@@ -14,6 +14,7 @@ import DB
 import Doc.Extending.Migrations
 import Doc.Migrations
 import Doc.Signing.Migrations
+import Doc.SMSPin.Migrations
 import FeatureFlags.Migrations
 import Mails.FromKontra.Migrations
 import Mails.Migrations
@@ -22,6 +23,7 @@ import SMS.FromKontra.Migrations
 import SMS.Migrations
 import ThirdPartyStats.Migrations
 import User.APILog.Migrations
+import User.History.Migrations
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
 -- Current version has migrations created after VII.2016.
@@ -64,4 +66,8 @@ kontraMigrations = [
   , createAPILogsTable
   , addSearchColumnsToDocument
   , addDocumentSearchUpdateJob
+  , addPKToAsyncEventQueue
+  , addPKToSignatorySMSPin
+  , addPKToDocumentTags
+  , addPKToUsersHistory
   ]

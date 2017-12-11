@@ -1,11 +1,23 @@
 module ThirdPartyStats.Migrations
     (
-     voidTableAsyncEventQueue
+      voidTableAsyncEventQueue
+    , addPKToAsyncEventQueue
     ) where
 
 import DB
 import KontraPrelude
 import ThirdPartyStats.Tables
+
+addPKToAsyncEventQueue :: MonadDB m => Migration m
+addPKToAsyncEventQueue = Migration {
+    mgrTableName = tblName tableAsyncEventQueue
+  , mgrFrom = 2
+  , mgrAction = StandardMigration $ do
+       runQuery_ $ sqlAlterTable (tblName tableAsyncEventQueue) [
+          sqlAddPK (tblName tableAsyncEventQueue)
+                   (fromJust . pkOnColumn $ "sequence_number")
+         ]
+  }
 
 voidTableAsyncEventQueue :: MonadDB m => Migration m
 voidTableAsyncEventQueue = Migration {

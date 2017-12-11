@@ -220,6 +220,7 @@ Library
                  , Doc.Model.Search
                  , Doc.Model.Update
                  , Doc.QRCode
+                 , Doc.SMSPin.Migrations
                  , Doc.SMSPin.Model
                  , Doc.SMSPin.Tables
                  , Doc.Screenshot
@@ -386,6 +387,7 @@ Library
                  , User.Email
                  , User.EmailChangeRequest
                  , User.EmailChangeRequest.Tables
+                 , User.History.Migrations
                  , User.History.Model
                  , User.History.Tables
                  , User.JSON
@@ -730,6 +732,7 @@ Executable kontrakcja-migrate
                  Doc.Functions
                  Doc.Migrations
                  Doc.Trigger
+                 Doc.SMSPin.Migrations
                  Doc.SMSPin.Tables
                  Doc.Sealing.Tables
                  Doc.Signing.Migrations
@@ -768,6 +771,7 @@ Executable kontrakcja-migrate
                  User.APILog.Tables
                  User.CallbackScheme.Tables
                  User.EmailChangeRequest.Tables
+                 User.History.Migrations
                  User.History.Tables
                  User.PasswordReminder.Tables
                  User.Tables
@@ -1206,6 +1210,7 @@ Test-suite kontrakcja-test
                  Doc.Functions
                  Doc.Migrations
                  Doc.QRCodeTest
+                 Doc.SMSPin.Migrations
                  Doc.SMSPin.Tables
                  Doc.Sealing.Tables
                  Doc.Signing.Migrations
@@ -1272,6 +1277,7 @@ Test-suite kontrakcja-test
                  User.APITest
                  User.CallbackScheme.Tables
                  User.EmailChangeRequest.Tables
+                 User.History.Migrations
                  User.History.Tables
                  User.PasswordReminder.Tables
                  User.Tables

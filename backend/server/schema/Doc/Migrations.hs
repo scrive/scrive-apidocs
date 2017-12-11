@@ -1,6 +1,7 @@
 module Doc.Migrations (
     addIsReceiptToDocument
   , addAllowsHighlightingToSignatories
+  , addPKToDocumentTags
   , createHighlightedPagesTable
   , normalizeCheckboxesSize
   , normalizeCheckboxesFSRel
@@ -32,6 +33,21 @@ addSearchColumnsToDocument = Migration {
       runQuery_ . sqlCreateIndex tname $ (indexOnColumn "archive_search_terms") { idxWhere = Just ("archive_search_terms IS NULL") }
       runQuery_ . sqlCreateIndex tname $ (indexOnColumnWithMethod "archive_search_fts" GIN)
   }
+
+addPKToDocumentTags :: MonadDB m => Migration m
+addPKToDocumentTags = Migration {
+    mgrTableName = tblName tableDocumentTags
+  , mgrFrom = 2
+  , mgrAction = StandardMigration $ do
+      -- the index created by introducing the pk supercedes the existing one
+      runQuery_ $ sqlDropIndex (tblName tableDocumentTags)
+                               (indexOnColumn "document_id")
+      runQuery_ $ sqlAlterTable (tblName tableDocumentTags) [
+          sqlAddPK (tblName tableDocumentTags)
+                   (fromJust . pkOnColumns $ ["document_id", "name"])
+
+        ]
+}
 
 addIsReceiptToDocument :: MonadDB m => Migration m
 addIsReceiptToDocument = Migration {

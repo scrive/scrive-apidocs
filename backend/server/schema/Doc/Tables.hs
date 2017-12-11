@@ -302,16 +302,16 @@ ctSignatoryLink = CompositeType {
 tableDocumentTags :: Table
 tableDocumentTags = tblTable {
     tblName = "document_tags"
-  , tblVersion = 2
+  , tblVersion = 3
   , tblColumns = [
       tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "name", colType = TextT, colNullable = False }
     , tblColumn { colName = "value", colType = TextT, colNullable = False }
     ]
+  , tblPrimaryKey = pkOnColumns ["document_id", "name"]
   , tblForeignKeys = [
       (fkOnColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyCascade }
     ]
-  , tblIndexes = [indexOnColumn "document_id"]
   }
 
 ctDocumentTag :: CompositeType

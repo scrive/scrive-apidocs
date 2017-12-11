@@ -6,7 +6,7 @@ import KontraPrelude
 tableUsersHistory :: Table
 tableUsersHistory = tblTable {
     tblName = "users_history"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns = [
       tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "event_type", colType = IntegerT, colNullable = False }
@@ -15,7 +15,9 @@ tableUsersHistory = tblTable {
     , tblColumn { colName = "time", colType = TimestampWithZoneT, colNullable = False }
     , tblColumn { colName = "system_version", colType = TextT, colNullable = False }
     , tblColumn { colName = "performing_user_id", colType = BigIntT }
+    , tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     ]
+  , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
       (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
     , (fkOnColumn "performing_user_id" "users" "id") {

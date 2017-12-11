@@ -9,13 +9,15 @@ import KontraPrelude
 --   Expected usage is basically write record, batch read records, batch
 --   delete records in fairly rapid sequence. This, coupled with the
 --   expectation that the table will never grow to any significant size
---   makes the omission of any keys seem the more performant choice.
+--   makes the omission of any keys seem the more performant choice - however,
+--   we need a primary key to enable no downtime updates.
 tableAsyncEventQueue :: Table
 tableAsyncEventQueue = tblTable {
   tblName = "async_event_queue"
-  , tblVersion = 2
+  , tblVersion = 3
   , tblColumns = [
       tblColumn { colName = "sequence_number", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "event", colType = TextT, colNullable = False }
     ]
+  , tblPrimaryKey = pkOnColumn "sequence_number"
   }
