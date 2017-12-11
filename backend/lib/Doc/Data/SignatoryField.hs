@@ -34,7 +34,6 @@ import Data.String.Utils
 import Data.Unjson
 import Database.PostgreSQL.PQTypes hiding (def)
 
-import DB.Derive
 import Doc.SignatoryFieldID
 import File.FileID
 import KontraPrelude
@@ -121,7 +120,8 @@ instance ToSQL FieldType where
 
 newtype PlacementID = PlacementID Int64
   deriving (Eq, Ord, PQFormat)
-$(newtypeDeriveUnderlyingReadShow ''PlacementID)
+deriving newtype instance Read PlacementID
+deriving newtype instance Show PlacementID
 
 instance FromSQL PlacementID where
   type PQBase PlacementID = PQBase Int64

@@ -12,13 +12,13 @@ import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
-import DB.Derive
 import KontraPrelude
 import Log.Identifier
 
 newtype FileID = FileID Int64
   deriving (Eq, Ord, Hashable, PQFormat, Typeable)
-$(newtypeDeriveUnderlyingReadShow ''FileID)
+deriving newtype instance Read FileID
+deriving newtype instance Show FileID
 
 instance Identifier FileID Int64 where
   idDefaultLabel _ = "file_id"

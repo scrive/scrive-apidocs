@@ -101,7 +101,8 @@ unjsonCallLogParam = objectOf $ pure CallLogParam
 
 newtype CallLogID = CallLogID Int64
   deriving (Eq, Ord, PQFormat)
-$(newtypeDeriveUnderlyingReadShow ''CallLogID)
+deriving newtype instance Read CallLogID
+deriving newtype instance Show CallLogID
 
 instance Identifier CallLogID Int64 where
   idDefaultLabel _ = "document_id"

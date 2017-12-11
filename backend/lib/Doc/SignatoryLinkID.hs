@@ -14,7 +14,6 @@ import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
-import DB.Derive
 import KontraPrelude
 import Log.Identifier
 
@@ -22,7 +21,8 @@ import Log.Identifier
 -- a signatory inside a document scope.
 newtype SignatoryLinkID = SignatoryLinkID Int64
   deriving (Eq, Ord, PQFormat)
-$(newtypeDeriveUnderlyingReadShow ''SignatoryLinkID)
+deriving newtype instance Read SignatoryLinkID
+deriving newtype instance Show SignatoryLinkID
 
 instance FromReqURI SignatoryLinkID where
   fromReqURI = maybeRead

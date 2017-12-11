@@ -12,7 +12,8 @@ import Log.Identifier
 
 newtype SessionID = SessionID Int64
   deriving (Eq, Ord, PQFormat)
-$(newtypeDeriveUnderlyingReadShow ''SessionID)
+deriving newtype instance Read SessionID
+deriving newtype instance Show SessionID
 
 instance Identifier SessionID Int64 where
   idDefaultLabel _ = "session_id"

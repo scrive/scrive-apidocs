@@ -13,13 +13,13 @@ import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
-import DB.Derive
 import KontraPrelude
 import Log.Identifier
 
 newtype PartnerID = PartnerID Int64
   deriving (Eq, Ord, PQFormat, Typeable)
-$(newtypeDeriveUnderlyingReadShow ''PartnerID)
+deriving newtype instance Read PartnerID
+deriving newtype instance Show PartnerID
 
 instance Default PartnerID where
   def = unsafePartnerID 0

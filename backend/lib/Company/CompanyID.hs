@@ -12,13 +12,13 @@ import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
-import DB.Derive
 import KontraPrelude
 import Log.Identifier
 
 newtype CompanyID = CompanyID Int64
   deriving (Eq, Ord, PQFormat, Typeable)
-$(newtypeDeriveUnderlyingReadShow ''CompanyID)
+deriving newtype instance Read CompanyID
+deriving newtype instance Show CompanyID
 
 instance FromReqURI CompanyID where
   fromReqURI = maybeRead

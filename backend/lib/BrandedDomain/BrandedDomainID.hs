@@ -11,12 +11,12 @@ import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
-import DB.Derive
 import KontraPrelude
 
 newtype BrandedDomainID = BrandedDomainID Int64
   deriving (Eq, Ord, PQFormat, Typeable)
-$(newtypeDeriveUnderlyingReadShow ''BrandedDomainID)
+deriving newtype instance Read BrandedDomainID
+deriving newtype instance Show BrandedDomainID
 
 instance FromReqURI BrandedDomainID where
   fromReqURI = maybeRead

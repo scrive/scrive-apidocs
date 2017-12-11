@@ -84,7 +84,8 @@ instance ToSQL SMSProvider where
 
 newtype ShortMessageID = ShortMessageID Int64
   deriving (Eq, Ord, PQFormat)
-$(newtypeDeriveUnderlyingReadShow ''ShortMessageID)
+deriving newtype instance Read ShortMessageID
+deriving newtype instance Show ShortMessageID
 
 instance Identifier ShortMessageID Int64 where
   idDefaultLabel _ = "sms_id"
@@ -134,7 +135,8 @@ instance Loggable ShortMessage where
 
 newtype SMSEventID = SMSEventID Int64
   deriving (Eq, Ord, PQFormat)
-$(newtypeDeriveUnderlyingReadShow ''SMSEventID)
+deriving newtype instance Read SMSEventID
+deriving newtype instance Show SMSEventID
 
 instance Identifier SMSEventID Int64 where
   idDefaultLabel _ = "sms_event_id"

@@ -78,7 +78,8 @@ data MailerJob = MailerJob {
 
 newtype MailID = MailID Int64
   deriving (Eq, Ord, PQFormat)
-$(newtypeDeriveUnderlyingReadShow ''MailID)
+deriving newtype instance Read MailID
+deriving newtype instance Show MailID
 
 instance Identifier MailID Int64 where
   idDefaultLabel _ = "mail_id"
@@ -192,7 +193,8 @@ instance Loggable Mail where
 
 newtype EventID = EventID Int64
   deriving (Eq, Ord, PQFormat)
-$(newtypeDeriveUnderlyingReadShow ''EventID)
+deriving newtype instance Read EventID
+deriving newtype instance Show EventID
 
 instance Identifier EventID Int64 where
   idDefaultLabel _ = "mail_event_id"

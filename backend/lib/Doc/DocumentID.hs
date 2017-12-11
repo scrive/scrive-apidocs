@@ -11,13 +11,13 @@ import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
-import DB.Derive
 import KontraPrelude
 import Log.Identifier
 
 newtype DocumentID = DocumentID Int64
   deriving (Eq, Ord, PQFormat)
-$(newtypeDeriveUnderlyingReadShow ''DocumentID)
+deriving newtype instance Read DocumentID
+deriving newtype instance Show DocumentID
 
 instance Identifier DocumentID Int64 where
   idDefaultLabel _ = "document_id"
