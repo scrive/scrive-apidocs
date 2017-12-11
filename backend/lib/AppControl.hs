@@ -229,7 +229,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
               -- there is no way to get stacktrace here as Respond404 is a CAF, fix this later
               rq <- askRq
               mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
-              logAttention "Respond404" . object $ logRequest rq mbody
+              logInfo "Respond404" . object $ logRequest rq mbody
               notFoundPage >>= notFound
             LinkInvalid -> do
               rq <- askRq

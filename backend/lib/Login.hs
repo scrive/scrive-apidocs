@@ -68,9 +68,9 @@ handleLoginPost = do
                                                (any (ipAddressIsInNetwork (ctxipnumber ctx)) (companyipaddressmasklist (companyinfo company)))
                         Nothing -> return True
             case maybeuser of
-                Just user@User{userpassword,userid}
+                Just user@User{userpassword,userid,useraccountsuspended}
                     | verifyPassword userpassword passwd
-                    && ipIsOK -> do
+                    && ipIsOK && not useraccountsuspended -> do
                         failedAttemptCount <- dbQuery $ GetUserRecentAuthFailureCount userid
                         if failedAttemptCount <= 5
                           then do
@@ -115,7 +115,7 @@ handleLoginPost = do
                           else dbUpdate $ LogHistoryLoginFailure (userid u) (ctxipnumber ctx) (ctxtime ctx)
                         J.runJSONGenT $ J.value "logged" False
 
-                Just u -> do
+                Just u | not ipIsOK -> do
                         logInfo "User login failed (ip not on allowed list)" $ object [
                             logPair_ u
                           , "ip" .= show (ctxipnumber ctx)
@@ -133,6 +133,13 @@ handleLoginPost = do
                                          J.value "adminname" (getSmartName admin)
                           _ -> J.runJSONGenT $ do
                                          J.value "logged" False
+                Just u -> do
+                  {- MR: useraccountsuspended must be true here. This is a hack for Hi3G. It will be removed in future -}
+                        logInfo "User login failed (user account suspended)" $ object [logPair_ u]
+                        _ <- if padlogin
+                          then dbUpdate $ LogHistoryPadLoginFailure (userid u) (ctxipnumber ctx) (ctxtime ctx)
+                          else dbUpdate $ LogHistoryLoginFailure (userid u) (ctxipnumber ctx) (ctxtime ctx)
+                        J.runJSONGenT $ J.value "logged" False
                 Nothing -> do
                     logInfo "User login failed (user not found)" $ object [
                         "email" .= email

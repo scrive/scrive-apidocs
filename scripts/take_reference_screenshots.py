@@ -11,6 +11,7 @@ import requests
 import selenium.webdriver as webdriver
 from PIL import Image
 from selenium.common import exceptions as selenium_exceptions
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support import ui as support_ui, expected_conditions
 
 
@@ -146,13 +147,8 @@ def quitting(thing):
 
 def save_screenshot(driver, file_path):
     screenshot = driver.get_screenshot_as_png()
-    height = driver.execute_script(
-        'return document.documentElement.clientHeight;')
-    scroll_offset = driver.execute_script('return window.pageYOffset;')
     img = Image.open(StringIO.StringIO(screenshot))
-    width = img.size[0]
-    cropped_img = img.crop((0, scroll_offset, width, scroll_offset + height))
-    cropped_img.save(file_path)
+    img.save(file_path)
 
 
 def send_keys(keys, times=1):
@@ -174,6 +170,15 @@ def wait_and_js_click(driver, css):
     wait_for_element(driver, css)
     driver.execute_script('$("' + css + '").click();')
 
+
+def make_driver():
+    chrome_options = Options()
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_argument('--window-size=1268,899')
+    return webdriver.Chrome(executable_path='/usr/bin/chromedriver',
+                            chrome_options=chrome_options)
+
 if __name__ == '__main__':
     api = ScriveAPI()
 
@@ -189,11 +194,12 @@ if __name__ == '__main__':
                                                    ssn='')]
     doc_data = api.update(doc_data)
 
-    with quitting(webdriver.Firefox()) as driver:
+    with quitting(make_driver()) as driver:
         driver.get(URL + '/d/' + doc_data['id'])
         wait_for_element(driver, 'input[name=email]').send_keys(
             'bartek+reference-screenshot@scrive.com')
-        wait_for_element(driver, 'input[name=password]').send_keys('dupadupa12')
+        wait_for_element(driver, 'input[name=password]').send_keys(
+            'dupadupa12')
         wait_for_element(driver, '.button.main').click()
         wait_for_element(driver, '.sendButton').click()
         time.sleep(1)  # wait for signinginprogress modal to be shown
@@ -205,7 +211,7 @@ if __name__ == '__main__':
     desktop_siglink = doc_data['signatories'][1]['signlink']
     mobile_siglink = doc_data['signatories'][2]['signlink']
 
-    with quitting(webdriver.Firefox()) as driver:
+    with quitting(make_driver()) as driver:
         driver.get(URL + desktop_siglink)
         time.sleep(2)  # wait for pages to load
         wait_for_element(driver, '.section.sign .button.action').click()
@@ -222,7 +228,7 @@ if __name__ == '__main__':
         driver.get(URL + mobile_siglink)
         time.sleep(2)  # wait for pages to load
         # scroll down and up to fix arrow position
-        driver.execute_script('window.scrollTo(0, document.body.scrollHeight)')
+        driver.execute_script('window.scrollTo(0, 99999)')
         wait_for_element(driver, '.section.sign .button.action').click()
         time.sleep(1)  # wait for confirm signing modal to be shown
         driver.execute_script('window.SIGN_TIMEOUT = 5000')
@@ -252,7 +258,7 @@ if __name__ == '__main__':
 
     doc_data = api.update(doc_data)
 
-    with quitting(webdriver.Firefox()) as driver:
+    with quitting(make_driver()) as driver:
         driver.get(URL + '/d/' + doc_data['id'])
         wait_for_element(driver, 'input[name=email]').send_keys(
             'bartek+reference-screenshot@scrive.com')
@@ -267,11 +273,12 @@ if __name__ == '__main__':
     desktop_siglink = doc_data['signatories'][1]['signlink']
     mobile_siglink = doc_data['signatories'][2]['signlink']
 
-    with quitting(webdriver.Firefox()) as driver:
+    with quitting(make_driver()) as driver:
         driver.get(URL + desktop_siglink)
+        print URL + desktop_siglink
         time.sleep(2)  # wait for pages to load
-        driver.execute_script('window.scrollTo(0, document.body.scrollHeight)')
-        time.sleep(1)  # for arrow to adjust
+        driver.execute_script('window.scrollTo(0, 99999)')
+        time.sleep(2)  # for arrow to adjust
         save_screenshot(driver, '/tmp/desktop_bankid.png')
 
         # user smaller size, so small screen mode is enabled
@@ -279,7 +286,7 @@ if __name__ == '__main__':
         driver.get(URL + mobile_siglink)
         time.sleep(2)  # wait for pages to load
         # scroll down and up to fix arrow position
-        driver.execute_script('window.scrollTo(0, document.body.scrollHeight)')
+        driver.execute_script('window.scrollTo(0, 99999)')
         time.sleep(1)  # for arrow to adjust
         save_screenshot(driver, '/tmp/mobile_bankid.png')
 
@@ -293,12 +300,3 @@ if __name__ == '__main__':
         json.dump(screenshot_json('/tmp/desktop_bankid.png'), f)
     with open('files/reference_screenshots/mobile_bankid.json', 'wb') as f:
         json.dump(screenshot_json('/tmp/mobile_bankid.png'), f)
-
-# STEPS:
-# run this script
-# x = concatLines base64 /tmp/author.png
-# authorJson = {"time":str(now()), in format 2015-09-22T16:00:00Z
-#               "image":"data:image/jpeg;base64," + x}
-# writeFile files/reference_screenshots/author.json (dumps(authorJson))
-# same thing for /tmp/desktop2.png into files/reference_screenshots/standard.json
-# same thing for /tmp/mobile2.png into files/reference_screenshots/mobile.json
