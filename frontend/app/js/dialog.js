@@ -1,102 +1,135 @@
-var $ = require("jquery");
-var BrowserInfo = require("./utils/browserinfo.js").BrowserInfo;
-var ScreenBlockingDialog = require("./dialog.js").ScreenBlockingDialog;
-
-/* Screen blocking dialog
+/*
+ * Screen blocking dialog
  *
- * Open with ScreenBlockingDialog.open({'header': some html/jquery object,
- *                                      'subheader': some html/jquery object,
- *                                      'content': some html/jquery object
- *                                      });
- * Close with ScreenBlockingDialog.close();
-*/
+ * Open with:
+ * ScreenBlockingDialog.open({
+ *   "header": some html/jquery object,
+ *   "subheader": some html/jquery object,
+ *   "content": some html/jquery object
+ * });
+ *
+ * Close with: ScreenBlockingDialog.close();
+ */
 
+var React = require("react");
+var $ = require("jquery");
 
-var fillWith = function(e, s) {
-  e.children().detach();
-  e.empty();
-  if (typeof s == 'string') {
-    e.text(s);
-  } else {
-    e.append(s);
+var ReactDialog = require("../scripts/common/dialog");
+
+var currentContainer = null;
+var currentDialog = null;
+
+var DialogContentWrapper = React.createClass({
+  propTypes: {
+    content: React.PropTypes.object
+  },
+  componentDidMount: function () {
+    $(React.findDOMNode(this)).append(this.props.content);
+  },
+  render: function () {
+    return React.createElement("div", {});
   }
-};
+});
 
-var buildDialog = function(cfg) {
-  var dialog = $('<div class="modal screenblockingdialog" />');
-  if (BrowserInfo.isPadDevice()) {
-            //Pad devices have a different aproach to body.width
-            //Check http://stackoverflow.com/questions/6695676/100-width-css-issue-only-on-mobile-safari
-            // Note also that width of sign page is dynamic due to arrows
-            dialog.css("min-width",$(document).width());
-  }
-  dialog.height($(document).height());
-  var modalcontainer = $('<div class="modal-container" />');
-  dialog.append(modalcontainer);
-  var modalbody = $('<div class="modal-body" />');
-  modalcontainer.append(modalbody);
-  var modalcontent = $('<div class="modal-content" />');
-  modalbody.append(modalcontent);
-  var body = $('<div class="body" />');
-  modalcontent.append(body);
-  var center = $('<center />');
-  body.append(center);
-
-  var header = $('<h4 class="screenblockingheader" />');
-  fillWith(header, cfg.header);
-  center.append(header);
-
-  var subheader = $('<h4 class="screenblockingsubheader" />');
-  fillWith(subheader, cfg.subheader);
-  center.append(subheader);
-
-  var content = $('<div class="screenblockingcontent" />');
-  fillWith(content, cfg.content);
-  center.append(content);
-
-  $('body').append(dialog);
-  return dialog;
-};
-
-var ScreenBlockingDialog = exports.ScreenBlockingDialog = {
-    dialog : function(cfg) {
-      var dialog = $('.modal.screenblockingdialog');
-      if (dialog.size() == 0) {
-        return buildDialog(cfg);
-      } else {
-        return dialog;
-      }
-    },
-    fixposition : function(dialog) {
-      var modalcontainer = $('.modal-container', dialog);
-      modalcontainer.css('top', $(window).scrollTop());
-      modalcontainer.css('margin-top', ($(window).height()- 200) /2);
-      modalcontainer.css('left', $(window).scrollLeft());
-      modalcontainer.css('margin-left', ($(window).width() - (modalcontainer.width() || 950)) / 2);
-      dialog.height($(document).height());
-    },
-    open: function (cfg) {
-      var dialog = ScreenBlockingDialog.dialog(cfg);
-      this.fixposition(dialog);
-      var header = $('.screenblockingheader', dialog);
-      fillWith(header, cfg.header);
-      var subheader = $('.screenblockingsubheader', dialog);
-      fillWith(subheader, cfg.subheader);
-      var content = $('.screenblockingcontent', dialog);
-      fillWith(content, cfg.content);
-      dialog.css('display','block');
-      dialog.addClass('active');
-      return dialog;
-    },
-    close : function() {
-      var dialog = $('.screenblockingdialog');
-      if (dialog.size() > 0 ) {
-        dialog.removeClass("active");
-        if (BrowserInfo.isIE())
-          dialog.css('display','none');
-        else // We need to hide this dialog, else it will cause screen to expand if size changed.
-          setTimeout(function() { if (!dialog.hasClass('active')) dialog.css('display','none');}, 500);
-      }
+var DialogWrapper = React.createClass({
+  propTypes: {
+    content: React.PropTypes.object,
+    header: React.PropTypes.object,
+    subheader: React.PropTypes.object,
+    onHide: React.PropTypes.func.isRequired
+  },
+  getInitialState: function () {
+    return {
+      active: false
     }
+  },
+  componentDidMount: function () {
+    this.setState({active: true});
+  },
+  render: function () {
+    var dialogChildren = [];
+    if (this.props.header) {
+      dialogChildren.push(
+        React.createElement(
+          ReactDialog.Header, {key: 0},
+          React.createElement(
+            DialogContentWrapper, {content: this.props.header}
+          )
+        )
+      );
+    }
+
+    if (this.props.subheader) {
+      dialogChildren.push(
+        React.createElement(
+          ReactDialog.SubHeader, {key: 1},
+          React.createElement(
+            DialogContentWrapper, {content: this.props.subheader}
+          )
+        )
+      );
+    }
+
+    if (this.props.content) {
+      dialogChildren.push(
+        React.createElement(
+          ReactDialog.Content, {key: 2},
+          React.createElement(
+            DialogContentWrapper, {content: this.props.content}
+          )
+        )
+      );
+    }
+
+    return React.createElement(
+      ReactDialog.Dialog,
+      {
+        active: this.state.active,
+        onHide: this.props.onHide
+      },
+      dialogChildren
+    );
+  }
+});
+
+var onDialogHide = function () {
+  if (currentContainer) {
+    React.unmountComponentAtNode(currentContainer);
+    document.body.removeChild(currentContainer);
+    currentContainer = null;
+    currentDialog = null;
+  }
 };
 
+var open = function (config) {
+  if (!currentContainer) {
+    currentContainer = document.createElement("div");
+    $("body").append(currentContainer);
+
+    currentDialog = React.render(
+      React.createElement(
+        DialogWrapper,
+        {
+          content: config.content,
+          header: config.header,
+          subheader: config.subheader,
+          onHide: onDialogHide
+        }
+      ),
+      currentContainer
+    );
+  }
+};
+
+var close = function () {
+  if (currentDialog) {
+    currentDialog.setState({active: false});
+  }
+};
+
+module.exports = {
+  ScreenBlockingDialog: {
+    open: open,
+    close: close
+  }
+};
