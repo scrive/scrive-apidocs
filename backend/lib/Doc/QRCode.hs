@@ -32,7 +32,7 @@ encodeQR msg = withSystemTempFile "qr.png" $ \path handle -> do
   hClose handle
   callProcess "qrencode" [ msg, "-o", path
                          , "--size", "20"
-                         -- ^ Makes a 580x580px ~0.5 KiB image.
+                         -- Makes a 580x580px ~0.5 KiB image.
                          ]
   QRCode <$> (BS.readFile path)
 
