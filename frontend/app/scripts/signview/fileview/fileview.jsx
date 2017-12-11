@@ -109,8 +109,10 @@ module.exports = React.createClass({
         const doc = this.context.document;
         const currentSig = doc.currentSignatory();
         const currentSigCanHighlight = currentSig.canSign() && currentSig.allowshighlighting();
-        if (currentSigCanHighlight) {
+        if (currentSigCanHighlight && !this.state.highlighting) {
           this.handleStartHighlight();
+        } else if (currentSigCanHighlight && this.state.highlighting) {
+          this.handleCancelHighlighting();
         }
       }
     }
