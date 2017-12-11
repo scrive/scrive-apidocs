@@ -37,6 +37,7 @@ kontraExtensions = map EnableExtension [
   , DeriveDataTypeable
   , DeriveFunctor
   , DeriveGeneric
+  , DerivingStrategies
   , FlexibleContexts
   , FlexibleInstances
   , FunctionalDependencies
@@ -162,7 +163,7 @@ expExps e = e `S.insert`
       ParArrayComp _ _ _          -> error "ParArrayComp"
       ParArrayFromThenTo _ _ _ _  -> error "ParArrayFromThenTo"
       LCase _ alts                -> S.unions $ map altExps alts
-      ExprHole _                  -> S.empty
+      UnboxedSum _ _ _ e'         -> expExps e'
 
 
 bindsExps :: Maybe (Binds SrcSpanInfo) -> S.Set (Exp SrcSpanInfo)
