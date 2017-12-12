@@ -11,12 +11,13 @@ module Shake.NewBuild (UseNewBuild(DontUseNewBuild)
 
 import Control.Monad
 import Data.Maybe
+import Data.List.Extra (trim)
 import Data.Version
+import Data.Version.Extra (readVersion)
 import Development.Shake
 import Development.Shake.FilePath
 import Distribution.Text
 import Distribution.System
-import Extra
 import System.Process (readProcess)
 import qualified Data.Map as M
 
