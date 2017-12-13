@@ -29,7 +29,7 @@ instance Ord Scrypt.EncryptedPass where
 
 data Password = Password       { pwdEncPass    :: !Scrypt.EncryptedPass
                                , pwdSHA256Salt :: !BS.ByteString }
-                -- ^ Current password scheme, scrypt + SHA256.
+                -- ^ Current password scheme, SHA256 + scrypt.
 
               | LegacyPassword { pwdHash'      :: !BS.ByteString
                                , pwdSalt'      :: !BS.ByteString }
@@ -37,7 +37,7 @@ data Password = Password       { pwdEncPass    :: !Scrypt.EncryptedPass
               deriving (Eq, Ord)
 
 instance Show Password where
-  show Password       {} = "Password (scrypt + SHA256, hash and salt hidden)"
+  show Password       {} = "Password (SHA256 + scrypt, hash and salt hidden)"
   show LegacyPassword {} = "Password (legacy SHA256, hash and salt hidden)"
 
 pwdHash :: Password -> BS.ByteString
@@ -87,7 +87,7 @@ mkPassword hash salt strength = case strength of
   1 -> Password (Scrypt.EncryptedPass hash) salt
   _ -> $unexpectedError "Password strength must be either 0 or 1!"
 
--- | Convert a legacy SHA-256 password to a SHA-256 + Scrypt one.
+-- | Convert a legacy SHA-256 password to a SHA-256 + scrypt one.
 strengthenPassword :: CryptoRNG m => Password -> m Password
 strengthenPassword p@Password{} = return p
 strengthenPassword LegacyPassword{..} = do

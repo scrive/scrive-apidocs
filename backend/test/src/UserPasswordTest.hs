@@ -59,7 +59,7 @@ testStrengthenPassword = do
   assert $ not $ verifyPassword pass wrong
 
 testLegacyPasswordCreateVerify :: TestEnv ()
-testLegacyPasswordCreateVerify = do
+testLegacyPasswordCreateVerify = replicateM_ 10 $ do
   s <- randomPasswordString
   wrong <- randomPasswordString
   p <- createLegacyPassword s

@@ -289,8 +289,10 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
           Just user ->
             case userpassword user of
               Nothing -> do
-                logAttention_ $ "StrengthenPasswords got a user without password"
-                  <> ", should not happen"
+                logAttention ("StrengthenPasswords found a user without a password"
+                              <> ", should not happen") $ object [
+                              "user_id" .= (show . userid $ user)
+                              ]
                 return . RerunAfter $ iseconds 1
               Just password -> do
                 newPassword <- strengthenPassword password
