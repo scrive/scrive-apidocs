@@ -3,13 +3,42 @@ var BackboneMixin = require("../../common/backbone_mixin");
 var Track = require("../../common/track");
 var CustomTextEditor = require("./customtexteditor");
 var _ = require("underscore");
-var ConfirmationWithEmail = require("../../../js/confirmationsWithEmails.js").ConfirmationWithEmail;
-
+var EmailModal = require("../../common/email_modal");
 
 module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
     getBackboneModels : function() {
       return [this.props.document];
+    },
+    getInitialState: function () {
+      return {
+        showConfirmationPreviewModal: false,
+        showInvitationPreviewModal: false
+      };
+    },
+    onShowConfirmationPreviewModal: function () {
+      Track.track('Open confirmation preview');
+      this.props.document.save();
+
+      var self = this;
+      this.props.document.afterSave(function() {
+        self.setState({showConfirmationPreviewModal: true});
+      });
+    },
+    onConfirmationPreviewModalClose: function () {
+      this.setState({showConfirmationPreviewModal: false});
+    },
+    onShowInvitationPreviewModal: function () {
+      Track.track('Open invitation preview');
+      this.props.document.save();
+
+      var self = this;
+      this.props.document.afterSave(function() {
+        self.setState({showInvitationPreviewModal: true});
+      });
+    },
+    onInvitationPreviewModalClose: function () {
+      this.setState({showInvitationPreviewModal: false});
     },
     render: function() {
       var self = this;
@@ -36,21 +65,19 @@ module.exports = React.createClass({
               onChange = {function(c) {doc.setInvitationMessage(c);}}
               placeholder = {localization.designview.editInvitation}
               disabledPlaceholder = {localization.designview.editInvitationMessagePlaceholder}
-              onPreview = {function() {
-                Track.track('Open invitation preview');
-                doc.save();
-                doc.afterSave(function() {
-                var popup = ConfirmationWithEmail.popup({
-                              editText: '',
-                              allowReject: false,
-                              title: localization.designview.customMessage.invitation,
-                              mail: doc.inviteMail(),
-                              onAccept: function() {
-                                popup.close();
-                              }
-                            });
-                });
-              }}
+              onPreview = {self.onShowInvitationPreviewModal}
+            />
+
+            <EmailModal.EmailModal
+              active={this.state.showInvitationPreviewModal}
+              allowReject={false}
+              allowEdit={false}
+              document={doc}
+              title={localization.designview.customMessage.invitation}
+              type="invite"
+              width={800}
+              onAccept={this.onInvitationPreviewModalClose}
+              onClose={this.onInvitationPreviewModalClose}
             />
           </div>
           <div style={{ "marginTop" :"15px" }}>
@@ -63,20 +90,19 @@ module.exports = React.createClass({
               placeholder  = {localization.designview.editConfirmation}
               disabledPlaceholder = {localization.designview.editConfirmationMessagePlaceholder}
               onChange = {function(c) {doc.setConfirmationMessage(c);}}
-              onPreview = {function() {
-                Track.track('Open confirmation preview');
-                doc.save();
-                doc.afterSave(function() {
-                var popup = ConfirmationWithEmail.popup({
-                              editText: '',
-                              title: localization.designview.customMessage.confirmation,
-                              mail: doc.confirmMail(),
-                              onAccept: function() {
-                                popup.close();
-                              }
-                            });
-                });
-              }}
+              onPreview = {self.onShowConfirmationPreviewModal}
+            />
+
+            <EmailModal.EmailModal
+              active={this.state.showConfirmationPreviewModal}
+              allowReject={false}
+              allowEdit={false}
+              document={doc}
+              title={localization.designview.customMessage.confirmation}
+              type="confirm"
+              width={800}
+              onAccept={this.onConfirmationPreviewModalClose}
+              onClose={this.onConfirmationPreviewModalClose}
             />
           </div>
         </div>
