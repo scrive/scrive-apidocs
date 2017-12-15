@@ -7,6 +7,7 @@ module Company.Model (
   , maxCompanyIdleDocTimeout
   , GetCompanies(..)
   , GetCompaniesByPartnerID(..)
+  , GetCompaniesWithIdleDocTimeoutSet(..)
   , GetCompany(..)
   , GetCompanyByUserID(..)
   , CreateCompany(..)
@@ -183,6 +184,14 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetCompaniesByPartnerID [Company
     runQuery_ $ sqlSelect "companies" $ do
       selectCompaniesSelectors
       sqlWhereEq "partner_id" partnerID
+    fetchMany fetchCompany
+
+data GetCompaniesWithIdleDocTimeoutSet = GetCompaniesWithIdleDocTimeoutSet
+instance (MonadDB m, MonadThrow m) => DBQuery m GetCompaniesWithIdleDocTimeoutSet [Company] where
+  query GetCompaniesWithIdleDocTimeoutSet = do
+    runQuery_ $ sqlSelect "companies" $ do
+      selectCompaniesSelectors
+      sqlWhereIsNotNULL "idle_doc_timeout"
     fetchMany fetchCompany
 
 data CreateCompany = CreateCompany
