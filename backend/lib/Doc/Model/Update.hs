@@ -19,7 +19,8 @@ module Doc.Model.Update
   , NewDocument(..)
   , PreparationToPending(..)
   , PurgeDocuments(..)
-  , ArchiveIdleDocuments(..)
+  , archiveIdleDocuments
+  , ArchiveIdleDocumentsForUserInCompany(..)
   , unsavedDocumentLingerDays
   , RejectDocument(..)
   , RemoveDocumentAttachments(..)
@@ -1885,29 +1886,55 @@ document is idle for a signatory if
    4. the signatory belongs to the same company as the author, and
    5. it's been more than idle_doc_timeout days since the document was modified.
 -}
-data ArchiveIdleDocuments = ArchiveIdleDocuments UTCTime
-instance MonadDB m => DBUpdate m ArchiveIdleDocuments Int where
-  update (ArchiveIdleDocuments now) = do
-    runSQL $ "UPDATE signatory_links"
-         <+> "   SET deleted =" <?> now
-         <+> " WHERE deleted IS NULL"
-         <+> "  AND EXISTS(SELECT TRUE"
-         <+> "               FROM documents"
-         <+> "               JOIN signatory_links AS author_sl"
-         <+> "                 ON author_sl.document_id = documents.id"
-         <+> "                AND documents.author_id = author_sl.id"
-         <+> "               JOIN users AS author"
-         <+> "                 ON author.id = author_sl.user_id"
-         <+> "               JOIN companies as author_company"
-         <+> "                 ON author_company.id = author.company_id"
-         <+> "                AND author_company.idle_doc_timeout IS NOT NULL"
-         <+> "               JOIN users"
-         <+> "                 ON users.company_id = author.company_id"
-         <+> "              WHERE users.id = signatory_links.user_id"
-         <+> "                AND signatory_links.document_id = documents.id"
-         <+> "                AND documents.type =" <?> Signable
-         <+> "                AND documents.status NOT IN (" <?> Pending <+> ")"
-         <+> "                AND documents.mtime + (interval '1 day') * author_company.idle_doc_timeout <" <?> now <+> ")"
+archiveIdleDocuments :: (MonadLog m, MonadDB m, MonadThrow m) => UTCTime -> m Int
+archiveIdleDocuments now = do
+  companiesWithIdleSet <- dbQuery GetCompaniesWithIdleDocTimeoutSet
+  fmap sum . forM companiesWithIdleSet $ \company -> do
+    let cid = companyid company
+        timeoutDays = fromJust . companyidledoctimeout . companyinfo $ company
+    users <- dbQuery $ GetCompanyAccounts cid
+    fmap sum . forM (map userid users) $ \uid -> do
+      logInfo "archiveIdleDocuments starting for user in company" $ object [
+          identifier_ cid
+        , identifier_ uid
+        ]
+      startTime <- currentTime
+      archived <- dbUpdate $ ArchiveIdleDocumentsForUserInCompany uid cid timeoutDays now
+      commit
+      finishTime <- currentTime
+      logInfo "archiveIdleDocuments finished for user in company" $ object [
+          identifier_ cid
+        , identifier_ uid
+        , "elapsed_time" .= (realToFrac (diffUTCTime finishTime startTime) :: Double)
+        , "signatory_links_archived" .= archived
+        ]
+      return archived
+
+data ArchiveIdleDocumentsForUserInCompany = ArchiveIdleDocumentsForUserInCompany UserID CompanyID Int16 UTCTime
+instance MonadDB m => DBUpdate m ArchiveIdleDocumentsForUserInCompany Int where
+  update (ArchiveIdleDocumentsForUserInCompany uid cid timeoutDays now) = do
+    runSQL $ "WITH user_idle_docs AS ("
+         <+> "  SELECT d.id"
+         <+> "  FROM documents AS d"
+         <+> "  JOIN signatory_links AS author_sl"
+         <+> "  ON d.author_id = author_sl.id"
+         <+> "  AND author_sl.user_id =" <?> uid
+         <+> "  WHERE d.type =" <?> Signable
+         <+> "  AND d.status NOT IN (" <?> Pending <+> ")"
+         <+> "  AND d.mtime + (interval '1 day') *" <?> timeoutDays <+> "<" <?> now
+         <+> "),"
+         <+> "doc_sigs_in_company AS ("
+         <+> "  SELECT sl.id"
+         <+> "  FROM signatory_links AS sl"
+         <+> "  JOIN users AS u"
+         <+> "  ON sl.user_id = u.id"
+         <+> "  AND u.company_id =" <?> cid
+         <+> "  WHERE sl.document_id IN (SELECT * FROM user_idle_docs)"
+         <+> ")"
+         <+> "UPDATE signatory_links"
+         <+> "SET deleted =" <?> now
+         <+> "WHERE deleted IS NULL"
+         <+> "AND id IN (SELECT * FROM doc_sigs_in_company)"
 
 -- Update utilities
 getEvidenceTextForUpdateField :: SignatoryLink -> FieldIdentity -> CurrentEvidenceEventType

@@ -180,12 +180,11 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
           ]
       return . RerunAfter $ iminutes 10
     DocumentsArchiveIdle -> do
-      runDB $ do
-        now <- currentTime
-        archived <- dbUpdate $ ArchiveIdleDocuments now
-        logInfo "Archived documents for signatories" $ object [
-            "signatory_count" .= archived
-          ]
+      now <- currentTime
+      archived <- runDB $ archiveIdleDocuments now
+      logInfo "DocumentsArchiveIdle finished" $ object [
+          "total_documents_archived" .= archived
+        ]
       RerunAt . nextDayAtHour 19 <$> currentTime
     EmailChangeRequestsEvaluation -> do
       runDB . dbUpdate $ DeleteExpiredEmailChangeRequests

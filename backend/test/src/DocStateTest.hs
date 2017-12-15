@@ -672,9 +672,9 @@ testArchiveIdleDocument = replicateM_ 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author (isClosed && isSignable)
   _ <- addRandomDocumentWithAuthorAndCondition author (isTemplate || isPending)
   _ <- addRandomDocumentWithAuthorAndCondition author2 (isClosed && isSignable)
-  archived1 <- dbUpdate $ ArchiveIdleDocuments (documentmtime doc)
+  archived1 <- archiveIdleDocuments (documentmtime doc)
   assertEqual "Archived zero idle documents (too early)" 0 archived1
-  archived2 <- dbUpdate $ ArchiveIdleDocuments (2 `daysAfter` documentmtime doc)
+  archived2 <- archiveIdleDocuments (2 `daysAfter` documentmtime doc)
   assertEqual "Archived idle documents for one signatory" 1 archived2
 
 -- for this stuff postgres implementation is stricter, with happstack it just left the doc unchanged
