@@ -11,12 +11,12 @@ var ShowAPIDeliveryModal = require("./showapideliverymodal");
 var EmailValidation = require("../../../js/validation.js").EmailValidation;
 var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
 var PhoneValidation = require("../../../js/validation.js").PhoneValidation;
-var ConfirmationWithEmail = require("../../../js/confirmationsWithEmails.js").ConfirmationWithEmail;
 var $ = require("jquery");
 var LocalStorage = require("../../../js/storage.js").LocalStorage;
 var Track = require("../../common/track");
 var Subscription = require("../../account/subscription");
 var Modal = require("../../common/modal");
+var EmailModal = require("../../common/email_modal");
 
   module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
@@ -34,7 +34,8 @@ var Modal = require("../../common/modal");
         showChangeMobileModal: false,
         showChangeEmailAndMobileModal: false,
         showRemindViaEmailAndSMSModal: false,
-        showRemindViaSMSModal: false
+        showRemindViaSMSModal: false,
+        showRemindEmailModal: false
       };
     },
 
@@ -325,25 +326,7 @@ var Modal = require("../../common/modal");
           signatory.emailMobileDelivery() : signatory.emailMobileConfirmationDelivery();
       }
       if (useEmail) {
-        ConfirmationWithEmail.popup({
-          title: ((document.closed() || signatory.hasSigned()) ? localization.process.remindagainbuttontext
-                                                               : localization.reminder.formHead),
-          mail: signatory.remindMail(),
-          acceptText: signatory.hasSigned() ? localization.send : localization.reminder.formSend,
-          editText: localization.reminder.formOwnMessage,
-          rejectText: localization.cancel,
-          onAccept: function (customtext) {
-            Track.track_timeout("Accept",
-              {"Accept": "send reminder",
-               "Signatory index": signatory.signIndex(),
-               "Delivery method": "Email"});
-            LoadingDialog.open();
-            signatory.remind(customtext).sendAjax(function () {
-              self.triggerOnAction();
-            });
-            return true;
-          }
-        });
+        this.setState({showRemindEmailModal: true});
       } else if (useMobile) {
         this.setState({showRemindViaSMSModal: true});
       } else if (useEmailAndMobile) {
@@ -459,6 +442,14 @@ var Modal = require("../../common/modal");
       }
     },
 
+    getRemindEmailModalTitle: function () {
+      if (this.props.signatory.document().closed() || this.props.signatory.hasSigned()) {
+        return localization.process.remindagainbuttontext;
+      }
+
+      return localization.reminder.formHead;
+    },
+
     onRemindViaEmailAndSMSModalClose: function () {
       this.setState({showRemindViaEmailAndSMSModal: false});
     },
@@ -497,6 +488,27 @@ var Modal = require("../../common/modal");
       var self = this;
       LoadingDialog.open();
       this.props.signatory.remind().sendAjax(function () {
+        self.triggerOnAction();
+      });
+    },
+
+    onRemindEmailModalClose: function () {
+      this.setState({showRemindEmailModal: false});
+    },
+
+    onRemindEmailModalAccept: function (customtext) {
+      Track.track_timeout(
+        "Accept",
+        {
+          "Accept": "send reminder",
+          "Signatory index": this.props.signatory.signIndex(),
+          "Delivery method": "Email"
+        }
+      );
+
+      var self = this;
+      LoadingDialog.open();
+      this.props.signatory.remind(customtext).sendAjax(function () {
         self.triggerOnAction();
       });
     },
@@ -762,6 +774,22 @@ var Modal = require("../../common/modal");
               />
             </Modal.Footer>
           </Modal.Container>
+
+          <EmailModal.EmailModal
+            active={this.state.showRemindEmailModal}
+            allowEdit={true}
+            allowReject={true}
+            acceptText={signatory.hasSigned() ? localization.send : localization.reminder.formSend}
+            document={signatory.document()}
+            editText={localization.reminder.formOwnMessage}
+            editWidth={300}
+            signatory={signatory}
+            title={this.getRemindEmailModalTitle()}
+            type="remind"
+            width={800}
+            onAccept={this.onRemindEmailModalAccept}
+            onClose={this.onRemindEmailModalClose}
+          />
         </div>
       );
     }
