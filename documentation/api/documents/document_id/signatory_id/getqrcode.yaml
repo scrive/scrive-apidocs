@@ -11,12 +11,12 @@ get:
     QR code in PNG format. Only valid for pending documents.
 
     The encoded link is of the form
-    `scrive://$hostname/{document_id}/{signatory_id}/{token}` and is intended
+    `scrive://{hostname}/{document_id}/{signatory_id}/{token}` and is intended
     to be used with our mobile applications available on the Apple App Store
     and Google Play Store.
 
     This endpoint will work irrespective of the delivery method set.
-    It will also work for viweing parties.
+    It will also work for viewing parties.
 
     *OAuth Privileges required: `DOC_CHECK`*
 
