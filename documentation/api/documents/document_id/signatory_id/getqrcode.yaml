@@ -8,7 +8,7 @@ get:
 
   description: |
     Get a Scrive eSign link for a given signatory and document ID, encoded as a
-    QR code in PNG format. Only valid for documents in preparation.
+    QR code in PNG format. Only valid for pending documents.
 
     The encoded link is of the form
     `scrive://$hostname/{document_id}/{signatory_id}/{token}` and is intended
