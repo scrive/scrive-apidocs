@@ -107,7 +107,10 @@ getAPIUserWith ctxUser privs = do
         Just (user, actor) -> return (user, actor)
         Nothing -> do
           sesids <- (lookCookieValues cookieNameSessionID . rqHeaders) <$> askRq
-          logInfo "Could not find user session" $ object ["session_id_cookies" .= sesids]
+          auth <- (lookCookieValues "authorization" . rqHeaders) <$> askRq
+          logInfo "Could not find user session" $ object [ "session_id_cookies" .= sesids
+                                                         , "authorization" .= auth
+                                                         ]
           apiError $ invalidAuthorization
 
 getOAuthUser :: Kontrakcja m => [APIPrivilege] -> m (Maybe (Either T.Text (User, Actor)))
