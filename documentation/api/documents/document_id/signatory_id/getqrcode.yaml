@@ -7,8 +7,16 @@ get:
     - Get
 
   description: |
-    Get a sign link for a given signatory `signatory_id` and a
-    document `document_id` as a QR code image in `.png` format.
+    Get a Scrive eSign link for a given signatory and document ID, encoded as a
+    QR code in PNG format. Only valid for documents in preparation.
+
+    The encoded link is of the form
+    `scrive://$hostname/{document_id}/{signatory_id}/{token}` and is intended
+    to be used with our mobile applications available on the Apple App Store
+    and Google Play Store.
+
+    This endpoint will work irrespective of the delivery method set.
+    It will also work for viweing parties.
 
     *OAuth Privileges required: `DOC_CHECK`*
 
