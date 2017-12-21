@@ -1,5 +1,6 @@
 module Doc.API.V2.Mock.MockDocInternal where
 
+import Data.Default
 import Data.Unjson
 
 import KontraPrelude
@@ -167,6 +168,33 @@ instance Unjson MockSigLink where
     <*> field "attachments" mockSigLinkAttachments ""
     <*> fieldOpt "api_delivery_url" mockSigLinkAPIDeliveryURL ""
 
+instance Default MockSigLink where
+  def = MockSigLink
+    { mockSigLinkId                     = "does not get used"
+    , mockSigLinkUserId                 = Nothing
+    , mockSigLinkIsAuthor               = False
+    , mockSigLinkIsSignatory            = True
+    , mockSigLinkFields                 = []
+    , mockSigLinkSignOrder              = 1
+    , mockSigLinkSignTime               = Nothing
+    , mockSigLinkSeenTime               = Nothing
+    , mockSigLinkReadInvitationTime     = Nothing
+    , mockSigLinkRejectedTime           = Nothing
+    , mockSigLinkSignRedirectURL        = Nothing
+    , mockSigLinkRejectRedirectURL      = Nothing
+    , mockSigLinkEmailDeliveryStatus    = "does not get used"
+    , mockSigLinkMobileDeliveryStatus   = "does not get used"
+    , mockSigLinkCSV                    = Nothing
+    , mockSigLinkDeliveryMethod         = "email_mobile"
+    , mockSigLinkAuthMethodToView       = "standard"
+    , mockSigLinkAuthMethodToSign       = "standard"
+    , mockSigLinkConfirmationDelivery   = "email_mobile"
+    , mockSigLinkAllowsHighlighting     = False
+    , mockSigLinkHighlightedPages       = []
+    , mockSigLinkAttachments            = []
+    , mockSigLinkAPIDeliveryURL         = Nothing
+    }
+
 data MockSigField = MockSigField {
     mockSigFieldType                   :: String
   , mockSigFieldIsObligatory           :: Bool
@@ -190,6 +218,19 @@ instance Unjson MockSigField where
     <*> fieldOpt "order" mockSigFieldOrder ""
     <*> fieldOpt "name" mockSigFieldName ""
     <*> fieldOpt "signature" mockSigFieldSignature ""
+
+instance Default MockSigField where
+  def = MockSigField
+    { mockSigFieldType                   = "email"
+    , mockSigFieldIsObligatory           = True
+    , mockSigFieldShouldBeFilledBySender = True
+    , mockSigFieldPlacements             = []
+    , mockSigFieldValue                  = Nothing
+    , mockSigFieldIsChecked              = Nothing
+    , mockSigFieldOrder                  = Nothing
+    , mockSigFieldName                   = Nothing
+    , mockSigFieldSignature              = Nothing
+    }
 
 data MockFieldPlacement = MockFieldPlacement {
     mockFieldPlacementXrel     :: Double

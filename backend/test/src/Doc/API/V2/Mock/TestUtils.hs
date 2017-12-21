@@ -54,6 +54,7 @@ module Doc.API.V2.Mock.TestUtils (
 ) where
 
 import Data.Aeson
+import Data.Default
 import Data.Unjson
 import Happstack.Server
 
@@ -268,17 +269,7 @@ setMockDocSigLinkStandardField i fieldType value =
   setForSigNumberFromMockDoc i
     $ \msl -> msl { mockSigLinkFields = newField : oldFieldsWithoutFieldType msl }
   where
-    newField = MockSigField
-                 { mockSigFieldType                   = fieldType
-                 , mockSigFieldIsObligatory           = True
-                 , mockSigFieldShouldBeFilledBySender = True
-                 , mockSigFieldPlacements             = []
-                 , mockSigFieldValue                  = Just value
-                 , mockSigFieldIsChecked              = Nothing
-                 , mockSigFieldOrder                  = Nothing
-                 , mockSigFieldName                   = Nothing
-                 , mockSigFieldSignature              = Nothing
-                 }
+    newField = def { mockSigFieldType = fieldType , mockSigFieldValue = Just value }
     oldFieldsWithoutFieldType msl =
       filter (\slf -> mockSigFieldType slf /= fieldType)
         (mockSigLinkFields msl)
@@ -286,32 +277,7 @@ setMockDocSigLinkStandardField i fieldType value =
 addStandardSigLinksToMockDoc :: Int -> MockDoc -> MockDoc
 addStandardSigLinksToMockDoc i md = md { mockDocParties = mockDocParties md ++ newParties }
   where
-    newParties = replicate i partyTemplate
-    partyTemplate = MockSigLink {
-        mockSigLinkId                     = "does not get used"
-      , mockSigLinkUserId                 = Nothing
-      , mockSigLinkIsAuthor               = False
-      , mockSigLinkIsSignatory            = True
-      , mockSigLinkFields                 = []
-      , mockSigLinkSignOrder              = 1
-      , mockSigLinkSignTime               = Nothing
-      , mockSigLinkSeenTime               = Nothing
-      , mockSigLinkReadInvitationTime     = Nothing
-      , mockSigLinkRejectedTime           = Nothing
-      , mockSigLinkSignRedirectURL        = Nothing
-      , mockSigLinkRejectRedirectURL      = Nothing
-      , mockSigLinkEmailDeliveryStatus    = "does not get used"
-      , mockSigLinkMobileDeliveryStatus   = "does not get used"
-      , mockSigLinkCSV                    = Nothing
-      , mockSigLinkDeliveryMethod         = "email_mobile"
-      , mockSigLinkAuthMethodToView       = "standard"
-      , mockSigLinkAuthMethodToSign       = "standard"
-      , mockSigLinkConfirmationDelivery   = "email_mobile"
-      , mockSigLinkAllowsHighlighting     = False
-      , mockSigLinkHighlightedPages       = []
-      , mockSigLinkAttachments            = []
-      , mockSigLinkAPIDeliveryURL         = Nothing
-      }
+    newParties = replicate i def
 
 -- * Internal use only!
 -----------------------
