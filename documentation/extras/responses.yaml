@@ -10,8 +10,3 @@ APIError:
     The JSON structured errors returned by the API.
   schema:
     $ref: ../definitions/ApiError.yaml
-
-PNGImage:
-  description: |
-    PNG image, `content-type: image/png`.
-
