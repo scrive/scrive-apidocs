@@ -58,7 +58,7 @@ import Doc.SignatoryLinkID
 import File.File (File(..))
 import File.Model
 import File.Storage
-import InputValidation (Result(..), asValidEmail, asValidPhone)
+import InputValidation (asValidEmail, asValidPhone)
 import Kontra
 import KontraPrelude
 import Log.Identifier
@@ -263,14 +263,11 @@ docApiV2Forward did = logDocument did . api $ do
     -- when it is closed, otherwise the link may be abused
     guardDocumentStatus Closed =<< theDocument
     -- Parameters
-    email <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "email")
+    validEmail <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterTextWithValidation "email" asValidEmail)
     noContent <- apiV2ParameterDefault True (ApiV2ParameterBool "no_content")
     noAttachments <- apiV2ParameterDefault False (ApiV2ParameterBool "no_attachments")
     -- API call actions
     asiglink <- fromJust <$> getAuthorSigLink <$> theDocument
-    validEmail <- case asValidEmail email of
-      Good em -> return em
-      _ -> apiError $ requestParameterInvalid "email" "Not a valid email address"
     _ <- sendForwardEmail validEmail noContent noAttachments asiglink
     -- Return
     return $ Accepted ()
@@ -537,20 +534,10 @@ docApiV2SigChangeEmailAndMobile did slid = logDocumentAndSignatory did slid . ap
     guardDocumentStatus Pending =<< theDocument
     guardSignatoryHasNotSigned slid =<< theDocument
     -- Parameters
-    validMobile <- do
-      paramMobile <- apiV2ParameterOptional (ApiV2ParameterText "mobile_number")
-      -- We are not using `asValidPhoneForSMS`, as we might not need to be so
-      -- strict. Instead `guardThatDocumentCanBeStarted` checks stuff later.
-      case fmap (asValidPhone . T.unpack) paramMobile of
-        Just (Good m) -> return $ Just m
-        Nothing -> return Nothing
-        _ -> apiError $ requestParameterInvalid "mobile_number" "Not a valid mobile number"
-    validEmail <- do
-      paramEmail  <- apiV2ParameterOptional (ApiV2ParameterText "email")
-      case fmap (asValidEmail . T.unpack) paramEmail of
-        Just (Good e)-> return $ Just e
-        Nothing -> return Nothing
-        _ -> apiError $ requestParameterInvalid "email" "Not a valid email addrress"
+    -- We are not using `asValidPhoneForSMS`, as we might not need to be so
+    -- strict. Instead `guardThatDocumentCanBeStarted` checks stuff later.
+    validMobile <- apiV2ParameterOptional (ApiV2ParameterTextWithValidation "mobile_number" asValidPhone)
+    validEmail <- apiV2ParameterOptional (ApiV2ParameterTextWithValidation "email" asValidEmail)
     -- Guard Parameters
     when (isNothing validMobile && isNothing validEmail ) (apiError $ requestParameterMissing "mobile_number or email")
     sl <- fromJust . getSigLinkFor slid <$> theDocument
@@ -564,11 +551,11 @@ docApiV2SigChangeEmailAndMobile did slid = logDocumentAndSignatory did slid . ap
       (apiError $ signatoryStateError "Signatory has no email field, cannot set email")
     -- API call actions
     -- update mobile and email as per parameters
-    case validMobile of
+    case fmap T.unpack validMobile of
       Nothing -> return ()
       Just mobile ->
         when (getMobile sl /= mobile) (dbUpdate $ ChangeSignatoryPhone slid mobile actor)
-    case validEmail of
+    case fmap T.unpack validEmail of
       Nothing -> return ()
       Just email ->
         when (getEmail sl /= email) $ do

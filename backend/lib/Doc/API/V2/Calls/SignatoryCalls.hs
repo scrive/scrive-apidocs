@@ -204,11 +204,7 @@ docApiV2SigSendSmsPin did slid = logDocumentAndSignatory did slid . api $ do
                 then case asValidPhoneForSMS slidMobile of
                           Good v -> return v
                           _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"
-                else do
-                    mobileParam <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "mobile")
-                    case asValidPhoneForSMS mobileParam of
-                         Good v -> return v
-                         _ -> apiError $ requestParameterInvalid "mobile" "Not a valid mobile number"
+                else T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterTextWithValidation "mobile" asValidPhoneForSMS)
     -- API call actions
     pin <- dbQuery $ GetSignatoryPin slid mobile
     sendPinCode sl mobile pin

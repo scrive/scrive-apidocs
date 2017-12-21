@@ -26,11 +26,14 @@ import Kontra
 import KontraPrelude
 import Util.PDFUtil
 import qualified Data.ByteString.RFC2397 as Base64Image
+import qualified InputValidation as V
 
 data ApiV2Parameter a where
   ApiV2ParameterBool  :: T.Text -> ApiV2Parameter Bool
   ApiV2ParameterInt   :: T.Text -> ApiV2Parameter Int
   ApiV2ParameterText  :: T.Text -> ApiV2Parameter T.Text
+  ApiV2ParameterTextWithValidation
+      :: T.Text -> (String -> V.Result String) -> ApiV2Parameter T.Text
   ApiV2ParameterRead  :: Read a => T.Text -> ApiV2Parameter a
   ApiV2ParameterJSON  :: T.Text -> UnjsonDef a -> ApiV2Parameter a
   -- Param that is text, but we want to reuse definition from Unjson instance
@@ -63,8 +66,19 @@ apiV2ParameterDefault d p = do
 apiV2ParameterOptional :: Kontrakcja m => ApiV2Parameter a -> m (Maybe a)
 
 apiV2ParameterOptional (ApiV2ParameterInt name) = apiParameterUsingMaybeRead name
-apiV2ParameterOptional (ApiV2ParameterText name) = (fmap T.pack) <$> getField (T.unpack name)
+apiV2ParameterOptional (ApiV2ParameterText name) = fmap T.pack <$> getField (T.unpack name)
 apiV2ParameterOptional (ApiV2ParameterRead name) = apiParameterUsingMaybeRead name
+
+apiV2ParameterOptional (ApiV2ParameterTextWithValidation name validate) = do
+  mValue <- getField $ T.unpack name
+  case fmap validate mValue of
+    Nothing -> return Nothing
+    Just (V.Good v) -> return $ Just (T.pack v)
+    Just V.Bad   -> failValidation
+    Just V.Empty -> failValidation
+  where
+    failValidation = apiError $ requestParameterParseError name
+      "validation failed, please check that the parameter format is correct"
 
 apiV2ParameterOptional (ApiV2ParameterBool name) = do
   mValue <- getField $ T.unpack name
@@ -189,6 +203,7 @@ getParameterName :: ApiV2Parameter a -> T.Text
 getParameterName (ApiV2ParameterBool n) = n
 getParameterName (ApiV2ParameterInt n) = n
 getParameterName (ApiV2ParameterText n) = n
+getParameterName (ApiV2ParameterTextWithValidation n _) = n
 getParameterName (ApiV2ParameterRead n) = n
 getParameterName (ApiV2ParameterJSON n _) = n
 getParameterName (ApiV2ParameterTextUnjson n _) = n

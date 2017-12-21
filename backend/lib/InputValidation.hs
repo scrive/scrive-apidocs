@@ -8,7 +8,6 @@ module InputValidation
     , isEmpty
     , resultToMaybe
     , getOptionalField
-    , getCorrectOptionalField
     , getDefaultedField
     , getCriticalField
     , asValidEmail
@@ -127,13 +126,6 @@ optionalFieldHandler result =
     >>= asMaybe
 
 {- |
-    Use this to get a field, which can be missing, but must be correct, if present.
--}
-getCorrectOptionalField :: Kontrakcja m => (String -> Result a) -> String -> m (Maybe a)
-getCorrectOptionalField validate =
-    getValidateAndHandle validate (\r -> logIfBadOrEmpty r >>= withFailureIfBadOrEmpty >>= asMaybe)
-
-{- |
     Use this to get a field that has a default value when Empty.
 -}
 getDefaultedField :: Kontrakcja m => a -> (String -> Result a) -> String -> m (Maybe a)
@@ -201,24 +193,6 @@ logValidationBad input = do
     ]
 
 {- |
-    Puts validation or emptiness problem in the security log.
-    This'll at least mean we've got a record of suspicious
-    behaviour.
--}
-logIfBadOrEmpty :: Kontrakcja m => (Input, Result a) -> m (Input, Result a)
-logIfBadOrEmpty x@(input, Bad) = do
-  logValidationBad input
-  return x
-logIfBadOrEmpty x@(Just _, Empty) = do
-  Context{ctxmaybeuser, ctxipnumber} <- getContext
-  logInfo "Input is empty" $ object [
-      "ip" .= show ctxipnumber
-    , "user" .= maybe "unknown" (unEmail . useremail . userinfo) ctxmaybeuser
-    ]
-  return x
-logIfBadOrEmpty x = return x
-
-{- |
     Interprets the Result as a Maybe,
     so you get a Just for sensible input,
     but a Nothing for invalid or empty input.
@@ -257,15 +231,6 @@ withRequiredFlash x     = return x
 withFailure :: Kontrakcja m => (Input, Result a) -> m a
 withFailure (_,Good x) = return x
 withFailure _        = internalError
-
-{- |
-    We allow the value to be missing, but if it is there,
-    it must validate and must not be empty
--}
-withFailureIfBadOrEmpty :: Kontrakcja m => (Input, Result a) -> m (Input, Result a)
-withFailureIfBadOrEmpty (Just _, Bad  ) = internalError
-withFailureIfBadOrEmpty (Just _, Empty) = internalError
-withFailureIfBadOrEmpty x               = return x
 
 -- | Creates a clean and validated email.
 --
