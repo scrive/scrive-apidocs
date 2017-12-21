@@ -5,7 +5,6 @@ get:
 
   tags:
     - Get
-    - Sign
 
   description: |
     Get a sign link for a given signatory `signatory_id` and a
