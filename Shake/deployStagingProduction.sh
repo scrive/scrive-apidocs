@@ -23,8 +23,8 @@ cd $TMP
 opensslfile="$BUILD_ID.signature.sha256"
 signaturefile="$BUILD_ID.signature.gtts"
 finalfile="$BUILD_ID.$SRV.enhanced.tar.gz"
-gtsigningurl="http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-signingservice"
-gtextendingurl="http://internal-guardtime-load-balancer-256298782.eu-west-1.elb.amazonaws.com:8080/gt-extendingservice"
+gtsigningurl="http://internal-gt-signer-848430379.eu-west-1.elb.amazonaws.com:8080/gt-signingservice"
+gtextendingurl="http://internal-gt-extender-2081608339.eu-west-1.elb.amazonaws.com:8081/gt-extendingservice"
 
 echo "Signing with private key"
 openssl dgst -sha256 -sign "$HOME/key/builds.scrive.com.key" -out "$opensslfile" "$TMP/$ZIP"
