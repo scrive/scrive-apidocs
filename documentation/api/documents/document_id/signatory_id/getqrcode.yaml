@@ -20,3 +20,7 @@ get:
     200:
       description: |
         PNG image, `content-type: image/png`.
+    409:
+      description: |
+        `document_state_error` with message _The document state must be
+        'Pending'_.
