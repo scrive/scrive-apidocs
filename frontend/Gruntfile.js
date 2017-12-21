@@ -2,6 +2,7 @@ var _ = require("underscore");
 var fs = require("fs");
 var path = require("path");
 var util = require("util");
+var webpack = require("webpack");
 var webpackConfig = require("./webpack.config.js");
 var generateVersionId = require("./custom_grunt_tasks/utils/version_id_generator");
 var langFromTexts = fs.readdirSync(path.join(__dirname, "../texts"));
@@ -70,7 +71,21 @@ module.exports = function (grunt) {
 
     webpack: {
       all: webpackConfig[0],
-      signview: webpackConfig[1],
+      signview: merge(
+        webpackConfig[1],
+        {
+          devtool: false,
+          plugins: [
+            new webpack.optimize.UglifyJsPlugin({
+              minimize: true,
+              compress: {warnings: false}
+            }),
+            new webpack.DefinePlugin({
+              "process.env": {"NODE_ENV": JSON.stringify("production")}
+            })
+          ]
+        }
+      ),
       allWatch: merge({
         watch: true,
         keepalive: true
@@ -108,6 +123,9 @@ module.exports = function (grunt) {
           noInfo: true,
           stats: "errors-only"
         }
+      },
+      dev: {
+        singleRun: true
       }
     },
 

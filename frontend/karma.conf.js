@@ -23,7 +23,7 @@ module.exports = function(config) {
       "./app/test/entry.js": ["webpack", "sourcemap"]
     },
 
-    reporters: ["progress"],
+    reporters: ["mocha"],
 
     port: 9876,
 
