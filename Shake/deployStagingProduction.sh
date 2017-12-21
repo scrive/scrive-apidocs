@@ -29,11 +29,11 @@ gtextendingurl="http://internal-gt-extender-2081608339.eu-west-1.elb.amazonaws.c
 echo "Signing with private key"
 openssl dgst -sha256 -sign "$HOME/key/builds.scrive.com.key" -out "$opensslfile" "$TMP/$ZIP"
 
-echo "Signing with GuardTime"
-gtime -S $gtsigningurl -s -f "$TMP/$ZIP" -o "$signaturefile"
+# echo "Signing with GuardTime"
+# gtime -S $gtsigningurl -s -f "$TMP/$ZIP" -o "$signaturefile"
 
 echo "Creating final enhanced deployment file"
-tar zcf "$finalfile" "$signaturefile" "$opensslfile" "$ZIP"
+tar zcf "$finalfile" "$opensslfile" "$ZIP"
 
 cd -
 ls -lh "$TMP/$finalfile"
@@ -75,7 +75,7 @@ cat "$TMP/$finalfile" | ssh $TRGMH  "cd /tmp/"$SRV"_deployment && tar -zx"
 scp "$HOME/key/builds.scrive.com.pubkey.pem" $TRGMH":/tmp/"$SRV"_deployment/."
 
 echo "Verifying and unzipping deployment file"
-ssh $TRGMH  "cd /tmp/"$SRV"_deployment && gtime -S $gtextendingurl -v -f $ZIP -i $signaturefile && openssl dgst -sha256 -verify builds.scrive.com.pubkey.pem -signature $opensslfile $ZIP ; exit \$?"
+ssh $TRGMH  "cd /tmp/"$SRV"_deployment && openssl dgst -sha256 -verify builds.scrive.com.pubkey.pem -signature $opensslfile $ZIP ; exit \$?"
 
 echo "Deployed to /tmp/"$SRV"_deployment on $SRV server. Deployment file has been verified."
 
