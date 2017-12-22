@@ -219,4 +219,4 @@ fetchSession (sid, m_user_id, m_pad_user_id, expires, token, csrf_token, domain)
 -- up in the database.
 deleteSuperfluousUserSessions :: MonadDB m => UserID -> m Int
 deleteSuperfluousUserSessions uid = do
-  runQuery $ "DELETE FROM sessions WHERE id IN (SELECT id FROM sessions WHERE user_id =" <?> uid <+> "ORDER BY expires DESC OFFSET 4)"
+  runQuery $ "DELETE FROM sessions WHERE id IN (SELECT id FROM sessions WHERE user_id =" <?> uid <+> "ORDER BY expires DESC OFFSET 50)"
