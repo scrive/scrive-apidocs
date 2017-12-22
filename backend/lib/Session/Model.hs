@@ -212,8 +212,8 @@ fetchSession (sid, m_user_id, m_pad_user_id, expires, token, csrf_token, domain)
     , sesDomain = domain
     }
 
--- | We allow for at most 5 sessions with the same user_id, so if there
--- are more, just delete the oldest ones. Note: only 4 sessions are left
+-- | We allow for at most 51 sessions with the same user_id, so if there
+-- are more, just delete the oldest ones. Note: only 50 sessions are left
 -- because we do deletion BEFORE inserting new session. This is better
 -- because this way we can be sure that newest session will always end
 -- up in the database.

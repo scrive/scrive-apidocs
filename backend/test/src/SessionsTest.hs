@@ -36,12 +36,12 @@ sessionsTests env = testGroup "Sessions" [
 testNewSessionInsertion :: TestEnv ()
 testNewSessionInsertion = do
   uid <- testUser
-  replicateM_ 12 $ do
+  replicateM_ 60 $ do
     (msess, _) <- insertNewSession uid
     assertBool "session successfully taken from the database" (isJust msess)
   runSQL_ $ "SELECT COUNT(*) FROM sessions WHERE user_id =" <?> uid
   user_sessions :: Int64 <- fetchOne runIdentity
-  assertEqual "there are only 5 sessions for one user" 5 user_sessions
+  assertEqual "there are only 51 sessions for one user" 51 user_sessions
 
 testSessionUpdate :: TestEnv ()
 testSessionUpdate = do
