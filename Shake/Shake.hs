@@ -1,13 +1,19 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
+import Control.Exception  (IOException, SomeException, catch, evaluate)
 import Control.Monad
+import Data.Char
+import Data.List.Extra    (trim)
 import Data.Maybe
 import Data.Monoid
+import Data.Version.Extra (makeVersion, showVersion, readVersion)
 import Development.Shake
 import Development.Shake.FilePath
-import Distribution.Text (display)
-import System.Directory  (createDirectoryIfMissing)
-import System.Process    (callProcess)
+import Distribution.Text  (display)
+import System.Directory   (createDirectoryIfMissing)
+import System.Exit        (exitFailure)
+import System.IO          (hPutStrLn, stderr)
+import System.Process     (callProcess, readProcess)
 
 import Shake.Cabal
 import Shake.DBSchema (buildDBDocs)
@@ -110,8 +116,48 @@ usageMsg = unlines
   , ""
   ]
 
+checkPrerequisites :: IO ()
+checkPrerequisites = do
+  requireVersion "node"  ["--version"] (makeVersion [4,0,0]) tail
+  requireVersion "grunt" ["--version"] (makeVersion [1,0,0])
+    (takeWhile dotOrNum . drop 11)
+  requireVersion "lessc" ["--version"] (makeVersion [2,5,0])
+    (takeWhile dotOrNum . drop 6)
+  requireVersion "cabal" ["--numeric-version"] (makeVersion [1,24,0]) id
+  requireVersion "alex"  ["--version"] (makeVersion [3,1,0])
+    (takeWhile dotOrNum . drop 13)
+  requireVersion "happy" ["--version"] (makeVersion [1,18,0])
+    (takeWhile dotOrNum . drop 14)
+
+    where
+      dotOrNum c = c == '.' || isNumber c
+
+      requireVersion  prog args ver pre =
+        requireVersion' prog args ver pre
+        `catch` (\(_ :: IOException) ->
+                   hPutStrLn stderr ("Required program '"
+                                     <> prog <> "' couldn't be found.") >>
+                   exitFailure)
+
+      requireVersion' prog args ver pre = do
+        out  <- pre . trim <$> readProcess prog args ""
+        ver' <- (evaluate . readVersion $ out) `catch`
+                (\(_ :: SomeException) ->
+                   hPutStrLn stderr ("Parse error: " <> prog <> " " <> show args
+                                     <> ": " <> out)
+                   >> exitFailure)
+        when (ver' < ver) $ do
+          hPutStrLn stderr ("Required program '" <> prog <> "' has wrong version: "
+                            <> showVersion ver'  <> ", at least "
+                            <> showVersion ver   <> " required.")
+          exitFailure
+
 main :: IO ()
 main = do
+  -- Check that the prerequisites are installed and their versions are
+  -- correct.
+  checkPrerequisites
+
   -- Used to check if Shake.hs rules changed, triggering a full rebuild.
   hsDeps       <- getHsDeps "Shake/Shake.hs"
   ver          <- getHashedShakeVersion $ ["shake.sh"] ++ hsDeps
