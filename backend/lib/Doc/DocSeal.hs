@@ -29,6 +29,7 @@ import System.IO hiding (stderr)
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import Text.HTML.TagSoup (Tag(..), parseTags)
 import Text.StringTemplates.Templates
+import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BB
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL (empty, writeFile)
@@ -609,6 +610,9 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
           _ -> do
             sealedfileid <- dbUpdate $ NewFile filename tmpoutContent
             dbUpdate $ AppendSealedFile sealedfileid Missing (systemActor now)
+            -- Temp hack to dump all sealing data. Will be removed soon. Will work fine
+            -- even when dumpFileData doen't exist. MR
+            liftIO $ (void $ readProcessWithExitCode "dumpFileData.sh" [tmppath] (BSL.empty)) `E.catch` (\(_::E.SomeException) -> return ())
       ExitFailure _ -> do
         systmp <- liftIO $ getTemporaryDirectory
         (path, handle) <- liftIO $ openTempFile systmp ("seal-failed-" ++ show documentid ++ "-" ++ show fileid ++ "-.pdf")
