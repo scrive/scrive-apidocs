@@ -23,6 +23,7 @@ import Database.PostgreSQL.PQTypes
 import Happstack.Server
 import Log.Class
 import qualified Data.Aeson as Aeson
+import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 
 import DB
@@ -211,7 +212,7 @@ instance (MonadDB m, MonadTime m, MonadThrow m) => DBUpdate m CreateCallLogItem 
       sqlSet "request_params_get"             . clrqParamsGet  . cldRequest  $ cld
       sqlSet "request_params_post"            . clrqParamsPost . cldRequest  $ cld
       sqlSet "response_code"                  . clrsCode       . cldResponse $ cld
-      sqlSet "response_body"                  . clrsBody       . cldResponse $ cld
+      sqlSet "response_body"                  . BS.unpack . B64.encode . BS.pack . clrsBody . cldResponse $ cld
       mapM_ sqlResult selectCallLogItemSelectorsList
     cli <- fetchOne fetchCallLogItem
     runQuery_ . sqlDelete "api_call_logs" $ do
@@ -239,7 +240,7 @@ fetchCallLogItem (clid, userid, time, rq_uri, rq_method, rq_params_get, rq_param
         }
       , cldResponse = CallLogResponse
         { clrsCode = rs_code
-        , clrsBody = rs_body
+        , clrsBody = either (const "<DECODING ERROR>") BS.unpack $ B64.decode $ BS.pack rs_body
         }
       }
     }

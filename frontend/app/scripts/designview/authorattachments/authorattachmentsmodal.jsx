@@ -147,6 +147,10 @@ var AuthorAttachmentsModal = React.createClass({
 
     this.refs.contentView.stopShowingAttachmentList();
   },
+  onClose: function () {
+    this.refs.contentView.stopShowingAttachmentList();
+    this.props.onClose();
+  },
   render: function () {
     return (
       <Modal.Container
@@ -157,7 +161,7 @@ var AuthorAttachmentsModal = React.createClass({
         <Modal.Header
           showClose={true}
           title={localization.authorattachments.selectAttachments}
-          onClose={this.props.onClose}
+          onClose={this.onClose}
         />
         <Modal.Content>
           {this._model &&

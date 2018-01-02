@@ -18,9 +18,14 @@ var APICallModel = Backbone.Model.extend(
       var parsedData = _.extendOwn({}, this.defaults);
       parsedData.id = data.id;
       parsedData.time = moment(data.time);
-      parsedData.responseBody = JSON.parse(data.data.response.body);
       parsedData.responseCode = data.data.response.code;
       parsedData.requestMethod = data.data.request.method;
+
+      try {
+        parsedData.responseBody = JSON.parse(data.data.response.body);
+      } catch (e) {
+        parsedData.responseBody = "<Non-JSON response>";
+      }
 
       parsedData.requestParamsGET = _.map(
         data.data.request.params_get,

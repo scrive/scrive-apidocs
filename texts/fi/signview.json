@@ -86,7 +86,7 @@
 "_mailDocumentLinkedButton":"Lataa dokumentti",
 "_mailGoToDocument":"Mene dokumenttiin",
 "_mailInvitationCustomInvitationHeader":"<strong>$creatorname$</strong> lähetti viestin",
-"_mailInvitationFromPart":"$authorname:noescape()$ kautta $originator$",
+"_mailInvitationFromPart":"$authorname:noescape()$ via $originator$",
 "_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong> on kutsunut sinut e-allekirjoittamaan dokumentin <strong>$documenttitle$</strong>.",
 "_mailInvitationToSignFollowInstructions":"Paina kuvaketta lisäohjeiden saamiseksi.",
 "_mailInvitationToSignGoToActionDescription":"Esikatsele ja allekirjoita dokumentti Scrivessa",

@@ -145,8 +145,22 @@ $loadScript(src="//js.hubspot.com/forms/current.js")$
 $loadScript(src="//js.hs-analytics.net/analytics/431732.js")$
 
 <script>
-  $analyticsLoaderBase()$
-  mixpanel.track_links('#logo', 'Click Logo');
+  $if(analytics.token)$
+    $analyticsLoaderBase()$
+    mixpanel.track_links('#logo', 'Click Logo');
+  $else$
+    var mockFunction = function() {};
+    window.mixpanel = {
+        track : mockFunction
+      , register : mockFunction
+      , track_links : mockFunction
+      , alias : mockFunction
+      , identify : mockFunction
+      , people : {
+        set : mockFunction
+      }
+    }
+  $endif$
 </script>
 ###
 pageFooter=
