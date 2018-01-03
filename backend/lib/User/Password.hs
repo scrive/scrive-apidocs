@@ -54,14 +54,24 @@ pwdStrength :: Password -> Int16
 pwdStrength Password{}       = 1
 pwdStrength LegacyPassword{} = 0
 
--- | Default ones are N = 14, r = 8, p = 1, we use slightly larger N and
--- p. N=15 gives us a 32M memory cost, p=2 then doubles the CPU
--- cost. This means 0.18 s password hashing time on a 2016-level CPU,
--- which I think is okay for our purposes.
+-- | Default scrypt parameters are N = 14, r = 8, p = 1, we use
+-- slightly larger N and p. N=15 gives us a 32M memory cost, p=2 then
+-- doubles the CPU cost. This means ~180 ms password hashing time on a
+-- 2016-level CPU, which I think is okay for our purposes.
+--
+-- Alternatives I've considered:
+--
+-- * N = 16, r = 8, p = 1  -- time cost is ~the same, memory cost is 64M per pass,
+--                            which I think is a bit too much.
+-- * N = 15, r = 8, p = 1  -- time cost is halved to ~100 ms, which is actually the
+--                            recommended time cost by the author of scrypt. I
+--                            chose to be a little bit more
+--                            conservative / future-proof.
 --
 -- See
 -- <https://pthree.org/2016/06/29/further-investigation-into-scrypt-and-argon2-password-hashing/>
--- for more details.
+-- and <https://blog.filippo.io/the-scrypt-parameters/> for more
+-- details.
 kontrakcjaScryptParams :: Scrypt.ScryptParams
 kontrakcjaScryptParams = fromJust $ -- OK to crash here
                          Scrypt.scryptParams 15 8 2
