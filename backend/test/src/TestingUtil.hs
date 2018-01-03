@@ -18,7 +18,9 @@ import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck
 import Test.QuickCheck.Gen
+import qualified Crypto.Scrypt as Scrypt
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Text as T
 import qualified Test.HUnit as T
@@ -500,8 +502,17 @@ instance Arbitrary UserInfo where
                       , useremail           = Email em
                       }
 
+instance Arbitrary Scrypt.EncryptedPass where
+  arbitrary = do salt <- vectorOf 32 arbitrary
+                 k    <- choose (8, 32)
+                 pass <- vectorOf k arbitrary
+                 let salt' = Scrypt.Salt . BS8.pack $ salt
+                     pass' = Scrypt.Pass . BS.fromString $ pass
+                 return $ Scrypt.encryptPass' salt' pass'
+
 instance Arbitrary Password where
-  arbitrary = LegacyPassword <$> arbitrary <*> arbitrary
+  arbitrary = oneof [ LegacyPassword <$> arbitrary <*> arbitrary
+                    , Password <$> arbitrary <*> arbitrary ]
 
 instance Arbitrary SignupMethod where
   arbitrary = elements [AccountRequest, ViralInvitation, ByAdmin, CompanyInvitation]

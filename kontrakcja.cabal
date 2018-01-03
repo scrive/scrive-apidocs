@@ -1333,6 +1333,7 @@ Test-suite kontrakcja-test
                , mtl
                , network-uri
                , regex-tdfa
+               , scrypt
                , semigroups
                , stm
                , tagsoup
