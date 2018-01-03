@@ -26,8 +26,10 @@ import Log
 import Network.AWS.Authentication
 import System.FilePath ((</>))
 import System.Timeout.Lifted
+import qualified Crypto.Hash.MD5 as MD5
 import qualified Crypto.Hash.SHA1 as SHA1
 import qualified Data.ByteString.Base16 as Base16
+import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
@@ -35,6 +37,7 @@ import qualified Data.Foldable as F
 import qualified Database.Redis as R
 import qualified Network.AWS.Authentication as AWS
 import qualified Network.AWS.AWSConnection as AWS
+import qualified Network.AWS.AWSResult as AWS
 import qualified Network.AWS.S3Object as AWS
 import qualified Network.HTTP as HTTP
 
@@ -141,6 +144,14 @@ urlFromFile File{filename, fileid, filechecksum} =
     </> (BSC.unpack . Base16.encode $ filechecksum)
     </> (HTTP.urlEncode . BSC.unpack . BS.fromString $ filename)
 
+-- This is a fork of AWS.sendObjectMIC, that uses bytestrings for MD5
+-- calculation, so it doesn't kill everything for 100mb objects
+sendObjectMIC :: AWS.AWSConnection -> AWS.S3Object -> IO (AWS.AWSResult ())
+sendObjectMIC aws obj = AWS.sendObject aws obj_w_header where
+    obj_w_header = obj { AWS.obj_headers = (AWS.obj_headers obj) ++ md5_header }
+    md5_header = [("Content-MD5", (mkMD5 (AWS.obj_data obj)))]
+    mkMD5 = BSC.unpack . Base64.encode . MD5.hashlazy
+
 -- | Create a new file, by uploading content straight to AWS S3, asking AWS to
 -- perform an MD5 integrity check on the contents.
 -- If AWS config is absent, database is used for storage.
@@ -174,7 +185,7 @@ newFileInAmazon fName fContent = do
                                , AWS.obj_headers = []
                                , AWS.obj_data = BSL.fromChunks [encryptedContent]
                                }
-      result <- liftIO $ AWS.sendObjectMIC s3Conn s3Obj
+      result <- liftIO $ sendObjectMIC s3Conn s3Obj
       case result of
         Right _ -> do
           dbUpdate $ FileMovedToAWS fid awsUrl aes
