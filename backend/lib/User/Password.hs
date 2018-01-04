@@ -140,11 +140,8 @@ maybeVerifyPassword (Just hash) pass = verifyPassword hash pass
 maybeMkPassword ::
   (Maybe BS.ByteString, Maybe BS.ByteString, Maybe PasswordStrength)
   -> Maybe Password
-maybeMkPassword (mHash, mSalt, mStrength) = do
-  hash     <- mHash
-  salt     <- mSalt
-  strength <- mStrength
-  return $ mkPassword hash salt strength
+maybeMkPassword (mHash, mSalt, mStrength) =
+  mkPassword <$> mHash <*> mSalt <*> mStrength
 
 randomPassword :: CryptoRNG m => m Password
 randomPassword = randomPasswordString >>= createPassword
