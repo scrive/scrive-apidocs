@@ -19,13 +19,13 @@ import Crypto.RNG (CryptoRNG, randomBytes)
 import Crypto.RNG.Utils
 import Data.Function
 import Data.Int
+import qualified Crypto.Hash.SHA256 as SHA256
 import qualified Crypto.Scrypt as Scrypt
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BSU
-import qualified Crypto.Hash.SHA256 as SHA256
 
-import User.Password.Internal
 import KontraPrelude
+import User.Password.Internal
 
 -- | Return the hash of the encrypted password. For non-legacy
 -- passwords, this returns both the hash, the salt, and the scrypt
