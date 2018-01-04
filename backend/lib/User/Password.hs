@@ -1,5 +1,7 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
-module User.Password ( Password(..) -- internals exported for testing
+module User.Password ( Password
+                     , PasswordStrength(..)
+                     , pwdStrengthToInt16
+                     , int16ToPwdStrength
                      , pwdHash
                      , pwdSalt
                      , pwdStrength
@@ -20,52 +22,58 @@ import Data.Int
 import qualified Crypto.Scrypt as Scrypt
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BSU
-import qualified Data.Digest.SHA256 as D
+import qualified Crypto.Hash.SHA256 as SHA256
 
+import User.Password.Internal
 import KontraPrelude
 
-instance Ord Scrypt.EncryptedPass where
-  compare = compare `on` Scrypt.getEncryptedPass
-
-data Password = Password       { pwdEncPass    :: !Scrypt.EncryptedPass
-                               , pwdSHA256Salt :: !BS.ByteString }
-                -- ^ Current password scheme, SHA256 + scrypt.
-
-              | LegacyPassword { pwdHash'      :: !BS.ByteString
-                               , pwdSalt'      :: !BS.ByteString }
-                -- ^ Legacy password scheme, single round SHA256.
-              deriving (Eq, Ord)
-
-instance Show Password where
-  show Password       {} = "Password (SHA256 + scrypt, hash and salt hidden)"
-  show LegacyPassword {} = "Password (legacy SHA256, hash and salt hidden)"
-
+-- | Return the hash of the encrypted password. For non-legacy
+-- passwords, this returns both the hash, the salt, and the scrypt
+-- params in a single bytestring, separated by '|'. See
+-- 'Crypto.Scrypt.EncryptedPass'. This form is useful for storing in a
+-- database.
 pwdHash :: Password -> BS.ByteString
 pwdHash Password{pwdEncPass}     = Scrypt.getEncryptedPass pwdEncPass
 pwdHash LegacyPassword{pwdHash'} = pwdHash'
 
+-- | Return the salt used for the SHA256 hashing step.
 pwdSalt :: Password -> BS.ByteString
 pwdSalt Password{pwdSHA256Salt}  = pwdSHA256Salt
 pwdSalt LegacyPassword{pwdSalt'} = pwdSalt'
 
--- | Version of the password hashing algorithm used. 0 = legacy
--- SHA-256, 1 = scrypt.
-pwdStrength :: Password -> Int16
-pwdStrength Password{}       = 1
-pwdStrength LegacyPassword{} = 0
+-- | Version of the password hashing scheme used. NB: Ordering of
+-- constructors here is important here, because we want the
+-- 'max legacy current == current' property.
+data PasswordStrength = PasswordStrengthLegacy
+                      | PasswordStrengthCurrent
+                      deriving (Eq, Ord, Show)
 
--- | Default scrypt parameters are N = 14, r = 8, p = 1, we use
--- slightly larger N and p. N=15 gives us a 32M memory cost, p=2 then
--- doubles the CPU cost. This means ~180 ms password hashing time on a
--- 2016-level CPU, which I think is okay for our purposes.
+-- | Return the version of the password hashing scheme.
+pwdStrength :: Password -> PasswordStrength
+pwdStrength Password{}       = PasswordStrengthCurrent
+pwdStrength LegacyPassword{} = PasswordStrengthLegacy
+
+pwdStrengthToInt16 :: PasswordStrength -> Int16
+pwdStrengthToInt16 PasswordStrengthLegacy  = 0
+pwdStrengthToInt16 PasswordStrengthCurrent = 1
+
+int16ToPwdStrength :: Int16 -> PasswordStrength
+int16ToPwdStrength n | n <= 0    = PasswordStrengthLegacy
+                     | otherwise = PasswordStrengthCurrent
+
+-- | Scrypt parameters used for hashing. Default scrypt parameters are
+-- N = 14, r = 8, p = 1, we use slightly larger N and p. N=15 gives us
+-- a 32M memory cost, p=2 then doubles the CPU cost. This means ~180
+-- ms password hashing time on a 2016-level CPU, which I think is okay
+-- for our purposes.
 --
 -- Alternatives I've considered:
 --
--- * N = 16, r = 8, p = 1  -- time cost is ~the same, memory cost is 64M per pass,
---                            which I think is a bit too much.
--- * N = 15, r = 8, p = 1  -- time cost is halved to ~100 ms, which is actually the
---                            recommended time cost by the author of scrypt. I
---                            chose to be a little bit more
+-- * N = 16, r = 8, p = 1  -- time cost is ~the same, memory cost is 64M
+--                            per pass, which I think is a bit too much.
+-- * N = 15, r = 8, p = 1  -- time cost is halved to ~100 ms, which is actually
+--                            the recommended time cost by the author of scrypt.
+--                            I chose to be a little bit more
 --                            conservative / future-proof.
 --
 -- See
@@ -90,12 +98,12 @@ createLegacyPassword password = do
     pwdSalt' = saltSHA256
     }
 
--- | Deserialise a password from a DB row.
-mkPassword :: BS.ByteString -> BS.ByteString -> Int16 -> Password
-mkPassword hash salt strength = case strength of
-  0 -> LegacyPassword hash salt
-  1 -> Password (Scrypt.EncryptedPass hash) salt
-  _ -> $unexpectedError "Password strength must be either 0 or 1!"
+-- | Deserialise a password from a DB row record.
+mkPassword :: BS.ByteString -> BS.ByteString -> PasswordStrength -> Password
+mkPassword hash salt PasswordStrengthLegacy  =
+  LegacyPassword hash salt
+mkPassword hash salt PasswordStrengthCurrent =
+  Password (Scrypt.EncryptedPass hash) salt
 
 -- | Convert a legacy SHA-256 password to a SHA-256 + scrypt one.
 strengthenPassword :: CryptoRNG m => Password -> m Password
@@ -109,10 +117,12 @@ strengthenPassword LegacyPassword{..} = do
     pwdSHA256Salt = pwdSalt'
     }
 
+-- | Hash a password using the legacy scheme with the provided salt.
 hashPasswordSHA256 :: String -> BS.ByteString -> BS.ByteString
-hashPasswordSHA256 password = BS.pack . D.hash . BS.unpack
-                              . (`BS.append` BSU.fromString password)
+hashPasswordSHA256 password salt =
+  SHA256.hash (salt `BS.append` BSU.fromString password)
 
+-- | Verify a provided password string against an encrypted 'Password'.
 verifyPassword :: Password -> String -> Bool
 verifyPassword Password{pwdEncPass, pwdSHA256Salt} password =
   Scrypt.verifyPass'
@@ -127,8 +137,9 @@ maybeVerifyPassword Nothing _        = False
 maybeVerifyPassword (Just hash) pass = verifyPassword hash pass
 
 -- | Like 'mkPassword', but everything is wrapped in Maybe.
-maybeMkPassword :: (Maybe BS.ByteString, Maybe BS.ByteString, Maybe Int16)
-                -> Maybe Password
+maybeMkPassword ::
+  (Maybe BS.ByteString, Maybe BS.ByteString, Maybe PasswordStrength)
+  -> Maybe Password
 maybeMkPassword (mHash, mSalt, mStrength) = do
   hash     <- mHash
   salt     <- mSalt

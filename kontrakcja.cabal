@@ -399,6 +399,7 @@ Library
                  , User.Model.Query
                  , User.Model.Update
                  , User.Password
+                 , User.Password.Internal
                  , User.PasswordReminder
                  , User.PasswordReminder.Tables
                  , User.Tables

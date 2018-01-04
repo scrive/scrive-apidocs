@@ -63,6 +63,7 @@ import Templates
 import TestKontra
 import User.Email
 import User.Model
+import User.Password.Internal (Password(..))
 import Util.Actor
 import qualified Amazon as A
 import qualified KontraError as KE

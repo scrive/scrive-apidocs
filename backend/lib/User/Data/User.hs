@@ -187,7 +187,8 @@ composeFullName (fstname, sndname) = if null sndname
 fetchUser :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe Int16) -> User
 fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, password_strength) = User {
   userid = uid
-, userpassword = maybeMkPassword (password, salt, password_strength)
+, userpassword = maybeMkPassword ( password, salt
+                                 , int16ToPwdStrength <$> password_strength )
 , useriscompanyadmin = is_company_admin
 , useraccountsuspended = account_suspended
 , userhasacceptedtermsofservice = has_accepted_terms_of_service
@@ -210,7 +211,9 @@ fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, 
   where
     user = User {
       userid = uid
-    , userpassword = maybeMkPassword (password, salt, password_strength)
+    , userpassword = maybeMkPassword
+                     ( password, salt
+                     , int16ToPwdStrength <$> password_strength )
     , useriscompanyadmin = is_company_admin
     , useraccountsuspended = account_suspended
     , userhasacceptedtermsofservice = has_accepted_terms_of_service

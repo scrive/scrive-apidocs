@@ -63,6 +63,7 @@ testLegacyPasswordCreateVerify = replicateM_ 10 $ do
   s <- randomPasswordString
   wrong <- randomPasswordString
   p <- createLegacyPassword s
-  let Just pass = maybeMkPassword (Just $ pwdHash p, Just $ pwdSalt p, Just 0)
+  let Just pass = maybeMkPassword ( Just $ pwdHash p, Just $ pwdSalt p
+                                  , Just $ int16ToPwdStrength 0)
   assert $ verifyPassword pass s
   assert $ not $ verifyPassword pass wrong
