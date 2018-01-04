@@ -37,7 +37,7 @@ import User.Data.User (User(..))
 import User.EmailChangeRequest (DeleteExpiredEmailChangeRequests(..))
 import User.Model.Query (GetUserWherePasswordStrengthIsLessThan(..))
 import User.Model.Update (SetUserPassword(..))
-import User.Password (strengthenPassword)
+import User.Password (PasswordStrength(..), strengthenPassword)
 import User.PasswordReminder (DeleteExpiredPasswordReminders(..))
 import User.UserAccountRequest (expireUserAccountRequests)
 import Utils.List
@@ -282,15 +282,17 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
       return . RerunAfter $ ihours 1
     StrengthenPasswords -> do
       runDB $ do
-        muser <- dbQuery $ GetUserWherePasswordStrengthIsLessThan 1
+        muser <- dbQuery $ GetUserWherePasswordStrengthIsLessThan
+                           PasswordStrengthCurrent
         case muser of
           -- If no passwords to strengthen, we can relax for a while
           Nothing   -> return . RerunAfter $ idays 14
           Just user ->
             case userpassword user of
               Nothing -> do
-                logAttention ("StrengthenPasswords found a user without a password"
-                              <> ", should not happen") $ object [
+                logAttention
+                  ( "StrengthenPasswords found a user without a password"
+                    <> ", should not happen" ) $ object [
                               "user_id" .= (show . userid $ user)
                               ]
                 return . RerunAfter $ iseconds 1
