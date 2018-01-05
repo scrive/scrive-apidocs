@@ -42,7 +42,7 @@ pwdSalt Password{pwdSHA256Salt}  = pwdSHA256Salt
 pwdSalt LegacyPassword{pwdSalt'} = pwdSalt'
 
 -- | Version of the password hashing scheme used. NB: Ordering of
--- constructors here is important here, because we want the
+-- constructors here is important, because we want the
 -- 'max legacy current == current' property.
 data PasswordStrength = PasswordStrengthLegacy
                       | PasswordStrengthCurrent
@@ -136,12 +136,14 @@ maybeVerifyPassword :: Maybe Password -> String -> Bool
 maybeVerifyPassword Nothing _        = False
 maybeVerifyPassword (Just hash) pass = verifyPassword hash pass
 
--- | Like 'mkPassword', but everything is wrapped in Maybe.
+-- | Like 'mkPassword', but everything is wrapped in Maybe. If the
+-- password strength parameter is Nothing, it defaults to legacy.
 maybeMkPassword ::
   (Maybe BS.ByteString, Maybe BS.ByteString, Maybe PasswordStrength)
   -> Maybe Password
 maybeMkPassword (mHash, mSalt, mStrength) =
-  mkPassword <$> mHash <*> mSalt <*> mStrength
+  mkPassword <$> mHash <*> mSalt
+  <*> (mStrength <|> Just PasswordStrengthLegacy)
 
 randomPassword :: CryptoRNG m => m Password
 randomPassword = randomPasswordString >>= createPassword
