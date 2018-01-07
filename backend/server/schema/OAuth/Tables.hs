@@ -144,7 +144,7 @@ tableTempPrivileges = tblTable {
       tblColumn { colName = "temp_token_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "privilege", colType = SmallIntT, colNullable = False }
     ]
-  , tblPrimaryKey = pkOnColumns ["temp_token_id", "privilege"]
+  , tblPrimaryKey = pkOnColumns ["privilege", "temp_token_id"]
   , tblForeignKeys = [
     (fkOnColumn "temp_token_id" "oauth_temp_credential" "id") { fkOnDelete = ForeignKeyCascade }
     ]

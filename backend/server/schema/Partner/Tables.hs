@@ -43,7 +43,7 @@ tablePartnerAdmins = tblTable {
       [ tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
       , tblColumn { colName = "partner_id", colType = BigIntT, colNullable = False}
       ]
-  , tblPrimaryKey = pkOnColumns ["user_id", "partner_id"]
+  , tblPrimaryKey = pkOnColumns ["partner_id", "user_id"]
   , tblIndexes = []
   , tblForeignKeys =
       [ (fkOnColumn "user_id" "users" "id")  { fkOnDelete = ForeignKeyCascade }

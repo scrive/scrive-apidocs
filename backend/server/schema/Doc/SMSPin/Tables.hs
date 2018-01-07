@@ -12,7 +12,7 @@ tableSignatorySMSPins = tblTable {
     , tblColumn { colName = "phone_number", colType = TextT, colNullable = False }
     , tblColumn { colName = "pin", colType = TextT, colNullable = False }
     ]
-  , tblPrimaryKey = pkOnColumns ["signatory_link_id", "phone_number"]
+  , tblPrimaryKey = pkOnColumns ["phone_number", "signatory_link_id"]
   , tblForeignKeys = [
       (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
     ]

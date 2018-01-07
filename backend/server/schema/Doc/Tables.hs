@@ -158,7 +158,7 @@ tableAuthorAttachments = tblTable {
     , tblColumn { colName = "required", colType = BoolT, colNullable = False }
     , tblColumn { colName = "add_to_sealed_file", colType = BoolT, colNullable = False }
     ]
-  , tblPrimaryKey = pkOnColumns ["file_id", "document_id", "name"]
+  , tblPrimaryKey = pkOnColumns ["document_id", "file_id", "name"]
   , tblForeignKeys = [
       fkOnColumn "file_id" "files" "id"
     , (fkOnColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyCascade }
@@ -194,7 +194,7 @@ tableSignatoryAttachments = tblTable {
     , tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False, colDefault = Just "0" }
     , tblColumn { colName = "required", colType = BoolT, colNullable = False, colDefault = Just "true"}
     ]
-  , tblPrimaryKey = pkOnColumns ["signatory_link_id", "name"]
+  , tblPrimaryKey = pkOnColumns ["name", "signatory_link_id"]
   , tblForeignKeys = [
       fkOnColumn "file_id" "files" "id"
     , (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
