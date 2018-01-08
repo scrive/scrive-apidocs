@@ -6,7 +6,7 @@ import KontraPrelude
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 45
+  , tblVersion = 46
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -39,6 +39,7 @@ tableDocuments = tblTable {
     , tblColumn { colName = "is_receipt", colType = BoolT, colNullable = False, colDefault = Just "false" }
     , tblColumn { colName = "archive_search_terms", colType = TextT, colNullable = True }
     , tblColumn { colName = "archive_search_fts", colType = TSVectorT, colNullable = True }
+    , tblColumn { colName = "author_user_id", colType = BigIntT, colNullable = True }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
@@ -47,6 +48,7 @@ tableDocuments = tblTable {
         (fkOnColumns ["id", "author_id"] "signatory_links" ["document_id", "id"]) {
             fkDeferred = True
           }
+      , (fkOnColumn "author_user_id" "users" "id")
       ]
   , tblIndexes = [
       -- for list of documents in adminonly
@@ -59,6 +61,7 @@ tableDocuments = tblTable {
       -- historical data
     , (indexOnColumn "archive_search_terms") { idxWhere = Just ("archive_search_terms IS NULL") }
     , (indexOnColumnWithMethod "archive_search_fts" GIN)
+    , indexOnColumn "author_user_id"
     ]
   , tblChecks = [
         Check "check_documents_pending_are_not_purged"

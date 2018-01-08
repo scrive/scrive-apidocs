@@ -46,6 +46,7 @@ data JobType
   | ClockErrorCollection
   | DocumentAutomaticRemindersEvaluation
   | DocumentSearchUpdate
+  | DocumentsAuthorIDMigration
   | DocumentsPurge
   | DocumentsArchiveIdle
   | EmailChangeRequestsEvaluation
@@ -85,6 +86,7 @@ jobTypeMapper = [
   , (SMSEventsProcessing, "sms_events_processing")
   , (UserAccountRequestEvaluation, "user_account_request_evaluation")
   , (DocumentSearchUpdate, "document_search_update")
+  , (DocumentsAuthorIDMigration, "document_author_id_job")
   ]
 
 instance PQFormat JobType where
@@ -171,6 +173,20 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
     DocumentAutomaticRemindersEvaluation -> do
       runCronEnv expireDocumentAutomaticReminders
       return . RerunAfter $ iminutes 1
+    DocumentsAuthorIDMigration -> do
+      let batchSize = 1000
+      runDB $ do
+        startTime <- currentTime
+        ress <- dbUpdate $ UpdateAuthorUserID batchSize
+        endTime <- currentTime
+        let delta = diffUTCTime endTime startTime
+        logInfo "Document author user ID updated" $ object
+                [ "items_updated" .= ress
+                , "elapsed_time" .= (realToFrac delta :: Double) ]
+      now <- currentTime
+      if now < todayAtHour 4 now
+      then RerunAfter <$> return (iseconds 2)
+      else RerunAt . nextDayMidnight <$> currentTime
     DocumentsPurge -> do
       runDB $ do
         startTime <- currentTime

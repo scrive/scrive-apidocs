@@ -97,6 +97,7 @@ allTests = [
   , cssGenerationTests
   , csvUtilTests
   , docControlTests
+  , docStateSideEffectsTests
   , docStateTests
   , dumpAllEvidenceTexts
   , eSignatureTests

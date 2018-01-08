@@ -1,6 +1,7 @@
 module Doc.DBActions
     (
-      GetDocumentSearchDataByFunction(..)
+      GetAuthorUserID(..)
+    , GetDocumentSearchDataByFunction(..)
     , GetDocumentSearchDataByField(..)
     , SetSLFValueTextField(..)
     ) where
@@ -13,6 +14,7 @@ import Doc.DocumentID
 import Doc.Model.Query ()
 import Doc.SignatoryFieldID
 import KontraPrelude
+import User.Model
 
 -- | Get the result of concatenating the different strings that we expose for
 -- searching purposes. For testing purposes only.
@@ -42,3 +44,11 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetSLFValueTextField () where
     runQuery_ . sqlUpdate "signatory_link_fields" $ do
       sqlWhereEq "id" sfid
       sqlSet "value_text" valueText
+
+data GetAuthorUserID = GetAuthorUserID DocumentID
+instance (MonadDB m, MonadThrow m) => DBQuery m GetAuthorUserID (Maybe UserID) where
+  query (GetAuthorUserID docID) = do
+    runQuery_ . sqlSelect "documents" $ do
+      sqlResult "author_user_id"
+      sqlWhereEq "id" docID
+    fetchMaybe runIdentity

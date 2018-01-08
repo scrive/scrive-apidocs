@@ -61,6 +61,7 @@ module Doc.Model.Update
   , PostReminderSend(..)
   , UpdateFieldsForSigning(..)
   , UpdatePhoneAfterIdentificationToView(..)
+  , UpdateAuthorUserID(..)
   , SetSigAttachments(..)
   , UpdateDraft(..)
   , ClearSignatoryEmail(..)
@@ -164,6 +165,8 @@ insertSignatoryLinks did links = do
     [author] -> do
       runQuery_ . sqlUpdate "documents" $ do
         sqlSet "author_id" $ signatorylinkid author
+        -- we denormalise due to load
+        sqlSet "author_user_id" $ maybesignatory author
         sqlWhereEq "id" did
     authors -> do
       logAttention "Document doesn't have exactly one author" $ object [
@@ -1935,6 +1938,21 @@ instance MonadDB m => DBUpdate m ArchiveIdleDocumentsForUserInCompany Int where
          <+> "SET deleted =" <?> now
          <+> "WHERE deleted IS NULL"
          <+> "AND id IN (SELECT * FROM doc_sigs_in_company)"
+
+data UpdateAuthorUserID = UpdateAuthorUserID Int
+instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateAuthorUserID Int where
+  update (UpdateAuthorUserID limit) = do
+    runQuery . sqlUpdate "documents" $ do
+      sqlWith "document_authors" . sqlSelect "documents d" $ do
+        sqlResult "d.id as document_id"
+        sqlResult "sl.user_id as author_id"
+        sqlJoinOn "signatory_links sl" "d.author_id = sl.id"
+        sqlWhereIsNULL "d.author_user_id"
+        sqlWhereIsNotNULL "sl.user_id"
+        sqlLimit limit
+      sqlFrom "document_authors da"
+      sqlSetCmd "author_user_id" "da.author_id"
+      sqlWhere "id = da.document_id"
 
 -- Update utilities
 getEvidenceTextForUpdateField :: SignatoryLink -> FieldIdentity -> CurrentEvidenceEventType

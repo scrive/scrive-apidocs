@@ -70,4 +70,6 @@ kontraMigrations = [
   , addPKToSignatorySMSPin
   , addPKToDocumentTags
   , addPKToUsersHistory
+  , addAuthorUserIDToDocuments
+  , addDocumentAuthorUserIDUpdateJob
   ]

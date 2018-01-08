@@ -10,6 +10,7 @@ module Doc.Migrations (
   , addEditableBySignatoryFlag
   , signatoryLinkFieldsAddCustomValidation
   , addSearchColumnsToDocument
+  , addAuthorUserIDToDocuments
 ) where
 
 import Data.Int
@@ -18,6 +19,21 @@ import Database.PostgreSQL.PQTypes.Checks
 import DB
 import Doc.Tables
 import KontraPrelude
+
+addAuthorUserIDToDocuments :: MonadDB m => Migration m
+addAuthorUserIDToDocuments = Migration {
+    mgrTableName = tblName tableDocuments
+  , mgrFrom = 45
+  , mgrAction = StandardMigration $ do
+      let tname = tblName tableDocuments
+      runQuery_ $ sqlAlterTable tname
+        [
+          sqlAddColumn $ tblColumn { colName = "author_user_id"
+                                   , colType = BigIntT, colNullable = True }
+        , sqlAddFK tname $ (fkOnColumn "author_user_id" "users" "id")
+        ]
+      runQuery_ . sqlCreateIndex tname $ indexOnColumn "author_user_id"
+  }
 
 addSearchColumnsToDocument :: MonadDB m => Migration m
 addSearchColumnsToDocument = Migration {

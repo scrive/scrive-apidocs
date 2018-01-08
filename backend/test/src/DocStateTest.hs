@@ -1,4 +1,4 @@
-module DocStateTest (docStateTests) where
+module DocStateTest (docStateTests, docStateSideEffectsTests) where
 
 import Control.Arrow (first)
 import Control.Conditional ((<|), (|>))
@@ -45,9 +45,16 @@ import qualified Doc.Screenshot as Screenshot
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 import qualified MemCache
 
+docStateSideEffectsTests :: TestEnvSt -> Test
+docStateSideEffectsTests env =
+    testGroup "DocState side effects"
+      [
+        testThat "Author user ID for documents relation is updated" env testDocumentAuthorUserID,
+        testThat "Triggers update search field in documents relation" env testSignDocumentSearchData
+      ]
+
 docStateTests :: TestEnvSt -> Test
 docStateTests env = testGroup "DocState" [
-  testThat "Triggers update search field in documents relation" env testSignDocumentSearchData,
   testThat "RejectDocument adds to the log" env testRejectDocumentEvidenceLog,
   testThat "RestartDocument adds to the log" env testRestartDocumentEvidenceLog,
   testThat "SignDocument adds to the log" env testSignDocumentEvidenceLog,
@@ -362,6 +369,51 @@ testSignDocumentSearchData = do
       then assertFailure "Search field was not updated"
       else assertEqual "Search string is updated by triggers after signatory_link_fields.value_text update"
                        mSearchDataByFunction'' mSearchDataByField''
+
+testDocumentAuthorUserID :: TestEnv ()
+testDocumentAuthorUserID = do
+  author <- addNewRandomUser
+
+  screenshots <- getScreenshots
+  addRandomDocumentWithAuthorAndCondition author (
+      isSignable &&
+      isPending &&
+      ((==) 2 . length . documentsignatorylinks) &&
+      (all signatoryispartner . documentsignatorylinks) &&
+      (all ((==) StandardAuthenticationToSign . signatorylinkauthenticationtosignmethod) . documentsignatorylinks)
+    ) `withDocumentM` do
+      docID <- theDocumentID
+      -- `documents.author_user_id` should be set by now
+      dbQuery (GetAuthorUserID docID) >>= \mDocAuthorUserID ->
+          assertEqual "Document author_user_id is updated upon document creation"
+                      mDocAuthorUserID (Just $ userid author)
+
+      Just asl <- getSigLinkFor (isAuthor::SignatoryLink->Bool) <$> theDocument
+      randomUpdate $ \t -> MarkDocumentSeen (signatorylinkid asl) (signatorymagichash asl) (systemActor t)
+      dbQuery (GetAuthorUserID docID) >>= \mDocAuthorUserID ->
+          assertEqual "Document author_user_id is not changed after document seen by author"
+                      mDocAuthorUserID (Just $ userid author)
+      randomUpdate $ \t -> SignDocument  (signatorylinkid asl) (signatorymagichash asl) Nothing Nothing screenshots (systemActor t)
+      dbQuery (GetAuthorUserID docID) >>= \mDocAuthorUserID ->
+          assertEqual "Document author_user_id is not changed after document signed by author"
+                      mDocAuthorUserID (Just $ userid author)
+
+      Just sl <- getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$> theDocument
+
+      randomUpdate $ \t -> MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
+      dbQuery (GetAuthorUserID docID) >>= \mDocAuthorUserID ->
+          assertEqual "Document author_user_id is not changed after document seen by signatory"
+                      mDocAuthorUserID (Just $ userid author)
+
+      randomUpdate $ \t -> SignDocument  (signatorylinkid sl) (signatorymagichash sl) Nothing Nothing screenshots (systemActor t)
+      dbQuery (GetAuthorUserID docID) >>= \mDocAuthorUserID ->
+          assertEqual "Document author_user_id is not changed after document signed by signatory"
+                      mDocAuthorUserID (Just $ userid author)
+
+      randomUpdate $ \t -> CloseDocument (systemActor t)
+      dbQuery (GetAuthorUserID docID) >>= \mDocAuthorUserID ->
+          assertEqual "Document author_user_id is not changed after document closed"
+                      mDocAuthorUserID (Just $ userid author)
 
 testTimeoutDocumentEvidenceLog :: TestEnv ()
 testTimeoutDocumentEvidenceLog = do
