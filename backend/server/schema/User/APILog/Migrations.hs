@@ -1,10 +1,30 @@
-module User.APILog.Migrations (createAPILogsTable) where
+module User.APILog.Migrations
+    (
+      createAPILogsTable
+    , createAPILogsTablePK
+    )
+    where
 
 import Database.PostgreSQL.PQTypes.Checks
 
 import DB
 import KontraPrelude
 import User.APILog.Tables
+
+createAPILogsTablePK :: MonadDB m => Migration m
+createAPILogsTablePK =
+  Migration
+  {
+    mgrTableName = tblName tableAPILogs
+  , mgrFrom = 1
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable
+                    (tblName tableAPILogs)
+                    [
+                     sqlAddPK (tblName tableAPILogs)
+                              (fromJust . pkOnColumn $ "id")
+                    ]
+  }
 
 createAPILogsTable :: MonadDB m => Migration m
 createAPILogsTable = Migration {

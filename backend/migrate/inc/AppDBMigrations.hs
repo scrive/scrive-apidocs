@@ -72,4 +72,5 @@ kontraMigrations = [
   , addPKToUsersHistory
   , addAuthorUserIDToDocuments
   , addDocumentAuthorUserIDUpdateJob
+  , createAPILogsTablePK
   ]

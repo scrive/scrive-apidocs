@@ -6,7 +6,7 @@ import KontraPrelude
 tableAPILogs :: Table
 tableAPILogs = tblTable {
   tblName = "api_call_logs"
-, tblVersion = 1
+, tblVersion = 2
 , tblColumns = [
     tblColumn { colName = "id"                 , colType = BigSerialT        , colNullable = False }
   , tblColumn { colName = "time"               , colType = TimestampWithZoneT, colNullable = False }
@@ -18,6 +18,7 @@ tableAPILogs = tblTable {
   , tblColumn { colName = "response_code"      , colType = IntegerT          , colNullable = False }
   , tblColumn { colName = "response_body"      , colType = TextT             , colNullable = False }
   ]
+, tblPrimaryKey = pkOnColumn "id"
 , tblIndexes = [
       indexOnColumn "user_id"
     ]
