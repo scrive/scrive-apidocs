@@ -57,6 +57,7 @@ info:
     |             | Added `SignatoryFieldRadiogroup`, Scrive now supports radio button fields |
     |             | Factor out `SignatoryFieldStandard` into `SignatoryFieldEmailMobile` to allow for `editable_by_signatory` property |
     | 2017-11-15  | Custom validations for the `SignatoryFieldCustomField` are now supported |
+    | 2018-01-08  | Add an endpoint to [get a sign link as a QR code](#get-a-sign-link-as-a-qr-code) |
 
     ## Environments & IP Addresses
 
@@ -788,6 +789,9 @@ paths:
 
   /{short_document_id}/getbyshortid:
     $ref: ./api/documents/short_document_id/getbyshortid.yaml
+
+  /{document_id}/{signatory_id}/getqrcode:
+    $ref: ./api/documents/document_id/signatory_id/getqrcode.yaml
 
   /list:
     $ref: ./api/documents/list.yaml
