@@ -41,12 +41,16 @@ pwdSalt :: Password -> BS.ByteString
 pwdSalt Password{pwdSHA256Salt}  = pwdSHA256Salt
 pwdSalt LegacyPassword{pwdSalt'} = pwdSalt'
 
--- | Version of the password hashing scheme used. NB: Ordering of
--- constructors here is important, because we want the
--- 'max legacy current == current' property.
+-- | Version of the password hashing scheme used.
 data PasswordStrength = PasswordStrengthLegacy
                       | PasswordStrengthCurrent
-                      deriving (Eq, Ord, Show)
+                      deriving (Eq, Show)
+
+instance Ord PasswordStrength where
+  compare PasswordStrengthLegacy  PasswordStrengthCurrent = LT
+  compare PasswordStrengthCurrent PasswordStrengthLegacy  = GT
+  compare PasswordStrengthLegacy  PasswordStrengthLegacy  = EQ
+  compare PasswordStrengthCurrent PasswordStrengthCurrent = EQ
 
 -- | Return the version of the password hashing scheme.
 pwdStrength :: Password -> PasswordStrength
