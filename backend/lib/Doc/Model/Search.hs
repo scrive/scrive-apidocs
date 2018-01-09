@@ -52,7 +52,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetDocumentSearchField Bool whe
     runQuery01 $ rawSQL
                    (
                      "WITH new_archive_search_terms(txt) AS" <+>
-                     "( SELECT coalesce(archive_search_terms_func($1)) )" <+>
+                     "( SELECT coalesce(archive_search_terms_func($1), '') )" <+>
                      "UPDATE documents" <+>
                      "SET    archive_search_terms = (SELECT txt FROM new_archive_search_terms)," <+>
                      "       archive_search_fts = post_process_search_string((SELECT txt FROM new_archive_search_terms))" <+>
