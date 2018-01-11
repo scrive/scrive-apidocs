@@ -119,7 +119,7 @@ usageMsg = unlines
 checkPrerequisites :: IO ()
 checkPrerequisites = do
   requireVersion "node"  ["--version"] (makeVersion [4,0,0]) tail
-  requireVersion "grunt" ["--version"] (makeVersion [1,0,0])
+  requireVersion "grunt" ["--version"] (makeVersion [0,1,0])
     (takeWhile dotOrNum . drop 11)
   requireVersion "lessc" ["--version"] (makeVersion [2,5,0])
     (takeWhile dotOrNum . drop 6)
