@@ -15,6 +15,7 @@ module KontraPrelude (
   , id
   , get
   , set
+  , copy
   , for
   , maybeRead
   , head
@@ -36,7 +37,7 @@ import Control.Monad
 import Control.Monad.Catch
 import Data.Algebra.Boolean
 import Data.Foldable (foldMap)
-import Data.Label (get, set)
+import Data.Label ((:->), get, set)
 import Data.List hiding ((!!), all, and, any, head, last, maximum, minimum, or, tail)
 import Data.Maybe hiding (fromJust)
 import Data.Monoid
@@ -58,6 +59,13 @@ instance Boolean (a -> Bool) where
   xor    = liftA2 xor
   (-->)  = liftA2 (-->)
   (<-->) = liftA2 (<-->)
+
+----------------------------------------
+-- Additional fclabels utilities.
+
+-- | Copy the field value from an object of the same type.
+copy :: (f :-> o) -> f -> f -> f
+copy x fromThis toThat = set x (get x fromThis) $ toThat
 
 ----------------------------------------
 

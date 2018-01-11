@@ -673,10 +673,10 @@ updateBrandedDomain xbdid = onlySalesOrAdmin $ do
       internalError
      Right js -> case (Unjson.parse unjsonBrandedDomain js) of
         (Result newDomain []) -> do
-          _ <- dbUpdate $ UpdateBrandedDomain
-                 (set bdid (get bdid obd) $
-                   set bdMainDomain (get bdMainDomain obd) $
-                   newDomain)
+          _ <- dbUpdate $ UpdateBrandedDomain $
+                 copy bdid obd $
+                 copy bdMainDomain obd $
+                 newDomain
           return ()
         _ -> internalError
 
