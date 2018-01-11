@@ -728,9 +728,8 @@ javascriptLocalisation =
                   EUR: "$_paymentPriceUnitEUR()$"
                 , SEK: "$_paymentPriceUnitSEK()$"
             }
-           , allFeaturesIncluded: "$_paymentAllFeaturesIncluded()$"
            , payYearly: "$_paymentPayYearly()$"
-           , payBiYearly: "$_paymentPayBiYearly()$"
+           , payMonthly: "$_paymentPayMonthly()$"
            , plans: {
                     trial : {
                           name : "$_paymentPlanTrial()$"
@@ -741,34 +740,23 @@ javascriptLocalisation =
                               EUR: "$TeamPriceEURPerMonth()$"
                             , SEK: "$TeamPriceSEKPerMonth()$"
                         }
-                        , priceWithDiscont : {
-                              EUR: "$TeamPriceWithDiscountEURPerMonth()$"
-                            , SEK: "$TeamPriceWithDiscountSEKPerMonth()$"
+                        , priceMonthly : {
+                              EUR: "$TeamPriceMonthlyEURPerMonth()$"
+                            , SEK: "$TeamPriceMonthlySEKPerMonth()$"
                         }
-                        , branding: "$_paymentPlanTeamBranding()$"
                         , users: "$_paymentPlanTeamUsers()$"
-                        , stores: "$_paymentPlanTeamStores()$"
-                        , api: "$_paymentPlanTeamAPI()$"
-                        , support: "$_paymentPlanTeamSupport()$"
+                        , allFromOnePlan: "$_paymentPlanTeamAllFromOnePlan()$"
+                        , sla: "$_paymentPlanTeamSLA()$"
+                        , salesforce: "$_paymentPlanTeamSalesforce()$"
                     }
                     , enterprise : {
                           name : "$EnterprisePlanName()$"
-                        , price : {
-                              EUR: "$EnterprisePriceEURPerMonth()$"
-                            , SEK: "$EnterprisePriceSEKPerMonth()$"
-                        }
-                        , priceWithDiscont : {
-                              EUR: "$EnterprisePriceWithDiscountEURPerMonth()$"
-                            , SEK: "$EnterprisePriceWithDiscountSEKPerMonth()$"
-                        }
-                        , branding: "$_paymentPlanEnterpriseBranding()$"
-                        , users: "$_paymentPlanEnterpriseUsers()$"
-                        , stores: "$_paymentPlanEnterpriseStores()$"
-                        , api: "$_paymentPlanEnterpriseAPI()$"
-                        , support: "$_paymentPlanEnterpriseSupport()$"
+                        , priceOffer: "$_paymentPlanEnterprisePriceOffer()$"
+                        , volumePricing: "$_paymentPlanEnterpriseVolumePricing()$"
                         , sla: "$_paymentPlanEnterpriseSLA()$"
-                        , p2es: "$_paymentPlanEnterpriseP2ES()$"
-                        , whiteLabel: "$_paymentPlanEnterpriseWhiteLabel()$"
+                        , accountManager: "$_paymentPlanEnterpriseAccountManager()$"
+                        , ipRestriction: "$_paymentPlanEnterpriseIPRestriction()$"
+                        , customDevelopment: "$_paymentPlanEnterpriseCustomDevelopment()$"
                     }
                     , company : {
                           name : "$CompanyPlanName()$"
@@ -776,16 +764,15 @@ javascriptLocalisation =
                               EUR: "$CompanyPriceEURPerMonth()$"
                             , SEK: "$CompanyPriceSEKPerMonth()$"
                         }
-                        , priceWithDiscont : {
-                              EUR: "$CompanyPriceWithDiscountEURPerMonth()$"
-                            , SEK: "$CompanyPriceWithDiscountSEKPerMonth()$"
+                        , priceMonthly : {
+                              EUR: "$CompanyPriceMonthlyEURPerMonth()$"
+                            , SEK: "$CompanyPriceMonthlySEKPerMonth()$"
                         }
-                        , branding: "$_paymentPlanCompanyBranding()$"
                         , users: "$_paymentPlanCompanyUsers()$"
-                        , stores: "$_paymentPlanCompanyStores()$"
-                        , api: "$_paymentPlanCompanyAPI()$"
-                        , support: "$_paymentPlanCompanySupport()$"
+                        , allFromTeamPlan: "$_paymentPlanCompanyAllFromTeamPlan()$"
                         , sla: "$_paymentPlanCompanySLA()$"
+                        , branding: "$_paymentPlanCompanyBranding()$"
+                        , accountManager: "$_paymentPlanCompanyAccountManager()$"
                     }
                     , one : {
                           name : "$OnePlanName()$"
@@ -793,12 +780,15 @@ javascriptLocalisation =
                               EUR: "$OnePriceEURPerMonth()$"
                             , SEK: "$OnePriceSEKPerMonth()$"
                         }
-                        , priceWithDiscont : {
-                              EUR: "$OnePriceWithDiscountEURPerMonth()$"
-                            , SEK: "$OnePriceWithDiscountSEKPerMonth()$"
+                        , priceMonthly : {
+                              EUR: "$OnePriceMonthlyEURPerMonth()$"
+                            , SEK: "$OnePriceMonthlySEKPerMonth()$"
                         }
                         , users: "$_paymentPlanOneUsers()$"
                         , support: "$_paymentPlanOneSupport()$"
+                        , evidencePackage: "$_paymentPlanOneEvidencePackage()$"
+                        , basicBranding: "$_paymentPlanOneBasicBranding()$"
+                        , languages: "$_paymentPlanOneLanguages()$"
                     }
            }
            , table: {
