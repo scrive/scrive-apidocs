@@ -7,7 +7,8 @@ $(function () {
   var $container = $("<div class='account'></div>");
   var view = React.render(
     React.createElement(
-      AccountView, {companyAdmin: fromTemplate.companyAdmin}
+      AccountView, {companyAdmin: fromTemplate.companyAdmin,
+                    apiLogEnabled: fromTemplate.apiLogEnabled}
     ),
     $container[0]
   );

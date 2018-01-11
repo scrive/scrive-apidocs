@@ -6,7 +6,8 @@ showAccount =
     <div class='archive'></div>
     <script>
     var fromTemplate = {
-      companyAdmin     : $if(companyAdmin)$true$else$false$endif$
+      companyAdmin     : $if(companyAdmin)$true$else$false$endif$,
+      apiLogEnabled    : $if(apiLogEnabled)$true$else$false$endif$
     };
     </script>
     <script src="$cdnbaseurl$/compiled/all/account-$versioncode$.js" crossorigin="anonymous"></script>
