@@ -35,9 +35,9 @@ import SMS.Events
 import ThirdPartyStats.Core
 import User.Data.User (User(..))
 import User.EmailChangeRequest (DeleteExpiredEmailChangeRequests(..))
-import User.Model.Query (GetUserWherePasswordStrengthIsLessThan(..))
+import User.Model.Query (GetUserWherePasswordAlgorithmIsEarlierThan(..))
 import User.Model.Update (SetUserPassword(..))
-import User.Password (PasswordStrength(..), strengthenPassword)
+import User.Password (PasswordAlgorithm(..), strengthenPassword)
 import User.PasswordReminder (DeleteExpiredPasswordReminders(..))
 import User.UserAccountRequest (expireUserAccountRequests)
 import Utils.List
@@ -89,7 +89,7 @@ jobTypeMapper = [
   , (PushPlanhatStats, "push_planhat_stats")
   , (SessionsEvaluation, "sessions_evaluation")
   , (SMSEventsProcessing, "sms_events_processing")
-  , (StrengthenPasswords, "strengthen_passwords")
+  , (StrengthenPasswords, "upgrade_password_algorithms")
   , (UserAccountRequestEvaluation, "user_account_request_evaluation")
   , (DocumentSearchUpdate, "document_search_update")
   , (DocumentsAuthorIDMigration, "document_author_id_job")
@@ -282,8 +282,8 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
       return . RerunAfter $ ihours 1
     StrengthenPasswords -> do
       runDB $ do
-        muser <- dbQuery $ GetUserWherePasswordStrengthIsLessThan
-                           PasswordStrengthCurrent
+        muser <- dbQuery $ GetUserWherePasswordAlgorithmIsEarlierThan
+                           PasswordAlgorithmScrypt
         case muser of
           -- If no passwords to strengthen, we can relax for a while
           Nothing   -> return . RerunAfter $ idays 14

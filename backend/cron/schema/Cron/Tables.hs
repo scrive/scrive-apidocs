@@ -90,7 +90,7 @@ tableCronJobs = tblTable {
       , "push_planhat_stats"
       , "sessions_evaluation"
       , "sms_events_processing"
-      , "strengthen_passwords"
+      , "upgrade_password_algorithm"
       , "user_account_request_evaluation"
       , "document_search_update"
       , "document_author_id_job"

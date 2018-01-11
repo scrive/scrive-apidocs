@@ -74,6 +74,6 @@ kontraMigrations = [
   , addAuthorUserIDToDocuments
   , addDocumentAuthorUserIDUpdateJob
   , createAPILogsTablePK
-  , addPasswordStrengthColumn
-  , addPasswordStrengtheningJob
+  , addPasswordAlgorithmVersionColumn
+  , addPasswordAlgorithmUpgradeJob
   ]

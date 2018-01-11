@@ -9,7 +9,7 @@ module User.Model.Query (
   , GetUserByIDIncludeDeleted(..)
   , GetUserByEmail(..)
   , GetUsers(..)
-  , GetUserWherePasswordStrengthIsLessThan(..)
+  , GetUserWherePasswordAlgorithmIsEarlierThan(..)
   , GetUsersWithCompanies(..)
   , IsUserDeletable(..)
   ) where
@@ -40,18 +40,18 @@ instance MonadDB m => DBQuery m GetUsers [User] where
     runQuery_ $ selectUsersSQL <+> "WHERE deleted IS NULL ORDER BY first_name || ' ' || last_name"
     fetchMany fetchUser
 
-data GetUserWherePasswordStrengthIsLessThan =
-  GetUserWherePasswordStrengthIsLessThan PasswordStrength
+data GetUserWherePasswordAlgorithmIsEarlierThan =
+  GetUserWherePasswordAlgorithmIsEarlierThan PasswordAlgorithm
 
 instance (MonadDB m, MonadThrow m) =>
-  DBQuery m GetUserWherePasswordStrengthIsLessThan (Maybe User) where
-  query (GetUserWherePasswordStrengthIsLessThan strength) = do
+  DBQuery m GetUserWherePasswordAlgorithmIsEarlierThan (Maybe User) where
+  query (GetUserWherePasswordAlgorithmIsEarlierThan strength) = do
     runQuery_ $ selectUsersSQL
       -- We include deleted users, we want to strengthen those too if
       -- they have a password
       <+> "WHERE password IS NOT NULL"
-      <+> "AND (password_strength IS NULL OR password_strength < "
-      <?> pwdStrengthToInt16 strength <+> ")"
+      <+> "AND (password_algorithm IS NULL OR password_algorithm < "
+      <?> pwdAlgorithmToInt16 strength <+> ")"
       <+> "LIMIT 1"
     fetchMaybe fetchUser
 

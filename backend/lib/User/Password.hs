@@ -1,10 +1,10 @@
 module User.Password ( Password
-                     , PasswordStrength(..)
-                     , pwdStrengthToInt16
-                     , int16ToPwdStrength
+                     , PasswordAlgorithm(..)
+                     , pwdAlgorithmToInt16
+                     , int16ToPwdAlgorithm
                      , pwdHash
                      , pwdSalt
-                     , pwdStrength
+                     , pwdAlgorithm
                      , createPassword
                      , createLegacyPassword
                      , strengthenPassword
@@ -42,28 +42,28 @@ pwdSalt Password{pwdSHA256Salt}  = pwdSHA256Salt
 pwdSalt LegacyPassword{pwdSalt'} = pwdSalt'
 
 -- | Version of the password hashing scheme used.
-data PasswordStrength = PasswordStrengthLegacy
-                      | PasswordStrengthCurrent
+data PasswordAlgorithm = PasswordAlgorithmLegacy
+                       | PasswordAlgorithmScrypt
                       deriving (Eq, Show)
 
-instance Ord PasswordStrength where
-  compare PasswordStrengthLegacy  PasswordStrengthCurrent = LT
-  compare PasswordStrengthCurrent PasswordStrengthLegacy  = GT
-  compare PasswordStrengthLegacy  PasswordStrengthLegacy  = EQ
-  compare PasswordStrengthCurrent PasswordStrengthCurrent = EQ
+instance Ord PasswordAlgorithm where
+  compare PasswordAlgorithmLegacy PasswordAlgorithmScrypt = LT
+  compare PasswordAlgorithmScrypt PasswordAlgorithmLegacy = GT
+  compare PasswordAlgorithmLegacy PasswordAlgorithmLegacy = EQ
+  compare PasswordAlgorithmScrypt PasswordAlgorithmScrypt = EQ
 
 -- | Return the version of the password hashing scheme.
-pwdStrength :: Password -> PasswordStrength
-pwdStrength Password{}       = PasswordStrengthCurrent
-pwdStrength LegacyPassword{} = PasswordStrengthLegacy
+pwdAlgorithm :: Password -> PasswordAlgorithm
+pwdAlgorithm Password{}       = PasswordAlgorithmScrypt
+pwdAlgorithm LegacyPassword{} = PasswordAlgorithmLegacy
 
-pwdStrengthToInt16 :: PasswordStrength -> Int16
-pwdStrengthToInt16 PasswordStrengthLegacy  = 0
-pwdStrengthToInt16 PasswordStrengthCurrent = 1
+pwdAlgorithmToInt16 :: PasswordAlgorithm -> Int16
+pwdAlgorithmToInt16 PasswordAlgorithmLegacy  = 0
+pwdAlgorithmToInt16 PasswordAlgorithmScrypt = 1
 
-int16ToPwdStrength :: Int16 -> PasswordStrength
-int16ToPwdStrength n | n <= 0    = PasswordStrengthLegacy
-                     | otherwise = PasswordStrengthCurrent
+int16ToPwdAlgorithm :: Int16 -> PasswordAlgorithm
+int16ToPwdAlgorithm n | n <= 0    = PasswordAlgorithmLegacy
+                     | otherwise = PasswordAlgorithmScrypt
 
 -- | Scrypt parameters used for hashing. Default scrypt parameters are
 -- N = 14, r = 8, p = 1, we use slightly larger N and p. N=15 gives us
@@ -103,10 +103,10 @@ createLegacyPassword password = do
     }
 
 -- | Deserialise a password from a DB row record.
-mkPassword :: BS.ByteString -> BS.ByteString -> PasswordStrength -> Password
-mkPassword hash salt PasswordStrengthLegacy  =
+mkPassword :: BS.ByteString -> BS.ByteString -> PasswordAlgorithm -> Password
+mkPassword hash salt PasswordAlgorithmLegacy  =
   LegacyPassword hash salt
-mkPassword hash salt PasswordStrengthCurrent =
+mkPassword hash salt PasswordAlgorithmScrypt =
   Password (Scrypt.EncryptedPass hash) salt
 
 -- | Convert a legacy SHA-256 password to a SHA-256 + scrypt one.
@@ -143,11 +143,11 @@ maybeVerifyPassword (Just hash) pass = verifyPassword hash pass
 -- | Like 'mkPassword', but everything is wrapped in Maybe. If the
 -- password strength parameter is Nothing, it defaults to legacy.
 maybeMkPassword ::
-  (Maybe BS.ByteString, Maybe BS.ByteString, Maybe PasswordStrength)
+  (Maybe BS.ByteString, Maybe BS.ByteString, Maybe PasswordAlgorithm)
   -> Maybe Password
 maybeMkPassword (mHash, mSalt, mStrength) =
   mkPassword <$> mHash <*> mSalt
-  <*> (mStrength <|> Just PasswordStrengthLegacy)
+  <*> (mStrength <|> Just PasswordAlgorithmLegacy)
 
 randomPassword :: CryptoRNG m => m Password
 randomPassword = randomPasswordString >>= createPassword

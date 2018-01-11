@@ -41,7 +41,7 @@ testPasswordMaybeVerify = do
   s <- randomPasswordString
   assert $ not $ maybeVerifyPassword Nothing s
   p <- createPassword s
-  let triplet = (Just $ pwdHash p, Just $ pwdSalt p, Just $ pwdStrength p)
+  let triplet = (Just $ pwdHash p, Just $ pwdSalt p, Just $ pwdAlgorithm p)
       mpass = maybeMkPassword triplet
   assertJust mpass
   assert $ maybeVerifyPassword mpass s
@@ -64,6 +64,6 @@ testLegacyPasswordCreateVerify = replicateM_ 10 $ do
   wrong <- randomPasswordString
   p <- createLegacyPassword s
   let Just pass = maybeMkPassword ( Just $ pwdHash p, Just $ pwdSalt p
-                                  , Just $ int16ToPwdStrength 0)
+                                  , Just $ int16ToPwdAlgorithm 0)
   assert $ verifyPassword pass s
   assert $ not $ verifyPassword pass wrong

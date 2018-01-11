@@ -25,7 +25,7 @@ tableUsers = tblTable {
     , tblColumn { colName = "lang", colType = SmallIntT, colNullable = False }
     , tblColumn { colName = "deleted", colType = TimestampWithZoneT }
     , tblColumn { colName = "associated_domain_id", colType = BigIntT , colNullable = False }
-    , tblColumn { colName = "password_strength", colType = SmallIntT, colNullable = True }
+    , tblColumn { colName = "password_algorithm", colType = SmallIntT, colNullable = True }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblChecks = [Check "check_users_lowercase_email" "email = lower(email)"]

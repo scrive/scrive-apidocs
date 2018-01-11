@@ -3,7 +3,7 @@ module Cron.Migrations (
   , removeFindAndDoPostDocumentClosedActions
   , addInvoicingJob
   , addPlanhatJob
-  , addPasswordStrengtheningJob
+  , addPasswordAlgorithmUpgradeJob
   , removeFindAndExtendDigitalSignaturesFromCronJobs
   , addDocumentSearchUpdateJob
   , addDocumentAuthorUserIDUpdateJob
@@ -47,11 +47,11 @@ addInvoicingJob = Migration {
   , mgrAction = StandardMigration $ runSQL_ "INSERT INTO cron_jobs (id, run_at) VALUES ('invoice_upload', to_timestamp(0))"
   }
 
-addPasswordStrengtheningJob :: (MonadDB m, MonadThrow m) => Migration m
-addPasswordStrengtheningJob = Migration {
+addPasswordAlgorithmUpgradeJob :: (MonadDB m, MonadThrow m) => Migration m
+addPasswordAlgorithmUpgradeJob = Migration {
     mgrTableName = tblName tableCronJobs
   , mgrFrom = 11
-  , mgrAction = StandardMigration $ runSQL_ "INSERT INTO cron_jobs (id, run_at) VALUES ('strengthen_passwords', to_timestamp(0))"
+  , mgrAction = StandardMigration $ runSQL_ "INSERT INTO cron_jobs (id, run_at) VALUES ('upgrade_password_algorithms', to_timestamp(0))"
   }
 
 removeFindAndDoPostDocumentClosedActions :: (MonadDB m, MonadThrow m) => Migration m
