@@ -64,7 +64,7 @@ handleAccountGet = withUserTOS $ \(user, _) -> do
   ctx <- getContext
   pb <- renderTemplate "showAccount" $ do
     F.value "companyAdmin" $ useriscompanyadmin user
-    F.value "apiLogEnabled" $ ctxisapilogenabled ctx
+    F.value "apiLogEnabled" $ get ctxisapilogenabled ctx
     entryPointFields ctx
   internalResponse <$> renderFromBodyWithFields pb (F.value "account" True)
 
