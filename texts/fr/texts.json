@@ -741,7 +741,7 @@
 "_passwordChangeLinkMailTitle":"Nouveau mot de passe",
 "_paymentAllFeaturesIncluded":"Toutes les fonctions incluses",
 "_paymentNumberOfUsers":"Nombre d'utilisateurs",
-"_paymentPayBiYearly":"Payer pour deux ans et enregistrer $PaymentYearlyDiscountAmount()$",
+"_paymentPayBiYearly":"Payer pour deux ans et économiser $PaymentYearlyDiscountAmount()$",
 "_paymentPayYearly":"Payer annuellement",
 "_paymentPlanAskViktor":"Veuillez contacter <a class='put-link-to-mail-sales-here'>notre service commercial</a> si vous souhaitez changer de plan tarifaire.",
 "_paymentPlanCompanyAPI":"<span class='desc-em'>ou</span> 2 500 docs via l'API/m",
