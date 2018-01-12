@@ -16,7 +16,8 @@ var BlockingModal = require("../blocking/blockingmodal");
 
 var AccountView = React.createClass({
   propTypes: {
-    companyAdmin: React.PropTypes.bool.isRequired
+    companyAdmin: React.PropTypes.bool.isRequired,
+    apiLogEnabled: React.PropTypes.bool.isRequired
   },
   componentWillMount: function () {
     mixpanel.register({Context: "Account Page"});
@@ -109,7 +110,7 @@ var AccountView = React.createClass({
             mixpanelSubcontext="API settings tab"
             trackEvent="View API settings tab"
           >
-            <APISettingsPanel loadLater={false} />
+            <APISettingsPanel loadLater={false} apiLogEnabled={this.props.apiLogEnabled}/>
           </TrackingView>
         </TabViewer.TabViewerTab>
         {this.props.companyAdmin &&

@@ -65,6 +65,20 @@ describe("account/apisettings/apisettingspanel", function () {
       $("li:nth-child(2)", tabs).text(),
       localization.account.apiSettings.name
     );
+    assert.lengthOf($("li", tabs), 2);
+
+    var component = renderComponent({apiLogEnabled: true});
+
+    var tabs = $(".tabs", component.getDOMNode());
+    assert.lengthOf(tabs, 1);
+
+    assert.lengthOf($("li", tabs), 3);
+
+    assert.equal(
+      $("li:nth-child(2)", tabs).text(),
+      localization.account.apiSettings.name
+    );
+
     assert.equal(
       $("li:nth-child(3)", tabs).text(),
       "API Requests"
@@ -80,7 +94,7 @@ describe("account/apisettings/apisettingspanel", function () {
   });
 
   it("should activate the API log tab by clicking on it", function (done) {
-    var component = renderComponent({companyAdmin: true});
+    var component = renderComponent({companyAdmin: true, apiLogEnabled: true});
 
     var tab = $(".tabs li:nth-child(3)", component.getDOMNode());
     TestUtils.Simulate.click(tab[0]);
@@ -119,7 +133,7 @@ describe("account/apisettings/apisettingspanel", function () {
   });
 
   it("should configure and render the API log view when its tab is active", function (done) {
-    var component = renderComponent();
+    var component = renderComponent({apiLogEnabled: true});
 
     var tab = $(".tabs li:nth-child(3)", component.getDOMNode());
     TestUtils.Simulate.click(tab[0]);

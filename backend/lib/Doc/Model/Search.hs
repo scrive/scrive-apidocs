@@ -48,13 +48,11 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetDocumentSearchField Bool whe
   update (SetDocumentSearchField docID) = do
     -- We do a raw query here, since we rely on a stored procedure in the DB:
     -- `archive_search_terms_func(bigint)`, defined by means of
-    -- `Doc.Trigger.archiveSearchTerms`. Also note that there is no need
-    -- for `coalesce` here, since that's already taken care of in
-    -- `archive_search_terms_func`.
+    -- `Doc.Trigger.archiveSearchTerms`.
     runQuery01 $ rawSQL
                    (
                      "WITH new_archive_search_terms(txt) AS" <+>
-                     "( SELECT archive_search_terms_func($1) )" <+>
+                     "( SELECT coalesce(archive_search_terms_func($1), '') )" <+>
                      "UPDATE documents" <+>
                      "SET    archive_search_terms = (SELECT txt FROM new_archive_search_terms)," <+>
                      "       archive_search_fts = post_process_search_string((SELECT txt FROM new_archive_search_terms))" <+>

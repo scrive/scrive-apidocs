@@ -6,7 +6,8 @@ var TabViewer = require("../../common/tabviewer");
 
 var APISettingsPanel = React.createClass({
   propTypes: {
-    loadLater: React.PropTypes.bool.isRequired
+    loadLater: React.PropTypes.bool.isRequired,
+    apiLogEnabled: React.PropTypes.bool.isRequired
   },
   render: function () {
     return (
@@ -23,13 +24,15 @@ var APISettingsPanel = React.createClass({
             >
               <OAuthDashboardView loadLater={this.props.loadLater} />
             </TabViewer.TabViewerTab>
-            <TabViewer.TabViewerTab
-              hash="api-log"
-              aliases={["api-call"]}
-              title={"API Requests"}
-            >
-              <APILogView loadLater={this.props.loadLater} />
-            </TabViewer.TabViewerTab>
+            { /* if */ this.props.apiLogEnabled &&
+              <TabViewer.TabViewerTab
+                hash="api-log"
+                aliases={["api-call"]}
+                title={"API Requests"}
+              >
+                <APILogView loadLater={this.props.loadLater} />
+              </TabViewer.TabViewerTab>
+            }
           </TabViewer.TabViewer>
         </div>
       </div>
