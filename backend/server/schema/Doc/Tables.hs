@@ -194,7 +194,7 @@ tableSignatoryAttachments = tblTable {
     , tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False, colDefault = Just "0" }
     , tblColumn { colName = "required", colType = BoolT, colNullable = False, colDefault = Just "true"}
     ]
-  , tblPrimaryKey = pkOnColumns ["name", "signatory_link_id"]
+  , tblPrimaryKey = pkOnColumns ["signatory_link_id", "name"]
   , tblForeignKeys = [
       fkOnColumn "file_id" "files" "id"
     , (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
