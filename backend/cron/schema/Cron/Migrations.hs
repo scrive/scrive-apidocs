@@ -51,7 +51,7 @@ addPasswordAlgorithmUpgradeJob :: (MonadDB m, MonadThrow m) => Migration m
 addPasswordAlgorithmUpgradeJob = Migration {
     mgrTableName = tblName tableCronJobs
   , mgrFrom = 11
-  , mgrAction = StandardMigration $ runSQL_ "INSERT INTO cron_jobs (id, run_at) VALUES ('upgrade_password_algorithms', to_timestamp(0))"
+  , mgrAction = StandardMigration $ runSQL_ "INSERT INTO cron_jobs (id, run_at) VALUES ('upgrade_password_algorithm', to_timestamp(0))"
   }
 
 removeFindAndDoPostDocumentClosedActions :: (MonadDB m, MonadThrow m) => Migration m
