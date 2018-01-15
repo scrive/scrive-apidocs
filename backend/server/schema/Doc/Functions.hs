@@ -56,7 +56,7 @@ postProcessSearchString =
       <+> "begin"
       <+> "  split_emails = (select string_agg(split_email(eml.splits), ' ')"
       <+> "                  from   (select unnest(string_to_array(emails, ' ')) as splits ) as eml);"
-      <+> "  return to_tsvector('simple', coalesce(txt, '')) ||  ' ' || (coalesce(split_emails, '')::tsvector);"
+      <+> "  return to_tsvector('simple', coalesce(regexp_replace(txt, ':+', ' ', 'g'), '')) ||  ' ' || (coalesce(regexp_replace(split_emails, ':+', ' ', 'g'), '')::tsvector);"
       <+> "end;"
       <+> "$$"
       <+> "language plpgsql"
