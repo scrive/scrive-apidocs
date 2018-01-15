@@ -89,7 +89,7 @@ jobTypeMapper = [
   , (PushPlanhatStats, "push_planhat_stats")
   , (SessionsEvaluation, "sessions_evaluation")
   , (SMSEventsProcessing, "sms_events_processing")
-  , (StrengthenPasswords, "upgrade_password_algorithms")
+  , (StrengthenPasswords, "upgrade_password_algorithm")
   , (UserAccountRequestEvaluation, "user_account_request_evaluation")
   , (DocumentSearchUpdate, "document_search_update")
   , (DocumentsAuthorIDMigration, "document_author_id_job")
