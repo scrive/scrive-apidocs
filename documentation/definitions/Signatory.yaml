@@ -151,6 +151,26 @@ properties:
       The intention of this feature is **not** for the signatory to affect a
       contract via highlighting, but simply for a point-of-sale situation to
       assist contract review.
+  hide_personal_number:
+    type: boolean
+    default: false
+    description: |
+      Whether the personal number should be hidden, both in the final PDF
+      verification page, and in the Evidence Log.
+
+      This is to be used when the document will be distributed to a wider
+      audience, and the personal number of the signatory should not be
+      available in the final document.
+
+      **If the signatory has a placed field for their personal number, it will
+      be included in the final PDF**. So this solution only works when the
+      field does not have any placements.
+
+      _Note:_ This is a measure to obscure the personal number, and is not
+      intended to be fail safe.  Specifically, we cannot guarantee that the
+      personal number will not be included in Evidence of Intent screenshots,
+      as part of the Evidence Package, even though we try our best to censor it
+      in those cases.
   highlighted_pages:
     type: array
     default: []
@@ -310,6 +330,7 @@ example:
     "authentication_method_to_sign": "standard",
     "confirmation_delivery_method": "none",
     "allows_highlighting": true,
+    "hide_personal_number": false,
     "attachments": [],
     "highlighted_pages": [
       {
