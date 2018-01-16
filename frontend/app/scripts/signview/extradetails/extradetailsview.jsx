@@ -189,6 +189,7 @@ var classNames = require("classnames");
       var ssnClass = classNames({
         "signview-input": true,
         "obligatory-input": true,
+        "censor-screenshot": sig.hidePNElog(),
         "valid": !signview.askForSSNIfNotEID()
       });
 

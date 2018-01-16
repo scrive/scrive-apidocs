@@ -51,6 +51,7 @@
       "allows_highlighting": false,
       "attachments": [],
       "highlighted_pages": [],
+      "hide_personal_number_in_evidence_log": false,
       "api_delivery_url": null
     },
     {
@@ -329,6 +330,7 @@
       "allows_highlighting": false,
       "attachments": [],
       "highlighted_pages": [],
+      "hide_personal_number_in_evidence_log": false,
       "api_delivery_url": null
     }
   ],

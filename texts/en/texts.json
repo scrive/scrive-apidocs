@@ -298,7 +298,6 @@
 "_contractsealingtextsinitiatorText":"Initiator",
 "_contractsealingtextsorgNumberText":"Company reg. no. $companynumber$",
 "_contractsealingtextspartnerText":"Signing parties",
-"_contractsealingtextspersonalNumberText":"ID number $idnumber$",
 "_contractsealingtextssignedAtText":"Signed $time$",
 "_contractsendbuttontext":"Send",
 "_contractstartsigningbuttontext":"Start signing",

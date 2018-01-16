@@ -58,8 +58,8 @@
       "highlighted_pages": [],
       "attachments": [],
       "api_delivery_url": null,
+      "hide_personal_number_in_evidence_log": false,
       "has_authenticated_to_view":false
-
     }
   ],
   "file": null,
