@@ -161,7 +161,7 @@ sqlWhereShortDocumentIDIs now shortDid = do
   sqlWhereE (ShortDocumentIDHasNoMatch shortDid)
     ("documents.id % 1000000 = " <?> shortDid)
   sqlWhereE (ShortDocumentIDHasNoMatch shortDid) $
-    "documents.mtime > " <?> now <+> " - interval '24 hour'"
+    "documents.id >= (SELECT COALESCE(max(id),0) FROM documents WHERE mtime < " <?> now <+> " - interval '24 hour')"
   sqlOrderBy "documents.id DESC"
   sqlLimit 1
 
