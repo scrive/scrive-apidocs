@@ -157,6 +157,7 @@ selectUsersWithCompaniesSQL = "SELECT"
   <> ", users.email"
   <> ", users.lang"
   <> ", users.associated_domain_id"
+  <> ", users.password_algorithm"
   -- Company:
   <> ", c.id AS company_id"
   <> ", c.name"
