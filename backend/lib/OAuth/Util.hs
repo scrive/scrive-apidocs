@@ -2,6 +2,9 @@ module OAuth.Util(
     getTempCredRequest
   , getTokenRequest
   , getAuthorization
+  , getOAuthUser
+  , getUserFromOAuthWithAnyPrivileges
+  , getMaybeAPIUserWithAnyPrivileges
 ) where
 
 import Control.Conditional ((<|), (|>))
@@ -12,12 +15,17 @@ import Network.HTTP.Base (urlDecode)
 import Network.URI
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
+import qualified Data.Text as T
 
+import DB
 import Happstack.Fields
 import Kontra
 import KontraPrelude
 import OAuth.Model
 import OAuth.Parse
+import User.Data.User
+import User.Model.Query
+import Util.Actor
 import Utils.Read
 
 getAuthorizationHeader :: Kontrakcja m => m (Maybe [(String, String)])
@@ -112,3 +120,30 @@ getAuthorization = do
                                                  , oaAccessToken  = fromJust macctoken
                                                  , oaAccessSecret = fromJust $ snd $ fromJust mapisecret
                                                  }
+
+getOAuthUser :: Kontrakcja m => [APIPrivilege] -> m (Maybe (Either T.Text (User, Actor)))
+getOAuthUser privs = do
+  eauth <- getAuthorization
+  case eauth of
+    Nothing       -> return Nothing
+    Just (Left l) -> return $ Just $ Left $ "OAuth headers could not be parsed: " <> (T.pack l)
+    Just (Right auth) -> Just <$> getUserFromOAuth auth privs
+
+getUserFromOAuth :: Kontrakcja m => OAuthAuthorization -> [APIPrivilege] -> m (Either T.Text (User, Actor))
+getUserFromOAuth OAuthAuthorization{..} privs = do
+  ctx <- getContext
+  uap <- dbQuery $ GetUserIDForAPIWithPrivilege oaAPIToken oaAPISecret oaAccessToken oaAccessSecret privs
+  case uap of
+    Nothing -> return $ Left "OAuth credentials are invalid or they may not have sufficient privileges."
+    Just (userid, apistring) -> dbQuery (GetUserByID userid) >>= \case
+      Nothing   -> return $ Left "OAuth credentials are valid but the user account for those credentials does not exist."
+      Just user -> return $ Right (user, apiActor ctx user apistring)
+
+getUserFromOAuthWithAnyPrivileges :: Kontrakcja m => OAuthAuthorization -> m (Either T.Text (User, Actor))
+getUserFromOAuthWithAnyPrivileges oauth = getUserFromOAuth oauth allPrivileges
+
+getMaybeAPIUserWithAnyPrivileges :: Kontrakcja m => m (Maybe User)
+getMaybeAPIUserWithAnyPrivileges = getOAuthUser allPrivileges >>= \case
+  Just (Left _)          -> return Nothing
+  Just (Right (user, _)) -> return $ Just user
+  Nothing                -> get ctxmaybeuser <$> getContext

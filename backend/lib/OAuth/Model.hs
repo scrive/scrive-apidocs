@@ -42,7 +42,10 @@ data APIPrivilege = APIDocCreate
                   | APIDocCheck
                   | APIDocSend
                   | APIPersonal  -- used only for personal access token
-  deriving (Eq)
+  deriving (Eq, Enum)
+
+allPrivileges :: [APIPrivilege]
+allPrivileges = [toEnum 0 ..]
 
 instance Read APIPrivilege where
   readsPrec _ "DOC_CREATE" = [(APIDocCreate, "")]

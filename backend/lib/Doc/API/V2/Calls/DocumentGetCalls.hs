@@ -79,12 +79,8 @@ docApiV2List = api $ do
   startQueryTime <- liftBase getCurrentTime
   (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit (DocumentsVisibleToUser $ userid user) documentFilters documentSorting (offset, 1000, maxcount)
   finishQueryTime <- liftBase getCurrentTime
-  ctx <- getContext
   logInfo "Fetching for docApiV2List done" $ object [
       "query_time" .= (realToFrac $ diffUTCTime finishQueryTime startQueryTime :: Double)
-    , identifier_ $ usercompany user
-    , identifier_ $ userid user
-    , "ip" .= show (get ctxipnumber ctx)
     ]
   -- Result
   let headers = mkHeaders [("Content-Type","application/json; charset=UTF-8")]

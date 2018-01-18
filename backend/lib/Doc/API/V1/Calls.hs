@@ -974,12 +974,8 @@ apiCallV1List = api $ do
           startQueryTime <- liftIO getCurrentTime
           (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit domain (searching ++ filters) sorting pagination
           finishQueryTime <- liftIO getCurrentTime
-          ctx <- getContext
           logInfo "Fetching for apiCallV1List done" $ object [
               "query_time" .= (realToFrac $ diffUTCTime finishQueryTime startQueryTime :: Double)
-            , identifier_ $ usercompany user
-            , identifier_ $ userid user
-            , "ip" .= show (get ctxipnumber ctx)
             ]
           let docs = PagedList {  list       = allDocs
                                 , params     = params

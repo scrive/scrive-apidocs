@@ -23,6 +23,8 @@ import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSU
 import qualified Happstack.Server.Response as Web
 
+import API.APIVersion
+import API.Logging
 import API.V2.Errors
 import API.V2.MonadUtils as MonadUtils
 import API.V2.User
@@ -80,7 +82,7 @@ instance ToAPIResponse () where
 -- This defines the possible outputs of the API.
 apiRun :: (Kontrakcja m, ToAPIResponse v) => m (APIResponse v) -> m Response
 apiRun acc =
-  (toAPIResponse <$> acc) `catches` [
+  (toAPIResponse <$> logUserCompanyIPAndApiVersion V2 acc) `catches` [
       Handler $ \ex@(SomeDBExtraException e) -> do
         -- API handler always returns a valid response. Due to that appHandler will not rollback - and we need to do it here
         rollback

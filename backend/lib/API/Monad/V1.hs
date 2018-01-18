@@ -33,6 +33,7 @@ module API.Monad.V1 (
   where
 
 import Control.Monad.Catch
+import Data.Text
 import Data.Typeable
 import Data.Unjson
 import Happstack.Server (toResponse)
@@ -42,6 +43,8 @@ import Text.JSON hiding (Ok)
 import Text.JSON.Gen hiding (object)
 import qualified Happstack.Server.Response as Web
 
+import API.APIVersion
+import API.Logging
 import DB
 import Kontra
 import KontraPrelude
@@ -201,12 +204,10 @@ jsonError rest = runJSONGen $ do
   value "status" ("error"::String)
   rest
 
-
-
 -- | convert the return type to the appropriate response
 -- This defines the possible outputs of the api.
 api :: (Kontrakcja m, ToAPIResponse v) => m v -> m Response
-api acc = (toAPIResponse <$> acc) `catches` [
+api acc = (toAPIResponse <$> logUserCompanyIPAndApiVersion V1 acc) `catches` [
     Handler $ \ex@(SomeDBExtraException e) -> do
       -- API handler always returns a valid response. Due to that appHandler will not rollback - and we need to do it here
       rollback
@@ -217,7 +218,6 @@ api acc = (toAPIResponse <$> acc) `catches` [
         rsCode = httpCodeFromSomeDBExtraException ex
       }
   ]
-
 
 apiGuardL' :: (Kontrakcja m, APIGuard m a b) => m a -> m b
 apiGuardL' acc = apiGuard' =<< acc
@@ -269,7 +269,7 @@ getAPIUser priv = getAPIUserWithPrivileges [priv]
 
 -- Get the user for the API, as long as any privileges are there
 getAPIUserWithAnyPrivileges :: Kontrakcja m => m (User, Actor, Bool)
-getAPIUserWithAnyPrivileges = getAPIUserWithPrivileges [APIPersonal, APIDocCheck, APIDocSend, APIDocCreate]
+getAPIUserWithAnyPrivileges = getAPIUserWithPrivileges allPrivileges
 
 -- Get the user for the API.
 -- Either through:
@@ -281,7 +281,7 @@ getAPIUserWithPrivileges :: Kontrakcja m => [APIPrivilege] -> m (User, Actor, Bo
 getAPIUserWithPrivileges privs = do
   moauthuser <- getOAuthUser privs
   case moauthuser of
-    Just (Left err) -> (throwM . SomeDBExtraException) $ notLoggedIn err
+    Just (Left err) -> (throwM . SomeDBExtraException) $ notLoggedIn $ unpack err
     Just (Right (user, actor)) -> return (user, actor, True)
     Nothing -> do
       msessionuser <- getSessionUser
@@ -293,7 +293,7 @@ getAPIUserWithPad :: Kontrakcja m => APIPrivilege -> m (User, Actor, Bool)
 getAPIUserWithPad priv = do
   moauthuser <- getOAuthUser [priv]
   case moauthuser of
-    Just (Left err) -> (throwM . SomeDBExtraException) $ notLoggedIn err
+    Just (Left err) -> (throwM . SomeDBExtraException) $ notLoggedIn $ unpack err
     Just (Right (user, actor)) -> return (user, actor, True)
     Nothing -> do
       msessionuser <- getSessionUserWithPad
@@ -315,19 +315,3 @@ getSessionUserWithPad = do
   case getContextUser ctx of
     Nothing -> return Nothing
     Just user -> return $ Just (user, authorActor ctx user)
-
-getOAuthUser :: Kontrakcja m => [APIPrivilege] -> m (Maybe (Either String (User, Actor)))
-getOAuthUser privs = do
-  ctx <- getContext
-  eauth <- getAuthorization
-  case eauth of
-    Nothing       -> return Nothing
-    Just (Left l) -> return $ Just $ Left l
-    Just (Right auth) -> do
-      uap <- dbQuery $ GetUserIDForAPIWithPrivilege (oaAPIToken auth) (oaAPISecret auth) (oaAccessToken auth) (oaAccessSecret auth) privs
-      case uap of
-        Nothing -> return $ Just $ Left "OAuth credentials are invalid."
-        Just (userid, apistring) -> do
-          user <- apiGuardL (serverError "The User account for those credentials does not exist.") $ dbQuery $ GetUserByID userid
-          let actor = apiActor ctx user apistring
-          return $ Just $ Right (user, actor)

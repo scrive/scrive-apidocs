@@ -22,8 +22,7 @@ import User.UserView
 import Util.MonadUtils
 
 {- |
-    This looks up the company for the given user, if the user doesn't
-    have a company then it returns Nothing.
+    This looks up the company for the given user.
 -}
 getCompanyForUser :: (MonadDB m, MonadThrow m) => User -> m Company
 getCompanyForUser user = dbQuery $ GetCompanyByUserID $ userid user

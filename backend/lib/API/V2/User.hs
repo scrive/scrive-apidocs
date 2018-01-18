@@ -1,16 +1,13 @@
 module API.V2.User (
     getAPIUser
-  , getAPIUserWithPrivileges
   , getAPIUserWithAnyPrivileges
   , getAPIUserWithPad
   , getMagicHashForSignatoryAction
   , getDocumentSignatoryMagicHash
-  , getUserFromOAuthWithAnyPrivileges
 ) where
 
 import Happstack.Server
 import Log
-import qualified Data.Text as T
 
 import API.V2.Errors
 import API.V2.MonadUtils
@@ -39,7 +36,7 @@ getAPIUser priv = getAPIUserWithPrivileges [priv]
 -- | Get the User and Actor for the API, as long as any privileges are granted
 -- Same behaviour as `getAPIUserWithPrivileges`
 getAPIUserWithAnyPrivileges :: Kontrakcja m => m (User, Actor)
-getAPIUserWithAnyPrivileges = getAPIUserWithPrivileges [APIPersonal, APIDocCheck, APIDocSend, APIDocCreate]
+getAPIUserWithAnyPrivileges = getAPIUserWithPrivileges allPrivileges
 
 -- | Get the User and Actor for a API call
 -- Either through:
@@ -112,28 +109,3 @@ getAPIUserWith ctxUser privs = do
                                                          , "authorization" .= auth
                                                          ]
           apiError $ invalidAuthorization
-
-getOAuthUser :: Kontrakcja m => [APIPrivilege] -> m (Maybe (Either T.Text (User, Actor)))
-getOAuthUser privs = do
-  eauth <- getAuthorization
-  case eauth of
-    Nothing       -> return Nothing
-    Just (Left l) -> return $ Just $ Left $ "OAuth headers could not be parsed: " `T.append` (T.pack l)
-    Just (Right auth) -> Just <$> getUserFromOAuth auth privs
-
-getUserFromOAuth :: Kontrakcja m => OAuthAuthorization -> [APIPrivilege] -> m (Either T.Text (User, Actor))
-getUserFromOAuth OAuthAuthorization{..} privs = do
-  uap <- dbQuery $ GetUserIDForAPIWithPrivilege oaAPIToken oaAPISecret oaAccessToken oaAccessSecret privs
-  case uap of
-    Nothing -> return $ Left "OAuth credentials are invalid or they may not have sufficient privileges"
-    Just (userid, apistring) -> do
-      mUser <- dbQuery $ GetUserByID userid
-      case mUser of
-        Nothing -> apiError $ serverError "OAuth credentials are valid but the user account for those credentials does not exist"
-        Just user -> do
-          ctx <- getContext
-          let actor = apiActor ctx user apistring
-          return $ Right (user, actor)
-
-getUserFromOAuthWithAnyPrivileges :: Kontrakcja m => OAuthAuthorization -> m (Either T.Text (User, Actor))
-getUserFromOAuthWithAnyPrivileges oauth = getUserFromOAuth oauth [APIPersonal, APIDocCheck, APIDocSend, APIDocCreate]

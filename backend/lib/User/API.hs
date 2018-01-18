@@ -32,6 +32,7 @@ import KontraPrelude
 import Log.Identifier
 import Mails.SendMail
 import OAuth.Model
+import OAuth.Util
 import Redirect
 import Routing
 import Salesforce.AuthorizationWorkflow
@@ -357,7 +358,7 @@ apiCallLoginUserAndGetSession :: Kontrakcja m => m Response
 apiCallLoginUserAndGetSession = V2.api $ do
   -- parse oauth from json
   oauth <- V2.apiV2ParameterObligatory $ V2.ApiV2ParameterJSON "personal_token" unjsonOAuthAuthorization
-  euser <- V2.getUserFromOAuthWithAnyPrivileges oauth
+  euser <- getUserFromOAuthWithAnyPrivileges oauth
   case euser of
     Left err -> V2.apiError $ V2.invalidAuthorizationWithMsg err
     Right (User{userid}, _actor) -> do
