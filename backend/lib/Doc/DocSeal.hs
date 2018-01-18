@@ -96,7 +96,9 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
     companyNumberText <- if (not (null companynumber))
                             then renderTemplate "_contractsealingtextsorgNumberText" $ F.value "companynumber" companynumber
                          else return ""
-    fields <- fieldsFromSignatory checkboxMapping radiobuttonMapping signatory
+    imgData <- liftIO . BS.readFile $ "files" </> "images" </> "bankid_logo_se.png"
+    fields  <- maybeAddSEBankIDLogo imgData <$>
+               fieldsFromSignatory checkboxMapping radiobuttonMapping signatory
     highlightedImages <- mapM (highlightedImageFromHighlightedPage inputpath) (signatoryhighlightedpages signatory)
     return $ Seal.Person { Seal.fullname           = fromMaybe "" $ signatoryIdentifier sim (signatorylinkid signatory) emptyNamePlaceholder
                          , Seal.company            = getCompanyName signatory
@@ -116,6 +118,24 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
                          , Seal.companyNumberText  = companyNumberText
                          , Seal.highlightedImages  = highlightedImages
                          }
+  where
+    maybeAddSEBankIDLogo :: BS.ByteString -> [Seal.Field] -> [Seal.Field]
+    maybeAddSEBankIDLogo imgData = case signatorylinkauthenticationtosignmethod
+                                        signatory of
+      SEBankIDAuthenticationToSign -> (seBankIDLogoJPEG imgData:)
+      _                            -> id
+    seBankIDLogoJPEG imgData = Seal.FieldJPG
+                 { valueBinary           = imgData
+                 , Seal.x                = 0
+                 , Seal.y                = 0
+                 , Seal.page             = 0
+                 , Seal.image_w          = 1.0
+                 , Seal.image_h          = 0.47222222222222222222
+                 , Seal.includeInSummary = True
+                 , Seal.onlyForSummary   = True
+                 , Seal.keyColor         = Just (255,255,255)
+                 }
+
 
 personExFromSignatoryLink :: (MonadDB m, MonadIO m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m)
                           => String
@@ -170,6 +190,7 @@ fieldsFromSignatory checkboxMapping radiobuttonMapping SignatoryLink{signatoryfi
                  , Seal.greyed           = greyed
                  , Seal.includeInSummary = True
                  }
+
     checkboxJPEG checked placement = Seal.FieldJPG
                  { valueBinary           = getCheckboxImage checkboxMapping (placementwrel placement) checked
                  , Seal.x                = placementxrel placement
@@ -517,7 +538,7 @@ sealSpecFromDocument checkboxMapping radiobuttonMapping hostpart document elog o
         , Seal.secretaries    = secretaries
         , Seal.initiator      = initiator
         , Seal.history        = history
-        , Seal.initialsText       = initialsText
+        , Seal.initialsText   = initialsText
         , Seal.hostpart       = hostpart
         , Seal.staticTexts    = staticTexts
         , Seal.attachments    = docAttachments ++ [evidenceattachment, evidenceOfTime, evidenceOfIntent]
