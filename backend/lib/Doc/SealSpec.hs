@@ -6,6 +6,7 @@ import Data.Int
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as Text
+import qualified Data.Text.Encoding as Text
 import qualified Data.Unjson as Unjson
 
 import KontraPrelude
@@ -144,7 +145,7 @@ unjsonField = Unjson.unionOf
               , (isFieldJPG,
                  pure FieldJPG
                  <*> Unjson.fieldBy "valueBase64" valueBinary ""
-                     (invmap (B64.decodeLenient . BS.pack . Text.unpack) (Text.pack . BS.unpack . B64.encode) Unjson.unjsonDef)
+                     (invmap (B64.decodeLenient . Text.encodeUtf8) (Text.decodeUtf8 . B64.encode) Unjson.unjsonDef)
                  <*> Unjson.field "x" x ""
                  <*> Unjson.field "y" y ""
                  <*> Unjson.field "page" page ""
