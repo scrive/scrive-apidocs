@@ -165,7 +165,7 @@ createUserAndResetPassword = do
   bd <- dbQuery $ GetMainBrandedDomain
   pwd <- createPassword "admin"
   company <- dbUpdate $ CreateCompany
-  Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) def (get bdid bd) AccountRequest
+  Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) def (get bdid bd) AccountRequest (companyusergroupid company)
   PasswordReminder{..} <- newPasswordReminder $ userid user
   ctx <- mkContext def
   req <- mkRequest POST [("password", inText "password123")]
@@ -185,5 +185,5 @@ createTestUser = do
     bd <- dbQuery $ GetMainBrandedDomain
     pwd <- createPassword "admin"
     company <- dbUpdate $ CreateCompany
-    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) def (get bdid bd) AccountRequest
+    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) def (get bdid bd) AccountRequest (companyusergroupid company)
     return userid

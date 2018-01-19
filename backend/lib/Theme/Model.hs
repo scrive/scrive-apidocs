@@ -18,11 +18,14 @@ module Theme.Model (
 
 import Control.Monad.Catch
 import Control.Monad.State
+import Log
 import qualified Data.ByteString.Char8 as BS
 
 import BrandedDomain.BrandedDomainID
 import Company.CompanyID
+import Company.Model
 import DB
+import Log.Identifier
 import Theme.ThemeID
 
 data Theme = Theme {
@@ -40,7 +43,7 @@ data Theme = Theme {
   , themeNegativeColor            :: !String
   , themeNegativeTextColor        :: !String
   , themeFont                     :: !String
-} deriving (Eq, Ord, Show) 
+} deriving (Eq, Ord, Show)
 
 data GetTheme = GetTheme ThemeID
 instance (MonadDB m,MonadThrow m) => DBQuery m GetTheme Theme where
@@ -123,7 +126,7 @@ setThemeData t = do
       sqlSet "font" $ themeFont t
 
 data InsertNewThemeForCompany = InsertNewThemeForCompany CompanyID Theme
-instance (MonadDB m,MonadThrow m) => DBUpdate m InsertNewThemeForCompany Theme where
+instance (MonadDB m,MonadThrow m, MonadLog m) => DBUpdate m InsertNewThemeForCompany Theme where
   update (InsertNewThemeForCompany cid t) = do
     nt <- dbUpdate $ UnsafeInsertNewThemeWithoutOwner t
     dbUpdate $ MakeThemeOwnedByCompany cid (themeID nt)
@@ -137,11 +140,20 @@ instance (MonadDB m,MonadThrow m) => DBUpdate m InsertNewThemeForDomain Theme wh
     return nt
 
 data MakeThemeOwnedByCompany = MakeThemeOwnedByCompany CompanyID ThemeID
-instance (MonadDB m,MonadThrow m) => DBUpdate m MakeThemeOwnedByCompany () where
+instance (MonadDB m,MonadThrow m, MonadLog m) => DBUpdate m MakeThemeOwnedByCompany () where
   update (MakeThemeOwnedByCompany cid tid) = do
+    mugid <- dbQuery (GetCompany cid) >>= \case
+      Nothing -> do
+        logAttention "MakeThemeOwnedByCompany company does not exist" $ object [
+            identifier_ tid
+          , identifier_ cid
+          ]
+        return Nothing
+      Just c -> return $ companyusergroupid c
     runQuery_ . sqlInsert "theme_owners" $ do
       sqlSet "theme_id"   $ tid
       sqlSet "company_id" $ cid
+      sqlSet "user_group_id" $ mugid
 
 data MakeThemeOwnedByDomain = MakeThemeOwnedByDomain BrandedDomainID ThemeID
 instance (MonadDB m,MonadThrow m) => DBUpdate m MakeThemeOwnedByDomain () where

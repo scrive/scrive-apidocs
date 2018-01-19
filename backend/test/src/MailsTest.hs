@@ -10,7 +10,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import qualified Text.XML as XML
 
-import Company.CompanyUI
+import Company.CompanyUI.Model
 import Company.Model
 import Context
 import DB

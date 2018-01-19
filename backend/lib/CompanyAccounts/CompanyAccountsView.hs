@@ -18,7 +18,7 @@ import qualified Text.StringTemplates.Fields as F
 
 import AppView
 import BrandedDomain.BrandedDomain
-import Company.CompanyUI
+import Company.CompanyUI.Model
 import Company.Model
 import Context
 import DB

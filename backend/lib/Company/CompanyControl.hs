@@ -26,7 +26,7 @@ import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.Unjson as Unjson
 
 import BrandedDomain.BrandedDomain
-import Company.CompanyUI
+import Company.CompanyUI.Model
 import Company.Model
 import DB
 import Happstack.Fields

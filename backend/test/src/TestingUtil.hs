@@ -19,6 +19,7 @@ import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck
 import Test.QuickCheck.Gen
+import Test.QuickCheck.Unicode as QCU
 import qualified Crypto.Scrypt as Scrypt
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS8
@@ -29,6 +30,7 @@ import qualified Test.HUnit as T
 import BrandedDomain.BrandedDomain
 import BrandedDomain.BrandedDomainID
 import BrandedDomain.Model
+import Company.CompanyUI.Model
 import Company.Model
 import Context
 import DB
@@ -68,6 +70,7 @@ import TestKontra
 import User.Email
 import User.Model
 import User.Password.Internal (Password(..))
+import UserGroup.Data
 import Util.Actor
 import qualified KontraError as KE
 import qualified Text.XML.Content as C
@@ -121,7 +124,20 @@ instance Arbitrary Company where
     d <- arbitrary
     return $ Company { companyid  = a
                      , companyinfo = d
+                     , companyusergroupid = Nothing
                      }
+
+arbitraryName :: Gen T.Text
+arbitraryName = (return . pack . concat) =<< replicateM 3 arbitrarySyllable
+
+arbitrarySyllable :: Gen String
+arbitrarySyllable = do
+  consonant <- elements "bcdfghjklmnpqrstvwxz"
+  vovel <- elements "aeiyou"
+  return [consonant,vovel]
+
+instance Arbitrary T.Text where
+  arbitrary = arbitraryName
 
 instance Arbitrary CompanyID where
   arbitrary = unsafeCompanyID . abs <$> arbitrary
@@ -147,10 +163,29 @@ instance Arbitrary PaymentPlan where
                        , TrialPlan
                        ]
 
+-- PostgreSQL will not store \NUL in DB
+genUnicodeString :: Gen String
+genUnicodeString = filter (/= '\NUL') <$> QCU.string
+
+genMaybeUnicodeString :: Gen (Maybe String)
+genMaybeUnicodeString = oneof [ pure Nothing, Just <$> genUnicodeString ]
+
 instance Arbitrary CompanyInfo where
   arbitrary = do
-    (a, b, c, d, e, f, h, i, j) <- arbitrary
-    (k, l, m, n, p) <- arbitrary
+    a <- genUnicodeString
+    b <- genUnicodeString
+    c <- genUnicodeString
+    d <- genUnicodeString
+    e <- genUnicodeString
+    f <- genUnicodeString
+    h <- arbitrary
+    i <- genMaybeUnicodeString
+    j <- arbitrary
+    k <- genMaybeUnicodeString
+    l <- arbitrary
+    m <- arbitrary
+    n <- arbitrary
+    p <- arbitrary
     return $ CompanyInfo { companyname       = a
                          , companynumber     = b
                          , companyaddress    = c
@@ -167,6 +202,55 @@ instance Arbitrary CompanyInfo where
                          , companypadearchiveenabled = n
                          , companypaymentplan = p
                          }
+
+instance Arbitrary CompanyUI where
+  arbitrary = CompanyUI
+    <$> pure (unsafeCompanyID 0)
+    <*> pure Nothing
+    <*> pure Nothing
+    <*> pure Nothing
+    <*> genMaybeUnicodeString
+    <*> genMaybeUnicodeString
+    <*> arbitrary
+
+instance Arbitrary UserGroup where
+  arbitrary = (\name minfo maddress mui invoicing -> UserGroup emptyUserGroupID Nothing name maddress minfo invoicing mui)
+    <$> arbitrary
+    <*> arbitrary
+    <*> arbitrary
+    <*> arbitrary
+    <*> arbitrary
+
+instance Arbitrary UserGroupInfo where
+  arbitrary = UserGroupInfo
+    <$> arbitrary
+    <*> arbitrary
+    <*> arbitrary
+    <*> arbitrary
+    <*> arbitrary
+    <*> arbitrary
+    <*> arbitrary
+
+instance Arbitrary UserGroupAddress where
+  arbitrary = UserGroupAddress
+    <$> arbitrary
+    <*> arbitrary
+    <*> arbitrary
+    <*> arbitrary
+    <*> arbitrary
+
+instance Arbitrary UserGroupUI where
+  arbitrary = (\mbrowsertitle msmsoriginator mfavicon -> UserGroupUI Nothing Nothing Nothing mbrowsertitle msmsoriginator mfavicon)
+    <$> arbitrary
+    <*> arbitrary
+    <*> arbitrary
+
+instance Arbitrary UserGroupInvoicing where
+  arbitrary = oneof [
+      pure None
+    , BillItem <$> arbitrary
+    , Invoice <$> arbitrary
+    ]
 
 instance Arbitrary MagicHash where
   arbitrary = unsafeMagicHash <$> arbitrary
@@ -541,6 +625,7 @@ instance Arbitrary User where
                    <*> arbitrary
                    <*> arbitrary
                    <*> pure (unsafeBrandedDomainID 0)
+                   <*> pure Nothing
 
 instance Arbitrary CgiGrpTransaction where
   arbitrary = do
@@ -681,36 +766,47 @@ addNewRandomFile = do
   cnt <- liftBase $ BS.readFile fn
   saveNewFile fn cnt
 
-addNewUser :: (MonadDB m, MonadThrow m, MonadLog m) => String -> String -> String -> m (Maybe User)
-addNewUser firstname secondname email = do
-  bd <- dbQuery $ GetMainBrandedDomain
-  company <- dbUpdate $ CreateCompany
-  dbUpdate $ AddUser (firstname, secondname) email Nothing (companyid company,True) def (get bdid bd) AccountRequest
+addNewUser :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m) => String -> String -> String -> m (Maybe User)
+addNewUser firstname secondname email = addNewUserAndMaybeUserGroup firstname secondname email True
 
-addNewUserWithCompany :: (MonadDB m, MonadThrow m, MonadLog m)
+addNewUserAndMaybeUserGroup :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m) => String -> String -> String -> Bool -> m (Maybe User)
+addNewUserAndMaybeUserGroup firstname secondname email createusergroup = do
+  bd <- dbQuery $ GetMainBrandedDomain
+  company <- case createusergroup of
+    True  -> dbUpdate $ CreateCompany
+    False -> dbUpdate$ CreateCompanyWithoutUserGroup
+  dbUpdate $ AddUser (firstname, secondname) email Nothing (companyid company,True) def (get bdid bd) AccountRequest (companyusergroupid company)
+
+addNewUserWithCompany :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
                       => String
                       -> String
                       -> String
                       -> m (Maybe (User, CompanyID))
 addNewUserWithCompany firstname secondname email = do
   bd <- dbQuery $ GetMainBrandedDomain
-  companyId <- companyid <$> (dbUpdate $ CreateCompany)
-  mUser <- dbUpdate $ AddUser (firstname, secondname) email Nothing (companyId, True) def (get bdid bd) AccountRequest
+  company <- dbUpdate CreateCompany
+  mUser <- dbUpdate $ AddUser (firstname, secondname) email Nothing (companyid company, True) def (get bdid bd) AccountRequest (companyusergroupid company)
   case mUser of
     Nothing -> return Nothing
-    Just user -> return $ Just (user, companyId)
+    Just user -> return $ Just (user, companyid company)
 
 addNewCompanyUser :: String -> String -> String -> CompanyID -> TestEnv (Maybe User)
 addNewCompanyUser firstname secondname email cid = do
   bd <- dbQuery $ GetMainBrandedDomain
-  dbUpdate $ AddUser (firstname, secondname) email Nothing (cid,True) def (get bdid bd) CompanyInvitation
+  dbQuery (GetCompany  cid) >>= \case
+    Nothing -> return Nothing
+    Just company ->
+      dbUpdate $ AddUser (firstname, secondname) email Nothing (cid,True) def (get bdid bd) CompanyInvitation (companyusergroupid company)
 
-addNewRandomUser :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => m User
-addNewRandomUser = do
+addNewRandomUser :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m) => m User
+addNewRandomUser = addNewRandomUserAndMaybeUserGroup True
+
+addNewRandomUserAndMaybeUserGroup :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m) => Bool -> m User
+addNewRandomUserAndMaybeUserGroup createusergroup = do
   fn <- rand 10 $ arbString 3 30
   ln <- rand 10 $ arbString 3 30
   em <- rand 10 arbEmail
-  Just user <- addNewUser fn ln em
+  Just user <- addNewUserAndMaybeUserGroup fn ln em createusergroup
   -- change the user to have some distinct personal information
   personal_number <- rand 10 $ arbString 3 30
   company_position <- rand 10 $ arbString 3 30
@@ -726,7 +822,7 @@ addNewRandomUser = do
   _ <- dbUpdate $ SetUserInfo (userid user) userinfo
   return user
 
-addNewRandomUserWithCompany :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m)
+addNewRandomUserWithCompany :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
                             => m (User, CompanyID)
 addNewRandomUserWithCompany = do
   fn <- rand 10 $ arbString 3 30
@@ -748,7 +844,7 @@ addNewRandomUserWithCompany = do
   _ <- dbUpdate $ SetUserInfo (userid user) userinfo
   return (user, companyId)
 
-addNewRandomUserWithPassword :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => String -> m User
+addNewRandomUserWithPassword :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m) => String -> m User
 addNewRandomUserWithPassword password = do
   -- create random user
   randomUser <- addNewRandomUser
@@ -972,6 +1068,9 @@ instance Arbitrary FileID where
 
 instance Arbitrary IPAddress where
   arbitrary = unsafeIPAddress <$> arbitrary
+
+instance Arbitrary IPAddressWithMask where
+  arbitrary = unsafeIPAddressWithMask <$> arbitrary <*> arbitrary
 
 instance Arbitrary SignInfo where
   arbitrary = SignInfo <$> arbitrary <*> arbitrary

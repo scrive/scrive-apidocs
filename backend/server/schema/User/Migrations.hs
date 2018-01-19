@@ -25,3 +25,17 @@ addUserTOTPKeyColumn = Migration {
             tblColumn { colName = "totp_active", colType = BoolT, colNullable = False, colDefault = Just "false" }
         ]
   }
+
+usersAddUserGroupID :: MonadDB m => Migration m
+usersAddUserGroupID = Migration {
+    mgrTableName = tblName tableUsers
+  , mgrFrom = 22
+  , mgrAction = StandardMigration $ do
+      let tname = tblName tableUsers
+      runQuery_ . sqlAlterTable tname $
+        [
+          sqlAddColumn $ tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = True }
+        , sqlAddFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
+        ]
+      runQuery_ . sqlCreateIndex tname $ indexOnColumn "user_group_id"
+  }

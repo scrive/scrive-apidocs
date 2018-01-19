@@ -21,6 +21,7 @@ import Partner.Model
 import TestingUtil
 import TestKontra as T
 import User.Model
+import UserGroup.Model
 
 partnerAPITests :: TestEnvSt -> Test
 partnerAPITests env = testGroup "PartnerAPI"
@@ -362,9 +363,11 @@ testHelperPartnerCompanyUserCreate ctx pid cid = do
 
 testJSONCtx :: TestEnv (Context, PartnerID)
 testJSONCtx = do
-  partnerAdminUser <- addNewRandomUser
+  partnerAdminUser <- addNewRandomUserAndMaybeUserGroup False
   partnerId <- dbUpdate $ AddNewPartner "My Favourite Upsales"
   _ <- dbUpdate $ MakeUserIDAdminForPartnerID (userid partnerAdminUser) partnerId
+  numberOfUpdates <- migrateToUserGroups 100
+  assertEqual "Only the single partner was migrated" 1 numberOfUpdates
   ctx <- (set ctxmaybeuser (Just partnerAdminUser)) <$> mkContext def
   return (ctx, partnerId)
 

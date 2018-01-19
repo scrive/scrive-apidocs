@@ -16,7 +16,7 @@ import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.BrandedDomain
-import Company.CompanyUI
+import Company.CompanyUI.Model
 import Company.Model
 import DB
 import Doc.DocStateData hiding (DocumentStatus(..))

@@ -111,7 +111,10 @@ Library
                  , Chargeable.Tables
                  , Company.CompanyControl
                  , Company.CompanyID
-                 , Company.CompanyUI
+                 , Company.CompanyUI.Data
+                 , Company.CompanyUI.Model
+                 , Company.Data
+                 , Company.Data.PaymentPlan
                  , Company.Model
                  , Company.Tables
                  , CompanyAccounts.CompanyAccountsControl
@@ -280,6 +283,11 @@ Library
                  , FileStorage.Class
                  , FileStorage.RedisCache
                  , FlashMessage
+                 , UserGroup.Data
+                 , UserGroup.Internal
+                 , UserGroup.Labels
+                 , UserGroup.Model
+                 , UserGroup.Tables
                  , GuardTime
                  , GuardTime.Class
                  , Happstack.Fields
@@ -777,6 +785,8 @@ Executable kontrakcja-migrate
                  FeatureFlags.Migrations
                  FeatureFlags.Tables
                  File.Tables
+                 UserGroup.Migrations
+                 UserGroup.Tables
                  HostClock.Tables
                  Log.Configuration
                  Log.Migrations
@@ -794,6 +804,7 @@ Executable kontrakcja-migrate
                  SMS.Migrations
                  SMS.Tables
                  Session.Tables
+                 Theme.Migrations
                  Theme.Tables
                  ThirdPartyStats.Migrations
                  ThirdPartyStats.Tables
@@ -1270,6 +1281,9 @@ Test-suite kontrakcja-test
                  File.Tables
                  FileTest
                  FlashMessages
+                 UserGroup.UserGroupTest
+                 UserGroup.Migrations
+                 UserGroup.Tables
                  GTWorkflowTest
                  HostClock.Tables
                  HtmlTest
@@ -1307,6 +1321,7 @@ Test-suite kontrakcja-test
                  TestFileStorage
                  TestKontra
                  TestingUtil
+                 Theme.Migrations
                  Theme.Tables
                  ThirdPartyStats
                  ThirdPartyStats.Migrations
@@ -1365,6 +1380,7 @@ Test-suite kontrakcja-test
                , mtl
                , network-uri
                , one-time-password
+               , quickcheck-unicode
                , regex-tdfa
                , sandi
                , scientific

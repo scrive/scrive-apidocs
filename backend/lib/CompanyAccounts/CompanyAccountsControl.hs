@@ -16,7 +16,7 @@ import Data.Char
 import Text.JSON (JSValue(..))
 import Text.JSON.Gen
 
-import Company.CompanyUI
+import Company.CompanyUI.Model
 import Company.Model
 import CompanyAccounts.CompanyAccountsView
 import CompanyAccounts.Model

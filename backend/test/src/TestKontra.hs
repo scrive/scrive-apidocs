@@ -424,3 +424,8 @@ clearTables = do
   runSQL_ "DELETE FROM main_files"
   runSQL_ "DELETE FROM document_sealing_jobs"
   runSQL_ "DELETE FROM amazon_upload_jobs"
+  runSQL_ "DELETE FROM user_groups"
+  runSQL_ "DELETE FROM user_group_invoicings"
+  runSQL_ "DELETE FROM user_group_uis"
+  runSQL_ "DELETE FROM user_group_addresses"
+  runSQL_ "DELETE FROM user_group_infos"

@@ -15,13 +15,15 @@ import Log
 import DB
 import Partner.Partner
 import User.UserID
+import UserGroup.Data
 
-fetchPartner :: (PartnerID, String, Bool) -> Partner
-fetchPartner (pid, pname, pdef) =
+fetchPartner :: (PartnerID, String, Bool, Maybe UserGroupID) -> Partner
+fetchPartner (pid, pname, pdef, mugid) =
   Partner
     { ptID = pid
     , ptName = pname
     , ptDefaultPartner = pdef
+    , ptUserGroupID = mugid
     }
 
 partnerSelector :: [SQL]
@@ -29,6 +31,7 @@ partnerSelector =
   [ "id"
   , "name"
   , "default_partner"
+  , "user_group_id"
   ]
 
 data GetPartners = GetPartners
@@ -55,6 +58,9 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBQuery m GetPartnerByID Partn
       sqlWhereEq "id" pid
     fetchOne fetchPartner
 
+-- to convert to UserGroup here, we would need to create some "empty" company and user_group
+-- since this is never called except for tests, lets assume that this will not happen during
+-- company to user_groups migration.
 data AddNewPartner = AddNewPartner String
 instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m AddNewPartner PartnerID where
   update (AddNewPartner name) = do

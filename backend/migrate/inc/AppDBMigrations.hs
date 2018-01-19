@@ -24,10 +24,12 @@ import Mails.Migrations
 import Partner.Migrations
 import SMS.FromKontra.Migrations
 import SMS.Migrations
+import Theme.Migrations
 import ThirdPartyStats.Migrations
 import User.APILog.Migrations
 import User.History.Migrations
 import User.Migrations
+import UserGroup.Migrations
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
 -- Current version has migrations created after VII.2016.
@@ -101,4 +103,16 @@ kontraMigrations = [
   , removeSearchTermsIndex
   , createAmazonURLFixConsumers
   , createAmazonURLFixJobs
+  , createTableUserGroups
+  , createTableUserGroupInfos
+  , createTableUserGroupAddresses
+  , createTableUserGroupUIs
+  , chargeableItemsAddUserGroupID
+  , featureFlagsAddUserGroupID
+  , themeOwnershipAddUserGroupID
+  , usersAddUserGroupID
+  , companiesAddUserGroupID
+  , partnersAddUserGroupID
+  , createTableUserGroupInvoicings
+  , addUserGroupMigrationJob
   ]

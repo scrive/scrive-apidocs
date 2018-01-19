@@ -13,7 +13,7 @@ import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Branding.Adler32
 import Company.CompanyControl
-import Company.CompanyUI
+import Company.CompanyUI.Model
 import Company.Model
 import Context
 import DB

@@ -77,6 +77,7 @@ import TestConf
 import TestKontra
 import ThirdPartyStats
 import User.APITest
+import UserGroup.UserGroupTest
 import UserHistoryTest
 import UserPasswordTest
 import UserStateTest
@@ -112,6 +113,7 @@ allTests = [
   , fileTests
   , featureFlagsTest
   , flashMessagesTests
+  , userGroupTests
   , htmlTests
   , inputValidationTests
   , jsonUtilTests

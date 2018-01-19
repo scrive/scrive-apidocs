@@ -148,5 +148,5 @@ testUser = do
   bd <- dbQuery $ GetMainBrandedDomain
   pwd <- createPassword "admin"
   company <- dbUpdate $ CreateCompany
-  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) (companyid company,True) def (get bdid bd) AccountRequest
+  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) (companyid company,True) def (get bdid bd) AccountRequest (companyusergroupid company)
   return $ userid user
