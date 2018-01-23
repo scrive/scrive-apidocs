@@ -88,12 +88,17 @@ var classNames = require("classnames");
 
       var inputClass = classNames({
         "obligatory-input": true,
-        "valid": !self.props.model.askForSSN()
+        "valid": !self.props.model.askForSSN(),
+        "censor-screenshot": model.document().currentSignatory().hidePNElog()
       });
 
       var buttonClass = classNames({
         "button-block": true,
         "inactive": !this.props.canSign
+      });
+
+      var ssnLabelClass = classNames({
+        "censor-screenshot": model.document().currentSignatory().hidePNElog()
       });
 
       var divClass = classNames({
@@ -138,7 +143,12 @@ var classNames = require("classnames");
             </dl>
           }
           {/* else */ !this.props.askForSSN &&
-            <p className="ssn-text">{localization.personalNumber} <b>{ssn}</b></p>
+              <p className="ssn-text">
+                {localization.personalNumber}
+                <span className={ssnLabelClass}>
+                  <b>{ssn}</b>
+                </span>
+              </p>
           }
           <Checkbox
             className="large-checkbox"

@@ -483,7 +483,7 @@ UpdateFieldLastNameEvidenceLog=The signatory <span class="actor"/> changed the t
 ###
 UpdateFieldCompanyEvidenceLog=The signatory <span class="actor"/> changed the text in the text field “Company” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
-UpdateFieldPersonalNumberEvidenceLog=The signatory <span class="actor"/> changed the text in the text field “ID number” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
+UpdateFieldPersonalNumberEvidenceLog=The signatory <span class="actor"/> changed the text in the text field “ID number” from $personalNumber(value=updateFieldPreviousValue())$ to $personalNumber(value=updateFieldNewValue())$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
 UpdateFieldCompanyNumberEvidenceLog=The signatory <span class="actor"/> changed the text in the text field “Company number” from $updateFieldPreviousValue()$ to $updateFieldNewValue()$.$if(placements)$ The field’s placement in the Main Document:$updateFieldPlacements()$$endif$
 ###
@@ -503,6 +503,13 @@ updateFieldPlacements=$if(placements)$<table class="placements"><tr><td>Page</td
 ###
 pinWasSent=The PIN was sent to $phone$.
 ###
+personalNumber=
+$if(hide_pn_elog)$
+  <i>*Redacted by author*</i>
+$else$
+  $value$
+$endif$
+###
 elegVerificationSign=
 <br/>
 <br/>
@@ -511,7 +518,7 @@ elegVerificationSign=
 <br/>
 <p>Data returned from $provider()$:
   <br/>Name: $signatory_name$
-  <br/>ID number: $signatory_personal_number$
+  <br/>ID number: $personalNumber(value=signatory_personal_number)$
 </p>
 <br/>
 <p>Signature: <div>$signature$</div></p>
@@ -560,7 +567,7 @@ elegVerificationAuth=
 <p>Data returned from $provider()$:
   <br/>Name: $signatory_name$
   $if(signatory_personal_number)$
-  <br/>ID number: $signatory_personal_number$
+  <br/>ID number: $personalNumber(value=signatory_personal_number)$
   $endif$
   $if(signatory_mobile)$
   <br/>Mobile: $signatory_mobile$

@@ -31,6 +31,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         delivery_method: "email",
         confirmation_delivery_method : "email",
         allows_highlighting: false,
+        hide_personal_number_in_evidence_log: false,
         // Internal properties used by design view for "goldfish" memory
         deliverySynchedWithConfirmationDelivery : true,
         confirmationDeliverySynchedWithDelivery : true,
@@ -643,7 +644,8 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
               authentication_method_to_view: this.authenticationToView(),
               delivery_method: this.delivery(),
               confirmation_delivery_method : this.confirmationdelivery(),
-              allows_highlighting : this.allowshighlighting()
+              allows_highlighting : this.allowshighlighting(),
+              hide_personal_number_in_evidence_log: this.hidePNElog()
         };
     },
     delivery: function() {
@@ -869,6 +871,9 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     },
     allowshighlighting: function() {
       return this.get("allows_highlighting");
+    },
+    hidePNElog: function() {
+      return this.get("hide_personal_number_in_evidence_log");
     },
     bindBubble: function() {
         var signatory = this;

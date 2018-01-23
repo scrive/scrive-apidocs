@@ -226,8 +226,10 @@ var Document = exports.Document = Backbone.Model.extend({
         var document = this;
         var extraErrorLogParams = {'Number of pages': document.file().pages().length};
         function callDone() {
+            $("body").removeClass("screenshot");
             if (done) done();
         }
+        $("body").addClass("screenshot");
         takeScreenshot(
             function(canvas) {
                 try {

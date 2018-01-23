@@ -11,6 +11,7 @@ module Doc.Migrations (
   , signatoryLinkFieldsAddCustomValidation
   , addSearchColumnsToDocument
   , addAuthorUserIDToDocuments
+  , addHidePnElogToSignatories
 ) where
 
 import Data.Int
@@ -221,5 +222,15 @@ signatoryLinkFieldsAddCustomValidation = Migration {
                 \AND custom_validation_pattern IS NOT NULL \
                 \AND custom_validation_positive_example IS NOT NULL \
                 \AND custom_validation_tooltip IS NOT NULL"
+        ]
+  }
+
+addHidePnElogToSignatories  :: MonadDB m => Migration m
+addHidePnElogToSignatories  = Migration {
+    mgrTableName = tblName tableSignatoryLinks
+  , mgrFrom = 31
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable "signatory_links" [
+          sqlAddColumn tblColumn { colName = "hide_pn_elog", colType = BoolT, colNullable = False, colDefault = Just "false" }
         ]
   }

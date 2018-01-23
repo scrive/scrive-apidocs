@@ -76,4 +76,5 @@ kontraMigrations = [
   , createAPILogsTablePK
   , addPasswordAlgorithmVersionColumn
   , addPasswordAlgorithmUpgradeJob
+  , addHidePnElogToSignatories
   ]

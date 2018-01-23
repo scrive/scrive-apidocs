@@ -100,14 +100,21 @@ module.exports = React.createClass({
       }
 
       if (signatory.personalnumber()) {
-        infoList.push({
-          label: localization.docsignview.personalNumberLabel,
-          text: signatory.personalnumber().trim() || localization.docsignview.notEntered
-        });
+        const info = {label: localization.docsignview.personalNumberLabel,
+                      text: signatory.personalnumber().trim() || localization.docsignview.notEntered};
+        if (signatory.hidePNElog()) {
+          info["textClass"] = "censor-screenshot";
+        }
+        infoList.push(info);
       }
 
-      function renderInfo ({label, text}, index) {
-        return <li key={"info_" + index}>{label}: <b>{text}</b></li>;
+      function renderInfo ({label, text, textClass}, index) {
+        return (<li key={"info_" + index}>
+                  {label}:
+                  <span className={textClass ? textClass : ""}>
+                    <b>{text}</b>
+                  </span>
+                </li>);
       }
 
       return (

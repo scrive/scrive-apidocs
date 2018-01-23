@@ -92,13 +92,9 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
     signedAtText <- if (null stime)
                        then return ""
                     else renderTemplate "_contractsealingtextssignedAtText" $ F.value "time" stime
-    let personalnumber = getPersonalNumber signatory
-        companynumber = getCompanyNumber signatory
+    let companynumber = getCompanyNumber signatory
     companyNumberText <- if (not (null companynumber))
                             then renderTemplate "_contractsealingtextsorgNumberText" $ F.value "companynumber" companynumber
-                         else return ""
-    personalNumberText <- if (not (null personalnumber))
-                            then renderTemplate "_contractsealingtextspersonalNumberText" $ F.value "idnumber" personalnumber
                          else return ""
     fields <- fieldsFromSignatory checkboxMapping radiobuttonMapping signatory
     highlightedImages <- mapM (highlightedImageFromHighlightedPage inputpath) (signatoryhighlightedpages signatory)
@@ -106,7 +102,7 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
                          , Seal.company            = getCompanyName signatory
                          , Seal.email              = getEmail signatory
                          , Seal.phone              = getMobile signatory
-                         , Seal.personalnumber     = getPersonalNumber signatory
+                         , Seal.personalnumber     = ""
                          , Seal.companynumber      = getCompanyNumber signatory
                          , Seal.fullnameverified   = False
                          , Seal.companyverified    = False
@@ -116,7 +112,7 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
                          , Seal.fields             = fields
                          , Seal.signtime           = stime
                          , Seal.signedAtText       = signedAtText
-                         , Seal.personalNumberText = personalNumberText
+                         , Seal.personalNumberText = ""
                          , Seal.companyNumberText  = companyNumberText
                          , Seal.highlightedImages  = highlightedImages
                          }
