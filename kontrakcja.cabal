@@ -365,6 +365,7 @@ Library
                  , Text.JSON.Orphans
                  , Text.XML.Content
                  , Text.XML.DirtyContent
+                 , TextSearchQuery
                  , Theme.Control
                  , Theme.Model
                  , Theme.Tables

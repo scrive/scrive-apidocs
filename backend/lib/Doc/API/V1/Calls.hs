@@ -956,7 +956,7 @@ apiCallV1List = api $ do
                       Right js ->[DocumentFilterByTags $ join $ maybeToList $ (fromJSValueCustomMany fromJSValue js)]
                       _ -> []
   let sorting    = docSortingFromParams params
-      searching  = processSearchStringToFilter . T.pack . listParamsSearching $ params
+      searching  = [processSearchStringToFilter . T.pack . listParamsSearching $ params]
       pagination = (listParamsOffset params, listParamsLimit params, docsPageSize)
       filters = filters1 ++ filters2 ++ tagsFilters
 

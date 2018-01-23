@@ -1158,7 +1158,7 @@ testGetDocumentsSharedInCompany = replicateM_ 10 $ do
 
 testProcessSearchStringToFilter :: TestEnv ()
 testProcessSearchStringToFilter = do
-  let stripDocumentFilter (DocumentFilterByString s) = s
+  let stripDocumentFilter (DocumentFilterByTSQuery s) = s
       stripDocumentFilter _ = $unexpectedError "This should not happen!"
       t0 = ""
       e0 = []
@@ -1201,26 +1201,26 @@ testProcessSearchStringToFilter = do
       tJ = "hey \"there 23\" and \"missing some not\" at all \"boooyah!\""
       eJ = [Unquoted "hey", Quoted "there 23", Unquoted "and", Quoted "missing some not", Unquoted "at"]
 
-  assertEqual "Should match" e0 (map stripDocumentFilter $ processSearchStringToFilter t0)
-  assertEqual "Should match" e1 (map stripDocumentFilter $ processSearchStringToFilter t1)
-  assertEqual "Should match" e2 (map stripDocumentFilter $ processSearchStringToFilter t2)
-  assertEqual "Should match" e3 (map stripDocumentFilter $ processSearchStringToFilter t3)
-  assertEqual "Should match" e4 (map stripDocumentFilter $ processSearchStringToFilter t4)
-  assertEqual "Should match" e5 (map stripDocumentFilter $ processSearchStringToFilter t5)
-  assertEqual "Should match" e6 (map stripDocumentFilter $ processSearchStringToFilter t6)
-  assertEqual "Should match" e7 (map stripDocumentFilter $ processSearchStringToFilter t7)
-  assertEqual "Should match" e8 (map stripDocumentFilter $ processSearchStringToFilter t8)
-  assertEqual "Should match" e9 (map stripDocumentFilter $ processSearchStringToFilter t9)
-  assertEqual "Should match" eA (map stripDocumentFilter $ processSearchStringToFilter tA)
-  assertEqual "Should match" eB (map stripDocumentFilter $ processSearchStringToFilter tB)
-  assertEqual "Should match" eC (map stripDocumentFilter $ processSearchStringToFilter tC)
-  assertEqual "Should match" eD (map stripDocumentFilter $ processSearchStringToFilter tD)
-  assertEqual "Should match" eE (map stripDocumentFilter $ processSearchStringToFilter tE)
-  assertEqual "Should match" eF (map stripDocumentFilter $ processSearchStringToFilter tF)
-  assertEqual "Should match" eG (map stripDocumentFilter $ processSearchStringToFilter tG)
-  assertEqual "Should match" eH (map stripDocumentFilter $ processSearchStringToFilter tH)
-  assertEqual "Should match" eI (map stripDocumentFilter $ processSearchStringToFilter tI)
-  assertEqual "Should match" eJ (map stripDocumentFilter $ processSearchStringToFilter tJ)
+  assertEqual "Should match" e0 (stripDocumentFilter $ processSearchStringToFilter t0)
+  assertEqual "Should match" e1 (stripDocumentFilter $ processSearchStringToFilter t1)
+  assertEqual "Should match" e2 (stripDocumentFilter $ processSearchStringToFilter t2)
+  assertEqual "Should match" e3 (stripDocumentFilter $ processSearchStringToFilter t3)
+  assertEqual "Should match" e4 (stripDocumentFilter $ processSearchStringToFilter t4)
+  assertEqual "Should match" e5 (stripDocumentFilter $ processSearchStringToFilter t5)
+  assertEqual "Should match" e6 (stripDocumentFilter $ processSearchStringToFilter t6)
+  assertEqual "Should match" e7 (stripDocumentFilter $ processSearchStringToFilter t7)
+  assertEqual "Should match" e8 (stripDocumentFilter $ processSearchStringToFilter t8)
+  assertEqual "Should match" e9 (stripDocumentFilter $ processSearchStringToFilter t9)
+  assertEqual "Should match" eA (stripDocumentFilter $ processSearchStringToFilter tA)
+  assertEqual "Should match" eB (stripDocumentFilter $ processSearchStringToFilter tB)
+  assertEqual "Should match" eC (stripDocumentFilter $ processSearchStringToFilter tC)
+  assertEqual "Should match" eD (stripDocumentFilter $ processSearchStringToFilter tD)
+  assertEqual "Should match" eE (stripDocumentFilter $ processSearchStringToFilter tE)
+  assertEqual "Should match" eF (stripDocumentFilter $ processSearchStringToFilter tF)
+  assertEqual "Should match" eG (stripDocumentFilter $ processSearchStringToFilter tG)
+  assertEqual "Should match" eH (stripDocumentFilter $ processSearchStringToFilter tH)
+  assertEqual "Should match" eI (stripDocumentFilter $ processSearchStringToFilter tI)
+  assertEqual "Should match" eJ (stripDocumentFilter $ processSearchStringToFilter tJ)
 
 testGetDocumentsSQLTextFiltered :: TestEnv ()
 testGetDocumentsSQLTextFiltered = replicateM_ 1 $ do
@@ -1244,59 +1244,43 @@ testGetDocumentsSQLTextFiltered = replicateM_ 1 $ do
   getDocs0 <- dbQuery $ GetDocuments domain [] [] maxBound
   assertEqual ("GetDocuments fetches all documents by author without filter") 3 (length getDocs0)
 
-  let matchTitleFilter1 = processSearchStringToFilter "Magic Unique Title 42"
+  let matchTitleFilter1 = [processSearchStringToFilter "Magic Unique Title 42"]
   matchTitleFilter1Matches <- dbQuery $ GetDocuments domain matchTitleFilter1 [] maxBound
   assertEqual ("With filter " ++ show matchTitleFilter1) 1 (length matchTitleFilter1Matches)
 
-  let matchTitleFilter2 = processSearchStringToFilter "\"Magic Unique Title 42\""
+  let matchTitleFilter2 = [processSearchStringToFilter "\"Magic Unique Title 42\""]
   matchTitleFilter2Matches <- dbQuery $ GetDocuments domain matchTitleFilter2 [] maxBound
   assertEqual ("With filter " ++ show matchTitleFilter2) 1 (length matchTitleFilter2Matches)
 
-  let matchTitleFilter3 = processSearchStringToFilter "\"Unique Title 42\""
+  let matchTitleFilter3 = [processSearchStringToFilter "\"Unique Title 42\""]
   matchTitleFilter3Matches <- dbQuery $ GetDocuments domain matchTitleFilter3 [] maxBound
   assertEqual ("With filter " ++ show matchTitleFilter3) 1 (length matchTitleFilter3Matches)
 
-  let matchTitleFilter4 = processSearchStringToFilter "agic nique itle"
-  matchTitleFilter4Matches <- dbQuery $ GetDocuments domain matchTitleFilter4 [] maxBound
-  assertEqual ("With filter " ++ show matchTitleFilter4) 1 (length matchTitleFilter4Matches)
-
-  let matchTitleFilter5 = processSearchStringToFilter "Magic \"Unique Title\" 42"
+  let matchTitleFilter5 = [processSearchStringToFilter "Magic \"Unique Title\" 42"]
   matchTitleFilter5Matches <- dbQuery $ GetDocuments domain matchTitleFilter5 [] maxBound
   assertEqual ("With filter " ++ show matchTitleFilter5) 1 (length matchTitleFilter5Matches)
 
-  let matchTitleFilter6 = processSearchStringToFilter "42 Unique \"Title\" Magic"
+  let matchTitleFilter6 = [processSearchStringToFilter "42 Unique \"Title\" Magic"]
   matchTitleFilter6Matches <- dbQuery $ GetDocuments domain matchTitleFilter6 [] maxBound
   assertEqual ("With filter " ++ show matchTitleFilter6) 1 (length matchTitleFilter6Matches)
 
-  let notMatchTitleFilter1 = processSearchStringToFilter "\"Magic Unique Title 4\""
+  let notMatchTitleFilter1 = [processSearchStringToFilter "\"Magic Unique Title 4*\""]
   notMatchTitleFilter1Matches <- dbQuery $ GetDocuments domain notMatchTitleFilter1 [] maxBound
   assertEqual ("With filter " ++ show notMatchTitleFilter1) 1 (length notMatchTitleFilter1Matches)
 
-  let notMatchTitleFilter2 = processSearchStringToFilter "\"agic Unique Title 42\""
-  notMatchTitleFilter2Matches <- dbQuery $ GetDocuments domain notMatchTitleFilter2 [] maxBound
-  assertEqual ("With filter " ++ show notMatchTitleFilter2) 1 (length notMatchTitleFilter2Matches)
-
-  let matchFirstNameFilter = processSearchStringToFilter "Bob Blue"
+  let matchFirstNameFilter = [processSearchStringToFilter "Bob Blue"]
   matchFirstNameFilterMatches <- dbQuery $ GetDocuments domain matchFirstNameFilter [] maxBound
   assertEqual ("With filter " ++ show matchFirstNameFilter) 3 (length matchFirstNameFilterMatches)
 
-  let notMatchFirstNameFilter = processSearchStringToFilter "\"Bob Blue\""
-  notMatchFirstNameFilterMatches <- dbQuery $ GetDocuments domain notMatchFirstNameFilter [] maxBound
-  assertEqual ("With filter " ++ show notMatchFirstNameFilter) 0 (length notMatchFirstNameFilterMatches)
-
-  let matchEmailFilter1 = processSearchStringToFilter "bill@"
+  let matchEmailFilter1 = [processSearchStringToFilter "bill@*"]
   matchEmailFilter1Matches <- dbQuery $ GetDocuments domain matchEmailFilter1 [] maxBound
   assertEqual ("With filter " ++ show matchEmailFilter1) 3 (length matchEmailFilter1Matches)
 
-  let matchEmailFilter2 = processSearchStringToFilter "\"bill@zonk.com\""
+  let matchEmailFilter2 = [processSearchStringToFilter "\"bill@zonk.com\""]
   matchEmailFilter2Matches <- dbQuery $ GetDocuments domain matchEmailFilter2 [] maxBound
   assertEqual ("With filter " ++ show matchEmailFilter2) 3 (length matchEmailFilter2Matches)
 
-  let notMatchEmailFilter1 = processSearchStringToFilter "\"bill@\""
-  notMatchEmailFilter1Matches <- dbQuery $ GetDocuments domain notMatchEmailFilter1 [] maxBound
-  assertEqual ("With filter " ++ show notMatchEmailFilter1) 3 (length notMatchEmailFilter1Matches)
-
-  let notMatchEmailFilter2 = processSearchStringToFilter "herm@"
+  let notMatchEmailFilter2 = [processSearchStringToFilter "herm@*"]
   notMatchEmailFilter2Matches <- dbQuery $ GetDocuments domain notMatchEmailFilter2 [] maxBound
   assertEqual ("With filter " ++ show notMatchEmailFilter2) 0 (length notMatchEmailFilter2Matches)
 

@@ -212,5 +212,5 @@ toDocumentFilter _ (DocumentAPIFilterIsTemplate)    = [DF.DocumentFilterTemplate
 toDocumentFilter _ (DocumentAPIFilterIsNotTemplate) = [DF.DocumentFilterSignable]
 toDocumentFilter _ (DocumentAPIFilterIsInTrash)     = [DF.DocumentFilterDeleted True]
 toDocumentFilter _ (DocumentAPIFilterIsNotInTrash)  = [DF.DocumentFilterDeleted False]
-toDocumentFilter _ (DocumentAPIFilterByText text) = DF.processSearchStringToFilter text
+toDocumentFilter _ (DocumentAPIFilterByText text) = [DF.processSearchStringToFilter text]
 toDocumentFilter _ (DocumentAPIFilterCanBeSignedBy uid) = [DF.DocumentFilterByCanSign uid]
