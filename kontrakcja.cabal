@@ -1,12 +1,14 @@
 Name:          kontrakcja
 Version:       1.0
 Author:        Scrive AB
+Maintainer:    Scrive AB
 Copyright:     2010-2017
 Stability:     Experimental
 Category:      Web
 Synopsis:      Ultimate signing solution
-Description:   Sign documents online
-Cabal-version: >= 1.18
+Description:   Sign documents online with the ultimate signing solution
+Cabal-Version: >= 2.0
+License:       OtherLicense
 Build-type:    Simple
 
 -- Note:
@@ -43,17 +45,6 @@ Build-type:    Simple
 --   LANGUAGE TemplateHaskell at the top of each file where it is used
 -- - use TH only where it is trully needed
 --
-
-Flag server-coverage
-  Description: Build server with coverage instrumentation
-  Manual: True
-  Default: False
-
-Flag test-coverage
-  Description: Collects tests coverage status
-  Manual: True
-  Default: False
-
 Flag enable-routinglist
   Description: Enables building the routing list executable
   Manual: True
@@ -65,9 +56,6 @@ Library kontrakcja-prelude
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Prof-Options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
-
-  if flag(server-coverage)
-    GHC-Options: -fhpc
 
   Exposed-Modules:    Prelude
   Build-Depends:      base, cond, exceptions, extra
@@ -89,9 +77,6 @@ Library
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
-
-  if flag(server-coverage)
-    GHC-Options: -fhpc
 
   Exposed-modules: API.APIVersion
                  , API.Logging
@@ -608,9 +593,6 @@ Executable kontrakcja-server
   GHC-Options: -threaded -rtsopts -with-rtsopts=-T
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
-  if flag(server-coverage)
-    GHC-Options: -fhpc
-
   Main-Is: Main.hs
   GHC-options: -main-is Main
 
@@ -666,9 +648,6 @@ Executable cron
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts -with-rtsopts=-T
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
-
-  if flag(server-coverage)
-    GHC-Options: -fhpc
 
   Build-depends: base-noprelude
                , kontrakcja-prelude
@@ -737,9 +716,6 @@ Executable kontrakcja-migrate
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
-
-  if flag(server-coverage)
-    GHC-Options: -fhpc
 
   Main-is: AppDBMain.hs
   GHC-options: -main-is AppDBMain
@@ -905,9 +881,6 @@ Executable mailing-server
   GHC-Options: -threaded -rtsopts -with-rtsopts=-T
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
-  if flag(server-coverage)
-    GHC-Options: -fhpc
-
   Main-is: MailingServer.hs
   GHC-options: -main-is MailingServer
   Other-Modules: Amazon
@@ -1068,9 +1041,6 @@ Executable messenger-server
   GHC-Options: -threaded -rtsopts -with-rtsopts=-T
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
-  if flag(server-coverage)
-    GHC-Options: -fhpc
-
   Main-is: MessengerServer.hs
   GHC-options: -main-is MessengerServer
   Other-Modules: Configuration
@@ -1207,9 +1177,6 @@ Test-suite kontrakcja-test
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
-
-  if flag(test-coverage)
-    GHC-Options: -fhpc
 
   Main-is:       TestMain.hs
   GHC-options: -main-is TestMain
