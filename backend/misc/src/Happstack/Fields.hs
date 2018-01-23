@@ -5,8 +5,6 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Text.JSON as J
 
-import KontraPrelude
-
 -- | Since we sometimes want to get 'Maybe' and also we wont work with
 -- newer versions of happstack here is.  This should be droped when
 -- new version is globaly established.

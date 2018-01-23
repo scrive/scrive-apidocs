@@ -14,7 +14,6 @@ import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Types
 
-import KontraPrelude
 import TestingUtil (assertFailure)
 import TestKontra
 import User.Lang

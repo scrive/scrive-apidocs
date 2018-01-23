@@ -20,7 +20,6 @@ import Doc.DocumentMonad
 import Doc.SignatoryLinkID
 import Doc.Tokens.Model
 import Kontra
-import KontraPrelude
 import MagicHash (MagicHash)
 import OAuth.Model
 import OAuth.Util

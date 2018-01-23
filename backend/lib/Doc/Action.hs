@@ -40,7 +40,6 @@ import Doc.SignatoryLinkID
 import Doc.Signing.Model ()
 import GuardTime (GuardTimeConfMonad)
 import Kontra
-import KontraPrelude
 import Log.Identifier
 import MailContext
 import Templates (runTemplatesT)

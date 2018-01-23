@@ -10,7 +10,6 @@ import qualified Control.Exception.Lifted as E
 
 import DB
 import Happstack.Fields
-import KontraPrelude
 import Log.Identifier
 import Mailer
 import MailingServerConf

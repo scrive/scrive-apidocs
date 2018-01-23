@@ -13,7 +13,6 @@ import Happstack.Server (Response)
 
 import FlashMessage
 import KontraLink
-import KontraPrelude
 
 data InternalKontraResponse =
   InternalKontraResponseWithFlash FlashMessage InternalKontraResponseContent |

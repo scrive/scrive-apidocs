@@ -10,7 +10,6 @@ import qualified Data.Set as Set
 import DB
 import EvidenceLog.Model
 import EvidenceLog.View (eventForHistory, eventForVerificationPage, simpleEvents)
-import KontraPrelude
 import TestingUtil
 import TestKontra
 import User.Lang (allLangs, codeFromLang)

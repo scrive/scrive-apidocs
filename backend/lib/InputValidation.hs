@@ -57,7 +57,6 @@ import Doc.DocumentID
 import Happstack.Fields hiding (getFields)
 import IPAddress
 import Kontra
-import KontraPrelude
 import User.Email
 import User.Model
 import Utils.String

@@ -17,8 +17,6 @@ import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 
-import KontraPrelude
-
 {- |
     Parses a csv file's contents.  It tries to guess the char encoding and the delimiters.
 -}

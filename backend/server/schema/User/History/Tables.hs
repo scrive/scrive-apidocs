@@ -1,7 +1,6 @@
 module User.History.Tables where
 
 import DB
-import KontraPrelude
 
 tableUsersHistory :: Table
 tableUsersHistory = tblTable {

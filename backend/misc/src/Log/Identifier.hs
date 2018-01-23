@@ -11,11 +11,8 @@ module Log.Identifier (
   ) where
 
 import Data.Aeson.Types as Aeson
-import Data.Monoid
 import Data.Text (Text)
 import GHC.Exts (fromList)
-
-import KontraPrelude
 
 class Identifier t b | t -> b where
   idDefaultLabel :: t -> Text

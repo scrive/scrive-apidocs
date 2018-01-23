@@ -19,7 +19,6 @@ import Doc.DocumentID (DocumentID, unsafeDocumentID)
 import Doc.DocumentMonad
 import Doc.Model
 import Doc.SignatoryLinkID (SignatoryLinkID, unsafeSignatoryLinkID)
-import KontraPrelude
 import TestingUtil
 import TestKontra as T
 

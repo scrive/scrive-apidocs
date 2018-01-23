@@ -11,7 +11,6 @@ import Data.Text (Text)
 import Data.Unjson
 import Data.Word
 
-import KontraPrelude
 import Log.Configuration
 import Monitoring
 import SMS.Data

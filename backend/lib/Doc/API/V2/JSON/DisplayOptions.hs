@@ -4,11 +4,9 @@ module Doc.API.V2.JSON.DisplayOptions (
 , unjsonDocumentDisplayOptions
 ) where
 
-import Control.Applicative
 import Data.Unjson
 
 import Doc.DocStateData
-import KontraPrelude
 
 data DocumentDisplayOptions = DocumentDisplayOptions {
     showHeader :: Bool

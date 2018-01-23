@@ -1,7 +1,6 @@
 module User.Tables where
 
 import DB
-import KontraPrelude
 
 tableUsers :: Table
 tableUsers = tblTable {

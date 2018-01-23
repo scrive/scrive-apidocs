@@ -20,7 +20,6 @@ module Doc.DocInfo(
 ) where
 
 import Doc.DocStateData
-import KontraPrelude
 import MinutesTime
 
 -- Predicates on documentstatus

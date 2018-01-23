@@ -14,8 +14,6 @@ module Happstack.Server.ReqHandler (
   , mapWebSandboxT
   ) where
 
-import Control.Applicative
-import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Except
@@ -32,7 +30,6 @@ import Network
 import qualified Happstack.Server.Internal.Listen as L
 
 import Happstack.Server.Instances ()
-import KontraPrelude
 
 ----------------------------------------
 

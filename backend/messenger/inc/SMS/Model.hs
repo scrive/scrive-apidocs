@@ -19,7 +19,6 @@ import Control.Monad.Catch
 import Data.Int
 
 import DB
-import KontraPrelude
 import MinutesTime
 import SMS.Data
 

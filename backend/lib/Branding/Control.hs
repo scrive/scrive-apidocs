@@ -32,7 +32,6 @@ import Doc.DocStateData
 import Doc.DocumentID
 import Doc.Model.Query
 import Kontra
-import KontraPrelude
 import Theme.Model
 import User.Model
 import User.Utils

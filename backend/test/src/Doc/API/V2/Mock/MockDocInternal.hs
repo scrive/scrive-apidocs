@@ -3,8 +3,6 @@ module Doc.API.V2.Mock.MockDocInternal where
 import Data.Default
 import Data.Unjson
 
-import KontraPrelude
-
 data MockDoc = MockDoc {
     mockDocId                 :: String
   , mockDocTitle              :: String

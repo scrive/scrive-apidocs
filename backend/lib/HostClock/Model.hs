@@ -11,12 +11,10 @@ module HostClock.Model
 import Control.Monad.Catch
 import Control.Monad.Time
 import Data.Decimal (realFracToDecimal)
-import Data.Int
 import Data.Time
 import Data.Word (Word8)
 
 import DB
-import KontraPrelude
 
 data InsertClockOffsetFrequency = InsertClockOffsetFrequency (Maybe Double) Double
 instance (MonadDB m, MonadTime m) => DBUpdate m InsertClockOffsetFrequency Int where

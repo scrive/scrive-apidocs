@@ -6,7 +6,6 @@ import Test.QuickCheck
 import Company.Model
 import DB
 import FeatureFlags.Model
-import KontraPrelude
 import TestingUtil
 import TestKontra
 

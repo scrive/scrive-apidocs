@@ -3,8 +3,6 @@ module Utils.Color (ensureHexRGB,isValidColor) where
 import Numeric
 import Text.Regex.TDFA
 
-import KontraPrelude
-
 -- converts strings like "rgb(1,2,3)" to "#aabbcc" notation
 -- returns Nothing for colors in other notation (or other garbage input)
 ensureHexRGB :: String -> Maybe String

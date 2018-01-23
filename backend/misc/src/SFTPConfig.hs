@@ -3,8 +3,6 @@ module SFTPConfig
 
 import Data.Unjson
 
-import KontraPrelude
-
 data SFTPConfig =
     SFTPConfig {
       sftpUser      :: String

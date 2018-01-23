@@ -15,7 +15,6 @@ module Util.HasSomeCompanyInfo (
 
 import Company.Model
 import Doc.DocStateData
-import KontraPrelude
 import Util.SignatoryLinkUtils
 
 -- | Anything that might have a company name and number

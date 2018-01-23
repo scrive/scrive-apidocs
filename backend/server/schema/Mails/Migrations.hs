@@ -1,7 +1,6 @@
 module Mails.Migrations (removeXSMTPAttrsFromMailEvents) where
 
 import DB
-import KontraPrelude
 import Mails.Tables
 
 removeXSMTPAttrsFromMailEvents :: MonadDB m => Migration m

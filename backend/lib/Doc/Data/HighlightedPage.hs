@@ -7,7 +7,6 @@ import Data.Int
 
 import DB
 import File.FileID
-import KontraPrelude
 
 data HighlightedPage = HighlightedPage {
     highlightedPagePage :: Int32

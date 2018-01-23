@@ -22,7 +22,6 @@ import Doc.SignatoryLinkID (unsafeSignatoryLinkID)
 import EvidenceLog.Model (CurrentEvidenceEventType(..), DocumentEvidenceEvent(..), EventRenderTarget(..), EvidenceEventType(..), evidenceLogText)
 import EvidenceLog.View (eventForHistory, eventForVerificationPage, simpleEvents, simplyfiedEventText)
 import EvidencePackage.EvidenceLog (finalizeEvidenceText)
-import KontraPrelude
 import MinutesTime
 import Templates (runTemplatesT)
 import TestingUtil (addNewRandomUser, addRandomDocumentWithAuthor, fieldForTests, testThat)

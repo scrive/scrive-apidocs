@@ -10,7 +10,6 @@ import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Types
 
-import KontraPrelude
 import Templates
 import TestKontra
 import User.Lang

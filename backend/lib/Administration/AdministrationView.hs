@@ -20,7 +20,6 @@ import qualified Text.StringTemplates.Fields as F
 import AppView
 import Company.Model
 import Kontra
-import KontraPrelude
 import User.Model
 
 adminMainPage :: TemplatesMonad m => Context -> m String

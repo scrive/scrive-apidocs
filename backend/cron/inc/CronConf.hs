@@ -13,7 +13,6 @@ import EID.CGI.GRP.Config
 import EID.Nets.Config
 import GuardTime (GuardTimeConf(..))
 import HostClock.System (defaultNtpServers)
-import KontraPrelude
 import Log.Configuration
 import Monitoring
 import Planhat

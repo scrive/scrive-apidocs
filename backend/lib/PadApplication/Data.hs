@@ -9,8 +9,6 @@ import Data.Int (Int16)
 import Database.PostgreSQL.PQTypes
 import qualified Data.Text as T
 
-import KontraPrelude
-
 -- PadAppMode describes, how a pad application is going to behave.
 data PadAppMode =
     -- pad application shows a list of documents prepared for signing,

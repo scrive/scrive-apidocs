@@ -8,7 +8,6 @@ import qualified Data.HashMap.Strict as H
 
 import DB
 import Doc.SignatoryLinkID ()
-import KontraPrelude
 import Monitor.API
 import TestingUtil
 import TestKontra as T

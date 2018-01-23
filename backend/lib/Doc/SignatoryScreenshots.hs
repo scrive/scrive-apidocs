@@ -17,7 +17,6 @@ import Text.JSON.ToJSValue (ToJSValue(..))
 import qualified Control.Exception.Lifted as E
 
 import Doc.Screenshot
-import KontraPrelude
 
 data SignatoryScreenshots = SignatoryScreenshots
   { first         :: Maybe Screenshot

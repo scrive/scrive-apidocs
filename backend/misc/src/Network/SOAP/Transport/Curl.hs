@@ -7,7 +7,6 @@ import Network.SOAP.Transport
 import Text.XML
 import qualified Data.Text.Lazy as TL
 
-import KontraPrelude
 import qualified Network.XMLCurl as XC
 
 curlTransport :: XC.SSL

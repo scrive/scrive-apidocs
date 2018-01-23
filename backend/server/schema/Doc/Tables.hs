@@ -1,7 +1,6 @@
 module Doc.Tables where
 
 import DB
-import KontraPrelude
 
 tableDocuments :: Table
 tableDocuments = tblTable {

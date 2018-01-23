@@ -1,10 +1,8 @@
 module TestCron (runTestCronUntilIdle) where
 
 import Control.Concurrent.STM
-import Control.Monad
 import Control.Monad.Loops
 import Control.Monad.Reader
-import Data.Maybe
 import Database.PostgreSQL.Consumers
 import Log
 import Network.HTTP.Client.TLS (newTlsManager)
@@ -19,7 +17,6 @@ import Doc.API.Callback.Model
 import Doc.Extending.Consumer
 import Doc.Sealing.Consumer
 import Doc.Signing.Consumer
-import KontraPrelude hiding (All)
 import TestKontra
 import qualified CronEnv
 

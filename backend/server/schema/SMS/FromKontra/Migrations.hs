@@ -3,7 +3,6 @@ module SMS.FromKontra.Migrations (createKontraInfoForSMSesTable) where
 import Database.PostgreSQL.PQTypes.Checks
 
 import DB
-import KontraPrelude
 import SMS.FromKontra.Tables
 
 createKontraInfoForSMSesTable :: MonadDB m => Migration m

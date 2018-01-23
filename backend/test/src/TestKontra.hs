@@ -50,7 +50,6 @@ import DB.PostgreSQL
 import Happstack.Server.ReqHandler
 import IPAddress
 import Kontra
-import KontraPrelude
 import MinutesTime
 import Session.SessionID
 import Templates

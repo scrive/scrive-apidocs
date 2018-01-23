@@ -6,7 +6,6 @@ import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (Assertion, assert, assertEqual)
 import qualified Data.ByteString.Lazy as BSL
 
-import KontraPrelude
 import TestKontra
 import Util.CSVUtil
 

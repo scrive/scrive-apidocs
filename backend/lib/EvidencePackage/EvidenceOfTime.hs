@@ -5,11 +5,9 @@ module EvidencePackage.EvidenceOfTime (
 ) where
 
 import Control.Arrow (second)
-import Control.Monad.Reader
 import Data.Decimal (realFracToDecimal)
 import Statistics.Distribution
 import Statistics.Distribution.Normal
-import System.FilePath
 import System.Process
 import System.Random
 import Text.StringTemplates.Templates
@@ -19,7 +17,6 @@ import qualified Statistics.Function as SF
 import qualified Statistics.Sample as S
 import qualified Text.StringTemplates.Fields as F
 
-import KontraPrelude
 import MinutesTime
 import qualified HostClock.Model as HC
 

@@ -6,7 +6,6 @@ import Control.Monad.Catch
 import Data.Int
 
 import DB
-import KontraPrelude
 
 {-
    Document start in Preparation state.

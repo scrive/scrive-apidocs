@@ -4,7 +4,6 @@ import Database.PostgreSQL.PQTypes.Checks
 
 import DB
 import Doc.Extending.Tables
-import KontraPrelude
 
 createDocumentExtendingJobs :: MonadDB m => Migration m
 createDocumentExtendingJobs = Migration {

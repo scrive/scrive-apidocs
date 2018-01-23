@@ -16,7 +16,6 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Crypto.RNG
-import Data.Functor
 import Log
 import Text.StringTemplates.Templates hiding (runTemplatesT)
 import qualified Text.StringTemplates.Fields as F
@@ -34,7 +33,6 @@ import Doc.Model
 import Doc.SignatoryLinkID
 import EvidenceLog.Model
 import KontraLink
-import KontraPrelude
 import Log.Identifier
 import Mails.SendMail
 import SMS.Data

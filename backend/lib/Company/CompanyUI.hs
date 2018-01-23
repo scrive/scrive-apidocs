@@ -11,7 +11,6 @@ import qualified Data.ByteString.Char8 as BS
 
 import Company.CompanyID
 import DB
-import KontraPrelude
 import Theme.Model
 
 data CompanyUI = CompanyUI

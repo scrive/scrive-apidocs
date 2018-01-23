@@ -5,7 +5,6 @@ module LangRouting
 import Happstack.StaticRouting (Route, choice, dir)
 
 import Kontra
-import KontraPrelude
 import User.Model
 
 allLangDirs :: Route (Kontra a) -> Route (Kontra a)

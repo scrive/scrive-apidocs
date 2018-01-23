@@ -3,10 +3,8 @@ module Data.ByteString.RFC2397 (decode, encode) where
 import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BS
 
-import KontraPrelude hiding (break)
-
-break :: Char -> BS.ByteString -> Maybe (BS.ByteString, BS.ByteString)
-break c i = let (a, r) = BS.break (== c) i
+breakBS :: Char -> BS.ByteString -> Maybe (BS.ByteString, BS.ByteString)
+breakBS c i = let (a, r) = BS.break (== c) i
   in case BS.uncons r of
     Just (c', r') | c' == c -> Just (a, r')
     _                       -> Nothing
@@ -15,9 +13,9 @@ break c i = let (a, r) = BS.break (== c) i
 -- 2397.  Assumes that character encoding is absent, and that encoding is base64.
 decode :: BS.ByteString -> Maybe (BS.ByteString, BS.ByteString)
 decode i = do
-  ("data",i2) <- break ':' i
-  (e,d) <- break ',' i2
-  (mt, "base64") <- break ';' e
+  ("data",i2) <- breakBS ':' i
+  (e,d) <- breakBS ',' i2
+  (mt, "base64") <- breakBS ';' e
   return (mt, Base64.decodeLenient d)
 
 -- | Encode a mimetype and content into a data URI using base64,

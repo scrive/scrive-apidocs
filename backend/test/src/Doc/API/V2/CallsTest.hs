@@ -5,7 +5,6 @@ import Test.Framework
 import Doc.API.V2.Calls.DocumentGetCallsTest
 import Doc.API.V2.Calls.DocumentPostCallsTest
 import Doc.API.V2.Calls.SignatoryCallsTest
-import KontraPrelude
 import TestKontra
 
 apiV2CallsTests :: TestEnvSt -> Test

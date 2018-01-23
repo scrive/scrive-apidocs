@@ -49,7 +49,6 @@ module EID.Nets.Data (
   ) where
 
 import Control.Monad.Catch
-import Control.Monad.State
 import Data.Aeson
 import Data.ByteString (ByteString)
 import Data.Int
@@ -67,7 +66,6 @@ import Doc.DocumentID
 import Doc.SignatoryLinkID
 import EID.Nets.Config
 import EID.Nets.SignID
-import KontraPrelude
 import Log.Identifier
 import MinutesTime
 import Session.SessionID

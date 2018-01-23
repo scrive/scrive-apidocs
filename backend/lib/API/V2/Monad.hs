@@ -30,7 +30,6 @@ import API.V2.MonadUtils as MonadUtils
 import API.V2.User
 import DB
 import Kontra
-import KontraPrelude
 import Text.JSON.Convert
 import User.APILog.Model
 import User.Model

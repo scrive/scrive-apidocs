@@ -11,7 +11,6 @@ import Log
 import DB
 import Doc.DocumentID
 import Doc.SignatoryLinkID
-import KontraPrelude
 import Log.Identifier
 import SMS.Data
 

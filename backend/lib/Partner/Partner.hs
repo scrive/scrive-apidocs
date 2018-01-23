@@ -9,7 +9,6 @@ module Partner.Partner
 
 import Data.Unjson
 
-import KontraPrelude
 import Partner.PartnerID
 
 data Partner = Partner {

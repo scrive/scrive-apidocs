@@ -13,7 +13,6 @@ import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
-import KontraPrelude
 import Log.Identifier
 
 newtype PartnerID = PartnerID Int64

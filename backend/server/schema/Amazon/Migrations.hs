@@ -4,7 +4,6 @@ import Database.PostgreSQL.PQTypes.Checks
 
 import Amazon.Tables
 import DB
-import KontraPrelude
 
 createAmazonUploadJobs :: MonadDB m => Migration m
 createAmazonUploadJobs = Migration {

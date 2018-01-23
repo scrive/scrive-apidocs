@@ -9,7 +9,6 @@ import Control.Monad.Catch
 
 import API.V2.Errors
 import DB
-import KontraPrelude
 
 apiGuardJustM :: (MonadThrow m) => APIError -> m (Maybe a) -> m a
 apiGuardJustM e a = a >>= maybe (apiError e) return

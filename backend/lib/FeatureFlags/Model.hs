@@ -10,7 +10,6 @@ import Crypto.RNG
 
 import Company.CompanyID
 import DB
-import KontraPrelude
 
 data FeatureFlags = FeatureFlags {
     ffCanUseTemplates :: Bool

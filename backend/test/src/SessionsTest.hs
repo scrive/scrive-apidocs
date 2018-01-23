@@ -16,7 +16,6 @@ import Doc.DocUtils
 import Doc.Tokens.Model
 import EID.CGI.GRP.Transaction.Model
 import KontraMonad
-import KontraPrelude
 import Session.Data
 import Session.Model
 import TestingUtil

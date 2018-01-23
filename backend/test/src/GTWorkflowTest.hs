@@ -3,7 +3,6 @@ module GTWorkflowTest (gtWorkflowTests) where
 
 import Control.Monad.Base
 import Control.Monad.Reader
-import Data.Functor
 import Happstack.Server (Method(..))
 import Test.Framework
 import qualified Data.ByteString as BS
@@ -21,7 +20,6 @@ import Doc.DocUtils
 import Doc.Model
 import Doc.SealStatus (SealStatus(..))
 import GuardTime
-import KontraPrelude
 import MinutesTime
 import Templates
 import TestCron

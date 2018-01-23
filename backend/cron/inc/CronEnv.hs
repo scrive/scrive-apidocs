@@ -20,7 +20,6 @@ import Amazon
 import CronConf (CronConf, cronAmazonConfig, cronMailNoreplyAddress, cronSalesforceConf)
 import DB
 import File.FileID (FileID)
-import KontraPrelude
 import Salesforce.Conf
 import Templates (KontrakcjaGlobalTemplates)
 import qualified MemCache

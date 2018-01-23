@@ -12,8 +12,6 @@ import Foreign.Ptr
 import Text.JSON.Generic
 import Text.JSON.String
 
-import KontraPrelude
-
 jsonFromSQL :: (Data a, Typeable a) => Maybe (PQBase String) -> IO a
 jsonFromSQL = jsonFromSQL' fromJSON
 

@@ -47,7 +47,6 @@ import Database.Redis.Helpers
 import DB
 import File.File
 import File.Model
-import KontraPrelude
 import Log.Identifier
 
 isAWSConfigOk :: Maybe (String, String, String) -> Bool

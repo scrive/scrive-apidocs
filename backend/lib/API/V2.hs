@@ -26,7 +26,6 @@ import API.V2.Errors
 import API.V2.Monad
 import API.V2.User
 import Kontra (Kontrakcja)
-import KontraPrelude
 
 -- Handler for 404 for API calls. Has to be inserted directly into system main routing table
 noAPIV2CallFoundHandler :: Kontrakcja m => m Response

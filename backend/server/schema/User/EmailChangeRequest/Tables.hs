@@ -1,7 +1,6 @@
 module User.EmailChangeRequest.Tables where
 
 import DB
-import KontraPrelude
 
 tableEmailChangeRequests :: Table
 tableEmailChangeRequests = tblTable {

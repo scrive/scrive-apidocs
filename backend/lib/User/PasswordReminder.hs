@@ -17,7 +17,6 @@ import Data.Typeable
 
 import DB
 import KontraLink
-import KontraPrelude
 import MagicHash
 import MinutesTime
 import User.Model

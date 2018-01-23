@@ -20,7 +20,6 @@ import Company.Model
 import DB.Query
 import Happstack.Fields
 import Kontra
-import KontraPrelude
 import PadApplication.Data
 import Routing
 import Theme.Model

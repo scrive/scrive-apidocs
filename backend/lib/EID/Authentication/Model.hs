@@ -22,7 +22,6 @@ import DB
 import Doc.SignatoryLinkID
 import EID.CGI.GRP.Data
 import EID.Nets.Data
-import KontraPrelude
 import Session.SessionID
 
 -- If one more type of a signature is to be added, follow the

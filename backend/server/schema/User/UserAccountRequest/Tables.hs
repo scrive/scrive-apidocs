@@ -1,7 +1,6 @@
 module User.UserAccountRequest.Tables where
 
 import DB
-import KontraPrelude
 
 tableUserAccountRequests :: Table
 tableUserAccountRequests = tblTable {

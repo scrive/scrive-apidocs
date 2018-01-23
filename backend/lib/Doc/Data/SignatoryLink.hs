@@ -25,7 +25,6 @@ import Doc.Data.SignatoryAttachment
 import Doc.Data.SignatoryField
 import Doc.SignatoryLinkID
 import IPAddress
-import KontraPrelude
 import MagicHash
 import MinutesTime
 import User.UserID

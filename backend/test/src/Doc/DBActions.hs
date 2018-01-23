@@ -7,13 +7,11 @@ module Doc.DBActions
     ) where
 
 import Control.Monad.Catch (MonadThrow)
-import Control.Monad.Reader
 
 import DB
 import Doc.DocumentID
 import Doc.Model.Query ()
 import Doc.SignatoryFieldID
-import KontraPrelude
 import User.Model
 
 -- | Get the result of concatenating the different strings that we expose for

@@ -14,7 +14,6 @@ import qualified Data.Set as Set
 
 import Doc.DocStateData (Document, SignatoryLink, documentsignatorylinks, signatoryisauthor, signatoryispartner, signatorylinkid)
 import Doc.SignatoryLinkID (SignatoryLinkID)
-import KontraPrelude
 import Util.HasSomeUserInfo (getFullName)
 
 type SignatoryIdentifierMap = Map SignatoryLinkID SignatoryIdentifier

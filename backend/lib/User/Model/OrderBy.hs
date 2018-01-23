@@ -5,7 +5,6 @@ module User.Model.OrderBy (
   ) where
 
 import DB
-import KontraPrelude
 
 data UserOrderBy
   = UserOrderByName

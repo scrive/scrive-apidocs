@@ -12,7 +12,6 @@ import qualified Data.ByteString.Lazy as BSL
 
 import Company.Model (CompanyID)
 import DB
-import KontraPrelude
 import Planhat.Communication
 import Planhat.Config
 import User.Model (GetCompanyAccountsCountActive(..), GetCompanyAccountsCountMainDomainBranding(..), GetCompanyAccountsCountTotal(..))

@@ -24,7 +24,6 @@ import Doc.SignatoryLinkID
 import EID.CGI.GRP.Data
 import EID.Nets.Data
 import EID.Signature.Legacy
-import KontraPrelude
 
 -- If one more type of a signature is to be added, follow the
 -- convention, i.e. make constructor name the same as signature

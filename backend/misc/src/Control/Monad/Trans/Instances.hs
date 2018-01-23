@@ -6,7 +6,6 @@ import Control.Monad.State as S
 import Control.Monad.Trans.Control
 
 import Control.Monad.Trans.Control.Util
-import KontraPrelude
 
 instance {-# OVERLAPS #-} (
     Monad (t m)

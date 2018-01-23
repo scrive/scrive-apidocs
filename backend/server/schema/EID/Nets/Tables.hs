@@ -1,7 +1,6 @@
 module EID.Nets.Tables where
 
 import DB
-import KontraPrelude
 
 -- | Nets signing transaction is unique for a given signatory. We do
 -- | not really need to bind

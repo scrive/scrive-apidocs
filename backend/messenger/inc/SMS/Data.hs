@@ -18,7 +18,6 @@ import Database.PostgreSQL.PQTypes
 import qualified Data.Text as T
 
 import DB.Derive
-import KontraPrelude
 import Log.Identifier
 import Utils.List
 

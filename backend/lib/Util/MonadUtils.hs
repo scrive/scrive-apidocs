@@ -12,7 +12,6 @@ module Util.MonadUtils where
 import Control.Monad.Base
 
 import KontraError
-import KontraPrelude
 
 -- TODO: remove these functions.
 

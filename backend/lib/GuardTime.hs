@@ -32,7 +32,6 @@ import qualified Data.ByteString.Lazy as BSL hiding (length)
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 
 import GuardTime.Class
-import KontraPrelude
 import Log.Identifier
 import Log.Utils
 import Text.JSON.Convert

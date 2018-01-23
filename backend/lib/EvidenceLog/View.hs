@@ -29,7 +29,6 @@ import EID.Authentication.Model
 import EID.Nets.Data
 import EID.Signature.Model
 import EvidenceLog.Model
-import KontraPrelude
 import MinutesTime
 import Templates (renderLocalTemplate)
 import User.Model

@@ -15,7 +15,6 @@ import EID.CGI.GRP.Config
 import EID.Nets.Config
 import GuardTime (GuardTimeConf(..))
 import HubSpot.Conf (HubSpotConf(..))
-import KontraPrelude
 import Log.Configuration
 import Monitoring (MonitoringConf(..))
 import Salesforce.Conf

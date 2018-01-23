@@ -16,7 +16,6 @@ import DB
 import InternalResponse
 import Kontra
 import KontraLink
-import KontraPrelude
 import User.Model
 import User.UserView
 import Util.MonadUtils

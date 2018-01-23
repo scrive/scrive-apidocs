@@ -25,7 +25,6 @@ import DB
 import Doc.DocViewMail
 import FlashMessage
 import KontraLink
-import KontraPrelude
 import Mails.SendMail (Mail, kontramail, kontramaillocal)
 import MinutesTime
 import Theme.Model

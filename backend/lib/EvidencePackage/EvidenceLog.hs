@@ -11,7 +11,6 @@ import qualified Text.StringTemplates.Fields as F
 import Doc.DocStateData
 import Doc.SignatoryIdentification (SignatoryIdentifierMap, siLink, signatoryIdentifier)
 import EvidenceLog.Model
-import KontraPrelude
 import MinutesTime
 import Text.XML.Content (cdata)
 import Text.XML.DirtyContent (XMLContent, renderXMLContent, substitute)

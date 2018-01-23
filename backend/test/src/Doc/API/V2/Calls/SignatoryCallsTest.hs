@@ -12,7 +12,6 @@ import Doc.API.V2.Calls.SignatoryCalls
 import Doc.API.V2.Mock.TestUtils
 import Doc.Data.DocumentStatus (DocumentStatus(..))
 import Doc.Data.SignatoryLink (AuthenticationToSignMethod(SMSPinAuthenticationToSign))
-import KontraPrelude
 import TestingUtil
 import TestKontra
 

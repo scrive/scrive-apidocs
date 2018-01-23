@@ -13,7 +13,6 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.Map as M
 import qualified Happstack.Server as HS
 
-import KontraPrelude
 import Utils.List (rStripFrom)
 
 -- | Add a non-http only cookie

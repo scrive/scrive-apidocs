@@ -12,7 +12,6 @@ import qualified Data.Text as T
 import DB
 import Doc.DocumentID
 import Doc.SignatoryLinkID
-import KontraPrelude
 import Log.Identifier
 import Mails.Model
 

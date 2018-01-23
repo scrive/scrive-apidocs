@@ -3,7 +3,6 @@ module EID.Nets.Model (
   , GetNetsSignOrder(..)
   ) where
 
-import Control.Monad
 import Control.Monad.Catch
 import Control.Monad.State.Class
 import Crypto.RNG (CryptoRNG)
@@ -14,7 +13,6 @@ import DB
 import Doc.SignatoryLinkID
 import EID.Nets.Data
 import EID.Nets.SignID
-import KontraPrelude
 import Session.SessionID
 
 selectNetsSignOrderSelectorsList :: [SQL]

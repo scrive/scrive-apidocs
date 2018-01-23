@@ -28,7 +28,6 @@ import FlashMessage
 import InspectXML
 import IPAddress
 import KontraLink
-import KontraPrelude
 import MagicHash (MagicHash)
 import MinutesTime
 import User.Email

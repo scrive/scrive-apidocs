@@ -1,6 +1,5 @@
 module Utils.Read where
 
-import KontraPrelude
 
 lookupAndRead :: (Read a, Eq k) => k -> [(k, String)] -> Maybe a
 lookupAndRead k kvs = maybeRead =<< lookup k kvs
@@ -16,3 +15,4 @@ pad0 len str = take missing (repeat '0') ++ str
   where
     diff = len - length str
     missing = max 0 diff
+

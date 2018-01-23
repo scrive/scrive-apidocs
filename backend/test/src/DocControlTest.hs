@@ -28,7 +28,6 @@ import Doc.Screenshot (Screenshot(..))
 import Doc.SignatoryScreenshots (SignatoryScreenshots(signing), emptySignatoryScreenshots)
 import Doc.SMSPin.Model
 import File.FileID
-import KontraPrelude
 import MagicHash
 import Mails.Model
 import MinutesTime

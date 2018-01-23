@@ -13,7 +13,6 @@ import DB
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.Model.Expressions
-import KontraPrelude
 import MinutesTime
 import TextSearchQuery
 import User.UserID

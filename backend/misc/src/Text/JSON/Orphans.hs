@@ -2,12 +2,9 @@
 module Text.JSON.Orphans where
 
 import Data.Binary as B
-import Data.Int
-import Data.String
 import Test.QuickCheck (Arbitrary(..), Gen, frequency, oneof)
 import qualified Text.JSON as J
 
-import KontraPrelude
 import MinutesTime ()
 
 instance Binary J.JSString where

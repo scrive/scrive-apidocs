@@ -8,7 +8,6 @@ module User.APILog.Migrations
 import Database.PostgreSQL.PQTypes.Checks
 
 import DB
-import KontraPrelude
 import User.APILog.Tables
 
 createAPILogsTablePK :: MonadDB m => Migration m

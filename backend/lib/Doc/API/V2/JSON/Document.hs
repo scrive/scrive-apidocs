@@ -21,7 +21,6 @@ import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocUtils
 import KontraLink
-import KontraPrelude
 
 unjsonDocument :: DocumentAccess -> UnjsonDef Document
 unjsonDocument da = objectOf $

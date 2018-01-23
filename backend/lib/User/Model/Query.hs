@@ -23,7 +23,6 @@ import Chargeable.Model
 import Company.Model
 import DB
 import Doc.DocStateData (DocumentStatus(..))
-import KontraPrelude
 import MinutesTime
 import User.Data.Stats
 import User.Data.User

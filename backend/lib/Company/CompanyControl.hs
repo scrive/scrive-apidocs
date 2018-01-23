@@ -31,7 +31,6 @@ import Company.Model
 import DB
 import Happstack.Fields
 import Kontra
-import KontraPrelude
 import Routing (hGet, hPost, toK0, toK1, toK2)
 import Theme.Control
 import Theme.ThemeID

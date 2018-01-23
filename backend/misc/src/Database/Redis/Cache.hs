@@ -4,14 +4,12 @@ import Control.Concurrent.Async.Lifted
 import Control.Concurrent.Lifted
 import Control.Monad.Catch
 import Control.Monad.Trans.Control
-import Data.Either
 import Data.Function (fix)
 import Log
 import qualified Data.ByteString.Char8 as BS
 import qualified Database.Redis as R
 
 import Database.Redis.Helpers
-import KontraPrelude
 import Log.Utils
 import Utils.Exception
 

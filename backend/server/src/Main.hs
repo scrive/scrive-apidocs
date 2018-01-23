@@ -11,7 +11,6 @@ import Log
 import Network.Curl
 import System.Console.CmdArgs hiding (def)
 import System.Environment
-import System.IO
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Traversable as F
@@ -27,7 +26,6 @@ import Database.Redis.Configuration
 import DB
 import DB.PostgreSQL
 import Happstack.Server.ReqHandler
-import KontraPrelude
 import Log.Configuration
 import Monitoring
 import RoutingTable

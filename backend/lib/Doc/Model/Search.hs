@@ -4,7 +4,6 @@ module Doc.Model.Search
   ) where
 
 import Control.Monad.Catch (MonadCatch, MonadThrow)
-import Control.Monad.Reader
 import Data.Time.Clock (diffUTCTime)
 import Log
 
@@ -12,7 +11,6 @@ import DB
 import Doc.DocumentID
 import Doc.DocumentMonad (theDocumentID, withDocumentID)
 import Doc.Model.Query ()
-import KontraPrelude
 
 updateHistoricalSearchData :: ( MonadDB m
                               , MonadThrow m

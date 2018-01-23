@@ -29,7 +29,6 @@ import Happstack.Fields
 import InputValidation
 import InternalResponse
 import Kontra
-import KontraPrelude
 import User.Model
 import User.Utils
 import Util.Actor

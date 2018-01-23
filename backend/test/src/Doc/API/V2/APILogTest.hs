@@ -9,7 +9,6 @@ import DB
 import Doc.API.V2.Calls.CallsTestUtils
 import Doc.API.V2.Calls.DocumentGetCalls
 import Doc.API.V2.Mock.TestUtils
-import KontraPrelude
 import TestingUtil
 import TestKontra
 import User.APILog.API

@@ -1,7 +1,6 @@
 module Doc.Signing.Tables where
 
 import DB
-import KontraPrelude
 
 tableDocumentSigningConsumers :: Table
 tableDocumentSigningConsumers = tblTable {

@@ -53,7 +53,6 @@ import GTWorkflowTest
 import HtmlTest
 import InputValidationTest
 import JSONUtilTest
-import KontraPrelude
 import LangTest
 import LocalizationTest
 import Log.Configuration

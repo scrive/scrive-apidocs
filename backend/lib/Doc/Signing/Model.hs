@@ -27,7 +27,6 @@ import Doc.SignatoryScreenshots
 import EID.Signature.Model
 import File.FileID
 import IPAddress
-import KontraPrelude
 import User.Lang
 
 instance PQFormat SignatoryFieldsValuesForSigning where

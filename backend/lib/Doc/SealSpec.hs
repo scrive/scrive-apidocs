@@ -9,8 +9,6 @@ import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import qualified Data.Unjson as Unjson
 
-import KontraPrelude
-
 data Person =
     Person { fullname            :: String
            , company             :: String

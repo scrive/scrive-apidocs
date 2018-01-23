@@ -8,8 +8,6 @@ import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
-import KontraPrelude
-
 newtype AttachmentID = AttachmentID Int64
   deriving (Eq, Ord, PQFormat)
 deriving newtype instance Read AttachmentID

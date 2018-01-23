@@ -17,7 +17,6 @@ import Company.CompanyUI
 import Company.Model
 import Context
 import DB
-import KontraPrelude
 import TestingUtil
 import TestKontra
 import Theme.Model

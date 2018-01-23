@@ -8,7 +8,6 @@ module Doc.Functions
 
 import DB
 import DB.SQLFunction
-import KontraPrelude
 
 -- | This function collects all text that should be searchable for one
 -- document.

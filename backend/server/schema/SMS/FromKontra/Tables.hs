@@ -1,7 +1,6 @@
 module SMS.FromKontra.Tables (tableKontraInfoForSMSes) where
 
 import DB
-import KontraPrelude
 
 tableKontraInfoForSMSes :: Table
 tableKontraInfoForSMSes =  tblTable {

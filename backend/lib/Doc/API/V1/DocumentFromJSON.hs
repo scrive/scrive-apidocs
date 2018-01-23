@@ -14,7 +14,6 @@ import Doc.DocStateData
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import InputValidation
-import KontraPrelude
 import User.Lang
 
 -- JSON instances

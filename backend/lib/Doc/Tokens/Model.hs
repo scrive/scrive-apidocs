@@ -12,7 +12,6 @@ import Context
 import DB
 import Doc.SignatoryLinkID
 import KontraMonad
-import KontraPrelude
 import MagicHash
 import Session.Model
 

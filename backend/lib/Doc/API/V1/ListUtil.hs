@@ -32,7 +32,6 @@ import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.UTF8 as BS
 
 import Happstack.Fields
-import KontraPrelude
 import Utils.Prelude
 
 -- This part is responsible for sorting,searching and paging documents lists

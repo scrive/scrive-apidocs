@@ -33,7 +33,6 @@ import Doc.Logging
 import Doc.Model
 import Doc.SealStatus
 import KontraError
-import KontraPrelude
 import Log.Identifier
 import Log.Utils
 import Mails.SendMail

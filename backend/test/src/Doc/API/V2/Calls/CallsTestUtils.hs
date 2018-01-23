@@ -9,7 +9,6 @@ import Context
 import Doc.API.V2.Calls.DocumentPostCalls
 import Doc.API.V2.Mock.TestUtils
 import Doc.Data.DocumentStatus (DocumentStatus(..))
-import KontraPrelude
 import TestingUtil
 import TestKontra
 

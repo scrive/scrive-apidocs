@@ -9,15 +9,12 @@ module MemCache (
 import Control.Concurrent.Lifted
 import Control.DeepSeq
 import Control.Exception.Lifted
-import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Trans.Control
 import Data.Hashable
 import Data.Word
 import qualified Data.HashMap.Strict as HM
 import qualified Data.HashPSQ as Q
-
-import KontraPrelude
 
 data MemCache_ k v = MemCache_ {
     mcSizeFun     :: !(v -> Int)

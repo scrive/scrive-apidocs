@@ -14,7 +14,6 @@ import Log
 import Chargeable.Model
 import DB
 import Doc.DocStateData
-import KontraPrelude
 import Log.Identifier
 import SMS.Data (SMSProvider(..))
 import SMS.KontraInfoForSMS

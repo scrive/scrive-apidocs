@@ -6,7 +6,6 @@ module Doc.Trigger
 
 import DB
 import DB.SQLTrigger
-import KontraPrelude
 
 -- Document search triggers. These triggers keep the `archive_search_terms`
 -- column of the document table up to date: whenever

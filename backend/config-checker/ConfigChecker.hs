@@ -16,7 +16,6 @@ import System.IO
 import AppConf
 import Configuration
 import CronConf
-import KontraPrelude
 import MailingServerConf
 import MessengerServerConf
 

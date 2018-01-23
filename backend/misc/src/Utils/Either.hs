@@ -1,6 +1,5 @@
 module Utils.Either where
 
-import KontraPrelude
 
 isLeft :: Either a b -> Bool
 isLeft (Left _) = True
@@ -24,3 +23,4 @@ toMaybe _ = Nothing
 
 toEither :: a -> Maybe b -> Either a b
 toEither m = maybe (Left m) Right
+

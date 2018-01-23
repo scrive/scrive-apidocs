@@ -25,7 +25,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSU
 import qualified Data.Text as T
 
 import DB
-import KontraPrelude
 import Log.Identifier
 import Log.Utils
 import MessengerServerConf

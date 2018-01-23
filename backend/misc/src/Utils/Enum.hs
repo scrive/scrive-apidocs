@@ -1,7 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Utils.Enum where
 
-import KontraPrelude
 
 -- | Extra classes for one way enums
 class SafeEnum a where
@@ -25,3 +24,4 @@ instance (Enum a, Bounded a, Enum b, Bounded b) => Enum (a,b) where
 -- | Enumerate all values of a bounded type.
 allValues::(Bounded a, Enum a) => [a]
 allValues = enumFromTo minBound maxBound
+

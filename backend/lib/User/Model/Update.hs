@@ -22,7 +22,6 @@ import Company.Model
 import DB
 import Doc.Data.SignatoryField
 import Doc.DocStateData (DocumentStatus(..))
-import KontraPrelude
 import MinutesTime
 import Partner.Model
 import User.Data.SignupMethod

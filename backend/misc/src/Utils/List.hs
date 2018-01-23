@@ -1,9 +1,5 @@
 module Utils.List where
 
-import Data.List
-
-import KontraPrelude
-
 mapKeep :: (a -> b) -> [a] -> [(a, b)]
 mapKeep f = map (\a -> (a, f a))
 
@@ -18,3 +14,4 @@ lStripFrom chars = dropWhile (`elem` chars)
 
 rStripFrom :: [Char] -> String -> String
 rStripFrom chars = reverse . lStripFrom chars . reverse
+

@@ -16,7 +16,6 @@ import Text.StringTemplates.Templates
 import Context
 import DB
 import GuardTime (GuardTimeConfMonad)
-import KontraPrelude
 import MailContext (MailContextMonad)
 import qualified Amazon as AWS
 

@@ -26,7 +26,6 @@ import Data.Typeable
 import Company.CompanyID
 import DB
 import IPAddress
-import KontraPrelude
 import PadApplication.Data
 import Partner.Model
 import SMS.Data (SMSProvider(..))

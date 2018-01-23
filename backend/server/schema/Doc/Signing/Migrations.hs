@@ -2,7 +2,6 @@ module Doc.Signing.Migrations where
 
 import DB
 import Doc.Signing.Tables
-import KontraPrelude
 
 documentSigningJobsUseJson :: MonadDB m => Migration m
 documentSigningJobsUseJson = Migration {

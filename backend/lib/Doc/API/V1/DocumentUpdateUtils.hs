@@ -7,7 +7,6 @@ module Doc.API.V1.DocumentUpdateUtils (
 
 import Control.Conditional (unlessM, whenM)
 import Control.Monad.Catch
-import Data.Functor
 import Log
 import qualified Control.Exception.Lifted as E
 
@@ -22,7 +21,6 @@ import Doc.Model
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import Kontra
-import KontraPrelude
 import Log.Identifier
 import Util.Actor
 import Util.HasSomeUserInfo

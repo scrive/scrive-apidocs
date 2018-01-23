@@ -24,7 +24,6 @@ import Company.Model
 import DB
 import InputValidation (Result(..), asValidEmail)
 import Kontra
-import KontraPrelude
 import MinutesTime
 import OAuth.Model
 import Partner.JSON

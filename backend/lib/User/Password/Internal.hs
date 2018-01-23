@@ -6,8 +6,6 @@ import Data.Function
 import qualified Crypto.Scrypt as Scrypt
 import qualified Data.ByteString as BS
 
-import KontraPrelude
-
 instance Ord Scrypt.EncryptedPass where
   compare = compare `on` Scrypt.getEncryptedPass
 

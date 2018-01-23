@@ -15,7 +15,6 @@ import Control.Monad.Trans.Instances ()
 import DB
 import Happstack.Server.Instances ()
 import Happstack.Server.ReqHandler
-import KontraPrelude
 
 type InnerMailer = CryptoRNGT (DBT (LogT (ReqHandlerT IO)))
 

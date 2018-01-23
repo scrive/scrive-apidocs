@@ -13,7 +13,6 @@ import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.SignatoryLinkID
-import KontraPrelude
 import User.Model
 import Util.SignatoryLinkUtils
 

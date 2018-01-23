@@ -4,8 +4,6 @@ module Salesforce.Conf (
 
 import Data.Unjson
 
-import KontraPrelude
-
 data SalesforceConf = SalesforceConf {
     salesforceAuthenticationUrl :: String
   , salesforceTokenUrl :: String

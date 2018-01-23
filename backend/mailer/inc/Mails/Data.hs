@@ -28,7 +28,6 @@ import qualified Data.Text as T
 import DB.Derive
 import File.FileID
 import HtmlToTxt
-import KontraPrelude
 import Log.Identifier
 import MagicHash (MagicHash)
 import Utils.List

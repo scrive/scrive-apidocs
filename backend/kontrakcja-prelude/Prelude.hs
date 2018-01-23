@@ -1,6 +1,7 @@
 -- | Slightly customized replacement of Prelude.
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-module KontraPrelude (
+{-# LANGUAGE PackageImports       #-}
+module Prelude (
     module Control.Applicative
   , module Control.Monad
   , module Data.Algebra.Boolean
@@ -9,7 +10,7 @@ module KontraPrelude (
   , module Data.Maybe
   , module Data.Monoid
   , module Data.Monoid.Utils
-  , module Prelude
+  , module P
   , (!!)
   , (.)
   , id
@@ -48,8 +49,8 @@ import Data.Typeable
 import GHC.Stack (HasCallStack)
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
-import Prelude hiding ((!!), (&&), (.), (||), all, and, any, error, head, id, last, maximum, minimum, not, or, read, tail)
-import qualified Prelude as P
+import "base" Prelude hiding ((!!), (&&), (.), (||), all, and, any, error, head, id, last, maximum, minimum, not, or, read, tail)
+import qualified "base" Prelude as P
 
 -- | Boolean algebra of functions.
 instance Boolean (a -> Bool) where

@@ -24,7 +24,6 @@ import Data.ByteString.Utils (splitEvery)
 import DB
 import File.Storage
 import HtmlToTxt
-import KontraPrelude
 import Mails.Data
 import MinutesTime
 import qualified Amazon as AWS

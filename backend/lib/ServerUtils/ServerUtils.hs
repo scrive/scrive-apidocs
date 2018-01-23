@@ -6,7 +6,6 @@ module ServerUtils.ServerUtils (
 
 import Control.Monad.Trans
 import Data.Char (toLower)
-import Data.Functor
 import Data.List.Split (splitOn)
 import Happstack.Server hiding (dir, simpleHTTP)
 import Log as Log
@@ -26,7 +25,6 @@ import qualified Text.JSON.Gen as J
 
 import Happstack.Fields
 import Kontra
-import KontraPrelude
 import Util.CSVUtil
 import Util.MonadUtils
 

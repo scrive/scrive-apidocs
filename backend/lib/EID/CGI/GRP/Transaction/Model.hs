@@ -19,7 +19,6 @@ import qualified Data.Text as T
 
 import DB
 import Doc.SignatoryLinkID
-import KontraPrelude
 import Session.SessionID
 
 data CgiGrpTransactionType = CgiGrpAuth | CgiGrpSign

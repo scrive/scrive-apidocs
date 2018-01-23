@@ -7,7 +7,6 @@ import Data.Typeable
 import qualified Database.Redis as R
 
 import File.FileID
-import KontraPrelude
 import MemCache
 
 data AmazonConfig = AmazonConfig {

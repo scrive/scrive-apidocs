@@ -7,7 +7,6 @@ import Happstack.StaticRouting
 
 import Doc.API.V2.Calls
 import Kontra
-import KontraPrelude
 import Routing
 
 documentAPIV2 ::  Route (Kontra Response)

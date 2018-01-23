@@ -20,7 +20,6 @@ import qualified Data.Text as T
 import DB
 import Happstack.Fields
 import Kontra
-import KontraPrelude
 import OAuth.Model
 import OAuth.Parse
 import User.Data.User

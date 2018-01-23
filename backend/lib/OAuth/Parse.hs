@@ -8,7 +8,6 @@ import Data.List.Split
 import Data.String.Utils hiding (maybeRead)
 import Network.HTTP (urlDecode)
 
-import KontraPrelude
 import MagicHash
 import OAuth.Model
 

@@ -23,7 +23,6 @@ import InternalResponse
 import IPAddress
 import Kontra
 import KontraLink
-import KontraPrelude
 import Log.Identifier
 import Redirect
 import ThirdPartyStats.Core

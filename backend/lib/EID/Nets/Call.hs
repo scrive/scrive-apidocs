@@ -2,7 +2,6 @@ module EID.Nets.Call (
     netsCall
   ) where
 
-import Control.Monad
 import Control.Monad.Base (MonadBase)
 import Control.Monad.Catch
 import Control.Monad.IO.Class
@@ -19,7 +18,6 @@ import qualified Data.Text as T
 import EID.Nets.Config
 import EID.Nets.SignID
 import Kontra hiding (InternalError)
-import KontraPrelude
 import Log.Identifier
 import MinutesTime
 import Network.XMLCurl

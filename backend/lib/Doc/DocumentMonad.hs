@@ -19,7 +19,6 @@ import Doc.Class
 import Doc.Data.Document
 import Doc.DocumentID (DocumentID)
 import Doc.Logging
-import KontraPrelude
 
 -- | A monad transformer that has a 'DocumentMonad' instance
 newtype DocumentT m a = DocumentT { unDocumentT :: RowCacheT Document m a }

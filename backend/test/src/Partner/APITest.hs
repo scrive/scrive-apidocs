@@ -3,7 +3,6 @@ module Partner.APITest (partnerAPITests) where
 
 import Control.Monad.IO.Class
 import Data.Aeson
-import Data.Int
 import Happstack.Server
 import Test.Framework
 import qualified Data.ByteString.Lazy as B
@@ -18,7 +17,6 @@ import DB
 import Doc.API.V2.Calls.DocumentPostCalls (docApiV2New)
 import Doc.SignatoryLinkID ()
 import Kontra
-import KontraPrelude
 import Partner.API
 import Partner.Model
 import TestingUtil

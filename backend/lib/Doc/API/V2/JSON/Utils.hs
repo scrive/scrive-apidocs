@@ -10,8 +10,6 @@ import Data.Unjson
 import qualified Data.Aeson as Aeson
 import qualified Data.Text as T
 
-import KontraPrelude
-
 unjsonEnumBy :: (Eq a) => T.Text -> [(a,T.Text)] -> UnjsonDef a
 unjsonEnumBy desc enumDef =
   unjsonEnum desc (parseEnum enumDef) (printEnum enumDef)

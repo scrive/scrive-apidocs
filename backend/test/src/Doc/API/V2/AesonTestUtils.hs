@@ -17,7 +17,6 @@ import qualified Data.Vector as V
 
 import Context (Context)
 import Kontra (Kontra)
-import KontraPrelude
 import TestingUtil (assertEqual, assertFailure)
 import TestKontra
 

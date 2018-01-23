@@ -21,7 +21,6 @@ import Company.Model
 import DB
 import Doc.DocStateData hiding (DocumentStatus(..))
 import KontraLink
-import KontraPrelude
 import MailContext
 import SMS.Data
 import SMS.SMS

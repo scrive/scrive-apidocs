@@ -9,7 +9,6 @@ import Log
 
 import DB
 import Happstack.Fields
-import KontraPrelude
 import Messenger
 import SMS.Data
 import SMS.Model

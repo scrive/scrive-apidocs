@@ -16,7 +16,6 @@ import qualified Data.Aeson.Types as JSON
 import qualified Data.ByteString.Lazy as BSL
 
 import Company.Model
-import KontraPrelude
 import Planhat
 import ThirdPartyStats.Core
 import User.Email (Email(..))

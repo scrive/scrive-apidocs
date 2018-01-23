@@ -1,10 +1,8 @@
 {-# LANGUAGE DataKinds #-}
 module DB.PostgreSQL where
 
-import Control.Applicative
 import Control.Concurrent.MVar
 import Control.Concurrent.STM
-import Control.Monad
 import Control.Monad.Base
 import Control.Monad.Catch
 import Data.Pool
@@ -13,8 +11,6 @@ import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.Internal.Connection
 import Database.PostgreSQL.PQTypes.Model.CompositeType
 import Log
-
-import KontraPrelude
 
 type BasicConnectionSource   = ConnectionSource '[MonadBase IO, MonadMask]
 type TrackedConnectionSource = ConnectionSource '[MonadBase IO, MonadMask, MonadLog]

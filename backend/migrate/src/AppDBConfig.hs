@@ -4,7 +4,6 @@ import Data.Default
 import Data.Unjson
 import qualified Data.Text as T
 
-import KontraPrelude
 import Log.Configuration
 
 -- | Subset of 'AppConf' needed for running database migrations.

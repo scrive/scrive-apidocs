@@ -10,7 +10,6 @@ import Log.Class
 import DB
 import Doc.DocumentID
 import Doc.DocumentMonad
-import KontraPrelude
 
 data ScheduleDocumentExtending = ScheduleDocumentExtending DocumentID UTCTime
 instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m, MonadTime m) => DBUpdate m ScheduleDocumentExtending () where

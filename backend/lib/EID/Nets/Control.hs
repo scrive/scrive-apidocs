@@ -3,7 +3,6 @@ module EID.Nets.Control (
   , checkNetsSignStatus
   , NetsSignStatus(..)) where
 
-import Control.Monad
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
@@ -42,7 +41,6 @@ import Happstack.Fields
 import InternalResponse
 import Kontra hiding (InternalError)
 import KontraLink
-import KontraPrelude
 import Log.Identifier
 import MinutesTime
 import Network.SOAP.Call

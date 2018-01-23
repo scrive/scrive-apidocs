@@ -9,8 +9,6 @@ import qualified Data.HashMap.Strict as H
 import qualified Data.Text as T
 import qualified Data.Vector as V
 
-import KontraPrelude
-
 jsonToAeson :: JSValue -> Value
 jsonToAeson JSNull = Null
 jsonToAeson (JSBool b) = Bool b

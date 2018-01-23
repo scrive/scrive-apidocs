@@ -59,6 +59,23 @@ Flag enable-routinglist
   Manual: True
   Default: False
 
+Library kontrakcja-prelude
+
+  Hs-Source-Dirs: backend/kontrakcja-prelude
+
+  GHC-Options: -Werror -Wall -fno-warn-type-defaults
+  GHC-Prof-Options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
+
+  if flag(server-coverage)
+    GHC-Options: -fhpc
+
+  Exposed-Modules:    Prelude
+  Build-Depends:      base, cond, exceptions, extra
+                    , fclabels, hpqtypes, template-haskell
+  Default-Language:   Haskell2010
+  Default-Extensions: FlexibleInstances, RecordWildCards
+                    , TemplateHaskell, TypeOperators
+
 Library
 
   Hs-source-dirs: backend/cron/inc backend/cron/schema
@@ -296,7 +313,6 @@ Library
                  , KontraError
                  , KontraLink
                  , KontraMonad
-                 , KontraPrelude
                  , LangRouting
                  , Log.Configuration
                  , Log.Identifier
@@ -454,7 +470,8 @@ Library
                  Context.Labels,
                  MailContext.Internal,
                  MailContext.Labels
-  Build-depends: base
+  Build-depends: base-noprelude
+               , kontrakcja-prelude
                , AES
                , Crypto
                , DRBG
@@ -488,7 +505,6 @@ Library
                , ekg-statsd
                , exceptions
                , explicit-exception
-               , extra
                , fclabels
                , fields-json
                , filepath
@@ -571,7 +587,6 @@ Library
                     , MultiParamTypeClasses
                     , MultiWayIf
                     , NamedFieldPuns
-                    , NoImplicitPrelude
                     , OverloadedStrings
                     , PatternGuards
                     , RankNTypes
@@ -599,8 +614,9 @@ Executable kontrakcja-server
   Main-Is: Main.hs
   GHC-options: -main-is Main
 
-  Build-depends: kontrakcja
-               , base
+  Build-depends: base-noprelude
+               , kontrakcja-prelude
+               , kontrakcja
                , bytestring
                , cmdargs
                , crypto-rng
@@ -631,7 +647,6 @@ Executable kontrakcja-server
                     , MultiParamTypeClasses
                     , MultiWayIf
                     , NamedFieldPuns
-                    , NoImplicitPrelude
                     , OverloadedStrings
                     , PatternGuards
                     , RankNTypes
@@ -655,8 +670,9 @@ Executable cron
   if flag(server-coverage)
     GHC-Options: -fhpc
 
-  Build-depends: kontrakcja
-               , base
+  Build-depends: base-noprelude
+               , kontrakcja-prelude
+               , kontrakcja
                , bytestring
                , cmdargs
                , consumers
@@ -696,7 +712,6 @@ Executable cron
                     , MultiParamTypeClasses
                     , MultiWayIf
                     , NamedFieldPuns
-                    , NoImplicitPrelude
                     , OverloadedStrings
                     , PatternGuards
                     , RankNTypes
@@ -776,7 +791,6 @@ Executable kontrakcja-migrate
                  FeatureFlags.Tables
                  File.Tables
                  HostClock.Tables
-                 KontraPrelude
                  Log.Configuration
                  Log.Migrations
                  Log.Tables
@@ -808,7 +822,8 @@ Executable kontrakcja-migrate
                  User.UserAccountRequest.Tables
                  Utils.TH
 
-  Build-depends: base
+  Build-depends: base-noprelude
+               , kontrakcja-prelude
                , DRBG
                , HaXml
                , MissingH
@@ -826,7 +841,6 @@ Executable kontrakcja-migrate
                , data-default
                , directory
                , exceptions
-               , extra
                , fclabels
                , fields-json
                , hpqtypes
@@ -869,7 +883,6 @@ Executable kontrakcja-migrate
                     , MultiParamTypeClasses
                     , MultiWayIf
                     , NamedFieldPuns
-                    , NoImplicitPrelude
                     , OverloadedStrings
                     , PatternGuards
                     , RankNTypes
@@ -923,7 +936,6 @@ Executable mailing-server
                  Happstack.Server.Instances
                  Happstack.Server.ReqHandler
                  HtmlToTxt
-                 KontraPrelude
                  Log.Configuration
                  Log.Identifier
                  Log.Migrations
@@ -952,7 +964,8 @@ Executable mailing-server
                  Utils.Read
                  Utils.TH
 
-  Build-depends: base
+  Build-depends: base-noprelude
+               , kontrakcja-prelude
                , AES
                , DRBG
                , HTTP
@@ -1032,7 +1045,6 @@ Executable mailing-server
                     , MultiParamTypeClasses
                     , MultiWayIf
                     , NamedFieldPuns
-                    , NoImplicitPrelude
                     , OverloadedStrings
                     , PatternGuards
                     , RankNTypes
@@ -1073,7 +1085,6 @@ Executable messenger-server
                  Happstack.Fields
                  Happstack.Server.Instances
                  Happstack.Server.ReqHandler
-                 KontraPrelude
                  Log.Configuration
                  Log.Identifier
                  Log.Migrations
@@ -1095,7 +1106,8 @@ Executable messenger-server
                  Utils.Network
                  Utils.TH
 
-  Build-depends: base
+  Build-depends: base-noprelude
+               , kontrakcja-prelude
                , DRBG
                , MissingH
                , aeson
@@ -1168,7 +1180,6 @@ Executable messenger-server
                     , MultiParamTypeClasses
                     , MultiWayIf
                     , NamedFieldPuns
-                    , NoImplicitPrelude
                     , OverloadedStrings
                     , PatternGuards
                     , RankNTypes
@@ -1329,8 +1340,9 @@ Test-suite kontrakcja-test
                  UserPasswordTest
                  UserStateTest
 
-  Build-depends: kontrakcja
-               , base
+  Build-depends: base-noprelude
+               , kontrakcja-prelude
+               , kontrakcja
                , Decimal
                , HStringTemplate
                , HUnit
@@ -1398,7 +1410,6 @@ Test-suite kontrakcja-test
                     , MultiParamTypeClasses
                     , MultiWayIf
                     , NamedFieldPuns
-                    , NoImplicitPrelude
                     , OverloadedStrings
                     , PatternGuards
                     , RankNTypes
@@ -1422,12 +1433,11 @@ Executable config-checker
   Other-modules: CronConf
                  MailingServerConf
                  MessengerServerConf
-  Build-Depends: base, data-default, either
+  Build-Depends: base-noprelude, kontrakcja-prelude, data-default, either
                , lifted-base, kontrakcja, text
                , unjson
   Default-Language: Haskell2010
-  Default-Extensions: NoImplicitPrelude
-                    , OverloadedStrings
+  Default-Extensions: OverloadedStrings
                     , RecordWildCards
                     , TemplateHaskell
 
@@ -1443,13 +1453,13 @@ Executable localization
 
   Main-Is: LocalizationMain.hs
   GHC-options: -main-is LocalizationMain
-  Other-Modules: KontraPrelude
-                 Templates
+  Other-Modules: Templates
                  User.Lang
                  Utils.Enum
                  Version
 
-  Build-depends: base
+  Build-depends: base-noprelude
+               , kontrakcja-prelude
                , base16-bytestring
                , cond
                , data-default
@@ -1484,7 +1494,6 @@ Executable localization
                     , MultiParamTypeClasses
                     , MultiWayIf
                     , NamedFieldPuns
-                    , NoImplicitPrelude
                     , OverloadedStrings
                     , PatternGuards
                     , RankNTypes
@@ -1514,7 +1523,8 @@ Executable routinglist
   GHC-options: -main-is RoutingListMain
 
   Build-depends: kontrakcja
-               , base
+               , base-noprelude
+               , kontrakcja-prelude
                , happstack-server
                , happstack-static-routing
                , mtl
@@ -1534,7 +1544,6 @@ Executable routinglist
                     , MultiParamTypeClasses
                     , MultiWayIf
                     , NamedFieldPuns
-                    , NoImplicitPrelude
                     , OverloadedStrings
                     , PatternGuards
                     , RankNTypes

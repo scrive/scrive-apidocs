@@ -8,7 +8,6 @@ import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocUtils
 import EID.Signature.Model
-import KontraPrelude
 import TestingUtil
 import TestKontra as T
 import Util.SignatoryLinkUtils

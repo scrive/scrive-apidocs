@@ -3,7 +3,6 @@ module Mails.FromKontra.Migrations (createKontraInfoForMailsTable) where
 import Database.PostgreSQL.PQTypes.Checks
 
 import DB
-import KontraPrelude
 import Mails.FromKontra.Tables
 
 createKontraInfoForMailsTable :: MonadDB m => Migration m

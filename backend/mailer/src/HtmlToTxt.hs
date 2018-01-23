@@ -8,8 +8,6 @@ import Data.Char
 import Text.HTML.TagSoup
 import Text.HTML.TagSoup.Entity
 
-import KontraPrelude
-
 unescapeHTML :: String -> String
 unescapeHTML [] = []
 unescapeHTML ('&':xs) =

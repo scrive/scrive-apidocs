@@ -2,8 +2,6 @@ module Data.ByteString.Utils (splitEvery) where
 
 import qualified Data.ByteString.Char8 as BS
 
-import KontraPrelude
-
 splitEvery :: Int -> BS.ByteString -> [BS.ByteString]
 splitEvery n = go
   where

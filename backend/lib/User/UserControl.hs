@@ -21,7 +21,6 @@ module User.UserControl(
   , getMonthsStats -- Exported for admin section
 ) where
 
-import Data.Functor
 import Data.Time.Calendar
 import Data.Time.Clock
 import Log
@@ -41,7 +40,6 @@ import InputValidation
 import InternalResponse
 import Kontra
 import KontraLink
-import KontraPrelude
 import Log.Identifier
 import MagicHash (MagicHash)
 import Mails.SendMail

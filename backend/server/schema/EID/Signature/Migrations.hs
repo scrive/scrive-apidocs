@@ -2,7 +2,6 @@ module EID.Signature.Migrations (eidSignaturesAddProviderNetsNOBankID) where
 
 import DB
 import EID.Signature.Tables
-import KontraPrelude
 
 -- the previous version of the check didn't handle adding new providers
 eidSignaturesAddProviderNetsNOBankID :: MonadDB m => Migration m

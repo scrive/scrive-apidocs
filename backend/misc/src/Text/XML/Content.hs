@@ -30,8 +30,6 @@ import Text.XML.Stream.Render (renderBytes)
 import qualified Data.Map as Map
 import qualified Data.Text as T
 
-import KontraPrelude
-
 newtype XMLContent = XMLContent { unXMLContent :: [Node] }
   deriving (Eq, Ord, Show)
 

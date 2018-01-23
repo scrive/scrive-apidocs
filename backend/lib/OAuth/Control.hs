@@ -19,7 +19,6 @@ import DB
 import Happstack.Fields
 import Kontra
 import KontraLink
-import KontraPrelude
 import Log.Identifier
 import OAuth.Model
 import OAuth.Util

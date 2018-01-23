@@ -8,7 +8,6 @@ import Data.Typeable
 import Data.Unjson
 
 import DB
-import KontraPrelude
 
 -- newtypes
 newtype Email = Email { unEmail :: String }

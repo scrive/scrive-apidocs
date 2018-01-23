@@ -5,7 +5,6 @@ import Happstack.Server (FromReqURI(..))
 import qualified Control.Exception.Lifted as E
 
 import DB
-import KontraPrelude
 
 {-# DEPRECATED BySigning "BySigning is not used anymore" #-}
 {- BySigning is not used anymore. We can't drop it right away, but it doesn't need to be supported -}

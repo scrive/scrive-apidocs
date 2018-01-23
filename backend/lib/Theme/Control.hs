@@ -28,7 +28,6 @@ import Company.Model
 import DB
 import Happstack.Fields
 import Kontra
-import KontraPrelude
 import Theme.Model
 import Theme.View
 import Util.MonadUtils

@@ -14,7 +14,6 @@ import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
-import KontraPrelude
 import Log.Identifier
 
 -- | 'SignatoryLinkID' is an integer that identifies

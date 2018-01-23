@@ -19,7 +19,6 @@ import qualified Data.UUID as U
 
 import DB
 import KontraError
-import KontraPrelude
 import Log.Identifier
 
 newtype SignOrderUUID = SignOrderUUID UUID

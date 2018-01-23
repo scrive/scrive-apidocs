@@ -10,7 +10,6 @@ import DB
 import File.Conditions
 import File.File
 import File.Model
-import KontraPrelude
 import Purging.Files
 import TestingUtil
 import TestKontra

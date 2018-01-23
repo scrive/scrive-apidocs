@@ -4,7 +4,6 @@ module Salesforce.Control (
   ) where
 
 import Control.Monad.Reader
-import Data.Functor
 import Text.JSON
 import Text.JSON.Gen
 
@@ -13,7 +12,6 @@ import Happstack.Fields
 import InternalResponse
 import Kontra
 import KontraLink
-import KontraPrelude
 import Salesforce.AuthorizationWorkflow
 import Salesforce.Conf
 import User.CallbackScheme.Model

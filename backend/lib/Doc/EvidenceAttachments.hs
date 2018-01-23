@@ -21,7 +21,6 @@ import DB (MonadDB)
 import Doc.Data.MainFile
 import Doc.DocStateData (Document(..), documentsealedfile)
 import File.Storage (getFileIDContents)
-import KontraPrelude
 import Log.Utils
 import Utils.Directory
 import qualified Amazon as AWS

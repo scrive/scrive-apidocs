@@ -39,7 +39,6 @@ import File.File
 import File.Model
 import InputValidation
 import Kontra
-import KontraPrelude
 import Log.Identifier
 import MailContext
 import MailContext.Internal

@@ -13,7 +13,6 @@ import Attachment.Model
 import DB
 import Doc.API.V2.JSON.Misc
 import Doc.API.V2.JSON.Utils
-import KontraPrelude
 
 unjsonAttachments :: UnjsonDef [Attachment]
 unjsonAttachments = objectOf $

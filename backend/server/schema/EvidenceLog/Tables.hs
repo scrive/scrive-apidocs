@@ -1,7 +1,6 @@
 module EvidenceLog.Tables (tableEvidenceLog) where
 
 import DB
-import KontraPrelude
 
 {- |
 Description of the table to store the evidence log.

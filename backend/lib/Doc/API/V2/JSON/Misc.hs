@@ -34,7 +34,6 @@ import Doc.API.V2.JSON.Utils
 import Doc.DocStateData
 import Doc.DocumentID
 import KontraLink
-import KontraPrelude
 import User.Lang
 import qualified Data.ByteString.RFC2397 as RFC2397
 import qualified Doc.Screenshot as Screenshot

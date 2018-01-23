@@ -1,7 +1,6 @@
 module EID.CGI.GRP.Transaction.Tables where
 
 import DB
-import KontraPrelude
 
 -- | CGI GRP transaction is unique for a given signatory. Since
 -- for a given personal number only one transaction can be active

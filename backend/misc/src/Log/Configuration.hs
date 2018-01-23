@@ -24,9 +24,9 @@ import Log.Backend.StandardOutput
 import Log.Data
 import Log.Internal.Logger hiding (withLogger)
 import Log.Monad
+import Prelude hiding ((<>))
 
 import DB.PostgreSQL
-import KontraPrelude hiding ((<>))
 import Log.Migrations
 import Log.Tables
 import Utils.TH
@@ -128,7 +128,7 @@ newtype WithLoggerFun = WithLoggerFun {
 }
 
 instance Semigroup WithLoggerFun where
-  (WithLoggerFun with0) <> (WithLoggerFun with1) = WithLoggerFun $
+   (WithLoggerFun with0) <> (WithLoggerFun with1) = WithLoggerFun $
     \f -> with0 (\logger0 -> with1 (\logger1 -> f $ logger0 <> logger1))
 
 mkLogRunner :: Text -> LogConfig -> CryptoRNGState -> IO LogRunner

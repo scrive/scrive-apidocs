@@ -94,7 +94,6 @@ import File.Storage
 import Happstack.Fields
 import InputValidation
 import Kontra
-import KontraPrelude
 import Log.Identifier
 import MagicHash (MagicHash)
 import MinutesTime

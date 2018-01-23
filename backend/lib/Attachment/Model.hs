@@ -22,7 +22,6 @@ import Attachment.AttachmentID
 import DB
 import File.FileID
 import File.Model
-import KontraPrelude
 import MinutesTime
 import User.UserID
 import Util.Actor

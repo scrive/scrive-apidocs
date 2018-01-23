@@ -20,7 +20,6 @@ import Data.Typeable
 import Company.CompanyID
 import DB
 import Doc.DocumentID
-import KontraPrelude
 import MinutesTime
 import SMS.Data (SMSProvider(..))
 import User.UserID

@@ -11,8 +11,6 @@ import Codec.Crypto.AES
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 
-import KontraPrelude
-
 data AESConf = AESConf ByteString ByteString -- key, iv
   deriving (Eq, Ord, Show)
 

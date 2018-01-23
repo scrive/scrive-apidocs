@@ -20,7 +20,6 @@ import DB
 import File.Conditions
 import File.File
 import File.FileID
-import KontraPrelude
 
 data GetFileByFileID = GetFileByFileID FileID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetFileByFileID File where

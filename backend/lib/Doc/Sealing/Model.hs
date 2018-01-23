@@ -11,7 +11,6 @@ import BrandedDomain.Model
 import DB
 import Doc.Data.Document
 import Doc.DocumentMonad
-import KontraPrelude
 
 documentSealingNotificationChannel :: Channel
 documentSealingNotificationChannel = "document_sealing"

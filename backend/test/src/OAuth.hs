@@ -5,7 +5,6 @@ import Test.Framework
 import Test.QuickCheck
 
 import DB
-import KontraPrelude
 import MagicHash
 import OAuth.Model
 import TestingUtil

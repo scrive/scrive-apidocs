@@ -24,7 +24,6 @@ import Doc.API.Callback.Execute
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.Logging
-import KontraPrelude
 import Log.Identifier
 import MinutesTime
 import User.CallbackScheme.Model

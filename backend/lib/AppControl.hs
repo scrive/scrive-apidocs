@@ -18,7 +18,6 @@ import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
 import Crypto.RNG
 import Data.Aeson.Types
-import Data.Functor
 import Data.Time.Clock
 import Data.Typeable
 import GHC.Stack
@@ -46,7 +45,6 @@ import File.FileID
 import Happstack.Server.ReqHandler
 import IPAddress
 import Kontra
-import KontraPrelude
 import Log.Identifier
 import Log.Utils
 import MinutesTime

@@ -7,7 +7,6 @@ import Text.JSON.Gen (runJSONGen, value)
 import Text.JSON.ToJSValue (ToJSValue(..))
 import qualified Data.ByteString.UTF8 as BS
 
-import KontraPrelude
 import MinutesTime
 import qualified Data.ByteString.RFC2397 as RFC2397
 

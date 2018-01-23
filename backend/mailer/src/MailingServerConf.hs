@@ -13,7 +13,6 @@ import Data.Unjson
 import Data.Word
 
 import Database.Redis.Configuration
-import KontraPrelude
 import Log.Configuration
 import Mails.Data
 import Monitoring

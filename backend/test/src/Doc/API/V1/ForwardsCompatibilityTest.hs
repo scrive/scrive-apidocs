@@ -9,7 +9,6 @@ import qualified Data.ByteString.Lazy as B
 import Doc.API.V1.Calls
 import Doc.API.V2.Calls
 import Doc.API.V2.JSONTest (runApiJSONTest, testJSONCtx)
-import KontraPrelude
 import TestingUtil
 import TestKontra as T
 

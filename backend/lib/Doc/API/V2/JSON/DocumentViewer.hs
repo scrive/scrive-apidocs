@@ -12,7 +12,6 @@ import Doc.API.V2.JSON.Misc ()
 import Doc.API.V2.JSON.Utils
 import Doc.DocStateData
 import Doc.SignatoryLinkID
-import KontraPrelude
 import Util.SignatoryLinkUtils
 
 -- Document viewer is returned by API as a part of document json structure,

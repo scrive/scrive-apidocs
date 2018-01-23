@@ -18,7 +18,6 @@ module Mails.Events (
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Crypto.RNG
-import Data.Functor
 import Data.Time
 import Log
 import Text.StringTemplates.Templates hiding (runTemplatesT)
@@ -39,7 +38,6 @@ import Doc.Logging
 import Doc.Model
 import Doc.SignatoryLinkID
 import KontraLink
-import KontraPrelude
 import Log.Identifier
 import Mails.MailsData
 import Mails.Model hiding (Mail)

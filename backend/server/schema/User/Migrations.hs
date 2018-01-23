@@ -1,7 +1,6 @@
 module User.Migrations where
 
 import DB
-import KontraPrelude
 import User.Tables
 
 addPasswordAlgorithmVersionColumn :: MonadDB m => Migration m

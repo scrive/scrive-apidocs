@@ -8,7 +8,6 @@ module MailContext.Class (
 import Control.Monad.Trans
 
 import BrandedDomain.BrandedDomain
-import KontraPrelude
 import MailContext.Internal
 import MailContext.Labels
 

@@ -1,7 +1,6 @@
 module Mails.FromKontra.Tables ( tableKontraInfoForMails ) where
 
 import DB
-import KontraPrelude
 
 tableKontraInfoForMails :: Table
 tableKontraInfoForMails =  tblTable {

@@ -20,7 +20,6 @@ import Data.String.Utils (strip)
 import BrandedDomain.BrandedDomainID
 import Company.Model
 import DB
-import KontraPrelude
 import Log.Identifier
 import MinutesTime
 import PadApplication.Data

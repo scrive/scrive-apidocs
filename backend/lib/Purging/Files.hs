@@ -12,7 +12,6 @@ import Amazon
 import DB
 import File.Conditions
 import File.Model
-import KontraPrelude
 import Log.Identifier
 
 data MarkOrphanFilesForPurgeAfter = MarkOrphanFilesForPurgeAfter Int Interval

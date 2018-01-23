@@ -15,7 +15,6 @@ import Control.Monad.State
 
 import Company.Model
 import DB
-import KontraPrelude
 import User.Model
 
 {- |

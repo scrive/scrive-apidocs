@@ -9,7 +9,6 @@ import Company.Model
 import CompanyAccountsTest
 import Context
 import DB hiding (query, update)
-import KontraPrelude
 import TestingUtil
 import TestKontra as T
 import User.Email

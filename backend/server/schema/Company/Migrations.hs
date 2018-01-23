@@ -8,7 +8,6 @@ import Control.Monad.Catch
 
 import Company.Tables
 import DB
-import KontraPrelude
 
 companiesAddPartnerID :: (MonadThrow m, MonadDB m) => Migration m
 companiesAddPartnerID = Migration {

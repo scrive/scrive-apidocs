@@ -1,7 +1,6 @@
 module Doc.Extending.Tables where
 
 import DB
-import KontraPrelude
 
 tableDocumentExtendingConsumers :: Table
 tableDocumentExtendingConsumers = tblTable {

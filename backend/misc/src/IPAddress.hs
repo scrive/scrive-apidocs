@@ -15,8 +15,6 @@ import Data.Int
 import Database.PostgreSQL.PQTypes
 import Numeric
 
-import KontraPrelude
-
 newtype IPAddress = IPAddress Word32
   deriving (Eq, Ord)
 

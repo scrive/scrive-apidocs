@@ -19,8 +19,6 @@ import qualified Data.HashMap.Lazy as H
 import qualified Data.Text as Text
 import qualified Data.Yaml as Yaml
 
-import KontraPrelude
-
 writeDefaultConfig :: forall a m .
               (Unjson a, Default a, Monad m, MonadBaseControl IO m) =>
               (String -> m ()) -> FilePath -> Proxy a -> m ()

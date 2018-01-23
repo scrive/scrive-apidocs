@@ -67,7 +67,6 @@ import Doc.DocumentID (DocumentID)
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import File.FileID
 import Kontra (Kontra)
-import KontraPrelude
 import TestKontra
 
 -- * MockDoc Helper Functions

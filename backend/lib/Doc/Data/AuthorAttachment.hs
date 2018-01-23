@@ -5,7 +5,6 @@ module Doc.Data.AuthorAttachment (
 
 import DB
 import File.FileID
-import KontraPrelude
 
 data AuthorAttachment = AuthorAttachment {
   authorattachmentname :: String,

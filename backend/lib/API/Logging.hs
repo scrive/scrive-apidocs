@@ -6,7 +6,6 @@ import Log
 import API.APIVersion
 import Company.Model
 import Kontra
-import KontraPrelude
 import Log.Identifier
 import OAuth.Util
 import User.Data.User

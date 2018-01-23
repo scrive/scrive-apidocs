@@ -20,7 +20,6 @@ import Control.Monad.Trans.Control
 import Database.PostgreSQL.PQTypes (MonadDB)
 
 import Control.Monad.Trans.Control.Util
-import KontraPrelude
 
 -- | Return an identifier type for a row 'r' that can be used to retrieve rows from storage
 type family ID r

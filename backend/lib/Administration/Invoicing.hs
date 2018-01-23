@@ -17,7 +17,6 @@ import Chargeable.Model
 import DB
 import Doc.Data.Document (DocumentType(..))
 import Doc.Data.DocumentStatus (DocumentStatus(..))
-import KontraPrelude
 import Log.Utils
 import MinutesTime
 import Partner.Model (PartnerID)

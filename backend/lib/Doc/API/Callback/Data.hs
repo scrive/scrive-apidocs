@@ -9,7 +9,6 @@ import Data.Int
 import API.APIVersion
 import DB
 import Doc.DocumentID
-import KontraPrelude
 import Log.Identifier
 
 newtype CallbackID = CallbackID Int64

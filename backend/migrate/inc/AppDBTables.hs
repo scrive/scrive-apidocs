@@ -36,7 +36,6 @@ import EvidenceLog.Tables
 import FeatureFlags.Tables
 import File.Tables
 import HostClock.Tables
-import KontraPrelude
 import Mails.FromKontra.Tables
 import Mails.Tables
 import OAuth.Tables

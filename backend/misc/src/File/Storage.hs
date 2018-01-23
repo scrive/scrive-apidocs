@@ -15,7 +15,6 @@ import Database.Redis.Helpers
 import DB
 import File.File
 import File.Model
-import KontraPrelude
 import qualified Amazon as AWS
 import qualified Database.Redis.Cache as RC
 import qualified MemCache as MemCache

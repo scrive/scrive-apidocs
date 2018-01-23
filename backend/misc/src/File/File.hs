@@ -10,7 +10,6 @@ import qualified Data.ByteString as BS
 
 import Crypto
 import File.FileID
-import KontraPrelude
 import Log.Identifier
 
 data FileStorage =

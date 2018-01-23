@@ -11,7 +11,6 @@ module Doc.Data.CheckboxPlacementsUtils (
 import qualified Data.ByteString.Char8 as BS
 
 import Doc.Data.SignatoryField
-import KontraPrelude
 
 -- Valid sizes. Exact size is synched with frontend.
 defaultCheckboxRatio :: Double

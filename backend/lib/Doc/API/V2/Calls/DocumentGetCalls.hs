@@ -49,7 +49,6 @@ import File.Model
 import File.Storage
 import Kontra
 import KontraLink
-import KontraPrelude
 import Log.Identifier
 import MagicHash
 import OAuth.Model

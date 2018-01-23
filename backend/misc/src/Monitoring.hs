@@ -8,8 +8,6 @@ import Data.Unjson
 import qualified System.Metrics as EKG
 import qualified System.Remote.Monitoring.Statsd as EKG
 
-import KontraPrelude
-
 data MonitoringConf = MonitoringConf
   { monitoringHost          :: !Text  -- ^ @statsd@ server hostname or IP address.
   , monitoringPort          :: !Int   -- ^ @statsd@ server port.

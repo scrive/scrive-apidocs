@@ -51,7 +51,6 @@ import FlashMessage
 import GuardTime
 import IPAddress
 import KontraMonad
-import KontraPrelude
 import MagicHash (MagicHash, unsafeMagicHash)
 import MailContext
 import MinutesTime

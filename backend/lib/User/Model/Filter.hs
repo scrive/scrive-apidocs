@@ -4,7 +4,6 @@ module User.Model.Filter (
   ) where
 
 import DB
-import KontraPrelude
 
 data UserFilter
   = UserFilterByString String             -- ^ Contains the string in name, email or anywhere

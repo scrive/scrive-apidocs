@@ -13,7 +13,6 @@ import Control.Monad.IO.Class
 import Happstack.Server hiding (Session, addCookie)
 
 import Cookies
-import KontraPrelude
 import MagicHash
 import Session.Data
 import Utils.HTTP

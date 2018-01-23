@@ -21,7 +21,6 @@ import Doc.Action
 import Doc.AutomaticReminder.Model (expireDocumentAutomaticReminders)
 import Doc.Model
 import HostClock.Collector (collectClockError)
-import KontraPrelude
 import Log.Configuration
 import Log.Identifier
 import Log.Model

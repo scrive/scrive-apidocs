@@ -34,7 +34,6 @@ import Doc.Conditions
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.SignatoryLinkID
-import KontraPrelude
 
 data APIError = APIError {
       errorType     :: APIErrorType

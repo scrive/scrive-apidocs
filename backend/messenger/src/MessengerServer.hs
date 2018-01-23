@@ -18,7 +18,6 @@ import DB
 import DB.PostgreSQL
 import Handlers
 import Happstack.Server.ReqHandler
-import KontraPrelude
 import Log.Configuration
 import Log.Identifier
 import MessengerServerConf

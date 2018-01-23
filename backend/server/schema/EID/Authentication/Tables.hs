@@ -1,7 +1,6 @@
 module EID.Authentication.Tables where
 
 import DB
-import KontraPrelude
 
 tableEIDAuthentications :: Table
 tableEIDAuthentications = tblTable {

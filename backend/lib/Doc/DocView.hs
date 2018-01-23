@@ -41,7 +41,6 @@ import EID.Nets.Config
 import File.FileID
 import Kontra
 import KontraLink
-import KontraPrelude
 import User.Model
 import User.Utils
 import Util.HasSomeUserInfo

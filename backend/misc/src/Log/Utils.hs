@@ -16,8 +16,6 @@ import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
-import KontraPrelude
-
 equalsExternalBS :: T.Text -> BS.ByteString -> Pair
 equalsExternalBS name value
   -- If any char is lower than 32 and not \t, \n or \r

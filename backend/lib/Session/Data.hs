@@ -10,7 +10,6 @@ import Data.Typeable
 import Happstack.Server hiding (Session)
 
 import DB
-import KontraPrelude
 import MagicHash
 import MinutesTime
 import Session.SessionID

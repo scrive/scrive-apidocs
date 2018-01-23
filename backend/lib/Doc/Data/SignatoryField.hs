@@ -36,7 +36,6 @@ import Database.PostgreSQL.PQTypes hiding (def)
 
 import Doc.SignatoryFieldID
 import File.FileID
-import KontraPrelude
 import Util.HasSomeUserInfo
 
 newtype NameOrder = NameOrder Int16

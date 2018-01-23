@@ -6,7 +6,6 @@ import Control.Monad.Catch
 
 import BrandedDomain.Tables
 import DB
-import KontraPrelude
 
 brandedDomainDropNoreplyEmail :: (MonadThrow m, MonadDB m) => Migration m
 brandedDomainDropNoreplyEmail = Migration {

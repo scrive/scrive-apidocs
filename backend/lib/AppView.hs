@@ -47,7 +47,6 @@ import Company.Model
 import DB
 import FeatureFlags.Model
 import Kontra
-import KontraPrelude
 import ThirdPartyStats.Core
 import User.JSON
 import User.Lang

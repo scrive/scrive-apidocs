@@ -5,14 +5,12 @@ module User.APILog.API (
   ) where
 
 import Control.Monad.Catch
-import Control.Monad.Reader
 import Happstack.Server.Types
 import Happstack.StaticRouting
 
 import API.V2.User
 import DB
 import Kontra
-import KontraPrelude
 import Routing
 import User.APILog.Model
 import User.Model

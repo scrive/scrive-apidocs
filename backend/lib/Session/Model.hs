@@ -22,7 +22,6 @@ import Context
 import DB
 import KontraError
 import KontraMonad
-import KontraPrelude
 import Log.Identifier
 import MagicHash
 import MinutesTime

@@ -10,7 +10,6 @@ import DB
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.SignatoryLinkID
-import KontraPrelude
 import MagicHash
 import MinutesTime
 import User.UserID

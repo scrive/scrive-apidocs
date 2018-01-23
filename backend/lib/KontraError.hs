@@ -8,8 +8,6 @@ import GHC.Stack
 import Log
 import qualified Control.Exception.Lifted as E
 
-import KontraPrelude
-
 data KontraError =
     Respond404
   | InternalError [String]

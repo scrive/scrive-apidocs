@@ -8,7 +8,6 @@ import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
 import Crypto.RNG (CryptoRNG)
-import Data.List hiding (head)
 import Log
 import System.Exit
 import System.Process hiding (readProcessWithExitCode)
@@ -19,7 +18,6 @@ import qualified Data.Foldable as F
 import Assembler
 import DB
 import DB.PostgreSQL
-import KontraPrelude
 import Log.Identifier
 import Log.Utils
 import MailingServerConf

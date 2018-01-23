@@ -79,7 +79,6 @@ import Happstack.Fields
 import InternalResponse
 import Kontra
 import KontraLink
-import KontraPrelude
 import MagicHash
 import Redirect
 import User.Email

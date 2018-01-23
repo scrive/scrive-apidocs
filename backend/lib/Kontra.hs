@@ -36,7 +36,6 @@ import Happstack.Server.Instances ()
 import Happstack.Server.ReqHandler
 import KontraError
 import KontraMonad
-import KontraPrelude
 import MailContext (MailContextMonad(..))
 import Session.Cookies
 import Session.Data

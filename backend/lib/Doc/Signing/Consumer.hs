@@ -46,7 +46,6 @@ import File.FileID
 import GuardTime
 import IPAddress
 import KontraError
-import KontraPrelude
 import Log.Identifier
 import MailContext
 import MailContext.Internal

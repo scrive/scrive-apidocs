@@ -18,7 +18,6 @@ import Doc.API.V2.Mock.TestUtils
 import Doc.DocStateData
 import Doc.DocumentMonad (withDocument)
 import Doc.Model
-import KontraPrelude
 import SMS.Data (SMSProvider(..))
 import SMS.SMS
 import TestingUtil

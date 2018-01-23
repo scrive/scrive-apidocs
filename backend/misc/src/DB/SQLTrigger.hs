@@ -7,8 +7,6 @@ module DB.SQLTrigger
 
 import Database.PostgreSQL.PQTypes
 
-import KontraPrelude
-
 -- | Basic SQL trigger handling.
 data SQLTrigger =
      SQLTrigger

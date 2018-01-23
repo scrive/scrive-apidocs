@@ -1,7 +1,6 @@
 module User.PasswordReminder.Tables where
 
 import DB
-import KontraPrelude
 
 tablePasswordReminders :: Table
 tablePasswordReminders = tblTable {

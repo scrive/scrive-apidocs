@@ -8,8 +8,6 @@ module User.Data.Stats
 import Data.Int (Int64)
 import Data.Time.Clock (UTCTime)
 
-import KontraPrelude
-
 data StatsPartition = PartitionByDay | PartitionByMonth
 
 data DocumentStats = DocumentStats {

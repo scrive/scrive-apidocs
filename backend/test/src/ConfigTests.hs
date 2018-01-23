@@ -10,7 +10,6 @@ import Test.HUnit (Assertion, assertEqual)
 import AppConf
 import Configuration
 import CronConf
-import KontraPrelude
 import MailingServerConf
 import MessengerServerConf
 import TestKontra

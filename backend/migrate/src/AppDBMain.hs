@@ -4,7 +4,6 @@ import Crypto.RNG
 import Database.PostgreSQL.PQTypes.Checks
 import System.Console.CmdArgs hiding (def)
 import System.Environment
-import System.IO
 
 import AppDBConfig
 import AppDBMigrations
@@ -14,7 +13,6 @@ import DB
 import DB.PostgreSQL
 import DB.SQLFunction
 import DB.SQLTrigger
-import KontraPrelude
 import Log.Configuration
 
 data CmdConf = CmdConf {

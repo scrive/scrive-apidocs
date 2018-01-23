@@ -1,7 +1,6 @@
 module Doc.AutomaticReminder.Tables where
 
 import DB
-import KontraPrelude
 
 tableDocumentAutomaticReminders :: Table
 tableDocumentAutomaticReminders = tblTable {

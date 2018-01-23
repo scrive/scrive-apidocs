@@ -4,7 +4,6 @@ module User.History.Migrations
     ) where
 
 import DB
-import KontraPrelude
 import User.History.Tables
 
 addPKToUsersHistory :: MonadDB m => Migration m

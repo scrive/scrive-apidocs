@@ -1,7 +1,6 @@
 module Log.Model where
 
 import DB
-import KontraPrelude
 import MinutesTime
 
 data CleanLogsOlderThanDays = CleanLogsOlderThanDays Int

@@ -1,7 +1,6 @@
 module Doc.SMSPin.Tables where
 
 import DB
-import KontraPrelude
 
 tableSignatorySMSPins :: Table
 tableSignatorySMSPins = tblTable {

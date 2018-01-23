@@ -1,7 +1,6 @@
 module SMS.Migrations (removeDataFromSmses) where
 
 import DB
-import KontraPrelude
 import SMS.Tables
 
 removeDataFromSmses :: MonadDB m => Migration m

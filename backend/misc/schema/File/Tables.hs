@@ -1,7 +1,6 @@
 module File.Tables where
 
 import DB
-import KontraPrelude
 
 tableFiles :: Table
 tableFiles = tblTable {

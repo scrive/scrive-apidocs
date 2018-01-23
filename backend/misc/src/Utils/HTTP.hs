@@ -18,8 +18,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Data.ByteString.UTF8 as BS
 import qualified Network.HTTP.Types.URI as URI
 
-import KontraPrelude
-
 currentDomain :: ServerMonad m => m String
 currentDomain = do
   rq <- askRq

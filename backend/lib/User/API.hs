@@ -28,7 +28,6 @@ import Happstack.Fields
 import InputValidation
 import Kontra
 import KontraLink
-import KontraPrelude
 import Log.Identifier
 import Mails.SendMail
 import OAuth.Model

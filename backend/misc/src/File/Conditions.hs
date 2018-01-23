@@ -7,7 +7,6 @@ import Database.PostgreSQL.PQTypes.SQL.Builder
 import Text.JSON.Gen
 
 import File.FileID
-import KontraPrelude
 import MinutesTime
 
 -- This is the part where we define all possible wrongs about a file.

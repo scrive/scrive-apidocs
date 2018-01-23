@@ -18,7 +18,6 @@ import qualified Text.StringTemplates.Files as TF
 import qualified Text.StringTemplates.Templates as T
 import qualified Text.StringTemplates.TemplatesLoader as TL
 
-import KontraPrelude
 import User.Lang
 
 templateFilesDir :: FilePath

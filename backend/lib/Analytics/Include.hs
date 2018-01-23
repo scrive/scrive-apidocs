@@ -16,7 +16,6 @@ import Company.Model
 import DB
 import HubSpot.Conf
 import Kontra
-import KontraPrelude
 import MinutesTime
 import User.Model
 import Util.HasSomeCompanyInfo

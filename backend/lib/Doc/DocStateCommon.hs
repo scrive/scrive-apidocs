@@ -6,7 +6,6 @@ import Company.Model
 import Doc.DocStateData
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
-import KontraPrelude
 import MagicHash (MagicHash)
 import User.Model
 import Util.HasSomeCompanyInfo

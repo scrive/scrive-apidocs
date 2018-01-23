@@ -12,7 +12,6 @@ import qualified Data.ByteString as BS
 import qualified Data.Monoid as Monoid
 
 import File.FileID
-import KontraPrelude
 import Log.Identifier
 import Mails.KontraInfoForMail
 

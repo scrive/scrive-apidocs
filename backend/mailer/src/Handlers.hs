@@ -14,7 +14,6 @@ import System.Directory
 import DB
 import DB.PostgreSQL
 import Happstack.Server.ReqHandler
-import KontraPrelude
 import Mailer
 import MailGun
 import MailingServerConf

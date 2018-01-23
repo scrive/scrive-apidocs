@@ -11,7 +11,6 @@ import Company.Model
 import CompanyAccountsTest (addNewAdminUserAndCompany)
 import Context
 import DB
-import KontraPrelude
 import PadApplication.API
 import TestingUtil
 import TestKontra

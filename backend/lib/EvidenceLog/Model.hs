@@ -35,7 +35,6 @@ import Doc.DocumentID
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
 import Doc.SignatoryLinkID
 import IPAddress
-import KontraPrelude
 import MinutesTime
 import Text.XML.Content (parseXMLContent)
 import Text.XML.DirtyContent (XMLContent(..))

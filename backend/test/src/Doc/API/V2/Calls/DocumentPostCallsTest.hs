@@ -17,7 +17,6 @@ import Doc.Data.DocumentStatus (DocumentStatus(..))
 import Doc.Data.SignatoryLink (AuthenticationToSignMethod(..), AuthenticationToViewMethod(..))
 import Doc.DocumentMonad (withDocumentID)
 import Doc.Model.Update (SetDocumentSharing(..), TimeoutDocument(..))
-import KontraPrelude
 import TestingUtil
 import TestKontra
 import Util.Actor (userActor)

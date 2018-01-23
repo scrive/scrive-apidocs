@@ -10,7 +10,6 @@ module InspectXML where
 
 import qualified Language.Haskell.TH as TH
 
-import KontraPrelude
 import Utils.String
 
 class InspectXML a where

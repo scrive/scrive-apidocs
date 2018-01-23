@@ -32,7 +32,6 @@ import Company.CompanyID (CompanyID, unsafeCompanyID)
 import DB
 import Doc.DocumentID (DocumentID, unsafeDocumentID)
 import IPAddress
-import KontraPrelude
 import MinutesTime ()
 import Text.JSON.Orphans ()
 import User.Email

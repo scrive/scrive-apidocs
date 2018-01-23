@@ -12,7 +12,6 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as Text
 
 import Company.Model
-import KontraPrelude
 import Planhat.Config (PlanhatConf(..))
 import User.Model
 

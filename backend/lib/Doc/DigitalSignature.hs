@@ -26,7 +26,6 @@ import File.File (filename)
 import File.Model (NewFile(..))
 import File.Storage (getFileContents)
 import GuardTime (GuardTimeConfMonad, getGuardTimeConf)
-import KontraPrelude
 import Log.Identifier
 import Log.Utils
 import Util.Actor (systemActor)

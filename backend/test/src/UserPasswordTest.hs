@@ -2,7 +2,6 @@ module UserPasswordTest(userPasswordTests) where
 
 import Test.Framework
 
-import KontraPrelude
 import TestingUtil
 import TestKontra as T
 import User.Password

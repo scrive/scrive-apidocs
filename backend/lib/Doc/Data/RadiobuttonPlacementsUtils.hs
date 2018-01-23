@@ -10,7 +10,6 @@ module Doc.Data.RadiobuttonPlacementsUtils (
 import qualified Data.ByteString.Char8 as BS
 
 import Doc.Data.SignatoryField
-import KontraPrelude
 
 smallSize :: Double
 smallSize = 0.014736 -- ~ 14px / 1040px

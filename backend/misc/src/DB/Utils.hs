@@ -9,8 +9,6 @@ import Data.String
 import Data.Typeable
 import Database.PostgreSQL.PQTypes
 
-import KontraPrelude
-
 explainAnalyze :: (IsSQL sql, IsString sql, Monoid sql, MonadDB m)
                => sql -> m String
 explainAnalyze sql = do

@@ -2,7 +2,6 @@ module Doc.Tokens.Tables where
 
 import DB
 import DB.SQLFunction
-import KontraPrelude
 
 insertDocumentSessionToken :: SQLFunction
 insertDocumentSessionToken = SQLFunction {

@@ -16,7 +16,6 @@ import DB
 import DB.PostgreSQL
 import File.FileID
 import File.Model
-import KontraPrelude
 import Log.Identifier
 import qualified Amazon as A
 

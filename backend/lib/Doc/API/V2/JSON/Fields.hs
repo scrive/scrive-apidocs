@@ -21,7 +21,6 @@ import Doc.Data.CheckboxPlacementsUtils
 import Doc.Data.RadiobuttonPlacementsUtils
 import Doc.DocStateData
 import Doc.SignatoryFieldID
-import KontraPrelude
 import qualified Data.ByteString.RFC2397 as RFC2397
 
 -- Unjson for signatory fields

@@ -18,7 +18,6 @@ import Doc.DocMails
 import Doc.DocumentID
 import Doc.DocumentMonad (withDocument)
 import Doc.Model
-import KontraPrelude
 import Log.Identifier
 import MinutesTime
 import Util.Actor

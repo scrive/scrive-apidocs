@@ -10,8 +10,6 @@ import Data.Int
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
-import KontraPrelude
-
 newtype SignatoryFieldID = SignatoryFieldID Int64
   deriving (Eq, Ord, PQFormat, Typeable, Data)
 deriving newtype instance Read SignatoryFieldID

@@ -3,7 +3,6 @@ module DocStateTest (docStateTests, docStateSideEffectsTests) where
 import Control.Arrow (first)
 import Control.Conditional ((<|), (|>))
 import Control.Monad.Reader
-import Data.Functor
 import Data.Text (unpack)
 import Log
 import Test.Framework
@@ -31,7 +30,6 @@ import Doc.TestInvariants
 import EvidenceLog.Model
 import EvidenceLog.View (getSignatoryIdentifierMap, simplyfiedEventText)
 import File.FileID
-import KontraPrelude
 import MinutesTime
 import TestingUtil
 import TestKontra

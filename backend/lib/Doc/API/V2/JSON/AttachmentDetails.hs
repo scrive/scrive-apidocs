@@ -8,7 +8,6 @@ import Data.Unjson
 import qualified Data.Text as T
 
 import File.FileID (FileID)
-import KontraPrelude
 import Utils.TH
 
 data AttachmentDetails = AttachmentDetails {

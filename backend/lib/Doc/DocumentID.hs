@@ -11,7 +11,6 @@ import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
-import KontraPrelude
 import Log.Identifier
 
 newtype DocumentID = DocumentID Int64

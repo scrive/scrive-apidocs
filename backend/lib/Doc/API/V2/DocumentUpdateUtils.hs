@@ -4,7 +4,6 @@ module Doc.API.V2.DocumentUpdateUtils (
 ) where
 
 import Control.Conditional (unlessM, whenM)
-import Data.Functor
 import Log
 import qualified Control.Exception.Lifted as E
 
@@ -18,7 +17,6 @@ import Doc.DocUtils
 import Doc.Model
 import Doc.SignatoryFieldID
 import Kontra
-import KontraPrelude
 import Log.Identifier
 import Util.Actor
 import Util.HasSomeUserInfo

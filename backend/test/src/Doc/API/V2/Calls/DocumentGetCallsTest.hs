@@ -1,7 +1,6 @@
 module Doc.API.V2.Calls.DocumentGetCallsTest (apiV2DocumentGetCallsTests) where
 
 import Control.Monad.IO.Class
-import Control.Monad.State
 import Data.Aeson (Value(String))
 import Data.Default
 import Data.Time (UTCTime(..), fromGregorian)
@@ -26,7 +25,6 @@ import Doc.DocumentMonad (withDocumentID)
 import Doc.Model.Update (SetDocumentSharing(..), updateMTimeAndObjectVersion)
 import Doc.QRCode
 import Kontra (Kontra)
-import KontraPrelude
 import TestingUtil
 import TestKontra
 

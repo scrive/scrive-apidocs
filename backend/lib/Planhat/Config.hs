@@ -2,8 +2,6 @@ module Planhat.Config where
 
 import Data.Unjson
 
-import KontraPrelude
-
 type PlanhatTenantID = String
 
 data PlanhatConf =

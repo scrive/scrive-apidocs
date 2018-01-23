@@ -17,7 +17,6 @@ import Company.Model
 import CompanyAccounts.Model
 import Context
 import DB
-import KontraPrelude
 import TestingUtil
 import TestKontra as T
 import Theme.Model

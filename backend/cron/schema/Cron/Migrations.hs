@@ -13,7 +13,6 @@ import Control.Monad.Catch
 
 import Cron.Tables
 import DB
-import KontraPrelude
 
 addDocumentAuthorUserIDUpdateJob :: (MonadDB m, MonadThrow m) => Migration m
 addDocumentAuthorUserIDUpdateJob = Migration {

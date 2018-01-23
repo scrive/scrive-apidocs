@@ -9,7 +9,6 @@ import Happstack.StaticRouting
 
 import DB
 import Kontra
-import KontraPrelude
 import Routing
 import Util.MonadUtils
 import qualified API.V2 as V2

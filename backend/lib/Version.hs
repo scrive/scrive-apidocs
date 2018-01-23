@@ -3,8 +3,6 @@ module Version (genVersionID) where
 import Control.Exception.Lifted as E
 import System.Environment
 
-import KontraPrelude
-
 genVersionID :: IO String
 genVersionID = do
   let catchIO :: IO a -> (E.IOException -> IO a) -> IO a

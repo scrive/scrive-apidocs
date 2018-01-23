@@ -3,8 +3,6 @@ module EID.Nets.Config where
 import Data.Unjson
 import qualified Data.Text as T
 
-import KontraPrelude
-
 data NetsConfig = NetsConfig {
     netsMerchantIdentifier     :: T.Text
   , netsMerchantPassword       :: T.Text

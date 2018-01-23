@@ -13,7 +13,6 @@ import Doc.API.V2.JSON.Misc
 import Doc.API.V2.JSON.Utils
 import Doc.DocStateData
 import Doc.Model.OrderBy
-import KontraPrelude
 import MinutesTime
 import User.UserID
 import qualified Doc.Model.Filter as DF

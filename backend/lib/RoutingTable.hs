@@ -14,7 +14,6 @@ import Doc.API
 import Happstack.Server.ReqHandler
 import Kontra
 import KontraLink
-import KontraPrelude
 import LangRouting
 import Login
 import Monitor.API

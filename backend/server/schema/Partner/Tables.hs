@@ -6,7 +6,6 @@ module Partner.Tables (
 import Data.Int
 
 import DB
-import KontraPrelude
 
 tablePartners :: Table
 tablePartners = tblTable {

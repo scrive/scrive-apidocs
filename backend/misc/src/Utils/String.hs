@@ -2,8 +2,6 @@ module Utils.String where
 
 import Data.String.Utils
 
-import KontraPrelude
-
 escapeString :: String -> String
 escapeString =  concatMap escape
   where

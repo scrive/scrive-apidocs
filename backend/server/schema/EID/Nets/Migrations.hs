@@ -4,7 +4,6 @@ import Database.PostgreSQL.PQTypes.Checks
 
 import DB
 import EID.Nets.Tables
-import KontraPrelude
 
 createNetsSignOrdersTable :: MonadDB m => Migration m
 createNetsSignOrdersTable = Migration {

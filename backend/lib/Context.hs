@@ -10,7 +10,6 @@ module Context (
 import BrandedDomain.BrandedDomain
 import Context.Internal
 import Context.Labels
-import KontraPrelude
 import MailContext.Internal (MailContext(..))
 import User.Data.User (User)
 

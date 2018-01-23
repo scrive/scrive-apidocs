@@ -5,7 +5,6 @@ import Data.Char
 
 import CompanyAccounts.Tables
 import DB
-import KontraPrelude
 
 normalizeCompanyInvites :: MonadDB m => Migration m
 normalizeCompanyInvites = Migration {

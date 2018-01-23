@@ -5,7 +5,6 @@ import Test.Framework
 import Company.Model
 import DB
 import Doc.DocInfo
-import KontraPrelude
 import MinutesTime
 import TestingUtil
 import TestKontra

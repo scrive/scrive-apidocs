@@ -78,7 +78,6 @@ import Control.Monad.Catch
 import Crypto.RNG
 import Data.Decimal (realFracToDecimal)
 import Data.Int
-import Data.Maybe hiding (fromJust)
 import Data.Time
 import Log
 import Text.StringTemplates.Templates
@@ -110,7 +109,6 @@ import EvidenceLog.Model
 import File.FileID
 import File.Model
 import IPAddress
-import KontraPrelude
 import Log.Identifier
 import MagicHash
 import MinutesTime

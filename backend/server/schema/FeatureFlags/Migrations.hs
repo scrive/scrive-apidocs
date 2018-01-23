@@ -8,7 +8,6 @@ import Database.PostgreSQL.PQTypes.Checks
 
 import DB
 import FeatureFlags.Tables
-import KontraPrelude
 
 createFeatureFlags :: MonadDB m => Migration m
 createFeatureFlags = Migration {

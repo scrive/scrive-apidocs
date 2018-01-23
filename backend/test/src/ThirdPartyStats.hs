@@ -4,7 +4,6 @@ import Data.Binary
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2
 
-import KontraPrelude
 import TestKontra
 import Text.JSON.Orphans ()
 import ThirdPartyStats.Core (AsyncEvent())

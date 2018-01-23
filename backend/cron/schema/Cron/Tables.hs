@@ -18,7 +18,6 @@ module Cron.Tables (
 import Data.Text (Text)
 
 import DB
-import KontraPrelude
 
 cronTables :: [Table]
 cronTables = [

@@ -21,7 +21,6 @@ import qualified Data.Foldable as F
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
-import KontraPrelude
 import Log.Utils
 
 -- TODO: in the future refactor curl bits, possibly create

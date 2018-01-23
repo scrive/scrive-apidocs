@@ -8,7 +8,6 @@ import Unsafe.Coerce (unsafeCoerce)
 import qualified Control.Monad.State as S
 
 import Kontra
-import KontraPrelude
 import RoutingTable (staticRoutes)
 import User.Lang
 

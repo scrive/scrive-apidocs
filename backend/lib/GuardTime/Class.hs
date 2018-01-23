@@ -4,8 +4,6 @@ import Control.Monad.Trans
 import Data.Default
 import Data.Unjson
 
-import KontraPrelude
-
 data GuardTimeConf = GuardTimeConf {
   guardTimeSigningServiceURL ::  String
 , guardTimeExtendingServiceURL :: String

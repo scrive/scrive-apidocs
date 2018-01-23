@@ -11,7 +11,6 @@ import qualified Data.ByteString.UTF8 as BS
 import Happstack.Fields
 import Kontra
 import KontraLink
-import KontraPrelude
 import User.Lang
 import Utils.HTTP
 import Utils.String

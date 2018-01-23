@@ -7,7 +7,6 @@ import qualified Text.StringTemplates.Fields as F
 
 import Doc.DocStateData
 import Doc.SignatoryIdentification (SignatoryIdentifierMap, signatoryIdentifier)
-import KontraPrelude
 import MinutesTime
 import Utils.Image
 import qualified Doc.Screenshot as Screenshot

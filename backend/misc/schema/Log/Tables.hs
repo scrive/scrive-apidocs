@@ -1,7 +1,6 @@
 module Log.Tables where
 
 import DB
-import KontraPrelude
 
 logsTables :: [Table]
 logsTables = [

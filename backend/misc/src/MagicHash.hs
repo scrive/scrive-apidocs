@@ -16,7 +16,6 @@ import Database.PostgreSQL.PQTypes
 import Happstack.Server
 import Numeric
 
-import KontraPrelude
 import Utils.Read
 
 -- | Hash value that is produced by cryptographically secure random

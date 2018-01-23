@@ -14,7 +14,6 @@ import Database.PostgreSQL.PQTypes
 import Happstack.Server
 import qualified Control.Exception.Lifted as E
 
-import KontraPrelude
 import Utils.Enum
 
 data Lang = LANG_SV

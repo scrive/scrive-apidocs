@@ -8,8 +8,6 @@ module EID.Signature.Legacy (
 import Data.ByteString (ByteString)
 import qualified Data.Text as T
 
-import KontraPrelude
-
 data LegacyBankIDSignature = LegacyBankIDSignature {
   lbidsSignedText  :: !T.Text
 , lbidsSignature   :: !ByteString

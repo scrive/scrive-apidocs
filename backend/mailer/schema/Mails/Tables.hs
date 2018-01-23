@@ -11,7 +11,6 @@ module Mails.Tables (
 import Data.Text (Text)
 
 import DB
-import KontraPrelude
 import MinutesTime
 
 mailerComposites :: [CompositeType]

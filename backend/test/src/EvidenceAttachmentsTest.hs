@@ -4,7 +4,6 @@ import Control.Monad.Trans
 import Test.Framework (Test, testGroup)
 import qualified Data.ByteString.Char8 as BS
 
-import KontraPrelude
 import TestingUtil
 import TestKontra
 import qualified Doc.EvidenceAttachments as E

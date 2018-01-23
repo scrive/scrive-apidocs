@@ -33,7 +33,6 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.Unjson as Unjson
 
-import KontraPrelude
 import Log.Utils
 import Utils.Directory
 

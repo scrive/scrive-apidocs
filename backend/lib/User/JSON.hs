@@ -16,7 +16,6 @@ import qualified Data.Text as T
 
 import Company.Model
 import FeatureFlags.Model
-import KontraPrelude
 import MinutesTime
 import PadApplication.Data
 import User.Model

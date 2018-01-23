@@ -19,7 +19,6 @@ module Util.HasSomeUserInfo (
 import Data.String.Utils
 import Text.StringTemplates.Templates
 
-import KontraPrelude
 import Mails.MailsData
 import Utils.String
 

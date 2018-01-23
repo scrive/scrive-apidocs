@@ -9,8 +9,6 @@ import Text.XML.Writer hiding (empty, node)
 import qualified Data.Text.Lazy as T
 import qualified Text.XML.Writer as W
 
-import KontraPrelude
-
 -- | Lightweight wrapper over cursor parsers to allow for
 -- convenient transformation and combining the results.
 -- TODO: Improve logging capabilities (some thought needs to

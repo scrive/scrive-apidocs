@@ -9,7 +9,6 @@ module SMS.Tables (
 import Data.Text (Text)
 
 import DB
-import KontraPrelude
 
 messengerTables :: [Table]
 messengerTables = [

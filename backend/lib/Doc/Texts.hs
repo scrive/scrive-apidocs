@@ -18,7 +18,6 @@ import qualified Text.JSON as J
 import qualified Text.JSON.Pretty as J (pp_value)
 
 import Kontra
-import KontraPrelude
 import Log.Utils (equalsExternalBSL)
 import Text.JSON.Convert (jsonToAeson)
 import Utils.Directory

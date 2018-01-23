@@ -34,7 +34,6 @@ module Util.SignatoryLinkUtils (
 import Doc.DocStateData
 import Doc.SignatoryLinkID
 import EID.Authentication.Model
-import KontraPrelude
 import MagicHash (MagicHash)
 import User.Email
 import User.Model

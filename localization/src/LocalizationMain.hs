@@ -8,7 +8,6 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Text.StringTemplates.Fields as F
 
-import KontraPrelude
 import Templates
 import User.Lang
 import Version

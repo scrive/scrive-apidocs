@@ -7,7 +7,6 @@ import Data.Int
 import Database.PostgreSQL.PQTypes
 import qualified Control.Exception.Lifted as E
 
-import KontraPrelude
 import Log.Identifier
 
 data APIVersion =

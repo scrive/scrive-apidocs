@@ -24,7 +24,6 @@ import Doc.DocumentMonad
 import Doc.Sealing.Model
 import File.FileID
 import GuardTime
-import KontraPrelude
 import Log.Identifier
 import MailContext
 import MailContext.Internal

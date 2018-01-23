@@ -12,7 +12,6 @@ import Network.SOAP.Parsing.Cursor
 import Text.XML
 import Text.XML.Cursor hiding (element)
 
-import KontraPrelude
 import Text.XML.Parser
 import Text.XML.Writer.Extended hiding (empty, node)
 

@@ -5,7 +5,6 @@ module ThirdPartyStats.Migrations
     ) where
 
 import DB
-import KontraPrelude
 import ThirdPartyStats.Tables
 
 addPKToAsyncEventQueue :: MonadDB m => Migration m

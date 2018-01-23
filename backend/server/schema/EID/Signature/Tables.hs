@@ -1,7 +1,6 @@
 module EID.Signature.Tables where
 
 import DB
-import KontraPrelude
 
 tableEIDSignatures :: Table
 tableEIDSignatures = tblTable {

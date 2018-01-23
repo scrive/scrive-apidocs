@@ -27,7 +27,6 @@ import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 
 import DB
-import KontraPrelude
 import Log.Identifier
 import User.UserID
 

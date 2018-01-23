@@ -7,7 +7,6 @@ module Doc.QRCode ( QRCode
                   , decodeQR
                   , decodeQRBSL ) where
 
-import Control.Monad
 import Data.String.Utils (rstrip)
 import System.IO
 import System.IO.Temp
@@ -18,7 +17,6 @@ import qualified Happstack.Server.Response as Web
 import qualified Happstack.Server.Types as Web
 
 import API.V2.Monad
-import KontraPrelude
 
 newtype QRCode = QRCode BS.ByteString
 

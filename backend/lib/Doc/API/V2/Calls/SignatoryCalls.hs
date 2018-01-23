@@ -40,7 +40,6 @@ import EID.Signature.Model
 import File.File (File(..))
 import InputValidation (Result(..), asValidPhoneForSMS)
 import Kontra
-import KontraPrelude
 import User.Lang
 import Util.Actor
 import Util.HasSomeUserInfo (getMobile)

@@ -27,7 +27,6 @@ import Text.JSON.Gen
 
 import DB
 import IPAddress
-import KontraPrelude
 import User.Data.User
 import User.Email
 import User.UserID

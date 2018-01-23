@@ -11,7 +11,6 @@ import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
 
-import KontraPrelude
 import MailContext.Class
 
 newtype MailContextT m a = MailContextT { unMailContextT :: ReaderT MailContext m a }

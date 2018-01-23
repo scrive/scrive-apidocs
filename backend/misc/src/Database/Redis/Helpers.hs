@@ -16,7 +16,6 @@ import Data.Typeable
 import qualified Data.ByteString.Char8 as BS
 import qualified Database.Redis as R
 
-import KontraPrelude
 import Utils.Exception
 
 newtype RedisKey = RedisKey BS.ByteString

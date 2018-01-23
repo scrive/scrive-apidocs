@@ -1,7 +1,6 @@
 module Amazon.Tables where
 
 import DB
-import KontraPrelude
 
 tableAmazonUploadConsumers :: Table
 tableAmazonUploadConsumers = tblTable {

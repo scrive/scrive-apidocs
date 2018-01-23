@@ -18,7 +18,6 @@ import Doc.DocStateData
 import Doc.DocumentMonad (theDocument, withDocumentM)
 import Doc.DocViewMail
 import Doc.Model
-import KontraPrelude
 import Mails.Events
 import Mails.SendMail
 import MinutesTime

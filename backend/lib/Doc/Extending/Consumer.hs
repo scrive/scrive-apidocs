@@ -24,7 +24,6 @@ import Doc.DocumentMonad
 import Doc.Model.Query
 import File.FileID
 import GuardTime
-import KontraPrelude
 import Log.Identifier
 import MemCache (MemCache)
 import Templates

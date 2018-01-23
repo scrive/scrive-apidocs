@@ -33,8 +33,6 @@ import Control.Monad.Catch
 import Control.Monad.State
 import Control.Monad.Trans.Control
 import Data.Int
-import Data.List hiding (head, tail)
-import Data.Maybe hiding (fromJust)
 import Log
 import qualified Data.ByteString as BS
 import qualified Data.Foldable as F
@@ -55,7 +53,6 @@ import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots
 import File.FileID
 import File.Storage
-import KontraPrelude
 import MagicHash
 import User.Model
 import qualified Amazon

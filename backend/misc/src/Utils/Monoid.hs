@@ -1,6 +1,5 @@
 module Utils.Monoid where
 
-import KontraPrelude
 
 -- | Pack value to just unless we have 'mzero'. Since we can't check
 -- emptyness of string in templates we want to pack it in maybe.
@@ -14,3 +13,4 @@ justEmptyToNothing = maybe Nothing emptyToNothing
 
 optional :: MonadPlus m => m a -> m (Maybe a)
 optional c = (liftM Just c) `mplus` (return Nothing)
+

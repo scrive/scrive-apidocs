@@ -38,7 +38,6 @@ import EvidenceLog.Model
 import Happstack.Fields
 import Kontra hiding (InternalError)
 import KontraLink
-import KontraPrelude
 import Log.Identifier
 import Network.SOAP.Call
 import Network.SOAP.Transport.Curl (curlTransport)

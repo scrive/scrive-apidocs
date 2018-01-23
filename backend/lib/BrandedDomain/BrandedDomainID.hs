@@ -11,8 +11,6 @@ import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
-import KontraPrelude
-
 newtype BrandedDomainID = BrandedDomainID Int64
   deriving (Eq, Ord, PQFormat, Typeable)
 deriving newtype instance Read BrandedDomainID

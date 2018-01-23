@@ -9,7 +9,6 @@ import Network.URI
 import qualified Control.Exception.Lifted as E
 
 import DB
-import KontraPrelude
 import Log.Identifier
 import MagicHash
 import MinutesTime

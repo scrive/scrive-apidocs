@@ -47,7 +47,6 @@ import API.APIVersion
 import API.Logging
 import DB
 import Kontra
-import KontraPrelude
 import OAuth.Model
 import OAuth.Util
 import Text.JSON.Convert

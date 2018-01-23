@@ -13,7 +13,6 @@ import Control.Monad.Catch
 import Log
 
 import DB
-import KontraPrelude
 import Partner.Partner
 import User.UserID
 

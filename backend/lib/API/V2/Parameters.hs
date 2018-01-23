@@ -23,7 +23,6 @@ import File.File (File(..))
 import File.Model
 import Happstack.Fields
 import Kontra
-import KontraPrelude
 import Util.PDFUtil
 import qualified Data.ByteString.RFC2397 as Base64Image
 import qualified InputValidation as V

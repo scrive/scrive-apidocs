@@ -12,7 +12,6 @@ import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
-import KontraPrelude
 import Log.Identifier
 
 newtype UserID = UserID Int64

@@ -22,7 +22,6 @@ module Doc.Data.SignatoryFieldUtils (
 import Doc.Data.SignatoryField
 import Doc.SignatoryFieldID
 import File.FileID
-import KontraPrelude
 
 data FieldValue
   = StringFV String

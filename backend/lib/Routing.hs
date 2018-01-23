@@ -23,7 +23,6 @@ module Routing ( hGet
                , ToResp(..)
                ) where
 
-import Data.Functor
 import Data.List.Split
 import Happstack.Server (Method(DELETE, GET, POST, PUT), Response, ToMessage(..))
 import Happstack.StaticRouting
@@ -36,7 +35,6 @@ import Happstack.Fields
 import InternalResponse
 import Kontra
 import KontraLink
-import KontraPrelude
 import Redirect
 import Session.Cookies
 import Util.CSVUtil

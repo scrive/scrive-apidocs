@@ -14,7 +14,6 @@ import System.Directory
 import DB
 import DB.PostgreSQL
 import Happstack.Server.ReqHandler
-import KontraPrelude
 import Mblox
 import Messenger
 import TeliaCallGuide

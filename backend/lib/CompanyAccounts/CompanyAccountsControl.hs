@@ -13,8 +13,6 @@ module CompanyAccounts.CompanyAccountsControl (
   ) where
 
 import Data.Char
-import Data.Functor
-import Data.Ord
 import Text.JSON (JSValue(..))
 import Text.JSON.Gen
 
@@ -28,7 +26,6 @@ import InputValidation
 import InternalResponse
 import Kontra
 import KontraLink
-import KontraPrelude
 import Mails.SendMail
 import MinutesTime
 import User.Action

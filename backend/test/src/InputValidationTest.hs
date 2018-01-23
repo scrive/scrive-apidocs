@@ -9,7 +9,6 @@ import Test.HUnit (Assertion, assert)
 import Test.QuickCheck ((==>), Arbitrary(..), Property, mapSize, oneof, property)
 
 import InputValidation
-import KontraPrelude
 import TestKontra
 
 inputValidationTests :: TestEnvSt -> Test

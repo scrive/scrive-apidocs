@@ -17,7 +17,6 @@ import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy as TL
 import qualified Text.XML as TX
 
-import KontraPrelude
 import Log.Utils
 import Text.XML.Writer.Extended hiding (content, many, node)
 import Utils.Directory (withSystemTempDirectory')

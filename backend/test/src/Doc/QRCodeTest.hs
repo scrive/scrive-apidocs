@@ -1,12 +1,10 @@
 module Doc.QRCodeTest where
 
-import Control.Monad
 import Control.Monad.IO.Class
 import Crypto.RNG.Utils
 import Test.Framework
 
 import Doc.QRCode
-import KontraPrelude
 import TestingUtil
 import TestKontra
 

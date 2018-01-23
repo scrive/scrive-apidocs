@@ -8,7 +8,6 @@ module Doc.API.V2.JSONTest (
 
 import Control.Monad.IO.Class
 import Data.Aeson
-import Data.Int
 import Data.Text (Text, unpack)
 import Happstack.Server
 import Test.Framework
@@ -23,7 +22,6 @@ import Doc.API.V2.Calls
 import Doc.DocumentID
 import Doc.SignatoryLinkID ()
 import Kontra
-import KontraPrelude
 import TestingUtil
 import TestKontra as T
 

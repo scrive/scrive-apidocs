@@ -18,7 +18,6 @@ import Doc.DocStateData (SignatoryLink(..))
 import Doc.DocumentMonad (DocumentMonad)
 import Doc.SignatoryLinkID
 import IPAddress
-import KontraPrelude
 import MinutesTime
 import User.Model
 import Util.HasSomeUserInfo

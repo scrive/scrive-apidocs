@@ -34,7 +34,6 @@ import Doc.DocViewMail
 import FlashMessage
 import Kontra
 import KontraLink
-import KontraPrelude
 import Mails.SendMail (Mail, kontramail, kontramaillocal)
 import Theme.Model
 import User.Email

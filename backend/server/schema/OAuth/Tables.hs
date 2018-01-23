@@ -1,7 +1,6 @@
 module OAuth.Tables where
 
 import DB
-import KontraPrelude
 
 {- |
    Module: OAuth.Tables

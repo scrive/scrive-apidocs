@@ -3,7 +3,6 @@ module Log.Migrations (logsMigrations) where
 import Database.PostgreSQL.PQTypes.Checks
 
 import DB
-import KontraPrelude
 import Log.Tables
 
 logsMigrations :: MonadDB m => [Migration m]

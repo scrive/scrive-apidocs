@@ -8,7 +8,6 @@ import Doc.DocStateData
 import Doc.DocUtils
 import Doc.SignatoryLinkID
 import InputValidation
-import KontraPrelude
 import MinutesTime
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils

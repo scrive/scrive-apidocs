@@ -1,10 +1,8 @@
 {-# LANGUAGE PackageImports #-}
 module Cron (main) where
 
-import Control.Monad
 import Control.Monad.Base
 import Crypto.RNG
-import Data.Maybe
 import Database.PostgreSQL.Consumers
 import Database.PostgreSQL.PQTypes.Checks
 import Log
@@ -26,7 +24,6 @@ import Doc.Extending.Consumer
 import Doc.Sealing.Consumer
 import Doc.Signing.Consumer
 import KontraError
-import KontraPrelude hiding (All)
 import Log.Configuration
 import Monitoring
 import Templates

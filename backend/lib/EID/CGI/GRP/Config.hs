@@ -3,8 +3,6 @@ module EID.CGI.GRP.Config where
 import Data.Unjson
 import qualified Data.Text as T
 
-import KontraPrelude
-
 data CgiGrpConfig = CgiGrpConfig {
 -- | CGI url to GRP API
   cgGateway     :: String

@@ -14,7 +14,6 @@ import Text.JSON.FromJSValue
 import qualified Data.ByteString.Lazy.UTF8 as BS
 
 import DB
-import KontraPrelude
 import Messenger
 import SMS.Data
 import SMS.Model

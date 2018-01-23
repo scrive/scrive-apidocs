@@ -7,7 +7,6 @@ import Test.Framework
 import qualified Data.Text as T
 
 import Doc.DocumentID
-import KontraPrelude
 import Log.Identifier
 import TestingUtil
 import TestKontra

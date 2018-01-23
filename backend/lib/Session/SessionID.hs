@@ -7,7 +7,6 @@ import Data.Aeson
 import Data.Int
 
 import DB
-import KontraPrelude
 import Log.Identifier
 
 newtype SessionID = SessionID Int64

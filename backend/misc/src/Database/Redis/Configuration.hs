@@ -13,7 +13,6 @@ import qualified Data.Text.Encoding as T
 import qualified Database.Redis as R
 
 import Database.Redis.Helpers
-import KontraPrelude
 
 data RedisConfig = RedisConfig {
     rcHost     :: !T.Text

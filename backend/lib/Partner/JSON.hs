@@ -16,7 +16,6 @@ import Data.Unjson
 
 import Company.Model
 import InputValidation
-import KontraPrelude
 import User.Email (Email(..))
 import User.Model
 

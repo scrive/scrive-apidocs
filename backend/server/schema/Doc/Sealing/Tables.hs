@@ -1,7 +1,6 @@
 module Doc.Sealing.Tables where
 
 import DB
-import KontraPrelude
 
 tableDocumentSealingConsumers :: Table
 tableDocumentSealingConsumers = tblTable {

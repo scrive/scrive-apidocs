@@ -3,7 +3,6 @@ module FeatureFlags.Tables (
 ) where
 
 import DB
-import KontraPrelude
 
 tableFeatureFlags :: Table
 tableFeatureFlags = tblTable {

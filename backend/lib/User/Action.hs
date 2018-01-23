@@ -6,7 +6,6 @@ module User.Action (
 import Control.Conditional (whenM)
 import Control.Monad.Catch
 import Crypto.RNG
-import Data.Functor
 import Log
 import Text.StringTemplates.Templates
 import qualified Data.Foldable as F
@@ -19,7 +18,6 @@ import Doc.Model
 import Happstack.Fields
 import InputValidation
 import Kontra
-import KontraPrelude
 import Log.Identifier
 import MinutesTime
 import User.Email

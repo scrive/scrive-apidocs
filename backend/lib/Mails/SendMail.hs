@@ -13,8 +13,9 @@ module Mails.SendMail
 import Control.Monad.Catch
 import Crypto.RNG
 import Data.Char
-import Data.String.Utils
+import Data.String.Utils hiding (join)
 import Log
+import qualified Data.String.Utils as Str
 import qualified Text.StringTemplates.Fields as F
 import qualified Text.StringTemplates.Templates as T
 
@@ -24,7 +25,6 @@ import DB
 import Doc.DocumentID
 import Doc.Model
 import InputValidation
-import KontraPrelude hiding (join)
 import Log.Identifier
 import Mails.MailsData
 import Mails.Model hiding (Mail)
@@ -118,7 +118,8 @@ kontramailHelper noreplyAddress bd theme renderFunc tname fields = do
     wholemail <- renderFunc tname fields
     let (title, content) = case split "\r\n" $ dropWhile (isControl || isSpace) wholemail of
                              [] -> $unexpectedError "Couldnt separate email content from title"
-                             (title':contentChunks) -> (unescapeHTML title', join "\r\n" contentChunks)
+                             (title':contentChunks) ->
+                               (unescapeHTML title', Str.join "\r\n" contentChunks)
     return $ emptyMail {
                          originator      = get bdEmailOriginator bd
                        , originatorEmail = noreplyAddress

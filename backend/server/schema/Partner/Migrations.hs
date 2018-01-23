@@ -6,7 +6,6 @@ module Partner.Migrations (
 import Database.PostgreSQL.PQTypes.Checks
 
 import DB
-import KontraPrelude
 import Partner.Tables
 
 createTablePartners :: MonadDB m => Migration m

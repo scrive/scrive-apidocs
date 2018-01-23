@@ -1,7 +1,6 @@
 module User.CallbackScheme.Tables where
 
 import DB
-import KontraPrelude
 
 tableUsersCallbackScheme :: Table
 tableUsersCallbackScheme = tblTable {

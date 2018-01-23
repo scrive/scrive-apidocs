@@ -28,7 +28,6 @@ import Doc.Data.SignatoryLink
 import Doc.DocumentID
 import Doc.SealStatus (HasGuardtimeSignature(..), SealStatus)
 import IPAddress
-import KontraPrelude
 import Log.Identifier
 import MagicHash
 import MinutesTime

@@ -1,7 +1,6 @@
 module User.APILog.Tables (tableAPILogs) where
 
 import DB
-import KontraPrelude
 
 tableAPILogs :: Table
 tableAPILogs = tblTable {

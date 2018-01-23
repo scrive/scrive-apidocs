@@ -10,7 +10,6 @@ import Text.JSON
 import Text.JSON.FromJSValue
 
 import FlashMessage (FlashMessage(..), FlashType(..), toCookieValue)
-import KontraPrelude
 import TestKontra
 
 flashMessagesTests :: TestEnvSt -> Test

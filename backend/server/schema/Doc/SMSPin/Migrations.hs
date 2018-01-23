@@ -5,7 +5,6 @@ module Doc.SMSPin.Migrations
 
 import DB
 import Doc.SMSPin.Tables
-import KontraPrelude
 
 addPKToSignatorySMSPin :: MonadDB m => Migration m
 addPKToSignatorySMSPin = Migration {

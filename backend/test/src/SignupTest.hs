@@ -8,7 +8,6 @@ import Text.JSON.FromJSValue (fromJSValueField, withJSValue)
 
 import Context
 import DB hiding (query, update)
-import KontraPrelude
 import MagicHash (MagicHash)
 import Mails.Model
 import MinutesTime

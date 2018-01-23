@@ -25,14 +25,10 @@ module Mails.Model (
 
 import Control.Monad.Catch
 import Data.Int
-import Data.Maybe hiding (fromJust)
-import Data.Monoid
-import Data.Monoid.Utils
 import Data.String.Utils (strip)
 import Data.Time
 
 import DB
-import KontraPrelude
 import MagicHash
 import Mails.Data
 import MinutesTime

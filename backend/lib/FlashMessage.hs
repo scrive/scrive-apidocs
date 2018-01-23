@@ -15,7 +15,6 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Text.JSON.Gen as J
 
 import Cookies
-import KontraPrelude hiding (optional)
 import Utils.HTTP
 
 data FlashType

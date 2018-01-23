@@ -35,8 +35,6 @@ import Data.Time
 import Data.Time.Clock.POSIX
 import qualified Data.Binary as B
 
-import KontraPrelude
-
 -- | FIXME: this really needs to go.
 instance B.Binary UTCTime where
   put t = B.put (floor $ utcTimeToPOSIXSeconds t :: Int64)

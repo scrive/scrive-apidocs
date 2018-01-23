@@ -13,7 +13,6 @@ import Text.JSON.FromJSValue
 import qualified Data.ByteString.Lazy.UTF8 as BS
 
 import DB
-import KontraPrelude
 import Log.Identifier
 import Mailer
 import Mails.Model

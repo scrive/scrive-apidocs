@@ -7,7 +7,6 @@ import Control.Monad.Trans.Control
 import Happstack.Server
 
 import Control.Monad.Trans.Control.Util
-import KontraPrelude
 
 instance NFData HeaderPair where
   rnf HeaderPair{..} = rnf hName

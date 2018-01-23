@@ -4,7 +4,6 @@ import Control.Concurrent
 import Control.Monad.Base
 import Log
 import System.Exit
-import System.IO
 import System.Posix.IO (stdInput)
 import System.Posix.Signals
 import System.Posix.Terminal (queryTerminal)
@@ -13,7 +12,6 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
 import qualified Data.Text as T
 
-import KontraPrelude
 import SFTPConfig
 
 -- | Wait for a signal (sigINT or sigTERM).

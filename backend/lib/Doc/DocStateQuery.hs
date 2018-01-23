@@ -47,7 +47,6 @@ import Doc.SignatoryLinkID
 import Doc.Tokens.Model
 import EID.Authentication.Model
 import Kontra
-import KontraPrelude
 import Log.Identifier
 import MagicHash
 import User.Model

@@ -5,7 +5,6 @@ module Chargeable.Migrations
 
 import Chargeable.Tables
 import DB
-import KontraPrelude
 
 createIndexesForChargeableItems :: MonadDB m => Migration m
 createIndexesForChargeableItems = Migration {

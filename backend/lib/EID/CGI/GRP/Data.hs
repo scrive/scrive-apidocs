@@ -28,7 +28,6 @@ import Text.XML.Cursor hiding (element)
 import Text.XML.Writer hiding (content, many, node)
 import qualified Data.Text as T
 
-import KontraPrelude
 import Log.Identifier
 import Session.Cookies
 import Text.XML.Parser

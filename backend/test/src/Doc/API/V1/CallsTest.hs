@@ -25,7 +25,6 @@ import Doc.SignatoryScreenshots
 import EID.Authentication.Model
 import EID.CGI.GRP.Data ()
 import KontraError
-import KontraPrelude
 import OAuth.Model
 import Session.Model
 import TestingUtil

@@ -1,7 +1,6 @@
 module Session.Tables where
 
 import DB
-import KontraPrelude
 
 tableSessions :: Table
 tableSessions = tblTable {

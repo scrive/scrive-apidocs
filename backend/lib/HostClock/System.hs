@@ -6,8 +6,6 @@ module HostClock.System
 
 import System.Process (readProcess)
 
-import KontraPrelude
-
 defaultNtpServers :: [String]
 defaultNtpServers = [ show n ++ ".ubuntu.pool.ntp.org" | n <- [0..3] ]
 

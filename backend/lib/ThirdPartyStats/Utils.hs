@@ -6,7 +6,6 @@ module ThirdPartyStats.Utils (
 
 import Company.CompanyID (CompanyID)
 import Doc.DocumentID (DocumentID)
-import KontraPrelude
 import ThirdPartyStats.Core
 import User.UserID (UserID)
 

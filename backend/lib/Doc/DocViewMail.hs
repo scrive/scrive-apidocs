@@ -18,7 +18,6 @@ module Doc.DocViewMail
 import Control.Conditional ((<|), (|>))
 import Control.Monad.Catch
 import Control.Monad.Trans (lift)
-import Data.Functor
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
@@ -33,7 +32,6 @@ import Doc.DocUtils
 import Doc.Model (unsavedDocumentLingerDays)
 import File.FileID
 import KontraLink
-import KontraPrelude
 import MailContext
 import Mails.SendMail
 import MinutesTime

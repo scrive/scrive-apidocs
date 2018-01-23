@@ -19,7 +19,6 @@ import qualified Control.Exception.Lifted as E
 
 import DB
 import KontraLink
-import KontraPrelude
 import Log.Identifier
 import MagicHash
 import MinutesTime

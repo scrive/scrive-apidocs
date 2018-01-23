@@ -1,6 +1,5 @@
 module Utils.Font (isValidFont) where
 
-import KontraPrelude
 
 isValidFont :: String -> Bool
 isValidFont font = case font of
@@ -18,3 +17,4 @@ isValidFont font = case font of
   "arial,helvetica,sans-serif" -> True
   "helvetica,sans-serif" -> True
   _ -> False
+

@@ -19,7 +19,6 @@ import Database.PostgreSQL.PQTypes.Checks
 
 import DB
 import Doc.Tables
-import KontraPrelude
 
 addAuthorUserIDToDocuments :: MonadDB m => Migration m
 addAuthorUserIDToDocuments = Migration {
