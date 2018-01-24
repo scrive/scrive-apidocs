@@ -240,7 +240,7 @@ getCabalConfigureFlags = do
   flags0       <- askOracle (BuildCabalConfigureOptions ())
   let flags = if tc then ["-fenable-routinglist",flags0]
               else [flags0]
-      flags'= if testCoverage then "-ftest-coverage":flags
+      flags'= if testCoverage then "--enable-coverage":flags
               else flags
   return flags'
 
