@@ -59,7 +59,7 @@ docApiV2SigReject did slid = logDocumentAndSignatory did slid . api $ do
     rejectReason <- (fmap $ T.unpack . T.strip) <$> apiV2ParameterOptional (ApiV2ParameterText "reason")
     -- API call actions
     ctx <- getContext
-    Just sl <- getSigLinkFor slid <$> theDocument
+    sl <- guardGetSignatoryFromIdForDocument slid
     actor <- signatoryActor ctx sl
     switchLang . getLang =<< theDocument
     dbUpdate $ RejectDocument slid rejectReason actor
@@ -74,7 +74,7 @@ docApiV2SigSigningStatusCheck did slid = logDocumentAndSignatory did slid . api 
   -- Permissions
   mh <- getMagicHashForSignatoryAction did slid
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
-    Just sl <- getSigLinkFor slid <$> theDocument
+    sl <- guardGetSignatoryFromIdForDocument slid
     isDocumentSigningInProgress <- dbQuery $ IsDocumentSigningInProgress slid
     lastCheckStatus <- dbQuery $ GetDocumentSigningLastCheckStatus slid
     return $ Ok $ JSObject (J.toJSObject $ [
@@ -117,8 +117,8 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
     fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValuesForSigning)
     guardThatRadioButtonValuesAreValid slid fields =<< theDocument
     -- API call actions + extra conditional parameter
-    authorization <- signatorylinkauthenticationtosignmethod <$> fromJust . getSigLinkFor slid <$> theDocument
-    case authorization of
+    sl <- guardGetSignatoryFromIdForDocument slid
+    case signatorylinkauthenticationtosignmethod sl of
       StandardAuthenticationToSign -> return ()
       SMSPinAuthenticationToSign -> do
         pin <- fmap T.unpack $ apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
@@ -152,8 +152,8 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
     -- API call actions + extra conditional parameter
     guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAttachments =<< theDocument
     guardThatAllSignatoryAttachmentsAreUploadedOrMarked slid notUploadedSignatoryAttachments =<< theDocument
-    authorization <- signatorylinkauthenticationtosignmethod <$> fromJust . getSigLinkFor slid <$> theDocument
-    (mprovider, mpin) <- case authorization of
+    sl <- guardGetSignatoryFromIdForDocument slid
+    (mprovider, mpin) <- case signatorylinkauthenticationtosignmethod sl of
       StandardAuthenticationToSign -> return (Nothing, Nothing)
       SMSPinAuthenticationToSign -> do
         pin <- fmap T.unpack $ apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
@@ -198,7 +198,7 @@ docApiV2SigSendSmsPin did slid = logDocumentAndSignatory did slid . api $ do
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument
     guardSignatoryHasNotSigned slid =<< theDocument
-    sl <- fromJust . getSigLinkFor slid <$> theDocument
+    sl <- guardGetSignatoryFromIdForDocument slid
     when (signatorylinkauthenticationtosignmethod sl /= SMSPinAuthenticationToSign) $ do
       apiError $ signatoryStateError "Signatory authentication method to sign is not SMS PIN"
     -- Parameters
@@ -233,7 +233,7 @@ docApiV2SigSetAttachment did slid = logDocumentAndSignatory did slid . api $ do
       Nothing -> apiError $ requestParameterInvalid "name" "There is no attachment with that name for the signatory"
       Just sa -> return sa
     -- API call actions
-    sl <- fromJust . getSigLinkFor slid <$> theDocument
+    sl <- guardGetSignatoryFromIdForDocument slid
     ctx <- getContext
     case mAttachment of
       Nothing -> dbUpdate . DeleteSigAttachment slid sigAttachment =<< signatoryActor ctx sl
@@ -260,7 +260,7 @@ docApiV2SetHighlightForPage did slid = logDocumentAndSignatory did slid . api $ 
     mimage <- apiV2ParameterOptional (ApiV2ParameterBase64PNGImage "image")
     -- API call actions
     ctx <- getContext
-    Just sl <- getSigLinkFor slid <$> theDocument
+    sl <- guardGetSignatoryFromIdForDocument slid
     actor <- signatoryActor ctx sl
     case mimage of
        Just image -> dbUpdate $ SetHighlightingForPageAndSignatory sl (fromIntegral page) (fileid image) actor

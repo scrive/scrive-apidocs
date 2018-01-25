@@ -16,6 +16,7 @@ import qualified Text.StringTemplates.Fields as F
 import API.V2
 import API.V2.Parameters
 import DB
+import Doc.API.V2.Guards (guardGetSignatoryFromIdForDocument)
 import Doc.API.V2.JSON.Fields
 import Doc.API.V2.JSON.Misc
 import Doc.DocStateData
@@ -32,7 +33,6 @@ import MagicHash (MagicHash)
 import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo
-import Util.SignatoryLinkUtils
 
 {- | Check if provided authorization values for sign call patch -}
 checkAuthenticationToSignMethodAndValue :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
@@ -41,7 +41,7 @@ checkAuthenticationToSignMethodAndValue slid = do
   case mAuthType of
     Nothing -> return ()
     Just authMethod -> do
-      siglink <- fromJust . getSigLinkFor slid <$> theDocument
+      siglink <- guardGetSignatoryFromIdForDocument slid
       let authOK = authMethod == signatorylinkauthenticationtosignmethod siglink
       when (not authOK) $
         apiError $ requestParameterInvalid "authentication_type" "does not match with document"
@@ -82,14 +82,14 @@ signDocument :: (Kontrakcja m, DocumentMonad m) =>
 signDocument slid mh fields acceptedAuthorAttachments notUploadedSignatoryAttachments mesig mpin screenshots = do
   switchLang =<< getLang <$> theDocument
   ctx <- getContext
-  -- Note that the second 'getSigLinkFor' call below may return a
-  -- different result than the first one due to the field update, so
-  -- don't attempt to replace the calls with a single call, or the
-  -- actor identities may get wrong in the evidence log.
+  -- Note that the second 'guardGetSignatoryFromIdForDocument' call
+  -- below may return a different result than the first one due to the
+  -- field update, so don't attempt to replace the calls with a single
+  -- call, or the actor identities may get wrong in the evidence log.
   fieldsWithFiles <- fieldsToFieldsWithFiles fields
-  getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . UpdateFieldsForSigning sl (fst fieldsWithFiles) (snd fieldsWithFiles) =<< signatoryActor ctx sl
+  guardGetSignatoryFromIdForDocument slid >>= \sl -> dbUpdate . UpdateFieldsForSigning sl (fst fieldsWithFiles) (snd fieldsWithFiles) =<< signatoryActor ctx sl
   theDocument >>= \doc -> do
-    let sl = fromJust (getSigLinkFor slid doc)
+    sl <- guardGetSignatoryFromIdForDocument slid
     authorAttachmetsWithAcceptanceText <- forM (documentauthorattachments doc) $ \a -> do
       acceptanceText <- renderTemplate "_authorAttachmentsUnderstoodContent" (F.value "attachment_name" $ authorattachmentname a)
       return (acceptanceText,a)
@@ -97,7 +97,7 @@ signDocument slid mh fields acceptedAuthorAttachments notUploadedSignatoryAttach
     let notUploadedSignatoryAttachmentsWithText = zip notUploadedSignatoryAttachments (repeat notUploadedSignatoryAttachmentsText)
     dbUpdate . AddAcceptedAuthorAttachmentsEvents sl acceptedAuthorAttachments authorAttachmetsWithAcceptanceText =<< signatoryActor ctx sl
     dbUpdate . AddNotUploadedSignatoryAttachmentsEvents sl notUploadedSignatoryAttachmentsWithText =<< signatoryActor ctx sl
-  getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . SignDocument slid mh mesig mpin screenshots =<< signatoryActor ctx sl
+  guardGetSignatoryFromIdForDocument slid >>= \sl -> dbUpdate . SignDocument slid mh mesig mpin screenshots =<< signatoryActor ctx sl
 
 
 fieldsToFieldsWithFiles :: (MonadDB m, MonadThrow m, MonadTime m) =>
@@ -117,7 +117,7 @@ fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning (f:fs)) = do
 
 checkSignatoryPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> SignatoryFieldsValuesForSigning -> String -> m Bool
 checkSignatoryPin slid (SignatoryFieldsValuesForSigning fields) pin = do
-  sl <- fromJust . getSigLinkFor slid <$> theDocument
+  sl <- guardGetSignatoryFromIdForDocument slid
   let mobileEditableBySignatory = Just True == join (fieldEditableBySignatory <$> getFieldByIdentity MobileFI (signatoryfields sl))
   let slidMobile = getMobile sl
   mobile <- case (not (null slidMobile) && not mobileEditableBySignatory , lookup MobileFI fields) of

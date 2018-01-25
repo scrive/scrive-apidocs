@@ -25,6 +25,7 @@ module KontraPrelude (
   , read
   , tail
   , fromJust
+  , whenJust
   , UnexpectedError(..)
   , unexpectedError
   , unexpectedErrorM
@@ -35,6 +36,7 @@ import Control.Category
 import Control.Exception (throw)
 import Control.Monad
 import Control.Monad.Catch
+import Control.Monad.Extra
 import Data.Algebra.Boolean
 import Data.Foldable (foldMap)
 import Data.Label ((:->), get, set)

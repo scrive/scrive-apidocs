@@ -488,6 +488,7 @@ Library
                , ekg-statsd
                , exceptions
                , explicit-exception
+               , extra
                , fclabels
                , fields-json
                , filepath
@@ -825,6 +826,7 @@ Executable kontrakcja-migrate
                , data-default
                , directory
                , exceptions
+               , extra
                , fclabels
                , fields-json
                , hpqtypes
@@ -974,6 +976,7 @@ Executable mailing-server
                , ekg-core
                , ekg-statsd
                , exceptions
+               , extra
                , fclabels
                , fields-json
                , filepath
@@ -1114,6 +1117,7 @@ Executable messenger-server
                , ekg-core
                , ekg-statsd
                , exceptions
+               , extra
                , fclabels
                , fields-json
                , happstack-server
@@ -1451,6 +1455,7 @@ Executable localization
                , data-default
                , directory
                , exceptions
+               , extra
                , fclabels
                , happstack-server
                , hpqtypes

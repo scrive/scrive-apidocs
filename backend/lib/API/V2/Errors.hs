@@ -8,6 +8,7 @@ module API.V2.Errors (
   , documentStateError
   , documentStateErrorWithCode
   , signatoryStateError
+  , signatoryLinkForDocumentNotFound
   , documentActionForbidden
   , documentNotFound
   , resourceNotFound
@@ -32,6 +33,7 @@ import DB
 import Doc.Conditions
 import Doc.DocStateData
 import Doc.DocumentID
+import Doc.SignatoryLinkID
 import KontraPrelude
 
 data APIError = APIError {
@@ -149,6 +151,12 @@ documentStateErrorWithCode code msg = (documentStateError msg) {errorHttpCode = 
 
 signatoryStateError :: T.Text -> APIError
 signatoryStateError msg = APIError { errorType = SignatoryStateError, errorHttpCode = 409, errorMessage = msg}
+
+signatoryLinkForDocumentNotFound :: DocumentID -> SignatoryLinkID -> APIError
+signatoryLinkForDocumentNotFound did slid =
+    resourceNotFound $ "A signatory with id" <+> slidText <+> "was not found for document id" <+> didText
+  where didText  = T.pack (show did)
+        slidText = T.pack (show slid)
 
 documentActionForbidden :: APIError
 documentActionForbidden = APIError { errorType = DocumentActionForbidden, errorHttpCode = 403, errorMessage = msg}

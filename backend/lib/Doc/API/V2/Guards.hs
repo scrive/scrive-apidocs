@@ -10,6 +10,7 @@ module Doc.API.V2.Guards (
 , guardThatUserIsAuthorOrDocumentIsShared
 , guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared
 -- * Signatory guards
+, guardGetSignatoryFromIdForDocument
 , guardSignatoryNeedsToIdentifyToView
 , guardSignatoryHasNotIdentifiedToView
 , guardCanSetAuthenticationToViewForSignatoryWithValues
@@ -34,6 +35,7 @@ import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocumentID
+import Doc.DocumentMonad (DocumentMonad, theDocument)
 import Doc.DocUtils
 import Doc.Model.Query
 import Doc.SignatoryLinkID
@@ -97,6 +99,11 @@ guardThatObjectVersionMatchesIfProvided did = do
     Nothing -> return ()
     Just ov -> (dbQuery $ CheckDocumentObjectVersionIs did (fromIntegral ov))
       `catchDBExtraException` (\e@DocumentObjectVersionDoesNotMatch {} -> apiError $ documentObjectVersionMismatch e)
+
+guardGetSignatoryFromIdForDocument :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m SignatoryLink
+guardGetSignatoryFromIdForDocument slid = do
+  doc <- theDocument
+  apiGuardJust (signatoryLinkForDocumentNotFound (documentid doc) slid) . getSigLinkFor slid $ doc
 
 guardSignatoryNeedsToIdentifyToView :: Kontrakcja m => SignatoryLinkID -> Document -> m ()
 guardSignatoryNeedsToIdentifyToView slid doc = do

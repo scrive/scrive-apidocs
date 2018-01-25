@@ -116,7 +116,7 @@ docApiV2GetQRCode did slid = logDocument did . logSignatory slid . api $ do
   guardDocumentStatus Pending doc
 
   domainURL <- ctxDomainUrl <$> getContext
-  sigLink   <- apiGuardJust (documentNotFound did) $ getSigLinkFor slid doc
+  sigLink   <- apiGuardJust (signatoryLinkForDocumentNotFound did slid) $ getSigLinkFor slid doc
   qrCode    <- liftIO $ encodeQR (mkSignLink domainURL sigLink)
 
   return $ Ok qrCode
@@ -172,7 +172,8 @@ docApiV2FilesMain did _filenameForBrowser = logDocument did . api $ do
   maccesstoken <- apiV2ParameterOptional (ApiV2ParameterRead "access_token")
   doc          <- getDocBySignatoryLinkIdOrAccessToken did mslid maccesstoken
   fileContents <- do
-    when (isJust mslid) $ guardSignatoryNeedsToIdentifyToView (fromJust mslid) doc
+    whenJust mslid $ \slid ->
+      guardSignatoryNeedsToIdentifyToView slid doc
     case documentstatus doc of
       Closed -> do
         mFile <- fileFromMainFile (documentsealedfile doc)
@@ -206,7 +207,9 @@ docApiV2FilesGet did fid filename = logDocumentAndFile did fid . api $ do
   maccesstoken <- apiV2ParameterOptional (ApiV2ParameterRead "access_token")
   doc          <- getDocBySignatoryLinkIdOrAccessToken did mslid maccesstoken
 
-  when (isJust mslid) $ guardSignatoryNeedsToIdentifyToView (fromJust mslid) doc
+  whenJust mslid $ \slid ->
+    guardSignatoryNeedsToIdentifyToView slid doc
+
   let allfiles = maybeToList (mainfileid <$> documentfile doc) ++ maybeToList (mainfileid <$> documentsealedfile doc) ++
                       (authorattachmentfileid <$> documentauthorattachments doc) ++
                       (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc) ++

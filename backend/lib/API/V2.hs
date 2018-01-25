@@ -9,6 +9,7 @@ module API.V2 (
   , documentStateError
   , documentStateErrorWithCode
   , signatoryStateError
+  , signatoryLinkForDocumentNotFound
   , documentActionForbidden
   , documentNotFound
   , resourceNotFound

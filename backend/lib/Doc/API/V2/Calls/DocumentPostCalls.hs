@@ -543,7 +543,7 @@ docApiV2SigChangeEmailAndMobile did slid = logDocumentAndSignatory did slid . ap
     validEmail <- apiV2ParameterOptional (ApiV2ParameterTextWithValidation "email" asValidEmail)
     -- Guard Parameters
     when (isNothing validMobile && isNothing validEmail ) (apiError $ requestParameterMissing "mobile_number or email")
-    sl <- fromJust . getSigLinkFor slid <$> theDocument
+    sl <- guardGetSignatoryFromIdForDocument slid
     when (isAuthor sl)
       (apiError $ signatoryStateError "Cannot change email or mobile of document author")
     let hasMobileField = isJust . getFieldByIdentity MobileFI . signatoryfields $ sl
