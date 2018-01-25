@@ -7,6 +7,7 @@ var PhoneValidationNO = require("../../../js/validation.js").PhoneValidationNO;
 var EmptyValidation = require("../../../js/validation.js").EmptyValidation;
 var PhoneValidation = require("../../../js/validation.js").PhoneValidation;
 var SSNForSEBankIDValidation = require("../../../js/validation.js").SSNForSEBankIDValidation;
+var SSNForNOBankIDValidation = require("../../../js/validation.js").SSNForNOBankIDValidation;
 var $ = require("jquery");
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
@@ -65,7 +66,15 @@ var Modal = require("../../common/modal");
     },
 
     isNewAuthenticationELeg: function () {
+      return this.isNewAuthenticationSEBankID() || this.isNewAuthenticationNOBankID();
+    },
+
+    isNewAuthenticationSEBankID: function () {
       return this.newAuthenticationMethod() == "se_bankid";
+    },
+
+    isNewAuthenticationNOBankID: function () {
+      return this.newAuthenticationMethod() == "no_bankid";
     },
 
     isAuthenticationValueInvalid: function () {
@@ -85,19 +94,28 @@ var Modal = require("../../common/modal");
             || new EmptyValidation().validateData(authvalue)
           );
         }
-      } else if (this.isNewAuthenticationELeg()) {
+      } else if (this.isNewAuthenticationSEBankID()) {
         // If SE BankID to view is set, then SSN needs to be valid and not empty
         if (this.signatory().authenticationToView() === "se_bankid") {
           return !new SSNForSEBankIDValidation().validateData(authvalue);
-        // Else valid or empty
+          // Else valid or empty
         } else {
           return !(
             new SSNForSEBankIDValidation().validateData(authvalue)
             || new EmptyValidation().validateData(authvalue)
           );
         }
+      } else if (this.isNewAuthenticationNOBankID()) {
+        // If NO BankID to view is set, then SSN needs to be valid and not empty
+        if (this.signatory().authenticationToView() === "no_bankid") {
+          return !new SSNForNOBankIDValidation().validateData(authvalue);
+        } else {
+          return !(
+            new SSNForNOBankIDValidation().validateData(authvalue)
+            || new EmptyValidation().validateData(authvalue)
+          );
+        }
       }
-
       return false;
     },
 
@@ -130,8 +148,10 @@ var Modal = require("../../common/modal");
         return localization.docview.signatory.authenticationToSignStandard;
       } else if (model.isNewAuthenticationPINbySMS()) {
         return localization.docview.signatory.authenticationToSignSMSPin;
-      } else if (model.isNewAuthenticationELeg()) {
+      } else if (model.isNewAuthenticationSEBankID()) {
         return localization.docview.signatory.authenticationToSignSEBankID;
+      } else if (model.isNewAuthenticationNOBankID()) {
+        return localization.docview.signatory.authenticationToSignNOBankID;
       }
     },
 
@@ -161,8 +181,10 @@ var Modal = require("../../common/modal");
       var text = "";
       if (model.isNewAuthenticationPINbySMS()) {
         text = localization.docview.changeAuthentication.placeholderPhone;
-      } else if (model.isNewAuthenticationELeg()) {
-        text = localization.docview.changeAuthentication.placeholderEID;
+      } else if (model.isNewAuthenticationSEBankID()) {
+        text = localization.docview.changeAuthentication.placeholderSEEID;
+      } else if (model.isNewAuthenticationNOBankID()) {
+        text = localization.docview.changeAuthentication.placeholderNOEID;
       }
       return text;
     },
@@ -180,9 +202,9 @@ var Modal = require("../../common/modal");
 
       options.push(standard);
 
-      var eleg = {
+      var sebankid = {
         name: localization.docview.signatory.authenticationToSignSEBankID,
-        selected: model.isNewAuthenticationELeg(),
+        selected: model.isNewAuthenticationSEBankID(),
         value: "se_bankid"
       };
 
@@ -191,9 +213,21 @@ var Modal = require("../../common/modal");
             (!sig.dkNemIDAuthenticationToView() && !sig.noBankIDAuthenticationToView())
           )
       ) {
-        options.push(eleg);
+        options.push(sebankid);
       }
 
+      var nobankid = {
+        name: localization.docview.signatory.authenticationToSignNOBankID,
+        selected: model.isNewAuthenticationNOBankID(),
+        value: "no_bankid"
+      };
+      if (sig.noBankIDAuthenticationToSign() ||
+          (Subscription.currentSubscription().canUseNOAuthenticationToSign() &&
+            (!sig.dkNemIDAuthenticationToView() && !sig.seBankIDAuthenticationToView())
+          )
+      ) {
+        options.push(nobankid);
+      }
 
       var sms = {
         name: localization.docview.signatory.authenticationToSignSMSPin,

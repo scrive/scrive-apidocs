@@ -29,25 +29,26 @@ module.exports = React.createClass({
     Track.track('Toggle visibility of to-start header');
     this.setState({'minified': !this.state.minified});
   },
-  getAuthenticationMethodText: function() { 
+  getAuthenticationMethodText: function() {
     var sig = this.props.signatory;
 
     if (sig.standardAuthenticationToSign()) return localization.docview.signatory.authenticationToSignStandard;
     if (sig.smsPinAuthenticationToSign()) return localization.docview.signatory.authenticationToSignSMSPin;
     if (sig.seBankIDAuthenticationToSign()) return localization.docview.signatory.authenticationToSignSEBankID;
+    if (sig.noBankIDAuthenticationToSign()) return localization.docview.signatory.authenticationToSignNOBankID;
 
     return "";
   },
   getDeliveryMethodText: function() {
     var sig = this.props.signatory;
-    if (sig.emailDelivery()) { return localization.docview.signatory.invitationEmail; }   
-    if (sig.padDelivery()) { return localization.docview.signatory.invitationPad; }   
-    if (sig.mobileDelivery()) { return localization.docview.signatory.invitationSMS; }   
-    if (sig.emailMobileDelivery()) { return localization.docview.signatory.invitationEmailSMS; }   
-    if (sig.apiDelivery()) { return localization.docview.signatory.invitationAPI; }   
+    if (sig.emailDelivery()) { return localization.docview.signatory.invitationEmail; }
+    if (sig.padDelivery()) { return localization.docview.signatory.invitationPad; }
+    if (sig.mobileDelivery()) { return localization.docview.signatory.invitationSMS; }
+    if (sig.emailMobileDelivery()) { return localization.docview.signatory.invitationEmailSMS; }
+    if (sig.apiDelivery()) { return localization.docview.signatory.invitationAPI; }
 
     return "";
-  },  
+  },
   focusOfFirstField: function() {
     var field =_.find(this.props.signatory.fields(), function(f) {
       return !f.isSignature() && !f.isCheckbox() && !f.isAuthorUnchangeableField();
@@ -88,7 +89,7 @@ module.exports = React.createClass({
           }
         })}
 
-        {/* if */ signatory.signs() && 
+        {/* if */ signatory.signs() &&
           <div className="extra-info">
             <div className="auth">
               {localization.docview.signatory.authenticationToSign}: {this.getAuthenticationMethodText()}

@@ -5,6 +5,7 @@ module Utils.HTTP(
   , isSecure
   , currentDomain
   , getHttpHostpart
+  , getHttpsHostpart
   , getHostpart
   , currentLink
   , currentLinkBody
@@ -48,6 +49,11 @@ getHttpHostpart :: ServerMonad m => m String
 getHttpHostpart = do
   hostpart <- currentDomain
   return $ "http://" ++ hostpart
+
+getHttpsHostpart :: ServerMonad m => m String
+getHttpsHostpart = do
+  hostpart <- currentDomain
+  return $ "https://" ++ hostpart
 
 currentLink :: ServerMonad m => m String -- We use this since we can switch to HTTPS whenever we want
 currentLink = do

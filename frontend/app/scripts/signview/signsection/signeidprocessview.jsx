@@ -128,7 +128,7 @@ var classNames = require("classnames");
               <span className="bankid-logo mobile-bankid-logo" />
               <span className="bankid-logo regular-bankid-logo" />
             </div>
-            {localization.docsignview.eleg.bankid.signConfirmationTitle}
+            {localization.docsignview.eleg.bankid.signSEConfirmationTitle}
           </h1>
           <p>
             {model.statusMessage()}

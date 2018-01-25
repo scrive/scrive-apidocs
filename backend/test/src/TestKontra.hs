@@ -335,6 +335,7 @@ mkContext lang = do
         , _ctxsalesforceconf = Nothing
         , _ctxnetsconfig = Nothing
         , _ctxisapilogenabled = True
+        , _ctxnetssignconfig = Nothing
     }
 
 -- pgsql database --

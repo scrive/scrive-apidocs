@@ -36,6 +36,7 @@ import Doc.Model
 import Doc.SignatoryLinkID
 import Doc.Signing.Model
 import Doc.SMSPin.Model (GetSignatoryPin(..))
+import EID.Signature.Model
 import File.File (File(..))
 import InputValidation (Result(..), asValidPhoneForSMS)
 import Kontra
@@ -126,6 +127,7 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
            then apiError $ requestParameterInvalid "sms_pin" "invalid SMS PIN"
            else return ()
       SEBankIDAuthenticationToSign -> return ()
+      NOBankIDAuthenticationToSign -> return ()
     -- Return
     return $ Ok ()
 
@@ -151,22 +153,23 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
     guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAttachments =<< theDocument
     guardThatAllSignatoryAttachmentsAreUploadedOrMarked slid notUploadedSignatoryAttachments =<< theDocument
     authorization <- signatorylinkauthenticationtosignmethod <$> fromJust . getSigLinkFor slid <$> theDocument
-    (signNow, mpin) <- case authorization of
-      StandardAuthenticationToSign -> return (True, Nothing)
+    (mprovider, mpin) <- case authorization of
+      StandardAuthenticationToSign -> return (Nothing, Nothing)
       SMSPinAuthenticationToSign -> do
         pin <- fmap T.unpack $ apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
         validPin <- checkSignatoryPin slid fields pin
         if not validPin
           then apiError documentActionForbidden
-          else return (True, Just pin)
-      SEBankIDAuthenticationToSign -> return (False, Nothing)
-    if (signNow)
-       then do
+          else return (Nothing, Just pin)
+      SEBankIDAuthenticationToSign -> return (Just CgiGrpBankID, Nothing)
+      NOBankIDAuthenticationToSign -> return (Just NetsNOBankID, Nothing)
+    case mprovider of
+       Nothing -> do
         signDocument slid mh fields acceptedAttachments notUploadedSignatoryAttachments Nothing mpin screenshots
         postDocumentPendingChange olddoc
         handleAfterSigning slid
         -- Return
-       else do
+       Just provider -> do
         ctx <- getContext
         doclang <- getLang <$> theDocument
         dbUpdate $ CleanAllScheduledDocumentSigning slid
@@ -182,6 +185,7 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
           acceptedAttachments
           screenshots
           notUploadedSignatoryAttachments
+          provider
     doc <- theDocument
     return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc),d)) doc
 

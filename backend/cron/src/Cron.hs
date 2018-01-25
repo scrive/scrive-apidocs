@@ -108,7 +108,7 @@ main = do
           (cronGuardTimeConf cronConf) templates filecache mrediscache pool (cronMailNoreplyAddress cronConf)
           (cronConsumerSealingMaxJobs cronConf)
         docSigning   = documentSigning (cronAmazonConfig cronConf)
-          (cronGuardTimeConf cronConf) (cronCgiGrpConfig cronConf)
+          (cronGuardTimeConf cronConf) (cronCgiGrpConfig cronConf) (cronNetsSignConfig cronConf)
           templates filecache mrediscache pool (cronMailNoreplyAddress cronConf) (cronConsumerSigningMaxJobs cronConf)
         docExtending = documentExtendingConsumer (cronAmazonConfig cronConf)
           (cronGuardTimeConf cronConf) templates filecache mrediscache pool (cronConsumerExtendingMaxJobs cronConf)

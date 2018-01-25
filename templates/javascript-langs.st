@@ -49,7 +49,7 @@ javascriptLocalisation =
              , identifyBankId: "$_IdentifyBankId()$"
              , identifyBankIdNo: "$_IdentifyBankIdNO()$"
              , identifyBankIdNoMobile: "$_IdentifyBankIdNOMobile()$"
-             , identifyBankIdError: {
+             , identifyNOBankIdError: {
                failed: "$_IdentifyBankIdNOFailed()$"
                , canceled: "$_IdentifyBankIdNOCanceled()$"
                , useragent: "$_IdentifyBankIdNOUserAgent()$"
@@ -68,6 +68,17 @@ javascriptLocalisation =
                , revoked: "$_IdentifyDKNemIdRevoked()$"
                , expired: "$_IdentifyDKNemIdExpired()$"
              }
+             , signNOBankIDError : {
+                 generic   : "$_SignBankIdNOErrorGeneric()$"
+               , useragent : "$_SignBankIdNOErrorUserAgent()$"
+               , auth      : "$_SignBankIdNOErrorAuth()$"
+               , document  : "$_SignBankIdNOErrorDocument()$"
+               , timeout   : "$_SignBankIdNOErrorTimeout()$"
+               , age       : "$_SignBankIdNOErrorAge()$"
+               , mobiledob : "$_SignBankIdNOErrorMobileDOB()$"
+             }
+             , signNOBankIDSuccess : "$_SignBankIdNOSuccess()$"
+             , signNOBankIDCanceled : "$_SignBankIdNOCanceled()$"
              , identifyPhoneError: "$_IdentifyPhoneError()$"
              , identifyPhoneNumber: "$_IdentifyPhoneNumber()$"
              , identifyPhoneNumber8: "$_IdentifyPhoneNumber8()$"
@@ -399,6 +410,7 @@ javascriptLocalisation =
                , authenticationToSign : "$_designViewAddPartiesAuthentication()$"
                , authenticationToSignStandard : "$_designViewAddPartiesAuthenticationStandard()$"
                , authenticationToSignSEBankID : "$_designViewAddPartiesAuthenticationSEBankID()$"
+               , authenticationToSignNOBankID : "$_designViewAddPartiesAuthenticationNOBankID()$"
                , authenticationToSignSMSPin : "$_designViewAddPartiesAuthenticationSMSPin()$"
                , confirmation : "$_designViewAddPartiesConfirmation()$"
                , confirmationEmail : "$_designViewAddPartiesConfirmationEmail()$"
@@ -623,9 +635,12 @@ javascriptLocalisation =
                   bankid : {
                         faultModalTitle : "$_elegBankIDFaultModalTitle()$"
                       , startAppNow : "$_elegBankIDStartAppNow()$"
-                      , signConfirmationTitle : "$_elegSignConfirmationTitle()$"
-                      , signConfirmationText : "<p>$_elegSignConfirmationText()$</p>"
-                      , signConfirmationTextNoName : "$_elegSignConfirmationTextNoName()$"
+                      , signSEConfirmationTitle : "$_elegSignSEConfirmationTitle()$"
+                      , signNOConfirmationTitle : "$_elegSignNOConfirmationTitle()$"
+                      , signSEConfirmationText : "$_elegSignSEConfirmationText()$"
+                      , signNOConfirmationText : "$_elegSignNOConfirmationText()$"
+                      , signSEConfirmationTextNoName : "$_elegSignSEConfirmationTextNoName()$"
+                      , signNOConfirmationTextNoName : "$_elegSignNOConfirmationTextNoName()$"
                       , rfa1 : "$_elegBankIDRFA1()$"
                       , rfa3 : "$_elegBankIDRFA3()$"
                       , rfa5 : "$_elegBankIDRFA5()$"
@@ -642,7 +657,7 @@ javascriptLocalisation =
                       , invalidParametersCanChange : "$_elegBankInvalidParametersCanChange()$"
                       , invalidParametersCantChange : "$_elegBankInvalidParametersCantChange()$"
                   }
-             }
+              }
         }
         , docview : {
             signatory : {
@@ -668,6 +683,7 @@ javascriptLocalisation =
               , authenticationToSign: "$_docviewSignatoryAuthenticationToSignMethodLabel()$"
               , authenticationToSignStandard: "$_docviewSignatoryAuthenticationToSignStandard()$"
               , authenticationToSignSMSPin: "$_docviewSignatoryAuthenticationToSignSMSPin()$"
+              , authenticationToSignNOBankID: "$_docviewSignatoryAuthenticationToSignNOBankID()$"
               , authenticationToSignSEBankID: "$_docviewSignatoryAuthenticationToSignSEBankID()$"
               , confirmation: "$_docviewSignatoryConfirmationMethodLabel()$"
               , confirmationEmail: "$_docviewSignatoryConfirmationEmail()$"
@@ -702,7 +718,8 @@ javascriptLocalisation =
                 title: "$_docviewChangeAuthenticationModalTitle()$"
               , accept: "$_docviewChangeAuthenticationModalAccept()$"
               , methodLabel: "$_docviewChangeAuthenticationModalMethodLabel()$"
-              , placeholderEID: "$_docviewChangeAuthenticationModalPlaceholderEID()$"
+              , placeholderSEEID: "$_docviewChangeAuthenticationModalPlaceholderSEEID()$"
+              , placeholderNOEID: "$_docviewChangeAuthenticationModalPlaceholderNOEID()$"
               , placeholderPhone: "$_docviewChangeAuthenticationModalPlaceholderPhone()$"
               , valueInfotext: "$_docviewChangeAuthenticationModalValueInfotext()$"
               , errorFlashMessage: "$_docviewChangeAuthenticationModalErrorFlashMessage()$"

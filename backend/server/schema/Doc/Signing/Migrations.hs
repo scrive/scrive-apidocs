@@ -22,3 +22,13 @@ documentSigningJobsAddSignatoryAttachments = Migration {
         sqlAddColumn tblColumn { colName = "not_uploaded_sig_attachments", colType = ArrayT TextT, colNullable = False, colDefault = Just "'{}'::text[]" }
         ]
   }
+
+documentSigningJobsAddSignatureProvider :: MonadDB m => Migration m
+documentSigningJobsAddSignatureProvider = Migration {
+    mgrTableName = tblName tableDocumentSigningJobs
+  , mgrFrom = 3
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable "document_signing_jobs" [
+          sqlAddColumn tblColumn { colName = "signature_provider", colType = SmallIntT, colNullable = False, colDefault = Just "5" } -- CgiGrpBankID
+        ]
+  }

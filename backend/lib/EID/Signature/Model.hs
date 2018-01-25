@@ -1,22 +1,28 @@
 module EID.Signature.Model (
     ESignature(..)
   , module EID.Signature.Legacy
+  , SignatureProvider(..)
   -- from EID.CGI.GRP.Data
   , CGISEBankIDSignature(..)
   , MergeCGISEBankIDSignature(..)
   , GetESignature(..)
+  -- from EID.Nets.Data
+  , NetsNOBankIDSignature(..)
+  , MergeNetsNOBankIDSignature(..)
   ) where
 
 import Control.Monad.Catch
 import Control.Monad.State
 import Data.ByteString (ByteString)
 import Data.Int
+import Data.Text.Encoding
 import Data.Time
 import qualified Data.Text as T
 
 import DB
 import Doc.SignatoryLinkID
 import EID.CGI.GRP.Data
+import EID.Nets.Data
 import EID.Signature.Legacy
 import KontraPrelude
 
@@ -33,6 +39,7 @@ data ESignature
   | LegacyNordeaSignature_ !LegacyNordeaSignature
   | LegacyMobileBankIDSignature_ !LegacyMobileBankIDSignature
   | CGISEBankIDSignature_ !CGISEBankIDSignature
+  | NetsNOBankIDSignature_ !NetsNOBankIDSignature
   deriving (Eq, Ord, Show)
 
 ----------------------------------------
@@ -47,6 +54,7 @@ data SignatureProvider
   | LegacyNordea
   | LegacyMobileBankID
   | CgiGrpBankID
+  | NetsNOBankID
     deriving (Eq, Ord, Show)
 
 instance PQFormat SignatureProvider where
@@ -62,8 +70,9 @@ instance FromSQL SignatureProvider where
       3 -> return LegacyNordea
       4 -> return LegacyMobileBankID
       5 -> return CgiGrpBankID
+      6 -> return NetsNOBankID
       _ -> throwM RangeError {
-        reRange = [(1, 5)]
+        reRange = [(1, 6)]
       , reValue = n
       }
 
@@ -74,6 +83,8 @@ instance ToSQL SignatureProvider where
   toSQL LegacyNordea       = toSQL (3::Int16)
   toSQL LegacyMobileBankID = toSQL (4::Int16)
   toSQL CgiGrpBankID       = toSQL (5::Int16)
+  toSQL NetsNOBankID       = toSQL (6::Int16)
+
 
 ----------------------------------------
 
@@ -109,6 +120,40 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeCGISEBankIDSignature () whe
         sqlSet "signatory_name" cgisebidsSignatoryName
         sqlSet "signatory_personal_number" cgisebidsSignatoryPersonalNumber
         sqlSet "ocsp_response" cgisebidsOcspResponse
+
+----------------------------------------
+
+-- | Insert bank id signature for a given signatory or replace the existing one.
+data MergeNetsNOBankIDSignature = MergeNetsNOBankIDSignature SignatoryLinkID NetsNOBankIDSignature
+instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsNOBankIDSignature () where
+  update (MergeNetsNOBankIDSignature slid NetsNOBankIDSignature{..}) = do
+    loopOnUniqueViolation . withSavepoint "merge_bank_id_signature" $ do
+      runQuery01_ selectSignatorySignTime
+      msign_time :: Maybe UTCTime <- fetchOne runIdentity
+      when (isJust msign_time) $ do
+        $unexpectedErrorM "signatory already signed, can't merge signature"
+      success <- runQuery01 . sqlUpdate "eid_signatures" $ do
+        setFields
+        sqlWhereEq "signatory_link_id" slid
+        -- replace the signature only if signatory hasn't signed yet
+        sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime) <+> "IS NULL"
+      when (not success) $ do
+        runQuery_ . sqlInsertSelect "eid_signatures" "" $ do
+          setFields
+    where
+      selectSignatorySignTime = do
+        sqlSelect "signatory_links" $ do
+          sqlResult "sign_time"
+          sqlWhereEq "id" slid
+
+      setFields :: (MonadState v n, SqlSet v) => n ()
+      setFields = do
+        sqlSet "signatory_link_id" slid
+        sqlSet "provider" NetsNOBankID
+        sqlSet "data" netsnoSignedText
+        sqlSet "signature" . encodeUtf8 $ netsnoB64SDO
+        sqlSet "signatory_name" netsnoSignatoryName
+        sqlSet "signatory_personal_number" netsnoSignatoryPersonalNumber
 
 -- | Get signature for a given signatory.
 data GetESignature = GetESignature SignatoryLinkID
@@ -154,4 +199,10 @@ fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msig
   , cgisebidsSignedText = sdata
   , cgisebidsSignature = signature
   , cgisebidsOcspResponse = fromJust mocsp_response
+  }
+  NetsNOBankID -> NetsNOBankIDSignature_ NetsNOBankIDSignature {
+    netsnoSignedText = sdata
+  , netsnoB64SDO = decodeUtf8 signature
+  , netsnoSignatoryName = fromJust msignatory_name
+  , netsnoSignatoryPersonalNumber = fromJust msignatory_personal_number
   }

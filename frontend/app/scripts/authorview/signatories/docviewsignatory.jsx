@@ -426,6 +426,8 @@ var EmailModal = require("../../common/email_modal");
         return localization.docview.signatory.authenticationToSignSMSPin;
       } else if (signatory.seBankIDAuthenticationToSign()) {
         return localization.docview.signatory.authenticationToSignSEBankID;
+      } else if (signatory.noBankIDAuthenticationToSign()) {
+        return localization.docview.signatory.authenticationToSignNOBankID;
       }
     },
 

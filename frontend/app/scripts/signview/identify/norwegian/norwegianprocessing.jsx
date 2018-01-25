@@ -12,23 +12,23 @@ var FlashMessage = require("../../../../js/flashmessages.js").FlashMessage;
       var errorType = e.data;
 
       var errorMsgs = {
-        "identify_none": localization.identifyBankIdError.failed,
-        "identify_authfailed": localization.identifyBankIdError.auth,
-        "identify_cancel": localization.identifyBankIdError.canceled,
-        "identify_ua.nobrowser": localization.identifyBankIdError.useragent,
-        "identify_ua.nocookies": localization.identifyBankIdError.useragent,
-        "identify_ua.nojava": localization.identifyBankIdError.useragent,
-        "identify_ua.nojavascript": localization.identifyBankIdError.useragent,
-        "identify_ua.noos": localization.identifyBankIdError.useragent,
-        "identify_ua.oldos": localization.identifyBankIdError.useragent,
-        "identify_ua.oldjava": localization.identifyBankIdError.useragent,
-        "identify_ua.oldjs": localization.identifyBankIdError.useragent,
-        "identify_ua.unsupported.version": localization.identifyBankIdError.useragent,
-        "identify_ua.unsupported.charset": localization.identifyBankIdError.useragent,
-        "identify_uid.blocked": localization.identifyBankIdError.blocked,
-        "identify_uid.revoked": localization.identifyBankIdError.revoked,
-        "identify_uid.expired": localization.identifyBankIdError.expired,
-        "identify_wrongmobdob": localization.identifyBankIdError.mobile
+        "identify_none": localization.identifyNOBankIdError.failed,
+        "identify_authfailed": localization.identifyNOBankIdError.auth,
+        "identify_cancel": localization.identifyNOBankIdError.canceled,
+        "identify_ua.nobrowser": localization.identifyNOBankIdError.useragent,
+        "identify_ua.nocookies": localization.identifyNOBankIdError.useragent,
+        "identify_ua.nojava": localization.identifyNOBankIdError.useragent,
+        "identify_ua.nojavascript": localization.identifyNOBankIdError.useragent,
+        "identify_ua.noos": localization.identifyNOBankIdError.useragent,
+        "identify_ua.oldos": localization.identifyNOBankIdError.useragent,
+        "identify_ua.oldjava": localization.identifyNOBankIdError.useragent,
+        "identify_ua.oldjs": localization.identifyNOBankIdError.useragent,
+        "identify_ua.unsupported.version": localization.identifyNOBankIdError.useragent,
+        "identify_ua.unsupported.charset": localization.identifyNOBankIdError.useragent,
+        "identify_uid.blocked": localization.identifyNOBankIdError.blocked,
+        "identify_uid.revoked": localization.identifyNOBankIdError.revoked,
+        "identify_uid.expired": localization.identifyNOBankIdError.expired,
+        "identify_wrongmobdob": localization.identifyNOBankIdError.mobile
       };
 
       if (/^identify_/.test(errorType)) {

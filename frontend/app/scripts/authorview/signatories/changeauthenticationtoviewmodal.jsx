@@ -193,7 +193,9 @@ var Modal = require("../../common/modal");
         value: model.SEBankIDAuthenticationValue()
       };
 
-      if (sig.seBankIDAuthenticationToView() || Subscription.currentSubscription().canUseSEAuthenticationToView()) {
+      if (sig.seBankIDAuthenticationToView() ||
+         (Subscription.currentSubscription().canUseSEAuthenticationToView()
+          && !sig.noBankIDAuthenticationToSign())) {
         options.push(seBankid);
       }
 
@@ -216,7 +218,9 @@ var Modal = require("../../common/modal");
       };
 
       if (sig.dkNemIDAuthenticationToView() ||
-         (Subscription.currentSubscription().canUseDKAuthenticationToView() && !sig.seBankIDAuthenticationToSign())
+         (Subscription.currentSubscription().canUseDKAuthenticationToView()
+          && !sig.seBankIDAuthenticationToSign()
+          && !sig.noBankIDAuthenticationToSign())
       ) {
         options.push(dkNemid);
       }

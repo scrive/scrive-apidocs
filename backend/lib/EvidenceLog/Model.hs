@@ -84,9 +84,9 @@ eventTextTemplateName t e =  show e ++ suffix t
 
 signatoryLinkTemplateFields :: Monad m => SignatoryLink -> F.Fields m ()
 signatoryLinkTemplateFields sl = do
-  F.value "identified"  $ signatorylinkauthenticationtosignmethod sl == SEBankIDAuthenticationToSign
+  F.value "identified"  $ signatorylinkauthenticationtosignmethod sl `elem` [SEBankIDAuthenticationToSign, NOBankIDAuthenticationToSign]
                        || not (signatoryisauthor sl || signatorylinkdeliverymethod sl == APIDelivery)
-  F.value "eleg"        $ signatorylinkauthenticationtosignmethod sl == SEBankIDAuthenticationToSign
+  F.value "eleg"        $ signatorylinkauthenticationtosignmethod sl `elem` [SEBankIDAuthenticationToSign, NOBankIDAuthenticationToSign]
   F.value "sms_pin"     $ signatorylinkauthenticationtosignmethod sl == SMSPinAuthenticationToSign
   F.value "api"         $ signatorylinkdeliverymethod sl == APIDelivery
   F.value "pad"         $ signatorylinkdeliverymethod sl == PadDelivery
@@ -350,7 +350,13 @@ data CurrentEvidenceEventType =
   PageHighlightingCleared                            |
   SignatoryAttachmentNotUploaded                     |
   ChangeSignatoryEmailEvidence                       |
-  ChangeSignatoryPhoneEvidence
+  ChangeSignatoryPhoneEvidence                       |
+  ChangeAuthenticationToSignMethodStandardToNOBankIDEvidence |
+  ChangeAuthenticationToSignMethodSEBankIDToNOBankIDEvidence |
+  ChangeAuthenticationToSignMethodSMSToNOBankIDEvidence      |
+  ChangeAuthenticationToSignMethodNOBankIDToStandardEvidence |
+  ChangeAuthenticationToSignMethodNOBankIDToSMSEvidence      |
+  ChangeAuthenticationToSignMethodNOBankIDToSEBankIDEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -552,7 +558,12 @@ instance ToSQL EvidenceEventType where
   toSQL (Current UpdateFieldRadioGroupEvidence) = toSQL (125::Int16)
   toSQL (Current ChangeSignatoryEmailEvidence) = toSQL (126::Int16)
   toSQL (Current ChangeSignatoryPhoneEvidence) = toSQL (127::Int16)
-
+  toSQL (Current ChangeAuthenticationToSignMethodStandardToNOBankIDEvidence) = toSQL (128::Int16)
+  toSQL (Current ChangeAuthenticationToSignMethodSEBankIDToNOBankIDEvidence) = toSQL (129::Int16)
+  toSQL (Current ChangeAuthenticationToSignMethodSMSToNOBankIDEvidence)      = toSQL (130::Int16)
+  toSQL (Current ChangeAuthenticationToSignMethodNOBankIDToStandardEvidence) = toSQL (131::Int16)
+  toSQL (Current ChangeAuthenticationToSignMethodNOBankIDToSMSEvidence)      = toSQL (132::Int16)
+  toSQL (Current ChangeAuthenticationToSignMethodNOBankIDToSEBankIDEvidence) = toSQL (133::Int16)
 
 
 instance FromSQL EvidenceEventType where
@@ -687,8 +698,14 @@ instance FromSQL EvidenceEventType where
       125 -> return (Current UpdateFieldRadioGroupEvidence)
       126 -> return (Current ChangeSignatoryEmailEvidence)
       127 -> return (Current ChangeSignatoryPhoneEvidence)
+      128 -> return (Current ChangeAuthenticationToSignMethodStandardToNOBankIDEvidence)
+      129 -> return (Current ChangeAuthenticationToSignMethodSEBankIDToNOBankIDEvidence)
+      130 -> return (Current ChangeAuthenticationToSignMethodSMSToNOBankIDEvidence)
+      131 -> return (Current ChangeAuthenticationToSignMethodNOBankIDToStandardEvidence)
+      132 -> return (Current ChangeAuthenticationToSignMethodNOBankIDToSMSEvidence)
+      133 -> return (Current ChangeAuthenticationToSignMethodNOBankIDToSEBankIDEvidence)
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 127)]
+        reRange = [(1, 133)]
       , reValue = n
       }
 

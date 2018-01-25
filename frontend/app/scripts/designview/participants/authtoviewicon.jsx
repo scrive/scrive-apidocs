@@ -24,16 +24,21 @@ module.exports = React.createClass({
     if (!sig.signs()) {
       new FlashMessage({type: "error", content: localization.designview.viewerCantHaveAuthorisation});
     } else {
-      var ams = ["standard", "se_bankid", "no_bankid", "dk_nemid"];
-      var i = (_.indexOf(ams, sig.authenticationToView()) + 1) || 0;
-      while (!this.isAllowedAuthenticationMethod(ams[i % ams.length])) {
-        i++;
-      }
-      var newAuthToView = ams[i % ams.length];
-      if (sig.authenticationToView() == newAuthToView && newAuthToView == "standard") {
+      var superthis = this;
+      var ams = ["standard", "se_bankid", "no_bankid", "dk_nemid"]
+                .filter(function (am) { return superthis.isAllowedAuthenticationMethod(am); });
+      if (ams.length <= 1) {
+        // if no auth methods are enabled, tell customer, that they can purchase them
         this.refs.blockingModal.openContactUsModal();
       } else {
-        sig.setAuthenticationToView(newAuthToView);
+        ams = ams.filter(function (am) {
+            return sig.authenticationMethodsCanMix(am, sig.authenticationToSign());
+        });
+        // newIndex will be 0 ("standard") if the selected auth method is not enabled anymore
+        var newIndex = _.indexOf(ams, sig.authenticationToView()) + 1;
+        // the new auth can stay the same ("standard"), if the other methods are not compatible
+        // with auth to view
+        sig.setAuthenticationToView(ams[newIndex % ams.length]);
       }
     }
   },

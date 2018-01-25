@@ -474,6 +474,9 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     noBankIDAuthenticationToView: function() {
           return this.get("authentication_method_to_view") == "no_bankid" && this.signs();
     },
+    noBankIDAuthenticationToSign: function() {
+          return this.get("authentication_method_to_sign") == "no_bankid" && this.signs();
+    },
     dkNemIDAuthenticationToView: function() {
           return this.get("authentication_method_to_view") == "dk_nemid" && this.signs();
     },
@@ -481,7 +484,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
           return this.get("authentication_method_to_sign") == "standard" && this.signs();
     },
     seBankIDAuthenticationToSign: function() {
-          return this.get("authentication_method_to_sign") == "se_bankid" &&  this.signs();
+          return this.get("authentication_method_to_sign") == "se_bankid" && this.signs();
     },
     smsPinAuthenticationToSign: function() {
           return this.get("authentication_method_to_sign") == "sms_pin" && this.signs();
@@ -692,6 +695,10 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         return false;
       } else if (authToView === "dk_nemid"  && authToSign === "se_bankid") {
         return false;
+      } else if (authToView === "dk_nemid"  && authToSign === "no_bankid") {
+        return false;
+      } else if (authToView === "se_bankid"  && authToSign === "no_bankid") {
+        return false;
       } else {
         return true;
       }
@@ -720,7 +727,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         });
     },
     authenticationToSignFieldValue: function() {
-        if(this.seBankIDAuthenticationToSign()) {
+        if(this.seBankIDAuthenticationToSign() || this.noBankIDAuthenticationToSign()) {
             return this.personalnumber();
         }
         else if(this.smsPinAuthenticationToSign()) {
@@ -799,7 +806,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         }
     },
     needsPersonalNumber: function() {
-        return this.seBankIDAuthenticationToSign() || this.seBankIDAuthenticationToView() || this.noBankIDAuthenticationToView() || this.dkNemIDAuthenticationToView();
+        return this.seBankIDAuthenticationToSign() || this.seBankIDAuthenticationToView() || this.noBankIDAuthenticationToSign() || this.noBankIDAuthenticationToView() || this.dkNemIDAuthenticationToView();
     },
     needsPersonalNumberFilledByAuthor: function() {
         return this.seBankIDAuthenticationToView()  || this.noBankIDAuthenticationToView() || this.dkNemIDAuthenticationToView();
@@ -903,4 +910,3 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
        this.csv().shift();
     }
 });
-

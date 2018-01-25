@@ -30,6 +30,7 @@ import Doc.Tokens.Tables
 import Doc.Trigger
 import EID.Authentication.Tables
 import EID.CGI.GRP.Transaction.Tables
+import EID.Nets.Tables
 import EID.Signature.Tables
 import EvidenceLog.Tables
 import FeatureFlags.Tables
@@ -149,6 +150,7 @@ kontraTables =
   , tableAmazonUploadConsumers
   , tableAmazonUploadJobs
   , tableFeatureFlags
+  , tableNetsSignOrders
   ] ++ cronTables
     ++ mailerTables
     ++ messengerTables

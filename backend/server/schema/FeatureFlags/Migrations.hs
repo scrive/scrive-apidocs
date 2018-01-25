@@ -1,7 +1,9 @@
 module FeatureFlags.Migrations (
   createFeatureFlags
+, featureFlagsAddNOAuthToSign
 ) where
 
+import Control.Monad.Catch
 import Database.PostgreSQL.PQTypes.Checks
 
 import DB
@@ -39,3 +41,13 @@ createFeatureFlags = Migration {
       runQuery_ . sqlInsertSelect "feature_flags" "companies c" $ do
         sqlSetCmd "company_id" "c.id"
   }
+
+featureFlagsAddNOAuthToSign :: (MonadThrow m, MonadDB m) => Migration m
+featureFlagsAddNOAuthToSign = Migration {
+  mgrTableName = tblName tableFeatureFlags
+, mgrFrom = 1
+, mgrAction = StandardMigration $ do
+    runQuery_ $ sqlAlterTable (tblName tableFeatureFlags)  [ sqlAddColumn $
+        tblColumn { colName = "can_use_no_authentication_to_sign", colType = BoolT, colNullable = False, colDefault = Just "true" }
+      ]
+}

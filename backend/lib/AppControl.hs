@@ -338,4 +338,5 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         , _ctxsalesforceconf     = salesforceConf appConf
         , _ctxnetsconfig         = netsConfig appConf
         , _ctxisapilogenabled    = isAPILogEnabled appConf
+        , _ctxnetssignconfig     = netsSignConfig appConf
         }

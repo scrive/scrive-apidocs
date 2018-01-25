@@ -30,8 +30,8 @@ import qualified Data.Text as T
 
 import KontraPrelude
 import Log.Identifier
-import Network.SOAP.Call
 import Session.Cookies
+import Text.XML.Parser
 
 -- | Final BankID signature.
 data CGISEBankIDSignature = CGISEBankIDSignature {

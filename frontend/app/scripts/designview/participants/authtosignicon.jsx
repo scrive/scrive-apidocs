@@ -8,6 +8,8 @@ module.exports = React.createClass({
   isAllowedAuthenticationMethod: function (am) {
     if (!Subscription.currentSubscription().canUseSEAuthenticationToSign() && am == "se_bankid") {
       return false;
+    } else if (!Subscription.currentSubscription().canUseNOAuthenticationToSign() && am == "no_bankid") {
+      return false;
     } else if (!Subscription.currentSubscription().canUseSMSPinAuthenticationToSign() && am == "sms_pin") {
       return false;
     } else {
@@ -22,19 +24,24 @@ module.exports = React.createClass({
     if (!sig.signs()) {
       new FlashMessage({type: "error", content: localization.designview.viewerCantHaveAuthorisation});
     } else {
-      var ams = ["standard", "se_bankid", "sms_pin"];
-      var i = (_.indexOf(ams, sig.authenticationToSign()) + 1) || 0;
-      while (!this.isAllowedAuthenticationMethod(ams[i % ams.length])) {
-        i++;
-      }
-
-      var newAuthToView = ams[i % ams.length];
-      if (sig.authenticationToSign() == newAuthToView && newAuthToView == "standard") {
+      var superthis = this;
+      var ams = ["standard", "se_bankid", "no_bankid", "sms_pin"]
+                .filter(function (am) {
+                   return superthis.isAllowedAuthenticationMethod(am);
+                 });
+      if (ams.length <= 1) {
+        // if no auth methods are enabled, tell customer, that they can purchase them
         this.refs.blockingModal.openContactUsModal();
       } else {
-        sig.setAuthenticationToSign(newAuthToView);
+        ams = ams.filter(function (am) {
+            return sig.authenticationMethodsCanMix(sig.authenticationToView(), am);
+         });
+        // newIndex will be 0 ("standard") if the selected method is not enabled anymore
+        var newIndex = _.indexOf(ams, sig.authenticationToSign()) + 1;
+        // the new auth can stay the same ("standard"), if the other methods are not compatible
+        // with auth to view
+        sig.setAuthenticationToSign(ams[newIndex % ams.length]);
       }
-
     }
 
   },
@@ -44,6 +51,8 @@ module.exports = React.createClass({
       return "design-view-action-participant-icon-auth-to-sign-icon-noauth";
     } else if (sig.seBankIDAuthenticationToSign()) {
       return "design-view-action-participant-icon-auth-to-sign-icon-se-bankid";
+    } else if (sig.noBankIDAuthenticationToSign()) {
+      return "design-view-action-participant-icon-auth-to-sign-icon-no-bankid";
     } else if (sig.smsPinAuthenticationToSign()) {
       return "design-view-action-participant-icon-auth-to-sign-icon-sms-pin";
     }
@@ -62,6 +71,10 @@ module.exports = React.createClass({
     } else if (authMethod == "se_bankid") {
       title.push(
         localization.designview.addParties.authenticationToSignSEBankID
+      );
+    } else if (authMethod == "no_bankid") {
+      title.push(
+        localization.designview.addParties.authenticationToSignNOBankID
       );
     } else if (authMethod == "sms_pin") {
       title.push(

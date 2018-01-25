@@ -10,6 +10,7 @@ import qualified Data.Text as T
 import Amazon.Config
 import Database.Redis.Configuration
 import EID.CGI.GRP.Config
+import EID.Nets.Config
 import GuardTime (GuardTimeConf(..))
 import HostClock.System (defaultNtpServers)
 import KontraPrelude
@@ -48,6 +49,7 @@ data CronConf = CronConf {
   , cronConsumerExtendingMaxJobs :: !Int
   , cronConsumerAPICallbackMaxJobs :: !Int
   , cronConsumerAmazonMaxJobs :: !Int
+  , cronNetsSignConfig :: Maybe NetsSignConfig
   } deriving (Eq, Show)
 
 unjsonCronConf :: UnjsonDef CronConf
@@ -125,6 +127,9 @@ unjsonCronConf = objectOf $ pure CronConf
   <*> field "consumer_amazon_max_jobs"
       cronConsumerAmazonMaxJobs
       "Maximum number of jobs running the Amazon Document Upload Consumer"
+  <*> fieldOpt "nets_sign"
+      cronNetsSignConfig
+      "Configuration of Nets for ESigning"
 
 instance Unjson CronConf where
   unjsonDef = unjsonCronConf
@@ -154,4 +159,5 @@ instance Default CronConf where
     , cronConsumerExtendingMaxJobs = 1
     , cronConsumerAPICallbackMaxJobs = 32
     , cronConsumerAmazonMaxJobs = 2
+    , cronNetsSignConfig = Nothing
     }

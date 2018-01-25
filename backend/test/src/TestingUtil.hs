@@ -204,6 +204,7 @@ instance Arbitrary FeatureFlags where
     j <- arbitrary
     k <- arbitrary
     l <- arbitrary
+    m <- arbitrary
     return $ FeatureFlags {
         ffCanUseTemplates = a
       , ffCanUseBranding  = b
@@ -214,9 +215,10 @@ instance Arbitrary FeatureFlags where
       , ffCanUseSMSConfirmations = g
       , ffCanUseDKAuthenticationToView = h
       , ffCanUseNOAuthenticationToView = i
-      , ffCanUseSEAuthenticationToView = j
-      , ffCanUseSEAuthenticationToSign = k
-      , ffCanUseSMSPinAuthenticationToSign = l
+      , ffCanUseNOAuthenticationToSign = j
+      , ffCanUseSEAuthenticationToView = k
+      , ffCanUseSEAuthenticationToSign = l
+      , ffCanUseSMSPinAuthenticationToSign = m
       }
 
 instance Arbitrary UTCTime where
@@ -481,10 +483,10 @@ instance Arbitrary SignatoryTextField where
     }
 
 instance Arbitrary AuthenticationToSignMethod where
-  arbitrary = elements [StandardAuthenticationToSign, SEBankIDAuthenticationToSign]
+  arbitrary = elements [StandardAuthenticationToSign, SEBankIDAuthenticationToSign, NOBankIDAuthenticationToSign]
 
 instance Arbitrary AuthenticationToViewMethod where
-  arbitrary = elements [StandardAuthenticationToView, SEBankIDAuthenticationToView]
+  arbitrary = elements [StandardAuthenticationToView, SEBankIDAuthenticationToView, NOBankIDAuthenticationToView, DKNemIDAuthenticationToView]
 
 instance Arbitrary DeliveryMethod where
   arbitrary = elements [EmailDelivery, PadDelivery]

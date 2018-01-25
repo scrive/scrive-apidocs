@@ -46,6 +46,7 @@ module.exports = React.createClass({
         canUseSMSConfirmations: subscription.canUseSMSConfirmations(),
         canUseDKAuthenticationToView: subscription.canUseDKAuthenticationToView(),
         canUseNOAuthenticationToView: subscription.canUseNOAuthenticationToView(),
+        canUseNOAuthenticationToSign: subscription.canUseNOAuthenticationToSign(),
         canUseSEAuthenticationToView: subscription.canUseSEAuthenticationToView(),
         canUseSEAuthenticationToSign: subscription.canUseSEAuthenticationToSign(),
         canUseSMSPinAuthenticationToSign: subscription.canUseSMSPinAuthenticationToSign()
@@ -64,6 +65,7 @@ module.exports = React.createClass({
           canUseSMSConfirmations : this.state.canUseSMSConfirmations,
           canUseDKAuthenticationToView : this.state.canUseDKAuthenticationToView,
           canUseNOAuthenticationToView : this.state.canUseNOAuthenticationToView,
+          canUseNOAuthenticationToSign : this.state.canUseNOAuthenticationToSign,
           canUseSEAuthenticationToView : this.state.canUseSEAuthenticationToView,
           canUseSEAuthenticationToSign : this.state.canUseSEAuthenticationToSign,
           canUseSMSPinAuthenticationToSign : this.state.canUseSMSPinAuthenticationToSign
@@ -167,6 +169,7 @@ module.exports = React.createClass({
               {this.renderTROptionSeparator("eID to view and sign")}
               {this.renderTRForOptionWithCheckbox("Can use DK authorization to view","canUseDKAuthenticationToView")}
               {this.renderTRForOptionWithCheckbox("Can use NO authorization to view","canUseNOAuthenticationToView")}
+              {this.renderTRForOptionWithCheckbox("Can use NO authorization to sign","canUseNOAuthenticationToSign")}
               {this.renderTRForOptionWithCheckbox("Can use SE authorization to view","canUseSEAuthenticationToView")}
               {this.renderTRForOptionWithCheckbox("Can use SE authorization to sign","canUseSEAuthenticationToSign")}
               <tr>

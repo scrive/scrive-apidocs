@@ -181,7 +181,7 @@ var Field = exports.Field = Backbone.Model.extend({
         } else if (this.isEmail()) {
             return new EmailValidation().validateData(this.value());
         }
-        if (this.isSSN() && (this.signatory().noBankIDAuthenticationToView())) {
+        if (this.isSSN() && (this.signatory().noBankIDAuthenticationToSign() || this.signatory().noBankIDAuthenticationToView())) {
             return new SSNForNOBankIDValidation().validateData(this.value());
         }
         if (this.isSSN() && (this.signatory().seBankIDAuthenticationToSign() || this.signatory().seBankIDAuthenticationToView())) {
@@ -279,6 +279,9 @@ var Field = exports.Field = Backbone.Model.extend({
         && signatory.ableToSign()
         && (!signatory.seBankIDAuthenticationToSign())
         && (!signatory.seBankIDAuthenticationToView())
+        && (!signatory.noBankIDAuthenticationToView())
+        && (!signatory.noBankIDAuthenticationToSign())
+        && (!signatory.dkNemIDAuthenticationToView())
         && (!signatory.hasPlacedSignatures())
         && field.isObligatory()
         && (field.isText() || field.isCheckbox());
@@ -323,7 +326,7 @@ var Field = exports.Field = Backbone.Model.extend({
     validateSSN: function() {
       if (this.signatory().seBankIDAuthenticationToSign() || this.signatory().seBankIDAuthenticationToView()) {
         return new EmptyValidation().or(new SSNForSEBankIDValidation());
-      } else if (this.signatory().noBankIDAuthenticationToView()) {
+      } else if (this.signatory().noBankIDAuthenticationToSign() || this.signatory().noBankIDAuthenticationToView()) {
         return new EmptyValidation().or(new SSNForNOBankIDValidation());
       } else if (this.signatory().dkNemIDAuthenticationToView()) {
         return new EmptyValidation().or(new SSNForDKNemIDValidation());
@@ -411,7 +414,7 @@ var Field = exports.Field = Backbone.Model.extend({
     },
     isCustom: function() {
         return this.type() == "text";
-    },      
+    },
     isText : function() {
         return this.isStandard() || this.isCustom();
     },
@@ -731,6 +734,3 @@ var Field = exports.Field = Backbone.Model.extend({
       return this.set("custom_validation", newValue);
     }
 });
-
-
-

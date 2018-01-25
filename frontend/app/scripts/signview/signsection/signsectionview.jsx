@@ -13,7 +13,9 @@ var SignProcess = require("./signprocessview");
 var SignPin = require("./signpin");
 var SignInputPin = require("./signinputpinview");
 var SignEID = require("./signeidview");
+var SignNetsEID = require("./signeidnetsview");
 var SignEIDProcess = require("./signeidprocessview");
+var SignEIDNetsProcess = require("./signeidnetsprocessview");
 var ErrorModal = require("../errormodal");
 var ReloadManager = require("../../../js/reloadmanager.js").ReloadManager;
 var $ = require("jquery");
@@ -85,6 +87,7 @@ var Task = require("../navigation/task");
       var signatory = document.currentSignatory();
       var hasPinAuth = signatory.smsPinAuthenticationToSign();
       var hasEIDAuth = signatory.seBankIDAuthenticationToSign();
+      var hasEIDNets = signatory.noBankIDAuthenticationToSign();
 
       if (hasPinAuth) {
         return "pin";
@@ -92,6 +95,10 @@ var Task = require("../navigation/task");
 
       if (hasEIDAuth) {
         return "eid";
+      }
+
+      if (hasEIDNets) {
+        return "eid-nets";
       }
 
       if (signatory.hasPlacedObligatorySignatures()) {
@@ -104,7 +111,7 @@ var Task = require("../navigation/task");
     isValidStep: function (step) {
       var steps = [
         "sign", "finish", "signing", "process", "eid", "eid-process", "pin",
-        "input-pin", "reject"
+        "input-pin", "reject", "eid-nets", "eid-nets-process"
       ];
 
       var valid = steps.indexOf(step) > -1;
@@ -166,7 +173,7 @@ var Task = require("../navigation/task");
 
     shouldHaveOverlay: function (step) {
       step = step || this.state.step;
-      var noOverlayStep = ["sign", "finish", "pin", "eid"];
+      var noOverlayStep = ["sign", "finish", "pin", "eid", "eid-nets"];
       return !(noOverlayStep.indexOf(step) > -1);
     },
 
@@ -268,6 +275,72 @@ var Task = require("../navigation/task");
       var signatory = document.currentSignatory();
        document.cancelSigning(
           function () { self.setStep("eid"); },
+          function (xhr) { new ErrorModal(xhr); }
+        ).send();
+    },
+    handleSignNets: function (netsSigning) {
+      var self = this;
+      var model = self.props.model;
+      var document = self.props.model.document();
+      var signatory = document.currentSignatory();
+
+      if (!self.canSignDocument()) {
+        return this.context.blinkArrow();
+      }
+
+      var errorCallback = function (xhr) {
+        if (xhr.status == 403) {
+          ReloadManager.stopBlocking();
+          ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
+        } else {
+          ReloadManager.stopBlocking();
+          new ErrorModal(xhr);
+        }
+      };
+
+      document.checksign(function () {
+        new FlashMessagesCleaner();
+        var timeout = window.SIGN_TIMEOUT || 0;
+        setTimeout(function () {
+          document.sign(errorCallback, function (newDocument, oldDocument) {
+            self.handleWaitingForNets(netsSigning);
+          }, {}).send();
+        }, timeout);
+      }, errorCallback, {}).send();
+    },
+
+    handleWaitingForNets: function (netsSigning) {
+      var self = this;
+      var model = self.props.model;
+      var document = self.props.model.document();
+      var checkSigning = function () {
+        document.checkingSigning(
+          function () { self.handleAfterSignRedirectOrReload(); },
+          function (s) {
+            netsSigning.setStatus(s);
+            setTimeout(checkSigning, 1000);
+          },
+          function (s) {
+            netsSigning.setStatus(s);
+            netsSigning.triggerFail();
+            self.handleFinishAfterNetsFailed();
+          }
+        ).send();
+       };
+      checkSigning();
+    },
+    handleFinishAfterNetsFailed: function () {
+      if (!this.isOnStep("eid-nets")) {
+        this.setStep("eid-nets");
+      }
+    },
+    handleCancelNets: function () {
+      var self = this;
+      var model = self.props.model;
+      var document = self.props.model.document();
+      var signatory = document.currentSignatory();
+       document.cancelSigning(
+          function () { self.setStep("eid-nets"); },
           function (xhr) { new ErrorModal(xhr); }
         ).send();
     },
@@ -397,6 +470,19 @@ var Task = require("../navigation/task");
       });
     },
 
+    handleStartNets: function (thisDevice) {
+      var self = this;
+      var model = self.props.model;
+
+      if (!self.canSignDocument()) {
+        return this.context.blinkArrow();
+      }
+
+      self.setState({eidThisDevice: thisDevice}, function () {
+        self.setStep("eid-nets-process");
+      });
+    },
+
     handleNext: function () {
       this.setStep("signing");
     },
@@ -481,6 +567,32 @@ var Task = require("../navigation/task");
               thisDevice={this.state.eidThisDevice}
               onBack={this.handleCancelSwedishBankID}
               onInitiated={function (bankIDSigning) { self.handleSignSwedishEID(bankIDSigning); }}
+            />
+          }
+          {/* if */ this.isOnStep("eid-nets") &&
+            <SignNetsEID
+              model={this.props.model}
+              fieldSSN={ssnField}
+              fieldPhone={phoneField}
+              name={sig.name()}
+              askForSSN={this.state.askForSSN}
+              canSign={this.canSignDocument()}
+              ssn={sig.personalnumber()}
+              onReject={this.handleSetStep("reject")}
+              onSign={ function () {
+                  doc.takeSigningScreenshot(function () {
+                    self.handleStartNets();
+                  }, {});
+                }
+              }
+            />
+          }
+          {/* if */ this.isOnStep("eid-nets-process") &&
+            <SignEIDNetsProcess
+              ssn={sig.personalnumber()}
+              signatory={sig}
+              onBack={this.handleCancelNets}
+              onInitiated={function (netsSigning) { self.handleSignNets(netsSigning); }}
             />
           }
           {/* if */ this.isOnStep("pin") &&

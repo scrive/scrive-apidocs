@@ -87,13 +87,25 @@ ChangeAuthenticationToViewMethodSEBankIDToDKNemIDEvidenceLog = The user <span cl
 ###
 ChangeAuthenticationToViewMethodNOBankIDToDKNemIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Norwegian BankID” to “Danish NemID”.
 ###
+ChangeAuthenticationToSignMethodNOBankIDToStandardEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Norwegian BankID” to "no extra authentication”.
+###
+ChangeAuthenticationToSignMethodNOBankIDToSEBankIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Norwegian BankID” to “PIN by SMS”.
+###
+ChangeAuthenticationToSignMethodNOBankIDToSMSEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Norwegian BankID” to “Swedish BankID”.
+###
+ChangeAuthenticationToSignMethodStandardToNOBankIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “no extra authentication” to “Norwegian BankID”.
+###
 ChangeAuthenticationToSignMethodStandardToSEBankIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “no extra authentication” to “Swedish BankID”.
 ###
 ChangeAuthenticationToSignMethodStandardToSMSEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “no extra authentication” to “PIN by SMS”.
 ###
+ChangeAuthenticationToSignMethodSEBankIDToNOBankIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Swedish BankID” to “Norwegian BankID”.
+###
 ChangeAuthenticationToSignMethodSEBankIDToStandardEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Swedish BankID” to “no extra authentication”.
 ###
 ChangeAuthenticationToSignMethodSEBankIDToSMSEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Swedish BankID” to “PIN by SMS”.
+###
+ChangeAuthenticationToSignMethodSMSToNOBankIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “PIN by SMS” to "Norwegian BankID”.
 ###
 ChangeAuthenticationToSignMethodSMSToStandardEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “PIN by SMS” to “no extra authentication”.
 ###
@@ -435,9 +447,17 @@ $if(sms_pin)$
       $_SignDocumentEvidenceTextSimpleNotArchiveSMSPin()$
 $elseif(eleg)$
       $if(eid_signatory_name)$
-        $_SignDocumentEvidenceTextSimpleNotArchiveElegWithName()$
+          $if(eid_provider_is_se_bankid)$
+              $_SignDocumentEvidenceTextSimpleNotArchiveElegWithName()$
+          $else$
+              $_SignDocumentEvidenceTextSimpleNotArchiveNOBankIDWithName()$
+          $endif$
       $else$
-        $_SignDocumentEvidenceTextSimpleNotArchiveEleg()$
+          $if(eid_provider_is_se_bankid)$
+              $_SignDocumentEvidenceTextSimpleNotArchiveEleg()$
+          $else$
+              $_SignDocumentEvidenceTextSimpleNotArchiveNOBankID()$
+          $endif$
       $endif$
 $else$
       $_SignDocumentEvidenceTextSimpleNotArchiveStandard()$
@@ -516,13 +536,28 @@ elegVerificationSign=
 <p>The text signed in the $providerType$ client was:</p>
 <pre style='white-space:normal'>$signed_text$</pre>
 <br/>
+$if(provider_sebankid)$
 <p>Data returned from $provider()$:
   <br/>Name: $signatory_name$
   <br/>ID number: $personalNumber(value=signatory_personal_number)$
 </p>
+$endif$
+$if(provider_nobankid)$
+<p>Transaction to $provider()$ was initiated with:
+  <br/>ID number: $personalNumber(value=signatory_personal_number)$
+</p>
+<br/>
+<p>Data returned from $provider()$:
+  <br/>Name: $signatory_name$
+</p>
+$endif$
 <br/>
 <p>Signature: <div>$signature$</div></p>
-<p>Online Certificate Status Protocol (OCSP) Response: <div>$ocsp_response$</div></p>
+$if(provider_sebankid)$
+<p>Online Certificate Status Protocol (OCSP) Response:
+  <div>$ocsp_response$</div>
+</p>
+$endif$
 ###
 invitationCustomMessageTextIfThereIsOne=
 $if(text)$$if(!mobile)$The invitation contained the following message: <BR/> <i>$text$</i>$endif$$endif$

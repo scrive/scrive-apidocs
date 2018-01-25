@@ -66,6 +66,8 @@ data AppConf = AppConf {
   , isAPILogEnabled :: Bool
     -- ^ If true, (limited amount of) API calls are logged in DB and available
     --   for user to inspect.
+  , netsSignConfig     :: Maybe NetsSignConfig
+    -- ^ Configuration of Nets for ESigning (BankID, NemID, ...)
   } deriving (Eq, Show)
 
 unjsonAppConf :: UnjsonDef AppConf
@@ -156,13 +158,16 @@ unjsonAppConf = objectOf $ pure AppConf
       "Configuration of salesforce"
   <*> fieldOpt "nets"
       netsConfig
-      "Configuration of Nets - NO BankID provider"
+      "Configuration of Nets - NO BankID, DN NemID provider"
   <*> fieldOpt "monitoring"
       monitoringConfig
       "Configuration of the ekg-statsd-based monitoring."
   <*> fieldDef "api_call_log_enabled" False
       isAPILogEnabled
       "Enable API Call logging in DB."
+  <*> fieldOpt "nets_sign"
+      netsSignConfig
+      "Configuration of Nets for ESigning"
 
 instance Unjson AppConf where
   unjsonDef = unjsonAppConf
@@ -196,4 +201,5 @@ instance Default AppConf where
     , netsConfig         = Nothing
     , monitoringConfig   = Nothing
     , isAPILogEnabled    = False
+    , netsSignConfig     = Nothing
     }

@@ -38,6 +38,12 @@
                 , "cert_file"    : "certs/steria3.pem"
                 , "service_id"   : "logtest004"
                 , "display_name" : "Funktionstjänster Test" },
+    "_nets_sign": { "user_cert_file"    : "certs/nets_test_user_cert.pem"
+                  , "user_privkey_file" : "certs/nets_test_user_privkey.pem"
+                  , "sign_xml_url"      : "https://order.sign-preprod1.nets.eu/tsos/XmlGw/tsos/XmlGw"
+                  , "merchant_id"       : "1486"
+                  , "sign_url_base"     : "https://www.sign-preprod1.nets.eu/sign/"
+                  },
     "admins": [],
     "sales": [],
     "initial_users": [],

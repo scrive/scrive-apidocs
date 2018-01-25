@@ -2,6 +2,7 @@ module EID.CGI.GRP.Control (
     grpRoutes
   , checkCGISignStatus
   , CGISignStatus(..)
+  , guardThatPersonalNumberMatches
   ) where
 
 import Control.Monad.Catch
@@ -40,7 +41,8 @@ import KontraLink
 import KontraPrelude
 import Log.Identifier
 import Network.SOAP.Call
-import Network.SOAP.Transport.Curl
+import Network.SOAP.Transport.Curl (curlTransport)
+import Network.XMLCurl (CurlAuth(..), SSL(..), mkCertErrorHandler, mkDebugFunction)
 import Routing
 import Session.Cookies
 import Session.Data
@@ -79,7 +81,7 @@ handleAuthRequest did slid = do
   guardThatPersonalNumberMatches slid pn doc
   certErrorHandler <- mkCertErrorHandler
   debugFunction <- mkDebugFunction
-  let transport = curlTransport SecureSSL (CurlAuthCert cgCertFile) cgGateway return certErrorHandler debugFunction
+  let transport = curlTransport SecureSSL (CurlAuthCert cgCertFile) cgGateway certErrorHandler debugFunction
       req = AuthRequest {
         arqPolicy = fromMaybe cgServiceID mcompany_service_id
       , arqDisplayName = fromMaybe cgDisplayName mcompany_display_name
@@ -120,7 +122,7 @@ handleSignRequest did slid = do
   guardThatPersonalNumberMatches slid pn doc
   certErrorHandler <- mkCertErrorHandler
   debugFunction <- mkDebugFunction
-  let transport = curlTransport SecureSSL (CurlAuthCert cgCertFile) cgGateway return certErrorHandler debugFunction
+  let transport = curlTransport SecureSSL (CurlAuthCert cgCertFile) cgGateway certErrorHandler debugFunction
       req = SignRequest {
         srqPolicy = fromMaybe cgServiceID mcompany_service_id
       , srqDisplayName = fromMaybe cgDisplayName mcompany_display_name
@@ -189,7 +191,7 @@ checkCGISignStatus CgiGrpConfig{..}  did slid = do
               logInfo_ "Transaction fetch"
               certErrorHandler <- mkCertErrorHandler
               debugFunction <- mkDebugFunction
-              let transport = curlTransport SecureSSL (CurlAuthCert cgCertFile) cgGateway return certErrorHandler debugFunction
+              let transport = curlTransport SecureSSL (CurlAuthCert cgCertFile) cgGateway certErrorHandler debugFunction
                   req = CollectRequest {
                     crqPolicy = fromMaybe cgServiceID mcompany_service_id
                   , crqTransactionID = cgiTransactionID cgiTransaction
@@ -255,7 +257,7 @@ checkCGIAuthStatus did slid = do
     Just cgiTransaction -> do
       certErrorHandler <- mkCertErrorHandler
       debugFunction <- mkDebugFunction
-      let transport = curlTransport SecureSSL (CurlAuthCert cgCertFile) cgGateway return certErrorHandler debugFunction
+      let transport = curlTransport SecureSSL (CurlAuthCert cgCertFile) cgGateway certErrorHandler debugFunction
           req = CollectRequest {
             crqPolicy = fromMaybe cgServiceID mcompany_service_id
           , crqTransactionID = cgiTransactionID cgiTransaction

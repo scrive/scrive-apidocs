@@ -55,8 +55,9 @@ runTestCronUntilIdle ctx = do
         , ( "document signing"
           , runConsumerWithIdleSignal . modTimeout
             $ documentSigning (cronAmazonConfig cronConf) (cronGuardTimeConf cronConf)
-                (cronCgiGrpConfig cronConf) (get ctxglobaltemplates ctx) (get ctxfilecache ctx) (get ctxmrediscache ctx)
-                pool (cronMailNoreplyAddress cronConf) (cronConsumerSigningMaxJobs cronConf)
+                (cronCgiGrpConfig cronConf) (cronNetsSignConfig cronConf) (get ctxglobaltemplates ctx)
+                (get ctxfilecache ctx) (get ctxmrediscache ctx) pool (cronMailNoreplyAddress cronConf)
+                (cronConsumerSigningMaxJobs cronConf)
           )
         , ( "document extending"
           , runConsumerWithIdleSignal . modTimeout

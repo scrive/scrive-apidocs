@@ -421,12 +421,14 @@ apiCallV1Ready did = logDocument did . api $ do
     signatoryHasValidAuthSettings sl = authToSignIsValid sl
     authToSignIsValid sl = getPersonalNumber sl == "" || case signatorylinkauthenticationtosignmethod sl of
       SEBankIDAuthenticationToSign -> isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl
-      _ -> True
+      NOBankIDAuthenticationToSign -> False -- Norwegian Nets eSigning is not supported in API v1
+      StandardAuthenticationToSign -> True
+      SMSPinAuthenticationToSign   -> True
     signatoryHasValidSSNForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of
       SEBankIDAuthenticationToView -> isGood $ asValidSwedishSSN $ getPersonalNumber sl
       NOBankIDAuthenticationToView -> isGood $ asValidNorwegianSSN $ getPersonalNumber sl
       DKNemIDAuthenticationToView  -> isGood $ asValidDanishSSN $ getPersonalNumber sl
-      _ -> True
+      StandardAuthenticationToView -> True
     signatoryHasValidPhoneForIdentifyToView sl =
       let resultValidPhone = asValidPhoneForNorwegianBankID $ getMobile sl in
       if (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView)
@@ -483,7 +485,6 @@ apiCallV1CheckSign did slid = logDocumentAndSignatory did slid . api $ do
       unlessM (isAuthor <$> fromJust . getSigLinkFor slid <$> theDocument) $ do -- Author does not need to accept attachments
         (throwM . SomeDBExtraException $ badInput $ "Some required attachments where not accepted")
 
-
     case authorization of
        StandardAuthenticationToSign -> return $ Right $ Ok () -- If we have a document with standard auth, it can be always signed if its not closed and signed
        SMSPinAuthenticationToSign -> do
@@ -496,6 +497,9 @@ apiCallV1CheckSign did slid = logDocumentAndSignatory did slid . api $ do
          Nothing -> do
            logInfo_ "No e-signature found for a signatory"
            return . Left . Failed $ J.runJSONGen $ J.value "noSignature" True
+       NOBankIDAuthenticationToSign -> do
+         logAttention_ "Norwegian BankID signing attempted in V1 API"
+         (Left . Failed) <$> (J.runJSONGenT $ J.value "noBankidNotSupported" True)
 
 apiCallV1Sign :: Kontrakcja m
              => DocumentID      -- ^ The DocumentID of the document to sign
@@ -552,6 +556,10 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
         Nothing -> do
           logInfo_ "No e-signature found for a signatory"
           return . Left . Failed $ J.runJSONGen $ J.value "noSignature" True
+      NOBankIDAuthenticationToSign -> do
+        logAttention_ "Norwegian BankID signing attempted in V1 API"
+        (Left . Failed) <$> (J.runJSONGenT $ J.value "noBankidNotSupported" True)
+
    )
     `catchDBExtraException` (\(DocumentStatusShouldBe _ _ i) -> throwM . SomeDBExtraException $ conflictError $ "Document not pending but " ++ show i)
     `catchDBExtraException` (\(SignatoryHasAlreadySigned {}) -> throwM . SomeDBExtraException $ conflictError $ "Signatory has already signed")
@@ -577,6 +585,9 @@ checkAuthenticationToSignMethodAndValue slid = do
                                 then return ()
                                 else throwM . SomeDBExtraException $
                                     conflictError "`authentication_value` for personal number does not match"
+                         (True, NOBankIDAuthenticationToSign)   ->
+                             throwM . SomeDBExtraException $
+                               conflictError "Norwegian BankID signing not supported in API V1"
                          (True, SMSPinAuthenticationToSign) ->
                              if (authValue == getMobile siglink || null (getMobile siglink))
                                 then return ()
@@ -767,6 +778,9 @@ apiCallV1ChangeAuthenticationToSign did slid = logDocumentAndSignatory did slid 
         Just StandardAuthenticationToSign -> return (StandardAuthenticationToSign, Nothing, Nothing)
         Just SEBankIDAuthenticationToSign -> return (SEBankIDAuthenticationToSign, authentication_value, Nothing)
         Just SMSPinAuthenticationToSign   -> return (SMSPinAuthenticationToSign, Nothing, authentication_value)
+        Just NOBankIDAuthenticationToSign -> throwM . SomeDBExtraException $ badInput
+          "`authentication_type` was not valid. Supported values are: `standard`, `eleg`, `sms_pin`."
+
       let authtoviewmethod = signatorylinkauthenticationtoviewmethod sl
       -- Check conditions for different authentication to sign methods
       guardAuthenticationMethodsCanMix authtoviewmethod authtosignmethod
@@ -800,6 +814,9 @@ apiCallV1ChangeAuthenticationToSign did slid = logDocumentAndSignatory did slid 
                 Bad -> throwM . SomeDBExtraException $ badInput "Phone number needs to be a valid Norwegian number as Norwegian BankID is set as authentication to view"
                 Empty -> return ()
                 Good _ -> return ()
+        NOBankIDAuthenticationToSign ->
+          throwM . SomeDBExtraException $ badInput "Norwegian BankID signing is not supported in API V1"
+
       -- Change authentication to sign method and return Document JSON
       dbUpdate $ ChangeAuthenticationToSignMethod slid authtosignmethod mSSN mPhone actor
       Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)

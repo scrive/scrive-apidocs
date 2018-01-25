@@ -237,6 +237,7 @@ simplyfiedEventText target mactor d sim dee = do
                 LegacyNordeaSignature_{} -> Nothing
                 LegacyMobileBankIDSignature_{} -> Nothing
                 CGISEBankIDSignature_ CGISEBankIDSignature{..} -> Just cgisebidsSignatoryName
+                NetsNOBankIDSignature_ NetsNOBankIDSignature{..} -> Just netsnoSignatoryName
           when (evType dee == Current AuthenticatedToViewEvidence) $ do
             dbQuery (GetEAuthenticationWithoutSession slinkid) >>= \case
               Nothing -> return ()

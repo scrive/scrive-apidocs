@@ -17,6 +17,7 @@ module InputValidation
     , asValidName
     , asValidCompanyName
     , asValidCompanyNumber
+    , asValidNOBankIdPersonalNumber
     , asValidSEBankIdPersonalNumber
     , asValidAddress
     , asValidPhone
@@ -408,6 +409,20 @@ asValidSEBankIdPersonalNumber input =
     >>= checkOnly [isDigit]
     >>= (\xs -> if
              | length xs `elem` [10, 12] -> return xs
+             | otherwise -> Bad)
+
+{- |
+    Creates a clean and validated personal number.
+    White list: Digits, hyphens (to be stripped)
+    Size: 11
+-}
+asValidNOBankIdPersonalNumber :: String -> Result String
+asValidNOBankIdPersonalNumber input =
+    stripAllWhitespace input
+    >>= filterOutCharacters "-+"
+    >>= checkOnly [isDigit]
+    >>= (\xs -> if
+             | length xs == 11 -> return xs
              | otherwise -> Bad)
 
 {- |

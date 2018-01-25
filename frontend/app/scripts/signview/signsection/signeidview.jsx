@@ -116,16 +116,16 @@ var classNames = require("classnames");
               <span className="bankid-logo mobile-bankid-logo" />
               <span className="bankid-logo regular-bankid-logo" />
             </div>
-            {localization.docsignview.eleg.bankid.signConfirmationTitle}
+            {localization.docsignview.eleg.bankid.signSEConfirmationTitle}
           </h1>
           {/* if */ name !== "" &&
             <HtmlTextWithSubstitution
-              secureText={localization.docsignview.eleg.bankid.signConfirmationText}
+              secureText={"<p>" + localization.docsignview.eleg.bankid.signSEConfirmationText + "</p>"}
               subs={{".put-signatory-name-here": name}}
             />
           }
           {/* else */ name === "" &&
-            <p>{localization.docsignview.eleg.bankid.signConfirmationTextNoName}</p>
+            <p>{localization.docsignview.eleg.bankid.signSEConfirmationTextNoName}</p>
           }
           {/* if */ this.props.askForSSN &&
             <dl className="ssn-list">
@@ -150,12 +150,12 @@ var classNames = require("classnames");
                 </span>
               </p>
           }
-          <Checkbox
-            className="large-checkbox"
-            label={localization.openBankId}
-            checked={this.state.thisDevice}
-            onChange={function () { self.setState({thisDevice: !self.state.thisDevice}); }}
-          />
+            <Checkbox
+              className="large-checkbox"
+              label={localization.openBankId}
+              checked={this.state.thisDevice}
+              onChange={function () { self.setState({thisDevice: !self.state.thisDevice}); }}
+            />
           <Button
             ref="signButton"
             type="action"

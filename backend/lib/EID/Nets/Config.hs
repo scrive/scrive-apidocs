@@ -31,3 +31,30 @@ instance Unjson NetsConfig where
     <*> field "trustedDomain"
         netsTrustedDomain
         "Trusted domain registed for this nets merchant"
+
+
+data NetsSignConfig = NetsSignConfig {
+    netssignCertFile    :: FilePath
+  , netssignPrivKeyFile :: FilePath
+  , netssignAPIUrl      :: T.Text
+  , netssignMerchantID  :: T.Text
+  , netssignSignURLBase :: T.Text
+} deriving (Eq, Ord, Show)
+
+instance Unjson NetsSignConfig where
+  unjsonDef = objectOf $ NetsSignConfig
+    <$> field "user_cert_file"
+        netssignCertFile
+        "Path to the user certificate file"
+    <*> field "user_privkey_file"
+        netssignPrivKeyFile
+        "Path to the user private key file"
+    <*> field "sign_xml_url"
+        netssignAPIUrl
+        "Url to Nets TrustSign interface"
+    <*> field "merchant_id"
+        netssignAPIUrl
+        "Nets merchant ID"
+    <*> field "sign_url_base"
+        netssignSignURLBase
+        "Nets signing URL base"

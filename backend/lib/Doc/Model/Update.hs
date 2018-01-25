@@ -726,6 +726,16 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
               sqlWhereEq "signatory_link_id" slid
               sqlWhereEq "type" PersonalNumberFT
           )
+        -- Make PersonalNumber non-obligatory if conditions are satisfied
+        (False, NOBankIDAuthenticationToSign) -> when
+          ( maybeFieldHasPlacements slSSNField
+            && (not $ authToViewNeedsPersonalNumber slAuthToView)
+          )
+          ( kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
+              sqlSet "obligatory" False
+              sqlWhereEq "signatory_link_id" slid
+              sqlWhereEq "type" PersonalNumberFT
+          )
         -- Make MobileNumber non-obligatory if conditions are satisfied
         (False, SMSPinAuthenticationToSign) -> when
           ( maybeFieldHasPlacements slMobileField
@@ -809,12 +819,20 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
            (StandardAuthenticationToSign, SEBankIDAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodStandardToSEBankIDEvidence
            (StandardAuthenticationToSign, SMSPinAuthenticationToSign)   -> insertEvidence ChangeAuthenticationToSignMethodStandardToSMSEvidence
            (StandardAuthenticationToSign, StandardAuthenticationToSign) -> return ()
+           (StandardAuthenticationToSign, NOBankIDAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodStandardToNOBankIDEvidence
            (SEBankIDAuthenticationToSign, StandardAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodSEBankIDToStandardEvidence
            (SEBankIDAuthenticationToSign, SMSPinAuthenticationToSign)   -> insertEvidence ChangeAuthenticationToSignMethodSEBankIDToSMSEvidence
            (SEBankIDAuthenticationToSign, SEBankIDAuthenticationToSign) -> return ()
+           (SEBankIDAuthenticationToSign, NOBankIDAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodSEBankIDToNOBankIDEvidence
            (SMSPinAuthenticationToSign,   StandardAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodSMSToStandardEvidence
            (SMSPinAuthenticationToSign,   SEBankIDAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodSMSToSEBankIDEvidence
            (SMSPinAuthenticationToSign,   SMSPinAuthenticationToSign)   -> return ()
+           (SMSPinAuthenticationToSign,   NOBankIDAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodSMSToNOBankIDEvidence
+           (NOBankIDAuthenticationToSign, StandardAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodNOBankIDToStandardEvidence
+           (NOBankIDAuthenticationToSign, SMSPinAuthenticationToSign)   -> insertEvidence ChangeAuthenticationToSignMethodNOBankIDToSMSEvidence
+           (NOBankIDAuthenticationToSign, SEBankIDAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodNOBankIDToSEBankIDEvidence
+           (NOBankIDAuthenticationToSign, NOBankIDAuthenticationToSign) -> return ()
+
 
 data PreparationToPending = PreparationToPending Actor TimeZoneName
 instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m PreparationToPending () where
@@ -1359,6 +1377,17 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpd
 data SignDocument = SignDocument SignatoryLinkID MagicHash (Maybe ESignature) (Maybe String) SignatoryScreenshots Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m, MonadTime m) => DBUpdate m SignDocument () where
   update (SignDocument slid mh mesig mpin screenshots actor) = do
+    let legacy_signature_error = $unexpectedError "signing with legacy signatures is not possible"
+        sqlWhereAuthSign = case (mesig, mpin) of
+          (Just (CGISEBankIDSignature_        _), _) -> sqlWhereSignatoryAuthenticationToSignMethodIs SEBankIDAuthenticationToSign
+          (Just (NetsNOBankIDSignature_       _), _) -> sqlWhereSignatoryAuthenticationToSignMethodIs NOBankIDAuthenticationToSign
+          (Just (LegacyBankIDSignature_       _), _) -> legacy_signature_error
+          (Just (LegacyTeliaSignature_        _), _) -> legacy_signature_error
+          (Just (LegacyNordeaSignature_       _), _) -> legacy_signature_error
+          (Just (LegacyMobileBankIDSignature_ _), _) -> legacy_signature_error
+          (_, Just _) -> sqlWhereSignatoryAuthenticationToSignMethodIs SMSPinAuthenticationToSign -- We should check pin here, but for now we do it in controler
+          (Nothing, Nothing) -> sqlWhereSignatoryAuthenticationToSignMethodIs StandardAuthenticationToSign
+
     updateDocumentWithID $ \docid -> do
       let ipnumber = fromMaybe noIP $ actorIP actor
           time     = actorTime actor
@@ -1373,15 +1402,11 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m, MonadTim
            sqlWhereDocumentStatusIs Pending
            sqlWhereSignatoryIsPartner
            sqlWhereSignatoryHasNotSigned
-           case (mesig, mpin) of
-             (Just _, _) -> sqlWhereSignatoryAuthenticationToSignMethodIs SEBankIDAuthenticationToSign
-             (_, Just _) -> sqlWhereSignatoryAuthenticationToSignMethodIs SMSPinAuthenticationToSign -- We should check pin here, but for now we do it in controler
-             (Nothing, Nothing) -> sqlWhereSignatoryAuthenticationToSignMethodIs StandardAuthenticationToSign
+           sqlWhereAuthSign
            sqlWhereSignatoryLinkMagicHashIs mh
       updateMTimeAndObjectVersion (actorTime actor)
     sl <- theDocumentID >>= \docid -> query $ GetSignatoryLinkByID docid slid Nothing
-    let legacy_signature_error = $unexpectedError "signing with legacy signatures is not possible"
-        signatureFields = case (mesig, mpin) of
+    let signatureFields = case (mesig, mpin) of
           (Just LegacyBankIDSignature_{}, _) -> legacy_signature_error
           (Just LegacyTeliaSignature_{}, _) -> legacy_signature_error
           (Just LegacyNordeaSignature_{}, _) -> legacy_signature_error
@@ -1395,6 +1420,13 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m, MonadTim
             F.value "provider_sebankid" True
             F.value "signature" $ B64.encode cgisebidsSignature
             F.value "ocsp_response" $ B64.encode cgisebidsOcspResponse
+          (Just (NetsNOBankIDSignature_ NetsNOBankIDSignature{..}), _) -> do
+            F.value "eleg" True
+            F.value "signatory_name" netsnoSignatoryName
+            F.value "signatory_personal_number" netsnoSignatoryPersonalNumber
+            F.value "signed_text" netsnoSignedText
+            F.value "provider_nobankid" True
+            F.value "signature" $ netsnoB64SDO
           (Nothing, Just _) -> do
             F.value "sms_pin" True
             F.value "phone" $ getMobile sl

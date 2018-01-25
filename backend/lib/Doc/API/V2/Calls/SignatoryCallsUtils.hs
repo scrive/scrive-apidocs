@@ -53,6 +53,12 @@ checkAuthenticationToSignMethodAndValue slid = do
             then return ()
             else apiError $
               requestParameterInvalid "authentication_value" "value for personal number does not match"
+        NOBankIDAuthenticationToSign -> do
+          authValue <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
+          if (authValue == getPersonalNumber siglink || null (getPersonalNumber siglink))
+            then return ()
+            else apiError $
+              requestParameterInvalid "authentication_value" "value for personal number does not match"
         SMSPinAuthenticationToSign -> do
           authValue <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
           let mobileEditableBySignatory = Just True == join (fieldEditableBySignatory <$> getFieldByIdentity MobileFI (signatoryfields siglink))

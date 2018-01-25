@@ -15,6 +15,8 @@ import Doc.Extending.Migrations
 import Doc.Migrations
 import Doc.Signing.Migrations
 import Doc.SMSPin.Migrations
+import EID.Nets.Migrations
+import EID.Signature.Migrations
 import FeatureFlags.Migrations
 import Mails.FromKontra.Migrations
 import Mails.Migrations
@@ -77,4 +79,8 @@ kontraMigrations = [
   , addPasswordAlgorithmVersionColumn
   , addPasswordAlgorithmUpgradeJob
   , addHidePnElogToSignatories
+  , documentSigningJobsAddSignatureProvider
+  , createNetsSignOrdersTable
+  , featureFlagsAddNOAuthToSign
+  , eidSignaturesAddProviderNetsNOBankID
   ]

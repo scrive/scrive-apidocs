@@ -250,9 +250,14 @@ Library
                  , EID.CGI.GRP.Data
                  , EID.CGI.GRP.Transaction.Model
                  , EID.CGI.GRP.Transaction.Tables
+                 , EID.Nets.Call
                  , EID.Nets.Config
                  , EID.Nets.Control
                  , EID.Nets.Data
+                 , EID.Nets.Migrations
+                 , EID.Nets.Model
+                 , EID.Nets.SignID
+                 , EID.Nets.Tables
                  , EID.Signature.Legacy
                  , EID.Signature.Model
                  , EID.Signature.Tables
@@ -319,6 +324,7 @@ Library
                  , Monitor.API
                  , Network.SOAP.Call
                  , Network.SOAP.Transport.Curl
+                 , Network.XMLCurl
                  , OAuth.Control
                  , OAuth.Model
                  , OAuth.Parse
@@ -365,6 +371,9 @@ Library
                  , Text.JSON.Orphans
                  , Text.XML.Content
                  , Text.XML.DirtyContent
+                 , Text.XML.Parser
+                 , Text.XML.Writer.Extended
+                 , Text.XML.XMLDSig
                  , TextSearchQuery
                  , Theme.Control
                  , Theme.Model
@@ -538,6 +547,7 @@ Library
                , unjson
                , unordered-containers
                , utf8-string
+               , uuid
                , vector
                , xml-conduit
                , xml-conduit-writer
@@ -756,6 +766,9 @@ Executable kontrakcja-migrate
                  Doc.Tokens.Tables
                  EID.Authentication.Tables
                  EID.CGI.GRP.Transaction.Tables
+                 EID.Nets.Migrations
+                 EID.Nets.Tables
+                 EID.Signature.Migrations
                  EID.Signature.Tables
                  EvidenceLog.Tables
                  FeatureFlags.Migrations
@@ -1246,6 +1259,9 @@ Test-suite kontrakcja-test
                  DumpEvidenceTexts
                  EID.Authentication.Tables
                  EID.CGI.GRP.Transaction.Tables
+                 EID.Nets.Migrations
+                 EID.Nets.Tables
+                 EID.Signature.Migrations
                  EID.Signature.Tables
                  ESignatureTest
                  EvidenceAttachmentsTest

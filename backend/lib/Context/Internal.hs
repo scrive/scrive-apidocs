@@ -51,6 +51,7 @@ data Context = Context
     , _ctxsalesforceconf      :: Maybe SalesforceConf
     , _ctxnetsconfig          :: Maybe NetsConfig
     , _ctxisapilogenabled     :: Bool
+    , _ctxnetssignconfig      :: Maybe NetsSignConfig
     }
 
 -- | anonymousContext changes given context into one that does not hold any user details.

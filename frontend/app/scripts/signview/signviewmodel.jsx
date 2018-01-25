@@ -194,7 +194,7 @@ var Track = require("../common/track");
       var signatory = this.document().currentSignatory();
       var field = signatory.personalnumberField();
       if (field != undefined && (!field.hasPlacements()) && field.obligatory()) {
-        if (signatory.noBankIDAuthenticationToView()) {
+        if (signatory.noBankIDAuthenticationToView() || signatory.noBankIDAuthenticationToSign()) {
           return !new SSNForNOBankIDValidation().validateData(field.value());
         } else if (signatory.seBankIDAuthenticationToView() || signatory.seBankIDAuthenticationToSign()) {
           return !new SSNForSEBankIDValidation().validateData(field.value());
@@ -212,7 +212,7 @@ var Track = require("../common/track");
       var document = this.document();
       var signatory = document.currentSignatory();
 
-      return this.askForSSN() && !signatory.seBankIDAuthenticationToSign();
+      return this.askForSSN() && !signatory.seBankIDAuthenticationToSign() && !signatory.noBankIDAuthenticationToSign();
     },
 
     askForPhone: function () {

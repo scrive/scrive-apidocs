@@ -605,7 +605,9 @@ var Document = exports.Document = Backbone.Model.extend({
           // the sign view.
           return false;
         }
-        if (this.author().seBankIDAuthenticationToSign() || this.author().seBankIDAuthenticationToView()) {
+        if (this.author().seBankIDAuthenticationToSign() || this.author().seBankIDAuthenticationToView()
+          ||this.author().noBankIDAuthenticationToSign() || this.author().noBankIDAuthenticationToView()
+          ||this.author().dkNemIDAuthenticationToView()) {
             // We don't support eleg authorization in design view
             return false;
         }
@@ -812,7 +814,9 @@ var Document = exports.Document = Backbone.Model.extend({
     },
     hasEleg: function() {
         return _.some(this.signatories(), function(s) {
-            return s.seBankIDAuthenticationToSign() ||  s.seBankIDAuthenticationToView();
+            return  (s.seBankIDAuthenticationToSign() || s.seBankIDAuthenticationToView()
+                   ||s.noBankIDAuthenticationToSign() || s.noBankIDAuthenticationToView()
+                   ||s.dkNemIDAuthenticationToView());
         });
     },
     hasEmail: function() {
@@ -877,4 +881,3 @@ var Document = exports.Document = Backbone.Model.extend({
       }
     }
 });
-

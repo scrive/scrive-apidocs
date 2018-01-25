@@ -1,11 +1,19 @@
-module EID.Nets.Control (netsRoutes) where
+module EID.Nets.Control (
+    netsRoutes
+  , checkNetsSignStatus
+  , NetsSignStatus(..)) where
 
 import Control.Monad
+import Control.Monad.Catch
+import Control.Monad.IO.Class
+import Control.Monad.Trans.Control
+import Data.Aeson ((.=), object)
 import Data.String.Utils (replace)
-import Happstack.Server hiding (dir)
+import Happstack.Server hiding (Expired, dir)
 import Happstack.StaticRouting
 import Log
 import Text.StringTemplates.Templates
+import qualified Data.Aeson as A
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.Text as T
@@ -15,13 +23,19 @@ import qualified Text.StringTemplates.Fields as F
 import AppView
 import Chargeable.Model
 import DB
+import Doc.DocInfo (isPending)
 import Doc.DocStateData
 import Doc.DocStateQuery
+import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.Model
-import EID.Authentication.Model
+import Doc.SignatoryLinkID
+import EID.CGI.GRP.Control (guardThatPersonalNumberMatches)
+import EID.Nets.Call
 import EID.Nets.Config
 import EID.Nets.Data
+import EID.Nets.Model
+import EID.Nets.SignID
 import EvidenceLog.Model
 import FlashMessage
 import Happstack.Fields
@@ -29,13 +43,22 @@ import InternalResponse
 import Kontra hiding (InternalError)
 import KontraLink
 import KontraPrelude
+import Log.Identifier
+import MinutesTime
 import Network.SOAP.Call
-import Network.SOAP.Transport.Curl
+import Network.SOAP.Transport.Curl (curlTransport)
+import Network.XMLCurl (CurlAuth(..), SSL(..), mkCertErrorHandler, mkDebugFunction)
 import Routing
+import Session.Data
+import Session.Model
+import Templates
 import User.Lang
 import Util.Actor
 import Util.HasSomeUserInfo
+import Util.SignatoryLinkUtils
 import Utils.HTTP
+import qualified EID.Authentication.Model as EID
+import qualified EID.Signature.Model as ESign
 
 netsRoutes :: Route (Kontra Response)
 netsRoutes = choice [
@@ -43,6 +66,11 @@ netsRoutes = choice [
     -- Bellow are error pages - names are based on nets parameters, not what they are
     , dir "status" . hGet  . toK0 $ handleNetsError
     , dir "start"  . hGet  . toK0 $ handleNetsError
+    -- Nets esigning pages
+    , dir "sign"       . hPost . toK2 $ handleSignRequest
+    , dir "sign_error" . hGet  . toK0 $ handleSignError
+    , dir "sign_exit"  . hGet  . toK0 $ handleSignExit
+    , dir "sign_abort"  . hGet  . toK0 $ handleSignAbort
   ]
 
 ----------------------------------------
@@ -72,12 +100,12 @@ decodeCertificate = either ($unexpectedError $ "invalid base64 of nets certifica
 attributeFromAssertion :: T.Text -> [(T.Text,T.Text)] -> T.Text
 attributeFromAssertion name = fromMaybe ($unexpectedError $ "missing field in assertion" <+> T.unpack name) . lookup name
 
-decodeProvider :: T.Text -> AuthenticationProvider
+decodeProvider :: T.Text -> EID.AuthenticationProvider
 decodeProvider s = case s of
-       "no_bankid"         -> NetsNOBankID
-       "no_bidmob"         -> NetsNOBankID
-       "dk_nemid_js"       -> NetsDKNemID
-       "dk_nemid-opensign" -> NetsDKNemID
+       "no_bankid"         -> EID.NetsNOBankID
+       "no_bidmob"         -> EID.NetsNOBankID
+       "dk_nemid_js"       -> EID.NetsDKNemID
+       "dk_nemid-opensign" -> EID.NetsDKNemID
        _ -> $unexpectedError $ "provider not supported"  <+> T.unpack s
 
 flashMessageUserHasIdentifiedWithDifferentSSN :: TemplatesMonad m => m FlashMessage
@@ -104,14 +132,14 @@ handleResolve = do
           certErrorHandler <- mkCertErrorHandler
           debugFunction <- mkDebugFunction
           let netsAuth =  CurlAuthBasic (netsMerchantIdentifier netsconf) (netsMerchantPassword netsconf)
-              transport = curlTransport SecureSSL netsAuth (T.unpack $ netsAssertionUrl netsconf) return certErrorHandler debugFunction
+              transport = curlTransport SecureSSL netsAuth (T.unpack $ netsAssertionUrl netsconf) certErrorHandler debugFunction
           res <- soapCall transport "" () (GetAssertionRequest {  assertionArtifact = T.pack art }) xpGetAssertionResponse
           if ("Success" `T.isInfixOf` assertionStatusCode res)
              then do
                let provider = decodeProvider $ attributeFromAssertion "IDPROVIDER" $ assertionAttributes res
                resolve <- case provider of
-                 NetsNOBankID -> return handleResolveNetsNOBankID
-                 NetsDKNemID  -> return handleResolveNetsDKNemID
+                 EID.NetsNOBankID -> return handleResolveNetsNOBankID
+                 EID.NetsDKNemID  -> return handleResolveNetsDKNemID
                  _ -> do
                    logAttention_ "Received invalid provider from Nets"
                    internalError
@@ -163,7 +191,7 @@ handleResolveNetsNOBankID res doc nt sl ctx = do
       return False
     else do
       -- Put NO BankID transaction in DB
-      dbUpdate $ MergeNetsNOBankIDAuthentication sessionID (netsSignatoryID nt) $ NetsNOBankIDAuthentication {
+      dbUpdate $ EID.MergeNetsNOBankIDAuthentication sessionID (netsSignatoryID nt) $ NetsNOBankIDAuthentication {
             netsNOBankIDInternalProvider = internal_provider
           , netsNOBankIDSignatoryName = signatoryName
           , netsNOBankIDPhoneNumber = mphone
@@ -224,7 +252,7 @@ handleResolveNetsDKNemID res doc nt sl ctx = do
       let certificate = decodeCertificate $ attributeFromAssertion "CERTIFICATE" $ assertionAttributes res
 
       -- Put DK Nem ID transaction in DB
-      dbUpdate $ MergeNetsDKNemIDAuthentication sessionID (netsSignatoryID nt) $ NetsDKNemIDAuthentication {
+      dbUpdate $ EID.MergeNetsDKNemIDAuthentication sessionID (netsSignatoryID nt) $ NetsDKNemIDAuthentication {
             netsDKNemIDInternalProvider = internal_provider
           , netsDKNemIDSignatoryName = signatoryName
           , netsDKNemIDDateOfBirth = dob
@@ -248,3 +276,113 @@ handleResolveNetsDKNemID res doc nt sl ctx = do
 
 handleNetsError  :: Kontrakcja m => m Response
 handleNetsError = simpleHtmlResponse =<< renderTemplate_ "netsError"
+
+-- NETS ESigning
+
+handleSignRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
+handleSignRequest did slid = do
+  logInfo_ "NETS SIGN start"
+  conf@NetsSignConfig{..} <- do
+    ctx <- getContext
+    case get ctxnetssignconfig ctx of
+      Nothing -> noConfigurationError "Nets ESigning"
+      Just netsconf -> return netsconf
+
+  pn <- getField "personal_number" >>= \case
+    (Just pn) -> return pn
+    _ -> do
+      logInfo_ "No personal number"
+      respond404
+  withDocumentID did $ do
+    nsoID <- newSignOrderUUID
+    guardThatPersonalNumberMatches slid pn =<< theDocument
+    sess <- getCurrentSession
+    tbs <- textToBeSigned =<< theDocument
+    now <- currentTime
+    dbQuery (GetNetsSignOrder slid) >>= \case
+      Just nso | not (nsoIsCanceled nso) -> do
+        logInfo "Found NetsSignOrder in progress" $ logObject_ nso
+        dbUpdate . MergeNetsSignOrder $ nso { nsoIsCanceled = True }
+        void $ netsCall conf (CancelOrderRequest $ nsoSignOrderID nso) xpCancelOrderResponse (show did)
+      _ -> return ()
+    let nso = NetsSignOrder nsoID slid (T.pack tbs) (sesID sess) (T.pack pn) (5 `minutesAfter` now) False
+    host_part <- T.pack <$> getHttpsHostpart
+    insOrdRs <- netsCall conf (InsertOrderRequest nso conf host_part) xpInsertOrderResponse (show did)
+    getSignProcRs <- netsCall conf (GetSigningProcessesRequest nso) xpGetSigningProcessesResponse (show did)
+    dbUpdate $ MergeNetsSignOrder nso
+    return $ object [
+        "nets_sign_url" .= gsprsSignURL getSignProcRs
+      , logPair_ insOrdRs
+      , logPair_ getSignProcRs
+      ]
+
+-- | Generate text to be signed that represents contents of the document.
+textToBeSigned :: TemplatesMonad m => Document -> m String
+textToBeSigned doc@Document{..} = renderLocalTemplate doc "tbs" $ do
+  F.value "document_title" $ documenttitle
+  F.value "document_id"   $ show documentid
+
+checkNetsSignStatus
+  :: (MonadMask m, MonadBaseControl IO m, MonadIO m, DocumentMonad m, MonadLog m)
+  => NetsSignConfig
+  -> DocumentID
+  -> SignatoryLinkID
+  -> m NetsSignStatus
+checkNetsSignStatus nets_conf did slid = do
+  doc <- dbQuery $ GetDocumentByDocumentID did
+  if (not (isPending doc) || hasSigned (fromJust $ getSigLinkFor slid doc))
+    then return NetsSignStatusAlreadySigned
+    else do
+      logInfo_ "Fetching signature"
+      esignature <- dbQuery $ ESign.GetESignature slid
+      if (isJust esignature)
+        then return NetsSignStatusSuccess
+        else do
+          mnso <- dbQuery (GetNetsSignOrder slid)
+          logInfo_ "Getting Nets sign order"
+          case mnso of
+            Nothing -> do
+              logAttention "Document Nets signing cannot be found" $ object [
+                  identifier_ slid
+                ]
+              return $ NetsSignStatusFailure NetsFaultExpiredTransaction
+            Just nso -> do
+              getOrdStRs <- netsCall nets_conf (GetOrderStatusRequest nso) xpGetOrderStatusResponse (show did)
+              case gosrsOrderStatus getOrdStRs of
+                CancelledByMerchant -> netsStatusFailure NetsFaultCancelledByMerchant
+                Expired             -> netsStatusFailure NetsFaultExpired
+                ExpiredByProxy      -> netsStatusFailure NetsFaultExpiredByProxy
+                RejectedBySigner    -> netsStatusFailure NetsFaultRejectedBySigner
+                Active -> do
+                  logInfo "Nets Sign Order not completed yet" $ logObject_ getOrdStRs
+                  return $ NetsSignStatusInProgress
+                Complete -> do
+                  getSdoRs <- netsCall nets_conf (GetSDORequest nso) xpGetSDOResponse (show did)
+                  getSdoDetRs <- netsCall nets_conf (GetSDODetailsRequest $ gsdorsB64SDOBytes getSdoRs) xpGetSDODetailsResponse (show did)
+                  logInfo "NETS Sign succeeded!" $ logObject_ getOrdStRs
+                  dbUpdate $ ESign.MergeNetsNOBankIDSignature slid NetsNOBankIDSignature
+                    { netsnoSignatoryName = gsdodrsSignerCN getSdoDetRs
+                    -- We initiated the Order with this SSN, so even thought Nets does not include SSN
+                    -- in the SDODetails, we know, which SSN has authenticated and which text was signed.
+                    , netsnoSignatoryPersonalNumber = nsoSignatorySSN nso
+                    , netsnoSignedText = nsoTextToBeSigned nso
+                    , netsnoB64SDO = gsdorsB64SDOBytes getSdoRs
+                    }
+                  dbUpdate $ ChargeCompanyForNOBankIDSignature (documentid doc)
+                  return $ NetsSignStatusSuccess
+  where
+    netsStatusFailure nets_fault = do
+      logInfo "Document Nets signing failed" $ object [
+          identifier_ slid
+        , "nets_fault" .= netsFaultText nets_fault
+        ]
+      return $ NetsSignStatusFailure nets_fault
+
+handleSignError  :: Kontrakcja m => m Response
+handleSignError = simpleHtmlResponse =<< renderTemplate_ "netsSignError"
+
+handleSignExit  :: Kontrakcja m => m Response
+handleSignExit = simpleHtmlResponse =<< renderTemplate_ "netsSignExit"
+
+handleSignAbort  :: Kontrakcja m => m Response
+handleSignAbort = simpleHtmlResponse =<< renderTemplate_ "netsSignAbort"

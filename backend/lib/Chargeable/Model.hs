@@ -4,6 +4,7 @@ module Chargeable.Model (
   , ChargeCompanyForSEBankIDSignature(..)
   , ChargeCompanyForSEBankIDAuthentication(..)
   , ChargeCompanyForNOBankIDAuthentication(..)
+  , ChargeCompanyForNOBankIDSignature(..)
   , ChargeCompanyForDKNemIDAuthentication(..)
   , ChargeCompanyForStartingDocument(..)
   , ChargeCompanyForClosingDocument(..)
@@ -25,15 +26,16 @@ import SMS.Data (SMSProvider(..))
 import User.UserID
 
 data ChargeableItem =
-  CIStartingDocument |
-  CIClosingDocument  |
-  CISMS |
-  CISMSTelia |
-  CISEBankIDSignature |
+  CIStartingDocument       |
+  CIClosingDocument        |
+  CISMS                    |
+  CISMSTelia               |
+  CISEBankIDSignature      |
   CISEBankIDAuthentication |
   CINOBankIDAuthentication |
-  CIDKNemIDAuthentication |
-  CIClosingSignature
+  CIDKNemIDAuthentication  |
+  CIClosingSignature       |
+  CINOBankIDSignature
   deriving (Eq, Ord, Show, Typeable)
 
 instance PQFormat ChargeableItem where
@@ -46,31 +48,33 @@ instance FromSQL ChargeableItem where
     case n :: Int16 of
       -- Note:
       -- If changing this, please also update `pure_sql/invoice_stats.sql`
-      1 -> return CISMS
-      2 -> return CISEBankIDSignature
-      3 -> return CISEBankIDAuthentication
-      4 -> return CINOBankIDAuthentication
-      5 -> return CISMSTelia
-      6 -> return CIStartingDocument
-      7 -> return CIDKNemIDAuthentication
-      8 -> return CIClosingDocument
-      9 -> return CIClosingSignature
-      _ -> throwM RangeError {
-        reRange = [(1, 9)]
+      1  -> return CISMS
+      2  -> return CISEBankIDSignature
+      3  -> return CISEBankIDAuthentication
+      4  -> return CINOBankIDAuthentication
+      5  -> return CISMSTelia
+      6  -> return CIStartingDocument
+      7  -> return CIDKNemIDAuthentication
+      8  -> return CIClosingDocument
+      9  -> return CIClosingSignature
+      10 -> return CINOBankIDSignature
+      _  -> throwM RangeError {
+        reRange = [(1, 10)]
       , reValue = n
       }
 
 instance ToSQL ChargeableItem where
   type PQDest ChargeableItem = PQDest Int16
-  toSQL CISMS                    = toSQL (1::Int16)
-  toSQL CISEBankIDSignature      = toSQL (2::Int16)
-  toSQL CISEBankIDAuthentication = toSQL (3::Int16)
-  toSQL CINOBankIDAuthentication = toSQL (4::Int16)
-  toSQL CISMSTelia               = toSQL (5::Int16)
-  toSQL CIStartingDocument       = toSQL (6::Int16)
-  toSQL CIDKNemIDAuthentication  = toSQL (7::Int16)
-  toSQL CIClosingDocument        = toSQL (8::Int16)
-  toSQL CIClosingSignature       = toSQL (9::Int16)
+  toSQL CISMS                    = toSQL ( 1::Int16)
+  toSQL CISEBankIDSignature      = toSQL ( 2::Int16)
+  toSQL CISEBankIDAuthentication = toSQL ( 3::Int16)
+  toSQL CINOBankIDAuthentication = toSQL ( 4::Int16)
+  toSQL CISMSTelia               = toSQL ( 5::Int16)
+  toSQL CIStartingDocument       = toSQL ( 6::Int16)
+  toSQL CIDKNemIDAuthentication  = toSQL ( 7::Int16)
+  toSQL CIClosingDocument        = toSQL ( 8::Int16)
+  toSQL CIClosingSignature       = toSQL ( 9::Int16)
+  toSQL CINOBankIDSignature      = toSQL (10::Int16)
 
 ----------------------------------------
 
@@ -99,6 +103,11 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForSE
 data ChargeCompanyForNOBankIDAuthentication = ChargeCompanyForNOBankIDAuthentication DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForNOBankIDAuthentication () where
   update (ChargeCompanyForNOBankIDAuthentication document_id) = update (ChargeCompanyFor CINOBankIDAuthentication 1 document_id)
+
+-- | Charge company of the author of the document for norwegian bankid signature while signing.
+data ChargeCompanyForNOBankIDSignature = ChargeCompanyForNOBankIDSignature DocumentID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForNOBankIDSignature () where
+  update (ChargeCompanyForNOBankIDSignature document_id) = update (ChargeCompanyFor CINOBankIDSignature 1 document_id)
 
 -- | Charge company of the author of the document for danish authentication
 data ChargeCompanyForDKNemIDAuthentication = ChargeCompanyForDKNemIDAuthentication DocumentID
