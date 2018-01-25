@@ -10,7 +10,8 @@ var SMS_PROVIDER_OPTIONS = [
 
 var PAD_APP_MODE_OPTIONS = [
   {name: "List view", value: "list_view"},
-  {name: "Pin code", value: "pin_code"}
+  {name: "Pin code", value: "pin_code"},
+  {name: "QR code", value: "qr_code"}
 ];
 
 var DetailsEditorView = React.createClass({
