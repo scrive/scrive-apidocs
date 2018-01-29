@@ -92,17 +92,23 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
     signedAtText <- if (null stime)
                        then return ""
                     else renderTemplate "_contractsealingtextssignedAtText" $ F.value "time" stime
-    let companynumber = getCompanyNumber signatory
-    companyNumberText <- if (not (null companynumber))
-                            then renderTemplate "_contractsealingtextsorgNumberText" $ F.value "companynumber" companynumber
-                         else return ""
+    let personalnumber = if signatorylinkhidepn signatory
+                           then ""
+                           else getPersonalNumber signatory
+        companynumber = getCompanyNumber signatory
+    companyNumberText <- if null companynumber
+                            then return ""
+                            else renderTemplate "_contractsealingtextsorgNumberText" $ F.value "companynumber" companynumber
+    personalNumberText <- if null personalnumber
+                           then return ""
+                           else renderTemplate "_contractsealingtextspersonalNumberText" $ F.value "idnumber" personalnumber
     fields <- fieldsFromSignatory checkboxMapping radiobuttonMapping signatory
     highlightedImages <- mapM (highlightedImageFromHighlightedPage inputpath) (signatoryhighlightedpages signatory)
     return $ Seal.Person { Seal.fullname           = fromMaybe "" $ signatoryIdentifier sim (signatorylinkid signatory) emptyNamePlaceholder
                          , Seal.company            = getCompanyName signatory
                          , Seal.email              = getEmail signatory
                          , Seal.phone              = getMobile signatory
-                         , Seal.personalnumber     = ""
+                         , Seal.personalnumber     = personalnumber
                          , Seal.companynumber      = getCompanyNumber signatory
                          , Seal.fullnameverified   = False
                          , Seal.companyverified    = False
@@ -112,7 +118,7 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
                          , Seal.fields             = fields
                          , Seal.signtime           = stime
                          , Seal.signedAtText       = signedAtText
-                         , Seal.personalNumberText = ""
+                         , Seal.personalNumberText = personalNumberText
                          , Seal.companyNumberText  = companyNumberText
                          , Seal.highlightedImages  = highlightedImages
                          }

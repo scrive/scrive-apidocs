@@ -297,7 +297,7 @@ checkCGIAuthStatus did slid = do
                 }
                 ctx <- getContext
                 let eventFields = do
-                      F.value "hide_pn_elog" $ signatorylinkhidepnelog sl
+                      F.value "hide_pn" $ signatorylinkhidepn sl
                       F.value "signatory_name" signatoryName
                       F.value "signatory_personal_number" signatoryPersonalNumber
                       F.value "provider_sebankid" True

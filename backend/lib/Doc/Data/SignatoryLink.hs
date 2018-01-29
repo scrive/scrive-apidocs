@@ -275,7 +275,7 @@ data SignatoryLink = SignatoryLink {
 , signatorylinkallowshighlighting         :: !Bool
 -- | If a person has identified to view the document
 , signatorylinkidentifiedtoview           :: !Bool
-, signatorylinkhidepnelog                 :: !Bool
+, signatorylinkhidepn                     :: !Bool
 } deriving (Show)
 
 instance Default SignatoryLink where
@@ -307,7 +307,7 @@ instance Default SignatoryLink where
   , signatorylinkconfirmationdeliverymethod = EmailConfirmationDelivery
   , signatorylinkallowshighlighting = False
   , signatorylinkidentifiedtoview = False
-  , signatorylinkhidepnelog = False
+  , signatorylinkhidepn = False
   }
 
 instance HasSomeUserInfo SignatoryLink where
@@ -359,7 +359,7 @@ instance PQFormat SignatoryLink where
   pqFormat _ = "%signatory_link"
 
 instance CompositeFromSQL SignatoryLink where
-  toComposite (slid, CompositeArray1 fields, is_author, is_partner, sign_order, magic_hash, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_contents, CompositeArray1 attachments, CompositeArray1 highlighted_pages, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_to_view_method, authentication_to_sign_method, delivery_method, confirmation_delivery_method, allows_highlighting, has_identified, hide_pn_elog) = SignatoryLink {
+  toComposite (slid, CompositeArray1 fields, is_author, is_partner, sign_order, magic_hash, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_contents, CompositeArray1 attachments, CompositeArray1 highlighted_pages, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_to_view_method, authentication_to_sign_method, delivery_method, confirmation_delivery_method, allows_highlighting, has_identified, hide_pn) = SignatoryLink {
     signatorylinkid = slid
   , signatoryfields = fields
   , signatoryisauthor = is_author
@@ -387,5 +387,5 @@ instance CompositeFromSQL SignatoryLink where
   , signatorylinkconfirmationdeliverymethod = confirmation_delivery_method
   , signatorylinkallowshighlighting = allows_highlighting
   , signatorylinkidentifiedtoview = has_identified
-  , signatorylinkhidepnelog = hide_pn_elog
+  , signatorylinkhidepn = hide_pn
   }
