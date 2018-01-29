@@ -77,7 +77,7 @@ evidenceLogTemplateVariables = Set.fromList
   -- , "provider_nobankid"  -- Provider is Norwegian BankID - disabled to do bug is StringTemplate variable detection
   , "signatory_name"  -- Name returned by Eleg
   , "signatory_personal_number" -- Personal number returned by eleg
-  , "hide_pn_elog"    -- whether personal number should be hidden
+  , "hide_pn"         -- whether personal number should be hidden
   , "signatory_mobile"-- Mobile number returned by eleg (NO BankID on mobile only)
   , "signatory_dob"   -- Signatory DoB returned by eleg (NO BankID Nets only)
   , "signatory_pid"   -- Unique number of person in No BankID

@@ -102,7 +102,7 @@ module.exports = React.createClass({
       if (signatory.personalnumber()) {
         const info = {label: localization.docsignview.personalNumberLabel,
                       text: signatory.personalnumber().trim() || localization.docsignview.notEntered};
-        if (signatory.hidePNElog()) {
+        if (signatory.hidePN()) {
           info["textClass"] = "censor-screenshot";
         }
         infoList.push(info);
