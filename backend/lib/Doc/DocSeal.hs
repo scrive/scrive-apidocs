@@ -98,6 +98,7 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
         companynumber = getCompanyNumber signatory
     companyNumberText <- if null companynumber
                             then return ""
+                            else renderTemplate "_contractsealingtextsorgNumberText" $ F.value "companynumber" companynumber
     personalNumberText <- if null personalnumber
                            then return ""
                            else renderTemplate "_contractsealingtextspersonalNumberText" $ F.value "idnumber" personalnumber
