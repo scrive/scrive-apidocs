@@ -560,7 +560,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     },
     changeEmailAndPhone: function(newValue) {
         return new Submit({
-                url: "/api/frontend/documents/" + this.document().documentid() + "/" + this.signatoryid() + "/changeemailandphone",
+                url: "/api/frontend/documents/" + this.document().documentid() + "/" + this.signatoryid() + "/changeemailandmobile",
                 method: "POST",
                 email: newValue.email,
                 mobile_number: newValue.mobile
@@ -568,14 +568,14 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     },
     changeEmail: function(email) {
         return new Submit({
-                url: "/api/frontend/documents/" + this.document().documentid() + "/" + this.signatoryid() + "/changeemailandphone",
+                url: "/api/frontend/documents/" + this.document().documentid() + "/" + this.signatoryid() + "/changeemailandmobile",
                 method: "POST",
                 email: email
          });
     },
     changePhone: function(phone) {
         return new Submit({
-                url: "/api/frontend/documents/" + this.document().documentid() + "/" + this.signatoryid() + "/changeemailandphone",
+                url: "/api/frontend/documents/" + this.document().documentid() + "/" + this.signatoryid() + "/changeemailandmobile",
                 method: "POST",
                 mobile_number: phone
          });
