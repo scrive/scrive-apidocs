@@ -89,7 +89,7 @@ var classNames = require("classnames");
       var inputClass = classNames({
         "obligatory-input": true,
         "valid": !self.props.model.askForSSN(),
-        "censor-screenshot": model.document().currentSignatory().hidePNElog()
+        "censor-screenshot": model.document().currentSignatory().hidePN()
       });
 
       var buttonClass = classNames({
@@ -98,7 +98,7 @@ var classNames = require("classnames");
       });
 
       var ssnLabelClass = classNames({
-        "censor-screenshot": model.document().currentSignatory().hidePNElog()
+        "censor-screenshot": model.document().currentSignatory().hidePN()
       });
 
       var divClass = classNames({

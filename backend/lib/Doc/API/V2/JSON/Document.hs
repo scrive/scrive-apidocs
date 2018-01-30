@@ -113,8 +113,8 @@ unjsonSignatory da =  objectOf $
         <**> (pure $ \scd s -> s { signatorylinkconfirmationdeliverymethod = scd }))
   <**> (fieldDef "allows_highlighting" (signatorylinkallowshighlighting def) signatorylinkallowshighlighting "Areas of main PDF can be highlighted during signing"
         <**> (pure $ \sah s -> s { signatorylinkallowshighlighting = sah }))
-  <**> (fieldDef "hide_personal_number_in_evidence_log" (signatorylinkhidepnelog def) signatorylinkhidepnelog "Signatory's personal number should be hidden in Evidence Log"
-        <**> (pure $ \shpe s -> s { signatorylinkhidepnelog = shpe }))
+  <**> (fieldDef "hide_personal_number" (signatorylinkhidepn def) signatorylinkhidepn "Signatory's personal number should be hidden"
+        <**> (pure $ \shpe s -> s { signatorylinkhidepn = shpe }))
   <**> (fieldDefBy "attachments"  (signatoryattachments def) signatoryattachments "Signatory attachments" (arrayOf unjsonSignatoryAttachment)
         <**> (pure $ \sa s -> s { signatoryattachments = sa }))
   <*   (fieldReadonlyBy "highlighted_pages" signatoryhighlightedpages "Highlighted page during signing" (arrayOf unjsonHighlightedPage))

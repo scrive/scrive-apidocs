@@ -141,7 +141,7 @@
       "allows_highlighting": false,
       "confirmation_delivery_method": "none",
       "highlighted_pages": [],
-      "hide_personal_number_in_evidence_log": true,
+      "hide_personal_number": true,
       "attachments": [
         {
           "name": "Other Att Def",

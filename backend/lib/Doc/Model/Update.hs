@@ -153,7 +153,7 @@ insertSignatoryLinks did links = do
     sqlSetList "delivery_method" $ signatorylinkdeliverymethod <$> links
     sqlSetList "confirmation_delivery_method" $ signatorylinkconfirmationdeliverymethod <$> links
     sqlSetList "allows_highlighting" $ signatorylinkallowshighlighting <$> links
-    sqlSetList "hide_pn_elog" $ signatorylinkhidepnelog <$> links
+    sqlSetList "hide_pn_elog" $ signatorylinkhidepn <$> links
     sqlResult "id"
 
   -- Update IDs.
@@ -639,7 +639,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
               UpdateFieldPersonalNumberEvidence
               (do F.value "value" newSSN
                   F.value "previousvalue" oldSSN
-                  F.value "hide_pn_elog" $ signatorylinkhidepnelog sl'
+                  F.value "hide_pn" $ signatorylinkhidepn sl'
                   when (newSSN == "") (F.value "newblank" True)
                   when (oldSSN == "") (F.value "prvblank" True)
               )
@@ -1412,7 +1412,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m, MonadTim
           (Just LegacyNordeaSignature_{}, _) -> legacy_signature_error
           (Just LegacyMobileBankIDSignature_{}, _) -> legacy_signature_error
           (Just (CGISEBankIDSignature_ CGISEBankIDSignature{..}), _) -> do
-            F.value "hide_pn_elog" $ signatorylinkhidepnelog sl
+            F.value "hide_pn" $ signatorylinkhidepn sl
             F.value "eleg" True
             F.value "signatory_name" cgisebidsSignatoryName
             F.value "signatory_personal_number" cgisebidsSignatoryPersonalNumber

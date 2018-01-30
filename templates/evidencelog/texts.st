@@ -524,7 +524,7 @@ updateFieldPlacements=$if(placements)$<table class="placements"><tr><td>Page</td
 pinWasSent=The PIN was sent to $phone$.
 ###
 personalNumber=
-$if(hide_pn_elog)$
+$if(hide_pn)$
   <i>*Redacted by author*</i>
 $else$
   $value$
