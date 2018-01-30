@@ -76,7 +76,7 @@ import qualified Amazon as AWS
 import qualified Doc.SealSpec as Seal
 import qualified HostClock.Model as HC
 
-personFromSignatory :: (MonadDB m, MonadIO m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m)
+personFromSignatory :: forall m . (MonadDB m, MonadIO m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m)
                     => String
                     -> TimeZoneName
                     -> SignatoryIdentifierMap
@@ -102,8 +102,7 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
     personalNumberText <- if null personalnumber
                            then return ""
                            else renderTemplate "_contractsealingtextspersonalNumberText" $ F.value "idnumber" personalnumber
-    imgData <- liftIO . BS.readFile $ "files" </> "images" </> "bankid_logo_se.png"
-    fields  <- maybeAddSEBankIDLogo imgData <$>
+    fields  <- maybeAddBankIDLogo =<<
                fieldsFromSignatory checkboxMapping radiobuttonMapping signatory
     highlightedImages <- mapM (highlightedImageFromHighlightedPage inputpath) (signatoryhighlightedpages signatory)
     return $ Seal.Person { Seal.fullname           = fromMaybe "" $ signatoryIdentifier sim (signatorylinkid signatory) emptyNamePlaceholder
@@ -125,12 +124,20 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
                          , Seal.highlightedImages  = highlightedImages
                          }
   where
-    maybeAddSEBankIDLogo :: BS.ByteString -> [Seal.Field] -> [Seal.Field]
-    maybeAddSEBankIDLogo imgData = case signatorylinkauthenticationtosignmethod
-                                        signatory of
-      SEBankIDAuthenticationToSign -> (seBankIDLogoJPEG imgData:)
-      _                            -> id
-    seBankIDLogoJPEG imgData = Seal.FieldJPG
+    maybeAddBankIDLogo :: [Seal.Field] -> m [Seal.Field]
+    maybeAddBankIDLogo = case signatorylinkauthenticationtosignmethod
+                              signatory of
+      SEBankIDAuthenticationToSign -> addBankIDLogo "bankid_logo_se.png"
+      NOBankIDAuthenticationToSign -> addBankIDLogo "bankid_logo_no.png"
+      _                            -> return
+
+    addBankIDLogo :: FilePath -> [Seal.Field] -> m [Seal.Field]
+    addBankIDLogo fname fields = do
+      imgData <- liftIO . BS.readFile $ "files" </> "images" </> fname
+      return (bankIDLogoJPEG imgData:fields)
+
+    bankIDLogoJPEG :: BS.ByteString -> Seal.Field
+    bankIDLogoJPEG imgData = Seal.FieldJPG
                  { valueBinary           = imgData
                  , Seal.x                = 0
                  , Seal.y                = 0
