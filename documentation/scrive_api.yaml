@@ -58,6 +58,7 @@ info:
     |             | Factor out `SignatoryFieldStandard` into `SignatoryFieldEmailMobile` to allow for `editable_by_signatory` property |
     | 2017-11-15  | Custom validations for the `SignatoryFieldCustomField` are now supported |
     | 2018-01-08  | Add an endpoint to [get a sign link as a QR code](#get-a-sign-link-as-a-qr-code) |
+    | 2018-01-29  | Add an endpoint to [change the email and mobile number of a signatory](#change-the-email-and-mobile-number-of-a-signatory) |
 
     ## Environments & IP Addresses
 
@@ -845,6 +846,9 @@ paths:
 
   /{document_id}/{signatory_id}/setauthenticationtosign:
     $ref: ./api/documents/document_id/signatory_id/setauthenticationtosign.yaml
+
+  /{document_id}/{signatory_id}/changeemailandmobile:
+    $ref: ./api/documents/document_id/signatory_id/changeemailandmobile.yaml
 
   # Sign
 
