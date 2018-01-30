@@ -28,6 +28,7 @@ import Doc.Model.Filter
 import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryFieldID
 import Doc.TestInvariants
+import EID.Signature.Model (ESignature(..))
 import EvidenceLog.Model
 import EvidenceLog.View (getSignatoryIdentifierMap, simplyfiedEventText)
 import File.FileID
@@ -143,7 +144,8 @@ docStateTests env = testGroup "DocState" [
 
   testThat "SignDocument fails when doc doesn't exist" env testSignDocumentNotLeft,
   testThat "SignDocument succeeds when doc is Signable and Pending (standard mode)" env testSignDocumentSignablePendingRight,
-  testThat "SignDocument succeeds when doc is Signable and Pending (eleg mode)" env testSignDocumentSignablePendingElegRight,
+  testThat "SignDocument succeeds when doc is Signable and Pending (SE BankID)" env testSignDocumentSignablePendingSEBankIDRight,
+  testThat "SignDocument succeeds when doc is Signable and Pending (NO BankID)" env testSignDocumentSignablePendingNOBankIDRight,
   testThat "SignDocument fails when the document is Signable but not in Pending" env testSignDocumentSignableNotPendingLeft,
   testThat "SignDocument fails when document is not signable" env testSignDocumentNonSignableLeft,
 
@@ -984,11 +986,16 @@ testSealDocument = replicateM_ 1 $ do
 
     forM_ sls $ \slk -> do
       when (signatoryispartner slk) $ do
-        if signatorylinkauthenticationtosignmethod slk == SEBankIDAuthenticationToSign
-          then do
-             randomUpdate $ \info -> SignDocument (signatorylinkid slk) (signatorymagichash slk) (Just info) Nothing screenshots sa
-          else do
+        case signatorylinkauthenticationtosignmethod slk of
+          SEBankIDAuthenticationToSign -> do
+             randomUpdate $ \esig -> SignDocument (signatorylinkid slk) (signatorymagichash slk) (Just (CGISEBankIDSignature_ esig)) Nothing screenshots sa
+          StandardAuthenticationToSign -> do
              dbUpdate $ SignDocument (signatorylinkid slk) (signatorymagichash slk) Nothing Nothing screenshots sa
+          SMSPinAuthenticationToSign -> do
+             dbUpdate $ SignDocument (signatorylinkid slk) (signatorymagichash slk) Nothing Nothing screenshots sa
+          NOBankIDAuthenticationToSign -> do
+             randomUpdate $ \esig -> SignDocument (signatorylinkid slk) (signatorymagichash slk) (Just (NetsNOBankIDSignature_ esig)) Nothing screenshots sa
+
 
     randomUpdate $ \t-> CloseDocument (systemActor t)
 
@@ -1491,15 +1498,25 @@ testSignDocumentSignablePendingRight = replicateM_ 10 $ do
     randomUpdate $ MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) (systemActor time)
     randomUpdate $ SignDocument (signatorylinkid sl) (signatorymagichash sl) Nothing Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor time)
 
-testSignDocumentSignablePendingElegRight :: TestEnv ()
-testSignDocumentSignablePendingElegRight = replicateM_ 10 $ do
+testSignDocumentSignablePendingSEBankIDRight :: TestEnv ()
+testSignDocumentSignablePendingSEBankIDRight = replicateM_ 10 $ do
   author <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (isSignable && isPending &&
            any ((== SEBankIDAuthenticationToSign) . signatorylinkauthenticationtosignmethod&& isSignatory && (not . hasSigned)) . documentsignatorylinks) `withDocumentM` do
     Just sl <- find ((== SEBankIDAuthenticationToSign) . signatorylinkauthenticationtosignmethod&& isSignatory && (not . hasSigned)) . documentsignatorylinks <$> theDocument
     time <- rand 10 arbitrary
     randomUpdate $ MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) (systemActor time)
-    randomUpdate $ \signinfo -> SignDocument (signatorylinkid sl) (signatorymagichash sl) (Just signinfo) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor time)
+    randomUpdate $ \esig -> SignDocument (signatorylinkid sl) (signatorymagichash sl) (Just (CGISEBankIDSignature_ esig)) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor time)
+
+testSignDocumentSignablePendingNOBankIDRight :: TestEnv ()
+testSignDocumentSignablePendingNOBankIDRight = replicateM_ 10 $ do
+  author <- addNewRandomUser
+  addRandomDocumentWithAuthorAndCondition author (isSignable && isPending &&
+           any ((== NOBankIDAuthenticationToSign) . signatorylinkauthenticationtosignmethod&& isSignatory && (not . hasSigned)) . documentsignatorylinks) `withDocumentM` do
+    Just sl <- find ((== NOBankIDAuthenticationToSign) . signatorylinkauthenticationtosignmethod&& isSignatory && (not . hasSigned)) . documentsignatorylinks <$> theDocument
+    time <- rand 10 arbitrary
+    randomUpdate $ MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) (systemActor time)
+    randomUpdate $ \esig -> SignDocument (signatorylinkid sl) (signatorymagichash sl) (Just (NetsNOBankIDSignature_ esig)) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor time)
 
 testSignDocumentNotLeft :: TestEnv ()
 testSignDocumentNotLeft = replicateM_ 10 $ do

@@ -553,8 +553,18 @@ instance Arbitrary CGISEBankIDSignature where
     <*> arbitrary
     <*> arbitrary
 
+instance Arbitrary NetsNOBankIDSignature where
+  arbitrary = NetsNOBankIDSignature
+    <$> (T.pack <$> arbString 20 30)
+    <*> (T.pack <$> arbString 200 300)
+    <*> (T.pack <$> arbString 10 20)
+    <*> (T.pack <$> arbString 11 11)
+
 instance Arbitrary ESignature where
-  arbitrary = CGISEBankIDSignature_ <$> arbitrary
+  arbitrary = oneof [
+      CGISEBankIDSignature_ <$> arbitrary
+    , NetsNOBankIDSignature_ <$> arbitrary
+    ]
 
 -- generate (byte)strings without \NUL in them since
 -- hdbc-postgresql plays around with these chars and
