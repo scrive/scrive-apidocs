@@ -77,6 +77,8 @@
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Das Dokument wurde signiert. ",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"$actor$ signierte das Dokument mittels schwedischer BankID als Authentifizierungsmethode. ",
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"$actor$ signierte das Dokument mittels schwedischer BankID als Authentifizierungsmethode. Der von der schwedischen BankID zurückgegebene Name ist \"$eid_signatory_name$\".",
+"_SignDocumentEvidenceTextSimpleNotArchiveNOBankID":"",
+"_SignDocumentEvidenceTextSimpleNotArchiveNOBankIDWithName":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"Das Dokument wurde von $actor$ mit PIN per SMS als Authentifizierungsmethode signiert.",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"Das Dokument wurde signiert von $actor$. ",
 "_SignReminderSendEmailLog":"Scrive eSign hat auf Antrag des Benutzers $actor$ eine Erinnerung zum Signieren an $signatory$ mit E-Mail gesendet. ",

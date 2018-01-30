@@ -77,6 +77,8 @@
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Skrifað var undir skjalið.",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"Skrifað var undir skjalið af $actor$ með því að nota sænskt BankID sem sannvottunaraðferð.",
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"Skrifað var undir skjalið af $actor$ með því að nota sænskt BankID sem sannvottunaraðferð. Nafnið sem sænskt BankID skilaði var \"$eid_signatory_name$\".",
+"_SignDocumentEvidenceTextSimpleNotArchiveNOBankID":"",
+"_SignDocumentEvidenceTextSimpleNotArchiveNOBankIDWithName":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"Skrifað var undir skjalið af $actor$ með PIN-númeri í textaskilaboðum sem sannvottunaraðferð.",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"Skrifað var undir skjalið af $actor$.",
 "_SignReminderSendEmailLog":"Scrive eSign sendi áminningu um undirritun með tölvupósti til $signatory$ að beiðni notandans $actor$.",

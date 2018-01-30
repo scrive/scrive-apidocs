@@ -77,6 +77,8 @@
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Het document werd ondertekend.",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"Het document is ondertekend door $actor$ met gebruik van Swedish BankID als authenticatiemethode.",
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"Het document is ondertekend door $actor$ met gebruik van Swedish BankID als authenticatiemethode. De naam die teruggestuurd is door Swedish BankID is \"$eid_signatory_name$\". ",
+"_SignDocumentEvidenceTextSimpleNotArchiveNOBankID":"",
+"_SignDocumentEvidenceTextSimpleNotArchiveNOBankIDWithName":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"Het document werd ondertekend door $actor$ met gebruik van PIN per SMS als identificatie methode.",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"Het document werd ondertekend door $actor$.",
 "_SignReminderSendEmailLog":"Scrive eSign heeft op aanvraag van gebruiker $signatory$ via e-mail een herinnering om te ondertekenen verstuurd aan $actor$.",

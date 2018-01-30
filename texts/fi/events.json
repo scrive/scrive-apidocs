@@ -77,6 +77,8 @@
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Dokumentti allekirjoitettiin.",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"$actor$ allekirjoitti dokumentin käyttäen ruotsalaista BankID:tä tunnistautumismuotona.",
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"$actor$ allekirjoitti dokumentin käyttäen ruotsalaista BankID:tä tunnistautumismuotona. Ruotsalaisesta BankID:stä palautettu nimi oli \"$eid_signatory_name$\".",
+"_SignDocumentEvidenceTextSimpleNotArchiveNOBankID":"",
+"_SignDocumentEvidenceTextSimpleNotArchiveNOBankIDWithName":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"$actor$ allekirjoitti dokumentin.",
 "_SignReminderSendEmailLog":"Scrive eSign lähetti muistutuksen dokumentin allekirjoittamisesta sähköpostitse henkilölle $signatory$, käyttäjän $actor$ pyynnöstä.",
