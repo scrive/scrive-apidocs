@@ -240,6 +240,10 @@ This is the only officially supported encoding for our API.
 <td>2018-01-08</td>
 <td>Add an endpoint to <a href="#get-a-sign-link-as-a-qr-code">get a sign link as a QR code</a></td>
 </tr>
+<tr>
+<td>2018-01-29</td>
+<td>Add an endpoint to <a href="#change-the-email-and-mobile-number-of-a-signatory">change the email and mobile number of a signatory</a></td>
+</tr>
 </tbody></table>
 
 <h2 id="environments-amp-ip-addresses">Environments &amp; IP Addresses</h2>
@@ -1226,6 +1230,14 @@ Scrive eSign system returning errors.</p>
 <a href="#apiv2documents{document_id}{signatory_id}setauthenticationtosign">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/documents/{document_id}/{signatory_id}/setauthenticationtosign</code>
+</strong>
+</a>
+</p>
+
+<p>
+<a href="#apiv2documents{document_id}{signatory_id}changeemailandmobile">
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/documents/{document_id}/{signatory_id}/changeemailandmobile</code>
 </strong>
 </a>
 </p>
@@ -2470,6 +2482,77 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <li><code>signatory_state_error</code>: You can’t mix different e-legitimation
 providers (one for viewing and another for signing) for the same
 signatory.</li>
+</ul>
+</td> </tr>
+</table>
+
+<div><a id="apiv2documents{document_id}{signatory_id}changeemailandmobile"></a></div>
+
+<h2 id="change-the-email-and-mobile-number-of-a-signatory">Change the email and mobile number of a signatory</h2>
+
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/documents/{document_id}/{signatory_id}/changeemailandmobile</code>
+</strong>
+</p>
+
+<p>Change the email address and mobile number of a signatory after the
+document has been started.</p>
+
+<p><strong>This API call is <em>meant</em> to be used for correcting mistakes that may occur
+during a manual document preparation process.</strong></p>
+
+<p>If you are planning to use it programatically, please be aware that this
+will result in extra invitation messages being sent, the old invitation
+links being invalidated, and may therefore not be the approach best suited
+to your use-case.</p>
+
+<p>You will only be able to change values for fields that a signatory has.
+For example, if they have no mobile field set, you will not be able to
+change it.</p>
+
+<p><em>OAuth Privileges required: <code class="prettyprint">DOC_SEND</code></em></p>
+
+<h3 id="parameters">Parameters</h3>
+
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
+Will not change.</p>
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>signatory_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a signatory.
+This value can change before document is made ready for signing, and should
+not be used to identify signatories while document is a draft.</p>
+</td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>email</code><br/><em>optional</em></p></td><td><p>The new email address for the signatory.</p>
+<p>Whilst this field is optional, both <code>email</code> and <code>mobile_number</code> cannot
+be blank, you need at least one.</p>
+</td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>mobile_number</code><br/><em>optional</em></p></td><td><p>The new mobile number for the signatory.</p>
+<p>Whilst this field is optional, both <code>email</code> and <code>mobile_number</code> cannot
+be blank, you need at least one.</p>
+</td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
+operation if these match.
+Otherwise you will get a <code>HTTP 409</code>.</p>
+</td><td><p>integer</p></td><td>formData</td></tr>
+</table>
+
+<h3 id="responses">Responses</h3>
+
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
+</td> </tr>
+<tr> <td>409</td> <td><p>Possible error responses:</p>
+<ul>
+<li><code>document_state_error</code>: The document status should be 'Pending&rsquo;.</li>
+<li><code>signatory_state_error</code>: The signatory has already signed, is the
+author, or does not have a mobile or email field already.</li>
+<li><code>request_parameter_parse_error</code>: Can happen if the <code>email</code> or
+<code>mobile_number</code> is not in the correct format.</li>
+<li><code>request_parameter_missing</code>: If neither <code>email</code> nor <code>mobile_number</code>
+is provided.</li>
 </ul>
 </td> </tr>
 </table>
