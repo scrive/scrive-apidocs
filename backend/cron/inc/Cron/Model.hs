@@ -212,11 +212,11 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
         ]
       RerunAt . nextDayAtHour 19 <$> currentTime
     DocumentSearchUpdate -> do
-      runDB updateHistoricalSearchData
+      numberOfItemsUpdated <- runDB updateHistoricalSearchData
       now <- currentTime
-      if now < todayAtHour 4 now
-      then RerunAfter <$> return (iseconds 1)
-      else RerunAt . nextDayMidnight <$> currentTime
+      case (numberOfItemsUpdated > 0, now < todayAtHour 4 now) of
+        (True, True)  -> RerunAfter <$> return (iseconds 1)
+        _             -> RerunAt . nextDayMidnight <$> currentTime
     EmailChangeRequestsEvaluation -> do
       runDB . dbUpdate $ DeleteExpiredEmailChangeRequests
       return . RerunAfter $ ihours 1
