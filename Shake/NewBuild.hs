@@ -7,6 +7,8 @@ module Shake.NewBuild (UseNewBuild(DontUseNewBuild)
                       ,ifNewBuild
                       ,whenNewBuild
                       ,componentTargetPath
+                      ,mainHpcPath
+                      ,componentHpcPath
                       ,componentBuildRules) where
 
 import Control.Monad
@@ -101,6 +103,19 @@ componentTargetPath DontUseNewBuild c =
 componentTargetPath (UseNewBuild cabalInstallVer buildDir) c =
   buildDir </> componentSubDir cabalInstallVer c </> componentName c </> "build"
            </> componentName c </> componentName c <.> exe
+
+-- TODO: remove undefined, unhardcode kontrakcja-1.0
+
+mainHpcPath :: UseNewBuild -> FilePath
+mainHpcPath DontUseNewBuild                         = undefined
+mainHpcPath (UseNewBuild _cabalInstallVer buildDir) =
+  buildDir </> "hpc" </> "dyn" </> "mix" </> "kontrakcja-1.0"
+
+componentHpcPath :: UseNewBuild -> CabalComponentName -> FilePath
+componentHpcPath DontUseNewBuild                       _c = undefined
+componentHpcPath (UseNewBuild cabalInstallVer buildDir) c =
+  buildDir </> componentSubDir cabalInstallVer c </> componentName c
+           </> "hpc" </> "dyn" </> "mix" </> componentName c
 
 -- | For each exe/test-suite/benchmark component in the .cabal file,
 -- add a rule for building the corresponding executable.
