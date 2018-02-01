@@ -4857,6 +4857,24 @@ assist contract review.</p>
 
 </div>
 
+<h6><code>hide_personal_number</code> (boolean)</h6>
+
+<div class="json-schema">
+
+<p>Whether the personal number should be hidden in the final PDF
+verification page and the Evidence Log.</p>
+<p>This is to be used when the document will be distributed to a wider
+audience, and the personal number of the signatory should not be
+available in the final document.</p>
+<p><strong>If the signatory has a placed field for their personal number, it will
+be included in the final PDF</strong>. So this solution only works when the
+field does not have any placements.</p>
+
+
+<p>Default: <code>false</code></p>
+
+</div>
+
 <h6><code>highlighted_pages</code> (array, read only)</h6>
 
 <div class="json-schema">
@@ -7826,6 +7844,24 @@ assist contract review.</p>
 
 </div>
 
+<h5><code>hide_personal_number</code> (boolean)</h5>
+
+<div class="json-schema">
+
+<p>Whether the personal number should be hidden in the final PDF
+verification page and the Evidence Log.</p>
+<p>This is to be used when the document will be distributed to a wider
+audience, and the personal number of the signatory should not be
+available in the final document.</p>
+<p><strong>If the signatory has a placed field for their personal number, it will
+be included in the final PDF</strong>. So this solution only works when the
+field does not have any placements.</p>
+
+
+<p>Default: <code>false</code></p>
+
+</div>
+
 <h5><code>highlighted_pages</code> (array, read only)</h5>
 
 <div class="json-schema">
@@ -8544,6 +8580,7 @@ be changed.</p>
   </span><span class="nt">"authentication_method_to_sign"</span><span class="p">:</span><span class="w"> </span><span class="s2">"standard"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"confirmation_delivery_method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"none"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"allows_highlighting"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"hide_personal_number"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
   </span><span class="nt">"attachments"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span><span class="w">
   </span><span class="nt">"highlighted_pages"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
@@ -10588,6 +10625,24 @@ performed while the signatory was viewing the document.</p>
 <p>The intention of this feature is <strong>not</strong> for the signatory to affect a
 contract via highlighting, but simply for a point-of-sale situation to
 assist contract review.</p>
+
+
+<p>Default: <code>false</code></p>
+
+</div>
+
+<h3><code>hide_personal_number</code> (boolean)</h3>
+
+<div class="json-schema">
+
+<p>Whether the personal number should be hidden in the final PDF
+verification page and the Evidence Log.</p>
+<p>This is to be used when the document will be distributed to a wider
+audience, and the personal number of the signatory should not be
+available in the final document.</p>
+<p><strong>If the signatory has a placed field for their personal number, it will
+be included in the final PDF</strong>. So this solution only works when the
+field does not have any placements.</p>
 
 
 <p>Default: <code>false</code></p>
