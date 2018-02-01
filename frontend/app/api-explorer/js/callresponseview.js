@@ -81,9 +81,10 @@ window.CallResponseView = Backbone.View.extend({
       Prism.highlightAll(panelBody);
     }
 
-    var copyClient = new ZeroClipboard(copyButton);
+    var copyClient = new Clipboard('.btn-copy');
 
-    copyClient.on("aftercopy", function (event) {
+    copyClient.on("success", function (event) {
+      var copyButton = $(".btn-copy");
       copyButton.tooltip("destroy");
       copyButton.tooltip({title: "Copied!", trigger: "hover", placement: "top", animation: false});
       copyButton.tooltip("show");
@@ -95,7 +96,12 @@ window.CallResponseView = Backbone.View.extend({
 
       if (callPrototype.tryToUseDocumentIDWithCopy()) {
         try {
-          var json = JSON.parse(call.resultContent());
+          var json, result = call.resultContent();
+          if (typeof result === "string") {
+            json = JSON.parse(result);
+          } else {
+            json = result;
+          }
           if (json.id != undefined) {
             LocalStorage.set("param", "documentid", json.id);
             LocalStorage.set("param", "document_id", json.id);
