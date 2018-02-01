@@ -81,7 +81,7 @@ window.CallResponseView = Backbone.View.extend({
       Prism.highlightAll(panelBody);
     }
 
-    var copyClient = new Clipboard('.btn-copy');
+    var copyClient = new Clipboard(".btn-copy");
 
     copyClient.on("success", function (event) {
       var copyButton = $(".btn-copy");
@@ -96,7 +96,8 @@ window.CallResponseView = Backbone.View.extend({
 
       if (callPrototype.tryToUseDocumentIDWithCopy()) {
         try {
-          var json, result = call.resultContent();
+          var json;
+          var result = call.resultContent();
           if (typeof result === "string") {
             json = JSON.parse(result);
           } else {

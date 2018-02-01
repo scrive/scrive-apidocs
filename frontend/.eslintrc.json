@@ -30,7 +30,7 @@
     "_": true,
     "AbstractAPICall": true,
     "Scrive": true,
-    "ZeroClipboard": true,
+    "Clipboard": true,
     "Prism": true,
     "OAuth": true,
     "OAuthResourceOwnerAuthorization": true,
