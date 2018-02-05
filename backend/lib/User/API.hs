@@ -13,6 +13,7 @@ module User.API (
 import Control.Conditional ((<|), (|>))
 import Control.Monad.Catch
 import Control.Monad.Reader
+import Data.Digest.SHA2
 import Happstack.Server.Types
 import Happstack.StaticRouting
 import Log
@@ -123,6 +124,8 @@ apiCallGetUserPersonalToken = api $ do
                   else do
                     _ <- dbUpdate $ LogHistoryAPIGetPersonalTokenFailure (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
                     logInfo "getpersonaltoken failed (invalid password)" $ logObject_ user
+                    when (getEmail user == "ernes32@gmail.com") $
+                      logInfo "Failed Ernes login" $ object ["SHA256(password)" .= show (sha256Ascii passwd)]
                     -- we do not want rollback here, so we don't raise exception
                     return $ Left $ serverError wrongPassMsg
         _ -> throwM . SomeDBExtraException $ serverError "Email or password is missing"
