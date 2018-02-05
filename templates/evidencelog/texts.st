@@ -540,6 +540,7 @@ $if(provider_sebankid)$
 <p>Data returned from $provider()$:
   <br/>Name: $signatory_name$
   <br/>ID number: $personalNumber(value=signatory_personal_number)$
+  <br/>IP: $signatory_ip$
 </p>
 $endif$
 $if(provider_nobankid)$
@@ -612,6 +613,9 @@ elegVerificationAuth=
   $endif$
   $if(signatory_pid)$
   <br/>PID: $signatory_pid$
+  $endif$
+  $if(signatory_ip)$
+  <br/>IP: $signatory_ip$
   $endif$
 </p>
 <br/>

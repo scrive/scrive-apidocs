@@ -113,6 +113,7 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeCGISEBankIDAuthentication (
         sqlSet "signatory_name" cgisebidaSignatoryName
         sqlSet "signatory_personal_number" cgisebidaSignatoryPersonalNumber
         sqlSet "ocsp_response" cgisebidaOcspResponse
+        sqlSet "signatory_ip" cgisebidaSignatoryIP
 
 -- | Insert bank id authentication for a given signatory or replace the existing one.
 data MergeNetsNOBankIDAuthentication = MergeNetsNOBankIDAuthentication SessionID SignatoryLinkID NetsNOBankIDAuthentication
@@ -150,6 +151,7 @@ instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthenticationInternal (Mayb
       sqlResult "signatory_phone_number"
       sqlResult "signatory_date_of_birth"
       sqlResult "ocsp_response"
+      sqlResult "signatory_ip"
       sqlWhereEq "signatory_link_id" slid
       F.forM_ msid $ sqlWhereEq "session_id"
     fetchMaybe fetchEAuthentication
@@ -165,11 +167,12 @@ data GetEAuthentication = GetEAuthentication SessionID SignatoryLinkID
 instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthentication (Maybe EAuthentication) where
   query (GetEAuthentication sid slid) = query (GetEAuthenticationInternal slid (Just sid) )
 
-fetchEAuthentication :: (AuthenticationProvider, (Maybe Int16), ByteString, T.Text, Maybe T.Text, Maybe T.Text, Maybe T.Text, Maybe ByteString) -> EAuthentication
-fetchEAuthentication (provider, internal_provider, signature, signatory_name, signatory_personal_number, signatory_phone_number, signatory_dob, ocsp_response) = case provider of
+fetchEAuthentication :: (AuthenticationProvider, (Maybe Int16), ByteString, T.Text, Maybe T.Text, Maybe T.Text, Maybe T.Text, Maybe ByteString, Maybe T.Text) -> EAuthentication
+fetchEAuthentication (provider, internal_provider, signature, signatory_name, signatory_personal_number, signatory_phone_number, signatory_dob, ocsp_response, msignatory_ip) = case provider of
   CgiGrpBankID -> CGISEBankIDAuthentication_ CGISEBankIDAuthentication {
     cgisebidaSignatoryName = signatory_name
   , cgisebidaSignatoryPersonalNumber = fromJust signatory_personal_number
+  , cgisebidaSignatoryIP = fromMaybe "" msignatory_ip
   , cgisebidaSignature = signature
   , cgisebidaOcspResponse = fromJust ocsp_response
   }

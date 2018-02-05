@@ -3,6 +3,7 @@ module AppDBMigrations (
   ) where
 
 import Control.Monad.Catch
+import EID.Authentication.Migrations
 import Log
 
 import Amazon.Migrations
@@ -83,4 +84,6 @@ kontraMigrations = [
   , createNetsSignOrdersTable
   , featureFlagsAddNOAuthToSign
   , eidSignaturesAddProviderNetsNOBankID
+  , addSignatoryIPToEIDSignatures
+  , addSignatoryIPToEIDAuthentications
   ]

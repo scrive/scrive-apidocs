@@ -6,7 +6,7 @@ import KontraPrelude
 tableEIDSignatures :: Table
 tableEIDSignatures = tblTable {
   tblName = "eid_signatures"
-, tblVersion = 2
+, tblVersion = 3
 , tblColumns = [
     tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
   , tblColumn { colName = "provider", colType = SmallIntT, colNullable = False }
@@ -17,6 +17,7 @@ tableEIDSignatures = tblTable {
   , tblColumn { colName = "signatory_name", colType = TextT }
   , tblColumn { colName = "signatory_personal_number", colType = TextT }
   , tblColumn { colName = "ocsp_response", colType = BinaryT }
+  , tblColumn { colName = "signatory_ip", colType = TextT }
   ]
 -- only one signature per signatory. can be relaxed later if necessary.
 , tblPrimaryKey = pkOnColumn "signatory_link_id"

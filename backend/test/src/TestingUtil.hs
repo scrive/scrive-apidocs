@@ -550,6 +550,7 @@ instance Arbitrary CGISEBankIDSignature where
     <$> (C.renderXMLContent <$> arbitrary)
     <*> (C.renderXMLContent <$> arbitrary)
     <*> (C.renderXMLContent <$> arbitrary)
+    <*> (C.renderXMLContent <$> arbitrary)
     <*> arbitrary
     <*> arbitrary
 

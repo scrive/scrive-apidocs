@@ -221,6 +221,7 @@ checkCGISignStatus CgiGrpConfig{..}  did slid = do
                           dbUpdate $ MergeCGISEBankIDSignature slid CGISEBankIDSignature {
                               cgisebidsSignatoryName = just_lookup "cert.subject.cn" crsAttributes
                             , cgisebidsSignatoryPersonalNumber = just_lookup "cert.subject.serialnumber" crsAttributes
+                            , cgisebidsSignatoryIP = just_lookup "ipAddress" crsAttributes
                             , cgisebidsSignedText = tbs
                             , cgisebidsSignature = mk_binary $ fromMaybe (missing "signature") crsSignature
                             , cgisebidsOcspResponse = mk_binary $ just_lookup "Validation.ocsp.response" crsAttributes
@@ -290,10 +291,12 @@ checkCGIAuthStatus did slid = do
                 let signatoryPersonalNumber = fromMaybe subjectSerialNumber $ lookup "cert.subject.serialnumber" crsAttributes
                 let signature = mk_binary $ fromMaybe (missing "signature") crsSignature
                 let ocspResponse = mk_binary $ just_lookup "Validation.ocsp.response" crsAttributes
+                let ipAddress = just_lookup "ipAddress" crsAttributes
 
                 dbUpdate $ MergeCGISEBankIDAuthentication session_id slid CGISEBankIDAuthentication {
                     cgisebidaSignatoryName = signatoryName
                   , cgisebidaSignatoryPersonalNumber = signatoryPersonalNumber
+                  , cgisebidaSignatoryIP = ipAddress
                   , cgisebidaSignature = signature
                   , cgisebidaOcspResponse = ocspResponse
                 }
@@ -302,6 +305,7 @@ checkCGIAuthStatus did slid = do
                       F.value "hide_pn" $ signatorylinkhidepn sl
                       F.value "signatory_name" signatoryName
                       F.value "signatory_personal_number" signatoryPersonalNumber
+                      F.value "signatory_ip" ipAddress
                       F.value "provider_sebankid" True
                       F.value "signature" $ B64.encode signature
                       F.value "ocsp_response" $ B64.encode ocspResponse

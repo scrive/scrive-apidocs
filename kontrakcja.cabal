@@ -243,6 +243,7 @@ Library
                  , Doc.Tokens.Model
                  , Doc.Tokens.Tables
                  , Doc.Trigger
+                 , EID.Authentication.Migrations
                  , EID.Authentication.Model
                  , EID.Authentication.Tables
                  , EID.CGI.GRP.Config
@@ -259,6 +260,7 @@ Library
                  , EID.Nets.SignID
                  , EID.Nets.Tables
                  , EID.Signature.Legacy
+                 , EID.Signature.Migrations
                  , EID.Signature.Model
                  , EID.Signature.Tables
                  , EvidenceLog.Model
@@ -765,6 +767,7 @@ Executable kontrakcja-migrate
                  Doc.Signing.Tables
                  Doc.Tables
                  Doc.Tokens.Tables
+                 EID.Authentication.Migrations
                  EID.Authentication.Tables
                  EID.CGI.GRP.Transaction.Tables
                  EID.Nets.Migrations
@@ -1261,6 +1264,7 @@ Test-suite kontrakcja-test
                  DocControlTest
                  DocStateTest
                  DumpEvidenceTexts
+                 EID.Authentication.Migrations
                  EID.Authentication.Tables
                  EID.CGI.GRP.Transaction.Tables
                  EID.Nets.Migrations

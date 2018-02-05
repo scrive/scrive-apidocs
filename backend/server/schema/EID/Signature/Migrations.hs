@@ -1,4 +1,7 @@
-module EID.Signature.Migrations (eidSignaturesAddProviderNetsNOBankID) where
+module EID.Signature.Migrations (
+    addSignatoryIPToEIDSignatures
+  , eidSignaturesAddProviderNetsNOBankID
+) where
 
 import DB
 import EID.Signature.Tables
@@ -16,5 +19,15 @@ eidSignaturesAddProviderNetsNOBankID = Migration {
       runQuery_ $ sqlAlterTable "eid_signatures"  $ map sqlAddCheck [
           Check "eid_signatures_ocsp_response_well_defined" $
             "(provider <= 3 OR provider >= 6) AND ocsp_response IS NULL OR (provider = 4 OR provider = 5) AND ocsp_response IS NOT NULL"
+        ]
+  }
+
+addSignatoryIPToEIDSignatures :: MonadDB m => Migration m
+addSignatoryIPToEIDSignatures = Migration {
+    mgrTableName = tblName tableEIDSignatures
+  , mgrFrom = 2
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable (tblName tableEIDSignatures)  [ sqlAddColumn $
+          tblColumn { colName = "signatory_ip", colType = TextT, colNullable = True }
         ]
   }

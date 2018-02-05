@@ -6,7 +6,7 @@ import KontraPrelude
 tableEIDAuthentications :: Table
 tableEIDAuthentications = tblTable {
   tblName = "eid_authentications"
-, tblVersion = 2
+, tblVersion = 3
 , tblColumns = [
     tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
   , tblColumn { colName = "provider", colType = SmallIntT, colNullable = False }
@@ -18,6 +18,7 @@ tableEIDAuthentications = tblTable {
   , tblColumn { colName = "internal_provider", colType = SmallIntT }
   , tblColumn { colName = "signatory_phone_number", colType = TextT }
   , tblColumn { colName = "signatory_date_of_birth", colType = TextT, colNullable = True }
+  , tblColumn { colName = "signatory_ip", colType = TextT }
   ]
 -- only one authentication per signatory. can be relaxed later if necessary.
 , tblPrimaryKey = pkOnColumn "signatory_link_id"
