@@ -86,4 +86,5 @@ kontraMigrations = [
   , eidSignaturesAddProviderNetsNOBankID
   , addSignatoryIPToEIDSignatures
   , addSignatoryIPToEIDAuthentications
+  , netsSignOrdersDropSSN
   ]

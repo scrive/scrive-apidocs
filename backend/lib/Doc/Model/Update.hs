@@ -1424,7 +1424,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m, MonadTim
           (Just (NetsNOBankIDSignature_ NetsNOBankIDSignature{..}), _) -> do
             F.value "eleg" True
             F.value "signatory_name" netsnoSignatoryName
-            F.value "signatory_personal_number" netsnoSignatoryPersonalNumber
+            F.value "signatory_pid" netsnoSignatoryPID
             F.value "signed_text" netsnoSignedText
             F.value "provider_nobankid" True
             F.value "signature" $ netsnoB64SDO

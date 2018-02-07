@@ -544,12 +544,9 @@ $if(provider_sebankid)$
 </p>
 $endif$
 $if(provider_nobankid)$
-<p>Transaction to $provider()$ was initiated with:
-  <br/>ID number: $personalNumber(value=signatory_personal_number)$
-</p>
-<br/>
 <p>Data returned from $provider()$:
   <br/>Name: $signatory_name$
+  <br/>PID: $signatory_pid$
 </p>
 $endif$
 <br/>

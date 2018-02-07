@@ -195,7 +195,7 @@ authToSignNeedsPersonalNumber :: AuthenticationToSignMethod -> Bool
 authToSignNeedsPersonalNumber StandardAuthenticationToSign = False
 authToSignNeedsPersonalNumber SMSPinAuthenticationToSign   = False
 authToSignNeedsPersonalNumber SEBankIDAuthenticationToSign = True
-authToSignNeedsPersonalNumber NOBankIDAuthenticationToSign = True
+authToSignNeedsPersonalNumber NOBankIDAuthenticationToSign = False
 
 authToSignNeedsMobileNumber :: AuthenticationToSignMethod -> Bool
 authToSignNeedsMobileNumber StandardAuthenticationToSign = False

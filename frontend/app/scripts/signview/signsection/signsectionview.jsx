@@ -572,12 +572,8 @@ var Task = require("../navigation/task");
           {/* if */ this.isOnStep("eid-nets") &&
             <SignNetsEID
               model={this.props.model}
-              fieldSSN={ssnField}
-              fieldPhone={phoneField}
               name={sig.name()}
-              askForSSN={this.state.askForSSN}
               canSign={this.canSignDocument()}
-              ssn={sig.personalnumber()}
               onReject={this.handleSetStep("reject")}
               onSign={ function () {
                   doc.takeSigningScreenshot(function () {
@@ -589,7 +585,6 @@ var Task = require("../navigation/task");
           }
           {/* if */ this.isOnStep("eid-nets-process") &&
             <SignEIDNetsProcess
-              ssn={sig.personalnumber()}
               signatory={sig}
               onBack={this.handleCancelNets}
               onInitiated={function (netsSigning) { self.handleSignNets(netsSigning); }}

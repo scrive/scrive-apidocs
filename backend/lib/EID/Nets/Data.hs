@@ -198,10 +198,10 @@ xpGetAssertionResponse = XMLParser $ \c -> listToMaybe $ c
 -- data NetsEidType = NetsEidNOBankID
 --
 data NetsNOBankIDSignature = NetsNOBankIDSignature {
-  netsnoSignedText              :: !T.Text
-, netsnoB64SDO                  :: !T.Text -- base64 SDO from Nets ESigning
-, netsnoSignatoryName           :: !T.Text
-, netsnoSignatoryPersonalNumber :: !T.Text
+  netsnoSignedText    :: !T.Text
+, netsnoB64SDO        :: !T.Text -- base64 SDO from Nets ESigning
+, netsnoSignatoryName :: !T.Text
+, netsnoSignatoryPID  :: !T.Text
 } deriving (Eq, Ord, Show)
 
 data NetsSignStatus
@@ -232,7 +232,6 @@ data NetsSignOrder = NetsSignOrder
   , nsoSignatoryLinkID :: !SignatoryLinkID
   , nsoTextToBeSigned :: !T.Text
   , nsoSessionID :: !SessionID
-  , nsoSignatorySSN :: !T.Text
   , nsoDeadline :: !UTCTime
   , nsoIsCanceled :: !Bool
   } deriving (Show)
@@ -271,9 +270,6 @@ instance ToXML InsertOrderRequest where
             element "AcceptedPKIs" $ do
               element "BankIDNOMobile" $ do
                 element "CertificatePolicy" ("Personal" :: T.Text)
-                element "SignerID" $ do
-                  element "IDType" ("SSN" :: T.Text)
-                  element "IDValue" nsoSignatorySSN
       element "WebContexts" $ do
         element "WebContext" $ do
           element "LocalWebContextRef" ("web_1" :: T.Text)
@@ -444,6 +440,7 @@ data GetSDODetailsResponse = GetSDODetailsResponse
   { gsdodrsTransactionRef :: !T.Text
   , gsdodrsSignedText     :: !T.Text
   , gsdodrsSignerCN       :: !T.Text
+  , gsdodrsSignerPID      :: !T.Text
   }
 
 instance Loggable GetSDODetailsResponse where
@@ -460,6 +457,7 @@ xpGetSDODetailsResponse = XMLParser $ \cursor -> listToMaybe $ cursor
       gsdodrsTransactionRef = readT "TransRef" rs
     , gsdodrsSignedText     = readTs ["SDOList", "SDO", "SignedData"] rs
     , gsdodrsSignerCN       = readTs ["SDOList", "SDO", "SDOSignatures", "SDOSignature", "SignerCertificateInfo", "CN"] rs
+    , gsdodrsSignerPID      = readTs ["SDOList", "SDO", "SDOSignatures", "SDOSignature", "SignerCertificateInfo", "UniqueID"] rs
     }
 
 -- NETS Signing - Cancel Order Request

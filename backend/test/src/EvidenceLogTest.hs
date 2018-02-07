@@ -78,6 +78,7 @@ evidenceLogTemplateVariables = Set.fromList
   , "signatory_name"  -- Name returned by Eleg
   , "signatory_personal_number" -- Personal number returned by eleg
   , "signatory_ip"    -- Signatory's client ip returned by eleg
+  , "signatory_pid"   -- Personal certificate ID returned by NO BankID
   , "hide_pn"         -- whether personal number should be hidden
   , "signatory_mobile"-- Mobile number returned by eleg (NO BankID on mobile only)
   , "signatory_dob"   -- Signatory DoB returned by eleg (NO BankID Nets only)
