@@ -107,12 +107,15 @@ componentTargetPath (UseNewBuild cabalInstallVer buildDir) c =
 -- TODO: remove undefined, unhardcode kontrakcja-1.0
 
 mainHpcPath :: UseNewBuild -> FilePath
-mainHpcPath DontUseNewBuild                         = undefined
-mainHpcPath (UseNewBuild _cabalInstallVer buildDir) =
-  buildDir </> "hpc" </> "dyn" </> "mix" </> "kontrakcja-1.0"
+mainHpcPath newBuild =
+  build_dir newBuild </> "hpc" </> "dyn" </> "mix" </> "kontrakcja-1.0"
+  where
+    build_dir DontUseNewBuild                         = "dist"
+    build_dir (UseNewBuild _cabalInstallVer buildDir) = buildDir
 
 componentHpcPath :: UseNewBuild -> CabalComponentName -> FilePath
-componentHpcPath DontUseNewBuild                       _c = undefined
+componentHpcPath DontUseNewBuild                        c =
+  "dist" </> "hpc" </> "dyn" </> "mix" </> componentName c
 componentHpcPath (UseNewBuild cabalInstallVer buildDir) c =
   buildDir </> componentSubDir cabalInstallVer c </> componentName c
            </> "hpc" </> "dyn" </> "mix" </> componentName c
