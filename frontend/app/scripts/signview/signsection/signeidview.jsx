@@ -145,6 +145,7 @@ var classNames = require("classnames");
           {/* else */ !this.props.askForSSN &&
               <p className="ssn-text">
                 {localization.personalNumber}
+                {" "}
                 <span className={ssnLabelClass}>
                   <b>{ssn}</b>
                 </span>
