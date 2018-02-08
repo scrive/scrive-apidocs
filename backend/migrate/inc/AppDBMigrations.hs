@@ -3,7 +3,6 @@ module AppDBMigrations (
   ) where
 
 import Control.Monad.Catch
-import EID.Authentication.Migrations
 import Log
 
 import Amazon.Migrations
@@ -16,6 +15,7 @@ import Doc.Extending.Migrations
 import Doc.Migrations
 import Doc.Signing.Migrations
 import Doc.SMSPin.Migrations
+import EID.Authentication.Migrations
 import EID.Nets.Migrations
 import EID.Signature.Migrations
 import FeatureFlags.Migrations
