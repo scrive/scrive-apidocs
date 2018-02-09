@@ -111,6 +111,7 @@ module.exports = React.createClass({
       function renderInfo ({label, text, textClass}, index) {
         return (<li key={"info_" + index}>
                   {label}:
+                  {" "}
                   <span className={textClass ? textClass : ""}>
                     <b>{text}</b>
                   </span>
