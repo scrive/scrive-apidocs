@@ -203,6 +203,7 @@ handleResolveNetsNOBankID res doc nt sl ctx = do
         let eventFields = do
              F.value "signatory_name" signatoryName
              F.value "signatory_mobile" mphone
+             F.value "provider_nobankid" True
              F.value "signatory_dob" dob
              -- XXX signatory_pid is saved as evidence, but never used again
              F.value "signatory_pid" mpid
@@ -262,6 +263,7 @@ handleResolveNetsDKNemID res doc nt sl ctx = do
         --Add evidence
         let eventFields = do
              F.value "signatory_name" signatoryName
+             F.value "provider_dknemid" True
              F.value "signatory_dob" dob
              -- XXX signatory_pid is saved as evidence, but never used again
              F.value "signatory_pid" mpid
