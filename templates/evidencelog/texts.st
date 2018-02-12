@@ -447,13 +447,13 @@ $if(sms_pin)$
       $_SignDocumentEvidenceTextSimpleNotArchiveSMSPin()$
 $elseif(eleg)$
       $if(eid_signatory_name)$
-          $if(eid_provider_is_se_bankid)$
+          $if(provider_sebankid)$
               $_SignDocumentEvidenceTextSimpleNotArchiveElegWithName()$
           $else$
               $_SignDocumentEvidenceTextSimpleNotArchiveNOBankIDWithName()$
           $endif$
       $else$
-          $if(eid_provider_is_se_bankid)$
+          $if(provider_sebankid)$
               $_SignDocumentEvidenceTextSimpleNotArchiveEleg()$
           $else$
               $_SignDocumentEvidenceTextSimpleNotArchiveNOBankID()$
