@@ -401,9 +401,8 @@ serverTestRules newBuild cabalFile createDB = do
         ("ls backend/test/src | awk -F \".\" '{print \"--exclude=\"$1}' "
          ++ "| hpc markup `xargs echo` "
          ++ "--destdir=coverage-reports kontrakcja-test.tix "
-         ++ "--hpcdir=" ++ mainHpcPath newBuild ++ " "
-         ++ "--hpcdir=" ++ componentHpcPath newBuild
-                           (TestSuiteName "kontrakcja-test")
+         ++ concat [ "--hpcdir=" ++ hpcPath ++ " "
+                   | hpcPath <- hpcPaths cabalFile newBuild ]
         ) []
       command_ [Shell]
         ("zip -r _build/coverage-reports.zip "

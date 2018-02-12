@@ -7,8 +7,7 @@ module Shake.NewBuild (UseNewBuild(DontUseNewBuild)
                       ,ifNewBuild
                       ,whenNewBuild
                       ,componentTargetPath
-                      ,mainHpcPath
-                      ,componentHpcPath
+                      ,hpcPaths
                       ,componentBuildRules) where
 
 import Control.Monad
@@ -88,7 +87,7 @@ componentSubDir :: CabalInstallVersion -> CabalComponentName -> String
 componentSubDir cabalInstallVer cname
   | useSeparateComponentDirs cabalInstallVer =
       case cname of
-        LibraryName         _ -> "c"
+        LibraryName         _ -> "l"
         ExecutableName      _ -> "x"
         TestSuiteName       _ -> "t"
         BenchmarkName       _ -> "b"
@@ -104,21 +103,27 @@ componentTargetPath (UseNewBuild cabalInstallVer buildDir) c =
   buildDir </> componentSubDir cabalInstallVer c </> componentName c </> "build"
            </> componentName c </> componentName c <.> exe
 
--- TODO: remove undefined, unhardcode kontrakcja-1.0
 
-mainHpcPath :: UseNewBuild -> FilePath
-mainHpcPath newBuild =
-  build_dir newBuild </> "hpc" </> "dyn" </> "mix" </> "kontrakcja-1.0"
+-- | Paths that coverage report generation needs to pass to `hpc` via `--hpcdir`.
+hpcPaths :: CabalFile -> UseNewBuild -> [FilePath]
+hpcPaths cabalFile newBuild =
+  [ mainPath
+  , componentPath (TestSuiteName "kontrakcja-test") ]
+  ++ if useNewBuild newBuild
+     then [componentPath (LibraryName "kontrakcja-prelude")]
+     else []
   where
-    build_dir DontUseNewBuild                         = "dist"
-    build_dir (UseNewBuild _cabalInstallVer buildDir) = buildDir
+    build_dir = ifNewBuild newBuild id "dist"
+    hdm       = "hpc" </> "dyn" </> "mix"
+    mainPath  = build_dir </> hdm </> packageId cabalFile
 
-componentHpcPath :: UseNewBuild -> CabalComponentName -> FilePath
-componentHpcPath DontUseNewBuild                        c =
-  "dist" </> "hpc" </> "dyn" </> "mix" </> componentName c
-componentHpcPath (UseNewBuild cabalInstallVer buildDir) c =
-  buildDir </> componentSubDir cabalInstallVer c </> componentName c
-           </> "hpc" </> "dyn" </> "mix" </> componentName c
+    componentPath :: CabalComponentName -> FilePath
+    componentPath c = case newBuild of
+      DontUseNewBuild -> build_dir </> hdm </> componentName c
+      (UseNewBuild cabalInstallVer _buildDir) ->
+        build_dir </> componentSubDir cabalInstallVer c </> componentName c
+        </> hdm </> (case c of (LibraryName _) -> packageId cabalFile
+                               _               -> componentName c)
 
 -- | For each exe/test-suite/benchmark component in the .cabal file,
 -- add a rule for building the corresponding executable.
