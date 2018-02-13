@@ -107,10 +107,6 @@ $htmlopentag()$
         DocumentID : "$documentid$",
         'Signatory ID' : $siglinkid$
       });
-
-      mixpanel.people.set({
-       'Last document sign view' : new Date()
-      });
    </script>
    <script src="$cdnbaseurl$/compiled/signview/signview-$versioncode$.js" crossorigin="anonymous"></script>
   </body>

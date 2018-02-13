@@ -104,21 +104,6 @@ var AccountSetupView = React.createClass({
         type: "success"
       });
 
-      mixpanel.alias(response.userid);
-      mixpanel.identify(response.userid);
-      var mixpanelPayload = {
-        "Phone": this.state.phone,
-        "Company Name": this.state.company,
-        "Position": this.state.position,
-        "$first_name": this.state.fstname,
-        "$last_name": this.state.sndname,
-        "TOS Date": tosDate,
-        "Signup Method": this.props.signupmethod,
-        "Scrive Domain": window.location.hostname
-      };
-      mixpanel.register(mixpanelPayload);
-      mixpanel.people.set(mixpanelPayload);
-
       HubSpot.track(HubSpot.FORM_TOS_SUBMIT, {
         "signup_method": this.props.signupmethod,
         "fullname": this.fullName(),

@@ -78,6 +78,7 @@ var Checkbox = require("../../common/checkbox");
           model.notLoading();
         },
         ajaxsuccess: function (docdata) {
+          Track.track("Finish attachment task");
           var olddocument = model.signatory().document();
           var newdoc = new Document(new Document({
             id: olddocument.documentid()
@@ -184,12 +185,6 @@ var Checkbox = require("../../common/checkbox");
             // don't open 2nd dialog if one file is already uploading
             uploadArea.uploadButton().openFileDialogue();
           }
-        },
-        onActivate: function () {
-          Track.track("Begin attachment task");
-        },
-        onDeactivate: function () {
-          Track.track("Finish attachment task");
         }
       })];
     },

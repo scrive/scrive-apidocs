@@ -265,28 +265,6 @@ var Track = require("../common/track");
 
       var signatory = this.document().currentSignatory();
 
-      var sps = {};
-      sps["Has user?"] = signatory.hasUser();
-      sps["First visit"] = !signatory.seendate();
-      mixpanel.register(sps);
-
-      var ps = {};
-      ps["Full Name"] = signatory.nameOrEmail();
-      ps.$email = signatory.email();
-      if (signatory.fstname()) {
-        ps.$first_name = signatory.fstname();
-      }
-
-      if (signatory.sndname()) {
-        ps.$last_name = signatory.sndname();
-      }
-
-      if (signatory.hasUser()) {
-        ps.$username = signatory.email();
-      }
-
-      mixpanel.people.set(ps);
-
       Track.track("View sign view");
     },
 
