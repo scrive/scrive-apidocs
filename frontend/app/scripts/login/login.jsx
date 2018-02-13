@@ -16,7 +16,7 @@ module.exports = React.createClass({
         referer : React.PropTypes.string,
         autofocus: React.PropTypes.bool,
         pad : React.PropTypes.bool,
-        nolink : React.PropTypes.string,
+        nolinks : React.PropTypes.string,
         langprefix : React.PropTypes.string
     },
     getInitialState: function() {

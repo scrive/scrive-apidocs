@@ -15,6 +15,7 @@ $(function () {
   React.render(React.createElement(Login, {
     referer:   referer,
     autofocus: true,
+    nolinks:   fromTemplate.nolinks,
     langprefix : fromTemplate.langprefix
   }), $(".global-table-cell")[0]);
   // FIXME there was some mixpanel events in the original here, we should
