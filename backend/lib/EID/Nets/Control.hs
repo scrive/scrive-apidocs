@@ -297,7 +297,10 @@ handleSignRequest did slid = do
       Just nso | not (nsoIsCanceled nso) -> do
         logInfo "Found NetsSignOrder in progress" $ logObject_ nso
         dbUpdate . MergeNetsSignOrder $ nso { nsoIsCanceled = True }
-        void $ netsCall conf (CancelOrderRequest $ nsoSignOrderID nso) xpCancelOrderResponse (show did)
+        catches
+          (void $ netsCall conf (CancelOrderRequest $ nsoSignOrderID nso) xpCancelOrderResponse (show did))
+          -- Cancelling of Order may help in some situations, but when it fails, it's not a dealbreaker.
+          [ Handler $ \(NetsSignParsingError _) -> return () ]
       _ -> return ()
     let nso = NetsSignOrder nsoID slid (T.pack tbs) (sesID sess) (5 `minutesAfter` now) False
     host_part <- T.pack <$> getHttpsHostpart
