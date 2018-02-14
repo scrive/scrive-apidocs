@@ -335,6 +335,7 @@ testChangeAuthenticationToViewMethod = do
     CGISEBankIDAuthentication {
         cgisebidaSignatoryName = "AName"
       , cgisebidaSignatoryPersonalNumber = "BName"
+      , cgisebidaSignatoryIP = "1.2.3.4"
       , cgisebidaSignature = "sig_here"
       , cgisebidaOcspResponse = "sig_resp"
     }

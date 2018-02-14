@@ -19,10 +19,6 @@ var classNames = require("classnames");
     createTasks: function () {
       var tasks = [this.createSignTask()];
 
-      if (this.props.askForSSN) {
-        tasks.push(this.createSSNTask());
-      }
-
       return tasks;
     },
 
@@ -46,31 +42,10 @@ var classNames = require("classnames");
       });
     },
 
-    createSSNTask: function () {
-      var self = this;
-      var ref = this.refs.ssnInput;
-      var model = this.props.model;
-
-      return new Task({
-        type: "extra-details",
-        onArrowClick: function () {
-          ref.focus();
-        },
-        isComplete: function () {
-          return !model.askForSSN();
-        },
-        el: $(ref.getDOMNode())
-      });
-    },
-
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model).isRequired,
-      fieldSSN: React.PropTypes.instanceOf(Field).isRequired,
-      fieldPhone: React.PropTypes.instanceOf(Field).isRequired,
       name: React.PropTypes.string.isRequired,
-      askForSSN: React.PropTypes.bool.isRequired,
       canSign: React.PropTypes.bool.isRequired,
-      ssn: React.PropTypes.string.isRequired,
       onReject: React.PropTypes.func.isRequired,
       onSign: React.PropTypes.func.isRequired
     },
@@ -85,13 +60,6 @@ var classNames = require("classnames");
       var self = this;
       var ssn = self.props.ssn;
       var name = self.props.name;
-      var fieldSSN = self.props.fieldSSN;
-      var askForSSN = model.askForSSN();
-
-      var inputSSNClass = classNames({
-        "obligatory-input": true,
-        "valid": !askForSSN
-      });
 
       var buttonClass = classNames({
         "button-block": true,
@@ -123,24 +91,6 @@ var classNames = require("classnames");
           }
           {/* else */ name === "" &&
             <p>{localization.docsignview.eleg.bankid.signNOConfirmationTextNoName}</p>
-          }
-          {/* if */ this.props.askForSSN &&
-            <dl className="ssn-list">
-              <dt><label htmlFor="ssn">{localization.personalNumber}</label></dt>
-              <dd>
-                <InfoTextInput
-                  id="ssn"
-                  ref="ssnInput"
-                  infotext={localization.ssnInfoText}
-                  className={inputSSNClass}
-                  value={fieldSSN.value()}
-                  onChange={function (value) { fieldSSN.setValue(value); }}
-                />
-              </dd>
-            </dl>
-          }
-          {/* else */ !this.props.askForSSN &&
-            <p className="ssn-text">{localization.personalNumber} <b>{ssn}</b></p>
           }
           <Button
             ref="signButton"

@@ -16,7 +16,6 @@ var classNames = require("classnames");
     mixins: [BackboneMixin.BackboneMixin],
 
     propTypes: {
-      ssn: React.PropTypes.string.isRequired,
       signatory: React.PropTypes.instanceOf(Signatory).isRequired,
       thisDevice: React.PropTypes.bool.isRequired,
       onBack: React.PropTypes.func.isRequired,

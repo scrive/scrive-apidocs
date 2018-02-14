@@ -29,7 +29,6 @@ import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.Model
 import Doc.SignatoryLinkID
-import EID.CGI.GRP.Control (guardThatPersonalNumberMatches)
 import EID.Nets.Call
 import EID.Nets.Config
 import EID.Nets.Data
@@ -202,6 +201,7 @@ handleResolveNetsNOBankID res doc nt sl ctx = do
         let eventFields = do
              F.value "signatory_name" signatoryName
              F.value "signatory_mobile" mphone
+             F.value "provider_nobankid" True
              F.value "signatory_dob" dob
              -- XXX signatory_pid is saved as evidence, but never used again
              F.value "signatory_pid" mpid
@@ -261,6 +261,7 @@ handleResolveNetsDKNemID res doc nt sl ctx = do
         --Add evidence
         let eventFields = do
              F.value "signatory_name" signatoryName
+             F.value "provider_dknemid" True
              F.value "signatory_dob" dob
              -- XXX signatory_pid is saved as evidence, but never used again
              F.value "signatory_pid" mpid
@@ -285,15 +286,8 @@ handleSignRequest did slid = do
     case get ctxnetssignconfig ctx of
       Nothing -> noConfigurationError "Nets ESigning"
       Just netsconf -> return netsconf
-
-  pn <- getField "personal_number" >>= \case
-    (Just pn) -> return pn
-    _ -> do
-      logInfo_ "No personal number"
-      respond404
   withDocumentID did $ do
     nsoID <- newSignOrderUUID
-    guardThatPersonalNumberMatches slid pn =<< theDocument
     sess <- getCurrentSession
     tbs <- textToBeSigned =<< theDocument
     now <- currentTime
@@ -301,9 +295,12 @@ handleSignRequest did slid = do
       Just nso | not (nsoIsCanceled nso) -> do
         logInfo "Found NetsSignOrder in progress" $ logObject_ nso
         dbUpdate . MergeNetsSignOrder $ nso { nsoIsCanceled = True }
-        void $ netsCall conf (CancelOrderRequest $ nsoSignOrderID nso) xpCancelOrderResponse (show did)
+        catches
+          (void $ netsCall conf (CancelOrderRequest $ nsoSignOrderID nso) xpCancelOrderResponse (show did))
+          -- Cancelling of Order may help in some situations, but when it fails, it's not a dealbreaker.
+          [ Handler $ \(NetsSignParsingError _) -> return () ]
       _ -> return ()
-    let nso = NetsSignOrder nsoID slid (T.pack tbs) (sesID sess) (T.pack pn) (5 `minutesAfter` now) False
+    let nso = NetsSignOrder nsoID slid (T.pack tbs) (sesID sess) (5 `minutesAfter` now) False
     host_part <- T.pack <$> getHttpsHostpart
     insOrdRs <- netsCall conf (InsertOrderRequest nso conf host_part) xpInsertOrderResponse (show did)
     getSignProcRs <- netsCall conf (GetSigningProcessesRequest nso) xpGetSigningProcessesResponse (show did)
@@ -360,9 +357,7 @@ checkNetsSignStatus nets_conf did slid = do
                   logInfo "NETS Sign succeeded!" $ logObject_ getOrdStRs
                   dbUpdate $ ESign.MergeNetsNOBankIDSignature slid NetsNOBankIDSignature
                     { netsnoSignatoryName = gsdodrsSignerCN getSdoDetRs
-                    -- We initiated the Order with this SSN, so even thought Nets does not include SSN
-                    -- in the SDODetails, we know, which SSN has authenticated and which text was signed.
-                    , netsnoSignatoryPersonalNumber = nsoSignatorySSN nso
+                    , netsnoSignatoryPID = gsdodrsSignerPID getSdoDetRs
                     , netsnoSignedText = nsoTextToBeSigned nso
                     , netsnoB64SDO = gsdorsB64SDOBytes getSdoRs
                     }

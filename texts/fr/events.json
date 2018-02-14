@@ -77,6 +77,8 @@
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Le document a été signé.",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"Le document a été signé par $actor$ avec comme méthode d'authentification l'identifiant bancaire suédois.",
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"Le document a été signé par $actor$ avec comme méthode d'authentification l'identifiant bancaire suédois. Le nom retourné par l'identifiant bancaire suédois était \"$eid_signatory_name$\".",
+"_SignDocumentEvidenceTextSimpleNotArchiveNOBankID":"",
+"_SignDocumentEvidenceTextSimpleNotArchiveNOBankIDWithName":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"Le document a été signé par $actor$ avec comme méthode d'identification un code PIN envoyé par SMS.",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"Le document a été signé par $actor$.",
 "_SignReminderSendEmailLog":"Scrive eSign a envoyé un rappel de la nécessité de consulter le document via mail à $signatory$ à la demande de l'utilisateur $actor$.",

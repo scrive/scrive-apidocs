@@ -37,3 +37,12 @@ createNetsSignOrdersTable = Migration {
     ]
   }
 }
+
+netsSignOrdersDropSSN :: MonadDB m => Migration m
+netsSignOrdersDropSSN = Migration {
+  mgrTableName = tblName tableNetsSignOrders
+, mgrFrom = 1
+, mgrAction = StandardMigration $
+    runQuery_ $ sqlAlterTable (tblName tableNetsSignOrders)
+      [ sqlDropColumn "ssn" ]
+}

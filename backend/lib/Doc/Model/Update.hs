@@ -1414,6 +1414,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m, MonadTim
             F.value "eleg" True
             F.value "signatory_name" cgisebidsSignatoryName
             F.value "signatory_personal_number" cgisebidsSignatoryPersonalNumber
+            F.value "signatory_ip" cgisebidsSignatoryIP
             F.value "signed_text" cgisebidsSignedText
             F.value "provider_sebankid" True
             F.value "signature" $ B64.encode cgisebidsSignature
@@ -1421,7 +1422,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m, MonadTim
           (Just (NetsNOBankIDSignature_ NetsNOBankIDSignature{..}), _) -> do
             F.value "eleg" True
             F.value "signatory_name" netsnoSignatoryName
-            F.value "signatory_personal_number" netsnoSignatoryPersonalNumber
+            F.value "signatory_pid" netsnoSignatoryPID
             F.value "signed_text" netsnoSignedText
             F.value "provider_nobankid" True
             F.value "signature" $ netsnoB64SDO

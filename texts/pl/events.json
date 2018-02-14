@@ -77,6 +77,8 @@
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Dokument został podpisany.",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"Dokument został podpisany przez $actor$ po uwierzytelnieniu danych przy użyciu szwedzkiego BankID.",
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"Dokument został podpisany przez $actor$ po uwierzytelnieniu danych przy użyciu szwedzkiego BankID. Szwedzki BankID zwrócił następujące imię i nazwisko \"$eid_signatory_name$\".",
+"_SignDocumentEvidenceTextSimpleNotArchiveNOBankID":"Dokument został podpisany przez $actor$ po uwierzytelnieniu danych przy użyciu norweskiego BankID.",
+"_SignDocumentEvidenceTextSimpleNotArchiveNOBankIDWithName":"Dokument został podpisany przez $actor$ po uwierzytelnieniu danych przy użyciu norweskiego BankID. Norweski BankID zwrócił następujące imię i nazwisko \"$eid_signatory_name$\".",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"Dokument został podpisany przez $actor$ po uwierzytelnieniu danych przy użyciu kodu PIN przesłanego SMS-em.",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"Dokument został podpisany przez $actor$.",
 "_SignReminderSendEmailLog":"Scrive eSign przesłał mailowe przypomnienie o mijającym terminie podpisania dokumentu do $signatory$ na prośbę użytkownika $actor$.",

@@ -36,6 +36,7 @@ import Text.XML.Parser
 data CGISEBankIDSignature = CGISEBankIDSignature {
   cgisebidsSignatoryName           :: !T.Text
 , cgisebidsSignatoryPersonalNumber :: !T.Text
+, cgisebidsSignatoryIP             :: !T.Text
 , cgisebidsSignedText              :: !T.Text
 , cgisebidsSignature               :: !ByteString
 , cgisebidsOcspResponse            :: !ByteString
@@ -45,6 +46,7 @@ data CGISEBankIDSignature = CGISEBankIDSignature {
 data CGISEBankIDAuthentication = CGISEBankIDAuthentication {
   cgisebidaSignatoryName           :: !T.Text
 , cgisebidaSignatoryPersonalNumber :: !T.Text
+, cgisebidaSignatoryIP             :: !T.Text
 , cgisebidaSignature               :: !ByteString
 , cgisebidaOcspResponse            :: !ByteString
 } deriving (Eq, Ord, Show)

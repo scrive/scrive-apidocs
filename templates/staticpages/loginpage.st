@@ -28,6 +28,7 @@ $endif$
   <script type="text/javascript">
     var fromTemplate = {
       referer: "$referer$",
+      nolinks: $if(nolinks)$true$else$false$endif$,
       langprefix : "$langprefix()$"
     };
   </script>

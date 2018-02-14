@@ -1,5 +1,6 @@
 module EID.Nets.Call (
     netsCall
+  , NetsSignParsingError(..)
   ) where
 
 import Control.Monad.Base (MonadBase)

@@ -21,7 +21,6 @@ selectNetsSignOrderSelectorsList =
   , "session_id"
   , "text_to_be_signed"
   , "order_id"
-  , "ssn"
   , "deadline"
   , "is_canceled"
   ]
@@ -45,7 +44,6 @@ instance (CryptoRNG m, MonadDB m, MonadMask m)
           sqlSet "session_id" $ nsoSessionID
           sqlSet "text_to_be_signed" $ nsoTextToBeSigned
           sqlSet "order_id" $ nsoSignOrderID
-          sqlSet "ssn" $ nsoSignatorySSN
           sqlSet "deadline" $ nsoDeadline
           sqlSet "is_canceled" $ nsoIsCanceled
 
@@ -58,14 +56,13 @@ instance (MonadDB m, MonadThrow m)
         sqlWhereEq "signatory_link_id" slid
       fetchMaybe fetchNetsSignOrder
 
-fetchNetsSignOrder :: (SignatoryLinkID, SessionID, T.Text, SignOrderUUID, T.Text, UTCTime, Bool) -> NetsSignOrder
-fetchNetsSignOrder (slid, session_id, ttbs, oid, ssn, deadline, is_canceled) =
+fetchNetsSignOrder :: (SignatoryLinkID, SessionID, T.Text, SignOrderUUID, UTCTime, Bool) -> NetsSignOrder
+fetchNetsSignOrder (slid, session_id, ttbs, oid, deadline, is_canceled) =
   NetsSignOrder
     { nsoSignOrderID = oid
     , nsoSignatoryLinkID = slid
     , nsoTextToBeSigned = ttbs
     , nsoSessionID = session_id
-    , nsoSignatorySSN = ssn
     , nsoDeadline = deadline
     , nsoIsCanceled = is_canceled
     }

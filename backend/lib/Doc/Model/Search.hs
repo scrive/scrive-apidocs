@@ -17,7 +17,7 @@ updateHistoricalSearchData :: ( MonadDB m
                               , MonadCatch m
                               , MonadTime m
                               , MonadLog m)
-                           => m ()
+                           => m Int
 updateHistoricalSearchData = do
   docIDs <- dbQuery $ GetDocumentIdsWithNullSearchField 1000
   t0 <- currentTime
@@ -26,10 +26,12 @@ updateHistoricalSearchData = do
              dbUpdate $ SetDocumentSearchField docID
   unless (null docIDs) commit
   t1 <- currentTime
+  let numberOfItemsUpdated = length . filter id $ ress
   logInfo "Document search data updated" $ object
-          [ "items_updated" .= (length . filter id $ ress)
+          [ "items_updated" .= numberOfItemsUpdated
           , "items_failed" .= (length . filter not $ ress)
           , "elapsed_time" .= (realToFrac (diffUTCTime t1 t0) :: Double) ]
+  return numberOfItemsUpdated
 
 
 data GetDocumentIdsWithNullSearchField = GetDocumentIdsWithNullSearchField Int

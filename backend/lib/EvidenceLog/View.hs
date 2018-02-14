@@ -230,13 +230,17 @@ simplyfiedEventText target mactor d sim dee = do
           when (evType dee == Current SignDocumentEvidence) $ do
             dbQuery (GetESignature slinkid) >>= \case
               Nothing -> return ()
-              Just esig -> F.value "eid_signatory_name" $ case esig of
-                LegacyBankIDSignature_{} -> Nothing
-                LegacyTeliaSignature_{} -> Nothing
-                LegacyNordeaSignature_{} -> Nothing
-                LegacyMobileBankIDSignature_{} -> Nothing
-                CGISEBankIDSignature_ CGISEBankIDSignature{..} -> Just cgisebidsSignatoryName
-                NetsNOBankIDSignature_ NetsNOBankIDSignature{..} -> Just netsnoSignatoryName
+              Just esig -> case esig of
+                LegacyBankIDSignature_{} -> return ()
+                LegacyTeliaSignature_{} -> return ()
+                LegacyNordeaSignature_{} -> return ()
+                LegacyMobileBankIDSignature_{} -> return ()
+                CGISEBankIDSignature_ CGISEBankIDSignature{..} -> do
+                  F.value "eid_signatory_name" $ Just cgisebidsSignatoryName
+                  F.value "provider_sebankid" True
+                NetsNOBankIDSignature_ NetsNOBankIDSignature{..} -> do
+                  F.value "eid_signatory_name" $ Just netsnoSignatoryName
+                  F.value "provider_nobankid" True
           when (evType dee == Current AuthenticatedToViewEvidence) $ do
             dbQuery (GetEAuthenticationWithoutSession slinkid) >>= \case
               Nothing -> return ()

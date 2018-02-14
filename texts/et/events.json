@@ -77,6 +77,8 @@
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Dokument allkirjastati.",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"Dokument allkirjastati $actor$ poolt, kasutades autentimiseks Rootsi BankID meetodit.",
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"Dokument allkirjastati kasutaja $actor$ poolt, kasutades autentimiseks Rootsi BankID meetodit. Rootsi BankID andis tulemuseks nime \"$eid_signatory_name$\".",
+"_SignDocumentEvidenceTextSimpleNotArchiveNOBankID":"",
+"_SignDocumentEvidenceTextSimpleNotArchiveNOBankIDWithName":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"Dokument allkirjastati $actor$ poolt, kasutades autentimiseks SMSi teel saadetud PIN koodi.",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"Dokument allkirjastati $actor$ poolt.",
 "_SignReminderSendEmailLog":"Scrive eSign saatis kasutaja $actor$ palvel kasutajale $signatory$ e-maili teel meeldetuletuse allkirjastamiseks.",

@@ -447,13 +447,13 @@ $if(sms_pin)$
       $_SignDocumentEvidenceTextSimpleNotArchiveSMSPin()$
 $elseif(eleg)$
       $if(eid_signatory_name)$
-          $if(eid_provider_is_se_bankid)$
+          $if(provider_sebankid)$
               $_SignDocumentEvidenceTextSimpleNotArchiveElegWithName()$
           $else$
               $_SignDocumentEvidenceTextSimpleNotArchiveNOBankIDWithName()$
           $endif$
       $else$
-          $if(eid_provider_is_se_bankid)$
+          $if(provider_sebankid)$
               $_SignDocumentEvidenceTextSimpleNotArchiveEleg()$
           $else$
               $_SignDocumentEvidenceTextSimpleNotArchiveNOBankID()$
@@ -540,15 +540,13 @@ $if(provider_sebankid)$
 <p>Data returned from $provider()$:
   <br/>Name: $signatory_name$
   <br/>ID number: $personalNumber(value=signatory_personal_number)$
+  <br/>IP: $signatory_ip$
 </p>
 $endif$
 $if(provider_nobankid)$
-<p>Transaction to $provider()$ was initiated with:
-  <br/>ID number: $personalNumber(value=signatory_personal_number)$
-</p>
-<br/>
 <p>Data returned from $provider()$:
   <br/>Name: $signatory_name$
+  <br/>PID: $signatory_pid$
 </p>
 $endif$
 <br/>
@@ -612,6 +610,9 @@ elegVerificationAuth=
   $endif$
   $if(signatory_pid)$
   <br/>PID: $signatory_pid$
+  $endif$
+  $if(signatory_ip)$
+  <br/>IP: $signatory_ip$
   $endif$
 </p>
 <br/>

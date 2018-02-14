@@ -77,6 +77,8 @@
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Il documento è stato firmato.",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"Il documento è stato firmato da $actor$ usando il BankID svedese come metodo di autenticazione.",
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"Il documento è stato firmato da $actor$ usando il BankID svedese come metodo di autenticazione. Il nome restituito dal BankID svedese è stato \"$eid_signatory_name$\".",
+"_SignDocumentEvidenceTextSimpleNotArchiveNOBankID":"",
+"_SignDocumentEvidenceTextSimpleNotArchiveNOBankIDWithName":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"Il documento è stato firmato da $actor$ usando un codice PIN via SMS come metodo di autenticazione.",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"Il documento è stato firmato da $actor$.",
 "_SignReminderSendEmailLog":"Scrive eSign ha mandato un promemoria di firma a $signatory$ via email su richiesta dell'utente $actor$.",

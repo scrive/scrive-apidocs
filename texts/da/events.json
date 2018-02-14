@@ -77,6 +77,8 @@
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Dokumentet blev signeret.",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"Dokumentet blev signeret af $actor$, der anvendte Swedish BankID som godkendelsesmetode.",
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"Dokumentet blev signeret af $actor$, der anvendte Swedish BankID som godkendelsesmetode. Navnet, der blev sendt tilbage fra Swedish BankID, var \"$eid_signatory_name$\".",
+"_SignDocumentEvidenceTextSimpleNotArchiveNOBankID":"",
+"_SignDocumentEvidenceTextSimpleNotArchiveNOBankIDWithName":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveSMSPin":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveStandard":"Dokumentet blev signeret af $actor$.",
 "_SignReminderSendEmailLog":"Scrive eSign sendte en forespørgsel om at signere via e-mail til $signatory$ på forespørgsel af brugeren $actor$.",

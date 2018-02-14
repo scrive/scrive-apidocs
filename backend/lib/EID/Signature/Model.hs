@@ -119,6 +119,7 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeCGISEBankIDSignature () whe
         sqlSet "signatory_name" cgisebidsSignatoryName
         sqlSet "signatory_personal_number" cgisebidsSignatoryPersonalNumber
         sqlSet "ocsp_response" cgisebidsOcspResponse
+        sqlSet "signatory_ip" cgisebidsSignatoryIP
 
 ----------------------------------------
 
@@ -152,7 +153,7 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsNOBankIDSignature () wh
         sqlSet "data" netsnoSignedText
         sqlSet "signature" . encodeUtf8 $ netsnoB64SDO
         sqlSet "signatory_name" netsnoSignatoryName
-        sqlSet "signatory_personal_number" netsnoSignatoryPersonalNumber
+        sqlSet "signatory_personal_number" netsnoSignatoryPID
 
 -- | Get signature for a given signatory.
 data GetESignature = GetESignature SignatoryLinkID
@@ -166,12 +167,13 @@ instance (MonadThrow m, MonadDB m) => DBQuery m GetESignature (Maybe ESignature)
       sqlResult "signatory_name"
       sqlResult "signatory_personal_number"
       sqlResult "ocsp_response"
+      sqlResult "signatory_ip"
       sqlWhereEq "signatory_link_id" slid
     fetchMaybe fetchESignature
 
 -- | Fetch e-signature.
-fetchESignature :: (SignatureProvider, T.Text, ByteString, Maybe ByteString, Maybe T.Text, Maybe T.Text, Maybe ByteString) -> ESignature
-fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msignatory_personal_number, mocsp_response) = case provider of
+fetchESignature :: (SignatureProvider, T.Text, ByteString, Maybe ByteString, Maybe T.Text, Maybe T.Text, Maybe ByteString, Maybe T.Text) -> ESignature
+fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msignatory_personal_number, mocsp_response, msignatory_ip) = case provider of
   LegacyBankID -> LegacyBankIDSignature_ LegacyBankIDSignature {
     lbidsSignedText = sdata
   , lbidsSignature = signature
@@ -195,6 +197,7 @@ fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msig
   CgiGrpBankID -> CGISEBankIDSignature_ CGISEBankIDSignature {
     cgisebidsSignatoryName = fromJust msignatory_name
   , cgisebidsSignatoryPersonalNumber = fromJust msignatory_personal_number
+  , cgisebidsSignatoryIP = fromMaybe "" msignatory_ip
   , cgisebidsSignedText = sdata
   , cgisebidsSignature = signature
   , cgisebidsOcspResponse = fromJust mocsp_response
@@ -203,5 +206,5 @@ fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msig
     netsnoSignedText = sdata
   , netsnoB64SDO = decodeUtf8 signature
   , netsnoSignatoryName = fromJust msignatory_name
-  , netsnoSignatoryPersonalNumber = fromJust msignatory_personal_number
+  , netsnoSignatoryPID = fromJust msignatory_personal_number
   }

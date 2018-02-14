@@ -15,6 +15,7 @@ import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
 import AppView
+import BrandedDomain.BrandedDomain
 import Company.Model
 import DB
 import Happstack.Fields
@@ -43,6 +44,7 @@ handleLoginGet = do
           ad <- getAnalyticsData
           content <- renderTemplate "loginPageWithBranding" $ do
             F.value "referer" $ fromMaybe "/" referer
+            F.value "nolinks" $ not $ get (bdMainDomain . ctxbrandeddomain) ctx
             standardPageFields ctx Nothing ad
           Right <$> simpleHtmlResponse content
        Just _ -> return $ Left LinkDesignView

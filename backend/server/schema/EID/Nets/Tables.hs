@@ -10,13 +10,12 @@ import DB
 tableNetsSignOrders :: Table
 tableNetsSignOrders = tblTable {
   tblName = "nets_sign_orders"
-, tblVersion = 1
+, tblVersion = 2
 , tblColumns = [
     tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
   , tblColumn { colName = "session_id", colType = BigIntT, colNullable = False }
   , tblColumn { colName = "text_to_be_signed", colType = TextT, colNullable = False }
   , tblColumn { colName = "order_id", colType = TextT, colNullable = False }
-  , tblColumn { colName = "ssn", colType = TextT, colNullable = False }
   , tblColumn { colName = "deadline", colType = TimestampWithZoneT, colNullable = False }
   , tblColumn { colName = "is_canceled", colType = BoolT, colNullable = False }
   ]

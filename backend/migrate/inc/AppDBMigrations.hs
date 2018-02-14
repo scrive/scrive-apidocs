@@ -15,6 +15,7 @@ import Doc.Extending.Migrations
 import Doc.Migrations
 import Doc.Signing.Migrations
 import Doc.SMSPin.Migrations
+import EID.Authentication.Migrations
 import EID.Nets.Migrations
 import EID.Signature.Migrations
 import FeatureFlags.Migrations
@@ -83,4 +84,7 @@ kontraMigrations = [
   , createNetsSignOrdersTable
   , featureFlagsAddNOAuthToSign
   , eidSignaturesAddProviderNetsNOBankID
+  , addSignatoryIPToEIDSignatures
+  , addSignatoryIPToEIDAuthentications
+  , netsSignOrdersDropSSN
   ]
