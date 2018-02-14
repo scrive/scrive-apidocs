@@ -4,7 +4,6 @@ module EID.Authentication.Migrations (
 
 import DB
 import EID.Authentication.Tables
-import KontraPrelude
 
 addSignatoryIPToEIDAuthentications :: MonadDB m => Migration m
 addSignatoryIPToEIDAuthentications = Migration {
