@@ -128,7 +128,9 @@ unjsonSignatory da =  objectOf $
           ) "Link for signing document by API delivery"
        )
 
--- We can't implement lists as Unjson - since we would have to do unjsonToJSON on each document parser. And this will make us loose the order
+-- We can't implement lists as Unjson - since we would have to do
+-- unjsonToJSON on each document parser. And that would make us lose
+-- the order.
 listToJSONBS ::  (Int,[(DocumentAccess,Document)]) -> BSC.ByteString
 listToJSONBS (i,docs) = toLazyByteString $
     "{\"total_matching\":"  <> (lazyByteString  $ BSC.pack $ show i) <>
