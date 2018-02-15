@@ -25,27 +25,28 @@ signLinkFromDetails' :: [SignatoryField]
                      -> MagicHash
                      -> SignatoryLink
 signLinkFromDetails' fields author partner sorder attachments magichash =
-  def {  signatorylinkid = unsafeSignatoryLinkID 0
-                , signatoryfields = map signatoryLinkClearField fields -- clean signatures
-                , signatoryisauthor  = author
-                , signatoryispartner = partner
-                , signatorysignorder  = sorder
-                , signatorymagichash = magichash
-                , maybesignatory = Nothing
-                , maybesigninfo  = Nothing
-                , maybeseeninfo  = Nothing
-                , maybereadinvite = Nothing
-                , mailinvitationdeliverystatus = Unknown
-                , smsinvitationdeliverystatus = Unknown
-                , signatorylinkdeleted = Nothing
-                , signatorylinkreallydeleted = Nothing
-                , signatorylinkcsvupload = Nothing
-                , signatoryattachments = attachments
-                , signatorylinksignredirecturl = Nothing
-                , signatorylinkrejectiontime = Nothing
-                , signatorylinkrejectionreason = Nothing
-                , signatorylinkauthenticationtosignmethod = StandardAuthenticationToSign
-                }
+  def { signatorylinkid                         = unsafeSignatoryLinkID 0
+      , signatoryfields                         = map signatoryLinkClearField
+                                                  fields -- clean signatures
+      , signatoryisauthor                       = author
+      , signatoryispartner                      = partner
+      , signatorysignorder                      = sorder
+      , signatorymagichash                      = magichash
+      , maybesignatory                          = Nothing
+      , maybesigninfo                           = Nothing
+      , maybeseeninfo                           = Nothing
+      , maybereadinvite                         = Nothing
+      , mailinvitationdeliverystatus            = Unknown
+      , smsinvitationdeliverystatus             = Unknown
+      , signatorylinkdeleted                    = Nothing
+      , signatorylinkreallydeleted              = Nothing
+      , signatorylinkcsvupload                  = Nothing
+      , signatoryattachments                    = attachments
+      , signatorylinksignredirecturl            = Nothing
+      , signatorylinkrejectiontime              = Nothing
+      , signatorylinkrejectionreason            = Nothing
+      , signatorylinkauthenticationtosignmethod = StandardAuthenticationToSign
+      }
 
 signatoryLinkClearField :: SignatoryField -> SignatoryField
 signatoryLinkClearField field =  case field of
