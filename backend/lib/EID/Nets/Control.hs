@@ -313,9 +313,22 @@ handleSignRequest did slid = do
 
 -- | Generate text to be signed that represents contents of the document.
 textToBeSigned :: TemplatesMonad m => Document -> m String
-textToBeSigned doc@Document{..} = renderLocalTemplate doc "tbs" $ do
-  F.value "document_title" $ documenttitle
-  F.value "document_id"   $ show documentid
+textToBeSigned doc@Document{..} = do
+    let noBankIDMobileCharLimit = 116
+    text1 <- render documenttitle
+    case length text1 > noBankIDMobileCharLimit of
+      False -> return text1
+      True -> render $ shortenText (length text1 - noBankIDMobileCharLimit) documenttitle
+  where
+    render title = renderLocalTemplate doc "tbs" $ do
+      F.value "document_title" $ title
+      F.value "document_id"   $ show documentid
+    -- we will be cutting from the middle and putting a " ... " string in the middle
+    shortenText charsToCut text = beginning ++ "..." ++ ending
+      where
+        preservedLength = (length text - charsToCut - 3) `div` 2
+        beginning = take preservedLength text
+        ending = reverse . take preservedLength . reverse $ text
 
 checkNetsSignStatus
   :: (MonadMask m, MonadBaseControl IO m, MonadIO m, DocumentMonad m, MonadLog m)
