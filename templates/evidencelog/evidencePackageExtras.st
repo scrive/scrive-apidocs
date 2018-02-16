@@ -45,13 +45,13 @@ EvidenceOfIntentTable=<table>
   <tr>
     <td>$entry.first.time$</td>
     <td>$entry.ip$</td>
-    <td>$entry.signatory$ opened the document in the signing view. <a class="entry-screenshot" href="$entry.first.image$">Click here</a> to see an attached screen capture of the top of their signing view.</td>
+    <td>$entry.signatory$ opened the document in the signing view. <a class="screenshot entry-screenshot" href-length="$entry.first.length$" href="$entry.first.image$" href-backup="$entry.first.image$">Click here</a> to see an attached screen capture of the top of their signing view.</td>
   </tr>
   $endif$
   <tr>
     <td>$entry.signing.time$</td>
     <td>$entry.ip$</td>
-    <td>$entry.signatory$ signed the document.$if(entry.signing.image)$ <a class="signing-screenshot" href="$entry.signing.image$">Click here</a> to see attached screen capture of their signing view.$else$ A screen capture was not done for this event.$endif$$if(entry.reference.image)$ <a class="reference-screenshot" href="$entry.reference.image$">Click here</a> to see attached screen capture of the reference signing view created at $entry.reference.time$.$endif$</td>
+    <td>$entry.signatory$ signed the document.$if(entry.signing.image)$ <a class="screenshot signing-screenshot" href-length="$entry.signing.length$" href="$entry.signing.image$" href-backup="$entry.signing.image$">Click here</a> to see attached screen capture of their signing view.$else$ A screen capture was not done for this event.$endif$$if(entry.reference.image)$ <a class="screenshot reference-screenshot" href-length="$entry.reference.length$" href="$entry.reference.image$" href-backup="$entry.reference.image$">Click here</a> to see attached screen capture of the reference signing view created at $entry.reference.time$.$endif$</td>
   </tr>}$
 </table>
 ###
