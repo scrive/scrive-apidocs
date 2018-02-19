@@ -154,7 +154,7 @@ def check_signing_settings1(test, drv, api):
     # screenshot not showing header
     drv.screenshot()
 
-    drv.scroll_to_bottom()
+    drv.scroll_to_bottom(use_signview=True)
 
     # screenshot not showing reject button or footer
     drv.screenshot(first_sleep_for=1)
@@ -174,7 +174,7 @@ def check_signing_settings2(test, drv, api):
     # screenshot showing header without pdf download button
     drv.screenshot()
 
-    drv.scroll_to_bottom()
+    drv.scroll_to_bottom(use_signview=True)
 
     # screenshot showing reject button and footer
     drv.screenshot(first_sleep_for=1)
@@ -201,7 +201,7 @@ def check_signing_settings3(test, drv, api):
     # screenshot showing header with pdf download button
     drv.screenshot()
 
-    drv.scroll_to_bottom()
+    drv.scroll_to_bottom(use_signview=True)
 
     # screenshot showing reject button and footer
     drv.screenshot(first_sleep_for=1)

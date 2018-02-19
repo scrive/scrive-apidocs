@@ -129,8 +129,11 @@ class SeleniumDriverWrapper(object):
         self._request_count += 1
         return self._driver.execute_script(script)
 
-    def scroll_to_bottom(self):
-        self.execute('window.scrollTo(0, document.body.scrollHeight);')
+    def scroll_to_bottom(self, use_signview=False):
+        if use_signview:
+            self.execute('window.scrollTo(0, $(".signview")[0].scrollHeight);')
+        else:
+            self.execute('window.scrollTo(0, document.body.scrollHeight);')
 
     def switch_window(self):
         current_window = self._driver.current_window_handle
