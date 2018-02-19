@@ -125,8 +125,7 @@ documentFilterToSQL (DocumentFilterUnsavedDraft flag) =
     ]
 
 documentFilterToSQL (DocumentFilterByAuthor userid) = do
-  sqlWhere "documents.author_id = signatory_links.id"
-  sqlWhereEq "signatory_links.user_id" userid
+  sqlWhereEq "documents.author_user_id" userid
 
 documentFilterToSQL (DocumentFilterByCanSign userid) = do
   sqlWhere "signatory_links.is_partner"

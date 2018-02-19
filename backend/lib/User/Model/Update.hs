@@ -200,7 +200,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateDraftsAndTemplatesWithUse
   where
     whereSignatoryLinkCanBeChanged =
       sqlWhereExists $ sqlSelect "documents" $ do
-        sqlLeftJoinOn "signatory_links" "documents.author_id = signatory_links.id"
+        sqlJoinOn "signatory_links" "documents.author_id = signatory_links.id"
         sqlWhere "signatory_links.id = signatory_link_fields.signatory_link_id"
         sqlWhereEq "documents.status" Preparation
         sqlWhereEq "signatory_links.user_id" userid
