@@ -1,0 +1,76 @@
+# See 'git help shortlog' for more details.
+# Formats: Proper Name [<proper@email.xx> [Commit Name]] <commit@email.xx>
+#
+# Show result: 'git shortlog -se'.
+# Should be empty list: 'git shortlog -se | cut -f2 | cut -d'<' -f1 | uniq -d'.
+Andrzej Rybczak             <andrzej@scrive.com>
+Andrzej Rybczak             <andrzej@scrive.com>        <andrzej@skrivapa.se>
+Andrzej Rybczak             <andrzej@scrive.com>        <electricityispower@gmail.com>
+Andrzej Rybczak             <andrzej@scrive.com>        andrzej <andrzej@skrivapa.se>
+Bartek Ćwikłowski           <bartek@scrive.com>
+Bartek Ćwikłowski           <bartek@scrive.com>         <paczesiowa@gmail.com>
+Bartek Ćwikłowski           <bartek@scrive.com>         Paczesiowa <paczesiowa@gmail.com>
+Brian Ollenberger           <brian@ollenberger.com>
+Emily Green                 <emily@skrivapa.se>
+Emily Green                 <emily@skrivapa.se>         emily <emily@skrivapa.se>
+Emily Green                 <emily@skrivapa.se>         emilymaygreen <emilymaygreen@gmail.com>
+Emily Green                 <emily@skrivapa.se>         emilymaygreen <emilymaygreen@goglemail.com>
+Emily Green                 <emily@skrivapa.se>         emilymaygreen <emilymaygreen@googlemail.com>
+Eric Normand                <eric@scrive.com>
+Eric Normand                <eric@scrive.com>           Eric Normand <eric+gerritisstupid@scrive.com>
+Eric Normand                <eric@scrive.com>           Eric Normand <eric@aloth.(none)>
+Eric Normand                <eric@scrive.com>           Eric Normand <eric@mint>
+Eric Normand                <eric@scrive.com>           Eric Normand <eric@shalini.(none)>
+Eric Normand                <eric@scrive.com>           Eric Normand <eric@skrivapa.se>
+Eric Normand                <eric@scrive.com>           Eric Normand <ericwnormand@gmail.com>
+Eric Normand                <eric@scrive.com>           eric <eric@skrivapa.se>
+Eric Normand                <eric@scrive.com>           ericwnormand <ericwnormand@gmail.com>
+Fredrik Carlén              <fredrik@scrive.com>
+Gracjan Polak               <gracjan@scrive.com>
+Gracjan Polak               <gracjan@scrive.com>        Gracjan Polak <gracjan@skrivapa.se>
+Gracjan Polak               <gracjan@scrive.com>        Gracjan Polak <gracjanpolak@gmail.com>
+Gracjan Polak               <gracjan@scrive.com>        gracjan <gracjan@skrivapa.se>
+Gracjan Polak               <gracjan@scrive.com>        gracjanpolak <gracjanpolak@gmail.com>
+Ilhan Demirok               <ilhan@skrivapa.se>
+Johan Nilo                  <johan.nilo@scrive.com>
+Johan Nilo                  <johan.nilo@scrive.com>     Johan Nilo <johannilo@Sofias-MacBook-Air.local>
+Johan Söderholm             <johan@scrive.com>
+Johan Söderholm             <johan@scrive.com>          Johan Söderholm <johan.hilding@gmail.com>
+Jonathan Jouty              <jonathan@scrive.com>
+Jonathan Jouty              <jonathan@scrive.com>       Jonathan Jouty <jonathanjouty@users.noreply.github.com>
+Karol Samborski             <karol@skrivapa.se>
+Karol Samborski             <karol@skrivapa.se>         Karol Samborski <edv.karol@gmail.com>
+Karol Samborski             <karol@skrivapa.se>         Karol Samborski <karol@thinkpad>
+Lukas Duczko                <lukas@scrive.com>
+Lukas Duczko                <lukas@scrive.com>          lukas <lukas@skrivapa.se>
+Magnus Carlsson             <magnus@scrive.com>
+Magnus Carlsson             <magnus@scrive.com>         Magnus Carlsson <magnus@carlssonia.org>
+Mariusz Rak                 <mariusz@scrive.com>
+Mariusz Rak                 <mariusz@scrive.com>        Mariusz <mariusz@.scrive.com>
+Mariusz Rak                 <mariusz@scrive.com>        Mariusz <mariusz@ubuntu.(none)>
+Mariusz Rak                 <mariusz@scrive.com>        Mariusz Rak <duzyrak@gmail.com>
+Mariusz Rak                 <mariusz@scrive.com>        Mariusz Rak <mariusz@scrvie.com>
+Mariusz Rak                 <mariusz@scrive.com>        duzyrak <duzyrak@gmail.com>
+Mariusz Rak                 <mariusz@scrive.com>        mariusz <mariusz@scrive.com>
+Mariusz Rak                 <mariusz@scrive.com>        mariusz <mariusz@skirvapa.se>
+Mariusz Rak                 <mariusz@scrive.com>        mariusz <mariusz@skrivapa.se>
+Mariusz Rak                 <mariusz@scrive.com>        mariusz <mariusz@ubuntu.(none)>
+Mariusz Rak                 <mariusz@scrive.com>        mariuszrak <mariusz@scrive.com>
+Martin Taranza              <martin.taranza@scrive.com>
+Martin Taranza              <martin.taranza@scrive.com> Martin Taranza <martin@promne.cz>
+Martin Taranza              <martin.taranza@scrive.com> Martin Taranza <trin-cz@users.noreply.github.com>
+Mikhail Glushenkov          <mikhail@scrive.com>
+Mikhail Glushenkov          <mikhail@scrive.com>        Mikhail Glushenkov <mikhail.glushenkov@gmail.com>
+Ola Holmström               <ola@scrive.com>
+Ola Holmström               <ola@scrive.com>            Ola Holmström <ola.holmstrom@gmail.com>
+Patrik Lythell              <patrik@skrivapa.se>
+Patrik Lythell              <patrik@skrivapa.se>        patrik <patrik@eventbook.se> # Not sure if these two are the same person actually...
+Tim Ellis                   <tim@scrive.com>
+Tim Ellis                   <tim@scrive.com>            Tim Ellis <tim@tims-mpb.home>
+Tim Ellis                   <tim@scrive.com>            Tim Ellis <tim@tims-mpb.local>
+Tim Ellis                   <tim@scrive.com>            Timothy Ellis <tim@scrive.com>
+Tage Borg                   <tage.borg@gmail.com>
+Tomek Wójcik                <tomek@scrive.com>
+Tomek Wójcik                <tomek@scrive.com>          Tomek Wójcik <labs@tomekwojcik.pl>
+Tomek Wójcik                <tomek@scrive.com>          Tomek Wójcik <labs@tomekwojcik.pl>
+Tomek Wójcik                <tomek@scrive.com>          Tomek Wójcik <tomekwojcik@users.noreply.github.com>
