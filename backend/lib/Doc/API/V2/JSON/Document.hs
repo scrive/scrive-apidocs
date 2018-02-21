@@ -94,6 +94,7 @@ unjsonSignatory da =  objectOf $
   <*   (fieldReadOnlyOpt "seen_time" (fmap utcTimeToAPIFormat . fmap signtime . maybeseeninfo) "Time when signatory opened the document in browser" )
   <*   (fieldReadOnlyOpt "read_invitation_time" (fmap utcTimeToAPIFormat . maybereadinvite) "Time when signatory read invitation" )
   <*   (fieldReadOnlyOpt "rejected_time" (fmap utcTimeToAPIFormat . signatorylinkrejectiontime) "Time when signatory rejected the document" )
+  <*   (fieldReadOnlyOpt "rejection_reason" signatorylinkrejectionreason "Message from the signatory to explain rejection")
   <**> (fieldOpt "sign_success_redirect_url" signatorylinksignredirecturl ("URL to redirect the signatory after signing the document")
         <**> (pure $ \mrd s -> s { signatorylinksignredirecturl = mrd }))
   <**> (fieldOpt "reject_redirect_url" signatorylinkrejectredirecturl ("URL to redirect the signatory after rejecting the document")
