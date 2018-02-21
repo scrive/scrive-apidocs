@@ -245,6 +245,50 @@ properties:
       and will only be visible when accessing the document as the author.
     type: string
     format: uri
+  consent_module:
+    description: |
+      If present, a section will be shown asking the signatory to answer some
+      mandatory questions.
+    type: object
+    properties:
+      title:
+        type: string
+        description: |
+          Section title.
+      questions:
+        type: array
+        items:
+          type: object
+          properties:
+            title:
+              type: string
+              description: |
+                Question text.
+            positive_option:
+              type: string
+              desription: |
+                Text for the positive answer.
+            negative_option:
+              type: string
+              desription: |
+                Text for the negative answer.
+            response:
+              type: bool
+              description: |
+                Will be present when the party has answered the question.
+            detailed_description:
+              type: object
+              description: |
+                Optional additional information to show the signatory.
+              properties:
+                title:
+                  type: string
+                  description: |
+                    Title of the section. Will be shown in a button.
+                text:
+                  type: string
+                  description: |
+                    Explanation of the question.
 example:
   {
     "id": "189256",
@@ -342,5 +386,20 @@ example:
         "file_id": "195173"
       }
     ],
-    "api_delivery_url": null
+    "api_delivery_url": null,
+    "consent_module": {
+      "title": "Handling of personal information",
+      "questions": [
+        {
+          "title": "Do you agree?",
+          "positive_option": "Yes",
+          "negative_option": "No",
+          "response": null,
+          "detailed_description": {
+            "title": "More information",
+            "text": "Dolor ipsum dolor sit amet"
+          }
+        }
+      ]
+    }
   }
