@@ -6,6 +6,7 @@ module Doc.API.V2.JSON.Utils (
 ) where
 
 import Control.Applicative.Free
+import Data.Typeable
 import Data.Unjson
 import qualified Data.Aeson as Aeson
 import qualified Data.Text as T
@@ -48,7 +49,7 @@ nothingToNullDef def = SimpleUnjsonDef "ReadOnly (Maybe a) for record like 'a'" 
     _ -> unjsonToJSON def mv
 
 -- | Used for optional fields that are also read-only
-fieldReadOnlyOpt :: Unjson a => T.Text -> (s -> Maybe a) -> T.Text -> Ap (FieldDef s) ()
+fieldReadOnlyOpt :: (Unjson a, Typeable a) => T.Text -> (s -> Maybe a) -> T.Text -> Ap (FieldDef s) ()
 fieldReadOnlyOpt name f desc = fieldReadonlyBy name f desc unjsonDefWithNull
   where unjsonDefWithNull :: Unjson a => UnjsonDef (Maybe a)
         unjsonDefWithNull = SimpleUnjsonDef "ReadOnly"  (\v -> Just <$> parse unjsonDef v) $ \mv ->
