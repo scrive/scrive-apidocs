@@ -7,7 +7,10 @@ module User.API (
     apiCallUpdateUserProfile,
     apiCallChangeEmail,
     apiCallSignup,
-    apiCallLoginUserAndGetSession
+    apiCallLoginUserAndGetSession,
+    setup2FA,
+    confirm2FA,
+    disable2FA
   ) where
 
 import Control.Conditional ((<|), (|>))
@@ -18,6 +21,8 @@ import Happstack.Server.Types
 import Happstack.StaticRouting
 import Log
 import Text.JSON.Gen hiding (object)
+import qualified Data.ByteString.Base64 as Base64
+import qualified Data.ByteString.Char8 as BS
 
 import API.Monad.V1
 import Chargeable.Model
@@ -48,11 +53,13 @@ import User.History.Model
 import User.JSON
 import User.Model
 import User.PasswordReminder
+import User.TwoFactor
 import User.UserAccountRequest
 import User.UserControl
 import User.UserView
 import User.Utils
 import Util.HasSomeUserInfo
+import Util.QRCode (unQRCode)
 import Utils.Monad
 import qualified API.V2 as V2
 import qualified API.V2.Errors as V2
@@ -84,14 +91,17 @@ userAPIV1 = choice [
 userAPIV2 :: Route (Kontra Response)
 userAPIV2 = choice [
   dir "loginandgetsession" $ hPost $ toK0 $ apiCallLoginUserAndGetSession,
+  dir "2fa" $ dir "setup"   $ hPost $ toK0 $ setup2FA,
+  dir "2fa" $ dir "confirm" $ hPost $ toK0 $ confirm2FA,
+  dir "2fa" $ dir "disable" $ hPost $ toK0 $ disable2FA,
   userAPIV1
   ]
 
 apiCallGetUserPersonalToken :: Kontrakcja m => m Response
 apiCallGetUserPersonalToken = api $ do
-    let wrongPassMsg = "Email and password don't match"
     memail  <- getField "email"
     mpasswd <- getField "password"
+    mtotpcode <- getOptionalField asWord32 "totp"
     case (memail, mpasswd) of
         (Just email, Just passwd) -> do
             -- check the user things here
@@ -100,34 +110,103 @@ apiCallGetUserPersonalToken = api $ do
               Nothing ->
                 -- use an ambiguous message, so that this cannot be used to determine
                 -- whether a user has an account with Scrive
-                throwM . SomeDBExtraException $ serverError wrongPassMsg
+                throwM . SomeDBExtraException $ forbidden wrongPassMsg
               Just user -> do
                 ctx <- getContext
                 if maybeVerifyPassword (userpassword user) passwd
-                  then do
-                    let uid = userid user
-                    _success <- dbUpdate $ CreatePersonalToken uid
-                    token <- dbQuery $ GetPersonalToken uid
-                    case token of
-                         Nothing -> throwM . SomeDBExtraException $ serverError "No token found, this should not happend"
-                         Just t  -> do
-                           attemptCount <- dbQuery $ GetUserRecentAuthFailureCount (userid user)
-                           if attemptCount <= 5
-                             then do
-                               _ <- dbUpdate $ LogHistoryAPIGetPersonalTokenSuccess uid (get ctxipnumber ctx) (get ctxtime ctx)
-                               return $ Right $ Ok (unjsonOAuthAuthorization, t)
-                             else
-                               -- use an ambiguous message, so that this cannot be used to determine
-                               -- whether a user has an account with Scrive
-                               throwM . SomeDBExtraException $ serverError wrongPassMsg
+                  then case (usertotp user, usertotpactive user, mtotpcode) of
+                    (_, False, _) -> returnTokenFor ctx user
+                    (Just totp, True, Just totpcode) -> do
+                      now <- currentTime
+                      if verifyTOTPCode totp now totpcode
+                         then returnTokenFor ctx user
+                         else return . Left $ forbidden "TOTP incorrect"
+                    (_, True, Nothing) ->
+                      return . Left $ forbidden "TOTP code missing"
+                    (Nothing, True, Just _) ->
+                      $unexpectedError "TOTP condition should not happen"
                   else do
                     _ <- dbUpdate $ LogHistoryAPIGetPersonalTokenFailure (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
                     logInfo "getpersonaltoken failed (invalid password)" $ logObject_ user
                     when (getEmail user == "ernes32@gmail.com") $
                       logInfo "Failed Ernes login" $ object ["SHA256(password)" .= show (sha256Ascii passwd)]
                     -- we do not want rollback here, so we don't raise exception
-                    return $ Left $ serverError wrongPassMsg
-        _ -> throwM . SomeDBExtraException $ serverError "Email or password is missing"
+                    return . Left $ forbidden wrongPassMsg
+        _ -> throwM . SomeDBExtraException $ forbidden "Email or password is missing"
+  where
+    wrongPassMsg = "Email and password don't match"
+    returnTokenFor ctx user = do
+      let uid = userid user
+      _success <- dbUpdate $ CreatePersonalToken uid
+      token <- dbQuery $ GetPersonalToken uid
+      case token of
+           Nothing -> throwM . SomeDBExtraException $ serverError "No token found, this should not happend"
+           Just t  -> do
+             attemptCount <- dbQuery $ GetUserRecentAuthFailureCount (userid user)
+             if attemptCount <= 5
+               then do
+                 _ <- dbUpdate $ LogHistoryAPIGetPersonalTokenSuccess uid (get ctxipnumber ctx) (get ctxtime ctx)
+                 return $ Right $ Ok (unjsonOAuthAuthorization, t)
+               else
+                 -- use an ambiguous message, so that this cannot be used to determine
+                 -- whether a user has an account with Scrive
+                 throwM . SomeDBExtraException $ forbidden wrongPassMsg
+
+setup2FA :: Kontrakcja m => m Response
+setup2FA = V2.api $ do
+  (user, _) <- V2.getAPIUserWithAnyPrivileges
+  if usertotpactive user
+     then V2.Ok <$> runJSONGenT (value "twofactor_active" True)
+     else do
+       key <- createTOTPKey
+       ok <- dbUpdate $ SetUserTOTPKey (userid user) key
+       if ok
+         then do
+           let email = useremail . userinfo $ user
+           url <- ctxDomainUrl <$> getContext
+           qrCode <- liftIO $ makeQRFromURLEmailAndKey url email key
+           return . V2.Ok <$> runJSONGen $ do
+             value "twofactor_active" False
+             value "qr_code" (BS.unpack . Base64.encode . unQRCode $ qrCode)
+         else V2.apiError $ V2.serverError "Could not set TOTP key"
+
+confirm2FA :: Kontrakcja m => m Response
+confirm2FA = V2.api $ do
+  ctx <- getContext
+  (user, _) <- V2.getAPIUserWithAnyPrivileges
+  totpcode <- V2.apiV2ParameterObligatory $ V2.ApiV2ParameterInt "totp"
+  now <- currentTime
+  case (usertotp user, usertotpactive user) of
+    (Just totpkey, False) ->
+      if verifyTOTPCode totpkey now (fromIntegral totpcode)
+         then do
+           r <- dbUpdate $ ConfirmUserTOTPSetup (userid user)
+           if r
+              then do
+                _ <- dbUpdate $ LogHistoryTOTPEnable (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
+                return . V2.Ok <$> runJSONGen $ do
+                  value "twofactor_active" r
+                  value "totp_valid" True
+              else
+                V2.apiError $ V2.serverError "Could not confirm user TOTP setup"
+         else
+           V2.apiError $ V2.requestParameterInvalid "totp" "The code is not valid"
+    (_, tfa) -> V2.Ok <$> runJSONGenT (value "twofactor_active" tfa)
+
+disable2FA :: Kontrakcja m => m Response
+disable2FA = V2.api $ do
+  ctx <- getContext
+  (user, _) <- V2.getAPIUserWithAnyPrivileges
+  if usertotpactive user
+     then do
+       r <- dbUpdate $ DisableUserTOTP (userid user)
+       if r
+          then do
+            _ <- dbUpdate $ LogHistoryTOTPDisable (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
+            V2.Ok <$> runJSONGenT (value "twofactor_active" False)
+          else
+            V2.apiError $ V2.serverError "Could not disable TOTP"
+     else V2.Ok <$> runJSONGenT (value "twofactor_active" False)
 
 apiCallGetUserProfile :: Kontrakcja m => m Response
 apiCallGetUserProfile =  api $ do

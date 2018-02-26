@@ -105,6 +105,7 @@ handlePostChangeEmail uid hash =  withUser $ \user -> do
   mpassword <- getOptionalField asDirtyPassword "password"
   case mpassword of
     Nothing -> return $ internalResponse $ LinkAccount
+    -- No need to check TOTP here, withUser gives us logged in user
     Just password | maybeVerifyPassword (userpassword user) password -> do
       changed <- maybe (return False)
                       (dbUpdate . SetUserEmail (userid user))

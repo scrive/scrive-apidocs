@@ -5,7 +5,7 @@ import DB
 tableUsers :: Table
 tableUsers = tblTable {
     tblName = "users"
-  , tblVersion = 21
+  , tblVersion = 22
     , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "password", colType = BinaryT }
@@ -25,6 +25,8 @@ tableUsers = tblTable {
     , tblColumn { colName = "deleted", colType = TimestampWithZoneT }
     , tblColumn { colName = "associated_domain_id", colType = BigIntT , colNullable = False }
     , tblColumn { colName = "password_algorithm", colType = SmallIntT, colNullable = True }
+    , tblColumn { colName = "totp_key", colType = BinaryT, colNullable = True }
+    , tblColumn { colName = "totp_active", colType = BoolT, colNullable = False, colDefault = Just "false" }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblChecks = [Check "check_users_lowercase_email" "email = lower(email)"]

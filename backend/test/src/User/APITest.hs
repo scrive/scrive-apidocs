@@ -1,23 +1,36 @@
 {-# LANGUAGE OverloadedStrings #-}
 module User.APITest (userAPITests) where
 
+import Control.Monad.IO.Class
+import Crypto.Hash.Algorithms (SHA1(..))
 import Data.Aeson
+import Data.Either (Either(..))
+import Data.List.Split (splitOneOf)
+import Data.OTP (totp)
 import Happstack.Server
 import Test.Framework
+import qualified Codec.Binary.Base32 as B32
+import qualified Data.ByteString.Base64 as Base64
+import qualified Data.ByteString.Char8 as BSC
 import qualified Data.HashMap.Strict as H
+import qualified Data.Text.Encoding as TE
 
+import Context
 import DB
 import Doc.SignatoryLinkID ()
+import MinutesTime
 import TestingUtil
 import TestKontra as T
 import User.API
 import User.Email
 import User.Model
+import Util.QRCode
 
 userAPITests :: TestEnvSt -> Test
 userAPITests env = testGroup "UserAPI"
   [ testThat "Test User API Create Login Link" env testUserLoginAndGetSession
   , testThat "Test User API Too Many Attempts To Get Tokens" env testUserTooManyGetTokens
+  , testThat "Test User API 2FA setup and disable workflow works" env testUser2FAWorkflow
   ]
 
 testUserLoginAndGetSession :: TestEnv ()
@@ -80,7 +93,7 @@ testUserTooManyGetTokens = do
     ]
   forM_ [1..6] $ \_ -> do
     (res2,_) <- runTestKontra req2 ctx $ apiCallGetUserPersonalToken
-    assertEqual "We should get a 500 error response" 500 (rsCode res2)
+    assertEqual "We should get a 403 error response" 403 (rsCode res2)
 
   -- after 6 failed requests, trying valid password also fails
   req3 <- mkRequest GET
@@ -88,4 +101,72 @@ testUserTooManyGetTokens = do
     , ("password", inText password)
     ]
   (res3,_) <- runTestKontra req3 ctx $ apiCallGetUserPersonalToken
-  assertEqual "We should get a 500 error response" 500 (rsCode res3)
+  assertEqual "We should get a 403 error response" 403 (rsCode res3)
+
+testUser2FAWorkflow :: TestEnv ()
+testUser2FAWorkflow = do
+  password <- rand 10 $ arbString 3 30
+  randomUser <- addNewRandomUserWithPassword password
+  ctx' <- set ctxmaybeuser (Just randomUser) <$> mkContext def
+
+  -- Start setting up 2FA
+  req_setup2fa <- mkRequest POST []
+  (res_setup2fa,_) <- runTestKontra req_setup2fa ctx' setup2FA
+  let Just (Object setupRespObj) = decode (rsBody res_setup2fa) :: Maybe Value
+      Just (Bool setupActive) = H.lookup "twofactor_active" setupRespObj
+      Just (String setupQRCode) = H.lookup "qr_code" setupRespObj
+  assertEqual "We should get a 200 response" 200 (rsCode res_setup2fa)
+  assertEqual "2FA should not be active yet" False setupActive
+
+  -- Get the secret from the QR code
+  now <- currentTime
+  qrText <- liftIO $ decodeQR (QRCode . Base64.decodeLenient $ TE.encodeUtf8 setupQRCode)
+  let encsecret = head . drop 1 . dropWhile (/= "secret") . splitOneOf "?&=" $ qrText
+      Right secret = B32.decode $ BSC.pack encsecret
+      totpcode = filter (/='"') . show $ totp SHA1 secret now 30 6
+
+  -- For some reason we need to get updated User and add to Context
+  -- otherwise tests fail because TOTP changes are not "seen"
+  Just user <- dbQuery $ GetUserByID $ userid randomUser
+  ctx <- set ctxmaybeuser (Just user) <$> mkContext def
+
+  -- apiCallGetUserPersonalToken should still work: 2FA not yet confirmed
+  do
+    req <- mkRequest GET
+      [ ("email", inText $ unEmail $ useremail $ userinfo randomUser)
+      , ("password", inText password)
+      ]
+    (res,_) <- runTestKontra req ctx $ apiCallGetUserPersonalToken
+    assertEqual "We should get a 200 response" 200 (rsCode res)
+
+  -- "random" confirmation code should not work
+  do
+    req <- mkRequest POST [ ("totp", inText "123456") ]
+    (res,_) <- runTestKontra req ctx confirm2FA
+    assertEqual "We should get a 400 response" 400 (rsCode res)
+
+  -- correct TOTP code should work to confirm2FA
+  do
+    req <- mkRequest POST [ ("totp", inText totpcode) ]
+    (res,_) <- runTestKontra req ctx confirm2FA
+    assertEqual "TOTP got activated properly" "{\"twofactor_active\":true,\"totp_valid\":true}" (rsBody res)
+    assertEqual "We should get a 200 response" 200 (rsCode res)
+
+  -- now apiCallGetUserPersonalToken without totp should fail
+  do
+    req <- mkRequest GET
+      [ ("email", inText $ unEmail $ useremail $ userinfo randomUser)
+      , ("password", inText password)
+      ]
+    (res,_) <- runTestKontra req ctx $ apiCallGetUserPersonalToken
+    assertEqual "We should get a 403 response" 403 (rsCode res)
+
+  -- and apiCallGetUserPersonalToken with totp should work
+  do
+    req <- mkRequest GET
+      [ ("email", inText $ unEmail $ useremail $ userinfo randomUser)
+      , ("password", inText password)
+      , ("totp", inText totpcode)
+      ]
+    (res,_) <- runTestKontra req ctx $ apiCallGetUserPersonalToken
+    assertEqual "We should get a 200 response" 200 (rsCode res)

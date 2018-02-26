@@ -14,7 +14,8 @@ window.OAuth = Backbone.Model.extend({
     final_token_secret: LocalStorage.get("oauth", "final_token_secret") || "",
     priviliges: LocalStorage.get("oauth", "priviliges") || "DOC_CREATE",
     email: LocalStorage.get("oauth", "email") ||  "",
-    password: ""
+    password: "",
+    totp: ""
   },
   save: function () {
     LocalStorage.set("oauth", "email", this.email());
@@ -36,6 +37,7 @@ window.OAuth = Backbone.Model.extend({
     LocalStorage.set("oauth", "final_token_secret", "");
     this.set({
       "password": "",
+      "totp": "",
       "token": "",
       "token_secret": "",
       "final_token": "",
@@ -74,6 +76,12 @@ window.OAuth = Backbone.Model.extend({
   },
   set_password: function (v) {
     this.set({"password": v}, {silent: true});
+  },
+  totp: function () {
+    return this.get("totp");
+  },
+  set_totp: function (v) {
+    this.set({"totp": v}, {silent: true});
   },
   /* TCR PARAMS*/
   consumer_key: function () {
@@ -186,7 +194,11 @@ window.OAuth = Backbone.Model.extend({
   },
   tryToGetPesonalToken: function () {
     var model = this;
-    $.post(Scrive.serverUrl() + "/api/v1/getpersonaltoken", {email: model.email(), password: model.password()},
+    $.post(Scrive.serverUrl() + "/api/v1/getpersonaltoken", {
+              email: model.email(),
+              password: model.password(),
+              totp: model.totp()
+              },
               function (rs) {
                 var resp = JSON.parse(rs);
                 model.set_consumer_key(resp.apitoken);

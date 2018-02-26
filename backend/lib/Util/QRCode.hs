@@ -2,10 +2,10 @@
 -- 'qrencode' and 'zbarimg' from 'zbar-tools' in $PATH ('zbarimg' is
 -- only required for decoding -- in other words, by the test suite).
 
-module Doc.QRCode ( QRCode
-                  , encodeQR
-                  , decodeQR
-                  , decodeQRBSL ) where
+module Util.QRCode ( QRCode(..)
+                   , encodeQR
+                   , decodeQR
+                   , decodeQRBSL ) where
 
 import Data.String.Utils (rstrip)
 import System.IO
@@ -18,7 +18,7 @@ import qualified Happstack.Server.Types as Web
 
 import API.V2.Monad
 
-newtype QRCode = QRCode BS.ByteString
+newtype QRCode = QRCode { unQRCode :: BS.ByteString }
 
 instance ToAPIResponse QRCode where
   toAPIResponse (QRCode bsdata) =

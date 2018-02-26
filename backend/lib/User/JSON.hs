@@ -28,6 +28,7 @@ userJSON user company = runJSONGen $ do
     value "fstname" $ getFirstName user
     value "sndname" $ getLastName user
     value "email" $ getEmail user
+    value "twofactor_active" $ usertotpactive user
     value "personalnumber" $ getPersonalNumber user
     value "phone" $ userphone $ userinfo user
     value "companyadmin" $ useriscompanyadmin user

@@ -17,7 +17,8 @@
 }
 
 .account .account-settings input.emailinput[type="text"],
-.account .account-settings input.newpassword[type="text"] {
+.account .account-settings input.newpassword[type="text"],
+.account .account-settings input.twofactor[type="text"] {
   color: #222222;
   background: transparent;
   border-color: transparent;
@@ -175,4 +176,18 @@
 #ChangePasswordModal {
   padding-left: 45px;
   padding-right: 45px;
+}
+
+#SetupTwoFactorModal {
+  div {
+    text-align: center;
+
+    img {
+      max-width: 40%;
+    }
+  }
+
+  .info-text-input {
+    margin: 5px 10px;
+  }
 }

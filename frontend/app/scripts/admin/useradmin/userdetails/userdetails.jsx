@@ -42,6 +42,7 @@ var UserDetailsView = React.createClass({
     this.props.viewModel.set(
       {
         userId: this.props.userId,
+        twoFactorActive: this.props.user.twofactoractive(),
         fstname: this.props.user.fstname(),
         sndname: this.props.user.sndname(),
         personalnumber: this.props.user.personalnumber(),
@@ -128,6 +129,7 @@ var UserDetailsView = React.createClass({
           <div className="tab-container account">
             <DetailsEditorView
               userId={this.props.viewModel.get("userId")}
+              twoFactorActive={this.props.viewModel.get("twoFactorActive")}
               fstname={this.props.viewModel.get("fstname")}
               sndname={this.props.viewModel.get("sndname")}
               personalnumber={this.props.viewModel.get("personalnumber")}

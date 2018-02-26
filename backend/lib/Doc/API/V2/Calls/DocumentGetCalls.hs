@@ -40,7 +40,6 @@ import Doc.DocumentMonad
 import Doc.DocUtils (fileFromMainFile)
 import Doc.Logging
 import Doc.Model
-import Doc.QRCode (encodeQR)
 import Doc.SignatoryLinkID
 import Doc.Texts
 import EvidenceLog.Model
@@ -53,6 +52,7 @@ import Log.Identifier
 import MagicHash
 import OAuth.Model
 import User.Model
+import Util.QRCode (encodeQR)
 import Util.SignatoryLinkUtils
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
 

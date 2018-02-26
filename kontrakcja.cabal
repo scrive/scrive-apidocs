@@ -223,7 +223,6 @@ Library
                  , Doc.Model.Query
                  , Doc.Model.Search
                  , Doc.Model.Update
-                 , Doc.QRCode
                  , Doc.SMSPin.Migrations
                  , Doc.SMSPin.Model
                  , Doc.SMSPin.Tables
@@ -418,6 +417,7 @@ Library
                  , User.PasswordReminder
                  , User.PasswordReminder.Tables
                  , User.Tables
+                 , User.TwoFactor
                  , User.UserAccountRequest
                  , User.UserAccountRequest.Tables
                  , User.UserControl
@@ -429,6 +429,7 @@ Library
                  , Util.HasSomeCompanyInfo
                  , Util.HasSomeUserInfo
                  , Util.MonadUtils
+                 , Util.QRCode
                  , Util.SignatoryLinkUtils
                  , Util.ZipUtil
                  , Utils.Color
@@ -482,6 +483,7 @@ Library
                , crypto-api
                , crypto-rng
                , cryptohash
+               , cryptonite
                , curl
                , data-default
                , deepseq
@@ -524,12 +526,14 @@ Library
                , mtl
                , network
                , network-uri
+               , one-time-password
                , process
                , process-extras
                , psqueues
                , random
                , regex-tdfa
                , resource-pool
+               , sandi
                , scientific
                , scrypt
                , semigroups
@@ -1229,7 +1233,6 @@ Test-suite kontrakcja-test
                  Doc.Extending.Tables
                  Doc.Functions
                  Doc.Migrations
-                 Doc.QRCodeTest
                  Doc.SMSPin.Migrations
                  Doc.SMSPin.Tables
                  Doc.Sealing.Tables
@@ -1281,6 +1284,7 @@ Test-suite kontrakcja-test
                  Partner.APITest
                  Partner.Migrations
                  Partner.Tables
+                 QRCodeTest
                  ReferenceScreenshotsTest
                  SMS.FromKontra.Migrations
                  SMS.FromKontra.Tables
@@ -1329,6 +1333,7 @@ Test-suite kontrakcja-test
                , consumers
                , containers
                , crypto-rng
+               , cryptonite
                , data-default
                , directory
                , exceptions
@@ -1348,9 +1353,12 @@ Test-suite kontrakcja-test
                , monad-loops
                , mtl
                , network-uri
+               , one-time-password
                , regex-tdfa
+               , sandi
                , scrypt
                , semigroups
+               , split
                , stm
                , tagsoup
                , test-framework

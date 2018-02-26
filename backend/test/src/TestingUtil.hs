@@ -526,6 +526,9 @@ instance Arbitrary UserSettings where
 instance Arbitrary User where
   arbitrary = User <$> arbitrary
                    <*> arbitrary
+                   -- Messes with tests if these are set
+                   <*> pure Nothing -- usertotp
+                   <*> pure False   -- usertotpactive
                    <*> arbitrary
                    <*> arbitrary
                    <*> arbitrary

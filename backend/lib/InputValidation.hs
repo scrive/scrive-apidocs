@@ -38,10 +38,12 @@ module InputValidation
     , asValidSwedishSSN
     , asValidNorwegianSSN
     , asValidDanishSSN
+    , asWord32
 ) where
 
 import Data.Char
 import Data.String.Utils
+import Data.Word (Word32)
 import Log
 import Numeric
 import Text.HTML.TagSoup.Entity
@@ -524,6 +526,15 @@ asValidDocID input =
             case reads xs of
               (val,[]):[] -> return val
               _ -> Bad
+
+asWord32 :: String -> Result Word32
+asWord32 input =
+  checkIfEmpty input
+  >>= parseAsWord32
+  where parseAsWord32 xs =
+          case reads xs of
+            (val,[]):[] -> return val
+            _ -> Bad
 
 asValidDocIDList :: String -> Result [DocumentID]
 asValidDocIDList input =

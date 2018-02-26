@@ -89,7 +89,7 @@ module.exports = React.createClass({
               {localization.esigningpoweredbyscrive}
             </div>
           </div>
-          {/* if */   (this.state.model.loginView()) &&
+          {/* if */   (this.state.model.loginView() || this.state.model.loginTotpView()) &&
             (<LoginView model={this.state.model}/>)
           }
           {/* else */ (this.state.model.reminderView()) &&

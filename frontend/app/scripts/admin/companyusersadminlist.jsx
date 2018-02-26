@@ -134,7 +134,7 @@ module.exports = React.createClass({
 
            <List.Column
              name="TOS date"
-             width="100px"
+             width="80px"
              rendering={function(d) {
                if (d.field("role") =="RoleInvite") {
                  return (<a style={{color:"red"}} href="#" onClick={function() {self.openDeleteInvitationModal(d)}}> Click to delete this invitation </a>);
@@ -144,6 +144,14 @@ module.exports = React.createClass({
                  return (<small> {moment(time).toDate().toTimeAbrev()}</small>);
                } else
                  return (<span/>);
+             }}
+           />
+
+           <List.Column
+             name="2FA"
+             width="20px"
+             rendering={function(d) {
+               return (<small> {d.field("twofactor_active") ? "On" : "" } </small>);
              }}
            />
 

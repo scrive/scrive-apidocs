@@ -227,6 +227,7 @@ jsonUsersList = onlySalesOrAdmin $ do
         value "company"  $ getCompanyName mcompany
         value "phone"    $ userphone $ userinfo user
         value "tos"      $ formatTimeISO <$> (userhasacceptedtermsofservice user)
+        value "twofactor_active" $ usertotpactive user
 
 
 {- | Handling user details change. It reads user info change -}

@@ -87,4 +87,5 @@ kontraMigrations = [
   , addSignatoryIPToEIDSignatures
   , addSignatoryIPToEIDAuthentications
   , netsSignOrdersDropSSN
+  , addUserTOTPKeyColumn
   ]

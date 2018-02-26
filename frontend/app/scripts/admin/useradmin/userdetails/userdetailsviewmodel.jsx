@@ -5,6 +5,7 @@ var Submit = require("../../../../js/submits.js").Submit;
 var UserDetailsViewModel = Backbone.Model.extend({
   defaults: {
     userId: "",
+    twoFactorActive: false,
     fstname: "",
     sndname: "",
     personalnumber: "",

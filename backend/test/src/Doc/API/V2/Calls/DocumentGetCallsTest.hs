@@ -23,10 +23,10 @@ import Doc.Data.DocumentStatus (DocumentStatus(..))
 import Doc.DocumentID (DocumentID, unsafeDocumentID)
 import Doc.DocumentMonad (withDocumentID)
 import Doc.Model.Update (SetDocumentSharing(..), updateMTimeAndObjectVersion)
-import Doc.QRCode
 import Kontra (Kontra)
 import TestingUtil
 import TestKontra
+import Util.QRCode
 
 apiV2DocumentGetCallsTests :: TestEnvSt -> Test
 apiV2DocumentGetCallsTests env = testGroup "APIv2DocumentGetCalls" $

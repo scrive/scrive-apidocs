@@ -255,9 +255,23 @@ module.exports = React.createClass({
             />
 
             <List.Column
+              name={localization.account.twoFactor.twoFactorShortSection}
+              sorting="twofactor_active"
+              width="30px"
+              rendering={function(d) {
+                var active = !d.field("twofactor_active");
+                if (active) {
+                  return (<a className='sharedIcon'/>);
+                } else {
+                  return (<span/>);
+                }
+              }}
+            />
+
+            <List.Column
               name={localization.account.companyAccounts.columnRole}
               sorting="role"
-              width="260px"
+              width="230px"
               rendering={function(d) {
                 var canChangeRole = !d.field("isctxuser") || !d.field("role") =="RoleInvite";
                 if (canChangeRole) {

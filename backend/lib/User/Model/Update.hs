@@ -10,11 +10,15 @@ module User.Model.Update (
   , SetUserCompanyAdmin(..)
   , SetUserInfo(..)
   , SetUserPassword(..)
+  , SetUserTOTPKey(..)
+  , ConfirmUserTOTPSetup(..)
+  , DisableUserTOTP(..)
   , SetUserSettings(..)
   ) where
 
 import Control.Monad.Catch
 import Control.Monad.Time
+import Data.ByteString (ByteString)
 import Data.Char
 
 import BrandedDomain.BrandedDomainID
@@ -162,6 +166,31 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserPassword Bool where
       sqlSet "password" $ pwdHash pwd
       sqlSet "salt" $ pwdSalt pwd
       sqlSet "password_algorithm" $ pwdAlgorithmToInt16 $ pwdAlgorithm $ pwd
+      sqlWhereEq "id" uid
+      sqlWhereIsNULL "deleted"
+
+data SetUserTOTPKey = SetUserTOTPKey UserID ByteString
+instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserTOTPKey Bool where
+  update (SetUserTOTPKey uid key) = do
+    runQuery01 . sqlUpdate "users" $ do
+      sqlSet "totp_key" key
+      sqlWhereEq "id" uid
+      sqlWhereIsNULL "deleted"
+
+data ConfirmUserTOTPSetup = ConfirmUserTOTPSetup UserID
+instance (MonadDB m, MonadThrow m) => DBUpdate m ConfirmUserTOTPSetup Bool where
+  update (ConfirmUserTOTPSetup uid) = do
+    runQuery01 . sqlUpdate "users" $ do
+      sqlSet "totp_active" True
+      sqlWhereEq "id" uid
+      sqlWhereIsNULL "deleted"
+
+data DisableUserTOTP = DisableUserTOTP UserID
+instance (MonadDB m, MonadThrow m) => DBUpdate m DisableUserTOTP Bool where
+  update (DisableUserTOTP uid) = do
+    runQuery01 . sqlUpdate "users" $ do
+      sqlSetCmd "totp_key" "NULL"
+      sqlSet "totp_active" False
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
 

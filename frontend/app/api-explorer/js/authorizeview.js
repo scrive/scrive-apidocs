@@ -122,6 +122,18 @@ window.ApiDemoAuthorizeView = Backbone.View.extend({
           function () { oauth.tryToGetPesonalToken(); }
         )
       );
+      self.appendLeftRow(
+        container,
+        self.formInput(
+          "totp",
+          "totp",
+          "Two-factor code (only if set for user)",
+          "Two-factor code",
+          function () { return oauth.totp(); },
+          function (v) { return oauth.set_totp(v); },
+          function () { oauth.tryToGetPesonalToken(); }
+        )
+      );
       self.appendCenteredRow(container, $("<p/>").append(
           $("<button class='btn btn-block' type='button'>Authorise</button>")).click(function () {
             oauth.tryToGetPesonalToken();

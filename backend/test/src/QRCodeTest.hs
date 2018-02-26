@@ -1,12 +1,12 @@
-module Doc.QRCodeTest where
+module QRCodeTest where
 
 import Control.Monad.IO.Class
 import Crypto.RNG.Utils
 import Test.Framework
 
-import Doc.QRCode
 import TestingUtil
 import TestKontra
+import Util.QRCode
 
 qrCodeTests :: TestEnvSt -> Test
 qrCodeTests env = testGroup "QRCode" [

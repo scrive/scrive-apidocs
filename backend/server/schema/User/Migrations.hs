@@ -12,3 +12,16 @@ addPasswordAlgorithmVersionColumn = Migration {
           tblColumn { colName = "password_algorithm", colType = SmallIntT, colNullable = True }
         ]
   }
+
+addUserTOTPKeyColumn :: MonadDB m => Migration m
+addUserTOTPKeyColumn = Migration {
+    mgrTableName = tblName tableUsers
+  , mgrFrom = 21
+  , mgrAction = StandardMigration $
+      runQuery_ $ sqlAlterTable (tblName tableUsers)
+        [ sqlAddColumn $
+            tblColumn { colName = "totp_key", colType = BinaryT, colNullable = True }
+        , sqlAddColumn $
+            tblColumn { colName = "totp_active", colType = BoolT, colNullable = False, colDefault = Just "false" }
+        ]
+  }

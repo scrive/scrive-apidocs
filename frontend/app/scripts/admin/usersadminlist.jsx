@@ -105,7 +105,7 @@ module.exports = React.createClass({
 
            <List.Column
              name="TOS date"
-             width="100px"
+             width="80px"
              sorting="tos"
              rendering={function(d) {
                var time = d.field("tos");
@@ -113,6 +113,14 @@ module.exports = React.createClass({
                  return (<small> {moment(time).toDate().toTimeAbrev()}</small>);
                } else
                  return (<span/>);
+             }}
+           />
+
+           <List.Column
+             name="2FA"
+             width="20px"
+             rendering={function(d) {
+               return (<small> {d.field("twofactor_active") ? "On" : "" } </small>);
              }}
            />
 

@@ -43,6 +43,12 @@ module.exports = Backbone.Model.extend({
   setSndname: function (v) {
      this.set({"sndname": v});
   },
+  twoFactorActive: function () {
+     return this.get("twofactoractive");
+  },
+  setTwoFactorActive: function (v) {
+     this.set({"twofactoractive": v});
+  },
   personnumber: function () {
      return this.get("personnumber");
   },
@@ -131,6 +137,7 @@ module.exports = Backbone.Model.extend({
       this.set({
         fstname: this.user().fstname(),
         sndname: this.user().sndname(),
+        twofactoractive: this.user().twofactoractive(),
         personnumber: this.user().personalnumber(),
         email: this.user().email(),
         newemail: "",

@@ -3,9 +3,12 @@ module User.History.Model (
   , UserHistoryEvent(..)
   , UserHistoryEventType(..)
   , LogHistoryLoginFailure(..)
+  , LogHistoryLoginTOTPFailure(..)
   , LogHistoryLoginSuccess(..)
   , LogHistoryPasswordSetup(..)
   , LogHistoryPasswordSetupReq(..)
+  , LogHistoryTOTPEnable(..)
+  , LogHistoryTOTPDisable(..)
   , LogHistoryAccountCreated(..)
   , LogHistoryTOSAccept(..)
   , LogHistoryDetailsChanged(..)
@@ -49,9 +52,12 @@ data UserHistoryEvent = UserHistoryEvent {
   deriving (Eq, Show)
 
 data UserHistoryEventType = UserLoginFailure
+                          | UserLoginTOTPFailure
                           | UserLoginSuccess
                           | UserPasswordSetup
                           | UserPasswordSetupReq
+                          | UserTOTPEnable
+                          | UserTOTPDisable
                           | UserAccountCreated
                           | UserDetailsChange
                           | UserTOSAccept
@@ -84,8 +90,11 @@ instance FromSQL UserHistoryEventType where
       9 -> return UserPadLoginSuccess
       10 -> return UserAPIGetPersonalTokenFailure
       11 -> return UserAPIGetPersonalTokenSuccess
+      12 -> return UserLoginTOTPFailure
+      13 -> return UserTOTPEnable
+      14 -> return UserTOTPDisable
       _ -> throwM RangeError {
-        reRange = [(1, 11)]
+        reRange = [(1, 14)]
       , reValue = n
       }
 
@@ -102,6 +111,9 @@ instance ToSQL UserHistoryEventType where
   toSQL UserPadLoginSuccess  = toSQL (9::Int32)
   toSQL UserAPIGetPersonalTokenFailure  = toSQL (10::Int32)
   toSQL UserAPIGetPersonalTokenSuccess  = toSQL (11::Int32)
+  toSQL UserLoginTOTPFailure = toSQL (12::Int32)
+  toSQL UserTOTPEnable  = toSQL (13::Int32)
+  toSQL UserTOTPDisable = toSQL (14::Int32)
 
 data GetUserHistoryByUserID = GetUserHistoryByUserID UserID
 instance MonadDB m => DBQuery m GetUserHistoryByUserID [UserHistory] where
@@ -116,7 +128,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetUserRecentAuthFa
     now <- currentTime
     runQuery_ $ sqlSelect "users_history" $ do
       sqlWhereEq "user_id" uid
-      sqlWhereIn "event_type" [UserLoginFailure, UserPadLoginFailure, UserAPIGetPersonalTokenFailure]
+      sqlWhereIn "event_type" [UserLoginFailure, UserLoginTOTPFailure, UserPadLoginFailure, UserAPIGetPersonalTokenFailure]
       sqlWhere $ "time >= cast ((" <?> now <+> " - interval '10 minutes') as timestamp)"
       sqlResult "COUNT(*)"
     fetchOne runIdentity
@@ -126,6 +138,15 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryLoginFailure Bool whe
   update (LogHistoryLoginFailure userid ip time) = addUserHistory
     userid
     UserHistoryEvent {uheventtype = UserLoginFailure, uheventdata = Nothing}
+    ip
+    time
+    Nothing
+
+data LogHistoryLoginTOTPFailure = LogHistoryLoginTOTPFailure UserID IPAddress UTCTime
+instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryLoginTOTPFailure Bool where
+  update (LogHistoryLoginTOTPFailure userid ip time) = addUserHistory
+    userid
+    UserHistoryEvent {uheventtype = UserLoginTOTPFailure, uheventdata = Nothing}
     ip
     time
     Nothing
@@ -193,6 +214,24 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryPasswordSetupReq Bool
     ip
     time
     mpuser
+
+data LogHistoryTOTPEnable = LogHistoryTOTPEnable UserID IPAddress UTCTime
+instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryTOTPEnable Bool where
+  update (LogHistoryTOTPEnable userid ip time) = addUserHistory
+    userid
+    UserHistoryEvent {uheventtype = UserTOTPEnable, uheventdata = Nothing}
+    ip
+    time
+    Nothing
+
+data LogHistoryTOTPDisable = LogHistoryTOTPDisable UserID IPAddress UTCTime
+instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryTOTPDisable Bool where
+  update (LogHistoryTOTPDisable userid ip time) = addUserHistory
+    userid
+    UserHistoryEvent {uheventtype = UserTOTPDisable, uheventdata = Nothing}
+    ip
+    time
+    Nothing
 
 data LogHistoryAccountCreated = LogHistoryAccountCreated UserID IPAddress UTCTime Email (Maybe UserID)
 instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryAccountCreated Bool where

@@ -10,10 +10,11 @@ var User = exports.User = Backbone.Model.extend({
       fstname   : "",
       sndname   : "",
       email     : "",
-      personalnumber  : "",
-      phone           : "",
-      companyposition : "",
-      usercompanyname : "",
+      twofactoractive  : "",
+      personalnumber    : "",
+      phone             : "",
+      companyposition   : "",
+      usercompanyname   : "",
       usercompanynumber : "",
       lang : "sv",
       company   : undefined,
@@ -47,6 +48,9 @@ var User = exports.User = Backbone.Model.extend({
   smartname : function() {
      return this.fstname() + " " + this.sndname();
   },
+  twofactoractive : function() {
+     return this.get("twofactoractive");
+  },
   personalnumber : function() {
      return this.get("personalnumber");
   },
@@ -77,10 +81,11 @@ var User = exports.User = Backbone.Model.extend({
       fstname   : args.fstname,
       sndname   : args.sndname,
       email     : args.email,
-      personalnumber  : args.personalnumber,
-      phone           : args.phone,
-      companyposition : args.companyposition,
-      usercompanyname : args.usercompanyname,
+      twofactoractive   : args.twofactor_active,
+      personalnumber    : args.personalnumber,
+      phone             : args.phone,
+      companyposition   : args.companyposition,
+      usercompanyname   : args.usercompanyname,
       usercompanynumber : args.usercompanynumber,
       lang : args.lang,
       companyadmin : args.companyadmin,

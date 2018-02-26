@@ -77,6 +77,7 @@ handleCompanyAccountsInternal cid = do
       , cadeletable = userid u `elem` deletableuserids
       , caactivated = isJust $ userhasacceptedtermsofservice u
       , catos = userhasacceptedtermsofservice u
+      , catotpactive = usertotpactive u
       }
     mkAccountFromInvite (i,fn,ln,em) = CompanyAccount {
         camaybeuserid = inviteduserid i
@@ -86,6 +87,7 @@ handleCompanyAccountsInternal cid = do
       , cadeletable = True
       , caactivated = False
       , catos = Nothing
+      , catotpactive = False
       }
 
   textFilter <- getField "text" >>= \case
@@ -110,6 +112,7 @@ handleCompanyAccountsInternal cid = do
       value "activated" $ caactivated f
       value "isctxuser" $ userid user == camaybeuserid f
       value "tos"       $ formatTimeISO <$> (catos f)
+      value "twofactor_active" $ catotpactive f
 
 {- |
     A special data type used for just displaying stuff in the list
@@ -123,6 +126,7 @@ data CompanyAccount = CompanyAccount
   , cadeletable   :: Bool         -- ^ can the account be deleted, or do they have pending documents (always True for invites)?
   , caactivated   :: Bool         -- ^ is the account a full company user with accepted tos? (always False for invites)
   , catos         :: Maybe UTCTime -- ^ TOS time if any (always Nothing for invites)
+  , catotpactive  :: Bool         -- ^ Whether TOTP two-factor authentication is active
   }
 
 data Role = RoleAdmin    -- ^ an admin user
@@ -142,6 +146,7 @@ companyAccountsSorting "role" = companyAccountsSortingBy carole
 companyAccountsSorting "deletable" = companyAccountsSortingBy cadeletable
 companyAccountsSorting "activated" = companyAccountsSortingBy caactivated
 companyAccountsSorting "id" = companyAccountsSortingBy camaybeuserid
+companyAccountsSorting "twofactor_active" = companyAccountsSortingBy catotpactive
 companyAccountsSorting _ = const $ const EQ
 
 companyAccountsSortingBy :: Show a => (CompanyAccount -> a) -> CompanyAccount -> CompanyAccount -> Ordering

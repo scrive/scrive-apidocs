@@ -1,17 +1,23 @@
 var React = require("react");
 var InfoTextInput = require("../../common/infotextinput");
+var FlashMessages = require("../../../js/flashmessages.js");
+var FlashMessage = FlashMessages.FlashMessage;
 var Button = require("../../common/button");
 var LanguageSelect = require("./languageselect");
 var Track = require("../../common/track");
+var Submit = require("../../../js/submits.js");
 
 var ChangeEmailModal = require("./changeemailmodal");
 var ChangePasswordModal = require("./changepasswordmodal");
+var SetupTwoFactorModal = require("./setuptwofactormodal");
 
 module.exports = React.createClass({
   getInitialState: function () {
     return {
       showChangeEmailModal: false,
-      showChangePasswordModal: false
+      showChangePasswordModal: false,
+      showSetupTwoFactorModal: false,
+      setupTwoFactorModalQRImage: ""
     };
   },
   onFstnameChange: function (value) {
@@ -41,6 +47,54 @@ module.exports = React.createClass({
   },
   onChangePasswordModalClose: function () {
     this.setState({showChangePasswordModal: false});
+  },
+  getTwoFactorStatusText: function () {
+    return this.props.model.twoFactorActive() ?
+        localization.account.twoFactor.statusActive :
+        localization.account.twoFactor.statusNotActive;
+  },
+  getTwoFactorButtonText: function () {
+    return this.props.model.twoFactorActive() ?
+        localization.account.twoFactor.buttonActive :
+        localization.account.twoFactor.buttonNotActive;
+  },
+  onTwoFactorButtonClick: function () {
+    if (this.props.model.twoFactorActive()) {
+      Track.track("Click disable two-factor button");
+      new Submit.Submit({
+        method: "POST",
+        url: "/api/frontend/2fa/disable",
+        ajax: true,
+        ajaxsuccess: this.onTwoFactorDisable
+      }).send();
+    } else {
+      Track.track("Click set up two-factor button");
+      new Submit.Submit({
+        method: "POST",
+        url: "/api/frontend/2fa/setup",
+        ajax: true,
+        ajaxsuccess: this.onTwoFactorSetupSuccess
+      }).send();
+    }
+  },
+  onTwoFactorDisable: function (response) {
+    new FlashMessage({
+        content: localization.account.twoFactor.disableFlashMessage,
+        type: "success"
+    });
+    this.props.model.refresh();
+  },
+  onTwoFactorSetupSuccess: function (response) {
+    this.setState({
+      showSetupTwoFactorModal: true,
+      setupTwoFactorModalQRImage: response.qr_code
+    });
+  },
+  onSetupTwoFactorModalClose: function () {
+    this.setState({
+      showSetupTwoFactorModal: false,
+      setupTwoFactorModalQRImage: ""
+    });
   },
   render: function () {
     var self = this;
@@ -133,6 +187,25 @@ module.exports = React.createClass({
               </tr>
               <tr>
                 <td>
+                  <label>{localization.account.twoFactor.twoFactorSection}</label>
+                </td>
+                <td>
+                  <input
+                    type="text"
+                    disabled={true}
+                    className="twofactor"
+                    value={this.getTwoFactorStatusText()}
+                  />
+                  <Button
+                    ref="changetwofactor"
+                    text={this.getTwoFactorButtonText()}
+                    className="twofactor-button"
+                    onClick={this.onTwoFactorButtonClick}
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td>
                   <label>{localization.account.accountDetails.phone}</label>
                 </td>
                 <td>
@@ -183,6 +256,13 @@ module.exports = React.createClass({
         <ChangePasswordModal
           active={this.state.showChangePasswordModal}
           onClose={this.onChangePasswordModalClose}
+        />
+
+        <SetupTwoFactorModal
+          active={this.state.showSetupTwoFactorModal}
+          qrImage={this.state.setupTwoFactorModalQRImage}
+          accountSettings={this.props.model}
+          onClose={this.onSetupTwoFactorModalClose}
         />
       </div>
     );

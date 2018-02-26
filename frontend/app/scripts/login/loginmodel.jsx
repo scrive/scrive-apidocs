@@ -12,6 +12,7 @@ module.exports = Backbone.Model.extend({
         view: "login",
         email : "",
         password : "",
+        totp : "",
         referer : "",
         autofocus: false,
         nolinks : false,
@@ -34,6 +35,9 @@ module.exports = Backbone.Model.extend({
   loginView : function() {
     return this.get("view") == "login";
   },
+  loginTotpView : function() {
+    return this.get("view") == "login_totp";
+  },
   signupView : function() {
     return this.get("view") == "signup";
   },
@@ -46,6 +50,9 @@ module.exports = Backbone.Model.extend({
   goToLoginView : function() {
     this.set({view: "login"});
   },
+  goToLoginTotpView : function() {
+    this.set({view: "login_totp"});
+  },
   pad : function() {
     return this.get("pad") == true;
   },
@@ -54,6 +61,9 @@ module.exports = Backbone.Model.extend({
   },
   password : function() {
      return this.get("password");
+  },
+  totp : function() {
+     return this.get("totp");
   },
   referer : function() {
     return this.get("referer");
@@ -67,6 +77,9 @@ module.exports = Backbone.Model.extend({
   setPassword: function(v) {
     this.set({password : v}, {silent: true});
   },
+  setTotp: function(v) {
+    this.set({totp : v}, {silent: true});
+  },
   login : function(callback) {
     var model = this;
     var email = model.email();
@@ -79,6 +92,7 @@ module.exports = Backbone.Model.extend({
           ajax: true,
           email : email,
           password : model.password(),
+          totp : model.totp(),
           ajaxsuccess: function(rs) {
             callback(rs);
           }

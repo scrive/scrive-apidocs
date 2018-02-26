@@ -44,6 +44,7 @@ var DetailsEditorView = React.createClass({
   mixins: [React.addons.PureRenderMixin],
   propTypes: {
     userId: React.PropTypes.string.isRequired,
+    twoFactorActive: React.PropTypes.string.isRequired,
     fstname: React.PropTypes.string.isRequired,
     sndname: React.PropTypes.string.isRequired,
     personalnumber: React.PropTypes.string.isRequired,
@@ -96,6 +97,12 @@ var DetailsEditorView = React.createClass({
                 style={{color: "#666666"}}
                 value={this.props.userId}
               />
+            </td>
+          </tr>
+          <tr>
+            <td><label>Two-factor authentication</label></td>
+            <td>
+              <p>{this.props.twoFactorActive ? "Active" : "Not active" }</p>
             </td>
           </tr>
           <tr>

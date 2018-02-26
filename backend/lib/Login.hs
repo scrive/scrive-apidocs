@@ -31,6 +31,7 @@ import ThirdPartyStats.Planhat
 import User.Email
 import User.History.Model
 import User.Model
+import User.TwoFactor (verifyTOTPCode)
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Utils.HTTP
@@ -58,6 +59,9 @@ handleLoginPost = do
     ctx <- getContext
     memail  <- getOptionalField asDirtyEmail    "email"
     mpasswd <- getOptionalField asDirtyPassword "password"
+    -- we take TOTP asDirtyPassword here because we don't want to mis-report it
+    -- as missing if it does not validate, we check it later
+    mtotpcode <- getOptionalField asDirtyPassword "totp"
     case (memail, mpasswd) of
         (Just email, Just passwd) -> do
             -- check the user things here
@@ -69,42 +73,33 @@ handleLoginPost = do
                                                (any (ipAddressIsInNetwork (get ctxipnumber ctx)) (companyipaddressmasklist (companyinfo company)))
                         Nothing -> return True
             case maybeuser of
-                Just user@User{userpassword,userid,useraccountsuspended}
+                Just user@User{userpassword,userid,useraccountsuspended,usertotp,usertotpactive}
                     | maybeVerifyPassword userpassword passwd
                     && ipIsOK && not useraccountsuspended -> do
                         failedAttemptCount <- dbQuery $ GetUserRecentAuthFailureCount userid
                         if failedAttemptCount <= 5
-                          then do
-                            logInfo "User logged in" $ logObject_ user
-                            muuser <- dbQuery $ GetUserByID userid
-
-                            case muuser of
-                              Just User{userid = uid} -> do
-                                now <- currentTime
-                                asyncLogEvent
-                                  SetUserProps
-                                  (simplePlanhatAction "Login" user now)
-                                  EventPlanhat
-                                asyncLogEvent
-                                  "Login"
-                                  [ UserIDProp uid
-                                  , IPProp $ get ctxipnumber ctx
-                                  , TimeProp $ get ctxtime ctx ]
-                                  EventMixpanel
-                                asyncLogEvent
-                                  SetUserProps
-                                  [ UserIDProp uid
-                                  , someProp "Last login" $ get ctxtime ctx ]
-                                  EventMixpanel
-                              _ -> return ()
-                            if padlogin
-                              then do
-                                _ <- dbUpdate $ LogHistoryPadLoginSuccess userid (get ctxipnumber ctx) (get ctxtime ctx)
-                                logPadUserToContext muuser
-                              else do
-                                _ <- dbUpdate $ LogHistoryLoginSuccess userid (get ctxipnumber ctx) (get ctxtime ctx)
-                                logUserToContext muuser
-                            J.runJSONGenT $ J.value "logged" True
+                          then case (usertotp, usertotpactive, mtotpcode) of
+                            (_, False, _) -> logTheUserIn ctx user padlogin
+                            (Just totp, True, Just totpcode') -> do
+                              now <- currentTime
+                              let onBadTOTP = do
+                                    logInfo "User login failed (invalid TOTP code provided)" $ logObject_ user
+                                    _ <- dbUpdate $ LogHistoryLoginTOTPFailure userid (get ctxipnumber ctx) (get ctxtime ctx)
+                                    J.runJSONGenT $ do
+                                      J.value "logged" False
+                                      J.value "totp_correct" False
+                              case resultToMaybe $ asWord32 totpcode' of
+                                Nothing -> onBadTOTP
+                                Just totpcode ->
+                                  if verifyTOTPCode totp now totpcode
+                                     then logTheUserIn ctx user padlogin
+                                     else do onBadTOTP
+                            (_, True, Nothing) -> do
+                              logInfo "User login failed: attempt without TOTP, expected, and next try should include it" $ logObject_ user
+                              J.runJSONGenT $ do
+                                J.value "logged" False
+                                J.value "totp_missing" True
+                            (Nothing, True, Just _) -> $unexpectedError "TOTP condition should not happen"
                           else do
                             logInfo "User login failed (too many attempts)" $ logObject_ user
                             J.runJSONGenT $ J.value "logged" False
@@ -147,6 +142,37 @@ handleLoginPost = do
                       ]
                     J.runJSONGenT $ J.value "logged" False
         _ -> J.runJSONGenT $ J.value "logged" False
+
+  where logTheUserIn ctx user padlogin = do
+          logInfo "User logged in" $ logObject_ user
+          muuser <- dbQuery $ GetUserByID (userid user)
+          case muuser of
+            Just User{userid = uid} -> do
+              now <- currentTime
+              asyncLogEvent
+                SetUserProps
+                (simplePlanhatAction "Login" user now)
+                EventPlanhat
+              asyncLogEvent
+                "Login"
+                [ UserIDProp uid
+                , IPProp $ get ctxipnumber ctx
+                , TimeProp $ get ctxtime ctx ]
+                EventMixpanel
+              asyncLogEvent
+                SetUserProps
+                [ UserIDProp uid
+                , someProp "Last login" $ get ctxtime ctx ]
+                EventMixpanel
+            _ -> return ()
+          if padlogin
+            then do
+              _ <- dbUpdate $ LogHistoryPadLoginSuccess (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
+              logPadUserToContext muuser
+            else do
+              _ <- dbUpdate $ LogHistoryLoginSuccess (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
+              logUserToContext muuser
+          J.runJSONGenT $ J.value "logged" True
 
 {- |
    Handles the logout, and sends user back to main page.
