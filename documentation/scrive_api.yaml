@@ -852,8 +852,8 @@ paths:
   /{document_id}/{signatory_id}/changeemailandmobile:
     $ref: ./api/documents/document_id/signatory_id/changeemailandmobile.yaml
 
-  /templates/sharing:
-    $ref: ./api/templates/sharing.yaml
+  /templates/setsharing:
+    $ref: ./api/templates/setsharing.yaml
 
   # Sign
 
