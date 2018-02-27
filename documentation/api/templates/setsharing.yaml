@@ -10,14 +10,14 @@ post:
     *OAuth Privileges required: `DOC_CREATE`*
 
   parameters:
-    - name: documentids
+    - name: document_ids
       in: formData
       type: string
       format: application/json
       required: true
       description: |
         List of document IDs of templates to share or unshare.
-    - name: sharing
+    - name: shared
       in: formData
       type: string
       format: application/json
