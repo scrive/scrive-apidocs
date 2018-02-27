@@ -16,6 +16,7 @@ module Doc.API.V2.Calls.DocumentPostCalls (
 , docApiV2Restart
 , docApiV2RemovePages
 , docApiV2Callback
+, docApiV2SetSharing
 , docApiV2SigSetAuthenticationToView
 , docApiV2SigSetAuthenticationToSign
 , docApiV2SigChangeEmailAndMobile
@@ -467,6 +468,19 @@ docApiV2Callback did = logDocument did . api $ do
     triggerAPICallbackIfThereIsOne =<< theDocument
     -- Return
     return $ Accepted ()
+
+docApiV2SetSharing :: Kontrakcja m => m Response
+docApiV2SetSharing = api $ do
+  (user, _) <- getAPIUser APIDocCreate
+  ids       <- apiV2ParameterObligatory $ ApiV2ParameterJSON "document_ids" $
+                 arrayOf unjsonDef
+  sharing   <- apiV2ParameterObligatory $ ApiV2ParameterBool "shared"
+
+  forM_ ids $ \i -> withDocumentID i $ do
+    guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
+    dbUpdate $ SetDocumentSharing [i] sharing
+
+  return $ Accepted ()
 
 docApiV2SigSetAuthenticationToView :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSetAuthenticationToView did slid = logDocumentAndSignatory did slid . api $ do

@@ -6,6 +6,7 @@ module.exports = React.createClass({
     propTypes: {
        onSelect : React.PropTypes.func,
        name : React.PropTypes.string,
+       makeName: React.PropTypes.func,
        type :  React.PropTypes.string,
        size:  React.PropTypes.string,
        className : React.PropTypes.string,
@@ -23,6 +24,13 @@ module.exports = React.createClass({
     render: function() {
       var self = this;
       var model = self.props.model;
+
+      var list = model.list();
+      var selected = list ? list.getSelected() : [];
+      var name = self.props.makeName === undefined
+                   ? self.props.name
+                   : self.props.makeName(selected);
+
       if (this.props.component != undefined) {
         return (this.props.component(model));
       } else {
@@ -33,7 +41,7 @@ module.exports = React.createClass({
             }}
             type={this.props.type}
             size={this.props.size}
-            text={this.props.name}
+            text={name}
             width={this.props.width}
             className={"float-left actionButton " + this.props.className}
             locked={this.props.locked}

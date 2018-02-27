@@ -15,6 +15,7 @@ module Doc.API.V2.Mock.TestUtils (
 , mockDocTestRequestHelper
 , mockDocFromValue
 , mockDocToInput
+, mockDocIsShared
 , cleanMockDocForComparison
 -- * MockDoc Accessor & Setter Functions
 , getMockDocId

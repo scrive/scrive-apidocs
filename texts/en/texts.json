@@ -1,4 +1,4 @@
-{ 
+{
 "_Accept":"Accept",
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
@@ -586,6 +586,7 @@
 "_flashMessageSomeFieldsAreIncorrectlyFilledIn":"Some fields are not filled out correctly.",
 "_flashMessageTemplateArchiveDone":"The selected templates have been deleted.",
 "_flashMessageTemplateShareDone":"The selected templates have been shared with your organisation.",
+"_flashMessageTemplateUnshareDone":"The selected templates have been unshared with your organisation.",
 "_flashMessageUserAccountRequestExpired":"Your invitation link has expired. Please sign up again.",
 "_flashMessageUserAccountRequestExpiredCompany":"Your invitation link has expired. Please contact an administrator at your company to get a new account activation link.",
 "_flashMessageUserActivated":"Welcome to Scrive!",
@@ -654,6 +655,8 @@
 "_listRestoreDialogHead":"Restore",
 "_listShareDialogBody":"Do you want to share this with everyone in your organisation?",
 "_listShareDialogHead":"Share",
+"_listUnshareDialogBody":"Do you want to unshare this with everyone in your organisation?",
+"_listUnshareDialogHead":"Unshare",
 "_listand":"and",
 "_listcancelbody":"Are you sure you want to withdraw selected documents?",
 "_listcancelbuttontext":"Withdraw",
@@ -892,6 +895,7 @@
 "_tooltiptimedout":"Timed-out",
 "_trashSubheadline":"Documents that have been in the trash for more than 30 days will be automatically deleted.",
 "_twoFactorInputLabel":"Two-factor code",
+"_unshare":"Unshare",
 "_unsupportedBrowserHeader":"We don't support the version of the browser you are using:",
 "_unsupportedBrowserInstruction1":"Update your browser to a newer version of Internet Explorer.",
 "_unsupportedBrowserInstruction2":"Open the link in a different browser (e.g. Chrome or Firefox).",

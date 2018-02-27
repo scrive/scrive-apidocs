@@ -37,6 +37,8 @@ documentAPIV2  = dir "documents" $ choice [
   , param $ dir "restart"         $ hPost $ toK1 $ docApiV2Restart
   , param $ dir "callback"        $ hPost $ toK1 $ docApiV2Callback
 
+  , dir "templates" $ dir "setsharing" $ hPost $ toK0 $ docApiV2SetSharing
+
   , param $ dir "files" $ dir "main" $ hGet $ toK2 $ docApiV2FilesMain
   , param $ dir "files"              $ hGet $ toK3 $ docApiV2FilesGet
 

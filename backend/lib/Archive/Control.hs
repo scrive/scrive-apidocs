@@ -4,7 +4,6 @@ module Archive.Control
        handleReallyDelete,
        handleSendReminders,
        handleRestore,
-       handleShare,
        handleCancel,
        handleZip,
        handleListCSV,
@@ -115,11 +114,6 @@ handleCancel = handleArchiveDocumentsAction' "cancel documents" isAuthorOrAuthor
 
 handleRestore :: Kontrakcja m => m JSValue
 handleRestore = handleArchiveDocumentsAction' "restore documents" isDocumentVisibleToUser $ \(user, actor) -> dbUpdate $ RestoreArchivedDocument user actor
-
-handleShare :: Kontrakcja m => m JSValue
-handleShare = handleArchiveDocumentsAction' "share documents" isAuthorOrAuthorsAdmin $ const $ do
-  doc <- theDocument
-  dbUpdate $ SetDocumentSharing [documentid doc] True
 
 handleZip :: Kontrakcja m => m ZipArchive
 handleZip = do

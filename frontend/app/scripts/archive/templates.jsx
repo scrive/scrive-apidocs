@@ -84,12 +84,7 @@ module.exports = React.createClass({
     openShareModal: function(selected) {
       this.setState({
         showShareModal: true,
-        templatesToShare: _.map(
-          selected,
-          function (doc) {
-            return doc.field("id");
-          }
-        )
+        templatesToShare: selected
       });
     },
     onShareModalClose: function () {
@@ -100,15 +95,24 @@ module.exports = React.createClass({
     },
     onShareModalAccept: function () {
       var self = this;
+      var templates = this.state.templatesToShare;
+      console.log(templates);
+      var templateIds = _.map(
+        templates,
+        function (doc) {
+          return doc.field("id").toString();
+        }
+      );
 
       new Submit({
-        url: "/d/share",
+        url: "/api/v2/documents/templates/setsharing",
         method: "POST",
-        documentids: "[" + this.state.templatesToShare + "]",
+        document_ids: JSON.stringify(templateIds),
+        shared: self.noneAreShared(templates),
         ajaxsuccess : function() {
           new FlashMessage({
             type: "success",
-            content: localization.archive.templates.share.successMessage
+            content: self.getSharingLocalization(templates).successMessage
           });
 
           self.reload();
@@ -152,6 +156,28 @@ module.exports = React.createClass({
         }
       }).sendAjax();
     },
+    getSharingLocalization: function(selected) {
+      var shareLoc = {
+        action:         localization.archive.templates.share.action,
+        head:           localization.archive.templates.share.head,
+        body:           localization.archive.templates.share.body,
+        successMessage: localization.archive.templates.share.successMessage,
+        emptyMessage:   localization.archive.templates.share.emptyMessage
+      };
+      var unshareLoc = {
+        action:         localization.archive.templates.unshare.action,
+        head:           localization.archive.templates.unshare.head,
+        body:           localization.archive.templates.unshare.body,
+        successMessage: localization.archive.templates.unshare.successMessage,
+        emptyMessage:   localization.archive.templates.unshare.emptyMessage
+      };
+      return this.noneAreShared(selected) ? shareLoc : unshareLoc;
+    },
+    noneAreShared: function(selected) {
+      return _.foldl(selected, function(acc, doc) {
+        return acc && !doc.field("is_shared");
+      }, true);
+    },
     render: function() {
       var self = this;
       return (
@@ -186,10 +212,15 @@ module.exports = React.createClass({
             />
 
             <List.ListAction
-              name={localization.archive.templates.share.action}
+              makeName={function(selected) {
+                return self.getSharingLocalization(selected).action;
+              }}
               onSelect={function(selected,model) {
                 if (selected.length ==0 ) {
-                  new FlashMessage({type: "error", content: localization.archive.templates.share.emptyMessage});
+                  new FlashMessage({
+                    type: "error",
+                    content: self.getSharingLocalization(selected).emptyMessage
+                  });
                   return false;
                 }
                 self.openShareModal(selected);
@@ -253,12 +284,12 @@ module.exports = React.createClass({
 
           <Modal.Container active={self.state.showShareModal}>
             <Modal.Header
-              title={localization.archive.templates.share.head}
+              title={this.getSharingLocalization(this.state.templatesToShare).head}
               showClose={true}
               onClose={this.onShareModalClose}
             />
             <Modal.Content>
-              <p>{localization.archive.templates.share.body}</p>
+              <p>{this.getSharingLocalization(this.state.templatesToShare).body}</p>
             </Modal.Content>
             <Modal.Footer>
               <Modal.CancelButton onClick={this.onShareModalClose} />

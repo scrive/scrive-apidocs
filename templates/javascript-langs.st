@@ -887,6 +887,13 @@ javascriptLocalisation =
                             , successMessage : "$_flashMessageTemplateShareDone()$"
                             , emptyMessage : "$_noDocumentChosen()$"
                         }
+                    ,  unshare : {
+                              action: "$_unshare()$"
+                            , head : "$_listUnshareDialogHead()$"
+                            , body : "$_listUnshareDialogBody()$"
+                            , successMessage : "$_flashMessageTemplateUnshareDone()$"
+                            , emptyMessage : "$_noDocumentChosen()$"
+                        }
                     ,  createnew : "$_createNewTemplate()$"
                     ,  search : "$_SearchDoc()$"
                     ,  columns :{

@@ -41,6 +41,7 @@ apiV2DocumentPostCallsTests env = testGroup "APIv2DocumentPostCalls"
   , testThat "API v2 Clone"                                 env testDocApiV2Clone
   , testThat "API v2 Restart"                               env testDocApiV2Restart
   , testThat "API v2 Callback"                              env testDocApiV2Callback
+  , testThat "API v2 Set sharing"                           env testDocApiV2SetSharing
   , testThat "API v2 Set signatory authentication to-view"  env testDocApiV2SigSetAuthenticationToView
   , testThat "API v2 Set signatory authentication to-sign"  env testDocApiV2SigSetAuthenticationToSign
   , testThat "API v2 Change email and mobile"               env testDocApiV2SigChangeEmailAndMobile
@@ -48,16 +49,16 @@ apiV2DocumentPostCallsTests env = testGroup "APIv2DocumentPostCalls"
 
 testDocApiV2New :: TestEnv ()
 testDocApiV2New = do
-  user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  user   <- addNewRandomUser
+  ctx    <- set ctxmaybeuser (Just user) <$> mkContext def
   status <- getMockDocStatus <$> testDocApiV2New' ctx
   assertEqual "Document should be in preparation" Preparation status
 
 testDocApiV2NewFromTemplate :: TestEnv ()
 testDocApiV2NewFromTemplate = do
   user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
-  did <- getMockDocId <$> testDocApiV2New' ctx
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
+  did  <- getMockDocId <$> testDocApiV2New' ctx
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     is_template <- getMockDocIsTemplate <$> mockDocTestRequestHelper ctx
@@ -72,9 +73,9 @@ testDocApiV2NewFromTemplate = do
 testDocApiV2NewFromTemplateShared :: TestEnv ()
 testDocApiV2NewFromTemplateShared = do
   (Company {companyid}) <- addNewCompany
-  author <- addNewRandomCompanyUser companyid False
-  ctxauthor <- (set ctxmaybeuser (Just author)) <$> mkContext def
-  did <- getMockDocId <$> testDocApiV2New' ctxauthor
+  author                <- addNewRandomCompanyUser companyid False
+  ctxauthor             <- set ctxmaybeuser (Just author) <$> mkContext def
+  did                   <- getMockDocId <$> testDocApiV2New' ctxauthor
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     is_template <- getMockDocIsTemplate <$> mockDocTestRequestHelper ctxauthor
@@ -82,9 +83,9 @@ testDocApiV2NewFromTemplateShared = do
       (docApiV2Update did) 200
     assertEqual "Document should be template" True is_template
 
-  _ <- randomUpdate $ SetDocumentSharing [did] True
+  void  $ randomUpdate $ SetDocumentSharing [did] True
   user <- addNewRandomCompanyUser companyid False
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     is_not_template <- getMockDocIsTemplate <$> mockDocTestRequestHelper ctx POST [] (docApiV2NewFromTemplate did) 201
@@ -93,8 +94,8 @@ testDocApiV2NewFromTemplateShared = do
 testDocApiV2Update :: TestEnv ()
 testDocApiV2Update = do
   user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
-  did <- getMockDocId <$> testDocApiV2New' ctx
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
+  did  <- getMockDocId <$> testDocApiV2New' ctx
 
   let new_title = "testTitle blah 42$#$%^"
   updated_title <- getMockDocTitle <$> mockDocTestRequestHelper ctx
@@ -104,29 +105,29 @@ testDocApiV2Update = do
 testDocApiV2Start :: TestEnv ()
 testDocApiV2Start = do
   user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
-  _ <- testDocApiV2Start' ctx
-  return ()
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
+  void  $ testDocApiV2Start' ctx
+
 
 testDocApiV2Prolong :: TestEnv ()
 testDocApiV2Prolong = do
-  user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  user    <- addNewRandomUser
+  ctx     <- set ctxmaybeuser (Just user) <$> mkContext def
   mockDoc <- testDocApiV2Start' ctx
   assertEqual "Default number of days should match" 90 $ getMockDocDaysToSign mockDoc
   let did = getMockDocId mockDoc
   withDocumentID did $ do
     dbUpdate $ TimeoutDocument (userActor ctx user)
   -- Current limit is 365 days
-  _ <- jsonTestRequestHelper ctx POST [("days", inText "366")] (docApiV2Prolong did) 400
+  void $ jsonTestRequestHelper ctx POST [("days", inText "366")] (docApiV2Prolong did) 400
   prolonged_status <- getMockDocStatus <$> mockDocTestRequestHelper ctx POST [("days", inText "365")] (docApiV2Prolong did) 200
   assertEqual "Document status should match" Pending prolonged_status
 
 testDocApiV2Cancel :: TestEnv ()
 testDocApiV2Cancel = do
   user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
-  did <- getMockDocId <$> testDocApiV2Start' ctx
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
+  did  <- getMockDocId <$> testDocApiV2Start' ctx
 
   cancel_status <- getMockDocStatus <$> mockDocTestRequestHelper ctx POST [] (docApiV2Cancel did) 200
   assertEqual "Document status should match" Canceled cancel_status
@@ -134,8 +135,8 @@ testDocApiV2Cancel = do
 testDocApiV2Trash :: TestEnv ()
 testDocApiV2Trash = do
   user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
-  did <- getMockDocId <$> testDocApiV2New' ctx
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
+  did  <- getMockDocId <$> testDocApiV2New' ctx
 
   is_trashed <- getMockDocIsTrashed <$> mockDocTestRequestHelper ctx POST [] (docApiV2Trash did) 200
   assertEqual "Document should be trashed after call" True is_trashed
@@ -143,10 +144,10 @@ testDocApiV2Trash = do
 testDocApiV2Delete :: TestEnv ()
 testDocApiV2Delete = do
   user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
-  did <- getMockDocId <$> testDocApiV2New' ctx
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
+  did  <- getMockDocId <$> testDocApiV2New' ctx
 
-  _ <- mockDocTestRequestHelper ctx POST [] (docApiV2Trash did) 200
+  void $ mockDocTestRequestHelper ctx POST [] (docApiV2Trash did) 200
 
   mockDoc <- mockDocTestRequestHelper ctx POST [] (docApiV2Delete did) 200
   assertEqual "Document should be trashed after call" True (getMockDocIsTrashed mockDoc)
@@ -155,35 +156,33 @@ testDocApiV2Delete = do
 testDocApiV2Remind :: TestEnv ()
 testDocApiV2Remind = do
   user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
-  did <- getMockDocId <$> testDocApiV2Start' ctx
-  _ <- testRequestHelper ctx POST [] (docApiV2Remind did) 202
-  return ()
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
+  did  <- getMockDocId <$> testDocApiV2Start' ctx
+  void  $ testRequestHelper ctx POST [] (docApiV2Remind did) 202
 
 testDocApiV2Forward :: TestEnv ()
 testDocApiV2Forward = do
-  user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  user    <- addNewRandomUser
+  ctx     <- set ctxmaybeuser (Just user) <$> mkContext def
   mockDoc <- testDocApiV2Start' ctx
-  let did = getMockDocId mockDoc
-  let slid = getMockDocSigLinkId 1 mockDoc
+  let did  = getMockDocId mockDoc
+      slid = getMockDocSigLinkId 1 mockDoc
 
-  _ <- mockDocTestRequestHelper ctx
+  void $ mockDocTestRequestHelper ctx
     POST
       [ ("fields", inText "[]")
       , ("accepted_author_attachments", inText "[]")
       ]
     (docApiV2SigSign did slid) 200
 
-  _ <- testRequestHelper ctx POST [("email", inText "2.a2@22.e.aa")]
+  void $ testRequestHelper ctx POST [("email", inText "2.a2@22.e.aa")]
     (docApiV2Forward did) 202
-  return ()
 
 testDocApiV2SetFile :: TestEnv ()
 testDocApiV2SetFile = do
   user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
-  did <- getMockDocId <$> testDocApiV2New' ctx
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
+  did  <- getMockDocId <$> testDocApiV2New' ctx
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     hasFile <- getMockDocHasFile <$> mockDocTestRequestHelper ctx POST [] (docApiV2SetFile did) 200
@@ -198,8 +197,8 @@ testDocApiV2SetFile = do
 testDocApiV2SetAttachments :: TestEnv ()
 testDocApiV2SetAttachments = do
   user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
-  did <- getMockDocId <$> testDocApiV2New' ctx
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
+  did  <- getMockDocId <$> testDocApiV2New' ctx
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mda <- mockDocTestRequestHelper ctx
@@ -233,19 +232,19 @@ testDocApiV2SetAttachments = do
 testDocApiV2SetAutoReminder :: TestEnv ()
 testDocApiV2SetAutoReminder = do
   user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
-  did <- getMockDocId <$> testDocApiV2Start' ctx
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
+  did  <- getMockDocId <$> testDocApiV2Start' ctx
 
-  _auto_remind_time <- getMockDocHasAutoRemindTime <$> mockDocTestRequestHelper ctx
+  void $ getMockDocHasAutoRemindTime <$> mockDocTestRequestHelper ctx
     POST [("days", inText "89")] (docApiV2SetAutoReminder did) 200
-  -- FIXME setting this doesn't update the auto remind time immediately, bug in core?
-  -- assertJust auto_remind_time
-  return ()
+  -- FIXME setting this doesn't update the auto remind time
+  -- immediately, bug in core?  assertJust auto_remind_time
+
 
 testDocApiV2Clone :: TestEnv ()
 testDocApiV2Clone = do
-  user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  user    <- addNewRandomUser
+  ctx     <- set ctxmaybeuser (Just user) <$> mkContext def
   mockDoc <- testDocApiV2New' ctx
   let did = getMockDocId mockDoc
 
@@ -255,8 +254,8 @@ testDocApiV2Clone = do
 testDocApiV2RemovePages :: TestEnv ()
 testDocApiV2RemovePages = do
   user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
-  did <- getMockDocId <$> testDocApiV2New' ctx
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
+  did  <- getMockDocId <$> testDocApiV2New' ctx
 
   do -- File changes and name stays the same when removing pages
     mocDocWith50PagesFile <- mockDocTestRequestHelper ctx
@@ -270,25 +269,25 @@ testDocApiV2RemovePages = do
 
 testDocApiV2Restart :: TestEnv ()
 testDocApiV2Restart = do
-  user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  user    <- addNewRandomUser
+  ctx     <- set ctxmaybeuser (Just user) <$> mkContext def
   mockDoc <- testDocApiV2Start' ctx
   let did = getMockDocId mockDoc
 
-  _ <- mockDocTestRequestHelper ctx POST [] (docApiV2Cancel did) 200
+  void $ mockDocTestRequestHelper ctx POST [] (docApiV2Cancel did) 200
 
   mockDocRestart <- mockDocTestRequestHelper ctx POST [] (docApiV2Restart did) 201
   assertEqual "Restarted document should have same structure as original" (cleanMockDocForComparison mockDoc) (cleanMockDocForComparison mockDocRestart)
 
 testDocApiV2Callback :: TestEnv ()
 testDocApiV2Callback = do
-  user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  user    <- addNewRandomUser
+  ctx     <- set ctxmaybeuser (Just user) <$> mkContext def
   mockDoc <- testDocApiV2New' ctx
   let did = getMockDocId mockDoc
 
   -- Should fail for documents in preparation
-  _ <- testRequestHelper ctx POST [] (docApiV2Callback did) 409
+  void $ testRequestHelper ctx POST [] (docApiV2Callback did) 409
 
   mockDocStart <- mockDocTestRequestHelper ctx POST [] (docApiV2Start did) 200
 
@@ -296,7 +295,7 @@ testDocApiV2Callback = do
   -- Right now as API v2 is not "active", V2 callbacks will not run
   -- When it becomes active this test should expand to test that a callback URL
   -- is actually called, by setting up some mock server or something...
-  _ <- testRequestHelper ctx POST [] (docApiV2Callback did) 202
+  void $ testRequestHelper ctx POST [] (docApiV2Callback did) 202
 
   mockDocAfterCallback <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
   assertEqual "Document after callback should have same structure as original" (cleanMockDocForComparison mockDocStart) (cleanMockDocForComparison mockDocAfterCallback)
@@ -304,16 +303,37 @@ testDocApiV2Callback = do
 
   _cancel <- mockDocTestRequestHelper ctx POST [] (docApiV2Cancel did) 200
   -- Should work after document is cancelled too
-  _ <- testRequestHelper ctx POST [] (docApiV2Callback did) 202
-  return ()
+  void $ testRequestHelper ctx POST [] (docApiV2Callback did) 202
+
+
+testDocApiV2SetSharing :: TestEnv ()
+testDocApiV2SetSharing = do
+  user <- addNewRandomUser
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
+  did  <- getMockDocId <$> testDocApiV2New' ctx
+
+  do
+    isTemplate <- getMockDocIsTemplate <$> mockDocTestRequestHelper ctx
+      POST [("document", inText "{\"is_template\":true}")]
+      (docApiV2Update did) 200
+    assertEqual "Document should be template" True isTemplate
+
+  forM_ [(True, "true"), (False, "false")] $ \(value, param) -> do
+    void $ testRequestHelper ctx POST
+      [ ("document_ids", inText ("[" ++ show (show did) ++ "]"))
+      , ("shared", inText param) ]
+      docApiV2SetSharing 202
+    isShared <- mockDocIsShared <$> mockDocTestRequestHelper ctx
+      GET [] (docApiV2Get did) 200
+    assertEqual "Document should have correct sharing" value isShared
 
 testDocApiV2SigSetAuthenticationToView :: TestEnv ()
 testDocApiV2SigSetAuthenticationToView = do
-  user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  user    <- addNewRandomUser
+  ctx     <- set ctxmaybeuser (Just user) <$> mkContext def
   mockDoc <- testDocApiV2Start' ctx
-  let did = getMockDocId mockDoc
-  let slid = getMockDocSigLinkId 1 mockDoc
+  let did  = getMockDocId mockDoc
+      slid = getMockDocSigLinkId 1 mockDoc
 
   let param_auth x = ("authentication_type", inText x)
       standard_auth = "standard"
@@ -327,18 +347,18 @@ testDocApiV2SigSetAuthenticationToView = do
       no_mobile = "+4712345678"
 
   -- Some invalid requests
-  _ <- jsonTestRequestHelper ctx POST [param_ssn se_ssn_10]
+  void $ jsonTestRequestHelper ctx POST [param_ssn se_ssn_10]
     (docApiV2SigSetAuthenticationToView did slid) 400
-  _ <- jsonTestRequestHelper ctx POST [param_auth "god_is_witness"]
+  void $ jsonTestRequestHelper ctx POST [param_auth "god_is_witness"]
     (docApiV2SigSetAuthenticationToView did slid) 400
   -- FIXME as this is random the SL could have a correct SSN already!
-  _ <- jsonTestRequestHelper ctx POST [param_auth no_bankid]
+  void $ jsonTestRequestHelper ctx POST [param_auth no_bankid]
     (docApiV2SigSetAuthenticationToView did slid) 409
-  _ <- jsonTestRequestHelper ctx POST [param_auth no_bankid, param_ssn se_ssn_10]
+  void $ jsonTestRequestHelper ctx POST [param_auth no_bankid, param_ssn se_ssn_10]
     (docApiV2SigSetAuthenticationToView did slid) 409
-  _ <- jsonTestRequestHelper ctx POST [param_auth se_bankid]
+  void $ jsonTestRequestHelper ctx POST [param_auth se_bankid]
     (docApiV2SigSetAuthenticationToView did slid) 409
-  _ <- jsonTestRequestHelper ctx POST [param_auth se_bankid, param_ssn no_ssn]
+  void $ jsonTestRequestHelper ctx POST [param_auth se_bankid, param_ssn no_ssn]
     (docApiV2SigSetAuthenticationToView did slid) 409
 
   let getAuthToView = getMockDocSigLinkAuthToViewMethod 1
@@ -365,7 +385,7 @@ testDocApiV2SigSetAuthenticationToView = do
     assertEqual "SE-12 Personal number should be set" se_ssn_12 (getPersonalNumber mockDocSE12)
 
   -- Invalid NO SSN
-  _ <- jsonTestRequestHelper ctx POST [param_auth no_bankid]
+  void $ jsonTestRequestHelper ctx POST [param_auth no_bankid]
     (docApiV2SigSetAuthenticationToView did slid) 409
 
   -- Valid NO BankID
@@ -376,11 +396,11 @@ testDocApiV2SigSetAuthenticationToView = do
     assertEqual "NO Personal number should be set" no_ssn (getPersonalNumber mockDocNO)
 
   -- Invalid NO Mobile
-  _ <- jsonTestRequestHelper ctx POST [param_auth no_bankid, param_mobile "-1"]
+  void $ jsonTestRequestHelper ctx POST [param_auth no_bankid, param_mobile "-1"]
     (docApiV2SigSetAuthenticationToView did slid) 409
-  _ <- jsonTestRequestHelper ctx POST [param_auth no_bankid, param_mobile (init no_mobile)]
+  void $ jsonTestRequestHelper ctx POST [param_auth no_bankid, param_mobile (init no_mobile)]
     (docApiV2SigSetAuthenticationToView did slid) 409
-  _ <- jsonTestRequestHelper ctx POST [param_auth no_bankid, param_mobile (no_mobile ++ "5")]
+  void $ jsonTestRequestHelper ctx POST [param_auth no_bankid, param_mobile (no_mobile ++ "5")]
     (docApiV2SigSetAuthenticationToView did slid) 409
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
@@ -405,11 +425,11 @@ testDocApiV2SigSetAuthenticationToView = do
 
 testDocApiV2SigSetAuthenticationToSign :: TestEnv ()
 testDocApiV2SigSetAuthenticationToSign = do
-  user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  user    <- addNewRandomUser
+  ctx     <- set ctxmaybeuser (Just user) <$> mkContext def
   mockDoc <- testDocApiV2Start' ctx
-  let did = getMockDocId mockDoc
-  let slid = getMockDocSigLinkId 1 mockDoc
+  let did  = getMockDocId mockDoc
+      slid = getMockDocSigLinkId 1 mockDoc
 
   let param_auth x = ("authentication_type", inText x)
       standard_auth = "standard"
@@ -424,12 +444,12 @@ testDocApiV2SigSetAuthenticationToSign = do
       _invalid_mobile = "45678"
 
   -- Some invalid requests
-  _ <- jsonTestRequestHelper ctx POST [param_auth "god_is_witness"]
+  void $ jsonTestRequestHelper ctx POST [param_auth "god_is_witness"]
     (docApiV2SigSetAuthenticationToSign did slid) 400
-  _ <- jsonTestRequestHelper ctx POST [param_auth se_bankid, param_ssn se_ssn_invalid]
+  void $ jsonTestRequestHelper ctx POST [param_auth se_bankid, param_ssn se_ssn_invalid]
     (docApiV2SigSetAuthenticationToSign did slid) 409
   -- FIXME this works, but is it supposed to?
-  --_ <- jsonTestRequestHelper ctx POST [param_auth sms_pin, param_mobile invalid_mobile]
+  -- void $ jsonTestRequestHelper ctx POST [param_auth sms_pin, param_mobile invalid_mobile]
   --  (docApiV2SigSetAuthenticationToSign did slid) 409
 
   let getAuthToSign = getMockDocSigLinkAuthToSignMethod 1
@@ -486,7 +506,7 @@ testDocApiV2SigSetAuthenticationToSign = do
 testDocApiV2SigChangeEmailAndMobile :: TestEnv ()
 testDocApiV2SigChangeEmailAndMobile = do
   user <- addNewRandomUser
-  ctx  <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
 
   -- Params that we will re-use
   let param_email x = ("email", inText x)
@@ -514,23 +534,22 @@ testDocApiV2SigChangeEmailAndMobile = do
   -- You should not be able to change the author's email or mobile
   do
     (did, author_slid, _slid) <- documentForTest
-    _ <- jsonTestRequestHelper ctx POST [param_email valid_email, param_mobile valid_mobile]
+    void $ jsonTestRequestHelper ctx POST [param_email valid_email, param_mobile valid_mobile]
       (docApiV2SigChangeEmailAndMobile did author_slid) 409
-    _ <- jsonTestRequestHelper ctx POST [param_email valid_email]
+    void $ jsonTestRequestHelper ctx POST [param_email valid_email]
       (docApiV2SigChangeEmailAndMobile did author_slid) 409
-    _ <- jsonTestRequestHelper ctx POST [param_mobile valid_mobile]
+    void $ jsonTestRequestHelper ctx POST [param_mobile valid_mobile]
       (docApiV2SigChangeEmailAndMobile did author_slid) 409
-    return ()
 
   -- Should work for other signatory
   do
     (did, _author_slid, slid) <- documentForTest
     -- Try invalid combinations
-    _ <- testRequestHelper ctx POST [param_email invalid_email, param_mobile invalid_mobile]
+    void $ testRequestHelper ctx POST [param_email invalid_email, param_mobile invalid_mobile]
       (docApiV2SigChangeEmailAndMobile did slid) 400
-    _ <- testRequestHelper ctx POST [param_email valid_email, param_mobile invalid_mobile]
+    void $ testRequestHelper ctx POST [param_email valid_email, param_mobile invalid_mobile]
       (docApiV2SigChangeEmailAndMobile did slid) 409
-    _ <- testRequestHelper ctx POST [param_email invalid_email, param_mobile valid_mobile]
+    void $ testRequestHelper ctx POST [param_email invalid_email, param_mobile valid_mobile]
       (docApiV2SigChangeEmailAndMobile did slid) 400
     -- Then test valid case
     emailAndPhone <- mockDocTestRequestHelper ctx POST [param_email valid_email, param_mobile valid_mobile]
@@ -540,7 +559,7 @@ testDocApiV2SigChangeEmailAndMobile = do
 
   do
     (did, _author_slid, slid) <- documentForTest
-    _ <- testRequestHelper ctx POST [param_email invalid_email]
+    void $ testRequestHelper ctx POST [param_email invalid_email]
       (docApiV2SigChangeEmailAndMobile did slid) 400
     emailOnly <- mockDocTestRequestHelper ctx POST [param_email valid_email]
       (docApiV2SigChangeEmailAndMobile did slid) 200
@@ -549,7 +568,7 @@ testDocApiV2SigChangeEmailAndMobile = do
 
   do
     (did, _author_slid, slid) <- documentForTest
-    _ <- testRequestHelper ctx POST [param_mobile invalid_mobile]
+    void $ testRequestHelper ctx POST [param_mobile invalid_mobile]
       (docApiV2SigChangeEmailAndMobile did slid) 409
     mobileOnly <- mockDocTestRequestHelper ctx POST [param_mobile valid_mobile]
       (docApiV2SigChangeEmailAndMobile did slid) 200
