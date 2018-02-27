@@ -3,7 +3,7 @@
 -- |
 -- Module      :  InspectXML
 --
--- Class for viewing data. Usefull for debugging etc.
+-- Class for viewing data. Useful for debugging etc.
 -- Contains a derivator.
 -----------------------------------------------------------------------------
 module InspectXML where
