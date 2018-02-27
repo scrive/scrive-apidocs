@@ -89,6 +89,11 @@ properties:
   rejection_reason:
     type: string
     readOnly: true
+    description: |
+      Will only have a value if the signatory rejected the document, and will
+      contain the message from the signatory to explain rejection.
+      The Document `display_options` needs to allow the signatory to write a
+      reject reason (`allow_reject_reason`).
   sign_success_redirect_url:
     description: |
       The URL to redirect this party after they have signed the document.
