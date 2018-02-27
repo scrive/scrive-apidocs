@@ -384,10 +384,12 @@ handleContactSales = do
                 "<p>" ++ uid ++ "</p>" ++
                 "<p>Have a good one!</p>"
       contactEmail = "info@scrive.com"
+      salesEmail = "leads@scrive.com"
       sendEmailTo emailAddress = scheduleEmailSendout $ emptyMail {
                                    to = [MailAddress { fullname = emailAddress, email = emailAddress }]
                                  , title = "Contact request (" ++ plan ++ ")"
                                  , content = content
                                  }
   sendEmailTo contactEmail
+  sendEmailTo salesEmail
   return ()
