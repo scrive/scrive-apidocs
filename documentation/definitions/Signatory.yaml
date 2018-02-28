@@ -246,49 +246,7 @@ properties:
     type: string
     format: uri
   consent_module:
-    description: |
-      If present, a section will be shown asking the signatory to answer some
-      mandatory questions.
-    type: object
-    properties:
-      title:
-        type: string
-        description: |
-          Section title.
-      questions:
-        type: array
-        items:
-          type: object
-          properties:
-            title:
-              type: string
-              description: |
-                Question text.
-            positive_option:
-              type: string
-              desription: |
-                Text for the positive answer.
-            negative_option:
-              type: string
-              desription: |
-                Text for the negative answer.
-            response:
-              type: bool
-              description: |
-                Will be present when the party has answered the question.
-            detailed_description:
-              type: object
-              description: |
-                Optional additional information to show the signatory.
-              properties:
-                title:
-                  type: string
-                  description: |
-                    Title of the section. Will be shown in a button.
-                text:
-                  type: string
-                  description: |
-                    Explanation of the question.
+    $ref: ./SignatoryConsentModule.yaml
 example:
   {
     "id": "189256",
@@ -391,13 +349,13 @@ example:
       "title": "Handling of personal information",
       "questions": [
         {
-          "title": "Do you agree?",
-          "positive_option": "Yes",
-          "negative_option": "No",
+          "title": "Do you agree for your information to be processed?",
+          "positive_option": "Yes, I agree with the processing of my data.",
+          "negative_option": "No, I do not agree with any processing of my data.",
           "response": null,
           "detailed_description": {
             "title": "More information",
-            "text": "Dolor ipsum dolor sit amet"
+            "text": "Long extra information regarding the question can go here, and can be separated using newlines.\n\nThis is useful for long terms and conditions that come along with a question."
           }
         }
       ]
