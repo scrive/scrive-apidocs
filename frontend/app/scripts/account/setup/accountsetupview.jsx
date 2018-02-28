@@ -58,9 +58,7 @@ var AccountSetupView = React.createClass({
   componentDidMount: function () {
     Track.track("Visit account setup");
 
-    // this is disabled, because this code in componentDidMount()
-    // is run while it's not mounted to DOM, and IE11 doesn't like that
-    //this.refs.fullNameInput.focus();
+    this.refs.fullNameInput.focus();
 
     var link = $(".is-TOS", this.refs.acceptTOSLabel.getDOMNode());
     link.attr("class", "clickable");
