@@ -8,6 +8,7 @@ $(function () {
   container.className = "short-input-section account-setup";
 
   var dirs = window.location.pathname.split("/").reverse();
+  $(".create-account-box").append(container);
   var view = React.render(
     React.createElement(
       AccountSetupView,
@@ -26,6 +27,4 @@ $(function () {
     ),
     container
   );
-
-  $(".create-account-box").append(container);
 });
