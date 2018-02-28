@@ -886,7 +886,8 @@ Executable mailing-server
 
   Main-is: MailingServer.hs
   GHC-options: -main-is MailingServer
-  Other-Modules: Amazon
+  Other-Modules: AddressUtils
+                 Amazon
                  Amazon.Class
                  Assembler
                  Configuration
@@ -989,6 +990,7 @@ Executable mailing-server
                , process
                , process-extras
                , psqueues
+               , punycode
                , resource-pool
                , scientific
                , semigroups
