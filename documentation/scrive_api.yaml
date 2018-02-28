@@ -853,7 +853,7 @@ paths:
     $ref: ./api/documents/document_id/signatory_id/changeemailandmobile.yaml
 
   /templates/setsharing:
-    $ref: ./api/templates/setsharing.yaml
+    $ref: ./api/documents/templates/setsharing.yaml
 
   # Sign
 
