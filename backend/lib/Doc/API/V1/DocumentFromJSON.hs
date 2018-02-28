@@ -111,10 +111,13 @@ instance FromJSValueWithUpdate SignatoryLink where
         allowshighlighting' <-  fromJSValueField "allowshighlighting"
         case (mfields) of
              (Just fields) -> return $ Just $ def {
-                    signatorylinkid            = fromMaybe (unsafeSignatoryLinkID 0) (signatorylinkid <$> ms)
+                    signatorylinkid        = fromMaybe (unsafeSignatoryLinkID 0) (signatorylinkid <$> ms)
                   , signatorysignorder     = updateWithDefaultAndField (SignOrder 1) signatorysignorder (SignOrder <$> signorder)
-                  -- nubBy comment: We accepted at some point documents with not uniqueue fields for signatory.
-                  -- To keep current workflow for some clients, we have to manually clean fields, else DB will reject update with contraints error
+                  -- nubBy comment: At some point, we accepted
+                  -- documents with non-unique fields for signatory.
+                  -- To keep the current workflow for some clients, we
+                  -- have to manually clean fields, else the DB will
+                  -- reject update with constraints error.
                   , signatoryfields        = nubBy (\f1 f2 -> fieldIdentity f1 == fieldIdentity f2) fields
                   , signatoryisauthor      = updateWithDefaultAndField False signatoryisauthor author
                   , signatoryispartner     = updateWithDefaultAndField False signatoryispartner signs
