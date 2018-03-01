@@ -101,7 +101,7 @@ var EmailValidation = exports.EmailValidation = Validation.extend({
             validates: function(t) {
                 t = t || "";
                 t = t.trim();
-                // this does not allow international characters, which for the moment is good
+                // this does allow international characters only in domain, which for the moment is good
                 var regex = new RegExp(defs.PATTERN_EMAIL, "i");
                 if (regex.test(t))
                     return true;

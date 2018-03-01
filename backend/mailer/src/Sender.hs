@@ -15,6 +15,7 @@ import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Foldable as F
 
+import AddressUtils
 import Assembler
 import DB
 import DB.PostgreSQL
@@ -68,7 +69,7 @@ createSMTPSender cs config =
   where
     mailRcpt addr = [
         "--mail-rcpt"
-      , "<" ++ addrEmail addr ++ ">"
+      , "<" ++ punyEncode (addrEmail addr) ++ ">"
       ]
 
     createArgs Mail{mailFrom, mailTo} =

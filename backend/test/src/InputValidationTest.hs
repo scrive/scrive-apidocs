@@ -110,6 +110,7 @@ testValidEmailExampleFails = do
                   , "a@abc.a2"
                   , "12@122@sdfsw@"
                   , "żółw@a.com"
+                  , "ok@ok.nótók"
                   ]
     assert $ all isBad results
 
@@ -121,6 +122,7 @@ goodEmailExamples = [ "1a2B3_4%5+6.7-zZ@abc.com"
                     , "abc@abc.au"
                     , "abc@abc.abcd"
                     , "abc@abc.travel"
+                    , "ok@ók.ok"
                     ]
 
 testValidEmailExamplePasses :: Assertion

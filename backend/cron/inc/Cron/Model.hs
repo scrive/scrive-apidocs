@@ -229,8 +229,10 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
         Just sftpConfig -> runDB $ uploadInvoicing sftpConfig
       RerunAt . nextDayAtHour 1 <$> currentTime
     MailEventsProcessing -> do
-      runCronEnv Mails.Events.processEvents
-      return . RerunAfter $ iseconds 5
+      let eventLimit = 50
+      eventsDone <- runCronEnv $ Mails.Events.processEvents eventLimit
+      let timeDelay = if eventsDone == eventLimit then 1 else 5
+      return . RerunAfter $ iseconds timeDelay
     MarkOrphanFilesForPurge -> do
       let maxMarked = 100000
           -- Share the string between all the log messages.

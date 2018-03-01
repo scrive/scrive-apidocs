@@ -49,12 +49,13 @@ import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
-processEvents :: (MonadDB m, MonadReader CronEnv m, MonadLog m, MonadCatch m, CryptoRNG m) => m ()
-processEvents = (take 50 <$> dbQuery GetUnreadEvents) >>= mapM_ (\event@(eid, mid, _) -> do
-  -- We limit processing to 50 events not to have issues with large number of documents locked.
-  localData [identifier_ eid, identifier_ mid] $ do
-    processEvent event
-  )
+processEvents :: (MonadDB m, MonadReader CronEnv m, MonadLog m, MonadCatch m, CryptoRNG m) => Int -> m Int
+processEvents limit = do
+  -- We limit processing to <limit> events not to have issues with large number of documents locked.
+  events <- take limit <$> dbQuery GetUnreadEvents
+  forM_ events $ \event@(eid, mid, _) -> do
+    localData [identifier_ eid, identifier_ mid] $ processEvent event
+  return $ length events
   where
     processEvent (eid, mid, eventType) = do
       now <- currentTime

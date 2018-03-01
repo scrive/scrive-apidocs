@@ -26,7 +26,7 @@ def check_language_tst(test, drv, api):
                                       description=u'description'))
 
     # add signature field
-    signature = Signature(name=u'Signature 1')
+    signature = Signature(name=u'Signature 1', obligatory=False)
     placement = Placement(left=.3505, top=.8089, width=.2736, height=.0829)
     signature.placements.add(placement)
     sig.fields.add(signature)
@@ -46,11 +46,8 @@ def check_language_tst(test, drv, api):
     drv.wait_for_element_and_click('.signatureBox')
     drv.screenshot(first_sleep_for=1)  # wait for animation to finish
 
-    # drawing dot for a signature
-    drv.wait_for_element_and_click('canvas')
-
     # close modal
-    drv.wait_for_element_and_click('.button.next.action')
+    drv.wait_for_element_and_click('.button.cancel-clear')
     test.sleep(1)  # wait for animation to finish
 
     # scrolling to author attachment section is automatic
@@ -102,7 +99,10 @@ def check_language_tst(test, drv, api):
 
     # click final sign button
     drv.wait_for_element_and_click('.section.sign .button.action')
-    drv.screenshot(first_sleep_for=1)  # wait for animation to start
+
+    drv.screenshot(first_sleep_for=1)  # wait for modal to be shown
+    drv.wait_for_element_and_click('.section.sign .button.action')
+    drv.screenshot(first_sleep_for=.1)  # wait for animation to start
 
     # wait for modal to disappear (by page reloading)
     drv.wait_for_element_to_disappear('.sign.section')

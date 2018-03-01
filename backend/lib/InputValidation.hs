@@ -43,16 +43,17 @@ module InputValidation
 
 import Data.Char
 import Data.String.Utils
+import Data.Text (pack)
 import Data.Word (Word32)
 import Log
 import Numeric
 import Text.HTML.TagSoup.Entity
-import Text.Regex.TDFA ((=~))
 import Text.XML.HaXml (render)
 import Text.XML.HaXml.Parse (xmlParse')
 import Text.XML.HaXml.Posn
 import Text.XML.HaXml.Pretty (content)
 import Text.XML.HaXml.Types
+import qualified Data.Text.ICU as Rx
 
 import Attachment.AttachmentID
 import Doc.DocumentID
@@ -281,7 +282,8 @@ asValidEmail input =
           checkFormat email | isValidFormat email = return email
                             | otherwise = Bad
           isValidFormat :: String -> Bool
-          isValidFormat = (=~ ("^[[:alnum:]._%+-]+@[[:alnum:].-]+[.][[:alpha:]]{2,}$":: String))
+          -- This must match PATTERN_EMAIL in frontend code
+          isValidFormat = isJust . Rx.find (Rx.regex [Rx.CaseInsensitive] "^[a-zA-Z0-9._%+-]+@(\\p{L}|[0-9.-])+[.][a-z]{2,}$") . pack
 
 {- |
     Creates an email that hasn't been completely validated.  It still does handy things

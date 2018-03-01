@@ -20,6 +20,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Data.ByteString.UTF8 as BSU
 import qualified Text.JSON as J
 
+import AddressUtils (punyEncode)
 import Data.ByteString.Utils (splitEvery)
 import DB
 import File.Storage
@@ -204,8 +205,8 @@ createMailTos = intercalate ", " . map (\a -> createAddrString a)
 
 createAddrString :: Address -> String
 createAddrString Address{..}
-    | asciiPrintable addrName = mailEncode Nothing escapedName ++ " <" ++ addrEmail ++ ">"
-    | otherwise = mailEncode Nothing addrName ++ " <" ++ addrEmail ++ ">"
+    | asciiPrintable addrName = mailEncode Nothing escapedName ++ " <" ++ punyEncode addrEmail ++ ">"
+    | otherwise = mailEncode Nothing addrName ++ " <" ++ punyEncode addrEmail ++ ">"
   -- wrap in quotes to handle commas correctly in names
   -- discard quotes from the inside, to block any injections
   -- most clients do this anyway
