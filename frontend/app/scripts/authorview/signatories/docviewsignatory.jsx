@@ -163,6 +163,7 @@ var EmailModal = require("../../common/email_modal");
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
         && signatory.document().pending()
         && !signatory.hasSigned()
+        && !signatory.author()
         && signatory.mobileDelivery();
     },
 
