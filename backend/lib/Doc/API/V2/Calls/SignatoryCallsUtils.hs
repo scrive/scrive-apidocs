@@ -91,12 +91,12 @@ signDocument slid mh fields acceptedAuthorAttachments notUploadedSignatoryAttach
   guardGetSignatoryFromIdForDocument slid >>= \sl -> dbUpdate . UpdateConsentResponsesForSigning sl consentResponses =<< signatoryActor ctx sl
   theDocument >>= \doc -> do
     sl <- guardGetSignatoryFromIdForDocument slid
-    authorAttachmetsWithAcceptanceText <- forM (documentauthorattachments doc) $ \a -> do
+    authorAttachmentsWithAcceptanceText <- forM (documentauthorattachments doc) $ \a -> do
       acceptanceText <- renderTemplate "_authorAttachmentsUnderstoodContent" (F.value "attachment_name" $ authorattachmentname a)
       return (acceptanceText,a)
     notUploadedSignatoryAttachmentsText <- renderTemplate_ "_pageDocumentForAuthorHelpersLocalDialogsAttachmentmarkasnotuploaded"
     let notUploadedSignatoryAttachmentsWithText = zip notUploadedSignatoryAttachments (repeat notUploadedSignatoryAttachmentsText)
-    dbUpdate . AddAcceptedAuthorAttachmentsEvents sl acceptedAuthorAttachments authorAttachmetsWithAcceptanceText =<< signatoryActor ctx sl
+    dbUpdate . AddAcceptedAuthorAttachmentsEvents sl acceptedAuthorAttachments authorAttachmentsWithAcceptanceText =<< signatoryActor ctx sl
     dbUpdate . AddNotUploadedSignatoryAttachmentsEvents sl notUploadedSignatoryAttachmentsWithText =<< signatoryActor ctx sl
   guardGetSignatoryFromIdForDocument slid >>= \sl -> dbUpdate . SignDocument slid mh mesig mpin screenshots =<< signatoryActor ctx sl
 
