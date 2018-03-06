@@ -67,8 +67,9 @@ main = do
     checkExecutables
 
     let pgSettings = pgConnSettings $ mailerDBConfig conf
+        extrasOptions = def
     withPostgreSQL (unConnectionSource . simpleSource $ pgSettings []) $ do
-      checkDatabaseAllowUnknownTables [] mailerTables
+      checkDatabaseAllowUnknownTables extrasOptions [] mailerTables
     awsconf <- do
       localCache <- MemCache.new BS.length (mailerLocalFileCacheSize conf)
       globalCache <- F.forM (mailerRedisCacheConfig conf) mkRedisConnection

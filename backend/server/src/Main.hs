@@ -63,6 +63,7 @@ main = withCurlDo $ do
     Just conf -> void $ startMonitoringServer conf
     Nothing   -> return ()
   let connSettings = pgConnSettings $ dbConfig appConf
+      extrasOptions = def { eoEnforcePKs = True }
   pool <- liftBase $ createPoolSource (connSettings kontraComposites) (maxDBConnections appConf)
   rng <- newCryptoRNGState
   lr <- mkLogRunner "kontrakcja" (logConfig appConf) rng
@@ -73,7 +74,7 @@ main = withCurlDo $ do
     checkExecutables
 
     withPostgreSQL (unConnectionSource . simpleSource $ connSettings []) $ do
-      checkDatabase kontraDomains kontraTables
+      checkDatabase extrasOptions kontraDomains kontraTables
       dbUpdate $ SetMainDomainURL $ mainDomainUrl appConf
 
     appGlobals <- do

@@ -41,9 +41,11 @@ main = do
   runWithLogRunner logRunner $ do
     -- composite types are not available in migrations
     let connSource = simpleSource $ pgConnSettings dbConfig []
-    let migrationOptions = if (force) then [ForceCommitAfterEveryMigration] else []
+        extrasOptions =  ExtrasOptions
+                         { eoForceCommit = force
+                         , eoEnforcePKs = True }
     withPostgreSQL (unConnectionSource connSource) $ do
-      migrateDatabase migrationOptions kontraExtensions kontraDomains kontraTables kontraMigrations
+      migrateDatabase extrasOptions kontraExtensions kontraDomains kontraTables kontraMigrations
       defineComposites kontraComposites
       defineFunctions kontraFunctions
       defineTriggers kontraTriggers

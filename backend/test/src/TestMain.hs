@@ -160,9 +160,9 @@ testMany' (allargs, ts) runLogger rng = do
   templates <- readGlobalTemplates
 
   let connSettings = pgConnSettings pgconf
-
+      extrasOptions = def
   runLogger . runDBT (unConnectionSource . simpleSource $ connSettings []) def $ do
-    migrateDatabase [] kontraExtensions kontraDomains kontraTables kontraMigrations
+    migrateDatabase extrasOptions kontraExtensions kontraDomains kontraTables kontraMigrations
     defineFunctions kontraFunctions
     defineComposites kontraComposites
     defineTriggers kontraTriggers
