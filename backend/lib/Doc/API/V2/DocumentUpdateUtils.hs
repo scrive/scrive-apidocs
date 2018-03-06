@@ -1,13 +1,15 @@
 module Doc.API.V2.DocumentUpdateUtils (
     applyDraftDataToDocument
+  , clearDocFields
   , adjustFieldAndPlacementsAfterRemovingPages
 ) where
 
 import Control.Conditional (unlessM, whenM)
+import Control.Monad.Base
 import Log
 import qualified Control.Exception.Lifted as E
 
-import API.V2 (apiError, requestParameterInvalid, serverError)
+import API.V2 (apiError, documentStateError, requestParameterInvalid, serverError)
 import DB
 import DB.TimeZoneName
 import Doc.DocInfo (isPreparation)
@@ -16,10 +18,12 @@ import Doc.DocumentMonad (DocumentMonad, theDocument)
 import Doc.DocUtils
 import Doc.Model
 import Doc.SignatoryFieldID
+import File.Storage (getFileContents)
 import Kontra
 import Log.Identifier
 import Util.Actor
 import Util.HasSomeUserInfo
+import Util.PDFUtil
 
 checkDraftTimeZoneName ::  (Kontrakcja m) =>  Document -> m ()
 checkDraftTimeZoneName draft = do
@@ -110,6 +114,53 @@ mergeAuthorDetails sigs nsigs =
 mergeSignatoriesIDs :: [SignatoryLink] ->[SignatoryLink] -> [SignatoryLink]
 mergeSignatoriesIDs (s:ss) (ns:nss) = (ns {signatorylinkid = signatorylinkid s}) : (mergeSignatoriesIDs ss nss)
 mergeSignatoriesIDs _ ns = ns
+
+-- This function removes:
+-- * placements that are on non-existing pages
+-- * non-standard fields that have no placements
+clearDocFields :: (Kontrakcja m, DocumentMonad m) => Actor -> m ()
+clearDocFields actor = do
+  mfile <- fileFromMainFile =<< documentfile <$> theDocument
+  case mfile of
+    Nothing -> apiError $ documentStateError "Document does not have a main file"
+    Just file -> do
+      content <- getFileContents file
+      enop <- liftBase $ getNumberOfPDFPages content
+      case enop of
+        Left _ -> apiError $ serverError "Can't extract number of pages from PDF"
+        Right numOfPages -> do
+          sigs <- documentsignatorylinks <$> theDocument
+
+          let clearSigFields sig = sig { signatoryfields = filter validField $ map clearField $ signatoryfields sig }
+
+              validField (SignatoryNameField _) = True
+              validField (SignatoryCompanyField _) = True
+              validField (SignatoryPersonalNumberField _) = True
+              validField (SignatoryCompanyNumberField _) = True
+              validField (SignatoryEmailField _) = True
+              validField (SignatoryMobileField _) = True
+              validField (SignatoryTextField stf) = not $ null $ stfPlacements stf
+              validField (SignatoryCheckboxField schf) = not $ null $ schfPlacements schf
+              validField (SignatorySignatureField ssf) = not $ null $ ssfPlacements ssf
+              validField (SignatoryRadioGroupField srgf) = not $ null $ srgfPlacements srgf
+
+              clearField (SignatoryNameField snf) = SignatoryNameField $ snf { snfPlacements = filter validPlacement $ snfPlacements snf }
+              clearField (SignatoryCompanyField scf) = SignatoryCompanyField $ scf { scfPlacements = filter validPlacement $ scfPlacements scf }
+              clearField (SignatoryPersonalNumberField spnf) = SignatoryPersonalNumberField $ spnf { spnfPlacements = filter validPlacement $ spnfPlacements spnf }
+              clearField (SignatoryCompanyNumberField scnf) = SignatoryCompanyNumberField $ scnf { scnfPlacements = filter validPlacement $ scnfPlacements scnf }
+              clearField (SignatoryEmailField sef) = SignatoryEmailField $ sef { sefPlacements = filter validPlacement $ sefPlacements sef }
+              clearField (SignatoryMobileField smf) = SignatoryMobileField $ smf { smfPlacements = filter validPlacement $ smfPlacements smf }
+              clearField (SignatoryTextField stf) = SignatoryTextField $ stf { stfPlacements = filter validPlacement $ stfPlacements stf }
+              clearField (SignatoryCheckboxField schf) = SignatoryCheckboxField $ schf { schfPlacements = filter validPlacement $ schfPlacements schf }
+              clearField (SignatorySignatureField ssf) = SignatorySignatureField $ ssf { ssfPlacements = filter validPlacement $ ssfPlacements ssf }
+              clearField (SignatoryRadioGroupField srgf) = SignatoryRadioGroupField $ srgf { srgfPlacements = filter validPlacement $ srgfPlacements srgf }
+
+              validPlacement fp = fromIntegral (placementpage fp) <= numOfPages
+
+              sigs' = map clearSigFields sigs
+
+          res <- dbUpdate $ ResetSignatoryDetails sigs' actor
+          unless res $ apiError $ serverError "clearing document fields failed"
 
 
 -- Utils for removing pages
