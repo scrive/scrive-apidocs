@@ -5,6 +5,7 @@ var DocumentViewSignatories = require("./signatories/docviewsignatories");
 var SignatoryAttachmentsView = require("./attachments/signatoryattachmentsview");
 var AuthorAttachmentsView = require("./attachments/authorattachmentsview");
 var ExtraDetailsView = require("./extradetails/extradetailsview");
+var ConsentModuleView = require("./consentmodule/consentmoduleview");
 var SignSectionView = require("./signsection/signsectionview");
 var SignViewModel = require("./signviewmodel");
 var FileView = require("./fileview/fileview");
@@ -135,13 +136,19 @@ var _ = require("underscore");
       var model = this.state.model;
       var doc = model.document();
       var attachments = [];
+      var questions = [];
 
       if (doc.currentSignatory()) {
         attachments = doc.currentSignatory().attachments();
         attachments = attachments.concat(doc.authorattachments());
+
+        var consentModule = doc.currentSignatory().consentModule();
+        if (consentModule) {
+          questions = consentModule.questions();
+        }
       }
 
-      return [model, doc].concat(attachments);
+      return [model, doc].concat(attachments, questions);
     },
 
     enableOverlay: function () {
@@ -277,6 +284,10 @@ var _ = require("underscore");
               }
               {/* if */ model.hasSignatoriesSection() &&
                 <DocumentViewSignatories model={doc} />
+              }
+              {/* if */ model.hasConsentModuleSection() &&
+                <ConsentModuleView
+                  model={doc.currentSignatory().consentModule()} />
               }
               {/* if */ model.hasSignSection() &&
                 <SignSectionView

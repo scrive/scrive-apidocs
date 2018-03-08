@@ -6,6 +6,7 @@ var SignatoryAttachment = require("./signatoryattachment.js").SignatoryAttachmen
 var HighlightedPage = require("./highlightedpage.js").HighlightedPage;
 var Submit = require("./submits.js").Submit;
 var Mail = require("./confirmationsWithEmails.js").Mail;
+var ConsentModule = require("./consentmodule").ConsentModule;
 
 /* Signatories model */
 
@@ -32,6 +33,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         confirmation_delivery_method : "email",
         allows_highlighting: false,
         hide_personal_number: false,
+        consent_module: null,
         // Internal properties used by design view for "goldfish" memory
         deliverySynchedWithConfirmationDelivery : true,
         confirmationDeliverySynchedWithDelivery : true,
@@ -64,6 +66,12 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         signatory.set({"fields": fields,
                        "attachments": attachments
                       });
+
+        if(args.consent_module != null) {
+          signatory.set({
+            "consent_module": new ConsentModule(args.consent_module)
+          });
+        }
 
         var highlightedPages =  _.map(args.highlighted_pages, function(attachment) {
                 return new HighlightedPage(extendedWithSignatory(attachment));
@@ -648,7 +656,8 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
               delivery_method: this.delivery(),
               confirmation_delivery_method : this.confirmationdelivery(),
               allows_highlighting : this.allowshighlighting(),
-              hide_personal_number: this.hidePN()
+              hide_personal_number: this.hidePN(),
+              consent_module: this.consentModule() ? this.consentModule().draftData() : null
         };
     },
     delivery: function() {
@@ -908,5 +917,8 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     dropFirstCSVLine : function() {
        this.csv()[1] = this.csv()[0];
        this.csv().shift();
+    },
+    consentModule: function() {
+        return this.get("consent_module");
     }
 });

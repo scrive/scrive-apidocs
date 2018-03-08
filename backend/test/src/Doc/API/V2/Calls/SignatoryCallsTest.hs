@@ -48,6 +48,7 @@ testDocApiV2SigCheck = do
     POST
       [ ("fields", inText "[]")
       , ("accepted_author_attachments", inText "[]")
+      , ("consent_responses", inText "[]")
       ]
     (docApiV2SigCheck did slid) 200
   return ()
@@ -64,6 +65,7 @@ testDocApiV2SigSign = do
     POST
       [ ("fields", inText "[]")
       , ("accepted_author_attachments", inText "[]")
+      , ("consent_responses", inText "[]")
       ]
     (docApiV2SigSign did slid) 200
   assertEqual "Document status after signing should match" Closed (getMockDocStatus mockDocSigned)

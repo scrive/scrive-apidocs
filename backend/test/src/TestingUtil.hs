@@ -263,6 +263,10 @@ instance Arbitrary SignatoryLink where
     delivery <- arbitrary
     authenticationToSign <- arbitrary
     authenticationToView <- arbitrary
+    (cmTitle, cmQuestions) <- oneof
+      [ (\t qs -> (Just t, qs)) <$> arbString 1 100 <*> listOf1 arbitrary
+      , return (Nothing, [])
+      ]
     return $ def { signatorylinkid = unsafeSignatoryLinkID 0
                           , signatoryfields = fields
                           , signatoryisauthor = False
@@ -274,7 +278,26 @@ instance Arbitrary SignatoryLink where
                           , signatorylinkdeliverymethod = delivery
                           , signatorylinkauthenticationtosignmethod = authenticationToSign
                           , signatorylinkauthenticationtoviewmethod = authenticationToView
+                          , signatorylinkconsenttitle     = cmTitle
+                          , signatorylinkconsentquestions = cmQuestions
                           }
+
+instance Arbitrary SignatoryConsentQuestion where
+  arbitrary = do
+    title       <- arbString 1 100
+    po          <- arbString 1 100
+    no          <- arbString 1 100
+    description <- oneof
+      [ (\ti te -> Just (ti, te)) <$> arbString 1 100 <*> arbString 1 100
+      , return Nothing
+      ]
+
+    return $ def
+      { scqTitle          = title
+      , scqPositiveOption = po
+      , scqNegativeOption = no
+      , scqDescription    = description
+      }
 
 instance Arbitrary CSVUpload where
   arbitrary = do

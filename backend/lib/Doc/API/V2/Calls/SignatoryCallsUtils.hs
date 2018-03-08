@@ -19,6 +19,7 @@ import DB
 import Doc.API.V2.Guards (guardGetSignatoryFromIdForDocument)
 import Doc.API.V2.JSON.Fields
 import Doc.API.V2.JSON.Misc
+import Doc.API.V2.JSON.SignatoryConsentQuestion
 import Doc.DocStateData
 import Doc.DocumentMonad
 import Doc.Model.Update
@@ -77,8 +78,8 @@ getScreenshots = do
 
 
 signDocument :: (Kontrakcja m, DocumentMonad m) =>
-  SignatoryLinkID -> MagicHash -> SignatoryFieldsValuesForSigning -> [FileID] -> [String] -> Maybe ESignature -> Maybe String -> SignatoryScreenshots -> m ()
-signDocument slid mh fields acceptedAuthorAttachments notUploadedSignatoryAttachments mesig mpin screenshots = do
+  SignatoryLinkID -> MagicHash -> SignatoryFieldsValuesForSigning -> [FileID] -> [String] -> Maybe ESignature -> Maybe String -> SignatoryScreenshots -> SignatoryConsentResponsesForSigning -> m ()
+signDocument slid mh fields acceptedAuthorAttachments notUploadedSignatoryAttachments mesig mpin screenshots consentResponses = do
   switchLang =<< getLang <$> theDocument
   ctx <- getContext
   -- Note that the second 'guardGetSignatoryFromIdForDocument' call
@@ -87,6 +88,7 @@ signDocument slid mh fields acceptedAuthorAttachments notUploadedSignatoryAttach
   -- call, or the actor identities may get wrong in the evidence log.
   fieldsWithFiles <- fieldsToFieldsWithFiles fields
   guardGetSignatoryFromIdForDocument slid >>= \sl -> dbUpdate . UpdateFieldsForSigning sl (fst fieldsWithFiles) (snd fieldsWithFiles) =<< signatoryActor ctx sl
+  guardGetSignatoryFromIdForDocument slid >>= \sl -> dbUpdate . UpdateConsentResponsesForSigning sl consentResponses =<< signatoryActor ctx sl
   theDocument >>= \doc -> do
     sl <- guardGetSignatoryFromIdForDocument slid
     authorAttachmetsWithAcceptanceText <- forM (documentauthorattachments doc) $ \a -> do

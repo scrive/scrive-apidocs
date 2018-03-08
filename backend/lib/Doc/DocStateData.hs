@@ -6,6 +6,7 @@ module Doc.DocStateData (
   , module Doc.Data.HighlightedPage
   , module Doc.Data.MainFile
   , module Doc.Data.SignatoryAttachment
+  , module Doc.Data.SignatoryConsentQuestion
   , module Doc.Data.SignatoryField
   , module Doc.Data.SignatoryFieldUtils
   , module Doc.Data.SignatoryLink
@@ -18,6 +19,7 @@ import Doc.Data.DocumentTag
 import Doc.Data.HighlightedPage
 import Doc.Data.MainFile
 import Doc.Data.SignatoryAttachment
+import Doc.Data.SignatoryConsentQuestion
 import Doc.Data.SignatoryField
 import Doc.Data.SignatoryFieldUtils
 import Doc.Data.SignatoryLink

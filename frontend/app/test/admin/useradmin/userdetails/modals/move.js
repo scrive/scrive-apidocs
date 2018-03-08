@@ -183,7 +183,7 @@ describe("admin/useradmin/userdetails/modals/move", function () {
   it("should call the onCancel callback when modal is closed", function () {
     var component = renderComponent({active: true});
 
-    var closeButton = $(".modal.user-details-modal-move a.modal-close");
+    var closeButton = $(".modal.user-details-modal-move a .modal-close");
 
     TestUtils.Simulate.click(closeButton[0]);
     assert.isTrue(component.props.onCancel.called);

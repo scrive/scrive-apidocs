@@ -15,6 +15,7 @@ import Company.Model
 import Context (ctxtime)
 import DB
 import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
+import Doc.API.V2.JSON.SignatoryConsentQuestion
 import Doc.Conditions
 import Doc.DBActions
 import Doc.DocInfo
@@ -25,6 +26,7 @@ import Doc.DocUtils
 import Doc.Model
 import Doc.Model.Filter
 import Doc.SealStatus (SealStatus(..))
+import Doc.SignatoryConsentQuestionID
 import Doc.SignatoryFieldID
 import Doc.TestInvariants
 import EID.Signature.Model (ESignature(..))
@@ -139,6 +141,9 @@ docStateTests env = testGroup "DocState" [
   testThat "PreparationToPending fails when document doesn't exist" env testPreparationToPendingNotLeft,
   testThat "PreparationToPending fails when signable but not preparation" env testPreparationToPendingSignableNotPreparationLeft,
   testThat "PreparationToPending fails when not signable" env testPreparationToPendingNotSignableLeft,
+
+  testThat "UpdateConsentResponsesForSigning updates the responses to consent questions" env testUpdateConsentResponsesForSigningSuccess,
+  testThat "UpdateConsentResponsesForSigning fails when the corresponding question doesn't exist" env testUpdateConsentResponsesForSigningWrongQuestionID,
 
   testThat "SignDocument fails when doc doesn't exist" env testSignDocumentNotLeft,
   testThat "SignDocument succeeds when doc is Signable and Pending (standard mode)" env testSignDocumentSignablePendingRight,
@@ -1469,6 +1474,60 @@ testTimeoutDocumentSignableNotLeft = replicateM_ 10 $ do
   assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
     d <- rand 10 arbitrary
     withDocument d $ randomUpdate $ TimeoutDocument actor
+
+hasConsentModule :: SignatoryLinkIdentity a => a -> Document -> Bool
+hasConsentModule i doc = case getSigLinkFor i doc of
+  Nothing -> False
+  Just sl -> not $ null $ signatorylinkconsentquestions sl
+
+testUpdateConsentResponsesForSigningSuccess :: TestEnv ()
+testUpdateConsentResponsesForSigningSuccess = do
+  author <- addNewRandomUser
+  doc    <- addRandomDocumentWithAuthorAndCondition author
+              (isSignable && isPending && hasConsentModule author)
+
+  withDocument doc $ do
+    Just sl <- getSigLinkFor author <$> theDocument
+    let questions = signatorylinkconsentquestions sl
+    responses <- mapM (\q -> (scqID q,) <$> rand 10 arbitrary) questions
+
+    randomUpdate $ \t -> UpdateConsentResponsesForSigning sl
+                           (SignatoryConsentResponsesForSigning responses)
+                           (systemActor t)
+
+    Just sl' <- getSigLinkFor author <$> theDocument
+    let questions' = signatorylinkconsentquestions sl'
+        responses' = map (\q -> (scqID q, scqResponse q)) questions'
+    assertBool "Some responses are missing or wrong"
+               (all id (zipWith (\(i,r) (i',r') -> i == i' && Just r == r')
+                                responses responses'))
+
+    events <- query $ GetEvidenceLog $ documentid doc
+    let check scq e = case scqDescription scq of
+          Nothing -> evType e == Current ConsentQuestionAnswered
+          Just _  -> evType e == Current ConsentQuestionAnsweredWithDescription
+    assertBool "There are some missing evidence logs"
+               (all (\q -> any (check q) events) questions)
+
+testUpdateConsentResponsesForSigningWrongQuestionID :: TestEnv ()
+testUpdateConsentResponsesForSigningWrongQuestionID = do
+  author <- addNewRandomUser
+  doc    <- addRandomDocumentWithAuthorAndCondition author
+              (isSignable && isPending && hasConsentModule author)
+
+  withDocument doc $ do
+    Just sl <- getSigLinkFor author <$> theDocument
+    let questions = signatorylinkconsentquestions sl
+        goodResponses = map (\q -> (scqID q, True)) questions
+        badResponse =
+          ( unsafeSignatoryConsentQuestionID
+              (fromSignatoryConsentQuestionID (scqID (head questions)) + 1000)
+          , True )
+
+    assertRaisesKontra (\(SignatoryConsentQuestionDoesNotExist _) -> True) $
+      randomUpdate $ \t -> UpdateConsentResponsesForSigning sl
+        (SignatoryConsentResponsesForSigning (badResponse : goodResponses))
+        (systemActor t)
 
 testSignDocumentNonSignableLeft :: TestEnv ()
 testSignDocumentNonSignableLeft = replicateM_ 10 $ do

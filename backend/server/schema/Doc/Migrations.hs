@@ -12,6 +12,8 @@ module Doc.Migrations (
   , addSearchColumnsToDocument
   , addAuthorUserIDToDocuments
   , addHidePnElogToSignatories
+  , createSignatoryLinkConsentQuestionsTable
+  , addConsentTitleToSignatoryLink
 ) where
 
 import Data.Int
@@ -231,5 +233,49 @@ addHidePnElogToSignatories  = Migration {
   , mgrAction = StandardMigration $ do
       runQuery_ $ sqlAlterTable "signatory_links" [
           sqlAddColumn tblColumn { colName = "hide_pn_elog", colType = BoolT, colNullable = False, colDefault = Just "false" }
+        ]
+  }
+
+createSignatoryLinkConsentQuestionsTable :: MonadDB m => Migration m
+createSignatoryLinkConsentQuestionsTable = Migration {
+    mgrTableName = tblName tableSignatoryLinkConsentQuestions
+  , mgrFrom = 0
+  , mgrAction = StandardMigration $ createTable True tblTable {
+      tblName = "signatory_link_consent_questions"
+    , tblVersion = 1
+    , tblColumns = [
+        tblColumn { colName = "id",                colType = BigSerialT, colNullable = False }
+      , tblColumn { colName = "signatory_link_id", colType = BigIntT,    colNullable = False }
+      , tblColumn { colName = "position",          colType = SmallIntT,  colNullable = False }
+      , tblColumn { colName = "title",             colType = TextT,      colNullable = False }
+      , tblColumn { colName = "positive_option",   colType = TextT,      colNullable = False }
+      , tblColumn { colName = "negative_option",   colType = TextT,      colNullable = False }
+      , tblColumn { colName = "response",          colType = BoolT,      colNullable = True }
+      , tblColumn { colName = "description_title", colType = TextT,      colNullable = True }
+      , tblColumn { colName = "description_text",  colType = TextT,      colNullable = True }
+     ]
+    , tblPrimaryKey = pkOnColumn "id"
+    , tblChecks = [
+        Check "description_all_or_nothing"
+          "description_title IS NOT NULL AND description_text IS NOT NULL\
+          \ OR description_title IS NULL AND description_text IS NULL"
+      ]
+    , tblForeignKeys = [
+        (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
+      ]
+    , tblIndexes = [
+        indexOnColumn "signatory_link_id"
+      , tblIndex { idxColumns = ["signatory_link_id", "\"position\""], idxUnique = True }
+      ]
+    }
+  }
+
+addConsentTitleToSignatoryLink :: MonadDB m => Migration m
+addConsentTitleToSignatoryLink = Migration {
+    mgrTableName = tblName tableSignatoryLinks
+  , mgrFrom = 32
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable (tblName tableSignatoryLinks) [
+          sqlAddColumn tblColumn { colName = "consent_title", colType = TextT, colNullable = True }
         ]
   }

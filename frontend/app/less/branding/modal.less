@@ -195,19 +195,26 @@
   font-size: 32px;
 }
 
-.modal-close {
-  background: url(~"@{img-base-url}/sprite-grey-X.png") no-repeat scroll 0 0 transparent;
+.modal-close-wrapper {
   cursor: pointer;
   display: block;
   float: right;
-  height: 12px;
   position: absolute;
   right: 15px;
   top: 20px;
-  width: 12px;
+  padding: 6px;
+
+  .modal-close {
+    background: url(~"@{img-base-url}/sprite-grey-X.png") no-repeat scroll 0 0 transparent;
+    display: block;
+    height: 12px;
+    width: 12px;
+  }
 
   &:hover {
-    background-position: -12px 0;
+    .modal-close {
+      background-position: -12px 0;
+    }
   }
 }
 

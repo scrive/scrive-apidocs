@@ -221,7 +221,7 @@ ctSignatoryAttachment = CompositeType {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable {
     tblName = "signatory_links"
-  , tblVersion = 32
+  , tblVersion = 33
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
@@ -249,6 +249,7 @@ tableSignatoryLinks = tblTable {
     , tblColumn { colName = "authentication_to_view_method", colType = SmallIntT, colNullable = False }
     , tblColumn { colName = "allows_highlighting", colType = BoolT, colNullable = False, colDefault = Just "false" }
     , tblColumn { colName = "hide_pn_elog", colType = BoolT, colNullable = False, colDefault = Just "false" }
+    , tblColumn { colName = "consent_title", colType = TextT, colNullable = True }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
@@ -298,6 +299,8 @@ ctSignatoryLink = CompositeType {
   , CompositeColumn { ccName = "allows_highlighting", ccType = BoolT}
   , CompositeColumn { ccName = "has_identified_to_view", ccType = BoolT }
   , CompositeColumn { ccName = "hide_pn_elog", ccType = BoolT}
+  , CompositeColumn { ccName = "consent_title", ccType = TextT }
+  , CompositeColumn { ccName = "consent_questions", ccType = ArrayT $ CustomT "signatory_consent_question" }
   ]
 }
 
@@ -546,5 +549,51 @@ ctHighlightedPage = CompositeType {
   , ctColumns = [
       CompositeColumn { ccName = "page", ccType = IntegerT }
     , CompositeColumn { ccName = "file_id", ccType = BigIntT }
+    ]
+  }
+
+---------------------------------
+
+tableSignatoryLinkConsentQuestions :: Table
+tableSignatoryLinkConsentQuestions = tblTable {
+    tblName = "signatory_link_consent_questions"
+  , tblVersion = 1
+  , tblColumns = [
+      tblColumn { colName = "id",                colType = BigSerialT, colNullable = False }
+    , tblColumn { colName = "signatory_link_id", colType = BigIntT,    colNullable = False }
+    , tblColumn { colName = "position",          colType = SmallIntT,  colNullable = False }
+    , tblColumn { colName = "title",             colType = TextT,      colNullable = False }
+    , tblColumn { colName = "positive_option",   colType = TextT,      colNullable = False }
+    , tblColumn { colName = "negative_option",   colType = TextT,      colNullable = False }
+    , tblColumn { colName = "response",          colType = BoolT,      colNullable = True }
+    , tblColumn { colName = "description_title", colType = TextT,      colNullable = True }
+    , tblColumn { colName = "description_text",  colType = TextT,      colNullable = True }
+    ]
+  , tblPrimaryKey = pkOnColumn "id"
+  , tblChecks = [
+      Check "description_all_or_nothing"
+        "description_title IS NOT NULL AND description_text IS NOT NULL\
+        \ OR description_title IS NULL AND description_text IS NULL"
+    ]
+  , tblForeignKeys = [
+      (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
+    ]
+  , tblIndexes = [
+      indexOnColumn "signatory_link_id"
+    , tblIndex { idxColumns = ["signatory_link_id", "\"position\""], idxUnique = True }
+    ]
+  }
+
+ctSignatoryConsentQuestion :: CompositeType
+ctSignatoryConsentQuestion = CompositeType {
+    ctName = "signatory_consent_question"
+  , ctColumns = [
+      CompositeColumn { ccName = "id",                ccType = BigIntT }
+    , CompositeColumn { ccName = "title",             ccType = TextT }
+    , CompositeColumn { ccName = "positive_option",   ccType = TextT }
+    , CompositeColumn { ccName = "negative_option",   ccType = TextT }
+    , CompositeColumn { ccName = "response",          ccType = BoolT }
+    , CompositeColumn { ccName = "description_title", ccType = TextT }
+    , CompositeColumn { ccName = "description_text",  ccType = TextT }
     ]
   }

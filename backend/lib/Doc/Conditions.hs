@@ -9,6 +9,7 @@ import Company.CompanyID
 import DB
 import Doc.DocStateData
 import Doc.DocumentID
+import Doc.SignatoryConsentQuestionID
 import Doc.SignatoryLinkID
 import MagicHash
 import MinutesTime
@@ -384,3 +385,21 @@ sqlWhereSignatoryAuthenticationToSignMethodIs am =
                 "signatory_links.id",
                 "signatory_links.authentication_to_sign_method")
                 ("signatory_links.authentication_to_sign_method = " <?> am)
+
+------------------------------------------------------------
+
+data SignatoryConsentQuestionDoesNotExist
+  = SignatoryConsentQuestionDoesNotExist SignatoryConsentQuestionID
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue SignatoryConsentQuestionDoesNotExist where
+  toJSValue (SignatoryConsentQuestionDoesNotExist d) = runJSONGen $ do
+    value "message" ("Signatory consent question does not exist" :: String)
+    value "signatory_consent_question_id" (show d)
+
+instance DBExtraException SignatoryConsentQuestionDoesNotExist
+
+sqlWhereSignatoryConsentQuestionIDIs :: (MonadState v m, SqlWhere v)
+                                     => SignatoryConsentQuestionID -> m ()
+sqlWhereSignatoryConsentQuestionIDIs scqid =
+  sqlWhereE (SignatoryConsentQuestionDoesNotExist scqid) ("signatory_link_consent_questions.id = " <?> scqid)

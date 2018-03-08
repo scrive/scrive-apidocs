@@ -202,6 +202,10 @@ module.exports = React.createClass({
       }
     }
 
+    if (task.isConsentQuestion()) {
+      offset.left = offset.left + task.margin();
+    }
+
     return {
       width: width,
       height: height,
@@ -224,7 +228,7 @@ module.exports = React.createClass({
     }
   },
 
-  computerArrowSide: function () {
+  computeArrowSide: function () {
     const task = this.props.task;
     const margin = 10;
     const base = task.tipSide() !== "right" ? ARROW.LEFT : ARROW.RIGHT;
@@ -257,8 +261,10 @@ module.exports = React.createClass({
     if (isElementInViewport.part(task.el())) {
       if (task.isOverlayTask()) {
         return ARROW.NONE;
+      } else if (task.isConsentQuestion()) {
+        return ARROW.LEFT;
       } else {
-        return this.computerArrowSide();
+        return this.computeArrowSide();
       }
     } else {
       return this.computeArrowDirection();
@@ -316,13 +322,8 @@ module.exports = React.createClass({
   },
 
   blinkGroupId: function () {
-    let field = this.props.task.field();
-
-    if (field) {
-      return this.props.task.field().cid;
-    }
-
-    return this.props.task.cid;
+    let task = this.props.task;
+    return (task.field() || task.consentQuestion() || task).cid;
   },
 
   onBlinkGroupCounterChange: function () {
@@ -405,6 +406,11 @@ module.exports = React.createClass({
       if (task.field().isRadioGroup()) {
         arrowStyle.marginLeft = Math.max(1, scale) * arrowVars.actionArrowSmallRightMargin;
       }
+    }
+
+    if (type == ARROW.LEFT && task.isConsentQuestion()
+        && this.sizeAndPositionOfElement().left > 10) {
+      transformWithPrefixes(arrowStyle, "scale(0.6)");
     }
 
     if (type === ARROW.LEFT) {

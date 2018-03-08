@@ -45,7 +45,8 @@ exports.Container = React.createClass({
     active: React.PropTypes.bool.isRequired,
     width: React.PropTypes.number,
     onShow: React.PropTypes.func,
-    onHide: React.PropTypes.func
+    onHide: React.PropTypes.func,
+    onClose: React.PropTypes.func
   },
   getInitialState: function () {
     return {
@@ -92,17 +93,30 @@ exports.Container = React.createClass({
       this.setState({height: 0});
     }
   },
+  onInnerClick: function (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  },
+  onClose: function (event) {
+    if (this.props.onClose) {
+      return this.props.onClose(event);
+    } else {
+      return false;
+    }
+  },
   render: function () {
     var overlayClassName = classNames("modal", this.props.className, {
       "active": this.props.active
     });
 
-    var width = this.props.width || (BrowserInfo.isSmallScreen() ? 980 : 640);
+    var minimalMargin = 20;
+    var computedWidth = $(window).width() - 2 * minimalMargin;
+    var width = Math.min(this.props.width || 640, computedWidth);
     var left = Math.floor(($(window).width() - width) / 2);
 
     var containerStyle = {
       left: 0,
-      marginLeft: Math.max(left, 20),
+      marginLeft: Math.max(left, minimalMargin),
       marginTop: 50,
       top: $(window).scrollTop(),
       width: width
@@ -114,9 +128,12 @@ exports.Container = React.createClass({
 
     return (
       <Portal>
-        <div className={overlayClassName} style={{height: this.state.height}}>
+        <div className={overlayClassName} style={{height: this.state.height}}
+             onClick={this.onClose}>
           <div className="modal-container" style={containerStyle}>
-            {this.props.children}
+            <div onClick={this.onInnerClick}>
+              {this.props.children}
+            </div>
           </div>
         </div>
       </Portal>
@@ -144,7 +161,9 @@ exports.Header = React.createClass({
           </div>
         </div>
         {this.props.showClose &&
-          <a className="modal-close" onClick={this.props.onClose} />
+          <a className="modal-close-wrapper" onClick={this.props.onClose}>
+            <span className="modal-close" />
+          </a>
         }
       </div>
     );

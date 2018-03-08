@@ -88,4 +88,7 @@ kontraMigrations = [
   , addSignatoryIPToEIDAuthentications
   , netsSignOrdersDropSSN
   , addUserTOTPKeyColumn
+  , createSignatoryLinkConsentQuestionsTable
+  , addConsentTitleToSignatoryLink
+  , documentSigningJobsAddConsentResponses
   ]

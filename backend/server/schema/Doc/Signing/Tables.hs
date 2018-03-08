@@ -17,7 +17,7 @@ tableDocumentSigningConsumers = tblTable {
 tableDocumentSigningJobs :: Table
 tableDocumentSigningJobs = tblTable {
     tblName = "document_signing_jobs"
-  , tblVersion = 4
+  , tblVersion = 5
   , tblColumns = [
       tblColumn { colName = "id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "run_at", colType = TimestampWithZoneT, colNullable = False }
@@ -37,6 +37,7 @@ tableDocumentSigningJobs = tblTable {
     , tblColumn { colName = "last_check_status", colType = TextT }
     , tblColumn { colName = "not_uploaded_sig_attachments", colType = ArrayT TextT, colNullable = False, colDefault = Just "'{}'::text[]" }
     , tblColumn { colName = "signature_provider", colType = SmallIntT, colNullable = False, colDefault = Just "5" } -- CgiGrpBankID
+    , tblColumn { colName = "consent_responses", colType = JsonT, colNullable = False, colDefault = Just "'[]'::json" }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [

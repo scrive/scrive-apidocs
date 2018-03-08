@@ -53,7 +53,8 @@
       "attachments": [],
       "highlighted_pages": [],
       "hide_personal_number": false,
-      "api_delivery_url": null
+      "api_delivery_url": null,
+      "consent_module": null
     },
     {
       "id": "638737",
@@ -333,7 +334,8 @@
       "attachments": [],
       "highlighted_pages": [],
       "hide_personal_number": false,
-      "api_delivery_url": null
+      "api_delivery_url": null,
+      "consent_module": null
     }
   ],
   "file": {

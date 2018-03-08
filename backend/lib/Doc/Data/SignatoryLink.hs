@@ -22,6 +22,7 @@ import Database.PostgreSQL.PQTypes
 import DB.Derive
 import Doc.Data.HighlightedPage
 import Doc.Data.SignatoryAttachment
+import Doc.Data.SignatoryConsentQuestion
 import Doc.Data.SignatoryField
 import Doc.SignatoryLinkID
 import IPAddress
@@ -278,6 +279,9 @@ data SignatoryLink = SignatoryLink {
 -- | If a person has identified to view the document
 , signatorylinkidentifiedtoview           :: !Bool
 , signatorylinkhidepn                     :: !Bool
+-- | Consent module
+, signatorylinkconsenttitle               :: !(Maybe String)
+, signatorylinkconsentquestions           :: ![SignatoryConsentQuestion]
 } deriving (Show)
 
 instance Default SignatoryLink where
@@ -310,6 +314,8 @@ instance Default SignatoryLink where
   , signatorylinkallowshighlighting = False
   , signatorylinkidentifiedtoview = False
   , signatorylinkhidepn = False
+  , signatorylinkconsenttitle = Nothing
+  , signatorylinkconsentquestions = []
   }
 
 instance HasSomeUserInfo SignatoryLink where
@@ -353,15 +359,17 @@ signatoryLinksSelectors = [
   , "signatory_links.allows_highlighting"
   , "(SELECT EXISTS (SELECT 1 FROM eid_authentications WHERE signatory_links.id = eid_authentications.signatory_link_id))"
   , "signatory_links.hide_pn_elog"
+  , "signatory_links.consent_title"
+  , "ARRAY(SELECT (" <> mintercalate ", " signatoryConsentQuestionsSelectors <> ")::signatory_consent_question FROM signatory_link_consent_questions WHERE signatory_links.id = signatory_link_consent_questions.signatory_link_id ORDER BY position ASC)"
   ]
 
-type instance CompositeRow SignatoryLink = (SignatoryLinkID, CompositeArray1 SignatoryField, Bool, Bool, SignOrder, MagicHash, Maybe UserID, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, DeliveryStatus, DeliveryStatus, Maybe UTCTime, Maybe UTCTime, Maybe [[String]], CompositeArray1 SignatoryAttachment,CompositeArray1 HighlightedPage, Maybe String, Maybe String, Maybe UTCTime, Maybe String, AuthenticationToViewMethod, AuthenticationToSignMethod, DeliveryMethod, ConfirmationDeliveryMethod, Bool, Bool, Bool)
+type instance CompositeRow SignatoryLink = (SignatoryLinkID, CompositeArray1 SignatoryField, Bool, Bool, SignOrder, MagicHash, Maybe UserID, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, DeliveryStatus, DeliveryStatus, Maybe UTCTime, Maybe UTCTime, Maybe [[String]], CompositeArray1 SignatoryAttachment,CompositeArray1 HighlightedPage, Maybe String, Maybe String, Maybe UTCTime, Maybe String, AuthenticationToViewMethod, AuthenticationToSignMethod, DeliveryMethod, ConfirmationDeliveryMethod, Bool, Bool, Bool, Maybe String, CompositeArray1 SignatoryConsentQuestion)
 
 instance PQFormat SignatoryLink where
   pqFormat _ = "%signatory_link"
 
 instance CompositeFromSQL SignatoryLink where
-  toComposite (slid, CompositeArray1 fields, is_author, is_partner, sign_order, magic_hash, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_contents, CompositeArray1 attachments, CompositeArray1 highlighted_pages, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_to_view_method, authentication_to_sign_method, delivery_method, confirmation_delivery_method, allows_highlighting, has_identified, hide_pn) = SignatoryLink {
+  toComposite (slid, CompositeArray1 fields, is_author, is_partner, sign_order, magic_hash, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_contents, CompositeArray1 attachments, CompositeArray1 highlighted_pages, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_to_view_method, authentication_to_sign_method, delivery_method, confirmation_delivery_method, allows_highlighting, has_identified, hide_pn, consent_title, CompositeArray1 consent_questions) = SignatoryLink {
     signatorylinkid = slid
   , signatoryfields = fields
   , signatoryisauthor = is_author
@@ -390,4 +398,6 @@ instance CompositeFromSQL SignatoryLink where
   , signatorylinkallowshighlighting = allows_highlighting
   , signatorylinkidentifiedtoview = has_identified
   , signatorylinkhidepn = hide_pn
+  , signatorylinkconsenttitle = consent_title
+  , signatorylinkconsentquestions = consent_questions
   }

@@ -89,6 +89,12 @@ module.exports = Backbone.Model.extend({
             newActive.push(item);
           }
         });
+      } else if (nextTask.isConsentQuestion()) {
+        _.forEach(incomplete, function (item) {
+          if (item.consentQuestion() == nextTask.consentQuestion()) {
+            newActive.push(item);
+          }
+        });
       } else {
         newActive.push(nextTask);
       }

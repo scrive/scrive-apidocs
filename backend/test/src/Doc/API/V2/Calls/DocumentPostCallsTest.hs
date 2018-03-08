@@ -1,8 +1,11 @@
 module Doc.API.V2.Calls.DocumentPostCallsTest (apiV2DocumentPostCallsTests) where
 
+import Control.Monad.Trans
 import Data.Default
 import Happstack.Server
 import Test.Framework
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
 
 import Company.Model
 import Context
@@ -45,6 +48,8 @@ apiV2DocumentPostCallsTests env = testGroup "APIv2DocumentPostCalls"
   , testThat "API v2 Set signatory authentication to-view"  env testDocApiV2SigSetAuthenticationToView
   , testThat "API v2 Set signatory authentication to-sign"  env testDocApiV2SigSetAuthenticationToSign
   , testThat "API v2 Change email and mobile"               env testDocApiV2SigChangeEmailAndMobile
+  , testThat "API v2 Update fails when a consent module is defined for a non-signing party"
+             env testDocApiV2SigUpdateFailsIfConsentModuleOnNonSigningParty
   ]
 
 testDocApiV2New :: TestEnv ()
@@ -101,6 +106,20 @@ testDocApiV2Update = do
   updated_title <- getMockDocTitle <$> mockDocTestRequestHelper ctx
     POST [("document", inText $ "{\"title\":\"" ++ new_title ++ "\"}")] (docApiV2Update did) 200
   assertEqual "Title should be updated" new_title updated_title
+
+testDocApiV2SigUpdateFailsIfConsentModuleOnNonSigningParty :: TestEnv ()
+testDocApiV2SigUpdateFailsIfConsentModuleOnNonSigningParty = do
+  user <- addNewRandomUser
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
+  did  <- getMockDocId <$> testDocApiV2New' ctx
+
+  contents <- liftIO $ readFile $
+    inTestDir "json/api_v2/test-DocUpdateConsentModuleOnNonSigningParty.json"
+  response <- testRequestHelper ctx
+    POST [("document", inText contents)] (docApiV2Update did) 400
+
+  assertBool "The error is about the consent module"
+             ("onsent module" `BS.isInfixOf` BSL.toStrict response)
 
 testDocApiV2Start :: TestEnv ()
 testDocApiV2Start = do
@@ -172,6 +191,7 @@ testDocApiV2Forward = do
     POST
       [ ("fields", inText "[]")
       , ("accepted_author_attachments", inText "[]")
+      , ("consent_responses", inText "[]")
       ]
     (docApiV2SigSign did slid) 200
 

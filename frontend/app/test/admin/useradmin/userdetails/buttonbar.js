@@ -103,7 +103,7 @@ describe("admin/useradmin/userdetails/buttonbar", function () {
 
     var deleteModal = $(".modal.user-details-modal-delete");
 
-    var deleteModalCloseButton = $("a.modal-close", deleteModal);
+    var deleteModalCloseButton = $("a .modal-close", deleteModal);
     TestUtils.Simulate.click(deleteModalCloseButton[0]);
 
     assert.isFalse(deleteModal.hasClass("false"));
@@ -162,7 +162,7 @@ describe("admin/useradmin/userdetails/buttonbar", function () {
 
     var moveModal = $(".modal.user-details-modal-move");
 
-    var moveModalCloseButton = $("a.modal-close", moveModal);
+    var moveModalCloseButton = $("a .modal-close", moveModal);
     TestUtils.Simulate.click(moveModalCloseButton[0]);
 
     assert.isFalse(moveModal.hasClass("false"));

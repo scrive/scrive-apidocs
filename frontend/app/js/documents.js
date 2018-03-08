@@ -265,6 +265,19 @@ var Document = exports.Document = Backbone.Model.extend({
         });
         return fields;
     },
+    consentResponsesForSigning: function() {
+      var responses = [];
+      var consentModule = this.currentSignatory().consentModule();
+      if(consentModule) {
+        responses = _.map(consentModule.questions(), function(question) {
+          return {
+            id: question.questionid(),
+            response: question.response()
+          };
+        });
+      }
+      return responses;
+    },
     acceptedAuthorAttachmentsForSigning : function() {
       var acceptedAttachments = _.filter(this.authorattachments(), function(a) {return a.isAccepted()});
       return _.map(acceptedAttachments,function(a) {
@@ -322,6 +335,7 @@ var Document = exports.Document = Backbone.Model.extend({
         var document = this;
         var signatory = document.currentSignatory();
         var fields = this.fieldsForSigning();
+        var consentResponses = this.consentResponsesForSigning();
         var acceptedAuthorAttachments = this.acceptedAuthorAttachmentsForSigning();
         extraSignFields = extraSignFields || {};
         var problemCallback = function (xhr) {
@@ -332,6 +346,7 @@ var Document = exports.Document = Backbone.Model.extend({
             url : "/api/frontend/documents/" + document.documentid() +  "/" + document.currentSignatory().signatoryid() + "/check",
             method: "POST",
             fields: JSON.stringify(fields),
+            consent_responses: JSON.stringify(consentResponses),
             authentication_type: signatory.authenticationToSign(),
             authentication_value: signatory.authenticationToSignFieldValue(),
             accepted_author_attachments: JSON.stringify(acceptedAuthorAttachments),
@@ -345,6 +360,7 @@ var Document = exports.Document = Backbone.Model.extend({
         var document = this;
         var signatory = document.currentSignatory();
         var fields = this.fieldsForSigning();
+        var consentResponses = this.consentResponsesForSigning();
         var acceptedAuthorAttachments = this.acceptedAuthorAttachmentsForSigning();
         extraSignFields = extraSignFields || {};
         return new Submit({
@@ -352,6 +368,7 @@ var Document = exports.Document = Backbone.Model.extend({
             method: "POST",
             screenshots: JSON.stringify(document.get("screenshots")),
             fields: JSON.stringify(fields),
+            consent_responses: JSON.stringify(consentResponses),
             authentication_type: signatory.authenticationToSign(),
             authentication_value: signatory.authenticationToSignFieldValue(),
             accepted_author_attachments: JSON.stringify(acceptedAuthorAttachments),

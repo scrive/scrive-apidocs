@@ -31,3 +31,13 @@ documentSigningJobsAddSignatureProvider = Migration {
           sqlAddColumn tblColumn { colName = "signature_provider", colType = SmallIntT, colNullable = False, colDefault = Just "5" } -- CgiGrpBankID
         ]
   }
+
+documentSigningJobsAddConsentResponses :: MonadDB m => Migration m
+documentSigningJobsAddConsentResponses = Migration {
+    mgrTableName = tblName tableDocumentSigningJobs
+  , mgrFrom = 4
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable "document_signing_jobs" [
+          sqlAddColumn tblColumn { colName = "consent_responses", colType = JsonT, colNullable = False, colDefault = Just "'[]'::json" }
+        ]
+  }

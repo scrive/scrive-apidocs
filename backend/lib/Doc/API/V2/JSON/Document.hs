@@ -16,6 +16,7 @@ import Doc.API.V2.JSON.DisplayOptions
 import Doc.API.V2.JSON.DocumentViewer
 import Doc.API.V2.JSON.Fields
 import Doc.API.V2.JSON.Misc
+import Doc.API.V2.JSON.SignatoryConsentQuestion
 import Doc.API.V2.JSON.Utils
 import Doc.DocInfo
 import Doc.DocStateData
@@ -88,6 +89,8 @@ unjsonSignatory da =  objectOf $
         <**> (pure $ \isa s -> s { signatoryispartner = isa }))
   <**> (fieldDefBy "fields"  (signatoryfields def) signatoryfields "Signatory fields" unjsonSignatoryFields
         <**> (pure $ \fs s -> s { signatoryfields = fs }))
+  <**> (fieldOptBy "consent_module" (\s -> if null (signatorylinkconsentquestions s) then Nothing else Just (signatorylinkconsenttitle s, signatorylinkconsentquestions s)) "Signatory consent module" unjsonSignatoryConsentModule
+        <**> (pure $ \mPair s -> case mPair of { Nothing -> s; Just (t, qs) -> s { signatorylinkconsenttitle = t, signatorylinkconsentquestions = qs } }))
   <**> (fieldDef "sign_order"  (signatorysignorder def) signatorysignorder "Signatory sign order"
         <**> (pure $ \so s-> s { signatorysignorder = so }))
   <*   (fieldReadOnlyOpt "sign_time" (fmap utcTimeToAPIFormat . fmap signtime . maybesigninfo) "Time when signatory signed the document")

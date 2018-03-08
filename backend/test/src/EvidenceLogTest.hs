@@ -89,6 +89,10 @@ evidenceLogTemplateVariables = Set.fromList
   , "attachment_nothing_to_upload_text" -- Text that should have been shown to user when rendering sign view and choosing not to upload attachment
   , "hash"            -- SHA256 hash of attachment that will not be appended to main, sealsed file
   , "pageno"          -- Number of page affected by event. Used when setting highlighting
+  , "question"          -- Consent question's title
+  , "response"          -- Consent question's response
+  , "description_title" -- Consent question's detailed description title
+  , "description_text"  -- Consent question's detailed description text
   ]
 
 -- Attachment name                                       , "name"

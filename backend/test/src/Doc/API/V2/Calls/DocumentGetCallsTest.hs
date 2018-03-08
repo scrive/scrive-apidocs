@@ -251,6 +251,7 @@ testDocApiV2EvidenceAttachments = do
     POST
       [ ("fields", inText "[]")
       , ("accepted_author_attachments", inText "[]")
+      , ("consent_responses", inText "[]")
       ]
     (docApiV2SigSign did slid) 200
   sealTestDocument ctx did

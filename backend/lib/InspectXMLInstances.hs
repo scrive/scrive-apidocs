@@ -21,6 +21,7 @@ import DB.TimeZoneName
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.SealStatus (SealStatus)
+import Doc.SignatoryConsentQuestionID
 import Doc.SignatoryLinkID
 import File.File
 import File.FileID
@@ -42,8 +43,11 @@ instance (InspectXML a, Show a) => InspectXML (Maybe a) where
     inspectXML Nothing = "Nothing"
     inspectXML (Just x) = inspectXML x
 
+instance (InspectXML a, InspectXML b, Show a, Show b) => InspectXML (a, b) where
+    inspectXML (a, b) = "(" ++ inspectXML a ++ "," ++ inspectXML b ++ ")"
+
 instance (InspectXML a, InspectXML b, InspectXML c, Show a, Show b, Show c) => InspectXML (a, b, c) where
-    inspectXML (a, b, c) = "(" ++ inspectXML a ++"," ++ inspectXML b ++ "," ++ inspectXML c ++ ")"
+    inspectXML (a, b, c) = "(" ++ inspectXML a ++ "," ++ inspectXML b ++ "," ++ inspectXML c ++ ")"
 
 $(deriveInspectXML ''MainFile)
 $(deriveInspectXML ''Document)
@@ -57,6 +61,7 @@ $(deriveInspectXML ''UserHistory)
 $(deriveInspectXML ''UserHistoryEvent)
 $(deriveInspectXML ''SignatoryLink)
 $(deriveInspectXML ''PlacementAnchor)
+$(deriveInspectXML ''SignatoryConsentQuestion)
 
 instance InspectXML SignatoryField where
   inspectXML field =
@@ -75,6 +80,9 @@ instance InspectXML SignatoryField where
                          Nothing -> "<not picked>"
                          Just s -> s
         _ -> inspectXML (fromJust (fieldTextValue field))
+
+instance InspectXML SignatoryConsentQuestionID where
+  inspectXML = show
 
 --Link creating types
 instance InspectXML DocumentID where
@@ -103,6 +111,7 @@ instance InspectXML B.ByteString where
 instance InspectXML Bool where
 instance InspectXML Char where
 instance InspectXML Int where
+instance InspectXML Int16 where
 instance InspectXML Int32 where
 instance InspectXML Int64 where
 instance InspectXML Integer where

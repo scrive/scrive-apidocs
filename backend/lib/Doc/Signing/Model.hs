@@ -21,6 +21,7 @@ import BrandedDomain.Model
 import DB
 import Doc.API.V2.JSON.Fields
 import Doc.API.V2.JSON.Misc (unjsonSignatoryScreenshots)
+import Doc.API.V2.JSON.SignatoryConsentQuestion
 import Doc.DocumentMonad
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots
@@ -63,9 +64,9 @@ instance ToSQL SignatoryScreenshots where
   type PQDest SignatoryScreenshots = PQDest (JSON BS.ByteString)
   toSQL s = toSQL (unjsonToByteStringLazy' (Options { pretty = False, indent = 0, nulls = True }) unjsonSignatoryScreenshots s)
 
-data ScheduleDocumentSigning = ScheduleDocumentSigning SignatoryLinkID BrandedDomainID UTCTime IPAddress (Maybe UTCTime) (Maybe String) Lang SignatoryFieldsValuesForSigning [FileID] SignatoryScreenshots [String] SignatureProvider
+data ScheduleDocumentSigning = ScheduleDocumentSigning SignatoryLinkID BrandedDomainID UTCTime IPAddress (Maybe UTCTime) (Maybe String) Lang SignatoryFieldsValuesForSigning [FileID] SignatoryScreenshots [String] SignatureProvider SignatoryConsentResponsesForSigning
 instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m, MonadTime m) => DBUpdate m ScheduleDocumentSigning () where
-  update (ScheduleDocumentSigning slid bdid st cip mct mcn sl sf saas ss nusa sp) = do
+  update (ScheduleDocumentSigning slid bdid st cip mct mcn sl sf saas ss nusa sp crs) = do
     now <- currentTime
     runQuery_ . sqlInsert "document_signing_jobs" $ do
       sqlSet "id" slid
@@ -82,6 +83,7 @@ instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m, MonadTime m) => D
       sqlSet "signature_provider" $ sp
       sqlSetCmd "run_at" $ sqlParam now
       sqlSet "attempts" (0::Int32)
+      sqlSet "consent_responses" crs
 
 data IsDocumentSigningInProgress = IsDocumentSigningInProgress SignatoryLinkID
 instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m) => DBQuery m IsDocumentSigningInProgress Bool where

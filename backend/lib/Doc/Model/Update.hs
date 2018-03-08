@@ -60,6 +60,7 @@ module Doc.Model.Update
   , TimeoutDocument(..)
   , PostReminderSend(..)
   , UpdateFieldsForSigning(..)
+  , UpdateConsentResponsesForSigning(..)
   , UpdatePhoneAfterIdentificationToView(..)
   , UpdateAuthorUserID(..)
   , SetSigAttachments(..)
@@ -92,6 +93,7 @@ import Company.Model
 import Control.Monad.Trans.Instances ()
 import DB
 import DB.TimeZoneName (TimeZoneName, defaultTimeZoneName, withTimeZone)
+import Doc.API.V2.JSON.SignatoryConsentQuestion
 import Doc.Conditions
 import Doc.DocStateCommon
 import Doc.DocStateData
@@ -152,6 +154,7 @@ insertSignatoryLinks did links = do
     sqlSetList "confirmation_delivery_method" $ signatorylinkconfirmationdeliverymethod <$> links
     sqlSetList "allows_highlighting" $ signatorylinkallowshighlighting <$> links
     sqlSetList "hide_pn_elog" $ signatorylinkhidepn <$> links
+    sqlSetList "consent_title" $ signatorylinkconsenttitle <$> links
     sqlResult "id"
 
   -- Update IDs.
@@ -179,6 +182,9 @@ insertSignatoryLinks did links = do
 
   insertSignatoryLinkFields
     [(signatorylinkid sl, fld) | sl <- linksWithID, fld <- signatoryfields sl]
+
+  insertSignatoryConsentQuestions
+    [(signatorylinkid sl, cq) | sl <- linksWithID, cq <- signatorylinkconsentquestions sl]
 
 insertSignatoryAttachments :: MonadDB m => [(SignatoryLinkID, SignatoryAttachment)] -> m ()
 insertSignatoryAttachments [] = return ()
@@ -311,6 +317,18 @@ insertSignatoryScreenshots l = do
            sqlSetList "type"              $ (types :: [String])
            sqlSetList "time"              $ times
            sqlSetList "file_id"           $ fileids
+
+insertSignatoryConsentQuestions :: MonadDB m => [(SignatoryLinkID, SignatoryConsentQuestion)] -> m ()
+insertSignatoryConsentQuestions [] = return ()
+insertSignatoryConsentQuestions questions = runQuery_ . sqlInsert "signatory_link_consent_questions" $ do
+  sqlSetList "signatory_link_id" $ map fst questions
+  sqlSetList "position" $ take (length questions) (iterate (+1) (0 :: Int))
+  sqlSetList "title" $ map (scqTitle . snd) questions
+  sqlSetList "positive_option" $ map (scqPositiveOption . snd) questions
+  sqlSetList "negative_option" $ map (scqNegativeOption . snd) questions
+  sqlSetList "response" $ map (scqResponse . snd) questions
+  sqlSetList "description_title" $ map (fmap fst . scqDescription . snd) questions
+  sqlSetList "description_text" $ map (fmap snd . scqDescription . snd) questions
 
 insertDocument :: (MonadLog m, MonadDB m, MonadThrow m)
                => Document -> m Document
@@ -1699,6 +1717,33 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateF
                actor
 
     forM_ fields updateValue
+
+data UpdateConsentResponsesForSigning = UpdateConsentResponsesForSigning SignatoryLink SignatoryConsentResponsesForSigning Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateConsentResponsesForSigning () where
+  update (UpdateConsentResponsesForSigning sl (SignatoryConsentResponsesForSigning responses) actor) =
+    updateDocumentWithID $ const $ forM_ responses $ \(i, r) -> do
+      runQuery_ $ sqlUpdate "signatory_link_consent_questions" $ do
+        sqlSet "response" r
+        sqlWhereSignatoryConsentQuestionIDIs i
+        sqlWhereEq "signatory_link_id" (signatorylinkid sl)
+
+      case find ((==i) . scqID) (signatorylinkconsentquestions sl) of
+        Nothing ->
+          throwM $ SomeDBExtraException $ SignatoryConsentQuestionDoesNotExist i
+        Just SignatoryConsentQuestion{..} -> do
+          let (eventType, tplFields) = case scqDescription of
+                     Nothing -> (ConsentQuestionAnswered , return ())
+                     Just (title, text) ->
+                       ( ConsentQuestionAnsweredWithDescription
+                       , do F.value "description_title" title
+                            F.value "description_text" text
+                       )
+          update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+            eventType
+            (do F.value "question" scqTitle
+                F.value "response" $ if r then scqPositiveOption else scqNegativeOption
+                tplFields)
+            (Just sl) Nothing actor
 
 data UpdatePhoneAfterIdentificationToView = UpdatePhoneAfterIdentificationToView SignatoryLink String String Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdatePhoneAfterIdentificationToView () where

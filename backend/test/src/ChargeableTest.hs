@@ -174,6 +174,7 @@ test_closeDocAndSigCharging = do
     POST
       [ ("fields", inText "[]")
       , ("accepted_author_attachments", inText "[]")
+      , ("consent_responses", inText "[]")
       ]
     (docApiV2SigSign didV2 slidV2) 200
 

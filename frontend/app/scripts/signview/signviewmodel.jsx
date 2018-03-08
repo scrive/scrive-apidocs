@@ -172,6 +172,14 @@ var Track = require("../common/track");
       return field != undefined && !field.hasPlacements() && field.editablebysignatory();
     },
 
+    hasConsentModuleSection: function () {
+      if (!this.document().currentSignatoryCanSign()) {
+        return false;
+      }
+      var signatory = this.document().currentSignatory();
+      return signatory.consentModule() != undefined;
+    },
+
     askForName: function () {
       var signatory = this.document().currentSignatory();
       var field1 = signatory.fstnameField();

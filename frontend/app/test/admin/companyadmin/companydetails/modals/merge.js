@@ -183,7 +183,7 @@ describe("admin/companyadmin/companydetails/modals/merge", function () {
   it("should call the onCancel callback when modal is closed", function () {
     var component = renderComponent({active: true});
 
-    var closeButton = $(".modal.company-details-modal-merge a.modal-close");
+    var closeButton = $(".modal.company-details-modal-merge a .modal-close");
 
     TestUtils.Simulate.click(closeButton[0]);
     assert.isTrue(component.props.onCancel.called);

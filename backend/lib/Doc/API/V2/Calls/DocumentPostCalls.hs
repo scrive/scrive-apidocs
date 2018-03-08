@@ -132,7 +132,8 @@ docApiV2Update did = logDocument did . api $ do
     doc <- theDocument
     let da = documentAccessForUser user doc
     draftData <- case (Unjson.update doc (unjsonDocument da) documentJSON) of
-      (Result draftData []) ->
+      (Result draftData []) -> do
+        guardThatConsentModulesAreOnSigningParties draftData
         return draftData
       (Result _ errs) ->
         apiError $ requestParameterParseError "document" $ "Errors while parsing document data:" <+> T.pack (show errs)

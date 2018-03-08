@@ -63,6 +63,7 @@ kontraComposites = [
   , ctSignatoryField
   , ctDocumentTag
   , ctMainFile
+  , ctSignatoryConsentQuestion
   , ctSignatoryLink
   , ctDocument
   ] ++ mailerComposites
@@ -157,4 +158,5 @@ kontraTables =
     tableKontraInfoForMails
   , tableKontraInfoForSMSes
   , tableAPILogs
+  , tableSignatoryLinkConsentQuestions
   ]

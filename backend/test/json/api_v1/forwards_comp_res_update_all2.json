@@ -53,7 +53,8 @@
       "attachments": [],
       "api_delivery_url": null,
       "hide_personal_number": false,
-      "has_authenticated_to_view":false
+      "has_authenticated_to_view":false,
+      "consent_module": null
     },
     {
       "id": "66",
@@ -173,7 +174,8 @@
       ],
       "api_delivery_url": null,
       "hide_personal_number": false,
-      "has_authenticated_to_view":false
+      "has_authenticated_to_view":false,
+      "consent_module": null
     }
   ],
   "file": {

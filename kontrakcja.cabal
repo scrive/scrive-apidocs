@@ -176,6 +176,7 @@ Library
                  , Doc.API.V2.JSON.Fields
                  , Doc.API.V2.JSON.List
                  , Doc.API.V2.JSON.Misc
+                 , Doc.API.V2.JSON.SignatoryConsentQuestion
                  , Doc.API.V2.JSON.Utils
                  , Doc.Action
                  , Doc.Anchors
@@ -192,6 +193,7 @@ Library
                  , Doc.Data.HighlightedPage
                  , Doc.Data.RadiobuttonPlacementsUtils
                  , Doc.Data.SignatoryAttachment
+                 , Doc.Data.SignatoryConsentQuestion
                  , Doc.Data.SignatoryField
                  , Doc.Data.SignatoryFieldUtils
                  , Doc.Data.SignatoryLink
@@ -232,6 +234,7 @@ Library
                  , Doc.Sealing.Consumer
                  , Doc.Sealing.Model
                  , Doc.Sealing.Tables
+                 , Doc.SignatoryConsentQuestionID
                  , Doc.SignatoryFieldID
                  , Doc.SignatoryIdentification
                  , Doc.SignatoryLinkID

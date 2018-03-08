@@ -4,6 +4,7 @@ module Doc.API.V2.Guards (
 , guardDocumentStatus
 , guardThatDocumentCanBeStarted
 , guardThatObjectVersionMatchesIfProvided
+, guardThatConsentModulesAreOnSigningParties
 -- * User guards
 , guardThatUserIsAuthor
 , guardThatUserIsAuthorOrCompanyAdmin
@@ -19,6 +20,7 @@ module Doc.API.V2.Guards (
 , guardThatAllAttachmentsAreAcceptedOrIsAuthor
 , guardThatAllSignatoryAttachmentsAreUploadedOrMarked
 , guardThatRadioButtonValuesAreValid
+, guardThatAllConsentQuestionsHaveResponse
 -- * Joined guard for read-only functions
 , guardDocumentReadAccess
 ) where
@@ -30,6 +32,7 @@ import API.V2.Parameters
 import DB
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.JSON.Fields
+import Doc.API.V2.JSON.SignatoryConsentQuestion
 import Doc.Conditions
 import Doc.DocInfo
 import Doc.DocStateData
@@ -287,6 +290,27 @@ guardThatAllSignatoryAttachmentsAreUploadedOrMarked slid notUploadedSignatoryAtt
                     && signatoryattachmentname sa `notElem` notUploadedSignatoryAttachments
               ) optionalSigAttachments) $
     apiError $ signatoryStateError "Some optional signatory attachments are not uploaded and are not marked as such"
+
+guardThatConsentModulesAreOnSigningParties :: Kontrakcja m => Document -> m ()
+guardThatConsentModulesAreOnSigningParties doc =
+  forM_ (documentsignatorylinks doc) $ \signatory -> do
+    case signatorylinkconsenttitle signatory of
+      Just _ | not (signatoryispartner signatory) ->
+        apiError $ requestParameterInvalid "consent_module"
+          "Consent module not allowed on non-signing party"
+      _ -> return ()
+
+guardThatAllConsentQuestionsHaveResponse :: Kontrakcja m => SignatoryLinkID -> SignatoryConsentResponsesForSigning -> Document -> m ()
+guardThatAllConsentQuestionsHaveResponse slid (SignatoryConsentResponsesForSigning responses) doc = do
+  let sl = fromJust $ getSigLinkFor slid doc
+      qs = signatorylinkconsentquestions sl
+      questionIDs = map scqID qs
+      responseIDs = map fst responses
+  unless (all (`elem` responseIDs) questionIDs) $ apiError $
+    requestParameterInvalid "consent_responses"
+                            "Some consent questions have not been answered"
+  unless (all (`elem` questionIDs) responseIDs) $ apiError $
+    requestParameterInvalid "consent_responses" "Consent responses are corrupted"
 
 -- | For the given DocumentID:
 --

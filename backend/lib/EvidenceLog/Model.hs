@@ -355,7 +355,9 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToSignMethodSMSToNOBankIDEvidence      |
   ChangeAuthenticationToSignMethodNOBankIDToStandardEvidence |
   ChangeAuthenticationToSignMethodNOBankIDToSMSEvidence      |
-  ChangeAuthenticationToSignMethodNOBankIDToSEBankIDEvidence
+  ChangeAuthenticationToSignMethodNOBankIDToSEBankIDEvidence |
+  ConsentQuestionAnswered |
+  ConsentQuestionAnsweredWithDescription
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -563,7 +565,8 @@ instance ToSQL EvidenceEventType where
   toSQL (Current ChangeAuthenticationToSignMethodNOBankIDToStandardEvidence) = toSQL (131::Int16)
   toSQL (Current ChangeAuthenticationToSignMethodNOBankIDToSMSEvidence)      = toSQL (132::Int16)
   toSQL (Current ChangeAuthenticationToSignMethodNOBankIDToSEBankIDEvidence) = toSQL (133::Int16)
-
+  toSQL (Current ConsentQuestionAnswered) = toSQL (134::Int16)
+  toSQL (Current ConsentQuestionAnsweredWithDescription) = toSQL (135::Int16)
 
 instance FromSQL EvidenceEventType where
   type PQBase EvidenceEventType = PQBase Int16
@@ -703,8 +706,10 @@ instance FromSQL EvidenceEventType where
       131 -> return (Current ChangeAuthenticationToSignMethodNOBankIDToStandardEvidence)
       132 -> return (Current ChangeAuthenticationToSignMethodNOBankIDToSMSEvidence)
       133 -> return (Current ChangeAuthenticationToSignMethodNOBankIDToSEBankIDEvidence)
+      134 -> return (Current ConsentQuestionAnswered)
+      135 -> return (Current ConsentQuestionAnsweredWithDescription)
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 133)]
+        reRange = [(1, 135)]
       , reValue = n
       }
 

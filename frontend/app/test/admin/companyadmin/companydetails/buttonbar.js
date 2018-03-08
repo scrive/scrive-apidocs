@@ -74,7 +74,7 @@ describe("admin/companyadmin/companydetails/buttonbar", function () {
 
     var mergeModal = $(".modal.company-details-modal-merge");
 
-    var mergeModalCloseButton = $("a.modal-close", mergeModal);
+    var mergeModalCloseButton = $("a .modal-close", mergeModal);
     TestUtils.Simulate.click(mergeModalCloseButton[0]);
 
     assert.isFalse(mergeModal.hasClass("false"));

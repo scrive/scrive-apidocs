@@ -25,6 +25,7 @@ import Doc.API.V2.DocumentAccess
 import Doc.API.V2.Guards
 import Doc.API.V2.JSON.Document
 import Doc.API.V2.JSON.Fields
+import Doc.API.V2.JSON.SignatoryConsentQuestion
 import Doc.DocControl
 import Doc.DocMails (sendPinCode)
 import Doc.DocStateData
@@ -115,6 +116,10 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
     checkAuthenticationToSignMethodAndValue slid
     fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValuesForSigning)
     guardThatRadioButtonValuesAreValid slid fields =<< theDocument
+    consentResponses <- apiV2ParameterDefault
+      (SignatoryConsentResponsesForSigning [])
+      (ApiV2ParameterJSON "consent_responses" unjsonSignatoryConsentResponsesForSigning)
+    guardThatAllConsentQuestionsHaveResponse slid consentResponses =<< theDocument
     -- API call actions + extra conditional parameter
     sl <- guardGetSignatoryFromIdForDocument slid
     case signatorylinkauthenticationtosignmethod sl of
@@ -148,6 +153,10 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
     notUploadedSignatoryAttachments <- apiV2ParameterDefault [] (ApiV2ParameterJSON "not_uploaded_signatory_attachments" unjsonDef)
     fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValuesForSigning)
     guardThatRadioButtonValuesAreValid slid fields =<< theDocument
+    consentResponses <- apiV2ParameterDefault
+      (SignatoryConsentResponsesForSigning [])
+      (ApiV2ParameterJSON "consent_responses" unjsonSignatoryConsentResponsesForSigning)
+    guardThatAllConsentQuestionsHaveResponse slid consentResponses =<< theDocument
     -- API call actions + extra conditional parameter
     guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAttachments =<< theDocument
     guardThatAllSignatoryAttachmentsAreUploadedOrMarked slid notUploadedSignatoryAttachments =<< theDocument
@@ -164,7 +173,7 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
       NOBankIDAuthenticationToSign -> return (Just NetsNOBankID, Nothing)
     case mprovider of
        Nothing -> do
-        signDocument slid mh fields acceptedAttachments notUploadedSignatoryAttachments Nothing mpin screenshots
+        signDocument slid mh fields acceptedAttachments notUploadedSignatoryAttachments Nothing mpin screenshots consentResponses
         postDocumentPendingChange olddoc
         handleAfterSigning slid
         -- Return
@@ -185,6 +194,7 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
           screenshots
           notUploadedSignatoryAttachments
           provider
+          consentResponses
     doc <- theDocument
     return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc),d)) doc
 

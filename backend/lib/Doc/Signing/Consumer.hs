@@ -25,6 +25,7 @@ import DB.PostgreSQL
 import Doc.Action
 import Doc.API.V2.Calls.SignatoryCallsUtils
 import Doc.API.V2.JSON.Fields
+import Doc.API.V2.JSON.SignatoryConsentQuestion
 import Doc.Data.AuthorAttachment
 import Doc.Data.Document
 import Doc.Data.SignatoryLink
@@ -73,6 +74,7 @@ data DocumentSigning = DocumentSigning {
   , signingAttempts             :: !Int32
   , signingNotUploadedSigAttachments :: ![String]
   , signingSignatureProvider    :: !SignatureProvider
+  , signingConsentResponses     :: !SignatoryConsentResponsesForSigning
   }
 
 documentSigning
@@ -108,8 +110,9 @@ documentSigning amazonConf guardTimeConf cgiGrpConf netsSignConf
     , "attempts"
     , "not_uploaded_sig_attachments"
     , "signature_provider"
+    , "consent_responses"
     ]
-  , ccJobFetcher = \(sid, bdid, st, cip, mct, mcn, sl, sf, Array1 saas, ss, mlcs, sc, attempts, Array1 nusa, sp) -> DocumentSigning {
+  , ccJobFetcher = \(sid, bdid, st, cip, mct, mcn, sl, sf, Array1 saas, ss, mlcs, sc, attempts, Array1 nusa, sp, crs) -> DocumentSigning {
       signingSignatoryID = sid
     , signingBrandedDomainID = bdid
     , signingTime = st
@@ -125,6 +128,7 @@ documentSigning amazonConf guardTimeConf cgiGrpConf netsSignConf
     , signingAttempts = attempts
     , signingNotUploadedSigAttachments = nusa
     , signingSignatureProvider = sp
+    , signingConsentResponses = crs
     }
   , ccJobIndex = signingSignatoryID
   , ccNotificationChannel = Nothing
@@ -239,6 +243,8 @@ signFromESignature DocumentSigning{..} now = do
 
   slWithUpdatedName <- fromJust <$> getSigLinkFor signingSignatoryID <$> theDocument
   actorWithUpdatedName <- recreatedSignatoryActor signingTime signingClientTime signingClientName signingClientIP4 slWithUpdatedName
+
+  dbUpdate $ UpdateConsentResponsesForSigning sl signingConsentResponses actorWithUpdatedName
 
   authorAttachmetsWithAcceptanceText <- forM (documentauthorattachments initialDoc) $ \a -> do
     acceptanceText <- renderTemplate "_authorAttachmentsUnderstoodContent" (F.value "attachment_name" $ authorattachmentname a)

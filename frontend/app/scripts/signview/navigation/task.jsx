@@ -15,7 +15,8 @@ module.exports = Backbone.Model.extend({
     pointSelector: undefined,
     margin: -22,
     type: undefined,
-    field: undefined
+    field: undefined,
+    consentQuestion: undefined
   },
 
   initialize: function (args) {
@@ -84,6 +85,10 @@ module.exports = Backbone.Model.extend({
     return this.get("field");
   },
 
+  consentQuestion: function () {
+    return this.get("consentQuestion");
+  },
+
   isSignTask: function () {
     return this.get("type") == "sign";
   },
@@ -98,6 +103,10 @@ module.exports = Backbone.Model.extend({
 
   isOverlayTask: function () {
     return this.get("type") == "overlay";
+  },
+
+  isConsentQuestion: function () {
+    return this.get("type") == "consent-question";
   },
 
   tipSide: function () {

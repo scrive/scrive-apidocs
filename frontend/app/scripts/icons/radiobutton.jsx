@@ -10,7 +10,8 @@ module.exports = React.createClass({
     pageWidth: React.PropTypes.number.isRequired,
     wrel: React.PropTypes.number.isRequired,
     active: React.PropTypes.bool.isRequired,
-    selected: React.PropTypes.bool.isRequired
+    selected: React.PropTypes.bool.isRequired,
+    inline: React.PropTypes.bool
   },
   isSize: function (size) {
     return Math.abs(this.props.wrel - size) < 0.001;
@@ -31,7 +32,8 @@ module.exports = React.createClass({
       medium: this.isMedium(),
       large: this.isLarge(),
       inactive: inactive,
-      selected: this.props.selected
+      selected: this.props.selected,
+      inline: this.props.inline
     });
 
     var buttonSize = Math.round(
