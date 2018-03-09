@@ -89,6 +89,7 @@ var MaskedPersonalNumber = require("../masked_personal_number");
                   onFocus={this.toggleEditing}
                   onBlur={this.toggleEditing}
                   className={textinputClass}
+                  inputtype="numeric"
                 />
                 <div style={{marginTop: "26px"}}>
                   {localization.identifyDateOfBirth} <b>{model.dateOfBirth()}</b>

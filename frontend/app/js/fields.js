@@ -732,5 +732,8 @@ var Field = exports.Field = Backbone.Model.extend({
     },
     setCustomValidation: function (newValue) {
       return this.set("custom_validation", newValue);
+    },
+    inputtype: function() {
+      return this.isMobile() || this.isSSN() ? "numeric" : undefined;
     }
 });

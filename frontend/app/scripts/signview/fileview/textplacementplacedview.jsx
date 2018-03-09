@@ -382,6 +382,7 @@ var ORIGINAL_PAGE_SIZE = 950;
               onBlur={self.handleBlur}
               onFocus={self.handleFocus}
               onAutoGrowth={self.handleAutoGrowth}
+              inputtype={field.inputtype()}
             />
           </div>
           {this.hasTooltip() &&

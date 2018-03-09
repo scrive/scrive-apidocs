@@ -270,6 +270,7 @@ var classNames = require("classnames");
                     onChange={function (value) { ssnField.setValue(value); }}
                     onFocus={this.handleFocus("ssn")}
                     onBlur={this.handleBlur}
+                    inputtype="numeric"
                   />
                 </DetailsItem>
               }
@@ -286,6 +287,7 @@ var classNames = require("classnames");
                     onChange={function (value) { phoneField.setValue(value); }}
                     onFocus={this.handleFocus("phone")}
                     onBlur={this.handleBlur}
+                    inputtype="numeric"
                   />
                 </DetailsItem>
               }

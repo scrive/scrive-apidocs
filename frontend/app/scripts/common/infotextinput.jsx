@@ -223,6 +223,8 @@ var _ = require("underscore");
         _.extend(inputStyle, {width: this.state.textWidth + "px"});
       }
 
+      var type = this.props.inputtype == "numeric" ? "tel" : this.props.inputtype;
+
       return (
         <div
           style={this.props.style}
@@ -232,7 +234,7 @@ var _ = require("underscore");
           <input
             id={this.props.id}
             name={this.props.name}
-            type={this.props.inputtype}
+            type={type}
             autoComplete={this.props.autocomplete ? "on" : "off"}
             style={inputStyle}
             readOnly={this.props.readonly}
