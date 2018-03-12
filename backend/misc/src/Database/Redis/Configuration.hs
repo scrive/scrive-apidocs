@@ -50,11 +50,11 @@ mkRedisConnection rc = do
   checkRedisConnection cache
   return cache
   where
-    configToConnectInfo RedisConfig{..} = R.ConnInfo {
-        connectHost           = T.unpack rcHost
-      , connectPort           = R.PortNumber $ fromIntegral rcPort
-      , connectAuth           = T.encodeUtf8 <$> rcAuth
-      , connectDatabase       = rcDatabase
-      , connectMaxConnections = 100
-      , connectMaxIdleTime    = 10
+    configToConnectInfo RedisConfig{..} = R.defaultConnectInfo {
+        R.connectHost           = T.unpack rcHost
+      , R.connectPort           = R.PortNumber $ fromIntegral rcPort
+      , R.connectAuth           = T.encodeUtf8 <$> rcAuth
+      , R.connectDatabase       = rcDatabase
+      , R.connectMaxConnections = 100
+      , R.connectMaxIdleTime    = 10
       }
