@@ -36,10 +36,6 @@ html, body {
   -webkit-text-size-adjust: none; /* Never autoresize text */
 }
 
-a {
-  color: $main-text;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // TABLE OF CONTENTS
 ////////////////////////////////////////////////////////////////////////////////
@@ -51,53 +47,20 @@ a {
   width: 20px;
 }
 
-@mixin embossed-bg {
-  background:
-    linear-gradient(to bottom, rgba(#000, 0.2), rgba(#000, 0) 8px),
-    linear-gradient(to top, rgba(#000, 0.2), rgba(#000, 0) 8px),
-    linear-gradient(to bottom, rgba($nav-embossed-border-top, 1), rgba($nav-embossed-border-top, 0) 1.5px),
-    linear-gradient(to top, rgba($nav-embossed-border-bottom, 1), rgba($nav-embossed-border-bottom, 0) 1.5px),
-    $nav-subitem-bg;
-}
-
-.top-navbar-wrapper {
-  height: $top-navbar-height;
-
-  .top-navbar {
-    background-color: $top-navbar-bg;
-    height: $top-navbar-height;
-    width: 100%;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 100;
-
-    border-style: none none solid none;
-    border-color: $top-navbar-border;
-    border-width: 1px;
-
-    &>img {
-      margin-left: $nav-padding;
-      height: 100%;
-    }
-  }
-}
-
-.tocify-wrapper {
+.toc-wrapper {
   transition: left 0.3s ease-in-out;
 
   overflow-y: auto;
   overflow-x: hidden;
   position: fixed;
   z-index: 30;
-  top: $top-navbar-height;
-  padding-top: $nav-top-padding;
+  top: 0;
   left: 0;
   bottom: 0;
   width: $nav-width;
   background-color: $nav-bg;
   font-size: 13px;
-  font-weight: normal;
+  font-weight: bold;
 
   // language selector for mobile devices
   .lang-selector {
@@ -155,8 +118,6 @@ a {
       margin-bottom: 1em;
     }
 
-    background-color: lighten($nav-bg, 4%);
-
     li {
       margin: 1em $nav-padding;
       line-height: 1;
@@ -194,11 +155,6 @@ a {
   .toc-link.active {
     background-color: $nav-active-bg;
     color: $nav-active-text;
-
-    a {
-      background-color: $nav-active-bg;
-      color: $nav-active-text;
-    }
   }
 
   // this is parent links of the currently selected ToC entry
@@ -210,12 +166,8 @@ a {
   .toc-list-h2 {
     display: none;
     background-color: $nav-subitem-bg;
-    font-weight: 200;
-
-    .tocify-item>a {
-      padding-left: $nav-padding + $nav-indent;
-      font-size: 12px;
-    }
+    font-weight: 500;
+  }
 
   .toc-h2 {
     padding-left: $nav-padding + $nav-indent;
@@ -394,12 +346,14 @@ a {
 
   h1 {
     @extend %header-font;
-    font-size: 30px;
-    padding-top: 2em;
-    margin-top: 2em;
+    font-size: 25px;
+    padding-top: 0.5em;
     padding-bottom: 0.5em;
     margin-bottom: $h1-margin-bottom;
-    border-top: 1px solid #ddd;
+    margin-top: 2em;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    background-color: #fdfdfd;
   }
 
   h1:first-child, div:first-child + h1 {
@@ -409,12 +363,13 @@ a {
 
   h2 {
     @extend %header-font;
-    font-size: 20px;
-    margin-top: 2em;
-    padding-top: 2.5em;
+    font-size: 19px;
+    margin-top: 4em;
     margin-bottom: 0;
-    border-top: 1px dashed #ccc;
+    border-top: 1px solid #ccc;
+    padding-top: 1.2em;
     padding-bottom: 1.2em;
+    background-image: linear-gradient(to bottom, rgba(#fff, 0.2), rgba(#fff, 0));
   }
 
   // h2s right after h1s should bump right up
@@ -427,7 +382,7 @@ a {
   h3, h4, h5, h6 {
     @extend %header-font;
     font-size: 15px;
-    margin-top: 2em;
+    margin-top: 2.5em;
     margin-bottom: 0.8em;
   }
 
@@ -463,24 +418,16 @@ a {
       padding: 10px;
     }
 
-    tr {
-      background-color: darken($main-bg,2.8%);
-      border-bottom-style: solid;
-      border-bottom-color: #f1f1f1;
-      border-bottom-width: 1px;
-    }
-
     tr:last-child {
       border-bottom: 1px solid #ccc;
     }
 
-    &.table-left-col-25 {
-      th:first-child, td:first-child {
-        width: 25%;
-      }
-      td:first-child {
-        text-align: right
-      }
+    tr:nth-child(odd)>td {
+      background-color: lighten($main-bg,4.2%);
+    }
+
+    tr:nth-child(even)>td {
+      background-color: lighten($main-bg,2.4%);
     }
   }
 
@@ -507,18 +454,6 @@ a {
     border-radius: 3px;
     @extend %break-words;
     @extend %code-font;
-
-    &.operation-method {
-      display: inline-block;
-      padding: 10px;
-
-      &.operation-method-GET {
-        background: lighten($aside-notice-bg, 6%);
-      }
-      &.operation-method-POST {
-        background: lighten($aside-success-bg, 6%);
-      }
-    }
   }
 
   pre>code {
@@ -529,7 +464,6 @@ a {
   aside {
     padding-top: 1em;
     padding-bottom: 1em;
-    text-shadow: none;
     margin-top: 1.5em;
     margin-bottom: 1.5em;
     background: $aside-notice-bg;
@@ -566,13 +500,8 @@ a {
     padding: 2px;
     margin: -3px;
     border-radius: 4px;
-    background: $search-highlight;
-  }
-
-  div.json-schema {
-    display: table-cell;
-    padding-left: 2em;
-    border-left: 2px solid $code-bg;
+    border: 1px solid #F7E633;
+    background: linear-gradient(to top left, #F7E633 0%, #F1D32F 100%);
   }
 }
 
@@ -593,7 +522,6 @@ a {
     clear:right;
 
     box-sizing: border-box;
-    text-shadow: none;
 
     @extend %right-col;
 
@@ -617,7 +545,7 @@ a {
     &>p {
       background-color: $code-annotation-bg;
       padding: $code-annotation-padding 2em;
-      color: #ccc;
+      color: #eee;
     }
   }
 }
@@ -685,3 +613,5 @@ a {
 .highlight, .highlight .w {
   background-color: $code-bg;
 }
+
+@import "scrive/screen.css.scss";

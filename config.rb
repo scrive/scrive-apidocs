@@ -1,3 +1,5 @@
+require './lib/scrive/external_pipeline.rb'
+
 # Unique header generation
 require './lib/unique_head.rb'
 
@@ -39,11 +41,12 @@ set :relative_links, true
 
 # Use openapi2slate to build the index.html.md
 # See https://middlemanapp.com/advanced/external-pipeline/
-activate :external_pipeline,
+activate :scrive_external_pipeline,
   name: :index,
-  command: "mkdir -p index && openapi2slate documentation/scrive_api.yaml > index/index.html.md",
+  command: "openapi2slate documentation/scrive_api.yaml > index/index.html.md",
   source: "index",
-  latency: 2
+  latency: 2,
+  frontmatter: true
 
 # Build Configuration
 configure :build do
