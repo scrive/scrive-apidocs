@@ -1,13 +1,20 @@
 var $ = require("jquery");
 var React = require("react");
+var BackboneMixin = require("../common/backbone_mixin");
 var Modal = require("../common/modal");
+var SubscriptionPanelModel = require("../account/subscription/subscriptionpanelmodel");
 var SubscriptionSelectionPanel = require("../account/subscription/subscriptionselectionpanel");
 
 module.exports = React.createClass({
+  mixins: [BackboneMixin.BackboneMixin],
   getInitialState: function () {
     return {
-      showContactUsModal: false
+      showContactUsModal: false,
+      model: new SubscriptionPanelModel()
     };
+  },
+  getBackboneModels: function () {
+    return [this.state.model];
   },
   openContactUsModal: function () {
     this.setState({showContactUsModal: true});
@@ -17,6 +24,7 @@ module.exports = React.createClass({
   },
   render: function () {
     var self = this;
+
       return (
         <Modal.Container
           width={1080}
@@ -29,7 +37,11 @@ module.exports = React.createClass({
           />
           <Modal.Content>
             <div className="subscription">
-              <SubscriptionSelectionPanel/>
+              { this.state.model.ready() ? <SubscriptionSelectionPanel key="sub_done"
+                fstname={this.state.model.user().fstname()}
+                sndname={this.state.model.user().sndname()}
+                email={this.state.model.user().email()}/> :
+              <SubscriptionSelectionPanel key="sub_notdone" /> }
             </div>
           </Modal.Content>
           <Modal.Footer>
