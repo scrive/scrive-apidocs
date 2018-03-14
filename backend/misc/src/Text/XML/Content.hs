@@ -16,7 +16,7 @@ module Text.XML.Content
 import Control.Exception (SomeException)
 import Control.Monad.ST (runST)
 import Control.Monad.State.Strict
-import Data.Conduit (runConduit, (.|))
+import Data.Conduit ((.|), runConduit)
 import Data.Conduit.List (consume, sourceList)
 import Data.Default (def)
 import Data.Map (Map)
