@@ -25,8 +25,6 @@ module Doc.DocUtils(
   , userCanPerformSigningAction
   , fileFromMainFile
   , allRequiredAttachmentsAreOnList
-  , isTemplate
-  , isSignable
 ) where
 
 import Control.Monad.Catch
@@ -60,13 +58,6 @@ renderListTemplateHelper renderFunc list =
          F.value "list" $ init list
          F.value "last" $ last list
      else renderFunc "nomorethanonelist" $ F.value "list" list
-
--- CHECKERS
-isTemplate :: Document -> Bool
-isTemplate d = documenttype d == Template
-
-isSignable :: Document -> Bool
-isSignable d = documenttype d == Signable
 
 -- OTHER UTILS
 

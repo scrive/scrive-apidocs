@@ -5,7 +5,6 @@ module Doc.TestInvariants (
 
 import Doc.DocInfo
 import Doc.DocStateData
-import Doc.DocUtils
 import Doc.SignatoryLinkID
 import InputValidation
 import MinutesTime
@@ -245,4 +244,3 @@ hasAtMostOneOfEachTypeOfField _ document =
 assertInvariant :: String -> Bool -> Maybe String
 assertInvariant _ True = Nothing
 assertInvariant s False  = Just s
-

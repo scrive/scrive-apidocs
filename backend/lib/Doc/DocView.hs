@@ -34,6 +34,7 @@ import Company.Model
 import DB
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.JSON.Document
+import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocUtils
 import Doc.DocViewMail

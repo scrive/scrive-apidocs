@@ -6,7 +6,6 @@ import Test.QuickCheck
 import DB hiding (query, update)
 import Doc.DocInfo
 import Doc.DocStateData
-import Doc.DocUtils
 import EID.Signature.Model
 import TestingUtil
 import TestKontra as T

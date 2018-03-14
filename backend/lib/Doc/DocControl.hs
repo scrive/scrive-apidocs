@@ -232,6 +232,7 @@ handleSignShow did slid = logDocumentAndSignatory did slid $ do
     Just magichash -> do
       doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid magichash
       invitedlink <- guardJust $ getSigLinkFor slid doc
+      guardThatDocumentIsReadableBySignatories doc
       -- We always switch to document langauge in case of pad signing
       switchLang $ getLang doc
       ctx <- getContext -- Order is important since ctx after switchLang changes
@@ -423,6 +424,7 @@ previewResponse fid pixelwidth = do
 handleDownloadClosedFile :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> String -> m Response
 handleDownloadClosedFile did sid mh _nameForBrowser = do
   doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
+  guardThatDocumentIsReadableBySignatories doc
   if isClosed doc then do
     file <- guardJustM $ fileFromMainFile $ documentsealedfile doc
     content <- getFileIDContents $ fileid file
@@ -488,6 +490,7 @@ checkFileAccessWith fid msid mmh mdid mattid =
   case (msid, mmh, mdid, mattid) of
     (Just sid, Just mh, Just did,_) -> do
        doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
+       guardThatDocumentIsReadableBySignatories doc
        sl <- guardJust $ getSigLinkFor sid doc
        whenM (signatoryNeedsToIdentifyToView sl) $ do
          unless (isAuthor sl) $ do
@@ -564,3 +567,8 @@ addEventForVisitingSigningPageIfNeeded ev sl = do
   when (isPending doc && isNothing (maybesigninfo sl)) $ do
     updateMTimeAndObjectVersion $ get ctxtime ctx
     void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg ev  (return ()) (Just sl) Nothing =<< signatoryActor ctx sl
+
+guardThatDocumentIsReadableBySignatories :: Kontrakcja m => Document -> m ()
+guardThatDocumentIsReadableBySignatories doc
+  | documentstatus doc `elem` [Pending, Closed] = return ()
+  | otherwise = respondLinkInvalid

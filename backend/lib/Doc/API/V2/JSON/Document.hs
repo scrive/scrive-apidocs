@@ -20,7 +20,6 @@ import Doc.API.V2.JSON.SignatoryConsentQuestion
 import Doc.API.V2.JSON.Utils
 import Doc.DocInfo
 import Doc.DocStateData
-import Doc.DocUtils
 import KontraLink
 
 unjsonDocument :: DocumentAccess -> UnjsonDef Document

@@ -20,15 +20,17 @@ import DB
 import DB.TimeZoneName (mkTimeZoneName)
 import Doc.API.V1.Calls
 import Doc.DocControl
+import Doc.DocInfo
 import Doc.DocStateData
-import Doc.DocumentMonad (theDocument, updateDocumentWithID, withDocumentID, withDocumentM)
-import Doc.DocUtils
+import Doc.DocumentMonad (theDocument, updateDocumentWithID, withDocumentID, withDocumentM, withDocument)
 import Doc.Model
 import Doc.Screenshot (Screenshot(..))
 import Doc.SignatoryScreenshots (SignatoryScreenshots(signing), emptySignatoryScreenshots)
 import Doc.SMSPin.Model
+import Doc.Tokens.Model
 import File.FileID
 import File.Storage
+import KontraError
 import MagicHash
 import Mails.Model
 import MinutesTime
@@ -62,6 +64,8 @@ docControlTests env = testGroup "DocControl" [
 
   , testThat "Signview branding generation block nasty input " env testSignviewBrandingBlocksNastyInput
   , testThat "We can download signview branding if we have access to document" env testDownloadSignviewBrandingAccess
+
+  , testThat "We can't get a document as a signatory if it has been cancelled" env testGetCancelledDocument
   ]
 
 testUploadingFile :: TestEnv ()
@@ -597,3 +601,28 @@ testDownloadSignviewBrandingAccess = do
   case resp2 of
     Right (cssResp2, _)->  assertBool "CSS should be returned" (rsCode cssResp2 == 200)
     Left (_ :: E.SomeException) -> assertFailure "CSS should be avaialbe for CDN"
+
+testGetCancelledDocument :: TestEnv ()
+testGetCancelledDocument = do
+  Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
+  ctx <- anonymousContext . set ctxmaybeuser (Just user) <$> mkContext def
+
+  doc <- addRandomDocumentWithAuthorAndCondition user $ \d ->
+    isPending d && isSignable d
+  let did       = documentid doc
+      signatory = head $ documentsignatorylinks doc
+      slid      = signatorylinkid signatory
+      mh        = signatorymagichash signatory
+
+  withDocument doc $ randomUpdate $ CancelDocument $ authorActor ctx user
+
+  req  <- mkRequest GET []
+  eRes <- E.try $ runTestKontra req ctx $ do
+    randomUpdate $ AddDocumentSessionToken slid mh
+    handleSignShow did slid
+
+  case eRes of
+    Right (res, _) ->
+      assertFailure $ "Should have failed, returned code " ++ show (rsCode res)
+    Left err ->
+      assertEqual "Should throw LinkInvalid" LinkInvalid err

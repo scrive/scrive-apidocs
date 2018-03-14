@@ -16,6 +16,8 @@ module Doc.DocInfo(
   , isRejected
   , isDocumentError
   , isDocumentShared
+  , isSignable
+  , isTemplate
   , getLastSignedTime
 ) where
 
@@ -67,10 +69,22 @@ isDocumentError :: Document -> Bool
 isDocumentError doc =  DocumentError == documentstatus doc
 
 {- |
+   Is the document signable?
+ -}
+isSignable :: Document -> Bool
+isSignable doc = documenttype doc == Signable
+
+{- |
+   Is the document a template?
+ -}
+isTemplate :: Document -> Bool
+isTemplate d = documenttype d == Template
+
+{- |
    Is document shared?
  -}
 isDocumentShared :: Document -> Bool
-isDocumentShared doc = Shared == documentsharing doc && Template == documenttype doc
+isDocumentShared doc = Shared == documentsharing doc && isTemplate doc
 
 {- |
   Get the time of the last signature as Int. Returns unixEpoch when there are no signatures.

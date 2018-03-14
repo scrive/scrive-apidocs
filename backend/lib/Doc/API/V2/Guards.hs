@@ -353,10 +353,17 @@ guardDocumentReadAccess :: Kontrakcja m => Maybe SignatoryLinkID -> Document -> 
 guardDocumentReadAccess mslid doc = do
   mSessionSignatory <- maybe (return Nothing) (getDocumentSignatoryMagicHash $ documentid doc) mslid
   case mSessionSignatory of
-    Just sl -> return $ documentAccessForSlid (signatorylinkid sl) doc
+    Just sl -> do
+      guardThatDocumentIsReadableBySignatories doc
+      return $ documentAccessForSlid (signatorylinkid sl) doc
     Nothing -> do
       (user,_) <- getAPIUser APIDocCheck
       case getSigLinkFor user doc of
         Just _ -> return ()
         Nothing -> guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user doc
       return $ documentAccessForUser user doc
+
+guardThatDocumentIsReadableBySignatories :: Kontrakcja m => Document -> m ()
+guardThatDocumentIsReadableBySignatories doc
+  | documentstatus doc `elem` [Pending, Closed] = return ()
+  | otherwise = apiError $ documentStateErrorWithCode 410 $ "This document has been withdrawn."

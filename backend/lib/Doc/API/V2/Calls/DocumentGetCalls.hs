@@ -201,7 +201,9 @@ withDocAccess did dochandler = do
   mslid        <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
   maccesstoken <- apiV2ParameterOptional (ApiV2ParameterRead "access_token")
   doc          <- getDocBySignatoryLinkIdOrAccessToken did mslid maccesstoken
-  whenJust mslid $ \slid ->
+
+  whenJust mslid $ \slid -> do
+    guardThatDocumentIsReadableBySignatories doc
     guardSignatoryNeedsToIdentifyToView slid doc
   dochandler doc
 
