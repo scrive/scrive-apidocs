@@ -45,10 +45,6 @@ Build-type:    Simple
 --   LANGUAGE TemplateHaskell at the top of each file where it is used
 -- - use TH only where it is trully needed
 --
-Flag enable-routinglist
-  Description: Enables building the routing list executable
-  Manual: True
-  Default: False
 
 Library kontrakcja-prelude
 
@@ -1493,11 +1489,6 @@ Executable localization
                     , UndecidableInstances
 
 Executable routinglist
-  if flag(enable-routinglist)
-    buildable:    True
-  else
-    buildable:    False
-
   Hs-source-dirs: backend/routinglist
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
