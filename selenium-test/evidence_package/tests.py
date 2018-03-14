@@ -64,6 +64,7 @@ def check_reference_screenshot(test, drv, api):
 
         ff.switch_window()
         ff.wait_for_element_and_click('.reference-screenshot')
+        ff.switch_window()
         screenshot = ff.get_native_screenshot()
         ff.close_window()
 

@@ -138,7 +138,7 @@ class SeleniumDriverWrapper(object):
     def switch_window(self):
         current_window = self._driver.current_window_handle
         other_window = filter(lambda h: h != current_window,
-                              self._driver.window_handles)[0]
+                              self._driver.window_handles)[-1]
         self._driver.switch_to_window(other_window)
 
     def close_window(self):
