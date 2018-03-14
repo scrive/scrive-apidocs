@@ -1298,6 +1298,7 @@ Test-suite kontrakcja-test
                  Session.Tables
                  SessionsTest
                  SignupTest
+                 TestConf
                  TestCron
                  TestKontra
                  TestingUtil

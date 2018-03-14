@@ -1,1 +1,3 @@
-host='localhost' user='kontra' password='kontrapwd' dbname='kontrakcja'
+{
+  "database":"host='localhost' user='kontra' password='kontrapwd' dbname='kontrakcja'"
+}

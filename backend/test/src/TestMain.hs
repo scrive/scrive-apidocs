@@ -13,7 +13,6 @@ import System.IO
 import Test.Framework
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
-import qualified Data.Text.IO as T
 
 import AccountInfoTest
 import AdministrationTest
@@ -27,6 +26,7 @@ import CompanyBrandingTest
 import CompanyControlTest
 import CompanyStateTest
 import ConfigTests
+import Configuration
 import CSSGenerationTest
 import CSVUtilTest
 import DB
@@ -68,6 +68,7 @@ import ReferenceScreenshotsTest
 import SessionsTest
 import SignupTest
 import Templates (readGlobalTemplates)
+import TestConf
 import TestKontra
 import ThirdPartyStats
 import User.APITest
@@ -156,10 +157,10 @@ testMany' (allargs, ts) runLogger rng = do
   let (args, envf) = modifyTestEnv allargs
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
-  pgconf    <- T.readFile "kontrakcja_test.conf"
+  tconf    <- readConfig  putStrLn "kontrakcja_test.conf"
   templates <- readGlobalTemplates
 
-  let connSettings = pgConnSettings pgconf
+  let connSettings = pgConnSettings (testDBConfig tconf)
       extrasOptions = def
   runLogger . runDBT (unConnectionSource . simpleSource $ connSettings []) def $ do
     migrateDatabase extrasOptions kontraExtensions kontraDomains kontraTables kontraMigrations

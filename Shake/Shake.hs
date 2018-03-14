@@ -364,7 +364,7 @@ serverTestRules newBuild cabalFile createDB = do
       CreateTestDB -> do
         (dbName, initialConnString) <- askOracle (CreateTestDBData ())
         liftIO $ writeFile "kontrakcja_test.conf"
-          (initialConnString <> " dbname='" <> dbName <> "'")
+          ("{ \"database\":\"" <> initialConnString <> " dbname='" <> dbName <> "'" <> "\"}")
       DontCreateTestDB -> do
         tc <- askOracle (TeamCity ())
         when tc $ do
