@@ -34,12 +34,13 @@ def check_screenshot(test, drv, api):
         ff.switch_window()
 
         ff.wait_for_element_and_click('.entry-screenshot')
+        ff.switch_window()
         test.write_artifact(ff._screenshot_prefix + '_entry_screenshot.png',
                             ff.get_native_screenshot())
-
-        ff._driver.back()  # go back
+        ff.switch_window()
 
         ff.wait_for_element_and_click('.signing-screenshot')
+        ff.switch_window()
         test.write_artifact(ff._screenshot_prefix + '_signing_screenshot.png',
                             ff.get_native_screenshot())
         ff.close_window()
