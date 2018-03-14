@@ -16,7 +16,7 @@ module Text.XML.Content
 import Control.Exception (SomeException)
 import Control.Monad.ST (runST)
 import Control.Monad.State.Strict
-import Data.Conduit (($$), (=$=))
+import Data.Conduit (runConduit, (.|))
 import Data.Conduit.List (consume, sourceList)
 import Data.Default (def)
 import Data.Map (Map)
@@ -44,7 +44,7 @@ parseXMLContent s = XMLContent . concatMap cleanup . elementNodes . documentRoot
     cleanup n = [n]
 
 renderXMLContent :: XMLContent -> Text
-renderXMLContent ns = T.concat . map decodeUtf8 $ runST $ (sourceList (nodesToEvents ns) $$ renderBytes def =$= consume)
+renderXMLContent ns = T.concat . map decodeUtf8 $ runST $ runConduit $ (sourceList (nodesToEvents ns) .| renderBytes def .| consume)
 
 nodesToEvents :: XMLContent -> [Event]
 nodesToEvents ct = goN (unXMLContent ct) []

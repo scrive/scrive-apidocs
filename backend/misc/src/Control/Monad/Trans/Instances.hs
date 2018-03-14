@@ -31,6 +31,9 @@ instance {-# OVERLAPS #-} (
 -- m does (an example is EitherT or MaybeT). Unfortunately it
 -- doesn't prevent you from creating them as MonadBaseControl
 -- does.
+--
+-- Note (2018-03-14): I believe that this was fixed in exceptions-0.9
+-- with the introduction of generalBracket.
 
 instance (
     Monad (t m)
