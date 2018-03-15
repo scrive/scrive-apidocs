@@ -436,6 +436,8 @@ $endif$
 SignDocumentEvidenceArchive=*
 $if(sms_pin)$
       $_SignDocumentEvidenceTextSimpleArchiveSMSPin()$
+$elseif(provider_nobankid)$
+      $_SignDocumentEvidenceTextSimpleArchiveNOBankID()$
 $elseif(eleg)$
       $_SignDocumentEvidenceTextSimpleArchiveEleg()$
 $else$
