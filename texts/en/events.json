@@ -73,6 +73,7 @@
 "_SMSPinDeliveredEvidenceText":"The SMS with the PIN was delivered to $text$ for $signatory$ to use for authentication.",
 "_SMSPinSendEvidenceText":"An SMS with a PIN was sent to $text$ for $signatory$ to use for authentication.",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Signed the document using Swedish BankID as authentication method.",
+"_SignDocumentEvidenceTextSimpleArchiveNOBankID":"Signed the document using Norwegian BankID as authentication method.",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"The document was signed using PIN by SMS as authentication method.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"The document was signed.",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"The document was signed by $actor$ using Swedish BankID as authentication method.",
