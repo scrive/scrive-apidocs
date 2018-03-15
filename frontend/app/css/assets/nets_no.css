@@ -7,3 +7,59 @@
 .bidm_phone {
   border: 10px black;
 }
+
+/* make iframe cover the whole area */
+
+html {
+  height: 85%;
+  width: 90%
+}
+
+body.iframe {
+  height: 100%;
+  width: 100%
+}
+
+div.ipage {
+  height: 100%;
+  width: 100%
+}
+
+div.main {
+  height: 100%;
+  width: 100%;
+}
+#bid_client {
+  height: 100%;
+  width: 100%;
+}
+
+/* keyfile vs keycard selection */
+div.signheader.ipageheader {
+  color: #505050;
+  font-weight: 400;
+  font-family: "Source Sans Pro", sans-serif;
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+div.signcontent.main input {
+  font-size: 20px;
+￼  font-weight: 400;
+￼  line-height: normal;
+￼  margin-top: 20px;
+￼  width: auto;
+  font-family: "Source Sans Pro", sans-serif;
+  min-width: 250px;
+￼  padding: 24px 28px;
+￼  transition: background-color 200ms ease-out, opacity 200ms ease-out;
+  text-align: center;
+}
+
+div.signdeadline {
+  margin-top: 10px;
+  color: #505050;
+  font-weight: 400;
+  font-family: "Source Sans Pro", sans-serif;
+  font-size: 18px;
+}

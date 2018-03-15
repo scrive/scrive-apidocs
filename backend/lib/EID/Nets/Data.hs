@@ -268,6 +268,8 @@ instance ToXML InsertOrderRequest where
             element "AcceptedPKIs" $ do
               element "BankIDNOMobile" $ do
                 element "CertificatePolicy" ("Personal" :: T.Text)
+              element "BankID" $ do
+                element "CertificatePolicy" ("Personal" :: T.Text)
       element "WebContexts" $ do
         element "WebContext" $ do
           element "LocalWebContextRef" ("web_1" :: T.Text)
