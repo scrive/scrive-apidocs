@@ -9,5 +9,3 @@ packages: .
 
 package kontrakcja
     ghc-options: -fprint-potential-instances
-
-allow-newer: bloodhound:aeson, happstack-server:transformers-compat, soap:exceptions, sandi:exceptions
