@@ -105,6 +105,17 @@ var UserDetailsView = React.createClass({
       this.onMoveSuccess, this.onMoveError
     );
   },
+  onChangePasswordSuccess: function () {
+    new FlashMessage({type: "success", content: "Changed"});
+  },
+  onChangePasswordError: function () {
+    new FlashMessage({type: "error", content: "Failed"});
+  },
+  onChangePassword: function (password) {
+    this.props.viewModel.changePassword(password).sendAjax(
+      this.onChangePasswordSuccess, this.onChangePasswordError
+    );
+  },
   onSaveComplete: function (resp) {
     if (resp.changed) {
       new FlashMessage({type: "success", content: "Saved"});
@@ -146,6 +157,7 @@ var UserDetailsView = React.createClass({
               onDelete={this.onDelete}
               onResendInvitation={this.onResendInvitation}
               onMove={this.onMove}
+              onChangePassword={this.onChangePassword}
               onSave={this.onSave}
             />
           </div>

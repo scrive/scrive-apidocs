@@ -44,6 +44,13 @@ var UserDetailsViewModel = Backbone.Model.extend({
       companyid: newCompanyid
     });
   },
+  changePassword: function (password) {
+    return new Submit({
+      url: "/adminonly/useradmin/changepassword/" + this.get("userId"),
+      method: "POST",
+      password: password
+    });
+  },
   deleteUser: function () {
     return new Submit({
       url: "/adminonly/useradmin/delete/" + this.get("userId"),

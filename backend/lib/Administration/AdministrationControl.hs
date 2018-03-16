@@ -100,6 +100,8 @@ adminonlyRoutes =
         , dir "useradmin" $ hGet $ toK1 $ showAdminUsers
         , dir "useradmin" $ dir "details" $ hGet $ toK1 $ handleUserGetProfile
         , dir "useradmin" $ hPost $ toK1 $ handleUserChange
+        , dir "useradmin" $ dir "changepassword" $ hPost $ toK1 $ handleUserPasswordChange
+
         , dir "useradmin" $ dir "deleteinvite" $ hPost $ toK2 $ handleDeleteInvite
         , dir "useradmin" $ dir "delete" $ hPost $ toK1 $ handleDeleteUser
         , dir "useradmin" $ dir "move" $ hPost $ toK1 $ handleMoveUserToDifferentCompany
@@ -278,6 +280,21 @@ handleUserChange uid = onlySalesOrAdmin $ do
     else do
       applyChanges
       runJSONGenT $ value "changed" True
+
+
+{- | Handling user password change. -}
+handleUserPasswordChange :: Kontrakcja m => UserID -> m JSValue
+handleUserPasswordChange uid = onlySalesOrAdmin $ do
+  user <- guardJustM $ dbQuery $ GetUserByID uid
+  password <- guardJustM $ getField "password"
+  passwordhash <- createPassword password
+  ctx <- getContext
+  let time     = get ctxtime ctx
+      ipnumber = get ctxipnumber ctx
+      admin    = get ctxmaybeuser ctx
+  _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
+  _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) ipnumber time (userid <$> admin)
+  runJSONGenT $ value "changed" True
 
 
 handleDeleteInvite :: Kontrakcja m => CompanyID -> UserID -> m ()
