@@ -51,5 +51,5 @@ withDecodedBody_ action = do
   tempDir <- liftIO getTemporaryDirectory
   withDecodedBody (bodyPolicy tempDir) action
   where
-    quota = 65536
+    quota = 31000000
     bodyPolicy tempDir = defaultBodyPolicy tempDir quota quota quota

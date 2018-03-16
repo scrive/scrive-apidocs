@@ -157,6 +157,7 @@ docApiV2Start did = logDocument did . api $ do
     authorSignsNow <- apiV2ParameterDefault False (ApiV2ParameterBool "author_signs_now")
     t <- get ctxtime <$> getContext
     timezone <- documenttimezonename <$> theDocument
+    clearDocFields actor
     dbUpdate $ PreparationToPending actor timezone
     dbUpdate $ SetDocumentInviteTime t actor
     postDocumentPreparationChange authorSignsNow timezone

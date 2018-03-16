@@ -3,6 +3,7 @@ var React = require("react");
 var Button = require("../../../common/button");
 var DeleteModal = require("./modals/delete");
 var MoveModal = require("./modals/move");
+var ChangePasswordModal = require("./modals/changepassword");
 
 var ButtonBarView = React.createClass({
   mixins: [React.addons.PureRenderMixin],
@@ -11,12 +12,14 @@ var ButtonBarView = React.createClass({
     onDelete: React.PropTypes.func.isRequired,
     onResendInvitation: React.PropTypes.func.isRequired,
     onMove: React.PropTypes.func.isRequired,
+    onChangePassword: React.PropTypes.func.isRequired,
     onSave: React.PropTypes.func.isRequired
   },
   getInitialState: function () {
     return {
       showDeleteModal: false,
-      showMoveModal: false
+      showMoveModal: false,
+      showChangePasswordModal: false
     };
   },
   componentDidUpdate: function (prevProps, prevState) {
@@ -33,8 +36,18 @@ var ButtonBarView = React.createClass({
   onMoveButtonClick: function () {
     this.setState({showMoveModal: true});
   },
+  onChangePaswordButtonClick: function () {
+    this.setState({showChangePasswordModal: true});
+  },
   onMoveModalCancel: function () {
     this.setState({showMoveModal: false});
+  },
+  onChangePasswordModalCancel: function () {
+    this.setState({showChangePasswordModal: false});
+  },
+  onChangePasswordModalAccept: function (password) {
+    this.props.onChangePassword(password);
+    this.setState({showChangePasswordModal: false});
   },
   render: function () {
     return (
@@ -64,6 +77,14 @@ var ButtonBarView = React.createClass({
         />
 
         <Button
+          className="user-details-button-changepassword"
+          text="Change password"
+          type="optional"
+          size="tiny"
+          onClick={this.onChangePaswordButtonClick}
+        />
+
+        <Button
           className="user-details-button-save"
           text="Change details"
           type="action"
@@ -83,6 +104,13 @@ var ButtonBarView = React.createClass({
           onAccept={this.props.onMove}
           onCancel={this.onMoveModalCancel}
         />
+
+        <ChangePasswordModal
+          active={this.state.showChangePasswordModal}
+          onAccept={this.onChangePasswordModalAccept}
+          onCancel={this.onChangePasswordModalCancel}
+        />
+
       </div>
     );
   }

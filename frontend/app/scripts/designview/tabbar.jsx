@@ -171,7 +171,13 @@ var TabBarView = React.createClass({
 
       $(tabContentContainerNode).slideUp(0, function () {
         self.renderCurrentTabContent();
-        $(tabContentContainerNode).slideDown(slideDuration);
+        $(tabContentContainerNode).slideDown(slideDuration, function () {
+          // force a reflow for IE/Edge. CORE-404
+          var body = $("body");
+          body.css("transform", "rotateZ(0deg)");
+          void(body[0].offsetHeight);
+          body.css("transform", "none");
+        });
       });
     }
   },
