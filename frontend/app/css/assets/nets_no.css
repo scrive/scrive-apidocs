@@ -1,8 +1,12 @@
 .bidm_app {
   width: 95%;
   height: 95%;
+  overflow: auto;
 }
 
+.bidm_app .bidm_wrapper {
+  height: 90%;
+}
 
 .bidm_phone {
   border: 10px black;
@@ -32,6 +36,7 @@ div.main {
 #bid_client {
   height: 100%;
   width: 100%;
+  min-width: 320px;
 }
 
 /* keyfile vs keycard selection */
