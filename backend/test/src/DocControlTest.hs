@@ -22,7 +22,7 @@ import Doc.API.V1.Calls
 import Doc.DocControl
 import Doc.DocInfo
 import Doc.DocStateData
-import Doc.DocumentMonad (theDocument, updateDocumentWithID, withDocumentID, withDocumentM, withDocument)
+import Doc.DocumentMonad (theDocument, updateDocumentWithID, withDocument, withDocumentID, withDocumentM)
 import Doc.Model
 import Doc.Screenshot (Screenshot(..))
 import Doc.SignatoryScreenshots (SignatoryScreenshots(signing), emptySignatoryScreenshots)

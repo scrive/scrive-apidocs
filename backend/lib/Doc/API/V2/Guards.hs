@@ -24,6 +24,7 @@ module Doc.API.V2.Guards (
 , guardThatAllConsentQuestionsHaveResponse
 -- * Joined guard for read-only functions
 , guardDocumentReadAccess
+, guardThatDocumentIsReadableBySignatories
 ) where
 
 import qualified Data.Text as T
