@@ -28,9 +28,6 @@ var classNames = require("classnames");
       var model = new NetsSigning({
         signatory: this.props.signatory,
         onStatusChange: function () {
-          if (self.isMounted()) {
-            self.redirectIfItsNeeded();
-          }
         },
         onInitiated: function () {
           if (self.isMounted()) {
@@ -55,7 +52,7 @@ var classNames = require("classnames");
         }
       });
 
-      return {model: model, error: false, hasBeenRedirected: false, hasBeenSigned: false};
+      return {model: model, error: false, hasBeenSigned: false};
     },
 
     getBackboneModels: function () {
@@ -117,19 +114,6 @@ var classNames = require("classnames");
       }
     },
 
-    redirectIfItsNeeded: function () {
-      ReloadManager.stopBlocking();
-      var bankID = this.state.model;
-      setTimeout(function () {
-        ReloadManager.startBlocking();
-      }, 5000);
-      if (BrowserInfo.isPadDevice()) {
-        // on android adn ios9 devices iframes dont work at all
-        window.top.location = bankID.bankIdUrl();
-        this.setState({hasBeenRedirected: true});
-      }
-    },
-
     render: function () {
       var divClass = classNames({
         "col-xs-6": !ViewSize.isSmall(),
@@ -146,7 +130,7 @@ var classNames = require("classnames");
             </div>
             {localization.docsignview.eleg.bankid.signNOConfirmationTitle}
           </h1>
-          {/* if */ (!this.state.hasBeenRedirected && ! this.state.hasBeenSigned) &&
+          {/* if */ !this.state.hasBeenSigned &&
             <iframe
               ref="iframe"
               style={{minHeight: "350px", width: "100%", margin: "auto", scrolling: "no"}}
