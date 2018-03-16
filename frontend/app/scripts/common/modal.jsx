@@ -95,7 +95,6 @@ exports.Container = React.createClass({
   },
   onInnerClick: function (event) {
     event.stopPropagation();
-    event.preventDefault();
   },
   onClose: function (event) {
     if (this.props.onClose) {
