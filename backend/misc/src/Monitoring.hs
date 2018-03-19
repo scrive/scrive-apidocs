@@ -2,7 +2,6 @@ module Monitoring ( MonitoringConf(..)
                   , startMonitoringServer
                   ) where
 
-import Data.Default
 import Data.Text
 import Data.Unjson
 import qualified System.Metrics as EKG
@@ -17,34 +16,24 @@ data MonitoringConf = MonitoringConf
   , monitoringSuffix        :: !Text  -- ^ Suffix to add to all metric names.
   } deriving (Eq, Show)
 
-instance Default MonitoringConf where
-  def = MonitoringConf
-    { monitoringHost          = "127.0.0.1"
-    , monitoringPort          = 8125
-    , monitoringFlushInterval = 1000
-    , monitoringDebug         = False
-    , monitoringPrefix        = "ekg_monitoring."
-    , monitoringSuffix        = ""
-    }
-
 instance Unjson MonitoringConf where
   unjsonDef = objectOf $ MonitoringConf
-    <$> fieldDef "host" (monitoringHost def)
+    <$> fieldDef "host" "127.0.0.1"
         monitoringHost
         "Monitoring server host"
-    <*> fieldDef "port" (monitoringPort def)
+    <*> fieldDef "port" 8125
         monitoringPort
         "Monitoring server port"
-    <*> fieldDef "flush_interval" (monitoringFlushInterval def)
+    <*> fieldDef "flush_interval" 1000
         monitoringFlushInterval
         "Data push interval, in ms"
-    <*> fieldDef "debug" (monitoringDebug def)
+    <*> fieldDef "debug" False
         monitoringDebug
         "Print debugging information to stderr"
-    <*> fieldDef "prefix" (monitoringPrefix def)
+    <*> fieldDef "prefix" "ekg_monitoring."
         monitoringPrefix
         "Prefix to add to all metric names"
-    <*> fieldDef "suffix" (monitoringSuffix def)
+    <*> fieldDef "suffix" ""
         monitoringSuffix
         "Suffix to add to all metric names"
 

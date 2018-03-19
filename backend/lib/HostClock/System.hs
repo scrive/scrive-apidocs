@@ -1,13 +1,9 @@
 module HostClock.System
-  ( defaultNtpServers,
-    getOffset
+  ( getOffset
   , getFrequency
   ) where
 
 import System.Process (readProcess)
-
-defaultNtpServers :: [String]
-defaultNtpServers = [ show n ++ ".ubuntu.pool.ntp.org" | n <- [0..3] ]
 
 -- | Get the current offset between our host clock and a number of reference time servers
 getOffset :: [String] -> IO Double

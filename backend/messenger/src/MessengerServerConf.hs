@@ -6,7 +6,6 @@ module MessengerServerConf (
   , unjsonMessengerServerConf
   ) where
 
-import Data.Default
 import Data.Text (Text)
 import Data.Unjson
 import Data.Word
@@ -109,20 +108,3 @@ instance Unjson SenderConfig where
             "Local open command to open 'eml' files ('/usr/bin/open', 'gnome-open', 'kde-open')"
       )
     ]
-
-instance Default MessengerServerConf where
-  def = MessengerServerConf {
-      messengerHttpBindAddress = (0x7f000001, 6668)
-    , messengerDBConfig = "user='kontra' password='kontra' dbname='kontrakcja'"
-    , messengerMaxDBConnections = 100
-    , messengerLogConfig = def
-    , messengerSenderDefault = LocalSender {
-        localDirectory = "/tmp/default"
-      , localOpenCommand = Nothing
-    }
-    , messengerSenderTelia = LocalSender {
-        localDirectory = "/tmp/telia"
-      , localOpenCommand = Nothing
-    }
-    , messengerMonitoringConfig = Nothing
-  }

@@ -5,9 +5,7 @@
 
 module Main where
 
-import Data.Default
 import Data.Either.Validation
-import Data.Proxy
 import Data.Unjson
 import System.Environment
 import System.Exit
@@ -23,7 +21,6 @@ printHelpMessage :: String -> IO ()
 printHelpMessage prog = putStr . unlines $
   [ "Usage: "
   , ""
-  , prog <> " def   - Generate default config files."
   , prog <> " check - Check that config files are in sync."
   ]
 
@@ -33,7 +30,7 @@ class ConfigFile config where
   configFile :: FilePath
 
 readConfigFile :: forall config .
-                  (ConfigFile config, Default config, Unjson config)
+                  (ConfigFile config, Unjson config)
                => IO config
 readConfigFile = readConfig putStrLn (configFile @ config)
 
@@ -159,24 +156,10 @@ checkFieldsEqualAppConfMessengerConf
     checkEq :: forall a . Eq a => String -> a -> a -> ConfigValidation
     checkEq = checkFieldEq (configFile @AppConf, configFile @MessengerServerConf)
 
-generateDefaultConfigFiles :: IO ()
-generateDefaultConfigFiles = do
-  writeDefaultConfigFile @AppConf
-  writeDefaultConfigFile @CronConf
-  writeDefaultConfigFile @MailingServerConf
-  writeDefaultConfigFile @MessengerServerConf
-
-writeDefaultConfigFile ::
-  forall conf . (ConfigFile conf, Unjson conf, Default conf) => IO ()
-writeDefaultConfigFile =
-  writeDefaultConfig @conf putStrLn (configFile @conf) Proxy
-
 main :: IO ()
 main = do
   prog <- getProgName
   args <- getArgs
   if | args == [] || head args `elem` ["help"] -> printHelpMessage prog
      | head args `elem` ["lint", "check"]      -> lintConfigFiles
-     | head args `elem` ["def", "default", "gen", "generate"]
-                                               -> generateDefaultConfigFiles
      | otherwise                               -> printHelpMessage prog

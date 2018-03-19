@@ -1,41 +1,24 @@
 module Configuration (
     ReadConfigOptions(..),
     readConfig,
-    readConfigEx,
-    writeDefaultConfig
+    readConfigEx
   ) where
 
 import Control.Monad.Base
 import Control.Monad.Trans.Control
-import Data.Default
-import Data.Proxy
 import Data.Unjson
-import System.Directory
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
 import qualified Data.HashMap.Lazy as H
 import qualified Data.Text as Text
 import qualified Data.Yaml as Yaml
 
-writeDefaultConfig :: forall a m .
-              (Unjson a, Default a, Monad m, MonadBaseControl IO m) =>
-              (String -> m ()) -> FilePath -> Proxy a -> m ()
-writeDefaultConfig logger path _proxy = do
-  configExists <- liftBase $ doesFileExist path
-
-  if configExists
-    then logger $ "Config file '" <> path <> "' already exists, skipping..."
-    else do logger $ "Writing a default configuration file to '" ++ path
-              ++ "'..."
-            liftBase $
-              BSL.writeFile path (configAsJsonLazyByteString (def :: a))
-
 readConfig :: forall a m .
-              (Unjson a, Default a, Monad m, MonadBaseControl IO m) =>
+              (Unjson a, Monad m, MonadBaseControl IO m) =>
               (String -> m ()) -> FilePath -> m a
-readConfig logger path = readConfigEx logger path def
+readConfig logger path = readConfigEx logger path standardReadConfigOptions
+
 
 data ReadConfigOptions = ReadConfigOptions {
   optReadConfigUncommentKeys :: Bool
@@ -43,10 +26,10 @@ data ReadConfigOptions = ReadConfigOptions {
   -- for testing).
   }
 
-instance Default ReadConfigOptions where
-  def = ReadConfigOptions {
-    optReadConfigUncommentKeys = False
-    }
+standardReadConfigOptions :: ReadConfigOptions
+standardReadConfigOptions = ReadConfigOptions {
+  optReadConfigUncommentKeys = False
+  }
 
 --
 -- Error handling here:
@@ -57,7 +40,7 @@ instance Default ReadConfigOptions where
 -- 4. When unjson has issue, then just info about specific problems
 
 readConfigEx :: forall a m .
-              (Unjson a, Default a, Monad m, MonadBaseControl IO m) =>
+              (Unjson a, Monad m, MonadBaseControl IO m) =>
               (String -> m ()) -> FilePath -> ReadConfigOptions -> m a
 readConfigEx logger path ReadConfigOptions{..} = do
   logger $ "Reading configuration " ++ path ++ "..."
@@ -110,7 +93,7 @@ readConfigEx logger path ReadConfigOptions{..} = do
     logExceptionAndPrintFullDocs ex = logStringAndPrintFullDocs (show ex)
     logStringAndPrintFullDocs :: String -> m g
     logStringAndPrintFullDocs ex = do
-      logger $ ex ++ "\n" ++ render ud ++ "\n" ++ configAsJsonString (def :: a)
+      logger $ ex ++ "\n" ++ render ud ++ "\n You can find configuration templates in configuration-templates directory.\n"
       fail (show ex)
     logProblem (Anchored xpath msg) = do
         case renderForPath xpath ud of
@@ -122,15 +105,6 @@ readConfigEx logger path ReadConfigOptions{..} = do
       logger $ "There were issues with the content of configuration " ++ path
       mapM_ logProblem problems
       fail $ "There were issues with the content of configuration " ++ path
-
-configAsJsonString :: Unjson a => a -> String
-configAsJsonString = BSL.toString . configAsJsonLazyByteString
-
-configAsJsonLazyByteString :: forall a . Unjson a => a -> BSL.ByteString
-configAsJsonLazyByteString a =
-  unjsonToByteStringLazy'
-      (Options { pretty = True, indent = 4, nulls = False })
-      (unjsonDef :: UnjsonDef a) a
 
 showNiceYamlParseException :: FilePath -> Yaml.ParseException -> String
 showNiceYamlParseException filepath parseException =

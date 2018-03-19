@@ -9,7 +9,6 @@ module Log.Configuration (
   ) where
 
 import Crypto.RNG
-import Data.Default
 import Data.Functor.Invariant (invmap)
 import Data.List.NonEmpty (fromList)
 import Data.Semigroup
@@ -35,12 +34,6 @@ data LogConfig = LogConfig {
   lcSuffix  :: !Text
 , lcLoggers :: ![LoggerDef]
 } deriving (Eq, Show)
-
-instance Default LogConfig where
-  def = LogConfig {
-    lcSuffix  = "dev"
-  , lcLoggers = [StandardOutput]
-  }
 
 instance Unjson LogConfig where
   unjsonDef = objectOf $ LogConfig

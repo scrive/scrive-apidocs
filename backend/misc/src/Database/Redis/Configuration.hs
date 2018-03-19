@@ -5,7 +5,6 @@ module Database.Redis.Configuration (
 
 import Control.Monad.Base
 import Control.Monad.Trans.Control
-import Data.Default
 import Data.Unjson
 import Data.Word
 import qualified Data.Text as T
@@ -35,14 +34,6 @@ instance Unjson RedisConfig where
     <*> field "database"
         rcDatabase
         "Database number"
-
-instance Default RedisConfig where
-  def = RedisConfig {
-      rcHost     = "localhost"
-    , rcPort     = 6379
-    , rcAuth     = Nothing
-    , rcDatabase = 0
-    }
 
 mkRedisConnection :: MonadBaseControl IO m => RedisConfig -> m R.Connection
 mkRedisConnection rc = do

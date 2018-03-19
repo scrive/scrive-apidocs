@@ -1,6 +1,5 @@
 module AppDBConfig where
 
-import Data.Default
 import Data.Unjson
 import qualified Data.Text as T
 
@@ -20,9 +19,3 @@ instance Unjson AppDBConf where
     <*> field "logging"
         logConfig
         "Logging configuration"
-
-instance Default AppDBConf where
-  def = AppDBConf {
-    dbConfig  = "user='kontra' password='kontra' dbname='kontrakcja'"
-  , logConfig = def
-  }

@@ -7,7 +7,6 @@ module MailingServerConf (
   , unjsonMailingServerConf
   ) where
 
-import Data.Default
 import Data.Text (Text)
 import Data.Unjson
 import Data.Word
@@ -178,33 +177,3 @@ instance Unjson SenderConfig where
           "Local open command to open 'eml' files ('/usr/bin/open', 'gnome-open', 'kde-open')")
     , ("null", (== NullSender), pure NullSender)
     ]
-
--- SMTPSender {
---     serviceName = "SendGrid"
---   , smtpAddr = "smtps://smtp.sendgrid.net"
---   , smtpUser= "duzyrak@gmail.com"
---   , smtpPassword = "zimowisko"
--- }
-
-instance Default MailingServerConf where
-  def = MailingServerConf {
-      mailerHttpBindAddress = (0x7f000001, 6666)
-    , mailerDBConfig = "user='kontra' password='kontra' dbname='kontrakcja'"
-    , mailerMaxDBConnections = 100
-    , mailerRedisCacheConfig = Nothing
-    , mailerLocalFileCacheSize = 52428800
-    , mailerLogConfig = def
-    , mailerMasterSender = LocalSender {
-        localDirectory = "/tmp"
-      , localOpenCommand = Nothing
-    }
-    , mailerSlaveSender = Nothing
-    , mailerAmazonConfig = Nothing
-    , mailerTestReceivers = [
-        Address {
-          addrName = "test"
-        , addrEmail = "your@email.scrive.com"
-      }
-    ]
-    , mailerMonitoringConfig = Nothing
-  }

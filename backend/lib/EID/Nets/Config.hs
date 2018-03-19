@@ -51,7 +51,7 @@ instance Unjson NetsSignConfig where
         netssignAPIUrl
         "Url to Nets TrustSign interface"
     <*> field "merchant_id"
-        netssignAPIUrl
+        netssignMerchantID
         "Nets merchant ID"
     <*> field "sign_url_base"
         netssignSignURLBase

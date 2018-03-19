@@ -3,7 +3,6 @@ module CronConf (
       , unjsonCronConf
   ) where
 
-import Data.Default
 import Data.Unjson
 import qualified Data.Text as T
 
@@ -12,7 +11,6 @@ import Database.Redis.Configuration
 import EID.CGI.GRP.Config
 import EID.Nets.Config
 import GuardTime (GuardTimeConf(..))
-import HostClock.System (defaultNtpServers)
 import Log.Configuration
 import Monitoring
 import Planhat
@@ -132,31 +130,3 @@ unjsonCronConf = objectOf $ pure CronConf
 
 instance Unjson CronConf where
   unjsonDef = unjsonCronConf
-
--- | Default cron configuration that does nothing.
-instance Default CronConf where
-  def = CronConf {
-      cronAmazonConfig       = Nothing
-    , cronDBConfig           =
-        "user='kontra' password='kontra' dbname='kontrakcja'"
-    , cronMaxDBConnections   = 100
-    , cronRedisCacheConfig   = Nothing
-    , cronLocalFileCacheSize = 200000000
-    , cronLogConfig          = def
-    , cronGuardTimeConf      = def
-    , cronCgiGrpConfig       = Nothing
-    , cronMixpanelToken      = Nothing
-    , cronNtpServers         = defaultNtpServers
-    , cronSalesforceConf     = Nothing
-    , cronInvoicingSFTPConf  = Nothing
-    , cronPlanhatConf        = Nothing
-    , cronMonitoringConf     = Nothing
-    , cronMailNoreplyAddress = "noreply@scrive.com"
-    , cronConsumerCronMaxJobs = 10
-    , cronConsumerSealingMaxJobs = 2
-    , cronConsumerSigningMaxJobs = 5
-    , cronConsumerExtendingMaxJobs = 1
-    , cronConsumerAPICallbackMaxJobs = 32
-    , cronConsumerAmazonMaxJobs = 2
-    , cronNetsSignConfig = Nothing
-    }

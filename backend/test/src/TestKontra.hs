@@ -18,6 +18,8 @@ module TestKontra (
     , modifyTestTime
     , setTestTime
     , setRequestURI
+    , testGTConf
+    , testLogConfig
     ) where
 
 import Control.Arrow
@@ -47,9 +49,11 @@ import BrandedDomain.Model
 import Context.Internal
 import DB
 import DB.PostgreSQL
+import GuardTime.Class
 import Happstack.Server.ReqHandler
 import IPAddress
 import Kontra
+import Log.Configuration
 import MinutesTime
 import Session.SessionID
 import Templates
@@ -324,7 +328,7 @@ mkContext lang = do
         , _ctxsalesaccounts = []
         , _ctxmaybepaduser = Nothing
         , _ctxusehttps = False
-        , _ctxgtconf = def
+        , _ctxgtconf = testGTConf
         , _ctxsessionid = tempSessionID
         , _ctxtrackjstoken = Nothing
         , _ctxmixpaneltoken = Nothing
@@ -337,6 +341,22 @@ mkContext lang = do
         , _ctxnetssignconfig = Nothing
     }
 
+testGTConf :: GuardTimeConf
+testGTConf = GuardTimeConf {
+    guardTimeSigningServiceURL = "http://internal-gt-signer-848430379.eu-west-1.elb.amazonaws.com:8080/gt-signingservice"
+  , guardTimeExtendingServiceURL ="http://internal-gt-extender-2081608339.eu-west-1.elb.amazonaws.com:8081/gt-extendingservice"
+  , guardTimeControlPublicationsURL = "http://verify.guardtime.com/ksi-publications.bin"
+  , guardTimeSigningLoginUser ="anon"
+  , guardTimeSigningLoginKey = "anon"
+  , guardTimeExtendingLoginUser ="anon"
+  , guardTimeExtendingLoginKey = "1234"
+  }
+
+testLogConfig :: LogConfig
+testLogConfig = LogConfig {
+    lcSuffix  = "dev"
+  , lcLoggers = [StandardOutput]
+  }
 -- pgsql database --
 
 -- | Runs set of sql queries within one transaction and clears all tables in the end

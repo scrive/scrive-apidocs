@@ -1,6 +1,5 @@
 module ConfigTests (configTests) where
 
-import Data.Default
 import Data.Proxy
 import Data.Unjson
 import Test.Framework (Test, testGroup)
@@ -17,16 +16,16 @@ import TestKontra
 configTests :: TestEnvSt -> Test
 configTests _ = testGroup "Configurations"
     [ testCase "kontrakcja-server config parses" $
-      testConfRoundtrip "AppConf"             unjsonAppConf
+      testConfRoundtrip "AppConf" "configuration-templates/kontrakcja.conf.template" (Proxy :: Proxy AppConf)
 
     , testCase "cron config parses"              $
-      testConfRoundtrip "CronConf"            unjsonCronConf
+      testConfRoundtrip "CronConf" "configuration-templates/cron.conf.template" (Proxy :: Proxy CronConf)
 
     , testCase "mailing-server config parses"    $
-      testConfRoundtrip "MailingServerConf"   unjsonMailingServerConf
+      testConfRoundtrip "MailingServerConf" "configuration-templates/mailing_server.conf.template" (Proxy :: Proxy MailingServerConf)
 
     , testCase "messenger-server config parses"  $
-      testConfRoundtrip "MessengerServerConf" unjsonMessengerServerConf
+      testConfRoundtrip "MessengerServerConf" "configuration-templates/messenger_server.conf.template" (Proxy :: Proxy MessengerServerConf)
 
     , testCase "kontrakcja-server config template parses" $
       testConfTemplate "configuration-templates/kontrakcja.conf.template"
@@ -62,15 +61,17 @@ configTests _ = testGroup "Configurations"
 
     ]
 
-testConfRoundtrip :: forall a . (Eq a, Show a, Default a) =>
-                     String -> UnjsonDef a -> Assertion
-testConfRoundtrip confName unjsonConf = do
-  let conf           = (def :: a)
-      asJson         = unjsonToJSON unjsonConf conf
-      Result conf2 _ = parse unjsonConf asJson
+testConfRoundtrip :: forall a . (Eq a, Show a, Unjson a) =>
+                     String -> FilePath -> Proxy a -> Assertion
+testConfRoundtrip confName confPath _proxy = do
+  let suppressLog = const $ return () -- replace with putStrLn for debugging
+  (conf :: a) <- readConfigEx suppressLog confPath
+               (ReadConfigOptions { optReadConfigUncommentKeys = True })
+  let asJson         = unjsonToJSON unjsonDef conf
+      Result conf2 _ = parse unjsonDef asJson
   assertEqual (confName ++ " configuration deserializes properly") conf conf2
 
-testConfTemplate :: forall a . (Eq a, Show a, Default a, Unjson a) =>
+testConfTemplate :: forall a . (Eq a, Show a, Unjson a) =>
                   FilePath -> Proxy a -> Assertion
 testConfTemplate confPath _proxy = do
   -- Throws an error when the config doesn't parse, for example:
@@ -81,7 +82,7 @@ testConfTemplate confPath _proxy = do
 
   let suppressLog = const $ return () -- replace with putStrLn for debugging
   (_ :: a) <- readConfigEx suppressLog confPath
-               (def { optReadConfigUncommentKeys = True })
+               (ReadConfigOptions { optReadConfigUncommentKeys = True })
   (_ :: a) <- readConfigEx suppressLog confPath
-               (def { optReadConfigUncommentKeys = False })
+               (ReadConfigOptions { optReadConfigUncommentKeys = False })
   return ()

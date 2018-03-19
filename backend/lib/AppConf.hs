@@ -4,7 +4,6 @@ module AppConf (
   , unjsonAppConf
   ) where
 
-import Data.Default
 import Data.Unjson
 import Data.Word
 import qualified Data.Text as T
@@ -170,35 +169,3 @@ unjsonAppConf = objectOf $ pure AppConf
 
 instance Unjson AppConf where
   unjsonDef = unjsonAppConf
-
--- | Default application configuration that does nothing.
-instance Default AppConf where
-  def = AppConf {
-      httpBindAddress    = (0x7f000001, 8000)
-    , mainDomainUrl      = "http://localhost:8000"
-    , useHttps           = False
-    , amazonConfig       = Nothing
-    , dbConfig           = "user='kontra' password='kontra' dbname='kontrakcja'"
-    , maxDBConnections   = 100
-    , redisCacheConfig   = Nothing
-    , localFileCacheSize = 200000000
-    , logConfig          = def
-    , production         = False
-    , cdnBaseUrl         = Nothing
-    , guardTimeConf      = def
-    , isMailBackdoorOpen = False
-    , mailNoreplyAddress = "noreply@scrive.com"
-    , cgiGrpConfig       = Nothing
-    , admins             = []
-    , sales              = []
-    , initialUsers       = []
-    , mixpanelToken      = Nothing
-    , gaToken            = Nothing
-    , trackjsToken       = Nothing
-    , hubspotConf        = Nothing
-    , salesforceConf     = Nothing
-    , netsConfig         = Nothing
-    , monitoringConfig   = Nothing
-    , isAPILogEnabled    = False
-    , netsSignConfig     = Nothing
-    }

@@ -148,7 +148,7 @@ modifyTestEnv (d:r) = first (d:) $ modifyTestEnv r
 testMany :: ([String], [(TestEnvSt -> Test)]) -> IO ()
 testMany (allargs, ts) = do
   rng <- unsafeCryptoRNGState (BS.pack (replicate 128 0))
-  lr  <- mkLogRunner "test" def rng
+  lr  <- mkLogRunner "test" testLogConfig rng
   withLogger lr $ \runLogger -> testMany' (allargs, ts) runLogger rng
 
 testMany' :: ([String], [(TestEnvSt -> Test)])

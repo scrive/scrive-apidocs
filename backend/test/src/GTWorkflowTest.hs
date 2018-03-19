@@ -62,7 +62,7 @@ testExtendDigitalSignatures = do
             }
     void
       . runTemplatesT (def, templates)
-      . runGuardTimeConfT def
+      . runGuardTimeConfT testGTConf
       . AWS.runAmazonMonadT ac
       $ extendDigitalSignature
 

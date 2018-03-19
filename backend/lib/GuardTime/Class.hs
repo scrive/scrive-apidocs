@@ -1,7 +1,6 @@
 module GuardTime.Class where
 
 import Control.Monad.Trans
-import Data.Default
 import Data.Unjson
 
 data GuardTimeConf = GuardTimeConf {
@@ -37,17 +36,6 @@ instance Unjson GuardTimeConf where
     <*> field "extending_login_key"
         guardTimeExtendingLoginKey
         "GuardTime password for extending service"
-
-instance Default GuardTimeConf where
-  def = GuardTimeConf {
-        guardTimeSigningServiceURL = "http://internal-gt-signer-848430379.eu-west-1.elb.amazonaws.com:8080/gt-signingservice"
-      , guardTimeExtendingServiceURL ="http://internal-gt-extender-2081608339.eu-west-1.elb.amazonaws.com:8081/gt-extendingservice"
-      , guardTimeControlPublicationsURL = "http://verify.guardtime.com/ksi-publications.bin"
-      , guardTimeSigningLoginUser ="anon"
-      , guardTimeSigningLoginKey = "anon"
-      , guardTimeExtendingLoginUser ="anon"
-      , guardTimeExtendingLoginKey = "1234"
-      }
 
 class Monad m => GuardTimeConfMonad m where
   getGuardTimeConf :: m GuardTimeConf

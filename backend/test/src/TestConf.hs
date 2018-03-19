@@ -3,7 +3,6 @@ module TestConf (
   , unjsonTestConf
   ) where
 
-import Data.Default
 import Data.Unjson
 import qualified Data.Text as T
 
@@ -23,8 +22,3 @@ unjsonTestConf = objectOf $ pure TestConf
 
 instance Unjson TestConf where
   unjsonDef = unjsonTestConf
-
-instance Default TestConf where
-  def = TestConf {
-      testDBConfig  = "user='test' password='test' dbname='kontratest'"
-    }

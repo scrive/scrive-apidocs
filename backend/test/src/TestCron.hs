@@ -31,13 +31,30 @@ runTestCronUntilIdle ctx = do
   reqManager <- newTlsManager
 
   let -- for testing, one of each is sufficient
-      cronConf = def
-        { cronConsumerCronMaxJobs        = 1
+      cronConf = CronConf {
+          cronAmazonConfig       = Nothing
+        , cronDBConfig           =
+            "user='kontra' password='kontra' dbname='kontrakcja'"
+        , cronMaxDBConnections   = 100
+        , cronRedisCacheConfig   = Nothing
+        , cronLocalFileCacheSize = 200000000
+        , cronLogConfig          = testLogConfig
+        , cronGuardTimeConf      = testGTConf
+        , cronCgiGrpConfig       = Nothing
+        , cronMixpanelToken      = Nothing
+        , cronNtpServers         = [ show n ++ ".ubuntu.pool.ntp.org" | n <- [0..3] ]
+        , cronSalesforceConf     = Nothing
+        , cronInvoicingSFTPConf  = Nothing
+        , cronPlanhatConf        = Nothing
+        , cronMonitoringConf     = Nothing
+        , cronMailNoreplyAddress = "noreply@scrive.com"
+        , cronConsumerCronMaxJobs        = 1
         , cronConsumerSealingMaxJobs     = 1
         , cronConsumerSigningMaxJobs     = 1
         , cronConsumerExtendingMaxJobs   = 1
         , cronConsumerAPICallbackMaxJobs = 1
         , cronConsumerAmazonMaxJobs      = 1
+        , cronNetsSignConfig = Nothing
         }
 
       -- make timeouts small, so that the test runs faster
