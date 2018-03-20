@@ -357,7 +357,15 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToSignMethodNOBankIDToSMSEvidence      |
   ChangeAuthenticationToSignMethodNOBankIDToSEBankIDEvidence |
   ConsentQuestionAnswered |
-  ConsentQuestionAnsweredWithDescription
+  ConsentQuestionAnsweredWithDescription |
+  ChangeAuthenticationToViewMethodSMSPinToStandardEvidence  |
+  ChangeAuthenticationToViewMethodSMSPinToSEBankIDEvidence  |
+  ChangeAuthenticationToViewMethodSMSPinToNOBankIDEvidence  |
+  ChangeAuthenticationToViewMethodSMSPinToDKNemIDEvidence   |
+  ChangeAuthenticationToViewMethodStandardToSMSPinEvidence  |
+  ChangeAuthenticationToViewMethodSEBankIDToSMSPinEvidence  |
+  ChangeAuthenticationToViewMethodNOBankIDToSMSPinEvidence  |
+  ChangeAuthenticationToViewMethodDKNemIDToSMSPinEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -567,6 +575,15 @@ instance ToSQL EvidenceEventType where
   toSQL (Current ChangeAuthenticationToSignMethodNOBankIDToSEBankIDEvidence) = toSQL (133::Int16)
   toSQL (Current ConsentQuestionAnswered) = toSQL (134::Int16)
   toSQL (Current ConsentQuestionAnsweredWithDescription) = toSQL (135::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodSMSPinToStandardEvidence ) = toSQL (136::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodSMSPinToSEBankIDEvidence ) = toSQL (137::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodSMSPinToNOBankIDEvidence ) = toSQL (138::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodSMSPinToDKNemIDEvidence  ) = toSQL (139::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodStandardToSMSPinEvidence ) = toSQL (140::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodSEBankIDToSMSPinEvidence ) = toSQL (141::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodNOBankIDToSMSPinEvidence ) = toSQL (142::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodDKNemIDToSMSPinEvidence  ) = toSQL (143::Int16)
+
 
 instance FromSQL EvidenceEventType where
   type PQBase EvidenceEventType = PQBase Int16
@@ -708,26 +725,43 @@ instance FromSQL EvidenceEventType where
       133 -> return (Current ChangeAuthenticationToSignMethodNOBankIDToSEBankIDEvidence)
       134 -> return (Current ConsentQuestionAnswered)
       135 -> return (Current ConsentQuestionAnsweredWithDescription)
+      136 -> return (Current ChangeAuthenticationToViewMethodSMSPinToStandardEvidence )
+      137 -> return (Current ChangeAuthenticationToViewMethodSMSPinToSEBankIDEvidence )
+      138 -> return (Current ChangeAuthenticationToViewMethodSMSPinToNOBankIDEvidence )
+      139 -> return (Current ChangeAuthenticationToViewMethodSMSPinToDKNemIDEvidence )
+      140 -> return (Current ChangeAuthenticationToViewMethodStandardToSMSPinEvidence )
+      141 -> return (Current ChangeAuthenticationToViewMethodSEBankIDToSMSPinEvidence )
+      142 -> return (Current ChangeAuthenticationToViewMethodNOBankIDToSMSPinEvidence )
+      143 -> return (Current ChangeAuthenticationToViewMethodDKNemIDToSMSPinEvidence )
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 135)]
+        reRange = [(1, 143)]
       , reValue = n
       }
 
 
 authViewChangeToEvidence :: (AuthenticationToViewMethod, AuthenticationToViewMethod) -> Maybe CurrentEvidenceEventType
 authViewChangeToEvidence (StandardAuthenticationToView, StandardAuthenticationToView) = Nothing
+authViewChangeToEvidence (StandardAuthenticationToView, SMSPinAuthenticationToView )  = Just ChangeAuthenticationToViewMethodStandardToSMSPinEvidence
 authViewChangeToEvidence (StandardAuthenticationToView, SEBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodStandardToSEBankIDEvidence
 authViewChangeToEvidence (StandardAuthenticationToView, NOBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodStandardToNOBankIDEvidence
 authViewChangeToEvidence (StandardAuthenticationToView, DKNemIDAuthenticationToView ) = Just ChangeAuthenticationToViewMethodStandardToDKNemIDEvidence
+authViewChangeToEvidence (SMSPinAuthenticationToView  , StandardAuthenticationToView) = Just ChangeAuthenticationToViewMethodSMSPinToStandardEvidence
+authViewChangeToEvidence (SMSPinAuthenticationToView  , SMSPinAuthenticationToView)   = Nothing
+authViewChangeToEvidence (SMSPinAuthenticationToView  , SEBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodSMSPinToSEBankIDEvidence
+authViewChangeToEvidence (SMSPinAuthenticationToView  , NOBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodSMSPinToNOBankIDEvidence
+authViewChangeToEvidence (SMSPinAuthenticationToView  , DKNemIDAuthenticationToView)  = Just ChangeAuthenticationToViewMethodSMSPinToDKNemIDEvidence
 authViewChangeToEvidence (SEBankIDAuthenticationToView, StandardAuthenticationToView) = Just ChangeAuthenticationToViewMethodSEBankIDToStandardEvidence
+authViewChangeToEvidence (SEBankIDAuthenticationToView, SMSPinAuthenticationToView)   = Just ChangeAuthenticationToViewMethodSEBankIDToSMSPinEvidence
 authViewChangeToEvidence (SEBankIDAuthenticationToView, SEBankIDAuthenticationToView) = Nothing
 authViewChangeToEvidence (SEBankIDAuthenticationToView, NOBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodSEBankIDToNOBankIDEvidence
 authViewChangeToEvidence (SEBankIDAuthenticationToView, DKNemIDAuthenticationToView ) = Just ChangeAuthenticationToViewMethodSEBankIDToDKNemIDEvidence
 authViewChangeToEvidence (NOBankIDAuthenticationToView, StandardAuthenticationToView) = Just ChangeAuthenticationToViewMethodNOBankIDToStandardEvidence
+authViewChangeToEvidence (NOBankIDAuthenticationToView, SMSPinAuthenticationToView)   = Just ChangeAuthenticationToViewMethodNOBankIDToSMSPinEvidence
 authViewChangeToEvidence (NOBankIDAuthenticationToView, SEBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodNOBankIDToSEBankIDEvidence
 authViewChangeToEvidence (NOBankIDAuthenticationToView, NOBankIDAuthenticationToView) = Nothing
 authViewChangeToEvidence (NOBankIDAuthenticationToView, DKNemIDAuthenticationToView ) = Just ChangeAuthenticationToViewMethodNOBankIDToDKNemIDEvidence
 authViewChangeToEvidence (DKNemIDAuthenticationToView , StandardAuthenticationToView) = Just ChangeAuthenticationToViewMethodDKNemIDToStandardEvidence
+authViewChangeToEvidence (DKNemIDAuthenticationToView , SMSPinAuthenticationToView)   = Just ChangeAuthenticationToViewMethodDKNemIDToSMSPinEvidence
 authViewChangeToEvidence (DKNemIDAuthenticationToView , SEBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodDKNemIDToSEBankIDEvidence
 authViewChangeToEvidence (DKNemIDAuthenticationToView , NOBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodDKNemIDToNOBankIDEvidence
 authViewChangeToEvidence (DKNemIDAuthenticationToView , DKNemIDAuthenticationToView ) = Nothing

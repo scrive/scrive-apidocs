@@ -134,6 +134,7 @@ authenticationToViewJSON StandardAuthenticationToView = toJSValue ("standard"::S
 authenticationToViewJSON SEBankIDAuthenticationToView = toJSValue ("se_bankid"::String)
 authenticationToViewJSON NOBankIDAuthenticationToView = toJSValue ("no_bankid"::String)
 authenticationToViewJSON DKNemIDAuthenticationToView  = toJSValue ("dk_nemid"::String)
+authenticationToViewJSON SMSPinAuthenticationToView   = toJSValue ("sms_pin"::String)
 
 authenticationToSignJSON :: AuthenticationToSignMethod -> JSValue
 authenticationToSignJSON StandardAuthenticationToSign = toJSValue ("standard"::String)

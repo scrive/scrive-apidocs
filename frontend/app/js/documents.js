@@ -290,16 +290,38 @@ var Document = exports.Document = Backbone.Model.extend({
         return a.name();
       });
     },
-    requestPin : function(successCallback,errorCallback) {
-        var document = this;
-        return new Submit({
-            url : "/api/frontend/documents/" + document.documentid() +  "/" + document.currentSignatory().signatoryid() + "/sendsmspin",
-            method: "POST",
-            mobile: document.currentSignatory().mobile(),
-            ajax: true,
-            ajaxsuccess : successCallback,
-            ajaxerror : errorCallback
-            });
+    requestPinToView : function(successCallback,errorCallback) {
+      var document = this;
+      return new Submit({
+          url : "/api/frontend/documents/" + document.documentid() +  "/" + document.currentSignatory().signatoryid() + "/sendsmspintoview",
+          method: "POST",
+          mobile: document.currentSignatory().mobile(),
+          ajax: true,
+          ajaxsuccess : successCallback,
+          ajaxerror : errorCallback
+          });
+    },
+    requestPinToSign : function(successCallback,errorCallback) {
+      var document = this;
+      return new Submit({
+          url : "/api/frontend/documents/" + document.documentid() +  "/" + document.currentSignatory().signatoryid() + "/sendsmspin",
+          method: "POST",
+          mobile: document.currentSignatory().mobile(),
+          ajax: true,
+          ajaxsuccess : successCallback,
+          ajaxerror : errorCallback
+          });
+    },
+    identifyToViewWithSMSPin : function(pin,successCallback,errorCallback) {
+      var document = this;
+      return new Submit({
+          url : "/api/frontend/documents/" + document.documentid() +  "/" + document.currentSignatory().signatoryid() + "/smspinidentifytoview",
+          method: "POST",
+          sms_pin: pin,
+          ajax: true,
+          ajaxsuccess : successCallback,
+          ajaxerror : errorCallback
+          });
     },
     cancelSigning: function(successCallback,errorCallback) {
       var document = this;
@@ -629,7 +651,7 @@ var Document = exports.Document = Backbone.Model.extend({
             return false;
         }
 
-        if (this.author().smsPinAuthenticationToSign()) {
+        if (this.author().smsPinAuthenticationToView() || this.author().smsPinAuthenticationToSign()) {
             // We don't support sms pin for author from design view
             return false;
         }

@@ -91,4 +91,7 @@ kontraMigrations = [
   , createSignatoryLinkConsentQuestionsTable
   , addConsentTitleToSignatoryLink
   , documentSigningJobsAddConsentResponses
+  , featureFlagsAddSMSPinAuthToView
+  , addSMSPinTypeToSMSMSPin
+  , addSMSPinAuthAdjustmentsToEIDAuthentications
   ]

@@ -1,6 +1,7 @@
 module FeatureFlags.Migrations (
   createFeatureFlags
 , featureFlagsAddNOAuthToSign
+, featureFlagsAddSMSPinAuthToView
 ) where
 
 import Control.Monad.Catch
@@ -48,5 +49,15 @@ featureFlagsAddNOAuthToSign = Migration {
 , mgrAction = StandardMigration $ do
     runQuery_ $ sqlAlterTable (tblName tableFeatureFlags)  [ sqlAddColumn $
         tblColumn { colName = "can_use_no_authentication_to_sign", colType = BoolT, colNullable = False, colDefault = Just "true" }
+      ]
+}
+
+featureFlagsAddSMSPinAuthToView :: (MonadThrow m, MonadDB m) => Migration m
+featureFlagsAddSMSPinAuthToView = Migration {
+  mgrTableName = tblName tableFeatureFlags
+, mgrFrom = 2
+, mgrAction = StandardMigration $ do
+    runQuery_ $ sqlAlterTable (tblName tableFeatureFlags)  [ sqlAddColumn $
+        tblColumn { colName = "can_use_sms_pin_authentication_to_view", colType = BoolT, colNullable = False, colDefault = Just "true" }
       ]
 }

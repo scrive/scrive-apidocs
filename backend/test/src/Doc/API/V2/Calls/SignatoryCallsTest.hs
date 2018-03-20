@@ -84,7 +84,7 @@ testDocApiV2SigSendSmsPin = do
 
   _start <- mockDocTestRequestHelper ctx POST [] (docApiV2Start did) 200
 
-  _send_pin <- testRequestHelper ctx POST [("mobile", inText "+46123456789")] (docApiV2SigSendSmsPin did slid) 202
+  _send_pin <- testRequestHelper ctx POST [("mobile", inText "+46123456789")] (docApiV2SigSendSmsPinToSign did slid) 202
   return ()
 
 testDocApiV2SigSetAttachment :: TestEnv ()

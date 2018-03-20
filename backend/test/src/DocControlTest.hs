@@ -215,7 +215,7 @@ testSigningWithPin = do
     --   randomUpdate . MarkDocumentSeen (signatorylinkid siglink) (signatorymagichash siglink)
     --             =<< signatoryActor (set ctxtime t ctx) siglink
 
-    pin <- dbQuery $ GetSignatoryPin (signatorylinkid siglink) (getMobile siglink)
+    pin <- dbQuery $ GetSignatoryPin SMSPinToSign (signatorylinkid siglink) (getMobile siglink)
     preq <- mkRequest GET [ ]
     (_,ctx') <- updateDocumentWithID $ \did ->
                 lift . runTestKontra preq ctx $ handleSignShowSaveMagicHash did (signatorylinkid siglink) (signatorymagichash siglink)

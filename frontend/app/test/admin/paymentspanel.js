@@ -53,7 +53,7 @@ describe("admin/paymentspanel", function () {
     var component = renderComponent();
     var checkboxes = $(".checkbox", component.getDOMNode());
     // We should have 13 checkboxes (one for each option)
-    assert.equal(checkboxes.size(), 13);
+    assert.equal(checkboxes.size(), 14);
     // We should have one select (for price plan)
     var selects = $(".select", component.getDOMNode());
     assert.equal(selects.size(), 1);
@@ -70,7 +70,7 @@ describe("admin/paymentspanel", function () {
 
     component.forceUpdate();
     // We should have 13 disabled checkboxes (one for each option)
-    assert.equal(checkboxes.size(), 13);
+    assert.equal(checkboxes.size(), 14);
 
   });
 
@@ -100,16 +100,17 @@ describe("admin/paymentspanel", function () {
       canUseNOAuthenticationToSign: true,
       canUseSEAuthenticationToView: true,
       canUseSEAuthenticationToSign: true,
-      canUseSMSPinAuthenticationToSign: true,
+      canUseSMSPinAuthenticationToView: true,
+      canUseSMSPinAuthenticationToSign: true
     });
     component.forceUpdate();
     var checkedCheckboxes = $(".checkbox.checked", component.getDOMNode());
-    assert.equal(checkedCheckboxes.size(), 11); // Two options where set to false
+    assert.equal(checkedCheckboxes.size(), 12); // Two options where set to false
 
     TestUtils.Simulate.click(checkedCheckboxes[0]); // Lets pick one to uncheck
     component.forceUpdate();
     var changedCheckedCheckboxes = $(".checkbox.checked", component.getDOMNode());
-    assert.equal(changedCheckedCheckboxes.size(), 10);
+    assert.equal(changedCheckedCheckboxes.size(), 11);
 
 
   });

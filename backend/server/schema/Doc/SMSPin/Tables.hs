@@ -5,13 +5,14 @@ import DB
 tableSignatorySMSPins :: Table
 tableSignatorySMSPins = tblTable {
     tblName = "signatory_sms_pins"
-  , tblVersion = 2
+  , tblVersion = 3
   , tblColumns = [
       tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "phone_number", colType = TextT, colNullable = False }
     , tblColumn { colName = "pin", colType = TextT, colNullable = False }
+    , tblColumn { colName = "pin_type", colType = SmallIntT, colNullable = False }
     ]
-  , tblPrimaryKey = pkOnColumns ["phone_number", "signatory_link_id"]
+  , tblPrimaryKey = pkOnColumns ["phone_number", "signatory_link_id", "pin_type"]
   , tblForeignKeys = [
       (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
     ]

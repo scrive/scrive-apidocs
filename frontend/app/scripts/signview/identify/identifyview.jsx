@@ -6,9 +6,12 @@ var NorwegianIdentifyView = require("./norwegian/norwegianidentifyview");
 var NorwegianIdentifyModel = require("./norwegian/norwegianidentifymodel");
 var DanishIdentifyView = require("./danish/danishidentifyview");
 var DanishIdentifyModel = require("./danish/danishidentifymodel");
+var SMSPinIdentifyView = require("./smspin/smspinidentifyview");
+var SMSPinIdentifyModel = require("./smspin/smspinidentifymodel");
 var Document = require("../../../js/documents.js").Document;
 var $ = require("jquery");
 var MaskedPersonalNumber = require("./masked_personal_number");
+var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
 
   module.exports = React.createClass({
 
@@ -39,6 +42,11 @@ var MaskedPersonalNumber = require("./masked_personal_number");
           doc: this.props.doc,
           siglinkid: this.props.siglinkid
         });
+      } else if (this.props.doc.currentSignatory().smsPinAuthenticationToView()) {
+        model = new SMSPinIdentifyModel({
+          doc: this.props.doc,
+          siglinkid: this.props.siglinkid
+        });
       }
       return {model: model};
     },
@@ -47,17 +55,6 @@ var MaskedPersonalNumber = require("./masked_personal_number");
       var signatoryId = this.props.siglinkid;
       var urlparams = window.brandingdomainid + "/" + documentId + "/" + window.brandinghash;
       return window.cdnbaseurl + "/signview_logo/" + urlparams;
-    },
-    bankidLogo: function () {
-      return (window.cdnbaseurl
-             + (this.state.model.isSwedish()
-               ? "/img/bankid2.png"
-               : (this.state.model.isNorwegian()
-                 ? "/img/bankid-no.png"
-                 : "/img/nemid-dk.png")));
-    },
-    swedishMobileBankidLogo: function () {
-      return (window.cdnbaseurl + "/img/mobilebankid.png");
     },
     verifyIdentityText: function () {
       var model = this.state.model;
@@ -79,6 +76,7 @@ var MaskedPersonalNumber = require("./masked_personal_number");
       var author = doc.author();
       var authorName = author.name();
       var personalNumber = sig.personalnumber();
+      var mobileNumber = sig.mobile();
 
       return (
         <div className="identify-content">
@@ -89,7 +87,15 @@ var MaskedPersonalNumber = require("./masked_personal_number");
           </div>
           <div className="identify-box">
             <div className="identify-box-header">
-              {this.verifyIdentityText()}
+              { /* if */ sig.name() &&
+                <HtmlTextWithSubstitution
+                  secureText={localization.verifyIdentityWithName}
+                  subs={{".name-of-signatory": sig.name()}}
+                />
+              }
+              { /* else */ !sig.name() &&
+                <span>{localization.verifyIdentityWithoutName}</span>
+              }
             </div>
             { /* if */ model.isSwedish() &&
               <div className="identify-box-content">
@@ -111,6 +117,12 @@ var MaskedPersonalNumber = require("./masked_personal_number");
                 model={model}
               />
             }
+            { /* else if */ model.isSMSPin() &&
+              <SMSPinIdentifyView
+                ref="identify"
+                model={model}
+              />
+            }
             <div className="identify-box-footer">
               <div className="identify-box-footer-text">
                 <div>
@@ -119,20 +131,35 @@ var MaskedPersonalNumber = require("./masked_personal_number");
                 <div>
                   {localization.identifyDocument} <b>{doc.title()}</b>
                 </div>
-                <div>
-                  {localization.yourIdNumber} <MaskedPersonalNumber
-                    number={personalNumber}
-                    placeholder="Empty"
-                    isNorwegian={model.isNorwegian()}
-                    isDanish={model.isDanish()}
-                  />
-                </div>
+                { /* if */ (model.isSwedish() || model.isNorwegian() || model.isDanish()) &&
+                  <div>
+                    {localization.yourIdNumber} <MaskedPersonalNumber
+                      number={personalNumber}
+                      placeholder="Empty"
+                      isNorwegian={model.isNorwegian()}
+                      isDanish={model.isDanish()}
+                    />
+                  </div>
+                }
+                { /* if */ (model.isSMSPin()) &&
+                  <div>
+                    {localization.yourMobileNumber} <b>{mobileNumber}</b>
+                  </div>
+                }
               </div>
               <div className="identify-box-footer-logo">
                 { /* if */ model.isSwedish() &&
-                <img src={this.swedishMobileBankidLogo()} className="identify-box-footer-first-logo"/>
+                  <img src={window.cdnbaseurl + "/img/mobilebankid.png"} className="identify-box-footer-first-logo"/>
                 }
-                <img src={this.bankidLogo()} />
+                { /* if */ model.isSwedish() &&
+                  <img src={window.cdnbaseurl + "/img/bankid2.png"} />
+                }
+                { /* if */ model.isNorwegian() &&
+                  <img src={window.cdnbaseurl + "/img/bankid-no.png"} />
+                }
+                { /* if */ model.isDanish() &&
+                  <img src={window.cdnbaseurl + "/img/nemid-dk.png"} />
+                }
               </div>
             </div>
           </div>

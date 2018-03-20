@@ -6,6 +6,7 @@ module EID.Authentication.Model (
   , MergeCGISEBankIDAuthentication(..)
   , MergeNetsNOBankIDAuthentication(..)
   , MergeNetsDKNemIDAuthentication(..)
+  , MergeSMSPinAuthentication(..)
   , GetEAuthentication(..)
   , GetEAuthenticationWithoutSession(..)
   ) where
@@ -35,6 +36,7 @@ data EAuthentication
   = CGISEBankIDAuthentication_ !CGISEBankIDAuthentication
   | NetsNOBankIDAuthentication_ !NetsNOBankIDAuthentication
   | NetsDKNemIDAuthentication_ !NetsDKNemIDAuthentication
+  | SMSPinAuthentication_ T.Text -- param is a phone number
 
 ----------------------------------------
 
@@ -46,6 +48,7 @@ data AuthenticationProvider
   = CgiGrpBankID
   | NetsNOBankID
   | NetsDKNemID
+  | SMSPinAuth
     deriving (Eq, Ord, Show)
 
 instance PQFormat AuthenticationProvider where
@@ -59,8 +62,9 @@ instance FromSQL AuthenticationProvider where
       1 -> return CgiGrpBankID
       2 -> return NetsNOBankID
       3 -> return NetsDKNemID
+      4 -> return SMSPinAuth
       _ -> throwM RangeError {
-        reRange = [(1, 3)]
+        reRange = [(1, 4)]
       , reValue = n
       }
 
@@ -69,7 +73,7 @@ instance ToSQL AuthenticationProvider where
   toSQL CgiGrpBankID = toSQL (1::Int16)
   toSQL NetsNOBankID = toSQL (2::Int16)
   toSQL NetsDKNemID  = toSQL (3::Int16)
-
+  toSQL SMSPinAuth   = toSQL (4::Int16)
 ----------------------------------------
 
 -- | General version of inserting some authentication for a given signatory or replacing existing one.
@@ -137,6 +141,13 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsDKNemIDAuthentication (
         sqlSet "signatory_name" netsDKNemIDSignatoryName
         sqlSet "signatory_date_of_birth" netsDKNemIDDateOfBirth
 
+data MergeSMSPinAuthentication = MergeSMSPinAuthentication SessionID SignatoryLinkID T.Text
+instance (MonadDB m, MonadMask m) => DBUpdate m MergeSMSPinAuthentication () where
+  update (MergeSMSPinAuthentication sid slid mobile) = do
+    dbUpdate $ MergeAuthenticationInternal sid slid $ do
+        sqlSet "provider" SMSPinAuth
+        sqlSet "signatory_phone_number" mobile
+
 -- Get authentication - internal - just to unify code
 data GetEAuthenticationInternal = GetEAuthenticationInternal SignatoryLinkID (Maybe SessionID)
 instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthenticationInternal (Maybe EAuthentication) where
@@ -166,25 +177,26 @@ data GetEAuthentication = GetEAuthentication SessionID SignatoryLinkID
 instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthentication (Maybe EAuthentication) where
   query (GetEAuthentication sid slid) = query (GetEAuthenticationInternal slid (Just sid) )
 
-fetchEAuthentication :: (AuthenticationProvider, (Maybe Int16), ByteString, T.Text, Maybe T.Text, Maybe T.Text, Maybe T.Text, Maybe ByteString, Maybe T.Text) -> EAuthentication
-fetchEAuthentication (provider, internal_provider, signature, signatory_name, signatory_personal_number, signatory_phone_number, signatory_dob, ocsp_response, msignatory_ip) = case provider of
+fetchEAuthentication :: (AuthenticationProvider, (Maybe Int16), Maybe ByteString, Maybe T.Text, Maybe T.Text, Maybe T.Text, Maybe T.Text, Maybe ByteString, Maybe T.Text) -> EAuthentication
+fetchEAuthentication (provider, internal_provider, msignature, msignatory_name, signatory_personal_number, signatory_phone_number, signatory_dob, ocsp_response, msignatory_ip) = case provider of
   CgiGrpBankID -> CGISEBankIDAuthentication_ CGISEBankIDAuthentication {
-    cgisebidaSignatoryName = signatory_name
+    cgisebidaSignatoryName = fromJust msignatory_name
   , cgisebidaSignatoryPersonalNumber = fromJust signatory_personal_number
   , cgisebidaSignatoryIP = fromMaybe "" msignatory_ip
-  , cgisebidaSignature = signature
+  , cgisebidaSignature = fromJust msignature
   , cgisebidaOcspResponse = fromJust ocsp_response
   }
   NetsNOBankID -> NetsNOBankIDAuthentication_ NetsNOBankIDAuthentication {
     netsNOBankIDInternalProvider = unsafeNetsNOBankIDInternalProviderFromInt16 (fromJust internal_provider)
-  , netsNOBankIDSignatoryName = signatory_name
+  , netsNOBankIDSignatoryName = fromJust msignatory_name
   , netsNOBankIDPhoneNumber   = signatory_phone_number
   , netsNOBankIDDateOfBirth   = fromJust signatory_dob
-  , netsNOBankIDCertificate   = signature
+  , netsNOBankIDCertificate   = fromJust msignature
   }
   NetsDKNemID -> NetsDKNemIDAuthentication_ NetsDKNemIDAuthentication {
     netsDKNemIDInternalProvider = unsafeNetsDKNemIDInternalProviderFromInt16 (fromJust internal_provider)
-  , netsDKNemIDSignatoryName = signatory_name
+  , netsDKNemIDSignatoryName = fromJust msignatory_name
   , netsDKNemIDDateOfBirth   = fromJust signatory_dob
-  , netsDKNemIDCertificate   = signature
+  , netsDKNemIDCertificate   = fromJust msignature
   }
+  SMSPinAuth -> SMSPinAuthentication_ (fromJust signatory_phone_number)

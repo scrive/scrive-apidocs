@@ -358,7 +358,7 @@ var Field = exports.Field = Backbone.Model.extend({
         validation = new PhoneValidation();
       }
       // If we have mobile delivery, we need a non-empty mobile
-      if (signatory.mobileDelivery() || signatory.emailMobileDelivery()) {
+      if (signatory.mobileDelivery() || signatory.emailMobileDelivery() || signatory.smsPinAuthenticationToView()) {
         validation = validation.concat(new NotEmptyValidation());
       }
       // Else it can be empty
@@ -502,7 +502,7 @@ var Field = exports.Field = Backbone.Model.extend({
       } else if (this.isEmail()) {
         return !(this.signatory().emailDelivery() || this.signatory().emailMobileDelivery());
       } else if (this.isMobile()) {
-        return !(this.signatory().mobileDelivery() || this.signatory().emailMobileDelivery());
+        return !(this.signatory().mobileDelivery() || this.signatory().emailMobileDelivery() || this.signatory().smsPinAuthenticationToView());
       } else if (this.isSSN()) {
         return !this.signatory().seBankIDAuthenticationToView();
       } else {

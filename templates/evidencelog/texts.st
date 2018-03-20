@@ -87,6 +87,22 @@ ChangeAuthenticationToViewMethodSEBankIDToDKNemIDEvidenceLog = The user <span cl
 ###
 ChangeAuthenticationToViewMethodNOBankIDToDKNemIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Norwegian BankID” to “Danish NemID”.
 ###
+ChangeAuthenticationToViewMethodStandardToSMSPinEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “no extra authentication” to “PIN by SMS”.
+###
+ChangeAuthenticationToViewMethodNOBankIDToSMSPinEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Norwegian BankID” to “PIN by SMS”.
+###
+ChangeAuthenticationToViewMethodSEBankIDToSMSPinEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Swedish BankID” to “PIN by SMS”.
+###
+ChangeAuthenticationToViewMethodDKNemIDToSMSPinEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Danish NemID” to “PIN by SMS”.
+###
+ChangeAuthenticationToViewMethodSMSPinToStandardEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “PIN by SMS” to “no extra authentication”.
+###
+ChangeAuthenticationToViewMethodSMSPinToNOBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “PIN by SMS” to “Norwegian BankID”.
+###
+ChangeAuthenticationToViewMethodSMSPinToSEBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “PIN by SMS” to “Swedish BankID”.
+###
+ChangeAuthenticationToViewMethodSMSPinToDKNemIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “PIN by SMS” to “Danish NemID”.
+###
 ChangeAuthenticationToSignMethodNOBankIDToStandardEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Norwegian BankID” to "no extra authentication”.
 ###
 ChangeAuthenticationToSignMethodNOBankIDToSEBankIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Norwegian BankID” to “PIN by SMS”.
@@ -594,7 +610,11 @@ VisitedViewForAuthenticationEvidenceArchive=$_VisitedViewForAuthenticationEviden
 ###
 VisitedViewForAuthenticationEvidenceVerificationPages=$_VisitedViewForAuthenticationEvidenceVerificationPages()$
 ###
-AuthenticatedToViewEvidenceLog=<span class="actor"/> verified their $providerType()$ identity through $provider()$ to access the document. $elegVerificationAuth()$
+AuthenticatedToViewEvidenceLog=$if(provider_sms_pin)$ $AuthenticatedToViewEvidenceLogWithSMSPin()$ $else$ $AuthenticatedToViewEvidenceLogWithEID()$ $endif$
+###
+AuthenticatedToViewEvidenceLogWithSMSPin=<span class="actor"/> verified their identity through “PIN by SMS” to access the document.
+###
+AuthenticatedToViewEvidenceLogWithEID=<span class="actor"/> verified their $providerType()$ identity through $provider()$ to access the document. $elegVerificationAuth()$
 ###
 elegVerificationAuth=
 <br/>
@@ -636,10 +656,14 @@ $elseif(provider_nobankid)$
   $_AuthenticatedToViewEvidenceArchiveNOBankID()$
 $elseif(provider_dknemid)$
   $_AuthenticatedToViewEvidenceArchiveDKNemID()$
+$elseif(provider_sms_pin)$
+  $_AuthenticatedToViewEvidenceArchiveSMSPin()$
 $endif$
 ###
 AuthenticatedToViewEvidenceVerificationPages=*
-$if(signatory_dob)$
+$if(provider_sms_pin)$
+  $_AuthenticatedToViewEvidenceVerificationPagesSMSPin()$
+$elseif(signatory_dob)$
   $if(provider_sebankid)$
     $_AuthenticatedToViewEvidenceVerificationPagesWithDateSEBankID()$
   $elseif(provider_nobankid)$

@@ -427,12 +427,16 @@ apiCallV1Ready did = logDocument did . api $ do
       SEBankIDAuthenticationToView -> isGood $ asValidSwedishSSN $ getPersonalNumber sl
       NOBankIDAuthenticationToView -> isGood $ asValidNorwegianSSN $ getPersonalNumber sl
       DKNemIDAuthenticationToView  -> isGood $ asValidDanishSSN $ getPersonalNumber sl
+      SMSPinAuthenticationToView   -> True
       StandardAuthenticationToView -> True
     signatoryHasValidPhoneForIdentifyToView sl =
       let resultValidPhone = asValidPhoneForNorwegianBankID $ getMobile sl in
-      if (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView)
-         then isGood resultValidPhone || isEmpty resultValidPhone
-         else True
+      case signatorylinkauthenticationtoviewmethod sl of
+        SEBankIDAuthenticationToView -> True
+        NOBankIDAuthenticationToView -> isGood resultValidPhone || isEmpty resultValidPhone
+        DKNemIDAuthenticationToView  -> True
+        SMSPinAuthenticationToView   -> isGood $ asValidPhoneForSMS $ getMobile sl
+        StandardAuthenticationToView -> True
 
 apiCallV1Cancel :: Kontrakcja m =>  DocumentID -> m Response
 apiCallV1Cancel did = logDocument did . api $ do
@@ -719,6 +723,7 @@ apiCallV1ChangeAuthenticationToView did slid = logDocumentAndSignatory did slid 
       Nothing -> throwM . SomeDBExtraException $ badInput $
         "Invalid authentication method: `" ++ fromMaybe "" authentication_type ++ "` was given. Supported values are: `standard`, `se_bankid`, `no_bankid`."
       Just StandardAuthenticationToView -> return (StandardAuthenticationToView, Nothing, Nothing)
+      Just SMSPinAuthenticationToView   -> return (SMSPinAuthenticationToView  , Nothing, mobile_number)
       Just SEBankIDAuthenticationToView -> return (SEBankIDAuthenticationToView, personal_number, Nothing)
       Just NOBankIDAuthenticationToView -> return (NOBankIDAuthenticationToView, personal_number, mobile_number)
       Just DKNemIDAuthenticationToView  -> return (DKNemIDAuthenticationToView , personal_number, Nothing)
@@ -741,11 +746,13 @@ apiCallV1ChangeAuthenticationToView did slid = logDocumentAndSignatory did slid 
   where
     isValidSSNForAuthenticationToView :: AuthenticationToViewMethod -> String -> Bool
     isValidSSNForAuthenticationToView StandardAuthenticationToView _ = True
+    isValidSSNForAuthenticationToView SMSPinAuthenticationToView   _ = True
     isValidSSNForAuthenticationToView SEBankIDAuthenticationToView ssn = isGood $ asValidSwedishSSN   ssn
     isValidSSNForAuthenticationToView NOBankIDAuthenticationToView ssn = isGood $ asValidNorwegianSSN ssn
     isValidSSNForAuthenticationToView DKNemIDAuthenticationToView  ssn = isGood $ asValidDanishSSN    ssn
     isValidPhoneForAuthenticationToView :: AuthenticationToViewMethod -> String -> Bool
     isValidPhoneForAuthenticationToView StandardAuthenticationToView _ = True
+    isValidPhoneForAuthenticationToView SMSPinAuthenticationToView phone = isGood (asValidPhoneForSMS phone)
     isValidPhoneForAuthenticationToView SEBankIDAuthenticationToView _ = True
     isValidPhoneForAuthenticationToView DKNemIDAuthenticationToView  _ = True
     isValidPhoneForAuthenticationToView NOBankIDAuthenticationToView phone =
@@ -1241,7 +1248,7 @@ apiCallV1SendSMSPinCode did slid = logDocumentAndSignatory did slid . api $ do
     phone <- if not $ null slidPhone
                 then return slidPhone
                 else apiGuardJustM (badInput "Phone number provided is not valid.") $ getOptionalField asValidPhone "phone"
-    pin <- dbQuery $ GetSignatoryPin slid phone
+    pin <- dbQuery $ GetSignatoryPin SMSPinToSign slid phone
     sendPinCode sl phone pin
     Ok <$> (J.runJSONGenT $ J.value "sent" True)
 
@@ -1341,7 +1348,7 @@ getValidPin slid fields = do
                 (True, _) -> return slidPhone
                 (False, Just (StringFTV v)) -> return v
                 (False, _) -> throwM . SomeDBExtraException $ badInput "Phone number not provided by author, you need to provide it"
-  pin' <- dbQuery $ GetSignatoryPin slid phone
+  pin' <- dbQuery $ GetSignatoryPin SMSPinToSign slid phone
   if (pin == pin')
     then return $ Just pin
     else return $ Nothing

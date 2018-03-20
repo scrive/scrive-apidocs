@@ -83,6 +83,7 @@ subscriptionJSON company users startedLastMonth ff = runJSONGen $ do
   value "can_use_no_authentication_to_sign" $ ffCanUseNOAuthenticationToSign ff
   value "can_use_se_authentication_to_view" $ ffCanUseSEAuthenticationToView ff
   value "can_use_se_authentication_to_sign" $ ffCanUseSEAuthenticationToSign ff
+  value "can_use_sms_pin_authentication_to_view" $ ffCanUseSMSPinAuthenticationToView ff
   value "can_use_sms_pin_authentication_to_sign" $ ffCanUseSMSPinAuthenticationToSign ff
 
 userStatsToJSON :: (UTCTime -> String) -> [UserUsageStats] -> JSValue

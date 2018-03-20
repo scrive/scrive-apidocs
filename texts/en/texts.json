@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Accept",
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
@@ -126,6 +126,7 @@
 "_VerifyIdentityWithName":"<span class='name-of-signatory'></span>, to see the document verify your identity",
 "_VerifyIdentityWithoutName":"To see the document verify your identity",
 "_YourIdNumber":"Your ID number",
+"_YourMobileNumber":"Your mobile number",
 "_ZoomOut1":"Zoom out and try again.",
 "_ZoomOut2":"To draw your signature you need to be zoomed out.",
 "_ZoomOutMore":"Zoom out a bit more",
@@ -522,6 +523,7 @@
 "_docviewSignatoryAuthenticationToViewMethodLabel":"Authentication to view",
 "_docviewSignatoryAuthenticationToViewNOBankID":"Norwegian BankID",
 "_docviewSignatoryAuthenticationToViewSEBankID":"Swedish BankID",
+"_docviewSignatoryAuthenticationToViewSMSPin":"PIN by SMS",
 "_docviewSignatoryAuthenticationToViewStandard":"no extra authentication",
 "_docviewSignatoryConfirmationEmail":"email",
 "_docviewSignatoryConfirmationEmailSMS":"email and SMS",
@@ -621,6 +623,9 @@
 "_historyHide":"Hide",
 "_historyParty":"Party",
 "_historyTime":"Time",
+"_identifyWithPinEnterPin":"Enter your SMS PIN",
+"_identifyWithPinInfotext":"Check your mobile phone",
+"_identifyWithPinInvalidPin":"Invalid PIN",
 "_imageFileFormatNotSpported":"File format is not supported. Select an image (PNG/JPG) instead.",
 "_imageFileFormatNotSpportedIco":"File format is not supported. Select PNG or ICO file instead.",
 "_internalServerError":"<h1>Something went wrong</h1><h4>If the problem remains please contact our support at support@scrive.com or +46 8 519 779 00.</h4>",

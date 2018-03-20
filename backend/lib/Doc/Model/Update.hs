@@ -625,7 +625,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
             && (isJust $ ssnField)
             && (not . null $ fromMaybe [] $ fmap fieldPlacements $ ssnField)
           ) $
-          kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
+          runQuery_ $ sqlUpdate "signatory_link_fields" $ do
            sqlSet "obligatory" False
            sqlWhereEq "signatory_link_id" slid
            sqlWhereEq "type" PersonalNumberFT

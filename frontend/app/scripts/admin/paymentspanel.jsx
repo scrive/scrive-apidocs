@@ -49,6 +49,7 @@ module.exports = React.createClass({
         canUseNOAuthenticationToSign: subscription.canUseNOAuthenticationToSign(),
         canUseSEAuthenticationToView: subscription.canUseSEAuthenticationToView(),
         canUseSEAuthenticationToSign: subscription.canUseSEAuthenticationToSign(),
+        canUseSMSPinAuthenticationToView : subscription.canUseSMSPinAuthenticationToView(),
         canUseSMSPinAuthenticationToSign: subscription.canUseSMSPinAuthenticationToSign()
       });
     },
@@ -68,6 +69,7 @@ module.exports = React.createClass({
           canUseNOAuthenticationToSign : this.state.canUseNOAuthenticationToSign,
           canUseSEAuthenticationToView : this.state.canUseSEAuthenticationToView,
           canUseSEAuthenticationToSign : this.state.canUseSEAuthenticationToSign,
+          canUseSMSPinAuthenticationToView : this.state.canUseSMSPinAuthenticationToView,
           canUseSMSPinAuthenticationToSign : this.state.canUseSMSPinAuthenticationToSign
         }, function() {
           new FlashMessage({ type: "success", content: "Saved" });
@@ -165,6 +167,7 @@ module.exports = React.createClass({
               {this.renderTROptionSeparator("SMS")}
               {this.renderTRForOptionWithCheckbox("Can use sms invitations","canUseSMSInvitations")}
               {this.renderTRForOptionWithCheckbox("Can use sms confirmations","canUseSMSConfirmations")}
+              {this.renderTRForOptionWithCheckbox("Can use SMS Pin authorization to view","canUseSMSPinAuthenticationToView")}
               {this.renderTRForOptionWithCheckbox("Can use SMS Pin authorization to sign","canUseSMSPinAuthenticationToSign")}
               {this.renderTROptionSeparator("eID to view and sign")}
               {this.renderTRForOptionWithCheckbox("Can use DK authorization to view","canUseDKAuthenticationToView")}

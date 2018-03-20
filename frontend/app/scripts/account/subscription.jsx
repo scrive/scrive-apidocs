@@ -24,6 +24,7 @@ var Subscription = Backbone.Model.extend({
     "can_use_no_authentication_to_sign": true,
     "can_use_se_authentication_to_view": true,
     "can_use_se_authentication_to_sign": true,
+    "can_use_sms_pin_authentication_to_view": true,
     "can_use_sms_pin_authentication_to_sign": true,
     "ready": false
   },
@@ -103,6 +104,9 @@ var Subscription = Backbone.Model.extend({
   canUseSEAuthenticationToSign: function () {
      return this.get("can_use_se_authentication_to_sign");
   },
+  canUseSMSPinAuthenticationToView: function () {
+     return this.get("can_use_sms_pin_authentication_to_view");
+  },
   canUseSMSPinAuthenticationToSign: function () {
      return this.get("can_use_sms_pin_authentication_to_sign");
   },
@@ -147,6 +151,9 @@ var Subscription = Backbone.Model.extend({
       can_use_no_authentication_to_sign: pick(nsd.canUseNOAuthenticationToSign, this.canUseNOAuthenticationToSign()),
       can_use_se_authentication_to_view: pick(nsd.canUseSEAuthenticationToView, this.canUseSEAuthenticationToView()),
       can_use_se_authentication_to_sign: pick(nsd.canUseSEAuthenticationToSign, this.canUseSEAuthenticationToSign()),
+      can_use_sms_pin_authentication_to_view: pick(
+        nsd.canUseSMSPinAuthenticationToView, this.canUseSMSPinAuthenticationToView()
+      ),
       can_use_sms_pin_authentication_to_sign: pick(
         nsd.canUseSMSPinAuthenticationToSign, this.canUseSMSPinAuthenticationToSign()
       ),
@@ -170,6 +177,7 @@ var Subscription = Backbone.Model.extend({
       can_use_no_authentication_to_sign: args.can_use_no_authentication_to_sign,
       can_use_se_authentication_to_view: args.can_use_se_authentication_to_view,
       can_use_se_authentication_to_sign: args.can_use_se_authentication_to_sign,
+      can_use_sms_pin_authentication_to_view: args.can_use_sms_pin_authentication_to_view,
       can_use_sms_pin_authentication_to_sign: args.can_use_sms_pin_authentication_to_sign,
       ready: true
     };

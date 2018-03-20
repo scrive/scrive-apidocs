@@ -59,6 +59,11 @@ javascriptLocalisation =
                , expired: "$_IdentifyBankIdNOExpired()$"
                , mobile: "$_IdentifyBankIdNOMobileError()$"
              }
+             , identifyWithPin: {
+                invalidPin: "$_identifyWithPinInvalidPin()$"
+                , enterPin: "$_identifyWithPinEnterPin()$"
+                , pinInfotext: "$_identifyWithPinInfotext()$"
+             }
              , identifyDKNemIdError: {
                failed: "$_IdentifyDKNemIdFailed()$"
                , canceled: "$_IdentifyDKNemIdCanceled()$"
@@ -85,6 +90,7 @@ javascriptLocalisation =
              , identifyDateOfBirth: "$_IdentifyDateOfBirth()$"
              , openBankId: "$_OpenBankId()$"
              , yourIdNumber: "$_YourIdNumber()$"
+             , yourMobileNumber:"$_YourMobileNumber()$"
              , idNumber: "$_IdNumber()$"
              , verifyIdentityWithName : "$_VerifyIdentityWithName()$"
              , verifyIdentityWithoutName : "$_VerifyIdentityWithoutName()$"
@@ -407,6 +413,7 @@ javascriptLocalisation =
                , authenticationToViewSEBankID : "$_designViewAddPartiesAuthenticationtoViewSEBankID()$"
                , authenticationToViewNOBankID : "$_designViewAddPartiesAuthenticationtoViewNOBankID()$"
                , authenticationToViewDKNemID : "$_designViewAddPartiesAuthenticationtoViewDKNemID()$"
+               , authenticationToViewSMSPin : "$_designViewAddPartiesAuthenticationSMSPin()$"
                , authenticationToSign : "$_designViewAddPartiesAuthentication()$"
                , authenticationToSignStandard : "$_designViewAddPartiesAuthenticationStandard()$"
                , authenticationToSignSEBankID : "$_designViewAddPartiesAuthenticationSEBankID()$"
@@ -680,6 +687,7 @@ javascriptLocalisation =
               , authenticationToViewSEBankID: "$_docviewSignatoryAuthenticationToViewSEBankID()$"
               , authenticationToViewNOBankID: "$_docviewSignatoryAuthenticationToViewNOBankID()$"
               , authenticationToViewDKNemID: "$_docviewSignatoryAuthenticationToViewDKNemID()$"
+              , authenticationToViewSMSPin:  "$_docviewSignatoryAuthenticationToViewSMSPin()$"
               , authenticationToSign: "$_docviewSignatoryAuthenticationToSignMethodLabel()$"
               , authenticationToSignStandard: "$_docviewSignatoryAuthenticationToSignStandard()$"
               , authenticationToSignSMSPin: "$_docviewSignatoryAuthenticationToSignSMSPin()$"

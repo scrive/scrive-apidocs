@@ -12,6 +12,8 @@ module.exports = React.createClass({
       return false;
     } else if (!Subscription.currentSubscription().canUseDKAuthenticationToView() && am == "dk_nemid") {
       return false;
+    } else if (!Subscription.currentSubscription().canUseSMSPinAuthenticationToView() && am == "sms_pin") {
+      return false;
     } else {
       return true;
     }
@@ -25,7 +27,7 @@ module.exports = React.createClass({
       new FlashMessage({type: "error", content: localization.designview.viewerCantHaveAuthorisation});
     } else {
       var superthis = this;
-      var ams = ["standard", "se_bankid", "no_bankid", "dk_nemid"]
+      var ams = ["standard", "se_bankid", "no_bankid", "dk_nemid", "sms_pin"]
                 .filter(function (am) { return superthis.isAllowedAuthenticationMethod(am); });
       if (ams.length <= 1) {
         // if no auth methods are enabled, tell customer, that they can purchase them
@@ -52,6 +54,8 @@ module.exports = React.createClass({
       return "design-view-action-participant-icon-auth-to-view-icon-no-bankid";
     } else if (sig.dkNemIDAuthenticationToView()) {
       return "design-view-action-participant-icon-auth-to-view-icon-dk-nemid";
+    } else if (sig.smsPinAuthenticationToView()) {
+      return "design-view-action-participant-icon-auth-to-view-icon-sms-pin";
     }
   },
   title: function () {
@@ -77,8 +81,11 @@ module.exports = React.createClass({
       title.push(
         localization.designview.addParties.authenticationToViewDKNemID
       );
+    } else if (authMethod == "sms_pin") {
+      title.push(
+        localization.designview.addParties.authenticationToViewSMSPin
+      );
     }
-
     return title.join(": ");
   },
   render: function () {

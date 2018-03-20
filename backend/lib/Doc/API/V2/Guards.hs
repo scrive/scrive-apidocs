@@ -138,11 +138,13 @@ guardCanSetAuthenticationToViewForSignatoryWithValues slid authToView mSSN mMobi
   where
     isValidSSNForAuthenticationToView :: AuthenticationToViewMethod -> String -> Bool
     isValidSSNForAuthenticationToView StandardAuthenticationToView _ = True
+    isValidSSNForAuthenticationToView SMSPinAuthenticationToView   _ = True
     isValidSSNForAuthenticationToView SEBankIDAuthenticationToView ssn = isGood $ asValidSwedishSSN   ssn
     isValidSSNForAuthenticationToView NOBankIDAuthenticationToView ssn = isGood $ asValidNorwegianSSN ssn
     isValidSSNForAuthenticationToView DKNemIDAuthenticationToView  ssn = isGood $ asValidDanishSSN    ssn
     isValidMobileForAuthenticationToView :: AuthenticationToViewMethod -> String -> Bool
     isValidMobileForAuthenticationToView StandardAuthenticationToView _ = True
+    isValidMobileForAuthenticationToView SMSPinAuthenticationToView mobile = isGood (asValidPhoneForSMS mobile)
     isValidMobileForAuthenticationToView SEBankIDAuthenticationToView _ = True
     isValidMobileForAuthenticationToView DKNemIDAuthenticationToView  _ = True
     isValidMobileForAuthenticationToView NOBankIDAuthenticationToView mobile = isGood phoneValidation || isEmpty phoneValidation
@@ -246,12 +248,12 @@ guardThatDocumentCanBeStarted doc = do
       SEBankIDAuthenticationToView -> isGood $ asValidSwedishSSN   $ getPersonalNumber sl
       NOBankIDAuthenticationToView -> isGood $ asValidNorwegianSSN $ getPersonalNumber sl
       DKNemIDAuthenticationToView  -> isGood $ asValidDanishSSN $ getPersonalNumber sl
+      SMSPinAuthenticationToView   -> True
       StandardAuthenticationToView -> True
-    signatoryHasValidMobileForIdentifyToView sl =
-      let resultValidPhone = asValidPhoneForNorwegianBankID $ getMobile sl in
-      if (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView)
-         then isGood resultValidPhone || isEmpty resultValidPhone
-         else True
+    signatoryHasValidMobileForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of
+      NOBankIDAuthenticationToView -> (isGood $ asValidPhoneForNorwegianBankID (getMobile sl )) || (isEmpty $ asValidPhoneForNorwegianBankID (getMobile sl))
+      SMSPinAuthenticationToView -> isGood $ asValidPhoneForSMS (getMobile sl)
+      _ -> True
 
 guardThatRadioButtonValuesAreValid :: Kontrakcja m => SignatoryLinkID -> SignatoryFieldsValuesForSigning -> Document -> m ()
 guardThatRadioButtonValuesAreValid slid (SignatoryFieldsValuesForSigning signfields) doc = do

@@ -68,7 +68,8 @@ unjsonAuthenticationToViewMethod = unjsonEnumBy "AuthenticationToViewMethod" [
       (StandardAuthenticationToView, "standard")
     , (SEBankIDAuthenticationToView, "se_bankid")
     , (NOBankIDAuthenticationToView, "no_bankid")
-    , (DKNemIDAuthenticationToView , "dk_nemid")
+    , (DKNemIDAuthenticationToView, "dk_nemid")
+    , (SMSPinAuthenticationToView, "sms_pin")
     ]
 
 unjsonAuthenticationToSignMethod :: UnjsonDef AuthenticationToSignMethod

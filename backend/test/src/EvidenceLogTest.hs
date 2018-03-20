@@ -43,7 +43,6 @@ conversionEq = do
     n' <- fetchOne runIdentity
     assertBool ("toSQL . fromSQL /= id on " ++ show n) $ n' == n
 
-
 evidenceLogTemplateVariables :: Set String
 evidenceLogTemplateVariables = Set.fromList
   [ "actor"           -- Person identifier (possibly prefixed by role)
@@ -73,17 +72,8 @@ evidenceLogTemplateVariables = Set.fromList
   , "timezone"        -- Pending :: TimeZone
   , "value"           -- Field updates :: FieldValue
   , "provider_sebankid"  -- Provider is Swedish BankID
-  -- , "provider_nobankid"  -- Provider is Norwegian BankID - disabled to do bug is StringTemplate variable detection
-  , "signatory_name"  -- Name returned by Eleg
-  , "signatory_personal_number" -- Personal number returned by eleg
-  , "signatory_ip"    -- Signatory's client ip returned by eleg
-  , "signatory_pid"   -- Personal certificate ID returned by NO BankID
+  , "provider_sms_pin"  -- Indetified with PIN by SMS
   , "hide_pn"         -- whether personal number should be hidden
-  , "signatory_mobile"-- Mobile number returned by eleg (NO BankID on mobile only)
-  , "signatory_dob"   -- Signatory DoB returned by eleg (NO BankID Nets only)
-  , "signatory_pid"   -- Unique number of person in No BankID
-  , "signature"       -- Data for eleg signing
-  , "ocsp_response"   -- Data for eleg signing
   , "attachment_name" -- Name of attachment when accepting authors attachments
   , "attachment_acceptance_text" -- Text that should have been shown to user when rendering sign view and accepting attachment
   , "attachment_nothing_to_upload_text" -- Text that should have been shown to user when rendering sign view and choosing not to upload attachment
@@ -141,7 +131,7 @@ evidenceLogTemplatesWellDefined = do
             assertFailure $ "Cannot find template name " ++ show tn
             return []
           Just st -> do
-            -- NOTE: checkTemplateDeep in HStringTemplates 8.3 is not reliable. It can miss fields if conditionals are used ($if$). Bug reported by MR
+            -- NOTE: checkTemplateDeep in HStringTemplates 8.3 is not reliable. It can miss fields when ($if$) is used. Bug reported by MR
             let (pe,freevars,te') = checkTemplateDeep st
             let te = filter (/="noescape") te'
             let errcontext = " in template " ++ tn ++ " for language " ++ show l ++ ": "
@@ -150,5 +140,6 @@ evidenceLogTemplatesWellDefined = do
             when (not (null te)) $ do
               assertFailure $ "Unknown template function" ++ errcontext ++ show te
             return freevars
+  -- If this test fails please first check note above
   assertEqual "Evidence log templates has variables not defined in evidenceLogTemplateVariables" Set.empty (vars Set.\\ evidenceLogTemplateVariables)
   assertEqual "evidenceLogTemplateVariables has elements not used in evidence log templates" Set.empty (evidenceLogTemplateVariables Set.\\ vars)

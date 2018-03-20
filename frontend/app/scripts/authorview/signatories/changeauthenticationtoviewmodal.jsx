@@ -7,6 +7,7 @@ var SSNForSEBankIDValidation = require("../../../js/validation.js").SSNForSEBank
 var SSNForNOBankIDValidation = require("../../../js/validation.js").SSNForNOBankIDValidation;
 var SSNForDKNemIDValidation = require("../../../js/validation.js").SSNForDKNemIDValidation;
 var PhoneValidationNO = require("../../../js/validation.js").PhoneValidationNO;
+var PhoneValidation = require("../../../js/validation.js").PhoneValidation;
 var EmptyValidation = require("../../../js/validation.js").EmptyValidation;
 var $ = require("jquery");
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
@@ -48,6 +49,8 @@ var Modal = require("../../common/modal");
           this.setMobileNumber(signatory.mobile());
         } else if (this.isAuthenticationDKNemID()) {
           this.setPersonalNumber(signatory.personalnumber());
+        } else if (this.isAuthenticationSMSPin()) {
+          this.setMobileNumber(signatory.mobile());
         }
       }
     },
@@ -84,6 +87,14 @@ var Modal = require("../../common/modal");
       return this.authenticationMethod() == this.DKNemIDAuthenticationValue();
     },
 
+    SMSPinAuthenticationValue: function () {
+      return "sms_pin";
+    },
+
+    isAuthenticationSMSPin: function () {
+      return this.authenticationMethod() == this.SMSPinAuthenticationValue();
+    },
+
     personalNumber: function () {
       return this.get("personalNumber");
     },
@@ -113,11 +124,15 @@ var Modal = require("../../common/modal");
     },
 
     isMobileNumberValid: function () {
+      var m = this.mobileNumber();
       if (this.isAuthenticationNOBankID()) {
-        var m = this.mobileNumber();
         return (
           new PhoneValidationNO().validateData(m) ||
           new EmptyValidation().validateData(m)
+        );
+      } else if (this.isAuthenticationSMSPin()) {
+        return (
+          new PhoneValidation().validateData(m)
         );
       }
       return true;
@@ -171,6 +186,8 @@ var Modal = require("../../common/modal");
         return localization.docview.signatory.authenticationToViewNOBankID;
       } else if (model.isAuthenticationDKNemID()) {
         return localization.docview.signatory.authenticationToViewDKNemID;
+      } else if (model.isAuthenticationSMSPin()) {
+        return localization.docview.signatory.authenticationToViewSMSPin;
       }
     },
 
@@ -223,6 +240,18 @@ var Modal = require("../../common/modal");
           && !sig.noBankIDAuthenticationToSign())
       ) {
         options.push(dkNemid);
+      }
+
+      var smsPin = {
+        name: localization.docview.signatory.authenticationToViewSMSPin,
+        selected: model.isAuthenticationSMSPin(),
+        value: model.SMSPinAuthenticationValue()
+      };
+
+      if (sig.smsPinAuthenticationToView() ||
+          Subscription.currentSubscription().canUseSMSPinAuthenticationToView()
+      ) {
+        options.push(smsPin);
       }
 
       return options;
@@ -280,7 +309,7 @@ var Modal = require("../../common/modal");
             width={348}
             options={this.getAuthenticationMethodOptions()}
           />
-          {/* if */ !model.isAuthenticationStandard() &&
+          {/* if */ (!model.isAuthenticationStandard() && !model.isAuthenticationSMSPin()) &&
             <div>
               <label>{this.getPersonalNumberLabelText()}</label>
               <InfoTextInput
@@ -292,7 +321,7 @@ var Modal = require("../../common/modal");
               />
             </div>
           }
-          {/* if */ model.isAuthenticationNOBankID() &&
+          {/* if */ (model.isAuthenticationNOBankID() || model.isAuthenticationSMSPin()) &&
             <div>
               <label>{this.getMobileNumberLabelText()}</label>
               <InfoTextInput

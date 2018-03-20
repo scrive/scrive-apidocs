@@ -24,6 +24,7 @@ data FeatureFlags = FeatureFlags {
   , ffCanUseNOAuthenticationToSign :: Bool
   , ffCanUseSEAuthenticationToView :: Bool
   , ffCanUseSEAuthenticationToSign :: Bool
+  , ffCanUseSMSPinAuthenticationToView :: Bool
   , ffCanUseSMSPinAuthenticationToSign :: Bool
 } deriving (Eq, Ord, Show)
 
@@ -52,6 +53,7 @@ instance (MonadDB m, MonadThrow m, CryptoRNG m) => DBUpdate m UpdateFeatureFlags
       sqlSet "can_use_no_authentication_to_sign" $ ffCanUseNOAuthenticationToSign ff
       sqlSet "can_use_se_authentication_to_view" $ ffCanUseSEAuthenticationToView ff
       sqlSet "can_use_se_authentication_to_sign" $ ffCanUseSEAuthenticationToSign ff
+      sqlSet "can_use_sms_pin_authentication_to_view" $ ffCanUseSMSPinAuthenticationToView ff
       sqlSet "can_use_sms_pin_authentication_to_sign" $ ffCanUseSMSPinAuthenticationToSign ff
       sqlWhereEq "company_id" cid
 
@@ -69,9 +71,11 @@ selectFeatureFlagsSelectors = do
   sqlResult "feature_flags.can_use_no_authentication_to_sign"
   sqlResult "feature_flags.can_use_se_authentication_to_view"
   sqlResult "feature_flags.can_use_se_authentication_to_sign"
+  sqlResult "feature_flags.can_use_sms_pin_authentication_to_view"
   sqlResult "feature_flags.can_use_sms_pin_authentication_to_sign"
 
-fetchFeatureFlags :: (Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool) -> FeatureFlags
+
+fetchFeatureFlags :: (Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool) -> FeatureFlags
 fetchFeatureFlags (
     can_use_templates
   , can_use_branding
@@ -85,6 +89,7 @@ fetchFeatureFlags (
   , can_use_no_authentication_to_sign
   , can_use_se_authentication_to_view
   , can_use_se_authentication_to_sign
+  , can_use_sms_pin_authentication_to_view
   , can_use_sms_pin_authentication_to_sign
   ) = FeatureFlags {
     ffCanUseTemplates = can_use_templates
@@ -99,6 +104,7 @@ fetchFeatureFlags (
   , ffCanUseNOAuthenticationToSign = can_use_no_authentication_to_sign
   , ffCanUseSEAuthenticationToView = can_use_se_authentication_to_view
   , ffCanUseSEAuthenticationToSign = can_use_se_authentication_to_sign
+  , ffCanUseSMSPinAuthenticationToView = can_use_sms_pin_authentication_to_view
   , ffCanUseSMSPinAuthenticationToSign = can_use_sms_pin_authentication_to_sign
 
   }

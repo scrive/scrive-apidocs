@@ -2,7 +2,8 @@ module Doc.API.V2.Calls.SignatoryCallsUtils (
   checkAuthenticationToSignMethodAndValue
 , getScreenshots
 , signDocument
-, checkSignatoryPin
+, checkSignatoryPinToSign
+, checkSignatoryPinToView
 , fieldsToFieldsWithFiles
 ) where
 
@@ -116,8 +117,8 @@ fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning (f:fs)) = do
         return $ ((fi,FileFV (Just fileid)):changeFields,(fileid,bs):files')
 
 
-checkSignatoryPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> SignatoryFieldsValuesForSigning -> String -> m Bool
-checkSignatoryPin slid (SignatoryFieldsValuesForSigning fields) pin = do
+checkSignatoryPinToSign :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> SignatoryFieldsValuesForSigning -> String -> m Bool
+checkSignatoryPinToSign slid (SignatoryFieldsValuesForSigning fields) pin = do
   sl <- guardGetSignatoryFromIdForDocument slid
   let mobileEditableBySignatory = Just True == join (fieldEditableBySignatory <$> getFieldByIdentity MobileFI (signatoryfields sl))
   let slidMobile = getMobile sl
@@ -126,5 +127,11 @@ checkSignatoryPin slid (SignatoryFieldsValuesForSigning fields) pin = do
     (False, Just (StringFTV v)) -> return v
     (False, _) -> apiError $ requestParameterInvalid "fields"
                     "Does not contain a mobile number field, author has not set one for the signatory"
-  pin' <- dbQuery $ GetSignatoryPin slid mobile
+  pin' <- dbQuery $ GetSignatoryPin SMSPinToSign slid mobile
+  return $ pin == pin'
+
+checkSignatoryPinToView :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> String -> m Bool
+checkSignatoryPinToView slid pin = do
+  sl <- guardGetSignatoryFromIdForDocument slid
+  pin' <- dbQuery $ GetSignatoryPin SMSPinToView slid (getMobile sl)
   return $ pin == pin'

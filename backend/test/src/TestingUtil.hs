@@ -204,6 +204,7 @@ instance Arbitrary FeatureFlags where
     k <- arbitrary
     l <- arbitrary
     m <- arbitrary
+    n <- arbitrary
     return $ FeatureFlags {
         ffCanUseTemplates = a
       , ffCanUseBranding  = b
@@ -217,7 +218,8 @@ instance Arbitrary FeatureFlags where
       , ffCanUseNOAuthenticationToSign = j
       , ffCanUseSEAuthenticationToView = k
       , ffCanUseSEAuthenticationToSign = l
-      , ffCanUseSMSPinAuthenticationToSign = m
+      , ffCanUseSMSPinAuthenticationToView = m
+      , ffCanUseSMSPinAuthenticationToSign = n
       }
 
 instance Arbitrary UTCTime where

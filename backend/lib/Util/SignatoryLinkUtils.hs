@@ -173,6 +173,7 @@ authViewMatchesAuth :: AuthenticationToViewMethod -> EAuthentication -> Bool
 authViewMatchesAuth NOBankIDAuthenticationToView NetsNOBankIDAuthentication_{} = True
 authViewMatchesAuth SEBankIDAuthenticationToView CGISEBankIDAuthentication_{}  = True
 authViewMatchesAuth DKNemIDAuthenticationToView  NetsDKNemIDAuthentication_{}  = True
+authViewMatchesAuth SMSPinAuthenticationToView   SMSPinAuthentication_{}  = True
 authViewMatchesAuth _ _ = False
 
 -- Functions to determine if AuthenticationToViewMethod or
@@ -183,12 +184,14 @@ authToViewNeedsPersonalNumber StandardAuthenticationToView = False
 authToViewNeedsPersonalNumber SEBankIDAuthenticationToView = True
 authToViewNeedsPersonalNumber NOBankIDAuthenticationToView = True
 authToViewNeedsPersonalNumber DKNemIDAuthenticationToView  = True
+authToViewNeedsPersonalNumber SMSPinAuthenticationToView = False
 
 authToViewNeedsMobileNumber :: AuthenticationToViewMethod -> Bool
 authToViewNeedsMobileNumber StandardAuthenticationToView = False
 authToViewNeedsMobileNumber SEBankIDAuthenticationToView = False
 authToViewNeedsMobileNumber NOBankIDAuthenticationToView = True
 authToViewNeedsMobileNumber DKNemIDAuthenticationToView  = False
+authToViewNeedsMobileNumber SMSPinAuthenticationToView = True
 
 authToSignNeedsPersonalNumber :: AuthenticationToSignMethod -> Bool
 authToSignNeedsPersonalNumber StandardAuthenticationToSign = False

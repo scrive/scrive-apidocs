@@ -488,6 +488,9 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     dkNemIDAuthenticationToView: function() {
           return this.get("authentication_method_to_view") == "dk_nemid" && this.signs();
     },
+    smsPinAuthenticationToView: function() {
+          return this.get("authentication_method_to_view") == "sms_pin" && this.signs();
+    },
     standardAuthenticationToSign: function() {
           return this.get("authentication_method_to_sign") == "standard" && this.signs();
     },
@@ -848,12 +851,13 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     },
     needsMobile: function() {
         return this.mobileDelivery() || this.emailMobileDelivery() || this.mobileConfirmationDelivery() ||
-               this.emailMobileConfirmationDelivery() || this.smsPinAuthenticationToSign() || this.noBankIDAuthenticationToView();
+               this.emailMobileConfirmationDelivery() || this.noBankIDAuthenticationToView() ||
+               this.smsPinAuthenticationToView() || this.smsPinAuthenticationToSign();
     },
     mobileIsObligatory: function() {
         // Mobile number is needed for NO BankID, but is not obligatory
         return this.mobileDelivery() || this.emailMobileDelivery() || this.mobileConfirmationDelivery() ||
-               this.emailMobileConfirmationDelivery() || this.smsPinAuthenticationToSign();
+               this.emailMobileConfirmationDelivery() || this.smsPinAuthenticationToView() || this.smsPinAuthenticationToSign();
     },
     needsEmail: function() {
         return this.emailDelivery() || this.emailMobileDelivery() || this.emailConfirmationDelivery() || this.emailMobileConfirmationDelivery();

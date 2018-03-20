@@ -449,7 +449,7 @@ var Task = require("../navigation/task");
         phone: phone
       });
 
-      doc.requestPin(function () {
+      doc.requestPinToSign(function () {
         self.setStep("input-pin");
       }, function (xhr) {
         ReloadManager.stopBlocking();

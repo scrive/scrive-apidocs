@@ -2,7 +2,9 @@ module Doc.API.V2.Calls.SignatoryCalls (
   docApiV2SigReject
 , docApiV2SigCheck
 , docApiV2SigSign
-, docApiV2SigSendSmsPin
+, docApiV2SigIdentifyToViewWithSmsPin
+, docApiV2SigSendSmsPinToSign
+, docApiV2SigSendSmsPinToView
 , docApiV2SigSetAttachment
 , docApiV2SigSigningStatusCheck
 , docApiV2SigSigningCancel
@@ -14,6 +16,7 @@ import Happstack.Server.Types
 import Text.JSON.Types (JSValue(..))
 import qualified Data.Text as T
 import qualified Text.JSON as J
+import qualified Text.StringTemplates.Fields as F
 
 import API.V2
 import API.V2.Parameters
@@ -36,11 +39,15 @@ import Doc.Logging
 import Doc.Model
 import Doc.SignatoryLinkID
 import Doc.Signing.Model
-import Doc.SMSPin.Model (GetSignatoryPin(..))
+import Doc.SMSPin.Model (GetSignatoryPin(..), SMSPinType(..))
+import EID.Authentication.Model (MergeSMSPinAuthentication(..))
 import EID.Signature.Model
+import EvidenceLog.Model
 import File.File (File(..))
 import InputValidation (Result(..), asValidPhoneForSMS)
 import Kontra
+import Session.Data (Session(sesID))
+import Session.Model (getCurrentSession)
 import User.Lang
 import Util.Actor
 import Util.HasSomeUserInfo (getMobile)
@@ -126,7 +133,7 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
       StandardAuthenticationToSign -> return ()
       SMSPinAuthenticationToSign -> do
         pin <- fmap T.unpack $ apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
-        validPin <- checkSignatoryPin slid fields pin
+        validPin <- checkSignatoryPinToSign slid fields pin
         if not validPin
            then apiError $ requestParameterInvalid "sms_pin" "invalid SMS PIN"
            else return ()
@@ -165,7 +172,7 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
       StandardAuthenticationToSign -> return (Nothing, Nothing)
       SMSPinAuthenticationToSign -> do
         pin <- fmap T.unpack $ apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
-        validPin <- checkSignatoryPin slid fields pin
+        validPin <- checkSignatoryPinToSign slid fields pin
         if not validPin
           then apiError documentActionForbidden
           else return (Nothing, Just pin)
@@ -198,8 +205,8 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
     doc <- theDocument
     return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc),d)) doc
 
-docApiV2SigSendSmsPin :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
-docApiV2SigSendSmsPin did slid = logDocumentAndSignatory did slid . api $ do
+docApiV2SigSendSmsPinToSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
+docApiV2SigSendSmsPinToSign did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
   mh <- getMagicHashForSignatoryAction did slid
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
@@ -219,9 +226,59 @@ docApiV2SigSendSmsPin did slid = logDocumentAndSignatory did slid . api $ do
                           _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"
                 else T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterTextWithValidation "mobile" asValidPhoneForSMS)
     -- API call actions
-    pin <- dbQuery $ GetSignatoryPin slid mobile
+    pin <- dbQuery $ GetSignatoryPin SMSPinToSign slid mobile
     sendPinCode sl mobile pin
     -- Return
+    return $ Accepted ()
+
+docApiV2SigSendSmsPinToView :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
+docApiV2SigSendSmsPinToView did slid = logDocumentAndSignatory did slid . api $ do
+  -- Permissions
+  mh <- getMagicHashForSignatoryAction did slid
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
+    -- Guards
+    guardThatObjectVersionMatchesIfProvided did
+    guardDocumentStatus Pending =<< theDocument
+    guardSignatoryHasNotSigned slid =<< theDocument
+    sl <- guardGetSignatoryFromIdForDocument slid
+    when (signatorylinkauthenticationtoviewmethod sl /= SMSPinAuthenticationToView) $ do
+      apiError $ signatoryStateError "Signatory authentication method to view is not SMS PIN"
+    mobile <- case asValidPhoneForSMS (getMobile sl) of
+                Good v -> return v
+                _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"
+    -- API call actions
+    pin <- dbQuery $ GetSignatoryPin SMSPinToView slid mobile
+    sendPinCode sl mobile pin
+    -- Return
+    return $ Accepted ()
+
+docApiV2SigIdentifyToViewWithSmsPin :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
+docApiV2SigIdentifyToViewWithSmsPin did slid = logDocumentAndSignatory did slid . api $ do
+  -- Permissions
+  mh <- getMagicHashForSignatoryAction did slid
+  ctx <- getContext
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
+    -- Guards
+    guardThatObjectVersionMatchesIfProvided did
+    guardDocumentStatus Pending =<< theDocument
+    guardSignatoryHasNotSigned slid =<< theDocument
+    sl <- guardGetSignatoryFromIdForDocument slid
+    when (signatorylinkauthenticationtoviewmethod sl /= SMSPinAuthenticationToView) $ do
+      apiError $ signatoryStateError "Signatory authentication method to view is not SMS PIN"
+    mobile <- case asValidPhoneForSMS (getMobile sl) of
+                Good v -> return v
+                _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"
+    pin <- fmap T.unpack $ apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
+    validPin <- checkSignatoryPinToView slid pin
+    when (not validPin) $ do
+      apiError $ requestParameterInvalid "sms_pin" "invalid SMS PIN"
+    sess <- getCurrentSession
+    dbUpdate $ MergeSMSPinAuthentication (sesID sess) slid (T.pack mobile)
+    let eventFields = do
+          F.value "signatory_mobile" mobile
+          F.value "provider_sms_pin" True
+    sActor <- signatoryActor ctx sl
+    void $ dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence (eventFields) (Just sl) Nothing sActor
     return $ Accepted ()
 
 docApiV2SigSetAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response

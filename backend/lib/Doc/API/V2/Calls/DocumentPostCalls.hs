@@ -501,6 +501,7 @@ docApiV2SigSetAuthenticationToView did slid = logDocumentAndSignatory did slid .
     mMobile_ <- (fmap T.unpack) <$> apiV2ParameterOptional (ApiV2ParameterText "mobile_number")
     (mSSN, mMobile) <- case authentication_type of
       StandardAuthenticationToView -> return (Nothing, Nothing)
+      SMSPinAuthenticationToView   -> return (Nothing, mMobile_)
       SEBankIDAuthenticationToView -> return (mSSN_, Nothing)
       NOBankIDAuthenticationToView -> return (mSSN_, mMobile_)
       DKNemIDAuthenticationToView  -> return (mSSN_, Nothing)

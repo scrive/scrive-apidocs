@@ -256,7 +256,9 @@ simplyfiedEventText target mactor d sim dee = do
                   F.value "provider_dknemid" True
                   F.value "signatory_name" $ netsDKNemIDSignatoryName n
                   F.value "signatory_dob" $ netsDKNemIDDateOfBirth n
-
+                SMSPinAuthentication_ mobile -> do
+                  F.value "provider_sms_pin" True
+                  F.value "signatory_mobile" $ mobile
         F.value "text" $ String.replace "\n" " " <$> evMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page
         F.value "additional_text" $ String.replace "\n" " " <$> evAdditionalMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page
         F.value "signatory" $ (\slid -> signatoryIdentifier sim slid emptyNamePlaceholder) <$> mslinkid

@@ -35,6 +35,9 @@ var ErrorModal = require("../../errormodal");
     isDanish: function () {
       return false;
     },
+    isSMSPin: function () {
+      return false;
+    },
     isIdentify: function () {
       return this.get("step") === "identify";
     },

@@ -40,6 +40,9 @@ var link = link;
     isDanish: function () {
       return true;
     },
+    isSMSPin: function () {
+      return false;
+    },
     isIdentify: function () {
       return this.get("step") === "identify";
     },

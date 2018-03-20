@@ -648,6 +648,7 @@ handleCompanyUpdateSubscription cid = onlySalesOrAdmin $ do
   canUseSEAuthenticationToView  <- fmap ((==) "true") $ guardJustM $ getField "can_use_se_authentication_to_view"
   canUseSEAuthenticationToSign  <- fmap ((==) "true") $ guardJustM $ getField "can_use_se_authentication_to_sign"
   canUseSMSPinAuthenticationToSign  <- fmap ((==) "true") $ guardJustM $ getField "can_use_sms_pin_authentication_to_sign"
+  canUseSMSPinAuthenticationToView  <- fmap ((==) "true") $ guardJustM $ getField "can_use_sms_pin_authentication_to_view"
 
   _ <- dbUpdate $ UpdateFeatureFlags cid $ FeatureFlags {
       ffCanUseTemplates = canUseTemplates
@@ -663,6 +664,7 @@ handleCompanyUpdateSubscription cid = onlySalesOrAdmin $ do
     , ffCanUseSEAuthenticationToView = canUseSEAuthenticationToView
     , ffCanUseSEAuthenticationToSign = canUseSEAuthenticationToSign
     , ffCanUseSMSPinAuthenticationToSign = canUseSMSPinAuthenticationToSign
+    , ffCanUseSMSPinAuthenticationToView = canUseSMSPinAuthenticationToView
     }
   return ()
 
