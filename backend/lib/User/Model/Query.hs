@@ -242,13 +242,15 @@ instance (MonadDB m, MonadTime m) => DBQuery m GetUsageStats [UserUsageStats] wh
 
       selectStatsData :: UTCTime -> SqlSelect
       selectStatsData now = sqlSelect "documents d" $ do
-        sqlJoinOn "users u" "d.author_user_id = u.id"
+        sqlJoinOn "signatory_links sl" "d.id = sl.document_id"
+        sqlJoinOn "users u" "sl.user_id = u.id"
         sqlResult $ dateTrunc "d.invite_time" <+> "AS sent_time_window"
         sqlResult $ dateTrunc maxSignTime     <+> "AS closed_time_window"
         sqlResult "d.id AS did"
         sqlResult "u.id AS uid"
         sqlResult $ documentSent   <+> "AS document_sent"
         sqlResult $ documentClosed <+> "AS document_closed"
+        sqlWhere "d.author_id = sl.id"
         sqlWhere $ documentSent `sqlOR` documentClosed
         case eid of
           Left  uid -> sqlWhereEq "u.id" uid
