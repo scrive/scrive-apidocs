@@ -332,8 +332,10 @@ instance MonadDB m => DBQuery m GetDocsSentBetween Int64 where
   query (GetDocsSentBetween cid start end) = do
     runQuery_ $ "SELECT count(documents.id) " <>
                "FROM documents " <>
-               "JOIN users ON documents.author_user_id = users.id " <>
+               "JOIN signatory_links ON documents.id = signatory_links.document_id " <>
+               "JOIN users ON signatory_links.user_id = users.id " <>
                "WHERE users.company_id =" <?> cid <>
+               "AND documents.author_id = signatory_links.id " <>
                "AND documents.invite_time >=" <?> start <>
                "AND documents.invite_time <" <?> end <>
                "AND documents.type =" <?> Signable <>
