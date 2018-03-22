@@ -22,7 +22,7 @@ import qualified Amazon as A
 data AmazonUploadConsumer = AmazonUploadConsumer {
     aucFileID :: !FileID
   , aucAttempts :: !Int32
-  }
+  } deriving Show
 
 amazonUploadConsumer
   :: (MonadIO m, MonadBase IO m, MonadLog m, CryptoRNG m, MonadMask m)

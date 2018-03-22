@@ -179,8 +179,9 @@ newFileInAmazon fName fContent = do
       Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
       let encryptedContent = aesEncrypt aes fContent
           s3Conn = AWS.amazonS3Connection awsAccessKey awsSecretKey
-          s3Obj = AWS.S3Object { AWS.obj_bucket = awsBucket
-                               , AWS.obj_name   = awsUrl
+          -- S3Action needs the bucket and the object URL-encoded but S3Object doesn't.
+          s3Obj = AWS.S3Object { AWS.obj_bucket = HTTP.urlDecode awsBucket
+                               , AWS.obj_name   = HTTP.urlDecode awsUrl
                                , AWS.content_type = ""
                                , AWS.obj_headers = []
                                , AWS.obj_data = BSL.fromChunks [encryptedContent]

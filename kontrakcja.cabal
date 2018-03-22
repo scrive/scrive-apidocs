@@ -89,6 +89,7 @@ Library
                  , Amazon.Class
                  , Amazon.Config
                  , Amazon.Consumer
+                 , Amazon.URLFix
                  , Amazon.Tables
                  , Analytics.Include
                  , AppConf

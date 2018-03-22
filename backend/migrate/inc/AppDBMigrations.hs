@@ -99,4 +99,6 @@ kontraMigrations = [
   , optimiseUsersHistoryIndexes
   , companiesDropAllowSaveSafetyCopy
   , removeSearchTermsIndex
+  , createAmazonURLFixConsumers
+  , createAmazonURLFixJobs
   ]

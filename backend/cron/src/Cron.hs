@@ -14,6 +14,7 @@ import qualified Data.Text.IO as T
 import qualified Data.Traversable as F
 
 import Amazon.Consumer
+import Amazon.URLFix
 import AppDBTables
 import Configuration
 import Cron.Model
@@ -115,6 +116,7 @@ main = do
         docExtending = documentExtendingConsumer (cronAmazonConfig cronConf)
           (cronGuardTimeConf cronConf) templates filecache mrediscache pool (cronConsumerExtendingMaxJobs cronConf)
         amazonFileUpload = amazonUploadConsumer (cronAmazonConfig cronConf) pool (cronConsumerAmazonMaxJobs cronConf)
+        amazonURLFix = amazonURLFixConsumer (cronAmazonConfig cronConf) pool
 
         apiCallbacks = documentAPICallback runCronEnv (cronConsumerAPICallbackMaxJobs cronConf)
         cron = cronConsumer cronConf reqManager mmixpanel mplanhat runCronEnv runDB (cronConsumerCronMaxJobs cronConf)
@@ -126,4 +128,5 @@ main = do
       . finalize (localDomain "api callbacks"      $ runConsumer apiCallbacks     pool)
       . finalize (localDomain "amazon file upload" $ runConsumer amazonFileUpload pool)
       . finalize (localDomain "cron"               $ runConsumer cron             pool)
+      . finalize (localDomain "amazon url fix"     $ runConsumer amazonURLFix     pool)
       $ liftBase waitForTermination
