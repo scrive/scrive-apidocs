@@ -559,7 +559,7 @@ info:
 
     > For example:
 
-    ```
+    ```json
     {
       "error_type": "resource_not_found"
     , "error_message": "The resource was not found. A document with id $id$ was not found."
