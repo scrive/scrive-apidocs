@@ -188,7 +188,7 @@ var DetailsEditorView = React.createClass({
               />
             </td>
             <td>
-              1 is default/Scrive. 3 is SF. Change only if you know what you are doing.
+              1 is default/Scrive. 3 is SF. Only Partner Manager is allowed to make changes in this field.
             </td>
           </tr>
           <tr>
