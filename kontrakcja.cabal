@@ -828,6 +828,7 @@ Executable kontrakcja-migrate
                , fields-json
                , hpqtypes
                , hpqtypes-extras
+               , http-client
                , invariant
                , json
                , lifted-base
@@ -974,6 +975,7 @@ Executable mailing-server
                , fclabels
                , fields-json
                , filepath
+               , http-client
                , hS3
                , happstack-server
                , happstack-static-routing
@@ -1115,6 +1117,7 @@ Executable messenger-server
                , happstack-static-routing
                , hpqtypes
                , HTTP
+               , http-client
                , iconv
                , invariant
                , json

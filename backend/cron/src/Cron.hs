@@ -3,6 +3,7 @@ module Cron (main) where
 
 import Control.Monad.Base
 import Crypto.RNG
+import qualified Data.Text.IO as T
 import Database.PostgreSQL.Consumers
 import Database.PostgreSQL.PQTypes.Checks
 import Log
@@ -61,7 +62,9 @@ main = do
     Nothing   -> return ()
   rng <- newCryptoRNGState
 
-  logRunner <- mkLogRunner "cron" (cronLogConfig cronConf) rng
+  (errs, logRunner) <- mkLogRunner "cron" (cronLogConfig cronConf) rng
+  mapM_ T.putStrLn errs
+
   reqManager <- newTlsManager
 
   runWithLogRunner logRunner $ do

@@ -3,6 +3,7 @@ module MessengerServer (main) where
 import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Crypto.RNG
+import qualified Data.Text.IO as T
 import Database.PostgreSQL.Consumers
 import Database.PostgreSQL.PQTypes.Checks
 import Happstack.Server hiding (waitForTermination)
@@ -55,7 +56,9 @@ main = do
     Just mconf -> void $ startMonitoringServer mconf
     Nothing    -> return ()
   rng <- newCryptoRNGState
-  lr <- mkLogRunner "messenger" (messengerLogConfig conf) rng
+  (errs, lr) <- mkLogRunner "messenger" (messengerLogConfig conf) rng
+  mapM_ T.putStrLn errs
+
   withLogger lr $ \runLogger -> runLogger $ do
     checkExecutables
 

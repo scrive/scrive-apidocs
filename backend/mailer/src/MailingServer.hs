@@ -4,6 +4,7 @@ import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Crypto.RNG
 import Data.Aeson
+import qualified Data.Text.IO as T
 import Database.PostgreSQL.Consumers
 import Database.PostgreSQL.PQTypes.Checks
 import Happstack.Server hiding (result, waitForTermination)
@@ -62,7 +63,9 @@ main = do
     Just mconf -> void $ startMonitoringServer mconf
     Nothing   -> return ()
   rng  <- newCryptoRNGState
-  lr   <- mkLogRunner "mailer" (mailerLogConfig conf) rng
+  (errs, lr)   <- mkLogRunner "mailer" (mailerLogConfig conf) rng
+  mapM_ T.putStrLn errs
+
   withLogger lr $ \runLogger -> runLogger $ do
     checkExecutables
 

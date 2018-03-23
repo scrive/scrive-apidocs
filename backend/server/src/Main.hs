@@ -4,6 +4,7 @@ import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Control.Monad.Catch
 import Crypto.RNG
+import qualified Data.Text.IO as T
 import Database.PostgreSQL.PQTypes.Checks
 import Happstack.Server hiding (waitForTermination)
 import Happstack.StaticRouting
@@ -66,7 +67,9 @@ main = withCurlDo $ do
       extrasOptions = def { eoEnforcePKs = True }
   pool <- liftBase $ createPoolSource (connSettings kontraComposites) (maxDBConnections appConf)
   rng <- newCryptoRNGState
-  lr <- mkLogRunner "kontrakcja" (logConfig appConf) rng
+  (errs, lr) <- mkLogRunner "kontrakcja" (logConfig appConf) rng
+  mapM_ T.putStrLn errs
+
   withLogger lr $ \runLogger -> runLogger $ do
     logInfo "Starting kontrakcja-server" $ object [
         "version" .= VersionTH.versionID

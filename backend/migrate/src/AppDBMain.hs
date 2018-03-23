@@ -1,6 +1,7 @@
 module AppDBMain where
 
 import Crypto.RNG
+import qualified Data.Text.IO as T
 import Database.PostgreSQL.PQTypes.Checks
 import System.Console.CmdArgs hiding (def)
 import System.Environment
@@ -37,7 +38,9 @@ main = do
   CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
   AppDBConf{..} <- readConfig putStrLn config
   rng <- newCryptoRNGState
-  logRunner <- mkLogRunner "kontrakcja-migrate" logConfig rng
+  (errs, logRunner) <- mkLogRunner "kontrakcja-migrate" logConfig rng
+  mapM_ T.putStrLn errs
+
   runWithLogRunner logRunner $ do
     -- composite types are not available in migrations
     let connSource = simpleSource $ pgConnSettings dbConfig []

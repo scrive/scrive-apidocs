@@ -13,6 +13,7 @@ import System.IO
 import Test.Framework
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
+import qualified Data.Text.IO as T
 
 import AccountInfoTest
 import AdministrationTest
@@ -150,7 +151,9 @@ modifyTestEnv (d:r) = first (d:) $ modifyTestEnv r
 testMany :: ([String], [(TestEnvSt -> Test)]) -> IO ()
 testMany (allargs, ts) = do
   rng <- unsafeCryptoRNGState (BS.pack (replicate 128 0))
-  lr  <- mkLogRunner "test" testLogConfig rng
+  (errs, lr)  <- mkLogRunner "test" testLogConfig rng
+  mapM_ T.putStrLn errs
+
   withLogger lr $ \runLogger -> testMany' (allargs, ts) runLogger rng
 
 testMany' :: ([String], [(TestEnvSt -> Test)])
