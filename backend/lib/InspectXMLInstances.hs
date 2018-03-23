@@ -1,10 +1,12 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  InspectXMLInstances
 --
--- Instances of InspectXML for SkrivaPa data-types. Moved to this module to use auto-derivation.
--- If someone know how to join InspectXMLInstances with InspectXML he should do it.
+-- Instances of InspectXML for Scrive data types. Moved to this module
+-- to use auto-derivation. If someone knows how to join
+-- InspectXMLInstances with InspectXML he should do it.
 -----------------------------------------------------------------------------
 
 module InspectXMLInstances() where

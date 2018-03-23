@@ -164,7 +164,7 @@ stdoutFromStdoutWithHTTPCode stdoutWithCode = BSL.take (lastEOLIndex stdoutWithC
 httpCodeFromStdoutWithHTTPCode :: BSL.ByteString -> Int
 httpCodeFromStdoutWithHTTPCode stdoutWithCode = case reads $ BSL.unpack $ BSL.drop (lastEOLIndex stdoutWithCode + 1) stdoutWithCode of
                                                 [(n, "")] -> n
-                                                _ -> $unexpectedError "Couldn't parse http status from curl output"
+                                                _ -> unexpectedError "Couldn't parse http status from curl output"
 
 lastEOLIndex :: BSL.ByteString -> Int64
 lastEOLIndex bs = last (BSL.elemIndices '\n' bs)

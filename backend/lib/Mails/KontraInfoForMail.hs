@@ -83,6 +83,6 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetKontraInfoForMail (Maybe Kont
 
 fetchKontraInfoForMail :: (KontraInfoForMailType, Maybe DocumentID, Maybe SignatoryLinkID) -> KontraInfoForMail
 fetchKontraInfoForMail (DocumentInvitationMailT, Just did, Just sig)  = DocumentInvitationMail did sig
-fetchKontraInfoForMail (DocumentInvitationMailT, _, _)  = ($unexpectedError "Failed to fetch KontraInfoForMail (DocumentInvitationMailT)")
+fetchKontraInfoForMail (DocumentInvitationMailT, _, _)  = (unexpectedError "Failed to fetch KontraInfoForMail (DocumentInvitationMailT)")
 fetchKontraInfoForMail (OtherDocumentMailT, Just did, Nothing)  = OtherDocumentMail did
-fetchKontraInfoForMail (OtherDocumentMailT, _, _)  = ($unexpectedError "Failed to fetch KontraInfoForMail (OtherDocumentMailT)")
+fetchKontraInfoForMail (OtherDocumentMailT, _, _)  = (unexpectedError "Failed to fetch KontraInfoForMail (OtherDocumentMailT)")

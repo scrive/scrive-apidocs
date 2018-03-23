@@ -123,7 +123,7 @@ sendSMSHelper TeliaCallGuideSender{..} sm@ShortMessage{..} = localData [identifi
   -- We want to store "messageId" as that is all we get for delivery reports:
   let teliaid = case take 1 . drop 1 . dropWhile (not . tagOpenNameLit "messageId") . parseTags $ resp of
                      (TagText tid):_ -> tid
-                     _ -> $unexpectedError "Could not parse Telia CallGuide response"
+                     _ -> unexpectedError "Could not parse Telia CallGuide response"
   res <- dbUpdate $ UpdateSMSWithTeliaID smID teliaid
   return (success && res)
 

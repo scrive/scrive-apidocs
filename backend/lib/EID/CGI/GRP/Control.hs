@@ -227,13 +227,13 @@ checkCGISignStatus CgiGrpConfig{..}  did slid = do
                           }
                           dbUpdate $ ChargeCompanyForSEBankIDSignature did
                           return CGISignStatusSuccess
-                        (CgiGrpAuthTransaction _ _ _ _) -> $unexpectedErrorM "Fetched CgiGrpAuthTransaction while expecting CgiGrpSignTransaction"
+                        (CgiGrpAuthTransaction _ _ _ _) -> unexpectedError "Fetched CgiGrpAuthTransaction while expecting CgiGrpSignTransaction"
                     _ -> return $  CGISignStatusInProgress crsProgressStatus
   where
-    missing name = $unexpectedError $ "missing" <+> T.unpack name
+    missing name = unexpectedError $ "missing" <+> T.unpack name
     just_lookup name = fromMaybe (missing name) . lookup name
 
-    invalid_b64 txt = $unexpectedError $ "invalid base64:" <+> T.unpack txt
+    invalid_b64 txt = unexpectedError $ "invalid base64:" <+> T.unpack txt
     mk_binary txt = either (invalid_b64 txt) id . B64.decode . T.encodeUtf8 $ txt
 
 checkCGIAuthStatus :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either GrpFault ProgressStatus)
@@ -312,14 +312,14 @@ checkCGIAuthStatus did slid = do
                   void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence  (eventFields) (Just sl) Nothing =<< signatoryActor ctx sl
                 dbUpdate $ ChargeCompanyForSEBankIDAuthentication did
                 return $ Right Complete
-              (CgiGrpSignTransaction _ _ _ _ _) -> $unexpectedErrorM "Fetched CgiGrpSignTransaction while expecting CgiGrpAuthTransaction"
+              (CgiGrpSignTransaction _ _ _ _ _) -> unexpectedError "Fetched CgiGrpSignTransaction while expecting CgiGrpAuthTransaction"
           else return $ Right crsProgressStatus
 
   where
-    missing name = $unexpectedError $ "missing" <+> T.unpack name
+    missing name = unexpectedError $ "missing" <+> T.unpack name
     just_lookup name = fromMaybe (missing name) . lookup name
 
-    invalid_b64 txt = $unexpectedError $ "invalid base64:" <+> T.unpack txt
+    invalid_b64 txt = unexpectedError $ "invalid base64:" <+> T.unpack txt
     mk_binary txt = either (invalid_b64 txt) id . B64.decode . T.encodeUtf8 $ txt
 
 ----------------------------------------

@@ -43,7 +43,7 @@ Build-type:    Simple
 --   library, make everything else depend on it, enable TH there
 -- - remove TH from extensions from everything else, add
 --   LANGUAGE TemplateHaskell at the top of each file where it is used
--- - use TH only where it is trully needed
+-- - use TH only where it is truly needed
 --
 
 Library kontrakcja-prelude
@@ -55,10 +55,9 @@ Library kontrakcja-prelude
 
   Exposed-Modules:    Prelude
   Build-Depends:      base, cond, exceptions, extra
-                    , fclabels, hpqtypes, template-haskell
+                    , fclabels, hpqtypes
   Default-Language:   Haskell2010
-  Default-Extensions: FlexibleInstances, RecordWildCards
-                    , TemplateHaskell, TypeOperators
+  Default-Extensions: FlexibleInstances, RecordWildCards, TypeOperators
 
 Library
 
@@ -583,12 +582,12 @@ Library
                     , RecordWildCards
                     , ScopedTypeVariables
                     , StandaloneDeriving
-                    , TemplateHaskell
                     , TupleSections
                     , TypeFamilies
                     , TypeOperators
                     , TypeSynonymInstances
                     , UndecidableInstances
+  Other-Extensions:   TemplateHaskell
 
 Executable kontrakcja-server
 
@@ -640,7 +639,6 @@ Executable kontrakcja-server
                     , RecordWildCards
                     , ScopedTypeVariables
                     , StandaloneDeriving
-                    , TemplateHaskell
                     , TupleSections
                     , TypeFamilies
                     , TypeOperators
@@ -702,7 +700,6 @@ Executable cron
                     , RecordWildCards
                     , ScopedTypeVariables
                     , StandaloneDeriving
-                    , TemplateHaskell
                     , TupleSections
                     , TypeFamilies
                     , TypeOperators
@@ -871,12 +868,12 @@ Executable kontrakcja-migrate
                     , RecordWildCards
                     , ScopedTypeVariables
                     , StandaloneDeriving
-                    , TemplateHaskell
                     , TupleSections
                     , TypeFamilies
                     , TypeOperators
                     , TypeSynonymInstances
                     , UndecidableInstances
+  Other-Extensions:   TemplateHaskell
 
 Executable mailing-server
 
@@ -1032,12 +1029,12 @@ Executable mailing-server
                     , RecordWildCards
                     , ScopedTypeVariables
                     , StandaloneDeriving
-                    , TemplateHaskell
                     , TupleSections
                     , TypeFamilies
                     , TypeOperators
                     , TypeSynonymInstances
                     , UndecidableInstances
+  Other-Extensions:   TemplateHaskell
 
 Executable messenger-server
 
@@ -1164,12 +1161,12 @@ Executable messenger-server
                     , RecordWildCards
                     , ScopedTypeVariables
                     , StandaloneDeriving
-                    , TemplateHaskell
                     , TupleSections
                     , TypeFamilies
                     , TypeOperators
                     , TypeSynonymInstances
                     , UndecidableInstances
+  Other-Extensions:   TemplateHaskell
 
 Test-suite kontrakcja-test
   Type:           exitcode-stdio-1.0
@@ -1397,7 +1394,6 @@ Test-suite kontrakcja-test
                     , RecordWildCards
                     , ScopedTypeVariables
                     , StandaloneDeriving
-                    , TemplateHaskell
                     , TupleSections
                     , TypeFamilies
                     , TypeOperators
@@ -1420,7 +1416,7 @@ Executable config-checker
   Default-Language: Haskell2010
   Default-Extensions: OverloadedStrings
                     , RecordWildCards
-                    , TemplateHaskell
+  Other-Extensions:   TemplateHaskell
 
 Executable localization
 
@@ -1481,7 +1477,6 @@ Executable localization
                     , RecordWildCards
                     , ScopedTypeVariables
                     , StandaloneDeriving
-                    , TemplateHaskell
                     , TupleSections
                     , TypeFamilies
                     , TypeOperators
@@ -1526,7 +1521,6 @@ Executable routinglist
                     , RecordWildCards
                     , ScopedTypeVariables
                     , StandaloneDeriving
-                    , TemplateHaskell
                     , TupleSections
                     , TypeFamilies
                     , TypeOperators

@@ -49,8 +49,8 @@ checkRedisConnection conn = do
   ereply <- tryAny $ runRedis conn R.ping
   case ereply :: Either SomeException R.Status of
     Right R.Pong -> return ()
-    Right status -> $unexpectedError $ "expected Pong, got" <+> show status
-    Left err     -> $unexpectedError $ smconcat [
+    Right status -> unexpectedError $ "expected Pong, got" <+> show status
+    Left err     -> unexpectedError $ smconcat [
         "couldn't execute command 'ping':"
       , show err
       , "(make sure configuration is correct and Redis server is running)"

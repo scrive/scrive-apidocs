@@ -41,7 +41,7 @@ decodeQR (QRCode bsdata) =  withSystemTempFile "qr.png" $ \path handle -> do
   zbarout <- readProcess "zbarimg" ["-q", path] ""
   case break (== ':') zbarout of
     ("QR-Code", ':':code) -> return $ rstrip code
-    _                     -> $unexpectedError "QR code couldn't be decoded."
+    _                     -> unexpectedError "QR code couldn't be decoded."
 
 decodeQRBSL :: BSL.ByteString -> IO String
 decodeQRBSL = decodeQR . QRCode . BSL.toStrict

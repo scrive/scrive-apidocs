@@ -35,7 +35,7 @@ data SMS = SMS {
 scheduleSMS :: (MonadLog m, MonadDB m, MonadThrow m) => Document -> SMS -> m ()
 scheduleSMS doc SMS{..} = do
   when (null smsMSISDN) $ do
-    $unexpectedErrorM "no mobile phone number defined"
+    unexpectedError "no mobile phone number defined"
   sid <- dbUpdate $ CreateSMS smsProvider (fixOriginator smsOriginator) smsMSISDN smsBody
   -- charge company of the author of the document for the smses
   dbUpdate $ ChargeCompanyForSMS (documentid doc) smsProvider sms_count

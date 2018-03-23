@@ -85,13 +85,13 @@ unsafeNetsNOBankIDInternalProviderFromInt16 :: Int16 -> NetsNOBankIDInternalProv
 unsafeNetsNOBankIDInternalProviderFromInt16 v = case v of
   1 -> NetsNOBankIDStandard
   2 -> NetsNOBankIDMobile
-  _ -> $unexpectedError "Range error while fetching NetsNOBankIDInternalProvider from Int16"
+  _ -> unexpectedError "Range error while fetching NetsNOBankIDInternalProvider from Int16"
 
 unsafeNetsDKNemIDInternalProviderFromInt16 :: Int16 -> NetsDKNemIDInternalProvider
 unsafeNetsDKNemIDInternalProviderFromInt16 v = case v of
   1 -> NetsDKNemIDKeyCard
   2 -> NetsDKNemIDKeyFile
-  _ -> $unexpectedError "Range error while fetching NetsDKNemIDInternalProvider from Int16"
+  _ -> unexpectedError "Range error while fetching NetsDKNemIDInternalProvider from Int16"
 
 instance PQFormat NetsNOBankIDInternalProvider where
   pqFormat = const $ pqFormat (undefined::Int16)
@@ -387,7 +387,7 @@ xpGetOrderStatusResponse = XMLParser $ \cursor -> listToMaybe $ cursor
 
 parseOrderStatus :: T.Text -> OrderStatus
 parseOrderStatus t = fromMaybe
-  ($unexpectedError $ "Cannot parse OrderStatus in GetOrderStatusResponse:" <+> T.unpack t)
+  (unexpectedError $ "Cannot parse OrderStatus in GetOrderStatusResponse:" <+> T.unpack t)
   (maybeRead $ T.unpack t)
 
 -- NETS Signing - Get SDO Request

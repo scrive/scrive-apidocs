@@ -104,7 +104,7 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
           logInfo "Error while compiling routes" $ object [
               "error" .= e
             ]
-          $unexpectedErrorM "static routing"
+          unexpectedError "static routing"
         Right r -> return r
       let conf = nullConf {
             port = fromIntegral port

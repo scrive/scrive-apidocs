@@ -131,7 +131,7 @@ fetch (MemCache mv) key construct = mask $ \release -> do
               , mcCache       = cache
               }
           | otherwise = case Q.minView cache of
-              Nothing -> $unexpectedError "tidyCache: size limit exceeded even though cache is empty"
+              Nothing -> unexpectedError "tidyCache: size limit exceeded even though cache is empty"
               Just (_, _, minEl, tidiedCache) -> go tidiedCache $ size - mcSizeFun mc minEl
 
 -- | Fetch an object from cache or construct it if it's not there.

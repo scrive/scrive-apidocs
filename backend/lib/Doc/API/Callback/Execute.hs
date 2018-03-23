@@ -57,7 +57,7 @@ execute dac@DocumentAPICallback {..} = logDocument dacDocumentID $ do
   else do
     doc <- dbQuery $ GetDocumentByDocumentID dacDocumentID
     case maybesignatory =<< getAuthorSigLink doc of
-      Nothing  -> $unexpectedErrorM $ "Document" <+> show dacDocumentID <+> "has no author"
+      Nothing  -> unexpectedError $ "Document" <+> show dacDocumentID <+> "has no author"
       Just uid -> do
         mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID uid
         case mcallbackschema of
@@ -84,7 +84,7 @@ executeStandardCallback mBasicAuth doc dac = logDocument (documentid doc) $ do
                       c:_ -> c
       httpCode = case reads httpCodeStr of
                     [(n::Int, "")] -> n
-                    _ -> $unexpectedError "Couldn't parse http status from curl output"
+                    _ -> unexpectedError "Couldn't parse http status from curl output"
   case (exitcode, httpCode) of
     (ExitSuccess, n) | n < 300 -> do
       logInfo "API callback executeStandardCallback succeeded" $ logObject_ dac
@@ -158,7 +158,7 @@ executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc dac = logDocument (documentid 
               c:_ -> c
             httpCode = case reads httpCodeStr of
                           [(n::Int, "")] -> n
-                          _ -> $unexpectedError "Couldn't parse http status from curl output"
+                          _ -> unexpectedError "Couldn't parse http status from curl output"
         case (exitcode2, httpCode) of
           (ExitSuccess, n) | n < 300 -> do
                                logInfo "API callback executeOAuth2Callback succeeded" $ logObject_ dac
@@ -239,7 +239,7 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
               c:_ -> c
             httpCode = case reads httpCodeStr of
                           [(n::Int, "")] -> n
-                          _ -> $unexpectedError "Couldn't parse http status from curl output"
+                          _ -> unexpectedError "Couldn't parse http status from curl output"
             sendAndFail mErr = do
                 logInfo "Salesforce API callback failed" $ object ["stderr" `equalsExternalBSL` stderr]
                 emailErrorIfNeeded ("Request to callback URL failed", fromMaybe "<unknown>" mErr, BSL.unpack stdout,

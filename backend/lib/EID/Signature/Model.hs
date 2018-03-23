@@ -95,7 +95,7 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeCGISEBankIDSignature () whe
       runQuery01_ selectSignatorySignTime
       msign_time :: Maybe UTCTime <- fetchOne runIdentity
       when (isJust msign_time) $ do
-        $unexpectedErrorM "signatory already signed, can't merge signature"
+        unexpectedError "signatory already signed, can't merge signature"
       success <- runQuery01 . sqlUpdate "eid_signatures" $ do
         setFields
         sqlWhereEq "signatory_link_id" slid
@@ -131,7 +131,7 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsNOBankIDSignature () wh
       runQuery01_ selectSignatorySignTime
       msign_time :: Maybe UTCTime <- fetchOne runIdentity
       when (isJust msign_time) $ do
-        $unexpectedErrorM "signatory already signed, can't merge signature"
+        unexpectedError "signatory already signed, can't merge signature"
       success <- runQuery01 . sqlUpdate "eid_signatures" $ do
         setFields
         sqlWhereEq "signatory_link_id" slid

@@ -80,7 +80,7 @@ removeTags = XMLContent . concatMap remove . unXMLContent
 
 -- | Form XMLContent from string literals
 instance IsString XMLContent where
-  fromString s = either ($unexpectedError $ "Cannot parse XML content " ++ show s) id $ parseXMLContent (T.pack s)
+  fromString s = either (unexpectedError $ "Cannot parse XML content " ++ show s) id $ parseXMLContent (T.pack s)
 
 -- | Form XMLContent from plain text
 cdata :: Text -> XMLContent

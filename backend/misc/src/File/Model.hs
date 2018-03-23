@@ -148,13 +148,13 @@ fetchFile (fid, fname, content, mamazon_url, checksum, maes_key, maes_iv, size) 
           Nothing -> case (mamazon_url, eaes) of
             (Just url, Just (Right aes)) -> FileStorageAWS url aes
             (Just _,   Just (Left msg))  -> err msg
-            d                                  -> $unexpectedError $ "invalid AWS data for file with id =" <+> show fid <> ":" <+> show d
+            d                                  -> unexpectedError $ "invalid AWS data for file with id =" <+> show fid <> ":" <+> show d
       , filechecksum = checksum
       , filesize = size
     }
       where
         err :: String -> FileStorage
-        err msg = $unexpectedError $ "file with id =" <+> show fid <+> "has invalid aes/iv pair:" <+> msg
+        err msg = unexpectedError $ "file with id =" <+> show fid <+> "has invalid aes/iv pair:" <+> msg
         eaes = case (maes_key, maes_iv) of
                  (Just aes_key, Just aes_iv) -> Just $ mkAESConf aes_key aes_iv
                  _ -> Nothing

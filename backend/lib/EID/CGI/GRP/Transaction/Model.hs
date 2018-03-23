@@ -128,4 +128,4 @@ fetchCgiGrpTransaction :: (CgiGrpTransactionType,SignatoryLinkID, Maybe T.Text, 
 fetchCgiGrpTransaction (cgitt, slid, mttbs, transaction_id, order_ref, session_id) =
     case cgitt of
       CgiGrpAuth -> CgiGrpAuthTransaction  slid transaction_id order_ref session_id
-      CgiGrpSign -> CgiGrpSignTransaction slid (fromMaybe ($unexpectedError "CGI Transaction field has NULL as text_to_be_signed") mttbs) transaction_id order_ref session_id
+      CgiGrpSign -> CgiGrpSignTransaction slid (fromMaybe (unexpectedError "CGI Transaction field has NULL as text_to_be_signed") mttbs) transaction_id order_ref session_id

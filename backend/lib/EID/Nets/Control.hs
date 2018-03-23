@@ -75,12 +75,12 @@ netsRoutes = choice [
 formatDOB :: T.Text -> T.Text
 formatDOB s = case T.splitOn "." s of
                [day, month, year] -> day <> month <> (T.drop 2 year)
-               _ -> $unexpectedError "Nets returned date of birth in invalid format"
+               _ -> unexpectedError "Nets returned date of birth in invalid format"
 
 dobFromDKPersonalNumber :: String -> T.Text
 dobFromDKPersonalNumber personalnumber = case T.chunksOf 2 (T.pack $ take 6 $ personalnumber) of
   [day, month, year] -> day <> "." <> month <> "." <> year
-  _ -> $unexpectedError $ "This personal number cannot be formatted to date: " <> personalnumber
+  _ -> unexpectedError $ "This personal number cannot be formatted to date: " <> personalnumber
 
 cnFromDN ::T.Text -> T.Text
 cnFromDN dn =
@@ -88,14 +88,14 @@ cnFromDN dn =
     where
       parsePair s = case T.splitOn "=" s of
         (name:values) -> (name, T.intercalate "=" values)
-        _ -> $unexpectedError $ "Cannot parse DN value: " <> show dn
-      parseError = $unexpectedError $ "Cannot parse DN value: " <> show dn
+        _ -> unexpectedError $ "Cannot parse DN value: " <> show dn
+      parseError = unexpectedError $ "Cannot parse DN value: " <> show dn
 
 decodeCertificate :: T.Text -> B.ByteString
-decodeCertificate = either ($unexpectedError $ "invalid base64 of nets certificate") id . B64.decode . T.encodeUtf8
+decodeCertificate = either (unexpectedError $ "invalid base64 of nets certificate") id . B64.decode . T.encodeUtf8
 
 attributeFromAssertion :: T.Text -> [(T.Text,T.Text)] -> T.Text
-attributeFromAssertion name = fromMaybe ($unexpectedError $ "missing field in assertion" <+> T.unpack name) . lookup name
+attributeFromAssertion name = fromMaybe (unexpectedError $ "missing field in assertion" <+> T.unpack name) . lookup name
 
 decodeProvider :: T.Text -> EID.AuthenticationProvider
 decodeProvider s = case s of
@@ -103,7 +103,7 @@ decodeProvider s = case s of
        "no_bidmob"         -> EID.NetsNOBankID
        "dk_nemid_js"       -> EID.NetsDKNemID
        "dk_nemid-opensign" -> EID.NetsDKNemID
-       _ -> $unexpectedError $ "provider not supported"  <+> T.unpack s
+       _ -> unexpectedError $ "provider not supported"  <+> T.unpack s
 
 flashMessageUserHasIdentifiedWithDifferentSSN :: TemplatesMonad m => m FlashMessage
 flashMessageUserHasIdentifiedWithDifferentSSN =
@@ -168,7 +168,7 @@ handleResolveNetsNOBankID res doc nt sl ctx = do
   let decodeInternalProvider s = case s of
          "no_bankid"         -> NetsNOBankIDStandard
          "no_bidmob"         -> NetsNOBankIDMobile
-         _ -> $unexpectedError $ "internal provider not supported"  <+> T.unpack s
+         _ -> unexpectedError $ "internal provider not supported"  <+> T.unpack s
   let internal_provider = decodeInternalProvider $ attributeFromAssertion "IDPROVIDER" $ assertionAttributes res
   let signatoryName = attributeFromAssertion "CN" $ assertionAttributes res
   let dob = attributeFromAssertion "DOB" $ assertionAttributes res
@@ -230,7 +230,7 @@ handleResolveNetsDKNemID res doc nt sl ctx = do
   let decodeInternalProvider s = case s of
          "dk_nemid_js"       -> NetsDKNemIDKeyCard
          "dk_nemid-opensign" -> NetsDKNemIDKeyFile
-         _ -> $unexpectedError $ "internal provider not supported"  <+> T.unpack s
+         _ -> unexpectedError $ "internal provider not supported"  <+> T.unpack s
       internal_provider = decodeInternalProvider $ attributeFromAssertion "IDPROVIDER" $ assertionAttributes res
       signatoryName = cnFromDN $ attributeFromAssertion "DN" $ assertionAttributes res
       ssn_sl = T.pack $ getPersonalNumber sl

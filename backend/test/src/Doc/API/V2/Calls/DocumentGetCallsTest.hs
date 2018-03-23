@@ -343,5 +343,5 @@ testDocApiV2Texts = do
   (line1:_) <- lookupObjectArray "lines" rect1
   let text1 = case line1 of
                 String s -> s
-                _ -> $unexpectedError "Should have been 'String' constructor"
+                _ -> unexpectedError "Should have been 'String' constructor"
   assertEqual "Lines in `docApiV2Texts` should match" "This is a test contract pdf." text1

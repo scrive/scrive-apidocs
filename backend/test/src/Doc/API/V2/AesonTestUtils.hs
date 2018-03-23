@@ -75,7 +75,7 @@ lookupObjectArray k v = do
   val <- lookupObject k v
   case val of
     Array a -> return $ V.toList a
-    _ -> $unexpectedErrorM "Lookup did not give Array"
+    _ -> unexpectedError "Lookup did not give Array"
 
 -- | Given a `Value` that should be an `Object`, lookup a key which should be
 -- an JSON `String`.
@@ -84,7 +84,7 @@ lookupObjectString k v = do
   val <- lookupObject k v
   case val of
     String s -> return $ T.unpack s
-    _ -> $unexpectedErrorM "Lookup did not give String"
+    _ -> unexpectedError "Lookup did not give String"
 
 -- * Internal Functions
 
@@ -92,5 +92,5 @@ lookupObjectString k v = do
 lookupObject :: String -> Value -> TestEnv Value
 lookupObject k (Object o) = case (H.lookup (T.pack k) o) of
                               Just v -> return v
-                              Nothing -> $unexpectedErrorM $ "Could not look up key: '" ++ k ++ "'"
-lookupObject _ _ = $unexpectedErrorM "Value was not an Object"
+                              Nothing -> unexpectedError $ "Could not look up key: '" ++ k ++ "'"
+lookupObject _ _ = unexpectedError "Value was not an Object"

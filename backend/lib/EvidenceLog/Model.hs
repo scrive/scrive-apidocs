@@ -122,7 +122,7 @@ evidenceLogText event textFields masl mmsg masg = do
 
 parseEventTextTemplate :: MonadThrow m => String -> String -> m XMLContent
 parseEventTextTemplate name s =
-  either ($unexpectedErrorM . (("Cannot parse event template " ++ name ++ " with content " ++ s ++ ": ") ++) . show) (return . CleanXMLContent) $
+  either (unexpectedError . (("Cannot parse event template " ++ name ++ " with content " ++ s ++ ": ") ++) . show) (return . CleanXMLContent) $
     parseXMLContent $ T.pack s
 
 instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsgs Bool where

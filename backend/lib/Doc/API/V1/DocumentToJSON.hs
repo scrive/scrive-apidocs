@@ -201,7 +201,7 @@ signatoryFieldsJSON doc sl = fmap (JSArray . catMaybes) $ forM orderedFields $ \
         return $ Just $ fieldJSON "standard" "sndname" (Left (snfValue nf))
           ((not $ null $ snfValue nf)  && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
-      SignatoryNameField _ -> $unexpectedError "Name field with order different then 1 or 2"
+      SignatoryNameField _ -> unexpectedError "Name field with order different then 1 or 2"
       SignatoryCompanyField cf ->
         return $ Just $ fieldJSON "standard" "sigco"  (Left (scfValue cf))
           ((not $ null $ scfValue $ cf)  && (not $ isPreparation doc))

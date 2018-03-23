@@ -36,7 +36,7 @@ unjsonAttachmentSorting = arrayOf $ objectOf $ pure (\f v -> (order f) v)
     order :: T.Text -> (a -> AscDesc a)
     order "ascending" = Asc
     order "descending" = Desc
-    order _ = $unexpectedError "parsing order for unjsonAttachmentSorting"
+    order _ = unexpectedError "parsing order for unjsonAttachmentSorting"
     askDesc (Asc _) = "ascending"
     askDesc (Desc _) = "descending"
     sorting (Asc o) = o
@@ -50,6 +50,6 @@ unjsonAttachmentFiltering =  arrayOf $ objectOf $ pure AttachmentFilterByString
   where
     unsafeFilterText :: AttachmentFilter ->  T.Text
     unsafeFilterText (AttachmentFilterByString text) = text
-    unsafeFilterText _ = $unexpectedError "unsafeDocumentAPIFilterText"
+    unsafeFilterText _ = unexpectedError "unsafeDocumentAPIFilterText"
     textFilterParser "text" = Just ()
     textFilterParser _ = Nothing

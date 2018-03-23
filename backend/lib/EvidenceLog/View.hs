@@ -55,7 +55,7 @@ eventsForLog = cleanUnimportantAfterSigning . filter ((simpleEvents . evType) &&
 
 -- TODO: Consider saving actor name in event instead, this is likely to become broken
 approximateActor :: (MonadDB m, MonadThrow m, TemplatesMonad m) => EventRenderTarget -> Document -> SignatoryIdentifierMap -> DocumentEvidenceEvent -> m String
-approximateActor EventForEvidenceLog _ _ _ = $unexpectedErrorM "approximateActor should not be called for evidence log entries"
+approximateActor EventForEvidenceLog _ _ _ = unexpectedError "approximateActor should not be called for evidence log entries"
 approximateActor tgt doc sim dee | systemEvents $ evType dee = return "Scrive"
                              | otherwise = do
   emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
@@ -196,7 +196,7 @@ eventForHistory = not . (`elem` map Current [AuthorAttachmentAccepted])
 -- verification pages).
 simplyfiedEventText :: (HasLang d, MonadDB m, MonadThrow m, TemplatesMonad m)
   => EventRenderTarget -> Maybe String -> d -> SignatoryIdentifierMap -> DocumentEvidenceEvent -> m String
-simplyfiedEventText EventForEvidenceLog _ _ _ _ = $unexpectedErrorM "simplyfiedEventText should not be called for evidence log entries"
+simplyfiedEventText EventForEvidenceLog _ _ _ _ = unexpectedError "simplyfiedEventText should not be called for evidence log entries"
 simplyfiedEventText target mactor d sim dee = do
   emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
   case evType dee of

@@ -44,7 +44,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
            ]
 
     when (sort expected_refs /= sort refs) $ do
-      $unexpectedErrorM $ "PurgeFile: database layout has changed, update PurgeFile.expected_refs and check the code: " ++ show refs
+      unexpectedError $ "PurgeFile: database layout has changed, update PurgeFile.expected_refs and check the code: " ++ show refs
 
     runSQL_ $ smconcat [
         "WITH files_to_purge AS ("

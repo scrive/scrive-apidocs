@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Utils.TH where
 
 import Language.Haskell.TH

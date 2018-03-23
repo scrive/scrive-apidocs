@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module VersionTH (versionID) where
 
 import Language.Haskell.TH.Lib

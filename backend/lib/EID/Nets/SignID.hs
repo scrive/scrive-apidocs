@@ -79,5 +79,5 @@ nextUUIDWrapper = do
 
 parseSignOrderUUID :: T.Text -> SignOrderUUID
 parseSignOrderUUID t = SignOrderUUID $ fromMaybe
-  ($unexpectedError $ "Cannot parse OrderID:" <+> T.unpack t)
+  (unexpectedError $ "Cannot parse OrderID:" <+> T.unpack t)
   (U.fromString $ T.unpack t)

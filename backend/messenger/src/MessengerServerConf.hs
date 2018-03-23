@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module MessengerServerConf (
     MessengerServerConf(..)
   , sendersConfigFromMessengerConf

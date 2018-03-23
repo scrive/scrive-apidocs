@@ -29,7 +29,7 @@ viewerForDocument (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess ms
 viewerForDocument (DocumentAccess { daAccessMode = AuthorDocumentAccess}) doc =
   case (getAuthorSigLink doc) of
     Just sig -> SignatoryDocumentViewer $ signatorylinkid sig
-    Nothing  -> $unexpectedError "Could not find author for document for DocumentViewer"
+    Nothing  -> unexpectedError "Could not find author for document for DocumentViewer"
 viewerForDocument (DocumentAccess { daAccessMode = SystemAdminDocumentAccess}) _ = CompanyAdminDocumentViewer Nothing
 
 dvSignatoryLinkID :: DocumentViewer -> Maybe SignatoryLinkID

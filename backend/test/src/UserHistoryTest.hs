@@ -250,5 +250,5 @@ createTestUser = do
                                 (get bdid bd)
                                 AccountRequest
     case muser of
-        Nothing     -> $unexpectedErrorM "can't create user"
+        Nothing     -> unexpectedError "can't create user"
         (Just user) -> return user

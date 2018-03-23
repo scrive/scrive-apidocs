@@ -117,7 +117,7 @@ kontramailHelper noreplyAddress bd theme renderFunc tname fields = do
 
     wholemail <- renderFunc tname fields
     let (title, content) = case split "\r\n" $ dropWhile (isControl || isSpace) wholemail of
-                             [] -> $unexpectedError "Couldnt separate email content from title"
+                             [] -> unexpectedError "Couldnt separate email content from title"
                              (title':contentChunks) ->
                                (unescapeHTML title', Str.join "\r\n" contentChunks)
     return $ emptyMail {

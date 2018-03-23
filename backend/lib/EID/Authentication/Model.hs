@@ -84,7 +84,7 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeAuthenticationInternal () w
       runQuery01_ selectSignatorySignTime
       msign_time :: Maybe UTCTime <- fetchOne runIdentity
       when (isJust msign_time) $ do
-        $unexpectedErrorM "signatory already signed, can't merge authentication"
+        unexpectedError "signatory already signed, can't merge authentication"
       success <- runQuery01 . sqlUpdate "eid_authentications" $ do
         setFields
         sqlWhereEq "signatory_link_id" slid

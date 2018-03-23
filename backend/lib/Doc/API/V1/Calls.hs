@@ -319,7 +319,7 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
             let putNewFiles ((Left  f, mdetails) : rest) newfs      = (f , mdetails) : putNewFiles rest newfs
                 putNewFiles ((Right _, mdetails) : rest) (nf:newfs) = (nf, mdetails) : putNewFiles rest newfs
                 putNewFiles []                           []         = []
-                putNewFiles _                            _          = $unexpectedError "Wrong amount of preChecked new files"
+                putNewFiles _                            _          = unexpectedError "Wrong amount of preChecked new files"
             return $ putNewFiles xs newFiles
 
           tryGetFile ::  Kontrakcja m => Document -> Int -> m (Maybe (Either File (String, BSL.ByteString)))

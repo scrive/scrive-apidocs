@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Doc.API.V2.JSON.AttachmentDetails (
     AttachmentDetails(..)
   , unjsonAttachmentDetails
@@ -35,11 +36,11 @@ addToSealedFileFromAttachmentDetailsWithFileIDOrFileParam (AttachmentDetailsWith
 
 fileIDFromAttachmentDetailsWithFileIDOrFileParam :: AttachmentDetailsWithFileIDOrFileParam -> FileID
 fileIDFromAttachmentDetailsWithFileIDOrFileParam (AttachmentDetailsWithFileID _ _ _ fid) = fid
-fileIDFromAttachmentDetailsWithFileIDOrFileParam _ = $unexpectedError "Trying to fetch file id from file param"
+fileIDFromAttachmentDetailsWithFileIDOrFileParam _ = unexpectedError "Trying to fetch file id from file param"
 
 fileParamAttachmentDetailsWithFileIDOrFileParam :: AttachmentDetailsWithFileIDOrFileParam -> T.Text
 fileParamAttachmentDetailsWithFileIDOrFileParam (AttachmentDetailsWithFileParam _ _ _ fp) = fp
-fileParamAttachmentDetailsWithFileIDOrFileParam _ = $unexpectedError "Trying to fetch file param from file id"
+fileParamAttachmentDetailsWithFileIDOrFileParam _ = unexpectedError "Trying to fetch file param from file id"
 
 toAttachmentDetails :: AttachmentDetailsWithFileIDOrFileParam -> AttachmentDetails
 toAttachmentDetails (AttachmentDetailsWithFileID n r a fid) = AttachmentDetails n r a (Left $ fid)

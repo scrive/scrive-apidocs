@@ -63,7 +63,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SwitchToSlaveSenderImmediately 
       sqlSet "finished_at" (Nothing :: Maybe UTCTime)
       sqlWhereEq "id" job
     when (not success) $ do
-      $unexpectedErrorM $ show job <+> "doesn't exist"
+      unexpectedError $ show job <+> "doesn't exist"
     where
       job = CollectServiceTestResult
 
@@ -75,7 +75,7 @@ instance (MonadDB m, MonadTime m, MonadThrow m) => DBUpdate m CollectServiceTest
       sqlSetCmd "run_at" $ sqlParam now <+> "+" <?> int
       sqlWhereEq "id" job
     when (not success) $ do
-      $unexpectedErrorM $ show job <+> "doesn't exist"
+      unexpectedError $ show job <+> "doesn't exist"
     where
       job = CollectServiceTestResult
 
@@ -86,7 +86,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m ScheduleServiceTest () where
       sqlSet "run_at" unixEpoch
       sqlWhereEq "id" job
     when (not success) $ do
-      $unexpectedErrorM $ show job <+> "doesn't exist"
+      unexpectedError $ show job <+> "doesn't exist"
     where
       job = PerformServiceTest
 

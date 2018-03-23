@@ -52,7 +52,7 @@ unjsonNameField = pure (\no v ob sfbs ps -> NameField (unsafeSignatoryFieldID 0)
   where
     unsafeFromNameField :: (SignatoryNameField -> a) -> SignatoryField -> a
     unsafeFromNameField f (SignatoryNameField a) = f a
-    unsafeFromNameField _ _ = $unexpectedError "unsafeFromNameField"
+    unsafeFromNameField _ _ = unexpectedError "unsafeFromNameField"
 
 unjsonCompanyField :: Ap (FieldDef SignatoryField) SignatoryCompanyField
 unjsonCompanyField = pure (\v ob sfbs ps -> CompanyField (unsafeSignatoryFieldID 0) v ob sfbs ps)
@@ -63,7 +63,7 @@ unjsonCompanyField = pure (\v ob sfbs ps -> CompanyField (unsafeSignatoryFieldID
   where
     unsafeFromCompanyField :: (SignatoryCompanyField -> a) -> SignatoryField -> a
     unsafeFromCompanyField f (SignatoryCompanyField a) = f a
-    unsafeFromCompanyField _ _ = $unexpectedError "unsafeFromCompanyField"
+    unsafeFromCompanyField _ _ = unexpectedError "unsafeFromCompanyField"
 
 unjsonPersonalNumberField :: Ap (FieldDef SignatoryField) SignatoryPersonalNumberField
 unjsonPersonalNumberField = pure (\v ob sfbs ps-> PersonalNumberField (unsafeSignatoryFieldID 0) (strip v) ob sfbs ps)
@@ -74,7 +74,7 @@ unjsonPersonalNumberField = pure (\v ob sfbs ps-> PersonalNumberField (unsafeSig
   where
     unsafeFromPersonalNumberField :: (SignatoryPersonalNumberField -> a) -> SignatoryField -> a
     unsafeFromPersonalNumberField f (SignatoryPersonalNumberField a) = f a
-    unsafeFromPersonalNumberField _ _ = $unexpectedError "unsafeFromPersonalNumberField"
+    unsafeFromPersonalNumberField _ _ = unexpectedError "unsafeFromPersonalNumberField"
 
 unjsonCompanyNumberField :: Ap (FieldDef SignatoryField) SignatoryCompanyNumberField
 unjsonCompanyNumberField = pure (\v  ob sfbs ps -> CompanyNumberField (unsafeSignatoryFieldID 0) v ob sfbs ps)
@@ -85,7 +85,7 @@ unjsonCompanyNumberField = pure (\v  ob sfbs ps -> CompanyNumberField (unsafeSig
   where
     unsafeFromCompanyNumberField :: (SignatoryCompanyNumberField -> a) -> SignatoryField -> a
     unsafeFromCompanyNumberField f (SignatoryCompanyNumberField a) = f a
-    unsafeFromCompanyNumberField _ _ = $unexpectedError "unsafeFromCompanyNumberField"
+    unsafeFromCompanyNumberField _ _ = unexpectedError "unsafeFromCompanyNumberField"
 
 
 unjsonEmailField :: Ap (FieldDef SignatoryField) SignatoryEmailField
@@ -98,7 +98,7 @@ unjsonEmailField = pure (\v  ob sfbs ebs ps -> EmailField (unsafeSignatoryFieldI
   where
     unsafeFromEmailField :: (SignatoryEmailField -> a) -> SignatoryField -> a
     unsafeFromEmailField f (SignatoryEmailField a) = f a
-    unsafeFromEmailField _ _ = $unexpectedError "unsafeFromEmailField"
+    unsafeFromEmailField _ _ = unexpectedError "unsafeFromEmailField"
 
 unjsonMobileField :: Ap (FieldDef SignatoryField) SignatoryMobileField
 unjsonMobileField = pure (\v ob sfbs ebs  ps -> MobileField (unsafeSignatoryFieldID 0) v ob sfbs ebs ps)
@@ -112,7 +112,7 @@ unjsonMobileField = pure (\v ob sfbs ebs  ps -> MobileField (unsafeSignatoryFiel
   where
     unsafeFromMobileField :: (SignatoryMobileField -> a) -> SignatoryField -> a
     unsafeFromMobileField f (SignatoryMobileField a) = f a
-    unsafeFromMobileField _ _ = $unexpectedError "unsafeFromMobileField"
+    unsafeFromMobileField _ _ = unexpectedError "unsafeFromMobileField"
 
 
 unjsonTextField :: Ap (FieldDef SignatoryField) SignatoryTextField
@@ -126,7 +126,7 @@ unjsonTextField  = pure (\n v ob sfbs ps -> TextField  (unsafeSignatoryFieldID 0
   where
     unsafeFromTextField  :: (SignatoryTextField  -> a) -> SignatoryField -> a
     unsafeFromTextField  f (SignatoryTextField  a) = f a
-    unsafeFromTextField  _ _ = $unexpectedError "unsafeFromTextField "
+    unsafeFromTextField  _ _ = unexpectedError "unsafeFromTextField "
 
 unjsonTextCustomValidation :: UnjsonDef TextCustomValidation
 unjsonTextCustomValidation = objectOf $ pure TextCustomValidation
@@ -144,7 +144,7 @@ unjsonCheckboxField  = pure (\n v ob sfbs ps -> CheckboxField  (unsafeSignatoryF
   where
     unsafeFromCheckboxField  :: (SignatoryCheckboxField  -> a) -> SignatoryField -> a
     unsafeFromCheckboxField  f (SignatoryCheckboxField  a) = f a
-    unsafeFromCheckboxField  _ _ = $unexpectedError "unsafeFromCheckboxField "
+    unsafeFromCheckboxField  _ _ = unexpectedError "unsafeFromCheckboxField "
     validCheckboxPlacement fp = if checkboxPlacementHasValidCheckboxRatio fp
       then return fp
       else fail "Checkbox placement has invalid wrel, hrel or fsrel"
@@ -159,7 +159,7 @@ unjsonSignatureField  = pure (\n ob sfbs ps -> SignatureField  (unsafeSignatoryF
   where
     unsafeFromSignatureField  :: (SignatorySignatureField  -> a) -> SignatoryField -> a
     unsafeFromSignatureField  f (SignatorySignatureField  a) = f a
-    unsafeFromSignatureField  _ _ = $unexpectedError "unsafeFromSignatureField "
+    unsafeFromSignatureField  _ _ = unexpectedError "unsafeFromSignatureField "
 
 unjsonRadioGroupField :: Ap (FieldDef SignatoryField) (Result SignatoryRadioGroupField)
 unjsonRadioGroupField = pure (\n sv ps vs -> validateRadioGroup $ RadioGroupField (unsafeSignatoryFieldID 0) n sv ps vs)
@@ -170,7 +170,7 @@ unjsonRadioGroupField = pure (\n sv ps vs -> validateRadioGroup $ RadioGroupFiel
   where
     unsafeFromRadioGroupField :: (SignatoryRadioGroupField -> a) -> SignatoryField -> a
     unsafeFromRadioGroupField f (SignatoryRadioGroupField a) = f a
-    unsafeFromRadioGroupField _ _ = $unexpectedError "unsafeFromRadioGroupField "
+    unsafeFromRadioGroupField _ _ = unexpectedError "unsafeFromRadioGroupField "
     validRadiobuttonPlacement fp = if radiobuttonPlacementHasValidRadiobuttonRatio fp
       then return fp
       else fail "Radiobutton placement has invalid wrel, hrel or fsrel"
@@ -237,18 +237,18 @@ data SignatoryFieldTMPValue = StringFTV String
 
 unsafeStringFromSignatoryFieldTMPValue :: SignatoryFieldTMPValue -> String
 unsafeStringFromSignatoryFieldTMPValue (StringFTV a) = a
-unsafeStringFromSignatoryFieldTMPValue (BoolFTV _) = $unexpectedError "unsafeStringFromSignatoryFieldTMPValue: Bool instead of Sting"
-unsafeStringFromSignatoryFieldTMPValue (FileFTV _) = $unexpectedError "unsafeStringFromSignatoryFieldTMPValue: File instead of Sting"
+unsafeStringFromSignatoryFieldTMPValue (BoolFTV _) = unexpectedError "unsafeStringFromSignatoryFieldTMPValue: Bool instead of Sting"
+unsafeStringFromSignatoryFieldTMPValue (FileFTV _) = unexpectedError "unsafeStringFromSignatoryFieldTMPValue: File instead of Sting"
 
 unsafeBoolFromSignatoryFieldTMPValue :: SignatoryFieldTMPValue -> Bool
 unsafeBoolFromSignatoryFieldTMPValue (BoolFTV a) = a
-unsafeBoolFromSignatoryFieldTMPValue (StringFTV _) = $unexpectedError "unsafeBoolFromSignatoryFieldTMPValue: Sting instead of Bool"
-unsafeBoolFromSignatoryFieldTMPValue (FileFTV _) = $unexpectedError "unsafeBoolFromSignatoryFieldTMPValue: File instead of Bool"
+unsafeBoolFromSignatoryFieldTMPValue (StringFTV _) = unexpectedError "unsafeBoolFromSignatoryFieldTMPValue: Sting instead of Bool"
+unsafeBoolFromSignatoryFieldTMPValue (FileFTV _) = unexpectedError "unsafeBoolFromSignatoryFieldTMPValue: File instead of Bool"
 
 unsafeFileFromSignatoryFieldTMPValue :: SignatoryFieldTMPValue -> BS.ByteString
 unsafeFileFromSignatoryFieldTMPValue (FileFTV a) = a
-unsafeFileFromSignatoryFieldTMPValue (StringFTV _) = $unexpectedError "unsafeFileFromSignatoryFieldTMPValue: Sting instead of File"
-unsafeFileFromSignatoryFieldTMPValue (BoolFTV _) = $unexpectedError "unsafeFileFromSignatoryFieldTMPValue: Bool instead of File"
+unsafeFileFromSignatoryFieldTMPValue (StringFTV _) = unexpectedError "unsafeFileFromSignatoryFieldTMPValue: Sting instead of File"
+unsafeFileFromSignatoryFieldTMPValue (BoolFTV _) = unexpectedError "unsafeFileFromSignatoryFieldTMPValue: Bool instead of File"
 
 newtype SignatoryFieldsValuesForSigning = SignatoryFieldsValuesForSigning [(FieldIdentity, SignatoryFieldTMPValue)] deriving Show
 
@@ -276,7 +276,7 @@ unjsonNameFieldFieldValue = pure (\no v ->(no,v))
   where
     unsafeNameOrder :: FieldIdentity -> NameOrder
     unsafeNameOrder (NameFI no) = no
-    unsafeNameOrder _ = $unexpectedError "unsafeNameOrder"
+    unsafeNameOrder _ = unexpectedError "unsafeNameOrder"
 
 unjsonCompanyFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) String
 unjsonCompanyFieldFieldValue = field "value" (unsafeStringFromSignatoryFieldTMPValue .snd) "Value of the field"
@@ -300,7 +300,7 @@ unjsonTextFieldFieldValue = pure (\no v ->(no,v))
   where
     unsafeTextName:: FieldIdentity -> String
     unsafeTextName (TextFI n) = n
-    unsafeTextName _ = $unexpectedError "unsafeTextName"
+    unsafeTextName _ = unexpectedError "unsafeTextName"
 
 unjsonCheckboxFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) (String,Bool)
 unjsonCheckboxFieldFieldValue = pure (\no v ->(no,v))
@@ -309,7 +309,7 @@ unjsonCheckboxFieldFieldValue = pure (\no v ->(no,v))
   where
     unsafeCheckboxName:: FieldIdentity -> String
     unsafeCheckboxName (CheckboxFI n) = n
-    unsafeCheckboxName _ = $unexpectedError "unsafeCheckboxName"
+    unsafeCheckboxName _ = unexpectedError "unsafeCheckboxName"
 
 unjsonRadioGroupFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) (String,String)
 unjsonRadioGroupFieldFieldValue = pure (\no v ->(no,v))
@@ -318,7 +318,7 @@ unjsonRadioGroupFieldFieldValue = pure (\no v ->(no,v))
   where
     unsafeRadioGroupName:: FieldIdentity -> String
     unsafeRadioGroupName (RadioGroupFI n) = n
-    unsafeRadioGroupName _ = $unexpectedError "unsafeRadioGroupName"
+    unsafeRadioGroupName _ = unexpectedError "unsafeRadioGroupName"
 
 unjsonSignatureFieldFieldValue :: Ap (FieldDef (FieldIdentity,SignatoryFieldTMPValue)) (String,BS.ByteString)
 unjsonSignatureFieldFieldValue = pure (\no v ->(no,v))
@@ -327,7 +327,7 @@ unjsonSignatureFieldFieldValue = pure (\no v ->(no,v))
   where
     unsafeSignatureName:: FieldIdentity -> String
     unsafeSignatureName (SignatureFI n) = n
-    unsafeSignatureName _ = $unexpectedError "unsafeSignatureName"
+    unsafeSignatureName _ = unexpectedError "unsafeSignatureName"
     unjsonImage :: UnjsonDef BS.ByteString
     -- JJ: what is "Screenshot" here?
     unjsonImage = SimpleUnjsonDef "Screenshot" parseImage (Aeson.String . decodeUtf8 . (RFC2397.encode "image/png"))

@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module BrandedDomain.BrandedDomain.Labels where
 
 import Data.Label (mkLabel)

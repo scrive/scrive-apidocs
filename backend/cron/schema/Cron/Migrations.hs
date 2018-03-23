@@ -60,7 +60,7 @@ removeFindAndDoPostDocumentClosedActions = Migration {
   , mgrAction = StandardMigration $ do
       n <- runSQL "DELETE FROM cron_jobs WHERE id = 'find_and_do_post_document_closed_actions'"
       when (n /= 1) $ do
-        $unexpectedErrorM "Wrong amount of rows deleted"
+        unexpectedError "Wrong amount of rows deleted"
   }
 
 removeRecurlySynchronizationFromCronJobs :: (MonadDB m, MonadThrow m) => Migration m
@@ -70,7 +70,7 @@ removeRecurlySynchronizationFromCronJobs = Migration {
   , mgrAction = StandardMigration $ do
       n <- runSQL "DELETE FROM cron_jobs WHERE id = 'recurly_synchronization'"
       when (n /= 1) $ do
-        $unexpectedErrorM "Wrong amount of rows deleted"
+        unexpectedError "Wrong amount of rows deleted"
   }
 
 removeFindAndExtendDigitalSignaturesFromCronJobs :: (MonadDB m, MonadThrow m) => Migration m
@@ -80,5 +80,5 @@ removeFindAndExtendDigitalSignaturesFromCronJobs = Migration {
   , mgrAction = StandardMigration $ do
       n <- runSQL "DELETE FROM cron_jobs WHERE id = 'find_and_extend_digital_signatures'"
       when (n /= 1) $ do
-        $unexpectedErrorM "Wrong amount of rows deleted"
+        unexpectedError "Wrong amount of rows deleted"
   }

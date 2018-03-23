@@ -125,10 +125,10 @@ requestParameterMissing param = APIError { errorType = RequestParametersMissing,
   where msg = "The parameter '"<> param <> "' was missing. Please refer to our API documentation"
 
 requestParameterParseError :: T.Text -> T.Text -> APIError
-requestParameterParseError param error = APIError { errorType = RequestParametersParseError, errorHttpCode = 400, errorMessage = msg}
+requestParameterParseError param err = APIError { errorType = RequestParametersParseError, errorHttpCode = 400, errorMessage = msg}
   where msg = "The parameter '" <> param <> "' could not be parsed."
             <+> "Please refer to our API documentation. Error details:"
-            <+> error
+            <+> err
 
 requestParameterInvalid :: T.Text -> T.Text -> APIError
 requestParameterInvalid param reason = APIError { errorType = RequestParametersInvalid, errorHttpCode = 400, errorMessage = msg}

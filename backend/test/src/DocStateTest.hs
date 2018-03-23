@@ -1169,7 +1169,7 @@ testGetDocumentsSharedInCompany = replicateM_ 10 $ do
 testProcessSearchStringToFilter :: TestEnv ()
 testProcessSearchStringToFilter = do
   let stripDocumentFilter (DocumentFilterByTSQuery s) = s
-      stripDocumentFilter _ = $unexpectedError "This should not happen!"
+      stripDocumentFilter _ = unexpectedError "This should not happen!"
       t0 = ""
       e0 = []
       t1 = "h"

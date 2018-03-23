@@ -143,7 +143,7 @@ instance CompositeFromSQL Attachment where
   , attContent = case (mcontent, mfid) of
     (Just content, Nothing) -> Left content
     (Nothing, Just fid) -> Right fid
-    _ -> $unexpectedError "impossible due to the check constraint"
+    _ -> unexpectedError "impossible due to the check constraint"
   }
 
 instance Loggable Attachment where

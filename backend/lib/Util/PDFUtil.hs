@@ -209,7 +209,7 @@ preCheckPDF content = do
   case res of
     Left e -> return $ Left e
     Right [x] -> return $ Right $ x
-    _ -> $unexpectedError "preCheckPDFs returned wrong amount of contents"
+    _ -> unexpectedError "preCheckPDFs returned wrong amount of contents"
 
 
 getNumberOfPDFPages :: BS.ByteString -> IO (Either String Int)

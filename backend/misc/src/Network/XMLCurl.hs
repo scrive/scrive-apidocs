@@ -37,7 +37,7 @@ noopErrorHandler _ = curlError
 
 -- | Throw an exception informing about curl error.
 curlError :: MonadThrow m => CurlCode -> m a
-curlError code = $unexpectedErrorM $ "Curl response code was" <+> show code
+curlError code = unexpectedError $ "Curl response code was" <+> show code
 
 -- | In case of certificate error, reconnect with
 -- disabled peer verification and log the issue.

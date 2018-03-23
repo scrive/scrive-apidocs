@@ -175,7 +175,7 @@ insertSignatoryLinks did links = do
           identifier_ did
         , identifier_ $ map signatorylinkid authors
         ]
-      $unexpectedErrorM "Invalid document"
+      unexpectedError "Invalid document"
 
   insertSignatoryAttachments
     [(signatorylinkid sl, att) | sl <- linksWithID, att <- signatoryattachments sl]
@@ -1393,7 +1393,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpd
 data SignDocument = SignDocument SignatoryLinkID MagicHash (Maybe ESignature) (Maybe String) SignatoryScreenshots Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m, MonadTime m) => DBUpdate m SignDocument () where
   update (SignDocument slid mh mesig mpin screenshots actor) = do
-    let legacy_signature_error = $unexpectedError "signing with legacy signatures is not possible"
+    let legacy_signature_error = unexpectedError "signing with legacy signatures is not possible"
         sqlWhereAuthSign = case (mesig, mpin) of
           (Just (CGISEBankIDSignature_        _), _) -> sqlWhereSignatoryAuthenticationToSignMethodIs SEBankIDAuthenticationToSign
           (Just (NetsNOBankIDSignature_       _), _) -> sqlWhereSignatoryAuthenticationToSignMethodIs NOBankIDAuthenticationToSign
@@ -1759,7 +1759,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateP
                      sqlWhereEq "documents.status" Pending
                      sqlWhere "signatory_links.sign_time IS NULL"
     unless success $ do
-      $unexpectedErrorM "Failed to update phone number after identification to view"
+      unexpectedError "Failed to update phone number after identification to view"
     void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg UpdateMobileAfterIdentificationToViewWithNets
                (F.value "oldphone" oldphone >> F.value "newphone" newphone) (Just sl) Nothing actor
 
@@ -2039,7 +2039,7 @@ getEvidenceTextForUpdateField sig (NameFI (NameOrder 1))
                             | hasOneNameField sig      = UpdateFieldNameEvidence
                             | otherwise                = UpdateFieldFirstNameEvidence
 getEvidenceTextForUpdateField _ (NameFI (NameOrder 2)) = UpdateFieldLastNameEvidence
-getEvidenceTextForUpdateField _ (NameFI (NameOrder _)) = $unexpectedError "NameFT with nameorder different than 1 and 2"
+getEvidenceTextForUpdateField _ (NameFI (NameOrder _)) = unexpectedError "NameFT with nameorder different than 1 and 2"
 getEvidenceTextForUpdateField _ CompanyFI              = UpdateFieldCompanyEvidence
 getEvidenceTextForUpdateField _ PersonalNumberFI       = UpdateFieldPersonalNumberEvidence
 getEvidenceTextForUpdateField _ CompanyNumberFI        = UpdateFieldCompanyNumberEvidence
@@ -2089,7 +2089,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
   logInfo message $ object [
       "inequalities" .= concatMap showInequality inequalities
     ]
-  $unexpectedErrorM $ T.unpack message
+  unexpectedError $ T.unpack message
   where
     message = "Documents aren't equal"
     showInequality (name,obj1,obj2) = name ++ ": \n" ++ obj1 ++ "\n" ++ obj2 ++ "\n"

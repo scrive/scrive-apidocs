@@ -87,7 +87,7 @@ main = do
           logInfo "Error while compiling routes" $ object [
               "error" .= e
             ]
-          $unexpectedErrorM "static routing"
+          unexpectedError "static routing"
         Right r -> return $ r >>= maybe (notFound $ toResponse ("Not found."::String)) return
       socket <- liftBase (listenOn (htonl iface) $ fromIntegral port)
       fork . liftBase . runReqHandlerT socket handlerConf . runLogger $

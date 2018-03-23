@@ -118,7 +118,7 @@ getDocByDocIDForAuthor :: Kontrakcja m => DocumentID -> m Document
 getDocByDocIDForAuthor did = do
   ctx <- getContext
   case userid <$> getContextUser ctx of
-    Nothing -> $unexpectedErrorM "Impossible happened (user being logged in is guarded up in the call stack)"
+    Nothing -> unexpectedError "Impossible happened (user being logged in is guarded up in the call stack)"
     Just uid -> dbQuery $ GetDocument
       (DocumentsVisibleToUser uid)
       [DocumentFilterByDocumentID did, DocumentFilterByAuthor uid]
@@ -131,7 +131,7 @@ getDocByDocIDForAuthorOrAuthorsCompanyAdmin
 getDocByDocIDForAuthorOrAuthorsCompanyAdmin did = do
   ctx <- getContext
   case userid <$> getContextUser ctx of
-    Nothing -> $unexpectedErrorM "Impossible happened (user being logged in is guarded up in the call stack)"
+    Nothing -> unexpectedError "Impossible happened (user being logged in is guarded up in the call stack)"
     Just uid -> dbQuery $ GetDocument
       (DocumentsVisibleToUser uid)
       [DocumentFilterByDocumentID did, DocumentFilterLinkIsAuthor True]

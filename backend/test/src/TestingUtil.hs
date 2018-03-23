@@ -1137,4 +1137,4 @@ fieldForTests (TextFI l) v = SignatoryTextField $ TextField {
     , stfPlacements             = []
     , stfCustomValidation       = Nothing
   }
-fieldForTests _ _  = $unexpectedError "cant use signature or checkbox fields with this function"
+fieldForTests _ _  = unexpectedError "cant use signature or checkbox fields with this function"

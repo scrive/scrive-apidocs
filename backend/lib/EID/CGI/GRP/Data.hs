@@ -115,7 +115,7 @@ xpGrpFault = XMLParser $ \c -> listToMaybe $ c
     "CERTIFICATE_ERR"     -> CertificateError
     "CANCELLED"           -> Cancelled
     "START_FAILED"        -> StartFailed
-    gf                    -> $unexpectedError $ "unknown faultStatus:" <+> T.unpack gf
+    gf                    -> unexpectedError $ "unknown faultStatus:" <+> T.unpack gf
 
 ----------------------------------------
 
@@ -324,4 +324,4 @@ xpCollectResponse = XMLParser $ \c -> listToMaybe $ c
      "NO_CLIENT"               -> NoClient
      "STARTED"                 -> Started
      "COMPLETE"                -> Complete
-     status                    -> $unexpectedError $ "xpCollectResponse: unknown progressStatus:" <+> T.unpack status
+     status                    -> unexpectedError $ "xpCollectResponse: unknown progressStatus:" <+> T.unpack status

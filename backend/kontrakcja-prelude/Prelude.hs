@@ -27,16 +27,13 @@ module Prelude (
   , tail
   , fromJust
   , whenJust
-  , UnexpectedError(..)
+  , error
   , unexpectedError
-  , unexpectedErrorM
   ) where
 
 import Control.Applicative
 import Control.Category
-import Control.Exception (throw)
 import Control.Monad
-import Control.Monad.Catch
 import Control.Monad.Extra
 import Data.Algebra.Boolean
 import Data.Foldable (foldMap)
@@ -45,10 +42,7 @@ import Data.List hiding ((!!), all, and, any, head, last, maximum, minimum, or, 
 import Data.Maybe hiding (fromJust)
 import Data.Monoid
 import Data.Monoid.Utils
-import Data.Typeable
-import GHC.Stack (HasCallStack)
-import Language.Haskell.TH
-import Language.Haskell.TH.Syntax
+import GHC.Stack (HasCallStack, withFrozenCallStack)
 import "base" Prelude hiding ((!!), (&&), (.), (||), all, and, any, error, head, id, last, maximum, minimum, not, or, read, tail)
 import qualified "base" Prelude as P
 
@@ -69,24 +63,6 @@ instance Boolean (a -> Bool) where
 -- | Copy the field value from an object of the same type.
 copy :: (f :-> o) -> f -> f -> f
 copy x fromThis toThat = set x (get x fromThis) $ toThat
-
-----------------------------------------
-
--- | Unexpected error message along with source code location.
-data UnexpectedError = UnexpectedError {
-  ueMessage  :: !String
-, ueModule   :: !String
-, ueLine     :: !Int
-, uePosition :: !Int
-} deriving (Eq, Ord, Typeable)
-
-instance Show UnexpectedError where
-  showsPrec _ UnexpectedError{..} = (ueModule ++)
-    . (":" ++) . (show ueLine ++)
-    . (":" ++) . (show uePosition ++)
-    . (": " ++) . (ueMessage ++)
-
-instance Exception UnexpectedError
 
 ----------------------------------------
 
@@ -134,39 +110,24 @@ minimum = emptyList P.minimum $ emptyListError "minimum"
 read :: (HasCallStack, Read a, Show a) => String -> a
 read s =
   let parsedS = reads s
-  in  fromMaybe (P.error $ "reading failed (input was '" ++ s ++ "', reads returned '" ++ show parsedS ++ "')") $ do
+  in  fromMaybe (unexpectedError $ "reading failed (input was '"
+                  ++ s ++ "', reads returned '" ++ show parsedS ++ "')") $ do
         [(v, "")] <- return parsedS
         return v
 
 -- | Replacement for 'Data.Maybe.fromJust'
 -- that provides useful information on failure.
 fromJust :: HasCallStack => Maybe a -> a
-fromJust Nothing  = P.error "fromJust received Nothing"
+fromJust Nothing  = unexpectedError "fromJust received Nothing"
 fromJust (Just x) = x
 
--- | Throw 'UnexpectedError' exception.
-unexpectedError :: Q Exp
-unexpectedError = [|
-  \msg -> let (modname, line, position) = $srcLocation
-          in throw UnexpectedError {
-            ueMessage = msg
-          , ueModule = modname
-          , ueLine = line
-          , uePosition = position
-          }
-  |]
+{-# WARNING error "Use 'unexpectedError' instead." #-}
+error :: HasCallStack => String -> a
+error errMsg = withFrozenCallStack $ P.error errMsg
 
--- | Throw 'UnexpectedError' exception in a monadic context (requires 'MonadThrow').
-unexpectedErrorM :: Q Exp
-unexpectedErrorM = [|
-  \msg -> let (modname, line, position) = $srcLocation
-          in throwM UnexpectedError {
-            ueMessage = msg
-          , ueModule = modname
-          , ueLine = line
-          , uePosition = position
-          }
-  |]
+-- | Like 'error', but with a more conspicous name.
+unexpectedError :: HasCallStack => String -> a
+unexpectedError errMsg = withFrozenCallStack $ P.error errMsg
 
 ---- internal stuff below ----
 
@@ -174,16 +135,12 @@ emptyList :: ([a] -> t) -> t -> [a] -> t
 emptyList f err v = if null v then err else f v
 
 emptyListError :: HasCallStack => String -> a
-emptyListError fname = P.error $ fname ++ " received an empty list"
+emptyListError fname = unexpectedError $ fname ++ " received an empty list"
 
 indexOutOfBoundsError :: HasCallStack => String -> a
-indexOutOfBoundsError fname = P.error $ fname ++ " received an out-of-bounds index"
+indexOutOfBoundsError fname = unexpectedError $
+                              fname ++ " received an out-of-bounds index"
 
 negativeIndexError :: HasCallStack => String -> a
-negativeIndexError fname = P.error $ fname ++ " received a negative index"
-
-srcLocation :: Q Exp
-srcLocation = do
-  Loc{..} <- qLocation
-  let (line, position) = loc_start
-  runQ [| (loc_module, line, position) |]
+negativeIndexError fname = unexpectedError $
+                           fname ++ " received a negative index"

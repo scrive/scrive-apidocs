@@ -94,8 +94,8 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetKontraInfoForSMS (Maybe Kontr
 
 fetchKontraInfoForSMS :: (KontraInfoForSMSType, Maybe DocumentID, Maybe SignatoryLinkID) -> KontraInfoForSMS
 fetchKontraInfoForSMS (DocumentInvitationSMST, Just did, Just sig)  = DocumentInvitationSMS did sig
-fetchKontraInfoForSMS (DocumentInvitationSMST, _, _)  = $unexpectedError "Failed to fetch KontraInfoForSMS (DocumentInvitationSMST)"
+fetchKontraInfoForSMS (DocumentInvitationSMST, _, _)  = unexpectedError "Failed to fetch KontraInfoForSMS (DocumentInvitationSMST)"
 fetchKontraInfoForSMS (DocumentPinSendoutSMST, Just did, Just sig)  = DocumentPinSendoutSMS did sig
-fetchKontraInfoForSMS (DocumentPinSendoutSMST, _, _)  = $unexpectedError "Failed to fetch KontraInfoForSMS (DocumentPinSendoutSMST)"
+fetchKontraInfoForSMS (DocumentPinSendoutSMST, _, _)  = unexpectedError "Failed to fetch KontraInfoForSMS (DocumentPinSendoutSMST)"
 fetchKontraInfoForSMS (OtherDocumentSMST, Just did, Nothing)  = OtherDocumentSMS did
-fetchKontraInfoForSMS (OtherDocumentSMST, _, _)  =  $unexpectedError "Failed to fetch KontraInfoForSMS (OtherDocumentSMST)"
+fetchKontraInfoForSMS (OtherDocumentSMST, _, _)  =  unexpectedError "Failed to fetch KontraInfoForSMS (OtherDocumentSMST)"

@@ -60,7 +60,7 @@ instance ToSQL NameOrder where
   type PQDest NameOrder = PQDest Int16
   toSQL (NameOrder 1) = toSQL (1 :: Int16)
   toSQL (NameOrder 2) = toSQL (2 :: Int16)
-  toSQL (NameOrder v) = $unexpectedError $ "Name order " ++ show v ++ " is not supported"
+  toSQL (NameOrder v) = unexpectedError $ "Name order " ++ show v ++ " is not supported"
 
 instance PQFormat NameOrder where
   pqFormat = const $ pqFormat (undefined::Int16)
@@ -371,54 +371,54 @@ instance CompositeFromSQL SignatoryField where
     case ftype of
       NameFT -> SignatoryNameField $ NameField {
           snfID                     = sfid
-        , snfNameOrder              = fromMaybe ($unexpectedError "Name field has NULL as name_order") mname_order
-        , snfValue                  = fromMaybe ($unexpectedError "Name field has NULL as value_text") mvalue_text
+        , snfNameOrder              = fromMaybe (unexpectedError "Name field has NULL as name_order") mname_order
+        , snfValue                  = fromMaybe (unexpectedError "Name field has NULL as value_text") mvalue_text
         , snfObligatory             = obligatory
         , snfShouldBeFilledBySender = should_be_filled_by_sender
         , snfPlacements             = placements
       }
       CompanyFT -> SignatoryCompanyField $ CompanyField {
           scfID                     = sfid
-        , scfValue                  = fromMaybe ($unexpectedError "Company field has NULL as value_text") mvalue_text
+        , scfValue                  = fromMaybe (unexpectedError "Company field has NULL as value_text") mvalue_text
         , scfObligatory             = obligatory
         , scfShouldBeFilledBySender = should_be_filled_by_sender
         , scfPlacements             = placements
       }
       PersonalNumberFT -> SignatoryPersonalNumberField $ PersonalNumberField {
           spnfID                     = sfid
-        , spnfValue                  = fromMaybe ($unexpectedError "Personal number field has NULL as value_text") mvalue_text
+        , spnfValue                  = fromMaybe (unexpectedError "Personal number field has NULL as value_text") mvalue_text
         , spnfObligatory             = obligatory
         , spnfShouldBeFilledBySender = should_be_filled_by_sender
         , spnfPlacements             = placements
       }
       CompanyNumberFT -> SignatoryCompanyNumberField $ CompanyNumberField {
           scnfID                     = sfid
-        , scnfValue                  = fromMaybe ($unexpectedError "Company number field has NULL as value_text") mvalue_text
+        , scnfValue                  = fromMaybe (unexpectedError "Company number field has NULL as value_text") mvalue_text
         , scnfObligatory             = obligatory
         , scnfShouldBeFilledBySender = should_be_filled_by_sender
         , scnfPlacements             = placements
       }
       EmailFT -> SignatoryEmailField $ EmailField {
           sefID                     = sfid
-        , sefValue                  = fromMaybe ($unexpectedError "Email field has NULL as value_text") mvalue_text
+        , sefValue                  = fromMaybe (unexpectedError "Email field has NULL as value_text") mvalue_text
         , sefObligatory             = obligatory
         , sefShouldBeFilledBySender = should_be_filled_by_sender
-        , sefEditableBySignatory    = fromMaybe ($unexpectedError "Email field has NULL as editable_by_signatory") meditable_by_signatory
+        , sefEditableBySignatory    = fromMaybe (unexpectedError "Email field has NULL as editable_by_signatory") meditable_by_signatory
         , sefPlacements             = placements
       }
       MobileFT -> SignatoryMobileField $ MobileField {
           smfID                     = sfid
-        , smfValue                  = fromMaybe ($unexpectedError "Mobile field has NULL as value_text") mvalue_text
+        , smfValue                  = fromMaybe (unexpectedError "Mobile field has NULL as value_text") mvalue_text
         , smfObligatory             = obligatory
         , smfShouldBeFilledBySender = should_be_filled_by_sender
-        , smfEditableBySignatory    = fromMaybe ($unexpectedError "Mobile field has NULL as editable_by_signatory") meditable_by_signatory
+        , smfEditableBySignatory    = fromMaybe (unexpectedError "Mobile field has NULL as editable_by_signatory") meditable_by_signatory
         , smfPlacements             = placements
       }
       TextFT -> SignatoryTextField $ TextField {
           stfID                     = sfid
         , stfName                   = custom_name
         , stfFilledByAuthor          = is_author_filled
-        , stfValue                  = fromMaybe ($unexpectedError "Text field has NULL as value_text") mvalue_text
+        , stfValue                  = fromMaybe (unexpectedError "Text field has NULL as value_text") mvalue_text
         , stfObligatory             = obligatory
         , stfShouldBeFilledBySender = should_be_filled_by_sender
         , stfPlacements             = placements
@@ -427,7 +427,7 @@ instance CompositeFromSQL SignatoryField where
       CheckboxFT -> SignatoryCheckboxField $ CheckboxField {
           schfID                     = sfid
         , schfName                   = custom_name
-        , schfValue                  = fromMaybe ($unexpectedError "Checkbox field has NULL as value_bool") mvalue_bool
+        , schfValue                  = fromMaybe (unexpectedError "Checkbox field has NULL as value_bool") mvalue_bool
         , schfObligatory             = obligatory
         , schfShouldBeFilledBySender = should_be_filled_by_sender
         , schfPlacements             = placements
@@ -445,7 +445,7 @@ instance CompositeFromSQL SignatoryField where
         , srgfName                   = custom_name
         , srgfSelectedValue          = mvalue_text
         , srgfPlacements             = placements
-        , srgfValues                 = (\(Array1 values) -> values) . fromMaybe ($unexpectedError "RadioGroup field has NULL as radio_button_group_values") $ mradio_button_group_values
+        , srgfValues                 = (\(Array1 values) -> values) . fromMaybe (unexpectedError "RadioGroup field has NULL as radio_button_group_values") $ mradio_button_group_values
       }
 
 data FieldIdentity

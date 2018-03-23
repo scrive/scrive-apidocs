@@ -26,7 +26,7 @@ unjsonEnumBy desc enumDef =
     printEnum ((m,t):ms) a =  if (a == m)
                             then t
                             else printEnum ms a
-    printEnum _ _ = $unexpectedError $
+    printEnum _ _ = unexpectedError $
                     T.unpack ("Incomplete printEnum definition for" <+> desc)
 
 unjsonEnum :: T.Text -> (T.Text -> Maybe a) -> (a -> T.Text) -> UnjsonDef a

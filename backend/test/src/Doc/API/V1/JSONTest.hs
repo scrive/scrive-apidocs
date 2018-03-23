@@ -380,16 +380,16 @@ getID :: Value -> TestEnv Int64
 getID (Object m) = case (H.lookup "id" m) of
     Just (String s) -> case (maybeRead $ unpack s) of
                          Just i -> return i
-                         _ -> $unexpectedErrorM "error while parsing id (not a string representing number)"
-    _ -> $unexpectedErrorM "error while parsing id (not a string)"
-getID _ = $unexpectedErrorM "error while parsing id (not found)"
+                         _ -> unexpectedError "error while parsing id (not a string representing number)"
+    _ -> unexpectedError "error while parsing id (not a string)"
+getID _ = unexpectedError "error while parsing id (not found)"
 
 getField :: Text -> BS.ByteString -> TestEnv Text
 getField key jsonBS = do
     let (Just (Object m)) = decode jsonBS
     case (H.lookup key m) of
       Just (String s) -> return s
-      _ -> $unexpectedErrorM $ "error while looking for a field " ++ unpack key ++ " (not a string)"
+      _ -> unexpectedError $ "error while looking for a field " ++ unpack key ++ " (not a string)"
 
 removeValues :: Value -> Value
 removeValues (Object m) = Object (H.map removeValues m)

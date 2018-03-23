@@ -107,7 +107,7 @@ replaceSignatoryData siglink fstname sndname email mobile company personalnumber
     fillData sf = case sf of
       SignatoryNameField nf@(NameField {snfNameOrder = NameOrder 1}) -> SignatoryNameField $ nf { snfValue = fstname }
       SignatoryNameField nf@(NameField {snfNameOrder = NameOrder 2}) -> SignatoryNameField $ nf { snfValue = sndname }
-      SignatoryNameField _ -> $unexpectedError "Name field with order different than 1 or 2"
+      SignatoryNameField _ -> unexpectedError "Name field with order different than 1 or 2"
       SignatoryCompanyField cf@(CompanyField{}) -> SignatoryCompanyField $ cf { scfValue = company }
       SignatoryPersonalNumberField pnf@(PersonalNumberField{}) -> SignatoryPersonalNumberField $ pnf { spnfValue = personalnumber }
       SignatoryCompanyNumberField cnf@(CompanyNumberField{}) -> SignatoryCompanyNumberField $ cnf { scnfValue = companynumber }

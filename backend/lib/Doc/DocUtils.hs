@@ -211,7 +211,7 @@ canAuthorSignNow doc =
   where
     author = case getAuthorSigLink doc of
       Just a -> a
-      _ -> $unexpectedError $ "document " ++ show (documentid doc) ++ " does not have author"
+      _ -> unexpectedError $ "document " ++ show (documentid doc) ++ " does not have author"
 
 
 -- Checks if signatory can sign now

@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module MailContext.Labels where
 
 import Data.Label

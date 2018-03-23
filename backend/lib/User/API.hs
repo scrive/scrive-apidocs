@@ -124,7 +124,7 @@ apiCallGetUserPersonalToken = api $ do
                     (_, True, Nothing) ->
                       return . Left $ forbidden "TOTP code missing"
                     (Nothing, True, Just _) ->
-                      $unexpectedError "TOTP condition should not happen"
+                      unexpectedError "TOTP condition should not happen"
                   else do
                     _ <- dbUpdate $ LogHistoryAPIGetPersonalTokenFailure (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
                     logInfo "getpersonaltoken failed (invalid password)" $ logObject_ user

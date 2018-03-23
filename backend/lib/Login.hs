@@ -99,7 +99,7 @@ handleLoginPost = do
                               J.runJSONGenT $ do
                                 J.value "logged" False
                                 J.value "totp_missing" True
-                            (Nothing, True, Just _) -> $unexpectedError "TOTP condition should not happen"
+                            (Nothing, True, Just _) -> unexpectedError "TOTP condition should not happen"
                           else do
                             logInfo "User login failed (too many attempts)" $ logObject_ user
                             J.runJSONGenT $ J.value "logged" False

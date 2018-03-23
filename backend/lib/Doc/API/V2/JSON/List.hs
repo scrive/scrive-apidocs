@@ -116,7 +116,7 @@ unjsonDocumentAPIFilterStatuses = pure DocumentAPIFilterStatuses
   where
     unsafeDocumentAPIFilterStatuses:: DocumentAPIFilter ->  [DocumentStatus]
     unsafeDocumentAPIFilterStatuses(DocumentAPIFilterStatuses fs) = fs
-    unsafeDocumentAPIFilterStatuses _ = $unexpectedError "unsafeDocumentAPIFilterStatus"
+    unsafeDocumentAPIFilterStatuses _ = unexpectedError "unsafeDocumentAPIFilterStatus"
 
 unjsonDocumentAPIFilterTime :: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterTime = pure DocumentAPIFilterTime
@@ -126,10 +126,10 @@ unjsonDocumentAPIFilterTime = pure DocumentAPIFilterTime
   where
     unsafeDocumentAPIFilterStartTime :: DocumentAPIFilter ->  Maybe UTCTime
     unsafeDocumentAPIFilterStartTime (DocumentAPIFilterTime s _) = s
-    unsafeDocumentAPIFilterStartTime _ = $unexpectedError "unsafeDocumentAPIFilterStartTime"
+    unsafeDocumentAPIFilterStartTime _ = unexpectedError "unsafeDocumentAPIFilterStartTime"
     unsafeDocumentAPIFilterEndTime :: DocumentAPIFilter ->  Maybe UTCTime
     unsafeDocumentAPIFilterEndTime (DocumentAPIFilterTime _ e) = e
-    unsafeDocumentAPIFilterEndTime _ = $unexpectedError "unsafeDocumentAPIFilterEndTime"
+    unsafeDocumentAPIFilterEndTime _ = unexpectedError "unsafeDocumentAPIFilterEndTime"
 
 unjsonDocumentAPIFilterTag:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterTag = pure DocumentAPIFilterTag
@@ -139,10 +139,10 @@ unjsonDocumentAPIFilterTag = pure DocumentAPIFilterTag
   where
     unsafeDocumentAPIFilterTagName:: DocumentAPIFilter ->  T.Text
     unsafeDocumentAPIFilterTagName (DocumentAPIFilterTag n _) = n
-    unsafeDocumentAPIFilterTagName _ = $unexpectedError "unsafeDocumentAPIFilterTagName"
+    unsafeDocumentAPIFilterTagName _ = unexpectedError "unsafeDocumentAPIFilterTagName"
     unsafeDocumentAPIFilterTagValue:: DocumentAPIFilter ->  T.Text
     unsafeDocumentAPIFilterTagValue (DocumentAPIFilterTag _ v) = v
-    unsafeDocumentAPIFilterTagValue _ = $unexpectedError "unsafeDocumentAPIFilterTagValue"
+    unsafeDocumentAPIFilterTagValue _ = unexpectedError "unsafeDocumentAPIFilterTagValue"
 
 unjsonDocumentAPIFilterIsAuthor:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterIsAuthor = pure DocumentAPIFilterIsAuthor
@@ -155,7 +155,7 @@ unjsonDocumentAPIFilterIsAuthoredBy = pure DocumentAPIFilterIsAuthoredBy
   where
     unsafeDocumentAPIFilterUserID :: DocumentAPIFilter ->  UserID
     unsafeDocumentAPIFilterUserID (DocumentAPIFilterIsAuthoredBy uid) = uid
-    unsafeDocumentAPIFilterUserID _ = $unexpectedError "unsafeDocumentAPIFilterStatus"
+    unsafeDocumentAPIFilterUserID _ = unexpectedError "unsafeDocumentAPIFilterStatus"
 
 unjsonDocumentAPIFilterIsSignableOnPad :: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterIsSignableOnPad = pure DocumentAPIFilterIsSignableOnPad
@@ -185,7 +185,7 @@ unjsonDocumentAPIFilterByText = pure DocumentAPIFilterByText
   where
     unsafeDocumentAPIFilterText :: DocumentAPIFilter ->  T.Text
     unsafeDocumentAPIFilterText (DocumentAPIFilterByText text) = text
-    unsafeDocumentAPIFilterText _ = $unexpectedError "unsafeDocumentAPIFilterText"
+    unsafeDocumentAPIFilterText _ = unexpectedError "unsafeDocumentAPIFilterText"
 
 unjsonDocumentAPIFilterCanBeSignedBy:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterCanBeSignedBy = pure DocumentAPIFilterCanBeSignedBy
@@ -194,7 +194,7 @@ unjsonDocumentAPIFilterCanBeSignedBy = pure DocumentAPIFilterCanBeSignedBy
   where
     unsafeDocumentAPIFilterUserID :: DocumentAPIFilter ->  UserID
     unsafeDocumentAPIFilterUserID (DocumentAPIFilterCanBeSignedBy uid) = uid
-    unsafeDocumentAPIFilterUserID _ = $unexpectedError "unsafeDocumentAPIFilterStatus"
+    unsafeDocumentAPIFilterUserID _ = unexpectedError "unsafeDocumentAPIFilterStatus"
 
 
 toDocumentFilter :: UserID -> DocumentAPIFilter -> [DF.DocumentFilter]

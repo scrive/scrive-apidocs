@@ -482,4 +482,4 @@ isLowerCase xs = map toLower xs == xs
 -- TODO: remove this.
 fromGood:: Result a -> a
 fromGood (Good a) = a
-fromGood _ = $unexpectedError "Trying to get good from bad"
+fromGood _ = unexpectedError "Trying to get good from bad"

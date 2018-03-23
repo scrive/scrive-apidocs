@@ -216,4 +216,4 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetMainDomainURL () where
       sqlSet "url" url
       sqlWhere "main_domain"
     when (n /= 1) $ do
-      $unexpectedErrorM "Main domain doesn't exist"
+      unexpectedError "Main domain doesn't exist"
