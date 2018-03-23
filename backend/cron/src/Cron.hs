@@ -3,7 +3,6 @@ module Cron (main) where
 
 import Control.Monad.Base
 import Crypto.RNG
-import qualified Data.Text.IO as T
 import Database.PostgreSQL.Consumers
 import Database.PostgreSQL.PQTypes.Checks
 import Log
@@ -11,6 +10,7 @@ import Network.HTTP.Client.TLS (newTlsManager)
 import System.Console.CmdArgs hiding (def)
 import System.Environment
 import qualified Data.ByteString as BS
+import qualified Data.Text.IO as T
 import qualified Data.Traversable as F
 
 import Amazon.Consumer

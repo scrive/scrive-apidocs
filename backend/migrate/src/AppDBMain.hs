@@ -1,10 +1,10 @@
 module AppDBMain where
 
 import Crypto.RNG
-import qualified Data.Text.IO as T
 import Database.PostgreSQL.PQTypes.Checks
 import System.Console.CmdArgs hiding (def)
 import System.Environment
+import qualified Data.Text.IO as T
 
 import AppDBConfig
 import AppDBMigrations

@@ -4,7 +4,6 @@ import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Crypto.RNG
 import Data.Aeson
-import qualified Data.Text.IO as T
 import Database.PostgreSQL.Consumers
 import Database.PostgreSQL.PQTypes.Checks
 import Happstack.Server hiding (result, waitForTermination)
@@ -14,6 +13,7 @@ import System.Environment
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
+import qualified Data.Text.IO as T
 import qualified Data.Traversable as F
 import qualified Happstack.StaticRouting as R
 

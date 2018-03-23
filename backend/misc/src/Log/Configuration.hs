@@ -10,7 +10,7 @@ module Log.Configuration (
   ) where
 
 import Crypto.RNG
-import Data.Either (rights, lefts)
+import Data.Either (lefts, rights)
 import Data.Functor.Invariant (invmap)
 import Data.List.NonEmpty (fromList)
 import Data.Semigroup
