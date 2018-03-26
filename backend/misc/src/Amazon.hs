@@ -173,9 +173,9 @@ newFileInAmazon fName fContent = do
       dbUpdate $ NewFile fName fContent
     Just (awsBucket,awsAccessKey,awsSecretKey) -> do
       startTime <- liftBase getCurrentTime
-      (fid, awsUrl) <- do
-        emptyFile <- dbUpdate $ NewEmptyFileForAWS fName fContent
-        return (fileid emptyFile, urlFromFile emptyFile)
+      emptyFile <- dbUpdate $ NewEmptyFileForAWS fName fContent
+      let fid    = fileid emptyFile
+          awsUrl = urlFromFile emptyFile
       Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
       let encryptedContent = aesEncrypt aes fContent
           s3Conn = AWS.amazonS3Connection awsAccessKey awsSecretKey
@@ -192,17 +192,15 @@ newFileInAmazon fName fContent = do
           dbUpdate $ FileMovedToAWS fid awsUrl aes
           finishTime <- liftBase getCurrentTime
           logInfo "newFileInAmazon: new file successfully created with content in S3" $ object [
-              "url" .= (awsBucket </> awsUrl)
-            , identifier_ fid
+              logPair_ emptyFile -- logging doesn't use the contents anyway
             , "elapsed_time" .= (realToFrac $ diffUTCTime finishTime startTime :: Double)
             ]
           return fid
         Left err -> do
           let attnMsg = "newFileInAmazon: failed to upload to AWS, purging file and creating new file in DB as fallback"
           logAttention attnMsg $ object [
-              "url" .= (awsBucket </> awsUrl)
+              logPair_ emptyFile
             , "error" .= show err
-            , identifier_ fid
             ]
           dbUpdate $ PurgeFile fid
           fallback <- dbUpdate $ NewFile fName fContent
@@ -318,15 +316,9 @@ getFileContents
   -> File
   -> Maybe (R.Connection, RedisKey)
   -> m BS.ByteString
-getFileContents s3action File{..} mredis = localData fileData $ do
+getFileContents s3action file@File{..} mredis = localData [logPair_ file] $ do
   getContent RegularRetry filestorage >>= verifyContent >>= cacheContent
   where
-    fileData = [
-        identifier_ fileid
-      , "filename" .= filename
-      , "filesize" .= filesize
-      ]
-
     getContent :: GetContentRetry -> FileStorage -> m BS.ByteString
     getContent _ (FileStorageMemory content) = return $ content
     getContent retry fs@(FileStorageAWS url aes) = do
