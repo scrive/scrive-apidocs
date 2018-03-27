@@ -248,6 +248,10 @@ This is the only officially supported encoding for our API.
 <td>2018-02-28</td>
 <td>Fix a minor error in the <a href="#quick-start">Quick Start</a> guide</td>
 </tr>
+<tr>
+<td>2018-03-26</td>
+<td>Add <code class="prettyprint">rejection_reason</code> to the Signatory JSON</td>
+</tr>
 </tbody></table>
 
 <h2 id="environments-amp-ip-addresses">Environments &amp; IP Addresses</h2>
@@ -2620,6 +2624,7 @@ is provided.</li>
       </span><span class="nt">"seen_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"read_invitation_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"rejected_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"rejection_reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"sign_success_redirect_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"reject_redirect_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"email_delivery_status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unknown"</span><span class="p">,</span><span class="w">
@@ -2710,6 +2715,7 @@ is provided.</li>
       </span><span class="nt">"seen_time"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-01-13T10:38:33.1783Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"read_invitation_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"rejected_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"rejection_reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"sign_success_redirect_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"reject_redirect_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"email_delivery_status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unknown"</span><span class="p">,</span><span class="w">
@@ -4686,6 +4692,18 @@ custom regular expression.</p>
 
 </div>
 
+<h6><code>rejection_reason</code> (string, read only)</h6>
+
+<div class="json-schema">
+
+<p>Will only have a value if the signatory rejected the document, and will
+contain the message from the signatory to explain rejection.
+The Document <code>display_options</code> needs to allow the signatory to write a
+reject reason (<code>allow_reject_reason</code>).</p>
+
+
+</div>
+
 <h6><code>sign_success_redirect_url</code> (string)</h6>
 
 <div class="json-schema">
@@ -5607,6 +5625,7 @@ The list API call can filter based on document tags.</p>
       </span><span class="nt">"seen_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"read_invitation_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"rejected_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"rejection_reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"sign_success_redirect_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"reject_redirect_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"email_delivery_status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unknown"</span><span class="p">,</span><span class="w">
@@ -5697,6 +5716,7 @@ The list API call can filter based on document tags.</p>
       </span><span class="nt">"seen_time"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-01-13T10:38:33.1783Z"</span><span class="p">,</span><span class="w">
       </span><span class="nt">"read_invitation_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"rejected_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+      </span><span class="nt">"rejection_reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"sign_success_redirect_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"reject_redirect_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="nt">"email_delivery_status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unknown"</span><span class="p">,</span><span class="w">
@@ -7673,6 +7693,18 @@ custom regular expression.</p>
 
 </div>
 
+<h5><code>rejection_reason</code> (string, read only)</h5>
+
+<div class="json-schema">
+
+<p>Will only have a value if the signatory rejected the document, and will
+contain the message from the signatory to explain rejection.
+The Document <code>display_options</code> needs to allow the signatory to write a
+reject reason (<code>allow_reject_reason</code>).</p>
+
+
+</div>
+
 <h5><code>sign_success_redirect_url</code> (string)</h5>
 
 <div class="json-schema">
@@ -8573,6 +8605,7 @@ be changed.</p>
   </span><span class="nt">"seen_time"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2017-01-13T10:38:33.1783Z"</span><span class="p">,</span><span class="w">
   </span><span class="nt">"read_invitation_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
   </span><span class="nt">"rejected_time"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="nt">"rejection_reason"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
   </span><span class="nt">"sign_success_redirect_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
   </span><span class="nt">"reject_redirect_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
   </span><span class="nt">"email_delivery_status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unknown"</span><span class="p">,</span><span class="w">
@@ -10457,6 +10490,18 @@ custom regular expression.</p>
 <h3><code>rejected_time</code> (string, read only)</h3>
 
 <div class="json-schema">
+
+</div>
+
+<h3><code>rejection_reason</code> (string, read only)</h3>
+
+<div class="json-schema">
+
+<p>Will only have a value if the signatory rejected the document, and will
+contain the message from the signatory to explain rejection.
+The Document <code>display_options</code> needs to allow the signatory to write a
+reject reason (<code>allow_reject_reason</code>).</p>
+
 
 </div>
 
