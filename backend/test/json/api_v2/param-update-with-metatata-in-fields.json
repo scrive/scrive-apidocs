@@ -1,0 +1,176 @@
+{
+   "id":"9179748218119268739",
+   "title":"1",
+   "parties":[
+      {
+         "id":"9220293573270384402",
+         "user_id":"2058327658948184031",
+         "is_author":true,
+         "is_signatory":true,
+         "fields":[
+            {
+            "type": "name",
+            "order": 1
+            },
+            {
+              "type": "name",
+              "order": 2
+            }
+         ],
+         "consent_module":null,
+         "sign_order":1,
+         "sign_time":null,
+         "seen_time":null,
+         "read_invitation_time":null,
+         "rejected_time":null,
+         "rejection_reason":null,
+         "sign_success_redirect_url":null,
+         "reject_redirect_url":null,
+         "email_delivery_status":"unknown",
+         "mobile_delivery_status":"unknown",
+         "has_authenticated_to_view":false,
+         "csv":null,
+         "delivery_method":"email",
+         "authentication_method_to_view":"standard",
+         "authentication_method_to_sign":"standard",
+         "confirmation_delivery_method":"email",
+         "allows_highlighting":false,
+         "hide_personal_number":false,
+         "attachments":[
+
+         ],
+         "highlighted_pages":[
+
+         ],
+         "api_delivery_url":null
+      },
+      {
+         "id":"9220293573270384403",
+         "user_id":null,
+         "is_author":false,
+         "is_signatory":true,
+         "fields":[
+            {
+               "type":"name",
+               "order":1,
+               "value":"Test",
+               "is_obligatory":true,
+               "should_be_filled_by_sender":false,
+               "placements":[
+
+               ]
+            },
+            {
+               "type":"name",
+               "order":2,
+               "value":"User",
+               "is_obligatory":true,
+               "should_be_filled_by_sender":false,
+               "placements":[
+
+               ]
+            },
+            {
+               "type":"email",
+               "value":"mariusz@scrive.com",
+               "is_obligatory":true,
+               "should_be_filled_by_sender":false,
+               "editable_by_signatory":false,
+               "placements":[
+
+               ]
+            },
+            {
+               "type":"text",
+               "name":"FieldMetadata1",
+               "value":"Meta1",
+               "is_obligatory":true,
+               "should_be_filled_by_sender":false,
+               "placements":[
+
+               ],
+               "custom_validation":null
+            },
+            {
+               "type":"text",
+               "name":"FieldMetadata2",
+               "value":"",
+               "is_obligatory":true,
+               "should_be_filled_by_sender":false,
+               "placements":[
+
+               ],
+               "custom_validation":null
+            }
+         ],
+         "consent_module":null,
+         "sign_order":1,
+         "sign_time":null,
+         "seen_time":null,
+         "read_invitation_time":null,
+         "rejected_time":null,
+         "rejection_reason":null,
+         "sign_success_redirect_url":null,
+         "reject_redirect_url":null,
+         "email_delivery_status":"unknown",
+         "mobile_delivery_status":"unknown",
+         "has_authenticated_to_view":false,
+         "csv":null,
+         "delivery_method":"api",
+         "authentication_method_to_view":"standard",
+         "authentication_method_to_sign":"standard",
+         "confirmation_delivery_method":"email",
+         "allows_highlighting":false,
+         "hide_personal_number":false,
+         "attachments":[
+
+         ],
+         "highlighted_pages":[
+
+         ],
+         "api_delivery_url":null
+      }
+   ],
+   "file":{
+      "name":"1.pdf",
+      "id":"9215148251417002408"
+   },
+   "sealed_file":null,
+   "author_attachments":[
+
+   ],
+   "ctime":"2018-03-27T09:39:19.046312Z",
+   "mtime":"2018-03-27T09:40:34.566231Z",
+   "timeout_time":null,
+   "auto_remind_time":null,
+   "status":"preparation",
+   "days_to_sign":90,
+   "days_to_remind":null,
+   "display_options":{
+      "show_header":true,
+      "show_pdf_download":true,
+      "show_reject_option":true,
+      "allow_reject_reason":true,
+      "show_footer":true,
+      "document_is_receipt":false
+   },
+   "invitation_message":"",
+   "confirmation_message":"",
+   "lang":"en",
+   "api_callback_url":null,
+   "object_version":5,
+   "access_token":"14ea1c8c6f17cd22",
+   "timezone":"Europe/Berlin",
+   "tags":[
+
+   ],
+   "is_template":false,
+   "is_saved":true,
+   "is_shared":false,
+   "is_trashed":false,
+   "is_deleted":false,
+   "viewer":{
+      "signatory_id":"9220293573270384402",
+      "role":"signatory"
+   }
+}
