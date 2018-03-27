@@ -435,6 +435,10 @@ docApiV2Clone did = logDocument did . api $ do
       apiError $ serverError "Could not clone document, did not get back valid ID"
     newdoc <- dbQuery $ GetDocumentByDocumentID $ fromJust mNewDid
     -- Result
+    logInfo "New document created by cloning" $ object [
+        logPair_ newdoc
+      , "parent doc id" .= show did
+      ]
     return $ Created $ (\d -> (unjsonDocument $ documentAccessForUser user d,d)) newdoc
 
 

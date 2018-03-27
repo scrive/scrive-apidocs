@@ -46,6 +46,7 @@ var CompanyDetailsView = React.createClass({
         city: this.props.company.city(),
         country: this.props.company.country(),
         ipaddressmasklist: this.props.company.ipaddressmasklist(),
+        partnerid: this.props.company.partnerid(),
         cgidisplayname: this.props.company.cgidisplayname(),
         cgiserviceid: this.props.company.cgiserviceid(),
         idledoctimeout: this.props.company.idledoctimeout(),
@@ -109,6 +110,7 @@ var CompanyDetailsView = React.createClass({
               ipaddressmasklist={
                 this.props.viewModel.get("ipaddressmasklist")
               }
+              partnerid={this.props.viewModel.get("partnerid")}
               cgidisplayname={this.props.viewModel.get("cgidisplayname")}
               cgiserviceid={this.props.viewModel.get("cgiserviceid")}
               idledoctimeout={this.props.viewModel.get("idledoctimeout")}

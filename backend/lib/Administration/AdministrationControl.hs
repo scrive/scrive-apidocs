@@ -176,7 +176,7 @@ handleUserGetProfile uid = onlySalesOrAdmin $ do
 handleCompanyGetProfile:: Kontrakcja m => CompanyID -> m JSValue
 handleCompanyGetProfile cid = onlySalesOrAdmin $ do
   company <- guardJustM $ dbQuery $ GetCompany cid
-  return $ companyJSON company
+  return $ companyJSON True company
 
 showAdminCompany :: Kontrakcja m => CompanyID -> m String
 showAdminCompany companyid = onlySalesOrAdmin $ do
@@ -380,6 +380,7 @@ getCompanyInfoChange = do
   mcompanyzip     <- getField "companyzip"
   mcompanycity    <- getField "companycity"
   mcompanycountry <- getField "companycountry"
+  mcompanypartnerid <- getOptionalField asValidPartnerID "companypartnerid"
   mcompanyipaddressmasklist <- getOptionalField asValidIPAddressWithMaskList "companyipaddressmasklist"
   mcompanycgidisplayname <- fmap emptyToNothing <$> getField "companycgidisplayname"
   mcompanycgiserviceid <- fmap emptyToNothing <$> getField "companycgiserviceid"
@@ -407,7 +408,7 @@ getCompanyInfoChange = do
       , companycgiserviceid = fromMaybe companycgiserviceid mcompanycgiserviceid
       , companysmsprovider = fromMaybe companysmsprovider mcompanysmsprovider
       , companypaymentplan = companypaymentplan
-      , companypartnerid = companypartnerid
+      , companypartnerid = fromMaybe companypartnerid mcompanypartnerid
       , companypadappmode = fromMaybe companypadappmode mcompanypadappmode
       , companypadearchiveenabled = maybe companypadearchiveenabled (=="true") mcompanypadearchiveenabled
     }

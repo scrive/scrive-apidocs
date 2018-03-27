@@ -14,6 +14,7 @@ var Company = exports.Company = Backbone.Model.extend({
       cgidisplayname : "",
       cgiserviceid : "",
       ipaddressmasklist : "",
+      partnerid : null,
       allowsavesafetycopy : false,
       smsprovider : "",
       ready : false,
@@ -47,6 +48,9 @@ var Company = exports.Company = Backbone.Model.extend({
   },
   ipaddressmasklist: function() {
      return this.get("ipaddressmasklist");
+  },
+  partnerid: function() {
+     return this.get("partnerid");
   },
   cgidisplayname : function() {
      return this.get("cgidisplayname");
@@ -88,6 +92,7 @@ var Company = exports.Company = Backbone.Model.extend({
       city      : args.city,
       country    : args.country,
       ipaddressmasklist : args.ipaddressmasklist,
+      partnerid : args.partnerid,
       cgidisplayname : args.cgidisplayname,
       cgiserviceid : args.cgiserviceid,
       idledoctimeout : args.idledoctimeout,

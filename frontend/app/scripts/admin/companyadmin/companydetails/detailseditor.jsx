@@ -25,6 +25,7 @@ var DetailsEditorView = React.createClass({
     city: React.PropTypes.string.isRequired,
     country: React.PropTypes.string.isRequired,
     ipaddressmasklist: React.PropTypes.string.isRequired,
+    partnerid: React.PropTypes.number.isRequired,
     cgidisplayname: React.PropTypes.string,
     cgiserviceid: React.PropTypes.string,
     idledoctimeout: React.PropTypes.number,
@@ -54,6 +55,9 @@ var DetailsEditorView = React.createClass({
   },
   onIpaddressmasklistChange: function (event) {
     this.props.onFieldChange("ipaddressmasklist", event.target.value);
+  },
+  onPartneridChange: function (event) {
+    this.props.onFieldChange("partnerid", event.target.value);
   },
   onCgidisplaynameChange: function (event) {
     this.props.onFieldChange("cgidisplayname", event.target.value);
@@ -171,6 +175,20 @@ var DetailsEditorView = React.createClass({
                 value={this.props.ipaddressmasklist}
                 onChange={this.onIpaddressmasklistChange}
               />
+            </td>
+          </tr>
+          <tr>
+            <td><label>Partner ID</label></td>
+            <td>
+              <input
+                name="partnerid"
+                type="text"
+                value={this.props.partnerid}
+                onChange={this.onPartneridChange}
+              />
+            </td>
+            <td>
+              1 is default/Scrive. 3 is SF. Only Partner Manager is allowed to make changes in this field.
             </td>
           </tr>
           <tr>

@@ -30,6 +30,7 @@ apiV2JSONTests env = testGroup "DocAPIV2JSON"
   [ testThat "Test API v2 'new' and 'get' call response structure" env testDocNewGet
   , testThat "Test API v2 'new', 'update' and 'newfromtemplate' call response structure" env testDocNewFromTemplate
   , testThat "Test API v2 'new' and 'start' call response structure" env testDocNewAndStart
+  , testThat "Test API v2 'new', 'update' and 'start' call with metadata on some fields" env testDocNewAndStartWithMetadataInFields
   , testThat "Test API v2 'update' with single empty signatory object" env testDocUpdateEmptySignatory
   , testThat "Test API v2 'update' with new empty signatory object" env testDocUpdateNewSignatory
   , testThat "Test API v2 'update' changing all non read-only fields" env testDocUpdateAll
@@ -142,6 +143,18 @@ testDocNewAndStart = do
   (did,_) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFP_new_file_saved
   _ <- runApiJSONTest ctx POST (docApiV2Start did) [] 200 $ inTestDir "json/api_v2/test-DocNewAndStart.json"
   return ()
+
+testDocNewAndStartWithMetadataInFields :: TestEnv ()
+testDocNewAndStartWithMetadataInFields = do
+  ctx <- testJSONCtx
+  let rq_new_params = [ ("file", inFile $ inTestDir "pdfs/simple.pdf") ]
+  (did,_) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFP_new_file_saved
+  documentWithMetaInFields <- liftIO $ B.readFile $ inTestDir "json/api_v2/param-update-with-metatata-in-fields.json"
+  req <- mkRequestWithHeaders POST [ ("document", inTextBS documentWithMetaInFields) ] []
+  (_,_) <- runTestKontra req ctx $ docApiV2Update did
+  _ <- runApiJSONTest ctx POST (docApiV2Start did) [] 200 $ inTestDir "json/api_v2/test-DocStartedWithMetadataInFields.json"
+  return ()
+
 
 testDocUpdateEmptySignatory :: TestEnv ()
 testDocUpdateEmptySignatory = do

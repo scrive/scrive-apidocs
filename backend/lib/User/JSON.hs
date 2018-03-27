@@ -34,10 +34,10 @@ userJSON user company = runJSONGen $ do
     value "companyadmin" $ useriscompanyadmin user
     value "companyposition" $ usercompanyposition $ userinfo user
     value "lang"   $ codeFromLang $ getLang user
-    value "company" $ companyJSON company
+    value "company" $ companyJSON False company
 
-companyJSON :: Company -> JSValue
-companyJSON company = runJSONGen $ do
+companyJSON :: Bool -> Company -> JSValue
+companyJSON forAdmin company = runJSONGen $ do
     value "companyid" $ show $ companyid company
     value "address" $ companyaddress $ companyinfo company
     value "city" $ companycity $ companyinfo company
@@ -53,6 +53,7 @@ companyJSON company = runJSONGen $ do
     value "smsprovider" $ show . companysmsprovider . companyinfo $ company
     value "padappmode" $ T.unpack $ padAppModeText $ companypadappmode $ companyinfo company
     value "padearchiveenabled" . companypadearchiveenabled $ companyinfo company
+    when forAdmin $ value "partnerid" $ show $ companypartnerid $ companyinfo company
 
 paymentPlanText :: PaymentPlan -> String
 paymentPlanText FreePlan       = "free"
