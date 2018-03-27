@@ -63,7 +63,8 @@
          "highlighted_pages":[
 
          ],
-         "api_delivery_url":null
+         "api_delivery_url":null,
+         "consent_module":null
       },
       {
          "id":"44918",
@@ -148,7 +149,8 @@
          "highlighted_pages":[
 
          ],
-         "api_delivery_url":"/s/8516/44918/c8b649788fe4dadc"
+         "api_delivery_url":"/s/8516/44918/c8b649788fe4dadc",
+         "consent_module":null
       }
    ],
    "file":{
