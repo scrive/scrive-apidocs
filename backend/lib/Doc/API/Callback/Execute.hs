@@ -18,7 +18,6 @@ import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Text.JSON as J
 
-import Amazon
 import API.APIVersion
 import Company.Model
 import CronEnv
@@ -32,6 +31,7 @@ import Doc.DocStateData
 import Doc.Logging
 import Doc.Model
 import Doc.SealStatus
+import File.Storage
 import KontraError
 import Log.Identifier
 import Log.Utils
@@ -47,7 +47,7 @@ import Utils.String
 import qualified Utils.HTTP as Utils.HTTP
 
 execute ::
-  (AmazonMonad m, MonadDB m, MonadIO m, CryptoRNG m, MonadMask m, MonadLog m, MonadBaseControl IO m, MonadReader CronEnv m) =>
+  (MonadFileStorage m, MonadDB m, MonadIO m, CryptoRNG m, MonadMask m, MonadLog m, MonadBaseControl IO m, MonadReader CronEnv m) =>
   DocumentAPICallback -> m Bool
 execute dac@DocumentAPICallback {..} = logDocument dacDocumentID $ do
   exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor dacDocumentID
@@ -74,7 +74,7 @@ execute dac@DocumentAPICallback {..} = logDocument dacDocumentID $ do
           _                                         -> executeStandardCallback Nothing doc dac
 
 executeStandardCallback ::
-  (AmazonMonad m, MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m) =>
+  (MonadFileStorage m, MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m) =>
   Maybe (String,String) -> Document -> DocumentAPICallback -> m Bool
 executeStandardCallback mBasicAuth doc dac = logDocument (documentid doc) $ do
   callbackParams <- callbackParamsWithDocumentJSON (dacApiVersion dac) doc
@@ -118,7 +118,7 @@ executeStandardCallback mBasicAuth doc dac = logDocument (documentid doc) $ do
         ) ++
         [dacURL dac]
 
-executeOAuth2Callback :: (AmazonMonad m, MonadIO m, MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m) =>
+executeOAuth2Callback :: (MonadFileStorage m, MonadIO m, MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m) =>
                          (String,String,String,String) -> Document -> DocumentAPICallback -> m Bool
 executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc dac = logDocument (documentid doc) $ do
    (exitcode1, stdout1 , stderr1) <- readCurl [
@@ -181,7 +181,7 @@ executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc dac = logDocument (documentid 
             return False
 
 
-callbackParamsWithDocumentJSON :: (AmazonMonad m, MonadIO m, MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m) =>
+callbackParamsWithDocumentJSON :: (MonadFileStorage m, MonadIO m, MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m) =>
                                   APIVersion -> Document -> m BSLU.ByteString
 callbackParamsWithDocumentJSON apiVersion doc = case apiVersion of
   V1 -> do

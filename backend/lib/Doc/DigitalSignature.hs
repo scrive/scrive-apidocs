@@ -14,7 +14,6 @@ import System.FilePath ((</>))
 import Text.StringTemplates.Templates (TemplatesMonad)
 import qualified Data.ByteString as BS
 
-import Amazon (AmazonMonad, newFileInAmazon)
 import DB (dbUpdate)
 import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
 import Doc.Data.Document (documentsealedfile)
@@ -23,8 +22,7 @@ import Doc.DocUtils (fileFromMainFile)
 import Doc.Model (AppendExtendedSealedFile(..), AppendSealedFile(..))
 import Doc.SealStatus (SealStatus(..))
 import File.File (filename)
-import File.Model (NewFile(..))
-import File.Storage (getFileContents)
+import File.Storage
 import GuardTime (GuardTimeConfMonad, getGuardTimeConf)
 import Log.Identifier
 import Log.Utils
@@ -32,7 +30,7 @@ import Util.Actor (systemActor)
 import Utils.Directory (withSystemTempDirectory')
 import qualified GuardTime as GT
 
-addDigitalSignature :: (CryptoRNG m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, DocumentMonad m, AmazonMonad m, GuardTimeConfMonad m, TemplatesMonad m) => m Bool
+addDigitalSignature :: (CryptoRNG m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, DocumentMonad m, MonadFileStorage m, GuardTimeConfMonad m, TemplatesMonad m) => m Bool
 addDigitalSignature = theDocumentID >>= \did ->
   withSystemTempDirectory' ("DigitalSignature-" ++ show did ++ "-") $ \tmppath -> do
   Just file <- fileFromMainFile =<< (documentsealedfile <$>theDocument)
@@ -52,7 +50,7 @@ addDigitalSignature = theDocumentID >>= \did ->
                 logInfo "GuardTime verification result" $ logObject_ vr
                 logInfo_ "GuardTime signed successfully"
                 logInfo_ "Adding new sealed file to DB"
-                sealedfileid <- dbUpdate $ NewFile (filename file) res
+                sealedfileid <- saveNewFile (filename file) res
                 logInfo "Finished adding sealed file to DB, adding to document" $ object [
                     identifier_ sealedfileid
                   ]
@@ -72,7 +70,7 @@ addDigitalSignature = theDocumentID >>= \did ->
       return False
 
 -- | Extend a document: replace the digital signature with a keyless one.  Trigger callbacks.
-extendDigitalSignature :: (MonadBaseControl IO m, MonadIO m, MonadMask m, MonadLog m, CryptoRNG m, DocumentMonad m, AmazonMonad m, GuardTimeConfMonad m, TemplatesMonad m) => m Bool
+extendDigitalSignature :: (MonadBaseControl IO m, MonadIO m, MonadMask m, MonadLog m, CryptoRNG m, DocumentMonad m, MonadFileStorage m, GuardTimeConfMonad m, TemplatesMonad m) => m Bool
 extendDigitalSignature = do
   Just file <- fileFromMainFile =<< (documentsealedfile <$>theDocument)
   did <- theDocumentID
@@ -99,7 +97,7 @@ extendDigitalSignature = do
     -- /verify service can detect and provide an extended version if
     -- the verified document was extensible.
 
-digitallyExtendFile :: (AmazonMonad m, TemplatesMonad m, MonadBase IO m,
+digitallyExtendFile :: (MonadFileStorage m, TemplatesMonad m, MonadBase IO m,
                         MonadThrow m, CryptoRNG m, MonadLog m, MonadIO m,
                         MonadMask m, DocumentMonad m, GuardTimeConfMonad m)
                     => UTCTime -> FilePath -> String -> m Bool
@@ -131,7 +129,7 @@ digitallyExtendFile ctxtime pdfpath pdfname = do
     Nothing -> return False
     Just (extendedfilepdf, status) -> do
       logInfo_ "Adding new extended file to DB"
-      sealedfileid <- newFileInAmazon pdfname extendedfilepdf
+      sealedfileid <- saveNewFile pdfname extendedfilepdf
       logInfo "Finished adding extended file to DB, adding to document" $ object [
           identifier_ sealedfileid
         ]

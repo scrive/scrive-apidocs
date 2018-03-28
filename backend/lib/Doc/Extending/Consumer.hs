@@ -14,7 +14,6 @@ import Database.PostgreSQL.Consumers.Config
 import Log.Class
 import qualified Database.Redis as R
 
-import AppConf
 import DB
 import DB.PostgreSQL
 import Doc.Conditions
@@ -23,11 +22,12 @@ import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.Model.Query
 import File.FileID
+import FileStorage
 import GuardTime
 import Log.Identifier
 import MemCache (MemCache)
 import Templates
-import qualified Amazon as A
+import qualified FileStorage.Amazon.Config as A
 
 data DocumentExtendingConsumer = DocumentExtendingConsumer {
     decDocumentID :: !DocumentID
@@ -36,7 +36,7 @@ data DocumentExtendingConsumer = DocumentExtendingConsumer {
 
 documentExtendingConsumer
   :: (CryptoRNG m, MonadLog m, MonadIO m, MonadBaseControl IO m, MonadMask m)
-  => Maybe AmazonConfig
+  => Maybe A.AmazonConfig
   -> GuardTimeConf
   -> KontrakcjaGlobalTemplates
   -> MemCache FileID ByteString
@@ -44,7 +44,8 @@ documentExtendingConsumer
   -> ConnectionSourceM m
   -> Int
   -> ConsumerConfig m DocumentID DocumentExtendingConsumer
-documentExtendingConsumer mbAmazonConf guardTimeConf templates localCache globalCache pool maxRunningJobs = ConsumerConfig {
+documentExtendingConsumer mAmazonConfig guardTimeConf templates _
+                          mRedisConn pool maxRunningJobs = ConsumerConfig {
     ccJobsTable = "document_extending_jobs"
   , ccConsumersTable = "document_extending_consumers"
   , ccJobSelectors =
@@ -71,16 +72,11 @@ documentExtendingConsumer mbAmazonConf guardTimeConf templates localCache global
   }
   where
     runExtending dec = do
-      let ac = A.AmazonConfig {
-              A.awsConfig = mbAmazonConf
-            , A.awsLocalCache = localCache
-            , A.awsGlobalCache = globalCache
-            }
       resultisok <- withPostgreSQL pool
         . withDocumentM (dbQuery $ GetDocumentByDocumentID $ decDocumentID dec)
         . runTemplatesT (def, templates)
         . runGuardTimeConfT guardTimeConf
-        . A.runAmazonMonadT ac
+        . runFileStorageT (mAmazonConfig, mRedisConn)
         $ extendDigitalSignature
       case resultisok of
         True  -> return $ Ok Remove

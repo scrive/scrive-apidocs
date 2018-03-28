@@ -20,12 +20,11 @@ import qualified Data.Text as T
 import DB (MonadDB)
 import Doc.Data.MainFile
 import Doc.DocStateData (Document(..), documentsealedfile)
-import File.Storage (getFileIDContents)
+import File.Storage
 import Log.Utils
 import Utils.Directory
-import qualified Amazon as AWS
 
-extractAttachmentsList :: (MonadLog m, MonadDB m, MonadIO m, MonadMask m, MonadBaseControl IO m, AWS.AmazonMonad m) => Document -> m [T.Text]
+extractAttachmentsList :: (MonadLog m, MonadDB m, MonadIO m, MonadMask m, MonadBaseControl IO m, MonadFileStorage m) => Document -> m [T.Text]
 extractAttachmentsList doc = do
   case mainfileid <$> documentsealedfile doc of
     Nothing -> do
@@ -35,7 +34,7 @@ extractAttachmentsList doc = do
       content <- getFileIDContents fid
       extractAttachmentsListFromFileContent content
 
-extractAttachment :: (MonadLog m, MonadIO m, MonadDB m, MonadMask m, MonadBaseControl IO m, AWS.AmazonMonad m) => Document -> T.Text -> m (Maybe BSL.ByteString)
+extractAttachment :: (MonadLog m, MonadIO m, MonadDB m, MonadMask m, MonadBaseControl IO m, MonadFileStorage m) => Document -> T.Text -> m (Maybe BSL.ByteString)
 extractAttachment doc aname = do
   case mainfileid <$> documentsealedfile doc of
     Nothing -> do

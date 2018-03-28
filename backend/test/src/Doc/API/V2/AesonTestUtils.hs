@@ -16,12 +16,11 @@ import qualified Data.Text as T
 import qualified Data.Vector as V
 
 import Context (Context)
-import Kontra (Kontra)
 import TestingUtil (assertEqual, assertFailure)
 import TestKontra
 
 -- | Used to succinctly construct a API requests and test response code
-testRequestHelper :: Context -> Method -> [(String, Input)] -> Kontra Response -> Int -> TestEnv BSL.ByteString
+testRequestHelper :: Context -> Method -> [(String, Input)] -> KontraTest Response -> Int -> TestEnv BSL.ByteString
 testRequestHelper ctx httpMethod params func expectedRsCode = do
   req <- mkRequest httpMethod params
   (rsp,_) <- runTestKontra req ctx func
@@ -35,7 +34,7 @@ testRequestHelper ctx httpMethod params func expectedRsCode = do
 testRequestHelperNoAssert_ :: Context
                            -> Method
                            -> [(String, Input)]
-                           -> Kontra Response
+                           -> KontraTest Response
                            -> TestEnv ()
 testRequestHelperNoAssert_ ctx httpMethod params func = do
   req <- mkRequest httpMethod params
@@ -57,7 +56,7 @@ testRequestHelperNoAssert_ ctx httpMethod params func = do
 --   docJSON <- jsonTestRequestHelper ctx GET [] (docApiV2Get did) 200
 --   testSomething docJSON
 -- @
-jsonTestRequestHelper :: Context -> Method -> [(String, Input)] -> Kontra Response -> Int
+jsonTestRequestHelper :: Context -> Method -> [(String, Input)] -> KontraTest Response -> Int
        -> TestEnv Value
 jsonTestRequestHelper ctx httpMethod params func expectedRsCode = do
   rsp <- testRequestHelper ctx httpMethod params func expectedRsCode

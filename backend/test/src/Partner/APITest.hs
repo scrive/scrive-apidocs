@@ -16,7 +16,6 @@ import Context
 import DB
 import Doc.API.V2.Calls.DocumentPostCalls (docApiV2New)
 import Doc.SignatoryLinkID ()
-import Kontra
 import Partner.API
 import Partner.Model
 import TestingUtil
@@ -369,12 +368,12 @@ testJSONCtx = do
   ctx <- (set ctxmaybeuser (Just partnerAdminUser)) <$> mkContext def
   return (ctx, partnerId)
 
-runApiJSONTest :: Context          -- ^ Context to run the test in
-               -> Method           -- ^ HTTP Method to use for API Call
-               -> Kontra Response  -- ^ The API call to use
-               -> [(String,Input)] -- ^ List of API call parameters
-               -> Int              -- ^ Expected response code
-               -> FilePath         -- ^ FilePath to JSON file to match against
+runApiJSONTest :: Context             -- ^ Context to run the test in
+               -> Method              -- ^ HTTP Method to use for API Call
+               -> KontraTest Response -- ^ The API call to use
+               -> [(String,Input)]    -- ^ List of API call parameters
+               -> Int                 -- ^ Expected response code
+               -> FilePath            -- ^ FilePath to JSON file to match against
                -> TestEnv Value
 runApiJSONTest ctx httpMethod apiCall httpHeaders expectedRsCode jsonFile = do
   req <- mkRequestWithHeaders httpMethod httpHeaders []

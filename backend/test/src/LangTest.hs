@@ -11,7 +11,7 @@ import Context
 import DB
 import Doc.DocStateData
 import Doc.Model
-import Kontra (Kontra(..))
+import Kontra (KontraG(..))
 import Login
 import MinutesTime
 import TestingUtil

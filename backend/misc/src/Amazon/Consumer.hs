@@ -1,3 +1,4 @@
+-- CORE-478: should be removed
 module Amazon.Consumer (
     AmazonUploadConsumer
   , amazonUploadConsumer
@@ -17,7 +18,8 @@ import DB.PostgreSQL
 import File.FileID
 import File.Model
 import Log.Identifier
-import qualified Amazon as A
+import qualified FileStorage.Amazon as A
+import qualified FileStorage.Amazon.Config as A
 
 data AmazonUploadConsumer = AmazonUploadConsumer {
     aucFileID :: !FileID
@@ -26,7 +28,7 @@ data AmazonUploadConsumer = AmazonUploadConsumer {
 
 amazonUploadConsumer
   :: (MonadIO m, MonadBase IO m, MonadLog m, CryptoRNG m, MonadMask m)
-  => Maybe (String, String, String)
+  => Maybe A.AmazonConfig
   -> ConnectionSourceM m
   -> Int
   -> ConsumerConfig m FileID AmazonUploadConsumer
@@ -46,7 +48,7 @@ amazonUploadConsumer mbAmazonConf pool maxRunningJobs = ConsumerConfig {
   , ccNotificationTimeout = 60 * 1000000 -- 1 minute
   , ccMaxRunningJobs = maxRunningJobs
   , ccProcessJob = \auc@AmazonUploadConsumer{..} -> do
-      if A.isAWSConfigOk mbAmazonConf
+      if maybe False A.isAmazonConfigValid mbAmazonConf
         then do
           withPostgreSQL pool $ do
             mfile <- dbQuery $ GetMaybeFileByFileID aucFileID

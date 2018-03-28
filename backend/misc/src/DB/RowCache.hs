@@ -19,6 +19,8 @@ import Control.Monad.State.Strict as S
 import Control.Monad.Trans.Control
 import Database.PostgreSQL.PQTypes (MonadDB)
 
+import FileStorage.Class
+
 -- | Return an identifier type for a row 'r' that can be used to
 -- retrieve rows from storage
 type family ID r
@@ -35,7 +37,7 @@ class Monad m => GetRow r m  where
 -- | Monad transformer for maintaining a cached row value or an invalid
 -- mark, and remembering the row's identifier
 newtype RowCacheT r m a = RowCacheT { unRowCacheT :: InnerRowCacheT r m a }
-  deriving (Applicative, Functor, Monad, MonadDB, MonadIO, MonadBase b, MonadThrow, MonadCatch, MonadMask)
+  deriving (Applicative, Functor, Monad, MonadDB, MonadIO, MonadBase b, MonadThrow, MonadCatch, MonadMask, MonadFileStorage)
 
 -- | Fetch the row and perform an operation that updates the stored row (and therefore marks the cached row as invalid)
 updateRow :: GetRow r m => (r -> RowCacheT r m a) -> RowCacheT r m a
@@ -107,4 +109,3 @@ instance MonadTransControl (RowCacheT r) where
   restoreT = RowCacheT . restoreT . restoreT
   {-# INLINE liftWith #-}
   {-# INLINE restoreT #-}
-

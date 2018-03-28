@@ -14,14 +14,12 @@ where
 import Control.Monad.Catch
 import Control.Monad.State.Class
 import Crypto.RNG
-import Data.ByteString (ByteString)
 import Data.Default
 import qualified Data.Text as T
 
 import Attachment.AttachmentID
 import DB
 import File.FileID
-import File.Model
 import MinutesTime
 import User.UserID
 import Util.Actor
@@ -72,11 +70,10 @@ fetchAttachment (aid, title, ctime, mtime, file_id, user_id, shared, deleted) = 
 , attachmentdeleted = deleted
 }
 
-data NewAttachment = NewAttachment UserID String String ByteString Actor
+data NewAttachment = NewAttachment UserID String FileID Actor
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m NewAttachment Attachment where
-  update (NewAttachment uid title filename filecontents actor) = do
+  update (NewAttachment uid title fileid actor) = do
     let ctime = actorTime actor
-    fileid <- update $ NewFile filename filecontents
     runQuery_ . sqlInsert "attachments" $ do
       sqlSet "user_id" uid
       sqlSet "title" title

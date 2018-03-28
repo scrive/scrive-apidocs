@@ -23,7 +23,6 @@ import Doc.Data.DocumentStatus (DocumentStatus(..))
 import Doc.DocumentID (DocumentID, unsafeDocumentID)
 import Doc.DocumentMonad (withDocumentID)
 import Doc.Model.Update (SetDocumentSharing(..), updateMTimeAndObjectVersion)
-import Kontra (Kontra)
 import TestingUtil
 import TestKontra
 import Util.QRCode
@@ -115,7 +114,7 @@ testDocApiV2GetShortCode = do
     409 (rsCode resPrep)
 
 -- | A malicious Mallory should not be able to execute this request.
-testMallory :: Request -> Kontra Response -> TestEnv ()
+testMallory :: Request -> KontraTest Response -> TestEnv ()
 testMallory getRequest req = do
   mallory <- addNewRandomUser
   ctxMallory <- (set ctxmaybeuser (Just mallory)) <$> mkContext def

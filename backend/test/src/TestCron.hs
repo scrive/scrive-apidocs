@@ -7,7 +7,6 @@ import Database.PostgreSQL.Consumers
 import Log
 import Network.HTTP.Client.TLS (newTlsManager)
 
-import Amazon (AmazonConfig(..), runAmazonMonadT)
 import Amazon.Consumer
 import Context
 import Cron.Model
@@ -17,6 +16,7 @@ import Doc.API.Callback.Model
 import Doc.Extending.Consumer
 import Doc.Sealing.Consumer
 import Doc.Signing.Consumer
+import FakeFileStorage
 import TestKontra
 import qualified CronEnv
 
@@ -97,7 +97,6 @@ runTestCronUntilIdle ctx = do
         ]
       cronEnvData = CronEnv.CronEnv (cronSalesforceConf cronConf) (get ctxglobaltemplates ctx)
                       (cronMailNoreplyAddress cronConf)
-      amazonCfg   = AmazonConfig (cronAmazonConfig cronConf) (get ctxfilecache ctx) (get ctxmrediscache ctx)
 
       finalizeRunner ((label, runner), idleSignal) =
         finalize (localDomain label $ runner pool idleSignal)
@@ -111,7 +110,7 @@ runTestCronUntilIdle ctx = do
 
   -- To simplify things, runDB and runCronEnv requirements are added to the TestEnv. So then runDB and runCronEnv can be just "id".
   (\m -> runReaderT m cronEnvData)
-    . runAmazonMonadT amazonCfg
+    . evalFakeFileStorageT
     . foldr1 (.) (finalizeRunner <$> (zip cronPartRunners idleSignals))
     $ whileM_ (not <$> allSignalsTrue idleSignals idleStatuses) $ return ()
 

@@ -21,7 +21,6 @@ import DB
 import Doc.API.V2.Calls
 import Doc.DocumentID
 import Doc.SignatoryLinkID ()
-import Kontra
 import TestingUtil
 import TestKontra as T
 
@@ -46,12 +45,12 @@ testJSONCtx = do
   (Just user)  <- addNewUser "BobTest" "JonesTest" "test@scrive.com"
   (set ctxmaybeuser (Just user)) <$> mkContext def
 
-runApiJSONTest :: Context          -- ^ Context to run the test in
-               -> Method           -- ^ HTTP Method to use for API Call
-               -> Kontra Response  -- ^ The API call to use
-               -> [(String,Input)] -- ^ List of API call parameters
-               -> Int              -- ^ Expected response code
-               -> FilePath         -- ^ FilePath to JSON file to match against
+runApiJSONTest :: Context             -- ^ Context to run the test in
+               -> Method              -- ^ HTTP Method to use for API Call
+               -> KontraTest Response -- ^ The API call to use
+               -> [(String,Input)]    -- ^ List of API call parameters
+               -> Int                 -- ^ Expected response code
+               -> FilePath            -- ^ FilePath to JSON file to match against
                -> TestEnv (DocumentID, Value)
 runApiJSONTest ctx httpMethod apiCall httpHeaders expectedRsCode jsonFile = do
   req <- mkRequestWithHeaders httpMethod httpHeaders []
@@ -64,12 +63,12 @@ runApiJSONTest ctx httpMethod apiCall httpHeaders expectedRsCode jsonFile = do
       Just did = maybeRead $ unpack didS
   return (did, docJSON)
 
-runApiTest :: Context          -- ^ Context to run the test in
-               -> Method           -- ^ HTTP Method to use for API Call
-               -> Kontra Response  -- ^ The API call to use
-               -> [(String,Input)] -- ^ List of API call parameters
-               -> Int              -- ^ Expected response code
-               -> TestEnv ()
+runApiTest :: Context             -- ^ Context to run the test in
+           -> Method              -- ^ HTTP Method to use for API Call
+           -> KontraTest Response -- ^ The API call to use
+           -> [(String,Input)]    -- ^ List of API call parameters
+           -> Int                 -- ^ Expected response code
+           -> TestEnv ()
 runApiTest ctx httpMethod apiCall httpHeaders expectedRsCode = do
   req <- mkRequestWithHeaders httpMethod httpHeaders []
   (res,_) <- runTestKontra req ctx $ apiCall

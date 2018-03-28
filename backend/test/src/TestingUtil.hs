@@ -2,6 +2,7 @@
 module TestingUtil where
 
 import Control.Concurrent.STM
+import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader.Class
 import Control.Monad.Trans
@@ -43,10 +44,12 @@ import Doc.SignatoryLinkID
 import Doc.TestInvariants
 import EID.CGI.GRP.Transaction.Model
 import EID.Signature.Model
+import FakeFileStorage (liftFakeFileStorageT, runFakeFileStorageT)
 import FeatureFlags.Model
 import File.File
 import File.FileID
 import File.Model
+import File.Storage
 import FlashMessage
 import GuardTime
 import IPAddress
@@ -66,7 +69,6 @@ import User.Email
 import User.Model
 import User.Password.Internal (Password(..))
 import Util.Actor
-import qualified Amazon as A
 import qualified KontraError as KE
 import qualified Text.XML.Content as C
 import qualified Text.XML.DirtyContent as D
@@ -667,18 +669,15 @@ addNewCompany = do
     Just company <- dbQuery $ GetCompany cid
     return company
 
-addNewFile :: (MonadDB m, MonadThrow m, MonadTime m) => String -> BS.ByteString -> m FileID
-addNewFile filename content = dbUpdate $ NewFile filename content
-
-addNewRandomFile :: (MonadIO m, CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m) => m FileID
+addNewRandomFile :: (MonadFileStorage m, MonadBase IO m, CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m, MonadLog m) => m FileID
 addNewRandomFile = do
   fn <- rand 1 $ elements [ inTestDir "pdfs/simple.pdf"
                           , inTestDir "pdfs/telia.pdf"
                           , inTestDir "pdfs/hp-designjet.pdf"
                           , inTestDir "pdfs/visa-application.pdf"
                           ]
-  cnt <- liftIO $ BS.readFile fn
-  addNewFile fn cnt
+  cnt <- liftBase $ BS.readFile fn
+  saveNewFile fn cnt
 
 addNewUser :: (MonadDB m, MonadThrow m, MonadLog m) => String -> String -> String -> m (Maybe User)
 addNewUser firstname secondname email = do
@@ -892,20 +891,22 @@ addRandomDocumentWithFile fileid rda = do
 
 -- | Synchronously seal a document.
 sealTestDocument :: Context -> DocumentID -> TestEnv ()
-sealTestDocument ctx did
-  = void
-  . withDocumentID did
-  . runGuardTimeConfT (get ctxgtconf ctx)
-  . runPdfToolsLambdaConfT (get ctxpdftoolslambdaconf ctx)
-  . runTemplatesT ((get ctxlang ctx), (get ctxglobaltemplates ctx))
-  . A.runAmazonMonadT (A.AmazonConfig Nothing (get ctxfilecache ctx) Nothing)
-  . runMailContextT (contextToMailContext ctx)
-  $ do
-      res <- (postDocumentClosedActions True False) `catch` (\(_::KE.KontraError) -> return False)
-      when res $ do
-        extendingJobCount <- runSQL $ "SELECT * FROM document_extending_jobs WHERE id =" <?> did
-        assertEqual "postDocumentClosedActions should add task to document_extending_jobs" 1 extendingJobCount
-      return res
+sealTestDocument ctx did = void $ TestEnv $ liftFakeFileStorageT $ \fakeFS -> do
+  withDocumentID did
+    . runGuardTimeConfT (get ctxgtconf ctx)
+    . runPdfToolsLambdaConfT (get ctxpdftoolslambdaconf ctx)
+    . runTemplatesT ((get ctxlang ctx), (get ctxglobaltemplates ctx))
+    . runMailContextT (contextToMailContext ctx)
+    . flip runFakeFileStorageT fakeFS
+    $ do
+        res <- postDocumentClosedActions True False
+                 `catch` \(_::KE.KontraError) -> return False
+        when res $ do
+          extendingJobCount <- runSQL $
+            "SELECT * FROM document_extending_jobs WHERE id =" <?> did
+          assertEqual "postDocumentClosedActions should add task to\
+                      \ document_extending_jobs" 1 extendingJobCount
+        return res
 
 rand :: CryptoRNG m => Int -> Gen a -> m a
 rand i a = do

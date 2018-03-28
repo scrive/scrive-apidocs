@@ -17,7 +17,6 @@ import DB
 import InternalResponse
 import KontraLink
 import Login
-import Routing
 import TestingUtil
 import TestKontra as T
 import User.API
@@ -114,7 +113,7 @@ testCanLoginWithRedirect = do
     -- Test that call with fail if "url" for redirection is not provided
   req4 <- mkRequest GET [("session_id", inText . unpack $ sessionid)]
   assertRaisesInternalError $ do
-    _ <- runTestKontra req4 ctx $ handleLoginWithRedirectGet >>= toResp
+    _ <- runTestKontra req4 ctx handleLoginWithRedirectGet
     return ()
 
   -- Test that session_id is valid for more then one redirect

@@ -70,11 +70,10 @@ import Util.PDFUtil
 import Util.SignatoryLinkUtils
 import Utils.Directory
 import Utils.Read
-import qualified Amazon as AWS
 import qualified Doc.SealSpec as Seal
 import qualified HostClock.Model as HC
 
-personFromSignatory :: forall m . (MonadDB m, MonadIO m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m)
+personFromSignatory :: forall m . (MonadDB m, MonadIO m, MonadMask m, TemplatesMonad m, MonadFileStorage m, MonadLog m, MonadBaseControl IO m)
                     => String
                     -> TimeZoneName
                     -> SignatoryIdentifierMap
@@ -149,7 +148,7 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
                  }
 
 
-personExFromSignatoryLink :: (MonadDB m, MonadIO m, MonadMask m, TemplatesMonad m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m)
+personExFromSignatoryLink :: (MonadDB m, MonadIO m, MonadMask m, TemplatesMonad m, MonadFileStorage m, MonadLog m, MonadBaseControl IO m)
                           => String
                           -> TimeZoneName
                           -> SignatoryIdentifierMap
@@ -167,7 +166,7 @@ personExFromSignatoryLink inputpath tz sim checkboxMapping radiobuttonMapping sl
      , Seal.phoneverified    = (signatorylinkdeliverymethod == MobileDelivery) || (signatorylinkauthenticationtosignmethod == SMSPinAuthenticationToSign)
      }
 
-fieldsFromSignatory :: forall m. (MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m)
+fieldsFromSignatory :: forall m. (MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, MonadFileStorage m)
                     => CheckboxImagesMapping
                     -> RadiobuttonImagesMapping
                     -> SignatoryLink
@@ -252,7 +251,7 @@ fieldsFromSignatory checkboxMapping radiobuttonMapping SignatoryLink{signatoryfi
                  , Seal.keyColor         = Just (255,255,255) -- white is transparent
                  }
 
-highlightedImageFromHighlightedPage :: forall m. (MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m) => String -> HighlightedPage -> m Seal.HighlightedImage
+highlightedImageFromHighlightedPage :: forall m. (MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, MonadFileStorage m) => String -> HighlightedPage -> m Seal.HighlightedImage
 highlightedImageFromHighlightedPage inputpath HighlightedPage{..} = do
   pdfContent <- liftBase $ BS.readFile inputpath
   content <- getFileIDContents highlightedPageFileID
@@ -271,7 +270,7 @@ listAttachmentsFromDocument document =
   where extract sl = map (\at -> (at,sl)) (signatoryattachments sl)
 
 
-findOutAttachmentDesc :: (MonadIO m, MonadDB m, MonadMask m, MonadLog m, TemplatesMonad m, AWS.AmazonMonad m, MonadBaseControl IO m)
+findOutAttachmentDesc :: (MonadIO m, MonadDB m, MonadMask m, MonadLog m, TemplatesMonad m, MonadFileStorage m, MonadBaseControl IO m)
                       => SignatoryIdentifierMap -> String -> Document -> m [Seal.FileDesc]
 
 findOutAttachmentDesc sim tmppath document = logDocument (documentid document) $ do
@@ -343,7 +342,7 @@ findOutAttachmentDesc sim tmppath document = logDocument (documentid document) $
                  }
 
 
-evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, AWS.AmazonMonad m)
+evidenceOfIntentAttachment :: (TemplatesMonad m, MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, MonadFileStorage m)
                            => SignatoryIdentifierMap -> Document -> m Seal.SealAttachment
 evidenceOfIntentAttachment sim doc = do
   let title = documenttitle doc
@@ -416,7 +415,7 @@ createSealingTextsForDocument document hostpart = do
 
   return sealingTexts
 
-sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, MonadLog m, AWS.AmazonMonad m, MonadBaseControl IO m)
+sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, MonadLog m, MonadFileStorage m, MonadBaseControl IO m)
                      => CheckboxImagesMapping
                      -> RadiobuttonImagesMapping
                      -> String
@@ -565,7 +564,7 @@ sealSpecFromDocument checkboxMapping radiobuttonMapping hostpart document elog o
                           } ] ++ additionalAttachments
         }
 
-presealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, MonadLog m, AWS.AmazonMonad m, MonadBaseControl IO m)
+presealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, MonadLog m, MonadFileStorage m, MonadBaseControl IO m)
                         => CheckboxImagesMapping
                         -> RadiobuttonImagesMapping
                         -> Document
@@ -580,7 +579,7 @@ presealSpecFromDocument checkboxMapping radiobuttonMapping document inputpath ou
             , Seal.pssFields         = fields
             }
 
-sealDocument :: (CryptoRNG m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadMask m, MonadLog m, AWS.AmazonMonad m, PdfToolsLambdaConfMonad m, CryptoRNG m)
+sealDocument :: (CryptoRNG m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadMask m, MonadLog m, MonadFileStorage m, PdfToolsLambdaConfMonad m)
              => String -> m ()
 sealDocument hostpart = do
   mfile <- fileFromMainFile =<< documentfile <$> theDocument
@@ -600,7 +599,7 @@ sealDocument hostpart = do
       logInfo_ "Sealing of document failed because it has no main file attached"
       internalError
 
-sealDocumentFile :: (CryptoRNG m, MonadMask m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadLog m, AWS.AmazonMonad m, PdfToolsLambdaConfMonad m, CryptoRNG m)
+sealDocumentFile :: (CryptoRNG m, MonadMask m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadLog m, MonadFileStorage m, PdfToolsLambdaConfMonad m)
                  => String
                  -> File
                  -> m ()
@@ -632,7 +631,7 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
        else runNewLambdaSealing tmppath filename spec
 
 -- | Generate file that has all placements printed on it. It will look same as final version except for footers and verification page.
-presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, MonadLog m, KontraMonad m, TemplatesMonad m, MonadIO m, MonadMask m, AWS.AmazonMonad m, PdfToolsLambdaConfMonad m, CryptoRNG m)
+presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, MonadLog m, KontraMonad m, TemplatesMonad m, MonadIO m, MonadMask m, MonadFileStorage m, PdfToolsLambdaConfMonad m, CryptoRNG m)
                  => Document
                  -> File
                  -> m (Either String BS.ByteString)
@@ -652,7 +651,7 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
        else runNewLambdaPresealing tmppath spec
 
 
-addSealedEvidenceEvents ::  (MonadBaseControl IO m, MonadDB m, MonadLog m, TemplatesMonad m, MonadIO m, DocumentMonad m, AWS.AmazonMonad m, MonadMask m)
+addSealedEvidenceEvents ::  (MonadBaseControl IO m, MonadDB m, MonadLog m, TemplatesMonad m, MonadIO m, DocumentMonad m, MonadFileStorage m, MonadMask m)
                  => Actor -> m ()
 addSealedEvidenceEvents actor = do
   notAddedAttachments <- filter (not . authorattachmentaddtosealedfile) <$> documentauthorattachments <$> theDocument

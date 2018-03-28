@@ -57,7 +57,6 @@ import Doc.Logging
 import Doc.Model
 import Doc.SignatoryLinkID
 import File.File (File(..))
-import File.Model
 import File.Storage
 import InputValidation (asValidEmail, asValidPhone)
 import Kontra
@@ -340,7 +339,7 @@ docApiV2RemovePages did = logDocument did . api $ do
                 case mnewcontent of
                   Nothing -> apiError $ serverError "Removing pages from file failed"
                   Just newcontent -> do
-                    nfileid <- dbUpdate $ NewFile (filename file) newcontent
+                    nfileid <- saveNewFile (filename file) newcontent
                     dbUpdate $ DetachFile actor
                     dbUpdate $ AttachFile nfileid actor
 

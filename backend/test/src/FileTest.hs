@@ -10,6 +10,7 @@ import DB
 import File.Conditions
 import File.File
 import File.Model
+import File.Storage
 import Purging.Files
 import TestingUtil
 import TestKontra
@@ -44,7 +45,7 @@ testFileIDUriShow = replicateM_ 100 $  do
 testFileNewFile :: TestEnv ()
 testFileNewFile  = replicateM_ 100 $ do
   (name, content) <- fileData
-  fileid' <- dbUpdate $ NewFile name content
+  fileid' <- saveNewFile name content
   File { fileid = fileid, filename = fname1, filestorage = FileStorageMemory fcontent1 } <- dbQuery $ GetFileByFileID fileid'
 
   assertEqual "We got the file we were asking for" fileid' fileid
@@ -63,7 +64,7 @@ testFileMovedToAWS :: TestEnv ()
 testFileMovedToAWS  = replicateM_ 100 $ do
   (name,content) <- fileData
   url <- viewableS
-  fileid' <- dbUpdate $ NewFile name content
+  fileid' <- saveNewFile name content
   let Right aes = mkAESConf (BS.fromString (take 32 $ repeat 'a')) (BS.fromString (take 16 $ repeat 'b'))
 
   dbUpdate $ FileMovedToAWS fileid' url aes
@@ -76,7 +77,7 @@ testPurgeFiles :: TestEnv ()
 testPurgeFiles  = replicateM_ 100 $ do
   let maxMarked = 1000
   (name,content) <- fileData
-  fid <- dbUpdate $ NewFile name content
+  fid <- saveNewFile name content
   runQuery_ $ "DELETE FROM amazon_upload_jobs WHERE id =" <?> fid
   fidsToPurge <- dbUpdate $ MarkOrphanFilesForPurgeAfter maxMarked mempty
   assertEqual "File successfully marked for purge" [fid] fidsToPurge
@@ -91,7 +92,7 @@ testPurgeFiles  = replicateM_ 100 $ do
 testNewFileThatShouldBeMovedToAWS :: TestEnv ()
 testNewFileThatShouldBeMovedToAWS  = do
   (name,content) <- fileData
-  fileid <- dbUpdate $ NewFile name content
+  fileid <- saveNewFile name content
   fileisscheduledforupload <- runQuery01 $ "SELECT id FROM amazon_upload_jobs WHERE id =" <?> fileid
   assertEqual "File is scheduled for upload to Amazon" True fileisscheduledforupload
 

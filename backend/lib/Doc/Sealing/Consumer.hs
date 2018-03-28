@@ -14,7 +14,6 @@ import Database.PostgreSQL.Consumers.Config
 import Log.Class
 import qualified Database.Redis as R
 
-import AppConf (AmazonConfig)
 import BrandedDomain.Model
 import DB
 import DB.PostgreSQL
@@ -23,6 +22,7 @@ import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.Sealing.Model
 import File.FileID
+import FileStorage
 import GuardTime
 import Log.Identifier
 import MailContext
@@ -31,7 +31,7 @@ import MemCache (MemCache)
 import PdfToolsLambda.Conf
 import Templates
 import User.Lang
-import qualified Amazon as A
+import qualified FileStorage.Amazon.Config as A
 
 data DocumentSealing = DocumentSealing {
     dsDocumentID      :: !DocumentID
@@ -41,7 +41,7 @@ data DocumentSealing = DocumentSealing {
 
 documentSealing
   :: (CryptoRNG m, MonadLog m, MonadIO m, MonadBaseControl IO m, MonadMask m)
-  => Maybe AmazonConfig
+  => Maybe A.AmazonConfig
   -> GuardTimeConf
   -> PdfToolsLambdaConf
   -> KontrakcjaGlobalTemplates
@@ -51,8 +51,8 @@ documentSealing
   -> String
   -> Int
   -> ConsumerConfig m DocumentID DocumentSealing
-documentSealing mbAmazonConf guardTimeConf pdfToolsLambdaConf templates
-  localCache globalCache pool mailNoreplyAddress maxRunningJobs = ConsumerConfig {
+documentSealing mAmazonConfig guardTimeConf pdfToolsLambdaConf templates _ mRedisConn pool
+                mailNoreplyAddress maxRunningJobs = ConsumerConfig {
     ccJobsTable = "document_sealing_jobs"
   , ccConsumersTable = "document_sealing_consumers"
   , ccJobSelectors = ["id", "branded_domain_id", "attempts"]
@@ -70,11 +70,6 @@ documentSealing mbAmazonConf guardTimeConf pdfToolsLambdaConf templates
       bd <- dbQuery $ GetBrandedDomainByID dsBrandedDomainID
       doc <- theDocument
       let lang = getLang doc
-          ac = A.AmazonConfig {
-              A.awsConfig      = mbAmazonConf
-            , A.awsLocalCache  = localCache
-            , A.awsGlobalCache = globalCache
-            }
           mc = MailContext {
               _mctxlang                 = lang
             , _mctxcurrentBrandedDomain = bd
@@ -84,8 +79,8 @@ documentSealing mbAmazonConf guardTimeConf pdfToolsLambdaConf templates
       resultisok <- runGuardTimeConfT guardTimeConf
         . runPdfToolsLambdaConfT pdfToolsLambdaConf
         . runTemplatesT (lang, templates)
-        . A.runAmazonMonadT ac
         . runMailContextT mc
+        . runFileStorageT (mAmazonConfig, mRedisConn)
         $ postDocumentClosedActions True False
       case resultisok of
         True  -> return $ Ok Remove

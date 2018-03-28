@@ -14,12 +14,12 @@ import Network.HTTP.Client (Manager)
 import qualified Data.Text as T
 
 import Administration.Invoicing
-import Amazon (AmazonMonad)
 import CronConf
 import DB
 import Doc.Action
 import Doc.AutomaticReminder.Model (expireDocumentAutomaticReminders)
 import Doc.Model
+import File.Storage
 import HostClock.Collector (collectClockError)
 import Log.Configuration
 import Log.Identifier
@@ -40,11 +40,12 @@ import User.Password (PasswordAlgorithm(..), strengthenPassword)
 import User.PasswordReminder (DeleteExpiredPasswordReminders(..))
 import User.UserAccountRequest (expireUserAccountRequests)
 import Utils.List
-import qualified Amazon as AWS
 import qualified CronEnv
+import qualified FileStorage.Amazon as AWS
+import qualified FileStorage.Amazon.Config as AWS
 
 data JobType
-  = AmazonUpload
+  = AmazonUpload -- CORE-478: should be removed
   | AsyncEventsProcessing
   | ClockErrorCollection
   | DocumentAutomaticRemindersEvaluation
@@ -131,9 +132,9 @@ cronJobFetcher (jtype, attempts) = CronJob {
 ---------------------------------------
 
 cronConsumer
-  :: ( CryptoRNG m, MonadBase IO m, MonadBaseControl IO m, MonadCatch m, MonadIO m
-     , MonadLog m, MonadMask m, MonadThrow m, MonadTime m
-     , AmazonMonad cronenv, CryptoRNG cronenv, MonadBaseControl IO cronenv
+  :: ( CryptoRNG m, MonadBase IO m, MonadBaseControl IO m, MonadCatch m
+     , MonadIO m, MonadLog m, MonadMask m, MonadThrow m, MonadTime m
+     , MonadFileStorage cronenv, CryptoRNG cronenv, MonadBaseControl IO cronenv
      , MonadDB cronenv, MonadIO cronenv, MonadLog cronenv, MonadMask cronenv
      , MonadReader CronEnv.CronEnv cronenv
      , CryptoRNG dbt, MonadBaseControl IO dbt, MonadCatch dbt, MonadDB dbt
@@ -158,10 +159,12 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
 , ccProcessJob = \CronJob{..} -> logHandlerInfo cjType $ do
   logInfo_ "Processing job"
   action <- case cjType of
+    -- CORE-478: should be removed
     AmazonUpload -> do
-      if AWS.isAWSConfigOk $ cronAmazonConfig cronConf
+      let mConfig = cronAmazonConfig cronConf
+      if maybe False AWS.isAmazonConfigValid mConfig
         then do
-          moved <- runCronEnv (AWS.uploadSomeFilesToAmazon 10)
+          moved <- runCronEnv (AWS.uploadSomeFilesToAmazon mConfig 10)
           if moved
             then return . RerunAfter $ iseconds 1
             else return . RerunAfter $ iminutes 1

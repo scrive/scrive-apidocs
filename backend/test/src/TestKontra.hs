@@ -1,6 +1,7 @@
 module TestKontra (
-      inTestDir
-    , TestEnv
+      KontraTest
+    , inTestDir
+    , TestEnv(..)
     , TestEnvSt(..)
     , runTestEnv
     , ununTestEnv
@@ -49,6 +50,7 @@ import BrandedDomain.Model
 import Context.Internal
 import DB
 import DB.PostgreSQL
+import FakeFileStorage
 import GuardTime.Class
 import Happstack.Server.ReqHandler
 import IPAddress
@@ -59,11 +61,12 @@ import PdfToolsLambda.Conf
 import Session.SessionID
 import Templates
 import User.Lang
-import qualified Amazon as AWS
 import qualified MemCache
 
 inTestDir :: FilePath -> FilePath
 inTestDir = ("backend/test" </>)
+
+type KontraTest = KontraG FakeFileStorageT
 
 data TestEnvSt = TestEnvSt {
     teConnSource        :: !BasicConnectionSource
@@ -85,7 +88,7 @@ data TestEnvStRW = TestEnvStRW {
   , terwRequestURI  :: !String
   }
 
-type InnerTestEnv = StateT TestEnvStRW (ReaderT TestEnvSt (LogT (DBT IO)))
+type InnerTestEnv = FakeFileStorageT (StateT TestEnvStRW (ReaderT TestEnvSt (LogT (DBT IO))))
 
 newtype TestEnv a = TestEnv { unTestEnv :: InnerTestEnv a }
   deriving (Applicative, Functor, Monad, MonadLog, MonadCatch, MonadThrow, MonadMask, MonadIO, MonadReader TestEnvSt, MonadBase IO, MonadState TestEnvStRW)
@@ -99,16 +102,17 @@ runTestEnv st m = do
       atomically . modifyTVar' (teActiveTests st) $ second (pred $!)
 
 ununTestEnv :: TestEnvSt -> TestEnv a -> DBT IO a
-ununTestEnv st m = teRunLogger st
-  . (\m' -> runReaderT m' st)
+ununTestEnv st =
+  teRunLogger st
+  . flip runReaderT st
   -- for each test start with no time delay
-  . (\m' -> fst <$> (runStateT m' $ TestEnvStRW
+  . flip evalStateT TestEnvStRW
       { terwTimeDelay = 0
       , terwCurrentTime = Nothing
       , terwRequestURI = "http://testkontra.fake"
       }
-    ))
-  . unTestEnv $ m
+  . evalFakeFileStorageT
+  . unTestEnv
 
 instance CryptoRNG TestEnv where
   randomBytes n = asks teRNGState >>= liftIO . randomBytesIO n
@@ -130,8 +134,8 @@ instance MonadDB TestEnv where
     -- new connection.
     ConnectionSource pool <- asks teConnSource
     runLogger <- asks teRunLogger
-    TestEnv . StateT $ \terw -> ReaderT $ \te -> LogT . ReaderT $ \_ -> DBT . StateT $ \st -> do
-      res <- runDBT pool (dbTransactionSettings st) . runLogger $ runReaderT (runStateT m terw) te
+    TestEnv . liftFakeFileStorageT $ \fsVar -> StateT $ \terw -> ReaderT $ \te -> LogT . ReaderT $ \_ -> DBT . StateT $ \st -> do
+      res <- runDBT pool (dbTransactionSettings st) . runLogger $ runReaderT (runStateT (runFakeFileStorageT m fsVar) terw) te
       return (res, st)
   getNotification = TestEnv . getNotification
 
@@ -160,10 +164,15 @@ instance MonadBaseControl IO TestEnv where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-runTestKontraHelper :: BasicConnectionSource -> Request -> Context -> Kontra a -> TestEnv (a, Context, Response -> Response)
+instance MonadFileStorage TestEnv where
+  saveNewFile url contents = TestEnv $ saveNewFile url contents
+  getFileContents = TestEnv . getFileContents
+  deleteFile = TestEnv . deleteFile
+
+runTestKontraHelper :: BasicConnectionSource -> Request -> Context
+                    -> KontraG FakeFileStorageT a
+                    -> TestEnv (a, Context, Response -> Response)
 runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
-  filecache <- MemCache.new BS.length 52428800
-  let amazoncfg = AWS.AmazonConfig Nothing filecache Nothing
   now <- currentTime
   rng <- asks teRNGState
   runLogger <- asks teRunLogger
@@ -171,16 +180,22 @@ runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
   -- commit previous changes and do not begin new transaction as runDBT
   -- does it and we don't want these pesky warnings about transaction
   -- being already in progress
+  fakeFS <- TestEnv getFakeFSTVar
   commit' ts { tsAutoTransaction = False }
   ((res, ctx'), st) <- E.finally
-    (liftBase $ runStateT (unReqHandlerT . runLogger . runCryptoRNGT rng . AWS.runAmazonMonadT amazoncfg . runDBT pool ts $ runStateT (unKontra tk) ctx) $ ReqHandlerSt rq id now)
+    (liftBase $ runStateT (unReqHandlerT . runLogger . runCryptoRNGT rng
+                                         . flip runFakeFileStorageT fakeFS
+                                         . runDBT pool ts
+                                         $ runStateT (unKontra tk) ctx)
+                          (ReqHandlerSt rq id now))
     -- runDBT commits and doesn't run another transaction, so begin new one
     begin
   return (res, ctx', hsFilter st)
 
 -- | Typeclass for running handlers within TestKontra monad
 class RunnableTestKontra a where
-  runTestKontra :: Request -> Context -> Kontra a -> TestEnv (a, Context)
+  runTestKontra :: Request -> Context -> KontraG FakeFileStorageT a
+                -> TestEnv (a, Context)
 
 instance RunnableTestKontra a where
   runTestKontra rq ctx tk = do

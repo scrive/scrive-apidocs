@@ -18,6 +18,7 @@ import Doc.API.V2.Mock.TestUtils
 import Doc.DocStateData
 import Doc.DocumentMonad (withDocument)
 import Doc.Model
+import File.Storage
 import SMS.Data (SMSProvider(..))
 import SMS.SMS
 import TestingUtil
@@ -111,7 +112,7 @@ test_startDocumentCharging = do
     newDocumentReadyToStart user = do
       let filename = inTestDir "pdfs/simple.pdf"
       filecontent <- liftIO $ BS.readFile filename
-      file <- addNewFile filename filecontent
+      file <- saveNewFile filename filecontent
       doc <- addRandomDocumentWithAuthorAndConditionAndFile
             user
             (\d -> documentstatus d == Preparation

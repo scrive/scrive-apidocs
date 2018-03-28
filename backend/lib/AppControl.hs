@@ -43,6 +43,7 @@ import Cookies (lookCookieValue)
 import DB hiding (ErrorCode(..))
 import DB.PostgreSQL
 import File.FileID
+import FileStorage
 import Happstack.Server.ReqHandler
 import IPAddress
 import Kontra
@@ -55,7 +56,6 @@ import Templates
 import Text.JSON.Convert
 import User.Model
 import Utils.HTTP
-import qualified Amazon as AWS
 import qualified MemCache
 
 -- | Global application data
@@ -127,7 +127,7 @@ logRequest rq maybeInputsBody = [
 -- | Outer handler monad
 type HandlerM = LogT (ReqHandlerT IO)
 -- | Inner handler monad.
-type InnerHandlerM = DBT (AWS.AmazonMonadT (CryptoRNGT HandlerM))
+type InnerHandlerM = DBT (FileStorageT (CryptoRNGT HandlerM))
 
 -- | Creates a context, routes the request, and handles the session.
 appHandler :: Kontra (Maybe Response) -> AppConf -> AppGlobals -> HandlerM Response
@@ -202,11 +202,11 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
     timeDiff :: UTCTime -> UTCTime -> Double
     timeDiff t = realToFrac . diffUTCTime t
 
-    runHandler :: AWS.AmazonMonadT (CryptoRNGT HandlerM) Response
+    runHandler :: FileStorageT (CryptoRNGT HandlerM) Response
                -> HandlerM Response
     runHandler = catchEverything
       . runCryptoRNGT (cryptorng appGlobals)
-      . AWS.runAmazonMonadT (AWS.AmazonConfig (amazonConfig appConf) (filecache appGlobals) $ mrediscache appGlobals)
+      . runFileStorageT (amazonConfig appConf, mrediscache appGlobals)
 
     catchEverything :: HandlerM Response -> HandlerM Response
     catchEverything m = m `E.catch` \(e::E.SomeException) -> do

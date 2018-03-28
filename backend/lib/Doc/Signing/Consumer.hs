@@ -18,7 +18,6 @@ import qualified Data.Text as T
 import qualified Database.Redis as R
 import qualified Text.StringTemplates.Fields as F
 
-import AppConf (AmazonConfig)
 import BrandedDomain.Model
 import DB
 import DB.PostgreSQL
@@ -44,6 +43,7 @@ import EID.Nets.Control (checkNetsSignStatus)
 import EID.Nets.Data (NetsSignStatus(..), netsFaultText)
 import EID.Signature.Model
 import File.FileID
+import FileStorage
 import GuardTime
 import IPAddress
 import KontraError
@@ -56,7 +56,7 @@ import Templates
 import User.Lang
 import Util.Actor
 import Util.SignatoryLinkUtils
-import qualified Amazon as A
+import qualified FileStorage.Amazon.Config as A
 
 data DocumentSigning = DocumentSigning {
     signingSignatoryID          :: !SignatoryLinkID
@@ -79,7 +79,7 @@ data DocumentSigning = DocumentSigning {
 
 documentSigning
   :: (CryptoRNG m, MonadLog m, MonadIO m, MonadBaseControl IO m, MonadMask m)
-  => Maybe AmazonConfig
+  => Maybe A.AmazonConfig
   -> GuardTimeConf
   -> Maybe CgiGrpConfig
   -> Maybe NetsSignConfig
@@ -90,8 +90,9 @@ documentSigning
   -> String
   -> Int
   -> ConsumerConfig m SignatoryLinkID DocumentSigning
-documentSigning amazonConf guardTimeConf cgiGrpConf netsSignConf
-  templates localCache globalCache pool mailNoreplyAddress maxRunningJobs = ConsumerConfig {
+documentSigning mAmazonConfig guardTimeConf cgiGrpConf netsSignConf templates _
+                mRedisConn pool mailNoreplyAddress
+                maxRunningJobs = ConsumerConfig {
     ccJobsTable = "document_signing_jobs"
   , ccConsumersTable = "document_signing_consumers"
   , ccJobSelectors =
@@ -138,21 +139,16 @@ documentSigning amazonConf guardTimeConf cgiGrpConf netsSignConf
       withPostgreSQL pool . withDocumentM (dbQuery $ GetDocumentBySignatoryLinkID signingSignatoryID) $ do
       now <- currentTime
       bd <- dbQuery $ GetBrandedDomainByID signingBrandedDomainID
-      let ac = A.AmazonConfig {
-              A.awsConfig      = amazonConf
-            , A.awsLocalCache  = localCache
-            , A.awsGlobalCache = globalCache
-            }
-          mc = MailContext {
+      let mc = MailContext {
               _mctxlang                 = signingLang
             , _mctxcurrentBrandedDomain = bd
             , _mctxtime                 = now
             , _mctxmailNoreplyAddress   = mailNoreplyAddress
             }
       runTemplatesT (signingLang, templates)
-        . A.runAmazonMonadT ac
         . runMailContextT mc
         . runGuardTimeConfT guardTimeConf
+        . runFileStorageT (mAmazonConfig, mRedisConn)
         $ if (signingCancelled)
             then if (minutesTillPurgeOfFailedAction `minutesAfter` signingTime > now)
               then return $ Ok $ RerunAfter $ iminutes minutesTillPurgeOfFailedAction
@@ -227,8 +223,9 @@ documentSigning amazonConf guardTimeConf cgiGrpConf netsSignConf
             NetsSignStatusAlreadySigned -> return $ Ok Remove
 
 signFromESignature
-  :: ( GuardTimeConfMonad m, MailContextMonad m, MonadIO m, MonadLog m, MonadMask m
-     , MonadBaseControl IO m, A.AmazonMonad m, CryptoRNG m, DocumentMonad m, TemplatesMonad m)
+  :: ( GuardTimeConfMonad m, MailContextMonad m, MonadIO m, MonadLog m
+     , MonadMask m, MonadBaseControl IO m, MonadFileStorage m, CryptoRNG m
+     , DocumentMonad m, TemplatesMonad m )
   => DocumentSigning
   -> UTCTime
   -> m ()

@@ -71,7 +71,7 @@ instance (ToResp a , ToResp b) => ToResp (Either a b) where
 instance ToResp InternalKontraResponse where
   toResp ikr = do
     case getFlashMessage ikr of
-      Just f -> do   
+      Just f -> do
         _ <- addFlashCookie (toCookieValue f)
         return ()
       Nothing -> return ()

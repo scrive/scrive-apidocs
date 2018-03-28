@@ -1,3 +1,4 @@
+-- CORE-478: should be removed
 module Amazon.URLFix
   ( AmazonURLFixConsumer
   , amazonURLFixConsumer
@@ -23,7 +24,8 @@ import File.File
 import File.FileID
 import File.Model
 import Log.Identifier
-import qualified Amazon as A
+import qualified FileStorage.Amazon as A
+import qualified FileStorage.Amazon.Config as A
 
 checkAndFixURL :: (MonadBase IO m, MonadIO m, MonadDB m, MonadLog m, CryptoRNG m) => AWS.S3Action -> FileStorage -> m Bool
 checkAndFixURL _ (FileStorageMemory _) = return True
@@ -61,10 +63,9 @@ data AmazonURLFixConsumer = AmazonURLFixConsumer {
 
 amazonURLFixConsumer
   :: (MonadIO m, MonadBase IO m, MonadLog m, CryptoRNG m, MonadMask m)
-  => Maybe (String, String, String)
-  -> ConnectionSourceM m
+  => Maybe A.AmazonConfig -> ConnectionSourceM m
   -> ConsumerConfig m FileID AmazonURLFixConsumer
-amazonURLFixConsumer mbAmazonConf pool = ConsumerConfig {
+amazonURLFixConsumer mConfig pool = ConsumerConfig {
     ccJobsTable = "amazon_url_fix_jobs"
   , ccConsumersTable = "amazon_url_fix_consumers"
   , ccJobSelectors = ["id"]
@@ -76,7 +77,7 @@ amazonURLFixConsumer mbAmazonConf pool = ConsumerConfig {
   , ccNotificationTimeout = 60 * 1000000 -- 1 minute
   , ccMaxRunningJobs = 1
   , ccProcessJob = \aufc@AmazonURLFixConsumer{..} -> do
-      if A.isAWSConfigOk mbAmazonConf
+      if maybe False A.isAmazonConfigValid mConfig
         then do
           withPostgreSQL pool $ do
             mfile <- dbQuery $ GetMaybeFileByFileID aufcFileID
@@ -88,7 +89,7 @@ amazonURLFixConsumer mbAmazonConf pool = ConsumerConfig {
                 -- this means, that file was not found or was purged
                 return $ Failed Remove
               Just file -> do
-                success <- checkAndFixURL (A.mkAWSAction mbAmazonConf) (filestorage file)
+                success <- checkAndFixURL (A.mkAWSAction mConfig) (filestorage file)
                 case success of
                   True  -> return $ Ok Remove
                   False -> Failed <$> onFailure aufc

@@ -53,10 +53,9 @@ import File.FileID
 import File.Storage
 import MagicHash
 import User.Model
-import qualified Amazon
 
 data GetSignatoryScreenshots = GetSignatoryScreenshots [SignatoryLinkID]
-instance (MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, Amazon.AmazonMonad m) => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, SignatoryScreenshots)] where
+instance (MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, MonadFileStorage m) => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, SignatoryScreenshots)] where
   query (GetSignatoryScreenshots l) = do
     runQuery_ . sqlSelect "signatory_screenshots" $ do
                 sqlWhereIn "signatory_link_id" l

@@ -1,4 +1,3 @@
-
 module Attachment.Control
   ( handleCreateNew
   , handleShare
@@ -86,7 +85,8 @@ handleCreateNew = guardLoggedInOrThrowInternalError $ do
           let title = takeBaseName filename
           actor <- guardJustM $ mkAuthorActor <$> getContext
           ctx <- getContext
-          _ <- dbUpdate $ NewAttachment (userid $ fromJust $ get ctxmaybeuser ctx) title filename content' actor
+          fileid <- saveNewFile filename content'
+          _ <- dbUpdate $ NewAttachment (userid $ fromJust $ get ctxmaybeuser ctx) title fileid actor
           J.runJSONGenT $ return ()
     _ -> internalError
 

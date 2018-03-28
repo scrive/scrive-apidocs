@@ -107,7 +107,6 @@ import Doc.Tables
 import EID.Signature.Model
 import EvidenceLog.Model
 import File.FileID
-import File.Model
 import IPAddress
 import Log.Identifier
 import MagicHash
@@ -308,7 +307,10 @@ insertSignatoryScreenshots l = do
                                         <> f "signing" signing
                                         <> f "reference" getReferenceScreenshot
       f col part = [ (slid, col, Screenshot.time s, Screenshot.image s) | (slid, Just s) <- map (second part) l ]
-  (fileids :: [FileID]) <- mapM (\(t,s) -> dbUpdate $ NewFile (t ++ "_screenshot.jpeg") s) (zip types ss)
+  (fileids :: [FileID]) <- forM (zip types ss) $ \_ -> do
+    -- FIXME: newFileInAmazon t s -- calling 3rd-party in database model?
+    -- old: dbUpdate $ NewFile (t ++ "_screenshot.jpeg") s)
+    undefined
   if null slids then return 0 else
     runQuery . sqlInsert "signatory_screenshots" $ do
            sqlSetList "signatory_link_id" $ slids

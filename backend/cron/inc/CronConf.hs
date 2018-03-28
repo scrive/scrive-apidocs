@@ -6,10 +6,10 @@ module CronConf (
 import Data.Unjson
 import qualified Data.Text as T
 
-import Amazon.Config
 import Database.Redis.Configuration
 import EID.CGI.GRP.Config
 import EID.Nets.Config
+import FileStorage.Amazon.Config
 import GuardTime (GuardTimeConf(..))
 import Log.Configuration
 import Monitoring
@@ -53,19 +53,9 @@ data CronConf = CronConf {
 
 unjsonCronConf :: UnjsonDef CronConf
 unjsonCronConf = objectOf $ pure CronConf
- <*> fieldOptBy "amazon"
+ <*> fieldOpt "amazon"
       cronAmazonConfig
       "Amazon configuration"
-      (objectOf $ pure (,,)
-       <*> field "bucket"
-         (\(x,_,_) -> x)
-         "In which bucket stored files exist"
-       <*> field "access_key"
-         (\(_,x,_) -> x)
-         "Amazon access key"
-       <*> field "secret_key"
-         (\(_,_,x) -> x)
-         "Amazon secret key")
   <*> field "database"
       cronDBConfig
       "Database connection string"

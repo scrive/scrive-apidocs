@@ -10,7 +10,6 @@ import Test.QuickCheck
 import qualified Data.ByteString as BS
 import qualified Data.Set as S
 
-import Amazon
 import Company.Model
 import Context (ctxpdftoolslambdaconf, ctxtime)
 import DB
@@ -32,6 +31,7 @@ import Doc.TestInvariants
 import EID.Signature.Model (ESignature(..))
 import EvidenceLog.Model
 import EvidenceLog.View (getSignatoryIdentifierMap, simplyfiedEventText)
+import FakeFileStorage
 import File.FileID
 import MinutesTime
 import PdfToolsLambda.Conf
@@ -46,7 +46,6 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import qualified Doc.Screenshot as Screenshot
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
-import qualified MemCache
 
 docStateSideEffectsTests :: TestEnvSt -> Test
 docStateSideEffectsTests env =
@@ -300,8 +299,7 @@ testSignDocumentEvidenceLog = do
       lg <- dbQuery . GetEvidenceLog =<< theDocumentID
       assertJust $ find (\e -> evType e == Current SignDocumentEvidence) lg
 
-      mc <- MemCache.new (const 1) 1000
-      runAmazonMonadT (AmazonConfig Nothing mc Nothing) $ do
+      evalFakeFileStorageT $ sealDocument "https://scrive.com"
         runPdfToolsLambdaConfT pdfSealLambdaConf $ do
           sealDocument "https://scrive.com"
 
@@ -999,11 +997,9 @@ testSealDocument = replicateM_ 1 $ do
 
     randomUpdate $ \t-> CloseDocument (systemActor t)
 
-    mc <- MemCache.new (const 1) 1000
-    runAmazonMonadT (AmazonConfig Nothing mc Nothing) $ do
-      runPdfToolsLambdaConfT (get ctxpdftoolslambdaconf ctx) $ do
+    evalFakeFileStorageT $
+      runPdfToolsLambdaConfT (get ctxpdftoolslambdaconf ctx) $
         sealDocument "https://scrive.com"
-
 
 testDocumentAppendSealedPendingRight :: TestEnv ()
 testDocumentAppendSealedPendingRight = replicateM_ 10 $ do
