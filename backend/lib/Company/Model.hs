@@ -205,6 +205,11 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m CreateCompany Company where
       sqlSet "company_id" companyidx
     runQuery_ $ sqlInsert "feature_flags" $ do
       sqlSet "company_id" companyidx
+      sqlSet "can_use_dk_authentication_to_view" False
+      sqlSet "can_use_no_authentication_to_view" False
+      sqlSet "can_use_no_authentication_to_sign" False
+      sqlSet "can_use_se_authentication_to_view" False
+      sqlSet "can_use_se_authentication_to_sign" False
     runQuery_ $ sqlSelect "companies" $ do
       sqlJoinOn "company_uis" "company_uis.company_id = companies.id"
       selectCompaniesSelectors
