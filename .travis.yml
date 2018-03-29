@@ -3,7 +3,7 @@ sudo: false
 language: ruby
 
 rvm:
-  - 2.1.0
+  - 2.4.0
 
 cache: bundler
 
@@ -29,4 +29,3 @@ deploy:
     - GIT_DEPLOY_REPO="git@github.com:scrive/scrive-apidocs.git"
   on:
     branch: master
-
