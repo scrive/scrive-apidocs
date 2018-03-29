@@ -28,6 +28,7 @@ post:
         - standard
         - sms_pin
         - se_bankid
+        - no_bankid
       required: true
       description: |
         The type of authentication-to-sign method to set for the signatory.

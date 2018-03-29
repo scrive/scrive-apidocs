@@ -138,6 +138,7 @@ properties:
       - standard
       - sms_pin
       - se_bankid
+      - no_bankid
   confirmation_delivery_method:
     type: string
     default: email
