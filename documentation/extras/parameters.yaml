@@ -74,6 +74,7 @@ SignParamAuthType:
     - standard
     - sms_pin
     - se_bankid
+    - no_bankid
   description: |
     The authentication method to be used for signing.
 

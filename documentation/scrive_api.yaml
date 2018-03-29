@@ -60,6 +60,8 @@ info:
     | 2018-01-08  | Add an endpoint to [get a sign link as a QR code](#get-a-sign-link-as-a-qr-code) |
     | 2018-01-29  | Add an endpoint to [change the email and mobile number of a signatory](#change-the-email-and-mobile-number-of-a-signatory) |
     | 2018-02-28  | Fix a minor error in the [Quick Start](#quick-start) guide |
+    | 2018-03-26  | Add `rejection_reason` to the Signatory JSON and an API endpoint to control [template sharing](#share-or-unshare-templates) |
+    | 2018-03-29  | Fix an omission where `no_bankid` (Norwegian BankID) was missing as an Authentication to Sign |
 
     ## Environments & IP Addresses
 
@@ -850,6 +852,9 @@ paths:
 
   /{document_id}/{signatory_id}/changeemailandmobile:
     $ref: ./api/documents/document_id/signatory_id/changeemailandmobile.yaml
+
+  /templates/setsharing:
+    $ref: ./api/documents/templates/setsharing.yaml
 
   # Sign
 
