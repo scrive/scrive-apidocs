@@ -252,6 +252,10 @@ This is the only officially supported encoding for our API.
 <td>2018-03-26</td>
 <td>Add <code class="prettyprint">rejection_reason</code> to the Signatory JSON and an API endpoint to control <a href="#share-or-unshare-templates">template sharing</a></td>
 </tr>
+<tr>
+<td>2018-03-29</td>
+<td>Fix an omission where <code class="prettyprint">no_bankid</code> (Norwegian BankID) was missing as an Authentication to Sign</td>
+</tr>
 </tbody></table>
 
 <h2 id="environments-amp-ip-addresses">Environments &amp; IP Addresses</h2>
@@ -4878,6 +4882,7 @@ reject reason (<code>allow_reject_reason</code>).</p>
 <li><code>standard</code></li>
 <li><code>sms_pin</code></li>
 <li><code>se_bankid</code></li>
+<li><code>no_bankid</code></li>
 
 </ul>
 
@@ -7879,6 +7884,7 @@ reject reason (<code>allow_reject_reason</code>).</p>
 <li><code>standard</code></li>
 <li><code>sms_pin</code></li>
 <li><code>se_bankid</code></li>
+<li><code>no_bankid</code></li>
 
 </ul>
 
@@ -10679,6 +10685,7 @@ reject reason (<code>allow_reject_reason</code>).</p>
 <li><code>standard</code></li>
 <li><code>sms_pin</code></li>
 <li><code>se_bankid</code></li>
+<li><code>no_bankid</code></li>
 
 </ul>
 
