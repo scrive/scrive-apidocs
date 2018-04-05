@@ -302,9 +302,9 @@ insertMainFiles documentid rfiles = do
     sqlSetList "document_status" $ mainfiledocumentstatus <$> files
     sqlSetList "seal_status" $ mainfilesealstatus <$> files
 
-insertSignatoryScreenshots :: ( CryptoRNG m, MonadBase IO m, MonadDB m
-                              , MonadFileStorage m, MonadLog m, MonadThrow m
-                              , MonadTime m )
+insertSignatoryScreenshots :: ( CryptoRNG m, MonadBase IO m, MonadCatch m
+                              , MonadDB m, MonadFileStorage m, MonadLog m
+                              , MonadThrow m, MonadTime m )
                            => [(SignatoryLinkID, SignatoryScreenshots)] -> m Int
 insertSignatoryScreenshots l = do
   let (slids, types, times, ss) = unzip4 $ f "first" first
@@ -1410,9 +1410,9 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpd
         actor
 
 data SignDocument = SignDocument SignatoryLinkID MagicHash (Maybe ESignature) (Maybe String) SignatoryScreenshots Actor
-instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadFileStorage m
-         , MonadLog m, MonadThrow m, MonadTime m, TemplatesMonad m )
-    => DBUpdate m SignDocument () where
+instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
+         , MonadFileStorage m, MonadLog m, MonadThrow m, MonadTime m
+         , TemplatesMonad m ) => DBUpdate m SignDocument () where
   update (SignDocument slid mh mesig mpin screenshots actor) = do
     let legacy_signature_error = unexpectedError "signing with legacy signatures is not possible"
         sqlWhereAuthSign = case (mesig, mpin) of

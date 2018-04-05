@@ -105,8 +105,12 @@ signDocument slid mh fields acceptedAuthorAttachments notUploadedSignatoryAttach
   guardGetSignatoryFromIdForDocument slid >>= \sl -> dbUpdate . SignDocument slid mh mesig mpin screenshots =<< signatoryActor ctx sl
 
 
-fieldsToFieldsWithFiles :: (MonadDB m, MonadThrow m, MonadTime m, MonadFileStorage m, MonadBase IO m, MonadLog m, CryptoRNG m) =>
-  SignatoryFieldsValuesForSigning -> m ([(FieldIdentity,FieldValue)],[(FileID,BS.ByteString)])
+fieldsToFieldsWithFiles :: ( CryptoRNG m, MonadBase IO m, MonadCatch m
+                           , MonadFileStorage m , MonadLog m , MonadDB m
+                           , MonadThrow m, MonadTime m)
+                        => SignatoryFieldsValuesForSigning
+                        -> m ( [(FieldIdentity,FieldValue)]
+                             , [(FileID,BS.ByteString)] )
 fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning []) = return ([],[])
 fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning (f:fs)) = do
   (changeFields,files') <- fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning fs)

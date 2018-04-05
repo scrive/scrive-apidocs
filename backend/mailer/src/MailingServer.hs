@@ -21,6 +21,7 @@ import Database.Redis.Configuration
 import DB
 import DB.PostgreSQL
 import FileStorage
+import FileStorage.MemCache
 import Handlers
 import Happstack.Server.ReqHandler
 import Log.Configuration
@@ -34,8 +35,6 @@ import Monitoring
 import Sender
 import Utils.IO
 import Utils.Network
-
---import qualified MemCache
 
 data CmdConf = CmdConf {
   config :: String
@@ -74,9 +73,9 @@ main = do
     withPostgreSQL (unConnectionSource . simpleSource $ pgSettings []) $ do
       checkDatabaseAllowUnknownTables extrasOptions [] mailerTables
     fsConf <- do
-      --localCache <- MemCache.new BS.length (mailerLocalFileCacheSize conf)
+      localCache  <- newFileMemCache $ mailerLocalFileCacheSize conf
       globalCache <- F.forM (mailerRedisCacheConfig conf) mkRedisConnection
-      return (mailerAmazonConfig conf, globalCache)
+      return (mailerAmazonConfig conf, globalCache, Just localCache)
     cs@(ConnectionSource pool) <- ($ (maxConnectionTracker $ mailerMaxDBConnections conf))
       <$> liftBase (createPoolSource (pgSettings mailerComposites)  (mailerMaxDBConnections conf))
 

@@ -8,7 +8,6 @@ import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
 import Crypto.RNG
 import Data.Aeson
-import Data.ByteString (ByteString)
 import Data.Int
 import Database.PostgreSQL.Consumers.Config
 import Log.Class
@@ -21,13 +20,12 @@ import Doc.Action
 import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.Sealing.Model
-import File.FileID
 import FileStorage
+import FileStorage.MemCache
 import GuardTime
 import Log.Identifier
 import MailContext
 import MailContext.Internal
-import MemCache (MemCache)
 import PdfToolsLambda.Conf
 import Templates
 import User.Lang
@@ -45,14 +43,15 @@ documentSealing
   -> GuardTimeConf
   -> PdfToolsLambdaConf
   -> KontrakcjaGlobalTemplates
-  -> MemCache FileID ByteString
+  -> FileMemCache
   -> Maybe R.Connection
   -> ConnectionSourceM m
   -> String
   -> Int
   -> ConsumerConfig m DocumentID DocumentSealing
-documentSealing mAmazonConfig guardTimeConf pdfToolsLambdaConf templates _ mRedisConn pool
-                mailNoreplyAddress maxRunningJobs = ConsumerConfig {
+documentSealing mAmazonConfig guardTimeConf pdfToolsLambdaConf templates
+                memcache mRedisConn pool mailNoreplyAddress
+                maxRunningJobs = ConsumerConfig {
     ccJobsTable = "document_sealing_jobs"
   , ccConsumersTable = "document_sealing_consumers"
   , ccJobSelectors = ["id", "branded_domain_id", "attempts"]
@@ -80,7 +79,7 @@ documentSealing mAmazonConfig guardTimeConf pdfToolsLambdaConf templates _ mRedi
         . runPdfToolsLambdaConfT pdfToolsLambdaConf
         . runTemplatesT (lang, templates)
         . runMailContextT mc
-        . runFileStorageT (mAmazonConfig, mRedisConn)
+        . runFileStorageT (mAmazonConfig, mRedisConn, Just memcache)
         $ postDocumentClosedActions True False
       case resultisok of
         True  -> return $ Ok Remove

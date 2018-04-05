@@ -1,6 +1,5 @@
 module FileStorage.Amazon
-  ( AmazonException(..)
-  , mkAWSAction
+  ( mkAWSAction
   , uploadSomeFilesToAmazon
   , AmazonMonadT
   , runAmazonMonadT
@@ -14,7 +13,6 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Crypto.RNG
 import Data.Time
-import Data.Typeable (Typeable)
 import Log
 import Network.AWS.Authentication
 import System.FilePath ((</>))
@@ -37,11 +35,6 @@ import File.Model
 import FileStorage.Amazon.Config
 import FileStorage.Class
 import Log.Identifier
-
--- CORE-478: should become FileStorageException? or be removed?
-data AmazonException = AmazonException String
-  deriving (Eq, Ord, Show, Typeable)
-instance Exception AmazonException
 
 -- CORE-478: should be removed
 mkAWSAction :: Maybe AmazonConfig -> AWS.S3Action
@@ -82,14 +75,14 @@ instance MonadBaseControl IO m => MonadBaseControl IO (AmazonMonadT m) where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-instance {-# OVERLAPPING #-} (MonadBase IO m, MonadLog m)
+instance {-# OVERLAPPING #-} (MonadBase IO m, MonadLog m, MonadThrow m)
     => MonadFileStorage (AmazonMonadT m) where
   saveNewFile     = saveNewFileInAmazon
   getFileContents = getFileContentsFromAmazon
   deleteFile      = deleteFileFromAmazon
 
-saveNewFileInAmazon :: (MonadBase IO m, MonadLog m) => String -> BS.ByteString
-                    -> AmazonMonadT m (Either String ())
+saveNewFileInAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m)
+                    => String -> BS.ByteString -> AmazonMonadT m ()
 saveNewFileInAmazon url contents = do
   config <- getAmazonConfig
 
@@ -104,13 +97,13 @@ saveNewFileInAmazon url contents = do
         [ "url"    .= url
         , "result" .= show err
         ]
-      return $ Left $ show err
+      throwM $ FileStorageException $ show err
     Right res -> do
       logInfo "Filed saved on AWS" $ object
         [ "url"    .= url
         , "result" .= show res
         ]
-      return $ Right ()
+      return ()
 
 -- CORE-478: should be removed
 data GetContentRetry = RegularRetry
@@ -119,12 +112,12 @@ data GetContentRetry = RegularRetry
                      | NoRetry
   deriving Show
 
-getFileContentsFromAmazon :: (MonadBase IO m, MonadLog m) => String
-                          -> AmazonMonadT m (Either String BS.ByteString)
+getFileContentsFromAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m)
+                          => String -> AmazonMonadT m BS.ByteString
 getFileContentsFromAmazon = go RegularRetry
   where
-    go :: (MonadBase IO m, MonadLog m) => GetContentRetry -> String
-       -> AmazonMonadT m (Either String BS.ByteString)
+    go :: (MonadBase IO m, MonadLog m, MonadThrow m) => GetContentRetry
+       -> String -> AmazonMonadT m BS.ByteString
     go retry url = do
       config <- getAmazonConfig
       let action = s3ActionFromConfig config url
@@ -141,7 +134,7 @@ getFileContentsFromAmazon = go RegularRetry
             [ "elapsed_time" .= diff
             , "url"          .= url
             ]
-          return $ Right $ BSL.toStrict $ HTTP.rspBody rsp
+          return $ BSL.toStrict $ HTTP.rspBody rsp
         Left err -> do
           logAttention "Fetching file from AWS failed" $ object
             [ "error"        .= show err
@@ -153,10 +146,10 @@ getFileContentsFromAmazon = go RegularRetry
             RegularRetry -> go RetryEncoded url
             RetryEncoded -> go AnotherRetryEncoded $ HTTP.urlEncode url
             AnotherRetryEncoded -> go NoRetry url
-            NoRetry -> return $ Left $ show err
+            NoRetry -> throwM $ FileStorageException $ show err
 
-deleteFileFromAmazon :: (MonadBase IO m, MonadLog m) => String
-                     -> AmazonMonadT m (Either String ())
+deleteFileFromAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m) => String
+                     -> AmazonMonadT m ()
 deleteFileFromAmazon url = do
   config <- getAmazonConfig
 
@@ -168,13 +161,13 @@ deleteFileFromAmazon url = do
         [ "url"    .= (AWS.s3bucket action </> url)
         , "result" .= show res
         ]
-      return $ Right ()
+      return ()
     Left err -> do
       logAttention "AWS failed to delete file" $ object
          [ "url"    .= (AWS.s3bucket action </> url)
          , "result" .= show err
          ]
-      return $ Left $ show err
+      throwM $ FileStorageException $ show err
 
 -- CORE-478: should be removed
 uploadSomeFilesToAmazon :: ( MonadBase IO m, MonadIO m, MonadLog m, MonadDB m
@@ -283,79 +276,3 @@ exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)}
 exportFile _ _ = do
   logInfo_ "No uploading to Amazon as bucket is ''"
   return False
-
---getFileFromRedis
---  :: (MonadBaseControl IO m, MonadLog m)
---  => R.Connection
---  -> RedisKey
---  -> m BS.ByteString
---getFileFromRedis cache rkey = do
---  semaphore <- newEmptyMVar
---  withAsync (listener semaphore) $ \_ -> fix $ \loop -> do
---    mcontent <- runRedis cache $ R.hget key "content"
---    case mcontent of
---      Just content -> do
---        logInfo_ "File retrieved successfully"
---        return content
---      Nothing -> do
---        logInfo_ "Waiting for file"
---        void . timeout 1000000 $ takeMVar semaphore
---        loop
---  where
---    key = fromRedisKey rkey
---
---    listener semaphore = runRedis_ cache $ do
---      R.pubSub (R.subscribe [key]) $ \_msg -> do
---        void $ tryPutMVar semaphore ()
---        return mempty
-
--- CORE-478: should be removed
---getFileContents
---  :: forall m. (MonadBase IO m, MonadLog m, MonadThrow m)
---  => S3Action
---  -> File
---  -> Maybe (R.Connection, RedisKey)
---  -> m BS.ByteString
---getFileContents s3action file@File{..} mredis = localData [logPair_ file] $ do
---  getContent RegularRetry filestorage >>= verifyContent >>= cacheContent
---  where
---    getContent :: GetContentRetry -> FileStorage -> m BS.ByteString
---    getContent _ (FileStorageMemory content) = return $ content
---    getContent retry fs@(FileStorageAWS url aes) = do
---      (result, timeDiff) <- do
---        startTime <- liftBase getCurrentTime
---        logInfo_ "Attempting to fetch file from AWS"
---        result <- liftBase . AWS.runAction $ s3action {
---            AWS.s3object = url
---        }
---        finishTime <- liftBase getCurrentTime
---        return (result, realToFrac $ diffUTCTime finishTime startTime :: Double)
---      case result of
---        Right rsp -> do
---          logInfo "Fetching file from AWS succeeded" $ object [
---              "elapsed_time" .= timeDiff
---            ]
---          return . aesDecrypt aes . BSL.toStrict $ HTTP.rspBody rsp
---        Left err -> do
---          logAttention "Fetching file from AWS failed" $ object [
---              "error" .= show err
---            , "elapsed_time" .= timeDiff
---            , "retry" .= show retry
---            ]
---          case retry of
---            RegularRetry -> getContent RetryEncoded fs
---            RetryEncoded -> getContent AnotherRetryEncoded $ FileStorageAWS (HTTP.urlEncode url) aes
---            AnotherRetryEncoded -> getContent NoRetry fs
---            NoRetry -> throwM $ AmazonException $ show err
---
---    verifyContent :: BS.ByteString -> m BS.ByteString
---    verifyContent content = if SHA1.hash content /= filechecksum
---      then do
---        logAttention_ "SHA1 checksum of file doesn't match the one in the database"
---        throwM $ AmazonException $ "SHA1 checksum of file doesn't match the one in the database"
---      else return content
---
---    cacheContent :: BS.ByteString -> m BS.ByteString
---    cacheContent content = do
---      F.forM_ mredis $ redisPut "content" content
---      return content

@@ -25,6 +25,7 @@ import Doc.API.Callback.Model
 import Doc.Extending.Consumer
 import Doc.Sealing.Consumer
 import Doc.Signing.Consumer
+import FileStorage.MemCache
 import KontraError
 import Log.Configuration
 import Monitoring
@@ -34,7 +35,6 @@ import ThirdPartyStats.Mixpanel
 import ThirdPartyStats.Planhat
 import Utils.IO
 import "kontrakcja" CronConf
-import qualified MemCache
 import qualified "kontrakcja" CronEnv
 
 data CmdConf = CmdConf {
@@ -80,7 +80,7 @@ main = do
       <$> liftBase (createPoolSource (connSettings kontraComposites) (cronMaxDBConnections cronConf))
     templates <- liftBase readGlobalTemplates
     mrediscache <- F.forM (cronRedisCacheConfig cronConf) mkRedisConnection
-    filecache <- MemCache.new BS.length (cronLocalFileCacheSize cronConf)
+    filecache <- newFileMemCache $ cronLocalFileCacheSize cronConf
 
     -- Asynchronous event dispatcher; if you want to add a consumer to the event
     -- dispatcher, please combine the two into one dispatcher function rather
@@ -105,7 +105,7 @@ main = do
 
         runCronEnv :: CronEnv.CronEnvM r -> CronM r
         runCronEnv = runDB . CronEnv.runCronEnv cronConf
-          filecache mrediscache templates
+          (Just filecache) mrediscache templates
 
         docSealing   = documentSealing (cronAmazonConfig cronConf)
           (cronGuardTimeConf cronConf) (cronPdfToolsLambdaConf cronConf) templates filecache mrediscache pool

@@ -10,7 +10,6 @@ import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Crypto.RNG
-import Data.Either (isRight)
 import Log
 import System.Timeout.Lifted
 import qualified Data.ByteString as BS
@@ -42,29 +41,27 @@ instance {-# OVERLAPPING #-} ( MonadFileStorage m, MonadBaseControl IO m
   deleteFile      = deleteFileWithRedis
 
 saveNewFileWithRedis :: (MonadFileStorage m, MonadBase IO m)
-                     => String -> BS.ByteString
-                     -> RedisCacheT m (Either String ())
+                     => String -> BS.ByteString -> RedisCacheT m ()
 saveNewFileWithRedis url contents = do
-  eRes <- lift $ saveNewFile url contents
-  when (isRight eRes) $ do
-    conn <- getRedisConnection
-    redisPut "contents" contents (conn, redisKeyFromURL url)
-  return eRes
+  lift $ saveNewFile url contents
+  conn <- getRedisConnection
+  redisPut "contents" contents (conn, redisKeyFromURL url)
 
 getFileContentsWithRedis
   :: (MonadFileStorage m, MonadBaseControl IO m, MonadLog m, MonadMask m)
-  => String -> RedisCacheT m (Either String BS.ByteString)
+  => String -> RedisCacheT m BS.ByteString
 getFileContentsWithRedis url = do
   conn <- getRedisConnection
   let key = redisKeyFromURL url
+  -- CORE-478: not sure mfetch adds it to the cache when it wasn't already
   mfetch (Just conn) key
-         (\_ _ -> Right `liftM` getFileFromRedis conn key)
+         (\_ _ -> getFileFromRedis conn key)
          (\_ -> lift $ getFileContents url)
 
 deleteFileWithRedis :: (Monad m, MonadFileStorage m) => String
-                    -> RedisCacheT m (Either String ())
+                    -> RedisCacheT m ()
 deleteFileWithRedis url = do
-  -- FIXME: delete from Redis
+  -- CORE-478: FIXME: delete from Redis
   lift $ deleteFile url
 
 -- | Fetch the contents of a file from Redis retrying every second.

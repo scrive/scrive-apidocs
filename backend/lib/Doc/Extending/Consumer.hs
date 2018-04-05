@@ -8,7 +8,6 @@ import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
 import Crypto.RNG
 import Data.Aeson
-import Data.ByteString (ByteString)
 import Data.Int
 import Database.PostgreSQL.Consumers.Config
 import Log.Class
@@ -21,11 +20,10 @@ import Doc.DigitalSignature
 import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.Model.Query
-import File.FileID
 import FileStorage
+import FileStorage.MemCache
 import GuardTime
 import Log.Identifier
-import MemCache (MemCache)
 import Templates
 import qualified FileStorage.Amazon.Config as A
 
@@ -39,12 +37,12 @@ documentExtendingConsumer
   => Maybe A.AmazonConfig
   -> GuardTimeConf
   -> KontrakcjaGlobalTemplates
-  -> MemCache FileID ByteString
+  -> FileMemCache
   -> Maybe R.Connection
   -> ConnectionSourceM m
   -> Int
   -> ConsumerConfig m DocumentID DocumentExtendingConsumer
-documentExtendingConsumer mAmazonConfig guardTimeConf templates _
+documentExtendingConsumer mAmazonConfig guardTimeConf templates memcache
                           mRedisConn pool maxRunningJobs = ConsumerConfig {
     ccJobsTable = "document_extending_jobs"
   , ccConsumersTable = "document_extending_consumers"
@@ -76,7 +74,7 @@ documentExtendingConsumer mAmazonConfig guardTimeConf templates _
         . withDocumentM (dbQuery $ GetDocumentByDocumentID $ decDocumentID dec)
         . runTemplatesT (def, templates)
         . runGuardTimeConfT guardTimeConf
-        . runFileStorageT (mAmazonConfig, mRedisConn)
+        . runFileStorageT (mAmazonConfig, mRedisConn, Just memcache)
         $ extendDigitalSignature
       case resultisok of
         True  -> return $ Ok Remove

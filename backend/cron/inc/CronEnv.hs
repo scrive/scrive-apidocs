@@ -13,16 +13,14 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Crypto.RNG
 import Log
-import qualified Data.ByteString as BS
 import qualified Database.Redis as R
 
 import CronConf (CronConf, cronAmazonConfig, cronMailNoreplyAddress, cronSalesforceConf)
 import DB
-import File.FileID (FileID)
 import FileStorage
+import FileStorage.MemCache
 import Salesforce.Conf
 import Templates (KontrakcjaGlobalTemplates)
-import qualified MemCache
 
 data CronEnv = CronEnv {
     ceSalesforceConf     :: Maybe SalesforceConf
@@ -32,15 +30,15 @@ data CronEnv = CronEnv {
 
 runCronEnv :: MonadBase IO m
              => CronConf
-             -> MemCache.MemCache FileID BS.ByteString
+             -> Maybe FileMemCache
              -> Maybe R.Connection
              -> KontrakcjaGlobalTemplates
              -> CronEnvT (FileStorageT m) CronEnv a
              -> m a
-runCronEnv cronConf _ mRedisConn templates x = do
+runCronEnv cronConf mMemCache mRedisConn templates x = do
   let cronEnvData = CronEnv (cronSalesforceConf cronConf) templates
                             (cronMailNoreplyAddress cronConf)
-      fsConfig = (cronAmazonConfig cronConf, mRedisConn)
+      fsConfig = (cronAmazonConfig cronConf, mRedisConn, mMemCache)
   runFileStorageT fsConfig $ runReaderT (unCronEnvT x) cronEnvData
 
 type CronEnvM = CronEnvT (FileStorageT (DBT (CryptoRNGT (LogT IO)))) CronEnv

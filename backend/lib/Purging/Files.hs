@@ -112,9 +112,9 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
       ]
     fetchMany runIdentity
 
-purgeOrphanFile
-  :: forall m. (MonadDB m, MonadThrow m, MonadLog m, MonadIO m, MonadFileStorage m, MonadTime m)
-  => Int -> m Bool
+purgeOrphanFile :: forall m. ( MonadDB m, MonadCatch m, MonadFileStorage m
+                             , MonadIO m , MonadLog m, MonadThrow m
+                             , MonadTime m ) => Int -> m Bool
 purgeOrphanFile batchSize = do
   now0 <- currentTime
   runQuery_ . sqlSelect "files" $ do
@@ -140,7 +140,7 @@ purgeOrphanFile batchSize = do
     purge :: (FileID, Maybe String, Bool) -> m ()
     purge (fid, mamazonUrl, isOnAmazon) = do
       eRes <- case (mamazonUrl, isOnAmazon) of
-        (Just amazonUrl, True) -> deleteFile amazonUrl
+        (Just amazonUrl, True) -> try $ deleteFile amazonUrl
         _ -> return $ Right ()
       case eRes of
         Right () -> do
@@ -149,6 +149,6 @@ purgeOrphanFile batchSize = do
         Left err -> do
           logAttention "Purging file failed, it couldn't be removed from Amazon" $ object [
               identifier_ fid
-            , "error" .= err
+            , "error" .= show (err :: FileStorageException)
             ]
           rollback

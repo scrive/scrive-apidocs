@@ -32,8 +32,8 @@ import qualified FileStorage.Class as FS
 --
 -- If the upload fails then the new NewEmptyFileForAWS is purged, and an
 -- exception is thrown.
-saveNewFile :: ( MonadBase IO m, MonadLog m, MonadDB m, MonadThrow m
-               , CryptoRNG m, MonadFileStorage m )
+saveNewFile :: ( MonadBase IO m, MonadCatch m, MonadLog m, MonadDB m
+               , MonadThrow m, CryptoRNG m, MonadFileStorage m )
             => String -> BS.ByteString -> m FileID
 saveNewFile fName fContent = do
   startTime <- liftBase getCurrentTime
@@ -43,8 +43,8 @@ saveNewFile fName fContent = do
       -- CORE-478: urlFromFile should be moved in this module
   Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
   let encryptedContent = aesEncrypt aes fContent
-  mErr <- FS.saveNewFile awsUrl encryptedContent
-  case mErr of
+  eRes <- try $ FS.saveNewFile awsUrl encryptedContent
+  case eRes of
     Right () -> do
       dbUpdate $ FileMovedToAWS fid awsUrl aes
       -- CORE-478: Could be removed if NewEmptyFileForAWS were returning the final file
@@ -55,15 +55,15 @@ saveNewFile fName fContent = do
         , "elapsed_time" .= (realToFrac $ diffUTCTime finishTime startTime :: Double)
         ]
       return fid
-    Left err -> do
+    Left err@(FS.FileStorageException msg) -> do
       let attnMsg = "newFile: failed to upload to AWS, purging file and creating new file in DB as fallback"
       logAttention attnMsg $ object [
           logPair_ emptyFile
-        , "error" .= err
+        , "error" .= msg
         ]
       dbUpdate $ PurgeFile fid
       logAttention "newFileInAmazon: purged file" $ object [identifier_ fid]
-      throwM $ A.AmazonException $ show err
+      throwM err
 
 -- | Gets file content from somewere (Amazon for now), putting it to cache and
 -- returning as BS.
@@ -71,20 +71,17 @@ getFileContents :: (MonadFileStorage m, MonadIO m, MonadLog m, MonadThrow m)
                 => File -> m BS.ByteString
 getFileContents File{ filestorage = FileStorageMemory contents } =  return contents
 getFileContents file@File{ filestorage = FileStorageAWS url aes } = do
-  eEncrypted <- FS.getFileContents url
-  case eEncrypted of
-    Left err -> throwM $ A.AmazonException err
-    Right encrypted -> do
-      let contents = aesDecrypt aes encrypted
-          checksum = SHA1.hash contents
-      unless (checksum == filechecksum file) $ do
-       logAttention "SHA1 checksums of file don't match" $ object
-         [ "checksum" .= BS.unpack checksum
-         , logPair_ file
-         ]
-       throwM $ A.AmazonException $
-          "SHA1 checksum of file doesn't match the one in the database"
-      return contents
+  encrypted <- FS.getFileContents url
+  let contents = aesDecrypt aes encrypted
+      checksum = SHA1.hash contents
+  unless (checksum == filechecksum file) $ do
+    logAttention "SHA1 checksums of file don't match" $ object
+      [ "checksum" .= BS.unpack checksum
+      , logPair_ file
+      ]
+    throwM $ FS.FileStorageException $
+      "SHA1 checksum of file doesn't match the one in the database"
+  return contents
 
 getFileIDContents :: ( MonadDB m, MonadFileStorage m, MonadIO m, MonadLog m
                      , MonadThrow m ) => FileID -> m BS.ByteString

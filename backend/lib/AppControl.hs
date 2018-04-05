@@ -29,7 +29,6 @@ import Network.Socket
 import System.Directory
 import Text.JSON.ToJSValue
 import qualified Control.Exception.Lifted as E
-import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
@@ -42,8 +41,8 @@ import Context.Internal
 import Cookies (lookCookieValue)
 import DB hiding (ErrorCode(..))
 import DB.PostgreSQL
-import File.FileID
 import FileStorage
+import FileStorage.MemCache
 import Happstack.Server.ReqHandler
 import IPAddress
 import Kontra
@@ -56,13 +55,12 @@ import Templates
 import Text.JSON.Convert
 import User.Model
 import Utils.HTTP
-import qualified MemCache
 
 -- | Global application data
 data AppGlobals = AppGlobals {
     templates          :: !(MVar (UTCTime, KontrakcjaGlobalTemplates))
   , mrediscache        :: !(Maybe R.Connection)
-  , filecache          :: !(MemCache.MemCache FileID BS.ByteString)
+  , filecache          :: !FileMemCache
   , cryptorng          :: !CryptoRNGState
   , connsource         :: !(ConnectionTracker -> TrackedConnectionSource)
   , runlogger          :: !(forall m r . LogT m r -> m r)
@@ -206,7 +204,8 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
                -> HandlerM Response
     runHandler = catchEverything
       . runCryptoRNGT (cryptorng appGlobals)
-      . runFileStorageT (amazonConfig appConf, mrediscache appGlobals)
+      . runFileStorageT ( amazonConfig appConf, mrediscache appGlobals
+                        , Just (filecache appGlobals) )
 
     catchEverything :: HandlerM Response -> HandlerM Response
     catchEverything m = m `E.catch` \(e::E.SomeException) -> do

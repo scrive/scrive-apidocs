@@ -279,7 +279,7 @@ Library
                  , FileStorage.Amazon.Config
                  , FileStorage.Class
                  , FileStorage.RedisCache
---                 , FileStorage.Memcache
+                 , FileStorage.MemCache
                  , FlashMessage
                  , GuardTime
                  , GuardTime.Class
@@ -919,6 +919,7 @@ Executable mailing-server
                  FileStorage.Amazon.Config
                  FileStorage.Class
                  FileStorage.RedisCache
+                 FileStorage.MemCache
                  Handlers
                  Happstack.Fields
                  Happstack.Server.Instances

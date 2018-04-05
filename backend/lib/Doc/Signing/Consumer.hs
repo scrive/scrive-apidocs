@@ -8,7 +8,6 @@ import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
 import Crypto.RNG
 import Data.Aeson ((.=), object)
-import Data.ByteString (ByteString)
 import Data.Int
 import Database.PostgreSQL.Consumers.Config
 import Log.Class
@@ -44,13 +43,13 @@ import EID.Nets.Data (NetsSignStatus(..), netsFaultText)
 import EID.Signature.Model
 import File.FileID
 import FileStorage
+import FileStorage.MemCache
 import GuardTime
 import IPAddress
 import KontraError
 import Log.Identifier
 import MailContext
 import MailContext.Internal
-import MemCache (MemCache)
 import MinutesTime
 import Templates
 import User.Lang
@@ -84,14 +83,14 @@ documentSigning
   -> Maybe CgiGrpConfig
   -> Maybe NetsSignConfig
   -> KontrakcjaGlobalTemplates
-  -> MemCache FileID ByteString
+  -> FileMemCache
   -> Maybe R.Connection
   -> ConnectionSourceM m
   -> String
   -> Int
   -> ConsumerConfig m SignatoryLinkID DocumentSigning
-documentSigning mAmazonConfig guardTimeConf cgiGrpConf netsSignConf templates _
-                mRedisConn pool mailNoreplyAddress
+documentSigning mAmazonConfig guardTimeConf cgiGrpConf netsSignConf templates
+                memcache mRedisConn pool mailNoreplyAddress
                 maxRunningJobs = ConsumerConfig {
     ccJobsTable = "document_signing_jobs"
   , ccConsumersTable = "document_signing_consumers"
@@ -148,7 +147,7 @@ documentSigning mAmazonConfig guardTimeConf cgiGrpConf netsSignConf templates _
       runTemplatesT (signingLang, templates)
         . runMailContextT mc
         . runGuardTimeConfT guardTimeConf
-        . runFileStorageT (mAmazonConfig, mRedisConn)
+        . runFileStorageT (mAmazonConfig, mRedisConn, Just memcache)
         $ if (signingCancelled)
             then if (minutesTillPurgeOfFailedAction `minutesAfter` signingTime > now)
               then return $ Ok $ RerunAfter $ iminutes minutesTillPurgeOfFailedAction

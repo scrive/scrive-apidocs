@@ -17,9 +17,11 @@ import DB
 import FileStorage.Amazon
 import FileStorage.Amazon.Config
 import FileStorage.Class
+import FileStorage.MemCache
 import FileStorage.RedisCache
 
-type FileStorageConfig = (Maybe AmazonConfig, Maybe R.Connection)
+type FileStorageConfig =
+  (Maybe AmazonConfig, Maybe R.Connection, Maybe FileMemCache)
 
 newtype FileStorageT m a
   = FileStorageT { unFileStorageT :: ReaderT FileStorageConfig m a }
@@ -42,13 +44,17 @@ instance (MonadBase IO m, MonadBaseControl IO m, MonadLog m, MonadMask m)
 
 inAvailableLayers :: ( MonadBase IO m, MonadBaseControl IO m, MonadLog m
                      , MonadMask m )
-                  => (forall n. MonadFileStorage n => n (Either String a))
-                  -> FileStorageT m (Either String a)
+                  => (forall n. MonadFileStorage n => n a) -> FileStorageT m a
 inAvailableLayers action = do
   config <- getFileStorageConfig
   case config of
-    (Nothing, _) -> return $ Left "no Amazon config"
-    (Just amazonConfig, Nothing) ->
+    (Nothing, _, _) -> throwM $ FileStorageException "no Amazon config"
+    (Just amazonConfig, Nothing, Nothing) ->
       runAmazonMonadT amazonConfig action
-    (Just amazonConfig, Just conn) ->
+    (Just amazonConfig, Just conn, Nothing) ->
       runAmazonMonadT amazonConfig $ runRedisCacheT conn action
+    (Just amazonConfig, Nothing, Just memcache) ->
+      runAmazonMonadT amazonConfig $ runMemCacheT memcache action
+    (Just amazonConfig, Just conn, Just memcache) ->
+      runAmazonMonadT amazonConfig $ runRedisCacheT conn $
+        runMemCacheT memcache action
