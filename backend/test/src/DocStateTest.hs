@@ -31,7 +31,6 @@ import Doc.TestInvariants
 import EID.Signature.Model (ESignature(..))
 import EvidenceLog.Model
 import EvidenceLog.View (getSignatoryIdentifierMap, simplyfiedEventText)
-import FakeFileStorage
 import File.FileID
 import MinutesTime
 import PdfToolsLambda.Conf
@@ -299,9 +298,8 @@ testSignDocumentEvidenceLog = do
       lg <- dbQuery . GetEvidenceLog =<< theDocumentID
       assertJust $ find (\e -> evType e == Current SignDocumentEvidence) lg
 
-      evalFakeFileStorageT $ sealDocument "https://scrive.com"
-        runPdfToolsLambdaConfT pdfSealLambdaConf $ do
-          sealDocument "https://scrive.com"
+      runPdfToolsLambdaConfT pdfSealLambdaConf $ do
+        sealDocument "https://scrive.com"
 
 testSignDocumentSearchData :: TestEnv ()
 testSignDocumentSearchData = do
@@ -997,9 +995,8 @@ testSealDocument = replicateM_ 1 $ do
 
     randomUpdate $ \t-> CloseDocument (systemActor t)
 
-    evalFakeFileStorageT $
-      runPdfToolsLambdaConfT (get ctxpdftoolslambdaconf ctx) $
-        sealDocument "https://scrive.com"
+    runPdfToolsLambdaConfT (get ctxpdftoolslambdaconf ctx) $
+      sealDocument "https://scrive.com"
 
 testDocumentAppendSealedPendingRight :: TestEnv ()
 testDocumentAppendSealedPendingRight = replicateM_ 10 $ do

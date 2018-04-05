@@ -1,8 +1,6 @@
 module FileStorage.Class where
 
 import Control.Monad.Reader
---import Control.Monad.State.Strict
---import Database.PostgreSQL.PQTypes
 import qualified Data.ByteString as BS
 
 -- | A monad in which we can store files.
@@ -21,26 +19,6 @@ class Monad m => MonadFileStorage m where
 
   deleteFile :: String -- ^ Object key (URL-encoded)
              -> m (Either String ())
-
---instance MonadFileStorage m => MonadFileStorage (ReaderT r m) where
---  saveNewFile url contents = lift $ saveNewFile url contents
---  getFileContents          = lift . getFileContents
---  deleteFile               = lift . deleteFile
---
---instance MonadFileStorage m => MonadFileStorage (StateT s m) where
---  saveNewFile url contents = lift $ saveNewFile url contents
---  getFileContents          = lift . getFileContents
---  deleteFile               = lift . deleteFile
---
---instance MonadFileStorage m => MonadFileStorage (DBT m) where
---  saveNewFile url contents = lift $ saveNewFile url contents
---  getFileContents          = lift . getFileContents
---  deleteFile               = lift . deleteFile
---
---instance MonadFileStorage m => MonadFileStorage (GuardTimeConfT m) where
---  saveNewFile url contents = lift $ saveNewFile url contents
---  getFileContents          = lift . getFileContents
---  deleteFile               = lift . deleteFile
 
 instance {-# OVERLAPS #-} (MonadFileStorage m, MonadTrans t, Monad (t m))
     => MonadFileStorage (t m) where

@@ -26,10 +26,7 @@ fileTests env = testGroup "Files" [
   testThat "File insert persists content"  env testFileNewFile,
   testThat "File move to AWS works"  env testFileMovedToAWS,
 
-  testThat "File purging works"  env testPurgeFiles,
-
-  -- Advanced tests
-  testThat "Newly created files are supposed to be moved to amazon"  env testNewFileThatShouldBeMovedToAWS
+  testThat "File purging works"  env testPurgeFiles
   ]
 
 testFileIDReadShow :: TestEnv ()
@@ -46,14 +43,12 @@ testFileNewFile :: TestEnv ()
 testFileNewFile  = replicateM_ 100 $ do
   (name, content) <- fileData
   fileid' <- saveNewFile name content
-  File { fileid = fileid, filename = fname1, filestorage = FileStorageMemory fcontent1 } <- dbQuery $ GetFileByFileID fileid'
+  file1@File{ fileid, filename = fname1 } <- dbQuery $ GetFileByFileID fileid'
+  fcontent1 <- getFileContents file1
 
   assertEqual "We got the file we were asking for" fileid' fileid
   assertEqual "File content doesn't change" content fcontent1
   assertEqual "File name doesn't change" name fname1
-  File { filename = fname2 , filestorage = FileStorageMemory fcontent2} <- dbQuery $ GetFileByFileID fileid'
-  assertEqual "File name doesn't change after storing" name fname2
-  assertEqual "File content doesn't change after storing" content fcontent2
 
 testFileDoesNotExist :: TestEnv ()
 testFileDoesNotExist = replicateM_ 5 $ do
@@ -88,13 +83,6 @@ testPurgeFiles  = replicateM_ 100 $ do
 
   orphanFidsAfterPurge <- dbUpdate $ MarkOrphanFilesForPurgeAfter maxMarked mempty
   assertEqual "File not marked for purge after it was purged" [] orphanFidsAfterPurge
-
-testNewFileThatShouldBeMovedToAWS :: TestEnv ()
-testNewFileThatShouldBeMovedToAWS  = do
-  (name,content) <- fileData
-  fileid <- saveNewFile name content
-  fileisscheduledforupload <- runQuery01 $ "SELECT id FROM amazon_upload_jobs WHERE id =" <?> fileid
-  assertEqual "File is scheduled for upload to Amazon" True fileisscheduledforupload
 
 viewableS :: TestEnv String
 viewableS = rand 10 $ arbString 10 100
