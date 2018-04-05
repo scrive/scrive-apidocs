@@ -342,10 +342,11 @@ module.exports = React.createClass({
   },
 
   zoomToPoint: function (zoomPoint, zoom) {
-    const zoomStep = this.zoomStepFromZoom(zoom);
+    var zoomStep = this.zoomStepFromZoom(zoom);
     zoom = 1 + (zoomStep * this.zoomStepSize()); // zoom to closes zoom step.
     if (zoom < this.state.zoom) {
       zoom = this.state.zoom;
+      zoomStep = this.state.zoomStep;
     }
     this.setState({zoomStyle: ZOOM_STYLE.CENTER, zoom, zoomPoint, zoomStep});
   },
