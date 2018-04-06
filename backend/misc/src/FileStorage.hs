@@ -36,7 +36,8 @@ runFileStorageT config = flip runReaderT config . unFileStorageT
 getFileStorageConfig :: Monad m => FileStorageT m FileStorageConfig
 getFileStorageConfig = FileStorageT ask
 
-instance (MonadBase IO m, MonadBaseControl IO m, MonadLog m, MonadMask m)
+instance {-# OVERLAPPING #-} ( MonadBase IO m, MonadBaseControl IO m, MonadLog m
+                             , MonadMask m )
     => MonadFileStorage (FileStorageT m) where
   saveNewFile url contents = inAvailableLayers $ saveNewFile url contents
   getFileContents url      = inAvailableLayers $ getFileContents url

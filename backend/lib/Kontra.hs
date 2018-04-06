@@ -56,7 +56,6 @@ type InnerKontra fst = DBT (fst (CryptoRNGT (LogT (ReqHandlerT IO))))
 -- is not an instance of MonadPlus.  Errors are signaled explicitly
 -- through 'KontraError'.
 newtype KontraG fst a = Kontra { unKontra :: S.StateT Context (InnerKontra fst) a }
---  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadThrow, ServerMonad, MonadFileStorage, MonadLog)
 
 deriving instance Monad        (InnerKontra fst) => Applicative  (KontraG fst)
 deriving instance CryptoRNG    (InnerKontra fst) => CryptoRNG    (KontraG fst)

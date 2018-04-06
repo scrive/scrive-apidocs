@@ -53,15 +53,18 @@ getFileContentsWithRedis
 getFileContentsWithRedis url = do
   conn <- getRedisConnection
   let key = redisKeyFromURL url
-  -- CORE-478: not sure mfetch adds it to the cache when it wasn't already
   mfetch (Just conn) key
-         (\_ _ -> getFileFromRedis conn key)
+         (\_ _ -> do
+           contents <- getFileFromRedis conn key
+           redisPut "contents" contents (conn, redisKeyFromURL url)
+           return contents)
          (\_ -> lift $ getFileContents url)
 
-deleteFileWithRedis :: (Monad m, MonadFileStorage m) => String
-                    -> RedisCacheT m ()
+deleteFileWithRedis :: ( MonadBaseControl IO m, MonadFileStorage m, MonadLog m
+                       , MonadMask m ) => String -> RedisCacheT m ()
 deleteFileWithRedis url = do
-  -- CORE-478: FIXME: delete from Redis
+  conn <- getRedisConnection
+  deleteKey conn $ redisKeyFromURL url
   lift $ deleteFile url
 
 -- | Fetch the contents of a file from Redis retrying every second.

@@ -37,7 +37,6 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetMaybeFileByFileID (Maybe File
       sqlWhereFileWasNotPurged
     fetchMaybe fetchFile
 
--- CORE-478: Does this need to be changed?
 data NewEmptyFileForAWS = NewEmptyFileForAWS String BS.ByteString
 instance (MonadDB m, MonadThrow m) => DBUpdate m NewEmptyFileForAWS File where
   update (NewEmptyFileForAWS fname fcontent) = do
