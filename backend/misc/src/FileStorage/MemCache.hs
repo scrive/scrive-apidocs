@@ -40,7 +40,8 @@ instance {-# OVERLAPPING #-} (MonadBaseControl IO m, MonadFileStorage m)
 saveNewFileWithMemCache :: (MonadBaseControl IO m, MonadFileStorage m)
                         => String -> BS.ByteString -> MemCacheT m ()
 saveNewFileWithMemCache url contents = do
-  deleteFileWithMemCache url
+  cache <- MemCacheT ask
+  invalidate cache url
   lift $ saveNewFile url contents
 
 getFileContentsWithMemCache :: (MonadBaseControl IO m, MonadFileStorage m)
