@@ -47,8 +47,7 @@ saveNewFile fName fContent = do
   case eRes of
     Right () -> do
       dbUpdate $ FileMovedToAWS fid awsUrl aes
-      -- CORE-478: Could be removed if NewEmptyFileForAWS were returning the final file
-      file <- dbQuery $ GetFileByFileID fid
+      let file = emptyFile { filestorage = FileStorageAWS awsUrl aes }
       finishTime <- liftBase getCurrentTime
       logInfo "newFile: new file successfully created with content in S3" $ object [
           logPair_ file
