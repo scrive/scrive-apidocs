@@ -1,6 +1,8 @@
 module Doc.API.V2.APILogTest (apiV2CallLogTests) where
 
 import Data.Default
+import Data.Function (on)
+import Data.List (sortBy)
 import Happstack.Server
 import Test.Framework
 
@@ -100,4 +102,6 @@ testApiLog2Users = do
   assertEqual "There should be only 100 logged API Calls for user B" 100 (length logsUserB)
 
   logsUserA' <- dbQuery $ GetCallLogList (userid userA)
-  assertEqual "Logs of user A are not affected by user B activity" logsUserA logsUserA'
+  assertEqual "Logs of user A are not affected by user B activity"
+              (sortBy (compare `on` cliID) logsUserA)
+              (sortBy (compare `on` cliID) logsUserA')
