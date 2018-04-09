@@ -5181,6 +5181,109 @@ and will only be visible when accessing the document as the author.</p>
 
 </div>
 
+<h6><code>consent_module</code> (object)</h6>
+
+<div class="json-schema">
+
+<p>If present, a section will be shown asking the signatory to answer some
+questions which must be answered by the signatory with either the positive
+or the negative option specified.</p>
+
+
+<p>The <code>consent_module</code> object has the following properties:</p>
+
+<h6><code>title</code> (string)</h6>
+
+
+<div class="json-schema">
+
+<p>Section title.</p>
+
+
+</div>
+
+<h6><code>questions</code> (array)</h6>
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>title</code> (string)</h6>
+
+
+<div class="json-schema">
+
+<p>Question text.</p>
+
+
+</div>
+
+<h6><code>positive_option</code> (string)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>negative_option</code> (string)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>response</code> (bool)</h6>
+
+<div class="json-schema">
+
+<p>Will be present when the party has answered the question. <code>true</code>
+when the signatory selected the positive response and <code>false</code>
+when the signatory selected the negative response.</p>
+
+
+</div>
+
+<h6><code>detailed_description</code> (object)</h6>
+
+<div class="json-schema">
+
+<p>Optional additional information to show the signatory.</p>
+
+
+<p>The <code>detailed_description</code> object has the following properties:</p>
+
+<h6><code>title</code> (string)</h6>
+
+
+<div class="json-schema">
+
+<p>Title of the section. Will be shown in a button.</p>
+
+
+</div>
+
+<h6><code>text</code> (string)</h6>
+
+<div class="json-schema">
+
+<p>Explanation of the question. New lines are shown as is.</p>
+
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
 <p></div></p>
 
 <p></div></p>
@@ -8171,6 +8274,109 @@ and will only be visible when accessing the document as the author.</p>
 
 </div>
 
+<h5><code>consent_module</code> (object)</h5>
+
+<div class="json-schema">
+
+<p>If present, a section will be shown asking the signatory to answer some
+questions which must be answered by the signatory with either the positive
+or the negative option specified.</p>
+
+
+<p>The <code>consent_module</code> object has the following properties:</p>
+
+<h6><code>title</code> (string)</h6>
+
+
+<div class="json-schema">
+
+<p>Section title.</p>
+
+
+</div>
+
+<h6><code>questions</code> (array)</h6>
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h6>(object)</h6>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>title</code> (string)</h6>
+
+
+<div class="json-schema">
+
+<p>Question text.</p>
+
+
+</div>
+
+<h6><code>positive_option</code> (string)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>negative_option</code> (string)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>response</code> (bool)</h6>
+
+<div class="json-schema">
+
+<p>Will be present when the party has answered the question. <code>true</code>
+when the signatory selected the positive response and <code>false</code>
+when the signatory selected the negative response.</p>
+
+
+</div>
+
+<h6><code>detailed_description</code> (object)</h6>
+
+<div class="json-schema">
+
+<p>Optional additional information to show the signatory.</p>
+
+
+<p>The <code>detailed_description</code> object has the following properties:</p>
+
+<h6><code>title</code> (string)</h6>
+
+
+<div class="json-schema">
+
+<p>Title of the section. Will be shown in a button.</p>
+
+
+</div>
+
+<h6><code>text</code> (string)</h6>
+
+<div class="json-schema">
+
+<p>Explanation of the question. New lines are shown as is.</p>
+
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
 <p></div></p>
 
 <p></div></p>
@@ -8751,7 +8957,22 @@ be changed.</p>
       </span><span class="s2">"file_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"195173"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">],</span><span class="w">
-  </span><span class="s2">"api_delivery_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="w">
+  </span><span class="s2">"api_delivery_url"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"consent_module"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Handling of personal information"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"questions"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="p">{</span><span class="w">
+        </span><span class="s2">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Do you agree for your information to be processed?"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"positive_option"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Yes, I agree with the processing of my data."</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"negative_option"</span><span class="p">:</span><span class="w"> </span><span class="s2">"No, I do not agree with any processing of my data."</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"response"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"detailed_description"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+          </span><span class="s2">"title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"More information"</span><span class="p">,</span><span class="w">
+          </span><span class="s2">"text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Long extra information regarding the question can go here, and can be separated using newlines.</span><span class="se">\n\n</span><span class="s2">This is useful for long terms and conditions that come along with a question."</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+      </span><span class="p">}</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+  </span><span class="p">}</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <div class="json-schema">
@@ -10965,6 +11186,109 @@ and will only be visible when accessing the document as the author.</p>
 
 
 </div>
+
+<h3><code>consent_module</code> (object)</h3>
+
+<div class="json-schema">
+
+<p>If present, a section will be shown asking the signatory to answer some
+questions which must be answered by the signatory with either the positive
+or the negative option specified.</p>
+
+
+<p>The <code>consent_module</code> object has the following properties:</p>
+
+<h4><code>title</code> (string)</h4>
+
+
+<div class="json-schema">
+
+<p>Section title.</p>
+
+
+</div>
+
+<h4><code>questions</code> (array)</h4>
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h5>(object)</h5>
+
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h6><code>title</code> (string)</h6>
+
+
+<div class="json-schema">
+
+<p>Question text.</p>
+
+
+</div>
+
+<h6><code>positive_option</code> (string)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>negative_option</code> (string)</h6>
+
+<div class="json-schema">
+
+</div>
+
+<h6><code>response</code> (bool)</h6>
+
+<div class="json-schema">
+
+<p>Will be present when the party has answered the question. <code>true</code>
+when the signatory selected the positive response and <code>false</code>
+when the signatory selected the negative response.</p>
+
+
+</div>
+
+<h6><code>detailed_description</code> (object)</h6>
+
+<div class="json-schema">
+
+<p>Optional additional information to show the signatory.</p>
+
+
+<p>The <code>detailed_description</code> object has the following properties:</p>
+
+<h6><code>title</code> (string)</h6>
+
+
+<div class="json-schema">
+
+<p>Title of the section. Will be shown in a button.</p>
+
+
+</div>
+
+<h6><code>text</code> (string)</h6>
+
+<div class="json-schema">
+
+<p>Explanation of the question. New lines are shown as is.</p>
+
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
 
 <p></div></p>
 <h2 id='signatoryfieldname'>SignatoryFieldName</h2>
