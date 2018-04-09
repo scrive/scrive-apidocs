@@ -6,7 +6,7 @@
 "_AuthenticatedToViewEvidenceArchiveDKNemID":"Verified their identity with Danish NemID to access the document.",
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Verified their identity with Norwegian BankID to access the document.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Verified their identity with Swedish BankID to access the document.",
-"_AuthenticatedToViewEvidenceArchiveSMSPin":"Verified their identity with SMS Pin to access the document.",
+"_AuthenticatedToViewEvidenceArchiveSMSPin":"Verified their identity with PIN by SMS to access the document.",
 "_AuthenticatedToViewEvidenceVerificationPagesSMSPin":"$actor$ verified their identity with PIN by SMS to access the document.",
 "_AuthenticatedToViewEvidenceVerificationPagesWithDateDKNemID":"$actor$ verified their identity with Danish NemID to access the document. Danish NemID returned the name \"$signatory_name$\" and the date of birth \"$signatory_dob$\".",
 "_AuthenticatedToViewEvidenceVerificationPagesWithDateNOBankID":"$actor$ verified their identity with Norwegian BankID to access the document. Norwegian BankID returned the name \"$signatory_name$\" and the date of birth \"$signatory_dob$\".",

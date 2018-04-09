@@ -139,6 +139,8 @@ docApiV2History :: Kontrakcja m => DocumentID -> m Response
 docApiV2History did = logDocument did . api $ do
   -- Permissions
   (user,_) <- getAPIUser APIDocCheck
+  doc <- dbQuery $ GetDocumentByDocumentID did
+  guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user doc
   -- Parameters
   mLangCode <- apiV2ParameterOptional (ApiV2ParameterText "lang")
   mLang <- case fmap (langFromCode . T.unpack) mLangCode of
@@ -149,8 +151,6 @@ docApiV2History did = logDocument did . api $ do
   -- API call actions
   switchLang $ fromMaybe (lang $ usersettings user) mLang
   evidenceLog <- dbQuery $ GetEvidenceLog did
-  doc <- dbQuery $ GetDocumentByDocumentID did
-  guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user doc
   events <- reverse <$> eventsJSListFromEvidenceLog doc evidenceLog
   -- Result
   return $ Ok $ JSObject (J.toJSObject $ [("events", JSArray events)])

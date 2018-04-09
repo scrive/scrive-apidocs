@@ -76,6 +76,27 @@ module.exports = React.createClass({
           self.reload();
         });
     },
+    changePlan: function(v) {
+      var self = this;
+      self.setState({selectedPlan : v});
+      if (v == "free") {
+        self.setState({
+          canUseDKAuthenticationToView : false,
+          canUseNOAuthenticationToView : false,
+          canUseNOAuthenticationToSign : false,
+          canUseSEAuthenticationToView : false,
+          canUseSEAuthenticationToSign : false
+        });
+      } else {
+        self.setState({
+          canUseDKAuthenticationToView : true,
+          canUseNOAuthenticationToView : true,
+          canUseNOAuthenticationToSign : true,
+          canUseSEAuthenticationToView : true,
+          canUseSEAuthenticationToSign : true
+        });
+      }
+    },
     componentWillUpdate: function() {
       if (!this.state.initiated) {
         this.initStateFromSubscription();
@@ -151,9 +172,7 @@ module.exports = React.createClass({
                         return o.value === subscription.paymentplan();
                       }
                     }}
-                    onSelect={function(v) {
-                      self.setState({selectedPlan : v});
-                    }}
+                    onSelect={this.changePlan}
                   />
                 </td>
               </tr>
