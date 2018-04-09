@@ -245,6 +245,8 @@ properties:
       and will only be visible when accessing the document as the author.
     type: string
     format: uri
+  consent_module:
+    $ref: ./SignatoryConsentModule.yaml
 example:
   {
     "id": "189256",
@@ -342,5 +344,20 @@ example:
         "file_id": "195173"
       }
     ],
-    "api_delivery_url": null
+    "api_delivery_url": null,
+    "consent_module": {
+      "title": "Handling of personal information",
+      "questions": [
+        {
+          "title": "Do you agree for your information to be processed?",
+          "positive_option": "Yes, I agree with the processing of my data.",
+          "negative_option": "No, I do not agree with any processing of my data.",
+          "response": null,
+          "detailed_description": {
+            "title": "More information",
+            "text": "Long extra information regarding the question can go here, and can be separated using newlines.\n\nThis is useful for long terms and conditions that come along with a question."
+          }
+        }
+      ]
+    }
   }
