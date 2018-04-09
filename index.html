@@ -2584,13 +2584,23 @@ not be used to identify signatories while document is a draft.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
 <tr><td><p><code>authentication_type</code><br/><em>required</em></p></td><td><p>The type of authentication-to-sign method to set for the signatory.</p>
 </td><td><p>string</p></td><td>formData</td></tr>
-<tr><td><p><code>authentication_value</code><br/><em>optional</em></p></td><td><p>Including this parameter will set the value associated with
-<code>authentication_type</code> to this value (e.g. mobile number for SMS PIN).</p>
-<p>Setting it to empty string will clear the associated value, if present.</p>
-<p>Excluding it will not affect any signatory properties other than
-necessary side-effects.
-In particular, if a value for the associated field was already set, it
-will not be cleared.</p>
+<tr><td><p><code>personal_number</code><br/><em>optional</em></p></td><td><p>If provided, it must be valid for the chosen authentication-to-sign
+method.</p>
+<p>If it is not used by the chosen authentication-to-sign method, the
+parameter will be ignored and will have no effect.</p>
+<p>If not provided, any existing <code>personal_number</code> field value set for the
+signatory will not be changed.
+However, if a <code>personal_number</code> <em>SignatoryField</em> does not yet exist,
+one will be added to the signatory (with empty string as <code>value</code>).</p>
+</td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>mobile_number</code><br/><em>optional</em></p></td><td><p>If provided, it must be valid for the chosen authentication-to-sign
+method.</p>
+<p>If it is not used by the chosen authentication-to-sign method, the
+parameter will be ignored and will have no effect.</p>
+<p>If not provided, any existing <code>mobile</code> field value set for the
+signatory will not be changed.
+However, if a <code>mobile</code> <em>SignatoryField</em> does not yet exist, one will be
+added to the signatory (with empty string as <code>value</code>).</p>
 </td><td><p>string</p></td><td>formData</td></tr>
 <tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
