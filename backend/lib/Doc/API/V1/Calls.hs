@@ -1427,7 +1427,6 @@ allRequiredAuthorAttachmentsAreAccepted :: (Kontrakcja m, DocumentMonad m) => [F
 allRequiredAuthorAttachmentsAreAccepted acceptedAttachments = allRequiredAttachmentsAreOnList acceptedAttachments <$> theDocument
 
 guardThatDocumentIsReadableBySignatories :: Kontrakcja m => Document -> m ()
-guardThatDocumentIsReadableBySignatories doc
-  | documentstatus doc `elem` [Pending, Closed] = return ()
-  | otherwise = throwM $ SomeDBExtraException $
-      forbidden "The document has expired or has been withdrawn."
+guardThatDocumentIsReadableBySignatories doc =
+  unless (isAccessibleBySignatories doc) $ throwM $ SomeDBExtraException $
+    forbidden "The document has expired or has been withdrawn."

@@ -19,6 +19,8 @@ module Doc.DocInfo(
   , isSignable
   , isTemplate
   , getLastSignedTime
+  , isAccessibleBySignatories
+  , documentStatusesAccessibleBySignatories
 ) where
 
 import Doc.DocStateData
@@ -92,3 +94,12 @@ isDocumentShared doc = Shared == documentsharing doc && isTemplate doc
 getLastSignedTime :: Document -> UTCTime
 getLastSignedTime doc =
   maximum $ unixEpoch : [signtime si | SignatoryLink {maybesigninfo = Just si} <- documentsignatorylinks doc]
+
+-- | Can signatories see the document?
+isAccessibleBySignatories :: Document -> Bool
+isAccessibleBySignatories doc =
+  documentstatus doc `elem` documentStatusesAccessibleBySignatories
+
+-- | Statuses in which a document is accessible by signatories.
+documentStatusesAccessibleBySignatories :: [DocumentStatus]
+documentStatusesAccessibleBySignatories = [Pending, Closed]

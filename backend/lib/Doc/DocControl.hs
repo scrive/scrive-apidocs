@@ -569,6 +569,5 @@ addEventForVisitingSigningPageIfNeeded ev sl = do
     void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg ev  (return ()) (Just sl) Nothing =<< signatoryActor ctx sl
 
 guardThatDocumentIsReadableBySignatories :: Kontrakcja m => Document -> m ()
-guardThatDocumentIsReadableBySignatories doc
-  | documentstatus doc `elem` [Pending, Closed] = return ()
-  | otherwise = respondLinkInvalid
+guardThatDocumentIsReadableBySignatories doc =
+  unless (isAccessibleBySignatories doc) respondLinkInvalid

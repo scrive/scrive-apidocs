@@ -9,6 +9,7 @@ import Data.Typeable
 import Company.CompanyID
 import DB
 import Doc.Conditions
+import Doc.DocInfo
 import Doc.DocStateData
 import MagicHash
 import User.UserID
@@ -102,7 +103,7 @@ documentDomainToSQL (DocumentsVisibleToUser uid) = do
     userIsPartnerAndHasAppropriateSignOrder = do
       sqlWhereEq "users.id" uid
       sqlWhereEq "documents.type" Signable
-      sqlWhereNotEq "documents.status" Preparation
+      sqlWhereIn "documents.status" documentStatusesAccessibleBySignatories
       sqlWhere "signatory_links.is_partner"
       sqlWhereNotExists . sqlSelect "signatory_links AS osl" $ do
         sqlWhere "signatory_links.document_id = osl.document_id"

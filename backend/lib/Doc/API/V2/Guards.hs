@@ -365,7 +365,7 @@ guardDocumentReadAccess mslid doc = do
       return $ documentAccessForUser user doc
 
 guardThatDocumentIsReadableBySignatories :: Kontrakcja m => Document -> m ()
-guardThatDocumentIsReadableBySignatories doc
-  | documentstatus doc `elem` [Pending, Closed] = return ()
-  | otherwise = apiError $ documentStateErrorWithCode 410 $
+guardThatDocumentIsReadableBySignatories doc =
+  unless (isAccessibleBySignatories doc) $
+    apiError $ documentStateErrorWithCode 410 $
       "This document has expired or has been withdrawn."
