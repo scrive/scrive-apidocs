@@ -616,13 +616,22 @@ testGetCancelledDocument = do
 
   withDocument doc $ randomUpdate $ CancelDocument $ authorActor ctx user
 
-  req  <- mkRequest GET []
-  eRes <- E.try $ runTestKontra req ctx $ do
-    randomUpdate $ AddDocumentSessionToken slid mh
-    handleSignShow did slid
+  -- It should fail if we're using the link with the magic hash.
+  do
+    req  <- mkRequest GET []
+    eRes <- E.try $ runTestKontra req ctx $
+      handleSignShowSaveMagicHash did slid mh
 
-  case eRes of
-    Right (res, _) ->
-      assertFailure $ "Should have failed, returned code " ++ show (rsCode res)
-    Left err ->
-      assertEqual "Should throw LinkInvalid" LinkInvalid err
+    case eRes of
+      Right (res, _) ->
+        assertFailure $ "Should have failed, returned code " ++ show (rsCode res)
+      Left err ->
+        assertEqual "Should throw LinkInvalid" LinkInvalid err
+
+  -- It shouldn't fail if we had already clicked on the link.
+  do
+    req <- mkRequest GET []
+    (res, _) <- runTestKontra req ctx $ do
+      randomUpdate $ AddDocumentSessionToken slid mh
+      handleSignShow did slid
+    assertEqual "Status is 200" 200 (rsCode res)

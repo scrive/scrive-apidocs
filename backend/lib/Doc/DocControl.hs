@@ -214,6 +214,7 @@ handleSignShowSaveMagicHash :: Kontrakcja m => DocumentID -> SignatoryLinkID -> 
 handleSignShowSaveMagicHash did sid mh = logDocumentAndSignatory did sid $
   (do
     dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
+      guardThatDocumentIsReadableBySignatories =<< theDocument
       dbUpdate $ AddDocumentSessionToken sid mh
       -- Redirect to propper page
       sendRedirect $ LinkSignDocNoMagicHash did sid
@@ -232,7 +233,6 @@ handleSignShow did slid = logDocumentAndSignatory did slid $ do
     Just magichash -> do
       doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid magichash
       invitedlink <- guardJust $ getSigLinkFor slid doc
-      guardThatDocumentIsReadableBySignatories doc
       -- We always switch to document langauge in case of pad signing
       switchLang $ getLang doc
       ctx <- getContext -- Order is important since ctx after switchLang changes
