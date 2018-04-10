@@ -3,11 +3,11 @@
 new APICallV2({
   category: ["draft", "main"],
   name: "New from template",
-  description: "Create a new document from a template ID.",
-  sampleUrl: "/api/v2/documents/newfromtemplate/$template_id$",
+  description: "Create a new document given the document ID for a document that is a template.",
+  sampleUrl: "/api/v2/documents/newfromtemplate/$document_id$",
   method: "POST",
   getCallUrl: function () {
-          return "/api/v2/documents/newfromtemplate/" + this.get("template_id");
+          return "/api/v2/documents/newfromtemplate/" + this.get("document_id");
         },
   needsAuthorization: true,
   tryToUseDocumentIDWithCopy: true,
@@ -15,16 +15,8 @@ new APICallV2({
     'v1': 'Create from template'
   },
   params: [
-          new APICallParam({
-            type: "text",
-            argName: "template_id",
-            name: "$template_id$",
-            sendAsParam: false,
-            description: "ID of document to use as template.\
-                         The document must be a template.",
-            defaultValue: ""
-          })
-          , window.APIV2CallParamObjectVersion
+          window.APIV2CallParamDocumentID,
+          window.APIV2CallParamObjectVersion
         ]
 });
 

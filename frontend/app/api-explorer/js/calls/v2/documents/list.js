@@ -29,7 +29,7 @@ new APICallV2({
             name: "Max",
             sendAsParam: true,
             description: "Maximum number of documents to return. Server may cap to a lower value.",
-            defaultValue: ""
+            defaultValue: "100"
           }),
           new APICallParam({
             type: "json",
@@ -38,7 +38,7 @@ new APICallV2({
             name: "Sorting",
             sendAsParam: true,
             description: "Sorting options.",
-            defaultValue: "[]"
+            defaultValue: "[{\"sort_by\":\"mtime\",\"order\":\"descending\"}]"
           }),
           new APICallParam({
             type: "json",

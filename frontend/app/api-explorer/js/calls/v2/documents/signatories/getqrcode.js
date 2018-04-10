@@ -16,8 +16,7 @@ new APICallV2({
   expectBinaryResponse: true,
   params: [
           window.APIV2CallParamDocumentID,
-          window.APIV2CallParamSignatoryID,
-          window.APIV2CallParamObjectVersion
+          window.APIV2CallParamSignatoryID
         ]
 });
 

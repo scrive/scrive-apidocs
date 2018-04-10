@@ -27,7 +27,16 @@ new APICallV2({
             argName: "no_content",
             optional: true,
             name: "No content",
-            description: "When set to true only the signed document will be forwarded, with no other email content."
+            description: "When set to true only the signed document will be forwarded, with no other email content.",
+            defaultValue: true
+          }),
+          new APICallParam({
+            type: "bool",
+            argName: "no_attachments",
+            optional: true,
+            name: "No attachments",
+            description: "When set to true, only the main file will be included as email attachments. Any attachments not merged with the main file will not be sent.",
+            defaultValue: false
           }),
           window.APIV2CallParamObjectVersion
         ]

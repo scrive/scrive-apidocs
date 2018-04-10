@@ -2,7 +2,7 @@
 
 new APICallV2({
   category: "signing",
-  name: "Signatory- Set Authentication to Sign",
+  name: "Signatory - Set Authentication to Sign",
   description: "Set the signatory authentication to sign method after the\
                 document has been started.\
                 Side-effects of this operation may include adding or modifying\
@@ -34,7 +34,7 @@ new APICallV2({
             name: "Personal Number",
             optional: true,
             optionToSendEmpty: true,
-            description: "TODO",
+            description: "If the authentication_type requires a personal number, and the signatory doesn’t have one set already, then it must be provided and valid for the chosen authentication-to-view method.",
             defaultValue: ""
           }),
           new APICallParam({
@@ -43,7 +43,7 @@ new APICallV2({
             name: "Mobile Number",
             optional: true,
             optionToSendEmpty: true,
-            description: "TODO",
+            description: "Can be used for authentication_type that makes use of a mobile number. Similar requirements as personal_number.",
             defaultValue: ""
           }),
           window.APIV2CallParamObjectVersion

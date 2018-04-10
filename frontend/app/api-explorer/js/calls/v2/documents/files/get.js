@@ -4,12 +4,12 @@ new APICallV2({
   category: "fetch",
   name: "Files: Get File",
   description: "Get a file.",
-  sampleUrl: "/api/v2/documents/$document_id$/files/$file_id$/$file_name$",
+  sampleUrl: "/api/v2/documents/$document_id$/files/$file_id$/$filename$",
   method: "GET",
   getCallUrl: function () {
           return "/api/v2/documents/" + this.get("document_id") + "/files/"
                                       + this.get("file_id") + "/"
-                                      + this.get("file_name");
+                                      + this.get("filename");
         },
   needsAuthorization: true,
   expectBinaryResponse: true,
@@ -25,8 +25,8 @@ new APICallV2({
           }),
           new APICallParam({
             type: "text",
-            argName: "file_name",
-            name: "$file_name$",
+            argName: "filename",
+            name: "$filename$",
             sendAsParam: false,
             description: "Arbitrary filename for downloading",
             defaultValue: ""

@@ -41,7 +41,7 @@ new APICallV2({
             optional: true,
             description: "Whether the document should start out as being saved\
                           and thus appear in the E-archive.",
-            defaultValue: false
+            defaultValue: true
           })
         ]
 });

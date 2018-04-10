@@ -1,4 +1,3 @@
-
 (function (window) {
 
 new APICallV1({
@@ -47,6 +46,7 @@ new APICallV1({
             name: "Personal number",
             sendAsParam: true,
             optional: true,
+            optionToSendEmpty: true,
             description: "Personal number to set for the signatory, if the authentication method requires it.",
             defaultValue: ""
           }),
