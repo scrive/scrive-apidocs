@@ -5,7 +5,7 @@ import DB
 tableUsersHistory :: Table
 tableUsersHistory = tblTable {
     tblName = "users_history"
-  , tblVersion = 2
+  , tblVersion = 3
   , tblColumns = [
       tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "event_type", colType = IntegerT, colNullable = False }
@@ -24,7 +24,6 @@ tableUsersHistory = tblTable {
       }
     ]
   , tblIndexes = [
-      indexOnColumn "user_id"
-    , indexOnColumn "performing_user_id"
+      indexOnColumns ["user_id", "event_type", "\"time\""]
     ]
   }

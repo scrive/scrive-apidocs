@@ -1,7 +1,7 @@
-module User.History.Migrations
-    (
-     addPKToUsersHistory
-    ) where
+module User.History.Migrations (
+  addPKToUsersHistory
+, optimiseUsersHistoryIndexes
+) where
 
 import DB
 import User.History.Tables
@@ -17,5 +17,18 @@ addPKToUsersHistory =  Migration {
                            , colType = BigSerialT
                            , colNullable = False }
         , sqlAddPK (tblName tableUsersHistory) (fromJust . pkOnColumn $ "id")
+        ]
+  }
+
+optimiseUsersHistoryIndexes :: MonadDB m => Migration m
+optimiseUsersHistoryIndexes = let tname = tblName tableUsersHistory in
+  Migration {
+    mgrTableName = tname
+  , mgrFrom = 2
+  , mgrAction = StandardMigration $
+      mapM_ runQuery_ [
+          sqlDropIndex   tname $ indexOnColumn "user_id"
+        , sqlDropIndex   tname $ indexOnColumn "performing_user_id"
+        , sqlCreateIndex tname $ indexOnColumns ["user_id", "event_type", "\"time\""]
         ]
   }

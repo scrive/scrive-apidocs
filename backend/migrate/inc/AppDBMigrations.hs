@@ -96,4 +96,5 @@ kontraMigrations = [
   , addSMSPinAuthAdjustmentsToEIDAuthentications
   , netsSignOrdersAddProviderAndSSN
   , featureFlagsAddDKAuthToSign
+  , optimiseUsersHistoryIndexes
   ]
