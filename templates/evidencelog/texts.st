@@ -692,7 +692,7 @@ PageHighlightingAddedLog=Highlighting was added to page $pageno$ while <span cla
 ###
 PageHighlightingClearedLog=Highlighting was removed from page $pageno$ while <span class="signatory"/> was viewing.
 ###
-ConsentQuestionAnsweredLog=The party <span class="signatory"/> answered the question "$question$" by "$text$".
+ConsentQuestionAnsweredLog=The party <span class="signatory"/> answered the question "$question$" by "$response$".
 ###
 ConsentQuestionAnsweredWithDescriptionLog=The party <span class="signatory"/> answered the question "$question$" by "$response$". The question's detailed description had the title "$description_title$" and the text "$description_text$".
 ###
