@@ -16,7 +16,8 @@ import DownloadPdfIcon from "../icons/download_pdf_icon.svg";
       documentid: React.PropTypes.string.isRequired,
       link : React.PropTypes.object,
       authorFullname: React.PropTypes.string,
-      authorPhone: React.PropTypes.string
+      authorPhone: React.PropTypes.string,
+      hasDownloadButton: React.PropTypes.bool
     },
     shouldComponentUpdate: function (nextProps, nextState) {
       var observedAttrs = [
@@ -47,7 +48,8 @@ import DownloadPdfIcon from "../icons/download_pdf_icon.svg";
     render: function() {
       var doc = this.props.document;
       var hasLink = this.props.link != undefined;
-      var hasDownloadButton = doc.showpdfdownload() && this.isReady();
+      var hasDownloadButton = doc.showpdfdownload() && this.isReady()
+                              && this.props.hasDownloadButton;
 
       return (
         <div className={"header"} >

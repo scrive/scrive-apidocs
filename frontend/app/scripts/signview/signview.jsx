@@ -230,6 +230,7 @@ var _ = require("underscore");
               link={this.props.link}
               authorFullname={this.props.authorFullname}
               authorPhone={this.props.authorPhone}
+              hasDownloadButton={model.hasAccessToDocument()}
             />
           }
           <div id="default-place-for-arrows" />

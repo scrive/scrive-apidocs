@@ -191,4 +191,3 @@ var FilePage = exports.FilePage = Backbone.Model.extend({
        this.trigger("change:dragables");
     }
 });
-
