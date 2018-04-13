@@ -1,3 +1,16 @@
+{- |
+ - This module provides a monad transformer to manage objects in S3 or Ceph
+ - using caches if its configuration is given. The first cache is in memory and
+ - the second in Redis. See the corresponding module for more details.
+ -
+ - It instantiates 'MonadFileStorage' which provides a common interface to store
+ - files. Note that, here, a file is some text contents with a name.
+ -
+ - /!\ WARNING: This might not be what you're looking for! If you seek to
+ - manipulate files in the sense of Scrive, that is the ones defined in
+ - 'File.File', you should go to 'File.Storage'.
+ -}
+
 module FileStorage
   ( module FileStorage.Class
   , FileStorageConfig

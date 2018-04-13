@@ -1,3 +1,8 @@
+{- |
+ - This modules allows to add a cache in memory to a monad instantiating
+ - 'MonadFileStorage'.
+ -}
+
 module FileStorage.MemCache
   ( MemCacheT
   , runMemCacheT
@@ -22,6 +27,8 @@ type FileMemCache = MemCache String BS.ByteString
 newFileMemCache :: MonadBase IO m => Int -> m FileMemCache
 newFileMemCache = new BS.length
 
+-- | Transform a monad instantiating 'MonadFileStorage' by adding a memory cache
+-- in front of it.
 newtype MemCacheT m a
   = MemCacheT { unMemCacheT :: ReaderT FileMemCache m a }
   deriving ( Alternative, Applicative, Functor, Monad, MonadDB, MonadIO

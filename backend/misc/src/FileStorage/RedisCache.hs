@@ -1,3 +1,8 @@
+{- |
+ - This modules allows to add a cache in Redis to a monad instantiating
+ - 'MonadFileStorage'.
+ -}
+
 module FileStorage.RedisCache
   ( RedisCacheT
   , runRedisCacheT
@@ -21,6 +26,8 @@ import Database.Redis.Helpers
 import DB
 import FileStorage.Class
 
+-- | Transform a monad instantiating 'MonadFileStorage' by adding a Redis cache
+-- in front of it.
 newtype RedisCacheT m a
   = RedisCacheT { unRedisCacheT :: ReaderT R.Connection m a }
   deriving ( Alternative, Applicative, Functor, Monad, MonadDB, MonadIO
