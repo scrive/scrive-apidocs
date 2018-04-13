@@ -280,7 +280,7 @@ var Track = require("../common/track");
       return this.tasks().incomplete().length == 1 && this.tasks().incomplete()[0].isSignTask();
     },
 
-    hasAccessToDocument: function() {
+    hasAccessToDocument: function () {
       return this.loggedInAsAuthor() || this.document().accessibleBySignatories();
     },
 
