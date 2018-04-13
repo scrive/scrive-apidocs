@@ -368,4 +368,5 @@ guardThatDocumentIsReadableBySignatories :: Kontrakcja m => Document -> m ()
 guardThatDocumentIsReadableBySignatories doc =
   unless (isAccessibleBySignatories doc) $
     apiError $ documentStateErrorWithCode 410 $
-      "This document has expired or has been withdrawn."
+      "The document has expired or has been withdrawn. (status: "
+      <> T.pack (show (documentstatus doc)) <> ")"

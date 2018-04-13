@@ -1429,4 +1429,5 @@ allRequiredAuthorAttachmentsAreAccepted acceptedAttachments = allRequiredAttachm
 guardThatDocumentIsReadableBySignatories :: Kontrakcja m => Document -> m ()
 guardThatDocumentIsReadableBySignatories doc =
   unless (isAccessibleBySignatories doc) $ throwM $ SomeDBExtraException $
-    forbidden "The document has expired or has been withdrawn."
+    forbidden $ "The document has expired or has been withdrawn. (status: "
+                ++ show (documentstatus doc) ++ ")"
