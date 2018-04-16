@@ -15,7 +15,7 @@ old_build_haddock() {
            happstack-data happstack-util hslogger time utf8-string \
            random extensible-exceptions containers directory process \
            base syb dataenc syb-with-class binary old-locale old-time \
-           network HTTP bytestring Crypto HaXml parallel HStringTemplate \
+           network HTTP bytestring Crypto parallel HStringTemplate \
            template-haskell mtl hS3 hxt mmap array html MissingH temporary \
            regex-tdfa parsec iconv json HPDF test-framework \
            test-framework-hunit test-framework-quickcheck2 HUnit QuickCheck \

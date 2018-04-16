@@ -94,7 +94,7 @@ instance MonadBaseControl b m => MonadBaseControl b (ReqHandlerT m) where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-instance Monad m => MonadTime (ReqHandlerT m) where
+instance {-# OVERLAPPING #-} Monad m => MonadTime (ReqHandlerT m) where
   currentTime = ReqHandlerT $ gets hsTime
 
 instance {-# OVERLAPPING #-} Monad m => FilterMonad Response (ReqHandlerT m) where

@@ -6,8 +6,9 @@ import Happstack.Server
 import Log
 import Test.Framework
 import Test.QuickCheck
-import Text.XML.HaXml.Parse (xmlParse')
 import qualified Data.Text as T
+import qualified Data.Text.Lazy as TL
+import qualified Text.XML as XML
 
 import Company.CompanyUI
 import Company.Model
@@ -143,20 +144,21 @@ testUserMails = do
 -- MAIL TESTING UTILS
 validMail :: MonadIO m => String -> Mail -> m ()
 validMail name m = do
-    let c = content m
-    let exml = xmlParse' name c
-    case (any isAlphaNum $ title m) of
-         True -> assertSuccess
-         False -> assertFailure ("Empty title of mail " ++ name)
+    let c    = content m
+        c'   = "<html>" <> TL.pack c <> "</html>"
+             -- ^ XML parser freaks out if there's content after root element.
+        exml = XML.parseText def c'
+    when (not . any isAlphaNum $ title m) $
+      assertFailure ("Empty title of mail " ++ name)
     case exml of
-         Right _ -> assertSuccess
-         Left err -> assertFailure ("Not valid HTML mail " ++ name ++ " : " ++ c ++ " " ++ err)
+      Left exc -> assertFailure $ "Invalid HTML mail " ++ name ++ " : " ++ c ++
+                                  " " ++ show exc
+      Right _  -> assertSuccess
 
 addNewRandomUserWithLang :: Lang -> TestEnv User
 addNewRandomUserWithLang l = do
   user <- addNewRandomUser
-  _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) {
-           lang = l
-         }
-  (Just uuser) <- dbQuery $ GetUserByID (userid user)
+  void . dbUpdate $ SetUserSettings (userid user)
+                                    ((usersettings user) { lang = l })
+  Just uuser <- dbQuery $ GetUserByID (userid user)
   return uuser

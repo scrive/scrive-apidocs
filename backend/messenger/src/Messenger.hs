@@ -19,7 +19,9 @@ import Happstack.Server.ReqHandler
 type InnerMessenger = CryptoRNGT (DBT (LogT (ReqHandlerT IO)))
 
 newtype Messenger a = Messenger { unMessenger :: InnerMessenger a }
-  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData, Monad, MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask, MonadThrow, MonadTime, ServerMonad, MonadLog)
+  deriving (Applicative, CryptoRNG, FilterMonad Response, Functor, HasRqData
+           ,Monad, MonadBase IO, MonadCatch, MonadDB, MonadIO, MonadMask
+           ,MonadThrow, MonadTime, ServerMonad, MonadLog)
 
 instance MonadBaseControl IO Messenger where
   type StM Messenger a = StM InnerMessenger a

@@ -27,6 +27,7 @@ import KontraError
 import Log.Configuration
 import Monitoring
 import Templates
+import ThirdPartyStats.Core
 import ThirdPartyStats.Mixpanel
 import ThirdPartyStats.Planhat
 import Utils.IO
@@ -86,14 +87,14 @@ main = do
         noConfigurationWarning "Mixpanel"
         return Nothing
       Just mt ->
-        return $ Just $ processMixpanelEvent mt
+        return . Just . EventProcessor $ processMixpanelEvent mt
 
     mplanhat <- case cronPlanhatConf cronConf of
       Nothing -> do
         noConfigurationWarning "Planhat"
         return Nothing
       Just phConf ->
-        return . Just $ processPlanhatEvent reqManager phConf
+        return . Just . EventProcessor $ processPlanhatEvent reqManager phConf
 
     let runDB :: DBT CronM r -> CronM r
         runDB = withPostgreSQL pool

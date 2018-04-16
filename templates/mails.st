@@ -141,7 +141,7 @@ $else$
   <div class="editable" name="custommessage"></div>
 $endif$
 ####
-#### FOREWARDING DOCUMENT
+#### FORWARDING DOCUMENT
 ####
 mailForwardSigned =
       $_mailForwardMailTitle()$

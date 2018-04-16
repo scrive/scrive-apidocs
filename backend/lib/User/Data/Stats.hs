@@ -7,6 +7,7 @@ module User.Data.Stats
 
 import Data.Int (Int64)
 import Data.Time.Clock (UTCTime)
+import qualified Data.Semigroup as SG
 
 data StatsPartition = PartitionByDay | PartitionByMonth
 
@@ -16,13 +17,16 @@ data DocumentStats = DocumentStats {
   , dsSignaturesClosed :: !Int64
   } deriving (Eq, Ord, Show)
 
-instance Monoid DocumentStats where
-  mempty = DocumentStats 0 0 0
-  ds1 `mappend` ds2 = DocumentStats {
+instance SG.Semigroup DocumentStats where
+  ds1 <> ds2 = DocumentStats {
       dsDocumentsSent = dsDocumentsSent ds1 + dsDocumentsSent ds2
     , dsDocumentsClosed = dsDocumentsClosed ds1 + dsDocumentsClosed ds2
     , dsSignaturesClosed = dsSignaturesClosed ds1 + dsSignaturesClosed ds2
     }
+
+instance Monoid DocumentStats where
+  mempty = DocumentStats 0 0 0
+  mappend = (SG.<>)
 
 data UserUsageStats = UserUsageStats {
     uusTimeWindowStart  :: !UTCTime
@@ -30,4 +34,3 @@ data UserUsageStats = UserUsageStats {
   , uusUserName         :: !String
   , uusDocumentStats    :: !DocumentStats
   } deriving (Eq, Ord, Show)
-

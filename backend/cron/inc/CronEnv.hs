@@ -48,7 +48,15 @@ type CronEnvM = CronEnvT (AmazonMonadT (DBT (CryptoRNGT (LogT IO)))) CronEnv
 
 -- hiding ReaderT prevents collision with ReaderT in TestEnvSt
 newtype CronEnvT m sd a = CronEnvT { unCronEnvT :: ReaderT sd m a }
-  deriving (Applicative, CryptoRNG, Functor, Monad, MonadCatch, MonadDB, MonadIO, MonadMask, MonadReader sd, MonadThrow, MonadTime, AmazonMonad, MonadBase b, MonadLog)
+  deriving (Applicative, CryptoRNG, Functor, Monad, MonadCatch, MonadDB, MonadIO
+           ,MonadMask, MonadReader sd, MonadThrow, AmazonMonad
+           ,MonadBase b)
+
+deriving newtype instance
+            (Monad m, MonadTime m) => MonadTime (CronEnvT m sd)
+deriving newtype instance
+            (Monad m, MonadTime m, MonadLog m)
+                                   => MonadLog  (CronEnvT m sd)
 
 instance (MonadBaseControl IO m, MonadBase IO (CronEnvT m sd)) => MonadBaseControl IO (CronEnvT m sd) where
   type StM (CronEnvT m sd) a = StM (ReaderT sd m) a

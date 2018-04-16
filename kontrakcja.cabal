@@ -464,7 +464,6 @@ Library
                , Decimal
                , HStringTemplate
                , HTTP
-               , HaXml
                , MissingH
                , QuickCheck
                , aeson
@@ -804,7 +803,6 @@ Executable kontrakcja-migrate
   Build-depends: base-noprelude
                , kontrakcja-prelude
                , DRBG
-               , HaXml
                , MissingH
                , aeson
                , base16-bytestring
@@ -1320,13 +1318,13 @@ Test-suite kontrakcja-test
                , Decimal
                , HStringTemplate
                , HUnit
-               , HaXml
                , HTTP
                , MissingH
                , QuickCheck
                , aeson
                , base64-bytestring
                , binary
+               , blaze-markup
                , bytestring
                , cond
                , consumers
@@ -1372,6 +1370,7 @@ Test-suite kontrakcja-test
                , unordered-containers
                , utf8-string
                , vector
+               , xml-conduit
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns

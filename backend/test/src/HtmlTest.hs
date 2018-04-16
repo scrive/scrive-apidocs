@@ -1,14 +1,14 @@
 module HtmlTest (htmlTests) where
 
-import Data.Char
 import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (Assertion, assertBool, assertFailure)
+import Text.Blaze (toMarkup)
+import Text.Blaze.Renderer.Pretty (renderMarkup)
 import Text.StringTemplates.TemplatesLoader (renderTemplateMain)
-import Text.XML.HaXml.Html.Pretty
-import Text.XML.HaXml.Parse (xmlParse')
-import Text.XML.HaXml.Posn
-import Text.XML.HaXml.Types
+import Text.XML
+import qualified Data.Text as T
+import qualified Data.Text.Lazy as TL
 
 import Templates
 import TestKontra
@@ -17,14 +17,21 @@ import User.Lang
 htmlTests :: TestEnvSt -> Test
 htmlTests _ = testGroup "HTML"
     [ testGroup "static checks"
-        [ testCase "templates make valid xml" testValidXml,
-          testCase "no unnecessary double divs" testNoUnecessaryDoubleDivs ,
-          testCase "no nested p tags when templates are rendered" testNoNestedP
-          ]
+        [ testCase "templates make valid xml" testValidXml
+        , testCase "no unnecessary double divs" testNoUnnecessaryDoubleDivs
+        , testCase "no nested p tags when templates are rendered" testNoNestedP
+        ]
     ]
 
 excludedTemplates :: [String]
-excludedTemplates = ["paymentsadminpagesuperuser", "javascriptLocalisation", "htmlopentag", "htmlclosingtag", "wrapperclosingtag", "wrapperopentag", "analyticsLoaderBase"]
+excludedTemplates = [ "paymentsadminpagesuperuser"
+                    , "javascriptLocalisation"
+                    , "htmlopentag"
+                    , "htmlclosingtag"
+                    , "wrapperclosingtag"
+                    , "wrapperopentag"
+                    , "analyticsLoaderBase"
+                    ]
 
 isIncluded :: (String, String) -> Bool
 isIncluded (name, _) = not $ name `elem` excludedTemplates
@@ -32,29 +39,27 @@ isIncluded (name, _) = not $ name `elem` excludedTemplates
 testValidXml :: Assertion
 testValidXml = do
   ts <- getAllTemplates
-  _ <- mapM assertTemplateIsValidXML . filter isIncluded $ ts
+  void $ mapM assertTemplateIsValidXML . filter isIncluded $ ts
   assertSuccess
 
 assertTemplateIsValidXML :: (String, String) -> Assertion
 assertTemplateIsValidXML t =
   case parseTemplateAsXML t of
-    Left msg -> assertFailure msg
-    Right _ -> assertSuccess
+    Left  msg -> assertFailure msg
+    Right   _ -> assertSuccess
 
-testNoUnecessaryDoubleDivs :: Assertion
-testNoUnecessaryDoubleDivs = do
+testNoUnnecessaryDoubleDivs :: Assertion
+testNoUnnecessaryDoubleDivs = do
   templates <- getAllTemplates
-  _ <- mapM assertNoUnecessaryDoubleDivs $ filter isIncluded templates
+  _ <- mapM assertNoUnnecessaryDoubleDivs $ filter isIncluded templates
   assertSuccess
 
 testNoNestedP :: Assertion
 testNoNestedP = do
-  langtemplates <- readGlobalTemplates
-  ts <- getAllTemplates
-  let alltemplatenames = map fst ts
-  _ <- forM allLangs $ \lang -> do
+  langtemplates    <- readGlobalTemplates
+  alltemplatenames <- map fst <$> getAllTemplates
+  forM_ allLangs $ \lang -> do
     let templates = localizedVersion lang langtemplates
-    --ts <- getTextTemplates lang
     assertNoNestedP alltemplatenames templates
   assertSuccess
 
@@ -63,69 +68,74 @@ assertNoNestedP tnames templates = do
   _ <- forM (filter (not . (flip elem) excludedTemplates) tnames) $ \n -> do
     let t = renderTemplateMain templates n ([]::[(String, String)]) id
     case parseStringAsXML (n, removeScripts $ removeDocTypeDeclaration t) of
-      Left msg -> assertFailure msg
-      Right (Document _ _ root _) -> checkXMLForNestedP n $ CElem root undefined
+      Left  msg -> assertFailure msg
+      Right doc -> checkXMLForNestedP n (NodeElement $ documentRoot doc)
   assertSuccess
 
-checkXMLForNestedP :: String -> Content Posn -> Assertion
-checkXMLForNestedP templatename e =
-  if isPAndHasP e
+checkXMLForNestedP :: String -> Node -> Assertion
+checkXMLForNestedP templatename elt =
+  if isPAndHasP elt
   then assertFailure $ "nested <p> tags in template " ++ templatename ++ ":\n" ++
-                         (show $ content e)
+                       (renderMarkup . toMarkup $ elt)
   else assertSuccess
 
-isPOrHasP :: Content Posn -> Bool
-isPOrHasP (CElem (Elem (N tag) _ children) _) =
-  if map toLower tag == "p"
+isPOrHasP :: Node -> Bool
+isPOrHasP (NodeElement (Element tag _attrs children)) =
+  if (T.toLower . nameLocalName $ tag) == "p"
   then True
   else any isPOrHasP children
 isPOrHasP _ = False
 
-isPAndHasP :: Content Posn -> Bool
-isPAndHasP (CElem (Elem (N tag) _ children) _) =
-  if map toLower tag == "p"
+isPAndHasP :: Node -> Bool
+isPAndHasP (NodeElement (Element tag _attrs children)) =
+  if (T.toLower . nameLocalName $ tag) == "p"
   then any isPOrHasP children
   else any isPAndHasP children
 isPAndHasP _ = False
 
-assertNoUnecessaryDoubleDivs :: (String, String) -> Assertion
-assertNoUnecessaryDoubleDivs t@(name,_) =
+assertNoUnnecessaryDoubleDivs :: (String, String) -> Assertion
+assertNoUnnecessaryDoubleDivs t@(name,_) =
   case parseTemplateAsXML t of
-    Left msg -> assertFailure msg
-    Right (Document _ _ root _) -> checkXMLForUnecessaryDoubleDivs name $ CElem root undefined
+    Left msg  -> assertFailure msg
+    Right doc -> checkXMLForUnnecessaryDoubleDivs name
+                 (NodeElement $ documentRoot doc)
 
-checkXMLForUnecessaryDoubleDivs :: String -> Content Posn -> Assertion
-checkXMLForUnecessaryDoubleDivs templatename e@(CElem (Elem _ _ children) _) =
-  let isDiv = isDivElem e
-      isSingleChild = length children == 1
+checkXMLForUnnecessaryDoubleDivs :: String -> Node -> Assertion
+checkXMLForUnnecessaryDoubleDivs templatename
+                                 e@(NodeElement (Element _ _ children)) =
+  let isDiv            = isDivElem e
+      isSingleChild    = length children == 1
       isSingleChildDiv = isSingleChild && isDivElem (head children)
-      isUnecessaryDiv = isDiv && isSingleChildDiv in
-  if isUnecessaryDiv
-    then assertFailure $ "unecesary double divs in template " ++ templatename ++ ":\n" ++
-                         (show $ content e)
+      isUnnecessaryDiv = isDiv && isSingleChildDiv in
+  if isUnnecessaryDiv
+    then assertFailure $ "unnecessary double divs in template " ++
+                         templatename ++ ":\n" ++
+                         (renderMarkup . toMarkup $ e)
     else do
-      _ <- mapM (checkXMLForUnecessaryDoubleDivs templatename) children
+      void $ mapM (checkXMLForUnnecessaryDoubleDivs templatename) children
       assertSuccess
-  where isDivElem :: Content Posn -> Bool
-        isDivElem (CElem (Elem (N n) _ _) _) = map toLower n == "div"
-        isDivElem _ = False
-checkXMLForUnecessaryDoubleDivs _ _ = assertSuccess
+  where isDivElem :: Node -> Bool
+        isDivElem (NodeElement (Element n _ _)) =
+          (T.toLower . nameLocalName $ n) == "div"
+        isDivElem _                             = False
+checkXMLForUnnecessaryDoubleDivs _ _ = assertSuccess
 
-parseStringAsXML :: (String, String) -> Either String (Document Posn)
+parseStringAsXML :: (String, String) -> Either String Document
 parseStringAsXML (name, rawtxt) =
-  let preparedtxt = "<template>\n" ++ rawtxt ++ "\n</template>"
-      prettyprinttxt = unlines . zipWith mklinewithno ([1..]::[Int]) $ lines preparedtxt
-      mklinewithno no line --okay, i did indenting in a horrible way, it's just a test!
-        | no<10  = (show no) ++ ".    |" ++ line
-        | no<100  = (show no) ++ ".   |" ++ line
-        | no<1000  = (show no) ++ ".  |" ++ line
-        | otherwise = (show no) ++ ". |" ++ line
-  in case xmlParse' name preparedtxt of
-    Left msg -> Left $ msg ++ "\n" ++ prettyprinttxt
-    r@(Right _) -> r
+  let preparedtxt    = "<template>\n" ++ rawtxt ++ "\n</template>"
+      prettyprinttxt = unlines . zipWith mklinewithno ([1..]::[Int])
+                       $ lines preparedtxt
+      mklinewithno no line -- okay, i did indenting in a horrible way,
+                           -- it's just a test!
+        | no<10     = (show no) ++ ".    |" ++ line
+        | no<100    = (show no) ++  ".   |" ++ line
+        | no<1000   = (show no) ++   ".  |" ++ line
+        | otherwise = (show no) ++    ". |" ++ line
+  in case parseText def (TL.pack preparedtxt) of
+    Left  exc -> Left $ name ++ ":" ++ show exc ++ "\n" ++ prettyprinttxt
+    Right doc -> Right doc
 
-
-parseTemplateAsXML :: (String, String) -> Either String (Document Posn)
+parseTemplateAsXML :: (String, String) -> Either String Document
 parseTemplateAsXML (name, rawtxt) =
   parseStringAsXML (name, clearTemplating rawtxt)
 

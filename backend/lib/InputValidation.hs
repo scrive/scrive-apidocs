@@ -44,17 +44,14 @@ module InputValidation
 
 import Data.Char
 import Data.String.Utils
-import Data.Text (pack)
 import Data.Word (Word32)
 import Log
 import Numeric
-import Text.HTML.TagSoup.Entity
-import Text.XML.HaXml (render)
-import Text.XML.HaXml.Parse (xmlParse')
-import Text.XML.HaXml.Posn
-import Text.XML.HaXml.Pretty (content)
-import Text.XML.HaXml.Types
+import Text.XML
+import qualified Data.Semigroup as SG
+import qualified Data.Text as T
 import qualified Data.Text.ICU as Rx
+import qualified Data.Text.Lazy as TL
 
 import Attachment.AttachmentID
 import Doc.DocumentID
@@ -81,13 +78,16 @@ data Result a = Good a
               | Empty
               deriving (Eq, Show, Functor)
 
+instance Monoid a => SG.Semigroup (Result a) where
+    Good a1 <> Good a2 = Good $ mappend a1 a2
+    Empty   <> a       = a
+    a       <> Empty   = a
+    Bad     <> _       = Bad
+    _       <> Bad     = Bad
+
 instance Monoid a => Monoid (Result a) where
-    mappend (Good a1) (Good a2) = Good $ mappend a1 a2
-    mappend Empty a = a
-    mappend a Empty = a
-    mappend Bad _ = Bad
-    mappend _ Bad  = Bad
-    mempty = Empty
+    mempty  = Empty
+    mappend = (SG.<>)
 
 instance Applicative Result where
   pure = Good
@@ -285,7 +285,7 @@ asValidEmail input =
                             | otherwise = Bad
           isValidFormat :: String -> Bool
           -- This must match PATTERN_EMAIL in frontend code
-          isValidFormat = isJust . Rx.find (Rx.regex [Rx.CaseInsensitive] "^[a-zA-Z0-9._%+-]+@(\\p{L}|[0-9.-])+[.][a-z]{2,}$") . pack
+          isValidFormat = isJust . Rx.find (Rx.regex [Rx.CaseInsensitive] "^[a-zA-Z0-9._%+-]+@(\\p{L}|[0-9.-])+[.][a-z]{2,}$") . T.pack
 
 {- |
     Creates an email that hasn't been completely validated.  It still does handy things
@@ -623,36 +623,42 @@ asValidFieldValue input =
     >>= checkLengthIsMax 200
     >>= checkOnly [isAlphaNum, isPunctuation, isSymbol, (==' ')]
 
-{- |
-    Cleans all HTML from message, and unescapes it. Api V1 accepting HTML, but internally DB holds only pure text.
-    Size:  up to 800 chars
--}
+-- | Cleans all HTML from message, and unescapes it. Api V1 accepting
+-- HTML, but internally DB holds only pure text. Size: up to 800
+-- chars.
 asValidInviteText :: String -> Result String
 asValidInviteText input =
     checkIfEmpty input
     >>= parseAndFixAsXml
     >>= return . strip . replace "\160" " "
-    where
-          parseAndFixAsXml :: String -> Result String
-          parseAndFixAsXml xs =
-            case xmlParse' "asValidInviteText" $ "<span>" ++ xs ++ "</span>" of
-              (Right (Document _ _ (Elem _ _ cs) _)) -> Good $ (concatMap fixContent cs)
-              _ -> let xsWithFixedBRs = replace "<BR>" "<BR/>" $ replace "<br>" "<br/>" xs
-                   in if xsWithFixedBRs /= xs
-                         then parseAndFixAsXml xsWithFixedBRs
-                         else Good $ unescapeHTML $ justText xs
-          fixContent :: Content Posn -> String
-          fixContent (CElem (Elem (N "div") _ cs) _) = (concatMap fixContent cs) ++ " \n"
-          fixContent (CElem (Elem (N "p") _ cs) _)   = (concatMap fixContent cs) ++ " \n"
-          fixContent (CElem (Elem (N "br") _ cs) _)  = (concatMap fixContent cs) ++ " \n"
-          fixContent (CElem (Elem (N _) _ cs) _)     = (concatMap fixContent cs)
-          fixContent x@(CString _ _ _)               = render $ content x
-          fixContent (CRef (RefEntity ent) _)        = fromMaybe "" $ lookupEntity ent
-          fixContent (CRef (RefChar i) _)            = [chr i]
-          fixContent _ = ""
-          justText ('<':cs) = justText $ drop 1 $ dropWhile (/= '>') cs
-          justText (c:cs) = c : justText cs
-          justText [] = []
+  where
+    parseAndFixAsXml :: String -> Result String
+    parseAndFixAsXml xs = case parseText def xs' of
+      (Right (Document { documentRoot = spanElt }))
+         | (T.toLower . nameLocalName . elementName $ spanElt) == "span"
+        -> Good . T.unpack . fixElems . elementNodes $ spanElt
+      _ -> let xsWithFixedBRs = replace "<BR>" "<BR/>" $ replace "<br>" "<br/>" xs
+           in if xsWithFixedBRs /= xs
+              then parseAndFixAsXml xsWithFixedBRs
+              else Good $ unescapeHTML $ justText xs
+      where
+        xs' = "<span>" <> TL.pack xs <> "</span>"
+
+    fixElem :: Node -> T.Text
+    fixElem (NodeElement (Element "div" _attrs cs)) = addNewline . fixElems $ cs
+    fixElem (NodeElement (Element "p"   _attrs cs)) = addNewline . fixElems $ cs
+    fixElem (NodeElement (Element "br"  _attrs cs)) = addNewline . fixElems $ cs
+    fixElem (NodeElement (Element _name _attrs cs)) =              fixElems $ cs
+    fixElem (NodeContent txt)                       = txt
+    fixElem _                                       = ""
+
+    addNewline  = (<> "\n")
+    fixElems    = mconcat . map fixElem
+
+    justText :: String -> String
+    justText ('<':cs) = justText $ drop 1 $ dropWhile (/= '>') cs
+    justText (c:cs)   = c : justText cs
+    justText []       = []
 
 
 {- |

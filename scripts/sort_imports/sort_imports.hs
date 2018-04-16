@@ -1,4 +1,4 @@
-{-# LANGUAGE BangPatterns, LambdaCase, OverloadedStrings, RecordWildCards #-}
+{-# LANGUAGE BangPatterns, CPP, LambdaCase, OverloadedStrings, RecordWildCards #-}
 {-# OPTIONS_GHC -Wall #-}
 module Main (main) where
 
@@ -9,7 +9,6 @@ import Data.Char
 import Data.Functor
 import Data.List
 import Data.Maybe
-import Data.Monoid
 import Data.Set (Set)
 import Data.Text (Text)
 import System.Directory
@@ -20,6 +19,10 @@ import qualified Data.Attoparsec.Text as P
 import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
+
+#if !MIN_VERSION_base(4,11,0)
+import Data.Monoid
+#endif
 
 (<&&>) :: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
 (<&&>) = liftA2 (&&)

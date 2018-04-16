@@ -4,7 +4,7 @@ module ThirdPartyStats.Core (
     EventProperty (..),
     PropValue (..),
     ProcRes (..),
-    EventProcessor,
+    EventProcessor(..),
     NumEvents (..),
     EventName (..),
     EventType (..),
@@ -27,6 +27,7 @@ import Log
 import Test.QuickCheck (Arbitrary(..), frequency, oneof, suchThat)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
+import qualified Data.Semigroup as SG
 
 import Company.CompanyID (CompanyID, unsafeCompanyID)
 import DB
@@ -197,7 +198,9 @@ data ProcRes
                    --   log the failure.
   | Ignored String -- ^ Processing ignored and regarded as done after logging
 
-type EventProcessor m = (EventName -> [EventProperty] -> m ProcRes)
+newtype EventProcessor m =
+  EventProcessor
+  { unEventProcessor :: (EventName -> [EventProperty] -> m ProcRes) }
 
 -- | Combine two event processors into one. The first event processor is always
 --   executed. If it fails, the second is not. Unfortunately, there is no way
@@ -207,7 +210,7 @@ type EventProcessor m = (EventName -> [EventProperty] -> m ProcRes)
 --   The operator is kind of ugly, but all the good ones were already taken by
 --   Arrow, Applicative, etc.
 (@@) :: Monad m => EventProcessor m -> EventProcessor m -> EventProcessor m
-a @@ b = \evt props -> do
+EventProcessor a @@ EventProcessor b = EventProcessor $ \evt props -> do
   res <- a evt props
   case res of
     OK -> do
@@ -223,12 +226,14 @@ a @@ b = \evt props -> do
 
 -- | Concatenate a list of event processors.
 catEventProcs :: Monad m => [EventProcessor m] -> EventProcessor m
-catEventProcs (ep:eps) = ep @@ catEventProcs eps
-catEventProcs _        = \_ _ -> return OK
+catEventProcs = mconcat
+
+instance Monad m => SG.Semigroup (EventProcessor m) where
+  (<>) = (@@)
 
 instance Monad m => Monoid (EventProcessor m) where
-  mempty  = \_ _ -> return OK
-  mappend = (@@)
+  mempty  = EventProcessor $ \_ _ -> return OK
+  mappend = (SG.<>)
   mconcat = catEventProcs
 
 -- | Remove a number of events from the queue and process them.
@@ -246,7 +251,7 @@ asyncProcessEvents getEventProcessor numEvts = do
     processEvent (AsyncEvent ename eprops etype) = do
         result <- case (getEventProcessor etype) of
           Nothing -> return . Ignored $ "No event processor defined"
-          Just process -> process ename eprops
+          Just process -> (unEventProcessor process) ename eprops
         case result of
           PutBack     -> asyncLogEvent ename eprops etype
           Failed msg  -> logAttention "Event processing failed" $
