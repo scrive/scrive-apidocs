@@ -31,7 +31,8 @@ var BrowserInfo = require("../../js/utils/browserinfo.js").BrowserInfo;
       size        : React.PropTypes.string,
       width       : React.PropTypes.number,
       className   : React.PropTypes.string,
-      style       : React.PropTypes.object
+      style       : React.PropTypes.object,
+      multiple    : React.PropTypes.bool
     },
     getDefaultProps : function() {
       return {
@@ -39,7 +40,8 @@ var BrowserInfo = require("../../js/utils/browserinfo.js").BrowserInfo;
         "text"      : "",
         "color"     : "green",
         "size"      : "small",
-        "style"     : {}
+        "style"     : {},
+        "multiple"  : false
       };
     },
     // Don't depend on this calls, since it will not work well in IE8 and IE9 (access denied on file upload)
@@ -68,10 +70,11 @@ var BrowserInfo = require("../../js/utils/browserinfo.js").BrowserInfo;
       if (self.isMounted()) {
         var fileinput = $("<input class='file-input' type='file' />");
         if (self.props.fileType) {
-          fileinput.attr("accept",self.props.fileType);
+          fileinput.attr("accept", self.props.fileType);
         }
 
-        fileinput.attr("name",self.props.name);
+        fileinput.attr("name", self.props.name);
+        fileinput.attr("multiple", self.props.multiple ? "multiple" : undefined);
         fileinput.change(function() {
           if (self.props.onUploadComplete != undefined) {
             // IE8 requires delay before inputs are available.

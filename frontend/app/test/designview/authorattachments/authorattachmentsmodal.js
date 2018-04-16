@@ -11,11 +11,10 @@ var AuthorAttachmentsModal = require(
 var DesignViewAttachment = require(
   "../../../scripts/designview/authorattachments/designviewattachment"
 );
-var DesignViewAuthorAttachments = require(
+var DesignViewAttachments = require(
   "../../../scripts/designview/authorattachments/designviewattachments"
 );
 var FlashMessage = require("../../../js/flashmessages.js");
-var LoadingDialog = require("../../../js/loading.js");
 var Submit = require("../../../js/submits.js").Submit;
 
 describe("designview/authorattachments/authorattachmentsmodal", function () {
@@ -49,11 +48,7 @@ describe("designview/authorattachments/authorattachmentsmodal", function () {
   beforeEach(function (done) {
     util.createDocument(function (doc) {
       document_ = doc;
-
       sinon.stub(FlashMessage, "FlashMessage");
-      sinon.stub(LoadingDialog.LoadingDialog, "close");
-      sinon.stub(LoadingDialog.LoadingDialog, "open");
-
       done();
     });
   });
@@ -69,8 +64,6 @@ describe("designview/authorattachments/authorattachmentsmodal", function () {
     }
 
     FlashMessage.FlashMessage.restore();
-    LoadingDialog.LoadingDialog.close.restore();
-    LoadingDialog.LoadingDialog.open.restore();
 
     util.cleanTimeoutsAndBody();
   });
@@ -88,7 +81,7 @@ describe("designview/authorattachments/authorattachmentsmodal", function () {
 
       component.componentWillReceiveProps({active: true});
       assert.isDefined(component._model);
-      assert.instanceOf(component._model, DesignViewAuthorAttachments);
+      assert.instanceOf(component._model, DesignViewAttachments);
     });
 
     it("should reset state to default when it becomes active", function () {
@@ -111,33 +104,7 @@ describe("designview/authorattachments/authorattachmentsmodal", function () {
     var submit = null;
 
     beforeEach(function () {
-      model = new DesignViewAuthorAttachments({document: document_});
-
-      submit = document_.setAttachments();
-      sinon.stub(submit, "addInputs");
-    });
-
-    it("should configure an uploaded attachment", function () {
-      var component = renderComponent();
-      component._model = model;
-
-      var $input = jQuery("<input type='file' />");
-
-      var attachment = new DesignViewAttachment({
-        name: "spam",
-        required: true,
-        addToSealedFile: true,
-        serverFileId: undefined,
-        fileUpload: $input,
-        documentid: document_.documentid()
-      });
-      model.addAttachment(attachment);
-
-      var result = component.attachmentsToSave(submit);
-      assert.isTrue(submit.addInputs.calledWith($input));
-
-      assert.isUndefined(result[0].file_id);
-      assert.equal(result[0].file_param, $input.attr("name"));
+      model = new DesignViewAttachments({document: document_});
     });
 
     it("should configure an attachment chosen from list", function () {
@@ -154,9 +121,7 @@ describe("designview/authorattachments/authorattachmentsmodal", function () {
       });
       model.addAttachment(attachment);
 
-      var result = component.attachmentsToSave(submit);
-      assert.isFalse(submit.addInputs.called);
-
+      var result = component.attachmentsToSave();
       assert.equal(result[0].file_id, attachment.serverFileId());
       assert.isUndefined(result[0].file_param);
     });
@@ -196,26 +161,116 @@ describe("designview/authorattachments/authorattachmentsmodal", function () {
     });
   });
 
-  it("should save attachments", function () {
+  it("should save already-uploaded attachments", function () {
     var submit = new Submit();
     sinon.stub(submit, "add");
-    sinon.stub(submit, "sendAjax");
+    sinon.stub(submit, "sendAjax", function(callback, _) {
+      callback();
+    });
     sinon.stub(document_, "setAttachments").returns(submit);
 
     var component = renderComponent();
     sinon.stub(component, "attachmentsToSave").returns("spam");
+    sinon.stub(component, "attachmentsToUpload").returns([]);
 
-    component.saveAttachments();
+    component.saveServerAttachments(function() { });
     assert.isTrue(submit.add.calledWith("attachments", '"spam"'));
-    assert.isTrue(submit.sendAjax.calledWith(
-      component.onSaveAttachmentsSuccess, component.onSaveAttachmentsError
-    ));
-    assert.isTrue(LoadingDialog.LoadingDialog.open.called);
+    assert.isTrue(submit.sendAjax.called);
+    assert.isFalse(component.isLoading());
+  });
+
+  it("should upload new attachments", function () {
+    var submit = new Submit();
+    sinon.stub(submit, "add");
+    sinon.stub(submit, "sendAjax", function (callback, _) {
+      callback();
+    });
+    sinon.stub(document_, "setAttachments").returns(submit);
+
+    var file = {};
+    var req = {
+      add: function() {},
+      sendAjax: function(success, error) {
+        success({
+          responseText: "{\"author_attachments\":[{\"name\":\"My File\",\"file_id\":1337}]}"
+        });
+      }
+    };
+    sinon.stub(req, "add");
+    sinon.stub(document_, "setAttachmentsIncrementally").returns(req);
+
+    var component = renderComponent();
+    sinon.stub(component, "attachmentsToSave").returns("spam");
+
+    var attachment = new DesignViewAttachment({
+      name: "My File",
+      fileUpload: file
+    });
+    sinon.stub(component, "attachmentsToUpload").returns([attachment]);
+
+    component.uploadNewAttachments(function() { });
+    assert.isTrue(attachment.serverFileId() == 1337);
+    assert.isTrue(attachment.fileUpload() === undefined);
+    assert.isTrue(req.add.calledWith("file", file));
+    assert.isTrue(req.add.calledWith("attachments"));
+    assert.isFalse(component.isLoading());
+  });
+
+  it("should show an error when an attachment is too large", function () {
+    var file = sinon.mock({});
+    var attachment = new DesignViewAttachment({
+      name: "My File",
+      fileUpload: file
+    });
+    var req = {
+      add: function () {},
+      sendAjax: function(success, error) {
+        error({status: 413});
+      }
+    };
+    sinon.stub(document_, "setAttachmentsIncrementally").returns(req);
+
+    var component = renderComponent();
+    sinon.stub(component, "attachmentsToUpload").returns([attachment]);
+
+    component.uploadNewAttachments();
+    assert.isFalse(component.isLoading());
+    assert.isTrue(FlashMessage.FlashMessage.calledWithNew());
+    assert.isTrue(FlashMessage.FlashMessage.calledWith({
+      type: "error",
+      content: localization.authorattachments.tooLargeAttachment + " (My File)"
+    }));
+  });
+
+  it("should show an error when an attachment is invalid", function () {
+    var file = sinon.mock({});
+    var attachment = new DesignViewAttachment({
+      name: "My File",
+      fileUpload: file
+    });
+    var req = {
+      add: function () {},
+      sendAjax: function(success, error) {
+        error({status: 400});
+      }
+    };
+    sinon.stub(document_, "setAttachmentsIncrementally").returns(req);
+
+    var component = renderComponent();
+    sinon.stub(component, "attachmentsToUpload").returns([attachment]);
+
+    component.uploadNewAttachments();
+    assert.isFalse(component.isLoading());
+    assert.isTrue(FlashMessage.FlashMessage.calledWithNew());
+    assert.isTrue(FlashMessage.FlashMessage.calledWith({
+      type: "error",
+      content: localization.authorattachments.invalidAttachments + " (My File)"
+    }));
   });
 
   it("should reset the model when it hides", function () {
     var component = renderComponent();
-    component._model = new DesignViewAuthorAttachments({
+    component._model = new DesignViewAttachments({
       document: document_
     });
 
@@ -226,10 +281,14 @@ describe("designview/authorattachments/authorattachmentsmodal", function () {
   it("should handle the document being recalled", function () {
     sinon.stub(document_, "trigger");
     var component = renderComponent();
+    component._model = {
+      hasErrorMessages: function () {
+        return false;
+      }
+    };
 
     component.onRecallDocument();
     assert.isTrue(document_.trigger.calledWith("change"));
-    assert.isTrue(LoadingDialog.LoadingDialog.close.called);
     assert.isTrue(component.props.saveAndFlashMessageIfAlreadySaved.called);
     assert.isTrue(component.props.onClose.called);
   });
@@ -239,35 +298,16 @@ describe("designview/authorattachments/authorattachmentsmodal", function () {
 
     beforeEach(function () {
       component = renderComponent();
-      component._model = new DesignViewAuthorAttachments({
+      component._model = new DesignViewAttachments({
         document: document_
       });
     });
 
-    it("should display an error message when one of the attachments is too large", function () {
-      sinon.stub(component._model, "attachments").returns(["spam", "eggs"]);
-
-      component.onSaveAttachmentsError({status: 413});
-      assert.isTrue(FlashMessage.FlashMessage.calledWithNew());
-      assert.isTrue(FlashMessage.FlashMessage.calledWith({
-        type: "error",
-        content: localization.authorattachments.tooLargeAttachments
-      }));
-    });
-
-    it("should display an error message when the only attachment is too large", function () {
-      sinon.stub(component._model, "attachments").returns(["spam"]);
-
-      component.onSaveAttachmentsError({status: 413});
-      assert.isTrue(FlashMessage.FlashMessage.calledWithNew());
-      assert.isTrue(FlashMessage.FlashMessage.calledWith({
-        type: "error",
-        content: localization.authorattachments.tooLargeAttachment
-      }));
-    });
-
     it("should display a generic error message", function () {
-      sinon.stub(component._model, "attachments").returns(["spam"]);
+      var attachment = new DesignViewAttachment({
+        name: "Attachment"
+      });
+      sinon.stub(component._model, "attachments").returns([attachment]);
 
       component.onSaveAttachmentsError({status: 400});
       assert.isTrue(FlashMessage.FlashMessage.calledWithNew());
@@ -279,7 +319,7 @@ describe("designview/authorattachments/authorattachmentsmodal", function () {
 
     it("should close the loading dialog", function () {
       component.onSaveAttachmentsError({status: 400});
-      assert.isTrue(LoadingDialog.LoadingDialog.close.called);
+      assert.isFalse(component.isLoading());
     });
   });
 
@@ -313,7 +353,7 @@ describe("designview/authorattachments/authorattachmentsmodal", function () {
       sinon.stub(document_, "afterSave");
 
       component = renderComponent();
-      component._model = new DesignViewAuthorAttachments({
+      component._model = new DesignViewAttachments({
         document: document_
       });
 

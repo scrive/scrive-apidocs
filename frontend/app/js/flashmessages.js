@@ -24,8 +24,15 @@ var ReactFlashMessageView = require("../scripts/common/flashmessages");
  */
 
 var FlashMessage = exports.FlashMessage = function (args) {
+  var globalContainer = document.querySelector("div.flash");
+  if (globalContainer == null) {
+    globalContainer = document.createElement("div");
+    globalContainer.classList.add("flash");
+    document.body.appendChild(globalContainer);
+  }
+
   var container = document.createElement("div");
-  document.body.appendChild(container);
+  globalContainer.appendChild(container);
 
   var onHide = function () {
     try {

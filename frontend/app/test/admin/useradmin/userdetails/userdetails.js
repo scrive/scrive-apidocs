@@ -245,10 +245,10 @@ describe("admin/useradmin/userdetails/userdetails", function () {
 
     util.waitUntil(
       function () {
-        return $(".flash.error").length == 1;
+        return $(".flash .error").length == 1;
       },
       function () {
-        assert.include($(".flash.error").text(), "Failed");
+        assert.include($(".flash .error").text(), "Failed");
         done();
       }
     );
@@ -273,10 +273,10 @@ describe("admin/useradmin/userdetails/userdetails", function () {
 
     util.waitUntil(
       function () {
-        return $(".flash.success").length == 1;
+        return $(".flash .success").length == 1;
       },
       function () {
-        assert.include($(".flash.success").text(), "Invitation sent");
+        assert.include($(".flash .success").text(), "Invitation sent");
         done();
       }
     );
@@ -311,10 +311,10 @@ describe("admin/useradmin/userdetails/userdetails", function () {
 
     util.waitUntil(
       function () {
-        return $(".flash.success").length == 1;
+        return $(".flash .success").length == 1;
       },
       function () {
-        assert.include($(".flash.success").text(), "Moved");
+        assert.include($(".flash .success").text(), "Moved");
         done();
       }
     );
@@ -334,10 +334,10 @@ describe("admin/useradmin/userdetails/userdetails", function () {
 
     util.waitUntil(
       function () {
-        return $(".flash.error").length == 1;
+        return $(".flash .error").length == 1;
       },
       function () {
-        assert.include($(".flash.error").text(), "Failed");
+        assert.include($(".flash .error").text(), "Failed");
         done();
       }
     );
@@ -364,10 +364,10 @@ describe("admin/useradmin/userdetails/userdetails", function () {
 
     util.waitUntil(
       function () {
-        return $(".flash.success").length == 1;
+        return $(".flash .success").length == 1;
       },
       function () {
-        assert.include($(".flash.success").text(), "Saved");
+        assert.include($(".flash .success").text(), "Saved");
         done();
       }
     );
@@ -387,11 +387,11 @@ describe("admin/useradmin/userdetails/userdetails", function () {
 
     util.waitUntil(
       function () {
-        return $(".flash.error").length == 1;
+        return $(".flash .error").length == 1;
       },
       function () {
         assert.include(
-          $(".flash.error").text(), "Failure. User already exists"
+          $(".flash .error").text(), "Failure. User already exists"
         );
 
         done();
@@ -445,8 +445,8 @@ describe("admin/useradmin/userdetails/userdetails", function () {
 
     var detailsEditor = TestUtils.findRenderedComponentWithType(
       component, DetailsEditorView
-    ); 
-    
+    );
+
     assert.equal(detailsEditor.props.userId, "1");
     assert.equal(detailsEditor.props.fstname, "fstname");
     assert.equal(detailsEditor.props.sndname, "sndname");
@@ -486,8 +486,8 @@ describe("admin/useradmin/userdetails/userdetails", function () {
 
     var buttonBar = TestUtils.findRenderedComponentWithType(
       component, ButtonBarView
-    ); 
-    
+    );
+
     assert.equal(buttonBar.props.companyid, "companyid");
     assert.equal(buttonBar.props.onDelete, component.onDelete);
     assert.equal(

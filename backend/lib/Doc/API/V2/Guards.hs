@@ -5,6 +5,7 @@ module Doc.API.V2.Guards (
 , guardThatDocumentCanBeStarted
 , guardThatObjectVersionMatchesIfProvided
 , guardThatConsentModulesAreOnSigningParties
+, guardThatAttachmentDetailsAreConsistent
 -- * User guards
 , guardThatUserIsAuthor
 , guardThatUserIsAuthorOrCompanyAdmin
@@ -31,6 +32,7 @@ import API.V2
 import API.V2.Parameters
 import DB
 import Doc.API.V2.DocumentAccess
+import Doc.API.V2.JSON.AttachmentDetails
 import Doc.API.V2.JSON.Fields
 import Doc.API.V2.JSON.SignatoryConsentQuestion
 import Doc.Conditions
@@ -101,6 +103,22 @@ guardThatObjectVersionMatchesIfProvided did = do
     Nothing -> return ()
     Just ov -> (dbQuery $ CheckDocumentObjectVersionIs did (fromIntegral ov))
       `catchDBExtraException` (\e@DocumentObjectVersionDoesNotMatch {} -> apiError $ documentObjectVersionMismatch e)
+
+guardThatAttachmentDetailsAreConsistent :: Kontrakcja m => [AttachmentDetails] -> m ()
+guardThatAttachmentDetailsAreConsistent ads = do
+    guardUnique $ map aadFileOrFileParam ads
+    guardUnique $ map aadName ads
+
+  where
+    guardUnique :: (Kontrakcja m, Eq a) => [a] -> m ()
+    guardUnique xs
+      | hasDuplicates xs = apiError $ requestParameterInvalid "attachments"
+          "Attachments must have a unique name, file ID and/or file parameter."
+      | otherwise = return ()
+
+    hasDuplicates :: Eq a => [a] -> Bool
+    hasDuplicates [] = False
+    hasDuplicates (x:xs) = x `elem` xs || hasDuplicates xs
 
 guardGetSignatoryFromIdForDocument :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m SignatoryLink
 guardGetSignatoryFromIdForDocument slid = do

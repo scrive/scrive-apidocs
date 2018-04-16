@@ -46,24 +46,24 @@ exports.Container = React.createClass({
     width: React.PropTypes.number,
     onShow: React.PropTypes.func,
     onHide: React.PropTypes.func,
-    onClose: React.PropTypes.func
+    onClose: React.PropTypes.func,
+    id: React.PropTypes.string
   },
+
   getInitialState: function () {
     return {
       height: 0
     };
   },
+
   componentWillMount: function () {
     this._onTransitionEndTimeout = null;
   },
+
   componentWillUnmount: function () {
     window.clearTimeout(this._onTransitionEndTimeout);
   },
-  componentWillReceiveProps: function (nextProps) {
-    if (nextProps.active) {
-      this.updateOverlayHeight(nextProps.active);
-    }
-  },
+
   componentDidUpdate: function (prevProps) {
     if (prevProps.active != this.props.active) {
       this._onTransitionEndTimeout = window.setTimeout(
@@ -71,9 +71,9 @@ exports.Container = React.createClass({
       );
     }
   },
+
   onTransitionEnd: function () {
     if (this.isMounted()) {
-      this.updateOverlayHeight(this.props.active);
 
       if (this.props.active) {
         if (_.isFunction(this.props.onShow)) {
@@ -86,23 +86,17 @@ exports.Container = React.createClass({
       }
     }
   },
-  updateOverlayHeight: function (active) {
-    if (active) {
-      this.setState({height: $(document).height()});
-    } else {
-      this.setState({height: 0});
-    }
-  },
+
   onInnerClick: function (event) {
     event.stopPropagation();
   },
+
   onClose: function (event) {
     if (this.props.onClose) {
-      return this.props.onClose(event);
-    } else {
-      return false;
+      this.props.onClose(event);
     }
   },
+
   render: function () {
     var overlayClassName = classNames("modal", this.props.className, {
       "active": this.props.active
@@ -114,21 +108,19 @@ exports.Container = React.createClass({
     var left = Math.floor(($(window).width() - width) / 2);
 
     var containerStyle = {
-      left: 0,
-      marginLeft: Math.max(left, minimalMargin),
-      marginTop: 50,
-      top: $(window).scrollTop(),
+      marginLeft: Math.max(left, minimalMargin) + $(window).scrollLeft(),
+      marginTop: 50 + $(window).scrollTop(),
+      marginBottom: 50,
       width: width
     };
 
-    if (this.state.height == 0) {
-      containerStyle.top = 0;
-    }
+    var minHeight = $(document).height();
 
     return (
       <Portal>
-        <div className={overlayClassName} style={{height: this.state.height}}
-             onClick={this.onClose}>
+        <div className={overlayClassName} style={{minHeight: minHeight}}
+             id={this.props.id} onClick={this.onClose}>
+
           <div className="modal-container" style={containerStyle}>
             <div onClick={this.onInnerClick}>
               {this.props.children}

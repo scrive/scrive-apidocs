@@ -1,18 +1,19 @@
 var Backbone = require("backbone");
-var DesignAuthorAttachment = require("./designviewattachment");
+var DesignViewAttachment = require("./designviewattachment");
 var _ = require("underscore");
 /* Model representing list of attachments created during design - not send to server yet */
 
   module.exports = Backbone.Model.extend({
     defaults: {
-        attachments: []
+      attachments: []
     },
 
     initialize: function (args) {
       var self = this;
       var attachments = new Array();
+
       _.each(args.document.authorattachments(), function (attachment) {
-          var newAttachment = new DesignAuthorAttachment({
+          var newAttachment = new DesignViewAttachment({
               serverFileId: attachment.fileid(),
               name: attachment.name(),
               required: attachment.isRequired(),
@@ -21,8 +22,12 @@ var _ = require("underscore");
           });
           self.listenTo(newAttachment, "change", function () { self.trigger("change"); });
           attachments.push(newAttachment);
-        });
-      this.set({"attachments": attachments});
+      });
+
+      this.set({
+        attachments: attachments,
+        document: args.document
+      });
     },
 
     attachments: function () {
@@ -50,5 +55,17 @@ var _ = require("underscore");
 
     isEmpty: function () {
       return this.attachments().length == 0;
+    },
+
+    hasErrorMessages: function () {
+      return _.any(this.attachments(), function (attachment) {
+        return attachment.hasErrorMessage();
+      });
+    },
+
+    clearErrorMessages: function () {
+      return _.each(this.attachments(), function (attachment) {
+        return attachment.clearErrorMessage();
+      });
     }
   });

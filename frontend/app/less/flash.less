@@ -1,13 +1,12 @@
 .flash {
   background: transparent;
+  top: 0;
   left: 0;
   padding: 4px 0;
   position: fixed;
   width: 100%;
   z-index: 100001;
   word-break: break-all;
-
-  transition: all .25s ease-in-out;
 
   .flash-content-wrapper {
     border: 6px solid rgba(255, 255, 255, 0.05);
@@ -16,6 +15,8 @@
     overflow: hidden;
     position: relative;
     width: 1018px;
+
+    transition: all .25s ease-in-out;
 
     @media not all and (min-width: 1030px) {
       width: calc(~"100% - 12px");

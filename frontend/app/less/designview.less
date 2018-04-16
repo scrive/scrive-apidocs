@@ -1,6 +1,6 @@
 @import 'branding/elements';
 @import 'branding/variables.less';
-
+@import 'runtime/servicebranding/servicebrandingdefaultvariables.less';
 
 // Stuff specyfic to design view
 // Durring backbone refactoring we changed structure and we want to get rid of bad css stuff also
@@ -63,22 +63,76 @@ input.daystosign {
 
 .selectAuthorAttachmentPopupContent {
   margin: auto;
-  width: 610px;
-
-  .name-input {
-    width: 300px;
-  }
+  width: 630px;
 
   .attachmentsList {
-    border-spacing: 0px 10px;
-    border-collapse: separate;
     padding : 8px;
-    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    thead, tbody {
+      display: inline-flex;
+      flex-direction: column;
+
+      tr {
+        display: inline-flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 2px;
+        margin: 3px;
+
+        &.redborder {
+          margin: 2px;
+        }
+
+        td {
+          display: inline-block;
+          margin: 0 2px;
+
+          &.attachment-name {
+            width: 210px;
+          }
+
+          &.attachment-shared {
+            width: 25px;
+          }
+
+          &.attachment-type {
+            width: 160px;
+          }
+
+          &.attachment-merged {
+            width: 140px;
+          }
+
+          &.attachment-view {
+            width: 30px;
+          }
+
+          &.attachment-remove {
+            width: 15px;
+          }
+
+          &.attachment-error {
+            color: @negativecolor;
+            width: 580px;
+            text-align: left;
+          }
+        }
+      }
+    }
+
+    tbody tr td {
+      text-align: center;
+    }
 
     .view-link {
       background: url(~"@{img-base-url}/sprite-grey-eye.png") no-repeat scroll 0 0 transparent;
       cursor: pointer;
-      display: block;
+      display: inline-block;
       height: 14px;
       width: 25px;
 
@@ -90,7 +144,7 @@ input.daystosign {
     .remove-link {
       background: url(~"@{img-base-url}/sprite-grey-X.png") no-repeat scroll 0 0 transparent;
       cursor: pointer;
-      display: block;
+      display: inline-block;
       height: 12px;
       width: 12px;
 

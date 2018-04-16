@@ -252,7 +252,6 @@ javascriptLocalisation =
                 , selectFile: "$_updateAttachmentsDialogUpLoadChooseFile()$"
                 , invalidAttachments : "$_invalidAttachments()$"
                 , tooLargeAttachment : "$_tooLargeAttachment()$"
-                , tooLargeAttachments : "$_tooLargeAttachments()$"
                 , required : "$_authorAttachmentRequired()$"
                 , optional : "$_authorAttachmentOptional()$"
                 , nameOfAttachment : "$_authorAttachmentName()$"
@@ -262,6 +261,7 @@ javascriptLocalisation =
                 , mergedQuestion : "$_authorAttachmentMergedQuestion()$"
                 , merged : "$_authorAttachmentMerged()$"
                 , notMerged : "$_authorAttachmentNotMerged()$"
+                , uploadingCounter: "$_authorAttachmentsUploadingCounter()$"
             }
           , signatoryAttachments : {
                 addAttachment:      "$_pageDocumentForAuthorHelpersLocalDialogsAddAttachment()$"

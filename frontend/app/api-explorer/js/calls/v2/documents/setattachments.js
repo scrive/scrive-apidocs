@@ -21,8 +21,17 @@ new APICallV2({
             optional: false,
             name: "Attachments",
             sendAsParam: true,
-            description: "List of attachments. Replaces any existing attachments.",
+            description: "List of attachments. Replaces any existing attachments (or adds some if incremental is set to true).",
             defaultValue: "[]"
+          }),
+          new APICallParam({
+            type: "bool",
+            argName: "incremental",
+            optional: true,
+            defaultValue: false,
+            name: "Incremental mode",
+            sendAsParam: true,
+            description: "Changes the behaviour of the API so that it adds or edits given attachments preserving already set attachments."
           }),
           new APICallParam({
             type: "file",

@@ -8,14 +8,16 @@ var Backbone = require("backbone");
       name: "",
       originaName: "",
       required: false,
-      addToSealedFile: true,
+      addToSealedFile: false,
       serverFileId: undefined,
       fileUpload: undefined,
       documentid: undefined
     },
+
     initialize: function (args) {
       this.set({originalName: args.name});
     },
+
     name: function () {
       return this.get("name");
     },
@@ -88,5 +90,28 @@ var Backbone = require("backbone");
 
     makeOptional: function () {
       this.set("required", false);
+    },
+
+    setServerFileId: function (fid) {
+      this.set({
+        serverFileId: fid,
+        fileUpload: undefined
+      });
+    },
+
+    setErrorMessage: function (err) {
+      this.set({errorMessage: err});
+    },
+
+    clearErrorMessage: function () {
+      this.unset("errorMessage");
+    },
+
+    errorMessage: function (err) {
+      return this.get("errorMessage");
+    },
+
+    hasErrorMessage: function () {
+      return this.errorMessage() != undefined;
     }
   });

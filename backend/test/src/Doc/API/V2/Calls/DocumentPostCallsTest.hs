@@ -39,6 +39,7 @@ apiV2DocumentPostCallsTests env = testGroup "APIv2DocumentPostCalls"
   , testThat "API v2 Forward"                               env testDocApiV2Forward
   , testThat "API v2 Set file"                              env testDocApiV2SetFile
   , testThat "API v2 Set attachments"                       env testDocApiV2SetAttachments
+  , testThat "API v2 Set attachments with incremental=true" env testDocApiV2SetAttachmentsIncrementally
   , testThat "API v2 Set auto-reminder"                     env testDocApiV2SetAutoReminder
   , testThat "API v2 Remove page"                           env testDocApiV2RemovePages
   , testThat "API v2 Clone"                                 env testDocApiV2Clone
@@ -248,6 +249,70 @@ testDocApiV2SetAttachments = do
     mdnoa <- mockDocTestRequestHelper ctx
       POST [("attachments", inText "[]")] (docApiV2SetAttachments did) 200
     assertEqual "Number of 'author_attachments' should match those set" 0 (getMockDocAuthorAttachmentLength mdnoa)
+
+testDocApiV2SetAttachmentsIncrementally :: TestEnv ()
+testDocApiV2SetAttachmentsIncrementally = do
+  user <- addNewRandomUser
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  did <- getMockDocId <$> testDocApiV2New' ctx
+
+  _ <- mockDocTestRequestHelper ctx
+    POST [
+      ("attachments", inText "[{\"name\" : \"A1\", \"required\" : false, \"add_to_sealed_file\" : true, \"file_param\" : \"attachment_0\"}]")
+    , ("attachment_0", inFile $ inTestDir "pdfs/simple-rotate-90.pdf")
+    ]
+    (docApiV2SetAttachments did) 200
+
+  -- It adds a new attachment without touching the old one.
+  do
+    mda <- mockDocTestRequestHelper ctx
+      POST [
+        ("attachments", inText "[{\"name\" : \"A2\", \"required\" : true, \"add_to_sealed_file\" : false, \"file_param\" : \"other_attachment\"}]")
+      , ("other_attachment", inFile $ inTestDir "pdfs/simple-rotate-180.pdf")
+      , ("incremental", inText "true")
+      ]
+      (docApiV2SetAttachments did) 200
+
+    assertEqual "Number of 'author_attachments' should match those set" 2 (getMockDocAuthorAttachmentLength mda)
+
+    assertEqual "Attachment 'A1' should be named as such" "A1" (getMockDocAuthorAttachmentName 1 mda)
+    assertEqual "Attachment 'A1' should not be required" False (getMockDocAuthorAttachmentRequired 1 mda)
+    assertEqual "Attachment 'A1' should be added to sealed file" True (getMockAuthorAttachmentAddedToSealedFile 1 mda)
+    assertBool "Attachment 'A1' should have a file set" (getMockDocAuthorAttachmentHasFile 1 mda)
+
+    assertEqual "Attachment 'A2' should be named as such" "A2" (getMockDocAuthorAttachmentName 2 mda)
+    assertEqual "Attachment 'A2' should be required" True (getMockDocAuthorAttachmentRequired 2 mda)
+    assertEqual "Attachment 'A2' should not be added to sealed file" False (getMockAuthorAttachmentAddedToSealedFile 2 mda)
+
+    assertBool "Attachment 'A2' should have a file set" (getMockDocAuthorAttachmentHasFile 2 mda)
+
+  -- It returns an error if two attachments have the same name.
+  _ <- testRequestHelper ctx
+    POST [
+      ("attachments", inText "[{\"name\" : \"A2\", \"required\" : true, \"add_to_sealed_file\" : false, \"file_param\" : \"other_attachment\"}, {\"name\" : \"A2\", \"required\" : true, \"add_to_sealed_file\" : false, \"file_param\" : \"yet_another_attachment\"}]")
+    , ("other_attachment", inFile $ inTestDir "pdfs/simple-rotate-180.pdf")
+    , ("yet_another_attachment", inFile $ inTestDir "pdfs/50page.pdf")
+    , ("incremental", inText "true")
+    ]
+    (docApiV2SetAttachments did) 400
+
+  -- It overwrites the attachment with the same name.
+  do
+    mda <- mockDocTestRequestHelper ctx
+      POST [
+        ("attachments", inText "[{\"name\" : \"A2\", \"required\" : false, \"add_to_sealed_file\" : true, \"file_param\" : \"other_attachment\"}]")
+      , ("other_attachment", inFile $ inTestDir "pdfs/50page.pdf")
+      , ("incremental", inText "true")
+      ]
+      (docApiV2SetAttachments did) 200
+
+    assertEqual "Attachment 'A2' should be named as such" "A2" (getMockDocAuthorAttachmentName 2 mda)
+    assertEqual "Attachment 'A2' should not be required" False (getMockDocAuthorAttachmentRequired 2 mda)
+    assertEqual "Attachment 'A2' should be added to sealed file" True (getMockAuthorAttachmentAddedToSealedFile 2 mda)
+
+    assertBool "Attachment 'A2' should have a file set" (getMockDocAuthorAttachmentHasFile 2 mda)
+
+  return ()
 
 testDocApiV2SetAutoReminder :: TestEnv ()
 testDocApiV2SetAutoReminder = do

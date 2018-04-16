@@ -363,16 +363,21 @@ docApiV2SetAttachments did = logDocument did . api $ do
     guardDocumentStatus Preparation =<< theDocument
     -- Parameters
     attachmentDetails <- apiV2ParameterObligatory (ApiV2ParameterJSON "attachments" $ arrayOf unjsonAttachmentDetails)
+    guardThatAttachmentDetailsAreConsistent attachmentDetails
+    incremental <- apiV2ParameterDefault False (ApiV2ParameterBool "incremental")
 
-    -- We fetch a function for checking if attachment was part of document before call. This has to be here - since next step is purging all attachmnets.
-    fileWasAlreadAnAttachmnet <- theDocument >>= (\d -> return $ \fid -> fid `elem` (authorattachmentfileid <$> documentauthorattachments d))
+    -- We fetch a function for checking if attachment was part of document before call. This has to be here - since next step is purging all attachments.
+    fileWasAlreadyAnAttachment <- theDocument >>= (\d -> return $ \fid -> fid `elem` (authorattachmentfileid <$> documentauthorattachments d))
 
-    (documentauthorattachments <$> theDocument >>=) $ mapM_ $ \att -> dbUpdate $ RemoveDocumentAttachments (authorattachmentfileid att) actor
+    let names = map aadName attachmentDetails
+    (documentauthorattachments <$> theDocument >>=) $ mapM_ $ \att ->
+      unless (incremental && T.pack (authorattachmentname att) `notElem` names) $
+        void $ dbUpdate $ RemoveDocumentAttachments (authorattachmentfileid att) actor
 
     newFileContentsWithDetails' <- forM attachmentDetails $ \ad ->  case (aadFileOrFileParam ad) of
       Left fid -> do
         attachmentFromAttachmentArchive <- (not null) <$> dbQuery (attachmentsQueryFor user fid)
-        when (not (fileWasAlreadAnAttachmnet fid || attachmentFromAttachmentArchive)) $
+        when (not (fileWasAlreadyAnAttachment fid || attachmentFromAttachmentArchive)) $
             apiError $ resourceNotFound $ "File id " <+> (T.pack . show $ fid)
               <+> " can't be used. It may not exist or you don't have permission to use it."
         _ <- dbUpdate $ AddDocumentAttachment (aadName ad) (aadRequired ad) (aadAddToSealedFile ad) fid actor
@@ -392,7 +397,6 @@ docApiV2SetAttachments did = logDocument did . api $ do
                                                   ]
                                                   [AttachmentFilterByFileID fid]
                                                   []
-
 
 docApiV2SetAutoReminder :: Kontrakcja m => DocumentID -> m Response
 docApiV2SetAutoReminder did = logDocument did . api $ do

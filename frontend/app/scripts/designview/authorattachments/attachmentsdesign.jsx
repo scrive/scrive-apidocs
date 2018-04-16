@@ -10,26 +10,54 @@ var InfoTextInput = require("../../common/infotextinput");
 var Track = require("../../common/track");
 var $ = require("jquery");
 var _ = require("underscore");
+var classNames = require("classnames");
 
   module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
+
     getBackboneModels: function () {
       return [this.props.model];
     },
+
     getInitialState: function () {
       return {showAttachmentsList: false};
     },
+
     isShowingAttachmentsList: function () {
       return this.state.showAttachmentsList;
     },
+
     showAttachmentsList: function () {
        this.props.onStartShowingList();
        this.setState({showAttachmentsList: true});
     },
+
     stopShowingAttachmentList: function () {
        this.props.onStopShowingList();
        this.setState({showAttachmentsList: false});
     },
+
+    onUploadComplete: function (fileinput) {
+      var self = this;
+
+      _.each(fileinput[0].files, function (file) {
+        var originalName = file.name;
+        Track.track("Upload attachment", {
+          "File Title as supplied by browser": originalName
+        });
+
+        var nameParts = originalName.split(".");
+        nameParts.pop(); // drop the extension
+        var name = nameParts.join(".");
+
+        var newAttachment = new DesignViewAttachment({
+          name: name,
+          fileUpload: file
+        });
+        self.props.model.addAttachment(newAttachment);
+      });
+    },
+
     render: function () {
       var self = this;
       var model = this.props.model;
@@ -53,16 +81,8 @@ var _ = require("underscore");
                     text={localization.authorattachments.selectFile}
                     maxlength={2}
                     style={{float: "right"}}
-                    onUploadComplete={function (input, title, multifile) {
-                      Track.track("Upload attachment", {"File Title as supplied by browser": title});
-                      var nameParts = title.split("\\").reverse()[0].split(".");
-                      nameParts.pop(); // drop the extension
-                      var newAttachment = new DesignViewAttachment({
-                        name: nameParts.join("."),
-                        fileUpload: $(input)
-                      });
-                      self.props.model.addAttachment(newAttachment);
-                    }}
+                    multiple={true}
+                    onUploadComplete={self.onUploadComplete}
                   />
                 </div>
                 <div style={{width: "10%", display: "inline-block"}}/>
@@ -82,37 +102,39 @@ var _ = require("underscore");
               (<table className="attachmentsList">
                 <thead>
                   <tr>
-                    <td style={{width: "210px"}}>{localization.authorattachments.nameOfAttachment}</td>
-                    <td style={{width: "25px"}}></td>
-                    <td style={{width: "142px"}}>{localization.authorattachments.typeOfAttachment}</td>
-                    <td style={{width: "142px"}}>{localization.authorattachments.mergedQuestion}</td>
-                    <td style={{width: "28px"}}></td>
-                    <td style={{width: "12px"}}></td>
+                    <td className="attachment-name">{localization.authorattachments.nameOfAttachment}</td>
+                    <td className="attachment-shared"></td>
+                    <td className="attachment-type">{localization.authorattachments.typeOfAttachment}</td>
+                    <td className="attachment-merged">{localization.authorattachments.mergedQuestion}</td>
+                    <td className="attachment-view"></td>
+                    <td className="attachment-remove"></td>
                   </tr>
                 </thead>
                 <tbody>
                   {_.map(self.props.model.attachments(), function (a, i) {
+                    var trClass = classNames({
+                      redborder: a.hasErrorMessage()
+                    });
+
                     return (
-                      <tr key={i}>
+                      <tr key={i} className={trClass}>
                         <td>
                           <InfoTextInput
                           value={a.name()}
-                          className="name-input"
-                          style={{width: "210px"}}
+                          className="atttachment-name"
                           onChange={function (v) {
                             a.setName(v);
                           }}
                           />
                         </td>
-                        <td>
+                        <td className="attachment-shared">
                           <div
                             className={a.isRequired() ? "required-author-attachment-icon"
                                                       : "optional-author-attachment-icon"}
                           />
                         </td>
-                        <td>
+                        <td className="attachment-type">
                           <Select
-                            width={140}
                             options={[
                               {
                                 name: localization.authorattachments.required,
@@ -127,7 +149,7 @@ var _ = require("underscore");
                             ]}
                           />
                         </td>
-                        <td>
+                        <td className="attachment-merged">
                           <Select
                             width={140}
                             options={[
@@ -144,7 +166,7 @@ var _ = require("underscore");
                             ]}
                           />
                         </td>
-                        <td>
+                        <td className="attachment-view">
                           {/* if */ (a.isServerFile()) &&
                             <a
                               className="view-link"
@@ -153,7 +175,7 @@ var _ = require("underscore");
                             />
                           }
                         </td>
-                        <td>
+                        <td className="attachment-remove">
                           <a
                             className="remove-link"
                             onClick={function () {
@@ -161,6 +183,11 @@ var _ = require("underscore");
                             }}
                           />
                         </td>
+                        {/* if */ a.hasErrorMessage() &&
+                          <td className="attachment-error">
+                            {a.errorMessage()}
+                          </td>
+                        }
                       </tr>
                     );
                   })}

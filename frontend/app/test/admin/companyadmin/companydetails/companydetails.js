@@ -222,10 +222,10 @@ describe("admin/companyadmin/companydetails/companydetails", function () {
 
     util.waitUntil(
       function () {
-        return $(".flash.success").length == 1;
+        return $(".flash .success").length == 1;
       },
       function () {
-        assert.include($(".flash.success").text(), "Merged");
+        assert.include($(".flash .success").text(), "Merged");
         assert.isTrue(window.location.assign.calledWith(
           "/adminonly/companyadmin/2"
         ));
@@ -241,10 +241,10 @@ describe("admin/companyadmin/companydetails/companydetails", function () {
 
     util.waitUntil(
       function () {
-        return $(".flash.error").length == 1;
+        return $(".flash .error").length == 1;
       },
       function () {
-        assert.include($(".flash.error").text(), "Failed");
+        assert.include($(".flash .error").text(), "Failed");
         done();
       }
     );
@@ -271,10 +271,10 @@ describe("admin/companyadmin/companydetails/companydetails", function () {
 
     util.waitUntil(
       function () {
-        return $(".flash.success").length == 1;
+        return $(".flash .success").length == 1;
       },
       function () {
-        assert.include($(".flash.success").text(), "Saved");
+        assert.include($(".flash .success").text(), "Saved");
         done();
       }
     );

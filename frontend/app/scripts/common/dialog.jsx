@@ -8,39 +8,62 @@ var DIALOG_WIDTH = 650;
 var Dialog = React.createClass({
   propTypes: {
     active: React.PropTypes.bool.isRequired,
-    onHide: React.PropTypes.func
+    onHide: React.PropTypes.func,
+    id: React.PropTypes.string
   },
+
+  getInitialState: function () {
+    var id = "dialog-" + Math.floor(Math.random()*65536).toString();
+    return {
+      id: this.props.id ? this.props.id : id
+    };
+  },
+
   componentWillMount: function () {
     this._onWindowResizeTimeout = null;
   },
+
   componentDidMount: function () {
     window.addEventListener("resize", this.onWindowResize, false);
+    this.fixPosition()
   },
+
   componentWillUnmount: function () {
     window.removeEventListener("resize", this.onWindowResize, false);
 
     this.clearWindowResizeTimeout();
   },
+
   componentWillReceiveProps: function (nextProps) {
     if (nextProps.active) {
       this.fixPosition()
     }
   },
+
   clearWindowResizeTimeout: function () {
     if (this._onWindowResizeTimeout) {
       window.clearTimeout(this._onWindowResizeTimeout);
       this._onWindowResizeTimeout = null;
     }
   },
-  fixPosition: function () {
-    var $container = $(".modal-container", this.refs.modal.getDOMNode());
-    $container.css({
-      left: $(window).scrollLeft(),
-      marginLeft: ($(window).width() - DIALOG_WIDTH) / 2,
-      marginTop: ($(window).height() - 200) / 2,
-      top: $(window).scrollTop()
-    });
+
+  // this.getDOMNode(), React.findDOMNode(this) and ReactDOM.findDOMNode(this)
+  // all return null because of Portal.
+  getActualNode: function () {
+    return document.querySelector("#" + this.state.id);
   },
+
+  fixPosition: function () {
+    var node = this.getActualNode();
+    if(node) {
+      var $container = $(".modal-container", node);
+      $container.css({
+        marginLeft: ($(window).width() - DIALOG_WIDTH) / 2 + $(window).scrollLeft(),
+        marginTop: ($(window).height() - 200) / 2 + $(window).scrollTop(),
+      });
+    }
+  },
+
   onWindowResize: function () {
     if (!this._onWindowResizeTimeout) {
       this._onWindowResizeTimeout = window.setTimeout(
@@ -48,10 +71,12 @@ var Dialog = React.createClass({
       );
     }
   },
+
   onWindowResizeTimeout: function () {
     this.clearWindowResizeTimeout();
     this.fixPosition();
   },
+
   render: function () {
     return (
       <Modal.Container
@@ -60,6 +85,7 @@ var Dialog = React.createClass({
         className="screenblockingdialog"
         width={DIALOG_WIDTH}
         onHide={this.props.onHide}
+        id={this.state.id}
       >
         <Modal.Content ref="modalContent">
           <center>

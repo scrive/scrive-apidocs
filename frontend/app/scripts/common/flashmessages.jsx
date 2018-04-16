@@ -52,19 +52,17 @@ var FlashMessageView = React.createClass({
       type = "success";
     }
 
-    var className = classNames("flash", type);
+    var className = classNames("flash-content-wrapper", type);
 
     return (
       <div className={className}>
-        <div className="flash-content-wrapper">
-          <div className="flash-content">
-            <div ref="body" className="flash-body" />
-            <div
-              className="flash-close"
-              onClick={this.onCloseClick}
-            >
-              &times;
-            </div>
+        <div className="flash-content">
+          <div ref="body" className="flash-body" />
+          <div
+            className="flash-close"
+            onClick={this.onCloseClick}
+          >
+            &times;
           </div>
         </div>
       </div>

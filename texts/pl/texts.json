@@ -885,7 +885,6 @@
 "_toFilter":"Do:",
 "_toStartDocSent":"Twój dokument został wysłany!",
 "_tooLargeAttachment":"Rozmiar pliku przekracza limit 10 MB. Spróbuj zmniejszyć rozmiar pliku.",
-"_tooLargeAttachments":"Rozmiar plików przekracza limit 10 MB. Spróbuj wysyłać jeden plik na raz.",
 "_tooltipcancelled":"Wycofano",
 "_tooltipdelivered":"Dostarczono",
 "_tooltipdeliveryproblem":"Problem z dostarczeniem",

@@ -455,6 +455,38 @@ var Document = exports.Document = Backbone.Model.extend({
               ajax: true
           });
     },
+
+    setAttachmentsIncrementally: function() {
+      // Not using Submit as there is no way to create an <input type="file">
+      // with a custom FileList even if we already have the object of type File.
+
+      var data = new FormData();
+      data.append("xtoken", Cookies.getMulti("xtoken").join(";"));
+      data.append("incremental", true);
+
+      var xhr = new XMLHttpRequest();
+      var url = "/api/frontend/documents/" + this.documentid() + "/setattachments";
+      xhr.open("POST", url, true);
+
+      // Mimics the interface of Submit
+      return {
+        add: function(name, value) {
+          return data.append(name, value);
+        },
+
+        sendAjax: function(onSuccess, onError) {
+          xhr.onload = function(event) {
+            if(xhr.status == 200) {
+              onSuccess(xhr);
+            } else {
+              onError(xhr);
+            }
+          };
+          xhr.send(data);
+        }
+      };
+    },
+
     setHighlight : function(pageno, imageData, callback) {
        var doc = this;
        var sig = doc.currentSignatory();
