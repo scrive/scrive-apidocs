@@ -2,22 +2,38 @@ import React from "react";
 import Button from "../../common/button";
 import Modal from "../../common/modal";
 import classNames from "classnames";
+import $ from "jquery";
 
 module.exports = React.createClass({
   propTypes: {
-    onClose: React.PropTypes.func,
-    onConfirmation: React.PropTypes.func,
-    model: React.PropTypes.object
+    onClose: React.PropTypes.func.isRequired,
+    onConfirmation: React.PropTypes.func.isRequired,
+    model: React.PropTypes.object.isRequired,
+    active: React.PropTypes.bool.isRequired
   },
 
   getInitialState: function () {
     return {
-      correctTextEntered: false
+      textEntered: ""
     };
   },
 
+  componentWillReceiveProps: function (nextProps) {
+    if (!this.props.active && nextProps.active) {
+      this.setState({ textEntered: "" });
+    }
+  },
+
   onTextChange: function (event) {
-    console.log(event);
+    this.setState({ textEntered: event.target.value });
+  },
+
+  correctText: function () {
+    return this.props.model.email();
+  },
+
+  correctTextEntered: function () {
+    return this.state.textEntered == this.correctText();
   },
 
   onClose: function (event) {
@@ -29,7 +45,7 @@ module.exports = React.createClass({
   },
 
   onConfirmation: function (event) {
-    if (this.props.onConfirmation && this.state.correctTextEntered) {
+    if (this.props.onConfirmation && this.correctTextEntered()) {
       return this.props.onConfirmation(event);
     } else {
       return false;
@@ -38,13 +54,20 @@ module.exports = React.createClass({
 
   render: function () {
     var acceptClassName = classNames({
-      disabled: !this.state.correctTextEntered
+      inactive: !this.correctTextEntered()
     });
+
+    var messageTpl =
+          localization.account.accountDetails.userDeletionModalMessage;
+    var message = $("<span />").html(messageTpl);
+    $(".text", message).text(this.correctText())
+      .removeClass("text").addClass("user-deletion-modal-text");
 
     return (
       <Modal.Container
-        active={true}
+        active={this.props.active}
         onHide={this.onClose}
+        onClose={this.onClose}
       >
         <Modal.Header
           onClose={this.onClose}
@@ -53,8 +76,12 @@ module.exports = React.createClass({
         />
 
         <Modal.Content>
-          <p>TODO: Copy with warning and the text to type in the box.</p>
-          <input type="text" onChange={this.onTextChange} />
+          <p dangerouslySetInnerHTML={{__html: message.html()}}></p>
+          <input
+            type="text"
+            value={this.state.textEntered}
+            onChange={this.onTextChange}
+          />
         </Modal.Content>
 
         <Modal.Footer>
@@ -62,6 +89,7 @@ module.exports = React.createClass({
           <Modal.AcceptButton
             className={acceptClassName}
             onClick={this.onConfirmation}
+            text={localization.account.accountDetails.deleteUser}
           />
         </Modal.Footer>
       </Modal.Container>

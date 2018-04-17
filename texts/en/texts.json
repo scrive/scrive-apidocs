@@ -901,6 +901,8 @@
 "_updateAttachmentsDialogUpLoadChooseAttachment":"Select attachment",
 "_updateAttachmentsDialogUpLoadChooseFile":"Select PDF",
 "_usageStatsDate":"Date",
+"_userDeletionModalMessage":"In order to confirm that you wish to delete this account, please enter <span class='text'></span> into the input below.",
+"_userDeletionModalTitle":"Account deletion",
 "_verificationDescription":"By uploading a document here you can check the authenticity of the document to make sure it hasn’t been compromised.",
 "_verificationError":"Error",
 "_verificationErrorMessage":"An error occured while trying to verify the document's authenticity. Please try again.",

@@ -40,6 +40,10 @@ module.exports = React.createClass({
     this.setState({ showUserDeletionModal: false });
   },
 
+  deleteUser: function () {
+    console.log("TODO");
+  },
+
   render: function () {
     if (!this.state.model.ready()) {
       return (<div/>);
@@ -76,13 +80,12 @@ module.exports = React.createClass({
           </div>
         </div>
 
-        {/* if */ this.state.showUserDeletionModal &&
-          <UserDeletionModal
-            onClose={this.closeUserDeletionModal}
-            onConfirmation={this.deleteUser}
-            model={this.state.model}
-          />
-        }
+        <UserDeletionModal
+          onClose={this.closeUserDeletionModal}
+          onConfirmation={this.deleteUser}
+          model={this.state.model}
+          active={this.state.showUserDeletionModal}
+        />
       </div>
     );
   }

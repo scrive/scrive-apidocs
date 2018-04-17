@@ -1055,6 +1055,9 @@ javascriptLocalisation =
               , invalidPhone : "$_flashMessageInvalidPhoneFormat()$"
               , emailAlreadyInUse : "$_flashCantChangeEmail()$"
               , changeEmailMailSent : "$_flashMessageChangeEmailMailSent()$"
+              , userDeletionModalTitle : "$_userDeletionModalTitle()$"
+              , userDeletionModalMessage : "$_userDeletionModalMessage()$"
+              , deleteUser : "$_delete()$"
             }
           , apiSettings : {
                 name : "$_apiSettings()$"
