@@ -39,7 +39,8 @@ module.exports = function (grunt) {
       var child = spawnSync("ghc", ["--numeric-version"]);
       var ghcVer = child.output[1].toString().trim();
       child = spawnSync(
-          "ghc", ["-e", 'System.IO.print (Data.List.concat [System.Info.arch, "-",System.Info.os])']);
+          "ghc", ["-package", "Cabal", "-e",
+                  "System.IO.print (Distribution.Text.display Distribution.System.buildPlatform)"]);
       var archOs = child.output[1].toString().trim();
       child = spawnSync("cabal", ["--numeric-version"]);
       var cabalVerStr = child.output[1].toString();
