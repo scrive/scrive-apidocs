@@ -45,6 +45,7 @@ module.exports = React.createClass({
         canUseSMSInvitations: subscription.canUseSMSInvitations(),
         canUseSMSConfirmations: subscription.canUseSMSConfirmations(),
         canUseDKAuthenticationToView: subscription.canUseDKAuthenticationToView(),
+        canUseDKAuthenticationToSign: subscription.canUseDKAuthenticationToSign(),
         canUseNOAuthenticationToView: subscription.canUseNOAuthenticationToView(),
         canUseNOAuthenticationToSign: subscription.canUseNOAuthenticationToSign(),
         canUseSEAuthenticationToView: subscription.canUseSEAuthenticationToView(),
@@ -65,6 +66,7 @@ module.exports = React.createClass({
           canUseSMSInvitations : this.state.canUseSMSInvitations,
           canUseSMSConfirmations : this.state.canUseSMSConfirmations,
           canUseDKAuthenticationToView : this.state.canUseDKAuthenticationToView,
+          canUseDKAuthenticationToSign : this.state.canUseDKAuthenticationToSign,
           canUseNOAuthenticationToView : this.state.canUseNOAuthenticationToView,
           canUseNOAuthenticationToSign : this.state.canUseNOAuthenticationToSign,
           canUseSEAuthenticationToView : this.state.canUseSEAuthenticationToView,
@@ -82,6 +84,7 @@ module.exports = React.createClass({
       if (v == "free") {
         self.setState({
           canUseDKAuthenticationToView : false,
+          canUseDKAuthenticationToSign : false,
           canUseNOAuthenticationToView : false,
           canUseNOAuthenticationToSign : false,
           canUseSEAuthenticationToView : false,
@@ -90,6 +93,7 @@ module.exports = React.createClass({
       } else {
         self.setState({
           canUseDKAuthenticationToView : true,
+          canUseDKAuthenticationToSign : true,
           canUseNOAuthenticationToView : true,
           canUseNOAuthenticationToSign : true,
           canUseSEAuthenticationToView : true,
@@ -190,6 +194,7 @@ module.exports = React.createClass({
               {this.renderTRForOptionWithCheckbox("Can use SMS Pin authorization to sign","canUseSMSPinAuthenticationToSign")}
               {this.renderTROptionSeparator("eID to view and sign")}
               {this.renderTRForOptionWithCheckbox("Can use DK authorization to view","canUseDKAuthenticationToView")}
+              {this.renderTRForOptionWithCheckbox("Can use DK authorization to sign","canUseDKAuthenticationToSign")}
               {this.renderTRForOptionWithCheckbox("Can use NO authorization to view","canUseNOAuthenticationToView")}
               {this.renderTRForOptionWithCheckbox("Can use NO authorization to sign","canUseNOAuthenticationToSign")}
               {this.renderTRForOptionWithCheckbox("Can use SE authorization to view","canUseSEAuthenticationToView")}

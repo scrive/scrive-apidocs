@@ -81,7 +81,9 @@ csvColumnHeadings = [
   , "SMSes sent (physical)"
   , "Swedish BankID signatures"
   , "Swedish BankID authorization"
+  , "Norwegian BankID signatures"
   , "Norwegian BankID authorization"
+  , "Danish NemID signatures"
   , "Danish NemID authorization"
   , "Telia SMSes sent (physical)"
   , "Users at start of period"
@@ -181,9 +183,21 @@ invoicingQry fromDate toDate =
       ", (SELECT coalesce(sum(chi.quantity), 0)" <+>
           "FROM chargeable_items chi" <+>
           "WHERE chi.company_id = companies.id" <+>
+            "AND chi.type = " <?> CINOBankIDSignature <+>
+            "AND chi.time >= " <?> fromDate <+>
+            "AND chi.time < " <?> toDate <+> ") AS NorwegianBankIDSignatures" <+>
+      ", (SELECT coalesce(sum(chi.quantity), 0)" <+>
+          "FROM chargeable_items chi" <+>
+          "WHERE chi.company_id = companies.id" <+>
             "AND chi.type = " <?> CINOBankIDAuthentication <+>
             "AND chi.time >= " <?> fromDate <+>
             "AND chi.time < " <?> toDate <+> ") AS NorwegianBankIDAuthorization" <+>
+      ", (SELECT coalesce(sum(chi.quantity), 0)" <+>
+          "FROM chargeable_items chi" <+>
+          "WHERE chi.company_id = companies.id" <+>
+            "AND chi.type = " <?> CIDKNemIDSignature <+>
+            "AND chi.time >= " <?> fromDate <+>
+            "AND chi.time < " <?> toDate <+> ") AS DanishNemIDSignatures" <+>
       ", (SELECT coalesce(sum(chi.quantity), 0)" <+>
           "FROM chargeable_items chi" <+>
           "WHERE chi.company_id = companies.id" <+>
@@ -231,7 +245,9 @@ invoicingQry fromDate toDate =
     "OR report.SMSSent > 0" <+>
     "OR report.SwedishBankIDSignatures > 0" <+>
     "OR report.SwedishBankIDAuthorization > 0" <+>
+    "OR report.NorwegianBankIDSignatures > 0" <+>
     "OR report.NorwegianBankIDAuthorization > 0" <+>
+    "OR report.DanishNemIDSignatures > 0" <+>
     "OR report.DanishNemIDAuthorization > 0" <+>
     "OR report.UsersStart > 0" <+>
     "OR report.UsersEnd > 0" <+>

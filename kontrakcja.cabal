@@ -1274,6 +1274,7 @@ Test-suite kontrakcja-test
                  Mails.Tables
                  MailsTest
                  Monitor.APITest
+                 NetsXMLTest
                  OAuth
                  OAuth.Tables
                  PadApplication.APITest

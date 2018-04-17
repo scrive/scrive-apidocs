@@ -1,4 +1,8 @@
-module EID.Nets.Migrations where
+module EID.Nets.Migrations (
+    createNetsSignOrdersTable
+  , netsSignOrdersDropSSN
+  , netsSignOrdersAddProviderAndSSN
+  ) where
 
 import Database.PostgreSQL.PQTypes.Checks
 
@@ -45,4 +49,25 @@ netsSignOrdersDropSSN = Migration {
 , mgrAction = StandardMigration $
     runQuery_ $ sqlAlterTable (tblName tableNetsSignOrders)
       [ sqlDropColumn "ssn" ]
+}
+
+netsSignOrdersAddProviderAndSSN :: MonadDB m => Migration m
+netsSignOrdersAddProviderAndSSN = Migration {
+  mgrTableName = tblName tableNetsSignOrders
+, mgrFrom = 2
+, mgrAction = StandardMigration $ do
+    runQuery_ $ sqlAlterTable (tblName tableNetsSignOrders)
+      [ sqlAddColumn $ tblColumn { colName = "provider", colType = SmallIntT, colNullable = True }
+      , sqlAddColumn $ tblColumn { colName = "ssn", colType = TextT, colNullable = True }
+      ]
+    -- set the provider for current orders, which are all Norwegian
+    runSQL_ $ "UPDATE nets_sign_orders SET provider = 1"
+    runQuery_ $ sqlAlterTable (tblName tableNetsSignOrders)
+      [ sqlAlterColumn "provider" "SET NOT NULL"
+      , sqlAddCheck $ Check "check_nets_sign_orders_ssn_is_well_defined" $
+          -- Norwegian Nets eSigning does not need SSN,
+          -- but Danish Nets eSigning does.
+              "provider = 1 AND ssn IS NULL\
+          \ OR provider = 2 AND ssn IS NOT NULL"
+      ]
 }

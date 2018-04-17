@@ -80,6 +80,7 @@ subscriptionJSON company users startedLastMonth ff = runJSONGen $ do
   value "can_use_sms_invitations" $ ffCanUseSMSInvitations ff
   value "can_use_sms_confirmations" $ ffCanUseSMSConfirmations ff
   value "can_use_dk_authentication_to_view" $ ffCanUseDKAuthenticationToView ff
+  value "can_use_dk_authentication_to_sign" $ ffCanUseDKAuthenticationToSign ff
   value "can_use_no_authentication_to_view" $ ffCanUseNOAuthenticationToView ff
   value "can_use_no_authentication_to_sign" $ ffCanUseNOAuthenticationToSign ff
   value "can_use_se_authentication_to_view" $ ffCanUseSEAuthenticationToView ff

@@ -12,9 +12,12 @@ import Happstack.Server hiding (Expired, dir)
 import Happstack.StaticRouting
 import Log
 import Text.StringTemplates.Templates
+import Text.XML hiding (Document)
+import Text.XML.Cursor
 import qualified Data.Aeson as A
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.Lazy as BL
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Text.StringTemplates.Fields as F
@@ -29,6 +32,7 @@ import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.Model
 import Doc.SignatoryLinkID
+import EID.CGI.GRP.Control (guardThatPersonalNumberMatches)
 import EID.Nets.Call
 import EID.Nets.Config
 import EID.Nets.Data
@@ -49,6 +53,7 @@ import Routing
 import Session.Data
 import Session.Model
 import Templates
+import Text.XML.Parser
 import User.Lang
 import Util.Actor
 import Util.HasSomeUserInfo
@@ -300,7 +305,24 @@ handleSignRequest did slid = do
           -- Cancelling of Order may help in some situations, but when it fails, it's not a dealbreaker.
           [ Handler $ \(NetsSignParsingError _) -> return () ]
       _ -> return ()
-    let nso = NetsSignOrder nsoID slid (T.pack tbs) (sesID sess) (5 `minutesAfter` now) False
+    auth_to_sign <- signatorylinkauthenticationtosignmethod <$> fromJust . getSigLinkFor slid <$> theDocument
+    (provider, mSSN) <- case auth_to_sign of
+      NOBankIDAuthenticationToSign -> return (NetsSignNO, Nothing)
+      DKNemIDAuthenticationToSign  -> do
+        pn <- getField "personal_number" >>= \case
+          (Just pn) -> return pn
+          _ -> do
+            logInfo_ "No personal number"
+            respond404
+        guardThatPersonalNumberMatches slid pn =<< theDocument
+        return (NetsSignDK, Just . T.pack $ pn)
+      _ -> do
+        logAttention "NetsSign: unsupported auth to sign method" $ object [
+            identifier_ did
+          , identifier_ slid
+          ]
+        internalError
+    let nso = NetsSignOrder nsoID slid provider (T.pack tbs) (sesID sess) (5 `minutesAfter` now) False mSSN
     host_part <- T.pack <$> getHttpsHostpart
     insOrdRs <- netsCall conf (InsertOrderRequest nso conf host_part) xpInsertOrderResponse (show did)
     getSignProcRs <- netsCall conf (GetSigningProcessesRequest nso) xpGetSigningProcessesResponse (show did)
@@ -366,16 +388,35 @@ checkNetsSignStatus nets_conf did slid = do
                   return $ NetsSignStatusInProgress
                 Complete -> do
                   getSdoRs <- netsCall nets_conf (GetSDORequest nso) xpGetSDOResponse (show did)
-                  getSdoDetRs <- netsCall nets_conf (GetSDODetailsRequest $ gsdorsB64SDOBytes getSdoRs) xpGetSDODetailsResponse (show did)
-                  logInfo "NETS Sign succeeded!" $ logObject_ getOrdStRs
-                  dbUpdate $ ESign.MergeNetsNOBankIDSignature slid NetsNOBankIDSignature
-                    { netsnoSignatoryName = gsdodrsSignerCN getSdoDetRs
-                    , netsnoSignatoryPID = gsdodrsSignerPID getSdoDetRs
-                    , netsnoSignedText = nsoTextToBeSigned nso
-                    , netsnoB64SDO = gsdorsB64SDOBytes getSdoRs
-                    }
-                  dbUpdate $ ChargeCompanyForNOBankIDSignature (documentid doc)
-                  return $ NetsSignStatusSuccess
+                  case nsoProvider nso of
+                    NetsSignNO -> do
+                      getSdoDetRsNo <- netsCall nets_conf (GetSDODetailsRequest $ gsdorsB64SDOBytes getSdoRs) xpGetSDODetailsResponseNO (show did)
+                      logInfo "NETS NO Sign succeeded!" $ logObject_ getOrdStRs
+                      dbUpdate $ ESign.MergeNetsNOBankIDSignature slid NetsNOBankIDSignature
+                        { netsnoSignatoryName = gsdodrsnoSignerCN getSdoDetRsNo
+                        , netsnoSignatoryPID = gsdodrsnoSignerPID getSdoDetRsNo
+                        , netsnoSignedText = nsoTextToBeSigned nso
+                        , netsnoB64SDO = gsdorsB64SDOBytes getSdoRs
+                        }
+                      dbUpdate $ ChargeCompanyForNOBankIDSignature (documentid doc)
+                      return $ NetsSignStatusSuccess
+                    NetsSignDK -> do
+                      getSignerSSN (gsdorsB64SDOBytes getSdoRs) >>= \case
+                        Nothing -> do
+                          logAttention_ "Required Danish NemID attributes were not found."
+                          return $ NetsSignStatusFailure NetsFaultAPIError
+                        Just signer_ssn -> do
+                          getSdoDetRsDk <- netsCall nets_conf (GetSDODetailsRequest $ gsdorsB64SDOBytes getSdoRs) xpGetSDODetailsResponseDK (show did)
+                          logInfo "NETS DK Sign succeeded!" $ logObject_ getOrdStRs
+                          dbUpdate $ ESign.MergeNetsDKNemIDSignature slid NetsDKNemIDSignature
+                            { netsdkSignatoryName = gsdodrsdkSignerCN getSdoDetRsDk
+                            , netsdkSignedText = nsoTextToBeSigned nso
+                            , netsdkB64SDO = gsdorsB64SDOBytes getSdoRs
+                            , netsdkSignatorySSN = signer_ssn
+                            }
+                          dbUpdate $ ChargeCompanyForDKNemIDSignature (documentid doc)
+                          return $ NetsSignStatusSuccess
+
   where
     netsStatusFailure nets_fault = do
       logInfo "Document Nets signing failed" $ object [
@@ -383,6 +424,12 @@ checkNetsSignStatus nets_conf did slid = do
         , "nets_fault" .= netsFaultText nets_fault
         ]
       return $ NetsSignStatusFailure nets_fault
+    getSignerSSN bytes64 = do
+      let xml = parseLBS_ def . BL.fromStrict . B64.decodeLenient . T.encodeUtf8 $ bytes64
+      case runParser xpGetSDOAttributes $ fromDocument xml of
+        Nothing -> return Nothing
+        Just attrs -> do
+          return $ lookup "cpr" attrs
 
 handleSignError  :: Kontrakcja m => m Response
 handleSignError = simpleHtmlResponse =<< renderTemplate_ "netsSignError"

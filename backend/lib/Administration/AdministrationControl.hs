@@ -644,6 +644,7 @@ handleCompanyUpdateSubscription cid = onlySalesOrAdmin $ do
   canUseSMSConfirmations  <- fmap ((==) "true") $ guardJustM $ getField "can_use_sms_confirmations"
 
   canUseDKAuthenticationToView  <- fmap ((==) "true") $ guardJustM $ getField "can_use_dk_authentication_to_view"
+  canUseDKAuthenticationToSign  <- fmap ((==) "true") $ guardJustM $ getField "can_use_dk_authentication_to_sign"
   canUseNOAuthenticationToView  <- fmap ((==) "true") $ guardJustM $ getField "can_use_no_authentication_to_view"
   canUseNOAuthenticationToSign  <- fmap ((==) "true") $ guardJustM $ getField "can_use_no_authentication_to_sign"
   canUseSEAuthenticationToView  <- fmap ((==) "true") $ guardJustM $ getField "can_use_se_authentication_to_view"
@@ -660,6 +661,7 @@ handleCompanyUpdateSubscription cid = onlySalesOrAdmin $ do
     , ffCanUseSMSInvitations = canUseSMSInvitations
     , ffCanUseSMSConfirmations = canUseSMSConfirmations
     , ffCanUseDKAuthenticationToView = canUseDKAuthenticationToView
+    , ffCanUseDKAuthenticationToSign = canUseDKAuthenticationToSign
     , ffCanUseNOAuthenticationToView = canUseNOAuthenticationToView
     , ffCanUseNOAuthenticationToSign = canUseNOAuthenticationToSign
     , ffCanUseSEAuthenticationToView = canUseSEAuthenticationToView

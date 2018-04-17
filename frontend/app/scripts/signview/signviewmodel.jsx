@@ -202,11 +202,11 @@ var Track = require("../common/track");
       var signatory = this.document().currentSignatory();
       var field = signatory.personalnumberField();
       if (field != undefined && (!field.hasPlacements()) && field.obligatory()) {
-        if (signatory.noBankIDAuthenticationToView() || signatory.noBankIDAuthenticationToSign()) {
+        if (signatory.noBankIDAuthenticationToView()) {
           return !new SSNForNOBankIDValidation().validateData(field.value());
         } else if (signatory.seBankIDAuthenticationToView() || signatory.seBankIDAuthenticationToSign()) {
           return !new SSNForSEBankIDValidation().validateData(field.value());
-        } else if (signatory.dkNemIDAuthenticationToView()) {
+        } else if (signatory.dkNemIDAuthenticationToView() || signatory.dkNemIDAuthenticationToSign()) {
           return !new SSNForDKNemIDValidation().validateData(field.value());
         } else {
           return !new NoValidation().validateData(field.value());
@@ -220,7 +220,7 @@ var Track = require("../common/track");
       var document = this.document();
       var signatory = document.currentSignatory();
 
-      return this.askForSSN() && !signatory.seBankIDAuthenticationToSign() && !signatory.noBankIDAuthenticationToSign();
+      return this.askForSSN() && !signatory.seBankIDAuthenticationToSign() && !signatory.dkNemIDAuthenticationToSign();
     },
 
     askForPhone: function () {

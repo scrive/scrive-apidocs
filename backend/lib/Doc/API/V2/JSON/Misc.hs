@@ -77,6 +77,7 @@ unjsonAuthenticationToSignMethod = unjsonEnumBy "AuthenticationToSignMethod" [
       (StandardAuthenticationToSign, "standard")
     , (SEBankIDAuthenticationToSign, "se_bankid")
     , (NOBankIDAuthenticationToSign, "no_bankid")
+    , (DKNemIDAuthenticationToSign, "dk_nemid")
     , (SMSPinAuthenticationToSign, "sms_pin")
     ]
 

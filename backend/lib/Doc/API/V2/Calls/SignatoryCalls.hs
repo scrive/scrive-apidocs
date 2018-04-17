@@ -139,6 +139,7 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
            else return ()
       SEBankIDAuthenticationToSign -> return ()
       NOBankIDAuthenticationToSign -> return ()
+      DKNemIDAuthenticationToSign  -> return ()
     -- Return
     return $ Ok ()
 
@@ -178,6 +179,7 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
           else return (Nothing, Just pin)
       SEBankIDAuthenticationToSign -> return (Just CgiGrpBankID, Nothing)
       NOBankIDAuthenticationToSign -> return (Just NetsNOBankID, Nothing)
+      DKNemIDAuthenticationToSign  -> return (Just NetsDKNemID, Nothing)
     case mprovider of
        Nothing -> do
         signDocument slid mh fields acceptedAttachments notUploadedSignatoryAttachments Nothing mpin screenshots consentResponses

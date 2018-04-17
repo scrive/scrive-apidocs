@@ -78,6 +78,8 @@
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"Signed the document using Norwegian BankID as authentication method.",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"The document was signed using PIN by SMS as authentication method.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"The document was signed.",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemID":"The document was signed by $actor$ using Danish NemID as authentication method.",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemWithName":"The document was signed by $actor$ using Danish NemID as authentication method. The name returned from the Danish NemID was \"$eid_signatory_name$\".",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"The document was signed by $actor$ using Swedish BankID as authentication method.",
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"The document was signed by $actor$ using Swedish BankID as authentication method. The name returned from the Swedish BankID was \"$eid_signatory_name$\".",
 "_SignDocumentEvidenceTextSimpleNotArchiveNOBankID":"The document was signed by $actor$ using Norwegian BankID as authentication method.",

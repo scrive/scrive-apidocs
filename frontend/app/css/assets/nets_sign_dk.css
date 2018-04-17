@@ -1,0 +1,73 @@
+/* make iframe cover the whole are */
+
+html {
+  height: 85%;
+}
+
+body.iframe {
+  height: 100%;
+  width: 100%;
+  margin: 0px;
+}
+
+body.iframe.signiframe {
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' height='300px' width='120px'><text x='50' y='230' fill='#505050' font-size='18' font-family='Source Sans Pro, sans-serif'>or</text></svg>");
+  background-repeat: no-repeat;
+  background-position: top;
+}
+
+div.ipage {
+  height: 100%;
+  width: 100%
+}
+
+div.main {
+  width: 100%;
+}
+
+div.nemid_client.standard {
+  height: 100%;
+  width:100%;
+}
+
+#nemid_iframe {
+  height: 100%;
+  width: 100%;
+  min-width: 240px;
+  min-height: 360px
+}
+
+#codefile_iframe {
+  min-height: 370px;
+  width: 100%;
+}
+/* keyfile vs keycard selection */
+div.signheader.ipageheader {
+  color: #505050;
+  font-weight: 400;
+  font-family: "Source Sans Pro", sans-serif;
+  font-size: 18px;
+  margin-bottom: 20px;
+  margin-top: 30px;
+  text-align: center;
+}
+
+div.signcontent input[type="submit"] {
+  width: 100%;
+  border: none;
+  background-color: #F1F1F1;
+  color: #505050;
+  padding: 24px 28px;
+  font-size: 18px;
+  cursor: pointer;
+  margin-top: 50px;
+}
+
+div.signdeadline {
+  margin-top: 10px;
+  color: #505050;
+  font-weight: 400;
+  font-family: "Source Sans Pro", sans-serif;
+  font-size: 18px;
+  text-align: center;
+}

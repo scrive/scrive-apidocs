@@ -87,7 +87,7 @@ var Task = require("../navigation/task");
       var signatory = document.currentSignatory();
       var hasPinAuth = signatory.smsPinAuthenticationToSign();
       var hasEIDAuth = signatory.seBankIDAuthenticationToSign();
-      var hasEIDNets = signatory.noBankIDAuthenticationToSign();
+      var hasEIDNets = signatory.noBankIDAuthenticationToSign() || signatory.dkNemIDAuthenticationToSign();
 
       if (hasPinAuth) {
         return "pin";
@@ -572,8 +572,11 @@ var Task = require("../navigation/task");
           {/* if */ this.isOnStep("eid-nets") &&
             <SignNetsEID
               model={this.props.model}
+              fieldSSN={ssnField}
               name={sig.name()}
+              askForSSN={this.state.askForSSN}
               canSign={this.canSignDocument()}
+              ssn={sig.personalnumber()}
               onReject={this.handleSetStep("reject")}
               onSign={ function () {
                   doc.takeSigningScreenshot(function () {
@@ -585,6 +588,7 @@ var Task = require("../navigation/task");
           }
           {/* if */ this.isOnStep("eid-nets-process") &&
             <SignEIDNetsProcess
+              ssn={sig.personalnumber()}
               signatory={sig}
               onBack={this.handleCancelNets}
               onInitiated={function (netsSigning) { self.handleSignNets(netsSigning); }}

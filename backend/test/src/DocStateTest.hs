@@ -149,6 +149,7 @@ docStateTests env = testGroup "DocState" [
   testThat "SignDocument succeeds when doc is Signable and Pending (standard mode)" env testSignDocumentSignablePendingRight,
   testThat "SignDocument succeeds when doc is Signable and Pending (SE BankID)" env testSignDocumentSignablePendingSEBankIDRight,
   testThat "SignDocument succeeds when doc is Signable and Pending (NO BankID)" env testSignDocumentSignablePendingNOBankIDRight,
+  testThat "SignDocument succeeds when doc is Signable and Pending (DK NemID)" env testSignDocumentSignablePendingDKNemIDRight,
   testThat "SignDocument fails when the document is Signable but not in Pending" env testSignDocumentSignableNotPendingLeft,
   testThat "SignDocument fails when document is not signable" env testSignDocumentNonSignableLeft,
 
@@ -998,6 +999,8 @@ testSealDocument = replicateM_ 1 $ do
              dbUpdate $ SignDocument (signatorylinkid slk) (signatorymagichash slk) Nothing Nothing screenshots sa
           NOBankIDAuthenticationToSign -> do
              randomUpdate $ \esig -> SignDocument (signatorylinkid slk) (signatorymagichash slk) (Just (NetsNOBankIDSignature_ esig)) Nothing screenshots sa
+          DKNemIDAuthenticationToSign -> do
+             randomUpdate $ \esig -> SignDocument (signatorylinkid slk) (signatorymagichash slk) (Just (NetsDKNemIDSignature_ esig)) Nothing screenshots sa
 
 
     randomUpdate $ \t-> CloseDocument (systemActor t)
@@ -1574,6 +1577,16 @@ testSignDocumentSignablePendingNOBankIDRight = replicateM_ 10 $ do
     time <- rand 10 arbitrary
     randomUpdate $ MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) (systemActor time)
     randomUpdate $ \esig -> SignDocument (signatorylinkid sl) (signatorymagichash sl) (Just (NetsNOBankIDSignature_ esig)) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor time)
+
+testSignDocumentSignablePendingDKNemIDRight :: TestEnv ()
+testSignDocumentSignablePendingDKNemIDRight = replicateM_ 10 $ do
+  author <- addNewRandomUser
+  addRandomDocumentWithAuthorAndCondition author (isSignable && isPending &&
+           any ((== DKNemIDAuthenticationToSign) . signatorylinkauthenticationtosignmethod&& isSignatory && (not . hasSigned)) . documentsignatorylinks) `withDocumentM` do
+    Just sl <- find ((== DKNemIDAuthenticationToSign) . signatorylinkauthenticationtosignmethod&& isSignatory && (not . hasSigned)) . documentsignatorylinks <$> theDocument
+    time <- rand 10 arbitrary
+    randomUpdate $ MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) (systemActor time)
+    randomUpdate $ \esig -> SignDocument (signatorylinkid sl) (signatorymagichash sl) (Just (NetsDKNemIDSignature_ esig)) Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor time)
 
 testSignDocumentNotLeft :: TestEnv ()
 testSignDocumentNotLeft = replicateM_ 10 $ do

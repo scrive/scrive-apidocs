@@ -48,25 +48,24 @@ checkAuthenticationToSignMethodAndValue slid = do
         apiError $ requestParameterInvalid "authentication_type" "does not match with document"
       case authMethod of
         StandardAuthenticationToSign -> return ()
-        SEBankIDAuthenticationToSign -> do
-          authValue <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
-          if (authValue == getPersonalNumber siglink || null (getPersonalNumber siglink))
-            then return ()
-            else apiError $
-              requestParameterInvalid "authentication_value" "value for personal number does not match"
-        NOBankIDAuthenticationToSign -> do
-          authValue <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
-          if (authValue == getPersonalNumber siglink || null (getPersonalNumber siglink))
-            then return ()
-            else apiError $
-              requestParameterInvalid "authentication_value" "value for personal number does not match"
-        SMSPinAuthenticationToSign -> do
-          authValue <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
-          let mobileEditableBySignatory = Just True == join (fieldEditableBySignatory <$> getFieldByIdentity MobileFI (signatoryfields siglink))
-          if (authValue == getMobile siglink || null (getMobile siglink) || mobileEditableBySignatory)
-            then return ()
-            else apiError $
-              requestParameterInvalid "authentication_value" "value for mobile number does not match"
+        SEBankIDAuthenticationToSign -> checkParamSSNMatchesSigLink siglink
+        NOBankIDAuthenticationToSign -> return ()
+        DKNemIDAuthenticationToSign  -> checkParamSSNMatchesSigLink siglink
+        SMSPinAuthenticationToSign   -> checkParamMobileMatchesSigLink siglink
+  where
+    checkParamMobileMatchesSigLink siglink = do
+      authValue <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
+      let mobileEditableBySignatory = Just True == join (fieldEditableBySignatory <$> getFieldByIdentity MobileFI (signatoryfields siglink))
+      if (authValue == getMobile siglink || null (getMobile siglink) || mobileEditableBySignatory)
+        then return ()
+        else apiError $
+          requestParameterInvalid "authentication_value" "value for mobile number does not match"
+    checkParamSSNMatchesSigLink siglink = do
+      authValue <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
+      if (authValue == getPersonalNumber siglink || null (getPersonalNumber siglink))
+        then return ()
+        else apiError $
+          requestParameterInvalid "authentication_value" "value for personal number does not match"
 
 getScreenshots :: (Kontrakcja m) => m SignatoryScreenshots
 getScreenshots = do

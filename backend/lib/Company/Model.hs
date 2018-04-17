@@ -206,6 +206,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m CreateCompany Company where
     runQuery_ $ sqlInsert "feature_flags" $ do
       sqlSet "company_id" companyidx
       sqlSet "can_use_dk_authentication_to_view" False
+      sqlSet "can_use_dk_authentication_to_sign" False
       sqlSet "can_use_no_authentication_to_view" False
       sqlSet "can_use_no_authentication_to_sign" False
       sqlSet "can_use_se_authentication_to_view" False

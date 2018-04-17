@@ -212,7 +212,8 @@ var Modal = require("../../common/modal");
 
       if (sig.seBankIDAuthenticationToView() ||
          (Subscription.currentSubscription().canUseSEAuthenticationToView()
-          && !sig.noBankIDAuthenticationToSign())) {
+           && !sig.dkNemIDAuthenticationToSign()
+           && !sig.noBankIDAuthenticationToSign())) {
         options.push(seBankid);
       }
 
@@ -223,7 +224,9 @@ var Modal = require("../../common/modal");
       };
 
       if (sig.noBankIDAuthenticationToView() ||
-         (Subscription.currentSubscription().canUseNOAuthenticationToView() && !sig.seBankIDAuthenticationToSign())
+         (Subscription.currentSubscription().canUseNOAuthenticationToView()
+           && !sig.dkNemIDAuthenticationToSign()
+           && !sig.seBankIDAuthenticationToSign())
       ) {
         options.push(noBankid);
       }

@@ -159,7 +159,8 @@ documentSigning amazonConf guardTimeConf cgiGrpConf netsSignConf
               else return $ Ok Remove
             else case signingSignatureProvider of
               CgiGrpBankID       -> handleCgiGrpBankID ds now
-              NetsNOBankID       -> handleNOBankID ds now
+              NetsNOBankID       -> handleNets ds now
+              NetsDKNemID        -> handleNets ds now
               LegacyBankID       -> legacyProviderFail signingSignatoryID LegacyBankID
               LegacyTelia        -> legacyProviderFail signingSignatoryID LegacyTelia
               LegacyNordea       -> legacyProviderFail signingSignatoryID LegacyNordea
@@ -203,7 +204,7 @@ documentSigning amazonConf guardTimeConf cgiGrpConf netsSignConf
             CGISignStatusSuccess -> do
               signFromESignature ds now
               return $ Ok Remove
-    handleNOBankID ds@DocumentSigning{..} now = do
+    handleNets ds@DocumentSigning{..} now = do
       logInfo_ "Collecting operation for Nets signing"
       case netsSignConf of
         Nothing -> do

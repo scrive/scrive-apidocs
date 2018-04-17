@@ -103,11 +103,23 @@ ChangeAuthenticationToViewMethodSMSPinToSEBankIDEvidenceLog = The user <span cla
 ###
 ChangeAuthenticationToViewMethodSMSPinToDKNemIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “PIN by SMS” to “Danish NemID”.
 ###
+ChangeAuthenticationToSignMethodDKNemIDToNOBankIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Danish NemID” to "Norwegian BankID”.
+###
+ChangeAuthenticationToSignMethodDKNemIDToStandardEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Danish NemID” to “no extra authentication”.
+###
+ChangeAuthenticationToSignMethodDKNemIDToSEBankIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Danish NemID” to “Swedish BankID”.
+###
+ChangeAuthenticationToSignMethodDKNemIDToSMSEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Danish NemID” to “PIN by SMS”.
+###
+ChangeAuthenticationToSignMethodNOBankIDToDKNemIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Norwegian BankID” to "Danish NemID”.
+###
 ChangeAuthenticationToSignMethodNOBankIDToStandardEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Norwegian BankID” to "no extra authentication”.
 ###
 ChangeAuthenticationToSignMethodNOBankIDToSEBankIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Norwegian BankID” to “PIN by SMS”.
 ###
 ChangeAuthenticationToSignMethodNOBankIDToSMSEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Norwegian BankID” to “Swedish BankID”.
+###
+ChangeAuthenticationToSignMethodStandardToDKNemIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “no extra authentication” to “Danish NemID”.
 ###
 ChangeAuthenticationToSignMethodStandardToNOBankIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “no extra authentication” to “Norwegian BankID”.
 ###
@@ -115,11 +127,15 @@ ChangeAuthenticationToSignMethodStandardToSEBankIDEvidenceLog=The user <span cla
 ###
 ChangeAuthenticationToSignMethodStandardToSMSEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “no extra authentication” to “PIN by SMS”.
 ###
+ChangeAuthenticationToSignMethodSEBankIDToDKNemIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Swedish BankID” to “Danish NemID”.
+###
 ChangeAuthenticationToSignMethodSEBankIDToNOBankIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Swedish BankID” to “Norwegian BankID”.
 ###
 ChangeAuthenticationToSignMethodSEBankIDToStandardEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Swedish BankID” to “no extra authentication”.
 ###
 ChangeAuthenticationToSignMethodSEBankIDToSMSEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Swedish BankID” to “PIN by SMS”.
+###
+ChangeAuthenticationToSignMethodSMSToDKNemIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “PIN by SMS” to "Danish NemID”.
 ###
 ChangeAuthenticationToSignMethodSMSToNOBankIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “PIN by SMS” to "Norwegian BankID”.
 ###
@@ -467,14 +483,18 @@ $elseif(eleg)$
       $if(eid_signatory_name)$
           $if(provider_sebankid)$
               $_SignDocumentEvidenceTextSimpleNotArchiveElegWithName()$
-          $else$
+          $elseif(provider_nobankid)$
               $_SignDocumentEvidenceTextSimpleNotArchiveNOBankIDWithName()$
+          $elseif(provider_dknemid)$
+              $_SignDocumentEvidenceTextSimpleNotArchiveDKNemWithName()$
           $endif$
       $else$
           $if(provider_sebankid)$
               $_SignDocumentEvidenceTextSimpleNotArchiveEleg()$
-          $else$
+          $elseif(provider_nobankid)$
               $_SignDocumentEvidenceTextSimpleNotArchiveNOBankID()$
+          $elseif(provider_dknemid)$
+              $_SignDocumentEvidenceTextSimpleNotArchiveDKNemID()$
           $endif$
       $endif$
 $else$
@@ -565,6 +585,12 @@ $if(provider_nobankid)$
 <p>Data returned from $provider()$:
   <br/>Name: $signatory_name$
   <br/>PID: $signatory_pid$
+</p>
+$endif$
+$if(provider_dknemid)$
+<p>Data returned from $provider()$:
+  <br/>Name: $signatory_name$
+  <br/>ID number: $personalNumber(value=signatory_personal_number)$
 </p>
 $endif$
 <br/>

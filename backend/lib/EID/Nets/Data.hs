@@ -6,6 +6,7 @@ module EID.Nets.Data (
     , unsafeNetsDKNemIDInternalProviderFromInt16
     , NetsDKNemIDAuthentication(..)
     , NetsNOBankIDSignature(..)
+    , NetsDKNemIDSignature(..)
 
     -- Target passed inside request
     , NetsTarget(..)
@@ -17,6 +18,7 @@ module EID.Nets.Data (
     , xpGetAssertionResponse
 
     , NetsSignOrder(..)
+    , NetsSignProvider(..)
     , InsertOrderRequest(..)
     , InsertOrderResponse(..)
     , xpInsertOrderResponse
@@ -34,8 +36,11 @@ module EID.Nets.Data (
     , xpGetSDOResponse
 
     , GetSDODetailsRequest(..)
-    , GetSDODetailsResponse(..)
-    , xpGetSDODetailsResponse
+    , GetSDODetailsResponseDK(..)
+    , GetSDODetailsResponseNO(..)
+    , xpGetSDODetailsResponseDK
+    , xpGetSDODetailsResponseNO
+    , xpGetSDOAttributes
 
     , CancelOrderRequest(..)
     , CancelOrderResponse(..)
@@ -54,6 +59,7 @@ import Data.ByteString (ByteString)
 import Data.Int
 import Data.Time
 import Network.SOAP.Parsing.Cursor (readT)
+import Prelude hiding (empty)
 import Text.XML.Cursor hiding (element)
 import Text.XML.Writer hiding (content, many, node)
 import qualified Data.ByteString.Base64 as B64
@@ -202,6 +208,13 @@ data NetsNOBankIDSignature = NetsNOBankIDSignature {
 , netsnoSignatoryPID  :: !T.Text
 } deriving (Eq, Ord, Show)
 
+data NetsDKNemIDSignature = NetsDKNemIDSignature {
+  netsdkSignedText    :: !T.Text
+, netsdkB64SDO        :: !T.Text -- base64 SDO from Nets ESigning
+, netsdkSignatoryName :: !T.Text
+, netsdkSignatorySSN  :: !T.Text
+} deriving (Eq, Ord, Show)
+
 data NetsSignStatus
   = NetsSignStatusSuccess
   | NetsSignStatusFailure NetsFault
@@ -225,13 +238,44 @@ netsFaultText NetsFaultExpired             = "nets_error_expired"
 netsFaultText NetsFaultExpiredByProxy      = "nets_error_expired_by_proxy"
 netsFaultText NetsFaultRejectedBySigner    = "nets_error_rejected_by_signer"
 
+data NetsSignProvider =
+    NetsSignNO
+  | NetsSignDK
+  deriving (Eq, Ord, Show)
+
+instance PQFormat NetsSignProvider where
+  pqFormat = const $ pqFormat (undefined::Int16)
+
+instance FromSQL NetsSignProvider where
+  type PQBase NetsSignProvider = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      1 -> return NetsSignNO
+      2 -> return NetsSignDK
+      _ -> throwM RangeError {
+        reRange = [(1, 2)]
+      , reValue = n
+      }
+
+instance ToSQL NetsSignProvider where
+  type PQDest NetsSignProvider = PQDest Int16
+  toSQL NetsSignNO = toSQL (1::Int16)
+  toSQL NetsSignDK = toSQL (2::Int16)
+
+netsSignProviderText :: NetsSignProvider -> T.Text
+netsSignProviderText NetsSignNO = "no_bankid"
+netsSignProviderText NetsSignDK = "dk_nemid"
+
 data NetsSignOrder = NetsSignOrder
   { nsoSignOrderID :: !SignOrderUUID
   , nsoSignatoryLinkID :: !SignatoryLinkID
+  , nsoProvider :: !NetsSignProvider
   , nsoTextToBeSigned :: !T.Text
   , nsoSessionID :: !SessionID
   , nsoDeadline :: !UTCTime
   , nsoIsCanceled :: !Bool
+  , nsoSSN :: !(Maybe T.Text)
   } deriving (Show)
 
 instance Loggable NetsSignOrder where
@@ -240,6 +284,7 @@ instance Loggable NetsSignOrder where
     , identifier_ nsoSessionID
     , identifier_ nsoSignatoryLinkID
     , "is_canceled" .= nsoIsCanceled
+    , "provider" .= netsSignProviderText nsoProvider
     ]
   logDefaultLabel _ = "nets_insert_order"
 
@@ -260,22 +305,38 @@ instance ToXML InsertOrderRequest where
           element "DocType" $ do
             element "TEXT" $ do
               element "B64DocumentBytes" . T.pack . BS.unpack . B64.encode . T.encodeUtf8 $ nsoTextToBeSigned
-          -- element "RequiresAuthentication" ("false" :: T.Text)
       element "Signers" $ do
         element "Signer" $ do
           element "EndUserSigner" $ do
             element "LocalSignerReference" ("signer_1" :: T.Text)
-            element "AcceptedPKIs" $ do
-              element "BankIDNOMobile" $ do
-                element "CertificatePolicy" ("Personal" :: T.Text)
-              element "BankID" $ do
-                element "CertificatePolicy" ("Personal" :: T.Text)
+            element "AcceptedPKIs" $ case nsoProvider of
+              NetsSignNO -> do
+                element "BankIDNOMobile" $ do
+                  element "CertificatePolicy" ("Personal" :: T.Text)
+                element "BankID" $ do
+                  element "CertificatePolicy" ("Personal" :: T.Text)
+              NetsSignDK -> do
+                -- Nets is unable to accept 2 "NemID" elements,
+                -- so the workaround is to use NemID and NemID-OpenSign for
+                -- 2 different policies
+                element "NemID" $ do
+                  element "CertificatePolicy" ("Personal" :: T.Text)
+                  element "SignerID" $ do
+                    element "IDType" ("SSN" :: T.Text)
+                    element "IDValue" nsoSSN
+                element "NemID-OpenSign" $ do
+                  element "CertificatePolicy" ("Employee" :: T.Text)
+                  element "SignerID" $ do
+                    element "IDType" ("SSN" :: T.Text)
+                    element "IDValue" nsoSSN
       element "WebContexts" $ do
         element "WebContext" $ do
           element "LocalWebContextRef" ("web_1" :: T.Text)
           element "SignURLBase" (netssignSignURLBase <> "index.html?ref=")
           element "ErrorURLBase" (host_part <> "/nets/sign_error?err=")
-          element "StyleURL" (host_part <> "/css/assets/nets_no.css")
+          case nsoProvider of
+            NetsSignNO -> element "StyleURL" (host_part <> "/css/assets/nets_sign_no.css")
+            NetsSignDK -> element "StyleURL" (host_part <> "/css/assets/nets_sign_dk.css")
           element "ExitURL" (host_part <> "/nets/sign_exit")
           element "AbortURL" (host_part <> "/nets/sign_abort")
       element "ExecutionDetails" $ do
@@ -434,31 +495,70 @@ instance ToXML GetSDODetailsRequest where
       element "B64SDOBytes" b64SDO
       element "VerifySDO" ("true" :: T.Text)
 
---NETS Signing - Get SDO Response
+--NETS Signing - Get SDO Response - NO BankID
 
-data GetSDODetailsResponse = GetSDODetailsResponse
-  { gsdodrsTransactionRef :: !T.Text
-  , gsdodrsSignedText     :: !T.Text
-  , gsdodrsSignerCN       :: !T.Text
-  , gsdodrsSignerPID      :: !T.Text
+data GetSDODetailsResponseNO = GetSDODetailsResponseNO
+  { gsdodrsnoTransactionRef :: !T.Text
+  , gsdodrsnoSignedText     :: !T.Text
+  , gsdodrsnoSignerCN       :: !T.Text
+  , gsdodrsnoSignerPID      :: !T.Text
   }
 
-instance Loggable GetSDODetailsResponse where
-  logValue GetSDODetailsResponse{..} = object [
-      "transaction_ref" .= gsdodrsTransactionRef
-    , "signed_text" .= gsdodrsSignedText
-    , "signer_cn" .= gsdodrsSignerCN
+instance Loggable GetSDODetailsResponseNO where
+  logValue GetSDODetailsResponseNO{..} = object [
+      "transaction_ref" .= gsdodrsnoTransactionRef
+    , "signed_text" .= gsdodrsnoSignedText
+    , "signer_cn" .= gsdodrsnoSignerCN
     ]
-  logDefaultLabel _ = "nets_get_sdo_details_response"
+  logDefaultLabel _ = "nets_get_sdo_details_response_no"
 
-xpGetSDODetailsResponse :: XMLParser GetSDODetailsResponse
-xpGetSDODetailsResponse = XMLParser $ \cursor -> listToMaybe $ cursor
-  $/ laxElement "GetSDODetailsResponse" &| \rs -> GetSDODetailsResponse {
-      gsdodrsTransactionRef = readT "TransRef" rs
-    , gsdodrsSignedText     = readTs ["SDOList", "SDO", "SignedData"] rs
-    , gsdodrsSignerCN       = readTs ["SDOList", "SDO", "SDOSignatures", "SDOSignature", "SignerCertificateInfo", "CN"] rs
-    , gsdodrsSignerPID      = readTs ["SDOList", "SDO", "SDOSignatures", "SDOSignature", "SignerCertificateInfo", "UniqueID"] rs
+xpGetSDODetailsResponseNO :: XMLParser GetSDODetailsResponseNO
+xpGetSDODetailsResponseNO = XMLParser $ \cursor -> listToMaybe $ cursor
+  $/ laxElement "GetSDODetailsResponse" &| \rs -> GetSDODetailsResponseNO {
+      gsdodrsnoTransactionRef = readT "TransRef" rs
+    , gsdodrsnoSignedText     = readTs ["SDOList", "SDO", "SignedData"] rs
+    , gsdodrsnoSignerCN       = readTs ["SDOList", "SDO", "SDOSignatures", "SDOSignature", "SignerCertificateInfo", "CN"] rs
+    , gsdodrsnoSignerPID      = readTs ["SDOList", "SDO", "SDOSignatures", "SDOSignature", "SignerCertificateInfo", "UniqueID"] rs
     }
+
+
+--NETS Signing - Get SDO Response - NemID
+
+data GetSDODetailsResponseDK = GetSDODetailsResponseDK
+  { gsdodrsdkTransactionRef :: !T.Text
+  , gsdodrsdkSignedText     :: !T.Text
+  , gsdodrsdkSignerCN       :: !T.Text
+  }
+
+instance Loggable GetSDODetailsResponseDK where
+  logValue GetSDODetailsResponseDK{..} = object [
+      "transaction_ref" .= gsdodrsdkTransactionRef
+    , "signed_text" .= gsdodrsdkSignedText
+    , "signer_cn" .= gsdodrsdkSignerCN
+    ]
+  logDefaultLabel _ = "nets_get_sdo_details_response_dk"
+
+xpGetSDODetailsResponseDK :: XMLParser GetSDODetailsResponseDK
+xpGetSDODetailsResponseDK = XMLParser $ \cursor -> listToMaybe $ cursor
+  $/ laxElement "GetSDODetailsResponse" &| \rs -> GetSDODetailsResponseDK {
+      gsdodrsdkTransactionRef = readT "TransRef" rs
+    , gsdodrsdkSignedText     = readTs ["SDOList", "SDO", "SignedData"] rs
+    , gsdodrsdkSignerCN       = readTs ["SDOList", "SDO", "SDOSignatures", "SDOSignature", "SignerCertificateInfo", "CN"] rs
+    }
+
+xpGetSDOAttributes :: XMLParser [(T.Text, T.Text)]
+xpGetSDOAttributes = XMLParser $ \cursor -> listToMaybe $ cursor
+    $/ laxElement "SDO"
+    &/ laxElement "SDODataPart"
+    &/ laxElement "SignatureElement"
+    &/ laxElement "XAdESSignatureElement"
+    &/ laxElement "XAdESSignature"
+    &/ laxElement "Signature"
+    &/ laxElement "Object"
+    &/ laxElement "SignatureProperties"
+    &| \sps -> sps
+      $/ laxElement "SignatureProperty"
+      &| \sp -> (readT "Name" sp, readT "Value" sp)
 
 -- NETS Signing - Cancel Order Request
 

@@ -241,6 +241,9 @@ simplyfiedEventText target mactor d sim dee = do
                 NetsNOBankIDSignature_ NetsNOBankIDSignature{..} -> do
                   F.value "eid_signatory_name" $ Just netsnoSignatoryName
                   F.value "provider_nobankid" True
+                NetsDKNemIDSignature_ NetsDKNemIDSignature{..} -> do
+                  F.value "eid_signatory_name" $ Just netsdkSignatoryName
+                  F.value "provider_dknemid" True
           when (evType dee == Current AuthenticatedToViewEvidence) $ do
             dbQuery (GetEAuthenticationWithoutSession slinkid) >>= \case
               Nothing -> return ()

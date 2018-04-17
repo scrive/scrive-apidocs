@@ -19,6 +19,10 @@ var classNames = require("classnames");
     createTasks: function () {
       var tasks = [this.createSignTask()];
 
+      if (this.props.askForSSN) {
+        tasks.push(this.createSSNTask());
+      }
+
       return tasks;
     },
 
@@ -42,10 +46,29 @@ var classNames = require("classnames");
       });
     },
 
+    createSSNTask: function () {
+      var self = this;
+      var ref = this.refs.ssnInput;
+      var model = this.props.model;
+      return new Task({
+        type: "extra-details",
+        onArrowClick: function () {
+          ref.focus();
+        },
+        isComplete: function () {
+          return !model.askForSSN();
+        },
+        el: $(ref.getDOMNode())
+      });
+    },
+
     propTypes: {
       model: React.PropTypes.instanceOf(Backbone.Model).isRequired,
+      fieldSSN: React.PropTypes.instanceOf(Field),
       name: React.PropTypes.string.isRequired,
+      askForSSN: React.PropTypes.bool.isRequired,
       canSign: React.PropTypes.bool.isRequired,
+      ssn: React.PropTypes.string.isRequired,
       onReject: React.PropTypes.func.isRequired,
       onSign: React.PropTypes.func.isRequired
     },
@@ -60,6 +83,13 @@ var classNames = require("classnames");
       var self = this;
       var ssn = self.props.ssn;
       var name = self.props.name;
+      var fieldSSN = self.props.fieldSSN;
+      var askForSSN = model.askForSSN();
+
+      var inputSSNClass = classNames({
+        "obligatory-input": true,
+        "valid": !askForSSN
+      });
 
       var buttonClass = classNames({
         "button-block": true,
@@ -72,26 +102,62 @@ var classNames = require("classnames");
         "center-block": true
       });
 
+      var confirmationText;
+      var confirmationTextNoName;
+      var logoClass;
+      var confirmationTitle;
+      var doc = model.document();
+      var sig = doc.currentSignatory();
+      if (sig.noBankIDAuthenticationToSign()) {
+        confirmationText = localization.docsignview.eleg.bankid.signNOConfirmationText;
+        confirmationTextNoName = localization.docsignview.eleg.bankid.signNOConfirmationTextNoName;
+        logoClass = classNames({"bankid-logo-nets": true, "no-bankid-logo": true});
+        confirmationTitle = localization.docsignview.eleg.bankid.signNOConfirmationTitle;
+      }
+      if (sig.dkNemIDAuthenticationToSign()) {
+        confirmationText = localization.docsignview.eleg.bankid.signDKConfirmationText;
+        confirmationTextNoName = localization.docsignview.eleg.bankid.signDKConfirmationTextNoName;
+        logoClass = classNames({"bankid-logo-nets": true, "dk-nemid-logo": true});
+        confirmationTitle = localization.docsignview.eleg.bankid.signDKConfirmationTitle;
+      }
+
       var randomFragment = Math.floor((Math.random() * 1000000) + 1);
 
 
       return (
         <div className={divClass}>
           <h1>
-            <div className="bankid-logo-wrapper" >
-              <span className="bankid-logo mobile-no-bankid-logo" />
-            </div>
-            {localization.docsignview.eleg.bankid.signNOConfirmationTitle}
+            <span className={logoClass}/>
+            {confirmationTitle}
           </h1>
           {/* if */ name !== "" &&
             <HtmlTextWithSubstitution
-              secureText={"<p>" + localization.docsignview.eleg.bankid.signNOConfirmationText + "</p>"}
+              secureText={"<p>" + confirmationText + "</p>"}
               subs={{".put-signatory-name-here": name}}
             />
           }
           {/* else */ name === "" &&
-            <p>{localization.docsignview.eleg.bankid.signNOConfirmationTextNoName}</p>
+            <p>{confirmationTextNoName}</p>
           }
+          { /* if */ sig.dkNemIDAuthenticationToSign() && this.props.askForSSN &&
+            <dl className="ssn-list">
+              <dt><label htmlFor="ssn">{localization.personalNumber}</label></dt>
+              <dd>
+                <InfoTextInput
+                  id="ssn"
+                  ref="ssnInput"
+                  infotext={localization.ssnInfoText}
+                  className={inputSSNClass}
+                  value={fieldSSN.value()}
+                  onChange={function (value) { fieldSSN.setValue(value); }}
+                />
+              </dd>
+            </dl>
+          }
+          {/* else */ sig.dkNemIDAuthenticationToSign() && !this.props.askForSSN &&
+            <p className="ssn-text">{localization.personalNumber} <b>{ssn}</b></p>
+          }
+
           <Button
             ref="signButton"
             type="action"

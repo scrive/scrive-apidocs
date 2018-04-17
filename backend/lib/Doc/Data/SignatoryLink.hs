@@ -144,6 +144,7 @@ data AuthenticationToSignMethod
   | SEBankIDAuthenticationToSign
   | SMSPinAuthenticationToSign
   | NOBankIDAuthenticationToSign
+  | DKNemIDAuthenticationToSign
     deriving (Eq, Ord, Show)
 
 instance PQFormat AuthenticationToSignMethod where
@@ -158,8 +159,9 @@ instance FromSQL AuthenticationToSignMethod where
       2 -> return SEBankIDAuthenticationToSign
       3 -> return SMSPinAuthenticationToSign
       4 -> return NOBankIDAuthenticationToSign
+      5 -> return DKNemIDAuthenticationToSign
       _ -> throwM RangeError {
-        reRange = [(1, 4)]
+        reRange = [(1, 5)]
       , reValue = n
       }
 
@@ -169,6 +171,7 @@ instance ToSQL AuthenticationToSignMethod where
   toSQL SEBankIDAuthenticationToSign      = toSQL (2::Int16)
   toSQL SMSPinAuthenticationToSign        = toSQL (3::Int16)
   toSQL NOBankIDAuthenticationToSign      = toSQL (4::Int16)
+  toSQL DKNemIDAuthenticationToSign       = toSQL (5::Int16)
 
 ---------------------------------
 

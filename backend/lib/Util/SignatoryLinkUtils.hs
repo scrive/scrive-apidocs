@@ -164,9 +164,11 @@ getSigLinkFor a d = find (isSigLinkFor a) (documentsignatorylinks d)
 
 authenticationMethodsCanMix :: AuthenticationToViewMethod -> AuthenticationToSignMethod -> Bool
 authenticationMethodsCanMix NOBankIDAuthenticationToView SEBankIDAuthenticationToSign = False
+authenticationMethodsCanMix NOBankIDAuthenticationToView DKNemIDAuthenticationToSign  = False
 authenticationMethodsCanMix DKNemIDAuthenticationToView  SEBankIDAuthenticationToSign = False
 authenticationMethodsCanMix DKNemIDAuthenticationToView  NOBankIDAuthenticationToSign = False
 authenticationMethodsCanMix SEBankIDAuthenticationToView NOBankIDAuthenticationToSign = False
+authenticationMethodsCanMix SEBankIDAuthenticationToView DKNemIDAuthenticationToSign  = False
 authenticationMethodsCanMix _ _ = True
 
 authViewMatchesAuth :: AuthenticationToViewMethod -> EAuthentication -> Bool
@@ -198,9 +200,11 @@ authToSignNeedsPersonalNumber StandardAuthenticationToSign = False
 authToSignNeedsPersonalNumber SMSPinAuthenticationToSign   = False
 authToSignNeedsPersonalNumber SEBankIDAuthenticationToSign = True
 authToSignNeedsPersonalNumber NOBankIDAuthenticationToSign = False
+authToSignNeedsPersonalNumber DKNemIDAuthenticationToSign  = True
 
 authToSignNeedsMobileNumber :: AuthenticationToSignMethod -> Bool
 authToSignNeedsMobileNumber StandardAuthenticationToSign = False
 authToSignNeedsMobileNumber SMSPinAuthenticationToSign   = True
 authToSignNeedsMobileNumber SEBankIDAuthenticationToSign = False
 authToSignNeedsMobileNumber NOBankIDAuthenticationToSign = False
+authToSignNeedsMobileNumber DKNemIDAuthenticationToSign  = False

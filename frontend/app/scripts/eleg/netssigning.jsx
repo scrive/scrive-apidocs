@@ -84,7 +84,7 @@ module.exports = Backbone.Model.extend({
       new Submit({
         method: "POST",
         url: "/nets/sign/" + self.document().documentid() + "/" + self.signatory().signatoryid(),
-        personal_number: BankIDUtils.normalizedPersonalNumber(self.signatory()),
+        personal_number: self.signatory().personalnumber(),
         ajaxsuccess: function (resp, s, xhr) {
           if (resp.nets_sign_url) {
             self.setSignUrl(resp.nets_sign_url);

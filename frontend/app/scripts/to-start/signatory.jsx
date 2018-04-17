@@ -36,6 +36,7 @@ module.exports = React.createClass({
     if (sig.smsPinAuthenticationToSign()) return localization.docview.signatory.authenticationToSignSMSPin;
     if (sig.seBankIDAuthenticationToSign()) return localization.docview.signatory.authenticationToSignSEBankID;
     if (sig.noBankIDAuthenticationToSign()) return localization.docview.signatory.authenticationToSignNOBankID;
+    if (sig.dkNemIDAuthenticationToSign()) return localization.docview.signatory.authenticationToSignDKNemID;
 
     return "";
   },

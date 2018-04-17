@@ -45,9 +45,11 @@ var Modal = require("../../common/modal");
         var signatory = this.signatory();
         if (this.isNewAuthenticationPINbySMS()) {
           this.setNewAuthenticationValue(signatory.mobile());
-        } else if (this.isNewAuthenticationELeg()) {
+        }
+        if (this.isNewAuthenticationSEBankID() || this.isNewAuthenticationDKNemID()) {
           this.setNewAuthenticationValue(signatory.personalnumber());
-        } else {
+        }
+        if (this.isNewAuthenticationNOBankID()) {
           this.setNewAuthenticationValue("");
         }
       }
@@ -65,16 +67,16 @@ var Modal = require("../../common/modal");
       return this.newAuthenticationMethod() == "sms_pin";
     },
 
-    isNewAuthenticationELeg: function () {
-      return this.isNewAuthenticationSEBankID() || this.isNewAuthenticationNOBankID();
-    },
-
     isNewAuthenticationSEBankID: function () {
       return this.newAuthenticationMethod() == "se_bankid";
     },
 
     isNewAuthenticationNOBankID: function () {
       return this.newAuthenticationMethod() == "no_bankid";
+    },
+
+    isNewAuthenticationDKNemID: function () {
+      return this.newAuthenticationMethod() == "dk_nemid";
     },
 
     isAuthenticationValueInvalid: function () {
@@ -124,9 +126,10 @@ var Modal = require("../../common/modal");
 
       if (this.isNewAuthenticationPINbySMS()) {
         text = localization.docview.changeAuthentication.errorPhone;
-      } else if (this.isNewAuthenticationELeg()) {
+      } else if (this.isNewAuthenticationSEBankID() || this.isNewAuthenticationDKNemID()) {
         text = localization.docview.changeAuthentication.errorEID;
       }
+      // no NOBankID here, because there is only empty "" authentication value
 
       return text;
     }
@@ -152,6 +155,8 @@ var Modal = require("../../common/modal");
         return localization.docview.signatory.authenticationToSignSEBankID;
       } else if (model.isNewAuthenticationNOBankID()) {
         return localization.docview.signatory.authenticationToSignNOBankID;
+      } else if (model.isNewAuthenticationDKNemID()) {
+        return localization.docview.signatory.authenticationToSignDKNemID;
       }
     },
 
@@ -170,9 +175,10 @@ var Modal = require("../../common/modal");
       var text = "";
       if (model.isNewAuthenticationPINbySMS()) {
         text = localization.phone;
-      } else if (model.isNewAuthenticationELeg()) {
+      } else if (model.isNewAuthenticationSEBankID() || model.isNewAuthenticationDKNemID()) {
         text = localization.docsignview.personalNumberLabel;
       }
+      // there is no NOBankID here, because authentication value is empty in that case.
       return text;
     },
 
@@ -185,6 +191,8 @@ var Modal = require("../../common/modal");
         text = localization.docview.changeAuthentication.placeholderSEEID;
       } else if (model.isNewAuthenticationNOBankID()) {
         text = localization.docview.changeAuthentication.placeholderNOEID;
+      } else if (model.isNewAuthenticationDKNemID()) {
+        text = localization.docview.changeAuthentication.placeholderDKEID;
       }
       return text;
     },
@@ -227,6 +235,19 @@ var Modal = require("../../common/modal");
           )
       ) {
         options.push(nobankid);
+      }
+
+      var dknemid = {
+        name: localization.docview.signatory.authenticationToSignDKNemID,
+        selected: model.isNewAuthenticationDKNemID(),
+        value: "dk_nemid"
+      };
+      if (sig.dkNemIDAuthenticationToSign() ||
+          (Subscription.currentSubscription().canUseDKAuthenticationToSign() &&
+            (!sig.noBankIDAuthenticationToView() && !sig.seBankIDAuthenticationToView())
+          )
+      ) {
+        options.push(dknemid);
       }
 
       var sms = {
@@ -310,7 +331,8 @@ module.exports = React.createClass({
   onAccept: function () {
     var authmethod = this._model.newAuthenticationMethod();
     var authvalue = this._model.newAuthenticationValue();
-    var personalNumber = this._model.isNewAuthenticationELeg() ? authvalue : undefined;
+    var personalNumber = (this._model.isNewAuthenticationSEBankID() || this._model.isNewAuthenticationDKNemID())
+                         ? authvalue : undefined;
     var mobileNumber = this._model.isNewAuthenticationPINbySMS() ? authvalue : undefined;
 
     if (this._model.isAuthenticationValueInvalid()) {

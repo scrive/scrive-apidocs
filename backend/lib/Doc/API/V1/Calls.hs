@@ -421,6 +421,7 @@ apiCallV1Ready did = logDocument did . api $ do
     authToSignIsValid sl = getPersonalNumber sl == "" || case signatorylinkauthenticationtosignmethod sl of
       SEBankIDAuthenticationToSign -> isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl
       NOBankIDAuthenticationToSign -> False -- Norwegian Nets eSigning is not supported in API v1
+      DKNemIDAuthenticationToSign  -> False -- Danish Nets eSigning is not supported in API v1
       StandardAuthenticationToSign -> True
       SMSPinAuthenticationToSign   -> True
     signatoryHasValidSSNForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of
@@ -503,6 +504,9 @@ apiCallV1CheckSign did slid = logDocumentAndSignatory did slid . api $ do
        NOBankIDAuthenticationToSign -> do
          logAttention_ "Norwegian BankID signing attempted in V1 API"
          (Left . Failed) <$> (J.runJSONGenT $ J.value "noBankidNotSupported" True)
+       DKNemIDAuthenticationToSign -> do
+         logAttention_ "Danish NemID signing attempted in V1 API"
+         (Left . Failed) <$> (J.runJSONGenT $ J.value "dkNemidNotSupported" True)
 
 apiCallV1Sign :: Kontrakcja m
              => DocumentID      -- ^ The DocumentID of the document to sign
@@ -562,6 +566,9 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
       NOBankIDAuthenticationToSign -> do
         logAttention_ "Norwegian BankID signing attempted in V1 API"
         (Left . Failed) <$> (J.runJSONGenT $ J.value "noBankidNotSupported" True)
+      DKNemIDAuthenticationToSign -> do
+        logAttention_ "Danish NemID signing attempted in V1 API"
+        (Left . Failed) <$> (J.runJSONGenT $ J.value "dkNemidNotSupported" True)
 
    )
     `catchDBExtraException` (\(DocumentStatusShouldBe _ _ i) -> throwM . SomeDBExtraException $ conflictError $ "Document not pending but " ++ show i)
@@ -591,6 +598,9 @@ checkAuthenticationToSignMethodAndValue slid = do
                          (True, NOBankIDAuthenticationToSign)   ->
                              throwM . SomeDBExtraException $
                                conflictError "Norwegian BankID signing not supported in API V1"
+                         (True, DKNemIDAuthenticationToSign)   ->
+                             throwM . SomeDBExtraException $
+                               conflictError "Danish NemID signing not supported in API V1"
                          (True, SMSPinAuthenticationToSign) ->
                              if (authValue == getMobile siglink || null (getMobile siglink))
                                 then return ()
@@ -786,6 +796,8 @@ apiCallV1ChangeAuthenticationToSign did slid = logDocumentAndSignatory did slid 
         Just SMSPinAuthenticationToSign   -> return (SMSPinAuthenticationToSign, Nothing, authentication_value)
         Just NOBankIDAuthenticationToSign -> throwM . SomeDBExtraException $ badInput
           "`authentication_type` was not valid. Supported values are: `standard`, `eleg`, `sms_pin`."
+        Just DKNemIDAuthenticationToSign  -> throwM . SomeDBExtraException $ badInput
+          "`authentication_type` was not valid. Supported values are: `standard`, `eleg`, `sms_pin`."
 
       let authtoviewmethod = signatorylinkauthenticationtoviewmethod sl
       -- Check conditions for different authentication to sign methods
@@ -822,6 +834,8 @@ apiCallV1ChangeAuthenticationToSign did slid = logDocumentAndSignatory did slid 
                 Good _ -> return ()
         NOBankIDAuthenticationToSign ->
           throwM . SomeDBExtraException $ badInput "Norwegian BankID signing is not supported in API V1"
+        DKNemIDAuthenticationToSign ->
+          throwM . SomeDBExtraException $ badInput "Danish NemID signing is not supported in API V1"
 
       -- Change authentication to sign method and return Document JSON
       dbUpdate $ ChangeAuthenticationToSignMethod slid authtosignmethod mSSN mPhone actor

@@ -60,6 +60,7 @@ import LogTest
 import MailModelTest
 import MailsTest
 import Monitor.APITest
+import NetsXMLTest
 import OAuth
 import PadApplication.APITest
 import Partner.APITest
@@ -117,6 +118,7 @@ allTests = [
   , mailModelTests
   , mailsTests
   , monitorAPITests
+  , netsXmlTests
   , oauthTest
   , padAplicationAPITests
   , partnerAPITests

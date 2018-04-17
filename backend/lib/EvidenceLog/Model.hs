@@ -83,9 +83,9 @@ eventTextTemplateName t e =  show e ++ suffix t
 
 signatoryLinkTemplateFields :: Monad m => SignatoryLink -> F.Fields m ()
 signatoryLinkTemplateFields sl = do
-  F.value "identified"  $ signatorylinkauthenticationtosignmethod sl `elem` [SEBankIDAuthenticationToSign, NOBankIDAuthenticationToSign]
+  F.value "identified"  $ signatorylinkauthenticationtosignmethod sl `elem` [SEBankIDAuthenticationToSign, NOBankIDAuthenticationToSign, DKNemIDAuthenticationToSign]
                        || not (signatoryisauthor sl || signatorylinkdeliverymethod sl == APIDelivery)
-  F.value "eleg"        $ signatorylinkauthenticationtosignmethod sl `elem` [SEBankIDAuthenticationToSign, NOBankIDAuthenticationToSign]
+  F.value "eleg"        $ signatorylinkauthenticationtosignmethod sl `elem` [SEBankIDAuthenticationToSign, NOBankIDAuthenticationToSign, DKNemIDAuthenticationToSign]
   F.value "sms_pin"     $ signatorylinkauthenticationtosignmethod sl == SMSPinAuthenticationToSign
   F.value "api"         $ signatorylinkdeliverymethod sl == APIDelivery
   F.value "pad"         $ signatorylinkdeliverymethod sl == PadDelivery
@@ -365,7 +365,15 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewMethodStandardToSMSPinEvidence  |
   ChangeAuthenticationToViewMethodSEBankIDToSMSPinEvidence  |
   ChangeAuthenticationToViewMethodNOBankIDToSMSPinEvidence  |
-  ChangeAuthenticationToViewMethodDKNemIDToSMSPinEvidence
+  ChangeAuthenticationToViewMethodDKNemIDToSMSPinEvidence   |
+  ChangeAuthenticationToSignMethodStandardToDKNemIDEvidence  |
+  ChangeAuthenticationToSignMethodSEBankIDToDKNemIDEvidence  |
+  ChangeAuthenticationToSignMethodSMSToDKNemIDEvidence       |
+  ChangeAuthenticationToSignMethodNOBankIDToDKNemIDEvidence  |
+  ChangeAuthenticationToSignMethodDKNemIDToStandardEvidence  |
+  ChangeAuthenticationToSignMethodDKNemIDToSEBankIDEvidence  |
+  ChangeAuthenticationToSignMethodDKNemIDToSMSEvidence       |
+  ChangeAuthenticationToSignMethodDKNemIDToNOBankIDEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -583,7 +591,14 @@ instance ToSQL EvidenceEventType where
   toSQL (Current ChangeAuthenticationToViewMethodSEBankIDToSMSPinEvidence ) = toSQL (141::Int16)
   toSQL (Current ChangeAuthenticationToViewMethodNOBankIDToSMSPinEvidence ) = toSQL (142::Int16)
   toSQL (Current ChangeAuthenticationToViewMethodDKNemIDToSMSPinEvidence  ) = toSQL (143::Int16)
-
+  toSQL (Current ChangeAuthenticationToSignMethodStandardToDKNemIDEvidence)  = toSQL (144::Int16)
+  toSQL (Current ChangeAuthenticationToSignMethodSEBankIDToDKNemIDEvidence)  = toSQL (145::Int16)
+  toSQL (Current ChangeAuthenticationToSignMethodSMSToDKNemIDEvidence)       = toSQL (146::Int16)
+  toSQL (Current ChangeAuthenticationToSignMethodNOBankIDToDKNemIDEvidence)  = toSQL (147::Int16)
+  toSQL (Current ChangeAuthenticationToSignMethodDKNemIDToStandardEvidence)  = toSQL (148::Int16)
+  toSQL (Current ChangeAuthenticationToSignMethodDKNemIDToSEBankIDEvidence)  = toSQL (149::Int16)
+  toSQL (Current ChangeAuthenticationToSignMethodDKNemIDToSMSEvidence)       = toSQL (150::Int16)
+  toSQL (Current ChangeAuthenticationToSignMethodDKNemIDToNOBankIDEvidence)  = toSQL (151::Int16)
 
 instance FromSQL EvidenceEventType where
   type PQBase EvidenceEventType = PQBase Int16
@@ -733,8 +748,16 @@ instance FromSQL EvidenceEventType where
       141 -> return (Current ChangeAuthenticationToViewMethodSEBankIDToSMSPinEvidence )
       142 -> return (Current ChangeAuthenticationToViewMethodNOBankIDToSMSPinEvidence )
       143 -> return (Current ChangeAuthenticationToViewMethodDKNemIDToSMSPinEvidence )
+      144 -> return (Current ChangeAuthenticationToSignMethodStandardToDKNemIDEvidence)
+      145 -> return (Current ChangeAuthenticationToSignMethodSEBankIDToDKNemIDEvidence)
+      146 -> return (Current ChangeAuthenticationToSignMethodSMSToDKNemIDEvidence)
+      147 -> return (Current ChangeAuthenticationToSignMethodNOBankIDToDKNemIDEvidence)
+      148 -> return (Current ChangeAuthenticationToSignMethodDKNemIDToStandardEvidence)
+      149 -> return (Current ChangeAuthenticationToSignMethodDKNemIDToSEBankIDEvidence)
+      150 -> return (Current ChangeAuthenticationToSignMethodDKNemIDToSMSEvidence)
+      151 -> return (Current ChangeAuthenticationToSignMethodDKNemIDToNOBankIDEvidence)
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 143)]
+        reRange = [(1, 151)]
       , reValue = n
       }
 

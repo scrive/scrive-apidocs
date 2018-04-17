@@ -187,7 +187,7 @@ var Field = exports.Field = Backbone.Model.extend({
         if (this.isSSN() && (this.signatory().seBankIDAuthenticationToSign() || this.signatory().seBankIDAuthenticationToView())) {
             return new SSNForSEBankIDValidation().validateData(this.value());
         }
-        if (this.isSSN() && (this.signatory().dkNemIDAuthenticationToView())) {
+        if (this.isSSN() && (this.signatory().dkNemIDAuthenticationToSign() || this.signatory().dkNemIDAuthenticationToView())) {
             return new SSNForDKNemIDValidation().validateData(this.value());
         }
         if (this.isMobile() &&
@@ -281,6 +281,7 @@ var Field = exports.Field = Backbone.Model.extend({
         && (!signatory.seBankIDAuthenticationToView())
         && (!signatory.noBankIDAuthenticationToView())
         && (!signatory.noBankIDAuthenticationToSign())
+        && (!signatory.dkNemIDAuthenticationToSign())
         && (!signatory.dkNemIDAuthenticationToView())
         && (!signatory.hasPlacedSignatures())
         && field.isObligatory()
@@ -328,7 +329,7 @@ var Field = exports.Field = Backbone.Model.extend({
         return new EmptyValidation().or(new SSNForSEBankIDValidation());
       } else if (this.signatory().noBankIDAuthenticationToSign() || this.signatory().noBankIDAuthenticationToView()) {
         return new EmptyValidation().or(new SSNForNOBankIDValidation());
-      } else if (this.signatory().dkNemIDAuthenticationToView()) {
+      } else if (this.signatory().dkNemIDAuthenticationToSign() || this.signatory().dkNemIDAuthenticationToView()) {
         return new EmptyValidation().or(new SSNForDKNemIDValidation());
       } else {
         return new Validation();

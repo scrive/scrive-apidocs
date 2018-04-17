@@ -20,6 +20,7 @@ var Subscription = Backbone.Model.extend({
     "can_use_sms_invitations": true,
     "can_use_sms_confirmations": true,
     "can_use_dk_authentication_to_view": true,
+    "can_use_dk_authentication_to_sign": true,
     "can_use_no_authentication_to_view": true,
     "can_use_no_authentication_to_sign": true,
     "can_use_se_authentication_to_view": true,
@@ -92,6 +93,9 @@ var Subscription = Backbone.Model.extend({
   canUseDKAuthenticationToView: function () {
      return this.get("can_use_dk_authentication_to_view");
   },
+  canUseDKAuthenticationToSign: function () {
+     return this.get("can_use_dk_authentication_to_sign");
+  },
   canUseNOAuthenticationToView: function () {
      return this.get("can_use_no_authentication_to_view");
   },
@@ -118,7 +122,8 @@ var Subscription = Backbone.Model.extend({
   canUseNonstandardAuthenticationToSign: function () {
     return this.canUseSEAuthenticationToSign() ||
       this.canUseSMSPinAuthenticationToSign() ||
-      this.canUseNOAuthenticationToSign();
+      this.canUseNOAuthenticationToSign() ||
+      this.canUseDKAuthenticationToSign();
   },
   isOverLimit: function (numberOfDocs) {
     if (numberOfDocs === undefined) {
@@ -147,6 +152,7 @@ var Subscription = Backbone.Model.extend({
       can_use_sms_invitations: pick(nsd.canUseSMSInvitations, this.canUseSMSInvitations()),
       can_use_sms_confirmations: pick(nsd.canUseSMSConfirmations, this.canUseSMSConfirmations()),
       can_use_dk_authentication_to_view: pick(nsd.canUseDKAuthenticationToView, this.canUseDKAuthenticationToView()),
+      can_use_dk_authentication_to_sign: pick(nsd.canUseDKAuthenticationToSign, this.canUseDKAuthenticationToSign()),
       can_use_no_authentication_to_view: pick(nsd.canUseNOAuthenticationToView, this.canUseNOAuthenticationToView()),
       can_use_no_authentication_to_sign: pick(nsd.canUseNOAuthenticationToSign, this.canUseNOAuthenticationToSign()),
       can_use_se_authentication_to_view: pick(nsd.canUseSEAuthenticationToView, this.canUseSEAuthenticationToView()),
@@ -173,6 +179,7 @@ var Subscription = Backbone.Model.extend({
       can_use_sms_invitations: args.can_use_sms_invitations,
       can_use_sms_confirmations: args.can_use_sms_confirmations,
       can_use_dk_authentication_to_view: args.can_use_dk_authentication_to_view,
+      can_use_dk_authentication_to_sign: args.can_use_dk_authentication_to_sign,
       can_use_no_authentication_to_view: args.can_use_no_authentication_to_view,
       can_use_no_authentication_to_sign: args.can_use_no_authentication_to_sign,
       can_use_se_authentication_to_view: args.can_use_se_authentication_to_view,

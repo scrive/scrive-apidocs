@@ -175,6 +175,12 @@ textarea {
   }
 }
 
+.button-thin .button-block {
+  margin-top: 0px;
+  margin-bottom: 20px;
+  padding: 0px;
+}
+
 .obligatory-input {
   @trans-time1: 100ms;
   @trans-time2: 80ms;
@@ -289,6 +295,11 @@ textarea {
   }
 }
 
+.nets-sign-process {
+  text-align: center;
+  margin-top: 20px
+}
+
 .bankid-logo-wrapper {
   display: inline;
 
@@ -304,6 +315,12 @@ textarea {
   vertical-align: middle;
 }
 
+.bankid-logo-nets {
+  display: inline-block;
+  margin-right: @signview-half-gutter;
+  vertical-align: baseline;
+}
+
 .regular-bankid-logo {
   background-image: url(/img/bankid3.png);
   background-size: cover;
@@ -316,7 +333,7 @@ textarea {
   });
 }
 
-.mobile-no-bankid-logo {
+.no-bankid-logo {
   background-image: url(/img/bankid-no.png);
   background-size: cover;
   height: 19px;
@@ -327,6 +344,20 @@ textarea {
     background-size: auto 100%;
     height: 19px;
     width: 113px;
+  });
+}
+
+.dk-nemid-logo {
+  background-image: url(/img/nemid-dk.png);
+  background-size: cover;
+  height: 19px;
+  width: 85px;
+
+  .on-small-view({
+    background-repeat: no-repeat;
+    background-size: auto 100%;
+    height: 19px;
+    width: 85px;
   });
 }
 

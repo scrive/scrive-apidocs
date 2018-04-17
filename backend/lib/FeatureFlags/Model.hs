@@ -20,6 +20,7 @@ data FeatureFlags = FeatureFlags {
   , ffCanUseSMSInvitations :: Bool
   , ffCanUseSMSConfirmations :: Bool
   , ffCanUseDKAuthenticationToView :: Bool
+  , ffCanUseDKAuthenticationToSign :: Bool
   , ffCanUseNOAuthenticationToView :: Bool
   , ffCanUseNOAuthenticationToSign :: Bool
   , ffCanUseSEAuthenticationToView :: Bool
@@ -49,6 +50,7 @@ instance (MonadDB m, MonadThrow m, CryptoRNG m) => DBUpdate m UpdateFeatureFlags
       sqlSet "can_use_sms_invitations" $ ffCanUseSMSInvitations ff
       sqlSet "can_use_sms_confirmations" $ ffCanUseSMSConfirmations ff
       sqlSet "can_use_dk_authentication_to_view" $ ffCanUseDKAuthenticationToView ff
+      sqlSet "can_use_dk_authentication_to_sign" $ ffCanUseDKAuthenticationToSign ff
       sqlSet "can_use_no_authentication_to_view" $ ffCanUseNOAuthenticationToView ff
       sqlSet "can_use_no_authentication_to_sign" $ ffCanUseNOAuthenticationToSign ff
       sqlSet "can_use_se_authentication_to_view" $ ffCanUseSEAuthenticationToView ff
@@ -67,6 +69,7 @@ selectFeatureFlagsSelectors = do
   sqlResult "feature_flags.can_use_sms_invitations"
   sqlResult "feature_flags.can_use_sms_confirmations"
   sqlResult "feature_flags.can_use_dk_authentication_to_view"
+  sqlResult "feature_flags.can_use_dk_authentication_to_sign"
   sqlResult "feature_flags.can_use_no_authentication_to_view"
   sqlResult "feature_flags.can_use_no_authentication_to_sign"
   sqlResult "feature_flags.can_use_se_authentication_to_view"
@@ -74,8 +77,7 @@ selectFeatureFlagsSelectors = do
   sqlResult "feature_flags.can_use_sms_pin_authentication_to_view"
   sqlResult "feature_flags.can_use_sms_pin_authentication_to_sign"
 
-
-fetchFeatureFlags :: (Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool) -> FeatureFlags
+fetchFeatureFlags :: (Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool) -> FeatureFlags
 fetchFeatureFlags (
     can_use_templates
   , can_use_branding
@@ -85,6 +87,7 @@ fetchFeatureFlags (
   , can_use_sms_invitations
   , can_use_sms_confirmations
   , can_use_dk_authentication_to_view
+  , can_use_dk_authentication_to_sign
   , can_use_no_authentication_to_view
   , can_use_no_authentication_to_sign
   , can_use_se_authentication_to_view
@@ -100,6 +103,7 @@ fetchFeatureFlags (
   , ffCanUseSMSInvitations = can_use_sms_invitations
   , ffCanUseSMSConfirmations = can_use_sms_confirmations
   , ffCanUseDKAuthenticationToView = can_use_dk_authentication_to_view
+  , ffCanUseDKAuthenticationToSign = can_use_dk_authentication_to_sign
   , ffCanUseNOAuthenticationToView = can_use_no_authentication_to_view
   , ffCanUseNOAuthenticationToSign = can_use_no_authentication_to_sign
   , ffCanUseSEAuthenticationToView = can_use_se_authentication_to_view

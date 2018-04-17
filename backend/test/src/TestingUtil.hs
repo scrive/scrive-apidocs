@@ -146,20 +146,8 @@ instance Arbitrary PaymentPlan where
 
 instance Arbitrary CompanyInfo where
   arbitrary = do
-    a <- arbitrary
-    b <- arbitrary
-    c <- arbitrary
-    d <- arbitrary
-    e <- arbitrary
-    f <- arbitrary
-    h <- arbitrary
-    i <- arbitrary
-    j <- arbitrary
-    k <- arbitrary
-    l <- arbitrary
-    m <- arbitrary
-    n <- arbitrary
-    p <- arbitrary
+    (a, b, c, d, e, f, h, i, j) <- arbitrary
+    (k, l, m, n, p) <- arbitrary
     return $ CompanyInfo { companyname       = a
                          , companynumber     = b
                          , companyaddress    = c
@@ -191,20 +179,8 @@ instance Arbitrary DeliveryStatus where
 
 instance Arbitrary FeatureFlags where
   arbitrary = do
-    a <- arbitrary
-    b <- arbitrary
-    c <- arbitrary
-    d <- arbitrary
-    e <- arbitrary
-    f <- arbitrary
-    g <- arbitrary
-    h <- arbitrary
-    i <- arbitrary
-    j <- arbitrary
-    k <- arbitrary
-    l <- arbitrary
-    m <- arbitrary
-    n <- arbitrary
+    (a, b, c, d, e, f, g, h, i, j) <- arbitrary
+    (k, l, m, n, o) <- arbitrary
     return $ FeatureFlags {
         ffCanUseTemplates = a
       , ffCanUseBranding  = b
@@ -214,12 +190,13 @@ instance Arbitrary FeatureFlags where
       , ffCanUseSMSInvitations = f
       , ffCanUseSMSConfirmations = g
       , ffCanUseDKAuthenticationToView = h
-      , ffCanUseNOAuthenticationToView = i
-      , ffCanUseNOAuthenticationToSign = j
-      , ffCanUseSEAuthenticationToView = k
-      , ffCanUseSEAuthenticationToSign = l
-      , ffCanUseSMSPinAuthenticationToView = m
-      , ffCanUseSMSPinAuthenticationToSign = n
+      , ffCanUseDKAuthenticationToSign = i
+      , ffCanUseNOAuthenticationToView = j
+      , ffCanUseNOAuthenticationToSign = k
+      , ffCanUseSEAuthenticationToView = l
+      , ffCanUseSEAuthenticationToSign = m
+      , ffCanUseSMSPinAuthenticationToView = n
+      , ffCanUseSMSPinAuthenticationToSign = o
       }
 
 instance Arbitrary UTCTime where
@@ -507,7 +484,7 @@ instance Arbitrary SignatoryTextField where
     }
 
 instance Arbitrary AuthenticationToSignMethod where
-  arbitrary = elements [StandardAuthenticationToSign, SEBankIDAuthenticationToSign, NOBankIDAuthenticationToSign]
+  arbitrary = elements [StandardAuthenticationToSign, SEBankIDAuthenticationToSign, NOBankIDAuthenticationToSign, DKNemIDAuthenticationToSign]
 
 instance Arbitrary AuthenticationToViewMethod where
   arbitrary = elements [StandardAuthenticationToView, SEBankIDAuthenticationToView, NOBankIDAuthenticationToView, DKNemIDAuthenticationToView]
@@ -588,10 +565,18 @@ instance Arbitrary NetsNOBankIDSignature where
     <*> (T.pack <$> arbString 10 20)
     <*> (T.pack <$> arbString 11 11)
 
+instance Arbitrary NetsDKNemIDSignature where
+  arbitrary = NetsDKNemIDSignature
+    <$> (T.pack <$> arbString 20 30)
+    <*> (T.pack <$> arbString 200 300)
+    <*> (T.pack <$> arbString 10 20)
+    <*> (T.pack <$> arbString 10 10)
+
 instance Arbitrary ESignature where
   arbitrary = oneof [
       CGISEBankIDSignature_ <$> arbitrary
     , NetsNOBankIDSignature_ <$> arbitrary
+    , NetsDKNemIDSignature_ <$> arbitrary
     ]
 
 -- generate (byte)strings without \NUL in them since

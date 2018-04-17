@@ -10,7 +10,7 @@ import DB
 tableNetsSignOrders :: Table
 tableNetsSignOrders = tblTable {
   tblName = "nets_sign_orders"
-, tblVersion = 2
+, tblVersion = 3
 , tblColumns = [
     tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
   , tblColumn { colName = "session_id", colType = BigIntT, colNullable = False }
@@ -18,6 +18,8 @@ tableNetsSignOrders = tblTable {
   , tblColumn { colName = "order_id", colType = TextT, colNullable = False }
   , tblColumn { colName = "deadline", colType = TimestampWithZoneT, colNullable = False }
   , tblColumn { colName = "is_canceled", colType = BoolT, colNullable = False }
+  , tblColumn { colName = "provider", colType = SmallIntT, colNullable = False}
+  , tblColumn { colName = "ssn", colType = TextT, colNullable = True }
   ]
 -- only one authentication per signatory. can be relaxed later if necessary.
 , tblPrimaryKey = pkOnColumn "signatory_link_id"
@@ -32,5 +34,12 @@ tableNetsSignOrders = tblTable {
 , tblIndexes = [
     indexOnColumn "session_id"
   , (indexOnColumn "order_id") { idxUnique = True }
+  ]
+, tblChecks = [
+    Check "check_nets_sign_orders_ssn_is_well_defined" $
+      -- Norwegian Nets eSigning does not need SSN,
+      -- but Danish Nets eSigning does.
+          "provider = 1 AND ssn IS NULL\
+      \ OR provider = 2 AND ssn IS NOT NULL"
   ]
 }

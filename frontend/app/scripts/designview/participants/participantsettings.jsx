@@ -108,6 +108,8 @@ module.exports = React.createClass({
       return localization.designview.addParties.authenticationToSignSEBankID;
     } else if (t == "no_bankid") {
       return localization.designview.addParties.authenticationToSignNOBankID;
+    } else if (t == "dk_nemid") {
+      return localization.designview.addParties.authenticationToSignDKNemID;
     } else if (t == "sms_pin") {
       return localization.designview.addParties.authenticationToSignSMSPin;
     }
@@ -115,7 +117,7 @@ module.exports = React.createClass({
   authenticationToSignOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var authTypes = !sig.signs() ? ["standard"] : ["standard", "se_bankid", "no_bankid", "sms_pin"];
+    var authTypes = !sig.signs() ? ["standard"] : ["standard", "se_bankid", "no_bankid", "dk_nemid", "sms_pin"];
 
     if (!Subscription.currentSubscription().canUseSEAuthenticationToSign() && !sig.seBankIDAuthenticationToSign()) {
       authTypes = _.without(authTypes, "se_bankid");
@@ -123,6 +125,10 @@ module.exports = React.createClass({
 
     if (!Subscription.currentSubscription().canUseNOAuthenticationToSign() && !sig.noBankIDAuthenticationToSign()) {
       authTypes = _.without(authTypes, "no_bankid");
+    }
+
+    if (!Subscription.currentSubscription().canUseDKAuthenticationToSign() && !sig.dkNemIDAuthenticationToSign()) {
+      authTypes = _.without(authTypes, "dk_nemid");
     }
 
     if (!Subscription.currentSubscription().canUseSMSPinAuthenticationToSign() && !sig.smsPinAuthenticationToSign()) {

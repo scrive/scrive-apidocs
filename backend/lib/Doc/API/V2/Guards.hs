@@ -203,19 +203,21 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
             Bad -> apiError $ signatoryStateError "Mobile number needs to be a valid Norwegian number as Norwegian BankID is set as authentication to view"
             Empty -> return ()
             Good _ -> return ()
-    NOBankIDAuthenticationToSign -> do
+    NOBankIDAuthenticationToSign -> return ()
+    DKNemIDAuthenticationToSign -> do
       case mSSN of
         Nothing -> return ()
-        -- If we are given a Norwegian SSN
+        -- If we are given a Danish SSN
         Just ssn -> do
           when (signatorylinkidentifiedtoview sl && ssn /= getPersonalNumber sl) $
             apiError $ signatoryStateError "The party has authenticated to view, therefore you can't change the authentication value"
-          case asValidNorwegianSSN ssn of
+          case asValidDanishSSN ssn of
             -- Empty is allowed only if we don't need it for AuthenticationToViewMethod
-            Empty -> when (signatorylinkauthenticationtoviewmethod sl == NOBankIDAuthenticationToView) $
+            Empty -> when (signatorylinkauthenticationtoviewmethod sl == DKNemIDAuthenticationToView) $
               apiError $ signatoryStateError "You provided an empty authentication value, needs a value for authentication to view"
-            Bad -> apiError $ signatoryStateError "The authentication value provided is not a valid for Norwegian BankID"
+            Bad -> apiError $ signatoryStateError "The authentication value provided is not a valid for Danish NemID"
             Good _ -> return ()
+
 
 guardAuthenticationMethodsCanMix :: Kontrakcja m => AuthenticationToViewMethod -> AuthenticationToSignMethod -> m ()
 guardAuthenticationMethodsCanMix authtoview authtosign = do
@@ -260,6 +262,7 @@ guardThatDocumentCanBeStarted doc = do
     authToSignIsValid sl = null (getPersonalNumber sl) || case signatorylinkauthenticationtosignmethod sl of
       SEBankIDAuthenticationToSign -> isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl
       NOBankIDAuthenticationToSign -> isGood $ asValidNOBankIdPersonalNumber $ getPersonalNumber sl
+      DKNemIDAuthenticationToSign  -> isGood $ asValidDanishSSN $ getPersonalNumber sl
       SMSPinAuthenticationToSign -> isJust (getFieldByIdentity MobileFI $ signatoryfields sl) && (null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl))
       StandardAuthenticationToSign -> True
     signatoryHasValidSSNForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of

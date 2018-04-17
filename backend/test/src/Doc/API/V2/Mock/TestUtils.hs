@@ -224,6 +224,7 @@ getMockDocSigLinkAuthToSignMethod i md = case mockSigLinkAuthMethodToSign . getM
   "standard"  -> StandardAuthenticationToSign
   "se_bankid" -> SEBankIDAuthenticationToSign
   "no_bankid" -> NOBankIDAuthenticationToSign
+  "dk_nemid"  -> DKNemIDAuthenticationToSign
   "sms_pin"   -> SMSPinAuthenticationToSign
   _ -> unexpectedError $ "Could not parse AuthenticationToSignMethod from MockDoc:\n" ++ show md
 
@@ -233,6 +234,7 @@ setMockDocSigLinkAuthToSignMethod i auth = setForSigNumberFromMockDoc i
   where toStrAuth StandardAuthenticationToSign = "standard"
         toStrAuth SEBankIDAuthenticationToSign = "se_bankid"
         toStrAuth NOBankIDAuthenticationToSign = "no_bankid"
+        toStrAuth DKNemIDAuthenticationToSign  = "dk_nemid"
         toStrAuth SMSPinAuthenticationToSign   = "sms_pin"
 
 getMockDocSigLinkPersonalNumber :: Int -> MockDoc -> String

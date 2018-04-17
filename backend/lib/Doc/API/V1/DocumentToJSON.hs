@@ -79,7 +79,8 @@ documentJSONV1 muser forapi forauthor msl doc = do
           [SEBankIDAuthenticationToSign] -> "eleg"
           [SMSPinAuthenticationToSign]   -> "sms_pin"
           [NOBankIDAuthenticationToSign] -> "no_bankid"
-          _                        -> "mixed"
+          [DKNemIDAuthenticationToSign]  -> "dk_nemid"
+          _                              -> "mixed"
       J.value "delivery" $ case nub (map signatorylinkdeliverymethod (documentsignatorylinks doc)) of
           [EmailDelivery]   -> ("email"::String)
           [PadDelivery]     -> "pad"
@@ -141,6 +142,7 @@ authenticationToSignJSON StandardAuthenticationToSign = toJSValue ("standard"::S
 authenticationToSignJSON SEBankIDAuthenticationToSign = toJSValue ("eleg"::String)
 authenticationToSignJSON SMSPinAuthenticationToSign   = toJSValue ("sms_pin"::String)
 authenticationToSignJSON NOBankIDAuthenticationToSign = toJSValue ("no_bankid"::String)
+authenticationToSignJSON DKNemIDAuthenticationToSign  = toJSValue ("dk_nemid"::String)
 
 signatoryJSON :: (MonadDB m, MonadIO m, MonadMask m, AWS.AmazonMonad m, MonadLog m, MonadBaseControl IO m) => Bool -> Document -> Maybe SignatoryLink -> SignatoryLink -> JSONGenT m ()
 signatoryJSON forauthor doc viewer siglink = do
@@ -362,6 +364,7 @@ docFieldsListForJSON userid doc = do
       [SEBankIDAuthenticationToSign] -> "eleg"
       [SMSPinAuthenticationToSign]   -> "sms_pin"
       [NOBankIDAuthenticationToSign] -> "no_bankid"
+      [DKNemIDAuthenticationToSign]  -> "dk_nemid"
       _                              -> "mixed"
     J.value "delivery" $ case nub (map signatorylinkdeliverymethod (documentsignatorylinks doc)) of
       [EmailDelivery] -> ("email"::String)
@@ -402,6 +405,7 @@ signatoryFieldsListForJSON doc sl = do
       SEBankIDAuthenticationToSign -> "eleg"
       SMSPinAuthenticationToSign   -> "sms_pin"
       NOBankIDAuthenticationToSign -> "no_bankid"
+      DKNemIDAuthenticationToSign  -> "dk_nemid"
 
     J.value "delivery" $ signatorylinkdeliverymethod sl
     where

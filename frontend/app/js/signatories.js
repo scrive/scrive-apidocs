@@ -491,6 +491,9 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     smsPinAuthenticationToView: function() {
           return this.get("authentication_method_to_view") == "sms_pin" && this.signs();
     },
+    dkNemIDAuthenticationToSign: function() {
+          return this.get("authentication_method_to_sign") == "dk_nemid" && this.signs();
+    },
     standardAuthenticationToSign: function() {
           return this.get("authentication_method_to_sign") == "standard" && this.signs();
     },
@@ -703,13 +706,13 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         return this.get('authentication_method_to_view');
     },
     authenticationMethodsCanMix: function(authToView, authToSign) {
-      if (authToView === "no_bankid" && authToSign === "se_bankid") {
-        return false;
-      } else if (authToView === "dk_nemid"  && authToSign === "se_bankid") {
-        return false;
-      } else if (authToView === "dk_nemid"  && authToSign === "no_bankid") {
-        return false;
-      } else if (authToView === "se_bankid"  && authToSign === "no_bankid") {
+      if (  authToView === "no_bankid" && authToSign === "se_bankid"
+         || authToView === "no_bankid" && authToSign === "dk_nemid"
+         || authToView === "dk_nemid"  && authToSign === "se_bankid"
+         || authToView === "dk_nemid"  && authToSign === "no_bankid"
+         || authToView === "se_bankid" && authToSign === "no_bankid"
+         || authToView === "se_bankid" && authToSign === "dk_nemid"
+         ) {
         return false;
       } else {
         return true;
@@ -739,7 +742,13 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         });
     },
     authenticationToSignFieldValue: function() {
-        if(this.seBankIDAuthenticationToSign() || this.noBankIDAuthenticationToSign()) {
+        if(this.seBankIDAuthenticationToSign()) {
+            return this.personalnumber();
+        }
+        else if(this.noBankIDAuthenticationToSign()) {
+            return ''; // personal number is not checked, when signing with NOBankID
+        }
+        else if(this.dkNemIDAuthenticationToSign()) {
             return this.personalnumber();
         }
         else if(this.smsPinAuthenticationToSign()) {
@@ -818,7 +827,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         }
     },
     needsPersonalNumber: function() {
-        return this.seBankIDAuthenticationToSign() || this.seBankIDAuthenticationToView() || this.noBankIDAuthenticationToSign() || this.noBankIDAuthenticationToView() || this.dkNemIDAuthenticationToView();
+        return this.seBankIDAuthenticationToSign() || this.seBankIDAuthenticationToView() || this.noBankIDAuthenticationToView() || this.dkNemIDAuthenticationToSign() || this.dkNemIDAuthenticationToView();
     },
     needsPersonalNumberFilledByAuthor: function() {
         return this.seBankIDAuthenticationToView()  || this.noBankIDAuthenticationToView() || this.dkNemIDAuthenticationToView();

@@ -128,6 +128,7 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
                               signatory of
       SEBankIDAuthenticationToSign -> addBankIDLogo "bankid_logo_se.png"
       NOBankIDAuthenticationToSign -> addBankIDLogo "bankid_logo_no.png"
+      DKNemIDAuthenticationToSign  -> addBankIDLogo "nemid_logo_dk.png"
       _                            -> return
 
     addBankIDLogo :: FilePath -> [Seal.Field] -> m [Seal.Field]

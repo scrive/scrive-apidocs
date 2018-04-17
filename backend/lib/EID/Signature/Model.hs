@@ -9,6 +9,8 @@ module EID.Signature.Model (
   -- from EID.Nets.Data
   , NetsNOBankIDSignature(..)
   , MergeNetsNOBankIDSignature(..)
+  , NetsDKNemIDSignature(..)
+  , MergeNetsDKNemIDSignature(..)
   ) where
 
 import Control.Monad.Catch
@@ -39,6 +41,7 @@ data ESignature
   | LegacyMobileBankIDSignature_ !LegacyMobileBankIDSignature
   | CGISEBankIDSignature_ !CGISEBankIDSignature
   | NetsNOBankIDSignature_ !NetsNOBankIDSignature
+  | NetsDKNemIDSignature_ !NetsDKNemIDSignature
   deriving (Eq, Ord, Show)
 
 ----------------------------------------
@@ -54,6 +57,7 @@ data SignatureProvider
   | LegacyMobileBankID
   | CgiGrpBankID
   | NetsNOBankID
+  | NetsDKNemID
     deriving (Eq, Ord, Show)
 
 instance PQFormat SignatureProvider where
@@ -70,8 +74,9 @@ instance FromSQL SignatureProvider where
       4 -> return LegacyMobileBankID
       5 -> return CgiGrpBankID
       6 -> return NetsNOBankID
+      7 -> return NetsDKNemID
       _ -> throwM RangeError {
-        reRange = [(1, 6)]
+        reRange = [(1, 7)]
       , reValue = n
       }
 
@@ -83,6 +88,7 @@ instance ToSQL SignatureProvider where
   toSQL LegacyMobileBankID = toSQL (4::Int16)
   toSQL CgiGrpBankID       = toSQL (5::Int16)
   toSQL NetsNOBankID       = toSQL (6::Int16)
+  toSQL NetsDKNemID        = toSQL (7::Int16)
 
 
 ----------------------------------------
@@ -155,6 +161,38 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsNOBankIDSignature () wh
         sqlSet "signatory_name" netsnoSignatoryName
         sqlSet "signatory_personal_number" netsnoSignatoryPID
 
+-- | Insert bank id signature for a given signatory or replace the existing one.
+data MergeNetsDKNemIDSignature = MergeNetsDKNemIDSignature SignatoryLinkID NetsDKNemIDSignature
+instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsDKNemIDSignature () where
+  update (MergeNetsDKNemIDSignature slid NetsDKNemIDSignature{..}) = do
+    loopOnUniqueViolation . withSavepoint "merge_bank_id_signature" $ do
+      runQuery01_ selectSignatorySignTime
+      msign_time :: Maybe UTCTime <- fetchOne runIdentity
+      when (isJust msign_time) $ do
+        unexpectedError "signatory already signed, can't merge signature"
+      success <- runQuery01 . sqlUpdate "eid_signatures" $ do
+        setFields
+        sqlWhereEq "signatory_link_id" slid
+        -- replace the signature only if signatory hasn't signed yet
+        sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime) <+> "IS NULL"
+      when (not success) $ do
+        runQuery_ . sqlInsertSelect "eid_signatures" "" $ do
+          setFields
+    where
+      selectSignatorySignTime = do
+        sqlSelect "signatory_links" $ do
+          sqlResult "sign_time"
+          sqlWhereEq "id" slid
+
+      setFields :: (MonadState v n, SqlSet v) => n ()
+      setFields = do
+        sqlSet "signatory_link_id" slid
+        sqlSet "provider" NetsDKNemID
+        sqlSet "data" netsdkSignedText
+        sqlSet "signature" . encodeUtf8 $ netsdkB64SDO
+        sqlSet "signatory_name" netsdkSignatoryName
+        sqlSet "signatory_personal_number" netsdkSignatorySSN
+
 -- | Get signature for a given signatory.
 data GetESignature = GetESignature SignatoryLinkID
 instance (MonadThrow m, MonadDB m) => DBQuery m GetESignature (Maybe ESignature) where
@@ -207,4 +245,10 @@ fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msig
   , netsnoB64SDO = decodeUtf8 signature
   , netsnoSignatoryName = fromJust msignatory_name
   , netsnoSignatoryPID = fromJust msignatory_personal_number
+  }
+  NetsDKNemID -> NetsDKNemIDSignature_ NetsDKNemIDSignature {
+    netsdkSignedText = sdata
+  , netsdkB64SDO = decodeUtf8 signature
+  , netsdkSignatoryName = fromJust msignatory_name
+  , netsdkSignatorySSN = fromJust msignatory_personal_number
   }

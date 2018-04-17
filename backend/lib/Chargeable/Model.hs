@@ -6,6 +6,7 @@ module Chargeable.Model (
   , ChargeCompanyForNOBankIDAuthentication(..)
   , ChargeCompanyForNOBankIDSignature(..)
   , ChargeCompanyForDKNemIDAuthentication(..)
+  , ChargeCompanyForDKNemIDSignature(..)
   , ChargeCompanyForStartingDocument(..)
   , ChargeCompanyForClosingDocument(..)
   , GetNumberOfDocumentsStartedThisMonth(..)
@@ -34,7 +35,8 @@ data ChargeableItem =
   CINOBankIDAuthentication |
   CIDKNemIDAuthentication  |
   CIClosingSignature       |
-  CINOBankIDSignature
+  CINOBankIDSignature      |
+  CIDKNemIDSignature
   deriving (Eq, Ord, Show, Typeable)
 
 instance PQFormat ChargeableItem where
@@ -57,8 +59,9 @@ instance FromSQL ChargeableItem where
       8  -> return CIClosingDocument
       9  -> return CIClosingSignature
       10 -> return CINOBankIDSignature
+      11 -> return CIDKNemIDSignature
       _  -> throwM RangeError {
-        reRange = [(1, 10)]
+        reRange = [(1, 11)]
       , reValue = n
       }
 
@@ -74,6 +77,7 @@ instance ToSQL ChargeableItem where
   toSQL CIClosingDocument        = toSQL ( 8::Int16)
   toSQL CIClosingSignature       = toSQL ( 9::Int16)
   toSQL CINOBankIDSignature      = toSQL (10::Int16)
+  toSQL CIDKNemIDSignature       = toSQL (11::Int16)
 
 ----------------------------------------
 
@@ -112,6 +116,11 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForNO
 data ChargeCompanyForDKNemIDAuthentication = ChargeCompanyForDKNemIDAuthentication DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForDKNemIDAuthentication () where
   update (ChargeCompanyForDKNemIDAuthentication document_id) = update (ChargeCompanyFor CIDKNemIDAuthentication 1 document_id)
+
+-- | Charge company of the author of the document for danish nemid signature
+data ChargeCompanyForDKNemIDSignature = ChargeCompanyForDKNemIDSignature DocumentID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForDKNemIDSignature () where
+  update (ChargeCompanyForDKNemIDSignature document_id) = update (ChargeCompanyFor CIDKNemIDSignature 1 document_id)
 
 -- | Charge company of the author of the document for creation of the document
 data ChargeCompanyForStartingDocument = ChargeCompanyForStartingDocument DocumentID

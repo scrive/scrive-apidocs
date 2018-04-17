@@ -540,7 +540,8 @@ docApiV2SigSetAuthenticationToSign did slid = logDocumentAndSignatory did slid .
       SMSPinAuthenticationToSign -> do
         mMobile <- (fmap T.unpack) <$> apiV2ParameterOptional (ApiV2ParameterText "mobile_number")
         return (Nothing, mMobile)
-      NOBankIDAuthenticationToSign -> do
+      NOBankIDAuthenticationToSign -> return (Nothing, Nothing)
+      DKNemIDAuthenticationToSign ->  do
         mSSN <- (fmap T.unpack) <$> apiV2ParameterOptional (ApiV2ParameterText "personal_number")
         return (mSSN, Nothing)
     -- Check conditions on parameters and signatory
