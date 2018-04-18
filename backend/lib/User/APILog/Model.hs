@@ -196,6 +196,7 @@ instance MonadDB m => DBQuery m GetCallLogList [CallLogItem] where
       mapM_ sqlResult selectCallLogItemSelectorsList
       sqlWhereEq "user_id" userid
       sqlOrderBy "time DESC"
+      sqlOrderBy "id DESC"
       sqlLimit 100
     fetchMany fetchCallLogItem
 
