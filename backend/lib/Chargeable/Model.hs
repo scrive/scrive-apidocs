@@ -162,8 +162,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetNumberOfDocument
 getAuthorAndAuthorsCompanyIDs :: (MonadDB m, MonadThrow m) => DocumentID -> m (UserID, CompanyID)
 getAuthorAndAuthorsCompanyIDs did = do
   runQuery_ . sqlSelect "documents d" $ do
-    sqlJoinOn "signatory_links sl" "d.author_id = sl.id"
-    sqlJoinOn "users u" "sl.user_id = u.id"
+    sqlJoinOn "users u" "d.author_user_id = u.id"
     sqlResult "u.id"
     sqlResult "u.company_id"
     sqlWhereEq "d.id" did

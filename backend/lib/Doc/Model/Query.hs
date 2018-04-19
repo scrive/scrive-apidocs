@@ -22,7 +22,6 @@ module Doc.Model.Query
   , GetTemplatesByAuthor(..)
   , GetAvailableTemplates(..)
   , GetTimeoutedButPendingDocumentsChunk(..)
-  , GetDocsSentBetween(..)
   , GetDocumentTags(..)
   , CheckDocumentObjectVersionIs(..)
   , DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor(..)
@@ -38,7 +37,6 @@ import qualified Data.ByteString as BS
 import qualified Data.Foldable as F
 import qualified Data.Set as S
 
-import Company.CompanyID
 import DB
 import DB.RowCache (GetRow(..))
 import Doc.Conditions
@@ -326,21 +324,6 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetTimeoutedButPendingDocumentsC
       sqlWhere $ "timeout_time IS NOT NULL AND timeout_time < " <?> mtime
       sqlLimit size
     fetchMany toComposite
-
-data GetDocsSentBetween = GetDocsSentBetween CompanyID UTCTime UTCTime
-instance MonadDB m => DBQuery m GetDocsSentBetween Int64 where
-  query (GetDocsSentBetween cid start end) = do
-    runQuery_ $ "SELECT count(documents.id) " <>
-               "FROM documents " <>
-               "JOIN signatory_links ON documents.id = signatory_links.document_id " <>
-               "JOIN users ON signatory_links.user_id = users.id " <>
-               "WHERE users.company_id =" <?> cid <>
-               "AND documents.author_id = signatory_links.id " <>
-               "AND documents.invite_time >=" <?> start <>
-               "AND documents.invite_time <" <?> end <>
-               "AND documents.type =" <?> Signable <>
-               "AND documents.status <>" <?> Preparation
-    foldlDB (\acc (Identity n) -> return $ acc + n) 0
 
 data CheckDocumentObjectVersionIs = CheckDocumentObjectVersionIs DocumentID Int64
 instance (MonadDB m, MonadThrow m) => DBQuery m CheckDocumentObjectVersionIs () where
