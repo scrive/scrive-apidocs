@@ -39,7 +39,7 @@ import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo
 
-{- | Check if provided authorization values for sign call patch -}
+-- | Check if provided authorization values for sign call patch
 checkAuthenticationToSignMethodAndValue :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
 checkAuthenticationToSignMethodAndValue slid = do
   mAuthType <- apiV2ParameterOptional (ApiV2ParameterTextUnjson "authentication_type" unjsonAuthenticationToSignMethod)
