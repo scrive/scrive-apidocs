@@ -7,6 +7,9 @@ export LC_ALL=en_US.UTF-8
 
 apt-get update
 apt-get install --yes git
+apt-get install --yes unzip
+apt-get install --yes qrencode
+apt-get install --yes xmlsec1
 apt-get install --yes libx11-dev
 apt-get install --yes libxext-dev
 apt-get install --yes pkg-config
@@ -17,11 +20,12 @@ apt-get install --yes libxinerama-dev
 apt-get install --yes libglu1-mesa-dev
 apt-get install --yes libcurl4-openssl-dev
 apt-get install --yes gnuplot
+apt-get install --yes libxi-dev
 
 cd /tmp/
-wget https://downloads.haskell.org/~ghc/8.0.1/ghc-8.0.1-x86_64-deb8-linux.tar.xz
-tar xf ghc-8.0.1-x86_64-deb8-linux.tar.xz
-cd ghc-8.0.1
+wget https://downloads.haskell.org/~ghc/8.2.2/ghc-8.2.2-x86_64-deb8-linux.tar.xz
+tar xf ghc-8.2.2-x86_64-deb8-linux.tar.xz
+cd ghc-8.2.2
 ./configure
 make install
 cd
@@ -30,17 +34,17 @@ ln -s libgmp.so.10 /usr/lib/x86_64-linux-gnu/libgmp.so
 apt-get install --yes zlib1g-dev
 
 cd /tmp/
-wget https://hackage.haskell.org/package/cabal-install-1.24.0.2/cabal-install-1.24.0.2.tar.gz
-tar xf cabal-install-1.24.0.2.tar.gz
-cd cabal-install-1.24.0.2
+wget https://hackage.haskell.org/package/cabal-install-2.0.0.1/cabal-install-2.0.0.1.tar.gz
+tar xf cabal-install-2.0.0.1.tar.gz
+cd cabal-install-2.0.0.1/
 ./bootstrap.sh
 cd
 mv ~/.cabal/bin/cabal  /usr/local/bin/
 
 cd /tmp/
-wget http://mupdf.com/downloads/archive/mupdf-1.8-source.tar.gz
-tar xf mupdf-1.8-source.tar.gz
-cd mupdf-1.8-source
+wget https://mupdf.com/downloads/mupdf-1.12.0-source.tar.xz
+tar xf mupdf-1.12.0-source.tar.xz
+cd mupdf-1.12.0-source
 make release
 cp build/release/mutool /usr/local/bin/
 cd
