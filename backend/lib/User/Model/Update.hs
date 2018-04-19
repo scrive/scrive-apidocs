@@ -79,9 +79,28 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
 data DeleteUser = DeleteUser UserID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool where
   update (DeleteUser uid) = do
+    runQuery_ $ sqlDelete "attachments"           $ sqlWhereEq "user_id" uid
+    runQuery_ $ sqlDelete "email_change_requests" $ sqlWhereEq "user_id" uid
+    runQuery_ $ sqlDelete "oauth_access_token"    $ sqlWhereEq "user_id" uid
+    runQuery_ $ sqlDelete "oauth_api_token"       $ sqlWhereEq "user_id" uid
+    runQuery_ $ sqlDelete "oauth_temp_credential" $ sqlWhereEq "user_id" uid
+    runQuery_ $ sqlDelete "sessions"              $ sqlWhereEq "user_id" uid
+    runQuery_ $ sqlDelete "sessions"              $ sqlWhereEq "pad_user_id" uid
+    runQuery_ $ sqlDelete "user_account_requests" $ sqlWhereEq "user_id" uid
+    runQuery_ $ sqlDelete "user_callback_scheme"  $ sqlWhereEq "user_id" uid
+
     now <- currentTime
     runQuery01 $ sqlUpdate "users" $ do
       sqlSet "deleted" now
+      sqlSet "password"         (Nothing :: Maybe String)
+      sqlSet "salt"             (Nothing :: Maybe String)
+      sqlSet "first_name"       (Nothing :: Maybe String)
+      sqlSet "last_name"        (Nothing :: Maybe String)
+      sqlSet "personal_number"  (Nothing :: Maybe String)
+      sqlSet "company_position" (Nothing :: Maybe String)
+      sqlSet "phone"            (Nothing :: Maybe String)
+      sqlSet "email"            (Nothing :: Maybe String)
+      sqlSet "lang"             (Nothing :: Maybe Int)
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
 

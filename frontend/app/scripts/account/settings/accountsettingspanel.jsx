@@ -41,7 +41,9 @@ module.exports = React.createClass({
   },
 
   deleteUser: function () {
-    console.log("TODO");
+    return this.state.model.deleteUser(function () {
+      console.log("FIXME: Account deleted");
+    });
   },
 
   render: function () {

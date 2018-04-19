@@ -63,5 +63,63 @@ usersDropCompanyID = Migration {
       runQuery_ . sqlAlterTable tname $
         [ sqlDropFK tname $ (fkOnColumn "company_id" "companies" "id")
         , sqlDropColumn "company_id"
+
+dropNotNullConstraintsWhenUserDeleted :: MonadDB m => Migration m
+dropNotNullConstraintsWhenUserDeleted = Migration
+  { mgrTableName = tblName tableUsers
+  , mgrFrom = 25
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable (tblName tableUsers)
+        [ sqlAlterColumn "first_name"       "DROP NOT NULL"
+        , sqlAlterColumn "last_name"        "DROP NOT NULL"
+        , sqlAlterColumn "personal_number"  "DROP NOT NULL"
+        , sqlAlterColumn "company_position" "DROP NOT NULL"
+        , sqlAlterColumn "phone"            "DROP NOT NULL"
+        , sqlAlterColumn "email"            "DROP NOT NULL"
+        , sqlAlterColumn "lang"             "DROP NOT NULL"
+        ]
+
+      let sqlWhereIsDeletedUserID name =
+            sqlWhereInSql name $ toSQLCommand $ sqlSelect "users" $ do
+              sqlResult "id"
+              sqlWhereIsNotNULL "deleted"
+
+      runQuery_ $ sqlDelete "attachments" $
+        sqlWhereIsDeletedUserID "user_id"
+      runQuery_ $ sqlDelete "email_change_requests" $
+        sqlWhereIsDeletedUserID "user_id"
+      runQuery_ $ sqlDelete "oauth_access_token" $
+        sqlWhereIsDeletedUserID "user_id"
+      runQuery_ $ sqlDelete "oauth_api_token" $
+        sqlWhereIsDeletedUserID "user_id"
+      runQuery_ $ sqlDelete "oauth_temp_credential" $
+        sqlWhereIsDeletedUserID "user_id"
+      runQuery_ $ sqlDelete "sessions" $
+        sqlWhereIsDeletedUserID "user_id"
+      runQuery_ $ sqlDelete "sessions" $
+        sqlWhereIsDeletedUserID "pad_user_id"
+      runQuery_ $ sqlDelete "user_account_requests" $
+        sqlWhereIsDeletedUserID "user_id"
+      runQuery_ $ sqlDelete "user_callback_scheme" $
+        sqlWhereIsDeletedUserID "user_id"
+
+      runQuery_ $ sqlUpdate "users" $ do
+        sqlSet "password"         (Nothing :: Maybe String)
+        sqlSet "salt"             (Nothing :: Maybe String)
+        sqlSet "first_name"       (Nothing :: Maybe String)
+        sqlSet "last_name"        (Nothing :: Maybe String)
+        sqlSet "personal_number"  (Nothing :: Maybe String)
+        sqlSet "company_position" (Nothing :: Maybe String)
+        sqlSet "phone"            (Nothing :: Maybe String)
+        sqlSet "email"            (Nothing :: Maybe String)
+        sqlSet "lang"             (Nothing :: Maybe Int)
+        sqlWhereIsNotNULL "deleted"
+
+      -- No information if deleted, all information otherwise.
+      runQuery_ $ sqlAlterTable (tblName tableUsers)
+        [ sqlAddCheck $ Check
+            { chkName      = "check_mandatory_fields_unless_deleted"
+            , chkCondition = checkMandatoryFieldsUnlessDetected23
+            }
         ]
   }

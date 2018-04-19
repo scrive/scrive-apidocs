@@ -202,6 +202,20 @@ module.exports = Backbone.Model.extend({
       companycountry: this.companycountry()
     }).send();
   },
+
+  deleteUser: function (callback) {
+    return new Submit({
+      method: "POST",
+      url: "/api/frontend/deleteuser",
+      ajax: true,
+      ajaxsuccess: function () {
+        if (callback != undefined) {
+          callback();
+        }
+      }
+    }).send();
+  },
+
   valid: function () {
     var number = this.companynumber();
     var message = null;

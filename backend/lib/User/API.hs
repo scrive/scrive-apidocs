@@ -98,6 +98,7 @@ userAPIV2 = choice [
   dir "2fa" $ dir "setup"   $ hPost $ toK0 $ setup2FA,
   dir "2fa" $ dir "confirm" $ hPost $ toK0 $ confirm2FA,
   dir "2fa" $ dir "disable" $ hPost $ toK0 $ disable2FA,
+  dir "deleteuser" $ hPost $ toK0 $ apiCallDeleteUser,
   userAPIV1
   ]
 
@@ -478,3 +479,13 @@ apiCallLoginUserAndGetSession = V2.api $ do
       ses <- startNewSession emptysession (Just userid) Nothing
       return $ V2.Ok $ runJSONGen $ do
         value "session_id" (show $ sessionCookieInfoFromSession ses)
+
+apiCallDeleteUser :: Kontrakcja m => m Response
+apiCallDeleteUser = V2.api $ do
+  (user, _ , _) <- getAPIUser APIPersonal
+  ctx <- getContext
+
+  _ <- dbUpdate $ DeleteUser (userid user)
+  _ <- dbUpdate $ LogHistoryAccountDeleted (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
+
+  return $ V2.Ok ()

@@ -2,10 +2,22 @@ module User.Tables where
 
 import DB
 
+checkMandatoryFieldsUnlessDetected23 :: RawSQL ()
+checkMandatoryFieldsUnlessDetected23 =
+  "(deleted IS NULL AND first_name IS NOT NULL \
+  \AND last_name IS NOT NULL AND personal_number IS NOT NULL \
+  \AND company_position IS NOT NULL AND phone IS NOT NULL \
+  \AND email IS NOT NULL AND lang IS NOT NULL) OR \
+  \(deleted IS NOT NULL AND first_name IS NULL \
+  \AND last_name IS NULL AND personal_number IS NULL \
+  \AND company_position IS NULL AND phone IS NULL AND email IS NULL \
+  \AND lang IS NULL)"
+
 tableUsers :: Table
 tableUsers = tblTable {
     tblName = "users"
-  , tblVersion = 25
+  , tblVersion = 26
+  , tblVersion = 24
     , tblColumns = [
         tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
       , tblColumn { colName = "password", colType = BinaryT }
@@ -14,13 +26,13 @@ tableUsers = tblTable {
       , tblColumn { colName = "account_suspended", colType = BoolT, colNullable = False }
       , tblColumn { colName = "has_accepted_terms_of_service", colType = TimestampWithZoneT }
       , tblColumn { colName = "signup_method", colType = SmallIntT, colNullable = False }
-      , tblColumn { colName = "first_name", colType = TextT, colNullable = False }
-      , tblColumn { colName = "last_name", colType = TextT, colNullable = False }
-      , tblColumn { colName = "personal_number", colType = TextT, colNullable = False }
-      , tblColumn { colName = "company_position", colType = TextT, colNullable = False }
-      , tblColumn { colName = "phone", colType = TextT, colNullable = False }
-      , tblColumn { colName = "email", colType = TextT, colNullable = False }
-      , tblColumn { colName = "lang", colType = SmallIntT, colNullable = False }
+      , tblColumn { colName = "first_name", colType = TextT }
+      , tblColumn { colName = "last_name", colType = TextT }
+      , tblColumn { colName = "personal_number", colType = TextT }
+      , tblColumn { colName = "company_position", colType = TextT }
+      , tblColumn { colName = "phone", colType = TextT }
+      , tblColumn { colName = "email", colType = TextT }
+      , tblColumn { colName = "lang", colType = SmallIntT }
       , tblColumn { colName = "deleted", colType = TimestampWithZoneT }
       , tblColumn { colName = "associated_domain_id", colType = BigIntT , colNullable = False }
       , tblColumn { colName = "password_algorithm", colType = SmallIntT, colNullable = True }
@@ -29,7 +41,11 @@ tableUsers = tblTable {
       , tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = False }
       ]
   , tblPrimaryKey = pkOnColumn "id"
-  , tblChecks = [Check "check_users_lowercase_email" "email = lower(email)"]
+  , tblChecks =
+      [ Check "check_users_lowercase_email" "email = lower(email)"
+      , Check "check_mandatory_fields_unless_deleted"
+              checkMandatoryFieldsUnlessDetected23
+      ]
   , tblForeignKeys = [
       fkOnColumn "user_group_id" "user_groups" "id"
     , fkOnColumn "associated_domain_id" "branded_domains" "id"

@@ -10,6 +10,7 @@ module User.History.Model (
   , LogHistoryTOTPEnable(..)
   , LogHistoryTOTPDisable(..)
   , LogHistoryAccountCreated(..)
+  , LogHistoryAccountDeleted(..)
   , LogHistoryTOSAccept(..)
   , LogHistoryDetailsChanged(..)
   , LogHistoryUserInfoChanged(..)
@@ -65,6 +66,7 @@ data UserHistoryEventType = UserLoginFailure
                           | UserPadLoginSuccess
                           | UserAPIGetPersonalTokenFailure
                           | UserAPIGetPersonalTokenSuccess
+                          | UserAccountDeleted
   deriving (Eq, Show)
 
 {- |
@@ -93,8 +95,9 @@ instance FromSQL UserHistoryEventType where
       12 -> return UserLoginTOTPFailure
       13 -> return UserTOTPEnable
       14 -> return UserTOTPDisable
+      15 -> return UserAccountDeleted
       _ -> throwM RangeError {
-        reRange = [(1, 14)]
+        reRange = [(1, 15)]
       , reValue = n
       }
 
@@ -114,6 +117,7 @@ instance ToSQL UserHistoryEventType where
   toSQL UserLoginTOTPFailure = toSQL (12::Int32)
   toSQL UserTOTPEnable  = toSQL (13::Int32)
   toSQL UserTOTPDisable = toSQL (14::Int32)
+  toSQL UserAccountDeleted = toSQL (15 :: Int32)
 
 data GetUserHistoryByUserID = GetUserHistoryByUserID UserID
 instance MonadDB m => DBQuery m GetUserHistoryByUserID [UserHistory] where
@@ -280,6 +284,18 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryUserInfoChanged Bool 
     case diff of
       [] -> return False
       _  -> update $ LogHistoryDetailsChanged userid ip time diff mpuser
+
+data LogHistoryAccountDeleted = LogHistoryAccountDeleted UserID IPAddress UTCTime
+instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryAccountDeleted Bool where
+  update (LogHistoryAccountDeleted userid ip time) = addUserHistory
+    userid
+    UserHistoryEvent {
+        uheventtype = UserAccountDeleted
+      , uheventdata = Nothing
+      }
+    ip
+    time
+    Nothing
 
 diffUserInfos :: UserInfo -> UserInfo -> [(String, String, String)]
 diffUserInfos old new = fstNameDiff
