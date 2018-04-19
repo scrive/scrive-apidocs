@@ -415,7 +415,7 @@ javascriptLocalisation =
                , invitationNone : "$_designViewAddPartiesInvitationNone()$"
                , invitationSMS : "$_designViewAddPartiesInvitationSMS()$"
                , invitationEmailSMS : "$_designViewAddPartiesInvitationEmailSMS()$"
-               , invitationAPI : "$_designViewAddPartiesInvitationAPI()$"
+               , invitationLink : "$_designViewAddPartiesInvitationLink()$"
                , role : "$_designViewAddPartiesRole()$"
                , roleSignatory : "$_designViewAddPartiesRoleSignatory()$"
                , roleViewer : "$_designViewAddPartiesRoleViewer()$"
@@ -685,14 +685,14 @@ javascriptLocalisation =
             signatory : {
                 editAuthenticationToViewMethod: "$_docviewSignatoryeditAuthenticationToViewMethod()$"
               , editAuthenticationToSignMethod: "$_docviewSignatoryeditAuthenticationToSignMethod()$"
-              , showAPIDelivery: "$_docviewSignatoryShowAPIDelivery()$"
+              , showLinkDelivery: "$_docviewSignatoryShowLinkDelivery()$"
               , invitationOrder: "$_docviewSignatoryInvitationOrderLabel()$"
               , invitationMethod: "$_docviewSignatoryInvitationMethodLabel()$"
               , invitationEmail: "$_docviewSignatoryInvitationEmail()$"
               , invitationPad: "$_docviewSignatoryInvitationPad()$"
               , invitationSMS: "$_docviewSignatoryInvitationSMS()$"
               , invitationEmailSMS: "$_docviewSignatoryInvitationEmailSMS()$"
-              , invitationAPI: "$_docviewSignatoryInvitationAPI()$"
+              , invitationLink: "$_docviewSignatoryInvitationLink()$"
               , invitationNone: "$_docviewSignatoryInvitationNone()$"
               , role: "$_docviewSignatoryRoleLabel()$"
               , roleSignatory: "$_docviewSignatoryRoleSignatory()$"
@@ -715,10 +715,15 @@ javascriptLocalisation =
               , confirmationEmailSMS: "$_docviewSignatoryConfirmationEmailSMS()$"
               , confirmationNone: "$_docviewSignatoryConfirmationNone()$"
             },
-            showAPIDelivery : {
-                title: "$_docviewShowAPIDeliveryModalTitle()$"
-              , accept: "$_docviewShowAPIDeliveryModalAccept()$"
-              , description: "$_docviewShowAPIDeliveryModalDescription()$"
+            showLinkDelivery : {
+                title: "$_docviewShowLinkDeliveryModalTitle()$"
+              , accept: "$_docviewShowLinkDeliveryModalAccept()$"
+              , description: "$_docviewShowLinkDeliveryModalDescription()$"
+            },
+            composeLinkEmail : {
+                compose: "$_docviewComposeLinkEmailCompose()$"
+              , subject: "$_docviewComposeLinkEmailSubject()$"
+              , body: "$_docviewComposeLinkEmailBody()$"
             },
             changeAuthenticationToView : {
                 title: "$_docviewChangeAuthenticationToViewModalTitle()$"
@@ -1196,7 +1201,7 @@ javascriptLocalisation =
              , pad          : "$_deliveryPad()$"
              , mobile       : "$_deliveryMobile()$"
              , email_mobile : "$_deliveryEmailMobile()$"
-             , api          : "$_deliveryAPI()$"
+             , link         : "$_deliveryLink()$"
       }
       , signinginprogressmodal : {
                action1 : "$_signinginprogressmodalAction1()$"

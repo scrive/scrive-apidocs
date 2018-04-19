@@ -78,7 +78,7 @@ module.exports = React.createClass({
     } else if (deliveryMethod == "email_mobile") {
       title.push(localization.designview.addParties.invitationEmailSMS);
     } else if (deliveryMethod == "api") {
-      title.push(localization.designview.addParties.invitationAPI);
+      title.push(localization.designview.addParties.invitationLink);
     }
 
     return title.join(": ");

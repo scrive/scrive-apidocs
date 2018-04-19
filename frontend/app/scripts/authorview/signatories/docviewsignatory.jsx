@@ -10,6 +10,7 @@ var ChangeEmailAndMobileModal = require("./changeemailandmobilemodal");
 var ShowAPIDeliveryModal = require("./showapideliverymodal");
 var EmailValidation = require("../../../js/validation.js").EmailValidation;
 var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
+var LocationUtils = require("../../common/location");
 var PhoneValidation = require("../../../js/validation.js").PhoneValidation;
 var $ = require("jquery");
 var LocalStorage = require("../../../js/storage.js").LocalStorage;
@@ -175,12 +176,22 @@ var EmailModal = require("../../common/email_modal");
       && signatory.padDelivery();
     },
 
+    hasComposeEmailOption: function () {
+      var signatory = this.props.signatory;
+      return signatory.document().currentViewerIsAuthor()
+      && signatory.document().pending()
+      && signatory.canSign()
+      && signatory.apiDelivery()
+      && signatory.email() != "";
+    },
+
     hasAnyOptions: function () {
       return this.hasRemindOption()
         || this.hasChangeEmailOption()
         || this.hasChangeMobileOption()
         || this.hasChangeEmailAndMobileOption()
-        || this.hasGoToSignviewOption();
+        || this.hasGoToSignviewOption()
+        || this.hasComposeEmailOption();
     },
 
     hasAnyDetails: function () {
@@ -253,6 +264,27 @@ var EmailModal = require("../../common/email_modal");
       this.props.signatory.changeEmail(newValue).sendAjax(function () {
         self.triggerOnAction();
       });
+    },
+
+    getComposeEmailLink: function () {
+      var signatory = this.props.signatory;
+      var document = signatory.document();
+      var link = LocationUtils.origin() + signatory.apideliveryurl();
+
+      var subject = $("<div>" + localization.docview.composeLinkEmail.subject + "</div>");
+      subject.find(".documenttitle").text(document.title());
+      subject = subject.text();
+
+      var body = $("<div>" + localization.docview.composeLinkEmail.body + "</div>");
+      body.find(".authorname").text(document.author().smartname());
+      body.find(".documenttitle").text(document.title());
+      body.find(".signlink").text(link);
+      body.find(".br").text("\r\n");
+      body = body.text();
+
+      return "mailto:" + signatory.email()
+            + "?subject=" + encodeURIComponent(subject)
+            + "&body=" + encodeURIComponent(body);
     },
 
     handleStartChangingMobile: function () {
@@ -391,7 +423,7 @@ var EmailModal = require("../../common/email_modal");
       } else if (signatory.emailMobileDelivery()) {
         return localization.docview.signatory.invitationEmailSMS;
       } else if (signatory.apiDelivery()) {
-        return localization.docview.signatory.invitationAPI;
+        return localization.docview.signatory.invitationLink;
       } else if (signatory.noneDelivery()) {
         return localization.docview.signatory.invitationNone;
       }
@@ -580,7 +612,7 @@ var EmailModal = require("../../common/email_modal");
               <div className="fieldrow">
                 {/* if */ this.hasShowAPIDelivery() &&
                   <a className="edit clickable" onClick={this.handleShowAPIDeliveryModal}>
-                    {localization.docview.signatory.showAPIDelivery}
+                    {localization.docview.signatory.showLinkDelivery}
                   </a>
                 }
                 <span className="deliverymethod field" title={this.getDeliveryMethod()}>
@@ -663,6 +695,12 @@ var EmailModal = require("../../common/email_modal");
                 onClick={this.handleStartChangingEmailAndMobile}
               />
             }
+            {/* if */ this.hasComposeEmailOption() &&
+              <Button
+                text={localization.docview.composeLinkEmail.compose}
+                href={this.getComposeEmailLink()}
+              />
+            }
           </div>
 
           <Modal.Container
@@ -671,7 +709,7 @@ var EmailModal = require("../../common/email_modal");
             onShow={this.onShowAPIDeliveryModalShow}
           >
             <Modal.Header
-              title={localization.docview.showAPIDelivery.title}
+              title={localization.docview.showLinkDelivery.title}
               showClose={true}
               onClose={this.onShowAPIDeliveryModalClose}
             />
@@ -682,7 +720,7 @@ var EmailModal = require("../../common/email_modal");
             </Modal.Content>
             <Modal.Footer>
               <Modal.AcceptButton
-                text={localization.docview.showAPIDelivery.accept}
+                text={localization.docview.showLinkDelivery.accept}
                 onClick={this.onShowAPIDeliveryModalClose}
               />
             </Modal.Footer>

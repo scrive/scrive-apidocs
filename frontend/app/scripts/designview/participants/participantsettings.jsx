@@ -31,7 +31,7 @@ module.exports = React.createClass({
     } else if (t == "email_mobile") {
       return localization.designview.addParties.invitationEmailSMS;
     } else if (t == "api") {
-      return localization.designview.addParties.invitationAPI;
+      return localization.designview.addParties.invitationLink;
     }
   },
   deliveryOptions: function () {

@@ -260,7 +260,7 @@ var capitaliseFirstLetter = require("../common/capitalise_first_letter");
       } else if (dm == "email_mobile") {
         return capitaliseFirstLetter(localization.delivery.email_mobile);
       } else if (dm == "api") {
-        return capitaliseFirstLetter(localization.delivery.api);
+        return capitaliseFirstLetter(localization.delivery.link);
       } else {
         return "";
       }

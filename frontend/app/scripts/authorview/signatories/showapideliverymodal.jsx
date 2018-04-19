@@ -25,7 +25,7 @@ var $ = require("jquery");
 
       return (
         <div className="docview-showapidelivery-modal">
-          <label>{localization.docview.showAPIDelivery.description}</label>
+          <label>{localization.docview.showLinkDelivery.description}</label>
           <InfoTextInput
             className="api-delivery-url"
             inputtype="text"

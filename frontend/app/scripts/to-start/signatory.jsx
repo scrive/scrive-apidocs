@@ -46,7 +46,7 @@ module.exports = React.createClass({
     if (sig.padDelivery()) { return localization.docview.signatory.invitationPad; }
     if (sig.mobileDelivery()) { return localization.docview.signatory.invitationSMS; }
     if (sig.emailMobileDelivery()) { return localization.docview.signatory.invitationEmailSMS; }
-    if (sig.apiDelivery()) { return localization.docview.signatory.invitationAPI; }
+    if (sig.apiDelivery()) { return localization.docview.signatory.invitationLink; }
 
     return "";
   },
