@@ -1,0 +1,145 @@
+{
+  "id": "39",
+  "title": "simple.pdf",
+  "parties": [
+    {
+      "id": "63",
+      "user_id": "1",
+      "is_author": true,
+      "is_signatory": true,
+      "fields": [
+        {
+          "type": "email",
+          "value": "test@scrive.com",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "editable_by_signatory": false,
+          "placements": []
+        },
+        {
+          "type": "name",
+          "order": 2,
+          "value": "JonesTest",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        },
+        {
+          "type": "name",
+          "order": 1,
+          "value": "BobTest",
+          "is_obligatory": true,
+          "should_be_filled_by_sender": false,
+          "placements": []
+        }
+      ],
+      "sign_order": 1,
+      "sign_time": null,
+      "seen_time": null,
+      "read_invitation_time": null,
+      "rejected_time": null,
+      "rejection_reason": null,
+      "sign_success_redirect_url": null,
+      "reject_redirect_url": null,
+      "email_delivery_status": "unknown",
+      "mobile_delivery_status": "unknown",
+      "csv": null,
+      "delivery_method": "email",
+      "authentication_method_to_view": "standard",
+      "authentication_method_to_sign": "standard",
+      "confirmation_delivery_method": "email",
+      "allows_highlighting": false,
+      "highlighted_pages": [],
+      "attachments": [],
+      "api_delivery_url": null,
+      "hide_personal_number": false,
+      "has_authenticated_to_view":false,
+      "consent_module": {
+        "title": "Consent module title",
+        "questions": [
+          {
+            "title": "Are you sure?",
+            "positive_option": "Yes",
+            "negative_option": "No",
+            "response": true,
+            "detailed_description": null
+          },
+          {
+            "title": "Really sure?",
+            "positive_option": "Yes",
+            "negative_option": "No",
+            "response": false,
+            "detailed_description": null
+          }
+        ]
+      }
+    },
+    {
+      "id": "64",
+      "user_id": null,
+      "is_author": false,
+      "is_signatory": false,
+      "fields": [],
+      "sign_order": 1,
+      "sign_time": null,
+      "seen_time": null,
+      "read_invitation_time": null,
+      "rejected_time": null,
+      "rejection_reason": null,
+      "sign_success_redirect_url": null,
+      "reject_redirect_url": null,
+      "email_delivery_status": "unknown",
+      "mobile_delivery_status": "unknown",
+      "csv": null,
+      "delivery_method": "email",
+      "authentication_method_to_view": "standard",
+      "authentication_method_to_sign": "standard",
+      "confirmation_delivery_method": "email",
+      "allows_highlighting": false,
+      "highlighted_pages": [],
+      "attachments": [],
+      "api_delivery_url": null,
+      "hide_personal_number": false,
+      "has_authenticated_to_view":false,
+      "consent_module": null
+    }
+  ],
+  "file": {
+    "name": "simple.pdf",
+    "id": "17"
+  },
+  "sealed_file": null,
+  "author_attachments": [],
+  "ctime": "2015-06-24T13:17:39.66Z",
+  "mtime": "2015-06-24T13:29:02.93Z",
+  "timeout_time": null,
+  "auto_remind_time": null,
+  "status": "preparation",
+  "days_to_sign": 90,
+  "days_to_remind": null,
+  "display_options": {
+    "show_header": true,
+    "show_pdf_download": true,
+    "show_reject_option": true,
+    "allow_reject_reason": true,
+    "show_footer": true,
+    "document_is_receipt": false
+  },
+  "invitation_message": "",
+  "confirmation_message": "",
+  "lang": "sv",
+  "api_callback_url": null,
+  "object_version": 2,
+  "access_token": "5a3ec92a88b74d0f",
+  "timezone": "Europe/Stockholm",
+  "tags": [],
+  "is_template": false,
+  "is_saved": true,
+  "is_shared": false,
+  "is_trashed": false,
+  "is_deleted": false,
+  "viewer": {
+    "signatory_id": "63",
+    "role": "signatory"
+  }
+}

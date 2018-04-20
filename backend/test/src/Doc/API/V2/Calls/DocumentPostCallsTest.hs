@@ -16,8 +16,11 @@ import Doc.API.V2.Calls.DocumentGetCalls (docApiV2Get)
 import Doc.API.V2.Calls.DocumentPostCalls
 import Doc.API.V2.Calls.SignatoryCalls (docApiV2SigSign)
 import Doc.API.V2.Mock.TestUtils
+import Doc.Class
+import Doc.Data.Document
 import Doc.Data.DocumentStatus (DocumentStatus(..))
-import Doc.Data.SignatoryLink (AuthenticationToSignMethod(..), AuthenticationToViewMethod(..))
+import Doc.Data.SignatoryConsentQuestion (SignatoryConsentQuestion(..))
+import Doc.Data.SignatoryLink (AuthenticationToSignMethod(..), AuthenticationToViewMethod(..), SignatoryLink(..))
 import Doc.DocumentMonad (withDocumentID)
 import Doc.Model.Update (SetDocumentSharing(..), TimeoutDocument(..))
 import TestingUtil
@@ -48,8 +51,12 @@ apiV2DocumentPostCallsTests env = testGroup "APIv2DocumentPostCalls"
   , testThat "API v2 Set signatory authentication to-view"  env testDocApiV2SigSetAuthenticationToView
   , testThat "API v2 Set signatory authentication to-sign"  env testDocApiV2SigSetAuthenticationToSign
   , testThat "API v2 Change email and mobile"               env testDocApiV2SigChangeEmailAndMobile
+
   , testThat "API v2 Update fails when a consent module is defined for a non-signing party"
              env testDocApiV2SigUpdateFailsIfConsentModuleOnNonSigningParty
+  , testThat "API v2 Update sets responses to null in the consent module"
+             env testDocApiV2SigUpdateNoConsentResponses
+
   ]
 
 testDocApiV2New :: TestEnv ()
@@ -120,6 +127,23 @@ testDocApiV2SigUpdateFailsIfConsentModuleOnNonSigningParty = do
 
   assertBool "The error is about the consent module"
              ("onsent module" `BS.isInfixOf` BSL.toStrict response)
+
+testDocApiV2SigUpdateNoConsentResponses :: TestEnv ()
+testDocApiV2SigUpdateNoConsentResponses = do
+  user <- addNewRandomUser
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
+  did  <- getMockDocId <$> testDocApiV2New' ctx
+
+  contents <- liftIO $ readFile $
+    inTestDir "json/api_v2/test-DocUpdateNoConsentResponses.json"
+  _ <- testRequestHelper ctx
+    POST [("document", inText contents)] (docApiV2Update did) 200
+
+  withDocumentID did $ do
+    sls <- documentsignatorylinks <$> theDocument
+    let allNull = flip all sls $ \sl ->
+          all (isNothing . scqResponse) (signatorylinkconsentquestions sl)
+    assertBool "All the consent responses should be null" allNull
 
 testDocApiV2Start :: TestEnv ()
 testDocApiV2Start = do
