@@ -176,6 +176,7 @@ testChangeCompanyUI = do
   ug <- addNewUserGroup
   Just user <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (get ugID ug)
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+
   mainbd <- dbQuery $ GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (get bdMailTheme mainbd)
   newTheme1 <- dbUpdate $ InsertNewThemeForUserGroup (get ugID ug) mailTheme

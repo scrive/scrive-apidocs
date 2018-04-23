@@ -4,14 +4,14 @@ import DB
 
 checkMandatoryFieldsUnlessDetected23 :: RawSQL ()
 checkMandatoryFieldsUnlessDetected23 =
-  "(deleted IS NULL AND first_name IS NOT NULL \
+  "deleted IS NULL AND first_name IS NOT NULL \
   \AND last_name IS NOT NULL AND personal_number IS NOT NULL \
   \AND company_position IS NOT NULL AND phone IS NOT NULL \
-  \AND email IS NOT NULL AND lang IS NOT NULL) OR \
-  \(deleted IS NOT NULL AND first_name IS NULL \
+  \AND email IS NOT NULL AND lang IS NOT NULL OR \
+  \deleted IS NOT NULL AND first_name IS NULL \
   \AND last_name IS NULL AND personal_number IS NULL \
   \AND company_position IS NULL AND phone IS NULL AND email IS NULL \
-  \AND lang IS NULL)"
+  \AND lang IS NULL"
 
 tableUsers :: Table
 tableUsers = tblTable {

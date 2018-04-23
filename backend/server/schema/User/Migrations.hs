@@ -1,5 +1,7 @@
 module User.Migrations where
 
+import qualified Data.ByteString as BS
+
 import DB
 import User.Tables
 
@@ -103,9 +105,13 @@ dropNotNullConstraintsWhenUserDeleted = Migration
       runQuery_ $ sqlDelete "user_callback_scheme" $
         sqlWhereIsDeletedUserID "user_id"
 
+      runQuery_ $ sqlUpdate "users_history" $ do
+        sqlSet "event_data" (Nothing :: Maybe String)
+        sqlWhereIsDeletedUserID "user_id"
+
       runQuery_ $ sqlUpdate "users" $ do
-        sqlSet "password"         (Nothing :: Maybe String)
-        sqlSet "salt"             (Nothing :: Maybe String)
+        sqlSet "password"         (Nothing :: Maybe BS.ByteString)
+        sqlSet "salt"             (Nothing :: Maybe BS.ByteString)
         sqlSet "first_name"       (Nothing :: Maybe String)
         sqlSet "last_name"        (Nothing :: Maybe String)
         sqlSet "personal_number"  (Nothing :: Maybe String)

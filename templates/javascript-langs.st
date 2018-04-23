@@ -1048,7 +1048,6 @@ javascriptLocalisation =
               , changeEmailTitle : "$_changeEmailRequestTitle()$"
               , changeEmailAccept : "$_changeEmailRequestAcceptText()$"
               , save : "$_SaveChanges()$"
-              , deleteAccount : "$_delete()$"
               , detailSaved : "$_flashMessageUserDetailsSaved()$"
               , mismatchedEmails : "$_flashMessageMismatchedEmails()$"
               , invalidEmail : "$_flashMessageInvalidEmailFormat()$"

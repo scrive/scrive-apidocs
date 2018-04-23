@@ -89,11 +89,15 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool wh
     runQuery_ $ sqlDelete "user_account_requests" $ sqlWhereEq "user_id" uid
     runQuery_ $ sqlDelete "user_callback_scheme"  $ sqlWhereEq "user_id" uid
 
+    runQuery_ $ sqlUpdate "users_history" $ do
+      sqlSet "event_data" (Nothing :: Maybe String)
+      sqlWhereEq "user_id" uid
+
     now <- currentTime
     runQuery01 $ sqlUpdate "users" $ do
       sqlSet "deleted" now
-      sqlSet "password"         (Nothing :: Maybe String)
-      sqlSet "salt"             (Nothing :: Maybe String)
+      sqlSet "password"         (Nothing :: Maybe ByteString)
+      sqlSet "salt"             (Nothing :: Maybe ByteString)
       sqlSet "first_name"       (Nothing :: Maybe String)
       sqlSet "last_name"        (Nothing :: Maybe String)
       sqlSet "personal_number"  (Nothing :: Maybe String)

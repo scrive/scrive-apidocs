@@ -20,6 +20,7 @@ module API.V2.Errors (
   , invalidAuthorization
   , invalidAuthorizationWithMsg
   , insufficientPrivileges
+  , actionNotPermitted
   , httpCodeFromSomeDBExtraException
   , jsonFromSomeDBExtraException
   , tryToConvertConditionalExceptionIntoAPIError
@@ -64,9 +65,8 @@ data APIErrorType = ServerError
                | DocumentObjectVersionMismatch
                | DocumentStateError
                | SignatoryStateError
+               | ActionNotPermitted
   deriving (Show, Eq, Typeable)
-
-
 
 errorIDFromAPIErrorType :: APIErrorType -> T.Text
 errorIDFromAPIErrorType ServerError                   = "server_error"
@@ -82,6 +82,7 @@ errorIDFromAPIErrorType RequestParametersInvalid      = "request_parameters_inva
 errorIDFromAPIErrorType DocumentObjectVersionMismatch = "document_object_version_mismatch"
 errorIDFromAPIErrorType DocumentStateError            = "document_state_error"
 errorIDFromAPIErrorType SignatoryStateError           = "signatory_state_error"
+errorIDFromAPIErrorType ActionNotPermitted            = "action_not_permitted"
 
 jsonFromSomeDBExtraException :: SomeDBExtraException -> JSValue
 jsonFromSomeDBExtraException (SomeDBExtraException ex)  = toJSValue ex
@@ -91,8 +92,6 @@ httpCodeFromSomeDBExtraException (SomeDBExtraException ex) =
   case cast ex of
     Just (apierror :: APIError) -> errorHttpCode apierror
     Nothing -> 500
-
-
 
 -- General errors that have to be handled, but are generally not expected
 serverError :: T.Text -> APIError
@@ -180,6 +179,13 @@ documentShortIDNotFound sdid = resourceNotFound $ "A document matching short id"
 resourceNotFound :: T.Text -> APIError
 resourceNotFound info = APIError { errorType = ResourceNotFound, errorHttpCode = 404, errorMessage = msg}
   where msg = "The resource was not found." <+>  info
+
+actionNotPermitted :: T.Text -> APIError
+actionNotPermitted msg = APIError
+  { errorType     = ActionNotPermitted
+  , errorHttpCode = 403
+  , errorMessage  = "Action not permitted. " <+> msg
+  }
 
 -- Conversion of DB exception / document conditionals into API errors
 

@@ -1914,7 +1914,7 @@ instance MonadDB m => DBUpdate m ConnectSignatoriesToUser () where
     ]
 
 -- | We purge documents that:
--- 1) Were deleted by all signatories with an account
+-- 1) Were deleted by all signatories with an existing account
 -- 2) Don't have an access token in an existing session.
 -- 3) A month has passed (because document could be too big to be sent by email,
 --    and confirmation email with links may still reference it)
@@ -1937,11 +1937,13 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
         sqlResult "d.id"
         -- Document wasn't purged yet.
         sqlWhere "d.purged_time IS NULL"
-        -- All signatories with an account deleted the document.
+        -- All signatories with an account deleted the document or their own account.
         sqlWhereNotExists . sqlSelect "signatory_links sl" $ do
           sqlWhere "sl.document_id = d.id"
           sqlWhere "sl.user_id IS NOT NULL"
           sqlWhere "sl.really_deleted IS NULL"
+          sqlJoinOn "users u" "sl.user_id = u.id"
+          sqlWhere "u.deleted IS NULL"
         -- Document isn't pending (it's possible that there are 0
         -- signatories with user set, but the doc is still pending
         -- purging it would violate db constraints

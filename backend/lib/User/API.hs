@@ -10,7 +10,8 @@ module User.API (
     apiCallLoginUserAndGetSession,
     setup2FA,
     confirm2FA,
-    disable2FA
+    disable2FA,
+    apiCallDeleteUser
   ) where
 
 import Control.Conditional ((<|), (|>))
@@ -484,6 +485,19 @@ apiCallDeleteUser :: Kontrakcja m => m Response
 apiCallDeleteUser = V2.api $ do
   (user, _ , _) <- getAPIUser APIPersonal
   ctx <- getContext
+
+  admins   <- dbQuery $ GetCompanyAdmins $ usercompany user
+  accounts <- dbQuery $ GetCompanyAccounts $ usercompany user
+  -- Either there would still be one admin or it's this company's last user.
+  unless (any ((/= userid user) . userid) admins
+          || length accounts == 1) $
+    V2.apiError $ V2.actionNotPermitted
+      "Can't delete a user unless it is the company's last account or \
+      \there is another admin."
+
+  isDeletable <- dbQuery $ IsUserDeletable $ userid user
+  unless isDeletable $
+    V2.apiError $ V2.actionNotPermitted "Can't delete a user with pending documents"
 
   _ <- dbUpdate $ DeleteUser (userid user)
   _ <- dbUpdate $ LogHistoryAccountDeleted (userid user) (get ctxipnumber ctx) (get ctxtime ctx)

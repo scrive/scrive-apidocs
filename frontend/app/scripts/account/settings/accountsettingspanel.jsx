@@ -33,11 +33,11 @@ module.exports = React.createClass({
   },
 
   onDeleteButtonClick: function () {
-    this.setState({ showUserDeletionModal: true });
+    this.setState({showUserDeletionModal: true});
   },
 
-  closeUserDeletionModal: function() {
-    this.setState({ showUserDeletionModal: false });
+  closeUserDeletionModal: function () {
+    this.setState({showUserDeletionModal: false});
   },
 
   deleteUser: function () {
@@ -68,7 +68,7 @@ module.exports = React.createClass({
             <Button
               type="cancel"
               size="small"
-              text={localization.account.accountDetails.deleteAccount}
+              text={localization.account.accountDetails.deleteUser}
               onClick={this.onDeleteButtonClick}
             />
             <Button

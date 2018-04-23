@@ -20,12 +20,12 @@ module.exports = React.createClass({
 
   componentWillReceiveProps: function (nextProps) {
     if (!this.props.active && nextProps.active) {
-      this.setState({ textEntered: "" });
+      this.setState({textEntered: ""});
     }
   },
 
   onTextChange: function (event) {
-    this.setState({ textEntered: event.target.value });
+    this.setState({textEntered: event.target.value});
   },
 
   correctText: function () {
@@ -53,7 +53,7 @@ module.exports = React.createClass({
   },
 
   render: function () {
-    var acceptClassName = classNames({
+    var acceptClassName = classNames("user-deletion-button", {
       inactive: !this.correctTextEntered()
     });
 

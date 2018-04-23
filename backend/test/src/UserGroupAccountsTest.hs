@@ -158,7 +158,7 @@ test_switchingStandardToAdminUser = do
                         ]
   (res, _ctx') <- runTestKontra req ctx $ handleChangeRoleOfUserGroupAccount
 
-  assertBool "Response is propper JSON" $ res == (runJSONGen $ value "changed" True)
+  assertBool "Response is proper JSON" $ res == (runJSONGen $ value "changed" True)
 
   Just updateduser <- dbQuery $ GetUserByID (userid standarduser)
   assertBool "User is now an admin" (useriscompanyadmin updateduser)
@@ -180,7 +180,7 @@ test_switchingAdminToStandardUser = do
                         ]
   (res, _ctx') <- runTestKontra req ctx $ handleChangeRoleOfUserGroupAccount
 
-  assertBool "Response is propper JSON" $ res == (runJSONGen $ value "changed" True)
+  assertBool "Response is proper JSON" $ res == (runJSONGen $ value "changed" True)
 
   Just updateduser <- dbQuery $ GetUserByID (userid adminuser)
   assertBool "User is now standard" (not $ useriscompanyadmin updateduser)
@@ -201,7 +201,7 @@ test_removingCompanyAccountInvite = do
                         ]
   (res, _ctx') <- runTestKontra req ctx $ handleRemoveUserGroupAccount
 
-  assertBool "Response is propper JSON" $ res == (runJSONGen $ value "removed" True)
+  assertBool "Response is proper JSON" $ res == (runJSONGen $ value "removed" True)
 
   assertCompanyInvitesAre ug []
 
@@ -226,7 +226,7 @@ test_removingCompanyAccountWorks = do
                         ]
   (res, _) <- runTestKontra req ctx $ handleRemoveUserGroupAccount
 
-  assertBool "Response is propper JSON" $ res == (runJSONGen $ value "removed" True)
+  assertBool "Response is proper JSON" $ res == (runJSONGen $ value "removed" True)
 
   deleteduser <- dbQuery $ GetUserByID (userid standarduser)
   assertEqual "User has been deleted" Nothing deleteduser

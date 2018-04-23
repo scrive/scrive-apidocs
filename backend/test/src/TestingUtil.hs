@@ -722,13 +722,27 @@ addNewUserWithCompany firstname secondname email = do
     Nothing -> return Nothing
     Just user -> return $ Just (user, get ugID ug)
 
-addNewCompanyUser :: String -> String -> String -> UserGroupID -> TestEnv (Maybe User)
+-- | Create user and add it to a company as non-admin user.
+addNewCompanyUser :: String -> String -> String -> UserGroupID
+                  -> TestEnv (Maybe User)
 addNewCompanyUser firstname secondname email ugid = do
   bd <- dbQuery $ GetMainBrandedDomain
   dbQuery (UserGroupGet ugid) >>= \case
     Nothing -> return Nothing
     Just _ug ->
-      dbUpdate $ AddUser (firstname, secondname) email Nothing (ugid,True) def (get bdid bd) CompanyInvitation
+      dbUpdate $ AddUser (firstname, secondname) email Nothing (ugid,True) def
+                         (get bdid bd) CompanyInvitation
+
+-- | Create user and add it to a company as admin.
+addNewCompanyAdminUser :: String -> String -> String -> UserGroupID
+                       -> TestEnv (Maybe User)
+addNewCompanyAdminUser firstname secondname email ugid = do
+  bd <- dbQuery $ GetMainBrandedDomain
+  dbQuery (UserGroupGet ugid) >>= \case
+    Nothing -> return Nothing
+    Just company ->
+      dbUpdate $ AddUser (firstname, secondname) email Nothing (ugid, True) def
+                         (get bdid bd) CompanyInvitation
 
 addNewUserToUserGroup :: String -> String -> String -> UserGroupID -> TestEnv (Maybe User)
 addNewUserToUserGroup firstname secondname email ugid = do
