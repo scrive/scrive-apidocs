@@ -42,7 +42,7 @@ cd
 mv ~/.cabal/bin/cabal  /usr/local/bin/
 
 cd /tmp/
-wget https://mupdf.com/downloads/mupdf-1.12.0-source.tar.xz
+wget https://mupdf.com/downloads/archive/mupdf-1.12.0-source.tar.xz
 tar xf mupdf-1.12.0-source.tar.xz
 cd mupdf-1.12.0-source
 make release
