@@ -1,6 +1,7 @@
 {-# LANGUAGE FunctionalDependencies, ExtendedDefaultRules #-}
 module API.V2.Errors (
     serverError
+  , requestFailed
   , requestParameterMissing
   , requestParameterParseError
   , requestParameterInvalid
@@ -51,6 +52,7 @@ instance ToJSValue APIError where
 instance DBExtraException APIError
 
 data APIErrorType = ServerError
+               | RequestFailed
                | EndpointNotFound
                | InvalidAuthorization
                | InsufficientPrivileges
@@ -68,6 +70,7 @@ data APIErrorType = ServerError
 
 errorIDFromAPIErrorType :: APIErrorType -> T.Text
 errorIDFromAPIErrorType ServerError                   = "server_error"
+errorIDFromAPIErrorType RequestFailed                 = "request_failed"
 errorIDFromAPIErrorType EndpointNotFound              = "endpoint_not_found"
 errorIDFromAPIErrorType InvalidAuthorization          = "invalid_authorisation"
 errorIDFromAPIErrorType InsufficientPrivileges        = "insufficient_privileges"
@@ -91,13 +94,18 @@ httpCodeFromSomeDBExtraException (SomeDBExtraException ex) =
 
 
 
--- General errors
+-- General errors that have to be handled, but are generally not expected
 serverError :: T.Text -> APIError
 serverError reason = APIError { errorType = ServerError, errorHttpCode = 500, errorMessage = msg}
   where msg = "We encountered an unexpected error. Please contact Scrive"
               <+> "support and include as much details about what caused"
               <+> "the error, including the document id or any other details. "
               <+> "Error details:" <+> reason
+
+-- General errors that have to be handled and are expected
+requestFailed :: T.Text -> APIError
+requestFailed reason = APIError { errorType = RequestFailed, errorHttpCode = 400, errorMessage = msg}
+  where msg = "Request failed. Additional information: " <+> reason
 
 -- | Used internally by API.V2 for reporting bad API endpoints
 endpointNotFound :: T.Text -> APIError
