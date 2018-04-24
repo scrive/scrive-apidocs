@@ -1935,6 +1935,11 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
     rows <- runQuery . sqlUpdate "documents" $ do
       sqlWith "documents_to_purge" . sqlSelect "documents d" $ do
         sqlResult "d.id"
+        -- The author's company has been deleted.
+        sqlWhereNotExists . sqlSelect "companies c" $ do
+          sqlJoinOn "users u" "u.company_id = c.id"
+          sqlWhere "d.author_id = u.id"
+          sqlWhereIsNotNULL "c.deleted"
         -- Document wasn't purged yet.
         sqlWhere "d.purged_time IS NULL"
         -- All signatories with an account deleted the document or their own account.

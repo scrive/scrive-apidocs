@@ -14,6 +14,8 @@ import Network.HTTP.Client (Manager)
 import qualified Data.Text as T
 
 import Administration.Invoicing
+import Amazon (AmazonMonad)
+import Company.Model
 import CronConf
 import DB
 import Doc.Action
@@ -66,6 +68,8 @@ data JobType
   | SMSEventsProcessing
   | StrengthenPasswords
   | UserAccountRequestEvaluation
+  | UserGroupMigration
+  | CompaniesPurge
   deriving (Eq, Ord, Show)
 
 jobTypeMapper :: [(JobType, T.Text)]
@@ -92,6 +96,8 @@ jobTypeMapper = [
   , (UserAccountRequestEvaluation, "user_account_request_evaluation")
   , (DocumentSearchUpdate, "document_search_update")
   , (DocumentsAuthorIDMigration, "document_author_id_job")
+  , (UserGroupMigration, "user_group_migration")
+  , (CompaniesPurge, "companies_purge")
   ]
 
 instance PQFormat JobType where
@@ -301,6 +307,17 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
   logInfo "Job processed successfully" $ object [
       "elapsed_time" .= (realToFrac (diffUTCTime endTime startTime) :: Double)
     ]
+    CompaniesPurge -> do
+      runDB $ do
+        startTime <- currentTime
+        purgedCount <- dbUpdate $ PurgeCompanies
+        finishTime <- currentTime
+        logInfo "Purged companies" $ object [
+            "purged" .= purgedCount
+          , "elapsed_time" .= (realToFrac (diffUTCTime finishTime startTime) :: Double)
+          ]
+      return . RerunAfter $ iminutes 10
+  logInfo_ "Job processed successfully"
   return $ Ok action
 , ccOnException = \_ CronJob{..} -> return $ case cjAttempts of
   1 -> RerunAfter $ iminutes 1

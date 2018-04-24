@@ -5,6 +5,7 @@ var AccountSettingsView = require("./accountsettingsview");
 var CompanySettingsView = require("./companysettingsview");
 var UserDeletionModal = require("./userdeletionmodal");
 var Button = require("../../common/button");
+var FlashMessages = require("../../../js/flashmessages");
 
 module.exports = React.createClass({
   mixins: [BackboneMixin.BackboneMixin],
@@ -42,7 +43,11 @@ module.exports = React.createClass({
 
   deleteUser: function () {
     return this.state.model.deleteUser(function () {
-      console.log("FIXME: Account deleted");
+      FlashMessages.FlashMessageAfterReload({
+        type: "success",
+        content: "Your account has been deleted successfully."
+      });
+      window.location.href = "/enter";
     });
   },
 

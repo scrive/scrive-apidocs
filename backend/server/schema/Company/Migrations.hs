@@ -37,6 +37,16 @@ companiesAddPartnerID = Migration {
     runSQL_ "ALTER TABLE companies ALTER partner_id SET NOT NULL"
 }
 
+companiesAddPadAppModeAndEArchiveEnabled :: MonadDB m => Migration m
+companiesAddPadAppModeAndEArchiveEnabled = Migration {
+  mgrTableName = tblName tableCompanies
+, mgrFrom = 21
+, mgrAction = StandardMigration $ runQuery_ $ sqlAlterTable (tblName tableCompanies) [
+    sqlAddColumn $ tblColumn { colName = "pad_app_mode", colType = SmallIntT, colNullable = False, colDefault = Just "1" }
+  , sqlAddColumn $ tblColumn { colName = "pad_earchive_enabled", colType = BoolT, colNullable = False, colDefault = Just "true" }
+  ]
+}
+
 companiesAddPaymentPlan :: (MonadThrow m, MonadDB m) => Migration m
 companiesAddPaymentPlan = Migration {
   mgrTableName = tableCompaniesName
@@ -56,16 +66,6 @@ companiesAddPaymentPlan = Migration {
     runSQL_ "ALTER TABLE companies ALTER COLUMN payment_plan SET NOT NULL"
     runSQL_ "DROP TABLE payment_plans"
     runSQL_ "DELETE FROM table_versions WHERE name='payment_plans'"
-}
-
-companiesAddPadAppModeAndEArchiveEnabled :: MonadDB m => Migration m
-companiesAddPadAppModeAndEArchiveEnabled = Migration {
-  mgrTableName = tableCompaniesName
-, mgrFrom = 21
-, mgrAction = StandardMigration $ runQuery_ $ sqlAlterTable tableCompaniesName [
-    sqlAddColumn $ tblColumn { colName = "pad_app_mode", colType = SmallIntT, colNullable = False, colDefault = Just "1" }
-  , sqlAddColumn $ tblColumn { colName = "pad_earchive_enabled", colType = BoolT, colNullable = False, colDefault = Just "true" }
-  ]
 }
 
 companiesDropAllowSaveSafetyCopy :: (MonadThrow m, MonadDB m) => Migration m

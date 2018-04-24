@@ -98,7 +98,7 @@ serverError :: T.Text -> APIError
 serverError reason = APIError { errorType = ServerError, errorHttpCode = 500, errorMessage = msg}
   where msg = "We encountered an unexpected error. Please contact Scrive"
               <+> "support and include as much details about what caused"
-              <+> "the error, including the document id or any other details. "
+              <+> "the error, including the document id or any other details."
               <+> "Error details:" <+> reason
 
 -- General errors that have to be handled and are expected
@@ -184,7 +184,7 @@ actionNotPermitted :: T.Text -> APIError
 actionNotPermitted msg = APIError
   { errorType     = ActionNotPermitted
   , errorHttpCode = 403
-  , errorMessage  = "Action not permitted. " <+> msg
+  , errorMessage  = "Action not permitted." <+> msg
   }
 
 -- Conversion of DB exception / document conditionals into API errors
