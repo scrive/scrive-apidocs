@@ -252,7 +252,7 @@ guardSignatoryHasNotSigned slid doc =
   when (hasSigned . fromJust $ getSigLinkFor slid doc)
     (apiError $ signatoryStateError $ T.pack $ "The signatory has already signed")
 
--- Checks if document can be strated. Throws matching API exception if it does not
+-- Checks if document can be started. Throws matching API exception if it does not
 guardThatDocumentCanBeStarted :: Kontrakcja m => Document -> m ()
 guardThatDocumentCanBeStarted doc = do
     when (isTemplate doc) $ do
