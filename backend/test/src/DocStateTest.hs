@@ -1104,8 +1104,6 @@ testNoDocumentResetSignatoryDetailsAlwaysLeft = replicateM_ 10 $ do
   assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
     withDocumentID a $ dbUpdate $ ResetSignatoryDetails [def { signatoryisauthor = True } ] (systemActor mt)
 
-
-
 testGetDocumentsSharedInCompany :: TestEnv ()
 testGetDocumentsSharedInCompany = replicateM_ 10 $ do
   -- two companies, two users per company, two users outside of company

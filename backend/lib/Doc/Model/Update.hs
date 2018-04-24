@@ -67,7 +67,6 @@ module Doc.Model.Update
   , UpdateDraft(..)
   , ClearSignatoryEmail(..)
   , ClearSignatoryMobile(..)
-  , GetDocsSentBetween(..)
   , FixClosedErroredDocument(..)
   , ConnectSignatoriesToUser(..)
   , AddNotUploadedSignatoryAttachmentsEvents(..)
@@ -1952,10 +1951,9 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
         -- Company settings require to wait to allow saving (we wait
         -- even if there is nobody to wait for to make things simple
         -- and more predictable).
-        sqlWhereNotExists . sqlSelect "signatory_links sl" $ do
-          sqlJoinOn "users u" "sl.user_id = u.id"
+        sqlWhereNotExists . sqlSelect "users u" $ do
           sqlJoinOn "companies c" "u.company_id = c.id"
-          sqlWhere "d.author_id = sl.id"
+          sqlWhere "d.author_user_id = u.id"
           -- Linger time is allowed by author's company settings.
           sqlWhere "c.allow_save_safety_copy"
           -- Linger time was not yet exceeded.
@@ -2024,10 +2022,8 @@ instance MonadDB m => DBUpdate m ArchiveIdleDocumentsForUserInCompany Int where
     runSQL $ "WITH user_idle_docs AS ("
          <+> "  SELECT d.id"
          <+> "  FROM documents AS d"
-         <+> "  JOIN signatory_links AS author_sl"
-         <+> "  ON d.author_id = author_sl.id"
-         <+> "  AND author_sl.user_id =" <?> uid
          <+> "  WHERE d.type =" <?> Signable
+         <+> "  AND d.author_user_id =" <?> uid
          <+> "  AND d.status NOT IN (" <?> Pending <+> ")"
          <+> "  AND d.mtime + (interval '1 day') *" <?> timeoutDays <+> "<" <?> now
          <+> "),"

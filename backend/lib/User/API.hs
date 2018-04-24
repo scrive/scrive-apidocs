@@ -23,6 +23,7 @@ import Log
 import Text.JSON.Gen hiding (object)
 import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.Text as T
 
 import API.Monad.V1
 import Chargeable.Model
@@ -85,7 +86,8 @@ userAPIV1 = choice [
   dir "updateprofile"   $ hPost $ toK0 $ apiCallUpdateUserProfile,
   dir "changeemail"     $ hPost $ toK0 $ apiCallChangeEmail,
   dir "getcallbackscheme" $ hGet $ toK0 $ apiCallUserGetCallbackScheme,
-  dir "testsalesforceintegration" $ hGet $ toK0 $ apiCallTestSalesforceIntegration
+  dir "testsalesforceintegration" $ hGet $ toK0 $ apiCallTestSalesforceIntegration,
+  dir "setsalesforcecallbacks" $ hPost $ toK0 $ apiCallSetSalesforceCallbacks
   ]
 
 userAPIV2 :: Route (Kontra Response)
@@ -434,6 +436,21 @@ apiCallTestSalesforceIntegration = api $ do
                 value "curl_stdout" stdout
                 value "curl_stderr" stderr
       _ -> throwM . SomeDBExtraException $ conflictError "Salesforce callback scheme is not set for this user"
+
+apiCallSetSalesforceCallbacks :: Kontrakcja m => m Response
+apiCallSetSalesforceCallbacks = V2.api $ do
+  (user, _ ) <- V2.getAPIUser APIPersonal
+  ctx <- getContext
+  case (get ctxsalesforceconf ctx) of
+    Nothing -> V2.apiError $ V2.serverError $ "No configuration for Salesforce integration"
+    Just sc -> do
+      code <- V2.apiV2ParameterObligatory (V2.ApiV2ParameterText "code")
+      mtoken <- flip runReaderT sc (getRefreshTokenFromCode $ T.unpack code)
+      case mtoken of
+        Left emsg -> V2.apiError $ V2.requestFailed $ T.pack emsg
+        Right token -> do
+          dbUpdate $ UpdateUserCallbackScheme (userid user) (SalesforceScheme token)
+          return $ V2.Ok $ runJSONGen $ value "status" ("ok"::String)
 
 apiCallLoginUserAndGetSession :: Kontrakcja m => m Response
 apiCallLoginUserAndGetSession = V2.api $ do

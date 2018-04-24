@@ -312,7 +312,7 @@ documentsSelectors = [
   , "documents.object_version"
   , "documents.token"
   , "documents.time_zone_name"
-  , "(SELECT u.company_id FROM users u JOIN signatory_links sl ON u.id = sl.user_id WHERE documents.author_id = sl.id)"
+  , "(SELECT u.company_id FROM users u WHERE u.id = documents.author_user_id)"
   , documentStatusClassExpression
   ]
 

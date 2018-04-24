@@ -10,6 +10,7 @@ import Database.PostgreSQL.PQTypes
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Char8 as BS
 
+import Doc.API.V2.JSON.Utils
 import Doc.DocStateData
 import Doc.SignatoryConsentQuestionID
 
@@ -26,7 +27,7 @@ unjsonSignatoryConsentModule = objectOf $ (,)
       <**> (field "title" scqTitle "Title" <**> pure (\t q -> q { scqTitle = t }))
       <**> (field "positive_option" scqPositiveOption "Text of the positive answer" <**> pure (\po q -> q { scqPositiveOption = po }))
       <**> (field "negative_option" scqNegativeOption "Text of the negative answer" <**> pure (\no q -> q { scqNegativeOption = no }))
-      <**> (fieldOpt "response" scqResponse "Response" <**> pure (\r q -> q { scqResponse = r }))
+      <*   (fieldReadOnlyOpt "response" scqResponse "Response")
       <**> (fieldOptBy "detailed_description" scqDescription "Additional detailed description" unjsonDescription <**> pure (\d q -> q { scqDescription = d }))
 
     unjsonDescription :: UnjsonDef (String, String)

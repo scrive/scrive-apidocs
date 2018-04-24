@@ -15,18 +15,18 @@ cabal update
 cabal install alex
 cabal install happy
 export PATH=/home/ubuntu/.cabal/bin:$PATH
-cabal install shake-0.15.11
-cabal install aeson-1.1.0.0
+cabal install shake-0.16
+cabal install aeson-1.2.3.0
 cd kontrakcja
+cd frontend
+npm install
+cd ..
+export PATH=/home/ubuntu/kontrakcja/frontend/node_modules/.bin:$PATH
+echo "export PATH=${PATH}" >> /home/ubuntu/.bash_profile
 cabal sandbox init
 ./shake.sh server
 cp /vagrant/kontrakcja.conf .
 cp /vagrant/mailing_server.conf .
 cp /vagrant/messenger_server.conf .
 cp /vagrant/cron.conf .
-cd frontend
-npm install
-cd ..
-export PATH=/home/ubuntu/kontrakcja/frontend/node_modules/.bin:$PATH
-echo "export PATH=${PATH}" >> /home/ubuntu/.bash_profile
 ./dist/build/kontrakcja-migrate/kontrakcja-migrate

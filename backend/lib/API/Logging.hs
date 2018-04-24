@@ -23,4 +23,6 @@ logUserCompanyIPAndApiVersion apiversion acc = do
         ]
   ctx <- getContext
   let apiversionandip = [identifier_ apiversion, "ip" .= show (get ctxipnumber ctx)]
-  localData (userandcompanyids ++ apiversionandip) acc
+  localData (userandcompanyids ++ apiversionandip) $ do
+    logInfo_ "API call"
+    acc
