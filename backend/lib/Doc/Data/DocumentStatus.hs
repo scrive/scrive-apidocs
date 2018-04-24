@@ -13,7 +13,6 @@ import DB
    Meaning:
    * Preparation: Only author can see it. He's still editing.
    * Pending: People can sign document. Could be timed out.
-   * AwaitingAuthor: Everyone has signed but the author.
    * Closed: Everybody signed. This is final state.
    * Canceled: Author has canceled the document.
    * Timedout: This works as autocancel and has exactly same
@@ -28,22 +27,15 @@ import DB
      all who have signed it already is sent.
    * Pending to Closed: When everyone has signed.
      Info about closed deal is sent to everybody involved.
-   * Pending to AwaitingAuthor: When all signatories have signed and there were fields.
-     Info is sent to author.
-   * AwaitingAuthor to Closed: Author signs it.
    * Pending to Cancel: Send no emails.
    * Pending to Timeout: TODO: No action?
 
    Allowed actions:
    * Preparation: change document, change title, add/rem signatories
    * Pending: change email of a signatory, signatory can sign
-   * AwaitingAuthor: autho can sign.
    * Closed: nothing
    * Canceled: edit back to Preparation
    * Timedout: edit back to Preparation
-
-   Archived bit:
-   * This bit just moves document out of main view.
  -}
 
 data DocumentStatus

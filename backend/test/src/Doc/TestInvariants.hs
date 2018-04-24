@@ -60,7 +60,7 @@ documentHasOneAuthor _ document =
     length authors == 1
 
 {- |
-   We don't expect to find any deleted documents in Pending or AwaitingAuthor
+   We don't expect to find any deleted documents in Pending state.
    Basically, you can't delete what needs to be signed.
  -}
 noDeletedSigLinksForSigning :: UTCTime -> Document -> Maybe String
@@ -177,11 +177,11 @@ maxNumberOfPlacements _ document =
   assertInvariant ("document had too many placements: " ++ show m ++ ". max is " ++ show maxlength ++ " (25 * number of fields)") $ m <= maxlength
 
 {- |
-   At least one signatory in Pending AwaitingAuthor or Closed
+   At least one signatory in Pending or Closed
  -}
 atLeastOneSignatory :: UTCTime -> Document -> Maybe String
 atLeastOneSignatory _ document =
-  assertInvariant "there are no signatories, though doc is pending, awaiting author, or closed" $
+  assertInvariant "there are no signatories, though doc is pending or closed" $
     (isPending document || isClosed document) -->
     (any isSignatory (documentsignatorylinks document))
 
@@ -205,7 +205,7 @@ maxCustomFields _ document =
   assertInvariant ("there are signatories with too many custom fields: " ++ show m ++ ". maximum is " ++ show maxfields) $
     m <= maxfields
 
--- the following should work in Pending, Closed, AwaitingAuthor
+-- the following should work in Pending and Closed
 
 -- | First Name not null
 _hasFirstName :: UTCTime -> Document -> Maybe String
