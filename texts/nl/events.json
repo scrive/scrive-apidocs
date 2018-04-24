@@ -78,6 +78,8 @@
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Het document werd ondertekend met gebruik van PIN per SMS als identificatie methode.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Het document werd ondertekend.",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemID":"",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemWithName":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"Het document is ondertekend door $actor$ met gebruik van Swedish BankID als authenticatiemethode.",
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"Het document is ondertekend door $actor$ met gebruik van Swedish BankID als authenticatiemethode. De naam die teruggestuurd is door Swedish BankID is \"$eid_signatory_name$\". ",
 "_SignDocumentEvidenceTextSimpleNotArchiveNOBankID":"",

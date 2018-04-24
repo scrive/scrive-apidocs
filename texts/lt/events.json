@@ -78,6 +78,8 @@
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Dokumentas pasirašytas autentifikuojant PIN arba SMS žinute.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Dokumentas buvo pasirašytas.",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemID":"",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemWithName":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"$actor$ pasirašė dokumentą per Švedijos „BankID“ autentifikavimo sistemą.",
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"$actor$ pasirašė dokumentą per Švedijos „BankID“ autentifikavimo sistemą. Švedijos „BankID“ pateiktas vardas „$eid_signatory_name$“.",
 "_SignDocumentEvidenceTextSimpleNotArchiveNOBankID":"",

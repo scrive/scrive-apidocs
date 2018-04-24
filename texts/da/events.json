@@ -78,6 +78,8 @@
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Dokumentet blev signeret.",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemID":"",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemWithName":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"Dokumentet blev signeret af $actor$, der anvendte Swedish BankID som godkendelsesmetode.",
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"Dokumentet blev signeret af $actor$, der anvendte Swedish BankID som godkendelsesmetode. Navnet, der blev sendt tilbage fra Swedish BankID, var \"$eid_signatory_name$\".",
 "_SignDocumentEvidenceTextSimpleNotArchiveNOBankID":"",

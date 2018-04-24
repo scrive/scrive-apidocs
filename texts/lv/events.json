@@ -78,6 +78,8 @@
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Parakstīja dokumentu, autentifikācijai izmantojot īsziņā nosūtīto PIN kodu.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Dokuments ir parakstīts.",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemID":"",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemWithName":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"$actor$ parakstīja dokumentu, autentifikācijai izmantojot Zviedrijas BankID.",
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"$actor$ parakstīja dokumentu, autentifikācijai izmantojot Zviedrijas BankID. Zviedrijas BankID norādītais vārds bija \"$eid_signatory_name$\".",
 "_SignDocumentEvidenceTextSimpleNotArchiveNOBankID":"",

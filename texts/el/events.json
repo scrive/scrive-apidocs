@@ -78,6 +78,8 @@
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Το έγγραφο υπογράφηκε με χρήση PIN μέσω SMS ως μέθοδος πιστοποίησης. ",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Το έγγραφο υπογράφηκε. ",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemID":"",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemWithName":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"Το έγγραφο υπογράφηκε από τον $actor$ με χρήση Σουηδικού BankID ως μέθοδο πιστοποίησης. ",
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"Το έγγραφο υπογράφηκε από τον $actor$ με χρήση Σουηδικού BankID ως μέθοδο πιστοποίησης. Το όνομα που επέστρεψε από το Σουηδικό BankID ήταν \"$eid_signatory_name$\". ",
 "_SignDocumentEvidenceTextSimpleNotArchiveNOBankID":"",

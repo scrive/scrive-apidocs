@@ -78,6 +78,8 @@
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Dokumentti allekirjoitettiin käyttämällä PIN by SMS -palvelua tunnistautumismuotona.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Dokumentti allekirjoitettiin.",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemID":"",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemWithName":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"$actor$ allekirjoitti dokumentin käyttäen ruotsalaista BankID:tä tunnistautumismuotona.",
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"$actor$ allekirjoitti dokumentin käyttäen ruotsalaista BankID:tä tunnistautumismuotona. Ruotsalaisesta BankID:stä palautettu nimi oli \"$eid_signatory_name$\".",
 "_SignDocumentEvidenceTextSimpleNotArchiveNOBankID":"$actor$ allekirjoitti dokumentin käyttäen norjalaista BankID:tä tunnistautumismuotona.",
