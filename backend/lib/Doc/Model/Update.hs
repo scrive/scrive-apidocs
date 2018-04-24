@@ -1049,7 +1049,6 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m RejectD
                                        sqlWhereSignatoryHasNotSigned
                                        sqlWhereDocumentIDIs docid
                                        sqlWhereSignatoryLinkIDIs slid
-                                       sqlWhereSignatoryHasNotSigned
       updateMTimeAndObjectVersion (actorTime actor)
 
     void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
