@@ -12,7 +12,7 @@ import qualified Data.Set as S
 
 import Amazon
 import Company.Model
-import Context (ctxtime)
+import Context (ctxpdftoolslambdaconf, ctxtime)
 import DB
 import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
 import Doc.API.V2.JSON.SignatoryConsentQuestion
@@ -34,8 +34,10 @@ import EvidenceLog.Model
 import EvidenceLog.View (getSignatoryIdentifierMap, simplyfiedEventText)
 import File.FileID
 import MinutesTime
+import PdfToolsLambda.Conf
 import TestingUtil
 import TestKontra
+import TestKontra (mkContext)
 import Text.XML.DirtyContent (renderXMLContent)
 import User.Model
 import Util.Actor
@@ -274,6 +276,8 @@ getScreenshots = do
 
 testSignDocumentEvidenceLog :: TestEnv ()
 testSignDocumentEvidenceLog = do
+  pdfSealLambdaConf <- tePdfToolsLambdaConf <$> ask
+
   author <- addNewRandomUser
 
   screenshots <- getScreenshots
@@ -299,7 +303,8 @@ testSignDocumentEvidenceLog = do
 
       mc <- MemCache.new (const 1) 1000
       runAmazonMonadT (AmazonConfig Nothing mc Nothing) $ do
-        sealDocument "https://scrive.com"
+        runPdfToolsLambdaConfT pdfSealLambdaConf $ do
+          sealDocument "https://scrive.com"
 
 testSignDocumentSearchData :: TestEnv ()
 testSignDocumentSearchData = do
@@ -1007,7 +1012,8 @@ testSealDocument = replicateM_ 1 $ do
 
     mc <- MemCache.new (const 1) 1000
     runAmazonMonadT (AmazonConfig Nothing mc Nothing) $ do
-      sealDocument "https://scrive.com"
+      runPdfToolsLambdaConfT (get ctxpdftoolslambdaconf ctx) $ do
+        sealDocument "https://scrive.com"
 
 
 testDocumentAppendSealedPendingRight :: TestEnv ()

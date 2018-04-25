@@ -55,6 +55,7 @@ import IPAddress
 import Kontra
 import Log.Configuration
 import MinutesTime
+import PdfToolsLambda.Conf
 import Session.SessionID
 import Templates
 import User.Lang
@@ -75,6 +76,7 @@ data TestEnvSt = TestEnvSt {
   , teRejectedDocuments :: !(TVar Int)
   , teOutputDirectory   :: !(Maybe String) -- ^ Put test artefact output in this directory if given
   , teStagingTests      :: !Bool
+  , tePdfToolsLambdaConf :: PdfToolsLambdaConf
   }
 
 data TestEnvStRW = TestEnvStRW {
@@ -302,6 +304,7 @@ mkRequestWithHeaders method vars headers = do
 -- | Constructs initial context with given templates
 mkContext :: Lang -> TestEnv Context
 mkContext lang = do
+  pdfSealLambdaConf <- tePdfToolsLambdaConf <$> ask
   globaltemplates <- teGlobalTemplates <$> ask
   time <- currentTime
   bd <- dbQuery $ GetMainBrandedDomain
@@ -339,6 +342,9 @@ mkContext lang = do
         , _ctxnetsconfig = Nothing
         , _ctxisapilogenabled = True
         , _ctxnetssignconfig = Nothing
+        -- We use real lambda config here because we want our tests to check it
+        -- This lambda and s3 bucket are dedicated for tests and development
+        , _ctxpdftoolslambdaconf = pdfSealLambdaConf
     }
 
 testGTConf :: GuardTimeConf
@@ -357,6 +363,7 @@ testLogConfig = LogConfig {
     lcSuffix  = "dev"
   , lcLoggers = [StandardOutput]
   }
+
 -- pgsql database --
 
 -- | Runs set of sql queries within one transaction and clears all tables in the end

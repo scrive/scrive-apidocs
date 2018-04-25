@@ -12,6 +12,7 @@ import GuardTime (GuardTimeConf(..))
 import HubSpot.Conf
 import IPAddress
 import MagicHash (MagicHash)
+import PdfToolsLambda.Conf
 import Salesforce.Conf
 import Session.SessionID
 import Templates
@@ -51,6 +52,7 @@ data Context = Context
     , _ctxnetsconfig          :: Maybe NetsConfig
     , _ctxisapilogenabled     :: Bool
     , _ctxnetssignconfig      :: Maybe NetsSignConfig
+    , _ctxpdftoolslambdaconf  :: PdfToolsLambdaConf
     }
 
 -- | anonymousContext changes given context into one that does not hold any user details.

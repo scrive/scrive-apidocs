@@ -22,14 +22,11 @@ import Data.Digest.SHA2
 import Data.Function (on)
 import Data.Time
 import Log
-import System.Directory
 import System.Exit
 import System.FilePath ((</>), takeExtension, takeFileName)
-import System.IO hiding (stderr)
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import Text.HTML.TagSoup (Tag(..), parseTags)
 import Text.StringTemplates.Templates
-import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BB
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL (empty, writeFile)
@@ -63,6 +60,8 @@ import File.Storage
 import Kontra
 import Log.Identifier
 import Log.Utils
+import PdfToolsLambda.Conf
+import PdfToolsLambda.Control
 import Templates
 import Util.Actor
 import Util.HasSomeCompanyInfo
@@ -581,7 +580,7 @@ presealSpecFromDocument checkboxMapping radiobuttonMapping document inputpath ou
             , Seal.pssFields         = fields
             }
 
-sealDocument :: (CryptoRNG m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadMask m, MonadLog m, AWS.AmazonMonad m)
+sealDocument :: (CryptoRNG m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadMask m, MonadLog m, AWS.AmazonMonad m, PdfToolsLambdaConfMonad m, CryptoRNG m)
              => String -> m ()
 sealDocument hostpart = do
   mfile <- fileFromMainFile =<< documentfile <$> theDocument
@@ -594,7 +593,7 @@ sealDocument hostpart = do
       logInfo_ "Sealing of document failed because it has no main file attached"
       internalError
 
-sealDocumentFile :: (CryptoRNG m, MonadMask m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadLog m, AWS.AmazonMonad m)
+sealDocumentFile :: (CryptoRNG m, MonadMask m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadLog m, AWS.AmazonMonad m, PdfToolsLambdaConfMonad m, CryptoRNG m)
                  => String
                  -> File
                  -> m ()
@@ -619,48 +618,14 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
         (return ())
         (systemActor now)
     eotData <- liftBase $ generateEvidenceOfTimeData 100 (tmppath ++ "/eot_samples.txt") (tmppath ++ "/eot_graph.svg") (map HC.offset offsets)
-    config <- theDocument >>= \d -> sealSpecFromDocument checkboxMapping radiobuttonMapping hostpart d elog offsets eotData content tmppath tmpin tmpout
-
-    let json_config = Unjson.unjsonToByteStringLazy Seal.unjsonSealSpec config
-    (code,_stdout,stderr) <- liftIO $ do
-      let sealspecpath = tmppath ++ "/sealspec.json"
-      liftIO $ BSL.writeFile sealspecpath json_config
-      readProcessWithExitCode "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "add-verification-pages", sealspecpath] (BSL.empty)
-
-    logInfo "Sealing completed" $ object [
-        "code" .= show code
-      ]
-    case code of
-      ExitSuccess -> do
-        tmpoutContent <- liftIO (BS.readFile tmpout)
-        case tmpoutContent of
-          "" -> do
-            logAttention_ $ "Sealing document resulted in an empty output"
-            internalError
-          _ -> do
-            sealedfileid <- dbUpdate $ NewFile filename tmpoutContent
-            dbUpdate $ AppendSealedFile sealedfileid Missing (systemActor now)
-            -- Temp hack to dump all sealing data. Will be removed soon. Will work fine
-            -- even when dumpFileData doen't exist. MR
-            liftIO $ (void $ readProcessWithExitCode "dumpFileData.sh" [tmppath] (BSL.empty)) `E.catch` (\(_::E.SomeException) -> return ())
-      ExitFailure _ -> do
-        systmp <- liftIO $ getTemporaryDirectory
-        (path, handle) <- liftIO $ openTempFile systmp ("seal-failed-" ++ show documentid ++ "-" ++ show fileid ++ "-.pdf")
-        logAttention "Cannot seal document because of file" $ object [
-            identifier_ fileid
-          , "path" .= path
-          , "stderr" `equalsExternalBSL` stderr
-          ]
-        -- show JSON'd config as that's what the java app is fed.
-        liftIO $ BS.hPutStr handle content
-        liftIO $ hClose handle
-        void $ dbUpdate $ ErrorDocument
-                            ErrorSealingDocumentEvidence
-                            (return ())
-                            (systemActor now)
+    spec <- theDocument >>= \d -> sealSpecFromDocument checkboxMapping radiobuttonMapping hostpart d elog offsets eotData content tmppath tmpin tmpout
+    lconf <- getPdfToolsLambdaConf
+    if (get pdfToolsLambdaSkip lconf)
+       then runOldJavaSealing  tmppath filename spec
+       else runNewLambdaSealing tmppath filename spec
 
 -- | Generate file that has all placements printed on it. It will look same as final version except for footers and verification page.
-presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, MonadLog m, KontraMonad m, TemplatesMonad m, MonadIO m, MonadMask m, AWS.AmazonMonad m)
+presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, MonadLog m, KontraMonad m, TemplatesMonad m, MonadIO m, MonadMask m, AWS.AmazonMonad m, PdfToolsLambdaConfMonad m, CryptoRNG m)
                  => Document
                  -> File
                  -> m (Either String BS.ByteString)
@@ -673,27 +638,11 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
     liftIO $ BS.writeFile tmpin content
     checkboxMapping <- liftIO $ readCheckboxImagesMapping
     radiobuttonMapping <- liftIO $ readRadiobuttonImagesMapping
-    config <- presealSpecFromDocument checkboxMapping radiobuttonMapping document tmpin tmpout
-
-    let json_config = Unjson.unjsonToByteStringLazy Seal.unjsonPreSealSpec config
-    (code,_stdout,stderr) <- liftIO $ do
-      let sealspecpath = tmppath ++ "/sealspec.json"
-      liftIO $ BSL.writeFile sealspecpath json_config
-      readProcessWithExitCode "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "add-verification-pages", sealspecpath] (BSL.empty)
-    logInfo "Presealing completed" $ object [
-        "code" .= show code
-      ]
-    case code of
-      ExitSuccess -> do
-          res <- liftIO $ BS.readFile tmpout
-          logInfo_ "Returning presealed content"
-          return $ Right res
-      ExitFailure _ -> do
-          logAttention "Presealing failed" $ object [
-              "stderr" `equalsExternalBSL` stderr
-            ]
-          -- show JSON'd config as that's what the java app is fed.
-          return $ Left "Error when preprinting fields on PDF"
+    spec <- presealSpecFromDocument checkboxMapping radiobuttonMapping document tmpin tmpout
+    lconf <- getPdfToolsLambdaConf
+    if (get pdfToolsLambdaSkip lconf)
+       then runOldJavaPresealing  tmppath spec
+       else runNewLambdaPresealing tmppath spec
 
 
 addSealedEvidenceEvents ::  (MonadBaseControl IO m, MonadDB m, MonadLog m, TemplatesMonad m, MonadIO m, DocumentMonad m, AWS.AmazonMonad m, MonadMask m)
@@ -713,3 +662,89 @@ addSealedEvidenceEvents actor = do
         (return ())
         actor
   return ()
+
+
+runOldJavaSealing :: (MonadBaseControl IO m, MonadDB m, MonadLog m, TemplatesMonad m, MonadIO m, DocumentMonad m, AWS.AmazonMonad m, MonadMask m) => FilePath -> String -> Seal.SealSpec -> m ()
+runOldJavaSealing tmppath fn spec = do
+  now <- currentTime
+  let json_config = Unjson.unjsonToByteStringLazy Seal.unjsonSealSpec spec
+  (code,_stdout,stderr) <- liftIO $ do
+    let sealspecpath = tmppath ++ "/sealspec.json"
+    liftIO $ BSL.writeFile sealspecpath json_config
+    readProcessWithExitCode "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "add-verification-pages", sealspecpath] (BSL.empty)
+  logInfo "Sealing completed" $ object [
+      "code" .= show code
+    ]
+  case code of
+    ExitSuccess -> do
+      tmpoutContent <- liftIO (BS.readFile $ Seal.output spec)
+      case tmpoutContent of
+        "" -> do
+          logAttention_ $ "Sealing document resulted in an empty output"
+          internalError
+        _ -> do
+          sealedfileid <- dbUpdate $ NewFile fn tmpoutContent
+          dbUpdate $ AppendSealedFile sealedfileid Missing (systemActor now)
+    ExitFailure _ -> do
+      logAttention "Cannot seal document" $ object [
+          "stderr" `equalsExternalBSL` stderr
+        ]
+      -- show JSON'd config as that's what the java app is fed.
+      void $ dbUpdate $ ErrorDocument
+                          ErrorSealingDocumentEvidence
+                          (return ())
+                          (systemActor now)
+
+runNewLambdaSealing :: (MonadBaseControl IO m, MonadDB m, MonadLog m, TemplatesMonad m, MonadIO m, DocumentMonad m, AWS.AmazonMonad m, MonadMask m, PdfToolsLambdaConfMonad m, CryptoRNG m) =>
+                       FilePath -> String -> Seal.SealSpec -> m ()
+runNewLambdaSealing _tmppath fn spec = do
+  now <- currentTime
+  lambdaconf <- getPdfToolsLambdaConf
+  (msealedcontent :: Maybe BS.ByteString) <- callPdfToolsSealing lambdaconf spec
+  case msealedcontent of
+    Just sealedcontent -> do
+      sealedfileid <- dbUpdate $ NewFile fn sealedcontent
+      dbUpdate $ AppendSealedFile sealedfileid Missing (systemActor now)
+    _ -> do
+      logAttention_ "Sealing document with lambda failed"
+      void $ dbUpdate $ ErrorDocument
+                          ErrorSealingDocumentEvidence
+                          (return ())
+                          (systemActor now)
+
+runOldJavaPresealing :: (MonadBaseControl IO m, MonadDB m, MonadLog m, TemplatesMonad m, MonadIO m, AWS.AmazonMonad m, MonadMask m) => FilePath -> Seal.PreSealSpec -> m (Either String BS.ByteString)
+runOldJavaPresealing tmppath config = do
+  let json_config = Unjson.unjsonToByteStringLazy Seal.unjsonPreSealSpec config
+  (code,_stdout,stderr) <- liftIO $ do
+    let sealspecpath = tmppath ++ "/sealspec.json"
+    liftIO $ BSL.writeFile sealspecpath json_config
+    readProcessWithExitCode "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "add-verification-pages", sealspecpath] (BSL.empty)
+  logInfo "Presealing completed" $ object [
+      "code" .= show code
+    ]
+  case code of
+    ExitSuccess -> do
+        res <- liftIO $ BS.readFile (Seal.pssOutput config)
+        logInfo_ "Returning presealed content"
+        return $ Right res
+    ExitFailure _ -> do
+        logAttention "Presealing failed" $ object [
+            "stderr" `equalsExternalBSL` stderr
+          ]
+        -- show JSON'd config as that's what the java app is fed.
+        return $ Left "Error when preprinting fields on PDF"
+
+
+
+runNewLambdaPresealing :: (MonadBaseControl IO m, MonadDB m, MonadLog m, TemplatesMonad m, MonadIO m, AWS.AmazonMonad m, MonadMask m, PdfToolsLambdaConfMonad m, CryptoRNG m) =>
+                       FilePath -> Seal.PreSealSpec -> m (Either String BS.ByteString)
+runNewLambdaPresealing _tmppath spec = do
+  lambdaconf <- getPdfToolsLambdaConf
+  msealedcontent <- callPdfToolsPresealing lambdaconf spec
+  case msealedcontent of
+    Just sealedcontent -> do
+        return $ Right sealedcontent
+    _ -> do
+        logAttention_ "Presealing in lambda failed"
+        -- show JSON'd config as that's what the java app is fed.
+        return $ Left "Error when preprinting fields on PDF"

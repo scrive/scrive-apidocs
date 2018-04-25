@@ -28,6 +28,7 @@ import Log.Identifier
 import MailContext
 import MailContext.Internal
 import MemCache (MemCache)
+import PdfToolsLambda.Conf
 import Templates
 import User.Lang
 import qualified Amazon as A
@@ -42,6 +43,7 @@ documentSealing
   :: (CryptoRNG m, MonadLog m, MonadIO m, MonadBaseControl IO m, MonadMask m)
   => Maybe AmazonConfig
   -> GuardTimeConf
+  -> PdfToolsLambdaConf
   -> KontrakcjaGlobalTemplates
   -> MemCache FileID ByteString
   -> Maybe R.Connection
@@ -49,7 +51,7 @@ documentSealing
   -> String
   -> Int
   -> ConsumerConfig m DocumentID DocumentSealing
-documentSealing mbAmazonConf guardTimeConf templates
+documentSealing mbAmazonConf guardTimeConf pdfToolsLambdaConf templates
   localCache globalCache pool mailNoreplyAddress maxRunningJobs = ConsumerConfig {
     ccJobsTable = "document_sealing_jobs"
   , ccConsumersTable = "document_sealing_consumers"
@@ -80,6 +82,7 @@ documentSealing mbAmazonConf guardTimeConf templates
             , _mctxmailNoreplyAddress   = mailNoreplyAddress
             }
       resultisok <- runGuardTimeConfT guardTimeConf
+        . runPdfToolsLambdaConfT pdfToolsLambdaConf
         . runTemplatesT (lang, templates)
         . A.runAmazonMonadT ac
         . runMailContextT mc

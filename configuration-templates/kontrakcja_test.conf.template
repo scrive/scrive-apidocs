@@ -1,3 +1,12 @@
 {
-  "database":"host='localhost' user='kontra' password='kontrapwd' dbname='kontrakcja'"
+  "database":"host='localhost' user='kontra' password='kontrapwd' dbname='kontrakcja'",
+  "pdftools_lambda" : {
+    "gateway_url": "",
+    "api_key": "",
+    "amazon_s3": {
+        "bucket" : ""
+      , "access_key":""
+      , "secret_key": ""
+    }
+  }
 }

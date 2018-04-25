@@ -337,4 +337,5 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         , _ctxnetsconfig         = netsConfig appConf
         , _ctxisapilogenabled    = isAPILogEnabled appConf
         , _ctxnetssignconfig     = netsSignConfig appConf
+        , _ctxpdftoolslambdaconf = pdfToolsLambdaConf appConf
         }

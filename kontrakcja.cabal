@@ -340,6 +340,12 @@ Library
                  , Partner.Partner
                  , Partner.PartnerID
                  , Partner.Tables
+                 , PdfToolsLambda.Conf
+                 , PdfToolsLambda.Conf.Labels
+                 , PdfToolsLambda.Conf.Internal
+                 , PdfToolsLambda.Control
+                 , PdfToolsLambda.Spec
+                 , PdfToolsLambda.Response
                  , Planhat
                  , Planhat.Communication
                  , Planhat.Config

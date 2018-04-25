@@ -13,6 +13,7 @@ import EID.Nets.Config
 import GuardTime (GuardTimeConf(..))
 import Log.Configuration
 import Monitoring
+import PdfToolsLambda.Conf
 import Planhat
 import Salesforce.Conf
 import SFTPConfig
@@ -47,6 +48,7 @@ data CronConf = CronConf {
   , cronConsumerAPICallbackMaxJobs :: !Int
   , cronConsumerAmazonMaxJobs :: !Int
   , cronNetsSignConfig :: Maybe NetsSignConfig
+  , cronPdfToolsLambdaConf :: PdfToolsLambdaConf
   } deriving (Eq, Show)
 
 unjsonCronConf :: UnjsonDef CronConf
@@ -127,6 +129,10 @@ unjsonCronConf = objectOf $ pure CronConf
   <*> fieldOpt "nets_sign"
       cronNetsSignConfig
       "Configuration of Nets for ESigning"
+  <*> field "pdftools_lambda"
+      cronPdfToolsLambdaConf
+      "Configuration of PdfTools Lambda"
 
 instance Unjson CronConf where
   unjsonDef = unjsonCronConf
+

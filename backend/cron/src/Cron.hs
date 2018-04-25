@@ -104,8 +104,8 @@ main = do
           filecache mrediscache templates
 
         docSealing   = documentSealing (cronAmazonConfig cronConf)
-          (cronGuardTimeConf cronConf) templates filecache mrediscache pool (cronMailNoreplyAddress cronConf)
-          (cronConsumerSealingMaxJobs cronConf)
+          (cronGuardTimeConf cronConf) (cronPdfToolsLambdaConf cronConf) templates filecache mrediscache pool
+          (cronMailNoreplyAddress cronConf) (cronConsumerSealingMaxJobs cronConf)
         docSigning   = documentSigning (cronAmazonConfig cronConf)
           (cronGuardTimeConf cronConf) (cronCgiGrpConfig cronConf) (cronNetsSignConfig cronConf)
           templates filecache mrediscache pool (cronMailNoreplyAddress cronConf) (cronConsumerSigningMaxJobs cronConf)

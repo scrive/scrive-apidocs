@@ -45,7 +45,9 @@ newtype TeamCityBuildDBConnString = TeamCityBuildDBConnString ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 newtype TeamCityBuildDBName = TeamCityBuildDBName ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
-newtype CreateTestDBData = CreateTestDBData ()
+newtype TeamCityBuildLambdaConf = TeamCityBuildLambdaConf ()
+  deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
+newtype CreateTestDBWithConfData = CreateTestDBWithConfData ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 
 #if MIN_VERSION_shake(0,16,0)
@@ -60,7 +62,8 @@ type instance RuleResult BuildTestCoverage          = Bool
 type instance RuleResult BuildCabalConfigureOptions = String
 type instance RuleResult TeamCityBuildDBConnString  = String
 type instance RuleResult TeamCityBuildDBName        = String
-type instance RuleResult CreateTestDBData           = (String, String)
+type instance RuleResult TeamCityBuildLambdaConf    = String
+type instance RuleResult CreateTestDBWithConfData   = (String, String, String)
 #endif
 
 addOracles :: Rules ()
@@ -78,6 +81,8 @@ addOracles = do
                      fromMaybe "" <$> getEnv "DB_BUILD_ADMIN_CONN_STRING"
   _ <- addOracle $ \(TeamCityBuildDBName _)  ->
                      fromMaybe "" <$> getEnv "BUILD_DB_NAME"
+  _ <- addOracle $ \(TeamCityBuildLambdaConf _)  ->
+                     fromMaybe "" <$> getEnv "TEST_LAMBDA_CONF"
 
   -- This is needed by our build.
   -- FIXME should be part of SHAKE_BUILD_ env vars?
@@ -98,7 +103,7 @@ addOracles = do
                      <$> getEnv "SHAKE_BUILD_TEST_COVERAGE"
   _ <- addOracle $ \(BuildCabalConfigureOptions _)  ->
                      fromMaybe "" <$> getEnv "SHAKE_BUILD_CABAL_CONFIGURE_OPTS"
-  _ <- addOracle $ \(CreateTestDBData _) -> do
+  _ <- addOracle $ \(CreateTestDBWithConfData _) -> do
     tc  <- askOracle (TeamCity ())
     now <- liftIO $ getCurrentTime
     let defDBName     = formatTime defaultTimeLocale
@@ -109,7 +114,9 @@ addOracles = do
                         else return defConnString
     dbName     <- if tc then askOracle (TeamCityBuildDBName ())
                         else return defDBName
-    return $ (dbName, connString)
+    lConf      <- if tc then askOracle (TeamCityBuildLambdaConf ())
+                        else (error "Lambda configuration for tests must be defined" :: m String)
+    return $ (dbName, connString, lConf)
 
   return ()
 

@@ -37,6 +37,7 @@ import Happstack.Server.ReqHandler
 import KontraError
 import KontraMonad
 import MailContext (MailContextMonad(..))
+import PdfToolsLambda.Conf
 import Session.Cookies
 import Session.Data
 import Session.Model
@@ -81,6 +82,9 @@ instance TemplatesMonad Kontra where
 
 instance GuardTimeConfMonad Kontra where
   getGuardTimeConf = get ctxgtconf <$> getContext
+
+instance PdfToolsLambdaConfMonad Kontra where
+  getPdfToolsLambdaConf = get ctxpdftoolslambdaconf <$> getContext
 
 instance MailContextMonad Kontra where
   getMailContext = contextToMailContext <$> getContext

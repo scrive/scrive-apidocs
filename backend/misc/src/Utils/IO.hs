@@ -33,7 +33,7 @@ readCurl :: MonadBase IO m
          => [String]                 -- ^ any arguments
          -> BSL.ByteString           -- ^ standard input
          -> m (ExitCode, BSL.ByteString, BSL.ByteString) -- ^ exitcode, stdout, stderr
-readCurl args input = liftBase $ readProcessWithExitCode curl_exe (["--max-time", "20", "-s", "-S"] ++ args) input
+readCurl args input = liftBase $ readProcessWithExitCode curl_exe (["--max-time", "60", "-s", "-S"] ++ args) input
 
 sftpTransfer :: (MonadBase IO m)
              => SFTPConfig

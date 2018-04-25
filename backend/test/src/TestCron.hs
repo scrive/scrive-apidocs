@@ -27,6 +27,8 @@ runTestCronUntilIdle ctx = do
   -- which do not see changes of the test transaction ... unless there is a commit.
   commit
   ConnectionSource pool <- asks teConnSource
+  pdfSealLambdaConf <- tePdfToolsLambdaConf <$> ask
+
   -- Will not be used, because Planhat is not configured when testing, but it is a parameter for cronConsumer.
   reqManager <- newTlsManager
 
@@ -55,6 +57,7 @@ runTestCronUntilIdle ctx = do
         , cronConsumerAPICallbackMaxJobs = 1
         , cronConsumerAmazonMaxJobs      = 1
         , cronNetsSignConfig = Nothing
+        , cronPdfToolsLambdaConf = pdfSealLambdaConf
         }
 
       -- make timeouts small, so that the test runs faster
@@ -62,7 +65,7 @@ runTestCronUntilIdle ctx = do
       cronPartRunners =
         [ ( "document sealing"
           , runConsumerWithIdleSignal . modTimeout
-            $ documentSealing (cronAmazonConfig cronConf) (cronGuardTimeConf cronConf)
+            $ documentSealing (cronAmazonConfig cronConf) (cronGuardTimeConf cronConf) (cronPdfToolsLambdaConf cronConf)
                 (get ctxglobaltemplates ctx) (get ctxfilecache ctx) (get ctxmrediscache ctx) pool
                 (cronMailNoreplyAddress cronConf) (cronConsumerSealingMaxJobs cronConf)
           )

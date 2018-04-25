@@ -17,6 +17,7 @@ import Context
 import DB
 import GuardTime (GuardTimeConfMonad)
 import MailContext (MailContextMonad)
+import PdfToolsLambda.Conf (PdfToolsLambdaConfMonad)
 import qualified Amazon as AWS
 
 -- | This is for grouping things together so we won't need to
@@ -25,6 +26,7 @@ type Kontrakcja m = (
     CryptoRNG m
   , FilterMonad Response m
   , GuardTimeConfMonad m
+  , PdfToolsLambdaConfMonad m
   , HasRqData m
   , KontraMonad m
   , MailContextMonad m

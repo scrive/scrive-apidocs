@@ -192,6 +192,7 @@ testMany' (allargs, ts) runLogger rng = do
       , teRejectedDocuments = rejected_documents
       , teOutputDirectory   = Nothing
       , teStagingTests      = False
+      , tePdfToolsLambdaConf = testPdfToolsLambdaConf tconf
       }
       ts' = if teStagingTests env
         then stagingTests ++ ts

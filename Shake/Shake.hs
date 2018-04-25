@@ -217,7 +217,7 @@ main = do
     -- * Rules
     componentBuildRules   newBuild cabalFile
     serverBuildRules      newBuild cabalFile
-    serverTestRules       newBuild cabalFile (mkCreateTestDB flags)
+    serverTestRules       newBuild cabalFile (mkCreateDBWithTestConf flags)
     serverFormatLintRules newBuild cabalFile flags
     frontendBuildRules    newBuild
     frontendTestRules     newBuild
@@ -349,23 +349,26 @@ serverOldBuildRules cabalFile = do
 
   "cabal-clean" ~> cmd "cabal clean"
 
--- | Should a new unique DB be created for this test run?
-data CreateTestDB = CreateTestDB | DontCreateTestDB
+-- | Should a new test configuration be created with new DB configuration for this test run?
+data CreateTestDBWithNewConf = CreateTestDBWithNewConf| DontCreateTestConf
 
-mkCreateTestDB :: [ShakeFlag] -> CreateTestDB
-mkCreateTestDB flags =
-  if CreateDB `elem` flags then CreateTestDB else DontCreateTestDB
+mkCreateDBWithTestConf :: [ShakeFlag] -> CreateTestDBWithNewConf
+mkCreateDBWithTestConf flags =
+  if CreateDB `elem` flags then CreateTestDBWithNewConf else DontCreateTestConf
 
 -- | Server test rules
-serverTestRules :: UseNewBuild -> CabalFile -> CreateTestDB -> Rules ()
-serverTestRules newBuild cabalFile createDB = do
+serverTestRules :: UseNewBuild -> CabalFile -> CreateTestDBWithNewConf -> Rules ()
+serverTestRules newBuild cabalFile createDBWithConf = do
   "kontrakcja_test.conf" %> \_ ->
-    case createDB of
-      CreateTestDB -> do
-        (dbName, initialConnString) <- askOracle (CreateTestDBData ())
+    case createDBWithConf of
+      CreateTestDBWithNewConf -> do
+        (dbName, initialConnString, lConf) <- askOracle (CreateTestDBWithConfData ())
         liftIO $ writeFile "kontrakcja_test.conf"
-          ("{ \"database\":\"" <> initialConnString <> " dbname='" <> dbName <> "'" <> "\"}")
-      DontCreateTestDB -> do
+          ("{ "
+            ++ "\"database\":\"" <> initialConnString <> " dbname='" <> dbName <> "'" <> "\" , "
+            ++ "\"pdftools_lambda\":" <> lConf
+            ++ "}")
+      DontCreateTestConf -> do
         tc <- askOracle (TeamCity ())
         when tc $ do
           testConfFile <- askOracle (BuildTestConfPath ())
@@ -378,7 +381,7 @@ serverTestRules newBuild cabalFile createDB = do
     -- removeFilesAfter is only performed on a successfull build, this file
     -- needs to be cleaned regardless otherwise successive builds will fail
     liftIO $ removeFiles "." ["kontrakcja-test.tix"]
-    withDB createDB $ forM_ testSuiteExePaths $ \testSuiteExe -> do
+    withDB createDBWithConf $ forM_ testSuiteExePaths $ \testSuiteExe -> do
       tc <- askOracle (TeamCity ())
       if tc
         then do
@@ -410,9 +413,9 @@ serverTestRules newBuild cabalFile createDB = do
       removeFilesAfter "coverage-reports" ["//*"]
 
         where
-          withDB DontCreateTestDB act = act
-          withDB CreateTestDB     act = do
-            (dbName, connString) <- askOracle (CreateTestDBData ())
+          withDB DontCreateTestConf act = act
+          withDB CreateTestDBWithNewConf act = do
+            (dbName, connString, (_::String)) <- askOracle (CreateTestDBWithConfData ())
             (mkDB connString dbName >> act)
               `actionFinally` (rmDB connString dbName)
             where

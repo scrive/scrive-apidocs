@@ -56,6 +56,7 @@ import MailContext
 import MinutesTime
 import PadApplication.Data
 import Partner.PartnerID
+import PdfToolsLambda.Conf
 import Session.SessionID
 import SMS.Data (SMSProvider(..))
 import System.Random.CryptoRNG ()
@@ -897,6 +898,7 @@ sealTestDocument ctx did
   = void
   . withDocumentID did
   . runGuardTimeConfT (get ctxgtconf ctx)
+  . runPdfToolsLambdaConfT (get ctxpdftoolslambdaconf ctx)
   . runTemplatesT ((get ctxlang ctx), (get ctxglobaltemplates ctx))
   . A.runAmazonMonadT (A.AmazonConfig Nothing (get ctxfilecache ctx) Nothing)
   . runMailContextT (contextToMailContext ctx)

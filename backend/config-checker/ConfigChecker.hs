@@ -83,8 +83,8 @@ checkFieldsEqualAppConfCronConf
     _logConfig          _production         _cdnBaseUrl         guardTimeConf
     _isMailBackdoorOpen  mailNoreplyAddress  cgiGrpConfig      _admins
     _sales              _initialUsers        mixpanelToken     _gaToken
-    _trackjsToken       _hubspotConf         salesforceConf     _netsConfig
-    _monitoringConfig   _isAPILogEnabled     netsSignConfig)
+    _trackjsToken       _hubspotConf         salesforceConf    _netsConfig
+    _monitoringConfig   _isAPILogEnabled     netsSignConfig    pdfToolsLambdaConf)
   (CronConf
      cronAmazonConfig              cronDBConfig                   _cronMaxDBConnections
      cronRedisCacheConfig         _cronLocalFileCacheSize         _cronLogConfig
@@ -93,7 +93,7 @@ checkFieldsEqualAppConfCronConf
     _cronPlanhatConf              _cronMonitoringConf              cronMailNoreplyAddress
     _cronConsumerCronMaxJobs      _cronConsumerSealingMaxJobs     _cronConsumerSigningMaxJobs
     _cronConsumerExtendingMaxJobs _cronConsumerAPICallbackMaxJobs _cronConsumerAmazonMaxJobs
-     cronNetsSignConfig)
+     cronNetsSignConfig           cronPdfToolsLambdaConf)
 
   = checkEq "amazon"               amazonConfig       cronAmazonConfig       *>
     checkEq "database"             dbConfig           cronDBConfig           *>
@@ -103,7 +103,9 @@ checkFieldsEqualAppConfCronConf
     checkEq "cgi_grp"              cgiGrpConfig       cronCgiGrpConfig       *>
     checkEq "mixpanel"             mixpanelToken      cronMixpanelToken      *>
     checkEq "salesforce"           salesforceConf     cronSalesforceConf     *>
-    checkEq "nets_sign"            netsSignConfig     cronNetsSignConfig
+    checkEq "nets_sign"            netsSignConfig     cronNetsSignConfig     *>
+    checkEq "pdftools_lambda"      pdfToolsLambdaConf cronPdfToolsLambdaConf
+
   where
     checkEq :: forall a . Eq a => String -> a -> a -> ConfigValidation
     checkEq = checkFieldEq (configFile @AppConf, configFile @CronConf)
@@ -118,7 +120,7 @@ checkFieldsEqualAppConfMailerConf
     _isMailBackdoorOpen _mailNoreplyAddress _cgiGrpConfig      _admins
     _sales              _initialUsers       _mixpanelToken     _gaToken
     _trackjsToken       _hubspotConf        _salesforceConf    _netsConfig
-    _monitoringConfig   _isAPILogEnabled    _netsSignConfig)
+    _monitoringConfig   _isAPILogEnabled    _netsSignConfig    _pdfToolsLambdaConf)
   (MailingServerConf
     _mailerHttpBindAddress     mailerDBConfig
     _mailerMaxDBConnections    mailerRedisCacheConfig
@@ -144,7 +146,7 @@ checkFieldsEqualAppConfMessengerConf
     _isMailBackdoorOpen _mailNoreplyAddress _cgiGrpConfig      _admins
     _sales              _initialUsers       _mixpanelToken     _gaToken
     _trackjsToken       _hubspotConf        _salesforceConf    _netsConfig
-    _monitoringConfig   _isAPILogEnabled    _netsSignConfig)
+    _monitoringConfig   _isAPILogEnabled    _netsSignConfig    _pdfToolsLambdaConf)
   (MessengerServerConf
     _messengerHttpBindAddress   messengerDBConfig
     _messengerMaxDBConnections _messengerLogConfig
