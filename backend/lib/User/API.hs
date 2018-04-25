@@ -96,10 +96,14 @@ userAPIV1 = choice [
 userAPIV2 :: Route (Kontra Response)
 userAPIV2 = choice [
   dir "loginandgetsession" $ hPost $ toK0 $ apiCallLoginUserAndGetSession,
+
   dir "2fa" $ dir "setup"   $ hPost $ toK0 $ setup2FA,
   dir "2fa" $ dir "confirm" $ hPost $ toK0 $ confirm2FA,
   dir "2fa" $ dir "disable" $ hPost $ toK0 $ disable2FA,
+
+  dir "isdeletable" $ hPost $ toK0 $ apiCallIsUserDeletable,
   dir "deleteuser" $ hPost $ toK0 $ apiCallDeleteUser,
+
   userAPIV1
   ]
 
@@ -481,23 +485,32 @@ apiCallLoginUserAndGetSession = V2.api $ do
       return $ V2.Ok $ runJSONGen $ do
         value "session_id" (show $ sessionCookieInfoFromSession ses)
 
+apiCallIsUserDeletable :: Kontrakcja m => m Response
+apiCallIsUserDeletable = V2.api $ do
+  (user, _ , _) <- getAPIUser APIPersonal
+
+  mReason <- dbQuery $ IsUserDeletable user
+
+  return $ V2.Ok $ runJSONGen $ case mReason of
+    Nothing -> value "deletable" True
+    Just reason -> do
+      value "deletable" False
+      value "reason" reason
+
 apiCallDeleteUser :: Kontrakcja m => m Response
 apiCallDeleteUser = V2.api $ do
   (user, _ , _) <- getAPIUser APIPersonal
   ctx <- getContext
 
-  admins   <- dbQuery $ GetCompanyAdmins $ usercompany user
-  accounts <- dbQuery $ GetCompanyAccounts $ usercompany user
-  -- Either there would still be one admin or it's this company's last user.
-  unless (any ((/= userid user) . userid) admins
-          || length accounts == 1) $
-    V2.apiError $ V2.actionNotPermitted
-      "Can't delete a user unless it is the company's last account or \
-      \there is another admin."
+  email <- V2.apiV2ParameterObligatory $ V2.ApiV2ParameterText "email"
+  unless (unEmail (useremail (userinfo user)) == T.unpack email) $
+    V2.apiError $ V2.requestParameterParseError "email" "wrong email"
 
-  isDeletable <- dbQuery $ IsUserDeletable $ userid user
-  unless isDeletable $
-    V2.apiError $ V2.actionNotPermitted "Can't delete a user with pending documents"
+  mReason <- dbQuery $ IsUserDeletable user
+  case mReason of
+    Nothing -> return ()
+    Just reason -> V2.apiError $
+      V2.actionNotPermitted $ userNotDeletableReasonToString reason
 
   _ <- dbUpdate $ DeleteUser (userid user)
   _ <- dbUpdate $ LogHistoryAccountDeleted (userid user) (get ctxipnumber ctx) (get ctxtime ctx)

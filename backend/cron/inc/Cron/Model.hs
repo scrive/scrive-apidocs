@@ -15,6 +15,7 @@ import qualified Data.Text as T
 
 import Administration.Invoicing
 import Amazon (AmazonMonad)
+import Attachment.Model
 import Company.Model
 import CronConf
 import DB
@@ -70,6 +71,7 @@ data JobType
   | UserAccountRequestEvaluation
   | UserGroupMigration
   | CompaniesPurge
+  | AttachmentsPurge
   deriving (Eq, Ord, Show)
 
 jobTypeMapper :: [(JobType, T.Text)]
@@ -98,6 +100,7 @@ jobTypeMapper = [
   , (DocumentsAuthorIDMigration, "document_author_id_job")
   , (UserGroupMigration, "user_group_migration")
   , (CompaniesPurge, "companies_purge")
+  , (AttachmentsPurge, "attachments_purge")
   ]
 
 instance PQFormat JobType where
@@ -310,14 +313,25 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
     CompaniesPurge -> do
       runDB $ do
         startTime <- currentTime
-        purgedCount <- dbUpdate $ PurgeCompanies
+        purgedCount <- dbUpdate PurgeCompanies
         finishTime <- currentTime
         logInfo "Purged companies" $ object [
             "purged" .= purgedCount
           , "elapsed_time" .= (realToFrac (diffUTCTime finishTime startTime) :: Double)
           ]
       return . RerunAfter $ iminutes 10
+    AttachmentsPurge -> do
+      runDB $ do
+        startTime <- currentTime
+        purgedCount <- dbUpdate PurgeAttachments
+        finishTime <- currentTime
+        logInfo "Purged attachments" $ object [
+            "purged" .= purgedCount
+          , "elapsed_time" .= (realToFrac (diffUTCTime finishTime startTime) :: Double)
+          ]
+      return . RerunAfter $ iminutes 10
   logInfo_ "Job processed successfully"
+
   return $ Ok action
 , ccOnException = \_ CronJob{..} -> return $ case cjAttempts of
   1 -> RerunAfter $ iminutes 1

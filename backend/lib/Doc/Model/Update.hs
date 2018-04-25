@@ -1935,24 +1935,35 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
     rows <- runQuery . sqlUpdate "documents" $ do
       sqlWith "documents_to_purge" . sqlSelect "documents d" $ do
         sqlResult "d.id"
-        -- The author's company has been deleted.
-        sqlWhereNotExists . sqlSelect "companies c" $ do
-          sqlJoinOn "users u" "u.company_id = c.id"
-          sqlWhere "d.author_id = u.id"
-          sqlWhereIsNotNULL "c.deleted"
+
         -- Document wasn't purged yet.
         sqlWhere "d.purged_time IS NULL"
-        -- All signatories with an account deleted the document or their own account.
+
+        -- All signatories with an account deleted the document or their company
+        -- has been deleted or the user is deleted but not the author.
+        -- (This last condition is for documents which have been created by
+        -- another company where a user who happens to have a Scrive account
+        -- is one of the signatory and this user has deleted her account.)
         sqlWhereNotExists . sqlSelect "signatory_links sl" $ do
           sqlWhere "sl.document_id = d.id"
           sqlWhere "sl.user_id IS NOT NULL"
           sqlWhere "sl.really_deleted IS NULL"
           sqlJoinOn "users u" "sl.user_id = u.id"
-          sqlWhere "u.deleted IS NULL"
+          sqlJoinOn "companies c" "u.company_id = c.id"
+          sqlWhereIsNULL "c.deleted"
+          sqlWhere "u.deleted IS NULL OR u.id = d.author_id"
+          sqlWhereNotEq "d.status" Preparation
+        -- ...or the documentation is in preparation by a deleted user.
+        sqlWhereNotExists . sqlSelect "users u" $ do
+          sqlWhere "d.author_id = u.id"
+          sqlWhereIsNULL "u.deleted"
+          sqlWhereEq "d.status" Preparation
+
         -- Document isn't pending (it's possible that there are 0
         -- signatories with user set, but the doc is still pending
         -- purging it would violate db constraints
-        sqlWhere $ "d.status <>" <?> Pending
+        sqlWhereNotEq "d.status" Pending
+
         -- Document is not referenced by any session.
         sqlWhereNotExists . sqlSelect "signatory_links sl" $ do
           sqlJoinOn "document_session_tokens dst" "sl.id = dst.signatory_link_id"

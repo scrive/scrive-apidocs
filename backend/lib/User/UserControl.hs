@@ -214,7 +214,7 @@ getStats statsPartition interval eid = do
 -}
 isUserDeletable :: Kontrakcja m => User -> m Bool
 isUserDeletable user = do
-  dbQuery $ IsUserDeletable (userid user)
+  fmap isNothing $ dbQuery $ IsUserDeletable user
 
 --there must be a better way than all of these weird user create functions
 -- TODO clean up

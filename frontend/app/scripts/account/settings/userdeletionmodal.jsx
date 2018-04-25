@@ -89,7 +89,7 @@ module.exports = React.createClass({
           <Modal.AcceptButton
             className={acceptClassName}
             onClick={this.onConfirmation}
-            text={localization.account.accountDetails.deleteUser}
+            text={localization.account.accountDetails.userDeletionModalConfirm}
           />
         </Modal.Footer>
       </Modal.Container>

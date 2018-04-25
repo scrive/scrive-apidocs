@@ -75,11 +75,15 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
             mapM_ sqlResult selectUsersSelectorsList
         fetchMaybe fetchUser
 
--- | Marks a user as deleted so that queries won't return them any more.
+-- | Mark a user as deleted so that queries won't return it anymore and delete
+-- sensible information.
+--
+-- Attachments, companies and documents purged separately.
 data DeleteUser = DeleteUser UserID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool where
   update (DeleteUser uid) = do
-    runQuery_ $ sqlDelete "attachments"           $ sqlWhereEq "user_id" uid
+    now <- currentTime
+
     runQuery_ $ sqlDelete "email_change_requests" $ sqlWhereEq "user_id" uid
     runQuery_ $ sqlDelete "oauth_access_token"    $ sqlWhereEq "user_id" uid
     runQuery_ $ sqlDelete "oauth_api_token"       $ sqlWhereEq "user_id" uid
@@ -93,7 +97,6 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool wh
       sqlSet "event_data" (Nothing :: Maybe String)
       sqlWhereEq "user_id" uid
 
-    now <- currentTime
     runQuery01 $ sqlUpdate "users" $ do
       sqlSet "deleted" now
       sqlSet "password"         (Nothing :: Maybe ByteString)

@@ -38,6 +38,8 @@ userAPITests env = testGroup "UserAPI"
   [ testThat "Test User API Create Login Link" env testUserLoginAndGetSession
   , testThat "Test User API Too Many Attempts To Get Tokens" env testUserTooManyGetTokens
   , testThat "Test User API 2FA setup and disable workflow works" env testUser2FAWorkflow
+  , testThat "Test User API Don't delete a user if the email is wrong"
+             env testUserNoDeletionIfWrongEmail
   , testThat "Test User API Don't delete a user if she's needed by the company"
              env testUserNoDeletionIfNeededByCompany
   , testThat "Test User API Don't delete a user if she has pending documents"
@@ -182,6 +184,24 @@ testUser2FAWorkflow = do
     (res,_) <- runTestKontra req ctx $ apiCallGetUserPersonalToken
     assertEqual "We should get a 200 response" 200 (rsCode res)
 
+testUserNoDeletionIfWrongEmail :: TestEnv ()
+testUserNoDeletionIfWrongEmail = do
+  (anna, _) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
+
+  ctx <- set ctxmaybeuser (Just anna) <$> mkContext def
+
+  do
+    req <- mkRequest POST [("email", inText "wrong@email.com")]
+    (res, _) <- runTestKontra req ctx apiCallDeleteUser
+    assertEqual "can't delete if the email is wrong"
+                400 (rsCode res)
+
+  do
+    req <- mkRequest POST [("email", inText "anna@android.com")]
+    (res, _) <- runTestKontra req ctx apiCallDeleteUser
+    assertEqual "can delete if the email is correct"
+                200 (rsCode res)
+
 testUserNoDeletionIfNeededByCompany :: TestEnv ()
 testUserNoDeletionIfNeededByCompany = do
   (anna, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
@@ -193,24 +213,24 @@ testUserNoDeletionIfNeededByCompany = do
   aliceCtx <- set ctxmaybeuser (Just alice) <$> mkContext def
 
   do
-    req <- mkRequest POST []
+    req <- mkRequest POST [("email", inText "anna@android.com")]
     (res, _) <- runTestKontra req annaCtx apiCallDeleteUser
     assertEqual "can't delete last company admin with some user left"
                 403 (rsCode res)
 
   do
     _ <- dbUpdate $ SetUserCompanyAdmin (userid bob) True
-    req <- mkRequest POST []
+    req <- mkRequest POST [("email", inText "anna@android.com")]
     (res, _) <- runTestKontra req annaCtx apiCallDeleteUser
     assertEqual "can delete admin if not the last one" 200 (rsCode res)
 
   do
-    req <- mkRequest POST []
+    req <- mkRequest POST [("email", inText "alice@red.com")]
     (res, _) <- runTestKontra req aliceCtx apiCallDeleteUser
     assertEqual "can delete non-admin user" 200 (rsCode res)
 
   do
-    req <- mkRequest POST []
+    req <- mkRequest POST [("email", inText "bob@blue.com")]
     (res, _) <- runTestKontra req bobCtx apiCallDeleteUser
     assertEqual "can delete admin if last user" 200 (rsCode res)
 
@@ -222,10 +242,10 @@ testUserNoDeletionIfPendingDocuments = do
   ctx <- set ctxmaybeuser (Just bob) <$> mkContext def
 
   doc <- addRandomDocumentWithAuthorAndCondition bob $ \doc ->
-    documentstatus doc == Pending
+    documentstatus doc == Pending && documenttype doc == Signable
 
   do
-    req <- mkRequest POST []
+    req <- mkRequest POST [("email", inText "bob@blue.com")]
     (res, _) <- runTestKontra req ctx apiCallDeleteUser
     assertEqual "can't delete last user if she has pending documents"
                 403 (rsCode res)
@@ -233,6 +253,6 @@ testUserNoDeletionIfPendingDocuments = do
   withDocument doc $ randomUpdate $ \t -> CancelDocument $ systemActor t
 
   do
-    req <- mkRequest POST []
+    req <- mkRequest POST [("email", inText "bob@blue.com")]
     (res, _) <- runTestKontra req ctx apiCallDeleteUser
     assertEqual "can delete once pending documnts are aborted" 200 (rsCode res)

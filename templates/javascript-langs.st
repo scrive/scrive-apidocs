@@ -1056,6 +1056,7 @@ javascriptLocalisation =
               , changeEmailMailSent : "$_flashMessageChangeEmailMailSent()$"
               , userDeletionModalTitle : "$_userDeletionModalTitle()$"
               , userDeletionModalMessage : "$_userDeletionModalMessage()$"
+              , userDeletionModalConfirm : "$_userDeletionModalConfirm()$"
               , deleteUser : "$_delete()$"
             }
           , apiSettings : {
