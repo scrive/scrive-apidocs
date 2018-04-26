@@ -203,14 +203,33 @@ module.exports = Backbone.Model.extend({
     }).send();
   },
 
-  deleteUser: function (callback) {
+  deleteUser: function (email, success, error) {
     return new Submit({
       method: "POST",
       url: "/api/frontend/deleteuser",
       ajax: true,
       ajaxsuccess: function () {
+        if (success != undefined) {
+          success();
+        }
+      },
+      ajaxerror: function (resp) {
+        if (error != undefined) {
+          error(resp);
+        }
+      },
+      email: email
+    }).send();
+  },
+
+  isUserDeletable: function (callback) {
+    return new Submit({
+      method: "POST",
+      url: "/api/frontend/isuserdeletable",
+      ajax: true,
+      ajaxsuccess: function (resp) {
         if (callback != undefined) {
-          callback();
+          callback(resp);
         }
       }
     }).send();

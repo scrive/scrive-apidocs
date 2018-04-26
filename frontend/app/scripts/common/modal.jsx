@@ -39,7 +39,7 @@ var Portal = React.createClass({
   }
 });
 
-exports.Container = React.createClass({
+var Container = exports.Container = React.createClass({
   mixins: [React.addons.PureRenderMixin],
   propTypes: {
     active: React.PropTypes.bool.isRequired,
@@ -132,7 +132,7 @@ exports.Container = React.createClass({
   }
 });
 
-exports.Header = React.createClass({
+var Header = exports.Header = React.createClass({
   mixins: [React.addons.PureRenderMixin],
   propTypes: {
     title: React.PropTypes.string,
@@ -161,7 +161,7 @@ exports.Header = React.createClass({
   }
 });
 
-exports.Content = React.createClass({
+var Content = exports.Content = React.createClass({
   mixins: [React.addons.PureRenderMixin],
   render: function () {
     return (
@@ -176,7 +176,7 @@ exports.Content = React.createClass({
   }
 });
 
-exports.Footer = React.createClass({
+var Footer = exports.Footer = React.createClass({
   mixins: [React.addons.PureRenderMixin],
   render: function () {
     return (
@@ -187,7 +187,7 @@ exports.Footer = React.createClass({
   }
 });
 
-exports.CancelButton = React.createClass({
+var CancelButton = exports.CancelButton = React.createClass({
   mixins: [React.addons.PureRenderMixin],
   propTypes: {
     text: React.PropTypes.string,
@@ -202,7 +202,7 @@ exports.CancelButton = React.createClass({
   }
 });
 
-exports.AcceptButton = React.createClass({
+var AcceptButton = exports.AcceptButton = React.createClass({
   mixins: [React.addons.PureRenderMixin],
   propTypes: {
     text: React.PropTypes.string,
@@ -234,6 +234,39 @@ exports.ExtraButtons = React.createClass({
       <div className="float-right" style={{marginRight: marginRight}}>
         {this.props.children}
       </div>
+    );
+  }
+});
+
+exports.InfoBox = React.createClass({
+  propTypes: {
+    active: React.PropTypes.bool,
+    title: React.PropTypes.string,
+    onClose: React.PropTypes.func
+  },
+
+  render: function () {
+    return (
+      <Container
+        active={this.props.active}
+        onHide={this.props.onClose}
+        onClose={this.props.onClose}
+      >
+        <Header
+          onClose={this.props.onClose}
+          title={this.props.title}
+          showClose={true}
+        />
+
+        <Content>{this.props.children}</Content>
+
+        <Footer>
+          <AcceptButton
+            onClick={this.props.onClose}
+            text="OK"
+          />
+        </Footer>
+      </Container>
     );
   }
 });

@@ -44,9 +44,9 @@ module.exports = React.createClass({
     }
   },
 
-  onConfirmation: function (event) {
+  onConfirmation: function () {
     if (this.props.onConfirmation && this.correctTextEntered()) {
-      return this.props.onConfirmation(event);
+      return this.props.onConfirmation(this.state.textEntered);
     } else {
       return false;
     }
@@ -76,7 +76,7 @@ module.exports = React.createClass({
         />
 
         <Modal.Content>
-          <p dangerouslySetInnerHTML={{__html: message.html()}}></p>
+          <div dangerouslySetInnerHTML={{__html: message.html()}}></div>
           <input
             type="text"
             value={this.state.textEntered}

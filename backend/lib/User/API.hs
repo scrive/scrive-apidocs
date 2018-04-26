@@ -101,7 +101,7 @@ userAPIV2 = choice [
   dir "2fa" $ dir "confirm" $ hPost $ toK0 $ confirm2FA,
   dir "2fa" $ dir "disable" $ hPost $ toK0 $ disable2FA,
 
-  dir "isdeletable" $ hPost $ toK0 $ apiCallIsUserDeletable,
+  dir "isuserdeletable" $ hPost $ toK0 $ apiCallIsUserDeletable,
   dir "deleteuser" $ hPost $ toK0 $ apiCallDeleteUser,
 
   userAPIV1

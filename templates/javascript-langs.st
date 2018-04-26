@@ -1057,7 +1057,10 @@ javascriptLocalisation =
               , userDeletionModalTitle : "$_userDeletionModalTitle()$"
               , userDeletionModalMessage : "$_userDeletionModalMessage()$"
               , userDeletionModalConfirm : "$_userDeletionModalConfirm()$"
+              , userNotDeletableDueToPendingDocuments : "$_userNotDeletableDueToPendingDocuments()$"
+              , userNotDeletableDueToLastAdminWithUsers : "$_userNotDeletableDueToLastAdminWithUsers()$"
               , deleteUser : "$_delete()$"
+              , userDeleted : "$_userDeleted()$"
             }
           , apiSettings : {
                 name : "$_apiSettings()$"

@@ -6,6 +6,7 @@ var CompanySettingsView = require("./companysettingsview");
 var UserDeletionModal = require("./userdeletionmodal");
 var Button = require("../../common/button");
 var FlashMessages = require("../../../js/flashmessages");
+var Modal = require("../../common/modal");
 
 module.exports = React.createClass({
   mixins: [BackboneMixin.BackboneMixin],
@@ -34,20 +35,42 @@ module.exports = React.createClass({
   },
 
   onDeleteButtonClick: function () {
-    this.setState({showUserDeletionModal: true});
+    var self = this;
+    this.state.model.isUserDeletable(function (result) {
+      if (result.deletable) {
+        self.setState({showUserDeletionModal: true});
+      } else {
+        var reason = result.reason.message;
+        if (result.reason.code == "pending_documents") {
+          reason = localization.account.accountDetails.userNotDeletableDueToPendingDocuments;
+        } else if (result.reason.code == "last_admin_with_users") {
+          reason = localization.account.accountDetails.userNotDeletableDueToLastAdminWithUsers;
+        }
+        self.setState({userNotDeletableReason: reason});
+      }
+    });
   },
 
   closeUserDeletionModal: function () {
     this.setState({showUserDeletionModal: false});
   },
 
-  deleteUser: function () {
-    return this.state.model.deleteUser(function () {
+  closeUserNotDeletableModal: function () {
+    this.setState({userNotDeletableReason: undefined});
+  },
+
+  deleteUser: function (textEntered) {
+    return this.state.model.deleteUser(textEntered, function () {
       FlashMessages.FlashMessageAfterReload({
         type: "success",
-        content: "Your account has been deleted successfully."
+        content: localization.account.accountDetails.userDeleted
       });
       window.location.href = "/enter";
+    }, function (resp) {
+      new FlashMessages.FlashMessage({
+        type: "error",
+        content: resp.responseJSON.error_message
+      });
     });
   },
 
@@ -55,6 +78,8 @@ module.exports = React.createClass({
     if (!this.state.model.ready()) {
       return (<div/>);
     }
+
+    var showUserNotDeletableReason = !!this.state.userNotDeletableReason;
 
     return (
       <div className="tab-container account-settings">
@@ -93,6 +118,14 @@ module.exports = React.createClass({
           model={this.state.model}
           active={this.state.showUserDeletionModal}
         />
+
+        <Modal.InfoBox
+          onClose={this.closeUserNotDeletableModal}
+          title={localization.account.accountDetails.userDeletionModalTitle}
+          active={showUserNotDeletableReason}
+        >
+          {this.state.userNotDeletableReason}
+        </Modal.InfoBox>
       </div>
     );
   }

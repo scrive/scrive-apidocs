@@ -1953,11 +1953,13 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
           sqlWhereIsNULL "c.deleted"
           sqlWhere "u.deleted IS NULL OR u.id = d.author_id"
           sqlWhereNotEq "d.status" Preparation
-        -- ...or the documentation is in preparation by a deleted user.
+        -- ...or the documentation is in preparation by a deleted user but not a
+        -- shared template.
         sqlWhereNotExists . sqlSelect "users u" $ do
           sqlWhere "d.author_id = u.id"
           sqlWhereIsNULL "u.deleted"
           sqlWhereEq "d.status" Preparation
+          sqlWhereNotEq "d.sharing" Shared
 
         -- Document isn't pending (it's possible that there are 0
         -- signatories with user set, but the doc is still pending

@@ -767,7 +767,7 @@ testPurgeDocument :: TestEnv ()
 testPurgeDocument = replicateM_ 10 $ do
   ug <- addNewUserGroup
   author <- addNewRandomCompanyUser (get ugID ug) False
-  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
+  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isClosed d || isCanceled d || isRejected d)
   now <- currentTime
   archived1 <- dbUpdate $ PurgeDocuments 0
   assertEqual "Purged zero documents when not deleted" 0 archived1
@@ -783,7 +783,7 @@ testPurgeDocumentUserSaved :: TestEnv ()
 testPurgeDocumentUserSaved = replicateM_ 10 $ do
   ug <- addNewUserGroup
   author <- addNewRandomCompanyUser (get ugID ug) False
-  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
+  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isClosed d || isCanceled d || isRejected d)
   archived1 <- dbUpdate $ PurgeDocuments 1
   now <- currentTime
   withDocument doc $ randomUpdate $ \t->ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
