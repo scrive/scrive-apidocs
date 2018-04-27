@@ -1,5 +1,6 @@
 module User.Model.Query (
     GetCompanyAccounts(..)
+  , GetCompanyAccountsIncludeDeleted(..)
   , GetCompanyAccountsCountActive(..)
   , GetCompanyAccountsCountMainDomainBranding(..)
   , GetCompanyAccountsCountTotal(..)
@@ -76,6 +77,12 @@ data GetCompanyAccounts = GetCompanyAccounts CompanyID
 instance MonadDB m => DBQuery m GetCompanyAccounts [User] where
   query (GetCompanyAccounts cid) = do
     runQuery_ $ selectUsersSQL <+> "WHERE company_id =" <?> cid <+> "AND deleted IS NULL ORDER BY email"
+    fetchMany fetchUser
+
+data GetCompanyAccountsIncludeDeleted = GetCompanyAccountsIncludeDeleted CompanyID
+instance MonadDB m => DBQuery m GetCompanyAccountsIncludeDeleted [User] where
+  query (GetCompanyAccountsIncludeDeleted cid) = do
+    runQuery_ $ selectUsersSQL <+> "WHERE company_id =" <?> cid <+> "ORDER BY email"
     fetchMany fetchUser
 
 data GetCompanyAccountsCountTotal = GetCompanyAccountsCountTotal
