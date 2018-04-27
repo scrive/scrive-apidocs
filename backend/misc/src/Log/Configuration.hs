@@ -169,7 +169,7 @@ mkLogRunner component LogConfig{..} rng = do
   let withLoggerFuns = rights eWithLoggerFuns
       errorReports = lefts eWithLoggerFuns
   if null withLoggerFuns
-     then $unexpectedErrorM "List of loggers is empty; aborting."
+     then unexpectedError "List of loggers is empty; aborting."
      else return ()
   let loggerFun = sconcat . fromList $ withLoggerFuns
   return (errorReports,
