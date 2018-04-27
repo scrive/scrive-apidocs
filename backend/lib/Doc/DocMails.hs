@@ -56,7 +56,7 @@ import qualified SMS.SMS as SMS
 {- |
    Send emails to all of the invited parties saying that we fucked up the process.
    Say sorry about this to them.
-   ??: Should this be in DocControl or in an email-sepecific file?
+   ??: Should this be in DocControl or in an email-specific file?
  -}
 sendDocumentErrorEmail :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, MailContextMonad m) => User -> Document -> m ()
 sendDocumentErrorEmail author document = do
@@ -95,7 +95,7 @@ sendDocumentErrorEmail author document = do
 
 {- |
    Send emails to all of the invited parties, respecting the sign order.
-   ??: Should this be in DocControl or in an email-sepecific file?
+   ??: Should this be in DocControl or in an email-specific file?
  -}
 sendInvitationEmails :: (CryptoRNG m, MonadThrow m, MonadLog m, TemplatesMonad m, DocumentMonad m, MailContextMonad m) => Bool -> m ()
 sendInvitationEmails authorsignsimmediately = do
