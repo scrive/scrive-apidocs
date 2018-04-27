@@ -79,6 +79,7 @@ import Happstack.Fields
 import InternalResponse
 import Kontra
 import KontraLink
+import Log.Identifier
 import MagicHash
 import Redirect
 import User.Email
@@ -155,6 +156,7 @@ handleNewDocument = withUser $ \user -> do
                                        }
       _ <- dbUpdate $ ResetSignatoryDetails [authorsiglink, othersiglink'] actor
       dbUpdate $ SetDocumentUnsavedDraft True
+      logInfo "New document created" $ logObject_ doc
       return $ internalResponse $ LinkIssueDoc (documentid doc)
 
 {-
