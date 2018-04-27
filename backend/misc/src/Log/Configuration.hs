@@ -25,7 +25,6 @@ import Log.Backend.StandardOutput
 import Log.Data
 import Log.Internal.Logger hiding (withLogger)
 import Log.Monad
-import Network.HTTP.Client (HttpException)
 import Prelude hiding ((<>))
 
 import DB.PostgreSQL
@@ -187,7 +186,7 @@ mkLogRunner component LogConfig{..} rng = do
     toWithLoggerFun (ElasticSearch ec) =
 
       checkElasticSearchConnection ec >>= \case
-        Left (_ex :: HttpException) ->
+        Left _ ->
           return . Left $ "ElasticSearch: unexpected error; " <>
                           "is ElasticSearch server running?\n"
              -- @review-note:include the below? A bit noisy
