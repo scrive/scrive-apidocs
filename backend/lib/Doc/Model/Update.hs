@@ -1963,6 +1963,7 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
         sqlResult "id"
         sqlSet "sign_ip" (0::Int32)
         sqlSet "seen_ip" (0::Int32)
+        sqlSet "csv_contents" (Nothing::Maybe [[String]])
         sqlWhere "document_id IN (SELECT id FROM documents_to_purge)"
 
       -- Blank out sensitive data in fields.
@@ -1975,6 +1976,22 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
       -- Remove whole evidence log as it is sensitive data.
       sqlWith "purged_evidence_log" . sqlDelete "evidence_log" $ do
         sqlWhere "document_id IN (SELECT id FROM documents_to_purge)"
+
+      -- Remove all document_tags.
+      sqlWith "purged_document_tags" . sqlDelete "document_tags" $ do
+        sqlWhere "document_id IN (SELECT id FROM documents_to_purge)"
+
+      -- Remove all eid_authentications.
+      sqlWith "purged_eid_authentications" . sqlDelete "eid_authentications" $ do
+        sqlWhere "signatory_link_id IN (SELECT id FROM purged_signatory_links)"
+
+      -- Remove all eid_authentications.
+      sqlWith "purged_eid_signatures" . sqlDelete "eid_signatures" $ do
+        sqlWhere "signatory_link_id IN (SELECT id FROM purged_signatory_links)"
+
+      -- Remove all signatory_sms_pins.
+      sqlWith "purged_signatory_sms_pins" . sqlDelete "signatory_sms_pins" $ do
+        sqlWhere "signatory_link_id IN (SELECT id FROM purged_signatory_links)"
 
       -- Set purged_time on documents.
       sqlSet "purged_time" now
