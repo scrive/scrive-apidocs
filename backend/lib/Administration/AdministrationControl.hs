@@ -440,7 +440,7 @@ getUserInfoChange = do
     }
 
 jsonDocuments :: Kontrakcja m => m Response
-jsonDocuments = onlySalesOrAdmin $ do
+jsonDocuments = onlyAdmin $ do
   adminUser <- guardJustM $ get ctxmaybeuser <$> getContext
   muid <- readField "userid"
   mcid <- readField "companyid"

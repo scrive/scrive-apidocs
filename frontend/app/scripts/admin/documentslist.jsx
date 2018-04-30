@@ -152,17 +152,15 @@ module.exports = React.createClass({
               );
             }}
           />
-          { /* if */ (this.props.forAdmin) &&
-            (<List.Column
-              name="DAVE"
-              width="30px"
-              rendering={function(d) {
-                return (
-                  <a className="gotodave" href={"/dave/document/" + d.field("id")}/>
-                );
-              }}
-            />)
-          }
+          <List.Column
+            name="DAVE"
+            width="30px"
+            rendering={function(d) {
+              return (
+                <a className="gotodave" href={"/dave/document/" + d.field("id")}/>
+              );
+            }}
+          />
           <List.Pagination/>
         </List.List>
       );

@@ -20,7 +20,7 @@ var BrandedDomainAdminPanelWrapperView = React.createClass({
 
 var AdminView = React.createClass({
   propTypes: {
-    isAdmin: React.PropTypes.bool.isRequired
+    forAdmin: React.PropTypes.bool.isRequired
   },
   onBrandedDomainSelect: function (id) {
     window.location.hash = "#branding-themes-email-" + id;
@@ -41,12 +41,16 @@ var AdminView = React.createClass({
         >
           <CompaniesAdminList loadLater={false} />
         </TabViewer.TabViewerTab>
-        <TabViewer.TabViewerTab
-          hash="documents"
-          title="Documents"
-        >
-          <DocumentsList forAdmin={this.props.isAdmin} loadLater={false} />
-        </TabViewer.TabViewerTab>
+
+        { /* if */ (this.props.forAdmin) && (
+          <TabViewer.TabViewerTab
+            hash="documents"
+            title="Documents"
+          >
+            <DocumentsList loadLater={false} />
+          </TabViewer.TabViewerTab>
+        )}
+
         <TabViewer.TabViewerTab
           hash="brandeddomains"
           title="Branded domains"

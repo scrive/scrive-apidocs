@@ -6,7 +6,7 @@ adminsmain=
 <div class='admin'></div>
 <script>
   var fromTemplate = {
-    isAdmin: $if(admin)$true$else$false$endif$
+    forAdmin: $if(admin)$true$else$false$endif$
   };
 </script>
 <script src="$cdnbaseurl$/compiled/all/admin-$versioncode$.js" crossorigin="anonymous"></script>

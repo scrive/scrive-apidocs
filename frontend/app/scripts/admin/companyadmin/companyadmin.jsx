@@ -58,20 +58,23 @@ var CompanyAdminView = React.createClass({
         <TabViewer.TabViewerTab hash="stats" title="Statistics">
           <StatsView companyId={this.props.companyId} withCompany={true} />
         </TabViewer.TabViewerTab>
-        <TabViewer.TabViewerTab hash="templates" title="Templates">
-          <TemplatesList
-            forAdmin={this.props.forAdmin}
-            loadLater={false}
-            companyid={this.props.companyId}
-          />
-        </TabViewer.TabViewerTab>
-        <TabViewer.TabViewerTab hash="documents" title="Documents">
-          <DocumentsList
-            forAdmin={this.props.forAdmin}
-            loadLater={false}
-            companyid={this.props.companyId}
-          />
-        </TabViewer.TabViewerTab>
+        { /* if */ (this.props.forAdmin) && (
+          <TabViewer.TabViewerTab hash="templates" title="Templates">
+            <TemplatesList
+              forAdmin={this.props.forAdmin}
+              loadLater={false}
+              companyid={this.props.companyId}
+            />
+          </TabViewer.TabViewerTab>
+        )}
+        { /* if */ (this.props.forAdmin) && (
+          <TabViewer.TabViewerTab hash="documents" title="Documents">
+            <DocumentsList
+              loadLater={false}
+              companyid={this.props.companyId}
+            />
+          </TabViewer.TabViewerTab>
+        )}
       </TabViewer.TabViewer>
     );
   }

@@ -74,7 +74,15 @@ describe("admin/useradmin/useradmin", function () {
     assert.equal($("li:nth-child(4)", tabs).text(), "Documents");
   });
 
-  it("should activate the details tab by default", function () {
+  it("should not render documents tab if not for admin", function () {
+    var component = renderComponent({forAdmin: false});
+
+    var tabs = $(".tabs", component.getDOMNode());
+
+    assert.isTrue($("li:nth-child(4)", tabs).length == 0);
+  });
+
+    it("should activate the details tab by default", function () {
     var component = renderComponent();
 
     var tab = $(".tabs li:nth-child(2)", component.getDOMNode());
@@ -175,7 +183,6 @@ describe("admin/useradmin/useradmin", function () {
           component, DocumentsList
         );
 
-        assert.isTrue(documentsView.props.forAdmin);
         assert.isFalse(documentsView.props.loadLater);
         assert.equal(documentsView.props.userid, "1");
 

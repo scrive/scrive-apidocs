@@ -27,13 +27,14 @@ var UserAdminView = React.createClass({
         <TabViewer.TabViewerTab hash="stats" title="Statistics">
           <StatsView userId={this.props.userId} withCompany={false} />
         </TabViewer.TabViewerTab>
-        <TabViewer.TabViewerTab hash="documents" title="Documents">
-          <DocumentsList
-            forAdmin={this.props.forAdmin}
-            loadLater={false}
-            userid={this.props.userId}
-          />
-        </TabViewer.TabViewerTab>
+        { /* if */ (this.props.forAdmin) && (
+          <TabViewer.TabViewerTab hash="documents" title="Documents">
+            <DocumentsList
+              loadLater={false}
+              userid={this.props.userId}
+            />
+          </TabViewer.TabViewerTab>
+       )}
       </TabViewer.TabViewer>
     );
   }

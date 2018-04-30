@@ -26,7 +26,7 @@ describe("admin/admin", function () {
 
     var actualProps = _.extendOwn(
       {
-        isAdmin: true
+        forAdmin: true
       },
       props || {}
     );
@@ -68,6 +68,14 @@ describe("admin/admin", function () {
     assert.equal($("li:nth-child(2)", tabs).text(), "Company admin");
     assert.equal($("li:nth-child(3)", tabs).text(), "Documents");
     assert.equal($("li:nth-child(4)", tabs).text(), "Branded domains");
+  });
+
+  it("should not render documents tab if not for admin", function () {
+    var component = renderComponent({forAdmin: false});
+
+    var tabs = $(".tabs", component.getDOMNode());
+
+    assert.isTrue($("li:nth-child(4)", tabs).length == 0);
   });
 
   it("should activate the users tab by default", function () {
@@ -188,7 +196,6 @@ describe("admin/admin", function () {
           component, DocumentsList
         );
 
-        assert.isTrue(documentsView.props.forAdmin);
         assert.isFalse(documentsView.props.loadLater);
 
         done();

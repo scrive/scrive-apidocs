@@ -92,6 +92,15 @@ describe("admin/companyadmin/companyadmin", function () {
     assert.equal($("li:nth-child(8)", tabs).text(), "Documents");
   });
 
+  it("should not render templates or documents tab if not for admin", function () {
+    var component = renderComponent({forAdmin: false});
+
+    var tabs = $(".tabs", component.getDOMNode());
+
+    assert.isTrue($("li:nth-child(7)", tabs).length == 0);
+  });
+
+
   it("should activate the details tab by default", function () {
     var component = renderComponent();
 
@@ -354,7 +363,6 @@ describe("admin/companyadmin/companyadmin", function () {
           component, DocumentsList
         );
 
-        assert.isTrue(documentsView.props.forAdmin);
         assert.isFalse(documentsView.props.loadLater);
         assert.equal(documentsView.props.companyid, "1");
 
