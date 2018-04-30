@@ -6,28 +6,26 @@ module Doc.API.V2.JSON.Utils (
 ) where
 
 import Control.Applicative.Free
+import Data.Tuple
 import Data.Typeable
 import Data.Unjson
 import qualified Data.Aeson as Aeson
 import qualified Data.Text as T
 
-unjsonEnumBy :: (Eq a) => T.Text -> [(a,T.Text)] -> UnjsonDef a
+unjsonEnumBy :: forall a . (Eq a) => T.Text -> [(a, T.Text)] -> UnjsonDef a
 unjsonEnumBy desc enumDef =
-  unjsonEnum desc (parseEnum enumDef) (printEnum enumDef)
+  unjsonEnum desc parseEnum printEnum
   where
+    parseEnum  :: T.Text -> Maybe a
+    parseEnum t = lookup t enumDef'
 
-    parseEnum :: [(a,T.Text)] -> T.Text -> Maybe a
-    parseEnum ((m,t):ms) v = if (t == v)
-                            then Just m
-                            else parseEnum ms v
-    parseEnum _ _ = Nothing
+    enumDef'    = map swap enumDef
 
-    printEnum :: (Eq a) => [(a,T.Text)] -> a -> T.Text
-    printEnum ((m,t):ms) a =  if (a == m)
-                            then t
-                            else printEnum ms a
-    printEnum _ _ = unexpectedError $
-                    T.unpack ("Incomplete printEnum definition for" <+> desc)
+    printEnum  :: a -> T.Text
+    printEnum a = fromMaybe err (lookup a enumDef)
+
+    err         = unexpectedError $
+                  T.unpack ("Incomplete printEnum definition for" <+> desc)
 
 unjsonEnum :: T.Text -> (T.Text -> Maybe a) -> (a -> T.Text) -> UnjsonDef a
 unjsonEnum desc parseEnum printEnum  =
