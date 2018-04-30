@@ -13,6 +13,7 @@ import Data.Time
 import Log
 import qualified Crypto.Hash.SHA1 as SHA1
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Lazy as BSL
 
 import Crypto
 import DB
@@ -43,7 +44,7 @@ saveNewFile fName fContent = do
       -- CORE-478: urlFromFile should be moved in this module
   Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
   let encryptedContent = aesEncrypt aes fContent
-  eRes <- try $ FS.saveNewFile awsUrl encryptedContent
+  eRes <- try $ FS.saveNewFile awsUrl $ BSL.fromStrict encryptedContent
   case eRes of
     Right () -> do
       dbUpdate $ FileMovedToAWS fid awsUrl aes
@@ -71,7 +72,7 @@ getFileContents :: (MonadFileStorage m, MonadIO m, MonadLog m, MonadThrow m)
 getFileContents File{ filestorage = FileStorageMemory contents } =  return contents
 getFileContents file@File{ filestorage = FileStorageAWS url aes } = do
   encrypted <- FS.getFileContents url
-  let contents = aesDecrypt aes encrypted
+  let contents = aesDecrypt aes $ BSL.toStrict encrypted
       checksum = SHA1.hash contents
   unless (checksum == filechecksum file) $ do
     logAttention "SHA1 checksums of file don't match" $ object

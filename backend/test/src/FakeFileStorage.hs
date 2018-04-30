@@ -15,7 +15,7 @@ import Control.Monad.Trans.Control
 import Crypto.RNG
 import Log
 import Prelude hiding (get)
-import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.HashMap.Strict as HM
 
 import DB
@@ -42,7 +42,7 @@ liftFakeFileStorageT = FakeFileStorageT . ReaderT
 getFakeFSTVar :: Monad m => FakeFileStorageT m (TVar FakeFS)
 getFakeFSTVar = FakeFileStorageT ask
 
-type FakeFS = HM.HashMap String BS.ByteString
+type FakeFS = HM.HashMap String BSL.ByteString
 
 instance (MonadIO m, MonadThrow m)
     => MonadFileStorage (FakeFileStorageT m) where

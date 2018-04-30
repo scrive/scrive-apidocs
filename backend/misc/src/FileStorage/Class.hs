@@ -3,7 +3,7 @@ module FileStorage.Class where
 import Control.Exception
 import Control.Monad.Reader
 import Data.Typeable
-import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
 
 data FileStorageException
   = FileStorageException String
@@ -21,12 +21,12 @@ instance Exception FileStorageException
 -- For tests, we can fake this storage and store files in memory.
 -- See FakeFileStorage.
 class Monad m => MonadFileStorage m where
-  saveNewFile :: String        -- ^ Object key (URL-encoded)
-              -> BS.ByteString -- ^ Contents (needs to be encrypted first)
+  saveNewFile :: String         -- ^ Object key (URL-encoded)
+              -> BSL.ByteString -- ^ Contents (needs to be encrypted first)
               -> m ()
 
-  getFileContents :: String -- ^ Object key (URL-encoded)
-                  -> m BS.ByteString -- ^ File contents
+  getFileContents :: String           -- ^ Object key (URL-encoded)
+                  -> m BSL.ByteString -- ^ File contents
 
   deleteFile :: String -- ^ Object key (URL-encoded)
              -> m ()

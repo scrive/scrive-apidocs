@@ -894,11 +894,13 @@ addRandomDocumentWithFile fileid rda = do
 -- | Synchronously seal a document.
 sealTestDocument :: Context -> DocumentID -> TestEnv ()
 sealTestDocument ctx did = void $ TestEnv $ liftFakeFileStorageT $ \fakeFS -> do
+  cryptoSt <- newCryptoRNGState
   withDocumentID did
     . runGuardTimeConfT (get ctxgtconf ctx)
     . runPdfToolsLambdaConfT (get ctxpdftoolslambdaconf ctx)
     . runTemplatesT ((get ctxlang ctx), (get ctxglobaltemplates ctx))
     . runMailContextT (contextToMailContext ctx)
+    . runCryptoRNGT cryptoSt
     . flip runFakeFileStorageT fakeFS
     $ do
         res <- postDocumentClosedActions True False

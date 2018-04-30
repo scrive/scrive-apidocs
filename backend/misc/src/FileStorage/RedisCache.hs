@@ -19,6 +19,7 @@ import Log
 import System.Timeout.Lifted
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
+import qualified Data.ByteString.Lazy as BSL
 import qualified Database.Redis as R
 
 import Database.Redis.Cache
@@ -48,22 +49,22 @@ instance {-# OVERLAPPING #-} ( MonadFileStorage m, MonadBaseControl IO m
   deleteFile      = deleteFileWithRedis
 
 saveNewFileWithRedis :: (MonadFileStorage m, MonadBase IO m)
-                     => String -> BS.ByteString -> RedisCacheT m ()
+                     => String -> BSL.ByteString -> RedisCacheT m ()
 saveNewFileWithRedis url contents = do
   lift $ saveNewFile url contents
   conn <- getRedisConnection
-  redisPut "contents" contents (conn, redisKeyFromURL url)
+  redisPut "contents" (BSL.toStrict contents) (conn, redisKeyFromURL url)
 
 getFileContentsWithRedis
   :: (MonadFileStorage m, MonadBaseControl IO m, MonadLog m, MonadMask m)
-  => String -> RedisCacheT m BS.ByteString
+  => String -> RedisCacheT m BSL.ByteString
 getFileContentsWithRedis url = do
   conn <- getRedisConnection
   let key = redisKeyFromURL url
   mfetch (Just conn) key
          (\_ _ -> do
            contents <- getFileFromRedis conn key
-           redisPut "contents" contents (conn, redisKeyFromURL url)
+           redisPut "contents" (BSL.toStrict contents) (conn, redisKeyFromURL url)
            return contents)
          (\_ -> lift $ getFileContents url)
 
@@ -76,7 +77,7 @@ deleteFileWithRedis url = do
 
 -- | Fetch the contents of a file from Redis retrying every second.
 getFileFromRedis :: (MonadBaseControl IO m, MonadLog m)
-                 => R.Connection -> RedisKey -> m BS.ByteString
+                 => R.Connection -> RedisKey -> m BSL.ByteString
 getFileFromRedis conn rkey = do
   -- This is used to make Redis race with a timeout.
   semaphore <- newEmptyMVar
@@ -86,7 +87,7 @@ getFileFromRedis conn rkey = do
     case mContents of
       Just contents -> do
         logInfo_ "File retrieved successfully"
-        return contents
+        return $ BSL.fromStrict contents
       Nothing -> do
         logInfo_ "Waiting for file"
         void . timeout 1000000 $ takeMVar semaphore

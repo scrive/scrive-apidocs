@@ -16,16 +16,16 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Crypto.RNG
 import Log
-import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
 
 import DB
 import FileStorage.Class
 import MemCache
 
-type FileMemCache = MemCache String BS.ByteString
+type FileMemCache = MemCache String BSL.ByteString
 
 newFileMemCache :: MonadBase IO m => Int -> m FileMemCache
-newFileMemCache = new BS.length
+newFileMemCache = new (fromInteger . toInteger . BSL.length)
 
 -- | Transform a monad instantiating 'MonadFileStorage' by adding a memory cache
 -- in front of it.
@@ -45,14 +45,14 @@ instance {-# OVERLAPPING #-} (MonadBaseControl IO m, MonadFileStorage m)
   deleteFile      = deleteFileWithMemCache
 
 saveNewFileWithMemCache :: (MonadBaseControl IO m, MonadFileStorage m)
-                        => String -> BS.ByteString -> MemCacheT m ()
+                        => String -> BSL.ByteString -> MemCacheT m ()
 saveNewFileWithMemCache url contents = do
   cache <- MemCacheT ask
   invalidate cache url
   lift $ saveNewFile url contents
 
 getFileContentsWithMemCache :: (MonadBaseControl IO m, MonadFileStorage m)
-                            => String -> MemCacheT m BS.ByteString
+                            => String -> MemCacheT m BSL.ByteString
 getFileContentsWithMemCache url = do
   cache <- MemCacheT ask
   fetch_ cache url $ lift $ getFileContents url

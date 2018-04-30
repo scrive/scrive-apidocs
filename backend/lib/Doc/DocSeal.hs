@@ -650,7 +650,6 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
        then runOldJavaPresealing  tmppath spec
        else runNewLambdaPresealing tmppath spec
 
-
 addSealedEvidenceEvents ::  (MonadBaseControl IO m, MonadDB m, MonadLog m, TemplatesMonad m, MonadIO m, DocumentMonad m, MonadFileStorage m, MonadMask m)
                  => Actor -> m ()
 addSealedEvidenceEvents actor = do
@@ -669,8 +668,10 @@ addSealedEvidenceEvents actor = do
         actor
   return ()
 
-
-runOldJavaSealing :: (MonadBaseControl IO m, MonadDB m, MonadLog m, TemplatesMonad m, MonadIO m, DocumentMonad m, AWS.AmazonMonad m, MonadMask m) => FilePath -> String -> Seal.SealSpec -> m ()
+runOldJavaSealing :: ( CryptoRNG m, DocumentMonad m, MonadBaseControl IO m
+                     , MonadDB m, MonadFileStorage m, MonadIO m, MonadLog m
+                     , MonadMask m, TemplatesMonad m )
+                  => FilePath -> String -> Seal.SealSpec -> m ()
 runOldJavaSealing tmppath fn spec = do
   now <- currentTime
   let json_config = Unjson.unjsonToByteStringLazy Seal.unjsonSealSpec spec
@@ -689,7 +690,7 @@ runOldJavaSealing tmppath fn spec = do
           logAttention_ $ "Sealing document resulted in an empty output"
           internalError
         _ -> do
-          sealedfileid <- dbUpdate $ NewFile fn tmpoutContent
+          sealedfileid <- saveNewFile fn tmpoutContent
           dbUpdate $ AppendSealedFile sealedfileid Missing (systemActor now)
     ExitFailure _ -> do
       logAttention "Cannot seal document" $ object [
@@ -701,15 +702,18 @@ runOldJavaSealing tmppath fn spec = do
                           (return ())
                           (systemActor now)
 
-runNewLambdaSealing :: (MonadBaseControl IO m, MonadDB m, MonadLog m, TemplatesMonad m, MonadIO m, DocumentMonad m, AWS.AmazonMonad m, MonadMask m, PdfToolsLambdaConfMonad m, CryptoRNG m) =>
-                       FilePath -> String -> Seal.SealSpec -> m ()
+runNewLambdaSealing :: ( CryptoRNG m, DocumentMonad m, MonadBaseControl IO m
+                       , MonadDB m, MonadFileStorage m, MonadIO m, MonadLog m
+                       , MonadMask m , PdfToolsLambdaConfMonad m
+                       , TemplatesMonad m )
+                    => FilePath -> String -> Seal.SealSpec -> m ()
 runNewLambdaSealing _tmppath fn spec = do
   now <- currentTime
   lambdaconf <- getPdfToolsLambdaConf
   (msealedcontent :: Maybe BS.ByteString) <- callPdfToolsSealing lambdaconf spec
   case msealedcontent of
     Just sealedcontent -> do
-      sealedfileid <- dbUpdate $ NewFile fn sealedcontent
+      sealedfileid <- saveNewFile fn sealedcontent
       dbUpdate $ AppendSealedFile sealedfileid Missing (systemActor now)
     _ -> do
       logAttention_ "Sealing document with lambda failed"
@@ -718,7 +722,10 @@ runNewLambdaSealing _tmppath fn spec = do
                           (return ())
                           (systemActor now)
 
-runOldJavaPresealing :: (MonadBaseControl IO m, MonadDB m, MonadLog m, TemplatesMonad m, MonadIO m, AWS.AmazonMonad m, MonadMask m) => FilePath -> Seal.PreSealSpec -> m (Either String BS.ByteString)
+runOldJavaPresealing :: ( MonadBaseControl IO m, MonadDB m, MonadFileStorage m
+                        , MonadIO m, MonadLog m, MonadMask m, TemplatesMonad m )
+                     => FilePath -> Seal.PreSealSpec
+                     -> m (Either String BS.ByteString)
 runOldJavaPresealing tmppath config = do
   let json_config = Unjson.unjsonToByteStringLazy Seal.unjsonPreSealSpec config
   (code,_stdout,stderr) <- liftIO $ do
@@ -740,10 +747,12 @@ runOldJavaPresealing tmppath config = do
         -- show JSON'd config as that's what the java app is fed.
         return $ Left "Error when preprinting fields on PDF"
 
-
-
-runNewLambdaPresealing :: (MonadBaseControl IO m, MonadDB m, MonadLog m, TemplatesMonad m, MonadIO m, AWS.AmazonMonad m, MonadMask m, PdfToolsLambdaConfMonad m, CryptoRNG m) =>
-                       FilePath -> Seal.PreSealSpec -> m (Either String BS.ByteString)
+runNewLambdaPresealing :: ( CryptoRNG m, MonadBaseControl IO m
+                          , MonadFileStorage m, MonadDB m, MonadIO m, MonadLog m
+                          , MonadMask m, PdfToolsLambdaConfMonad m
+                          , TemplatesMonad m )
+                       => FilePath -> Seal.PreSealSpec
+                       -> m (Either String BS.ByteString)
 runNewLambdaPresealing _tmppath spec = do
   lambdaconf <- getPdfToolsLambdaConf
   msealedcontent <- callPdfToolsPresealing lambdaconf spec

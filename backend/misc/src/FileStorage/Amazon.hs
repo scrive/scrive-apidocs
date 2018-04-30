@@ -82,13 +82,12 @@ instance {-# OVERLAPPING #-} (MonadBase IO m, MonadLog m, MonadThrow m)
   deleteFile      = deleteFileFromAmazon
 
 saveNewFileInAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m)
-                    => String -> BS.ByteString -> AmazonMonadT m ()
+                    => String -> BSL.ByteString -> AmazonMonadT m ()
 saveNewFileInAmazon url contents = do
   config <- getAmazonConfig
 
   let conn = s3ConnFromConfig config
-      obj  = (s3ObjectFromConfig config url)
-        { AWS.obj_data = BSL.fromChunks [contents] }
+      obj  = (s3ObjectFromConfig config url) { AWS.obj_data = contents }
   result <- liftBase $ sendObjectMIC conn obj
 
   case result of
@@ -113,11 +112,11 @@ data GetContentRetry = RegularRetry
   deriving Show
 
 getFileContentsFromAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m)
-                          => String -> AmazonMonadT m BS.ByteString
+                          => String -> AmazonMonadT m BSL.ByteString
 getFileContentsFromAmazon = go RegularRetry
   where
     go :: (MonadBase IO m, MonadLog m, MonadThrow m) => GetContentRetry
-       -> String -> AmazonMonadT m BS.ByteString
+       -> String -> AmazonMonadT m BSL.ByteString
     go retry url = do
       config <- getAmazonConfig
       let action = s3ActionFromConfig config url
@@ -134,7 +133,7 @@ getFileContentsFromAmazon = go RegularRetry
             [ "elapsed_time" .= diff
             , "url"          .= url
             ]
-          return $ BSL.toStrict $ HTTP.rspBody rsp
+          return $ HTTP.rspBody rsp
         Left err -> do
           logAttention "Fetching file from AWS failed" $ object
             [ "error"        .= show err
@@ -194,7 +193,7 @@ uploadSomeFilesToAmazon config n = do
               identifier_ (fileid file)
             , "elapsed_time" .= getDiffTime finishTime
             ]
-          $unexpectedErrorM $ "Moving file " <+> show (fileid file) <+> " to Amazon failed."
+          unexpectedError $ "Moving file " <+> show (fileid file) <+> " to Amazon failed."
       finishTime <- liftBase getCurrentTime
       logInfo "Finished uploading some files to AWS" $ object [
           "number_of_files" .= n

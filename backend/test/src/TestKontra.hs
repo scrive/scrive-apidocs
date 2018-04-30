@@ -40,7 +40,6 @@ import Log
 import System.FilePath
 import Text.StringTemplates.Templates
 import qualified Control.Exception.Lifted as E
-import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Map as M
@@ -51,6 +50,7 @@ import Context.Internal
 import DB
 import DB.PostgreSQL
 import FakeFileStorage
+import FileStorage.MemCache
 import GuardTime.Class
 import Happstack.Server.ReqHandler
 import IPAddress
@@ -61,7 +61,6 @@ import PdfToolsLambda.Conf
 import Session.SessionID
 import Templates
 import User.Lang
-import qualified MemCache
 
 inTestDir :: FilePath -> FilePath
 inTestDir = ("backend/test" </>)
@@ -324,7 +323,7 @@ mkContext lang = do
   time <- currentTime
   bd <- dbQuery $ GetMainBrandedDomain
   liftIO $ do
-    filecache <- MemCache.new BS.length 52428800
+    filecache <- newFileMemCache 52428800
     return Context {
           _ctxmaybeuser = Nothing
         , _ctxtime = time
