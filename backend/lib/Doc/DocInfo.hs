@@ -28,7 +28,7 @@ import Data.Time
 import Doc.DocStateData
 import MinutesTime
 
--- Predicates on documentstatus
+-- Predicates on document status
 
 {- |
    Is the document pending?
