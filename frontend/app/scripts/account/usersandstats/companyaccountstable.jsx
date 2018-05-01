@@ -259,7 +259,7 @@ module.exports = React.createClass({
               sorting="twofactor_active"
               width="30px"
               rendering={function(d) {
-                var active = !d.field("twofactor_active");
+                var active = d.field("twofactor_active");
                 if (active) {
                   return (<a className='sharedIcon'/>);
                 } else {
