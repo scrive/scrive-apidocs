@@ -10,7 +10,7 @@ import Control.Monad.IO.Class
 import Crypto.RNG
 import Data.Aeson
 import Data.Either (isRight)
-import Data.Functor.Identity
+import Data.Int
 import Database.PostgreSQL.Consumers.Config
 import Log.Class
 import Network.HTTP.Base (RequestMethod(..))
@@ -57,21 +57,23 @@ checkAndFixURL s3action (FileStorageAWS correctURL _) = do
             }
           return $ isRight res''
 
-data AmazonURLFixConsumer = AmazonURLFixConsumer {
-    aufcFileID :: !FileID
+data AmazonURLFixConsumer = AmazonURLFixConsumer
+  { aufcFileID   :: !FileID
+  , aufcAttempts :: !Int32
   } deriving Show
 
 amazonURLFixConsumer
   :: (MonadIO m, MonadBase IO m, MonadLog m, CryptoRNG m, MonadMask m)
   => A.AmazonConfig -> ConnectionSourceM m
   -> ConsumerConfig m FileID AmazonURLFixConsumer
-amazonURLFixConsumer config pool = ConsumerConfig {
-    ccJobsTable = "amazon_url_fix_jobs"
+amazonURLFixConsumer config pool = ConsumerConfig
+  { ccJobsTable = "amazon_url_fix_jobs"
   , ccConsumersTable = "amazon_url_fix_consumers"
-  , ccJobSelectors = ["id"]
-  , ccJobFetcher = \(Identity fid) -> AmazonURLFixConsumer {
-      aufcFileID = fid
-    }
+  , ccJobSelectors = ["id", "attempts"]
+  , ccJobFetcher = \(fid, attempts) -> AmazonURLFixConsumer
+      { aufcFileID   = fid
+      , aufcAttempts = attempts
+      }
   , ccJobIndex = aufcFileID
   , ccNotificationChannel = Nothing
   , ccNotificationTimeout = 60 * 1000000 -- 1 minute
@@ -97,4 +99,5 @@ amazonURLFixConsumer config pool = ConsumerConfig {
   , ccOnException = const onFailure
   }
   where
-    onFailure AmazonURLFixConsumer{..} = return . RerunAfter $ idays 1
+    onFailure AmazonURLFixConsumer{..} = return . RerunAfter $
+      if aufcAttempts == 0 then iminutes 15 else idays 1

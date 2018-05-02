@@ -56,7 +56,7 @@ saveNewFile fName fContent = do
         ]
       return fid
     Left err@(FS.FileStorageException msg) -> do
-      let attnMsg = "newFile: failed to upload to AWS, purging file and creating new file in DB as fallback"
+      let attnMsg = "newFile: failed to upload to AWS, purging file"
       logAttention attnMsg $ object [
           logPair_ emptyFile
         , "error" .= msg
