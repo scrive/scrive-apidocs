@@ -39,6 +39,7 @@ var classNames = require("classnames");
 
     onUploadComplete: function (fileinput) {
       var self = this;
+      var addToSealedFile = fileinput[0].files.length <= 5;
 
       _.each(fileinput[0].files, function (file) {
         var originalName = file.name;
@@ -52,7 +53,8 @@ var classNames = require("classnames");
 
         var newAttachment = new DesignViewAttachment({
           name: name,
-          fileUpload: file
+          fileUpload: file,
+          addToSealedFile: addToSealedFile
         });
         self.props.model.addAttachment(newAttachment);
       });
