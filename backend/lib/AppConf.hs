@@ -30,7 +30,7 @@ data AppConf = AppConf {
     -- 8000) localhost:8000 (default) (0, 80) all interfaces port 80.
   , mainDomainUrl      :: String               -- ^ base url of the main domain
   , useHttps           :: Bool                 -- ^ should we redirect to https?
-  , amazonConfig       :: Maybe AmazonConfig
+  , amazonConfig       :: AmazonConfig
   -- ^ AWS configuration (host, port, bucket, access key, secret key).
   -- The host and port default to S3.
   , dbConfig           :: T.Text               -- ^ postgresql configuration
@@ -89,7 +89,7 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> fieldDef "https" True
       useHttps
       "Should use https"
-  <*> fieldOpt "amazon"
+  <*> field "amazon"
       amazonConfig
       "Amazon configuration"
   <*> field "database"

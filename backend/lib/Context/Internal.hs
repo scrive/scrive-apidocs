@@ -6,7 +6,7 @@ import qualified Database.Redis as R
 import BrandedDomain.BrandedDomain
 import EID.CGI.GRP.Config
 import EID.Nets.Config
-import FileStorage.MemCache
+import FileStorage
 import GuardTime (GuardTimeConf(..))
 import HubSpot.Conf
 import IPAddress

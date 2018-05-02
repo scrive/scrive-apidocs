@@ -28,7 +28,7 @@ data MailingServerConf = MailingServerConf {
   , mailerLogConfig          :: !LogConfig
   , mailerMasterSender       :: !SenderConfig
   , mailerSlaveSender        :: !(Maybe SenderConfig)
-  , mailerAmazonConfig       :: !(Maybe AmazonConfig)
+  , mailerAmazonConfig       :: !AmazonConfig
   , mailerTestReceivers      :: ![Address]
   , mailerMonitoringConfig   :: !(Maybe MonitoringConf)
   } deriving (Eq, Show)
@@ -118,7 +118,7 @@ unjsonMailingServerConf = objectOf $ MailingServerConf
   <*> fieldOpt "slave_sender"
       mailerSlaveSender
       "Slave sender"
-  <*> fieldOpt "amazon"
+  <*> field "amazon"
       mailerAmazonConfig
       "Amazon configuration"
   <*> field "test_receivers"

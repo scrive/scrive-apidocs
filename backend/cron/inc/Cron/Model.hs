@@ -42,7 +42,6 @@ import User.UserAccountRequest (expireUserAccountRequests)
 import Utils.List
 import qualified CronEnv
 import qualified FileStorage.Amazon as AWS
-import qualified FileStorage.Amazon.Config as AWS
 
 data JobType
   = AmazonUpload -- CORE-478: should be removed
@@ -161,16 +160,11 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
   action <- case cjType of
     -- CORE-478: should be removed
     AmazonUpload -> do
-      let mConfig = cronAmazonConfig cronConf
-      if maybe False AWS.isAmazonConfigValid mConfig
-        then do
-          moved <- runCronEnv (AWS.uploadSomeFilesToAmazon mConfig 10)
-          if moved
-            then return . RerunAfter $ iseconds 1
-            else return . RerunAfter $ iminutes 1
-        else do
-          logInfo_ "No valid AWS config, skipping"
-          return . RerunAfter $ iminutes 1
+      let amazonConfig = cronAmazonConfig cronConf
+      moved <- runCronEnv (AWS.uploadSomeFilesToAmazon (Just amazonConfig) 10)
+      if moved
+        then return . RerunAfter $ iseconds 1
+        else return . RerunAfter $ iminutes 1
     AsyncEventsProcessing -> do
       runDB $ do
         let processMaximum = 200

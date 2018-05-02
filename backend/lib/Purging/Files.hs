@@ -140,7 +140,7 @@ purgeOrphanFile batchSize = do
     purge :: (FileID, Maybe String, Bool) -> m ()
     purge (fid, mamazonUrl, isOnAmazon) = do
       eRes <- case (mamazonUrl, isOnAmazon) of
-        (Just amazonUrl, True) -> try $ deleteFile amazonUrl
+        (Just amazonUrl, True) -> try $ deleteSavedContents amazonUrl
         _ -> return $ Right ()
       case eRes of
         Right () -> do

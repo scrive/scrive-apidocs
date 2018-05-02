@@ -21,7 +21,6 @@ import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.Model.Query
 import FileStorage
-import FileStorage.MemCache
 import GuardTime
 import Log.Identifier
 import Templates
@@ -34,7 +33,7 @@ data DocumentExtendingConsumer = DocumentExtendingConsumer {
 
 documentExtendingConsumer
   :: (CryptoRNG m, MonadLog m, MonadIO m, MonadBaseControl IO m, MonadMask m)
-  => Maybe A.AmazonConfig
+  => A.AmazonConfig
   -> GuardTimeConf
   -> KontrakcjaGlobalTemplates
   -> FileMemCache
@@ -42,7 +41,7 @@ documentExtendingConsumer
   -> ConnectionSourceM m
   -> Int
   -> ConsumerConfig m DocumentID DocumentExtendingConsumer
-documentExtendingConsumer mAmazonConfig guardTimeConf templates memcache
+documentExtendingConsumer amazonConfig guardTimeConf templates memcache
                           mRedisConn pool maxRunningJobs = ConsumerConfig {
     ccJobsTable = "document_extending_jobs"
   , ccConsumersTable = "document_extending_consumers"
@@ -74,7 +73,7 @@ documentExtendingConsumer mAmazonConfig guardTimeConf templates memcache
         . withDocumentM (dbQuery $ GetDocumentByDocumentID $ decDocumentID dec)
         . runTemplatesT (def, templates)
         . runGuardTimeConfT guardTimeConf
-        . runFileStorageT (mAmazonConfig, mRedisConn, Just memcache)
+        . runFileStorageT (amazonConfig, mRedisConn, memcache)
         $ extendDigitalSignature
       case resultisok of
         True  -> return $ Ok Remove

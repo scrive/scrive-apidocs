@@ -21,18 +21,18 @@ instance Exception FileStorageException
 -- For tests, we can fake this storage and store files in memory.
 -- See FakeFileStorage.
 class Monad m => MonadFileStorage m where
-  saveNewFile :: String         -- ^ Object key (URL-encoded)
-              -> BSL.ByteString -- ^ Contents (needs to be encrypted first)
-              -> m ()
+  saveNewContents :: String         -- ^ Object key (URL-encoded)
+                  -> BSL.ByteString -- ^ Contents (needs to be encrypted first)
+                  -> m ()
 
-  getFileContents :: String           -- ^ Object key (URL-encoded)
-                  -> m BSL.ByteString -- ^ File contents
+  getSavedContents :: String           -- ^ Object key (URL-encoded)
+                   -> m BSL.ByteString -- ^ File contents
 
-  deleteFile :: String -- ^ Object key (URL-encoded)
-             -> m ()
+  deleteSavedContents :: String -- ^ Object key (URL-encoded)
+                      -> m ()
 
 instance {-# OVERLAPS #-} (MonadFileStorage m, MonadTrans t, Monad (t m))
     => MonadFileStorage (t m) where
-  saveNewFile url contents = lift $ saveNewFile url contents
-  getFileContents          = lift . getFileContents
-  deleteFile               = lift . deleteFile
+  saveNewContents url contents = lift $ saveNewContents url contents
+  getSavedContents             = lift . getSavedContents
+  deleteSavedContents          = lift . deleteSavedContents

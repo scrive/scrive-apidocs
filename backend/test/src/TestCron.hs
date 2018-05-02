@@ -17,6 +17,7 @@ import Doc.Extending.Consumer
 import Doc.Sealing.Consumer
 import Doc.Signing.Consumer
 import FakeFileStorage
+import FileStorage.Amazon.Config
 import TestKontra
 import qualified CronEnv
 
@@ -34,7 +35,7 @@ runTestCronUntilIdle ctx = do
 
   let -- for testing, one of each is sufficient
       cronConf = CronConf {
-          cronAmazonConfig       = Nothing
+          cronAmazonConfig       = AmazonConfig "" 0 "" "" ""
         , cronDBConfig           =
             "user='kontra' password='kontra' dbname='kontrakcja'"
         , cronMaxDBConnections   = 100

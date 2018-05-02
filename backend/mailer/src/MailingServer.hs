@@ -21,7 +21,6 @@ import Database.Redis.Configuration
 import DB
 import DB.PostgreSQL
 import FileStorage
-import FileStorage.MemCache
 import Handlers
 import Happstack.Server.ReqHandler
 import Log.Configuration
@@ -75,7 +74,7 @@ main = do
     fsConf <- do
       localCache  <- newFileMemCache $ mailerLocalFileCacheSize conf
       globalCache <- F.forM (mailerRedisCacheConfig conf) mkRedisConnection
-      return (mailerAmazonConfig conf, globalCache, Just localCache)
+      return (mailerAmazonConfig conf, globalCache, localCache)
     cs@(ConnectionSource pool) <- ($ (maxConnectionTracker $ mailerMaxDBConnections conf))
       <$> liftBase (createPoolSource (pgSettings mailerComposites)  (mailerMaxDBConnections conf))
 

@@ -21,7 +21,6 @@ import Doc.DocumentID
 import Doc.DocumentMonad
 import Doc.Sealing.Model
 import FileStorage
-import FileStorage.MemCache
 import GuardTime
 import Log.Identifier
 import MailContext
@@ -39,7 +38,7 @@ data DocumentSealing = DocumentSealing {
 
 documentSealing
   :: (CryptoRNG m, MonadLog m, MonadIO m, MonadBaseControl IO m, MonadMask m)
-  => Maybe A.AmazonConfig
+  => A.AmazonConfig
   -> GuardTimeConf
   -> PdfToolsLambdaConf
   -> KontrakcjaGlobalTemplates
@@ -49,7 +48,7 @@ documentSealing
   -> String
   -> Int
   -> ConsumerConfig m DocumentID DocumentSealing
-documentSealing mAmazonConfig guardTimeConf pdfToolsLambdaConf templates
+documentSealing amazonConfig guardTimeConf pdfToolsLambdaConf templates
                 memcache mRedisConn pool mailNoreplyAddress
                 maxRunningJobs = ConsumerConfig {
     ccJobsTable = "document_sealing_jobs"
@@ -79,7 +78,7 @@ documentSealing mAmazonConfig guardTimeConf pdfToolsLambdaConf templates
         . runPdfToolsLambdaConfT pdfToolsLambdaConf
         . runTemplatesT (lang, templates)
         . runMailContextT mc
-        . runFileStorageT (mAmazonConfig, mRedisConn, Just memcache)
+        . runFileStorageT (amazonConfig, mRedisConn, memcache)
         $ postDocumentClosedActions True False
       case resultisok of
         True  -> return $ Ok Remove

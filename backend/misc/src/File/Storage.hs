@@ -44,7 +44,7 @@ saveNewFile fName fContent = do
       -- CORE-478: urlFromFile should be moved in this module
   Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
   let encryptedContent = aesEncrypt aes fContent
-  eRes <- try $ FS.saveNewFile awsUrl $ BSL.fromStrict encryptedContent
+  eRes <- try $ FS.saveNewContents awsUrl $ BSL.fromStrict encryptedContent
   case eRes of
     Right () -> do
       dbUpdate $ FileMovedToAWS fid awsUrl aes
@@ -71,7 +71,7 @@ getFileContents :: (MonadFileStorage m, MonadIO m, MonadLog m, MonadThrow m)
                 => File -> m BS.ByteString
 getFileContents File{ filestorage = FileStorageMemory contents } =  return contents
 getFileContents file@File{ filestorage = FileStorageAWS url aes } = do
-  encrypted <- FS.getFileContents url
+  encrypted <- FS.getSavedContents url
   let contents = aesDecrypt aes $ BSL.toStrict encrypted
       checksum = SHA1.hash contents
   unless (checksum == filechecksum file) $ do

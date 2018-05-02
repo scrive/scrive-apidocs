@@ -43,7 +43,6 @@ import EID.Nets.Data (NetsSignStatus(..), netsFaultText)
 import EID.Signature.Model
 import File.FileID
 import FileStorage
-import FileStorage.MemCache
 import GuardTime
 import IPAddress
 import KontraError
@@ -78,7 +77,7 @@ data DocumentSigning = DocumentSigning {
 
 documentSigning
   :: (CryptoRNG m, MonadLog m, MonadIO m, MonadBaseControl IO m, MonadMask m)
-  => Maybe A.AmazonConfig
+  => A.AmazonConfig
   -> GuardTimeConf
   -> Maybe CgiGrpConfig
   -> Maybe NetsSignConfig
@@ -89,7 +88,7 @@ documentSigning
   -> String
   -> Int
   -> ConsumerConfig m SignatoryLinkID DocumentSigning
-documentSigning mAmazonConfig guardTimeConf cgiGrpConf netsSignConf templates
+documentSigning amazonConfig guardTimeConf cgiGrpConf netsSignConf templates
                 memcache mRedisConn pool mailNoreplyAddress
                 maxRunningJobs = ConsumerConfig {
     ccJobsTable = "document_signing_jobs"
@@ -147,7 +146,7 @@ documentSigning mAmazonConfig guardTimeConf cgiGrpConf netsSignConf templates
       runTemplatesT (signingLang, templates)
         . runMailContextT mc
         . runGuardTimeConfT guardTimeConf
-        . runFileStorageT (mAmazonConfig, mRedisConn, Just memcache)
+        . runFileStorageT (amazonConfig, mRedisConn, memcache)
         $ if (signingCancelled)
             then if (minutesTillPurgeOfFailedAction `minutesAfter` signingTime > now)
               then return $ Ok $ RerunAfter $ iminutes minutesTillPurgeOfFailedAction

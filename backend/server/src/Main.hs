@@ -26,7 +26,7 @@ import Configuration
 import Database.Redis.Configuration
 import DB
 import DB.PostgreSQL
-import FileStorage.MemCache
+import FileStorage
 import Happstack.Server.ReqHandler
 import Log.Configuration
 import Monitoring

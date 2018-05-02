@@ -1,7 +1,7 @@
 {
-    "_amazon" : { "bucket"     : "foo"
-                , "access_key" : "bar"
-                , "secret_key" : "baz" },
+    "amazon" : { "bucket"     : "foo"
+               , "access_key" : "bar"
+               , "secret_key" : "baz" },
     "database": "user='kontra' password='kontra' dbname='kontrakcja'",
     "max_db_connections": 100,
     "_redis_cache" : { "host"     : "foo"

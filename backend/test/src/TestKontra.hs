@@ -50,7 +50,7 @@ import Context.Internal
 import DB
 import DB.PostgreSQL
 import FakeFileStorage
-import FileStorage.MemCache
+import FileStorage
 import GuardTime.Class
 import Happstack.Server.ReqHandler
 import IPAddress
@@ -164,9 +164,9 @@ instance MonadBaseControl IO TestEnv where
   {-# INLINE restoreM #-}
 
 instance MonadFileStorage TestEnv where
-  saveNewFile url contents = TestEnv $ saveNewFile url contents
-  getFileContents = TestEnv . getFileContents
-  deleteFile = TestEnv . deleteFile
+  saveNewContents url contents = TestEnv $ saveNewContents url contents
+  getSavedContents             = TestEnv . getSavedContents
+  deleteSavedContents          = TestEnv . deleteSavedContents
 
 runTestKontraHelper :: BasicConnectionSource -> Request -> Context
                     -> KontraG FakeFileStorageT a

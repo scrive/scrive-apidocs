@@ -101,11 +101,11 @@ sendDataFileToAmazon content = do
     randomPart <- randomString 10 ['a'..'z']
     timePart   <- filter isDigit <$> show <$> liftBase getCurrentTime
     let name = randomPart ++ timePart
-    saveNewFile name content
+    saveNewContents name content
     return $ Just name
 
 getDataFromAmazon :: (MonadCatch m, MonadFileStorage m)
                   => String -> m (Maybe BSL.ByteString)
 getDataFromAmazon name =
-  (Just <$> getFileContents name)
+  (Just <$> getSavedContents name)
     `catch` (\(_ :: FileStorageException) -> return Nothing)

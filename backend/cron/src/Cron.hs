@@ -25,7 +25,7 @@ import Doc.API.Callback.Model
 import Doc.Extending.Consumer
 import Doc.Sealing.Consumer
 import Doc.Signing.Consumer
-import FileStorage.MemCache
+import FileStorage
 import KontraError
 import Log.Configuration
 import Monitoring
@@ -105,7 +105,7 @@ main = do
 
         runCronEnv :: CronEnv.CronEnvM r -> CronM r
         runCronEnv = runDB . CronEnv.runCronEnv cronConf
-          (Just filecache) mrediscache templates
+          filecache mrediscache templates
 
         docSealing   = documentSealing (cronAmazonConfig cronConf)
           (cronGuardTimeConf cronConf) (cronPdfToolsLambdaConf cronConf) templates filecache mrediscache pool

@@ -4,7 +4,7 @@
  - the second in Redis. See the corresponding module for more details.
  -
  - It instantiates 'MonadFileStorage' which provides a common interface to store
- - files. Note that, here, a file is some text contents with a name.
+ - some contents.
  -
  - /!\ WARNING: This might not be what you're looking for! If you seek to
  - manipulate files in the sense of Scrive, that is the ones defined in
@@ -16,6 +16,8 @@ module FileStorage
   , FileStorageConfig
   , FileStorageT
   , runFileStorageT
+  , FileMemCache
+  , newFileMemCache
   ) where
 
 import Control.Monad.Base
@@ -24,17 +26,22 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Crypto.RNG
 import Log
+import qualified Data.ByteString.Lazy as BSL
 import qualified Database.Redis as R
 
 import DB
 import FileStorage.Amazon
 import FileStorage.Amazon.Config
 import FileStorage.Class
-import FileStorage.MemCache
-import FileStorage.RedisCache
+import qualified FileStorage.RedisCache as Redis
+import qualified MemCache
 
-type FileStorageConfig =
-  (Maybe AmazonConfig, Maybe R.Connection, Maybe FileMemCache)
+type FileMemCache = MemCache.MemCache String BSL.ByteString
+
+newFileMemCache :: MonadBase IO m => Int -> m FileMemCache
+newFileMemCache = MemCache.new (fromInteger . toInteger . BSL.length)
+
+type FileStorageConfig = (AmazonConfig, Maybe R.Connection, FileMemCache)
 
 newtype FileStorageT m a
   = FileStorageT { unFileStorageT :: ReaderT FileStorageConfig m a }
@@ -52,23 +59,35 @@ getFileStorageConfig = FileStorageT ask
 instance {-# OVERLAPPING #-} ( MonadBase IO m, MonadBaseControl IO m, MonadLog m
                              , MonadMask m )
     => MonadFileStorage (FileStorageT m) where
-  saveNewFile url contents = inAvailableLayers $ saveNewFile url contents
-  getFileContents url      = inAvailableLayers $ getFileContents url
-  deleteFile url           = inAvailableLayers $ deleteFile url
+  saveNewContents url contents = do
+    (amazonConfig, mRedisCache, memCache) <- getFileStorageConfig
 
-inAvailableLayers :: ( MonadBase IO m, MonadBaseControl IO m, MonadLog m
-                     , MonadMask m )
-                  => (forall n. MonadFileStorage n => n a) -> FileStorageT m a
-inAvailableLayers action = do
-  config <- getFileStorageConfig
-  case config of
-    (Nothing, _, _) -> throwM $ FileStorageException "no Amazon config"
-    (Just amazonConfig, Nothing, Nothing) ->
-      runAmazonMonadT amazonConfig action
-    (Just amazonConfig, Just conn, Nothing) ->
-      runAmazonMonadT amazonConfig $ runRedisCacheT conn action
-    (Just amazonConfig, Nothing, Just memcache) ->
-      runAmazonMonadT amazonConfig $ runMemCacheT memcache action
-    (Just amazonConfig, Just conn, Just memcache) ->
-      runAmazonMonadT amazonConfig $ runRedisCacheT conn $
-        runMemCacheT memcache action
+    MemCache.invalidate memCache url
+    whenJust mRedisCache $ \conn -> do
+      Redis.deleteKey conn $ Redis.redisKeyFromURL url
+
+    runAmazonMonadT amazonConfig $ saveNewContents url contents
+
+    _ <- MemCache.fetch memCache url (return contents)
+    whenJust mRedisCache $ \conn -> do
+      Redis.redisPut "contents" (BSL.toStrict contents)
+                     (conn, Redis.redisKeyFromURL url)
+
+  getSavedContents url = do
+    (amazonConfig, mRedisCache, memCache) <- getFileStorageConfig
+
+    MemCache.fetch_ memCache url $ do
+      Redis.mfetch mRedisCache (Redis.redisKeyFromURL url)
+        Redis.getFileFromRedis
+        (\mConnKey -> do
+          contents <- runAmazonMonadT amazonConfig $ getSavedContents url
+          whenJust mConnKey $ Redis.redisPut "contents" $ BSL.toStrict contents
+          return contents)
+
+  deleteSavedContents url = do
+    (amazonConfig, mRedisCache, memCache) <- getFileStorageConfig
+
+    MemCache.invalidate memCache url
+    whenJust mRedisCache $ \conn ->
+      Redis.deleteKey conn $ Redis.redisKeyFromURL url
+    runAmazonMonadT amazonConfig $ deleteSavedContents url

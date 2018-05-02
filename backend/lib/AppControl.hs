@@ -42,7 +42,6 @@ import Cookies (lookCookieValue)
 import DB hiding (ErrorCode(..))
 import DB.PostgreSQL
 import FileStorage
-import FileStorage.MemCache
 import Happstack.Server.ReqHandler
 import IPAddress
 import Kontra
@@ -205,7 +204,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
     runHandler = catchEverything
       . runCryptoRNGT (cryptorng appGlobals)
       . runFileStorageT ( amazonConfig appConf, mrediscache appGlobals
-                        , Just (filecache appGlobals) )
+                        , filecache appGlobals )
 
     catchEverything :: HandlerM Response -> HandlerM Response
     catchEverything m = m `E.catch` \(e::E.SomeException) -> do

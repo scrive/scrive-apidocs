@@ -1,20 +1,14 @@
-{- |
- - This modules allows to add a cache in Redis to a monad instantiating
- - 'MonadFileStorage'.
- -}
-
 module FileStorage.RedisCache
-  ( RedisCacheT
-  , runRedisCacheT
+  ( getFileFromRedis
+  , redisKeyFromURL
+  , module Database.Redis.Cache
+  , module Database.Redis.Helpers
   ) where
 
 import Control.Concurrent.Async.Lifted
 import Control.Concurrent.Lifted
-import Control.Monad.Base
-import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
-import Crypto.RNG
 import Log
 import System.Timeout.Lifted
 import qualified Data.ByteString as BS
@@ -24,56 +18,6 @@ import qualified Database.Redis as R
 
 import Database.Redis.Cache
 import Database.Redis.Helpers
-import DB
-import FileStorage.Class
-
--- | Transform a monad instantiating 'MonadFileStorage' by adding a Redis cache
--- in front of it.
-newtype RedisCacheT m a
-  = RedisCacheT { unRedisCacheT :: ReaderT R.Connection m a }
-  deriving ( Alternative, Applicative, Functor, Monad, MonadDB, MonadIO
-           , MonadLog, CryptoRNG, MonadTrans, MonadPlus, MonadBase b
-           , MonadBaseControl b, MonadThrow, MonadCatch, MonadMask )
-
-runRedisCacheT :: R.Connection -> RedisCacheT m a -> m a
-runRedisCacheT config = flip runReaderT config . unRedisCacheT
-
-getRedisConnection :: Monad m => RedisCacheT m R.Connection
-getRedisConnection = RedisCacheT ask
-
-instance {-# OVERLAPPING #-} ( MonadFileStorage m, MonadBaseControl IO m
-                             , MonadLog m, MonadMask m )
-    => MonadFileStorage (RedisCacheT m) where
-  saveNewFile     = saveNewFileWithRedis
-  getFileContents = getFileContentsWithRedis
-  deleteFile      = deleteFileWithRedis
-
-saveNewFileWithRedis :: (MonadFileStorage m, MonadBase IO m)
-                     => String -> BSL.ByteString -> RedisCacheT m ()
-saveNewFileWithRedis url contents = do
-  lift $ saveNewFile url contents
-  conn <- getRedisConnection
-  redisPut "contents" (BSL.toStrict contents) (conn, redisKeyFromURL url)
-
-getFileContentsWithRedis
-  :: (MonadFileStorage m, MonadBaseControl IO m, MonadLog m, MonadMask m)
-  => String -> RedisCacheT m BSL.ByteString
-getFileContentsWithRedis url = do
-  conn <- getRedisConnection
-  let key = redisKeyFromURL url
-  mfetch (Just conn) key
-         (\_ _ -> do
-           contents <- getFileFromRedis conn key
-           redisPut "contents" (BSL.toStrict contents) (conn, redisKeyFromURL url)
-           return contents)
-         (\_ -> lift $ getFileContents url)
-
-deleteFileWithRedis :: ( MonadBaseControl IO m, MonadFileStorage m, MonadLog m
-                       , MonadMask m ) => String -> RedisCacheT m ()
-deleteFileWithRedis url = do
-  conn <- getRedisConnection
-  deleteKey conn $ redisKeyFromURL url
-  lift $ deleteFile url
 
 -- | Fetch the contents of a file from Redis retrying every second.
 getFileFromRedis :: (MonadBaseControl IO m, MonadLog m)

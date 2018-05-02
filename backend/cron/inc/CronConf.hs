@@ -20,7 +20,7 @@ import SFTPConfig
 
 -- | Cron configuration: things like AWS, Postgres and Redis, NTP servers, etc.
 data CronConf = CronConf {
-    cronAmazonConfig       :: !(Maybe AmazonConfig)
+    cronAmazonConfig       :: !AmazonConfig
     -- ^ AWS configuration (bucket, access key, secret key).
   , cronDBConfig           :: !T.Text               -- ^ Postgresql configuration.
   , cronMaxDBConnections   :: !Int                  -- ^ Limit of db connections.
@@ -53,7 +53,7 @@ data CronConf = CronConf {
 
 unjsonCronConf :: UnjsonDef CronConf
 unjsonCronConf = objectOf $ pure CronConf
- <*> fieldOpt "amazon"
+  <*> field "amazon"
       cronAmazonConfig
       "Amazon configuration"
   <*> field "database"
@@ -125,4 +125,3 @@ unjsonCronConf = objectOf $ pure CronConf
 
 instance Unjson CronConf where
   unjsonDef = unjsonCronConf
-

@@ -77,13 +77,13 @@ instance MonadBaseControl IO m => MonadBaseControl IO (AmazonMonadT m) where
 
 instance {-# OVERLAPPING #-} (MonadBase IO m, MonadLog m, MonadThrow m)
     => MonadFileStorage (AmazonMonadT m) where
-  saveNewFile     = saveNewFileInAmazon
-  getFileContents = getFileContentsFromAmazon
-  deleteFile      = deleteFileFromAmazon
+  saveNewContents     = saveNewContentsInAmazon
+  getSavedContents    = getContentsFromAmazon
+  deleteSavedContents = deleteContentsFromAmazon
 
-saveNewFileInAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m)
+saveNewContentsInAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m)
                     => String -> BSL.ByteString -> AmazonMonadT m ()
-saveNewFileInAmazon url contents = do
+saveNewContentsInAmazon url contents = do
   config <- getAmazonConfig
 
   let conn = s3ConnFromConfig config
@@ -111,9 +111,9 @@ data GetContentRetry = RegularRetry
                      | NoRetry
   deriving Show
 
-getFileContentsFromAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m)
+getContentsFromAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m)
                           => String -> AmazonMonadT m BSL.ByteString
-getFileContentsFromAmazon = go RegularRetry
+getContentsFromAmazon = go RegularRetry
   where
     go :: (MonadBase IO m, MonadLog m, MonadThrow m) => GetContentRetry
        -> String -> AmazonMonadT m BSL.ByteString
@@ -147,9 +147,9 @@ getFileContentsFromAmazon = go RegularRetry
             AnotherRetryEncoded -> go NoRetry url
             NoRetry -> throwM $ FileStorageException $ show err
 
-deleteFileFromAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m) => String
+deleteContentsFromAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m) => String
                      -> AmazonMonadT m ()
-deleteFileFromAmazon url = do
+deleteContentsFromAmazon url = do
   config <- getAmazonConfig
 
   let action = (s3ActionFromConfig config url) { AWS.s3operation = HTTP.DELETE }
