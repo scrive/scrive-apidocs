@@ -44,5 +44,5 @@ getFileIDContents fid = do
   file <- dbQuery $ GetFileByFileID fid
   result <- getFileContents file
   stop <- liftIO getCurrentTime
-  logInfo "getFileIDContents timing" $ object ["duration" .= show (diffUTCTime stop start)]
+  logInfo "getFileIDContents timing" $ object ["duration" .= (realToFrac $ diffUTCTime stop start :: Double)]
   return result

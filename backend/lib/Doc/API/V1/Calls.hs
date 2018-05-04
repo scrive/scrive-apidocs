@@ -1121,7 +1121,8 @@ apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
                     -- Give Guardtime signing a few seconds to complete before we respond
                     when (diffUTCTime now (documentmtime doc) < 8) $ do
                       logInfo "Waiting for Guardtime signing" $ object [
-                          "document_last_modified_ago" .= show (diffUTCTime now $ documentmtime doc)
+                          "document_last_modified_ago" .=
+                            (realToFrac $ diffUTCTime now $ documentmtime doc :: Double)
                         ]
                       throwM $ SomeDBExtraException $ noAvailableYet "Digitally sealed document not ready"
                   file <- apiGuardJustM (noAvailableYet "Not ready, please try later") $ fileFromMainFile (documentsealedfile doc)
@@ -1243,7 +1244,8 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
             start <- liftIO getCurrentTime
             recalculateAnchoredFieldPlacements oldfileid fileid
             stop <- liftIO getCurrentTime
-            logInfo "recalculateAnchoredFieldPlacements timing" $ object ["duration" .= show (diffUTCTime stop start)]
+            logInfo "recalculateAnchoredFieldPlacements timing" $ object
+                    ["duration" .= (realToFrac $ diffUTCTime stop start :: Double)]
           Nothing -> return ()
       Nothing -> dbUpdate $ DetachFile actor
     Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
