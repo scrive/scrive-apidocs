@@ -7,7 +7,7 @@ var FlashMessageView = React.createClass({
     type: React.PropTypes.string.isRequired,
     content: React.PropTypes.string.isRequired
   },
-  getInitialState: function() {
+  getInitialState: function () {
     return {visible: false};
   },
   componentDidMount: function () {
@@ -25,11 +25,11 @@ var FlashMessageView = React.createClass({
   },
   hide: function () {
     window.clearTimeout(this._hideTimeout);
-    this.setState({visible : false});
+    this.setState({visible: false});
   },
   show: function () {
     window.clearTimeout(this._showTimeout);
-    this.setState({visible : true});
+    this.setState({visible: true});
   },
   onTransitionEnd: function () {
     if (!this.state.visible) {
