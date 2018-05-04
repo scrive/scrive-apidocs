@@ -26,7 +26,7 @@ import Data.Typeable
 import Happstack.Server
 import Happstack.Server.Internal.MessageWrap
 import Happstack.Server.Internal.Monads
-import Network
+import Network.Socket
 import qualified Happstack.Server.Internal.Listen as L
 
 import Happstack.Server.Instances ()

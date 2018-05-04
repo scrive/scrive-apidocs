@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-deprecations #-}
 module Database.Redis.Configuration (
     RedisConfig(..)
   , mkRedisConnection
