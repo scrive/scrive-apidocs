@@ -55,29 +55,21 @@ describe("common/flashmessages", function () {
   it("should hide", function () {
     var component = renderComponent();
     component._hideTimeout = "spam";
-    component._visible = true;
+    component.setState({visible: true});
 
     component.hide();
     assert.isTrue(window.clearTimeout.calledWith("spam"));
-    assert.isFalse(component._visible);
+    assert.isFalse(component.state.visible);
   });
 
   it("should show", function () {
     var component = renderComponent();
     component._showTimeout = "spam";
-    component._visible = false;
+    component.setState({visible: true});
 
     component.show();
     assert.isTrue(window.clearTimeout.calledWith("spam"));
-    assert.isTrue(component._visible);
-  });
-
-  it("should hide when the close button is clicked", function () {
-    var component = renderComponent();
-    sinon.stub(component, "hide");
-
-    component.onCloseClick();
-    assert.isTrue(component.hide.called);
+    assert.isTrue(component.state.visible);
   });
 
   describe("render", function () {
@@ -91,11 +83,6 @@ describe("common/flashmessages", function () {
       assert.isTrue(component.getDOMNode().classList.contains("error"));
     });
 
-    it("should render as success message if type is invalid", function () {
-      var component = renderComponent({type: "spam"});
-      assert.isTrue(component.getDOMNode().classList.contains("success"));
-    });
-
     it("should render the body container", function () {
       var component = renderComponent();
       assert.isDefined(component.refs.body);
@@ -107,7 +94,7 @@ describe("common/flashmessages", function () {
       var button = TestUtils.findRenderedDOMComponentWithClass(
         component, "flash-close"
       );
-      assert.equal(button.props.onClick, component.onCloseClick);
+      assert.equal(button.props.onClick, component.hide);
     });
   });
 });
