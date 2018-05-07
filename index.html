@@ -1776,8 +1776,9 @@ chose <code>toc_file</code> for the first, and <code>proof_file</code> for the s
 
 <p>Set or remove author attachments for the document.</p>
 
-<p>Replaces any existing attachments, so all attachments must be set by any
-use of this call.</p>
+<p>By default, it replaces any existing attachments, so all attachments must be
+set by any use of this call. See the parameter <code>incremental</code> to change this
+behaviour.</p>
 
 <p><em>OAuth Privileges required: <code>DOC_CREATE</code></em></p>
 <h3 id='parameters-6'>Parameters</h3>
@@ -1791,7 +1792,7 @@ Will not change.</p>
 Therefore, to add an attachment to an existing list, you would need to
 first fetch the existing attachments <code>file_id</code> and use it for this
 call.</p>
-<p><strong>Note:</strong> The JSON structure two variants, one with <code>file_param</code> and
+<p><strong>Note:</strong> The JSON structure has two variants, one with <code>file_param</code> and
 the other with <code>file_id</code>.</p>
 <ul>
 <li>
@@ -1814,6 +1815,11 @@ parameters <code>attachment_1</code>, <code>attachment_2</code>, etc, and refere
 such in the <code>attachments</code> JSON.
 Although it is possible to use any HTTP compatible naming scheme.</p>
 </td><td><p>file<br><em>application/pdf</em></p></td><td>formData</td></tr>
+<tr><td><p><code>incremental</code><br/><em>optional</em></p><p><em>default:</em> <code>false</code></p></td><td><p>If set to <code>true</code>, this will make the API set the given author
+attachments leaving all already set attachments intact.</p>
+<p>For each given attachment, if there already is one with the same name,
+it will get overwritten, otherwise, the attachment will be added.</p>
+</td><td><p>boolean</p></td><td>formData</td></tr>
 <tr><td><p><code>object_version</code><br/><em>optional</em></p></td><td><p>If provided, will check the document <code>object_version</code> and only perform the
 operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
@@ -4935,6 +4941,10 @@ reject reason (<code>allow_reject_reason</code>).</p>
 
 <div class="json-schema">
 
+<p>Note that <code>api</code> delivery is referred to as &quot;Link&quot; delivery in the Scrive Web
+interface.</p>
+
+
 <p>Default: <code>"email"</code></p>
 
 <p>This element must be one of the following enum values:</p>
@@ -5179,6 +5189,8 @@ when signing.</p>
 
 <p>If the <code>delivery_method</code> is set to <code>api</code>, then this field will hold the
 relative URL for the party.</p>
+<p>Note that <code>api</code> delivery is referred to as &quot;Link&quot; delivery in the Scrive Web
+interface.</p>
 <p>This will only be available after the signing process has been started,
 and will only be visible when accessing the document as the author.</p>
 
@@ -8028,6 +8040,10 @@ reject reason (<code>allow_reject_reason</code>).</p>
 
 <div class="json-schema">
 
+<p>Note that <code>api</code> delivery is referred to as &quot;Link&quot; delivery in the Scrive Web
+interface.</p>
+
+
 <p>Default: <code>"email"</code></p>
 
 <p>This element must be one of the following enum values:</p>
@@ -8272,6 +8288,8 @@ when signing.</p>
 
 <p>If the <code>delivery_method</code> is set to <code>api</code>, then this field will hold the
 relative URL for the party.</p>
+<p>Note that <code>api</code> delivery is referred to as &quot;Link&quot; delivery in the Scrive Web
+interface.</p>
 <p>This will only be available after the signing process has been started,
 and will only be visible when accessing the document as the author.</p>
 
@@ -10941,6 +10959,10 @@ reject reason (<code>allow_reject_reason</code>).</p>
 
 <div class="json-schema">
 
+<p>Note that <code>api</code> delivery is referred to as &quot;Link&quot; delivery in the Scrive Web
+interface.</p>
+
+
 <p>Default: <code>"email"</code></p>
 
 <p>This element must be one of the following enum values:</p>
@@ -11185,6 +11207,8 @@ when signing.</p>
 
 <p>If the <code>delivery_method</code> is set to <code>api</code>, then this field will hold the
 relative URL for the party.</p>
+<p>Note that <code>api</code> delivery is referred to as &quot;Link&quot; delivery in the Scrive Web
+interface.</p>
 <p>This will only be available after the signing process has been started,
 and will only be visible when accessing the document as the author.</p>
 
