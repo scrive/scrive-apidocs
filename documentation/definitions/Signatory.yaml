@@ -123,6 +123,9 @@ properties:
       - email_mobile
       - pad
       - api
+    description: |
+      Note that `api` delivery is referred to as "Link" delivery in the Scrive Web
+      interface.
   authentication_method_to_view:
     type: string
     default: standard
@@ -240,6 +243,9 @@ properties:
     description: |
       If the `delivery_method` is set to `api`, then this field will hold the
       relative URL for the party.
+
+      Note that `api` delivery is referred to as "Link" delivery in the Scrive Web
+      interface.
 
       This will only be available after the signing process has been started,
       and will only be visible when accessing the document as the author.
