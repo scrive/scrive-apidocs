@@ -28,24 +28,44 @@ post:
         - standard
         - sms_pin
         - se_bankid
+        - no_bankid
       required: true
       description: |
         The type of authentication-to-sign method to set for the signatory.
-    - name: authentication_value
+    - name: personal_number
       in: formData
       type: string
+      # TODO format?
       required: false
       # default not valid here
       description: |
-        Including this parameter will set the value associated with
-        `authentication_type` to this value (e.g. mobile number for SMS PIN).
+        If provided, it must be valid for the chosen authentication-to-sign
+        method.
 
-        Setting it to empty string will clear the associated value, if present.
+        If it is not used by the chosen authentication-to-sign method, the
+        parameter will be ignored and will have no effect.
 
-        Excluding it will not affect any signatory properties other than
-        necessary side-effects.
-        In particular, if a value for the associated field was already set, it
-        will not be cleared.
+        If not provided, any existing `personal_number` field value set for the
+        signatory will not be changed.
+        However, if a `personal_number` _SignatoryField_ does not yet exist,
+        one will be added to the signatory (with empty string as `value`).
+    - name: mobile_number
+      in: formData
+      type: string
+      # TODO format?
+      required: false
+      # default not valid here
+      description: |
+        If provided, it must be valid for the chosen authentication-to-sign
+        method.
+
+        If it is not used by the chosen authentication-to-sign method, the
+        parameter will be ignored and will have no effect.
+
+        If not provided, any existing `mobile` field value set for the
+        signatory will not be changed.
+        However, if a `mobile` _SignatoryField_ does not yet exist, one will be
+        added to the signatory (with empty string as `value`).
     - $ref: ../../../../extras/parameters.yaml#/ObjectVersion
 
   responses:

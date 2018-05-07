@@ -23,7 +23,8 @@ This repository contains the [Open API specification](https://www.openapis.org/)
 documentation for the Scrive Document API and a copy of _Slate_.
 
 The _Open API_ documentation lives in `documentation/` and instructions on using
-that are included below.
+that are included below. Custom code lives in `source/stylesheets/scrive` and
+`lib/scrive`.
 
 Everything else is from _Slate_, with the following modifications:
 
@@ -56,7 +57,7 @@ This gives you a command line tool, `openapi2slate`, that converts Yaml source t
 Slate Markdown and outputs the result to `stdout`.
 
 You will also need to install the Slate dependencies, running `bundle install`
-in this directory should be enough (or `bundle install --path vendor/bundle` 
+in this directory should be enough (or `bundle install --path vendor/bundle`
 to install dependencies to the current directory). See the
 [official Slate documentation](https://github.com/lord/slate#getting-started-with-slate)
 for more details.
@@ -102,6 +103,5 @@ You will need to create a Pull Request and get someone to review it.
 Once merged (thus updating `master`)  a build will auto-trigger and deployment
 will happen via [Travis CI](https://travis-ci.org/scrive/scrive-apidocs).  You
 can look into `.travis.yml` if you are curious...
-
 
 That's it!

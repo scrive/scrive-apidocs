@@ -2,6 +2,7 @@
 @import 'normalize';
 @import 'variables';
 @import 'icon-font';
+// @import 'rtl'; // uncomment to switch to RTL format
 
 /*
 Copyright 2008-2013 Concur Technologies, Inc.
@@ -35,10 +36,6 @@ html, body {
   -webkit-text-size-adjust: none; /* Never autoresize text */
 }
 
-a {
-  color: $main-text;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // TABLE OF CONTENTS
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,44 +47,20 @@ a {
   width: 20px;
 }
 
-.top-navbar-wrapper {
-  height: $top-navbar-height;
-
-  .top-navbar {
-    background-color: $top-navbar-bg;
-    height: $top-navbar-height;
-    width: 100%;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 100;
-
-    border-style: none none solid none;
-    border-color: $top-navbar-border;
-    border-width: 1px;
-
-    &>img {
-      margin-left: $nav-padding;
-      height: 100%;
-    }
-  }
-}
-
-.tocify-wrapper {
+.toc-wrapper {
   transition: left 0.3s ease-in-out;
 
   overflow-y: auto;
   overflow-x: hidden;
   position: fixed;
   z-index: 30;
-  top: $top-navbar-height;
-  padding-top: $nav-top-padding;
+  top: 0;
   left: 0;
   bottom: 0;
   width: $nav-width;
   background-color: $nav-bg;
   font-size: 13px;
-  font-weight: normal;
+  font-weight: bold;
 
   // language selector for mobile devices
   .lang-selector {
@@ -99,9 +72,10 @@ a {
   }
 
   // This is the logo at the top of the ToC
-  &>img {
+  .logo {
     display: block;
     max-width: 100%;
+    margin-bottom: $logo-margin;
   }
 
   &>.search {
@@ -129,10 +103,6 @@ a {
     }
   }
 
-  img+.tocify {
-    margin-top: $logo-margin;
-  }
-
   .search-results {
     margin-top: 0;
     box-sizing: border-box;
@@ -142,12 +112,11 @@ a {
     transition-property: height, margin;
     transition-duration: 180ms;
     transition-timing-function: ease-in-out;
+    background: $nav-subitem-bg;
     &.visible {
       height: 30%;
       margin-bottom: 1em;
     }
-
-    background-color: lighten($nav-bg, 4%);
 
     li {
       margin: 1em $nav-padding;
@@ -165,14 +134,6 @@ a {
   }
 
 
-  .tocify-item>a, .toc-footer li {
-    padding: 0 $nav-padding 0 $nav-padding;
-    display: block;
-    overflow-x: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
   // The Table of Contents is composed of multiple nested
   // unordered lists.  These styles remove the default
   // styling of an unordered list because it is ugly.
@@ -187,31 +148,30 @@ a {
     color: $nav-text;
     transition-property: background;
     transition-timing-function: linear;
-    transition-duration: 230ms;
+    transition-duration: 200ms;
   }
 
   // This is the currently selected ToC entry
-  .tocify-focus {
+  .toc-link.active {
     background-color: $nav-active-bg;
     color: $nav-active-text;
-
-    a {
-      background-color: $nav-active-bg;
-      color: $nav-active-text;
-    }
   }
 
-  // Subheaders are the submenus that slide open
-  // in the table of contents.
-  .tocify-subheader {
-    display: none; // tocify will override this when needed
-    background-color: $nav-subitem-bg;
-    font-weight: 200;
-    .tocify-item>a {
-      padding-left: $nav-padding + $nav-indent;
-      font-size: 12px;
-    }
+  // this is parent links of the currently selected ToC entry
+  .toc-link.active-parent {
+    background-color: $nav-active-parent-bg;
+    color: $nav-active-parent-text;
+  }
 
+  .toc-list-h2 {
+    display: none;
+    background-color: $nav-subitem-bg;
+    font-weight: 500;
+  }
+
+  .toc-h2 {
+    padding-left: $nav-padding + $nav-indent;
+    font-size: 12px;
   }
 
   .toc-footer {
@@ -234,7 +194,19 @@ a {
       text-decoration: none;
     }
   }
+}
 
+.toc-link, .toc-footer li {
+  padding: 0 $nav-padding 0 $nav-padding;
+  display: block;
+  overflow-x: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-decoration: none;
+  color: $nav-text;
+  transition-property: background;
+  transition-timing-function: linear;
+  transition-duration: 130ms;
 }
 
 // button to show navigation on mobile devices
@@ -342,6 +314,8 @@ a {
 // This is all the stuff with the light background in the left half of the page
 
 .content {
+  // fixes webkit rendering bug for some: see #538
+  -webkit-transform: translateZ(0);
   // to place content above the dark box
   position: relative;
   z-index: 30;
@@ -357,7 +331,6 @@ a {
     padding: 0 $main-padding;
     box-sizing: border-box;
     display: block;
-    text-shadow: $main-embossed-text-shadow;
 
     @extend %left-col;
   }
@@ -373,12 +346,14 @@ a {
 
   h1 {
     @extend %header-font;
-    font-size: 30px;
-    padding-top: 2em;
-    margin-top: 2em;
+    font-size: 25px;
+    padding-top: 0.5em;
     padding-bottom: 0.5em;
     margin-bottom: $h1-margin-bottom;
-    border-top: 1px solid #ddd;
+    margin-top: 2em;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    background-color: #fdfdfd;
   }
 
   h1:first-child, div:first-child + h1 {
@@ -388,12 +363,13 @@ a {
 
   h2 {
     @extend %header-font;
-    font-size: 20px;
-    margin-top: 2em;
-    padding-top: 2.5em;
+    font-size: 19px;
+    margin-top: 4em;
     margin-bottom: 0;
-    border-top: 1px dashed #ccc;
+    border-top: 1px solid #ccc;
+    padding-top: 1.2em;
     padding-bottom: 1.2em;
+    background-image: linear-gradient(to bottom, rgba(#fff, 0.2), rgba(#fff, 0));
   }
 
   // h2s right after h1s should bump right up
@@ -406,7 +382,7 @@ a {
   h3, h4, h5, h6 {
     @extend %header-font;
     font-size: 15px;
-    margin-top: 2em;
+    margin-top: 2.5em;
     margin-bottom: 0.8em;
   }
 
@@ -427,6 +403,9 @@ a {
       text-align: left;
       vertical-align: top;
       line-height: 1.6;
+      code {
+        white-space: nowrap;
+      }
     }
 
     th {
@@ -439,24 +418,16 @@ a {
       padding: 10px;
     }
 
-    tr {
-      background-color: darken($main-bg,2.8%);
-      border-bottom-style: solid;
-      border-bottom-color: #f1f1f1;
-      border-bottom-width: 1px;
-    }
-
     tr:last-child {
       border-bottom: 1px solid #ccc;
     }
 
-    &.table-left-col-25 {
-      th:first-child, td:first-child {
-        width: 25%;
-      }
-      td:first-child {
-        text-align: right
-      }
+    tr:nth-child(odd)>td {
+      background-color: lighten($main-bg,4.2%);
+    }
+
+    tr:nth-child(even)>td {
+      background-color: lighten($main-bg,2.4%);
     }
   }
 
@@ -483,18 +454,6 @@ a {
     border-radius: 3px;
     @extend %break-words;
     @extend %code-font;
-
-    &.operation-method {
-      display: inline-block;
-      padding: 10px;
-
-      &.operation-method-GET {
-        background: lighten($aside-notice-bg, 6%);
-      }
-      &.operation-method-POST {
-        background: lighten($aside-success-bg, 6%);
-      }
-    }
   }
 
   pre>code {
@@ -505,7 +464,6 @@ a {
   aside {
     padding-top: 1em;
     padding-bottom: 1em;
-    text-shadow: none;
     margin-top: 1.5em;
     margin-bottom: 1.5em;
     background: $aside-notice-bg;
@@ -540,15 +498,10 @@ a {
 
   .search-highlight {
     padding: 2px;
-    margin: -2px;
+    margin: -3px;
     border-radius: 4px;
-    background: $search-highlight;
-  }
-
-  div.json-schema {
-    display: table-cell;
-    padding-left: 2em;
-    border-left: 2px solid $code-bg;
+    border: 1px solid #F7E633;
+    background: linear-gradient(to top left, #F7E633 0%, #F1D32F 100%);
   }
 }
 
@@ -562,7 +515,6 @@ a {
     background-color: $code-bg;
     color: #fff;
 
-    padding: 2em $main-padding;
     margin: 0;
     width: $examples-width;
 
@@ -570,7 +522,6 @@ a {
     clear:right;
 
     box-sizing: border-box;
-    text-shadow: none;
 
     @extend %right-col;
 
@@ -585,13 +536,16 @@ a {
 
   pre {
     @extend %code-font;
+    padding-top: 2em;
+    padding-bottom: 2em;
+    padding: 2em $main-padding;
   }
 
   blockquote {
     &>p {
       background-color: $code-annotation-bg;
-      padding: $code-annotation-padding;
-      color: #ccc;
+      padding: $code-annotation-padding 2em;
+      color: #eee;
     }
   }
 }
@@ -603,7 +557,7 @@ a {
 // There are also a couple styles disperesed
 
 @media (max-width: $tablet-width) {
-  .tocify-wrapper {
+  .toc-wrapper {
     left: -$nav-width;
 
     &.open {
@@ -619,7 +573,7 @@ a {
     display: block;
   }
 
-  .tocify-wrapper .tocify-item > a {
+  .toc-link {
     padding-top: 0.3em;
     padding-bottom: 0.3em;
   }
@@ -634,7 +588,7 @@ a {
     margin-right: 0;
   }
 
-  .tocify-wrapper .lang-selector {
+  .toc-wrapper .lang-selector {
     display: block;
   }
 
@@ -659,3 +613,5 @@ a {
 .highlight, .highlight .w {
   background-color: $code-bg;
 }
+
+@import "scrive/screen.css.scss";
