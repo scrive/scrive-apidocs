@@ -98,9 +98,9 @@ post:
       in: formData
       type: boolean
       default: false
-      description:
-        If set to true, this will make the API set the given author attachments
-        leaving all already set attachments intact.
+      description: |
+        If set to `true`, this will make the API set the given author
+        attachments leaving all already set attachments intact.
 
         For each given attachment, if there already is one with the same name,
         it will get overwritten, otherwise, the attachment will be added.
