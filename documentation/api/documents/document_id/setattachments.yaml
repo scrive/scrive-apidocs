@@ -44,8 +44,9 @@ post:
 
     Set or remove author attachments for the document.
 
-    Replaces any existing attachments, so all attachments must be set by any
-    use of this call.
+    By default, it replaces any existing attachments, so all attachments must be
+    set by any use of this call. See the parameter `incremental` to change this
+    behaviour.
 
     *OAuth Privileges required: `DOC_CREATE`*
 
@@ -65,7 +66,7 @@ post:
         first fetch the existing attachments `file_id` and use it for this
         call.
 
-        **Note:** The JSON structure two variants, one with `file_param` and
+        **Note:** The JSON structure has two variants, one with `file_param` and
         the other with `file_id`.
 
         * `file_param` refers to a named parameter that must also be included
@@ -93,6 +94,16 @@ post:
         parameters `attachment_1`, `attachment_2`, etc, and reference them as
         such in the `attachments` JSON.
         Although it is possible to use any HTTP compatible naming scheme.
+    - name: incremental
+      in: formData
+      type: boolean
+      default: false
+      description: |
+        If set to `true`, this will make the API set the given author
+        attachments leaving all already set attachments intact.
+
+        For each given attachment, if there already is one with the same name,
+        it will get overwritten, otherwise, the attachment will be added.
     - $ref: ../../../extras/parameters.yaml#/ObjectVersion
 
   responses:
