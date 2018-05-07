@@ -20,7 +20,7 @@ import Doc.DocumentMonad (theDocument, withDocument, withDocumentID)
 import Doc.SignatoryIdentification (signatoryIdentifierMap)
 import Doc.SignatoryLinkID (unsafeSignatoryLinkID)
 import EvidenceLog.Model (CurrentEvidenceEventType(..), DocumentEvidenceEvent(..), EvidenceEventType(..), evidenceLogText)
-import EvidenceLog.View (historyEventType, simplyfiedEventText)
+import EvidenceLog.View (historyEventType, simplifiedEventText)
 import EvidencePackage.EvidenceLog (finalizeEvidenceText)
 import MinutesTime
 import Templates (runTemplatesT)
@@ -128,7 +128,7 @@ dumpEvidenceTexts now lang doc' = do
        let ev = mkev elog msgtext amsgtext evt
            sim = signatoryIdentifierMap True  [doc] (Set.fromList  [signatorylinkid asl])
        let simpletext = if historyEventType (Current evt)
-                                      then Just <$> simplyfiedEventText Nothing sim ev
+                                      then Just <$> simplifiedEventText Nothing sim ev
                                       else return Nothing
        av <- if (historyEventType $ Current evt)
               then simpletext

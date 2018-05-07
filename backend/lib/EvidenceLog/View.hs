@@ -4,7 +4,7 @@ module EvidenceLog.View (
     , approximateActor
     , suppressRepeatedEvents
     , historyEventType
-    , simplyfiedEventText
+    , simplifiedEventText
   ) where
 
 import Control.Monad.Catch
@@ -80,7 +80,7 @@ eventJSValue doc sim dee = do
     J.value "status" $ show $ getEvidenceEventStatusClass (evType dee)
     J.value "time"   $ formatTimeISO (evTime dee)
     J.valueM "party" $ approximateActor doc sim dee
-    J.valueM "text"  $ simplyfiedEventText Nothing sim dee
+    J.valueM "text"  $ simplifiedEventText Nothing sim dee
 
 
 -- | Events to be included in archive history. They have translations.
@@ -179,9 +179,9 @@ emptyEvent _ = False
 
 -- | Produce simplified text for an event (only for archive or
 -- verification pages).
-simplyfiedEventText :: (MonadDB m, MonadThrow m, TemplatesMonad m)
+simplifiedEventText :: (MonadDB m, MonadThrow m, TemplatesMonad m)
   => Maybe String -> SignatoryIdentifierMap -> DocumentEvidenceEvent -> m String
-simplyfiedEventText mactor sim dee = do
+simplifiedEventText mactor sim dee = do
   emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
   case evType dee of
     Obsolete CancelDocumenElegEvidence -> renderEvent emptyNamePlaceholder "CancelDocumenElegEvidenceText"
