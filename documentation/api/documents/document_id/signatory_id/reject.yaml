@@ -10,7 +10,7 @@ post:
   description: |
     Reject signing the document for the given signatory.
 
-    If successfull, this will prevent any future signatories from signing and
+    If successful, this will prevent any future signatories from signing and
     change the document status to `rejected`.
 
   parameters:
