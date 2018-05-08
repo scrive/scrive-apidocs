@@ -78,6 +78,8 @@
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Dokument allkirjastati, kasutades autentimiseks SMSi teel saadetud PIN koodi.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Dokument allkirjastati.",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemID":"",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemWithName":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"Dokument allkirjastati $actor$ poolt, kasutades autentimiseks Rootsi BankID meetodit.",
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"Dokument allkirjastati kasutaja $actor$ poolt, kasutades autentimiseks Rootsi BankID meetodit. Rootsi BankID andis tulemuseks nime \"$eid_signatory_name$\".",
 "_SignDocumentEvidenceTextSimpleNotArchiveNOBankID":"",

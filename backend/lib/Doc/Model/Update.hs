@@ -2014,7 +2014,7 @@ archiveIdleDocuments now = do
   fmap sum . forM companiesWithIdleSet $ \company -> do
     let cid = companyid company
         timeoutDays = fromJust . companyidledoctimeout . companyinfo $ company
-    users <- dbQuery $ GetCompanyAccounts cid
+    users <- dbQuery $ GetCompanyAccountsIncludeDeleted cid
     fmap sum . forM (map userid users) $ \uid -> do
       logInfo "archiveIdleDocuments starting for user in company" $ object [
           identifier_ cid

@@ -29,6 +29,7 @@ htmlDocFromEvidenceLog title sim elog = do
       F.value "ces_time" $ maybe "" ((++" UTC") . formatTimeUTC . HC.time)
                                     (evClockErrorEstimate entry)
       F.value "ip"   $ show <$> evIP4 entry
+      F.value "ua" $ evClientName entry
       F.value "text" $ T.unpack $ renderXMLContent $ finalizeEvidenceText sim entry emptyNamePlaceholder
 
 htmlSkipedEvidenceType :: EvidenceEventType -> Bool

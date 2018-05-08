@@ -3,14 +3,19 @@ EvidenceLogEvidenceTable=<table id="event-table">
   <tr>
     <th id="time"><em>Time</em></th>
     <th id="ces"><em>CES</em></th>
-    <th id="ipaddr"><em>IP address</em></th>
+    <th id="ipaddr" style="width: 10%;"><em>IP address and User-Agent</em></th>
     <th id="event"><em>Event</em></th>
   </tr>
   $entries:{entry|
   <tr>
     <td>$entry.time$</td>
     <td>$entry.ces_time$</td>
-    <td>$entry.ip$</td>
+    <td>
+      $entry.ip$
+      <span style="display: block; font-size: small; margin-top: 1em;">
+        $entry.ua$
+      </span>
+    </td>
     <td>
       <div class="capitalize-first-letter event-content">
         $entry.text:noescape()$

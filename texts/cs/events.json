@@ -78,6 +78,8 @@
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Dokument podepsán prostřednictvím autentizace kódem PIN zaslaným zprávou SMS.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Dokument byl podepsán.",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemID":"",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemWithName":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"Dokument byl podepsán uživatelem $actor$, který jako způsobu autentizace využil švédskou službu BankID.",
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"Dokument byl podepsán uživatelem $actor$. Autentizace proběhla pomocí švédské služby BankID. Švédská služba BankID je registrována na jméno \"$eid_signatory_name$\".",
 "_SignDocumentEvidenceTextSimpleNotArchiveNOBankID":"",

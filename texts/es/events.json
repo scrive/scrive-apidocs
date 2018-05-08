@@ -78,6 +78,8 @@
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"El documento ha sido firmado utilizando PIN por SMS como método de identificación.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"El documento fue firmado.",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemID":"",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemWithName":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"El documento fue firmado por $actor$ usando el método de indentificación bancario sueco como sistema de autentificación.",
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"El documento ha sido firmado por $actor$ utilizando el método de identificación bancaria sueco como sistema de autentificación. El nombre utilizado en el sistema bancario sueco fue \"$eid_signatory_name$\".",
 "_SignDocumentEvidenceTextSimpleNotArchiveNOBankID":"",

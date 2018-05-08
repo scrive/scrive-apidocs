@@ -142,7 +142,18 @@ test_getCompanyAccounts = do
     Just user <- addNewCompanyUser "Emily" "Green" email cid
     return user
   company_accounts <- dbQuery $ GetCompanyAccounts cid
-  assertBool "Company accounts returned in proper order (sorted by email)" $ sortByEmail users == company_accounts
+  assertBool "Company accounts returned in proper order (sorted by email)" $
+    sortByEmail users == company_accounts
+  res <- dbUpdate . DeleteUser . userid . head . sortByEmail $ users
+  assertBool "User was deleted" res
+  do
+    company_accounts1 <- dbQuery $ GetCompanyAccounts cid
+    assertBool "Company accounts returned in proper order (sorted by email)" $
+      tail (sortByEmail users) == company_accounts1
+  do
+    company_accounts_all <- dbQuery $ GetCompanyAccountsIncludeDeleted cid
+    assertBool "Company accounts returned in proper order (sorted by email)" $
+      sortByEmail users == company_accounts_all
 
 test_userUsageStatisticsByUser :: TestEnv ()
 test_userUsageStatisticsByUser = do
@@ -183,11 +194,13 @@ test_setUserCompany = do
 
 test_deleteUser :: TestEnv ()
 test_deleteUser = do
-  Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  Just User{userid,usercompany} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   res <- dbUpdate $ DeleteUser userid
   assertBool "User was correctly removed" res
   nouser <- dbQuery $ GetUserByID userid
   assertBool "No user returned after removal" $ isNothing nouser
+  company_accounts <- dbQuery $ GetCompanyAccounts usercompany
+  assertBool "No users in company after removal" $ null company_accounts
 
 test_setUserInfo :: TestEnv ()
 test_setUserInfo = do

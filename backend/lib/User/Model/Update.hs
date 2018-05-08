@@ -167,7 +167,6 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserPassword Bool where
       sqlSet "salt" $ pwdSalt pwd
       sqlSet "password_algorithm" $ pwdAlgorithmToInt16 $ pwdAlgorithm $ pwd
       sqlWhereEq "id" uid
-      sqlWhereIsNULL "deleted"
 
 data SetUserTOTPKey = SetUserTOTPKey UserID ByteString
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserTOTPKey Bool where

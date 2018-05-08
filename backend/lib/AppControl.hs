@@ -23,6 +23,7 @@ import Data.Typeable
 import GHC.Stack
 import Happstack.Server hiding (dir, host, lookCookieValue, path, simpleHTTP)
 import Happstack.Server.Internal.Cookie
+import Happstack.Server.Internal.Multipart (defaultFileSaver, defaultInputIter)
 import Log
 import Network.Socket
 import System.Directory
@@ -134,7 +135,10 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
   realStartTime <- liftBase getCurrentTime
   temp <- liftIO getTemporaryDirectory
   let quota = 30000000
-      bodyPolicy = defaultBodyPolicy temp quota quota quota
+      stripFilename = reverse . takeWhile (\c -> c /= '/' && c /= '\\') . reverse
+      -- just like defaultFileSaver, but accepts filenames containing full paths (they are stripped though)
+      fileSaver tmpDir diskQuota filename b = defaultFileSaver tmpDir diskQuota (stripFilename filename) b
+      bodyPolicy = (defaultBodyPolicy temp quota quota quota) { inputWorker = defaultInputIter fileSaver temp 0 0 0 }
   logInfo_ "Incoming request, decoding body"
   withDecodedBody bodyPolicy $ do
     rq <- askRq

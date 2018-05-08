@@ -78,6 +78,8 @@
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Skrifað var undir skjalið með PIN-númeri sem sannvottunaraðferð.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Skrifað var undir skjalið.",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemID":"",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemWithName":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"Skrifað var undir skjalið af $actor$ með því að nota sænskt BankID sem sannvottunaraðferð.",
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"Skrifað var undir skjalið af $actor$ með því að nota sænskt BankID sem sannvottunaraðferð. Nafnið sem sænskt BankID skilaði var \"$eid_signatory_name$\".",
 "_SignDocumentEvidenceTextSimpleNotArchiveNOBankID":"",

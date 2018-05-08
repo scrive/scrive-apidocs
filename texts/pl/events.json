@@ -78,6 +78,8 @@
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Dokument podpisano po uwierzytelnieniu danych przy użyciu kodu PIN przesłanego SMS-em.",
 "_SignDocumentEvidenceTextSimpleArchiveStandard":"Dokument został podpisany.",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemID":"",
+"_SignDocumentEvidenceTextSimpleNotArchiveDKNemWithName":"",
 "_SignDocumentEvidenceTextSimpleNotArchiveEleg":"Dokument został podpisany przez $actor$ po uwierzytelnieniu danych przy użyciu szwedzkiego BankID.",
 "_SignDocumentEvidenceTextSimpleNotArchiveElegWithName":"Dokument został podpisany przez $actor$ po uwierzytelnieniu danych przy użyciu szwedzkiego BankID. Szwedzki BankID zwrócił następujące imię i nazwisko \"$eid_signatory_name$\".",
 "_SignDocumentEvidenceTextSimpleNotArchiveNOBankID":"Dokument został podpisany przez $actor$ po uwierzytelnieniu danych przy użyciu norweskiego BankID.",

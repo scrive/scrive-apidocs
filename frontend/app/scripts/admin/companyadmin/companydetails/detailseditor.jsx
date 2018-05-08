@@ -66,8 +66,12 @@ var DetailsEditorView = React.createClass({
     this.props.onFieldChange("cgiserviceid", event.target.value);
   },
   onIdledoctimeoutChange: function (event) {
+    var newValue = event.target.value;
+    if (newValue !== "") {
+      newValue = parseInt(newValue, 10);
+    }
     this.props.onFieldChange(
-      "idledoctimeout", parseInt(event.target.value, 10)
+      "idledoctimeout", newValue
     );
   },
   onAllowsavesafetycopyChange: function (event) {
