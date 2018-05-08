@@ -26,9 +26,13 @@ properties:
     readOnly: true
   is_signatory:
     description: |
-      Whether this party is a signatory to the document, otherwise they are
-      viewers and will not sign the document.
+      Whether this party is a signatory to the document, otherwise
+      they are viewers and will not sign the document. This field is
+      optional: if a `signatory_role` field is present, the value of
+      this field is ignored.
     type: boolean
+  signatory_role:
+    $ref: ./SignatoryRole.yaml
   fields:
     description: |
       The signatory fields represent information requested from, or information
@@ -259,7 +263,7 @@ example:
     "id": "189256",
     "user_id": null,
     "is_author": false,
-    "is_signatory": true,
+    "signatory_role": "signing_party",
     "fields": [
       {
         "type": "name",

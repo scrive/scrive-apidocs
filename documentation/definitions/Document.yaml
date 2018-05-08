@@ -222,7 +222,7 @@ example:
         "id": "189255",
         "user_id": "1404",
         "is_author": true,
-        "is_signatory": false,
+        "signatory_role": "viewer",
         "fields": [
           {
             "type": "name",
@@ -280,7 +280,7 @@ example:
         "id": "189256",
         "user_id": null,
         "is_author": false,
-        "is_signatory": true,
+        "signatory_role": "signing_party",
         "fields": [
           {
             "type": "name",
