@@ -25,7 +25,11 @@ import           Distribution.PackageDescription               hiding
                                                                (allExtensions)
 import qualified Distribution.PackageDescription               as PkgDesc
 import           Distribution.PackageDescription.Configuration
+#if MIN_VERSION_Cabal(2,2,0)
+import           Distribution.PackageDescription.Parsec
+#else
 import           Distribution.PackageDescription.Parse
+#endif
 #if MIN_VERSION_Cabal(2,0,0)
 import           Distribution.Types.UnqualComponentName
 #endif

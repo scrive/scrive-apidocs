@@ -1,11 +1,18 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE CPP                 #-}
+
+#ifndef MIN_VERSION_base
+#define MIN_VERSION_base(x,y,z) 0
+#endif
 
 import Control.Exception  (IOException, SomeException, catch, evaluate)
 import Control.Monad
 import Data.Char
 import Data.List.Extra    (trim)
 import Data.Maybe
+#if !MIN_VERSION_base(4,11,0)
 import Data.Monoid
+#endif
 import Data.Version.Extra (makeVersion, showVersion, readVersion)
 import Development.Shake
 import Development.Shake.FilePath
