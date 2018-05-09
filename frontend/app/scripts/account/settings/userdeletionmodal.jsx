@@ -58,7 +58,7 @@ module.exports = React.createClass({
     });
 
     var messageTpl =
-          localization.account.accountDetails.userDeletionModalMessage;
+          localization.account.accountDetails.userDeletionModalMessage.line4;
     var message = $("<span />").html(messageTpl);
     $(".text", message).text(this.correctText())
       .removeClass("text").addClass("user-deletion-modal-text");
@@ -76,7 +76,20 @@ module.exports = React.createClass({
         />
 
         <Modal.Content>
-          <div dangerouslySetInnerHTML={{__html: message.html()}}></div>
+          <div>
+            <p>
+              {localization.account.accountDetails.userDeletionModalMessage.line1}
+            </p>
+            <p>
+              {localization.account.accountDetails.userDeletionModalMessage.line2}
+            </p>
+            <p>
+              <strong>
+                {localization.account.accountDetails.userDeletionModalMessage.line3}
+              </strong>
+            </p>
+            <p dangerouslySetInnerHTML={{__html: message.html()}}></p>
+          </div>
           <input
             type="text"
             value={this.state.textEntered}

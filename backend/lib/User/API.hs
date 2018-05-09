@@ -504,13 +504,14 @@ apiCallDeleteUser = V2.api $ do
 
   email <- V2.apiV2ParameterObligatory $ V2.ApiV2ParameterText "email"
   unless (unEmail (useremail (userinfo user)) == T.unpack email) $
-    V2.apiError $ V2.requestParameterParseError "email" "wrong email"
+    V2.apiError $ V2.requestParameterParseError "email"
+      "the email provided does not match that of the user account"
 
   mReason <- dbQuery $ IsUserDeletable user
   case mReason of
     Nothing -> return ()
     Just reason -> V2.apiError $
-      V2.actionNotPermitted $ userNotDeletableReasonToString reason
+      V2.conflictError $ userNotDeletableReasonToString reason
 
   _ <- dbUpdate $ DeleteUser (userid user)
   _ <- dbUpdate $ LogHistoryAccountDeleted (userid user) (get ctxipnumber ctx) (get ctxtime ctx)

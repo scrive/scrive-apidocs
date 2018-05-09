@@ -71,16 +71,6 @@ dropNotNullConstraintsWhenUserDeleted = Migration
   { mgrTableName = tblName tableUsers
   , mgrFrom = 25
   , mgrAction = StandardMigration $ do
-      runQuery_ $ sqlAlterTable (tblName tableUsers)
-        [ sqlAlterColumn "first_name"       "DROP NOT NULL"
-        , sqlAlterColumn "last_name"        "DROP NOT NULL"
-        , sqlAlterColumn "personal_number"  "DROP NOT NULL"
-        , sqlAlterColumn "company_position" "DROP NOT NULL"
-        , sqlAlterColumn "phone"            "DROP NOT NULL"
-        , sqlAlterColumn "email"            "DROP NOT NULL"
-        , sqlAlterColumn "lang"             "DROP NOT NULL"
-        ]
-
       let sqlWhereIsDeletedUserID name =
             sqlWhereInSql name $ toSQLCommand $ sqlSelect "users" $ do
               sqlResult "id"
@@ -110,22 +100,14 @@ dropNotNullConstraintsWhenUserDeleted = Migration
         sqlWhereIsDeletedUserID "user_id"
 
       runQuery_ $ sqlUpdate "users" $ do
-        sqlSet "password"         (Nothing :: Maybe BS.ByteString)
-        sqlSet "salt"             (Nothing :: Maybe BS.ByteString)
-        sqlSet "first_name"       (Nothing :: Maybe String)
-        sqlSet "last_name"        (Nothing :: Maybe String)
-        sqlSet "personal_number"  (Nothing :: Maybe String)
-        sqlSet "company_position" (Nothing :: Maybe String)
-        sqlSet "phone"            (Nothing :: Maybe String)
-        sqlSet "email"            (Nothing :: Maybe String)
-        sqlSet "lang"             (Nothing :: Maybe Int)
+        sqlSet "password"         ("" :: BS.ByteString)
+        sqlSet "salt"             ("" :: BS.ByteString)
+        sqlSet "first_name"       ("" :: String)
+        sqlSet "last_name"        ("" :: String)
+        sqlSet "personal_number"  ("" :: String)
+        sqlSet "company_position" ("" :: String)
+        sqlSet "phone"            ("" :: String)
+        sqlSet "email"            ("" :: String)
+        sqlSet "lang"             (1 :: Int)
         sqlWhereIsNotNULL "deleted"
-
-      -- No information if deleted, all information otherwise.
-      runQuery_ $ sqlAlterTable (tblName tableUsers)
-        [ sqlAddCheck $ Check
-            { chkName      = "check_mandatory_fields_unless_deleted"
-            , chkCondition = checkMandatoryFieldsUnlessDetected23
-            }
-        ]
   }

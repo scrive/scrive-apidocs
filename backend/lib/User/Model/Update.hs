@@ -76,7 +76,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
         fetchMaybe fetchUser
 
 -- | Mark a user as deleted so that queries won't return it anymore and delete
--- sensible information.
+-- sensitive information.
 --
 -- Attachments, companies and documents purged separately.
 data DeleteUser = DeleteUser UserID
@@ -99,15 +99,15 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool wh
 
     runQuery01 $ sqlUpdate "users" $ do
       sqlSet "deleted" now
-      sqlSet "password"         (Nothing :: Maybe ByteString)
-      sqlSet "salt"             (Nothing :: Maybe ByteString)
-      sqlSet "first_name"       (Nothing :: Maybe String)
-      sqlSet "last_name"        (Nothing :: Maybe String)
-      sqlSet "personal_number"  (Nothing :: Maybe String)
-      sqlSet "company_position" (Nothing :: Maybe String)
-      sqlSet "phone"            (Nothing :: Maybe String)
-      sqlSet "email"            (Nothing :: Maybe String)
-      sqlSet "lang"             (Nothing :: Maybe Int)
+      sqlSet "password"         ("" :: ByteString)
+      sqlSet "salt"             ("" :: ByteString)
+      sqlSet "first_name"       ("" :: String)
+      sqlSet "last_name"        ("" :: String)
+      sqlSet "personal_number"  ("" :: String)
+      sqlSet "company_position" ("" :: String)
+      sqlSet "phone"            ("" :: String)
+      sqlSet "email"            ("" :: String)
+      sqlSet "lang"             (def :: Lang)
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
 

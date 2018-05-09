@@ -21,6 +21,7 @@ module API.V2.Errors (
   , invalidAuthorizationWithMsg
   , insufficientPrivileges
   , actionNotPermitted
+  , conflictError
   , httpCodeFromSomeDBExtraException
   , jsonFromSomeDBExtraException
   , tryToConvertConditionalExceptionIntoAPIError
@@ -66,6 +67,7 @@ data APIErrorType = ServerError
                | DocumentStateError
                | SignatoryStateError
                | ActionNotPermitted
+               | ConflictError
   deriving (Show, Eq, Typeable)
 
 errorIDFromAPIErrorType :: APIErrorType -> T.Text
@@ -83,6 +85,7 @@ errorIDFromAPIErrorType DocumentObjectVersionMismatch = "document_object_version
 errorIDFromAPIErrorType DocumentStateError            = "document_state_error"
 errorIDFromAPIErrorType SignatoryStateError           = "signatory_state_error"
 errorIDFromAPIErrorType ActionNotPermitted            = "action_not_permitted"
+errorIDFromAPIErrorType ConflictError                 = "conflict_error"
 
 jsonFromSomeDBExtraException :: SomeDBExtraException -> JSValue
 jsonFromSomeDBExtraException (SomeDBExtraException ex)  = toJSValue ex
@@ -185,6 +188,13 @@ actionNotPermitted msg = APIError
   { errorType     = ActionNotPermitted
   , errorHttpCode = 403
   , errorMessage  = "Action not permitted." <+> msg
+  }
+
+conflictError :: T.Text -> APIError
+conflictError msg = APIError
+  { errorType     = ConflictError
+  , errorHttpCode = 409
+  , errorMessage  = "There was a conflict." <+> msg
   }
 
 -- Conversion of DB exception / document conditionals into API errors

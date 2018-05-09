@@ -40,12 +40,19 @@ module.exports = React.createClass({
       if (result.deletable) {
         self.setState({showUserDeletionModal: true});
       } else {
-        var reason = result.reason.message;
+        var line1 = result.reason.message;
+        var line2 = "";
         if (result.reason.code == "pending_documents") {
-          reason = localization.account.accountDetails.userNotDeletableDueToPendingDocuments;
+          line1 = localization.account.accountDetails.userNotDeletableDueToPendingDocuments.line1;
+          line2 = localization.account.accountDetails.userNotDeletableDueToPendingDocuments.line2;
         } else if (result.reason.code == "last_admin_with_users") {
-          reason = localization.account.accountDetails.userNotDeletableDueToLastAdminWithUsers;
+          line1 = localization.account.accountDetails.userNotDeletableDueToLastAdminWithUsers.line1;
+          line2 = localization.account.accountDetails.userNotDeletableDueToLastAdminWithUsers.line2;
         }
+        var reason = {
+          line1: line1,
+          line2: line2
+        };
         self.setState({userNotDeletableReason: reason});
       }
     });
@@ -124,7 +131,12 @@ module.exports = React.createClass({
           title={localization.account.accountDetails.userDeletionModalTitle}
           active={showUserNotDeletableReason}
         >
-          {this.state.userNotDeletableReason}
+          {/* if */ showUserNotDeletableReason &&
+            <div>
+              <p>{this.state.userNotDeletableReason.line1}</p>
+              <p>{this.state.userNotDeletableReason.line2}</p>
+            </div>
+          }
         </Modal.InfoBox>
       </div>
     );

@@ -1055,10 +1055,21 @@ javascriptLocalisation =
               , emailAlreadyInUse : "$_flashCantChangeEmail()$"
               , changeEmailMailSent : "$_flashMessageChangeEmailMailSent()$"
               , userDeletionModalTitle : "$_userDeletionModalTitle()$"
-              , userDeletionModalMessage : "$_userDeletionModalMessage()$"
+              , userDeletionModalMessage : {
+                    line1 : "$_userDeletionModalMessageLine1()$"
+                  , line2 : "$_userDeletionModalMessageLine2()$"
+                  , line3 : "$_userDeletionModalMessageLine3()$"
+                  , line4 : "$_userDeletionModalMessageLine4()$"
+                  }
               , userDeletionModalConfirm : "$_userDeletionModalConfirm()$"
-              , userNotDeletableDueToPendingDocuments : "$_userNotDeletableDueToPendingDocuments()$"
-              , userNotDeletableDueToLastAdminWithUsers : "$_userNotDeletableDueToLastAdminWithUsers()$"
+              , userNotDeletableDueToPendingDocuments : {
+                    line1 : "$_userNotDeletableDueToPendingDocumentsLine1()$"
+                  , line2 : "$_userNotDeletableDueToPendingDocumentsLine2()$"
+                  }
+              , userNotDeletableDueToLastAdminWithUsers : {
+                    line1 : "$_userNotDeletableDueToLastAdminWithUsersLine1()$"
+                  , line2 : "$_userNotDeletableDueToLastAdminWithUsersLine2()$"
+                  }
               , deleteUser : "$_delete()$"
               , userDeleted : "$_userDeleted()$"
             }
