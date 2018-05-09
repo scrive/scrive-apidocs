@@ -28,8 +28,8 @@ properties:
     description: |
       Whether this party is a signatory to the document, otherwise
       they are viewers and will not sign the document. This field is
-      optional: if a `signatory_role` field is present, the value of
-      this field is ignored.
+      optional when updating the document: if a `signatory_role` field
+      is present, the value of this field is ignored.
     type: boolean
   signatory_role:
     $ref: ./SignatoryRole.yaml
