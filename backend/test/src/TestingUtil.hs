@@ -44,7 +44,6 @@ import Doc.SignatoryLinkID
 import Doc.TestInvariants
 import EID.CGI.GRP.Transaction.Model
 import EID.Signature.Model
-import TestFileStorage (liftTestFileStorageT, runTestFileStorageT)
 import FeatureFlags.Model
 import File.File
 import File.FileID
@@ -64,6 +63,7 @@ import Session.SessionID
 import SMS.Data (SMSProvider(..))
 import System.Random.CryptoRNG ()
 import Templates
+import TestFileStorage (liftTestFileStorageT, runTestFileStorageT)
 import TestKontra
 import User.Email
 import User.Model
