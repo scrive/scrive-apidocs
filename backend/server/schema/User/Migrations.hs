@@ -66,8 +66,8 @@ usersDropCompanyID = Migration {
         [ sqlDropFK tname $ (fkOnColumn "company_id" "companies" "id")
         , sqlDropColumn "company_id"
 
-dropNotNullConstraintsWhenUserDeleted :: MonadDB m => Migration m
-dropNotNullConstraintsWhenUserDeleted = Migration
+actuallyDeletePreviouslyDeletedUser :: MonadDB m => Migration m
+actuallyDeletePreviouslyDeletedUser = Migration
   { mgrTableName = tblName tableUsers
   , mgrFrom = 25
   , mgrAction = StandardMigration $ do
