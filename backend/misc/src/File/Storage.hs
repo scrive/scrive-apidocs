@@ -65,11 +65,11 @@ saveNewFile fName fContent = do
       logAttention "newFileInAmazon: purged file" $ object [identifier_ fid]
       throwM err
 
--- | Gets file content from somewere (Amazon for now), putting it to cache and
--- returning as BS.
+-- | Get file contents from the underlying storage and decrypt the contents
+-- returning them as BS.
 getFileContents :: (MonadFileStorage m, MonadIO m, MonadLog m, MonadThrow m)
                 => File -> m BS.ByteString
-getFileContents File{ filestorage = FileStorageMemory contents } =  return contents
+getFileContents File{ filestorage = FileStorageMemory contents } = return contents
 getFileContents file@File{ filestorage = FileStorageAWS url aes } = do
   encrypted <- FS.getSavedContents url
   let contents = aesDecrypt aes $ BSL.toStrict encrypted
@@ -91,5 +91,5 @@ getFileIDContents fid = do
   result <- getFileContents file
   stop <- liftIO getCurrentTime
   logInfo "getFileIDContents timing" $ object
-    [ "duration" .= realToFrac (diffUTCTime stop start :: Double) ]
+    [ "duration" .= (realToFrac $ diffUTCTime stop start :: Double) ]
   return result

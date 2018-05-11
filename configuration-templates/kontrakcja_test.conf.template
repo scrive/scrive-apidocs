@@ -8,5 +8,12 @@
       , "access_key":""
       , "secret_key": ""
     }
+  },
+  "_amazon" : {
+    "_host": "example.com",
+    "_port": 1234,
+    "bucket": "foo",
+    "access_key": "bar",
+    "secret_key": "baz"
   }
 }

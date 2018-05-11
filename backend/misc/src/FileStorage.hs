@@ -56,6 +56,15 @@ runFileStorageT config = flip runReaderT config . unFileStorageT
 getFileStorageConfig :: Monad m => FileStorageT m FileStorageConfig
 getFileStorageConfig = FileStorageT ask
 
+-- 'saveNewContents' invalidates the data already stored in the caches, uploads
+-- the data to Amazon and puts them in the caches.
+--
+-- 'getSavedContents' tries to fetch the contents from the memory cache then
+-- Redis and, if it's not in either of them, fetches them from Amazon. The data
+-- will be added to the caches from which they were missing.
+--
+-- 'deleteSavedContents' first deletes the data from the caches then from Amazon
+-- to prevent inconsistency.
 instance {-# OVERLAPPING #-} ( MonadBase IO m, MonadBaseControl IO m, MonadLog m
                              , MonadMask m )
     => MonadFileStorage (FileStorageT m) where

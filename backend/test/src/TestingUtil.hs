@@ -44,7 +44,7 @@ import Doc.SignatoryLinkID
 import Doc.TestInvariants
 import EID.CGI.GRP.Transaction.Model
 import EID.Signature.Model
-import FakeFileStorage (liftFakeFileStorageT, runFakeFileStorageT)
+import TestFileStorage (liftTestFileStorageT, runTestFileStorageT)
 import FeatureFlags.Model
 import File.File
 import File.FileID
@@ -893,7 +893,7 @@ addRandomDocumentWithFile fileid rda = do
 
 -- | Synchronously seal a document.
 sealTestDocument :: Context -> DocumentID -> TestEnv ()
-sealTestDocument ctx did = void $ TestEnv $ liftFakeFileStorageT $ \fakeFS -> do
+sealTestDocument ctx did = void $ TestEnv $ liftTestFileStorageT $ \fsEnv -> do
   cryptoSt <- newCryptoRNGState
   withDocumentID did
     . runGuardTimeConfT (get ctxgtconf ctx)
@@ -901,7 +901,7 @@ sealTestDocument ctx did = void $ TestEnv $ liftFakeFileStorageT $ \fakeFS -> do
     . runTemplatesT ((get ctxlang ctx), (get ctxglobaltemplates ctx))
     . runMailContextT (contextToMailContext ctx)
     . runCryptoRNGT cryptoSt
-    . flip runFakeFileStorageT fakeFS
+    . flip runTestFileStorageT fsEnv
     $ do
         res <- postDocumentClosedActions True False
                  `catch` \(_::KE.KontraError) -> return False

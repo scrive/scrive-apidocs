@@ -47,7 +47,7 @@ mkAWSAction mConfig =
         , amazonConfigSecretKey = ""
         }
       config = fromMaybe emptyConfig mConfig
-  in s3ActionFromConfig config ""
+  in s3ActionFromConfig config HTTP.GET ""
 
 newtype AmazonMonadT m a
   = AmazonMonadT { unAmazonMonadT :: ReaderT AmazonConfig m a }
@@ -82,27 +82,47 @@ instance {-# OVERLAPPING #-} (MonadBase IO m, MonadLog m, MonadThrow m)
   deleteSavedContents = deleteContentsFromAmazon
 
 saveNewContentsInAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m)
-                    => String -> BSL.ByteString -> AmazonMonadT m ()
+                        => String -> BSL.ByteString -> AmazonMonadT m ()
 saveNewContentsInAmazon url contents = do
-  config <- getAmazonConfig
+    config <- getAmazonConfig
 
-  let conn = s3ConnFromConfig config
-      obj  = (s3ObjectFromConfig config url) { AWS.obj_data = contents }
-  result <- liftBase $ sendObjectMIC conn obj
+    let conn = s3ConnFromConfig config
+        obj  = (s3ObjectFromConfig config url) { AWS.obj_data = contents }
 
-  case result of
-    Left err -> do
-      logInfo "Saving file to AWS failed" $ object
-        [ "url"    .= url
-        , "result" .= show err
-        ]
-      throwM $ FileStorageException $ show err
-    Right res -> do
-      logInfo "Filed saved on AWS" $ object
-        [ "url"    .= url
-        , "result" .= show res
-        ]
-      return ()
+    go True conn obj
+
+  where
+    go retry conn obj = do
+      result <- liftBase $ sendObjectMIC conn obj
+      case result of
+        Left err -> do
+          if retry
+            then do
+              logInfo "Saving file to AWS failed, retrying" $ object
+                [ "url"    .= url
+                , "result" .= show err
+                ]
+              go False conn obj
+            else do
+              logAttention "Saving file to AWS failed" $ object
+                [ "url"    .= url
+                , "result" .= show err
+                ]
+              throwM $ FileStorageException $ show err
+        Right res -> do
+          logInfo "Filed saved on AWS" $ object
+            [ "url"    .= url
+            , "result" .= show res
+            ]
+          return ()
+
+    -- This is a fork of AWS.sendObjectMIC, that uses bytestrings for MD5
+    -- calculation, so it doesn't kill everything for 100mb objects
+    sendObjectMIC :: AWS.AWSConnection -> AWS.S3Object -> IO (AWS.AWSResult ())
+    sendObjectMIC aws obj = AWS.sendObject aws obj_w_header where
+      obj_w_header = obj { AWS.obj_headers = (AWS.obj_headers obj) ++ md5_header }
+      md5_header = [("Content-MD5", (mkMD5 (AWS.obj_data obj)))]
+      mkMD5 = BSC.unpack . Base64.encode . MD5.hashlazy
 
 -- CORE-478: should be removed
 data GetContentRetry = RegularRetry
@@ -119,7 +139,7 @@ getContentsFromAmazon = go RegularRetry
        -> String -> AmazonMonadT m BSL.ByteString
     go retry url = do
       config <- getAmazonConfig
-      let action = s3ActionFromConfig config url
+      let action = s3ActionFromConfig config HTTP.GET url
       logInfo "Attempting to fetch file from AWS" $ object ["url" .= url]
 
       startTime  <- liftBase getCurrentTime
@@ -148,11 +168,11 @@ getContentsFromAmazon = go RegularRetry
             NoRetry -> throwM $ FileStorageException $ show err
 
 deleteContentsFromAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m) => String
-                     -> AmazonMonadT m ()
+                         -> AmazonMonadT m ()
 deleteContentsFromAmazon url = do
   config <- getAmazonConfig
 
-  let action = (s3ActionFromConfig config url) { AWS.s3operation = HTTP.DELETE }
+  let action = s3ActionFromConfig config HTTP.DELETE url
   result <- liftBase $ AWS.runAction action
   case result of
     Right res -> do
@@ -222,14 +242,6 @@ urlFromFile File{filename, fileid, filechecksum} =
     </> (BSC.unpack . Base16.encode $ filechecksum)
     </> (HTTP.urlEncode . BSC.unpack . BS.fromString $ filename)
 
--- This is a fork of AWS.sendObjectMIC, that uses bytestrings for MD5
--- calculation, so it doesn't kill everything for 100mb objects
-sendObjectMIC :: AWS.AWSConnection -> AWS.S3Object -> IO (AWS.AWSResult ())
-sendObjectMIC aws obj = AWS.sendObject aws obj_w_header where
-    obj_w_header = obj { AWS.obj_headers = (AWS.obj_headers obj) ++ md5_header }
-    md5_header = [("Content-MD5", (mkMD5 (AWS.obj_data obj)))]
-    mkMD5 = BSC.unpack . Base64.encode . MD5.hashlazy
-
 -- CORE-478: should be removed
 -- | Upload a document file. This means one of:
 --
@@ -272,6 +284,10 @@ exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)}
         ]
       return False
 
+exportFile _ File{fileid, filestorage = FileStorageAWS _ _ }  = localData [identifier_ fileid] $ do
+  logInfo_ "Not uploading already uploaded file"
+  return False
+
 exportFile _ _ = do
-  logInfo_ "No uploading to Amazon as bucket is ''"
+  logInfo_ "Not uploading to Amazon as bucket is ''"
   return False

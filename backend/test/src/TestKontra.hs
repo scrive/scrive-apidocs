@@ -49,8 +49,8 @@ import BrandedDomain.Model
 import Context.Internal
 import DB
 import DB.PostgreSQL
-import FakeFileStorage
 import FileStorage
+import FileStorage.Amazon.Config
 import GuardTime.Class
 import Happstack.Server.ReqHandler
 import IPAddress
@@ -60,12 +60,13 @@ import MinutesTime
 import PdfToolsLambda.Conf
 import Session.SessionID
 import Templates
+import TestFileStorage
 import User.Lang
 
 inTestDir :: FilePath -> FilePath
 inTestDir = ("backend/test" </>)
 
-type KontraTest = KontraG FakeFileStorageT
+type KontraTest = KontraG TestFileStorageT
 
 data TestEnvSt = TestEnvSt {
     teConnSource        :: !BasicConnectionSource
@@ -79,6 +80,7 @@ data TestEnvSt = TestEnvSt {
   , teOutputDirectory   :: !(Maybe String) -- ^ Put test artefact output in this directory if given
   , teStagingTests      :: !Bool
   , tePdfToolsLambdaConf :: PdfToolsLambdaConf
+  , teAmazonConfig      :: Maybe AmazonConfig
   }
 
 data TestEnvStRW = TestEnvStRW {
@@ -87,7 +89,7 @@ data TestEnvStRW = TestEnvStRW {
   , terwRequestURI  :: !String
   }
 
-type InnerTestEnv = FakeFileStorageT (StateT TestEnvStRW (ReaderT TestEnvSt (LogT (DBT IO))))
+type InnerTestEnv = TestFileStorageT (StateT TestEnvStRW (ReaderT TestEnvSt (LogT (DBT IO))))
 
 newtype TestEnv a = TestEnv { unTestEnv :: InnerTestEnv a }
   deriving (Applicative, Functor, Monad, MonadLog, MonadCatch, MonadThrow, MonadMask, MonadIO, MonadReader TestEnvSt, MonadBase IO, MonadState TestEnvStRW)
@@ -110,7 +112,7 @@ ununTestEnv st =
       , terwCurrentTime = Nothing
       , terwRequestURI = "http://testkontra.fake"
       }
-  . evalFakeFileStorageT
+  . flip evalTestFileStorageT (teAmazonConfig st)
   . unTestEnv
 
 instance CryptoRNG TestEnv where
@@ -133,8 +135,8 @@ instance MonadDB TestEnv where
     -- new connection.
     ConnectionSource pool <- asks teConnSource
     runLogger <- asks teRunLogger
-    TestEnv . liftFakeFileStorageT $ \fsVar -> StateT $ \terw -> ReaderT $ \te -> LogT . ReaderT $ \_ -> DBT . StateT $ \st -> do
-      res <- runDBT pool (dbTransactionSettings st) . runLogger $ runReaderT (runStateT (runFakeFileStorageT m fsVar) terw) te
+    TestEnv . liftTestFileStorageT $ \fsVar -> StateT $ \terw -> ReaderT $ \te -> LogT . ReaderT $ \_ -> DBT . StateT $ \st -> do
+      res <- runDBT pool (dbTransactionSettings st) . runLogger $ runReaderT (runStateT (runTestFileStorageT m fsVar) terw) te
       return (res, st)
   getNotification = TestEnv . getNotification
 
@@ -169,7 +171,7 @@ instance MonadFileStorage TestEnv where
   deleteSavedContents          = TestEnv . deleteSavedContents
 
 runTestKontraHelper :: BasicConnectionSource -> Request -> Context
-                    -> KontraG FakeFileStorageT a
+                    -> KontraG TestFileStorageT a
                     -> TestEnv (a, Context, Response -> Response)
 runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
   now <- currentTime
@@ -179,11 +181,11 @@ runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
   -- commit previous changes and do not begin new transaction as runDBT
   -- does it and we don't want these pesky warnings about transaction
   -- being already in progress
-  fakeFS <- TestEnv getFakeFSTVar
+  fsEnv <- TestEnv getTestFSEnv
   commit' ts { tsAutoTransaction = False }
   ((res, ctx'), st) <- E.finally
     (liftBase $ runStateT (unReqHandlerT . runLogger . runCryptoRNGT rng
-                                         . flip runFakeFileStorageT fakeFS
+                                         . flip runTestFileStorageT fsEnv
                                          . runDBT pool ts
                                          $ runStateT (unKontra tk) ctx)
                           (ReqHandlerSt rq id now))
@@ -193,7 +195,7 @@ runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
 
 -- | Typeclass for running handlers within TestKontra monad
 class RunnableTestKontra a where
-  runTestKontra :: Request -> Context -> KontraG FakeFileStorageT a
+  runTestKontra :: Request -> Context -> KontraG TestFileStorageT a
                 -> TestEnv (a, Context)
 
 instance RunnableTestKontra a where

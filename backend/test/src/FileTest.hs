@@ -5,7 +5,6 @@ import Test.Framework
 import Test.QuickCheck
 import qualified Data.ByteString.UTF8 as BS
 
-import Crypto
 import DB
 import File.Conditions
 import File.File
@@ -24,7 +23,6 @@ fileTests env = testGroup "Files" [
 
   --Basic DB operations
   testThat "File insert persists content"  env testFileNewFile,
-  testThat "File move to AWS works"  env testFileMovedToAWS,
 
   testThat "File purging works"  env testPurgeFiles
   ]
@@ -54,19 +52,6 @@ testFileDoesNotExist :: TestEnv ()
 testFileDoesNotExist = replicateM_ 5 $ do
   assertRaisesKontra (\FileDoesNotExist {} -> True) $
     randomQuery GetFileByFileID
-
-testFileMovedToAWS :: TestEnv ()
-testFileMovedToAWS  = replicateM_ 100 $ do
-  (name,content) <- fileData
-  url <- viewableS
-  fileid' <- saveNewFile name content
-  let Right aes = mkAESConf (BS.fromString (take 32 $ repeat 'a')) (BS.fromString (take 16 $ repeat 'b'))
-
-  dbUpdate $ FileMovedToAWS fileid' url aes
-  File { filename = fname , filestorage = FileStorageAWS furl aes2 } <- dbQuery $ GetFileByFileID fileid'
-  assertEqual "File data name does not change" name fname
-  assertEqual "File URL does not change" url furl
-  assertEqual "AES key is persistent" aes aes2
 
 testPurgeFiles :: TestEnv ()
 testPurgeFiles  = replicateM_ 100 $ do

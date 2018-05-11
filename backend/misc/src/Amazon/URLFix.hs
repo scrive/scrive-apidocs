@@ -4,6 +4,7 @@ module Amazon.URLFix
   , amazonURLFixConsumer
   ) where
 
+import Control.Concurrent (threadDelay)
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.IO.Class
@@ -50,7 +51,9 @@ checkAndFixURL s3action (FileStorageAWS correctURL _) = do
       case res' of
         Left _ -> return False
         Right _ -> do
-          -- Delete wrong one
+          -- Delete wrong one after a little while to let other processes fetch
+          -- it should there be any.
+          liftIO $ threadDelay 1000000 -- 1 second
           res'' <- liftIO $ AWS.runAction $ s3action
             { AWS.s3object    = wrongURL
             , AWS.s3operation = DELETE

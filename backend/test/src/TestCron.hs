@@ -16,8 +16,8 @@ import Doc.API.Callback.Model
 import Doc.Extending.Consumer
 import Doc.Sealing.Consumer
 import Doc.Signing.Consumer
-import FakeFileStorage
 import FileStorage.Amazon.Config
+import TestFileStorage
 import TestKontra
 import qualified CronEnv
 
@@ -29,6 +29,7 @@ runTestCronUntilIdle ctx = do
   commit
   ConnectionSource pool <- asks teConnSource
   pdfSealLambdaConf <- tePdfToolsLambdaConf <$> ask
+  mAmazonConfig     <- teAmazonConfig       <$> ask
 
   -- Will not be used, because Planhat is not configured when testing, but it is a parameter for cronConsumer.
   reqManager <- newTlsManager
@@ -111,7 +112,7 @@ runTestCronUntilIdle ctx = do
 
   -- To simplify things, runDB and runCronEnv requirements are added to the TestEnv. So then runDB and runCronEnv can be just "id".
   (\m -> runReaderT m cronEnvData)
-    . evalFakeFileStorageT
+    . evalTestFileStorageT mAmazonConfig
     . foldr1 (.) (finalizeRunner <$> (zip cronPartRunners idleSignals))
     $ whileM_ (not <$> allSignalsTrue idleSignals idleStatuses) $ return ()
 

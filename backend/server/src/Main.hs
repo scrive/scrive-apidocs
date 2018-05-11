@@ -12,7 +12,6 @@ import Network.Curl
 import System.Console.CmdArgs hiding (def)
 import System.Environment
 import qualified Control.Exception.Lifted as E
-import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text.IO as T
 import qualified Data.Traversable as F
 

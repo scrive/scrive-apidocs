@@ -1264,7 +1264,6 @@ Test-suite kontrakcja-test
                  EvidenceAttachmentsTest
                  EvidenceLog.Tables
                  EvidenceLogTest
-                 FakeFileStorage
                  FeatureFlags.Migrations
                  FeatureFlags.Tables
                  FeatureFlagsTest
@@ -1305,6 +1304,7 @@ Test-suite kontrakcja-test
                  SignupTest
                  TestConf
                  TestCron
+                 TestFileStorage
                  TestKontra
                  TestingUtil
                  Theme.Tables

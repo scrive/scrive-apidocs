@@ -53,15 +53,16 @@ s3ConnFromConfig :: AmazonConfig -> AWS.AWSConnection
 s3ConnFromConfig AmazonConfig{..} = AWS.AWSConnection
   amazonConfigHost amazonConfigPort amazonConfigAccessKey amazonConfigSecretKey
 
-s3ActionFromConfig :: AmazonConfig -> String -> AWS.S3Action
-s3ActionFromConfig config url = AWS.S3Action
+s3ActionFromConfig :: AmazonConfig -> HTTP.RequestMethod -> String
+                   -> AWS.S3Action
+s3ActionFromConfig config method url = AWS.S3Action
   { AWS.s3conn      = s3ConnFromConfig config
   , AWS.s3bucket    = amazonConfigBucket config
   , AWS.s3object    = url
   , AWS.s3query     = ""
   , AWS.s3metadata  = []
   , AWS.s3body      = BSL.empty
-  , AWS.s3operation = HTTP.GET
+  , AWS.s3operation = method
   }
 
 s3ObjectFromConfig :: AmazonConfig -> String -> AWS.S3Object

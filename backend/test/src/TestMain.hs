@@ -162,7 +162,7 @@ testMany' (allargs, ts) runLogger rng = do
   let (args, envf) = modifyTestEnv allargs
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
-  tconf    <- readConfig  putStrLn "kontrakcja_test.conf"
+  tconf     <- readConfig  putStrLn "kontrakcja_test.conf"
   templates <- readGlobalTemplates
 
   let connSettings = pgConnSettings (testDBConfig tconf)
@@ -196,6 +196,7 @@ testMany' (allargs, ts) runLogger rng = do
       , teOutputDirectory   = Nothing
       , teStagingTests      = False
       , tePdfToolsLambdaConf = testPdfToolsLambdaConf tconf
+      , teAmazonConfig      = testAmazonConfig tconf
       }
       ts' = if teStagingTests env
         then stagingTests ++ ts

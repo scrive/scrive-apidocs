@@ -24,7 +24,9 @@
         "type": "local",
         "dir": "/tmp"
     },
-    "amazon" : { "bucket"     : "foo"
+    "amazon" : { "_host"      : "example.com"
+               , "_port"      : 1234
+               , "bucket"     : "foo"
                , "access_key" : "bar"
                , "secret_key" : "baz" },
     "test_receivers": [
