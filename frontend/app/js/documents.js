@@ -403,6 +403,14 @@ var Document = exports.Document = Backbone.Model.extend({
             },
             ajaxerror : function(xhr) {
               if (errorCallback != undefined) {
+                // this is temporary
+                if (xhr.status === 400) {
+                  var image = document.get("screenshots").first.image;
+                  if (typeof image === "string") {
+                    image = image.substr(0, 50);
+                  }
+                  Track.track('Sign call failed', {"first_screenshot": image});
+                }
                 errorCallback(xhr);
               } else {
                 window.location.reload();
