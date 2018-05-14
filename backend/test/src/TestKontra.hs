@@ -112,7 +112,7 @@ ununTestEnv st =
       , terwCurrentTime = Nothing
       , terwRequestURI = "http://testkontra.fake"
       }
-  . flip evalTestFileStorageT (teAmazonConfig st)
+  . evalTestFileStorageT (teAmazonConfig st)
   . unTestEnv
 
 instance CryptoRNG TestEnv where
