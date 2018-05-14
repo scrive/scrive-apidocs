@@ -1940,7 +1940,10 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
         sqlWhere "d.purged_time IS NULL"
 
         -- All signatories with an account deleted the document or their company
-        -- has been deleted or the user is deleted but not the author.
+        -- has been deleted or (the user is deleted but/and not the author).
+        -- In other words, the document is NOT deleted if any of the signatories
+        -- hasn't deleted it and the company still exists and (the author is not
+        -- deleted or is the author).
         -- (This last condition is for documents which have been created by
         -- another company where a user who happens to have a Scrive account
         -- is one of the signatory and this user has deleted her account.)
