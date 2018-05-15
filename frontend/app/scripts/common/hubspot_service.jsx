@@ -83,6 +83,9 @@ var expose = {
   FORM_YES_SENDS_DOCS : hubspotConf ? hubspotConf.forms.yes_sends_docs : undefined,
 
   track : function(formId, formData, noCookie) {
+    if (typeof hbspt === 'undefined') {
+      return;
+    }
 
     noCookie = (noCookie) ? true : false;
 
