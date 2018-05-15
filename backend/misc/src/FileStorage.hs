@@ -20,6 +20,7 @@ module FileStorage
   , newFileMemCache
   ) where
 
+import Control.Monad (void)
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
@@ -65,38 +66,95 @@ getFileStorageConfig = FileStorageT ask
 --
 -- 'deleteSavedContents' first deletes the data from the caches then from Amazon
 -- to prevent inconsistency.
-instance {-# OVERLAPPING #-} ( MonadBase IO m, MonadBaseControl IO m, MonadLog m
-                             , MonadMask m )
+instance (MonadBaseControl IO m, MonadCatch m, MonadLog m, MonadMask m)
     => MonadFileStorage (FileStorageT m) where
-  saveNewContents url contents = do
+  saveNewContents     = saveNewContents_
+  getSavedContents    = getSavedContents_
+  deleteSavedContents = deleteSavedContents_
+
+saveNewContents_ :: ( MonadBaseControl IO m, MonadCatch m, MonadLog m
+                    , MonadMask m )
+                 => String -> BSL.ByteString -> FileStorageT m ()
+saveNewContents_ url contents = do
+  (amazonConfig, mRedisCache, memCache) <- getFileStorageConfig
+
+  MemCache.invalidate memCache url
+  whenJust mRedisCache $ \conn -> do
+    Redis.deleteKey conn $ Redis.redisKeyFromURL url
+
+  runAmazonMonadT amazonConfig $ saveNewContents url contents
+
+  void (MemCache.fetch memCache url (return contents)) `catch` \e ->
+    logInfo "Failed to save in memory cache" $ object
+      [ "error" .= show (e :: SomeException) ]
+
+  whenJust mRedisCache $ \conn -> do
+    Redis.redisPut "contents" (BSL.toStrict contents)
+                   (conn, Redis.redisKeyFromURL url) `catch` \e ->
+      logInfo "Failed to save to Redis cache" $ object
+        [ "error" .= show (e :: SomeException) ]
+
+getSavedContents_ :: forall m. ( MonadBaseControl IO m, MonadCatch m, MonadLog m
+                               , MonadMask m, MonadThrow m )
+                  => String -> FileStorageT m BSL.ByteString
+getSavedContents_ url = do
     (amazonConfig, mRedisCache, memCache) <- getFileStorageConfig
 
-    MemCache.invalidate memCache url
-    whenJust mRedisCache $ \conn -> do
-      Redis.deleteKey conn $ Redis.redisKeyFromURL url
+    MemCache.fetch_ memCache url
+      (fetchFromRedisOrAmazon mRedisCache amazonConfig) `catch` \e -> do
+        case fromException e of
+          -- It's coming from fetchFromRedisOrAmazon
+          Just e' -> throwM (e' :: FileStorageException)
+          -- It's coming from MemCache.fetch_
+          Nothing -> do
+            logInfo "Failed to fetch from memory cache" $ object
+              [ "error" .= show e ]
+            fetchFromRedisOrAmazon mRedisCache amazonConfig
 
-    runAmazonMonadT amazonConfig $ saveNewContents url contents
-
-    _ <- MemCache.fetch memCache url (return contents)
-    whenJust mRedisCache $ \conn -> do
-      Redis.redisPut "contents" (BSL.toStrict contents)
-                     (conn, Redis.redisKeyFromURL url)
-
-  getSavedContents url = do
-    (amazonConfig, mRedisCache, memCache) <- getFileStorageConfig
-
-    MemCache.fetch_ memCache url $ do
+  where
+    fetchFromRedisOrAmazon :: Maybe R.Connection -> AmazonConfig
+                           -> FileStorageT m BSL.ByteString
+    fetchFromRedisOrAmazon mRedisCache amazonConfig =
       Redis.mfetch mRedisCache (Redis.redisKeyFromURL url)
-        Redis.getFileFromRedis
+        (fetchFromRedis amazonConfig)
         (\mConnKey -> do
-          contents <- runAmazonMonadT amazonConfig $ getSavedContents url
-          whenJust mConnKey $ Redis.redisPut "contents" $ BSL.toStrict contents
+          contents <- fetchFromAmazon amazonConfig
+          whenJust mConnKey $ \connKey -> do
+            Redis.redisPut "contents" (BSL.toStrict contents) connKey
+              `catch` \e ->
+                logInfo "Failed to save to Redis cache" $ object
+                  [ "error" .= show (e :: SomeException) ]
           return contents)
 
-  deleteSavedContents url = do
-    (amazonConfig, mRedisCache, memCache) <- getFileStorageConfig
+        `catch` \e -> case fromException e of
+          Just e' -> throwM (e' :: FileStorageException)
+          Nothing -> do
+            logInfo "Failed to fetch from Redis cache" $ object
+              [ "error" .= show e ]
+            fetchFromAmazon amazonConfig
 
-    MemCache.invalidate memCache url
-    whenJust mRedisCache $ \conn ->
-      Redis.deleteKey conn $ Redis.redisKeyFromURL url
-    runAmazonMonadT amazonConfig $ deleteSavedContents url
+    fetchFromRedis :: AmazonConfig -> R.Connection -> Redis.RedisKey
+                   -> FileStorageT m BSL.ByteString
+    fetchFromRedis amazonConfig conn key =
+      Redis.getFileFromRedis conn key `catch` \e -> do
+        logInfo "Failed to fetch from Redis cache" $ object
+          [ "error" .= show (e :: SomeException) ]
+        fetchFromAmazon amazonConfig
+
+    fetchFromAmazon :: AmazonConfig -> FileStorageT m BSL.ByteString
+    fetchFromAmazon amazonConfig = do
+      runAmazonMonadT amazonConfig (getSavedContents url) `catch` \e -> do
+        case fromException e of
+          Just e' -> throwM (e' :: FileStorageException)
+          Nothing -> throwM $ FileStorageException $ show e
+
+deleteSavedContents_ :: ( MonadBaseControl IO m, MonadLog m, MonadMask m
+                        , MonadThrow m )
+                     => String -> FileStorageT m ()
+deleteSavedContents_ url = do
+  (amazonConfig, mRedisCache, memCache) <- getFileStorageConfig
+
+  MemCache.invalidate memCache url
+  whenJust mRedisCache $ \conn ->
+    Redis.deleteKey conn $ Redis.redisKeyFromURL url
+  runAmazonMonadT amazonConfig $ deleteSavedContents url

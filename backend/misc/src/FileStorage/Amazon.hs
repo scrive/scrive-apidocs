@@ -75,7 +75,7 @@ instance MonadBaseControl IO m => MonadBaseControl IO (AmazonMonadT m) where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-instance {-# OVERLAPPING #-} (MonadBase IO m, MonadLog m, MonadThrow m)
+instance (MonadBase IO m, MonadLog m, MonadThrow m)
     => MonadFileStorage (AmazonMonadT m) where
   saveNewContents     = saveNewContentsInAmazon
   getSavedContents    = getContentsFromAmazon
@@ -132,7 +132,7 @@ data GetContentRetry = RegularRetry
   deriving Show
 
 getContentsFromAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m)
-                          => String -> AmazonMonadT m BSL.ByteString
+                      => String -> AmazonMonadT m BSL.ByteString
 getContentsFromAmazon = go RegularRetry
   where
     go :: (MonadBase IO m, MonadLog m, MonadThrow m) => GetContentRetry
