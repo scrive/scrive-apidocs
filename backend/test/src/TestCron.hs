@@ -30,6 +30,8 @@ runTestCronUntilIdle ctx = do
   ConnectionSource pool <- asks teConnSource
   pdfSealLambdaConf <- tePdfToolsLambdaConf <$> ask
   mAmazonConfig     <- teAmazonConfig       <$> ask
+  memcache          <- teFileMemCache       <$> ask
+  mRedisConn        <- teRedisConn          <$> ask
 
   -- Will not be used, because Planhat is not configured when testing, but it is a parameter for cronConsumer.
   reqManager <- newTlsManager
@@ -112,7 +114,7 @@ runTestCronUntilIdle ctx = do
 
   -- To simplify things, runDB and runCronEnv requirements are added to the TestEnv. So then runDB and runCronEnv can be just "id".
   (\m -> runReaderT m cronEnvData)
-    . evalTestFileStorageT mAmazonConfig
+    . evalTestFileStorageT ((,mRedisConn,memcache) <$> mAmazonConfig)
     . foldr1 (.) (finalizeRunner <$> (zip cronPartRunners idleSignals))
     $ whileM_ (not <$> allSignalsTrue idleSignals idleStatuses) $ return ()
 

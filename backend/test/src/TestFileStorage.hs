@@ -19,19 +19,18 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.HashMap.Strict as HM
 
 import DB
-import FileStorage.Amazon
-import FileStorage.Amazon.Config
+import FileStorage
 import FileStorage.Class
 
 newtype TestFileStorageT m a = TestFileStorageT
-  { unTestFileStorageT :: ReaderT (Either (TVar FakeFS) AmazonConfig) m a }
+  { unTestFileStorageT :: ReaderT (Either (TVar FakeFS) FileStorageConfig) m a }
   deriving ( Alternative, Applicative, Functor, Monad, MonadDB, MonadIO
            , MonadLog, CryptoRNG, MonadTrans, MonadPlus, MonadBase b
            , MonadBaseControl b, MonadThrow, MonadCatch, MonadMask
            , MonadTransControl )
 
-evalTestFileStorageT :: MonadIO m => Maybe AmazonConfig -> TestFileStorageT m a
-                     -> m a
+evalTestFileStorageT :: MonadIO m => Maybe FileStorageConfig
+                     -> TestFileStorageT m a -> m a
 evalTestFileStorageT mConfig action = do
   env <- case mConfig of
     Nothing -> fmap Left . liftIO $ newTVarIO HM.empty
@@ -39,25 +38,27 @@ evalTestFileStorageT mConfig action = do
   runTestFileStorageT action env
 
 runTestFileStorageT :: MonadIO m => TestFileStorageT m a
-                    -> Either (TVar FakeFS) AmazonConfig -> m a
+                    -> Either (TVar FakeFS) FileStorageConfig -> m a
 runTestFileStorageT = runReaderT . unTestFileStorageT
 
-liftTestFileStorageT :: Monad m => (Either (TVar FakeFS) AmazonConfig -> m a)
+liftTestFileStorageT :: Monad m
+                     => (Either (TVar FakeFS) FileStorageConfig -> m a)
                      -> TestFileStorageT m a
 liftTestFileStorageT = TestFileStorageT . ReaderT
 
 getTestFSEnv :: Monad m
-             => TestFileStorageT m (Either (TVar FakeFS) AmazonConfig)
+             => TestFileStorageT m (Either (TVar FakeFS) FileStorageConfig)
 getTestFSEnv = TestFileStorageT ask
 
 type FakeFS = HM.HashMap String BSL.ByteString
 
-instance (MonadBase IO m, MonadLog m, MonadThrow m)
+instance ( MonadBaseControl IO m, MonadCatch m, MonadLog m, MonadMask m
+         , MonadThrow m )
     => MonadFileStorage (TestFileStorageT m) where
   saveNewContents url contents = TestFileStorageT $ ReaderT $ \case
     Left tvar ->
       liftBase $ atomically $ modifyTVar' tvar $ HM.insert url contents
-    Right conf -> runAmazonMonadT conf $ saveNewContents url contents
+    Right conf -> runFileStorageT conf $ saveNewContents url contents
 
   getSavedContents url = TestFileStorageT $ ReaderT $ \case
     Left tvar -> do
@@ -66,8 +67,8 @@ instance (MonadBase IO m, MonadLog m, MonadThrow m)
         Just contents -> return contents
         Nothing ->
           throwM $ FileStorageException $ "object " ++ url ++ " not found"
-    Right conf -> runAmazonMonadT conf $ getSavedContents url
+    Right conf -> runFileStorageT conf $ getSavedContents url
 
   deleteSavedContents url = TestFileStorageT $ ReaderT $ \case
     Left tvar -> liftBase $ atomically $ modifyTVar' tvar $ HM.delete url
-    Right conf -> runAmazonMonadT conf $ deleteSavedContents url
+    Right conf -> runFileStorageT conf $ deleteSavedContents url

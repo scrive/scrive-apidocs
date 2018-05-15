@@ -43,6 +43,7 @@ import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Map as M
+import qualified Database.Redis as R
 import qualified Text.StringTemplates.TemplatesLoader as TL
 
 import BrandedDomain.Model
@@ -81,6 +82,8 @@ data TestEnvSt = TestEnvSt {
   , teStagingTests      :: !Bool
   , tePdfToolsLambdaConf :: PdfToolsLambdaConf
   , teAmazonConfig      :: Maybe AmazonConfig
+  , teFileMemCache      :: FileMemCache
+  , teRedisConn         :: Maybe R.Connection
   }
 
 data TestEnvStRW = TestEnvStRW {
@@ -112,7 +115,8 @@ ununTestEnv st =
       , terwCurrentTime = Nothing
       , terwRequestURI = "http://testkontra.fake"
       }
-  . evalTestFileStorageT (teAmazonConfig st)
+  . evalTestFileStorageT
+      ((, teRedisConn st, teFileMemCache st) <$> teAmazonConfig st)
   . unTestEnv
 
 instance CryptoRNG TestEnv where

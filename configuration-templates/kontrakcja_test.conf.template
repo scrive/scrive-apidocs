@@ -4,7 +4,9 @@
     "gateway_url": "",
     "api_key": "",
     "amazon_s3": {
-        "bucket" : ""
+        "_host": "example.com"
+      , "_port": 1234
+      , "bucket" : ""
       , "access_key":""
       , "secret_key": ""
     }
@@ -15,5 +17,12 @@
     "bucket": "foo",
     "access_key": "bar",
     "secret_key": "baz"
+  },
+  "_local_file_cache_size": 200000000,
+  "_redis_cache": {
+    "host": "foo",
+    "port": 1234,
+    "password": "bar",
+    "database": 0
   }
 }

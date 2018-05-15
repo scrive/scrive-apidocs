@@ -1,8 +1,9 @@
 module FileStorage.Amazon
-  ( mkAWSAction
+  ( saveContentsToAmazon
+  , getContentsFromAmazon
+  , deleteContentsFromAmazon
+  , mkAWSAction
   , uploadSomeFilesToAmazon
-  , AmazonMonadT
-  , runAmazonMonadT
   , exportFile
   , urlFromFile
   ) where
@@ -10,7 +11,6 @@ module FileStorage.Amazon
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
-import Control.Monad.Trans.Control
 import Crypto.RNG
 import Data.Time
 import Log
@@ -49,43 +49,9 @@ mkAWSAction mConfig =
       config = fromMaybe emptyConfig mConfig
   in s3ActionFromConfig config HTTP.GET ""
 
-newtype AmazonMonadT m a
-  = AmazonMonadT { unAmazonMonadT :: ReaderT AmazonConfig m a }
-  deriving ( Alternative, Applicative, Functor, Monad, MonadDB, MonadIO
-           , MonadLog, CryptoRNG, MonadTrans, MonadPlus, MonadBase b, MonadThrow
-           , MonadCatch, MonadMask )
-
-runAmazonMonadT :: Monad m => AmazonConfig -> AmazonMonadT m a -> m a
-runAmazonMonadT config = flip runReaderT config . unAmazonMonadT
-
-getAmazonConfig :: Monad m => AmazonMonadT m AmazonConfig
-getAmazonConfig = AmazonMonadT ask
-
-instance MonadTransControl AmazonMonadT where
-  type StT AmazonMonadT m = StT (ReaderT AmazonConfig) m
-  liftWith = defaultLiftWith AmazonMonadT unAmazonMonadT
-  restoreT = defaultRestoreT AmazonMonadT
-  {-# INLINE liftWith #-}
-  {-# INLINE restoreT #-}
-
-instance MonadBaseControl IO m => MonadBaseControl IO (AmazonMonadT m) where
-  type StM (AmazonMonadT m) a = ComposeSt AmazonMonadT m a
-  liftBaseWith = defaultLiftBaseWith
-  restoreM     = defaultRestoreM
-  {-# INLINE liftBaseWith #-}
-  {-# INLINE restoreM #-}
-
-instance (MonadBase IO m, MonadLog m, MonadThrow m)
-    => MonadFileStorage (AmazonMonadT m) where
-  saveNewContents     = saveNewContentsInAmazon
-  getSavedContents    = getContentsFromAmazon
-  deleteSavedContents = deleteContentsFromAmazon
-
-saveNewContentsInAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m)
-                        => String -> BSL.ByteString -> AmazonMonadT m ()
-saveNewContentsInAmazon url contents = do
-    config <- getAmazonConfig
-
+saveContentsToAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m)
+                     => AmazonConfig -> String -> BSL.ByteString -> m ()
+saveContentsToAmazon config url contents = do
     let conn = s3ConnFromConfig config
         obj  = (s3ObjectFromConfig config url) { AWS.obj_data = contents }
 
@@ -132,13 +98,12 @@ data GetContentRetry = RegularRetry
   deriving Show
 
 getContentsFromAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m)
-                      => String -> AmazonMonadT m BSL.ByteString
-getContentsFromAmazon = go RegularRetry
+                      => AmazonConfig -> String -> m BSL.ByteString
+getContentsFromAmazon config = go RegularRetry
   where
     go :: (MonadBase IO m, MonadLog m, MonadThrow m) => GetContentRetry
-       -> String -> AmazonMonadT m BSL.ByteString
+       -> String -> m BSL.ByteString
     go retry url = do
-      config <- getAmazonConfig
       let action = s3ActionFromConfig config HTTP.GET url
       logInfo "Attempting to fetch file from AWS" $ object ["url" .= url]
 
@@ -167,11 +132,9 @@ getContentsFromAmazon = go RegularRetry
             AnotherRetryEncoded -> go NoRetry url
             NoRetry -> throwM $ FileStorageException $ show err
 
-deleteContentsFromAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m) => String
-                         -> AmazonMonadT m ()
-deleteContentsFromAmazon url = do
-  config <- getAmazonConfig
-
+deleteContentsFromAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m)
+                         => AmazonConfig -> String -> m ()
+deleteContentsFromAmazon config url = do
   let action = s3ActionFromConfig config HTTP.DELETE url
   result <- liftBase $ AWS.runAction action
   case result of

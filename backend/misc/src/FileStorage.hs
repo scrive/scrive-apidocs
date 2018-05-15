@@ -82,7 +82,7 @@ saveNewContents_ url contents = do
   whenJust mRedisCache $ \conn -> do
     Redis.deleteKey conn $ Redis.redisKeyFromURL url
 
-  runAmazonMonadT amazonConfig $ saveNewContents url contents
+  saveContentsToAmazon amazonConfig url contents
 
   void (MemCache.fetch memCache url (return contents)) `catch` \e ->
     logInfo "Failed to save in memory cache" $ object
@@ -143,7 +143,7 @@ getSavedContents_ url = do
 
     fetchFromAmazon :: AmazonConfig -> FileStorageT m BSL.ByteString
     fetchFromAmazon amazonConfig = do
-      runAmazonMonadT amazonConfig (getSavedContents url) `catch` \e -> do
+      getContentsFromAmazon amazonConfig url `catch` \e -> do
         case fromException e of
           Just e' -> throwM (e' :: FileStorageException)
           Nothing -> throwM $ FileStorageException $ show e
@@ -157,4 +157,4 @@ deleteSavedContents_ url = do
   MemCache.invalidate memCache url
   whenJust mRedisCache $ \conn ->
     Redis.deleteKey conn $ Redis.redisKeyFromURL url
-  runAmazonMonadT amazonConfig $ deleteSavedContents url
+  deleteContentsFromAmazon amazonConfig url
