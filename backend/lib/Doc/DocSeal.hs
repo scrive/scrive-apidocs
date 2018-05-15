@@ -587,8 +587,15 @@ sealDocument hostpart = do
   case mfile of
     Just file -> do
       logInfo_ "Sealing document"
+      startTime <- currentTime
       sealDocumentFile hostpart file
-      logInfo_ "Sealing of document should be done now"
+      finishTime <- currentTime
+      lambdaSkip <- get pdfToolsLambdaSkip <$> getPdfToolsLambdaConf
+      logInfo "Sealing of document should be done now" $ object [
+          "elapsed_time" .= (realToFrac (diffUTCTime finishTime startTime) :: Double)
+        , "skip_lambda"  .= lambdaSkip
+        , logPair_ file
+        ]
     Nothing -> do
       logInfo_ "Sealing of document failed because it has no main file attached"
       internalError
