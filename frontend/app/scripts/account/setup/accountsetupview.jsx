@@ -106,16 +106,17 @@ var AccountSetupView = React.createClass({
         type: "success"
       });
 
-      HubSpot.track(HubSpot.FORM_TOS_SUBMIT, {
-        "signup_method": this.props.signupmethod,
-        "fullname": this.fullName(),
-        "firstname": this.state.fstname,
-        "lastname": this.state.sndname,
-        "email": this.props.email,
-        "phone": this.state.phone,
-        "company": this.state.company,
-        "jobtitle": this.state.position
-      });
+      // HS temporarily disabled, because it doesnt work
+      // HubSpot.track(HubSpot.FORM_TOS_SUBMIT, {
+      //   "signup_method": this.props.signupmethod,
+      //   "fullname": this.fullName(),
+      //   "firstname": this.state.fstname,
+      //   "lastname": this.state.sndname,
+      //   "email": this.props.email,
+      //   "phone": this.state.phone,
+      //   "company": this.state.company,
+      //   "jobtitle": this.state.position
+      // });
 
       Track.track_timeout(
         "Sign TOS",

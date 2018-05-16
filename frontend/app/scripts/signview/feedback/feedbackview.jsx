@@ -143,12 +143,14 @@ var _ = require("underscore");
         };
 
         if (from === "Q4" && event === "yes") {
-          HubSpot.track(HubSpot.FORM_YES_SENDS_DOCS, hubspotData);
+          // HS temporarily disabled, because it doesnt work
+          // HubSpot.track(HubSpot.FORM_YES_SENDS_DOCS, hubspotData);
         }
 
         if (from === "Q5" && event === "yes") {
           extraMixpanelProperties["Others in your organisation information wanted"] = true;
-          HubSpot.track(HubSpot.FORM_NO_SENDS_DOCS, hubspotData);
+          // HS temporarily disabled, because it doesnt work
+          // HubSpot.track(HubSpot.FORM_NO_SENDS_DOCS, hubspotData);
         }
 
         if (from !== "Q2") {
