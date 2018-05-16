@@ -84,18 +84,19 @@ module.exports = React.createClass({
             }
           }
 
-          HubSpot.track(
-            HubSpot.FORM_INVITE,
-            {
-              "email" : self.state.email,
-              "language" : Language.current(),
-              "scrive_domain" : location.hostname,
-              "signup_method" : "CompanyInvitation",
-              "firstname" : self.state.fstname,
-              "lastname" : self.state.sndname
-            },
-            true
-          );
+          // HS temporarily disabled, because it doesnt work
+          // HubSpot.track(
+          //   HubSpot.FORM_INVITE,
+          //   {
+          //     "email" : self.state.email,
+          //     "language" : Language.current(),
+          //     "scrive_domain" : location.hostname,
+          //     "signup_method" : "CompanyInvitation",
+          //     "firstname" : self.state.fstname,
+          //     "lastname" : self.state.sndname
+          //   },
+          //   true
+          // );
 
           self.onClose(true);
         },
