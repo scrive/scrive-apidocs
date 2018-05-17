@@ -17,7 +17,6 @@ module Doc.DocViewMail
 
 import Control.Conditional ((<|), (|>))
 import Control.Monad.Catch
-import Control.Monad.Trans (lift)
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
@@ -29,7 +28,6 @@ import DB
 import Doc.DocInfo (getLastSignedTime)
 import Doc.DocStateData
 import Doc.DocUtils
-import Doc.Model (unsavedDocumentLingerDays)
 import File.FileID
 import KontraLink
 import MailContext
@@ -106,16 +104,8 @@ documentAttachedFields forMail signlink documentAttached document = do
   F.value "documentAttached" documentAttached
   F.value "ispreview" $ not $ forMail
   F.value "mainfilelink" $ protectLink forMail mctx $ LinkMainFile document signlink
-  mcompany <- case join $ maybesignatory <$> getAuthorSigLink document of
-    Just suid ->  fmap Just $ (lift (dbQuery $ GetCompanyByUserID $ suid))
-    Nothing -> return Nothing
-  if ((companyallowsavesafetycopy . companyinfo) <$> mcompany) == Just True
-     then do
-       now <- currentTime
-       F.value "availabledate" $ formatTimeYMD $ (unsavedDocumentLingerDays-1) `daysAfter` now
-    else do
-       now <- currentTime
-       F.value "availabledate" $ formatTimeSimple $ (60 `minutesAfter` now)
+  now <- currentTime
+  F.value "availabledate" $ formatTimeSimple $ (60 `minutesAfter` now)
 
 remindMailSigned :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, MailContextMonad m)
                  => Bool

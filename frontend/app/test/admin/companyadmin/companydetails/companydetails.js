@@ -62,7 +62,6 @@ describe("admin/companyadmin/companydetails/companydetails", function () {
       actualProps.company.cgidisplayname = sinon.stub().returns("cgidisplayname");
       actualProps.company.cgiserviceid = sinon.stub().returns("cgiserviceid");
       actualProps.company.idledoctimeout = sinon.stub().returns(99);
-      actualProps.company.allowsavesafetycopy = sinon.stub().returns(true);
       actualProps.company.smsprovider = sinon.stub().returns("SMSDefault");
       actualProps.company.padappmode = sinon.stub().returns("list_view");
       actualProps.company.padearchiveenabled = sinon.stub().returns(true);
@@ -182,7 +181,6 @@ describe("admin/companyadmin/companydetails/companydetails", function () {
     assert.equal(setCall.args[0].cgidisplayname, "cgidisplayname");
     assert.equal(setCall.args[0].cgiserviceid, "cgiserviceid");
     assert.equal(setCall.args[0].idledoctimeout, 99);
-    assert.equal(setCall.args[0].allowsavesafetycopy, true);
     assert.equal(setCall.args[0].smsprovider, "SMSDefault");
     assert.equal(setCall.args[0].padappmode, "list_view");
     assert.equal(setCall.args[0].padearchiveenabled, true);
@@ -327,7 +325,6 @@ describe("admin/companyadmin/companydetails/companydetails", function () {
       cgidisplayname: "cgidisplayname",
       cgiserviceid: "cgiserviceid",
       idledoctimeout: 99,
-      allowsavesafetycopy: true,
       smsprovider: "SMSDefault",
       padappmode: "list_view",
       padearchiveenabled: true
@@ -352,7 +349,6 @@ describe("admin/companyadmin/companydetails/companydetails", function () {
     assert.equal(detailsEditor.props.cgidisplayname, "cgidisplayname");
     assert.equal(detailsEditor.props.cgiserviceid, "cgiserviceid");
     assert.equal(detailsEditor.props.idledoctimeout, 99);
-    assert.equal(detailsEditor.props.allowsavesafetycopy, true);
     assert.equal(detailsEditor.props.smsprovider, "SMSDefault");
     assert.equal(detailsEditor.props.padappmode, "list_view");
     assert.equal(detailsEditor.props.padearchiveenabled, true);
@@ -374,7 +370,6 @@ describe("admin/companyadmin/companydetails/companydetails", function () {
       cgidisplayname: "cgidisplayname",
       cgiserviceid: "cgiserviceid",
       idledoctimeout: 99,
-      allowsavesafetycopy: true,
       smsprovider: "SMSDefault",
       padappmode: "list_view",
       padearchiveenabled: true

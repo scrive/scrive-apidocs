@@ -15,7 +15,6 @@ var Company = exports.Company = Backbone.Model.extend({
       cgiserviceid : "",
       ipaddressmasklist : "",
       partnerid : null,
-      allowsavesafetycopy : false,
       smsprovider : "",
       ready : false,
       padappmode : "list_view",
@@ -67,9 +66,6 @@ var Company = exports.Company = Backbone.Model.extend({
   maxidledoctimeout : function() {
      return 365; // sync with backend
   },
-  allowsavesafetycopy: function() {
-     return this.get("allowsavesafetycopy");
-  },
   smsprovider: function() {
     return this.get("smsprovider");
   },
@@ -96,7 +92,6 @@ var Company = exports.Company = Backbone.Model.extend({
       cgidisplayname : args.cgidisplayname,
       cgiserviceid : args.cgiserviceid,
       idledoctimeout : args.idledoctimeout,
-      allowsavesafetycopy : args.allowsavesafetycopy,
       smsprovider : args.smsprovider,
       padappmode : args.padappmode,
       padearchiveenabled : args.padearchiveenabled,

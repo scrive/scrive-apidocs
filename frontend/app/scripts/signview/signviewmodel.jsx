@@ -93,10 +93,6 @@ var Track = require("../common/track");
         doc.signatoriesThatCanSignNowOnPad().length > 0;
     },
 
-    allowsavesafetycopy: function () {
-      return this.get("allowsavesafetycopy");
-    },
-
     loggedInAsAuthor: function () {
       return this.get("loggedInAsAuthor");
     },
@@ -110,7 +106,6 @@ var Track = require("../common/track");
         || this.hasAuthorAttachmentsSection()
         || this.hasExtraDetailsSection()
         || this.hasSignatoriesAttachmentsSection()
-        || this.hasPostSignView()
         || this.hasSignSection();
     },
 
@@ -251,17 +246,6 @@ var Track = require("../common/track");
       var file = this.document().mainfile();
       return this.document().ready() && this.document().currentSignatoryCanSign()
         && file.ready() && file.view && file.view.ready();
-    },
-
-    hasPostSignView: function () {
-      var document = this.document();
-      return document.currentSignatory() != undefined
-         && !document.currentSignatory().saved()
-         && document.currentSignatory().email() // We assume that if this email is set - then it is valid
-         && !document.currentSignatory().padDelivery()
-         && !document.currentSignatory().apiDelivery()
-         && document.currentSignatory().hasSigned()
-         && this.allowsavesafetycopy();
     },
 
     hasDonePostRenderTasks: function () {

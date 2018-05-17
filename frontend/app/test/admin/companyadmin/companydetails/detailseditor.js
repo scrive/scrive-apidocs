@@ -32,7 +32,6 @@ describe("admin/companyadmin/companydetails/detailseditor", function () {
         cgidisplayname: "cgidisplayname",
         cgiserviceid: "cgiserviceid",
         idledoctimeout: 99,
-        allowsavesafetycopy: true,
         smsprovider: "SMSDefault",
         padappmode: "list_view",
         padearchiveenabled: true,
@@ -281,27 +280,6 @@ describe("admin/companyadmin/companydetails/detailseditor", function () {
 
     assert.isTrue(
       component.props.onFieldChange.calledWith("idledoctimeout", 1)
-    );
-  });
-
-  it("should render the allow to save document checkbox", function () {
-    var component = renderComponent();
-
-    var input = $("input[name=allowsavesafetycopy]", component.getDOMNode());
-
-    assert.lengthOf(input, 1);
-    assert.equal(input.attr("checked"), "checked");
-  });
-
-  it("should propagate change of the allow to save document checkbox", function () {
-    var component = renderComponent();
-
-    var input = $("input[name=allowsavesafetycopy]", component.getDOMNode());
-    input.removeAttr("checked");
-    TestUtils.Simulate.change(input[0]);
-
-    assert.isTrue(
-      component.props.onFieldChange.calledWith("allowsavesafetycopy", false)
     );
   });
 

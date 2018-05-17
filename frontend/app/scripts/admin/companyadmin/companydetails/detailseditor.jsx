@@ -29,7 +29,6 @@ var DetailsEditorView = React.createClass({
     cgidisplayname: React.PropTypes.string,
     cgiserviceid: React.PropTypes.string,
     idledoctimeout: React.PropTypes.number,
-    allowsavesafetycopy: React.PropTypes.bool.isRequired,
     smsprovider: React.PropTypes.string.isRequired,
     padappmode: React.PropTypes.string.isRequired,
     padearchiveenabled: React.PropTypes.bool.isRequired,
@@ -73,9 +72,6 @@ var DetailsEditorView = React.createClass({
     this.props.onFieldChange(
       "idledoctimeout", newValue
     );
-  },
-  onAllowsavesafetycopyChange: function (event) {
-    this.props.onFieldChange("allowsavesafetycopy", event.target.checked);
   },
   onSmsproviderChange: function (newSmsprovider) {
     this.props.onFieldChange("smsprovider", newSmsprovider);
@@ -242,21 +238,6 @@ var DetailsEditorView = React.createClass({
               If empty, documents will not be moved. Available values:&nbsp;
               {CompanyDetailsViewModel.IDLE_DOC_TIMEOUT_MIN}&nbsp;to&nbsp;
               {CompanyDetailsViewModel.IDLE_DOC_TIMEOUT_MAX}
-            </td>
-          </tr>
-          <tr>
-            <td><label>Allow to save document</label></td>
-            <td>
-              <input
-                name="allowsavesafetycopy"
-                type="checkbox"
-                checked={this.props.allowsavesafetycopy}
-                onChange={this.onAllowsavesafetycopyChange}
-              />
-            </td>
-            <td>
-              Signing parties might be offered to save documents or get
-              questionnaire after they have signed.
             </td>
           </tr>
           <tr>

@@ -50,7 +50,6 @@ var CompanyDetailsView = React.createClass({
         cgidisplayname: this.props.company.cgidisplayname(),
         cgiserviceid: this.props.company.cgiserviceid(),
         idledoctimeout: this.props.company.idledoctimeout(),
-        allowsavesafetycopy: this.props.company.allowsavesafetycopy(),
         smsprovider: this.props.company.smsprovider(),
         padappmode: this.props.company.padappmode(),
         padearchiveenabled: this.props.company.padearchiveenabled()
@@ -114,9 +113,6 @@ var CompanyDetailsView = React.createClass({
               cgidisplayname={this.props.viewModel.get("cgidisplayname")}
               cgiserviceid={this.props.viewModel.get("cgiserviceid")}
               idledoctimeout={this.props.viewModel.get("idledoctimeout")}
-              allowsavesafetycopy={
-                this.props.viewModel.get("allowsavesafetycopy")
-              }
               smsprovider={this.props.viewModel.get("smsprovider")}
               padappmode={this.props.viewModel.get("padappmode")}
               padearchiveenabled={

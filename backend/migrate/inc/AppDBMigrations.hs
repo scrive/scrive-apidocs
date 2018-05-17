@@ -97,4 +97,5 @@ kontraMigrations = [
   , netsSignOrdersAddProviderAndSSN
   , featureFlagsAddDKAuthToSign
   , optimiseUsersHistoryIndexes
+  , companiesDropAllowSaveSafetyCopy
   ]

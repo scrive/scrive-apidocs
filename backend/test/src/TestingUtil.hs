@@ -156,7 +156,6 @@ instance Arbitrary CompanyInfo where
                          , companycity       = e
                          , companycountry    = f
                          , companyipaddressmasklist = []
-                         , companyallowsavesafetycopy = True
                          , companyidledoctimeout = h
                          , companycgidisplayname = i
                          , companysmsprovider = j
@@ -656,7 +655,6 @@ addNewCompany = do
          , companycity = companycity
          , companycountry = companycountry
          , companyipaddressmasklist = []
-         , companyallowsavesafetycopy = True
          , companyidledoctimeout = Nothing
          , companycgidisplayname = Nothing
          , companysmsprovider = SMSDefault

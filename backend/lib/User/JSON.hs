@@ -48,7 +48,6 @@ companyJSON forAdmin company = runJSONGen $ do
     value "cgidisplayname" $ companycgidisplayname $ companyinfo company
     value "cgiserviceid" $ companycgiserviceid $ companyinfo company
     value "ipaddressmasklist" $ intercalate "," $ fmap show $ companyipaddressmasklist $ companyinfo company
-    value "allowsavesafetycopy" $ companyallowsavesafetycopy (companyinfo company)
     value "idledoctimeout" $ companyidledoctimeout $ companyinfo company
     value "smsprovider" $ show . companysmsprovider . companyinfo $ company
     value "padappmode" $ T.unpack $ padAppModeText $ companypadappmode $ companyinfo company

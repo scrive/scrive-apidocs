@@ -27,8 +27,7 @@ var SignView = require("../../scripts/signview/signview");
 
         var signView = TestUtils.renderIntoDocument(React.createElement(SignView, {
           documentId: "2",
-          sigLinkId: "1",
-          allowSaveSafetyCopy: true
+          sigLinkId: "1"
         }));
 
         var allReady = function () {

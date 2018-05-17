@@ -92,7 +92,6 @@ $htmlopentag()$
           documentId: "$documentid$",
           sigLinkId: "$siglinkid$",
           documentData: documentData,
-          allowSaveSafetyCopy: $if(allowsavesafetycopy)$ true $else$ false $endif$,
           loggedInAsAuthor: $if(loggedinauthor)$ true $else$ false $endif$,
           authorFullname: "$authorFullname$",
           authorPhone: "$authorPhone$"

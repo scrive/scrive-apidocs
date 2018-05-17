@@ -42,7 +42,9 @@ standardHeaderContents=
         </script>
         <script src="$cdnbaseurl$/localization/$versioncode$.$ctxlang$.js"  type="text/javascript" crossorigin="anonymous"></script>
         <script type="text/javascript"> window.versioncode = "$versioncode$" </script>
-        <script type="text/javascript"> window.hubspotConf = $analytics.hubspotConf:noescape()$;</script>
+        $if(!signview)$
+          <script type="text/javascript"> window.hubspotConf = $analytics.hubspotConf:noescape()$;</script>
+        $endif$
         $if(production)$
         $if(signview)$
         <link href='$cdnbaseurl$/$versioncode$.signview-all-styling-minified.css' rel='stylesheet' type='text/css'/>
@@ -141,8 +143,11 @@ typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var
    // end Mixpanel
 ####
 analyticsLoaderKontrakcja=
-$loadScript(src="//js.hubspot.com/forms/current.js")$
-$loadScript(src="//js.hs-analytics.net/analytics/431732.js")$
+
+$if(!signview)$
+  $loadScript(src="//js.hubspot.com/forms/current.js")$
+  $loadScript(src="//js.hs-analytics.net/analytics/431732.js")$
+$endif$
 
 <script>
   $if(analytics.token)$

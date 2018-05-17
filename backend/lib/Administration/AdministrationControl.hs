@@ -384,7 +384,6 @@ getCompanyInfoChange = do
   mcompanyipaddressmasklist <- getOptionalField asValidIPAddressWithMaskList "companyipaddressmasklist"
   mcompanycgidisplayname <- fmap emptyToNothing <$> getField "companycgidisplayname"
   mcompanycgiserviceid <- fmap emptyToNothing <$> getField "companycgiserviceid"
-  mcompanyallowsavesafetycopy <- getField "companyallowsavesafetycopy"
   mcompanyidledoctimeout <- (>>= \s -> if null s
                                        then Just Nothing
                                        else Just <$> (do t <- maybeRead s
@@ -402,7 +401,6 @@ getCompanyInfoChange = do
       , companycity        = fromMaybe companycity mcompanycity
       , companycountry     = fromMaybe companycountry mcompanycountry
       , companyipaddressmasklist = fromMaybe companyipaddressmasklist mcompanyipaddressmasklist
-      , companyallowsavesafetycopy = maybe companyallowsavesafetycopy (=="true") mcompanyallowsavesafetycopy
       , companyidledoctimeout = fromMaybe companyidledoctimeout mcompanyidledoctimeout
       , companycgidisplayname = fromMaybe companycgidisplayname mcompanycgidisplayname
       , companycgiserviceid = fromMaybe companycgiserviceid mcompanycgiserviceid

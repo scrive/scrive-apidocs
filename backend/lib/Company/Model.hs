@@ -80,7 +80,6 @@ data CompanyInfo = CompanyInfo {
   , companycity    :: String
   , companycountry :: String
   , companyipaddressmasklist :: [IPAddressWithMask]
-  , companyallowsavesafetycopy :: Bool
   , companyidledoctimeout :: Maybe Int16
   , companycgidisplayname :: Maybe String
   , companysmsprovider    :: SMSProvider
@@ -102,7 +101,6 @@ instance Default CompanyInfo where
           , companycity                = ""
           , companycountry             = ""
           , companyipaddressmasklist   = []
-          , companyallowsavesafetycopy = True
           , companyidledoctimeout      = Nothing
           , companycgidisplayname      = Nothing
           , companysmsprovider         = SMSDefault
@@ -244,7 +242,6 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyInfo Bool where
       sqlSet "ip_address_mask_list" $ case companyipaddressmasklist of
                                         [] -> Nothing
                                         x -> Just (show x)
-      sqlSet "allow_save_safety_copy" companyallowsavesafetycopy
       sqlSet "idle_doc_timeout" companyidledoctimeout
       sqlSet "cgi_display_name" companycgidisplayname
       sqlSet "sms_provider" companysmsprovider
@@ -267,7 +264,6 @@ selectCompaniesSelectors = do
   sqlResult "companies.city"
   sqlResult "companies.country"
   sqlResult "companies.ip_address_mask_list"
-  sqlResult "companies.allow_save_safety_copy"
   sqlResult "companies.idle_doc_timeout"
   sqlResult "companies.cgi_display_name"
   sqlResult "companies.sms_provider"
@@ -278,10 +274,10 @@ selectCompaniesSelectors = do
   sqlResult "companies.pad_earchive_enabled"
 
 fetchCompany :: (CompanyID, String, String, String, String, String, String,
-                 Maybe String, Bool, Maybe Int16, Maybe String,
+                 Maybe String, Maybe Int16, Maybe String,
                  SMSProvider, Maybe String, PaymentPlan, PartnerID, PadAppMode, Bool) -> Company
 fetchCompany (cid, name, number, address, zip', city, country,
-              ip_address_mask_list, allow_save_safety_copy, idle_doc_timeout, cgi_display_name,
+              ip_address_mask_list, idle_doc_timeout, cgi_display_name,
               sms_provider, cgi_service_id, payment_plan,  partner_id, pad_app_mode, pad_earchive_enabled) = Company {
   companyid = cid
 , companyinfo = CompanyInfo {
@@ -292,7 +288,6 @@ fetchCompany (cid, name, number, address, zip', city, country,
   , companycity = city
   , companycountry = country
   , companyipaddressmasklist = maybe [] read ip_address_mask_list
-  , companyallowsavesafetycopy = allow_save_safety_copy
   , companyidledoctimeout = idle_doc_timeout
   , companycgidisplayname = cgi_display_name
   , companysmsprovider = sms_provider

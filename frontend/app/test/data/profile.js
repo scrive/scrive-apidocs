@@ -19,7 +19,6 @@ module.exports = {
     "cgidisplayname":null,
     "cgiserviceid":null,
     "ipaddressmasklist":"",
-    "allowsavesafetycopy":true,
     "idledoctimeout":null,
     "smsprovider":"SMSDefault"
   }

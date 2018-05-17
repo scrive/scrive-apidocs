@@ -21,7 +21,6 @@ describe("admin/companyadmin/companydetails/companydetailsviewmodel", function (
     assert.isNull(model.get("cgidisplayname"));
     assert.isNull(model.get("cgiserviceid"));
     assert.isNull(model.get("idledoctimeout"));
-    assert.isTrue(model.get("allowsavesafetycopy"));
     assert.equal(model.get("smsprovider"), "");
     assert.equal(model.get("padappmode"), "");
     assert.isTrue(model.get("padearchiveenabled"));
@@ -40,7 +39,6 @@ describe("admin/companyadmin/companydetails/companydetailsviewmodel", function (
       cgidisplayname: "cgidisplayname",
       cgiserviceid: "cgiserviceid",
       idledoctimeout: 1,
-      allowsavesafetycopy: true,
       smsprovider: "smsprovider",
       padappmode: "padappmode",
       padearchiveenabled: true
@@ -59,7 +57,6 @@ describe("admin/companyadmin/companydetails/companydetailsviewmodel", function (
     assert.equal(submit.get("companycgidisplayname"), "cgidisplayname");
     assert.equal(submit.get("companycgiserviceid"), "cgiserviceid");
     assert.equal(submit.get("companyidledoctimeout"), 1);
-    assert.isTrue(submit.get("companyallowsavesafetycopy"), true);
     assert.equal(submit.get("companysmsprovider"), "smsprovider");
     assert.equal(submit.get("companypadappmode"), "padappmode");
     assert.isTrue(submit.get("companypadearchiveenabled"), true);

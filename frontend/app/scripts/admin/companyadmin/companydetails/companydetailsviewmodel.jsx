@@ -17,7 +17,6 @@ var CompanyDetailsViewModel = Backbone.Model.extend(
       cgidisplayname: null,
       cgiserviceid: null,
       idledoctimeout: null,
-      allowsavesafetycopy: true,
       smsprovider: "",
       padappmode: "",
       padearchiveenabled: true
@@ -37,7 +36,6 @@ var CompanyDetailsViewModel = Backbone.Model.extend(
         companycgidisplayname: this.get("cgidisplayname"),
         companycgiserviceid: this.get("cgiserviceid"),
         companyidledoctimeout: this.get("idledoctimeout"),
-        companyallowsavesafetycopy: this.get("allowsavesafetycopy"),
         companysmsprovider: this.get("smsprovider"),
         companypadappmode: this.get("padappmode"),
         companypadearchiveenabled: this.get("padearchiveenabled")

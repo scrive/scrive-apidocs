@@ -96,7 +96,6 @@ pageDocumentSignView ctx document siglink ad = do
       F.value "documenttitle" $ documenttitle document
       F.value "loggedinsignatory" $ loggedAsSignatory
       F.value "loggedinauthor"   $ loggedAsAuthor
-      F.value "allowsavesafetycopy" $ companyallowsavesafetycopy $ companyinfo acompany
       F.value "authorFullname" $ getFullName auser
       F.value "authorPhone" $ getMobile auser
       F.value "previewLink" $  case signatorylinkauthenticationtoviewmethod siglink of

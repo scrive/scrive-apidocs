@@ -2,6 +2,7 @@ module Company.Migrations (
     companiesAddPartnerID
   , companiesAddPadAppModeAndEArchiveEnabled
   , companiesAddPaymentPlan
+  , companiesDropAllowSaveSafetyCopy
 ) where
 
 import Control.Monad.Catch
@@ -56,4 +57,12 @@ companiesAddPadAppModeAndEArchiveEnabled = Migration {
     sqlAddColumn $ tblColumn { colName = "pad_app_mode", colType = SmallIntT, colNullable = False, colDefault = Just "1" }
   , sqlAddColumn $ tblColumn { colName = "pad_earchive_enabled", colType = BoolT, colNullable = False, colDefault = Just "true" }
   ]
+}
+
+companiesDropAllowSaveSafetyCopy :: (MonadThrow m, MonadDB m) => Migration m
+companiesDropAllowSaveSafetyCopy = Migration {
+  mgrTableName = tblName tableCompanies
+, mgrFrom = 23
+, mgrAction = StandardMigration $ do
+    runQuery_ $ sqlAlterTable (tblName tableCompanies) [ sqlDropColumn "allow_save_safety_copy" ]
 }

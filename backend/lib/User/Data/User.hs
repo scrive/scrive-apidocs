@@ -174,7 +174,6 @@ selectUsersWithCompaniesSQL = "SELECT"
   <> ", c.city"
   <> ", c.country"
   <> ", c.ip_address_mask_list"
-  <> ", c.allow_save_safety_copy"
   <> ", c.idle_doc_timeout"
   <> ", c.cgi_display_name"
   <> ", c.sms_provider"
@@ -216,8 +215,8 @@ fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepte
 , userassociateddomainid = associated_domain_id
 }
 
-fetchUserWithCompany :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, Maybe CompanyID, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Bool, Maybe Int16, Maybe String, SMSProvider, Maybe String, PaymentPlan, PartnerID, PadAppMode, Bool) -> (User, Company)
-fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, password_algorithm, totp_key, totp_active, cid, name, number, address, zip', city, country, ip_address_mask, allow_save_safety_copy, idle_doc_timeout, cgi_display_name, sms_provider, cgi_service_id, payment_plan, partner_id, pad_app_mode, pad_earchive_enabled) = (user, company)
+fetchUserWithCompany :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, Maybe CompanyID, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe Int16, Maybe String, SMSProvider, Maybe String, PaymentPlan, PartnerID, PadAppMode, Bool) -> (User, Company)
+fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, password_algorithm, totp_key, totp_active, cid, name, number, address, zip', city, country, ip_address_mask, idle_doc_timeout, cgi_display_name, sms_provider, cgi_service_id, payment_plan, partner_id, pad_app_mode, pad_earchive_enabled) = (user, company)
   where
     user = User {
       userid = uid
@@ -252,7 +251,6 @@ fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, 
       , companycity = fromJust city
       , companycountry = fromJust country
       , companyipaddressmasklist = maybe [] read ip_address_mask
-      , companyallowsavesafetycopy = allow_save_safety_copy
       , companyidledoctimeout = idle_doc_timeout
       , companycgidisplayname = cgi_display_name
       , companysmsprovider = sms_provider

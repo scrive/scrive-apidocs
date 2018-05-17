@@ -213,7 +213,6 @@ docStateTests env = testGroup "DocState" [
 
   testThat "PurgeDocuments purges documents" env testPurgeDocument,
   testThat "PurgeDocuments does not purge documents for saved users" env testPurgeDocumentUserSaved,
-  testThat "PurgeDocuments does not purge documents for links waiting to be signed" env testPurgeDocumentActiveSignLink,
 
   testThat "ArchiveIdleDocuments archives idle documents" env testArchiveIdleDocument,
 
@@ -771,10 +770,10 @@ testPurgeDocument = replicateM_ 10 $ do
   author <- addNewRandomCompanyUser (companyid company) False
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
   now <- currentTime
-  archived1 <- dbUpdate $ PurgeDocuments 0 0
+  archived1 <- dbUpdate $ PurgeDocuments 0
   assertEqual "Purged zero documents when not deleted" 0 archived1
   withDocument doc $ randomUpdate $ \t -> ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
-  archived2 <- dbUpdate $ PurgeDocuments 0 0
+  archived2 <- dbUpdate $ PurgeDocuments 0
   assertEqual "Purged single document" 1 archived2
 
   allDocs1 <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author)
@@ -786,23 +785,13 @@ testPurgeDocumentUserSaved = replicateM_ 10 $ do
   company <- addNewCompany
   author <- addNewRandomCompanyUser (companyid company) False
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
-  archived1 <- dbUpdate $ PurgeDocuments 1 0
+  archived1 <- dbUpdate $ PurgeDocuments 1
   now <- currentTime
   withDocument doc $ randomUpdate $ \t->ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
-  archived2 <- dbUpdate $ PurgeDocuments 1 0
+  archived2 <- dbUpdate $ PurgeDocuments 1
   assertEqual "Purged zero documents before delete" 0 archived1
   assertEqual "Purged zero documents before time passed after delete" 0 archived2
 
-testPurgeDocumentActiveSignLink :: TestEnv ()
-testPurgeDocumentActiveSignLink = replicateM_ 10 $ do
-  company <- addNewCompany
-  author <- addNewRandomCompanyUser (companyid company) False
-  addRandomDocumentWithAuthorAndCondition author (isClosed && (not . null . filter (isSignatory && (not . isAuthor)). documentsignatorylinks)) `withDocumentM` do
-    now <- currentTime
-    randomUpdate $ \t -> ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
-    updateMTimeAndObjectVersion now
-    archived <- dbUpdate $ PurgeDocuments 0 1
-    assertEqual "Purged zero documents" 0 archived
 
 testArchiveIdleDocument :: TestEnv ()
 testArchiveIdleDocument = replicateM_ 10 $ do

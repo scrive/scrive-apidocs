@@ -11,7 +11,6 @@ var SignViewModel = require("./signviewmodel");
 var FileView = require("./fileview/fileview");
 var Header = require("./header");
 var Footer = require("./footer");
-var PostSignView = require("./postsignview");
 var Overlay = require("./overlay");
 var ViewSize = require("./viewsize");
 var Document = require("../../js/documents.js").Document;
@@ -30,7 +29,6 @@ var _ = require("underscore");
       documentId: React.PropTypes.string.isRequired,
       documentData: React.PropTypes.object,
       sigLinkId: React.PropTypes.string.isRequired,
-      allowSaveSafetyCopy: React.PropTypes.bool.isRequired,
       loggedInAsAuthor: React.PropTypes.bool.isRequired,
       authorFullname: React.PropTypes.string,
       authorPhone: React.PropTypes.string,
@@ -42,7 +40,6 @@ var _ = require("underscore");
         document: new Document({id: this.props.documentId,
                                 initialdocumentdata: this.props.documentData,
                                 siglinkid: this.props.sigLinkId}),
-        allowsavesafetycopy: this.props.allowSaveSafetyCopy,
         loggedInAsAuthor: this.props.loggedInAsAuthor
       });
 
@@ -255,9 +252,6 @@ var _ = require("underscore");
               <Overlay on={this.state.overlay} />
               {/* if */ this.props.loggedInAsAuthor && model.hasPadSigning() &&
                 <PadSigningView sigs={doc.signatoriesThatCanSignNowOnPad()} />
-              }
-              {/* if */ model.hasPostSignView() &&
-                <PostSignView document={doc} />
               }
               <FileView
                 ref="fileView"

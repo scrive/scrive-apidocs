@@ -21,7 +21,6 @@ module Doc.Model.Update
   , PurgeDocuments(..)
   , archiveIdleDocuments
   , ArchiveIdleDocumentsForUserInCompany(..)
-  , unsavedDocumentLingerDays
   , RejectDocument(..)
   , RemoveDocumentAttachments(..)
   , ResetSignatoryDetails(..)
@@ -1908,16 +1907,12 @@ instance MonadDB m => DBUpdate m ConnectSignatoriesToUser () where
     , "   AND document_id = ids.doc_id"
     ]
 
-unsavedDocumentLingerDays :: Int
-unsavedDocumentLingerDays = 30
-
 -- | We purge documents that:
 -- 1) Were deleted by all signatories with an account
 -- 2) Don't have an access token in an existing session.
--- 3) Belong to a company that didn't set wait time after save or it was exceeded.
-data PurgeDocuments = PurgeDocuments Int32 Int32
+data PurgeDocuments = PurgeDocuments Int32
 instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
-  update (PurgeDocuments savedDocumentLingerDays unsavedDocumentLingerDays') = do
+  update (PurgeDocuments savedDocumentLingerDays) = do
     now <- currentTime
     -- Unlink documents that were in thrash long enough.
     runQuery_ . sqlUpdate "signatory_links" $ do
@@ -1947,16 +1942,6 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
         sqlWhereNotExists . sqlSelect "signatory_links sl" $ do
           sqlJoinOn "document_session_tokens dst" "sl.id = dst.signatory_link_id"
           sqlWhere "sl.document_id = d.id"
-        -- Company settings require to wait to allow saving (we wait
-        -- even if there is nobody to wait for to make things simple
-        -- and more predictable).
-        sqlWhereNotExists . sqlSelect "users u" $ do
-          sqlJoinOn "companies c" "u.company_id = c.id"
-          sqlWhere "d.author_user_id = u.id"
-          -- Linger time is allowed by author's company settings.
-          sqlWhere "c.allow_save_safety_copy"
-          -- Linger time was not yet exceeded.
-          sqlWhere $ "d.mtime +" <?> idays unsavedDocumentLingerDays' <+> ">" <?> now
 
       -- Blank out sensitive data.
       sqlWith "purged_signatory_links" . sqlUpdate "signatory_links" $ do

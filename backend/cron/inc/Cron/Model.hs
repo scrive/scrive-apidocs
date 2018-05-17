@@ -196,7 +196,7 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
     DocumentsPurge -> do
       runDB $ do
         startTime <- currentTime
-        purgedCount <- dbUpdate . PurgeDocuments 30 $ fromIntegral unsavedDocumentLingerDays
+        purgedCount <- dbUpdate $ PurgeDocuments 30
         finishTime <- currentTime
         logInfo "Purged documents" $ object [
             "purged" .= purgedCount
