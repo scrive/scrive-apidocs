@@ -98,13 +98,13 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m RemoveInactiveUser Bool where
     -- yet not active account the true fix is to not have inactive
     -- accounts, but we are not close to that point yet. Here is a
     -- kludge to get around our own bug.
-    runQuery_ $ "SELECT TRUE FROM companyinvites where user_id = " <?> uid
+    runQuery_ $ "SELECT TRUE FROM companyinvites where user_id =" <?> uid
     x :: Maybe Bool <- fetchMaybe runIdentity
     if isJust x then
         return False
      else do
-       runQuery_ $ "UPDATE signatory_links SET user_id = NULL WHERE user_id = " <?> uid <+> "AND EXISTS (SELECT TRUE FROM users WHERE users.id = " <?> uid <+> " AND users.has_accepted_terms_of_service IS NULL)"
-       runQuery01 $ "DELETE FROM users WHERE id = " <?> uid <+> "AND has_accepted_terms_of_service IS NULL"
+       runQuery_ $ "UPDATE signatory_links SET user_id = NULL WHERE user_id =" <?> uid <+> "AND EXISTS (SELECT TRUE FROM users WHERE users.id =" <?> uid <+> "AND users.has_accepted_terms_of_service IS NULL)"
+       runQuery01 $ "DELETE FROM users WHERE id =" <?> uid <+> "AND has_accepted_terms_of_service IS NULL"
 
 data SetSignupMethod = SetSignupMethod UserID SignupMethod
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetSignupMethod Bool where

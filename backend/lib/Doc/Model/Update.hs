@@ -401,7 +401,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
           sqlWhereUserIsSelfOrCompanyAdmin
 
         sqlWhereExists $ sqlSelect "documents" $ do
-          sqlWhere $ "signatory_links.document_id = " <?> did
+          sqlWhere $ "signatory_links.document_id =" <?> did
           sqlWhere "documents.id = signatory_links.document_id"
 
           sqlWhereDocumentIsNotDeleted
@@ -422,7 +422,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
           sqlWhereUserIsSelfOrCompanyAdmin
 
         sqlWhereExists $ sqlSelect "documents" $ do
-          sqlWhere $ "signatory_links.document_id = " <?> did
+          sqlWhere $ "signatory_links.document_id =" <?> did
           sqlWhere "documents.id = signatory_links.document_id"
 
           sqlWhereDocumentIsDeleted
@@ -1137,7 +1137,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m Restore
 
           sqlWhere "documents.purged_time IS NULL"
 
-          sqlWhere $ "signatory_links.document_id = " <?> did
+          sqlWhere $ "signatory_links.document_id =" <?> did
           sqlWhere "documents.id = signatory_links.document_id"
 
 {- |
@@ -1486,7 +1486,7 @@ instance (CryptoRNG m, MonadLog m, MonadThrow m, DocumentMonad m, TemplatesMonad
     document <- query $ GetDocumentByDocumentID documentid
     case checkResetSignatoryData document signatories of
           [] -> do
-            runQuery_ $ "DELETE FROM signatory_links WHERE document_id = " <?> documentid
+            runQuery_ $ "DELETE FROM signatory_links WHERE document_id =" <?> documentid
             siglinks <- forM signatories $ \sl -> do
                      magichash <- random
                      return $ sl {  signatorymagichash = magichash,
@@ -1577,7 +1577,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m ProlongD
          sqlSet "status" Pending
          sqlSet "mtime" time
          sqlSetCmd "timeout_time" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"
-                              <+> "+ (interval '1 day') * " <?> days <+> " + (interval '23 hours 59 minutes 59 seconds')"
+                              <+> "+ (interval '1 day') *" <?> days <+> "+ (interval '23 hours 59 minutes 59 seconds')"
          sqlWhereDocumentIDIs did
          sqlWhereDocumentTypeIs Signable
          sqlWhereDocumentStatusIs Timedout
@@ -1803,7 +1803,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AddDocu
 data RemoveDocumentAttachments = RemoveDocumentAttachments FileID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m RemoveDocumentAttachments Bool where
   update (RemoveDocumentAttachments fid _actor) = updateDocumentWithID $ \did -> do
-    count <- runQuery $ "DELETE FROM author_attachments WHERE document_id =" <?> did <+> "AND file_id =" <?> fid <+> "AND EXISTS (SELECT 1 FROM documents WHERE id = author_attachments.document_id AND status = " <?> Preparation <+> ")"
+    count <- runQuery $ "DELETE FROM author_attachments WHERE document_id =" <?> did <+> "AND file_id =" <?> fid <+> "AND EXISTS (SELECT 1 FROM documents WHERE id = author_attachments.document_id AND status =" <?> Preparation <+> ")"
     return $ count > 0
 
 -- Remove unsaved drafts (older than 1 week) from db.
@@ -1817,10 +1817,10 @@ instance (MonadDB m, MonadTime m) => DBUpdate m RemoveOldDrafts Int where
         , "WHERE id IN ("
         , "  SELECT id FROM documents"
         , "  WHERE unsaved_draft"
-        , "    AND type = " <?> Signable
-        , "    AND status = " <?> Preparation
+        , "    AND type =" <?> Signable
+        , "    AND status =" <?> Preparation
         , "    AND mtime <" <?> weekAgo
-        , "  LIMIT " <?> limit
+        , "  LIMIT" <?> limit
         , ")"
         ]
 
@@ -2021,20 +2021,20 @@ data ArchiveIdleDocumentsForUserInCompany = ArchiveIdleDocumentsForUserInCompany
 instance MonadDB m => DBUpdate m ArchiveIdleDocumentsForUserInCompany Int where
   update (ArchiveIdleDocumentsForUserInCompany uid cid timeoutDays now) = do
     runSQL $ "WITH user_idle_docs AS ("
-         <+> "  SELECT d.id"
-         <+> "  FROM documents AS d"
-         <+> "  WHERE d.type =" <?> Signable
-         <+> "  AND d.author_user_id =" <?> uid
-         <+> "  AND d.status NOT IN (" <?> Pending <+> ")"
-         <+> "  AND d.mtime + (interval '1 day') *" <?> timeoutDays <+> "<" <?> now
+           <+> "SELECT d.id"
+           <+> "FROM documents AS d"
+           <+> "WHERE d.type =" <?> Signable
+           <+> "AND d.author_user_id =" <?> uid
+           <+> "AND d.status NOT IN (" <?> Pending <+> ")"
+           <+> "AND d.mtime + (interval '1 day') *" <?> timeoutDays <+> "<" <?> now
          <+> "),"
          <+> "doc_sigs_in_company AS ("
-         <+> "  SELECT sl.id"
-         <+> "  FROM signatory_links AS sl"
-         <+> "  JOIN users AS u"
-         <+> "  ON sl.user_id = u.id"
-         <+> "  AND u.company_id =" <?> cid
-         <+> "  WHERE sl.document_id IN (SELECT * FROM user_idle_docs)"
+           <+> "SELECT sl.id"
+           <+> "FROM signatory_links AS sl"
+           <+> "JOIN users AS u"
+           <+> "ON sl.user_id = u.id"
+           <+> "AND u.company_id =" <?> cid
+           <+> "WHERE sl.document_id IN (SELECT * FROM user_idle_docs)"
          <+> ")"
          <+> "UPDATE signatory_links"
          <+> "SET deleted =" <?> now

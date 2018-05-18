@@ -39,7 +39,7 @@ triggerFunName t =
 -- supported.
 toTriggerDef :: SQLTrigger -> RawSQL ()
 toTriggerDef t@SQLTrigger{..} =
-    let mColumn = maybe "" (\colName -> "of " <+> colName) sqlTrigCol
+    let mColumn = maybe "" (\colName -> "of" <+> colName) sqlTrigCol
     in "create trigger" <+> (triggerDefName t)
     <+> "after insert or update" <+> mColumn <+> "on" <+> sqlTrigTbl
     <+> "for each row"

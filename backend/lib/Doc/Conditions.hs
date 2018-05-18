@@ -70,7 +70,7 @@ sqlWhereDocumentStatusIsOneOf :: (MonadState v m, SqlWhere v)
 sqlWhereDocumentStatusIsOneOf [] =
   sqlWhereEVV (\d -> DocumentStatusShouldBe d [], "documents.id", "documents.status") "FALSE"
 sqlWhereDocumentStatusIsOneOf [s] =
-  sqlWhereEVV (\d -> DocumentStatusShouldBe d [s], "documents.id", "documents.status") ("documents.status = " <?> s)
+  sqlWhereEVV (\d -> DocumentStatusShouldBe d [s], "documents.id", "documents.status") ("documents.status =" <?> s)
 sqlWhereDocumentStatusIsOneOf sx =
   sqlWhereEVV (\d -> DocumentStatusShouldBe d sx, "documents.id", "documents.status") ("documents.status IN" <+> parenthesize (sqlConcatComma (map sqlParam sx)))
 
@@ -126,8 +126,8 @@ sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument :: (MonadState v m, SqlWhere
 sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument uid =
   sqlWhereEVVV (UserShouldBeDirectlyOrIndirectlyRelatedToDocument uid, "(SELECT signatory_links.document_id)",
                "(SELECT documents.title FROM documents WHERE documents.id = signatory_links.document_id)",
-               "(SELECT email FROM users WHERE id = " <?> uid <> ")")
-              ("same_company_users.id = " <?> uid)
+               "(SELECT email FROM users WHERE id =" <?> uid <> ")")
+              ("same_company_users.id =" <?> uid)
 
 data DocumentDoesNotExist = DocumentDoesNotExist DocumentID
   deriving (Eq, Ord, Show, Typeable)
@@ -142,7 +142,7 @@ instance DBExtraException DocumentDoesNotExist
 sqlWhereDocumentIDIs :: (MonadState v m, SqlWhere v)
                      => DocumentID -> m ()
 sqlWhereDocumentIDIs did = do
-  sqlWhereE (DocumentDoesNotExist did) ("documents.id = " <?> did)
+  sqlWhereE (DocumentDoesNotExist did) ("documents.id =" <?> did)
 
 data ShortDocumentIDHasNoMatch = ShortDocumentIDHasNoMatch DocumentID
   deriving (Eq, Ord, Show, Typeable)
@@ -159,17 +159,17 @@ sqlWhereShortDocumentIDIs
   => UTCTime -> DocumentID -> m ()
 sqlWhereShortDocumentIDIs now shortDid = do
   sqlWhereE (ShortDocumentIDHasNoMatch shortDid)
-    ("documents.id % 1000000 = " <?> shortDid)
+    ("documents.id % 1000000 =" <?> shortDid)
   sqlWhereE (ShortDocumentIDHasNoMatch shortDid) $
-    ("documents.id >= (SELECT COALESCE(max(id),0) FROM documents WHERE mtime < " <?> now <+> " - interval '24 hour') "
-     <+> "and documents.mtime > " <?> now <+> " - interval '24 hour'")
+    ("documents.id >= (SELECT COALESCE(max(id),0) FROM documents WHERE mtime <" <?> now <+> "- interval '24 hour') "
+     <+> "and documents.mtime >" <?> now <+> "- interval '24 hour'")
   sqlOrderBy "documents.id DESC"
   sqlLimit 1
 
 sqlWhereDocumentIDForSignatoryIs :: (MonadState v m, SqlWhere v)
                      => DocumentID -> m ()
 sqlWhereDocumentIDForSignatoryIs did = do
-  sqlWhereE (DocumentDoesNotExist did) ("signatory_links.document_id = " <?> did)
+  sqlWhereE (DocumentDoesNotExist did) ("signatory_links.document_id =" <?> did)
 
 data SignatoryLinkDoesNotExist = SignatoryLinkDoesNotExist SignatoryLinkID
   deriving (Eq, Ord, Show, Typeable)
@@ -185,7 +185,7 @@ instance DBExtraException SignatoryLinkDoesNotExist
 sqlWhereSignatoryLinkIDIs :: (MonadState v m, SqlWhere v)
                           => SignatoryLinkID -> m ()
 sqlWhereSignatoryLinkIDIs slid =
-  sqlWhereE (SignatoryLinkDoesNotExist slid) ("signatory_links.id = " <?> slid)
+  sqlWhereE (SignatoryLinkDoesNotExist slid) ("signatory_links.id =" <?> slid)
 
 
 data SignatoryHasNotYetSigned = SignatoryHasNotYetSigned
@@ -262,7 +262,7 @@ instance DBExtraException SignatoryTokenDoesNotMatch
 sqlWhereSignatoryLinkMagicHashIs :: (MonadState v m, SqlWhere v)
                                  => MagicHash -> m ()
 sqlWhereSignatoryLinkMagicHashIs mh = sqlWhereE SignatoryTokenDoesNotMatch $
-  "signatory_links.token = " <?> mh
+  "signatory_links.token =" <?> mh
 
 data DocumentObjectVersionDoesNotMatch = DocumentObjectVersionDoesNotMatch
     { documentOdocumentObjectVersionDocumentID :: DocumentID
@@ -282,7 +282,7 @@ instance DBExtraException DocumentObjectVersionDoesNotMatch
 sqlWhereDocumentObjectVersionIs :: (MonadState v m, SqlWhere v)
                                  => Int64 -> m ()
 sqlWhereDocumentObjectVersionIs object_version = sqlWhereEVV (\did actual -> DocumentObjectVersionDoesNotMatch did object_version actual, "documents.id", "documents.object_version") $
- ("documents.object_version = " <?> object_version)
+ ("documents.object_version =" <?> object_version)
 
 data DocumentWasPurged = DocumentWasPurged DocumentID String UTCTime
   deriving (Eq, Ord, Show, Typeable)
@@ -384,7 +384,7 @@ sqlWhereSignatoryAuthenticationToSignMethodIs am =
                 "signatory_links.document_id",
                 "signatory_links.id",
                 "signatory_links.authentication_to_sign_method")
-                ("signatory_links.authentication_to_sign_method = " <?> am)
+                ("signatory_links.authentication_to_sign_method =" <?> am)
 
 ------------------------------------------------------------
 
@@ -402,4 +402,4 @@ instance DBExtraException SignatoryConsentQuestionDoesNotExist
 sqlWhereSignatoryConsentQuestionIDIs :: (MonadState v m, SqlWhere v)
                                      => SignatoryConsentQuestionID -> m ()
 sqlWhereSignatoryConsentQuestionIDIs scqid =
-  sqlWhereE (SignatoryConsentQuestionDoesNotExist scqid) ("signatory_link_consent_questions.id = " <?> scqid)
+  sqlWhereE (SignatoryConsentQuestionDoesNotExist scqid) ("signatory_link_consent_questions.id =" <?> scqid)

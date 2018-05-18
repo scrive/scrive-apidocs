@@ -23,7 +23,7 @@ instance DBExtraException FileDoesNotExist
 
 sqlWhereFileIDIs :: (MonadState v m, SqlWhere v) => FileID -> m ()
 sqlWhereFileIDIs fid =
-  sqlWhereE (FileDoesNotExist fid) ("files.id = " <?> fid)
+  sqlWhereE (FileDoesNotExist fid) ("files.id =" <?> fid)
 
 data FileWasPurged = FileWasPurged FileID UTCTime
   deriving (Eq, Ord, Show, Typeable)

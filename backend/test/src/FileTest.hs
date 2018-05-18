@@ -77,7 +77,7 @@ testPurgeFiles  = replicateM_ 100 $ do
   let maxMarked = 1000
   (name,content) <- fileData
   fid <- dbUpdate $ NewFile name content
-  runQuery_ $ "DELETE FROM amazon_upload_jobs WHERE id = " <?> fid
+  runQuery_ $ "DELETE FROM amazon_upload_jobs WHERE id =" <?> fid
   fidsToPurge <- dbUpdate $ MarkOrphanFilesForPurgeAfter maxMarked mempty
   assertEqual "File successfully marked for purge" [fid] fidsToPurge
   dbUpdate $ PurgeFile fid
@@ -92,7 +92,7 @@ testNewFileThatShouldBeMovedToAWS :: TestEnv ()
 testNewFileThatShouldBeMovedToAWS  = do
   (name,content) <- fileData
   fileid <- dbUpdate $ NewFile name content
-  fileisscheduledforupload <- runQuery01 $ "SELECT id FROM amazon_upload_jobs WHERE id = " <?> fileid
+  fileisscheduledforupload <- runQuery01 $ "SELECT id FROM amazon_upload_jobs WHERE id =" <?> fileid
   assertEqual "File is scheduled for upload to Amazon" True fileisscheduledforupload
 
 viewableS :: TestEnv String

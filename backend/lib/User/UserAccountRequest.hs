@@ -90,7 +90,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetExpiredUserAccou
     now <- currentTime
     runQuery_ $ sqlSelect "user_account_requests" $ do
       mapM_ sqlResult selectUserAccountRequestSelectorsList
-      sqlWhere $ "expires < " <?> now
+      sqlWhere $ "expires <" <?> now
     fetchMany fetchUserAccountRequest
 
 data GetExpiredUserAccountRequestsForTesting = GetExpiredUserAccountRequestsForTesting UTCTime
@@ -98,7 +98,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetExpiredUserAccountRequestsFor
   query (GetExpiredUserAccountRequestsForTesting now) = do
     runQuery_ $ sqlSelect "user_account_requests" $ do
       mapM_ sqlResult selectUserAccountRequestSelectorsList
-      sqlWhere $ "expires < " <?> now
+      sqlWhere $ "expires <" <?> now
     fetchMany fetchUserAccountRequest
 
 data GetUserAccountRequest = GetUserAccountRequest UserID
@@ -108,7 +108,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetUserAccountReque
     runQuery_ $ sqlSelect "user_account_requests" $ do
       mapM_ sqlResult selectUserAccountRequestSelectorsList
       sqlWhereEq "user_id" user_id
-      sqlWhere $ "expires >= " <?> now
+      sqlWhere $ "expires >=" <?> now
     fetchMaybe fetchUserAccountRequest
 
 data CreateUserAccountRequest = CreateUserAccountRequest UserAccountRequest

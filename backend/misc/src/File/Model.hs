@@ -52,7 +52,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m NewFile FileID whe
     -- Every new file is uploaded to Amazon
     runQuery_ . sqlInsert "amazon_upload_jobs" $ do
       sqlSet "id" fileid
-      sqlSetCmd "run_at" $ "" <?> now <+> " + interval '1 minute'"
+      sqlSetCmd "run_at" $ "" <?> now <+> "+ interval '1 minute'"
       sqlSet "attempts" (0::Int32)
     return fileid
 

@@ -320,46 +320,46 @@ documentStatusClassExpression :: SQL
 documentStatusClassExpression = mconcat [
     "(SELECT COALESCE((SELECT min(" <> statusClassCaseExpression <> ")"
   , "FROM signatory_links WHERE signatory_links.document_id = documents.id AND signatory_links.is_partner),"
-  , "(SELECT " <> statusClassCaseExpressionForDocument <> "), " <?> SCDraft <> "))::SMALLINT"
+  , "(SELECT " <> statusClassCaseExpressionForDocument <> ")," <?> SCDraft <> "))::SMALLINT"
   ]
   where
     -- FIXME: Add to DB.SQL functionality that encodes CASE expression.
     statusClassCaseExpression = smconcat [
         "(CASE"
-      , "WHEN documents.status = " <?> DocumentError
+      , "WHEN documents.status =" <?> DocumentError
       , "THEN" <?> SCError
-      , "WHEN documents.status = " <?> Preparation
+      , "WHEN documents.status =" <?> Preparation
       , "THEN" <?> SCDraft
       , "WHEN signatory_links.sign_time IS NOT NULL"
       , "THEN" <?> SCSigned
-      , "WHEN documents.status = " <?> Canceled
+      , "WHEN documents.status =" <?> Canceled
       , "THEN" <?> SCCancelled
-      , "WHEN documents.status = " <?> Timedout
+      , "WHEN documents.status =" <?> Timedout
       , "THEN" <?> SCTimedout
-      , "WHEN documents.status = " <?> Rejected
+      , "WHEN documents.status =" <?> Rejected
       , "THEN" <?> SCRejected
       , "WHEN signatory_links.seen_time IS NOT NULL"
       , "THEN" <?> SCOpened
       , "WHEN signatory_links.read_invitation IS NOT NULL"
       , "THEN" <?> SCRead
-      , "WHEN signatory_links.mail_invitation_delivery_status = " <?> Undelivered
+      , "WHEN signatory_links.mail_invitation_delivery_status =" <?> Undelivered
       , "THEN" <?> SCDeliveryProblem
-      , "WHEN signatory_links.sms_invitation_delivery_status = " <?> Undelivered
+      , "WHEN signatory_links.sms_invitation_delivery_status ="  <?> Undelivered
       , "THEN" <?> SCDeliveryProblem
-      , "WHEN signatory_links.mail_invitation_delivery_status = " <?> Delivered
+      , "WHEN signatory_links.mail_invitation_delivery_status =" <?> Delivered
       , "THEN" <?> SCDelivered
-      , "WHEN signatory_links.sms_invitation_delivery_status = " <?> Delivered
+      , "WHEN signatory_links.sms_invitation_delivery_status ="  <?> Delivered
       , "THEN" <?> SCDelivered
       , "ELSE" <?> SCSent
       , "END :: SMALLINT)"
       ]
     statusClassCaseExpressionForDocument = smconcat [
         "(CASE"
-      , "WHEN documents.status = " <?> DocumentError      <+> "THEN" <?> SCError
-      , "WHEN documents.status = " <?> Preparation        <+> "THEN" <?> SCDraft
-      , "WHEN documents.status = " <?> Canceled           <+> "THEN" <?> SCCancelled
-      , "WHEN documents.status = " <?> Timedout           <+> "THEN" <?> SCTimedout
-      , "WHEN documents.status = " <?> Rejected           <+> "THEN" <?> SCRejected
+      , "WHEN documents.status =" <?> DocumentError <+> "THEN" <?> SCError
+      , "WHEN documents.status =" <?> Preparation   <+> "THEN" <?> SCDraft
+      , "WHEN documents.status =" <?> Canceled      <+> "THEN" <?> SCCancelled
+      , "WHEN documents.status =" <?> Timedout      <+> "THEN" <?> SCTimedout
+      , "WHEN documents.status =" <?> Rejected      <+> "THEN" <?> SCRejected
       , "END :: INTEGER)"
       ]
 

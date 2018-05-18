@@ -86,9 +86,9 @@ documentFilterToSQL (DocumentFilterByMonthYearFrom (month,year)) = do
 documentFilterToSQL (DocumentFilterByMonthYearTo (month,year)) = do
   sqlWhere $ raw $ unsafeSQL $ "(documents.mtime < '" ++ show (year + 1 <| month == 12 |> year)++ "-" ++ show ((month `mod` 12) + 1) ++ "-1')"
 documentFilterToSQL (DocumentFilterByTimeAfter time) = do
-  sqlWhere $ "documents.mtime >= " <?> time
+  sqlWhere $ "documents.mtime >=" <?> time
 documentFilterToSQL (DocumentFilterByTimeBefore time) = do
-  sqlWhere $ "documents.mtime <= " <?> time
+  sqlWhere $ "documents.mtime <=" <?> time
 documentFilterToSQL (DocumentFilterByTags []) = do
   sqlWhere "TRUE"
 documentFilterToSQL (DocumentFilterByTags tags) = do

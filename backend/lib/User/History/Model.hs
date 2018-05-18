@@ -129,7 +129,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetUserRecentAuthFa
     runQuery_ $ sqlSelect "users_history" $ do
       sqlWhereEq "user_id" uid
       sqlWhereIn "event_type" [UserLoginFailure, UserLoginTOTPFailure, UserPadLoginFailure, UserAPIGetPersonalTokenFailure]
-      sqlWhere $ "time >= (" <?> now <+> " - interval '10 minutes')"
+      sqlWhere $ "time >= (" <?> now <+> "- interval '10 minutes')"
       sqlResult "COUNT(*)"
     fetchOne runIdentity
 

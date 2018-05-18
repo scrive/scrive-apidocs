@@ -98,13 +98,13 @@ test_startDocumentCharging = do
   did1 <- newDocumentReadyToStart user
   req1 <- mkRequest POST []
   (_, _) <- runTestKontra req1 ctxWithUser $ apiCallV1Ready $ did1
-  runSQL_ $ "SELECT count(*) FROM chargeable_items WHERE type = 6 AND quantity = 1 AND company_id = " <?> (companyid company)
+  runSQL_ $ "SELECT count(*) FROM chargeable_items WHERE type = 6 AND quantity = 1 AND company_id =" <?> (companyid company)
   fetchOne runIdentity >>= assertEqual "Company was charged for starting one document" (1::Int64)
 
   did2 <- newDocumentReadyToStart user
   req2 <- mkRequest POST []
   (_, _) <- runTestKontra req2 ctxWithUser $ docApiV2Start $ did2
-  runSQL_ $ "SELECT count(*) FROM chargeable_items WHERE type = 6 AND quantity = 1 AND company_id = " <?> (companyid company)
+  runSQL_ $ "SELECT count(*) FROM chargeable_items WHERE type = 6 AND quantity = 1 AND company_id =" <?> (companyid company)
   fetchOne runIdentity >>= assertEqual "Company was charged for starting other document" (2::Int64)
 
   where
@@ -144,10 +144,10 @@ test_closeDocAndSigCharging = do
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   let queryChargeableSigClose =
           "SELECT count(*) FROM chargeable_items WHERE type = 9 " <>
-          "AND quantity = 1 AND company_id = " <?> companyId
+          "AND quantity = 1 AND company_id =" <?> companyId
   let queryChargeableDocClose =
           "SELECT count(*) FROM chargeable_items WHERE type = 8 " <>
-          "AND quantity = 1 AND company_id = " <?> companyId
+          "AND quantity = 1 AND company_id =" <?> companyId
 
   -- Test that closing document in V1 adds a chargeable item
   mockDocV1 <- testDocApiV2Start' ctx

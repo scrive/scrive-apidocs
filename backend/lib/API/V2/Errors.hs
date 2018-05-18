@@ -105,7 +105,7 @@ serverError reason = APIError { errorType = ServerError, errorHttpCode = 500, er
 -- General errors that have to be handled and are expected
 requestFailed :: T.Text -> APIError
 requestFailed reason = APIError { errorType = RequestFailed, errorHttpCode = 400, errorMessage = msg}
-  where msg = "Request failed. Additional information: " <+> reason
+  where msg = "Request failed. Additional information:" <+> reason
 
 -- | Used internally by API.V2 for reporting bad API endpoints
 endpointNotFound :: T.Text -> APIError
@@ -148,7 +148,7 @@ documentObjectVersionMismatch :: DocumentObjectVersionDoesNotMatch -> APIError
 documentObjectVersionMismatch (DocumentObjectVersionDoesNotMatch {..}) = APIError { errorType = DocumentObjectVersionMismatch, errorHttpCode = 409, errorMessage = msg}
   where msg = "The document has a different object_version to the one provided and so the request was not processed."
               <+> "You gave" <+> (T.pack $ show documentObjectVersionShouldBe)
-              <+> " but the document had" <+> (T.pack $ show documentObjectVersionIs)
+              <+> "but the document had" <+> (T.pack $ show documentObjectVersionIs)
 
 documentStateError :: T.Text -> APIError
 documentStateError msg = APIError { errorType = DocumentStateError, errorHttpCode = 409, errorMessage = msg}

@@ -903,7 +903,7 @@ sealTestDocument ctx did
   $ do
       res <- (postDocumentClosedActions True False) `catch` (\(_::KE.KontraError) -> return False)
       when res $ do
-        extendingJobCount <- runSQL $ "SELECT * FROM document_extending_jobs WHERE id = " <?> did
+        extendingJobCount <- runSQL $ "SELECT * FROM document_extending_jobs WHERE id =" <?> did
         assertEqual "postDocumentClosedActions should add task to document_extending_jobs" 1 extendingJobCount
       return res
 

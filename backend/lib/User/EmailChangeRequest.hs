@@ -69,7 +69,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteExpiredEmail
   update DeleteExpiredEmailChangeRequests = do
     now <- currentTime
     runQuery_ . sqlDelete "email_change_requests" $
-      sqlWhere $ "expires < " <?> now
+      sqlWhere $ "expires <" <?> now
 
 data GetExpiredEmailChangeRequestsForTesting = GetExpiredEmailChangeRequestsForTesting
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetExpiredEmailChangeRequestsForTesting [EmailChangeRequest] where
@@ -77,7 +77,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetExpiredEmailChan
     now <- currentTime
     runQuery_ $ sqlSelect "email_change_requests" $ do
       mapM_ sqlResult selectEmailChangeRequestSelectorsList
-      sqlWhere $ "expires < " <?> now
+      sqlWhere $ "expires <" <?> now
     fetchMany fetchEmailChangeRequest
 
 data GetEmailChangeRequest = GetEmailChangeRequest UserID
@@ -87,7 +87,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetEmailChangeReque
     runQuery_ $ sqlSelect "email_change_requests" $ do
       mapM_ sqlResult selectEmailChangeRequestSelectorsList
       sqlWhereEq "user_id" user_id
-      sqlWhere $ "expires >= " <?> now
+      sqlWhere $ "expires >=" <?> now
     fetchMaybe fetchEmailChangeRequest
 
 data CreateEmailChangeRequest = CreateEmailChangeRequest EmailChangeRequest

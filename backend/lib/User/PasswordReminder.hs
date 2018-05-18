@@ -54,7 +54,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteExpiredPassw
   update DeleteExpiredPasswordReminders = do
     now <- currentTime
     runQuery_ $ sqlDelete "password_reminders" $
-      sqlWhere $ "expires < " <?> now
+      sqlWhere $ "expires <" <?> now
 
 data GetPasswordReminder = GetPasswordReminder UserID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetPasswordReminder (Maybe PasswordReminder) where
@@ -63,7 +63,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetPasswordReminder
     runQuery_ $ sqlSelect "password_reminders" $ do
       mapM_ sqlResult selectPasswordReminderSelectorsList
       sqlWhereEq "user_id" user_id
-      sqlWhere $ "expires >= " <?> now
+      sqlWhere $ "expires >=" <?> now
     fetchMaybe fetchPasswordReminder
 
 data CreatePasswordReminder = CreatePasswordReminder PasswordReminder

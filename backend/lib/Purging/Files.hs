@@ -104,7 +104,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
       , ")"
       -- Actual purge
       , "UPDATE files"
-      , "   SET purge_at = " <?> now <+> " +" <?> interval
+      , "   SET purge_at =" <?> now <+> "+" <?> interval
       , " WHERE id IN (SELECT id FROM files_to_purge LIMIT" <?> limit <> ")"
       , "RETURNING id"
       ]
@@ -120,7 +120,7 @@ purgeOrphanFile = do
     sqlResult "amazon_url"
     sqlResult "content IS NULL"
     sqlWhereFileWasNotPurged
-    sqlWhere $ "purge_at < " <?> now
+    sqlWhere $ "purge_at <" <?> now
     sqlOrderBy "purge_at"
     sqlLimit 1
   fetchMaybe id >>= \case

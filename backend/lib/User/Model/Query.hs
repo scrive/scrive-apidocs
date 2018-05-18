@@ -145,7 +145,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetCompanyAccountsC
             sqlWhereIsNotScriveEmail "u.email"
             sqlGroupBy "u.id"
             sqlGroupBy "c.id"
-            sqlHaving $ "max(h.time) > (" <?> now <+> " - interval '4 weeks')"
+            sqlHaving $ "max(h.time) > (" <?> now <+> "- interval '4 weeks')"
 
         docSentRecently :: UTCTime -> SQL
         docSentRecently now = toSQLCommand $
@@ -159,7 +159,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetCompanyAccountsC
             sqlWhereIsNotScriveEmail "u.email"
             sqlGroupBy "i.user_id"
             sqlGroupBy "i.company_id"
-            sqlHaving $ "max(i.time) > (" <?> now <+> " - interval '4 weeks')"
+            sqlHaving $ "max(i.time) > (" <?> now <+> "- interval '4 weeks')"
 
 data GetCompanyAdmins = GetCompanyAdmins CompanyID
 instance MonadDB m => DBQuery m GetCompanyAdmins [User] where
@@ -268,7 +268,7 @@ instance (MonadDB m, MonadTime m) => DBQuery m GetUsageStats [UserUsageStats] wh
             , dateTrunc maxSignTime <+> ">=" <+> startingDate
             ]
 
-          startingDate = dateTrunc (sqlParam now <+> " -" <?> interval)
+          startingDate = dateTrunc (sqlParam now <+> "-" <?> interval)
 
       dateTrunc :: SQL -> SQL
       dateTrunc time = "date_trunc('" <> granularity <> "', " <> time <> ")"

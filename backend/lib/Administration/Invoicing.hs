@@ -127,8 +127,8 @@ invoicingQry fromDate toDate =
           "FROM documents d" <+>
           "JOIN signatory_links sl ON d.author_id = sl.id" <+>
           "JOIN users u            ON sl.user_id = u.id" <+>
-          "WHERE d.type = " <?> Signable <+>
-            "AND d.status = " <?> Closed <+>
+          "WHERE d.type =" <?> Signable <+>
+            "AND d.status =" <?> Closed <+>
             "AND u.company_id = companies.id" <+>
         ") AS \"First doc signed\"" <+>
       ", (SELECT count(*)" <+>
@@ -141,101 +141,101 @@ invoicingQry fromDate toDate =
       ", (SELECT coalesce(sum(chi.quantity), 0)" <+>
           "FROM chargeable_items chi" <+>
           "WHERE chi.company_id = companies.id" <+>
-            "AND chi.type = " <?> CIStartingDocument <+>
+            "AND chi.type =" <?> CIStartingDocument <+>
             "AND chi.time >=" <?> fromDate <+>
-            "AND chi.time < " <?> toDate <+> " ) AS \"Docs sent\"" <+>
+            "AND chi.time <" <?> toDate <+> ") AS \"Docs sent\"" <+>
       ", (SELECT coalesce(sum(chi.quantity), 0)" <+>
           "FROM chargeable_items chi" <+>
           "WHERE chi.company_id = companies.id" <+>
-            "AND chi.type = " <?> CIClosingDocument <+>
-            "AND chi.time >= " <?> fromDate <+>
-            "AND chi.time < " <?> toDate <+> ") AS DocsClosed" <+>
+            "AND chi.type =" <?> CIClosingDocument <+>
+            "AND chi.time >=" <?> fromDate <+>
+            "AND chi.time <" <?> toDate <+> ") AS DocsClosed" <+>
        ", (SELECT coalesce(sum(chi.quantity), 0)" <+>
             "FROM chargeable_items chi" <+>
            "WHERE chi.company_id = companies.id" <+>
-             "AND chi.type = " <?> CIClosingSignature <+>
-             "AND chi.time >= " <?> fromDate <+>
-             "AND chi.time < " <?> toDate <+> ") AS SigsClosed" <+>
+             "AND chi.type =" <?> CIClosingSignature <+>
+             "AND chi.time >=" <?> fromDate <+>
+             "AND chi.time <" <?> toDate <+> ") AS SigsClosed" <+>
       ", (SELECT count(*)" <+>
           "FROM chargeable_items chi" <+>
           "WHERE chi.company_id = companies.id" <+>
-            "AND chi.type = " <?> CISMS <+>
-            "AND chi.time >= " <?> fromDate <+>
-            "AND chi.time < " <?> toDate <+> ") AS SMSSent" <+>
+            "AND chi.type =" <?> CISMS <+>
+            "AND chi.time >=" <?> fromDate <+>
+            "AND chi.time <" <?> toDate <+> ") AS SMSSent" <+>
       ", (SELECT coalesce(sum(chi.quantity), 0)" <+>
           "FROM chargeable_items chi" <+>
           "WHERE chi.company_id = companies.id" <+>
-            "AND chi.type = " <?> CISMS <+>
-            "AND chi.time >= " <?> fromDate <+>
-            "AND chi.time < " <?> toDate <+> ") AS SMSSentPhysical" <+>
+            "AND chi.type =" <?> CISMS <+>
+            "AND chi.time >=" <?> fromDate <+>
+            "AND chi.time <" <?> toDate <+> ") AS SMSSentPhysical" <+>
       ", (SELECT coalesce(sum(chi.quantity), 0)" <+>
           "FROM chargeable_items chi" <+>
           "WHERE chi.company_id = companies.id" <+>
-            "AND chi.type = " <?> CISEBankIDSignature <+>
-            "AND chi.time >= " <?> fromDate <+>
-            "AND chi.time < " <?> toDate <+> ") AS SwedishBankIDSignatures" <+>
+            "AND chi.type =" <?> CISEBankIDSignature <+>
+            "AND chi.time >=" <?> fromDate <+>
+            "AND chi.time <" <?> toDate <+> ") AS SwedishBankIDSignatures" <+>
       ", (SELECT coalesce(sum(chi.quantity), 0)" <+>
           "FROM chargeable_items chi" <+>
           "WHERE chi.company_id = companies.id" <+>
-            "AND chi.type = " <?> CISEBankIDAuthentication <+>
-            "AND chi.time >= " <?> fromDate <+>
-            "AND chi.time < " <?> toDate <+> ") AS SwedishBankIDAuthorization" <+>
+            "AND chi.type =" <?> CISEBankIDAuthentication <+>
+            "AND chi.time >=" <?> fromDate <+>
+            "AND chi.time <" <?> toDate <+> ") AS SwedishBankIDAuthorization" <+>
       ", (SELECT coalesce(sum(chi.quantity), 0)" <+>
           "FROM chargeable_items chi" <+>
           "WHERE chi.company_id = companies.id" <+>
-            "AND chi.type = " <?> CINOBankIDSignature <+>
-            "AND chi.time >= " <?> fromDate <+>
-            "AND chi.time < " <?> toDate <+> ") AS NorwegianBankIDSignatures" <+>
+            "AND chi.type =" <?> CINOBankIDSignature <+>
+            "AND chi.time >=" <?> fromDate <+>
+            "AND chi.time <" <?> toDate <+> ") AS NorwegianBankIDSignatures" <+>
       ", (SELECT coalesce(sum(chi.quantity), 0)" <+>
           "FROM chargeable_items chi" <+>
           "WHERE chi.company_id = companies.id" <+>
-            "AND chi.type = " <?> CINOBankIDAuthentication <+>
-            "AND chi.time >= " <?> fromDate <+>
-            "AND chi.time < " <?> toDate <+> ") AS NorwegianBankIDAuthorization" <+>
+            "AND chi.type =" <?> CINOBankIDAuthentication <+>
+            "AND chi.time >=" <?> fromDate <+>
+            "AND chi.time <" <?> toDate <+> ") AS NorwegianBankIDAuthorization" <+>
       ", (SELECT coalesce(sum(chi.quantity), 0)" <+>
           "FROM chargeable_items chi" <+>
           "WHERE chi.company_id = companies.id" <+>
-            "AND chi.type = " <?> CIDKNemIDSignature <+>
-            "AND chi.time >= " <?> fromDate <+>
-            "AND chi.time < " <?> toDate <+> ") AS DanishNemIDSignatures" <+>
+            "AND chi.type =" <?> CIDKNemIDSignature <+>
+            "AND chi.time >=" <?> fromDate <+>
+            "AND chi.time <" <?> toDate <+> ") AS DanishNemIDSignatures" <+>
       ", (SELECT coalesce(sum(chi.quantity), 0)" <+>
           "FROM chargeable_items chi" <+>
           "WHERE chi.company_id = companies.id" <+>
-            "AND chi.type = " <?> CIDKNemIDAuthentication <+>
-            "AND chi.time >= " <?> fromDate <+>
-            "AND chi.time < " <?> toDate <+> ") AS DanishNemIDAuthorization" <+>
+            "AND chi.type =" <?> CIDKNemIDAuthentication <+>
+            "AND chi.time >=" <?> fromDate <+>
+            "AND chi.time <" <?> toDate <+> ") AS DanishNemIDAuthorization" <+>
       ", (SELECT coalesce(sum(chi.quantity), 0)" <+>
           "FROM chargeable_items chi" <+>
           "WHERE chi.company_id = companies.id" <+>
-            "AND chi.type = " <?> CISMSTelia <+>
-            "AND chi.time >= " <?> fromDate <+>
-            "AND chi.time < " <?> toDate <+> ") AS \"Telia SMSes sent (physical)\"" <+>
-      ", (SELECT count(*)" <+>
-          "FROM users" <+>
-          "WHERE (users.deleted IS NULL OR users.deleted > " <?> fromDate <+> ")" <+>
-            "AND users.email NOT LIKE '%@scrive.com'" <+>
-            "AND users.company_id = companies.id" <+>
-            "AND users.has_accepted_terms_of_service <= " <?> fromDate <+> ") AS UsersStart" <+>
+            "AND chi.type =" <?> CISMSTelia <+>
+            "AND chi.time >=" <?> fromDate <+>
+            "AND chi.time <" <?> toDate <+> ") AS \"Telia SMSes sent (physical)\"" <+>
       ", (SELECT count(*)" <+>
           "FROM users" <+>
-          "WHERE (users.deleted IS NULL OR users.deleted > " <?> toDate <+> ")" <+>
+          "WHERE (users.deleted IS NULL OR users.deleted >" <?> fromDate <+> ")" <+>
             "AND users.email NOT LIKE '%@scrive.com'" <+>
             "AND users.company_id = companies.id" <+>
-            "AND users.has_accepted_terms_of_service < " <?> toDate <+> ") AS UsersEnd" <+>
+            "AND users.has_accepted_terms_of_service <=" <?> fromDate <+> ") AS UsersStart" <+>
+      ", (SELECT count(*)" <+>
+          "FROM users" <+>
+          "WHERE (users.deleted IS NULL OR users.deleted >" <?> toDate <+> ")" <+>
+            "AND users.email NOT LIKE '%@scrive.com'" <+>
+            "AND users.company_id = companies.id" <+>
+            "AND users.has_accepted_terms_of_service <" <?> toDate <+> ") AS UsersEnd" <+>
       ", (SELECT count(*)" <+>
           "FROM users" <+>
           "WHERE users.company_id = companies.id" <+>
             "AND users.email NOT LIKE '%@scrive.com'" <+>
-            "AND has_accepted_terms_of_service >= " <?> fromDate <+>
-            "AND has_accepted_terms_of_service < " <?> toDate <+> ") AS \"Users activated during period\"" <+>
+            "AND has_accepted_terms_of_service >=" <?> fromDate <+>
+            "AND has_accepted_terms_of_service <" <?> toDate <+> ") AS \"Users activated during period\"" <+>
       ", (SELECT count(*)" <+>
           "FROM users" <+>
           "WHERE users.company_id = companies.id" <+>
             "AND users.email NOT LIKE '%@scrive.com'" <+>
-            "AND users.deleted >= " <?> fromDate <+>
-            "AND users.deleted < " <?> toDate <+> ") AS \"Users deleted during period\"" <+>
-  ", (SELECT " <?> fromDate <+> ") AS DateFrom" <+>
-  ", (SELECT " <?> toDate <+> ") AS DateTo" <+>
+            "AND users.deleted >=" <?> fromDate <+>
+            "AND users.deleted <" <?> toDate <+> ") AS \"Users deleted during period\"" <+>
+  ", (SELECT" <?> fromDate <+> ") AS DateFrom" <+>
+  ", (SELECT" <?> toDate <+> ") AS DateTo" <+>
   "FROM companies" <+>
   ") as report" <+>
   "WHERE report.PaymentPlan <> 'free'" <+>

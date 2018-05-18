@@ -321,7 +321,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetTimeoutedButPendingDocumentsC
       mapM_ sqlResult documentsSelectors
       sqlWhereEq "documents.status" Pending
       sqlWhere "purged_time IS NULL"
-      sqlWhere $ "timeout_time IS NOT NULL AND timeout_time < " <?> mtime
+      sqlWhere $ "timeout_time IS NOT NULL AND timeout_time <" <?> mtime
       sqlLimit size
     fetchMany toComposite
 
@@ -357,7 +357,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetRandomSignatoryLinkIDThatSign
       runQuery_ . sqlSelect "signatory_links" $ do
         sqlJoinOn "documents" "signatory_links.document_id = documents.id"
         sqlResult "signatory_links.id"
-        sqlWhere $ "signatory_links.sign_time > " <?> time
+        sqlWhere $ "signatory_links.sign_time >" <?> time
         sqlWhereDocumentWasNotPurged
         sqlOrderBy "random()"
         sqlLimit 1

@@ -114,7 +114,8 @@ uploadSomeFilesToAmazon n = do
               identifier_ (fileid file)
             , "elapsed_time" .= getDiffTime finishTime
             ]
-          unexpectedError $ "Moving file " <+> show (fileid file) <+> " to Amazon failed."
+          unexpectedError $ "Moving file" <+> show (fileid file)
+            <+> "to Amazon failed."
       finishTime <- liftBase getCurrentTime
       logInfo "Finished uploading some files to AWS" $ object [
           "number_of_files" .= n

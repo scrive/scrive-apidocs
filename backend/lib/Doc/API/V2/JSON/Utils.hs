@@ -39,7 +39,7 @@ unjsonEnum desc parseEnum printEnum  =
         Just a -> Result a []
         _ -> fail $ T.unpack $ "cannot parse enum" <+> desc <+> "from" <+> s
     parseFromEnumFromAeson _ =
-      fail $ T.unpack $ "cannot parse enum " <+> desc <+> "from not string"
+      fail $ T.unpack $ "cannot parse enum" <+> desc <+> "from not string"
 
 
 -- | It is impossible to write a reasonable definition of 'Unjson (Maybe a)'

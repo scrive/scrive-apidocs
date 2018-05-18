@@ -160,7 +160,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteExpiredSessi
   update DeleteExpiredSessions = do
     now <- currentTime
     runQuery_ . sqlDelete "sessions" $
-      sqlWhere $ "expires < " <?> now
+      sqlWhere $ "expires <" <?> now
 
 data GetSession = GetSession SessionID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetSession (Maybe Session) where
@@ -169,7 +169,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetSession (Maybe S
     runQuery_ $ sqlSelect "sessions" $ do
       mapM_ sqlResult selectSessionSelectorsList
       sqlWhereEq "id" sid
-      sqlWhere $ "expires >= " <?> now
+      sqlWhere $ "expires >=" <?> now
     fetchMaybe fetchSession
 
 data CreateSession = CreateSession Session

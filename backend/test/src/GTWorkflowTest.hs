@@ -90,7 +90,7 @@ testExtendingIsNotRescheduledForPurgedDocs = do
     (docApiV2SigSign did slid) 200
 
   -- There is a document sealing job scheduled
-  runSQL01_ $ "SELECT EXISTS (SELECT id FROM document_sealing_jobs WHERE id = " <?> did <> ")"
+  runSQL01_ $ "SELECT EXISTS (SELECT id FROM document_sealing_jobs WHERE id =" <?> did <> ")"
   fetchOne runIdentity >>= assertEqual "Document is scheduled for sealing" True
 
   -- Commit is not completely necessary here, because there is a commit in the middle
@@ -101,7 +101,7 @@ testExtendingIsNotRescheduledForPurgedDocs = do
   runTestCronUntilIdle ctx
 
   -- There is a document extending job scheduled
-  runSQL01_ $ "SELECT EXISTS (SELECT id FROM document_extending_jobs WHERE id = " <?> did <> ")"
+  runSQL01_ $ "SELECT EXISTS (SELECT id FROM document_extending_jobs WHERE id =" <?> did <> ")"
   fetchOne runIdentity >>= assertEqual "Document is scheduled for extending" True
 
   -- Purge document
@@ -118,5 +118,5 @@ testExtendingIsNotRescheduledForPurgedDocs = do
   runTestCronUntilIdle ctx
 
   -- There is no extending job scheduled for this document
-  runSQL01_ $ "SELECT EXISTS (SELECT id FROM document_extending_jobs WHERE id = " <?> did <> ")"
+  runSQL01_ $ "SELECT EXISTS (SELECT id FROM document_extending_jobs WHERE id =" <?> did <> ")"
   fetchOne runIdentity >>= assertEqual "Document is not scheduled for extending" False

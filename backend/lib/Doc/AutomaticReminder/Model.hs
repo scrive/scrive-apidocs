@@ -77,7 +77,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetExpiredAutomatic
     now <- currentTime
     runQuery_ $ sqlSelect "document_automatic_reminders" $ do
       mapM_ sqlResult selectAutomaticReminderSelectorsList
-      sqlWhere $ "expires < " <?> now
+      sqlWhere $ "expires <" <?> now
     fetchMany fetchAutomaticReminder
 
 data CreateAutomaticReminder = CreateAutomaticReminder DocumentID Int32 TimeZoneName
@@ -88,7 +88,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m, MonadMask m) => DBUpdate m Creat
     runQuery_ . sqlInsert "document_automatic_reminders" $ do
       -- send the reminder at 10:15 in the time zone of the document
       sqlSetCmd "expires" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"
-                            <+> "+ ((interval '1 day') * " <?> days <+> " ) + (interval '10 hours 15 minutes')"
+                            <+> "+ ((interval '1 day') *" <?> days <+> ") + (interval '10 hours 15 minutes')"
       sqlSet "document_id" did
       mapM_ sqlResult selectAutomaticReminderSelectorsList
     fetchOne fetchAutomaticReminder

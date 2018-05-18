@@ -89,7 +89,7 @@ selectSignatoryLinksSmartNames signatory_condition =
                                       NameFI nameorder -> "AND name_order =" <?> nameorder
                                       _ -> "AND name_order IS NULL"
                                     ) <+>
-                                    "LIMIT 1) " <+>
+                                    "LIMIT 1)" <+>
                                     "AS" <+> name
     {-
      selectSmartName explanation:

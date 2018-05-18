@@ -107,7 +107,7 @@ curlTransport ssl curlAuth url on_failure debug_fun xml_request_bin additionalHe
     CurlAuthCertKey fpcert fpkey -> void . setopts curl $ [ CurlSSLCert fpcert, CurlSSLKey fpkey ]
     _ -> return ()
   let authHeaders = case curlAuth of
-        CurlAuthBasic un pwd -> ["Authorization: Basic " <+> (BSC8.unpack $ B64.encode $ T.encodeUtf8 $ un <> ":" <>  pwd)]
+        CurlAuthBasic un pwd -> ["Authorization: Basic" <+> (BSC8.unpack $ B64.encode $ T.encodeUtf8 $ un <> ":" <>  pwd)]
         _ -> []
   setopts curl [
       CurlWriteFunction $ gatherOutput_ fetch_body
