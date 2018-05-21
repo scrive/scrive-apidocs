@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 46
+  , tblVersion = 47
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -56,9 +56,6 @@ tableDocuments = tblTable {
     , indexOnColumn "status"
       -- for joining with signatory links
     , uniqueIndexOnColumn "author_id"
-      -- @todo: drop when `documents.archive_search_terms` has been updated with
-      -- historical data
-    , (indexOnColumn "archive_search_terms") { idxWhere = Just ("archive_search_terms IS NULL") }
     , (indexOnColumnWithMethod "archive_search_fts" GIN)
     , indexOnColumn "author_user_id"
     ]

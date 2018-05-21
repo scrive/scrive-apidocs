@@ -14,6 +14,7 @@ module Doc.Migrations (
   , addHidePnElogToSignatories
   , createSignatoryLinkConsentQuestionsTable
   , addConsentTitleToSignatoryLink
+  , removeSearchTermsIndex
 ) where
 
 import Data.Int
@@ -21,6 +22,17 @@ import Database.PostgreSQL.PQTypes.Checks
 
 import DB
 import Doc.Tables
+
+removeSearchTermsIndex :: MonadDB m => Migration m
+removeSearchTermsIndex = Migration {
+    mgrTableName = tblName tableDocuments
+  , mgrFrom = 46
+  , mgrAction = StandardMigration $ do
+      let tname = tblName tableDocuments
+      runQuery_ . sqlDropIndex tname $
+          (indexOnColumn "archive_search_terms")
+              { idxWhere = Just ("archive_search_terms IS NULL") }
+  }
 
 addAuthorUserIDToDocuments :: MonadDB m => Migration m
 addAuthorUserIDToDocuments = Migration {

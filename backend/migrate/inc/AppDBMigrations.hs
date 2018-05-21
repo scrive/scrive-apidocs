@@ -98,4 +98,5 @@ kontraMigrations = [
   , featureFlagsAddDKAuthToSign
   , optimiseUsersHistoryIndexes
   , companiesDropAllowSaveSafetyCopy
+  , removeSearchTermsIndex
   ]
