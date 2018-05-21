@@ -268,7 +268,8 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
       runDB . dbUpdate $ DeleteExpiredPasswordReminders
       return . RerunAfter $ ihours 1
     PurgeOrphanFile -> do
-      found <- runCronEnv purgeOrphanFile
+      let batchSize = 10
+      found <- runCronEnv $ purgeOrphanFile batchSize
       return . RerunAfter $ if found
                             then iseconds 1
                             else iminutes 1

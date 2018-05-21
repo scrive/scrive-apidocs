@@ -5,6 +5,7 @@ module Purging.Files (
 
 import Control.Monad.Catch
 import Control.Monad.IO.Class
+import Data.Time.Clock (diffUTCTime)
 import Log
 import qualified Data.Text as T
 
@@ -112,21 +113,27 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
 
 purgeOrphanFile
   :: forall m. (MonadDB m, MonadThrow m, MonadLog m, MonadIO m, AmazonMonad m, MonadTime m)
-  => m Bool
-purgeOrphanFile = do
-  now <- currentTime
+  => Int -> m Bool
+purgeOrphanFile batchSize = do
+  now0 <- currentTime
   runQuery_ . sqlSelect "files" $ do
     sqlResult "id"
     sqlResult "amazon_url"
     sqlResult "content IS NULL"
     sqlWhereFileWasNotPurged
-    sqlWhere $ "purge_at <" <?> now
+    sqlWhere $ "purge_at < " <?> now0
     sqlOrderBy "purge_at"
-    sqlLimit 1
-  fetchMaybe id >>= \case
-    Nothing   -> return False
-    Just file -> do
-      purge file
+    sqlLimit batchSize
+  fetchMany id >>= \case
+    []    -> return False
+    files -> do
+      mapM_ purge (files :: [(FileID, Maybe String, Bool)])
+      now1 <- currentTime
+      let timeDelta = realToFrac $ diffUTCTime now1 now0 :: Double
+      logInfo "Purged files" $ object [
+                    "elapsed_time" .= timeDelta
+                  , "batch_size" .= batchSize
+                  ]
       return True
   where
     purge :: (FileID, Maybe String, Bool) -> m ()
