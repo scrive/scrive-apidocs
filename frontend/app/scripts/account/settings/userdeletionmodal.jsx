@@ -100,6 +100,7 @@ module.exports = React.createClass({
         <Modal.Footer>
           <Modal.CancelButton onClick={this.onClose} />
           <Modal.AcceptButton
+            type="cancel"
             className={acceptClassName}
             onClick={this.onConfirmation}
             text={localization.account.accountDetails.userDeletionModalConfirm}
