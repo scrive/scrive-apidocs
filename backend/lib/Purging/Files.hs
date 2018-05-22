@@ -122,7 +122,7 @@ purgeOrphanFile batchSize = do
     sqlResult "amazon_url"
     sqlResult "content IS NULL"
     sqlWhereFileWasNotPurged
-    sqlWhere $ "purge_at < " <?> now0
+    sqlWhere $ "purge_at <" <?> now0
     sqlOrderBy "purge_at"
     sqlLimit batchSize
   fetchMany id >>= \case
