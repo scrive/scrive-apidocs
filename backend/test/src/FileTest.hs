@@ -58,7 +58,6 @@ testPurgeFiles  = replicateM_ 100 $ do
   let maxMarked = 1000
   (name,content) <- fileData
   fid <- saveNewFile name content
-  runQuery_ $ "DELETE FROM amazon_upload_jobs WHERE id =" <?> fid
   fidsToPurge <- dbUpdate $ MarkOrphanFilesForPurgeAfter maxMarked mempty
   assertEqual "File successfully marked for purge" [fid] fidsToPurge
   dbUpdate $ PurgeFile fid

@@ -1,4 +1,4 @@
-module Amazon.Migrations where
+ module Amazon.Migrations where
 
 import Database.PostgreSQL.PQTypes.Checks
 
@@ -68,7 +68,7 @@ createAmazonURLFixJobs = Migration {
           }
         ]
       }
-      runSQL_ "INSERT INTO amazon_url_fix_jobs (id, run_at, attempts) SELECT id, now(), 0 FROM files WHERE amazon_url LIKE '%\\%%'"
+      runSQL_ "INSERT INTO amazon_url_fix_jobs (id, run_at, attempts) SELECT id, now(), 0 FROM files WHERE amazon_url LIKE '%\\%%' AND purged_time IS NULL"
   }
 
 createAmazonURLFixConsumers :: MonadDB m => Migration m

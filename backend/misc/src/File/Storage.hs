@@ -44,44 +44,46 @@ saveNewFile fName fContent = do
       -- CORE-478: urlFromFile should be moved in this module
   Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
   let encryptedContent = aesEncrypt aes fContent
-  eRes <- try $ FS.saveNewContents awsUrl $ BSL.fromStrict encryptedContent
-  case eRes of
-    Right () -> do
-      dbUpdate $ FileMovedToAWS fid awsUrl aes
-      let file = emptyFile { filestorage = FileStorageAWS awsUrl aes }
-      finishTime <- liftBase getCurrentTime
-      logInfo "newFile: new file successfully created with content in S3" $ object [
-          logPair_ file
-        , "elapsed_time" .= (realToFrac $ diffUTCTime finishTime startTime :: Double)
-        ]
-      return fid
-    Left err@(FS.FileStorageException msg) -> do
-      let attnMsg = "newFile: failed to upload to AWS, purging file"
-      logAttention attnMsg $ object [
-          logPair_ emptyFile
-        , "error" .= msg
-        ]
-      dbUpdate $ PurgeFile fid
-      logAttention "newFileInAmazon: purged file" $ object [identifier_ fid]
-      throwM err
+  localData [identifier_ fid] $ do
+    eRes <- try $ FS.saveNewContents awsUrl $ BSL.fromStrict encryptedContent
+    case eRes of
+      Right () -> do
+        dbUpdate $ FileMovedToAWS fid awsUrl aes
+        let file = emptyFile { filestorage = FileStorageAWS awsUrl aes }
+        finishTime <- liftBase getCurrentTime
+        logInfo "newFile: new file successfully created with content in S3" $ object [
+            logPair_ file
+          , "elapsed_time" .= (realToFrac $ diffUTCTime finishTime startTime :: Double)
+          ]
+        return fid
+      Left err@(FS.FileStorageException msg) -> do
+        let attnMsg = "newFile: failed to upload to AWS, purging file"
+        logAttention attnMsg $ object [
+            logPair_ emptyFile
+          , "error" .= msg
+          ]
+        dbUpdate $ PurgeFile fid
+        logAttention "newFileInAmazon: purged file" $ object [identifier_ fid]
+        throwM err
 
 -- | Get file contents from the underlying storage and decrypt the contents
 -- returning them as BS.
 getFileContents :: (MonadFileStorage m, MonadIO m, MonadLog m, MonadThrow m)
                 => File -> m BS.ByteString
 getFileContents File{ filestorage = FileStorageMemory contents } = return contents
-getFileContents file@File{ filestorage = FileStorageAWS url aes } = do
-  encrypted <- FS.getSavedContents url
-  let contents = aesDecrypt aes $ BSL.toStrict encrypted
-      checksum = SHA1.hash contents
-  unless (checksum == filechecksum file) $ do
-    logAttention "SHA1 checksums of file don't match" $ object
-      [ "checksum" .= BS.unpack checksum
-      , logPair_ file
-      ]
-    throwM $ FS.FileStorageException $
-      "SHA1 checksum of file doesn't match the one in the database"
-  return contents
+getFileContents file@File{ fileid, filestorage = FileStorageAWS url aes } =
+  localData [identifier_ fileid] $ do
+    encrypted <- FS.getSavedContents url
+    let contents = aesDecrypt aes $ BSL.toStrict encrypted
+        checksum = SHA1.hash contents
+    unless (checksum == filechecksum file) $ do
+      logAttention "SHA1 checksums of file don't match" $ object
+        [ "checksum" .= BS.unpack checksum
+        , logPair_ file
+        ]
+      throwM $ FS.FileStorageException $
+        "SHA1 checksum of file doesn't match the one in the database"
+    return contents
 
 getFileIDContents :: ( MonadDB m, MonadFileStorage m, MonadIO m, MonadLog m
                      , MonadThrow m ) => FileID -> m BS.ByteString
@@ -91,5 +93,7 @@ getFileIDContents fid = do
   result <- getFileContents file
   stop <- liftIO getCurrentTime
   logInfo "getFileIDContents timing" $ object
-    [ "duration" .= (realToFrac $ diffUTCTime stop start :: Double) ]
+    [ "duration" .= (realToFrac $ diffUTCTime stop start :: Double)
+    , identifier_ fid
+    ]
   return result
