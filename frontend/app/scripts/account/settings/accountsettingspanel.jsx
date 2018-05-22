@@ -38,7 +38,10 @@ module.exports = React.createClass({
     var self = this;
     this.state.model.isUserDeletable(function (result) {
       if (result.deletable) {
-        self.setState({showUserDeletionModal: true});
+        self.setState({
+          showUserDeletionModal: true,
+          lastCompanyUser: result.last_company_user
+        });
       } else {
         var line1 = result.reason.message;
         var line2 = "";
@@ -124,6 +127,7 @@ module.exports = React.createClass({
           onConfirmation={this.deleteUser}
           model={this.state.model}
           active={this.state.showUserDeletionModal}
+          lastCompanyUser={this.state.lastCompanyUser}
         />
 
         <Modal.InfoBox

@@ -190,14 +190,17 @@ userNotDeletableReasonToString = fromString . \case
   UserNotDeletableDueToLastAdminWithUsers ->
     "Can't delete a user if it would leave the company without an admin."
 
+-- | Check if a user can be deleted giving the reason if it can't and returning
+-- whether it is the last company user otherwise.
 data IsUserDeletable = IsUserDeletable User
-instance MonadDB m => DBQuery m IsUserDeletable (Maybe UserNotDeletableReason) where
+instance MonadDB m
+    => DBQuery m IsUserDeletable (Either UserNotDeletableReason Bool) where
   query (IsUserDeletable user) = do
-    admins   <- dbQuery $ GetCompanyAdmins $ usercompany user
     accounts <- dbQuery $ GetCompanyAccounts $ usercompany user
+    let admins = filter useriscompanyadmin accounts
     -- Either there would still be one admin or it's this company's last user.
     if all ((== userid user) . userid) admins && length accounts > 1
-      then return $ Just UserNotDeletableDueToLastAdminWithUsers
+      then return $ Left UserNotDeletableDueToLastAdminWithUsers
       else do
 
         n <- runQuery $ sqlSelect "users" $ do
@@ -211,8 +214,8 @@ instance MonadDB m => DBQuery m IsUserDeletable (Maybe UserNotDeletableReason) w
           sqlLimit 1
 
         return $ if n == 0
-          then Nothing
-          else Just UserNotDeletableDueToPendingDocuments
+          then Right $ length accounts == 1
+          else Left UserNotDeletableDueToPendingDocuments
 
 {-
   @note: There's some shared functionality between `GetUsageStatsOld` and

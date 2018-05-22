@@ -9,7 +9,8 @@ module.exports = React.createClass({
     onClose: React.PropTypes.func.isRequired,
     onConfirmation: React.PropTypes.func.isRequired,
     model: React.PropTypes.object.isRequired,
-    active: React.PropTypes.bool.isRequired
+    active: React.PropTypes.bool.isRequired,
+    lastCompanyUser: React.PropTypes.bool.isRequired
   },
 
   getInitialState: function () {
@@ -60,8 +61,12 @@ module.exports = React.createClass({
     var messageTpl =
           localization.account.accountDetails.userDeletionModalMessage.line4;
     var message = $("<span />").html(messageTpl);
-    $(".text", message).text(this.correctText())
+    $(".email", message).text(this.correctText())
       .removeClass("text").addClass("user-deletion-modal-text");
+
+    var line1 = this.props.lastCompanyUser
+      ? localization.account.accountDetails.userDeletionModalMessage.line1last
+      : localization.account.accountDetails.userDeletionModalMessage.line1;
 
     return (
       <Modal.Container
@@ -78,7 +83,7 @@ module.exports = React.createClass({
         <Modal.Content>
           <div>
             <p>
-              {localization.account.accountDetails.userDeletionModalMessage.line1}
+              {line1}
             </p>
             <p>
               {localization.account.accountDetails.userDeletionModalMessage.line2}

@@ -21,6 +21,7 @@ module User.UserControl(
   , getMonthsStats -- Exported for admin section
 ) where
 
+import Data.Either (isRight)
 import Data.Time.Calendar
 import Data.Time.Clock
 import Log
@@ -214,7 +215,7 @@ getStats statsPartition interval eid = do
 -}
 isUserDeletable :: Kontrakcja m => User -> m Bool
 isUserDeletable user = do
-  fmap isNothing $ dbQuery $ IsUserDeletable user
+  fmap isRight $ dbQuery $ IsUserDeletable user
 
 --there must be a better way than all of these weird user create functions
 -- TODO clean up

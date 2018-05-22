@@ -131,7 +131,5 @@ kontraMigrations = [
   , companyUIsDropTable
   , companiesDropTable
   , usergroupsBumpVersionAfterDropingCompanies
-  , dropNotNullConstraintsWhenUserDeleted
   , actuallyDeletePreviouslyDeletedUser
-  , companiesAddDeleted
   ]
