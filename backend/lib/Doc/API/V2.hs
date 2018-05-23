@@ -39,8 +39,10 @@ documentAPIV2  = dir "documents" $ choice [
 
   , dir "templates" $ dir "setsharing" $ hPost $ toK0 $ docApiV2SetSharing
 
-  , param $ dir "files" $ dir "main" $ hGet $ toK2 $ docApiV2FilesMain
-  , param $ dir "files"              $ hGet $ toK3 $ docApiV2FilesGet
+  , param $ dir "files" $ dir "main"               $ hGet $ toK2 $ docApiV2FilesMain
+  , param $ dir "files"                            $ hGet $ toK3 $ docApiV2FilesGet
+  , param $ dir "files" $ param $ dir "pagescount" $ hGet $ toK2 $ docApiV2FilesPagesCount
+  , param $ dir "files" $ param $ dir "page"       $ hGet $ toK3 $ docApiV2FilesPage
 
   , param $ dir "texts" $ hGet $ toK2 $ docApiV2Texts
 

@@ -1367,6 +1367,7 @@ Test-suite kontrakcja-test
                , one-time-password
                , regex-tdfa
                , sandi
+               , scientific
                , scrypt
                , semigroups
                , split

@@ -39,6 +39,7 @@ apiV2DocumentGetCallsTests env = testGroup "APIv2DocumentGetCalls" $
   , testThat "API v2 History (permissions)" env testDocApiV2HistoryPermissionCheck
   , testThat "API v2 Evidence attachments"  env testDocApiV2EvidenceAttachments
   , testThat "API v2 Files - Main"          env testDocApiV2FilesMain
+  , testThat "API v2 Files - Pages"         env testDocApiV2FilesPages
   , testThat "API v2 Files - Get"           env testDocApiV2FilesGet
   , testThat "API v2 Texts"                 env testDocApiV2Texts
   ]
@@ -293,6 +294,25 @@ testDocApiV2FilesMain = do
       (rsp,_) <- runTestKontra req ctx $ docApiV2FilesMain did "filename.pdf"
       assertEqual ("Successful `docApiV2FilesMain` " ++ desc ++ " response code")
         expected_code (rsCode rsp)
+
+testDocApiV2FilesPages :: TestEnv ()
+testDocApiV2FilesPages = do
+  user <- addNewRandomUser
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  doc <- testDocApiV2New' ctx
+  let did = getMockDocId doc
+      fid = getMockDocFileId doc
+
+  -- GET number of pages
+  rspJSON <- jsonTestRequestHelper ctx
+    GET [] (docApiV2FilesPagesCount did fid) 200
+  pagecount <- lookupObjectInt "pages" rspJSON
+
+    -- GET the last page image
+  req2 <- mkRequest GET [("pixelwidth", inText "200")]
+  (rsp2,_) <- runTestKontra req2 ctx $ docApiV2FilesPage did fid pagecount
+  assertEqual ("Successful `docApiV2FilesPage` response code")
+    200 (rsCode rsp2)
 
 testDocApiV2FilesGet :: TestEnv ()
 testDocApiV2FilesGet = do

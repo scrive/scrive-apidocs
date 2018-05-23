@@ -102,10 +102,16 @@ instance (MonadDB m, MonadThrow m) => DBQuery m FileInDocument Bool where
                    sqlWhereEq "value_file_id" fid
                    sqlWhereEq "document_id" did
                    sqlResult "TRUE"
+    let s5 = sqlSelect "highlighted_pages" $ do
+                   sqlJoinOn "signatory_links" "highlighted_pages.signatory_link_id = signatory_links.id"
+                   sqlWhereEq "file_id" fid
+                   sqlWhereEq "document_id" did
+                   sqlResult "TRUE"
     runQuery_ $ "SELECT EXISTS (" <> toSQLCommand s1 <> ") OR " <>
                        "EXISTS (" <> toSQLCommand s2 <> ") OR " <>
                        "EXISTS (" <> toSQLCommand s3 <> ") OR " <>
-                       "EXISTS (" <> toSQLCommand s4 <> ")"
+                       "EXISTS (" <> toSQLCommand s4 <> ") OR " <>
+                       "EXISTS (" <> toSQLCommand s5 <> ")"
     fetchOne runIdentity
 
 data GetDocumentTags = GetDocumentTags DocumentID

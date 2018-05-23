@@ -5,10 +5,12 @@ module Doc.API.V2.AesonTestUtils (
 -- * Aeson Value deconstructors
 , lookupObjectArray
 , lookupObjectString
+, lookupObjectInt
 ) where
 
 import Control.Monad.Trans (liftIO)
 import Data.Aeson
+import Data.Scientific (floatingOrInteger)
 import Happstack.Server
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.HashMap.Strict as H
@@ -84,6 +86,19 @@ lookupObjectString k v = do
   case val of
     String s -> return $ T.unpack s
     _ -> unexpectedError "Lookup did not give String"
+
+-- | Given a `Value` that should be an `Object`, lookup a key which should be
+-- an JSON `Number`.
+lookupObjectInt :: String -> Value -> TestEnv Int
+lookupObjectInt k v = do
+  val <- lookupObject k v
+  case val of
+    Number n -> case floatingOrInteger n of
+      Right i -> return i
+      _ -> unexpectedError "Lookup did not give Int"
+    _ -> unexpectedError "Lookup did not give Int"
+
+
 
 -- * Internal Functions
 

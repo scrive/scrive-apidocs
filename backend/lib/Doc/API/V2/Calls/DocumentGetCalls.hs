@@ -6,6 +6,8 @@ module Doc.API.V2.Calls.DocumentGetCalls (
 , docApiV2History
 , docApiV2EvidenceAttachments
 , docApiV2FilesMain
+, docApiV2FilesPage
+, docApiV2FilesPagesCount
 , docApiV2FilesGet
 , docApiV2Texts
 ) where
@@ -52,6 +54,7 @@ import Log.Identifier
 import MagicHash
 import OAuth.Model
 import User.Model
+import Util.PDFUtil
 import Util.QRCode (encodeQR)
 import Util.SignatoryLinkUtils
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
@@ -165,30 +168,24 @@ docApiV2EvidenceAttachments did = logDocument did . api $ withDocumentID did $ d
   return $ Ok $ Response 200 headers nullRsFlags (evidenceAttachmentsToJSONBS (documentid doc) eas) Nothing
 
 docApiV2FilesMain :: Kontrakcja m => DocumentID -> String -> m Response
-docApiV2FilesMain did _filenameForBrowser = logDocument did . api $ do
-  mslid        <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
+docApiV2FilesMain did _filenameForBrowser = logDocument did . api . withDocAccess did $ \doc -> do
   download     <- apiV2ParameterDefault False (ApiV2ParameterBool "as_download")
-  maccesstoken <- apiV2ParameterOptional (ApiV2ParameterRead "access_token")
-  doc          <- getDocBySignatoryLinkIdOrAccessToken did mslid maccesstoken
-  fileContents <- do
-    whenJust mslid $ \slid ->
-      guardSignatoryNeedsToIdentifyToView slid doc
-    case documentstatus doc of
-      Closed -> do
-        mFile <- fileFromMainFile (documentsealedfile doc)
-        case mFile of
-          Nothing -> apiError $ documentStateErrorWithCode 503 "The sealed PDF for the document is not ready yet, please wait and try again."
-          Just file -> getFileContents file
-      _ -> do
-        mFile <- fileFromMainFile (documentfile doc)
-        case mFile of
-          Nothing -> apiError $ resourceNotFound "The document has no main file"
-          Just file -> do
-           presealFile <- presealDocumentFile doc file
-           case presealFile of
-             Left err -> apiError $ serverError (T.pack err)
-             Right f -> return $ f
-  return $ Ok $ respondWithPDF download fileContents
+  case documentstatus doc of
+    Closed ->
+      fileFromMainFile (documentsealedfile doc)
+        >>= maybe errorNonexistingSealedMainFile return
+        >>= getFileContents
+        >>= return . Ok . respondWithPDF download
+    _      ->
+      fileFromMainFile (documentfile doc)
+        >>= maybe errorNonexistingMainFile return
+        >>= presealDocumentFile doc
+        >>= either errorPresealDocumentFile return
+        >>= return . Ok . respondWithPDF download
+  where
+    errorNonexistingSealedMainFile = apiError $ documentStateErrorWithCode 503 "The sealed PDF for the document is not ready yet, please wait and try again."
+    errorNonexistingMainFile = apiError $ resourceNotFound "The document has no main file"
+    errorPresealDocumentFile err = apiError . serverError . T.pack $ err
 
 getDocBySignatoryLinkIdOrAccessToken :: Kontrakcja m =>
   DocumentID -> Maybe SignatoryLinkID -> Maybe MagicHash -> m Document
@@ -199,33 +196,63 @@ getDocBySignatoryLinkIdOrAccessToken did mslid maccesstoken =
       void $ guardDocumentReadAccess mslid =<< theDocument
       theDocument
 
-docApiV2FilesGet :: Kontrakcja m => DocumentID -> FileID -> String -> m Response
-docApiV2FilesGet did fid filename = logDocumentAndFile did fid . api $ do
+withDocAccess :: Kontrakcja m => DocumentID -> (Document -> m a) -> m a
+withDocAccess did dochandler = do
   mslid        <- apiV2ParameterOptional (ApiV2ParameterRead "signatory_id")
-  download     <- apiV2ParameterDefault False (ApiV2ParameterBool "as_download")
   maccesstoken <- apiV2ParameterOptional (ApiV2ParameterRead "access_token")
   doc          <- getDocBySignatoryLinkIdOrAccessToken did mslid maccesstoken
-
   whenJust mslid $ \slid ->
     guardSignatoryNeedsToIdentifyToView slid doc
+  dochandler doc
 
-  let allfiles = maybeToList (mainfileid <$> documentfile doc) ++ maybeToList (mainfileid <$> documentsealedfile doc) ++
-                      (authorattachmentfileid <$> documentauthorattachments doc) ++
-                      (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc) ++
-                      (catMaybes $ map fieldFileValue $ concatMap signatoryfields $ documentsignatorylinks doc) ++
-                      (map highlightedPageFileID $ concatMap signatoryhighlightedpages $ documentsignatorylinks doc)
-  if (all (/= fid) allfiles)
-     then apiError $ resourceNotFound "No file with given fileid associated with document"
-     else do
-       fileContents <- getFileIDContents fid
-       let filename' = map toLower filename
-           contentType | isSuffixOf ".pdf" filename' = "application/pdf"
-                       | isSuffixOf ".png" filename' = "image/png"
-                       | isSuffixOf ".jpg" filename' = "image/jpeg"
-                       | otherwise = "application/octet-stream"
-           additionalDownloadHeader = if (download) then [("Content-Disposition", "attachment")] else []
-           headers = mkHeaders $ [("Content-Type", contentType)] ++ additionalDownloadHeader
-       return $ Ok $ Response 200 headers nullRsFlags (BSL.fromStrict fileContents) Nothing
+withDocFileAccess :: Kontrakcja m => DocumentID -> FileID -> m a -> m a
+withDocFileAccess did fid action = withDocAccess did $ \_doc -> do
+  filenotindocument <- not <$> (dbQuery $ FileInDocument did fid)
+  if filenotindocument
+    then apiError $ resourceNotFound "No file with given fileid associated with document"
+    else action
+
+docApiV2FilesGet :: Kontrakcja m => DocumentID -> FileID -> String -> m Response
+docApiV2FilesGet did fid filename = logDocumentAndFile did fid . api . withDocFileAccess did fid $ do
+  download     <- apiV2ParameterDefault False (ApiV2ParameterBool "as_download")
+  fileContents <- getFileIDContents fid
+  let filename' = map toLower filename
+      contentType | isSuffixOf ".pdf" filename' = "application/pdf"
+                  | isSuffixOf ".png" filename' = "image/png"
+                  | isSuffixOf ".jpg" filename' = "image/jpeg"
+                  | otherwise = "application/octet-stream"
+      additionalDownloadHeader = if (download) then [("Content-Disposition", "attachment")] else []
+      headers = mkHeaders $ [("Content-Type", contentType)] ++ additionalDownloadHeader
+  return $ Ok $ Response 200 headers nullRsFlags (BSL.fromStrict fileContents) Nothing
+
+-- We return 503 if sealed file is still pending, else we return JSON with number of pages
+docApiV2FilesPagesCount :: Kontrakcja m => DocumentID -> FileID -> m Response
+docApiV2FilesPagesCount did fid = logDocument did . api . withDocFileAccess did fid $ do
+  getFileIDContents fid
+    >>= liftIO . getNumberOfPDFPages
+    >>= either errorCountingPages return
+    >>= return . Ok . pageCountJSON
+  where
+    pageCountJSON pagecount = JSObject . J.toJSObject $ [("pages", JSRational False (toRational pagecount))]
+    errorCountingPages _err = do
+      let msg = "Counting number of pages failed"
+      logAttention_ msg
+      apiError $ serverError msg
+
+-- We return 503 if sealed file is still pending, else we return PNG of the page
+docApiV2FilesPage :: Kontrakcja m => DocumentID -> FileID -> Int -> m Response
+docApiV2FilesPage did fid pagenumber = logDocument did . api . withDocFileAccess did fid $ do
+  pixelwidth <- apiV2ParameterObligatory (ApiV2ParameterRead "pixelwidth")
+  getFileIDContents fid
+    >>= (\content -> renderPage content pagenumber $ clamp pixelwidth)
+    >>= maybe errorRenderingFailed return
+    >>= \bytes -> return . Ok $ Response 200 headers nullRsFlags (BSL.fromStrict bytes) Nothing
+  where
+    clamp = min 2000 . max 100
+    errorRenderingFailed = do
+      logAttention "Rendering PDF page failed" $ object [ "page" .= show pagenumber]
+      apiError $ serverError "Rendering PDF page failed"
+    headers = mkHeaders [("Cache-Control", "max-age=604800"), ("Content-Type", "image/png")]
 
 -------------------------------------------------------------------------------
 
