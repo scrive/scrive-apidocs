@@ -28,6 +28,7 @@ import Doc.Screenshot (Screenshot(..))
 import Doc.SignatoryScreenshots (SignatoryScreenshots(signing), emptySignatoryScreenshots)
 import Doc.SMSPin.Model
 import File.FileID
+import File.Storage
 import MagicHash
 import Mails.Model
 import MinutesTime
@@ -103,7 +104,7 @@ testLastPersonSigningADocumentClosesIt = do
 
   let filename = inTestDir "pdfs/simple.pdf"
   filecontent <- liftIO $ BS.readFile filename
-  file <- addNewFile filename filecontent
+  file <- saveNewFile filename filecontent
 
   addRandomDocumentWithAuthorAndConditionAndFile
             user
@@ -170,7 +171,7 @@ testSigningWithPin = do
 
   let filename = inTestDir "pdfs/simple.pdf"
   filecontent <- liftIO $ BS.readFile filename
-  file <- addNewFile filename filecontent
+  file <- saveNewFile filename filecontent
 
   addRandomDocumentWithAuthorAndConditionAndFile
             user1
@@ -546,7 +547,7 @@ testDownloadSignviewBrandingAccess = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   let filename = inTestDir "pdfs/simple.pdf"
   filecontent <- liftIO $ BS.readFile filename
-  file <- addNewFile filename filecontent
+  file <- saveNewFile filename filecontent
 
   doc <- addRandomDocumentWithAuthorAndConditionAndFile
             user

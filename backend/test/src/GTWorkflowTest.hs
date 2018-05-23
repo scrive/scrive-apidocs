@@ -19,6 +19,7 @@ import Doc.DocumentMonad (theDocument, withDocumentID)
 import Doc.DocUtils
 import Doc.Model
 import Doc.SealStatus (SealStatus(..))
+import File.Storage
 import GuardTime
 import MinutesTime
 import Templates
@@ -27,8 +28,6 @@ import TestingUtil
 import TestKontra
 import User.Model
 import Util.Actor
-import qualified Amazon as AWS
-import qualified MemCache
 
 gtWorkflowTests :: TestEnvSt -> Test
 gtWorkflowTests env = testGroup "GTWorkflowTest" [
@@ -41,9 +40,9 @@ testExtendDigitalSignatures = do
   author <- addNewRandomUser
   let filename = inTestDir "pdfs/extensible.pdf"
   filecontent <- liftIO $ BS.readFile filename
-  file <- addNewFile filename filecontent
-  file1 <- addNewFile filename filecontent
-  file2 <- addNewFile filename filecontent
+  file <- saveNewFile filename filecontent
+  file1 <- saveNewFile filename filecontent
+  file2 <- saveNewFile filename filecontent
   did <- documentid <$> addRandomDocumentWithAuthorAndConditionAndFile author (isSignable && isClosed) file
   withDocumentID did $ do
     now <- currentTime
@@ -53,17 +52,10 @@ testExtendDigitalSignatures = do
     dbUpdate $ AppendExtendedSealedFile file2 Guardtime{ extended = False, private = False } actor
 
     -- Run extending
-    filecache <- MemCache.new BS.length 52428800
     templates <- liftBase readGlobalTemplates
-    let ac = AWS.AmazonConfig {
-              AWS.awsConfig = Nothing
-            , AWS.awsLocalCache = filecache
-            , AWS.awsGlobalCache = Nothing
-            }
     void
       . runTemplatesT (def, templates)
       . runGuardTimeConfT testGTConf
-      . AWS.runAmazonMonadT ac
       $ extendDigitalSignature
 
   withDocumentID did $ do

@@ -186,7 +186,7 @@ apiCallV1CreateFromFile = api $ do
       let content' = either (const content1') id (B64.decode content1')
 
       pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ preCheckPDF content'
-      fileid' <- dbUpdate $ NewFile filename pdfcontent
+      fileid' <- saveNewFile filename pdfcontent
       return (Just fileid', takeBaseName filename)
   mtimezone <- getField "timezone"
   timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezone)
@@ -314,7 +314,7 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
             newFiles <- case cres of
               Left _ -> throwM . SomeDBExtraException $ (badInput $ "One of Attached files is not a valid PDF")
               Right contents -> forM (zip filenames contents) $ \(filename, content) -> do
-                fid <- dbUpdate $ NewFile filename content
+                fid <- saveNewFile filename content
                 dbQuery $ GetFileByFileID fid
             let putNewFiles ((Left  f, mdetails) : rest) newfs      = (f , mdetails) : putNewFiles rest newfs
                 putNewFiles ((Right _, mdetails) : rest) (nf:newfs) = (nf, mdetails) : putNewFiles rest newfs
@@ -1232,7 +1232,7 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
         let content' = either (const content1') id (B64.decode content1')
 
         pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ preCheckPDF content'
-        fileid' <- dbUpdate $ NewFile filename pdfcontent
+        fileid' <- saveNewFile filename pdfcontent
         return $ Just (fileid', takeBaseName filename)
 
     case mft of
@@ -1298,7 +1298,7 @@ apiCallV1SetSignatoryAttachment did sid aname = logDocumentAndSignatory did sid 
                       then return $ BSL.toStrict content1
                       else throwM . SomeDBExtraException $ badInput ("Image can't be empty. Uploaded filename was " ++ filename)
                     else throwM . SomeDBExtraException $ badInput ("Only pdf files or images can be attached. Uploaded filename was " ++ filename)
-                (dbUpdate $ NewFile (dropFilePathFromWindows filename) content)
+                (saveNewFile (dropFilePathFromWindows filename) content)
       _ -> return Nothing
     ctx <- getContext
     case mfileid of
@@ -1405,7 +1405,7 @@ fieldsToFieldsWithFiles (field:fields) = do
     (fi,FileFTV bs)  -> if (BS.null bs)
                           then return $ ((fi,FileFV Nothing):changeFields,files')
                           else do
-                            fileid <- dbUpdate $ NewFile "signature.png" bs
+                            fileid <- saveNewFile "signature.png" bs
                             return $ ((fi,FileFV (Just fileid)):changeFields,(fileid,bs):files')
 
 -- Mandatory attachments parameters

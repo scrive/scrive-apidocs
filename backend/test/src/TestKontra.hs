@@ -1,6 +1,7 @@
 module TestKontra (
-      inTestDir
-    , TestEnv
+      KontraTest
+    , inTestDir
+    , TestEnv(..)
     , TestEnvSt(..)
     , runTestEnv
     , ununTestEnv
@@ -39,16 +40,18 @@ import Log
 import System.FilePath
 import Text.StringTemplates.Templates
 import qualified Control.Exception.Lifted as E
-import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Map as M
+import qualified Database.Redis as R
 import qualified Text.StringTemplates.TemplatesLoader as TL
 
 import BrandedDomain.Model
 import Context.Internal
 import DB
 import DB.PostgreSQL
+import FileStorage
+import FileStorage.Amazon.Config
 import GuardTime.Class
 import Happstack.Server.ReqHandler
 import IPAddress
@@ -58,12 +61,13 @@ import MinutesTime
 import PdfToolsLambda.Conf
 import Session.SessionID
 import Templates
+import TestFileStorage
 import User.Lang
-import qualified Amazon as AWS
-import qualified MemCache
 
 inTestDir :: FilePath -> FilePath
 inTestDir = ("backend/test" </>)
+
+type KontraTest = KontraG TestFileStorageT
 
 data TestEnvSt = TestEnvSt {
     teConnSource        :: !BasicConnectionSource
@@ -77,6 +81,9 @@ data TestEnvSt = TestEnvSt {
   , teOutputDirectory   :: !(Maybe String) -- ^ Put test artefact output in this directory if given
   , teStagingTests      :: !Bool
   , tePdfToolsLambdaConf :: PdfToolsLambdaConf
+  , teAmazonConfig      :: Maybe AmazonConfig
+  , teFileMemCache      :: FileMemCache
+  , teRedisConn         :: Maybe R.Connection
   }
 
 data TestEnvStRW = TestEnvStRW {
@@ -85,7 +92,7 @@ data TestEnvStRW = TestEnvStRW {
   , terwRequestURI  :: !String
   }
 
-type InnerTestEnv = StateT TestEnvStRW (ReaderT TestEnvSt (LogT (DBT IO)))
+type InnerTestEnv = TestFileStorageT (StateT TestEnvStRW (ReaderT TestEnvSt (LogT (DBT IO))))
 
 newtype TestEnv a = TestEnv { unTestEnv :: InnerTestEnv a }
   deriving (Applicative, Functor, Monad, MonadLog, MonadCatch, MonadThrow, MonadMask, MonadIO, MonadReader TestEnvSt, MonadBase IO, MonadState TestEnvStRW)
@@ -99,16 +106,18 @@ runTestEnv st m = do
       atomically . modifyTVar' (teActiveTests st) $ second (pred $!)
 
 ununTestEnv :: TestEnvSt -> TestEnv a -> DBT IO a
-ununTestEnv st m = teRunLogger st
-  . (\m' -> runReaderT m' st)
+ununTestEnv st =
+  teRunLogger st
+  . flip runReaderT st
   -- for each test start with no time delay
-  . (\m' -> fst <$> (runStateT m' $ TestEnvStRW
+  . flip evalStateT TestEnvStRW
       { terwTimeDelay = 0
       , terwCurrentTime = Nothing
       , terwRequestURI = "http://testkontra.fake"
       }
-    ))
-  . unTestEnv $ m
+  . evalTestFileStorageT
+      ((, teRedisConn st, teFileMemCache st) <$> teAmazonConfig st)
+  . unTestEnv
 
 instance CryptoRNG TestEnv where
   randomBytes n = asks teRNGState >>= liftIO . randomBytesIO n
@@ -130,8 +139,8 @@ instance MonadDB TestEnv where
     -- new connection.
     ConnectionSource pool <- asks teConnSource
     runLogger <- asks teRunLogger
-    TestEnv . StateT $ \terw -> ReaderT $ \te -> LogT . ReaderT $ \_ -> DBT . StateT $ \st -> do
-      res <- runDBT pool (dbTransactionSettings st) . runLogger $ runReaderT (runStateT m terw) te
+    TestEnv . liftTestFileStorageT $ \fsVar -> StateT $ \terw -> ReaderT $ \te -> LogT . ReaderT $ \_ -> DBT . StateT $ \st -> do
+      res <- runDBT pool (dbTransactionSettings st) . runLogger $ runReaderT (runStateT (runTestFileStorageT m fsVar) terw) te
       return (res, st)
   getNotification = TestEnv . getNotification
 
@@ -160,10 +169,15 @@ instance MonadBaseControl IO TestEnv where
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
-runTestKontraHelper :: BasicConnectionSource -> Request -> Context -> Kontra a -> TestEnv (a, Context, Response -> Response)
+instance MonadFileStorage TestEnv where
+  saveNewContents url contents = TestEnv $ saveNewContents url contents
+  getSavedContents             = TestEnv . getSavedContents
+  deleteSavedContents          = TestEnv . deleteSavedContents
+
+runTestKontraHelper :: BasicConnectionSource -> Request -> Context
+                    -> KontraG TestFileStorageT a
+                    -> TestEnv (a, Context, Response -> Response)
 runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
-  filecache <- MemCache.new BS.length 52428800
-  let amazoncfg = AWS.AmazonConfig Nothing filecache Nothing
   now <- currentTime
   rng <- asks teRNGState
   runLogger <- asks teRunLogger
@@ -171,16 +185,22 @@ runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
   -- commit previous changes and do not begin new transaction as runDBT
   -- does it and we don't want these pesky warnings about transaction
   -- being already in progress
+  fsEnv <- TestEnv getTestFSEnv
   commit' ts { tsAutoTransaction = False }
   ((res, ctx'), st) <- E.finally
-    (liftBase $ runStateT (unReqHandlerT . runLogger . runCryptoRNGT rng . AWS.runAmazonMonadT amazoncfg . runDBT pool ts $ runStateT (unKontra tk) ctx) $ ReqHandlerSt rq id now)
+    (liftBase $ runStateT (unReqHandlerT . runLogger . runCryptoRNGT rng
+                                         . flip runTestFileStorageT fsEnv
+                                         . runDBT pool ts
+                                         $ runStateT (unKontra tk) ctx)
+                          (ReqHandlerSt rq id now))
     -- runDBT commits and doesn't run another transaction, so begin new one
     begin
   return (res, ctx', hsFilter st)
 
 -- | Typeclass for running handlers within TestKontra monad
 class RunnableTestKontra a where
-  runTestKontra :: Request -> Context -> Kontra a -> TestEnv (a, Context)
+  runTestKontra :: Request -> Context -> KontraG TestFileStorageT a
+                -> TestEnv (a, Context)
 
 instance RunnableTestKontra a where
   runTestKontra rq ctx tk = do
@@ -309,7 +329,7 @@ mkContext lang = do
   time <- currentTime
   bd <- dbQuery $ GetMainBrandedDomain
   liftIO $ do
-    filecache <- MemCache.new BS.length 52428800
+    filecache <- newFileMemCache 52428800
     return Context {
           _ctxmaybeuser = Nothing
         , _ctxtime = time

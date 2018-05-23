@@ -67,7 +67,6 @@ import Doc.Data.SignatoryLink (AuthenticationToSignMethod(..), AuthenticationToV
 import Doc.DocumentID (DocumentID)
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import File.FileID
-import Kontra (Kontra)
 import TestKontra
 
 -- * MockDoc Helper Functions
@@ -76,7 +75,7 @@ import TestKontra
 -- | For conveniently doing a test API call that returns Document JSON.
 -- Uses `jsonTestRequestHelper` but parses the result using `mockDocFromValue`
 mockDocTestRequestHelper :: Context -> Method -> [(String, Input)]
-                         -> Kontra Response -> Int -> TestEnv MockDoc
+                         -> KontraTest Response -> Int -> TestEnv MockDoc
 mockDocTestRequestHelper c m p f i = mockDocFromValue <$> jsonTestRequestHelper c m p f i
 
 mockDocFromValue :: Value -> MockDoc

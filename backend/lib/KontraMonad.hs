@@ -15,10 +15,10 @@ import Text.StringTemplates.Templates
 
 import Context
 import DB
+import FileStorage.Class
 import GuardTime (GuardTimeConfMonad)
 import MailContext (MailContextMonad)
 import PdfToolsLambda.Conf (PdfToolsLambdaConfMonad)
-import qualified Amazon as AWS
 
 -- | This is for grouping things together so we won't need to
 -- write all that each time we write function type signature
@@ -39,7 +39,7 @@ type Kontrakcja m = (
   , MonadTime m
   , ServerMonad m
   , TemplatesMonad m
-  , AWS.AmazonMonad m
+  , MonadFileStorage m
   )
 
 class Monad m => KontraMonad m where

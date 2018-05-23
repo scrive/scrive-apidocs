@@ -4,26 +4,24 @@ module PdfToolsLambda.Control (
 ) where
 
 import Control.Monad.Base
+import Control.Monad.Catch
 import Crypto.RNG
 import Crypto.RNG.Utils
 import Data.Char
 import Data.Time
 import Log
 import System.Exit
-import qualified Crypto.Hash.MD5 as MD5
-import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.Lazy.Char8 as BSL
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
-import qualified Network.AWS.AWSConnection as AWS
-import qualified Network.AWS.AWSResult as AWS
-import qualified Network.AWS.S3Object as AWS
 import qualified Text.JSON as JSON
 import qualified Text.JSON.Gen as JSON
 
-import Amazon.Config
 import DB
 import Doc.SealSpec
+import FileStorage.Amazon
+import FileStorage.Amazon.Config
+import FileStorage.Class
 import Log.Utils
 import PdfToolsLambda.Conf
 import PdfToolsLambda.Response
@@ -31,23 +29,25 @@ import PdfToolsLambda.Spec
 import Utils.IO
 
 callPdfToolsSealing ::
-  (MonadDB m, MonadLog m, MonadBase IO m, CryptoRNG m) =>
+  (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadDB m, MonadLog m) =>
   PdfToolsLambdaConf -> SealSpec -> m (Maybe BS.ByteString)
 callPdfToolsSealing lc spec = do
   inputData <- sealSpecToLambdaSpec spec
-  excutePdfToolsLambdaSealCall lc inputData
+  executePdfToolsLambdaSealCall lc inputData
 
 callPdfToolsPresealing ::
-  (MonadDB m, MonadLog m, MonadBase IO m, CryptoRNG m) =>
+  (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadDB m, MonadLog m) =>
   PdfToolsLambdaConf -> PreSealSpec -> m (Maybe BS.ByteString)
 callPdfToolsPresealing lc spec = do
   inputData <- presealSpecToLambdaSpec spec
-  excutePdfToolsLambdaSealCall lc inputData
+  executePdfToolsLambdaSealCall lc inputData
 
-excutePdfToolsLambdaSealCall ::   (MonadDB m, MonadLog m, MonadBase IO m, CryptoRNG m) =>
-  PdfToolsLambdaConf -> BSL.ByteString -> m (Maybe BS.ByteString)
-excutePdfToolsLambdaSealCall lc inputData = do
-  uploadedDataFileName <- sendDataFileToAmazon (get pdfToolsLambdaS3Config lc) inputData
+executePdfToolsLambdaSealCall
+  :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadDB m, MonadLog m)
+  => PdfToolsLambdaConf -> BSL.ByteString -> m (Maybe BS.ByteString)
+executePdfToolsLambdaSealCall lc inputData = do
+  let amazonConfig = get pdfToolsLambdaS3Config lc
+  uploadedDataFileName <- sendDataFileToAmazon amazonConfig inputData
   case uploadedDataFileName of
     Nothing -> do
       logAttention_ "Failed to upload data to s3 for lambda"
@@ -76,10 +76,9 @@ excutePdfToolsLambdaSealCall lc inputData = do
         ExitSuccess -> do
           case (parsePdfToolsLambdaSealingResponse stdout) of
             SealSuccess resultS3Name -> do
-              mresdata <- getDataFromAmazon (get pdfToolsLambdaS3Config lc) resultS3Name
+              mresdata <- getDataFromAmazon amazonConfig resultS3Name
               case mresdata of
-                Just resdata -> do
-                  return $ Just $ BSL.toStrict resdata
+                Just resdata -> return $ Just $ BSL.toStrict resdata
                 Nothing -> do
                   logAttention "Failed to fetch lambda result from S3" $ object $ [
                       "stdout" `equalsExternalBSL` stdout
@@ -95,56 +94,19 @@ excutePdfToolsLambdaSealCall lc inputData = do
                 ]
               return $ Nothing
 
-sendDataFileToAmazon :: (MonadBase IO m, MonadLog m, CryptoRNG m)
-                      => AmazonConfig -> BSL.ByteString -> m (Maybe String)
-sendDataFileToAmazon (s3bucket, s3key, s3secret) content = do
-  randomPart <- randomString 10 ['a'..'z']
-  timePart   <- filter isDigit <$> show <$> liftBase getCurrentTime
-  let name = randomPart ++ timePart
-      s3Conn = AWS.amazonS3Connection s3key s3secret
-      s3Obj = AWS.S3Object { AWS.obj_bucket = s3bucket
-                           , AWS.obj_name   = name
-                           , AWS.content_type = ""
-                           , AWS.obj_headers = []
-                           , AWS.obj_data = content
-                           }
-  result <- liftBase $ sendObjectMIC s3Conn s3Obj
-  case result of
-    Right _ -> return $ Just name
-    Left err -> do
-      logAttention  "Failed to upload data to AWS to be used by lambda" $ object [
-          "s3bucket" .= s3bucket
-        , "name" .= name
-        , "error" .= show err
-        ]
-      return Nothing
-  where
-    sendObjectMIC :: AWS.AWSConnection -> AWS.S3Object -> IO (AWS.AWSResult ())
-    sendObjectMIC aws obj = AWS.sendObject aws obj_w_header where
-      obj_w_header = obj { AWS.obj_headers = (AWS.obj_headers obj) ++ md5_header }
-      md5_header = [("Content-MD5", (mkMD5 (AWS.obj_data obj)))]
-      mkMD5 = BS.unpack . Base64.encode . MD5.hashlazy
+sendDataFileToAmazon :: ( CryptoRNG m, MonadBase IO m, MonadCatch m
+                        , MonadLog m, MonadThrow m )
+                     => AmazonConfig -> BSL.ByteString -> m (Maybe String)
+sendDataFileToAmazon config content = do
+  flip catch (\(_ :: FileStorageException) -> return Nothing) $ do
+    randomPart <- randomString 10 ['a'..'z']
+    timePart   <- filter isDigit <$> show <$> liftBase getCurrentTime
+    let name = randomPart ++ timePart
+    saveContentsToAmazon config name content
+    return $ Just name
 
-
-
-getDataFromAmazon :: (MonadBase IO m, MonadLog m, CryptoRNG m)
-                      => AmazonConfig -> String -> m (Maybe BSL.ByteString)
-getDataFromAmazon (s3bucket, s3key, s3secret) name = do
-  let s3Conn = AWS.amazonS3Connection s3key s3secret
-      s3Obj = AWS.S3Object { AWS.obj_bucket = s3bucket
-                           , AWS.obj_name   = name
-                           , AWS.content_type = ""
-                           , AWS.obj_headers = []
-                           , AWS.obj_data = BSL.empty
-                           }
-  result <- liftBase $ AWS.getObject s3Conn s3Obj
-  case result of
-    Right res -> return $ Just $ AWS.obj_data res
-    Left err -> do
-      logAttention  "Failed to download result of AWS lambda from S3 bucket" $ object [
-          "s3bucket" .= s3bucket
-        , "name" .= name
-        , "error" .= show err
-        ]
-      return Nothing
-
+getDataFromAmazon :: (MonadBase IO m, MonadCatch m, MonadLog m, MonadThrow m)
+                  => AmazonConfig -> String -> m (Maybe BSL.ByteString)
+getDataFromAmazon config name =
+  (Just <$> getContentsFromAmazon config name)
+    `catch` (\(_ :: FileStorageException) -> return Nothing)

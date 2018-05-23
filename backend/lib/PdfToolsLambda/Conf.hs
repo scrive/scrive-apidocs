@@ -12,10 +12,8 @@ import Control.Monad.Catch
 import Control.Monad.Reader (ReaderT, ask, runReaderT)
 import Control.Monad.Trans
 import Control.Monad.Trans.Control (ComposeSt, MonadBaseControl(..), MonadTransControl(..), defaultLiftBaseWith, defaultLiftWith, defaultRestoreM, defaultRestoreT)
-import Data.Default
 import Data.Unjson
 
-import Amazon.Config
 import PdfToolsLambda.Conf.Internal
 import PdfToolsLambda.Conf.Labels
 
@@ -27,31 +25,15 @@ unjsonPdfToolsLambdaConf = objectOf $ pure PdfToolsLambdaConf
   <*> field "api_key"
       _pdfToolsLambdaApiKey
       "Pdf Tools Lambda Api Key"
-  <*> fieldBy "amazon_s3"
+  <*> field "amazon_s3"
       _pdfToolsLambdaS3Config
       "Amazon bucket configuration"
-      (objectOf $ pure (,,)
-       <*> field "bucket"
-         (\(x,_,_) -> x)
-         "In which bucket stored files exist"
-       <*> field "access_key"
-         (\(_,x,_) -> x)
-         "Amazon access key"
-       <*> field "secret_key"
-         (\(_,_,x) -> x)
-         "Amazon secret key")
   <*> fieldDef "skip_lambda" False
       _pdfToolsLambdaSkip
       "Fallback to old version of pdftools. Should be used ONLY as emergency fallback on production during transition and will be dropped in few weeks"
 
 instance Unjson PdfToolsLambdaConf where
   unjsonDef = unjsonPdfToolsLambdaConf
-
-instance Default PdfToolsLambdaConf where
-  def = PdfToolsLambdaConf "DEFAULT_GATEWAY" "DEFAULT_API_KEY" defPdfToolsLambdaAmazonBucket True
-
-defPdfToolsLambdaAmazonBucket :: AmazonConfig
-defPdfToolsLambdaAmazonBucket = ("DEFAULT_S3_BUCKET_FOR_LAMBDA","DEFAULT_S3_ACCESS_KEY_FOR_LAMBDA","DEFAULT_S3_SECRET_KEY_FOR_LAMBDA")
 
 class Monad m => PdfToolsLambdaConfMonad m where
   getPdfToolsLambdaConf :: m PdfToolsLambdaConf

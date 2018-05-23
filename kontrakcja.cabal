@@ -85,10 +85,8 @@ Library
                  , Administration.AdministrationControl
                  , Administration.AdministrationView
                  , Administration.Invoicing
-                 , Amazon
-                 , Amazon.Class
-                 , Amazon.Config
                  , Amazon.Consumer
+                 , Amazon.URLFix
                  , Amazon.Tables
                  , Analytics.Include
                  , AppConf
@@ -276,6 +274,11 @@ Library
                  , File.Model
                  , File.Storage
                  , File.Tables
+                 , FileStorage
+                 , FileStorage.Amazon
+                 , FileStorage.Amazon.Config
+                 , FileStorage.Class
+                 , FileStorage.RedisCache
                  , FlashMessage
                  , GuardTime
                  , GuardTime.Class
@@ -891,8 +894,6 @@ Executable mailing-server
   Main-is: MailingServer.hs
   GHC-options: -main-is MailingServer
   Other-Modules: AddressUtils
-                 Amazon
-                 Amazon.Class
                  Assembler
                  Configuration
                  Control.Monad.Trans.Control.Util
@@ -912,6 +913,11 @@ Executable mailing-server
                  File.FileID
                  File.Model
                  File.Storage
+                 FileStorage
+                 FileStorage.Amazon
+                 FileStorage.Amazon.Config
+                 FileStorage.Class
+                 FileStorage.RedisCache
                  Handlers
                  Happstack.Fields
                  Happstack.Server.Instances
@@ -1298,6 +1304,7 @@ Test-suite kontrakcja-test
                  SignupTest
                  TestConf
                  TestCron
+                 TestFileStorage
                  TestKontra
                  TestingUtil
                  Theme.Tables

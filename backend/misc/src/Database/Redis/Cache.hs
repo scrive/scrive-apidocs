@@ -1,4 +1,7 @@
-module Database.Redis.Cache (mfetch) where
+module Database.Redis.Cache
+  ( mfetch
+  , deleteKey
+  ) where
 
 import Control.Concurrent.Async.Lifted
 import Control.Concurrent.Lifted
@@ -46,7 +49,7 @@ mfetch mredis rkey actGet construct = case mredis of
     fetch cache = mask $ \release -> do
       keySet <- runRedis cache $ R.hsetnx key "__set" ""
       if keySet
-        then (`onException` deleteKey) . release $ do
+        then (`onException` deleteKey cache rkey) . release $ do
           logInfo "Key not found in global cache" $ object [
               "key" `equalsExternalBS` key
             ]
@@ -81,7 +84,7 @@ mfetch mredis rkey actGet construct = case mredis of
               when (ttl < oneDay `div` 2) $ do
                 void $ R.expire key oneDay
             -- If key with no TTL set exists, delete it as it's invalid.
-            Left TTLNotSet -> deleteKey
+            Left TTLNotSet -> deleteKey cache rkey
             Left NotExists -> return ()
 
           return eres
@@ -100,11 +103,12 @@ mfetch mredis rkey actGet construct = case mredis of
             -1 -> return TTLNotSet
             _  -> loop
 
-        deleteKey :: m ()
-        deleteKey = void . runRedis cache $ R.del [key]
-
         key :: BS.ByteString
         key = fromRedisKey rkey
 
         oneDay :: Integer
         oneDay = 86400
+
+deleteKey :: (MonadBaseControl IO m, MonadLog m, MonadMask m) => R.Connection
+          -> RedisKey -> m ()
+deleteKey conn = void . runRedis conn . R.del . pure . fromRedisKey

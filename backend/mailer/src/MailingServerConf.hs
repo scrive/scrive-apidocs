@@ -13,6 +13,7 @@ import Data.Unjson
 import Data.Word
 
 import Database.Redis.Configuration
+import FileStorage.Amazon.Config
 import Log.Configuration
 import Mails.Data
 import Monitoring
@@ -27,7 +28,7 @@ data MailingServerConf = MailingServerConf {
   , mailerLogConfig          :: !LogConfig
   , mailerMasterSender       :: !SenderConfig
   , mailerSlaveSender        :: !(Maybe SenderConfig)
-  , mailerAmazonConfig       :: !(Maybe (String, String, String))
+  , mailerAmazonConfig       :: !AmazonConfig
   , mailerTestReceivers      :: ![Address]
   , mailerMonitoringConfig   :: !(Maybe MonitoringConf)
   } deriving (Eq, Show)
@@ -117,19 +118,9 @@ unjsonMailingServerConf = objectOf $ MailingServerConf
   <*> fieldOpt "slave_sender"
       mailerSlaveSender
       "Slave sender"
-  <*> fieldOptBy "amazon"
+  <*> field "amazon"
       mailerAmazonConfig
       "Amazon configuration"
-      (objectOf $ (,,)
-        <$> field "bucket"
-            (\(x,_,_) -> x)
-            "In which bucket stored files exist"
-        <*> field "access_key"
-            (\(_,x,_) -> x)
-            "Amazon access key"
-        <*> field "secret_key"
-            (\(_,_,x) -> x)
-            "Amazon secret key")
   <*> field "test_receivers"
       mailerTestReceivers
       "Email addresses for testing services"

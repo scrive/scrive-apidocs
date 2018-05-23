@@ -6,6 +6,13 @@ echo ""
 echo "MIGRATING DATABASE"
 dist/build/kontrakcja-migrate/kontrakcja-migrate
 
+echo ""
+echo "STARTING S3 SERVER"
+    mkdir -p s3files
+    fakes3 --root s3files --port 4568 &
+    echo $! > _s3_pid
+    echo "started S3 server with pid $(cat _s3_pid)"
+    sleep 1
 
 echo "STARTING MAILER SERVER"
     dist/build/mailing-server/mailing-server &
@@ -21,7 +28,6 @@ echo "STARTING SMS SERVER"
     sleep 1
 
 echo ""
-
 echo "STARTING CRON SERVER"
     dist/build/cron/cron &
     echo $! > _cron_pid

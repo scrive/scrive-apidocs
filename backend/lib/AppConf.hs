@@ -8,10 +8,10 @@ import Data.Unjson
 import Data.Word
 import qualified Data.Text as T
 
-import Amazon.Config
 import Database.Redis.Configuration
 import EID.CGI.GRP.Config
 import EID.Nets.Config
+import FileStorage.Amazon.Config
 import GuardTime (GuardTimeConf(..))
 import HubSpot.Conf (HubSpotConf(..))
 import Log.Configuration
@@ -30,8 +30,9 @@ data AppConf = AppConf {
     -- 8000) localhost:8000 (default) (0, 80) all interfaces port 80.
   , mainDomainUrl      :: String               -- ^ base url of the main domain
   , useHttps           :: Bool                 -- ^ should we redirect to https?
-  , amazonConfig       :: Maybe AmazonConfig
-  -- ^ AWS configuration (bucket, access key, secret key).
+  , amazonConfig       :: AmazonConfig
+  -- ^ AWS configuration (host, port, bucket, access key, secret key).
+  -- The host and port default to S3.
   , dbConfig           :: T.Text               -- ^ postgresql configuration
   , maxDBConnections   :: Int                  -- ^ limit of db connections
   , redisCacheConfig   :: Maybe RedisConfig    -- ^ redis configuration
@@ -88,19 +89,9 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> fieldDef "https" True
       useHttps
       "Should use https"
-  <*> fieldOptBy "amazon"
+  <*> field "amazon"
       amazonConfig
       "Amazon configuration"
-      (objectOf $ pure (,,)
-       <*> field "bucket"
-         (\(x,_,_) -> x)
-         "In which bucket stored files exist"
-       <*> field "access_key"
-         (\(_,x,_) -> x)
-         "Amazon access key"
-       <*> field "secret_key"
-         (\(_,_,x) -> x)
-         "Amazon secret key")
   <*> field "database"
       dbConfig
       "Database connection string"

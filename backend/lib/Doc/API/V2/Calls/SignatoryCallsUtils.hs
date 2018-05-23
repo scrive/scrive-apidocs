@@ -7,8 +7,11 @@ module Doc.API.V2.Calls.SignatoryCallsUtils (
 , fieldsToFieldsWithFiles
 ) where
 
+import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Time
+import Crypto.RNG
+import Log
 import Text.StringTemplates.Templates
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
@@ -29,6 +32,7 @@ import Doc.SignatoryScreenshots (SignatoryScreenshots, emptySignatoryScreenshots
 import Doc.SMSPin.Model
 import EID.Signature.Model
 import File.Model
+import File.Storage
 import Kontra
 import MagicHash (MagicHash)
 import User.Model
@@ -101,8 +105,12 @@ signDocument slid mh fields acceptedAuthorAttachments notUploadedSignatoryAttach
   guardGetSignatoryFromIdForDocument slid >>= \sl -> dbUpdate . SignDocument slid mh mesig mpin screenshots =<< signatoryActor ctx sl
 
 
-fieldsToFieldsWithFiles :: (MonadDB m, MonadThrow m, MonadTime m) =>
-  SignatoryFieldsValuesForSigning -> m ([(FieldIdentity,FieldValue)],[(FileID,BS.ByteString)])
+fieldsToFieldsWithFiles :: ( CryptoRNG m, MonadBase IO m, MonadCatch m
+                           , MonadFileStorage m , MonadLog m , MonadDB m
+                           , MonadThrow m, MonadTime m)
+                        => SignatoryFieldsValuesForSigning
+                        -> m ( [(FieldIdentity,FieldValue)]
+                             , [(FileID,BS.ByteString)] )
 fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning []) = return ([],[])
 fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning (f:fs)) = do
   (changeFields,files') <- fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning fs)
@@ -112,7 +120,7 @@ fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning (f:fs)) = do
     (fi,FileFTV bs)  -> if (BS.null bs)
       then return $ ((fi,FileFV Nothing):changeFields,files')
       else do
-        fileid <- dbUpdate $ NewFile "signature.png" bs
+        fileid <- saveNewFile "signature.png" bs
         return $ ((fi,FileFV (Just fileid)):changeFields,(fileid,bs):files')
 
 

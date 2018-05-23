@@ -159,4 +159,6 @@ kontraTables =
   , tableKontraInfoForSMSes
   , tableAPILogs
   , tableSignatoryLinkConsentQuestions
+  , tableAmazonURLFixConsumers
+  , tableAmazonURLFixJobs
   ]

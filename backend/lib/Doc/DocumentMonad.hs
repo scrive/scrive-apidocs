@@ -19,10 +19,11 @@ import Doc.Class
 import Doc.Data.Document
 import Doc.DocumentID (DocumentID)
 import Doc.Logging
+import FileStorage.Class
 
 -- | A monad transformer that has a 'DocumentMonad' instance
 newtype DocumentT m a = DocumentT { unDocumentT :: RowCacheT Document m a }
-  deriving (Applicative, Monad, MonadDB, Functor, MonadIO, MonadTrans, MonadBase b, MonadThrow, MonadCatch, MonadMask)
+  deriving (Applicative, Monad, MonadDB, Functor, MonadIO, MonadTrans, MonadBase b, MonadThrow, MonadCatch, MonadMask, MonadFileStorage)
 
 instance MonadBaseControl b m => MonadBaseControl b (DocumentT m) where
   type StM (DocumentT m) a = ComposeSt DocumentT m a

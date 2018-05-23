@@ -9,11 +9,11 @@ import Log
 import Network.HTTP.Client.TLS (newTlsManager)
 import System.Console.CmdArgs hiding (def)
 import System.Environment
-import qualified Data.ByteString as BS
 import qualified Data.Text.IO as T
 import qualified Data.Traversable as F
 
 import Amazon.Consumer
+import Amazon.URLFix
 import AppDBTables
 import Configuration
 import Cron.Model
@@ -24,6 +24,7 @@ import Doc.API.Callback.Model
 import Doc.Extending.Consumer
 import Doc.Sealing.Consumer
 import Doc.Signing.Consumer
+import FileStorage
 import KontraError
 import Log.Configuration
 import Monitoring
@@ -33,7 +34,6 @@ import ThirdPartyStats.Mixpanel
 import ThirdPartyStats.Planhat
 import Utils.IO
 import "kontrakcja" CronConf
-import qualified MemCache
 import qualified "kontrakcja" CronEnv
 
 data CmdConf = CmdConf {
@@ -79,7 +79,7 @@ main = do
       <$> liftBase (createPoolSource (connSettings kontraComposites) (cronMaxDBConnections cronConf))
     templates <- liftBase readGlobalTemplates
     mrediscache <- F.forM (cronRedisCacheConfig cronConf) mkRedisConnection
-    filecache <- MemCache.new BS.length (cronLocalFileCacheSize cronConf)
+    filecache <- newFileMemCache $ cronLocalFileCacheSize cronConf
 
     -- Asynchronous event dispatcher; if you want to add a consumer to the event
     -- dispatcher, please combine the two into one dispatcher function rather
@@ -115,6 +115,7 @@ main = do
         docExtending = documentExtendingConsumer (cronAmazonConfig cronConf)
           (cronGuardTimeConf cronConf) templates filecache mrediscache pool (cronConsumerExtendingMaxJobs cronConf)
         amazonFileUpload = amazonUploadConsumer (cronAmazonConfig cronConf) pool (cronConsumerAmazonMaxJobs cronConf)
+        amazonURLFix = amazonURLFixConsumer (cronAmazonConfig cronConf) pool
 
         apiCallbacks = documentAPICallback runCronEnv (cronConsumerAPICallbackMaxJobs cronConf)
         cron = cronConsumer cronConf reqManager mmixpanel mplanhat runCronEnv runDB (cronConsumerCronMaxJobs cronConf)
@@ -126,4 +127,5 @@ main = do
       . finalize (localDomain "api callbacks"      $ runConsumer apiCallbacks     pool)
       . finalize (localDomain "amazon file upload" $ runConsumer amazonFileUpload pool)
       . finalize (localDomain "cron"               $ runConsumer cron             pool)
+      . finalize (localDomain "amazon url fix"     $ runConsumer amazonURLFix     pool)
       $ liftBase waitForTermination

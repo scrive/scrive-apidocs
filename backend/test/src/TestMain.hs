@@ -14,6 +14,7 @@ import Test.Framework
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
 import qualified Data.Text.IO as T
+import qualified Data.Traversable as T
 
 import AccountInfoTest
 import AdministrationTest
@@ -30,6 +31,7 @@ import ConfigTests
 import Configuration
 import CSSGenerationTest
 import CSVUtilTest
+import Database.Redis.Configuration
 import DB
 import DB.PostgreSQL
 import DB.SQLFunction
@@ -47,6 +49,7 @@ import ESignatureTest
 import EvidenceAttachmentsTest
 import EvidenceLogTest
 import FeatureFlagsTest
+import FileStorage
 import FileTest
 import FlashMessages
 import GTWorkflowTest
@@ -162,7 +165,7 @@ testMany' (allargs, ts) runLogger rng = do
   let (args, envf) = modifyTestEnv allargs
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
-  tconf    <- readConfig  putStrLn "kontrakcja_test.conf"
+  tconf     <- readConfig  putStrLn "kontrakcja_test.conf"
   templates <- readGlobalTemplates
 
   let connSettings = pgConnSettings (testDBConfig tconf)
@@ -184,6 +187,8 @@ testMany' (allargs, ts) runLogger rng = do
 
   active_tests <- atomically $ newTVar (True, 0)
   rejected_documents <- atomically $ newTVar 0
+  memcache <- newFileMemCache $ fromMaybe 200000000 $ testLocalFileCacheSize tconf
+  mRedisConn <- T.forM (testRedisCacheConfig tconf) mkRedisConnection
   let env = envf $ TestEnvSt {
         teConnSource        = cs
       , teStaticConnSource  = staticSource
@@ -196,6 +201,9 @@ testMany' (allargs, ts) runLogger rng = do
       , teOutputDirectory   = Nothing
       , teStagingTests      = False
       , tePdfToolsLambdaConf = testPdfToolsLambdaConf tconf
+      , teAmazonConfig      = testAmazonConfig tconf
+      , teFileMemCache      = memcache
+      , teRedisConn         = mRedisConn
       }
       ts' = if teStagingTests env
         then stagingTests ++ ts

@@ -1,3 +1,4 @@
+-- CORE-478: should be removed
 module Amazon.Consumer (
     AmazonUploadConsumer
   , amazonUploadConsumer
@@ -17,20 +18,21 @@ import DB.PostgreSQL
 import File.FileID
 import File.Model
 import Log.Identifier
-import qualified Amazon as A
+import qualified FileStorage.Amazon as A
+import qualified FileStorage.Amazon.Config as A
 
 data AmazonUploadConsumer = AmazonUploadConsumer {
     aucFileID :: !FileID
   , aucAttempts :: !Int32
-  }
+  } deriving Show
 
 amazonUploadConsumer
   :: (MonadIO m, MonadBase IO m, MonadLog m, CryptoRNG m, MonadMask m)
-  => Maybe (String, String, String)
+  => A.AmazonConfig
   -> ConnectionSourceM m
   -> Int
   -> ConsumerConfig m FileID AmazonUploadConsumer
-amazonUploadConsumer mbAmazonConf pool maxRunningJobs = ConsumerConfig {
+amazonUploadConsumer amazonConf pool maxRunningJobs = ConsumerConfig {
     ccJobsTable = "amazon_upload_jobs"
   , ccConsumersTable = "amazon_upload_consumers"
   , ccJobSelectors =
@@ -46,7 +48,7 @@ amazonUploadConsumer mbAmazonConf pool maxRunningJobs = ConsumerConfig {
   , ccNotificationTimeout = 60 * 1000000 -- 1 minute
   , ccMaxRunningJobs = maxRunningJobs
   , ccProcessJob = \auc@AmazonUploadConsumer{..} -> do
-      if A.isAWSConfigOk mbAmazonConf
+      if A.isAmazonConfigValid amazonConf
         then do
           withPostgreSQL pool $ do
             mfile <- dbQuery $ GetMaybeFileByFileID aucFileID
@@ -58,7 +60,7 @@ amazonUploadConsumer mbAmazonConf pool maxRunningJobs = ConsumerConfig {
                 -- this means, that file was not found or was purged
                 return $ Failed Remove
               Just file -> do
-                success <- A.exportFile (A.mkAWSAction mbAmazonConf) file
+                success <- A.exportFile (A.mkAWSAction (Just amazonConf)) file
                 case success of
                   True  -> return $ Ok Remove
                   False -> Failed <$> onFailure auc

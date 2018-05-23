@@ -4,7 +4,6 @@ module File.Model (
     , GetFileByFileID(..)
     , GetMaybeFileByFileID(..)
     , GetFilesThatShouldBeMovedToAmazon(..)
-    , NewFile(..)
     , NewEmptyFileForAWS(..)
     , PurgeFile(..)
     ) where
@@ -37,24 +36,6 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetMaybeFileByFileID (Maybe File
       sqlWhereFileIDIs fid
       sqlWhereFileWasNotPurged
     fetchMaybe fetchFile
-
-data NewFile = NewFile String BS.ByteString
-instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m NewFile FileID where
-  update (NewFile filename content) = do
-    runQuery_ $ sqlInsert "files" $ do
-        sqlSet "name" filename
-        sqlSet "content" $ content
-        sqlSet "checksum" $ SHA1.hash content
-        sqlSet "size" (fromIntegral . BS.length $ content :: Int32)
-        sqlResult "id"
-    fileid <- fetchOne runIdentity
-    now <- currentTime
-    -- Every new file is uploaded to Amazon
-    runQuery_ . sqlInsert "amazon_upload_jobs" $ do
-      sqlSet "id" fileid
-      sqlSetCmd "run_at" $ "" <?> now <+> "+ interval '1 minute'"
-      sqlSet "attempts" (0::Int32)
-    return fileid
 
 data NewEmptyFileForAWS = NewEmptyFileForAWS String BS.ByteString
 instance (MonadDB m, MonadThrow m) => DBUpdate m NewEmptyFileForAWS File where

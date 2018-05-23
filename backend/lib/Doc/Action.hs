@@ -16,7 +16,6 @@ import Crypto.RNG
 import Log
 import Text.StringTemplates.Templates (TemplatesMonad)
 
-import Amazon (AmazonMonad)
 import BrandedDomain.BrandedDomain
 import Chargeable.Model
 import CronEnv
@@ -38,6 +37,7 @@ import Doc.Sealing.Model
 import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
 import Doc.SignatoryLinkID
 import Doc.Signing.Model ()
+import File.Storage
 import GuardTime (GuardTimeConfMonad)
 import Kontra
 import Log.Identifier
@@ -140,7 +140,7 @@ postDocumentCanceledChange doc@Document{..} = logDocument documentid $ do
 
 -- | After a party has signed - check if we need to close document and
 -- take further actions.
-postDocumentPendingChange :: (CryptoRNG m, TemplatesMonad m, AmazonMonad m, MonadBaseControl IO m, DocumentMonad m, MonadMask m, MonadLog m, MonadIO m, MailContextMonad m, GuardTimeConfMonad m)
+postDocumentPendingChange :: (CryptoRNG m, TemplatesMonad m, MonadFileStorage m, MonadBaseControl IO m, DocumentMonad m, MonadMask m, MonadLog m, MonadIO m, MailContextMonad m, GuardTimeConfMonad m)
                           => Document -> m ()
 postDocumentPendingChange olddoc = do
   unlessM (isPending <$> theDocument) $
@@ -179,7 +179,7 @@ postDocumentPendingChange olddoc = do
 -- | Prepare final PDF if needed, apply digital signature, and send
 -- out confirmation emails if there has been a change in the seal status.  Precondition: document must be
 -- closed or in error.
-postDocumentClosedActions :: (TemplatesMonad m, MailContextMonad m, CryptoRNG m, MonadIO m, MonadLog m, AmazonMonad m, MonadBaseControl IO m, MonadMask m, DocumentMonad m, GuardTimeConfMonad m, PdfToolsLambdaConfMonad m)
+postDocumentClosedActions :: (TemplatesMonad m, MailContextMonad m, CryptoRNG m, MonadIO m, MonadLog m, MonadFileStorage m, MonadBaseControl IO m, MonadMask m, DocumentMonad m, GuardTimeConfMonad m, PdfToolsLambdaConfMonad m)
   => Bool -- ^ Commit to DB after we have sealed the document
   -> Bool -- ^ Prepare final PDF even if it has already been prepared
   -> m Bool

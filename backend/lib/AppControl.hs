@@ -29,7 +29,6 @@ import Network.Socket
 import System.Directory
 import Text.JSON.ToJSValue
 import qualified Control.Exception.Lifted as E
-import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
@@ -42,7 +41,7 @@ import Context.Internal
 import Cookies (lookCookieValue)
 import DB hiding (ErrorCode(..))
 import DB.PostgreSQL
-import File.FileID
+import FileStorage
 import Happstack.Server.ReqHandler
 import IPAddress
 import Kontra
@@ -55,14 +54,12 @@ import Templates
 import Text.JSON.Convert
 import User.Model
 import Utils.HTTP
-import qualified Amazon as AWS
-import qualified MemCache
 
 -- | Global application data
 data AppGlobals = AppGlobals {
     templates          :: !(MVar (UTCTime, KontrakcjaGlobalTemplates))
   , mrediscache        :: !(Maybe R.Connection)
-  , filecache          :: !(MemCache.MemCache FileID BS.ByteString)
+  , filecache          :: !FileMemCache
   , cryptorng          :: !CryptoRNGState
   , connsource         :: !(ConnectionTracker -> TrackedConnectionSource)
   , runlogger          :: !(forall m r . LogT m r -> m r)
@@ -127,7 +124,7 @@ logRequest rq maybeInputsBody = [
 -- | Outer handler monad
 type HandlerM = LogT (ReqHandlerT IO)
 -- | Inner handler monad.
-type InnerHandlerM = DBT (AWS.AmazonMonadT (CryptoRNGT HandlerM))
+type InnerHandlerM = DBT (FileStorageT (CryptoRNGT HandlerM))
 
 -- | Creates a context, routes the request, and handles the session.
 appHandler :: Kontra (Maybe Response) -> AppConf -> AppGlobals -> HandlerM Response
@@ -202,11 +199,12 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
     timeDiff :: UTCTime -> UTCTime -> Double
     timeDiff t = realToFrac . diffUTCTime t
 
-    runHandler :: AWS.AmazonMonadT (CryptoRNGT HandlerM) Response
+    runHandler :: FileStorageT (CryptoRNGT HandlerM) Response
                -> HandlerM Response
     runHandler = catchEverything
       . runCryptoRNGT (cryptorng appGlobals)
-      . AWS.runAmazonMonadT (AWS.AmazonConfig (amazonConfig appConf) (filecache appGlobals) $ mrediscache appGlobals)
+      . runFileStorageT ( amazonConfig appConf, mrediscache appGlobals
+                        , filecache appGlobals )
 
     catchEverything :: HandlerM Response -> HandlerM Response
     catchEverything m = m `E.catch` \(e::E.SomeException) -> do

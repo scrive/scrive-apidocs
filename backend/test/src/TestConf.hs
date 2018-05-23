@@ -6,6 +6,8 @@ module TestConf (
 import Data.Unjson
 import qualified Data.Text as T
 
+import Database.Redis.Configuration
+import FileStorage.Amazon.Config
 import PdfToolsLambda.Conf
 
 -- | Main application configuration.  This includes amongst other
@@ -15,6 +17,9 @@ import PdfToolsLambda.Conf
 data TestConf = TestConf {
     testDBConfig           :: T.Text               -- ^ test postgresql configuration
   , testPdfToolsLambdaConf :: PdfToolsLambdaConf   -- ^ pdf tools lambda configuration for tests
+  , testAmazonConfig       :: Maybe AmazonConfig   -- ^ Optional configuration for S3
+  , testLocalFileCacheSize :: Maybe Int            -- ^ Optional size for the local file cache
+  , testRedisCacheConfig   :: Maybe RedisConfig    -- ^ Optional configuration for the Redis file cache
   } deriving (Eq, Show)
 
 unjsonTestConf :: UnjsonDef TestConf
@@ -25,6 +30,15 @@ unjsonTestConf = objectOf $ pure TestConf
   <*> field "pdftools_lambda"
       testPdfToolsLambdaConf
       "Configuration of PdfTools Lambda"
+  <*> fieldOpt "amazon"
+      testAmazonConfig
+      "Optional configuration for S3"
+  <*> fieldOpt "local_file_cache_size"
+      testLocalFileCacheSize
+      "Optional size for the local file cache"
+  <*> fieldOpt "redis_cache"
+      testRedisCacheConfig
+      "Optional configuration for the Redis file cache"
 
 instance Unjson TestConf where
   unjsonDef = unjsonTestConf

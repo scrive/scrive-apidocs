@@ -1,13 +1,12 @@
 module Context.Internal where
 
 import Log.Class
-import qualified Data.ByteString as BS
 import qualified Database.Redis as R
 
 import BrandedDomain.BrandedDomain
 import EID.CGI.GRP.Config
 import EID.Nets.Config
-import File.FileID
+import FileStorage
 import GuardTime (GuardTimeConf(..))
 import HubSpot.Conf
 import IPAddress
@@ -18,7 +17,6 @@ import Session.SessionID
 import Templates
 import User.Email
 import User.Model
-import qualified MemCache
 
 data Context = Context
     { _ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
@@ -36,7 +34,7 @@ data Context = Context
     , _ctxcgigrpconfig        :: Maybe CgiGrpConfig
     , _ctxgtconf              :: GuardTimeConf -- ^ GuardTime configuration
     , _ctxmrediscache         :: Maybe R.Connection
-    , _ctxfilecache           :: MemCache.MemCache FileID BS.ByteString -- ^
+    , _ctxfilecache           :: FileMemCache
     , _ctxxtoken              :: MagicHash -- ^ The XToken for combatting CSRF
     , _ctxadminaccounts       :: [Email] -- ^
     , _ctxsalesaccounts       :: [Email] -- ^

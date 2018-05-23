@@ -21,6 +21,7 @@ import API.V2
 import DB
 import File.File (File(..))
 import File.Model
+import File.Storage
 import Happstack.Fields
 import Kontra
 import Util.PDFUtil
@@ -142,7 +143,7 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFs names) = do
       Left _ -> apiError $ requestParameterParseError (T.intercalate ", " names) $ "not a valid PDF"
 
   files <- forM pdfcontents $ \(filename, pdfcontent) -> do
-    fileid <- dbUpdate $ NewFile filename pdfcontent
+    fileid <- saveNewFile filename pdfcontent
     file <- dbQuery $ GetFileByFileID fileid
     return file
   return $ Just files
@@ -171,7 +172,7 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFOrImage name) = do
           then return content'
           else apiError $ requestParameterParseError name "image is empty"
         _ -> apiError $ requestParameterParseError name "not a PDF or image (PNG or JPG)"
-      fileid <- dbUpdate $ NewFile filename content
+      fileid <- saveNewFile filename content
       file <- dbQuery $ GetFileByFileID fileid
       return $ Just file
 
@@ -182,7 +183,7 @@ apiV2ParameterOptional (ApiV2ParameterBase64PNGImage name) = do
     (Just Nothing) -> apiError $ requestParameterParseError name "expected RFC2397 encoded png"
     (Just (Just (_,""))) -> apiError $ requestParameterParseError name "image is empty"
     (Just (Just (_,content))) -> do
-      fileid <- dbUpdate $ NewFile "image-param.png" content
+      fileid <- saveNewFile "image-param.png" content
       file <- dbQuery $ GetFileByFileID fileid
       return $ Just file
 

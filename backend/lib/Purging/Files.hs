@@ -9,10 +9,10 @@ import Data.Time.Clock (diffUTCTime)
 import Log
 import qualified Data.Text as T
 
-import Amazon
 import DB
 import File.Conditions
 import File.Model
+import FileStorage.Class
 import Log.Identifier
 
 data MarkOrphanFilesForPurgeAfter = MarkOrphanFilesForPurgeAfter Int Interval
@@ -42,6 +42,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
            , ("signatory_link_fields", "value_file_id")
            , ("highlighted_pages", "file_id")
            , ("amazon_upload_jobs", "id")
+           , ("amazon_url_fix_jobs", "id")
            ]
 
     when (sort expected_refs /= sort refs) $ do
@@ -111,9 +112,9 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
       ]
     fetchMany runIdentity
 
-purgeOrphanFile
-  :: forall m. (MonadDB m, MonadThrow m, MonadLog m, MonadIO m, AmazonMonad m, MonadTime m)
-  => Int -> m Bool
+purgeOrphanFile :: forall m. ( MonadDB m, MonadCatch m, MonadFileStorage m
+                             , MonadIO m , MonadLog m, MonadThrow m
+                             , MonadTime m ) => Int -> m Bool
 purgeOrphanFile batchSize = do
   now0 <- currentTime
   runQuery_ . sqlSelect "files" $ do
@@ -138,17 +139,16 @@ purgeOrphanFile batchSize = do
   where
     purge :: (FileID, Maybe String, Bool) -> m ()
     purge (fid, mamazonUrl, isOnAmazon) = do
-      purgedFromOtherSystems <- case (mamazonUrl, isOnAmazon) of
-        (Just amazonUrl, True) -> do
-          conf <- getAmazonConfig
-          deleteFile (mkAWSAction $ awsConfig conf) amazonUrl
-        _ -> return True
-      if purgedFromOtherSystems
-        then do
+      eRes <- case (mamazonUrl, isOnAmazon) of
+        (Just amazonUrl, True) -> try $ deleteSavedContents amazonUrl
+        _ -> return $ Right ()
+      case eRes of
+        Right () -> do
           dbUpdate $ PurgeFile fid
           commit
-        else do
+        Left err -> do
           logAttention "Purging file failed, it couldn't be removed from Amazon" $ object [
               identifier_ fid
+            , "error" .= show (err :: FileStorageException)
             ]
           rollback

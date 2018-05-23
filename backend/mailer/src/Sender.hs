@@ -19,15 +19,15 @@ import AddressUtils
 import Assembler
 import DB
 import DB.PostgreSQL
+import File.Storage
 import Log.Identifier
 import Log.Utils
 import MailingServerConf
 import Mails.Model
-import qualified Amazon as AWS
 
 data Sender = Sender {
   senderName :: String
-, sendMail   :: forall m. (CryptoRNG m, MonadIO m, MonadMask m, MonadBaseControl IO m, MonadLog m, AWS.AmazonMonad m) => Mail -> m Bool
+, sendMail   :: forall m. (CryptoRNG m, MonadIO m, MonadMask m, MonadBaseControl IO m, MonadLog m, MonadFileStorage m) => Mail -> m Bool
 }
 
 instance Show Sender where

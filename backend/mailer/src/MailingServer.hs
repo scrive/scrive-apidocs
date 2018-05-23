@@ -11,7 +11,6 @@ import Log
 import System.Console.CmdArgs hiding (def)
 import System.Environment
 import qualified Control.Exception.Lifted as E
-import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Data.Traversable as F
@@ -21,6 +20,7 @@ import Configuration
 import Database.Redis.Configuration
 import DB
 import DB.PostgreSQL
+import FileStorage
 import Handlers
 import Happstack.Server.ReqHandler
 import Log.Configuration
@@ -34,8 +34,6 @@ import Monitoring
 import Sender
 import Utils.IO
 import Utils.Network
-import qualified Amazon as AWS
-import qualified MemCache
 
 data CmdConf = CmdConf {
   config :: String
@@ -73,14 +71,10 @@ main = do
         extrasOptions = def
     withPostgreSQL (unConnectionSource . simpleSource $ pgSettings []) $ do
       checkDatabaseAllowUnknownTables extrasOptions [] mailerTables
-    awsconf <- do
-      localCache <- MemCache.new BS.length (mailerLocalFileCacheSize conf)
+    fsConf <- do
+      localCache  <- newFileMemCache $ mailerLocalFileCacheSize conf
       globalCache <- F.forM (mailerRedisCacheConfig conf) mkRedisConnection
-      return $ AWS.AmazonConfig {
-          awsConfig = mailerAmazonConfig conf
-        , awsLocalCache = localCache
-        , awsGlobalCache = globalCache
-        }
+      return (mailerAmazonConfig conf, globalCache, localCache)
     cs@(ConnectionSource pool) <- ($ (maxConnectionTracker $ mailerMaxDBConnections conf))
       <$> liftBase (createPoolSource (pgSettings mailerComposites)  (mailerMaxDBConnections conf))
 
@@ -88,7 +82,7 @@ main = do
       let master = createSender cs $ mailerMasterSender conf
           mslave = createSender cs <$> mailerSlaveSender conf
           cron   = jobsWorker conf cs rng
-          sender = mailsConsumer awsconf master mslave cs rng
+          sender = mailsConsumer fsConf master mslave cs rng
 
       finalize (localDomain "cron" $ runConsumer cron pool) $ do
         finalize (localDomain "sender" $ runConsumer sender pool) $ do
@@ -118,13 +112,13 @@ main = do
       Nothing -> False
 
     mailsConsumer
-      :: AWS.AmazonConfig
+      :: FileStorageConfig
       -> Sender
       -> Maybe Sender
       -> TrackedConnectionSource
       -> CryptoRNGState
       -> ConsumerConfig MainM MailID Mail
-    mailsConsumer awsconf master mslave (ConnectionSource pool) rng = ConsumerConfig {
+    mailsConsumer fsConf master mslave (ConnectionSource pool) rng = ConsumerConfig {
       ccJobsTable = "mails"
     , ccConsumersTable = "mailer_workers"
     , ccJobSelectors = mailSelectors
@@ -139,7 +133,7 @@ main = do
             "mail" .= show mail
           ]
         return $ Failed Remove
-      else AWS.runAmazonMonadT awsconf . runCryptoRNGT rng $ do
+      else runCryptoRNGT rng . runFileStorageT fsConf $ do
         senderType <- if mailServiceTest
           then return MasterSender
           else withPostgreSQL pool $ dbQuery GetCurrentSenderType

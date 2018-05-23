@@ -13,16 +13,13 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Crypto.RNG
 import Log
-import qualified Data.ByteString as BS
 import qualified Database.Redis as R
 
-import Amazon
 import CronConf (CronConf, cronAmazonConfig, cronMailNoreplyAddress, cronSalesforceConf)
 import DB
-import File.FileID (FileID)
+import FileStorage
 import Salesforce.Conf
 import Templates (KontrakcjaGlobalTemplates)
-import qualified MemCache
 
 data CronEnv = CronEnv {
     ceSalesforceConf     :: Maybe SalesforceConf
@@ -32,25 +29,24 @@ data CronEnv = CronEnv {
 
 runCronEnv :: MonadBase IO m
              => CronConf
-             -> MemCache.MemCache FileID BS.ByteString
+             -> FileMemCache
              -> Maybe R.Connection
              -> KontrakcjaGlobalTemplates
-             -> CronEnvT (AmazonMonadT m) CronEnv a
+             -> CronEnvT (FileStorageT m) CronEnv a
              -> m a
-runCronEnv cronConf localCache globalCache templates x = do
-  let amazoncfg     = AmazonConfig (cronAmazonConfig cronConf)
-                      localCache globalCache
-      cronEnvData   = CronEnv (cronSalesforceConf cronConf) templates
-                      (cronMailNoreplyAddress cronConf)
-  runAmazonMonadT amazoncfg $ runReaderT (unCronEnvT x) cronEnvData
+runCronEnv cronConf memCache mRedisConn templates x = do
+  let cronEnvData = CronEnv (cronSalesforceConf cronConf) templates
+                            (cronMailNoreplyAddress cronConf)
+      fsConfig = (cronAmazonConfig cronConf, mRedisConn, memCache)
+  runFileStorageT fsConfig $ runReaderT (unCronEnvT x) cronEnvData
 
-type CronEnvM = CronEnvT (AmazonMonadT (DBT (CryptoRNGT (LogT IO)))) CronEnv
+type CronEnvM = CronEnvT (FileStorageT (DBT (CryptoRNGT (LogT IO)))) CronEnv
 
 -- hiding ReaderT prevents collision with ReaderT in TestEnvSt
 newtype CronEnvT m sd a = CronEnvT { unCronEnvT :: ReaderT sd m a }
-  deriving (Applicative, CryptoRNG, Functor, Monad, MonadCatch, MonadDB, MonadIO
-           ,MonadMask, MonadReader sd, MonadThrow, AmazonMonad
-           ,MonadBase b)
+  deriving ( Applicative, CryptoRNG, Functor, Monad, MonadCatch, MonadDB, MonadIO
+           , MonadMask, MonadReader sd, MonadThrow, MonadFileStorage
+           , MonadBase b)
 
 deriving newtype instance
             (Monad m, MonadTime m) => MonadTime (CronEnvT m sd)

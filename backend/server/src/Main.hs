@@ -12,7 +12,6 @@ import Network.Curl
 import System.Console.CmdArgs hiding (def)
 import System.Environment
 import qualified Control.Exception.Lifted as E
-import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text.IO as T
 import qualified Data.Traversable as F
 
@@ -26,6 +25,7 @@ import Configuration
 import Database.Redis.Configuration
 import DB
 import DB.PostgreSQL
+import FileStorage
 import Happstack.Server.ReqHandler
 import Log.Configuration
 import Monitoring
@@ -36,7 +36,6 @@ import User.Model
 import Utils.IO
 import Utils.Network
 import qualified HostClock.Model as HC
-import qualified MemCache
 import qualified VersionTH
 
 data CmdConf = CmdConf {
@@ -83,7 +82,7 @@ main = withCurlDo $ do
     appGlobals <- do
       templates <- liftBase (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
       mrediscache <- F.forM (redisCacheConfig appConf) mkRedisConnection
-      filecache <- MemCache.new BS.length (localFileCacheSize appConf)
+      filecache <- newFileMemCache $ localFileCacheSize appConf
       return AppGlobals {
           templates          = templates
         , mrediscache        = mrediscache

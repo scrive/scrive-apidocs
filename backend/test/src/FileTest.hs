@@ -5,11 +5,11 @@ import Test.Framework
 import Test.QuickCheck
 import qualified Data.ByteString.UTF8 as BS
 
-import Crypto
 import DB
 import File.Conditions
 import File.File
 import File.Model
+import File.Storage
 import Purging.Files
 import TestingUtil
 import TestKontra
@@ -23,12 +23,8 @@ fileTests env = testGroup "Files" [
 
   --Basic DB operations
   testThat "File insert persists content"  env testFileNewFile,
-  testThat "File move to AWS works"  env testFileMovedToAWS,
 
-  testThat "File purging works"  env testPurgeFiles,
-
-  -- Advanced tests
-  testThat "Newly created files are supposed to be moved to amazon"  env testNewFileThatShouldBeMovedToAWS
+  testThat "File purging works"  env testPurgeFiles
   ]
 
 testFileIDReadShow :: TestEnv ()
@@ -44,40 +40,24 @@ testFileIDUriShow = replicateM_ 100 $  do
 testFileNewFile :: TestEnv ()
 testFileNewFile  = replicateM_ 100 $ do
   (name, content) <- fileData
-  fileid' <- dbUpdate $ NewFile name content
-  File { fileid = fileid, filename = fname1, filestorage = FileStorageMemory fcontent1 } <- dbQuery $ GetFileByFileID fileid'
+  fileid' <- saveNewFile name content
+  file1@File{ fileid, filename = fname1 } <- dbQuery $ GetFileByFileID fileid'
+  fcontent1 <- getFileContents file1
 
   assertEqual "We got the file we were asking for" fileid' fileid
   assertEqual "File content doesn't change" content fcontent1
   assertEqual "File name doesn't change" name fname1
-  File { filename = fname2 , filestorage = FileStorageMemory fcontent2} <- dbQuery $ GetFileByFileID fileid'
-  assertEqual "File name doesn't change after storing" name fname2
-  assertEqual "File content doesn't change after storing" content fcontent2
 
 testFileDoesNotExist :: TestEnv ()
 testFileDoesNotExist = replicateM_ 5 $ do
   assertRaisesKontra (\FileDoesNotExist {} -> True) $
     randomQuery GetFileByFileID
 
-testFileMovedToAWS :: TestEnv ()
-testFileMovedToAWS  = replicateM_ 100 $ do
-  (name,content) <- fileData
-  url <- viewableS
-  fileid' <- dbUpdate $ NewFile name content
-  let Right aes = mkAESConf (BS.fromString (take 32 $ repeat 'a')) (BS.fromString (take 16 $ repeat 'b'))
-
-  dbUpdate $ FileMovedToAWS fileid' url aes
-  File { filename = fname , filestorage = FileStorageAWS furl aes2 } <- dbQuery $ GetFileByFileID fileid'
-  assertEqual "File data name does not change" name fname
-  assertEqual "File URL does not change" url furl
-  assertEqual "AES key is persistent" aes aes2
-
 testPurgeFiles :: TestEnv ()
 testPurgeFiles  = replicateM_ 100 $ do
   let maxMarked = 1000
   (name,content) <- fileData
-  fid <- dbUpdate $ NewFile name content
-  runQuery_ $ "DELETE FROM amazon_upload_jobs WHERE id =" <?> fid
+  fid <- saveNewFile name content
   fidsToPurge <- dbUpdate $ MarkOrphanFilesForPurgeAfter maxMarked mempty
   assertEqual "File successfully marked for purge" [fid] fidsToPurge
   dbUpdate $ PurgeFile fid
@@ -87,13 +67,6 @@ testPurgeFiles  = replicateM_ 100 $ do
 
   orphanFidsAfterPurge <- dbUpdate $ MarkOrphanFilesForPurgeAfter maxMarked mempty
   assertEqual "File not marked for purge after it was purged" [] orphanFidsAfterPurge
-
-testNewFileThatShouldBeMovedToAWS :: TestEnv ()
-testNewFileThatShouldBeMovedToAWS  = do
-  (name,content) <- fileData
-  fileid <- dbUpdate $ NewFile name content
-  fileisscheduledforupload <- runQuery01 $ "SELECT id FROM amazon_upload_jobs WHERE id =" <?> fileid
-  assertEqual "File is scheduled for upload to Amazon" True fileisscheduledforupload
 
 viewableS :: TestEnv String
 viewableS = rand 10 $ arbString 10 100
