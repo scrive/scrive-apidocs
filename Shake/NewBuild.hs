@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 -- | Various new-build related utilities.
 --
 
@@ -10,14 +12,22 @@ module Shake.NewBuild (UseNewBuild(DontUseNewBuild)
                       ,hpcPaths
                       ,componentBuildRules) where
 
+#ifndef MIN_VERSION_base
+#define MIN_VERSION_base(x,y,z) 0
+#endif
+
 import Control.Monad
-import Data.Maybe
 import Data.List.Extra (trim)
+import Data.Maybe
+#if !MIN_VERSION_base(4,11,0)
+import Data.Monoid
+#endif
 import Data.Version
 import Data.Version.Extra (readVersion)
 import Development.Shake
 import Development.Shake.FilePath
 import Distribution.Text
+import Distribution.Types.ComponentName
 import Distribution.System
 import System.Process (readProcess)
 import qualified Data.Map as M
@@ -84,64 +94,79 @@ whenNewBuild unb act = ifNewBuild unb act (return ())
 -- | Subdirectory where the built artifacts for this component are
 -- located, this depends on the version of 'cabal-install'.
 componentSubDir :: CabalInstallVersion -> CabalComponentName -> String
-componentSubDir cabalInstallVer cname
-  | useSeparateComponentDirs cabalInstallVer =
+componentSubDir cabalInstallVer cname = ctype </> cbuilddir
+  where
+    cbuilddir =
       case cname of
-        LibraryName         _ -> "l"
-        ExecutableName      _ -> "x"
-        TestSuiteName       _ -> "t"
-        BenchmarkName       _ -> "b"
-        ForeignLibraryName  _ -> "f"
-  | otherwise = "c"
+        CLibName -> unComponentName cname </> "build"
+        _        -> unComponentName cname </> "build" </> unComponentName cname
+    ctype | useSeparateComponentDirs cabalInstallVer =
+              case cname of
+                CLibName      -> ""
+                CSubLibName _ -> "l"
+                CExeName    _ -> "x"
+                CTestName   _ -> "t"
+                CBenchName  _ -> "b"
+                CFLibName   _ -> "f"
+          | otherwise = "c"
+
+-- | Name of the main built artifact for this component.
+componentArtifactName :: CabalComponentName -> String
+componentArtifactName c =
+  let libname   = "libHS" <> unComponentName c <> "1.0-inplace" <.> "a"
+  in case c of
+    CLibName      -> libname
+    CSubLibName _ -> libname
+    _             -> unComponentName c <.> exe
 
 -- | Given a component name and type, return the path to the
 -- corresponding executable.
-componentTargetPath :: UseNewBuild -> CabalComponentName -> FilePath
+componentTargetPath :: UseNewBuild -> ComponentName -> FilePath
 componentTargetPath DontUseNewBuild c =
-  "dist" </> "build" </> componentName c </> componentName c <.> exe
+  "dist" </> "build" </> unComponentName c </> componentArtifactName c
 componentTargetPath (UseNewBuild cabalInstallVer buildDir) c =
-  buildDir </> componentSubDir cabalInstallVer c </> componentName c </> "build"
-           </> componentName c </> componentName c <.> exe
+  buildDir </> componentSubDir cabalInstallVer c </> componentArtifactName c
 
 
--- | Paths that coverage report generation needs to pass to `hpc` via `--hpcdir`.
+-- | Paths that coverage report generation needs to pass to `hpc` via
+-- `--hpcdir`.
 hpcPaths :: CabalFile -> UseNewBuild -> [FilePath]
 hpcPaths cabalFile newBuild =
   [ mainPath
-  , componentPath (TestSuiteName "kontrakcja-test") ]
+  , componentPath . mkTestName $ "kontrakcja-test" ]
   ++ if useNewBuild newBuild
-     then [componentPath (LibraryName "kontrakcja-prelude")]
+     then [componentPath . mkSubLibName $ "kontrakcja-prelude"]
      else []
   where
     build_dir = ifNewBuild newBuild id "dist"
     hdm       = "hpc" </> "dyn" </> "mix"
     mainPath  = build_dir </> hdm </> packageId cabalFile
 
-    componentPath :: CabalComponentName -> FilePath
+    componentPath :: ComponentName -> FilePath
     componentPath c = case newBuild of
-      DontUseNewBuild -> build_dir </> hdm </> componentName c
+      DontUseNewBuild -> build_dir </> hdm </> unComponentName c
       (UseNewBuild cabalInstallVer _buildDir) ->
-        build_dir </> componentSubDir cabalInstallVer c </> componentName c
-        </> hdm </> (case c of (LibraryName _) -> packageId cabalFile
-                               _               -> componentName c)
+        build_dir </> componentSubDir cabalInstallVer c </> unComponentName c
+        </> hdm </> (case c of CLibName -> packageId cabalFile
+                               _        -> unComponentName c)
 
 -- | For each exe/test-suite/benchmark component in the .cabal file,
 -- add a rule for building the corresponding executable.
 componentBuildRules :: UseNewBuild -> CabalFile -> Rules ()
 componentBuildRules newBuild cabalFile =
-  forM_ (allComponentNames cabalFile) $ \cname ->
-    if not . isLibrary $ cname
-    then do
+  forM_ (allComponentNames cabalFile) $ \cname -> do
       let targetPath = componentTargetPath newBuild cname
-      componentName cname ~> need [targetPath]
+      unComponentName cname ~> do need [targetPath]
       targetPath %> \_ ->
         -- Assumes that all sources of a component are in its hs-source-dirs.
-        do let sourceDirs = componentHsSourceDirs cname cabalFile
+        do let sourceDirs = componentHsSourceDirs cabalFile cname
+               depsSourceDirs = concatMap (componentHsSourceDirs cabalFile)
+                                (componentDependencies cname cabalFile)
            if useNewBuild newBuild
              then need ["cabal.project.local"]
              else need ["dist/setup-config"]
-           needPatternsInDirectories ["//*.hs"] sourceDirs
+           needPatternsInDirectories ["//*.hs"]
+             (ordNub $ sourceDirs ++ depsSourceDirs)
            if useNewBuild newBuild
-             then cmd $ "cabal new-build " ++ (componentName cname)
-             else cmd $ "cabal build " ++ (componentName cname)
-    else return ()
+             then cmd $ "cabal new-build " ++ (unComponentName cname)
+             else cmd $ "cabal build "     ++ (unComponentName cname)

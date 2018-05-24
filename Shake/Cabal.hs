@@ -1,16 +1,22 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP                 #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 #ifndef MIN_VERSION_Cabal
 #define MIN_VERSION_Cabal(x,y,z) 0
 #endif
 
-module Shake.Cabal ( CabalFile(packageId, allExtensions), parseCabalFile
-                   , CabalComponentName(..), componentName
-                   , isLibrary, isExecutable, isLibOrExe
-                   , isTestSuite, isBenchmark, isForeignLibrary
-                   , CabalComponentType(..), componentNameHasType
+module Shake.Cabal ( CabalFile(packageId, allExtensions)
+                   , parseCabalFile
+                   , CabalComponentName, unComponentName
+                   , mkExeName, mkSubLibName, mkTestName, mkBenchName
+                   , Library, Executable, TestSuite, Benchmark, ForeignLib
+                   , componentNameHasType
                    , allComponentNames
-                   , libExeComponentNames, testComponentNames, benchComponentNames
+                   , componentDependencies
+                   , libExeComponentNames
+                   , testComponentNames, benchComponentNames
                    , allHsSourceDirs, allHsSourceDirsForComponentType
                    , componentHsSourceDirs
                    , allLibExeHsSourceDirs
@@ -21,6 +27,11 @@ module Shake.Cabal ( CabalFile(packageId, allExtensions), parseCabalFile
 
 import qualified Data.Map.Strict                               as M
 import           Data.Maybe
+import           Distribution.Backpack.ComponentsGraph
+import           Distribution.Compat.Graph                     as Graph
+#if MIN_VERSION_Cabal(2,2,0)
+import           Distribution.Compat.Lens                      as Lens
+#endif
 import           Distribution.PackageDescription               hiding
                                                                (allExtensions)
 import qualified Distribution.PackageDescription               as PkgDesc
@@ -30,80 +41,57 @@ import           Distribution.PackageDescription.Parsec
 #else
 import           Distribution.PackageDescription.Parse
 #endif
-#if MIN_VERSION_Cabal(2,0,0)
-import           Distribution.Types.UnqualComponentName
+#if MIN_VERSION_Cabal(2,2,0)
+import           Distribution.Types.BuildInfo.Lens             as Lens
 #endif
+import           Distribution.Types.Component
+import           Distribution.Types.ComponentName
+import           Distribution.Types.ComponentRequestedSpec
+import           Distribution.Types.ForeignLib
+import           Distribution.Types.UnqualComponentName
 import           Distribution.Text                             (display)
 import           Distribution.Verbosity
 import           Language.Haskell.Extension
+import qualified Text.PrettyPrint                              as PP
 
 import Shake.Utils
 
-#if !MIN_VERSION_Cabal(2,0,0)
+type CabalComponentName = ComponentName
 
-unUnqualComponentName :: String -> String
-unUnqualComponentName = id
+unComponentName :: CabalComponentName -> String
+unComponentName = fromMaybe "" . fmap unUnqualComponentName
+                  . componentNameString
 
-readGenericPackageDescription :: Verbosity -> FilePath
-                              -> IO GenericPackageDescription
-readGenericPackageDescription = readPackageDescription
-#endif
+mkExeName, mkSubLibName, mkTestName, mkBenchName :: String -> ComponentName
+mkExeName    = CExeName    . mkUnqualComponentName
+mkSubLibName = CSubLibName . mkUnqualComponentName
+mkTestName   = CTestName   . mkUnqualComponentName
+mkBenchName  = CBenchName  . mkUnqualComponentName
 
-data CabalComponentName = LibraryName        String
-                        | ExecutableName     String
-                        | TestSuiteName      String
-                        | BenchmarkName      String
-                        | ForeignLibraryName String
-  deriving (Ord, Eq)
+class ComponentNameHasType t where
+  componentNameHasType :: ComponentName -> Bool
 
-componentName :: CabalComponentName -> String
-componentName (LibraryName n)        = n
-componentName (ExecutableName n)     = n
-componentName (TestSuiteName n)      = n
-componentName (BenchmarkName n)      = n
-componentName (ForeignLibraryName n) = n
-
-isLibrary :: CabalComponentName -> Bool
-isLibrary (LibraryName _) = True
-isLibrary _               = False
-
-isExecutable :: CabalComponentName -> Bool
-isExecutable (ExecutableName _) = True
-isExecutable _                  = False
-
-isLibOrExe :: CabalComponentName -> Bool
-isLibOrExe (LibraryName _)    = True
-isLibOrExe (ExecutableName _) = True
-isLibOrExe _                  = False
-
-isTestSuite :: CabalComponentName -> Bool
-isTestSuite (TestSuiteName _) = True
-isTestSuite _                 = False
-
-isBenchmark :: CabalComponentName -> Bool
-isBenchmark (BenchmarkName _) = True
-isBenchmark _                 = False
-
-isForeignLibrary :: CabalComponentName -> Bool
-isForeignLibrary (ForeignLibraryName _) = True
-isForeignLibrary _                 = False
-
-data CabalComponentType = LibraryComponent
-                        | ExecutableComponent
-                        | TestSuiteComponent
-                        | BenchmarkComponent
-                        | ForeignLibraryComponent
-
-componentNameHasType :: CabalComponentType -> CabalComponentName -> Bool
-componentNameHasType LibraryComponent        = isLibrary
-componentNameHasType ExecutableComponent     = isExecutable
-componentNameHasType TestSuiteComponent      = isTestSuite
-componentNameHasType BenchmarkComponent      = isBenchmark
-componentNameHasType ForeignLibraryComponent = isForeignLibrary
-
+instance ComponentNameHasType Library where
+  componentNameHasType CLibName        = True
+  componentNameHasType (CSubLibName _) = True
+  componentNameHasType _               = False
+instance ComponentNameHasType Executable where
+  componentNameHasType (CExeName _)    = True
+  componentNameHasType _               = False
+instance ComponentNameHasType TestSuite where
+  componentNameHasType (CTestName _)   = True
+  componentNameHasType _               = False
+instance ComponentNameHasType Benchmark where
+  componentNameHasType (CBenchName _)  = True
+  componentNameHasType _               = False
+instance ComponentNameHasType ForeignLib where
+  componentNameHasType (CFLibName _)   = True
+  componentNameHasType _               = False
 
 -- | A component name -> list of hs-source-dirs map.
-type HsSourceDirsMap = M.Map CabalComponentName [FilePath]
+type HsSourceDirsMap = M.Map ComponentName [FilePath]
+
+type ComponentDepsMap = M.Map ComponentName [ComponentName]
 
 -- | All data that we need from a .cabal file.
 data CabalFile = CabalFile {
@@ -112,84 +100,111 @@ data CabalFile = CabalFile {
   -- | List all extensions used by this package.
   allExtensions      :: [Extension],
   -- | hs-source-dirs of all components. Default library has name
-  -- "". TODO: support sublibraries and foreign libraries.
-  hsSourceDirsMap    :: HsSourceDirsMap
+  -- "".
+  hsSourceDirsMap    :: HsSourceDirsMap,
+  -- | Component dependency graph.
+  componentDepsMap   :: ComponentDepsMap
   }
+
+cabalComponentHsSourceDirs :: Component -> [FilePath]
+#if MIN_VERSION_Cabal(2,2,0)
+cabalComponentHsSourceDirs = Lens.view (Lens.buildInfo . Lens.hsSourceDirs)
+#else
+cabalComponentHsSourceDirs (CLib   l) = hsSourceDirs . libBuildInfo        $ l
+cabalComponentHsSourceDirs (CExe   e) = hsSourceDirs . buildInfo           $ e
+cabalComponentHsSourceDirs (CFLib  f) = hsSourceDirs . foreignLibBuildInfo $ f
+cabalComponentHsSourceDirs (CTest  t) = hsSourceDirs . testBuildInfo       $ t
+cabalComponentHsSourceDirs (CBench b) = hsSourceDirs . benchmarkBuildInfo  $ b
+#endif
 
 -- | Parse a .cabal file.
 parseCabalFile :: FilePath -> IO CabalFile
 parseCabalFile cabalFile = do
   pkgDesc <- flattenPackageDescription <$>
              readGenericPackageDescription normal cabalFile
-  let libBuildInfos    =  [(LibraryName "", libBuildInfo $ lib)
-                          | lib <- maybeToList $ library pkgDesc ]
-      exeBuildInfos    =  [( ExecutableName . unUnqualComponentName . exeName $ exe
-                           , buildInfo exe )
-                          | exe <- executables pkgDesc ]
-      testBuildInfos   =  [( TestSuiteName . unUnqualComponentName . testName
-                             $ test
-                           , testBuildInfo test )
-                          | test <- testSuites pkgDesc]
-      benchBuildInfos  =  [( BenchmarkName . unUnqualComponentName . benchmarkName
-                             $ bench
-                           , benchmarkBuildInfo bench )
-                          | bench <- benchmarks pkgDesc]
-      srcDirs bis      =  M.fromList [(name, ordNub . hsSourceDirs $ bi)
-                                     | (name, bi) <- bis]
-      exts             = ordNub . concatMap PkgDesc.allExtensions . allBuildInfo $
-                         pkgDesc
-      pkgid            = display . package $ pkgDesc
-  return $ CabalFile pkgid exts
-                     (mconcat . map srcDirs $ [ libBuildInfos, exeBuildInfos
-                                              , testBuildInfos, benchBuildInfos])
+
+  let pkgid       = display . package $ pkgDesc
+      exts        = ordNub . concatMap PkgDesc.allExtensions . allBuildInfo
+                    $ pkgDesc
+      compReqSpec = ComponentRequestedSpec { testsRequested      = True
+                                           , benchmarksRequested = True }
+      compGraphE  = mkComponentsGraph compReqSpec pkgDesc
+      srcDirs     = ordNub . cabalComponentHsSourceDirs
+
+  compGraph <- case compGraphE of
+    Left compCycle -> fail . PP.renderStyle PP.style . componentCycleMsg
+                      $ compCycle
+    Right g        -> return g
+
+  return $ CabalFile
+    { packageId        = pkgid
+    , allExtensions    = exts
+    , hsSourceDirsMap  = M.map (srcDirs . Graph.nodeValue) . Graph.toMap
+                         $ compGraph
+    , componentDepsMap = M.fromList .
+                         map (\(comp, cnames) -> (componentName comp, cnames)) .
+                         componentsGraphToList $ compGraph
+    }
+
+-- | All components that this component depends on.
+componentDependencies :: ComponentName -> CabalFile -> [ComponentName]
+componentDependencies cname cabalFile =
+  M.findWithDefault [] cname . componentDepsMap $ cabalFile
 
 -- | List of hs-source-dirs of all components.
 allHsSourceDirs :: CabalFile -> [FilePath]
 allHsSourceDirs = ordNub . concat . M.elems . hsSourceDirsMap
 
 -- | List of hs-source-dirs of all components of a given type.
-allHsSourceDirsForComponentType :: CabalComponentType -> CabalFile -> [FilePath]
-allHsSourceDirsForComponentType componentType cabalFile =
+allHsSourceDirsForComponentType :: forall t . ComponentNameHasType t
+                                => CabalFile -> [FilePath]
+allHsSourceDirsForComponentType cabalFile =
   allHsSourceDirs $ cabalFile
   { hsSourceDirsMap = M.filterWithKey
-                      (\k _v -> componentNameHasType componentType k)
+                      (\k _v -> componentNameHasType @t k)
                       $ hsSourceDirsMap cabalFile
   }
 
 -- | List of hs-source-dirs of a single component.
-componentHsSourceDirs :: CabalComponentName -> CabalFile -> [FilePath]
-componentHsSourceDirs compName = fromMaybe [] . M.lookup compName . hsSourceDirsMap
+componentHsSourceDirs :: CabalFile -> ComponentName -> [FilePath]
+componentHsSourceDirs cabalFile compName =
+  fromMaybe [] . M.lookup compName . hsSourceDirsMap $ cabalFile
 
 -- | Return the list of hs-source-dirs for all libraries and executables.
 allLibExeHsSourceDirs :: CabalFile -> [FilePath]
 allLibExeHsSourceDirs cabalFile =
-  allHsSourceDirsForComponentType LibraryComponent cabalFile
-  ++ allHsSourceDirsForComponentType ExecutableComponent cabalFile
+  allHsSourceDirsForComponentType @Library cabalFile
+  ++ allHsSourceDirsForComponentType @Executable cabalFile
 
 -- | Return the list of hs-source-dirs for all test suites.
 allTestHsSourceDirs :: CabalFile -> [FilePath]
-allTestHsSourceDirs = allHsSourceDirsForComponentType TestSuiteComponent
+allTestHsSourceDirs = allHsSourceDirsForComponentType @TestSuite
 
 -- | Return the list of hs-source-dirs for all benchmarks.
 allBenchHsSourceDirs :: CabalFile -> [FilePath]
-allBenchHsSourceDirs = allHsSourceDirsForComponentType BenchmarkComponent
+allBenchHsSourceDirs = allHsSourceDirsForComponentType @Benchmark
 
 -- | Return the list of hs-source-dirs for all foreign libraries.
 allFLibHsSourceDirs :: CabalFile -> [FilePath]
-allFLibHsSourceDirs = allHsSourceDirsForComponentType ForeignLibraryComponent
+allFLibHsSourceDirs = allHsSourceDirsForComponentType @ForeignLib
 
 -- | List the names of all components.
-allComponentNames :: CabalFile -> [CabalComponentName]
+allComponentNames :: CabalFile -> [ComponentName]
 allComponentNames = M.keys . hsSourceDirsMap
 
 -- | List all names of library/executable components.
-libExeComponentNames :: CabalFile -> [CabalComponentName]
+libExeComponentNames :: CabalFile -> [ComponentName]
 libExeComponentNames = filter isLibOrExe . allComponentNames
+  where
+    isLibOrExe n = componentNameHasType @Library n ||
+                   componentNameHasType @Executable n
 
 -- | List all names of test suite components.
-testComponentNames :: CabalFile -> [CabalComponentName]
-testComponentNames = filter isTestSuite . allComponentNames
+testComponentNames :: CabalFile -> [ComponentName]
+testComponentNames = filter (componentNameHasType @TestSuite) .
+                     allComponentNames
 
 -- | List all names of benchmark components.
-benchComponentNames :: CabalFile -> [CabalComponentName]
-benchComponentNames = filter isBenchmark . allComponentNames
+benchComponentNames :: CabalFile -> [ComponentName]
+benchComponentNames = filter (componentNameHasType @Benchmark) .
+                      allComponentNames

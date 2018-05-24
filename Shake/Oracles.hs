@@ -115,7 +115,9 @@ addOracles = do
     dbName     <- if tc then askOracle (TeamCityBuildDBName ())
                         else return defDBName
     lConf      <- if tc then askOracle (TeamCityBuildLambdaConf ())
-                        else (error "Lambda configuration for tests must be defined" :: m String)
+                        else error
+                        "AWS Lambda configuration for tests must be defined"
+                        :: m String
     return $ (dbName, connString, lConf)
 
   return ()

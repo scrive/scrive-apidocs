@@ -46,7 +46,8 @@ buildDBDocs tgt = do
         ExitSuccess -> return stdout
         _           -> do
           userHomeDir <- liftIO $ getHomeDirectory
-          return $ userHomeDir </> "bin/schemacrawler/_schemacrawler/schemacrawler.sh"
+          return $ userHomeDir </> "bin" </> "schemacrawler"
+                               </> "_schemacrawler" </> "schemacrawler.sh"
 
     getSchemaCrawlerDir :: Action FilePath
     getSchemaCrawlerDir = takeDirectory <$> getSchemaCrawlerPath

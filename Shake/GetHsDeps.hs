@@ -13,7 +13,8 @@ getHsDeps :: FilePath -> IO [FilePath]
 getHsDeps mainIs = do
   withTempDir $ \dir -> do
     let tmpFile = dir </> ".depend"
-    callProcess "ghc" ["-dep-suffix", "", "-M", mainIs, "-dep-makefile", tmpFile]
+    callProcess "ghc" [ "-dep-suffix", "", "-M", mainIs
+                      , "-dep-makefile", tmpFile ]
     deps <- nub . filter (".hs" `isSuffixOf`)
       . concatMap snd . parseMakefile <$> readFile' tmpFile
     return deps

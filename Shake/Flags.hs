@@ -1,9 +1,12 @@
 -- | Command-line flags accepted by the main Shake script.
 
 module Shake.Flags (ShakeFlag(..)
+                   ,Pattern
                    ,shakeFlags) where
 
 import System.Console.GetOpt
+
+type Pattern = String
 
 data ShakeFlag = TransifexUser     String
                | TransifexPassword String
@@ -11,19 +14,22 @@ data ShakeFlag = TransifexUser     String
                | SrcSubdir         FilePath
                | NewBuild
                | CreateDB
+               | TestPattern       Pattern
   deriving Eq
 
 shakeFlags :: [OptDescr (Either String ShakeFlag)]
 shakeFlags =
-  [ Option "" ["user"]       (reqArg TransifexUser     "USER") "User name"
-  , Option "" ["password"]   (reqArg TransifexPassword "PASS") "Password"
-  , Option "" ["lang"]       (reqArg TransifexLang     "LANG") "Language"
-  , Option "" ["src-subdir"] (reqArg SrcSubdir         "DIR")
-    "Source subdirectory (for hindent/stylish-haskell/hlint)"
-  , Option "" ["new-build"]  (noArg  NewBuild)
+  [ Option ""  ["user"]       (reqArg TransifexUser     "USER") "User name"
+  , Option ""  ["password"]   (reqArg TransifexPassword "PASS") "Password"
+  , Option ""  ["lang"]       (reqArg TransifexLang     "LANG") "Language"
+  , Option ""  ["src-subdir"] (reqArg SrcSubdir         "DIR")
+    "Source subdirectory (for 'hindent'/'stylish-haskell'/'hlint')"
+  , Option ""  ["new-build"]  (noArg  NewBuild)
     "Use 'new-build'."
-  , Option "" ["create-db"]  (noArg  CreateDB)
+  , Option ""  ["create-db"]  (noArg  CreateDB)
     "Use a new DB for tests. See 'help-env' for relevant env var settings."
+  , Option "p" ["pattern"]    (reqArg TestPattern       "PATTERN")
+    "Run only tests matching a pattern (for 'test'/'test-server')"
   ]
   where
     noArg  flagVal     = NoArg  (Right flagVal)

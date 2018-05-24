@@ -8,7 +8,7 @@
 import Control.Exception  (IOException, SomeException, catch, evaluate)
 import Control.Monad
 import Data.Char
-import Data.List.Extra    (trim)
+import Data.List.Extra    (intersperse, trim)
 import Data.Maybe
 #if !MIN_VERSION_base(4,11,0)
 import Data.Monoid
@@ -78,6 +78,9 @@ usageMsg = unlines
   , "   test-frontend-tests       : Run frontend Grunt Tests"
   , "   test-frontend-lint        : Run frontend Grunt Style Checkers"
   , ""
+  , "                               Use the --pattern PATTERN (or -p) option to"
+  , "                               only run test cases whose names match"
+  , "                               a given pattern."
   , "# Distribution targets"
   , ""
   , "   dist                      : Build all and create .tar.gz archive"
@@ -154,9 +157,10 @@ checkPrerequisites = do
                                      <> ": " <> out)
                    >> exitFailure)
         when (ver' < ver) $ do
-          hPutStrLn stderr ("Required program '" <> prog <> "' has wrong version: "
-                            <> showVersion ver'  <> ", at least "
-                            <> showVersion ver   <> " required.")
+          hPutStrLn stderr
+            ("Required program '" <> prog <> "' has wrong version: "
+             <> showVersion ver'  <> ", at least "
+             <> showVersion ver   <> " required.")
           exitFailure
 
 main :: IO ()
@@ -198,9 +202,9 @@ main = do
 
     "dist" ~> need ["_build/kontrakcja.tar.gz"]
 
-    "transifex-fix"              ~> runTransifexFixScript newBuild
-    "transifex-push"             ~> runTransifexPushScript newBuild flags
-    "transifex-diff"             ~> runTransifexDiffScript newBuild flags
+    "transifex-fix"              ~> runTransifexFixScript   newBuild
+    "transifex-push"             ~> runTransifexPushScript  newBuild flags
+    "transifex-diff"             ~> runTransifexDiffScript  newBuild flags
     "transifex-merge"            ~> runTransifexMergeScript newBuild flags
     "transifex-help"             ~> do putNormal transifexUsageMsg
                                        putNormal "-----------------------------"
@@ -224,7 +228,9 @@ main = do
     -- * Rules
     componentBuildRules   newBuild cabalFile
     serverBuildRules      newBuild cabalFile
-    serverTestRules       newBuild cabalFile (mkCreateDBWithTestConf flags)
+    serverTestRules       newBuild cabalFile
+                          (mkCreateDBWithTestConf flags)
+                          [pat | TestPattern pat <- flags]
     serverFormatLintRules newBuild cabalFile flags
     frontendBuildRules    newBuild
     frontendTestRules     newBuild
@@ -356,7 +362,8 @@ serverOldBuildRules cabalFile = do
 
   "cabal-clean" ~> cmd "cabal clean"
 
--- | Should a new test configuration be created with new DB configuration for this test run?
+-- | Should a new test configuration be created with new DB
+-- configuration for this test run?
 data CreateTestDBWithNewConf = CreateTestDBWithNewConf| DontCreateTestConf
 
 mkCreateDBWithTestConf :: [ShakeFlag] -> CreateTestDBWithNewConf
@@ -364,17 +371,21 @@ mkCreateDBWithTestConf flags =
   if CreateDB `elem` flags then CreateTestDBWithNewConf else DontCreateTestConf
 
 -- | Server test rules
-serverTestRules :: UseNewBuild -> CabalFile -> CreateTestDBWithNewConf -> Rules ()
-serverTestRules newBuild cabalFile createDBWithConf = do
+serverTestRules :: UseNewBuild -> CabalFile -> CreateTestDBWithNewConf
+                -> [Pattern]
+                -> Rules ()
+serverTestRules newBuild cabalFile createDBWithConf testPatterns = do
   "kontrakcja_test.conf" %> \_ ->
     case createDBWithConf of
       CreateTestDBWithNewConf -> do
-        (dbName, initialConnString, lConf) <- askOracle (CreateTestDBWithConfData ())
+        (dbName, initialConnString, lConf) <- askOracle $
+                                              CreateTestDBWithConfData ()
         liftIO $ writeFile "kontrakcja_test.conf"
           ("{ "
-            ++ "\"database\":\"" <> initialConnString <> " dbname='" <> dbName <> "'" <> "\" , "
-            ++ "\"pdftools_lambda\":" <> lConf
-            ++ "}")
+            <> "\"database\":\"" <> initialConnString
+                                 <> " dbname='" <> dbName <> "'" <> "\" , "
+            <> "\"pdftools_lambda\":" <> lConf
+            <> "}")
       DontCreateTestConf -> do
         tc <- askOracle (TeamCity ())
         when tc $ do
@@ -384,25 +395,29 @@ serverTestRules newBuild cabalFile createDBWithConf = do
   "run-server-tests" ~> do
     let testSuiteNames    = testComponentNames cabalFile
         testSuiteExePaths = map (componentTargetPath newBuild) testSuiteNames
-    need $ "kontrakcja_test.conf" : map componentName testSuiteNames
+    need $ "kontrakcja_test.conf" : map unComponentName testSuiteNames
     -- removeFilesAfter is only performed on a successfull build, this file
     -- needs to be cleaned regardless otherwise successive builds will fail
     liftIO $ removeFiles "." ["kontrakcja-test.tix"]
     withDB createDBWithConf $ forM_ testSuiteExePaths $ \testSuiteExe -> do
       tc <- askOracle (TeamCity ())
+      let testPatterns'
+            | null testPatterns = []
+            | otherwise         = "-t" : intersperse "-t" testPatterns
       if tc
         then do
           target <- askOracle (BuildTarget ())
           let cmdopt = [Shell] ++ langEnv
               flags = ["--plain"
                       ,"--output-dir _build/kontrakcja-test-artefacts"]
+                      ++ testPatterns'
                       ++ case target of
                            "staging" -> ["--staging-tests"]
                            _         -> []
           (Exit c, Stdouterr out) <- command cmdopt testSuiteExe flags
           liftIO $ hUnitForTeamCity c out
         else
-          cmd testSuiteExe
+          cmd testSuiteExe testPatterns'
     testCoverage <- askOracle (BuildTestCoverage ())
     when testCoverage $ do
       putNormal "Checking if kontrakcja-test.tix was generated by tests..."
@@ -420,9 +435,10 @@ serverTestRules newBuild cabalFile createDBWithConf = do
       removeFilesAfter "coverage-reports" ["//*"]
 
         where
-          withDB DontCreateTestConf act = act
+          withDB DontCreateTestConf      act = act
           withDB CreateTestDBWithNewConf act = do
-            (dbName, connString, (_::String)) <- askOracle (CreateTestDBWithConfData ())
+            (dbName, connString, (_::String)) <- askOracle $
+                                                 CreateTestDBWithConfData ()
             (mkDB connString dbName >> act)
               `actionFinally` (rmDB connString dbName)
             where
@@ -452,11 +468,11 @@ serverFormatLintRules newBuild cabalFile flags = do
 
   "_build/hs-import-order" %>>> do
     needAllHaskellFiles cabalFile
-    need [componentTargetPath newBuild (ExecutableName "sort_imports")]
+    need [componentTargetPath newBuild (mkExeName "sort_imports")]
     hsImportOrderAction True srcSubdirs
 
   "fix-hs-import-order" ~> do
-    need [componentTargetPath newBuild (ExecutableName "sort_imports")]
+    need [componentTargetPath newBuild (mkExeName "sort_imports")]
     hsImportOrderAction False srcSubdirs
 
   "test-hs-outdated-deps" ~> do
@@ -498,7 +514,7 @@ serverFormatLintRules newBuild cabalFile flags = do
       hsImportOrderAction checkOnly dirs = do
         let sortImportsFlags = if checkOnly then ("--check":dirs) else dirs
         command ([Shell] ++ langEnv)
-          (componentTargetPath newBuild (ExecutableName "sort_imports"))
+          (componentTargetPath newBuild . mkExeName $ "sort_imports")
           sortImportsFlags
 
 
@@ -560,13 +576,13 @@ distributionRules newBuild = do
         ++ "with Shake when running from TeamCity"
     when (null nginxconfpath) $ do
       fail "ERROR: NGINX_CONF_PATH is empty"
-    let routingListPath = componentTargetPath newBuild
-                          (ExecutableName "routinglist")
+    let routingListPath = componentTargetPath newBuild . mkExeName
+                          $ "routinglist"
     need [routingListPath]
     command_ [] routingListPath [nginxconfpath]
     removeFilesAfter "." ["urls.txt"]
 
-  let binaryNames = map ExecutableName $
+  let binaryNames = map mkExeName $
                     [ "kontrakcja-server"
                     , "cron"
                     , "kontrakcja-migrate"
@@ -722,13 +738,13 @@ transifexUsageMsg = unlines $
 
 runTX :: UseNewBuild -> String -> [String] -> Action ()
 runTX newBuild a args = do
-  let scriptPath = componentTargetPath newBuild (ExecutableName "transifex")
+  let scriptPath = componentTargetPath newBuild . mkExeName $ "transifex"
   need [scriptPath]
   command_ [] scriptPath ([a] ++ args)
 
 runTransifexUsageScript :: UseNewBuild -> Action ()
 runTransifexUsageScript newBuild = do
-  let scriptPath = componentTargetPath newBuild (ExecutableName "transifex")
+  let scriptPath = componentTargetPath newBuild . mkExeName $ "transifex"
   need [scriptPath]
   -- 'transifex' prints out usage info if no command provided.
   cmd scriptPath
@@ -775,15 +791,15 @@ runTransifexMergeScript newBuild flags = do
 
 runDetectOldLocalizationsScript :: UseNewBuild -> Action ()
 runDetectOldLocalizationsScript newBuild = do
-  let scriptPath = componentTargetPath newBuild
-                   (ExecutableName "detect_old_localizations")
+  let scriptPath = componentTargetPath newBuild .
+                   mkExeName $ "detect_old_localizations"
   need [scriptPath]
   cmd scriptPath
 
 runDetectOldTemplatesScript :: UseNewBuild -> Action ()
 runDetectOldTemplatesScript newBuild = do
-  let scriptPath = componentTargetPath newBuild
-                   (ExecutableName "detect_old_templates")
+  let scriptPath = componentTargetPath newBuild .
+                   mkExeName $ "detect_old_templates"
   need [scriptPath]
   cmd scriptPath
 
@@ -794,7 +810,7 @@ runTakeReferenceScreenshotsScript = do
 
 runLocalization :: UseNewBuild -> Action ()
 runLocalization newBuild = do
-  let exePath = componentTargetPath newBuild
-                (ExecutableName "localization")
+  let exePath = componentTargetPath newBuild .
+                mkExeName $ "localization"
   need [exePath]
   cmd  exePath
