@@ -18,7 +18,6 @@ module AppView(
               , entryPointFields
               , companyForPage
               , companyUIForPage
-              , handleTermsOfService
               , enableCookiesPage
               ) where
 
@@ -196,12 +195,6 @@ enableCookiesPage = do
       , "secure"    .= secure
       , "http_only" .= httpOnly
       ]
-
-handleTermsOfService :: Kontrakcja m => m Response
-handleTermsOfService = withAnonymousContext $ do
-  ctx <- getContext
-  ad <- getAnalyticsData
-  simpleHtmlResponse =<< renderTemplate "termsOfService" (standardPageFields ctx Nothing ad)
 
 standardPageFields :: (Kontrakcja m) => Context -> Maybe CompanyUI -> AnalyticsData -> Fields m ()
 standardPageFields ctx mcompanyui ad = do
