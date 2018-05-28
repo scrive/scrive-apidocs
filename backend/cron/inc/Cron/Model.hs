@@ -157,6 +157,7 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
 , ccMaxRunningJobs = maxRunningJobs
 , ccProcessJob = \CronJob{..} -> logHandlerInfo cjType $ do
   logInfo_ "Processing job"
+  startTime <- currentTime
   action <- case cjType of
     AmazonUpload -> do
       if AWS.isAWSConfigOk $ cronAmazonConfig cronConf
@@ -182,26 +183,17 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
     DocumentsAuthorIDMigration -> do
       let batchSize = 1000
       runDB $ do
-        startTime <- currentTime
         ress <- dbUpdate $ UpdateAuthorUserID batchSize
-        endTime <- currentTime
-        let delta = diffUTCTime endTime startTime
         logInfo "Document author user ID updated" $ object
-                [ "items_updated" .= ress
-                , "elapsed_time" .= (realToFrac delta :: Double) ]
+                [ "items_updated" .= ress ]
       now <- currentTime
       if now < todayAtHour 4 now
       then RerunAfter <$> return (iseconds 2)
       else RerunAt . nextDayMidnight <$> currentTime
     DocumentsPurge -> do
       runDB $ do
-        startTime <- currentTime
         purgedCount <- dbUpdate $ PurgeDocuments 30
-        finishTime <- currentTime
-        logInfo "Purged documents" $ object [
-            "purged" .= purgedCount
-          , "elapsed_time" .= (realToFrac (diffUTCTime finishTime startTime) :: Double)
-          ]
+        logInfo "Purged documents" $ object [ "purged" .= purgedCount ]
       return . RerunAfter $ iminutes 10
     DocumentsArchiveIdle -> do
       now <- currentTime
@@ -308,7 +300,10 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
     UserAccountRequestEvaluation -> do
       runDB expireUserAccountRequests
       return . RerunAfter $ ihours 1
-  logInfo_ "Job processed successfully"
+  endTime <- currentTime
+  logInfo "Job processed successfully" $ object [
+      "elapsed_time" .= (realToFrac (diffUTCTime endTime startTime) :: Double)
+    ]
   return $ Ok action
 , ccOnException = \_ CronJob{..} -> return $ case cjAttempts of
   1 -> RerunAfter $ iminutes 1
