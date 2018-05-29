@@ -79,12 +79,13 @@ checkFieldsEqualAppConfCronConf
    -- warning when a new field is added.
   (AppConf
     _httpBindAddress    _mainDomainUrl      _useHttps           amazonConfig
-     dbConfig           _maxDBConnections    redisCacheConfig  _localFileCacheSize
-    _logConfig          _production         _cdnBaseUrl         guardTimeConf
-    _isMailBackdoorOpen  mailNoreplyAddress  cgiGrpConfig      _admins
-    _sales              _initialUsers        mixpanelToken     _gaToken
-    _trackjsToken       _hubspotConf         salesforceConf    _netsConfig
-    _monitoringConfig   _isAPILogEnabled     netsSignConfig    pdfToolsLambdaConf)
+     dbConfig           _maxDBConnections   _queryTimeout       redisCacheConfig
+    _localFileCacheSize _logConfig          _production         _cdnBaseUrl
+     guardTimeConf      _isMailBackdoorOpen  mailNoreplyAddress  cgiGrpConfig
+    _admins             _sales              _initialUsers        mixpanelToken
+    _gaToken            _trackjsToken       _hubspotConf         salesforceConf
+    _netsConfig         _monitoringConfig   _isAPILogEnabled     netsSignConfig
+     pdfToolsLambdaConf)
   (CronConf
      cronAmazonConfig              cronDBConfig                   _cronMaxDBConnections
      cronRedisCacheConfig         _cronLocalFileCacheSize         _cronLogConfig
@@ -115,12 +116,13 @@ checkFieldsEqualAppConfMailerConf :: AppConf -> MailingServerConf
 checkFieldsEqualAppConfMailerConf
   (AppConf
     _httpBindAddress    _mainDomainUrl      _useHttps           amazonConfig
-     dbConfig           _maxDBConnections    redisCacheConfig  _localFileCacheSize
-    _logConfig          _production         _cdnBaseUrl        _guardTimeConf
-    _isMailBackdoorOpen _mailNoreplyAddress _cgiGrpConfig      _admins
-    _sales              _initialUsers       _mixpanelToken     _gaToken
-    _trackjsToken       _hubspotConf        _salesforceConf    _netsConfig
-    _monitoringConfig   _isAPILogEnabled    _netsSignConfig    _pdfToolsLambdaConf)
+     dbConfig           _maxDBConnections   _queryTimeout       redisCacheConfig
+    _localFileCacheSize _logConfig          _production         _cdnBaseUrl
+    _guardTimeConf      _isMailBackdoorOpen _mailNoreplyAddress _cgiGrpConfig
+    _admins             _sales              _initialUsers       _mixpanelToken
+    _gaToken            _trackjsToken       _hubspotConf        _salesforceConf
+    _netsConfig         _monitoringConfig   _isAPILogEnabled    _netsSignConfig
+    _pdfToolsLambdaConf)
   (MailingServerConf
     _mailerHttpBindAddress     mailerDBConfig
     _mailerMaxDBConnections    mailerRedisCacheConfig
@@ -141,12 +143,12 @@ checkFieldsEqualAppConfMessengerConf :: AppConf -> MessengerServerConf
 checkFieldsEqualAppConfMessengerConf
   (AppConf
     _httpBindAddress    _mainDomainUrl      _useHttps          _amazonConfig
-     dbConfig           _maxDBConnections   _redisCacheConfig  _localFileCacheSize
-    _logConfig          _production         _cdnBaseUrl        _guardTimeConf
-    _isMailBackdoorOpen _mailNoreplyAddress _cgiGrpConfig      _admins
-    _sales              _initialUsers       _mixpanelToken     _gaToken
-    _trackjsToken       _hubspotConf        _salesforceConf    _netsConfig
-    _monitoringConfig   _isAPILogEnabled    _netsSignConfig    _pdfToolsLambdaConf)
+     dbConfig           _maxDBConnections   _queryTimeout      _redisCacheConfig
+    _localFileCacheSize _logConfig          _production         _cdnBaseUrl
+    _guardTimeConf      _isMailBackdoorOpen _mailNoreplyAddress _cgiGrpConfig
+    _admins             _sales              _initialUsers       _mixpanelToken
+    _gaToken            _trackjsToken       _hubspotConf        _salesforceConf
+    _netsConfig         _monitoringConfig   _isAPILogEnabled    _netsSignConfig    _pdfToolsLambdaConf)
   (MessengerServerConf
     _messengerHttpBindAddress   messengerDBConfig
     _messengerMaxDBConnections _messengerLogConfig
