@@ -144,6 +144,8 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
     rq <- askRq
     let routeLogData = ["uri" .= rqUri rq, "query" .= rqQuery rq]
     (res, ConnectionStats{..}, handlerTime) <- withPostgreSQL (unConnectionSource $ connsource appGlobals detailedConnectionTracker) $ do
+      forM_ (queryTimeout appConf) $ \qt -> do
+        runSQL_ $ "SET statement_timeout TO " <+> unsafeSQL (show qt)
       logInfo_ "Retrieving session"
       session <- getCurrentSession
       logInfo_ "Initializing context"
