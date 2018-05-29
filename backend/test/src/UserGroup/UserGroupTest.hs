@@ -39,6 +39,7 @@ userGroupTests env = testGroup "Grouping"
   , testThat "Can update partner company with user_group" env testCanUpdatePartnerCompanyWithUserGroup
   , testThat "Update of company does the same to it's group" env testUpdateOfCompanyDoesTheSameToItsGroup
   , testThat "Update of partner company does the same to it's group" env testUpdateOfCompanyWithPartnerDoesTheSameToItsGroup
+  , testThat "Cannot delete a UserGroup with subgroups" env testCannotDeleteUserGroupWithSubgroups
   ]
 
 testCreateGroups :: TestEnv ()
@@ -367,6 +368,20 @@ testCanUpdatePartnerCompanyWithUserGroup = replicateM_ 20 $ do
 
   result4 <- randomUpdate $ \pp -> SetCompanyPaymentPlan cid pp
   assertEqual "SetCompanyPaymentPlan result is True" True result4
+
+testCannotDeleteUserGroupWithSubgroups :: TestEnv ()
+testCannotDeleteUserGroupWithSubgroups = do
+  ugA0 <- unARootUserGroup <$> rand 10 arbitrary
+  ugA <- dbUpdate . UserGroupCreate $ ugA0
+  -- make B child of A
+  ugB0 <- rand 10 arbitrary
+  ugB <- dbUpdate . UserGroupCreate . set ugParentGroupID (Just . get ugID $ ugA) $ ugB0
+  commit -- so that raising exception will not take our data with it
+  -- deleting group A raises exception
+  assertRaisesDBException . runSQL_ $ "DELETE from user_groups where id = " <?> get ugID ugA
+  commit
+  -- deleting group B works
+  runSQL_ $ "DELETE from user_groups where id = " <?> get ugID ugB
 
 userGroupFromCompany :: (MonadDB m, MonadThrow m, MonadLog m) => CompanyID -> m UserGroup
 userGroupFromCompany cid = do
