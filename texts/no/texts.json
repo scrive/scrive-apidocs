@@ -498,7 +498,7 @@
 "_docviewChangeAuthenticationToViewModalSEBankIDPlaceholder":"YYMMÅÅXXXX",
 "_docviewChangeAuthenticationToViewModalSEBankIDSSNLabel":"Fødselsnummer",
 "_docviewChangeAuthenticationToViewModalTitle":"Autentisering til å se",
-"_docviewComposeLinkEmailBody":"",
+"_docviewComposeLinkEmailBody":"<span class='authorname'></span> har invitert deg til å e-signere dokumentet <span class='documenttitle'></span>.<span class='br'></span><span class='br'></span>Følg lenken for videre instruksjoner:<span class='br'></span><span class='signlink'></span>",
 "_docviewComposeLinkEmailCompose":"",
 "_docviewComposeLinkEmailSubject":"",
 "_docviewShowLinkDeliveryModalAccept":"",
