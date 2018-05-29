@@ -242,7 +242,7 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
       -- If maximum amount of files was marked, run it again shortly after.
       if length fids == maxMarked
         then return . RerunAfter $ iseconds 1
-        else RerunAt . nextDayMidnight <$> currentTime
+        else RerunAt . nextDayAtHour 2 <$> currentTime
     OldDraftsRemoval -> do
       runDB $ do
         delCount <- dbUpdate $ RemoveOldDrafts 100
@@ -268,17 +268,17 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
       runDB . dbUpdate $ DeleteExpiredPasswordReminders
       return . RerunAfter $ ihours 1
     PurgeOrphanFile -> do
-      let batchSize = 10
+      let batchSize = 500
       found <- runCronEnv $ purgeOrphanFile batchSize
       return . RerunAfter $ if found
-                            then iseconds 1
-                            else iminutes 1
+                            then iseconds 5
+                            else iminutes 5
     PushPlanhatStats -> do
       case cronPlanhatConf cronConf of
         Nothing -> do
           logInfo "Planhat config missing; skipping" $ object []
         Just phConf -> do runDB $ doDailyPlanhatStats phConf mgr
-      RerunAt . nextDayAtHour 2 <$> currentTime
+      RerunAt . nextDayAtHour 1 <$> currentTime
     SessionsEvaluation -> do
       runDB . dbUpdate $ DeleteExpiredSessions
       return . RerunAfter $ ihours 1
