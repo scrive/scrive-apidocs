@@ -34,7 +34,7 @@ import Company.Data
 import DB
 import Log.Identifier
 import PadApplication.Data (PadAppMode)
-import Partner.PartnerID
+import Partner.Model
 import SMS.Data (SMSProvider)
 import User.Data.User
 import UserGroup.Data
@@ -297,6 +297,14 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyUserGroupID Bool wher
       sqlSet "user_group_id" ugid
       sqlWhereEq "id" cID
 
+-- | Set `user_group_id` for `companies` - does _one_ by `id`
+data SetCompanyName = SetCompanyName CompanyID String
+instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyName Bool where
+  update (SetCompanyName cID name) = do
+    runQuery01 . sqlUpdate "companies" $ do
+      sqlSet "name" name
+      sqlWhereEq "id" cID
+
 -- | Set `user_group_id` for `partners` - does _one_ by `id`
 data SetPartnerUserGroupID = SetPartnerUserGroupID PartnerID UserGroupID
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetPartnerUserGroupID Bool where
@@ -337,61 +345,43 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetThemeUserGroupID () where
       sqlSet "user_group_id" ugid
       sqlWhereEq "company_id" cID
 
--- Companies that have a user that is a partner admin will become the roots in a
--- user group tree that includes the companies that are administrated by this
--- user. The next two actions make this happen.
-data GetPartnerRootCompaniesToMigrate = GetPartnerRootCompaniesToMigrate Int
-instance (MonadDB m, MonadThrow m) => DBQuery m GetPartnerRootCompaniesToMigrate [(CompanyID, PartnerID)] where
-  query (GetPartnerRootCompaniesToMigrate limit) = do
-    runQuery_ . sqlSelect "companies c" $ do
-      sqlResult "c.id"
-      sqlResult "p.id"
-      sqlJoinOn "users u" "c.id = u.company_id"
-      sqlJoinOn "partner_admins pa" "pa.user_id = u.id"
-      sqlJoinOn "partners p" "p.id = pa.partner_id and not p.default_partner" -- on the safe side
-      sqlWhereIsNULL "p.user_group_id"
-      sqlLimit limit
-    fetchMany id
+data GetPartnersToMigrate = GetPartnersToMigrate Int
+instance (MonadDB m, MonadThrow m, MonadLog m) => DBQuery m GetPartnersToMigrate [Partner] where
+  query (GetPartnersToMigrate limit) = do
+    partners <- query GetPartners
+    return . take limit . filter (not . ptDefaultPartner) . filter (isNothing . ptUserGroupID) $ partners
 
 data CronUserGroupUpdatePartnerRoots = CronUserGroupUpdatePartnerRoots Int
 instance (MonadDB m, MonadLog m, MonadMask m, MonadThrow m) => DBUpdate m CronUserGroupUpdatePartnerRoots [Bool] where
   update (CronUserGroupUpdatePartnerRoots limit) = do
-    cpIDs <- query $ GetPartnerRootCompaniesToMigrate limit
-    forM cpIDs $ \(companyID, partnerID) -> do
-      mCompany <- query $ GetCompany' companyID
-      case mCompany of
-        Nothing -> do
-          logInfo "Invalid company ID or no UI" $ A.object
+    partners <- query $ GetPartnersToMigrate limit
+    forM partners $ \partner -> withSavepoint "create_user_group" $ do
+        company <- update CreateCompany'
+        let companyID = companyid company
+        (query . UserGroupGet . companyIDToUserGroupID . companyid $ company) >>= \case
+          Nothing -> do
+            logInfo "UserGroup not created for new company" $ A.object
                [ ("company_id" :: T.Text) .= (fromCompanyID companyID) ]
-          return False
-        Just company -> do
-          cui <- query $ GetCompanyUI' companyID
-          let userGroup = companyToUserGroup company cui Nothing
-          withSavepoint "create_user_group" $ do
-            ug <- update $ UserGroupCreateRetainCompanyID userGroup
+            runQuery_ . sqlDelete "companies" . sqlWhereEq "id" $ companyID
+            return False
+          Just ug -> do
             let ugid = get ugID ug
-            res  <- update $ SetCompanyUserGroupID companyID ugid
-            res' <- update $ SetPartnerUserGroupID partnerID ugid
-            _ <- update $ SetCompanyUsersUserGroupID companyID ugid
-            _ <- update $ SetFFlagsUserGroupID companyID ugid
-            _ <- update $ SetChargeableUserGroupID companyID ugid
-            _ <- update $ SetThemeUserGroupID companyID ugid
-            return (res && res')
+            res   <- update $ SetCompanyName companyID $ ptName partner
+            res'  <- update $ SetCompanyUserGroupID companyID $ get ugID ug
+            res'' <- update $ SetPartnerUserGroupID (ptID partner) ugid
+            return (res && res' && res'')
 
 -- Assumes that `CronUserGroupUpdatePartnerRoots` has successfully done its job
 -- in order to get a root user group.
+-- Intentionally not checking, whether partner user_group_id is not NULL. We want
+-- to crash in that case, because partners should already be converted.
 data GetCompaniesToMigrateForNonDefaultPartner = GetCompaniesToMigrateForNonDefaultPartner Int
 instance (MonadDB m, MonadThrow m) => DBQuery m GetCompaniesToMigrateForNonDefaultPartner [(CompanyID, UserGroupID)] where
   query (GetCompaniesToMigrateForNonDefaultPartner limit) = do
     runQuery_ . sqlSelect "companies c" $ do
       sqlResult "c.id"
-      sqlResult "partner_admin_company.user_group_id" -- partner root user group
-      sqlJoinOn "company_uis cui" "cui.company_id = c.id"
-      -- ^ condition as in e.g. `GetCompany`,
+      sqlResult "p.user_group_id" -- partner root user group
       sqlJoinOn "partners p" "p.id = c.partner_id and not p.default_partner"
-      sqlJoinOn "partner_admins pa" "pa.partner_id = c.partner_id"
-      sqlJoinOn "users partner_admin_users" "partner_admin_users.id = pa.user_id"
-      sqlJoinOn "companies partner_admin_company" "partner_admin_users.company_id = partner_admin_company.id"
       sqlWhereIsNULL "c.user_group_id"
       sqlLimit limit
     fetchMany id
@@ -424,8 +414,6 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetCompaniesToMigrateForDefaultP
   query (GetCompaniesToMigrateForDefaultPartner limit) = do
     runQuery_ . sqlSelect "companies c" $ do
       sqlResult "c.id"
-      sqlJoinOn "company_uis cui" "cui.company_id = c.id"
-      -- ^ as in e.g. `GetCompany`
       sqlJoinOn "partners p" "p.id = c.partner_id and p.default_partner"
       sqlWhereIsNULL "c.user_group_id"
       sqlLimit limit
@@ -478,64 +466,102 @@ companyMigrateForDefaultPartner companyID = do
 -- helpers
 
 -- remove once Cron job has finished. Only a local copy of
+-- Company.Model.CreateCompany to avoid import loops.
+data CreateCompanyWithoutUserGroup' = CreateCompanyWithoutUserGroup'
+instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m CreateCompanyWithoutUserGroup' Company where
+  update (CreateCompanyWithoutUserGroup') = do
+    runQuery_ $ sqlInsert "companies" $ do
+      sqlSetCmd "id" "DEFAULT"
+      sqlSetCmd "partner_id" "(SELECT partners.id FROM partners WHERE partners.default_partner LIMIT 1)"
+      sqlResult "id"
+    companyidx :: CompanyID <- fetchOne runIdentity
+    runQuery_ $ sqlInsert "company_uis" $ do
+      sqlSet "company_id" companyidx
+    runQuery_ $ sqlInsert "feature_flags" $ do
+      sqlSet "company_id" companyidx
+      sqlSet "can_use_dk_authentication_to_view" False
+      sqlSet "can_use_dk_authentication_to_sign" False
+      sqlSet "can_use_no_authentication_to_view" False
+      sqlSet "can_use_no_authentication_to_sign" False
+      sqlSet "can_use_se_authentication_to_view" False
+      sqlSet "can_use_se_authentication_to_sign" False
+    runQuery_ $ sqlSelect "companies" $ do
+      sqlJoinOn "company_uis" "company_uis.company_id = companies.id"
+      selectCompaniesSelectors'
+      sqlWhereEq "companies.id" companyidx
+    fetchOne fetchCompany'
+
+data CreateCompany' = CreateCompany'
+instance (MonadDB m, MonadThrow m, MonadMask m, MonadLog m) => DBUpdate m CreateCompany' Company where
+  update (CreateCompany') = do
+    company0 <- dbUpdate $ CreateCompanyWithoutUserGroup'
+    result <- companyMigrateForDefaultPartner $ companyid company0
+    when (not result) $
+      logAttention "UserGroup cannot migrate a newly created company" $ A.object [
+          identifier_ $ companyid company0
+        ]
+    -- re-read company, because the migration changed it
+    fromJust <$> dbQuery (GetCompany' $ companyid company0)
+
+-- remove once Cron job has finished. Only a local copy of
 -- Company.Model.GetCompany to avoid import loops.
 data GetCompany' = GetCompany' CompanyID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetCompany' (Maybe Company) where
   query (GetCompany' compID) = do
     runQuery_ $ sqlSelect "companies" $ do
       sqlJoinOn "company_uis" "company_uis.company_id = companies.id"
-      selectCompaniesSelectors
+      selectCompaniesSelectors'
       sqlWhereEq "id" compID
-    fetchMaybe fetchCompany
-    where
-      selectCompaniesSelectors :: (SqlResult command) => State command ()
-      selectCompaniesSelectors = do
-        sqlResult "companies.id"
-        sqlResult "companies.name"
-        sqlResult "companies.number"
-        sqlResult "companies.address"
-        sqlResult "companies.zip"
-        sqlResult "companies.city"
-        sqlResult "companies.country"
-        sqlResult "companies.ip_address_mask_list"
-        sqlResult "companies.idle_doc_timeout"
-        sqlResult "companies.cgi_display_name"
-        sqlResult "companies.sms_provider"
-        sqlResult "companies.cgi_service_id"
-        sqlResult "companies.payment_plan"
-        sqlResult "companies.partner_id"
-        sqlResult "companies.pad_app_mode"
-        sqlResult "companies.pad_earchive_enabled"
-        sqlResult "companies.user_group_id"
+    fetchMaybe fetchCompany'
 
-      fetchCompany :: (CompanyID, String, String, String, String, String, String,
-                       Maybe String, Maybe Int16, Maybe String,
-                       SMSProvider, Maybe String, PaymentPlan, PartnerID, PadAppMode,
-                       Bool, Maybe UserGroupID) -> Company
-      fetchCompany (cid, name, number, address, zip', city, country,
-                    ip_address_mask_list, idle_doc_timeout, cgi_display_name,
-                    sms_provider, cgi_service_id, payment_plan,  partner_id, pad_app_mode,
-                    pad_earchive_enabled, muser_group_id) = Company {
-        companyid = cid
-      , companyusergroupid = muser_group_id
-      , companyinfo = CompanyInfo {
-          companyname = name
-        , companynumber = number
-        , companyaddress = address
-        , companyzip = zip'
-        , companycity = city
-        , companycountry = country
-        , companyipaddressmasklist = maybe [] read ip_address_mask_list
-        , companyidledoctimeout = idle_doc_timeout
-        , companycgidisplayname = cgi_display_name
-        , companysmsprovider = sms_provider
-        , companycgiserviceid = cgi_service_id
-        , companypaymentplan = payment_plan
-        , companypartnerid = partner_id
-        , companypadappmode = pad_app_mode
-        , companypadearchiveenabled = pad_earchive_enabled
-        }
-      }
+selectCompaniesSelectors' :: (SqlResult command) => State command ()
+selectCompaniesSelectors' = do
+  sqlResult "companies.id"
+  sqlResult "companies.name"
+  sqlResult "companies.number"
+  sqlResult "companies.address"
+  sqlResult "companies.zip"
+  sqlResult "companies.city"
+  sqlResult "companies.country"
+  sqlResult "companies.ip_address_mask_list"
+  sqlResult "companies.idle_doc_timeout"
+  sqlResult "companies.cgi_display_name"
+  sqlResult "companies.sms_provider"
+  sqlResult "companies.cgi_service_id"
+  sqlResult "companies.payment_plan"
+  sqlResult "companies.partner_id"
+  sqlResult "companies.pad_app_mode"
+  sqlResult "companies.pad_earchive_enabled"
+  sqlResult "companies.user_group_id"
+
+fetchCompany' :: (CompanyID, String, String, String, String, String, String,
+                 Maybe String, Maybe Int16, Maybe String,
+                 SMSProvider, Maybe String, PaymentPlan, PartnerID, PadAppMode,
+                 Bool, Maybe UserGroupID) -> Company
+fetchCompany' (cid, name, number, address, zip', city, country,
+              ip_address_mask_list, idle_doc_timeout, cgi_display_name,
+              sms_provider, cgi_service_id, payment_plan,  partner_id, pad_app_mode,
+              pad_earchive_enabled, muser_group_id) = Company {
+  companyid = cid
+, companyusergroupid = muser_group_id
+, companyinfo = CompanyInfo {
+    companyname = name
+  , companynumber = number
+  , companyaddress = address
+  , companyzip = zip'
+  , companycity = city
+  , companycountry = country
+  , companyipaddressmasklist = maybe [] read ip_address_mask_list
+  , companyidledoctimeout = idle_doc_timeout
+  , companycgidisplayname = cgi_display_name
+  , companysmsprovider = sms_provider
+  , companycgiserviceid = cgi_service_id
+  , companypaymentplan = payment_plan
+  , companypartnerid = partner_id
+  , companypadappmode = pad_app_mode
+  , companypadearchiveenabled = pad_earchive_enabled
+  }
+}
 
 -- remove once Cron job has finished. Only a local copy of
 -- Company.CompanyUI.Model.GetCompanyUI to avoid import loops.
@@ -586,7 +612,7 @@ migrateToUserGroups batchLimit = do
   -- 3. Update all the companies that have default partner, but also only if the
   -- roots are done.
   remNumNonDefaultPartners <- do
-      length <$> (dbQuery $ GetPartnerRootCompaniesToMigrate batchLimit)
+      length <$> (dbQuery $ GetPartnersToMigrate batchLimit)
   (updatedNonDefPartnerGroups, updatedDefPartnerGroups) <-
       if remNumNonDefaultPartners > 0
       then do

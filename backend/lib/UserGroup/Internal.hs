@@ -13,6 +13,7 @@ module UserGroup.Internal (
   ) where
 
 import Data.Aeson
+import Data.Default
 import Data.Int
 import Data.Text
 import qualified Control.Exception.Lifted as E
@@ -25,6 +26,7 @@ import Log.Identifier
 import PadApplication.Data
 import SMS.Data
 import Theme.ThemeID
+
 
 data UserGroup = UserGroup {
     _ugID            :: UserGroupID
@@ -151,6 +153,31 @@ instance CompositeFromSQL UserGroup where
     , _ugUI = unComposite cuis
     }
 
+instance Default UserGroup where
+  def = UserGroup {
+      _ugID = emptyUserGroupID
+    , _ugParentGroupID = Nothing
+    , _ugName = ""
+    , _ugInfo = UserGroupInfo {
+        _ugiIPAddressMaskList   = []
+      , _ugiIdleDocTimeout      = Nothing
+      , _ugiCGIDisplayName      = Nothing
+      , _ugiCGIServiceID        = Nothing
+      , _ugiSMSProvider         = SMSDefault
+      , _ugiPadAppMode          = ListView
+      , _ugiPadEarchiveEnabled  = True
+      }
+    , _ugInvoicing = Invoice FreePlan
+    , _ugAddress = UserGroupAddress {
+        _ugaCompanyNumber = ""
+      , _ugaAddress       = ""
+      , _ugaZip           = ""
+      , _ugaCity          = ""
+      , _ugaCountry       = ""
+      }
+    , _ugUI = def
+    }
+
 newtype UserGroupID = UserGroupID Int64
   deriving (Eq, Ord, PQFormat)
 deriving newtype instance Read UserGroupID
@@ -242,6 +269,16 @@ instance CompositeFromSQL UserGroupUI where
     -- We should interpret empty logos as no logos.
     faviconFromBinary (Just f) = if (BS.null f) then Nothing else Just f
     faviconFromBinary Nothing = Nothing
+
+instance Default UserGroupUI where
+  def = UserGroupUI {
+      _uguiMailTheme     = Nothing
+    , _uguiSignviewTheme = Nothing
+    , _uguiServiceTheme  = Nothing
+    , _uguiBrowserTitle  = Nothing
+    , _uguiSmsOriginator = Nothing
+    , _uguiFavicon       = Nothing
+    }
 
 -- ADDRESS
 

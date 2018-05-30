@@ -367,7 +367,7 @@ testJSONCtx = do
   partnerId <- dbUpdate $ AddNewPartner "My Favourite Upsales"
   _ <- dbUpdate $ MakeUserIDAdminForPartnerID (userid partnerAdminUser) partnerId
   numberOfUpdates <- migrateToUserGroups 100
-  assertEqual "Only the single partner was migrated" 1 numberOfUpdates
+  assertEqual "Only partner and admins company were migrated" 2 numberOfUpdates
   ctx <- (set ctxmaybeuser (Just partnerAdminUser)) <$> mkContext def
   return (ctx, partnerId)
 

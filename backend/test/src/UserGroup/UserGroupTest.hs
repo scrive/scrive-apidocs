@@ -239,7 +239,7 @@ testUpdateOfCompanyWithPartnerDoesTheSameToItsGroup = replicateM_ 20 $ do
   assertEqual "Set company partner result is True" True result2
   -- convert everything to usergroups
   numberOfUpdates <- migrateToUserGroups 100
-  assertEqual "Only the company and its partner were migrated" 2 numberOfUpdates
+  assertEqual "Only the company, its partner and admin's company were migrated" 3 numberOfUpdates
   c2 <- fromJust <$> (dbQuery $ GetCompany cid)
   let ugid = fromJust . companyusergroupid $ c2
 
@@ -361,7 +361,7 @@ testCanUpdatePartnerCompanyWithUserGroup = replicateM_ 20 $ do
   assertEqual "Set company partner result is True" True result2
   -- convert everything to user_groups
   numberOfUpdates <- migrateToUserGroups 100
-  assertEqual "Only the company and its partner were migrated" 2 numberOfUpdates
+  assertEqual "Only the company, its partner and admin's company were migrated" 3 numberOfUpdates
 
   result3 <- randomUpdate $ \ci -> SetCompanyInfo cid ci { companypartnerid = pid }
   assertEqual "SetCompanyInfo result is True" True result3
