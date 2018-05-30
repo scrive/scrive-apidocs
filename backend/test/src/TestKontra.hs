@@ -428,5 +428,5 @@ clearTables = do
   runSQL_ "DELETE FROM user_group_invoicings"
   runSQL_ "DELETE FROM user_group_uis"
   runSQL_ "DELETE FROM user_group_addresses"
-  runSQL_ "DELETE FROM user_group_infos"
+  runSQL_ "DELETE FROM user_group_settings"
   runSQL_ "DELETE FROM partners where not default_partner"

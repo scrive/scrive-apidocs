@@ -28,15 +28,15 @@ ctUserGroup = CompositeType {
     , CompositeColumn { ccName = "name", ccType = TextT }
     , CompositeColumn { ccName = "parent_group_id", ccType = BigIntT }
     , CompositeColumn { ccName = "invoicing", ccType = CustomT "user_group_invoicing" }
-    , CompositeColumn { ccName = "user_group_info", ccType = CustomT "user_group_info" }
+    , CompositeColumn { ccName = "user_group_setting", ccType = CustomT "user_group_setting" }
     , CompositeColumn { ccName = "user_group_addresses", ccType = CustomT "user_group_address" }
     , CompositeColumn { ccName = "ui", ccType = CustomT "user_group_ui" }
     ]
   }
 
-tableUserGroupInfos :: Table
-tableUserGroupInfos = tblTable {
-    tblName = "user_group_infos"
+tableUserGroupSettings :: Table
+tableUserGroupSettings = tblTable {
+    tblName = "user_group_settings"
   , tblVersion = 1
   , tblColumns = [
       tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = False }
@@ -54,9 +54,10 @@ tableUserGroupInfos = tblTable {
     ]
   }
 
-ctUserGroupInfo :: CompositeType
-ctUserGroupInfo = CompositeType {
-    ctName = "user_group_info"
+-- the CT is named user_group_setting instead of naming the table user_group_settingss
+ctUserGroupSettings :: CompositeType
+ctUserGroupSettings = CompositeType {
+    ctName = "user_group_setting"
   , ctColumns = [
       CompositeColumn { ccName = "ip_address_mask_list", ccType = TextT }
     , CompositeColumn { ccName = "idle_doc_timeout", ccType = SmallIntT }

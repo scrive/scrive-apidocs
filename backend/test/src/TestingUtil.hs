@@ -221,8 +221,8 @@ instance Arbitrary UserGroup where
     <*> arbitrary
     <*> arbitrary
 
-instance Arbitrary UserGroupInfo where
-  arbitrary = UserGroupInfo
+instance Arbitrary UserGroupSettings where
+  arbitrary = UserGroupSettings
     <$> arbitrary
     <*> arbitrary
     <*> arbitrary

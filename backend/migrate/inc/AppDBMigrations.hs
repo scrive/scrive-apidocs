@@ -104,7 +104,7 @@ kontraMigrations = [
   , createAmazonURLFixConsumers
   , createAmazonURLFixJobs
   , createTableUserGroups
-  , createTableUserGroupInfos
+  , createTableUserGroupSettings
   , createTableUserGroupAddresses
   , createTableUserGroupUIs
   , chargeableItemsAddUserGroupID

@@ -74,18 +74,18 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate' UserGroup wher
       sqlResult "id"
     ugid <- fetchOne runIdentity
     -- insert group info
-    let ugi = get ugInfo ug
-    runQuery_ . sqlInsert "user_group_infos" $ do
+    let ugi = get ugSettings ug
+    runQuery_ . sqlInsert "user_group_settings" $ do
       sqlSet "user_group_id" ugid
-      sqlSet "ip_address_mask_list" $ case get ugiIPAddressMaskList ugi of
+      sqlSet "ip_address_mask_list" $ case get ugsIPAddressMaskList ugi of
         [] -> Nothing
         x  -> Just (show x)
-      sqlSet "idle_doc_timeout" . get ugiIdleDocTimeout $ ugi
-      sqlSet "cgi_display_name" . get ugiCGIDisplayName $ ugi
-      sqlSet "cgi_service_id" . get ugiCGIServiceID $ ugi
-      sqlSet "sms_provider" . get ugiSMSProvider $ ugi
-      sqlSet "pad_app_mode" . get ugiPadAppMode $ ugi
-      sqlSet "pad_earchive_enabled" . get ugiPadEarchiveEnabled $ ugi
+      sqlSet "idle_doc_timeout" . get ugsIdleDocTimeout $ ugi
+      sqlSet "cgi_display_name" . get ugsCGIDisplayName $ ugi
+      sqlSet "cgi_service_id" . get ugsCGIServiceID $ ugi
+      sqlSet "sms_provider" . get ugsSMSProvider $ ugi
+      sqlSet "pad_app_mode" . get ugsPadAppMode $ ugi
+      sqlSet "pad_earchive_enabled" . get ugsPadEarchiveEnabled $ ugi
     -- insert group address
     let uga = get ugAddress ug
     runQuery_ . sqlInsert "user_group_addresses" $ do
@@ -146,18 +146,18 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupUpdate () where
   update (UserGroupUpdate new_ug) = do
     let ugid = get ugID new_ug
     -- update group info
-    let ugi = get ugInfo new_ug
-    runQuery_ . sqlUpdate "user_group_infos" $ do
+    let ugi = get ugSettings new_ug
+    runQuery_ . sqlUpdate "user_group_settings" $ do
       sqlWhereEq "user_group_id" ugid
-      sqlSet "ip_address_mask_list" $ case get ugiIPAddressMaskList ugi of
+      sqlSet "ip_address_mask_list" $ case get ugsIPAddressMaskList ugi of
         [] -> Nothing
         x  -> Just (show x)
-      sqlSet "idle_doc_timeout" . get ugiIdleDocTimeout $ ugi
-      sqlSet "cgi_display_name" . get ugiCGIDisplayName $ ugi
-      sqlSet "cgi_service_id" . get ugiCGIServiceID $ ugi
-      sqlSet "sms_provider" . get ugiSMSProvider $ ugi
-      sqlSet "pad_app_mode" . get ugiPadAppMode $ ugi
-      sqlSet "pad_earchive_enabled" . get ugiPadEarchiveEnabled $ ugi
+      sqlSet "idle_doc_timeout" . get ugsIdleDocTimeout $ ugi
+      sqlSet "cgi_display_name" . get ugsCGIDisplayName $ ugi
+      sqlSet "cgi_service_id" . get ugsCGIServiceID $ ugi
+      sqlSet "sms_provider" . get ugsSMSProvider $ ugi
+      sqlSet "pad_app_mode" . get ugsPadAppMode $ ugi
+      sqlSet "pad_earchive_enabled" . get ugsPadEarchiveEnabled $ ugi
     -- insert group address
     let uga = get ugAddress new_ug
     runQuery_ . sqlUpdate "user_group_addresses" $ do
@@ -248,13 +248,13 @@ userGroupSelectors = [
   , "user_groups.parent_group_id"
   , "user_groups.name"
   , "(SELECT (" <> mintercalate ", " ugInvoicingSelectors <> ")::user_group_invoicing FROM user_group_invoicings WHERE user_groups.id = user_group_invoicings.user_group_id)"
-  , "(SELECT (" <> mintercalate ", " ugInfoSelectors <> ")::user_group_info FROM user_group_infos WHERE user_groups.id = user_group_infos.user_group_id)"
+  , "(SELECT (" <> mintercalate ", " ugSettingsSelectors <> ")::user_group_setting FROM user_group_settings WHERE user_groups.id = user_group_settings.user_group_id)"
   , "(SELECT (" <> mintercalate ", " ugAddressSelectors <> ")::user_group_address FROM user_group_addresses WHERE user_groups.id = user_group_addresses.user_group_id)"
   , "(SELECT (" <> mintercalate ", " ugUISelectors <> ")::user_group_ui FROM user_group_uis WHERE user_groups.id = user_group_uis.user_group_id)"
   ]
 
-ugInfoSelectors :: [SQL]
-ugInfoSelectors = [
+ugSettingsSelectors :: [SQL]
+ugSettingsSelectors = [
     "ip_address_mask_list"
   , "idle_doc_timeout"
   , "cgi_display_name"
@@ -659,23 +659,23 @@ companyToUserGroup c cui mParentGroupID =
     , _ugParentGroupID = mParentGroupID
     , _ugName          = T.pack . companyname . companyinfo $ c
     , _ugAddress       = toUserGroupAddress . companyinfo $ c
-    , _ugInfo          = toUserGroupInfo . companyinfo $ c
+    , _ugSettings      = toUserGroupSettings . companyinfo $ c
     , _ugInvoicing     = paymentPlanToUserGroupInvoicing (isJust mParentGroupID) .
                           companypaymentplan . companyinfo $ c
     , _ugUI            = toUserGroupUI $ cui
     }
 
-toUserGroupInfo :: CompanyInfo -> UserGroupInfo
-toUserGroupInfo ci =
-  UserGroupInfo
+toUserGroupSettings :: CompanyInfo -> UserGroupSettings
+toUserGroupSettings ci =
+  UserGroupSettings
     {
-      _ugiIPAddressMaskList   = companyipaddressmasklist ci
-    , _ugiIdleDocTimeout      = companyidledoctimeout ci
-    , _ugiCGIDisplayName      = T.pack <$> companycgidisplayname ci
-    , _ugiCGIServiceID        = T.pack <$> companycgiserviceid ci
-    , _ugiSMSProvider         = companysmsprovider ci
-    , _ugiPadAppMode          = companypadappmode ci
-    , _ugiPadEarchiveEnabled  = companypadearchiveenabled ci
+      _ugsIPAddressMaskList   = companyipaddressmasklist ci
+    , _ugsIdleDocTimeout      = companyidledoctimeout ci
+    , _ugsCGIDisplayName      = T.pack <$> companycgidisplayname ci
+    , _ugsCGIServiceID        = T.pack <$> companycgiserviceid ci
+    , _ugsSMSProvider         = companysmsprovider ci
+    , _ugsPadAppMode          = companypadappmode ci
+    , _ugsPadEarchiveEnabled  = companypadearchiveenabled ci
     }
 
 toUserGroupAddress :: CompanyInfo -> UserGroupAddress

@@ -6,6 +6,6 @@ import Data.Label
 import UserGroup.Internal
 
 mkLabel ''UserGroup
-mkLabel ''UserGroupInfo
+mkLabel ''UserGroupSettings
 mkLabel ''UserGroupUI
 mkLabel ''UserGroupAddress

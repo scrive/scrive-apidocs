@@ -218,15 +218,15 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m SetCompanyInfo Bool
             -- We can do this for default partner, because that does not have
             -- a usergroup associated.
             . set ugParentGroupID ptUserGroupID
-            . set ugInfo
-                  (UserGroupInfo {
-                      _ugiIPAddressMaskList   = companyipaddressmasklist
-                    , _ugiIdleDocTimeout      = companyidledoctimeout
-                    , _ugiCGIDisplayName      = T.pack <$> companycgidisplayname
-                    , _ugiCGIServiceID        = T.pack <$> companycgiserviceid
-                    , _ugiSMSProvider         = companysmsprovider
-                    , _ugiPadAppMode          = companypadappmode
-                    , _ugiPadEarchiveEnabled  = companypadearchiveenabled
+            . set ugSettings
+                  (UserGroupSettings {
+                      _ugsIPAddressMaskList   = companyipaddressmasklist
+                    , _ugsIdleDocTimeout      = companyidledoctimeout
+                    , _ugsCGIDisplayName      = T.pack <$> companycgidisplayname
+                    , _ugsCGIServiceID        = T.pack <$> companycgiserviceid
+                    , _ugsSMSProvider         = companysmsprovider
+                    , _ugsPadAppMode          = companypadappmode
+                    , _ugsPadEarchiveEnabled  = companypadearchiveenabled
                     })
             . set ugAddress
                   (UserGroupAddress {

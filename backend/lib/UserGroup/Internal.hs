@@ -5,7 +5,7 @@ module UserGroup.Internal (
   , UserGroupID
   , emptyUserGroupID
   , unsafeUserGroupID
-  , UserGroupInfo(..)
+  , UserGroupSettings(..)
   , UserGroupAddress(..)
   , UserGroupUI(..)
   , UserGroupInvoicing(..)
@@ -27,13 +27,12 @@ import PadApplication.Data
 import SMS.Data
 import Theme.ThemeID
 
-
 data UserGroup = UserGroup {
     _ugID            :: UserGroupID
   , _ugParentGroupID :: Maybe UserGroupID
   , _ugName          :: Text
   , _ugAddress       :: UserGroupAddress
-  , _ugInfo          :: UserGroupInfo
+  , _ugSettings      :: UserGroupSettings
   , _ugInvoicing     :: UserGroupInvoicing
   , _ugUI            :: UserGroupUI
   } deriving (Show, Eq)
@@ -52,14 +51,14 @@ data InvoicingType =
   | InvoicingTypeInvoice
   deriving (Read, Show)
 
-data UserGroupInfo = UserGroupInfo {
-    _ugiIPAddressMaskList   :: [IPAddressWithMask]
-  , _ugiIdleDocTimeout      :: Maybe Int16
-  , _ugiCGIDisplayName      :: Maybe Text
-  , _ugiCGIServiceID        :: Maybe Text
-  , _ugiSMSProvider         :: SMSProvider
-  , _ugiPadAppMode          :: PadAppMode
-  , _ugiPadEarchiveEnabled  :: Bool
+data UserGroupSettings = UserGroupSettings {
+    _ugsIPAddressMaskList   :: [IPAddressWithMask]
+  , _ugsIdleDocTimeout      :: Maybe Int16
+  , _ugsCGIDisplayName      :: Maybe Text
+  , _ugsCGIServiceID        :: Maybe Text
+  , _ugsSMSProvider         :: SMSProvider
+  , _ugsPadAppMode          :: PadAppMode
+  , _ugsPadEarchiveEnabled  :: Bool
   } deriving (Show, Eq)
 
 data UserGroupUI = UserGroupUI {
@@ -134,7 +133,7 @@ type instance CompositeRow UserGroup = (
   , Maybe UserGroupID
   , Text
   , Composite UserGroupInvoicing
-  , Composite UserGroupInfo
+  , Composite UserGroupSettings
   , Composite UserGroupAddress
   , Composite UserGroupUI
   )
@@ -147,7 +146,7 @@ instance CompositeFromSQL UserGroup where
       _ugID = ugid
     , _ugParentGroupID = mparentgroupid
     , _ugName = name
-    , _ugInfo = unComposite cinfos
+    , _ugSettings = unComposite cinfos
     , _ugInvoicing = unComposite cinvoicing
     , _ugAddress = unComposite  caddresses
     , _ugUI = unComposite cuis
@@ -158,14 +157,14 @@ instance Default UserGroup where
       _ugID = emptyUserGroupID
     , _ugParentGroupID = Nothing
     , _ugName = ""
-    , _ugInfo = UserGroupInfo {
-        _ugiIPAddressMaskList   = []
-      , _ugiIdleDocTimeout      = Nothing
-      , _ugiCGIDisplayName      = Nothing
-      , _ugiCGIServiceID        = Nothing
-      , _ugiSMSProvider         = SMSDefault
-      , _ugiPadAppMode          = ListView
-      , _ugiPadEarchiveEnabled  = True
+    , _ugSettings = UserGroupSettings {
+        _ugsIPAddressMaskList   = []
+      , _ugsIdleDocTimeout      = Nothing
+      , _ugsCGIDisplayName      = Nothing
+      , _ugsCGIServiceID        = Nothing
+      , _ugsSMSProvider         = SMSDefault
+      , _ugsPadAppMode          = ListView
+      , _ugsPadEarchiveEnabled  = True
       }
     , _ugInvoicing = Invoice FreePlan
     , _ugAddress = UserGroupAddress {
@@ -203,7 +202,7 @@ instance Identifier UserGroupID Int64 where
 
 -- USER GROUP INFO
 
-type instance CompositeRow UserGroupInfo = (
+type instance CompositeRow UserGroupSettings = (
     Maybe String
   , Maybe Int16
   , Maybe Text
@@ -213,10 +212,10 @@ type instance CompositeRow UserGroupInfo = (
   , Bool
   )
 
-instance PQFormat UserGroupInfo where
-  pqFormat _ = "%user_group_info"
+instance PQFormat UserGroupSettings where
+  pqFormat _ = "%user_group_setting"
 
-instance CompositeFromSQL UserGroupInfo where
+instance CompositeFromSQL UserGroupSettings where
   toComposite (
       ip_address_mask_list
     , idle_doc_timeout
@@ -225,14 +224,14 @@ instance CompositeFromSQL UserGroupInfo where
     , cgi_service_id
     , pad_app_mode
     , pad_earchive_enabled
-    ) = UserGroupInfo {
-      _ugiIPAddressMaskList   = maybe [] read ip_address_mask_list
-    , _ugiIdleDocTimeout      = idle_doc_timeout
-    , _ugiCGIDisplayName      = cgi_display_name
-    , _ugiCGIServiceID        = cgi_service_id
-    , _ugiSMSProvider         = sms_provider
-    , _ugiPadAppMode          = pad_app_mode
-    , _ugiPadEarchiveEnabled  = pad_earchive_enabled
+    ) = UserGroupSettings {
+      _ugsIPAddressMaskList   = maybe [] read ip_address_mask_list
+    , _ugsIdleDocTimeout      = idle_doc_timeout
+    , _ugsCGIDisplayName      = cgi_display_name
+    , _ugsCGIServiceID        = cgi_service_id
+    , _ugsSMSProvider         = sms_provider
+    , _ugsPadAppMode          = pad_app_mode
+    , _ugsPadEarchiveEnabled  = pad_earchive_enabled
     }
 
 -- UI

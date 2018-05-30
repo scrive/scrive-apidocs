@@ -27,12 +27,12 @@ createTableUserGroups = Migration {
     }
   }
 
-createTableUserGroupInfos :: MonadDB m => Migration m
-createTableUserGroupInfos = Migration {
-    mgrTableName = tblName tableUserGroupInfos
+createTableUserGroupSettings :: MonadDB m => Migration m
+createTableUserGroupSettings = Migration {
+    mgrTableName = tblName tableUserGroupSettings
   , mgrFrom = 0
   , mgrAction = StandardMigration $ createTable True tblTable {
-      tblName = "user_group_infos"
+      tblName = "user_group_settings"
     , tblVersion = 1
     , tblColumns = [
         tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = False }

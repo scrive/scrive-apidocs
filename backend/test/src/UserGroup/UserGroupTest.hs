@@ -398,7 +398,7 @@ instance Arbitrary ARootUserGroup where
   arbitrary = (\ug pp ui address info -> ARootUserGroup $ ug {
       _ugInvoicing = Invoice pp
     , _ugUI        = ui
-    , _ugInfo      = info
+    , _ugSettings  = info
     , _ugAddress   = address
     })
     <$> arbitrary

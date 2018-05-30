@@ -70,7 +70,7 @@ kontraComposites = [
 
   -- user group composites
   , ctUserGroupInvoicing
-  , ctUserGroupInfo
+  , ctUserGroupSettings
   , ctUserGroupUI
   , ctUserGroupAddress
   , ctUserGroup
@@ -170,7 +170,7 @@ kontraTables =
   , tableSignatoryLinkConsentQuestions
   , tableAmazonURLFixConsumers
   , tableAmazonURLFixJobs
-  , tableUserGroupInfos
+  , tableUserGroupSettings
   , tableUserGroupInvoicings
   , tableUserGroupUIs
   , tableUserGroupAddresses
