@@ -25,6 +25,7 @@ import Log
 
 import BrandedDomain.BrandedDomainID
 import DB
+import Doc.Data.Document (DocumentSharing(..))
 import Doc.Data.SignatoryField
 import Doc.DocStateData (DocumentStatus(..))
 import Log.Identifier
@@ -82,7 +83,8 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
 data DeleteUser = DeleteUser UserID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool where
   update (DeleteUser uid) = do
-    now <- currentTime
+    now       <- currentTime
+    Just user <- query $ GetUserByID uid
 
     runQuery_ $ sqlDelete "email_change_requests" $ sqlWhereEq "user_id" uid
     runQuery_ $ sqlDelete "oauth_access_token"    $ sqlWhereEq "user_id" uid
@@ -92,6 +94,25 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool wh
     runQuery_ $ sqlDelete "sessions"              $ sqlWhereEq "pad_user_id" uid
     runQuery_ $ sqlDelete "user_account_requests" $ sqlWhereEq "user_id" uid
     runQuery_ $ sqlDelete "user_callback_scheme"  $ sqlWhereEq "user_id" uid
+
+    -- Give the shared templates to the oldest admin.
+    runQuery_ $ sqlSelect "users u" $ do
+      sqlResult "u.id"
+      sqlJoinOn "companies c" "u.company_id = c.id"
+      sqlWhereEq "c.id" $ usercompany user
+      sqlWhereIsNULL "u.deleted"
+      sqlWhere "u.is_company_admin"
+      sqlOrderBy "has_accepted_terms_of_service"
+      sqlWhereNotEq "u.id" uid
+      sqlLimit 1
+    mAdminID <- fetchMaybe runIdentity
+    case mAdminID of
+      Nothing -> return ()
+      Just adminID -> do
+        runQuery_ $ sqlUpdate "documents" $ do
+          sqlSet "author_id" (adminID :: UserID)
+          sqlWhereNotEq "sharing" Shared
+          sqlWhereEq "author_id" uid
 
     runQuery_ $ sqlUpdate "users_history" $ do
       sqlSet "event_data" (Nothing :: Maybe String)

@@ -14,7 +14,6 @@ import Network.HTTP.Client (Manager)
 import qualified Data.Text as T
 
 import Administration.Invoicing
-import Amazon (AmazonMonad)
 import Attachment.Model
 import Company.Model
 import CronConf
