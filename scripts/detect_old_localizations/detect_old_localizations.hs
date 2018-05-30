@@ -10,6 +10,7 @@ import Data.Foldable (foldlM)
 import Data.List (intersperse, isPrefixOf, isSuffixOf, unfoldr)
 import Data.Maybe
 import Language.JavaScript.Parser
+import Language.JavaScript.Parser.AST
 import System.Directory
 import System.Exit
 import System.IO
@@ -113,23 +114,31 @@ intersectLocalizations _ _ = undefined
 
 ------------------------------
 -- | Parsing Localization from JavaScript.
-propsToLocalization :: String -> [JSNode] -> Either String Localization
+propsToLocalization :: String -> JSObjectPropertyList -> Either String Localization
 propsToLocalization path props = do
-  subProps <- mapM aux props
+  subProps <- mapM aux propsList
   Object <$> disjointUnions merger subProps
     where
-      aux (NN (JSPropertyNameandValue (NT (JSIdentifier varName) _ _)
-                _ [NT (JSStringLiteral _ template) _ _])) =
+      propsList =
+        let toList JSLNil             = []
+            toList (JSLOne a)         = [a]
+            toList (JSLCons l _ann a) = a:toList l
+        in case props of
+          JSCTLComma l _ann -> toList l
+          JSCTLNone  l      -> toList l
+
+      aux (JSPropertyNameandValue (JSPropertyIdent _ann varName)
+           _ann' [JSStringLiteral _ann'' template]) =
         return $ Map.singleton varName $ Value template
-      aux (NN (JSPropertyNameandValue (NT (JSIdentifier varName) _ _)
-                _ [NN (JSObjectLiteral _ props' _)])) = do
+      aux (JSPropertyNameandValue (JSPropertyIdent _ann varName)
+           _ann' [JSObjectLiteral _ann'' props' _ann''']) = do
         children <- propsToLocalization (path ++ "." ++ varName) props'
         return $ Map.singleton varName children
-      aux (NN (JSPropertyNameandValue (NT (JSIdentifier varName) _ _)
-                _ [NN (JSFunctionExpression _ _ _ _ _ _)])) =
+      aux (JSPropertyNameandValue (JSPropertyIdent _ann varName)
+           _ann' [JSFunctionExpression _ _ _ _ _ _]) =
         return $ Map.singleton varName $ Value "<function>"
-      aux (NN (JSPropertyNameandValue (NT (JSIdentifier varName) _ _)
-                _ [NN (JSArrayLiteral _ _ _)])) =
+      aux (JSPropertyNameandValue (JSPropertyIdent _ann varName)
+           _ann' [JSArrayLiteral _ _ _]) =
         return $ Map.singleton varName $ Value "<array>"
       aux _ = return $ Map.empty
 
@@ -139,18 +148,18 @@ propsToLocalization path props = do
 
 localizationsFromFile :: FilePath -> IO Localization
 localizationsFromFile path = do
-  langsTemplate <- readFile path
-  let template = unlines $ tail $ filter (not . ("#" `isPrefixOf`)) $
-        lines langsTemplate
-      node = parse template path
-      Right (NN top) = node
-      JSSourceElementsTop (NN vars: _) = top
-      JSExpression [_, _, NN obj] = vars
-      JSObjectLiteral _ props _ = obj
+  template <- readStFile path
+  let Right jsast                            = parse template path
+      JSAstProgram stmts _annot              = jsast
+      JSAssignStatement _expr _op obj _semi  = head stmts
+      JSObjectLiteral _annot' props _annot'' = obj
   case propsToLocalization "localization" props of
     Left e -> hPutStrLn stderr e >> exitFailure
     Right localization -> return $ Object $
                           Map.singleton "localization" localization
+  where
+    readStFile fname =
+      unlines . tail . filter (not . ("#" `isPrefixOf`)) . lines <$> readFile fname
 
 ------------------------------
 -- Localization calls.
