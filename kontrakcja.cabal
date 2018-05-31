@@ -1351,6 +1351,7 @@ Test-suite kontrakcja-test
                , MissingH
                , QuickCheck
                , aeson
+               , aeson-diff
                , base64-bytestring
                , binary
                , blaze-markup

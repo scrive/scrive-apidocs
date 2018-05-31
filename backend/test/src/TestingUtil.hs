@@ -21,6 +21,8 @@ import Test.QuickCheck
 import Test.QuickCheck.Gen
 import Test.QuickCheck.Unicode as QCU
 import qualified Crypto.Scrypt as Scrypt
+import qualified Data.Aeson as A
+import qualified Data.Aeson.Diff as A
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.UTF8 as BS
@@ -1106,6 +1108,21 @@ assertBool msg = liftIO . T.assertBool msg
 
 assertEqual :: (Eq a, Show a, MonadIO m) => String -> a -> a -> m ()
 assertEqual msg a = liftIO . T.assertEqual msg a
+
+assertEqualJson :: MonadIO m => String -> A.Value -> A.Value -> m ()
+assertEqualJson msg expected got = unless (expected == got) $ do
+  assertFailure . unlines $
+    [ msg
+    , ""
+    , "Expected: " ++ show expected
+    , "Got: " ++ show got
+    , ""
+    , "Steps to go from the expected value to the one we got:"
+    ] ++ map ((" * " ++) . show) (A.patchOperations $ A.diff expected got)
+      ++
+    [ ""
+    , "Steps to go from the value we got to the expected one:"
+    ] ++ map ((" * " ++) . show) (A.patchOperations $ A.diff got expected)
 
 assertFailure :: MonadIO m => String -> m ()
 assertFailure = liftIO . T.assertFailure

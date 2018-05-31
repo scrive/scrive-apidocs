@@ -391,10 +391,10 @@ testJSONWith fp jsonBS = do
   jsonFileBS <- liftIO $ B.readFile fp
   let Just value    = decode jsonBS
       Just jsonFile = decode jsonFileBS
-  assertEqual ("JSON structure and types (including 'null') should match that in " ++ fp)
-              (removeValues jsonFile) (removeValues value)
-  assertEqual ("JSON structure and values should match if we will remove dynamic values (like documentid or mtime) " ++ fp)
-              (removeDynamicValues jsonFile) (removeDynamicValues value)
+  assertEqualJson ("JSON structure and types (including 'null') should match that in " ++ fp)
+                  (removeValues jsonFile) (removeValues value)
+  assertEqualJson ("JSON structure and values should match if we will remove dynamic values (like documentid or mtime) " ++ fp)
+                  (removeDynamicValues jsonFile) (removeDynamicValues value)
   return ()
 
 removeValues :: Value -> Value
