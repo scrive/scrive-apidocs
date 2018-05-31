@@ -8,7 +8,9 @@ window.AbstractAPICall = Backbone.Model.extend({
     category: "other",
     isInternal: false,
     tryToUseDocumentIDWithCopy: false,
-    expectBinaryResponse: false
+    expectBinaryResponse: false,
+    expectImageResponse: false,
+    expectPDFResponse: false
   },
   name: function () {
           return this.get("name");
@@ -56,6 +58,12 @@ window.AbstractAPICall = Backbone.Model.extend({
   expectBinaryResponse: function () {
           return this.get("expectBinaryResponse");
         },
+  expectImageResponse: function () {
+          return this.get("expectImageResponse");
+        },
+  expectPDFResponse: function () {
+          return this.get("expectPDFResponse");
+        },
   urlHash: function () {
           return this.apiVersion() + "-" + this.name().replace(/\s+/g, "-").toLowerCase();
         },
@@ -75,6 +83,7 @@ window.ApiCallInstance = AbstractAPICall.extend({
     details: undefined,
     resultContent: undefined,
     resultContentLength: undefined,
+    resultContentType: undefined,
     responseStatusCode: undefined
   },
   initialize: function (args) {
@@ -89,6 +98,7 @@ window.ApiCallInstance = AbstractAPICall.extend({
             details: undefined,
             resultContent: undefined,
             resultContentLength: undefined,
+            resultContentType: undefined,
             responseStatusCode: undefined
           });
           this.trigger("send");
@@ -163,6 +173,7 @@ window.ApiCallInstance = AbstractAPICall.extend({
   details: function () { return this.get("details"); },
   resultContent: function () { return this.get("resultContent"); },
   resultContentLength: function () { return this.get("resultContentLength"); },
+  resultContentType: function () { return this.get("resultContentType"); },
   getDetails: function (jqXHR) {
           return {
             "Status Code":
@@ -197,10 +208,18 @@ window.ApiCallInstance = AbstractAPICall.extend({
             args.headers.authorization = this.authorization();
           }
           args.cache = false;
+          if (this.expectBinaryResponse()) {
+            if (this.expectImageResponse() || this.expectPDFResponse()) {
+                  args.dataType = "binary";
+                  args.processData = false;
+                  args.responseType = "arraybuffer";
+              }
+          }
           args.success = function (data, textStatus, jqXHR) {
             self.set("details", self.getDetails(jqXHR));
             self.set("resultContent", data);
             self.set("resultContentLength", jqXHR.getResponseHeader("Content-Length"));
+            self.set("resultContentType", jqXHR.getResponseHeader("content-type"));
             self.set("responseStatusCode", jqXHR.status);
             if (form != undefined) {
               self.detachFileParamsFromForm(form);
@@ -214,6 +233,7 @@ window.ApiCallInstance = AbstractAPICall.extend({
             self.set("details", self.getDetails(jqXHR));
             self.set("resultContent", jqXHR.responseText);
             self.set("resultContentLength", jqXHR.getResponseHeader("Content-Length"));
+            self.set("resultContentType", jqXHR.getResponseHeader("content-type"));
             self.set("responseStatusCode", jqXHR.status);
             if (form != undefined) {
               self.detachFileParamsFromForm(form);
@@ -276,7 +296,9 @@ var APICall = function (props) {
     "category",
     "equivalentCalls",
     "tryToUseDocumentIDWithCopy",
-    "expectBinaryResponse"
+    "expectBinaryResponse",
+    "expectImageResponse",
+    "expectPDFResponse"
   ];
   var staticProps = {};
   var dynamicProps = {};
