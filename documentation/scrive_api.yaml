@@ -63,6 +63,7 @@ info:
     | 2018-03-26  | Add `rejection_reason` to the Signatory JSON and an API endpoint to control [template sharing](#share-or-unshare-templates) |
     | 2018-03-29  | Fix an omission where `no_bankid` (Norwegian BankID) was missing as an Authentication to Sign |
     | 2018-04-09  | Add a new field to the [Signatory JSON](#signatory): `consent_module` |
+    | 2018-06-01  | Add `dk_nemid` (Danish NemID) to `authentication_to_sign` |
 
     ## Environments & IP Addresses
 

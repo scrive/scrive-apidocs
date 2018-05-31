@@ -142,6 +142,7 @@ properties:
       - sms_pin
       - se_bankid
       - no_bankid
+      - dk_nemid
   confirmation_delivery_method:
     type: string
     default: email
