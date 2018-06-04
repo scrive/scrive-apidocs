@@ -11,6 +11,7 @@ new APICallV2({
         },
   needsAuthorization: true,
   expectBinaryResponse: true,
+  expectPDFResponse: true,
   params: [
           window.APIV2CallParamDocumentID,
           new APICallParam({

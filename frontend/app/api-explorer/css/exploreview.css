@@ -64,6 +64,12 @@
   word-wrap: break-word;
 }
 
+.exploreview .response-image-result {
+  height: auto;
+  max-height: 500px;
+  word-wrap: break-word;
+}
+
 .exploreview .response-result, .exploreview .request-details{
   background-color: #f1f1f1;
   -moz-transition: background-color 300ms ease-out;

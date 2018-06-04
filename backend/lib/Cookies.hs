@@ -1,5 +1,6 @@
 module Cookies ( addCookie
                , addHttpOnlyCookie
+               , lookCookieNames
                , lookCookieValue
                , lookCookieValues
                ) where
@@ -72,6 +73,13 @@ lookCookieValues name headers =
       cookiesWithNames = concatMap parseCookieHeader cookieHeaderValues
       cookies = take 10 $ map snd $ filter (\c -> (fst c) == (map toLower name)) cookiesWithNames
   in  cookies
+
+lookCookieNames :: Headers -> [String]
+lookCookieNames headers =
+  let mCookieHeader = M.lookup "cookie" headers
+      cookieHeaderValues = map BS.unpack $ maybe [] hValue mCookieHeader
+      cookiesWithNames = concatMap parseCookieHeader cookieHeaderValues
+  in map fst cookiesWithNames
 
 lookCookieValue :: String -> Headers -> Maybe String
 lookCookieValue name = listToMaybe . lookCookieValues name

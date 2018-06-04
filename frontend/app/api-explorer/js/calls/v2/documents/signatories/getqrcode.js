@@ -14,6 +14,7 @@ new APICallV2({
   needsAuthorization: true,
   tryToUseDocumentIDWithCopy: true,
   expectBinaryResponse: true,
+  expectImageResponse: true,
   params: [
           window.APIV2CallParamDocumentID,
           window.APIV2CallParamSignatoryID

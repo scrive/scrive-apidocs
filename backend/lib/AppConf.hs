@@ -35,6 +35,7 @@ data AppConf = AppConf {
   -- The host and port default to S3.
   , dbConfig           :: T.Text               -- ^ postgresql configuration
   , maxDBConnections   :: Int                  -- ^ limit of db connections
+  , queryTimeout       :: Maybe Int            -- ^ timeout for DB queries
   , redisCacheConfig   :: Maybe RedisConfig    -- ^ redis configuration
   , localFileCacheSize :: Int                  -- ^ size of local cache for files
   , logConfig          :: LogConfig            -- ^ logging configuration
@@ -70,7 +71,6 @@ data AppConf = AppConf {
     -- ^ Configuration of Nets for ESigning (BankID, NemID, ...)
   , pdfToolsLambdaConf :: PdfToolsLambdaConf
     -- ^ Configuration of PdfTools Lambda
-
   } deriving (Eq, Show)
 
 unjsonAppConf :: UnjsonDef AppConf
@@ -98,6 +98,9 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> field "max_db_connections"
       maxDBConnections
       "Database connections limit"
+  <*> fieldOpt "query_timeout"
+      queryTimeout
+      "Query timeout in miliseconds"
   <*> fieldOpt "redis_cache"
       redisCacheConfig
       "Redis cache configuration"

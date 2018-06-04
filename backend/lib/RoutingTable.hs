@@ -158,7 +158,6 @@ staticRoutes production = choice
 
      , allLangDirs $ dir "unsupported_browser" $ hGet $ toK0 $ unsupportedBrowserPage
      , allLangDirs $ dir "enable-cookies" $ dir "enable-cookies.html" $ hGetAllowHttp $ toK0 $ enableCookiesPage
-     , allLangDirs $ dir "terms" $ hGet $ toK0 $ handleTermsOfService
      , documentAPI
      , monitorAPI
      , partnerAPI
