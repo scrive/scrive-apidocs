@@ -12,7 +12,7 @@ import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Char8 as BSC8
 
 import BrandedDomain.BrandedDomain
-import Company.CompanyUI
+import Company.CompanyUI.Model
 import Context
 import DB
 import Theme.Model

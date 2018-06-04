@@ -18,7 +18,7 @@ import Data.Int (Int16)
 import Data.String.Utils (strip)
 
 import BrandedDomain.BrandedDomainID
-import Company.Model
+import Company.Data
 import DB
 import Log.Identifier
 import MinutesTime
@@ -30,6 +30,7 @@ import User.Email
 import User.Lang
 import User.Password
 import User.UserID
+import UserGroup.Data
 import Util.HasSomeUserInfo
 
 data User = User {
@@ -45,6 +46,7 @@ data User = User {
   , usersettings                  :: UserSettings
   , usercompany                   :: CompanyID
   , userassociateddomainid        :: BrandedDomainID
+  , usergroupid                   :: Maybe UserGroupID
   } deriving (Eq, Ord, Show)
 
 instance HasSomeUserInfo User where
@@ -92,6 +94,7 @@ instance Default User where
   , usersettings                  = UserSettings LANG_EN
   , usercompany                   = unsafeCompanyID 0
   , userassociateddomainid        = unsafeBrandedDomainID 0
+  , usergroupid                   = Nothing
   }
 
 instance Default UserInfo where
@@ -135,6 +138,7 @@ selectUsersSelectorsList =
   , "password_algorithm"
   , "totp_key"
   , "totp_active"
+  , "user_group_id"
   ]
 
 selectUsersSelectors :: SQL
@@ -165,6 +169,7 @@ selectUsersWithCompaniesSQL = "SELECT"
   <> ", users.password_algorithm"
   <> ", users.totp_key"
   <> ", users.totp_active"
+  <> ", users.user_group_id"
   -- Company:
   <> ", c.id AS company_id"
   <> ", c.name"
@@ -182,6 +187,7 @@ selectUsersWithCompaniesSQL = "SELECT"
   <> ", c.partner_id as partner_id"
   <> ", c.pad_app_mode"
   <> ", c.pad_earchive_enabled"
+  <> ", c.user_group_id"
   <> "  FROM users"
   <> "  LEFT JOIN companies c ON users.company_id = c.id"
   <> "  WHERE users.deleted IS NULL"
@@ -191,8 +197,8 @@ composeFullName (fstname, sndname) = if null sndname
   then fstname
   else fstname ++ " " ++ sndname
 
-fetchUser :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool) -> User
-fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, password_algorithm, totp_key, totp_active) = User {
+fetchUser :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, Maybe UserGroupID) -> User
+fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, password_algorithm, totp_key, totp_active, mugid) = User {
   userid = uid
 , userpassword = maybeMkPassword ( password, salt
                                  , int16ToPwdAlgorithm <$> password_algorithm )
@@ -213,10 +219,11 @@ fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepte
 , usersettings = UserSettings { lang = lang }
 , usercompany = company_id
 , userassociateddomainid = associated_domain_id
+, usergroupid = mugid
 }
 
-fetchUserWithCompany :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, Maybe CompanyID, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe Int16, Maybe String, SMSProvider, Maybe String, PaymentPlan, PartnerID, PadAppMode, Bool) -> (User, Company)
-fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, password_algorithm, totp_key, totp_active, cid, name, number, address, zip', city, country, ip_address_mask, idle_doc_timeout, cgi_display_name, sms_provider, cgi_service_id, payment_plan, partner_id, pad_app_mode, pad_earchive_enabled) = (user, company)
+fetchUserWithCompany :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, Maybe UserGroupID, Maybe CompanyID, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe Int16, Maybe String, SMSProvider, Maybe String, PaymentPlan, PartnerID, PadAppMode, Bool, Maybe UserGroupID) -> (User, Company)
+fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, password_algorithm, totp_key, totp_active, mugid1, cid, name, number, address, zip', city, country, ip_address_mask, idle_doc_timeout, cgi_display_name, sms_provider, cgi_service_id, payment_plan, partner_id, pad_app_mode, pad_earchive_enabled, mugid2) = (user, company)
   where
     user = User {
       userid = uid
@@ -240,9 +247,11 @@ fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, 
     , usersettings = UserSettings { lang = lang }
     , usercompany = company_id
     , userassociateddomainid = associated_domain_id
+    , usergroupid = mugid1
     }
     company = Company {
       companyid = fromJust cid
+    , companyusergroupid = mugid2
     , companyinfo = CompanyInfo {
         companyname = fromJust name
       , companynumber = fromJust number

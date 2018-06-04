@@ -1,6 +1,6 @@
 module Company.Model (
     module Company.CompanyID
-  , PaymentPlan(..)
+  , module Company.Data
   , Company(..)
   , CompanyInfo(..)
   , minCompanyIdleDocTimeout
@@ -11,105 +11,28 @@ module Company.Model (
   , GetCompany(..)
   , GetCompanyByUserID(..)
   , CreateCompany(..)
+  , CreateCompanyWithoutUserGroup(..)
   , SetCompanyInfo(..)
-  , SetCompanyIPAddressMaskList(..)
   , SetCompanyPaymentPlan(..)
   , CompanyFilter(..)
   ) where
 
 import Control.Monad.Catch
 import Control.Monad.State
-import Data.Default
 import Data.Int (Int16)
-import Data.Typeable
+import Log
+import qualified Data.Text as T
 
 import Company.CompanyID
+import Company.Data
 import DB
-import IPAddress
+import Log.Identifier
 import PadApplication.Data
 import Partner.Model
 import SMS.Data (SMSProvider(..))
 import User.UserID
-
-data PaymentPlan =
-    FreePlan
-  | OnePlan
-  | TeamPlan
-  | EnterprisePlan
-  | TrialPlan
-  deriving (Eq, Ord, Show)
-
-instance PQFormat PaymentPlan where
-  pqFormat = const $ pqFormat (undefined::Int16)
-
-instance FromSQL PaymentPlan where
-  type PQBase PaymentPlan = PQBase Int16
-  fromSQL mbase = do
-    n <- fromSQL mbase
-    case n :: Int16 of
-      -- Note:
-      -- If changing this, please also update `pure_sql/invoice_stat.sql`
-      0 -> return FreePlan
-      1 -> return OnePlan
-      2 -> return TeamPlan
-      3 -> return EnterprisePlan
-      4 -> return TrialPlan
-      _ -> throwM RangeError {
-        reRange = [(0, 4)]
-      , reValue = n
-      }
-
-instance ToSQL PaymentPlan where
-  type PQDest PaymentPlan = PQDest Int16
-  toSQL FreePlan        = toSQL (0::Int16)
-  toSQL OnePlan         = toSQL (1::Int16)
-  toSQL TeamPlan        = toSQL (2::Int16)
-  toSQL EnterprisePlan  = toSQL (3::Int16)
-  toSQL TrialPlan       = toSQL (4::Int16)
-
-data Company = Company {
-    companyid         :: CompanyID
-  , companyinfo       :: CompanyInfo
-  } deriving (Eq, Ord, Show, Typeable)
-
-data CompanyInfo = CompanyInfo {
-    companyname    :: String
-  , companynumber  :: String
-  , companyaddress :: String
-  , companyzip     :: String
-  , companycity    :: String
-  , companycountry :: String
-  , companyipaddressmasklist :: [IPAddressWithMask]
-  , companyidledoctimeout :: Maybe Int16
-  , companycgidisplayname :: Maybe String
-  , companysmsprovider    :: SMSProvider
-  , companycgiserviceid   :: Maybe String
-  , companypaymentplan    :: PaymentPlan
-  , companypartnerid      :: PartnerID
-  , companypadappmode     :: PadAppMode
-  , companypadearchiveenabled :: Bool
-  } deriving (Eq, Ord, Show)
-
--- @devnote will be no partner ID '0' so we'll remove this in the API endpoints when we
--- encounter it (i.e. when not given explicitly by the API client)
-instance Default CompanyInfo where
-    def = CompanyInfo
-          { companyname                = ""
-          , companynumber              = ""
-          , companyaddress             = ""
-          , companyzip                 = ""
-          , companycity                = ""
-          , companycountry             = ""
-          , companyipaddressmasklist   = []
-          , companyidledoctimeout      = Nothing
-          , companycgidisplayname      = Nothing
-          , companysmsprovider         = SMSDefault
-          , companycgiserviceid        = Nothing
-          , companypaymentplan         = FreePlan
-          , companypartnerid           = unsafePartnerID 0
-          , companypadappmode          = ListView
-          , companypadearchiveenabled  = True
-          }
+import UserGroup.Data
+import UserGroup.Model
 
 -- Synchronize these definitions with frontend/app/js/account/company.js
 minCompanyIdleDocTimeout, maxCompanyIdleDocTimeout :: Int16
@@ -191,9 +114,9 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetCompaniesWithIdleDocTimeoutSe
       sqlWhereIsNotNULL "idle_doc_timeout"
     fetchMany fetchCompany
 
-data CreateCompany = CreateCompany
-instance (MonadDB m, MonadThrow m) => DBUpdate m CreateCompany Company where
-  update (CreateCompany) = do
+data CreateCompanyWithoutUserGroup = CreateCompanyWithoutUserGroup
+instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m CreateCompanyWithoutUserGroup Company where
+  update (CreateCompanyWithoutUserGroup) = do
     runQuery_ $ sqlInsert "companies" $ do
       sqlSetCmd "id" "DEFAULT"
       sqlSetCmd "partner_id" "(SELECT partners.id FROM partners WHERE partners.default_partner LIMIT 1)"
@@ -215,24 +138,45 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m CreateCompany Company where
       sqlWhereEq "companies.id" companyidx
     fetchOne fetchCompany
 
-data SetCompanyIPAddressMaskList = SetCompanyIPAddressMaskList CompanyID [IPAddress]
-instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyIPAddressMaskList Bool where
-  update (SetCompanyIPAddressMaskList cid ads) =
-    runQuery01 . sqlUpdate "companies" $ do
-      sqlSet "ip_address_mask" $ show ads
-      sqlWhereEq "id" cid
+data CreateCompany = CreateCompany
+instance (MonadDB m, MonadThrow m, MonadMask m, MonadLog m) => DBUpdate m CreateCompany Company where
+  update (CreateCompany) = do
+    company0 <- dbUpdate $ CreateCompanyWithoutUserGroup
+    result <- companyMigrateForDefaultPartner $ companyid company0
+    when (not result) $
+      logAttention "UserGroup cannot migrate a newly created company" $ object [
+          identifier_ $ companyid company0
+        ]
+    -- re-read company, because the migration changed it
+    fromJust <$> dbQuery (GetCompany $ companyid company0)
 
 data SetCompanyPaymentPlan = SetCompanyPaymentPlan CompanyID PaymentPlan
-instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyPaymentPlan Bool where
-  update (SetCompanyPaymentPlan cid pp) =
-    runQuery01 . sqlUpdate "companies" $ do
+instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m SetCompanyPaymentPlan Bool where
+  update (SetCompanyPaymentPlan cid pp) = do
+    result <- runQuery01 . sqlUpdate "companies" $ do
       sqlSet "payment_plan" $ pp
       sqlWhereEq "id" cid
+    when result $ do
+      dbQuery (GetCompany cid) >>= \case
+        Nothing ->
+          logAttention "SetCompanyPaymentPlan company does not exist" $ object [
+              identifier_ cid
+            ]
+        Just company -> do
+          p <- dbQuery . GetPartnerByID . companypartnerid . companyinfo $ company
+          -- The motivation is, that in future the partner will get only 1 invoice with all
+          -- the billed companies. Until then, our current invoicing code will just grab the
+          -- `PaymentPlan`, so there will be no difference between `Invoice pp` and `BillItem $ Just pp`.
+          let inv = case ptDefaultPartner p of
+                True  -> Invoice pp
+                False -> BillItem (Just pp)
+          modifyCompanyUserGroup company $ set ugInvoicing inv
+    return result
 
 data SetCompanyInfo = SetCompanyInfo CompanyID CompanyInfo
-instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyInfo Bool where
-  update (SetCompanyInfo cid CompanyInfo{..}) =
-    runQuery01 $ sqlUpdate "companies" $ do
+instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m SetCompanyInfo Bool where
+  update (SetCompanyInfo cid CompanyInfo{..}) = do
+    result <- runQuery01 . sqlUpdate "companies" $ do
       sqlSet "name" companyname
       sqlSet "number" companynumber
       sqlSet "address" companyaddress
@@ -251,6 +195,48 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyInfo Bool where
       sqlSet "pad_app_mode" companypadappmode
       sqlSet "pad_earchive_enabled" companypadearchiveenabled
       sqlWhereEq "id" cid
+    when result $ dbQuery (GetCompany cid) >>= \case
+      Nothing ->
+        logAttention "SetCompanyInfo company does not exist" $ object [
+            identifier_ cid
+          ]
+      Just (company@Company{..}) -> do
+        Partner{..} <- dbQuery . GetPartnerByID $ companypartnerid
+        let company_and_partner_have_same_status_of_usergroup_migration =
+                isJust    companyusergroupid && isJust    ptUserGroupID
+             || isNothing companyusergroupid && isNothing ptUserGroupID
+        case (  company_and_partner_have_same_status_of_usergroup_migration
+             -- Default partner will not be migrated to user_groups, so in this case
+             -- the migration status of usergroups can be different.
+             || ptDefaultPartner) of
+          False -> logAttention "UserGroup inconsistent partner migration" $ object [
+              identifier_ cid
+            , identifier_ ptID
+            ]
+          True -> modifyCompanyUserGroup company $
+              set ugName          (T.pack companyname)
+            -- We can do this for default partner, because that does not have
+            -- a usergroup associated.
+            . set ugParentGroupID ptUserGroupID
+            . set ugSettings
+                  (UserGroupSettings {
+                      _ugsIPAddressMaskList   = companyipaddressmasklist
+                    , _ugsIdleDocTimeout      = companyidledoctimeout
+                    , _ugsCGIDisplayName      = T.pack <$> companycgidisplayname
+                    , _ugsCGIServiceID        = T.pack <$> companycgiserviceid
+                    , _ugsSMSProvider         = companysmsprovider
+                    , _ugsPadAppMode          = companypadappmode
+                    , _ugsPadEarchiveEnabled  = companypadearchiveenabled
+                    })
+            . set ugAddress
+                  (UserGroupAddress {
+                      _ugaCompanyNumber = T.pack companynumber
+                    , _ugaAddress       = T.pack companyaddress
+                    , _ugaZip           = T.pack companyzip
+                    , _ugaCity          = T.pack companycity
+                    , _ugaCountry       = T.pack companycountry
+                    })
+    return result
 
 -- helpers
 
@@ -272,14 +258,18 @@ selectCompaniesSelectors = do
   sqlResult "companies.partner_id"
   sqlResult "companies.pad_app_mode"
   sqlResult "companies.pad_earchive_enabled"
+  sqlResult "companies.user_group_id"
 
 fetchCompany :: (CompanyID, String, String, String, String, String, String,
                  Maybe String, Maybe Int16, Maybe String,
-                 SMSProvider, Maybe String, PaymentPlan, PartnerID, PadAppMode, Bool) -> Company
+                 SMSProvider, Maybe String, PaymentPlan, PartnerID, PadAppMode,
+                 Bool, Maybe UserGroupID) -> Company
 fetchCompany (cid, name, number, address, zip', city, country,
               ip_address_mask_list, idle_doc_timeout, cgi_display_name,
-              sms_provider, cgi_service_id, payment_plan,  partner_id, pad_app_mode, pad_earchive_enabled) = Company {
+              sms_provider, cgi_service_id, payment_plan,  partner_id, pad_app_mode,
+              pad_earchive_enabled, muser_group_id) = Company {
   companyid = cid
+, companyusergroupid = muser_group_id
 , companyinfo = CompanyInfo {
     companyname = name
   , companynumber = number
@@ -298,3 +288,17 @@ fetchCompany (cid, name, number, address, zip', city, country,
   , companypadearchiveenabled = pad_earchive_enabled
   }
 }
+
+modifyCompanyUserGroup
+  :: (MonadDB m, MonadThrow m, MonadLog m)
+  => Company -> (UserGroup -> UserGroup) -> m ()
+modifyCompanyUserGroup company modify_ug =
+  case companyusergroupid company of
+    Nothing -> return () -- This company was not migrated to user_groups yet. This is just fine.
+    Just ugid -> dbQuery (UserGroupGet ugid) >>= \case
+      Nothing ->
+        logAttention "UserGroup inconsistent ForeignKey" $ object [
+            identifier_ ugid
+          , identifier_ $ companyid company
+          ]
+      Just ug -> dbUpdate . UserGroupUpdate . modify_ug $ ug

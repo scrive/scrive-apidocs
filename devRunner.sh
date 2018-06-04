@@ -52,7 +52,6 @@ else
     shift
 fi
 
-
 echo ""
 echo "STARTING MAIN SERVER"
     dist/build/kontrakcja-server/kontrakcja-server "$@" &

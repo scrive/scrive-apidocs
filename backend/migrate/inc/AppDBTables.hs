@@ -52,6 +52,7 @@ import User.History.Tables
 import User.PasswordReminder.Tables
 import User.Tables
 import User.UserAccountRequest.Tables
+import UserGroup.Tables
 
 kontraComposites :: [CompositeType]
 kontraComposites = [
@@ -66,6 +67,13 @@ kontraComposites = [
   , ctSignatoryConsentQuestion
   , ctSignatoryLink
   , ctDocument
+
+  -- user group composites
+  , ctUserGroupInvoicing
+  , ctUserGroupSettings
+  , ctUserGroupUI
+  , ctUserGroupAddress
+  , ctUserGroup
   ] ++ mailerComposites
 
 kontraDomains :: [Domain]
@@ -98,6 +106,7 @@ kontraTables :: [Table]
 kontraTables =
   [ tableThemes
   , tableBrandedDomains
+  , tableUserGroups
   , tablePartners
   , tableCompanies
   , tableUsers
@@ -161,4 +170,8 @@ kontraTables =
   , tableSignatoryLinkConsentQuestions
   , tableAmazonURLFixConsumers
   , tableAmazonURLFixJobs
+  , tableUserGroupSettings
+  , tableUserGroupInvoicings
+  , tableUserGroupUIs
+  , tableUserGroupAddresses
   ]

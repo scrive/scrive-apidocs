@@ -4,12 +4,15 @@ module Theme.ThemeID (
   , fromThemeID
   ) where
 
+import Data.Aeson
 import Data.Binary as B
 import Data.Int
 import Data.Typeable
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
+
+import Log.Identifier
 
 newtype ThemeID = ThemeID Int64
   deriving (Eq, Ord, PQFormat, Typeable)
@@ -43,3 +46,7 @@ unjsonThemeID = unjsonInvmapR ((maybe (fail "Can't parse ThemeID")  return) . ma
 
 instance Unjson ThemeID where
   unjsonDef = unjsonThemeID
+
+instance Identifier ThemeID Int64 where
+  idDefaultLabel _ = "theme_id"
+  idValue (ThemeID k) = toJSON k

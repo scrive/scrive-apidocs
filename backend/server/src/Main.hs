@@ -123,7 +123,11 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
       liftBase $ waitForTermination
       logInfo_ "Termination request received"
 
-initDatabaseEntries :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => AppConf -> m ()
+initDatabaseEntries :: ( CryptoRNG m
+                       , MonadDB m
+                       , MonadThrow m
+                       , MonadLog m
+                       , MonadMask m) => AppConf -> m ()
 initDatabaseEntries appConf = do
   when (not $ production appConf) $ do
     -- Add some host_clock entries in "dev" mode if there are no valid samples
@@ -140,6 +144,6 @@ initDatabaseEntries appConf = do
       Nothing -> do
         bd <- dbQuery $ GetMainBrandedDomain
         company <- dbUpdate $ CreateCompany
-        _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) (companyid company,True) def (get bdid bd) ByAdmin
+        _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) (companyid company,True) def (get bdid bd) ByAdmin (companyusergroupid company)
         return ()
       Just _ -> return () -- user exist, do not add it

@@ -15,7 +15,7 @@ import Text.JSON.Types (JSValue(JSNull))
 import API.Monad.V1
 import AppView
 import BrandedDomain.BrandedDomain
-import Company.CompanyUI
+import Company.CompanyUI.Model
 import Company.Model
 import DB.Query
 import Happstack.Fields

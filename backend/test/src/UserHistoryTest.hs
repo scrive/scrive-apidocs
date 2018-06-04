@@ -249,6 +249,7 @@ createTestUser = do
                                 def
                                 (get bdid bd)
                                 AccountRequest
+                                (companyusergroupid company)
     case muser of
         Nothing     -> unexpectedError "can't create user"
         (Just user) -> return user

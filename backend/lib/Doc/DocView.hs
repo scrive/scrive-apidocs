@@ -29,7 +29,7 @@ import qualified Text.StringTemplates.Fields as F
 import Analytics.Include
 import AppView (companyUIForPage, entryPointFields, simpleHtmlResponse, standardPageFields)
 import BrandedDomain.BrandedDomain
-import Company.CompanyUI
+import Company.CompanyUI.Model
 import Company.Model
 import DB
 import Doc.API.V2.DocumentAccess

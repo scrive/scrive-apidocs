@@ -41,7 +41,7 @@ import Analytics.Include
 import BrandedDomain.BrandedDomain
 import Branding.Adler32
 import Chargeable.Model
-import Company.CompanyUI
+import Company.CompanyUI.Model
 import Company.Model
 import DB
 import FeatureFlags.Model

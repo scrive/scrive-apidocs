@@ -36,6 +36,7 @@ import MinutesTime
 import User.Email
 import User.History.Model
 import User.Model
+import UserGroup.Data
 import Utils.String
 
 instance (InspectXML a, Show a) => InspectXML [a] where
@@ -152,3 +153,4 @@ instance InspectXML JSValue where
 instance InspectXML StatusClass where
 instance InspectXML SealStatus
 instance InspectXML TimeZoneName
+instance InspectXML UserGroupID

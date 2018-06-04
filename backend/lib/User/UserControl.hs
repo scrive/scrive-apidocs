@@ -32,7 +32,7 @@ import qualified Text.StringTemplates.Fields as F
 import Analytics.Include
 import AppView
 import BrandedDomain.BrandedDomain
-import Company.CompanyUI
+import Company.CompanyUI.Model
 import Company.Model
 import DB hiding (query, update)
 import Happstack.Fields

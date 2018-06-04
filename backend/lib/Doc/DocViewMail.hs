@@ -22,7 +22,7 @@ import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.BrandedDomain
 import Branding.Adler32
-import Company.CompanyUI
+import Company.CompanyUI.Model
 import Company.Model
 import DB
 import Doc.DocInfo (getLastSignedTime)

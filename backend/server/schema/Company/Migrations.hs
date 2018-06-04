@@ -3,6 +3,7 @@ module Company.Migrations (
   , companiesAddPadAppModeAndEArchiveEnabled
   , companiesAddPaymentPlan
   , companiesDropAllowSaveSafetyCopy
+  , companiesAddUserGroupID
 ) where
 
 import Control.Monad.Catch
@@ -65,4 +66,18 @@ companiesDropAllowSaveSafetyCopy = Migration {
 , mgrFrom = 23
 , mgrAction = StandardMigration $ do
     runQuery_ $ sqlAlterTable (tblName tableCompanies) [ sqlDropColumn "allow_save_safety_copy" ]
+}
+
+companiesAddUserGroupID :: MonadDB m => Migration m
+companiesAddUserGroupID = Migration {
+  mgrTableName = tblName tableCompanies
+, mgrFrom = 24
+, mgrAction = StandardMigration $ do
+    let tname = tblName tableCompanies
+    runQuery_ $ sqlAlterTable tname
+      [
+        sqlAddColumn $ tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = True }
+      , sqlAddFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
+      ]
+    runQuery_ . sqlCreateIndex tname $ indexOnColumn "user_group_id"
 }

@@ -6,6 +6,7 @@ module User.Model.Update (
   , RemoveInactiveUser(..)
   , SetSignupMethod(..)
   , SetUserCompany(..)
+  , SetUserGroup(..)
   , SetUserEmail(..)
   , SetUserCompanyAdmin(..)
   , SetUserInfo(..)
@@ -20,13 +21,14 @@ import Control.Monad.Catch
 import Control.Monad.Time
 import Data.ByteString (ByteString)
 import Data.Char
+import Log
 
 import BrandedDomain.BrandedDomainID
 import Company.Model
 import DB
 import Doc.Data.SignatoryField
 import Doc.DocStateData (DocumentStatus(..))
-import MinutesTime
+import Log.Identifier
 import Partner.Model
 import User.Data.SignupMethod
 import User.Data.User
@@ -35,6 +37,7 @@ import User.Lang
 import User.Model.Query
 import User.Password
 import User.UserID
+import UserGroup.Data
 
 data AcceptTermsOfService = AcceptTermsOfService UserID UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m AcceptTermsOfService Bool where
@@ -44,9 +47,9 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AcceptTermsOfService Bool where
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
 
-data AddUser = AddUser (String, String) String (Maybe Password) (CompanyID,Bool) Lang BrandedDomainID SignupMethod
+data AddUser = AddUser (String, String) String (Maybe Password) (CompanyID,Bool) Lang BrandedDomainID SignupMethod (Maybe UserGroupID)
 instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
-  update (AddUser (fname, lname) email mpwd (cid, admin) l ad sm) = do
+  update (AddUser (fname, lname) email mpwd (cid, admin) l ad sm mugid) = do
     mu <- query $ GetUserByEmail $ Email email
     case mu of
       Just _ -> return Nothing -- user with the same email address exists
@@ -70,6 +73,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
             sqlSet "lang" l
             sqlSet "deleted" (Nothing :: Maybe UTCTime)
             sqlSet "associated_domain_id" ad
+            sqlSet "user_group_id" mugid
             mapM_ sqlResult selectUsersSelectorsList
         fetchMaybe fetchUser
 
@@ -84,27 +88,61 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool wh
       sqlWhereIsNULL "deleted"
 
 data MakeUserIDAdminForPartnerID = MakeUserIDAdminForPartnerID UserID PartnerID
-instance (MonadDB m, MonadThrow m) => DBUpdate m MakeUserIDAdminForPartnerID Bool where
-  update (MakeUserIDAdminForPartnerID uid pid) =
-    runQuery01 . sqlInsert "partner_admins" $ do
-      sqlSet "user_id" uid
-      sqlSet "partner_id" pid
+instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m MakeUserIDAdminForPartnerID Bool where
+  update (MakeUserIDAdminForPartnerID uid pid) = do
+    -- During migration to user_groups, we must synchronize everything we do to
+    -- companies and partners. Partners are transformed into parent user_groups and all
+    -- users in partner/parent user_group are considered partner admins.
+    -- get user
+    dbQuery (GetUserByID uid) >>= \case
+      Nothing -> return False
+      Just user -> do
+        -- get user's company
+        company <- dbQuery . GetCompanyByUserID $ uid
+        -- get partner
+        partner <- dbQuery . GetPartnerByID $ pid
+        -- if the company has been transformed into user_group, but not the user, report
+        -- this immediately (not affected by partner, just user & company consistency check)
+        case (companyusergroupid company /= usergroupid user) of
+          True -> do
+            logAttention "UserGroup inconsistent user migration" $ object [
+                identifier_ uid
+              , identifier_ (companyid company)
+              , identifier_ pid
+              ]
+            return False
+          False -> do
+            -- if only one of them (user's company, partner) was transformed into user_group
+            -- or they were transformed into different user_groups, this
+            -- is an invalid scenario. Nothing must be changed and this must be roported.
+            case (companyusergroupid company /= ptUserGroupID partner) of
+              True -> do
+                logAttention "UserGroup inconsistent partner migration" $ object [
+                    identifier_ uid
+                  , identifier_ (companyid company)
+                  , identifier_ pid
+                  ]
+                return False
+              False ->
+                runQuery01 . sqlInsert "partner_admins" $ do
+                  sqlSet "user_id" uid
+                  sqlSet "partner_id" pid
 
 -- | Removes user who didn't accept TOS from the database
 data RemoveInactiveUser = RemoveInactiveUser UserID
-instance (MonadDB m, MonadThrow m) => DBUpdate m RemoveInactiveUser Bool where
+instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m RemoveInactiveUser Bool where
   update (RemoveInactiveUser uid) = do
     -- There is a chance that a signatory_links gets connected to an
     -- yet not active account the true fix is to not have inactive
     -- accounts, but we are not close to that point yet. Here is a
     -- kludge to get around our own bug.
-    runQuery_ $ "SELECT TRUE FROM companyinvites where user_id =" <?> uid
-    x :: Maybe Bool <- fetchMaybe runIdentity
-    if isJust x then
-        return False
-     else do
-       runQuery_ $ "UPDATE signatory_links SET user_id = NULL WHERE user_id =" <?> uid <+> "AND EXISTS (SELECT TRUE FROM users WHERE users.id =" <?> uid <+> "AND users.has_accepted_terms_of_service IS NULL)"
-       runQuery01 $ "DELETE FROM users WHERE id =" <?> uid <+> "AND has_accepted_terms_of_service IS NULL"
+    runQuery_ $ "SELECT TRUE FROM companyinvites where user_id = " <?> uid
+    ci :: Maybe Bool <- fetchMaybe runIdentity
+    if isJust ci then
+      return False
+    else do
+      runQuery_ $ "UPDATE signatory_links SET user_id = NULL WHERE user_id = " <?> uid <+> "AND EXISTS (SELECT TRUE FROM users WHERE users.id = " <?> uid <+> " AND users.has_accepted_terms_of_service IS NULL)"
+      runQuery01 $ "DELETE FROM users WHERE id = " <?> uid <+> "AND has_accepted_terms_of_service IS NULL"
 
 data SetSignupMethod = SetSignupMethod UserID SignupMethod
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetSignupMethod Bool where
@@ -117,8 +155,22 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetSignupMethod Bool where
 data SetUserCompany = SetUserCompany UserID CompanyID
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserCompany Bool where
   update (SetUserCompany uid cid) =
+    -- also set the new company user_group (regardless, whether the new company
+    -- already migrated to user_group
+    dbQuery (GetCompany cid) >>= \case
+      Nothing -> return False
+      Just company ->
+        runQuery01 $ sqlUpdate "users" $ do
+          sqlSet "company_id" cid
+          sqlSet "user_group_id" . companyusergroupid $ company
+          sqlWhereEq "id" uid
+          sqlWhereIsNULL "deleted"
+
+data SetUserGroup = SetUserGroup UserID (Maybe UserGroupID)
+instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserGroup Bool where
+  update (SetUserGroup uid mugid) =
     runQuery01 $ sqlUpdate "users" $ do
-      sqlSet "company_id" cid
+      sqlSet "user_group_id" mugid
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
 

@@ -39,6 +39,7 @@ import User.Model.Update (SetUserPassword(..))
 import User.Password (PasswordAlgorithm(..), strengthenPassword)
 import User.PasswordReminder (DeleteExpiredPasswordReminders(..))
 import User.UserAccountRequest (expireUserAccountRequests)
+import UserGroup.Model (migrateToUserGroups)
 import Utils.List
 import qualified CronEnv
 import qualified FileStorage.Amazon as AWS
@@ -66,6 +67,7 @@ data JobType
   | SMSEventsProcessing
   | StrengthenPasswords
   | UserAccountRequestEvaluation
+  | UserGroupMigration
   deriving (Eq, Ord, Show)
 
 jobTypeMapper :: [(JobType, T.Text)]
@@ -92,6 +94,7 @@ jobTypeMapper = [
   , (UserAccountRequestEvaluation, "user_account_request_evaluation")
   , (DocumentSearchUpdate, "document_search_update")
   , (DocumentsAuthorIDMigration, "document_author_id_job")
+  , (UserGroupMigration, "user_group_migration")
   ]
 
 instance PQFormat JobType where
@@ -137,7 +140,7 @@ cronConsumer
      , MonadDB cronenv, MonadIO cronenv, MonadLog cronenv, MonadMask cronenv
      , MonadReader CronEnv.CronEnv cronenv
      , CryptoRNG dbt, MonadBaseControl IO dbt, MonadCatch dbt, MonadDB dbt
-     , MonadIO dbt, MonadLog dbt, MonadThrow dbt, MonadTime dbt)
+     , MonadIO dbt, MonadLog dbt, MonadMask dbt, MonadThrow dbt, MonadTime dbt)
   => CronConf
   -> Manager
   -> Maybe (EventProcessor dbt)
@@ -297,6 +300,15 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
     UserAccountRequestEvaluation -> do
       runDB expireUserAccountRequests
       return . RerunAfter $ ihours 1
+    UserGroupMigration -> do
+      let batchLimit = 1000
+      numberOfUpdates <- runDB $ migrateToUserGroups batchLimit
+      now <- currentTime
+      case numberOfUpdates of
+        0 -> RerunAt . nextDayMidnight <$> currentTime
+        _ -> if now < todayAtHour 4 now
+             then RerunAfter <$> return (iseconds 5)
+             else RerunAt . nextDayMidnight <$> currentTime
   endTime <- currentTime
   logInfo "Job processed successfully" $ object [
       "elapsed_time" .= (realToFrac (diffUTCTime endTime startTime) :: Double)

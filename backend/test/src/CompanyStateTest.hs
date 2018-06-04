@@ -2,7 +2,7 @@ module CompanyStateTest (companyStateTests) where
 
 import Test.Framework
 
-import Company.CompanyUI
+import Company.CompanyUI.Model
 import Company.Model
 import DB
 import TestingUtil

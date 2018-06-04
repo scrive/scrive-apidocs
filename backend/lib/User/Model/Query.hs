@@ -13,6 +13,7 @@ module User.Model.Query (
   , GetUserWherePasswordAlgorithmIsEarlierThan(..)
   , GetUsersWithCompanies(..)
   , IsUserDeletable(..)
+  , UserGroupGetAllUsersFromThisAndSubgroups(..)
   ) where
 
 import Control.Monad.Catch
@@ -33,6 +34,7 @@ import User.Model.Filter
 import User.Model.OrderBy
 import User.Password
 import User.UserID
+import UserGroup.Data (UserGroupID)
 
 data GetUsers = GetUsers
 instance MonadDB m => DBQuery m GetUsers [User] where
@@ -372,6 +374,19 @@ instance MonadDB m => DBQuery m GetUsersWithCompanies [(User, Company)] where
       , " OFFSET" <?> (fromIntegral offset :: Int32) <+> "LIMIT" <?> (fromIntegral limit :: Int32)
       ]
     fetchMany fetchUserWithCompany
+
+data UserGroupGetAllUsersFromThisAndSubgroups = UserGroupGetAllUsersFromThisAndSubgroups UserGroupID
+instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetAllUsersFromThisAndSubgroups [User] where
+  query (UserGroupGetAllUsersFromThisAndSubgroups ugid) = do
+    runQuery_ . sqlSelect "users" $ do
+      mapM_ sqlResult selectUsersSelectorsList
+      sqlWhereAny [
+          sqlWhereInSql "user_group_id" $ sqlSelect "user_groups" $ do
+            sqlResult "id"
+            sqlWhere $ "parent_group_path @> " <?> (Array1 [ugid])
+        , sqlWhereEq "user_group_id" ugid
+        ]
+    fetchMany fetchUser
 
 -- helpers
 sqlWhereIsNotScriveEmail :: (MonadState v m, SqlWhere v) => SQL -> m ()

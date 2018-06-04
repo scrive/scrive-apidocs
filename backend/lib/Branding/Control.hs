@@ -25,7 +25,7 @@ import qualified Data.Map as Map
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Branding.CSS
-import Company.CompanyUI
+import Company.CompanyUI.Model
 import Company.Model
 import DB
 import Doc.DocStateData

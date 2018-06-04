@@ -1,27 +1,22 @@
-module Company.CompanyUI (
-    CompanyUI(..)
+module Company.CompanyUI.Model (
+    module Company.CompanyUI.Data
   , SetCompanyUI(..)
   , GetCompanyUI(..)
   ) where
 
 import Control.Monad.Catch
 import Control.Monad.State
-import Data.Typeable
+import Log
 import qualified Data.ByteString.Char8 as BS
 
 import Company.CompanyID
+import Company.CompanyUI.Data
+import Company.Model
 import DB
+import Log.Identifier
 import Theme.Model
-
-data CompanyUI = CompanyUI
-  { companyuicompanyid                :: !CompanyID
-  , companyMailTheme                  :: !(Maybe ThemeID)
-  , companySignviewTheme              :: !(Maybe ThemeID)
-  , companyServiceTheme               :: !(Maybe ThemeID)
-  , companyBrowserTitle               :: !(Maybe String)
-  , companySmsOriginator              :: !(Maybe String)
-  , companyFavicon                    :: !(Maybe BS.ByteString)
-} deriving (Eq, Ord, Show, Typeable)
+import UserGroup.Data
+import UserGroup.Model
 
 data GetCompanyUI = GetCompanyUI CompanyID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetCompanyUI CompanyUI where
@@ -32,9 +27,9 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetCompanyUI CompanyUI where
     fetchOne fetchCompanyUI
 
 data SetCompanyUI = SetCompanyUI CompanyID CompanyUI
-instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyUI Bool where
+instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m SetCompanyUI Bool where
   update (SetCompanyUI cid cui) = do
-    runQuery01 . sqlUpdate "company_uis" $ do
+    result <- runQuery01 . sqlUpdate "company_uis" $ do
       sqlSet "mail_theme" $ companyMailTheme cui
       sqlSet "signview_theme" $ companySignviewTheme cui
       sqlSet "service_theme" $ companyServiceTheme cui
@@ -57,6 +52,33 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetCompanyUI Bool where
         sqlWhereExists $ sqlSelect "theme_owners" $ do
           sqlWhereEq "company_id" cid
           sqlWhereEq "theme_id" (companyServiceTheme cui)
+    when result $ do
+      dbQuery (GetCompany cid) >>= \case
+        Nothing -> logAttention "SetCompanyUI company doesn't exist" $ object [
+            identifier_ cid
+          ]
+        Just c -> do
+          whenJust (companyusergroupid c) $ \ugid ->
+            dbQuery (UserGroupGet ugid) >>= \case
+              Nothing -> logAttention "UserGroup doesn't exist during SetCompanyUI" $ object [
+                  identifier_ cid
+                , identifier_ ugid
+                ]
+              Just ug -> do
+                -- check, that all themes are already owned by this user group
+                let newthemeids = catMaybes [companyMailTheme cui, companySignviewTheme cui, companyServiceTheme cui]
+                runQuery_ . sqlSelect "theme_owners" $ do
+                  sqlResult "theme_id"
+                  sqlWhereEq "user_group_id" ugid
+                ownedthemeids <- fetchMany runIdentity
+                case all (`elem` ownedthemeids) newthemeids of
+                  False -> logAttention "UserGroup doesn't own assigned themes during SetCompanyUI" $ object [
+                      identifier_ cid
+                    , identifier_ ugid
+                    ]
+                  True  -> dbUpdate . UserGroupUpdate . set ugUI (toUserGroupUI cui) $ ug
+    return result
+
 
 selectCompanyUIsSelectors :: (SqlResult command) => State command ()
 selectCompanyUIsSelectors = do

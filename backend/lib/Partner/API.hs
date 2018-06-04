@@ -63,7 +63,13 @@ partnerApiCallV1CompanyCreate partnerID = logPartner partnerID . api $ do
   -- Parameters
   companyForUpdate <- apiV2ParameterObligatory $ ApiV2ParameterJSON "json" unjsonCompanyForUpdate
   -- API call actions
-  newCompany <- dbUpdate CreateCompany
+  -- if partner is migrated to user groups, migrate the company immediately
+  partner <- dbQuery (GetPartnerByID partnerID)
+  newCompany <- case ptUserGroupID partner of
+    -- partner was not migrated to user groups yet
+    Nothing -> dbUpdate CreateCompanyWithoutUserGroup
+    -- partner was already migrated to user groups
+    Just _  -> dbUpdate CreateCompany
   let companyInfo = updateCompanyInfoWithCompanyForUpdate def companyForUpdate
       companyInfo' = companyInfo { companypartnerid = partnerID }
   didUpdate <- dbUpdate $ SetCompanyInfo (companyid newCompany) companyInfo'
@@ -72,6 +78,7 @@ partnerApiCallV1CompanyCreate partnerID = logPartner partnerID . api $ do
   companyRefreshed <- apiGuardJustM
     (serverError "The company could not be re-fetched from database, but was created.")
     (dbQuery $ GetCompany (companyid newCompany))
+
   -- Result
   Created <$> return (unjsonCompanyForUpdate, companyToCompanyForUpdate companyRefreshed)
 

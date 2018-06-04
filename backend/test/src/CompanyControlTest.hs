@@ -12,7 +12,7 @@ import qualified Data.ByteString.UTF8 as BS
 
 import BrandedDomain.BrandedDomain
 import Company.CompanyControl
-import Company.CompanyUI
+import Company.CompanyUI.Model
 import Company.Model
 import CompanyAccounts.Model
 import Context
@@ -74,7 +74,7 @@ test_settingUIWithHandleChangeCompanyBranding = do
   mailTheme <- dbUpdate $ InsertNewThemeForCompany (companyid company) mailThemeFromDomain
   signviewThemeFromDomain <- dbQuery $ GetTheme (get (bdSignviewTheme . ctxbrandeddomain) ctx)
   signviewTheme <- dbUpdate $ InsertNewThemeForCompany (companyid company) signviewThemeFromDomain
-  serviceThemeFromDomain <- dbQuery $ GetTheme (get (bdSignviewTheme . ctxbrandeddomain) ctx)
+  serviceThemeFromDomain <- dbQuery $ GetTheme (get (bdServiceTheme . ctxbrandeddomain) ctx)
   serviceTheme <- dbUpdate $ InsertNewThemeForCompany (companyid company) serviceThemeFromDomain
   let browserTitle = "Super"
   let smsOriginator = "Super SMS"

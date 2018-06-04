@@ -7,12 +7,25 @@ module Cron.Migrations (
   , removeFindAndExtendDigitalSignaturesFromCronJobs
   , addDocumentSearchUpdateJob
   , addDocumentAuthorUserIDUpdateJob
+  , addUserGroupMigrationJob
 ) where
 
 import Control.Monad.Catch
 
 import Cron.Tables
 import DB
+
+addUserGroupMigrationJob :: (MonadDB m, MonadThrow m) => Migration m
+addUserGroupMigrationJob = Migration {
+    mgrTableName = tblName tableCronJobs
+  , mgrFrom = 12
+  , mgrAction =
+      StandardMigration $
+        runSQL_ $
+              "INSERT INTO cron_jobs (id, run_at) VALUES"
+          <+> "('user_group_migration', to_timestamp(0))"
+  }
+
 
 addDocumentAuthorUserIDUpdateJob :: (MonadDB m, MonadThrow m) => Migration m
 addDocumentAuthorUserIDUpdateJob = Migration {

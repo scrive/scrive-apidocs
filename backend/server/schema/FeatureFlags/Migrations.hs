@@ -3,6 +3,7 @@ module FeatureFlags.Migrations (
 , featureFlagsAddNOAuthToSign
 , featureFlagsAddSMSPinAuthToView
 , featureFlagsAddDKAuthToSign
+, featureFlagsAddUserGroupID
 ) where
 
 import Control.Monad.Catch
@@ -37,7 +38,9 @@ createFeatureFlags = Migration {
           , tblColumn { colName = "can_use_sms_pin_authentication_to_sign", colType = BoolT, colNullable = False, colDefault = Just "true" }
           ]
         , tblPrimaryKey = pkOnColumn "company_id"
-        , tblForeignKeys = [ (fkOnColumn "company_id" "companies" "id")  { fkOnDelete = ForeignKeyCascade } ]
+        , tblForeignKeys = [
+            (fkOnColumn "company_id" "companies" "id") { fkOnDelete = ForeignKeyCascade }
+          ]
         }
       runQuery_ . sqlInsertSelect "feature_flags" "companies c" $ do
         sqlSetCmd "company_id" "c.id"
@@ -71,4 +74,18 @@ featureFlagsAddDKAuthToSign = Migration {
     runQuery_ $ sqlAlterTable (tblName tableFeatureFlags)  [ sqlAddColumn $
         tblColumn { colName = "can_use_dk_authentication_to_sign", colType = BoolT, colNullable = False, colDefault = Just "true" }
       ]
+}
+
+featureFlagsAddUserGroupID :: (MonadThrow m, MonadDB m) => Migration m
+featureFlagsAddUserGroupID = Migration {
+  mgrTableName = tblName tableFeatureFlags
+, mgrFrom = 4
+, mgrAction = StandardMigration $ do
+    let tname = tblName tableFeatureFlags
+    runQuery_ $ sqlAlterTable tname
+      [
+        sqlAddColumn $ tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = True }
+      ,  sqlAddFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
+      ]
+    runQuery_ . sqlCreateIndex tname $ indexOnColumn "user_group_id"
 }
