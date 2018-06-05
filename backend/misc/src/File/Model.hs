@@ -88,6 +88,8 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m PurgeFile () where
     now <- currentTime
     kRun1OrThrowWhyNot $ sqlUpdate "files" $ do
       sqlSet "purged_time" now
+      sqlSet "name" ("" :: String)
+      sqlSet "amazon_url" (Nothing :: Maybe String)
       sqlSetCmd "content" "NULL"
       sqlWhereFileIDIs fid
 

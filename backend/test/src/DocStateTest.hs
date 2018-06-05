@@ -3,6 +3,7 @@ module DocStateTest (docStateTests, docStateSideEffectsTests) where
 import Control.Arrow (first)
 import Control.Conditional ((<|), (|>))
 import Control.Monad.Reader
+import Data.Int
 import Data.Text (unpack)
 import Log
 import Test.Framework
@@ -211,6 +212,7 @@ docStateTests env = testGroup "DocState" [
 
   testThat "PurgeDocuments purges documents" env testPurgeDocument,
   testThat "PurgeDocuments does not purge documents for saved users" env testPurgeDocumentUserSaved,
+  testThat "PurgeDocuments removes sensitive data" env testPurgeDocumentRemovesSensitiveData,
 
   testThat "ArchiveIdleDocuments archives idle documents" env testArchiveIdleDocument,
 
@@ -788,6 +790,64 @@ testPurgeDocumentUserSaved = replicateM_ 10 $ do
   assertEqual "Purged zero documents before delete" 0 archived1
   assertEqual "Purged zero documents before time passed after delete" 0 archived2
 
+testPurgeDocumentRemovesSensitiveData :: TestEnv ()
+testPurgeDocumentRemovesSensitiveData = replicateM_ 10 $ do
+  company <- addNewCompany
+  author <- addNewRandomCompanyUser (companyid company) False
+  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
+  now <- currentTime
+  withDocument doc $ randomUpdate $ \t -> ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
+  _ <- dbUpdate $ PurgeDocuments 0
+  let sidsSql = "SELECT id FROM signatory_links WHERE document_id = " <?> documentid doc
+
+  runSQL_ $ "SELECT count(*) FROM author_attachments " <+>
+    "WHERE document_id =" <?> documentid doc
+  aac :: Int64 <- fetchOne runIdentity
+  assertEqual "All author attachments are removed" 0 aac
+
+  runSQL_ $ "SELECT count(*) FROM document_tags " <+>
+    "WHERE document_id =" <?> documentid doc
+  dtc :: Int64 <- fetchOne runIdentity
+  assertEqual "All document tags are removed" 0 dtc
+
+  runSQL_ $ "SELECT count(*) FROM evidence_log " <+>
+    "WHERE document_id =" <?> documentid doc
+  delc :: Int64 <- fetchOne runIdentity
+  assertEqual "All document evidence log is removed" 0 delc
+
+  runSQL_ $ "SELECT count(*) FROM signatory_attachments" <+>
+    "WHERE signatory_link_id IN (" <+> sidsSql <+> ")"
+  sac :: Int64 <- fetchOne runIdentity
+  assertEqual "All signatory attachments are removed" 0 sac
+
+  runSQL_ $ "SELECT count(*) FROM signatory_link_fields " <+>
+    "WHERE (value_text IS NOT NULL AND value_text != '') AND " <+>
+    "signatory_link_id IN (" <+> sidsSql <+> ")"
+  stc :: Int64 <- fetchOne runIdentity
+  assertEqual "All signatory fields have empty texts" 0 stc
+
+  runSQL_ $ "SELECT count(*) FROM signatory_link_fields " <+>
+    "WHERE (value_file_id IS NOT NULL) AND " <+>
+    "signatory_link_id IN (" <+> sidsSql <+> ")"
+  sfc :: Int64 <- fetchOne runIdentity
+  assertEqual "All signatory fields don't point to files" 0 sfc
+
+  runSQL_ $ "SELECT count(*) FROM documents " <+>
+    "WHERE id =" <?> documentid doc <+>
+    "AND title='' AND api_v1_callback_url IS NULL " <+>
+    "AND api_v2_callback_url IS NULL AND invite_text =''" <+>
+    "AND confirm_text='' AND invite_ip=0"
+  dc :: Int64 <- fetchOne runIdentity
+  assertEqual "The is one document with given id and removed sensitive data" 1 dc
+
+  runSQL_ $ "SELECT count(*) FROM signatory_links " <+>
+    "WHERE document_id=" <?> documentid doc <+>
+    "AND csv_contents IS NULL " <+>
+    "AND sign_redirect_url IS NULL AND rejection_reason IS NULL " <+>
+    "AND reject_redirect_url IS NULL AND consent_title IS NULL " <+>
+    "AND seen_ip=0 AND sign_ip=0"
+  sc :: Int64 <- fetchOne runIdentity
+  assertEqual "No signatory has sensitive data" (length $ documentsignatorylinks doc) (fromIntegral sc)
 
 testArchiveIdleDocument :: TestEnv ()
 testArchiveIdleDocument = replicateM_ 10 $ do

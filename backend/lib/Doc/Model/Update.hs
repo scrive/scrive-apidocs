@@ -1955,6 +1955,10 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
         sqlSet "sign_ip" (0::Int32)
         sqlSet "seen_ip" (0::Int32)
         sqlSet "csv_contents" (Nothing::Maybe [[String]])
+        sqlSet "sign_redirect_url" (Nothing::Maybe String)
+        sqlSet "rejection_reason" (Nothing::Maybe String)
+        sqlSet "reject_redirect_url" (Nothing::Maybe String)
+        sqlSet "consent_title" (Nothing::Maybe String)
         sqlWhere "document_id IN (SELECT id FROM documents_to_purge)"
 
       -- Blank out sensitive data in fields.
@@ -1972,6 +1976,10 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
       sqlWith "purged_document_tags" . sqlDelete "document_tags" $ do
         sqlWhere "document_id IN (SELECT id FROM documents_to_purge)"
 
+      -- Remove all author attachments
+      sqlWith "purged_author_attachments" . sqlDelete "author_attachments" $ do
+        sqlWhere "document_id IN (SELECT id FROM documents_to_purge)"
+
       -- Remove all eid_authentications.
       sqlWith "purged_eid_authentications" . sqlDelete "eid_authentications" $ do
         sqlWhere "signatory_link_id IN (SELECT id FROM purged_signatory_links)"
@@ -1984,9 +1992,27 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
       sqlWith "purged_signatory_sms_pins" . sqlDelete "signatory_sms_pins" $ do
         sqlWhere "signatory_link_id IN (SELECT id FROM purged_signatory_links)"
 
+      -- Remove all signatory attachments
+      sqlWith "purged_signatory_attachements" . sqlDelete "signatory_attachments" $ do
+        sqlWhere "signatory_link_id IN (SELECT id FROM purged_signatory_links)"
+
+      -- Remove all signatory consent questions
+      sqlWith "purged_signatory_consent_questions" . sqlDelete "signatory_link_consent_questions" $ do
+        sqlWhere "signatory_link_id IN (SELECT id FROM purged_signatory_links)"
+
+      -- Clean sensitive data in document
+      sqlSet "title" ("" :: String)
+      sqlSet "api_v1_callback_url" (Nothing :: Maybe String)
+      sqlSet "api_v2_callback_url" (Nothing :: Maybe String)
+      sqlSet "invite_ip" (0::Int32)
+      sqlSet "invite_text" ("" :: String)
+      sqlSet "confirm_text" ("" :: String)
+
       -- Set purged_time on documents.
       sqlSet "purged_time" now
       sqlWhere "id IN (SELECT id FROM documents_to_purge)"
+
+
 
     return rows
 
