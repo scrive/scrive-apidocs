@@ -730,7 +730,7 @@ addNewCompanyUser firstname secondname email ugid = do
   dbQuery (UserGroupGet ugid) >>= \case
     Nothing -> return Nothing
     Just _ug ->
-      dbUpdate $ AddUser (firstname, secondname) email Nothing (ugid,True) def
+      dbUpdate $ AddUser (firstname, secondname) email Nothing (ugid, False) def
                          (get bdid bd) CompanyInvitation
 
 -- | Create user and add it to a company as admin.

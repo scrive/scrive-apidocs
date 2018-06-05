@@ -257,7 +257,7 @@ testUserNoDeletionIfPendingDocuments = do
   do
     req <- mkRequest POST [("email", inText "bob@blue.com")]
     (res, _) <- runTestKontra req ctx apiCallDeleteUser
-    assertEqual "can delete once pending documnts are aborted" 200 (rsCode res)
+    assertEqual "can delete once pending documents are aborted" 200 (rsCode res)
 
 testUserDeletion :: TestEnv ()
 testUserDeletion = do

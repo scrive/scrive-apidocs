@@ -305,31 +305,29 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
     UserAccountRequestEvaluation -> do
       runDB expireUserAccountRequests
       return . RerunAfter $ ihours 1
+    UserGroupMigration -> do
+      let batchLimit = 1000
+      numberOfUpdates <- runDB $ migrateToUserGroups batchLimit
+      now <- currentTime
+      case numberOfUpdates of
+        0 -> RerunAt . nextDayMidnight <$> currentTime
+        _ -> if now < todayAtHour 4 now
+             then RerunAfter <$> return (iseconds 5)
+             else RerunAt . nextDayMidnight <$> currentTime
+    CompaniesPurge -> do
+      runDB $ do
+        purgedCount <- dbUpdate PurgeCompanies
+        logInfo "Purged companies" $ object ["purged" .= purgedCount]
+      return . RerunAfter $ iminutes 10
+    AttachmentsPurge -> do
+      runDB $ do
+        purgedCount <- dbUpdate PurgeAttachments
+        logInfo "Purged attachments" $ object ["purged" .= purgedCount]
+      return . RerunAfter $ iminutes 10
   endTime <- currentTime
   logInfo "Job processed successfully" $ object [
       "elapsed_time" .= (realToFrac (diffUTCTime endTime startTime) :: Double)
     ]
-    CompaniesPurge -> do
-      runDB $ do
-        startTime <- currentTime
-        purgedCount <- dbUpdate PurgeCompanies
-        finishTime <- currentTime
-        logInfo "Purged companies" $ object [
-            "purged" .= purgedCount
-          , "elapsed_time" .= (realToFrac (diffUTCTime finishTime startTime) :: Double)
-          ]
-      return . RerunAfter $ iminutes 10
-    AttachmentsPurge -> do
-      runDB $ do
-        startTime <- currentTime
-        purgedCount <- dbUpdate PurgeAttachments
-        finishTime <- currentTime
-        logInfo "Purged attachments" $ object [
-            "purged" .= purgedCount
-          , "elapsed_time" .= (realToFrac (diffUTCTime finishTime startTime) :: Double)
-          ]
-      return . RerunAfter $ iminutes 10
-  logInfo_ "Job processed successfully"
 
   return $ Ok action
 , ccOnException = \_ CronJob{..} -> return $ case cjAttempts of
