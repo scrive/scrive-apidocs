@@ -944,6 +944,22 @@ var Document = exports.Document = Backbone.Model.extend({
             s.dropFirstCSVLine();
       });
     },
+    adjustAuthorFieldsAfterCloning : function(odoc) {
+      author = this.author();
+      oauthor = odoc.author();
+      if (author.personalnumberField() && oauthor.personalnumberField()) {
+        author.personalnumberField().setValue(oauthor.personalnumberField().value());
+      }
+      if (author.mobileField() && oauthor.mobileField()) {
+        author.mobileField().setValue(oauthor.mobileField().value());
+      }
+      if (author.companyField() && oauthor.companyField()) {
+        author.companyField().setValue(oauthor.companyField().value());
+      }
+      if (author.companynumberField() && oauthor.companynumberField()) {
+        author.companynumberField().setValue(oauthor.companynumberField().value());
+      }
+    },
     allHighlighedPagesForPageNo: function(pageno) {
       return _.flatten(_.map(this.signatories(), function(s) {
         return _.filter(s.highlightedPages(), function(hp) { return hp.page() == pageno; })

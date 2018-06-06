@@ -26,6 +26,10 @@ var DialogContentWrapper = React.createClass({
   componentDidMount: function () {
     $(React.findDOMNode(this)).append(this.props.content);
   },
+  componentDidUpdate: function () {
+    $(React.findDOMNode(this)).children().detach();
+    $(React.findDOMNode(this)).append(this.props.content);
+  },
   render: function () {
     return React.createElement("div", {});
   }
@@ -105,20 +109,20 @@ var open = function (config) {
   if (!currentContainer) {
     currentContainer = document.createElement("div");
     $("body").append(currentContainer);
-
-    currentDialog = React.render(
-      React.createElement(
-        DialogWrapper,
-        {
-          content: config.content,
-          header: config.header,
-          subheader: config.subheader,
-          onHide: onDialogHide
-        }
-      ),
-      currentContainer
-    );
   }
+  currentDialog = React.render(
+    React.createElement(
+      DialogWrapper,
+      {
+        content: config.content,
+        header: config.header,
+        subheader: config.subheader,
+        onHide: onDialogHide
+      }
+    ),
+    currentContainer
+  );
+
 };
 
 var close = function () {

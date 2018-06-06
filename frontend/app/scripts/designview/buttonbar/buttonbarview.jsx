@@ -186,6 +186,7 @@ module.exports = React.createClass({
             newdoc.set({"screenshots": doc.get("screenshots")});
             newdoc.sign().sendAjax(
               function () {
+                doc2.adjustAuthorFieldsAfterCloning(doc);
                 doc2.dropFirstCSVLine();
                 doc2.save();
                 doc2.afterSave(function () {
@@ -241,6 +242,7 @@ module.exports = React.createClass({
         doc.save();
         doc.afterSave(function () {
           doc.makeReadyForSigning().sendAjax(function () {
+            doc2.adjustAuthorFieldsAfterCloning(doc);
             doc2.dropFirstCSVLine();
             doc2.save();
             doc2.afterSave(function () {
