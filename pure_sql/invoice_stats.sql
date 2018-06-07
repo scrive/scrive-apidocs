@@ -101,7 +101,9 @@ CREATE OR REPLACE FUNCTION print_csv(date_from TIMESTAMPTZ, date_to TIMESTAMPTZ)
         "SMSes sent (physical)" BIGINT,
         "Swedish BankID signatures" BIGINT,
         "Swedish BankID authorization" BIGINT,
+        "Norwegian BankID signatures" BIGINT,
         "Norwegian BankID authorization" BIGINT,
+        "Danish NemID signatures" BIGINT,
         "Danish NemID authorization" BIGINT,
         "Telia SMSes sent (physical)" BIGINT,
         "Users at start of period" BIGINT,
@@ -203,9 +205,21 @@ CREATE OR REPLACE FUNCTION print_csv(date_from TIMESTAMPTZ, date_to TIMESTAMPTZ)
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.company_id = companies.id
+                 AND chi.type = 10
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) as "Norwegian BankID signatures"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.company_id = companies.id
                  AND chi.type = 4
                  AND chi.time >= period.from
                  AND chi.time <= period.to) as "Norwegian BankID authorization"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.company_id = companies.id
+                 AND chi.type = 11
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) as "Danish NemID signatures"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.company_id = companies.id
@@ -253,7 +267,9 @@ CREATE OR REPLACE FUNCTION print_csv(date_from TIMESTAMPTZ, date_to TIMESTAMPTZ)
              OR report."SMSes sent" > 0
              OR report."Swedish BankID signatures" > 0
              OR report."Swedish BankID authorization" > 0
+             OR report."Norwegian BankID signatures" > 0
              OR report."Norwegian BankID authorization" > 0
+             OR report."Danish NemID signatures" > 0
              OR report."Danish NemID authorization" > 0
              OR report."Users at start of period" > 0
              OR report."Users at end of period" > 0
