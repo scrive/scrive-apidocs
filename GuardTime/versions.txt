@@ -1,0 +1,5 @@
+We don't use symlinks because of git problems on TC
+
+pdf-extender.jar -> pdf-tools-1.0.0-extender.jar
+pdf-signer.jar -> pdf-tools-1.0.0-signer.jar
+pdf-verifier.jar -> pdf-tools-1.0.0-verifier.jar
