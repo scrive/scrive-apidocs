@@ -597,11 +597,6 @@ var Document = exports.Document = Backbone.Model.extend({
     closed: function() {
         return this.status() == "closed";
     },
-
-    accessibleBySignatories: function() {
-      return this.pending() || this.closed();
-    },
-
     timeouttime: function() {
         return this.get("timeouttime");
     },

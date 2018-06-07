@@ -281,7 +281,7 @@ var Track = require("../common/track");
     },
 
     hasAccessToDocument: function () {
-      return this.loggedInAsAuthor() || this.document().accessibleBySignatories();
+      return this.loggedInAsAuthor() || !this.document().isUnavailableForSign();
     },
 
     recall: function (f) {
