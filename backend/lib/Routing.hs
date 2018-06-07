@@ -26,6 +26,7 @@ module Routing ( hGet
 import Data.List.Split
 import Happstack.Server (Method(DELETE, GET, POST, PUT), Response, ToMessage(..))
 import Happstack.StaticRouting
+import Log
 import Text.JSON
 import qualified Data.Aeson as A
 
@@ -171,6 +172,7 @@ guardXToken action = do
   case mxtokenString of
     Just xtokenString | get ctxxtoken ctx `elem` tokensFromString xtokenString -> action
     _ -> do -- Requests authorized by something else then xtoken, can't access session data or change context stuff.
+      logInfo "Invalid xtoken value, anonymousing context" $ object ["xtoken" .= mxtokenString]
       modifyContext anonymousContext
       res <- action
       modifyContext (\_ -> ctx)

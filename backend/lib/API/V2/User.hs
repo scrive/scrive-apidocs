@@ -104,9 +104,11 @@ getAPIUserWith ctxUser privs = do
         Nothing -> do
           sesids <- (lookCookieValues cookieNameSessionID . rqHeaders) <$> askRq
           auth <- (lookCookieValues "authorization" . rqHeaders) <$> askRq
+          xtoken <- (lookCookieValues cookieNameXToken . rqHeaders) <$> askRq
           cookies <- (lookCookieNames . rqHeaders) <$> askRq
           logInfo "Could not find user session" $ object [ "session_id_cookies" .= sesids
                                                          , "authorization" .= auth
                                                          , "cookie names" .= show cookies
+                                                         , "xtoken" .= xtoken
                                                          ]
           apiError $ invalidAuthorization
