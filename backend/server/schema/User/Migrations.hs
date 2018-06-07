@@ -72,12 +72,10 @@ actuallyDeletePreviouslyDeletedUser = Migration
   , mgrFrom = 25
   , mgrAction = StandardMigration $ do
       let sqlWhereIsDeletedUserID name =
-            sqlWhereInSql name $ toSQLCommand $ sqlSelect "users" $ do
+            sqlWhereInSql name $ sqlSelect "users" $ do
               sqlResult "id"
               sqlWhereIsNotNULL "deleted"
 
-      runQuery_ $ sqlDelete "attachments" $
-        sqlWhereIsDeletedUserID "user_id"
       runQuery_ $ sqlDelete "email_change_requests" $
         sqlWhereIsDeletedUserID "user_id"
       runQuery_ $ sqlDelete "oauth_access_token" $

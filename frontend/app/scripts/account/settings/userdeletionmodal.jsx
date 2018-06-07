@@ -2,7 +2,7 @@ import React from "react";
 import Button from "../../common/button";
 import Modal from "../../common/modal";
 import classNames from "classnames";
-import $ from "jquery";
+import HtmlTextWithSubstitution from "../../common/htmltextwithsubstitution";
 
 module.exports = React.createClass({
   propTypes: {
@@ -58,12 +58,6 @@ module.exports = React.createClass({
       inactive: !this.correctTextEntered()
     });
 
-    var messageTpl =
-          localization.account.accountDetails.userDeletionModalMessage.line4;
-    var message = $("<span />").html(messageTpl);
-    $(".email", message).text(this.correctText())
-      .removeClass("text").addClass("user-deletion-modal-text");
-
     var line1 = this.props.lastCompanyUser
       ? localization.account.accountDetails.userDeletionModalMessage.line1last
       : localization.account.accountDetails.userDeletionModalMessage.line1;
@@ -93,7 +87,17 @@ module.exports = React.createClass({
                 {localization.account.accountDetails.userDeletionModalMessage.line3}
               </strong>
             </p>
-            <p dangerouslySetInnerHTML={{__html: message.html()}}></p>
+            <p>
+              <HtmlTextWithSubstitution
+                secureText={localization.account.accountDetails.userDeletionModalMessage.line4}
+                lists={{
+                  ".email": {
+                    items: [this.correctText()],
+                    wrapper: "<strong />"
+                  }
+                }}
+              />
+            </p>
           </div>
           <input
             type="text"
