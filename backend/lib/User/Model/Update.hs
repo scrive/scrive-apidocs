@@ -106,13 +106,19 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool wh
       sqlWhereNotEq "u.id" uid
       sqlLimit 1
     mAdminID <- fetchMaybe runIdentity
+
     case mAdminID of
       Nothing -> return ()
       Just adminID -> do
-        runQuery_ $ sqlUpdate "documents" $ do
-          sqlSet "author_id" (adminID :: UserID)
-          sqlWhereNotEq "sharing" Shared
-          sqlWhereEq "author_id" uid
+        runQuery_ $ sqlUpdate "signatory_links" $ do
+          sqlWith "signatory_link_ids_to_change" . sqlUpdate "documents" $ do
+            sqlSet "author_user_id" (adminID :: UserID)
+            sqlWhereNotEq "sharing" Shared
+            sqlWhereEq "author_user_id" uid
+            sqlResult "author_id AS id"
+
+          sqlSet "user_id" adminID
+          sqlWhere "id IN (SELECT id FROM signatory_link_ids_to_change)"
 
     runQuery_ $ sqlUpdate "users_history" $ do
       sqlSet "event_data" (Nothing :: Maybe String)
