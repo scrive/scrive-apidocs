@@ -1939,25 +1939,33 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
         -- Document wasn't purged yet.
         sqlWhere "d.purged_time IS NULL"
 
-        -- All signatories with an account deleted the document or their company
-        -- has been deleted or (the user is deleted but/and not the author).
-        -- In other words, the document is NOT deleted if any of the signatories
-        -- hasn't deleted it and the company still exists and (the author is not
-        -- deleted or is the author).
-        -- (This last condition is for documents which have been created by
+        -- Documents (not in preparation) are deleted if ANY of the following is
+        -- true:
+        -- a) all signatories with an account deleted the document or
+        -- b) their company has been deleted or
+        -- c) the user is deleted but/and not the author.
+        --
+        -- In other words, the document is NOT deleted if ALL of the following
+        -- conditions are true:
+        -- a) any of the signatories hasn't deleted it and
+        -- b) the company still exists and
+        -- c) the user is not deleted or is the author.
+        --
+        -- The condition (c) is for documents which have been created by
         -- another company where a user who happens to have a Scrive account
-        -- is one of the signatory and this user has deleted her account.)
+        -- is one of the signatory and this user has deleted her account.
         sqlWhereNotExists . sqlSelect "signatory_links sl" $ do
           sqlWhere "sl.document_id = d.id"
           sqlWhere "sl.user_id IS NOT NULL"
-          sqlWhere "sl.really_deleted IS NULL"
+          sqlWhere "sl.really_deleted IS NULL" -- condition a
           sqlJoinOn "users u" "sl.user_id = u.id"
           sqlJoinOn "companies c" "u.company_id = c.id"
-          sqlWhereIsNULL "c.deleted"
-          sqlWhere "u.deleted IS NULL OR u.id = d.author_id"
+          sqlWhereIsNULL "c.deleted" -- condition b
+          sqlWhere "u.deleted IS NULL OR u.id = d.author_id" -- condition c
           sqlWhereNotEq "d.status" Preparation
-        -- ...or the documentation is in preparation by a deleted user but not a
-        -- shared template.
+
+        -- Documents in preparation are deleted if their author has been deleted
+        -- but it is not a shared template.
         sqlWhereNotExists . sqlSelect "users u" $ do
           sqlWhere "d.author_id = u.id"
           sqlWhereIsNULL "u.deleted"

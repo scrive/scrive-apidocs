@@ -71,33 +71,35 @@ actuallyDeletePreviouslyDeletedUser = Migration
   { mgrTableName = tblName tableUsers
   , mgrFrom = 25
   , mgrAction = StandardMigration $ do
-      let sqlWhereIsDeletedUserID name =
-            sqlWhereInSql name $ sqlSelect "users" $ do
-              sqlResult "id"
-              sqlWhereIsNotNULL "deleted"
-
-      runQuery_ $ sqlDelete "email_change_requests" $
-        sqlWhereIsDeletedUserID "user_id"
-      runQuery_ $ sqlDelete "oauth_access_token" $
-        sqlWhereIsDeletedUserID "user_id"
-      runQuery_ $ sqlDelete "oauth_api_token" $
-        sqlWhereIsDeletedUserID "user_id"
-      runQuery_ $ sqlDelete "oauth_temp_credential" $
-        sqlWhereIsDeletedUserID "user_id"
-      runQuery_ $ sqlDelete "sessions" $
-        sqlWhereIsDeletedUserID "user_id"
-      runQuery_ $ sqlDelete "sessions" $
-        sqlWhereIsDeletedUserID "pad_user_id"
-      runQuery_ $ sqlDelete "user_account_requests" $
-        sqlWhereIsDeletedUserID "user_id"
-      runQuery_ $ sqlDelete "user_callback_scheme" $
-        sqlWhereIsDeletedUserID "user_id"
-
-      runQuery_ $ sqlUpdate "users_history" $ do
-        sqlSet "event_data" (Nothing :: Maybe String)
-        sqlWhereIsDeletedUserID "user_id"
-
       runQuery_ $ sqlUpdate "users" $ do
+        sqlWith "deleted_users" . sqlSelect "users" $ do
+          sqlResult "id"
+          sqlWhereIsNotNULL "deleted"
+
+        let sqlWhereIsDeletedUserID name =
+              sqlWhere $ name <> " IN (SELECT id FROM deleted_users)"
+
+        sqlWith "deleted_email_change_requests" . sqlDelete "email_change_requests" $
+          sqlWhereIsDeletedUserID "user_id"
+        sqlWith "deleted_oauth_access_tokens" . sqlDelete "oauth_access_token" $
+          sqlWhereIsDeletedUserID "user_id"
+        sqlWith "deleted_oauth_api_tokens" . sqlDelete "oauth_api_token" $
+          sqlWhereIsDeletedUserID "user_id"
+        sqlWith "deleted_oauth_temp_credentials" . sqlDelete "oauth_temp_credential" $
+          sqlWhereIsDeletedUserID "user_id"
+        sqlWith "deleted_sessions" . sqlDelete "sessions" $
+          sqlWhereIsDeletedUserID "user_id"
+        sqlWith "deleted_pad_sessions" . sqlDelete "sessions" $
+          sqlWhereIsDeletedUserID "pad_user_id"
+        sqlWith "deleted_user_account_requests" . sqlDelete "user_account_requests" $
+          sqlWhereIsDeletedUserID "user_id"
+        sqlWith "deleted_user_callback_schemes" . sqlDelete "user_callback_scheme" $
+          sqlWhereIsDeletedUserID "user_id"
+
+        sqlWith "deleted_users_histories" . sqlUpdate "users_history" $ do
+          sqlSet "event_data" (Nothing :: Maybe String)
+          sqlWhereIsDeletedUserID "user_id"
+
         sqlSet "password"         ("" :: BS.ByteString)
         sqlSet "salt"             ("" :: BS.ByteString)
         sqlSet "first_name"       ("" :: String)

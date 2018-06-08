@@ -198,11 +198,13 @@ instance MonadDB m
   query (IsUserDeletable user) = do
     accounts <- dbQuery $ GetCompanyAccounts $ usercompany user
     let admins = filter useriscompanyadmin accounts
-    -- Either there would still be one admin or it's this company's last user.
-    if all ((== userid user) . userid) admins && length accounts > 1
-      then return $ Left UserNotDeletableDueToLastAdminWithUsers
-      else do
+    -- Either there will still be one admin after deletion or it's the
+    -- company's last user.
+    case (admins, accounts) of
+      ([admin], _ : _ : _) | userid user == userid admin ->
+        return $ Left UserNotDeletableDueToLastAdminWithUsers
 
+      _ -> do
         n <- runQuery $ sqlSelect "users" $ do
           sqlWhere "users.deleted IS NULL"
           sqlWhereEq "users.id" (userid user)

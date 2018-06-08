@@ -214,8 +214,7 @@ getStats statsPartition interval eid = do
     Checks for live documents owned by the user.
 -}
 isUserDeletable :: Kontrakcja m => User -> m Bool
-isUserDeletable user = do
-  fmap isRight $ dbQuery $ IsUserDeletable user
+isUserDeletable = fmap isRight . dbQuery . IsUserDeletable
 
 --there must be a better way than all of these weird user create functions
 -- TODO clean up
