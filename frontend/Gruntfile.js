@@ -33,21 +33,6 @@ module.exports = function (grunt) {
       newBuild = grunt.option("new-build")
           || fs.existsSync(yeomanConfig.kontrakcja + "dist-newstyle");
   }
-  var buildDir = "./dist";
-  if (newBuild) {
-      var spawnSync = require("child_process").spawnSync;
-      var child = spawnSync("ghc", ["--numeric-version"]);
-      var ghcVer = child.output[1].toString().trim();
-      child = spawnSync(
-          "ghc", ["-package", "Cabal", "-e",
-                  "System.IO.print (Distribution.Text.display Distribution.System.buildPlatform)"]);
-      var archOs = child.output[1].toString().trim();
-      child = spawnSync("cabal", ["--numeric-version"]);
-      var cabalVerStr = child.output[1].toString();
-      var cabalBuildTypeDir = cabalVerStr >= "2.1.0.0" ? "x" : "c";
-      buildDir = "./dist-newstyle/build/" + archOs + "/ghc-"
-          + ghcVer + "/kontrakcja-1.0/" + cabalBuildTypeDir + "/localization";
-  }
 
   grunt.initConfig({
     yeoman: yeomanConfig,
@@ -196,7 +181,7 @@ module.exports = function (grunt) {
         }
       },
       generateLocalization: {
-        command: buildDir + "/build/localization/localization",
+        command: (newBuild ? "cabal new-run localization" : "./dist/build/localization/localization"),
         options: {
           execOptions: {
             cwd: "<%= yeoman.kontrakcja %>"
