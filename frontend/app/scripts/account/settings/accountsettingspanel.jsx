@@ -51,6 +51,9 @@ module.exports = React.createClass({
         } else if (result.reason.code == "last_admin_with_users") {
           line1 = localization.account.accountDetails.userNotDeletableDueToLastAdminWithUsers.line1;
           line2 = localization.account.accountDetails.userNotDeletableDueToLastAdminWithUsers.line2;
+        } else if (result.reason.code == "pending_user_invitations") {
+          line1 = localization.account.accountDetails.userNotDeletableDueToPendingUserInvitations.line1;
+          line2 = localization.account.accountDetails.userNotDeletableDueToPendingUserInvitations.line2;
         }
         var reason = {
           line1: line1,

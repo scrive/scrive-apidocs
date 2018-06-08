@@ -18,6 +18,7 @@ module User.Model.Query (
   ) where
 
 import Control.Monad.Catch
+import Control.Monad.Except (lift, runExceptT, throwError)
 import Control.Monad.State (MonadState)
 import Data.Char
 import Data.Int
@@ -171,12 +172,15 @@ instance MonadDB m => DBQuery m GetUserGroupAdmins [User] where
 data UserNotDeletableReason
   = UserNotDeletableDueToPendingDocuments
   | UserNotDeletableDueToLastAdminWithUsers
+  | UserNotDeletableDueToPendingUserInvitations
+  deriving Show
 
 instance ToJSValue UserNotDeletableReason where
   toJSValue reason =
     let code = case reason of
-          UserNotDeletableDueToPendingDocuments   -> "pending_documents"
-          UserNotDeletableDueToLastAdminWithUsers -> "last_admin_with_users"
+          UserNotDeletableDueToPendingDocuments       -> "pending_documents"
+          UserNotDeletableDueToLastAdminWithUsers     -> "last_admin_with_users"
+          UserNotDeletableDueToPendingUserInvitations -> "pending_user_invitations"
         msg = userNotDeletableReasonToString reason
     in JSObject $ toJSObject
          [ ("code",    JSString $ toJSString code)
@@ -189,35 +193,50 @@ userNotDeletableReasonToString = fromString . \case
     "Can't delete a user with pending documents."
   UserNotDeletableDueToLastAdminWithUsers ->
     "Can't delete a user if it would leave the company without an admin."
+  UserNotDeletableDueToPendingUserInvitations ->
+    "Can't delete last admin user of a company with pending user invitations."
 
 -- | Check if a user can be deleted giving the reason if it can't and returning
 -- whether it is the last company user otherwise.
 data IsUserDeletable = IsUserDeletable User
 instance MonadDB m
     => DBQuery m IsUserDeletable (Either UserNotDeletableReason Bool) where
-  query (IsUserDeletable user) = do
-    accounts <- dbQuery $ GetCompanyAccounts $ usercompany user
-    let admins = filter useriscompanyadmin accounts
-    -- Either there will still be one admin after deletion or it's the
-    -- company's last user.
-    case (admins, accounts) of
-      ([admin], _ : _ : _) | userid user == userid admin ->
-        return $ Left UserNotDeletableDueToLastAdminWithUsers
+  query (IsUserDeletable user) = runExceptT $ do
+    accounts <- lift $ dbQuery $ GetCompanyAccounts $ usercompany user
 
-      _ -> do
-        n <- runQuery $ sqlSelect "users" $ do
-          sqlWhere "users.deleted IS NULL"
-          sqlWhereEq "users.id" (userid user)
-          sqlJoinOn "signatory_links" "users.id = signatory_links.user_id"
-          sqlWhere "signatory_links.deleted IS NULL"
-          sqlJoinOn "documents" "signatory_links.id = documents.author_id"
-          sqlWhereEq "documents.status" Pending
-          sqlResult "documents.id"
-          sqlLimit 1
+    let lastAdmin = case filter useriscompanyadmin accounts of
+          [admin] -> userid user == userid admin
+          _ -> False
+        lastUser = case accounts of
+          [_] -> True
+          _ -> False
 
-        return $ if n == 0
-          then Right $ length accounts == 1
-          else Left UserNotDeletableDueToPendingDocuments
+    when lastAdmin $ do
+      n <- lift $ runQuery $ sqlSelect "users u1" $ do
+        sqlWhere "u1.deleted IS NULL"
+        sqlWhereIsNULL "u1.has_accepted_terms_of_service"
+        sqlJoinOn "users u2" "u1.company_id = u2.company_id"
+        sqlWhere "u1.id <> u2.id"
+        sqlWhereEq "u2.id" $ userid user
+        sqlResult "u1.id"
+        sqlLimit 1
+      when (n /= 0) $ throwError UserNotDeletableDueToPendingUserInvitations
+
+    when (lastAdmin && not lastUser) $
+      throwError UserNotDeletableDueToLastAdminWithUsers
+
+    n <- lift $ runQuery $ sqlSelect "users" $ do
+      sqlWhere "users.deleted IS NULL"
+      sqlWhereEq "users.id" $ userid user
+      sqlJoinOn "signatory_links" "users.id = signatory_links.user_id"
+      sqlWhere "signatory_links.deleted IS NULL"
+      sqlJoinOn "documents" "signatory_links.id = documents.author_id"
+      sqlWhereEq "documents.status" Pending
+      sqlResult "documents.id"
+      sqlLimit 1
+    when (n /= 0) $ throwError UserNotDeletableDueToPendingDocuments
+
+    return lastUser
 
 {-
   @note: There's some shared functionality between `GetUsageStatsOld` and

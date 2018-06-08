@@ -913,6 +913,8 @@
 "_userNotDeletableDueToLastAdminWithUsersLine2":"As your are the last administrator, you need to delete all users in your company before you can delete your own account.",
 "_userNotDeletableDueToPendingDocumentsLine1":"Please check your E-archive: you have pending documents. To delete your user account, you must have no pending documents.",
 "_userNotDeletableDueToPendingDocumentsLine2":"The documents must be either signed, rejected or withdrawn before your account can be deleted.",
+"_userNotDeletableDueToPendingUserInvitationsLine1":"There are pending user invitations in your company.",
+"_userNotDeletableDueToPendingUserInvitationsLine2":"As you are the last administrator, you need to cancel all user invitations in your company before you can delete your account.",
 "_verificationDescription":"By uploading a document here you can check the authenticity of the document to make sure it hasn’t been compromised.",
 "_verificationError":"Error",
 "_verificationErrorMessage":"An error occured while trying to verify the document's authenticity. Please try again.",
