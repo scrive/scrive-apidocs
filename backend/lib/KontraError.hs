@@ -12,7 +12,7 @@ data KontraError =
     Respond404
   | InternalError [String]
   | LinkInvalid
-  deriving (Show, Typeable)
+  deriving (Eq, Show, Typeable)
 
 instance E.Exception KontraError
 

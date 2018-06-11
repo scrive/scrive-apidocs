@@ -204,7 +204,7 @@ module.exports = React.createClass({
     };
 
     const buttonsClass = classNames({
-      "hidden": this.isHiddenByBlink(),
+      "hidden": this.isHiddenByBlink() || doc.isUnavailableForSign(),
       "buttons": true});
 
     return (

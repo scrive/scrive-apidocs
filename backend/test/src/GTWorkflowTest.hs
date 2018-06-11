@@ -16,7 +16,6 @@ import Doc.DigitalSignature (extendDigitalSignature)
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentMonad (theDocument, withDocumentID)
-import Doc.DocUtils
 import Doc.Model
 import Doc.SealStatus (SealStatus(..))
 import File.Storage

@@ -214,6 +214,7 @@ handleSignShowSaveMagicHash :: Kontrakcja m => DocumentID -> SignatoryLinkID -> 
 handleSignShowSaveMagicHash did sid mh = logDocumentAndSignatory did sid $
   (do
     dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
+      guardThatDocumentIsReadableBySignatories =<< theDocument
       dbUpdate $ AddDocumentSessionToken sid mh
       -- Redirect to propper page
       sendRedirect $ LinkSignDocNoMagicHash did sid
@@ -423,6 +424,7 @@ previewResponse fid pixelwidth = do
 handleDownloadClosedFile :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> String -> m Response
 handleDownloadClosedFile did sid mh _nameForBrowser = do
   doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
+  guardThatDocumentIsReadableBySignatories doc
   if isClosed doc then do
     file <- guardJustM $ fileFromMainFile $ documentsealedfile doc
     content <- getFileIDContents $ fileid file
@@ -488,6 +490,7 @@ checkFileAccessWith fid msid mmh mdid mattid =
   case (msid, mmh, mdid, mattid) of
     (Just sid, Just mh, Just did,_) -> do
        doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
+       guardThatDocumentIsReadableBySignatories doc
        sl <- guardJust $ getSigLinkFor sid doc
        whenM (signatoryNeedsToIdentifyToView sl) $ do
          unless (isAuthor sl) $ do
@@ -564,3 +567,7 @@ addEventForVisitingSigningPageIfNeeded ev sl = do
   when (isPending doc && isNothing (maybesigninfo sl)) $ do
     updateMTimeAndObjectVersion $ get ctxtime ctx
     void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg ev  (return ()) (Just sl) Nothing =<< signatoryActor ctx sl
+
+guardThatDocumentIsReadableBySignatories :: Kontrakcja m => Document -> m ()
+guardThatDocumentIsReadableBySignatories doc =
+  unless (isAccessibleBySignatories doc) respondLinkInvalid

@@ -43,11 +43,13 @@ var Track = require("../common/track");
             model.trigger("change");
           } else if (!triggeredChangeOnReady) { // Once model is ready - we want to trigger change only once
             triggeredChangeOnReady = true;
-            document.mainfile().fetch({
-              data: {signatory_id: document.currentSignatory() && document.currentSignatory().signatoryid()},
-              processData: true,
-              cache: false
-            });
+            if (model.hasAccessToDocument()) {
+              document.mainfile().fetch({
+                data: {signatory_id: document.currentSignatory() && document.currentSignatory().signatoryid()},
+                processData: true,
+                cache: false
+              });
+            }
             document.setReferenceScreenshot(model.referenceScreenshotName());
             model.trigger("change");
           }
@@ -276,6 +278,10 @@ var Track = require("../common/track");
 
     canSignDocument: function () {
       return this.tasks().incomplete().length == 1 && this.tasks().incomplete()[0].isSignTask();
+    },
+
+    hasAccessToDocument: function () {
+      return !this.document().isUnavailableForSign();
     },
 
     recall: function (f) {

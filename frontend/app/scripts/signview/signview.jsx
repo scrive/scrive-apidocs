@@ -9,6 +9,7 @@ var ConsentModuleView = require("./consentmodule/consentmoduleview");
 var SignSectionView = require("./signsection/signsectionview");
 var SignViewModel = require("./signviewmodel");
 var FileView = require("./fileview/fileview");
+var InaccessibleFileView = require("./fileview/inaccessiblefileview");
 var Header = require("./header");
 var Footer = require("./footer");
 var Overlay = require("./overlay");
@@ -230,6 +231,7 @@ var _ = require("underscore");
               link={this.props.link}
               authorFullname={this.props.authorFullname}
               authorPhone={this.props.authorPhone}
+              hasDownloadButton={model.hasAccessToDocument()}
             />
           }
           <div id="default-place-for-arrows" />
@@ -253,23 +255,28 @@ var _ = require("underscore");
               {/* if */ this.props.loggedInAsAuthor && model.hasPadSigning() &&
                 <PadSigningView sigs={doc.signatoriesThatCanSignNowOnPad()} />
               }
-              <FileView
-                ref="fileView"
-                pixelWidth={this.state.pixelWidth}
-                dimControls={this.state.overlay}
-                model={doc.mainfile()}
-                signview={model}
-              />
+              {/* if */ model.hasAccessToDocument() &&
+                <FileView
+                  ref="fileView"
+                  pixelWidth={this.state.pixelWidth}
+                  dimControls={this.state.overlay}
+                  model={doc.mainfile()}
+                  signview={model}
+                />
+              }
+              {/* else */ !model.hasAccessToDocument() && model.hasAccessToDocument() &&
+                <InaccessibleFileView />
+              }
               {/* if */ model.hasAuthorAttachmentsSection() &&
                 <AuthorAttachmentsView
                   model={doc}
                   canStartFetching={self.refs.fileView != undefined && self.refs.fileView.ready()}
                 />
               }
-              {/* if */ model.hasSignatoriesAttachmentsSection() &&
+              {/* if */ model.hasSignatoriesAttachmentsSection() && model.hasAccessToDocument() &&
                 <SignatoryAttachmentsView model={doc} />
               }
-              {/* if */ model.hasExtraDetailsSection() &&
+              {/* if */ model.hasExtraDetailsSection() && model.hasAccessToDocument() &&
                 <ExtraDetailsView
                   model={doc.currentSignatory()}
                   signview={model}
@@ -279,7 +286,7 @@ var _ = require("underscore");
               {/* if */ model.hasSignatoriesSection() &&
                 <DocumentViewSignatories model={doc} />
               }
-              {/* if */ model.hasConsentModuleSection() &&
+              {/* if */ model.hasConsentModuleSection() && model.hasAccessToDocument() &&
                 <ConsentModuleView
                   model={doc.currentSignatory().consentModule()} />
               }

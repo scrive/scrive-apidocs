@@ -12,7 +12,6 @@ import Context
 import DB hiding (query, update)
 import Doc.DocInfo
 import Doc.DocStateData
-import Doc.DocUtils
 import Doc.Tokens.Model
 import EID.CGI.GRP.Transaction.Model
 import KontraMonad

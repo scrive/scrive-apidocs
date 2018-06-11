@@ -926,6 +926,7 @@ apiCallV1Get did = logDocument did . api $ do
   case (msignatorylink,mmagichashh) of
     (Just slid,Just mh) -> do
        sl <- maybe (throwM $ SomeDBExtraException $ serverError "No document found") return  $ getSigLinkFor slid doc
+       guardThatDocumentIsReadableBySignatories doc
        when (signatorymagichash sl /= mh) $ throwM . SomeDBExtraException $ serverError "No document found"
        switchLang $ getLang doc
 
@@ -1098,6 +1099,7 @@ apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
             (Just sid, Just mh, _) -> do
               (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
                 sl <- apiGuardJustM  (serverError "Signatory does not exist") $ getSigLinkFor sid <$> theDocument
+                guardThatDocumentIsReadableBySignatories =<< theDocument
                 whenM (signatoryNeedsToIdentifyToView sl) $ do
                   unless (isAuthor sl) $ do
                     throwM . SomeDBExtraException $ forbidden "Authorization to view is needed"
@@ -1142,6 +1144,7 @@ apiCallV1DownloadFile did fileid nameForBrowser = logDocumentAndFile did fileid 
             (Just sid, Just mh, _) -> do
               (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
                 sl <- apiGuardJustM  (serverError "Signatory does not exist") $ getSigLinkFor sid <$> theDocument
+                guardThatDocumentIsReadableBySignatories =<< theDocument
                 whenM (signatoryNeedsToIdentifyToView sl) $ do
                   unless (isAuthor sl) $ do
                     throwM . SomeDBExtraException $ forbidden "Authorization to view is needed"
@@ -1422,3 +1425,9 @@ getAcceptedAuthorAttachments = do
 
 allRequiredAuthorAttachmentsAreAccepted :: (Kontrakcja m, DocumentMonad m) => [FileID] -> m Bool
 allRequiredAuthorAttachmentsAreAccepted acceptedAttachments = allRequiredAttachmentsAreOnList acceptedAttachments <$> theDocument
+
+guardThatDocumentIsReadableBySignatories :: Kontrakcja m => Document -> m ()
+guardThatDocumentIsReadableBySignatories doc =
+  unless (isAccessibleBySignatories doc) $ throwM $ SomeDBExtraException $
+    forbidden $ "The document has expired or has been withdrawn. (status: "
+                ++ show (documentstatus doc) ++ ")"

@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.Model.Query
-  ( isTemplate -- fromUtils
+  ( isTemplate -- from Doc.DocInfo
   , DocumentFilter(..)
   , processSearchStringToFilter
   , DocumentDomain(..)
@@ -40,9 +40,9 @@ import qualified Data.Set as S
 import DB
 import DB.RowCache (GetRow(..))
 import Doc.Conditions
+import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentID
-import Doc.DocUtils
 import Doc.Model.Domain
 import Doc.Model.Filter
 import Doc.Model.OrderBy

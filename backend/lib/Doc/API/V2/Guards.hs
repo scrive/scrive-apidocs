@@ -24,6 +24,7 @@ module Doc.API.V2.Guards (
 , guardThatAllConsentQuestionsHaveResponse
 -- * Joined guard for read-only functions
 , guardDocumentReadAccess
+, guardThatDocumentIsReadableBySignatories
 ) where
 
 import qualified Data.Text as T
@@ -353,10 +354,19 @@ guardDocumentReadAccess :: Kontrakcja m => Maybe SignatoryLinkID -> Document -> 
 guardDocumentReadAccess mslid doc = do
   mSessionSignatory <- maybe (return Nothing) (getDocumentSignatoryMagicHash $ documentid doc) mslid
   case mSessionSignatory of
-    Just sl -> return $ documentAccessForSlid (signatorylinkid sl) doc
+    Just sl -> do
+      guardThatDocumentIsReadableBySignatories doc
+      return $ documentAccessForSlid (signatorylinkid sl) doc
     Nothing -> do
       (user,_) <- getAPIUser APIDocCheck
       case getSigLinkFor user doc of
         Just _ -> return ()
         Nothing -> guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user doc
       return $ documentAccessForUser user doc
+
+guardThatDocumentIsReadableBySignatories :: Kontrakcja m => Document -> m ()
+guardThatDocumentIsReadableBySignatories doc =
+  unless (isAccessibleBySignatories doc) $
+    apiError $ documentStateErrorWithCode 410 $
+      "The document has expired or has been withdrawn. (status: "
+      <> T.pack (show (documentstatus doc)) <> ")"

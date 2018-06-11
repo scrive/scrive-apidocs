@@ -19,7 +19,6 @@ import Doc.API.V1.DocumentToJSON
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentMonad
-import Doc.DocUtils
 import Doc.Model
 import Doc.SignatoryScreenshots
 import EID.Authentication.Model

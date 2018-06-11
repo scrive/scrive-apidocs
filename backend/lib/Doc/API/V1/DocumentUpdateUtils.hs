@@ -16,7 +16,6 @@ import DB.TimeZoneName
 import Doc.DocInfo (isPreparation)
 import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument)
-import Doc.DocUtils
 import Doc.Model
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
