@@ -1967,7 +1967,7 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
         -- Documents in preparation are deleted if their author has been deleted
         -- but it is not a shared template.
         sqlWhereNotExists . sqlSelect "users u" $ do
-          sqlWhere "d.author_id = u.id"
+          sqlWhere "d.author_user_id = u.id"
           sqlWhereIsNULL "u.deleted"
           sqlWhereEq "d.status" Preparation
           sqlWhereNotEq "d.sharing" Shared
