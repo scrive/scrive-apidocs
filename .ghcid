@@ -1,1 +1,1 @@
---command "ghci -j4 +RTS -A128m"
+--command "ghci -fno-code -j4 +RTS -A128m"
