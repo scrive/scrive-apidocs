@@ -213,6 +213,7 @@ testUserNoDeletionIfLastAdminWithUsers = do
   Just alice <- addNewCompanyUser "Alice" "Red" "alice@red.com" (companyid company)
 
   now <- currentTime
+  _ <- dbUpdate $ AcceptTermsOfService (userid anna) now
   _ <- dbUpdate $ AcceptTermsOfService (userid bob)   now
   _ <- dbUpdate $ AcceptTermsOfService (userid alice) now
 
@@ -244,7 +245,10 @@ testUserNoDeletionIfLastAdminWithUsers = do
 
 testUserNoDeletionIfPendingDocuments :: TestEnv ()
 testUserNoDeletionIfPendingDocuments = do
-  (_, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
+  (anna, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
+  now <- currentTime
+  _ <- dbUpdate $ AcceptTermsOfService (userid anna) now
+
   Just bob <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
 
   ctx <- set ctxmaybeuser (Just bob) <$> mkContext def
@@ -268,6 +272,9 @@ testUserNoDeletionIfPendingDocuments = do
 testUserNoDeletionIfPendingUserInvitations :: TestEnv ()
 testUserNoDeletionIfPendingUserInvitations = do
   (anna, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
+  now <- currentTime
+  _ <- dbUpdate $ AcceptTermsOfService (userid anna) now
+
   Just bob <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
 
   ctx <- set ctxmaybeuser (Just anna) <$> mkContext def
@@ -275,8 +282,16 @@ testUserNoDeletionIfPendingUserInvitations = do
   do
     req <- mkRequest POST [("email", inText "anna@android.com")]
     (res, _) <- runTestKontra req ctx apiCallDeleteUser
-    assertEqual "can't delete last company admin with pending user invitations"
-                409 (rsCode res)
+    assertEqual "can't delete last company admin with pending user invitation\
+                \ for user" 409 (rsCode res)
+
+  _ <- dbUpdate $ SetUserCompanyAdmin (userid bob) True
+
+  do
+    req <- mkRequest POST [("email", inText "anna@android.com")]
+    (res, _) <- runTestKontra req ctx apiCallDeleteUser
+    assertEqual "can't delete last company admin with pending user invitation\
+                \ for admin" 409 (rsCode res)
 
   _ <- dbUpdate $ DeleteUser $ userid bob
 

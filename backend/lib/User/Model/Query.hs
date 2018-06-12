@@ -203,24 +203,18 @@ instance MonadDB m
     => DBQuery m IsUserDeletable (Either UserNotDeletableReason Bool) where
   query (IsUserDeletable user) = runExceptT $ do
     accounts <- lift $ dbQuery $ GetCompanyAccounts $ usercompany user
+    let (activeAccounts, userInvitations) =
+          partition (isJust . userhasacceptedtermsofservice) accounts
 
-    let lastAdmin = case filter useriscompanyadmin accounts of
+    let lastAdmin = case filter useriscompanyadmin activeAccounts of
           [admin] -> userid user == userid admin
           _ -> False
-        lastUser = case accounts of
+        lastUser = case activeAccounts of
           [_] -> True
           _ -> False
 
-    when lastAdmin $ do
-      n <- lift $ runQuery $ sqlSelect "users u1" $ do
-        sqlWhere "u1.deleted IS NULL"
-        sqlWhereIsNULL "u1.has_accepted_terms_of_service"
-        sqlJoinOn "users u2" "u1.company_id = u2.company_id"
-        sqlWhere "u1.id <> u2.id"
-        sqlWhereEq "u2.id" $ userid user
-        sqlResult "u1.id"
-        sqlLimit 1
-      when (n /= 0) $ throwError UserNotDeletableDueToPendingUserInvitations
+    when (lastAdmin && not (null userInvitations)) $
+      throwError UserNotDeletableDueToPendingUserInvitations
 
     when (lastAdmin && not lastUser) $
       throwError UserNotDeletableDueToLastAdminWithUsers
