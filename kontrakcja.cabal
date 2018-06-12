@@ -1321,6 +1321,7 @@ Test-suite kontrakcja-test
                  TestFileStorage
                  TestKontra
                  TestingUtil
+                 TestingUtil.JSON
                  Theme.Migrations
                  Theme.Tables
                  ThirdPartyStats

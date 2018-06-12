@@ -8,13 +8,12 @@ module Doc.API.V2.JSONTest (
 
 import Control.Monad.IO.Class
 import Data.Aeson
-import Data.Text (Text, unpack)
+import Data.Text (unpack)
 import Happstack.Server
 import Test.Framework
 import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString.Lazy.UTF8 as BS
 import qualified Data.HashMap.Strict as H
-import qualified Data.Vector as V
 
 import Context
 import DB
@@ -22,6 +21,7 @@ import Doc.API.V2.Calls
 import Doc.DocumentID
 import Doc.SignatoryLinkID ()
 import TestingUtil
+import TestingUtil.JSON
 import TestKontra as T
 
 apiV2JSONTests :: TestEnvSt -> Test
@@ -291,37 +291,15 @@ testDocRemovePages = do
   _ <- runApiJSONTest ctx POST (docApiV2RemovePages did) rq_remove_pages_params 200 rq_remove_pages_res_json
   return ()
 
--- Compare JSON sesults from API calls
 testJSONWith :: FilePath -> BS.ByteString -> TestEnv ()
-testJSONWith fp jsonBS = do
-  jsonFileBS <- liftIO $ B.readFile fp
-  let Just value    = decode jsonBS
-      Just jsonFile = decode jsonFileBS
-  assertEqualJson ("JSON structure and types (including 'null') should match that in " ++ fp)
-                  (removeValues jsonFile) (removeValues value)
-  assertEqualJson ("JSON structure and values should match if we will remove dynamic values (like documentid or mtime) " ++ fp)
-                  (removeDynamicValues jsonFile) (removeDynamicValues value)
-  return ()
-
-removeValues :: Value -> Value
-removeValues (Object m) = Object (H.map removeValues m)
-removeValues (Array v)  = Array  (V.map removeValues v)
-removeValues (String _) = String ""
-removeValues (Number _) = Number 0
-removeValues (Bool _)   = Bool False
-removeValues Null       = Null
-
-removeDynamicValues :: Value -> Value
-removeDynamicValues (Object m) = Object $ H.map removeDynamicValues $ filterOutDynamicKeys m
-  where
-    filterOutDynamicKeys hm = H.filterWithKey (\k _ -> not $ k `elem` dynamicKeys) hm
-    dynamicKeys = ["id", "title", "user_id", "mtime", "ctime", "timeout_time", "object_version", "access_token", "signatory_id", "api_delivery_url"]
-removeDynamicValues (Array v)  = Array  (V.map removeDynamicValues v)
-removeDynamicValues v = v
-
-setDocKey :: Text -> Value -> Value -> Value
-setDocKey k n v = overDocKey k (const n) v
-
-overDocKey :: Text -> (Value -> Value) -> Value -> Value
-overDocKey k f (Object doc) = Object $ H.adjust f k doc
-overDocKey _ _ v = v
+testJSONWith = testJSONWithDynamicKeys [ "id"
+                                       , "access_token"
+                                       , "api_delivery_url"
+                                       , "ctime"
+                                       , "mtime"
+                                       , "object_version"
+                                       , "signatory_id"
+                                       , "timeout_time"
+                                       , "title"
+                                       , "user_id"
+                                       ]

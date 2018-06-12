@@ -20,6 +20,7 @@ import Doc.DocumentMonad
 import Doc.Model
 import Doc.SignatoryLinkID (SignatoryLinkID, unsafeSignatoryLinkID)
 import TestingUtil
+import TestingUtil.JSON
 import TestKontra as T
 
 apiV1JSONTests :: TestEnvSt -> Test
@@ -351,19 +352,6 @@ testSignWithSignature = do
   assertEqual "We should get a 200 response" 200 (rsCode resFinalDoc)
   testJSONWith (inTestDir "json/api_v1/test_9_get_after_signing.json") (rsBody resFinalDoc)
 
-
--- Compare JSON sesults from API calls
-testJSONWith :: FilePath -> BS.ByteString -> TestEnv ()
-testJSONWith fp jsonBS = do
-  jsonFileBS <- liftIO $ B.readFile fp
-  let Just value    = decode jsonBS
-      Just jsonFile = decode jsonFileBS
-  assertEqualJson ("JSON structure and types (including 'null') should match that in " ++ fp)
-                  (removeValues jsonFile) (removeValues value)
-  assertEqualJson ("JSON structure and values should match if we will remove dynamic values (like documentid or mtime) " ++ fp)
-                  (removeDynamicValues jsonFile) (removeDynamicValues value)
-  return ()
-
 -- So utils fro getting common properties from Document JSON
 getDocumentID :: BS.ByteString -> TestEnv DocumentID
 getDocumentID jsonBS = do
@@ -391,31 +379,6 @@ getField key jsonBS = do
       Just (String s) -> return s
       _ -> unexpectedError $ "error while looking for a field " ++ unpack key ++ " (not a string)"
 
-removeValues :: Value -> Value
-removeValues (Object m) = Object (H.map removeValues m)
-removeValues (Array v)  = Array  (V.map removeValues v)
-removeValues (String _) = String ""
-removeValues (Number _) = Number 0
-removeValues (Bool _)   = Bool False
-removeValues Null       = Null
-
-
-removeDynamicValues :: Value -> Value
-removeDynamicValues (Object m) = Object $ H.map removeDynamicValues $ filterOutDynamicKeys m
-  where
-    filterOutDynamicKeys hm = H.filterWithKey (\k _ -> not $ k `elem` dynamicKeys) hm
-    dynamicKeys = ["id", "accesstoken", "time", "ctime", "mtime", "signdate", "userid", "timeouttime", "objectversion", "title", "link", "file"]
-removeDynamicValues (Array v)  = Array  (V.map removeDynamicValues v)
-removeDynamicValues v = v
-
-setDocKey :: Text -> Value -> Value -> Value
-setDocKey k n v = overDocKey k (const n) v
-
-overDocKey :: Text -> (Value -> Value) -> Value -> Value
-overDocKey k f (Object doc) = Object $ H.adjust f k doc
-overDocKey _ _ v = v
-
-
 -- Deap replacement. There are some integrations that work with replacemente of #EMAIL etc. This operation
 setDocValuesBySimpleReplacement :: Text -> Text -> Value -> Value
 setDocValuesBySimpleReplacement v nv (Object m) = Object $ H.map (setDocValuesBySimpleReplacement v nv) m
@@ -424,3 +387,18 @@ setDocValuesBySimpleReplacement v nv (String v') = if (v == v')
                                                    then String nv
                                                    else String v'
 setDocValuesBySimpleReplacement _ _ jv = jv
+
+testJSONWith :: FilePath -> BS.ByteString -> TestEnv ()
+testJSONWith = testJSONWithDynamicKeys [ "id"
+                                       , "accesstoken"
+                                       , "ctime"
+                                       , "file"
+                                       , "link"
+                                       , "mtime"
+                                       , "objectversion"
+                                       , "signdate"
+                                       , "time"
+                                       , "timeouttime"
+                                       , "title"
+                                       , "userid"
+                                       ]
