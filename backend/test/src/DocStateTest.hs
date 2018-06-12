@@ -2,6 +2,7 @@ module DocStateTest (docStateTests, docStateSideEffectsTests) where
 
 import Control.Arrow (first)
 import Control.Conditional ((<|), (|>))
+import Control.Monad.Catch (try)
 import Control.Monad.Reader
 import Data.Int
 import Data.Text (unpack)
@@ -214,6 +215,7 @@ docStateTests env = testGroup "DocState" [
   testThat "PurgeDocuments purges documents" env testPurgeDocument,
   testThat "PurgeDocuments does not purge documents for saved users" env testPurgeDocumentUserSaved,
   testThat "PurgeDocuments removes sensitive data" env testPurgeDocumentRemovesSensitiveData,
+  testThat "PurgeDocuments does not purge shared templates" env testPurgeDocumentSharedTemplates,
 
   testThat "ArchiveIdleDocuments archives idle documents" env testArchiveIdleDocument,
 
@@ -849,6 +851,26 @@ testPurgeDocumentRemovesSensitiveData = replicateM_ 10 $ do
     "AND seen_ip=0 AND sign_ip=0"
   sc :: Int64 <- fetchOne runIdentity
   assertEqual "No signatory has sensitive data" (length $ documentsignatorylinks doc) (fromIntegral sc)
+
+testPurgeDocumentSharedTemplates :: TestEnv ()
+testPurgeDocumentSharedTemplates = do
+  company <- addNewCompany
+  bob <- addNewRandomCompanyUser (companyid company) True
+  alice <- addNewRandomCompanyUser (companyid company) False
+
+  doc <- addRandomDocumentWithAuthorAndCondition bob (\d -> isPreparation d || isDocumentShared d)
+  _ <- dbUpdate $ DeleteUser $ userid alice
+  _ <- dbUpdate $ PurgeDocuments 0
+
+  eDoc <- try $ dbQuery $ GetDocumentByDocumentID $ documentid doc
+  case eDoc of
+    Left (_ :: SomeDBExtraException) ->
+      assertFailure "Shared template should not be purged"
+    Right Document{ documentsignatorylinks
+                      = SignatoryLink{ maybesignatory = Just uid } : _ } ->
+      assertEqual "Shared template should be given to oldest admin"
+                  uid (userid bob)
+    _ -> assertFailure "Unexpected error"
 
 testArchiveIdleDocument :: TestEnv ()
 testArchiveIdleDocument = replicateM_ 10 $ do
