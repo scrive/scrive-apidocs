@@ -24,7 +24,6 @@ import Doc.DocumentID
 import MinutesTime
 import SMS.Data (SMSProvider(..))
 import User.UserID
-import UserGroup.Data
 
 data ChargeableItem =
   CIStartingDocument       |
@@ -150,7 +149,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyFor (
       sqlSet "user_id" user_id
       sqlSet "document_id" document_id
       sqlSet "quantity" quantity
-      sqlSet "user_group_id" . unsafeUserGroupID . fromCompanyID $ company_id
+      sqlSetCmd "user_group_id" $ "(SELECT user_group_id FROM companies WHERE id = " <?> company_id <+> ")"
 ----------------------------------------
 
 data GetTotalOfChargeableItemFromThisMonth = GetTotalOfChargeableItemFromThisMonth ChargeableItem CompanyID
