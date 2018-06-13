@@ -16,6 +16,7 @@ import Amazon.URLFix
 import AppDBTables
 import Configuration
 import Cron.Model
+import CronConf
 import Database.Redis.Configuration
 import DB
 import DB.PostgreSQL
@@ -32,7 +33,6 @@ import ThirdPartyStats.Core
 import ThirdPartyStats.Mixpanel
 import ThirdPartyStats.Planhat
 import Utils.IO
-import CronConf
 import qualified CronEnv
 
 data CmdConf = CmdConf {
