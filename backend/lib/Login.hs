@@ -41,7 +41,12 @@ handleLoginGet = do
   ctx <- getContext
   case (get ctxmaybeuser ctx) of
        Nothing -> do
-          referer <- getField "referer"
+          dirtyReferer <- getField "referer"
+          let checkPrefixes s = s `isPrefixOf` fromMaybe "" dirtyReferer
+              localReferer = any checkPrefixes ["/","%2F"]
+              naughtyRef   = any checkPrefixes ["javascript:","data:"]
+              referer = if localReferer then dirtyReferer else Nothing
+          when naughtyRef $ logAttention_ "handleLoginGet: Somebody tried to XSS a referer"
           ad <- getAnalyticsData
           content <- renderTemplate "loginPageWithBranding" $ do
             F.value "referer" $ fromMaybe "/" referer
@@ -195,7 +200,10 @@ handleLogoutAJAX = do
 handleLoginWithRedirectGet :: Kontrakcja m => m InternalKontraResponse
 handleLoginWithRedirectGet = do
   sci <- guardJustM $ readField "session_id"
-  url <- guardJustM $ getField "url"
+  dirtyUrl <- guardJustM $ getField "url"
+  let naughtyUrl = any (\s -> s `isPrefixOf` dirtyUrl) ["javascript:","data:"]
+      url = if naughtyUrl then "" else dirtyUrl
+  when naughtyUrl $ logAttention_ "handleLoginWithRedirectGet: someone tried to XSS url field"
   -- It may seems strange, that we do the same thing regardless whether the user
   -- session exists. The reason is, that session from link may become invalid, when
   -- user logs out from the original login link session. We want the original link
