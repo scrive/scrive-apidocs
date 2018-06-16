@@ -8,6 +8,7 @@ module SMS.SMS (
 
 import Control.Monad.Catch
 import Data.Char
+import Data.Set (Set, fromList, member)
 import Data.String.Utils
 import Log
 
@@ -27,18 +28,16 @@ data SMS = SMS {
   , smsProvider   :: SMSProvider -- ^ SMS provider type
   } deriving (Eq, Ord, Show)
 
--- | Schedule SMS sendout. Note that body/originator needs
--- to be converted to latin1 as sms provider supports latin1 messages only.
--- Transliterate is used since eg. polish characters are not supported by
--- latin1, but we still want messages containing such characters to be sent
--- successfully.
+-- | Schedule SMS sendout. The SMS sendout provider takes care of detecting the
+-- need to use UCS2 or GSM7 and the details of conversion, but unfortunately we
+-- also need to distinguish between these formats for billing reasons.
 scheduleSMS :: (MonadLog m, MonadDB m, MonadThrow m) => Document -> SMS -> m ()
 scheduleSMS doc SMS{..} = do
   when (null smsMSISDN) $ do
     unexpectedError "no mobile phone number defined"
   sid <- dbUpdate $ CreateSMS smsProvider (fixOriginator smsOriginator) smsMSISDN smsBody
   -- charge company of the author of the document for the smses
-  dbUpdate $ ChargeCompanyForSMS (documentid doc) smsProvider sms_count
+  dbUpdate $ ChargeCompanyForSMS (documentid doc) smsProvider smsCount
   case kontraInfoForSMS of
     Nothing -> return ()
     Just kifs -> void $ dbUpdate $ AddKontraInfoForSMS sid kifs
@@ -52,19 +51,42 @@ scheduleSMS doc SMS{..} = do
     , "sms_provider" .= show smsProvider
     ]
   where
-    -- Count the real smses; if the message length is less than
-    -- 160 characters, it's 1 sms. Otherwise it's split into
-    -- multiple parts. Headers are attached to each part to be
-    -- able to reconstruct the sms, therefore in this case it's
-    -- only 153 characters per sms (GSM encoding). Note that we
-    -- are not using multibyte encoding for sms, therefore using
-    -- length on a String here makes sense.
-    -- Source: https://en.wikipedia.org/wiki/Concatenated_SMS
-    sms_count = case fromIntegral $ length smsBody of
-      len | len > 160 -> case len `divMod` 153 of
-                           (count, 0) -> count
-                           (count, _) -> count + 1
-      _ -> 1
+    -- Count the real smses; GSM encoding (UCS2 encoding numbers in
+    -- parenthesis): if the message length is less than or equal to 160 (70)
+    -- characters, it's 1 sms. Otherwise it's split into multiple parts. Headers
+    -- are attached to each part to be able to reconstruct the sms, therefore in
+    -- this case the maximum length is only 153 (67) characters per sms. The way
+    -- we distinguish a UCS2 message from a GSM7 is that if all characters in
+    -- the message body is in the string defined in `gsm7PermissibleChars`, its
+    -- GSM7 - otherwise it's UCS2.
+    --
+    -- Note that currently the API endpoint for Telia CallGuide uses only GSM7
+    -- by means of transliteration and simple omission.
+    --
+    -- Sources:
+    -- - https://en.wikipedia.org/wiki/Concatenated_SMS
+    -- - https://en.wikipedia.org/wiki/Universal_Coded_Character_Set
+    smsBodyLength = fromIntegral . length $ smsBody
+    smsCount =
+      if smsProvider == SMSTeliaCallGuide || isGSM7PermissibleString smsBody
+      then countSMSes 160 153
+      else countSMSes 70 67
+    countSMSes maxForOne maxForMultiple
+      | smsBodyLength > maxForOne =
+          case smsBodyLength `divMod` maxForMultiple of
+            (count, 0) -> count
+            (count, _) -> count + 1
+      | otherwise = 1
+
+isGSM7PermissibleString :: String -> Bool
+isGSM7PermissibleString s =
+  all (`member` gsm7PermissibleChars) s
+  where
+    gsm7PermissibleChars :: Set Char
+    gsm7PermissibleChars =
+      fromList ("@Δ0¡P¿p£_!1AQaq$Φ\"2BRbr¥Γ#3CScsèΛ¤4DTdtéΩ%5EUeuùΠ" <>
+                "&6FVfvìΨ'7GWgwòΣ(8HXhxÇΘ)9IYiyΞ*:JZjzØ+;KÄkäøÆ,<LÖ" <>
+                "löæ-=MÑmñÅß.>NÜnüåÉ/?O§oà \r\n\x1B")
 
 fixOriginator :: String -> String
 fixOriginator s = notEmpty $ map fixChars $ take 11 s
