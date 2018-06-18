@@ -1956,13 +1956,13 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
         -- is one of the signatory and this user has deleted her account.
         -- If the author is deleted, the company should still keep the document.
         sqlWhereNotExists . sqlSelect "signatory_links sl" $ do
+          sqlJoinOn "users u" "sl.user_id = u.id"
+          sqlJoinOn "companies c" "u.company_id = c.id"
           sqlWhere "sl.document_id = d.id"
           sqlWhereIsNotNULL "sl.user_id"
           sqlWhereIsNULL "sl.really_deleted" -- condition a
-          sqlJoinOn "users u" "sl.user_id = u.id"
-          sqlJoinOn "companies c" "u.company_id = c.id"
           sqlWhereIsNULL "c.deleted" -- condition b
-          sqlWhere "u.deleted IS NULL OR u.id = d.author_id" -- condition c
+          sqlWhere "u.deleted IS NULL OR u.id = d.author_user_id" -- condition c
           sqlWhereNotEq "d.status" Preparation
 
         -- Documents in preparation are deleted if
@@ -1975,8 +1975,8 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
         -- b) the author has not deleted the document AND
         -- c) the document's company is not deleted.
         sqlWhereNotExists . sqlSelect "signatory_links sl" $ do
-          sqlWhere "d.author_id = sl.id"
           sqlJoinOn "users u" "sl.user_id = u.id"
+          sqlWhere "d.author_id = sl.id"
           sqlWhere $ "u.deleted IS NULL OR d.sharing =" <?> Shared
           sqlWhere "sl.really_deleted IS NULL"
           sqlWhereEq "d.status" Preparation

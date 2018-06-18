@@ -108,6 +108,9 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool wh
     mAdminID <- fetchMaybe runIdentity
 
     case mAdminID of
+      -- Nothing in case it is the last admin. In this particular case, we don't
+      -- care about document ownership as the company and the documents will be
+      -- purged.
       Nothing -> return ()
       Just adminID -> do
         runQuery_ $ sqlUpdate "signatory_links" $ do
