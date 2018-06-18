@@ -114,4 +114,5 @@ jsonAttachmentsList = withUser $ \user -> do
     Nothing -> return []
 
   attachments <- dbQuery $ GetAttachments domain filters sorting
-  return $ internalResponse $ Response 200 Map.empty nullRsFlags (Unjson.unjsonToByteStringLazy unjsonAttachments attachments) Nothing
+  let headers = Map.singleton "content-type" $ HeaderPair "Content-Type" ["application/json; charset=UTF-8"]
+  return $ internalResponse $ Response 200 headers nullRsFlags (Unjson.unjsonToByteStringLazy unjsonAttachments attachments) Nothing
