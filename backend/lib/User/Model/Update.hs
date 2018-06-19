@@ -95,7 +95,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool wh
     runQuery_ $ sqlDelete "user_account_requests" $ sqlWhereEq "user_id" uid
     runQuery_ $ sqlDelete "user_callback_scheme"  $ sqlWhereEq "user_id" uid
 
-    -- Give the shared templates to the oldest admin.
+    -- Give the shared attachments and templates to the oldest admin.
     runQuery_ $ sqlSelect "users u" $ do
       sqlResult "u.id"
       sqlJoinOn "companies c" "u.company_id = c.id"
@@ -122,6 +122,11 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool wh
 
           sqlSet "user_id" adminID
           sqlWhere "id IN (SELECT id FROM signatory_link_ids_to_change)"
+
+        runQuery_ $ sqlUpdate "attachments" $ do
+          sqlSet "user_id" adminID
+          sqlWhere "shared"
+          sqlWhereEq "user_id" uid
 
     runQuery_ $ sqlUpdate "users_history" $ do
       sqlSet "event_data" (Nothing :: Maybe String)

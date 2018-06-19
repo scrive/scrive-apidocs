@@ -15,6 +15,7 @@ import qualified Data.ByteString.Char8 as BSC
 import qualified Data.HashMap.Strict as H
 import qualified Data.Text.Encoding as TE
 
+import Attachment.Model
 import Company.Model
 import CompanyAccountsTest
 import Context
@@ -41,18 +42,22 @@ userAPITests env = testGroup "UserAPI"
   [ testThat "Test User API Create Login Link" env testUserLoginAndGetSession
   , testThat "Test User API Too Many Attempts To Get Tokens" env testUserTooManyGetTokens
   , testThat "Test User API 2FA setup and disable workflow works" env testUser2FAWorkflow
+
   , testThat "Test User API Don't delete a user if the email is wrong"
              env testUserNoDeletionIfWrongEmail
-  , testThat "Test User API Don't delete the last admin if there are still users in the company"
+  , testThat "Test User API Don't delete the last admin if there are still\
+             \ users in the company"
              env testUserNoDeletionIfLastAdminWithUsers
   , testThat "Test User API Don't delete a user if she has pending documents"
              env testUserNoDeletionIfPendingDocuments
-  , testThat "Test User API Don't delete the last admin if there are user invitations"
+  , testThat "Test User API Don't delete the last admin if there are user\
+             \ invitations"
              env testUserNoDeletionIfPendingUserInvitations
   , testThat "Test User API Delete a user if there is nothing preventing it"
              env testUserDeletion
-  , testThat "Test User API Delete a user and give the shared templates to the oldest admin"
-             env testUserDeletionSharedTemplatesOwnershipTransfer
+  , testThat "Test User API Delete a user and give the shared\
+             \ attachments/templates to the oldest admin"
+             env testUserDeletionOwnershipTransfer
   ]
 
 testUserLoginAndGetSession :: TestEnv ()
@@ -314,8 +319,8 @@ testUserDeletion = do
   (res, _) <- runTestKontra req ctx apiCallDeleteUser
   assertEqual "user got deleted" 200 (rsCode res)
 
-testUserDeletionSharedTemplatesOwnershipTransfer :: TestEnv ()
-testUserDeletionSharedTemplatesOwnershipTransfer = do
+testUserDeletionOwnershipTransfer :: TestEnv ()
+testUserDeletionOwnershipTransfer = do
   (anna, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
   Just bob <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
 
@@ -330,17 +335,39 @@ testUserDeletionSharedTemplatesOwnershipTransfer = do
     isTemplate doc && not (isDocumentShared doc)
 
   ctx <- set ctxmaybeuser (Just anna) <$> mkContext def
+  let actor = userActor ctx anna
+
+  fid <- addNewRandomFile
+  fid' <- addNewRandomFile
+  sharedAttachment <- dbUpdate $ NewAttachment (userid anna) "shared" fid actor
+  unsharedAttachment <- dbUpdate $ NewAttachment (userid anna) "shared" fid' actor
+  dbUpdate $ SetAttachmentsSharing (userid anna) [attachmentid sharedAttachment] True
+
   req <- mkRequest POST [("email", inText "anna@android.com")]
   (res, _) <- runTestKontra req ctx apiCallDeleteUser
   assertEqual "user got deleted" 200 (rsCode res)
 
-  sharedTemplate' <- dbQuery $ GetDocumentByDocumentID $ documentid sharedTemplate
-  unsharedTemplate' <- dbQuery $ GetDocumentByDocumentID $ documentid unsharedTemplate
+  sharedTemplate' <-
+    dbQuery $ GetDocumentByDocumentID $ documentid sharedTemplate
+  unsharedTemplate' <-
+    dbQuery $ GetDocumentByDocumentID $ documentid unsharedTemplate
+
+  let domains = [ AttachmentsOfAuthorDeleteValue (userid bob) False
+                , AttachmentsOfAuthorDeleteValue (userid anna) False
+                , AttachmentsSharedInUsersCompany (userid bob) ]
+  [sharedAttachment'] <- dbQuery $ GetAttachments domains
+    [AttachmentFilterByID (attachmentid sharedAttachment)] []
+  [unsharedAttachment'] <- dbQuery $ GetAttachments domains
+    [AttachmentFilterByID (attachmentid unsharedAttachment)] []
 
   assertEqual "other admin has been given shared template"
               (maybesignatory $ head $ documentsignatorylinks sharedTemplate')
               (Just $ userid bob)
-
   assertEqual "other admin has not been given unshared template"
               (maybesignatory $ head $ documentsignatorylinks unsharedTemplate')
               (Just $ userid anna)
+
+  assertEqual "other admin has been given shared attachment"
+              (attachmentuser sharedAttachment') (userid bob)
+  assertEqual "other admin has not been given unshared attachment"
+              (attachmentuser unsharedAttachment') (userid anna)
