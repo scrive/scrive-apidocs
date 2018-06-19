@@ -1,4 +1,3 @@
-{-# LANGUAGE PackageImports #-}
 module Cron (main) where
 
 import Control.Monad.Base
@@ -17,6 +16,7 @@ import Amazon.URLFix
 import AppDBTables
 import Configuration
 import Cron.Model
+import CronConf
 import Database.Redis.Configuration
 import DB
 import DB.PostgreSQL
@@ -33,8 +33,7 @@ import ThirdPartyStats.Core
 import ThirdPartyStats.Mixpanel
 import ThirdPartyStats.Planhat
 import Utils.IO
-import "kontrakcja" CronConf
-import qualified "kontrakcja" CronEnv
+import qualified CronEnv
 
 data CmdConf = CmdConf {
   config :: String
