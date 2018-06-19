@@ -28,6 +28,8 @@ regular-css-compiled.css
 cabal.sandbox.config
 cabal.project.local
 cabal.project.local~
+/.ghci
+/.ghcid
 *.bak
 *.*\~
 
