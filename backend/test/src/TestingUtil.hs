@@ -337,11 +337,20 @@ documentTemplateTypes = [ Template
 instance Arbitrary DocumentType where
   arbitrary = elements documentAllTypes
 
+documentAllSharings :: [DocumentSharing]
+documentAllSharings = [Private, Shared]
+
+instance Arbitrary DocumentSharing where
+  arbitrary = elements documentAllSharings
 
 instance Arbitrary Document where
   arbitrary = do
     -- we can have any document type here
     dtype <- arbitrary
+    -- sharing has meaning only for templates
+    dsharing <- if dtype == Template
+                then arbitrary
+                else return Private
     -- status has meaning only for signables
     dstatus <- if dtype == Signable
                then arbitrary
@@ -350,12 +359,14 @@ instance Arbitrary Document where
     -- we can have any days to sign. almost
     ddaystosign <- elements [1, 10, 99]
     dtimeouttime <- arbitrary
-    return $ def  { documentstatus = dstatus
-                           , documenttype = dtype
-                           , documentsignatorylinks = sls
-                           , documenttimeouttime = Just dtimeouttime
-                           , documentdaystosign = ddaystosign
-                           }
+    return $ def
+      { documentstatus = dstatus
+      , documenttype = dtype
+      , documentsharing = dsharing
+      , documentsignatorylinks = sls
+      , documenttimeouttime = Just dtimeouttime
+      , documentdaystosign = ddaystosign
+      }
 
 documentAllStatuses :: [DocumentStatus]
 documentAllStatuses = [ Preparation
@@ -852,13 +863,14 @@ addNewRandomPartnerUser = do
 data RandomDocumentAllows = RandomDocumentAllows
                           { randomDocumentAllowedTypes :: [DocumentType]
                           , randomDocumentAllowedStatuses :: [DocumentStatus]
+                          , randomDocumentAllowedSharings :: [DocumentSharing]
                           , randomDocumentAuthor :: User
                           , randomDocumentCondition :: Document -> Bool
                           }
 
 randomDocumentAllowsDefault :: User -> RandomDocumentAllows
 randomDocumentAllowsDefault user = RandomDocumentAllows
-                              { randomDocumentAllowedTypes = [ Signable , Template ]
+                              { randomDocumentAllowedTypes = documentAllTypes
                               , randomDocumentAllowedStatuses = [ Preparation
                                                                 , Pending
                                                                 , Closed
@@ -867,6 +879,7 @@ randomDocumentAllowsDefault user = RandomDocumentAllows
                                                                 , Rejected
                                                                 , DocumentError
                                                                 ]
+                              , randomDocumentAllowedSharings = documentAllSharings
                               , randomDocumentAuthor = user
                               , randomDocumentCondition = const True
                               }
@@ -930,12 +943,18 @@ addRandomDocumentWithFile fileid rda = do
     worker now user p file = do
       doc' <- rand 10 arbitrary
       xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
-      status <- rand 10 (elements $ randomDocumentAllowedStatuses rda)
+      status <- if xtype == Signable
+        then rand 10 (elements $ randomDocumentAllowedStatuses rda)
+        else return Preparation
+      sharing <- if xtype == Template
+        then rand 10 (elements $ randomDocumentAllowedSharings rda)
+        else return Private
       title <- rand 1 $ arbString 10 25
       siglinks <- rand 10 (listOf $ randomSigLinkByStatus status)
 
       let doc = doc' { documenttype = xtype
                      , documentstatus = status
+                     , documentsharing = sharing
                      , documenttitle = title
                      }
 

@@ -21,7 +21,10 @@ import Context
 import DB
 import Doc.Data.Document
 import Doc.Data.DocumentStatus
+import Doc.Data.SignatoryLink
+import Doc.DocInfo
 import Doc.DocumentMonad
+import Doc.Model.Query
 import Doc.Model.Update
 import Doc.SignatoryLinkID ()
 import MinutesTime
@@ -48,6 +51,8 @@ userAPITests env = testGroup "UserAPI"
              env testUserNoDeletionIfPendingUserInvitations
   , testThat "Test User API Delete a user if there is nothing preventing it"
              env testUserDeletion
+  , testThat "Test User API Delete a user and give the shared templates to the oldest admin"
+             env testUserDeletionSharedTemplatesOwnershipTransfer
   ]
 
 testUserLoginAndGetSession :: TestEnv ()
@@ -308,3 +313,34 @@ testUserDeletion = do
   req <- mkRequest POST [("email", inText "anna@android.com")]
   (res, _) <- runTestKontra req ctx apiCallDeleteUser
   assertEqual "user got deleted" 200 (rsCode res)
+
+testUserDeletionSharedTemplatesOwnershipTransfer :: TestEnv ()
+testUserDeletionSharedTemplatesOwnershipTransfer = do
+  (anna, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
+  Just bob <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
+
+  now <- currentTime
+  _ <- dbUpdate $ AcceptTermsOfService (userid anna) now
+  _ <- dbUpdate $ AcceptTermsOfService (userid bob)  now
+  _ <- dbUpdate $ SetUserCompanyAdmin  (userid bob)  True
+
+  sharedTemplate <- addRandomDocumentWithAuthorAndCondition anna $ \doc ->
+    isDocumentShared doc
+  unsharedTemplate <- addRandomDocumentWithAuthorAndCondition anna $ \doc ->
+    isTemplate doc && not (isDocumentShared doc)
+
+  ctx <- set ctxmaybeuser (Just anna) <$> mkContext def
+  req <- mkRequest POST [("email", inText "anna@android.com")]
+  (res, _) <- runTestKontra req ctx apiCallDeleteUser
+  assertEqual "user got deleted" 200 (rsCode res)
+
+  sharedTemplate' <- dbQuery $ GetDocumentByDocumentID $ documentid sharedTemplate
+  unsharedTemplate' <- dbQuery $ GetDocumentByDocumentID $ documentid unsharedTemplate
+
+  assertEqual "other admin has been given shared template"
+              (maybesignatory $ head $ documentsignatorylinks sharedTemplate')
+              (Just $ userid bob)
+
+  assertEqual "other admin has not been given unshared template"
+              (maybesignatory $ head $ documentsignatorylinks unsharedTemplate')
+              (Just $ userid anna)

@@ -102,8 +102,8 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool wh
       sqlWhereEq "c.id" $ usercompany user
       sqlWhereIsNULL "u.deleted"
       sqlWhere "u.is_company_admin"
-      sqlOrderBy "has_accepted_terms_of_service"
       sqlWhereNotEq "u.id" uid
+      sqlOrderBy "has_accepted_terms_of_service"
       sqlLimit 1
     mAdminID <- fetchMaybe runIdentity
 
@@ -116,7 +116,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool wh
         runQuery_ $ sqlUpdate "signatory_links" $ do
           sqlWith "signatory_link_ids_to_change" . sqlUpdate "documents" $ do
             sqlSet "author_user_id" (adminID :: UserID)
-            sqlWhereNotEq "sharing" Shared
+            sqlWhereEq "sharing" Shared
             sqlWhereEq "author_user_id" uid
             sqlResult "author_id AS id"
 
