@@ -116,6 +116,10 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool wh
         runQuery_ $ sqlUpdate "signatory_links" $ do
           sqlWith "signatory_link_ids_to_change" . sqlUpdate "documents" $ do
             sqlSet "author_user_id" (adminID :: UserID)
+            -- Archive search info is simply set to NULL. It will be regenerated
+            -- by cron at worst, the next day at midnight.
+            sqlSet "archive_search_terms" (Nothing :: Maybe String)
+            sqlSet "archive_search_fts" (Nothing :: Maybe String)
             sqlWhereEq "sharing" Shared
             sqlWhereEq "author_user_id" uid
             sqlResult "author_id AS id"

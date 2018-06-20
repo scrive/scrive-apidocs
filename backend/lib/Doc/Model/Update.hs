@@ -1954,7 +1954,8 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
         -- (*) The condition (c) is for documents which have been created by
         -- another company where a user who happens to have a Scrive account
         -- is one of the signatory and this user has deleted her account.
-        -- If the author is deleted, the company should still keep the document.
+        -- If the author is deleted and is the author, the company should still
+        -- keep the document.
         sqlWhereNotExists . sqlSelect "signatory_links sl" $ do
           sqlJoinOn "users u" "sl.user_id = u.id"
           sqlJoinOn "companies c" "u.company_id = c.id"
