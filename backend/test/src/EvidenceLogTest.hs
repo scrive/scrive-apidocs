@@ -15,10 +15,15 @@ import TestKontra
 import User.Lang (allLangs, codeFromLang)
 
 evidenceLogTests :: TestEnvSt -> Test
-evidenceLogTests env = testGroup "Evidence Log" [
-      testThat "Testing EvidenceEventType conversions equal" env conversionEq,
-      testThat "Testing EvidenceEventType templates are well defined and their variable set is known" env evidenceLogTemplatesWellDefined
-      ]
+evidenceLogTests env = testGroup "Evidence Log"
+  [ testThat
+    "Testing EvidenceEventType conversions equal"
+    env conversionEq
+  , testThat
+    ("Testing EvidenceEventType templates are well defined and " <>
+     "their variable set is known")
+    env evidenceLogTemplatesWellDefined
+  ]
 
 evidenceEventTypes :: [(Int16, EvidenceEventType)]
 evidenceEventTypes = zip [1..] $ concat [
@@ -36,7 +41,8 @@ conversionEq = do
     (t', True) <- fetchOne id
     assertBool ("fromSQL . toSQL /= id on " ++ show t) $ t' == t
 
-    -- test that id . toSQL . fromSQL == id (fromSQL|{1..eventsNum} is a bijection)
+    -- test that id . toSQL . fromSQL == id (fromSQL|{1..eventsNum} is
+    -- a bijection)
     runSQL_ $ "SELECT" <+> unsafeSQL (show n) <+> "::int2"
     tt :: EvidenceEventType <- fetchOne runIdentity
     runSQL_ $ "SELECT" <?> tt
@@ -112,13 +118,15 @@ evidenceLogTemplateVariables = Set.fromList
 
 evidenceLogTemplatesWellDefined :: TestEnv ()
 evidenceLogTemplatesWellDefined = do
-  vars <- fmap (Set.fromList . concat) $ forM [ (ty,l,ta)
-                                              | (_,ty) <- evidenceEventTypes
-                                              , l <- allLangs
-                                              , ta <- [minBound..maxBound]
-                                              , (ta == EventForEvidenceLog) ||
-                                                (ta == EventForArchive && historyEventType ty)
-                                              ] $ \(ty,l,ta) -> do
+  vars <- fmap (Set.fromList . concat) $
+    forM [ (ty,l,ta)
+         | (_,ty) <- evidenceEventTypes
+         , l      <- allLangs
+         , ta     <- [minBound..maxBound]
+         , (ta == EventForEvidenceLog)
+           || (ta == EventForArchive
+               && historyEventType ty)
+         ] $ \(ty,l,ta) -> do
     case ty of
       Obsolete _ -> return []
       Current ct -> do
@@ -129,15 +137,25 @@ evidenceLogTemplatesWellDefined = do
             assertFailure $ "Cannot find template name " ++ show tn
             return []
           Just st -> do
-            -- NOTE: checkTemplateDeep in HStringTemplates 8.3 is not reliable. It can miss fields when ($if$) is used. Bug reported by MR
+            -- NOTE: checkTemplateDeep in HStringTemplates 8.3 is not
+            -- reliable. It can miss fields when ($if$) is used. Bug
+            -- reported by MR.
             let (pe,freevars,te') = checkTemplateDeep st
             let te = filter (/="noescape") te'
-            let errcontext = " in template " ++ tn ++ " for language " ++ show l ++ ": "
+            let errcontext = " in template " ++ tn
+                  ++ " for language " ++ show l ++ ": "
             when (not (null pe)) $ do
               assertFailure $ "Parse error" ++ errcontext ++ show pe
             when (not (null te)) $ do
-              assertFailure $ "Unknown template function" ++ errcontext ++ show te
+              assertFailure $ "Unknown template function"
+                ++ errcontext ++ show te
             return freevars
   -- If this test fails please first check note above
-  assertEqual "Evidence log templates has variables not defined in evidenceLogTemplateVariables" Set.empty (vars Set.\\ evidenceLogTemplateVariables)
-  assertEqual "evidenceLogTemplateVariables has elements not used in evidence log templates" Set.empty (evidenceLogTemplateVariables Set.\\ vars)
+  assertEqual
+    ("Evidence log templates has variables not defined in " <>
+     "evidenceLogTemplateVariables")
+    Set.empty (vars Set.\\ evidenceLogTemplateVariables)
+  assertEqual
+    ("evidenceLogTemplateVariables has elements not used in " <>
+     "evidence log templates")
+    Set.empty (evidenceLogTemplateVariables Set.\\ vars)

@@ -81,23 +81,39 @@ getScreenshots = do
 
 
 
-signDocument :: (Kontrakcja m, DocumentMonad m) =>
-  SignatoryLinkID -> MagicHash -> SignatoryFieldsValuesForSigning -> [FileID] -> [String] -> Maybe ESignature -> Maybe String -> SignatoryScreenshots -> SignatoryConsentResponsesForSigning -> m ()
-signDocument slid mh fields acceptedAuthorAttachments notUploadedSignatoryAttachments mesig mpin screenshots consentResponses = do
+signDocument :: (Kontrakcja m, DocumentMonad m)
+             => SignatoryLinkID -> MagicHash -> SignatoryFieldsValuesForSigning
+             -> [FileID] -> [String] -> Maybe ESignature -> Maybe String
+             -> SignatoryScreenshots -> SignatoryConsentResponsesForSigning
+             -> m ()
+signDocument slid mh fields acceptedAuthorAttachments
+  notUploadedSignatoryAttachments mesig mpin screenshots consentResponses = do
+
   switchLang =<< getLang <$> theDocument
-  ctx <- getContext
+
+  ctx             <- getContext
+  fieldsWithFiles <- fieldsToFieldsWithFiles fields
+
   -- Note that the second 'guardGetSignatoryFromIdForDocument' call
   -- below may return a different result than the first one due to the
   -- field update, so don't attempt to replace the calls with a single
   -- call, or the actor identities may get wrong in the evidence log.
-  fieldsWithFiles <- fieldsToFieldsWithFiles fields
-  guardGetSignatoryFromIdForDocument slid >>= \sl -> dbUpdate . UpdateFieldsForSigning sl (fst fieldsWithFiles) (snd fieldsWithFiles) =<< signatoryActor ctx sl
-  guardGetSignatoryFromIdForDocument slid >>= \sl -> dbUpdate . UpdateConsentResponsesForSigning sl consentResponses =<< signatoryActor ctx sl
+  guardGetSignatoryFromIdForDocument slid >>=
+    \sl -> dbUpdate . UpdateFieldsForSigning sl
+           (fst fieldsWithFiles) (snd fieldsWithFiles)
+    =<< signatoryActor ctx sl
+
+  guardGetSignatoryFromIdForDocument slid >>=
+    \sl -> dbUpdate . UpdateConsentResponsesForSigning sl consentResponses
+    =<< signatoryActor ctx sl
+
   theDocument >>= \doc -> do
     sl <- guardGetSignatoryFromIdForDocument slid
-    authorAttachmentsWithAcceptanceText <- forM (documentauthorattachments doc) $ \a -> do
-      acceptanceText <- renderTemplate "_authorAttachmentsUnderstoodContent" (F.value "attachment_name" $ authorattachmentname a)
-      return (acceptanceText,a)
+    authorAttachmentsWithAcceptanceText <-
+      forM (documentauthorattachments doc) $ \a -> do
+        acceptanceText <- renderTemplate "_authorAttachmentsUnderstoodContent"
+                          (F.value "attachment_name" $ authorattachmentname a)
+        return (acceptanceText,a)
     notUploadedSignatoryAttachmentsText <- renderTemplate_ "_pageDocumentForAuthorHelpersLocalDialogsAttachmentmarkasnotuploaded"
     let notUploadedSignatoryAttachmentsWithText = zip notUploadedSignatoryAttachments (repeat notUploadedSignatoryAttachmentsText)
     dbUpdate . AddAcceptedAuthorAttachmentsEvents sl acceptedAuthorAttachments authorAttachmentsWithAcceptanceText =<< signatoryActor ctx sl

@@ -91,9 +91,13 @@ authorActor ctx u = (userActor ctx u) {
 signatoryActor :: DocumentMonad m => Context -> SignatoryLink -> m Actor
 signatoryActor ctx s = return $ toSignatoryActor s (contextActor ctx)
 
--- | Used if we are performing some action in background, but we want to pretent like if it was performed by signatory
-recreatedSignatoryActor :: DocumentMonad m => UTCTime -> Maybe UTCTime ->  Maybe String -> IPAddress -> SignatoryLink -> m Actor
-recreatedSignatoryActor time mctime mcname mipaddress s = return $ toSignatoryActor s $ Actor
+-- | Used if we are performing some action in background, but we want
+-- to pretend like if it was performed by signatory.
+recreatedSignatoryActor :: DocumentMonad m
+  => UTCTime -> Maybe UTCTime ->  Maybe String -> IPAddress -> SignatoryLink
+  -> m Actor
+recreatedSignatoryActor time mctime mcname mipaddress s = return $
+  toSignatoryActor s $ Actor
   { actorTime = time
   , actorClientTime = mctime
   , actorClientName = mcname

@@ -191,7 +191,8 @@ conflictError msg = APIError
 
 -- Conversion of DB exception / document conditionals into API errors
 
-tryToConvertConditionalExceptionIntoAPIError :: SomeDBExtraException -> SomeDBExtraException
+tryToConvertConditionalExceptionIntoAPIError :: SomeDBExtraException
+                                             -> SomeDBExtraException
 tryToConvertConditionalExceptionIntoAPIError  =  foldr (.) id [
       convertDocumentDoesNotExist
     , convertShortDocumentIDHasNoMatch

@@ -1084,25 +1084,26 @@ testNoDocumentAppendSealedAlwaysLeft = replicateM_ 10 $ do
 testSealDocument :: TestEnv ()
 testSealDocument = replicateM_ 1 $ do
   -- setup
-  author <- addNewRandomUser
-  ctx <- mkContext def
+  author      <- addNewRandomUser
+  ctx         <- mkContext def
   screenshots <- getScreenshots
-  addRandomDocument ((randomDocumentAllowsDefault author) { randomDocumentAllowedStatuses = [Pending]
-                                                          , randomDocumentAllowedTypes = [Signable]
-                                                          }) `withDocumentM` do
-    _file <- addNewRandomFile
-
-    atts <- replicateM 2 $ do
+  addRandomDocument
+    ((randomDocumentAllowsDefault author)
+      { randomDocumentAllowedStatuses = [Pending]
+      , randomDocumentAllowedTypes    = [Signable]
+      }) `withDocumentM` do
+    void $ addNewRandomFile
+    atts  <- replicateM 2 $ do
              file <- addNewRandomFile
 
              let att = def
-                   { signatoryattachmentfile = Just file
+                   { signatoryattachmentfile     = Just file
                    , signatoryattachmentfilename = Just "afile.ran"
-                   , signatoryattachmentname = show file
+                   , signatoryattachmentname     = show file
                    }
              return att
     (time, sl) <- rand 10 arbitrary
-    sa <- signatoryActor (set ctxtime time ctx) sl
+    sa  <- signatoryActor (set ctxtime time ctx) sl
     sls <- documentsignatorylinks <$> theDocument
     dbUpdate $ SetSigAttachments (signatorylinkid $ sls !! 0) atts sa
 
@@ -1110,18 +1111,28 @@ testSealDocument = replicateM_ 1 $ do
       when (signatoryispartner slk) $ do
         case signatorylinkauthenticationtosignmethod slk of
           SEBankIDAuthenticationToSign -> do
-             randomUpdate $ \esig -> SignDocument (signatorylinkid slk) (signatorymagichash slk) (Just (CGISEBankIDSignature_ esig)) Nothing screenshots sa
+             randomUpdate $ \esig ->
+               SignDocument (signatorylinkid slk) (signatorymagichash slk)
+               (Just (CGISEBankIDSignature_ esig)) Nothing screenshots sa
           StandardAuthenticationToSign -> do
-             dbUpdate $ SignDocument (signatorylinkid slk) (signatorymagichash slk) Nothing Nothing screenshots sa
+             dbUpdate $
+               SignDocument (signatorylinkid slk) (signatorymagichash slk)
+               Nothing Nothing screenshots sa
           SMSPinAuthenticationToSign -> do
-             dbUpdate $ SignDocument (signatorylinkid slk) (signatorymagichash slk) Nothing (Just "Arbitrary PIN") screenshots sa
+             dbUpdate $
+               SignDocument (signatorylinkid slk) (signatorymagichash slk)
+               Nothing (Just "Arbitrary PIN") screenshots sa
           NOBankIDAuthenticationToSign -> do
-             randomUpdate $ \esig -> SignDocument (signatorylinkid slk) (signatorymagichash slk) (Just (NetsNOBankIDSignature_ esig)) Nothing screenshots sa
+             randomUpdate $ \esig ->
+               SignDocument (signatorylinkid slk) (signatorymagichash slk)
+               (Just (NetsNOBankIDSignature_ esig)) Nothing screenshots sa
           DKNemIDAuthenticationToSign -> do
-             randomUpdate $ \esig -> SignDocument (signatorylinkid slk) (signatorymagichash slk) (Just (NetsDKNemIDSignature_ esig)) Nothing screenshots sa
+             randomUpdate $ \esig ->
+               SignDocument (signatorylinkid slk) (signatorymagichash slk)
+               (Just (NetsDKNemIDSignature_ esig)) Nothing screenshots sa
 
 
-    randomUpdate $ \t-> CloseDocument (systemActor t)
+    randomUpdate $ \t -> CloseDocument (systemActor t)
 
     runPdfToolsLambdaConfT (get ctxpdftoolslambdaconf ctx) $
       sealDocument "https://scrive.com"
@@ -1130,14 +1141,16 @@ testDocumentAppendSealedPendingRight :: TestEnv ()
 testDocumentAppendSealedPendingRight = replicateM_ 10 $ do
   -- setup
   author <- addNewRandomUser
-  addRandomDocument ((randomDocumentAllowsDefault author) { randomDocumentAllowedStatuses = [Closed]
-                                                          }) `withDocumentM` do
+  addRandomDocument
+    ((randomDocumentAllowsDefault author)
+     { randomDocumentAllowedStatuses = [Closed] }) `withDocumentM` do
     file <- addNewRandomFile
 
     --execute
 
     now <- currentTime
-    success <- randomUpdate $ AppendExtendedSealedFile file Missing $ systemActor now
+    success <- randomUpdate $
+      AppendExtendedSealedFile file Missing $ systemActor now
 
     --assert
     assert success
