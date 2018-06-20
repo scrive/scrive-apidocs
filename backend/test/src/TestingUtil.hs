@@ -943,12 +943,14 @@ addRandomDocumentWithFile fileid rda = do
     worker now user p file = do
       doc' <- rand 10 arbitrary
       xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
-      status <- if xtype == Signable
-        then rand 10 (elements $ randomDocumentAllowedStatuses rda)
-        else return Preparation
-      sharing <- if xtype == Template
-        then rand 10 (elements $ randomDocumentAllowedSharings rda)
-        else return Private
+      status <- if xtype /= Signable
+                     && Preparation `elem` randomDocumentAllowedStatuses rda
+        then return Preparation
+        else rand 10 (elements $ randomDocumentAllowedStatuses rda)
+      sharing <- if xtype /= Template
+                      && Private `elem` randomDocumentAllowedSharings rda
+        then return Private
+        else rand 10 (elements $ randomDocumentAllowedSharings rda)
       title <- rand 1 $ arbString 10 25
       siglinks <- rand 10 (listOf $ randomSigLinkByStatus status)
 
