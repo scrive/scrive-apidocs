@@ -281,7 +281,7 @@
 "_clickToDraw":"Click to sign",
 "_closedDocuments":"Closed documents",
 "_closedSignatures":"Closed signatures",
-"_companyNumberInvalidChars":"Company number may only contain letters, digits and dash symbol.",
+"_companyNumberInvalidChars":"Company number may only contain letters, digits, dash symbol and spaces.",
 "_companyNumberTooLong":"Company number must be at most 50 characters long.",
 "_companyposition":"Position",
 "_confirmAccountMaybeCreatedUser":"Check your email for an activation link. If you have an account, try to reset your password instead.",
