@@ -129,9 +129,8 @@ var PhoneValidation = exports.PhoneValidation = Validation.extend({
 var PhoneValidationNO = exports.PhoneValidationNO = Validation.extend({
      defaults: {
             validates: function(t) {
-              // Norwegian phone numbers +47xxx xxx xx.
-              var z = t.replace(/-/g, "").replace(/\s/g, "");
-              return /^\+47[0-9]{8}$/.test(z);
+              // Norwegian phone numbers +47xxxxxxxx.
+              return /^\+47[0-9]{8}$/.test(t);
             },
             message: "Wrong Norwegian phone number format!"
     }
