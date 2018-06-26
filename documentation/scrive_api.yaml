@@ -750,7 +750,7 @@ info:
 
 host: scrive.com
 
-basePath: /api/v2/documents
+basePath: /api/v2
 
 schemes:
   - https
@@ -760,123 +760,143 @@ tags:
   - name: Get
   - name: Modify
   - name: Sign
+  - name: Attachment
   - name: Internal
 
 paths:
 
   # Prepare
-  /new:
+
+  /documents/new:
     $ref: ./api/documents/new.yaml
 
-  /newfromtemplate/{document_id}:
+  /documents/newfromtemplate/{document_id}:
     $ref: ./api/documents/newfromtemplate.yaml
 
-  /{document_id}/clone:
+  /documents/{document_id}/clone:
     $ref: ./api/documents/document_id/clone.yaml
 
-  /{document_id}/update:
+  /documents/{document_id}/update:
     $ref: ./api/documents/document_id/update.yaml
 
-  /{document_id}/setfile:
+  /documents/{document_id}/setfile:
     $ref: ./api/documents/document_id/setfile.yaml
 
-  /{document_id}/setattachments:
+  /documents/{document_id}/setattachments:
     $ref: ./api/documents/document_id/setattachments.yaml
 
-  /{document_id}/removepages:
+  /documents/{document_id}/removepages:
     $ref: ./api/documents/document_id/removepages.yaml
 
-  /{document_id}/start:
+  /documents/{document_id}/start:
     $ref: ./api/documents/document_id/start.yaml
 
   # Get
-  /{document_id}/get:
+
+  /documents/{document_id}/get:
     $ref: ./api/documents/document_id/get.yaml
 
-  /{short_document_id}/getbyshortid:
+  /documents/{short_document_id}/getbyshortid:
     $ref: ./api/documents/short_document_id/getbyshortid.yaml
 
-  /{document_id}/{signatory_id}/getqrcode:
+  /documents/{document_id}/{signatory_id}/getqrcode:
     $ref: ./api/documents/document_id/signatory_id/getqrcode.yaml
 
-  /list:
+  /documents/list:
     $ref: ./api/documents/list.yaml
 
-  /{document_id}/files/main/{filename}:
+  /documents/{document_id}/files/main/{filename}:
     $ref: ./api/documents/document_id/files/main.yaml
 
-  /{document_id}/files/{file_id}/{filename}:
+  /documents/{document_id}/files/{file_id}/{filename}:
     $ref: ./api/documents/document_id/files/file_id.yaml
 
-  /{document_id}/texts/{file_id}:
+  /documents/{document_id}/texts/{file_id}:
     $ref: ./api/documents/document_id/texts.yaml
 
-  /{document_id}/history:
+  /documents/{document_id}/history:
     $ref: ./api/documents/document_id/history.yaml
 
-  /{document_id}/evidenceattachments:
+  /documents/{document_id}/evidenceattachments:
     $ref: ./api/documents/document_id/evidenceattachments.yaml
 
-  /{document_id}/callback:
+  /documents/{document_id}/callback:
     $ref: ./api/documents/document_id/callback.yaml
 
   # Modify
 
-  /{document_id}/remind:
+  /documents/{document_id}/remind:
     $ref: ./api/documents/document_id/remind.yaml
 
-  /{document_id}/prolong:
+  /documents/{document_id}/prolong:
     $ref: ./api/documents/document_id/prolong.yaml
 
-  /{document_id}/cancel:
+  /documents/{document_id}/cancel:
     $ref: ./api/documents/document_id/cancel.yaml
 
-  /{document_id}/trash:
+  /documents/{document_id}/trash:
     $ref: ./api/documents/document_id/trash.yaml
 
-  /{document_id}/delete:
+  /documents/{document_id}/delete:
     $ref: ./api/documents/document_id/delete.yaml
 
-  /{document_id}/forward:
+  /documents/{document_id}/forward:
     $ref: ./api/documents/document_id/forward.yaml
 
-  /{document_id}/setautoreminder:
+  /documents/{document_id}/setautoreminder:
     $ref: ./api/documents/document_id/setautoreminder.yaml
 
-  /{document_id}/restart:
+  /documents/{document_id}/restart:
     $ref: ./api/documents/document_id/restart.yaml
 
-  /{document_id}/{signatory_id}/setauthenticationtoview:
+  /documents/{document_id}/{signatory_id}/setauthenticationtoview:
     $ref: ./api/documents/document_id/signatory_id/setauthenticationtoview.yaml
 
-  /{document_id}/{signatory_id}/setauthenticationtosign:
+  /documents/{document_id}/{signatory_id}/setauthenticationtosign:
     $ref: ./api/documents/document_id/signatory_id/setauthenticationtosign.yaml
 
-  /{document_id}/{signatory_id}/changeemailandmobile:
+  /documents/{document_id}/{signatory_id}/changeemailandmobile:
     $ref: ./api/documents/document_id/signatory_id/changeemailandmobile.yaml
 
-  /templates/setsharing:
+  /documents/templates/setsharing:
     $ref: ./api/documents/templates/setsharing.yaml
 
   # Sign
 
-  /{document_id}/{signatory_id}/check:
+  /documents/{document_id}/{signatory_id}/check:
     $ref: ./api/documents/document_id/signatory_id/check.yaml
 
-  /{document_id}/{signatory_id}/sign:
+  /documents/{document_id}/{signatory_id}/sign:
     $ref: ./api/documents/document_id/signatory_id/sign.yaml
 
-  /{document_id}/{signatory_id}/reject:
+  /documents/{document_id}/{signatory_id}/reject:
     $ref: ./api/documents/document_id/signatory_id/reject.yaml
 
-  /{document_id}/{signatory_id}/sendsmspin:
+  /documents/{document_id}/{signatory_id}/sendsmspin:
     $ref: ./api/documents/document_id/signatory_id/sendsmspin.yaml
 
-  /{document_id}/{signatory_id}/setattachment:
+  /documents/{document_id}/{signatory_id}/setattachment:
     $ref: ./api/documents/document_id/signatory_id/setattachment.yaml
 
-  /{document_id}/{signatory_id}/highlight:
+  /documents/{document_id}/{signatory_id}/highlight:
     $ref: ./api/documents/document_id/signatory_id/highlight.yaml
+
+  # Attachment
+
+  /attachments/list:
+    $ref: ./api/attachments/list.yaml
+
+  /attachments/{attachment_id}/download/{filename}:
+    $ref: ./api/attachments/download.yaml
+
+  /attachments/new:
+    $ref: ./api/attachments/new.yaml
+
+  /attachments/delete:
+    $ref: ./api/attachments/delete.yaml
+
+  /attachments/setsharing:
+    $ref: ./api/attachments/setsharing.yaml
 
 definitions:
   Document:
@@ -907,6 +927,10 @@ definitions:
     $ref: ./definitions/AuthorAttachments.yaml
   HistoryItems:
     $ref: ./definitions/HistoryItems.yaml
+  Attachment:
+    $ref: ./definitions/Attachment.yaml
+  AttachmentListFilter:
+    $ref: ./definitions/AttachmentListFilter.yaml
 
 parameters:
   $ref: ./extras/parameters.yaml
