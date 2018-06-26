@@ -20,7 +20,6 @@ import AppControl
 import AppDBTables
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
-import Company.Model
 import Configuration
 import Database.Redis.Configuration
 import DB
@@ -33,6 +32,8 @@ import RoutingTable
 import Templates
 import User.Email
 import User.Model
+import UserGroup.Data
+import UserGroup.Model
 import Utils.IO
 import Utils.Network
 import qualified HostClock.Model as HC
@@ -143,7 +144,7 @@ initDatabaseEntries appConf = do
     case maybeuser of
       Nothing -> do
         bd <- dbQuery $ GetMainBrandedDomain
-        company <- dbUpdate $ CreateCompany
-        _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) (companyid company,True) def (get bdid bd) ByAdmin (companyusergroupid company)
+        ug <- dbUpdate . UserGroupCreate $ def
+        _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) (get ugID ug,True) def (get bdid bd) ByAdmin
         return ()
       Just _ -> return () -- user exist, do not add it

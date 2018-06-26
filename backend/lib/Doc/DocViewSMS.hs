@@ -13,11 +13,10 @@ import Control.Conditional ((<|), (|>))
 import Control.Monad.Catch
 import Control.Monad.Trans
 import Text.StringTemplates.Templates
+import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.BrandedDomain
-import Company.CompanyUI.Model
-import Company.Model
 import DB
 import Doc.DocStateData hiding (DocumentStatus(..))
 import KontraLink
@@ -26,6 +25,8 @@ import SMS.Data
 import SMS.SMS
 import Templates
 import User.Model
+import UserGroup.Data
+import UserGroup.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.Monoid
@@ -40,9 +41,8 @@ mkSMS doc sl mkontraInfoForSMS msgBody = do
       case muser of
         Nothing -> return (Nothing, SMSDefault)
         Just user -> do
-          orig <- companySmsOriginator <$> (dbQuery $ GetCompanyUI $ usercompany user)
-          prov <- companysmsprovider . companyinfo <$> (dbQuery $ GetCompanyByUserID (userid user))
-          return (orig, prov)
+          ug <- dbQuery . UserGroupGetByUserID . userid $ user
+          return (fmap T.unpack . get (uguiSmsOriginator . ugUI) $ ug, get (ugsSMSProvider . ugSettings) ug)
   let originator = fromMaybe
         (get (bdSmsOriginator . mctxcurrentBrandedDomain) mctx)
         (justEmptyToNothing moriginator)

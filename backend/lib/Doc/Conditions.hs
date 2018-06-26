@@ -5,7 +5,6 @@ import Data.Int
 import Data.Typeable
 import Text.JSON.Gen
 
-import Company.CompanyID
 import DB
 import Doc.DocStateData
 import Doc.DocumentID
@@ -14,6 +13,7 @@ import Doc.SignatoryLinkID
 import MagicHash
 import MinutesTime
 import User.UserID
+import UserGroup.Data
 
 -- This is the part where we define all possible wrongs about a document.
 
@@ -83,7 +83,7 @@ sqlWhereDocumentStatusIs status =
 data UserShouldBeSelfOrCompanyAdmin = UserShouldBeSelfOrCompanyAdmin
   { userShouldBeSelfOrCompanyAdminUserID    :: UserID
   , userShouldBeSelfOrCompanyAdminUserEmail :: String
-  , userShouldBeSelfOrCompanyAdminCompanyID :: CompanyID
+  , userShouldBeSelfOrCompanyAdminUserGroupID :: UserGroupID
   }
      deriving (Eq, Ord, Typeable, Show)
 
@@ -99,9 +99,9 @@ instance DBExtraException UserShouldBeSelfOrCompanyAdmin
 sqlWhereUserIsSelfOrCompanyAdmin :: (MonadState v m, SqlWhere v)
                                  => m ()
 sqlWhereUserIsSelfOrCompanyAdmin =
-  sqlWhereEVVV (UserShouldBeSelfOrCompanyAdmin,"same_company_users.id","same_company_users.email",
-                "same_company_users.company_id")
-              "(users.id = same_company_users.id OR same_company_users.is_company_admin)"
+  sqlWhereEVVV (UserShouldBeSelfOrCompanyAdmin,"same_usergroup_users.id","same_usergroup_users.email",
+                "same_usergroup_users.user_group_id")
+              "(users.id = same_usergroup_users.id OR same_usergroup_users.is_company_admin)"
 
 data UserShouldBeDirectlyOrIndirectlyRelatedToDocument = UserShouldBeDirectlyOrIndirectlyRelatedToDocument
   { userShouldBeDirectlyOrIndirectlyRelatedToDocumentUserID :: UserID
@@ -126,8 +126,8 @@ sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument :: (MonadState v m, SqlWhere
 sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument uid =
   sqlWhereEVVV (UserShouldBeDirectlyOrIndirectlyRelatedToDocument uid, "(SELECT signatory_links.document_id)",
                "(SELECT documents.title FROM documents WHERE documents.id = signatory_links.document_id)",
-               "(SELECT email FROM users WHERE id =" <?> uid <> ")")
-              ("same_company_users.id =" <?> uid)
+               "(SELECT email FROM users WHERE id = " <?> uid <> ")")
+              ("same_usergroup_users.id = " <?> uid)
 
 data DocumentDoesNotExist = DocumentDoesNotExist DocumentID
   deriving (Eq, Ord, Show, Typeable)

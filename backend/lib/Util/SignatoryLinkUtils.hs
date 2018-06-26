@@ -139,7 +139,7 @@ isAuthor :: (MaybeSignatoryLink msl) => msl -> Bool
 isAuthor = isSigLinkFor signatoryisauthor
 
 isAuthorOrAuthorsAdmin :: User -> Document -> Bool
-isAuthorOrAuthorsAdmin user doc = isAuthor (doc, user) || (useriscompanyadmin user && documentauthorcompanyid doc == Just (usercompany user))
+isAuthorOrAuthorsAdmin user doc = isAuthor (doc, user) || (useriscompanyadmin user && documentauthorugid doc == Just (usergroupid user))
 
 isDocumentVisibleToUser :: User -> Document -> Bool
 isDocumentVisibleToUser user doc = isJust (getSigLinkFor user doc) || isAuthorOrAuthorsAdmin user doc

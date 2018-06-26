@@ -11,7 +11,6 @@ import qualified Data.HashMap.Strict as H
 
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
-import Company.Model
 import Context
 import DB
 import InternalResponse
@@ -24,6 +23,8 @@ import User.Email
 import User.Model
 import User.PasswordReminder
 import User.UserControl
+import UserGroup.Data
+import UserGroup.Model
 
 loginTests :: TestEnvSt -> Test
 loginTests env = testGroup "Login" [
@@ -164,8 +165,8 @@ createUserAndResetPassword :: TestEnv (User, Context)
 createUserAndResetPassword = do
   bd <- dbQuery $ GetMainBrandedDomain
   pwd <- createPassword "admin"
-  company <- dbUpdate $ CreateCompany
-  Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) def (get bdid bd) AccountRequest (companyusergroupid company)
+  ug <- dbUpdate $ UserGroupCreate def
+  Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (get ugID ug, True) def (get bdid bd) AccountRequest
   PasswordReminder{..} <- newPasswordReminder $ userid user
   ctx <- mkContext def
   req <- mkRequest POST [("password", inText "password123")]
@@ -184,6 +185,6 @@ createTestUser :: TestEnv UserID
 createTestUser = do
     bd <- dbQuery $ GetMainBrandedDomain
     pwd <- createPassword "admin"
-    company <- dbUpdate $ CreateCompany
-    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) def (get bdid bd) AccountRequest (companyusergroupid company)
+    ug <- dbUpdate $ UserGroupCreate def
+    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (get ugID ug, True) def (get bdid bd) AccountRequest
     return userid

@@ -2,6 +2,8 @@ module FeatureFlags.Model(
     FeatureFlags(..)
   , GetFeatureFlags(..)
   , UpdateFeatureFlags(..)
+  -- only for testing
+  , GetFeatureFlagsForCompany(..)
 ) where
 
 import Control.Monad.Catch
@@ -10,6 +12,7 @@ import Crypto.RNG
 
 import Company.CompanyID
 import DB
+import UserGroup.Data
 
 data FeatureFlags = FeatureFlags {
     ffCanUseTemplates :: Bool
@@ -29,18 +32,25 @@ data FeatureFlags = FeatureFlags {
   , ffCanUseSMSPinAuthenticationToSign :: Bool
 } deriving (Eq, Ord, Show)
 
-
-data GetFeatureFlags = GetFeatureFlags CompanyID
-instance (MonadDB m,MonadThrow m) => DBQuery m GetFeatureFlags FeatureFlags where
-  query (GetFeatureFlags cid) = do
+data GetFeatureFlagsForCompany = GetFeatureFlagsForCompany CompanyID
+instance (MonadDB m,MonadThrow m) => DBQuery m GetFeatureFlagsForCompany FeatureFlags where
+  query (GetFeatureFlagsForCompany cid) = do
     runQuery_ . sqlSelect "feature_flags" $ do
       sqlWhereEq "company_id" cid
       selectFeatureFlagsSelectors
     fetchOne fetchFeatureFlags
 
-data UpdateFeatureFlags = UpdateFeatureFlags CompanyID FeatureFlags
+data GetFeatureFlags = GetFeatureFlags UserGroupID
+instance (MonadDB m,MonadThrow m) => DBQuery m GetFeatureFlags FeatureFlags where
+  query (GetFeatureFlags ugid) = do
+    runQuery_ . sqlSelect "feature_flags" $ do
+      sqlWhereEq "user_group_id" ugid
+      selectFeatureFlagsSelectors
+    fetchOne fetchFeatureFlags
+
+data UpdateFeatureFlags = UpdateFeatureFlags UserGroupID FeatureFlags
 instance (MonadDB m, MonadThrow m, CryptoRNG m) => DBUpdate m UpdateFeatureFlags Bool where
-  update (UpdateFeatureFlags cid ff) = do
+  update (UpdateFeatureFlags ugid ff) = do
     runQuery01 . sqlUpdate "feature_flags" $ do
       sqlSet "can_use_templates" $ ffCanUseTemplates ff
       sqlSet "can_use_branding" $ ffCanUseBranding ff
@@ -57,7 +67,7 @@ instance (MonadDB m, MonadThrow m, CryptoRNG m) => DBUpdate m UpdateFeatureFlags
       sqlSet "can_use_se_authentication_to_sign" $ ffCanUseSEAuthenticationToSign ff
       sqlSet "can_use_sms_pin_authentication_to_view" $ ffCanUseSMSPinAuthenticationToView ff
       sqlSet "can_use_sms_pin_authentication_to_sign" $ ffCanUseSMSPinAuthenticationToSign ff
-      sqlWhereEq "company_id" cid
+      sqlWhereEq "user_group_id" ugid
 
 selectFeatureFlagsSelectors :: (SqlResult command) => State command ()
 selectFeatureFlagsSelectors = do

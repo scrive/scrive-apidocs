@@ -1,16 +1,16 @@
 module Chargeable.Model (
     ChargeableItem(..)
-  , ChargeCompanyForSMS(..)
-  , ChargeCompanyForSEBankIDSignature(..)
-  , ChargeCompanyForSEBankIDAuthentication(..)
-  , ChargeCompanyForNOBankIDAuthentication(..)
-  , ChargeCompanyForNOBankIDSignature(..)
-  , ChargeCompanyForDKNemIDAuthentication(..)
-  , ChargeCompanyForDKNemIDSignature(..)
-  , ChargeCompanyForStartingDocument(..)
-  , ChargeCompanyForClosingDocument(..)
+  , ChargeUserGroupForSMS(..)
+  , ChargeUserGroupForSEBankIDSignature(..)
+  , ChargeUserGroupForSEBankIDAuthentication(..)
+  , ChargeUserGroupForNOBankIDAuthentication(..)
+  , ChargeUserGroupForNOBankIDSignature(..)
+  , ChargeUserGroupForDKNemIDAuthentication(..)
+  , ChargeUserGroupForDKNemIDSignature(..)
+  , ChargeUserGroupForStartingDocument(..)
+  , ChargeUserGroupForClosingDocument(..)
   , GetNumberOfDocumentsStartedThisMonth(..)
-  , ChargeCompanyForClosingSignature(..)
+  , ChargeUserGroupForClosingSignature(..)
   ) where
 
 import Control.Monad.Catch
@@ -18,13 +18,13 @@ import Control.Monad.Time
 import Data.Int
 import Data.Typeable
 
-import Company.CompanyID
 import DB
 import Doc.DocumentID
 import MinutesTime
 import SMS.Data (SMSProvider(..))
 import User.UserID
 import UserGroup.Data
+import UserGroup.Model
 
 data ChargeableItem =
   CIStartingDocument       |
@@ -88,93 +88,93 @@ instance ToSQL ChargeableItem where
 -- company.
 
 -- | Charge company of the author of the document for SMSes.
-data ChargeCompanyForSMS = ChargeCompanyForSMS DocumentID SMSProvider Int32
-instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForSMS () where
-  update (ChargeCompanyForSMS document_id SMSDefault sms_count)        = update (ChargeCompanyFor CISMS sms_count document_id)
-  update (ChargeCompanyForSMS document_id SMSTeliaCallGuide sms_count) = update (ChargeCompanyFor CISMSTelia sms_count document_id)
+data ChargeUserGroupForSMS = ChargeUserGroupForSMS DocumentID SMSProvider Int32
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForSMS () where
+  update (ChargeUserGroupForSMS document_id SMSDefault sms_count)        = update (ChargeUserGroupFor CISMS sms_count document_id)
+  update (ChargeUserGroupForSMS document_id SMSTeliaCallGuide sms_count) = update (ChargeUserGroupFor CISMSTelia sms_count document_id)
 
 -- | Charge company of the author of the document for swedish bankid signature while signing.
-data ChargeCompanyForSEBankIDSignature = ChargeCompanyForSEBankIDSignature DocumentID
-instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForSEBankIDSignature () where
-  update (ChargeCompanyForSEBankIDSignature document_id) = update (ChargeCompanyFor CISEBankIDSignature 1 document_id)
+data ChargeUserGroupForSEBankIDSignature = ChargeUserGroupForSEBankIDSignature DocumentID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForSEBankIDSignature () where
+  update (ChargeUserGroupForSEBankIDSignature document_id) = update (ChargeUserGroupFor CISEBankIDSignature 1 document_id)
 
 -- | Charge company of the author of the document for swedish authorization
-data ChargeCompanyForSEBankIDAuthentication = ChargeCompanyForSEBankIDAuthentication DocumentID
-instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForSEBankIDAuthentication () where
-  update (ChargeCompanyForSEBankIDAuthentication document_id) = update (ChargeCompanyFor CISEBankIDAuthentication 1 document_id)
+data ChargeUserGroupForSEBankIDAuthentication = ChargeUserGroupForSEBankIDAuthentication DocumentID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForSEBankIDAuthentication () where
+  update (ChargeUserGroupForSEBankIDAuthentication document_id) = update (ChargeUserGroupFor CISEBankIDAuthentication 1 document_id)
 
 -- | Charge company of the author of the document for norwegian authorization
-data ChargeCompanyForNOBankIDAuthentication = ChargeCompanyForNOBankIDAuthentication DocumentID
-instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForNOBankIDAuthentication () where
-  update (ChargeCompanyForNOBankIDAuthentication document_id) = update (ChargeCompanyFor CINOBankIDAuthentication 1 document_id)
+data ChargeUserGroupForNOBankIDAuthentication = ChargeUserGroupForNOBankIDAuthentication DocumentID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForNOBankIDAuthentication () where
+  update (ChargeUserGroupForNOBankIDAuthentication document_id) = update (ChargeUserGroupFor CINOBankIDAuthentication 1 document_id)
 
 -- | Charge company of the author of the document for norwegian bankid signature while signing.
-data ChargeCompanyForNOBankIDSignature = ChargeCompanyForNOBankIDSignature DocumentID
-instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForNOBankIDSignature () where
-  update (ChargeCompanyForNOBankIDSignature document_id) = update (ChargeCompanyFor CINOBankIDSignature 1 document_id)
+data ChargeUserGroupForNOBankIDSignature = ChargeUserGroupForNOBankIDSignature DocumentID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForNOBankIDSignature () where
+  update (ChargeUserGroupForNOBankIDSignature document_id) = update (ChargeUserGroupFor CINOBankIDSignature 1 document_id)
 
 -- | Charge company of the author of the document for danish authentication
-data ChargeCompanyForDKNemIDAuthentication = ChargeCompanyForDKNemIDAuthentication DocumentID
-instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForDKNemIDAuthentication () where
-  update (ChargeCompanyForDKNemIDAuthentication document_id) = update (ChargeCompanyFor CIDKNemIDAuthentication 1 document_id)
+data ChargeUserGroupForDKNemIDAuthentication = ChargeUserGroupForDKNemIDAuthentication DocumentID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForDKNemIDAuthentication () where
+  update (ChargeUserGroupForDKNemIDAuthentication document_id) = update (ChargeUserGroupFor CIDKNemIDAuthentication 1 document_id)
 
 -- | Charge company of the author of the document for danish nemid signature
-data ChargeCompanyForDKNemIDSignature = ChargeCompanyForDKNemIDSignature DocumentID
-instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForDKNemIDSignature () where
-  update (ChargeCompanyForDKNemIDSignature document_id) = update (ChargeCompanyFor CIDKNemIDSignature 1 document_id)
+data ChargeUserGroupForDKNemIDSignature = ChargeUserGroupForDKNemIDSignature DocumentID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForDKNemIDSignature () where
+  update (ChargeUserGroupForDKNemIDSignature document_id) = update (ChargeUserGroupFor CIDKNemIDSignature 1 document_id)
 
 -- | Charge company of the author of the document for creation of the document
-data ChargeCompanyForStartingDocument = ChargeCompanyForStartingDocument DocumentID
-instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForStartingDocument () where
-  update (ChargeCompanyForStartingDocument document_id) = update (ChargeCompanyFor CIStartingDocument 1 document_id)
+data ChargeUserGroupForStartingDocument = ChargeUserGroupForStartingDocument DocumentID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForStartingDocument () where
+  update (ChargeUserGroupForStartingDocument document_id) = update (ChargeUserGroupFor CIStartingDocument 1 document_id)
 
 -- | Charge company of the author of the document for closing of the document
-data ChargeCompanyForClosingDocument = ChargeCompanyForClosingDocument DocumentID
-instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForClosingDocument () where
-  update (ChargeCompanyForClosingDocument document_id) = update (ChargeCompanyFor CIClosingDocument 1 document_id)
+data ChargeUserGroupForClosingDocument = ChargeUserGroupForClosingDocument DocumentID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForClosingDocument () where
+  update (ChargeUserGroupForClosingDocument document_id) = update (ChargeUserGroupFor CIClosingDocument 1 document_id)
 
 -- | Charge company of the author of the document for closing a signature
-data ChargeCompanyForClosingSignature = ChargeCompanyForClosingSignature DocumentID
-instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyForClosingSignature () where
-  update (ChargeCompanyForClosingSignature document_id) = update (ChargeCompanyFor CIClosingSignature 1 document_id)
+data ChargeUserGroupForClosingSignature = ChargeUserGroupForClosingSignature DocumentID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForClosingSignature () where
+  update (ChargeUserGroupForClosingSignature document_id) = update (ChargeUserGroupFor CIClosingSignature 1 document_id)
 
-data ChargeCompanyFor = ChargeCompanyFor ChargeableItem Int32 DocumentID
-instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeCompanyFor () where
-  update (ChargeCompanyFor item quantity document_id) = do
+data ChargeUserGroupFor = ChargeUserGroupFor ChargeableItem Int32 DocumentID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupFor () where
+  update (ChargeUserGroupFor item quantity document_id) = do
     now <- currentTime
-    (user_id,company_id) <- getAuthorAndAuthorsCompanyIDs document_id
+    (user_id, ugid) <- getAuthorAndAuthorsUserGroupIDs document_id
     runQuery_ . sqlInsert "chargeable_items" $ do
       sqlSet "time" now
       sqlSet "type" item
-      sqlSet "company_id" $ company_id
+      sqlSet "company_id" . unsafeUserGroupIDToCompanyID $ ugid
       sqlSet "user_id" user_id
       sqlSet "document_id" document_id
       sqlSet "quantity" quantity
-      sqlSet "user_group_id" . unsafeUserGroupID . fromCompanyID $ company_id
+      sqlSet "user_group_id" ugid
 ----------------------------------------
 
-data GetTotalOfChargeableItemFromThisMonth = GetTotalOfChargeableItemFromThisMonth ChargeableItem CompanyID
+data GetTotalOfChargeableItemFromThisMonth = GetTotalOfChargeableItemFromThisMonth ChargeableItem UserGroupID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetTotalOfChargeableItemFromThisMonth Int64 where
-  query (GetTotalOfChargeableItemFromThisMonth charge_type company_id) = do
+  query (GetTotalOfChargeableItemFromThisMonth charge_type ugid) = do
     now <- currentTime
     let firstOfCurrentMonth = formatTime' "%Y-%m-01" now -- IGNORING TIME ZONE - DEFAULT ONE SHOULD BE FINE
     runQuery_ . sqlSelect "chargeable_items" $ do
-      sqlWhereEq "company_id" company_id
+      sqlWhereEq "user_group_id" ugid
       sqlWhereEq "type" charge_type
       sqlWhere $ "time >= cast ("<?> firstOfCurrentMonth <+>" as timestamp)"
       sqlResult "COALESCE(sum(quantity),0)"
     fetchOne runIdentity
 
-data GetNumberOfDocumentsStartedThisMonth = GetNumberOfDocumentsStartedThisMonth CompanyID
+data GetNumberOfDocumentsStartedThisMonth = GetNumberOfDocumentsStartedThisMonth UserGroupID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetNumberOfDocumentsStartedThisMonth Int64 where
-  query (GetNumberOfDocumentsStartedThisMonth company_id) = query $ GetTotalOfChargeableItemFromThisMonth CIStartingDocument company_id
+  query (GetNumberOfDocumentsStartedThisMonth ugid) = query $ GetTotalOfChargeableItemFromThisMonth CIStartingDocument ugid
 
 -- | Fetch id of the author of the document.
-getAuthorAndAuthorsCompanyIDs :: (MonadDB m, MonadThrow m) => DocumentID -> m (UserID, CompanyID)
-getAuthorAndAuthorsCompanyIDs did = do
+getAuthorAndAuthorsUserGroupIDs :: (MonadDB m, MonadThrow m) => DocumentID -> m (UserID, UserGroupID)
+getAuthorAndAuthorsUserGroupIDs did = do
   runQuery_ . sqlSelect "documents d" $ do
     sqlJoinOn "users u" "d.author_user_id = u.id"
     sqlResult "u.id"
-    sqlResult "u.company_id"
+    sqlResult "u.user_group_id"
     sqlWhereEq "d.id" did
   fetchOne id

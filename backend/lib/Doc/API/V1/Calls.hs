@@ -345,7 +345,7 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
             if (fid `elem` (authorattachmentfileid <$> documentauthorattachments doc))
              then return True
              else do
-              atts <-  dbQuery $ GetAttachments [  AttachmentsSharedInUsersCompany (userid user)
+              atts <-  dbQuery $ GetAttachments [  AttachmentsSharedInUsersUserGroup (userid user)
                                                 , AttachmentsOfAuthorDeleteValue (userid user) True
                                                 , AttachmentsOfAuthorDeleteValue (userid user) False
                                                ]
@@ -391,7 +391,7 @@ apiCallV1Ready did = logDocument did . api $ do
       dbUpdate $ SetDocumentInviteTime t actor
       authorsignsimmediately <- isFieldSet "authorsignsimmediately"
       postDocumentPreparationChange authorsignsimmediately timezone
-      dbUpdate $ ChargeCompanyForStartingDocument did
+      dbUpdate $ ChargeUserGroupForStartingDocument did
       Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
   where
     signatoryHasValidDeliverySettings sl = case (signatorylinkdeliverymethod sl) of

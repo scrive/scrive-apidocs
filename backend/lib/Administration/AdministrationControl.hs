@@ -16,6 +16,7 @@ module Administration.AdministrationControl(
 
 import Data.Char
 import Data.Functor.Invariant
+import Data.Label (modify)
 import Data.Unjson
 import Happstack.Server hiding (dir, https, path, simpleHTTP)
 import Happstack.StaticRouting (Route, choice, dir)
@@ -39,8 +40,6 @@ import AppView (renderFromBody, simpleHtmlResponse)
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Chargeable.Model
-import Company.Model
-import CompanyAccounts.Model
 import DB
 import Doc.Action (postDocumentClosedActions)
 import Doc.API.V2.DocumentAccess
@@ -63,7 +62,6 @@ import Happstack.Fields
 import InputValidation
 import InspectXML
 import InspectXMLInstances ()
-import InspectXMLInstances ()
 import InternalResponse
 import IPAddress ()
 import Kontra
@@ -71,6 +69,7 @@ import KontraLink
 import Mails.Model
 import MinutesTime
 import PadApplication.Data (padAppModeFromText)
+import Partner.Model
 import Routing
 import Theme.Control
 import User.CallbackScheme.Model
@@ -80,15 +79,17 @@ import User.JSON
 import User.UserControl
 import User.UserView
 import User.Utils
+import UserGroup.Data
+import UserGroup.Model
+import UserGroupAccounts.Model
 import Util.Actor
-import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import Utils.Monoid
 import qualified Company.CompanyControl as Company
-import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import qualified Data.ByteString.RFC2397 as RFC2397
+import qualified UserGroupAccounts.UserGroupAccountsControl as UserGroupAccounts
 
 adminonlyRoutes :: Route (Kontra Response)
 adminonlyRoutes =
@@ -120,7 +121,7 @@ adminonlyRoutes =
         , dir "companyadmin" $ dir "branding" $ Company.adminRoutes
         , dir "companyadmin" $ dir "users" $ hPost $ toK1 $ handlePostAdminCompanyUsers
 
-        , dir "companyaccounts" $ hGet  $ toK1 $ CompanyAccounts.handleCompanyAccountsForAdminOnly
+        , dir "companyaccounts" $ hGet  $ toK1 $ UserGroupAccounts.handleUserGroupAccountsForAdminOnly
         , dir "companyadmin" $ dir "usagestats" $ dir "days" $ hGet $ toK1 handleAdminCompanyUsageStatsDays
         , dir "companyadmin" $ dir "usagestats" $ dir "months" $ hGet $ toK1 handleAdminCompanyUsageStatsMonths
 
@@ -169,19 +170,20 @@ showAdminUsers uid = onlySalesOrAdmin $ do
 handleUserGetProfile:: Kontrakcja m => UserID -> m JSValue
 handleUserGetProfile uid = onlySalesOrAdmin $ do
   user <- guardJustM $ dbQuery $ GetUserByID uid
-  company <- getCompanyForUser user
-  return $ userJSON user company
+  ug <- getUserGroupForUser user
+  partners <- dbQuery GetPartners
+  return $ userJSON user (companyFromUserGroup ug partners)
 
+handleCompanyGetProfile:: Kontrakcja m => UserGroupID -> m JSValue
+handleCompanyGetProfile ugid = onlySalesOrAdmin $ do
+  ug <- guardJustM . dbQuery . UserGroupGet $ ugid
+  partners <- dbQuery GetPartners
+  return . companyJSON True $ companyFromUserGroup ug partners
 
-handleCompanyGetProfile:: Kontrakcja m => CompanyID -> m JSValue
-handleCompanyGetProfile cid = onlySalesOrAdmin $ do
-  company <- guardJustM $ dbQuery $ GetCompany cid
-  return $ companyJSON True company
-
-showAdminCompany :: Kontrakcja m => CompanyID -> m String
-showAdminCompany companyid = onlySalesOrAdmin $ do
+showAdminCompany :: Kontrakcja m => UserGroupID -> m String
+showAdminCompany ugid = onlySalesOrAdmin $ do
   ctx <- getContext
-  adminCompanyPage ctx companyid
+  adminCompanyPage ctx ugid
 
 jsonCompanies :: Kontrakcja m => m JSValue
 jsonCompanies = onlySalesOrAdmin $ do
@@ -189,23 +191,23 @@ jsonCompanies = onlySalesOrAdmin $ do
     offset   <- guardJustM $ readField "offset"
     textFilter <- getField "text" >>= \case
                      Nothing -> return []
-                     Just s -> return [CompanyFilterByString s]
+                     Just s -> return [UGFilterByString s]
     usersFilter <- isFieldSet "allCompanies" >>= \case
                      True ->  return []
-                     False -> return [CompanyManyUsers]
+                     False -> return [UGManyUsers]
     pplanFilter <- isFieldSet "nonFree" >>= \case
-                     True ->  return [CompanyWithNonFreePricePlan]
+                     True ->  return [UGWithNonFreePricePlan]
                      False -> return []
-    allCompanies <- dbQuery $ GetCompanies (textFilter ++ usersFilter ++ pplanFilter) offset limit
+    ugs <- dbQuery $ UserGroupsGetFiltered (textFilter ++ usersFilter ++ pplanFilter) (Just (offset, limit))
     runJSONGenT $ do
-            valueM "companies" $ forM allCompanies $ \company -> runJSONGenT $ do
-              value "id"            $ show . companyid $ company
-              value "companyname"   $ getCompanyName $ company
-              value "companynumber" $ getCompanyNumber $ company
-              value "companyaddress" $ companyaddress . companyinfo $ company
-              value "companyzip"     $ companyzip . companyinfo $ company
-              value "companycity"    $ companycity . companyinfo $ company
-              value "companycountry" $ companycountry . companyinfo $ company
+            valueM "companies" $ forM ugs $ \ug -> runJSONGenT $ do
+              value "id"             . show . get ugID $ ug
+              value "companyname"    . T.unpack . get ugName $ ug
+              value "companynumber"  . T.unpack . get (ugaCompanyNumber . ugAddress) $ ug
+              value "companyaddress" . T.unpack . get (ugaAddress       . ugAddress) $ ug
+              value "companyzip"     . T.unpack . get (ugaZip           . ugAddress) $ ug
+              value "companycity"    . T.unpack . get (ugaCity          . ugAddress) $ ug
+              value "companycountry" . T.unpack . get (ugaCountry       . ugAddress) $ ug
 
 jsonUsersList ::Kontrakcja m => m JSValue
 jsonUsersList = onlySalesOrAdmin $ do
@@ -218,15 +220,15 @@ jsonUsersList = onlySalesOrAdmin $ do
                      Just "ascending"   -> return [Asc UserOrderByAccountCreationDate]
                      Just "descending" -> return [Desc UserOrderByAccountCreationDate]
                      _ -> return [Asc UserOrderByName]
-    allUsers <- dbQuery $ GetUsersWithCompanies textFilter sorting (offset,limit)
+    allUsers <- dbQuery $ GetUsersWithUserGroupNames textFilter sorting (offset,limit)
 
     runJSONGenT $ do
-      valueM "users" $ forM (allUsers) $ \(user,mcompany) -> runJSONGenT $ do
+      valueM "users" $ forM (allUsers) $ \(user,ugname) -> runJSONGenT $ do
         value "id" $ show $ userid user
         value "username" $ getFullName user
         value "email"    $ getEmail user
         value "companyposition" $ usercompanyposition $ userinfo user
-        value "company"  $ getCompanyName mcompany
+        value "company"  . T.unpack $ ugname
         value "phone"    $ userphone $ userinfo user
         value "tos"      $ formatTimeISO <$> (userhasacceptedtermsofservice user)
         value "twofactor_active" $ usertotpactive user
@@ -297,15 +299,14 @@ handleUserPasswordChange uid = onlySalesOrAdmin $ do
   _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) ipnumber time (userid <$> admin)
   runJSONGenT $ value "changed" True
 
-
-handleDeleteInvite :: Kontrakcja m => CompanyID -> UserID -> m ()
-handleDeleteInvite cid uid = onlySalesOrAdmin $ do
-  _ <- dbUpdate $ RemoveCompanyInvite cid uid
+handleDeleteInvite :: Kontrakcja m => UserGroupID -> UserID -> m ()
+handleDeleteInvite ugid uid = onlySalesOrAdmin $ do
+  _ <- dbUpdate $ RemoveUserGroupInvite ugid uid
   return ()
 
 handleDeleteUser :: Kontrakcja m => UserID -> m ()
 handleDeleteUser uid = onlySalesOrAdmin $ do
-  _ <- dbUpdate $ RemoveUserCompanyInvites uid
+  _ <- dbUpdate $ RemoveUserUserGroupInvites uid
   _ <- dbUpdate $ DeleteUserCallbackScheme uid
   _ <- dbUpdate $ DeleteUser uid
   return ()
@@ -313,30 +314,56 @@ handleDeleteUser uid = onlySalesOrAdmin $ do
 
 handleMoveUserToDifferentCompany :: Kontrakcja m => UserID -> m ()
 handleMoveUserToDifferentCompany uid = onlySalesOrAdmin $ do
-  cid <- guardJustM $ readField "companyid"
-  _ <- dbUpdate $ SetUserCompany uid cid
+  ugid <- guardJustM $ readField "companyid"
+  _ <- dbUpdate $ SetUserUserGroup uid ugid
   _ <- dbUpdate $ SetUserCompanyAdmin uid False
   return ()
 
 
-handleMergeToOtherCompany :: Kontrakcja m => CompanyID -> m ()
-handleMergeToOtherCompany scid = onlySalesOrAdmin $ do
-  tcid <- guardJustM $ readField "companyid"
-  users <- dbQuery $ GetCompanyAccounts scid
+handleMergeToOtherCompany :: Kontrakcja m => UserGroupID -> m ()
+handleMergeToOtherCompany ugid_source = onlySalesOrAdmin $ do
+  ugid_target <- guardJustM $ readField "companyid"
+  users <- dbQuery $ UserGroupGetUsers ugid_source
   forM_ users $ \u -> do
-      _ <- dbUpdate $ SetUserCompany (userid u) tcid
+      _ <- dbUpdate $ SetUserUserGroup (userid u) ugid_target
       return ()
-  invites <- dbQuery $ GetCompanyInvites scid
+  invites <- dbQuery $ UserGroupGetInvites ugid_source
   forM_ invites $ \i-> do
-      _ <- dbUpdate $ RemoveCompanyInvite scid (inviteduserid i)
+      _ <- dbUpdate $ RemoveUserGroupInvite ugid_source (inviteduserid i)
       return ()
 
 {- | Handling company details change. It reads user info change -}
-handleCompanyChange :: Kontrakcja m => CompanyID -> m ()
-handleCompanyChange companyid = onlySalesOrAdmin $ do
-  company <- guardJustM $ dbQuery $ GetCompany companyid
-  companyInfoChange <- getCompanyInfoChange
-  _ <- dbUpdate $ SetCompanyInfo companyid (companyInfoChange $ companyinfo company)
+handleCompanyChange :: Kontrakcja m => UserGroupID -> m ()
+handleCompanyChange ugid = onlySalesOrAdmin $ do
+  ug <- guardJustM $ dbQuery $ UserGroupGet ugid
+  mcompanyname <- getField "companyname"
+  uginfochange <- getUserGroupSettingsChange
+  ugaddresschange <- getUserGroupAddressChange
+
+  mcompanypartnerid <- getOptionalField asValidPartnerID "companypartnerid"
+  mnewparentugid <- case mcompanypartnerid of
+    Nothing -> return Nothing
+    Just partnerid -> do
+      partners <- dbQuery GetPartners
+      -- check, if this company is a partner. We must not set partner_id of partners.
+      let thisUserGroupIsPartner = ugid `elem` (catMaybes $ fmap ptUserGroupID partners)
+      case thisUserGroupIsPartner of
+        True  -> internalError
+        False -> (return . find ((==partnerid) . ptID) $ partners) >>= \case
+          -- No partner corresponds to the ID supplied
+          Nothing -> internalError
+          Just newParent -> case ptDefaultPartner newParent of
+            -- setting the default partnerID is the same as having no usergroup parent
+            True -> return Nothing
+            -- All non-default partners have usergroup set. `Just . fromJust` is only a guard.
+            False -> return . Just . fromJust . ptUserGroupID $ newParent
+
+  dbUpdate . UserGroupUpdate
+    . set ugParentGroupID mnewparentugid
+    . maybe id (set ugName . T.pack) mcompanyname
+    . modify ugSettings uginfochange
+    . modify ugAddress ugaddresschange
+    $ ug
   return $ ()
 
 handleCreateUser :: Kontrakcja m => m JSValue
@@ -345,8 +372,8 @@ handleCreateUser = onlySalesOrAdmin $ do
     fstname <- guardJustM $ getField "fstname"
     sndname <- guardJustM $ getField "sndname"
     lang <- guardJustM $ join <$> fmap langFromCode <$> getField "lang"
-    company <- dbUpdate $ CreateCompany
-    muser <- createNewUserByAdmin email (fstname, sndname) (companyid company, True) lang
+    ug <- dbUpdate . UserGroupCreate $ def
+    muser <- createNewUserByAdmin email (fstname, sndname) (get ugID ug, True) lang
     runJSONGenT $ case muser of
       Nothing -> do
         value "success" False
@@ -355,14 +382,14 @@ handleCreateUser = onlySalesOrAdmin $ do
         value "success" True
         value "error_message" (Nothing :: Maybe String)
 
-handlePostAdminCompanyUsers :: Kontrakcja m => CompanyID -> m JSValue
-handlePostAdminCompanyUsers companyid = onlySalesOrAdmin $ do
+handlePostAdminCompanyUsers :: Kontrakcja m => UserGroupID -> m JSValue
+handlePostAdminCompanyUsers ugid = onlySalesOrAdmin $ do
   email <- getCriticalField asValidEmail "email"
   fstname <- fromMaybe "" <$> getOptionalField asValidName "fstname"
   sndname <- fromMaybe "" <$> getOptionalField asValidName "sndname"
   lang <- guardJustM $ join <$> fmap langFromCode <$> getField "lang"
   admin <- isFieldSet "iscompanyadmin"
-  muser <- createNewUserByAdmin email (fstname, sndname) (companyid, admin) lang
+  muser <- createNewUserByAdmin email (fstname, sndname) (ugid, admin) lang
   runJSONGenT $ case muser of
     Nothing -> do
       value "success" False
@@ -371,45 +398,45 @@ handlePostAdminCompanyUsers companyid = onlySalesOrAdmin $ do
       value "success" True
       value "error_message" (Nothing :: Maybe String)
 
-{- | Reads params and returns function for conversion of company info.  With no param leaves fields unchanged -}
-getCompanyInfoChange :: Kontrakcja m => m (CompanyInfo -> CompanyInfo)
-getCompanyInfoChange = do
-  mcompanyname    <- getField "companyname"
-  mcompanynumber  <- getField "companynumber"
-  mcompanyaddress <- getField "companyaddress"
-  mcompanyzip     <- getField "companyzip"
-  mcompanycity    <- getField "companycity"
-  mcompanycountry <- getField "companycountry"
-  mcompanypartnerid <- getOptionalField asValidPartnerID "companypartnerid"
+{- | Reads params and returns function for conversion of user group info.  With no param leaves fields unchanged -}
+getUserGroupSettingsChange :: Kontrakcja m => m (UserGroupSettings -> UserGroupSettings)
+getUserGroupSettingsChange = do
   mcompanyipaddressmasklist <- getOptionalField asValidIPAddressWithMaskList "companyipaddressmasklist"
   mcompanycgidisplayname <- fmap emptyToNothing <$> getField "companycgidisplayname"
   mcompanycgiserviceid <- fmap emptyToNothing <$> getField "companycgiserviceid"
   mcompanyidledoctimeout <- (>>= \s -> if null s
                                        then Just Nothing
                                        else Just <$> (do t <- maybeRead s
-                                                         guard $ t >= minCompanyIdleDocTimeout
-                                                         guard $ t <= maxCompanyIdleDocTimeout
+                                                         guard $ t >= minUserGroupIdleDocTimeout
+                                                         guard $ t <= maxUserGroupIdleDocTimeout
                                                          return t)) <$> getField "companyidledoctimeout"
   mcompanysmsprovider <- fmap maybeRead <$> getField' $ "companysmsprovider"
   mcompanypadappmode <- fmap (padAppModeFromText . T.pack) <$> getField' $ "companypadappmode"
   mcompanypadearchiveenabled <- getField "companypadearchiveenabled"
-  return $ \CompanyInfo{..} -> CompanyInfo {
-        companyname        = fromMaybe companyname mcompanyname
-      , companynumber      = fromMaybe companynumber mcompanynumber
-      , companyaddress     = fromMaybe companyaddress mcompanyaddress
-      , companyzip         = fromMaybe companyzip mcompanyzip
-      , companycity        = fromMaybe companycity mcompanycity
-      , companycountry     = fromMaybe companycountry mcompanycountry
-      , companyipaddressmasklist = fromMaybe companyipaddressmasklist mcompanyipaddressmasklist
-      , companyidledoctimeout = fromMaybe companyidledoctimeout mcompanyidledoctimeout
-      , companycgidisplayname = fromMaybe companycgidisplayname mcompanycgidisplayname
-      , companycgiserviceid = fromMaybe companycgiserviceid mcompanycgiserviceid
-      , companysmsprovider = fromMaybe companysmsprovider mcompanysmsprovider
-      , companypaymentplan = companypaymentplan
-      , companypartnerid = fromMaybe companypartnerid mcompanypartnerid
-      , companypadappmode = fromMaybe companypadappmode mcompanypadappmode
-      , companypadearchiveenabled = maybe companypadearchiveenabled (=="true") mcompanypadearchiveenabled
-    }
+
+  return $
+      maybe id (set ugsIPAddressMaskList) mcompanyipaddressmasklist
+    . maybe id (set ugsCGIDisplayName . fmap T.pack) mcompanycgidisplayname
+    . maybe id (set ugsIdleDocTimeout) mcompanyidledoctimeout
+    . maybe id (set ugsCGIServiceID . fmap T.pack) mcompanycgiserviceid
+    . maybe id (set ugsSMSProvider) mcompanysmsprovider
+    . maybe id (set ugsPadAppMode) mcompanypadappmode
+    . maybe id (set ugsPadEarchiveEnabled . (=="true")) mcompanypadearchiveenabled
+
+{- | Reads params and returns function for conversion of user group address.  With no param leaves fields unchanged -}
+getUserGroupAddressChange :: Kontrakcja m => m (UserGroupAddress -> UserGroupAddress)
+getUserGroupAddressChange = do
+  mcompanynumber  <- getField "companynumber"
+  mcompanyaddress <- getField "companyaddress"
+  mcompanyzip     <- getField "companyzip"
+  mcompanycity    <- getField "companycity"
+  mcompanycountry <- getField "companycountry"
+  return $
+      maybe id (set ugaCompanyNumber . T.pack) mcompanynumber
+    . maybe id (set ugaAddress . T.pack) mcompanyaddress
+    . maybe id (set ugaZip . T.pack) mcompanyzip
+    . maybe id (set ugaCity . T.pack) mcompanycity
+    . maybe id (set ugaCountry . T.pack) mcompanycountry
 
 {- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}
 getUserSettingsChange :: Kontrakcja m => m (UserSettings -> UserSettings)
@@ -441,7 +468,7 @@ jsonDocuments :: Kontrakcja m => m Response
 jsonDocuments = onlyAdmin $ do
   adminUser <- guardJustM $ get ctxmaybeuser <$> getContext
   muid <- readField "userid"
-  mcid <- readField "companyid"
+  mugid <- readField "companyid"
   offset   <- guardJustM $ readField "offset"
   maxcount <- guardJustM $ readField  "max"
 
@@ -461,12 +488,12 @@ jsonDocuments = onlyAdmin $ do
          Left _ -> internalError
       Nothing -> return []
 
-  let (domain,filtering, sorting)     = case (mcid, muid) of
+  let (domain,filtering, sorting)     = case (mugid, muid) of
         -- When fetching all documents, we don't allow any filtering, and only default sort is allowed
-        (Nothing, Nothing)  -> (DocumentsOfWholeUniverse,[],[Desc DocumentOrderByMTime])
-        (Just cid, Nothing) -> (DocumentsOfCompany cid,requestedFilters,requestedSorting)
-        (Nothing, Just uid) -> (DocumentsVisibleToUser uid, requestedFilters,requestedSorting)
-        _                   -> unexpectedError "Can't pass both user id and company id"
+        (Nothing, Nothing)   -> (DocumentsOfWholeUniverse,[],[Desc DocumentOrderByMTime])
+        (Just ugid, Nothing) -> (DocumentsOfUserGroup ugid,requestedFilters,requestedSorting)
+        (Nothing, Just uid)  -> (DocumentsVisibleToUser uid, requestedFilters,requestedSorting)
+        _                    -> unexpectedError "Can't pass both user id and company id"
   (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit domain filtering sorting (offset, 1000, maxcount)
   let json = listToJSONBS (allDocsCount,(\d -> (documentAccessForAdminonly d,d)) <$> allDocs)
   return $ Response 200 Map.empty nullRsFlags json Nothing
@@ -558,10 +585,11 @@ daveUserHistory userid = onlyAdmin $ do
 {- |
     Used by super users to inspect a company in xml.
 -}
-daveCompany :: Kontrakcja m => CompanyID -> m String
-daveCompany companyid = onlyAdmin $ do
-  company <- guardJustM $ dbQuery $ GetCompany companyid
-  return $ inspectXML company
+daveCompany :: Kontrakcja m => UserGroupID -> m String
+daveCompany ugid = onlyAdmin $ do
+  ug <- guardJustM . dbQuery . UserGroupGet $ ugid
+  partners <- dbQuery GetPartners
+  return . inspectXML $ companyFromUserGroup ug partners
 
 daveFile :: Kontrakcja m => FileID -> String -> m Response
 daveFile fileid' _title = onlyAdmin $ do
@@ -599,7 +627,7 @@ handleAdminUserUsageStatsDays uid = onlySalesOrAdmin $ do
   user <- guardJustM $ dbQuery $ GetUserByID uid
   withCompany <- isFieldSet "withCompany"
   if (useriscompanyadmin user && withCompany)
-    then getDaysStats (Right $ usercompany user)
+    then getDaysStats (Right $ usergroupid user)
     else getDaysStats (Left $ userid user)
 
 
@@ -608,29 +636,34 @@ handleAdminUserUsageStatsMonths uid = onlySalesOrAdmin $ do
   user <- guardJustM $ dbQuery $ GetUserByID uid
   withCompany <- isFieldSet "withCompany"
   if (useriscompanyadmin user && withCompany)
-    then getMonthsStats (Right $ usercompany user)
+    then getMonthsStats (Right $ usergroupid user)
     else getMonthsStats (Left $ userid user)
 
-handleAdminCompanyUsageStatsDays :: Kontrakcja m => CompanyID -> m JSValue
-handleAdminCompanyUsageStatsDays cid = onlySalesOrAdmin $ do
-  getDaysStats (Right $ cid)
+handleAdminCompanyUsageStatsDays :: Kontrakcja m => UserGroupID -> m JSValue
+handleAdminCompanyUsageStatsDays ugid = onlySalesOrAdmin $ do
+  getDaysStats (Right $ ugid)
 
-handleAdminCompanyUsageStatsMonths :: Kontrakcja m => CompanyID -> m JSValue
-handleAdminCompanyUsageStatsMonths cid = onlySalesOrAdmin $ do
-  getMonthsStats (Right $ cid)
+handleAdminCompanyUsageStatsMonths :: Kontrakcja m => UserGroupID -> m JSValue
+handleAdminCompanyUsageStatsMonths ugid = onlySalesOrAdmin $ do
+  getMonthsStats (Right $ ugid)
 
-handleCompanyGetSubscription :: Kontrakcja m => CompanyID -> m JSValue
-handleCompanyGetSubscription cid = onlySalesOrAdmin $ do
-  company <- guardJustM $ dbQuery $ GetCompany cid
-  users <- dbQuery $ GetCompanyAccounts $ cid
-  docsStartedThisMonth <- fromIntegral <$> (dbQuery $ GetNumberOfDocumentsStartedThisMonth $ cid)
-  ff <- dbQuery $ GetFeatureFlags cid
-  return $ subscriptionJSON company users docsStartedThisMonth ff
+handleCompanyGetSubscription :: Kontrakcja m => UserGroupID -> m JSValue
+handleCompanyGetSubscription ugid = onlySalesOrAdmin $ do
+  ug <- guardJustM . dbQuery . UserGroupGet $ ugid
+  users <- dbQuery . UserGroupGetUsers $ ugid
+  docsStartedThisMonth <- fromIntegral <$> (dbQuery $ GetNumberOfDocumentsStartedThisMonth $ ugid)
+  ff <- dbQuery $ GetFeatureFlags ugid
+  return $ subscriptionJSON ug users docsStartedThisMonth ff
 
-handleCompanyUpdateSubscription :: Kontrakcja m => CompanyID -> m ()
-handleCompanyUpdateSubscription cid = onlySalesOrAdmin $ do
+handleCompanyUpdateSubscription :: Kontrakcja m => UserGroupID -> m ()
+handleCompanyUpdateSubscription ugid = onlySalesOrAdmin $ do
   paymentPlan <- guardJustM $ join <$> fmap paymentPlanFromText <$> getField "payment_plan"
-  _ <- dbUpdate $ SetCompanyPaymentPlan cid paymentPlan
+  ug <- guardJustM . dbQuery . UserGroupGet $ ugid
+  let new_invoicing = case get ugInvoicing ug of
+        None         -> None
+        BillItem mpp -> BillItem . fmap (const paymentPlan) $ mpp
+        Invoice _    -> Invoice paymentPlan
+  dbUpdate . UserGroupUpdate . set ugInvoicing new_invoicing $ ug
 
   canUseTemplates <- fmap ((==) "true") $ guardJustM $ getField "can_use_templates"
   canUseBranding <- fmap ((==) "true") $ guardJustM $ getField "can_use_branding"
@@ -650,7 +683,7 @@ handleCompanyUpdateSubscription cid = onlySalesOrAdmin $ do
   canUseSMSPinAuthenticationToSign  <- fmap ((==) "true") $ guardJustM $ getField "can_use_sms_pin_authentication_to_sign"
   canUseSMSPinAuthenticationToView  <- fmap ((==) "true") $ guardJustM $ getField "can_use_sms_pin_authentication_to_view"
 
-  _ <- dbUpdate $ UpdateFeatureFlags cid $ FeatureFlags {
+  _ <- dbUpdate $ UpdateFeatureFlags ugid $ FeatureFlags {
       ffCanUseTemplates = canUseTemplates
     , ffCanUseBranding = canUseBranding
     , ffCanUseAuthorAttachments = canUseAuthorAttachments

@@ -39,3 +39,16 @@ usersAddUserGroupID = Migration {
         ]
       runQuery_ . sqlCreateIndex tname $ indexOnColumn "user_group_id"
   }
+
+usersMakeUserGroupIDNotNull :: MonadDB m => Migration m
+usersMakeUserGroupIDNotNull = Migration {
+    mgrTableName = tblName tableUsers
+  , mgrFrom = 23
+  , mgrAction = StandardMigration $ do
+      let tname = tblName tableUsers
+      runQuery_ . sqlAlterTable tname $
+        [ sqlAlterColumn "user_group_id" "SET NOT NULL"
+        , sqlDropFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
+        , sqlAddFK tname $ fkOnColumn "user_group_id" "user_groups" "id"
+        ]
+  }

@@ -5,7 +5,7 @@ import DB
 tableCompanies :: Table
 tableCompanies = tblTable {
     tblName = "companies"
-  , tblVersion = 25
+  , tblVersion = 26
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "name", colType = TextT, colNullable = False, colDefault = Just "''::text" }
@@ -23,12 +23,12 @@ tableCompanies = tblTable {
     , tblColumn { colName = "pad_app_mode", colType = SmallIntT, colNullable = False, colDefault = Just "1"}
     , tblColumn { colName = "pad_earchive_enabled", colType = BoolT, colNullable = False, colDefault = Just "true" }
     , tblColumn { colName = "payment_plan", colType = SmallIntT, colNullable = False, colDefault = Just "0"}
-    , tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = True}
+    , tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = False}
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
       (fkOnColumn "partner_id" "partners" "id") { fkOnDelete = ForeignKeySetNull }
-    , (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
+    , (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade }
     ]
   , tblIndexes = [
       indexOnColumn "user_group_id"

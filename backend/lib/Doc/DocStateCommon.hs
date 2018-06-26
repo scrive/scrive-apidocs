@@ -2,12 +2,12 @@ module Doc.DocStateCommon where
 
 import Data.Default
 
-import Company.Model
 import Doc.DocStateData
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import MagicHash (MagicHash)
 import User.Model
+import UserGroup.Data
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -120,17 +120,16 @@ replaceSignatoryData siglink fstname sndname email mobile company personalnumber
 -}
 replaceSignatoryUser :: SignatoryLink
                      -> User
-                     -> Company
+                     -> UserGroup
                      -> SignatoryLink
-replaceSignatoryUser siglink user company=
+replaceSignatoryUser siglink user ug =
   (replaceSignatoryData
      siglink
      (getFirstName      user)
      (getLastName       user)
      (getEmail          user)
      (getMobile         user)
-     (getCompanyName    company)
+     (getCompanyName    ug)
      (getPersonalNumber user)
-     (getCompanyNumber  company)
+     (getCompanyNumber  ug)
   ) { maybesignatory = Just $ userid user }
-

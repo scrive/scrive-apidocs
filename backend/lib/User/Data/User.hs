@@ -1,11 +1,11 @@
 module User.Data.User
     ( composeFullName
     , fetchUser
-    , fetchUserWithCompany
+    , fetchUserWithUserGroupName
     , selectUsersSQL
     , selectUsersSelectors
     , selectUsersSelectorsList
-    , selectUsersWithCompaniesSQL
+    , selectUsersWithUserGroupNamesSQL
     , User(..)
     , UserInfo(..)
     , UserSettings(..)
@@ -16,15 +16,13 @@ import Data.ByteString (ByteString)
 import Data.Default
 import Data.Int (Int16)
 import Data.String.Utils (strip)
+import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomainID
 import Company.Data
 import DB
 import Log.Identifier
 import MinutesTime
-import PadApplication.Data
-import Partner.Model
-import SMS.Data (SMSProvider)
 import User.Data.SignupMethod
 import User.Email
 import User.Lang
@@ -46,7 +44,7 @@ data User = User {
   , usersettings                  :: UserSettings
   , usercompany                   :: CompanyID
   , userassociateddomainid        :: BrandedDomainID
-  , usergroupid                   :: Maybe UserGroupID
+  , usergroupid                   :: UserGroupID
   } deriving (Eq, Ord, Show)
 
 instance HasSomeUserInfo User where
@@ -94,7 +92,7 @@ instance Default User where
   , usersettings                  = UserSettings LANG_EN
   , usercompany                   = unsafeCompanyID 0
   , userassociateddomainid        = unsafeBrandedDomainID 0
-  , usergroupid                   = Nothing
+  , usergroupid                   = emptyUserGroupID
   }
 
 instance Default UserInfo where
@@ -147,8 +145,8 @@ selectUsersSelectors = sqlConcatComma selectUsersSelectorsList
 selectUsersSQL :: SQL
 selectUsersSQL = "SELECT" <+> selectUsersSelectors <+> "FROM users"
 
-selectUsersWithCompaniesSQL :: SQL
-selectUsersWithCompaniesSQL = "SELECT"
+selectUsersWithUserGroupNamesSQL :: SQL
+selectUsersWithUserGroupNamesSQL = "SELECT"
   -- User:
   <> "  users.id AS user_id"
   <> ", users.password"
@@ -170,26 +168,9 @@ selectUsersWithCompaniesSQL = "SELECT"
   <> ", users.totp_key"
   <> ", users.totp_active"
   <> ", users.user_group_id"
-  -- Company:
-  <> ", c.id AS company_id"
-  <> ", c.name"
-  <> ", c.number"
-  <> ", c.address"
-  <> ", c.zip"
-  <> ", c.city"
-  <> ", c.country"
-  <> ", c.ip_address_mask_list"
-  <> ", c.idle_doc_timeout"
-  <> ", c.cgi_display_name"
-  <> ", c.sms_provider"
-  <> ", c.cgi_service_id"
-  <> ", c.payment_plan"
-  <> ", c.partner_id as partner_id"
-  <> ", c.pad_app_mode"
-  <> ", c.pad_earchive_enabled"
-  <> ", c.user_group_id"
+  <> ", ug.name"
   <> "  FROM users"
-  <> "  LEFT JOIN companies c ON users.company_id = c.id"
+  <> "  LEFT JOIN user_groups ug ON users.user_group_id = ug.id"
   <> "  WHERE users.deleted IS NULL"
 
 composeFullName :: (String, String) -> String
@@ -197,8 +178,8 @@ composeFullName (fstname, sndname) = if null sndname
   then fstname
   else fstname ++ " " ++ sndname
 
-fetchUser :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, Maybe UserGroupID) -> User
-fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, password_algorithm, totp_key, totp_active, mugid) = User {
+fetchUser :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, UserGroupID) -> User
+fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, password_algorithm, totp_key, totp_active, ugid) = User {
   userid = uid
 , userpassword = maybeMkPassword ( password, salt
                                  , int16ToPwdAlgorithm <$> password_algorithm )
@@ -219,11 +200,11 @@ fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepte
 , usersettings = UserSettings { lang = lang }
 , usercompany = company_id
 , userassociateddomainid = associated_domain_id
-, usergroupid = mugid
+, usergroupid = ugid
 }
 
-fetchUserWithCompany :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, Maybe UserGroupID, Maybe CompanyID, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe String, Maybe Int16, Maybe String, SMSProvider, Maybe String, PaymentPlan, PartnerID, PadAppMode, Bool, Maybe UserGroupID) -> (User, Company)
-fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, password_algorithm, totp_key, totp_active, mugid1, cid, name, number, address, zip', city, country, ip_address_mask, idle_doc_timeout, cgi_display_name, sms_provider, cgi_service_id, payment_plan, partner_id, pad_app_mode, pad_earchive_enabled, mugid2) = (user, company)
+fetchUserWithUserGroupName :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, UserGroupID, T.Text) -> (User, T.Text)
+fetchUserWithUserGroupName (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, password_algorithm, totp_key, totp_active, ugid, name) = (user, name)
   where
     user = User {
       userid = uid
@@ -247,26 +228,5 @@ fetchUserWithCompany (uid, password, salt, is_company_admin, account_suspended, 
     , usersettings = UserSettings { lang = lang }
     , usercompany = company_id
     , userassociateddomainid = associated_domain_id
-    , usergroupid = mugid1
-    }
-    company = Company {
-      companyid = fromJust cid
-    , companyusergroupid = mugid2
-    , companyinfo = CompanyInfo {
-        companyname = fromJust name
-      , companynumber = fromJust number
-      , companyaddress = fromJust address
-      , companyzip = fromJust zip'
-      , companycity = fromJust city
-      , companycountry = fromJust country
-      , companyipaddressmasklist = maybe [] read ip_address_mask
-      , companyidledoctimeout = idle_doc_timeout
-      , companycgidisplayname = cgi_display_name
-      , companysmsprovider = sms_provider
-      , companycgiserviceid = cgi_service_id
-      , companypaymentplan = payment_plan
-      , companypartnerid = partner_id
-      , companypadappmode = pad_app_mode
-      , companypadearchiveenabled = pad_earchive_enabled
-      }
+    , usergroupid = ugid
     }

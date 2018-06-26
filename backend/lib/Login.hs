@@ -16,7 +16,6 @@ import qualified Text.StringTemplates.Fields as F
 import Analytics.Include
 import AppView
 import BrandedDomain.BrandedDomain
-import Company.Model
 import DB
 import Happstack.Fields
 import InputValidation hiding (Result)
@@ -32,6 +31,8 @@ import User.Email
 import User.History.Model
 import User.Model
 import User.TwoFactor (verifyTOTPCode)
+import UserGroup.Data
+import UserGroup.Model
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Utils.HTTP
@@ -68,9 +69,9 @@ handleLoginPost = do
             maybeuser <- dbQuery $ GetUserByEmail (Email email)
             ipIsOK <- case maybeuser of
                         Just u -> do
-                             (company :: Company) <- dbQuery $ GetCompanyByUserID (userid u)
-                             return $ null (companyipaddressmasklist (companyinfo company)) ||
-                                               (any (ipAddressIsInNetwork (get ctxipnumber ctx)) (companyipaddressmasklist (companyinfo company)))
+                             ug <- dbQuery $ UserGroupGetByUserID (userid u)
+                             let masklist = get (ugsIPAddressMaskList . ugSettings) ug
+                             return $ null masklist || (any (ipAddressIsInNetwork (get ctxipnumber ctx)) masklist)
                         Nothing -> return True
             case maybeuser of
                 Just user@User{userpassword,userid,useraccountsuspended,usertotp,usertotpactive}
@@ -120,8 +121,8 @@ handleLoginPost = do
                           then dbUpdate $ LogHistoryPadLoginFailure (userid u) (get ctxipnumber ctx) (get ctxtime ctx)
                           else dbUpdate $ LogHistoryLoginFailure (userid u) (get ctxipnumber ctx) (get ctxtime ctx)
 
-                        company <- dbQuery $ GetCompanyByUserID (userid u)
-                        admins <-  dbQuery $ GetCompanyAdmins (companyid company)
+                        ug <- dbQuery . UserGroupGetByUserID . userid $ u
+                        admins <- dbQuery . GetUserGroupAdmins . get ugID $ ug
                         case admins of
                           (admin:_) -> J.runJSONGenT $ do
                                          J.value "logged" False

@@ -13,8 +13,11 @@ module Util.HasSomeCompanyInfo (
   , HasSomeCompanyInfo
   ) where
 
+import qualified Data.Text as T
+
 import Company.Model
 import Doc.DocStateData
+import UserGroup.Data
 import Util.SignatoryLinkUtils
 
 -- | Anything that might have a company name and number
@@ -22,13 +25,13 @@ class HasSomeCompanyInfo a where
   getCompanyName   :: a -> String
   getCompanyNumber :: a -> String
 
+instance (HasSomeCompanyInfo a) => HasSomeCompanyInfo (Maybe a) where
+  getCompanyName   = maybe "" getCompanyName
+  getCompanyNumber = maybe "" getCompanyNumber
+
 instance HasSomeCompanyInfo Company where
   getCompanyName   = companyname   . companyinfo
   getCompanyNumber = companynumber . companyinfo
-
-instance HasSomeCompanyInfo (Maybe Company) where
-  getCompanyName   = maybe "" getCompanyName
-  getCompanyNumber = maybe "" getCompanyNumber
 
 instance HasSomeCompanyInfo SignatoryLink where
   getCompanyName   = getCompanyName . signatoryfields
@@ -41,3 +44,7 @@ instance HasSomeCompanyInfo [SignatoryField] where
 instance HasSomeCompanyInfo Document where
   getCompanyName   doc = maybe "" getCompanyName   $ getAuthorSigLink doc
   getCompanyNumber doc = maybe "" getCompanyNumber $ getAuthorSigLink doc
+
+instance HasSomeCompanyInfo UserGroup where
+  getCompanyName   = T.unpack . get ugName
+  getCompanyNumber = T.unpack . get (ugaCompanyNumber . ugAddress)

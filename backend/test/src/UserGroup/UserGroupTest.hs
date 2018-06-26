@@ -1,16 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 module UserGroup.UserGroupTest (userGroupTests) where
 
-import Control.Monad.Catch
 import Data.Foldable (foldlM)
 import Data.Int
-import Log
 import Test.Framework
 import Test.QuickCheck
 
 import BrandedDomain.BrandedDomain
 import Company.CompanyUI.Model
-import Company.Data
 import Company.Model
 import DB
 import Doc.SignatoryLinkID ()
@@ -22,9 +19,16 @@ import Theme.Model
 import User.Model
 import UserGroup.Data
 import UserGroup.Model
+import Util.MonadUtils
 
 userGroupTests :: TestEnvSt -> Test
-userGroupTests env = testGroup "Grouping"
+userGroupTests env = testGroup "UserGroup" [
+    testThat "Test fetching user group" env testGetUserGroup
+  ]
+
+  {- We will enable this tests as soon as we remove company tables from database -}
+_userGroupTests :: TestEnvSt -> Test
+_userGroupTests env = testGroup "UserGroup"
   [ testThat "Test creating groups" env testCreateGroups
   , testThat "Test creating groups with users" env testCreateGroupsWithUsers
   , testThat "Test fetching all users of group" env testGetAllUsersOfTopGroup
@@ -33,12 +37,8 @@ userGroupTests env = testGroup "Grouping"
   , testThat "Test moving a group" env testMoveGroup
   , testThat "Test moving a group cannot form a cycle" env testMoveGroupCycleError
   , testThat "Test find a parent group, where charging happens" env testFindInheritedPricePlan
-  , testThat "Can update company without user_group" env testCanUpdateCompanyWithoutUserGroup
-  , testThat "Can update partner company without user_group" env testCanUpdatePartnerCompanyWithoutUserGroup
-  , testThat "Can update company with user_group" env testCanUpdateCompanyWithUserGroup
-  , testThat "Can update partner company with user_group" env testCanUpdatePartnerCompanyWithUserGroup
-  , testThat "Update of company does the same to it's group" env testUpdateOfCompanyDoesTheSameToItsGroup
-  , testThat "Update of partner company does the same to it's group" env testUpdateOfCompanyWithPartnerDoesTheSameToItsGroup
+  , testThat "Update of group does the same to it's company" env testUpdateOfGroupDoesTheSameToItsCompany
+  , testThat "Update of group does the same to it's company with partner" env testUpdateOfGroupDoesTheSameToItsCompanyWithPartner
   , testThat "Cannot delete a UserGroup with subgroups" env testCannotDeleteUserGroupWithSubgroups
   ]
 
@@ -117,7 +117,7 @@ testGetAllGroupsOfUser = do
         ug0 <- case level of
           1 -> unARootUserGroup <$> rand 10 arbitrary
           _ -> rand 10 arbitrary
-        ug1 <- dbUpdate . UserGroupCreate .set ugParentGroupID mparent_id $ ug0
+        ug1 <- dbUpdate . UserGroupCreate . set ugParentGroupID mparent_id $ ug0
         u <- addNewRandomUser
         void . dbUpdate $ SetUserGroup (userid u) (Just . get ugID $ ug1)
         return (get ugID ug1, userid u)
@@ -147,7 +147,7 @@ testMoveGroup = do
   (_, ugids) <- foldlM createGroupsWithUsers ([Nothing],[]) [1..4]
   -- take Root.Left group and move it to Root.Right....Right group
   Just ug1 <- dbQuery . UserGroupGet $ ugids !! 1
-  dbUpdate . UserGroupUpdate . set ugParentGroupID (Just $ ugids !! 14) $ ug1
+  _ <- dbUpdate . UserGroupCreate . set ugParentGroupID (Just $ ugids !! 14) $ ug1
   -- parentpath of new leaf in moved group should be 6 items long
   Just (_ug10, parentugs) <- dbQuery . UserGroupGetWithParents $ ugids !! 10
   assertEqual ("Fetched all parents of leaf group") 6 (length parentugs)
@@ -176,7 +176,7 @@ testMoveGroupCycleError = do
   ugB0 <- rand 10 arbitrary
   ugB <- dbUpdate . UserGroupCreate . set ugParentGroupID (Just . get ugID $ ugA) $ ugB0
   -- making A child of B fails
-  assertRaisesKontra (\(UserGroupsFormCycle _) -> True) . dbUpdate . UserGroupUpdate . set ugParentGroupID (Just . get ugID $ ugB) $ ugA
+  assertRaisesKontra (\(UserGroupsFormCycle _) -> True) . dbUpdate . UserGroupCreate . set ugParentGroupID (Just . get ugID $ ugB) $ ugA
 
 testFindInheritedPricePlan :: TestEnv ()
 testFindInheritedPricePlan = do
@@ -190,184 +190,33 @@ testFindInheritedPricePlan = do
   Just ugwithparents <- dbQuery . UserGroupGetWithParents . get ugID $ ugB
   assertEqual "A is the charging group" (ugPaymentPlan ugA) . ugInherited ugPaymentPlan $ ugwithparents
 
-testCanUpdateCompanyWithoutUserGroup :: TestEnv ()
-testCanUpdateCompanyWithoutUserGroup = replicateM_ 20 $ do
-  c@Company{companyid = cid} <- dbUpdate $ CreateCompanyWithoutUserGroup
-  result1 <- randomUpdate $ \ci -> SetCompanyInfo cid ci { companypartnerid = companypartnerid . companyinfo $ c }
-  assertEqual "SetCompanyInfo result is True" True result1
-
-  result2 <- randomUpdate $ \pp -> SetCompanyPaymentPlan cid pp
-  assertEqual "SetCompanyPaymentPlan result is True" True result2
-
-testCanUpdateCompanyWithUserGroup :: TestEnv ()
-testCanUpdateCompanyWithUserGroup = replicateM_ 20 $ do
-  -- create company
-  c@Company{companyid = cid} <- dbUpdate $ CreateCompanyWithoutUserGroup
-  -- convert everything to user_groups
-  numberOfUpdates <- migrateToUserGroups 100
-  assertEqual "Only the single company was migrated" 1 numberOfUpdates
-  -- do not set company partner when randomly updating CompanyInfo
-  result1 <- randomUpdate $ \ci -> SetCompanyInfo cid ci { companypartnerid = companypartnerid . companyinfo $ c }
-  assertEqual "SetCompanyInfo result is True" True result1
-
-  result2 <- randomUpdate $ \pp -> SetCompanyPaymentPlan cid pp
-  assertEqual "SetCompanyPaymentPlan result is True" True result2
-
-testUpdateOfCompanyWithPartnerDoesTheSameToItsGroup :: TestEnv ()
-testUpdateOfCompanyWithPartnerDoesTheSameToItsGroup = replicateM_ 20 $ do
-  -- create company
-  c1@(Company{companyid = cid}) <- dbUpdate $ CreateCompanyWithoutUserGroup
+testUpdateOfGroupDoesTheSameToItsCompany :: TestEnv ()
+testUpdateOfGroupDoesTheSameToItsCompany = replicateM_ 20 $ do
+  -- create user group
+  ug <- dbUpdate . UserGroupCreate $ def
+  let ugid = get ugID ug
   -- setup some themes
   ctx <- mkContext def
   mailThemeFromDomain <- dbQuery . GetTheme . get (bdMailTheme . ctxbrandeddomain) $ ctx
-  mailTheme <- dbUpdate $ InsertNewThemeForCompany cid mailThemeFromDomain
+  mailTheme <- dbUpdate $ InsertNewThemeForUserGroup ugid mailThemeFromDomain
   signviewThemeFromDomain <- dbQuery $ GetTheme (get (bdSignviewTheme . ctxbrandeddomain) ctx)
-  signviewTheme <- dbUpdate $ InsertNewThemeForCompany cid signviewThemeFromDomain
-  cui <- dbQuery $ GetCompanyUI cid
-  result0 <- dbUpdate $ SetCompanyUI cid cui {
-      companyMailTheme     = Just $ themeID mailTheme
-    , companySignviewTheme = Just $ themeID signviewTheme
-    }
-  assertEqual "SetCompanyUI result is True" True result0
-  -- create partner
-  user <- addNewRandomUserAndMaybeUserGroup False
-  pid <- dbUpdate $ AddNewPartner "My Favourite Upsales"
-  result1 <- dbUpdate $ MakeUserIDAdminForPartnerID (userid user) pid
-  assertEqual "MakeUserIDAdminForPartnerID result is True" True result1
-  -- set the company partner
-  result2 <- dbUpdate$ SetCompanyInfo cid (companyinfo c1) { companypartnerid = pid }
-  assertEqual "Set company partner result is True" True result2
-  -- convert everything to usergroups
-  numberOfUpdates <- migrateToUserGroups 100
-  assertEqual "Only the company, its partner and admin's company were migrated" 3 numberOfUpdates
-  c2 <- fromJust <$> (dbQuery $ GetCompany cid)
-  let ugid = fromJust . companyusergroupid $ c2
-
-  ug0_fromCompany <- userGroupFromCompany cid
-  ug0 <- fromJust <$> (dbQuery $ UserGroupGet ugid)
-  assertEqual "UserGroup from DB is the same as UserGroup from company0" ug0 ug0_fromCompany
-
+  signviewTheme <- dbUpdate $ InsertNewThemeForUserGroup ugid signviewThemeFromDomain
+  let ug2 = set (uguiMailTheme     . ugUI) (Just $ themeID mailTheme)
+          . set (uguiSignviewTheme . ugUI) (Just $ themeID signviewTheme)
+          $ ug
+  dbUpdate . UserGroupUpdate $ ug2
   -- apply random change (but do not change partner)
-  result3 <- randomUpdate $ \ci -> SetCompanyInfo cid ci { companypartnerid = companypartnerid . companyinfo $ c2 }
-  assertEqual "SetCompanyInfo result is True" True result3
+  randomUpdate $ \(info, pp, name) -> UserGroupUpdate
+    . set ugSettings info . set ugInvoicing (Invoice pp) . set ugName name $ ug2
+  ug3 <- guardJustM . dbQuery . UserGroupGet $ ugid
 
-  ug1_fromCompany <- userGroupFromCompany cid
-  ug1 <- fromJust <$> (dbQuery $ UserGroupGet ugid)
-  assertEqual "UserGroup from DB is the same as UserGroup from company1" ug1 ug1_fromCompany
-
-  -- apply PaymentPlan change
-  result4 <- randomUpdate $ \pp -> SetCompanyPaymentPlan cid pp
-  assertEqual "SetCompanyInfo result is True" True result4
-
-  ug2_fromCompany <- userGroupFromCompany cid
-  ug2 <- fromJust <$> (dbQuery $ UserGroupGet ugid)
-  assertEqual "UserGroup from DB is the same as UserGroup from company2" ug2 ug2_fromCompany
-
-  -- apply UI change
-  -- this is just change, which remove all themes. But there are some themes set now, so it tests the update.
-  serviceThemeFromDomain <- dbQuery $ GetTheme (get (bdServiceTheme . ctxbrandeddomain) ctx)
-  serviceTheme <- dbUpdate $ InsertNewThemeForCompany cid serviceThemeFromDomain
-  result5 <- randomUpdate $ \cui' -> SetCompanyUI cid cui' {
-      companyuicompanyid  = cid
-    , companyServiceTheme = Just $ themeID serviceTheme
-    }
-  assertEqual "SetCompanyUI result is True" True result5
-
-  ug3_fromCompany <- userGroupFromCompany cid
-  ug3 <- fromJust <$> (dbQuery $ UserGroupGet ugid)
-  assertEqual "UserGroup from DB is the same as UserGroup from company3" ug3 ug3_fromCompany
-
-testUpdateOfCompanyDoesTheSameToItsGroup :: TestEnv ()
-testUpdateOfCompanyDoesTheSameToItsGroup = replicateM_ 20 $ do
-  -- create company
-  Company{companyid = cid} <- dbUpdate $ CreateCompanyWithoutUserGroup
-  -- setup some themes
-  ctx <- mkContext def
-  mailThemeFromDomain <- dbQuery . GetTheme . get (bdMailTheme . ctxbrandeddomain) $ ctx
-  mailTheme <- dbUpdate $ InsertNewThemeForCompany cid mailThemeFromDomain
-  signviewThemeFromDomain <- dbQuery $ GetTheme (get (bdSignviewTheme . ctxbrandeddomain) ctx)
-  signviewTheme <- dbUpdate $ InsertNewThemeForCompany cid signviewThemeFromDomain
-  cui <- dbQuery $ GetCompanyUI cid
-  result0 <- dbUpdate $ SetCompanyUI cid cui {
-      companyMailTheme     = Just $ themeID mailTheme
-    , companySignviewTheme = Just $ themeID signviewTheme
-    }
-  assertEqual "GetCompanyUI result is True" True result0
-  -- convert everything to usergroups
-  numberOfUpdates <- migrateToUserGroups 100
-  assertEqual "Only the single company was migrated" 1 numberOfUpdates
-  c <- fromJust <$> (dbQuery $ GetCompany cid)
-  let ugid = fromJust . companyusergroupid $ c
-
-  -- apply random change (but do not change partner)
-  result1 <- randomUpdate $ \ci -> SetCompanyInfo cid ci { companypartnerid = companypartnerid . companyinfo $ c }
-  assertEqual "SetCompanyInfo result is True" True result1
-
-  ug1_fromCompany <- userGroupFromCompany cid
-  ug1 <- fromJust <$> (dbQuery $ UserGroupGet ugid)
-  assertEqual "UserGroup from DB is the same as UserGroup from company" ug1 ug1_fromCompany
-
-  -- apply another random change
-  result2 <- randomUpdate $ \pp -> SetCompanyPaymentPlan cid pp
-  assertEqual "SetCompanyInfo result is True" True result2
-
-  ug2_fromCompany <- userGroupFromCompany cid
-  ug2 <- fromJust <$> (dbQuery $ UserGroupGet ugid)
-  assertEqual "UserGroup from DB is the same as UserGroup from company" ug2 ug2_fromCompany
-
-  -- apply UI change
-  serviceThemeFromDomain <- dbQuery $ GetTheme (get (bdServiceTheme . ctxbrandeddomain) ctx)
-  serviceTheme <- dbUpdate $ InsertNewThemeForCompany cid serviceThemeFromDomain
-  result3 <- randomUpdate $ \cui' -> SetCompanyUI cid cui' {
-      companyuicompanyid  = cid
-    , companyServiceTheme = Just $ themeID serviceTheme
-    }
-  assertEqual "SetCompanyUI result is True" True result3
-
-  ug3_fromCompany <- userGroupFromCompany cid
-  ug3 <- fromJust <$> (dbQuery $ UserGroupGet ugid)
-  assertEqual "UserGroup from DB is the same as UserGroup from company3" ug3 ug3_fromCompany
-
-testCanUpdatePartnerCompanyWithoutUserGroup :: TestEnv ()
-testCanUpdatePartnerCompanyWithoutUserGroup = replicateM_ 20 $ do
-  -- create company
-  c@Company{companyid = cid} <- dbUpdate $ CreateCompanyWithoutUserGroup
-  -- create partner
-  user <- addNewRandomUserAndMaybeUserGroup False
-  pid <- dbUpdate $ AddNewPartner "My Favourite Upsales"
-  result1 <- dbUpdate $ MakeUserIDAdminForPartnerID (userid user) pid
-  assertEqual "MakeUserIDAdminForPartnerID result is True" True result1
-  -- set the company partner
-  result2 <- dbUpdate$ SetCompanyInfo cid (companyinfo c) { companypartnerid = pid }
-  assertEqual "Set company partner result is True" True result2
-
-  result3 <- randomUpdate $ \ci -> SetCompanyInfo cid ci { companypartnerid = pid }
-  assertEqual "SetCompanyInfo result is True" True result3
-
-  result4 <- randomUpdate $ \pp -> SetCompanyPaymentPlan cid pp
-  assertEqual "SetCompanyPaymentPlan result is True" True result4
-
-testCanUpdatePartnerCompanyWithUserGroup :: TestEnv ()
-testCanUpdatePartnerCompanyWithUserGroup = replicateM_ 20 $ do
-  -- create company
-  c@Company{companyid = cid} <- dbUpdate $ CreateCompanyWithoutUserGroup
-  -- create partner
-  user <- addNewRandomUserAndMaybeUserGroup False
-  pid <- dbUpdate $ AddNewPartner "My Favourite Upsales"
-  result1 <- dbUpdate $ MakeUserIDAdminForPartnerID (userid user) pid
-  assertEqual "MakeUserIDAdminForPartnerID result is True" True result1
-  -- set the company partner
-  result2 <- dbUpdate$ SetCompanyInfo cid (companyinfo c) { companypartnerid = pid }
-  assertEqual "Set company partner result is True" True result2
-  -- convert everything to user_groups
-  numberOfUpdates <- migrateToUserGroups 100
-  assertEqual "Only the company, its partner and admin's company were migrated" 3 numberOfUpdates
-
-  result3 <- randomUpdate $ \ci -> SetCompanyInfo cid ci { companypartnerid = pid }
-  assertEqual "SetCompanyInfo result is True" True result3
-
-  result4 <- randomUpdate $ \pp -> SetCompanyPaymentPlan cid pp
-  assertEqual "SetCompanyPaymentPlan result is True" True result4
+  -- verify, that the company has the same data
+  c <- guardJustM . dbQuery . GetCompany . unsafeUserGroupIDToCompanyID $ ugid
+  partners <- dbQuery GetPartners
+  let c_fromUserGroup = companyFromUserGroup ug3 partners
+  assertEqual "Company from DB is the same as Company from UserGroup" c c_fromUserGroup
+  cui <- dbQuery . GetCompanyUI . unsafeUserGroupIDToCompanyID $ ugid
+  assertEqual "CompanyUI from DB is the same as CompanyUI from UserGroup" cui (fromUserGroupUI ug3)
 
 testCannotDeleteUserGroupWithSubgroups :: TestEnv ()
 testCannotDeleteUserGroupWithSubgroups = do
@@ -383,14 +232,25 @@ testCannotDeleteUserGroupWithSubgroups = do
   -- deleting group B works
   runSQL_ $ "DELETE from user_groups where id = " <?> get ugID ugB
 
-userGroupFromCompany :: (MonadDB m, MonadThrow m, MonadLog m) => CompanyID -> m UserGroup
-userGroupFromCompany cid = do
-  c <- fromJust <$> dbQuery (GetCompany cid)
-  cui <- dbQuery $ GetCompanyUI cid
-  p <- dbQuery . GetPartnerByID . companypartnerid . companyinfo $ c
-  case ptDefaultPartner p of
-    True  -> return $ companyToUserGroup c cui Nothing
-    False -> return $ companyToUserGroup c cui (ptUserGroupID p)
+testUpdateOfGroupDoesTheSameToItsCompanyWithPartner :: TestEnv ()
+testUpdateOfGroupDoesTheSameToItsCompanyWithPartner = replicateM_ 20 $ do
+  -- create user group
+  ug1 <- dbUpdate . UserGroupCreate $ def
+  let ugid = get ugID ug1
+  -- create partner
+  (_, partner_ug) <- addNewRandomPartnerUser
+  -- make user group administered by partner
+  let ug2 = set ugParentGroupID (Just . get ugID $ partner_ug) $ ug1
+  dbUpdate . UserGroupUpdate $ ug2
+  -- apply random change (but do not change partner again)
+  randomUpdate $ \(info, pp, name) -> UserGroupUpdate
+    . set ugSettings info . set ugInvoicing (Invoice pp) . set ugName name $ ug2
+  ug3 <- guardJustM . dbQuery . UserGroupGet $ ugid
+  -- verify, that the company has the same data
+  c <- guardJustM . dbQuery . GetCompany . unsafeUserGroupIDToCompanyID $ ugid
+  partners <- dbQuery GetPartners
+  let c_fromUserGroup = companyFromUserGroup ug3 partners
+  assertEqual "Company from DB is the same as Company from UserGroup" c c_fromUserGroup
 
 newtype ARootUserGroup = ARootUserGroup { unARootUserGroup :: UserGroup }
 

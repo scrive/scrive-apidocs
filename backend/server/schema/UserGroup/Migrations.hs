@@ -123,3 +123,13 @@ createTableUserGroupInvoicings = Migration {
       ]
     }
   }
+
+
+userGroupsAdjustIDSequence :: MonadDB m => Migration m
+userGroupsAdjustIDSequence = Migration {
+    mgrTableName = tblName tableUserGroups
+  , mgrFrom = 1
+  , mgrAction = StandardMigration $
+      runSQL_ "SELECT setval('user_groups_id_seq', max(id)) FROM companies"
+
+  }

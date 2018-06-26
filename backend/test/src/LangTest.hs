@@ -6,7 +6,6 @@ import Test.Framework
 import AppControl
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
-import Company.Model
 import Context
 import DB
 import Doc.DocStateData
@@ -18,6 +17,8 @@ import TestingUtil
 import TestKontra as T
 import User.Lang
 import User.Model
+import UserGroup.Data
+import UserGroup.Model
 
 langTests :: TestEnvSt -> Test
 langTests env = testGroup "Lang" [
@@ -85,6 +86,6 @@ createTestUser :: Lang -> TestEnv User
 createTestUser lang = do
     bd <- dbQuery $ GetMainBrandedDomain
     pwd <- createPassword "admin"
-    company <- dbUpdate $ CreateCompany
-    Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (companyid company,True) lang (get bdid bd) AccountRequest (companyusergroupid company)
+    ug <- dbUpdate $ UserGroupCreate def
+    Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (get ugID ug, True) lang (get bdid bd) AccountRequest
     return user

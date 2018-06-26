@@ -74,12 +74,12 @@ documentAccessModeForUser user document =
   case (getSigLinkFor user document) of
     Just sl -> if (isAuthor sl)
                  then AuthorDocumentAccess
-                 else if (documentauthorcompanyid document == Just (usercompany user) && useriscompanyadmin user)
+                 else if (documentauthorugid document == Just (usergroupid user) && useriscompanyadmin user)
                   then CompanyAdminDocumentAccess $ Just $ signatorylinkid sl
                   else SignatoryDocumentAccess $ signatorylinkid sl
-    Nothing -> if (documentauthorcompanyid document == Just (usercompany user) && useriscompanyadmin user)
+    Nothing -> if (documentauthorugid document == Just (usergroupid user) && useriscompanyadmin user)
                  then CompanyAdminDocumentAccess $ Nothing
-                 else if (documentauthorcompanyid document == Just (usercompany user) && isDocumentShared document)
+                 else if (documentauthorugid document == Just (usergroupid user) && isDocumentShared document)
                   then CompanySharedDocumentAccess
                   else unexpectedError $ "User " ++ show (userid user) ++ " accessing document " ++ show (documentid document) ++ " without any permission. This should be cought earlier."
 

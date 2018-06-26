@@ -1,6 +1,6 @@
-module CompanyAccountsTest ( companyAccountsTests
-                           , addNewAdminUserAndCompany
-                           , addNewCompanyUser
+module UserGroupAccountsTest ( companyAccountsTests
+                           , addNewAdminUserAndUserGroup
+                           , addNewUserToUserGroup
                            ) where
 
 import Data.Ord
@@ -9,9 +9,6 @@ import Test.Framework
 import Text.JSON.Gen
 import qualified Control.Exception.Lifted as E
 
-import Company.Model
-import CompanyAccounts.CompanyAccountsControl
-import CompanyAccounts.Model
 import Context
 import DB hiding (query, update)
 import Doc.DocStateData
@@ -25,10 +22,13 @@ import TestingUtil
 import TestKontra as T
 import User.Email
 import User.UserAccountRequest
+import UserGroup.Data
+import UserGroupAccounts.Model
+import UserGroupAccounts.UserGroupAccountsControl
 import Util.HasSomeUserInfo
 
 companyAccountsTests :: TestEnvSt -> Test
-companyAccountsTests env = testGroup "CompanyAccounts" [
+companyAccountsTests env = testGroup "UserGroupAccounts" [
     testGroup "Model" [
         testThat "Adding an invite for a new email works" env test_addInviteForNewEmail
       , testThat "Removing a existing invite works" env test_removingExistingInvite
@@ -49,29 +49,29 @@ companyAccountsTests env = testGroup "CompanyAccounts" [
 
 test_addInviteForNewEmail :: TestEnv ()
 test_addInviteForNewEmail = do
-  company <- addNewCompany
-  (user1, _) <- addNewAdminUserAndCompany "a@a.com" "Anna" "Android"
-  _ <- dbUpdate $ AddCompanyInvite $ mkInvite company user1
-  assertCompanyInvitesAre company [mkInvite company user1]
+  ug <- addNewUserGroup
+  (user1, _) <- addNewAdminUserAndUserGroup "a@a.com" "Anna" "Android"
+  _ <- dbUpdate $ AddUserGroupInvite $ mkInvite ug user1
+  assertCompanyInvitesAre ug [mkInvite ug user1]
 
 test_removingExistingInvite :: TestEnv ()
 test_removingExistingInvite = do
-  company <- addNewCompany
-  (user, _) <- addNewAdminUserAndCompany "a@a.com" "Anna" "Android"
+  ug <- addNewUserGroup
+  (user, _) <- addNewAdminUserAndUserGroup "a@a.com" "Anna" "Android"
 
-  _ <- dbUpdate $ AddCompanyInvite $  mkInvite company user
-  _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (userid user)
-  assertCompanyInvitesAre company []
+  _ <- dbUpdate $ AddUserGroupInvite $ mkInvite ug user
+  _ <- dbUpdate $ RemoveUserGroupInvite (get ugID ug) (userid user)
+  assertCompanyInvitesAre ug []
 
 test_removingNonExistantInvite :: TestEnv ()
 test_removingNonExistantInvite = do
-  company <- addNewCompany
-  _ <- dbUpdate $ RemoveCompanyInvite (companyid company) (unsafeUserID 0)
-  assertCompanyInvitesAre company []
+  ug <- addNewUserGroup
+  _ <- dbUpdate $ RemoveUserGroupInvite (get ugID ug) (unsafeUserID 0)
+  assertCompanyInvitesAre ug []
 
 test_addingANewCompanyAccount :: TestEnv ()
 test_addingANewCompanyAccount = do
-  (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
   ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext def
@@ -81,17 +81,17 @@ test_addingANewCompanyAccount = do
                         , ("fstname", inText "Bob")
                         , ("sndname", inText "Blue")
                         ]
-  (res, _) <- runTestKontra req ctx $ handleAddCompanyAccount
+  (res, _) <- runTestKontra req ctx $ handleAddUserGroupAccount
 
   assertBool "Response is propper JSON" $ res == (runJSONGen $ value "added" True)
 
 
   Just newuser <- dbQuery $ GetUserByEmail (Email "bob@blue.com")
-  assertEqual "New user is in company" (companyid company) (usercompany newuser)
+  assertEqual "New user is in company" (get ugID ug) (usergroupid newuser)
   assertEqual "New user is standard user" False (useriscompanyadmin newuser)
   assertEqual "New user has the invited name" "Bob Blue" (getFullName newuser)
 
-  assertCompanyInvitesAre company [] -- We don't add an invite if we created a user
+  assertCompanyInvitesAre ug [] -- We don't add an invite if we created a user
 
   actions <- getAccountCreatedActions
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
@@ -101,48 +101,43 @@ test_addingANewCompanyAccount = do
 
 test_addingExistingCompanyUserAsCompanyAccount :: TestEnv ()
 test_addingExistingCompanyUserAsCompanyAccount = do
-  (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  (existinguser, existingcompany) <- addNewAdminUserAndCompany "Bob" "Blue" "bob@blue.com"
-
-  ctx <- (set ctxmaybeuser (Just user))
-    <$> mkContext def
-
+  (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  (existinguser, existingug) <- addNewAdminUserAndUserGroup "Bob" "Blue" "bob@blue.com"
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   req <- mkRequest POST [ ("add", inText "True")
                         , ("email", inText "bob@blue.com")
                         , ("fstname", inText "Bob")
                         , ("sndname", inText "Blue")
                         ]
-  (res, _) <- runTestKontra req ctx $ handleAddCompanyAccount
+  (res, _) <- runTestKontra req ctx $ handleAddUserGroupAccount
 
   assertBool "Response is propper JSON" $ res == (runJSONGen $ value "added" True)
 
   Just updatedexistinguser <- dbQuery $ GetUserByID (userid existinguser)
-  assertEqual "Invited user's company stays the same" (usercompany updatedexistinguser)
-                                                      (companyid existingcompany)
+  assertEqual "Invited user's company stays the same" (usergroupid updatedexistinguser)
+                                                      (get ugID existingug)
 
-  assertCompanyInvitesAre company [mkInvite company existinguser]
+  assertCompanyInvitesAre ug [mkInvite ug existinguser]
 
   emails <- dbQuery GetEmailsForTest
   assertEqual "An email was sent" 1 (length emails)
 
 test_resendingInviteToNewCompanyAccount :: TestEnv ()
 test_resendingInviteToNewCompanyAccount = do
-  (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  Just newuser <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
-  _ <- dbUpdate $ AddCompanyInvite $ mkInvite company newuser
+  (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  Just newuser <- addNewUserToUserGroup "Bob" "Blue" "bob@blue.com" (get ugID ug)
+  _ <- dbUpdate $ AddUserGroupInvite $ mkInvite ug newuser
 
-  ctx <- (set ctxmaybeuser (Just user))
-    <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
   req <- mkRequest POST [ ("resend", inText "True")
                         , ("resendid", inText $ show (userid newuser))
                         , ("resendemail", inText "bob@blue.com")
                         , ("sndname", inText "Blue")
                         ]
-  (res, _) <- runTestKontra req ctx $ handleResendToCompanyAccount
+  (res, _) <- runTestKontra req ctx $ handleResendToUserGroupAccount
 
   assertBool "Response is propper JSON" $ res == (runJSONGen $ value "resent" True)
-
 
   actions <- getAccountCreatedActions
   assertEqual "An AccountCreated action was made" 1 (length $ actions)
@@ -152,78 +147,74 @@ test_resendingInviteToNewCompanyAccount = do
 
 test_switchingStandardToAdminUser :: TestEnv ()
 test_switchingStandardToAdminUser = do
-  (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  Just standarduser <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
+  (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  Just standarduser <- addNewUserToUserGroup "Bob" "Blue" "bob@blue.com" (get ugID ug)
 
-  ctx <- (set ctxmaybeuser (Just user))
-    <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
   req <- mkRequest POST [ ("changerole", inText "True")
                         , ("changeid", inText $ show (userid standarduser))
                         , ("makeadmin", inText $ "true")
                         ]
-  (res, _ctx') <- runTestKontra req ctx $ handleChangeRoleOfCompanyAccount
+  (res, _ctx') <- runTestKontra req ctx $ handleChangeRoleOfUserGroupAccount
 
   assertBool "Response is propper JSON" $ res == (runJSONGen $ value "changed" True)
 
   Just updateduser <- dbQuery $ GetUserByID (userid standarduser)
   assertBool "User is now an admin" (useriscompanyadmin updateduser)
-  assertEqual "User belongs to the same company" (usercompany updateduser)
-                                                 (companyid company)
+  assertEqual "User belongs to the same company" (usergroupid updateduser)
+                                                 (get ugID ug)
 
 test_switchingAdminToStandardUser :: TestEnv ()
 test_switchingAdminToStandardUser = do
-  (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  Just standarduser <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
+  (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  Just standarduser <- addNewUserToUserGroup "Bob" "Blue" "bob@blue.com" (get ugID ug)
   _ <- dbUpdate $ SetUserCompanyAdmin (userid standarduser) True
   Just adminuser <- dbQuery $ GetUserByID (userid user)
 
-  ctx <- (set ctxmaybeuser (Just user))
-    <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
   req <- mkRequest POST [ ("changerole", inText "True")
                         , ("changeid", inText $ show (userid adminuser))
                         , ("makeadmin", inText $ "false")
                         ]
-  (res, _ctx') <- runTestKontra req ctx $ handleChangeRoleOfCompanyAccount
+  (res, _ctx') <- runTestKontra req ctx $ handleChangeRoleOfUserGroupAccount
 
   assertBool "Response is propper JSON" $ res == (runJSONGen $ value "changed" True)
 
   Just updateduser <- dbQuery $ GetUserByID (userid adminuser)
   assertBool "User is now standard" (not $ useriscompanyadmin updateduser)
-  assertEqual "User belongs to the same company" (usercompany updateduser)
-                                                 (companyid company)
+  assertEqual "User belongs to the same company" (usergroupid updateduser)
+                                                 (get ugID ug)
 
 test_removingCompanyAccountInvite :: TestEnv ()
 test_removingCompanyAccountInvite = do
-  (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  (standarduser,_) <- addNewAdminUserAndCompany "Bob" "Blue" "jony@blue.com"
+  (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  (standarduser,_) <- addNewAdminUserAndUserGroup "Bob" "Blue" "jony@blue.com"
 
-  _ <- dbUpdate $ AddCompanyInvite $ mkInvite company standarduser
+  _ <- dbUpdate $ AddUserGroupInvite $ mkInvite ug standarduser
 
-  ctx <- (set ctxmaybeuser (Just user))
-    <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
   req <- mkRequest POST [ ("remove", inText "True")
                         , ("removeid", inText $ show $ userid standarduser)
                         ]
-  (res, _ctx') <- runTestKontra req ctx $ handleRemoveCompanyAccount
+  (res, _ctx') <- runTestKontra req ctx $ handleRemoveUserGroupAccount
 
   assertBool "Response is propper JSON" $ res == (runJSONGen $ value "removed" True)
 
-  assertCompanyInvitesAre company []
+  assertCompanyInvitesAre ug []
 
 test_removingCompanyAccountWorks :: TestEnv ()
 test_removingCompanyAccountWorks = do
-  (adminuser, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
-  Just standarduser <- addNewCompanyUser "Bob" "Blue" "jony@blue.com" (companyid company)
+  (adminuser, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
+  Just standarduser <- addNewUserToUserGroup "Bob" "Blue" "jony@blue.com" (get ugID ug)
   doc <- addRandomDocumentWithAuthorAndCondition standarduser (\d -> documentstatus d `elem` [Closed])
   let docid = documentid doc
 
-  _ <- dbUpdate $ AddCompanyInvite $ mkInvite company standarduser
+  _ <- dbUpdate $ AddUserGroupInvite $ mkInvite ug standarduser
 
-  ctx <- (set ctxmaybeuser (Just adminuser))
-    <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just adminuser)) <$> mkContext def
 
   companydocs1 <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid adminuser) [DocumentFilterUnsavedDraft False] [] maxBound
   assertEqual "Company admin sees users docs before user delete" 1 (length companydocs1)
@@ -233,14 +224,14 @@ test_removingCompanyAccountWorks = do
                         , ("removeid", inText $ show (userid standarduser))
                         , ("removeemail", inText $ "jony@blue.com")
                         ]
-  (res, _) <- runTestKontra req ctx $ handleRemoveCompanyAccount
+  (res, _) <- runTestKontra req ctx $ handleRemoveUserGroupAccount
 
   assertBool "Response is propper JSON" $ res == (runJSONGen $ value "removed" True)
 
   deleteduser <- dbQuery $ GetUserByID (userid standarduser)
   assertEqual "User has been deleted" Nothing deleteduser
 
-  assertCompanyInvitesAre company []
+  assertCompanyInvitesAre ug []
 
   companydocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid adminuser) [DocumentFilterUnsavedDraft False] [] maxBound
   assertEqual "Company admin sees users docs after user delete" 1 (length companydocs)
@@ -248,23 +239,22 @@ test_removingCompanyAccountWorks = do
 
 test_privateUserTakoverWorks :: TestEnv ()
 test_privateUserTakoverWorks = do
-  (adminuser, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
+  (adminuser, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   docid <- documentid <$> addRandomDocumentWithAuthorAndCondition user (\d -> not $ (documentstatus d) `elem` [Preparation])
 
 
-  _ <- dbUpdate $ AddCompanyInvite $ mkInvite company user
+  _ <- dbUpdate $ AddUserGroupInvite $ mkInvite ug user
 
-  ctx <- (set ctxmaybeuser (Just user))
-    <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
   req <- mkRequest POST []
-  (res, _) <- runTestKontra req ctx $ handlePostBecomeCompanyAccount (companyid company)
+  (res, _) <- runTestKontra req ctx $ handlePostBecomeUserGroupAccount (get ugID ug)
   assertBool "Response is redirect" (isRedirect LinkAccount res)
   assertBool "Response has flash message redirect" (hasFlashMessage res)
   Just updateduser <- dbQuery $ GetUserByID (userid user)
-  assertEqual "User belongs to the company" (usercompany updateduser)
-                                            (companyid company)
+  assertEqual "User belongs to the company" (usergroupid updateduser)
+                                            (get ugID ug)
   assertBool "User is a standard user" (not $ useriscompanyadmin updateduser)
 
   companydocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid adminuser) [DocumentFilterUnsavedDraft False] [] maxBound
@@ -278,7 +268,7 @@ test_privateUserTakoverWorks = do
 
 test_mustBeInvitedForTakeoverToWork :: TestEnv ()
 test_mustBeInvitedForTakeoverToWork = do
-  company <- addNewCompany
+  ug <- addNewUserGroup
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
 
   ctx <- (set ctxmaybeuser (Just user))
@@ -286,37 +276,37 @@ test_mustBeInvitedForTakeoverToWork = do
 
   req <- mkRequest POST []
   (l, _ctx') <- runTestKontra req ctx $
-    (handlePostBecomeCompanyAccount (companyid company) >> return False)
+    (handlePostBecomeUserGroupAccount (get ugID ug) >> return False)
       `E.catch` (\(_::KontraError) -> return True)
   assertEqual "Exception thrown" True l
   Just updateduser <- dbQuery $ GetUserByID (userid user)
-  assertBool "User is still not in the other company" ((usercompany user) == (usercompany updateduser))
+  assertBool "User is still not in the other company" ((usergroupid user) == (usergroupid updateduser))
 
-assertCompanyInvitesAre :: Company -> [CompanyInvite] -> TestEnv ()
-assertCompanyInvitesAre company expectedinvites = do
-  actualinvites <- dbQuery $ GetCompanyInvites (companyid company)
+assertCompanyInvitesAre :: UserGroup -> [UserGroupInvite] -> TestEnv ()
+assertCompanyInvitesAre ug expectedinvites = do
+  actualinvites <- dbQuery $ UserGroupGetInvites (get ugID ug)
   assertEqual "Wrong company invites" (inviteSort expectedinvites)
                                       (inviteSort actualinvites)
   mapM_ assertInviteExists expectedinvites
   where
     inviteSort = sortBy (comparing inviteduserid)
     assertInviteExists expectedinvite = do
-      mactualinvite <- dbQuery $ GetCompanyInvite (companyid company) (inviteduserid expectedinvite)
+      mactualinvite <- dbQuery $ GetUserGroupInvite (get ugID ug) (inviteduserid expectedinvite)
       assertEqual "Wrong company invite" (Just expectedinvite) mactualinvite
 
-addNewAdminUserAndCompany :: String -> String -> String -> TestEnv (User, Company)
-addNewAdminUserAndCompany fstname sndname email = do
-  company <- addNewCompany
-  Just user <- addNewCompanyUser fstname sndname email (companyid company)
+addNewAdminUserAndUserGroup :: String -> String -> String -> TestEnv (User, UserGroup)
+addNewAdminUserAndUserGroup fstname sndname email = do
+  ug <- addNewUserGroup
+  Just user <- addNewUserToUserGroup fstname sndname email (get ugID ug)
   _ <- dbUpdate $ SetUserCompanyAdmin (userid user) True
   Just updateduser <- dbQuery $ GetUserByID (userid user)
-  return (updateduser, company)
+  return (updateduser, ug)
 
-mkInvite :: Company -> User -> CompanyInvite
-mkInvite company user =
-  CompanyInvite {
+mkInvite :: UserGroup -> User -> UserGroupInvite
+mkInvite ug user =
+  UserGroupInvite {
       inviteduserid= userid user
-    , invitingcompany = companyid company
+    , invitingusergroup = get ugID ug
   }
 
 getAccountCreatedActions :: TestEnv [UserAccountRequest]

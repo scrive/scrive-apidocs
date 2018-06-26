@@ -15,3 +15,21 @@ themeOwnershipAddUserGroupID = Migration {
       , sqlAddFK (tblName tableThemeOwnership) $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
       ]
 }
+
+themeOwnershipMakeUserGroupIDMandatory :: (MonadThrow m, MonadDB m) => Migration m
+themeOwnershipMakeUserGroupIDMandatory = Migration {
+  mgrTableName = tblName tableThemeOwnership
+, mgrFrom = 2
+, mgrAction = StandardMigration $ runQuery_ $ do
+    let tname = tblName tableThemeOwnership
+    sqlAlterTable tname [
+        sqlDropFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
+      , sqlAddFK  tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade }
+      , sqlDropFK tname $ (fkOnColumn "company_id" "companies" "id") { fkOnDelete = ForeignKeyCascade }
+      , sqlAddFK  tname $ (fkOnColumn "company_id" "companies" "id") { fkOnDelete = ForeignKeyNoAction }
+      , sqlDropCheck $ Check "check_theme_is_owned_by_company_or_domain" ""
+      , sqlAddCheck $ Check "check_theme_is_owned_by_user_group_or_domain" $
+              "(company_id IS \  \NULL AND user_group_id IS \  \NULL OR domain_id IS \  \NULL) \
+          \AND (company_id IS NOT NULL AND user_group_id IS NOT NULL OR domain_id IS NOT NULL)" -- (usergroup && company) XOR domain
+      ]
+}

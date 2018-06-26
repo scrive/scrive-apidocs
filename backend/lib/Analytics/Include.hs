@@ -12,12 +12,14 @@ import Text.StringTemplates.Templates
 import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 
-import Company.Model
+import Company.Data
 import DB
 import HubSpot.Conf
 import Kontra
 import MinutesTime
+import Partner.Model
 import User.Model
+import UserGroup.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Utils.Monoid
@@ -34,9 +36,11 @@ data AnalyticsData = AnalyticsData { aUser           :: Maybe User
 getAnalyticsData :: Kontrakcja m => m AnalyticsData
 getAnalyticsData = do
   muser    <- get ctxmaybeuser <$> getContext
-  mcompany <- case muser of
-    Just user -> dbQuery $ GetCompany $ usercompany user
+  mug <- case muser of
+    Just user -> dbQuery . UserGroupGet . usergroupid $ user
     _         -> return Nothing
+  partners <- dbQuery GetPartners
+  let mcompany = (\ug -> companyFromUserGroup ug partners) <$> mug
   token       <- get ctxmixpaneltoken <$> getContext
   gaToken     <- get ctxgatoken <$> getContext
   hubspotConf <- get ctxhubspotconf <$> getContext

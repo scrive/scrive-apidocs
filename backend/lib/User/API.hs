@@ -17,6 +17,7 @@ import Control.Conditional ((<|), (|>))
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.Digest.SHA2
+import Data.Label (modify)
 import Happstack.Server.Types
 import Happstack.StaticRouting
 import Log
@@ -27,7 +28,6 @@ import qualified Data.Text as T
 
 import API.Monad.V1
 import Chargeable.Model
-import Company.Model
 import Context
 import DB
 import FeatureFlags.Model
@@ -39,6 +39,7 @@ import Log.Identifier
 import Mails.SendMail
 import OAuth.Model
 import OAuth.Util
+import Partner.Model
 import Redirect
 import Routing
 import Salesforce.AuthorizationWorkflow
@@ -59,6 +60,8 @@ import User.UserAccountRequest
 import User.UserControl
 import User.UserView
 import User.Utils
+import UserGroup.Data
+import UserGroup.Model
 import Util.HasSomeUserInfo
 import Util.QRCode (unQRCode)
 import Utils.Monad
@@ -213,18 +216,18 @@ disable2FA = V2.api $ do
 apiCallGetUserProfile :: Kontrakcja m => m Response
 apiCallGetUserProfile =  api $ do
   (user, _ , _) <- getAPIUserWithAnyPrivileges
-  company <- getCompanyForUser user
-  return $ Ok $ userJSON user company
-
+  ug <- getUserGroupForUser user
+  partners <- dbQuery GetPartners
+  return . Ok . userJSON user $ companyFromUserGroup ug partners
 
 apiCallGetSubscription :: Kontrakcja m => m Response
 apiCallGetSubscription =  api $ do
   (user, _ , _) <- getAPIUserWithAnyPrivileges
-  company <- getCompanyForUser user
-  users <- dbQuery $ GetCompanyAccounts $ companyid company
-  docsStartedThisMonth <- fromIntegral <$> (dbQuery $ GetNumberOfDocumentsStartedThisMonth $ companyid company)
-  ff <- dbQuery $ GetFeatureFlags $ companyid company
-  return $ Ok $ subscriptionJSON company users docsStartedThisMonth ff
+  ug <- getUserGroupForUser user
+  users <- dbQuery . UserGroupGetUsers . get ugID $ ug
+  docsStartedThisMonth <- fromIntegral <$> (dbQuery . GetNumberOfDocumentsStartedThisMonth . get ugID $ ug)
+  ff <- dbQuery . GetFeatureFlags . get ugID $ ug
+  return $ Ok $ subscriptionJSON ug users docsStartedThisMonth ff
 
 apiCallChangeUserPassword :: Kontrakcja m => m Response
 apiCallChangeUserPassword = api $ do
@@ -271,9 +274,13 @@ apiCallUpdateUserProfile = api $ do
                                                (userid <$> get ctxmaybeuser ctx)
   if (useriscompanyadmin user)
     then do
-      company <- getCompanyForUser user
-      companyinfoupdate <- getCompanyInfoUpdate
-      _ <- dbUpdate $ SetCompanyInfo (companyid company) (companyinfoupdate $ companyinfo company)
+      ug <- getUserGroupForUser user
+      mcompanyname <- getDefaultedField "" asValidCompanyName "companyname"
+      ugaddressupdate <- getUserGroupAddressUpdate
+      _ <- dbUpdate . UserGroupUpdate
+        . maybe id (set ugName . T.pack) mcompanyname
+        . modify ugAddress ugaddressupdate
+        $ ug
       Ok <$> (runJSONGenT $ value "changed" True)
     else  Ok <$> (runJSONGenT $ value "changed" True)
 
@@ -325,10 +332,9 @@ apiCallSignup = api $ do
   muser' <- case muser of
                Just user ->   return $ Nothing <| (isJust (userhasacceptedtermsofservice user)) |> Just user
                Nothing ->  do
-                 company <- dbUpdate $ CreateCompany
-                 let newCompanyInfo = (companyinfo company) { companyname = companyName }
-                 _ <- dbUpdate $ SetCompanyInfo (companyid company) newCompanyInfo
-                 createUser (Email email) (firstname,lastname) (companyid company,True) lang AccountRequest
+                 let ug0 = set ugName (T.pack companyName) def
+                 ug <- dbUpdate $ UserGroupCreate ug0
+                 createUser (Email email) (firstname,lastname) (get ugID ug,True) lang AccountRequest
   case muser' of
     -- return ambiguous response in both cases to prevent a security issue
     Nothing -> runJSONGenT $ value "sent" True

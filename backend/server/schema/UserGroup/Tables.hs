@@ -5,7 +5,7 @@ import DB
 tableUserGroups :: Table
 tableUserGroups = tblTable {
     tblName = "user_groups"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "parent_group_id", colType = BigIntT, colNullable = True }

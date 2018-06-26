@@ -6,8 +6,6 @@ import Happstack.Server
 import Test.Framework
 import qualified Data.ByteString as BS
 
-import Company.Model
-import CompanyAccounts.Model
 import Context
 import DB hiding (query, update)
 import Doc.API.V1.Calls
@@ -23,6 +21,8 @@ import SMS.Data (SMSProvider(..))
 import SMS.SMS
 import TestingUtil
 import TestKontra as T
+import UserGroup.Data
+import UserGroupAccounts.Model
 import Util.Actor
 import Util.SignatoryLinkUtils
 
@@ -37,9 +37,9 @@ chargeableTest env = testGroup "Chargeable Items" [
 
 test_smsCounting_default :: TestEnv ()
 test_smsCounting_default = do
-  company <- addNewCompany
+  ugid <- (get ugID) <$> addNewUserGroup
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
-  True <- dbUpdate $ SetUserCompany (userid user) (companyid company)
+  True <- dbUpdate $ SetUserUserGroup (userid user) ugid
   doc <- addRandomDocument (randomDocumentAllowsDefault user)
   let sms = SMS {
         smsMSISDN = "+48666666666"
@@ -64,9 +64,9 @@ test_smsCounting_default = do
 
 test_smsCounting_telia :: TestEnv ()
 test_smsCounting_telia = do
-  company <- addNewCompany
+  ugid <- (get ugID) <$> addNewUserGroup
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
-  True <- dbUpdate $ SetUserCompany (userid user) (companyid company)
+  True <- dbUpdate $ SetUserUserGroup (userid user) ugid
   doc <- addRandomDocument (randomDocumentAllowsDefault user)
   let sms = SMS {
         smsMSISDN = "+48666666666"
@@ -91,22 +91,22 @@ test_smsCounting_telia = do
 
 test_startDocumentCharging :: TestEnv ()
 test_startDocumentCharging = do
-  company <- addNewCompany
+  ugid <- (get ugID) <$> addNewUserGroup
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
-  True <- dbUpdate $ SetUserCompany (userid user) (companyid company)
+  True <- dbUpdate $ SetUserUserGroup (userid user) ugid
   ctxWithUser <- (set ctxmaybeuser (Just user))<$> mkContext def
 
   did1 <- newDocumentReadyToStart user
   req1 <- mkRequest POST []
   (_, _) <- runTestKontra req1 ctxWithUser $ apiCallV1Ready $ did1
-  runSQL_ $ "SELECT count(*) FROM chargeable_items WHERE type = 6 AND quantity = 1 AND company_id =" <?> (companyid company)
-  fetchOne runIdentity >>= assertEqual "Company was charged for starting one document" (1::Int64)
+  runSQL_ $ "SELECT count(*) FROM chargeable_items WHERE type = 6 AND quantity = 1 AND user_group_id = " <?> ugid
+  fetchOne runIdentity >>= assertEqual "User group was charged for starting one document" (1::Int64)
 
   did2 <- newDocumentReadyToStart user
   req2 <- mkRequest POST []
   (_, _) <- runTestKontra req2 ctxWithUser $ docApiV2Start $ did2
-  runSQL_ $ "SELECT count(*) FROM chargeable_items WHERE type = 6 AND quantity = 1 AND company_id =" <?> (companyid company)
-  fetchOne runIdentity >>= assertEqual "Company was charged for starting other document" (2::Int64)
+  runSQL_ $ "SELECT count(*) FROM chargeable_items WHERE type = 6 AND quantity = 1 AND user_group_id = " <?> ugid
+  fetchOne runIdentity >>= assertEqual "User group was charged for starting other document" (2::Int64)
 
   where
     newDocumentReadyToStart user = do

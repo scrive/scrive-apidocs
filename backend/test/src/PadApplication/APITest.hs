@@ -7,13 +7,13 @@ import Test.Framework
 import qualified Data.HashMap.Strict as H
 import qualified Data.Text as T
 
-import Company.Model
-import CompanyAccountsTest (addNewAdminUserAndCompany)
 import Context
 import DB
 import PadApplication.API
 import TestingUtil
 import TestKontra
+import UserGroup.Data
+import UserGroupAccountsTest (addNewAdminUserAndUserGroup)
 
 padAplicationAPITests :: TestEnvSt -> Test
 padAplicationAPITests env = testGroup "PadApplicationAPI"
@@ -22,7 +22,7 @@ padAplicationAPITests env = testGroup "PadApplicationAPI"
 
 testPadApplicationPadInfoGet :: TestEnv ()
 testPadApplicationPadInfoGet = do
-  (user, company) <- addNewAdminUserAndCompany "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
   ctx1 <- (set ctxmaybeuser (Just user)) <$> mkContext def
   req1 <- mkRequest GET []
@@ -33,7 +33,7 @@ testPadApplicationPadInfoGet = do
 
   assertEqual ("We should get a 200 response") 200 (rsCode res1)
   assertEqual "We should get the same e_archive_enabled"
-              (companypadearchiveenabled . companyinfo $ company)
+              (get ugsPadEarchiveEnabled . get ugSettings $ ug)
               res1padearchiveenabled
   assertEqual "We should get the same app_mode"
               "list_view"

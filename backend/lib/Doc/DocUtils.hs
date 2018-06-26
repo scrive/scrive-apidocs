@@ -29,9 +29,9 @@ module Doc.DocUtils(
 
 import Control.Monad.Catch
 import Text.StringTemplates.Templates
+import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
-import Company.Model
 import DB
 import Doc.DocInfo
 import Doc.DocStateData
@@ -41,6 +41,8 @@ import File.File
 import File.Model
 import Templates
 import User.Model
+import UserGroup.Data
+import UserGroup.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -95,7 +97,7 @@ isLastViewer doc sl =
  -}
 signatoryFieldsFromUser :: (MonadDB m, MonadThrow m) => User -> m [SignatoryField]
 signatoryFieldsFromUser user = do
-  company <- dbQuery $ GetCompanyByUserID (userid user)
+  ug <- dbQuery . UserGroupGetByUserID . userid $ user
   return $
         [ SignatoryNameField $ NameField {
               snfID                     = (unsafeSignatoryFieldID 0)
@@ -123,7 +125,7 @@ signatoryFieldsFromUser user = do
           }
          , SignatoryCompanyField $ CompanyField {
               scfID                     = (unsafeSignatoryFieldID 0)
-            , scfValue                  = getCompanyName company
+            , scfValue                  = T.unpack . get ugName $ ug
             , scfObligatory             = False
             , scfShouldBeFilledBySender = False
             , scfPlacements             = []
@@ -155,11 +157,11 @@ signatoryFieldsFromUser user = do
             else []
         )
           ++
-        (if (not $ null $ getCompanyNumber company)
+        (if (not $ null $ getCompanyNumber ug)
            then [
               SignatoryCompanyNumberField $ CompanyNumberField {
                   scnfID                     = (unsafeSignatoryFieldID 0)
-                , scnfValue                  = getCompanyNumber company
+                , scnfValue                  = getCompanyNumber ug
                 , scnfObligatory             = False
                 , scnfShouldBeFilledBySender = False
                 , scnfPlacements             = []

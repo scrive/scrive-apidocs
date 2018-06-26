@@ -7,7 +7,6 @@ import Test.Framework
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 
-import Company.Model
 import Context
 import DB.Query (dbUpdate)
 import Doc.API.V2.AesonTestUtils
@@ -25,6 +24,7 @@ import Doc.DocumentMonad (withDocumentID)
 import Doc.Model.Update (SetDocumentSharing(..), TimeoutDocument(..))
 import TestingUtil
 import TestKontra
+import UserGroup.Data
 import Util.Actor (userActor)
 
 apiV2DocumentPostCallsTests :: TestEnvSt -> Test
@@ -85,8 +85,9 @@ testDocApiV2NewFromTemplate = do
 
 testDocApiV2NewFromTemplateShared :: TestEnv ()
 testDocApiV2NewFromTemplateShared = do
-  (Company {companyid}) <- addNewCompany
-  author                <- addNewRandomCompanyUser companyid False
+  ug <- addNewUserGroup
+  let ugid = get ugID ug
+  author                <- addNewRandomCompanyUser ugid False
   ctxauthor             <- set ctxmaybeuser (Just author) <$> mkContext def
   did                   <- getMockDocId <$> testDocApiV2New' ctxauthor
 
@@ -97,7 +98,7 @@ testDocApiV2NewFromTemplateShared = do
     assertEqual "Document should be template" True is_template
 
   void  $ randomUpdate $ SetDocumentSharing [did] True
-  user <- addNewRandomCompanyUser companyid False
+  user <- addNewRandomCompanyUser ugid False
   ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
 
   do -- Just to ensure limited scope so we don't test against the wrong thing

@@ -2,9 +2,10 @@ module UserGroup.Internal (
     UserGroup(..)
   , ugInvoicingType
   , ugPaymentPlan
-  , UserGroupID
+  , UserGroupID(..)
   , emptyUserGroupID
   , unsafeUserGroupID
+  , fromUserGroupID
   , UserGroupSettings(..)
   , UserGroupAddress(..)
   , UserGroupUI(..)
@@ -16,6 +17,7 @@ import Data.Aeson
 import Data.Default
 import Data.Int
 import Data.Text
+import Happstack.Server
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
 
@@ -148,7 +150,7 @@ instance CompositeFromSQL UserGroup where
     , _ugName = name
     , _ugSettings = unComposite cinfos
     , _ugInvoicing = unComposite cinvoicing
-    , _ugAddress = unComposite  caddresses
+    , _ugAddress = unComposite caddresses
     , _ugUI = unComposite cuis
     }
 
@@ -190,11 +192,17 @@ instance ToSQL UserGroupID where
   type PQDest UserGroupID = PQDest Int64
   toSQL (UserGroupID n) = toSQL n
 
+instance FromReqURI UserGroupID where
+  fromReqURI = maybeRead
+
 unsafeUserGroupID :: Int64 -> UserGroupID
 unsafeUserGroupID = UserGroupID
 
 emptyUserGroupID :: UserGroupID
 emptyUserGroupID = UserGroupID 0
+
+fromUserGroupID :: UserGroupID -> Int64
+fromUserGroupID (UserGroupID ugid) = ugid
 
 instance Identifier UserGroupID Int64 where
   idDefaultLabel _ = "user_group_id"

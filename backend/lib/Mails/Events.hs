@@ -179,7 +179,7 @@ handleEventOtherMail docid eid timeDiff templates eventType = logDocument docid 
 logDeliveryTime :: (DocumentMonad m, MonadLog m, MonadThrow m) => Maybe Int -> m ()
 logDeliveryTime timeDiff = theDocument >>= \d -> do
   logInfo "Email delivered" $ object [
-      identifier_ $ documentauthorcompanyid d
+      identifier_ $ documentauthorugid d
     , "delivery_time" .= timeDiff
     ]
 

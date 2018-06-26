@@ -4,6 +4,7 @@ module Company.Migrations (
   , companiesAddPaymentPlan
   , companiesDropAllowSaveSafetyCopy
   , companiesAddUserGroupID
+  , companiesMakeUserGroupIDNotNull
 ) where
 
 import Control.Monad.Catch
@@ -81,3 +82,16 @@ companiesAddUserGroupID = Migration {
       ]
     runQuery_ . sqlCreateIndex tname $ indexOnColumn "user_group_id"
 }
+
+companiesMakeUserGroupIDNotNull :: MonadDB m => Migration m
+companiesMakeUserGroupIDNotNull = Migration {
+    mgrTableName = tblName tableCompanies
+  , mgrFrom = 25
+  , mgrAction = StandardMigration $ do
+      let tname = tblName tableCompanies
+      runQuery_ . sqlAlterTable tname $
+        [ sqlAlterColumn "user_group_id" "SET NOT NULL"
+        , sqlDropFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
+        , sqlAddFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade }
+        ]
+  }

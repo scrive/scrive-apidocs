@@ -117,10 +117,10 @@ Library
                  , Company.Data.PaymentPlan
                  , Company.Model
                  , Company.Tables
-                 , CompanyAccounts.CompanyAccountsControl
-                 , CompanyAccounts.CompanyAccountsView
-                 , CompanyAccounts.Model
-                 , CompanyAccounts.Tables
+                 , UserGroupAccounts.UserGroupAccountsControl
+                 , UserGroupAccounts.UserGroupAccountsView
+                 , UserGroupAccounts.Model
+                 , UserGroupAccounts.Tables
                  , Configuration
                  , Context
                  , Context.Internal
@@ -749,7 +749,7 @@ Executable kontrakcja-migrate
                  Chargeable.Tables
                  Company.Migrations
                  Company.Tables
-                 CompanyAccounts.Tables
+                 UserGroupAccounts.Tables
                  Configuration
                  Cron.Migrations
                  Cron.Tables
@@ -1224,11 +1224,10 @@ Test-suite kontrakcja-test
                  ChargeableTest
                  Company.Migrations
                  Company.Tables
-                 CompanyAccounts.Tables
-                 CompanyAccountsTest
+                 UserGroupAccounts.Tables
+                 UserGroupAccountsTest
                  CompanyBrandingTest
                  CompanyControlTest
-                 CompanyStateTest
                  ConfigTests
                  Cron.Migrations
                  Cron.Tables

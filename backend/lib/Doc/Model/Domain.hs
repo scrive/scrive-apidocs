@@ -6,13 +6,13 @@ module Doc.Model.Domain
 import Control.Monad.State.Class
 import Data.Typeable
 
-import Company.CompanyID
 import DB
 import Doc.Conditions
 import Doc.DocInfo
 import Doc.DocStateData
 import MagicHash
 import User.UserID
+import UserGroup.Data
 
 -- | Document security domain.
 --
@@ -30,7 +30,7 @@ import User.UserID
 data DocumentDomain
   = DocumentsOfWholeUniverse                     -- ^ All documents in the system. Only for admin view.
   | DocumentsVisibleViaAccessToken MagicHash     -- ^ Documents accessed using 'accesstoken' field from json
-  | DocumentsOfCompany CompanyID                 -- ^ Documents created by a particular company.
+  | DocumentsOfUserGroup UserGroupID             -- ^ Documents created by a particular user group.
   | DocumentsVisibleToUser UserID                -- ^ Documents that a user has possible access to
  deriving (Eq, Ord, Typeable, Show)
 --
@@ -75,19 +75,19 @@ documentDomainToSQL (DocumentsVisibleViaAccessToken token) = do
   sqlWhereDocumentWasNotPurged
   sqlWhereEq "documents.token" token
 
-documentDomainToSQL (DocumentsOfCompany cid) = do
+documentDomainToSQL (DocumentsOfUserGroup ugid) = do
   sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
   sqlJoinOn "users" "signatory_links.user_id = users.id"
   sqlWhereDocumentWasNotPurged
   sqlWhere "documents.author_id = signatory_links.id"
-  sqlWhereEq "users.company_id" cid
+  sqlWhereEq "users.user_group_id" ugid
 
 documentDomainToSQL (DocumentsVisibleToUser uid) = do
   sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
   sqlJoinOn "users" "signatory_links.user_id = users.id"
   sqlWhereDocumentWasNotPurged
   sqlWhereDocumentIsNotReallyDeleted
-  sqlWhere $ "users.company_id = (SELECT u.company_id FROM users u WHERE u.id =" <?> uid <> ")"
+  sqlWhere $ "users.user_group_id = (SELECT u.user_group_id FROM users u WHERE u.id =" <?> uid <> ")"
   sqlWhereAny [
       userIsAuthor
     , userIsPartnerAndHasAppropriateSignOrder

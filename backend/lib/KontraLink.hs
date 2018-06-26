@@ -7,8 +7,6 @@ import Data.List.Split
 import Network.HTTP
 import Network.URI
 
-import Attachment.AttachmentID
-import Company.Model
 import Context
 import Doc.DocStateData
 import Doc.DocumentID
@@ -18,6 +16,7 @@ import KontraMonad
 import MagicHash
 import OAuth.Model
 import User.Model
+import UserGroup.Data
 
 {- |
    All the links available for responses
@@ -26,30 +25,23 @@ data KontraLink
     = LinkHome Lang
     | LinkLogin Lang
     | LinkLoginDirect Lang
-    | LinkLogout
     | LinkSignup Lang
     | LinkArchive
     | LinkAccount
-    | LinkAccountCompany (Maybe CompanyID)
     | LinkChangeUserEmail UserID MagicHash
-    | LinkUserMailAPI
     | LinkSignDoc DocumentID SignatoryLink
     | LinkSignDocPad DocumentID SignatoryLinkID
     | LinkMainFile Document SignatoryLink
     | LinkSignDocNoMagicHash DocumentID SignatoryLinkID
     | LinkIssueDoc DocumentID
     | LinkEvidenceAttachment DocumentID String
-    | LinkCompanyAccounts
-    | LinkCompanyTakeover CompanyID
+    | LinkCompanyTakeover UserGroupID
     | LinkAcceptTOS
-    | LinkUserAdmin UserID
-    | LinkCompanyAdmin CompanyID
     | LinkPasswordReminder UserID MagicHash
     | LinkAccountCreated Lang UserID MagicHash SignupMethod -- email
     | LoopBack
     | LinkDaveDocument DocumentID
     | LinkDaveFile FileID String
-    | LinkAttachmentDownload AttachmentID String
     | LinkEnableCookies
     | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID Int
     | LinkOAuthAuthorization APIToken
@@ -59,7 +51,7 @@ data KontraLink
     | LinkPadList
     | LinkPreviewLockedImage
     | LinkPermanentRedirect String
-      
+
 langFolder :: Lang -> String
 langFolder lang = "/" ++ (codeFromLang lang)
 
@@ -70,18 +62,13 @@ instance Show KontraLink where
     showsPrec _ (LinkHome lang) = (++) $ langFolder lang ++ "/"
     showsPrec _ (LinkLogin lang) = (++) $ langFolder lang ++ "/enter#log-in" -- THIS ONE IS NOT USED. CHECK sendRedirect
     showsPrec _ (LinkLoginDirect lang) = (++) $ langFolder lang ++ "/enter#log-in"  -- THIS ONE IS NOT USED. CHECK sendRedirect
-    showsPrec _ LinkLogout = (++) "/logout"
     showsPrec _ (LinkSignup lang) = (++) $ langFolder lang ++ "/enter#sign-up"
     showsPrec _ (LinkArchive) = (++) $ "/d"
     showsPrec _ LinkAcceptTOS = (++) "/accepttos"
     showsPrec _ (LinkAccount) = (++) "/account"
-    showsPrec _ (LinkAccountCompany Nothing) = (++) "/account#company"
-    showsPrec _ (LinkAccountCompany (Just cid)) = (++) $ "/adminonly/companyadmin/" ++ show cid
     showsPrec _ (LinkChangeUserEmail actionid magichash) =
         (++) $ "/account/" ++ show actionid ++  "/" ++ show magichash
-    showsPrec _ (LinkCompanyAccounts) = (++) $ "/account#users"
-    showsPrec _ (LinkCompanyTakeover companyid) = (++) $ "/companyaccounts/join/" ++ show companyid
-    showsPrec _ LinkUserMailAPI = (++) "/account#mailapi"
+    showsPrec _ (LinkCompanyTakeover ugid) = (++) $ "/companyaccounts/join/" ++ show ugid
     showsPrec _ (LinkIssueDoc documentid) =
         (++) $ "/d/" ++ show documentid
     showsPrec _ (LinkEvidenceAttachment did filename) =  (++) $ "/d/evidenceattachment/" ++ show did ++ "/" ++ filename
@@ -95,8 +82,6 @@ instance Show KontraLink where
                  "/"++ show (signatorymagichash signatorylink) ++ "/"++ urlEncode (documenttitle document) ++ ".pdf"
     showsPrec _ (LinkSignDocNoMagicHash documentid signatorylinkid) =
         (++) $ "/s/" ++ show documentid ++ "/" ++ show signatorylinkid
-    showsPrec _ (LinkUserAdmin userId) = (++) $ "/adminonly/useradmin/"++show userId
-    showsPrec _ (LinkCompanyAdmin companyid) = (++) $ "/adminonly/companyadmin/" ++ show companyid
     showsPrec _ (LinkPasswordReminder aid hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash
     showsPrec _ (LinkAccountCreated lang uid hash sm) = (++) $ langFolder lang  ++ "/accountsetup/" ++ show uid ++ "/" ++ show hash ++ "/" ++ show sm
     showsPrec _ LoopBack = (++) $ "/" -- this should never be used
@@ -116,7 +101,6 @@ instance Show KontraLink where
       (++) (show $ setParams url [("oauth_token", show token), ("oauth_verifier", show verifier)])
     showsPrec _ (LinkOAuthCallback url token Nothing) =
       (++) (show $ setParams url [("oauth_token", show token), ("denied", "true")])
-    showsPrec _ (LinkAttachmentDownload attid attname) = (++) ("/a/download/" ++ show attid ++ "/" ++ attname ++ ".pdf")
     showsPrec _ (LinkDesignView) = (++) "/newdocument"
     showsPrec _ (LinkPadList) = (++) "/to-sign"
     showsPrec _ (LinkExternal s) = (++) s

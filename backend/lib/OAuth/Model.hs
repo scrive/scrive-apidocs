@@ -252,12 +252,12 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m DenyCredentials (Maybe URI) whe
 data GetRequestedPrivileges = GetRequestedPrivileges APIToken UTCTime
 instance MonadDB m => DBQuery m GetRequestedPrivileges (Maybe (String, [APIPrivilege])) where
   query (GetRequestedPrivileges token time) = do
-    runQuery_ $ rawSQL ("SELECT com.name, u.first_name, u.last_name, u.email, p.privilege "
+    runQuery_ $ rawSQL ("SELECT ug.name, u.first_name, u.last_name, u.email, p.privilege "
               <> "FROM oauth_temp_privileges p "
               <> "JOIN oauth_temp_credential c  ON p.temp_token_id =   c.id "
               <> "JOIN oauth_api_token t        ON c.api_token_id  =   t.id "
               <> "JOIN users u                  ON t.user_id       =   u.id "
-              <> "JOIN companies com            ON u.company_id    = com.id "
+              <> "JOIN user_groups ug           ON u.user_group_id =  ug.id "
               <> "WHERE c.temp_token = $1 AND c.id = $2 AND expires > $3 AND c.user_id IS NULL")
               (atToken token, atID token, time)
     foldlDB f Nothing
@@ -348,12 +348,12 @@ data GetUserIDForAPIWithPrivilege = GetUserIDForAPIWithPrivilege
                                     [APIPrivilege]
 instance (MonadDB m, MonadThrow m) => DBQuery m GetUserIDForAPIWithPrivilege (Maybe (UserID, String)) where
   query (GetUserIDForAPIWithPrivilege token secret atoken asecret priv) = do
-    runQuery_ $ rawSQL ("SELECT a.user_id, u.email, u.first_name, u.last_name,c.name "
+    runQuery_ $ rawSQL ("SELECT a.user_id, u.email, u.first_name, u.last_name,ug.name "
              <> "FROM oauth_access_token a "
              <> "JOIN oauth_privilege p      ON p.access_token_id = a.id "
              <> "JOIN oauth_api_token t      ON a.api_token_id    = t.id "
              <> "JOIN users u                ON t.user_id         = u.id "
-             <> "JOIN companies c            ON u.company_id      = c.id "
+             <> "JOIN user_groups ug         ON u.user_group_id   = ug.id "
              <> "WHERE t.id = $1 AND t.api_token = $2 AND t.api_secret = $3 AND a.id = $4 AND a.access_token = $5 AND a.access_secret = $6 AND (p.privilege = ANY($7) OR p.privilege = $8) LIMIT 1")
                   ( atID token
                   , atToken token
@@ -364,9 +364,9 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetUserIDForAPIWithPrivilege (Ma
                   , Array1 priv
                   , APIPersonal)
     fetchMaybe f
-   where    f (uid, e, "", "", "") = (uid, e)               -- just email
-            f (uid, _, fn, ln, "") = (uid, fn ++ " " ++ ln) -- user's first + last
-            f (uid, _, _,  _,  cn) = (uid, cn)              -- user's company name
+   where    f (uid, e, "", "", "" ) = (uid, e)               -- just email
+            f (uid, _, fn, ln, "" ) = (uid, fn ++ " " ++ ln) -- user's first + last
+            f (uid, _, _,  _,  ugn) = (uid, ugn)             -- user's user_group name
 
 -- stuff for the dashboard
 

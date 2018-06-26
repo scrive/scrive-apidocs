@@ -10,11 +10,11 @@ import Network.HTTP.Simple (getResponseBody)
 import qualified Data.Aeson as JSON
 import qualified Data.ByteString.Lazy as BSL
 
-import Company.Model (CompanyID)
 import DB
 import Planhat.Communication
 import Planhat.Config
-import User.Model (GetCompanyAccountsCountActive(..), GetCompanyAccountsCountMainDomainBranding(..), GetCompanyAccountsCountTotal(..))
+import User.Model (GetUserGroupAccountsCountActive(..), GetUserGroupAccountsCountMainDomainBranding(..), GetUserGroupAccountsCountTotal(..))
+import UserGroup.Data
 
 doDailyPlanhatStats :: ( MonadDB m
                        , MonadLog m
@@ -27,9 +27,9 @@ doDailyPlanhatStats :: ( MonadDB m
 doDailyPlanhatStats phConf reqManager = do
   now <- currentTime
   logInfo_ "Generating Planhat user stats"
-  usersTotal  <- dbQuery GetCompanyAccountsCountTotal
-  usersActive <- dbQuery GetCompanyAccountsCountActive
-  usersMainDomainBranding <- dbQuery GetCompanyAccountsCountMainDomainBranding
+  usersTotal  <- dbQuery GetUserGroupAccountsCountTotal
+  usersActive <- dbQuery GetUserGroupAccountsCountActive
+  usersMainDomainBranding <- dbQuery GetUserGroupAccountsCountMainDomainBranding
 
   -- metrics; the Planhat metrics API endpoint accepts a list so we concatenate
   -- the updates to be efficient
@@ -45,9 +45,9 @@ doDailyPlanhatStats phConf reqManager = do
 
   where
 
-    planhatMetricJSONs :: String -> [(CompanyID, Int64)] -> UTCTime -> [JSON.Value]
-    planhatMetricJSONs dimensionId uts now = map (\(compID, k) ->
-      planhatMetricJSON dimensionId k compID now) uts
+    planhatMetricJSONs :: String -> [(UserGroupID, Int64)] -> UTCTime -> [JSON.Value]
+    planhatMetricJSONs dimensionId uts now = map (\(ugid, k) ->
+      planhatMetricJSON dimensionId k ugid now) uts
 
     logPlanhatErrors :: (MonadLog m) => Response BSL.ByteString-> m ()
     logPlanhatErrors res = do

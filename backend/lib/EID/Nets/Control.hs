@@ -225,7 +225,7 @@ handleResolveNetsNOBankID res doc nt sl ctx = do
           when (signatoryHasFilledInPhone && Pending == documentstatus doc) $ do
             dbUpdate . UpdatePhoneAfterIdentificationToView sl phone formattedPhoneFromNets =<< signatoryActor ctx sl
 
-      dbUpdate $ ChargeCompanyForNOBankIDAuthentication (documentid doc)
+      dbUpdate $ ChargeUserGroupForNOBankIDAuthentication (documentid doc)
       return True
 
 
@@ -273,7 +273,7 @@ handleResolveNetsDKNemID res doc nt sl ctx = do
              F.value "signature" $ B64.encode certificate
         void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence  (eventFields) (Just sl) Nothing =<< signatoryActor ctx sl
 
-      dbUpdate $ ChargeCompanyForDKNemIDAuthentication (documentid doc)
+      dbUpdate $ ChargeUserGroupForDKNemIDAuthentication (documentid doc)
       return True
 
 ------------------------------------------
@@ -398,7 +398,7 @@ checkNetsSignStatus nets_conf did slid = do
                         , netsnoSignedText = nsoTextToBeSigned nso
                         , netsnoB64SDO = gsdorsB64SDOBytes getSdoRs
                         }
-                      dbUpdate $ ChargeCompanyForNOBankIDSignature (documentid doc)
+                      dbUpdate $ ChargeUserGroupForNOBankIDSignature (documentid doc)
                       return $ NetsSignStatusSuccess
                     NetsSignDK -> do
                       getSignerSSN (gsdorsB64SDOBytes getSdoRs) >>= \case
@@ -414,7 +414,7 @@ checkNetsSignStatus nets_conf did slid = do
                             , netsdkB64SDO = gsdorsB64SDOBytes getSdoRs
                             , netsdkSignatorySSN = signer_ssn
                             }
-                          dbUpdate $ ChargeCompanyForDKNemIDSignature (documentid doc)
+                          dbUpdate $ ChargeUserGroupForDKNemIDSignature (documentid doc)
                           return $ NetsSignStatusSuccess
 
   where

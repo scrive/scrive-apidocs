@@ -26,7 +26,6 @@ import qualified Text.StringTemplates.Fields as F
 import API.V2.Parameters (ApiV2Parameter(..), apiV2ParameterDefault)
 import AppView
 import Archive.View
-import Company.Model (GetCompany(..))
 import DB
 import Doc.Action
 import Doc.API.V1.DocumentToJSON (allCustomTextOrCheckboxOrRadioGroupFields, docForListCSVHeaderV1, docForListCSVV1)
@@ -44,6 +43,7 @@ import Kontra
 import Log.Identifier
 import User.Model
 import User.Utils
+import UserGroup.Model
 import Util.Actor
 import Util.CSVUtil
 import Util.MonadUtils
@@ -146,9 +146,9 @@ handleListCSV= do
 -- | Main view of the archive
 showArchive :: Kontrakcja m => m InternalKontraResponse
 showArchive = withUserTOS $ \(user,tostime) -> do
-    mcompany <- dbQuery $ GetCompany (usercompany user)
+    mug <- dbQuery . UserGroupGet . usergroupid $ user
     ctx <- getContext
-    pb <-  pageArchive ctx user mcompany tostime
+    pb <-  pageArchive ctx user mug tostime
     internalResponse <$> renderFromBodyWithFields pb (F.value "archive" True)
 
 -- Zip utils

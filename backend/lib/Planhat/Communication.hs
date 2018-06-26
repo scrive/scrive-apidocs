@@ -11,9 +11,10 @@ import qualified Data.Aeson.Types as JSON
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as Text
 
-import Company.Model
 import Planhat.Config (PlanhatConf(..))
 import User.Model
+import UserGroup.Data
+import UserGroup.Model
 
 phActionURL :: PlanhatConf -> String
 phActionURL PlanhatConf{..} =
@@ -59,9 +60,9 @@ planhatActionJSON actionTag email userId time =
                 , "externalId" .= (show . unUserID $ userId)
                 , "date"       .= time ]
 
-planhatMetricJSON :: String -> Int64 -> CompanyID -> UTCTime -> JSON.Value
-planhatMetricJSON dimensionId value companyID time =
-    JSON.object [ "companyExternalId" .= (Text.pack . show $ companyID)
+planhatMetricJSON :: String -> Int64 -> UserGroupID -> UTCTime -> JSON.Value
+planhatMetricJSON dimensionId value ugid time =
+    JSON.object [ "companyExternalId" .= (Text.pack . show . unsafeUserGroupIDToCompanyID $ ugid)
                 , "dimensionId"       .= dimensionId
                 , "value"             .= value
                 , "date"              .= time ]

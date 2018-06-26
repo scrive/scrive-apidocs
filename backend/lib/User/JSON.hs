@@ -19,6 +19,7 @@ import FeatureFlags.Model
 import MinutesTime
 import PadApplication.Data
 import User.Model
+import UserGroup.Data
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 
@@ -66,9 +67,9 @@ paymentPlanFromText s = find (\p -> s == paymentPlanText p) allAvailablePlans
   where
     allAvailablePlans = [FreePlan, OnePlan, TeamPlan, EnterprisePlan, TrialPlan]
 
-subscriptionJSON  :: Company -> [User] -> Int -> FeatureFlags -> JSValue
-subscriptionJSON company users startedLastMonth ff = runJSONGen $ do
-  value "payment_plan" $ paymentPlanText $ companypaymentplan $ companyinfo company
+subscriptionJSON  :: UserGroup -> [User] -> Int -> FeatureFlags -> JSValue
+subscriptionJSON ug users startedLastMonth ff = runJSONGen $ do
+  value "payment_plan" . paymentPlanText . fromJust . ugPaymentPlan $ ug
   value "number_of_users" $ length users
   value "started_last_month" $ startedLastMonth
   value "can_use_templates" $ ffCanUseTemplates ff

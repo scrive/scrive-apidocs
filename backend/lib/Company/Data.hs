@@ -20,7 +20,7 @@ import UserGroup.Data
 data Company = Company {
     companyid          :: CompanyID
   , companyinfo        :: CompanyInfo
-  , companyusergroupid :: Maybe UserGroupID
+  , companyusergroupid :: UserGroupID
   } deriving (Eq, Ord, Show, Typeable)
 
 data CompanyInfo = CompanyInfo {

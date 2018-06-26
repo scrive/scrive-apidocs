@@ -23,10 +23,8 @@ import AppDBTables
 import ArchiveTest
 import BrandedDomainTest
 import ChargeableTest
-import CompanyAccountsTest
 import CompanyBrandingTest
 import CompanyControlTest
-import CompanyStateTest
 import ConfigTests
 import Configuration
 import CSSGenerationTest
@@ -78,6 +76,7 @@ import TestKontra
 import ThirdPartyStats
 import User.APITest
 import UserGroup.UserGroupTest
+import UserGroupAccountsTest
 import UserHistoryTest
 import UserPasswordTest
 import UserStateTest
@@ -99,7 +98,6 @@ allTests = [
   , companyAccountsTests
   , companyBrandingTests
   , companyControlTests
-  , companyStateTests
   , configTests
   , cssGenerationTests
   , csvUtilTests

@@ -503,7 +503,7 @@ checkFileAccessWith fid msid mmh mdid mattid =
        when (not indoc) $ internalError
     (_,_,_,Just attid) -> guardLoggedInOrThrowInternalError $ do
        user <- guardJustM $ get ctxmaybeuser <$> getContext
-       atts <- dbQuery $ GetAttachments [ AttachmentsSharedInUsersCompany (userid user)
+       atts <- dbQuery $ GetAttachments [ AttachmentsSharedInUsersUserGroup (userid user)
                                             , AttachmentsOfAuthorDeleteValue (userid user) True
                                             , AttachmentsOfAuthorDeleteValue (userid user) False
                                             ]

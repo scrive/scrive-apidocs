@@ -2,10 +2,9 @@ module User.Model.Update (
     AddUser(..)
   , AcceptTermsOfService(..)
   , DeleteUser(..)
-  , MakeUserIDAdminForPartnerID(..)
   , RemoveInactiveUser(..)
   , SetSignupMethod(..)
-  , SetUserCompany(..)
+  , SetUserUserGroup(..)
   , SetUserGroup(..)
   , SetUserEmail(..)
   , SetUserCompanyAdmin(..)
@@ -15,6 +14,7 @@ module User.Model.Update (
   , ConfirmUserTOTPSetup(..)
   , DisableUserTOTP(..)
   , SetUserSettings(..)
+  , MakeUserPartnerAdmin(..)
   ) where
 
 import Control.Monad.Catch
@@ -24,12 +24,10 @@ import Data.Char
 import Log
 
 import BrandedDomain.BrandedDomainID
-import Company.Model
 import DB
 import Doc.Data.SignatoryField
 import Doc.DocStateData (DocumentStatus(..))
 import Log.Identifier
-import Partner.Model
 import User.Data.SignupMethod
 import User.Data.User
 import User.Email
@@ -38,6 +36,7 @@ import User.Model.Query
 import User.Password
 import User.UserID
 import UserGroup.Data
+import UserGroup.Model
 
 data AcceptTermsOfService = AcceptTermsOfService UserID UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m AcceptTermsOfService Bool where
@@ -47,9 +46,9 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AcceptTermsOfService Bool where
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
 
-data AddUser = AddUser (String, String) String (Maybe Password) (CompanyID,Bool) Lang BrandedDomainID SignupMethod (Maybe UserGroupID)
+data AddUser = AddUser (String, String) String (Maybe Password) (UserGroupID, Bool) Lang BrandedDomainID SignupMethod
 instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
-  update (AddUser (fname, lname) email mpwd (cid, admin) l ad sm mugid) = do
+  update (AddUser (fname, lname) email mpwd (ugid, admin) l ad sm) = do
     mu <- query $ GetUserByEmail $ Email email
     case mu of
       Just _ -> return Nothing -- user with the same email address exists
@@ -63,7 +62,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
             sqlSet "account_suspended" False
             sqlSet "has_accepted_terms_of_service" (Nothing :: Maybe UTCTime)
             sqlSet "signup_method" sm
-            sqlSet "company_id" cid
+            sqlSet "company_id" . unsafeUserGroupIDToCompanyID $ ugid
             sqlSet "first_name" fname
             sqlSet "last_name" lname
             sqlSet "personal_number" ("" :: String)
@@ -73,7 +72,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
             sqlSet "lang" l
             sqlSet "deleted" (Nothing :: Maybe UTCTime)
             sqlSet "associated_domain_id" ad
-            sqlSet "user_group_id" mugid
+            sqlSet "user_group_id" ugid
             mapM_ sqlResult selectUsersSelectorsList
         fetchMaybe fetchUser
 
@@ -86,47 +85,6 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool wh
       sqlSet "deleted" now
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
-
-data MakeUserIDAdminForPartnerID = MakeUserIDAdminForPartnerID UserID PartnerID
-instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m MakeUserIDAdminForPartnerID Bool where
-  update (MakeUserIDAdminForPartnerID uid pid) = do
-    -- During migration to user_groups, we must synchronize everything we do to
-    -- companies and partners. Partners are transformed into parent user_groups and all
-    -- users in partner/parent user_group are considered partner admins.
-    -- get user
-    dbQuery (GetUserByID uid) >>= \case
-      Nothing -> return False
-      Just user -> do
-        -- get user's company
-        company <- dbQuery . GetCompanyByUserID $ uid
-        -- get partner
-        partner <- dbQuery . GetPartnerByID $ pid
-        -- if the company has been transformed into user_group, but not the user, report
-        -- this immediately (not affected by partner, just user & company consistency check)
-        case (companyusergroupid company /= usergroupid user) of
-          True -> do
-            logAttention "UserGroup inconsistent user migration" $ object [
-                identifier_ uid
-              , identifier_ (companyid company)
-              , identifier_ pid
-              ]
-            return False
-          False -> do
-            -- if only one of them (user's company, partner) was transformed into user_group
-            -- or they were transformed into different user_groups, this
-            -- is an invalid scenario. Nothing must be changed and this must be roported.
-            case (companyusergroupid company /= ptUserGroupID partner) of
-              True -> do
-                logAttention "UserGroup inconsistent partner migration" $ object [
-                    identifier_ uid
-                  , identifier_ (companyid company)
-                  , identifier_ pid
-                  ]
-                return False
-              False ->
-                runQuery01 . sqlInsert "partner_admins" $ do
-                  sqlSet "user_id" uid
-                  sqlSet "partner_id" pid
 
 -- | Removes user who didn't accept TOS from the database
 data RemoveInactiveUser = RemoveInactiveUser UserID
@@ -152,17 +110,16 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetSignupMethod Bool where
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
 
-data SetUserCompany = SetUserCompany UserID CompanyID
-instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserCompany Bool where
-  update (SetUserCompany uid cid) =
-    -- also set the new company user_group (regardless, whether the new company
-    -- already migrated to user_group
-    dbQuery (GetCompany cid) >>= \case
+data SetUserUserGroup = SetUserUserGroup UserID UserGroupID
+instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserUserGroup Bool where
+  update (SetUserUserGroup uid ugid) =
+    -- also set the new user_group company
+    dbQuery (UserGroupGet ugid) >>= \case
       Nothing -> return False
-      Just company ->
+      Just ug ->
         runQuery01 $ sqlUpdate "users" $ do
-          sqlSet "company_id" cid
-          sqlSet "user_group_id" . companyusergroupid $ company
+          sqlSet "company_id" . unsafeUserGroupIDToCompanyID . get ugID $ ug
+          sqlSet "user_group_id" . get ugID $ ug
           sqlWhereEq "id" uid
           sqlWhereIsNULL "deleted"
 
@@ -177,9 +134,9 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserGroup Bool where
 data SetUserCompanyAdmin = SetUserCompanyAdmin UserID Bool
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserCompanyAdmin Bool where
   update (SetUserCompanyAdmin uid iscompanyadmin) = do
-    runQuery_ $ "SELECT company_id FROM users WHERE id =" <?> uid <+> "AND deleted IS NULL FOR UPDATE"
-    mcid <- fetchMaybe runIdentity
-    case mcid :: Maybe CompanyID of
+    runQuery_ $ "SELECT user_group_id FROM users WHERE id =" <?> uid <+> "AND deleted IS NULL FOR UPDATE"
+    mugid <- fetchMaybe runIdentity
+    case mugid :: Maybe UserGroupID of
       Nothing -> return False
       Just _ -> runQuery01 . sqlUpdate "users" $ do
         sqlSet "is_company_admin" iscompanyadmin
@@ -284,3 +241,21 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateDraftsAndTemplatesWithUse
         sqlWhere "signatory_links.id = signatory_link_fields.signatory_link_id"
         sqlWhereEq "documents.status" Preparation
         sqlWhereEq "signatory_links.user_id" userid
+
+-- this is only for testing.
+data MakeUserPartnerAdmin = MakeUserPartnerAdmin UserID UserGroupID
+instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m MakeUserPartnerAdmin Bool where
+  update (MakeUserPartnerAdmin uid ugid) = do
+    -- guard that the user is member of that "partner" user group
+    user_ug <- dbQuery . UserGroupGetByUserID $ uid
+    case (ugid == get ugID user_ug) of
+      False -> do
+        logAttention "User is not member of this usergroup" $ object [
+              identifier_ uid
+            , identifier_ ugid
+            ]
+        return False
+      True ->
+        runQuery01 . sqlInsert "partner_admins" $ do
+          sqlSet "user_id" uid
+          sqlSet "partner_id" ugid

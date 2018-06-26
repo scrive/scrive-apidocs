@@ -32,7 +32,6 @@ import qualified Test.HUnit as T
 import BrandedDomain.BrandedDomain
 import BrandedDomain.BrandedDomainID
 import BrandedDomain.Model
-import Company.CompanyUI.Model
 import Company.Model
 import Context
 import DB
@@ -61,7 +60,7 @@ import MagicHash (MagicHash, unsafeMagicHash)
 import MailContext
 import MinutesTime
 import PadApplication.Data
-import Partner.PartnerID
+import Partner.Model
 import PdfToolsLambda.Conf
 import Session.SessionID
 import SMS.Data (SMSProvider(..))
@@ -73,6 +72,7 @@ import User.Email
 import User.Model
 import User.Password.Internal (Password(..))
 import UserGroup.Data
+import UserGroup.Model
 import Util.Actor
 import qualified KontraError as KE
 import qualified Text.XML.Content as C
@@ -120,15 +120,6 @@ instance Arbitrary DocumentTag where
 instance Arbitrary UserID where
   arbitrary = unsafeUserID . abs <$> arbitrary
 
-instance Arbitrary Company where
-  arbitrary = do
-    a <- arbitrary
-    d <- arbitrary
-    return $ Company { companyid  = a
-                     , companyinfo = d
-                     , companyusergroupid = Nothing
-                     }
-
 arbitraryName :: Gen T.Text
 arbitraryName = (return . pack . concat) =<< replicateM 3 arbitrarySyllable
 
@@ -171,49 +162,6 @@ genUnicodeString = filter (/= '\NUL') <$> QCU.string
 
 genMaybeUnicodeString :: Gen (Maybe String)
 genMaybeUnicodeString = oneof [ pure Nothing, Just <$> genUnicodeString ]
-
-instance Arbitrary CompanyInfo where
-  arbitrary = do
-    a <- genUnicodeString
-    b <- genUnicodeString
-    c <- genUnicodeString
-    d <- genUnicodeString
-    e <- genUnicodeString
-    f <- genUnicodeString
-    h <- arbitrary
-    i <- genMaybeUnicodeString
-    j <- arbitrary
-    k <- genMaybeUnicodeString
-    l <- arbitrary
-    m <- arbitrary
-    n <- arbitrary
-    p <- arbitrary
-    return $ CompanyInfo { companyname       = a
-                         , companynumber     = b
-                         , companyaddress    = c
-                         , companyzip        = d
-                         , companycity       = e
-                         , companycountry    = f
-                         , companyipaddressmasklist = []
-                         , companyidledoctimeout = h
-                         , companycgidisplayname = i
-                         , companysmsprovider = j
-                         , companycgiserviceid = k
-                         , companypartnerid = l
-                         , companypadappmode = m
-                         , companypadearchiveenabled = n
-                         , companypaymentplan = p
-                         }
-
-instance Arbitrary CompanyUI where
-  arbitrary = CompanyUI
-    <$> pure (unsafeCompanyID 0)
-    <*> pure Nothing
-    <*> pure Nothing
-    <*> pure Nothing
-    <*> genMaybeUnicodeString
-    <*> genMaybeUnicodeString
-    <*> arbitrary
 
 instance Arbitrary UserGroup where
   arbitrary = (\name minfo maddress mui invoicing -> UserGroup emptyUserGroupID Nothing name maddress minfo invoicing mui)
@@ -627,7 +575,7 @@ instance Arbitrary User where
                    <*> arbitrary
                    <*> arbitrary
                    <*> pure (unsafeBrandedDomainID 0)
-                   <*> pure Nothing
+                   <*> pure (unsafeUserGroupID 0)
 
 instance Arbitrary CgiGrpTransaction where
   arbitrary = do
@@ -727,34 +675,25 @@ compareTime :: UTCTime -> UTCTime -> Bool
 compareTime (UTCTime da ta) (UTCTime db tb) = (da == db)
   && (((ta + picosecondsToDiffTime (10^9) >= tb) && (ta <= tb)) || ((tb + picosecondsToDiffTime (10^9)) >= ta && (ta >= tb)))
 
-addNewCompany :: TestEnv Company
-addNewCompany = do
-    cc@Company{companyid = cid} <- dbUpdate $ CreateCompany
-    companyname <- rand 10 $ arbString 3 30
-    companynumber <- rand 10 $ arbString 3 30
-    companyaddress <- rand 10 $ arbString 3 30
-    companyzip <- rand 10 $ arbString 3 30
-    companycity <- rand 10 $ arbString 3 30
-    companycountry <- rand 10 $ arbString 3 30
-    _ <- dbUpdate $ SetCompanyInfo cid $ CompanyInfo
-         { companyname = companyname
-         , companynumber = companynumber
-         , companyaddress = companyaddress
-         , companyzip = companyzip
-         , companycity = companycity
-         , companycountry = companycountry
-         , companyipaddressmasklist = []
-         , companyidledoctimeout = Nothing
-         , companycgidisplayname = Nothing
-         , companysmsprovider = SMSDefault
-         , companycgiserviceid = Nothing
-         , companypaymentplan = FreePlan
-         , companypartnerid = companypartnerid . companyinfo $ cc
-         , companypadappmode = ListView
-         , companypadearchiveenabled = True
-         }
-    Just company <- dbQuery $ GetCompany cid
-    return company
+addNewUserGroup :: TestEnv UserGroup
+addNewUserGroup = do
+    ugname <- rand 10 (T.pack <$> arbString 3 30)
+    ugacompanynumber <- rand 10 (T.pack <$> arbString 3 30)
+    ugaaddress <- rand 10 (T.pack <$> arbString 3 30)
+    ugazip <- rand 10 (T.pack <$> arbString 3 30)
+    ugacity <- rand 10 (T.pack <$> arbString 3 30)
+    ugacountry <- rand 10 (T.pack <$> arbString 3 30)
+    let ug = set ugName          ugname
+          . set ugAddress       uga
+          $ def
+        uga = UserGroupAddress
+          { _ugaCompanyNumber = ugacompanynumber
+          , _ugaAddress       = ugaaddress
+          , _ugaZip           = ugazip
+          , _ugaCity          = ugacity
+          , _ugaCountry       = ugacountry
+          }
+    dbUpdate . UserGroupCreate $ ug
 
 addNewRandomFile :: ( CryptoRNG m, MonadBase IO m, MonadCatch m, MonadDB m
                     , MonadFileStorage m, MonadLog m, MonadThrow m, MonadTime m
@@ -769,46 +708,46 @@ addNewRandomFile = do
   saveNewFile fn cnt
 
 addNewUser :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m) => String -> String -> String -> m (Maybe User)
-addNewUser firstname secondname email = addNewUserAndMaybeUserGroup firstname secondname email True
-
-addNewUserAndMaybeUserGroup :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m) => String -> String -> String -> Bool -> m (Maybe User)
-addNewUserAndMaybeUserGroup firstname secondname email createusergroup = do
+addNewUser firstname secondname email = do
   bd <- dbQuery $ GetMainBrandedDomain
-  company <- case createusergroup of
-    True  -> dbUpdate $ CreateCompany
-    False -> dbUpdate$ CreateCompanyWithoutUserGroup
-  dbUpdate $ AddUser (firstname, secondname) email Nothing (companyid company,True) def (get bdid bd) AccountRequest (companyusergroupid company)
+  ug <- dbUpdate $ UserGroupCreate def
+  dbUpdate $ AddUser (firstname, secondname) email Nothing (get ugID ug,True) def (get bdid bd) AccountRequest
 
 addNewUserWithCompany :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
                       => String
                       -> String
                       -> String
-                      -> m (Maybe (User, CompanyID))
+                      -> m (Maybe (User, UserGroupID))
 addNewUserWithCompany firstname secondname email = do
   bd <- dbQuery $ GetMainBrandedDomain
-  company <- dbUpdate CreateCompany
-  mUser <- dbUpdate $ AddUser (firstname, secondname) email Nothing (companyid company, True) def (get bdid bd) AccountRequest (companyusergroupid company)
+  ug <- dbUpdate $ UserGroupCreate def
+  mUser <- dbUpdate $ AddUser (firstname, secondname) email Nothing (get ugID ug,True) def (get bdid bd) AccountRequest
   case mUser of
     Nothing -> return Nothing
-    Just user -> return $ Just (user, companyid company)
+    Just user -> return $ Just (user, get ugID ug)
 
-addNewCompanyUser :: String -> String -> String -> CompanyID -> TestEnv (Maybe User)
-addNewCompanyUser firstname secondname email cid = do
+addNewCompanyUser :: String -> String -> String -> UserGroupID -> TestEnv (Maybe User)
+addNewCompanyUser firstname secondname email ugid = do
   bd <- dbQuery $ GetMainBrandedDomain
-  dbQuery (GetCompany  cid) >>= \case
+  dbQuery (UserGroupGet ugid) >>= \case
     Nothing -> return Nothing
-    Just company ->
-      dbUpdate $ AddUser (firstname, secondname) email Nothing (cid,True) def (get bdid bd) CompanyInvitation (companyusergroupid company)
+    Just _ug ->
+      dbUpdate $ AddUser (firstname, secondname) email Nothing (ugid,True) def (get bdid bd) CompanyInvitation
+
+addNewUserToUserGroup :: String -> String -> String -> UserGroupID -> TestEnv (Maybe User)
+addNewUserToUserGroup firstname secondname email ugid = do
+  bd <- dbQuery $ GetMainBrandedDomain
+  dbQuery (UserGroupGet ugid) >>= \case
+    Nothing -> return Nothing
+    Just _ug ->
+      dbUpdate $ AddUser (firstname, secondname) email Nothing (ugid,True) def (get bdid bd) CompanyInvitation
 
 addNewRandomUser :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m) => m User
-addNewRandomUser = addNewRandomUserAndMaybeUserGroup True
-
-addNewRandomUserAndMaybeUserGroup :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m) => Bool -> m User
-addNewRandomUserAndMaybeUserGroup createusergroup = do
+addNewRandomUser = do
   fn <- rand 10 $ arbString 3 30
   ln <- rand 10 $ arbString 3 30
   em <- rand 10 arbEmail
-  Just user <- addNewUserAndMaybeUserGroup fn ln em createusergroup
+  Just user <- addNewUser fn ln em
   -- change the user to have some distinct personal information
   personal_number <- rand 10 $ arbString 3 30
   company_position <- rand 10 $ arbString 3 30
@@ -825,12 +764,12 @@ addNewRandomUserAndMaybeUserGroup createusergroup = do
   return user
 
 addNewRandomUserWithCompany :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
-                            => m (User, CompanyID)
+                            => m (User, UserGroupID)
 addNewRandomUserWithCompany = do
   fn <- rand 10 $ arbString 3 30
   ln <- rand 10 $ arbString 3 30
   em <- rand 10 arbEmail
-  Just (user, companyId) <- addNewUserWithCompany fn ln em
+  Just (user, ugid) <- addNewUserWithCompany fn ln em
   -- change the user to have some distinct personal information
   personal_number <- rand 10 $ arbString 3 30
   company_position <- rand 10 $ arbString 3 30
@@ -844,7 +783,7 @@ addNewRandomUserWithCompany = do
                  , useremail = Email em
                  }
   _ <- dbUpdate $ SetUserInfo (userid user) userinfo
-  return (user, companyId)
+  return (user, ugid)
 
 addNewRandomUserWithPassword :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m) => String -> m User
 addNewRandomUserWithPassword password = do
@@ -855,13 +794,50 @@ addNewRandomUserWithPassword password = do
   _ <- dbUpdate $ SetUserPassword (userid randomUser) passwordhash
   return randomUser
 
-addNewRandomCompanyUser :: CompanyID -> Bool -> TestEnv User
-addNewRandomCompanyUser cid isadmin = do
+addNewRandomCompanyUser :: UserGroupID -> Bool -> TestEnv User
+addNewRandomCompanyUser ugid isadmin = do
   User{userid} <- addNewRandomUser
-  _ <- dbUpdate $ SetUserCompany userid cid
+  _ <- dbUpdate $ SetUserUserGroup userid ugid
   _ <- dbUpdate $ SetUserCompanyAdmin userid isadmin
   Just user <- dbQuery $ GetUserByID userid
   return user
+
+addNewRandomUserGroupUser :: UserGroupID -> Bool -> TestEnv User
+addNewRandomUserGroupUser ugid isadmin = do
+  User{userid} <- addNewRandomUser
+  _ <- dbUpdate $ SetUserUserGroup userid ugid
+  _ <- dbUpdate $ SetUserCompanyAdmin userid isadmin
+  Just user <- dbQuery $ GetUserByID userid
+  return user
+
+addNewRandomPartnerUser :: TestEnv (User, UserGroup)
+addNewRandomPartnerUser = do
+  -- To use UserGroups as if they are Partners, we need to generate a UserGroupID
+  -- which is not a PartnerID.
+  partners <- dbQuery GetPartners
+  -- try to generate a userGroup and always check, whether the ugid is already a partnerID.
+  mresult <- (\folder -> foldM folder Nothing [1..100]) $ \mres _counter -> do
+    case mres of
+      Just res -> return . Just $ res
+      Nothing -> do
+        partnerAdminUser <- addNewRandomUser
+        partnerAdminUserGroup <- dbQuery $ UserGroupGetByUserID (userid partnerAdminUser)
+        let partnerIDAlreadyExists = (unsafeUserGroupIDToPartnerID . get ugID $ partnerAdminUserGroup) `elem` map ptID partners
+        case partnerIDAlreadyExists of
+          True -> return Nothing
+          False -> return $ Just (partnerAdminUser, partnerAdminUserGroup)
+  case mresult of
+    Nothing -> unexpectedError "UserGroupID - PartnerID collision"
+    Just (partnerAdminUser, partnerAdminUserGroup) -> do
+      -- insert new partner row with the same ID as the UserGroup
+      True <- dbUpdate . InsertPartnerForTests $ Partner {
+                ptID = unsafeUserGroupIDToPartnerID . get ugID $ partnerAdminUserGroup
+              , ptName = T.unpack . get ugName $ partnerAdminUserGroup
+              , ptDefaultPartner = False
+              , ptUserGroupID = Just $ get ugID partnerAdminUserGroup
+              }
+      True <- dbUpdate $ MakeUserPartnerAdmin (userid partnerAdminUser) (get ugID partnerAdminUserGroup)
+      return (partnerAdminUser, partnerAdminUserGroup)
 
 data RandomDocumentAllows = RandomDocumentAllows
                           { randomDocumentAllowedTypes :: [DocumentType]

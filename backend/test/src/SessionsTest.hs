@@ -7,7 +7,6 @@ import Test.QuickCheck
 
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
-import Company.Model
 import Context
 import DB hiding (query, update)
 import Doc.DocInfo
@@ -20,6 +19,8 @@ import Session.Model
 import TestingUtil
 import TestKontra as T
 import User.Model
+import UserGroup.Data
+import UserGroup.Model
 import Util.SignatoryLinkUtils
 
 sessionsTests :: TestEnvSt -> Test
@@ -146,6 +147,6 @@ testUser :: TestEnv UserID
 testUser = do
   bd <- dbQuery $ GetMainBrandedDomain
   pwd <- createPassword "admin"
-  company <- dbUpdate $ CreateCompany
-  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) (companyid company,True) def (get bdid bd) AccountRequest (companyusergroupid company)
+  ug <- dbUpdate . UserGroupCreate $ def
+  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) (get ugID ug,True) def (get bdid bd) AccountRequest
   return $ userid user

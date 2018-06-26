@@ -10,7 +10,6 @@ import Test.Framework
 import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomain
-import Company.Model
 import Context
 import DB.Query (dbUpdate)
 import Doc.API.V2.AesonTestUtils
@@ -25,6 +24,7 @@ import Doc.DocumentMonad (withDocumentID)
 import Doc.Model.Update (SetDocumentSharing(..), updateMTimeAndObjectVersion)
 import TestingUtil
 import TestKontra
+import UserGroup.Data
 import Util.QRCode
 
 apiV2DocumentGetCallsTests :: TestEnvSt -> Test
@@ -176,20 +176,22 @@ testDocApiV2GetQRCode = do
 
 testDocApiV2GetByAdmin :: TestEnv ()
 testDocApiV2GetByAdmin = do
-  (Company {companyid}) <- addNewCompany
-  author <- addNewRandomCompanyUser companyid False
+  ug <- addNewUserGroup
+  let ugid = (get ugID ug)
+  author <- addNewRandomCompanyUser ugid False
   ctxauthor <- (set ctxmaybeuser (Just author)) <$> mkContext def
   did <- getMockDocId <$> testDocApiV2New' ctxauthor
 
-  admin <- addNewRandomCompanyUser companyid True
+  admin <- addNewRandomCompanyUser ugid True
   ctx <- (set ctxmaybeuser (Just admin)) <$> mkContext def
   getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
   assertEqual "Document viewer should be" "company_admin" (getMockDocViewerRole getMockDoc)
 
 testDocApiV2GetShared :: TestEnv ()
 testDocApiV2GetShared = do
-  (Company {companyid}) <- addNewCompany
-  author <- addNewRandomCompanyUser companyid False
+  ug <- addNewUserGroup
+  let ugid = (get ugID ug)
+  author <- addNewRandomCompanyUser ugid False
   ctxauthor <- (set ctxmaybeuser (Just author)) <$> mkContext def
   did <- getMockDocId <$> testDocApiV2New' ctxauthor
 
@@ -198,7 +200,7 @@ testDocApiV2GetShared = do
     dbUpdate $ SetDocumentSharing [did] True
   assert setshare
 
-  user <- addNewRandomCompanyUser companyid False
+  user <- addNewRandomCompanyUser ugid False
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
   assertEqual "Document viewer should be" "company_shared" (getMockDocViewerRole getMockDoc)

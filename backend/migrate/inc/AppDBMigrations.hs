@@ -115,4 +115,11 @@ kontraMigrations = [
   , partnersAddUserGroupID
   , createTableUserGroupInvoicings
   , addUserGroupMigrationJob
+  , removeUserGroupMigrationJob
+  , createJointTypeUserGroupIDTimeIndexForChargeableItems
+  , dropFKCascadeForUserGroupID
+  , companiesMakeUserGroupIDNotNull
+  , themeOwnershipMakeUserGroupIDMandatory
+  , usersMakeUserGroupIDNotNull
+  , userGroupsAdjustIDSequence
   ]

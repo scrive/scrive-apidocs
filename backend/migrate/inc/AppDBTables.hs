@@ -14,7 +14,6 @@ import Attachment.Tables
 import BrandedDomain.Tables
 import Chargeable.Tables
 import Company.Tables
-import CompanyAccounts.Tables
 import Cron.Tables
 import DB.SQLFunction
 import DB.SQLTrigger
@@ -53,6 +52,7 @@ import User.PasswordReminder.Tables
 import User.Tables
 import User.UserAccountRequest.Tables
 import UserGroup.Tables
+import UserGroupAccounts.Tables
 
 kontraComposites :: [CompositeType]
 kontraComposites = [

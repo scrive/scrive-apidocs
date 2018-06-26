@@ -56,7 +56,7 @@ handleDelete = do
 handleDownloadAttachment :: Kontrakcja m => AttachmentID -> String -> m Response
 handleDownloadAttachment attid _nameForBrowser = do
   user <- guardJustM $ get ctxmaybeuser <$> getContext
-  atts <- dbQuery $ GetAttachments [ AttachmentsSharedInUsersCompany (userid user)
+  atts <- dbQuery $ GetAttachments [ AttachmentsSharedInUsersUserGroup (userid user)
                                             , AttachmentsOfAuthorDeleteValue (userid user) True
                                             , AttachmentsOfAuthorDeleteValue (userid user) False
                                             ]
@@ -94,7 +94,7 @@ jsonAttachmentsList ::  Kontrakcja m => m InternalKontraResponse
 jsonAttachmentsList = withUser $ \user -> do
   let uid = userid user
   domain <- getField "domain" >>= \case
-    (Just "All") -> return [AttachmentsOfAuthorDeleteValue uid False, AttachmentsSharedInUsersCompany uid]
+    (Just "All") -> return [AttachmentsOfAuthorDeleteValue uid False, AttachmentsSharedInUsersUserGroup uid]
     _ -> return [AttachmentsOfAuthorDeleteValue uid False]
 
   filters <- getFieldBS "filter" >>= \case

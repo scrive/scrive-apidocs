@@ -16,8 +16,7 @@ module AppView(
               , unsupportedBrowserPage
               , standardPageFields
               , entryPointFields
-              , companyForPage
-              , companyUIForPage
+              , userGroupUIForPage
               , enableCookiesPage
               ) where
 
@@ -34,6 +33,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
+import qualified Data.Text as T
 import qualified Text.JSON as JSON
 import qualified Text.StringTemplates.Fields as F
 
@@ -41,8 +41,6 @@ import Analytics.Include
 import BrandedDomain.BrandedDomain
 import Branding.Adler32
 import Chargeable.Model
-import Company.CompanyUI.Model
-import Company.Model
 import DB
 import FeatureFlags.Model
 import Kontra
@@ -50,6 +48,8 @@ import ThirdPartyStats.Core
 import User.JSON
 import User.Lang
 import User.Model
+import UserGroup.Data
+import UserGroup.Model
 import Utils.HTTP
 import Utils.Monoid
 import VersionTH
@@ -89,36 +89,38 @@ pageFromBody :: Kontrakcja m
              -> Fields m ()
              -> m String
 pageFromBody ctx ad bodytext fields = do
-  mcompanyui <- companyUIForPage
+  mugidandui <- userGroupUIForPage
   renderTemplate "wholePage" $ do
     F.value "content" bodytext
-    standardPageFields ctx mcompanyui ad
+    standardPageFields ctx mugidandui ad
     F.valueM "httplink" $ getHttpHostpart
     fields
 
-companyForPage  :: Kontrakcja m => m (Maybe Company)
-companyForPage = do
+userGroupForPage  :: Kontrakcja m => m (Maybe UserGroup)
+userGroupForPage = do
   ctx <- getContext
   case (get ctxmaybeuser ctx) of
        Nothing -> return Nothing
-       Just user -> fmap Just $ dbQuery $ GetCompanyByUserID (userid user)
+       Just user -> fmap Just $ dbQuery $ UserGroupGetByUserID (userid user)
 
-companyUIForPage  :: Kontrakcja m => m (Maybe CompanyUI)
-companyUIForPage = do
+userGroupUIForPage  :: Kontrakcja m => m (Maybe (UserGroupID, UserGroupUI))
+userGroupUIForPage = do
   ctx <- getContext
   case (get ctxmaybeuser ctx) of
-       Just User{usercompany = cid} -> Just <$> (dbQuery $ GetCompanyUI cid)
+       Just user -> do
+         ug <- dbQuery . UserGroupGetByUserID . userid $ user
+         return . Just $ (get ugID ug, get ugUI ug)
        _ -> return Nothing
 
 currentSubscriptionJSON :: Kontrakcja m => m (Maybe JSON.JSValue)
 currentSubscriptionJSON = do
-  mcompany <- companyForPage
-  case mcompany of
-    Just company -> do
-      users <- dbQuery $ GetCompanyAccounts $ companyid company
-      docsStartedThisMonth <- fromIntegral <$> (dbQuery $ GetNumberOfDocumentsStartedThisMonth $ companyid company)
-      ff <- dbQuery $ GetFeatureFlags $ companyid company
-      return $ Just $ subscriptionJSON company users docsStartedThisMonth ff
+  mug <- userGroupForPage
+  case mug of
+    Just ug -> do
+      users <- dbQuery $ UserGroupGetUsers $ get ugID $ ug
+      docsStartedThisMonth <- fromIntegral <$> (dbQuery . GetNumberOfDocumentsStartedThisMonth . get ugID $ ug)
+      ff <- dbQuery . GetFeatureFlags . get ugID $ ug
+      return $ Just $ subscriptionJSON ug users docsStartedThisMonth ff
     _ -> return Nothing
 
 notFoundPage :: Kontrakcja m => m Response
@@ -196,8 +198,8 @@ enableCookiesPage = do
       , "http_only" .= httpOnly
       ]
 
-standardPageFields :: (Kontrakcja m) => Context -> Maybe CompanyUI -> AnalyticsData -> Fields m ()
-standardPageFields ctx mcompanyui ad = do
+standardPageFields :: (Kontrakcja m) => Context -> Maybe (UserGroupID, UserGroupUI) -> AnalyticsData -> Fields m ()
+standardPageFields ctx mugidandui ad = do
   F.value "langcode"  $ codeFromLang $ get ctxlang ctx
   F.value "logged"    $ isJust (get ctxmaybeuser ctx)
   F.value "padlogged" $ isJust (get ctxmaybepaduser ctx)
@@ -209,9 +211,9 @@ standardPageFields ctx mcompanyui ad = do
   F.value "ctxlang" $ codeFromLang $ get ctxlang ctx
   F.object "analytics" $ analyticsTemplates ad
   F.value "trackjstoken" (get ctxtrackjstoken ctx)
-  F.valueM "brandinghash" $ brandingAdler32 ctx mcompanyui
+  F.valueM "brandinghash" $ brandingAdler32 ctx mugidandui
   F.valueM "b64subscriptiondata" $  fmap (B64.encode . BSL.fromString . JSON.encode) <$> currentSubscriptionJSON
-  F.value "title" $ case emptyToNothing . strip =<< companyBrowserTitle =<< mcompanyui of
+  F.value "title" $ case emptyToNothing . strip . T.unpack =<< get uguiBrowserTitle . snd =<< mugidandui of
                       Just ctitle -> ctitle ++ " - " ++
                                      (get (bdBrowserTitle . ctxbrandeddomain) ctx)
                       Nothing -> (get (bdBrowserTitle . ctxbrandeddomain) ctx)

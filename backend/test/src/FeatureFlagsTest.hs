@@ -3,11 +3,12 @@ module FeatureFlagsTest (featureFlagsTest) where
 import Test.Framework
 import Test.QuickCheck
 
-import Company.Model
 import DB
 import FeatureFlags.Model
 import TestingUtil
 import TestKontra
+import UserGroup.Data
+import UserGroup.Model
 
 featureFlagsTest :: TestEnvSt -> Test
 featureFlagsTest env = testGroup "FeatureFlags" [
@@ -17,17 +18,19 @@ featureFlagsTest env = testGroup "FeatureFlags" [
 
 testUpdateFeatureFlagsWorks :: TestEnv ()
 testUpdateFeatureFlagsWorks = do
-  cid <- companyid <$> addNewCompany
+  ugid <- (get ugID) <$> addNewUserGroup
   replicateM_ 100 $  do
     (ff :: FeatureFlags) <- rand 10 arbitrary
-    True <- dbUpdate $ UpdateFeatureFlags cid ff
-    ff' <- dbQuery $ GetFeatureFlags cid
+    True <- dbUpdate $ UpdateFeatureFlags ugid ff
+    ff' <- dbQuery $ GetFeatureFlags ugid
     assertEqual "Updating feature flags works" ff ff'
+    companyff <- dbQuery . GetFeatureFlagsForCompany . unsafeUserGroupIDToCompanyID $ ugid
+    assertEqual "Updating FF synchronizes with company FF" ff' companyff
 
 testNewCompanyFeatureFlagDefaults :: TestEnv ()
 testNewCompanyFeatureFlagDefaults  = do
-  company <- addNewCompany
-  ff <- dbQuery $ GetFeatureFlags (companyid company)
+  ug <- addNewUserGroup
+  ff <- dbQuery $ GetFeatureFlags (get ugID ug)
   assertEqual "New company can use templates" True (ffCanUseTemplates ff)
   assertEqual "New company can use branding" True (ffCanUseBranding ff)
   assertEqual "New company can use author attachments" True (ffCanUseAuthorAttachments ff)
@@ -38,6 +41,7 @@ testNewCompanyFeatureFlagDefaults  = do
   assertEqual "New company can use dk authentication to view" False (ffCanUseDKAuthenticationToView ff)
   assertEqual "New company can use dk authentication to sign" False (ffCanUseDKAuthenticationToSign ff)
   assertEqual "New company can use no authentication to view" False (ffCanUseNOAuthenticationToView ff)
+  assertEqual "New company can use no authentication to sign" False (ffCanUseNOAuthenticationToSign ff)
   assertEqual "New company can use se authentication to view" False (ffCanUseSEAuthenticationToView ff)
   assertEqual "New company can use se authentication to sign" False (ffCanUseSEAuthenticationToSign ff)
   assertEqual "New company can use sms pin authentication to view" True (ffCanUseSMSPinAuthenticationToView ff)

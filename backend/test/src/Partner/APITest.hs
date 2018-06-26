@@ -10,7 +10,6 @@ import qualified Data.ByteString.Lazy.UTF8 as BS
 import qualified Data.HashMap.Strict as H
 import qualified Data.Text as T
 
-import Company.CompanyID
 import Context
 import DB
 import Doc.API.V2.Calls.DocumentPostCalls (docApiV2New)
@@ -21,6 +20,7 @@ import TestingUtil
 import TestingUtil.JSON
 import TestKontra as T
 import User.Model
+import UserGroup.Data
 import UserGroup.Model
 
 partnerAPITests :: TestEnvSt -> Test
@@ -47,12 +47,14 @@ testPartnerCompanyCreate = do
   let rq_newCompany_params = [ ("json", inTextBS newCompanyJSON) ]
       rq_newCompany_resp_fp = inTestDir "json/partner_api_v1/resp-partnerCompanyCreate.json"
 
-  -- First partner, create company
-  (ctx, pid1) <- testJSONCtx
+  -- First partner, create user group
+  (ctx, partner_ugid1) <- testJSONCtxWithPartnerGroupID
+  let pid1 = unsafeUserGroupIDToPartnerID partner_ugid1
   _ <- runApiJSONTest ctx POST (partnerApiCallV1CompanyCreate pid1) rq_newCompany_params 201 rq_newCompany_resp_fp
 
-  -- Second partner, create company
-  (ctx2, pid2) <- testJSONCtx
+  -- Second partner, create user group
+  (ctx2, partner_ugid2) <- testJSONCtxWithPartnerGroupID
+  let pid2 = unsafeUserGroupIDToPartnerID partner_ugid2
   _ <- runApiJSONTest ctx2 POST (partnerApiCallV1CompanyCreate pid2) rq_newCompany_params 201 rq_newCompany_resp_fp
 
   -- Random  user shouldn't be able to create company
@@ -334,42 +336,40 @@ testPartnersUserGetTokens = do
 -- fit the current use case
 -- Will need some love and care...
 
-testHelperPartnerCompanyCreate :: TestEnv (Context, PartnerID, CompanyID)
+testHelperPartnerCompanyCreate :: TestEnv (Context, PartnerID, UserGroupID)
 testHelperPartnerCompanyCreate = do
-  (ctx, pid) <- testJSONCtx
+  (ctx, partner_ugid) <- testJSONCtxWithPartnerGroupID
+  let pid = unsafeUserGroupIDToPartnerID partner_ugid
+
   newCompanyJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerCompanyCreate.json"
   let rq_newCompany_params = [ ("json", inTextBS newCompanyJSON) ]
       rq_newCompany_resp_fp = inTestDir "json/partner_api_v1/resp-partnerCompanyCreate.json"
   respValue <- runApiJSONTest ctx POST (partnerApiCallV1CompanyCreate pid) rq_newCompany_params 201 rq_newCompany_resp_fp
   let Object respObject = respValue
       Just (String cid) = H.lookup "id" respObject
-  return (ctx, pid, unsafeCompanyID $ read $ T.unpack cid)
+  return (ctx, pid, unsafeUserGroupID $ read $ T.unpack cid)
 
 testHelperPartnerUserCreate :: TestEnv (Context, PartnerID, UserID)
 testHelperPartnerUserCreate = do
-  (ctx,pid,cid) <- testHelperPartnerCompanyCreate
-  uid <- testHelperPartnerCompanyUserCreate ctx pid cid
+  (ctx,pid,company_ugid) <- testHelperPartnerCompanyCreate
+  uid <- testHelperPartnerCompanyUserCreate ctx pid company_ugid
   return (ctx, pid, uid)
 
-testHelperPartnerCompanyUserCreate :: Context -> PartnerID -> CompanyID -> TestEnv UserID
-testHelperPartnerCompanyUserCreate ctx pid cid = do
+testHelperPartnerCompanyUserCreate :: Context -> PartnerID -> UserGroupID -> TestEnv UserID
+testHelperPartnerCompanyUserCreate ctx pid company_ugid = do
   newUserGoodJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
   let rq_newUserGood_params = [ ("json", inTextBS newUserGoodJSON) ]
       rq_newUserGood_resp_fp = inTestDir "json/partner_api_v1/resp-partnerCompanyUserNew-good.json"
-  respValue <- runApiJSONTest ctx POST (partnerApiCallV1UserCreate pid cid) rq_newUserGood_params 201 rq_newUserGood_resp_fp
+  respValue <- runApiJSONTest ctx POST (partnerApiCallV1UserCreate pid company_ugid) rq_newUserGood_params 201 rq_newUserGood_resp_fp
   let Object respObject = respValue
       Just (String uid) = H.lookup "id" respObject
   return $ unsafeUserID $ read $ T.unpack uid
 
-testJSONCtx :: TestEnv (Context, PartnerID)
-testJSONCtx = do
-  partnerAdminUser <- addNewRandomUserAndMaybeUserGroup False
-  partnerId <- dbUpdate $ AddNewPartner "My Favourite Upsales"
-  _ <- dbUpdate $ MakeUserIDAdminForPartnerID (userid partnerAdminUser) partnerId
-  numberOfUpdates <- migrateToUserGroups 100
-  assertEqual "Only partner and admins company were migrated" 2 numberOfUpdates
+testJSONCtxWithPartnerGroupID :: TestEnv (Context, UserGroupID)
+testJSONCtxWithPartnerGroupID = do
+  (partnerAdminUser, partnerAdminUserGroup) <- addNewRandomPartnerUser
   ctx <- (set ctxmaybeuser (Just partnerAdminUser)) <$> mkContext def
-  return (ctx, partnerId)
+  return (ctx, get ugID partnerAdminUserGroup)
 
 runApiJSONTest :: Context             -- ^ Context to run the test in
                -> Method              -- ^ HTTP Method to use for API Call

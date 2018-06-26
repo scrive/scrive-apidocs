@@ -2,7 +2,6 @@ module UserStateTest (userStateTests) where
 
 import Test.Framework
 
-import Company.Model
 import DB
 import Doc.DocInfo
 import MinutesTime
@@ -10,6 +9,8 @@ import TestingUtil
 import TestKontra
 import User.Email
 import User.Model
+import UserGroup.Data
+import UserGroup.Model
 
 sortByEmail :: [User] -> [User]
 sortByEmail = sortBy (\a b -> compare (f a) (f b))
@@ -42,8 +43,8 @@ userStateTests env = testGroup "UserState" [
       testThat "can fetch statistics by user id" env test_userUsageStatisticsByUser,
       testThat "can fetch statistics by company id" env test_userUsageStatisticsByCompany
     ]
-  , testThat "SetUserCompanyAdmin/GetCompanyAccounts works" env test_getCompanyAccounts
-  , testThat "SetUserCompany works" env test_setUserCompany
+  , testThat "SetUserCompanyAdmin/GetUserGroupAccounts works" env test_getUserGroupAccounts
+  , testThat "SetUserUserGroup works" env test_setUserCompany
   , testThat "DeleteUser works" env test_deleteUser
   , testGroup "SetUserInfo" [
       testThat "SetUserInfo works" env test_setUserInfo
@@ -134,26 +135,25 @@ test_addUser_repeatedEmailReturnsNothing = do
   result <- addNewUser "Emily" "Green Again" "emily@green.com"
   assert $ isNothing result
 
-test_getCompanyAccounts :: TestEnv ()
-test_getCompanyAccounts = do
-  Company{companyid = cid} <- dbUpdate $ CreateCompany
+test_getUserGroupAccounts :: TestEnv ()
+test_getUserGroupAccounts = do
+  ugid <- (get ugID) <$> (dbUpdate $ UserGroupCreate def)
   let emails = ["emily@green.com", "emily2@green.com", "andrzej@skrivapa.se"]
   users <- forM emails $ \email -> do
-    Just user <- addNewCompanyUser "Emily" "Green" email cid
+    Just user <- addNewUserToUserGroup "Emily" "Green" email ugid
     return user
-  company_accounts <- dbQuery $ GetCompanyAccounts cid
-  assertBool "Company accounts returned in proper order (sorted by email)" $
-    sortByEmail users == company_accounts
+  ugAccounts1 <- dbQuery $ UserGroupGetUsers ugid
+  assertBool "Company accounts returned in proper order (sorted by email)" $ sortByEmail users == ugAccounts1
   res <- dbUpdate . DeleteUser . userid . head . sortByEmail $ users
   assertBool "User was deleted" res
   do
-    company_accounts1 <- dbQuery $ GetCompanyAccounts cid
+    ugAccounts2 <- dbQuery $ UserGroupGetUsers ugid
     assertBool "Company accounts returned in proper order (sorted by email)" $
-      tail (sortByEmail users) == company_accounts1
+      tail (sortByEmail users) == ugAccounts2
   do
-    company_accounts_all <- dbQuery $ GetCompanyAccountsIncludeDeleted cid
+    ugAccountsAll <- dbQuery $ UserGroupGetUsersIncludeDeleted ugid
     assertBool "Company accounts returned in proper order (sorted by email)" $
-      sortByEmail users == company_accounts_all
+      sortByEmail users == ugAccountsAll
 
 test_userUsageStatisticsByUser :: TestEnv ()
 test_userUsageStatisticsByUser = do
@@ -171,12 +171,12 @@ test_userUsageStatisticsByCompany :: TestEnv ()
 test_userUsageStatisticsByCompany = do
   let email1 = "emily@green.com"
       email2 = "bob@gblue.com"
-  Company{companyid = cid} <- dbUpdate $ CreateCompany
-  Just user1 <- addNewCompanyUser "Emily" "Green" email1 cid
-  Just user2 <- addNewCompanyUser "Bob" "Blue" email2 cid
+  ugid <- (get ugID) <$> (dbUpdate $ UserGroupCreate def)
+  Just user1 <- addNewUserToUserGroup "Emily" "Green" email1 ugid
+  Just user2 <- addNewUserToUserGroup "Bob" "Blue" email2 ugid
   _ <- addRandomDocumentWithAuthorAndCondition user1 isClosed
   _ <- addRandomDocumentWithAuthorAndCondition user2 isClosed
-  res <- dbQuery $ GetUsageStatsOld (Right cid) PartitionByDay $ iyears 2000
+  res <- dbQuery $ GetUsageStatsOld (Right ugid) PartitionByDay $ iyears 2000
   assertEqual "Documents present in stats" 2 $ length res
   let Just uus1 = find ((email1 ==) . uusUserEmail) res
       Just uus2 = find ((email2 ==) . uusUserEmail) res
@@ -186,21 +186,21 @@ test_userUsageStatisticsByCompany = do
 test_setUserCompany :: TestEnv ()
 test_setUserCompany = do
   Just User{userid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  Company{companyid} <- dbUpdate $ CreateCompany
-  res <- dbUpdate $ SetUserCompany userid companyid
+  ugid <- (get ugID) <$> (dbUpdate $ UserGroupCreate def)
+  res <- dbUpdate $ SetUserUserGroup userid ugid
   assertBool "Company was correctly set" res
   Just user <- dbQuery $ GetUserByID userid
-  assertBool "Returned user has proper companyid" $ usercompany user == companyid
+  assertBool "Returned user has proper companyid" $ usergroupid user == ugid
 
 test_deleteUser :: TestEnv ()
 test_deleteUser = do
-  Just User{userid,usercompany} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  Just User{userid,usergroupid} <- addNewUser "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   res <- dbUpdate $ DeleteUser userid
   assertBool "User was correctly removed" res
   nouser <- dbQuery $ GetUserByID userid
   assertBool "No user returned after removal" $ isNothing nouser
-  company_accounts <- dbQuery $ GetCompanyAccounts usercompany
-  assertBool "No users in company after removal" $ null company_accounts
+  ugusers <- dbQuery $ UserGroupGetUsers usergroupid
+  assertBool "No users in company after removal" $ null ugusers
 
 test_setUserInfo :: TestEnv ()
 test_setUserInfo = do

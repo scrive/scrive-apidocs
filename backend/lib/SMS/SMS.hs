@@ -37,7 +37,7 @@ scheduleSMS doc SMS{..} = do
     unexpectedError "no mobile phone number defined"
   sid <- dbUpdate $ CreateSMS smsProvider (fixOriginator smsOriginator) smsMSISDN smsBody
   -- charge company of the author of the document for the smses
-  dbUpdate $ ChargeCompanyForSMS (documentid doc) smsProvider smsCount
+  dbUpdate $ ChargeUserGroupForSMS (documentid doc) smsProvider smsCount
   case kontraInfoForSMS of
     Nothing -> return ()
     Just kifs -> void $ dbUpdate $ AddKontraInfoForSMS sid kifs

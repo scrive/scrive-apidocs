@@ -30,12 +30,12 @@ import qualified Archive.Control as ArchiveControl
 import qualified Attachment.Control as AttachmentControl
 import qualified Branding.Control as Branding
 import qualified Company.CompanyControl as Company
-import qualified CompanyAccounts.CompanyAccountsControl as CompanyAccounts
 import qualified Doc.DocControl as DocControl
 import qualified EID.CGI.GRP.Control as CGI
 import qualified EID.Nets.Control as NETS
 import qualified ServerUtils.ServerUtils as ServerUtils
 import qualified User.UserControl as UserControl
+import qualified UserGroupAccounts.UserGroupAccountsControl as UserGroupAccounts
 
 {- |
    The routing table for the app.
@@ -124,15 +124,15 @@ staticRoutes production = choice
      , dir "accepttos" $ hGet  $ toK0 $ UserControl.handleAcceptTOSGet
      , dir "accepttos" $ hPost $ toK0 $ UserControl.handleAcceptTOSPost
 
-     --CompanyAccountsControl
-     , dir "account" $ dir "companyaccounts" $ dir "add" $ hPost $ toK0 $ CompanyAccounts.handleAddCompanyAccount
-     , dir "account" $ dir "companyaccounts" $ dir "resend" $ hPost $ toK0 $ CompanyAccounts.handleResendToCompanyAccount
-     , dir "account" $ dir "companyaccounts" $ dir "changerole" $ hPost $ toK0 $ CompanyAccounts.handleChangeRoleOfCompanyAccount
-     , dir "account" $ dir "companyaccounts" $ dir "remove" $ hPost $ toK0 $ CompanyAccounts.handleRemoveCompanyAccount
+     --UserGroupAccountsControl
+     , dir "account" $ dir "companyaccounts" $ dir "add" $ hPost $ toK0 $ UserGroupAccounts.handleAddUserGroupAccount
+     , dir "account" $ dir "companyaccounts" $ dir "resend" $ hPost $ toK0 $ UserGroupAccounts.handleResendToUserGroupAccount
+     , dir "account" $ dir "companyaccounts" $ dir "changerole" $ hPost $ toK0 $ UserGroupAccounts.handleChangeRoleOfUserGroupAccount
+     , dir "account" $ dir "companyaccounts" $ dir "remove" $ hPost $ toK0 $ UserGroupAccounts.handleRemoveUserGroupAccount
 
-     , dir "companyaccounts" $ hGet  $ toK0 $ CompanyAccounts.handleCompanyAccounts
-     , dir "companyaccounts" $ dir "join" $ hGet $ toK1 $ CompanyAccounts.handleGetBecomeCompanyAccount
-     , dir "companyaccounts" $ dir "join" $ hPost $ toK1 $ CompanyAccounts.handlePostBecomeCompanyAccount
+     , dir "companyaccounts" $ hGet  $ toK0 $ UserGroupAccounts.handleUserGroupAccounts
+     , dir "companyaccounts" $ dir "join" $ hGet $ toK1 $ UserGroupAccounts.handleGetBecomeUserGroupAccount
+     , dir "companyaccounts" $ dir "join" $ hPost $ toK1 $ UserGroupAccounts.handlePostBecomeUserGroupAccount
 
      -- account stuff
      , allLangDirs $ dir "enter" $ hGet $ toK0 $ handleLoginGet

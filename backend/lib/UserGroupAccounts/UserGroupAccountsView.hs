@@ -1,6 +1,6 @@
-module CompanyAccounts.CompanyAccountsView (
+module UserGroupAccounts.UserGroupAccountsView (
     -- mails
-    mailNewCompanyUserInvite,
+    mailNewUserGroupUserInvite,
     mailTakeoverSingleUserInvite,
 
     -- pages
@@ -14,12 +14,11 @@ module CompanyAccounts.CompanyAccountsView (
 import Control.Monad.Catch
 import Data.Time
 import Text.StringTemplates.Templates
+import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
 import AppView
 import BrandedDomain.BrandedDomain
-import Company.CompanyUI.Model
-import Company.Model
 import Context
 import DB
 import Doc.DocViewMail
@@ -29,17 +28,17 @@ import Mails.SendMail (Mail, kontramail, kontramaillocal)
 import MinutesTime
 import Theme.Model
 import User.Model
-import Util.HasSomeCompanyInfo
+import UserGroup.Data
 import Util.HasSomeUserInfo
 
 ----------------------------------------------------------------------------
 
-mailNewCompanyUserInvite :: (TemplatesMonad m, MonadDB m,MonadThrow m, HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>
-                               Context -> a -> b -> Company -> CompanyUI -> KontraLink -> UTCTime -> m Mail
-mailNewCompanyUserInvite ctx invited inviter company companyui link expires = do
-  theme <- dbQuery $ GetTheme $ fromMaybe (get (bdMailTheme . ctxbrandeddomain) ctx) (companyMailTheme companyui)
+mailNewUserGroupUserInvite :: (TemplatesMonad m, MonadDB m,MonadThrow m, HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>
+                               Context -> a -> b -> UserGroup -> KontraLink -> UTCTime -> m Mail
+mailNewUserGroupUserInvite ctx invited inviter ug link expires = do
+  theme <- dbQuery . GetTheme . fromMaybe (get (bdMailTheme . ctxbrandeddomain) ctx) . get (uguiMailTheme . ugUI) $ ug
   kontramail (get ctxmailnoreplyaddress ctx) (get ctxbrandeddomain ctx) theme "mailNewCompanyUserInvite" $ do
-    basicCompanyInviteFields invited inviter company
+    basicUserGroupInviteFields invited inviter ug
     basicLinkFields (ctxDomainUrl ctx) link
     brandingMailFields theme
     F.value "creatorname" $ getSmartName inviter
@@ -47,21 +46,21 @@ mailNewCompanyUserInvite ctx invited inviter company companyui link expires = do
 
 
 mailTakeoverSingleUserInvite :: (TemplatesMonad m, MonadDB m,MonadThrow m, HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>
-                               Context -> a -> b -> Company -> CompanyUI -> KontraLink -> m Mail
-mailTakeoverSingleUserInvite ctx invited inviter company companyui link = do
-  theme <- dbQuery $ GetTheme $ fromMaybe (get (bdMailTheme . ctxbrandeddomain) ctx) (companyMailTheme companyui)
+                               Context -> a -> b -> UserGroup -> KontraLink -> m Mail
+mailTakeoverSingleUserInvite ctx invited inviter ug link = do
+  theme <- dbQuery . GetTheme . fromMaybe (get (bdMailTheme . ctxbrandeddomain) ctx) . get (uguiMailTheme . ugUI) $ ug
   --invite in the language of the existing user rather than in the inviter's language
   kontramaillocal (get ctxmailnoreplyaddress ctx) (get ctxbrandeddomain ctx) theme invited  "mailTakeoverSingleUserInvite" $ do
-    basicCompanyInviteFields invited inviter company
+    basicUserGroupInviteFields invited inviter ug
     basicLinkFields (ctxDomainUrl ctx) link
     brandingMailFields theme
 
-basicCompanyInviteFields :: (TemplatesMonad m, HasSomeUserInfo a, HasSomeUserInfo b, HasSomeCompanyInfo c) => a -> b -> c -> Fields m ()
-basicCompanyInviteFields invited inviter company = do
+basicUserGroupInviteFields :: (TemplatesMonad m, HasSomeUserInfo a, HasSomeUserInfo b) => a -> b -> UserGroup -> Fields m ()
+basicUserGroupInviteFields invited inviter ug = do
   F.value "invitedname" $ getFullName invited
   F.value "invitedemail" $ getEmail invited
   F.value "invitername" $ getSmartName inviter
-  F.value "companyname" $ getCompanyName company
+  F.value "companyname" . get ugName $ ug
 
 basicLinkFields :: TemplatesMonad m => String -> KontraLink -> Fields m ()
 basicLinkFields hostpart link = do
@@ -71,17 +70,17 @@ basicLinkFields hostpart link = do
 
 -------------------------------------------------------------------------------
 
-pageDoYouWantToBeCompanyAccount :: (TemplatesMonad m,  HasSomeCompanyInfo c) => Context -> c -> m String
-pageDoYouWantToBeCompanyAccount ctx company =
+pageDoYouWantToBeCompanyAccount :: (TemplatesMonad m) => Context -> UserGroup -> m String
+pageDoYouWantToBeCompanyAccount ctx ug =
   renderTemplate "pageDoYouWantToBeCompanyAccount" $ do
-    F.value "companyname" $ getCompanyName company
+    F.value "companyname" . get ugName $ ug
     entryPointFields ctx
 -------------------------------------------------------------------------------
 
-flashMessageUserHasBecomeCompanyAccount :: (TemplatesMonad m,  HasSomeCompanyInfo c) => c -> m FlashMessage
-flashMessageUserHasBecomeCompanyAccount company =
+flashMessageUserHasBecomeCompanyAccount :: (TemplatesMonad m) => UserGroup -> m FlashMessage
+flashMessageUserHasBecomeCompanyAccount ug =
   toFlashMsg OperationDone <$> renderTemplate "flashMessageUserHasBecomeCompanyAccount"
-                                  (F.value "companyname" $ getCompanyName company)
+                                  (F.value "companyname" . T.unpack . get ugName $ ug)
 
 -------------------------------------------------------------------------------
 

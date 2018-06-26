@@ -11,7 +11,7 @@ module Company.CompanyControl (
   , handleGetDomainThemes
   , handleUpdateTheme
   , handleDeleteTheme
-  , unjsonCompanyUI
+  , unjsonUserGroupUI
   ) where
 
 import Data.Functor.Invariant
@@ -27,7 +27,6 @@ import qualified Data.Unjson as Unjson
 
 import BrandedDomain.BrandedDomain
 import Company.CompanyUI.Model
-import Company.Model
 import DB
 import Happstack.Fields
 import Kontra
@@ -35,6 +34,8 @@ import Routing (hGet, hPost, toK0, toK1, toK2)
 import Theme.Control
 import Theme.ThemeID
 import User.Utils
+import UserGroup.Data
+import UserGroup.Model
 import Util.MonadUtils
 
 routes :: Route (Kontra Response)
@@ -62,15 +63,15 @@ adminRoutes = choice
   , dir "companybranding" $ dir "deletetheme" $  hPost $ toK2 $ (\cid tid -> handleDeleteTheme (Just cid) tid)
   ]
 
-handleGetCompanyBranding :: Kontrakcja m => Maybe CompanyID -> m Aeson.Value
-handleGetCompanyBranding mcid = do
+handleGetCompanyBranding :: Kontrakcja m => Maybe UserGroupID -> m Aeson.Value
+handleGetCompanyBranding mugid = do
   _ctx <- getContext
-  withCompanyAdminOrAdminOnly mcid $ \company -> do
-    companyui <- dbQuery $ GetCompanyUI (companyid company)
+  withCompanyAdminOrAdminOnly mugid $ \ug -> do
+    let companyui = fromUserGroupUI ug
     return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonCompanyUI companyui
 
-handleChangeCompanyBranding :: Kontrakcja m => Maybe CompanyID -> m ()
-handleChangeCompanyBranding mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
+handleChangeCompanyBranding :: Kontrakcja m => Maybe UserGroupID -> m ()
+handleChangeCompanyBranding mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
   companyUIJSON <- guardJustM $ getFieldBS "companyui"
   case Aeson.eitherDecode $ companyUIJSON of
      Left err -> do
@@ -78,15 +79,13 @@ handleChangeCompanyBranding mcid = withCompanyAdminOrAdminOnly mcid $ \company -
           "error" .= err
         ]
        internalError
-     Right js -> case (Unjson.parse unjsonCompanyUI js) of
-        (Result cui []) -> do
-           _ <- dbUpdate $ SetCompanyUI (companyid company) cui
-           return ()
+     Right js -> case (Unjson.parse unjsonUserGroupUI js) of
+        (Result ugui []) -> dbUpdate . UserGroupUpdate . set ugUI ugui $ ug
         _ -> internalError
 
-handleGetThemes :: Kontrakcja m =>  Maybe CompanyID -> m Aeson.Value
-handleGetThemes mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
-  handleGetThemesForCompany (companyid company)
+handleGetThemes :: Kontrakcja m =>  Maybe UserGroupID -> m Aeson.Value
+handleGetThemes mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
+  handleGetThemesForUserGroup . get ugID $ ug
 
 handleGetDomainThemes :: Kontrakcja m =>  m Aeson.Value
 handleGetDomainThemes = do
@@ -94,28 +93,27 @@ handleGetDomainThemes = do
   handleGetThemesUsedByDomain bd
 
 handleGetSignviewTheme :: Kontrakcja m => m Aeson.Value
-handleGetSignviewTheme = withUserCompany $ \(_,company) -> do
-  cu <- dbQuery $ GetCompanyUI $ companyid company
+handleGetSignviewTheme = withUserAndGroup $ \(_,ug) -> do
   bd <- get ctxbrandeddomain <$> getContext
-  handleGetTheme $ fromMaybe (get bdSignviewTheme bd) (companySignviewTheme cu)
+  handleGetTheme . fromMaybe (get bdSignviewTheme bd) . get (uguiSignviewTheme . ugUI) $ ug
 
-handleNewTheme :: Kontrakcja m =>  String -> Maybe CompanyID -> m Aeson.Value
-handleNewTheme s mcid = withCompanyAdminOrAdminOnly mcid $ \company -> do
+handleNewTheme :: Kontrakcja m =>  String -> Maybe UserGroupID -> m Aeson.Value
+handleNewTheme s mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
   bd <- get ctxbrandeddomain <$> getContext
   tid <- case s of
            "signview" -> return $ get bdSignviewTheme bd
            "service"  -> return $ get bdServiceTheme bd
            "mail" -> return $ get bdMailTheme bd
            _ -> internalError
-  handleNewThemeForCompany (companyid company) tid
+  handleNewThemeForUserGroup (get ugID ug) tid
 
-handleDeleteTheme :: Kontrakcja m =>  Maybe CompanyID -> ThemeID -> m ()
-handleDeleteTheme mcid tid =  withCompanyAdminOrAdminOnly mcid $ \company -> do
-  handleDeleteThemeForCompany (companyid company) tid
+handleDeleteTheme :: Kontrakcja m =>  Maybe UserGroupID -> ThemeID -> m ()
+handleDeleteTheme mugid tid =  withCompanyAdminOrAdminOnly mugid $ \ug -> do
+  handleDeleteThemeForUserGroup (get ugID ug) tid
 
-handleUpdateTheme :: Kontrakcja m =>  Maybe CompanyID -> ThemeID -> m ()
-handleUpdateTheme mcid tid = withCompanyAdminOrAdminOnly mcid $ \company -> do
-  handleUpdateThemeForCompany (companyid company) tid
+handleUpdateTheme :: Kontrakcja m =>  Maybe UserGroupID -> ThemeID -> m ()
+handleUpdateTheme mugid tid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
+  handleUpdateThemeForUserGroup (get ugID ug) tid
 
 unjsonCompanyUI :: UnjsonDef CompanyUI
 unjsonCompanyUI = objectOf $ pure CompanyUI
@@ -146,5 +144,28 @@ unjsonCompanyUI = objectOf $ pure CompanyUI
           unjsonDef
        )
 
-instance Unjson CompanyUI where
-  unjsonDef = unjsonCompanyUI
+unjsonUserGroupUI :: UnjsonDef UserGroupUI
+unjsonUserGroupUI = objectOf $ pure UserGroupUI
+  <*> fieldOpt "mailTheme"
+      _uguiMailTheme
+      "Id of a mail theme"
+  <*> fieldOpt "signviewTheme"
+      _uguiSignviewTheme
+      "Id of a signview theme"
+  <*> fieldOpt "serviceTheme"
+      _uguiServiceTheme
+      "Id of a service theme"
+  <*> fieldOpt "browserTitle"
+      _uguiBrowserTitle
+      "Browser title"
+  <*> fieldOpt "smsOriginator"
+      _uguiSmsOriginator
+      "SMS Originator"
+  <*> fieldOptBy "favicon"
+      _uguiFavicon
+      "Favicon"
+       (invmap
+          (\l -> B64.decodeLenient $ BSC8.pack $ drop 1 $ dropWhile ((/=) ',') $ l)
+          (\l -> BSC8.unpack $ BS.append (BSC8.pack "data:image/png;base64,") $ B64.encode l)
+          unjsonDef
+       )

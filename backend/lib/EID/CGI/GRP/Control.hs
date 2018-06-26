@@ -20,7 +20,6 @@ import qualified Data.Text.Encoding as T
 import qualified Text.StringTemplates.Fields as F
 
 import Chargeable.Model
-import Company.Model
 import DB hiding (InternalError)
 import Doc.DocInfo
 import Doc.DocStateData
@@ -47,6 +46,8 @@ import Session.Cookies
 import Session.Data
 import Session.Model
 import Templates
+import UserGroup.Data
+import UserGroup.Model
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.MonadUtils
@@ -225,7 +226,7 @@ checkCGISignStatus CgiGrpConfig{..}  did slid = do
                             , cgisebidsSignature = mk_binary $ fromMaybe (missing "signature") crsSignature
                             , cgisebidsOcspResponse = mk_binary $ just_lookup "Validation.ocsp.response" crsAttributes
                           }
-                          dbUpdate $ ChargeCompanyForSEBankIDSignature did
+                          dbUpdate $ ChargeUserGroupForSEBankIDSignature did
                           return CGISignStatusSuccess
                         (CgiGrpAuthTransaction _ _ _ _) -> unexpectedError "Fetched CgiGrpAuthTransaction while expecting CgiGrpSignTransaction"
                     _ -> return $  CGISignStatusInProgress crsProgressStatus
@@ -310,7 +311,7 @@ checkCGIAuthStatus did slid = do
                       F.value "ocsp_response" $ B64.encode ocspResponse
                 withDocument doc $
                   void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence  (eventFields) (Just sl) Nothing =<< signatoryActor ctx sl
-                dbUpdate $ ChargeCompanyForSEBankIDAuthentication did
+                dbUpdate $ ChargeUserGroupForSEBankIDAuthentication did
                 return $ Right Complete
               (CgiGrpSignTransaction _ _ _ _ _) -> unexpectedError "Fetched CgiGrpSignTransaction while expecting CgiGrpAuthTransaction"
           else return $ Right crsProgressStatus
@@ -325,14 +326,14 @@ checkCGIAuthStatus did slid = do
 ----------------------------------------
 
 getCompanyDisplayName :: (MonadDB m, MonadThrow m) => Document -> m (Maybe T.Text)
-getCompanyDisplayName doc = fmap T.pack . companycgidisplayname . companyinfo
-  <$> dbQuery (GetCompanyByUserID $ fromJust $ maybesignatory author)
+getCompanyDisplayName doc = get (ugsCGIDisplayName . ugSettings)
+  <$> dbQuery (UserGroupGetByUserID $ fromJust $ maybesignatory author)
   where
     author = fromJust $ getSigLinkFor signatoryisauthor doc
 
 getCompanyServiceID :: (MonadDB m, MonadThrow m) => Document -> m (Maybe T.Text)
-getCompanyServiceID doc = fmap T.pack . companycgiserviceid . companyinfo
-  <$> dbQuery (GetCompanyByUserID $ fromJust $ maybesignatory author)
+getCompanyServiceID doc = get (ugsCGIServiceID . ugSettings)
+  <$> dbQuery (UserGroupGetByUserID $ fromJust $ maybesignatory author)
   where
     author = fromJust $ getSigLinkFor signatoryisauthor doc
 

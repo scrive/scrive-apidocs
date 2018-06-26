@@ -1,28 +1,29 @@
 module User.Model.Query (
-    GetCompanyAccounts(..)
-  , GetCompanyAccountsIncludeDeleted(..)
-  , GetCompanyAccountsCountActive(..)
-  , GetCompanyAccountsCountMainDomainBranding(..)
-  , GetCompanyAccountsCountTotal(..)
-  , GetCompanyAdmins(..)
+    GetUserGroupAccountsCountActive(..)
+  , GetUserGroupAccountsCountMainDomainBranding(..)
+  , GetUserGroupAccountsCountTotal(..)
+  , GetUserGroupAdmins(..)
   , GetUsageStats(..)
   , GetUserByID(..)
   , GetUserByIDIncludeDeleted(..)
   , GetUserByEmail(..)
   , GetUsers(..)
   , GetUserWherePasswordAlgorithmIsEarlierThan(..)
-  , GetUsersWithCompanies(..)
+  , GetUsersWithUserGroupNames(..)
   , IsUserDeletable(..)
   , UserGroupGetAllUsersFromThisAndSubgroups(..)
+  , UserGroupGetUsers(..)
+  , UserGroupGetUsersIncludeDeleted(..)
   ) where
 
 import Control.Monad.Catch
 import Control.Monad.State (MonadState)
 import Data.Char
 import Data.Int
+import qualified Data.Text as T
 
 import Chargeable.Model
-import Company.Model
+import Company.Data
 import DB
 import Doc.DocStateData (DocumentStatus(..))
 import MinutesTime
@@ -75,49 +76,55 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetUserByEmail (Maybe User) wher
     runQuery_ $ selectUsersSQL <+> "WHERE deleted IS NULL AND email =" <?> map toLower (unEmail email)
     fetchMaybe fetchUser
 
-data GetCompanyAccounts = GetCompanyAccounts CompanyID
-instance MonadDB m => DBQuery m GetCompanyAccounts [User] where
-  query (GetCompanyAccounts cid) = do
+data GetUserGroupAccounts = GetUserGroupAccounts CompanyID
+instance MonadDB m => DBQuery m GetUserGroupAccounts [User] where
+  query (GetUserGroupAccounts cid) = do
     runQuery_ $ selectUsersSQL <+> "WHERE company_id =" <?> cid <+> "AND deleted IS NULL ORDER BY email"
     fetchMany fetchUser
 
-data GetCompanyAccountsIncludeDeleted = GetCompanyAccountsIncludeDeleted CompanyID
-instance MonadDB m => DBQuery m GetCompanyAccountsIncludeDeleted [User] where
-  query (GetCompanyAccountsIncludeDeleted cid) = do
-    runQuery_ $ selectUsersSQL <+> "WHERE company_id =" <?> cid <+> "ORDER BY email"
+data UserGroupGetUsers = UserGroupGetUsers UserGroupID
+instance MonadDB m => DBQuery m UserGroupGetUsers [User] where
+  query (UserGroupGetUsers ugid) = do
+    runQuery_ $ selectUsersSQL <+> "WHERE user_group_id =" <?> ugid <+> "AND deleted IS NULL ORDER BY email"
     fetchMany fetchUser
 
-data GetCompanyAccountsCountTotal = GetCompanyAccountsCountTotal
-instance (MonadDB m, MonadThrow m) => DBQuery m GetCompanyAccountsCountTotal [(CompanyID, Int64)] where
-  query GetCompanyAccountsCountTotal = do
+data UserGroupGetUsersIncludeDeleted = UserGroupGetUsersIncludeDeleted UserGroupID
+instance MonadDB m => DBQuery m UserGroupGetUsersIncludeDeleted [User] where
+  query (UserGroupGetUsersIncludeDeleted ugid) = do
+    runQuery_ $ selectUsersSQL <+> "WHERE User_group_id =" <?> ugid <+> "ORDER BY email"
+    fetchMany fetchUser
+
+data GetUserGroupAccountsCountTotal = GetUserGroupAccountsCountTotal
+instance (MonadDB m, MonadThrow m) => DBQuery m GetUserGroupAccountsCountTotal [(UserGroupID, Int64)] where
+  query GetUserGroupAccountsCountTotal = do
     runQuery_ $ sqlSelect "users u" $ do
-      sqlJoinOn "companies c" "u.company_id = c.id"
-      sqlResult "u.company_id"
+      sqlJoinOn "user_group_invoicings uginv" "u.user_group_id = uginv.user_group_id"
+      sqlResult "u.user_group_id"
       sqlResult "count(u.id)"
       sqlWhereIsNotScriveEmail "u.email"
       sqlWhereIsNULL "u.deleted"
-      sqlWhereNotEq "c.payment_plan" FreePlan
-      sqlGroupBy "u.company_id"
+      sqlWhereNotEq "uginv.payment_plan" FreePlan
+      sqlGroupBy "u.user_group_id"
     fetchMany id
 
-data GetCompanyAccountsCountMainDomainBranding = GetCompanyAccountsCountMainDomainBranding
-instance (MonadDB m, MonadThrow m) => DBQuery m GetCompanyAccountsCountMainDomainBranding [(CompanyID, Int64)] where
-  query GetCompanyAccountsCountMainDomainBranding = do
+data GetUserGroupAccountsCountMainDomainBranding = GetUserGroupAccountsCountMainDomainBranding
+instance (MonadDB m, MonadThrow m) => DBQuery m GetUserGroupAccountsCountMainDomainBranding [(UserGroupID, Int64)] where
+  query GetUserGroupAccountsCountMainDomainBranding = do
     runQuery_ $ sqlSelect "users u" $ do
-      sqlJoinOn "companies c" "u.company_id = c.id"
-      sqlResult "u.company_id"
+      sqlJoinOn "user_group_invoicings uginv" "u.user_group_id = uginv.user_group_id"
+      sqlResult "u.user_group_id"
       sqlResult "count(u.id)"
       sqlWhereIsNotScriveEmail "u.email"
       sqlWhereIsNULL "u.deleted"
-      sqlWhereNotEq "c.payment_plan" FreePlan
+      sqlWhereNotEq "uginv.payment_plan" FreePlan
       sqlWhere ("u.associated_domain_id = (SELECT b.id FROM branded_domains b " <>
                 "WHERE b.main_domain=TRUE LIMIT 1)")
-      sqlGroupBy "u.company_id"
+      sqlGroupBy "u.user_group_id"
     fetchMany id
 
-data GetCompanyAccountsCountActive = GetCompanyAccountsCountActive
-instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetCompanyAccountsCountActive [(CompanyID, Int64)] where
-  query GetCompanyAccountsCountActive = do
+data GetUserGroupAccountsCountActive = GetUserGroupAccountsCountActive
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetUserGroupAccountsCountActive [(UserGroupID, Int64)] where
+  query GetUserGroupAccountsCountActive = do
     now <- currentTime
     runQuery_ $ activeUsersQuery now
     fetchMany id
@@ -125,7 +132,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetCompanyAccountsC
       where
 
         activeUsersQuery :: UTCTime -> SQL
-        activeUsersQuery now = ("SELECT company_id, count(user_id) FROM") <+>
+        activeUsersQuery now = ("SELECT user_group_id, count(user_id) FROM") <+>
                            (
                             "(" <+>
                             loggedInRecently now <+>
@@ -133,40 +140,40 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetCompanyAccountsC
                             docSentRecently now <+>
                             ")"
                            ) <+>
-                           "as active_users GROUP BY company_id;"
+                           "as active_users GROUP BY user_group_id;"
 
         loggedInRecently :: UTCTime -> SQL
         loggedInRecently now = toSQLCommand $
           sqlSelect "users u" $ do
             sqlJoinOn "users_history h" "u.id = h.user_id"
-            sqlJoinOn "companies c" "c.id = u.company_id"
-            sqlResult "u.company_id AS company_id"
+            sqlJoinOn "user_groups ug" "ug.id = u.user_group_id"
+            sqlResult "u.user_group_id AS user_group_id"
             sqlResult "u.id AS user_id"
             sqlWhereEq "h.event_type" UserLoginSuccess
             sqlWhereNotEq "c.payment_plan" FreePlan
             sqlWhereIsNotScriveEmail "u.email"
             sqlGroupBy "u.id"
-            sqlGroupBy "c.id"
-            sqlHaving $ "max(h.time) > (" <?> now <+> "- interval '4 weeks')"
+            sqlGroupBy "ug.id"
+            sqlHaving $ "max(h.time) > (" <?> now <+> " - interval '4 weeks')"
 
         docSentRecently :: UTCTime -> SQL
         docSentRecently now = toSQLCommand $
           sqlSelect "chargeable_items i" $ do
-            sqlJoinOn "companies c" "c.id = i.company_id"
+            sqlJoinOn "user_groups ug" "ug.id = i.user_group_id"
             sqlJoinOn "users u" "u.id = i.user_id"
-            sqlResult "i.company_id AS company_id"
+            sqlResult "i.user_group_id AS user_group_id"
             sqlResult "i.user_id AS user_id"
             sqlWhereEq "i.\"type\"" CIStartingDocument
-            sqlWhereNotEq "c.payment_plan" FreePlan
+            sqlWhereNotEq "ug.payment_plan" FreePlan
             sqlWhereIsNotScriveEmail "u.email"
             sqlGroupBy "i.user_id"
-            sqlGroupBy "i.company_id"
-            sqlHaving $ "max(i.time) > (" <?> now <+> "- interval '4 weeks')"
+            sqlGroupBy "i.user_group_id"
+            sqlHaving $ "max(i.time) > (" <?> now <+> " - interval '4 weeks')"
 
-data GetCompanyAdmins = GetCompanyAdmins CompanyID
-instance MonadDB m => DBQuery m GetCompanyAdmins [User] where
-  query (GetCompanyAdmins cid) = do
-    runQuery_ $ selectUsersSQL <+> "WHERE is_company_admin AND company_id =" <?> cid <+> "AND deleted IS NULL ORDER BY email"
+data GetUserGroupAdmins = GetUserGroupAdmins UserGroupID
+instance MonadDB m => DBQuery m GetUserGroupAdmins [User] where
+  query (GetUserGroupAdmins ugid) = do
+    runQuery_ $ selectUsersSQL <+> "WHERE is_company_admin AND user_group_id =" <?> ugid <+> "AND deleted IS NULL ORDER BY email"
     fetchMany fetchUser
 
 data IsUserDeletable = IsUserDeletable UserID
@@ -189,8 +196,8 @@ instance MonadDB m => DBQuery m IsUserDeletable Bool where
   disappear within short (December 2017), so I see no point in doing this.
 -}
 
-data GetUsageStats = GetUsageStatsOld (Either UserID CompanyID) StatsPartition Interval
-                   | GetUsageStatsNew (Either UserID CompanyID) StatsPartition Interval
+data GetUsageStats = GetUsageStatsOld (Either UserID UserGroupID) StatsPartition Interval
+                   | GetUsageStatsNew (Either UserID UserGroupID) StatsPartition Interval
 instance (MonadDB m, MonadTime m) => DBQuery m GetUsageStats [UserUsageStats] where
   query (GetUsageStatsOld eid statsPartition interval) = do
     now <- currentTime
@@ -260,8 +267,8 @@ instance (MonadDB m, MonadTime m) => DBQuery m GetUsageStats [UserUsageStats] wh
         sqlResult $ documentClosed <+> "AS document_closed"
         sqlWhere $ documentSent `sqlOR` documentClosed
         case eid of
-          Left  uid -> sqlWhereEq "u.id" uid
-          Right cid -> sqlWhereEq "u.company_id" cid
+          Left  uid  -> sqlWhereEq "u.id" uid
+          Right ugid -> sqlWhereEq "u.user_group_id" ugid
         where
           documentSent = dateTrunc "d.invite_time" <+> ">=" <+> startingDate
 
@@ -334,8 +341,8 @@ instance (MonadDB m, MonadTime m) => DBQuery m GetUsageStats [UserUsageStats] wh
           sqlGroupBy "time_window"
           sqlGroupBy "chi.user_id"
           case eid of
-            Left  uid -> sqlWhereEq "chi.user_id" uid
-            Right cid -> sqlWhereEq "chi.company_id" cid
+            Left  uid  -> sqlWhereEq "chi.user_id" uid
+            Right ugid -> sqlWhereEq "chi.user_group_id" ugid
 
       startingDate :: UTCTime -> SQL
       startingDate now = dateTrunc (sqlParam now <+> "-" <?> interval)
@@ -360,11 +367,11 @@ instance (MonadDB m, MonadTime m) => DBQuery m GetUsageStats [UserUsageStats] wh
           }
       }
 
-data GetUsersWithCompanies = GetUsersWithCompanies [UserFilter] [AscDesc UserOrderBy] (Int, Int)
-instance MonadDB m => DBQuery m GetUsersWithCompanies [(User, Company)] where
-  query (GetUsersWithCompanies filters sorting (offset, limit)) = do
+data GetUsersWithUserGroupNames = GetUsersWithUserGroupNames [UserFilter] [AscDesc UserOrderBy] (Int, Int)
+instance MonadDB m => DBQuery m GetUsersWithUserGroupNames [(User, T.Text)] where
+  query (GetUsersWithUserGroupNames filters sorting (offset, limit)) = do
     runQuery_ $ smconcat [
-        selectUsersWithCompaniesSQL
+        selectUsersWithUserGroupNamesSQL
       , if null filters
           then mempty
           else "AND" <+> sqlConcatAND (map userFilterToSQL filters)
@@ -373,7 +380,7 @@ instance MonadDB m => DBQuery m GetUsersWithCompanies [(User, Company)] where
           else "ORDER BY" <+> sqlConcatComma (map userOrderByAscDescToSQL sorting)
       , " OFFSET" <?> (fromIntegral offset :: Int32) <+> "LIMIT" <?> (fromIntegral limit :: Int32)
       ]
-    fetchMany fetchUserWithCompany
+    fetchMany fetchUserWithUserGroupName
 
 data UserGroupGetAllUsersFromThisAndSubgroups = UserGroupGetAllUsersFromThisAndSubgroups UserGroupID
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetAllUsersFromThisAndSubgroups [User] where

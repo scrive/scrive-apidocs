@@ -5,15 +5,15 @@
 -}
 module Theme.Control (
     handleGetTheme
-  , handleGetThemesForCompany
+  , handleGetThemesForUserGroup
   , handleGetThemesForDomain
   , handleGetThemesUsedByDomain
   , handleNewThemeForDomain
-  , handleNewThemeForCompany
+  , handleNewThemeForUserGroup
   , handleUpdateThemeForDomain
-  , handleUpdateThemeForCompany
+  , handleUpdateThemeForUserGroup
   , handleDeleteThemeForDomain
-  , handleDeleteThemeForCompany
+  , handleDeleteThemeForUserGroup
   ) where
 
 import Data.Unjson
@@ -24,12 +24,12 @@ import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
-import Company.Model
 import DB
 import Happstack.Fields
 import Kontra
 import Theme.Model
 import Theme.View
+import UserGroup.Data
 import Util.MonadUtils
 
 handleGetTheme:: Kontrakcja m => ThemeID -> m Aeson.Value
@@ -37,9 +37,9 @@ handleGetTheme tid =  do
   theme <- dbQuery $ GetTheme tid
   return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme theme
 
-handleGetThemesForCompany:: Kontrakcja m => CompanyID -> m Aeson.Value
-handleGetThemesForCompany cid =  do
-  themes <- dbQuery $ GetThemesForCompany cid
+handleGetThemesForUserGroup:: Kontrakcja m => UserGroupID -> m Aeson.Value
+handleGetThemesForUserGroup ugid =  do
+  themes <- dbQuery $ GetThemesForUserGroup ugid
   return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonThemesList themes
 
 handleGetThemesForDomain:: Kontrakcja m => BrandedDomainID -> m Aeson.Value
@@ -72,19 +72,19 @@ handleUpdateThemeForDomain did tid =  do
         return ()
       _ -> internalError
 
-handleUpdateThemeForCompany:: Kontrakcja m => CompanyID -> ThemeID -> m ()
-handleUpdateThemeForCompany cid tid =  do
+handleUpdateThemeForUserGroup:: Kontrakcja m => UserGroupID -> ThemeID -> m ()
+handleUpdateThemeForUserGroup ugid tid =  do
   theme <- dbQuery $ GetTheme tid
   themeJSON <- guardJustM $ getFieldBS "theme"
   case Aeson.eitherDecode themeJSON of
    Left err -> do
-    logInfo "Error while parsing theme for company" $ object [
+    logInfo "Error while parsing theme for user group" $ object [
         "error" .= err
       ]
     internalError
    Right js -> case (Unjson.parse unjsonTheme js) of
         (Result newTheme []) -> do
-          _ <- dbUpdate $ UpdateThemeForCompany cid newTheme {themeID = themeID theme}
+          _ <- dbUpdate $ UpdateThemeForUserGroup ugid newTheme {themeID = themeID theme}
           return ()
         _ -> internalError
 
@@ -97,11 +97,11 @@ handleNewThemeForDomain did tid = do
   newTheme <- dbUpdate $ InsertNewThemeForDomain did $ theme {themeName = name}
   return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme newTheme
 
-handleNewThemeForCompany :: Kontrakcja m => CompanyID -> ThemeID -> m Aeson.Value
-handleNewThemeForCompany cid tid = do
+handleNewThemeForUserGroup :: Kontrakcja m => UserGroupID -> ThemeID -> m Aeson.Value
+handleNewThemeForUserGroup ugid tid = do
   theme <- dbQuery $ GetTheme tid
   name <- guardJustM $ getField "name"
-  newTheme <- dbUpdate $ InsertNewThemeForCompany cid $ theme {themeName = name}
+  newTheme <- dbUpdate $ InsertNewThemeForUserGroup ugid $ theme {themeName = name}
   return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme newTheme
 
 handleDeleteThemeForDomain:: Kontrakcja m => BrandedDomainID -> ThemeID -> m ()
@@ -109,9 +109,9 @@ handleDeleteThemeForDomain did tid = do
   guardNotMainDomain did  "Main domain themes can't be deleted"
   dbUpdate $ DeleteThemeOwnedByDomain did tid
 
-handleDeleteThemeForCompany:: Kontrakcja m => CompanyID -> ThemeID -> m ()
-handleDeleteThemeForCompany cid tid = do
-  dbUpdate $ DeleteThemeOwnedByCompany cid tid
+handleDeleteThemeForUserGroup:: Kontrakcja m => UserGroupID -> ThemeID -> m ()
+handleDeleteThemeForUserGroup ugid tid = do
+  dbUpdate $ DeleteThemeOwnedByUserGroup ugid tid
 
 
 guardNotMainDomain :: Kontrakcja m => BrandedDomainID -> T.Text -> m ()

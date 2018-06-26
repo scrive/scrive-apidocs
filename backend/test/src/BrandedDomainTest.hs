@@ -4,12 +4,12 @@ import Test.Framework
 
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
-import Company.Model
 import DB
 import TestingUtil
 import TestKontra
 import Theme.Model
 import User.Model
+import UserGroup.Data
 
 brandedDomainTests :: TestEnvSt -> Test
 brandedDomainTests env = testGroup "BrandedDomainsTest" [
@@ -37,7 +37,7 @@ test_brandedDomainCreateUpdate = do
 
 test_brandedDomainAssociatedDomain :: TestEnv ()
 test_brandedDomainAssociatedDomain = do
-  company <- addNewCompany
+  ugid <- (get ugID) <$> addNewUserGroup
   bdID <- dbUpdate $ NewBrandedDomain
   bd <- dbQuery $ GetBrandedDomainByID bdID
   let nbd = set bdUrl "http://localhost:8000" bd
@@ -45,7 +45,7 @@ test_brandedDomainAssociatedDomain = do
 
   pwd <- createPassword "admin"
 
-  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) (companyid company,True) def bdID AccountRequest (companyusergroupid company)
+  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) (ugid, True) def bdID AccountRequest
 
   wbd <- dbQuery $ GetBrandedDomainByUserID (userid user)
 

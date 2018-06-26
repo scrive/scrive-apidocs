@@ -113,7 +113,7 @@ sqlWhereAttachmentFilter (AttachmentFilterByFileID fileid) =
 
 data AttachmentDomain
   = AttachmentsOfAuthorDeleteValue UserID Bool   -- ^ Attachments of user, with deleted flag
-  | AttachmentsSharedInUsersCompany UserID       -- ^ Attachments shared in the user company
+  | AttachmentsSharedInUsersUserGroup UserID       -- ^ Attachments shared in the user company
 
 -- | These are possible order by clauses that make documents sorted by.
 data AttachmentOrderBy
@@ -143,10 +143,10 @@ instance MonadDB m => DBQuery m GetAttachments [Attachment] where
    where
     domainToSQLCommand (AttachmentsOfAuthorDeleteValue uid del) =
       "attachments.user_id =" <?> uid <+> "AND attachments.deleted =" <?> del
-    domainToSQLCommand (AttachmentsSharedInUsersCompany uid) =
+    domainToSQLCommand (AttachmentsSharedInUsersUserGroup uid) =
       "attachments.deleted = FALSE AND attachments.shared AND EXISTS (SELECT 1 FROM users, users AS users_2"
                                           <+> "WHERE attachments.user_id = users.id"
-                                            <+> "AND users.company_id = users_2.company_id AND users_2.id =" <?> uid <+>")"
+                                            <+> "AND users.user_group_id = users_2.user_group_id AND users_2.id =" <?> uid <+>")"
     orderToSQLCommand (Asc AttachmentOrderByTitle)  = "attachments.title ASC"
     orderToSQLCommand (Desc AttachmentOrderByTitle) = "attachments.title DESC"
     orderToSQLCommand (Asc AttachmentOrderByMTime)  = "attachments.mtime ASC"

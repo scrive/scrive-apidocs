@@ -160,7 +160,7 @@ docApiV2Start did = logDocument did . api $ do
     dbUpdate $ PreparationToPending actor timezone
     dbUpdate $ SetDocumentInviteTime t actor
     postDocumentPreparationChange authorSignsNow timezone
-    dbUpdate $ ChargeCompanyForStartingDocument did
+    dbUpdate $ ChargeUserGroupForStartingDocument did
     -- Result
     Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 
@@ -390,7 +390,7 @@ docApiV2SetAttachments did = logDocument did . api $ do
     Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 
   where
-    attachmentsQueryFor user fid = GetAttachments [ AttachmentsSharedInUsersCompany (userid user)
+    attachmentsQueryFor user fid = GetAttachments [ AttachmentsSharedInUsersUserGroup (userid user)
                                                   , AttachmentsOfAuthorDeleteValue  (userid user) True
                                                   , AttachmentsOfAuthorDeleteValue  (userid user) False
                                                   ]

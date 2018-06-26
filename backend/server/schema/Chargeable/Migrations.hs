@@ -2,6 +2,8 @@ module Chargeable.Migrations
     ( createIndexesForChargeableItems
     , createJointTypeCompanyIDTimeIndexForChargeableItems
     , chargeableItemsAddUserGroupID
+    , createJointTypeUserGroupIDTimeIndexForChargeableItems
+    , dropFKCascadeForUserGroupID
     ) where
 
 import Control.Monad.Catch
@@ -43,3 +45,25 @@ chargeableItemsAddUserGroupID = Migration {
       ]
     runQuery_ . sqlCreateIndex tname $ indexOnColumn "user_group_id"
 }
+
+createJointTypeUserGroupIDTimeIndexForChargeableItems :: MonadDB m => Migration m
+createJointTypeUserGroupIDTimeIndexForChargeableItems = Migration {
+    mgrTableName = tblName tableChargeableItems
+  , mgrFrom = 4
+  , mgrAction = StandardMigration $ do
+      let tname = tblName tableChargeableItems
+      runQuery_ . sqlCreateIndex tname $
+                  (indexOnColumns  ["type", "user_group_id", "\"time\""])
+  }
+
+dropFKCascadeForUserGroupID :: MonadDB m => Migration m
+dropFKCascadeForUserGroupID = Migration {
+    mgrTableName = tblName tableChargeableItems
+  , mgrFrom = 5
+  , mgrAction = StandardMigration $ do
+      let tname = tblName tableChargeableItems
+      runQuery_ $ sqlAlterTable tname
+        [ sqlDropFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
+        , sqlAddFK tname $ fkOnColumn "user_group_id" "user_groups" "id"
+        ]
+  }

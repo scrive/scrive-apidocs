@@ -15,6 +15,7 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Crypto.RNG
 import Log
 import Text.StringTemplates.Templates (TemplatesMonad)
+import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomain
 import Chargeable.Model
@@ -49,8 +50,8 @@ import ThirdPartyStats.Planhat
 import User.Email
 import User.Model
 import User.Utils
+import UserGroup.Data
 import Util.Actor
-import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
@@ -58,7 +59,7 @@ import Util.SignatoryLinkUtils
 -- | Log a document event, adding some standard properties.
 logDocEvent :: (MonadDB m, MonadThrow m, MonadTime m) => EventName -> User -> [EventProperty] -> Document -> m ()
 logDocEvent name user extraProps doc = do
-  comp <- getCompanyForUser user
+  ug <- getUserGroupForUser user
   now <- currentTime
   let uid = userid user
       email = Email $ getEmail user
@@ -70,7 +71,7 @@ logDocEvent name user extraProps doc = do
     TimeProp   now,
     MailProp   email,
     NameProp   fullname,
-    stringProp "Company Name" $ getCompanyName $ comp,
+    stringProp "Company Name" . T.unpack . get ugName $ ug,
     stringProp "Delivery Method" deliverymethod,
     stringProp "Type" (show $ documenttype doc),
     stringProp "Language" (show $ documentlang doc),
@@ -146,14 +147,14 @@ postDocumentPendingChange olddoc = do
   unlessM (isPending <$> theDocument) $
     theDocument >>= stateMismatchError "postDocumentPendingChange" Pending
 
-  dbUpdate $ ChargeCompanyForClosingSignature (documentid olddoc)
+  dbUpdate $ ChargeUserGroupForClosingSignature (documentid olddoc)
 
   ifM (allSignatoriesSigned <$> theDocument)
   {-then-} (do
       theDocument >>= \d -> logInfo "All have signed, document will be closed" $ logObject_ d
       time <- get mctxtime <$> getMailContext
       dbUpdate $ CloseDocument (systemActor time)
-      dbUpdate $ ChargeCompanyForClosingDocument $ documentid olddoc
+      dbUpdate $ ChargeUserGroupForClosingDocument $ documentid olddoc
       author <- theDocument >>= getDocAuthor
       theDocument >>= logDocEvent "Doc Closed" author []
       -- report

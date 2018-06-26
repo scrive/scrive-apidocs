@@ -20,7 +20,6 @@ module Doc.Model.Update
   , PreparationToPending(..)
   , PurgeDocuments(..)
   , archiveIdleDocuments
-  , ArchiveIdleDocumentsForUserInCompany(..)
   , RejectDocument(..)
   , RemoveDocumentAttachments(..)
   , ResetSignatoryDetails(..)
@@ -88,7 +87,6 @@ import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
 import API.APIVersion
-import Company.Model
 import Control.Monad.Trans.Instances ()
 import DB
 import DB.TimeZoneName (TimeZoneName, defaultTimeZoneName, withTimeZone)
@@ -115,6 +113,8 @@ import MagicHash
 import MinutesTime
 import User.Email
 import User.Model
+import UserGroup.Data
+import UserGroup.Model
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -398,7 +398,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
         sqlSet "deleted" now
 
         sqlWhereExists $ sqlSelect "users" $ do
-          sqlJoinOn "users AS same_company_users" "(users.company_id = same_company_users.company_id OR users.id = same_company_users.id)"
+          sqlJoinOn "users AS same_usergroup_users" "(users.user_group_id = same_usergroup_users.user_group_id OR users.id = same_usergroup_users.id)"
           sqlWhere "signatory_links.user_id = users.id"
 
           sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument uid
@@ -419,7 +419,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
         sqlSet "really_deleted" now
 
         sqlWhereExists $ sqlSelect "users" $ do
-          sqlJoinOn "users AS same_company_users" "(users.company_id = same_company_users.company_id OR users.id = same_company_users.id)"
+          sqlJoinOn "users AS same_usergroup_users" "(users.user_group_id = same_usergroup_users.user_group_id OR users.id = same_usergroup_users.id)"
           sqlWhere "signatory_links.user_id = users.id"
 
           sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument uid
@@ -1000,7 +1000,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m MarkInv
     return success
 
 data NewDocument = NewDocument User String DocumentType TimeZoneName Int Actor
-instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) => DBUpdate m NewDocument Document where
+instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, MonadBase IO m) => DBUpdate m NewDocument Document where
   update (NewDocument user title documenttype timezone nrOfOtherSignatories actor) = do
     let ctime = actorTime actor
     magichash <- random
@@ -1130,14 +1130,14 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m Restore
       sqlSet "deleted" (Nothing :: Maybe UTCTime)
 
       sqlWhereExists $ sqlSelect "users" $ do
-          sqlJoinOn "users AS same_company_users" "(users.company_id = same_company_users.company_id OR users.id = same_company_users.id)"
+          sqlJoinOn "users AS same_usergroup_users" "(users.user_group_id = same_usergroup_users.user_group_id OR users.id = same_usergroup_users.id)"
           sqlWhere "signatory_links.user_id = users.id"
 
           sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument (userid user)
           sqlWhereUserIsSelfOrCompanyAdmin
 
       sqlWhereExists $ sqlSelect "documents" $ do
-          sqlJoinOn "users AS same_company_users" "TRUE"
+          sqlJoinOn "users AS same_usergroup_users" "TRUE"
 
           sqlWhere "documents.purged_time IS NULL"
 
@@ -1511,10 +1511,10 @@ instance (CryptoRNG m, MonadLog m, MonadThrow m, DocumentMonad m, TemplatesMonad
 data CloneDocumentWithUpdatedAuthor = CloneDocumentWithUpdatedAuthor User Document Actor
 instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m) => DBUpdate m CloneDocumentWithUpdatedAuthor (Maybe DocumentID) where
   update (CloneDocumentWithUpdatedAuthor user document actor) = do
-          company <- query $ GetCompanyByUserID (userid user)
+          ug <- query . UserGroupGetByUserID . userid $ user
           siglinks <- forM (documentsignatorylinks document) $ \sl -> do
                 magichash <- random
-                let sl' = if (isAuthor sl) then (replaceSignatoryUser sl user company) else sl
+                let sl' = if (isAuthor sl) then (replaceSignatoryUser sl user ug) else sl
                 return sl' {signatorylinkid = unsafeSignatoryLinkID 0, signatorymagichash = magichash}
           res <- (flip newFromDocumentID) (documentid document) $ \doc ->
             doc {
@@ -2027,31 +2027,31 @@ document is idle for a signatory if
 -}
 archiveIdleDocuments :: (MonadLog m, MonadDB m, MonadThrow m) => UTCTime -> m Int
 archiveIdleDocuments now = do
-  companiesWithIdleSet <- dbQuery GetCompaniesWithIdleDocTimeoutSet
-  fmap sum . forM companiesWithIdleSet $ \company -> do
-    let cid = companyid company
-        timeoutDays = fromJust . companyidledoctimeout . companyinfo $ company
-    users <- dbQuery $ GetCompanyAccountsIncludeDeleted cid
+  ugs <- dbQuery $ UserGroupsGetFiltered [UGWithIdleDocTimeoutSet] Nothing
+  fmap sum . forM ugs $ \ug -> do
+    let ugid = get ugID ug
+        timeoutDays = fromJust . get (ugsIdleDocTimeout . ugSettings) $ ug
+    users <- dbQuery $ UserGroupGetUsersIncludeDeleted ugid
     fmap sum . forM (map userid users) $ \uid -> do
-      logInfo "archiveIdleDocuments starting for user in company" $ object [
-          identifier_ cid
+      logInfo "archiveIdleDocuments starting for user in user_group" $ object [
+          identifier_ ugid
         , identifier_ uid
         ]
       startTime <- currentTime
-      archived <- dbUpdate $ ArchiveIdleDocumentsForUserInCompany uid cid timeoutDays now
+      archived <- dbUpdate $ ArchiveIdleDocumentsForUserInUserGroup uid ugid timeoutDays now
       commit
       finishTime <- currentTime
-      logInfo "archiveIdleDocuments finished for user in company" $ object [
-          identifier_ cid
+      logInfo "archiveIdleDocuments finished for user in user_group" $ object [
+          identifier_ ugid
         , identifier_ uid
         , "elapsed_time" .= (realToFrac (diffUTCTime finishTime startTime) :: Double)
         , "signatory_links_archived" .= archived
         ]
       return archived
 
-data ArchiveIdleDocumentsForUserInCompany = ArchiveIdleDocumentsForUserInCompany UserID CompanyID Int16 UTCTime
-instance MonadDB m => DBUpdate m ArchiveIdleDocumentsForUserInCompany Int where
-  update (ArchiveIdleDocumentsForUserInCompany uid cid timeoutDays now) = do
+data ArchiveIdleDocumentsForUserInUserGroup = ArchiveIdleDocumentsForUserInUserGroup UserID UserGroupID Int16 UTCTime
+instance MonadDB m => DBUpdate m ArchiveIdleDocumentsForUserInUserGroup Int where
+  update (ArchiveIdleDocumentsForUserInUserGroup uid ugid timeoutDays now) = do
     runSQL $ "WITH user_idle_docs AS ("
            <+> "SELECT d.id"
            <+> "FROM documents AS d"
@@ -2060,18 +2060,18 @@ instance MonadDB m => DBUpdate m ArchiveIdleDocumentsForUserInCompany Int where
            <+> "AND d.status NOT IN (" <?> Pending <+> ")"
            <+> "AND d.mtime + (interval '1 day') *" <?> timeoutDays <+> "<" <?> now
          <+> "),"
-         <+> "doc_sigs_in_company AS ("
-           <+> "SELECT sl.id"
-           <+> "FROM signatory_links AS sl"
-           <+> "JOIN users AS u"
-           <+> "ON sl.user_id = u.id"
-           <+> "AND u.company_id =" <?> cid
-           <+> "WHERE sl.document_id IN (SELECT * FROM user_idle_docs)"
+         <+> "doc_sigs_in_user_group AS ("
+           <+> "  SELECT sl.id"
+           <+> "  FROM signatory_links AS sl"
+           <+> "  JOIN users AS u"
+           <+> "  ON sl.user_id = u.id"
+           <+> "  AND u.user_group_id =" <?> ugid
+           <+> "  WHERE sl.document_id IN (SELECT * FROM user_idle_docs)"
          <+> ")"
          <+> "UPDATE signatory_links"
          <+> "SET deleted =" <?> now
          <+> "WHERE deleted IS NULL"
-         <+> "AND id IN (SELECT * FROM doc_sigs_in_company)"
+         <+> "AND id IN (SELECT * FROM doc_sigs_in_user_group)"
 
 data UpdateAuthorUserID = UpdateAuthorUserID Int
 instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateAuthorUserID Int where

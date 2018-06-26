@@ -4,7 +4,7 @@ module Partner.Model (
 , GetPartners(..)
 , IsUserPartnerAdmin(..)
 , GetPartnerByID(..)
-, AddNewPartner(..)
+, InsertPartnerForTests(..)
 , unsafePartnerID
 , unPartnerID
 ) where
@@ -51,22 +51,19 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBQuery m IsUserPartnerAdmin B
       sqlResult "TRUE"
 
 data GetPartnerByID = GetPartnerByID PartnerID
-instance (MonadDB m, MonadThrow m, MonadLog m) => DBQuery m GetPartnerByID Partner where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetPartnerByID Partner where
   query (GetPartnerByID pid) = do
     runQuery_ . sqlSelect "partners" $ do
       mapM_ sqlResult $ partnerSelector
       sqlWhereEq "id" pid
     fetchOne fetchPartner
 
--- to convert to UserGroup here, we would need to create some "empty" company and user_group
--- since this is never called except for tests, lets assume that this will not happen during
--- company to user_groups migration.
-data AddNewPartner = AddNewPartner String
-instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m AddNewPartner PartnerID where
-  update (AddNewPartner name) = do
-    runQuery_ . sqlInsert "partners" $ do
-      sqlSet "name" name
+-- This must be only used for testing.
+data InsertPartnerForTests = InsertPartnerForTests Partner
+instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m InsertPartnerForTests Bool where
+  update (InsertPartnerForTests pt) = do
+    runQuery01 . sqlInsert "partners" $ do
+      sqlSet "id" . ptID $ pt
+      sqlSet "name" . ptName $ pt
       sqlSet "default_partner" False -- @note one can't create a new default partner
-      sqlResult "id"
-    newPartnerID <- fetchOne runIdentity
-    return newPartnerID
+      sqlSet "user_group_id" . ptUserGroupID $ pt

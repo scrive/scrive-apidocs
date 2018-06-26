@@ -14,7 +14,6 @@ import Archive.Control
 import BrandedDomain.BrandedDomain
 import Branding.Control
 import Branding.CSS
-import Company.Model
 import Context
 import DB
 import DB.TimeZoneName (mkTimeZoneName)
@@ -38,6 +37,7 @@ import TestingUtil
 import TestKontra as T
 import Theme.Model
 import User.Model
+import UserGroup.Data
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -165,12 +165,12 @@ testLastPersonSigningADocumentClosesIt = do
 
 testSigningWithPin :: TestEnv ()
 testSigningWithPin = do
-  company1 <- addNewCompany
-  company2 <- addNewCompany
+  ugid1 <- (get ugID) <$> addNewUserGroup
+  ugid2 <- (get ugID) <$> addNewUserGroup
   Just user1 <- addNewUser "Bob" "Blue" "bob@blue.com"
   Just user2 <- addNewUser "Gary" "Green" "gary@green.com"
-  True <- dbUpdate $ SetUserCompany (userid user1) (companyid company1)
-  True <- dbUpdate $ SetUserCompany (userid user2) (companyid company2)
+  True <- dbUpdate $ SetUserUserGroup (userid user1) ugid1
+  True <- dbUpdate $ SetUserUserGroup (userid user2) ugid2
   ctx <- (set ctxmaybeuser (Just user1)) <$> mkContext def
 
   let filename = inTestDir "pdfs/simple.pdf"
@@ -211,7 +211,7 @@ testSigningWithPin = do
     (rdyrsp, _) <- lift . runTestKontra req ctx $ apiCallV1Ready $ documentid d
     lift $ do
       assertEqual "Ready call was successful" 202 (rsCode rdyrsp)
-      runSQL ("SELECT * FROM chargeable_items WHERE type = 1 AND user_id =" <?> userid user1 <+> "AND company_id =" <?> companyid company1 <+> "AND document_id =" <?> documentid d)
+      runSQL ("SELECT * FROM chargeable_items WHERE type = 1 AND user_id =" <?> userid user1 <+> "AND user_group_id =" <?> ugid1 <+> "AND document_id =" <?> documentid d)
         >>= assertBool "Author and the company get charged for the delivery" . (> 0)
     let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
     siglink <- head . filter isUnsigned .documentsignatorylinks <$> theDocument
@@ -248,7 +248,7 @@ testSigningWithPin = do
     runSQL ("SELECT * FROM chargeable_items WHERE type = 1 AND user_id <>" <?> userid user1)
       >>= assertEqual "Users other than author don't get charged" 0
 
-    runSQL ("SELECT * FROM chargeable_items WHERE type = 1 AND company_id <>" <?> companyid company1)
+    runSQL ("SELECT * FROM chargeable_items WHERE type = 1 AND user_group_id <>" <?> ugid1)
       >>= assertEqual "Companies other than author's one don't get charged" 0
 
 
@@ -279,10 +279,10 @@ testSendReminderEmailUpdatesLastModifiedDate = do
 
 testSendReminderEmailByCompanyAdmin :: TestEnv ()
 testSendReminderEmailByCompanyAdmin = do
-  company   <- addNewCompany
-  user      <- addNewRandomCompanyUser (companyid company) False
-  otheruser <- addNewRandomCompanyUser (companyid company) False
-  adminuser <- addNewRandomCompanyUser (companyid company) True
+  ugid <- (get ugID) <$> addNewUserGroup
+  user      <- addNewRandomCompanyUser ugid False
+  otheruser <- addNewRandomCompanyUser ugid False
+  adminuser <- addNewRandomCompanyUser ugid True
 
   ctx      <- (set ctxmaybeuser (Just user))      <$> mkContext def
   ctxadmin <- (set ctxmaybeuser (Just adminuser)) <$> mkContext def
@@ -326,10 +326,10 @@ testSendReminderEmailByCompanyAdmin = do
 
 testDownloadFile :: TestEnv ()
 testDownloadFile = do
-  company <- addNewCompany
-  user <- addNewRandomCompanyUser (companyid company) False
-  otheruser <- addNewRandomCompanyUser (companyid company) False
-  adminuser <- addNewRandomCompanyUser (companyid company) True
+  ugid <- (get ugID) <$> addNewUserGroup
+  user <- addNewRandomCompanyUser ugid False
+  otheruser <- addNewRandomCompanyUser ugid False
+  adminuser <- addNewRandomCompanyUser ugid True
 
   ctxnotloggedin <- mkContext def
 
@@ -440,13 +440,13 @@ testDocumentFromTemplate = do
 
 testDocumentFromTemplateShared :: TestEnv ()
 testDocumentFromTemplateShared = do
-    (Company {companyid}) <- addNewCompany
-    (Just author) <- addNewCompanyUser "aaa" "bbb" "xxx@xxx.pl" companyid
+    ugid <- (get ugID) <$> addNewUserGroup
+    (Just author) <- addNewUserToUserGroup "aaa" "bbb" "xxx@xxx.pl" ugid
     doc <- addRandomDocumentWithAuthorAndCondition author (\d -> case documenttype d of
                                                             Template -> True
                                                             _ -> False)
     _ <- randomUpdate $ SetDocumentSharing [documentid doc] True
-    (Just user) <- addNewCompanyUser "ccc" "ddd" "zzz@zzz.pl" companyid
+    (Just user) <- addNewUserToUserGroup "ccc" "ddd" "zzz@zzz.pl" ugid
     docs1 <- randomQuery $ GetDocumentsByAuthor (userid user)
     ctx <- (set ctxmaybeuser (Just user))
       <$> mkContext def
@@ -457,20 +457,18 @@ testDocumentFromTemplateShared = do
 
 testDocumentDeleteInBulk :: TestEnv ()
 testDocumentDeleteInBulk = do
-    (Company {companyid}) <- addNewCompany
-    (Just author) <- addNewCompanyUser "aaa" "bbb" "xxx@xxx.pl" companyid
+    ugid <- (get ugID) <$> addNewUserGroup
+    (Just author) <- addNewUserToUserGroup "aaa" "bbb" "xxx@xxx.pl" ugid
     -- isSignable condition below is wrong. Tests somehow generate template documents
     -- that are pending and that breaks everything.
     docs <- replicateM 100 (addRandomDocumentWithAuthorAndCondition author (isSignable))
 
-    ctx <- (set ctxmaybeuser (Just author))
-      <$> mkContext def
+    ctx <- (set ctxmaybeuser (Just author)) <$> mkContext def
     req <- mkRequest POST [("documentids",  inText $ (show $ documentid <$> docs))]
 
     _ <- runTestKontra req ctx $ handleDelete
     docs2 <- dbQuery $ GetDocumentsByAuthor (userid author)
     assertEqual "Documents are deleted" 0 (length docs2)
-
 
 testGetLoggedIn :: TestEnv ()
 testGetLoggedIn = do

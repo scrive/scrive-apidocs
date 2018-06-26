@@ -18,18 +18,18 @@ import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
 import AppView
-import Company.Model
 import Kontra
 import User.Model
+import UserGroup.Data
 
 adminMainPage :: TemplatesMonad m => Context -> m String
 adminMainPage ctx = renderTemplate "adminsmain" $ do
   F.value "admin" $ isAdmin ctx
   entryPointFields ctx
 
-adminCompanyPage :: TemplatesMonad m => Context -> CompanyID ->  m String
-adminCompanyPage ctx cid = renderTemplate "admincompany" $ do
-  F.value "companyid" $ show cid
+adminCompanyPage :: TemplatesMonad m => Context -> UserGroupID ->  m String
+adminCompanyPage ctx ugid = renderTemplate "admincompany" $ do
+  F.value "companyid" $ show ugid
   F.value "admin" $ isAdmin ctx
   entryPointFields ctx
 
@@ -38,4 +38,3 @@ adminUserPage ctx uid = renderTemplate "adminuser" $ do
   F.value "userid" $ show uid
   F.value "admin" $ isAdmin ctx
   entryPointFields ctx
-

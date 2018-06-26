@@ -1,7 +1,6 @@
 module ThirdPartyStats.Planhat
     ( processPlanhatEvent
     , simplePlanhatAction
-    , simplePlanhatMetric
     ) where
 
 import Control.Monad.IO.Class
@@ -15,7 +14,6 @@ import qualified Data.Aeson as JSON
 import qualified Data.Aeson.Types as JSON
 import qualified Data.ByteString.Lazy as BSL
 
-import Company.Model
 import Planhat
 import ThirdPartyStats.Core
 import User.Email (Email(..))
@@ -65,15 +63,6 @@ simplePlanhatAction actionTag author time =
     [ MailProp . Email $ getEmail author
     , stringProp "action" actionTag
     , UserIDProp $ userid author
-    , TimeProp time ]
-
--- | Update a so called 'dimension' in Planhat; just a key/value thing on company
--- level.
-simplePlanhatMetric :: String -> Company -> UTCTime -> [EventProperty]
-simplePlanhatMetric dimensionId comp time =
-    [ stringProp "companyExternalId" $ show . companyid $ comp
-    , stringProp "dimensionId" dimensionId
-    , numProp "value" 1
     , TimeProp time ]
 
 -- Helpers

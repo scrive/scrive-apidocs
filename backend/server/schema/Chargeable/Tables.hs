@@ -5,7 +5,7 @@ import DB
 tableChargeableItems :: Table
 tableChargeableItems = tblTable {
   tblName = "chargeable_items"
-, tblVersion = 4
+, tblVersion = 6
 , tblColumns = [
     tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
   , tblColumn { colName = "time", colType = TimestampWithZoneT, colNullable = False }
@@ -19,7 +19,7 @@ tableChargeableItems = tblTable {
 , tblPrimaryKey = pkOnColumn "id"
 , tblForeignKeys = [
     fkOnColumn "company_id" "companies" "id"
-  , (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
+  , fkOnColumn "user_group_id" "user_groups" "id"
   , fkOnColumn "user_id" "users" "id"
   , fkOnColumn "document_id" "documents" "id"
   ]
@@ -31,5 +31,6 @@ tableChargeableItems = tblTable {
   , indexOnColumn "\"time\""
   , indexOnColumn "type"
   , indexOnColumns ["type", "company_id", "\"time\""]
+  , indexOnColumns ["type", "user_group_id", "\"time\""]
   ]
 }

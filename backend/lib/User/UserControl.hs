@@ -4,7 +4,7 @@ module User.UserControl(
   , handleGetChangeEmail
   , handlePostChangeEmail
   , getUserInfoUpdate
-  , getCompanyInfoUpdate
+  , getUserGroupAddressUpdate
   , handleUsageStatsJSONForUserDays
   , handleUsageStatsJSONForUserMonths
   , isUserDeletable
@@ -26,14 +26,13 @@ import Data.Time.Clock
 import Log
 import Text.JSON (JSValue(..))
 import Text.StringTemplates.Templates
+import qualified Data.Text as T
 import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
 import AppView
 import BrandedDomain.BrandedDomain
-import Company.CompanyUI.Model
-import Company.Model
 import DB hiding (query, update)
 import Happstack.Fields
 import InputValidation
@@ -54,6 +53,7 @@ import User.PasswordReminder
 import User.UserAccountRequest
 import User.UserView
 import User.Utils
+import UserGroup.Data
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 
@@ -141,34 +141,29 @@ getUserInfoUpdate  = do
           , userphone           = fromMaybe (userphone           ui) mphone
         }
 
-getCompanyInfoUpdate :: Kontrakcja m => m (CompanyInfo -> CompanyInfo)
-getCompanyInfoUpdate = do
+getUserGroupAddressUpdate :: Kontrakcja m => m (UserGroupAddress -> UserGroupAddress)
+getUserGroupAddressUpdate = do
     -- a lot doesn't have validation rules defined, but i put in what we do have
-  mcompanyname <- getValidField asValidCompanyName "companyname"
   mcompanynumber <- getValidField asValidCompanyNumber "companynumber"
   mcompanyaddress <- getValidField asValidAddress "companyaddress"
   mcompanyzip <- getField "companyzip"
   mcompanycity <- getField "companycity"
   mcompanycountry <- getField "companycountry"
-  return $ \ci ->
-      ci {
-         companyname = fromMaybe (companyname ci) mcompanyname
-      ,  companynumber = fromMaybe (companynumber ci) mcompanynumber
-      ,  companyaddress = fromMaybe (companyaddress ci) mcompanyaddress
-      ,  companyzip = fromMaybe (companyzip ci) mcompanyzip
-      ,  companycity = fromMaybe (companycity ci) mcompanycity
-      ,  companycountry = fromMaybe (companycountry ci) mcompanycountry
-      }
+  return $
+      maybe id (set ugaCompanyNumber . T.pack) mcompanynumber
+    . maybe id (set ugaAddress       . T.pack) mcompanyaddress
+    . maybe id (set ugaZip           . T.pack) mcompanyzip
+    . maybe id (set ugaCity          . T.pack) mcompanycity
+    . maybe id (set ugaCountry       . T.pack) mcompanycountry
   where
     getValidField = getDefaultedField ""
-
 
 handleUsageStatsJSONForUserDays :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserDays = do
   user <- guardJustM $ get ctxmaybeuser <$> getContext
   withCompany <- isFieldSet "withCompany"
   if (useriscompanyadmin user && withCompany)
-    then getDaysStats (Right $ usercompany user)
+    then getDaysStats (Right $ usergroupid user)
     else getDaysStats (Left $ userid user)
 
 
@@ -177,16 +172,16 @@ handleUsageStatsJSONForUserMonths = do
   user  <- guardJustM $ get ctxmaybeuser <$> getContext
   withCompany <- isFieldSet "withCompany"
   if (useriscompanyadmin user && withCompany)
-    then getMonthsStats (Right $ usercompany user)
+    then getMonthsStats (Right $ usergroupid user)
     else getMonthsStats (Left $ userid user)
 
-getDaysStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
+getDaysStats :: Kontrakcja m => Either UserID UserGroupID -> m JSValue
 getDaysStats = getStats PartitionByDay (idays 30)
 
-getMonthsStats :: Kontrakcja m => Either UserID CompanyID -> m JSValue
+getMonthsStats :: Kontrakcja m => Either UserID UserGroupID -> m JSValue
 getMonthsStats = getStats PartitionByMonth (imonths 6)
 
-getStats :: Kontrakcja m => StatsPartition -> Interval -> Either UserID CompanyID -> m JSValue
+getStats :: Kontrakcja m => StatsPartition -> Interval -> Either UserID UserGroupID -> m JSValue
 getStats statsPartition interval eid = do
     -- @note: This is a hack around the fact that we don't yet have enough data
     -- in `chargeable_items` table to use queries for longer periods.  The code
@@ -205,9 +200,9 @@ getStats statsPartition interval eid = do
       Left uid -> do
         stats <- dbQuery $ queryConstructor (Left uid) statsPartition interval
         return $ userStatsToJSON timeFormat stats
-      Right cid -> do
+      Right ugid -> do
         totalS <- renderTemplate_ "statsOrgTotal"
-        stats <- dbQuery $ queryConstructor (Right cid) statsPartition interval
+        stats <- dbQuery $ queryConstructor (Right ugid) statsPartition interval
         return $ companyStatsToJSON timeFormat totalS stats
       where timeFormat :: UTCTime -> String
             timeFormat = case statsPartition of
@@ -232,10 +227,10 @@ sendNewUserMail user = do
   scheduleEmailSendout $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
   return ()
 
-createNewUserByAdmin :: Kontrakcja m => String -> (String, String) -> (CompanyID, Bool) -> Lang -> m (Maybe User)
-createNewUserByAdmin email names companyandrole lg = do
+createNewUserByAdmin :: Kontrakcja m => String -> (String, String) -> (UserGroupID, Bool) -> Lang -> m (Maybe User)
+createNewUserByAdmin email names usergroupandrole lg = do
     ctx <- getContext
-    muser <- createUser (Email email) names companyandrole lg ByAdmin
+    muser <- createUser (Email email) names usergroupandrole lg ByAdmin
     case muser of
          Just user -> do
              let fullname = composeFullName names
@@ -269,16 +264,15 @@ handleAccountSetupGet uid token sm = do
   muser <- getUserAccountRequestUser uid token
   case (muser, userhasacceptedtermsofservice =<< muser) of
     (Just user, Nothing) -> do
-      company <-  getCompanyForUser user
-      companyui <- dbQuery $ GetCompanyUI (usercompany user)
+      ug <-  getUserGroupForUser user
       ad <- getAnalyticsData
       content <- renderTemplate "accountSetupPage" $ do
-        standardPageFields ctx (Just companyui) ad
+        standardPageFields ctx (Just (get ugID ug, get ugUI ug)) ad
         F.value "fstname" $ getFirstName user
         F.value "sndname" $ getLastName user
         F.value "email"   $ getEmail user
         F.value "userid"  $ show uid
-        F.value "company" $ companyname $ companyinfo $ company
+        F.value "company" . get ugName $ ug
         F.value "companyAdmin" $ useriscompanyadmin user
         F.value "companyPosition" $ usercompanyposition $ userinfo user
         F.value "mobile" $ getMobile user
@@ -294,7 +288,7 @@ handleAccountSetupGet uid token sm = do
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m JSValue
 handleAccountSetupPost uid token sm = do
   user <- guardJustM $ getUserAccountRequestUser uid token
-  company <-  getCompanyForUser user
+  ug <-  getUserGroupForUser user
   if isJust $ userhasacceptedtermsofservice user
     then do
       J.runJSONGenT $ do
@@ -303,7 +297,7 @@ handleAccountSetupPost uid token sm = do
     else do
       mfstname <- getOptionalField asValidName "fstname"
       msndname <- getOptionalField asValidName "sndname"
-      _ <- handleActivate mfstname msndname (user,company) sm
+      _ <- handleActivate mfstname msndname (user,ug) sm
       _ <- dbUpdate $ DeleteUserAccountRequest uid
       ctx <- getContext
       _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) { lang = get ctxlang ctx }

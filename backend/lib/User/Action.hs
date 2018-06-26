@@ -9,10 +9,9 @@ import Crypto.RNG
 import Log
 import Text.StringTemplates.Templates
 import qualified Data.Foldable as F
+import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomain
-import Company.CompanyID
-import Company.Model
 import DB
 import Doc.Model
 import Happstack.Fields
@@ -23,12 +22,13 @@ import MinutesTime
 import User.Email
 import User.History.Model
 import User.Model
-import Util.HasSomeCompanyInfo
+import UserGroup.Data
+import UserGroup.Model
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 
-handleActivate :: Kontrakcja m => Maybe String -> Maybe String -> (User,Company) -> SignupMethod -> m User
-handleActivate mfstname msndname (actvuser,company) signupmethod = do
+handleActivate :: Kontrakcja m => Maybe String -> Maybe String -> (User,UserGroup) -> SignupMethod -> m User
+handleActivate mfstname msndname (actvuser,ug) signupmethod = do
   logInfo "Attempting to activate account for user" $ logObject_ actvuser
   -- Don't remove - else people will be able to hijack accounts
   when (isJust $ userhasacceptedtermsofservice actvuser) $ do
@@ -41,7 +41,7 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
   switchLang (getLang actvuser)
   ctx <- getContext
   phone <-  fromMaybe (getMobile actvuser) <$> getField "phone"
-  companyname <- fromMaybe (getCompanyName company) <$> getField "company"
+  ugname <- (fromMaybe (get ugName ug) . fmap T.pack) <$> getField "company"
   position <- fromMaybe "" <$> getField "position"
 
   _ <- dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser) {
@@ -50,9 +50,7 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
     , userphone = phone
     , usercompanyposition = position
   }
-  _ <- dbUpdate $ SetCompanyInfo (companyid company) $ (companyinfo company) {
-      companyname = companyname
-  }
+  _ <- dbUpdate . UserGroupUpdate . set ugName ugname $ ug
   _ <- dbUpdate $ LogHistoryUserInfoChanged (userid actvuser)
     (get ctxipnumber ctx) (get ctxtime ctx) (userinfo actvuser)
     ((userinfo actvuser) { userfstname = fromMaybe "" mfstname , usersndname =  fromMaybe "" msndname })
@@ -78,16 +76,14 @@ handleActivate mfstname msndname (actvuser,company) signupmethod = do
 
   return tosuser
 
-createUser :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => Email -> (String, String) -> (CompanyID,Bool) -> Lang -> SignupMethod -> m (Maybe User)
-createUser email names companyandrole@(cid,_) lang sm = do
+createUser :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => Email -> (String, String) -> (UserGroupID,Bool) -> Lang -> SignupMethod -> m (Maybe User)
+createUser email names (ugid, iscompanyadmin) lang sm = do
   ctx <- getContext
   passwd <- randomPassword
-  dbQuery (GetCompany cid) >>= \case
+  dbQuery (UserGroupGet ugid) >>= \case
     Nothing -> return Nothing
-    Just company -> do
-      muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) companyandrole lang (get (bdid . ctxbrandeddomain) ctx) sm (companyusergroupid company)
-      case muser of
-        Just user -> do
-          _ <- dbUpdate $ LogHistoryAccountCreated (userid user) (get ctxipnumber ctx) (get ctxtime ctx) email (userid <$> getContextUser ctx)
-          return muser
-        _ -> return muser
+    Just _ug -> do
+      muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) (ugid, iscompanyadmin) lang (get (bdid . ctxbrandeddomain) ctx) sm
+      whenJust muser $ \user ->
+        void . dbUpdate $ LogHistoryAccountCreated (userid user) (get ctxipnumber ctx) (get ctxtime ctx) email (userid <$> getContextUser ctx)
+      return muser

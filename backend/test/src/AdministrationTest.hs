@@ -6,12 +6,14 @@ import Text.JSON
 
 import Administration.AdministrationControl
 import Company.Model
-import CompanyAccountsTest
 import Context
 import DB hiding (query, update)
 import TestingUtil
 import TestKontra as T
 import User.Email
+import UserGroup.Data
+import UserGroup.Model
+import UserGroupAccountsTest
 
 administrationTests :: TestEnvSt -> Test
 administrationTests env = testGroup "AdministrationControl" [
@@ -20,10 +22,10 @@ administrationTests env = testGroup "AdministrationControl" [
 
 test_jsonCompanies :: TestEnv ()
 test_jsonCompanies = do
-  (_adminuser1, _company1) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
-  (adminuser2, company2) <- addNewAdminUserAndCompany "Jet" "Li" "jet.li@example.com"
-  Just _standarduser2 <- addNewCompanyUser "Bob" "Blue" "jony@blue.com" (companyid company2)
-  _ <- dbUpdate $ SetCompanyPaymentPlan (companyid company2) OnePlan
+  (_adminuser1, _ug1) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
+  (adminuser2, ug2) <- addNewAdminUserAndUserGroup "Jet" "Li" "jet.li@example.com"
+  Just _standarduser2 <- addNewUserToUserGroup "Bob" "Blue" "jony@blue.com" (get ugID ug2)
+  _ <- dbUpdate . UserGroupUpdate . set ugInvoicing (Invoice OnePlan) $ ug2
 
   ctx <- (set ctxmaybeuser     (Just adminuser2) .
           set ctxadminaccounts [Email "jet.li@example.com"]) <$> mkContext def

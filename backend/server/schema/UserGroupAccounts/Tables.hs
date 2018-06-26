@@ -1,4 +1,4 @@
-module CompanyAccounts.Tables (
+module UserGroupAccounts.Tables (
     tableCompanyInvites
   ) where
 

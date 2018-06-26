@@ -16,10 +16,10 @@ import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
+import qualified Data.Text as T
 import qualified Text.JSON as J
 
 import API.APIVersion
-import Company.Model
 import CronEnv
 import DB
 import Doc.API.Callback.Data
@@ -40,6 +40,8 @@ import Salesforce.AuthorizationWorkflow
 import Salesforce.Conf
 import User.CallbackScheme.Model
 import User.Model
+import UserGroup.Data
+import UserGroup.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.IO
@@ -257,13 +259,13 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
             muser <- dbQuery $ GetUserByID uid
             let userEmail = maybe "<unknown>" getEmail muser
                 userName = maybe "<unknown>" getFullName muser
-            company <- dbQuery $ GetCompanyByUserID $ uid
+            ug <- dbQuery $ UserGroupGetByUserID $ uid
 
             let mail = emptyMail {
                     to = [ MailAddress { fullname = "Salesforce Admin", email = fromJust (salesforceErrorEmail sc) } ]
                   , title = "[Salesforce Callback Error] " ++
                             "(user: " ++ userEmail ++ ") " ++
-                            "(company: " ++ companyname (companyinfo company) ++ ") " ++
+                            "(company: " ++ T.unpack (get ugName ug) ++ ") " ++
                             "(documentid: " ++ show (documentid doc) ++ ") " ++
                             "(http_code: " ++ http_code ++ ")"
                   , content = "<h2>Salesforce Callback Failed</h2>" ++ "<br />\r\n"
@@ -278,7 +280,7 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
                           ++ "<br />"
                           ++ "<strong>User ID:</strong> " ++ show uid ++ "<br />\r\n"
                           ++ "<strong>Document ID:</strong> " ++ show (documentid doc) ++ "<br />\r\n"
-                          ++ "<strong>User Company ID:</strong> " ++ show (companyid company) ++ "<br />\r\n"
+                          ++ "<strong>User Company ID:</strong> " ++ show (get ugID ug) ++ "<br />\r\n"
                           ++ "<strong>User Name:</strong> " ++ escapeHTML userName ++ "<br />\r\n"
                           ++ "<strong>User Email:</strong> " ++ escapeHTML userEmail ++ "<br />\r\n"
                   }

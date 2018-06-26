@@ -336,7 +336,7 @@ docForListJSONV1 user doc = do
     J.objects "subfields" $ map (signatoryFieldsListForJSON doc) (filter sigFilter (documentsignatorylinks doc))
     J.value "link" $ show link
     J.value "isauthor" $ fromMaybe False (isAuthor <$> getSigLinkFor user doc)
-    J.value "docauthorcompanysameasuser" $ Just (usercompany user) == documentauthorcompanyid doc
+    J.value "docauthorcompanysameasuser" $ Just (usergroupid user) == documentauthorugid doc
 
 docFieldsListForJSON :: TemplatesMonad m => UserID -> Document -> JSONGenT m ()
 docFieldsListForJSON userid doc = do

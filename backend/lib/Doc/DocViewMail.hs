@@ -17,13 +17,13 @@ module Doc.DocViewMail
 
 import Control.Conditional ((<|), (|>))
 import Control.Monad.Catch
+import Data.Label.Base
 import Text.StringTemplates.Templates
+import qualified Data.Label.Partial as LP
 import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.BrandedDomain
 import Branding.Adler32
-import Company.CompanyUI.Model
-import Company.Model
 import DB
 import Doc.DocInfo (getLastSignedTime)
 import Doc.DocStateData
@@ -36,6 +36,8 @@ import MinutesTime
 import Templates
 import Theme.Model
 import User.Model
+import UserGroup.Data
+import UserGroup.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -288,14 +290,11 @@ documentMailWithDocLang doc mailname otherfields = documentMail doc doc mailname
 
 documentMailFields :: (MonadDB m, MonadThrow m, Monad m') => Document -> MailContext -> m (Fields m' ())
 documentMailFields doc mctx = do
-    mcompany <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
-                   Just suid ->  fmap Just $ dbQuery $ GetCompanyByUserID $ suid
+    mug <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
+                   Just suid ->  fmap Just $ dbQuery $ UserGroupGetByUserID $ suid
                    Nothing -> return Nothing
-    mcompanyui <- case mcompany of
-                    Just comp -> (dbQuery $ GetCompanyUI (companyid comp)) >>= return . Just
-                    Nothing -> return Nothing
-    let themeid = fromMaybe (get (bdMailTheme . mctxcurrentBrandedDomain) mctx)
-                  (join $ companyMailTheme <$> mcompanyui)
+    let themeid =   fromMaybe (get (bdMailTheme . mctxcurrentBrandedDomain) mctx)
+                  . LP.get (just . uguiMailTheme . ugUI . just) $ mug
     theme <- dbQuery $ GetTheme themeid
     return $ do
       F.value "ctxhostpart" $ mctxDomainUrl mctx
@@ -312,14 +311,11 @@ documentMailFields doc mctx = do
 documentMail :: (HasLang a, MailContextMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => a -> Document -> String -> Fields m () -> m Mail
 documentMail haslang doc mailname otherfields = do
   mctx <- getMailContext
-  mcompany <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
-                   Just suid ->  fmap Just $ dbQuery $ GetCompanyByUserID $ suid
+  mug <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
+                   Just suid ->  fmap Just $ dbQuery $ UserGroupGetByUserID $ suid
                    Nothing -> return Nothing
-  mcompanyui <- case mcompany of
-                    Just comp -> (dbQuery $ GetCompanyUI (companyid comp)) >>= return . Just
-                    Nothing -> return Nothing
   let themeid = fromMaybe (get (bdMailTheme . mctxcurrentBrandedDomain) mctx)
-                (join $ companyMailTheme <$> mcompanyui)
+                  . LP.get (just . uguiMailTheme . ugUI . just) $ mug
   theme <- dbQuery $ GetTheme themeid
   allfields <- documentMailFields doc mctx
   kontramaillocal (get mctxmailNoreplyAddress mctx)

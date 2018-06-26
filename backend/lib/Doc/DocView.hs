@@ -27,10 +27,8 @@ import qualified Data.ByteString.Base64.Lazy as B64
 import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
-import AppView (companyUIForPage, entryPointFields, simpleHtmlResponse, standardPageFields)
+import AppView (entryPointFields, simpleHtmlResponse, standardPageFields, userGroupUIForPage)
 import BrandedDomain.BrandedDomain
-import Company.CompanyUI.Model
-import Company.Model
 import DB
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.JSON.Document
@@ -44,6 +42,7 @@ import Kontra
 import KontraLink
 import User.Model
 import User.Utils
+import UserGroup.Data
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
@@ -56,10 +55,10 @@ pageDocumentDesign :: Kontrakcja m
                    -> AnalyticsData
                    -> m String
 pageDocumentDesign ctx document ad = do
-     mcompany <- companyUIForPage
+     mugui <- userGroupUIForPage
      renderTemplate "pageDocumentDesign" $ do
          F.value "documentid" $ show $ documentid document
-         standardPageFields ctx mcompany ad
+         standardPageFields ctx mugui ad
 
 pageDocumentView :: TemplatesMonad m
                     => Context
@@ -83,10 +82,13 @@ pageDocumentSignView :: Kontrakcja m
 pageDocumentSignView ctx document siglink ad = do
 
   -- Sign view needs some author details and information if company allows saving a safety copy.
-  let authorid = fromJust $ getAuthorSigLink document >>= maybesignatory
-  auser <- fmap fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
-  acompany <- getCompanyForUser auser
-  acompanyui <- dbQuery $ GetCompanyUI (companyid acompany)
+  let authorid = case getAuthorSigLink document of
+        Nothing -> unexpectedError "Impossible happened: cannot find author signatory link"
+        Just authorSigLink -> case maybesignatory authorSigLink of
+          Nothing -> unexpectedError "Impossible happened: this document was not saved to an account"
+          Just authorid' -> authorid'
+  authoruser <- fmap fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
+  authorug <- getUserGroupForUser authoruser
   let loggedAsSignatory = (isJust $ maybesignatory siglink) && (maybesignatory siglink) == (userid <$> getContextUser ctx);
   let loggedAsAuthor = (Just authorid == (userid <$> getContextUser ctx));
   let docjson = unjsonToByteStringLazy' (Options { pretty = False, indent = 0, nulls = True }) (unjsonDocument (documentAccessForSlid (signatorylinkid siglink) document)) document
@@ -97,13 +99,13 @@ pageDocumentSignView ctx document siglink ad = do
       F.value "documenttitle" $ documenttitle document
       F.value "loggedinsignatory" $ loggedAsSignatory
       F.value "loggedinauthor"   $ loggedAsAuthor
-      F.value "authorFullname" $ getFullName auser
-      F.value "authorPhone" $ getMobile auser
+      F.value "authorFullname" $ getFullName authoruser
+      F.value "authorPhone" $ getMobile authoruser
       F.value "previewLink" $  case signatorylinkauthenticationtoviewmethod siglink of
           StandardAuthenticationToView -> show $ LinkDocumentPreview (documentid document) (Just siglink) mainfile 600
           _ -> show LinkPreviewLockedImage
       F.value "b64documentdata" $ B64.encode $ docjson
-      standardPageFields ctx (Just acompanyui) ad -- Branding for signview depends only on authors company
+      standardPageFields ctx (Just (get ugID authorug, get ugUI authorug)) ad -- Branding for signview depends only on authors company
 
 pageDocumentIdentifyView :: Kontrakcja m
                     => Context
@@ -114,8 +116,7 @@ pageDocumentIdentifyView :: Kontrakcja m
 pageDocumentIdentifyView ctx document siglink ad = do
   let authorid = fromJust $ getAuthorSigLink document >>= maybesignatory
   auser <- fmap fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
-  acompany <- getCompanyForUser auser
-  acompanyui <- dbQuery $ GetCompanyUI (companyid acompany)
+  authorug <- getUserGroupForUser auser
 
   renderTemplate "pageDocumentIdentifyView" $ do
       F.value "documentid" $ show $ documentid document
@@ -125,16 +126,16 @@ pageDocumentIdentifyView ctx document siglink ad = do
       F.value "netsMerchantIdentifier" $ netsMerchantIdentifier <$> get ctxnetsconfig ctx
       F.value "netsTrustedDomain" $ netsTrustedDomain <$> get ctxnetsconfig ctx
       F.value "previewLink" $ show LinkPreviewLockedImage
-      standardPageFields ctx (Just acompanyui) ad -- Branding for signview depends only on authors company
+      standardPageFields ctx (Just (get ugID authorug, get ugUI authorug)) ad -- Branding for signview depends only on authors company
 
 pageDocumentPadList:: Kontrakcja m
                     => Context
                     -> AnalyticsData
                     -> m String
 pageDocumentPadList ctx ad = do
-  mcompany <- companyUIForPage
+  mugui <- userGroupUIForPage
   renderTemplate "pagePadListView" $ do
-      standardPageFields ctx mcompany ad
+      standardPageFields ctx mugui ad
 
 pageDocumentPadListLogin:: Kontrakcja m
                     => Context
@@ -151,9 +152,9 @@ pageDocumentToStartList :: Kontrakcja m
                            -> AnalyticsData
                            -> m String
 pageDocumentToStartList ctx ad = do
-  mcompany <- companyUIForPage
+  mugui <- userGroupUIForPage
   renderTemplate "pageToStartListView" $ do
-    standardPageFields ctx mcompany ad
+    standardPageFields ctx mugui ad
 
 pageDocumentToStartLogin:: Kontrakcja m
                     => Context
@@ -169,11 +170,11 @@ pageDocumentToStartView :: Kontrakcja m
                     -> AnalyticsData
                     -> m String
 pageDocumentToStartView ctx document ad = do
-  mcompany <- companyUIForPage
+  mugui <- userGroupUIForPage
   renderTemplate "pageToStartDocumentView" $ do
     F.value "documentid" $ show $ documentid document
     F.value "documenttitle" $ documenttitle document
-    standardPageFields ctx mcompany ad
+    standardPageFields ctx mugui ad
 
 
 -- | Basic info about document , name, id ,author

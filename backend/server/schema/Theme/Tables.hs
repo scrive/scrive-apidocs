@@ -30,7 +30,7 @@ tableThemes = tblTable {
 tableThemeOwnership:: Table
 tableThemeOwnership = tblTable {
     tblName = "theme_owners"
-  , tblVersion = 2
+  , tblVersion = 3
   , tblColumns = [
       tblColumn { colName = "theme_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "company_id", colType = BigIntT, colNullable = True  }
@@ -38,11 +38,13 @@ tableThemeOwnership = tblTable {
     , tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = True  }
     ]
   , tblPrimaryKey = pkOnColumn "theme_id"
-  , tblChecks = [Check "check_theme_is_owned_by_company_or_domain" "(company_id IS NULL OR domain_id IS NULL) AND (company_id IS NOT NULL OR domain_id IS NOT NULL)"] -- XOR
+  , tblChecks = [Check "check_theme_is_owned_by_user_group_or_domain"
+          "(company_id IS \  \NULL AND user_group_id IS \  \NULL OR domain_id IS \  \NULL) \
+      \AND (company_id IS NOT NULL AND user_group_id IS NOT NULL OR domain_id IS NOT NULL)"]
   , tblForeignKeys = [
-      (fkOnColumn "company_id" "companies" "id") { fkOnDelete = ForeignKeyCascade }
+      (fkOnColumn "company_id" "companies" "id") { fkOnDelete = ForeignKeyNoAction }
     , (fkOnColumn "domain_id" "branded_domains" "id") { fkOnDelete = ForeignKeyCascade }
-    , (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
+    , (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade }
     ]
   }
 

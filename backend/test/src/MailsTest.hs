@@ -10,8 +10,6 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import qualified Text.XML as XML
 
-import Company.CompanyUI.Model
-import Company.Model
 import Context
 import DB
 import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
@@ -27,6 +25,8 @@ import TestKontra as T
 import User.Model
 import User.UserAccountRequest
 import User.UserView
+import UserGroup.Data
+import UserGroup.Model
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -41,18 +41,9 @@ mailsTests env  = testGroup "Mails" [
 
 testBrandedDocumentMails :: TestEnv ()
 testBrandedDocumentMails = do
-  company' <- addNewCompany
-  author <- addNewRandomCompanyUser (companyid company') False
-  let cui = CompanyUI {
-        companyuicompanyid = companyid company'
-      , companyMailTheme = Nothing
-      , companySignviewTheme = Nothing
-      , companyServiceTheme = Nothing
-      , companyBrowserTitle = Nothing
-      , companySmsOriginator = Nothing
-      , companyFavicon = Nothing
-      }
-  _ <- dbUpdate $ SetCompanyUI (companyid company') cui
+  ug <- addNewUserGroup
+  author <- addNewRandomCompanyUser (get ugID ug) False
+  _ <- dbUpdate $ UserGroupUpdate (set ugUI def ug)
   sendDocumentMails author
 
 testDocumentMails ::TestEnv ()

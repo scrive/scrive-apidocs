@@ -7,7 +7,6 @@ import Text.JSON.Gen
 
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
-import Company.Model
 import Context
 import DB
 import IPAddress
@@ -22,6 +21,8 @@ import User.History.Model
 import User.Model
 import User.UserAccountRequest
 import User.UserControl
+import UserGroup.Data
+import UserGroup.Model
 
 userHistoryTests :: TestEnvSt -> Test
 userHistoryTests env = testGroup "User's history" [
@@ -241,15 +242,14 @@ createTestUser :: TestEnv User
 createTestUser = do
     bd <- dbQuery $ GetMainBrandedDomain
     pwd <- createPassword "test_password"
-    company <- dbUpdate $ CreateCompany
+    ug <- dbUpdate $ UserGroupCreate def
     muser <- dbUpdate $ AddUser ("", "")
                                 "karol@skrivapa.se"
                                 (Just pwd)
-                                (companyid company,True)
+                                (get ugID ug, True)
                                 def
                                 (get bdid bd)
                                 AccountRequest
-                                (companyusergroupid company)
     case muser of
         Nothing     -> unexpectedError "can't create user"
         (Just user) -> return user

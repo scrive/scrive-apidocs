@@ -12,25 +12,24 @@ import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Char8 as BSC8
 
 import BrandedDomain.BrandedDomain
-import Company.CompanyUI.Model
 import Context
 import DB
 import Theme.Model
 import User.Model
+import UserGroup.Data
+import UserGroup.Model
 import VersionTH
 
-brandingAdler32 :: (MonadDB m, MonadThrow m) => Context -> Maybe CompanyUI -> m String
-brandingAdler32 ctx mcompanyui = do
+brandingAdler32 :: (MonadDB m, MonadThrow m) => Context -> Maybe (UserGroupID, UserGroupUI) -> m String
+brandingAdler32 ctx mugidandui = do
   ad1 <- domainAdler32 $ get ctxbrandeddomain ctx
-  ad2 <- case mcompanyui of
-    Just cui1 -> companyUIAdler32 cui1
-    Nothing  -> return ""
+  ad2 <- maybe (return "") userGroupUIAdler32 mugidandui
   ad3 <- do
     case getContextUser ctx of
       Nothing -> return ""
       Just user -> do
-        cui2 <- dbQuery $ GetCompanyUI $ usercompany user
-        companyUIAdler32 cui2
+        ug2 <- dbQuery . UserGroupGetByUserID . userid $ user
+        userGroupUIAdler32 (get ugID ug2, get ugUI ug2)
   return $ BSC8.unpack $ adler32BS $ BSC8.pack $ concat $ [ad1,ad2,ad3,show versionID]
 
 
@@ -66,15 +65,15 @@ domainAdler32 bd = do
     , show $ get bdLoginTheme     bd
     ] ++ themesMD5
 
-companyUIAdler32 :: (MonadDB m, MonadThrow m) => CompanyUI -> m String
-companyUIAdler32 cui = do
-  themesMD5 <- dbQuery $ GetThemesMD5 $ catMaybes [companyMailTheme cui,companySignviewTheme cui,companyServiceTheme cui]
+userGroupUIAdler32 :: (MonadDB m, MonadThrow m) => (UserGroupID, UserGroupUI) -> m String
+userGroupUIAdler32 (ugid, ugui) = do
+  themesMD5 <- dbQuery . GetThemesMD5 . catMaybes . fmap (\getter -> get getter ugui) $ [uguiMailTheme, uguiSignviewTheme, uguiServiceTheme]
   return $ BSC8.unpack $ adler32BS $ BSC8.pack $ concat $ [
-      show $ companyuicompanyid cui
-    , maybe "" imageAdler32(companyFavicon cui)
-    , show $ companyMailTheme cui
-    , show $ companySignviewTheme cui
-    , show $ companyServiceTheme cui
+      show ugid
+    , maybe "" imageAdler32 (get uguiFavicon ugui)
+    , show (get uguiMailTheme ugui)
+    , show (get uguiSignviewTheme ugui)
+    , show (get uguiServiceTheme ugui)
     ] ++ themesMD5
 
 adler32BS :: BSC8.ByteString -> BSC8.ByteString

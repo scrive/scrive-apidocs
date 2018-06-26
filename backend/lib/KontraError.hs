@@ -27,10 +27,6 @@ respond404 = throwM Respond404
 respondLinkInvalid :: MonadThrow m => m a
 respondLinkInvalid = throwM LinkInvalid
 
-{-# NOINLINE preventTailCallOptimization #-}
-preventTailCallOptimization :: (Monad m) => m ()
-preventTailCallOptimization = return ()
-
 {- | Auxiliary function for configuration errors in code called from
 `RoutingTable.staticRoutes`, e.g.,
 "ERROR, no configuration for Salesforce". -}

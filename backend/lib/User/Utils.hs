@@ -1,9 +1,9 @@
 module User.Utils (
-      getCompanyForUser
+      getUserGroupForUser
     , guardLoggedInOrThrowInternalError
     , withUserTOS
     , withUser
-    , withUserCompany
+    , withUserAndGroup
     , withCompanyAdmin
     , withCompanyAdminOrAdminOnly
 ) where
@@ -11,20 +11,21 @@ module User.Utils (
 import Control.Monad.Catch
 import Data.Time.Clock (UTCTime)
 
-import Company.Model
 import DB
 import InternalResponse
 import Kontra
 import KontraLink
 import User.Model
 import User.UserView
+import UserGroup.Data
+import UserGroup.Model
 import Util.MonadUtils
 
 {- |
     This looks up the company for the given user.
 -}
-getCompanyForUser :: (MonadDB m, MonadThrow m) => User -> m Company
-getCompanyForUser user = dbQuery $ GetCompanyByUserID $ userid user
+getUserGroupForUser :: (MonadDB m, MonadThrow m) => User -> m UserGroup
+getUserGroupForUser user = dbQuery $ UserGroupGetByUserID $ userid user
 
 {- |
    Guard against a GET/POST with no logged in user.
@@ -66,21 +67,21 @@ withUserTOS action = withUser $ \user -> do
     are in a company.  The user and company are passed as params
     to the given action, to save you having to look them up yourself.
 -}
-withUserCompany :: Kontrakcja m => ((User, Company) -> m a) -> m a
-withUserCompany action = do
+withUserAndGroup :: Kontrakcja m => ((User, UserGroup) -> m a) -> m a
+withUserAndGroup action = do
   maybeuser <- get ctxmaybeuser <$> getContext
   user      <- guardJust maybeuser
-  company   <- getCompanyForUser user
-  action (user, company)
+  ug        <- dbQuery . UserGroupGetByUserID . userid $ user
+  action (user, ug)
 
 {- |
     Guards that there is a logged in company admin.
 -}
-withCompanyAdmin :: Kontrakcja m => ((User, Company) -> m a) -> m a
-withCompanyAdmin action = withUserCompany $ \(user, company) ->
-  if useriscompanyadmin user then action (user, company) else internalError
+withCompanyAdmin :: Kontrakcja m => ((User, UserGroup) -> m a) -> m a
+withCompanyAdmin action = withUserAndGroup $ \(user, ug) ->
+  if useriscompanyadmin user then action (user, ug) else internalError
 
-withCompanyAdminOrAdminOnly :: Kontrakcja m => Maybe CompanyID -> (Company -> m a) -> m a
+withCompanyAdminOrAdminOnly :: Kontrakcja m => Maybe UserGroupID -> (UserGroup -> m a) -> m a
 withCompanyAdminOrAdminOnly Nothing action = withCompanyAdmin (action . snd)
-withCompanyAdminOrAdminOnly (Just cid) action = onlySalesOrAdmin $
-  guardJustM (dbQuery (GetCompany cid)) >>= action
+withCompanyAdminOrAdminOnly (Just ugid) action = onlySalesOrAdmin $
+  guardJustM (dbQuery (UserGroupGet ugid)) >>= action

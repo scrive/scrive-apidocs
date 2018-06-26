@@ -4,20 +4,22 @@ module Partner.JSON (
   , userInfoFromUserForUpdate
   , userToUserForUpdate
   , unjsonUsersForUpdate
-  , CompanyForUpdate(..)
-  , unjsonCompanyForUpdate
-  , updateCompanyInfoWithCompanyForUpdate
-  , companyToCompanyForUpdate
-  , unjsonCompaniesForUpdate
+
+  , UserGroupForUpdate
+  , unjsonUserGroupForUpdate
+  , unjsonUserGroupsForUpdate
+  , userGroupToUserGroupForUpdate
+  , updateUserGroupWithUserGroupForUpdate
   ) where
 
 import Data.Default
+import Data.Text (Text, pack, unpack)
 import Data.Unjson
 
-import Company.Model
 import InputValidation
 import User.Email (Email(..))
 import User.Model
+import UserGroup.Data
 
 data UserForUpdate = UserForUpdate {
       ufuId :: String
@@ -102,78 +104,83 @@ unjsonUsersForUpdate = objectOf $
   "List of users"
   (arrayOf unjsonUserForUpdate)
 
-data CompanyForUpdate = CompanyForUpdate
+data UserGroupForUpdate = UserGroupForUpdate
     {
-      cfuCompanyId :: String
-    , cfuCompanyName :: String
-    , cfuCompanyNumber :: String
-    , cfuCompanyAddress :: String
-    , cfuCompanyZip :: String
-    , cfuCompanyCity :: String
-    , cfuCompanyCountry :: String
-    }
+      uguUserGroupID      :: Text
+    , uguUserGroupName    :: Text
+    , uguUserGroupNumber  :: Text
+    , uguUserGroupAddress :: Text
+    , uguUserGroupZip     :: Text
+    , uguUserGroupCity    :: Text
+    , uguUserGroupCountry :: Text
+    } deriving (Show)
 
-instance Default CompanyForUpdate where
-    def = CompanyForUpdate
+instance Default UserGroupForUpdate where
+    def = UserGroupForUpdate
           {
-            cfuCompanyId = ""
-          , cfuCompanyName = ""
-          , cfuCompanyNumber = ""
-          , cfuCompanyAddress = ""
-          , cfuCompanyZip = ""
-          , cfuCompanyCity = ""
-          , cfuCompanyCountry = ""
+            uguUserGroupID = ""
+          , uguUserGroupName = ""
+          , uguUserGroupNumber = ""
+          , uguUserGroupAddress = ""
+          , uguUserGroupZip = ""
+          , uguUserGroupCity = ""
+          , uguUserGroupCountry = ""
           }
 
-unjsonCompanyForUpdate :: UnjsonDef CompanyForUpdate
-unjsonCompanyForUpdate = objectOf $ pure def
-        <*   fieldReadonly "id" cfuCompanyId "The company ID"
-        <**> (fieldBy "name" cfuCompanyName "Company name"
-              (unjsonWithValidationOrEmpty asValidCompanyName)
-              <**> (pure $ \cn cfu -> cfu { cfuCompanyName = cn }))
-        <**> (fieldBy "number" cfuCompanyNumber "Company number"
-              (unjsonWithValidationOrEmpty asValidCompanyNumber)
-              <**> (pure $ \cnum cfu -> cfu { cfuCompanyNumber = cnum }))
-        <**> (fieldBy "address" cfuCompanyAddress "Company address"
-              (unjsonWithValidationOrEmpty asValidAddress)
-              <**> (pure $ \ca cfu -> cfu { cfuCompanyAddress = ca }))
-        <**> (field "zip" cfuCompanyZip "Company zip"
-              <**> (pure $ \cz cfu -> cfu { cfuCompanyZip = cz }))
-        <**> (fieldBy "city" cfuCompanyCity "Company city"
-              (unjsonWithValidationOrEmpty asValidName)
-              <**> (pure $ \cci cfu -> cfu { cfuCompanyCity = cci }))
-        <**> (fieldBy "country" cfuCompanyCountry "Company country"
-              (unjsonWithValidationOrEmpty asValidName)
-              <**> (pure $ \cco cfu -> cfu { cfuCompanyCountry = cco }))
+-- We're not changing the labels to use user group terminology in the first run,
+-- since this is already out in the wild.
+unjsonUserGroupForUpdate :: UnjsonDef UserGroupForUpdate
+unjsonUserGroupForUpdate = objectOf $ pure def
+        <*   fieldReadonly "id" uguUserGroupID "The company ID"
+        <**> (fieldBy "name" uguUserGroupName "Company name"
+              (unjsonWithValidationOrEmptyText (\s -> pack <$> (asValidCompanyName . unpack $ s)))
+              <**> (pure $ \cn cfu -> cfu { uguUserGroupName = cn }))
+        <**> (fieldBy "number" uguUserGroupNumber "Company number"
+              (unjsonWithValidationOrEmptyText (\s -> pack <$> (asValidCompanyNumber . unpack $ s)))
+              <**> (pure $ \cnum cfu -> cfu { uguUserGroupNumber = cnum }))
+        <**> (fieldBy "address" uguUserGroupAddress "Company address"
+              (unjsonWithValidationOrEmptyText (\s -> pack <$> (asValidAddress . unpack $ s)))
+              <**> (pure $ \ca cfu -> cfu { uguUserGroupAddress = ca }))
+        <**> (field "zip" uguUserGroupZip "Company zip"
+              <**> (pure $ \cz cfu -> cfu { uguUserGroupZip = cz }))
+        <**> (fieldBy "city" uguUserGroupCity "Company city"
+              (unjsonWithValidationOrEmptyText (\s -> pack <$> (asValidName . unpack $ s)))
+              <**> (pure $ \cci cfu -> cfu { uguUserGroupCity = cci }))
+        <**> (fieldBy "country" uguUserGroupCountry "Company country"
+              (unjsonWithValidationOrEmptyText (\s -> pack <$> (asValidName . unpack $ s)))
+              <**> (pure $ \cco cfu -> cfu { uguUserGroupCountry = cco }))
 
-updateCompanyInfoWithCompanyForUpdate :: CompanyInfo -> CompanyForUpdate -> CompanyInfo
-updateCompanyInfoWithCompanyForUpdate companyInfo CompanyForUpdate{..} =
-  companyInfo { companyname = cfuCompanyName
-              , companynumber = cfuCompanyNumber
-              , companyaddress = cfuCompanyAddress
-              , companyzip = cfuCompanyZip
-              , companycity = cfuCompanyCity
-              , companycountry = cfuCompanyCountry
-              }
-
-companyToCompanyForUpdate :: Company -> CompanyForUpdate
-companyToCompanyForUpdate company = CompanyForUpdate {
-    cfuCompanyId = show $ companyid company
-  , cfuCompanyName = companyname cInfo
-  , cfuCompanyNumber = companynumber cInfo
-  , cfuCompanyAddress = companyaddress cInfo
-  , cfuCompanyZip = companyzip cInfo
-  , cfuCompanyCity = companycity cInfo
-  , cfuCompanyCountry = companycountry cInfo
-  }
-  where cInfo = companyinfo company
-
-unjsonCompaniesForUpdate :: UnjsonDef [CompanyForUpdate]
-unjsonCompaniesForUpdate = objectOf $
+unjsonUserGroupsForUpdate :: UnjsonDef [UserGroupForUpdate]
+unjsonUserGroupsForUpdate = objectOf $
   fieldBy "companies"
   id
   "List of companies"
-  (arrayOf unjsonCompanyForUpdate)
+  (arrayOf unjsonUserGroupForUpdate)
+
+userGroupToUserGroupForUpdate :: UserGroup -> UserGroupForUpdate
+userGroupToUserGroupForUpdate ug
+  = UserGroupForUpdate
+      {
+        uguUserGroupID      = pack . show $ get ugID ug -- unsafeUserGroupID
+      , uguUserGroupName    = get ugName ug
+      , uguUserGroupNumber  = get ugaCompanyNumber ugAddress'
+      , uguUserGroupAddress = get ugaAddress ugAddress'
+      , uguUserGroupZip     = get ugaZip ugAddress'
+      , uguUserGroupCity    = get ugaCity ugAddress'
+      , uguUserGroupCountry = get ugaCountry ugAddress'
+      }
+  where ugAddress' = get ugAddress ug
+
+
+updateUserGroupWithUserGroupForUpdate :: UserGroup -> UserGroupForUpdate -> UserGroup
+updateUserGroupWithUserGroupForUpdate ug UserGroupForUpdate{..} =
+  set ugName uguUserGroupName . set ugAddress muga $ ug
+  where muga = set ugaCompanyNumber uguUserGroupNumber .
+               set ugaAddress       uguUserGroupAddress .
+               set ugaZip           uguUserGroupZip .
+               set ugaCity          uguUserGroupCity .
+               set ugaCountry       uguUserGroupCountry $
+               get ugAddress ug
 
 -------------------------------------------------------------------------------
 -- Utils                                                                    ---
@@ -192,3 +199,10 @@ unjsonWithValidationOrEmpty validation = unjsonInvmapR (convertResult . validati
     convertResult (InputValidation.Empty)    = return ""
     convertResult (InputValidation.Bad)      = fail "not valid"
 
+-- @note unify the Text vs. String approach when removing or tidying up old partners API.
+unjsonWithValidationOrEmptyText :: (Text -> InputValidation.Result Text) -> UnjsonDef Text
+unjsonWithValidationOrEmptyText validation = unjsonInvmapR (convertResult . validation) id unjsonDef
+  where
+    convertResult (InputValidation.Good s)   = return s
+    convertResult (InputValidation.Empty)    = return ""
+    convertResult (InputValidation.Bad)      = fail "not valid"

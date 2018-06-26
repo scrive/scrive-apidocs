@@ -5,7 +5,7 @@ import DB
 tableUsers :: Table
 tableUsers = tblTable {
     tblName = "users"
-  , tblVersion = 23
+  , tblVersion = 24
     , tblColumns = [
         tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
       , tblColumn { colName = "password", colType = BinaryT }
@@ -27,13 +27,13 @@ tableUsers = tblTable {
       , tblColumn { colName = "password_algorithm", colType = SmallIntT, colNullable = True }
       , tblColumn { colName = "totp_key", colType = BinaryT, colNullable = True }
       , tblColumn { colName = "totp_active", colType = BoolT, colNullable = False, colDefault = Just "false" }
-      , tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = True }
+      , tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = False }
       ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblChecks = [Check "check_users_lowercase_email" "email = lower(email)"]
   , tblForeignKeys = [
       fkOnColumn "company_id" "companies" "id"
-    , (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
+    , fkOnColumn "user_group_id" "user_groups" "id"
     , fkOnColumn "associated_domain_id" "branded_domains" "id"
     ]
   , tblIndexes = [

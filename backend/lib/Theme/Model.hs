@@ -3,17 +3,17 @@ module Theme.Model (
     , Theme(..)
     , GetTheme(..)
     , GetThemesForDomain(..)
-    , GetThemesForCompany(..)
+    , GetThemesForUserGroup(..)
     , GetThemesMD5(..)
     , UpdateThemeForDomain(..)
-    , UpdateThemeForCompany(..)
-    , InsertNewThemeForCompany(..)
+    , UpdateThemeForUserGroup(..)
+    , InsertNewThemeForUserGroup(..)
     , InsertNewThemeForDomain(..)
-    , MakeThemeOwnedByCompany(..)
+    , MakeThemeOwnedByUserGroup(..)
     , MakeThemeOwnedByDomain(..)
     , UnsafeInsertNewThemeWithoutOwner(..)
     , DeleteThemeOwnedByDomain(..)
-    , DeleteThemeOwnedByCompany(..)
+    , DeleteThemeOwnedByUserGroup(..)
   ) where
 
 import Control.Monad.Catch
@@ -22,11 +22,10 @@ import Log
 import qualified Data.ByteString.Char8 as BS
 
 import BrandedDomain.BrandedDomainID
-import Company.CompanyID
-import Company.Model
 import DB
-import Log.Identifier
 import Theme.ThemeID
+import UserGroup.Data
+import UserGroup.Model
 
 data Theme = Theme {
     themeID                       :: !ThemeID
@@ -62,13 +61,12 @@ instance (MonadDB m,MonadThrow m) => DBQuery m GetThemesForDomain [Theme] where
       selectThemesSelectors
     fetchMany fetchTheme
 
-
-data GetThemesForCompany = GetThemesForCompany CompanyID
-instance (MonadDB m,MonadThrow m) => DBQuery m GetThemesForCompany [Theme] where
-  query (GetThemesForCompany cid) = do
+data GetThemesForUserGroup = GetThemesForUserGroup UserGroupID
+instance (MonadDB m,MonadThrow m) => DBQuery m GetThemesForUserGroup [Theme] where
+  query (GetThemesForUserGroup ugid) = do
     runQuery_ . sqlSelect "themes, theme_owners as o" $ do
       sqlWhere "id = o.theme_id"
-      sqlWhereEq "o.company_id" cid
+      sqlWhereEq "o.user_group_id" ugid
       selectThemesSelectors
     fetchMany fetchTheme
 
@@ -81,15 +79,15 @@ instance (MonadDB m,MonadThrow m) => DBQuery m GetThemesMD5 [String] where
       selectThemesMD5
     fetchMany runIdentity
 
-data UpdateThemeForCompany = UpdateThemeForCompany CompanyID Theme
-instance (MonadDB m,MonadThrow m) => DBUpdate m UpdateThemeForCompany Bool where
-  update (UpdateThemeForCompany cid t) = do
+data UpdateThemeForUserGroup = UpdateThemeForUserGroup UserGroupID Theme
+instance (MonadDB m,MonadThrow m) => DBUpdate m UpdateThemeForUserGroup Bool where
+  update (UpdateThemeForUserGroup ugid t) = do
     runQuery01 . sqlUpdate "themes" $ do
       setThemeData t
       sqlWhereEq "id" $ themeID t
       sqlWhereInSql "id" $ do
         sqlSelect "theme_owners" $ do
-          sqlWhereEq "company_id" $ cid
+          sqlWhereEq "user_group_id" $ ugid
           sqlWhereEq "theme_id" $ themeID t
           sqlResult "theme_id"
 
@@ -125,11 +123,11 @@ setThemeData t = do
       sqlSet "negative_text_color" $ themeNegativeTextColor t
       sqlSet "font" $ themeFont t
 
-data InsertNewThemeForCompany = InsertNewThemeForCompany CompanyID Theme
-instance (MonadDB m,MonadThrow m, MonadLog m) => DBUpdate m InsertNewThemeForCompany Theme where
-  update (InsertNewThemeForCompany cid t) = do
+data InsertNewThemeForUserGroup = InsertNewThemeForUserGroup UserGroupID Theme
+instance (MonadDB m,MonadThrow m, MonadLog m) => DBUpdate m InsertNewThemeForUserGroup Theme where
+  update (InsertNewThemeForUserGroup ugid t) = do
     nt <- dbUpdate $ UnsafeInsertNewThemeWithoutOwner t
-    dbUpdate $ MakeThemeOwnedByCompany cid (themeID nt)
+    dbUpdate $ MakeThemeOwnedByUserGroup ugid (themeID nt)
     return nt
 
 data InsertNewThemeForDomain = InsertNewThemeForDomain BrandedDomainID Theme
@@ -139,21 +137,13 @@ instance (MonadDB m,MonadThrow m) => DBUpdate m InsertNewThemeForDomain Theme wh
     dbUpdate $ MakeThemeOwnedByDomain did (themeID nt)
     return nt
 
-data MakeThemeOwnedByCompany = MakeThemeOwnedByCompany CompanyID ThemeID
-instance (MonadDB m,MonadThrow m, MonadLog m) => DBUpdate m MakeThemeOwnedByCompany () where
-  update (MakeThemeOwnedByCompany cid tid) = do
-    mugid <- dbQuery (GetCompany cid) >>= \case
-      Nothing -> do
-        logAttention "MakeThemeOwnedByCompany company does not exist" $ object [
-            identifier_ tid
-          , identifier_ cid
-          ]
-        return Nothing
-      Just c -> return $ companyusergroupid c
+data MakeThemeOwnedByUserGroup = MakeThemeOwnedByUserGroup UserGroupID ThemeID
+instance (MonadDB m,MonadThrow m, MonadLog m) => DBUpdate m MakeThemeOwnedByUserGroup () where
+  update (MakeThemeOwnedByUserGroup ugid tid) = do
     runQuery_ . sqlInsert "theme_owners" $ do
       sqlSet "theme_id"   $ tid
-      sqlSet "company_id" $ cid
-      sqlSet "user_group_id" $ mugid
+      sqlSet "company_id" . unsafeUserGroupIDToCompanyID $ ugid
+      sqlSet "user_group_id" $ ugid
 
 data MakeThemeOwnedByDomain = MakeThemeOwnedByDomain BrandedDomainID ThemeID
 instance (MonadDB m,MonadThrow m) => DBUpdate m MakeThemeOwnedByDomain () where
@@ -176,13 +166,13 @@ instance (MonadDB m,MonadThrow m) => DBUpdate m DeleteThemeOwnedByDomain () wher
           sqlWhereEq "id" $ did
           sqlWhereEq "main_domain" $ True
 
-data DeleteThemeOwnedByCompany = DeleteThemeOwnedByCompany CompanyID ThemeID
-instance (MonadDB m,MonadThrow m) => DBUpdate m DeleteThemeOwnedByCompany () where
-  update (DeleteThemeOwnedByCompany cid tid) = do
+data DeleteThemeOwnedByUserGroup = DeleteThemeOwnedByUserGroup UserGroupID ThemeID
+instance (MonadDB m,MonadThrow m) => DBUpdate m DeleteThemeOwnedByUserGroup () where
+  update (DeleteThemeOwnedByUserGroup ugid tid) = do
     runQuery_ . sqlDelete "themes" $ do
       sqlWhereInSql "id" $ do
         sqlSelect "theme_owners" $ do
-          sqlWhereEq "company_id" $ cid
+          sqlWhereEq "user_group_id" $ ugid
           sqlWhereEq "theme_id" $ tid
           sqlResult "theme_id"
 

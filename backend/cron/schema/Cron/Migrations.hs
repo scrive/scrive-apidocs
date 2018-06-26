@@ -8,6 +8,7 @@ module Cron.Migrations (
   , addDocumentSearchUpdateJob
   , addDocumentAuthorUserIDUpdateJob
   , addUserGroupMigrationJob
+  , removeUserGroupMigrationJob
 ) where
 
 import Control.Monad.Catch
@@ -94,4 +95,12 @@ removeFindAndExtendDigitalSignaturesFromCronJobs = Migration {
       n <- runSQL "DELETE FROM cron_jobs WHERE id = 'find_and_extend_digital_signatures'"
       when (n /= 1) $ do
         unexpectedError "Wrong amount of rows deleted"
+  }
+
+removeUserGroupMigrationJob :: (MonadDB m, MonadThrow m) => Migration m
+removeUserGroupMigrationJob = Migration {
+    mgrTableName = tblName tableCronJobs
+  , mgrFrom = 13
+  , mgrAction =
+      StandardMigration $ runSQL_ "DELETE FROM cron_jobs WHERE id = 'user_group_migration'"
   }
