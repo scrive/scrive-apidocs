@@ -2,15 +2,12 @@ module FeatureFlags.Model(
     FeatureFlags(..)
   , GetFeatureFlags(..)
   , UpdateFeatureFlags(..)
-  -- only for testing
-  , GetFeatureFlagsForCompany(..)
 ) where
 
 import Control.Monad.Catch
 import Control.Monad.State
 import Crypto.RNG
 
-import Company.CompanyID
 import DB
 import UserGroup.Data
 
@@ -31,14 +28,6 @@ data FeatureFlags = FeatureFlags {
   , ffCanUseSMSPinAuthenticationToView :: Bool
   , ffCanUseSMSPinAuthenticationToSign :: Bool
 } deriving (Eq, Ord, Show)
-
-data GetFeatureFlagsForCompany = GetFeatureFlagsForCompany CompanyID
-instance (MonadDB m,MonadThrow m) => DBQuery m GetFeatureFlagsForCompany FeatureFlags where
-  query (GetFeatureFlagsForCompany cid) = do
-    runQuery_ . sqlSelect "feature_flags" $ do
-      sqlWhereEq "company_id" cid
-      selectFeatureFlagsSelectors
-    fetchOne fetchFeatureFlags
 
 data GetFeatureFlags = GetFeatureFlags UserGroupID
 instance (MonadDB m,MonadThrow m) => DBQuery m GetFeatureFlags FeatureFlags where

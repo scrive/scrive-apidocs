@@ -43,16 +43,16 @@ processMixpanelEvent _token SetCompanyProps _props = do
 
 -- | Convert a generic async event property to a Mixpanel property.
 mixpanelProperty :: EventProperty -> Mixpanel.Property
-mixpanelProperty (MailProp mail)     = CustomString "$email" (unEmail mail)
-mixpanelProperty (IPProp ip)         = IP (show ip)
-mixpanelProperty (NameProp name)     = FullName name
-mixpanelProperty (TimeProp t)        = Time t
-mixpanelProperty (UserIDProp _)      = unexpectedError "user ID prop in the wrong place!"
-mixpanelProperty (DocIDProp did)     = CustomString "Document ID" (show did)
-mixpanelProperty (CompanyIDProp cid) = CustomString "Company ID" (show cid)
-mixpanelProperty (FirstNameProp name) = FirstName name
-mixpanelProperty (LastNameProp name) = LastName name
-mixpanelProperty (SomeProp name val) = mkMixpanelProperty val
+mixpanelProperty (MailProp mail)       = CustomString "$email" (unEmail mail)
+mixpanelProperty (IPProp ip)           = IP (show ip)
+mixpanelProperty (NameProp name)       = FullName name
+mixpanelProperty (TimeProp t)          = Time t
+mixpanelProperty (UserIDProp _)        = unexpectedError "user ID prop in the wrong place!"
+mixpanelProperty (DocIDProp did)       = CustomString "Document ID" (show did)
+mixpanelProperty (UserGroupIDProp cid) = CustomString "Company ID" (show cid)
+mixpanelProperty (FirstNameProp name)  = FirstName name
+mixpanelProperty (LastNameProp name)   = LastName name
+mixpanelProperty (SomeProp name val)   = mkMixpanelProperty val
     where
       mkMixpanelProperty (PVNumber n) =
         CustomNumber name n

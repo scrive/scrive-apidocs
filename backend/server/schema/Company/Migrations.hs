@@ -5,25 +5,32 @@ module Company.Migrations (
   , companiesDropAllowSaveSafetyCopy
   , companiesAddUserGroupID
   , companiesMakeUserGroupIDNotNull
+  , companiesDropTable
+  , companyUIsDropTable
 ) where
 
 import Control.Monad.Catch
 
-import Company.Tables
 import DB
+
+tableCompaniesName :: RawSQL ()
+tableCompaniesName = "companies"
+
+tableCompanyUIsName :: RawSQL ()
+tableCompanyUIsName = "company_uis"
 
 companiesAddPartnerID :: (MonadThrow m, MonadDB m) => Migration m
 companiesAddPartnerID = Migration {
-  mgrTableName = tblName tableCompanies
+  mgrTableName = tableCompaniesName
 , mgrFrom = 20
 , mgrAction = StandardMigration $ do
-    runQuery_ $ sqlAlterTable (tblName tableCompanies)
+    runQuery_ $ sqlAlterTable tableCompaniesName
                               [ sqlAddColumn $ tblColumn
                                                  { colName = "partner_id"
                                                  , colType = BigIntT
                                                  , colNullable = True
                                                  }
-                              , sqlAddFK (tblName tableCompanies) $
+                              , sqlAddFK tableCompaniesName $
                                     (fkOnColumn "partner_id" "partners" "id" )
                                       { fkOnDelete = ForeignKeySetNull } ]
     runSQL_ "UPDATE companies SET partner_id = (SELECT partners.id FROM partners WHERE partners.default_partner) WHERE partner_id IS NULL"
@@ -32,10 +39,10 @@ companiesAddPartnerID = Migration {
 
 companiesAddPaymentPlan :: (MonadThrow m, MonadDB m) => Migration m
 companiesAddPaymentPlan = Migration {
-  mgrTableName = tblName tableCompanies
+  mgrTableName = tableCompaniesName
 , mgrFrom = 22
 , mgrAction = StandardMigration $ do
-    runQuery_ $ sqlAlterTable (tblName tableCompanies)  [ sqlAddColumn $
+    runQuery_ $ sqlAlterTable tableCompaniesName  [ sqlAddColumn $
         tblColumn { colName = "payment_plan", colType = SmallIntT, colNullable = True, colDefault = Just "0"}
       ]
     -- Migrate One plan to One plan
@@ -53,9 +60,9 @@ companiesAddPaymentPlan = Migration {
 
 companiesAddPadAppModeAndEArchiveEnabled :: MonadDB m => Migration m
 companiesAddPadAppModeAndEArchiveEnabled = Migration {
-  mgrTableName = tblName tableCompanies
+  mgrTableName = tableCompaniesName
 , mgrFrom = 21
-, mgrAction = StandardMigration $ runQuery_ $ sqlAlterTable (tblName tableCompanies) [
+, mgrAction = StandardMigration $ runQuery_ $ sqlAlterTable tableCompaniesName [
     sqlAddColumn $ tblColumn { colName = "pad_app_mode", colType = SmallIntT, colNullable = False, colDefault = Just "1" }
   , sqlAddColumn $ tblColumn { colName = "pad_earchive_enabled", colType = BoolT, colNullable = False, colDefault = Just "true" }
   ]
@@ -63,18 +70,18 @@ companiesAddPadAppModeAndEArchiveEnabled = Migration {
 
 companiesDropAllowSaveSafetyCopy :: (MonadThrow m, MonadDB m) => Migration m
 companiesDropAllowSaveSafetyCopy = Migration {
-  mgrTableName = tblName tableCompanies
+  mgrTableName = tableCompaniesName
 , mgrFrom = 23
 , mgrAction = StandardMigration $ do
-    runQuery_ $ sqlAlterTable (tblName tableCompanies) [ sqlDropColumn "allow_save_safety_copy" ]
+    runQuery_ $ sqlAlterTable tableCompaniesName [ sqlDropColumn "allow_save_safety_copy" ]
 }
 
 companiesAddUserGroupID :: MonadDB m => Migration m
 companiesAddUserGroupID = Migration {
-  mgrTableName = tblName tableCompanies
+  mgrTableName = tableCompaniesName
 , mgrFrom = 24
 , mgrAction = StandardMigration $ do
-    let tname = tblName tableCompanies
+    let tname = tableCompaniesName
     runQuery_ $ sqlAlterTable tname
       [
         sqlAddColumn $ tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = True }
@@ -85,13 +92,27 @@ companiesAddUserGroupID = Migration {
 
 companiesMakeUserGroupIDNotNull :: MonadDB m => Migration m
 companiesMakeUserGroupIDNotNull = Migration {
-    mgrTableName = tblName tableCompanies
+    mgrTableName = tableCompaniesName
   , mgrFrom = 25
   , mgrAction = StandardMigration $ do
-      let tname = tblName tableCompanies
+      let tname = tableCompaniesName
       runQuery_ . sqlAlterTable tname $
         [ sqlAlterColumn "user_group_id" "SET NOT NULL"
         , sqlDropFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
         , sqlAddFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade }
         ]
+  }
+
+companiesDropTable :: MonadDB m => Migration m
+companiesDropTable = Migration {
+    mgrTableName = tableCompaniesName
+  , mgrFrom = 26
+  , mgrAction = DropTableMigration DropTableRestrict
+  }
+
+companyUIsDropTable :: MonadDB m => Migration m
+companyUIsDropTable = Migration {
+    mgrTableName = tableCompanyUIsName
+  , mgrFrom = 4
+  , mgrAction = DropTableMigration DropTableRestrict
   }

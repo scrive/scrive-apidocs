@@ -25,7 +25,6 @@ import BrandedDomain.BrandedDomainID
 import DB
 import Theme.ThemeID
 import UserGroup.Data
-import UserGroup.Model
 
 data Theme = Theme {
     themeID                       :: !ThemeID
@@ -142,7 +141,6 @@ instance (MonadDB m,MonadThrow m, MonadLog m) => DBUpdate m MakeThemeOwnedByUser
   update (MakeThemeOwnedByUserGroup ugid tid) = do
     runQuery_ . sqlInsert "theme_owners" $ do
       sqlSet "theme_id"   $ tid
-      sqlSet "company_id" . unsafeUserGroupIDToCompanyID $ ugid
       sqlSet "user_group_id" $ ugid
 
 data MakeThemeOwnedByDomain = MakeThemeOwnedByDomain BrandedDomainID ThemeID

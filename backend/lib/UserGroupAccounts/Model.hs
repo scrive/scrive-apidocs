@@ -31,18 +31,18 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddUserGroupInvite UserGroupInv
   update (AddUserGroupInvite UserGroupInvite{..}) = do
     runSQL_ "LOCK TABLE companyinvites IN ACCESS EXCLUSIVE MODE"
     runQuery_ . sqlDelete "companyinvites" $ do
-      sqlWhereEq "company_id" invitingusergroup
+      sqlWhereEq "user_group_id" invitingusergroup
       sqlWhereEq "user_id" inviteduserid
     runQuery_ . sqlInsert "companyinvites" $ do
       sqlSet "user_id" inviteduserid
-      sqlSet "company_id" invitingusergroup
+      sqlSet "user_group_id" invitingusergroup
     fromJust `liftM` query (GetUserGroupInvite invitingusergroup inviteduserid)
 
 data RemoveUserGroupInvite = RemoveUserGroupInvite UserGroupID UserID
 instance (MonadDB m, MonadThrow m) => DBUpdate m RemoveUserGroupInvite Bool where
   update (RemoveUserGroupInvite ugid user_id) = do
     runQuery01 . sqlDelete "companyinvites" $ do
-      sqlWhereEq "company_id" ugid
+      sqlWhereEq "user_group_id" ugid
       sqlWhereEq "user_id" user_id
 
 data RemoveUserUserGroupInvites = RemoveUserUserGroupInvites UserID
@@ -55,7 +55,7 @@ data GetUserGroupInvite = GetUserGroupInvite UserGroupID UserID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetUserGroupInvite (Maybe UserGroupInvite) where
   query (GetUserGroupInvite ugid uid) = do
     runQuery_ . selectUserGroupInvites $ do
-      sqlWhereEq "ci.company_id" ugid
+      sqlWhereEq "ci.user_group_id" ugid
       sqlWhereEq "ci.user_id" uid
     fetchMaybe fetchUserGroupInvite
 
@@ -63,7 +63,7 @@ data UserGroupGetInvites = UserGroupGetInvites UserGroupID
 instance MonadDB m => DBQuery m UserGroupGetInvites [UserGroupInvite] where
   query (UserGroupGetInvites ugid) = do
     runQuery_ . selectUserGroupInvites $ do
-      sqlWhereEq "ci.company_id" ugid
+      sqlWhereEq "ci.user_group_id" ugid
     fetchMany fetchUserGroupInvite
 
 data UserGroupGetInvitesWithUsersData = UserGroupGetInvitesWithUsersData UserGroupID
@@ -71,9 +71,9 @@ instance MonadDB m => DBQuery m UserGroupGetInvitesWithUsersData [(UserGroupInvi
   query (UserGroupGetInvitesWithUsersData ugid) = do
     runQuery_ . sqlSelect "companyinvites as i, users as u" $ do
       sqlWhere "i.user_id = u.id"
-      sqlWhereEq "i.company_id" ugid
+      sqlWhereEq "i.user_group_id" ugid
       sqlResult "i.user_id"
-      sqlResult "i.company_id"
+      sqlResult "i.user_group_id"
       sqlResult "u.first_name"
       sqlResult "u.last_name"
       sqlResult "u.email"
@@ -85,7 +85,7 @@ selectUserGroupInvites :: State SqlSelect () -> SqlSelect
 selectUserGroupInvites refine =
   sqlSelect "companyinvites ci" $ do
     sqlResult "ci.user_id"
-    sqlResult "ci.company_id"
+    sqlResult "ci.user_group_id"
     refine
 
 fetchUserGroupInvite :: (UserID, UserGroupID) -> UserGroupInvite

@@ -39,7 +39,6 @@ import Log.Identifier
 import Mails.SendMail
 import OAuth.Model
 import OAuth.Util
-import Partner.Model
 import Redirect
 import Routing
 import Salesforce.AuthorizationWorkflow
@@ -217,8 +216,7 @@ apiCallGetUserProfile :: Kontrakcja m => m Response
 apiCallGetUserProfile =  api $ do
   (user, _ , _) <- getAPIUserWithAnyPrivileges
   ug <- getUserGroupForUser user
-  partners <- dbQuery GetPartners
-  return . Ok . userJSON user $ companyFromUserGroup ug partners
+  return $ Ok $ userJSON user $ ug
 
 apiCallGetSubscription :: Kontrakcja m => m Response
 apiCallGetSubscription =  api $ do

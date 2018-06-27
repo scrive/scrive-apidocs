@@ -101,7 +101,7 @@ ctDocument = CompositeType {
   , CompositeColumn { ccName = "object_version", ccType = BigIntT }
   , CompositeColumn { ccName = "token", ccType = BigIntT }
   , CompositeColumn { ccName = "time_zone_name", ccType = TextT }
-  , CompositeColumn { ccName = "author_company_id", ccType = BigIntT }
+  , CompositeColumn { ccName = "author_user_group_id", ccType = BigIntT }
   , CompositeColumn { ccName = "status_class", ccType = SmallIntT }
   ]
 }

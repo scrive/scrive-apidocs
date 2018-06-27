@@ -18,7 +18,6 @@ import qualified Data.ByteString.UTF8 as BU
 import qualified Data.Set as S
 
 import BrandedDomain.BrandedDomainID
-import Company.Model
 import DB.TimeZoneName
 import Doc.DocStateData
 import Doc.DocumentID
@@ -140,8 +139,6 @@ instance InspectXML AuthenticationToViewMethod where
 instance InspectXML AuthenticationToSignMethod where
 instance InspectXML DeliveryMethod where
 instance InspectXML ConfirmationDeliveryMethod where
-instance InspectXML Company where
-instance InspectXML CompanyID where
 instance InspectXML PlacementID where
 instance InspectXML DocumentSharing where
 instance InspectXML KontraLink where
@@ -154,3 +151,4 @@ instance InspectXML StatusClass where
 instance InspectXML SealStatus
 instance InspectXML TimeZoneName
 instance InspectXML UserGroupID
+instance InspectXML UserGroup

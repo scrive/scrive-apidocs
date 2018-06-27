@@ -340,7 +340,6 @@ testHelperPartnerCompanyCreate :: TestEnv (Context, PartnerID, UserGroupID)
 testHelperPartnerCompanyCreate = do
   (ctx, partner_ugid) <- testJSONCtxWithPartnerGroupID
   let pid = unsafeUserGroupIDToPartnerID partner_ugid
-
   newCompanyJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerCompanyCreate.json"
   let rq_newCompany_params = [ ("json", inTextBS newCompanyJSON) ]
       rq_newCompany_resp_fp = inTestDir "json/partner_api_v1/resp-partnerCompanyCreate.json"

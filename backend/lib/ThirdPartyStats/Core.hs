@@ -29,7 +29,6 @@ import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Semigroup as SG
 
-import Company.CompanyID (CompanyID, unsafeCompanyID)
 import DB
 import Doc.DocumentID (DocumentID, unsafeDocumentID)
 import IPAddress
@@ -37,6 +36,7 @@ import MinutesTime ()
 import Text.JSON.Orphans ()
 import User.Email
 import User.UserID (UserID, unsafeUserID)
+import UserGroup.Data
 
 -- | The various types of values a property can take.
 data PropValue
@@ -141,7 +141,7 @@ data EventProperty
   | UserIDProp    UserID
   | TimeProp      UTCTime
   | DocIDProp     DocumentID
-  | CompanyIDProp CompanyID
+  | UserGroupIDProp UserGroupID
   | FirstNameProp String
   | LastNameProp  String
   | SomeProp      PropName PropValue
@@ -151,16 +151,16 @@ data EventProperty
 -- | The scheme here is to have generic properties at ID 255 and give any
 --   special properties IDs starting at 0. Obviously.
 instance Binary EventProperty where
-  put (MailProp mail)     = putWord8 0   >> put (unEmail mail)
-  put (IPProp ip)         = putWord8 1   >> put ip
-  put (NameProp name)     = putWord8 2   >> put name
-  put (UserIDProp uid)    = putWord8 3   >> put uid
-  put (TimeProp t)        = putWord8 4   >> put t
-  put (DocIDProp did)     = putWord8 5   >> put did
-  put (CompanyIDProp cid) = putWord8 6   >> put cid
-  put (FirstNameProp n)   = putWord8 7   >> put n
-  put (LastNameProp n)    = putWord8 8   >> put n
-  put (SomeProp name val) = putWord8 255 >> put name >> put val
+  put (MailProp mail)       = putWord8 0   >> put (unEmail mail)
+  put (IPProp ip)           = putWord8 1   >> put ip
+  put (NameProp name)       = putWord8 2   >> put name
+  put (UserIDProp uid)      = putWord8 3   >> put uid
+  put (TimeProp t)          = putWord8 4   >> put t
+  put (DocIDProp did)       = putWord8 5   >> put did
+  put (UserGroupIDProp cid) = putWord8 6   >> put cid
+  put (FirstNameProp n)     = putWord8 7   >> put n
+  put (LastNameProp n)      = putWord8 8   >> put n
+  put (SomeProp name val)   = putWord8 255 >> put name >> put val
 
   get = do
     tag <- getWord8
@@ -171,7 +171,7 @@ instance Binary EventProperty where
       3   -> UserIDProp       <$> B.get
       4   -> TimeProp         <$> B.get
       5   -> DocIDProp        <$> B.get
-      6   -> CompanyIDProp    <$> B.get
+      6   -> UserGroupIDProp  <$> B.get
       7   -> FirstNameProp    <$> B.get
       8   -> LastNameProp     <$> B.get
       255 -> SomeProp         <$> B.get <*> B.get
@@ -328,7 +328,7 @@ instance Arbitrary EventProperty where
       (1, UserIDProp . unsafeUserID <$> arbitrary),
       (1, TimeProp . posixSecondsToUTCTime . fromInteger <$> arbitrary),
       (1, DocIDProp . unsafeDocumentID <$> arbitrary),
-      (1, CompanyIDProp . unsafeCompanyID <$> arbitrary),
+      (1, UserGroupIDProp . unsafeUserGroupID <$> arbitrary),
       (5, SomeProp <$> arbitrary <*> arbitrary)]
     where
       email = do

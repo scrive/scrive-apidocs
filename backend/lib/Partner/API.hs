@@ -23,7 +23,6 @@ import qualified Data.Text as T
 import API.V2
 import API.V2.Errors
 import API.V2.Parameters
-import Company.Data.PaymentPlan
 import DB
 import InputValidation (Result(..), asValidEmail)
 import Kontra
@@ -36,6 +35,7 @@ import User.Action (createUser)
 import User.Email (Email(..))
 import User.Model
 import UserGroup.Data
+import UserGroup.Data.PaymentPlan
 import UserGroup.Model
 
 partnerAPI :: Route (Kontra Response)

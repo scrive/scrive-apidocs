@@ -32,7 +32,6 @@ import qualified Test.HUnit as T
 import BrandedDomain.BrandedDomain
 import BrandedDomain.BrandedDomainID
 import BrandedDomain.Model
-import Company.Model
 import Context
 import DB
 import Doc.Action
@@ -72,6 +71,7 @@ import User.Email
 import User.Model
 import User.Password.Internal (Password(..))
 import UserGroup.Data
+import UserGroup.Data.PaymentPlan
 import UserGroup.Model
 import Util.Actor
 import qualified KontraError as KE
@@ -131,9 +131,6 @@ arbitrarySyllable = do
 
 instance Arbitrary T.Text where
   arbitrary = arbitraryName
-
-instance Arbitrary CompanyID where
-  arbitrary = unsafeCompanyID . abs <$> arbitrary
 
 instance Arbitrary PartnerID where
   arbitrary = unsafePartnerID . abs <$> arbitrary
@@ -573,7 +570,6 @@ instance Arbitrary User where
                    <*> arbitrary
                    <*> arbitrary
                    <*> arbitrary
-                   <*> arbitrary
                    <*> pure (unsafeBrandedDomainID 0)
                    <*> pure (unsafeUserGroupID 0)
 
@@ -911,14 +907,13 @@ addRandomDocumentWithFile fileid rda = do
   now <- currentTime
   let user = randomDocumentAuthor rda
       p = randomDocumentCondition rda
-  mcompany <-  dbQuery $ GetCompany $ usercompany user
   file <- dbQuery $ GetFileByFileID fileid
   --liftIO $ print $ "about to generate document"
-  document <- worker now user p mcompany file
+  document <- worker now user p file
   docid <- dbUpdate $ StoreDocumentForTesting document
   dbQuery $ GetDocumentByDocumentID docid
   where
-    worker now user p mcompany file = do
+    worker now user p file = do
       doc' <- rand 10 arbitrary
       xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
       status <- rand 10 (elements $ randomDocumentAllowedStatuses rda)
@@ -954,7 +949,7 @@ addRandomDocumentWithFile fileid rda = do
           rej <- asks teRejectedDocuments
           liftIO $ (atomically . modifyTVar' rej) (+1)
           --liftIO $ print $ "did not pass condition; doc: " ++ show adoc
-          worker now user p mcompany file
+          worker now user p file
 
         (_, Just _problems) -> do
           rej <- asks teRejectedDocuments
@@ -963,7 +958,7 @@ addRandomDocumentWithFile fileid rda = do
           --uncomment this to find out why the doc was rejected
           --print adoc
           --liftIO $ print $ "rejecting doc: " ++ _problems
-          worker now user p mcompany file
+          worker now user p file
 
 -- | Synchronously seal a document.
 sealTestDocument :: Context -> DocumentID -> TestEnv ()

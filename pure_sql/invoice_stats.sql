@@ -124,23 +124,19 @@ CREATE OR REPLACE FUNCTION print_csv(date_from TIMESTAMPTZ, date_to TIMESTAMPTZ)
       -- is not in the context of a PL/pgSQL call chain it's impossible to
       -- dereference any variable given to `psql` on the command line.
       CREATE TEMPORARY TABLE report AS
-      SELECT escape_for_csv(companies.name) AS "Company name"
-           , escape_for_csv(companies.id :: TEXT) AS "Company ID"
-           , escape_for_csv(companies.number :: TEXT) AS "Company number"
-           , escape_for_csv(companies.partner_id :: TEXT) AS "Partner ID"
-           , escape_for_csv((
-             SELECT name
-               FROM partners
-              WHERE partners.id = companies.partner_id
-             ) :: TEXT) AS "Partner name"
+      SELECT escape_for_csv(user_groups.name) AS "Company name"
+           , escape_for_csv(user_groups.id :: TEXT) AS "Company ID"
+           , escape_for_csv(user_group_addresses.company_number :: TEXT) AS "Company number"
+           , escape_for_csv(user_groups.parent_group_id :: TEXT) AS "Partner ID"
+           , escape_for_csv(COALESCE((SELECT pug.name FROM user_groups as pug WHERE pug.id = user_groups.parent_group_id),'Scrive') :: TEXT) AS "Partner name"
            , escape_for_csv((
              SELECT email
                FROM users
               WHERE users.is_company_admin
-                AND users.company_id = companies.id
+                AND users.user_group_id = user_groups.id
               LIMIT 1
              ) :: TEXT) AS "Company admin"
-           , escape_for_csv(CASE companies.payment_plan
+           , escape_for_csv(CASE user_group_invoicings.payment_plan
                 WHEN 0 THEN 'free'
                 WHEN 1 THEN 'one'
                 WHEN 2 THEN 'team'
@@ -152,83 +148,83 @@ CREATE OR REPLACE FUNCTION print_csv(date_from TIMESTAMPTZ, date_to TIMESTAMPTZ)
                 JOIN users u            ON d.author_user_id = u.id
                WHERE d.type = 1
                  AND d.status = 3
-                 AND u.company_id = companies.id
+                 AND u.user_group_id = user_groups.id
              ) AS "First doc signed"
            , (SELECT count(*)
                 FROM documents
                WHERE EXISTS (SELECT TRUE
                                FROM documents
                                JOIN users ON users.id = documents.author_user_id
-                              WHERE users.company_id = companies.id)) AS "All docs"
+                              WHERE users.user_group_id = user_groups.id)) AS "All docs"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
-               WHERE chi.company_id = companies.id
+               WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 6
                  AND chi.time >= period.from
                  AND chi.time < period.to) as "Docs sent"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
-               WHERE chi.company_id = companies.id
+               WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 8
                  AND chi.time >= period.from
                  AND chi.time < period.to) as "Docs closed"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
-               WHERE chi.company_id = companies.id
+               WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 9
                  AND chi.time >= period.from
                  AND chi.time < period.to) as "Sigs closed"
            , (SELECT count(*)
                 FROM chargeable_items chi
-               WHERE chi.company_id = companies.id
+               WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 1 -- sms
                  AND chi.time >= period.from
                  AND chi.time < period.to) as "SMSes sent"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
-               WHERE chi.company_id = companies.id
+               WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 1 -- sms
                  AND chi.time >= period.from
                  AND chi.time < period.to) as "SMSes sent (physical)"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
-               WHERE chi.company_id = companies.id
+               WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 2 -- eleg signatures
                  AND chi.time >= period.from
                  AND chi.time < period.to)  as "Swedish BankID signatures"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
-               WHERE chi.company_id = companies.id
+               WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 3 -- eleg authentication
                  AND chi.time >= period.from
                  AND chi.time <= period.to) as "Swedish BankID authorization"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
-               WHERE chi.company_id = companies.id
+               WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 10
                  AND chi.time >= period.from
                  AND chi.time <= period.to) as "Norwegian BankID signatures"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
-               WHERE chi.company_id = companies.id
+               WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 4
                  AND chi.time >= period.from
                  AND chi.time <= period.to) as "Norwegian BankID authorization"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
-               WHERE chi.company_id = companies.id
+               WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 11
                  AND chi.time >= period.from
                  AND chi.time <= period.to) as "Danish NemID signatures"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
-               WHERE chi.company_id = companies.id
+               WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 7
                  AND chi.time >= period.from
                  AND chi.time <= period.to) as "Danish NemID authorization"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
-               WHERE chi.company_id = companies.id
+               WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 5
                  AND chi.time >= period.from
                  AND chi.time <= period.to) as "Telia SMSes sent (physical)"
@@ -236,29 +232,29 @@ CREATE OR REPLACE FUNCTION print_csv(date_from TIMESTAMPTZ, date_to TIMESTAMPTZ)
                 FROM users
                WHERE (users.deleted IS NULL OR users.deleted > period.from)
                  AND users.email NOT LIKE '%@scrive.com'
-                 AND users.company_id = companies.id
+                 AND users.user_group_id = user_groups.id
                  AND users.has_accepted_terms_of_service <= period.from) AS "Users at start of period"
            , (SELECT count(*)
                 FROM users
                WHERE (users.deleted IS NULL OR users.deleted > period.to)
                  AND users.email NOT LIKE '%@scrive.com'
-                 AND users.company_id = companies.id
+                 AND users.user_group_id = user_groups.id
                  AND users.has_accepted_terms_of_service <= period.to) AS "Users at end of period"
            , (SELECT count(*)
                 FROM users
-               WHERE users.company_id = companies.id
+               WHERE users.user_group_id = user_groups.id
                  AND users.email NOT LIKE '%@scrive.com'
                  AND has_accepted_terms_of_service >= period.from
                  AND has_accepted_terms_of_service < period.to) AS "Users activated during period"
            , (SELECT count(*)
                 FROM users
-               WHERE users.company_id = companies.id
+               WHERE users.user_group_id = user_groups.id
                  AND users.email NOT LIKE '%@scrive.com'
                  AND users.deleted >= period.from
                  AND users.deleted < period.to) AS "Users deleted during period"
            , escape_for_csv(substring((period.from :: DATE :: TEXT) for 10)) AS "Start date"
            , escape_for_csv(substring((period.to :: DATE :: TEXT) for 10)) AS "End date"
-        FROM companies CROSS JOIN period WHERE companies.payment_plan <> 0;
+        FROM user_groups join user_group_addresses on user_groups.id = user_group_addresses.user_group_id join user_group_invoicings on user_groups.id = user_group_invoicings.user_group_id CROSS JOIN period WHERE user_group_invoicings.payment_plan <> 0;
         RETURN QUERY
           SELECT *
            FROM report

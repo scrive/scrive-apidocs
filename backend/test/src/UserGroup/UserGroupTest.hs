@@ -6,29 +6,16 @@ import Data.Int
 import Test.Framework
 import Test.QuickCheck
 
-import BrandedDomain.BrandedDomain
-import Company.CompanyUI.Model
-import Company.Model
 import DB
 import Doc.SignatoryLinkID ()
-import Kontra
-import Partner.Model
 import TestingUtil
 import TestKontra as T
-import Theme.Model
 import User.Model
 import UserGroup.Data
 import UserGroup.Model
-import Util.MonadUtils
 
 userGroupTests :: TestEnvSt -> Test
-userGroupTests env = testGroup "UserGroup" [
-    testThat "Test fetching user group" env testGetUserGroup
-  ]
-
-  {- We will enable this tests as soon as we remove company tables from database -}
-_userGroupTests :: TestEnvSt -> Test
-_userGroupTests env = testGroup "UserGroup"
+userGroupTests env  = testGroup "UserGroup"
   [ testThat "Test creating groups" env testCreateGroups
   , testThat "Test creating groups with users" env testCreateGroupsWithUsers
   , testThat "Test fetching all users of group" env testGetAllUsersOfTopGroup
@@ -37,8 +24,6 @@ _userGroupTests env = testGroup "UserGroup"
   , testThat "Test moving a group" env testMoveGroup
   , testThat "Test moving a group cannot form a cycle" env testMoveGroupCycleError
   , testThat "Test find a parent group, where charging happens" env testFindInheritedPricePlan
-  , testThat "Update of group does the same to it's company" env testUpdateOfGroupDoesTheSameToItsCompany
-  , testThat "Update of group does the same to it's company with partner" env testUpdateOfGroupDoesTheSameToItsCompanyWithPartner
   , testThat "Cannot delete a UserGroup with subgroups" env testCannotDeleteUserGroupWithSubgroups
   ]
 
@@ -147,7 +132,7 @@ testMoveGroup = do
   (_, ugids) <- foldlM createGroupsWithUsers ([Nothing],[]) [1..4]
   -- take Root.Left group and move it to Root.Right....Right group
   Just ug1 <- dbQuery . UserGroupGet $ ugids !! 1
-  _ <- dbUpdate . UserGroupCreate . set ugParentGroupID (Just $ ugids !! 14) $ ug1
+  _ <- dbUpdate . UserGroupUpdate . set ugParentGroupID (Just $ ugids !! 14) $ ug1
   -- parentpath of new leaf in moved group should be 6 items long
   Just (_ug10, parentugs) <- dbQuery . UserGroupGetWithParents $ ugids !! 10
   assertEqual ("Fetched all parents of leaf group") 6 (length parentugs)
@@ -176,7 +161,7 @@ testMoveGroupCycleError = do
   ugB0 <- rand 10 arbitrary
   ugB <- dbUpdate . UserGroupCreate . set ugParentGroupID (Just . get ugID $ ugA) $ ugB0
   -- making A child of B fails
-  assertRaisesKontra (\(UserGroupsFormCycle _) -> True) . dbUpdate . UserGroupCreate . set ugParentGroupID (Just . get ugID $ ugB) $ ugA
+  assertRaisesKontra (\(UserGroupsFormCycle _) -> True) . dbUpdate . UserGroupUpdate . set ugParentGroupID (Just . get ugID $ ugB) $ ugA
 
 testFindInheritedPricePlan :: TestEnv ()
 testFindInheritedPricePlan = do
@@ -190,33 +175,6 @@ testFindInheritedPricePlan = do
   Just ugwithparents <- dbQuery . UserGroupGetWithParents . get ugID $ ugB
   assertEqual "A is the charging group" (ugPaymentPlan ugA) . ugInherited ugPaymentPlan $ ugwithparents
 
-testUpdateOfGroupDoesTheSameToItsCompany :: TestEnv ()
-testUpdateOfGroupDoesTheSameToItsCompany = replicateM_ 20 $ do
-  -- create user group
-  ug <- dbUpdate . UserGroupCreate $ def
-  let ugid = get ugID ug
-  -- setup some themes
-  ctx <- mkContext def
-  mailThemeFromDomain <- dbQuery . GetTheme . get (bdMailTheme . ctxbrandeddomain) $ ctx
-  mailTheme <- dbUpdate $ InsertNewThemeForUserGroup ugid mailThemeFromDomain
-  signviewThemeFromDomain <- dbQuery $ GetTheme (get (bdSignviewTheme . ctxbrandeddomain) ctx)
-  signviewTheme <- dbUpdate $ InsertNewThemeForUserGroup ugid signviewThemeFromDomain
-  let ug2 = set (uguiMailTheme     . ugUI) (Just $ themeID mailTheme)
-          . set (uguiSignviewTheme . ugUI) (Just $ themeID signviewTheme)
-          $ ug
-  dbUpdate . UserGroupUpdate $ ug2
-  -- apply random change (but do not change partner)
-  randomUpdate $ \(info, pp, name) -> UserGroupUpdate
-    . set ugSettings info . set ugInvoicing (Invoice pp) . set ugName name $ ug2
-  ug3 <- guardJustM . dbQuery . UserGroupGet $ ugid
-
-  -- verify, that the company has the same data
-  c <- guardJustM . dbQuery . GetCompany . unsafeUserGroupIDToCompanyID $ ugid
-  partners <- dbQuery GetPartners
-  let c_fromUserGroup = companyFromUserGroup ug3 partners
-  assertEqual "Company from DB is the same as Company from UserGroup" c c_fromUserGroup
-  cui <- dbQuery . GetCompanyUI . unsafeUserGroupIDToCompanyID $ ugid
-  assertEqual "CompanyUI from DB is the same as CompanyUI from UserGroup" cui (fromUserGroupUI ug3)
 
 testCannotDeleteUserGroupWithSubgroups :: TestEnv ()
 testCannotDeleteUserGroupWithSubgroups = do
@@ -232,25 +190,6 @@ testCannotDeleteUserGroupWithSubgroups = do
   -- deleting group B works
   runSQL_ $ "DELETE from user_groups where id = " <?> get ugID ugB
 
-testUpdateOfGroupDoesTheSameToItsCompanyWithPartner :: TestEnv ()
-testUpdateOfGroupDoesTheSameToItsCompanyWithPartner = replicateM_ 20 $ do
-  -- create user group
-  ug1 <- dbUpdate . UserGroupCreate $ def
-  let ugid = get ugID ug1
-  -- create partner
-  (_, partner_ug) <- addNewRandomPartnerUser
-  -- make user group administered by partner
-  let ug2 = set ugParentGroupID (Just . get ugID $ partner_ug) $ ug1
-  dbUpdate . UserGroupUpdate $ ug2
-  -- apply random change (but do not change partner again)
-  randomUpdate $ \(info, pp, name) -> UserGroupUpdate
-    . set ugSettings info . set ugInvoicing (Invoice pp) . set ugName name $ ug2
-  ug3 <- guardJustM . dbQuery . UserGroupGet $ ugid
-  -- verify, that the company has the same data
-  c <- guardJustM . dbQuery . GetCompany . unsafeUserGroupIDToCompanyID $ ugid
-  partners <- dbQuery GetPartners
-  let c_fromUserGroup = companyFromUserGroup ug3 partners
-  assertEqual "Company from DB is the same as Company from UserGroup" c c_fromUserGroup
 
 newtype ARootUserGroup = ARootUserGroup { unARootUserGroup :: UserGroup }
 

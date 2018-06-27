@@ -133,3 +133,10 @@ userGroupsAdjustIDSequence = Migration {
       runSQL_ "SELECT setval('user_groups_id_seq', max(id)) FROM companies"
 
   }
+
+usergroupsBumpVersionAfterDropingCompanies :: MonadDB m => Migration m
+usergroupsBumpVersionAfterDropingCompanies = Migration {
+    mgrTableName = tblName tableUserGroups
+  , mgrFrom = 2
+  , mgrAction = StandardMigration $ return ()
+  }

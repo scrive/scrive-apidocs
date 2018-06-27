@@ -24,7 +24,6 @@ import MinutesTime
 import SMS.Data (SMSProvider(..))
 import User.UserID
 import UserGroup.Data
-import UserGroup.Model
 
 data ChargeableItem =
   CIStartingDocument       |
@@ -82,58 +81,58 @@ instance ToSQL ChargeableItem where
 
 ----------------------------------------
 
--- Note: We charge the company of the author of the document
--- at a time of the event, therefore the company id never
+-- Note: We charge the user group of the author of the document
+-- at a time of the event, therefore the user_group_id never
 -- changes, even if the corresponding user moves to the other
--- company.
+-- user group.
 
--- | Charge company of the author of the document for SMSes.
+-- | Charge user group of the author of the document for SMSes.
 data ChargeUserGroupForSMS = ChargeUserGroupForSMS DocumentID SMSProvider Int32
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForSMS () where
   update (ChargeUserGroupForSMS document_id SMSDefault sms_count)        = update (ChargeUserGroupFor CISMS sms_count document_id)
   update (ChargeUserGroupForSMS document_id SMSTeliaCallGuide sms_count) = update (ChargeUserGroupFor CISMSTelia sms_count document_id)
 
--- | Charge company of the author of the document for swedish bankid signature while signing.
+-- | Charge user group of the author of the document for swedish bankid signature while signing.
 data ChargeUserGroupForSEBankIDSignature = ChargeUserGroupForSEBankIDSignature DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForSEBankIDSignature () where
   update (ChargeUserGroupForSEBankIDSignature document_id) = update (ChargeUserGroupFor CISEBankIDSignature 1 document_id)
 
--- | Charge company of the author of the document for swedish authorization
+-- | Charge user group of the author of the document for swedish authorization
 data ChargeUserGroupForSEBankIDAuthentication = ChargeUserGroupForSEBankIDAuthentication DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForSEBankIDAuthentication () where
   update (ChargeUserGroupForSEBankIDAuthentication document_id) = update (ChargeUserGroupFor CISEBankIDAuthentication 1 document_id)
 
--- | Charge company of the author of the document for norwegian authorization
+-- | Charge user group of the author of the document for norwegian authorization
 data ChargeUserGroupForNOBankIDAuthentication = ChargeUserGroupForNOBankIDAuthentication DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForNOBankIDAuthentication () where
   update (ChargeUserGroupForNOBankIDAuthentication document_id) = update (ChargeUserGroupFor CINOBankIDAuthentication 1 document_id)
 
--- | Charge company of the author of the document for norwegian bankid signature while signing.
+-- | Charge user group of the author of the document for norwegian bankid signature while signing.
 data ChargeUserGroupForNOBankIDSignature = ChargeUserGroupForNOBankIDSignature DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForNOBankIDSignature () where
   update (ChargeUserGroupForNOBankIDSignature document_id) = update (ChargeUserGroupFor CINOBankIDSignature 1 document_id)
 
--- | Charge company of the author of the document for danish authentication
+-- | Charge user group of the author of the document for danish authentication
 data ChargeUserGroupForDKNemIDAuthentication = ChargeUserGroupForDKNemIDAuthentication DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForDKNemIDAuthentication () where
   update (ChargeUserGroupForDKNemIDAuthentication document_id) = update (ChargeUserGroupFor CIDKNemIDAuthentication 1 document_id)
 
--- | Charge company of the author of the document for danish nemid signature
+-- | Charge user group of the author of the document for danish nemid signature
 data ChargeUserGroupForDKNemIDSignature = ChargeUserGroupForDKNemIDSignature DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForDKNemIDSignature () where
   update (ChargeUserGroupForDKNemIDSignature document_id) = update (ChargeUserGroupFor CIDKNemIDSignature 1 document_id)
 
--- | Charge company of the author of the document for creation of the document
+-- | Charge user group of the author of the document for creation of the document
 data ChargeUserGroupForStartingDocument = ChargeUserGroupForStartingDocument DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForStartingDocument () where
   update (ChargeUserGroupForStartingDocument document_id) = update (ChargeUserGroupFor CIStartingDocument 1 document_id)
 
--- | Charge company of the author of the document for closing of the document
+-- | Charge user group of the author of the document for closing of the document
 data ChargeUserGroupForClosingDocument = ChargeUserGroupForClosingDocument DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForClosingDocument () where
   update (ChargeUserGroupForClosingDocument document_id) = update (ChargeUserGroupFor CIClosingDocument 1 document_id)
 
--- | Charge company of the author of the document for closing a signature
+-- | Charge user group of the author of the document for closing a signature
 data ChargeUserGroupForClosingSignature = ChargeUserGroupForClosingSignature DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForClosingSignature () where
   update (ChargeUserGroupForClosingSignature document_id) = update (ChargeUserGroupFor CIClosingSignature 1 document_id)
@@ -146,7 +145,6 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupFor
     runQuery_ . sqlInsert "chargeable_items" $ do
       sqlSet "time" now
       sqlSet "type" item
-      sqlSet "company_id" . unsafeUserGroupIDToCompanyID $ ugid
       sqlSet "user_id" user_id
       sqlSet "document_id" document_id
       sqlSet "quantity" quantity

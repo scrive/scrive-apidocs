@@ -30,6 +30,7 @@ import User.APILog.Migrations
 import User.History.Migrations
 import User.Migrations
 import UserGroup.Migrations
+import UserGroupAccounts.Migrations
 
 -- Note: ALWAYS append new migrations TO THE END of this list.
 -- Current version has migrations created after VII.2016.
@@ -122,4 +123,12 @@ kontraMigrations = [
   , themeOwnershipMakeUserGroupIDMandatory
   , usersMakeUserGroupIDNotNull
   , userGroupsAdjustIDSequence
+  , dropCompanyIDForChargeableItems
+  , featureFlagsDropCompanyID
+  , themeOwnershipDropCompanyID
+  , changeCompanyToUserGroupInCompanyInvites
+  , usersDropCompanyID
+  , companyUIsDropTable
+  , companiesDropTable
+  , usergroupsBumpVersionAfterDropingCompanies
   ]

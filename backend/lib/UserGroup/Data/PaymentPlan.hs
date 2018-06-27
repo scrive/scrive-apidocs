@@ -1,4 +1,4 @@
-module Company.Data.PaymentPlan (
+module UserGroup.Data.PaymentPlan (
     PaymentPlan(..)
   ) where
 

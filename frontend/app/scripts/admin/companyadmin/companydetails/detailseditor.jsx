@@ -178,7 +178,7 @@ var DetailsEditorView = React.createClass({
             </td>
           </tr>
           <tr>
-            <td><label>Partner ID</label></td>
+            <td><label>Partner User Group ID</label></td>
             <td>
               <input
                 name="partnerid"
@@ -188,7 +188,8 @@ var DetailsEditorView = React.createClass({
               />
             </td>
             <td>
-              1 is default/Scrive. 3 is SF. Only Partner Manager is allowed to make changes in this field.
+              Leave is empty for Scrive. SF is 9197237133460633368.
+              Only Partner Manager is allowed to make changes in this field.
             </td>
           </tr>
           <tr>

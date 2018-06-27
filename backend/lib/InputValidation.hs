@@ -35,7 +35,7 @@ module InputValidation
     , asValidFieldValue
     , asValidInviteText
     , asValidIPAddressWithMaskList
-    , asValidPartnerID
+    , asValidUserGroupID
     , asValidSwedishSSN
     , asValidNorwegianSSN
     , asValidDanishSSN
@@ -58,9 +58,9 @@ import Doc.DocumentID
 import Happstack.Fields hiding (getFields)
 import IPAddress
 import Kontra
-import Partner.PartnerID
 import User.Email
 import User.Model
+import UserGroup.Data
 import Utils.String
 
 {- |
@@ -442,8 +442,8 @@ asValidAddress input =
     >>= checkLengthIsMax 200
     >>= checkOnly (isAlphaNum : map (==) " \'():,/.#-")
 
-asValidPartnerID :: String -> Result PartnerID
-asValidPartnerID input = checkIfEmpty input
+asValidUserGroupID :: String -> Result UserGroupID
+asValidUserGroupID input = checkIfEmpty input
   >>= \xs -> case reads xs of
     [(val,[])] -> return val
     _ -> Bad

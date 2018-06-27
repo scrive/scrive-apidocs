@@ -207,7 +207,7 @@ apiCallV1CreateFromTemplate did = logDocument did . api $ do
   auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink template
   auser <- apiGuardJustM (serverError "No user found") $ dbQuery $ GetUserByIDIncludeDeleted auid
   let haspermission = (userid auser == userid user) ||
-                      (usercompany auser == usercompany user &&  isDocumentShared template)
+                      (usergroupid auser == usergroupid user &&  isDocumentShared template)
   unless (isTemplate template && haspermission) $ do
     throwM $ SomeDBExtraException $ serverError "Id did not matched template or you do not have right to access document"
   when (documentDeletedForUser template $ userid user) $
@@ -887,7 +887,7 @@ apiCallV1Delete did = logDocument did . api $ do
                          _ -> return Nothing
     msl <- getSigLinkFor user <$> theDocument
     let haspermission = (isJust msl)
-                     || (isJust mauser && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user))
+                     || (isJust mauser && usergroupid (fromJust mauser) == usergroupid user && (useriscompanyadmin user))
     when (not haspermission) $ do
            throwM . SomeDBExtraException $ serverError "Permission problem. Not connected to document."
     dbUpdate $ ArchiveDocument (userid user) actor
@@ -904,7 +904,7 @@ apiCallV1ReallyDelete did = logDocument did . api $ do
                          _ -> return Nothing
     msl <- getSigLinkFor user <$> theDocument
     let haspermission = (isJust msl)
-                     || (isJust mauser && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user))
+                     || (isJust mauser && usergroupid (fromJust mauser) == usergroupid user && (useriscompanyadmin user))
     when (not haspermission) $ do
            throwM . SomeDBExtraException $ serverError "Permission problem. Not connected to document."
     dbUpdate $ ReallyDeleteDocument (userid user) actor
@@ -939,7 +939,7 @@ apiCallV1Get did = logDocument did . api $ do
                      _ -> return Nothing
 
       haspermission <- return $ isJust msiglink
-                       || (isJust mauser && usercompany (fromJust mauser) == usercompany user && (useriscompanyadmin user || isDocumentShared doc))
+                       || (isJust mauser && usergroupid (fromJust mauser) == usergroupid user && (useriscompanyadmin user || isDocumentShared doc))
       if (haspermission)
         then do
           Ok <$> (documentJSONV1 (Just user) external ((userid <$> mauser) == (Just $ userid user)) msiglink doc)
@@ -1335,7 +1335,7 @@ guardAuthorOrAuthorsAdmin user forbidenMessage = do
   docUserID <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
   docUser   <- apiGuardJustM (serverError "No user found for author") $ dbQuery $ GetUserByIDIncludeDeleted docUserID
   let hasPermission = (docUserID == userid user) ||
-                          ((usercompany docUser == usercompany user)
+                          ((usergroupid docUser == usergroupid user)
                             && (useriscompanyadmin user))
   when (not hasPermission) $
     throwM . SomeDBExtraException $ forbidden forbidenMessage

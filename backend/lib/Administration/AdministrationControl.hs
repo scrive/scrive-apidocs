@@ -149,7 +149,7 @@ daveRoutes =
      , dir "document"      $ hGet $ toK2 $ daveSignatoryLink
      , dir "user"          $ hGet $ toK1 $ daveUser
      , dir "userhistory"   $ hGet $ toK1 $ daveUserHistory
-     , dir "company"       $ hGet $ toK1 $ daveCompany
+     , dir "usergroup"       $ hGet $ toK1 $ daveUserGroup
      , dir "reseal" $ hPost $ toK1 $ resealFile
      , dir "file"   $ hGet  $ toK2 $ daveFile
      , dir "backdoor" $ hGet $ handleBackdoorQuery
@@ -171,14 +171,12 @@ handleUserGetProfile:: Kontrakcja m => UserID -> m JSValue
 handleUserGetProfile uid = onlySalesOrAdmin $ do
   user <- guardJustM $ dbQuery $ GetUserByID uid
   ug <- getUserGroupForUser user
-  partners <- dbQuery GetPartners
-  return $ userJSON user (companyFromUserGroup ug partners)
+  return $ userJSON user ug
 
 handleCompanyGetProfile:: Kontrakcja m => UserGroupID -> m JSValue
 handleCompanyGetProfile ugid = onlySalesOrAdmin $ do
   ug <- guardJustM . dbQuery . UserGroupGet $ ugid
-  partners <- dbQuery GetPartners
-  return . companyJSON True $ companyFromUserGroup ug partners
+  return $ companyJSON True ug
 
 showAdminCompany :: Kontrakcja m => UserGroupID -> m String
 showAdminCompany ugid = onlySalesOrAdmin $ do
@@ -340,24 +338,18 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
   uginfochange <- getUserGroupSettingsChange
   ugaddresschange <- getUserGroupAddressChange
 
-  mcompanypartnerid <- getOptionalField asValidPartnerID "companypartnerid"
-  mnewparentugid <- case mcompanypartnerid of
+  mpartnerusergroupid <- getOptionalField asValidUserGroupID "companypartnerid"
+  mnewparentugid <- case mpartnerusergroupid of
     Nothing -> return Nothing
-    Just partnerid -> do
+    Just partnerusergroupid -> do
       partners <- dbQuery GetPartners
       -- check, if this company is a partner. We must not set partner_id of partners.
       let thisUserGroupIsPartner = ugid `elem` (catMaybes $ fmap ptUserGroupID partners)
       case thisUserGroupIsPartner of
         True  -> internalError
-        False -> (return . find ((==partnerid) . ptID) $ partners) >>= \case
-          -- No partner corresponds to the ID supplied
-          Nothing -> internalError
-          Just newParent -> case ptDefaultPartner newParent of
-            -- setting the default partnerID is the same as having no usergroup parent
-            True -> return Nothing
-            -- All non-default partners have usergroup set. `Just . fromJust` is only a guard.
-            False -> return . Just . fromJust . ptUserGroupID $ newParent
-
+        False -> if (Just partnerusergroupid) `elem` (ptUserGroupID <$> partners)
+          then return $ Just partnerusergroupid
+          else internalError
   dbUpdate . UserGroupUpdate
     . set ugParentGroupID mnewparentugid
     . maybe id (set ugName . T.pack) mcompanyname
@@ -583,13 +575,12 @@ daveUserHistory userid = onlyAdmin $ do
     return $ inspectXML history
 
 {- |
-    Used by super users to inspect a company in xml.
+    Used by super users to inspect a user group in xml.
 -}
-daveCompany :: Kontrakcja m => UserGroupID -> m String
-daveCompany ugid = onlyAdmin $ do
+daveUserGroup :: Kontrakcja m => UserGroupID -> m String
+daveUserGroup ugid = onlyAdmin $ do
   ug <- guardJustM . dbQuery . UserGroupGet $ ugid
-  partners <- dbQuery GetPartners
-  return . inspectXML $ companyFromUserGroup ug partners
+  return $ inspectXML ug
 
 daveFile :: Kontrakcja m => FileID -> String -> m Response
 daveFile fileid' _title = onlyAdmin $ do

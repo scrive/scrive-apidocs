@@ -82,19 +82,19 @@ guardThatUserIsAuthor user = guardDocumentAuthorIs (\a -> userid user == userid 
 guardThatUserIsAuthorOrCompanyAdmin :: Kontrakcja m => User -> Document -> m ()
 guardThatUserIsAuthorOrCompanyAdmin user = guardDocumentAuthorIs
   (\a -> userid user == userid a
-      || (usercompany user == usercompany a && useriscompanyadmin user)
+      || (usergroupid user == usergroupid a && useriscompanyadmin user)
   )
 
 guardThatUserIsAuthorOrDocumentIsShared :: Kontrakcja m => User -> Document -> m ()
 guardThatUserIsAuthorOrDocumentIsShared user doc = do
   guardDocumentAuthorIs (\a -> userid user == userid a
-    || (usercompany user == usercompany a && isDocumentShared doc)
+    || (usergroupid user == usergroupid a && isDocumentShared doc)
     ) doc
 
 guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared :: Kontrakcja m => User -> Document -> m ()
 guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user doc = do
   guardDocumentAuthorIs (\a -> userid user == userid a
-    || (usercompany user == usercompany a && (useriscompanyadmin user || isDocumentShared doc))
+    || (usergroupid user == usergroupid a && (useriscompanyadmin user || isDocumentShared doc))
     ) doc
 
 guardThatObjectVersionMatchesIfProvided :: Kontrakcja m => DocumentID -> m ()

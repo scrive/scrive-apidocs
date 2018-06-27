@@ -5,7 +5,7 @@ import DB
 tableUsers :: Table
 tableUsers = tblTable {
     tblName = "users"
-  , tblVersion = 24
+  , tblVersion = 25
     , tblColumns = [
         tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
       , tblColumn { colName = "password", colType = BinaryT }
@@ -14,7 +14,6 @@ tableUsers = tblTable {
       , tblColumn { colName = "account_suspended", colType = BoolT, colNullable = False }
       , tblColumn { colName = "has_accepted_terms_of_service", colType = TimestampWithZoneT }
       , tblColumn { colName = "signup_method", colType = SmallIntT, colNullable = False }
-      , tblColumn { colName = "company_id", colType = BigIntT, colNullable = False }
       , tblColumn { colName = "first_name", colType = TextT, colNullable = False }
       , tblColumn { colName = "last_name", colType = TextT, colNullable = False }
       , tblColumn { colName = "personal_number", colType = TextT, colNullable = False }
@@ -32,13 +31,11 @@ tableUsers = tblTable {
   , tblPrimaryKey = pkOnColumn "id"
   , tblChecks = [Check "check_users_lowercase_email" "email = lower(email)"]
   , tblForeignKeys = [
-      fkOnColumn "company_id" "companies" "id"
-    , fkOnColumn "user_group_id" "user_groups" "id"
+      fkOnColumn "user_group_id" "user_groups" "id"
     , fkOnColumn "associated_domain_id" "branded_domains" "id"
     ]
   , tblIndexes = [
-      indexOnColumn "company_id"
-    , indexOnColumn "user_group_id"
+      indexOnColumn "user_group_id"
     , (indexOnColumn "email") { idxUnique = True, idxWhere = Just ("deleted IS NULL") }
     ]
   }

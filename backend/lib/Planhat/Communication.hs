@@ -14,7 +14,6 @@ import qualified Data.Text as Text
 import Planhat.Config (PlanhatConf(..))
 import User.Model
 import UserGroup.Data
-import UserGroup.Model
 
 phActionURL :: PlanhatConf -> String
 phActionURL PlanhatConf{..} =
@@ -62,7 +61,7 @@ planhatActionJSON actionTag email userId time =
 
 planhatMetricJSON :: String -> Int64 -> UserGroupID -> UTCTime -> JSON.Value
 planhatMetricJSON dimensionId value ugid time =
-    JSON.object [ "companyExternalId" .= (Text.pack . show . unsafeUserGroupIDToCompanyID $ ugid)
+    JSON.object [ "companyExternalId" .= (Text.pack $ show ugid)
                 , "dimensionId"       .= dimensionId
                 , "value"             .= value
                 , "date"              .= time ]

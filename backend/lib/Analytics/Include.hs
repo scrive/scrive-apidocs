@@ -12,13 +12,12 @@ import Text.StringTemplates.Templates
 import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 
-import Company.Data
 import DB
 import HubSpot.Conf
 import Kontra
 import MinutesTime
-import Partner.Model
 import User.Model
+import UserGroup.Data
 import UserGroup.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
@@ -26,7 +25,7 @@ import Utils.Monoid
 import Utils.String
 
 data AnalyticsData = AnalyticsData { aUser           :: Maybe User
-                                   , aCompany        :: Maybe Company
+                                   , aUserGroup      :: Maybe UserGroup
                                    , aToken          :: Maybe String
                                    , aHubSpotConf    :: Maybe HubSpotConf
                                    , aGACode         :: Maybe String
@@ -36,11 +35,9 @@ data AnalyticsData = AnalyticsData { aUser           :: Maybe User
 getAnalyticsData :: Kontrakcja m => m AnalyticsData
 getAnalyticsData = do
   muser    <- get ctxmaybeuser <$> getContext
-  mug <- case muser of
+  musergroup <- case muser of
     Just user -> dbQuery . UserGroupGet . usergroupid $ user
     _         -> return Nothing
-  partners <- dbQuery GetPartners
-  let mcompany = (\ug -> companyFromUserGroup ug partners) <$> mug
   token       <- get ctxmixpaneltoken <$> getContext
   gaToken     <- get ctxgatoken <$> getContext
   hubspotConf <- get ctxhubspotconf <$> getContext
@@ -48,7 +45,7 @@ getAnalyticsData = do
 
 
   return $ AnalyticsData { aUser         = muser
-                         , aCompany      = mcompany
+                         , aUserGroup    = musergroup
                          , aToken        = token
                          , aHubSpotConf  = hubspotConf
                          , aGACode       = gaToken
@@ -81,7 +78,7 @@ instance ToJSValue AnalyticsData where
     mnop (J.value "Position") $ emptyToNothing $ escapeString <$> usercompanyposition <$> userinfo  <$> aUser
 
     mnop (J.value "Company Status") $ escapeString <$> (\u -> if (useriscompanyadmin u) then "admin" else "sub") <$> aUser
-    mnop (J.value "Company Name") $ emptyToNothing $ escapeString <$> getCompanyName  <$> aCompany
+    mnop (J.value "Company Name") $ emptyToNothing $ escapeString <$> getCompanyName  <$> aUserGroup
 
     mnop (J.value "Signup Method") $ emptyToNothing $ escapeString <$> show <$> usersignupmethod <$> aUser
 

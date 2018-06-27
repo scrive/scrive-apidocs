@@ -33,3 +33,22 @@ themeOwnershipMakeUserGroupIDMandatory = Migration {
           \AND (company_id IS NOT NULL AND user_group_id IS NOT NULL OR domain_id IS NOT NULL)" -- (usergroup && company) XOR domain
       ]
 }
+
+
+themeOwnershipDropCompanyID :: (MonadThrow m, MonadDB m) => Migration m
+themeOwnershipDropCompanyID = Migration {
+  mgrTableName = tblName tableThemeOwnership
+, mgrFrom = 3
+, mgrAction = StandardMigration $ do
+    let tname = tblName tableThemeOwnership
+    runQuery_ $ sqlAlterTable tname [
+        sqlDropFK tname $ (fkOnColumn "company_id" "companies" "id")
+      , sqlDropCheck $ Check "check_theme_is_owned_by_user_group_or_domain" ""
+      ]
+    runQuery_ $ sqlAlterTable tname [
+        sqlAddCheck $ Check "check_theme_is_owned_by_user_group_or_domain" $
+              "(user_group_id IS \  \NULL OR domain_id IS \  \NULL) \
+          \AND (user_group_id IS NOT NULL OR domain_id IS NOT NULL)" -- (usergroup && company) XOR domain
+      ]
+    runQuery_ $ sqlAlterTable tname [ sqlDropColumn "company_id" ]
+}

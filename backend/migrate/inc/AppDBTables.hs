@@ -13,7 +13,6 @@ import Amazon.Tables
 import Attachment.Tables
 import BrandedDomain.Tables
 import Chargeable.Tables
-import Company.Tables
 import Cron.Tables
 import DB.SQLFunction
 import DB.SQLTrigger
@@ -108,7 +107,6 @@ kontraTables =
   , tableBrandedDomains
   , tableUserGroups
   , tablePartners
-  , tableCompanies
   , tableUsers
   , tablePartnerAdmins
   , tableUsersHistory
@@ -149,7 +147,6 @@ kontraTables =
   , tableAsyncEventQueue
   , tableHostClock
   , tableUsersCallbackScheme
-  , tableCompanyUIs
   , tableDocumentAutomaticReminders
   , tableSignatorySMSPins
   , tableChargeableItems

@@ -40,7 +40,7 @@ userStateTests env = testGroup "UserState" [
       testThat "can fetch statistics by user id" env test_userUsageStatisticsByUser,
       testThat "can fetch statistics by company id" env test_userUsageStatisticsByCompany
     ]
-  , testThat "SetUserCompanyAdmin/GetUserGroupAccounts works" env test_getUserGroupAccounts
+  , testThat "UserGroupGetUsers/UserGroupGetUsersIncludeDeleted works" env test_userGroupGetUsers
   , testThat "SetUserUserGroup works" env test_setUserCompany
   , testThat "DeleteUser works" env test_deleteUser
   , testGroup "SetUserInfo" [
@@ -123,8 +123,8 @@ test_addUser_repeatedEmailReturnsNothing = do
   result <- addNewUser "Emily" "Green Again" "emily@green.com"
   assert $ isNothing result
 
-test_getUserGroupAccounts :: TestEnv ()
-test_getUserGroupAccounts = do
+test_userGroupGetUsers :: TestEnv ()
+test_userGroupGetUsers = do
   ugid <- (get ugID) <$> (dbUpdate $ UserGroupCreate def)
   let emails = ["emily@green.com", "emily2@green.com", "andrzej@skrivapa.se"]
   users <- forM emails $ \email -> do

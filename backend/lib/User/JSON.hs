@@ -14,16 +14,15 @@ import Text.StringTemplate.GenericStandard ()
 import Text.StringTemplate.GenericStandard ()
 import qualified Data.Text as T
 
-import Company.Model
 import FeatureFlags.Model
 import MinutesTime
 import PadApplication.Data
 import User.Model
 import UserGroup.Data
-import Util.HasSomeCompanyInfo
+import UserGroup.Data.PaymentPlan
 import Util.HasSomeUserInfo
 
-userJSON :: User -> Company -> JSValue
+userJSON :: User -> UserGroup -> JSValue
 userJSON user company = runJSONGen $ do
     value "id" $ show $ userid user
     value "fstname" $ getFirstName user
@@ -37,23 +36,26 @@ userJSON user company = runJSONGen $ do
     value "lang"   $ codeFromLang $ getLang user
     value "company" $ companyJSON False company
 
-companyJSON :: Bool -> Company -> JSValue
-companyJSON forAdmin company = runJSONGen $ do
-    value "companyid" $ show $ companyid company
-    value "address" $ companyaddress $ companyinfo company
-    value "city" $ companycity $ companyinfo company
-    value "country" $ companycountry $ companyinfo company
-    value "zip" $ companyzip $ companyinfo company
-    value "companyname" $ getCompanyName company
-    value "companynumber" $ getCompanyNumber company
-    value "cgidisplayname" $ companycgidisplayname $ companyinfo company
-    value "cgiserviceid" $ companycgiserviceid $ companyinfo company
-    value "ipaddressmasklist" $ intercalate "," $ fmap show $ companyipaddressmasklist $ companyinfo company
-    value "idledoctimeout" $ companyidledoctimeout $ companyinfo company
-    value "smsprovider" $ show . companysmsprovider . companyinfo $ company
-    value "padappmode" $ T.unpack $ padAppModeText $ companypadappmode $ companyinfo company
-    value "padearchiveenabled" . companypadearchiveenabled $ companyinfo company
-    when forAdmin $ value "partnerid" $ show $ companypartnerid $ companyinfo company
+companyJSON :: Bool -> UserGroup -> JSValue
+companyJSON forAdmin ug = runJSONGen $ do
+    value "companyid" $ show $ get ugID ug
+    value "address" $ unpack $ get (ugaAddress . ugAddress) ug
+    value "city" $ unpack $ get (ugaCity  . ugAddress) ug
+    value "country" $ unpack $ get (ugaCountry . ugAddress) ug
+    value "zip" $ unpack $ get (ugaZip . ugAddress) ug
+    value "companyname" $ unpack $ get ugName ug
+    value "companynumber" $ unpack $ get (ugaCompanyNumber . ugAddress) ug
+    value "cgidisplayname" $ unpack <$> get (ugsCGIDisplayName . ugSettings) ug
+    value "cgiserviceid" $ unpack <$> get (ugsCGIServiceID . ugSettings) ug
+    value "ipaddressmasklist" $ intercalate "," $ fmap show $  get (ugsIPAddressMaskList . ugSettings) ug
+    value "idledoctimeout" $ get (ugsIdleDocTimeout . ugSettings) ug
+    value "smsprovider" $ show $ get (ugsSMSProvider . ugSettings) ug
+    value "padappmode" $ unpack $ padAppModeText $ get (ugsPadAppMode . ugSettings) ug
+    value "padearchiveenabled" $ get (ugsPadEarchiveEnabled . ugSettings) ug
+    when forAdmin $ value "partnerid" $ show <$> (get ugParentGroupID ug)
+  where
+    unpack :: T.Text -> String
+    unpack = T.unpack
 
 paymentPlanText :: PaymentPlan -> String
 paymentPlanText FreePlan       = "free"

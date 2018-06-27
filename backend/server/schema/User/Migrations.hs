@@ -52,3 +52,16 @@ usersMakeUserGroupIDNotNull = Migration {
         , sqlAddFK tname $ fkOnColumn "user_group_id" "user_groups" "id"
         ]
   }
+
+usersDropCompanyID :: MonadDB m => Migration m
+usersDropCompanyID = Migration {
+    mgrTableName = tblName tableUsers
+  , mgrFrom = 24
+  , mgrAction = StandardMigration $ do
+      let tname = tblName tableUsers
+      runQuery_ $ sqlDropIndex tname $ (indexOnColumn "company_id")
+      runQuery_ . sqlAlterTable tname $
+        [ sqlDropFK tname $ (fkOnColumn "company_id" "companies" "id")
+        , sqlDropColumn "company_id"
+        ]
+  }

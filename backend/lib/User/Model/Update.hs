@@ -62,7 +62,6 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
             sqlSet "account_suspended" False
             sqlSet "has_accepted_terms_of_service" (Nothing :: Maybe UTCTime)
             sqlSet "signup_method" sm
-            sqlSet "company_id" . unsafeUserGroupIDToCompanyID $ ugid
             sqlSet "first_name" fname
             sqlSet "last_name" lname
             sqlSet "personal_number" ("" :: String)
@@ -118,7 +117,6 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserUserGroup Bool where
       Nothing -> return False
       Just ug ->
         runQuery01 $ sqlUpdate "users" $ do
-          sqlSet "company_id" . unsafeUserGroupIDToCompanyID . get ugID $ ug
           sqlSet "user_group_id" . get ugID $ ug
           sqlWhereEq "id" uid
           sqlWhereIsNULL "deleted"

@@ -14,6 +14,7 @@ module Company.CompanyControl (
   , unjsonUserGroupUI
   ) where
 
+import Control.Applicative.Free
 import Data.Functor.Invariant
 import Data.Unjson
 import Happstack.Server hiding (dir, simpleHTTP)
@@ -26,7 +27,6 @@ import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.Unjson as Unjson
 
 import BrandedDomain.BrandedDomain
-import Company.CompanyUI.Model
 import DB
 import Happstack.Fields
 import Kontra
@@ -67,8 +67,8 @@ handleGetCompanyBranding :: Kontrakcja m => Maybe UserGroupID -> m Aeson.Value
 handleGetCompanyBranding mugid = do
   _ctx <- getContext
   withCompanyAdminOrAdminOnly mugid $ \ug -> do
-    let companyui = fromUserGroupUI ug
-    return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonCompanyUI companyui
+    return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True })
+      (unjsonUserGroupUIWithCompanyID $ get ugID ug) (get ugUI ug)
 
 handleChangeCompanyBranding :: Kontrakcja m => Maybe UserGroupID -> m ()
 handleChangeCompanyBranding mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
@@ -115,57 +115,32 @@ handleUpdateTheme :: Kontrakcja m =>  Maybe UserGroupID -> ThemeID -> m ()
 handleUpdateTheme mugid tid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
   handleUpdateThemeForUserGroup (get ugID ug) tid
 
-unjsonCompanyUI :: UnjsonDef CompanyUI
-unjsonCompanyUI = objectOf $ pure CompanyUI
-  <*>  field "companyid"
-      companyuicompanyid
-      "Id of a company"
-  <*> fieldOpt "mailTheme"
-      companyMailTheme
-      "Id of a mail theme"
-  <*> fieldOpt "signviewTheme"
-      companySignviewTheme
-      "Id of a signview theme"
-  <*> fieldOpt "serviceTheme"
-      companyServiceTheme
-      "Id of a service theme"
-  <*> fieldOpt "browserTitle"
-      companyBrowserTitle
-      "Browser title"
-  <*> fieldOpt "smsOriginator"
-      companySmsOriginator
-      "SMS Originator"
-  <*> fieldOptBy "favicon"
-      companyFavicon
-      "Favicon"
-       (invmap
-          (\l -> B64.decodeLenient $ BSC8.pack $ drop 1 $ dropWhile ((/=) ',') $ l)
-          (\l -> BSC8.unpack $ BS.append (BSC8.pack "data:image/png;base64,") $ B64.encode l)
-          unjsonDef
-       )
-
 unjsonUserGroupUI :: UnjsonDef UserGroupUI
-unjsonUserGroupUI = objectOf $ pure UserGroupUI
-  <*> fieldOpt "mailTheme"
-      _uguiMailTheme
-      "Id of a mail theme"
-  <*> fieldOpt "signviewTheme"
-      _uguiSignviewTheme
-      "Id of a signview theme"
-  <*> fieldOpt "serviceTheme"
-      _uguiServiceTheme
-      "Id of a service theme"
-  <*> fieldOpt "browserTitle"
-      _uguiBrowserTitle
-      "Browser title"
-  <*> fieldOpt "smsOriginator"
-      _uguiSmsOriginator
-      "SMS Originator"
-  <*> fieldOptBy "favicon"
-      _uguiFavicon
-      "Favicon"
-       (invmap
-          (\l -> B64.decodeLenient $ BSC8.pack $ drop 1 $ dropWhile ((/=) ',') $ l)
-          (\l -> BSC8.unpack $ BS.append (BSC8.pack "data:image/png;base64,") $ B64.encode l)
-          unjsonDef
-       )
+unjsonUserGroupUI = objectOf $ unjsonUserGroupUIFields
+
+-- Dedicated version of unjsonUserGroupUI that adds companyid field for
+-- backward compatibility
+unjsonUserGroupUIWithCompanyID :: UserGroupID -> UnjsonDef UserGroupUI
+unjsonUserGroupUIWithCompanyID uid = objectOf $ unjsonUserGroupUIFields
+  <* (fieldReadonly "companyid" (const uid) "Company id")
+
+unjsonUserGroupUIFields :: Ap (FieldDef UserGroupUI) UserGroupUI
+unjsonUserGroupUIFields = pure def
+  <**>  (fieldOpt "mailTheme" (get uguiMailTheme) "Id of a mail theme"
+    <**> (pure $ set uguiMailTheme))
+  <**>  (fieldOpt "signviewTheme" (get uguiSignviewTheme) "Id of a signview theme"
+    <**> (pure $ set uguiSignviewTheme))
+  <**>  (fieldOpt "serviceTheme" (get uguiServiceTheme) "Id of a service theme"
+    <**> (pure $ set uguiServiceTheme))
+  <**>  (fieldOpt "browserTitle" (get uguiBrowserTitle) "Browser title"
+    <**> (pure $ set uguiBrowserTitle))
+  <**>  (fieldOpt "smsOriginator" (get uguiSmsOriginator) "SMS Originator"
+    <**> (pure $ set uguiSmsOriginator))
+  <**>  (fieldOptBy "favicon" (get uguiFavicon) "Favicon"
+        (invmap
+              (\l -> B64.decodeLenient $ BSC8.pack $ drop 1 $ dropWhile ((/=) ',') $ l)
+              (\l -> BSC8.unpack $ BS.append (BSC8.pack "data:image/png;base64,") $ B64.encode l)
+              unjsonDef
+        )
+    <**> (pure $ set uguiFavicon))
+

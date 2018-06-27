@@ -378,12 +378,12 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetUserIDForAPIWithPrivilege (Ma
 data GetGrantedPrivileges = GetGrantedPrivileges UserID
 instance MonadDB m => DBQuery m GetGrantedPrivileges [(Int64, String, [APIPrivilege])] where
   query (GetGrantedPrivileges userid) = do
-    runQuery_ $ rawSQL ("SELECT a.id, u.email, u.first_name, u.last_name, c.name, p.privilege "
+    runQuery_ $ rawSQL ("SELECT a.id, u.email, u.first_name, u.last_name, ug.name, p.privilege "
              <> "FROM oauth_access_token a "
              <> "JOIN oauth_api_token t on a.api_token_id = t.id "
              <> "JOIN users u on u.id = t.user_id "
              <> "JOIN oauth_privilege p on p.access_token_id = a.id "
-             <> "JOIN companies c ON u.company_id = c.id "
+             <> "JOIN user_groups ug ON u.user_group_id = ug.id "
              <> "WHERE a.user_id = $1 AND "
              -- exclude personal tokens
              <> "      t.id NOT IN (SELECT api_token_id FROM oauth_access_token "

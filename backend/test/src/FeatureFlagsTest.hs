@@ -8,7 +8,6 @@ import FeatureFlags.Model
 import TestingUtil
 import TestKontra
 import UserGroup.Data
-import UserGroup.Model
 
 featureFlagsTest :: TestEnvSt -> Test
 featureFlagsTest env = testGroup "FeatureFlags" [
@@ -24,8 +23,6 @@ testUpdateFeatureFlagsWorks = do
     True <- dbUpdate $ UpdateFeatureFlags ugid ff
     ff' <- dbQuery $ GetFeatureFlags ugid
     assertEqual "Updating feature flags works" ff ff'
-    companyff <- dbQuery . GetFeatureFlagsForCompany . unsafeUserGroupIDToCompanyID $ ugid
-    assertEqual "Updating FF synchronizes with company FF" ff' companyff
 
 testNewCompanyFeatureFlagDefaults :: TestEnv ()
 testNewCompanyFeatureFlagDefaults  = do

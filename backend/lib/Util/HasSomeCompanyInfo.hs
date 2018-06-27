@@ -15,7 +15,6 @@ module Util.HasSomeCompanyInfo (
 
 import qualified Data.Text as T
 
-import Company.Model
 import Doc.DocStateData
 import UserGroup.Data
 import Util.SignatoryLinkUtils
@@ -28,10 +27,6 @@ class HasSomeCompanyInfo a where
 instance (HasSomeCompanyInfo a) => HasSomeCompanyInfo (Maybe a) where
   getCompanyName   = maybe "" getCompanyName
   getCompanyNumber = maybe "" getCompanyNumber
-
-instance HasSomeCompanyInfo Company where
-  getCompanyName   = companyname   . companyinfo
-  getCompanyNumber = companynumber . companyinfo
 
 instance HasSomeCompanyInfo SignatoryLink where
   getCompanyName   = getCompanyName . signatoryfields

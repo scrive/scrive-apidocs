@@ -19,7 +19,6 @@ import Data.String.Utils (strip)
 import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomainID
-import Company.Data
 import DB
 import Log.Identifier
 import MinutesTime
@@ -42,7 +41,6 @@ data User = User {
   , usersignupmethod              :: SignupMethod
   , userinfo                      :: UserInfo
   , usersettings                  :: UserSettings
-  , usercompany                   :: CompanyID
   , userassociateddomainid        :: BrandedDomainID
   , usergroupid                   :: UserGroupID
   } deriving (Eq, Ord, Show)
@@ -90,7 +88,6 @@ instance Default User where
   , usersignupmethod              = ByAdmin
   , userinfo                      = def
   , usersettings                  = UserSettings LANG_EN
-  , usercompany                   = unsafeCompanyID 0
   , userassociateddomainid        = unsafeBrandedDomainID 0
   , usergroupid                   = emptyUserGroupID
   }
@@ -124,7 +121,6 @@ selectUsersSelectorsList =
   , "account_suspended"
   , "has_accepted_terms_of_service"
   , "signup_method"
-  , "company_id"
   , "first_name"
   , "last_name"
   , "personal_number"
@@ -155,7 +151,6 @@ selectUsersWithUserGroupNamesSQL = "SELECT"
   <> ", users.account_suspended"
   <> ", users.has_accepted_terms_of_service"
   <> ", users.signup_method"
-  <> ", users.company_id AS user_company_id"
   <> ", users.first_name"
   <> ", users.last_name"
   <> ", users.personal_number"
@@ -178,8 +173,8 @@ composeFullName (fstname, sndname) = if null sndname
   then fstname
   else fstname ++ " " ++ sndname
 
-fetchUser :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, UserGroupID) -> User
-fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, password_algorithm, totp_key, totp_active, ugid) = User {
+fetchUser :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, UserGroupID) -> User
+fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, password_algorithm, totp_key, totp_active, ugid) = User {
   userid = uid
 , userpassword = maybeMkPassword ( password, salt
                                  , int16ToPwdAlgorithm <$> password_algorithm )
@@ -198,13 +193,12 @@ fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepte
   , useremail = email
   }
 , usersettings = UserSettings { lang = lang }
-, usercompany = company_id
 , userassociateddomainid = associated_domain_id
 , usergroupid = ugid
 }
 
-fetchUserWithUserGroupName :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, CompanyID, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, UserGroupID, T.Text) -> (User, T.Text)
-fetchUserWithUserGroupName (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, company_id, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, password_algorithm, totp_key, totp_active, ugid, name) = (user, name)
+fetchUserWithUserGroupName :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, UserGroupID, T.Text) -> (User, T.Text)
+fetchUserWithUserGroupName (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, password_algorithm, totp_key, totp_active, ugid, name) = (user, name)
   where
     user = User {
       userid = uid
@@ -226,7 +220,6 @@ fetchUserWithUserGroupName (uid, password, salt, is_company_admin, account_suspe
       , useremail = email
       }
     , usersettings = UserSettings { lang = lang }
-    , usercompany = company_id
     , userassociateddomainid = associated_domain_id
     , usergroupid = ugid
     }

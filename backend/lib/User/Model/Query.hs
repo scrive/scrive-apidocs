@@ -22,7 +22,6 @@ import Data.Int
 import qualified Data.Text as T
 
 import Chargeable.Model
-import Company.Data
 import DB
 import Doc.DocStateData (DocumentStatus(..))
 import MinutesTime
@@ -35,6 +34,7 @@ import User.Model.OrderBy
 import User.Password
 import User.UserID
 import UserGroup.Data (UserGroupID)
+import UserGroup.Data.PaymentPlan
 
 data GetUserWherePasswordAlgorithmIsEarlierThan =
   GetUserWherePasswordAlgorithmIsEarlierThan PasswordAlgorithm
@@ -68,12 +68,6 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetUserByEmail (Maybe User) wher
   query (GetUserByEmail email) = do
     runQuery_ $ selectUsersSQL <+> "WHERE deleted IS NULL AND email =" <?> map toLower (unEmail email)
     fetchMaybe fetchUser
-
-data GetUserGroupAccounts = GetUserGroupAccounts CompanyID
-instance MonadDB m => DBQuery m GetUserGroupAccounts [User] where
-  query (GetUserGroupAccounts cid) = do
-    runQuery_ $ selectUsersSQL <+> "WHERE company_id =" <?> cid <+> "AND deleted IS NULL ORDER BY email"
-    fetchMany fetchUser
 
 data UserGroupGetUsers = UserGroupGetUsers UserGroupID
 instance MonadDB m => DBQuery m UserGroupGetUsers [User] where

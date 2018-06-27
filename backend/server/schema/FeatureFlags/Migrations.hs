@@ -4,6 +4,7 @@ module FeatureFlags.Migrations (
 , featureFlagsAddSMSPinAuthToView
 , featureFlagsAddDKAuthToSign
 , featureFlagsAddUserGroupID
+, featureFlagsDropCompanyID
 ) where
 
 import Control.Monad.Catch
@@ -89,3 +90,23 @@ featureFlagsAddUserGroupID = Migration {
       ]
     runQuery_ . sqlCreateIndex tname $ indexOnColumn "user_group_id"
 }
+
+
+featureFlagsDropCompanyID :: MonadDB m => Migration m
+featureFlagsDropCompanyID = Migration {
+    mgrTableName = tblName tableFeatureFlags
+  , mgrFrom = 5
+  , mgrAction = StandardMigration $ do
+      let tname = tblName tableFeatureFlags
+      runQuery_ $ sqlAlterTable tname [
+          sqlAlterColumn "user_group_id" "SET NOT NULL"
+        , sqlDropFK tname $ (fkOnColumn "company_id" "companies" "id")
+        , sqlDropFK tname $ (fkOnColumn "user_group_id" "user_groups" "id")
+        , sqlAddFK  tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade }
+        , sqlDropPK tname
+        , sqlAddPK tname (fromJust $ pkOnColumn "user_group_id")
+        , sqlDropColumn "company_id"
+        ]
+      runQuery_ $ sqlDropIndex tname $ (indexOnColumn "user_group_id")
+
+  }

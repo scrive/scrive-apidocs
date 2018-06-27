@@ -14,20 +14,23 @@ module UserGroup.Internal (
   ) where
 
 import Data.Aeson
+import Data.Binary
 import Data.Default
 import Data.Int
 import Data.Text
+import Data.Unjson
 import Happstack.Server
 import qualified Control.Exception.Lifted as E
+import qualified Data.Binary as B
 import qualified Data.ByteString.Char8 as BS
 
-import Company.Data.PaymentPlan
 import DB
 import IPAddress
 import Log.Identifier
 import PadApplication.Data
 import SMS.Data
 import Theme.ThemeID
+import UserGroup.Data.PaymentPlan
 
 data UserGroup = UserGroup {
     _ugID            :: UserGroupID
@@ -207,6 +210,13 @@ fromUserGroupID (UserGroupID ugid) = ugid
 instance Identifier UserGroupID Int64 where
   idDefaultLabel _ = "user_group_id"
   idValue (UserGroupID k) = toJSON k
+
+instance Binary UserGroupID where
+  put (UserGroupID ugid) = put ugid
+  get = fmap UserGroupID B.get
+
+instance Unjson UserGroupID where
+  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse UserGroupID")  return) . maybeRead) show unjsonDef
 
 -- USER GROUP INFO
 

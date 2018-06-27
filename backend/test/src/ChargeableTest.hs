@@ -141,14 +141,14 @@ test_startDocumentCharging = do
 
 test_closeDocAndSigCharging :: TestEnv ()
 test_closeDocAndSigCharging = do
-  (user, companyId) <- addNewRandomUserWithCompany
+  user <- addNewRandomUser
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   let queryChargeableSigClose =
           "SELECT count(*) FROM chargeable_items WHERE type = 9 " <>
-          "AND quantity = 1 AND company_id =" <?> companyId
+          "AND quantity = 1 AND user_group_id =" <?> usergroupid user
   let queryChargeableDocClose =
           "SELECT count(*) FROM chargeable_items WHERE type = 8 " <>
-          "AND quantity = 1 AND company_id =" <?> companyId
+          "AND quantity = 1 AND user_group_id =" <?> usergroupid user
 
   -- Test that closing document in V1 adds a chargeable item
   mockDocV1 <- testDocApiV2Start' ctx
