@@ -45,9 +45,13 @@ getTempCredRequest = do
     Just [] -> return $ Left "Authorization header does not have a valid format and could not be parsed."
     Just params -> do
       mprivilegesstring <- getDataFn' (look "privileges")
+      let customParseURI s = case parseURI s of
+                               Just (URI{uriScheme="data:"}) -> Nothing
+                               Just (URI{uriScheme="javascript:"}) -> Nothing
+                               _ -> parseURI s
       let msigtype          = lookupAndRead "oauth_signature_method" params
           mapisecret        = splitSignature =<< lookupAndRead "oauth_signature" params
-          mcallback         = parseURI =<< (urlDecode <$> lookupAndRead "oauth_callback" params)
+          mcallback         = customParseURI =<< (urlDecode <$> lookupAndRead "oauth_callback" params)
           mapitoken         = lookupAndReadString "oauth_consumer_key" params
           mprivileges       = readPrivileges =<< mprivilegesstring
           errors            = intercalate "; "

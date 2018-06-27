@@ -7,6 +7,7 @@ import Control.Applicative.Free
 import Data.ByteString.Builder
 import Data.Default
 import Data.Functor.Invariant
+import Data.String.Utils (strip)
 import Data.Unjson
 import qualified Data.ByteString.Lazy.Char8 as BSC
 import qualified Data.Set as Set
@@ -98,9 +99,9 @@ unjsonSignatory da =  objectOf $
   <*   (fieldReadOnlyOpt "rejected_time" (fmap utcTimeToAPIFormat . signatorylinkrejectiontime) "Time when signatory rejected the document" )
   <*   (fieldReadOnlyOpt "rejection_reason" signatorylinkrejectionreason "Message from the signatory to explain rejection")
   <**> (fieldOpt "sign_success_redirect_url" signatorylinksignredirecturl ("URL to redirect the signatory after signing the document")
-        <**> (pure $ \mrd s -> s { signatorylinksignredirecturl = mrd }))
+        <**> (pure $ \mrd s -> s { signatorylinksignredirecturl = fmap emptyIfNaughty mrd }))
   <**> (fieldOpt "reject_redirect_url" signatorylinkrejectredirecturl ("URL to redirect the signatory after rejecting the document")
-        <**> (pure $ \mrd s -> s { signatorylinkrejectredirecturl = mrd }))
+        <**> (pure $ \mrd s -> s { signatorylinkrejectredirecturl = fmap emptyIfNaughty mrd }))
   <*   (fieldReadonlyBy "email_delivery_status" mailinvitationdeliverystatus "Email invitation delivery status" unjsonDeliveryStatus)
   <*   (fieldReadonlyBy "mobile_delivery_status" smsinvitationdeliverystatus "SMS invitation delivery status" unjsonDeliveryStatus)
   <*   (fieldReadonly "has_authenticated_to_view" signatorylinkidentifiedtoview "Signatory has already authenticated to view")
@@ -126,6 +127,8 @@ unjsonSignatory da =  objectOf $
              else Nothing
           ) "Link for signing document by API delivery"
        )
+  where
+    emptyIfNaughty url = if any (\s -> s `isPrefixOf` (strip url)) ["javascript:","data:"] then "" else url
 
 -- We can't implement lists as Unjson - since we would have to do
 -- unjsonToJSON on each document parser. And that would make us lose

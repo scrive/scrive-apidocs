@@ -205,7 +205,7 @@ module.exports = Backbone.Model.extend({
   valid: function () {
     var number = this.companynumber();
     var message = null;
-    var validCharsRegex = /^[a-zA-Z0-9-]*$/;
+    var validCharsRegex = /^[a-zA-Z0-9- ]*$/;
     if (number.length > 50) {
       message = localization.validation.companyNumberTooLong;
     } else if (number.match(validCharsRegex) === null) {

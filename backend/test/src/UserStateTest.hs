@@ -26,9 +26,6 @@ userStateTests env = testGroup "UserState" [
       testThat "returns nothing when there isn't a user with a matching id" env test_getUserByID_returnsNothing
     , testThat "returns a user with a matching id" env test_getUserByID_returnsTheRightUser
     ]
-  , testGroup "getAllUsers" [
-      testThat "returns all the users" env test_getAllUsers_returnsAllUsers
-    ]
   , testGroup "setUserEmail" [
       testThat "email casing works with set user email" env test_setUserEmail_GetByEmail
     , testThat "email gets set!" env test_setUserEmail_works
@@ -88,15 +85,6 @@ test_getUserByID_returnsTheRightUser = do
   queriedUser <- dbQuery $ GetUserByID $ userid user
   assert (isJust queriedUser)
   assertEqual "For GetUserByUserID result" user (fromJust queriedUser)
-
-test_getAllUsers_returnsAllUsers :: TestEnv ()
-test_getAllUsers_returnsAllUsers = do
-  Just user0 <- addNewUser "Emily" "Green" "emily@green.com"
-  Just user1 <- addNewUser "Bob" "Blue" "bob@blue.com"
-  queriedUsers <- dbQuery GetUsers
-  assertEqual "For GetUsers result" 2 (length queriedUsers)
-  assert $ user0 `elem` queriedUsers
-  assert $ user1 `elem` queriedUsers
 
 test_setUserEmail_GetByEmail :: TestEnv ()
 test_setUserEmail_GetByEmail = do

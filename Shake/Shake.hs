@@ -378,13 +378,14 @@ serverTestRules newBuild cabalFile createDBWithConf testPatterns = do
   "kontrakcja_test.conf" %> \_ ->
     case createDBWithConf of
       CreateTestDBWithNewConf -> do
-        (dbName, initialConnString, lConf) <- askOracle $
-                                              CreateTestDBWithConfData ()
+        (dbName, initialConnString, lConf, s3Conf) <-
+          askOracle $ CreateTestDBWithConfData ()
         liftIO $ writeFile "kontrakcja_test.conf"
           ("{ "
             <> "\"database\":\"" <> initialConnString
                                  <> " dbname='" <> dbName <> "'" <> "\" , "
-            <> "\"pdftools_lambda\":" <> lConf
+            <> "\"pdftools_lambda\":" <> lConf <> ","
+            <> "\"amazon\":" <> s3Conf
             <> "}")
       DontCreateTestConf -> do
         tc <- askOracle (TeamCity ())
@@ -437,8 +438,8 @@ serverTestRules newBuild cabalFile createDBWithConf testPatterns = do
         where
           withDB DontCreateTestConf      act = act
           withDB CreateTestDBWithNewConf act = do
-            (dbName, connString, (_::String)) <- askOracle $
-                                                 CreateTestDBWithConfData ()
+            (dbName, connString, (_::String), (_::String)) <-
+              askOracle $ CreateTestDBWithConfData ()
             (mkDB connString dbName >> act)
               `actionFinally` (rmDB connString dbName)
             where

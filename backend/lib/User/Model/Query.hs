@@ -7,7 +7,6 @@ module User.Model.Query (
   , GetUserByID(..)
   , GetUserByIDIncludeDeleted(..)
   , GetUserByEmail(..)
-  , GetUsers(..)
   , GetUserWherePasswordAlgorithmIsEarlierThan(..)
   , GetUsersWithUserGroupNames(..)
   , IsUserDeletable(..)
@@ -36,12 +35,6 @@ import User.Model.OrderBy
 import User.Password
 import User.UserID
 import UserGroup.Data (UserGroupID)
-
-data GetUsers = GetUsers
-instance MonadDB m => DBQuery m GetUsers [User] where
-  query GetUsers = do
-    runQuery_ $ selectUsersSQL <+> "WHERE deleted IS NULL ORDER BY first_name || ' ' || last_name"
-    fetchMany fetchUser
 
 data GetUserWherePasswordAlgorithmIsEarlierThan =
   GetUserWherePasswordAlgorithmIsEarlierThan PasswordAlgorithm

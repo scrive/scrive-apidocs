@@ -102,8 +102,11 @@ instance FromJSValueWithUpdate SignatoryLink where
         signorder <- fromJSValueField "signorder"
         attachments <- fromJSValueField "attachments"
         (csv :: Maybe (Maybe CSVUpload)) <- fromJSValueField "csv"
-        (sredirecturl :: Maybe (Maybe String)) <- fromJSValueField "signsuccessredirect"
-        (rredirecturl :: Maybe (Maybe String)) <- fromJSValueField "rejectredirect"
+        (sredirecturl' :: Maybe (Maybe String)) <- fromJSValueField "signsuccessredirect"
+        (rredirecturl' :: Maybe (Maybe String)) <- fromJSValueField "rejectredirect"
+        let emptyIfNaughty url = if any (\s -> s `isPrefixOf` (strip url)) ["javascript:","data:"] then "" else url
+            sredirecturl = fmap (fmap emptyIfNaughty) sredirecturl'
+            rredirecturl = fmap (fmap emptyIfNaughty) rredirecturl'
         authenticationToView' <-  fromJSValueField "authenticationToView"
         authenticationToSign' <-  fromJSValueField "authentication"
         delivery' <-  fromJSValueField "delivery"

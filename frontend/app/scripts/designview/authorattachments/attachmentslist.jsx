@@ -11,6 +11,7 @@ var DesignAuthorAttachment = require("./designviewattachment");
           new DesignAuthorAttachment({
             name: title,
             serverFileId: file,
+            addToSealedFile: true,
             attachmentid: attachmentid
           })
         );

@@ -363,7 +363,7 @@ asValidCompanyNumber input =
     stripWhitespace input
     >>= checkIfEmpty
     >>= checkLengthIsMax 50
-    >>= checkOnly [isDigit, (`elem` ['a'..'z']), (`elem` ['A'..'Z']), (=='-')]
+    >>= checkOnly [isDigit, (`elem` ['a'..'z']), (`elem` ['A'..'Z']), (`elem` ['-', ' '])]
 
 
 {- |

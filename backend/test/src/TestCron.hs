@@ -38,7 +38,7 @@ runTestCronUntilIdle ctx = do
 
   let -- for testing, one of each is sufficient
       cronConf = CronConf {
-          cronAmazonConfig       = AmazonConfig "" 0 "" "" ""
+          cronAmazonConfig       = fromMaybe (AmazonConfig "" 0 "" "" "") mAmazonConfig
         , cronDBConfig           =
             "user='kontra' password='kontra' dbname='kontrakcja'"
         , cronMaxDBConnections   = 100
