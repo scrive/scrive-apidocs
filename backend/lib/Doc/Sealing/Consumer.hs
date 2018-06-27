@@ -11,7 +11,6 @@ import Data.Aeson
 import Data.Int
 import Database.PostgreSQL.Consumers.Config
 import Log.Class
-import qualified Database.Redis as R
 
 import BrandedDomain.Model
 import DB
@@ -28,7 +27,6 @@ import MailContext.Internal
 import PdfToolsLambda.Conf
 import Templates
 import User.Lang
-import qualified FileStorage.Amazon.Config as A
 
 data DocumentSealing = DocumentSealing {
     dsDocumentID      :: !DocumentID
@@ -37,20 +35,17 @@ data DocumentSealing = DocumentSealing {
   }
 
 documentSealing
-  :: (CryptoRNG m, MonadLog m, MonadIO m, MonadBaseControl IO m, MonadMask m)
-  => A.AmazonConfig
-  -> GuardTimeConf
+  :: ( CryptoRNG m, MonadBaseControl IO m, MonadFileStorage m, MonadIO m
+     , MonadLog m, MonadMask m )
+  => GuardTimeConf
   -> PdfToolsLambdaConf
   -> KontrakcjaGlobalTemplates
-  -> FileMemCache
-  -> Maybe R.Connection
   -> ConnectionSourceM m
   -> String
   -> Int
   -> ConsumerConfig m DocumentID DocumentSealing
-documentSealing amazonConfig guardTimeConf pdfToolsLambdaConf templates
-                memcache mRedisConn pool mailNoreplyAddress
-                maxRunningJobs = ConsumerConfig {
+documentSealing guardTimeConf pdfToolsLambdaConf templates pool
+                mailNoreplyAddress maxRunningJobs = ConsumerConfig {
     ccJobsTable = "document_sealing_jobs"
   , ccConsumersTable = "document_sealing_consumers"
   , ccJobSelectors = ["id", "branded_domain_id", "attempts"]
@@ -78,7 +73,6 @@ documentSealing amazonConfig guardTimeConf pdfToolsLambdaConf templates
         . runPdfToolsLambdaConfT pdfToolsLambdaConf
         . runTemplatesT (lang, templates)
         . runMailContextT mc
-        . runFileStorageT (amazonConfig, mRedisConn, memcache)
         $ postDocumentClosedActions True False
       case resultisok of
         True  -> return $ Ok Remove

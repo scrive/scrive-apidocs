@@ -17,7 +17,6 @@ import Doc.Extending.Consumer
 import Doc.Sealing.Consumer
 import Doc.Signing.Consumer
 import FileStorage.Amazon.Config
-import TestFileStorage
 import TestKontra
 import qualified CronEnv
 
@@ -30,15 +29,14 @@ runTestCronUntilIdle ctx = do
   ConnectionSource pool <- asks teConnSource
   pdfSealLambdaConf <- tePdfToolsLambdaConf <$> ask
   mAmazonConfig     <- teAmazonConfig       <$> ask
-  memcache          <- teFileMemCache       <$> ask
-  mRedisConn        <- teRedisConn          <$> ask
 
   -- Will not be used, because Planhat is not configured when testing, but it is a parameter for cronConsumer.
   reqManager <- newTlsManager
 
   let -- for testing, one of each is sufficient
       cronConf = CronConf {
-          cronAmazonConfig       = fromMaybe (AmazonConfig "" 0 "" "" "") mAmazonConfig
+          cronAmazonConfig       = fromMaybe (AmazonConfig "" 0 "" "" "")
+                                             mAmazonConfig
         , cronDBConfig           =
             "user='kontra' password='kontra' dbname='kontrakcja'"
         , cronMaxDBConnections   = 100
@@ -69,43 +67,48 @@ runTestCronUntilIdle ctx = do
       cronPartRunners =
         [ ( "document sealing"
           , runConsumerWithIdleSignal . modTimeout
-            $ documentSealing (cronAmazonConfig cronConf) (cronGuardTimeConf cronConf) (cronPdfToolsLambdaConf cronConf)
-                (get ctxglobaltemplates ctx) (get ctxfilecache ctx) (get ctxmrediscache ctx) pool
-                (cronMailNoreplyAddress cronConf) (cronConsumerSealingMaxJobs cronConf)
+            $ documentSealing (cronGuardTimeConf cronConf)
+                (cronPdfToolsLambdaConf cronConf) (get ctxglobaltemplates ctx)
+                pool (cronMailNoreplyAddress cronConf)
+                (cronConsumerSealingMaxJobs cronConf)
           )
         , ( "document signing"
           , runConsumerWithIdleSignal . modTimeout
-            $ documentSigning (cronAmazonConfig cronConf) (cronGuardTimeConf cronConf)
-                (cronCgiGrpConfig cronConf) (cronNetsSignConfig cronConf) (get ctxglobaltemplates ctx)
-                (get ctxfilecache ctx) (get ctxmrediscache ctx) pool (cronMailNoreplyAddress cronConf)
+            $ documentSigning (cronGuardTimeConf cronConf)
+                (cronCgiGrpConfig cronConf) (cronNetsSignConfig cronConf)
+                (get ctxglobaltemplates ctx) pool
+                (cronMailNoreplyAddress cronConf)
                 (cronConsumerSigningMaxJobs cronConf)
           )
         , ( "document extending"
           , runConsumerWithIdleSignal . modTimeout
-            $ documentExtendingConsumer (cronAmazonConfig cronConf) (cronGuardTimeConf cronConf)
-                (get ctxglobaltemplates ctx) (get ctxfilecache ctx) (get ctxmrediscache ctx) pool (cronConsumerExtendingMaxJobs cronConf)
+            $ documentExtendingConsumer (cronGuardTimeConf cronConf)
+                (get ctxglobaltemplates ctx) pool
+                (cronConsumerExtendingMaxJobs cronConf)
           )
         , ( "api callbacks"
           , runConsumerWithIdleSignal . modTimeout
-            $ documentAPICallback {-runCronEnv-} id (cronConsumerAPICallbackMaxJobs cronConf)
+            $ documentAPICallback {-runCronEnv-} id
+                (cronConsumerAPICallbackMaxJobs cronConf)
           )
+        -- CORE-478: This should go.
         , ( "amazon file upload"
           , runConsumerWithIdleSignal . modTimeout
-            $ amazonUploadConsumer (cronAmazonConfig cronConf) pool (cronConsumerAmazonMaxJobs cronConf)
+            $ amazonUploadConsumer (cronAmazonConfig cronConf) pool
+                (cronConsumerAmazonMaxJobs cronConf)
           )
         , ( "cron"
           , runConsumerWithIdleSignal . modTimeout
-            $ cronConsumer cronConf reqManager {-mmixpanel-} Nothing {-mplanhat-} Nothing
-                {-runCronEnv-} id {-runDB-} id (cronConsumerCronMaxJobs cronConf)
+            $ cronConsumer cronConf reqManager {-mmixpanel-} Nothing
+                {-mplanhat-} Nothing {-runCronEnv-} id {-runDB-} id
+                (cronConsumerCronMaxJobs cronConf)
           )
         ]
-      cronEnvData = CronEnv.CronEnv (cronSalesforceConf cronConf) (get ctxglobaltemplates ctx)
-                      (cronMailNoreplyAddress cronConf)
+      cronEnvData = CronEnv.CronEnv (cronSalesforceConf cronConf)
+        (get ctxglobaltemplates ctx) (cronMailNoreplyAddress cronConf)
 
       finalizeRunner ((label, runner), idleSignal) =
         finalize (localDomain label $ runner pool idleSignal)
-
-
 
   (idleSignals, idleStatuses) <- liftIO . atomically $ do
     sigs <- replicateM (length cronPartRunners) $ newEmptyTMVar
@@ -114,7 +117,6 @@ runTestCronUntilIdle ctx = do
 
   -- To simplify things, runDB and runCronEnv requirements are added to the TestEnv. So then runDB and runCronEnv can be just "id".
   (\m -> runReaderT m cronEnvData)
-    . evalTestFileStorageT ((,mRedisConn,memcache) <$> mAmazonConfig)
     . foldr1 (.) (finalizeRunner <$> (zip cronPartRunners idleSignals))
     $ whileM_ (not <$> allSignalsTrue idleSignals idleStatuses) $ return ()
 

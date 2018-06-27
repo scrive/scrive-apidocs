@@ -14,7 +14,6 @@ import Log.Class
 import Text.StringTemplates.Templates (TemplatesMonad)
 import Text.StringTemplates.Templates (renderTemplate, renderTemplate_)
 import qualified Data.Text as T
-import qualified Database.Redis as R
 import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.Model
@@ -54,7 +53,6 @@ import Templates
 import User.Lang
 import Util.Actor
 import Util.SignatoryLinkUtils
-import qualified FileStorage.Amazon.Config as A
 
 data DocumentSigning = DocumentSigning {
     signingSignatoryID          :: !SignatoryLinkID
@@ -76,21 +74,18 @@ data DocumentSigning = DocumentSigning {
   }
 
 documentSigning
-  :: (CryptoRNG m, MonadLog m, MonadIO m, MonadBaseControl IO m, MonadMask m)
-  => A.AmazonConfig
-  -> GuardTimeConf
+  :: ( CryptoRNG m, MonadBaseControl IO m, MonadFileStorage m, MonadIO m
+     , MonadLog m, MonadMask m )
+  => GuardTimeConf
   -> Maybe CgiGrpConfig
   -> Maybe NetsSignConfig
   -> KontrakcjaGlobalTemplates
-  -> FileMemCache
-  -> Maybe R.Connection
   -> ConnectionSourceM m
   -> String
   -> Int
   -> ConsumerConfig m SignatoryLinkID DocumentSigning
-documentSigning amazonConfig guardTimeConf cgiGrpConf netsSignConf templates
-                memcache mRedisConn pool mailNoreplyAddress
-                maxRunningJobs = ConsumerConfig {
+documentSigning guardTimeConf cgiGrpConf netsSignConf templates pool
+                mailNoreplyAddress maxRunningJobs = ConsumerConfig {
     ccJobsTable = "document_signing_jobs"
   , ccConsumersTable = "document_signing_consumers"
   , ccJobSelectors =
@@ -146,7 +141,6 @@ documentSigning amazonConfig guardTimeConf cgiGrpConf netsSignConf templates
       runTemplatesT (signingLang, templates)
         . runMailContextT mc
         . runGuardTimeConfT guardTimeConf
-        . runFileStorageT (amazonConfig, mRedisConn, memcache)
         $ if (signingCancelled)
             then if (minutesTillPurgeOfFailedAction `minutesAfter` signingTime > now)
               then return $ Ok $ RerunAfter $ iminutes minutesTillPurgeOfFailedAction

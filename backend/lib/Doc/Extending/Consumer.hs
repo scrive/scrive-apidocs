@@ -11,7 +11,6 @@ import Data.Aeson
 import Data.Int
 import Database.PostgreSQL.Consumers.Config
 import Log.Class
-import qualified Database.Redis as R
 
 import DB
 import DB.PostgreSQL
@@ -24,7 +23,6 @@ import FileStorage
 import GuardTime
 import Log.Identifier
 import Templates
-import qualified FileStorage.Amazon.Config as A
 
 data DocumentExtendingConsumer = DocumentExtendingConsumer {
     decDocumentID :: !DocumentID
@@ -32,17 +30,15 @@ data DocumentExtendingConsumer = DocumentExtendingConsumer {
   }
 
 documentExtendingConsumer
-  :: (CryptoRNG m, MonadLog m, MonadIO m, MonadBaseControl IO m, MonadMask m)
-  => A.AmazonConfig
-  -> GuardTimeConf
+  :: ( CryptoRNG m, MonadBaseControl IO m, MonadFileStorage m, MonadIO m
+     , MonadLog m, MonadMask m )
+  => GuardTimeConf
   -> KontrakcjaGlobalTemplates
-  -> FileMemCache
-  -> Maybe R.Connection
   -> ConnectionSourceM m
   -> Int
   -> ConsumerConfig m DocumentID DocumentExtendingConsumer
-documentExtendingConsumer amazonConfig guardTimeConf templates memcache
-                          mRedisConn pool maxRunningJobs = ConsumerConfig {
+documentExtendingConsumer guardTimeConf templates pool
+                          maxRunningJobs = ConsumerConfig {
     ccJobsTable = "document_extending_jobs"
   , ccConsumersTable = "document_extending_consumers"
   , ccJobSelectors =
@@ -73,7 +69,6 @@ documentExtendingConsumer amazonConfig guardTimeConf templates memcache
         . withDocumentM (dbQuery $ GetDocumentByDocumentID $ decDocumentID dec)
         . runTemplatesT (def, templates)
         . runGuardTimeConfT guardTimeConf
-        . runFileStorageT (amazonConfig, mRedisConn, memcache)
         $ extendDigitalSignature
       case resultisok of
         True  -> return $ Ok Remove

@@ -13,9 +13,8 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Crypto.RNG
 import Log
-import qualified Database.Redis as R
 
-import CronConf (CronConf, cronAmazonConfig, cronMailNoreplyAddress, cronSalesforceConf)
+import CronConf (CronConf, cronMailNoreplyAddress, cronSalesforceConf)
 import DB
 import FileStorage
 import Salesforce.Conf
@@ -28,19 +27,16 @@ data CronEnv = CronEnv {
   }
 
 runCronEnv :: MonadBase IO m
-             => CronConf
-             -> FileMemCache
-             -> Maybe R.Connection
-             -> KontrakcjaGlobalTemplates
-             -> CronEnvT (FileStorageT m) CronEnv a
-             -> m a
-runCronEnv cronConf memCache mRedisConn templates x = do
+           => CronConf
+           -> KontrakcjaGlobalTemplates
+           -> CronEnvT m CronEnv a
+           -> m a
+runCronEnv cronConf templates x = do
   let cronEnvData = CronEnv (cronSalesforceConf cronConf) templates
                             (cronMailNoreplyAddress cronConf)
-      fsConfig = (cronAmazonConfig cronConf, mRedisConn, memCache)
-  runFileStorageT fsConfig $ runReaderT (unCronEnvT x) cronEnvData
+  runReaderT (unCronEnvT x) cronEnvData
 
-type CronEnvM = CronEnvT (FileStorageT (DBT (CryptoRNGT (LogT IO)))) CronEnv
+type CronEnvM = CronEnvT (DBT (FileStorageT (CryptoRNGT (LogT IO)))) CronEnv
 
 -- hiding ReaderT prevents collision with ReaderT in TestEnvSt
 newtype CronEnvT m sd a = CronEnvT { unCronEnvT :: ReaderT sd m a }

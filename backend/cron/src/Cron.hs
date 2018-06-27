@@ -50,7 +50,7 @@ cmdConf progName = CmdConf {
 
 ----------------------------------------
 
-type CronM = CryptoRNGT (LogT IO)
+type CronM = FileStorageT (CryptoRNGT (LogT IO))
 
 main :: IO ()
 main = do
@@ -102,29 +102,29 @@ main = do
         runDB = withPostgreSQL pool
 
         runCronEnv :: CronEnv.CronEnvM r -> CronM r
-        runCronEnv = runDB . CronEnv.runCronEnv cronConf
-          filecache mrediscache templates
+        runCronEnv = runDB . CronEnv.runCronEnv cronConf templates
 
-        docSealing   = documentSealing (cronAmazonConfig cronConf)
-          (cronGuardTimeConf cronConf) (cronPdfToolsLambdaConf cronConf) templates filecache mrediscache pool
+        docSealing   = documentSealing
+          (cronGuardTimeConf cronConf) (cronPdfToolsLambdaConf cronConf) templates pool
           (cronMailNoreplyAddress cronConf) (cronConsumerSealingMaxJobs cronConf)
-        docSigning   = documentSigning (cronAmazonConfig cronConf)
+        docSigning   = documentSigning
           (cronGuardTimeConf cronConf) (cronCgiGrpConfig cronConf) (cronNetsSignConfig cronConf)
-          templates filecache mrediscache pool (cronMailNoreplyAddress cronConf) (cronConsumerSigningMaxJobs cronConf)
-        docExtending = documentExtendingConsumer (cronAmazonConfig cronConf)
-          (cronGuardTimeConf cronConf) templates filecache mrediscache pool (cronConsumerExtendingMaxJobs cronConf)
+          templates pool (cronMailNoreplyAddress cronConf) (cronConsumerSigningMaxJobs cronConf)
+        docExtending = documentExtendingConsumer
+          (cronGuardTimeConf cronConf) templates pool (cronConsumerExtendingMaxJobs cronConf)
         amazonFileUpload = amazonUploadConsumer (cronAmazonConfig cronConf) pool (cronConsumerAmazonMaxJobs cronConf)
         amazonURLFix = amazonURLFixConsumer (cronAmazonConfig cronConf) pool
-
         apiCallbacks = documentAPICallback runCronEnv (cronConsumerAPICallbackMaxJobs cronConf)
         cron = cronConsumer cronConf reqManager mmixpanel mplanhat runCronEnv runDB (cronConsumerCronMaxJobs cronConf)
 
     runCryptoRNGT rng
+      . runFileStorageT (cronAmazonConfig cronConf, mrediscache, filecache)
       . finalize (localDomain "document sealing"   $ runConsumer docSealing       pool)
       . finalize (localDomain "document signing"   $ runConsumer docSigning       pool)
       . finalize (localDomain "document extending" $ runConsumer docExtending     pool)
       . finalize (localDomain "api callbacks"      $ runConsumer apiCallbacks     pool)
+      -- CORE-478: Those two should go away when the remaining tasks are done.
       . finalize (localDomain "amazon file upload" $ runConsumer amazonFileUpload pool)
-      . finalize (localDomain "cron"               $ runConsumer cron             pool)
       . finalize (localDomain "amazon url fix"     $ runConsumer amazonURLFix     pool)
+      . finalize (localDomain "cron"               $ runConsumer cron             pool)
       $ liftBase waitForTermination
