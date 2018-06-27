@@ -105,7 +105,6 @@ preCheckPDFsHelper :: [BS.ByteString]
 preCheckPDFsHelper contents tmppath =
     runExceptT $ do
       mapM_ checkSize contents
-      mapM_ checkHeader contents
       checkRemoveJavaScript
       mapM_ checkNormalize $ zip [1..] contents
       mapM readOutput [1..length contents]
@@ -117,15 +116,9 @@ preCheckPDFsHelper contents tmppath =
 
     sizeLimit = 10 * 1000 * 1000
 
-    headerPattern = BS.pack "%PDF-1."
-
     checkSize content = let contentLength = BS.length content
                         in when (contentLength > sizeLimit) $
                              throwError (FileSizeError sizeLimit contentLength)
-
-    checkHeader content = do
-      when (not $ headerPattern `BS.isPrefixOf` content) $ do
-        throwError (FileFormatError)
 
     checkRemoveJavaScript = do
       forM_ (zip [1..] contents) $ \(num, content) -> do
