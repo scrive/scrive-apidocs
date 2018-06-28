@@ -145,7 +145,8 @@ CREATE OR REPLACE FUNCTION print_csv(date_from TIMESTAMPTZ, date_to TIMESTAMPTZ)
               END :: TEXT) AS "Payment plan"
            , (SELECT MIN(d.mtime)::date
                 FROM documents d
-                JOIN users u            ON d.author_user_id = u.id
+                JOIN signatory_links sl ON d.author_id = sl.id
+                JOIN users u            ON sl.user_id = u.id
                WHERE d.type = 1
                  AND d.status = 3
                  AND u.user_group_id = user_groups.id
@@ -153,9 +154,9 @@ CREATE OR REPLACE FUNCTION print_csv(date_from TIMESTAMPTZ, date_to TIMESTAMPTZ)
            , (SELECT count(*)
                 FROM documents
                WHERE EXISTS (SELECT TRUE
-                               FROM documents
-                               JOIN users ON users.id = documents.author_user_id
-                              WHERE users.user_group_id = user_groups.id)) AS "All docs"
+                               FROM signatory_links
+                               JOIN users ON users.id = signatory_links.user_id
+                              WHERE documents.author_id = signatory_links.id)) AS "All docs"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
