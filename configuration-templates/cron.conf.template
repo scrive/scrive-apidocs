@@ -1,9 +1,9 @@
 {
-    "amazon" : { "_host"      : "example.com"
-               , "_port"      : 1234
-               , "bucket"     : "foo"
-               , "access_key" : "bar"
-               , "secret_key" : "baz" },
+    "amazon" : { "host"       : "localdomain"
+               , "port"       : 4568
+               , "bucket"     : "localhost"
+               , "access_key" : "key"
+               , "secret_key" : "secret" },
     "database": "user='kontra' password='kontra' dbname='kontrakcja'",
     "max_db_connections": 100,
     "_redis_cache" : { "host"     : "foo"
