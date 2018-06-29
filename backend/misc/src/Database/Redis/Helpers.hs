@@ -58,7 +58,8 @@ checkRedisConnection conn = do
 
 -- | Put value into a specific hash field of a key and publish an empty message
 -- under channel named as the key signifying that the key was updated.
-redisPut :: MonadBase IO m => BS.ByteString -> BS.ByteString -> (R.Connection, RedisKey) -> m ()
+redisPut :: MonadBase IO m => BS.ByteString -> BS.ByteString
+         -> (R.Connection, RedisKey) -> m ()
 redisPut field value (cache, rkey) = runRedis' cache $ do
   let key = fromRedisKey rkey
   void $ R.hset key field value

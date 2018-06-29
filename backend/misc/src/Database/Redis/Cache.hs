@@ -19,27 +19,31 @@ import Utils.Exception
 data KeyInvalidated = NotExists | TTLNotSet
   deriving (Eq, Show)
 
+-- | Given a 'RedisKey', try to fetch it from the cache and run the
+-- corresponding handler afterwards.
 mfetch
   :: forall m r. (MonadBaseControl IO m, MonadLog m, MonadMask m)
-  => Maybe R.Connection -- ^ Redis connection
-  -> RedisKey -- ^ Redis key
-  -> (R.Connection -> RedisKey -> m r) -- ^ What to do if key is in cache
-  -> (Maybe (R.Connection, RedisKey) -> m r) -- ^ What to do if there is no
-  -- Redis connection or key is not in cache
+  => Maybe R.Connection                       -- ^ Redis connection
+  -> RedisKey                                 -- ^ Redis key
+  -> (R.Connection -> RedisKey -> m r)        -- ^ What to do if key is in cache
+  -> (Maybe (R.Connection, RedisKey) -> m r)  -- ^ What to do if there is no
+                                 -- Redis connection or key is not in cache
   -> m r
 mfetch mredis rkey actGet construct = case mredis of
-  Nothing -> construct Nothing
+  Nothing    -> construct Nothing
   Just cache -> tryAny (fetch cache) >>= \case
-    -- In case fetching/generating values with Redis fails, retry without it. If
-    -- a key is left in partial or invalid state, it will be eventually cleaned
-    -- up by one of the instances.
+    -- In case fetching/generating values with Redis fails, retry
+    -- without it. If a key is left in partial or invalid state, it
+    -- will be eventually cleaned up by one of the instances.
     Left ex -> do
-      logAttention "Error when using Redis, trying cacheless version" $ object [
+      logAttention "Error when using Redis, trying cacheless version" $
+        object [
           "error" .= show ex
         ]
       construct Nothing
     Right (Left err) -> do
-      logAttention "Key invalidated while its value was being fetched" $ object [
+      logAttention "Key invalidated while its value was being fetched" $
+        object [
           "reason" .= show err
         ]
       mfetch mredis rkey actGet construct
