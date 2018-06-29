@@ -43,7 +43,7 @@ getFileFromRedis conn rkey = do
 
     -- This interrupts the timeout every time we receive a message from Redis.
     listener :: (MonadBaseControl IO m, MonadLog m) => MVar () -> m ()
-    listener semaphore = runRedis_ conn $ do
+    listener semaphore = runRedis' conn $ do
       R.pubSub (R.subscribe [key]) $ \_msg -> do
         void $ tryPutMVar semaphore ()
         return mempty

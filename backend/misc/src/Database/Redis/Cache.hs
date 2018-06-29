@@ -79,8 +79,8 @@ mfetch mredis rkey actGet construct = case mredis of
           case eres of
             -- If fetch was successful and remaining TTL is shorter than half a
             -- day, update it to its original value.
-            Right _ -> runRedis_ cache $ do
-              ttl <- redisResp $ R.ttl key
+            Right _ -> runRedis' cache $ do
+              ttl <- fromRedisResp <=< R.ttl $ key
               when (ttl < oneDay `div` 2) $ do
                 void $ R.expire key oneDay
             -- If key with no TTL set exists, delete it as it's invalid.
