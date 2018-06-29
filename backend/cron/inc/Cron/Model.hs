@@ -15,7 +15,6 @@ import qualified Data.Text as T
 
 import Administration.Invoicing
 import Attachment.Model
-import Company.Model
 import CronConf
 import DB
 import Doc.Action
@@ -41,6 +40,7 @@ import User.Model.Update (SetUserPassword(..))
 import User.Password (PasswordAlgorithm(..), strengthenPassword)
 import User.PasswordReminder (DeleteExpiredPasswordReminders(..))
 import User.UserAccountRequest (expireUserAccountRequests)
+import UserGroup.Model
 import Utils.List
 import qualified CronEnv
 import qualified FileStorage.Amazon as AWS
@@ -68,8 +68,7 @@ data JobType
   | SMSEventsProcessing
   | StrengthenPasswords
   | UserAccountRequestEvaluation
-  | UserGroupMigration
-  | CompaniesPurge
+  | UserGroupsPurge
   | AttachmentsPurge
   deriving (Eq, Ord, Show)
 
@@ -97,8 +96,7 @@ jobTypeMapper = [
   , (UserAccountRequestEvaluation, "user_account_request_evaluation")
   , (DocumentSearchUpdate, "document_search_update")
   , (DocumentsAuthorIDMigration, "document_author_id_job")
-  , (UserGroupMigration, "user_group_migration")
-  , (CompaniesPurge, "companies_purge")
+  , (UserGroupsPurge, "user_groups_purge")
   , (AttachmentsPurge, "attachments_purge")
   ]
 
@@ -305,19 +303,10 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
     UserAccountRequestEvaluation -> do
       runDB expireUserAccountRequests
       return . RerunAfter $ ihours 1
-    UserGroupMigration -> do
-      let batchLimit = 1000
-      numberOfUpdates <- runDB $ migrateToUserGroups batchLimit
-      now <- currentTime
-      case numberOfUpdates of
-        0 -> RerunAt . nextDayMidnight <$> currentTime
-        _ -> if now < todayAtHour 4 now
-             then RerunAfter <$> return (iseconds 5)
-             else RerunAt . nextDayMidnight <$> currentTime
-    CompaniesPurge -> do
+    UserGroupsPurge -> do
       runDB $ do
-        purgedCount <- dbUpdate PurgeCompanies
-        logInfo "Purged companies" $ object ["purged" .= purgedCount]
+        purgedCount <- dbUpdate UserGroupPurge
+        logInfo "Purged user groups" $ object ["purged" .= purgedCount]
       return . RerunAfter $ iminutes 10
     AttachmentsPurge -> do
       runDB $ do

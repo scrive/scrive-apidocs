@@ -20,7 +20,6 @@ import TestKontra as T
 import Theme.Model
 import UserGroup.Data
 import UserGroup.Model
-import UserGroupAccountsTest
 import Util.MonadUtils
 
 companyControlTests :: TestEnvSt -> Test

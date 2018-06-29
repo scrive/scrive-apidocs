@@ -751,9 +751,20 @@ addNewCompanyAdminUser firstname secondname email ugid = do
   bd <- dbQuery $ GetMainBrandedDomain
   dbQuery (UserGroupGet ugid) >>= \case
     Nothing -> return Nothing
-    Just company ->
+    Just _ug ->
       dbUpdate $ AddUser (firstname, secondname) email Nothing (ugid, True) def
                          (get bdid bd) CompanyInvitation
+
+-- | Create user and add it to a new user group as admin.
+addNewAdminUserAndUserGroup :: String -> String -> String
+                            -> TestEnv (User, UserGroup)
+addNewAdminUserAndUserGroup firstname secondname email = do
+  ug <- addNewUserGroup
+  bd <- dbQuery $ GetMainBrandedDomain
+  Just user <- dbUpdate $ AddUser
+    (firstname, secondname) email Nothing (get ugID ug, True) def (get bdid bd)
+    CompanyInvitation
+  return (user, ug)
 
 addNewUserToUserGroup :: String -> String -> String -> UserGroupID -> TestEnv (Maybe User)
 addNewUserToUserGroup firstname secondname email ugid = do

@@ -9,6 +9,7 @@ module UserGroup.Model (
   , UserGroupGetAllChildren(..)
   , UserGroupsFormCycle(..)
   , UserGroupFilter(..)
+  , UserGroupPurge(..)
   , ugInherited
   , unsafeUserGroupIDToPartnerID
   , minUserGroupIdleDocTimeout
@@ -356,3 +357,7 @@ minUserGroupIdleDocTimeout :: Int16
 minUserGroupIdleDocTimeout = 1
 maxUserGroupIdleDocTimeout :: Int16
 maxUserGroupIdleDocTimeout = 365
+
+data UserGroupPurge = UserGroupPurge
+instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupPurge Int where
+  update UserGroupPurge = return 0 -- FIXME

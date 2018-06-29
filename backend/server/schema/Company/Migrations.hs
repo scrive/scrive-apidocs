@@ -39,9 +39,9 @@ companiesAddPartnerID = Migration {
 
 companiesAddPadAppModeAndEArchiveEnabled :: MonadDB m => Migration m
 companiesAddPadAppModeAndEArchiveEnabled = Migration {
-  mgrTableName = tblName tableCompanies
+  mgrTableName = tableCompaniesName
 , mgrFrom = 21
-, mgrAction = StandardMigration $ runQuery_ $ sqlAlterTable (tblName tableCompanies) [
+, mgrAction = StandardMigration $ runQuery_ $ sqlAlterTable tableCompaniesName [
     sqlAddColumn $ tblColumn { colName = "pad_app_mode", colType = SmallIntT, colNullable = False, colDefault = Just "1" }
   , sqlAddColumn $ tblColumn { colName = "pad_earchive_enabled", colType = BoolT, colNullable = False, colDefault = Just "true" }
   ]

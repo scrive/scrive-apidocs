@@ -16,8 +16,6 @@ import qualified Data.HashMap.Strict as H
 import qualified Data.Text.Encoding as TE
 
 import Attachment.Model
-import Company.Model
-import CompanyAccountsTest
 import Context
 import DB
 import Doc.Data.Document
@@ -34,6 +32,7 @@ import TestKontra as T
 import User.API
 import User.Email
 import User.Model
+import UserGroup.Data
 import Util.Actor
 import Util.QRCode
 
@@ -200,7 +199,7 @@ testUser2FAWorkflow = do
 
 testUserNoDeletionIfWrongEmail :: TestEnv ()
 testUserNoDeletionIfWrongEmail = do
-  (anna, _) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
+  (anna, _) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
 
   ctx <- set ctxmaybeuser (Just anna) <$> mkContext def
 
@@ -218,9 +217,9 @@ testUserNoDeletionIfWrongEmail = do
 
 testUserNoDeletionIfLastAdminWithUsers :: TestEnv ()
 testUserNoDeletionIfLastAdminWithUsers = do
-  (anna, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
-  Just bob   <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
-  Just alice <- addNewCompanyUser "Alice" "Red" "alice@red.com" (companyid company)
+  (anna, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
+  Just bob   <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (get ugID ug)
+  Just alice <- addNewCompanyUser "Alice" "Red" "alice@red.com" (get ugID ug)
 
   now <- currentTime
   _ <- dbUpdate $ AcceptTermsOfService (userid anna) now
@@ -255,11 +254,11 @@ testUserNoDeletionIfLastAdminWithUsers = do
 
 testUserNoDeletionIfPendingDocuments :: TestEnv ()
 testUserNoDeletionIfPendingDocuments = do
-  (anna, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
+  (anna, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
   now <- currentTime
   _ <- dbUpdate $ AcceptTermsOfService (userid anna) now
 
-  Just bob <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
+  Just bob <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (get ugID ug)
 
   ctx <- set ctxmaybeuser (Just bob) <$> mkContext def
 
@@ -281,11 +280,11 @@ testUserNoDeletionIfPendingDocuments = do
 
 testUserNoDeletionIfPendingUserInvitations :: TestEnv ()
 testUserNoDeletionIfPendingUserInvitations = do
-  (anna, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
+  (anna, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
   now <- currentTime
   _ <- dbUpdate $ AcceptTermsOfService (userid anna) now
 
-  Just bob <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
+  Just bob <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (get ugID ug)
 
   ctx <- set ctxmaybeuser (Just anna) <$> mkContext def
 
@@ -312,7 +311,7 @@ testUserNoDeletionIfPendingUserInvitations = do
 
 testUserDeletion :: TestEnv ()
 testUserDeletion = do
-  (anna, _) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
+  (anna, _) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
   ctx <- set ctxmaybeuser (Just anna) <$> mkContext def
 
   req <- mkRequest POST [("email", inText "anna@android.com")]
@@ -321,8 +320,8 @@ testUserDeletion = do
 
 testUserDeletionOwnershipTransfer :: TestEnv ()
 testUserDeletionOwnershipTransfer = do
-  (anna, company) <- addNewAdminUserAndCompany "Anna" "Android" "anna@android.com"
-  Just bob <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (companyid company)
+  (anna, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
+  Just bob <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (get ugID ug)
 
   now <- currentTime
   _ <- dbUpdate $ AcceptTermsOfService (userid anna) now
@@ -354,7 +353,7 @@ testUserDeletionOwnershipTransfer = do
 
   let domains = [ AttachmentsOfAuthorDeleteValue (userid bob) False
                 , AttachmentsOfAuthorDeleteValue (userid anna) False
-                , AttachmentsSharedInUsersCompany (userid bob) ]
+                , AttachmentsSharedInUsersUserGroup (userid bob) ]
   [sharedAttachment'] <- dbQuery $ GetAttachments domains
     [AttachmentFilterByID (attachmentid sharedAttachment)] []
   [unsharedAttachment'] <- dbQuery $ GetAttachments domains

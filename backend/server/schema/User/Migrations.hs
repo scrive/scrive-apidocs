@@ -65,6 +65,8 @@ usersDropCompanyID = Migration {
       runQuery_ . sqlAlterTable tname $
         [ sqlDropFK tname $ (fkOnColumn "company_id" "companies" "id")
         , sqlDropColumn "company_id"
+        ]
+  }
 
 actuallyDeletePreviouslyDeletedUser :: MonadDB m => Migration m
 actuallyDeletePreviouslyDeletedUser = Migration

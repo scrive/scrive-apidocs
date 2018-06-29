@@ -98,8 +98,8 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool wh
     -- Give the shared attachments and templates to the oldest admin.
     runQuery_ $ sqlSelect "users u" $ do
       sqlResult "u.id"
-      sqlJoinOn "companies c" "u.company_id = c.id"
-      sqlWhereEq "c.id" $ usercompany user
+      sqlJoinOn "user_groups ug" "u.user_group_id = ANY (ug.parent_group_path)"
+      sqlWhereEq "ug.id" $ usergroupid user
       sqlWhereIsNULL "u.deleted"
       sqlWhere "u.is_company_admin"
       sqlWhereNotEq "u.id" uid

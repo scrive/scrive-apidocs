@@ -854,9 +854,9 @@ testPurgeDocumentRemovesSensitiveData = replicateM_ 10 $ do
 
 testPurgeDocumentSharedTemplates :: TestEnv ()
 testPurgeDocumentSharedTemplates = do
-  company <- addNewCompany
-  bob <- addNewRandomCompanyUser (companyid company) True
-  alice <- addNewRandomCompanyUser (companyid company) False
+  ug <- addNewUserGroup
+  bob <- addNewRandomCompanyUser (get ugID ug) True
+  alice <- addNewRandomCompanyUser (get ugID ug) False
 
   doc <- addRandomDocumentWithAuthorAndCondition bob (\d -> isPreparation d || isDocumentShared d)
   _ <- dbUpdate $ DeleteUser $ userid alice

@@ -294,14 +294,6 @@ assertCompanyInvitesAre ug expectedinvites = do
       mactualinvite <- dbQuery $ GetUserGroupInvite (get ugID ug) (inviteduserid expectedinvite)
       assertEqual "Wrong company invite" (Just expectedinvite) mactualinvite
 
-addNewAdminUserAndUserGroup :: String -> String -> String -> TestEnv (User, UserGroup)
-addNewAdminUserAndUserGroup fstname sndname email = do
-  ug <- addNewUserGroup
-  Just user <- addNewUserToUserGroup fstname sndname email (get ugID ug)
-  _ <- dbUpdate $ SetUserCompanyAdmin (userid user) True
-  Just updateduser <- dbQuery $ GetUserByID (userid user)
-  return (updateduser, ug)
-
 mkInvite :: UserGroup -> User -> UserGroupInvite
 mkInvite ug user =
   UserGroupInvite {

@@ -141,7 +141,7 @@ test_userGroupGetUsers = do
   do
     ugAccountsAll <- dbQuery $ UserGroupGetUsersIncludeDeleted ugid
     assertBool "Company accounts returned in proper order (sorted by email)" $
-      sortByEmail users == ugAccountsAll
+      map userid (sortByEmail users) == map userid ugAccountsAll
 
 test_userUsageStatisticsByUser :: TestEnv ()
 test_userUsageStatisticsByUser = do

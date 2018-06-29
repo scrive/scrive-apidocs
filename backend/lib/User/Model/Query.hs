@@ -199,10 +199,11 @@ userNotDeletableReasonToString = fromString . \case
 -- | Check if a user can be deleted giving the reason if it can't and returning
 -- whether it is the last company user otherwise.
 data IsUserDeletable = IsUserDeletable User
-instance MonadDB m
+instance (MonadDB m, MonadThrow m)
     => DBQuery m IsUserDeletable (Either UserNotDeletableReason Bool) where
   query (IsUserDeletable user) = runExceptT $ do
-    accounts <- lift $ dbQuery $ GetCompanyAccounts $ usercompany user
+    accounts <- lift $
+      dbQuery $ UserGroupGetAllUsersFromThisAndSubgroups $ usergroupid user
     let (activeAccounts, userInvitations) =
           partition (isJust . userhasacceptedtermsofservice) accounts
 

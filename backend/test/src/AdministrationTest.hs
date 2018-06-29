@@ -18,7 +18,6 @@ import User.Email
 import UserGroup.Data
 import UserGroup.Data.PaymentPlan
 import UserGroup.Model
-import UserGroupAccountsTest
 import Util.CSVUtil (CSV(..))
 
 administrationTests :: TestEnvSt -> Test
@@ -69,4 +68,3 @@ test_invoicingReport = do
   ct <- currentTime
   csv <- dbQuery $ InvoicingReport $ 1 `daysAfter` ct
   assertBool "There are some rows in invoicing csv if there are some companies in DB" (length (csvContent csv) > 0)
-
