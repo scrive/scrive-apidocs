@@ -264,7 +264,7 @@ var _ = require("underscore");
                   signview={model}
                 />
               }
-              {/* else */ !model.hasAccessToDocument() && model.hasAccessToDocument() &&
+              {/* else */ !model.hasAccessToDocument() &&
                 <InaccessibleFileView />
               }
               {/* if */ model.hasAuthorAttachmentsSection() &&
