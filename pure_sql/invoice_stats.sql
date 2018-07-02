@@ -93,7 +93,6 @@ CREATE OR REPLACE FUNCTION print_csv(date_from TIMESTAMPTZ, date_to TIMESTAMPTZ)
         "Company admin" TEXT,
         "Payment plan" TEXT,
         "First doc signed" DATE,
-        "All docs" BIGINT,
         "Docs sent" BIGINT,
         "Docs closed" BIGINT,
         "Sigs closed" BIGINT,
@@ -151,12 +150,6 @@ CREATE OR REPLACE FUNCTION print_csv(date_from TIMESTAMPTZ, date_to TIMESTAMPTZ)
                  AND d.status = 3
                  AND u.user_group_id = user_groups.id
              ) AS "First doc signed"
-           , (SELECT count(*)
-                FROM documents
-               WHERE EXISTS (SELECT TRUE
-                               FROM signatory_links
-                               JOIN users ON users.id = signatory_links.user_id
-                              WHERE documents.author_id = signatory_links.id)) AS "All docs"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id

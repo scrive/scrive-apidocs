@@ -73,7 +73,6 @@ csvColumnHeadings = [
   , "Company admin"
   , "Payment plan"
   , "First doc signed"
-  , "All docs"
   , "Docs sent"
   , "Docs closed"
   , "Sigs closed"
@@ -131,13 +130,6 @@ invoicingQry fromDate toDate =
             "AND d.status =" <?> Closed <+>
             "AND u.user_group_id = user_groups.id" <+>
         ") AS \"First doc signed\"" <+>
-      ", (SELECT count(*)" <+>
-          "FROM documents" <+>
-          "WHERE EXISTS (SELECT TRUE" <+>
-                          "FROM signatory_links" <+>
-                          "JOIN users ON users.id = signatory_links.user_id" <+>
-                        "WHERE documents.author_id = signatory_links.id" <+>
-                          "AND users.user_group_id = user_groups.id)) AS \"All docs\"" <+>
       ", (SELECT coalesce(sum(chi.quantity), 0)" <+>
           "FROM chargeable_items chi" <+>
           "WHERE chi.user_group_id = user_groups.id" <+>
@@ -278,7 +270,6 @@ fetchInvoicing :: ( String
                   , Int64
                   , Int64
                   , Int64
-                  , Int64
                   , UTCTime
                   , UTCTime
                   )
@@ -291,7 +282,6 @@ fetchInvoicing ( companyName
                , companyAdmin
                , paymentPlan
                , firstDocSigned
-               , allDocs
                , docsSent
                , docsClosed
                , sigsClosed
@@ -319,7 +309,6 @@ fetchInvoicing ( companyName
                , companyAdmin
                , paymentPlan
                , showGregorian . utctDay $ firstDocSigned
-               , show allDocs
                , show docsSent
                , show docsClosed
                , show sigsClosed
