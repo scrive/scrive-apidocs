@@ -2,7 +2,8 @@ var expose = {};
 
 expose.track = function (event_name, properties, callback) {
   // console.log() will be tracked in Track.js as INFO-level event
-  console.log(event_name)
+  console.log(event_name);
+  console.log(properties);
   return mixpanel.track(event_name, properties, callback);
 };
 
