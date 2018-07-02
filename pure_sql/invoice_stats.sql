@@ -154,12 +154,6 @@ CREATE OR REPLACE FUNCTION print_csv(date_from TIMESTAMPTZ, date_to TIMESTAMPTZ)
                  AND d.status = 3
                  AND u.company_id = companies.id
              ) AS "First doc signed"
-           , (SELECT count(*)
-                FROM documents
-               WHERE EXISTS (SELECT TRUE
-                               FROM documents
-                               JOIN users ON users.id = documents.author_user_id
-                              WHERE users.company_id = companies.id)) AS "All docs"
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.company_id = companies.id
