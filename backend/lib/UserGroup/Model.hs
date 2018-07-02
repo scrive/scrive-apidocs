@@ -120,6 +120,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetAllChildren [UserGro
     runQuery_ . sqlSelect "user_groups" $ do
       mapM_ sqlResult userGroupSelectors
       sqlWhereEq "parent_group_id" ugid
+      sqlWhereIsNULL "deleted"
     fetchMany toComposite
 
 data UserGroupGetWithParents = UserGroupGetWithParents UserGroupID
@@ -340,6 +341,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupsGetFiltered [UserGroup
        whenJust moffsetlimit $ \(offset, limit) -> do
          sqlOffset offset
          sqlLimit limit
+       sqlWhereIsNULL "deleted"
        sqlOrderBy "user_groups.id"
     fetchMany toComposite
     where
@@ -359,5 +361,23 @@ maxUserGroupIdleDocTimeout :: Int16
 maxUserGroupIdleDocTimeout = 365
 
 data UserGroupPurge = UserGroupPurge
-instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupPurge Int where
-  update UserGroupPurge = return 0 -- FIXME
+instance (MonadDB m, MonadTime m) => DBUpdate m UserGroupPurge Int where
+  update UserGroupPurge = do
+    now <- currentTime
+
+    runQuery_ . sqlUpdate "user_groups ug" $ do
+      -- FIXME: Remove PIIs
+      sqlSet "deleted" now
+
+      -- Give a chance to add a user before deleting it.
+      -- FIXME
+
+      -- No existing user left.
+      sqlWhereNotExists . sqlSelect "users u" $ do
+        sqlWhereEq "u.user_group_id" "ug.id"
+        sqlWhereIsNULL "u.deleted"
+
+      -- No existing subgroup left.
+      sqlWhereNotExists . sqlSelect "user_groups sug" $ do
+        sqlWhere "ug.id = ANY (sug.parent_group_path)"
+        sqlWhereIsNULL "sug.deleted"

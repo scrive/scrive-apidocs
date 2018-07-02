@@ -5,12 +5,13 @@ import DB
 tableUserGroups :: Table
 tableUserGroups = tblTable {
     tblName = "user_groups"
-  , tblVersion = 3
+  , tblVersion = 4
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "parent_group_id", colType = BigIntT, colNullable = True }
     , tblColumn { colName = "parent_group_path", colType = ArrayT BigIntT, colDefault = Just "ARRAY[]::bigint[]" }
     , tblColumn { colName = "name", colType = TextT }
+    , tblColumn { colName = "deleted", colType = TimestampWithZoneT }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [

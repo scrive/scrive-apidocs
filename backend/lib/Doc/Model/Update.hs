@@ -1942,13 +1942,13 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
         -- Documents (not in preparation) are deleted if, for all signatories,
         -- ANY of the following is true
         -- a) she has deleted the document or
-        -- b) her company has been deleted or
+        -- b) her user group has been deleted or
         -- c) she is deleted but/and not the author. (*)
         --
         -- In other words, the document is NOT deleted if, there exists a
         -- signatory for which ALL of the following conditions are true:
         -- a) she hasn't deleted the document and
-        -- b) her company still exists and
+        -- b) her user group still exists and
         -- c) she is not deleted or is the author. (*)
         --
         -- (*) The condition (c) is for documents which have been created by
@@ -1958,28 +1958,31 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
         -- keep the document.
         sqlWhereNotExists . sqlSelect "signatory_links sl" $ do
           sqlJoinOn "users u" "sl.user_id = u.id"
-          sqlJoinOn "companies c" "u.company_id = c.id"
+          sqlJoinOn "user_groups ug" "u.user_group_id = ug.id"
           sqlWhere "sl.document_id = d.id"
           sqlWhereIsNotNULL "sl.user_id"
           sqlWhereIsNULL "sl.really_deleted" -- condition a
-          sqlWhereIsNULL "c.deleted" -- condition b
+          sqlWhereIsNULL "ug.deleted" -- condition b
           sqlWhere "u.deleted IS NULL OR u.id = d.author_user_id" -- condition c
           sqlWhereNotEq "d.status" Preparation
 
         -- Documents in preparation are deleted if
         -- a) their author has been deleted but it is not a shared template OR
         -- b) their author has deleted the document OR
-        -- c) their company has been deleted.
+        -- c) their user groups has been deleted.
         --
         -- That is, the document is NOT deleted if
         -- a) the author is not deleted or it is a shared template AND
         -- b) the author has not deleted the document AND
-        -- c) the document's company is not deleted.
+        -- c) the document's author's user group is not deleted.
         sqlWhereNotExists . sqlSelect "signatory_links sl" $ do
           sqlJoinOn "users u" "sl.user_id = u.id"
+          sqlJoinOn "user_groups ug" "u.user_group_id = ug.id"
           sqlWhere "d.author_id = sl.id"
+           -- condition a
           sqlWhere $ "u.deleted IS NULL OR d.sharing =" <?> Shared
-          sqlWhere "sl.really_deleted IS NULL"
+          sqlWhere "sl.really_deleted IS NULL" -- condition b
+          sqlWhereIsNULL "ug.deleted" -- condition c
           sqlWhereEq "d.status" Preparation
 
         -- Document isn't pending (it's possible that there are 0

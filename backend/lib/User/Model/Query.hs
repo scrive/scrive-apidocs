@@ -436,6 +436,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetAllUsersFromThisAndS
             sqlWhere $ "parent_group_path @> " <?> (Array1 [ugid])
         , sqlWhereEq "user_group_id" ugid
         ]
+      sqlWhereIsNULL "deleted"
     fetchMany fetchUser
 
 -- helpers

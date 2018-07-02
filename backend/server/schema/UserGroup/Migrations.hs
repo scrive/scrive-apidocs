@@ -140,3 +140,14 @@ usergroupsBumpVersionAfterDropingCompanies = Migration {
   , mgrFrom = 2
   , mgrAction = StandardMigration $ return ()
   }
+
+usergroupsAddDeleted :: MonadDB m => Migration m
+usergroupsAddDeleted = Migration
+  { mgrTableName = tblName tableUserGroups
+  , mgrFrom = 3
+  , mgrAction = StandardMigration $
+      runQuery_ $ sqlAlterTable (tblName tableUserGroups)
+        [ sqlAddColumn $
+            tblColumn { colName = "deleted", colType = TimestampWithZoneT }
+        ]
+  }
