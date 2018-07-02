@@ -315,7 +315,7 @@ handleSignRequest did slid = do
             logInfo_ "No personal number"
             respond404
         guardThatPersonalNumberMatches slid pn =<< theDocument
-        return (NetsSignDK, Just . T.pack $ pn)
+        return (NetsSignDK, Just . T.pack . filter ('-' /=) $ pn)
       _ -> do
         logAttention "NetsSign: unsupported auth to sign method" $ object [
             identifier_ did
