@@ -73,7 +73,6 @@ csvColumnHeadings = [
   , "Company admin"
   , "Payment plan"
   , "First doc signed"
-  , "All docs"
   , "Docs sent"
   , "Docs closed"
   , "Sigs closed"
