@@ -93,7 +93,6 @@ CREATE OR REPLACE FUNCTION print_csv(date_from TIMESTAMPTZ, date_to TIMESTAMPTZ)
         "Company admin" TEXT,
         "Payment plan" TEXT,
         "First doc signed" DATE,
-        "All docs" BIGINT,
         "Docs sent" BIGINT,
         "Docs closed" BIGINT,
         "Sigs closed" BIGINT,
