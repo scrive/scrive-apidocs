@@ -21,12 +21,12 @@ var UserDetailsViewModel = Backbone.Model.extend({
     return new Submit({
       url: "/adminonly/useradmin/" + this.get("userId"),
       method: "POST",
-      userfstname: this.get("fstname"),
-      usersndname: this.get("sndname"),
-      userpersonalnumber: this.get("personalnumber"),
-      userphone: this.get("phone"),
-      useremail: this.get("email"),
-      usercompanyposition: this.get("companyposition"),
+      userfstname: this.get("fstname").trim(),
+      usersndname: this.get("sndname").trim(),
+      userpersonalnumber: this.get("personalnumber").trim(),
+      userphone: this.get("phone").trim(),
+      useremail: this.get("email").trim(),
+      usercompanyposition: this.get("companyposition").trim(),
       userlang: this.get("lang"),
       useraccounttype: this.get("accountType")
     });
