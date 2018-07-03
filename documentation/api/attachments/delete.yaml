@@ -15,7 +15,7 @@ post:
       required: true
 
       description: |
-        List of attachment IDs of attachments to share or unshare.
+        List of attachment IDs of attachments to delete.
 
       schema:
         type: array
