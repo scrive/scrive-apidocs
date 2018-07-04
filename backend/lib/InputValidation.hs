@@ -285,7 +285,7 @@ asValidEmail input =
                             | otherwise = Bad
           isValidFormat :: String -> Bool
           -- This must match PATTERN_EMAIL in frontend code
-          isValidFormat = isJust . Rx.find (Rx.regex [Rx.CaseInsensitive] "^[a-zA-Z0-9._%+-]+@(\\p{L}|[0-9.-])+[.][a-z]{2,}$") . T.pack
+          isValidFormat = isJust . Rx.find (Rx.regex [Rx.CaseInsensitive] "^[a-zA-Z0-9&._%+-]+@(\\p{L}|[0-9.-])+[.][a-z]{2,}$") . T.pack
 
 {- |
     Creates an email that hasn't been completely validated.  It still does handy things
