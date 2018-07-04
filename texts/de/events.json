@@ -74,6 +74,7 @@
 "_ReviewReminderSendSMSLogWithText":"Scrive eSign hat auf Antrag des Benutzers $actor$ eine Erinnerung zur Überprüfung an $signatory$ mit SMS gesendet. Der Erinnerungsbescheid von $actor$ lautet: <BR/> <i>$text$</i>",
 "_SMSPinDeliveredEvidenceText":"Die SMS mit der PIN wurde an $text$ zur Authentifizierung durch $signatory$ gesendet.",
 "_SMSPinSendEvidenceText":"Eine SMS mit einer PIN wurde an $text$ zur Authentifizierung durch $signatory$ gesendet.",
+"_SignDocumentEvidenceTextSimpleArchiveDKNemID":"",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Signierte das Dokument mittels schwedischer BankID als Authentifizierungsmethode.",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Das Dokument wurde mit PIN per SMS als Authentifizierungsmethode signiert.",

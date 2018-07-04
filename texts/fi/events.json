@@ -74,6 +74,7 @@
 "_ReviewReminderSendSMSLogWithText":"Scrive eSign lähetti muistutuksen dokumentin esikatselusta tekstiviestitse henkilölle $signatory$, käyttäjän $actor$ pyynnöstä. Muistutusviesti käyttäjältä $actor$ oli: <BR/> <i>$text$</i>.",
 "_SMSPinDeliveredEvidenceText":"PIN-koodin sisältävä tekstiviesti toimitettiin numeroon $text$, jotta $signatory$ voi käyttää sitä tunnistautumiseen.",
 "_SMSPinSendEvidenceText":"PIN-koodin sisältävä tekstiviesti lähetettiin numeroon $text$, jotta $signatory$ voi käyttää sitä tunnistautumiseen.",
+"_SignDocumentEvidenceTextSimpleArchiveDKNemID":"",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Allekirjoitti dokumentin käyttäen ruotsalaista BankID:tä tunnistautumismuotona.",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Dokumentti allekirjoitettiin käyttämällä PIN by SMS -palvelua tunnistautumismuotona.",

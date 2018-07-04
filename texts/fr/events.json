@@ -74,6 +74,7 @@
 "_ReviewReminderSendSMSLogWithText":"Scrive eSign a envoyé un rappel de la nécessité de consulter le document via SMS à $signatory$ à la demande de l'utilisateur $actor$. Le message de rappel envoyé par l'utilisateur $actor$ était: <BR/> <i>$text$</i>.",
 "_SMSPinDeliveredEvidenceText":"Le SMS avec le code PIN à utiliser pour s'identifier a été envoyé à $text$ pour $signatory$.",
 "_SMSPinSendEvidenceText":"Un SMS avec un code PIN à utiliser pour s'identifier a été envoyé à $text$ pour $signatory$.",
+"_SignDocumentEvidenceTextSimpleArchiveDKNemID":"",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"A signé le document avec l'identifiant bancaire suédois comme méthode d'authentification.",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Le document a été signé avec comme méthode d'identification un code PIN envoyé par SMS.",

@@ -74,6 +74,7 @@
 "_ReviewReminderSendSMSLogWithText":"Η υπηρεσία ηλεκτρονικής υπογραφής Scrive έστειλε μια υπενθύμιση ελέγχου μέσω SMS στον $signatory$ ως αίτημα του χρήστη $actor$. Το μήνυμα υπενθύμισης από τον χρήστη $actor$ ήταν: <BR/> <i>$text$</i>.",
 "_SMSPinDeliveredEvidenceText":"Το SMS με το PIN παραδόθηκε στο $text$ προς τον $signatory$ για χρήση πιστοποίησης.  ",
 "_SMSPinSendEvidenceText":"Ένα SMS με ένα PIN εστάλη στο $text$ προς τον $signatory$ για χρήση πιστοποίησης. ",
+"_SignDocumentEvidenceTextSimpleArchiveDKNemID":"",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Το έγγραφο υπογράφηκε με χρήση Σουηδικού BankID ως μέθοδο πιστοποίησης. ",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Το έγγραφο υπογράφηκε με χρήση PIN μέσω SMS ως μέθοδος πιστοποίησης. ",

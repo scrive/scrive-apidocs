@@ -74,6 +74,7 @@
 "_ReviewReminderSendSMSLogWithText":"Scrive eSign przesłał SMS-owe przypomnienie o mijającym terminie przejrzenia dokumentu do $signatory$ na prośbę użytkownika $actor$. Przypomnienie od użytkownika $actor$ miało następującą treść: <BR/> <i>$text$</i>.",
 "_SMSPinDeliveredEvidenceText":"SMS zawierający PIN został dostarczony na numer $text$ dla użytkownika $signatory$ celem uwierzytelnienia danych.",
 "_SMSPinSendEvidenceText":"SMS zawierający PIN został wysłany na numer $text$ dla użytkownika $signatory$ celem uwierzytelnienia danych.",
+"_SignDocumentEvidenceTextSimpleArchiveDKNemID":"",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Dokument podpisano po uwierzytelnieniu danych przy użyciu szwedzkiego BankID.",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Dokument podpisano po uwierzytelnieniu danych przy użyciu kodu PIN przesłanego SMS-em.",

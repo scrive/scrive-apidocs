@@ -74,6 +74,7 @@
 "_ReviewReminderSendSMSLogWithText":"Scrive eSign sendi áminningu um yfirlestur með tölvupósti til $signatory$ að beiðni notandans $actor$. Áminningarskilaboðin frá $actor$ voru: <BR/> <i>$text$</i>.",
 "_SMSPinDeliveredEvidenceText":"Textaskilaboð með PIN-númeri voru afhend $text$ fyrir $signatory$ til notkunar við sannvottun.",
 "_SMSPinSendEvidenceText":"Textaskilaboð með PIN-númeri voru send til $text$ fyrir $signatory$ til notkunar við sannvottun.",
+"_SignDocumentEvidenceTextSimpleArchiveDKNemID":"",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Skrifaði undir skjalið með því að nota sænskt bankaauðkenni sem sannvottunaraðferð.",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Skrifað var undir skjalið með PIN-númeri sem sannvottunaraðferð.",

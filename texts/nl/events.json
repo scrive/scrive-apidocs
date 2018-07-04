@@ -74,6 +74,7 @@
 "_ReviewReminderSendSMSLogWithText":"Scrive eSign heeft op aan vraag van gebruiker $actor$ via SMS een herinnering verstuurd aan $signatory$. Het herinneringsbericht van gebruiker $actor$ is: <BR/> <i>$text$</i>",
 "_SMSPinDeliveredEvidenceText":"De SMS met de PIN is geleverd aan $text$ om door $signatory$ als identificatie te gebruiken.",
 "_SMSPinSendEvidenceText":"Een SMS met een PIN is verstuurd naar $text$ om door $signatory$ te gebruiken voor identificatie.",
+"_SignDocumentEvidenceTextSimpleArchiveDKNemID":"",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Heeft het document ondertekend met gebruik van Swedish BankId als authenticatiemethode.",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Het document werd ondertekend met gebruik van PIN per SMS als identificatie methode.",

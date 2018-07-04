@@ -74,6 +74,7 @@
 "_ReviewReminderSendSMSLogWithText":"Scrive eSign ha mandato un promemoria di revisione a $signatory$ via SMS su richiesta dell'utente $actor$. Il messaggio del promemoria dall'utente $actor$ era: <BR/> <i>$text$</i>",
 "_SMSPinDeliveredEvidenceText":"L'SMS contenente il PIN è stato consegnato a $text$ per $signatory$ da usare per l'autenticazione.",
 "_SMSPinSendEvidenceText":"Un SMS contenente il PIN è stato inviato a $text$ per $signatory$ da usare per l'autenticazione.",
+"_SignDocumentEvidenceTextSimpleArchiveDKNemID":"",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Ha firmato il documento usando il BankID svedese come metodo di autenticazione.",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Il documento è stato firmato usando un codice PIN via SMS come metodo di autenticazione.",

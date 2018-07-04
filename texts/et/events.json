@@ -74,6 +74,7 @@
 "_ReviewReminderSendSMSLogWithText":"Scrive eSign saatis kasutaja $actor$ palvel kasutajale $signatory$ SMSi teel meeldetuletuse ülevaatamiseks. Meeldetuletuse tekst kasutajalt $actor$ oli: <BR/> <i>$text$</i>.",
 "_SMSPinDeliveredEvidenceText":"PIN koodi sisaldav SMS saadeti autentimiseks isikule $signatory$ numbrile $text$.",
 "_SMSPinSendEvidenceText":"PIN koodi sisaldav SMS saadeti autentimiseks isikule $signatory$ numbrile $text$.",
+"_SignDocumentEvidenceTextSimpleArchiveDKNemID":"",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Allkirjastas dokumendi Rootsi BankID abil.",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Dokument allkirjastati, kasutades autentimiseks SMSi teel saadetud PIN koodi.",
