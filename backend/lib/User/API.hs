@@ -489,15 +489,14 @@ apiCallIsUserDeletable :: Kontrakcja m => m Response
 apiCallIsUserDeletable = V2.api $ do
   (user, _ , _) <- getAPIUser APIPersonal
 
-  eRes <- dbQuery $ IsUserDeletable user
+  mReason <- dbQuery $ IsUserDeletable user
 
-  return $ V2.Ok $ runJSONGen $ case eRes of
-    Left reason -> do
+  return $ V2.Ok $ runJSONGen $ case mReason of
+    Just reason -> do
       value "deletable" False
       value "reason" reason
-    Right lastCompanyUser -> do
+    Nothing -> do
       value "deletable" True
-      value "last_company_user" lastCompanyUser
 
 apiCallDeleteUser :: Kontrakcja m => m Response
 apiCallDeleteUser = V2.api $ do
@@ -509,11 +508,11 @@ apiCallDeleteUser = V2.api $ do
     V2.apiError $ V2.requestParameterParseError "email"
       "the email provided does not match that of the user account"
 
-  eRes <- dbQuery $ IsUserDeletable user
-  case eRes of
-    Left reason -> V2.apiError $
+  mReason <- dbQuery $ IsUserDeletable user
+  case mReason of
+    Just reason -> V2.apiError $
       V2.conflictError $ userNotDeletableReasonToString reason
-    Right _ -> return ()
+    Nothing -> return ()
 
   _ <- dbUpdate $ DeleteUser (userid user)
   _ <- dbUpdate $ LogHistoryAccountDeleted (userid user) (get ctxipnumber ctx) (get ctxtime ctx)

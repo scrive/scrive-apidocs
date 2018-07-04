@@ -18,7 +18,6 @@ module User.Model.Query (
   ) where
 
 import Control.Monad.Catch
-import Control.Monad.Except (lift, runExceptT, throwError)
 import Control.Monad.State (MonadState)
 import Data.Char
 import Data.Int
@@ -171,16 +170,12 @@ instance MonadDB m => DBQuery m GetUserGroupAdmins [User] where
 
 data UserNotDeletableReason
   = UserNotDeletableDueToPendingDocuments
-  | UserNotDeletableDueToLastAdminWithUsers
-  | UserNotDeletableDueToPendingUserInvitations
   deriving Show
 
 instance ToJSValue UserNotDeletableReason where
   toJSValue reason =
     let code = case reason of
-          UserNotDeletableDueToPendingDocuments       -> "pending_documents"
-          UserNotDeletableDueToLastAdminWithUsers     -> "last_admin_with_users"
-          UserNotDeletableDueToPendingUserInvitations -> "pending_user_invitations"
+          UserNotDeletableDueToPendingDocuments -> "pending_documents"
         msg = userNotDeletableReasonToString reason
     in JSObject $ toJSObject
          [ ("code",    JSString $ toJSString code)
@@ -191,36 +186,13 @@ userNotDeletableReasonToString :: IsString s => UserNotDeletableReason -> s
 userNotDeletableReasonToString = fromString . \case
   UserNotDeletableDueToPendingDocuments ->
     "Can't delete a user with pending documents."
-  UserNotDeletableDueToLastAdminWithUsers ->
-    "Can't delete a user if it would leave the company without an admin."
-  UserNotDeletableDueToPendingUserInvitations ->
-    "Can't delete last admin user of a company with pending user invitations."
 
--- | Check if a user can be deleted giving the reason if it can't and returning
--- whether it is the last company user otherwise.
+-- | Check if a user can be deleted giving the reason if it can't.
 data IsUserDeletable = IsUserDeletable User
 instance (MonadDB m, MonadThrow m)
-    => DBQuery m IsUserDeletable (Either UserNotDeletableReason Bool) where
-  query (IsUserDeletable user) = runExceptT $ do
-    accounts <- lift $
-      dbQuery $ UserGroupGetAllUsersFromThisAndSubgroups $ usergroupid user
-    let (activeAccounts, userInvitations) =
-          partition (isJust . userhasacceptedtermsofservice) accounts
-
-    let lastAdmin = case filter useriscompanyadmin activeAccounts of
-          [admin] -> userid user == userid admin
-          _ -> False
-        lastUser = case activeAccounts of
-          [_] -> True
-          _ -> False
-
-    when (lastAdmin && not (null userInvitations)) $
-      throwError UserNotDeletableDueToPendingUserInvitations
-
-    when (lastAdmin && not lastUser) $
-      throwError UserNotDeletableDueToLastAdminWithUsers
-
-    n <- lift $ runQuery $ sqlSelect "users" $ do
+    => DBQuery m IsUserDeletable (Maybe UserNotDeletableReason) where
+  query (IsUserDeletable user) = do
+    n <- runQuery $ sqlSelect "users" $ do
       sqlWhere "users.deleted IS NULL"
       sqlWhereEq "users.id" $ userid user
       sqlJoinOn "signatory_links" "users.id = signatory_links.user_id"
@@ -229,9 +201,9 @@ instance (MonadDB m, MonadThrow m)
       sqlWhereEq "documents.status" Pending
       sqlResult "documents.id"
       sqlLimit 1
-    when (n /= 0) $ throwError UserNotDeletableDueToPendingDocuments
-
-    return lastUser
+    if n == 0
+      then return Nothing
+      else return $ Just UserNotDeletableDueToPendingDocuments
 
 {-
   @note: There's some shared functionality between `GetUsageStatsOld` and

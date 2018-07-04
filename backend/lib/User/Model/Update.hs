@@ -95,7 +95,8 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool wh
     runQuery_ $ sqlDelete "user_account_requests" $ sqlWhereEq "user_id" uid
     runQuery_ $ sqlDelete "user_callback_scheme"  $ sqlWhereEq "user_id" uid
 
-    -- Give the shared attachments and templates to the oldest admin.
+    -- Give the shared attachments and templates to the oldest admin or user if
+    -- there are no admins left.
     runQuery_ $ sqlSelect "users u" $ do
       sqlResult "u.id"
       -- In either the same user group or a subgroup.
@@ -103,21 +104,20 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool wh
                 "u.user_group_id = ANY (ug.id || ug.parent_group_path)"
       sqlWhereEq "ug.id" $ usergroupid user
       sqlWhereIsNULL "u.deleted"
-      sqlWhere "u.is_company_admin"
       sqlWhereNotEq "u.id" uid
-      sqlOrderBy "has_accepted_terms_of_service"
+      sqlOrderBy "u.is_company_admin DESC, u.has_accepted_terms_of_service ASC"
       sqlLimit 1
-    mAdminID <- fetchMaybe runIdentity
+    mNewOwnerID <- fetchMaybe runIdentity
 
-    case mAdminID of
-      -- Nothing in case it is the last admin. In this particular case, we don't
-      -- care about document ownership as the company and the documents will be
-      -- purged.
+    case mNewOwnerID of
+      -- Nothing in case it is the last user. In this particular case, we don't
+      -- care about document ownership and we leave the documents and
+      -- attachments untouched.
       Nothing -> return ()
-      Just adminID -> do
+      Just newOwnerID -> do
         runQuery_ $ sqlUpdate "signatory_links" $ do
           sqlWith "signatory_link_ids_to_change" . sqlUpdate "documents" $ do
-            sqlSet "author_user_id" (adminID :: UserID)
+            sqlSet "author_user_id" (newOwnerID :: UserID)
             -- Archive search info is simply set to NULL. It will be regenerated
             -- by cron at worst, the next day at midnight.
             sqlSetCmd "archive_search_terms" "NULL"
@@ -126,11 +126,11 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool wh
             sqlWhereEq "author_user_id" uid
             sqlResult "author_id AS id"
 
-          sqlSet "user_id" adminID
+          sqlSet "user_id" newOwnerID
           sqlWhere "id IN (SELECT id FROM signatory_link_ids_to_change)"
 
         runQuery_ $ sqlUpdate "attachments" $ do
-          sqlSet "user_id" adminID
+          sqlSet "user_id" newOwnerID
           sqlWhere "shared"
           sqlWhereEq "user_id" uid
 

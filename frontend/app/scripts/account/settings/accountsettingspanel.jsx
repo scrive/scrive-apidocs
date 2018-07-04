@@ -38,22 +38,13 @@ module.exports = React.createClass({
     var self = this;
     this.state.model.isUserDeletable(function (result) {
       if (result.deletable) {
-        self.setState({
-          showUserDeletionModal: true,
-          lastCompanyUser: result.last_company_user
-        });
+        self.setState({showUserDeletionModal: true});
       } else {
         var line1 = result.reason.message;
         var line2 = "";
         if (result.reason.code == "pending_documents") {
           line1 = localization.account.accountDetails.userNotDeletableDueToPendingDocuments.line1;
           line2 = localization.account.accountDetails.userNotDeletableDueToPendingDocuments.line2;
-        } else if (result.reason.code == "last_admin_with_users") {
-          line1 = localization.account.accountDetails.userNotDeletableDueToLastAdminWithUsers.line1;
-          line2 = localization.account.accountDetails.userNotDeletableDueToLastAdminWithUsers.line2;
-        } else if (result.reason.code == "pending_user_invitations") {
-          line1 = localization.account.accountDetails.userNotDeletableDueToPendingUserInvitations.line1;
-          line2 = localization.account.accountDetails.userNotDeletableDueToPendingUserInvitations.line2;
         }
         var reason = {
           line1: line1,
@@ -130,7 +121,6 @@ module.exports = React.createClass({
           onConfirmation={this.deleteUser}
           model={this.state.model}
           active={this.state.showUserDeletionModal}
-          lastCompanyUser={this.state.lastCompanyUser}
         />
 
         <Modal.InfoBox

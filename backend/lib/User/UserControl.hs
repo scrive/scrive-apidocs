@@ -21,7 +21,6 @@ module User.UserControl(
   , getMonthsStats -- Exported for admin section
 ) where
 
-import Data.Either (isRight)
 import Data.Time.Calendar
 import Data.Time.Clock
 import Log
@@ -214,7 +213,7 @@ getStats statsPartition interval eid = do
     Checks for live documents owned by the user.
 -}
 isUserDeletable :: Kontrakcja m => User -> m Bool
-isUserDeletable = fmap isRight . dbQuery . IsUserDeletable
+isUserDeletable = fmap isNothing . dbQuery . IsUserDeletable
 
 --there must be a better way than all of these weird user create functions
 -- TODO clean up

@@ -9,7 +9,6 @@ module UserGroup.Model (
   , UserGroupGetAllChildren(..)
   , UserGroupsFormCycle(..)
   , UserGroupFilter(..)
-  , UserGroupPurge(..)
   , ugInherited
   , unsafeUserGroupIDToPartnerID
   , minUserGroupIdleDocTimeout
@@ -359,25 +358,3 @@ minUserGroupIdleDocTimeout :: Int16
 minUserGroupIdleDocTimeout = 1
 maxUserGroupIdleDocTimeout :: Int16
 maxUserGroupIdleDocTimeout = 365
-
-data UserGroupPurge = UserGroupPurge
-instance (MonadDB m, MonadTime m) => DBUpdate m UserGroupPurge Int where
-  update UserGroupPurge = do
-    now <- currentTime
-
-    runQuery_ . sqlUpdate "user_groups ug" $ do
-      -- FIXME: Remove PIIs
-      sqlSet "deleted" now
-
-      -- Give a chance to add a user before deleting it.
-      -- FIXME
-
-      -- No existing user left.
-      sqlWhereNotExists . sqlSelect "users u" $ do
-        sqlWhereEq "u.user_group_id" "ug.id"
-        sqlWhereIsNULL "u.deleted"
-
-      -- No existing subgroup left.
-      sqlWhereNotExists . sqlSelect "user_groups sug" $ do
-        sqlWhere "ug.id = ANY (sug.parent_group_path)"
-        sqlWhereIsNULL "sug.deleted"

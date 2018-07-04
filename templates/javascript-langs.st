@@ -1067,14 +1067,6 @@ javascriptLocalisation =
                     line1 : "$_userNotDeletableDueToPendingDocumentsLine1()$"
                   , line2 : "$_userNotDeletableDueToPendingDocumentsLine2()$"
                   }
-              , userNotDeletableDueToLastAdminWithUsers : {
-                    line1 : "$_userNotDeletableDueToLastAdminWithUsersLine1()$"
-                  , line2 : "$_userNotDeletableDueToLastAdminWithUsersLine2()$"
-                  }
-              , userNotDeletableDueToPendingUserInvitations : {
-                    line1 : "$_userNotDeletableDueToPendingUserInvitationsLine1()$"
-                  , line2 : "$_userNotDeletableDueToPendingUserInvitationsLine2()$"
-                  }
               , deleteUser : "$_delete()$"
               , userDeleted : "$_userDeleted()$"
             }

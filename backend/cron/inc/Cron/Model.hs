@@ -40,7 +40,6 @@ import User.Model.Update (SetUserPassword(..))
 import User.Password (PasswordAlgorithm(..), strengthenPassword)
 import User.PasswordReminder (DeleteExpiredPasswordReminders(..))
 import User.UserAccountRequest (expireUserAccountRequests)
-import UserGroup.Model
 import Utils.List
 import qualified CronEnv
 import qualified FileStorage.Amazon as AWS
@@ -68,7 +67,6 @@ data JobType
   | SMSEventsProcessing
   | StrengthenPasswords
   | UserAccountRequestEvaluation
-  | UserGroupsPurge
   | AttachmentsPurge
   deriving (Eq, Ord, Show)
 
@@ -96,7 +94,6 @@ jobTypeMapper = [
   , (UserAccountRequestEvaluation, "user_account_request_evaluation")
   , (DocumentSearchUpdate, "document_search_update")
   , (DocumentsAuthorIDMigration, "document_author_id_job")
-  , (UserGroupsPurge, "user_groups_purge")
   , (AttachmentsPurge, "attachments_purge")
   ]
 
@@ -303,11 +300,6 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
     UserAccountRequestEvaluation -> do
       runDB expireUserAccountRequests
       return . RerunAfter $ ihours 1
-    UserGroupsPurge -> do
-      runDB $ do
-        purgedCount <- dbUpdate UserGroupPurge
-        logInfo "Purged user groups" $ object ["purged" .= purgedCount]
-      return . RerunAfter $ iminutes 10
     AttachmentsPurge -> do
       runDB $ do
         purgedCount <- dbUpdate PurgeAttachments
