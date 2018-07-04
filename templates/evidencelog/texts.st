@@ -470,6 +470,8 @@ $if(sms_pin)$
       $_SignDocumentEvidenceTextSimpleArchiveSMSPin()$
 $elseif(provider_nobankid)$
       $_SignDocumentEvidenceTextSimpleArchiveNOBankID()$
+$elseif(provider_dknemid)$
+      $_SignDocumentEvidenceTextSimpleArchiveDKNemID()$
 $elseif(eleg)$
       $_SignDocumentEvidenceTextSimpleArchiveEleg()$
 $else$
