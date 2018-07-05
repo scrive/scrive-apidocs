@@ -117,6 +117,18 @@ var UserDetailsView = React.createClass({
       this.onChangePasswordSuccess, this.onChangePasswordError
     );
   },
+  onDisableTwoFASuccess: function () {
+    new FlashMessage({type: "success", content: "Disabled"});
+    this.reloadData();
+  },
+  onDisableTwoFAError: function () {
+    new FlashMessage({type: "error", content: "Failed"});
+  },
+  onDisableTwoFA: function () {
+    this.props.viewModel.disableTwoFA().sendAjax(
+      this.onDisableTwoFASuccess, this.onDisableTwoFAError
+    );
+  },
   onSaveComplete: function (resp) {
     if (resp.changed) {
       new FlashMessage({type: "success", content: "Saved"});
@@ -151,6 +163,7 @@ var UserDetailsView = React.createClass({
               companyname={this.props.viewModel.get("companyname")}
               companyid={this.props.viewModel.get("companyid")}
               accountType={this.props.viewModel.get("accountType")}
+              onDisableTwoFA={this.onDisableTwoFA}
               onFieldChange={this.onDetailsEditorFieldChange}
             />
 

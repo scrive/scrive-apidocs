@@ -55,6 +55,7 @@ var DetailsEditorView = React.createClass({
     companyname: React.PropTypes.string.isRequired,
     companyid: React.PropTypes.string.isRequired,
     accountType: React.PropTypes.string.isRequired,
+    onDisableTwoFA: React.PropTypes.func.isRequired,
     onFieldChange: React.PropTypes.func.isRequired
   },
   onFstnameChange: function (event) {
@@ -81,6 +82,9 @@ var DetailsEditorView = React.createClass({
   onAccountTypeChange: function (newAccountType) {
     this.props.onFieldChange("accountType", newAccountType);
   },
+  onDisableTwoFA: function () {
+    this.props.onDisableTwoFA();
+  },
   render: function () {
     var self = this;
 
@@ -102,7 +106,20 @@ var DetailsEditorView = React.createClass({
           <tr>
             <td><label>Two-factor authentication</label></td>
             <td>
-              <p>{this.props.twoFactorActive ? "Active" : "Not active" }</p>
+              {/* if */ this.props.twoFactorActive &&
+                <div>
+                  <p>Active</p>
+                  <a className="user-details-twofa-disable-link"
+                     href="#"
+                     onClick={this.onDisableTwoFA}
+                  >
+                    Disable
+                  </a>
+                </div>
+              }
+              {/* else */ !this.props.twoFactorActive &&
+                <p>Not active</p>
+              }
             </td>
           </tr>
           <tr>

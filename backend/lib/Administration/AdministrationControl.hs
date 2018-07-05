@@ -106,6 +106,7 @@ adminonlyRoutes =
         , dir "useradmin" $ dir "deleteinvite" $ hPost $ toK2 $ handleDeleteInvite
         , dir "useradmin" $ dir "delete" $ hPost $ toK1 $ handleDeleteUser
         , dir "useradmin" $ dir "move" $ hPost $ toK1 $ handleMoveUserToDifferentCompany
+        , dir "useradmin" $ dir "disable2fa" $ hPost $ toK1 $ handleDisable2FAForUser
 
         , dir "useradmin" $ dir "usagestats" $ dir "days" $ hGet $ toK1 handleAdminUserUsageStatsDays
         , dir "useradmin" $ dir "usagestats" $ dir "months" $ hGet $ toK1 handleAdminUserUsageStatsMonths
@@ -311,6 +312,20 @@ handleDeleteUser uid = onlySalesOrAdmin $ do
   _ <- dbUpdate $ DeleteUser uid
   return ()
 
+handleDisable2FAForUser :: Kontrakcja m => UserID -> m ()
+handleDisable2FAForUser uid = onlySalesOrAdmin $ do
+  ctx <- getContext
+  user <- guardJustM $ dbQuery $ GetUserByID uid
+  if usertotpactive user
+     then do
+       r <- dbUpdate $ DisableUserTOTP uid
+       if r
+          then do
+            _ <- dbUpdate $ LogHistoryTOTPDisable uid (get ctxipnumber ctx) (get ctxtime ctx)
+            return ()
+          else
+            internalError
+     else return ()
 
 handleMoveUserToDifferentCompany :: Kontrakcja m => UserID -> m ()
 handleMoveUserToDifferentCompany uid = onlySalesOrAdmin $ do

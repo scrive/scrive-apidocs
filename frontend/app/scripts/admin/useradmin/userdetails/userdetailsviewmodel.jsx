@@ -45,6 +45,12 @@ var UserDetailsViewModel = Backbone.Model.extend({
       companyid: newCompanyid
     });
   },
+  disableTwoFA: function () {
+    return new Submit({
+      url: "/adminonly/useradmin/disable2fa/" + this.get("userId"),
+      method: "POST"
+    });
+  },
   changePassword: function (password) {
     return new Submit({
       url: "/adminonly/useradmin/changepassword/" + this.get("userId"),
