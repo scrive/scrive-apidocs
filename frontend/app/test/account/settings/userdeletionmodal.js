@@ -68,7 +68,7 @@ describe("account/settings/userdeletionmodal", function () {
 
   it("should call onConfirmation when the text is correct", function () {
     var component = renderComponent({ active: true });
-    component.onTextChange({target: {value: model.email()}});
+    component.onTextChange(model.email());
 
     var button = $(".user-deletion-button");
     assert.isFalse(button.hasClass("inactive"));
@@ -80,7 +80,7 @@ describe("account/settings/userdeletionmodal", function () {
   it("should clear the entered text when closed and reopened", function () {
     var component = renderComponent({active: true});
 
-    component.onTextChange({target: {value: "some text"}});
+    component.onTextChange("some text");
     assert.equal(component.state.textEntered, "some text");
 
     component.componentWillReceiveProps({active: false});
