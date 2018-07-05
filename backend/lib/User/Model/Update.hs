@@ -28,6 +28,7 @@ import DB
 import Doc.Data.Document (DocumentSharing(..))
 import Doc.Data.SignatoryField
 import Doc.DocStateData (DocumentStatus(..))
+import IPAddress
 import Log.Identifier
 import User.Data.SignupMethod
 import User.Data.User
@@ -38,6 +39,7 @@ import User.Password
 import User.UserID
 import UserGroup.Data
 import UserGroup.Model
+import Util.HasSomeUserInfo
 
 data AcceptTermsOfService = AcceptTermsOfService UserID UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m AcceptTermsOfService Bool where
@@ -97,46 +99,73 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool wh
 
     -- Give the shared attachments and templates to the oldest admin or user if
     -- there are no admins left.
-    runQuery_ $ sqlSelect "users u" $ do
-      sqlResult "u.id"
+    runQuery_ $ sqlSelect "users" $ do
+      mapM_ sqlResult selectUsersSelectorsList
       -- In either the same user group or a subgroup.
-      sqlJoinOn "user_groups ug"
-                "u.user_group_id = ANY (ug.id || ug.parent_group_path)"
+      sqlJoinOn "user_groups ug" "user_group_id = ug.id"
       sqlWhereEq "ug.id" $ usergroupid user
-      sqlWhereIsNULL "u.deleted"
-      sqlWhereNotEq "u.id" uid
+      sqlWhereIsNULL "deleted"
+      sqlWhereNotEq "id" uid
       sqlOrderBy "u.is_company_admin DESC, u.has_accepted_terms_of_service ASC"
       sqlLimit 1
-    mNewOwnerID <- fetchMaybe runIdentity
+    mNewOwner <- fetchMaybe fetchUser
 
-    case mNewOwnerID of
+    case mNewOwner of
       -- Nothing in case it is the last user. In this particular case, we don't
       -- care about document ownership and we leave the documents and
       -- attachments untouched.
       Nothing -> return ()
-      Just newOwnerID -> do
+      Just newOwner -> do
         runQuery_ $ sqlUpdate "signatory_links" $ do
           sqlWith "signatory_link_ids_to_change" . sqlUpdate "documents" $ do
-            sqlSet "author_user_id" (newOwnerID :: UserID)
-            -- Archive search info is simply set to NULL. It will be regenerated
-            -- by cron at worst, the next day at midnight.
-            sqlSetCmd "archive_search_terms" "NULL"
-            sqlSetCmd "archive_search_fts" "NULL"
+            sqlSet "author_user_id" $ userid newOwner
             sqlWhereEq "sharing" Shared
             sqlWhereEq "author_user_id" uid
             sqlResult "author_id AS id"
 
-          sqlSet "user_id" newOwnerID
+          let sqlFieldToChange =
+                sqlWhere "signatory_link_id IN\
+                         \ (SELECT id FROM signatory_link_ids_to_change)"
+
+          sqlWith "_updated_firstnames" . sqlUpdate "signatory_link_fields" $ do
+            sqlSet "value_text" $ getFirstName newOwner
+            sqlWhereEq "type" NameFT
+            sqlWhereEq "name_order" (1 :: Int)
+            sqlFieldToChange
+
+          sqlWith "_updated_lastnames" . sqlUpdate "signatory_link_fields" $ do
+            sqlSet "value_text" $ getLastName newOwner
+            sqlWhereEq "type" NameFT
+            sqlWhereEq "name_order" (2 :: Int)
+            sqlFieldToChange
+
+          sqlWith "_updated_emails" . sqlUpdate "signatory_link_fields" $ do
+            sqlSet "value_text" $ getEmail newOwner
+            sqlWhereEq "type" EmailFT
+            sqlFieldToChange
+
+          sqlWith "_updated_mobiles" . sqlUpdate "signatory_link_fields" $ do
+            sqlSet "value_text" $ getMobile newOwner
+            sqlWhereEq "type" MobileFT
+            sqlFieldToChange
+
+          sqlWith "_updated_personal_numbers"
+              . sqlUpdate "signatory_link_fields" $ do
+            sqlSet "value_text" $ getPersonalNumber newOwner
+            sqlWhereEq "type" PersonalNumberFT
+            sqlFieldToChange
+
+          sqlSet "user_id" $ userid newOwner
           sqlWhere "id IN (SELECT id FROM signatory_link_ids_to_change)"
 
         runQuery_ $ sqlUpdate "attachments" $ do
-          sqlSet "user_id" newOwnerID
+          sqlSet "user_id" $ userid newOwner
           sqlWhere "shared"
           sqlWhereEq "user_id" uid
 
     runQuery_ $ sqlUpdate "users_history" $ do
       sqlSet "event_data" (Nothing :: Maybe String)
-      sqlSet "ip" (0 :: Int)
+      sqlSet "ip" noIP
       sqlWhereEq "user_id" uid
 
     runQuery01 $ sqlUpdate "users" $ do

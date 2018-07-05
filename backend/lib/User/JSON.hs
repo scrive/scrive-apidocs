@@ -1,13 +1,17 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE ExtendedDefaultRules #-}
+
 module User.JSON (
     userJSON,
     companyJSON,
     subscriptionJSON,
     userStatsToJSON,
     companyStatsToJSON,
-    paymentPlanFromText
+    paymentPlanFromText,
+    userNotDeletableReasonToString
     ) where
 
+import Data.String (IsString(..))
 import Text.JSON
 import Text.JSON.Gen
 import Text.StringTemplate.GenericStandard ()
@@ -119,3 +123,18 @@ companyStatsToJSON formatTime textName uuss = runJSONGen . objects "stats" . for
     uussGrouped = groupBy sameTimeWindow uuss
       where
         sameTimeWindow u1 u2 = uusTimeWindowStart u1 == uusTimeWindowStart u2
+
+instance ToJSValue UserNotDeletableReason where
+  toJSValue reason =
+    let code = case reason of
+          UserNotDeletableDueToPendingDocuments -> "pending_documents"
+        msg = userNotDeletableReasonToString reason
+    in JSObject $ toJSObject
+         [ ("code",    JSString $ toJSString code)
+         , ("message", JSString $ toJSString msg)
+         ]
+
+userNotDeletableReasonToString :: IsString s => UserNotDeletableReason -> s
+userNotDeletableReasonToString = fromString . \case
+  UserNotDeletableDueToPendingDocuments ->
+    "Can't delete a user with pending documents."

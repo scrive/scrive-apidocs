@@ -44,18 +44,12 @@ userAPITests env = testGroup "UserAPI"
 
   , testThat "Test User API Don't delete a user if the email is wrong"
              env testUserNoDeletionIfWrongEmail
-  , testThat "Test User API Don't delete the last admin if there are still\
-             \ users in the company"
-             env testUserNoDeletionIfLastAdminWithUsers
   , testThat "Test User API Don't delete a user if she has pending documents"
              env testUserNoDeletionIfPendingDocuments
-  , testThat "Test User API Don't delete the last admin if there are user\
-             \ invitations"
-             env testUserNoDeletionIfPendingUserInvitations
   , testThat "Test User API Delete a user if there is nothing preventing it"
              env testUserDeletion
   , testThat "Test User API Delete a user and give the shared\
-             \ attachments/templates to the oldest admin"
+             \ attachments/templates to the oldest admin or user"
              env testUserDeletionOwnershipTransfer
   ]
 
@@ -215,43 +209,6 @@ testUserNoDeletionIfWrongEmail = do
     assertEqual "can delete if the email is correct"
                 200 (rsCode res)
 
-testUserNoDeletionIfLastAdminWithUsers :: TestEnv ()
-testUserNoDeletionIfLastAdminWithUsers = do
-  (anna, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
-  Just bob   <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (get ugID ug)
-  Just alice <- addNewCompanyUser "Alice" "Red" "alice@red.com" (get ugID ug)
-
-  now <- currentTime
-  _ <- dbUpdate $ AcceptTermsOfService (userid anna) now
-  _ <- dbUpdate $ AcceptTermsOfService (userid bob)   now
-  _ <- dbUpdate $ AcceptTermsOfService (userid alice) now
-
-  annaCtx  <- set ctxmaybeuser (Just anna)  <$> mkContext def
-  bobCtx   <- set ctxmaybeuser (Just bob)   <$> mkContext def
-  aliceCtx <- set ctxmaybeuser (Just alice) <$> mkContext def
-
-  do
-    req <- mkRequest POST [("email", inText "anna@android.com")]
-    (res, _) <- runTestKontra req annaCtx apiCallDeleteUser
-    assertEqual "can't delete last company admin with some user left"
-                409 (rsCode res)
-
-  do
-    _ <- dbUpdate $ SetUserCompanyAdmin (userid bob) True
-    req <- mkRequest POST [("email", inText "anna@android.com")]
-    (res, _) <- runTestKontra req annaCtx apiCallDeleteUser
-    assertEqual "can delete admin if not the last one" 200 (rsCode res)
-
-  do
-    req <- mkRequest POST [("email", inText "alice@red.com")]
-    (res, _) <- runTestKontra req aliceCtx apiCallDeleteUser
-    assertEqual "can delete non-admin user" 200 (rsCode res)
-
-  do
-    req <- mkRequest POST [("email", inText "bob@blue.com")]
-    (res, _) <- runTestKontra req bobCtx apiCallDeleteUser
-    assertEqual "can delete admin if last user" 200 (rsCode res)
-
 testUserNoDeletionIfPendingDocuments :: TestEnv ()
 testUserNoDeletionIfPendingDocuments = do
   (anna, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
@@ -277,37 +234,6 @@ testUserNoDeletionIfPendingDocuments = do
     req <- mkRequest POST [("email", inText "bob@blue.com")]
     (res, _) <- runTestKontra req ctx apiCallDeleteUser
     assertEqual "can delete once pending documents are aborted" 200 (rsCode res)
-
-testUserNoDeletionIfPendingUserInvitations :: TestEnv ()
-testUserNoDeletionIfPendingUserInvitations = do
-  (anna, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
-  now <- currentTime
-  _ <- dbUpdate $ AcceptTermsOfService (userid anna) now
-
-  Just bob <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (get ugID ug)
-
-  ctx <- set ctxmaybeuser (Just anna) <$> mkContext def
-
-  do
-    req <- mkRequest POST [("email", inText "anna@android.com")]
-    (res, _) <- runTestKontra req ctx apiCallDeleteUser
-    assertEqual "can't delete last company admin with pending user invitation\
-                \ for user" 409 (rsCode res)
-
-  _ <- dbUpdate $ SetUserCompanyAdmin (userid bob) True
-
-  do
-    req <- mkRequest POST [("email", inText "anna@android.com")]
-    (res, _) <- runTestKontra req ctx apiCallDeleteUser
-    assertEqual "can't delete last company admin with pending user invitation\
-                \ for admin" 409 (rsCode res)
-
-  _ <- dbUpdate $ DeleteUser $ userid bob
-
-  do
-    req <- mkRequest POST [("email", inText "anna@android.com")]
-    (res, _) <- runTestKontra req ctx apiCallDeleteUser
-    assertEqual "can delete admin if not the last one" 200 (rsCode res)
 
 testUserDeletion :: TestEnv ()
 testUserDeletion = do

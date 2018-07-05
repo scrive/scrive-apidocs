@@ -34,6 +34,7 @@ import DB
 import FeatureFlags.Model
 import Happstack.Fields
 import InputValidation
+import IPAddress
 import Kontra
 import KontraLink
 import Log.Identifier
@@ -515,6 +516,6 @@ apiCallDeleteUser = V2.api $ do
     Nothing -> return ()
 
   _ <- dbUpdate $ DeleteUser (userid user)
-  _ <- dbUpdate $ LogHistoryAccountDeleted (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
+  _ <- dbUpdate $ LogHistoryAccountDeleted (userid user) noIP (get ctxtime ctx)
 
   return $ V2.Ok ()

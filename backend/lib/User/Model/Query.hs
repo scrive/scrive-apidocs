@@ -14,16 +14,12 @@ module User.Model.Query (
   , UserGroupGetUsers(..)
   , UserGroupGetUsersIncludeDeleted(..)
   , UserNotDeletableReason(..)
-  , userNotDeletableReasonToString
   ) where
 
 import Control.Monad.Catch
 import Control.Monad.State (MonadState)
 import Data.Char
 import Data.Int
-import Data.String (IsString(..))
-import Text.JSON
-import Text.JSON.ToJSValue
 import qualified Data.Text as T
 
 import Chargeable.Model
@@ -171,21 +167,6 @@ instance MonadDB m => DBQuery m GetUserGroupAdmins [User] where
 data UserNotDeletableReason
   = UserNotDeletableDueToPendingDocuments
   deriving Show
-
-instance ToJSValue UserNotDeletableReason where
-  toJSValue reason =
-    let code = case reason of
-          UserNotDeletableDueToPendingDocuments -> "pending_documents"
-        msg = userNotDeletableReasonToString reason
-    in JSObject $ toJSObject
-         [ ("code",    JSString $ toJSString code)
-         , ("message", JSString $ toJSString msg)
-         ]
-
-userNotDeletableReasonToString :: IsString s => UserNotDeletableReason -> s
-userNotDeletableReasonToString = fromString . \case
-  UserNotDeletableDueToPendingDocuments ->
-    "Can't delete a user with pending documents."
 
 -- | Check if a user can be deleted giving the reason if it can't.
 data IsUserDeletable = IsUserDeletable User

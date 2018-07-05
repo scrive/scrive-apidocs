@@ -1057,7 +1057,6 @@ javascriptLocalisation =
               , userDeletionModalTitle : "$_userDeletionModalTitle()$"
               , userDeletionModalMessage : {
                     line1 : "$_userDeletionModalMessageLine1()$"
-                  , line1last : "$_userDeletionModalMessageLine1Last()$"
                   , line2 : "$_userDeletionModalMessageLine2()$"
                   , line3 : "$_userDeletionModalMessageLine3()$"
                   , line4 : "$_userDeletionModalMessageLine4()$"

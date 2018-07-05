@@ -3,6 +3,7 @@ import Button from "../../common/button";
 import Modal from "../../common/modal";
 import classNames from "classnames";
 import HtmlTextWithSubstitution from "../../common/htmltextwithsubstitution";
+import InfoTextInput from "../../common/infotextinput";
 
 module.exports = React.createClass({
   propTypes: {
@@ -24,8 +25,8 @@ module.exports = React.createClass({
     }
   },
 
-  onTextChange: function (event) {
-    this.setState({textEntered: event.target.value});
+  onTextChange: function (value) {
+    this.setState({textEntered: value});
   },
 
   correctText: function () {
@@ -94,9 +95,10 @@ module.exports = React.createClass({
               />
             </p>
           </div>
-          <input
-            type="text"
+          <InfoTextInput
             value={this.state.textEntered}
+            infotext={this.correctText()}
+            focus={true}
             onChange={this.onTextChange}
           />
         </Modal.Content>

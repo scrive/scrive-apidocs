@@ -105,15 +105,14 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeAttachments Int where
       sqlSet "mtime" now
       sqlSet "deleted" True
       sqlJoinOn "users u" "u.id = a.user_id"
-      sqlJoinOn "companies c" "c.id = u.company_id"
-      sqlWhere "c.deleted OR (u.deleted IS NOT NULL AND NOT a.shared)"
+      sqlJoinOn "user_groups ug" "u.user_group_id = ug.id"
+      sqlWhere "ug.deleted OR (u.deleted IS NOT NULL AND NOT a.shared)"
       sqlWhereEq "a.deleted" False
 
 data AttachmentFilter
   = AttachmentFilterByString T.Text           -- ^ Contains the string in title, list of people involved or anywhere
   | AttachmentFilterByID AttachmentID         -- ^ Attachments with IDs on the list
   | AttachmentFilterByFileID FileID           -- ^ Attachments with IDs on the list
-  | AttachmentFilterByShared Bool             -- ^ Attachments which are (not) shared
   deriving Eq
 
 sqlWhereAttachmentFilter :: (MonadState v m, SqlWhere v) =>
@@ -124,8 +123,6 @@ sqlWhereAttachmentFilter (AttachmentFilterByID aid) =
   sqlWhereEq "attachments.id" aid
 sqlWhereAttachmentFilter (AttachmentFilterByFileID fileid) =
   sqlWhereEq "attachments.file_id" fileid
-sqlWhereAttachmentFilter (AttachmentFilterByShared shared) =
-  sqlWhereEq "attachments.shared" shared
 
 data AttachmentDomain
   = AttachmentsOfAuthorDeleteValue UserID Bool   -- ^ Attachments of user, with deleted flag

@@ -182,11 +182,7 @@ module.exports = Backbone.Model.extend({
       method: "POST",
       url: "/api/frontend/updateprofile",
       ajax: true,
-      ajaxsuccess: function () {
-        if (callback != undefined) {
-          callback();
-        }
-      },
+      ajaxsuccess: callback,
       fstname: this.fstname(),
       sndname: this.sndname(),
       personalnumber: this.personnumber(),
@@ -208,16 +204,8 @@ module.exports = Backbone.Model.extend({
       method: "POST",
       url: "/api/frontend/deleteuser",
       ajax: true,
-      ajaxsuccess: function () {
-        if (success != undefined) {
-          success();
-        }
-      },
-      ajaxerror: function (resp) {
-        if (error != undefined) {
-          error(resp);
-        }
-      },
+      ajaxsuccess: success,
+      ajaxerror: error,
       email: email
     }).send();
   },
@@ -227,11 +215,7 @@ module.exports = Backbone.Model.extend({
       method: "POST",
       url: "/api/frontend/isuserdeletable",
       ajax: true,
-      ajaxsuccess: function (resp) {
-        if (callback != undefined) {
-          callback(resp);
-        }
-      }
+      ajaxsuccess: callback
     }).send();
   },
 
