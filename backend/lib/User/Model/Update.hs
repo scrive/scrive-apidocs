@@ -99,13 +99,13 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool wh
 
     -- Give the shared attachments and templates to the oldest admin or user if
     -- there are no admins left.
-    runQuery_ $ sqlSelect "users" $ do
-      mapM_ sqlResult selectUsersSelectorsList
+    runQuery_ $ sqlSelect "users u" $ do
+      mapM_ (sqlResult . ("u." <>)) selectUsersSelectorsList
       -- In either the same user group or a subgroup.
-      sqlJoinOn "user_groups ug" "user_group_id = ug.id"
+      sqlJoinOn "user_groups ug" "u.user_group_id = ug.id"
       sqlWhereEq "ug.id" $ usergroupid user
-      sqlWhereIsNULL "deleted"
-      sqlWhereNotEq "id" uid
+      sqlWhereIsNULL "u.deleted"
+      sqlWhereNotEq "u.id" uid
       sqlOrderBy "u.is_company_admin DESC, u.has_accepted_terms_of_service ASC"
       sqlLimit 1
     mNewOwner <- fetchMaybe fetchUser
