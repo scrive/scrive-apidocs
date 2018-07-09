@@ -79,7 +79,9 @@ testDocApiV2SigSendSmsPin = do
   let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
 
-  let updateDoc = mockDocToInput $ setMockDocSigLinkAuthToSignMethod 1 SMSPinAuthenticationToSign mockDoc
+  let updateDoc = mockDocToInput $ setMockDocSigLinkAuthToSignMethod 1 SMSPinAuthenticationToSign
+                                 $ setMockDocSigLinkStandardField 1 "mobile" "+46123456789"
+                                 $ mockDoc
   _update <- mockDocTestRequestHelper ctx POST [("document", updateDoc)] (docApiV2Update did) 200
 
   _start <- mockDocTestRequestHelper ctx POST [] (docApiV2Start did) 200

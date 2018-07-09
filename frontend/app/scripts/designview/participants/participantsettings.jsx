@@ -1,3 +1,4 @@
+var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var React = require("react");
 var Select = require("../../common/select");
 var Track = require("../../common/track");
@@ -239,7 +240,11 @@ module.exports = React.createClass({
                 sig.setAuthenticationToView(v);
               }}
               onClickWhenInactive={function () {
-                self.refs.blockingModal.openContactUsModal();
+                if (sig.signs()) {
+                  self.refs.blockingModal.openContactUsModal();
+                } else {
+                  new FlashMessage({type: "error", content: localization.designview.viewerCantHaveAuthorisation});
+                }
               }}
             />
           </span>
@@ -287,7 +292,11 @@ module.exports = React.createClass({
                 sig.setAuthenticationToSign(v);
               }}
               onClickWhenInactive={function () {
-                self.refs.blockingModal.openContactUsModal();
+                if (sig.signs()) {
+                  self.refs.blockingModal.openContactUsModal();
+                } else {
+                  new FlashMessage({type: "error", content: localization.designview.viewerCantHaveAuthorisation});
+                }
               }}
             />
           </span>

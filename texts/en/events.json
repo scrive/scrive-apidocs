@@ -74,6 +74,7 @@
 "_ReviewReminderSendSMSLogWithText":"Scrive eSign sent a reminder to review via SMS to $signatory$ at the request of the user $actor$. The reminder message from the user $actor$ was: <BR/> <i>$text$</i>.",
 "_SMSPinDeliveredEvidenceText":"The SMS with the PIN was delivered to $text$ for $signatory$ to use for authentication.",
 "_SMSPinSendEvidenceText":"An SMS with a PIN was sent to $text$ for $signatory$ to use for authentication.",
+"_SignDocumentEvidenceTextSimpleArchiveDKNemID":"Signed the document using Danish NemID as authentication method.",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Signed the document using Swedish BankID as authentication method.",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"Signed the document using Norwegian BankID as authentication method.",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"The document was signed using PIN by SMS as authentication method.",

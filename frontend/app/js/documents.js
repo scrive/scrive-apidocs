@@ -232,22 +232,29 @@ var Document = exports.Document = Backbone.Model.extend({
         $("body").addClass("screenshot");
         takeScreenshot(
             function(canvas) {
+                var trackError = function (e) {
+                  Track.track("Take screenshot failed",
+                              {"Reason": "Canvas exception",
+                               "Exception": e,
+                               "Browser": $.browser.name,
+                               "Browser version": $.browser.version,
+                               "Platform": $.browser.platform});
+                };
                 try {
-                  var shot = { "time" : new Date().toISOString(),
-                             "image": canvas.toDataURL("image/png") };
-                  if (first)
+                  var shot = {"time" : new Date().toISOString(),
+                              "image": canvas.toDataURL("image/png")};
+                  if (shot.image !== "data:,") {
+                    if (first) {
                       document.get("screenshots").first = shot;
-                  else
+                    } else {
                       document.get("screenshots").signing = shot;
+                    }
+                  } else {
+                    trackError("Blank screenshot");
+                  }
                 } catch(e) {
                   // Some old browsers can throw exception here. We need to catch it, to execute callDone later.
-                  Track.track('Take screenshot failed',{
-                    'Reason': "Canvas exception",
-                    'Exception': e,
-                    'Browser': $.browser.name,
-                    'Browser version': $.browser.version,
-                    'Platform': $.browser.platform
-                  });
+                  trackError(e);
                 }
                 callDone();
             },

@@ -74,6 +74,7 @@
 "_ReviewReminderSendSMSLogWithText":"„Scrive eSign“ SMS žinute, naudotojo $actor$ prašymu, $signatory$ išsiuntė priminimą peržiūrėti. Naudotojo $actor$ pranešimo žinutė tokia: <BR/> <i>$text$</i>.",
 "_SMSPinDeliveredEvidenceText":"Autentifikuoti $signatory$ į $text$ buvo nusiųsta SMS žinutė su PIN.",
 "_SMSPinSendEvidenceText":"Autentifikuoti $signatory$ į $text$ buvo išsiųsta SMS žinutė su PIN.",
+"_SignDocumentEvidenceTextSimpleArchiveDKNemID":"",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Pasirašė dokumentą per Švedijos „BankID“ autentifikavimo sistemą.",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Dokumentas pasirašytas autentifikuojant PIN arba SMS žinute.",

@@ -260,10 +260,10 @@ guardThatDocumentCanBeStarted doc = do
       EmailAndMobileConfirmationDelivery -> (null (getEmail sl) || isGood (asValidEmail $ getEmail sl)) && (null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl))
       NoConfirmationDelivery -> True
     signatoryHasValidAuthSettings sl = authToSignIsValid sl
-    authToSignIsValid sl = null (getPersonalNumber sl) || case signatorylinkauthenticationtosignmethod sl of
-      SEBankIDAuthenticationToSign -> isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl
-      NOBankIDAuthenticationToSign -> isGood $ asValidNOBankIdPersonalNumber $ getPersonalNumber sl
-      DKNemIDAuthenticationToSign  -> isGood $ asValidDanishSSN $ getPersonalNumber sl
+    authToSignIsValid sl = case signatorylinkauthenticationtosignmethod sl of
+      SEBankIDAuthenticationToSign -> null (getPersonalNumber sl) || (isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl)
+      NOBankIDAuthenticationToSign -> null (getPersonalNumber sl) || (isGood $ asValidNOBankIdPersonalNumber $ getPersonalNumber sl)
+      DKNemIDAuthenticationToSign  -> null (getPersonalNumber sl) || (isGood $ asValidDanishSSN $ getPersonalNumber sl)
       SMSPinAuthenticationToSign -> isJust (getFieldByIdentity MobileFI $ signatoryfields sl) && (null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl))
       StandardAuthenticationToSign -> True
     signatoryHasValidSSNForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of

@@ -74,6 +74,7 @@
 "_ReviewReminderSendSMSLogWithText":"O Scrive eSign enviou um lembrete para rever o documento para $signatory$ utilizando SMS, a pedido do utilizador $actor$. A mensagem de lembrete do utilizador $actor$ foi a seguinte: <BR/> <i>$text$</i>.",
 "_SMSPinDeliveredEvidenceText":"O SMS com o PIN foi entregue a $text$ para uso por $signatory$ para fins de autenticação.",
 "_SMSPinSendEvidenceText":"Um SMS com um PIN foi enviado para $text$ para uso por $signatory$ para fins de autenticação.",
+"_SignDocumentEvidenceTextSimpleArchiveDKNemID":"",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"O documento foi assinado utilizando o BankID sueco como método de autenticação.",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"O documento foi assinado utilizando o PIN por SMS como método de autenticação.",

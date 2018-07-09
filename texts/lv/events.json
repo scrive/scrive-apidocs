@@ -74,6 +74,7 @@
 "_ReviewReminderSendSMSLogWithText":"Scrive eSign lietotāja $actor$ vārdā īsziņā nosūtīja $signatory$ atgādinājumu pārskatīt dokumentu. Atgādinājumā no lietotāja $actor$ bija rakstīts: <BR/> <i>$text$</i>.",
 "_SMSPinDeliveredEvidenceText":"$signatory$ īsziņā uz $text$ tika piegādāts PIN kods, kas jāizmanto autentifikācijā.",
 "_SMSPinSendEvidenceText":"$signatory$ īsziņā uz $text$ tika nosūtīts viens PIN kods, kas jāizmanto autentifikācijā.",
+"_SignDocumentEvidenceTextSimpleArchiveDKNemID":"",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Parakstīja dokumentu, autentifikācijai izmantojot Zviedrijas BankID.",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Parakstīja dokumentu, autentifikācijai izmantojot īsziņā nosūtīto PIN kodu.",

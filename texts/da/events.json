@@ -74,6 +74,7 @@
 "_ReviewReminderSendSMSLogWithText":"Scrive eSign sendte en påmindelse om at gennemse via SMS til $signatory$ på forespørgsel af brugeren $actor$. Beskeden vedrørende påmindelsen fra brugeren $actor$ lød: <BR/> <i>$text$</i>.",
 "_SMSPinDeliveredEvidenceText":"",
 "_SMSPinSendEvidenceText":"",
+"_SignDocumentEvidenceTextSimpleArchiveDKNemID":"",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Dokumentet blev signeret ved at anvende Swedish BankID som godkendelsesmetode.",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"",

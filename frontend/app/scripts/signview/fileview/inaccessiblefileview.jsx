@@ -1,5 +1,6 @@
 import Backbone from "backbone";
 import React from "react";
+import $ from "jquery";
 import classNames from "classnames";
 import {Document} from "../../../js/documents.js";
 import HtmlTextWithSubstitution from "../../common/htmltextwithsubstitution";
@@ -14,6 +15,24 @@ module.exports = React.createClass({
   },
 
   mixins: [React.addons.PureRenderMixin],
+
+  componentWillMount: function () {
+    $(window).on("resize", this.handleResize);
+  },
+
+  componentWillUnmount: function () {
+    $(window).off("resize", this.handleResize);
+    clearTimeout(this.resizeTimeout);
+  },
+
+  handleResize: function () {
+    const self = this;
+    clearTimeout(self.resizeTimeout);
+    self.resizeTimeout = setTimeout(function () {
+      // wait a bit, so window width is updated after orientation change in wkwebview
+      self.forceUpdate();
+    }, 100);
+  },
 
   statusText: function () {
     const doc = this.context.document;
@@ -35,7 +54,7 @@ module.exports = React.createClass({
     const doc = this.context.document;
 
     const authorNameText = doc.author().name() || localization.docsignview.controlsStatus.authornamePlaceholder;
-    const width = vars.signviewLargeView;
+    const width = ($.windowWidth() < vars.signviewLargeView) ? $.windowWidth() : vars.signviewLargeView;
 
     return (
       <div>

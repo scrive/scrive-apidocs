@@ -74,6 +74,7 @@
 "_ReviewReminderSendSMSLogWithText":"Scrive eSign sendte en påminnelse om å lese gjennom via SMS til $signatory$ etter en forespørsel fra brukeren $actor$. Påminnelsesmeldingen fra brukeren $actor$ var: <BR/> <i>$text$</i>.",
 "_SMSPinDeliveredEvidenceText":"SMS-en med PIN-koden ble levert til $text$ for å brukes som autentisering av $signatory$.",
 "_SMSPinSendEvidenceText":"En SMS med en PIN-kode ble sendt til $text$ for å brukes som autentisering av $signatory$.",
+"_SignDocumentEvidenceTextSimpleArchiveDKNemID":"",
 "_SignDocumentEvidenceTextSimpleArchiveEleg":"Signerte dokumentet ved å bruke en svensk BankID som autentifiseringsmetode.",
 "_SignDocumentEvidenceTextSimpleArchiveNOBankID":"",
 "_SignDocumentEvidenceTextSimpleArchiveSMSPin":"Dokumentet ble signert med PIN-kode fra SMS som autentiseringsmetode.",
