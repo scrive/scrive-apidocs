@@ -1,4 +1,3 @@
-
 (function (window) {
 
 window.CallSelector = Backbone.View.extend({
@@ -21,6 +20,7 @@ window.CallSelector = Backbone.View.extend({
     var draftsCalls = _.filter(availableCalls, function (c) { return c.hasCategory("draft"); });
     var signingCalls = _.filter(availableCalls, function (c) { return c.hasCategory("signing"); });
     var otherCalls = _.filter(availableCalls, function (c) { return c.hasCategory("other"); });
+    var attachmentCalls = _.filter(availableCalls, function (c) { return c.hasCategory("attachment"); });
 
     select.append("<option disabled>-- Most common calls --</option>");
     _.each(mainCalls, function (c) {
@@ -56,6 +56,14 @@ window.CallSelector = Backbone.View.extend({
 
     select.append("<option disabled>-- Other --</option>");
     _.each(otherCalls, function (c) {
+      select.append(
+        $("<option value='" + c.cid + "'>" + c.name() + "</option>")
+          .attr("selected", !c.hasCategory("main") && model.selectedApiCall().callPrototype() == c)
+        );
+    });
+
+    select.append("<option disabled>-- Attachments --</option>");
+    _.each(attachmentCalls, function (c) {
       select.append(
         $("<option value='" + c.cid + "'>" + c.name() + "</option>")
           .attr("selected", !c.hasCategory("main") && model.selectedApiCall().callPrototype() == c)

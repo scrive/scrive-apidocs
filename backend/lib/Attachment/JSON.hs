@@ -1,10 +1,8 @@
-
 module Attachment.JSON
   ( unjsonAttachments
   , unjsonAttachmentSorting
   , unjsonAttachmentFiltering
-  )
-where
+  ) where
 
 import Data.Unjson
 import qualified Data.Text as T
@@ -27,11 +25,10 @@ unjsonAttachment =  objectOf $
   <*   (fieldReadonly "shared" attachmentshared "Is attachment shared")
   <*   (fieldReadonly "file" attachmentfile "Is attachment shared")
 
-
 unjsonAttachmentSorting :: UnjsonDef [AscDesc AttachmentOrderBy]
 unjsonAttachmentSorting = arrayOf $ objectOf $ pure (\f v -> (order f) v)
     <*> field "order" askDesc "Sorting value"
-    <*> fieldBy "sort_by" sorting "Ask/Desc"  (unjsonEnumBy "Order" [ (AttachmentOrderByTitle, ("title" :: T.Text)), (AttachmentOrderByMTime, ("time" :: T.Text))])
+    <*> fieldBy "sort_by" sorting "Asc/Desc" (unjsonEnumBy "Order" [ (AttachmentOrderByTitle, ("title" :: T.Text)), (AttachmentOrderByMTime, ("time" :: T.Text))])
   where
     order :: T.Text -> (a -> AscDesc a)
     order "ascending" = Asc
@@ -41,7 +38,6 @@ unjsonAttachmentSorting = arrayOf $ objectOf $ pure (\f v -> (order f) v)
     askDesc (Desc _) = "descending"
     sorting (Asc o) = o
     sorting (Desc o) = o
-
 
 unjsonAttachmentFiltering :: UnjsonDef [AttachmentFilter]
 unjsonAttachmentFiltering =  arrayOf $ objectOf $ pure AttachmentFilterByString

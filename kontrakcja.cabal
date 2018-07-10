@@ -95,8 +95,8 @@ Library
                  , AppView
                  , Archive.Control
                  , Archive.View
+                 , Attachment.API
                  , Attachment.AttachmentID
-                 , Attachment.Control
                  , Attachment.JSON
                  , Attachment.Model
                  , Attachment.Tables
@@ -1208,6 +1208,7 @@ Test-suite kontrakcja-test
                  AppDBMigrations
                  AppDBTables
                  ArchiveTest
+                 Attachment.APITest
                  Attachment.Tables
                  BrandedDomain.Tables
                  BrandedDomain.Migrations

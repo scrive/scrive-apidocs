@@ -105,7 +105,7 @@ module.exports = React.createClass({
       );
 
       new Submit({
-        url: "/api/v2/documents/templates/setsharing",
+        url: "/api/frontend/documents/templates/setsharing",
         method: "POST",
         document_ids: JSON.stringify(templateIds),
         shared: self.noneAreShared(templates),

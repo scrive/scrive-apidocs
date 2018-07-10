@@ -33,7 +33,7 @@ data Attachment = Attachment
   , attachmentuser    :: UserID
   , attachmentshared  :: Bool
   , attachmentdeleted :: Bool
-  }
+  } deriving (Eq, Show)
 
 instance Default Attachment where
   def = Attachment {

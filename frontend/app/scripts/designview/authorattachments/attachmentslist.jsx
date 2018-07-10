@@ -21,7 +21,7 @@ var DesignAuthorAttachment = require("./designviewattachment");
         var self = this;
         return (
           <List.List
-            url="/a?domain=All"
+            url="/api/frontend/attachments/list?domain=All"
             dataFetcher={function (d) { return d.attachments; }}
             idFetcher={function (d) { return d.field("id"); }}
             ref='list'

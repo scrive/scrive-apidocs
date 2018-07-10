@@ -55,7 +55,7 @@ module.exports = React.createClass({
       };
     },
     attachmentDownloadLink : function(d) {
-      return "/a/download/"+ d.field("id") + "/" + d.field("title") +".pdf";
+      return "/api/frontend/attachments/"+ d.field("id") + "/download/" + d.field("title") +".pdf";
     },
     openShareModal: function(selected) {
       this.setState({
@@ -73,11 +73,18 @@ module.exports = React.createClass({
     },
     onShareModalAccept: function () {
       var self = this;
+      var attachmentIds = _.map(
+        this.state.attachmentsToShare,
+        function (attid) {
+          return attid.toString();
+        }
+      );
 
       new Submit({
-        url: "/a/share",
+        url: "/api/frontend/attachments/setsharing",
         method: "POST",
-        attachmentids: "[" + this.state.attachmentsToShare + "]",
+        attachment_ids: JSON.stringify(attachmentIds),
+        shared: true,
         ajaxsuccess : function() {
           new FlashMessage({
             type: "success",
@@ -103,14 +110,14 @@ module.exports = React.createClass({
       var attachmentIds = _.map(
         this.state.attachmentsToRemove,
         function (doc) {
-          return doc.field("id");
+          return doc.field("id").toString();
         }
       );
 
       new Submit({
-        url: "/a/delete",
+        url: "/api/frontend/attachments/delete",
         method: "POST",
-        attachmentids: "[" + attachmentIds + "]",
+        attachment_ids: JSON.stringify(attachmentIds),
         ajaxsuccess : function() {
           new FlashMessage({
             type: "success",
@@ -127,7 +134,7 @@ module.exports = React.createClass({
       return (
         <div>
           <List.List
-            url='/a'
+            url='/api/frontend/attachments/list'
             dataFetcher={function(d) {return d.attachments;}}
             idFetcher={function(d) {return d.field("id");}}
             paramsFunction = {function(text,_selectfiltering,sorting) {
@@ -160,19 +167,18 @@ module.exports = React.createClass({
            <List.ListAction
               component={function(model) {
                 return (<UploadButton
-                  name="doc"
+                  name="file"
                   text={localization.archive.attachments.createnew.action}
                   className="float-left actionButton"
                   onUploadComplete={function(input) {
-                          new Submit({
-                          method : "POST",
-                          url : "/a",
-                          ajaxsuccess : function() {self.reload();},
-                          ajaxerror : function() {
-                            new FlashMessage({type: 'error', content: localization.couldNotUpload});
-                          }
-                          }).addInputs($(input)).sendAjax();
-
+                    new Submit({
+                      method: "POST",
+                      url: "/api/frontend/attachments/new",
+                      ajaxsuccess: function() {self.reload();},
+                      ajaxerror: function() {
+                        new FlashMessage({type: 'error', content: localization.couldNotUpload});
+                      }
+                    }).addInputs($(input)).sendAjax();
                   }}
                 />);
               }}

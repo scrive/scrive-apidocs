@@ -10,6 +10,7 @@ import Happstack.StaticRouting (Route, choice, dir, remainingPath)
 
 import API.V2 (noAPIV2CallFoundHandler)
 import AppView
+import Attachment.API
 import Doc.API
 import Happstack.Server.ReqHandler
 import Kontra
@@ -27,7 +28,6 @@ import User.API
 import User.APILog.API
 import qualified Administration.AdministrationControl as Administration
 import qualified Archive.Control as ArchiveControl
-import qualified Attachment.Control as AttachmentControl
 import qualified Branding.Control as Branding
 import qualified Company.CompanyControl as Company
 import qualified Doc.DocControl as DocControl
@@ -78,13 +78,6 @@ staticRoutes production = choice
      -- Simple sending
      , allLangDirs $ dir "to-start" $ hGet $ toK0 $ DocControl.handleToStart
      , dir "ts" $ hGet $ toK1 $ DocControl.handleToStartShow
-
-     -- Attachments
-     , dir "a" $ dir "share"       $ hPost $ toK0 $ AttachmentControl.handleShare
-     , dir "a" $ dir "delete"      $ hPost $ toK0 $ AttachmentControl.handleDelete
-     , dir "a"                     $ hPost $ toK0 $ AttachmentControl.handleCreateNew
-     , dir "a"                     $ hGet  $ toK0 $ AttachmentControl.jsonAttachmentsList
-     , dir "a" $ dir "download"    $ hGet  $ toK2 $ AttachmentControl.handleDownloadAttachment
 
      , dir "d"                     $ hGet  $ toK0 $ ArchiveControl.showArchive
      , dir "d"                     $ hGet  $ toK1 $ DocControl.handleIssueShowGet
@@ -165,6 +158,7 @@ staticRoutes production = choice
      , padApplicationAPI
      , oauth
      , apiLogAPI
+     , attachmentAPI
 
      -- api explorer
      , dir "api-explorer" $ remainingPath GET $ runWebSandboxT (runPlusSandboxT $ serveDirectory EnableBrowsing ["index.html"] (staticDir ++ "/api-explorer")) >>= either return (maybe respond404 return)

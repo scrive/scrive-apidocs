@@ -21,6 +21,7 @@ import AdministrationTest
 import AppDBMigrations
 import AppDBTables
 import ArchiveTest
+import Attachment.APITest
 import BrandedDomainTest
 import ChargeableTest
 import CompanyBrandingTest
@@ -93,6 +94,7 @@ allTests = [
   , apiV2CallsTests
   , apiV2JSONTests
   , archiveTests
+  , attachmentAPITests
   , brandedDomainTests
   , chargeableTest
   , companyAccountsTests

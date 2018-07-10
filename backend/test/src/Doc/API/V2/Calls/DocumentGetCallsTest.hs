@@ -293,7 +293,7 @@ testDocApiV2FilesMain = do
   where
     getReq ctx did vars desc expected_code = do
       req <- mkRequest GET vars
-      (rsp,_) <- runTestKontra req ctx $ docApiV2FilesMain did "filename.pdf"
+      (rsp,_) <- runTestKontra req ctx $ docApiV2FilesMain did
       assertEqual ("Successful `docApiV2FilesMain` " ++ desc ++ " response code")
         expected_code (rsCode rsp)
 
@@ -344,7 +344,7 @@ testDocApiV2FilesGet = do
   where
     getReq ctx did fid vars desc expected_code = do
       req <- mkRequest GET vars
-      (rsp,_) <- runTestKontra req ctx $ docApiV2FilesGet did fid "somefile.pdf"
+      (rsp,_) <- runTestKontra req ctx $ docApiV2FilesGet did fid Nothing
       assertEqual ("Successful `docApiV2FilesGet` " ++ desc ++ " response code")
         expected_code (rsCode rsp)
 

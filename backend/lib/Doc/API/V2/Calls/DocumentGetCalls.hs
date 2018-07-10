@@ -46,6 +46,7 @@ import Doc.SignatoryLinkID
 import Doc.Texts
 import EvidenceLog.Model
 import EvidenceLog.View
+import File.File
 import File.Model
 import File.Storage
 import Kontra
@@ -168,8 +169,8 @@ docApiV2EvidenceAttachments did = logDocument did . api $ withDocumentID did $ d
   let headers = mkHeaders [("Content-Type","application/json; charset=UTF-8")]
   return $ Ok $ Response 200 headers nullRsFlags (evidenceAttachmentsToJSONBS (documentid doc) eas) Nothing
 
-docApiV2FilesMain :: Kontrakcja m => DocumentID -> String -> m Response
-docApiV2FilesMain did _filenameForBrowser = logDocument did . api . withDocAccess did $ \doc -> do
+docApiV2FilesMain :: Kontrakcja m => DocumentID -> m Response
+docApiV2FilesMain did = logDocument did . api . withDocAccess did $ \doc -> do
   download     <- apiV2ParameterDefault False (ApiV2ParameterBool "as_download")
   case documentstatus doc of
     Closed ->
@@ -215,11 +216,12 @@ withDocFileAccess did fid action = withDocAccess did $ \_doc -> do
     then apiError $ resourceNotFound "No file with given fileid associated with document"
     else action
 
-docApiV2FilesGet :: Kontrakcja m => DocumentID -> FileID -> String -> m Response
-docApiV2FilesGet did fid filename = logDocumentAndFile did fid . api . withDocFileAccess did fid $ do
+docApiV2FilesGet :: Kontrakcja m => DocumentID -> FileID -> Maybe String -> m Response
+docApiV2FilesGet did fid mFilename = logDocumentAndFile did fid . api . withDocFileAccess did fid $ do
   download     <- apiV2ParameterDefault False (ApiV2ParameterBool "as_download")
-  fileContents <- getFileIDContents fid
-  let filename' = map toLower filename
+  file         <- dbQuery $ GetFileByFileID fid
+  fileContents <- getFileContents file
+  let filename' = map toLower $ fromMaybe (filename file) mFilename
       contentType | isSuffixOf ".pdf" filename' = "application/pdf"
                   | isSuffixOf ".png" filename' = "image/png"
                   | isSuffixOf ".jpg" filename' = "image/jpeg"
