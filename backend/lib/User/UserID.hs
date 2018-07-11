@@ -15,9 +15,12 @@ import Happstack.Server
 import Log.Identifier
 
 newtype UserID = UserID Int64
-  deriving (Eq, Ord, PQFormat, Typeable)
+  deriving (Eq, Ord, Typeable)
 deriving newtype instance Read UserID
 deriving newtype instance Show UserID
+
+instance PQFormat UserID where
+  pqFormat = pqFormat @Int64
 
 instance FromReqURI UserID where
   fromReqURI = maybeRead

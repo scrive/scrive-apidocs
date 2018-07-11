@@ -51,7 +51,7 @@ jobTypeMapper = [
   ]
 
 instance PQFormat JobType where
-  pqFormat = const $ pqFormat (undefined::T.Text)
+  pqFormat = pqFormat @T.Text
 
 instance FromSQL JobType where
   type PQBase JobType = PQBase T.Text
@@ -76,9 +76,12 @@ data MailerJob = MailerJob {
 ----------------------------------------
 
 newtype MailID = MailID Int64
-  deriving (Eq, Ord, PQFormat)
+  deriving (Eq, Ord)
 deriving newtype instance Read MailID
 deriving newtype instance Show MailID
+
+instance PQFormat MailID where
+  pqFormat = pqFormat @Int64
 
 instance Identifier MailID Int64 where
   idDefaultLabel _ = "mail_id"
@@ -110,7 +113,7 @@ instance ToJSON Address where
   toEncoding = Aeson.unsafeToEncoding . unjsonToByteStringBuilder unjsonDef
 
 instance PQFormat Address where
-  pqFormat = const $ pqFormat (undefined::String)
+  pqFormat = pqFormat @String
 instance FromSQL Address where
   type PQBase Address = PQBase String
   fromSQL = jsonFromSQL
@@ -119,7 +122,7 @@ instance ToSQL Address where
   toSQL = jsonToSQL
 
 instance PQFormat [Address] where
-  pqFormat = const $ pqFormat (undefined::String)
+  pqFormat = pqFormat @String
 instance FromSQL [Address] where
   type PQBase [Address] = PQBase String
   fromSQL = jsonFromSQL
@@ -135,7 +138,7 @@ data Attachment = Attachment {
 type instance CompositeRow Attachment = (String, Maybe B.ByteString, Maybe FileID)
 
 instance PQFormat Attachment where
-  pqFormat = const "%mail_attachment"
+  pqFormat = "%mail_attachment"
 
 instance CompositeFromSQL Attachment where
   toComposite (name, mcontent, mfid) = Attachment {
@@ -191,9 +194,12 @@ instance Loggable Mail where
 ----------------------------------------
 
 newtype EventID = EventID Int64
-  deriving (Eq, Ord, PQFormat)
+  deriving (Eq, Ord)
 deriving newtype instance Read EventID
 deriving newtype instance Show EventID
+
+instance PQFormat EventID where
+  pqFormat = pqFormat @Int64
 
 instance Identifier EventID Int64 where
   idDefaultLabel _ = "mail_event_id"
@@ -255,7 +261,7 @@ data Event
   deriving (Eq, Ord, Show, Data, Typeable)
 
 instance PQFormat Event where
-  pqFormat = const $ pqFormat (undefined::String)
+  pqFormat = pqFormat @String
 instance FromSQL Event where
   type PQBase Event = PQBase String
   fromSQL = jsonFromSQL

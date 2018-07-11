@@ -594,6 +594,7 @@ Library
                     , ScopedTypeVariables
                     , StandaloneDeriving
                     , TupleSections
+                    , TypeApplications
                     , TypeFamilies
                     , TypeOperators
                     , TypeSynonymInstances
@@ -1046,6 +1047,7 @@ Executable mailing-server
                     , ScopedTypeVariables
                     , StandaloneDeriving
                     , TupleSections
+                    , TypeApplications
                     , TypeFamilies
                     , TypeOperators
                     , TypeSynonymInstances
@@ -1178,6 +1180,7 @@ Executable messenger-server
                     , ScopedTypeVariables
                     , StandaloneDeriving
                     , TupleSections
+                    , TypeApplications
                     , TypeFamilies
                     , TypeOperators
                     , TypeSynonymInstances
@@ -1505,6 +1508,7 @@ Executable localization
                     , ScopedTypeVariables
                     , StandaloneDeriving
                     , TupleSections
+                    , TypeApplications
                     , TypeFamilies
                     , TypeOperators
                     , TypeSynonymInstances

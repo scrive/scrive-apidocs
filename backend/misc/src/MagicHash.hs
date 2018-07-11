@@ -28,7 +28,10 @@ import Utils.Read
 -- unsigned one in Show instance and readHex works fine with negative
 -- numbers.
 newtype MagicHash = MagicHash Int64
-  deriving (Eq, Ord, PQFormat)
+  deriving (Eq, Ord)
+
+instance PQFormat MagicHash where
+  pqFormat = pqFormat @Int64
 
 instance Random MagicHash where
   random = MagicHash `liftM` random

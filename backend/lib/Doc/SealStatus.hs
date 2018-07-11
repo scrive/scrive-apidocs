@@ -53,7 +53,7 @@ instance Ord SealStatus where
   compare = compare `on` fromEnum
 
 instance PQFormat SealStatus where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL SealStatus where
   type PQBase SealStatus = PQBase Int16

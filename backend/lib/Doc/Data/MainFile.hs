@@ -31,7 +31,7 @@ mainFilesSelectors = [
 type instance CompositeRow MainFile = (FileID, DocumentStatus, SealStatus, String)
 
 instance PQFormat MainFile where
-  pqFormat _ = "%main_file"
+  pqFormat = "%main_file"
 
 instance CompositeFromSQL MainFile where
   toComposite (fid, document_status, seal_status, file_name) = MainFile {

@@ -26,7 +26,7 @@ authorAttachmentsSelectors = [
 type instance CompositeRow AuthorAttachment = (String, Bool, Bool, FileID)
 
 instance PQFormat AuthorAttachment where
-  pqFormat _ = "%author_attachment"
+  pqFormat = "%author_attachment"
 
 instance CompositeFromSQL AuthorAttachment where
   toComposite (aname, areq, aatsf, afid) = AuthorAttachment {

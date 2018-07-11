@@ -54,6 +54,7 @@ kontraExtensions = map EnableExtension [
   , StandaloneDeriving
   , TemplateHaskell
   , TupleSections
+  , TypeApplications
   , TypeFamilies
   , TypeOperators
   , TypeSynonymInstances

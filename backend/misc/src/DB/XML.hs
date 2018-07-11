@@ -11,18 +11,19 @@ import qualified Text.XML.Content as C
 import qualified Text.XML.DirtyContent as D
 
 instance PQFormat C.XMLContent where
-  pqFormat = const $ pqFormat (undefined :: XML)
+  pqFormat = pqFormat @XML
 
 instance FromSQL C.XMLContent where
   type PQBase C.XMLContent = PQBase XML
-  fromSQL mbase = either throwIO return =<< (C.parseXMLContent . unXML <$> fromSQL mbase)
+  fromSQL mbase = either throwIO return
+                  =<< (C.parseXMLContent . unXML <$> fromSQL mbase)
 
 instance ToSQL C.XMLContent where
   type PQDest C.XMLContent = PQDest XML
   toSQL = toSQL . XML . C.renderXMLContent
 
 instance PQFormat D.XMLContent where
-  pqFormat = const $ pqFormat (undefined :: Text)
+  pqFormat = pqFormat @Text
 
 instance FromSQL D.XMLContent where
   type PQBase D.XMLContent = PQBase Text

@@ -38,7 +38,7 @@ instance Loggable KontraInfoForMail where
 
 
 instance PQFormat KontraInfoForMailType where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL KontraInfoForMailType where
   type PQBase KontraInfoForMailType = PQBase Int16

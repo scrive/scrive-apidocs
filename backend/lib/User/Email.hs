@@ -11,9 +11,12 @@ import DB
 
 -- newtypes
 newtype Email = Email { unEmail :: String }
-  deriving (Eq, Ord, PQFormat, Typeable)
+  deriving (Eq, Ord, Typeable)
 deriving newtype instance Read Email
 deriving newtype instance Show Email
+
+instance PQFormat Email where
+  pqFormat = pqFormat @String
 
 instance FromSQL Email where
   type PQBase Email = PQBase String

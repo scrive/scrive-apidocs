@@ -27,7 +27,7 @@ documentTagsSelectors = [
 type instance CompositeRow DocumentTag = (String, String)
 
 instance PQFormat DocumentTag where
-  pqFormat _ = "%document_tag"
+  pqFormat = "%document_tag"
 
 instance CompositeFromSQL DocumentTag where
   toComposite (name, value) = DocumentTag {

@@ -14,9 +14,12 @@ import Happstack.Server
 import Log.Identifier
 
 newtype DocumentID = DocumentID Int64
-  deriving (Eq, Ord, PQFormat)
+  deriving (Eq, Ord)
 deriving newtype instance Read DocumentID
 deriving newtype instance Show DocumentID
+
+instance PQFormat DocumentID where
+  pqFormat = pqFormat @Int64
 
 instance Identifier DocumentID Int64 where
   idDefaultLabel _ = "document_id"

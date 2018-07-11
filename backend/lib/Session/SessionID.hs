@@ -10,9 +10,12 @@ import DB
 import Log.Identifier
 
 newtype SessionID = SessionID Int64
-  deriving (Eq, Ord, PQFormat)
+  deriving (Eq, Ord)
 deriving newtype instance Read SessionID
 deriving newtype instance Show SessionID
+
+instance PQFormat SessionID where
+  pqFormat = pqFormat @Int64
 
 instance Identifier SessionID Int64 where
   idDefaultLabel _ = "session_id"

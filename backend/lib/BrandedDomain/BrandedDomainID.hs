@@ -12,9 +12,12 @@ import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
 newtype BrandedDomainID = BrandedDomainID Int64
-  deriving (Eq, Ord, PQFormat, Typeable)
+  deriving (Eq, Ord, Typeable)
 deriving newtype instance Read BrandedDomainID
 deriving newtype instance Show BrandedDomainID
+
+instance PQFormat BrandedDomainID where
+  pqFormat = pqFormat @Int64
 
 instance FromReqURI BrandedDomainID where
   fromReqURI = maybeRead

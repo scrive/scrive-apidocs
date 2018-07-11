@@ -63,7 +63,7 @@ instance ToSQL NameOrder where
   toSQL (NameOrder v) = unexpectedError $ "Name order " ++ show v ++ " is not supported"
 
 instance PQFormat NameOrder where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 data FieldType
   = NameFT
@@ -79,7 +79,7 @@ data FieldType
     deriving (Eq, Show)
 
 instance PQFormat FieldType where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL FieldType where
   type PQBase FieldType = PQBase Int16
@@ -118,9 +118,12 @@ instance ToSQL FieldType where
 ---------------------------------
 
 newtype PlacementID = PlacementID Int64
-  deriving (Eq, Ord, PQFormat)
+  deriving (Eq, Ord)
 deriving newtype instance Read PlacementID
 deriving newtype instance Show PlacementID
+
+instance PQFormat PlacementID where
+  pqFormat = pqFormat @Int64
 
 instance FromSQL PlacementID where
   type PQBase PlacementID = PQBase Int64
@@ -142,7 +145,7 @@ data PlacementAnchor = PlacementAnchor {
 type instance CompositeRow PlacementAnchor = (String, Int32)
 
 instance PQFormat PlacementAnchor where
-  pqFormat = const "%placement_anchor"
+  pqFormat = "%placement_anchor"
 
 instance CompositeFromSQL PlacementAnchor where
   toComposite (text, index) = PlacementAnchor {
@@ -154,7 +157,7 @@ data TipSide = LeftTip | RightTip
   deriving (Eq, Show)
 
 instance PQFormat TipSide where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL TipSide where
   type PQBase TipSide = PQBase Int16
@@ -202,7 +205,7 @@ instance Eq FieldPlacement where
 type instance CompositeRow FieldPlacement = (PlacementID, Double, Double, Double, Double, Double, Int32, Maybe TipSide, CompositeArray1 PlacementAnchor)
 
 instance PQFormat FieldPlacement where
-  pqFormat = const "%field_placement"
+  pqFormat = "%field_placement"
 
 instance CompositeFromSQL FieldPlacement where
   toComposite (pid, xrel, yrel, wrel, hrel, fsrel, page, tip, CompositeArray1 anchors) = FieldPlacement {
@@ -364,7 +367,7 @@ signatoryFieldsSelectors = [
 type instance CompositeRow SignatoryField = (SignatoryFieldID, FieldType, Maybe NameOrder, String, Bool, Maybe String, Maybe Bool, Maybe FileID, Bool, Bool, Maybe Bool, CompositeArray1 FieldPlacement, Maybe (Array1 String), Maybe String, Maybe String, Maybe String)
 
 instance PQFormat SignatoryField where
-  pqFormat = const "%signatory_field"
+  pqFormat = "%signatory_field"
 
 instance CompositeFromSQL SignatoryField where
   toComposite (sfid, ftype, mname_order, custom_name, is_author_filled, mvalue_text, mvalue_bool, mvalue_file, obligatory, should_be_filled_by_sender, meditable_by_signatory, CompositeArray1 placements, mradio_button_group_values, mcustom_validation_pattern, mcustom_validation_positive_example, mcustom_validation_tooltip) =

@@ -13,7 +13,7 @@ import Doc.SignatoryLinkID
 data SMSPinType = SMSPinToSign | SMSPinToView deriving (Eq, Show)
 
 instance PQFormat SMSPinType where
-  pqFormat = const $ pqFormat (undefined::Int32)
+  pqFormat = pqFormat @Int32
 
 instance FromSQL SMSPinType where
   type PQBase SMSPinType = PQBase Int32

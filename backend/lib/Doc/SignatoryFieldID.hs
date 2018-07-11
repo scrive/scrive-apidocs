@@ -11,9 +11,12 @@ import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
 newtype SignatoryFieldID = SignatoryFieldID Int64
-  deriving (Eq, Ord, PQFormat, Typeable, Data)
+  deriving (Eq, Ord, Typeable, Data)
 deriving newtype instance Read SignatoryFieldID
 deriving newtype instance Show SignatoryFieldID
+
+instance PQFormat SignatoryFieldID where
+  pqFormat = pqFormat @Int64
 
 instance FromReqURI SignatoryFieldID where
   fromReqURI = maybeRead

@@ -31,7 +31,7 @@ jobTypeMapper = [
   ]
 
 instance PQFormat JobType where
-  pqFormat = const $ pqFormat (undefined::T.Text)
+  pqFormat = pqFormat @T.Text
 
 instance FromSQL JobType where
   type PQBase JobType = PQBase T.Text
@@ -60,7 +60,7 @@ data SMSProvider = SMSDefault
    deriving (Eq, Ord, Show, Read)
 
 instance PQFormat SMSProvider where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL SMSProvider where
   type PQBase SMSProvider = PQBase Int16
@@ -82,9 +82,12 @@ instance ToSQL SMSProvider where
 ----------------------------------------
 
 newtype ShortMessageID = ShortMessageID Int64
-  deriving (Eq, Ord, PQFormat)
+  deriving (Eq, Ord)
 deriving newtype instance Read ShortMessageID
 deriving newtype instance Show ShortMessageID
+
+instance PQFormat ShortMessageID where
+  pqFormat = pqFormat @Int64
 
 instance Identifier ShortMessageID Int64 where
   idDefaultLabel _ = "sms_id"
@@ -133,9 +136,12 @@ instance Loggable ShortMessage where
 ----------------------------------------
 
 newtype SMSEventID = SMSEventID Int64
-  deriving (Eq, Ord, PQFormat)
+  deriving (Eq, Ord)
 deriving newtype instance Read SMSEventID
 deriving newtype instance Show SMSEventID
+
+instance PQFormat SMSEventID where
+  pqFormat = pqFormat @Int64
 
 instance Identifier SMSEventID Int64 where
   idDefaultLabel _ = "sms_event_id"
@@ -158,7 +164,7 @@ data SMSEvent = SMSEvent !String !SMSEventType -- ^ phone number, event
   deriving (Eq, Ord, Show, Data, Typeable)
 
 instance PQFormat SMSEvent where
-  pqFormat = const $ pqFormat (undefined::String)
+  pqFormat = pqFormat @String
 
 instance FromSQL SMSEvent where
   type PQBase SMSEvent = PQBase String

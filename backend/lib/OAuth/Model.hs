@@ -59,7 +59,7 @@ instance Show APIPrivilege where
   showsPrec _ APIPersonal  = (++) "PERSONAL"
 
 instance PQFormat APIPrivilege where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL APIPrivilege where
   type PQBase APIPrivilege = PQBase Int16

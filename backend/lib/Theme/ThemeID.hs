@@ -15,9 +15,12 @@ import Happstack.Server
 import Log.Identifier
 
 newtype ThemeID = ThemeID Int64
-  deriving (Eq, Ord, PQFormat, Typeable)
+  deriving (Eq, Ord, Typeable)
 deriving newtype instance Read ThemeID
 deriving newtype instance Show ThemeID
+
+instance PQFormat ThemeID where
+  pqFormat = pqFormat @Int64
 
 instance FromReqURI ThemeID where
   fromReqURI = maybeRead

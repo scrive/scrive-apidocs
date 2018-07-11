@@ -32,9 +32,9 @@ instance Identifier SignOrderUUID UUID where
   idValue (SignOrderUUID k) = A.toJSON . U.toString $ k
 
 instance PQFormat SignOrderUUID where
-  pqFormat _ = pqFormat (undefined::T.Text)
-  pqFormat0 _ = pqFormat0 (undefined::T.Text)
-  pqVariables _ = pqVariables (undefined::T.Text)
+  pqFormat    = pqFormat    @T.Text
+  pqFormat0   = pqFormat0   @T.Text
+  pqVariables = pqVariables @T.Text
 
 instance FromSQL SignOrderUUID where
   type PQBase SignOrderUUID = PQBase T.Text

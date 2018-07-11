@@ -100,9 +100,12 @@ unjsonCallLogParam = objectOf $ pure CallLogParam
       "Call Log Param Value"
 
 newtype CallLogID = CallLogID Int64
-  deriving (Eq, Ord, PQFormat)
+  deriving (Eq, Ord)
 deriving newtype instance Read CallLogID
 deriving newtype instance Show CallLogID
+
+instance PQFormat CallLogID where
+  pqFormat = pqFormat @Int64
 
 instance Identifier CallLogID Int64 where
   idDefaultLabel _ = "document_id"
@@ -131,7 +134,7 @@ fromCallLogID (CallLogID did) = did
 
 
 instance PQFormat [CallLogParam] where
-  pqFormat = const $ pqFormat (undefined::JSON BS.ByteString)
+  pqFormat = pqFormat @(JSON BS.ByteString)
 
 instance FromSQL [CallLogParam] where
   type PQBase [CallLogParam] = PQBase (JSON BS.ByteString)

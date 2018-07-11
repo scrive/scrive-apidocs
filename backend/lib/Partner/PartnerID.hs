@@ -16,9 +16,12 @@ import Happstack.Server
 import Log.Identifier
 
 newtype PartnerID = PartnerID Int64
-  deriving (Eq, Ord, PQFormat, Typeable)
+  deriving (Eq, Ord, Typeable)
 deriving newtype instance Read PartnerID
 deriving newtype instance Show PartnerID
+
+instance PQFormat PartnerID where
+  pqFormat = pqFormat @Int64
 
 instance Default PartnerID where
   def = unsafePartnerID 0

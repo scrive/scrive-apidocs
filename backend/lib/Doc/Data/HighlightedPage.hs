@@ -24,7 +24,7 @@ highlightedPagesSelectors = [
 type instance CompositeRow HighlightedPage = (Int32, FileID)
 
 instance PQFormat HighlightedPage where
-  pqFormat _ = "%highlighted_page"
+  pqFormat = "%highlighted_page"
 
 instance CompositeFromSQL HighlightedPage where
   toComposite (hppage, hpfid) = HighlightedPage {

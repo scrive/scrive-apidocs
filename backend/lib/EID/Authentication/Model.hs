@@ -52,7 +52,7 @@ data AuthenticationProvider
     deriving (Eq, Ord, Show)
 
 instance PQFormat AuthenticationProvider where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL AuthenticationProvider where
   type PQBase AuthenticationProvider = PQBase Int16

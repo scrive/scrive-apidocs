@@ -86,7 +86,7 @@ data UserGroupAddress = UserGroupAddress {
 -- INVOICING
 
 instance PQFormat InvoicingType where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL InvoicingType where
   type PQBase InvoicingType = PQBase Int16
@@ -122,7 +122,7 @@ ugPaymentPlan ug = case _ugInvoicing ug of
 type instance CompositeRow UserGroupInvoicing = (InvoicingType, Maybe PaymentPlan)
 
 instance PQFormat UserGroupInvoicing where
-  pqFormat _ = "%user_group_invoicing"
+  pqFormat = "%user_group_invoicing"
 
 instance CompositeFromSQL UserGroupInvoicing where
   toComposite (invoicing_type, mpayplan) = case (invoicing_type, mpayplan) of
@@ -144,7 +144,7 @@ type instance CompositeRow UserGroup = (
   )
 
 instance PQFormat UserGroup where
-  pqFormat _ = "%user_group"
+  pqFormat = "%user_group"
 
 instance CompositeFromSQL UserGroup where
   toComposite (ugid, mparentgroupid, name, cinvoicing, cinfos, caddresses, cuis) = UserGroup {
@@ -183,9 +183,12 @@ instance Default UserGroup where
     }
 
 newtype UserGroupID = UserGroupID Int64
-  deriving (Eq, Ord, PQFormat)
+  deriving (Eq, Ord)
 deriving newtype instance Read UserGroupID
 deriving newtype instance Show UserGroupID
+
+instance PQFormat UserGroupID where
+  pqFormat = pqFormat @Int64
 
 instance FromSQL UserGroupID where
   type PQBase UserGroupID = PQBase Int64
@@ -231,7 +234,7 @@ type instance CompositeRow UserGroupSettings = (
   )
 
 instance PQFormat UserGroupSettings where
-  pqFormat _ = "%user_group_setting"
+  pqFormat = "%user_group_setting"
 
 instance CompositeFromSQL UserGroupSettings where
   toComposite (
@@ -264,7 +267,7 @@ type instance CompositeRow UserGroupUI = (
   )
 
 instance PQFormat UserGroupUI where
-  pqFormat _ = "%user_group_ui"
+  pqFormat = "%user_group_ui"
 
 instance CompositeFromSQL UserGroupUI where
   toComposite (
@@ -308,7 +311,7 @@ type instance CompositeRow UserGroupAddress = (
   )
 
 instance PQFormat UserGroupAddress where
-  pqFormat _ = "%user_group_address"
+  pqFormat = "%user_group_address"
 
 instance CompositeFromSQL UserGroupAddress where
   toComposite (

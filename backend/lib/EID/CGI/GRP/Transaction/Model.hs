@@ -25,7 +25,7 @@ data CgiGrpTransactionType = CgiGrpAuth | CgiGrpSign
   deriving (Eq, Ord, Show, Typeable)
 
 instance PQFormat CgiGrpTransactionType where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL CgiGrpTransactionType where
   type PQBase CgiGrpTransactionType = PQBase Int16

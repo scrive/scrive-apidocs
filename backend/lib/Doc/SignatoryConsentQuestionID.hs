@@ -15,9 +15,12 @@ import Happstack.Server
 import Log.Identifier
 
 newtype SignatoryConsentQuestionID = SignatoryConsentQuestionID Int64
-  deriving (Eq, Ord, PQFormat, Typeable, Data)
+  deriving (Eq, Ord, Typeable, Data)
 deriving newtype instance Read SignatoryConsentQuestionID
 deriving newtype instance Show SignatoryConsentQuestionID
+
+instance PQFormat SignatoryConsentQuestionID where
+  pqFormat = pqFormat @Int64
 
 instance FromReqURI SignatoryConsentQuestionID where
   fromReqURI = maybeRead

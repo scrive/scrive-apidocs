@@ -12,9 +12,12 @@ import Doc.DocumentID
 import Log.Identifier
 
 newtype CallbackID = CallbackID Int64
-  deriving (Eq, Ord, PQFormat)
+  deriving (Eq, Ord)
 deriving newtype instance Read CallbackID
 deriving newtype instance Show CallbackID
+
+instance PQFormat CallbackID where
+  pqFormat = pqFormat @Int64
 
 instance Identifier CallbackID Int64 where
   idDefaultLabel _       = "callback_id"

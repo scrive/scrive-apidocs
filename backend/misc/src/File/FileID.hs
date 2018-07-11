@@ -15,9 +15,12 @@ import Happstack.Server
 import Log.Identifier
 
 newtype FileID = FileID Int64
-  deriving (Eq, Ord, Hashable, PQFormat, Typeable)
+  deriving (Eq, Ord, Hashable, Typeable)
 deriving newtype instance Read FileID
 deriving newtype instance Show FileID
+
+instance PQFormat FileID where
+  pqFormat = pqFormat @Int64
 
 instance Identifier FileID Int64 where
   idDefaultLabel _ = "file_id"
@@ -27,7 +30,9 @@ instance FromReqURI FileID where
   fromReqURI = maybeRead
 
 instance Unjson FileID where
-  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse FileID")  return) . maybeRead) show unjsonDef
+  unjsonDef = unjsonInvmapR
+              ((maybe (fail "Can't parse FileID") return) . maybeRead)
+              show unjsonDef
 
 instance FromSQL FileID where
   type PQBase FileID = PQBase Int64

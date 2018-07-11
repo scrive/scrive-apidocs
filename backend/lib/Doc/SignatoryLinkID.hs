@@ -19,9 +19,12 @@ import Log.Identifier
 -- | 'SignatoryLinkID' is an integer that identifies
 -- a signatory inside a document scope.
 newtype SignatoryLinkID = SignatoryLinkID Int64
-  deriving (Eq, Ord, PQFormat)
+  deriving (Eq, Ord)
 deriving newtype instance Read SignatoryLinkID
 deriving newtype instance Show SignatoryLinkID
+
+instance PQFormat SignatoryLinkID where
+  pqFormat = pqFormat @Int64
 
 instance FromReqURI SignatoryLinkID where
   fromReqURI = maybeRead
@@ -31,7 +34,9 @@ instance Identifier SignatoryLinkID Int64 where
   idValue (SignatoryLinkID k) = toJSON k
 
 instance Unjson SignatoryLinkID where
-  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse SignatoryLinkID")  return) . maybeRead) show unjsonDef
+  unjsonDef = unjsonInvmapR
+              ((maybe (fail "Can't parse SignatoryLinkID")  return) . maybeRead)
+              show unjsonDef
 
 instance FromSQL SignatoryLinkID where
   type PQBase SignatoryLinkID = PQBase Int64

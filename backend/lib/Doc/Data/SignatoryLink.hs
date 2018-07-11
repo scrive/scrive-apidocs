@@ -32,9 +32,12 @@ import User.UserID
 import Util.HasSomeUserInfo
 
 newtype SignOrder = SignOrder { unSignOrder :: Int32 }
-  deriving (Eq, Ord, PQFormat)
+  deriving (Eq, Ord)
 deriving newtype instance Read SignOrder
 deriving newtype instance Show SignOrder
+
+instance PQFormat SignOrder where
+  pqFormat = pqFormat @Int32
 
 instance Unjson SignOrder where
   unjsonDef = invmap SignOrder unSignOrder unjsonDef
@@ -63,7 +66,7 @@ data DeliveryStatus
     deriving (Eq, Ord, Show)
 
 instance PQFormat DeliveryStatus where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL DeliveryStatus where
   type PQBase DeliveryStatus = PQBase Int16
@@ -93,7 +96,7 @@ data CSVUpload = CSVUpload {
 } deriving (Eq, Ord, Show)
 
 instance PQFormat [[String]] where
-  pqFormat = const $ pqFormat (undefined::String)
+  pqFormat = pqFormat @String
 instance FromSQL [[String]] where
   type PQBase [[String]] = PQBase String
   fromSQL = jsonFromSQL
@@ -112,7 +115,7 @@ data AuthenticationToViewMethod
     deriving (Eq, Ord, Show)
 
 instance PQFormat AuthenticationToViewMethod where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL AuthenticationToViewMethod where
   type PQBase AuthenticationToViewMethod = PQBase Int16
@@ -148,7 +151,7 @@ data AuthenticationToSignMethod
     deriving (Eq, Ord, Show)
 
 instance PQFormat AuthenticationToSignMethod where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL AuthenticationToSignMethod where
   type PQBase AuthenticationToSignMethod = PQBase Int16
@@ -184,7 +187,7 @@ data DeliveryMethod
     deriving (Eq, Ord, Show)
 
 instance PQFormat DeliveryMethod where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL DeliveryMethod where
   type PQBase DeliveryMethod = PQBase Int16
@@ -219,7 +222,7 @@ data ConfirmationDeliveryMethod
     deriving (Eq, Ord, Show)
 
 instance PQFormat ConfirmationDeliveryMethod where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL ConfirmationDeliveryMethod where
   type PQBase ConfirmationDeliveryMethod = PQBase Int16
@@ -372,7 +375,7 @@ signatoryLinksSelectors = [
 type instance CompositeRow SignatoryLink = (SignatoryLinkID, CompositeArray1 SignatoryField, Bool, Bool, SignOrder, MagicHash, Maybe UserID, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, DeliveryStatus, DeliveryStatus, Maybe UTCTime, Maybe UTCTime, Maybe [[String]], CompositeArray1 SignatoryAttachment,CompositeArray1 HighlightedPage, Maybe String, Maybe String, Maybe UTCTime, Maybe String, AuthenticationToViewMethod, AuthenticationToSignMethod, DeliveryMethod, ConfirmationDeliveryMethod, Bool, Bool, Bool, Maybe String, CompositeArray1 SignatoryConsentQuestion)
 
 instance PQFormat SignatoryLink where
-  pqFormat _ = "%signatory_link"
+  pqFormat = "%signatory_link"
 
 instance CompositeFromSQL SignatoryLink where
   toComposite (slid, CompositeArray1 fields, is_author, is_partner, sign_order, magic_hash, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_contents, CompositeArray1 attachments, CompositeArray1 highlighted_pages, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_to_view_method, authentication_to_sign_method, delivery_method, confirmation_delivery_method, allows_highlighting, has_identified, hide_pn, consent_title, CompositeArray1 consent_questions) = SignatoryLink {

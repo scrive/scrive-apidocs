@@ -37,7 +37,7 @@ data DocumentType = Signable | Template
   deriving (Eq, Ord, Show, Read)
 
 instance PQFormat DocumentType where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL DocumentType where
   type PQBase DocumentType = PQBase Int16
@@ -65,7 +65,7 @@ data DocumentSharing
     deriving (Eq, Ord, Show)
 
 instance PQFormat DocumentSharing where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL DocumentSharing where
   type PQBase DocumentSharing = PQBase Int16
@@ -107,7 +107,7 @@ data StatusClass
     deriving (Eq, Ord, Enum, Bounded)
 
 instance PQFormat StatusClass where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL StatusClass where
   type PQBase StatusClass = PQBase Int16
@@ -366,7 +366,7 @@ documentStatusClassExpression = mconcat [
 type instance CompositeRow Document = (DocumentID, String, CompositeArray1 SignatoryLink, CompositeArray1 MainFile, DocumentStatus, DocumentType, UTCTime, UTCTime, Int32, Maybe Int32, Maybe UTCTime, Maybe UTCTime, Maybe UTCTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Bool, Bool, Lang, DocumentSharing, CompositeArray1 DocumentTag, CompositeArray1 AuthorAttachment, Maybe String, Maybe String, Bool, Int64, MagicHash, TimeZoneName, Maybe UserGroupID, StatusClass)
 
 instance PQFormat Document where
-  pqFormat _ = "%document"
+  pqFormat = "%document"
 
 instance CompositeFromSQL Document where
   toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text,  show_header, show_pdf_download, show_reject_option, allow_reject_reason, show_footer, is_receipt, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apiv1callback, apiv2callback, unsaved_draft, objectversion, token, time_zone_name, author_ugid, status_class) = Document {

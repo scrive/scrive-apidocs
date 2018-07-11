@@ -40,7 +40,7 @@ newtype SignatoryConsentResponsesForSigning
   deriving Show
 
 instance PQFormat SignatoryConsentResponsesForSigning where
-  pqFormat _ = pqFormat (undefined :: JSON BS.ByteString)
+  pqFormat = pqFormat @(JSON BS.ByteString)
 
 instance FromSQL SignatoryConsentResponsesForSigning where
   type PQBase SignatoryConsentResponsesForSigning = PQBase (JSON BS.ByteString)

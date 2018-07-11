@@ -25,7 +25,7 @@ data KontraInfoForSMS =
 
 
 instance PQFormat KontraInfoForSMSType where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL KontraInfoForSMSType where
   type PQBase KontraInfoForSMSType = PQBase Int16

@@ -61,7 +61,7 @@ data SignatureProvider
     deriving (Eq, Ord, Show)
 
 instance PQFormat SignatureProvider where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL SignatureProvider where
   type PQBase SignatureProvider = PQBase Int16

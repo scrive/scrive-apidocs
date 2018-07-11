@@ -27,10 +27,11 @@ signatoryAttachmentsSelectors = [
   , "signatory_attachments.required"
   ]
 
-type instance CompositeRow SignatoryAttachment = (Maybe FileID, Maybe String, String, String, Bool)
+type instance CompositeRow SignatoryAttachment =
+  (Maybe FileID, Maybe String, String, String, Bool)
 
 instance PQFormat SignatoryAttachment where
-  pqFormat _ = "%signatory_attachment"
+  pqFormat = "%signatory_attachment"
 
 instance CompositeFromSQL SignatoryAttachment where
   toComposite (mfid, mfname, name, description, required) = SignatoryAttachment {

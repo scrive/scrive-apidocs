@@ -16,7 +16,7 @@ data PaymentPlan =
   deriving (Eq, Ord, Show)
 
 instance PQFormat PaymentPlan where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL PaymentPlan where
   type PQBase PaymentPlan = PQBase Int16

@@ -26,7 +26,7 @@ data PadAppMode =
   deriving (Eq, Ord, Show, Read)
 
 instance PQFormat PadAppMode where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL PadAppMode where
   type PQBase PadAppMode = PQBase Int16

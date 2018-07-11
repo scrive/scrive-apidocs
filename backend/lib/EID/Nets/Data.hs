@@ -100,7 +100,7 @@ unsafeNetsDKNemIDInternalProviderFromInt16 v = case v of
   _ -> unexpectedError "Range error while fetching NetsDKNemIDInternalProvider from Int16"
 
 instance PQFormat NetsNOBankIDInternalProvider where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL NetsNOBankIDInternalProvider where
   type PQBase NetsNOBankIDInternalProvider = PQBase Int16
@@ -120,7 +120,7 @@ instance ToSQL NetsNOBankIDInternalProvider where
   toSQL NetsNOBankIDMobile   = toSQL (2::Int16)
 
 instance PQFormat NetsDKNemIDInternalProvider where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL NetsDKNemIDInternalProvider where
   type PQBase NetsDKNemIDInternalProvider = PQBase Int16
@@ -244,7 +244,7 @@ data NetsSignProvider =
   deriving (Eq, Ord, Show)
 
 instance PQFormat NetsSignProvider where
-  pqFormat = const $ pqFormat (undefined::Int16)
+  pqFormat = pqFormat @Int16
 
 instance FromSQL NetsSignProvider where
   type PQBase NetsSignProvider = PQBase Int16

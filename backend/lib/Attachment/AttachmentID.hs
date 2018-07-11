@@ -9,15 +9,20 @@ import Database.PostgreSQL.PQTypes
 import Happstack.Server
 
 newtype AttachmentID = AttachmentID Int64
-  deriving (Eq, Ord, PQFormat)
+  deriving (Eq, Ord)
 deriving newtype instance Read AttachmentID
 deriving newtype instance Show AttachmentID
+
+instance PQFormat AttachmentID where
+  pqFormat = pqFormat @Int64
 
 instance FromReqURI AttachmentID where
   fromReqURI = maybeRead
 
 instance Unjson AttachmentID where
-  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse AttachmentID")  return) . maybeRead) show  unjsonDef
+  unjsonDef = unjsonInvmapR
+              ((maybe (fail "Can't parse AttachmentID")  return) . maybeRead)
+              show  unjsonDef
 
 instance FromSQL AttachmentID where
   type PQBase AttachmentID = PQBase Int64

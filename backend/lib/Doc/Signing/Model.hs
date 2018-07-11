@@ -31,7 +31,7 @@ import IPAddress
 import User.Lang
 
 instance PQFormat SignatoryFieldsValuesForSigning where
-  pqFormat = const $ pqFormat (undefined::JSON BS.ByteString)
+  pqFormat = pqFormat @(JSON BS.ByteString)
 
 instance FromSQL SignatoryFieldsValuesForSigning where
   type PQBase SignatoryFieldsValuesForSigning = PQBase (JSON BS.ByteString)
@@ -48,7 +48,7 @@ instance ToSQL SignatoryFieldsValuesForSigning where
   toSQL s = toSQL (unjsonToByteStringLazy' (Options { pretty = False, indent = 0, nulls = True }) unjsonSignatoryFieldsValuesForSigning s)
 
 instance PQFormat SignatoryScreenshots where
-  pqFormat = const $ pqFormat (undefined::JSON BS.ByteString)
+  pqFormat = pqFormat @(JSON BS.ByteString)
 
 instance FromSQL SignatoryScreenshots where
   type PQBase SignatoryScreenshots = PQBase (JSON BS.ByteString)
