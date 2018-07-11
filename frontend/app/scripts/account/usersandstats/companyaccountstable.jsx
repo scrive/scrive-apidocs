@@ -261,7 +261,7 @@ module.exports = React.createClass({
               rendering={function(d) {
                 var active = d.field("twofactor_active");
                 if (active) {
-                  return (<a className='sharedIcon'/>);
+                  return (<a className='twofactorIcon'/>);
                 } else {
                   return (<span/>);
                 }

@@ -15,6 +15,17 @@
   width: 17px;
 }
 
+.twofactorIcon {
+  @url : %('/colored_image?file=shared.png&color=%D', @positivecolor);
+  background: url(@url) ;
+  background-repeat: no-repeat;
+  cursor: default;
+  display: block;
+  height: 14px;
+  margin-left: 10px;
+  width: 17px;
+}
+
 .icon.delete {
   @url : %('/colored_image?file=icon-delete.png&color=%D', @negativecolor);
   background : url(@url) 0 0 no-repeat;
