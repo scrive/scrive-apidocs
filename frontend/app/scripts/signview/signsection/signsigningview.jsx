@@ -6,6 +6,7 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
 var ViewSize = require("../viewsize");
 var $ = require("jquery");
 var classNames = require("classnames");
+var SignHeader = require("./signheader");
 
   module.exports = React.createClass({
     propTypes: {
@@ -28,14 +29,22 @@ var classNames = require("classnames");
 
       return (
         <div className={divClass}>
-          <h1>{hasSignaturesPlaced ? localization.process.signModalTitle : localization.process.signbuttontext}</h1>
-          <p>
-            <HtmlTextWithSubstitution
-              secureText={hasSignaturesPlaced ? localization.signviewConfirmationSignaturesPlaced :
-                                                localization.signviewConfirmation}
-              subs={{".put-document-title-here": this.props.title, ".put-signatory-name-here": this.props.name}}
-            />
-          </p>
+          {/* if */ hasSignaturesPlaced &&
+            <div>
+              <h1>{localization.process.signModalTitle}</h1>
+              <SignLegalAgreement />
+              <p>
+                <HtmlTextWithSubstitution
+                  secureText={hasSignaturesPlaced ? localization.signviewConfirmationSignaturesPlaced :
+                                                    localization.signviewConfirmation}
+                  subs={{".put-document-title-here": this.props.title, ".put-signatory-name-here": this.props.name}}
+                />
+              </p>
+            </div>
+          }
+          {/* else */ !hasSignaturesPlaced &&
+            <SignHeader title={this.props.title} name={this.props.name} />
+          }
           <Button
             type="action"
             ref="signButton"
