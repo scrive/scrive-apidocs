@@ -98,7 +98,6 @@ module.exports = React.createClass({
           <InfoTextInput
             value={this.state.textEntered}
             infotext={this.correctText()}
-            focus={true}
             onChange={this.onTextChange}
           />
         </Modal.Content>

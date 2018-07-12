@@ -25,7 +25,7 @@ import Log
 
 import BrandedDomain.BrandedDomainID
 import DB
-import Doc.Data.Document (DocumentSharing(..))
+import Doc.Data.Document (DocumentSharing(..), DocumentType(..))
 import Doc.Data.SignatoryField
 import Doc.DocStateData (DocumentStatus(..))
 import IPAddress
@@ -120,6 +120,8 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool wh
           sqlWith "signatory_link_ids_to_change" . sqlUpdate "documents" $ do
             sqlSet "author_user_id" $ userid newOwner
             sqlWhereEq "sharing" Shared
+            sqlWhereEq "status" Preparation
+            sqlWhereEq "type" Template
             sqlWhereEq "author_user_id" uid
             sqlResult "author_id AS id"
 

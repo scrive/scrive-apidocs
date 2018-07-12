@@ -100,6 +100,7 @@ actuallyDeletePreviouslyDeletedUser = Migration
 
         sqlWith "deleted_users_histories" . sqlUpdate "users_history" $ do
           sqlSet "event_data" (Nothing :: Maybe String)
+          sqlSet "ip" (0 :: Int)
           sqlWhereIsDeletedUserID "user_id"
 
         sqlSet "password"         ("" :: BS.ByteString)

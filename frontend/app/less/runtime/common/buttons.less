@@ -7,6 +7,10 @@
   .upload-button:hover &
   {
     background-color: lighten(@color,10%);
+
+    &.inactive {
+      background-color: @color;
+    }
   }
 
   &:active {

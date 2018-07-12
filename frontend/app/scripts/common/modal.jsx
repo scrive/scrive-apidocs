@@ -211,7 +211,7 @@ var AcceptButton = exports.AcceptButton = React.createClass({
     className: React.PropTypes.string
   },
   render: function () {
-    var className = "float-right " + (this.props.className ? this.props.className : "");
+    var className = classNames("float-right", this.props.className);
     return (
       <Button
         className={className}
@@ -263,7 +263,7 @@ exports.InfoBox = React.createClass({
         <Footer>
           <AcceptButton
             onClick={this.props.onClose}
-            text="OK"
+            text={localization.ok}
           />
         </Footer>
       </Container>

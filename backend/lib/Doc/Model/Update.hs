@@ -1981,7 +1981,7 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
           sqlWhere "d.author_id = sl.id"
            -- condition a
           sqlWhere $ "u.deleted IS NULL OR d.sharing =" <?> Shared
-          sqlWhere "sl.really_deleted IS NULL" -- condition b
+          sqlWhereIsNULL "sl.really_deleted" -- condition b
           sqlWhereIsNULL "ug.deleted" -- condition c
           sqlWhereEq "d.status" Preparation
 
