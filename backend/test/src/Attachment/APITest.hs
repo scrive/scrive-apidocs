@@ -16,7 +16,6 @@ import TestingUtil
 import TestKontra
 import User.Model
 import UserGroup.Data
-import UserGroupAccountsTest
 import Util.Actor
 
 attachmentAPITests :: TestEnvSt -> Test
