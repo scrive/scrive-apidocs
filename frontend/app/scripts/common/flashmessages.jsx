@@ -11,7 +11,6 @@ var FlashMessageView = React.createClass({
     return {visible: false};
   },
   componentDidMount: function () {
-    $(this.refs.body.getDOMNode()).append(this.props.content);
     this.getDOMNode().addEventListener("transitionend", this.onTransitionEnd);
     this._showTimeout = window.setTimeout(this.show, 100);
     this._hideTimeout = window.setTimeout(this.hide, 10000);
@@ -42,7 +41,7 @@ var FlashMessageView = React.createClass({
            style={{display: this.state.visible ? "block" : "none"}}
         >
         <div className="flash-content">
-          <div ref="body" className="flash-body" />
+          <div ref="body" className="flash-body" >{this.props.content}</div>
           <div className="flash-close" onClick={this.hide}>
             &times;
           </div>
