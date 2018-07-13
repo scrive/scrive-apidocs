@@ -107,7 +107,7 @@ documentAttachedFields forMail signlink documentAttached document = do
   F.value "ispreview" $ not $ forMail
   F.value "mainfilelink" $ protectLink forMail mctx $ LinkMainFile document signlink
   now <- currentTime
-  F.value "availabledate" $ formatTimeSimple $ (60 `minutesAfter` now)
+  F.value "availabledate" $ formatTimeSimple $ (30 `daysAfter` now)
 
 remindMailSigned :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, MailContextMonad m)
                  => Bool

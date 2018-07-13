@@ -1916,6 +1916,8 @@ instance MonadDB m => DBUpdate m ConnectSignatoriesToUser () where
 -- | We purge documents that:
 -- 1) Were deleted by all signatories with an account
 -- 2) Don't have an access token in an existing session.
+-- 3) A month has passed (because document could be too big to be sent by email,
+--    and confirmation email with links may still reference it)
 data PurgeDocuments = PurgeDocuments Int32
 instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
   update (PurgeDocuments savedDocumentLingerDays) = do
@@ -1948,6 +1950,9 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
         sqlWhereNotExists . sqlSelect "signatory_links sl" $ do
           sqlJoinOn "document_session_tokens dst" "sl.id = dst.signatory_link_id"
           sqlWhere "sl.document_id = d.id"
+        -- Document hasn't changed for a month:
+        -- so that `availabledate` in `documentAttachedFields` works
+        sqlWhere $ "d.mtime" <+> "<=" <?> (30 `daysBefore` now)
 
       -- Blank out sensitive data.
       sqlWith "purged_signatory_links" . sqlUpdate "signatory_links" $ do
