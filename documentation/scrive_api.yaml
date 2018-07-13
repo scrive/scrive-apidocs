@@ -67,16 +67,16 @@ info:
 
     ## Environments & IP Addresses
 
-	This section provides details on the IP addresses used by the Scrive Service. You may want to whitelist 
-	these addresses in your firewalls for outgoing traffic but more importantly for incoming traffic from 
-	Scrive when using callbacks.
-	
+    This section provides details on the IP addresses used by the Scrive Service. You may want to whitelist 
+    these addresses in your firewalls for outgoing traffic but more importantly for incoming traffic from 
+    Scrive eSign when using callbacks.
+
     <aside class="warning">
-    Do not call the API using these IP addresses directly! SNI is used to route calls to 
-	different services on the same IP address and thus hostnames must be used to reliably reach 
-	the service you intend to integrate with.
+    Do not call the API using these IP addresses directly! Server Name Identification (SNI) is used to 
+    route calls to different services on the same IP address and thus hostnames must be used to reliably reach 
+    the service you intend to integrate with.
     </aside>
-	
+
 
     ### Production
     The main application is available through the `scrive.com` domain.
