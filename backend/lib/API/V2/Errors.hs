@@ -20,7 +20,6 @@ module API.V2.Errors (
   , invalidAuthorization
   , invalidAuthorizationWithMsg
   , insufficientPrivileges
-  , actionNotPermitted
   , conflictError
   , httpCodeFromSomeDBExtraException
   , jsonFromSomeDBExtraException
@@ -182,13 +181,6 @@ documentShortIDNotFound sdid = resourceNotFound $ "A document matching short id"
 resourceNotFound :: T.Text -> APIError
 resourceNotFound info = APIError { errorType = ResourceNotFound, errorHttpCode = 404, errorMessage = msg}
   where msg = "The resource was not found." <+>  info
-
-actionNotPermitted :: T.Text -> APIError
-actionNotPermitted msg = APIError
-  { errorType     = ActionNotPermitted
-  , errorHttpCode = 403
-  , errorMessage  = "Action not permitted." <+> msg
-  }
 
 conflictError :: T.Text -> APIError
 conflictError msg = APIError

@@ -133,4 +133,5 @@ kontraMigrations = [
   , usergroupsBumpVersionAfterDropingCompanies
   , actuallyDeletePreviouslyDeletedUser
   , usergroupsAddDeleted
+  , addAttachmentsPurgeJob
   ]

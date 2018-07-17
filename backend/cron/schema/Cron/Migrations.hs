@@ -9,6 +9,7 @@ module Cron.Migrations (
   , addDocumentAuthorUserIDUpdateJob
   , addUserGroupMigrationJob
   , removeUserGroupMigrationJob
+  , addAttachmentsPurgeJob
 ) where
 
 import Control.Monad.Catch
@@ -103,4 +104,12 @@ removeUserGroupMigrationJob = Migration {
   , mgrFrom = 13
   , mgrAction =
       StandardMigration $ runSQL_ "DELETE FROM cron_jobs WHERE id = 'user_group_migration'"
+  }
+
+addAttachmentsPurgeJob :: (MonadDB m, MonadThrow m) => Migration m
+addAttachmentsPurgeJob = Migration
+  { mgrTableName = tblName tableCronJobs
+  , mgrFrom = 14
+  , mgrAction = StandardMigration $
+      runSQL_ "INSERT INTO cron_jobs (id, run_at) VALUES ('attachments_purge', to_timestamp(0))"
   }

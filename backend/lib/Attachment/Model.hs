@@ -104,10 +104,15 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeAttachments Int where
     runQuery $ sqlUpdate "attachments a" $ do
       sqlSet "mtime" now
       sqlSet "deleted" True
-      sqlJoinOn "users u" "u.id = a.user_id"
-      sqlJoinOn "user_groups ug" "u.user_group_id = ug.id"
-      sqlWhere "ug.deleted OR (u.deleted IS NOT NULL AND NOT a.shared)"
       sqlWhereEq "a.deleted" False
+
+      -- Keep attachments if
+      -- 1) the company still exists and it is shared or
+      -- 2) the user still exists.
+      sqlWhereNotExists . sqlSelect "users u" $ do
+        sqlJoinOn "user_groups ug" "u.user_group_id = ug.id"
+        sqlWhere "u.id = a.user_id"
+        sqlWhere "(ug.deleted IS NULL AND a.shared) OR u.deleted IS NULL"
 
 data AttachmentFilter
   = AttachmentFilterByString T.Text           -- ^ Contains the string in title, list of people involved or anywhere
