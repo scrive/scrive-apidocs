@@ -57,9 +57,17 @@ var Dialog = React.createClass({
     var node = this.getActualNode();
     if(node) {
       var $container = $(".modal-container", node);
+      var marginLeft = ($(window).width() - DIALOG_WIDTH) / 2 + $(window).scrollLeft();
+      var width = $container.css("width");
+      if (marginLeft < 0) {
+        // must be a tiny window
+        marginLeft = 0;
+        width = "100%";
+      }
       $container.css({
-        marginLeft: ($(window).width() - DIALOG_WIDTH) / 2 + $(window).scrollLeft(),
+        marginLeft: marginLeft,
         marginTop: ($(window).height() - 200) / 2 + $(window).scrollTop(),
+        width: width
       });
     }
   },
