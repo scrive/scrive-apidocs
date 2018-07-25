@@ -538,6 +538,8 @@ var Task = require("../navigation/task");
           {/* if */ this.isOnStep("process") &&
             <SignProcess
               imgUrl={imgUrl}
+              pageHeight={doc._firstPageHeight}
+              pageWidth={this.props.pixelWidth}
               docTitle={doc.title()}
               status={this.state.signedStatus}
             />
