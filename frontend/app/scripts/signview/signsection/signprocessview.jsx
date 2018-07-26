@@ -4,6 +4,7 @@ var React = require("react");
 var Button = require("../../common/button");
 var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
 var ViewSize = require("../viewsize");
+var signVars = require("../../../less/signview/sign.less");
 var ReloadManager = require("../../../js/reloadmanager.js").ReloadManager;
 var classNames = require("classnames");
 
@@ -25,6 +26,8 @@ var classNames = require("classnames");
     propTypes: {
       imgUrl: React.PropTypes.string.isRequired,
       docTitle: React.PropTypes.string.isRequired,
+      pageHeight: React.PropTypes.number.isRequired,
+      pageWidth: React.PropTypes.number.isRequired,
       status: React.PropTypes.number.isRequired
     },
 
@@ -32,11 +35,33 @@ var classNames = require("classnames");
       ReloadManager.pushBlock(function () {
         return localization.signingInProgressDontCloseWindow;
       });
+      this.fixHeight();
     },
 
     componentDidUpdate: function () {
       if (this.props.status > 1) {
         ReloadManager.stopBlocking();
+      }
+      this.fixHeight();
+    },
+
+    fixHeight: function () {
+      // we need to set explicit image height
+      // so other calculations (like scrolling) can work properly even if
+      // the image is not yet loaded
+
+      var $this = $(this.getDOMNode());
+      var modalWidth = $this.width();
+
+      // ratio of image width to this whole div
+      var imgWidthScale = signVars.signviewSignPreviewImageWidth.replace("%", "") / 100;
+
+      // how much was the image scaled down from its original size based on its width
+      var scaleRatio = (modalWidth / this.props.pageWidth) * imgWidthScale;
+
+      var img = this.refs.imgdoc;
+      if (img !== undefined) {
+        $(img.getDOMNode()).css("height", this.props.pageHeight * scaleRatio);
       }
     },
 
@@ -50,7 +75,7 @@ var classNames = require("classnames");
       return (
         <div className={divClass}>
           <div>
-            <img className="img-doc" src={this.props.imgUrl} />
+            <img className="img-doc" src={this.props.imgUrl} ref="imgdoc"/>
           </div>
           <div className="status-box">
             <div className="status">

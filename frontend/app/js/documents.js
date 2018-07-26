@@ -212,12 +212,15 @@ var Document = exports.Document = Backbone.Model.extend({
     },
     takeFirstScreenshot: function() {
         var document = this;
-        if (document.file() && document.file().view.readyFirstPage())
+        if (document.file() && document.file().view.readyFirstPage()) {
+            document._firstPageHeight = document.file().view.state.images[0].height;
             document.takeScreenshot(true, null);
-        else
+        } else {
             document.file().on('FirstPageReady', function() {
-            document.takeScreenshot(true, null);
+              document._firstPageHeight = document.file().view.state.images[0].height;
+              document.takeScreenshot(true, null);
             });
+        }
     },
     takeSigningScreenshot: function(done) {
         this.takeScreenshot(false, done);

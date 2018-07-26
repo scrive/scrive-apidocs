@@ -20,6 +20,7 @@ import AppControl
 import AppDBTables
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
+import Company.Data.PaymentPlan
 import Configuration
 import Database.Redis.Configuration
 import DB
@@ -145,6 +146,7 @@ initDatabaseEntries appConf = do
       Nothing -> do
         bd <- dbQuery $ GetMainBrandedDomain
         ug <- dbUpdate . UserGroupCreate $ def
-        _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) (get ugID ug,True) def (get bdid bd) ByAdmin
+        _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) (get ugID ug,True) LANG_EN (get bdid bd) ByAdmin
+        dbUpdate $ UserGroupUpdate $ set ugInvoicing (Invoice EnterprisePlan) ug
         return ()
       Just _ -> return () -- user exist, do not add it

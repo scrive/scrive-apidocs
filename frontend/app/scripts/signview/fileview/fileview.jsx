@@ -436,7 +436,7 @@ module.exports = React.createClass({
 
     const scrollerStyle = {
       width: $.windowWidth(),
-      overflowX: isTouchDevice() ? "scroll" : "hidden"
+      overflowX: (isTouchDevice() && !this.state.highlighting) ? "scroll" : "hidden"
     };
 
     return (
