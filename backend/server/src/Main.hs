@@ -20,7 +20,6 @@ import AppControl
 import AppDBTables
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
-import Company.Data.PaymentPlan
 import Configuration
 import Database.Redis.Configuration
 import DB
@@ -34,6 +33,7 @@ import Templates
 import User.Email
 import User.Model
 import UserGroup.Data
+import UserGroup.Data.PaymentPlan
 import UserGroup.Model
 import Utils.IO
 import Utils.Network
