@@ -7,6 +7,7 @@ var ViewSize = require("../viewsize");
 var $ = require("jquery");
 var classNames = require("classnames");
 var SignHeader = require("./signheader");
+var SignLegalAgreement = require("./signlegalagreement");
 
   module.exports = React.createClass({
     propTypes: {
