@@ -21,6 +21,7 @@ import vars from "../../../less/signview/vars.less";
 
 const ZOOM_STEPS = 4;
 const MAX_ZOOM_PIXELS = 2000;
+const MAX_PIXEL_WIDTH = 2000;
 
 function zoomPointMiddle () {
   return {x: $.windowWidth() / 2, y: $.windowHeight() / 2};
@@ -66,7 +67,8 @@ module.exports = React.createClass({
       zoomStyle: ZOOM_STYLE.POINT,
       grabbing: false,
       highlighting: false,
-      removingHighlighting: false
+      removingHighlighting: false,
+      currentPixelWidth: this.props.pixelWidth
     };
   },
 
@@ -178,7 +180,7 @@ module.exports = React.createClass({
     var self = this;
     var file = self.props.model;
     var fileid = file.fileid();
-    var pixelWidth = this.props.pixelWidth;
+    var pixelWidth = this.state.currentPixelWidth;
 
     _.each(self.state.images, function (img) {
       img.removeEventListener("load", self.handleLoad);
@@ -360,7 +362,14 @@ module.exports = React.createClass({
     } else {
       newState.zoom = MAX_ZOOM_PIXELS / this.standardWidth();
     }
-    this.setState(newState);
+    if (this.state.currentPixelWidth != MAX_PIXEL_WIDTH && newState.zoomStep >= ZOOM_STEPS - 1) {
+      newState.currentPixelWidth = MAX_PIXEL_WIDTH;
+      this.setState(newState, function () {
+        this.updateImages();
+      });
+    } else {
+      this.setState(newState);
+    }
   },
 
   handleZoomOut: function () {
