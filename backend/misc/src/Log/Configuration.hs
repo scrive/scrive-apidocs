@@ -58,7 +58,8 @@ instance Unjson LoggerDef where
     , ("elasticsearch", $(isConstr 'ElasticSearch), ElasticSearch
         <$> fieldDefBy "configuration" defaultElasticSearchConfig
             (\(ElasticSearch es) -> es)
-            "ElasticSearch configuration, defaults to http://localhost:9200/logs/log"
+            ("ElasticSearch configuration, " <>
+             "defaults to http://localhost:9200/logs/log")
             esUnjsonConfig
       )
     , ("postgresql", $(isConstr 'PostgreSQL), PostgreSQL

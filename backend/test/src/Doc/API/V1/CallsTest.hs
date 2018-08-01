@@ -656,7 +656,7 @@ assertEqualDouble msg [(x1,x2,x3)] [(y1,y2,y3)] = do
   assertEqual msg (round' x3) (round' y3)
 assertEqualDouble msg x y = do assertEqual msg x y
 
-testCloseEvidenceAttachments :: TestEnv ()
+testCloseEvidenceAttachments:: TestEnv ()
 testCloseEvidenceAttachments = do
   author <- addNewRandomUser
   ctx <- (set ctxmaybeuser (Just author)) <$> mkContext def
