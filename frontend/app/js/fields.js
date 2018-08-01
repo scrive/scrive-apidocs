@@ -194,6 +194,7 @@ var Field = exports.Field = Backbone.Model.extend({
               (   this.signatory().mobileConfirmationDelivery()
                || this.signatory().emailMobileConfirmationDelivery()
                || this.signatory().smsPinAuthenticationToSign()
+               || this.signatory().smsPinAuthenticationToView()
               )
            ) {
             return new PhoneValidation().validateData(this.value());
@@ -353,6 +354,7 @@ var Field = exports.Field = Backbone.Model.extend({
       else if (signatory.mobileDelivery()
               || signatory.emailMobileDelivery()
               || signatory.smsPinAuthenticationToSign()
+              || signatory.smsPinAuthenticationToView()
               || signatory.mobileConfirmationDelivery()
               || signatory.emailMobileConfirmationDelivery()
       ) {
