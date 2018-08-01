@@ -325,7 +325,9 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupsGetFiltered [UserGroup
     runQuery_ $ sqlSelect "user_groups" $ do
        mapM_ sqlResult userGroupSelectors
        forM_ filters $ \case
-         UGFilterByString text -> mapM_ (sqlWhere . parenthesize . findWord) (words text)
+         UGFilterByString text -> do
+           sqlJoinOn "user_group_addresses" "user_group_addresses.user_group_id = user_groups.id"
+           mapM_ (sqlWhere . parenthesize . findWord) (words text)
          UGManyUsers -> sqlWhereAny
            [ sqlWhere $ "((SELECT count(*) FROM users WHERE users.user_group_id = user_groups.id AND users.deleted IS NULL) > 1)"
            , sqlWhere $ "((SELECT count(*) FROM companyinvites WHERE companyinvites.user_group_id = user_groups.id) > 0)"
@@ -342,9 +344,10 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupsGetFiltered [UserGroup
        sqlOrderBy "user_groups.id"
     fetchMany toComposite
     where
-      findWordInField word fieldName = ("companies." <> fieldName) <+> "ILIKE" <?> sqlwordpat word
-      findWordList word = map (findWordInField word) ["name", "number", "address", "zip", "city", "country"]
-      findWord word = sqlConcatOR $ findWordList word
+      findWordInField word fieldName = ("user_group_addresses." <+> fieldName) <+> "ILIKE" <?> sqlwordpat word
+      findWordInName word = ("user_groups.name") <+> "ILIKE" <?> sqlwordpat word
+      findWordList word = map (findWordInField word) ["company_number", "address", "zip", "city", "country"]
+      findWord word = sqlConcatOR $ findWordInName word : findWordList word
       sqlwordpat word = "%" ++ concatMap escape word ++ "%"
       escape '\\' = "\\\\"
       escape '%' = "\\%"
