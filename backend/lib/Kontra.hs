@@ -122,15 +122,20 @@ instance (MonadTrans fst, Monad (InnerKontra fst))
     => MailContextMonad (KontraG fst) where
   getMailContext = contextToMailContext <$> getContext
 
-{- Logged in user is admin-}
+{- Logged in user is admin with 2FA -}
 isAdmin :: Context -> Bool
-isAdmin ctx = maybe False (`elem` get ctxadminaccounts ctx)
-  (useremail <$> userinfo <$> get ctxmaybeuser ctx)
+isAdmin ctx = case get ctxmaybeuser ctx of
+                Nothing -> False
+                Just user -> (useremail (userinfo user) `elem` get ctxadminaccounts ctx)
+                            && (usertotpactive user || not (get ctxproduction ctx))
 
-{- Logged in user is sales -}
+
+{- Logged in user is sales with 2FA -}
 isSales :: Context -> Bool
-isSales ctx = maybe False (`elem` get ctxsalesaccounts ctx)
-  (useremail <$> userinfo <$> get ctxmaybeuser ctx)
+isSales ctx = case get ctxmaybeuser ctx of
+                Nothing -> False
+                Just user -> (useremail (userinfo user) `elem` get ctxsalesaccounts ctx)
+                            && (usertotpactive user || not (get ctxproduction ctx))
 
 {- |
    Will 404 if not logged in as an admin.
