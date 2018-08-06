@@ -281,7 +281,7 @@ var Modal = require("../../common/modal");
         return false;
       // Else always show if we are setting anything other than no authentication
       } else {
-        return model.newAuthenticationMethod() != "standard";
+        return (model.newAuthenticationMethod() !== "standard" && model.newAuthenticationMethod() !== "no_bankid");
       }
     },
 

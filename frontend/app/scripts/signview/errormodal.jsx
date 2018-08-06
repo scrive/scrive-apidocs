@@ -39,6 +39,24 @@ var ScreenBlockingDialog = require("../../js/dialog.js").ScreenBlockingDialog;
     }
   });
 
+  var ErrorDetailsComponent = React.createClass({
+    propTypes: {
+      details: React.PropTypes.object.isRequired
+    },
+    render: function () {
+      var details = this.props.details || {};
+      return (
+        <div className="errordetails">
+          <ul>
+            {Object.keys(details).map(function (key) {
+              return (<li>{key}: {details[key]}</li>);
+            })}
+          </ul>
+        </div>
+      );
+    }
+  });
+
   var buttonParams = {
     color: "action",
     style: {margin: "20px"},
@@ -48,7 +66,7 @@ var ScreenBlockingDialog = require("../../js/dialog.js").ScreenBlockingDialog;
     }
   };
 
-  module.exports = function(xhr) {
+  module.exports = function(xhr, details) {
     ReloadManager.stopBlocking();
     Track.track('Error', {
       Message : 'Signing failed: reload modal',
@@ -84,6 +102,10 @@ var ScreenBlockingDialog = require("../../js/dialog.js").ScreenBlockingDialog;
         textDiv[0]
       );
     }
+
+    var detailsDiv = $("<div/>");
+    React.render(React.createElement(ErrorDetailsComponent, {details: details}), detailsDiv[0]);
+    detailsDiv.appendTo(contentDiv);
 
     var buttonDiv = $("<div/>");
     React.render(React.createElement(Button,buttonParams), buttonDiv[0]);

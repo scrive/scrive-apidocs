@@ -181,6 +181,12 @@ var Task = require("../navigation/task");
       return this.shouldHaveOverlay() || this.props.model.canSignDocument();
     },
 
+    errorModal: function (xhr) {
+      var document = this.props.model.document();
+      var signatory = document.currentSignatory();
+      new ErrorModal(xhr, {"Document ID": document.documentid(), "Signatory ID": signatory.signatoryid()});
+    },
+
     handleReject: function (text) {
       var model = this.props.model;
       var doc = model.document();
@@ -228,7 +234,7 @@ var Task = require("../navigation/task");
           ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
         } else {
           ReloadManager.stopBlocking();
-          new ErrorModal(xhr);
+          self.errorModal(xhr);
         }
       };
 
@@ -275,7 +281,7 @@ var Task = require("../navigation/task");
       var signatory = document.currentSignatory();
        document.cancelSigning(
           function () { self.setStep("eid"); },
-          function (xhr) { new ErrorModal(xhr); }
+          function (xhr) { self.errorModal(xhr); }
         ).send();
     },
     handleSignNets: function (netsSigning) {
@@ -294,7 +300,7 @@ var Task = require("../navigation/task");
           ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
         } else {
           ReloadManager.stopBlocking();
-          new ErrorModal(xhr);
+          self.errorModal(xhr);
         }
       };
 
@@ -341,7 +347,7 @@ var Task = require("../navigation/task");
       var signatory = document.currentSignatory();
        document.cancelSigning(
           function () { self.setStep("eid-nets"); },
-          function (xhr) { new ErrorModal(xhr); }
+          function (xhr) { self.errorModal(xhr); }
         ).send();
     },
     handleSign: function (pin) {
@@ -383,7 +389,7 @@ var Task = require("../navigation/task");
             ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
           } else {
             ReloadManager.stopBlocking();
-            new ErrorModal(xhr);
+            self.errorModal(xhr);
           }
         }
       };
@@ -453,7 +459,7 @@ var Task = require("../navigation/task");
         self.setStep("input-pin");
       }, function (xhr) {
         ReloadManager.stopBlocking();
-        new ErrorModal(xhr);
+        self.errorModal(xhr);
       }).send();
     },
 
