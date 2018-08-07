@@ -156,7 +156,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
       -- access/update session from a row that was previously locked.
       commit
 
-      logInfo "Handler started" $ object routeLogData
+      logInfo "Handler started" . object $ routeLogData ++ [ "ip" .= show (get ctxipnumber ctx) ]
 
       (res, handlerTime) <- localData [identifier_ $ sesID session] $ do
         startTime <- liftBase getCurrentTime
