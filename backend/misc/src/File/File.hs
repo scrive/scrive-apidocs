@@ -49,7 +49,6 @@ instance Loggable File where
       identifier_ fileid
     , "name" .= filename
     , "size" .= filesize
-    , "checksum" .= BS.unpack filechecksum
     , logPair_ filestorage
     ]
   logDefaultLabel _ = "file"

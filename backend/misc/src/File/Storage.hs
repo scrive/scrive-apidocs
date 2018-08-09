@@ -78,8 +78,7 @@ getFileContents file@File{ fileid, filestorage = FileStorageAWS url aes } =
         checksum = SHA1.hash contents
     unless (checksum == filechecksum file) $ do
       logAttention "SHA1 checksums of file don't match" $ object
-        [ "checksum" .= BS.unpack checksum
-        , logPair_ file
+        [ logPair_ file
         ]
       throwM $ FS.FileStorageException $
         "SHA1 checksum of file doesn't match the one in the database"
