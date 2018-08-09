@@ -55,4 +55,4 @@ instance Unjson PartnerID where
 
 instance Identifier PartnerID Int64 where
   idDefaultLabel _ = "partner_id"
-  idValue = toJSON . unPartnerID
+  idValue = toJSON . show . unPartnerID

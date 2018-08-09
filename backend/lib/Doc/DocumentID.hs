@@ -23,7 +23,7 @@ instance PQFormat DocumentID where
 
 instance Identifier DocumentID Int64 where
   idDefaultLabel _ = "document_id"
-  idValue = toJSON . fromDocumentID
+  idValue = toJSON . show . fromDocumentID
 
 instance FromReqURI DocumentID where
   fromReqURI = maybeRead

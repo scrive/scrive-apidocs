@@ -13,7 +13,6 @@ import Control.Monad.Catch
 import Data.Aeson
 import Data.Data
 import Data.Int
-import Data.Monoid as Monoid
 import Database.PostgreSQL.PQTypes
 import qualified Data.Text as T
 
@@ -91,7 +90,7 @@ instance PQFormat ShortMessageID where
 
 instance Identifier ShortMessageID Int64 where
   idDefaultLabel _ = "sms_id"
-  idValue (ShortMessageID k) = toJSON k
+  idValue (ShortMessageID k) = toJSON . show $ k
 
 instance FromSQL ShortMessageID where
   type PQBase ShortMessageID = PQBase Int64
@@ -110,27 +109,15 @@ data ShortMessage = ShortMessage {
 , smAttempts   :: !Int32
 } deriving (Eq, Ord, Show)
 
-instance ToJSON ShortMessage where
-  toJSON ShortMessage{..} = object [
-      identifier_ smID
-    , "provider"   .= show smProvider
-    , "originator" .= smOriginator
-    , "msisdn"     .= smMSISDN -- original/non-clean format
-    , "body"       .= smBody
-    , "attempts"   .= smAttempts
-    ]
-
-  toEncoding ShortMessage{..} = pairs $ Monoid.mconcat [
-      identifier_ smID
-    , "provider"   .= show smProvider
-    , "originator" .= smOriginator
-    , "msisdn"     .= smMSISDN -- original/non-clean format
-    , "body"       .= smBody
-    , "attempts"   .= smAttempts
-    ]
-
 instance Loggable ShortMessage where
-  logValue = toJSON
+  logValue ShortMessage{..} = object [
+      identifier_ smID
+    , "provider"   .= show smProvider
+    , "originator" .= smOriginator
+    , "msisdn"     .= smMSISDN -- original/non-clean format
+    , "body"       .= smBody
+    , "attempts"   .= smAttempts
+    ]
   logDefaultLabel _ = "short_message"
 
 ----------------------------------------
@@ -145,7 +132,7 @@ instance PQFormat SMSEventID where
 
 instance Identifier SMSEventID Int64 where
   idDefaultLabel _ = "sms_event_id"
-  idValue (SMSEventID k) = toJSON k
+  idValue (SMSEventID k) = toJSON . show $ k
 
 instance FromSQL SMSEventID where
   type PQBase SMSEventID = PQBase Int64

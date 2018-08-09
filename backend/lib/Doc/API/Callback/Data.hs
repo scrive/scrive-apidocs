@@ -21,7 +21,7 @@ instance PQFormat CallbackID where
 
 instance Identifier CallbackID Int64 where
   idDefaultLabel _       = "callback_id"
-  idValue (CallbackID k) = toJSON k
+  idValue (CallbackID k) = toJSON . show $ k
 
 instance FromSQL CallbackID where
   type PQBase CallbackID = PQBase Int64

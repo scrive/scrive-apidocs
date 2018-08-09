@@ -24,7 +24,7 @@ instance PQFormat FileID where
 
 instance Identifier FileID Int64 where
   idDefaultLabel _ = "file_id"
-  idValue (FileID k) = toJSON k
+  idValue (FileID k) = toJSON . show $ k
 
 instance FromReqURI FileID where
   fromReqURI = maybeRead

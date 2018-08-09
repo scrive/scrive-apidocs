@@ -19,7 +19,7 @@ instance PQFormat SessionID where
 
 instance Identifier SessionID Int64 where
   idDefaultLabel _ = "session_id"
-  idValue (SessionID k) = toJSON k
+  idValue (SessionID k) = toJSON . show $ k
 
 instance FromSQL SessionID where
   type PQBase SessionID = PQBase Int64
