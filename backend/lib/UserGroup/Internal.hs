@@ -212,7 +212,7 @@ fromUserGroupID (UserGroupID ugid) = ugid
 
 instance Identifier UserGroupID Int64 where
   idDefaultLabel _ = "user_group_id"
-  idValue (UserGroupID k) = toJSON k
+  idValue (UserGroupID k) = toJSON . show $ k
 
 instance Binary UserGroupID where
   put (UserGroupID ugid) = put ugid

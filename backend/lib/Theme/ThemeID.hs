@@ -52,4 +52,4 @@ instance Unjson ThemeID where
 
 instance Identifier ThemeID Int64 where
   idDefaultLabel _ = "theme_id"
-  idValue (ThemeID k) = toJSON k
+  idValue (ThemeID k) = toJSON . show $ k

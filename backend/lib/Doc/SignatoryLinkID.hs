@@ -31,7 +31,7 @@ instance FromReqURI SignatoryLinkID where
 
 instance Identifier SignatoryLinkID Int64 where
   idDefaultLabel _ = "signatory_link_id"
-  idValue (SignatoryLinkID k) = toJSON k
+  idValue (SignatoryLinkID k) = toJSON . show $ k
 
 instance Unjson SignatoryLinkID where
   unjsonDef = unjsonInvmapR

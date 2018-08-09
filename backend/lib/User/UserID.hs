@@ -31,7 +31,7 @@ instance Binary UserID where
 
 instance Identifier UserID Int64 where
   idDefaultLabel _ = "user_id"
-  idValue = toJSON . unUserID
+  idValue = toJSON . show . unUserID
 
 instance Unjson UserID where
   unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse UserID")  return) . maybeRead) show  unjsonDef

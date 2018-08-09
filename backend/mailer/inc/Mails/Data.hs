@@ -85,7 +85,7 @@ instance PQFormat MailID where
 
 instance Identifier MailID Int64 where
   idDefaultLabel _ = "mail_id"
-  idValue (MailID k) = toJSON k
+  idValue (MailID k) = toJSON . show $ k
 
 instance FromSQL MailID where
   type PQBase MailID = PQBase Int64
@@ -203,7 +203,7 @@ instance PQFormat EventID where
 
 instance Identifier EventID Int64 where
   idDefaultLabel _ = "mail_event_id"
-  idValue (EventID k) = toJSON k
+  idValue (EventID k) = toJSON . show $ k
 
 instance FromSQL EventID where
   type PQBase EventID = PQBase Int64

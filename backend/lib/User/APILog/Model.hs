@@ -109,7 +109,7 @@ instance PQFormat CallLogID where
 
 instance Identifier CallLogID Int64 where
   idDefaultLabel _ = "document_id"
-  idValue = Aeson.toJSON . fromCallLogID
+  idValue = Aeson.toJSON . show . fromCallLogID
 
 instance FromReqURI CallLogID where
   fromReqURI = maybeRead

@@ -32,7 +32,7 @@ deriving newtype instance Unjson SignatoryConsentQuestionID
 
 instance Identifier SignatoryConsentQuestionID Int64 where
   idDefaultLabel _ = "signatory_consent_question_id"
-  idValue (SignatoryConsentQuestionID k) = toJSON k
+  idValue (SignatoryConsentQuestionID k) = toJSON . show $ k
 
 unsafeSignatoryConsentQuestionID :: Int64 -> SignatoryConsentQuestionID
 unsafeSignatoryConsentQuestionID = SignatoryConsentQuestionID
