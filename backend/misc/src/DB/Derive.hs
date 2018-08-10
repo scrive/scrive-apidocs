@@ -12,10 +12,13 @@ import Foreign.Ptr
 import Text.JSON.Generic
 import Text.JSON.String
 
-jsonFromSQL :: (Data a, Typeable a) => Maybe (PQBase String) -> IO a
+jsonFromSQL :: (Data a, Typeable a)
+            => Maybe (PQBase String) -> IO a
 jsonFromSQL = jsonFromSQL' fromJSON
 
-jsonToSQL :: Data a => a -> ParamAllocator -> (Ptr (PQDest String) -> IO r) -> IO r
+jsonToSQL :: Data a
+          => a -> ParamAllocator -> (Ptr (PQDest String) -> IO r)
+          -> IO r
 jsonToSQL = jsonToSQL' toJSON
 
 ----------------------------------------
@@ -33,7 +36,10 @@ jsonFromSQL' f mbase = do
     err msg = hpqTypesError $ "jsonFromSQL (" ++ typerep ++ "): " ++ msg
     typerep = show $ typeOf (undefined::a)
 
-jsonToSQL' :: Data a => (a -> JSValue) -> a -> ParamAllocator -> (Ptr (PQDest String) -> IO r) -> IO r
+jsonToSQL' :: Data a
+           => (a -> JSValue) -> a -> ParamAllocator
+           -> (Ptr (PQDest String) -> IO r)
+           -> IO r
 jsonToSQL' f v = toSQL (showJSValue (f v) "")
 
 ----------------------------------------
