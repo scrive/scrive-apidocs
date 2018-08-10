@@ -11,7 +11,7 @@ import Data.Char
 import Data.Text (pack)
 import Data.Time.Clock
 import Data.Time.Clock.POSIX
-import Data.Typeable
+import Data.Typeable (cast)
 import Data.Word
 import Happstack.Server
 import Log
@@ -20,6 +20,7 @@ import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck
 import Test.QuickCheck.Gen
 import Test.QuickCheck.Unicode as QCU
+import Type.Reflection
 import qualified Crypto.Scrypt as Scrypt
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Diff as A
@@ -1184,7 +1185,7 @@ assertRaisesKontra correctException action =
     invExc :: (Show a, Typeable a) => a -> m ()
     invExc e = assertString $ "Expected DBExtraException " ++ typeOfE ++ ", instead got exception " ++ show e
 
-    typeOfE = show $ typeOf (undefined :: e)
+    typeOfE = show $ typeRep @e
 
 -- other helpers
 

@@ -883,6 +883,7 @@ Executable kontrakcja-migrate
                     , ScopedTypeVariables
                     , StandaloneDeriving
                     , TupleSections
+                    , TypeApplications
                     , TypeFamilies
                     , TypeOperators
                     , TypeSynonymInstances
@@ -1424,6 +1425,7 @@ Test-suite kontrakcja-test
                     , RecordWildCards
                     , ScopedTypeVariables
                     , StandaloneDeriving
+                    , TypeApplications
                     , TupleSections
                     , TypeFamilies
                     , TypeOperators
