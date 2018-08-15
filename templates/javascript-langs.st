@@ -19,12 +19,6 @@ javascriptLocalisation =
              , zoomOut2: "$_ZoomOut2()$"
              , signviewConfirmation: "$_contractSignConfirmation()$"
              , signviewConfirmationSignaturesPlaced: "$_contractSignConfirmationSignaturePlaced()$"
-             , signviewLegalAgreement: {
-                   text: "$_signviewLegalAgreementText()$"
-                 , point1: "$_signviewLegalAgreementPoint1()$"
-                 , point2: "$_signviewLegalAgreementPoint2()$"
-                 , point3: "$_signviewLegalAgreementPoint3()$"
-               }
              , signviewPdfOrPhoto: "$_pdfOrPhoto()$"
              , identifyDocument: "$_IdentifyDocument()$"
              , identifyBankId: "$_IdentifyBankId()$"

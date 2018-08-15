@@ -12,7 +12,6 @@ var Task = require("../navigation/task");
 var $ = require("jquery");
 var Field = require("../../../js/fields.js").Field;
 var classNames = require("classnames");
-var SignLegalAgreement = require("./signlegalagreement");
 
   module.exports = React.createClass({
     mixins: [TaskMixin],
@@ -131,7 +130,6 @@ var SignLegalAgreement = require("./signlegalagreement");
             <span className={logoClass}/>
             {confirmationTitle}
           </h1>
-          <SignLegalAgreement />
           {/* if */ name !== "" &&
             <HtmlTextWithSubstitution
               secureText={"<p>" + confirmationText + "</p>"}
