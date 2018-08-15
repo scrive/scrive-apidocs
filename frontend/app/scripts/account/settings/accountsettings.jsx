@@ -165,7 +165,7 @@ module.exports = Backbone.Model.extend({
         if (rs.send) {
           var msg = $("<span>" + localization.account.accountDetails.changeEmailMailSent + "</span>");
           msg.find(".email-confirmation-address").text(self.newemail());
-          new FlashMessage({content: msg, type: "success"});
+          new FlashMessage({content: msg.text(), type: "success"});
         } else {
           new FlashMessage({content: localization.account.accountDetails.emailAlreadyInUse, type: "error"});
         }
