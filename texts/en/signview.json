@@ -1,4 +1,4 @@
-{
+{ 
 "_DeletePDF":"Delete",
 "_RequestedAttachments":"Requested attachments",
 "_ReviewPDF":"Show",
@@ -158,10 +158,6 @@
 "_signinginprogressmodalAction1":"Saves collected evidence",
 "_signinginprogressmodalAction2":"Registers your signature",
 "_signviewAttachmentUploadedInOtherWindow":"Sorry, we are unable to upload your file because this document is open in another window. Please reload your page to continue.",
-"_signviewLegalAgreementPoint1":"you have read the entire document;",
-"_signviewLegalAgreementPoint2":"you agree to each of the terms in the document;",
-"_signviewLegalAgreementPoint3":"you have full power and authority to sign this document.",
-"_signviewLegalAgreementText":"This is an important document and, by signing it, you will be entering into a contract with legal effect. By signing this document, you confirm that:",
 "_signviewSigningFailed":"Sorry, something went wrong while signing the document. Please try again.",
 "_smsDocumentErrorAuthor":"Scrive could not handle the document $documenttitle:noescape()$ and the signing process has been cancelled. If you have any questions, please contact us at support@scrive.com",
 "_smsDocumentErrorSignatory":"Scrive could not handle the document $documenttitle:noescape()$ and the signing process has been cancelled. If you have any questions, please contact us at support@scrive.com",

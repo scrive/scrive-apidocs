@@ -6,7 +6,6 @@ var InfoTextInput = require("../../common/infotextinput");
 var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
 var ViewSize = require("../viewsize");
 var classNames = require("classnames");
-var SignHeader = require("./signheader");
 
   module.exports = React.createClass({
     propTypes: {
@@ -27,7 +26,13 @@ var SignHeader = require("./signheader");
 
       return (
         <div className={divClass}>
-          <SignHeader title={this.props.title} name={this.props.name} />
+          <h1>{localization.process.signbuttontext}</h1>
+          <p>
+            <HtmlTextWithSubstitution
+              subs={{".put-document-title-here": this.props.title, ".put-signatory-name-here": this.props.name}}
+              secureText={localization.signviewConfirmation}
+            />
+          </p>
           <dl>
             <dt><label htmlFor="pin">{localization.docsignview.pinSigning.enterSMSPin}</label></dt>
             <dd>
