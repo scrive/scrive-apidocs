@@ -4,6 +4,7 @@ module User.Model.Query (
   , GetUserGroupAccountsCountTotal(..)
   , GetUserGroupAdmins(..)
   , GetUsageStats(..)
+  , UsageStatsFor(..)
   , GetUserByID(..)
   , GetUserByIDIncludeDeleted(..)
   , GetUserByEmail(..)
@@ -186,11 +187,14 @@ instance (MonadDB m, MonadThrow m)
       then return Nothing
       else return $ Just UserNotDeletableDueToPendingDocuments
 
+data UsageStatsFor = UsageStatsForUser !UserID
+                   | UsageStatsForUserGroup !UserGroupID
+
 data GetUsageStats =
-  GetUsageStats (Either UserID UserGroupID) StatsPartition Interval
+  GetUsageStats UsageStatsFor StatsPartition Interval
 
 instance (MonadDB m, MonadTime m) => DBQuery m GetUsageStats [UserUsageStats] where
-  query (GetUsageStats eid statsPartition interval) = do
+  query (GetUsageStats forWhom statsPartition interval) = do
     now <- currentTime
     -- Fetches relevant documents and then groups them by the
     -- timestamps (trimmed to the precision we want) and users to
@@ -231,9 +235,9 @@ instance (MonadDB m, MonadTime m) => DBQuery m GetUsageStats [UserUsageStats] wh
           sqlWhere $ "chi.time" <+> ">=" <+> startingDate now
           sqlGroupBy "time_window"
           sqlGroupBy "chi.user_id"
-          case eid of
-            Left  uid  -> sqlWhereEq "chi.user_id" uid
-            Right ugid -> sqlWhereEq "chi.user_group_id" ugid
+          case forWhom of
+            UsageStatsForUser      uid  -> sqlWhereEq "chi.user_id" uid
+            UsageStatsForUserGroup ugid -> sqlWhereEq "chi.user_group_id" ugid
 
       startingDate :: UTCTime -> SQL
       startingDate now = dateTrunc (sqlParam now <+> "-" <?> interval)

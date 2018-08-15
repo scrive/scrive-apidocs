@@ -633,8 +633,8 @@ handleAdminUserUsageStatsDays uid = onlySalesOrAdmin $ do
   user <- guardJustM $ dbQuery $ GetUserByID uid
   withCompany <- isFieldSet "withCompany"
   if (useriscompanyadmin user && withCompany)
-    then getDaysStats (Right $ usergroupid user)
-    else getDaysStats (Left $ userid user)
+    then getDaysStats (UsageStatsForUserGroup $ usergroupid user)
+    else getDaysStats (UsageStatsForUser $ userid user)
 
 
 handleAdminUserUsageStatsMonths :: Kontrakcja m => UserID -> m JSValue
@@ -642,16 +642,16 @@ handleAdminUserUsageStatsMonths uid = onlySalesOrAdmin $ do
   user <- guardJustM $ dbQuery $ GetUserByID uid
   withCompany <- isFieldSet "withCompany"
   if (useriscompanyadmin user && withCompany)
-    then getMonthsStats (Right $ usergroupid user)
-    else getMonthsStats (Left $ userid user)
+    then getMonthsStats (UsageStatsForUserGroup $ usergroupid user)
+    else getMonthsStats (UsageStatsForUser $ userid user)
 
 handleAdminCompanyUsageStatsDays :: Kontrakcja m => UserGroupID -> m JSValue
 handleAdminCompanyUsageStatsDays ugid = onlySalesOrAdmin $ do
-  getDaysStats (Right $ ugid)
+  getDaysStats (UsageStatsForUserGroup ugid)
 
 handleAdminCompanyUsageStatsMonths :: Kontrakcja m => UserGroupID -> m JSValue
 handleAdminCompanyUsageStatsMonths ugid = onlySalesOrAdmin $ do
-  getMonthsStats (Right $ ugid)
+  getMonthsStats (UsageStatsForUserGroup ugid)
 
 handleCompanyGetSubscription :: Kontrakcja m => UserGroupID -> m JSValue
 handleCompanyGetSubscription ugid = onlySalesOrAdmin $ do

@@ -17,6 +17,7 @@ module User.UserControl(
   , handlePasswordReminderGet
   , handlePasswordReminderPost
   , handleContactSales
+  , UsageStatsFor(..)
   , getDaysStats   -- Exported for admin section
   , getMonthsStats -- Exported for admin section
 ) where
@@ -162,8 +163,8 @@ handleUsageStatsJSONForUserDays = do
   user <- guardJustM $ get ctxmaybeuser <$> getContext
   withCompany <- isFieldSet "withCompany"
   if (useriscompanyadmin user && withCompany)
-    then getDaysStats (Right $ usergroupid user)
-    else getDaysStats (Left $ userid user)
+    then getDaysStats (UsageStatsForUserGroup $ usergroupid user)
+    else getDaysStats (UsageStatsForUser $ userid user)
 
 
 handleUsageStatsJSONForUserMonths :: Kontrakcja m => m JSValue
@@ -171,26 +172,26 @@ handleUsageStatsJSONForUserMonths = do
   user  <- guardJustM $ get ctxmaybeuser <$> getContext
   withCompany <- isFieldSet "withCompany"
   if (useriscompanyadmin user && withCompany)
-    then getMonthsStats (Right $ usergroupid user)
-    else getMonthsStats (Left $ userid user)
+    then getMonthsStats (UsageStatsForUserGroup $ usergroupid user)
+    else getMonthsStats (UsageStatsForUser $ userid user)
 
-getDaysStats :: Kontrakcja m => Either UserID UserGroupID -> m JSValue
-getDaysStats = getStats PartitionByDay (idays 30)
+getDaysStats :: Kontrakcja m => UsageStatsFor -> m JSValue
+getDaysStats forWhom = getStats PartitionByDay (idays 30) forWhom
 
-getMonthsStats :: Kontrakcja m => Either UserID UserGroupID -> m JSValue
-getMonthsStats = getStats PartitionByMonth (imonths 6)
+getMonthsStats :: Kontrakcja m => UsageStatsFor -> m JSValue
+getMonthsStats forWhom = getStats PartitionByMonth (imonths 6) forWhom
 
 getStats :: Kontrakcja m
-         => StatsPartition -> Interval -> Either UserID UserGroupID
+         => StatsPartition -> Interval -> UsageStatsFor
          -> m JSValue
-getStats statsPartition interval eid =
-  case eid of
-    Left uid -> do
-      stats <- dbQuery $ GetUsageStats (Left uid) statsPartition interval
+getStats statsPartition interval forWhom =
+  case forWhom of
+    UsageStatsForUser _uid -> do
+      stats <- dbQuery $ GetUsageStats forWhom statsPartition interval
       return $ userStatsToJSON timeFormat stats
-    Right ugid -> do
+    UsageStatsForUserGroup _ugid -> do
       totalS <- renderTemplate_ "statsOrgTotal"
-      stats <- dbQuery $ GetUsageStats (Right ugid) statsPartition interval
+      stats <- dbQuery $ GetUsageStats forWhom statsPartition interval
       return $ companyStatsToJSON timeFormat totalS stats
   where timeFormat :: UTCTime -> String
         timeFormat = case statsPartition of

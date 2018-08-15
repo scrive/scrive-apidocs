@@ -149,7 +149,8 @@ test_userUsageStatisticsByUser = do
   Just user <- addNewUser "Emily" "Green" email
   _ <- addRandomDocumentWithAuthorAndCondition user isClosed
   res <- dbQuery $
-         GetUsageStats (Left $ userid user) PartitionByMonth (iyears 2000)
+         GetUsageStats (UsageStatsForUser $ userid user)
+         PartitionByMonth (iyears 2000)
   assertEqual "Document present in stats" 1 (length res)
   let [UserUsageStats{..}] = res
   assertEqual "Email in statistics is correct" email uusUserEmail
@@ -166,7 +167,8 @@ test_userUsageStatisticsByCompany = do
   _ <- addRandomDocumentWithAuthorAndCondition user1 isClosed
   _ <- addRandomDocumentWithAuthorAndCondition user2 isClosed
   res <- dbQuery $
-         GetUsageStats (Right ugid) PartitionByDay (iyears 2000)
+         GetUsageStats (UsageStatsForUserGroup ugid)
+         PartitionByDay (iyears 2000)
   assertEqual "Documents present in stats" 2 $ length res
   let Just uus1 = find ((email1 ==) . uusUserEmail) res
       Just uus2 = find ((email2 ==) . uusUserEmail) res
