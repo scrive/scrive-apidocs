@@ -1,3 +1,5 @@
+var InfoTextInput = require("../common/infotextinput");
+var Calendar = require("../../js/calendar.js");
 var React = require("react");
 var Utils = require("./utils");
 var StatusTooltipMixin = require("./statustooltipmixin");
@@ -84,15 +86,120 @@ var RemoveModalContent = React.createClass({
   }
 });
 
+var ProlongModal = React.createClass({
+  propTypes: {
+    documents: React.PropTypes.array,
+    active: React.PropTypes.bool.isRequired,
+    onClose: React.PropTypes.func.isRequired,
+    onAccept: React.PropTypes.func.isRequired,
+  },
+  getInitialState: function () {
+    return {acceptVisible: true,
+            days: "1"};
+  },
+  componentDidMount: function () {
+    this.calendar = new Calendar.Calendar({
+      on: $(this.refs.calendarButton.getDOMNode()),
+      days: this.state.days,
+      change: this.onCalendarChange
+    });
+  },
+  componentDidUpdate: function (prevProps, prevState) {
+    if (prevState.days != this.state.days) {
+      this.calendar.setDays(parseInt(this.state.days));
+      this.setState({acceptVisible: !isNaN(parseInt(this.state.days, 10))});
+    }
+  },
+  onCalendarChange: function (value) {
+    this.setState({days: "" + value});
+  },
+  onDaysInputChange: function (value) {
+    this.setState({days: value});
+  },
+  onHide: function () {
+    this.setState(this.getInitialState());
+  },
+  onAccept: function () {
+    this.calendar.close();
+    this.props.onAccept(this.state.days);
+  },
+  text: function () {
+    if (this.props.documents === null) {
+      return <span />;
+    } else if (this.props.documents.length == 1) {
+      return (
+        <HtmlTextWithSubstitution
+          secureText={localization.archive.documents.prolong.body}
+          lists={{
+            ".put-one-or-more-things-to-be-prolonged-here": {
+              items: [this.props.documents[0].field("title")],
+              wrapper: "<strong />"
+            }
+          }}
+        />
+      );
+    } else {
+      var sub = this.props.documents.length + (" " + localization.documents).toLowerCase();
+      return (
+        <HtmlTextWithSubstitution
+          secureText={localization.archive.documents.prolong.body}
+          subs={{
+            ".put-one-or-more-things-to-be-prolonged-here": sub
+          }}
+        />
+      );
+    }
+  },
+  render: function () {
+    return (
+      <Modal.Container
+        active={this.props.active}
+        onHide={this.onHide}
+      >
+        <Modal.Header
+          title={localization.archive.documents.prolong.action}
+          showClose={true}
+          onClose={this.props.onClose}
+        />
+        <Modal.Content>
+          <div className="prolongmodal">
+            {this.text()}
+            <InfoTextInput
+              ref="daysInput"
+              infotext="1"
+              value={this.state.days}
+              onChange={this.onDaysInputChange}
+            />
+            <div className="text">{localization.prolongmodal.days}</div>
+            <div ref="calendarButton" className="calendarbutton"></div>
+          </div>
+        </Modal.Content>
+        <Modal.Footer>
+          <Modal.CancelButton onClick={this.props.onClose} />
+          {this.state.acceptVisible &&
+            <Modal.AcceptButton
+              type="cancel"
+              text={localization.archive.documents.prolong.action}
+              onClick={this.onAccept}
+             />
+          }
+        </Modal.Footer>
+      </Modal.Container>
+    );
+  }
+});
+
 module.exports = React.createClass({
     mixins: [StatusTooltipMixin, List.ReloadableContainer, TimeFilterOptionsMixin],
     getInitialState: function () {
       return {
         showSendReminderModal: false,
         documentsToRemind: null,
+        documentsToProlong: null,
         showCancelModal: false,
         documentsToCancel: null,
         showRemoveModal: false,
+        showProlongModal: false,
         documentsToRemove: null
       };
     },
@@ -219,6 +326,37 @@ module.exports = React.createClass({
         }
       }).sendAjax();
     },
+    openProlongModal: function (selected) {
+      this.setState({showProlongModal: true,
+                     documentsToProlong: selected});
+    },
+    onProlongModalClose: function () {
+      this.setState({showProlongModal: false,
+                     documentsToProlong: null});
+    },
+    onProlongModalAccept: function (days) {
+      var self = this;
+      var documentIds = _.map(this.state.documentsToProlong, function (doc) {
+        return doc.field("id");
+      });
+
+      Track.track('Prolong documents');
+      new Submit({
+        url: "/d/prolong",
+        method: "POST",
+        documentids: "[" + documentIds + "]",
+        days: days,
+        ajaxsuccess : function() {
+          new FlashMessage({
+            type: 'success',
+            content: localization.archive.documents.prolong.successMessage
+          });
+
+          self.reload();
+          self.onProlongModalClose();
+        }
+      }).sendAjax();
+    },
     render: function() {
       var self = this;
       return (
@@ -301,6 +439,25 @@ module.exports = React.createClass({
                     new FlashMessage({type: 'error', content: localization.archive.documents.remove.invalidMessage});
                   } else {
                     self.openRemoveModal(selected);
+                  }
+                }
+              }}
+            />
+
+            <List.ListAction
+              name={localization.archive.documents.prolong.action}
+              onSelect={function(selected,model) {
+                if (selected.length ==0 ) {
+                  new FlashMessage({type: 'error', content: localization.archive.documents.prolong.emptyMessage});
+                } else {
+                  var canProlongAll = _.all(selected, function (doc) {
+                    return ((doc.field("status") === "timedout") &&
+                            (Utils.viewerIsAuthor(doc) || (doc.field("viewer").role == "company_admin"  && self.props.forCompanyAdmin)));
+                  });
+                  if (!canProlongAll) {
+                    new FlashMessage({type: 'error', content: localization.archive.documents.prolong.invalidMessage});
+                  } else {
+                    self.openProlongModal(selected);
                   }
                 }
               }}
@@ -425,6 +582,13 @@ module.exports = React.createClass({
               />
             </Modal.Footer>
           </Modal.Container>
+
+          <ProlongModal
+            documents={self.state.documentsToProlong}
+            active={self.state.showProlongModal}
+            onClose={self.onProlongModalClose}
+            onAccept={self.onProlongModalAccept}
+          />
         </div>
       );
     }

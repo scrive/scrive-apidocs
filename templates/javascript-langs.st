@@ -901,6 +901,13 @@ javascriptLocalisation =
                             , emptyMessage : "$_noDocumentChosen()$"
                             , notAvailableMessage : "$_youCantSendRemindersToThisDocuments()$"
                         }
+                    , prolong : {
+                              action: "$_archiveProlong()$"
+                            , body : "$_listLocalDialogsBodyProlong()$"
+                            , emptyMessage : "$_noDocumentChosen()$"
+                            , invalidMessage : "$_flashMessageDocumentArchiveInvalidProlong()$"
+                            , successMessage : "$_listprolongedflashmessagesuccess()$"
+                        }
                     , cancel : {
                               action: "$_listcancelbuttontext()$"
                             , body : "$_listcancelbody()$"
