@@ -49,8 +49,8 @@ processEvents :: (MonadDB m, MonadBase IO m, MonadReader CronEnv m, MonadLog m, 
 processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, smsOrigMsisdn) -> do
     mkontraInfoForSMS <- dbQuery $ GetKontraInfoForSMS smsid
     logInfo "Messages.procesEvent: logging info" . object $ [
-            identifier_ eid
-          , identifier_ smsid
+            identifier eid
+          , identifier smsid
           , "event_type" .= show eventType
           ]
     processEvent (eid, smsid, eventType, mkontraInfoForSMS, smsOrigMsisdn)
@@ -61,12 +61,12 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, s
       mailNoreplyAddress <- asks ceMailNoreplyAddress
       case docs of
         [] -> do
-          logInfo "SMS event for purged/non-existing document" $ object [identifier_ slid]
+          logInfo "SMS event for purged/non-existing document" $ object [identifier slid]
           void $ dbUpdate $ MarkSMSEventAsRead eid
         (doc':_) -> do
           exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor (documentid doc')
           if not exists then do
-            logInfo "SMS event for purged/non-existing document" $ object [identifier_ slid, logPair_ doc']
+            logInfo "SMS event for purged/non-existing document" $ object [identifier slid, logPair_ doc']
             void $ dbUpdate $ MarkSMSEventAsRead eid
           else withDocument doc' $ do
             _ <- dbUpdate $ MarkSMSEventAsRead eid
@@ -83,7 +83,7 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, s
                 -- addresses here (for dropped/bounce events)
                 handleEv (SMSEvent phone ev) = do
                   logInfo "Comparing phone numbers" $ object [
-                      identifier_ slid
+                      identifier slid
                     , "signatory_phone" .= signphone
                     , "event_phone" .= phone
                     , "sms_original_phone" .= smsOrigMsisdn
@@ -120,7 +120,7 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, s
         case eventType of
           SMSEvent phone SMSDelivered ->
             logInfo "SMS delivered" $ object [
-                identifier_ did
+                identifier did
               , "recipient" .= phone
               , "sms_original_phone" .= smsOrigMsisdn
               ]

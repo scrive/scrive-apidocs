@@ -1,7 +1,12 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 module Log.Identifier (
     Identifier(..)
+  , IdentifierValue
+  , stringIdentifier
+  , int64AsStringIdentifier
+  , intIdentifier
   , identifier
-  , identifier_
+  , identifierMapLabel
   , (.=)
   , Loggable(..)
   , logPair
@@ -11,27 +16,66 @@ module Log.Identifier (
   ) where
 
 import Data.Aeson.Types as Aeson
+import Data.Int (Int64)
 import Data.Text (Text)
 import GHC.Exts (fromList)
 
-class Identifier t b | t -> b where
-  idDefaultLabel :: t -> Text
-  idValue        :: t -> Value
+-- | We use String identifiers for everything to workaround issues
+-- JavaScript has with big numbers, and Ints in rare cases when we
+-- know that the value will fit into 52 bits.
+data IdentifierValue = IdentifierInt    !Int
+                     | IdentifierString !String
+                     | IdentifierJSON   !Value
+                       -- ^ Used only for implementing Maybe and [a]
+                       -- 'Identifier' instances.
 
-identifier :: (Aeson.KeyValue kv, Identifier t b) => (Text -> Text) -> t -> kv
-identifier f n = f (idDefaultLabel n) .= idValue n
+instance ToJSON IdentifierValue where
+  toJSON (IdentifierInt      i) = toJSON i
+  toJSON (IdentifierString str) = toJSON str
+  toJSON (IdentifierJSON   val) = val
 
-identifier_ :: Aeson.KeyValue kv => Identifier t b => t -> kv
-identifier_ = identifier id
+  toEncoding (IdentifierInt      i) = toEncoding i
+  toEncoding (IdentifierString str) = toEncoding str
+  toEncoding (IdentifierJSON   val) = toEncoding val
 
-instance Identifier t b => Identifier [t] b where
-  idDefaultLabel _ = idDefaultLabel (undefined::t) <> "s"
-  idValue ns       = Array $ fromList $ fmap idValue ns
+class Identifier t where
+  idDefaultLabel :: Text
+  idValue        :: t -> IdentifierValue
 
-instance Identifier t b => Identifier (Maybe t) b where
-  idDefaultLabel _ = idDefaultLabel (undefined::t)
-  idValue Nothing  = Null
+-- Helpers for implementing 'Identifier' instances.
+
+stringIdentifier :: String -> IdentifierValue
+stringIdentifier = IdentifierString
+
+int64AsStringIdentifier :: Int64 -> IdentifierValue
+int64AsStringIdentifier = IdentifierString . show
+
+intIdentifier :: Int -> IdentifierValue
+intIdentifier = IdentifierInt
+
+jsonIdentifier :: ToJSON a => a -> IdentifierValue
+jsonIdentifier = IdentifierJSON . toJSON
+
+-- Default instances.
+
+instance Identifier t => Identifier [t] where
+  idDefaultLabel = idDefaultLabel @t <> "s"
+  idValue ns     = IdentifierJSON $ Array $ fromList $ fmap (toJSON . idValue) ns
+
+instance Identifier t => Identifier (Maybe t)  where
+  idDefaultLabel   = idDefaultLabel @t
+  idValue Nothing  = jsonIdentifier Null
   idValue (Just n) = idValue n
+
+-- Helpers for client code.
+
+identifier :: forall t kv . (Identifier t, Aeson.KeyValue kv)
+           => t -> kv
+identifier n = (idDefaultLabel @t) .= (toJSON . idValue $ n)
+
+identifierMapLabel :: forall t kv . (Identifier t, Aeson.KeyValue kv)
+                   => (Text -> Text) -> t -> kv
+identifierMapLabel f n = (f $ idDefaultLabel @t) .= (toJSON . idValue $ n)
 
 class Loggable a where
   -- | Type can be converted for logging purposes by encoding (parts of)

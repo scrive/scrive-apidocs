@@ -4,7 +4,6 @@ module Doc.SignatoryConsentQuestionID (
   , fromSignatoryConsentQuestionID
   ) where
 
-import Data.Aeson (toJSON)
 import Data.Binary as B
 import Data.Data
 import Data.Int
@@ -30,9 +29,9 @@ deriving newtype instance FromSQL SignatoryConsentQuestionID
 deriving newtype instance ToSQL SignatoryConsentQuestionID
 deriving newtype instance Unjson SignatoryConsentQuestionID
 
-instance Identifier SignatoryConsentQuestionID Int64 where
-  idDefaultLabel _ = "signatory_consent_question_id"
-  idValue (SignatoryConsentQuestionID k) = toJSON . show $ k
+instance Identifier SignatoryConsentQuestionID where
+  idDefaultLabel                         = "signatory_consent_question_id"
+  idValue (SignatoryConsentQuestionID k) = int64AsStringIdentifier k
 
 unsafeSignatoryConsentQuestionID :: Int64 -> SignatoryConsentQuestionID
 unsafeSignatoryConsentQuestionID = SignatoryConsentQuestionID

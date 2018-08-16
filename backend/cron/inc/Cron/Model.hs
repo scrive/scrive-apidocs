@@ -230,7 +230,7 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
           -- Share the string between all the log messages.
           orphanFileMarked = "Orphan file marked for purge"
       fids <- runDB . dbUpdate . MarkOrphanFilesForPurgeAfter maxMarked $ idays 7
-      forM_ fids $ \fid -> logInfo orphanFileMarked $ object [identifier_ fid]
+      forM_ fids $ \fid -> logInfo orphanFileMarked $ object [identifier fid]
       -- If maximum amount of files was marked, run it again shortly after.
       if length fids == maxMarked
         then return . RerunAfter $ iseconds 1

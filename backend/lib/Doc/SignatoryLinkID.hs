@@ -8,7 +8,6 @@ module Doc.SignatoryLinkID (
   , fromSignatoryLinkID
   ) where
 
-import Data.Aeson
 import Data.Int
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
@@ -29,9 +28,9 @@ instance PQFormat SignatoryLinkID where
 instance FromReqURI SignatoryLinkID where
   fromReqURI = maybeRead
 
-instance Identifier SignatoryLinkID Int64 where
-  idDefaultLabel _ = "signatory_link_id"
-  idValue (SignatoryLinkID k) = toJSON . show $ k
+instance Identifier SignatoryLinkID where
+  idDefaultLabel              = "signatory_link_id"
+  idValue (SignatoryLinkID k) = int64AsStringIdentifier k
 
 instance Unjson SignatoryLinkID where
   unjsonDef = unjsonInvmapR

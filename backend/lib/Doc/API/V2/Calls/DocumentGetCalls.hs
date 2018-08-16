@@ -73,7 +73,7 @@ docApiV2List = api $ do
   let documentFilters = (DocumentFilterUnsavedDraft False):(join $ toDocumentFilter (userid user) <$> filters)
   let documentSorting = (toDocumentSorting <$> sorting)
   logInfo "Fetching list of documents from the database" $ object [
-      identifier_ $ userid user
+      identifier $ userid user
     , "offset"    .= offset
     , "max_count" .= maxcount
     , "filters"   .= map show documentFilters
@@ -98,7 +98,7 @@ docApiV2Get did = logDocument did . api $ do
 
 docApiV2GetByShortID :: Kontrakcja m => DocumentID -> m Response
 docApiV2GetByShortID shortDid = api $ do
-  logInfo "docApiV2GetByShortID" $ object $ [ identifier ("short_"<>) shortDid ]
+  logInfo "docApiV2GetByShortID" $ object $ [ identifierMapLabel ("short_"<>) shortDid ]
   when (length (show shortDid) > 6) $
     apiError $ requestParameterInvalid "short_document_id"
     "was greater than 6 digits"

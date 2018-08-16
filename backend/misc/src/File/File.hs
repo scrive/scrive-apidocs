@@ -46,7 +46,7 @@ instance Show File where
 
 instance Loggable File where
   logValue File{..} = object [
-      identifier_ fileid
+      identifier fileid
     , "name" .= filename
     , "size" .= filesize
     , logPair_ filestorage

@@ -18,11 +18,11 @@ logUserCompanyIPAndApiVersion apiversion acc = do
     Just user -> do
       ug <- getUserGroupForUser user
       return
-        [ identifier_ $ userid user
-        , identifier_ . get ugID $ ug
+        [ identifier $ userid user
+        , identifier . get ugID $ ug
         ]
   ctx <- getContext
-  let apiversionandip = [identifier_ apiversion, "ip" .= show (get ctxipnumber ctx)]
+  let apiversionandip = [identifier apiversion, "ip" .= show (get ctxipnumber ctx)]
   localData (userandcompanyids ++ apiversionandip) $ do
     logInfo_ "API call"
     acc

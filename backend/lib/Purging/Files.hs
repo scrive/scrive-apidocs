@@ -148,7 +148,7 @@ purgeOrphanFile batchSize = do
           commit
         Left err -> do
           logAttention "Purging file failed, it couldn't be removed from Amazon" $ object [
-              identifier_ fid
+              identifier fid
             , "error" .= show (err :: FileStorageException)
             ]
           rollback

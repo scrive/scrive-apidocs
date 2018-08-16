@@ -13,7 +13,6 @@ module UserGroup.Internal (
   , UserGroupWithParents
   ) where
 
-import Data.Aeson
 import Data.Binary
 import Data.Default
 import Data.Int
@@ -210,9 +209,9 @@ emptyUserGroupID = UserGroupID 0
 fromUserGroupID :: UserGroupID -> Int64
 fromUserGroupID (UserGroupID ugid) = ugid
 
-instance Identifier UserGroupID Int64 where
-  idDefaultLabel _ = "user_group_id"
-  idValue (UserGroupID k) = toJSON . show $ k
+instance Identifier UserGroupID where
+  idDefaultLabel          = "user_group_id"
+  idValue (UserGroupID k) = int64AsStringIdentifier k
 
 instance Binary UserGroupID where
   put (UserGroupID ugid) = put ugid

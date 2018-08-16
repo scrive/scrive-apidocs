@@ -45,7 +45,7 @@ clearMobileNumber :: String -> String
 clearMobileNumber = filter (\c -> not (c `elem` (" -()."::String)))
 
 sendSMSHelper :: (MonadDB m, MonadThrow m, CryptoRNG m, MonadBase IO m, MonadIO m, MonadLog m) => SenderConfig -> ShortMessage -> m Bool
-sendSMSHelper MbloxSender{..} sm@ShortMessage{..} = localData [identifier_ smID] $ do
+sendSMSHelper MbloxSender{..} sm@ShortMessage{..} = localData [identifier smID] $ do
   let clearmsisdn = clearMobileNumber smMSISDN
       northAmericanNumber = "+1" `isPrefixOf` clearmsisdn
       -- Sending SMS to the USA cannot be done with AlphaNumeric sender
@@ -85,7 +85,7 @@ sendSMSHelper MbloxSender{..} sm@ShortMessage{..} = localData [identifier_ smID]
          return False
        _ -> return False
 
-sendSMSHelper TeliaCallGuideSender{..} sm@ShortMessage{..} = localData [identifier_ smID] $ do
+sendSMSHelper TeliaCallGuideSender{..} sm@ShortMessage{..} = localData [identifier smID] $ do
   -- Telia CallGuide doesn't want leading +
   let msisdn = filter (/='+') smMSISDN
   let clearmsisdn = clearMobileNumber msisdn
@@ -127,7 +127,7 @@ sendSMSHelper TeliaCallGuideSender{..} sm@ShortMessage{..} = localData [identifi
   res <- dbUpdate $ UpdateSMSWithTeliaID smID teliaid
   return (success && res)
 
-sendSMSHelper LocalSender{..} ShortMessage{..} = localData [identifier_ smID] $ do
+sendSMSHelper LocalSender{..} ShortMessage{..} = localData [identifier smID] $ do
   let clearmsisdn = clearMobileNumber smMSISDN
   let matchResult = (match (makeRegex ("https?://[a-zA-Z:0-9.-]+/[a-zA-Z_:/0-9#?-]+" :: String) :: Regex) (smBody :: String) :: MatchResult String)
   let withClickableLinks = mrBefore matchResult ++ "<a href=\"" ++ mrMatch matchResult ++ "\">" ++ mrMatch matchResult ++ "</a>" ++ mrAfter matchResult

@@ -4,7 +4,6 @@ module Doc.DocumentID (
   , fromDocumentID
   ) where
 
-import Data.Aeson
 import Data.Binary as B
 import Data.Int
 import Data.Unjson
@@ -21,9 +20,9 @@ deriving newtype instance Show DocumentID
 instance PQFormat DocumentID where
   pqFormat = pqFormat @Int64
 
-instance Identifier DocumentID Int64 where
-  idDefaultLabel _ = "document_id"
-  idValue = toJSON . show . fromDocumentID
+instance Identifier DocumentID where
+  idDefaultLabel = "document_id"
+  idValue        = int64AsStringIdentifier . fromDocumentID
 
 instance FromReqURI DocumentID where
   fromReqURI = maybeRead

@@ -44,7 +44,7 @@ saveNewFile fName fContent = do
       -- CORE-478: urlFromFile should be moved in this module
   Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
   let encryptedContent = aesEncrypt aes fContent
-  localData [identifier_ fid] $ do
+  localData [identifier fid] $ do
     eRes <- try $ FS.saveNewContents awsUrl $ BSL.fromStrict encryptedContent
     case eRes of
       Right () -> do
@@ -63,7 +63,7 @@ saveNewFile fName fContent = do
           , "error" .= msg
           ]
         dbUpdate $ PurgeFile fid
-        logAttention "newFileInAmazon: purged file" $ object [identifier_ fid]
+        logAttention "newFileInAmazon: purged file" $ object [identifier fid]
         throwM err
 
 -- | Get file contents from the underlying storage and decrypt the contents
@@ -72,7 +72,7 @@ getFileContents :: (MonadFileStorage m, MonadIO m, MonadLog m, MonadThrow m)
                 => File -> m BS.ByteString
 getFileContents File{ filestorage = FileStorageMemory contents } = return contents
 getFileContents file@File{ fileid, filestorage = FileStorageAWS url aes } =
-  localData [identifier_ fileid] $ do
+  localData [identifier fileid] $ do
     encrypted <- FS.getSavedContents url
     let contents = aesDecrypt aes $ BSL.toStrict encrypted
         checksum = SHA1.hash contents
@@ -93,6 +93,6 @@ getFileIDContents fid = do
   stop <- liftIO getCurrentTime
   logInfo "getFileIDContents timing" $ object
     [ "duration" .= (realToFrac $ diffUTCTime stop start :: Double)
-    , identifier_ fid
+    , identifier fid
     ]
   return result

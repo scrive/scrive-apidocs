@@ -24,13 +24,13 @@ handleMailGunEvents = localDomain "handleMailGunEvents" $ do
   logInfo_ "Processing mailgun event"
   mident <- (,) <$> readField "email_id" <*> readField "email_token"
   case mident of
-    (Just mid, Just token) -> localData [identifier_ mid] $ do
+    (Just mid, Just token) -> localData [identifier mid] $ do
       mmail <- dbQuery $ GetEmail mid token
       case mmail of
         Nothing -> logInfo "Email doesn't exist" $ object [
             "token" .= show token
           ]
-        Just Mail{..} -> localData [identifier_ mailID] $ do
+        Just Mail{..} -> localData [identifier mailID] $ do
           mevent <- readEventType =<< getField "event"
           case mevent of
             Nothing -> logInfo_ "No event object received"
@@ -49,7 +49,7 @@ handleMailGunEvents = localDomain "handleMailGunEvents" $ do
                     "event" .= show event
                   ]
     (mid, token) -> logInfo "Invalid id or token received" $ object [
-        identifier_ mid
+        identifier mid
       , "token" .= fmap show token
       ]
   ok $ toResponse "Thanks"

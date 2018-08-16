@@ -4,7 +4,6 @@ module Partner.PartnerID (
   , unPartnerID
   ) where
 
-import Data.Aeson
 import Data.Binary as B
 import Data.Default (Default(..))
 import Data.Int
@@ -53,6 +52,6 @@ unjsonPartnerID = unjsonInvmapR ((maybe (fail "Can't parse PartnerID")  return) 
 instance Unjson PartnerID where
   unjsonDef = unjsonPartnerID
 
-instance Identifier PartnerID Int64 where
-  idDefaultLabel _ = "partner_id"
-  idValue = toJSON . show . unPartnerID
+instance Identifier PartnerID where
+  idDefaultLabel = "partner_id"
+  idValue        = int64AsStringIdentifier . unPartnerID

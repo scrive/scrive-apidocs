@@ -116,7 +116,7 @@ amazonURLFixConsumer config pool = ConsumerConfig
             case mfile of
               Nothing -> do
                 logInfo "File missing, so it cannot be checked on AWS." $ object [
-                    identifier_ aufcFileID
+                    identifier aufcFileID
                   ]
                 -- this means, that file was not found or was purged
                 return $ Failed Remove

@@ -30,7 +30,7 @@ data DocumentAutomaticReminder = DocumentAutomaticReminder {
 
 instance Loggable DocumentAutomaticReminder where
   logValue dar = object [
-      identifier_ $ darDocumentID dar
+      identifier $ darDocumentID dar
     , "sent_time" .= darExpires dar
     ]
   logDefaultLabel _ = "document_automatic_reminder"
@@ -53,7 +53,7 @@ expireDocumentAutomaticReminders = do
   mailNoreplyAddress <- asks ceMailNoreplyAddress
   dars <- dbQuery $ GetExpiredAutomaticReminders
   forM_ dars $ \dar@DocumentAutomaticReminder{..} -> do
-    res <- try . localData [identifier_ darDocumentID] $ do
+    res <- try . localData [identifier darDocumentID] $ do
       now <- currentTime
       exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor $ darDocumentID
       if exists

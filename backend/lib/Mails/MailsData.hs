@@ -49,7 +49,7 @@ attachmentToJson (name, acontent) = object [
     "name" .= name
   , "storage_type" .= case acontent of
     Left _ -> "direct"
-    Right fid -> object [identifier_ fid]
+    Right fid -> object [identifier fid]
   ]
 
 instance Loggable Mail where

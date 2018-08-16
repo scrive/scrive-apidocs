@@ -83,7 +83,7 @@ documentSealing guardTimeConf pdfToolsLambdaConf templates pool
     onFailure DocumentSealing{..} = do
       when (dsAttempts > 1) $ do
         logAttention "Document sealing failed more than 1 time" $ object [
-            identifier_ dsDocumentID
+            identifier dsDocumentID
           , "attempt_count" .= dsAttempts
           ]
       return . RerunAfter . attemptToDelay $ dsAttempts

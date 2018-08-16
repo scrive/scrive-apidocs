@@ -40,7 +40,7 @@ processSendGridEvent js = do
     mmid <- join . fmap maybeRead <$> fromJSValueField "email_id"
     mmtk <- join . fmap maybeRead <$> fromJSValueField "email_token"
     case (mmid, mmtk) of
-      (Just mid, Just token) -> localData [identifier_ mid] $ do
+      (Just mid, Just token) -> localData [identifier mid] $ do
         mmail <- dbQuery $ GetEmail mid token
         case mmail of
           Nothing -> logAttention "Email doesn't exist" $ object [
@@ -71,7 +71,7 @@ processSendGridEvent js = do
                       ]
       _ -> logAttention "Received event but couldn't determine email and/or token" $ object [
           "event" .= jsonToAeson js
-        , identifier_ mmid
+        , identifier mmid
         , "token" .= fmap show mmtk
         ]
 

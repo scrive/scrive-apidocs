@@ -77,7 +77,7 @@ startNewSession session mnewuid mnewpaduid = do
   let uid = fromJust $ (mnewuid `mplus` mnewpaduid)
   n <- deleteSuperfluousUserSessions uid
   logInfo "Superfluous sessions of user removed from the database" $ object [
-      identifier_ uid
+      identifier uid
     , "sessions" .= n
     ]
   expires <- sessionNowModifier <$> currentTime

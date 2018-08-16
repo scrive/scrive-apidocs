@@ -347,8 +347,8 @@ guardThatPersonalNumberMatches :: Kontrakcja m => SignatoryLinkID -> String -> D
 guardThatPersonalNumberMatches slid pn doc = case getSigLinkFor slid doc of
     Nothing -> do
       logInfo "Can't find signatory for eleg operation" $ object [
-          identifier_ $ documentid doc
-        , identifier_ slid
+          identifier $ documentid doc
+        , identifier slid
         ]
       respond404
     Just sl -> do
@@ -359,8 +359,8 @@ guardThatPersonalNumberMatches slid pn doc = case getSigLinkFor slid doc of
                                && slPersonalNumber /= "20" ++ pn' && "20" ++ slPersonalNumber /= pn')
         then do
           logInfo "Personal number for eleg operation does not match and signatory personal number can't be changed" $ object [
-              identifier_ $ documentid doc
-            , identifier_ slid
+              identifier $ documentid doc
+            , identifier slid
             ]
           respond404
         else return ()

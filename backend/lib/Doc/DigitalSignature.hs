@@ -52,7 +52,7 @@ addDigitalSignature = theDocumentID >>= \did ->
                 logInfo_ "Adding new sealed file to DB"
                 sealedfileid <- saveNewFile (filename file) res
                 logInfo "Finished adding sealed file to DB, adding to document" $ object [
-                    identifier_ sealedfileid
+                    identifier sealedfileid
                   ]
                 dbUpdate $ AppendSealedFile sealedfileid (Guardtime (GT.extended gsig) (GT.privateGateway gsig)) $ systemActor now
                 return True
@@ -131,7 +131,7 @@ digitallyExtendFile ctxtime pdfpath pdfname = do
       logInfo_ "Adding new extended file to DB"
       sealedfileid <- saveNewFile pdfname extendedfilepdf
       logInfo "Finished adding extended file to DB, adding to document" $ object [
-          identifier_ sealedfileid
+          identifier sealedfileid
         ]
       dbUpdate $ AppendExtendedSealedFile sealedfileid status $ systemActor ctxtime
       return True

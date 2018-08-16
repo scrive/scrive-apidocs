@@ -162,7 +162,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         , "server_hostname" .= hostname appGlobals
         ]
 
-      (res, handlerTime) <- localData [identifier_ $ sesID session] $ do
+      (res, handlerTime) <- localData [identifier $ sesID session] $ do
         startTime <- liftBase getCurrentTime
         -- Make Response filters local to the main request handler so
         -- that they do not interfere with delayed response.

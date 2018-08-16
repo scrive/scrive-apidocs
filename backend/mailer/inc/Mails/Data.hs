@@ -83,9 +83,9 @@ deriving newtype instance Show MailID
 instance PQFormat MailID where
   pqFormat = pqFormat @Int64
 
-instance Identifier MailID Int64 where
-  idDefaultLabel _ = "mail_id"
-  idValue (MailID k) = toJSON . show $ k
+instance Identifier MailID where
+  idDefaultLabel     = "mail_id"
+  idValue (MailID k) = int64AsStringIdentifier k
 
 instance FromSQL MailID where
   type PQBase MailID = PQBase Int64
@@ -159,7 +159,7 @@ instance Loggable Attachment where
         ]
       Right fid -> [
           "type" .= ("file_id" :: String)
-        , identifier_ fid
+        , identifier fid
         ]
   logDefaultLabel _ = "attachment"
 
@@ -178,7 +178,7 @@ data Mail = Mail {
 
 instance Loggable Mail where
   logValue Mail{..} = object [
-      identifier_ mailID
+      identifier mailID
     , "attachments" .= map logValue mailAttachments
     , "attachment_count" .= length mailAttachments
     , "attempt_count" .= mailAttempts
@@ -201,9 +201,9 @@ deriving newtype instance Show EventID
 instance PQFormat EventID where
   pqFormat = pqFormat @Int64
 
-instance Identifier EventID Int64 where
-  idDefaultLabel _ = "mail_event_id"
-  idValue (EventID k) = toJSON . show $ k
+instance Identifier EventID where
+  idDefaultLabel      = "mail_event_id"
+  idValue (EventID k) = int64AsStringIdentifier k
 
 instance FromSQL EventID where
   type PQBase EventID = PQBase Int64

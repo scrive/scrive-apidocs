@@ -68,8 +68,8 @@ handleArchiveDocumentsAction actionStr docPermission m = do
     failWithMsg user ids msg = do
       logInfo msg $ object [
           "action" .= actionStr
-        , identifier_ $ userid user
-        , identifier_ ids
+        , identifier $ userid user
+        , identifier ids
         ]
       internalError
 

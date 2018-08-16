@@ -107,9 +107,9 @@ deriving newtype instance Show CallLogID
 instance PQFormat CallLogID where
   pqFormat = pqFormat @Int64
 
-instance Identifier CallLogID Int64 where
-  idDefaultLabel _ = "document_id"
-  idValue = Aeson.toJSON . show . fromCallLogID
+instance Identifier CallLogID where
+  idDefaultLabel = "document_id"
+  idValue        = int64AsStringIdentifier . fromCallLogID
 
 instance FromReqURI CallLogID where
   fromReqURI = maybeRead

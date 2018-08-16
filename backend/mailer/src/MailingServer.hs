@@ -127,7 +127,7 @@ main = do
     , ccNotificationChannel = Just mailNotificationChannel
     , ccNotificationTimeout = 60 * 1000000 -- 1 minute
     , ccMaxRunningJobs = 10
-    , ccProcessJob = \mail@Mail{..} -> localData [identifier_ mailID] $ if isNotSendable mail
+    , ccProcessJob = \mail@Mail{..} -> localData [identifier mailID] $ if isNotSendable mail
       then do
         logInfo "Email is not sendable, discarding" $ object [
             "mail" .= show mail
@@ -197,7 +197,7 @@ main = do
           logInfo_ "Running service checker"
           token <- random
           mid <- dbUpdate $ CreateServiceTest (token, testSender, mailerTestReceivers conf, Just testSender, "test", "test", [])
-          logInfo "Service testing email created" $ object [identifier_ mid]
+          logInfo "Service testing email created" $ object [identifier mid]
           dbUpdate $ CollectServiceTestResultIn $ iminutes 10
           return $ Ok MarkProcessed
         else do

@@ -222,7 +222,7 @@ type instance ID Document = DocumentID
 
 instance Loggable Document where
   logValue Document{..} = object [
-      identifier_ documentid
+      identifier documentid
     , "title" .= documenttitle
     , "status" .= show documentstatus
     ]
