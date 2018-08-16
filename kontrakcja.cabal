@@ -624,6 +624,7 @@ Executable kontrakcja-server
                , happstack-server
                , happstack-static-routing
                , hedis
+               , hostname
                , lifted-base
                , log-base
                , text
