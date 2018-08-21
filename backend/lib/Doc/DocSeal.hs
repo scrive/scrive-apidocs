@@ -416,7 +416,8 @@ createSealingTextsForDocument document hostpart = do
   return sealingTexts
 
 sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, MonadLog m, MonadFileStorage m, MonadBaseControl IO m)
-                     => CheckboxImagesMapping
+                     => Bool
+                     -> CheckboxImagesMapping
                      -> RadiobuttonImagesMapping
                      -> String
                      -> Document
@@ -428,7 +429,7 @@ sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, Mo
                      -> String
                      -> String
                      -> m Seal.SealSpec
-sealSpecFromDocument checkboxMapping radiobuttonMapping hostpart document elog offsets eotData content tmppath inputpath outputpath = do
+sealSpecFromDocument extendedFlattening checkboxMapping radiobuttonMapping hostpart document elog offsets eotData content tmppath inputpath outputpath = do
   -- Keep only simple events and remove events induced by resealing
   let velog = filter (eventForVerificationPage . evType) $ eventsForLog elog
   -- Form initials from signing parties
@@ -554,6 +555,7 @@ sealSpecFromDocument checkboxMapping radiobuttonMapping hostpart document elog o
         , Seal.staticTexts    = staticTexts
         , Seal.attachments    = docAttachments ++ [evidenceattachment, evidenceOfTime, evidenceOfIntent]
         , Seal.disableFooter = documentisreceipt document
+        , Seal.extendedFlattening = extendedFlattening
         , Seal.filesList      =
           [ Seal.FileDesc { fileTitle = title
                           , fileRole = mainDocumentText
@@ -565,18 +567,20 @@ sealSpecFromDocument checkboxMapping radiobuttonMapping hostpart document elog o
         }
 
 presealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, MonadLog m, MonadFileStorage m, MonadBaseControl IO m)
-                        => CheckboxImagesMapping
+                        => Bool
+                        -> CheckboxImagesMapping
                         -> RadiobuttonImagesMapping
                         -> Document
                         -> String
                         -> String
                         -> m Seal.PreSealSpec
-presealSpecFromDocument checkboxMapping radiobuttonMapping document inputpath outputpath = do
+presealSpecFromDocument extendedFlattening checkboxMapping radiobuttonMapping document inputpath outputpath = do
        fields <- concat <$> mapM (fieldsFromSignatory checkboxMapping radiobuttonMapping) (documentsignatorylinks document)
        return $ Seal.PreSealSpec
             { Seal.pssInput          = inputpath
             , Seal.pssOutput         = outputpath
             , Seal.pssFields         = fields
+            , Seal.pssExtendedFlattening = extendedFlattening
             }
 
 sealDocument :: (CryptoRNG m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadMask m, MonadLog m, MonadFileStorage m, PdfToolsLambdaConfMonad m)
@@ -624,11 +628,16 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
         (return ())
         (systemActor now)
     eotData <- liftBase $ generateEvidenceOfTimeData 100 (tmppath ++ "/eot_samples.txt") (tmppath ++ "/eot_graph.svg") (map HC.offset offsets)
-    spec <- theDocument >>= \d -> sealSpecFromDocument checkboxMapping radiobuttonMapping hostpart d elog offsets eotData content tmppath tmpin tmpout
     lconf <- getPdfToolsLambdaConf
     if (get pdfToolsLambdaSkip lconf)
-       then runOldJavaSealing  tmppath filename spec
-       else runNewLambdaSealing tmppath filename spec
+       then do
+         spec <- theDocument >>= \d -> sealSpecFromDocument False checkboxMapping radiobuttonMapping hostpart d elog offsets eotData content tmppath tmpin tmpout
+         runOldJavaSealing  tmppath filename spec
+       else do
+         spec <- theDocument >>= \d -> do
+           let extendedFlattening = useExtendedFlattening lconf d
+           sealSpecFromDocument extendedFlattening checkboxMapping radiobuttonMapping hostpart d elog offsets eotData content tmppath tmpin tmpout
+         runNewLambdaSealing tmppath filename spec
 
 -- | Generate file that has all placements printed on it. It will look same as final version except for footers and verification page.
 presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, MonadLog m, KontraMonad m, TemplatesMonad m, MonadIO m, MonadMask m, MonadFileStorage m, PdfToolsLambdaConfMonad m, CryptoRNG m)
@@ -644,11 +653,15 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
     liftIO $ BS.writeFile tmpin content
     checkboxMapping <- liftIO $ readCheckboxImagesMapping
     radiobuttonMapping <- liftIO $ readRadiobuttonImagesMapping
-    spec <- presealSpecFromDocument checkboxMapping radiobuttonMapping document tmpin tmpout
     lconf <- getPdfToolsLambdaConf
     if (get pdfToolsLambdaSkip lconf)
-       then runOldJavaPresealing  tmppath spec
-       else runNewLambdaPresealing tmppath spec
+       then do
+         spec <- presealSpecFromDocument False checkboxMapping radiobuttonMapping document tmpin tmpout
+         runOldJavaPresealing  tmppath spec
+       else do
+         let extendedFlattening = useExtendedFlattening lconf document
+         spec <- presealSpecFromDocument extendedFlattening checkboxMapping radiobuttonMapping document tmpin tmpout
+         runNewLambdaPresealing tmppath spec
 
 addSealedEvidenceEvents ::  (MonadBaseControl IO m, MonadDB m, MonadLog m, TemplatesMonad m, MonadIO m, DocumentMonad m, MonadFileStorage m, MonadMask m)
                  => Actor -> m ()
@@ -763,3 +776,8 @@ runNewLambdaPresealing _tmppath spec = do
         logAttention_ "Presealing in lambda failed"
         -- show JSON'd config as that's what the java app is fed.
         return $ Left "Error when preprinting fields on PDF"
+
+useExtendedFlattening ::  PdfToolsLambdaConf -> Document -> Bool
+useExtendedFlattening lconf document = case (get pdfToolsUserGroupsWithExtendedFlattening lconf , documentauthorugid document) of
+  (Just ids, Just ugi) -> ugi `elem` ids
+  _ -> False

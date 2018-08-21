@@ -31,6 +31,9 @@ unjsonPdfToolsLambdaConf = objectOf $ pure PdfToolsLambdaConf
   <*> fieldDef "skip_lambda" False
       _pdfToolsLambdaSkip
       "Fallback to old version of pdftools. Should be used ONLY as emergency fallback on production during transition and will be dropped in few weeks"
+  <*> fieldOpt "user_groups_with_extended_flattening"
+      _pdfToolsUserGroupsWithExtendedFlattening
+      "Pdfs of documents created by this user groups should be treat differently by pdftools due to backward compatiblility (CORE-783)"
 
 instance Unjson PdfToolsLambdaConf where
   unjsonDef = unjsonPdfToolsLambdaConf

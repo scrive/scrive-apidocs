@@ -206,6 +206,7 @@ data SealSpec = SealSpec
     , attachments    :: [SealAttachment]
     , filesList      :: [FileDesc]
     , disableFooter  :: Bool
+    , extendedFlattening :: Bool
     }
     deriving (Eq,Ord,Show,Read)
 
@@ -224,6 +225,7 @@ unjsonSealSpec = Unjson.objectOf $ pure SealSpec
     <*> Unjson.fieldBy "attachments" attachments "" (Unjson.arrayOf unjsonSealAttachment)
     <*> Unjson.fieldBy "filesList" filesList "" (Unjson.arrayOf unjsonFileDesc)
     <*> Unjson.field "disableFooter" disableFooter ""
+    <*> Unjson.field "extendedFlattening" extendedFlattening ""
 
 
 data FileDesc = FileDesc
@@ -249,6 +251,7 @@ data PreSealSpec = PreSealSpec
     { pssInput  :: String
     , pssOutput :: String
     , pssFields :: [Field]
+    , pssExtendedFlattening :: Bool
     }
     deriving (Eq,Ord,Show,Read)
 
@@ -258,6 +261,7 @@ unjsonPreSealSpec = Unjson.objectOf $ pure PreSealSpec
     <*> Unjson.field "output" pssOutput ""
     <*> Unjson.fieldBy "fields" pssFields "" (Unjson.arrayOf unjsonField)
     <*  Unjson.field "preseal" (const True) ""
+    <*> Unjson.field "extendedFlattening" pssExtendedFlattening ""
 
 data HistEntry = HistEntry
     { histdate    :: String
