@@ -279,6 +279,7 @@ instance Arbitrary SignatoryLink where
       [ (\t qs -> (Just t, qs)) <$> arbString 1 100 <*> listOf1 arbitrary
       , return (Nothing, [])
       ]
+    hidePN <- arbitrary
     return $ def { signatorylinkid = unsafeSignatoryLinkID 0
                           , signatoryfields = fields
                           , signatoryisauthor = False
@@ -292,6 +293,7 @@ instance Arbitrary SignatoryLink where
                           , signatorylinkauthenticationtoviewmethod = authenticationToView
                           , signatorylinkconsenttitle     = cmTitle
                           , signatorylinkconsentquestions = cmQuestions
+                          , signatorylinkhidepn = hidePN
                           }
 
 instance Arbitrary SignatoryConsentQuestion where
