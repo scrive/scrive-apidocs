@@ -67,6 +67,7 @@ importantExecutables =
   [ ("java", ["-version"])
   , ("curl", ["-V"])
   , ("mutool", ["-v"])
+  , ("pngquant", ["--version"])
   , ("convert", ["--version"])
   , ("identify", ["--version"])
   , ("lessc", ["-v"])

@@ -131,29 +131,31 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetUserGroupAccount
                            ) <+>
                            "as active_users GROUP BY user_group_id;"
 
+        -- this query would benefit by having more work_mem since it's merge
+        -- sorting on disc with a mere 4MB - and 8MB is _not_ enough, but 20
+        -- _is_, currently anyway.
         loggedInRecently :: UTCTime -> SQL
         loggedInRecently now = toSQLCommand $
           sqlSelect "users u" $ do
             sqlJoinOn "users_history h" "u.id = h.user_id"
-            sqlJoinOn "user_groups ug" "ug.id = u.user_group_id"
+            sqlJoinOn "user_group_invoicings ugi" "ugi.user_group_id = u.user_group_id"
             sqlResult "u.user_group_id AS user_group_id"
             sqlResult "u.id AS user_id"
             sqlWhereEq "h.event_type" UserLoginSuccess
-            sqlWhereNotEq "c.payment_plan" FreePlan
+            sqlWhereNotEq "ugi.payment_plan" FreePlan
             sqlWhereIsNotScriveEmail "u.email"
             sqlGroupBy "u.id"
-            sqlGroupBy "ug.id"
             sqlHaving $ "max(h.time) > (" <?> now <+> " - interval '4 weeks')"
 
         docSentRecently :: UTCTime -> SQL
         docSentRecently now = toSQLCommand $
           sqlSelect "chargeable_items i" $ do
-            sqlJoinOn "user_groups ug" "ug.id = i.user_group_id"
             sqlJoinOn "users u" "u.id = i.user_id"
+            sqlJoinOn "user_group_invoicings ugi" "ugi.user_group_id = i.user_group_id"
             sqlResult "i.user_group_id AS user_group_id"
             sqlResult "i.user_id AS user_id"
             sqlWhereEq "i.\"type\"" CIStartingDocument
-            sqlWhereNotEq "ug.payment_plan" FreePlan
+            sqlWhereNotEq "ugi.payment_plan" FreePlan
             sqlWhereIsNotScriveEmail "u.email"
             sqlGroupBy "i.user_id"
             sqlGroupBy "i.user_group_id"

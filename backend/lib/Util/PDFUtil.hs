@@ -57,6 +57,7 @@ renderPage fileContent pageNo widthInPixels = do
     let sourcePath = tmpPath ++ "/source.pdf"
     liftBase $ BS.writeFile sourcePath fileContent
     let pagePath = tmpPath ++ "/output-" ++ show pageNo ++ ".png"
+        pageQuantPath = tmpPath ++ "/output-quant-" ++ show pageNo ++ ".png"
     (mudrawcode,mudrawout,mudrawerr) <- liftBase $ readProcessWithExitCode "mutool" (concat [
             ["draw"]
           , ["-o", tmpPath ++ "/output-%d.png"]
@@ -68,13 +69,30 @@ renderPage fileContent pageNo widthInPixels = do
           ]) (BSL.empty)
     case mudrawcode of
       ExitSuccess -> do
-        (liftBase (Just <$> BS.readFile pagePath))
-          `E.catch` \(_::IOError) -> do
-            -- mupdf will return last page if pdf has less pages - and not trigger content.
-            -- We detect this issue with IOError - output file will have name with real page
-            -- number and not requested one.
-            logAttentionWithPage "Reading page content failed. Probably PDF has less pages." []
-            return Nothing
+        let successHandler | widthInPixels <= 1040 = liftBase $ Just <$> BS.readFile pagePath
+                           | otherwise = do
+                               (pngqcode, pngqout, pngqerr) <-
+                                 liftBase $ readProcessWithExitCode "pngquant" [ "--speed", "10"
+                                                                               , pagePath
+                                                                               , "--output", pageQuantPath
+                                                                               ] BSL.empty
+                               case pngqcode of
+                                 ExitSuccess -> liftBase $ Just <$> BS.readFile pageQuantPath
+                                 _ -> do
+                                   logAttentionWithPage "Quanting of page failed" $
+                                     [ "exit_code" .= show pngqcode
+                                     , "stdout" `equalsExternalBSL` pngqout
+                                     , "stderr" `equalsExternalBSL` pngqerr
+                                     ]
+                                   -- fallback to unquanted (?) file
+                                   liftBase $ Just <$> BS.readFile pagePath
+            errorHandler (_ :: IOError) = do
+                      -- mupdf will return last page if pdf has less pages - and not trigger content.
+                      -- We detect this issue with IOError - output file will have name with real page
+                      -- number and not requested one.
+                      logAttentionWithPage "Reading page content failed. Probably PDF has less pages." []
+                      return Nothing
+        successHandler `E.catch` errorHandler
       _ -> do
         logAttentionWithPage "Rendering of page failed" $ [
           "exit_code" .= show mudrawcode,
