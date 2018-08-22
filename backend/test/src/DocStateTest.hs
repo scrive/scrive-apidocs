@@ -61,6 +61,7 @@ docStateTests :: TestEnvSt -> Test
 docStateTests env = testGroup "DocState" [
   testThat "RejectDocument adds to the log" env testRejectDocumentEvidenceLog,
   testThat "RestartDocument adds to the log" env testRestartDocumentEvidenceLog,
+  testThat "RestartDocument keeps signatorylinkhidepn" env testRestartDocumentKeepsHidePN,
   testThat "SignDocument adds to the log" env testSignDocumentEvidenceLog,
   testThat "TimeoutDocument adds to the log" env testTimeoutDocumentEvidenceLog,
   testThat "ProlongDocument can be executed and adds to a log" env testProlongDocument,
@@ -263,6 +264,18 @@ testRestartDocumentEvidenceLog = do
   assertJust $ find (\e -> evType e == Current CancelDocumentEvidence) lg
   lg2 <- dbQuery $ GetEvidenceLog (documentid doc)
   assertJust $ find (\e -> evType e == Current CancelDocumentEvidence) lg2
+
+testRestartDocumentKeepsHidePN :: TestEnv ()
+testRestartDocumentKeepsHidePN = do
+  author <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable && isPending)
+  withDocument doc $ randomUpdate $ \t->CancelDocument (systemActor t)
+  cdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+  mdoc <- randomUpdate $ \t->RestartDocument cdoc (systemActor t)
+  assertJust mdoc
+  assertEqual "After restart signatorylinkhidepn for all signatories is the same"
+    (signatorylinkhidepn <$> documentsignatorylinks doc)
+    (signatorylinkhidepn <$> documentsignatorylinks (fromJust mdoc))
 
 getScreenshots :: TestEnv SignatoryScreenshots.SignatoryScreenshots
 getScreenshots = do
