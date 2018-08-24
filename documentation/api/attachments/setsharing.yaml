@@ -1,23 +1,21 @@
 ---
 post:
-  summary: Share or unshare templates
+  summary: Share or unshare
   tags:
-    - Modify
+    - Attachment
 
   description: |
-    Share or unshare the specified templates with the company's other users.
-
-    *OAuth Privileges required: `DOC_CREATE`*
+    Share or unshare the specified attachments with the company's other users.
 
   parameters:
-    - name: document_ids
+    - name: attachment_ids
       in: formData
       type: string
       format: application/json
       required: true
 
       description: |
-        List of document IDs of templates to share or unshare.
+        List of attachment IDs of attachments to share or unshare.
 
       schema:
         type: array
