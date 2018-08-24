@@ -55,7 +55,7 @@ amazonUploadConsumer amazonConf pool maxRunningJobs = ConsumerConfig {
             case mfile of
               Nothing -> do
                 logInfo "File missing, so it cannot be uploaded to AWS." $ object [
-                    identifier_ aucFileID
+                    identifier aucFileID
                   ]
                 -- this means, that file was not found or was purged
                 return $ Failed Remove
@@ -71,7 +71,7 @@ amazonUploadConsumer amazonConf pool maxRunningJobs = ConsumerConfig {
     onFailure AmazonUploadConsumer{..} = do
       when (aucAttempts > 1) $ do
         logAttention "File upload to Amazon failed more than 1 time" $ object [
-            identifier_ aucFileID
+            identifier aucFileID
           , "attempt_count" .= aucAttempts
           ]
       return . RerunAfter $ idays 1

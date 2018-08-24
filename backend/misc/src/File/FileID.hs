@@ -4,7 +4,6 @@ module File.FileID (
   , fromFileID
   ) where
 
-import Data.Aeson
 import Data.Hashable
 import Data.Int
 import Data.Typeable
@@ -22,9 +21,9 @@ deriving newtype instance Show FileID
 instance PQFormat FileID where
   pqFormat = pqFormat @Int64
 
-instance Identifier FileID Int64 where
-  idDefaultLabel _ = "file_id"
-  idValue (FileID k) = toJSON . show $ k
+instance Identifier FileID where
+  idDefaultLabel     = "file_id"
+  idValue (FileID k) = int64AsStringIdentifier k
 
 instance FromReqURI FileID where
   fromReqURI = maybeRead

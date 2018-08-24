@@ -14,7 +14,6 @@ import Data.Typeable
 import Data.UUID (UUID)
 import Data.UUID.V1
 import Log
-import qualified Data.Aeson as A
 import qualified Data.UUID as U
 
 import DB
@@ -27,9 +26,9 @@ newtype SignOrderUUID = SignOrderUUID UUID
 instance Show SignOrderUUID where
   show (SignOrderUUID uuid) = U.toString uuid
 
-instance Identifier SignOrderUUID UUID where
-  idDefaultLabel _ = "nets_sign_order_id"
-  idValue (SignOrderUUID k) = A.toJSON . U.toString $ k
+instance Identifier SignOrderUUID where
+  idDefaultLabel            = "nets_sign_order_id"
+  idValue (SignOrderUUID k) = stringIdentifier . U.toString $ k
 
 instance PQFormat SignOrderUUID where
   pqFormat    = pqFormat    @T.Text
@@ -58,9 +57,9 @@ newtype TrustSignMessageUUID = TrustSignMessageUUID UUID
 instance Show TrustSignMessageUUID where
   show (TrustSignMessageUUID uuid) = U.toString uuid
 
-instance Identifier TrustSignMessageUUID T.Text where
-  idDefaultLabel _ = "nets_sign_message_id"
-  idValue (TrustSignMessageUUID t) = A.toJSON t
+instance Identifier TrustSignMessageUUID where
+  idDefaultLabel                   = "nets_sign_message_id"
+  idValue (TrustSignMessageUUID t) = stringIdentifier . U.toString $ t
 
 newSignOrderUUID :: (MonadBase IO m, MonadIO m, MonadLog m) => m SignOrderUUID
 newSignOrderUUID = SignOrderUUID <$> nextUUIDWrapper

@@ -2,7 +2,9 @@ module UserStateTest (userStateTests) where
 
 import Test.Framework
 
+import Chargeable.Model
 import DB
+import Doc.Data.Document
 import Doc.DocInfo
 import MinutesTime
 import TestingUtil
@@ -147,8 +149,11 @@ test_userUsageStatisticsByUser :: TestEnv ()
 test_userUsageStatisticsByUser = do
   let email = "emily@green.com"
   Just user <- addNewUser "Emily" "Green" email
-  _ <- addRandomDocumentWithAuthorAndCondition user isClosed
-  res <- dbQuery $ GetUsageStatsOld (Left $ userid user) PartitionByMonth $ iyears 2000
+  doc <- addRandomDocumentWithAuthorAndCondition user isClosed
+  void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc)
+  res <- dbQuery $
+         GetUsageStats (UsageStatsForUser $ userid user)
+         PartitionByMonth (iyears 2000)
   assertEqual "Document present in stats" 1 (length res)
   let [UserUsageStats{..}] = res
   assertEqual "Email in statistics is correct" email uusUserEmail
@@ -162,14 +167,20 @@ test_userUsageStatisticsByCompany = do
   ugid <- (get ugID) <$> (dbUpdate $ UserGroupCreate def)
   Just user1 <- addNewUserToUserGroup "Emily" "Green" email1 ugid
   Just user2 <- addNewUserToUserGroup "Bob" "Blue" email2 ugid
-  _ <- addRandomDocumentWithAuthorAndCondition user1 isClosed
-  _ <- addRandomDocumentWithAuthorAndCondition user2 isClosed
-  res <- dbQuery $ GetUsageStatsOld (Right ugid) PartitionByDay $ iyears 2000
+  doc0 <- addRandomDocumentWithAuthorAndCondition user1 isClosed
+  doc1 <- addRandomDocumentWithAuthorAndCondition user2 isClosed
+  void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc0)
+  void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc1)
+  res <- dbQuery $
+         GetUsageStats (UsageStatsForUserGroup ugid)
+         PartitionByDay (iyears 2000)
   assertEqual "Documents present in stats" 2 $ length res
   let Just uus1 = find ((email1 ==) . uusUserEmail) res
       Just uus2 = find ((email2 ==) . uusUserEmail) res
-  assertEqual "Statistics for Emily are correct" 1 $ dsDocumentsClosed $ uusDocumentStats uus1
-  assertEqual "Statistics for Bob are correct" 1 $ dsDocumentsClosed $ uusDocumentStats uus2
+  assertEqual "Statistics for Emily are correct"
+    1 (dsDocumentsClosed . uusDocumentStats $ uus1)
+  assertEqual "Statistics for Bob are correct"
+    1 (dsDocumentsClosed . uusDocumentStats $ uus2)
 
 test_setUserCompany :: TestEnv ()
 test_setUserCompany = do

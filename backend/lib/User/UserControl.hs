@@ -17,11 +17,11 @@ module User.UserControl(
   , handlePasswordReminderGet
   , handlePasswordReminderPost
   , handleContactSales
+  , UsageStatsFor(..)
   , getDaysStats   -- Exported for admin section
   , getMonthsStats -- Exported for admin section
 ) where
 
-import Data.Time.Calendar
 import Data.Time.Clock
 import Log
 import Text.JSON (JSValue(..))
@@ -163,8 +163,8 @@ handleUsageStatsJSONForUserDays = do
   user <- guardJustM $ get ctxmaybeuser <$> getContext
   withCompany <- isFieldSet "withCompany"
   if (useriscompanyadmin user && withCompany)
-    then getDaysStats (Right $ usergroupid user)
-    else getDaysStats (Left $ userid user)
+    then getDaysStats (UsageStatsForUserGroup $ usergroupid user)
+    else getDaysStats (UsageStatsForUser $ userid user)
 
 
 handleUsageStatsJSONForUserMonths :: Kontrakcja m => m JSValue
@@ -172,42 +172,31 @@ handleUsageStatsJSONForUserMonths = do
   user  <- guardJustM $ get ctxmaybeuser <$> getContext
   withCompany <- isFieldSet "withCompany"
   if (useriscompanyadmin user && withCompany)
-    then getMonthsStats (Right $ usergroupid user)
-    else getMonthsStats (Left $ userid user)
+    then getMonthsStats (UsageStatsForUserGroup $ usergroupid user)
+    else getMonthsStats (UsageStatsForUser $ userid user)
 
-getDaysStats :: Kontrakcja m => Either UserID UserGroupID -> m JSValue
-getDaysStats = getStats PartitionByDay (idays 30)
+getDaysStats :: Kontrakcja m => UsageStatsFor -> m JSValue
+getDaysStats forWhom = getStats PartitionByDay (idays 30) forWhom
 
-getMonthsStats :: Kontrakcja m => Either UserID UserGroupID -> m JSValue
-getMonthsStats = getStats PartitionByMonth (imonths 6)
+getMonthsStats :: Kontrakcja m => UsageStatsFor -> m JSValue
+getMonthsStats forWhom = getStats PartitionByMonth (imonths 6) forWhom
 
-getStats :: Kontrakcja m => StatsPartition -> Interval -> Either UserID UserGroupID -> m JSValue
-getStats statsPartition interval eid = do
-    -- @note: This is a hack around the fact that we don't yet have enough data
-    -- in `chargeable_items` table to use queries for longer periods.  The code
-    -- can be reset 6 months after 20170601 (if a 6 month interval is indeed
-    -- used).
-    now <- currentTime
-    let timeDiffSinceFstJune =
-            diffUTCTime now (UTCTime (fromGregorian 2017 6 1) 0)
-        intervalDaysSinceFstJune =
-            idays . floor $ timeDiffSinceFstJune / nominalDay
-        queryConstructor =
-            if intervalDaysSinceFstJune >= interval
-            then GetUsageStatsNew
-            else GetUsageStatsOld
-    case eid of
-      Left uid -> do
-        stats <- dbQuery $ queryConstructor (Left uid) statsPartition interval
-        return $ userStatsToJSON timeFormat stats
-      Right ugid -> do
-        totalS <- renderTemplate_ "statsOrgTotal"
-        stats <- dbQuery $ queryConstructor (Right ugid) statsPartition interval
-        return $ companyStatsToJSON timeFormat totalS stats
-      where timeFormat :: UTCTime -> String
-            timeFormat = case statsPartition of
-                           PartitionByDay   -> formatTimeYMD
-                           PartitionByMonth -> formatTime' "%Y-%m"
+getStats :: Kontrakcja m
+         => StatsPartition -> Interval -> UsageStatsFor
+         -> m JSValue
+getStats statsPartition interval forWhom =
+  case forWhom of
+    UsageStatsForUser _uid -> do
+      stats <- dbQuery $ GetUsageStats forWhom statsPartition interval
+      return $ userStatsToJSON timeFormat stats
+    UsageStatsForUserGroup _ugid -> do
+      totalS <- renderTemplate_ "statsOrgTotal"
+      stats <- dbQuery $ GetUsageStats forWhom statsPartition interval
+      return $ companyStatsToJSON timeFormat totalS stats
+  where timeFormat :: UTCTime -> String
+        timeFormat = case statsPartition of
+          PartitionByDay   -> formatTimeYMD
+          PartitionByMonth -> formatTime' "%Y-%m"
 
 {- |
     Checks for live documents owned by the user.

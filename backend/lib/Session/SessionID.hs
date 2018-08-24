@@ -3,7 +3,6 @@ module Session.SessionID (
   , tempSessionID
   ) where
 
-import Data.Aeson
 import Data.Int
 
 import DB
@@ -17,9 +16,9 @@ deriving newtype instance Show SessionID
 instance PQFormat SessionID where
   pqFormat = pqFormat @Int64
 
-instance Identifier SessionID Int64 where
-  idDefaultLabel _ = "session_id"
-  idValue (SessionID k) = toJSON . show $ k
+instance Identifier SessionID where
+  idDefaultLabel        = "session_id"
+  idValue (SessionID k) = int64AsStringIdentifier k
 
 instance FromSQL SessionID where
   type PQBase SessionID = PQBase Int64

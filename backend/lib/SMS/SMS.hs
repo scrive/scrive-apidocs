@@ -42,8 +42,8 @@ scheduleSMS doc SMS{..} = do
     Nothing -> return ()
     Just kifs -> void $ dbUpdate $ AddKontraInfoForSMS sid kifs
   logInfo "SMS scheduled for sendout" $ object [
-      identifier_ $ documentid doc
-    , identifier_ sid
+      identifier $ documentid doc
+    , identifier sid
     , "sms_msisdn" .= smsMSISDN
     , "sms_info" .= (logObject_ <$> kontraInfoForSMS)
     , "sms_body" .= smsBody

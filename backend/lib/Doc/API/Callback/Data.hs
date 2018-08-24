@@ -19,9 +19,9 @@ deriving newtype instance Show CallbackID
 instance PQFormat CallbackID where
   pqFormat = pqFormat @Int64
 
-instance Identifier CallbackID Int64 where
-  idDefaultLabel _       = "callback_id"
-  idValue (CallbackID k) = toJSON . show $ k
+instance Identifier CallbackID where
+  idDefaultLabel         = "callback_id"
+  idValue (CallbackID k) = int64AsStringIdentifier k
 
 instance FromSQL CallbackID where
   type PQBase CallbackID = PQBase Int64
@@ -40,8 +40,8 @@ data DocumentAPICallback = DocumentAPICallback {
 
 instance Loggable DocumentAPICallback where
   logValue DocumentAPICallback{..} = object [
-      identifier_ dacID
-    , identifier_ dacApiVersion
+      identifier dacID
+    , identifier dacApiVersion
     , "url" .= dacURL
     , "attempt_count" .= dacAttempts
     ]

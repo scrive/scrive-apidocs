@@ -18,7 +18,7 @@ import User.CallbackScheme.Model
 import User.Model
 import User.Utils
 
-{- This handlers sets SalesforceScheme for callbacks for give user -}
+{- This handlers sets SalesforceScheme for callbacks for a user -}
 handleSalesforceIntegration :: Kontrakcja m => m InternalKontraResponse
 handleSalesforceIntegration  = withUser $ \user -> do
   ctx <- getContext
@@ -26,7 +26,7 @@ handleSalesforceIntegration  = withUser $ \user -> do
     Nothing -> noConfigurationError "Salesforce"
     Just sc -> do
       mcode <- getField "code"
-      mstate <- getField "state" -- Internall salesforce param. We use it for holding url, where we will redirect user after authorization flow is done.
+      mstate <- getField "state" -- Internal salesforce param. We use it to hold url to redirect user after authorization flow is done.
       case mcode of
         Nothing   ->  (internalResponse . LinkExternal) <$> (flip runReaderT sc (initAuthorizationWorkflowUrl mstate))
         Just code -> do
@@ -37,7 +37,7 @@ handleSalesforceIntegration  = withUser $ \user -> do
               dbUpdate $ UpdateUserCallbackScheme (userid user) (SalesforceScheme token)
               return $ internalResponse $ fromMaybe LinkDesignView (LinkExternal <$> mstate)
 
-{- Returns access keys for salesforce user. User by They salesfroce plugin to start propper oauth wokflow. Keys are hardcodded in config file. -}
+{- Returns access keys for salesforce user. User by the salesforce plugin to start oauth wokflow. Keys are hardcoded in config file. -}
 getSalesforceKeys :: Kontrakcja m => m JSValue
 getSalesforceKeys = do
   ctx <- getContext

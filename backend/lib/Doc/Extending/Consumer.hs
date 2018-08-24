@@ -58,7 +58,7 @@ documentExtendingConsumer guardTimeConf templates pool
       -- if we handle it in ccOnException, it is already logged as ATTENTION.
       runExtending dec `catchDBExtraException` (\(_ :: DocumentWasPurged) -> do
         logInfo "Document was purged before extending" $ object [
-            identifier_ $ decDocumentID dec
+            identifier $ decDocumentID dec
           ]
         return $ Failed Remove)
   , ccOnException = const onFailure
@@ -76,7 +76,7 @@ documentExtendingConsumer guardTimeConf templates pool
     onFailure DocumentExtendingConsumer{..} = do
       when (decAttempts > 1) $ do
         logAttention "Document extending failed more than 1 time" $ object [
-            identifier_ decDocumentID
+            identifier decDocumentID
           , "attempt_count" .= decAttempts
           ]
       return . RerunAfter $ idays 1

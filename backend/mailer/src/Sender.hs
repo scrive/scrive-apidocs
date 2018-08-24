@@ -47,7 +47,7 @@ createSender cs mc = case mc of
 createExternalSender :: TrackedConnectionSource -> String -> String -> (Mail -> [String]) -> Sender
 createExternalSender (ConnectionSource pool) name program createArgs = Sender {
   senderName = name
-, sendMail = \mail@Mail{..} -> localData [identifier_ mailID] $ do
+, sendMail = \mail@Mail{..} -> localData [identifier mailID] $ do
   content <- runDBT pool ts $ assembleContent mail
   (code, _, bsstderr) <- liftBase $ readProcessWithExitCode program (createArgs mail) content
   case code of
@@ -92,7 +92,7 @@ createSMTPSender cs config =
 createLocalSender :: TrackedConnectionSource -> SenderConfig -> Sender
 createLocalSender (ConnectionSource pool) config = Sender {
   senderName = "localSender"
-, sendMail = \mail@Mail{..} -> localData [identifier_ mailID] $ do
+, sendMail = \mail@Mail{..} -> localData [identifier mailID] $ do
   content <- runDBT pool ts $ assembleContent mail
   let filename = localDirectory config ++ "/Email-" ++ addrEmail (head mailTo) ++ "-" ++ show mailID ++ ".eml"
   liftBase $ BSL.writeFile filename content

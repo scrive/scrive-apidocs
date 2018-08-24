@@ -624,6 +624,7 @@ Executable kontrakcja-server
                , happstack-server
                , happstack-static-routing
                , hedis
+               , hostname
                , lifted-base
                , log-base
                , text
@@ -883,6 +884,7 @@ Executable kontrakcja-migrate
                     , ScopedTypeVariables
                     , StandaloneDeriving
                     , TupleSections
+                    , TypeApplications
                     , TypeFamilies
                     , TypeOperators
                     , TypeSynonymInstances
@@ -1424,6 +1426,7 @@ Test-suite kontrakcja-test
                     , RecordWildCards
                     , ScopedTypeVariables
                     , StandaloneDeriving
+                    , TypeApplications
                     , TupleSections
                     , TypeFamilies
                     , TypeOperators

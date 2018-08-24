@@ -13,8 +13,30 @@ getHsDeps :: FilePath -> IO [FilePath]
 getHsDeps mainIs = do
   withTempDir $ \dir -> do
     let tmpFile = dir </> ".depend"
-    callProcess "ghc" [ "-dep-suffix", "", "-M", mainIs
-                      , "-dep-makefile", tmpFile ]
+    callProcess "ghc"
+      [ "-hide-all-packages"
+
+        -- We use 'getHsDeps' only on 'Shake/Shake.hs', so this is
+        -- fine. Otherwise GHC would get confused by the package
+        -- environment file.
+      , "-package", "Cabal"
+      , "-package", "aeson"
+      , "-package", "attoparsec"
+      , "-package", "base"
+      , "-package", "bytestring"
+      , "-package", "containers"
+      , "-package", "directory"
+      , "-package", "extra"
+      , "-package", "filepath"
+      , "-package", "pretty"
+      , "-package", "process"
+      , "-package", "shake"
+      , "-package", "text"
+      , "-package", "time"
+      , "-package", "unordered-containers"
+
+      , "-dep-suffix", "", "-M", mainIs
+      , "-dep-makefile", tmpFile ]
     deps <- nub . filter (".hs" `isSuffixOf`)
       . concatMap snd . parseMakefile <$> readFile' tmpFile
     return deps

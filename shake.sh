@@ -5,7 +5,6 @@ set -eux
 
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
-rm -f ./.ghc.environment.*
 
 # Check that the prerequisites for running the shake script are
 # installed.
@@ -31,5 +30,21 @@ rm ghc-pkg.list
 
 # Build and run the Shake script.
 mkdir -p _shake
-ghc --make Shake/Shake.hs -Wall -Werror -rtsopts -with-rtsopts=-I0 \
+ghc -hide-all-packages \
+    -package Cabal \
+    -package aeson \
+    -package attoparsec \
+    -package base \
+    -package bytestring \
+    -package containers \
+    -package directory \
+    -package extra \
+    -package filepath \
+    -package pretty \
+    -package process \
+    -package shake \
+    -package text \
+    -package time \
+    -package unordered-containers \
+    --make Shake/Shake.hs -Wall -Werror -rtsopts -with-rtsopts=-I0 \
     -outputdir=_shake -o _shake/build && _shake/build --color "$@"

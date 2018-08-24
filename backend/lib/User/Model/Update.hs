@@ -348,8 +348,8 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m MakeUserPartnerAdmi
     case (ugid == get ugID user_ug) of
       False -> do
         logAttention "User is not member of this usergroup" $ object [
-              identifier_ uid
-            , identifier_ ugid
+              identifier uid
+            , identifier ugid
             ]
         return False
       True ->

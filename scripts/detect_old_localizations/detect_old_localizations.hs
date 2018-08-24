@@ -110,7 +110,7 @@ intersectLocalizations (Object m1) (Object m2) = Object $ Map.fromList items'
         let m' = m2 Map.! k
         in Just (k, intersectLocalizations m m')
 
-intersectLocalizations _ _ = undefined
+intersectLocalizations _ _ = error "intersectLocalizations: impossible"
 
 ------------------------------
 -- | Parsing Localization from JavaScript.

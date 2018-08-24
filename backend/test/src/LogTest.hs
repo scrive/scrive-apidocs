@@ -29,5 +29,5 @@ testDocIDFormatting = do
       dummyDocumentID = unsafeDocumentID 123456789
 
       logAct :: LogT IO ()
-      logAct = localData [identifier_ dummyDocumentID] $
+      logAct = localData [identifier dummyDocumentID] $
                logInfo_ "foo"

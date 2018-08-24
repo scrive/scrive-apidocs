@@ -171,8 +171,8 @@ insertSignatoryLinks did links = do
         sqlWhereEq "id" did
     authors -> do
       logAttention "Document doesn't have exactly one author" $ object [
-          identifier_ did
-        , identifier_ $ map signatorylinkid authors
+          identifier did
+        , identifier $ map signatorylinkid authors
         ]
       unexpectedError "Invalid document"
 
@@ -1080,7 +1080,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
             return $ Just d
       Left err -> do
         logAttention "Document restart failed" $ object [
-            identifier_ $ documentid doc
+            identifier $ documentid doc
           , "error" .= err
           ]
         return Nothing
@@ -1504,7 +1504,7 @@ instance (CryptoRNG m, MonadLog m, MonadThrow m, DocumentMonad m, TemplatesMonad
 
           errs -> do
             logAttention "Cannot reset signatory details on document" $ object [
-                identifier_ documentid
+                identifier documentid
               , "errors" .= errs
               ]
             return False
@@ -2084,16 +2084,16 @@ archiveIdleDocuments now = do
     users <- dbQuery $ UserGroupGetUsersIncludeDeleted ugid
     fmap sum . forM (map userid users) $ \uid -> do
       logInfo "archiveIdleDocuments starting for user in user_group" $ object [
-          identifier_ ugid
-        , identifier_ uid
+          identifier ugid
+        , identifier uid
         ]
       startTime <- currentTime
       archived <- dbUpdate $ ArchiveIdleDocumentsForUserInUserGroup uid ugid timeoutDays now
       commit
       finishTime <- currentTime
       logInfo "archiveIdleDocuments finished for user in user_group" $ object [
-          identifier_ ugid
-        , identifier_ uid
+          identifier ugid
+        , identifier uid
         , "elapsed_time" .= (realToFrac (diffUTCTime finishTime startTime) :: Double)
         , "signatory_links_archived" .= archived
         ]

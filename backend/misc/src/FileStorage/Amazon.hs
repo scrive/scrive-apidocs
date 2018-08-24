@@ -173,7 +173,7 @@ uploadSomeFilesToAmazon config n = do
         when (not success) $ do
           finishTime <- liftBase getCurrentTime
           logAttention "A file failed to upload to AWS" $ object [
-              identifier_ (fileid file)
+              identifier (fileid file)
             , "elapsed_time" .= getDiffTime finishTime
             ]
           unexpectedError $ "Moving file " <+> show (fileid file) <+> " to Amazon failed."
@@ -212,7 +212,7 @@ urlFromFile File{filename, fileid, filechecksum} =
 -- - do nothing and keep it in memory database
 exportFile :: (MonadBase IO m, MonadIO m, MonadDB m, MonadLog m, CryptoRNG m) => S3Action -> File -> m Bool
 exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)}
-           file@File{fileid, filestorage = FileStorageMemory plainContent} = localData [identifier_ fileid] $ do
+           file@File{fileid, filestorage = FileStorageMemory plainContent} = localData [identifier fileid] $ do
   Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
   let encryptedContent = aesEncrypt aes plainContent
       action = ctxs3action {
@@ -235,7 +235,7 @@ exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)}
       logInfo "AWS uploaded" $ object [
           "url" .= (bucket </> url)
         , "elapsed_time" .= timeDiff
-        , identifier_ fileid
+        , identifier fileid
         ]
       return True
     Left err -> do
@@ -243,11 +243,11 @@ exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)}
           "url" .= (bucket </> url)
         , "error" .= show err
         , "elapsed_time" .= timeDiff
-        , identifier_ fileid
+        , identifier fileid
         ]
       return False
 
-exportFile _ File{fileid, filestorage = FileStorageAWS _ _ }  = localData [identifier_ fileid] $ do
+exportFile _ File{fileid, filestorage = FileStorageAWS _ _ }  = localData [identifier fileid] $ do
   logInfo_ "Not uploading already uploaded file"
   return False
 

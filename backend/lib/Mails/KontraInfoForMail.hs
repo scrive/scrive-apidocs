@@ -26,12 +26,12 @@ data KontraInfoForMail
 instance Loggable KontraInfoForMail where
   logValue (DocumentInvitationMail did slid) = object $ [
            "type" .= ("invitation"::T.Text)
-          , identifier_ did
-          , identifier_ slid
+          , identifier did
+          , identifier slid
           ]
   logValue (OtherDocumentMail did) = object $ [
             "type" .= ("other"::T.Text)
-          , identifier_ did
+          , identifier did
           ]
 
   logDefaultLabel _ = "mail_info"

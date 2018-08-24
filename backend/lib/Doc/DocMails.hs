@@ -407,7 +407,7 @@ sendPinCode sl phone pin = do
 sendNotifications :: (Monad m, MonadLog m) => SignatoryLink -> Bool -> m () -> m () -> m Bool
 sendNotifications sl alwaysEmailAuthor domail dosms = do
   logInfo "Delivery method chosen for a signatory" $ object [
-      identifier_ $ signatorylinkid sl
+      identifier $ signatorylinkid sl
     , "method" .= (show $ signatorylinkdeliverymethod sl)
     , "phone" .= getMobile sl
     , "email" .= getEmail sl

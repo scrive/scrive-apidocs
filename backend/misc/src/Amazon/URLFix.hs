@@ -10,7 +10,6 @@ import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Crypto.RNG
 import Data.Aeson
-import Data.Either (isRight)
 import Data.Int
 import Database.PostgreSQL.Consumers.Config
 import Log.Class
@@ -37,8 +36,18 @@ checkAndFixURL s3action (FileStorageAWS correctURL _) = do
     , AWS.s3operation = HEAD
     }
   case res of
-    Left (AWS.AWSError "NoSuchKey" _) -> return True
-    Left _ -> return False
+    Left (AWS.AWSError "NoSuchKey" _) -> do
+      logInfo "Skipping S3 URL fix as it is already correct" $ object
+        [ "correct_url" .= correctURL
+        ]
+      return True
+    Left err -> do
+      logInfo "Checking S3 wrong URL failed" $ object
+        [ "correct_url" .= correctURL
+        , "wrong_url"   .= wrongURL
+        , "error"       .= show err
+        ]
+      return False
     Right _ -> do
       -- Copy file to the correct URL
       res' <- liftIO $ AWS.runAction $ s3action
@@ -49,7 +58,13 @@ checkAndFixURL s3action (FileStorageAWS correctURL _) = do
         , AWS.s3operation = PUT
         }
       case res' of
-        Left _ -> return False
+        Left err -> do
+          logInfo "Copying file to correct S3 URL failed" $ object
+            [ "correct_url" .= correctURL
+            , "wrong_url"   .= wrongURL
+            , "error"       .= show err
+            ]
+          return False
         Right _ -> do
           -- Delete wrong one after a little while to let other processes fetch
           -- it should there be any.
@@ -58,7 +73,19 @@ checkAndFixURL s3action (FileStorageAWS correctURL _) = do
             { AWS.s3object    = wrongURL
             , AWS.s3operation = DELETE
             }
-          return $ isRight res''
+          case res'' of
+            Left err -> do
+              logInfo "Deleting S3 wrong file failed" $ object
+                [ "correct_url" .= correctURL
+                , "wrong_url"   .= wrongURL
+                , "error"       .= show err
+                ]
+              return False
+            Right _ -> do
+              logInfo "S3 URL successfully fixed" $ object
+                [ "correct_url" .= correctURL
+                ]
+              return True
 
 data AmazonURLFixConsumer = AmazonURLFixConsumer
   { aufcFileID   :: !FileID
@@ -89,7 +116,7 @@ amazonURLFixConsumer config pool = ConsumerConfig
             case mfile of
               Nothing -> do
                 logInfo "File missing, so it cannot be checked on AWS." $ object [
-                    identifier_ aufcFileID
+                    identifier aufcFileID
                   ]
                 -- this means, that file was not found or was purged
                 return $ Failed Remove

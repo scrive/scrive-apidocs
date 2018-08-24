@@ -167,7 +167,7 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf templates pool
 
     legacyProviderFail signingSignatoryID provider = do
       logAttention "Legacy provider used in signing consumer" $ object [
-          identifier_ signingSignatoryID
+          identifier signingSignatoryID
         , "provider" .= (T.pack . show $ provider)
         ]
       return $ Failed Remove

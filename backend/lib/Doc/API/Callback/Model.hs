@@ -98,14 +98,14 @@ triggerAPICallbackIfThereIsOne doc@Document{..} = logDocument documentid $ case 
           _ -> return () -- No callback defined for document nor user.
       Nothing -> do
         logAttention "Cant trigger user API callback for doc wihout author" $ object [
-            identifier_ documentid
+            identifier documentid
           ]
         return () -- skipping
 
   where
     addAPICallback url apiVersion = do
       logInfo "Triggering API callback for document with api version" $
-        object [ identifier_ apiVersion]
+        object [ identifier apiVersion]
       dbUpdate $ MergeAPICallback documentid url apiVersion
 
 ----------------------------------------

@@ -54,7 +54,7 @@ processEvents limit = do
   -- We limit processing to <limit> events not to have issues with large number of documents locked.
   events <- take limit <$> dbQuery GetUnreadEvents
   forM_ events $ \event@(eid, mid, _) -> do
-    localData [identifier_ eid, identifier_ mid] $ processEvent event
+    localData [identifier eid, identifier mid] $ processEvent event
   return $ length events
   where
     processEvent (eid, mid, eventType) = do
@@ -179,7 +179,7 @@ handleEventOtherMail docid eid timeDiff templates eventType = logDocument docid 
 logDeliveryTime :: (DocumentMonad m, MonadLog m, MonadThrow m) => Maybe Int -> m ()
 logDeliveryTime timeDiff = theDocument >>= \d -> do
   logInfo "Email delivered" $ object [
-      identifier_ $ documentauthorugid d
+      identifier $ documentauthorugid d
     , "delivery_time" .= timeDiff
     ]
 

@@ -88,9 +88,9 @@ deriving newtype instance Show ShortMessageID
 instance PQFormat ShortMessageID where
   pqFormat = pqFormat @Int64
 
-instance Identifier ShortMessageID Int64 where
-  idDefaultLabel _ = "sms_id"
-  idValue (ShortMessageID k) = toJSON . show $ k
+instance Identifier ShortMessageID where
+  idDefaultLabel             = "sms_id"
+  idValue (ShortMessageID k) = int64AsStringIdentifier k
 
 instance FromSQL ShortMessageID where
   type PQBase ShortMessageID = PQBase Int64
@@ -111,7 +111,7 @@ data ShortMessage = ShortMessage {
 
 instance Loggable ShortMessage where
   logValue ShortMessage{..} = object [
-      identifier_ smID
+      identifier smID
     , "provider"   .= show smProvider
     , "originator" .= smOriginator
     , "msisdn"     .= smMSISDN -- original/non-clean format
@@ -130,9 +130,9 @@ deriving newtype instance Show SMSEventID
 instance PQFormat SMSEventID where
   pqFormat = pqFormat @Int64
 
-instance Identifier SMSEventID Int64 where
-  idDefaultLabel _ = "sms_event_id"
-  idValue (SMSEventID k) = toJSON . show $ k
+instance Identifier SMSEventID where
+  idDefaultLabel         = "sms_event_id"
+  idValue (SMSEventID k) = int64AsStringIdentifier k
 
 instance FromSQL SMSEventID where
   type PQBase SMSEventID = PQBase Int64

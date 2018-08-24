@@ -6,16 +6,19 @@ module DB.Derive (
   , nothingToResult
   ) where
 
-import Data.Typeable
 import Database.PostgreSQL.PQTypes
 import Foreign.Ptr
 import Text.JSON.Generic
 import Text.JSON.String
+import Type.Reflection
 
-jsonFromSQL :: (Data a, Typeable a) => Maybe (PQBase String) -> IO a
+jsonFromSQL :: (Data a, Typeable a)
+            => Maybe (PQBase String) -> IO a
 jsonFromSQL = jsonFromSQL' fromJSON
 
-jsonToSQL :: Data a => a -> ParamAllocator -> (Ptr (PQDest String) -> IO r) -> IO r
+jsonToSQL :: Data a
+          => a -> ParamAllocator -> (Ptr (PQDest String) -> IO r)
+          -> IO r
 jsonToSQL = jsonToSQL' toJSON
 
 ----------------------------------------
@@ -31,9 +34,12 @@ jsonFromSQL' f mbase = do
     Left msg -> err msg
   where
     err msg = hpqTypesError $ "jsonFromSQL (" ++ typerep ++ "): " ++ msg
-    typerep = show $ typeOf (undefined::a)
+    typerep = show $ typeRep @a
 
-jsonToSQL' :: Data a => (a -> JSValue) -> a -> ParamAllocator -> (Ptr (PQDest String) -> IO r) -> IO r
+jsonToSQL' :: Data a
+           => (a -> JSValue) -> a -> ParamAllocator
+           -> (Ptr (PQDest String) -> IO r)
+           -> IO r
 jsonToSQL' f v = toSQL (showJSValue (f v) "")
 
 ----------------------------------------

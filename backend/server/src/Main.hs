@@ -9,6 +9,7 @@ import Happstack.Server hiding (waitForTermination)
 import Happstack.StaticRouting
 import Log
 import Network.Curl
+import Network.HostName
 import System.Console.CmdArgs hiding (def)
 import System.Environment
 import qualified Control.Exception.Lifted as E
@@ -85,6 +86,7 @@ main = withCurlDo $ do
       templates <- liftBase (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
       mrediscache <- F.forM (redisCacheConfig appConf) mkRedisConnection
       filecache <- newFileMemCache $ localFileCacheSize appConf
+      hostname <- liftBase getHostName
       return AppGlobals {
           templates          = templates
         , mrediscache        = mrediscache
@@ -92,6 +94,7 @@ main = withCurlDo $ do
         , cryptorng          = rng
         , connsource         = pool
         , runlogger          = runLogger
+        , hostname           = hostname
         }
 
     startSystem appGlobals appConf

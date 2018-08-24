@@ -318,8 +318,8 @@ handleSignRequest did slid = do
         return (NetsSignDK, Just . T.pack . filter ('-' /=) $ pn)
       _ -> do
         logAttention "NetsSign: unsupported auth to sign method" $ object [
-            identifier_ did
-          , identifier_ slid
+            identifier did
+          , identifier slid
           ]
         internalError
     let nso = NetsSignOrder nsoID slid provider (T.pack tbs) (sesID sess) (5 `minutesAfter` now) False mSSN
@@ -373,7 +373,7 @@ checkNetsSignStatus nets_conf did slid = do
           case mnso of
             Nothing -> do
               logAttention "Document Nets signing cannot be found" $ object [
-                  identifier_ slid
+                  identifier slid
                 ]
               return $ NetsSignStatusFailure NetsFaultExpiredTransaction
             Just nso -> do
@@ -420,7 +420,7 @@ checkNetsSignStatus nets_conf did slid = do
   where
     netsStatusFailure nets_fault = do
       logInfo "Document Nets signing failed" $ object [
-          identifier_ slid
+          identifier slid
         , "nets_fault" .= netsFaultText nets_fault
         ]
       return $ NetsSignStatusFailure nets_fault

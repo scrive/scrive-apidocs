@@ -46,10 +46,9 @@ instance Show File where
 
 instance Loggable File where
   logValue File{..} = object [
-      identifier_ fileid
+      identifier fileid
     , "name" .= filename
     , "size" .= filesize
-    , "checksum" .= BS.unpack filechecksum
     , logPair_ filestorage
     ]
   logDefaultLabel _ = "file"

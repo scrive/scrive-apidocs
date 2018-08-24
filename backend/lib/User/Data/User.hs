@@ -54,7 +54,7 @@ instance HasSomeUserInfo User where
 
 instance Loggable User where
   logValue User{..} = object [
-      identifier_ userid
+      identifier userid
     , "email" .= useremail userinfo
     , "name" .= (userfstname userinfo <> " " <> usersndname userinfo)
     ]

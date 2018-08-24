@@ -280,9 +280,9 @@ data NetsSignOrder = NetsSignOrder
 
 instance Loggable NetsSignOrder where
   logValue NetsSignOrder{..} = object [
-      identifier_ nsoSignOrderID
-    , identifier_ nsoSessionID
-    , identifier_ nsoSignatoryLinkID
+      identifier nsoSignOrderID
+    , identifier nsoSessionID
+    , identifier nsoSignatoryLinkID
     , "is_canceled" .= nsoIsCanceled
     , "provider" .= netsSignProviderText nsoProvider
     ]
@@ -358,7 +358,7 @@ data InsertOrderResponse = InsertOrderResponse
 
 instance Loggable InsertOrderResponse where
   logValue InsertOrderResponse{..} = object [
-      identifier_ iorsSignOrderUUID
+      identifier iorsSignOrderUUID
     , "transaction_ref" .= iorsTransactionRef
     ]
   logDefaultLabel _ = "nets_insert_order_response"
@@ -398,7 +398,7 @@ xpGetSigningProcessesResponse = XMLParser $ \cursor -> listToMaybe $ cursor
 
 instance Loggable GetSigningProcessesResponse where
   logValue GetSigningProcessesResponse{..} = object [
-      identifier_ gsprsSignOrderUUID
+      identifier gsprsSignOrderUUID
     , "transaction_ref" .= gsprsTransactionRef
     , "nets_sign_url" .= gsprsSignURL
     ]
@@ -432,7 +432,7 @@ data GetOrderStatusResponse = GetOrderStatusResponse
 
 instance Loggable GetOrderStatusResponse where
   logValue GetOrderStatusResponse{..} = object [
-      identifier_ gosrsSignOrderUUID
+      identifier gosrsSignOrderUUID
     , "transaction_ref" .= gosrsTransactionRef
     , "order_status" .= (T.pack . show $ gosrsOrderStatus)
     ]
@@ -470,7 +470,7 @@ data GetSDOResponse = GetSDOResponse
 
 instance Loggable GetSDOResponse where
   logValue GetSDOResponse{..} = object [
-      identifier_ gsdorsSignOrderUUID
+      identifier gsdorsSignOrderUUID
     , "transaction_ref" .= gsdorsTransactionRef
     , "b64_sdo_bytes_length" .= T.length gsdorsB64SDOBytes
     ]

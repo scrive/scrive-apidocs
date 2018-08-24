@@ -49,17 +49,17 @@ instance ToSQL KontraInfoForSMSType where
 instance Loggable KontraInfoForSMS where
   logValue (DocumentInvitationSMS did slid) = object [
        "type" .= ("invitation" :: String)
-      , identifier_ did
-      , identifier_ slid
+      , identifier did
+      , identifier slid
     ]
   logValue (DocumentPinSendoutSMS did slid) = object [
        "type" .= ("pin_sendout" :: String)
-      , identifier_ did
-      , identifier_ slid
+      , identifier did
+      , identifier slid
     ]
   logValue (OtherDocumentSMS did) = object [
        "type" .= ("other" :: String)
-      , identifier_ did
+      , identifier did
     ]
 
   logDefaultLabel _ = "sms_document_info"

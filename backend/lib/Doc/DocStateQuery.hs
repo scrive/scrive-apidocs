@@ -80,7 +80,7 @@ getDocByDocIDAndAccessToken :: Kontrakcja m =>
 getDocByDocIDAndAccessToken did mhash tryuser = case mhash of
   Just accessToken -> do
     logInfo "Trying to get a document via access token" $ object [
-        identifier_ did
+        identifier did
       , "access_token" .= show accessToken
       ]
     mdoc <- dbQuery $ GetDocuments
@@ -92,18 +92,18 @@ getDocByDocIDAndAccessToken did mhash tryuser = case mhash of
       [doc] -> return doc
       _ | tryuser == TryUserDocuments -> do
             logInfo "Access token was invalid, trying user documents" $ object [
-              identifier_ did
+              identifier did
               ]
             getDocumentOfUser
 
         | otherwise -> do
-            logInfo "Access token was invalid" $ object [ identifier_ did ]
+            logInfo "Access token was invalid" $ object [ identifier did ]
             throwM . SomeDBExtraException $ invalidAuthorizationWithMsg
               "Access token was invalid."
 
   Nothing | tryuser == TryUserDocuments -> getDocumentOfUser
           | otherwise                   -> do
-              logInfo "No access token provided" $ object [ identifier_ did ]
+              logInfo "No access token provided" $ object [ identifier did ]
               throwM . SomeDBExtraException $ invalidAuthorizationWithMsg
                 "No access token provided."
   where

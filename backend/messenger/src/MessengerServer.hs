@@ -110,7 +110,7 @@ main = do
     , ccNotificationChannel = Just smsNotificationChannel
     , ccNotificationTimeout = 60 * 1000000 -- 1 minute
     , ccMaxRunningJobs = 10
-    , ccProcessJob = \sms@ShortMessage{..} -> localData [identifier_ smID] . runCryptoRNGT rng $ do
+    , ccProcessJob = \sms@ShortMessage{..} -> localData [identifier smID] . runCryptoRNGT rng $ do
       logInfo_ "Sending sms"
       withPostgreSQL pool $ sendSMS sender sms >>= \case
         True  -> return $ Ok MarkProcessed

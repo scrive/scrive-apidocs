@@ -4,7 +4,6 @@ module Theme.ThemeID (
   , fromThemeID
   ) where
 
-import Data.Aeson
 import Data.Binary as B
 import Data.Int
 import Data.Typeable
@@ -50,6 +49,6 @@ unjsonThemeID = unjsonInvmapR ((maybe (fail "Can't parse ThemeID")  return) . ma
 instance Unjson ThemeID where
   unjsonDef = unjsonThemeID
 
-instance Identifier ThemeID Int64 where
-  idDefaultLabel _ = "theme_id"
-  idValue (ThemeID k) = toJSON . show $ k
+instance Identifier ThemeID where
+  idDefaultLabel      = "theme_id"
+  idValue (ThemeID k) = int64AsStringIdentifier k
