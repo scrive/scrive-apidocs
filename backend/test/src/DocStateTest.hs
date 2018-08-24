@@ -13,6 +13,7 @@ import qualified Data.ByteString as BS
 import qualified Data.Set as S
 
 import Context (ctxpdftoolslambdaconf, ctxtime)
+import DataRetentionPolicy
 import DB
 import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
 import Doc.API.V2.JSON.SignatoryConsentQuestion
@@ -217,6 +218,9 @@ docStateTests env = testGroup "DocState" [
   testThat "PurgeDocuments does not purge documents for saved users" env testPurgeDocumentUserSaved,
   testThat "PurgeDocuments removes sensitive data" env testPurgeDocumentRemovesSensitiveData,
   testThat "PurgeDocuments does not purge shared templates" env testPurgeDocumentSharedTemplates,
+  testThat "PurgeDocuments does not purge documents before a given number of\
+           \ days except if it is the company's data retention policy"
+           env testPurgeDocumentImmediateTrash,
 
   testThat "ArchiveIdleDocuments archives idle documents" env testArchiveIdleDocument,
 
@@ -885,17 +889,42 @@ testPurgeDocumentSharedTemplates = do
                   uid (userid bob)
     _ -> assertFailure "Unexpected error"
 
+testPurgeDocumentImmediateTrash :: TestEnv ()
+testPurgeDocumentImmediateTrash = replicateM_ 10 $ do
+  ug <- addNewUserGroup
+  author <- addNewRandomCompanyUser (get ugID ug) False
+  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
+  now <- currentTime
+  withDocument doc $ randomUpdate $ \t -> ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
+
+  archived1 <- dbUpdate $ PurgeDocuments 1 -- purge after 1 day
+  assertEqual "Purged zero documents before 1 day after deletion" 0 archived1
+
+  dbUpdate $ UserGroupUpdate $
+    set (drpImmediateTrash . ugsDataRetentionPolicy . ugSettings) True ug
+
+  archived2 <- dbUpdate $ PurgeDocuments 1
+  assertEqual "Purged single document" 1 archived2
+
+  allDocs1 <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author)
+                         [DocumentFilterByDocumentID (documentid doc)] [] (-1)
+  assertEqual "List documents does not include purged ones" [] (map documentid allDocs1)
+
 testArchiveIdleDocument :: TestEnv ()
 testArchiveIdleDocument = replicateM_ 10 $ do
   ug <- addNewUserGroup
-  let oldUGS = get ugSettings ug
-      newUGS = set ugsIdleDocTimeout (Just 1) $ oldUGS
-  _ <- dbUpdate . UserGroupUpdate . set ugSettings newUGS $ ug
   author <- addNewRandomUserGroupUser (get ugID ug) False
   author2 <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isClosed && isSignable)
+  doc <- addRandomDocumentWithAuthorAndCondition author $ \d ->
+           isSignable d && not (isPending d)
   _ <- addRandomDocumentWithAuthorAndCondition author (isTemplate || isPending)
-  _ <- addRandomDocumentWithAuthorAndCondition author2 (isClosed && isSignable)
+  _ <- addRandomDocumentWithAuthorAndCondition author2 $ \d ->
+         documentstatus d == documentstatus doc
+
+  let oldUGS = get ugSettings ug
+      newUGS = set (drpIdleDocTimeout (documentstatus doc) . ugsDataRetentionPolicy) (Just 1) $ oldUGS
+  _ <- dbUpdate . UserGroupUpdate . set ugSettings newUGS $ ug
+
   archived1 <- archiveIdleDocuments (documentmtime doc)
   assertEqual "Archived zero idle documents (too early)" 0 archived1
   archived2 <- archiveIdleDocuments (2 `daysAfter` documentmtime doc)

@@ -23,6 +23,7 @@ import qualified Control.Exception.Lifted as E
 import qualified Data.Binary as B
 import qualified Data.ByteString.Char8 as BS
 
+import DataRetentionPolicy
 import DB
 import IPAddress
 import Log.Identifier
@@ -57,7 +58,7 @@ data InvoicingType =
 
 data UserGroupSettings = UserGroupSettings {
     _ugsIPAddressMaskList   :: [IPAddressWithMask]
-  , _ugsIdleDocTimeout      :: Maybe Int16
+  , _ugsDataRetentionPolicy :: DataRetentionPolicy
   , _ugsCGIDisplayName      :: Maybe Text
   , _ugsCGIServiceID        :: Maybe Text
   , _ugsSMSProvider         :: SMSProvider
@@ -163,7 +164,7 @@ instance Default UserGroup where
     , _ugName = ""
     , _ugSettings = UserGroupSettings {
         _ugsIPAddressMaskList   = []
-      , _ugsIdleDocTimeout      = Nothing
+      , _ugsDataRetentionPolicy = def
       , _ugsCGIDisplayName      = Nothing
       , _ugsCGIServiceID        = Nothing
       , _ugsSMSProvider         = SMSDefault
@@ -225,6 +226,12 @@ instance Unjson UserGroupID where
 type instance CompositeRow UserGroupSettings = (
     Maybe String
   , Maybe Int16
+  , Maybe Int16
+  , Maybe Int16
+  , Maybe Int16
+  , Maybe Int16
+  , Maybe Int16
+  , Bool
   , Maybe Text
   , SMSProvider
   , Maybe Text
@@ -238,20 +245,34 @@ instance PQFormat UserGroupSettings where
 instance CompositeFromSQL UserGroupSettings where
   toComposite (
       ip_address_mask_list
-    , idle_doc_timeout
+    , idle_doc_timeout_preparation
+    , idle_doc_timeout_closed
+    , idle_doc_timeout_canceled
+    , idle_doc_timeout_timedout
+    , idle_doc_timeout_rejected
+    , idle_doc_timeout_error
+    , immediate_trash
     , cgi_display_name
     , sms_provider
     , cgi_service_id
     , pad_app_mode
     , pad_earchive_enabled
     ) = UserGroupSettings {
-      _ugsIPAddressMaskList   = maybe [] read ip_address_mask_list
-    , _ugsIdleDocTimeout      = idle_doc_timeout
-    , _ugsCGIDisplayName      = cgi_display_name
-    , _ugsCGIServiceID        = cgi_service_id
-    , _ugsSMSProvider         = sms_provider
-    , _ugsPadAppMode          = pad_app_mode
-    , _ugsPadEarchiveEnabled  = pad_earchive_enabled
+      _ugsIPAddressMaskList         = maybe [] read ip_address_mask_list
+    , _ugsDataRetentionPolicy = DataRetentionPolicy
+        { _drpIdleDocTimeoutPreparation = idle_doc_timeout_preparation
+        , _drpIdleDocTimeoutClosed      = idle_doc_timeout_closed
+        , _drpIdleDocTimeoutCanceled    = idle_doc_timeout_canceled
+        , _drpIdleDocTimeoutTimedout    = idle_doc_timeout_timedout
+        , _drpIdleDocTimeoutRejected    = idle_doc_timeout_rejected
+        , _drpIdleDocTimeoutError       = idle_doc_timeout_error
+        , _drpImmediateTrash            = immediate_trash
+        }
+    , _ugsCGIDisplayName            = cgi_display_name
+    , _ugsCGIServiceID              = cgi_service_id
+    , _ugsSMSProvider               = sms_provider
+    , _ugsPadAppMode                = pad_app_mode
+    , _ugsPadEarchiveEnabled        = pad_earchive_enabled
     }
 
 -- UI

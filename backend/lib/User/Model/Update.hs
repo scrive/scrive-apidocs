@@ -24,6 +24,7 @@ import Data.Char
 import Log
 
 import BrandedDomain.BrandedDomainID
+import DataRetentionPolicy
 import DB
 import Doc.Data.Document (DocumentSharing(..), DocumentType(..))
 import Doc.Data.SignatoryField
@@ -303,7 +304,15 @@ data SetUserSettings = SetUserSettings UserID UserSettings
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserSettings Bool where
   update (SetUserSettings uid us) = do
     runQuery01 . sqlUpdate "users" $ do
+      let drp = dataretentionpolicy us
       sqlSet "lang" $ getLang us
+      sqlSet "idle_doc_timeout_preparation" $ get drpIdleDocTimeoutPreparation drp
+      sqlSet "idle_doc_timeout_closed"      $ get drpIdleDocTimeoutClosed      drp
+      sqlSet "idle_doc_timeout_canceled"    $ get drpIdleDocTimeoutCanceled    drp
+      sqlSet "idle_doc_timeout_timedout"    $ get drpIdleDocTimeoutTimedout    drp
+      sqlSet "idle_doc_timeout_rejected"    $ get drpIdleDocTimeoutRejected    drp
+      sqlSet "idle_doc_timeout_error"       $ get drpIdleDocTimeoutError       drp
+      sqlSet "immediate_trash"              $ get drpImmediateTrash            drp
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
 

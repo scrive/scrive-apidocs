@@ -5,10 +5,13 @@ import Control.Monad.IO.Class
 import Crypto.Hash.Algorithms (SHA1(..))
 import Data.Aeson
 import Data.Either (Either(..))
+import Data.Label
 import Data.List.Split (splitOneOf)
 import Data.OTP (totp)
+import Data.Unjson
 import Happstack.Server
 import Test.Framework
+import Test.QuickCheck
 import qualified Codec.Binary.Base32 as B32
 import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BSC
@@ -17,6 +20,7 @@ import qualified Data.Text.Encoding as TE
 
 import Attachment.Model
 import Context
+import DataRetentionPolicy
 import DB
 import Doc.Data.Document
 import Doc.Data.DocumentStatus
@@ -33,6 +37,7 @@ import User.API
 import User.Email
 import User.Model
 import UserGroup.Data
+import UserGroup.Model
 import Util.Actor
 import Util.QRCode
 
@@ -51,6 +56,12 @@ userAPITests env = testGroup "UserAPI"
   , testThat "Test User API Delete a user and give the shared\
              \ attachments/templates to the oldest admin or user"
              env testUserDeletionOwnershipTransfer
+
+  , testThat "Test User API Set user's data retention policy"
+             env testUserSetDataRetentionPolicy
+  , testThat "Test User API Don't set data retention policy if it's not\
+             \ at least as strict as company's one"
+             env testUserSetDataRetentionPolicyOnlyIfAsStrict
   ]
 
 testUserLoginAndGetSession :: TestEnv ()
@@ -296,3 +307,55 @@ testUserDeletionOwnershipTransfer = do
               (attachmentuser sharedAttachment') (userid bob)
   assertEqual "other admin has not been given unshared attachment"
               (attachmentuser unsharedAttachment') (userid anna)
+
+testUserSetDataRetentionPolicy :: TestEnv ()
+testUserSetDataRetentionPolicy = do
+  (user, _) <- addNewAdminUserAndUserGroup "Bob" "Blue" "bob@email.tld"
+  ctx <- set ctxmaybeuser (Just user) <$> mkContext def
+
+  replicateM_ 10 $ do
+    drp <- rand 10 arbitrary
+    let drpBS = unjsonToByteStringLazy unjsonDataRetentionPolicy drp
+    req <- mkRequest POST [("data_retention_policy", inTextBS drpBS)]
+    (res, _) <- runTestKontra req ctx apiCallSetDataRetentionPolicy
+    assertEqual "should return 200" (rsCode res) 200
+
+    Just user' <- dbQuery $ GetUserByID $ userid user
+    assertEqual "policy should have been saved"
+                (dataretentionpolicy (usersettings user')) drp
+
+testUserSetDataRetentionPolicyOnlyIfAsStrict :: TestEnv ()
+testUserSetDataRetentionPolicyOnlyIfAsStrict = do
+    (user, ug) <- addNewAdminUserAndUserGroup "Bob" "Blue" "bob@email.tld"
+    ctx <- set ctxmaybeuser (Just user) <$> mkContext def
+
+    replicateM_ 10 $ do
+      userDRP    <- rand 10 arbitrary
+      companyDRP <- rand 10 arbitrary
+
+      let ug' = set (ugsDataRetentionPolicy . ugSettings) companyDRP ug
+      _ <- dbUpdate $ UserGroupUpdate ug'
+
+      let drpBS = unjsonToByteStringLazy unjsonDataRetentionPolicy userDRP
+      req <- mkRequest POST [("data_retention_policy", inTextBS drpBS)]
+      (res, _) <- runTestKontra req ctx apiCallSetDataRetentionPolicy
+
+      let expCode = if userDRP `isAsStrict` companyDRP then 200 else 400
+      assertEqual ("should return " ++ show expCode) expCode (rsCode res)
+
+  where
+    isAsStrict :: DataRetentionPolicy -> DataRetentionPolicy -> Bool
+    isAsStrict drp1 drp2 =
+      check drpIdleDocTimeoutPreparation drp1 drp2
+      && check drpIdleDocTimeoutClosed   drp1 drp2
+      && check drpIdleDocTimeoutCanceled drp1 drp2
+      && check drpIdleDocTimeoutTimedout drp1 drp2
+      && check drpIdleDocTimeoutRejected drp1 drp2
+      && check drpIdleDocTimeoutError    drp1 drp2
+      && (not (get drpImmediateTrash drp2) || get drpImmediateTrash drp1)
+
+    check :: Ord a => DataRetentionPolicy :-> Maybe a -> DataRetentionPolicy
+          -> DataRetentionPolicy -> Bool
+    check l drp1 drp2 = case (get l drp1, get l drp2) of
+      (Just x1, Just x2) -> x1 <= x2
+      _ -> True

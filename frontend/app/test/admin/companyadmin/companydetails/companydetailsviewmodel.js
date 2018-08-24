@@ -20,7 +20,13 @@ describe("admin/companyadmin/companydetails/companydetailsviewmodel", function (
     assert.equal(model.get("ipaddressmasklist"), "");
     assert.isNull(model.get("cgidisplayname"));
     assert.isNull(model.get("cgiserviceid"));
-    assert.isNull(model.get("idledoctimeout"));
+    assert.isNull(model.get("idledoctimeoutpreparation"));
+    assert.isNull(model.get("idledoctimeoutclosed"));
+    assert.isNull(model.get("idledoctimeoutcanceled"));
+    assert.isNull(model.get("idledoctimeouttimedout"));
+    assert.isNull(model.get("idledoctimeoutrejected"));
+    assert.isNull(model.get("idledoctimeouterror"));
+    assert.isFalse(model.get("immediatetrash"));
     assert.equal(model.get("smsprovider"), "");
     assert.equal(model.get("padappmode"), "");
     assert.isTrue(model.get("padearchiveenabled"));
@@ -38,7 +44,13 @@ describe("admin/companyadmin/companydetails/companydetailsviewmodel", function (
       ipaddressmasklist: "ipaddressmasklist",
       cgidisplayname: "cgidisplayname",
       cgiserviceid: "cgiserviceid",
-      idledoctimeout: 1,
+      idledoctimeoutpreparation: 1,
+      idledoctimeoutclosed: 2,
+      idledoctimeoutcanceled: 3,
+      idledoctimeouttimedout: 4,
+      idledoctimeoutrejected: 5,
+      idledoctimeouterror: 6,
+      immediatetrash: true,
       smsprovider: "smsprovider",
       padappmode: "padappmode",
       padearchiveenabled: true
@@ -56,7 +68,13 @@ describe("admin/companyadmin/companydetails/companydetailsviewmodel", function (
     assert.equal(submit.get("companyipaddressmasklist"), "ipaddressmasklist");
     assert.equal(submit.get("companycgidisplayname"), "cgidisplayname");
     assert.equal(submit.get("companycgiserviceid"), "cgiserviceid");
-    assert.equal(submit.get("companyidledoctimeout"), 1);
+    assert.equal(submit.get("companyidledoctimeoutpreparation"), 1);
+    assert.equal(submit.get("companyidledoctimeoutclosed"), 2);
+    assert.equal(submit.get("companyidledoctimeoutcanceled"), 3);
+    assert.equal(submit.get("companyidledoctimeouttimedout"), 4);
+    assert.equal(submit.get("companyidledoctimeoutrejected"), 5);
+    assert.equal(submit.get("companyidledoctimeouterror"), 6);
+    assert.equal(submit.get("companyimmediatetrash"), true);
     assert.equal(submit.get("companysmsprovider"), "smsprovider");
     assert.equal(submit.get("companypadappmode"), "padappmode");
     assert.isTrue(submit.get("companypadearchiveenabled"), true);

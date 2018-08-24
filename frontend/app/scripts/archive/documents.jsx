@@ -221,14 +221,6 @@ module.exports = React.createClass({
     },
     render: function() {
       var self = this;
-      var idleRemark;
-      if (self.props.idledoctimeout == 1) {
-        idleRemark = localization.archive.documents.idleRemark1;
-      } else {
-        idleRemark = $("<div/>").html(localization.archive.documents.idleRemark);
-        idleRemark.find('.put-idledoctimeout-here').text(self.props.idledoctimeout);
-        idleRemark = idleRemark.text();
-      }
       return (
         <div>
           <List.List
@@ -354,9 +346,9 @@ module.exports = React.createClass({
            />
 
             {DocumentFilters({list: self, fromToFilterOptions: self._fromToFilterOptions})}
-            {self.props.idledoctimeout == null ? "" :
+            {!self.props.hasDataRetentionPolicy ? "" :
               <List.ListSubHeader>
-                {idleRemark}
+                {localization.archive.documents.dataRetentionPolicyRemark}
               </List.ListSubHeader>}
             {DocumentColumns({list:self})}
              <List.ListFooter>

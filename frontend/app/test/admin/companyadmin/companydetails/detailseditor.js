@@ -31,7 +31,13 @@ describe("admin/companyadmin/companydetails/detailseditor", function () {
         ipaddressmasklist: "ipaddressmasklist",
         cgidisplayname: "cgidisplayname",
         cgiserviceid: "cgiserviceid",
-        idledoctimeout: 99,
+        idledoctimeoutpreparation: 99,
+        idledoctimeoutclosed: 98,
+        idledoctimeoutcanceled: 97,
+        idledoctimeouttimedout: 96,
+        idledoctimeoutrejected: 95,
+        idledoctimeouterror: 94,
+        immediatetrash: true,
         smsprovider: "SMSDefault",
         padappmode: "list_view",
         padearchiveenabled: true,
@@ -255,32 +261,39 @@ describe("admin/companyadmin/companydetails/detailseditor", function () {
     );
   });
 
-  it("should render the idle document timeout field", function () {
-    var component = renderComponent();
+  const statuses =
+    ["preparation", "closed", "canceled", "timedout", "rejected", "error"];
 
-    var input = $("input[name=idledoctimeout]", component.getDOMNode());
+  _.forEach(statuses, function (status) {
+    it("should render the idle document timeout field", function () {
+      var component = renderComponent();
 
-    assert.lengthOf(input, 1);
-    assert.equal(
-      input.attr("min"), CompanyDetailsViewModel.IDLE_DOC_TIMEOUT_MIN
-    );
-    assert.equal(
-      input.attr("max"), CompanyDetailsViewModel.IDLE_DOC_TIMEOUT_MAX
-    );
-    assert.equal(input.attr("type"), "number");
-    assert.equal(input.val(), component.props.idledoctimeout);
-  });
+      var input = $("input[name=idledoctimeout" + status + "]",
+                    component.getDOMNode());
 
-  it("should propagate change of the idle document timeout field", function () {
-    var component = renderComponent();
+      assert.lengthOf(input, 1);
+      assert.equal(
+        input.attr("min"), CompanyDetailsViewModel.IDLE_DOC_TIMEOUT_MIN
+      );
+      assert.equal(
+        input.attr("max"), CompanyDetailsViewModel.IDLE_DOC_TIMEOUT_MAX
+      );
+      assert.equal(input.attr("type"), "number");
+      assert.equal(input.val(), component.props["idledoctimeout" + status]);
+    });
 
-    var input = $("input[name=idledoctimeout]", component.getDOMNode());
-    input.val("1");
-    TestUtils.Simulate.change(input[0]);
+    it("should propagate change of the idle document timeout field", function () {
+      var component = renderComponent();
 
-    assert.isTrue(
-      component.props.onFieldChange.calledWith("idledoctimeout", 1)
-    );
+      var input = $("input[name=idledoctimeout" + status + "]",
+                    component.getDOMNode());
+      input.val("1");
+      TestUtils.Simulate.change(input[0]);
+
+      assert.isTrue(
+        component.props.onFieldChange.calledWith("idledoctimeout" + status, 1)
+      );
+    });
   });
 
   it("should render the SMS provider select", function () {

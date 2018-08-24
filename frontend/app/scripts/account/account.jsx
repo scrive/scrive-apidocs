@@ -6,6 +6,7 @@ var CompanyAccountsAndStatsView = require(
   "./usersandstats/companyaccountsandstats"
 );
 var CompanyBrandingPanel = require("./branding/companybrandingpanel");
+var DataRetentionView = require("./dataretention/dataretentionview");
 var StatsView = require("../stats/stats");
 var Subscription = require("../../scripts/account/subscription");
 var SubscriptionPanel = require("./subscription/subscriptionpanel");
@@ -41,6 +42,18 @@ var AccountView = React.createClass({
             trackEvent="View Account Details Tab"
           >
             <AccountSettingsPanel companyAdmin={this.props.companyAdmin} />
+          </TrackingView>
+        </TabViewer.TabViewerTab>
+        <TabViewer.TabViewerTab
+          hash="data-retention"
+          title={localization.account.dataRetention.name}
+        >
+          <TrackingView
+            key="tracking-data-retention"
+            mixpanelSubcontext="Data retention"
+            trackEvent="View Data Retention tab"
+          >
+            <DataRetentionView />
           </TrackingView>
         </TabViewer.TabViewerTab>
         {this.props.companyAdmin &&

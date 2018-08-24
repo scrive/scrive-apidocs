@@ -874,8 +874,7 @@ javascriptLocalisation =
                             , title  : "$_SortDoc()$"
 
                        }
-                    , idleRemark  : "$_documentsArchiveIdleRemark()$"
-                    , idleRemark1 : "$_documentsArchiveIdleRemark1()$"
+                    , dataRetentionPolicyRemark : "$_archiveDataRetentionPolicyRemark()$"
                 }
             ,  templates : {
                        name :  "$_docListTabsTemplates()$"
@@ -951,8 +950,9 @@ javascriptLocalisation =
                             , successMessage : "$_flashMessageDocumentArchiveDone()$"
                             , emptyMessage : "$_noDocumentChosen()$"
                         }
-                    , subheadline : "$_trashSubheadline()$"
-                    ,  search : "$_SearchDoc()$"
+                    , subheadline30Days : "$_trashSubheadline30Days()$"
+                    , subheadline24Hours : "$_trashSubheadline24Hours()$"
+                    , search : "$_SearchDoc()$"
                }
         }
       , padlist : {
@@ -1127,6 +1127,48 @@ javascriptLocalisation =
               , columnClosedSignatures : "$_closedSignatures()$"
             }
           , subscription : "$_Subscription()$"
+          , dataRetention : {
+                name : "$_dataRetentionName()$"
+              , title : "$_dataRetentionTitle()$"
+              , save : "$_save()$"
+              , successMessage : "$_dataRetentionSuccessMessage()$"
+              , sideBar : {
+                    paragraph1 : "$_dataRetentionSideBarParagraph1()$"
+                  , paragraph2 : "$_dataRetentionSideBarParagraph2()$"
+                  , paragraph3 : "$_dataRetentionSideBarParagraph3()$"
+                  , paragraph4 : "$_dataRetentionSideBarParagraph4()$"
+                }
+              , preparation : {
+                    text : "$_dataRetentionPreparationText()$"
+                  , description : "$_dataRetentionPreparationDescription()$"
+                }
+              , closed : {
+                    text : "$_dataRetentionClosedText()$"
+                  , description : "$_dataRetentionClosedDescription()$"
+                }
+              , canceled : {
+                    text : "$_dataRetentionCanceledText()$"
+                  , description : "$_dataRetentionCanceledDescription()$"
+                }
+              , timedout : {
+                    text : "$_dataRetentionTimedoutText()$"
+                  , description : "$_dataRetentionTimedoutDescription()$"
+                }
+              , rejected : {
+                    text : "$_dataRetentionRejectedText()$"
+                  , description : "$_dataRetentionRejectedDescription()$"
+                }
+              , error : {
+                    text : "$_dataRetentionErrorText()$"
+                  , description : "$_dataRetentionErrorDescription()$"
+                }
+              , immediateTrash : {
+                    text : "$_dataRetentionImmediateTrashText()$"
+                  , description : "$_dataRetentionImmediateTrashDescription()$"
+                }
+              , maximum : "$_dataRetentionMaximum()$"
+              , companyMaximum : "$_dataRetentionCompanyMaximum()$"
+            }
       }
       , sampleSignView : {
             phone : "$_sampleSignViewPhone()$"

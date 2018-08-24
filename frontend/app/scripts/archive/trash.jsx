@@ -173,7 +173,9 @@ module.exports = React.createClass({
 
             {DocumentFilters({list: self, fromToFilterOptions: this._fromToFilterOptions})}
             <List.ListSubHeader>
-              {localization.archive.trash.subheadline}
+              {self.props.immediateTrash
+               ? localization.archive.trash.subheadline24Hours
+               : localization.archive.trash.subheadline30Days}
             </List.ListSubHeader>
             {DocumentColumns({list:self})}
             <List.Pagination/>

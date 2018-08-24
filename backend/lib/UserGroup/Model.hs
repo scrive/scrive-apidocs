@@ -21,6 +21,7 @@ import Data.Typeable
 import Log
 import Text.JSON.Gen
 
+import DataRetentionPolicy
 import DB
 import Partner.Model
 import User.Data.User
@@ -56,7 +57,14 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
       sqlSet "ip_address_mask_list" $ case get ugsIPAddressMaskList ugs of
         [] -> Nothing
         x  -> Just (show x)
-      sqlSet "idle_doc_timeout" . get ugsIdleDocTimeout $ ugs
+      let drp = get ugsDataRetentionPolicy ugs
+      sqlSet "idle_doc_timeout_preparation" . get drpIdleDocTimeoutPreparation $ drp
+      sqlSet "idle_doc_timeout_closed" . get drpIdleDocTimeoutClosed $ drp
+      sqlSet "idle_doc_timeout_canceled" . get drpIdleDocTimeoutCanceled $ drp
+      sqlSet "idle_doc_timeout_timedout" . get drpIdleDocTimeoutTimedout $ drp
+      sqlSet "idle_doc_timeout_rejected" . get drpIdleDocTimeoutRejected $ drp
+      sqlSet "idle_doc_timeout_error" . get drpIdleDocTimeoutError $ drp
+      sqlSet "immediate_trash" . get drpImmediateTrash $ drp
       sqlSet "cgi_display_name" . get ugsCGIDisplayName $ ugs
       sqlSet "cgi_service_id" . get ugsCGIServiceID $ ugs
       sqlSet "sms_provider" . get ugsSMSProvider $ ugs
@@ -155,7 +163,14 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () 
       sqlSet "ip_address_mask_list" $ case get ugsIPAddressMaskList ugs of
         [] -> Nothing
         x  -> Just (show x)
-      sqlSet "idle_doc_timeout" . get ugsIdleDocTimeout $ ugs
+      let drp = get ugsDataRetentionPolicy ugs
+      sqlSet "idle_doc_timeout_preparation" . get drpIdleDocTimeoutPreparation $ drp
+      sqlSet "idle_doc_timeout_closed" . get drpIdleDocTimeoutClosed $ drp
+      sqlSet "idle_doc_timeout_canceled" . get drpIdleDocTimeoutCanceled $ drp
+      sqlSet "idle_doc_timeout_timedout" . get drpIdleDocTimeoutTimedout $ drp
+      sqlSet "idle_doc_timeout_rejected" . get drpIdleDocTimeoutRejected $ drp
+      sqlSet "idle_doc_timeout_error" . get drpIdleDocTimeoutError $ drp
+      sqlSet "immediate_trash" . get drpImmediateTrash $ drp
       sqlSet "cgi_display_name" . get ugsCGIDisplayName $ ugs
       sqlSet "cgi_service_id" . get ugsCGIServiceID $ ugs
       sqlSet "sms_provider" . get ugsSMSProvider $ ugs
@@ -270,7 +285,13 @@ userGroupSelectors = [
 ugSettingsSelectors :: [SQL]
 ugSettingsSelectors = [
     "ip_address_mask_list"
-  , "idle_doc_timeout"
+  , "idle_doc_timeout_preparation"
+  , "idle_doc_timeout_closed"
+  , "idle_doc_timeout_canceled"
+  , "idle_doc_timeout_timedout"
+  , "idle_doc_timeout_rejected"
+  , "idle_doc_timeout_error"
+  , "immediate_trash"
   , "cgi_display_name"
   , "sms_provider"
   , "cgi_service_id"
@@ -315,10 +336,10 @@ unsafeUserGroupIDToPartnerID :: UserGroupID -> PartnerID
 unsafeUserGroupIDToPartnerID = unsafePartnerID . fromUserGroupID
 
 data UserGroupFilter
-  = UGFilterByString String -- ^ Contains the string anywhere
-  | UGManyUsers             -- ^ Has non-trivial amount of users (includes invited users)
-  | UGWithNonFreePricePlan  -- ^ Has a non-free price plan attached
-  | UGWithIdleDocTimeoutSet -- ^ Has ugIdleDocTimeout set
+  = UGFilterByString String    -- ^ Contains the string anywhere
+  | UGManyUsers                -- ^ Has non-trivial amount of users (includes invited users)
+  | UGWithNonFreePricePlan     -- ^ Has a non-free price plan attached
+  | UGWithAnyIdleDocTimeoutSet -- ^ Has any ugIdleDocTimeout{STATUS} set
 
 data UserGroupsGetFiltered = UserGroupsGetFiltered [UserGroupFilter] (Maybe (Integer, Integer))
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupsGetFiltered [UserGroup] where
@@ -336,9 +357,15 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupsGetFiltered [UserGroup
          UGWithNonFreePricePlan -> do
            sqlJoinOn "user_group_invoicings" "user_group_invoicings.user_group_id = user_groups.id"
            sqlWhere $ "(user_group_invoicings.payment_plan != "<?> FreePlan <> ")"
-         UGWithIdleDocTimeoutSet -> do
+         UGWithAnyIdleDocTimeoutSet -> do
            sqlJoinOn "user_group_settings" "user_group_settings.user_group_id = user_groups.id"
-           sqlWhereIsNotNULL "user_group_settings.idle_doc_timeout"
+           sqlWhere
+             "(user_group_settings.idle_doc_timeout_preparation IS NOT NULL\
+             \ OR user_group_settings.idle_doc_timeout_closed   IS NOT NULL\
+             \ OR user_group_settings.idle_doc_timeout_canceled IS NOT NULL\
+             \ OR user_group_settings.idle_doc_timeout_timedout IS NOT NULL\
+             \ OR user_group_settings.idle_doc_timeout_rejected IS NOT NULL\
+             \ OR user_group_settings.idle_doc_timeout_error    IS NOT NULL)"
        whenJust moffsetlimit $ \(offset, limit) -> do
          sqlOffset offset
          sqlLimit limit

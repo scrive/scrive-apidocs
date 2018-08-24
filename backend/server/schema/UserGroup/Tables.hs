@@ -38,16 +38,22 @@ ctUserGroup = CompositeType {
 tableUserGroupSettings :: Table
 tableUserGroupSettings = tblTable {
     tblName = "user_group_settings"
-  , tblVersion = 1
+  , tblVersion = 3
   , tblColumns = [
       tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "ip_address_mask_list", colType = TextT }
-    , tblColumn { colName = "idle_doc_timeout", colType = SmallIntT }
     , tblColumn { colName = "cgi_display_name", colType = TextT }
     , tblColumn { colName = "sms_provider", colType = SmallIntT, colNullable = False, colDefault = Just "1"}
     , tblColumn { colName = "cgi_service_id", colType = TextT }
     , tblColumn { colName = "pad_app_mode", colType = SmallIntT, colNullable = False, colDefault = Just "1"}
     , tblColumn { colName = "pad_earchive_enabled", colType = BoolT, colNullable = False, colDefault = Just "true" }
+    , tblColumn { colName = "idle_doc_timeout_preparation", colType = SmallIntT }
+    , tblColumn { colName = "idle_doc_timeout_closed", colType = SmallIntT }
+    , tblColumn { colName = "idle_doc_timeout_canceled", colType = SmallIntT }
+    , tblColumn { colName = "idle_doc_timeout_timedout", colType = SmallIntT }
+    , tblColumn { colName = "idle_doc_timeout_rejected", colType = SmallIntT }
+    , tblColumn { colName = "idle_doc_timeout_error", colType = SmallIntT }
+    , tblColumn { colName = "immediate_trash", colType = BoolT, colNullable = False, colDefault  = Just "false" }
     ]
   , tblPrimaryKey = pkOnColumn "user_group_id"
   , tblForeignKeys = [
@@ -61,7 +67,13 @@ ctUserGroupSettings = CompositeType {
     ctName = "user_group_setting"
   , ctColumns = [
       CompositeColumn { ccName = "ip_address_mask_list", ccType = TextT }
-    , CompositeColumn { ccName = "idle_doc_timeout", ccType = SmallIntT }
+    , CompositeColumn { ccName = "idle_doc_timeout_preparation", ccType = SmallIntT }
+    , CompositeColumn { ccName = "idle_doc_timeout_closed", ccType = SmallIntT }
+    , CompositeColumn { ccName = "idle_doc_timeout_canceled", ccType = SmallIntT }
+    , CompositeColumn { ccName = "idle_doc_timeout_timedout", ccType = SmallIntT }
+    , CompositeColumn { ccName = "idle_doc_timeout_rejected", ccType = SmallIntT }
+    , CompositeColumn { ccName = "idle_doc_timeout_error", ccType = SmallIntT }
+    , CompositeColumn { ccName = "immediate_trash", ccType = BoolT }
     , CompositeColumn { ccName = "cgi_display_name", ccType = TextT }
     , CompositeColumn { ccName = "sms_provider", ccType = SmallIntT }
     , CompositeColumn { ccName = "cgi_service_id", ccType = TextT }

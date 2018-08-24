@@ -17,7 +17,8 @@ var ArchiveView = React.createClass({
   mixins: [React.addons.PureRenderMixin],
   propTypes: {
     companyAdmin: React.PropTypes.bool.isRequired,
-    idleDocumentTimeout: React.PropTypes.number.isRequired,
+    hasDataRetentionPolicy: React.PropTypes.bool.isRequired,
+    immediateTrash: React.PropTypes.bool.isRequired,
     month: React.PropTypes.number.isRequired,
     year: React.PropTypes.number.isRequired
   },
@@ -66,7 +67,7 @@ var ArchiveView = React.createClass({
             >
               <DocumentsList
                 forCompanyAdmin={this.props.companyAdmin}
-                idledoctimeout={this.props.idleDocumentTimeout}
+                hasDataRetentionPolicy={this.props.hasDataRetentionPolicy}
                 loadLater={false}
                 month={this.props.month}
                 year={this.props.year}
@@ -108,7 +109,7 @@ var ArchiveView = React.createClass({
             >
               <TrashList
                 forCompanyAdmin={this.props.companyAdmin}
-                idledoctimeout={this.props.idleDocumentTimeout}
+                immediateTrash={this.props.immediateTrash}
                 loadLater={false}
                 month={this.props.month}
                 year={this.props.year}

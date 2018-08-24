@@ -49,7 +49,13 @@ var CompanyDetailsView = React.createClass({
         partnerid: this.props.company.partnerid(),
         cgidisplayname: this.props.company.cgidisplayname(),
         cgiserviceid: this.props.company.cgiserviceid(),
-        idledoctimeout: this.props.company.idledoctimeout(),
+        idledoctimeoutpreparation: this.props.company.idledoctimeoutpreparation(),
+        idledoctimeoutclosed: this.props.company.idledoctimeoutclosed(),
+        idledoctimeoutcanceled: this.props.company.idledoctimeoutcanceled(),
+        idledoctimeouttimedout: this.props.company.idledoctimeouttimedout(),
+        idledoctimeoutrejected: this.props.company.idledoctimeoutrejected(),
+        idledoctimeouterror: this.props.company.idledoctimeouterror(),
+        immediatetrash: this.props.company.immediatetrash(),
         smsprovider: this.props.company.smsprovider(),
         padappmode: this.props.company.padappmode(),
         padearchiveenabled: this.props.company.padearchiveenabled()
@@ -112,7 +118,13 @@ var CompanyDetailsView = React.createClass({
               partnerid={this.props.viewModel.get("partnerid")}
               cgidisplayname={this.props.viewModel.get("cgidisplayname")}
               cgiserviceid={this.props.viewModel.get("cgiserviceid")}
-              idledoctimeout={this.props.viewModel.get("idledoctimeout")}
+              idledoctimeoutpreparation={this.props.viewModel.get("idledoctimeoutpreparation")}
+              idledoctimeoutclosed={this.props.viewModel.get("idledoctimeoutclosed")}
+              idledoctimeoutcanceled={this.props.viewModel.get("idledoctimeoutcanceled")}
+              idledoctimeouttimedout={this.props.viewModel.get("idledoctimeouttimedout")}
+              idledoctimeoutrejected={this.props.viewModel.get("idledoctimeoutrejected")}
+              idledoctimeouterror={this.props.viewModel.get("idledoctimeouterror")}
+              immediatetrash={this.props.viewModel.get("immediatetrash")}
               smsprovider={this.props.viewModel.get("smsprovider")}
               padappmode={this.props.viewModel.get("padappmode")}
               padearchiveenabled={
@@ -147,4 +159,3 @@ module.exports.CompanyDetailsViewFactory = function (companyId) {
     />
   );
 };
-

@@ -1,4 +1,5 @@
 var React = require("react");
+var _ = require("underscore");
 
 var CompanyDetailsViewModel = require("./companydetailsviewmodel");
 var Select = require("../../../common/select");
@@ -28,7 +29,13 @@ var DetailsEditorView = React.createClass({
     partnerid: React.PropTypes.number.isRequired,
     cgidisplayname: React.PropTypes.string,
     cgiserviceid: React.PropTypes.string,
-    idledoctimeout: React.PropTypes.number,
+    idledoctimeoutpreparation: React.PropTypes.number,
+    idledoctimeoutclosed: React.PropTypes.number,
+    idledoctimeoutcanceled: React.PropTypes.number,
+    idledoctimeouttimedout: React.PropTypes.number,
+    idledoctimeoutrejected: React.PropTypes.number,
+    idledoctimeouterror: React.PropTypes.number,
+    immediatetrash: React.PropTypes.bool,
     smsprovider: React.PropTypes.string.isRequired,
     padappmode: React.PropTypes.string.isRequired,
     padearchiveenabled: React.PropTypes.bool.isRequired,
@@ -64,15 +71,24 @@ var DetailsEditorView = React.createClass({
   onCgiserviceidChange: function (event) {
     this.props.onFieldChange("cgiserviceid", event.target.value);
   },
-  onIdledoctimeoutChange: function (event) {
-    var newValue = event.target.value;
-    if (newValue !== "") {
-      newValue = parseInt(newValue, 10);
-    }
-    this.props.onFieldChange(
-      "idledoctimeout", newValue
-    );
+
+  onIdledoctimeoutChange: function (name) {
+    var self = this;
+    return function (event) {
+      var newValue = event.target.value;
+      if (newValue !== "") {
+        newValue = parseInt(newValue, 10);
+      }
+      self.props.onFieldChange(
+        name, newValue
+      );
+    };
   },
+
+  onImmediateTrashChange: function (event) {
+    this.props.onFieldChange("immediatetrash", event.target.checked);
+  },
+
   onSmsproviderChange: function (newSmsprovider) {
     this.props.onFieldChange("smsprovider", newSmsprovider);
   },
@@ -84,6 +100,15 @@ var DetailsEditorView = React.createClass({
   },
   render: function () {
     var self = this;
+
+    const idledoctimeoutstatuses = [
+      ["In preparation", "idledoctimeoutpreparation"],
+      ["Closed", "idledoctimeoutclosed"],
+      ["Cancelled", "idledoctimeoutcanceled"],
+      ["Timed out", "idledoctimeouttimedout"],
+      ["Rejected", "idledoctimeoutrejected"],
+      ["Error", "idledoctimeouterror"]
+    ];
 
     return (
       <table className="company-details-editor">
@@ -223,25 +248,6 @@ var DetailsEditorView = React.createClass({
             </td>
           </tr>
           <tr>
-            <td><label>Move idle documents to trash after days</label></td>
-            <td>
-              <input
-                min={CompanyDetailsViewModel.IDLE_DOC_TIMEOUT_MIN}
-                max={CompanyDetailsViewModel.IDLE_DOC_TIMEOUT_MAX}
-                name="idledoctimeout"
-                type="number"
-                value={this.props.idledoctimeout}
-                onChange={this.onIdledoctimeoutChange}
-              />
-            </td>
-            <td>
-              Applies to all documents except pending documents and templates.
-              If empty, documents will not be moved. Available values:&nbsp;
-              {CompanyDetailsViewModel.IDLE_DOC_TIMEOUT_MIN}&nbsp;to&nbsp;
-              {CompanyDetailsViewModel.IDLE_DOC_TIMEOUT_MAX}
-            </td>
-          </tr>
-          <tr>
             <td><label>SMS Provider</label></td>
             <td>
               <Select
@@ -281,6 +287,49 @@ var DetailsEditorView = React.createClass({
             </td>
             <td>Enable using E-archive in Pad applications.</td>
           </tr>
+          <tr>
+            <td><label>Immediate trash</label></td>
+            <td>
+              <input
+                name="companyimmediatetrash"
+                type="checkbox"
+                checked={this.props.immediatetrash}
+                onChange={this.onImmediateTrashChange}
+              />
+            </td>
+            <td>If enabled, documents in trash will be deleted as soon as possible instead of waiting for 30 days.</td>
+          </tr>
+          <tr>
+            <td colSpan={2}>
+              <label>Move idle documents to trash after X days</label>
+            </td>
+            <td>
+              The following settings apply to all documents except pending
+              documents and templates.
+              If empty, documents will not be moved. Available values:&nbsp;
+              {CompanyDetailsViewModel.IDLE_DOC_TIMEOUT_MIN}&nbsp;to&nbsp;
+              {CompanyDetailsViewModel.IDLE_DOC_TIMEOUT_MAX}
+            </td>
+          </tr>
+          {_.map(idledoctimeoutstatuses, function ([title, name]) {
+            return (
+              <tr>
+                <td>
+                  {title}
+                </td>
+                <td>
+                  <input
+                    min={CompanyDetailsViewModel.IDLE_DOC_TIMEOUT_MIN}
+                    max={CompanyDetailsViewModel.IDLE_DOC_TIMEOUT_MAX}
+                    name={name}
+                    type="number"
+                    value={self.props[name]}
+                    onChange={self.onIdledoctimeoutChange(name)}
+                  />
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     );

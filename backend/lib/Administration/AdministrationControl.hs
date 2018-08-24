@@ -18,6 +18,7 @@ import Data.Char
 import Data.Functor.Invariant
 import Data.Label (modify)
 import Data.Unjson
+import GHC.Int (Int16)
 import Happstack.Server hiding (dir, https, path, simpleHTTP)
 import Happstack.StaticRouting (Route, choice, dir)
 import Log
@@ -40,6 +41,8 @@ import AppView (renderFromBody, simpleHtmlResponse)
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Chargeable.Model
+import DataRetentionPolicy
+import DataRetentionPolicy.Guards
 import DB
 import Doc.Action (postDocumentClosedActions)
 import Doc.API.V2.DocumentAccess
@@ -365,12 +368,14 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
         False -> if (Just partnerusergroupid) `elem` (ptUserGroupID <$> partners)
           then return $ Just partnerusergroupid
           else internalError
-  dbUpdate . UserGroupUpdate
-    . set ugParentGroupID mnewparentugid
-    . maybe id (set ugName . T.pack) mcompanyname
-    . modify ugSettings uginfochange
-    . modify ugAddress ugaddresschange
-    $ ug
+  let ug' = set ugParentGroupID mnewparentugid
+          . maybe id (set ugName . T.pack) mcompanyname
+          . modify ugSettings uginfochange
+          . modify ugAddress ugaddresschange
+          $ ug
+  guardThatDataRetentionPolicyIsValid
+    (get (ugsDataRetentionPolicy . ugSettings) ug') Nothing
+  dbUpdate $ UserGroupUpdate ug'
   return $ ()
 
 handleCreateUser :: Kontrakcja m => m JSValue
@@ -408,27 +413,56 @@ handlePostAdminCompanyUsers ugid = onlySalesOrAdmin $ do
 {- | Reads params and returns function for conversion of user group info.  With no param leaves fields unchanged -}
 getUserGroupSettingsChange :: Kontrakcja m => m (UserGroupSettings -> UserGroupSettings)
 getUserGroupSettingsChange = do
-  mcompanyipaddressmasklist <- getOptionalField asValidIPAddressWithMaskList "companyipaddressmasklist"
-  mcompanycgidisplayname <- fmap emptyToNothing <$> getField "companycgidisplayname"
-  mcompanycgiserviceid <- fmap emptyToNothing <$> getField "companycgiserviceid"
-  mcompanyidledoctimeout <- (>>= \s -> if null s
-                                       then Just Nothing
-                                       else Just <$> (do t <- maybeRead s
-                                                         guard $ t >= minUserGroupIdleDocTimeout
-                                                         guard $ t <= maxUserGroupIdleDocTimeout
-                                                         return t)) <$> getField "companyidledoctimeout"
-  mcompanysmsprovider <- fmap maybeRead <$> getField' $ "companysmsprovider"
-  mcompanypadappmode <- fmap (padAppModeFromText . T.pack) <$> getField' $ "companypadappmode"
-  mcompanypadearchiveenabled <- getField "companypadearchiveenabled"
+    mcompanyipaddressmasklist <- getOptionalField asValidIPAddressWithMaskList "companyipaddressmasklist"
+    mcompanycgidisplayname <- fmap emptyToNothing <$> getField "companycgidisplayname"
+    mcompanycgiserviceid <- fmap emptyToNothing <$> getField "companycgiserviceid"
+    mcompanyidledoctimeoutpreparation <- getIdleDocTimeoutField "companyidledoctimeoutpreparation"
+    mcompanyidledoctimeoutclosed <- getIdleDocTimeoutField "companyidledoctimeoutclosed"
+    mcompanyidledoctimeoutcanceled <- getIdleDocTimeoutField "companyidledoctimeoutcanceled"
+    mcompanyidledoctimeouttimedout <- getIdleDocTimeoutField "companyidledoctimeouttimedout"
+    mcompanyidledoctimeoutrejected <- getIdleDocTimeoutField "companyidledoctimeoutrejected"
+    mcompanyidledoctimeouterror <- getIdleDocTimeoutField "companyidledoctimeouterror"
+    mcompanyimmediatetrash <- getField "companyimmediatetrash"
+    mcompanysmsprovider <- fmap maybeRead <$> getField' $ "companysmsprovider"
+    mcompanypadappmode <- fmap (padAppModeFromText . T.pack) <$> getField' $ "companypadappmode"
+    mcompanypadearchiveenabled <- getField "companypadearchiveenabled"
 
-  return $
-      maybe id (set ugsIPAddressMaskList) mcompanyipaddressmasklist
-    . maybe id (set ugsCGIDisplayName . fmap T.pack) mcompanycgidisplayname
-    . maybe id (set ugsIdleDocTimeout) mcompanyidledoctimeout
-    . maybe id (set ugsCGIServiceID . fmap T.pack) mcompanycgiserviceid
-    . maybe id (set ugsSMSProvider) mcompanysmsprovider
-    . maybe id (set ugsPadAppMode) mcompanypadappmode
-    . maybe id (set ugsPadEarchiveEnabled . (=="true")) mcompanypadearchiveenabled
+    return $
+        maybe id (set ugsIPAddressMaskList) mcompanyipaddressmasklist
+      . maybe id (set ugsCGIDisplayName . fmap T.pack) mcompanycgidisplayname
+      . maybe id (set (drpIdleDocTimeoutPreparation . ugsDataRetentionPolicy))
+              mcompanyidledoctimeoutpreparation
+      . maybe id (set (drpIdleDocTimeoutClosed . ugsDataRetentionPolicy))
+              mcompanyidledoctimeoutclosed
+      . maybe id (set (drpIdleDocTimeoutCanceled . ugsDataRetentionPolicy))
+              mcompanyidledoctimeoutcanceled
+      . maybe id (set (drpIdleDocTimeoutTimedout . ugsDataRetentionPolicy))
+              mcompanyidledoctimeouttimedout
+      . maybe id (set (drpIdleDocTimeoutRejected . ugsDataRetentionPolicy))
+              mcompanyidledoctimeoutrejected
+      . maybe id (set (drpIdleDocTimeoutError . ugsDataRetentionPolicy))
+              mcompanyidledoctimeouterror
+      . maybe id (set (drpImmediateTrash . ugsDataRetentionPolicy)
+                  . (=="true"))
+              mcompanyimmediatetrash
+      . maybe id (set ugsCGIServiceID . fmap T.pack) mcompanycgiserviceid
+      . maybe id (set ugsSMSProvider) mcompanysmsprovider
+      . maybe id (set ugsPadAppMode) mcompanypadappmode
+      . maybe id (set ugsPadEarchiveEnabled . (=="true")) mcompanypadearchiveenabled
+
+  where
+    getIdleDocTimeoutField :: Kontrakcja m => String -> m (Maybe (Maybe Int16))
+    getIdleDocTimeoutField name = do
+      ms <- getField name
+      return $ do
+        s <- ms
+        if null s
+          then return Nothing
+          else do
+            t <- maybeRead s
+            guard $ t >= minUserGroupIdleDocTimeout
+            guard $ t <= maxUserGroupIdleDocTimeout
+            return $ Just t
 
 {- | Reads params and returns function for conversion of user group address.  With no param leaves fields unchanged -}
 getUserGroupAddressChange :: Kontrakcja m => m (UserGroupAddress -> UserGroupAddress)

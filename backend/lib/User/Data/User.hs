@@ -19,6 +19,7 @@ import Data.String.Utils (strip)
 import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomainID
+import DataRetentionPolicy
 import DB
 import Log.Identifier
 import MinutesTime
@@ -87,7 +88,7 @@ instance Default User where
   , userhasacceptedtermsofservice = Nothing
   , usersignupmethod              = ByAdmin
   , userinfo                      = def
-  , usersettings                  = UserSettings LANG_EN
+  , usersettings                  = UserSettings LANG_EN def
   , userassociateddomainid        = unsafeBrandedDomainID 0
   , usergroupid                   = emptyUserGroupID
   }
@@ -102,8 +103,9 @@ instance Default UserInfo where
   , useremail           = Email ""
   }
 
-data UserSettings  = UserSettings {
-    lang                :: Lang
+data UserSettings  = UserSettings
+  { lang                :: Lang
+  , dataretentionpolicy :: DataRetentionPolicy
   } deriving (Eq, Ord, Show)
 
 instance HasLang User where
@@ -128,6 +130,13 @@ selectUsersSelectorsList =
   , "phone"
   , "email"
   , "lang"
+  , "idle_doc_timeout_preparation"
+  , "idle_doc_timeout_closed"
+  , "idle_doc_timeout_canceled"
+  , "idle_doc_timeout_timedout"
+  , "idle_doc_timeout_rejected"
+  , "idle_doc_timeout_error"
+  , "immediate_trash"
   , "associated_domain_id"
   , "password_algorithm"
   , "totp_key"
@@ -158,6 +167,13 @@ selectUsersWithUserGroupNamesSQL = "SELECT"
   <> ", users.phone"
   <> ", users.email"
   <> ", users.lang"
+  <> ", users.idle_doc_timeout_preparation"
+  <> ", users.idle_doc_timeout_closed"
+  <> ", users.idle_doc_timeout_canceled"
+  <> ", users.idle_doc_timeout_timedout"
+  <> ", users.idle_doc_timeout_rejected"
+  <> ", users.idle_doc_timeout_error"
+  <> ", users.immediate_trash"
   <> ", users.associated_domain_id"
   <> ", users.password_algorithm"
   <> ", users.totp_key"
@@ -173,8 +189,8 @@ composeFullName (fstname, sndname) = if null sndname
   then fstname
   else fstname ++ " " ++ sndname
 
-fetchUser :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, UserGroupID) -> User
-fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, password_algorithm, totp_key, totp_active, ugid) = User {
+fetchUser :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, String, String, String, String, String, Email, Lang, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Bool, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, UserGroupID) -> User
+fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, first_name, last_name, personal_number, company_position, phone, email, lang, idle_doc_timeout_preparation, idle_doc_timeout_closed, idle_doc_timeout_canceled, idle_doc_timeout_timedout, idle_doc_timeout_rejected, idle_doc_timeout_error, immediate_trash, associated_domain_id, password_algorithm, totp_key, totp_active, ugid) = User {
   userid = uid
 , userpassword = maybeMkPassword ( password, salt
                                  , int16ToPwdAlgorithm <$> password_algorithm )
@@ -192,13 +208,24 @@ fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepte
   , userphone = phone
   , useremail = email
   }
-, usersettings = UserSettings { lang = lang }
+, usersettings = UserSettings
+    { lang = lang
+    , dataretentionpolicy = DataRetentionPolicy
+        { _drpIdleDocTimeoutPreparation = idle_doc_timeout_preparation
+        , _drpIdleDocTimeoutClosed      = idle_doc_timeout_closed
+        , _drpIdleDocTimeoutCanceled    = idle_doc_timeout_canceled
+        , _drpIdleDocTimeoutTimedout    = idle_doc_timeout_timedout
+        , _drpIdleDocTimeoutRejected    = idle_doc_timeout_rejected
+        , _drpIdleDocTimeoutError       = idle_doc_timeout_error
+        , _drpImmediateTrash            = immediate_trash
+        }
+    }
 , userassociateddomainid = associated_domain_id
 , usergroupid = ugid
 }
 
-fetchUserWithUserGroupName :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, String, String, String, String, String, Email, Lang, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, UserGroupID, T.Text) -> (User, T.Text)
-fetchUserWithUserGroupName (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, first_name, last_name, personal_number, company_position, phone, email, lang, associated_domain_id, password_algorithm, totp_key, totp_active, ugid, name) = (user, name)
+fetchUserWithUserGroupName :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, String, String, String, String, String, Email, Lang, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Bool, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, UserGroupID, T.Text) -> (User, T.Text)
+fetchUserWithUserGroupName (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, first_name, last_name, personal_number, company_position, phone, email, lang, idle_doc_timeout_preparation, idle_doc_timeout_closed, idle_doc_timeout_canceled, idle_doc_timeout_timedout, idle_doc_timeout_rejected, idle_doc_timeout_error, immediate_trash, associated_domain_id, password_algorithm, totp_key, totp_active, ugid, name) = (user, name)
   where
     user = User {
       userid = uid
@@ -219,7 +246,18 @@ fetchUserWithUserGroupName (uid, password, salt, is_company_admin, account_suspe
       , userphone = phone
       , useremail = email
       }
-    , usersettings = UserSettings { lang = lang }
+    , usersettings = UserSettings
+        { lang = lang
+        , dataretentionpolicy = DataRetentionPolicy
+            { _drpIdleDocTimeoutPreparation = idle_doc_timeout_preparation
+            , _drpIdleDocTimeoutClosed      = idle_doc_timeout_closed
+            , _drpIdleDocTimeoutCanceled    = idle_doc_timeout_canceled
+            , _drpIdleDocTimeoutTimedout    = idle_doc_timeout_timedout
+            , _drpIdleDocTimeoutRejected    = idle_doc_timeout_rejected
+            , _drpIdleDocTimeoutError       = idle_doc_timeout_error
+            , _drpImmediateTrash            = immediate_trash
+            }
+        }
     , userassociateddomainid = associated_domain_id
     , usergroupid = ugid
     }

@@ -61,7 +61,13 @@ describe("admin/companyadmin/companydetails/companydetails", function () {
       );
       actualProps.company.cgidisplayname = sinon.stub().returns("cgidisplayname");
       actualProps.company.cgiserviceid = sinon.stub().returns("cgiserviceid");
-      actualProps.company.idledoctimeout = sinon.stub().returns(99);
+      actualProps.company.idledoctimeoutpreparation = sinon.stub().returns(99);
+      actualProps.company.idledoctimeoutclosed = sinon.stub().returns(98);
+      actualProps.company.idledoctimeoutcanceled = sinon.stub().returns(97);
+      actualProps.company.idledoctimeouttimedout = sinon.stub().returns(96);
+      actualProps.company.idledoctimeoutrejected = sinon.stub().returns(95);
+      actualProps.company.idledoctimeouterror = sinon.stub().returns(94);
+      actualProps.company.immediatetrash = sinon.stub().returns(true);
       actualProps.company.smsprovider = sinon.stub().returns("SMSDefault");
       actualProps.company.padappmode = sinon.stub().returns("list_view");
       actualProps.company.padearchiveenabled = sinon.stub().returns(true);
@@ -180,7 +186,13 @@ describe("admin/companyadmin/companydetails/companydetails", function () {
     assert.equal(setCall.args[0].ipaddressmasklist, "ipaddressmasklist");
     assert.equal(setCall.args[0].cgidisplayname, "cgidisplayname");
     assert.equal(setCall.args[0].cgiserviceid, "cgiserviceid");
-    assert.equal(setCall.args[0].idledoctimeout, 99);
+    assert.equal(setCall.args[0].idledoctimeoutpreparation, 99);
+    assert.equal(setCall.args[0].idledoctimeoutclosed, 98);
+    assert.equal(setCall.args[0].idledoctimeoutcanceled, 97);
+    assert.equal(setCall.args[0].idledoctimeouttimedout, 96);
+    assert.equal(setCall.args[0].idledoctimeoutrejected, 95);
+    assert.equal(setCall.args[0].idledoctimeouterror, 94);
+    assert.equal(setCall.args[0].immediatetrash, true);
     assert.equal(setCall.args[0].smsprovider, "SMSDefault");
     assert.equal(setCall.args[0].padappmode, "list_view");
     assert.equal(setCall.args[0].padearchiveenabled, true);
@@ -324,7 +336,13 @@ describe("admin/companyadmin/companydetails/companydetails", function () {
       ipaddressmasklist: "ipaddressmasklist",
       cgidisplayname: "cgidisplayname",
       cgiserviceid: "cgiserviceid",
-      idledoctimeout: 99,
+      idledoctimeoutpreparation: 99,
+      idledoctimeoutclosed: 98,
+      idledoctimeoutcanceled: 97,
+      idledoctimeouttimedout: 96,
+      idledoctimeoutrejected: 95,
+      idledoctimeouterror: 94,
+      immediatetrash: true,
       smsprovider: "SMSDefault",
       padappmode: "list_view",
       padearchiveenabled: true
@@ -348,7 +366,13 @@ describe("admin/companyadmin/companydetails/companydetails", function () {
     assert.equal(detailsEditor.props.ipaddressmasklist, "ipaddressmasklist");
     assert.equal(detailsEditor.props.cgidisplayname, "cgidisplayname");
     assert.equal(detailsEditor.props.cgiserviceid, "cgiserviceid");
-    assert.equal(detailsEditor.props.idledoctimeout, 99);
+    assert.equal(detailsEditor.props.idledoctimeoutpreparation, 99);
+    assert.equal(detailsEditor.props.idledoctimeoutclosed, 98);
+    assert.equal(detailsEditor.props.idledoctimeoutcanceled, 97);
+    assert.equal(detailsEditor.props.idledoctimeouttimedout, 96);
+    assert.equal(detailsEditor.props.idledoctimeoutrejected, 95);
+    assert.equal(detailsEditor.props.idledoctimeouterror, 94);
+    assert.equal(detailsEditor.props.immediatetrash, true);
     assert.equal(detailsEditor.props.smsprovider, "SMSDefault");
     assert.equal(detailsEditor.props.padappmode, "list_view");
     assert.equal(detailsEditor.props.padearchiveenabled, true);
@@ -369,7 +393,6 @@ describe("admin/companyadmin/companydetails/companydetails", function () {
       ipaddressmasklist: "ipaddressmasklist",
       cgidisplayname: "cgidisplayname",
       cgiserviceid: "cgiserviceid",
-      idledoctimeout: 99,
       smsprovider: "SMSDefault",
       padappmode: "list_view",
       padearchiveenabled: true

@@ -88,6 +88,7 @@ import qualified Text.StringTemplates.Fields as F
 
 import API.APIVersion
 import Control.Monad.Trans.Instances ()
+import DataRetentionPolicy
 import DB
 import DB.TimeZoneName (TimeZoneName, defaultTimeZoneName, withTimeZone)
 import Doc.API.V2.JSON.SignatoryConsentQuestion
@@ -1924,12 +1925,21 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
   update (PurgeDocuments savedDocumentLingerDays) = do
     now <- currentTime
     -- Unlink documents that were in thrash long enough.
-    runQuery_ . sqlUpdate "signatory_links" $ do
+    runQuery_ . sqlUpdate "signatory_links sl" $ do
       sqlSet "really_deleted" now
       -- Document belongs to somebody.
       sqlWhere "user_id IS NOT NULL"
-      -- It was deleted sufficient amount of time ago.
-      sqlWhere $ "deleted +" <?> idays savedDocumentLingerDays <+> "<=" <?> now
+      -- It was deleted sufficient amount of time ago or the user group's data
+      -- retention policy is to delete things in the trash immediately.
+      sqlWhereAny
+        [ sqlWhere $
+            "deleted +" <?> idays savedDocumentLingerDays <+> "<=" <?> now
+        , sqlWhereExists . sqlSelect "users u" $ do
+            sqlJoinOn "user_group_settings ugs"
+                      "ugs.user_group_id = u.user_group_id"
+            sqlWhere "ugs.immediate_trash OR u.immediate_trash"
+            sqlWhere "u.id = sl.user_id"
+        ]
       -- It wasn't yet unlinked.
       sqlWhere "really_deleted IS NULL"
 
@@ -2071,24 +2081,35 @@ document is idle for a signatory if
 
    1. the document is not archived for the signatory,
    2. the document is not a template and not pending,
-   3. the document author's company's idle_doc_timeout is set,
+   3. the document author's company's idle_doc_timeout_STATUS is set,
    4. the signatory belongs to the same company as the author, and
-   5. it's been more than idle_doc_timeout days since the document was modified.
+   5. it's been more than idle_doc_timeout_STATUS days since the document was modified.
 -}
 archiveIdleDocuments :: (MonadLog m, MonadDB m, MonadThrow m) => UTCTime -> m Int
 archiveIdleDocuments now = do
-  ugs <- dbQuery $ UserGroupsGetFiltered [UGWithIdleDocTimeoutSet] Nothing
+  ugs <- dbQuery $ UserGroupsGetFiltered [UGWithAnyIdleDocTimeoutSet] Nothing
   fmap sum . forM ugs $ \ug -> do
     let ugid = get ugID ug
-        timeoutDays = fromJust . get (ugsIdleDocTimeout . ugSettings) $ ug
+        ugDRP = get (ugsDataRetentionPolicy . ugSettings) ug
     users <- dbQuery $ UserGroupGetUsersIncludeDeleted ugid
-    fmap sum . forM (map userid users) $ \uid -> do
+    fmap sum . forM users $ \user -> do
+      let uid     = userid user
+          userDRP = dataretentionpolicy $ usersettings user
+          drp     = makeStricterDataRetentionPolicy ugDRP userDRP
       logInfo "archiveIdleDocuments starting for user in user_group" $ object [
           identifier ugid
         , identifier uid
         ]
       startTime <- currentTime
-      archived <- dbUpdate $ ArchiveIdleDocumentsForUserInUserGroup uid ugid timeoutDays now
+      archived <- foldM
+        (\acc status ->
+          case get (drpIdleDocTimeout status) drp of
+            Just timeoutDays -> do
+              n <- dbUpdate $ ArchiveIdleDocumentsForUserInUserGroup
+                     uid ugid status timeoutDays now
+              return $ acc + n
+            Nothing -> return acc)
+        0 [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError]
       commit
       finishTime <- currentTime
       logInfo "archiveIdleDocuments finished for user in user_group" $ object [
@@ -2099,15 +2120,15 @@ archiveIdleDocuments now = do
         ]
       return archived
 
-data ArchiveIdleDocumentsForUserInUserGroup = ArchiveIdleDocumentsForUserInUserGroup UserID UserGroupID Int16 UTCTime
+data ArchiveIdleDocumentsForUserInUserGroup = ArchiveIdleDocumentsForUserInUserGroup UserID UserGroupID DocumentStatus Int16 UTCTime
 instance MonadDB m => DBUpdate m ArchiveIdleDocumentsForUserInUserGroup Int where
-  update (ArchiveIdleDocumentsForUserInUserGroup uid ugid timeoutDays now) = do
+  update (ArchiveIdleDocumentsForUserInUserGroup uid ugid status timeoutDays now) = do
     runSQL $ "WITH user_idle_docs AS ("
            <+> "SELECT d.id"
            <+> "FROM documents AS d"
            <+> "WHERE d.type =" <?> Signable
            <+> "AND d.author_user_id =" <?> uid
-           <+> "AND d.status NOT IN (" <?> Pending <+> ")"
+           <+> "AND d.status =" <?> status
            <+> "AND d.mtime + (interval '1 day') *" <?> timeoutDays <+> "<" <?> now
          <+> "),"
          <+> "doc_sigs_in_user_group AS ("

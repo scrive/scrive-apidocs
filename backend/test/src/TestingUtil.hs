@@ -34,6 +34,7 @@ import BrandedDomain.BrandedDomain
 import BrandedDomain.BrandedDomainID
 import BrandedDomain.Model
 import Context
+import DataRetentionPolicy
 import DB
 import Doc.Action
 import Doc.DocStateData
@@ -167,6 +168,16 @@ instance Arbitrary UserGroup where
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
+    <*> arbitrary
+
+instance Arbitrary DataRetentionPolicy where
+  arbitrary = DataRetentionPolicy
+    <$> oneof [return Nothing, Just <$> choose (1,365)]
+    <*> oneof [return Nothing, Just <$> choose (1,365)]
+    <*> oneof [return Nothing, Just <$> choose (1,365)]
+    <*> oneof [return Nothing, Just <$> choose (1,365)]
+    <*> oneof [return Nothing, Just <$> choose (1,365)]
+    <*> oneof [return Nothing, Just <$> choose (1,365)]
     <*> arbitrary
 
 instance Arbitrary UserGroupSettings where
@@ -570,7 +581,7 @@ instance Arbitrary SignupMethod where
   arbitrary = elements [AccountRequest, ViralInvitation, ByAdmin, CompanyInvitation]
 
 instance Arbitrary UserSettings where
-  arbitrary = UserSettings <$> arbitrary
+  arbitrary = UserSettings <$> arbitrary <*> arbitrary
 
 instance Arbitrary User where
   arbitrary = User <$> arbitrary

@@ -10,7 +10,13 @@ var Company = exports.Company = Backbone.Model.extend({
       zip       : "",
       city      : "",
       country    : "",
-      idledoctimeout : null,
+      idledoctimeoutpreparation : null,
+      idledoctimeoutclosed : null,
+      idledoctimeoutcanceled : null,
+      idledoctimeouttimedout : null,
+      idledoctimeoutrejected : null,
+      idledoctimeouterror : null,
+      immediatetrash: false,
       cgidisplayname : "",
       cgiserviceid : "",
       ipaddressmasklist : "",
@@ -57,9 +63,35 @@ var Company = exports.Company = Backbone.Model.extend({
   cgiserviceid : function() {
      return this.get("cgiserviceid");
   },
-  idledoctimeout : function() {
-     return this.get("idledoctimeout");
+
+  idledoctimeoutpreparation: function() {
+    return this.get("idledoctimeoutpreparation");
   },
+
+  idledoctimeoutclosed: function() {
+    return this.get("idledoctimeoutclosed");
+  },
+
+  idledoctimeoutcanceled: function() {
+    return this.get("idledoctimeoutcanceled");
+  },
+
+  idledoctimeouttimedout: function() {
+    return this.get("idledoctimeouttimedout");
+  },
+
+  idledoctimeoutrejected: function() {
+    return this.get("idledoctimeoutrejected");
+  },
+
+  idledoctimeouterror: function() {
+    return this.get("idledoctimeouterror");
+  },
+
+  immediatetrash: function() {
+    return this.get("immediatetrash");
+  },
+
   minidledoctimeout : function() {
      return 1; // sync with backend
   },
@@ -91,7 +123,13 @@ var Company = exports.Company = Backbone.Model.extend({
       partnerid : args.partnerid,
       cgidisplayname : args.cgidisplayname,
       cgiserviceid : args.cgiserviceid,
-      idledoctimeout : args.idledoctimeout,
+      idledoctimeoutpreparation  : args.idledoctimeoutpreparation,
+      idledoctimeoutclosed : args.idledoctimeoutclosed,
+      idledoctimeoutcanceled : args.idledoctimeoutcanceled,
+      idledoctimeouttimedout : args.idledoctimeouttimedout,
+      idledoctimeoutrejected : args.idledoctimeoutrejected,
+      idledoctimeouterror : args.idledoctimeouterror,
+      immediatetrash: args.immediatetrash,
       smsprovider : args.smsprovider,
       padappmode : args.padappmode,
       padearchiveenabled : args.padearchiveenabled,

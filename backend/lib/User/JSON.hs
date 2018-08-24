@@ -18,6 +18,7 @@ import Text.StringTemplate.GenericStandard ()
 import Text.StringTemplate.GenericStandard ()
 import qualified Data.Text as T
 
+import DataRetentionPolicy
 import FeatureFlags.Model
 import MinutesTime
 import PadApplication.Data
@@ -52,7 +53,13 @@ companyJSON forAdmin ug = runJSONGen $ do
     value "cgidisplayname" $ unpack <$> get (ugsCGIDisplayName . ugSettings) ug
     value "cgiserviceid" $ unpack <$> get (ugsCGIServiceID . ugSettings) ug
     value "ipaddressmasklist" $ intercalate "," $ fmap show $  get (ugsIPAddressMaskList . ugSettings) ug
-    value "idledoctimeout" $ get (ugsIdleDocTimeout . ugSettings) ug
+    value "idledoctimeoutpreparation" $ get (drpIdleDocTimeoutPreparation . ugsDataRetentionPolicy . ugSettings) ug
+    value "idledoctimeoutclosed" $ get (drpIdleDocTimeoutClosed . ugsDataRetentionPolicy . ugSettings) ug
+    value "idledoctimeoutcanceled" $ get (drpIdleDocTimeoutCanceled . ugsDataRetentionPolicy . ugSettings) ug
+    value "idledoctimeouttimedout" $ get (drpIdleDocTimeoutTimedout . ugsDataRetentionPolicy . ugSettings) ug
+    value "idledoctimeoutrejected" $ get (drpIdleDocTimeoutRejected . ugsDataRetentionPolicy . ugSettings) ug
+    value "idledoctimeouterror" $ get (drpIdleDocTimeoutError . ugsDataRetentionPolicy . ugSettings) ug
+    value "immediatetrash" $ get (drpImmediateTrash . ugsDataRetentionPolicy . ugSettings) ug
     value "smsprovider" $ show $ get (ugsSMSProvider . ugSettings) ug
     value "padappmode" $ unpack $ padAppModeText $ get (ugsPadAppMode . ugSettings) ug
     value "padearchiveenabled" $ get (ugsPadEarchiveEnabled . ugSettings) ug

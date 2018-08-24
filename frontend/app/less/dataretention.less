@@ -1,0 +1,75 @@
+.data-retention {
+  @sidebar-width: 400px;
+  @sidebar-padding: 10px;
+
+  .data-retention-header {
+    font-family: @font-family-source;
+    font-size: 25px;
+    font-weight: 300;
+    border-bottom: 2px solid #eeeeee;
+    padding: 10px 0;
+  }
+
+  .data-retention-form {
+    float: left;
+    width: 1018px - @sidebar-width - @sidebar-padding;
+
+    .info-text-input {
+      margin: 0 0.3em;
+      width: 30px;
+      padding: 0 5px;
+
+      input {
+        width: 30px;
+      }
+    }
+
+    .data-retention-option-wrapper {
+      padding-top: 10px;
+
+      display: grid;
+      grid-template-columns: 1fr 12fr;
+      grid-template-areas:
+        "checkbox main-text"
+        "checkbox description";
+
+      .data-retention-option-checkbox {
+        grid-area: checkbox;
+        align-self: center;
+        text-align: center;
+
+        .checkbox {
+          display: inline-block;
+        }
+      }
+
+      .data-retention-option-main-text {
+        grid-area: main-text;
+      }
+
+      .data-retention-option-description {
+        grid-area: description;
+        font-style: italic;
+      }
+    }
+
+    .error {
+      border: 1px solid red;
+    }
+  }
+
+  .data-retention-sidebar {
+    padding: 10px 0 20px @sidebar-padding;
+    float: left;
+    width: @sidebar-width;
+  }
+
+  .data-retention-footer {
+    float: right;
+
+    a {
+      display: inline-block;
+      margin: 0 auto;
+    }
+  }
+}

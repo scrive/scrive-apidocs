@@ -86,8 +86,8 @@ Library
                  , Administration.AdministrationView
                  , Administration.Invoicing
                  , Amazon.Consumer
-                 , Amazon.URLFix
                  , Amazon.Tables
+                 , Amazon.URLFix
                  , Analytics.Include
                  , AppConf
                  , AppControl
@@ -110,12 +110,7 @@ Library
                  , Chargeable.Model
                  , Chargeable.Tables
                  , Company.CompanyControl
-                 , UserGroup.Data.PaymentPlan
-                 , UserGroupAccounts.UserGroupAccountsControl
-                 , UserGroupAccounts.UserGroupAccountsView
-                 , UserGroupAccounts.Model
-                 , UserGroupAccounts.Tables
-                 , UserGroupAccounts.Migrations
+                 , Company.JSON
                  , Configuration
                  , Context
                  , Context.Internal
@@ -127,9 +122,6 @@ Library
                  , CronConf
                  , CronEnv
                  , Crypto
-                 , Database.Redis.Cache
-                 , Database.Redis.Configuration
-                 , Database.Redis.Helpers
                  , DB
                  , DB.Derive
                  , DB.PostgreSQL
@@ -141,6 +133,11 @@ Library
                  , DB.Utils
                  , DB.XML
                  , Data.ByteString.RFC2397
+                 , DataRetentionPolicy
+                 , DataRetentionPolicy.Guards
+                 , Database.Redis.Cache
+                 , Database.Redis.Configuration
+                 , Database.Redis.Helpers
                  , Doc.API
                  , Doc.API.Callback.Data
                  , Doc.API.Callback.Execute
@@ -180,8 +177,8 @@ Library
                  , Doc.Data.Document
                  , Doc.Data.DocumentStatus
                  , Doc.Data.DocumentTag
-                 , Doc.Data.MainFile
                  , Doc.Data.HighlightedPage
+                 , Doc.Data.MainFile
                  , Doc.Data.RadiobuttonPlacementsUtils
                  , Doc.Data.SignatoryAttachment
                  , Doc.Data.SignatoryConsentQuestion
@@ -278,11 +275,6 @@ Library
                  , FileStorage.Class
                  , FileStorage.RedisCache
                  , FlashMessage
-                 , UserGroup.Data
-                 , UserGroup.Internal
-                 , UserGroup.Labels
-                 , UserGroup.Model
-                 , UserGroup.Tables
                  , GuardTime
                  , GuardTime.Class
                  , Happstack.Fields
@@ -296,9 +288,9 @@ Library
                  , HubSpot.Conf
                  , IPAddress
                  , InputValidation
-                 , InternalResponse
                  , InspectXML
                  , InspectXMLInstances
+                 , InternalResponse
                  , Kontra
                  , KontraError
                  , KontraLink
@@ -326,8 +318,8 @@ Library
                  , MemCache
                  , MessengerServerConf
                  , MinutesTime
-                 , Monitoring
                  , Monitor.API
+                 , Monitoring
                  , Network.SOAP.Call
                  , Network.SOAP.Transport.Curl
                  , Network.XMLCurl
@@ -347,11 +339,11 @@ Library
                  , Partner.PartnerID
                  , Partner.Tables
                  , PdfToolsLambda.Conf
-                 , PdfToolsLambda.Conf.Labels
                  , PdfToolsLambda.Conf.Internal
+                 , PdfToolsLambda.Conf.Labels
                  , PdfToolsLambda.Control
-                 , PdfToolsLambda.Spec
                  , PdfToolsLambda.Response
+                 , PdfToolsLambda.Spec
                  , Planhat
                  , Planhat.Communication
                  , Planhat.Config
@@ -360,6 +352,7 @@ Library
                  , Redirect
                  , Routing
                  , RoutingTable
+                 , SFTPConfig
                  , SMS.Data
                  , SMS.Events
                  , SMS.FromKontra.Tables
@@ -376,7 +369,6 @@ Library
                  , Session.Model
                  , Session.SessionID
                  , Session.Tables
-                 , SFTPConfig
                  , System.Random.CryptoRNG
                  , Templates
                  , Text.JSON.Convert
@@ -403,11 +395,11 @@ Library
                  , User.APILog.Model
                  , User.APILog.Tables
                  , User.Action
+                 , User.CallbackScheme.Model
+                 , User.CallbackScheme.Tables
                  , User.Data.SignupMethod
                  , User.Data.Stats
                  , User.Data.User
-                 , User.CallbackScheme.Model
-                 , User.CallbackScheme.Tables
                  , User.Email
                  , User.EmailChangeRequest
                  , User.EmailChangeRequest.Tables
@@ -434,11 +426,23 @@ Library
                  , User.UserID
                  , User.UserView
                  , User.Utils
+                 , UserGroup.Data
+                 , UserGroup.Data.PaymentPlan
+                 , UserGroup.Internal
+                 , UserGroup.Labels
+                 , UserGroup.Model
+                 , UserGroup.Tables
+                 , UserGroupAccounts.Migrations
+                 , UserGroupAccounts.Model
+                 , UserGroupAccounts.Tables
+                 , UserGroupAccounts.UserGroupAccountsControl
+                 , UserGroupAccounts.UserGroupAccountsView
                  , Util.Actor
                  , Util.CSVUtil
                  , Util.HasSomeCompanyInfo
                  , Util.HasSomeUserInfo
                  , Util.MonadUtils
+                 , Util.PDFUtil
                  , Util.QRCode
                  , Util.SignatoryLinkUtils
                  , Util.ZipUtil
@@ -455,7 +459,6 @@ Library
                  , Utils.Monad
                  , Utils.Monoid
                  , Utils.Network
-                 , Util.PDFUtil
                  , Utils.Prelude
                  , Utils.Read
                  , Utils.String
@@ -1365,6 +1368,7 @@ Test-suite kontrakcja-test
                , data-default
                , directory
                , exceptions
+               , fclabels
                , fields-json
                , filepath
                , happstack-server

@@ -7,7 +7,8 @@ $(function () {
   var view = React.render(
     React.createElement(ArchiveView, {
       companyAdmin: fromTemplate.forCompanyAdmin,
-      idleDocumentTimeout: fromTemplate.idledoctimeout,
+      hasDataRetentionPolicy: fromTemplate.hasDataRetentionPolicy,
+      immediateTrash: fromTemplate.immediateTrash,
       month: fromTemplate.month,
       year: fromTemplate.year
     }),

@@ -25,6 +25,19 @@ var SubscriptionPanel = require(
   "../../scripts/account/subscription/subscriptionpanel"
 );
 
+function findTab (name, component) {
+  const lis = $(".tabs li", component.getDOMNode());
+  var tab = null;
+
+  lis.each(function (_, li) {
+    if (li.innerText == name) {
+      tab = li;
+    }
+  });
+
+  return tab;
+}
+
 describe("account/account", function () {
   var container = null;
   var server = null;
@@ -35,7 +48,14 @@ describe("account/account", function () {
 
     var actualProps = underscore.extendOwn(
       {
-        companyAdmin: false
+        companyAdmin: false,
+        idledoctimeoutpreparation: 99,
+        idledoctimeoutclosed: 98,
+        idledoctimeoutcanceled: 97,
+        idledoctimeouttimedout: 96,
+        idledoctimeoutrejected: 95,
+        idledoctimeouterror: 94,
+        immediatetrash: true
       },
       props || {}
     );
@@ -73,23 +93,20 @@ describe("account/account", function () {
     var tabs = $(".tabs", component.getDOMNode());
     assert.lengthOf(tabs, 1);
 
-    assert.equal(
-      $("li:nth-child(1)", tabs).text(),
-      localization.account.accountDetails.name
-    );
-    assert.equal(
-      $("li:nth-child(2)", tabs).text(),
-      localization.account.companyAccounts.name
-    );
-    assert.equal(
-      $("li:nth-child(3)", tabs).text(), localization.account.companySettings
-    );
-    assert.equal(
-      $("li:nth-child(4)", tabs).text(), localization.account.apiSettings.name
-    );
-    assert.equal(
-      $("li:nth-child(5)", tabs).text(), localization.account.subscription
-    );
+    var names =
+      $("li", tabs).map(function (_, li) { return $(li).text(); })
+      .toArray().sort();
+
+    var expNames = [
+      localization.account.accountDetails.name,
+      localization.account.dataRetention.name,
+      localization.account.companyAccounts.name,
+      localization.account.companySettings,
+      localization.account.apiSettings.name,
+      localization.account.subscription
+    ].sort();
+
+    assert.deepEqual(names, expNames);
   });
 
   it("should render the tabs for non-admin user", function () {
@@ -98,16 +115,18 @@ describe("account/account", function () {
     var tabs = $(".tabs", component.getDOMNode());
     assert.lengthOf(tabs, 1);
 
-    assert.equal(
-      $("li:nth-child(1)", tabs).text(),
-      localization.account.accountDetails.name
-    );
-    assert.equal(
-      $("li:nth-child(2)", tabs).text(), localization.account.stats.name
-    );
-    assert.equal(
-      $("li:nth-child(3)", tabs).text(), localization.account.apiSettings.name
-    );
+    var names =
+      $("li", tabs).map(function (_, li) { return $(li).text(); })
+      .toArray().sort();
+
+    var expNames = [
+      localization.account.accountDetails.name,
+      localization.account.dataRetention.name,
+      localization.account.stats.name,
+      localization.account.apiSettings.name
+    ].sort();
+
+    assert.deepEqual(names, expNames);
   });
 
   it("should activate the details tab by default", function () {
@@ -118,19 +137,53 @@ describe("account/account", function () {
     assert.equal(window.location.hash, "#details");
   });
 
-  it("should activate the company accounts and stats tab by clicking on it", function (done) {
+  it("should activate the data retention tab by clicking on it (admin)", function () {
     var component = renderComponent({companyAdmin: true});
 
-    var tab = $(".tabs li:nth-child(2)", component.getDOMNode());
-    TestUtils.Simulate.click(tab[0]);
+    var tab = findTab(localization.account.dataRetention.name, component);
+    TestUtils.Simulate.click(tab);
 
     util.waitUntil(
       function () {
-        return tab.hasClass("active");
+        return $(tab).hasClass("active");
+      },
+      function () {
+        assert.equal(window.location.hash, "#data-retention");
+        done();
+      }
+    );
+  });
+
+  it("should activate the data retention tab by clicking on it", function () {
+    var component = renderComponent();
+
+    var tab = findTab(localization.account.dataRetention.name, component);
+    TestUtils.Simulate.click(tab);
+
+    util.waitUntil(
+      function () {
+        return $(tab).hasClass("active");
+      },
+      function () {
+        assert.equal(window.location.hash, "#data-retention");
+        done();
+      }
+    );
+  });
+
+  it("should activate the company accounts and stats tab by clicking on it", function (done) {
+    var component = renderComponent({companyAdmin: true});
+
+    var tab = findTab(localization.account.companyAccounts.name, component);
+    TestUtils.Simulate.click(tab);
+
+    util.waitUntil(
+      function () {
+        return $(tab).hasClass("active");
       },
       function () {
         assert.equal(window.location.hash, "#company-accounts");
-        done(); 
+        done();
       }
     );
   });
@@ -138,16 +191,16 @@ describe("account/account", function () {
   it("should activate the statistics tab by clicking on it", function (done) {
     var component = renderComponent();
 
-    var tab = $(".tabs li:nth-child(2)", component.getDOMNode());
-    TestUtils.Simulate.click(tab[0]);
+    var tab = findTab(localization.account.stats.name, component);
+    TestUtils.Simulate.click(tab);
 
     util.waitUntil(
       function () {
-        return tab.hasClass("active");
+        return $(tab).hasClass("active");
       },
       function () {
         assert.equal(window.location.hash, "#stats");
-        done(); 
+        done();
       }
     );
   });
@@ -155,16 +208,16 @@ describe("account/account", function () {
   it("should activate the branding tab by clicking on it", function (done) {
     var component = renderComponent({companyAdmin: true});
 
-    var tab = $(".tabs li:nth-child(3)", component.getDOMNode());
-    TestUtils.Simulate.click(tab[0]);
+    var tab = findTab(localization.account.companySettings, component);
+    TestUtils.Simulate.click(tab);
 
     util.waitUntil(
       function () {
-        return tab.hasClass("active");
+        return $(tab).hasClass("active");
       },
       function () {
         assert.equal(window.location.hash, "#branding-themes-email");
-        done(); 
+        done();
       }
     );
   });
@@ -172,16 +225,16 @@ describe("account/account", function () {
   it("should activate the API settings tab by clicking on it", function (done) {
     var component = renderComponent();
 
-    var tab = $(".tabs li:nth-child(3)", component.getDOMNode());
-    TestUtils.Simulate.click(tab[0]);
+    var tab = findTab(localization.account.apiSettings.name, component);
+    TestUtils.Simulate.click(tab);
 
     util.waitUntil(
       function () {
-        return tab.hasClass("active");
+        return $(tab).hasClass("active");
       },
       function () {
         assert.equal(window.location.hash, "#api-dashboard");
-        done(); 
+        done();
       }
     );
   });
@@ -189,16 +242,16 @@ describe("account/account", function () {
   it("should activate the API settings tab by clicking on it (admin)", function (done) {
     var component = renderComponent({companyAdmin: true});
 
-    var tab = $(".tabs li:nth-child(4)", component.getDOMNode());
-    TestUtils.Simulate.click(tab[0]);
+    var tab = findTab(localization.account.apiSettings.name, component);
+    TestUtils.Simulate.click(tab);
 
     util.waitUntil(
       function () {
-        return tab.hasClass("active");
+        return $(tab).hasClass("active");
       },
       function () {
         assert.equal(window.location.hash, "#api-dashboard");
-        done(); 
+        done();
       }
     );
   });
@@ -206,16 +259,16 @@ describe("account/account", function () {
   it("should activate the subscription tab by clicking on it", function (done) {
     var component = renderComponent({companyAdmin: true});
 
-    var tab = $(".tabs li:nth-child(5)", component.getDOMNode());
-    TestUtils.Simulate.click(tab[0]);
+    var tab = findTab(localization.account.subscription, component);
+    TestUtils.Simulate.click(tab);
 
     util.waitUntil(
       function () {
-        return tab.hasClass("active");
+        return $(tab).hasClass("active");
       },
       function () {
         assert.equal(window.location.hash, "#subscriptions");
-        done(); 
+        done();
       }
     );
   });
@@ -223,12 +276,12 @@ describe("account/account", function () {
   it("should configure and render the details view when its tab is active", function (done) {
     var component = renderComponent();
 
-    var tab = $(".tabs li:nth-child(1)", component.getDOMNode());
-    TestUtils.Simulate.click(tab[0]);
+    var tab = findTab(localization.account.accountDetails.name, component);
+    TestUtils.Simulate.click(tab);
 
     util.waitUntil(
       function () {
-        return tab.hasClass("active");
+        return $(tab).hasClass("active");
       },
       function () {
         var detailsView = TestUtils.findRenderedComponentWithType(
@@ -245,12 +298,12 @@ describe("account/account", function () {
   it("should configure and render the company account and stats view when its tab is active", function (done) {
     var component = renderComponent({companyAdmin: true});
 
-    var tab = $(".tabs li:nth-child(2)", component.getDOMNode());
-    TestUtils.Simulate.click(tab[0]);
+    var tab = findTab(localization.account.companyAccounts.name, component);
+    TestUtils.Simulate.click(tab);
 
     util.waitUntil(
       function () {
-        return tab.hasClass("active");
+        return $(tab).hasClass("active");
       },
       function () {
         var accountsAndStatsView = TestUtils.findRenderedComponentWithType(
@@ -267,12 +320,12 @@ describe("account/account", function () {
   it("should configure and render the statistics view when its tab is active", function (done) {
     var component = renderComponent();
 
-    var tab = $(".tabs li:nth-child(2)", component.getDOMNode());
-    TestUtils.Simulate.click(tab[0]);
+    var tab = findTab(localization.account.stats.name, component);
+    TestUtils.Simulate.click(tab);
 
     util.waitUntil(
       function () {
-        return tab.hasClass("active");
+        return $(tab).hasClass("active");
       },
       function () {
         var statsView = TestUtils.findRenderedComponentWithType(
@@ -289,12 +342,12 @@ describe("account/account", function () {
   it("should configure and render the branding view when its tab is active", function (done) {
     var component = renderComponent({companyAdmin: true});
 
-    var tab = $(".tabs li:nth-child(3)", component.getDOMNode());
-    TestUtils.Simulate.click(tab[0]);
+    var tab = findTab(localization.account.companySettings, component);
+    TestUtils.Simulate.click(tab);
 
     util.waitUntil(
       function () {
-        return tab.hasClass("active");
+        return $(tab).hasClass("active");
       },
       function () {
         var brandingView = TestUtils.findRenderedComponentWithType(
@@ -311,12 +364,12 @@ describe("account/account", function () {
   it("should configure and render the API settings view when its tab is active", function (done) {
     var component = renderComponent();
 
-    var tab = $(".tabs li:nth-child(3)", component.getDOMNode());
-    TestUtils.Simulate.click(tab[0]);
+    var tab = findTab(localization.account.apiSettings.name, component);
+    TestUtils.Simulate.click(tab);
 
     util.waitUntil(
       function () {
-        return tab.hasClass("active");
+        return $(tab).hasClass("active");
       },
       function () {
         var apiSettingsView = TestUtils.findRenderedComponentWithType(
@@ -333,12 +386,12 @@ describe("account/account", function () {
   it("should configure and render the API settings view when its tab is active (admin)", function (done) {
     var component = renderComponent({companyAdmin: true});
 
-    var tab = $(".tabs li:nth-child(4)", component.getDOMNode());
-    TestUtils.Simulate.click(tab[0]);
+    var tab = findTab(localization.account.apiSettings.name, component);
+    TestUtils.Simulate.click(tab);
 
     util.waitUntil(
       function () {
-        return tab.hasClass("active");
+        return $(tab).hasClass("active");
       },
       function () {
         var apiSettingsView = TestUtils.findRenderedComponentWithType(
@@ -355,12 +408,12 @@ describe("account/account", function () {
   it("should configure and render the subscription view when its tab is active", function (done) {
     var component = renderComponent({companyAdmin: true});
 
-    var tab = $(".tabs li:nth-child(5)", component.getDOMNode());
-    TestUtils.Simulate.click(tab[0]);
+    var tab = findTab(localization.account.subscription, component);
+    TestUtils.Simulate.click(tab);
 
     util.waitUntil(
       function () {
-        return tab.hasClass("active");
+        return $(tab).hasClass("active");
       },
       function () {
         var subscriptionView = TestUtils.findRenderedComponentWithType(

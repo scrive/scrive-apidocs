@@ -220,7 +220,7 @@ partnerApiCallV1UserUpdate pid userID =
       apiError $ requestParameterInvalid "has_accepted_tos" "The user must accept the Scrive Terms of Service to use it."
     -- API call actions
     didUpdateInfo     <- dbUpdate $ SetUserInfo userID userInfo
-    didUpdateSettings <- dbUpdate $ SetUserSettings userID (UserSettings $ ufuLang ufu)
+    didUpdateSettings <- dbUpdate $ SetUserSettings userID $ (usersettings user) { lang = ufuLang ufu }
     when (not $ didUpdateInfo && didUpdateSettings) $
       apiError $ serverError "Could not update user"
     -- re-fetch original to get what's really in the DB.

@@ -124,7 +124,6 @@ createTableUserGroupInvoicings = Migration {
     }
   }
 
-
 userGroupsAdjustIDSequence :: MonadDB m => Migration m
 userGroupsAdjustIDSequence = Migration {
     mgrTableName = tblName tableUserGroups
@@ -149,5 +148,53 @@ usergroupsAddDeleted = Migration
       runQuery_ $ sqlAlterTable (tblName tableUserGroups)
         [ sqlAddColumn $
             tblColumn { colName = "deleted", colType = TimestampWithZoneT }
+        ]
+  }
+
+userGroupSettingsSplitIdleDocTimeout :: MonadDB m => Migration m
+userGroupSettingsSplitIdleDocTimeout = Migration {
+    mgrTableName = tblName tableUserGroupSettings
+  , mgrFrom = 1
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable (tblName tableUserGroupSettings)
+        [ sqlAddColumn $ tblColumn
+            { colName = "idle_doc_timeout_preparation", colType = SmallIntT }
+        , sqlAddColumn $ tblColumn
+            { colName = "idle_doc_timeout_closed", colType = SmallIntT }
+        , sqlAddColumn $ tblColumn
+            { colName = "idle_doc_timeout_canceled", colType = SmallIntT }
+        , sqlAddColumn $ tblColumn
+            { colName = "idle_doc_timeout_timedout", colType = SmallIntT }
+        , sqlAddColumn $ tblColumn
+            { colName = "idle_doc_timeout_rejected", colType = SmallIntT }
+        , sqlAddColumn $ tblColumn
+            { colName = "idle_doc_timeout_error", colType = SmallIntT }
+        ]
+
+      _ <- runSQL
+       "UPDATE user_group_settings SET\
+       \ idle_doc_timeout_preparation = idle_doc_timeout,\
+       \ idle_doc_timeout_closed      = idle_doc_timeout,\
+       \ idle_doc_timeout_canceled    = idle_doc_timeout,\
+       \ idle_doc_timeout_timedout    = idle_doc_timeout,\
+       \ idle_doc_timeout_rejected    = idle_doc_timeout,\
+       \ idle_doc_timeout_error       = idle_doc_timeout"
+
+      runQuery_ $ sqlAlterTable (tblName tableUserGroupSettings)
+        [ sqlDropColumn "idle_doc_timeout" ]
+  }
+
+userGroupSettingsAddImmediateTrash :: MonadDB m => Migration m
+userGroupSettingsAddImmediateTrash = Migration {
+    mgrTableName = tblName tableUserGroupSettings
+  , mgrFrom = 2
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable (tblName tableUserGroupSettings)
+        [ sqlAddColumn $ tblColumn
+            { colName     = "immediate_trash"
+            , colType     = BoolT
+            , colNullable = False
+            , colDefault  = Just "false"
+            }
         ]
   }

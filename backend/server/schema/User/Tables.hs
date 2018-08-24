@@ -5,7 +5,7 @@ import DB
 tableUsers :: Table
 tableUsers = tblTable {
     tblName = "users"
-  , tblVersion = 26
+  , tblVersion = 27
   , tblColumns = [
         tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
       , tblColumn { colName = "password", colType = BinaryT }
@@ -27,6 +27,13 @@ tableUsers = tblTable {
       , tblColumn { colName = "totp_key", colType = BinaryT, colNullable = True }
       , tblColumn { colName = "totp_active", colType = BoolT, colNullable = False, colDefault = Just "false" }
       , tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = False }
+      , tblColumn { colName = "idle_doc_timeout_preparation", colType = SmallIntT }
+      , tblColumn { colName = "idle_doc_timeout_closed", colType = SmallIntT }
+      , tblColumn { colName = "idle_doc_timeout_canceled", colType = SmallIntT }
+      , tblColumn { colName = "idle_doc_timeout_timedout", colType = SmallIntT }
+      , tblColumn { colName = "idle_doc_timeout_rejected", colType = SmallIntT }
+      , tblColumn { colName = "idle_doc_timeout_error", colType = SmallIntT }
+      , tblColumn { colName = "immediate_trash", colType = BoolT, colNullable = False, colDefault  = Just "false" }
       ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblChecks = [Check "check_users_lowercase_email" "email = lower(email)"]

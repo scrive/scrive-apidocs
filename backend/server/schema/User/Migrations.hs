@@ -114,3 +114,30 @@ actuallyDeletePreviouslyDeletedUser = Migration
         sqlSet "lang"             (1 :: Int)
         sqlWhereIsNotNULL "deleted"
   }
+
+usersAddDataRetentionPolicy :: MonadDB m => Migration m
+usersAddDataRetentionPolicy = Migration
+  { mgrTableName = tblName tableUsers
+  , mgrFrom = 26
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable "users"
+        [ sqlAddColumn $ tblColumn
+            { colName = "idle_doc_timeout_preparation", colType = SmallIntT }
+        , sqlAddColumn $ tblColumn
+            { colName = "idle_doc_timeout_closed", colType = SmallIntT }
+        , sqlAddColumn $ tblColumn
+            { colName = "idle_doc_timeout_canceled", colType = SmallIntT }
+        , sqlAddColumn $ tblColumn
+            { colName = "idle_doc_timeout_timedout", colType = SmallIntT }
+        , sqlAddColumn $ tblColumn
+            { colName = "idle_doc_timeout_rejected", colType = SmallIntT }
+        , sqlAddColumn $ tblColumn
+            { colName = "idle_doc_timeout_error", colType = SmallIntT }
+        , sqlAddColumn $ tblColumn
+            { colName     = "immediate_trash"
+            , colType     = BoolT
+            , colNullable = False
+            , colDefault  = Just "false"
+            }
+        ]
+  }

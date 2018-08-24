@@ -24,9 +24,10 @@ describe("archive/archive", function () {
     var actualProps = _.extendOwn(
       {
         companyAdmin: false,
-        idleDocumentTimeout: 365,
         month: 2,
-        year: 2017
+        year: 2017,
+        hasDataRetentionPolicy: true,
+        immediateTrash: true
       },
       props || {}
     );
@@ -115,7 +116,7 @@ describe("archive/archive", function () {
       },
       function () {
         assert.equal(window.location.hash, "#templates");
-        done(); 
+        done();
       }
     );
   });
@@ -132,7 +133,7 @@ describe("archive/archive", function () {
       },
       function () {
         assert.equal(window.location.hash, "#attachments");
-        done(); 
+        done();
       }
     );
   });
@@ -149,7 +150,7 @@ describe("archive/archive", function () {
       },
       function () {
         assert.equal(window.location.hash, "#trash");
-        done(); 
+        done();
       }
     );
   });
@@ -170,10 +171,10 @@ describe("archive/archive", function () {
         );
 
         assert.isFalse(documentsView.props.forCompanyAdmin);
-        assert.equal(documentsView.props.idledoctimeout, 365);
         assert.isFalse(documentsView.props.loadLater);
         assert.equal(documentsView.props.month, 2);
         assert.equal(documentsView.props.year, 2017);
+        assert(documentsView.props.hasDataRetentionPolicy);
 
         done();
       }
@@ -240,10 +241,10 @@ describe("archive/archive", function () {
         );
 
         assert.isFalse(trashView.props.forCompanyAdmin);
-        assert.equal(trashView.props.idledoctimeout, 365);
         assert.isFalse(trashView.props.loadLater);
         assert.equal(trashView.props.month, 2);
         assert.equal(trashView.props.year, 2017);
+        assert(trashView.props.immediateTrash);
 
         done();
       }

@@ -11,14 +11,17 @@ module User.API (
     setup2FA,
     confirm2FA,
     disable2FA,
-    apiCallDeleteUser
+    apiCallDeleteUser,
+    apiCallSetDataRetentionPolicy
   ) where
 
 import Control.Conditional ((<|), (|>))
 import Control.Monad.Catch
 import Control.Monad.Reader
+import Data.Aeson
 import Data.Digest.SHA2
 import Data.Label (modify)
+import Data.Unjson
 import Happstack.Server.Types
 import Happstack.StaticRouting
 import Log
@@ -30,6 +33,8 @@ import qualified Data.Text as T
 import API.Monad.V1
 import Chargeable.Model
 import Context
+import DataRetentionPolicy
+import DataRetentionPolicy.Guards
 import DB
 import FeatureFlags.Model
 import Happstack.Fields
@@ -64,6 +69,7 @@ import User.Utils
 import UserGroup.Data
 import UserGroup.Model
 import Util.HasSomeUserInfo
+import Util.MonadUtils
 import Util.QRCode (unQRCode)
 import Utils.Monad
 import qualified API.V2 as V2
@@ -104,6 +110,9 @@ userAPIV2 = choice [
 
   dir "isuserdeletable" $ hPost $ toK0 $ apiCallIsUserDeletable,
   dir "deleteuser" $ hPost $ toK0 $ apiCallDeleteUser,
+
+  dir "dataretentionpolicy" $ hGet $ toK0 $ apiCallGetDataRetentionPolicy,
+  dir "dataretentionpolicy" $ dir "set" $ hPost $ toK0 $ apiCallSetDataRetentionPolicy,
 
   userAPIV1
   ]
@@ -517,5 +526,42 @@ apiCallDeleteUser = V2.api $ do
 
   _ <- dbUpdate $ DeleteUser (userid user)
   _ <- dbUpdate $ LogHistoryAccountDeleted (userid user) noIP (get ctxtime ctx)
+
+  return $ V2.Ok ()
+
+
+{-
+ - User's data retention policy
+ -}
+
+apiCallGetDataRetentionPolicy :: Kontrakcja m => m Response
+apiCallGetDataRetentionPolicy = V2.api $ do
+  ctx  <- getContext
+  user <- guardJust $ getContextUser ctx
+
+  let drp = dataretentionpolicy $ usersettings user
+  ug <- dbQuery $ UserGroupGetByUserID $ userid user
+  let ugDRP = get (ugsDataRetentionPolicy . ugSettings) ug
+
+  return $ V2.Ok $ object
+    [ "data_retention_policy" .= unjsonToJSON unjsonDataRetentionPolicy drp
+    , "company_data_retention_policy" .=
+        unjsonToJSON unjsonDataRetentionPolicy ugDRP
+    ]
+
+apiCallSetDataRetentionPolicy :: Kontrakcja m => m Response
+apiCallSetDataRetentionPolicy = V2.api $ do
+  ctx  <- getContext
+  user <- guardJust $ getContextUser ctx
+
+  ug <- dbQuery $ UserGroupGetByUserID $ userid user
+  let ugDRP = get (ugsDataRetentionPolicy . ugSettings) ug
+  drp <- V2.apiV2ParameterObligatory $
+    V2.ApiV2ParameterJSON "data_retention_policy"
+    unjsonDataRetentionPolicy
+  guardThatDataRetentionPolicyIsValid drp $ Just ugDRP
+
+  let settings' = (usersettings user) { dataretentionpolicy = drp }
+  _ <- dbUpdate $ SetUserSettings (userid user) settings'
 
   return $ V2.Ok ()
