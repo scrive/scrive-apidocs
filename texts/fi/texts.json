@@ -98,7 +98,7 @@
 "_UserAccountSettingsTwoFactorButtonNotActive":"Ota käyttöön",
 "_UserAccountSettingsTwoFactorDisableFlashMessage":"Kaksivaiheinen tunnistautuminen on otettu pois käytöstä",
 "_UserAccountSettingsTwoFactorSection":"Kaksivaiheinen tunnistautuminen",
-"_UserAccountSettingsTwoFactorSetupModalInstruction1":"Sinun tulee asentaa \"kaksivaiheinen tunnistautuminen\" -sovellus mobiililaitteeseesi voidaaksesi jatkaa eteenpäin. Me suosittelemme käyttämään Google Authenticator -sovellusta.",
+"_UserAccountSettingsTwoFactorSetupModalInstruction1":"Sinun tulee asentaa kaksivaiheinen tunnistautuminen -sovellus mobiililaitteeseesi voidaaksesi jatkaa eteenpäin. Me suosittelemme käyttämään Google Authenticator -sovellusta.",
 "_UserAccountSettingsTwoFactorSetupModalInstruction2":"Ole hyvä ja skannaa ensin QR-koodi mobiilisovellusta käyttämällä.",
 "_UserAccountSettingsTwoFactorSetupModalInstruction3":"Kun tämä on otettu käyttöön, sinulta kysytään koodia aina sisäänkirjautuessasi.",
 "_UserAccountSettingsTwoFactorSetupModalInstruction4":"Syötä nyt kaksivaiheiseen tunnistautumiseen käyttämästäsi sovelluksesta saamasi kuusinumeroinen koodi suorittaaksesi asennuksen loppuun.",
