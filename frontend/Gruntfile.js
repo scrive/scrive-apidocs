@@ -93,8 +93,7 @@ module.exports = function (grunt) {
       full: {
         autoWatch: false,
         browsers: ["PhantomJS"],
-        //reporters: ["teamcity", "coverage-istanbul"],
-        reporters: ["teamcity"],
+        reporters: ["teamcity", "coverage-istanbul"],
         singleRun: true,
         webpackMiddleware: {
           noInfo: true,
