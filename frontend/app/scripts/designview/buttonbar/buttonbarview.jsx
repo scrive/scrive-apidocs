@@ -169,6 +169,7 @@ module.exports = React.createClass({
     if (doc.csv() != undefined && doc.csv().length > 2) {
       doc.clone(function (doc2) {
         var name = doc.normalizeWithFirstCSVLine();
+        doc.setTitle(doc.title() + " - " + name);
 
         var copyDocFor = $("<span>" + localization.designview.preparingDocument + "</span>");
         $(".put-person-name", copyDocFor).text(name);
@@ -199,9 +200,10 @@ module.exports = React.createClass({
       }).sendAjax();
     } else {
       var name = doc.normalizeWithFirstCSVLine();
-
       var singleDocument = !doc.isCsv();
+
       if (!singleDocument) {
+        doc.setTitle(doc.title() + " - " + name);
         var copyDocFor = $("<span>" + localization.designview.preparingDocument + "</span>");
         $(".put-person-name", copyDocFor).text(name);
 
