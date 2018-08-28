@@ -104,21 +104,18 @@ module.exports = function(config) {
     }
   };
 
-  // disabled karma coverage due to issue:
-  //   [14:21:59][Step 2/3] 28 08 2018 14:21:59.599:ERROR [plugin]: Error during loading "/home/builds-3/TeamCity/buildAgent/work/2fea7b8be4128677/frontend/node_modules/karma-coverage-istanbul-reporter" plugin:
-  //   [14:21:59][Step 2/3]   Unexpected token =
-  // if (config.reporters.indexOf("coverage-istanbul") != -1) {
-  //   newConfig.coverageIstanbulReporter = {
-  //     reports: ["html"],
-  //     dir: "./coverage/",
-  //     fixWebpackSourcePaths: true
-  //   };
-  //
-  //   newConfig.webpack.module.rules.unshift({
-  //     test: /\.jsx$/,
-  //     loader: "istanbul-instrumenter-loader"
-  //   });
-  // }
+  if (config.reporters.indexOf("coverage-istanbul") != -1) {
+    newConfig.coverageIstanbulReporter = {
+      reports: ["html"],
+      dir: "./coverage/",
+      fixWebpackSourcePaths: true
+    };
+
+    newConfig.webpack.module.rules.unshift({
+      test: /\.jsx$/,
+      loader: "istanbul-instrumenter-loader"
+    });
+  }
 
   config.set(newConfig);
 };
