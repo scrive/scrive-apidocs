@@ -459,7 +459,8 @@ apiCallSetSalesforceCallbacks :: Kontrakcja m => m Response
 apiCallSetSalesforceCallbacks = do
   salesforceFullDebugLog
   V2.api $ do
-    (user, _ ) <- V2.getAPIUser APIPersonal
+    -- We allow all permission although workflow with Partners API should use APIPersonal.
+    (user, _ ) <- V2.getAPIUserWithAnyPrivileges
     ctx <- getContext
     case (get ctxsalesforceconf ctx) of
       Nothing -> V2.apiError $ V2.serverError $ "No configuration for Salesforce integration"
