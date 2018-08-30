@@ -198,3 +198,18 @@ userGroupSettingsAddImmediateTrash = Migration {
             }
         ]
   }
+
+userGroupSettingsAddLegalText :: MonadDB m => Migration m
+userGroupSettingsAddLegalText = Migration
+  { mgrTableName = tblName tableUserGroupSettings
+  , mgrFrom = 3
+  , mgrAction = StandardMigration $
+      runQuery_ $ sqlAlterTable (tblName tableUserGroupSettings)
+        [ sqlAddColumn $ tblColumn
+            { colName     = "legal_text"
+            , colType     = BoolT
+            , colNullable = False
+            , colDefault  = Just "false"
+            }
+        ]
+  }

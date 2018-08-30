@@ -38,7 +38,7 @@ ctUserGroup = CompositeType {
 tableUserGroupSettings :: Table
 tableUserGroupSettings = tblTable {
     tblName = "user_group_settings"
-  , tblVersion = 3
+  , tblVersion = 4
   , tblColumns = [
       tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "ip_address_mask_list", colType = TextT }
@@ -54,6 +54,7 @@ tableUserGroupSettings = tblTable {
     , tblColumn { colName = "idle_doc_timeout_rejected", colType = SmallIntT }
     , tblColumn { colName = "idle_doc_timeout_error", colType = SmallIntT }
     , tblColumn { colName = "immediate_trash", colType = BoolT, colNullable = False, colDefault  = Just "false" }
+    , tblColumn { colName = "legal_text", colType = BoolT, colNullable = False, colDefault = Just "false" }
     ]
   , tblPrimaryKey = pkOnColumn "user_group_id"
   , tblForeignKeys = [
@@ -79,6 +80,7 @@ ctUserGroupSettings = CompositeType {
     , CompositeColumn { ccName = "cgi_service_id", ccType = TextT }
     , CompositeColumn { ccName = "pad_app_mode", ccType = SmallIntT }
     , CompositeColumn { ccName = "pad_earchive_enabled", ccType = BoolT }
+    , CompositeColumn { ccName = "legal_text", ccType = BoolT }
     ]
   }
 

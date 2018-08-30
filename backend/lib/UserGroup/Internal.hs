@@ -64,6 +64,7 @@ data UserGroupSettings = UserGroupSettings {
   , _ugsSMSProvider         :: SMSProvider
   , _ugsPadAppMode          :: PadAppMode
   , _ugsPadEarchiveEnabled  :: Bool
+  , _ugsLegalText           :: Bool
   } deriving (Show, Eq)
 
 data UserGroupUI = UserGroupUI {
@@ -170,6 +171,7 @@ instance Default UserGroup where
       , _ugsSMSProvider         = SMSDefault
       , _ugsPadAppMode          = ListView
       , _ugsPadEarchiveEnabled  = True
+      , _ugsLegalText           = False
       }
     , _ugInvoicing = Invoice FreePlan
     , _ugAddress = UserGroupAddress {
@@ -237,6 +239,7 @@ type instance CompositeRow UserGroupSettings = (
   , Maybe Text
   , PadAppMode
   , Bool
+  , Bool
   )
 
 instance PQFormat UserGroupSettings where
@@ -257,6 +260,7 @@ instance CompositeFromSQL UserGroupSettings where
     , cgi_service_id
     , pad_app_mode
     , pad_earchive_enabled
+    , legal_text
     ) = UserGroupSettings {
       _ugsIPAddressMaskList         = maybe [] read ip_address_mask_list
     , _ugsDataRetentionPolicy = DataRetentionPolicy
@@ -273,6 +277,7 @@ instance CompositeFromSQL UserGroupSettings where
     , _ugsSMSProvider               = sms_provider
     , _ugsPadAppMode                = pad_app_mode
     , _ugsPadEarchiveEnabled        = pad_earchive_enabled
+    , _ugsLegalText                 = legal_text
     }
 
 -- UI
