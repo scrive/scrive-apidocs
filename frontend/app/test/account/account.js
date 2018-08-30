@@ -137,7 +137,7 @@ describe("account/account", function () {
     assert.equal(window.location.hash, "#details");
   });
 
-  it("should activate the data retention tab by clicking on it (admin)", function () {
+  it("should activate the data retention tab by clicking on it (admin)", function (done) {
     var component = renderComponent({companyAdmin: true});
 
     var tab = findTab(localization.account.dataRetention.name, component);
@@ -154,7 +154,7 @@ describe("account/account", function () {
     );
   });
 
-  it("should activate the data retention tab by clicking on it", function () {
+  it("should activate the data retention tab by clicking on it", function (done) {
     var component = renderComponent();
 
     var tab = findTab(localization.account.dataRetention.name, component);

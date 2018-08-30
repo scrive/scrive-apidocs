@@ -66,7 +66,8 @@ module.exports = React.createClass({
     var mainTextBefore = "";
     var mainTextAfter = "";
     var putFieldEncountered = false;
-    $text.get(0).childNodes.forEach(function (el) {
+    // See https://developer.mozilla.org/en-US/docs/Web/API/NodeList
+    Array.prototype.forEach.call($text.get(0).childNodes, function (el) {
       if (el.className == 'put-field') {
         putFieldEncountered = true;
       } else {
