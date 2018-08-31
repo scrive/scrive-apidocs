@@ -94,7 +94,8 @@ $htmlopentag()$
           documentData: documentData,
           loggedInAsAuthor: $if(loggedinauthor)$ true $else$ false $endif$,
           authorFullname: "$authorFullname$",
-          authorPhone: "$authorPhone$"
+          authorPhone: "$authorPhone$",
+          showLegalText: $if(legaltext)$ true $else$ false $endif$
         };
 
       if (window.trackJs !== undefined && trackJs) {

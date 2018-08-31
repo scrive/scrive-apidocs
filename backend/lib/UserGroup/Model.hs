@@ -276,6 +276,7 @@ ugSettingsSelectors = [
   , "cgi_service_id"
   , "pad_app_mode"
   , "pad_earchive_enabled"
+  , "legal_text"
   ]
 
 ugAddressSelectors :: [SQL]

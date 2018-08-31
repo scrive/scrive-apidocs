@@ -105,6 +105,7 @@ pageDocumentSignView ctx document siglink ad = do
           StandardAuthenticationToView -> show $ LinkDocumentPreview (documentid document) (Just siglink) mainfile 600
           _ -> show LinkPreviewLockedImage
       F.value "b64documentdata" $ B64.encode $ docjson
+      F.value "legaltext" $ get (ugsLegalText . ugSettings) authorug
       standardPageFields ctx (Just (get ugID authorug, get ugUI authorug)) ad -- Branding for signview depends only on authors company
 
 pageDocumentIdentifyView :: Kontrakcja m

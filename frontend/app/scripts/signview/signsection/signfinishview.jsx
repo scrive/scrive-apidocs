@@ -14,6 +14,8 @@ var TaskMixin = require("../navigation/task_mixin");
 var Track = require("../../common/track");
 var ViewSize = require("../viewsize");
 
+var SignHeader = require("./signheader");
+
 var SignFinishView = React.createClass({
   mixins: [TaskMixin],
   propTypes: {
@@ -22,7 +24,8 @@ var SignFinishView = React.createClass({
     name: React.PropTypes.string.isRequired,
     canSign: React.PropTypes.bool.isRequired,
     onSign: React.PropTypes.func.isRequired,
-    onReject: React.PropTypes.func.isRequired
+    onReject: React.PropTypes.func.isRequired,
+    showLegalText: React.PropTypes.bool.isRequired
   },
   contextTypes: {
     blinkArrow: React.PropTypes.func
@@ -71,17 +74,12 @@ var SignFinishView = React.createClass({
       "center-block": true
     });
 
-    var textSibstitutions = {
-      ".put-document-title-here": this.props.title,
-      ".put-signatory-name-here": this.props.name
-    };
-
     return (
       <div className={divClass}>
-        <h1>{localization.process.signModalTitle}</h1>
-        <HtmlTextWithSubstitution
-          secureText={localization.signviewConfirmation}
-          subs={textSibstitutions}
+        <SignHeader
+          title={this.props.title}
+          name={this.props.name}
+          showLegalText={this.props.showLegalText}
         />
         <Button
           ref="signButton"

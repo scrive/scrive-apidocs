@@ -37,7 +37,8 @@ var Task = require("../navigation/task");
       className: React.PropTypes.string,
       pixelWidth: React.PropTypes.number.isRequired,
       enableOverlay: React.PropTypes.func.isRequired,
-      disableOverlay: React.PropTypes.func.isRequired
+      disableOverlay: React.PropTypes.func.isRequired,
+      showLegalText: React.PropTypes.bool.isRequired
     },
 
     contextTypes: {
@@ -529,6 +530,7 @@ var Task = require("../navigation/task");
               canSign={this.canSignDocument()}
               onSign={this.handleSign}
               onReject={this.handleSetStep("reject")}
+              showLegalText={this.props.showLegalText}
             />
           }
           {/* if */ this.isOnStep("signing") &&
@@ -539,6 +541,7 @@ var Task = require("../navigation/task");
               canSign={this.canSignDocument()}
               onBack={this.handleSetStep("sign")}
               onSign={this.handleSign}
+              showLegalText={this.props.showLegalText}
             />
           }
           {/* if */ this.isOnStep("process") &&
@@ -566,6 +569,7 @@ var Task = require("../navigation/task");
                   }, {});
                 }
               }
+              showLegalText={this.props.showLegalText}
             />
           }
           {/* if */ this.isOnStep("eid-process") &&
@@ -592,6 +596,7 @@ var Task = require("../navigation/task");
                   }, {});
                 }
               }
+              showLegalText={this.props.showLegalText}
             />
           }
           {/* if */ this.isOnStep("eid-nets-process") &&
@@ -618,6 +623,7 @@ var Task = require("../navigation/task");
               name={sig.name()}
               onBack={this.handleSetStep("pin")}
               onSign={this.handleSign}
+              showLegalText={this.props.showLegalText}
             />
           }
           {/* if */ this.isOnStep("reject") &&

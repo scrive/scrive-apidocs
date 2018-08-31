@@ -38,7 +38,7 @@ ctUserGroup = CompositeType {
 tableUserGroupSettings :: Table
 tableUserGroupSettings = tblTable {
     tblName = "user_group_settings"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns = [
       tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "ip_address_mask_list", colType = TextT }
@@ -48,6 +48,7 @@ tableUserGroupSettings = tblTable {
     , tblColumn { colName = "cgi_service_id", colType = TextT }
     , tblColumn { colName = "pad_app_mode", colType = SmallIntT, colNullable = False, colDefault = Just "1"}
     , tblColumn { colName = "pad_earchive_enabled", colType = BoolT, colNullable = False, colDefault = Just "true" }
+    , tblColumn { colName = "legal_text", colType = BoolT, colNullable = False, colDefault = Just "false" }
     ]
   , tblPrimaryKey = pkOnColumn "user_group_id"
   , tblForeignKeys = [
@@ -67,6 +68,7 @@ ctUserGroupSettings = CompositeType {
     , CompositeColumn { ccName = "cgi_service_id", ccType = TextT }
     , CompositeColumn { ccName = "pad_app_mode", ccType = SmallIntT }
     , CompositeColumn { ccName = "pad_earchive_enabled", ccType = BoolT }
+    , CompositeColumn { ccName = "legal_text", ccType = BoolT }
     ]
   }
 

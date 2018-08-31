@@ -12,6 +12,7 @@ var Task = require("../navigation/task");
 var $ = require("jquery");
 var Field = require("../../../js/fields.js").Field;
 var classNames = require("classnames");
+var SignLegalAgreement = require("./signlegalagreement");
 
   module.exports = React.createClass({
     mixins: [TaskMixin],
@@ -71,7 +72,8 @@ var classNames = require("classnames");
       canSign: React.PropTypes.bool.isRequired,
       ssn: React.PropTypes.string.isRequired,
       onReject: React.PropTypes.func.isRequired,
-      onSign: React.PropTypes.func.isRequired
+      onSign: React.PropTypes.func.isRequired,
+      showLegalText: React.PropTypes.bool.isRequired
     },
 
     getInitialState: function () {
@@ -118,6 +120,7 @@ var classNames = require("classnames");
             </div>
             {localization.docsignview.eleg.bankid.signSEConfirmationTitle}
           </h1>
+          {/* if */ this.props.showLegalText && <SignLegalAgreement /> }
           {/* if */ name !== "" &&
             <HtmlTextWithSubstitution
               secureText={"<p>" + localization.docsignview.eleg.bankid.signSEConfirmationText + "</p>"}

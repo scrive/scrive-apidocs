@@ -33,7 +33,8 @@ var _ = require("underscore");
       loggedInAsAuthor: React.PropTypes.bool.isRequired,
       authorFullname: React.PropTypes.string,
       authorPhone: React.PropTypes.string,
-      link: React.PropTypes.object
+      link: React.PropTypes.object,
+      showLegalText: React.PropTypes.bool.isRequired
     },
 
     getInitialState: function () {
@@ -296,6 +297,7 @@ var _ = require("underscore");
                   model={model}
                   enableOverlay={this.enableOverlay}
                   disableOverlay={this.disableOverlay}
+                  showLegalText={this.props.showLegalText}
                 />
               }
               {/* if */ doc.showfooter() &&
