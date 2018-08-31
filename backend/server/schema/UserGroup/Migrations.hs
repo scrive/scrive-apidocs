@@ -151,10 +151,25 @@ usergroupsAddDeleted = Migration
         ]
   }
 
+userGroupSettingsAddLegalText :: MonadDB m => Migration m
+userGroupSettingsAddLegalText = Migration
+  { mgrTableName = tblName tableUserGroupSettings
+  , mgrFrom = 1
+  , mgrAction = StandardMigration $
+      runQuery_ $ sqlAlterTable (tblName tableUserGroupSettings)
+        [ sqlAddColumn $ tblColumn
+            { colName     = "legal_text"
+            , colType     = BoolT
+            , colNullable = False
+            , colDefault  = Just "false"
+            }
+        ]
+  }
+
 userGroupSettingsSplitIdleDocTimeout :: MonadDB m => Migration m
 userGroupSettingsSplitIdleDocTimeout = Migration {
     mgrTableName = tblName tableUserGroupSettings
-  , mgrFrom = 1
+  , mgrFrom = 2
   , mgrAction = StandardMigration $ do
       runQuery_ $ sqlAlterTable (tblName tableUserGroupSettings)
         [ sqlAddColumn $ tblColumn
@@ -187,26 +202,11 @@ userGroupSettingsSplitIdleDocTimeout = Migration {
 userGroupSettingsAddImmediateTrash :: MonadDB m => Migration m
 userGroupSettingsAddImmediateTrash = Migration {
     mgrTableName = tblName tableUserGroupSettings
-  , mgrFrom = 2
+  , mgrFrom = 3
   , mgrAction = StandardMigration $ do
       runQuery_ $ sqlAlterTable (tblName tableUserGroupSettings)
         [ sqlAddColumn $ tblColumn
             { colName     = "immediate_trash"
-            , colType     = BoolT
-            , colNullable = False
-            , colDefault  = Just "false"
-            }
-        ]
-  }
-
-userGroupSettingsAddLegalText :: MonadDB m => Migration m
-userGroupSettingsAddLegalText = Migration
-  { mgrTableName = tblName tableUserGroupSettings
-  , mgrFrom = 3
-  , mgrAction = StandardMigration $
-      runQuery_ $ sqlAlterTable (tblName tableUserGroupSettings)
-        [ sqlAddColumn $ tblColumn
-            { colName     = "legal_text"
             , colType     = BoolT
             , colNullable = False
             , colDefault  = Just "false"

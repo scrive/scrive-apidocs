@@ -15,6 +15,7 @@ module User.API (
     apiCallSetDataRetentionPolicy
   ) where
 
+import Control.Concurrent.Lifted
 import Control.Conditional ((<|), (|>))
 import Control.Monad.Catch
 import Control.Monad.Reader
@@ -22,12 +23,16 @@ import Data.Aeson
 import Data.Digest.SHA2
 import Data.Label (modify)
 import Data.Unjson
-import Happstack.Server.Types
+import Happstack.Server hiding (dir, forbidden, host, lookCookieValue, ok, path, resp, simpleHTTP)
+import Happstack.Server.Internal.Cookie
 import Happstack.StaticRouting
 import Log
 import Text.JSON.Gen hiding (object)
 import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Lazy.UTF8 as BSL
+import qualified Data.ByteString.UTF8 as UTF8
+import qualified Data.Map as Map
 import qualified Data.Text as T
 
 import API.Monad.V1
@@ -429,48 +434,53 @@ apiCallUserGetCallbackScheme = api $ do
 
 
 apiCallTestSalesforceIntegration :: Kontrakcja m => m Response
-apiCallTestSalesforceIntegration = api $ do
-  (user, _ , _) <- getAPIUser APIDocCheck
-  scheme <- dbQuery $ GetUserCallbackSchemeByUserID $ userid user
-  murl <- getField "url"
-  when (isNothing murl) $ do
-    throwM . SomeDBExtraException $ badInput $ "No 'url' parameter provided"
-  let url = fromJust murl
-  fmap Ok $ case scheme of
-      Just (SalesforceScheme token)  -> do
-        ctx <- getContext
-        case get ctxsalesforceconf ctx of
-          Nothing -> noConfigurationError "Salesforce"
-          Just sc -> do
-            res <- flip runReaderT sc $ testSalesforce token url
-            case res of
-              Right (http_code, resp)-> runJSONGenT $ do
-                value "status" ("ok"::String)
-                value "http_code" http_code
-                value "response" resp
-              Left (msg, curl_err, stdout, stderr, http_code) -> runJSONGenT $ do
-                value "status" ("error"::String)
-                value "error_message" msg
-                value "http_code" http_code
-                value "curl_exit_code" curl_err
-                value "curl_stdout" stdout
-                value "curl_stderr" stderr
-      _ -> throwM . SomeDBExtraException $ conflictError "Salesforce callback scheme is not set for this user"
+apiCallTestSalesforceIntegration = do
+  salesforceFullDebugLog
+  api $ do
+    (user, _ , _) <- getAPIUser APIDocCheck
+    scheme <- dbQuery $ GetUserCallbackSchemeByUserID $ userid user
+    murl <- getField "url"
+    when (isNothing murl) $ do
+      throwM . SomeDBExtraException $ badInput $ "No 'url' parameter provided"
+    let url = fromJust murl
+    fmap Ok $ case scheme of
+        Just (SalesforceScheme token)  -> do
+          ctx <- getContext
+          case get ctxsalesforceconf ctx of
+            Nothing -> noConfigurationError "Salesforce"
+            Just sc -> do
+              res <- flip runReaderT sc $ testSalesforce token url
+              case res of
+                Right (http_code, resp)-> runJSONGenT $ do
+                  value "status" ("ok"::String)
+                  value "http_code" http_code
+                  value "response" resp
+                Left (msg, curl_err, stdout, stderr, http_code) -> runJSONGenT $ do
+                  value "status" ("error"::String)
+                  value "error_message" msg
+                  value "http_code" http_code
+                  value "curl_exit_code" curl_err
+                  value "curl_stdout" stdout
+                  value "curl_stderr" stderr
+        _ -> throwM . SomeDBExtraException $ conflictError "Salesforce callback scheme is not set for this user"
 
 apiCallSetSalesforceCallbacks :: Kontrakcja m => m Response
-apiCallSetSalesforceCallbacks = V2.api $ do
-  (user, _ ) <- V2.getAPIUser APIPersonal
-  ctx <- getContext
-  case (get ctxsalesforceconf ctx) of
-    Nothing -> V2.apiError $ V2.serverError $ "No configuration for Salesforce integration"
-    Just sc -> do
-      code <- V2.apiV2ParameterObligatory (V2.ApiV2ParameterText "code")
-      mtoken <- flip runReaderT sc (getRefreshTokenFromCode $ T.unpack code)
-      case mtoken of
-        Left emsg -> V2.apiError $ V2.requestFailed $ T.pack emsg
-        Right token -> do
-          dbUpdate $ UpdateUserCallbackScheme (userid user) (SalesforceScheme token)
-          return $ V2.Ok $ runJSONGen $ value "status" ("ok"::String)
+apiCallSetSalesforceCallbacks = do
+  salesforceFullDebugLog
+  V2.api $ do
+    -- We allow all permission although workflow with Partners API should use APIPersonal.
+    (user, _ ) <- V2.getAPIUserWithAnyPrivileges
+    ctx <- getContext
+    case (get ctxsalesforceconf ctx) of
+      Nothing -> V2.apiError $ V2.serverError $ "No configuration for Salesforce integration"
+      Just sc -> do
+        code <- V2.apiV2ParameterObligatory (V2.ApiV2ParameterText "code")
+        mtoken <- flip runReaderT sc (getRefreshTokenFromCode $ T.unpack code)
+        case mtoken of
+          Left emsg -> V2.apiError $ V2.requestFailed $ T.pack emsg
+          Right token -> do
+            dbUpdate $ UpdateUserCallbackScheme (userid user) (SalesforceScheme token)
+            return $ V2.Ok $ runJSONGen $ value "status" ("ok"::String)
 
 apiCallLoginUserAndGetSession :: Kontrakcja m => m Response
 apiCallLoginUserAndGetSession = V2.api $ do
@@ -529,7 +539,6 @@ apiCallDeleteUser = V2.api $ do
 
   return $ V2.Ok ()
 
-
 {-
  - User's data retention policy
  -}
@@ -565,3 +574,33 @@ apiCallSetDataRetentionPolicy = V2.api $ do
   _ <- dbUpdate $ SetUserSettings (userid user) settings'
 
   return $ V2.Ok ()
+
+-- salesforceFullDebugLog is for debugging salesforce issues - should be removed before 1.10.2018
+salesforceFullDebugLog :: Kontrakcja m => m ()
+salesforceFullDebugLog = do
+  rq <- askRq
+  mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
+  logInfo "Full info for salesforce related requests - should be removed before 1.10.2018" $ object [
+      "uri" .= rqUri rq
+    , "request" .= (show (rqMethod rq) ++ " " ++ rqUri rq ++ rqQuery rq)
+    , "post variables" .= (map showNamedInput $ fromMaybe [] mbody)
+    , "http headers" .= (concatMap showNamedHeader . Map.toList $ rqHeaders rq)
+    , "http cookies" .= (map showNamedCookie $ rqCookies rq)
+    ]
+
+showNamedCookie :: (String, Cookie) -> String
+showNamedCookie (_name,cookie) = mkCookieHeader Nothing cookie
+
+showNamedHeader :: (a, HeaderPair) -> [String]
+showNamedHeader (_nm,hd) | hName hd == UTF8.fromString "cookie" = []
+showNamedHeader (_nm,hd) = map showHeaderLine (hValue hd)
+  where
+    showHeaderLine value' = UTF8.toString (hName hd) ++ ": " ++ UTF8.toString value'
+
+showNamedInput :: (String, Input) -> String
+showNamedInput (name,input) = name ++ ": " ++
+    case inputFilename input of
+      Just filename -> filename
+      _ -> case inputValue input of
+             Left _tmpfilename -> "<<content in /tmp>>"
+             Right value' -> show (BSL.toString value')

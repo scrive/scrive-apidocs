@@ -134,8 +134,8 @@ kontraMigrations = [
   , actuallyDeletePreviouslyDeletedUser
   , usergroupsAddDeleted
   , addAttachmentsPurgeJob
+  , userGroupSettingsAddLegalText
   , userGroupSettingsSplitIdleDocTimeout
   , userGroupSettingsAddImmediateTrash
   , usersAddDataRetentionPolicy
-  , userGroupSettingsAddLegalText
   ]
