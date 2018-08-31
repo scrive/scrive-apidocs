@@ -19,8 +19,10 @@ import Utils.HTTP
 
 -- | Info that we store in cookies.
 data SessionCookieInfo = SessionCookieInfo {
-    cookieSessionID    :: SessionID -- While parsing we depend on it containing just nums
-  , cookieSessionToken :: MagicHash -- While parsing we depend on it starting with alpha
+    cookieSessionID    :: SessionID -- While parsing we depend on it
+                                    -- containing just nums
+  , cookieSessionToken :: MagicHash -- While parsing we depend on it
+                                    -- starting with alpha
   }
 
 instance Show SessionCookieInfo where

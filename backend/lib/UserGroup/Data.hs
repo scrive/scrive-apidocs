@@ -5,4 +5,3 @@ module UserGroup.Data (
 
 import UserGroup.Internal
 import UserGroup.Labels
-

@@ -115,8 +115,8 @@ read s =
         [(v, "")] <- return parsedS
         return v
 
--- | Replacement for 'Data.Maybe.fromJust'
--- that provides useful information on failure.
+-- | Replacement for 'Data.Maybe.fromJust' that provides useful
+-- information on failure.
 fromJust :: HasCallStack => Maybe a -> a
 fromJust Nothing  = unexpectedError "fromJust received Nothing"
 fromJust (Just x) = x

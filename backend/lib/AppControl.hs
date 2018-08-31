@@ -1,7 +1,6 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
-{- |
-   Initialises contexts and sessions, and farms requests out to the appropriate handlers.
- -}
+-- | Initialises contexts and sessions, and farms requests out to the
+-- appropriate handlers.
 module AppControl
     ( appHandler
     , AppGlobals(..)
@@ -66,24 +65,25 @@ data AppGlobals = AppGlobals {
   , hostname           :: !String
   }
 
-{- |
-    Determines the lang of the current user (whether they are logged in or not), by checking
-    their settings, the request, and cookies.
--}
-getStandardLang :: (HasLang a, ServerMonad m, FilterMonad Response m, MonadIO m, Functor m, MonadLog m, MonadCatch m) => Maybe a -> m Lang
+-- | Determines the lang of the current user (whether they are logged
+-- in or not), by checking their settings, the request, and cookies.
+getStandardLang :: ( HasLang a, ServerMonad m, FilterMonad Response m, MonadIO m
+                   , Functor m, MonadLog m, MonadCatch m )
+                => Maybe a -> m Lang
 getStandardLang muser = do
   rq <- askRq
   let mlangcookie = lookCookieValue "lang" $ rqHeaders rq
       mcookielang = join $ langFromCode <$> mlangcookie
-      browserlang = langFromHTTPHeader (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
+      browserlang = langFromHTTPHeader
+                    (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
       newlang = fromMaybe browserlang $ msum [(getLang <$> muser), mcookielang]
       newlangcookie = mkCookie "lang" (codeFromLang newlang)
   addCookie (MaxAge (60*60*24*366)) newlangcookie
   return newlang
 
 maybeReadTemplates :: (MonadBaseControl IO m, MonadLog m)
-                   => Bool
-                   -> MVar (UTCTime, KontrakcjaGlobalTemplates) -> m KontrakcjaGlobalTemplates
+                   => Bool -> MVar (UTCTime, KontrakcjaGlobalTemplates)
+                   -> m KontrakcjaGlobalTemplates
 maybeReadTemplates production mvar | production = snd <$> readMVar mvar
 maybeReadTemplates _ mvar = modifyMVar mvar $ \(modtime, templates) -> do
   modtime' <- liftBase getTemplatesModTime
@@ -129,14 +129,20 @@ type InnerHandlerM = DBT (FileStorageT (CryptoRNGT HandlerM))
 
 -- | Creates a context, routes the request, and handles the session.
 appHandler :: Kontra (Maybe Response) -> AppConf -> AppGlobals -> HandlerM Response
-appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler_id" $ do
+appHandler handleRoutes appConf appGlobals = runHandler
+                                             . localRandomID "handler_id" $ do
   realStartTime <- liftBase getCurrentTime
   temp <- liftIO getTemporaryDirectory
   let quota = 30000000
       stripFilename = reverse . takeWhile (\c -> c /= '/' && c /= '\\') . reverse
-      -- just like defaultFileSaver, but accepts filenames containing full paths (they are stripped though)
-      fileSaver tmpDir diskQuota filename b = defaultFileSaver tmpDir diskQuota (stripFilename filename) b
-      bodyPolicy = (defaultBodyPolicy temp quota quota quota) { inputWorker = defaultInputIter fileSaver temp 0 0 0 }
+      -- just like defaultFileSaver, but accepts filenames containing
+      -- full paths (they are stripped though)
+      fileSaver tmpDir diskQuota filename b =
+        defaultFileSaver tmpDir diskQuota (stripFilename filename) b
+      bodyPolicy =
+        (defaultBodyPolicy temp quota quota quota) {
+        inputWorker = defaultInputIter fileSaver temp 0 0 0
+        }
   logInfo_ "Incoming request, decoding body"
   withDecodedBody bodyPolicy $ do
     rq <- askRq
@@ -144,7 +150,9 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
             Nothing -> []
             Just s  -> [ "x_request_id" .= BS.toString s ]
         routeLogData = ["uri" .= rqUri rq, "query" .= rqQuery rq]
-    (res, ConnectionStats{..}, handlerTime) <- localData xRequestIDPair . withPostgreSQL (unConnectionSource $ connsource appGlobals detailedConnectionTracker) $ do
+    (res, ConnectionStats{..}, handlerTime) <-
+      localData xRequestIDPair .
+      withPostgreSQL (unConnectionSource $ connsource appGlobals detailedConnectionTracker) $ do
       forM_ (queryTimeout appConf) $ \qt -> do
         runSQL_ $ "SET statement_timeout TO " <+> unsafeSQL (show qt)
       logInfo_ "Retrieving session"
@@ -176,7 +184,9 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         let usehttps = useHttps appConf
         when (issecure || not usehttps) $ do
           logInfo_ "Updating session"
-          updateSession session (get ctxsessionid ctx') (userid <$> get ctxmaybeuser ctx') (userid <$> get ctxmaybepaduser ctx')
+          updateSession session (get ctxsessionid ctx')
+            (userid <$> get ctxmaybeuser ctx')
+            (userid <$> get ctxmaybepaduser ctx')
 
         logInfo_ "Evaluating response"
         -- Make sure response is well defined before passing it further.
@@ -233,8 +243,9 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
 
     routeHandlers :: Context -> InnerHandlerM (Either Response Response, Context)
     routeHandlers ctx = runKontra ctx $ do
-      res <- (Right <$> (handleRoutes >>= maybe (E.throwIO Respond404) return)) `E.catches` [
-          E.Handler $ \e -> Left <$> case e of
+      res <- (Right <$> (handleRoutes >>= maybe (E.throwIO Respond404) return))
+             `E.catches`
+        [ E.Handler $ \e -> Left <$> case e of
             InternalError stack -> do
               rq <- askRq
               mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
@@ -243,7 +254,8 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
                 ] ++ logRequest rq mbody
               internalServerErrorPage >>= internalServerError
             Respond404 -> do
-              -- there is no way to get stacktrace here as Respond404 is a CAF, fix this later
+              -- there is no way to get stacktrace here as Respond404
+              -- is a CAF, fix this later
               rq <- askRq
               mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
               logInfo "Respond404" . object $ logRequest rq mbody
@@ -252,7 +264,8 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
               rq <- askRq
               mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
               logAttention "LinkInvalid" . object $ logRequest rq mbody
-              -- We reply with 422, because the request is in correct form (so not 400)
+              -- We reply with 422, because the request is in correct
+              -- form (so not 400)
               linkInvalidPage >>= resp 422
         , E.Handler $ \e@DBException{..} -> Left <$> do
             rq <- askRq
@@ -262,7 +275,8 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
                 "dbe_query_context" .= show dbeQueryContext
               , case cast dbeError of
                   Nothing -> "dbe_error" .= show dbeError
-                  Just (SomeDBExtraException ee) -> "extra_exception" .= jsonToAeson (toJSValue ee)
+                  Just (SomeDBExtraException ee) ->
+                    "extra_exception" .= jsonToAeson (toJSValue ee)
               , "stacktrace" .= reverse stack
               ] ++ logRequest rq mbody
             internalServerErrorPage >>= internalServerError
@@ -311,7 +325,8 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
       currhostpart <- getHostpart
       minutestime <- currentTime
       let clientName = BS.toString <$> getHeader "client-name" rq
-          clientTime = parseTimeISO =<< (BS.toString <$> getHeader "client-time" rq)
+          clientTime = parseTimeISO =<<
+            (BS.toString <$> getHeader "client-time" rq)
           userAgent  = BS.toString <$> getHeader "user-agent" rq
       muser <- getUserFromSession session
       mpaduser <- getPadUserFromSession session

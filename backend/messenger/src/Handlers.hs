@@ -39,8 +39,9 @@ handlers = choice [
 showHelloMessage :: Messenger Response
 showHelloMessage = ok $ toResponse "Messenger says hello!"
 
--- Some providers send a valid POST request that should be decoded for further processing
--- Mblox events have JSON in body but not as parameter, and should not be decoded.
+-- Some providers send a valid POST request that should be decoded for
+-- further processing Mblox events have JSON in body but not as
+-- parameter, and should not be decoded.
 withDecodedBody_ :: Messenger Response -> Messenger Response
 withDecodedBody_ action = do
   tempDir <- liftIO getTemporaryDirectory

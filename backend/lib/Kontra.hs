@@ -50,12 +50,13 @@ import Utils.HTTP
 type InnerKontra fst = DBT (fst (CryptoRNGT (LogT (ReqHandlerT IO))))
 
 -- | Kontra is a traditional Happstack handler monad except that it's
--- not WebMonad.
+-- not a WebMonad.
 --
 -- Note also that in Kontra we don't do backtracking, which is why it
 -- is not an instance of MonadPlus.  Errors are signaled explicitly
 -- through 'KontraError'.
-newtype KontraG fst a = Kontra { unKontra :: S.StateT Context (InnerKontra fst) a }
+newtype KontraG fst a =
+  Kontra { unKontra :: S.StateT Context (InnerKontra fst) a }
 
 deriving instance Monad        (InnerKontra fst) => Applicative  (KontraG fst)
 deriving instance CryptoRNG    (InnerKontra fst) => CryptoRNG    (KontraG fst)

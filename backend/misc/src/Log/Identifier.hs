@@ -57,7 +57,7 @@ int64AsStringIdentifier = IdentifierString . show
 
 -- | Should only be used when we can guarantee that the value will fit
 -- into 52 bits (limitation due to JavaScript/JSON semantics),
--- normally int64AsString should be used instead.
+-- normally 'int64AsStringIdentifier' should be used instead.
 intIdentifier :: Int -> IdentifierValue
 intIdentifier = IdentifierInt
 

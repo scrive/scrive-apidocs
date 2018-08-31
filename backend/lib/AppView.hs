@@ -246,8 +246,9 @@ simpleUnjsonResponse unjson a = ok $ toResponseBS jsonContentType $ unjsonToByte
 {- |
    Changing our pages into reponses
 -}
-simpleHtmlResponse :: Kontrakcja m => String -> m Response
-simpleHtmlResponse s = ok $ toResponseBS (BS.fromString "text/html;charset=utf-8") $ BSL.fromString s
+simpleHtmlResponse :: FilterMonad Response m => String -> m Response
+simpleHtmlResponse s = ok $
+  toResponseBS (BS.fromString "text/html;charset=utf-8") $ BSL.fromString s
 
 respondWithPDF :: Bool -> BS.ByteString -> Response
 respondWithPDF = respondWithDownloadContents "application/pdf"

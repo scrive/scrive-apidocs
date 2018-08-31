@@ -15,8 +15,9 @@ splitAuthorization :: String -> [(String, String)]
 splitAuthorization s =
   catMaybes $ map makeKV $ splitParts $ over
   where
-        -- We by default we split on commas, but if no comma is there, we split on spaces
-        -- This is a fix for some headers that cant send commas in header.
+        -- By default we split on commas, but if no comma is there, we
+        -- split on spaces. This is a fix for some headers that cant
+        -- send commas in header.
         splitParts o = if (',' `elem` o)
                           then splitOn "," o
                           else splitOn " " o
