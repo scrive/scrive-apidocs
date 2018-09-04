@@ -43,6 +43,11 @@ class Identifier t where
   idValue        :: t -> IdentifierValue
 
 -- Helpers for implementing 'Identifier' instances.
+-- Usage:
+--
+-- instance Identifier Foo where
+--     idDefaultLabel  = "foo"
+--     idValue (Foo f) = {string,int64AsString,int}Identifier f
 
 stringIdentifier :: String -> IdentifierValue
 stringIdentifier = IdentifierString
@@ -50,6 +55,9 @@ stringIdentifier = IdentifierString
 int64AsStringIdentifier :: Int64 -> IdentifierValue
 int64AsStringIdentifier = IdentifierString . show
 
+-- | Should only be used when we can guarantee that the value will fit
+-- into 52 bits (limitation due to JavaScript/JSON semantics),
+-- normally int64AsString should be used instead.
 intIdentifier :: Int -> IdentifierValue
 intIdentifier = IdentifierInt
 
