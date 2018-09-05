@@ -1,13 +1,7 @@
 module Doc.SealSpec where
 
-import Data.Char
-import Data.Functor.Invariant
 import Data.Int
-import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.Text as Text
-import qualified Data.Text.Encoding as Text
-import qualified Data.Unjson as Unjson
 
 data Person =
     Person { fullname            :: String
@@ -29,63 +23,6 @@ data Person =
            , highlightedImages   :: [HighlightedImage]
            }
     deriving (Eq,Ord,Show,Read)
-
-unjsonPerson :: Unjson.UnjsonDef Person
-unjsonPerson = Unjson.objectOf $ pure Person
-    <*> Unjson.field "fullname"
-        fullname
-        ""
-    <*> Unjson.field "company"
-        company
-        ""
-    <*> Unjson.field "personalnumber"
-        personalnumber
-        ""
-    <*> Unjson.field "companynumber"
-        companynumber
-        ""
-    <*> Unjson.field "email"
-        email
-        ""
-    <*> Unjson.field "phone"
-        phone
-        ""
-    <*> Unjson.field "fullnameverified"
-        fullnameverified
-        ""
-    <*> Unjson.field "companyverified"
-        companyverified
-        ""
-    <*> Unjson.field "numberverified"
-        numberverified
-        ""
-    <*> Unjson.field "emailverified"
-        emailverified
-        ""
-    <*> Unjson.field "phoneverified"
-        phoneverified
-        ""
-    <*> Unjson.fieldBy "fields"
-        fields
-        ""
-        (Unjson.arrayOf unjsonField)
-    <*> Unjson.field "signtime"
-        signtime
-        ""
-    <*> Unjson.field "signedAtText"
-        signedAtText
-        ""
-    <*> Unjson.field "personalNumberText"
-        personalNumberText
-        ""
-    <*> Unjson.field "companyNumberText"
-        companyNumberText
-        ""
-    <*> Unjson.fieldBy "highlightedImages"
-        highlightedImages
-        ""
-        (Unjson.arrayOf unjsonHighlightedImage)
-
 
 -- | Field coordinates are in screen coordinate space. That means:
 --
@@ -120,41 +57,6 @@ data Field
     }
     deriving (Eq, Ord, Show, Read)
 
-isField :: Field -> Bool
-isField (Field {}) = True
-isField _ = False
-
-isFieldJPG :: Field -> Bool
-isFieldJPG (FieldJPG {}) = True
-isFieldJPG _ = False
-
-
-unjsonField :: Unjson.UnjsonDef Field
-unjsonField = Unjson.unionOf
-              [ (isField,
-                 pure Field
-                 <*> Unjson.field "value" value ""
-                 <*> Unjson.field "x" x ""
-                 <*> Unjson.field "y" y ""
-                 <*> Unjson.field "page" page ""
-                 <*> Unjson.field "fontSize" fontSize ""
-                 <*> Unjson.field "greyed" greyed ""
-                 <*> Unjson.field "includeInSummary" includeInSummary "")
-              , (isFieldJPG,
-                 pure FieldJPG
-                 <*> Unjson.fieldBy "valueBase64" valueBinary ""
-                     (invmap (B64.decodeLenient . Text.encodeUtf8) (Text.decodeUtf8 . B64.encode) Unjson.unjsonDef)
-                 <*> Unjson.field "x" x ""
-                 <*> Unjson.field "y" y ""
-                 <*> Unjson.field "page" page ""
-                 <*> Unjson.field "image_w" image_w ""
-                 <*> Unjson.field "image_h" image_h ""
-                 <*> Unjson.field "includeInSummary" includeInSummary ""
-                 <*> Unjson.field "onlyForSummary" onlyForSummary ""
-                 <*> Unjson.fieldOpt "keyColor" keyColor ""
-              )]
-
-
 -- | Image is a transparent layer that was put on pdf page during signing to
 --   highlight important information to signatory. It should cover whole page
 
@@ -162,17 +64,6 @@ data HighlightedImage = HighlightedImage {
     hiPage             :: Int32  -- ^ on which page should the image be placed
   , hiImage            :: BS.ByteString -- ^ binary content of image
   } deriving (Eq, Ord, Show, Read)
-
-unjsonHighlightedImage:: Unjson.UnjsonDef HighlightedImage
-unjsonHighlightedImage = Unjson.objectOf $ pure HighlightedImage
-    <*> Unjson.field "page"
-        hiPage
-        ""
-    <*> Unjson.fieldBy "imageBase64"
-        hiImage
-        ""
-        (invmap (B64.decodeLenient . BS.pack . Text.unpack) (Text.pack . BS.unpack . B64.encode) Unjson.unjsonDef)
-
 
 -- | An attachment that will be put into a PDF. Attachments are put in
 -- order.  File name should be without any directory parts. File
@@ -184,14 +75,6 @@ data SealAttachment = SealAttachment
   }
     deriving (Eq,Ord,Show,Read)
 
-unjsonSealAttachment :: Unjson.UnjsonDef SealAttachment
-unjsonSealAttachment = Unjson.objectOf $ pure SealAttachment
-   <*> Unjson.field "fileName" fileName ""
-   <*> Unjson.fieldOpt "mimeType" mimeType ""
-   <*> Unjson.fieldBy "fileBase64Content" fileContent ""
-         (invmap (B64.decodeLenient . BS.pack . Text.unpack) (Text.pack . BS.unpack . B64.encode) Unjson.unjsonDef)
-
-
 data SealSpec = SealSpec
     { input          :: String
     , output         :: String
@@ -199,7 +82,6 @@ data SealSpec = SealSpec
     , persons        :: [Person]
     , secretaries    :: [Person]
     , initiator      :: Maybe Person
-    , history        :: [HistEntry]
     , initialsText   :: String
     , hostpart       :: String
     , staticTexts    :: SealingTexts
@@ -210,42 +92,16 @@ data SealSpec = SealSpec
     }
     deriving (Eq,Ord,Show,Read)
 
-unjsonSealSpec :: Unjson.UnjsonDef SealSpec
-unjsonSealSpec = Unjson.objectOf $ pure SealSpec
-    <*> Unjson.field "input" input ""
-    <*> Unjson.field "output" output ""
-    <*> Unjson.field "documentNumberText" documentNumberText ""
-    <*> Unjson.fieldBy "persons" persons "" (Unjson.arrayOf unjsonPerson)
-    <*> Unjson.fieldBy "secretaries" secretaries "" (Unjson.arrayOf unjsonPerson)
-    <*> Unjson.fieldOptBy "initiator" initiator "" unjsonPerson
-    <*> Unjson.fieldBy "history" history "" (Unjson.arrayOf unjsonHistEntry)
-    <*> Unjson.field "initialsText" initialsText ""
-    <*> Unjson.field "hostpart" hostpart ""
-    <*> Unjson.fieldBy "staticTexts" staticTexts "" unjsonSealingTexts
-    <*> Unjson.fieldBy "attachments" attachments "" (Unjson.arrayOf unjsonSealAttachment)
-    <*> Unjson.fieldBy "filesList" filesList "" (Unjson.arrayOf unjsonFileDesc)
-    <*> Unjson.field "disableFooter" disableFooter ""
-    <*> Unjson.field "extendedFlattening" extendedFlattening ""
-
-
 data FileDesc = FileDesc
     { fileTitle      :: String
     , fileRole       :: String
     , filePagesText  :: String
     , fileAttachedBy :: String
+    , fileSealedOn   :: Maybe String
     , fileAttachedToSealedFileText :: Maybe String
     , fileInput      :: Maybe String
     }
     deriving (Eq,Ord,Show,Read)
-
-unjsonFileDesc :: Unjson.UnjsonDef FileDesc
-unjsonFileDesc = Unjson.objectOf $ pure FileDesc
-    <*> Unjson.field "title" (filter isPrint . fileTitle) ""
-    <*> Unjson.field "role" fileRole ""
-    <*> Unjson.field "pagesText" filePagesText ""
-    <*> Unjson.field "attachedBy" fileAttachedBy ""
-    <*> Unjson.fieldOpt "attachedToSealedFileText" fileAttachedToSealedFileText ""
-    <*> Unjson.fieldOpt "input" fileInput ""
 
 data PreSealSpec = PreSealSpec
     { pssInput  :: String
@@ -254,28 +110,6 @@ data PreSealSpec = PreSealSpec
     , pssExtendedFlattening :: Bool
     }
     deriving (Eq,Ord,Show,Read)
-
-unjsonPreSealSpec :: Unjson.UnjsonDef PreSealSpec
-unjsonPreSealSpec = Unjson.objectOf $ pure PreSealSpec
-    <*> Unjson.field "input" pssInput ""
-    <*> Unjson.field "output" pssOutput ""
-    <*> Unjson.fieldBy "fields" pssFields "" (Unjson.arrayOf unjsonField)
-    <*  Unjson.field "preseal" (const True) ""
-    <*> Unjson.field "extendedFlattening" pssExtendedFlattening ""
-
-data HistEntry = HistEntry
-    { histdate    :: String
-    , histcomment :: String
-    , histaddress :: String
-    }
-    deriving (Eq,Ord,Show,Read)
-
-unjsonHistEntry :: Unjson.UnjsonDef HistEntry
-unjsonHistEntry = Unjson.objectOf $ pure HistEntry
-    <*> Unjson.field "date" histdate ""
-    <*> Unjson.field "comment" histcomment ""
-    <*> Unjson.field "address" histaddress ""
-
 
 {- |  Static (almost) text for sealing document.
       !!!! IMPORTANT Templates for sealing depends on read instance of this class
@@ -286,24 +120,8 @@ data SealingTexts = SealingTexts
   , partnerText        :: String -- Header for partner list
   , initiatorText      :: String -- Header for initiator
   , documentText       :: String -- Header for documents list
-  , eventsText         :: String -- history table preheader
-  , dateText           :: String -- history table date header
-  , historyText        :: String -- history table event header
-  , verificationFooter :: String -- Long text all the end saying that doc was verified
+  , verificationPageDescription :: String -- Long summary near the end of verification page
   , hiddenAttachmentText :: String -- "Concealed Attachment"
   , onePageText        :: String -- "1 page"
   }
   deriving (Eq,Ord,Show,Read)
-
-unjsonSealingTexts :: Unjson.UnjsonDef SealingTexts
-unjsonSealingTexts = Unjson.objectOf $ pure SealingTexts
-   <*> Unjson.field "verificationTitle" verificationTitle ""
-   <*> Unjson.field "partnerText" partnerText ""
-   <*> Unjson.field "initiatorText" initiatorText ""
-   <*> Unjson.field "documentText" documentText ""
-   <*> Unjson.field "eventsText" eventsText ""
-   <*> Unjson.field "dateText" dateText ""
-   <*> Unjson.field "historyText" historyText ""
-   <*> Unjson.field "verificationFooter" verificationFooter ""
-   <*> Unjson.field "hiddenAttachmentText" hiddenAttachmentText ""
-   <*> Unjson.field "onePageText" onePageText ""

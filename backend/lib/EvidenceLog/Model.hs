@@ -72,14 +72,12 @@ data InsertEvidenceEvent = InsertEvidenceEvent
 data EventRenderTarget =
    EventForEvidenceLog
  | EventForArchive
- | EventForVerificationPages
   deriving (Enum, Eq, Ord, Bounded, Show)
 
 eventTextTemplateName :: EventRenderTarget -> CurrentEvidenceEventType -> String
 eventTextTemplateName t e =  show e ++ suffix t
   where suffix EventForEvidenceLog       = "Log"
         suffix EventForArchive           = "Archive"
-        suffix EventForVerificationPages = "VerificationPages"
 
 signatoryLinkTemplateFields :: Monad m => SignatoryLink -> F.Fields m ()
 signatoryLinkTemplateFields sl = do

@@ -9,7 +9,7 @@ import qualified Data.Set as Set
 
 import DB
 import EvidenceLog.Model
-import EvidenceLog.View (eventForHistory, eventForVerificationPage, simpleEvents)
+import EvidenceLog.View (historyEventType)
 import TestingUtil
 import TestKontra
 import User.Lang (allLangs, codeFromLang)
@@ -67,7 +67,6 @@ evidenceLogTemplateVariables = Set.fromList
   , "signing"         -- Flag
   , "sms_pin"         -- Flag
   , "text"            -- Messages :: String
-  , "additional_text" -- Messages :: String
   , "timeouttime"     -- Pending :: UTCTime
   , "timezone"        -- Pending :: TimeZone
   , "value"           -- Field updates :: FieldValue
@@ -118,8 +117,7 @@ evidenceLogTemplatesWellDefined = do
                                               , l <- allLangs
                                               , ta <- [minBound..maxBound]
                                               , (ta == EventForEvidenceLog) ||
-                                                (ta == EventForVerificationPages && eventForVerificationPage ty && simpleEvents ty ) ||
-                                                (ta == EventForArchive && eventForHistory ty && simpleEvents ty)
+                                                (ta == EventForArchive && historyEventType ty)
                                               ] $ \(ty,l,ta) -> do
     case ty of
       Obsolete _ -> return []

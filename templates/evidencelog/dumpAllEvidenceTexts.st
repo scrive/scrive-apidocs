@@ -32,8 +32,6 @@ dumpAllEvidenceTexts=
           $evidences:{evidence|
           $if(evidence.unavailable)$
             <tr><td>$evidence.name$</td><td>(UNAVAILABLE)</td></tr>
-          $else$
-            $if(evidence.verificationpage)$<tr><td>$evidence.name$</td><td>$evidence.verificationpage:noescape()$</td></tr>$endif$
           $endif$}$
         </table>
         <h2>Evidence Log</h2>

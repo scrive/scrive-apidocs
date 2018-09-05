@@ -32,7 +32,6 @@ import Doc.SignatoryFieldID
 import Doc.TestInvariants
 import EID.Signature.Model (ESignature(..))
 import EvidenceLog.Model
-import EvidenceLog.View (getSignatoryIdentifierMap, simplyfiedEventText)
 import File.FileID
 import MinutesTime
 import PdfToolsLambda.Conf
@@ -493,12 +492,6 @@ testMarkInvitationReadEvidenceLog = do
     let Just e = me
     let expectedFull = "Scrive eSign’s external email delivery system reported that the invitation sent to " ++ getEmail sl ++ " was opened."
     assertEqual "Correct event text full" (expectedFull) (unpack $ renderXMLContent $ evText e)
-    let expectedSimple = "The invitation to "
-                ++ (if signatoryispartner sl then "sign" else "review")
-                ++ " the document (sent to " ++ getEmail sl ++ ") was opened."
-    sim <- getSignatoryIdentifierMap True [e]
-    simpletext <- theDocument >>= \d -> simplyfiedEventText EventForVerificationPages (Just "author") d{ documentlang = LANG_EN } sim e
-    assertEqual "Correct simplified event text" (expectedSimple) simpletext
 
 testSaveSigAttachmentEvidenceLog :: TestEnv ()
 testSaveSigAttachmentEvidenceLog = do

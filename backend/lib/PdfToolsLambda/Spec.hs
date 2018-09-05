@@ -40,7 +40,6 @@ sealSpecToLambdaSpec spec = do
     , "dontAddFooterToEveryPage" .= disableFooter spec
     , "extendedFlattening" .= extendedFlattening spec
     , "staticTexts" .= staticTextsJSON (staticTexts spec)
-    , "history" .= map sealSpecForHistoryEvent (history spec)
     ]
 
 presealSpecToLambdaSpec ::
@@ -140,6 +139,7 @@ sealSpecForFile fd = do
     , "role" .= fileRole fd
     , "pagesText" .= filePagesText fd
     , "attachedBy" .= fileAttachedBy fd
+    , "sealedOn" .= fileSealedOn fd
     , "attachedToSealedFileText" .= fileAttachedToSealedFileText fd
     ] ++
     case (mfc) of
@@ -150,23 +150,13 @@ sealSpecForFile fd = do
         ]
       _ -> []
 
-sealSpecForHistoryEvent :: HistEntry -> Aeson.Value
-sealSpecForHistoryEvent he =  Aeson.object $ [
-    "date" .= histdate he
-  , "comment" .= histcomment he
-  , "address" .= histaddress he
-  ]
-
 staticTextsJSON :: SealingTexts -> Aeson.Value
 staticTextsJSON st =  Aeson.object [
      "verificationTitle" .= verificationTitle st
    , "partnerText" .= partnerText st
    , "initiatorText" .= initiatorText st
    , "documentText" .= documentText st
-   , "eventsText" .= eventsText st
-   , "dateText" .= dateText st
-   , "historyText" .= historyText st
-   , "verificationFooter" .= verificationFooter st
+   , "verificationPageDescription" .= verificationPageDescription st
    , "hiddenAttachmentText" .=  hiddenAttachmentText st
    , "onePageText" .= onePageText st
    ]

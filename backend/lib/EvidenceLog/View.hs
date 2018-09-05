@@ -1,13 +1,10 @@
 module EvidenceLog.View (
       eventsJSListFromEvidenceLog
-    , eventsForLog
     , getSignatoryIdentifierMap
-    , simplyfiedEventText
     , approximateActor
     , suppressRepeatedEvents
-    , simpleEvents
-    , eventForHistory
-    , eventForVerificationPage
+    , historyEventType
+    , simplyfiedEventText
   ) where
 
 import Control.Monad.Catch
@@ -30,7 +27,6 @@ import EID.Nets.Data
 import EID.Signature.Model
 import EvidenceLog.Model
 import MinutesTime
-import Templates (renderLocalTemplate)
 import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -38,7 +34,7 @@ import Util.SignatoryLinkUtils
 -- | Evidence log for web page - short and simplified texts
 eventsJSListFromEvidenceLog ::  (MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> [DocumentEvidenceEvent] -> m [JSValue]
 eventsJSListFromEvidenceLog doc dees = do
-  let evs = filter (eventForHistory . evType) $ eventsForLog dees
+  let evs = filter ((historyEventType . evType) && (not . emptyEvent)) $ cleanUnimportantAfterSigning $ dees
   sim <- getSignatoryIdentifierMap True evs
   mapM (J.runJSONGenT . eventJSValue doc sim) evs
 
@@ -49,14 +45,9 @@ getSignatoryIdentifierMap includeviewers evs = do
   docs <- dbQuery $ GetDocumentsBySignatoryLinkIDs $ Set.toList sigs
   return $ signatoryIdentifierMap includeviewers (sortBy (compare `on` documentid) docs) sigs
 
--- | Keep only simple events, remove some redundant signatory events after signing
-eventsForLog :: [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
-eventsForLog = cleanUnimportantAfterSigning . filter ((simpleEvents . evType) && (not . emptyEvent))
-
 -- TODO: Consider saving actor name in event instead, this is likely to become broken
-approximateActor :: (MonadDB m, MonadThrow m, TemplatesMonad m) => EventRenderTarget -> Document -> SignatoryIdentifierMap -> DocumentEvidenceEvent -> m String
-approximateActor EventForEvidenceLog _ _ _ = unexpectedError "approximateActor should not be called for evidence log entries"
-approximateActor tgt doc sim dee | systemEvents $ evType dee = return "Scrive"
+approximateActor :: (MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> SignatoryIdentifierMap -> DocumentEvidenceEvent -> m String
+approximateActor doc sim dee | systemEvents $ evType dee = return "Scrive"
                              | otherwise = do
   emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
   case evSigLink dee >>= sigid emptyNamePlaceholder of
@@ -76,50 +67,50 @@ approximateActor tgt doc sim dee | systemEvents $ evType dee = return "Scrive"
   where authorName emptyNamePlaceholder = case getAuthorSigLink doc >>= sigid emptyNamePlaceholder . signatorylinkid of
                         Just i -> return i
                         Nothing -> renderTemplate_ "_authorParty"
-        sigid emptyNamePlaceholder s | tgt == EventForArchive = do
-                                             si <- Map.lookup s sim
-                                             let name = siFullName si
-                                             if null name then
-                                                 signatoryIdentifier sim s emptyNamePlaceholder
-                                              else
-                                                 return name
-                                     | otherwise = signatoryIdentifier sim s emptyNamePlaceholder
+        sigid emptyNamePlaceholder s = do
+                                        si <- Map.lookup s sim
+                                        let name = siFullName si
+                                        if null name then
+                                            signatoryIdentifier sim s emptyNamePlaceholder
+                                        else
+                                            return name
 
 eventJSValue :: (MonadDB m, MonadThrow m, TemplatesMonad m) => Document -> SignatoryIdentifierMap -> DocumentEvidenceEvent -> JSONGenT m ()
 eventJSValue doc sim dee = do
     J.value "status" $ show $ getEvidenceEventStatusClass (evType dee)
     J.value "time"   $ formatTimeISO (evTime dee)
-    J.valueM "party" $ approximateActor EventForArchive doc sim dee
-    J.valueM "text"  $ simplyfiedEventText EventForArchive Nothing doc sim dee
+    J.valueM "party" $ approximateActor doc sim dee
+    J.valueM "text"  $ simplyfiedEventText Nothing sim dee
 
--- | Simple events to be included in the archive history and the verification page.  These have translations.
-simpleEvents :: EvidenceEventType -> Bool
-simpleEvents (Current AttachExtendedSealedFileEvidence)  = True
-simpleEvents (Current AttachGuardtimeSealedFileEvidence) = True
-simpleEvents (Obsolete CancelDocumenElegEvidence)        = True
-simpleEvents (Current CancelDocumentEvidence)            = True
-simpleEvents (Current InvitationDeliveredByEmail)        = True
-simpleEvents (Current InvitationDeliveredBySMS)          = True
-simpleEvents (Current InvitationEvidence)                = True
-simpleEvents (Current InvitationUndeliveredByEmail)      = True
-simpleEvents (Current InvitationUndeliveredBySMS)        = True
-simpleEvents (Current MarkInvitationReadEvidence)        = True
-simpleEvents (Current PreparationToPendingEvidence)      = True
-simpleEvents (Current ProlongDocumentEvidence)           = True
-simpleEvents (Current RejectDocumentEvidence)            = True
-simpleEvents (Current ReminderSend)                      = True
-simpleEvents (Current AutomaticReminderSent)             = True
-simpleEvents (Current RestartDocumentEvidence)           = True
-simpleEvents (Current SignDocumentEvidence)              = True
-simpleEvents (Obsolete SignatoryLinkVisited)              = True
-simpleEvents (Current TimeoutDocumentEvidence)           = True
-simpleEvents (Current SMSPinSendEvidence)                = True
-simpleEvents (Current SMSPinDeliveredEvidence)           = True
-simpleEvents (Current VisitedViewForAuthenticationEvidence) = True
-simpleEvents (Current VisitedViewForSigningEvidence)     = True
-simpleEvents (Current AuthenticatedToViewEvidence)       = True
-simpleEvents (Current AuthorAttachmentAccepted)          = True
-simpleEvents _                                           = False
+
+-- | Events to be included in archive history. They have translations.
+historyEventType :: EvidenceEventType -> Bool
+historyEventType (Current AttachExtendedSealedFileEvidence)     = True
+historyEventType (Current AttachGuardtimeSealedFileEvidence)    = True
+historyEventType (Obsolete CancelDocumenElegEvidence)           = True
+historyEventType (Current CancelDocumentEvidence)               = True
+historyEventType (Current InvitationDeliveredByEmail)           = True
+historyEventType (Current InvitationDeliveredBySMS)             = True
+historyEventType (Current InvitationEvidence)                   = True
+historyEventType (Current InvitationUndeliveredByEmail)         = True
+historyEventType (Current InvitationUndeliveredBySMS)           = True
+historyEventType (Current MarkInvitationReadEvidence)           = True
+historyEventType (Current PreparationToPendingEvidence)         = True
+historyEventType (Current ProlongDocumentEvidence)              = True
+historyEventType (Current RejectDocumentEvidence)               = True
+historyEventType (Current ReminderSend)                         = True
+historyEventType (Current AutomaticReminderSent)                = True
+historyEventType (Current RestartDocumentEvidence)              = True
+historyEventType (Current SignDocumentEvidence)                 = True
+historyEventType (Obsolete SignatoryLinkVisited)                = True
+historyEventType (Current TimeoutDocumentEvidence)              = True
+historyEventType (Current SMSPinSendEvidence)                   = True
+historyEventType (Current SMSPinDeliveredEvidence)              = True
+historyEventType (Current VisitedViewForAuthenticationEvidence) = True
+historyEventType (Current VisitedViewForSigningEvidence)        = True
+historyEventType (Current AuthenticatedToViewEvidence)          = True
+historyEventType _                                              = False
+
 
 getEvidenceEventStatusClass :: EvidenceEventType -> StatusClass
 getEvidenceEventStatusClass (Current CloseDocumentEvidence)             = SCSigned
@@ -186,28 +177,19 @@ emptyEvent (DocumentEvidenceEvent {evType = Current InvitationEvidence, evAffect
 emptyEvent (DocumentEvidenceEvent {evType = Current ReminderSend,       evAffectedSigLink = Nothing }) = True
 emptyEvent _ = False
 
-eventForVerificationPage :: EvidenceEventType -> Bool
-eventForVerificationPage = not . (`elem` map Current [AttachGuardtimeSealedFileEvidence, AttachExtendedSealedFileEvidence, MarkInvitationReadEvidence])
-
-eventForHistory :: EvidenceEventType -> Bool
-eventForHistory = not . (`elem` map Current [AuthorAttachmentAccepted])
-
 -- | Produce simplified text for an event (only for archive or
 -- verification pages).
-simplyfiedEventText :: (HasLang d, MonadDB m, MonadThrow m, TemplatesMonad m)
-  => EventRenderTarget -> Maybe String -> d -> SignatoryIdentifierMap -> DocumentEvidenceEvent -> m String
-simplyfiedEventText EventForEvidenceLog _ _ _ _ = unexpectedError "simplyfiedEventText should not be called for evidence log entries"
-simplyfiedEventText target mactor d sim dee = do
+simplyfiedEventText :: (MonadDB m, MonadThrow m, TemplatesMonad m)
+  => Maybe String -> SignatoryIdentifierMap -> DocumentEvidenceEvent -> m String
+simplyfiedEventText mactor sim dee = do
   emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
   case evType dee of
     Obsolete CancelDocumenElegEvidence -> renderEvent emptyNamePlaceholder "CancelDocumenElegEvidenceText"
     Obsolete SignatoryLinkVisited -> renderEvent emptyNamePlaceholder "SignatoryLinkVisitedArchive"
-    Current et -> renderEvent emptyNamePlaceholder $ eventTextTemplateName target et
+    Current et -> renderEvent emptyNamePlaceholder $ eventTextTemplateName EventForArchive et
     Obsolete _ -> return "" -- shouldn't we throw an error in this case?
     where
-      render | target == EventForVerificationPages = renderLocalTemplate (getLang d)
-             | otherwise                           = renderTemplate
-      renderEvent emptyNamePlaceholder eventTemplateName = render eventTemplateName $ do
+      renderEvent emptyNamePlaceholder eventTemplateName = renderTemplate eventTemplateName $ do
         let mslinkid = evAffectedSigLink dee
         F.forM_ mslinkid  $ \slinkid -> do
           case Map.lookup slinkid sim >>= siLink of

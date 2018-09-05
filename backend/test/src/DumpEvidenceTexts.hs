@@ -19,8 +19,8 @@ import Doc.DocStateData
 import Doc.DocumentMonad (theDocument, withDocument, withDocumentID)
 import Doc.SignatoryIdentification (signatoryIdentifierMap)
 import Doc.SignatoryLinkID (unsafeSignatoryLinkID)
-import EvidenceLog.Model (CurrentEvidenceEventType(..), DocumentEvidenceEvent(..), EventRenderTarget(..), EvidenceEventType(..), evidenceLogText)
-import EvidenceLog.View (eventForHistory, eventForVerificationPage, simpleEvents, simplyfiedEventText)
+import EvidenceLog.Model (CurrentEvidenceEventType(..), DocumentEvidenceEvent(..), EvidenceEventType(..), evidenceLogText)
+import EvidenceLog.View (historyEventType, simplyfiedEventText)
 import EvidencePackage.EvidenceLog (finalizeEvidenceText)
 import MinutesTime
 import Templates (runTemplatesT)
@@ -118,7 +118,7 @@ dumpEvidenceTexts now lang doc' = do
                                 , evMessageText = msgtext
                                 , evAdditionalMessageText = amsgtext
                                 }
-  evs <- (sortBy (compare `on` (\(evt, _, _, _) -> show evt)) <$>) $
+  evs <- (sortBy (compare `on` (\(evt, _, _) -> show evt)) <$>) $
          forM (evidencetypes) $ \evt -> do
        let (msgtext,amsgtext) = case evt of
                     _ | evt `elem` [SMSPinSendEvidence, SMSPinDeliveredEvidence] -> (Just "+481234567890",Nothing)
@@ -127,23 +127,19 @@ dumpEvidenceTexts now lang doc' = do
        elog <- withDocument doc $ evidenceLogText evt (fields evt) (Just asl) msgtext amsgtext
        let ev = mkev elog msgtext amsgtext evt
            sim = signatoryIdentifierMap True  [doc] (Set.fromList  [signatorylinkid asl])
-       let simpletext target mactor = if simpleEvents (Current evt) && (isNothing mactor || eventForVerificationPage (evType ev))
-                                      then Just <$> simplyfiedEventText target mactor doc{ documentlang = lang } sim ev
+       let simpletext = if historyEventType (Current evt)
+                                      then Just <$> simplyfiedEventText Nothing sim ev
                                       else return Nothing
-       vp <- if (eventForVerificationPage $ Current evt)
-              then simpletext EventForVerificationPages (actorEmail actor)
+       av <- if (historyEventType $ Current evt)
+              then simpletext
               else return Nothing
-       av <- if (eventForHistory $ Current evt)
-              then simpletext EventForArchive Nothing
-              else return Nothing
-       return (evt, vp, av, finalizeEvidenceText sim ev "Not named party")
+       return (evt, av, finalizeEvidenceText sim ev "Not named party")
   renderTemplate "dumpAllEvidenceTexts" $ do
      F.value "lang" $ codeFromLang lang
      F.value "versionID" versionID
      F.value "timestamp" $ show now
-     F.objects "evidences" $ for evs $ \(evt, vp, av, elog) -> do
+     F.objects "evidences" $ for evs $ \(evt, av, elog) -> do
        F.value "unavailable" $ evt `elem` [AuthenticatedToViewEvidence]
        F.value "name" $ show evt
        F.value "evidencelog" $ renderXMLContent elog
        F.value "authorview" $ av
-       F.value "verificationpage" $ vp

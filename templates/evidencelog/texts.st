@@ -2,21 +2,15 @@ AttachExtendedSealedFileEvidenceLog=Scrive eSign sealed the Evidence Package (as
 ###
 AttachExtendedSealedFileEvidenceArchive=$_AttachExtendedSealedFileEvidenceTextSimple()$
 ###
-AttachExtendedSealedFileEvidenceVerificationPages=$_AttachExtendedSealedFileEvidenceTextSimple()$
-###
 ###
 AttachGuardtimeSealedFileEvidenceLog=Scrive eSign sealed the final PDF with a digital signature.
 ###
 AttachGuardtimeSealedFileEvidenceArchive=$_AttachGuardtimeSealedFileEvidenceTextSimple()$
 ###
-AttachGuardtimeSealedFileEvidenceVerificationPages=$_AttachGuardtimeSealedFileEvidenceTextSimple()$
-###
 ###
 AttachSealedFileEvidenceLog=Scrive eSign prepared the final PDF, including evidence collected by Scrive eSign, before sealing with a digital signature.
 ###
 AttachSealedFileEvidenceArchive=$_AttachSealedFileEvidenceTextSimpleArchive()$
-###
-AttachSealedFileEvidenceVerificationPages=$_AttachSealedFileEvidenceTextSimpleNotArchive()$
 ###
 ###
 AutomaticReminderSentLogEmail=Scrive eSign sent an automatic reminder to sign using email to <span class="signatory"/> at the request of <span class="actor"/>.
@@ -45,14 +39,10 @@ $endif$
 ###
 AutomaticReminderSentArchive=$AutomaticReminderSentSimple()$
 ###
-AutomaticReminderSentVerificationPages=$AutomaticReminderSentSimple()$
-###
 ###
 CancelDocumentEvidenceLog=The user <span class="actor"/> withdrew the invitation to sign and Scrive eSign disabled the possibility to sign for all parties.
 ###
 CancelDocumentEvidenceArchive=$_CancelDocumentEvidenceTextSimpleArchive()$
-###
-CancelDocumentEvidenceVerificationPages=$_CancelDocumentEvidenceTextSimpleNotArchive()$
 ###
 ###
 ChangeSignatoryEmailEvidenceLog=The user <span class="actor"/> changed the email address for the party from $oldemail$ to $newemail$.
@@ -148,9 +138,6 @@ CloseDocumentEvidenceLog=Scrive eSign locked the document from further modificat
 ###
 CloseDocumentEvidenceArchive=$_CloseDocumentEvidenceTextSimple()$
 ###
-CloseDocumentEvidenceVerificationPages=$_CloseDocumentEvidenceTextSimple()$
-
-###
 DeleteSigAttachmentEvidenceLog=The party <span class="actor"/> deleted the attachment “$name$” previously uploaded by the party <span class="actor"/>.
 ###
 ErrorSealingDocumentEvidenceLog=Due to a system error Scrive eSign failed to finalise the Evidence Package (as defined in the Service Description) before sealing with a digital signature.
@@ -176,8 +163,6 @@ $endif$
 ###
 InvitationDeliveredByEmailArchive=$InvitationDeliveredByEmailSimple()$
 ###
-InvitationDeliveredByEmailVerificationPages=$InvitationDeliveredByEmailSimple()$
-###
 ###
 ReviewInvitationDeliveredBySMSLog=Scrive eSign’s external SMS delivery system reported that the invitation to review the document sent via SMS to <span class="signatory"/> was delivered.
 ###
@@ -199,8 +184,6 @@ $elseif(viewing)$
 $endif$
 ###
 InvitationDeliveredBySMSArchive=$InvitationDeliveredBySMSSimple()$
-###
-InvitationDeliveredBySMSVerificationPages=$InvitationDeliveredBySMSSimple()$
 ###
 ###
 SigningInvitationEvidenceLogEmail=Scrive eSign sent an invitation to sign the document via email to <span class="signatory"/>. The invitation included a link that when clicked lead to Scrive eSign’s online interface to sign documents. $invitationCustomMessageTextIfThereIsOne()$
@@ -253,38 +236,13 @@ $elseif(viewing)$
   $endif$
 $endif$
 ###
-InvitationEvidenceVerificationPages=*
-$if(signing)$
-  $if(email)$
-        $_InvitationEvidenceTextToSignNotArchiveSimpleEmail()$
-  $elseif(mobile)$
-        $_InvitationEvidenceTextToSignNotArchiveSimpleSMS()$
-  $elseif(emailmobile)$
-        $_InvitationEvidenceTextToSignNotArchiveSimpleEmailSMS()$
-  $endif$
-$elseif(viewing)$
-  $if(email)$
-        $_InvitationEvidenceTextToReviewNotArchiveSimpleEmail()$
-  $elseif(mobile)$
-        $_InvitationEvidenceTextToReviewNotArchiveSimpleSMS()$
-  $elseif(emailmobile)$
-        $_InvitationEvidenceTextToReviewNotArchiveSimpleEmailSMS()$
-  $endif$
-$endif$
-###
-###
 InvitationUndeliveredByEmailLog=Scrive eSign’s external email delivery system reported that the invitation sent via email to <span class="signatory"/> could not be delivered and continued attempts were cancelled.
 ###
 InvitationUndeliveredByEmailArchive=$_InvitationUndeliveredByEmailTextSimpleArchive()$
 ###
-InvitationUndeliveredByEmailVerificationPages=$_InvitationUndeliveredByEmailTextSimpleNotArchive()$
-###
-###
 InvitationUndeliveredBySMSLog=Scrive eSign’s external SMS delivery system reported that the invitation sent via SMS to <span class="signatory"/> could not be delivered and continued attempts were cancelled.
 ###
 InvitationUndeliveredBySMSArchive=$_InvitationUndeliveredBySMSTextSimpleArchive()$
-###
-InvitationUndeliveredBySMSVerificationPages=$_InvitationUndeliveredBySMSTextSimpleNotArchive()$
 ###
 MarkInvitationReadEvidenceLog=Scrive eSign’s external email delivery system reported that the invitation sent to $signatory_email$ was opened.
 ###
@@ -297,20 +255,14 @@ $endif$
 ###
 MarkInvitationReadEvidenceArchive=$MarkInvitationReadEvidenceSimple()$
 ###
-MarkInvitationReadEvidenceVerificationPages=$MarkInvitationReadEvidenceSimple()$
-###
 ###
 PreparationToPendingEvidenceLog=The initiator <span class="actor"/> initiated the signing workflow and Scrive eSign a) locked the signing workflow from further editing, b) set the signing workflow language to $lang$, c) set the signing due date to $timeouttime$ UTC,$if(timezone)$ d) set the time zone to $timezone$$endif$ and e) initiated the signing workflow.
 ###
 PreparationToPendingEvidenceArchive=$_PreparationToPendingEvidenceTextSimpleArchive()$
 ###
-PreparationToPendingEvidenceVerificationPages=$_PreparationToPendingEvidenceTextSimpleNotArchive()$
-###
 ProlongDocumentEvidenceLog=The user <span class="actor"/> prolonged the signing due date.
 ###
 ProlongDocumentEvidenceArchive=$_ProlongDocumentEvidenceTextArchive()$
-###
-ProlongDocumentEvidenceVerificationPages=$_ProlongDocumentEvidenceTextNotArchive()$
 ###
 ###
 RejectDocumentEvidenceLog=The signatory <span class="actor"/> rejected the invitation to sign and Scrive eSign disabled the possibility to sign for all parties.$if(text)$ The rejection message from the signatory <span class="actor"/> was: <BR/> <i>$text$</i>$endif$
@@ -320,13 +272,6 @@ $if(text)$
   $_RejectDocumentEvidenceTextSimpleArchiveWithText()$
 $else$
   $_RejectDocumentEvidenceTextSimpleArchive()$
-$endif$
-###
-RejectDocumentEvidenceVerificationPages=*
-$if(text)$
-  $_RejectDocumentEvidenceTextSimpleNotArchiveWithText()$
-$else$
-  $_RejectDocumentEvidenceTextSimpleNotArchive()$
 $endif$
 ###
 ReminderSendLog=*
@@ -415,8 +360,6 @@ $elseif(viewing)$
   $endif$
 $endif$
 ###
-ReminderSendVerificationPages=$ReminderSendLog()$
-###
 ###
 RemovedFromPadDeviceLog=The invitation to signatory <span class="signatory"/> to sign the document by in-person meeting was withdrawn by <span class="actor"/>.
 ###
@@ -426,21 +369,15 @@ RestartDocumentEvidenceLog=The user <span class="actor"/> edited the signing wor
 ###
 RestartDocumentEvidenceArchive=$_RestartDocumentEvidenceTextSimpleArchive()$
 ###
-RestartDocumentEvidenceVerificationPages=$_RestartDocumentEvidenceTextSimpleNotArchive()$
-###
 ###
 SMSPinDeliveredEvidenceLog=$_SMSPinDeliveredEvidenceText()$
 ###
 SMSPinDeliveredEvidenceArchive=$_SMSPinDeliveredEvidenceText()$
 ###
-SMSPinDeliveredEvidenceVerificationPages=$_SMSPinDeliveredEvidenceText()$
-###
 ###
 SMSPinSendEvidenceLog=$_SMSPinSendEvidenceText()$
 ###
 SMSPinSendEvidenceArchive=$_SMSPinSendEvidenceText()$
-###
-SMSPinSendEvidenceVerificationPages=$_SMSPinSendEvidenceText()$
 ###
 ###
 SaveSigAttachmentEvidenceLog=The signatory <span class="actor"/> uploaded the attachment “$name$” requested by the workflow author. The request had the following description: <BR/> <i>$description$</i>
@@ -478,31 +415,6 @@ $else$
       $_SignDocumentEvidenceTextSimpleArchiveStandard()$
 $endif$
 ###
-SignDocumentEvidenceVerificationPages=*
-$if(sms_pin)$
-      $_SignDocumentEvidenceTextSimpleNotArchiveSMSPin()$
-$elseif(eleg)$
-      $if(eid_signatory_name)$
-          $if(provider_sebankid)$
-              $_SignDocumentEvidenceTextSimpleNotArchiveElegWithName()$
-          $elseif(provider_nobankid)$
-              $_SignDocumentEvidenceTextSimpleNotArchiveNOBankIDWithName()$
-          $elseif(provider_dknemid)$
-              $_SignDocumentEvidenceTextSimpleNotArchiveDKNemWithName()$
-          $endif$
-      $else$
-          $if(provider_sebankid)$
-              $_SignDocumentEvidenceTextSimpleNotArchiveEleg()$
-          $elseif(provider_nobankid)$
-              $_SignDocumentEvidenceTextSimpleNotArchiveNOBankID()$
-          $elseif(provider_dknemid)$
-              $_SignDocumentEvidenceTextSimpleNotArchiveDKNemID()$
-          $endif$
-      $endif$
-$else$
-      $_SignDocumentEvidenceTextSimpleNotArchiveStandard()$
-$endif$
-###
 SignatorySignLinkVisitedLog=The party <span class="actor"/> opened the document in Scrive eSign’s online interface to sign documents.
 ###
 SignatoryReviewLinkVisitedLog=The party <span class="actor"/> opened the document in Scrive eSign’s online interface to review documents.
@@ -516,16 +428,10 @@ $endif$
 ###
 SignatoryLinkVisitedArchive=$_SignatoryLinkVisitedTextArchiveSimple()$
 ###
-SignatoryLinkVisitedVerificationPages=$_SignatoryLinkVisitedTextNotArchiveSimple()$
-###
 ###
 TimeoutDocumentEvidenceLog=The due date for signing the document passed. Scrive eSign disabled the possibility to sign for all parties.
 ###
 TimeoutDocumentEvidenceArchive=$_TimeoutDocumentEvidenceTextSimple()$
-###
-TimeoutDocumentEvidenceVerificationPages=$_TimeoutDocumentEvidenceTextSimple()$
-###
-AuthorAttachmentAcceptedVerificationPages=$_AuthorAttachmentAcceptedTextNotArchiveSimple()$.
 ###
 AuthorAttachmentAcceptedLog=The signatory <span class="actor"/> checked the checkbox "$attachment_name$". The text next to the checkbox was "$attachment_acceptance_text$".
 ###
@@ -618,8 +524,6 @@ CancelDocumenElegEvidenceText=$_CancelDocumenElegEvidenceText()$
 ###
 VisitedViewForSigningEvidenceArchive=$_VisitedViewForSigningEvidenceArchive()$
 ###
-VisitedViewForSigningEvidenceVerificationPages=$_VisitedViewForSigningEvidenceVerificationPages()$
-###
 ###
 VisitedViewForSigningEvidenceLogForSign=The party <span class="actor"/> opened the document in Scrive eSign’s online interface to sign documents.
 ###
@@ -635,8 +539,6 @@ $endif$
 VisitedViewForAuthenticationEvidenceLog=The party <span class="actor"/> opened the view to verify their identity before viewing the document.
 ###
 VisitedViewForAuthenticationEvidenceArchive=$_VisitedViewForAuthenticationEvidenceArchive()$
-###
-VisitedViewForAuthenticationEvidenceVerificationPages=$_VisitedViewForAuthenticationEvidenceVerificationPages()$
 ###
 AuthenticatedToViewEvidenceLog=$if(provider_sms_pin)$ $AuthenticatedToViewEvidenceLogWithSMSPin()$ $else$ $AuthenticatedToViewEvidenceLogWithEID()$ $endif$
 ###
@@ -686,27 +588,6 @@ $elseif(provider_dknemid)$
   $_AuthenticatedToViewEvidenceArchiveDKNemID()$
 $elseif(provider_sms_pin)$
   $_AuthenticatedToViewEvidenceArchiveSMSPin()$
-$endif$
-###
-AuthenticatedToViewEvidenceVerificationPages=*
-$if(provider_sms_pin)$
-  $_AuthenticatedToViewEvidenceVerificationPagesSMSPin()$
-$elseif(signatory_dob)$
-  $if(provider_sebankid)$
-    $_AuthenticatedToViewEvidenceVerificationPagesWithDateSEBankID()$
-  $elseif(provider_nobankid)$
-    $_AuthenticatedToViewEvidenceVerificationPagesWithDateNOBankID()$
-  $elseif(provider_dknemid)$
-    $_AuthenticatedToViewEvidenceVerificationPagesWithDateDKNemID()$
-  $endif$
-$else$
-  $if(provider_sebankid)$
-    $_AuthenticatedToViewEvidenceVerificationPagesWithoutDateSEBankID()$
-  $elseif(provider_nobankid)$
-    $_AuthenticatedToViewEvidenceVerificationPagesWithoutDateNOBankID()$
-  $elseif(provider_dknemid)$
-    $_AuthenticatedToViewEvidenceVerificationPagesWithoutDateDKNemID()$
-  $endif$
 $endif$
 ###
 UpdateMobileAfterIdentificationToViewWithNetsLog=The party <span class="signatory"/> wrote the number "$oldphone$" in the field "Mobile". Scrive eSign changed it from "$oldphone$" to "$newphone$".
