@@ -81,7 +81,8 @@ window.CallResponseView = Backbone.View.extend({
       .append($("<code class='language-request'/>").html(this.niceDetails(call.details())))
     );
 
-    if (call.resultContentType() === "application/json; charset=UTF-8") {
+    if ((call.resultContentType() === "application/json; charset=UTF-8" ||
+         call.resultContentType() === "text/plain; charset=UTF-8")) {
         panelBody.append("<p><strong>Response body</strong></p>");
         if (call.resultContent()) {
           var copyButton = $("<div class='btn btn-copy'>Copy</div>");
