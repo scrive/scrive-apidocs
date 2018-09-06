@@ -27,7 +27,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         sign_order: 1,
         csv: undefined,
         user_id: undefined,
-        authentication_method_to_sign: "standard", // Authentication to sign. TODO: Change name of field with API V2
+        authentication_method_to_sign: "standard",
         authentication_method_to_view: "standard",
         delivery_method: "email",
         confirmation_delivery_method : "email",
@@ -327,9 +327,19 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     rejectredirect : function() {
           return this.get("reject_redirect_url");
     },
-    makeSignatory: function() {
+    makeSignatory: function(args) {
       this.set({ is_signatory: true });
       this.document().checkLastViewerChange();
+      if (args != undefined
+          && args.authenticationToView != undefined
+          && args.authenticationToSign != undefined
+         ) {
+        // Note:
+        // If auth options are incompatible, it will default to standard
+        // See this.setAuthenticationTo[View,Sign] implementation
+        this.setAuthenticationToView(args.authenticationToView);
+        this.setAuthenticationToSign(args.authenticationToSign);
+      }
     },
     makeViewer: function() {
       this.set({is_signatory: false});

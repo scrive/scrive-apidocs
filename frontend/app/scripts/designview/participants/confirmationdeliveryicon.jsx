@@ -7,7 +7,7 @@ module.exports = React.createClass({
     var sig = this.props.model;
     if (sig.isLastViewer() && sig.confirmationdelivery() == "none") {
       return false;
-    } else if (!Subscription.currentSubscription().canUseSMSConfirmations()) {
+    } else if (!Subscription.currentSubscription().currentUserFeatures().canUseSMSConfirmations()) {
       return dm != "mobile" && dm != "email_mobile";
     } else {
       return true;
@@ -32,9 +32,11 @@ module.exports = React.createClass({
     var sig = this.props.model;
     if (sig.emailConfirmationDelivery()) {
       sig.setDeliverySynchedWithConfirmationDelivery("email");
-    } else if (sig.mobileConfirmationDelivery() && Subscription.currentSubscription().canUseSMSInvitations()) {
+    } else if (sig.mobileConfirmationDelivery() &&
+        Subscription.currentSubscription().currentUserFeatures().canUseSMSInvitations()) {
       sig.setDeliverySynchedWithConfirmationDelivery("mobile");
-    } else if (sig.emailMobileConfirmationDelivery() && Subscription.currentSubscription().canUseSMSInvitations()) {
+    } else if (sig.emailMobileConfirmationDelivery() &&
+        Subscription.currentSubscription().currentUserFeatures().canUseSMSInvitations()) {
       sig.setDeliverySynchedWithConfirmationDelivery("email_mobile");
     } else if (sig.noneConfirmationDelivery()) {
       sig.setDeliverySynchedWithConfirmationDelivery("email");

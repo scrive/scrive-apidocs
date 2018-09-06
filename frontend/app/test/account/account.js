@@ -42,9 +42,8 @@ describe("account/account", function () {
   var container = null;
   var server = null;
 
-  var renderComponent = function (props, componentClass) {
+  var renderComponent = function (props) {
     container = document.createElement('div');
-    componentClass = componentClass || AccountView;
 
     var actualProps = underscore.extendOwn(
       {
@@ -61,7 +60,7 @@ describe("account/account", function () {
     );
 
     var component = React.render(
-      React.createElement(componentClass, actualProps), container
+      React.createElement(AccountView, actualProps), container
     );
 
     return component;

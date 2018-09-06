@@ -41,6 +41,7 @@ import Happstack.Server.Types
 import Log as Log
 import Text.JSON hiding (Ok)
 import Text.JSON.Gen hiding (object)
+import qualified Data.Aeson as A
 import qualified Happstack.Server.Response as Web
 
 import API.APIVersion
@@ -160,6 +161,11 @@ instance ToAPIResponse JSValue where
   toAPIResponse jv =
     -- must be text/plain because some browsers complain about JSON type
     setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ encode jv
+
+instance ToAPIResponse A.Value where
+  toAPIResponse jv =
+    -- must be text/plain because some browsers complain about JSON type
+    setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ A.encode jv
 
 instance ToAPIResponse (UnjsonDef a,a) where
   toAPIResponse (unjson,a) =

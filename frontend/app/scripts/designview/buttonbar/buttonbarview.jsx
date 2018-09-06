@@ -80,7 +80,7 @@ module.exports = React.createClass({
     submit.send();
   },
   onSaveTemplateButtonClick: function () {
-    if (!Subscription.currentSubscription().canUseTemplates())  {
+    if (!Subscription.currentSubscription().currentUserFeatures().canUseTemplates())  {
       this.refs.blockingModal.openContactUsModal();
     } else {
       Track.track("Click save as template");
@@ -309,7 +309,7 @@ module.exports = React.createClass({
 
           <Button
             className={(this.props.document.isTemplate() ? "button-save-template" : "button-save-as-template")}
-            locked={!Subscription.currentSubscription().canUseTemplates()}
+            locked={!Subscription.currentSubscription().currentUserFeatures().canUseTemplates()}
             text={this.saveTemplateButtonText()}
             onClick={this.onSaveTemplateButtonClick}
           />

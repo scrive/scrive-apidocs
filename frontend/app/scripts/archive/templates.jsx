@@ -201,9 +201,9 @@ module.exports = React.createClass({
 
             <List.ListAction
               name={localization.archive.templates.createnew}
-              locked={!Subscription.currentSubscription().canUseTemplates()}
+              locked={!Subscription.currentSubscription().currentUserFeatures().canUseTemplates()}
               onSelect={function() {
-                if (!Subscription.currentSubscription().canUseTemplates()) {
+                if (!Subscription.currentSubscription().currentUserFeatures().canUseTemplates()) {
                   self.refs.blockingModal.openContactUsModal();
                 } else {
                   self.createNewTemplate();

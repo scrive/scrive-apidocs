@@ -5,6 +5,7 @@ module FeatureFlags.Migrations (
 , featureFlagsAddDKAuthToSign
 , featureFlagsAddUserGroupID
 , featureFlagsDropCompanyID
+, featureFlagsAddStandardAuthAndFlagsForAdmin
 ) where
 
 import Control.Monad.Catch
@@ -110,3 +111,43 @@ featureFlagsDropCompanyID = Migration {
       runQuery_ $ sqlDropIndex tname $ (indexOnColumn "user_group_id")
 
   }
+
+featureFlagsAddStandardAuthAndFlagsForAdmin :: MonadDB m => Migration m
+featureFlagsAddStandardAuthAndFlagsForAdmin = Migration {
+    mgrTableName = tname
+  , mgrFrom = 6
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable tname
+        [ sqlAddColumn $
+            tblColumn { colName = "can_use_standard_authentication_to_view", colType = BoolT, colNullable = False, colDefault = Just "true" }
+        , sqlAddColumn $
+            tblColumn { colName = "can_use_standard_authentication_to_sign", colType = BoolT, colNullable = False, colDefault = Just "true" }
+        , sqlAddColumn $
+            tblColumn { colName = "flags_for_admin", colType = BoolT, colNullable = False, colDefault = Just "false" }
+        ]
+      runQuery_ $ sqlAlterTable tname
+        [ sqlAlterColumn "flags_for_admin" "DROP DEFAULT"
+        , sqlDropPK tname
+        , sqlAddPK tname (fromJust $ pkOnColumns ["user_group_id", "flags_for_admin"])
+        ]
+      runSQL_ $ "INSERT INTO feature_flags (flags_for_admin,user_group_id," <+>
+                " can_use_templates,can_use_branding,can_use_author_attachments," <+>
+                " can_use_signatory_attachments,can_use_mass_sendout," <+>
+                " can_use_sms_invitations,can_use_sms_confirmations," <+>
+                " can_use_dk_authentication_to_view,can_use_dk_authentication_to_sign," <+>
+                " can_use_no_authentication_to_view,can_use_no_authentication_to_sign," <+>
+                " can_use_se_authentication_to_view,can_use_se_authentication_to_sign," <+>
+                " can_use_sms_pin_authentication_to_view,can_use_sms_pin_authentication_to_sign," <+>
+                " can_use_standard_authentication_to_view,can_use_standard_authentication_to_sign" <+>
+                ") SELECT true, user_group_id," <+>
+                " can_use_templates,can_use_branding,can_use_author_attachments," <+>
+                " can_use_signatory_attachments,can_use_mass_sendout," <+>
+                " can_use_sms_invitations,can_use_sms_confirmations," <+>
+                " can_use_dk_authentication_to_view,can_use_dk_authentication_to_sign," <+>
+                " can_use_no_authentication_to_view,can_use_no_authentication_to_sign," <+>
+                " can_use_se_authentication_to_view,can_use_se_authentication_to_sign," <+>
+                " can_use_sms_pin_authentication_to_view,can_use_sms_pin_authentication_to_sign," <+>
+                " can_use_standard_authentication_to_view,can_use_standard_authentication_to_sign" <+>
+                "FROM feature_flags WHERE flags_for_admin = false"
+  }
+  where tname = tblName tableFeatureFlags

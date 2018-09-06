@@ -7,7 +7,7 @@ import DB
 tableFeatureFlags :: Table
 tableFeatureFlags = tblTable {
     tblName = "feature_flags"
-  , tblVersion = 6
+  , tblVersion = 7
   , tblColumns = [
       tblColumn { colName = "can_use_templates", colType = BoolT, colNullable = False, colDefault = Just "true" }
     , tblColumn { colName = "can_use_branding", colType = BoolT, colNullable = False, colDefault = Just "true" }
@@ -27,8 +27,11 @@ tableFeatureFlags = tblTable {
     , tblColumn { colName = "can_use_sms_pin_authentication_to_view", colType = BoolT, colNullable = False, colDefault = Just "true" }
     , tblColumn { colName = "can_use_dk_authentication_to_sign", colType = BoolT, colNullable = False, colDefault = Just "true" }
     , tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "can_use_standard_authentication_to_view", colType = BoolT, colNullable = False, colDefault = Just "true" }
+    , tblColumn { colName = "can_use_standard_authentication_to_sign", colType = BoolT, colNullable = False, colDefault = Just "true" }
+    , tblColumn { colName = "flags_for_admin", colType = BoolT, colNullable = False }
     ]
-  , tblPrimaryKey = pkOnColumn "user_group_id"
+  , tblPrimaryKey = pkOnColumns ["user_group_id", "flags_for_admin"]
   , tblForeignKeys = [
       (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade }
     ]

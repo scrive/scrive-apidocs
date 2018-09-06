@@ -9,19 +9,24 @@ var $ = require("jquery");
 module.exports = Backbone.Model.extend({
   initialize: function () {
     var self = this;
-    var subscription = new Subscription({});
     var user = new User({});
-    this.set({"subscription": subscription, "user": user});
-    subscription.bind("change", function () {
-      self.trigger("change");
-    });
     user.bind("change", function () {
       self.trigger("change");
     });
-    subscription.set({"ready": false}, {silent: true});
     user.set({"ready": false}, {silent: true});
-    subscription.fetch({cache: false, processData: true});
-    user.fetch({cache: false, processData: true});
+    this.set({"user": user});
+
+    var addSubscription = function (m, r, o) {
+      var subscription = new Subscription({current_user_is_admin: m.companyadmin()});
+      self.set({"subscription": subscription});
+      subscription.bind("change", function () {
+        self.trigger("change");
+      });
+      subscription.set({"ready": false}, {silent: true});
+      subscription.fetch({cache: false, processData: true});
+    };
+
+    user.fetch({cache: false, processData: true, success: addSubscription});
   },
   subscription: function () {
      return this.get("subscription");
@@ -30,7 +35,11 @@ module.exports = Backbone.Model.extend({
      return this.get("user");
   },
   ready: function () {
-     return this.subscription().ready() && this.user().ready();
+     if (this.subscription() && this.user()) {
+       return this.subscription().ready() && this.user().ready();
+     } else {
+       return false;
+     }
   },
   reload: function () {
     this.subscription().reload();

@@ -226,7 +226,7 @@ instance Arbitrary DeliveryStatus where
 instance Arbitrary FeatureFlags where
   arbitrary = do
     (a, b, c, d, e, f, g, h, i, j) <- arbitrary
-    (k, l, m, n, o) <- arbitrary
+    (k, l, m, n, o, p, q) <- arbitrary
     return $ FeatureFlags {
         ffCanUseTemplates = a
       , ffCanUseBranding  = b
@@ -243,7 +243,15 @@ instance Arbitrary FeatureFlags where
       , ffCanUseSEAuthenticationToSign = m
       , ffCanUseSMSPinAuthenticationToView = n
       , ffCanUseSMSPinAuthenticationToSign = o
+      , ffCanUseStandardAuthenticationToView = p
+      , ffCanUseStandardAuthenticationToSign = q
       }
+
+instance Arbitrary Features where
+  arbitrary = do
+    admin  <- arbitrary
+    others <- arbitrary
+    return $ Features { fAdminUsers = admin, fRegularUsers = others }
 
 instance Arbitrary UTCTime where
   arbitrary = posixSecondsToUTCTime . fromInteger <$> arbitrary

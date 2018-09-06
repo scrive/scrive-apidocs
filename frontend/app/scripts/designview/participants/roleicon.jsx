@@ -1,5 +1,6 @@
 var React = require("react");
 var Track = require("../../common/track");
+var Subscription = require("../../account/subscription");
 
 module.exports = React.createClass({
   onClick: function () {
@@ -8,7 +9,12 @@ module.exports = React.createClass({
       Where: "icon"
     });
     if (!sig.signs()) {
-      sig.makeSignatory();
+      var currFF = Subscription.currentSubscription().currentUserFeatures();
+      var args = {
+        authenticationToView: currFF.firstAllowedAuthenticationToView(),
+        authenticationToSign: currFF.firstAllowedAuthenticationToSign()
+      };
+      sig.makeSignatory(args);
     } else {
       sig.makeViewer();
     }

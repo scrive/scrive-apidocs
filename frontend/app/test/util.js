@@ -30,14 +30,14 @@ var Subscription = require("../scripts/account/subscription");
   };
 
   var createDocument = exports.createDocument = function (cb) {
-    var doc = new Document({ id: 0 });
-    doc.fetch({ processData: true, cache: false });
+    var doc = new Document({id: 0});
     doc.once("change:ready", function () {
-      doc.mainfile().fetch({ processData: true, cache: false });
       doc.mainfile().once("change:pages", function () {
         cb(doc);
       });
+      doc.mainfile().fetch({processData: true, cache: false});
     });
+    doc.fetch({processData: true, cache: false});
   };
 
   var waitUntil = exports.waitUntil = function (fn, cb) {

@@ -6,13 +6,16 @@ var BlockingModal = require("../../blocking/blockingmodal");
 
 module.exports = React.createClass({
   isAllowedAuthenticationMethod: function (am) {
-    if (!Subscription.currentSubscription().canUseSEAuthenticationToSign() && am == "se_bankid") {
+    var ff = Subscription.currentSubscription().currentUserFeatures();
+    if (!ff.canUseStandardAuthenticationToSign() && am == "standard") {
       return false;
-    } else if (!Subscription.currentSubscription().canUseNOAuthenticationToSign() && am == "no_bankid") {
+    } else if (!ff.canUseSEAuthenticationToSign() && am == "se_bankid") {
       return false;
-    } else if (!Subscription.currentSubscription().canUseDKAuthenticationToSign() && am == "dk_nemid") {
+    } else if (!ff.canUseNOAuthenticationToSign() && am == "no_bankid") {
       return false;
-    } else if (!Subscription.currentSubscription().canUseSMSPinAuthenticationToSign() && am == "sms_pin") {
+    } else if (!ff.canUseDKAuthenticationToSign() && am == "dk_nemid") {
+      return false;
+    } else if (!ff.canUseSMSPinAuthenticationToSign() && am == "sms_pin") {
       return false;
     } else {
       return true;

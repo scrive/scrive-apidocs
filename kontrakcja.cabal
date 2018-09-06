@@ -428,6 +428,7 @@ Library
                  , User.Utils
                  , UserGroup.Data
                  , UserGroup.Data.PaymentPlan
+                 , UserGroup.Data.Subscription
                  , UserGroup.Internal
                  , UserGroup.Labels
                  , UserGroup.Model

@@ -37,10 +37,10 @@ import qualified Data.Unjson as Unjson
 import qualified Text.StringTemplates.Fields as F
 
 import Administration.AdministrationView
+import API.V2.Parameters
 import AppView (renderFromBody, simpleHtmlResponse)
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
-import Chargeable.Model
 import DataRetentionPolicy
 import DataRetentionPolicy.Guards
 import DB
@@ -83,6 +83,7 @@ import User.UserControl
 import User.UserView
 import User.Utils
 import UserGroup.Data
+import UserGroup.Data.Subscription
 import UserGroup.Model
 import UserGroupAccounts.Model
 import Util.Actor
@@ -90,6 +91,7 @@ import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import Utils.Monoid
+import qualified API.V2 as V2
 import qualified Company.CompanyControl as Company
 import qualified Data.ByteString.RFC2397 as RFC2397
 import qualified UserGroupAccounts.UserGroupAccountsControl as UserGroupAccounts
@@ -687,60 +689,29 @@ handleAdminCompanyUsageStatsMonths :: Kontrakcja m => UserGroupID -> m JSValue
 handleAdminCompanyUsageStatsMonths ugid = onlySalesOrAdmin $ do
   getMonthsStats (UsageStatsForUserGroup ugid)
 
-handleCompanyGetSubscription :: Kontrakcja m => UserGroupID -> m JSValue
+handleCompanyGetSubscription :: Kontrakcja m => UserGroupID -> m Aeson.Value
 handleCompanyGetSubscription ugid = onlySalesOrAdmin $ do
   ug <- guardJustM . dbQuery . UserGroupGet $ ugid
-  users <- dbQuery . UserGroupGetUsers $ ugid
-  docsStartedThisMonth <- fromIntegral <$> (dbQuery $ GetNumberOfDocumentsStartedThisMonth $ ugid)
-  ff <- dbQuery $ GetFeatureFlags ugid
-  return $ subscriptionJSON ug users docsStartedThisMonth ff
+  unjsonToJSON unjsonDef <$> getSubscription ug
 
-handleCompanyUpdateSubscription :: Kontrakcja m => UserGroupID -> m ()
-handleCompanyUpdateSubscription ugid = onlySalesOrAdmin $ do
-  paymentPlan <- guardJustM $ join <$> fmap paymentPlanFromText <$> getField "payment_plan"
+handleCompanyUpdateSubscription :: Kontrakcja m => UserGroupID -> m Response
+handleCompanyUpdateSubscription ugid = onlySalesOrAdmin . V2.api $ do
   ug <- guardJustM . dbQuery . UserGroupGet $ ugid
-  let new_invoicing = case get ugInvoicing ug of
+  subscription <- apiV2ParameterObligatory (ApiV2ParameterJSON "subscription" unjsonDef)
+
+  let updateInvoicingWith pp = case get ugInvoicing ug of
         None         -> None
-        BillItem mpp -> BillItem . fmap (const paymentPlan) $ mpp
-        Invoice _    -> Invoice paymentPlan
-  dbUpdate . UserGroupUpdate . set ugInvoicing new_invoicing $ ug
+        BillItem mpp -> BillItem . fmap (const pp) $ mpp
+        Invoice _    -> Invoice pp
+      newInvoicing =
+        case ugSubPaymentPlan subscription of
+          Nothing -> get ugInvoicing ug
+          Just pp -> updateInvoicingWith pp
 
-  canUseTemplates <- fmap ((==) "true") $ guardJustM $ getField "can_use_templates"
-  canUseBranding <- fmap ((==) "true") $ guardJustM $ getField "can_use_branding"
-  canUseAuthorAttachments  <- fmap ((==) "true") $ guardJustM $ getField "can_use_author_attachments"
-  canUseSignatoryAttachments  <- fmap ((==) "true") $ guardJustM $ getField "can_use_signatory_attachments"
-  canUseMassSendout  <- fmap ((==) "true") $ guardJustM $ getField "can_use_mass_sendout"
+  dbUpdate . UserGroupUpdate . set ugInvoicing newInvoicing $ ug
+  updateFeaturesFor ugid (ugSubFeatures subscription)
+  return $ V2.Accepted ()
 
-  canUseSMSInvitations  <- fmap ((==) "true") $ guardJustM $ getField "can_use_sms_invitations"
-  canUseSMSConfirmations  <- fmap ((==) "true") $ guardJustM $ getField "can_use_sms_confirmations"
-
-  canUseDKAuthenticationToView  <- fmap ((==) "true") $ guardJustM $ getField "can_use_dk_authentication_to_view"
-  canUseDKAuthenticationToSign  <- fmap ((==) "true") $ guardJustM $ getField "can_use_dk_authentication_to_sign"
-  canUseNOAuthenticationToView  <- fmap ((==) "true") $ guardJustM $ getField "can_use_no_authentication_to_view"
-  canUseNOAuthenticationToSign  <- fmap ((==) "true") $ guardJustM $ getField "can_use_no_authentication_to_sign"
-  canUseSEAuthenticationToView  <- fmap ((==) "true") $ guardJustM $ getField "can_use_se_authentication_to_view"
-  canUseSEAuthenticationToSign  <- fmap ((==) "true") $ guardJustM $ getField "can_use_se_authentication_to_sign"
-  canUseSMSPinAuthenticationToSign  <- fmap ((==) "true") $ guardJustM $ getField "can_use_sms_pin_authentication_to_sign"
-  canUseSMSPinAuthenticationToView  <- fmap ((==) "true") $ guardJustM $ getField "can_use_sms_pin_authentication_to_view"
-
-  _ <- dbUpdate $ UpdateFeatureFlags ugid $ FeatureFlags {
-      ffCanUseTemplates = canUseTemplates
-    , ffCanUseBranding = canUseBranding
-    , ffCanUseAuthorAttachments = canUseAuthorAttachments
-    , ffCanUseSignatoryAttachments = canUseSignatoryAttachments
-    , ffCanUseMassSendout = canUseMassSendout
-    , ffCanUseSMSInvitations = canUseSMSInvitations
-    , ffCanUseSMSConfirmations = canUseSMSConfirmations
-    , ffCanUseDKAuthenticationToView = canUseDKAuthenticationToView
-    , ffCanUseDKAuthenticationToSign = canUseDKAuthenticationToSign
-    , ffCanUseNOAuthenticationToView = canUseNOAuthenticationToView
-    , ffCanUseNOAuthenticationToSign = canUseNOAuthenticationToSign
-    , ffCanUseSEAuthenticationToView = canUseSEAuthenticationToView
-    , ffCanUseSEAuthenticationToSign = canUseSEAuthenticationToSign
-    , ffCanUseSMSPinAuthenticationToSign = canUseSMSPinAuthenticationToSign
-    , ffCanUseSMSPinAuthenticationToView = canUseSMSPinAuthenticationToView
-    }
-  return ()
 
 jsonBrandedDomainsList ::Kontrakcja m => m Aeson.Value
 jsonBrandedDomainsList = onlySalesOrAdmin $ do

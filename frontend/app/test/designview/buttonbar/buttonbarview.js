@@ -26,6 +26,7 @@ describe("designview/buttonbarview", function () {
 
   before(function () {
     server = backend.createServer();
+    server.respondImmediately = true;
   });
 
   beforeEach(function (done) {
@@ -37,7 +38,6 @@ describe("designview/buttonbarview", function () {
 
   after(function () {
     server.restore();
-
   });
 
   afterEach(function () {
@@ -346,8 +346,12 @@ describe("designview/buttonbarview", function () {
   });
 
   it("should render save as template button locked if subscription doesn't allow templates", function () {
-    sinon.stub(Subscription.currentSubscription(), "canUseTemplates", function () {
-      return false;
+    sinon.stub(Subscription.currentSubscription(), "currentUserFeatures", function () {
+      return {
+        canUseTemplates: function () {
+          return false;
+        }
+      }
     });
 
     var component = renderComponent();
@@ -360,8 +364,12 @@ describe("designview/buttonbarview", function () {
 
   it("should render save template button locked if subscription doesn't allow templates", function () {
     sinon.stub(document_, "isTemplate").returns(true);
-    sinon.stub(Subscription.currentSubscription(), "canUseTemplates", function () {
-      return false;
+    sinon.stub(Subscription.currentSubscription(), "currentUserFeatures", function () {
+      return {
+        canUseTemplates: function () {
+          return false;
+        }
+      }
     });
 
     var component = renderComponent();

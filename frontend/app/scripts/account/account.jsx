@@ -87,7 +87,8 @@ var AccountView = React.createClass({
             </TrackingView>
           </TabViewer.TabViewerTab>
         }
-        {/* if */  this.props.companyAdmin && Subscription.currentSubscription().canUseBranding() &&
+        {/* if */  this.props.companyAdmin &&
+                   Subscription.currentSubscription().currentUserFeatures().canUseBranding() &&
           <TabViewer.TabViewerTab
             hash="branding-themes-email"
             aliases={[
@@ -105,7 +106,8 @@ var AccountView = React.createClass({
             </TrackingView>
           </TabViewer.TabViewerTab>
         }
-        {/* else */ this.props.companyAdmin && !Subscription.currentSubscription().canUseBranding() &&
+        {/* else */ this.props.companyAdmin &&
+                    !Subscription.currentSubscription().currentUserFeatures().canUseBranding() &&
           <TabViewer.TabViewerTab
             title={localization.account.companySettings}
             onClick={this.openBlockingModal}

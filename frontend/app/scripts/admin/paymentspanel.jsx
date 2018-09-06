@@ -33,113 +33,132 @@ module.exports = React.createClass({
         initiated: false,
       };
     },
+    initFeatureFlagsFromFeatures : function(features) {
+      return {
+        canUseTemplates: features.canUseTemplates(),
+        canUseBranding: features.canUseBranding(),
+        canUseAuthorAttachments: features.canUseAuthorAttachments(),
+        canUseSignatoryAttachments: features.canUseSignatoryAttachments(),
+        canUseMassSendout: features.canUseMassSendout(),
+        canUseSMSInvitations: features.canUseSMSInvitations(),
+        canUseSMSConfirmations: features.canUseSMSConfirmations(),
+        canUseDKAuthenticationToView: features.canUseDKAuthenticationToView(),
+        canUseDKAuthenticationToSign: features.canUseDKAuthenticationToSign(),
+        canUseNOAuthenticationToView: features.canUseNOAuthenticationToView(),
+        canUseNOAuthenticationToSign: features.canUseNOAuthenticationToSign(),
+        canUseSEAuthenticationToView: features.canUseSEAuthenticationToView(),
+        canUseSEAuthenticationToSign: features.canUseSEAuthenticationToSign(),
+        canUseSMSPinAuthenticationToView: features.canUseSMSPinAuthenticationToView(),
+        canUseSMSPinAuthenticationToSign: features.canUseSMSPinAuthenticationToSign(),
+        canUseStandardAuthenticationToView: features.canUseStandardAuthenticationToView(),
+        canUseStandardAuthenticationToSign: features.canUseStandardAuthenticationToSign()
+      };
+    },
     initStateFromSubscription : function() {
-      var subscription = this.state.subscription;
+      var adminFs   = this.state.subscription.featuresForAdminUsers();
+      var regularFs = this.state.subscription.featuresForRegularUsers();
+      var adminUserFeatures   = this.initFeatureFlagsFromFeatures(adminFs);
+      var regularUserFeatures = this.initFeatureFlagsFromFeatures(regularFs);
       this.setState({
         initiated: true,
-        canUseTemplates: subscription.canUseTemplates(),
-        canUseBranding: subscription.canUseBranding(),
-        canUseAuthorAttachments: subscription.canUseAuthorAttachments(),
-        canUseSignatoryAttachments: subscription.canUseSignatoryAttachments(),
-        canUseMassSendout: subscription.canUseMassSendout(),
-        canUseSMSInvitations: subscription.canUseSMSInvitations(),
-        canUseSMSConfirmations: subscription.canUseSMSConfirmations(),
-        canUseDKAuthenticationToView: subscription.canUseDKAuthenticationToView(),
-        canUseDKAuthenticationToSign: subscription.canUseDKAuthenticationToSign(),
-        canUseNOAuthenticationToView: subscription.canUseNOAuthenticationToView(),
-        canUseNOAuthenticationToSign: subscription.canUseNOAuthenticationToSign(),
-        canUseSEAuthenticationToView: subscription.canUseSEAuthenticationToView(),
-        canUseSEAuthenticationToSign: subscription.canUseSEAuthenticationToSign(),
-        canUseSMSPinAuthenticationToView : subscription.canUseSMSPinAuthenticationToView(),
-        canUseSMSPinAuthenticationToSign: subscription.canUseSMSPinAuthenticationToSign()
+        adminUserFeatures: adminUserFeatures,
+        regularUserFeatures: regularUserFeatures
       });
     },
     savePlan: function() {
       var self = this;
       this.state.subscription.updateSubscriptionAsAdmin({
-          selectedPlan : this.state.selectedPlan,
-          canUseTemplates : this.state.canUseTemplates,
-          canUseBranding : this.state.canUseBranding,
-          canUseAuthorAttachments : this.state.canUseAuthorAttachments,
-          canUseSignatoryAttachments : this.state.canUseSignatoryAttachments,
-          canUseMassSendout : this.state.canUseMassSendout,
-          canUseSMSInvitations : this.state.canUseSMSInvitations,
-          canUseSMSConfirmations : this.state.canUseSMSConfirmations,
-          canUseDKAuthenticationToView : this.state.canUseDKAuthenticationToView,
-          canUseDKAuthenticationToSign : this.state.canUseDKAuthenticationToSign,
-          canUseNOAuthenticationToView : this.state.canUseNOAuthenticationToView,
-          canUseNOAuthenticationToSign : this.state.canUseNOAuthenticationToSign,
-          canUseSEAuthenticationToView : this.state.canUseSEAuthenticationToView,
-          canUseSEAuthenticationToSign : this.state.canUseSEAuthenticationToSign,
-          canUseSMSPinAuthenticationToView : this.state.canUseSMSPinAuthenticationToView,
-          canUseSMSPinAuthenticationToSign : this.state.canUseSMSPinAuthenticationToSign
-        }, function() {
+          selectedPlan : self.state.selectedPlan,
+          adminUserFeatures: self.state.adminUserFeatures,
+          regularUserFeatures: self.state.regularUserFeatures
+        }, function () {
           new FlashMessage({ type: "success", content: "Saved" });
           self.reload();
         });
     },
     changePlan: function(v) {
-      var self = this;
-      self.setState({selectedPlan : v});
+      var adminUserFeatures = this.state.adminUserFeatures;
+      var regularUserFeatures = this.state.regularUserFeatures;
       if (v == "free") {
-        self.setState({
-          canUseDKAuthenticationToView : false,
-          canUseDKAuthenticationToSign : false,
-          canUseNOAuthenticationToView : false,
-          canUseNOAuthenticationToSign : false,
-          canUseSEAuthenticationToView : false,
-          canUseSEAuthenticationToSign : false
-        });
+          adminUserFeatures.canUseDKAuthenticationToView = false;
+          adminUserFeatures.canUseDKAuthenticationToSign = false;
+          adminUserFeatures.canUseNOAuthenticationToView = false;
+          adminUserFeatures.canUseNOAuthenticationToSign = false;
+          adminUserFeatures.canUseSEAuthenticationToView = false;
+          adminUserFeatures.canUseSEAuthenticationToSign = false;
+          regularUserFeatures.canUseDKAuthenticationToView = false;
+          regularUserFeatures.canUseDKAuthenticationToSign = false;
+          regularUserFeatures.canUseNOAuthenticationToView = false;
+          regularUserFeatures.canUseNOAuthenticationToSign = false;
+          regularUserFeatures.canUseSEAuthenticationToView = false;
+          regularUserFeatures.canUseSEAuthenticationToSign = false;
       } else {
-        self.setState({
-          canUseDKAuthenticationToView : true,
-          canUseDKAuthenticationToSign : true,
-          canUseNOAuthenticationToView : true,
-          canUseNOAuthenticationToSign : true,
-          canUseSEAuthenticationToView : true,
-          canUseSEAuthenticationToSign : true
-        });
+          adminUserFeatures.canUseDKAuthenticationToView = true;
+          adminUserFeatures.canUseDKAuthenticationToSign = true;
+          adminUserFeatures.canUseNOAuthenticationToView = true;
+          adminUserFeatures.canUseNOAuthenticationToSign = true;
+          adminUserFeatures.canUseSEAuthenticationToView = true;
+          adminUserFeatures.canUseSEAuthenticationToSign = true;
+          regularUserFeatures.canUseDKAuthenticationToView = true;
+          regularUserFeatures.canUseDKAuthenticationToSign = true;
+          regularUserFeatures.canUseNOAuthenticationToView = true;
+          regularUserFeatures.canUseNOAuthenticationToSign = true;
+          regularUserFeatures.canUseSEAuthenticationToView = true;
+          regularUserFeatures.canUseSEAuthenticationToSign = true;
       }
+      this.setState({
+          selectedPlan: v,
+          adminUserFeatures: adminUserFeatures,
+          regularUserFeatures: regularUserFeatures
+      });
     },
     componentWillUpdate: function() {
       if (!this.state.initiated) {
         this.initStateFromSubscription();
       }
     },
-    renderTROptionSeparator(desc) {
+    renderTROptionSeparator: function (desc) {
       return (
-        <tr>
-          <td>
-            <strong>{desc}</strong>
-          </td>
-        </tr>
+        <tr><td><strong>{desc}</strong></td></tr>
       );
     },
-    renderTRForOptionWithCheckbox(desc, stateProp) {
+    renderTRForOptionWithCheckbox: function (desc, stateProp) {
       var self = this;
+      var adminUserFeatures = this.state.adminUserFeatures;
+      var regularUserFeatures = this.state.regularUserFeatures;
       return (
         <tr>
+          <td>{desc}</td>
           <td>
-            {desc}
+            <Checkbox
+              disabled={!this.props.forAdmin}
+              checked={regularUserFeatures[stateProp]}
+              onChange={function (v) {
+                  regularUserFeatures[stateProp] = v;
+                  self.setState({regularUserFeatures: regularUserFeatures});
+              }}
+            />
           </td>
           <td>
             <Checkbox
               disabled={!this.props.forAdmin}
-              checked={this.state[stateProp]}
-              onChange={function(v) { self.setState({[stateProp]:v})}}
+              checked={adminUserFeatures[stateProp]}
+              onChange={function (v) {
+                  adminUserFeatures[stateProp] = v;
+                  self.setState({adminUserFeatures: adminUserFeatures});
+              }}
             />
           </td>
         </tr>
       );
     },
-
     render: function() {
       var self = this;
       var subscription = this.state.subscription;
       var selectedPlan = this.state.selectedPlan;
       return (
         <div className="tab-container account">
-          { /* if */ (subscription.ready()) &&
+          { /* if */ subscription.ready() && this.state.initiated &&
             <table>
               <tr>
                 <th style={{"width":"250px"}}>
@@ -180,6 +199,11 @@ module.exports = React.createClass({
                   />
                 </td>
               </tr>
+              <tr>
+                <td></td>
+                <td><strong>Regular users</strong></td>
+                <td><strong>Admin users</strong></td>
+              </tr>
               {this.renderTROptionSeparator("General features")}
               {this.renderTRForOptionWithCheckbox("Can use templates","canUseTemplates")}
               {this.renderTRForOptionWithCheckbox("Can use branding","canUseBranding")}
@@ -199,6 +223,10 @@ module.exports = React.createClass({
               {this.renderTRForOptionWithCheckbox("Can use NO authorization to sign","canUseNOAuthenticationToSign")}
               {this.renderTRForOptionWithCheckbox("Can use SE authorization to view","canUseSEAuthenticationToView")}
               {this.renderTRForOptionWithCheckbox("Can use SE authorization to sign","canUseSEAuthenticationToSign")}
+              {this.renderTROptionSeparator("Standard auth to view and sign")}
+              {this.renderTROptionSeparator("(disable to force use of eID/SMS)")}
+              {this.renderTRForOptionWithCheckbox("Can use Standard authorization to view","canUseStandardAuthenticationToView")}
+              {this.renderTRForOptionWithCheckbox("Can use Standard authorization to sign","canUseStandardAuthenticationToSign")}
               <tr>
                 <td>
                   <Button

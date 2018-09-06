@@ -16,7 +16,7 @@ module.exports = React.createClass({
     return false;
   },
   handleNewFromTemplate: function () {
-    if (!Subscription.currentSubscription().canUseTemplates())  {
+    if (!Subscription.currentSubscription().currentUserFeatures().canUseTemplates())  {
       this.refs.blockingModal.openContactUsModal();
     } else {
       Track.track_timeout("Click create from template", {}, function (e) {
@@ -66,7 +66,7 @@ module.exports = React.createClass({
                 type="main"
                 onClick={this.handleNewFromTemplate}
                 text={localization.header.template}
-                locked={!Subscription.currentSubscription().canUseTemplates()}
+                locked={!Subscription.currentSubscription().currentUserFeatures().canUseTemplates()}
               />
               <BlockingModal ref="blockingModal"/>
             </li>

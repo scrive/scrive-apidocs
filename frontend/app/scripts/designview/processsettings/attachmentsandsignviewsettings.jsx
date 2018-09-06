@@ -59,9 +59,9 @@ module.exports = React.createClass({
           <Button
             text={localization.designview.addRemove}
             className='design-view-action-process-left-column-attachments-author-button'
-            locked={!Subscription.currentSubscription().canUseAuthorAttachments()}
+            locked={!Subscription.currentSubscription().currentUserFeatures().canUseAuthorAttachments()}
             onClick= {function() {
-              if (!Subscription.currentSubscription().canUseAuthorAttachments())  {
+              if (!Subscription.currentSubscription().currentUserFeatures().canUseAuthorAttachments())  {
                 self.refs.blockingModal.openContactUsModal();
               } else {
                 Track.track('Open author attachments');
@@ -73,9 +73,9 @@ module.exports = React.createClass({
           <Button
             text={localization.designview.request}
             className="design-view-action-process-left-column-attachments-signatory-button"
-            locked={!Subscription.currentSubscription().canUseSignatoryAttachments()}
+            locked={!Subscription.currentSubscription().currentUserFeatures().canUseSignatoryAttachments()}
             onClick= {function() {
-             if (!Subscription.currentSubscription().canUseSignatoryAttachments())  {
+             if (!Subscription.currentSubscription().currentUserFeatures().canUseSignatoryAttachments())  {
                 self.refs.blockingModal.openContactUsModal();
               } else if(document.signatoriesWhoSign().length == 0 || document.authorIsOnlySignatory()) {
                 Track.track('Open signatory attachments but not enough participants');

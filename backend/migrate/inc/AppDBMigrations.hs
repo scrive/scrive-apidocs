@@ -138,4 +138,5 @@ kontraMigrations = [
   , userGroupSettingsSplitIdleDocTimeout
   , userGroupSettingsAddImmediateTrash
   , usersAddDataRetentionPolicy
+  , featureFlagsAddStandardAuthAndFlagsForAdmin
   ]

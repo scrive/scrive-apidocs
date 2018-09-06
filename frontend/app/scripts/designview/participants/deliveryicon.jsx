@@ -5,7 +5,7 @@ var Subscription = require("../../account/subscription");
 
 module.exports = React.createClass({
   isAllowedDeliveryMethod: function (dm) {
-    if (!Subscription.currentSubscription().canUseSMSInvitations()) {
+    if (!Subscription.currentSubscription().currentUserFeatures().canUseSMSInvitations()) {
       return dm != "mobile" && dm != "email_mobile";
     } else {
       return true;
@@ -34,9 +34,11 @@ module.exports = React.createClass({
     var sig = this.props.model;
     if (sig.emailDelivery()) {
       sig.setConfirmationDeliverySynchedWithDelivery("email");
-    } else if (sig.mobileDelivery()  && Subscription.currentSubscription().canUseSMSConfirmations()) {
+    } else if (sig.mobileDelivery() &&
+        Subscription.currentSubscription().currentUserFeatures().canUseSMSConfirmations()) {
       sig.setConfirmationDeliverySynchedWithDelivery("mobile");
-    } else if (sig.emailMobileDelivery() && Subscription.currentSubscription().canUseSMSConfirmations()) {
+    } else if (sig.emailMobileDelivery() &&
+        Subscription.currentSubscription().currentUserFeatures().canUseSMSConfirmations()) {
       sig.setConfirmationDeliverySynchedWithDelivery("email_mobile");
     } else if (sig.padDelivery()) {
       sig.setConfirmationDeliverySynchedWithDelivery("email");

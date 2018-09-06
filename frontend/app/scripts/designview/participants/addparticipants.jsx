@@ -18,16 +18,19 @@ module.exports = React.createClass({
     this.props.setParticipantDetail(undefined);
   },
   addSingleParticipant: function () {
+    var currFF = Subscription.currentSubscription().currentUserFeatures();
     var sig = new Signatory({
       document: this.props.document,
-      signs: true
+      signs: true,
+      authentication_method_to_view: currFF.firstAllowedAuthenticationToView(),
+      authentication_method_to_sign: currFF.firstAllowedAuthenticationToSign()
     });
     this.props.document.addExistingSignatory(sig);
     this.props.setParticipantDetail(sig);
     this.props.onAddSingle();
   },
   addMultisendParticipant: function () {
-    if (!Subscription.currentSubscription().canUseMassSendout())  {
+    if (!Subscription.currentSubscription().currentUserFeatures().canUseMassSendout())  {
       this.refs.blockingModal.openContactUsModal();
     } else {
       Track.track("Click add CSV");
@@ -60,7 +63,7 @@ module.exports = React.createClass({
                   ref="add-multi-button"
                   text={localization.designview.addMultisend}
                   onClick={this.addMultisendParticipant}
-                  locked={!Subscription.currentSubscription().canUseMassSendout()}
+                  locked={!Subscription.currentSubscription().currentUserFeatures().canUseMassSendout()}
                 />
                 <BlockingModal ref="blockingModal"/>
               </div>

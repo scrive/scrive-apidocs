@@ -4,10 +4,8 @@
 module User.JSON (
     userJSON,
     companyJSON,
-    subscriptionJSON,
     userStatsToJSON,
     companyStatsToJSON,
-    paymentPlanFromText,
     userNotDeletableReasonToString
     ) where
 
@@ -19,12 +17,10 @@ import Text.StringTemplate.GenericStandard ()
 import qualified Data.Text as T
 
 import DataRetentionPolicy
-import FeatureFlags.Model
 import MinutesTime
 import PadApplication.Data
 import User.Model
 import UserGroup.Data
-import UserGroup.Data.PaymentPlan
 import Util.HasSomeUserInfo
 
 userJSON :: User -> UserGroup -> JSValue
@@ -67,39 +63,6 @@ companyJSON forAdmin ug = runJSONGen $ do
   where
     unpack :: T.Text -> String
     unpack = T.unpack
-
-paymentPlanText :: PaymentPlan -> String
-paymentPlanText FreePlan       = "free"
-paymentPlanText OnePlan        = "one"
-paymentPlanText TeamPlan       = "team"
-paymentPlanText EnterprisePlan = "enterprise"
-paymentPlanText TrialPlan      = "trial"
-
-paymentPlanFromText :: String -> Maybe PaymentPlan
-paymentPlanFromText s = find (\p -> s == paymentPlanText p) allAvailablePlans
-  where
-    allAvailablePlans = [FreePlan, OnePlan, TeamPlan, EnterprisePlan, TrialPlan]
-
-subscriptionJSON  :: UserGroup -> [User] -> Int -> FeatureFlags -> JSValue
-subscriptionJSON ug users startedLastMonth ff = runJSONGen $ do
-  value "payment_plan" . paymentPlanText . fromJust . ugPaymentPlan $ ug
-  value "number_of_users" $ length users
-  value "started_last_month" $ startedLastMonth
-  value "can_use_templates" $ ffCanUseTemplates ff
-  value "can_use_branding" $ ffCanUseBranding ff
-  value "can_use_author_attachments" $ ffCanUseAuthorAttachments ff
-  value "can_use_signatory_attachments" $ ffCanUseSignatoryAttachments ff
-  value "can_use_mass_sendout" $ ffCanUseMassSendout ff
-  value "can_use_sms_invitations" $ ffCanUseSMSInvitations ff
-  value "can_use_sms_confirmations" $ ffCanUseSMSConfirmations ff
-  value "can_use_dk_authentication_to_view" $ ffCanUseDKAuthenticationToView ff
-  value "can_use_dk_authentication_to_sign" $ ffCanUseDKAuthenticationToSign ff
-  value "can_use_no_authentication_to_view" $ ffCanUseNOAuthenticationToView ff
-  value "can_use_no_authentication_to_sign" $ ffCanUseNOAuthenticationToSign ff
-  value "can_use_se_authentication_to_view" $ ffCanUseSEAuthenticationToView ff
-  value "can_use_se_authentication_to_sign" $ ffCanUseSEAuthenticationToSign ff
-  value "can_use_sms_pin_authentication_to_view" $ ffCanUseSMSPinAuthenticationToView ff
-  value "can_use_sms_pin_authentication_to_sign" $ ffCanUseSMSPinAuthenticationToSign ff
 
 userStatsToJSON :: (UTCTime -> String) -> [UserUsageStats] -> JSValue
 userStatsToJSON formatTime uuss = runJSONGen . objects "stats" . for uuss $ \uus -> do

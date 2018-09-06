@@ -52,8 +52,9 @@ describe("admin/paymentspanel", function () {
   it("should render the payments panel", function () {
     var component = renderComponent();
     var checkboxes = $(".checkbox", component.getDOMNode());
-    // We should have 15 checkboxes (one for each option)
-    assert.equal(checkboxes.size(), 15);
+    // We should have 17 x 2 checkboxes. One for each option.
+    // 2 sets - one for regular user, one for admin
+    assert.equal(checkboxes.size(), 34);
     // We should have one select (for price plan)
     var selects = $(".select", component.getDOMNode());
     assert.equal(selects.size(), 1);
@@ -69,8 +70,9 @@ describe("admin/paymentspanel", function () {
     var checkboxes = $(".checkbox.disabled", component.getDOMNode());
 
     component.forceUpdate();
-    // We should have 15 disabled checkboxes (one for each option)
-    assert.equal(checkboxes.size(), 15);
+    // We should have 17 x 2 checkboxes. One for each option.
+    // 2 sets - one for regular user, one for admin
+    assert.equal(checkboxes.size(), 34);
 
   });
 
@@ -88,30 +90,53 @@ describe("admin/paymentspanel", function () {
   it("should render checked and unchecked checkboxes based on state", function () {
     var component = renderComponent();
     component.setState({
-      canUseTemplates: true,
-      canUseBranding: true,
-      canUseAuthorAttachments: true,
-      canUseSignatoryAttachments: false,
-      canUseMassSendout: true,
-      canUseSMSInvitations: true,
-      canUseSMSConfirmations: true,
-      canUseDKAuthenticationToView: false,
-      canUseDKAuthenticationToSign: true,
-      canUseNOAuthenticationToView: true,
-      canUseNOAuthenticationToSign: true,
-      canUseSEAuthenticationToView: true,
-      canUseSEAuthenticationToSign: true,
-      canUseSMSPinAuthenticationToView: true,
-      canUseSMSPinAuthenticationToSign: true
+      adminUserFeatures: {
+        canUseTemplates: true,
+        canUseBranding: true,
+        canUseAuthorAttachments: true,
+        canUseSignatoryAttachments: false,
+        canUseMassSendout: true,
+        canUseSMSInvitations: true,
+        canUseSMSConfirmations: true,
+        canUseDKAuthenticationToView: false,
+        canUseDKAuthenticationToSign: true,
+        canUseNOAuthenticationToView: true,
+        canUseNOAuthenticationToSign: true,
+        canUseSEAuthenticationToView: true,
+        canUseSEAuthenticationToSign: true,
+        canUseSMSPinAuthenticationToView: true,
+        canUseSMSPinAuthenticationToSign: true,
+        canUseStandardAuthenticationToView: true,
+        canUseStandardAuthenticationToSign: true
+      },
+      regularUserFeatures: {
+        canUseTemplates: true,
+        canUseBranding: true,
+        canUseAuthorAttachments: true,
+        canUseSignatoryAttachments: false,
+        canUseMassSendout: true,
+        canUseSMSInvitations: true,
+        canUseSMSConfirmations: true,
+        canUseDKAuthenticationToView: false,
+        canUseDKAuthenticationToSign: true,
+        canUseNOAuthenticationToView: true,
+        canUseNOAuthenticationToSign: true,
+        canUseSEAuthenticationToView: true,
+        canUseSEAuthenticationToSign: true,
+        canUseSMSPinAuthenticationToView: true,
+        canUseSMSPinAuthenticationToSign: true,
+        canUseStandardAuthenticationToView: true,
+        canUseStandardAuthenticationToSign: true
+      }
     });
     component.forceUpdate();
     var checkedCheckboxes = $(".checkbox.checked", component.getDOMNode());
-    assert.equal(checkedCheckboxes.size(), 13); // Two options where set to false
+    assert.equal(checkedCheckboxes.size(), 30); // 4 options were set to false
 
     TestUtils.Simulate.click(checkedCheckboxes[0]); // Lets pick one to uncheck
     component.forceUpdate();
     var changedCheckedCheckboxes = $(".checkbox.checked", component.getDOMNode());
-    assert.equal(changedCheckedCheckboxes.size(), 12);
+    assert.equal(changedCheckedCheckboxes.size(), 29);
 
 
   });

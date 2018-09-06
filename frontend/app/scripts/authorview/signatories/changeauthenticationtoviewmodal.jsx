@@ -192,6 +192,7 @@ var Modal = require("../../common/modal");
     },
 
     getAuthenticationMethodOptions: function () {
+      var ff = Subscription.currentSubscription().currentUserFeatures();
       var model = this.props.model;
       var sig = model.signatory();
       var options = [];
@@ -201,7 +202,11 @@ var Modal = require("../../common/modal");
         selected: model.isAuthenticationStandard(),
         value: model.standardAuthenticationValue()
       };
-      options.push(standard);
+      if (sig.standardAuthenticationToView() ||
+          ff.canUseStandardAuthenticationToView()
+         ) {
+        options.push(standard);
+      }
 
 
       var seBankid = {
@@ -211,7 +216,7 @@ var Modal = require("../../common/modal");
       };
 
       if (sig.seBankIDAuthenticationToView() ||
-         (Subscription.currentSubscription().canUseSEAuthenticationToView()
+         (ff.canUseSEAuthenticationToView()
            && !sig.dkNemIDAuthenticationToSign()
            && !sig.noBankIDAuthenticationToSign())) {
         options.push(seBankid);
@@ -224,7 +229,7 @@ var Modal = require("../../common/modal");
       };
 
       if (sig.noBankIDAuthenticationToView() ||
-         (Subscription.currentSubscription().canUseNOAuthenticationToView()
+         (ff.canUseNOAuthenticationToView()
            && !sig.dkNemIDAuthenticationToSign()
            && !sig.seBankIDAuthenticationToSign())
       ) {
@@ -238,7 +243,7 @@ var Modal = require("../../common/modal");
       };
 
       if (sig.dkNemIDAuthenticationToView() ||
-         (Subscription.currentSubscription().canUseDKAuthenticationToView()
+         (ff.canUseDKAuthenticationToView()
           && !sig.seBankIDAuthenticationToSign()
           && !sig.noBankIDAuthenticationToSign())
       ) {
@@ -252,7 +257,7 @@ var Modal = require("../../common/modal");
       };
 
       if (sig.smsPinAuthenticationToView() ||
-          Subscription.currentSubscription().canUseSMSPinAuthenticationToView()
+          ff.canUseSMSPinAuthenticationToView()
       ) {
         options.push(smsPin);
       }

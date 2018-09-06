@@ -12,7 +12,6 @@ var ParticipantsTabView = require("./participants/participants");
 var ProcessSettingsTabView = require("./processsettings/processsettings");
 var TabBarView = require("./tabbar").TabBarView;
 var TabView = require("./tabbar").TabView;
-var Subscription = require("../account/subscription");
 var DragAndDropUploaderView = require("./draganddropuploaderview");
 var UsageInfo = require("./usageinfo/usageinfo");
 

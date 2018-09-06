@@ -72,6 +72,7 @@ import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import Doc.Tokens.Model
 import EvidenceLog.Model (CurrentEvidenceEventType(..), InsertEvidenceEventWithAffectedSignatoryAndMsg(..))
+import FeatureFlags.Model
 import File.File (fileid)
 import File.Model
 import File.Storage (getFileIDContents)
@@ -85,6 +86,8 @@ import Redirect
 import User.Email
 import User.Model
 import User.Utils
+import UserGroup.Data.Subscription
+import UserGroup.Model (UserGroupGet(..))
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.MonadUtils
@@ -107,6 +110,13 @@ handleNewDocument = withUser $ \user -> do
   doc <- dbUpdate $ NewDocument user (replace "  " " " $ title ++ " " ++ timestamp) Signable timezone 1 actor
   -- Default document on the frontend has different requirements,
   -- this sets up the signatories to match those requirements.
+  (authToView, authToSign) <- do
+    ug <- guardJustM . dbQuery $ UserGroupGet (usergroupid user)
+    features <- ugSubFeatures <$> getSubscription ug
+    let ff = if useriscompanyadmin user
+                then fAdminUsers features
+                else fRegularUsers features
+    return (firstAllowedAuthenticationToView ff, firstAllowedAuthenticationToSign ff)
   withDocument doc $ do
       authorsiglink <- guardJust $ find (\sl -> signatoryisauthor sl) (documentsignatorylinks doc)
       othersiglink  <- guardJust $ find (\sl -> not $ signatoryisauthor sl)  (documentsignatorylinks doc)
@@ -151,10 +161,17 @@ handleNewDocument = withUser $ \user -> do
                 , scfPlacements             = []
               }
             ]
-          othersiglink' = othersiglink { signatorysignorder = SignOrder 1
-                                       , signatoryfields = fields
-                                       }
-      _ <- dbUpdate $ ResetSignatoryDetails [authorsiglink, othersiglink'] actor
+          authorsiglink' = authorsiglink
+            { signatorylinkauthenticationtoviewmethod = authToView
+            , signatorylinkauthenticationtosignmethod = authToSign
+            }
+          othersiglink' = othersiglink
+            { signatorysignorder = SignOrder 1
+            , signatoryfields = fields
+            , signatorylinkauthenticationtoviewmethod = authToView
+            , signatorylinkauthenticationtosignmethod = authToSign
+            }
+      _ <- dbUpdate $ ResetSignatoryDetails [authorsiglink', othersiglink'] actor
       dbUpdate $ SetDocumentUnsavedDraft True
       logInfo "New document created" $ logObject_ doc
       return $ internalResponse $ LinkIssueDoc (documentid doc)

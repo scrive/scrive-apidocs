@@ -43,7 +43,6 @@ module.exports = React.createClass({
       return (
         <div className="tab-container">
           <div className="tab-content subscription">
-
             { /* if */ (!subscription.hasFreePlan()) &&
               <div className="subscription-plan">
                 <div className="account-header">
@@ -72,7 +71,7 @@ module.exports = React.createClass({
                 email={this.state.model.user().email()}
               />
            }
-         </div>
+          </div>
         </div>
       );
     }

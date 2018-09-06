@@ -140,23 +140,23 @@ var EmailModal = require("../../common/email_modal");
 
     hasChangeAuthenticationToView: function () {
       var signatory = this.props.signatory;
-      var currentSubscription = Subscription.currentSubscription();
+      var currentFeatures = Subscription.currentSubscription().currentUserFeatures();
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
         && signatory.document().pending()
         && signatory.signs()
         && !signatory.hasSigned()
         && !signatory.hasAuthenticatedToView()
-        && (!signatory.standardAuthenticationToView() || currentSubscription.canUseNonstandardAuthenticationToView());
+        && (!signatory.standardAuthenticationToView() || currentFeatures.canUseNonstandardAuthenticationToView());
 
     },
     hasChangeAuthenticationToSign: function () {
       var signatory = this.props.signatory;
-      var currentSubscription = Subscription.currentSubscription();
+      var currentFeatures = Subscription.currentSubscription().currentUserFeatures();
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
         && signatory.document().pending()
         && signatory.signs()
         && !signatory.hasSigned()
-        && (!signatory.standardAuthenticationToSign() || currentSubscription.canUseNonstandardAuthenticationToSign());
+        && (!signatory.standardAuthenticationToSign() || currentFeatures.canUseNonstandardAuthenticationToSign());
     },
 
     hasChangeMobileOption: function () {

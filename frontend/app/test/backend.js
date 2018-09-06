@@ -5,6 +5,7 @@ var profile = require("./data/profile");
 var file = require("./data/file");
 var evidence_attachments = require("./data/evidence_attachments");
 var apilog = require("./data/apilog");
+var sub = require("./data/subscription");
   var exports = {};
 
   exports.createServer = function () {
@@ -88,23 +89,17 @@ var apilog = require("./data/apilog");
     });
 
     server.respondWith(/\/adminonly\/companyadmin\/getsubscription\/(\d+).+?$/, function (xhr, id) {
-      var clone = getDocumentById(id);
-      var subscriptionJSON = {
-          "payment_plan" : "enterprise",
-          "number_of_users" : 1,
-          "started_last_month" : 0
-      };
-      xhr.respond(200, { "Content-Type": "application/json" }, JSON.stringify(subscriptionJSON));
+      xhr.respond(
+        200, {"Content-Type": "application/json"},
+        JSON.stringify(_.clone(sub))
+      );
     });
 
     server.respondWith(/\/api\/frontend\/getsubscription/, function (xhr, id) {
-      var clone = getDocumentById(id);
-      var subscriptionJSON = {
-          "payment_plan" : "enterprise",
-          "number_of_users" : 1,
-          "started_last_month" : 0
-      };
-      xhr.respond(200, { "Content-Type": "application/json" }, JSON.stringify(subscriptionJSON));
+      xhr.respond(
+        200, {"Content-Type": "application/json"},
+        JSON.stringify(_.clone(sub))
+      );
     });
 
     server.respondWith(/\/api\/frontend\/apilog\/list/, function (xhr) {

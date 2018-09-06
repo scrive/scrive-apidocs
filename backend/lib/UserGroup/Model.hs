@@ -94,14 +94,18 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
       sqlSet "sms_originator" . get uguiSmsOriginator $ ugui
       sqlSet "favicon" . get uguiFavicon $ ugui
 
-    runQuery_ $ sqlInsert "feature_flags" $ do
-      sqlSet "can_use_dk_authentication_to_view" False
-      sqlSet "can_use_dk_authentication_to_sign" False
-      sqlSet "can_use_no_authentication_to_view" False
-      sqlSet "can_use_no_authentication_to_sign" False
-      sqlSet "can_use_se_authentication_to_view" False
-      sqlSet "can_use_se_authentication_to_sign" False
-      sqlSet "user_group_id" ugid
+    let newAccountFlags forAdmins = do
+          sqlSet "can_use_dk_authentication_to_view" False
+          sqlSet "can_use_dk_authentication_to_sign" False
+          sqlSet "can_use_no_authentication_to_view" False
+          sqlSet "can_use_no_authentication_to_sign" False
+          sqlSet "can_use_se_authentication_to_view" False
+          sqlSet "can_use_se_authentication_to_sign" False
+          sqlSet "user_group_id" ugid
+          sqlSet "flags_for_admin" forAdmins
+    runQuery_ . sqlInsert "feature_flags" $ newAccountFlags False
+    runQuery_ . sqlInsert "feature_flags" $ newAccountFlags True
+
     return . set ugID ugid $ ug
 
 data UserGroupGet = UserGroupGet UserGroupID

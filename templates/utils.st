@@ -26,7 +26,8 @@ currentSubscription=
         }
 
         var fromCurrentSubscriptionTemplate = {
-          subscriptionData: subscriptionData
+          subscriptionData: subscriptionData,
+          subscriptionUserIsCompanyAdmin: $subscriptionuseriscompanyadmin$
         };
 </script>
 <script src="$cdnbaseurl$/compiled/all/current_subscription-$versioncode$.js" crossorigin="anonymous"></script>

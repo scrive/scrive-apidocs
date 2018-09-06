@@ -28,13 +28,14 @@ describe("designview/designview", function () {
 
   before(function () {
     server = backend.createServer();
+    server.respondImmediately = true;
   });
 
   beforeEach(function (done) {
     util.createDocument(function (doc) {
       document_ = doc;
       done();
-    });
+  });
 
 
   });

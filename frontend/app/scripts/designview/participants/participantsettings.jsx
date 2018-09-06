@@ -39,7 +39,7 @@ module.exports = React.createClass({
     var self = this;
     var sig = this.props.model;
     var deliveryTypes = sig.isLastViewer() ? ["none"] : ["email", "pad", "mobile", "email_mobile", "api"];
-    if (!Subscription.currentSubscription().canUseSMSInvitations()) {
+    if (!Subscription.currentSubscription().currentUserFeatures().canUseSMSInvitations()) {
 
       if (sig.delivery() != "mobile") {
         deliveryTypes = _.without(deliveryTypes, "mobile");
@@ -78,20 +78,23 @@ module.exports = React.createClass({
     var sig = this.props.model;
     var authTypes = !sig.signs() ? ["standard"] : ["standard", "se_bankid", "no_bankid", "dk_nemid", "sms_pin"];
 
-    if (!Subscription.currentSubscription().canUseSEAuthenticationToView() && !sig.seBankIDAuthenticationToView()) {
-      authTypes = _.without(authTypes, "se_bankid");
-    }
-
-    if (!Subscription.currentSubscription().canUseNOAuthenticationToView() && !sig.noBankIDAuthenticationToView()) {
-      authTypes = _.without(authTypes, "no_bankid");
-    }
-
-    if (!Subscription.currentSubscription().canUseDKAuthenticationToView() && !sig.dkNemIDAuthenticationToView()) {
-      authTypes = _.without(authTypes, "dk_nemid");
-    }
-
-    if (!Subscription.currentSubscription().canUseSMSPinAuthenticationToView() && !sig.smsPinAuthenticationToView()) {
-      authTypes = _.without(authTypes, "sms_pin");
+    if (sig.signs()) {
+      var ff = Subscription.currentSubscription().currentUserFeatures();
+      if (!ff.canUseStandardAuthenticationToView() && !sig.standardAuthenticationToView()) {
+        authTypes = _.without(authTypes, "standard");
+      }
+      if (!ff.canUseSEAuthenticationToView() && !sig.seBankIDAuthenticationToView()) {
+        authTypes = _.without(authTypes, "se_bankid");
+      }
+      if (!ff.canUseNOAuthenticationToView() && !sig.noBankIDAuthenticationToView()) {
+        authTypes = _.without(authTypes, "no_bankid");
+      }
+      if (!ff.canUseDKAuthenticationToView() && !sig.dkNemIDAuthenticationToView()) {
+        authTypes = _.without(authTypes, "dk_nemid");
+      }
+      if (!ff.canUseSMSPinAuthenticationToView() && !sig.smsPinAuthenticationToView()) {
+        authTypes = _.without(authTypes, "sms_pin");
+      }
     }
 
     authTypes = _.filter(authTypes, function (authToView) {
@@ -120,20 +123,23 @@ module.exports = React.createClass({
     var sig = this.props.model;
     var authTypes = !sig.signs() ? ["standard"] : ["standard", "se_bankid", "no_bankid", "dk_nemid", "sms_pin"];
 
-    if (!Subscription.currentSubscription().canUseSEAuthenticationToSign() && !sig.seBankIDAuthenticationToSign()) {
-      authTypes = _.without(authTypes, "se_bankid");
-    }
-
-    if (!Subscription.currentSubscription().canUseNOAuthenticationToSign() && !sig.noBankIDAuthenticationToSign()) {
-      authTypes = _.without(authTypes, "no_bankid");
-    }
-
-    if (!Subscription.currentSubscription().canUseDKAuthenticationToSign() && !sig.dkNemIDAuthenticationToSign()) {
-      authTypes = _.without(authTypes, "dk_nemid");
-    }
-
-    if (!Subscription.currentSubscription().canUseSMSPinAuthenticationToSign() && !sig.smsPinAuthenticationToSign()) {
-      authTypes = _.without(authTypes, "sms_pin");
+    if (sig.signs()) {
+      var ff = Subscription.currentSubscription().currentUserFeatures();
+      if (!ff.canUseStandardAuthenticationToSign() && !sig.standardAuthenticationToSign()) {
+        authTypes = _.without(authTypes, "standard");
+      }
+      if (!ff.canUseSEAuthenticationToSign() && !sig.seBankIDAuthenticationToSign()) {
+        authTypes = _.without(authTypes, "se_bankid");
+      }
+      if (!ff.canUseNOAuthenticationToSign() && !sig.noBankIDAuthenticationToSign()) {
+        authTypes = _.without(authTypes, "no_bankid");
+      }
+      if (!ff.canUseDKAuthenticationToSign() && !sig.dkNemIDAuthenticationToSign()) {
+        authTypes = _.without(authTypes, "dk_nemid");
+      }
+      if (!ff.canUseSMSPinAuthenticationToSign() && !sig.smsPinAuthenticationToSign()) {
+        authTypes = _.without(authTypes, "sms_pin");
+      }
     }
 
     authTypes = _.filter(authTypes, function (authToSign) {
@@ -164,7 +170,7 @@ module.exports = React.createClass({
       deliveryTypes = _.without(deliveryTypes, "none");
     }
 
-    if (!Subscription.currentSubscription().canUseSMSConfirmations()) {
+    if (!Subscription.currentSubscription().currentUserFeatures().canUseSMSConfirmations()) {
 
       if (sig.confirmationdelivery() != "mobile") {
         deliveryTypes = _.without(deliveryTypes, "mobile");
@@ -268,7 +274,12 @@ module.exports = React.createClass({
                   Where: "Icon"
                 });
                 if (v === "signatory") {
-                  sig.makeSignatory();
+                  var currFF = Subscription.currentSubscription().currentUserFeatures();
+                  var args = {
+                    authenticationToView: currFF.firstAllowedAuthenticationToView(),
+                    authenticationToSign: currFF.firstAllowedAuthenticationToSign()
+                  };
+                  sig.makeSignatory(args);
                 } else if (v === "viewer") {
                   sig.makeViewer();
                 }

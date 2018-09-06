@@ -3,7 +3,9 @@ var Subscription = require("../../account/subscription");
 var $ = require("jquery");
 
 $(function () {
-  if (fromCurrentSubscriptionTemplate.subscriptionData) {
-    Subscription.initCurrentSubscription(fromCurrentSubscriptionTemplate.subscriptionData);
+  var subscriptionData = fromCurrentSubscriptionTemplate.subscriptionData;
+  var subscriptionUserIsCompanyAdmin = fromCurrentSubscriptionTemplate.subscriptionUserIsCompanyAdmin;
+  if (subscriptionData) {
+    Subscription.initCurrentSubscription(subscriptionData, subscriptionUserIsCompanyAdmin);
   }
 });

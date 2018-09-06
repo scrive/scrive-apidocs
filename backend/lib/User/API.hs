@@ -36,12 +36,10 @@ import qualified Data.Map as Map
 import qualified Data.Text as T
 
 import API.Monad.V1
-import Chargeable.Model
 import Context
 import DataRetentionPolicy
 import DataRetentionPolicy.Guards
 import DB
-import FeatureFlags.Model
 import Happstack.Fields
 import InputValidation
 import IPAddress
@@ -72,6 +70,7 @@ import User.UserControl
 import User.UserView
 import User.Utils
 import UserGroup.Data
+import UserGroup.Data.Subscription
 import UserGroup.Model
 import Util.HasSomeUserInfo
 import Util.MonadUtils
@@ -243,10 +242,8 @@ apiCallGetSubscription :: Kontrakcja m => m Response
 apiCallGetSubscription =  api $ do
   (user, _ , _) <- getAPIUserWithAnyPrivileges
   ug <- getUserGroupForUser user
-  users <- dbQuery . UserGroupGetUsers . get ugID $ ug
-  docsStartedThisMonth <- fromIntegral <$> (dbQuery . GetNumberOfDocumentsStartedThisMonth . get ugID $ ug)
-  ff <- dbQuery . GetFeatureFlags . get ugID $ ug
-  return $ Ok $ subscriptionJSON ug users docsStartedThisMonth ff
+  sub <- getSubscription ug
+  return . Ok $ unjsonToJSON unjsonDef sub
 
 apiCallChangeUserPassword :: Kontrakcja m => m Response
 apiCallChangeUserPassword = api $ do

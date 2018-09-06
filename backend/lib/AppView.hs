@@ -40,15 +40,13 @@ import qualified Text.StringTemplates.Fields as F
 import Analytics.Include
 import BrandedDomain.BrandedDomain
 import Branding.Adler32
-import Chargeable.Model
 import DB
-import FeatureFlags.Model
 import Kontra
 import ThirdPartyStats.Core
-import User.JSON
 import User.Lang
 import User.Model
 import UserGroup.Data
+import UserGroup.Data.Subscription
 import UserGroup.Model
 import Utils.HTTP
 import Utils.Monoid
@@ -112,16 +110,12 @@ userGroupUIForPage = do
          return . Just $ (get ugID ug, get ugUI ug)
        _ -> return Nothing
 
-currentSubscriptionJSON :: Kontrakcja m => m (Maybe JSON.JSValue)
+currentSubscriptionJSON :: Kontrakcja m => m (Maybe A.Value)
 currentSubscriptionJSON = do
   mug <- userGroupForPage
   case mug of
-    Just ug -> do
-      users <- dbQuery $ UserGroupGetUsers $ get ugID $ ug
-      docsStartedThisMonth <- fromIntegral <$> (dbQuery . GetNumberOfDocumentsStartedThisMonth . get ugID $ ug)
-      ff <- dbQuery . GetFeatureFlags . get ugID $ ug
-      return $ Just $ subscriptionJSON ug users docsStartedThisMonth ff
-    _ -> return Nothing
+    Just ug -> Just . unjsonToJSON unjsonDef <$> getSubscription ug
+    Nothing -> return Nothing
 
 notFoundPage :: Kontrakcja m => m Response
 notFoundPage = pageWhereLanguageCanBeInUrl $ do
@@ -212,7 +206,12 @@ standardPageFields ctx mugidandui ad = do
   F.object "analytics" $ analyticsTemplates ad
   F.value "trackjstoken" (get ctxtrackjstoken ctx)
   F.valueM "brandinghash" $ brandingAdler32 ctx mugidandui
-  F.valueM "b64subscriptiondata" $  fmap (B64.encode . BSL.fromString . JSON.encode) <$> currentSubscriptionJSON
+  F.valueM "b64subscriptiondata" $  fmap (B64.encode . A.encode) <$> currentSubscriptionJSON
+  F.value  "subscriptionuseriscompanyadmin" $
+    case fmap useriscompanyadmin (get ctxmaybeuser ctx) of
+      Nothing -> "undefined"
+      Just True -> "true"
+      Just False -> "false"
   F.value "title" $ case emptyToNothing . strip . T.unpack =<< get uguiBrowserTitle . snd =<< mugidandui of
                       Just ctitle -> ctitle ++ " - " ++
                                      (get (bdBrowserTitle . ctxbrandeddomain) ctx)

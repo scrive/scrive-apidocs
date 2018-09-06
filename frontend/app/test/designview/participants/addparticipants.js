@@ -50,8 +50,12 @@ var TestUtils = React.addons.TestUtils;
         onAddSingle: function() {}
         , element: $("body")[0]
       }));
-      sinon.stub(Subscription.currentSubscription(), "canUseMassSendout", function () {
-        return false;
+      sinon.stub(Subscription.currentSubscription(), "currentUserFeatures", function () {
+        return {
+          canUseMassSendout: function () {
+            return false;
+          }
+        }
       });
       addParticipants.forceUpdate();
       assert.ok($(".design-view-action-participant-new-multi .button.locked",addParticipants.getDOMNode()).length > 0);

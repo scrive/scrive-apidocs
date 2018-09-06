@@ -198,17 +198,21 @@ var Modal = require("../../common/modal");
     },
 
     getAuthenticationOptions: function () {
+      var ff = Subscription.currentSubscription().currentUserFeatures();
       var model = this.props.model;
       var sig = model.signatory();
-
       var options = [];
+
       var standard = {
         name: localization.docview.signatory.authenticationToSignStandard,
         selected: model.isNewAuthenticationStandard(),
         value: "standard"
       };
-
-      options.push(standard);
+      if (sig.standardAuthenticationToSign() ||
+          ff.canUseStandardAuthenticationToSign()
+         ) {
+        options.push(standard);
+      }
 
       var sebankid = {
         name: localization.docview.signatory.authenticationToSignSEBankID,
@@ -217,7 +221,7 @@ var Modal = require("../../common/modal");
       };
 
       if (sig.seBankIDAuthenticationToSign() ||
-          (Subscription.currentSubscription().canUseSEAuthenticationToSign() &&
+          (ff.canUseSEAuthenticationToSign() &&
             (!sig.dkNemIDAuthenticationToView() && !sig.noBankIDAuthenticationToView())
           )
       ) {
@@ -230,7 +234,7 @@ var Modal = require("../../common/modal");
         value: "no_bankid"
       };
       if (sig.noBankIDAuthenticationToSign() ||
-          (Subscription.currentSubscription().canUseNOAuthenticationToSign() &&
+          (ff.canUseNOAuthenticationToSign() &&
             (!sig.dkNemIDAuthenticationToView() && !sig.seBankIDAuthenticationToView())
           )
       ) {
@@ -243,7 +247,7 @@ var Modal = require("../../common/modal");
         value: "dk_nemid"
       };
       if (sig.dkNemIDAuthenticationToSign() ||
-          (Subscription.currentSubscription().canUseDKAuthenticationToSign() &&
+          (ff.canUseDKAuthenticationToSign() &&
             (!sig.noBankIDAuthenticationToView() && !sig.seBankIDAuthenticationToView())
           )
       ) {
@@ -256,7 +260,7 @@ var Modal = require("../../common/modal");
         value: "sms_pin"
       };
 
-      if (sig.smsPinAuthenticationToSign() || Subscription.currentSubscription().canUseSMSPinAuthenticationToSign()) {
+      if (sig.smsPinAuthenticationToSign() || ff.canUseSMSPinAuthenticationToSign()) {
         options.push(sms);
       }
 
