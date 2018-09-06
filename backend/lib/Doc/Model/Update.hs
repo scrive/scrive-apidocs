@@ -1462,6 +1462,7 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
             F.value "signature" $ B64.encode cgisebidsSignature
             F.value "ocsp_response" $ B64.encode cgisebidsOcspResponse
           (Just (NetsNOBankIDSignature_ NetsNOBankIDSignature{..}), _) -> do
+            F.value "hide_pn" $ signatorylinkhidepn sl
             F.value "eleg" True
             F.value "signatory_name" netsnoSignatoryName
             F.value "signatory_pid" netsnoSignatoryPID
@@ -1469,6 +1470,7 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
             F.value "provider_nobankid" True
             F.value "signature" $ netsnoB64SDO
           (Just (NetsDKNemIDSignature_ NetsDKNemIDSignature{..}), _) -> do
+            F.value "hide_pn" $ signatorylinkhidepn sl
             F.value "eleg" True
             F.value "signatory_name" netsdkSignatoryName
             F.value "signed_text" netsdkSignedText
