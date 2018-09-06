@@ -56,9 +56,9 @@ module.exports = React.createClass({
     return (
       <div className="tab-container">
         <div className="tab-content data-retention">
-          <h1 className="data-retention-header">
+          <h4 className="data-retention-header">
             {localization.account.dataRetention.title}
-          </h1>
+          </h4>
 
           <div className="data-retention-form">
             <IdleDocTimeoutOption
