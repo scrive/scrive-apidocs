@@ -199,8 +199,8 @@ module.exports = React.createClass({
         });
       }).sendAjax();
     } else {
-      var name = doc.normalizeWithFirstCSVLine();
       var singleDocument = !doc.isCsv();
+      var name = doc.normalizeWithFirstCSVLine();
 
       if (!singleDocument) {
         doc.setTitle(doc.title() + " - " + name);
