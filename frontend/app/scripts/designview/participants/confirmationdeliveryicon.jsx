@@ -30,15 +30,18 @@ module.exports = React.createClass({
   },
   synchDelivery: function () {
     var sig = this.props.model;
-    if (sig.emailConfirmationDelivery()) {
+    if (sig.emailConfirmationDelivery() &&
+        Subscription.currentSubscription().currentUserFeatures().canUseEmailInvitations()) {
       sig.setDeliverySynchedWithConfirmationDelivery("email");
     } else if (sig.mobileConfirmationDelivery() &&
         Subscription.currentSubscription().currentUserFeatures().canUseSMSInvitations()) {
       sig.setDeliverySynchedWithConfirmationDelivery("mobile");
     } else if (sig.emailMobileConfirmationDelivery() &&
-        Subscription.currentSubscription().currentUserFeatures().canUseSMSInvitations()) {
+        Subscription.currentSubscription().currentUserFeatures().canUseSMSInvitations() &&
+        Subscription.currentSubscription().currentUserFeatures().canUseEmailInvitations()) {
       sig.setDeliverySynchedWithConfirmationDelivery("email_mobile");
-    } else if (sig.noneConfirmationDelivery()) {
+    } else if (sig.noneConfirmationDelivery() &&
+        Subscription.currentSubscription().currentUserFeatures().canUseEmailInvitations()) {
       sig.setDeliverySynchedWithConfirmationDelivery("email");
     }
   },

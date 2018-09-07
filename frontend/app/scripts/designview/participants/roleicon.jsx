@@ -11,6 +11,7 @@ module.exports = React.createClass({
     if (!sig.signs()) {
       var currFF = Subscription.currentSubscription().currentUserFeatures();
       var args = {
+        deliveryMethod: currFF.firstAllowedInvitationDelivery(),
         authenticationToView: currFF.firstAllowedAuthenticationToView(),
         authenticationToSign: currFF.firstAllowedAuthenticationToSign()
       };

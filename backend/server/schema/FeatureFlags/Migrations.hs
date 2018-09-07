@@ -6,6 +6,7 @@ module FeatureFlags.Migrations (
 , featureFlagsAddUserGroupID
 , featureFlagsDropCompanyID
 , featureFlagsAddStandardAuthAndFlagsForAdmin
+, featureFlagsAddEmailInvitation
 ) where
 
 import Control.Monad.Catch
@@ -151,3 +152,15 @@ featureFlagsAddStandardAuthAndFlagsForAdmin = Migration {
                 "FROM feature_flags WHERE flags_for_admin = false"
   }
   where tname = tblName tableFeatureFlags
+
+featureFlagsAddEmailInvitation :: (MonadThrow m, MonadDB m) => Migration m
+featureFlagsAddEmailInvitation = Migration {
+  mgrTableName = tblName tableFeatureFlags
+, mgrFrom = 7
+, mgrAction = StandardMigration .
+    runQuery_ $ sqlAlterTable (tblName tableFeatureFlags)  [
+        sqlAddColumn $ tblColumn { colName = "can_use_email_invitations", colType = BoolT, colNullable = False, colDefault = Just "true" }
+      , sqlAddColumn $ tblColumn { colName = "can_use_api_invitations", colType = BoolT, colNullable = False, colDefault = Just "true" }
+      , sqlAddColumn $ tblColumn { colName = "can_use_pad_invitations", colType = BoolT, colNullable = False, colDefault = Just "true" }
+      ]
+}

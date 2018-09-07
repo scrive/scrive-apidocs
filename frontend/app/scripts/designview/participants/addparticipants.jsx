@@ -22,6 +22,7 @@ module.exports = React.createClass({
     var sig = new Signatory({
       document: this.props.document,
       signs: true,
+      delivery_method: currFF.firstAllowedInvitationDelivery(),
       authentication_method_to_view: currFF.firstAllowedAuthenticationToView(),
       authentication_method_to_sign: currFF.firstAllowedAuthenticationToSign()
     });

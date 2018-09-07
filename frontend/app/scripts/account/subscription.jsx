@@ -161,6 +161,15 @@ var Subscription = Backbone.Model.extend({
             ),
             can_use_standard_authentication_to_sign: pick(
               f.canUseStandardAuthenticationToSign, ff.canUseStandardAuthenticationToSign()
+            ),
+            can_use_email_invitations: pick(
+              f.canUseEmailInvitations, ff.canUseEmailInvitations()
+            ),
+            can_use_api_invitations: pick(
+              f.canUseAPIInvitations, ff.canUseAPIInvitations()
+            ),
+            can_use_pad_invitations: pick(
+              f.canUsePadInvitations, ff.canUsePadInvitations()
             )
         });
     };
@@ -228,7 +237,10 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
     "can_use_sms_pin_authentication_to_view": true,
     "can_use_sms_pin_authentication_to_sign": true,
     "can_use_standard_authentication_to_view": true,
-    "can_use_standard_authentication_to_sign": true
+    "can_use_standard_authentication_to_sign": true,
+    "can_use_email_invitations": true,
+    "can_use_api_invitations": true,
+    "can_use_pad_invitations": true
   },
   canUseTemplates: function () {
      return this.get("can_use_templates");
@@ -281,6 +293,15 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
   canUseStandardAuthenticationToSign: function () {
      return this.get("can_use_standard_authentication_to_sign");
   },
+  canUseEmailInvitations: function () {
+     return this.get("can_use_email_invitations");
+  },
+  canUseAPIInvitations: function () {
+     return this.get("can_use_api_invitations");
+  },
+  canUsePadInvitations: function () {
+     return this.get("can_use_pad_invitations");
+  },
   firstAllowedAuthenticationToView: function () {
     if (this.canUseStandardAuthenticationToView())
       return "standard";
@@ -311,6 +332,21 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       // Should not happen, just in case
       return "standard";
   },
+  firstAllowedInvitationDelivery: function () {
+    if (this.canUseEmailInvitations())
+      return "email";
+    else if (this.canUseSMSInvitations())
+      return "mobile";
+    else if (this.canUseEmailInvitations() && this.canUseSMSInvitations())
+      return "email_mobile";
+    else if (this.canUseAPIInvitations())
+      return "api";
+    else if (this.canUsePadInvitations())
+      return "pad";
+    else
+      // Should not happen, just in case
+      return "email";
+  },
   canUseNonstandardAuthenticationToView: function () {
     return this.canUseDKAuthenticationToView() ||
       this.canUseNOAuthenticationToView() ||
@@ -340,7 +376,10 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       can_use_sms_pin_authentication_to_view: args.can_use_sms_pin_authentication_to_view,
       can_use_sms_pin_authentication_to_sign: args.can_use_sms_pin_authentication_to_sign,
       can_use_standard_authentication_to_view: args.can_use_standard_authentication_to_view,
-      can_use_standard_authentication_to_sign: args.can_use_standard_authentication_to_sign
+      can_use_standard_authentication_to_sign: args.can_use_standard_authentication_to_sign,
+      can_use_email_invitations: args.can_use_email_invitations,
+      can_use_api_invitations: args.can_use_api_invitations,
+      can_use_pad_invitations: args.can_use_pad_invitations
     };
   }
 });

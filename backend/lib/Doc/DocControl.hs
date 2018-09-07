@@ -110,13 +110,13 @@ handleNewDocument = withUser $ \user -> do
   doc <- dbUpdate $ NewDocument user (replace "  " " " $ title ++ " " ++ timestamp) Signable timezone 1 actor
   -- Default document on the frontend has different requirements,
   -- this sets up the signatories to match those requirements.
-  (authToView, authToSign) <- do
+  (authToView, authToSign, invitationDelivery) <- do
     ug <- guardJustM . dbQuery $ UserGroupGet (usergroupid user)
     features <- ugSubFeatures <$> getSubscription ug
     let ff = if useriscompanyadmin user
                 then fAdminUsers features
                 else fRegularUsers features
-    return (firstAllowedAuthenticationToView ff, firstAllowedAuthenticationToSign ff)
+    return (firstAllowedAuthenticationToView ff, firstAllowedAuthenticationToSign ff, firstAllowedInvitationDelivery ff)
   withDocument doc $ do
       authorsiglink <- guardJust $ find (\sl -> signatoryisauthor sl) (documentsignatorylinks doc)
       othersiglink  <- guardJust $ find (\sl -> not $ signatoryisauthor sl)  (documentsignatorylinks doc)
@@ -162,12 +162,14 @@ handleNewDocument = withUser $ \user -> do
               }
             ]
           authorsiglink' = authorsiglink
-            { signatorylinkauthenticationtoviewmethod = authToView
+            { signatorylinkdeliverymethod = invitationDelivery
+            , signatorylinkauthenticationtoviewmethod = authToView
             , signatorylinkauthenticationtosignmethod = authToSign
             }
           othersiglink' = othersiglink
             { signatorysignorder = SignOrder 1
             , signatoryfields = fields
+            , signatorylinkdeliverymethod = invitationDelivery
             , signatorylinkauthenticationtoviewmethod = authToView
             , signatorylinkauthenticationtosignmethod = authToSign
             }

@@ -5,9 +5,19 @@ var Subscription = require("../../account/subscription");
 
 module.exports = React.createClass({
   isAllowedDeliveryMethod: function (dm) {
-    if (!Subscription.currentSubscription().currentUserFeatures().canUseSMSInvitations()) {
-      return dm != "mobile" && dm != "email_mobile";
+    var ff = Subscription.currentSubscription().currentUserFeatures();
+    if (dm == "email") {
+      return ff.canUseEmailInvitations();
+    } else if (dm == "mobile") {
+      return ff.canUseSMSInvitations();
+    } else if (dm == "email_mobile") {
+      return ff.canUseEmailInvitations() && ff.canUseSMSInvitations();
+    } else if (dm == "api") {
+      return ff.canUseAPIInvitations();
+    } else if (dm == "pad") {
+      return ff.canUsePadInvitations();
     } else {
+      // Should not happen, we covered all methods
       return true;
     }
   },

@@ -7,7 +7,7 @@ import DB
 tableFeatureFlags :: Table
 tableFeatureFlags = tblTable {
     tblName = "feature_flags"
-  , tblVersion = 7
+  , tblVersion = 8
   , tblColumns = [
       tblColumn { colName = "can_use_templates", colType = BoolT, colNullable = False, colDefault = Just "true" }
     , tblColumn { colName = "can_use_branding", colType = BoolT, colNullable = False, colDefault = Just "true" }
@@ -30,6 +30,9 @@ tableFeatureFlags = tblTable {
     , tblColumn { colName = "can_use_standard_authentication_to_view", colType = BoolT, colNullable = False, colDefault = Just "true" }
     , tblColumn { colName = "can_use_standard_authentication_to_sign", colType = BoolT, colNullable = False, colDefault = Just "true" }
     , tblColumn { colName = "flags_for_admin", colType = BoolT, colNullable = False }
+    , tblColumn { colName = "can_use_email_invitations", colType = BoolT, colNullable = False, colDefault = Just "true" }
+    , tblColumn { colName = "can_use_api_invitations", colType = BoolT, colNullable = False, colDefault = Just "true" }
+    , tblColumn { colName = "can_use_pad_invitations", colType = BoolT, colNullable = False, colDefault = Just "true" }
     ]
   , tblPrimaryKey = pkOnColumns ["user_group_id", "flags_for_admin"]
   , tblForeignKeys = [

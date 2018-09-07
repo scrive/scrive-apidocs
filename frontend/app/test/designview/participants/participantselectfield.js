@@ -32,7 +32,7 @@ var Field = require("../../../js/fields").Field;
 
       fieldView.refs["select"].select(1);
       //This depends a lot on document structure
-      assert.equal(field.type(),"personal_number");
+      assert.equal(field.type(),"text");
     });
 
    it("should test component  with using enter and same name conflict", function () {

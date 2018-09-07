@@ -5,6 +5,7 @@ module FeatureFlags.Model(
   , updateFeaturesFor
   , firstAllowedAuthenticationToView
   , firstAllowedAuthenticationToSign
+  , firstAllowedInvitationDelivery
 ) where
 
 import Control.Monad.Catch
@@ -12,7 +13,7 @@ import Control.Monad.State
 import Data.Unjson
 
 import DB
-import Doc.Data.SignatoryLink (AuthenticationToSignMethod(..), AuthenticationToViewMethod(..))
+import Doc.Data.SignatoryLink (AuthenticationToSignMethod(..), AuthenticationToViewMethod(..), DeliveryMethod(..))
 import UserGroup.Data
 
 data Features = Features {
@@ -43,6 +44,9 @@ data FeatureFlags = FeatureFlags {
   , ffCanUseSMSPinAuthenticationToSign :: Bool
   , ffCanUseStandardAuthenticationToView :: Bool
   , ffCanUseStandardAuthenticationToSign :: Bool
+  , ffCanUseEmailInvitations :: Bool
+  , ffCanUseAPIInvitations :: Bool
+  , ffCanUsePadInvitations :: Bool
 } deriving (Eq, Ord, Show)
 
 instance Unjson FeatureFlags where
@@ -64,6 +68,9 @@ instance Unjson FeatureFlags where
     <*> field "can_use_sms_pin_authentication_to_sign" ffCanUseSMSPinAuthenticationToSign "TODO desc"
     <*> field "can_use_standard_authentication_to_view" ffCanUseStandardAuthenticationToView "TODO desc"
     <*> field "can_use_standard_authentication_to_sign" ffCanUseStandardAuthenticationToSign "TODO desc"
+    <*> field "can_use_email_invitations" ffCanUseEmailInvitations "TODO desc"
+    <*> fieldDef "can_use_api_invitations" True ffCanUseAPIInvitations "TODO desc"
+    <*> fieldDef "can_use_pad_invitations" True ffCanUsePadInvitations "TODO desc"
 
 getFeaturesFor :: (MonadDB m, MonadThrow m) => UserGroupID -> m Features
 getFeaturesFor ugid = do
@@ -97,6 +104,16 @@ firstAllowedAuthenticationToSign ff
   -- Someone can turn off all FFs, not recommended
   | otherwise = StandardAuthenticationToSign
 
+firstAllowedInvitationDelivery :: FeatureFlags -> DeliveryMethod
+firstAllowedInvitationDelivery ff
+  | ffCanUseEmailInvitations ff = EmailDelivery
+  | ffCanUseSMSInvitations ff   = MobileDelivery
+  | ffCanUseEmailInvitations ff && ffCanUseSMSInvitations ff = EmailAndMobileDelivery
+  | ffCanUseAPIInvitations ff   = APIDelivery
+  | ffCanUsePadInvitations ff   = PadDelivery
+  -- Someone can turn off all FFs, not recommended
+  | otherwise = EmailDelivery
+
 data GetFeatureFlags = GetFeatureFlags UserGroupID Bool
 instance (MonadDB m,MonadThrow m) => DBQuery m GetFeatureFlags FeatureFlags where
   query (GetFeatureFlags ugid forAdmins) = do
@@ -127,6 +144,9 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateFeatureFlags Bool where
       sqlSet "can_use_sms_pin_authentication_to_sign" $ ffCanUseSMSPinAuthenticationToSign ff
       sqlSet "can_use_standard_authentication_to_view" $ ffCanUseStandardAuthenticationToView ff
       sqlSet "can_use_standard_authentication_to_sign" $ ffCanUseStandardAuthenticationToSign ff
+      sqlSet "can_use_email_invitations" $ ffCanUseEmailInvitations ff
+      sqlSet "can_use_api_invitations" $ ffCanUseAPIInvitations ff
+      sqlSet "can_use_pad_invitations" $ ffCanUsePadInvitations ff
       sqlWhereEq "user_group_id" ugid
       sqlWhereEq "flags_for_admin" forAdmins
 
@@ -149,8 +169,12 @@ selectFeatureFlagsSelectors = do
   sqlResult "feature_flags.can_use_sms_pin_authentication_to_sign"
   sqlResult "feature_flags.can_use_standard_authentication_to_view"
   sqlResult "feature_flags.can_use_standard_authentication_to_sign"
+  sqlResult "feature_flags.can_use_email_invitations"
+  sqlResult "feature_flags.can_use_api_invitations"
+  sqlResult "feature_flags.can_use_pad_invitations"
 
-fetchFeatureFlags :: (Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool) -> FeatureFlags
+fetchFeatureFlags :: (Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool,
+  Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool) -> FeatureFlags
 fetchFeatureFlags (
     can_use_templates
   , can_use_branding
@@ -169,6 +193,9 @@ fetchFeatureFlags (
   , can_use_sms_pin_authentication_to_sign
   , can_use_standard_authentication_to_view
   , can_use_standard_authentication_to_sign
+  , can_use_email_invitations
+  , can_use_api_invitations
+  , can_use_pad_invitations
   ) = FeatureFlags {
     ffCanUseTemplates = can_use_templates
   , ffCanUseBranding = can_use_branding
@@ -187,5 +214,7 @@ fetchFeatureFlags (
   , ffCanUseSMSPinAuthenticationToSign = can_use_sms_pin_authentication_to_sign
   , ffCanUseStandardAuthenticationToView = can_use_standard_authentication_to_view
   , ffCanUseStandardAuthenticationToSign = can_use_standard_authentication_to_sign
-
+  , ffCanUseEmailInvitations = can_use_email_invitations
+  , ffCanUseAPIInvitations = can_use_api_invitations
+  , ffCanUsePadInvitations = can_use_pad_invitations
   }

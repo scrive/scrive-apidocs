@@ -18,7 +18,10 @@ module.exports = {
       "can_use_sms_pin_authentication_to_view": true,
       "can_use_se_authentication_to_sign": true,
       "can_use_dk_authentication_to_view": true,
-      "can_use_sms_confirmations": true
+      "can_use_sms_confirmations": true,
+      "can_use_email_invitations": true,
+      "can_use_api_invitations": true,
+      "can_use_pad_invitations": true
     },
     "regular_users": {
       "can_use_sms_invitations": true,
@@ -37,7 +40,10 @@ module.exports = {
       "can_use_sms_pin_authentication_to_view": true,
       "can_use_se_authentication_to_sign": true,
       "can_use_dk_authentication_to_view": true,
-      "can_use_sms_confirmations": true
+      "can_use_sms_confirmations": true,
+      "can_use_email_invitations": true,
+      "can_use_api_invitations": true,
+      "can_use_pad_invitations": true
     }
   },
   "number_of_users": 1,

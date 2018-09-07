@@ -39,7 +39,9 @@ module.exports = React.createClass({
     var self = this;
     var sig = this.props.model;
     var deliveryTypes = sig.isLastViewer() ? ["none"] : ["email", "pad", "mobile", "email_mobile", "api"];
-    if (!Subscription.currentSubscription().currentUserFeatures().canUseSMSInvitations()) {
+    var ff = Subscription.currentSubscription().currentUserFeatures();
+
+    if (!ff.canUseSMSInvitations()) {
 
       if (sig.delivery() != "mobile") {
         deliveryTypes = _.without(deliveryTypes, "mobile");
@@ -47,6 +49,29 @@ module.exports = React.createClass({
 
       if (sig.delivery() != "email_mobile") {
         deliveryTypes = _.without(deliveryTypes, "email_mobile");
+      }
+    }
+
+    if (!ff.canUseEmailInvitations()) {
+
+      if (sig.delivery() != "email") {
+        deliveryTypes = _.without(deliveryTypes, "email");
+      }
+
+      if (sig.delivery() != "email_mobile") {
+        deliveryTypes = _.without(deliveryTypes, "email_mobile");
+      }
+    }
+
+    if (!ff.canUseAPIInvitations()) {
+      if (sig.delivery() != "api") {
+        deliveryTypes = _.without(deliveryTypes, "api");
+      }
+    }
+
+    if (!ff.canUsePadInvitations()) {
+      if (sig.delivery() != "pad") {
+        deliveryTypes = _.without(deliveryTypes, "pad");
       }
     }
 
@@ -276,6 +301,7 @@ module.exports = React.createClass({
                 if (v === "signatory") {
                   var currFF = Subscription.currentSubscription().currentUserFeatures();
                   var args = {
+                    deliveryMethod: currFF.firstAllowedInvitationDelivery(),
                     authenticationToView: currFF.firstAllowedAuthenticationToView(),
                     authenticationToSign: currFF.firstAllowedAuthenticationToSign()
                   };

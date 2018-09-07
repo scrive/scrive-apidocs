@@ -48,3 +48,6 @@ testNewCompanyFeatureFlagDefaults  = do
           assertEqual "New company can use sms pin authentication to sign" True (ffCanUseSMSPinAuthenticationToSign ff)
           assertEqual "New company can use standard authentication to view" True (ffCanUseStandardAuthenticationToView ff)
           assertEqual "New company can use standard authentication to sign" True (ffCanUseStandardAuthenticationToSign ff)
+          assertEqual "New company can use email invitation" True (ffCanUseEmailInvitations ff)
+          assertEqual "New company can use API invitation" True (ffCanUseAPIInvitations ff)
+          assertEqual "New company can use Pad invitation" True (ffCanUsePadInvitations ff)
