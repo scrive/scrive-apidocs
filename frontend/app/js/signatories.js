@@ -51,15 +51,6 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
                     return hash;
         };
         var fields = signatory.get('fields');
-        if (signatory.standardAuthenticationToView()) {
-            fields = fields.concat([
-                {type: "personal_number", should_be_filled_by_sender: true, is_obligatory: true}
-            ]);
-        } else if (signatory.standardAuthenticationToSign()) {
-            fields = fields.concat([
-                {type: "personal_number", should_be_filled_by_sender: false, is_obligatory: true}
-            ]);
-        }
         fields = _.map(fields, function(field) {
             var f = new Field(extendedWithSignatory(field));
             if(f.obligatory() && f.shouldbefilledbysender())
