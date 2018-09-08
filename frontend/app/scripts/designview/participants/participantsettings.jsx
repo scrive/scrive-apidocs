@@ -272,7 +272,9 @@ module.exports = React.createClass({
               }}
               onClickWhenInactive={function () {
                 if (sig.signs()) {
-                  self.refs.blockingModal.openContactUsModal();
+                  if (Subscription.currentSubscription().hasFreePlan()) {
+                    self.refs.blockingModal.openContactUsModal();
+                  }
                 } else {
                   new FlashMessage({type: "error", content: localization.designview.viewerCantHaveAuthorisation});
                 }
@@ -330,7 +332,9 @@ module.exports = React.createClass({
               }}
               onClickWhenInactive={function () {
                 if (sig.signs()) {
-                  self.refs.blockingModal.openContactUsModal();
+                  if (Subscription.currentSubscription().hasFreePlan()) {
+                    self.refs.blockingModal.openContactUsModal();
+                  }
                 } else {
                   new FlashMessage({type: "error", content: localization.designview.viewerCantHaveAuthorisation});
                 }
