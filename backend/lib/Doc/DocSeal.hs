@@ -22,14 +22,19 @@ import Data.Digest.SHA2
 import Data.Function (on)
 import Data.Time
 import Log
+import System.Exit
 import System.FilePath ((</>), takeExtension, takeFileName)
+import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import Text.StringTemplates.Templates
 import qualified Data.ByteString as BB
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import qualified Data.Text as T
 import qualified Data.Text.ICU.Normalize as ICU
+import qualified Text.JSON.Gen as JSON
+import qualified Text.JSON.Pretty as JSON (pp_value)
 import qualified Text.StringTemplates.Fields as F
 
 import DB
@@ -55,6 +60,7 @@ import File.Model
 import File.Storage
 import Kontra
 import Log.Identifier
+import Log.Utils (equalsExternalBSL)
 import PdfToolsLambda.Conf
 import PdfToolsLambda.Control
 import Templates
@@ -586,7 +592,10 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
     let tmpin = tmppath ++ "/input.pdf"
     let tmpout = tmppath ++ "/output.pdf"
     content <- getFileContents file
-    liftIO $ BS.writeFile tmpin content
+    lconf <- getPdfToolsLambdaConf
+    theDocument >>= \d -> if (useOldFlattening lconf d)
+      then runOldFlatteningAndWriteResultToFile tmpin content tmppath
+      else liftIO $ BS.writeFile tmpin content
     checkboxMapping <- liftIO $ readCheckboxImagesMapping
     radiobuttonMapping <- liftIO $ readRadiobuttonImagesMapping
     elog <- dbQuery $ GetEvidenceLog documentid
@@ -598,7 +607,6 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
         (return ())
         (systemActor now)
     eotData <- liftBase $ generateEvidenceOfTimeData 100 (tmppath ++ "/eot_samples.txt") (tmppath ++ "/eot_graph.svg") (map HC.offset offsets)
-    lconf <- getPdfToolsLambdaConf
     spec <- theDocument >>= \d -> do
       let extendedFlattening = useExtendedFlattening lconf d
       sealSpecFromDocument extendedFlattening checkboxMapping radiobuttonMapping hostpart d elog offsets eotData content tmppath tmpin tmpout
@@ -615,10 +623,12 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
     let tmpin = tmppath ++ "/input.pdf"
     let tmpout = tmppath ++ "/output.pdf"
     content <- getFileContents file
-    liftIO $ BS.writeFile tmpin content
+    lconf <- getPdfToolsLambdaConf
+    if (useOldFlattening lconf document)
+      then runOldFlatteningAndWriteResultToFile tmpin content tmppath
+      else liftIO $ BS.writeFile tmpin content
     checkboxMapping <- liftIO $ readCheckboxImagesMapping
     radiobuttonMapping <- liftIO $ readRadiobuttonImagesMapping
-    lconf <- getPdfToolsLambdaConf
     let extendedFlattening = useExtendedFlattening lconf document
     spec <- presealSpecFromDocument extendedFlattening checkboxMapping radiobuttonMapping document tmpin tmpout
     runLambdaPresealing tmppath spec
@@ -678,7 +688,35 @@ runLambdaPresealing _tmppath spec = do
         -- show JSON'd config as that's what the java app is fed.
         return $ Left "Error when preprinting fields on PDF"
 
+runOldFlatteningAndWriteResultToFile :: (MonadIO m, MonadLog m) => String -> BS.ByteString -> String -> m ()
+runOldFlatteningAndWriteResultToFile outputpath content tmppath = do
+  logInfo_ "Started flattening with old pdftools"
+  let inputpathforflattening = tmppath ++ "/input_for_flattening.pdf"
+  liftIO $ BS.writeFile inputpathforflattening content
+  let sealspecpath = tmppath ++ "/sealspec.json"
+  liftIO $ BS.writeFile sealspecpath $ BS.fromString $ show $ JSON.pp_value $ JSON.runJSONGen $ do
+        JSON.value "input" inputpathforflattening
+        JSON.value "output" outputpath
+        JSON.value "fields" ([] :: [String])
+        JSON.value "preseal" True
+        JSON.value "extendedFlattening" False
+  (code,_stdout,stderr) <- liftIO $ readProcessWithExitCode "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "add-verification-pages", sealspecpath] (BSL.empty)
+  case code of
+    ExitSuccess -> do
+        logInfo_ "Flattening with old pdftools succeed"
+        return $ ()
+    ExitFailure _ -> do
+        logAttention "Flattening with old pdftools failed" $ object [
+            "stderr" `equalsExternalBSL` stderr
+          ]
+        liftIO $ BS.writeFile outputpath content
+
 useExtendedFlattening ::  PdfToolsLambdaConf -> Document -> Bool
 useExtendedFlattening lconf document = case (get pdfToolsUserGroupsWithExtendedFlattening lconf , documentauthorugid document) of
+  (Just ids, Just ugi) -> ugi `elem` ids
+  _ -> False
+
+useOldFlattening ::  PdfToolsLambdaConf -> Document -> Bool
+useOldFlattening lconf document = case (get pdfToolsUserGroupsWithOldFlattening lconf , documentauthorugid document) of
   (Just ids, Just ugi) -> ugi `elem` ids
   _ -> False
