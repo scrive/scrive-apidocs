@@ -8,4 +8,5 @@ data PdfToolsLambdaConf = PdfToolsLambdaConf {
   , _pdfToolsLambdaApiKey :: String
   , _pdfToolsLambdaS3Config :: AmazonConfig
   , _pdfToolsUserGroupsWithExtendedFlattening :: Maybe [UserGroupID]
+  , _pdfToolsUserGroupsWithOldFlattening :: Maybe [UserGroupID]
 } deriving (Show, Eq)

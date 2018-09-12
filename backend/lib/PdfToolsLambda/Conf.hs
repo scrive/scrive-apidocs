@@ -31,6 +31,9 @@ unjsonPdfToolsLambdaConf = objectOf $ pure PdfToolsLambdaConf
   <*> fieldOpt "user_groups_with_extended_flattening"
       _pdfToolsUserGroupsWithExtendedFlattening
       "Pdfs of documents created by this user groups should be treat differently by pdftools due to backward compatiblility (CORE-783)"
+  <*> fieldOpt "user_groups_with_old_flattening"
+      _pdfToolsUserGroupsWithOldFlattening
+      "Pdfs of documents created by this user groups should get an additional flattening with old pdftools (CORE-851)"
 
 instance Unjson PdfToolsLambdaConf where
   unjsonDef = unjsonPdfToolsLambdaConf
