@@ -890,14 +890,22 @@ testPurgeDocumentImmediateTrash = replicateM_ 10 $ do
   now <- currentTime
   withDocument doc $ randomUpdate $ \t -> ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
 
-  archived1 <- dbUpdate $ PurgeDocuments 1 -- purge after 1 day
-  assertEqual "Purged zero documents before 1 day after deletion" 0 archived1
+  do
+    archived <- dbUpdate $ PurgeDocuments 1 -- purge after 1 day
+    assertEqual "Purged zero documents before 1 day after deletion" 0 archived
+
+    doc' <- randomQuery $ GetDocumentByDocumentID $ documentid doc
+    forM_ (documentsignatorylinks doc') $ \sl -> do
+      assertBool "Should \"really delete\" deleted documents only" $ not $
+        isNothing (signatorylinkdeleted sl)
+        && isJust (signatorylinkreallydeleted sl)
 
   dbUpdate $ UserGroupUpdate $
     set (drpImmediateTrash . ugsDataRetentionPolicy . ugSettings) True ug
 
-  archived2 <- dbUpdate $ PurgeDocuments 1
-  assertEqual "Purged single document" 1 archived2
+  do
+    archived <- dbUpdate $ PurgeDocuments 1
+    assertEqual "Purged single document" 1 archived
 
   allDocs1 <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author)
                          [DocumentFilterByDocumentID (documentid doc)] [] (-1)

@@ -1930,17 +1930,19 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
     runQuery_ . sqlUpdate "signatory_links sl" $ do
       sqlSet "really_deleted" now
       -- Document belongs to somebody.
-      sqlWhere "user_id IS NOT NULL"
+      sqlWhereIsNotNULL "sl.user_id"
       -- It was deleted sufficient amount of time ago or the user group's data
       -- retention policy is to delete things in the trash immediately.
       sqlWhereAny
         [ sqlWhere $
-            "deleted +" <?> idays savedDocumentLingerDays <+> "<=" <?> now
-        , sqlWhereExists . sqlSelect "users u" $ do
-            sqlJoinOn "user_group_settings ugs"
-                      "ugs.user_group_id = u.user_group_id"
-            sqlWhere "ugs.immediate_trash OR u.immediate_trash"
-            sqlWhere "u.id = sl.user_id"
+            "sl.deleted +" <?> idays savedDocumentLingerDays <+> "<=" <?> now
+        , do
+            sqlWhereIsNotNULL "sl.deleted"
+            sqlWhereExists . sqlSelect "users u" $ do
+              sqlJoinOn "user_group_settings ugs"
+                        "ugs.user_group_id = u.user_group_id"
+              sqlWhere "ugs.immediate_trash OR u.immediate_trash"
+              sqlWhere "u.id = sl.user_id"
         ]
       -- It wasn't yet unlinked.
       sqlWhere "really_deleted IS NULL"
