@@ -57,8 +57,9 @@ useNewBuild DontUseNewBuild   = False
 -- | Make a 'UseNewBuild' object from command-line flags.
 mkUseNewBuild :: [ShakeFlag] -> CabalFile -> IO UseNewBuild
 mkUseNewBuild flags cabalFile =
-  if NewBuild `elem` flags
-  then do
+  if OldBuild `elem` flags
+  then return DontUseNewBuild
+  else do
     cabalVer <- readVersion <$> numericVersion "cabal"
     if cabalVer < makeVersion [1,25] then do
       putStrLn $ "Warning: --new-build only works with cabal-install >= 1.25."
@@ -66,8 +67,6 @@ mkUseNewBuild flags cabalFile =
       return DontUseNewBuild
     else UseNewBuild <$> (pure . CabalInstallVersion $ cabalVer)
                      <*> (newBuildBuildDir <$> readGhcInfo)
-  else return DontUseNewBuild
-
   where
     numericVersion   prog    = trim <$>
                                readProcess prog ["--numeric-version"] ""

@@ -13,6 +13,7 @@ data ShakeFlag = TransifexUser     String
                | TransifexLang     String
                | SrcSubdir         FilePath
                | NewBuild
+               | OldBuild
                | CreateDB
                | TestPattern       Pattern
   deriving Eq
@@ -25,7 +26,9 @@ shakeFlags =
   , Option ""  ["src-subdir"] (reqArg SrcSubdir         "DIR")
     "Source subdirectory (for 'hindent'/'stylish-haskell'/'hlint')"
   , Option ""  ["new-build"]  (noArg  NewBuild)
-    "Use 'new-build'."
+    "Use 'new-build' (default)."
+  , Option ""  ["old-build"]  (noArg  OldBuild)
+    "Don't use 'new-build'."
   , Option ""  ["create-db"]  (noArg  CreateDB)
     "Use a new DB for tests. See 'help-env' for relevant env var settings."
   , Option "p" ["pattern"]    (reqArg TestPattern       "PATTERN")
