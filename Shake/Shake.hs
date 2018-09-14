@@ -263,7 +263,7 @@ serverNewBuildRules cabalFile buildDir = do
 
   "_build/cabal-update" %>>> do
     need cabalFiles
-    cmd (EchoStdout True) "cabal update"
+    cmd (EchoStdout True) "cabal new-update"
 
   "cabal.project.local" %> \_ -> do
     need ("_build/cabal-update":cabalFiles)
@@ -293,7 +293,7 @@ serverNewBuildRules cabalFile buildDir = do
     command_ [Shell] "tar" ["-czf","_build/cabal-haddock.tar.gz"
                            ,buildDir </> "doc"]
 
-  "cabal-clean" ~> cmd "rm -rf dist-newstyle"
+  "cabal-clean" ~> cmd "cabal new-clean"
 
 serverOldBuildRules :: CabalFile -> Rules ()
 serverOldBuildRules cabalFile = do

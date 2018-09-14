@@ -7,5 +7,9 @@
 
 packages: .
 
+repository hackage.scrive.com
+    url: http://hackage.scrive.com
+    secure: False
+
 package kontrakcja
     ghc-options: -fprint-potential-instances
