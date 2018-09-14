@@ -176,6 +176,7 @@ main = do
   cabalFile    <- parseCabalFile "kontrakcja.cabal"
   shakeArgsWith (opts ver) shakeFlags $ \flags targets -> return . Just $ do
     newBuild <- liftIO $ mkUseNewBuild flags cabalFile
+    let opt   = mkOptimisationEnabled flags
 
     if null targets then want ["help"] else want targets
 
@@ -227,7 +228,7 @@ main = do
 
     -- * Rules
     componentBuildRules   newBuild cabalFile
-    serverBuildRules      newBuild cabalFile
+    serverBuildRules      newBuild opt cabalFile
     serverTestRules       newBuild cabalFile
                           (mkCreateDBWithTestConf flags)
                           [pat | TestPattern pat <- flags]
@@ -239,26 +240,37 @@ main = do
 
 -- * Server
 
+data OptimisationEnabled = OptimisationEnabled | OptimisationDisabled
+
+mkOptimisationEnabled :: [ShakeFlag] -> OptimisationEnabled
+mkOptimisationEnabled flags =
+  if EnableOptimisation `elem` flags
+  then OptimisationEnabled
+  else OptimisationDisabled
+
 -- | Server build rules
-serverBuildRules :: UseNewBuild -> CabalFile -> Rules ()
-serverBuildRules newBuild cabalFile = do
-  ifNewBuild newBuild (serverNewBuildRules cabalFile)
-                      (serverOldBuildRules cabalFile)
+serverBuildRules :: UseNewBuild -> OptimisationEnabled -> CabalFile -> Rules ()
+serverBuildRules newBuild opt cabalFile = do
+  ifNewBuild newBuild (serverNewBuildRules opt cabalFile)
+                      (serverOldBuildRules opt cabalFile)
   "_build" </> "db-docs" </> "kontra.html" %> buildDBDocs
 
-getCabalConfigureFlags :: Action [String]
-getCabalConfigureFlags = do
+getCabalConfigureFlags :: OptimisationEnabled -> Action [String]
+getCabalConfigureFlags opt = do
   tc           <- askOracle (TeamCity ())
   testCoverage <- askOracle (BuildTestCoverage ())
   flags0       <- askOracle (BuildCabalConfigureOptions ())
-  let flags = if tc then ["-fenable-routinglist",flags0]
-              else [flags0]
-      flags'= if testCoverage then "--enable-coverage":flags
-              else flags
-  return flags'
+  let flags  = if tc then ["-fenable-routinglist",flags0]
+               else [flags0]
+      flags' = if testCoverage then "--enable-coverage":flags
+               else flags
+      flags''= case opt of
+                OptimisationEnabled  -> flags'
+                OptimisationDisabled -> "--disable-optimization":flags'
+  return flags''
 
-serverNewBuildRules :: CabalFile -> FilePath -> Rules ()
-serverNewBuildRules cabalFile buildDir = do
+serverNewBuildRules :: OptimisationEnabled -> CabalFile -> FilePath -> Rules ()
+serverNewBuildRules opt cabalFile buildDir = do
   let cabalFiles = ["cabal.project.freeze", "kontrakcja.cabal"]
 
   "_build/cabal-update" %>>> do
@@ -267,7 +279,7 @@ serverNewBuildRules cabalFile buildDir = do
 
   "cabal.project.local" %> \_ -> do
     need ("_build/cabal-update":cabalFiles)
-    flags <- getCabalConfigureFlags
+    flags <- getCabalConfigureFlags opt
     command [Shell] "cabal" ("new-configure":flags)
 
   "_build/cabal-build" %>>> do
@@ -295,8 +307,8 @@ serverNewBuildRules cabalFile buildDir = do
 
   "cabal-clean" ~> cmd "cabal new-clean"
 
-serverOldBuildRules :: CabalFile -> Rules ()
-serverOldBuildRules cabalFile = do
+serverOldBuildRules :: OptimisationEnabled -> CabalFile -> Rules ()
+serverOldBuildRules opt cabalFile = do
   let cabalFiles = ["cabal.config", "kontrakcja.cabal"]
 
   "cabal.sandbox.config" %> \_ -> do
@@ -334,7 +346,7 @@ serverOldBuildRules cabalFile = do
     -- Need to clean for flags to be effective.
     command_ [] "cabal" ["clean"]
 
-    flags <- getCabalConfigureFlags
+    flags <- getCabalConfigureFlags opt
     command [Shell] "cabal" ("configure":"--enable-tests":flags)
 
   "dist/setup-config" %> \_ -> do

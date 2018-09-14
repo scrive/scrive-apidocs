@@ -14,6 +14,7 @@ data ShakeFlag = TransifexUser     String
                | SrcSubdir         FilePath
                | NewBuild
                | OldBuild
+               | EnableOptimisation
                | CreateDB
                | TestPattern       Pattern
   deriving Eq
@@ -29,6 +30,10 @@ shakeFlags =
     "Use 'new-build' (default)."
   , Option ""  ["old-build"]  (noArg  OldBuild)
     "Don't use 'new-build'."
+  , Option ""
+    ["enable-optimisation", "enable-optimization"]
+    (noArg EnableOptimisation)
+    "Build the back end with optimisation enabled"
   , Option ""  ["create-db"]  (noArg  CreateDB)
     "Use a new DB for tests. See 'help-env' for relevant env var settings."
   , Option "p" ["pattern"]    (reqArg TestPattern       "PATTERN")
