@@ -205,7 +205,9 @@ withDocAccess did dochandler = do
   doc          <- getDocBySignatoryLinkIdOrAccessToken did mslid maccesstoken
 
   whenJust mslid $ \slid -> do
-    guardThatDocumentIsReadableBySignatories doc
+    case getSigLinkFor slid doc of
+      Just sl | signatoryisauthor sl -> return ()
+      _ -> guardThatDocumentIsReadableBySignatories doc
     guardSignatoryNeedsToIdentifyToView slid doc
   dochandler doc
 

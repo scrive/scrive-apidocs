@@ -355,6 +355,9 @@ guardDocumentReadAccess mslid doc = do
   mSessionSignatory <- maybe (return Nothing) (getDocumentSignatoryMagicHash $ documentid doc) mslid
   case mSessionSignatory of
     Just sl -> do
+      case signatoryisauthor sl of
+        True -> return ()
+        False -> guardThatDocumentIsReadableBySignatories doc
       guardThatDocumentIsReadableBySignatories doc
       return $ documentAccessForSlid (signatorylinkid sl) doc
     Nothing -> do
