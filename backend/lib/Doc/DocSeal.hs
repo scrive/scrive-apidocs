@@ -50,6 +50,9 @@ import Doc.Logging
 import Doc.Model
 import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryIdentification (SignatoryIdentifierMap, siInitials, signatoryIdentifier)
+import EID.Authentication.Model
+import EID.Nets.Data
+import EID.Signature.Model
 import EvidenceLog.Model
 import EvidenceLog.View
 import EvidencePackage.EvidenceLog
@@ -100,6 +103,22 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
     personalNumberText <- if null personalnumber
                            then return ""
                            else renderTemplate "_contractsealingtextspersonalNumberText" $ F.value "idnumber" personalnumber
+
+    eauthentication <- dbQuery $ GetEAuthenticationWithoutSession $ signatorylinkid signatory
+    identifiedNameText <- case eauthentication of
+        Just (CGISEBankIDAuthentication_ authentication) -> renderTemplate "_identifiedBySwedishBankIDText" $ F.value "name" $ cgisebidaSignatoryName authentication
+        Just (NetsNOBankIDAuthentication_ authentication) -> renderTemplate "_identifiedByNOBankIDText" $ F.value "name" $ netsNOBankIDSignatoryName authentication
+        Just (NetsDKNemIDAuthentication_ authentication) -> renderTemplate "_identifiedByDKNemIDText" $ F.value "name" $ netsDKNemIDSignatoryName authentication
+        _ -> return ""
+
+    esignature <- dbQuery $ GetESignature $ signatorylinkid signatory
+    nameFromText <- case esignature of
+        Just (CGISEBankIDSignature_ signature) -> renderTemplate "_nameFromSwedishBankIDText" $ F.value "name" $ cgisebidsSignatoryName signature
+        Just (NetsNOBankIDSignature_ signature) -> renderTemplate "_nameFromNOBankIDText" $ F.value "name" $ netsnoSignatoryName signature
+        Just (NetsDKNemIDSignature_ signature) -> renderTemplate "_nameFromDKNemIDText" $ F.value "name" $ netsdkSignatoryName signature
+        _ -> return ""
+
+
     fields  <- maybeAddBankIDLogo =<<
                fieldsFromSignatory checkboxMapping radiobuttonMapping signatory
     highlightedImages <- mapM (highlightedImageFromHighlightedPage inputpath) (signatoryhighlightedpages signatory)
@@ -120,6 +139,8 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
                          , Seal.personalNumberText = personalNumberText
                          , Seal.companyNumberText  = companyNumberText
                          , Seal.highlightedImages  = highlightedImages
+                         , Seal.identifiedNameText = identifiedNameText
+                         , Seal.nameFromText       = nameFromText
                          }
   where
     maybeAddBankIDLogo :: [Seal.Field] -> m [Seal.Field]

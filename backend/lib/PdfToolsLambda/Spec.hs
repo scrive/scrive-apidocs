@@ -78,6 +78,8 @@ sealSpecForPerson person = do
     , "signedAtText" .= signedAtText person
     , "personalNumberText" .= personalNumberText person
     , "companyNumberText" .= companyNumberText person
+    , "identifiedNameText" .= identifiedNameText person
+    , "nameFromText" .= nameFromText person
     , "highlightedImages" .= highlightedImages_
     , "fields" .= fields_
     ]
