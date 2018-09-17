@@ -22,6 +22,7 @@ module Doc.API.V2.Calls.DocumentPostCalls (
 , docApiV2SigChangeEmailAndMobile
 ) where
 
+import Control.Conditional (ifM)
 import Control.Monad.Base
 import Data.Unjson
 import Data.Unjson as Unjson
@@ -63,6 +64,7 @@ import Kontra
 import Log.Identifier
 import MinutesTime
 import OAuth.Model
+import PdfToolsLambda.Conf
 import User.Email (Email(..))
 import User.Model
 import Util.HasSomeUserInfo (getEmail, getMobile)
@@ -75,7 +77,9 @@ docApiV2New = api $ do
   (user, actor) <- getAPIUser APIDocCreate
   -- Parameters
   saved <- apiV2ParameterDefault True (ApiV2ParameterBool "saved")
-  mFile <- apiV2ParameterOptional (ApiV2ParameterFilePDF "file")
+  mFile <-   ifM (dontRunJavascriptRemovalForUser user)
+    {-then-} (apiV2ParameterOptional (ApiV2ParameterUnsafeFilePDF "file"))
+    {-else-} (apiV2ParameterOptional (ApiV2ParameterFilePDF "file"))
   -- API call actions
   title <- case mFile of
     Nothing -> do
@@ -284,7 +288,9 @@ docApiV2SetFile did = logDocument did . api $ do
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Preparation =<< theDocument
     -- Parameters
-    mFile <- apiV2ParameterOptional (ApiV2ParameterFilePDF "file")
+    mFile <- ifM (dontRunJavascriptRemovalForUser user)
+    {-then-} (apiV2ParameterOptional (ApiV2ParameterUnsafeFilePDF $ "file" ))
+    {-else-} (apiV2ParameterOptional (ApiV2ParameterFilePDF "file"))
     -- API call actions
     case mFile of
       Nothing -> dbUpdate $ DetachFile actor
@@ -596,3 +602,12 @@ docApiV2SigChangeEmailAndMobile did slid = logDocumentAndSignatory did slid . ap
     _ <- sendInvitationEmail1 sl'
     -- API call actions
     Ok . (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
+
+
+dontRunJavascriptRemovalForUser :: Kontrakcja m => User -> m Bool
+dontRunJavascriptRemovalForUser user = do
+  let uid = usergroupid user
+  lc <- get ctxpdftoolslambdaconf <$> getContext
+  let us1 = fromMaybe [] (get pdfToolsUserGroupsWithExtendedFlattening lc)
+  let us2 = fromMaybe [] (get pdfToolsUserGroupsWithOldFlattening lc)
+  return $ uid `elem` (us1 ++ us2)
