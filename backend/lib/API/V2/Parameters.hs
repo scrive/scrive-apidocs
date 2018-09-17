@@ -41,6 +41,8 @@ data ApiV2Parameter a where
   ApiV2ParameterAeson :: Aeson.FromJSON a => T.Text -> ApiV2Parameter a
   ApiV2ParameterFilePDF        :: T.Text -> ApiV2Parameter File
   ApiV2ParameterFilePDFs       :: [T.Text] -> ApiV2Parameter [File]
+  ApiV2ParameterUnsafeFilePDF  :: T.Text -> ApiV2Parameter File
+  ApiV2ParameterUnsafeFilePDFs :: [T.Text] -> ApiV2Parameter [File]
   ApiV2ParameterFilePDFOrImage :: T.Text -> ApiV2Parameter File
   ApiV2ParameterBase64PNGImage :: T.Text -> ApiV2Parameter File
 
@@ -148,6 +150,39 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFs names) = do
     return file
   return $ Just files
 
+
+-- TEMP: We will remove ApiV2ParameterUnsafeFilePDFs and ApiV2ParameterUnsafeFilePDFs
+-- once we have solved some itext issues
+apiV2ParameterOptional (ApiV2ParameterUnsafeFilePDF name) = do
+  mFiles <- apiV2ParameterOptional (ApiV2ParameterUnsafeFilePDFs [name])
+  case mFiles of
+    Just [file] -> return $ Just file
+    _ -> return Nothing
+
+apiV2ParameterOptional (ApiV2ParameterUnsafeFilePDFs names) = do
+  contentsWithNames <- forM names $ \name -> do
+    mValue <- getDataFn' (lookInput $ T.unpack name)
+    case mValue of
+      Nothing -> return Nothing
+      Just (Input _ Nothing _) -> apiError $ requestParameterInvalid name "file was empty"
+      Just (Input contentspec (Just filename') _contentType) -> do
+        let filename = reverse . takeWhile (/='\\') . reverse $ filename' -- Drop filepath for windows
+        content <- case contentspec of
+          Left filepath -> liftIO $ BS.readFile filepath
+          Right content -> return $ BS.concat $ BSL.toChunks content
+        return $ Just (filename, content)
+  let contentsWithNames' = catMaybes contentsWithNames
+  pdfcontents <- do
+    res <- preCheckPDFsWithoutRemovingJavascript $ map snd contentsWithNames'
+    case res of
+      Right r -> return $ zip (map fst contentsWithNames') r
+      Left _ -> apiError $ requestParameterParseError (T.intercalate ", " names) $ "not a valid PDF"
+  files <- forM pdfcontents $ \(filename, pdfcontent) -> do
+    fileid <- saveNewFile filename pdfcontent
+    file <- dbQuery $ GetFileByFileID fileid
+    return file
+  return $ Just files
+
 apiV2ParameterOptional (ApiV2ParameterFilePDFOrImage name) = do
   mValue <- getDataFn' (lookInput $ T.unpack name)
   case mValue of
@@ -210,5 +245,7 @@ getParameterName (ApiV2ParameterTextUnjson n _) = n
 getParameterName (ApiV2ParameterAeson n) = n
 getParameterName (ApiV2ParameterFilePDF n) = n
 getParameterName (ApiV2ParameterFilePDFs ns) = T.intercalate "," ns
+getParameterName (ApiV2ParameterUnsafeFilePDF n) = n
+getParameterName (ApiV2ParameterUnsafeFilePDFs ns) = T.intercalate "," ns
 getParameterName (ApiV2ParameterFilePDFOrImage n) = n
 getParameterName (ApiV2ParameterBase64PNGImage n) = n

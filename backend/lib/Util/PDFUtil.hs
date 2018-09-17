@@ -11,6 +11,7 @@ module Util.PDFUtil
     , FileError(..)
     , preCheckPDF
     , preCheckPDFs
+    , preCheckPDFsWithoutRemovingJavascript
     , getNumberOfPDFPages
     , pickPages
     , clipHighlightImageFromPage
@@ -182,6 +183,56 @@ preCheckPDFsHelper contents tmppath =
 
     readOutput num = liftIO $ BS.readFile $ normalizedpath num
 
+
+preCheckPDFsHelperWithoutRemovingJavascript :: [BS.ByteString]
+                   -> String
+                   -> IO (Either FileError [BS.ByteString])
+preCheckPDFsHelperWithoutRemovingJavascript contents tmppath =
+    runExceptT $ do
+      mapM_ checkSize contents
+      writeSource
+      mapM_ checkNormalize $ zip [1..] contents
+      mapM readOutput [1..length contents]
+  where
+    normalizedpath   num = tmppath ++ "/normalized" ++ show num ++ ".pdf"
+    sourcepath       num = tmppath ++ "/source"     ++ show num ++ ".pdf"
+
+    sizeLimit = 10 * 1000 * 1000
+
+    checkSize content = let contentLength = BS.length content
+                        in when (contentLength > sizeLimit) $
+                             throwError (FileSizeError sizeLimit contentLength)
+
+    writeSource = do
+      forM_ (zip [1..] contents) $ \(num, content) -> do
+        liftIO $ BS.writeFile (sourcepath num) content
+
+
+    checkNormalize (num, content) = do
+
+      -- dont rely on mutool exit code - for mupdf-1.6 it's always 1
+      -- just check if the output file is there
+      (_, stdout, stderr) <- liftIO $ readProcessWithExitCode "mutool"
+                                   [ "clean"
+                                   , "-gg"
+                                   , sourcepath num
+                                   , normalizedpath num
+                                   ] BSL.empty
+      flag <- liftIO $ doesFileExist $ normalizedpath num
+      when (not flag) $ do
+        liftIO $ do
+          systmp <- getTemporaryDirectory
+          (_path,handle) <- openTempFile systmp ("pre-normalize-failed-.pdf")
+          BS.hPutStr handle content
+          hClose handle
+
+        throwError $ FileNormalizeError $ BSL.concat [ BSL.pack ("Exit failure \n")
+                                                     , stdout
+                                                     , BSL.pack "\n"
+                                                     , stderr
+                                                     ]
+
+    readOutput num = liftIO $ BS.readFile $ normalizedpath num
 -- | The 'preCheckPDF' function should be invoked just after receiving
 -- uploaded document from user and before it gets into the
 -- database. It does the following:
@@ -212,6 +263,20 @@ preCheckPDFs contents =
         ]
       Right _ -> return ()
     return res
+
+preCheckPDFsWithoutRemovingJavascript :: (MonadLog m, MonadBaseControl IO m) => [BS.ByteString]
+            -> m (Either FileError [BS.ByteString])
+preCheckPDFsWithoutRemovingJavascript contents =
+  withSystemTempDirectory' "precheck" $ \tmppath -> do
+    res <- liftBase (preCheckPDFsHelperWithoutRemovingJavascript contents tmppath)
+      `E.catch` \(e::IOError) -> return (Left (FileOtherError (show e)))
+    case res of
+      Left x -> logInfo "preCheckPDFsHelperWithoutRemovingJavascript failed" $ object [
+          "error" .= show x
+        ]
+      Right _ -> return ()
+    return res
+
 
 preCheckPDF :: (MonadLog m, MonadBaseControl IO m) => BS.ByteString
             -> m (Either FileError BS.ByteString)
