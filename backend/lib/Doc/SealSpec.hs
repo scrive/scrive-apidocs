@@ -21,6 +21,8 @@ data Person =
            , personalNumberText  :: String
            , companyNumberText   :: String
            , highlightedImages   :: [HighlightedImage]
+           , identifiedNameText  :: String
+           , nameFromText        :: String
            }
     deriving (Eq,Ord,Show,Read)
 

@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Accept",
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
@@ -634,6 +634,9 @@
 "_historyHide":"Hide",
 "_historyParty":"Party",
 "_historyTime":"Time",
+"_identifiedByDKNemIDText":"Identified by Danish NemID as \"$name$\"",
+"_identifiedByNOBankIDText":"Identified by Norwegian BankID as \"$name$\"",
+"_identifiedBySwedishBankIDText":"Identified by Swedish BankID as \"$name$\"",
 "_identifyWithPinEnterPin":"Enter your SMS PIN",
 "_identifyWithPinInfotext":"Check your mobile phone",
 "_identifyWithPinInvalidPin":"Invalid PIN",
@@ -739,6 +742,9 @@
 "_modalResendCompanyAccountInviteHeader":"Resend invite",
 "_more":"Export",
 "_name":"Name",
+"_nameFromDKNemIDText":"The name returned by Danish NemID was \"$name$\"",
+"_nameFromNOBankIDText":"The name returned by Norwegian BankID was \"$name$\"",
+"_nameFromSwedishBankIDText":"The name returned by Swedish BankID was \"$name$\"",
 "_nameInvalidChars":"<span class='put-field-name'></span> contains invalid characters.",
 "_nameRequired":"<span class='put-field-name'></span> required.",
 "_nameTooLong":"<span class='put-field-name'></span> may contain up to 100 characters.",
