@@ -16,7 +16,6 @@ module User.API (
   ) where
 
 import Control.Concurrent.Lifted
-import Control.Conditional ((<|), (|>))
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.Aeson
@@ -346,7 +345,10 @@ apiCallSignup = api $ do
   switchLang lang
   muser <- dbQuery $ GetUserByEmail $ Email email
   muser' <- case muser of
-               Just user ->   return $ Nothing <| (isJust (userhasacceptedtermsofservice user)) |> Just user
+               -- creating account that already exists should send password reminder so customers stopp calling us
+               -- CORE-631
+               Just user | isJust $ userhasacceptedtermsofservice user -> sendPasswordReminder user >> return Nothing
+                         | otherwise -> return $ Just user
                Nothing ->  do
                  let ug0 = set ugName (T.pack companyName) def
                  ug <- dbUpdate $ UserGroupCreate ug0
@@ -377,7 +379,6 @@ apiCallSignup = api $ do
 
 apiCallSendPasswordReminder :: Kontrakcja m => m Response
 apiCallSendPasswordReminder = api $ do
-  ctx <- getContext
   memail <- getOptionalField asValidEmail "email"
   case memail of
     Nothing -> runJSONGenT $ value "send" False >> value "badformat" True
@@ -389,23 +390,26 @@ apiCallSendPasswordReminder = api $ do
         Nothing -> do
           runJSONGenT $ value "send" True
         Just user -> do
-          minv <- dbQuery $ GetPasswordReminder $ userid user
-          case minv of
-            Just pr@PasswordReminder{..} -> case prRemainedEmails of
-              0 -> runJSONGenT $ value "send" True
-              n -> do
-                _ <- dbUpdate $ UpdatePasswordReminder $ pr { prRemainedEmails = n - 1 }
-                sendResetPasswordMail ctx (LinkPasswordReminder prUserID prToken) user
-                runJSONGenT $ value "send" True
-            _ -> do
-              link <- newPasswordReminderLink $ userid user
-              sendResetPasswordMail ctx link user
-              runJSONGenT $ value "send" True
+          sendPasswordReminder user
+          runJSONGenT $ value "send" True
+
+sendPasswordReminder :: Kontrakcja m => User -> m ()
+sendPasswordReminder user = do
+  ctx <- getContext
+  minv <- dbQuery $ GetPasswordReminder $ userid user
+  case minv of
+    Just pr@PasswordReminder{..} -> case prRemainedEmails of
+      0 -> return ()
+      n -> do
+        _ <- dbUpdate $ UpdatePasswordReminder $ pr { prRemainedEmails = n - 1 }
+        sendResetPasswordMail ctx (LinkPasswordReminder prUserID prToken)
+    _ -> do
+      link <- newPasswordReminderLink $ userid user
+      sendResetPasswordMail ctx link
  where
-  sendResetPasswordMail ctx link user = do
+  sendResetPasswordMail ctx link = do
     mail <- resetPasswordMail ctx user link
     scheduleEmailSendout $ mail { to = [getMailAddress user] }
-
 
 apiCallUserGetCallbackScheme :: Kontrakcja m => m Response
 apiCallUserGetCallbackScheme = api $ do
