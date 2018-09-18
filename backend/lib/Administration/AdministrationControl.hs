@@ -33,6 +33,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
 import qualified Data.Text as T
+import qualified Data.Text.ICU.Normalize as ICU
 import qualified Data.Unjson as Unjson
 import qualified Text.StringTemplates.Fields as F
 
@@ -641,7 +642,8 @@ daveFile fileid' _title = onlyAdmin $ do
       then internalError
       else do
         let fname = filter (/=',') $ filename file -- Chrome does not like commas in this header
-        return $ setHeader "Content-Disposition" ("attachment;filename=" ++ fname)
+            fname' = T.unpack $ ICU.normalize ICU.NFC $ T.pack fname -- http2 doesnt like non-normalized utf8
+        return $ setHeader "Content-Disposition" ("attachment;filename=" ++ fname')
                  $ Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
 
 randomScreenshotForTest :: Kontrakcja m => m Response
