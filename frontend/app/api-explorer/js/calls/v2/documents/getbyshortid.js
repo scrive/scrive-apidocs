@@ -3,7 +3,7 @@
 new APICallV2({
   category: ["fetch"],
   name: "Get by short ID",
-  description: "Get a document using a short 6 digit Document ID. Only valid for documents created or modified in the last 24 hours that are Pending.",
+  description: "Get a document using a short 6 digit Document ID. Only valid for documents created or modified in the last 72 hours that are Pending.",
   sampleUrl: "/api/v2/documents/$short_document_id$/getbyshortid",
   method: "GET",
   getCallUrl: function () {
