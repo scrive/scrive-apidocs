@@ -20,7 +20,8 @@ javascriptLocalisation =
              , signviewConfirmation: "$_contractSignConfirmation()$"
              , signviewConfirmationSignaturesPlaced: "$_contractSignConfirmationSignaturePlaced()$"
              , signviewLegalAgreement: {
-                   text: "$_signviewLegalAgreementText()$"
+                   textTop: "$_signviewLegalAgreementText()$"
+                 , textBottom: "$_signviewLegalAgreementTextBottom()$"
                  , point1: "$_signviewLegalAgreementPoint1()$"
                  , point2: "$_signviewLegalAgreementPoint2()$"
                  , point3: "$_signviewLegalAgreementPoint3()$"
