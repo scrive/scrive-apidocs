@@ -30,13 +30,12 @@ var FlashMessage = require("../../../../js/flashmessages.js").FlashMessage;
         "identify_uid.expired": localization.identifyDKNemIdError.expired
       };
 
-      if (/^identify_/.test(errorType)) {
-        new FlashMessage({
-          type: "error",
-          content: errorMsgs[errorType] || errorMsgs.none
-        });
-        this.props.model.setIdentify();
-      }
+      new FlashMessage({
+        type: "error",
+        content: errorMsgs[errorType] || errorMsgs["identify_none"]
+      });
+      window.removeEventListener("message", this.onError);
+      this.props.model.setIdentify();
     },
     componentDidMount: function () {
       window.addEventListener("message", this.onError);

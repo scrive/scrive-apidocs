@@ -97,6 +97,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
     let newAccountFlags forAdmins = do
           sqlSet "can_use_dk_authentication_to_view" False
           sqlSet "can_use_dk_authentication_to_sign" False
+          sqlSet "can_use_fi_authentication_to_view" False
           sqlSet "can_use_no_authentication_to_view" False
           sqlSet "can_use_no_authentication_to_sign" False
           sqlSet "can_use_se_authentication_to_view" False

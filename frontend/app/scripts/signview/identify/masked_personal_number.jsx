@@ -6,23 +6,12 @@ var MaskedPersonalNumber = React.createClass({
     number: React.PropTypes.string,
     placeholder: React.PropTypes.string,
     isNorwegian: React.PropTypes.bool,
-    isDanish: React.PropTypes.bool
+    isDanish: React.PropTypes.bool,
+    isFinnish: React.PropTypes.bool
   },
   maskNumber: function (digits) {
-    var result = this.props.number;
-    var replacementCount = 0;
-    for (var i = this.props.number.length - 1; i >= 0; i--) {
-      if (!isNaN(parseInt(this.props.number.substr(i, 1), 10))) {
-        result = this.props.number.substr(0, i) + "*" + result.substr(i + 1);
-        replacementCount++;
-      }
-
-      if (replacementCount == digits) {
-        break;
-      }
-    }
-
-    return result;
+    //   "*".repeat(digits) is not supported by some browsers - like PhantomJS :(
+    return this.props.number.substr(0, this.props.number.length - digits) + Array(digits + 1).join("*");
   },
   render: function () {
     var result = this.props.placeholder || "";
@@ -31,6 +20,8 @@ var MaskedPersonalNumber = React.createClass({
       if (this.props.isNorwegian) {
         result = this.maskNumber(5);
       } else if (this.props.isDanish) {
+        result = this.maskNumber(4);
+      } else if (this.props.isFinnish) {
         result = this.maskNumber(4);
       } else {
         result = this.maskNumber(4);

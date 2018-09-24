@@ -317,6 +317,29 @@ var SSNForDKNemIDValidation = exports.SSNForDKNemIDValidation = Validation.exten
     }
 });
 
+var SSNForFITupasValidation = exports.SSNForFITupasValidation = Validation.extend({
+    defaults: {
+        validates: function(t) {
+           // Format: DDMMYY [+-A] XXX checksumCharacter
+           try {
+             var result = t.toUpperCase().match(/^([0-9]{2})([0-9]{2})([0-9]{2})[+-A][0-9]{3}[0123456789ABCDEFHJKLMNPRSTUVWXY]$/)
+             var checksumChars = "0123456789ABCDEFHJKLMNPRSTUVWXY"
+             var day = Number(result[1])
+             var month = Number(result[2])
+             var year = Number(result[3])
+             var computedChecksumIdx = Number(result[0].slice(0,6) + result[0].slice(7,10)) % (checksumChars.length)
+             var computedChecksum = checksumChars[computedChecksumIdx]
+             return (1 <= day && day <= 31 && 1 <= month && month <= 12 && computedChecksum == result[0][10])
+           }
+           catch(err) {
+             console.log(err);
+             return false;
+           }
+        },
+        message: "Personal number for Finnish TUPAS must be in format DDMMYY?XXXC"
+    }
+});
+
 jQuery.fn.validate = function(validationObject){
     var validationObject = validationObject || (new NotEmptyValidation);
     var validates = true;
@@ -341,4 +364,3 @@ String.prototype.validate = function(validationObject) {
     var validationObject = validationObject || (new NotEmptyValidation);
     return validationObject.validateData(this);
 };
-

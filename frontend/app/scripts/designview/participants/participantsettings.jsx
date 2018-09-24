@@ -94,6 +94,8 @@ module.exports = React.createClass({
       return localization.designview.addParties.authenticationToViewNOBankID;
     } else if (t == "dk_nemid") {
       return localization.designview.addParties.authenticationToViewDKNemID;
+    } else if (t == "fi_tupas") {
+      return localization.designview.addParties.authenticationToViewFITupas;
     } else if (t == "sms_pin") {
       return localization.designview.addParties.authenticationToViewSMSPin;
     }
@@ -101,7 +103,9 @@ module.exports = React.createClass({
   authenticationToViewOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var authTypes = !sig.signs() ? ["standard"] : ["standard", "se_bankid", "no_bankid", "dk_nemid", "sms_pin"];
+    var authTypes = !sig.signs()
+          ? ["standard"]
+          : ["standard", "se_bankid", "no_bankid", "dk_nemid", "fi_tupas", "sms_pin"];
 
     if (sig.signs()) {
       var ff = Subscription.currentSubscription().currentUserFeatures();
@@ -119,6 +123,9 @@ module.exports = React.createClass({
       }
       if (!ff.canUseSMSPinAuthenticationToView() && !sig.smsPinAuthenticationToView()) {
         authTypes = _.without(authTypes, "sms_pin");
+      }
+      if (!ff.canUseFIAuthenticationToView() && !sig.fiTupasAuthenticationToView()) {
+        authTypes = _.without(authTypes, "fi_tupas");
       }
     }
 

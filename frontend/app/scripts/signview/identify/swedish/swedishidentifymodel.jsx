@@ -35,6 +35,9 @@ var ErrorModal = require("../../errormodal");
     isDanish: function () {
       return false;
     },
+    isFinnish: function () {
+      return false;
+    },
     isSMSPin: function () {
       return false;
     },

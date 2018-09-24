@@ -169,12 +169,16 @@ authenticationMethodsCanMix DKNemIDAuthenticationToView  SEBankIDAuthenticationT
 authenticationMethodsCanMix DKNemIDAuthenticationToView  NOBankIDAuthenticationToSign = False
 authenticationMethodsCanMix SEBankIDAuthenticationToView NOBankIDAuthenticationToSign = False
 authenticationMethodsCanMix SEBankIDAuthenticationToView DKNemIDAuthenticationToSign  = False
+authenticationMethodsCanMix FITupasAuthenticationToView  SEBankIDAuthenticationToSign = False
+authenticationMethodsCanMix FITupasAuthenticationToView  NOBankIDAuthenticationToSign = False
+authenticationMethodsCanMix FITupasAuthenticationToView  DKNemIDAuthenticationToSign  = False
 authenticationMethodsCanMix _ _ = True
 
 authViewMatchesAuth :: AuthenticationToViewMethod -> EAuthentication -> Bool
 authViewMatchesAuth NOBankIDAuthenticationToView NetsNOBankIDAuthentication_{} = True
 authViewMatchesAuth SEBankIDAuthenticationToView CGISEBankIDAuthentication_{}  = True
 authViewMatchesAuth DKNemIDAuthenticationToView  NetsDKNemIDAuthentication_{}  = True
+authViewMatchesAuth FITupasAuthenticationToView  NetsFITupasAuthentication_{}  = True
 authViewMatchesAuth SMSPinAuthenticationToView   SMSPinAuthentication_{}  = True
 authViewMatchesAuth _ _ = False
 
@@ -186,14 +190,16 @@ authToViewNeedsPersonalNumber StandardAuthenticationToView = False
 authToViewNeedsPersonalNumber SEBankIDAuthenticationToView = True
 authToViewNeedsPersonalNumber NOBankIDAuthenticationToView = True
 authToViewNeedsPersonalNumber DKNemIDAuthenticationToView  = True
-authToViewNeedsPersonalNumber SMSPinAuthenticationToView = False
+authToViewNeedsPersonalNumber SMSPinAuthenticationToView   = False
+authToViewNeedsPersonalNumber FITupasAuthenticationToView  = True
 
 authToViewNeedsMobileNumber :: AuthenticationToViewMethod -> Bool
 authToViewNeedsMobileNumber StandardAuthenticationToView = False
 authToViewNeedsMobileNumber SEBankIDAuthenticationToView = False
 authToViewNeedsMobileNumber NOBankIDAuthenticationToView = True
 authToViewNeedsMobileNumber DKNemIDAuthenticationToView  = False
-authToViewNeedsMobileNumber SMSPinAuthenticationToView = True
+authToViewNeedsMobileNumber SMSPinAuthenticationToView   = True
+authToViewNeedsMobileNumber FITupasAuthenticationToView  = False
 
 authToSignNeedsPersonalNumber :: AuthenticationToSignMethod -> Bool
 authToSignNeedsPersonalNumber StandardAuthenticationToSign = False

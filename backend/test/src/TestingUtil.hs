@@ -227,6 +227,7 @@ instance Arbitrary FeatureFlags where
   arbitrary = do
     (a, b, c, d, e, f, g, h, i, j) <- arbitrary
     (k, l, m, n, o, p, q, r, s, t) <- arbitrary
+    u <- arbitrary
     return $ FeatureFlags {
         ffCanUseTemplates = a
       , ffCanUseBranding  = b
@@ -248,6 +249,7 @@ instance Arbitrary FeatureFlags where
       , ffCanUseEmailInvitations = r
       , ffCanUseAPIInvitations = s
       , ffCanUsePadInvitations = t
+      , ffCanUseFIAuthenticationToView = u
       }
 
 instance Arbitrary Features where
@@ -554,10 +556,10 @@ instance Arbitrary SignatoryTextField where
     }
 
 instance Arbitrary AuthenticationToSignMethod where
-  arbitrary = elements [StandardAuthenticationToSign, SEBankIDAuthenticationToSign, NOBankIDAuthenticationToSign, DKNemIDAuthenticationToSign]
+  arbitrary = elements [toEnum 0 ..]
 
 instance Arbitrary AuthenticationToViewMethod where
-  arbitrary = elements [StandardAuthenticationToView, SEBankIDAuthenticationToView, NOBankIDAuthenticationToView, DKNemIDAuthenticationToView]
+  arbitrary = elements [toEnum 0 ..]
 
 instance Arbitrary DeliveryMethod where
   arbitrary = elements [EmailDelivery, PadDelivery]

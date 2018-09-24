@@ -428,6 +428,7 @@ apiCallV1Ready did = logDocument did . api $ do
       SEBankIDAuthenticationToView -> isGood $ asValidSwedishSSN $ getPersonalNumber sl
       NOBankIDAuthenticationToView -> isGood $ asValidNorwegianSSN $ getPersonalNumber sl
       DKNemIDAuthenticationToView  -> isGood $ asValidDanishSSN $ getPersonalNumber sl
+      FITupasAuthenticationToView  -> False -- Finnish TUPAS auth to view is not supported in API v1
       SMSPinAuthenticationToView   -> True
       StandardAuthenticationToView -> True
     signatoryHasValidPhoneForIdentifyToView sl =
@@ -436,6 +437,7 @@ apiCallV1Ready did = logDocument did . api $ do
         SEBankIDAuthenticationToView -> True
         NOBankIDAuthenticationToView -> isGood resultValidPhone || isEmpty resultValidPhone
         DKNemIDAuthenticationToView  -> True
+        FITupasAuthenticationToView  -> False -- Finnish TUPAS auth to view is not supported in API v1
         SMSPinAuthenticationToView   -> isGood $ asValidPhoneForSMS $ getMobile sl
         StandardAuthenticationToView -> True
 
@@ -728,7 +730,7 @@ apiCallV1ChangeAuthenticationToView did slid = logDocumentAndSignatory did slid 
     mobile_number <- getField "mobile_number"
     when (isNothing authentication_type) $
       throwM . SomeDBExtraException $ badInput $
-        "`authentication_type` must be given. Supported values are: `standard`, `se_bankid`, `no_bankid`."
+        "`authentication_type` must be given. Supported values are: `standard`, `se_bankid`, `no_bankid`, `dk_nemid`."
     (authtoview, mSSN, mPhone) <- case fromJSValue $ J.toJSValue $ fromMaybe "" authentication_type of
       Nothing -> throwM . SomeDBExtraException $ badInput $
         "Invalid authentication method: `" ++ fromMaybe "" authentication_type ++ "` was given. Supported values are: `standard`, `se_bankid`, `no_bankid`."
@@ -737,6 +739,9 @@ apiCallV1ChangeAuthenticationToView did slid = logDocumentAndSignatory did slid 
       Just SEBankIDAuthenticationToView -> return (SEBankIDAuthenticationToView, personal_number, Nothing)
       Just NOBankIDAuthenticationToView -> return (NOBankIDAuthenticationToView, personal_number, mobile_number)
       Just DKNemIDAuthenticationToView  -> return (DKNemIDAuthenticationToView , personal_number, Nothing)
+      -- Finnish TUPAS is not supported in API V1
+      Just FITupasAuthenticationToView  -> throwM . SomeDBExtraException $ badInput $
+        "Invalid `authentication_type`. Supported values are: `standard`, `se_bankid`, `no_bankid`, `dk_nemid`."
     -- Check conditions on signatory
     guardAuthenticationMethodsCanMix authtoview $ signatorylinkauthenticationtosignmethod sl
     case mSSN of
@@ -760,6 +765,8 @@ apiCallV1ChangeAuthenticationToView did slid = logDocumentAndSignatory did slid 
     isValidSSNForAuthenticationToView SEBankIDAuthenticationToView ssn = isGood $ asValidSwedishSSN   ssn
     isValidSSNForAuthenticationToView NOBankIDAuthenticationToView ssn = isGood $ asValidNorwegianSSN ssn
     isValidSSNForAuthenticationToView DKNemIDAuthenticationToView  ssn = isGood $ asValidDanishSSN    ssn
+    -- Finnish TUPAS is not supported in API V1
+    isValidSSNForAuthenticationToView FITupasAuthenticationToView  _ = False
     isValidPhoneForAuthenticationToView :: AuthenticationToViewMethod -> String -> Bool
     isValidPhoneForAuthenticationToView StandardAuthenticationToView _ = True
     isValidPhoneForAuthenticationToView SMSPinAuthenticationToView phone = isGood (asValidPhoneForSMS phone)
@@ -767,6 +774,8 @@ apiCallV1ChangeAuthenticationToView did slid = logDocumentAndSignatory did slid 
     isValidPhoneForAuthenticationToView DKNemIDAuthenticationToView  _ = True
     isValidPhoneForAuthenticationToView NOBankIDAuthenticationToView phone =
       let phoneValidation = asValidPhoneForNorwegianBankID phone in isGood phoneValidation || isEmpty phoneValidation
+    -- Finnish TUPAS is not supported in API V1
+    isValidPhoneForAuthenticationToView FITupasAuthenticationToView _ = False
 
 apiCallV1ChangeAuthenticationToSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 apiCallV1ChangeAuthenticationToSign did slid = logDocumentAndSignatory did slid . api $ do

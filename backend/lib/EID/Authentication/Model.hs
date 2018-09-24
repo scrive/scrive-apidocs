@@ -6,6 +6,7 @@ module EID.Authentication.Model (
   , MergeCGISEBankIDAuthentication(..)
   , MergeNetsNOBankIDAuthentication(..)
   , MergeNetsDKNemIDAuthentication(..)
+  , MergeNetsFITupasAuthentication(..)
   , MergeSMSPinAuthentication(..)
   , GetEAuthentication(..)
   , GetEAuthenticationWithoutSession(..)
@@ -36,6 +37,7 @@ data EAuthentication
   = CGISEBankIDAuthentication_ !CGISEBankIDAuthentication
   | NetsNOBankIDAuthentication_ !NetsNOBankIDAuthentication
   | NetsDKNemIDAuthentication_ !NetsDKNemIDAuthentication
+  | NetsFITupasAuthentication_ !NetsFITupasAuthentication
   | SMSPinAuthentication_ T.Text -- param is a phone number
 
 ----------------------------------------
@@ -49,6 +51,7 @@ data AuthenticationProvider
   | NetsNOBankID
   | NetsDKNemID
   | SMSPinAuth
+  | NetsFITupas
     deriving (Eq, Ord, Show)
 
 instance PQFormat AuthenticationProvider where
@@ -63,8 +66,9 @@ instance FromSQL AuthenticationProvider where
       2 -> return NetsNOBankID
       3 -> return NetsDKNemID
       4 -> return SMSPinAuth
+      5 -> return NetsFITupas
       _ -> throwM RangeError {
-        reRange = [(1, 4)]
+        reRange = [(1, 5)]
       , reValue = n
       }
 
@@ -74,6 +78,7 @@ instance ToSQL AuthenticationProvider where
   toSQL NetsNOBankID = toSQL (2::Int16)
   toSQL NetsDKNemID  = toSQL (3::Int16)
   toSQL SMSPinAuth   = toSQL (4::Int16)
+  toSQL NetsFITupas  = toSQL (5::Int16)
 ----------------------------------------
 
 -- | General version of inserting some authentication for a given signatory or replacing existing one.
@@ -148,6 +153,15 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeSMSPinAuthentication () whe
         sqlSet "provider" SMSPinAuth
         sqlSet "signatory_phone_number" mobile
 
+-- | Insert NemID authentication for a given signatory or replace the existing one.
+data MergeNetsFITupasAuthentication = MergeNetsFITupasAuthentication SessionID SignatoryLinkID NetsFITupasAuthentication
+instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsFITupasAuthentication () where
+  update (MergeNetsFITupasAuthentication sid slid NetsFITupasAuthentication{..}) = do
+    dbUpdate $ MergeAuthenticationInternal sid slid $ do
+        sqlSet "provider" NetsFITupas
+        sqlSet "signatory_name" netsFITupasSignatoryName
+        sqlSet "signatory_date_of_birth" netsFITupasDateOfBirth
+
 -- Get authentication - internal - just to unify code
 data GetEAuthenticationInternal = GetEAuthenticationInternal SignatoryLinkID (Maybe SessionID)
 instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthenticationInternal (Maybe EAuthentication) where
@@ -200,3 +214,7 @@ fetchEAuthentication (provider, internal_provider, msignature, msignatory_name, 
   , netsDKNemIDCertificate   = fromJust msignature
   }
   SMSPinAuth -> SMSPinAuthentication_ (fromJust signatory_phone_number)
+  NetsFITupas -> NetsFITupasAuthentication_ NetsFITupasAuthentication {
+    netsFITupasSignatoryName = fromJust msignatory_name
+  , netsFITupasDateOfBirth   = fromJust signatory_dob
+  }

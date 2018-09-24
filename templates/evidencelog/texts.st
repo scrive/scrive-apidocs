@@ -93,6 +93,26 @@ ChangeAuthenticationToViewMethodSMSPinToSEBankIDEvidenceLog = The user <span cla
 ###
 ChangeAuthenticationToViewMethodSMSPinToDKNemIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “PIN by SMS” to “Danish NemID”.
 ###
+ChangeAuthenticationToViewMethodStandardToFITupasEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “no extra authentication” to “Finnish TUPAS”.
+###
+ChangeAuthenticationToViewMethodNOBankIDToFITupasEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Norwegian BankID” to “Finnish TUPAS”.
+###
+ChangeAuthenticationToViewMethodSEBankIDToFITupasEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Swedish BankID” to “Finnish TUPAS”.
+###
+ChangeAuthenticationToViewMethodDKNemIDToFITupasEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Danish NemID” to “Finnish TUPAS”.
+###
+ChangeAuthenticationToViewMethodSMSPinToFITupasEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “PIN by SMS” to “Finnish TUPAS”.
+###
+ChangeAuthenticationToViewMethodFITupasToStandardEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Finnish TUPAS” to “no extra authentication”.
+###
+ChangeAuthenticationToViewMethodFITupasToNOBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Finnish TUPAS” to “Norwegian BankID”.
+###
+ChangeAuthenticationToViewMethodFITupasToSEBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Finnish TUPAS” to “Swedish BankID”.
+###
+ChangeAuthenticationToViewMethodFITupasToDKNemIDEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Finnish TUPAS” to “Danish NemID”.
+###
+ChangeAuthenticationToViewMethodFITupasToSMSPinEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Finnish TUPAS” to “PIN by SMS”.
+###
 ChangeAuthenticationToSignMethodDKNemIDToNOBankIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Danish NemID” to "Norwegian BankID”.
 ###
 ChangeAuthenticationToSignMethodDKNemIDToStandardEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Danish NemID” to “no extra authentication”.
@@ -566,6 +586,9 @@ elegVerificationAuth=
   $if(signatory_ip)$
   <br/>IP: $signatory_ip$
   $endif$
+  $if(signatory_bank_name)$
+  <br/>Bank: $signatory_bank_name$
+  $endif$
 </p>
 <br/>
 $if(signature)$
@@ -575,9 +598,9 @@ $if(ocsp_response)$
 <p>Online Certificate Status Protocol (OCSP) Response: <div>$ocsp_response$</div></p>
 $endif$
 ###
-provider=$if(provider_sebankid)$CGI$elseif(provider_nobankid)$Nets$elseif(provider_dknemid)$Nets$endif$
+provider=$if(provider_sebankid)$CGI$elseif(provider_nobankid)$Nets$elseif(provider_dknemid)$Nets$elseif(provider_fitupas)$Nets$endif$
 ###
-providerType=$if(provider_sebankid)$Swedish BankID$elseif(provider_nobankid)$Norwegian BankID$elseif(provider_dknemid)$Danish NemID$endif$
+providerType=$if(provider_sebankid)$Swedish BankID$elseif(provider_nobankid)$Norwegian BankID$elseif(provider_dknemid)$Danish NemID$elseif(provider_fitupas)$Finnish TUPAS$endif$
 ###
 AuthenticatedToViewEvidenceArchive=*
 $if(provider_sebankid)$
@@ -586,6 +609,8 @@ $elseif(provider_nobankid)$
   $_AuthenticatedToViewEvidenceArchiveNOBankID()$
 $elseif(provider_dknemid)$
   $_AuthenticatedToViewEvidenceArchiveDKNemID()$
+$elseif(provider_fitupas)$
+  $_AuthenticatedToViewEvidenceArchiveFITupas()$
 $elseif(provider_sms_pin)$
   $_AuthenticatedToViewEvidenceArchiveSMSPin()$
 $endif$

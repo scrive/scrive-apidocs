@@ -140,4 +140,6 @@ kontraMigrations = [
   , usersAddDataRetentionPolicy
   , featureFlagsAddStandardAuthAndFlagsForAdmin
   , featureFlagsAddEmailInvitation
+  , featureFlagsAddFIAuthToView
+  , addFIAuthChecksToEIDAuthentications
   ]

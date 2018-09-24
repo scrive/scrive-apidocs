@@ -52,9 +52,9 @@ describe("admin/paymentspanel", function () {
   it("should render the payments panel", function () {
     var component = renderComponent();
     var checkboxes = $(".checkbox", component.getDOMNode());
-    // We should have 20 x 2 checkboxes. One for each option.
+    // We should have 21 x 2 checkboxes. One for each option.
     // 2 sets - one for regular user, one for admin
-    assert.equal(checkboxes.size(), 40);
+    assert.equal(checkboxes.size(), 42);
     // We should have one select (for price plan)
     var selects = $(".select", component.getDOMNode());
     assert.equal(selects.size(), 1);
@@ -70,9 +70,9 @@ describe("admin/paymentspanel", function () {
     var checkboxes = $(".checkbox.disabled", component.getDOMNode());
 
     component.forceUpdate();
-    // We should have 20 x 2 checkboxes. One for each option.
+    // We should have 21 x 2 checkboxes. One for each option.
     // 2 sets - one for regular user, one for admin
-    assert.equal(checkboxes.size(), 40);
+    assert.equal(checkboxes.size(), 42);
 
   });
 
@@ -100,6 +100,7 @@ describe("admin/paymentspanel", function () {
         canUseSMSConfirmations: true,
         canUseDKAuthenticationToView: false,
         canUseDKAuthenticationToSign: true,
+        canUseFIAuthenticationToView: true,
         canUseNOAuthenticationToView: true,
         canUseNOAuthenticationToSign: true,
         canUseSEAuthenticationToView: true,
@@ -122,6 +123,7 @@ describe("admin/paymentspanel", function () {
         canUseSMSConfirmations: true,
         canUseDKAuthenticationToView: false,
         canUseDKAuthenticationToSign: true,
+        canUseFIAuthenticationToView: true,
         canUseNOAuthenticationToView: true,
         canUseNOAuthenticationToSign: true,
         canUseSEAuthenticationToView: true,
@@ -137,12 +139,12 @@ describe("admin/paymentspanel", function () {
     });
     component.forceUpdate();
     var checkedCheckboxes = $(".checkbox.checked", component.getDOMNode());
-    assert.equal(checkedCheckboxes.size(), 36); // 4 options were set to false
+    assert.equal(checkedCheckboxes.size(), 38); // 4 options were set to false
 
     TestUtils.Simulate.click(checkedCheckboxes[0]); // Lets pick one to uncheck
     component.forceUpdate();
     var changedCheckedCheckboxes = $(".checkbox.checked", component.getDOMNode());
-    assert.equal(changedCheckedCheckboxes.size(), 35);
+    assert.equal(changedCheckedCheckboxes.size(), 37);
 
 
   });

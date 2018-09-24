@@ -28,9 +28,6 @@ var link = link;
     personalnumberFormatted: function () {
       return this.doc().currentSignatory().personalnumber().replace(/-/g, "");
     },
-    dateOfBirth: function () {
-      return this.personalnumberFormatted().slice(0, 6);
-    },
     isSwedish: function () {
       return false;
     },
@@ -39,6 +36,9 @@ var link = link;
     },
     isDanish: function () {
       return true;
+    },
+    isFinnish: function () {
+      return false;
     },
     isSMSPin: function () {
       return false;

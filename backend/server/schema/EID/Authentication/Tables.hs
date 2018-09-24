@@ -5,7 +5,7 @@ import DB
 tableEIDAuthentications :: Table
 tableEIDAuthentications = tblTable {
   tblName = "eid_authentications"
-, tblVersion = 4
+, tblVersion = 5
 , tblColumns = [
     tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
   , tblColumn { colName = "provider", colType = SmallIntT, colNullable = False }
@@ -31,6 +31,8 @@ tableEIDAuthentications = tblTable {
           "provider = 3 AND signature IS NOT NULL AND signatory_name IS NOT NULL OR provider <> 3"
     , Check "check_sms_pin_authentications_have_all_required_fields"
           "provider = 4 AND signatory_phone_number IS NOT NULL OR provider <> 4"
+    , Check "check_nets_fi_tupas_authentications_have_all_required_fields"
+          "provider = 5 AND signatory_name IS NOT NULL AND signatory_date_of_birth IS NOT NULL OR provider <> 5"
   ]
 , tblForeignKeys = [
     (fkOnColumn "signatory_link_id" "signatory_links" "id") {

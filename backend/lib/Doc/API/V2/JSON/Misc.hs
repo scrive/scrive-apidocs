@@ -69,6 +69,7 @@ unjsonAuthenticationToViewMethod = unjsonEnumBy "AuthenticationToViewMethod" [
     , (SEBankIDAuthenticationToView, "se_bankid")
     , (NOBankIDAuthenticationToView, "no_bankid")
     , (DKNemIDAuthenticationToView, "dk_nemid")
+    , (FITupasAuthenticationToView, "fi_tupas")
     , (SMSPinAuthenticationToView, "sms_pin")
     ]
 

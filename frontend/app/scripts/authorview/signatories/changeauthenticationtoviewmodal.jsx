@@ -6,6 +6,7 @@ var InfoTextInput = require("../../common/infotextinput");
 var SSNForSEBankIDValidation = require("../../../js/validation.js").SSNForSEBankIDValidation;
 var SSNForNOBankIDValidation = require("../../../js/validation.js").SSNForNOBankIDValidation;
 var SSNForDKNemIDValidation = require("../../../js/validation.js").SSNForDKNemIDValidation;
+var SSNForFITupasValidation = require("../../../js/validation.js").SSNForFITupasValidation;
 var PhoneValidationNO = require("../../../js/validation.js").PhoneValidationNO;
 var PhoneValidation = require("../../../js/validation.js").PhoneValidation;
 var EmptyValidation = require("../../../js/validation.js").EmptyValidation;
@@ -49,6 +50,8 @@ var Modal = require("../../common/modal");
           this.setMobileNumber(signatory.mobile());
         } else if (this.isAuthenticationDKNemID()) {
           this.setPersonalNumber(signatory.personalnumber());
+        } else if (this.isAuthenticationFITupas()) {
+          this.setPersonalNumber(signatory.personalnumber());
         } else if (this.isAuthenticationSMSPin()) {
           this.setMobileNumber(signatory.mobile());
         }
@@ -87,6 +90,14 @@ var Modal = require("../../common/modal");
       return this.authenticationMethod() == this.DKNemIDAuthenticationValue();
     },
 
+    FITupasAuthenticationValue: function () {
+      return "fi_tupas";
+    },
+
+    isAuthenticationFITupas: function () {
+      return this.authenticationMethod() == this.FITupasAuthenticationValue();
+    },
+
     SMSPinAuthenticationValue: function () {
       return "sms_pin";
     },
@@ -111,6 +122,8 @@ var Modal = require("../../common/modal");
         return new SSNForNOBankIDValidation().validateData(pn);
       } else if (this.isAuthenticationDKNemID()) {
         return new SSNForDKNemIDValidation().validateData(pn);
+      } else if (this.isAuthenticationFITupas()) {
+        return new SSNForFITupasValidation().validateData(pn);
       }
       return true;
     },
@@ -156,6 +169,8 @@ var Modal = require("../../common/modal");
         }
       } else if (this.isAuthenticationDKNemID() && !this.isPersonalNumberValid()) {
         text = localization.docview.changeAuthenticationToView.flashMessageInvalidDKSSN;
+      } else if (this.isAuthenticationFITupas() && !this.isPersonalNumberValid()) {
+        text = localization.docview.changeAuthenticationToView.flashMessageInvalidFISSN;
       }
       return text;
     }
@@ -186,6 +201,8 @@ var Modal = require("../../common/modal");
         return localization.docview.signatory.authenticationToViewNOBankID;
       } else if (model.isAuthenticationDKNemID()) {
         return localization.docview.signatory.authenticationToViewDKNemID;
+      } else if (model.isAuthenticationFITupas()) {
+        return localization.docview.signatory.authenticationToViewFITupas;
       } else if (model.isAuthenticationSMSPin()) {
         return localization.docview.signatory.authenticationToViewSMSPin;
       }
@@ -250,6 +267,21 @@ var Modal = require("../../common/modal");
         options.push(dkNemid);
       }
 
+      var fiTupas = {
+        name: localization.docview.signatory.authenticationToViewFITupas,
+        selected: model.isAuthenticationFITupas(),
+        value: model.FITupasAuthenticationValue()
+      };
+
+      if (sig.fiTupasAuthenticationToView() ||
+         (ff.canUseFIAuthenticationToView()
+          && !sig.seBankIDAuthenticationToSign()
+          && !sig.noBankIDAuthenticationToSign()
+          && !sig.dkNemIDAuthenticationToSign())
+      ) {
+        options.push(fiTupas);
+      }
+
       var smsPin = {
         name: localization.docview.signatory.authenticationToViewSMSPin,
         selected: model.isAuthenticationSMSPin(),
@@ -279,6 +311,8 @@ var Modal = require("../../common/modal");
         text = localization.docview.changeAuthenticationToView.ssnNOBankIDLabel;
       } else if (model.isAuthenticationDKNemID()) {
         text = localization.docview.changeAuthenticationToView.ssnDKNemIDLabel;
+      } else if (model.isAuthenticationFITupas()) {
+        text = localization.docview.changeAuthenticationToView.ssnFITupasLabel;
       }
       return text;
     },
@@ -292,6 +326,8 @@ var Modal = require("../../common/modal");
         text = localization.docview.changeAuthenticationToView.ssnNOBankIDPlaceholder;
       } else if (model.isAuthenticationDKNemID()) {
         text = localization.docview.changeAuthenticationToView.ssnDKNemIDPlaceholder;
+      } else if (model.isAuthenticationFITupas()) {
+        text = localization.docview.changeAuthenticationToView.ssnFITupasPlaceholder;
       }
       return text;
     },

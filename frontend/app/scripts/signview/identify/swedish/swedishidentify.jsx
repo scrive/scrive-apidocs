@@ -28,6 +28,7 @@ var MaskedPersonalNumber = require("../masked_personal_number");
             number={this.props.model.doc().currentSignatory().personalnumber()}
             isNorwegian={false}
             isDanish={false}
+            isFinnish={false}
           />
 
           <div className="identify-box-button">

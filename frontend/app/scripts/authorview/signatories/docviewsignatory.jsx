@@ -448,6 +448,8 @@ var EmailModal = require("../../common/email_modal");
         return localization.docview.signatory.authenticationToViewNOBankID;
       } else if (signatory.dkNemIDAuthenticationToView()) {
         return localization.docview.signatory.authenticationToViewDKNemID;
+      } else if (signatory.fiTupasAuthenticationToView()) {
+        return localization.docview.signatory.authenticationToViewFITupas;
       } else if (signatory.smsPinAuthenticationToView()) {
         return localization.docview.signatory.authenticationToViewSMSPin;
       }

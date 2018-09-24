@@ -11,21 +11,10 @@ var link = link;
     defaults: {
       doc: undefined,
       siglinkid: 0,
-      type: "desktop",
-      step: "identify",
-      mobile: "",
-      canEditMobile: false
+      step: "processing"
     },
     initialize: function (args) {
-      this.set({
-        mobile: this.mobileForNOBankIDFormat(this.doc().currentSignatory().mobile()),
-        canEditMobile: this.doc().currentSignatory().mobile() == ""
-      });
       _.bindAll(this, "identify");
-    },
-    mobileForNOBankIDFormat: function (mobile) {
-      // We need to drop prefix. It's a standard for users of NO BankID not to have it.
-      return mobile.replace("+47", "");
     },
     doc: function () {
       return this.get("doc");
@@ -37,48 +26,20 @@ var link = link;
       return this.doc().currentSignatory().personalnumber();
     },
     personalnumberFormatted: function () {
-      return this.doc().currentSignatory().personalnumber().replace(/-/g, "");
-    },
-    dateOfBirth: function () {
-      return this.personalnumberFormatted().slice(0, 6);
-    },
-    mobile: function () {
-      return this.get("mobile");
-    },
-    mobileFormatted: function () {
-      return this.get("mobile").replace(/[ -]/g, "");
-    },
-    setMobile: function (v) {
-      if (this.canEditMobile()) {
-        this.set({mobile: v});
-      }
-    },
-    canEditMobile: function () {
-      return this.get("canEditMobile");
-    },
-    isDesktopMode: function () {
-      return this.get("type") == "desktop";
-    },
-    isMobileMode: function () {
-      return this.get("type") == "mobile";
-    },
-    setDesktopMode: function () {
-      this.set({type: "desktop"});
-    },
-    setMobileMode: function () {
-      this.set({type: "mobile"});
+      // in Finnish SSN the '-' must not be removed, it carries century information.
+      return this.doc().currentSignatory().personalnumber().toUpperCase();
     },
     isSwedish: function () {
       return false;
     },
     isNorwegian: function () {
-      return true;
+      return false;
     },
     isDanish: function () {
       return false;
     },
     isFinnish: function () {
-      return false;
+      return true;
     },
     isSMSPin: function () {
       return false;
@@ -98,19 +59,15 @@ var link = link;
     identify: function () {
       this.setProcessing();
     },
-    noBankIDLink: function () {
+    fiTupasLink: function () {
       var netsTrustedDomain = window.netsTrustedDomain;
       var netsIdentifyUrl = window.netsIdentifyUrl;
       var netsMerchantIdentifier = window.netsMerchantIdentifier;
-      var vendor = this.isDesktopMode() ? "no_bankid" : "no_bidmob";
+      var vendor = "fi_tupas";
       link = netsIdentifyUrl + "?mid=" + netsMerchantIdentifier + "&wi=r";
       link = link + "&forcepkivendor=" + vendor;
-      if (this.isDesktopMode()) {
-        link = link + "&presetid=" + encodeURIComponent(Base64.encode(this.personalnumberFormatted()));
-      } else if (this.isMobileMode()) {
-        link = link + "&celnr8=" + encodeURIComponent(Base64.encode(this.mobileFormatted()));
-        link = link + "&dob6=" + encodeURIComponent(Base64.encode(this.dateOfBirth()));
-      }
+      link = link + "&style=" + window.netsTrustedDomain + "/css/assets/nets_fi.css";
+      link = link + "&presetid=" + encodeURIComponent(Base64.encode(this.personalnumberFormatted()));
       var target = "(\"" + LocationUtils.origin() + "\"," + this.doc().documentid() +
                      "," + this.siglinkid() + ",\"" + window.location  + "\")";
       link = link + "&TARGET=" + encodeURIComponent(Base64.encode(target));
@@ -121,11 +78,6 @@ var link = link;
       var status = netsTrustedDomain + "/nets/status?status=";
       link = link + "&status=" + encodeURIComponent(status);
 
-      if (this.isMobileMode()) {
-        var style = netsTrustedDomain + "/css/assets/nets.css";
-        link = link + "&style=" + encodeURIComponent(style);
-      }
-
       var locale = "en_GB";
       if (this.doc().lang() == "sv") {
         locale = "sv_SE";
@@ -133,6 +85,8 @@ var link = link;
         locale = "nb_NO";
       }  else if (this.doc().lang() == "da") {
         locale = "da_DK";
+      }  else if (this.doc().lang() == "fi") {
+        locale = "fi_FI";
       }
       link = link + "&locale=" + locale;
 

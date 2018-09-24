@@ -6,6 +6,7 @@ var NotEmptyValidation = require("./validation.js").NotEmptyValidation;
 var SSNForNOBankIDValidation = require("./validation.js").SSNForNOBankIDValidation;
 var SSNForSEBankIDValidation = require("./validation.js").SSNForSEBankIDValidation;
 var SSNForDKNemIDValidation = require("./validation.js").SSNForDKNemIDValidation;
+var SSNForFITupasValidation = require("./validation.js").SSNForFITupasValidation;
 var PhoneValidation = require("./validation.js").PhoneValidation;
 var Validation = require("./validation.js").Validation;
 var NoValidation = require("./validation.js").NoValidation;
@@ -190,6 +191,9 @@ var Field = exports.Field = Backbone.Model.extend({
         if (this.isSSN() && (this.signatory().dkNemIDAuthenticationToSign() || this.signatory().dkNemIDAuthenticationToView())) {
             return new SSNForDKNemIDValidation().validateData(this.value());
         }
+        if (this.isSSN() && this.signatory().fiTupasAuthenticationToView()) {
+            return new SSNForFITupasValidation().validateData(this.value());
+        }
         if (this.isMobile() &&
               (   this.signatory().mobileConfirmationDelivery()
                || this.signatory().emailMobileConfirmationDelivery()
@@ -284,6 +288,7 @@ var Field = exports.Field = Backbone.Model.extend({
         && (!signatory.noBankIDAuthenticationToSign())
         && (!signatory.dkNemIDAuthenticationToSign())
         && (!signatory.dkNemIDAuthenticationToView())
+        && (!signatory.fiTupasAuthenticationToView())
         && (!signatory.hasPlacedSignatures())
         && field.isObligatory()
         && (field.isText() || field.isCheckbox());
@@ -332,6 +337,8 @@ var Field = exports.Field = Backbone.Model.extend({
         return new EmptyValidation().or(new SSNForNOBankIDValidation());
       } else if (this.signatory().dkNemIDAuthenticationToSign() || this.signatory().dkNemIDAuthenticationToView()) {
         return new EmptyValidation().or(new SSNForDKNemIDValidation());
+      } else if (this.signatory().fiTupasAuthenticationToView()) {
+        return new EmptyValidation().or(new SSNForFITupasValidation());
       } else {
         return new Validation();
       }
@@ -507,7 +514,10 @@ var Field = exports.Field = Backbone.Model.extend({
       } else if (this.isMobile()) {
         return !(this.signatory().mobileDelivery() || this.signatory().emailMobileDelivery() || this.signatory().smsPinAuthenticationToView());
       } else if (this.isSSN()) {
-        return !this.signatory().seBankIDAuthenticationToView();
+        return (!this.signatory().seBankIDAuthenticationToView()
+             && !this.signatory().noBankIDAuthenticationToView()
+             && !this.signatory().dkNemIDAuthenticationToView()
+             && !this.signatory().fiTupasAuthenticationToView());
       } else {
         return true;
       }

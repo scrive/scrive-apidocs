@@ -5,6 +5,7 @@ module EID.Nets.Data (
     , NetsDKNemIDInternalProvider(..)
     , unsafeNetsDKNemIDInternalProviderFromInt16
     , NetsDKNemIDAuthentication(..)
+    , NetsFITupasAuthentication(..)
     , NetsNOBankIDSignature(..)
     , NetsDKNemIDSignature(..)
 
@@ -153,6 +154,11 @@ data NetsDKNemIDAuthentication = NetsDKNemIDAuthentication {
   , netsDKNemIDSignatoryName        :: !T.Text
   , netsDKNemIDDateOfBirth          :: !T.Text
   , netsDKNemIDCertificate          :: !ByteString
+} deriving (Eq, Ord, Show)
+
+data NetsFITupasAuthentication = NetsFITupasAuthentication {
+    netsFITupasSignatoryName        :: !T.Text
+  , netsFITupasDateOfBirth          :: !T.Text
 } deriving (Eq, Ord, Show)
 
 -- | Information for transaction. It is encoded in frontend as (,,,) + Base64 when starting nets iframe.

@@ -222,7 +222,8 @@ var Modal = require("../../common/modal");
 
       if (sig.seBankIDAuthenticationToSign() ||
           (ff.canUseSEAuthenticationToSign() &&
-            (!sig.dkNemIDAuthenticationToView() && !sig.noBankIDAuthenticationToView())
+            (!sig.dkNemIDAuthenticationToView() && !sig.noBankIDAuthenticationToView()
+            && !sig.fiTupasAuthenticationToView())
           )
       ) {
         options.push(sebankid);
@@ -235,7 +236,8 @@ var Modal = require("../../common/modal");
       };
       if (sig.noBankIDAuthenticationToSign() ||
           (ff.canUseNOAuthenticationToSign() &&
-            (!sig.dkNemIDAuthenticationToView() && !sig.seBankIDAuthenticationToView())
+            (!sig.dkNemIDAuthenticationToView() && !sig.seBankIDAuthenticationToView()
+            && !sig.fiTupasAuthenticationToView())
           )
       ) {
         options.push(nobankid);
@@ -248,7 +250,8 @@ var Modal = require("../../common/modal");
       };
       if (sig.dkNemIDAuthenticationToSign() ||
           (ff.canUseDKAuthenticationToSign() &&
-            (!sig.noBankIDAuthenticationToView() && !sig.seBankIDAuthenticationToView())
+            (!sig.noBankIDAuthenticationToView() && !sig.seBankIDAuthenticationToView()
+            && !sig.fiTupasAuthenticationToView())
           )
       ) {
         options.push(dknemid);

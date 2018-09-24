@@ -1,6 +1,7 @@
 module EID.Authentication.Migrations (
     addSignatoryIPToEIDAuthentications
   , addSMSPinAuthAdjustmentsToEIDAuthentications
+  , addFIAuthChecksToEIDAuthentications
 ) where
 
 import DB
@@ -40,5 +41,16 @@ addSMSPinAuthAdjustmentsToEIDAuthentications = Migration {
                 "provider = 3 AND signature IS NOT NULL AND signatory_name IS NOT NULL OR provider <> 3"
           , Check "check_sms_pin_authentications_have_all_required_fields"
                 "provider = 4 AND signatory_phone_number IS NOT NULL OR provider <> 4"
+          ]
+  }
+
+addFIAuthChecksToEIDAuthentications :: MonadDB m => Migration m
+addFIAuthChecksToEIDAuthentications = Migration {
+    mgrTableName = tblName tableEIDAuthentications
+  , mgrFrom = 4
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable (tblName tableEIDAuthentications) $ map sqlAddCheck [
+            Check "check_nets_fi_tupas_authentications_have_all_required_fields"
+                "provider = 5 AND signatory_name IS NOT NULL AND signatory_date_of_birth IS NOT NULL OR provider <> 5"
           ]
   }

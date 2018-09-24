@@ -518,6 +518,7 @@ docApiV2SigSetAuthenticationToView did slid = logDocumentAndSignatory did slid .
       SEBankIDAuthenticationToView -> return (mSSN_, Nothing)
       NOBankIDAuthenticationToView -> return (mSSN_, mMobile_)
       DKNemIDAuthenticationToView  -> return (mSSN_, Nothing)
+      FITupasAuthenticationToView  -> return (mSSN_, Nothing)
     -- Check conditions on parameters and signatory
     guardCanSetAuthenticationToViewForSignatoryWithValues slid authentication_type mSSN mMobile =<< theDocument
     -- API call actions

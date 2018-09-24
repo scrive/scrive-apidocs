@@ -82,8 +82,9 @@ formatDOB s = case T.splitOn "." s of
                [day, month, year] -> day <> month <> (T.drop 2 year)
                _ -> unexpectedError "Nets returned date of birth in invalid format"
 
-dobFromDKPersonalNumber :: String -> T.Text
-dobFromDKPersonalNumber personalnumber = case T.chunksOf 2 (T.pack $ take 6 $ personalnumber) of
+-- First 6 digits have the same format in both DK and FI personal numbers - DDMMYY
+dobFromDKOrFIPersonalNumber :: String -> T.Text
+dobFromDKOrFIPersonalNumber personalnumber = case T.chunksOf 2 (T.pack $ take 6 $ personalnumber) of
   [day, month, year] -> day <> "." <> month <> "." <> year
   _ -> unexpectedError $ "This personal number cannot be formatted to date: " <> personalnumber
 
@@ -108,6 +109,7 @@ decodeProvider s = case s of
        "no_bidmob"         -> EID.NetsNOBankID
        "dk_nemid_js"       -> EID.NetsDKNemID
        "dk_nemid-opensign" -> EID.NetsDKNemID
+       "fi_tupas"          -> EID.NetsFITupas
        _ -> unexpectedError $ "provider not supported"  <+> T.unpack s
 
 flashMessageUserHasIdentifiedWithDifferentSSN :: TemplatesMonad m => m FlashMessage
@@ -142,6 +144,7 @@ handleResolve = do
                resolve <- case provider of
                  EID.NetsNOBankID -> return handleResolveNetsNOBankID
                  EID.NetsDKNemID  -> return handleResolveNetsDKNemID
+                 EID.NetsFITupas  -> return handleResolveNetsFITupas
                  _ -> do
                    logAttention_ "Received invalid provider from Nets"
                    internalError
@@ -189,6 +192,7 @@ handleResolveNetsNOBankID res doc nt sl ctx = do
       logAttention "Date of birth from NETS does not match date of birth from SSN. Signatory redirected back and should see identify view." $ object [
           "dob_nets" .= dobNETS
         , "dob_ssn" .= dobSSN
+        , "provider" .= ("no_bankid" :: T.Text)
         ]
       return False
     else do
@@ -208,7 +212,6 @@ handleResolveNetsNOBankID res doc nt sl ctx = do
              F.value "signatory_mobile" mphone
              F.value "provider_nobankid" True
              F.value "signatory_dob" dob
-             -- XXX signatory_pid is saved as evidence, but never used again
              F.value "signatory_pid" mpid
              F.value "signature" $ B64.encode certificate
         void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence  (eventFields) (Just sl) Nothing =<< signatoryActor ctx sl
@@ -240,7 +243,7 @@ handleResolveNetsDKNemID res doc nt sl ctx = do
       signatoryName = cnFromDN $ attributeFromAssertion "DN" $ assertionAttributes res
       ssn_sl = T.pack $ getPersonalNumber sl
       ssn_nets = attributeFromAssertion "DK_SSN" $ assertionAttributes res
-      dob = dobFromDKPersonalNumber $ getPersonalNumber sl
+      dob = dobFromDKOrFIPersonalNumber $ getPersonalNumber sl
       mpid = lookup "DK_DAN_PID" $ assertionAttributes res
 
   let normalizeSSN = T.filter (/= '-')
@@ -249,6 +252,7 @@ handleResolveNetsDKNemID res doc nt sl ctx = do
       logAttention "SSN from NETS does not match SSN from SignatoryLink." $ object [
           "ssn_sl"   .= ssn_sl
         , "ssn_nets" .= ssn_nets
+        , "provider" .= ("dk_nemid" :: T.Text)
         ]
       return False
     else do
@@ -268,12 +272,55 @@ handleResolveNetsDKNemID res doc nt sl ctx = do
              F.value "signatory_name" signatoryName
              F.value "provider_dknemid" True
              F.value "signatory_dob" dob
-             -- XXX signatory_pid is saved as evidence, but never used again
              F.value "signatory_pid" mpid
              F.value "signature" $ B64.encode certificate
         void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence  (eventFields) (Just sl) Nothing =<< signatoryActor ctx sl
 
       dbUpdate $ ChargeUserGroupForDKNemIDAuthentication (documentid doc)
+      return True
+
+handleResolveNetsFITupas :: Kontrakcja m => GetAssertionResponse -> Document -> NetsTarget -> SignatoryLink -> Context -> m Bool
+handleResolveNetsFITupas res doc nt sl ctx = do
+  sessionID <- get ctxsessionid <$> getContext
+  let signatoryName = cnFromDN $ attributeFromAssertion "DN" $ assertionAttributes res
+      ssn_sl = T.pack $ getPersonalNumber sl
+      ssn_nets = attributeFromAssertion "FI_SSN" $ assertionAttributes res
+      dob = dobFromDKOrFIPersonalNumber $ getPersonalNumber sl
+      mpid = attributeFromAssertion "FI_TUPAS_PID" $ assertionAttributes res
+      allowed_banks = ["nordea", "opbank", "danske", "handelsbanken", "aland"
+                      , "sbank", "aktia", "popbank", "savingsbank"]
+      bankStr = attributeFromAssertion "FI_TUPAS_BANK" $ assertionAttributes res
+      bankName = if (bankStr `elem` allowed_banks)
+        then bankStr
+        else unexpectedError $ "invalid field in FI_TUPAS_BANK: " <+> T.unpack bankStr
+
+  let normalizeSSN = T.toUpper
+  if (normalizeSSN ssn_sl /= normalizeSSN ssn_nets)
+    then do
+      logAttention "SSN from NETS does not match SSN from SignatoryLink." $ object [
+          "ssn_sl"   .= ssn_sl
+        , "ssn_nets" .= ssn_nets
+        , "provider" .= ("fi_tupas" :: T.Text)
+        ]
+      return False
+    else do
+      -- Put FI TUPAS Nem ID transaction in DB
+      dbUpdate $ EID.MergeNetsFITupasAuthentication sessionID (netsSignatoryID nt) $ NetsFITupasAuthentication {
+            netsFITupasSignatoryName = signatoryName
+          , netsFITupasDateOfBirth = dob
+        }
+
+      withDocument doc $ do
+        --Add evidence
+        let eventFields = do
+             F.value "signatory_name" signatoryName
+             F.value "provider_fitupas" True
+             F.value "signatory_dob" dob
+             F.value "signatory_pid" mpid
+             F.value "signatory_bank_name" bankName
+        void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence  (eventFields) (Just sl) Nothing =<< signatoryActor ctx sl
+
+      dbUpdate $ ChargeUserGroupForFITupasAuthentication (documentid doc)
       return True
 
 ------------------------------------------

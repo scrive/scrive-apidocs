@@ -161,6 +161,7 @@ guardCanSetAuthenticationToViewForSignatoryWithValues slid authToView mSSN mMobi
     isValidSSNForAuthenticationToView SEBankIDAuthenticationToView ssn = isGood $ asValidSwedishSSN   ssn
     isValidSSNForAuthenticationToView NOBankIDAuthenticationToView ssn = isGood $ asValidNorwegianSSN ssn
     isValidSSNForAuthenticationToView DKNemIDAuthenticationToView  ssn = isGood $ asValidDanishSSN    ssn
+    isValidSSNForAuthenticationToView FITupasAuthenticationToView  ssn = isGood $ asValidFinnishSSN   ssn
     isValidMobileForAuthenticationToView :: AuthenticationToViewMethod -> String -> Bool
     isValidMobileForAuthenticationToView StandardAuthenticationToView _ = True
     isValidMobileForAuthenticationToView SMSPinAuthenticationToView mobile = isGood (asValidPhoneForSMS mobile)
@@ -168,6 +169,7 @@ guardCanSetAuthenticationToViewForSignatoryWithValues slid authToView mSSN mMobi
     isValidMobileForAuthenticationToView DKNemIDAuthenticationToView  _ = True
     isValidMobileForAuthenticationToView NOBankIDAuthenticationToView mobile = isGood phoneValidation || isEmpty phoneValidation
       where phoneValidation = asValidPhoneForNorwegianBankID mobile
+    isValidMobileForAuthenticationToView FITupasAuthenticationToView  _ = True
 
 guardCanSetAuthenticationToSignForSignatoryWithValue :: Kontrakcja m => SignatoryLinkID -> AuthenticationToSignMethod -> Maybe String -> Maybe String -> Document -> m ()
 guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobile doc = do
@@ -269,7 +271,8 @@ guardThatDocumentCanBeStarted doc = do
     signatoryHasValidSSNForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of
       SEBankIDAuthenticationToView -> isGood $ asValidSwedishSSN   $ getPersonalNumber sl
       NOBankIDAuthenticationToView -> isGood $ asValidNorwegianSSN $ getPersonalNumber sl
-      DKNemIDAuthenticationToView  -> isGood $ asValidDanishSSN $ getPersonalNumber sl
+      DKNemIDAuthenticationToView  -> isGood $ asValidDanishSSN    $ getPersonalNumber sl
+      FITupasAuthenticationToView  -> isGood $ asValidFinnishSSN   $ getPersonalNumber sl
       SMSPinAuthenticationToView   -> True
       StandardAuthenticationToView -> True
     signatoryHasValidMobileForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of

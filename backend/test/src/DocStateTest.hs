@@ -1114,7 +1114,7 @@ testSealDocument = replicateM_ 1 $ do
           StandardAuthenticationToSign -> do
              dbUpdate $ SignDocument (signatorylinkid slk) (signatorymagichash slk) Nothing Nothing screenshots sa
           SMSPinAuthenticationToSign -> do
-             dbUpdate $ SignDocument (signatorylinkid slk) (signatorymagichash slk) Nothing Nothing screenshots sa
+             dbUpdate $ SignDocument (signatorylinkid slk) (signatorymagichash slk) Nothing (Just "Arbitrary PIN") screenshots sa
           NOBankIDAuthenticationToSign -> do
              randomUpdate $ \esig -> SignDocument (signatorylinkid slk) (signatorymagichash slk) (Just (NetsNOBankIDSignature_ esig)) Nothing screenshots sa
           DKNemIDAuthenticationToSign -> do

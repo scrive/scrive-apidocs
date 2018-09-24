@@ -216,6 +216,8 @@ getMockDocSigLinkAuthToViewMethod i md = case mockSigLinkAuthMethodToView . getM
   "se_bankid" -> SEBankIDAuthenticationToView
   "no_bankid" -> NOBankIDAuthenticationToView
   "dk_nemid"  -> DKNemIDAuthenticationToView
+  "fi_tupas"  -> FITupasAuthenticationToView
+  "sms_pin"   -> SMSPinAuthenticationToView
   _ -> unexpectedError $ "Could not parse AuthenticationToViewMethod from MockDoc:\n" ++ show md
 
 getMockDocSigLinkAuthToSignMethod :: Int -> MockDoc -> AuthenticationToSignMethod

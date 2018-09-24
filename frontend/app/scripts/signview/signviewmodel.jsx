@@ -7,6 +7,7 @@ var NoValidation = require("../../js/validation.js").NoValidation;
 var SSNForNOBankIDValidation = require("../../js/validation.js").SSNForNOBankIDValidation;
 var SSNForDKNemIDValidation = require("../../js/validation.js").SSNForDKNemIDValidation;
 var SSNForSEBankIDValidation = require("../../js/validation.js").SSNForSEBankIDValidation;
+var SSNForFITupasValidation = require("../../js/validation.js").SSNForFITupasValidation;
 var PhoneValidation = require("../../js/validation.js").PhoneValidation;
 var TaskList = require("./navigation/task_list");
 var Track = require("../common/track");
@@ -205,6 +206,8 @@ var Track = require("../common/track");
           return !new SSNForSEBankIDValidation().validateData(field.value());
         } else if (signatory.dkNemIDAuthenticationToView() || signatory.dkNemIDAuthenticationToSign()) {
           return !new SSNForDKNemIDValidation().validateData(field.value());
+        } else if (signatory.fiTupasAuthenticationToView()) {
+          return !new SSNForFITupasValidation().validateData(field.value());
         } else {
           return !new NoValidation().validateData(field.value());
         }

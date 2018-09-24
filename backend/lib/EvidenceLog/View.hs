@@ -241,6 +241,10 @@ simplyfiedEventText mactor sim dee = do
                   F.value "provider_dknemid" True
                   F.value "signatory_name" $ netsDKNemIDSignatoryName n
                   F.value "signatory_dob" $ netsDKNemIDDateOfBirth n
+                NetsFITupasAuthentication_ n -> do
+                  F.value "provider_fitupas" True
+                  F.value "signatory_name" $ netsFITupasSignatoryName n
+                  F.value "signatory_dob" $ netsFITupasDateOfBirth n
                 SMSPinAuthentication_ mobile -> do
                   F.value "provider_sms_pin" True
                   F.value "signatory_mobile" $ mobile

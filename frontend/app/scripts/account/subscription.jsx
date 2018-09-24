@@ -138,6 +138,9 @@ var Subscription = Backbone.Model.extend({
             can_use_dk_authentication_to_sign: pick(
                 f.canUseDKAuthenticationToSign, ff.canUseDKAuthenticationToSign()
             ),
+            can_use_fi_authentication_to_view: pick(
+                f.canUseFIAuthenticationToView, ff.canUseFIAuthenticationToView()
+            ),
             can_use_no_authentication_to_view: pick(
                 f.canUseNOAuthenticationToView, ff.canUseNOAuthenticationToView()
             ),
@@ -269,6 +272,9 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
   canUseDKAuthenticationToSign: function () {
      return this.get("can_use_dk_authentication_to_sign");
   },
+  canUseFIAuthenticationToView: function () {
+     return this.get("can_use_fi_authentication_to_view");
+  },
   canUseNOAuthenticationToView: function () {
      return this.get("can_use_no_authentication_to_view");
   },
@@ -311,6 +317,8 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       return "no_bankid";
     else if (this.canUseDKAuthenticationToView())
       return "dk_bankid";
+    else if (this.canUseFIAuthenticationToView())
+      return "fi_tupas";
     else if (this.canUseSMSPinAuthenticationToView())
       return "sms_pin";
     else
@@ -350,7 +358,8 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
   canUseNonstandardAuthenticationToView: function () {
     return this.canUseDKAuthenticationToView() ||
       this.canUseNOAuthenticationToView() ||
-      this.canUseSEAuthenticationToView();
+      this.canUseSEAuthenticationToView() ||
+      this.canUseFIAuthenticationToView();
   },
   canUseNonstandardAuthenticationToSign: function () {
     return this.canUseSEAuthenticationToSign() ||
@@ -369,6 +378,7 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       can_use_sms_confirmations: args.can_use_sms_confirmations,
       can_use_dk_authentication_to_view: args.can_use_dk_authentication_to_view,
       can_use_dk_authentication_to_sign: args.can_use_dk_authentication_to_sign,
+      can_use_fi_authentication_to_view: args.can_use_fi_authentication_to_view,
       can_use_no_authentication_to_view: args.can_use_no_authentication_to_view,
       can_use_no_authentication_to_sign: args.can_use_no_authentication_to_sign,
       can_use_se_authentication_to_view: args.can_use_se_authentication_to_view,

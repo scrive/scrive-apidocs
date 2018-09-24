@@ -24,7 +24,7 @@ describe("MaskedPersonalNumber", function () {
 
   afterEach(function () {
     if ($container) {
-      console.log(React.unmountComponentAtNode($container[0])); 
+      console.log(React.unmountComponentAtNode($container[0]));
     }
   });
 
@@ -62,7 +62,8 @@ describe("MaskedPersonalNumber", function () {
     var component = renderComponent({
       number: "70010112345",
       isNorwegian: true,
-      isDanish: false
+      isDanish: false,
+      isFinnish: false
     });
 
     assert.equal(React.findDOMNode(component).innerText, "700101*****");
@@ -72,7 +73,8 @@ describe("MaskedPersonalNumber", function () {
     var component = renderComponent({
       number: "700101-12345",
       isNorwegian: true,
-      isDanish: false
+      isDanish: false,
+      isFinnish: false
     });
 
     assert.equal(React.findDOMNode(component).innerText, "700101-*****");
@@ -82,7 +84,8 @@ describe("MaskedPersonalNumber", function () {
     var component = renderComponent({
       number: "0101701234",
       isNorwegian: false,
-      isDanish: true
+      isDanish: true,
+      isFinnish: false
     });
 
     assert.equal(React.findDOMNode(component).innerText, "010170****");
@@ -92,9 +95,21 @@ describe("MaskedPersonalNumber", function () {
     var component = renderComponent({
       number: "010170-1234",
       isNorwegian: false,
-      isDanish: true
+      isDanish: true,
+      isFinnish: false
     });
 
     assert.equal(React.findDOMNode(component).innerText, "010170-****");
+  });
+
+  it("should mask Finnish ID number", function () {
+    var component = renderComponent({
+      number: "010170+123X",
+      isNorwegian: false,
+      isDanish: false,
+      isFinnish: true
+    });
+
+    assert.equal(React.findDOMNode(component).innerText, "010170+****");
   });
 });

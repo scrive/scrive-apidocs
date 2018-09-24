@@ -39,11 +39,13 @@ module InputValidation
     , asValidSwedishSSN
     , asValidNorwegianSSN
     , asValidDanishSSN
+    , asValidFinnishSSN
     , asWord32
 ) where
 
 import Data.Char
-import Data.String.Utils
+import Data.Int
+import Data.String.Utils hiding (maybeRead)
 import Data.Word (Word32)
 import Log
 import Numeric
@@ -401,6 +403,37 @@ asValidDanishSSN input =
     >>= checkIfEmpty
     >>= checkLengthIs [10]
     >>= checkOnly [isDigit]
+
+{- |
+    Validated Finnish personal number.
+    White list: Digits in first part, special character separator, checksum character
+
+    Format:
+    Source: https://en.wikipedia.org/wiki/National_identification_number#Finland
+    Size: 10
+-}
+asValidFinnishSSN :: String -> Result String
+asValidFinnishSSN input =
+    filterOutCharacters [' '] input
+    >>= checkIfEmpty
+    >>= checkLengthIs [11]
+    >>= \case
+      [d1,d2,m1,m2,y1,y2,sep,x1,x2,x3,checksum] ->
+        fromMaybe Bad $ do
+          (day :: Int64)  <- maybeRead [d1,d2]
+          month <- maybeRead [m1,m2]
+          combined_digits <- maybeRead [d1,d2,m1,m2,y1,y2,x1,x2,x3]
+          let -- some alphabetic chars are missing to prevent confusion with digits
+              checksum_chars = "0123456789ABCDEFHJKLMNPRSTUVWXY"
+              computed_checksum = checksum_chars !! (combined_digits `mod` length checksum_chars)
+          if (  1 <= day   && day   <= 31
+             && 1 <= month && month <= 12
+             && computed_checksum == toUpper checksum
+             && (toUpper sep `elem` ['-', '+', 'A'])
+             )
+            then return . return $ [d1,d2,m1,m2,y1,y2,toUpper sep,x1,x2,x3,toUpper checksum]
+            else return Bad
+      _ -> Bad
 
 {- |
     Creates a clean and validated personal number.

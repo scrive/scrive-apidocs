@@ -7,6 +7,7 @@ module Chargeable.Model (
   , ChargeUserGroupForNOBankIDSignature(..)
   , ChargeUserGroupForDKNemIDAuthentication(..)
   , ChargeUserGroupForDKNemIDSignature(..)
+  , ChargeUserGroupForFITupasAuthentication(..)
   , ChargeUserGroupForStartingDocument(..)
   , ChargeUserGroupForClosingDocument(..)
   , GetNumberOfDocumentsStartedThisMonth(..)
@@ -36,7 +37,8 @@ data ChargeableItem =
   CIDKNemIDAuthentication  |
   CIClosingSignature       |
   CINOBankIDSignature      |
-  CIDKNemIDSignature
+  CIDKNemIDSignature       |
+  CIFITupasAuthentication
   deriving (Eq, Ord, Show, Typeable)
 
 instance PQFormat ChargeableItem where
@@ -60,8 +62,9 @@ instance FromSQL ChargeableItem where
       9  -> return CIClosingSignature
       10 -> return CINOBankIDSignature
       11 -> return CIDKNemIDSignature
+      12 -> return CIFITupasAuthentication
       _  -> throwM RangeError {
-        reRange = [(1, 11)]
+        reRange = [(1, 12)]
       , reValue = n
       }
 
@@ -78,6 +81,7 @@ instance ToSQL ChargeableItem where
   toSQL CIClosingSignature       = toSQL ( 9::Int16)
   toSQL CINOBankIDSignature      = toSQL (10::Int16)
   toSQL CIDKNemIDSignature       = toSQL (11::Int16)
+  toSQL CIFITupasAuthentication  = toSQL (12::Int16)
 
 ----------------------------------------
 
@@ -121,6 +125,11 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupFor
 data ChargeUserGroupForDKNemIDSignature = ChargeUserGroupForDKNemIDSignature DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForDKNemIDSignature () where
   update (ChargeUserGroupForDKNemIDSignature document_id) = update (ChargeUserGroupFor CIDKNemIDSignature 1 document_id)
+
+-- | Charge user group of the author of the document for danish authentication
+data ChargeUserGroupForFITupasAuthentication = ChargeUserGroupForFITupasAuthentication DocumentID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForFITupasAuthentication () where
+  update (ChargeUserGroupForFITupasAuthentication document_id) = update (ChargeUserGroupFor CIFITupasAuthentication 1 document_id)
 
 -- | Charge user group of the author of the document for creation of the document
 data ChargeUserGroupForStartingDocument = ChargeUserGroupForStartingDocument DocumentID

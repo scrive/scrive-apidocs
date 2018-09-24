@@ -504,6 +504,9 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     smsPinAuthenticationToView: function() {
           return this.get("authentication_method_to_view") == "sms_pin" && this.signs();
     },
+    fiTupasAuthenticationToView: function() {
+          return this.get("authentication_method_to_view") == "fi_tupas" && this.signs();
+    },
     dkNemIDAuthenticationToSign: function() {
           return this.get("authentication_method_to_sign") == "dk_nemid" && this.signs();
     },
@@ -725,6 +728,9 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
          || authToView === "dk_nemid"  && authToSign === "no_bankid"
          || authToView === "se_bankid" && authToSign === "no_bankid"
          || authToView === "se_bankid" && authToSign === "dk_nemid"
+         || authToView === "fi_tupas" && authToSign === "se_bankid"
+         || authToView === "fi_tupas" && authToSign === "no_bankid"
+         || authToView === "fi_tupas" && authToSign === "dk_nemid"
          ) {
         return false;
       } else {
@@ -840,10 +846,18 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         }
     },
     needsPersonalNumber: function() {
-        return this.seBankIDAuthenticationToSign() || this.seBankIDAuthenticationToView() || this.noBankIDAuthenticationToView() || this.dkNemIDAuthenticationToSign() || this.dkNemIDAuthenticationToView();
+        return (this.seBankIDAuthenticationToSign()
+             || this.seBankIDAuthenticationToView()
+             || this.noBankIDAuthenticationToView()
+             || this.dkNemIDAuthenticationToSign()
+             || this.dkNemIDAuthenticationToView()
+             || this.fiTupasAuthenticationToView());
     },
     needsPersonalNumberFilledByAuthor: function() {
-        return this.seBankIDAuthenticationToView()  || this.noBankIDAuthenticationToView() || this.dkNemIDAuthenticationToView();
+        return (this.seBankIDAuthenticationToView()
+             || this.noBankIDAuthenticationToView()
+             || this.dkNemIDAuthenticationToView()
+             || this.fiTupasAuthenticationToView());
     },
     ensureMobile: function() {
         var signatory = this;

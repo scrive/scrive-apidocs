@@ -84,6 +84,7 @@ csvColumnHeadings = [
   , "Norwegian BankID authorization"
   , "Danish NemID signatures"
   , "Danish NemID authorization"
+  , "Finnish TUPAS authorization"
   , "Telia SMSes sent (physical)"
   , "Users at start of period"
   , "Users at end of period"
@@ -199,6 +200,12 @@ invoicingQry fromDate toDate =
       ", (SELECT coalesce(sum(chi.quantity), 0)" <+>
           "FROM chargeable_items chi" <+>
           "WHERE chi.user_group_id = user_groups.id" <+>
+            "AND chi.type =" <?> CIFITupasAuthentication <+>
+            "AND chi.time >=" <?> fromDate <+>
+            "AND chi.time <" <?> toDate <+> ") AS FinnishTupasAuthorization" <+>
+      ", (SELECT coalesce(sum(chi.quantity), 0)" <+>
+          "FROM chargeable_items chi" <+>
+          "WHERE chi.user_group_id = user_groups.id" <+>
             "AND chi.type =" <?> CISMSTelia <+>
             "AND chi.time >=" <?> fromDate <+>
             "AND chi.time <" <?> toDate <+> ") AS \"Telia SMSes sent (physical)\"" <+>
@@ -241,6 +248,7 @@ invoicingQry fromDate toDate =
     "OR report.NorwegianBankIDAuthorization > 0" <+>
     "OR report.DanishNemIDSignatures > 0" <+>
     "OR report.DanishNemIDAuthorization > 0" <+>
+    "OR report.FinnishTupasAuthorization > 0" <+>
     "OR report.UsersStart > 0" <+>
     "OR report.UsersEnd > 0" <+>
   ")" <+>
@@ -254,6 +262,7 @@ fetchInvoicing :: ( String
                   , String
                   , String
                   , UTCTime
+                  , Int64
                   , Int64
                   , Int64
                   , Int64
@@ -293,6 +302,7 @@ fetchInvoicing ( companyName
                , noBankIDAuths
                , dkNemIDSigs
                , dkNemIDAuths
+               , fiTupasAuths
                , smsSentPhysicalTelia
                , usersAtStart
                , usersAtEnd
@@ -320,6 +330,7 @@ fetchInvoicing ( companyName
                , show noBankIDAuths
                , show dkNemIDSigs
                , show dkNemIDAuths
+               , show fiTupasAuths
                , show smsSentPhysicalTelia
                , show usersAtStart
                , show usersAtEnd

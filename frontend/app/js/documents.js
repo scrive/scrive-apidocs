@@ -696,7 +696,8 @@ var Document = exports.Document = Backbone.Model.extend({
         }
         if (this.author().seBankIDAuthenticationToSign() || this.author().seBankIDAuthenticationToView()
           ||this.author().noBankIDAuthenticationToSign() || this.author().noBankIDAuthenticationToView()
-          ||this.author().dkNemIDAuthenticationToSign()  || this.author().dkNemIDAuthenticationToView()) {
+          ||this.author().dkNemIDAuthenticationToSign()  || this.author().dkNemIDAuthenticationToView()
+          ||this.author().fiTupasAuthenticationToView()) {
             // We don't support eleg authorization in design view
             return false;
         }
@@ -905,7 +906,8 @@ var Document = exports.Document = Backbone.Model.extend({
         return _.some(this.signatories(), function(s) {
             return  (s.seBankIDAuthenticationToSign() || s.seBankIDAuthenticationToView()
                    ||s.noBankIDAuthenticationToSign() || s.noBankIDAuthenticationToView()
-                   ||s.dkNemIDAuthenticationToSign()  || s.dkNemIDAuthenticationToView());
+                   ||s.dkNemIDAuthenticationToSign()  || s.dkNemIDAuthenticationToView()
+                   ||s.fiTupasAuthenticationToView());
         });
     },
     hasEmail: function() {

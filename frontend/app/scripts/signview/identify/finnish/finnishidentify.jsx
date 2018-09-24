@@ -3,14 +3,14 @@ var Backbone = require("backbone");
 var React = require("react");
 var Button = require("../../../common/button");
 var InfoTextInput = require("../../../common/infotextinput");
-var DanishIdentifyModel = require("./danishidentifymodel");
+var FinnishIdentifyModel = require("./finnishidentifymodel");
 var FlashMessage = require("../../../../js/flashmessages.js").FlashMessage;
 var classNames = require("classnames");
 var MaskedPersonalNumber = require("../masked_personal_number");
 
   module.exports = React.createClass({
     propTypes: {
-      model: React.PropTypes.instanceOf(DanishIdentifyModel).isRequired
+      model: React.PropTypes.instanceOf(FinnishIdentifyModel).isRequired
     },
 
     handleIdentify: function () {
@@ -31,8 +31,8 @@ var MaskedPersonalNumber = require("../masked_personal_number");
               {localization.idNumber} <MaskedPersonalNumber
                 number={this.props.model.doc().currentSignatory().personalnumber()}
                 isNorwegian={false}
-                isDanish={true}
-                isFinnish={false}
+                isDanish={false}
+                isFinnish={true}
               />
             </span>
             <div className="identify-box-button">

@@ -6,6 +6,8 @@ var NorwegianIdentifyView = require("./norwegian/norwegianidentifyview");
 var NorwegianIdentifyModel = require("./norwegian/norwegianidentifymodel");
 var DanishIdentifyView = require("./danish/danishidentifyview");
 var DanishIdentifyModel = require("./danish/danishidentifymodel");
+var FinnishIdentifyView = require("./finnish/finnishidentifyview");
+var FinnishIdentifyModel = require("./finnish/finnishidentifymodel");
 var SMSPinIdentifyView = require("./smspin/smspinidentifyview");
 var SMSPinIdentifyModel = require("./smspin/smspinidentifymodel");
 var Document = require("../../../js/documents.js").Document;
@@ -42,6 +44,11 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
           doc: this.props.doc,
           siglinkid: this.props.siglinkid
         });
+      } else if (this.props.doc.currentSignatory().fiTupasAuthenticationToView()) {
+      model = new FinnishIdentifyModel({
+        doc: this.props.doc,
+        siglinkid: this.props.siglinkid
+      });
       } else if (this.props.doc.currentSignatory().smsPinAuthenticationToView()) {
         model = new SMSPinIdentifyModel({
           doc: this.props.doc,
@@ -117,6 +124,12 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
                 model={model}
               />
             }
+            { /* else if */ model.isFinnish() &&
+              <FinnishIdentifyView
+                ref="identify"
+                model={model}
+              />
+            }
             { /* else if */ model.isSMSPin() &&
               <SMSPinIdentifyView
                 ref="identify"
@@ -131,13 +144,14 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
                 <div>
                   {localization.identifyDocument} <b>{doc.title()}</b>
                 </div>
-                { /* if */ (model.isSwedish() || model.isNorwegian() || model.isDanish()) &&
+                { /* if */ (model.isSwedish() || model.isNorwegian() || model.isDanish() || model.isFinnish()) &&
                   <div>
                     {localization.yourIdNumber} <MaskedPersonalNumber
                       number={personalNumber}
                       placeholder="Empty"
                       isNorwegian={model.isNorwegian()}
                       isDanish={model.isDanish()}
+                      isFinnish={model.isFinnish()}
                     />
                   </div>
                 }
@@ -159,6 +173,9 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
                 }
                 { /* if */ model.isDanish() &&
                   <img src={window.cdnbaseurl + "/img/nemid-dk.png"} />
+                }
+                { /* if */ model.isFinnish() &&
+                  <img src={window.cdnbaseurl + "/img/tupas-fi.png"} />
                 }
               </div>
             </div>
