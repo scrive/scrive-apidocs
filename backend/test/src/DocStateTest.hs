@@ -1442,7 +1442,7 @@ testCreateFromSharedTemplate = do
            dbQuery $ GetDocumentByDocumentID docid
   newuser <- addNewRandomUser
 
-  docid' <- fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor newuser doc (systemActor mt))
+  docid' <- fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor (Just newuser) doc (systemActor mt) id)
   _ <- withDocumentID docid' $ dbUpdate $ DocumentFromTemplate (systemActor mt)
 
   ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
@@ -1468,7 +1468,7 @@ testCreateFromTemplateCompanyField = replicateM_ 10 $ do
            _ <- withDocumentID docid $ dbUpdate $ TemplateFromDocument (systemActor mt)
            dbQuery $ GetDocumentByDocumentID docid
   user' <- fromJust <$> (dbQuery $ GetUserByID (userid user))
-  docid' <- fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor user' doc (systemActor mt))
+  docid' <- fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user') doc (systemActor mt) id)
   _ <- withDocumentID docid' $ dbUpdate $ DocumentFromTemplate (systemActor mt)
   doc' <- dbQuery $ GetDocumentByDocumentID docid'
   let [author] = filter isAuthor $ documentsignatorylinks doc'

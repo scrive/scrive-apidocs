@@ -62,9 +62,10 @@ staticRoutes production = choice
      , dir "newdocument" $ hGet $ toK0 $ DocControl.handleNewDocument
 
      -- Sign view
-     , dir "s" $ hGet $ toK0    $ sendRedirect $ LinkArchive
-     , dir "s" $ hGet $ toK2    $ DocControl.handleSignShow
-     , dir "s" $ hGet $ toK3    $ DocControl.handleSignShowSaveMagicHash
+     , dir "s" $ hGet $ toK0 $ sendRedirect $ LinkArchive
+     , dir "s" $ hGet $ toK2 $ DocControl.handleSignShow
+     , dir "s" $ hGet $ toK3 $ DocControl.handleSignShowSaveMagicHash
+     , dir "t" $ hGet $ toK2 $ DocControl.handleSignFromTemplate
 
      -- E-ID stuff
      , dir "s" $ dir "eid" $ CGI.grpRoutes

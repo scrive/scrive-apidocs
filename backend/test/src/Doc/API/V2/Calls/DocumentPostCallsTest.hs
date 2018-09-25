@@ -21,6 +21,7 @@ import Doc.Data.DocumentStatus (DocumentStatus(..))
 import Doc.Data.SignatoryConsentQuestion (SignatoryConsentQuestion(..))
 import Doc.Data.SignatoryLink (AuthenticationToSignMethod(..), AuthenticationToViewMethod(..), SignatoryLink(..))
 import Doc.DocumentMonad (withDocumentID)
+import Doc.Model.Query
 import Doc.Model.Update (SetDocumentSharing(..), TimeoutDocument(..))
 import TestingUtil
 import TestKontra
@@ -58,6 +59,10 @@ apiV2DocumentPostCallsTests env = testGroup "APIv2DocumentPostCalls"
   , testThat "API v2 Update sets responses to null in the consent module"
              env testDocApiV2SigUpdateNoConsentResponses
 
+  , testThat "API v2 Generate shareable link for template"
+             env testDocApiV2GenerateShareableLink
+  , testThat "API v2 Discard shareable link for template"
+             env testDocApiV2DiscardShareableLink
   ]
 
 testDocApiV2New :: TestEnv ()
@@ -423,10 +428,10 @@ testDocApiV2SetSharing = do
   did  <- getMockDocId <$> testDocApiV2New' ctx
 
   do
-    isTemplate <- getMockDocIsTemplate <$> mockDocTestRequestHelper ctx
+    check <- getMockDocIsTemplate <$> mockDocTestRequestHelper ctx
       POST [("document", inText "{\"is_template\":true}")]
       (docApiV2Update did) 200
-    assertEqual "Document should be template" True isTemplate
+    assertEqual "Document should be template" True check
 
   forM_ [(True, "true"), (False, "false")] $ \(value, param) -> do
     void $ testRequestHelper ctx POST
@@ -684,3 +689,36 @@ testDocApiV2SigChangeEmailAndMobile = do
       (docApiV2SigChangeEmailAndMobile did slid) 200
     assertEqual "Email should NOT have changed" orig_email (getMockDocSigLinkEmail 2 mobileOnly)
     assertEqual "Mobile should have changed" valid_mobile (getMockDocSigLinkMobileNumber 2 mobileOnly)
+
+testDocApiV2GenerateShareableLink :: TestEnv ()
+testDocApiV2GenerateShareableLink = replicateM_ 10 $ do
+  user <- addNewRandomUser
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
+  doc  <- addRandomDocumentWithAuthorAndCondition user (const True)
+
+  if isTemplate doc
+    then do
+      void $ testRequestHelper ctx POST []
+        (docApiV2GenerateShareableLink (documentid doc)) 200
+
+      doc' <- randomQuery $ GetDocumentByDocumentID $ documentid doc
+
+      assertNotEqual "Shareable link hash should have changed"
+                     (documentshareablelinkhash doc)
+                     (documentshareablelinkhash doc')
+
+    else do
+      void $ testRequestHelper ctx POST []
+        (docApiV2GenerateShareableLink (documentid doc)) 409
+
+testDocApiV2DiscardShareableLink :: TestEnv ()
+testDocApiV2DiscardShareableLink = replicateM_ 10 $ do
+  user <- addNewRandomUser
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
+  doc  <- addRandomDocumentWithAuthorAndCondition user isTemplate
+
+  void $ testRequestHelper ctx POST []
+    (docApiV2DiscardShareableLink (documentid doc)) 202
+
+  doc' <- randomQuery $ GetDocumentByDocumentID $ documentid doc
+  assertNothing $ documentshareablelinkhash doc'

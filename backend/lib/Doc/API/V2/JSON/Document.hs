@@ -67,6 +67,7 @@ unjsonDocument da = objectOf $
   <*   (fieldReadonly "is_trashed" (propertyForCurrentSignatory da (isJust . signatorylinkdeleted)) "Whether document is in Trash")
   <*   (fieldReadonly "is_deleted" (propertyForCurrentSignatory da (isJust . signatorylinkreallydeleted)) "Whether document has been deleted")
   <*   (fieldReadonlyBy "viewer" (\d -> Just $ viewerForDocument da d) "Document viewer" unjsonDocumentViewer)
+  <*   fieldShareableLink da
 
 fieldAccessToken :: DocumentAccess -> Ap (FieldDef Document) ()
 fieldAccessToken (DocumentAccess { daAccessMode }) =
@@ -75,6 +76,22 @@ fieldAccessToken (DocumentAccess { daAccessMode }) =
        CompanyAdminDocumentAccess _ -> accessTokenField
        _ -> pure ()
   where accessTokenField = fieldReadonly "access_token" documentmagichash "Document access token"
+
+fieldShareableLink :: DocumentAccess -> Ap (FieldDef Document) ()
+fieldShareableLink DocumentAccess{ daAccessMode } =
+     case daAccessMode of
+       AuthorDocumentAccess -> hashField
+       CompanyAdminDocumentAccess _ -> hashField
+       CompanySharedDocumentAccess -> hashField
+       _ -> pure ()
+
+   where
+     hashField :: Ap (FieldDef Document) ()
+     hashField =
+       fieldOpt "shareable_link"
+                (\doc -> show . LinkTemplateShareableLink (documentid doc)
+                         <$> documentshareablelinkhash doc)
+                "Template's shareable link" *> pure ()
 
 unjsonSignatoryArray ::  DocumentAccess -> UnjsonDef [SignatoryLink]
 unjsonSignatoryArray da = arrayOf (unjsonSignatory da)

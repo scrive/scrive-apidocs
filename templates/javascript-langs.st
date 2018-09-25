@@ -927,7 +927,26 @@ javascriptLocalisation =
                             , shared     : "$_shared()$"
                             , sharedBy   : "$_sharedBy()$"
                             , verificationMethod : "$_verificationMethod()$"
+                            , link: "$_templatesShareableLinkColumn()$"
                        }
+                    , shareableLink: {
+                        showTitle: "$_templatesShareableLinkShowTitle()$"
+                      , showText: "$_templatesShareableLinkShowText()$"
+                      , showTooltip: "$_templatesShareableLinkShowTooltip()$"
+                      , generateTitle: "$_templatesShareableLinkGenerateTitle()$"
+                      , generateText: "$_templatesShareableLinkGenerateText()$"
+                      , generateTooltip: "$_templatesShareableLinkGenerateTooltip()$"
+                      , regenerateText: "$_templatesShareableLinkRegenerateText()$"
+                      , regenerateTooltip: "$_templatesShareableLinkRegenerateTooltip()$"
+                      , generationSucceeded: "$_templatesShareableLinkGenerationSucceeded()$"
+                      , generationFailed: "$_templatesShareableLinkGenerationFailed()$"
+                      , discardTitle: "$_templatesShareableLinkDiscardTitle()$"
+                      , discardText: "$_templatesShareableLinkDiscardText()$"
+                      , discardTooltip: "$_templatesShareableLinkDiscardTooltip()$"
+                      , discardButton: "$_templatesShareableLinkDiscardButton()$"
+                      , discardingSucceeded: "$_templatesShareableLinkDiscardingSucceeded()$"
+                      , discardingFailed: "$_templatesShareableLinkDiscardingFailed()$"
+                    }
                 }
             ,  attachments : {
                        name : "$_docListTabsAttachemtns()$"

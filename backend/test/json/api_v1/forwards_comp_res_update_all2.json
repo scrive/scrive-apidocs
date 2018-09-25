@@ -224,5 +224,6 @@
   "viewer": {
     "signatory_id": "65",
     "role": "signatory"
-  }
+  },
+  "shareable_link": null
 }

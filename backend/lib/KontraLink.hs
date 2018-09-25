@@ -51,6 +51,7 @@ data KontraLink
     | LinkPadList
     | LinkPreviewLockedImage
     | LinkPermanentRedirect String
+    | LinkTemplateShareableLink DocumentID MagicHash
 
 langFolder :: Lang -> String
 langFolder lang = "/" ++ (codeFromLang lang)
@@ -106,7 +107,8 @@ instance Show KontraLink where
     showsPrec _ (LinkExternal s) = (++) s
     showsPrec _ (LinkPreviewLockedImage) = (++) "/img/preview_locked.png"
     showsPrec _ (LinkPermanentRedirect s) = (++) s
-
+    showsPrec _ (LinkTemplateShareableLink did mh) =
+      (++) ("/t/" ++ show did ++ "/" ++ show mh)
 
 setParams :: URI -> [(String, String)] -> URI
 setParams uri params = uri { uriQuery = "?" ++ vars }

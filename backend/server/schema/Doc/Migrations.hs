@@ -15,6 +15,7 @@ module Doc.Migrations (
   , createSignatoryLinkConsentQuestionsTable
   , addConsentTitleToSignatoryLink
   , removeSearchTermsIndex
+  , addShareableLinkHashToDocuments
 ) where
 
 import Data.Int
@@ -289,5 +290,15 @@ addConsentTitleToSignatoryLink = Migration {
   , mgrAction = StandardMigration $ do
       runQuery_ $ sqlAlterTable (tblName tableSignatoryLinks) [
           sqlAddColumn tblColumn { colName = "consent_title", colType = TextT, colNullable = True }
+        ]
+  }
+
+addShareableLinkHashToDocuments :: MonadDB m => Migration m
+addShareableLinkHashToDocuments = Migration
+  { mgrTableName = tblName tableDocuments
+  , mgrFrom = 47
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable (tblName tableDocuments)
+        [ sqlAddColumn tblColumn { colName = "shareable_link_hash", colType = BigIntT }
         ]
   }

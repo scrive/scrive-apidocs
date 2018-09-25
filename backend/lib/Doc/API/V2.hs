@@ -48,6 +48,11 @@ documentAPIV2  = dir "documents" $ choice [
 
   , param $ dir "texts" $ hGet $ toK2 $ docApiV2Texts
 
+  , param $ dir "shareablelink" $ choice
+      [ dir "generate" $ hPost $ toK1 $ docApiV2GenerateShareableLink
+      , dir "discard" $ hPost $ toK1 $ docApiV2DiscardShareableLink
+      ]
+
   , param $ param $ dir "getqrcode"               $ hGet  $ toK2 $ docApiV2GetQRCode
 
   , param $ param $ dir "sign"                    $ hPost $ toK2 $ docApiV2SigSign

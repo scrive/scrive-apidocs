@@ -20,10 +20,13 @@ module Doc.API.V2.Calls.DocumentPostCalls (
 , docApiV2SigSetAuthenticationToView
 , docApiV2SigSetAuthenticationToSign
 , docApiV2SigChangeEmailAndMobile
+, docApiV2GenerateShareableLink
+, docApiV2DiscardShareableLink
 ) where
 
 import Control.Conditional (ifM)
 import Control.Monad.Base
+import Crypto.RNG
 import Data.Unjson
 import Data.Unjson as Unjson
 import Happstack.Server.Types
@@ -110,7 +113,7 @@ docApiV2NewFromTemplate did = logDocument did . api $ do
     guardThatDocumentIs (not $ flip documentDeletedForUser $ userid user) "The template is in Trash" =<< theDocument
   -- API call actions
   template <- dbQuery $ GetDocumentByDocumentID $ did
-  (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor user template actor) >>=) $ flip withDocumentID $ do
+  (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user) template actor id) >>=) $ flip withDocumentID $ do
     dbUpdate $ DocumentFromTemplate actor
     dbUpdate $ SetDocumentUnsavedDraft False
   -- Result
@@ -439,7 +442,7 @@ docApiV2Clone did = logDocument did . api $ do
     guardThatObjectVersionMatchesIfProvided did
     -- API call actions
     doc <- theDocument
-    mNewDid <- dbUpdate $ CloneDocumentWithUpdatedAuthor user doc actor
+    mNewDid <- dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user) doc actor id
     when (isNothing mNewDid) $
       apiError $ serverError "Could not clone document, did not get back valid ID"
     newdoc <- dbQuery $ GetDocumentByDocumentID $ fromJust mNewDid
@@ -604,7 +607,6 @@ docApiV2SigChangeEmailAndMobile did slid = logDocumentAndSignatory did slid . ap
     -- API call actions
     Ok . (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 
-
 dontRunJavascriptRemovalForUser :: Kontrakcja m => User -> m Bool
 dontRunJavascriptRemovalForUser user = do
   let uid = usergroupid user
@@ -612,3 +614,22 @@ dontRunJavascriptRemovalForUser user = do
   let us1 = fromMaybe [] (get pdfToolsUserGroupsWithExtendedFlattening lc)
   let us2 = fromMaybe [] (get pdfToolsUserGroupsWithOldFlattening lc)
   return $ uid `elem` (us1 ++ us2)
+
+docApiV2GenerateShareableLink :: Kontrakcja m => DocumentID -> m Response
+docApiV2GenerateShareableLink did = logDocument did . api $ do
+  (user, _) <- getAPIUser APIDocCreate
+  withDocumentID did $ do
+    guardThatUserIsAuthor user =<< theDocument
+    guardThatDocumentIs isTemplate "The document is not a template." =<< theDocument
+    hash <- random
+    dbUpdate $ UpdateShareableLinkHash $ Just hash
+    (\d -> Ok (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument
+
+docApiV2DiscardShareableLink :: Kontrakcja m => DocumentID -> m Response
+docApiV2DiscardShareableLink did = logDocument did . api $ do
+  (user, _) <- getAPIUser APIDocCreate
+  withDocumentID did $ do
+    guardThatUserIsAuthor user =<< theDocument
+    guardThatDocumentIs isTemplate "The document is not a template." =<< theDocument
+    dbUpdate $ UpdateShareableLinkHash Nothing
+    return $ Accepted ()

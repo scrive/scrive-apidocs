@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 47
+  , tblVersion = 48
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -39,6 +39,7 @@ tableDocuments = tblTable {
     , tblColumn { colName = "archive_search_terms", colType = TextT, colNullable = True }
     , tblColumn { colName = "archive_search_fts", colType = TSVectorT, colNullable = True }
     , tblColumn { colName = "author_user_id", colType = BigIntT, colNullable = True }
+    , tblColumn { colName = "shareable_link_hash", colType = BigIntT }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
@@ -103,6 +104,7 @@ ctDocument = CompositeType {
   , CompositeColumn { ccName = "time_zone_name", ccType = TextT }
   , CompositeColumn { ccName = "author_user_group_id", ccType = BigIntT }
   , CompositeColumn { ccName = "status_class", ccType = SmallIntT }
+  , CompositeColumn { ccName = "shareable_link_hash", ccType = BigIntT }
   ]
 }
 

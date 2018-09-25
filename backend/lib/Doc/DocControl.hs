@@ -11,6 +11,7 @@ module Doc.DocControl(
     , handleDownloadClosedFile
     , handleSignShow
     , handleSignShowSaveMagicHash
+    , handleSignFromTemplate
     , handleEvidenceAttachment
     , handleIssueShowGet
     , handleIssueGoToSignview
@@ -62,7 +63,7 @@ import Doc.DocMails
 import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocumentID
-import Doc.DocumentMonad (DocumentMonad, theDocument, withDocument, withDocumentM)
+import Doc.DocumentMonad (DocumentMonad, theDocument, withDocument, withDocumentID, withDocumentM)
 import Doc.DocUtils (fileFromMainFile)
 import Doc.DocView
 import Doc.DocViewMail
@@ -240,6 +241,36 @@ handleSignShowSaveMagicHash did sid mh = logDocumentAndSignatory did sid $
   )
   `catchDBExtraException` (\(DocumentDoesNotExist _) -> respond404)
   `catchDBExtraException` (\SignatoryTokenDoesNotMatch -> respondLinkInvalid)
+
+handleSignFromTemplate :: Kontrakcja m => DocumentID -> MagicHash -> m Response
+handleSignFromTemplate tplID mh = logDocument tplID $ do
+  ctx <- getContext
+  tpl <- dbQuery $ GetDocumentByDocumentIDAndShareableLinkHash tplID mh
+
+  let actor = systemActor $ get ctxtime ctx
+  mDocID <- withDocument tpl $
+    dbUpdate $ CloneDocumentWithUpdatedAuthor Nothing tpl actor $ \doc ->
+      doc { documenttype = Signable }
+
+  case mDocID of
+    Nothing -> do
+      logAttention "Cloning shareable template failed" $ object [identifier tplID]
+      respondLinkInvalid
+
+    Just docID -> withDocumentID docID $ do
+      timezone <- documenttimezonename <$> theDocument
+      dbUpdate $ PreparationToPending actor timezone
+      mSL <- (find (not . isAuthor) . documentsignatorylinks) <$> theDocument
+
+      case mSL of
+        Nothing -> do
+          logAttention "Can't find suitable signatory for shareable\
+                       \ template" $ object [identifier docID]
+          respondLinkInvalid
+        Just sl -> do
+          dbUpdate $ AddDocumentSessionToken (signatorylinkid sl)
+                                             (signatorymagichash sl)
+          sendRedirect $ LinkSignDocNoMagicHash docID $ signatorylinkid sl
 
 -- |
 --   /s/[documentid]/[signatorylinkid] and /sp/[documentid]/[signatorylinkid]

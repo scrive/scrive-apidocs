@@ -10,14 +10,25 @@ var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
 var $ = require("jquery");
 var Subscription = require("../account/subscription");
 var BlockingModal = require("../blocking/blockingmodal");
-
+var LocationUtils = require("../common/location");
+var InfoTextInput = require("../common/infotextinput");
+var Document = require("../../js/documents").Document;
+var BackboneMixin = require("../common/backbone_mixin");
 var HtmlTextWithSubstitution = require("../common/htmltextwithsubstitution");
 var Modal = require("../common/modal");
 
 var RemoveModalContent = React.createClass({
+  mixins: [BackboneMixin.BackboneMixin],
+
   propTypes: {
     templates: React.PropTypes.array
   },
+
+  getBackboneModels: function () {
+    const tpl = this.state ? this.state.templateForShareableLinkModals : null;
+    return tpl ? [tpl] : [];
+  },
+
   render: function () {
     if (this.props.templates === null) {
       return <span />;
@@ -47,14 +58,18 @@ var RemoveModalContent = React.createClass({
   }
 });
 
-module.exports = React.createClass({
+  module.exports = React.createClass({
     mixins : [List.ReloadableContainer],
     getInitialState: function () {
       return {
         showShareModal: false,
         templatesToShare: null,
         showRemoveModal: false,
-        templatesToRemove: null
+        templatesToRemove: null,
+        templateForShareableLinkModals: null,
+        showShareableLinkModal: false,
+        showGenerateShareableLinkModal: false,
+        showDiscardShareableLinkModal: false
       };
     },
     createNewTemplate : function() {
@@ -96,7 +111,6 @@ module.exports = React.createClass({
     onShareModalAccept: function () {
       var self = this;
       var templates = this.state.templatesToShare;
-      console.log(templates);
       var templateIds = _.map(
         templates,
         function (doc) {
@@ -178,8 +192,108 @@ module.exports = React.createClass({
         return acc && !doc.field("is_shared");
       }, true);
     },
+
+    openShowShareableLinkModal: function(template) {
+      var self = this;
+      return function() {
+        self.setState({
+          templateForShareableLinkModals: template,
+          showShareableLinkModal: true
+        });
+      };
+    },
+
+    openGenerateShareableLinkModal: function(template) {
+      var self = this;
+      return function() {
+        self.setState({
+          templateForShareableLinkModals: template,
+          showGenerateShareableLinkModal: true
+        });
+      };
+    },
+
+    openDiscardShareableLinkModal: function(template) {
+      var self = this;
+      return function() {
+        self.setState({
+          templateForShareableLinkModals: template,
+          showDiscardShareableLinkModal: true
+        });
+      };
+    },
+
+    closeShowShareableLinkModal: function() {
+      this.setState({
+        templateForShareableLinkModals: null,
+        showShareableLinkModal: false
+      });
+    },
+
+    closeGenerateShareableLinkModal: function() {
+      this.setState({
+        templateForShareableLinkModals: null,
+        showGenerateShareableLinkModal: false
+      });
+    },
+
+    closeDiscardShareableLinkModal: function() {
+      this.setState({
+        templateForShareableLinkModals: null,
+        showDiscardShareableLinkModal: false
+      });
+    },
+
+    selectShareableLink: function() {
+      this.refs.input.focus();
+      this.refs.input.selectText();
+    },
+
+    onGenerateShareableLinkClick: function() {
+      const self = this;
+      const tpl = this.state.templateForShareableLinkModals;
+      const submit = tpl.generateShareableLink(function(resp) {
+        self.closeGenerateShareableLinkModal();
+        new FlashMessage({
+          type: "success",
+          content: localization.archive.templates.shareableLink.generationSucceeded
+        });
+        self.openShowShareableLinkModal(tpl)();
+        self.reload();
+      }, function(resp) {
+        new FlashMessage({
+          type: "error",
+          content: localization.archive.templates.shareableLink.generationFailed
+        });
+      }).sendAjax();
+    },
+
+    onDiscardShareableLinkClick: function() {
+      const self = this;
+      const tpl = this.state.templateForShareableLinkModals;
+      const submit = tpl.discardShareableLink(function(resp) {
+        self.closeDiscardShareableLinkModal();
+        new FlashMessage({
+          type: "success",
+          content: localization.archive.templates.shareableLink.discardingSucceeded
+        });
+        self.reload();
+      }, function(resp) {
+        new FlashMessage({
+          type: "error",
+          content: localization.archive.templates.shareableLink.discardingFailed
+        });
+      }).sendAjax();
+    },
+
     render: function() {
       var self = this;
+
+      const templateShareableLink = this.state.templateForShareableLinkModals
+        ? LocationUtils.origin()
+            + this.state.templateForShareableLinkModals.shareableLink()
+        : "";
+
       return (
         <div>
           <List.List
@@ -262,7 +376,7 @@ module.exports = React.createClass({
             />
            <List.Column
               name={localization.archive.templates.columns.template}
-              width="535px"
+              width="460px"
               sorting="title"
               rendering={function(d) {
                 return (<a href={Utils.documentLink(d)}>{d.field("title")}</a>);
@@ -274,6 +388,45 @@ module.exports = React.createClass({
               className="archive-table-shared-column-header"
               rendering={function(d) {
                 return (<div className={"archive-table-shared-column " + ((d.field("is_shared")) ? "sharedIcon" : "")}/>);
+              }}
+            />
+            <List.Column
+              name={localization.archive.templates.columns.link}
+              width="75px"
+              className="archive-table-link-column-header"
+              rendering={function(r) {
+                const d = new Document(r.get("listObjectData"));
+                if(d.shareableLink()) {
+                  return (
+                    <div>
+                      <div
+                        className="shareable-link-icon-show"
+                        onClick={self.openShowShareableLinkModal(d)}
+                        title={localization.archive.templates.shareableLink.showTooltip}
+                      />
+                      <div
+                        className="shareable-link-icon-regenerate"
+                        onClick={self.openGenerateShareableLinkModal(d)}
+                        title={localization.archive.templates.shareableLink.regenerateTooltip}
+                      />
+                      <div
+                        className="shareable-link-icon-discard"
+                        onClick={self.openDiscardShareableLinkModal(d)}
+                        title={localization.archive.templates.shareableLink.discardTooltip}
+                      />
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div>
+                      <div
+                        className="shareable-link-icon-generate"
+                        onClick={self.openGenerateShareableLinkModal(d)}
+                        title={localization.archive.templates.shareableLink.generateTooltip}
+                      />
+                    </div>
+                  );
+                }
               }}
             />
 
@@ -315,7 +468,80 @@ module.exports = React.createClass({
               />
             </Modal.Footer>
           </Modal.Container>
+
+          <Modal.Container active={self.state.showShareableLinkModal}
+                           onClose={this.closeShowShareableLinkModal}>
+            <Modal.Header
+              title={localization.archive.templates.shareableLink.showTitle}
+              showClose={true}
+              onClose={this.closeShowShareableLinkModal}
+            />
+            <Modal.Content>
+              <p>{localization.archive.templates.shareableLink.showText}</p>
+              <InfoTextInput
+                inputtype="text"
+                ref="input"
+                readonly={true}
+                disabled={false}
+                value={templateShareableLink}
+                onClick={this.selectShareableLink}
+              />
+            </Modal.Content>
+            <Modal.Footer>
+              <Modal.AcceptButton
+                text={localization.ok}
+                onClick={this.closeShowShareableLinkModal}
+              />
+            </Modal.Footer>
+          </Modal.Container>
+
+          <Modal.Container active={self.state.showGenerateShareableLinkModal}
+                           onClose={this.closeGenerateShareableLinkModal}>
+            <Modal.Header
+              title={localization.archive.templates.shareableLink.generateTitle}
+              showClose={true}
+              onClose={this.closeGenerateShareableLinkModal}
+            />
+            <Modal.Content>
+              {/* if */ this.state.templateForShareableLinkModals &&
+                <div>
+                  {this.state.templateForShareableLinkModals.shareableLink()
+                    ? localization.archive.templates.shareableLink.regenerateText
+                    : localization.archive.templates.shareableLink.generateText}
+                </div>
+              }
+            </Modal.Content>
+            <Modal.Footer>
+              <Modal.CancelButton
+                onClick={this.closeGenerateShareableLinkModal} />
+              <Modal.AcceptButton
+                text={localization.ok}
+                onClick={this.onGenerateShareableLinkClick}
+              />
+            </Modal.Footer>
+          </Modal.Container>
+
+          <Modal.Container active={self.state.showDiscardShareableLinkModal}
+                           onClose={this.closeDiscardShareableLinkModal}>
+            <Modal.Header
+              title={localization.archive.templates.shareableLink.discardTitle}
+              showClose={true}
+              onClose={this.closeDiscardShareableLinkModal}
+            />
+            <Modal.Content>
+              {localization.archive.templates.shareableLink.discardText}
+            </Modal.Content>
+            <Modal.Footer>
+              <Modal.CancelButton
+                onClick={this.closeDiscardShareableLinkModal} />
+              <Modal.AcceptButton
+                type="cancel"
+                text={localization.archive.templates.shareableLink.discardButton}
+                onClick={this.onDiscardShareableLinkClick}
+              />
+            </Modal.Footer>
+          </Modal.Container>
         </div>
       );
     }
-});
+  });

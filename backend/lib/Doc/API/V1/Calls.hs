@@ -212,7 +212,7 @@ apiCallV1CreateFromTemplate did = logDocument did . api $ do
     throwM $ SomeDBExtraException $ serverError "Id did not matched template or you do not have right to access document"
   when (documentDeletedForUser template $ userid user) $
     throwM $ SomeDBExtraException $ serverError "Template is deleted"
-  (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor user template actor) >>=) $ flip withDocumentID $ do
+  (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user) template actor id) >>=) $ flip withDocumentID $ do
     dbUpdate $ DocumentFromTemplate actor
     when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft True
     newDoc <- theDocument
@@ -228,7 +228,7 @@ apiCallV1Clone did = logDocument did . api $ do
   doc <- dbQuery $ GetDocumentByDocumentID $ did
   if isAuthor (doc,user)
      then do
-         mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor user doc actor
+         mndid <- dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user) doc actor id
          when (isNothing mndid) $
              throwM . SomeDBExtraException $ serverError "Can't clone given document"
          newdoc <- dbQuery $ GetDocumentByDocumentID $ fromJust mndid

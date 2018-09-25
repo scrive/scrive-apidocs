@@ -103,3 +103,42 @@
     margin-left: 4px;
   }
 }
+
+.shareable-link-icon {
+  display: inline-block;
+  height: 20px;
+  width: 20px;
+  margin-top: 7px;
+
+  cursor: pointer;
+
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 17px 17px;
+}
+
+.shareable-link-icon-generate {
+  &:extend(.shareable-link-icon);
+
+  background-image: url('/img/plus.svg');
+  background-size: 15px 15px;
+}
+
+.shareable-link-icon-show {
+  &:extend(.shareable-link-icon);
+
+  background-image: url('/img/eye.png');
+}
+
+.shareable-link-icon-regenerate {
+  &:extend(.shareable-link-icon);
+
+  background-image: url('/img/reload.svg');
+  background-size: 15px 15px;
+}
+
+.shareable-link-icon-discard {
+  &:extend(.shareable-link-icon);
+
+  background-image: url('/img/icon-delete.png');
+}

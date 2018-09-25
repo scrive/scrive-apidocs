@@ -68,6 +68,7 @@ module Doc.Model.Update
   , FixClosedErroredDocument(..)
   , ConnectSignatoriesToUser(..)
   , AddNotUploadedSignatoryAttachmentsEvents(..)
+  , UpdateShareableLinkHash(..)
   , updateMTimeAndObjectVersion
   ) where
 
@@ -363,6 +364,7 @@ insertDocument document@(Document{..}) = do
     sqlSet "token" documentmagichash
     sqlSet "time_zone_name" documenttimezonename
     sqlSet "author_id" $ unsafeDocumentID 0
+    sqlSet "shareable_link_hash" documentshareablelinkhash
     sqlResult "documents.id"
   did <- fetchOne runIdentity
   insertSignatoryLinks did documentsignatorylinks
@@ -1512,26 +1514,34 @@ instance (CryptoRNG m, MonadLog m, MonadThrow m, DocumentMonad m, TemplatesMonad
               ]
             return False
 
-data CloneDocumentWithUpdatedAuthor = CloneDocumentWithUpdatedAuthor User Document Actor
-instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m) => DBUpdate m CloneDocumentWithUpdatedAuthor (Maybe DocumentID) where
-  update (CloneDocumentWithUpdatedAuthor user document actor) = do
+data CloneDocumentWithUpdatedAuthor
+  = CloneDocumentWithUpdatedAuthor (Maybe User) Document Actor (Document -> Document)
+instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m)
+  => DBUpdate m CloneDocumentWithUpdatedAuthor (Maybe DocumentID) where
+  update (CloneDocumentWithUpdatedAuthor mUser document actor f) = do
+    siglinks <- forM (documentsignatorylinks document) $ \sl -> do
+      magichash <- random
+      sl' <-  case mUser of
+        Just user | isAuthor sl -> do
           ug <- query . UserGroupGetByUserID . userid $ user
-          siglinks <- forM (documentsignatorylinks document) $ \sl -> do
-                magichash <- random
-                let sl' = if (isAuthor sl) then (replaceSignatoryUser sl user ug) else sl
-                return sl' {signatorylinkid = unsafeSignatoryLinkID 0, signatorymagichash = magichash}
-          res <- (flip newFromDocumentID) (documentid document) $ \doc ->
-            doc {
-                documentstatus = Preparation
-              , documentsharing = Private
-              , documentsignatorylinks = siglinks
-                                       -- FIXME: Need to remove authorfields?
-              , documentctime = actorTime actor
-              , documentmtime = actorTime actor
-              }
-          case res of
-            Nothing -> return Nothing
-            Just d -> return $ Just $ documentid d
+          return $ replaceSignatoryUser sl user ug
+        _ -> return sl
+      return sl'
+        { signatorylinkid = unsafeSignatoryLinkID 0
+        , signatorymagichash = magichash
+        }
+
+    mDoc <- flip newFromDocumentID (documentid document) $ f . \doc -> doc
+      { documentstatus = Preparation
+      , documentsharing = Private
+      , documentsignatorylinks = siglinks
+      -- FIXME: Need to remove authorfields?
+      , documentctime = actorTime actor
+      , documentmtime = actorTime actor
+      , documentshareablelinkhash = Nothing
+      }
+
+    return $ documentid <$> mDoc
 
 data StoreDocumentForTesting = StoreDocumentForTesting Document
 instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) => DBUpdate m StoreDocumentForTesting DocumentID where
@@ -1815,6 +1825,13 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m RemoveD
   update (RemoveDocumentAttachments fid _actor) = updateDocumentWithID $ \did -> do
     count <- runQuery $ "DELETE FROM author_attachments WHERE document_id =" <?> did <+> "AND file_id =" <?> fid <+> "AND EXISTS (SELECT 1 FROM documents WHERE id = author_attachments.document_id AND status =" <?> Preparation <+> ")"
     return $ count > 0
+
+data UpdateShareableLinkHash = UpdateShareableLinkHash (Maybe MagicHash)
+instance (DocumentMonad m, MonadThrow m) => DBUpdate m UpdateShareableLinkHash () where
+  update (UpdateShareableLinkHash mHash) = updateDocumentWithID $ \did ->
+    runQuery01_ . sqlUpdate "documents" $ do
+      sqlSet "shareable_link_hash" mHash
+      sqlWhereEq "id" did
 
 -- Remove unsaved drafts (older than 1 week) from db.
 -- Uses chunking to not overload db when there's a lot of old drafts

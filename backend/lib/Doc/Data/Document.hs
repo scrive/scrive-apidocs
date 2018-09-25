@@ -216,6 +216,7 @@ data Document = Document {
 , documentmagichash              :: !MagicHash
 , documentauthorugid             :: !(Maybe UserGroupID)
 , documenttimezonename           :: !TimeZoneName
+, documentshareablelinkhash      :: !(Maybe MagicHash)
 } deriving (Show)
 
 type instance ID Document = DocumentID
@@ -263,6 +264,7 @@ instance Default Document where
   , documentmagichash = unsafeMagicHash 0
   , documentauthorugid = Nothing
   , documenttimezonename = defaultTimeZoneName
+  , documentshareablelinkhash = Nothing
   }
 
 instance HasGuardtimeSignature Document where
@@ -314,6 +316,7 @@ documentsSelectors = [
   , "documents.time_zone_name"
   , "(SELECT u.user_group_id FROM users u WHERE u.id = documents.author_user_id)"
   , documentStatusClassExpression
+  , "documents.shareable_link_hash"
   ]
 
 documentStatusClassExpression :: SQL
@@ -363,13 +366,13 @@ documentStatusClassExpression = mconcat [
       , "END :: INTEGER)"
       ]
 
-type instance CompositeRow Document = (DocumentID, String, CompositeArray1 SignatoryLink, CompositeArray1 MainFile, DocumentStatus, DocumentType, UTCTime, UTCTime, Int32, Maybe Int32, Maybe UTCTime, Maybe UTCTime, Maybe UTCTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Bool, Bool, Lang, DocumentSharing, CompositeArray1 DocumentTag, CompositeArray1 AuthorAttachment, Maybe String, Maybe String, Bool, Int64, MagicHash, TimeZoneName, Maybe UserGroupID, StatusClass)
+type instance CompositeRow Document = (DocumentID, String, CompositeArray1 SignatoryLink, CompositeArray1 MainFile, DocumentStatus, DocumentType, UTCTime, UTCTime, Int32, Maybe Int32, Maybe UTCTime, Maybe UTCTime, Maybe UTCTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Bool, Bool, Lang, DocumentSharing, CompositeArray1 DocumentTag, CompositeArray1 AuthorAttachment, Maybe String, Maybe String, Bool, Int64, MagicHash, TimeZoneName, Maybe UserGroupID, StatusClass, Maybe MagicHash)
 
 instance PQFormat Document where
   pqFormat = "%document"
 
 instance CompositeFromSQL Document where
-  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text,  show_header, show_pdf_download, show_reject_option, allow_reject_reason, show_footer, is_receipt, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apiv1callback, apiv2callback, unsaved_draft, objectversion, token, time_zone_name, author_ugid, status_class) = Document {
+  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text,  show_header, show_pdf_download, show_reject_option, allow_reject_reason, show_footer, is_receipt, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apiv1callback, apiv2callback, unsaved_draft, objectversion, token, time_zone_name, author_ugid, status_class, shareable_link_hash) = Document {
     documentid = did
   , documenttitle = title
   , documentsignatorylinks = signatory_links
@@ -407,6 +410,7 @@ instance CompositeFromSQL Document where
   , documentmagichash = token
   , documentauthorugid = author_ugid
   , documenttimezonename = time_zone_name
+  , documentshareablelinkhash = shareable_link_hash
   }
 
 ---------------------------------

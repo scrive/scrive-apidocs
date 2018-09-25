@@ -387,6 +387,7 @@ instance Arbitrary Document where
     -- we can have any days to sign. almost
     ddaystosign <- elements [1, 10, 99]
     dtimeouttime <- arbitrary
+    documentshareablelinkhash <- arbitrary
     return $ def
       { documentstatus = dstatus
       , documenttype = dtype
@@ -394,6 +395,7 @@ instance Arbitrary Document where
       , documentsignatorylinks = sls
       , documenttimeouttime = Just dtimeouttime
       , documentdaystosign = ddaystosign
+      , documentshareablelinkhash
       }
 
 documentAllStatuses :: [DocumentStatus]
@@ -1122,6 +1124,26 @@ instance Arbitrary IPAddressWithMask where
 instance Arbitrary SignInfo where
   arbitrary = SignInfo <$> arbitrary <*> arbitrary
 
+-- versions of assert types from Test.HUnit with typeclass constraint for convenience
+
+assert :: (T.Assertable t, MonadIO m) => t -> m ()
+assert = liftIO . T.assert
+
+assertBool :: MonadIO m => String -> Bool -> m ()
+assertBool msg = liftIO . T.assertBool msg
+
+assertEqual :: (Eq a, Show a, MonadIO m) => String -> a -> a -> m ()
+assertEqual msg a = liftIO . T.assertEqual msg a
+
+assertFailure :: MonadIO m => String -> m ()
+assertFailure = liftIO . T.assertFailure
+
+assertString :: MonadIO m => String -> m ()
+assertString = liftIO . T.assertString
+
+assertionPredicate :: (T.AssertionPredicable t, MonadIO m) => t -> m Bool
+assertionPredicate = liftIO . T.assertionPredicate
+
 -- our asserts
 
 assertSuccess :: MonadIO m => m ()
@@ -1143,16 +1165,14 @@ assertNothing :: MonadIO m => Maybe a -> m ()
 assertNothing Nothing = assertSuccess
 assertNothing (Just _) = assertFailure "Should have returned Nothing but returned Just"
 
--- versions of assert types from Test.HUnit with typeclass constraint for convenience
-
-assert :: (T.Assertable t, MonadIO m) => t -> m ()
-assert = liftIO . T.assert
-
-assertBool :: MonadIO m => String -> Bool -> m ()
-assertBool msg = liftIO . T.assertBool msg
-
-assertEqual :: (Eq a, Show a, MonadIO m) => String -> a -> a -> m ()
-assertEqual msg a = liftIO . T.assertEqual msg a
+assertNotEqual :: (Eq a, Show a, MonadIO m) => String -> a -> a -> m ()
+assertNotEqual msg expected got = unless (expected /= got) $ do
+  assertFailure . unlines $
+    [ msg
+    , ""
+    , "Expected: " ++ show expected
+    , "Got: " ++ show got
+    ]
 
 assertEqualJson :: MonadIO m => String -> A.Value -> A.Value -> m ()
 assertEqualJson msg expected got = unless (expected == got) $ do
@@ -1168,15 +1188,6 @@ assertEqualJson msg expected got = unless (expected == got) $ do
     [ ""
     , "Steps to go from the value we got to the expected one:"
     ] ++ map ((" * " ++) . show) (A.patchOperations $ A.diff got expected)
-
-assertFailure :: MonadIO m => String -> m ()
-assertFailure = liftIO . T.assertFailure
-
-assertString :: MonadIO m => String -> m ()
-assertString = liftIO . T.assertString
-
-assertionPredicate :: (T.AssertionPredicable t, MonadIO m) => t -> m Bool
-assertionPredicate = liftIO . T.assertionPredicate
 
 assertRaisesInternalError :: (Show v, MonadIO m, MonadMask m) =>  m v -> m ()
 assertRaisesInternalError a = catchJust (\case

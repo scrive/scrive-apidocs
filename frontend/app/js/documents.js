@@ -4,7 +4,6 @@ var AjaxQueue = require("./ajaxqueue.js").AjaxQueue;
 var _ = require("underscore");
 var Submit = require("./submits.js").Submit;
 var Mail = require("./confirmationsWithEmails.js").Mail;
-var Document = require("./documents.js").Document;
 var File = require("./files.js").File;
 var AuthorAttachment = require("./authorattachment.js").AuthorAttachment;
 var Signatory = require("./signatories.js").Signatory;
@@ -32,7 +31,8 @@ var Document = exports.Document = Backbone.Model.extend({
         saveQueue : new AjaxQueue(),
         is_saved : false,
         screenshots : {},
-        companyAdmin: false
+        companyAdmin: false,
+        shareable_link: undefined
     }},
     initialize: function(args) {
         this.url = "/api/frontend/documents/" + args.id  + "/get" + (args.siglinkid ? "?signatory_id="+ args.siglinkid : "");
@@ -824,7 +824,8 @@ var Document = exports.Document = Backbone.Model.extend({
        timezone: args.timezone,
        is_saved: args.is_saved,
        companyAdmin: args.viewer.role == "company_admin",
-       ready: true
+       ready: true,
+       shareableLink: args.shareable_link
      };
     },
     markAsNotReady: function() {
@@ -986,5 +987,39 @@ var Document = exports.Document = Backbone.Model.extend({
       } else {
         return undefined;
       }
+    },
+
+    shareableLink: function() {
+      return this.get("shareable_link");
+    },
+
+    generateShareableLink: function(successCallback, errorCallback) {
+      const self = this;
+
+      return new Submit({
+        method: "POST",
+        ajax: true,
+        url: "/api/v2/documents/" + this.documentid() + "/shareablelink/generate",
+        ajaxsuccess: function (resp) {
+          self.set("shareable_link", resp.shareable_link);
+          successCallback(resp);
+        },
+        ajaxerror: errorCallback
+      });
+    },
+
+    discardShareableLink: function(successCallback, errorCallback) {
+      const self = this;
+
+      return new Submit({
+        method: "POST",
+        ajax: true,
+        url: "/api/v2/documents/" + this.documentid() + "/shareablelink/discard",
+        ajaxsuccess: function (resp) {
+          self.set("shareable_link", null);
+          successCallback(resp);
+        },
+        ajaxerror: errorCallback
+      });
     }
 });

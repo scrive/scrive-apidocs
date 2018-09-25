@@ -1,13 +1,17 @@
 module DocControlTest (docControlTests) where
 
 import Control.Monad.Trans
+import Crypto.RNG
+import Data.Bifunctor
 import Happstack.Server
 import Test.Framework
 import Text.JSON.Gen (toJSValue)
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
+import qualified Data.Map as M
 import qualified Text.JSON
 
 import Archive.Control
@@ -66,6 +70,8 @@ docControlTests env = testGroup "DocControl" [
   , testThat "We can download signview branding if we have access to document" env testDownloadSignviewBrandingAccess
 
   , testThat "We can't get a document as a signatory if it has been cancelled" env testGetCancelledDocument
+  , testThat "Generate document to sign from shareable template"
+             env testDocumentFromShareableTemplate
   ]
 
 testUploadingFile :: TestEnv ()
@@ -633,3 +639,35 @@ testGetCancelledDocument = do
       randomUpdate $ AddDocumentSessionToken slid mh
       handleSignShow did slid
     assertEqual "Status is 200" 200 (rsCode res)
+
+testDocumentFromShareableTemplate :: TestEnv ()
+testDocumentFromShareableTemplate = do
+  Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
+  tpl <- addRandomDocumentWithAuthorAndCondition user $ \d ->
+    isTemplate d && any (not . isAuthor) (documentsignatorylinks d)
+  mh <- random
+  withDocument tpl $ randomUpdate $ UpdateShareableLinkHash $ Just mh
+
+  ctx <- anonymousContext <$> mkContext def
+  req <- mkRequest GET []
+  (res, ctx') <- runTestKontra req ctx $
+    handleSignFromTemplate (documentid tpl) mh
+
+  assertEqual "Status is 303" 303 (rsCode res)
+  let Just HeaderPair{ hValue = [loc] } = M.lookup "location" $ rsHeaders res
+      (did, slid) = bimap read (read . drop 1)
+        . break (=='/')
+        . drop (length ("/s/" :: String))
+        . BS8.unpack
+        $ loc
+  doc <- randomQuery $ GetDocumentByDocumentID did
+  assertNotEqual "Should be a different document"
+                 (documentid doc) (documentid tpl)
+  assertEqual "Should have the same title"
+              (documenttitle doc) (documenttitle tpl)
+  assertEqual "Shouldn't have a shareable link hash"
+              Nothing (documentshareablelinkhash doc)
+
+  req' <- mkRequest GET []
+  (res', _) <- runTestKontra req' ctx' $ handleSignShow did slid
+  assertEqual "Status is 200" 200 (rsCode res')
