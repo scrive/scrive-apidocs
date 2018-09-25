@@ -448,18 +448,21 @@ checkNetsSignStatus nets_conf did slid = do
                       dbUpdate $ ChargeUserGroupForNOBankIDSignature (documentid doc)
                       return $ NetsSignStatusSuccess
                     NetsSignDK -> do
-                      getSignerSSN (gsdorsB64SDOBytes getSdoRs) >>= \case
-                        Nothing -> do
+                      getSignerSSNAndIPAddress (gsdorsB64SDOBytes getSdoRs) >>= \case
+                        (Nothing, _) -> do
                           logAttention_ "Required Danish NemID attributes were not found."
                           return $ NetsSignStatusFailure NetsFaultAPIError
-                        Just signer_ssn -> do
+                        (Just signer_ssn, m_ipaddress) -> do
                           getSdoDetRsDk <- netsCall nets_conf (GetSDODetailsRequest $ gsdorsB64SDOBytes getSdoRs) xpGetSDODetailsResponseDK (show did)
                           logInfo "NETS DK Sign succeeded!" $ logObject_ getOrdStRs
+                          when (isNothing m_ipaddress) $
+                            logInfo_ "NETS DK Sign does not inlude IP address"
                           dbUpdate $ ESign.MergeNetsDKNemIDSignature slid NetsDKNemIDSignature
                             { netsdkSignatoryName = gsdodrsdkSignerCN getSdoDetRsDk
                             , netsdkSignedText = nsoTextToBeSigned nso
                             , netsdkB64SDO = gsdorsB64SDOBytes getSdoRs
                             , netsdkSignatorySSN = signer_ssn
+                            , netsdkSignatoryIP = fromMaybe "" m_ipaddress
                             }
                           dbUpdate $ ChargeUserGroupForDKNemIDSignature (documentid doc)
                           return $ NetsSignStatusSuccess
@@ -471,12 +474,12 @@ checkNetsSignStatus nets_conf did slid = do
         , "nets_fault" .= netsFaultText nets_fault
         ]
       return $ NetsSignStatusFailure nets_fault
-    getSignerSSN bytes64 = do
+    getSignerSSNAndIPAddress bytes64 = do
       let xml = parseLBS_ def . BL.fromStrict . B64.decodeLenient . T.encodeUtf8 $ bytes64
       case runParser xpGetSDOAttributes $ fromDocument xml of
-        Nothing -> return Nothing
+        Nothing -> return (Nothing, Nothing)
         Just attrs -> do
-          return $ lookup "cpr" attrs
+          return (lookup "cpr" attrs, lookup "useripaddress" attrs)
 
 handleSignError  :: Kontrakcja m => m Response
 handleSignError = simpleHtmlResponse =<< renderTemplate_ "netsSignError"

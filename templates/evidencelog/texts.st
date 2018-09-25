@@ -519,6 +519,7 @@ $if(provider_dknemid)$
 <p>Data returned from $provider()$:
   <br/>Name: $signatory_name$
   <br/>ID number: $personalNumber(value=signatory_personal_number)$
+  <br/>IP: $signatory_ip$
 </p>
 $endif$
 <br/>

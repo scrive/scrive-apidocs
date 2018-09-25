@@ -645,6 +645,7 @@ instance Arbitrary NetsDKNemIDSignature where
     <*> (T.pack <$> arbString 200 300)
     <*> (T.pack <$> arbString 10 20)
     <*> (T.pack <$> arbString 10 10)
+    <*> (T.pack <$> arbString 10 10)
 
 instance Arbitrary ESignature where
   arbitrary = oneof [

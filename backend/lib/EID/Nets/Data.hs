@@ -219,6 +219,7 @@ data NetsDKNemIDSignature = NetsDKNemIDSignature {
 , netsdkB64SDO        :: !T.Text -- base64 SDO from Nets ESigning
 , netsdkSignatoryName :: !T.Text
 , netsdkSignatorySSN  :: !T.Text
+, netsdkSignatoryIP   :: !T.Text
 } deriving (Eq, Ord, Show)
 
 data NetsSignStatus

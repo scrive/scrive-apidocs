@@ -192,6 +192,7 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsDKNemIDSignature () whe
         sqlSet "signature" . encodeUtf8 $ netsdkB64SDO
         sqlSet "signatory_name" netsdkSignatoryName
         sqlSet "signatory_personal_number" netsdkSignatorySSN
+        sqlSet "signatory_ip" netsdkSignatoryIP
 
 -- | Get signature for a given signatory.
 data GetESignature = GetESignature SignatoryLinkID
@@ -251,4 +252,5 @@ fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msig
   , netsdkB64SDO = decodeUtf8 signature
   , netsdkSignatoryName = fromJust msignatory_name
   , netsdkSignatorySSN = fromJust msignatory_personal_number
+  , netsdkSignatoryIP = fromMaybe "" msignatory_ip
   }
