@@ -176,7 +176,7 @@ main = do
   cabalFile    <- parseCabalFile "kontrakcja.cabal"
   shakeArgsWith (opts ver) shakeFlags $ \flags targets -> return . Just $ do
     newBuild <- liftIO $ mkUseNewBuild flags cabalFile
-    let opt   = mkOptimisationEnabled flags
+    let opt   = getOptimisationLevel flags
 
     if null targets then want ["help"] else want targets
 
@@ -240,22 +240,18 @@ main = do
 
 -- * Server
 
-data OptimisationEnabled = OptimisationEnabled | OptimisationDisabled
-
-mkOptimisationEnabled :: [ShakeFlag] -> OptimisationEnabled
-mkOptimisationEnabled flags =
-  if EnableOptimisation `elem` flags
-  then OptimisationEnabled
-  else OptimisationDisabled
+getOptimisationLevel :: [ShakeFlag] -> OptimisationLevel
+getOptimisationLevel flags =
+  last (NoOptimisation : [ optlevel | OptimisationLevel optlevel <- flags ])
 
 -- | Server build rules
-serverBuildRules :: UseNewBuild -> OptimisationEnabled -> CabalFile -> Rules ()
+serverBuildRules :: UseNewBuild -> OptimisationLevel -> CabalFile -> Rules ()
 serverBuildRules newBuild opt cabalFile = do
   ifNewBuild newBuild (serverNewBuildRules opt cabalFile)
                       (serverOldBuildRules opt cabalFile)
   "_build" </> "db-docs" </> "kontra.html" %> buildDBDocs
 
-getCabalConfigureFlags :: OptimisationEnabled -> Action [String]
+getCabalConfigureFlags :: OptimisationLevel -> Action [String]
 getCabalConfigureFlags opt = do
   tc           <- askOracle (TeamCity ())
   testCoverage <- askOracle (BuildTestCoverage ())
@@ -265,11 +261,12 @@ getCabalConfigureFlags opt = do
       flags' = if testCoverage then "--enable-coverage":flags
                else flags
       flags''= case opt of
-                OptimisationEnabled  -> flags'
-                OptimisationDisabled -> "--disable-optimization":flags'
+                MaxOptimisation     -> "-O2":flags'
+                DefaultOptimisation -> flags'
+                NoOptimisation      -> "-O0":flags'
   return flags''
 
-serverNewBuildRules :: OptimisationEnabled -> CabalFile -> FilePath -> Rules ()
+serverNewBuildRules :: OptimisationLevel -> CabalFile -> FilePath -> Rules ()
 serverNewBuildRules opt cabalFile buildDir = do
   let cabalFiles = ["cabal.project.freeze", "kontrakcja.cabal"]
 
@@ -307,7 +304,7 @@ serverNewBuildRules opt cabalFile buildDir = do
 
   "cabal-clean" ~> cmd "cabal new-clean"
 
-serverOldBuildRules :: OptimisationEnabled -> CabalFile -> Rules ()
+serverOldBuildRules :: OptimisationLevel -> CabalFile -> Rules ()
 serverOldBuildRules opt cabalFile = do
   let cabalFiles = ["cabal.config", "kontrakcja.cabal"]
 

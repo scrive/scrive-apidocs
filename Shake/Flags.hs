@@ -1,12 +1,26 @@
 -- | Command-line flags accepted by the main Shake script.
 
 module Shake.Flags (ShakeFlag(..)
+                   ,OptimisationLevel(..)
                    ,Pattern
                    ,shakeFlags) where
 
+import Data.Bifunctor
 import System.Console.GetOpt
 
 type Pattern = String
+
+data OptimisationLevel = NoOptimisation
+                       | DefaultOptimisation
+                       | MaxOptimisation
+  deriving Eq
+
+optimisationLevelFromString :: String -> Either String OptimisationLevel
+optimisationLevelFromString "0" = Right NoOptimisation
+optimisationLevelFromString "1" = Right DefaultOptimisation
+optimisationLevelFromString "2" = Right MaxOptimisation
+optimisationLevelFromString l   = Left $ "Unknown optimisation level: " ++ l
+                                  ++ ", must be 0, 1, or 2."
 
 data ShakeFlag = TransifexUser     String
                | TransifexPassword String
@@ -14,7 +28,7 @@ data ShakeFlag = TransifexUser     String
                | SrcSubdir         FilePath
                | NewBuild
                | OldBuild
-               | EnableOptimisation
+               | OptimisationLevel OptimisationLevel
                | CreateDB
                | TestPattern       Pattern
   deriving Eq
@@ -30,9 +44,12 @@ shakeFlags =
     "Use 'new-build' (default)."
   , Option ""  ["old-build"]  (noArg  OldBuild)
     "Don't use 'new-build'."
-  , Option ""
-    ["enable-optimisation", "enable-optimization"]
-    (noArg EnableOptimisation)
+  , Option "O"
+    [ "enable-optimisation", "enable-optimization"
+    , "optimisation", "optimization" ]
+    (optArg
+     (bimap id OptimisationLevel . optimisationLevelFromString)
+     (OptimisationLevel NoOptimisation) "NUM")
     "Build the back end with optimisation enabled"
   , Option ""  ["create-db"]  (noArg  CreateDB)
     "Use a new DB for tests. See 'help-env' for relevant env var settings."
@@ -40,5 +57,6 @@ shakeFlags =
     "Run only tests matching a pattern (for 'test'/'test-server')"
   ]
   where
-    noArg  flagVal     = NoArg  (Right flagVal)
-    reqArg toFlag name = ReqArg (Right . toFlag) name
+    noArg  flagVal         = NoArg  (Right flagVal)
+    reqArg toFlag name     = ReqArg (Right . toFlag) name
+    optArg toFlag def name = OptArg (maybe (Right def) toFlag) name
