@@ -92,13 +92,10 @@ whenNewBuild unb act = ifNewBuild unb act (return ())
 
 -- | Subdirectory where the built artifacts for this component are
 -- located, this depends on the version of 'cabal-install'.
-componentSubDir :: CabalInstallVersion -> CabalComponentName -> String
-componentSubDir cabalInstallVer cname = ctype </> cbuilddir
+componentSubDir :: CabalInstallVersion -> OptimisationLevel -> CabalComponentName
+                -> String
+componentSubDir cabalInstallVer optlevel cname = ctype </> cbuilddir
   where
-    cbuilddir =
-      case cname of
-        CLibName -> unComponentName cname </> "build"
-        _        -> unComponentName cname </> "build" </> unComponentName cname
     ctype | useSeparateComponentDirs cabalInstallVer =
               case cname of
                 CLibName      -> ""
@@ -108,6 +105,18 @@ componentSubDir cabalInstallVer cname = ctype </> cbuilddir
                 CBenchName  _ -> "b"
                 CFLibName   _ -> "f"
           | otherwise = "c"
+
+    cbuilddir =
+      case cname of
+        CLibName -> unComponentName cname </> coptlevel </> "build"
+        _        -> unComponentName cname </> coptlevel </> "build"
+                    </> unComponentName cname
+
+    coptlevel =
+      case optlevel of
+        NoOptimisation      -> "noopt"
+        DefaultOptimisation -> ""
+        MaxOptimisation     -> "opt"
 
 -- | Name of the main built artifact for this component.
 componentArtifactName :: CabalComponentName -> String
@@ -120,17 +129,19 @@ componentArtifactName c =
 
 -- | Given a component name and type, return the path to the
 -- corresponding executable.
-componentTargetPath :: UseNewBuild -> ComponentName -> FilePath
-componentTargetPath DontUseNewBuild c =
+componentTargetPath :: UseNewBuild -> OptimisationLevel -> ComponentName
+                    -> FilePath
+componentTargetPath DontUseNewBuild _optlevel c =
   "dist" </> "build" </> unComponentName c </> componentArtifactName c
-componentTargetPath (UseNewBuild cabalInstallVer buildDir) c =
-  buildDir </> componentSubDir cabalInstallVer c </> componentArtifactName c
+componentTargetPath (UseNewBuild cabalInstallVer buildDir) optlevel c =
+  buildDir </> componentSubDir cabalInstallVer optlevel c
+  </> componentArtifactName c
 
 
 -- | Paths that coverage report generation needs to pass to `hpc` via
 -- `--hpcdir`.
-hpcPaths :: CabalFile -> UseNewBuild -> [FilePath]
-hpcPaths cabalFile newBuild =
+hpcPaths :: CabalFile -> UseNewBuild -> OptimisationLevel -> [FilePath]
+hpcPaths cabalFile newBuild opt =
   [ mainPath
   , componentPath . mkTestName $ "kontrakcja-test" ]
   ++ if useNewBuild newBuild
@@ -145,16 +156,16 @@ hpcPaths cabalFile newBuild =
     componentPath c = case newBuild of
       DontUseNewBuild -> build_dir </> hdm </> unComponentName c
       (UseNewBuild cabalInstallVer _buildDir) ->
-        build_dir </> componentSubDir cabalInstallVer c </> unComponentName c
+        build_dir </> componentSubDir cabalInstallVer opt c </> unComponentName c
         </> hdm </> (case c of CLibName -> packageId cabalFile
                                _        -> unComponentName c)
 
 -- | For each exe/test-suite/benchmark component in the .cabal file,
 -- add a rule for building the corresponding executable.
-componentBuildRules :: UseNewBuild -> CabalFile -> Rules ()
-componentBuildRules newBuild cabalFile =
+componentBuildRules :: UseNewBuild -> OptimisationLevel -> CabalFile -> Rules ()
+componentBuildRules newBuild optlevel cabalFile =
   forM_ (allComponentNames cabalFile) $ \cname -> do
-      let targetPath = componentTargetPath newBuild cname
+      let targetPath = componentTargetPath newBuild optlevel cname
       unComponentName cname ~> do need [targetPath]
       targetPath %> \_ ->
         -- Assumes that all sources of a component are in its hs-source-dirs.

@@ -203,19 +203,19 @@ main = do
 
     "dist" ~> need ["_build/kontrakcja.tar.gz"]
 
-    "transifex-fix"              ~> runTransifexFixScript   newBuild
-    "transifex-push"             ~> runTransifexPushScript  newBuild flags
-    "transifex-diff"             ~> runTransifexDiffScript  newBuild flags
-    "transifex-merge"            ~> runTransifexMergeScript newBuild flags
+    "transifex-fix"              ~> runTransifexFixScript   newBuild opt
+    "transifex-push"             ~> runTransifexPushScript  newBuild opt flags
+    "transifex-diff"             ~> runTransifexDiffScript  newBuild opt flags
+    "transifex-merge"            ~> runTransifexMergeScript newBuild opt flags
     "transifex-help"             ~> do putNormal transifexUsageMsg
                                        putNormal "-----------------------------"
                                        putNormal "Output of 'transifex --help':"
                                        putNormal "-----------------------------"
-                                       runTransifexUsageScript newBuild
-    "detect-old-localizations"   ~> runDetectOldLocalizationsScript newBuild
-    "detect-old-templates"       ~> runDetectOldTemplatesScript newBuild
+                                       runTransifexUsageScript newBuild opt
+    "detect-old-localizations"   ~> runDetectOldLocalizationsScript newBuild opt
+    "detect-old-templates"       ~> runDetectOldTemplatesScript newBuild opt
     "take-reference-screenshots" ~> runTakeReferenceScreenshotsScript
-    "run-localization"           ~> runLocalization newBuild
+    "run-localization"           ~> runLocalization newBuild opt
     "scripts-help"               ~> putNormal scriptsUsageMsg
 
     "clean"          ~> need ["clean-server","clean-frontend"]
@@ -227,15 +227,15 @@ main = do
       removeFilesAfter "_shake/" ["//*"]
 
     -- * Rules
-    componentBuildRules   newBuild cabalFile
+    componentBuildRules   newBuild opt cabalFile
     serverBuildRules      newBuild opt cabalFile
-    serverTestRules       newBuild cabalFile
+    serverTestRules       newBuild opt cabalFile
                           (mkCreateDBWithTestConf flags)
                           [pat | TestPattern pat <- flags]
-    serverFormatLintRules newBuild cabalFile flags
+    serverFormatLintRules newBuild opt cabalFile flags
     frontendBuildRules    newBuild
     frontendTestRules     newBuild
-    distributionRules     newBuild
+    distributionRules     newBuild opt
     oracleHelpRule
 
 -- * Server
@@ -380,10 +380,11 @@ mkCreateDBWithTestConf flags =
   if CreateDB `elem` flags then CreateTestDBWithNewConf else DontCreateTestConf
 
 -- | Server test rules
-serverTestRules :: UseNewBuild -> CabalFile -> CreateTestDBWithNewConf
+serverTestRules :: UseNewBuild -> OptimisationLevel -> CabalFile
+                -> CreateTestDBWithNewConf
                 -> [Pattern]
                 -> Rules ()
-serverTestRules newBuild cabalFile createDBWithConf testPatterns = do
+serverTestRules newBuild opt cabalFile createDBWithConf testPatterns = do
   "kontrakcja_test.conf" %> \_ ->
     case createDBWithConf of
       CreateTestDBWithNewConf -> do
@@ -404,7 +405,7 @@ serverTestRules newBuild cabalFile createDBWithConf testPatterns = do
 
   "run-server-tests" ~> do
     let testSuiteNames    = testComponentNames cabalFile
-        testSuiteExePaths = map (componentTargetPath newBuild) testSuiteNames
+        testSuiteExePaths = map (componentTargetPath newBuild opt) testSuiteNames
     need $ "kontrakcja_test.conf" : map unComponentName testSuiteNames
     -- removeFilesAfter is only performed on a successfull build, this file
     -- needs to be cleaned regardless otherwise successive builds will fail
@@ -437,7 +438,7 @@ serverTestRules newBuild cabalFile createDBWithConf testPatterns = do
          ++ "| hpc markup `xargs echo` "
          ++ "--destdir=coverage-reports kontrakcja-test.tix "
          ++ concat [ "--hpcdir=" ++ hpcPath ++ " "
-                   | hpcPath <- hpcPaths cabalFile newBuild ]
+                   | hpcPath <- hpcPaths cabalFile newBuild opt ]
         ) []
       command_ [Shell]
         ("zip -r _build/coverage-reports.zip "
@@ -470,19 +471,20 @@ needAllHaskellFiles = needHaskellFilesInDirectories . allHsSourceDirs
 needServerHaskellFiles :: CabalFile -> Action ()
 needServerHaskellFiles = needHaskellFilesInDirectories . allLibExeHsSourceDirs
 
-serverFormatLintRules :: UseNewBuild -> CabalFile -> [ShakeFlag] -> Rules ()
-serverFormatLintRules newBuild cabalFile flags = do
+serverFormatLintRules :: UseNewBuild -> OptimisationLevel -> CabalFile
+                      -> [ShakeFlag] -> Rules ()
+serverFormatLintRules newBuild opt cabalFile flags = do
   let srcSubdirs = case [subdir | SrcSubdir subdir <- flags]
                    of [] -> allHsSourceDirs cabalFile
                       ds -> ds
 
   "_build/hs-import-order" %>>> do
     needAllHaskellFiles cabalFile
-    need [componentTargetPath newBuild (mkExeName "sort_imports")]
+    need [componentTargetPath newBuild opt (mkExeName "sort_imports")]
     hsImportOrderAction True srcSubdirs
 
   "fix-hs-import-order" ~> do
-    need [componentTargetPath newBuild (mkExeName "sort_imports")]
+    need [componentTargetPath newBuild opt (mkExeName "sort_imports")]
     hsImportOrderAction False srcSubdirs
 
   "test-hs-outdated-deps" ~> do
@@ -524,7 +526,7 @@ serverFormatLintRules newBuild cabalFile flags = do
       hsImportOrderAction checkOnly dirs = do
         let sortImportsFlags = if checkOnly then ("--check":dirs) else dirs
         command ([Shell] ++ langEnv)
-          (componentTargetPath newBuild . mkExeName $ "sort_imports")
+          (componentTargetPath newBuild opt . mkExeName $ "sort_imports")
           sortImportsFlags
 
 
@@ -576,8 +578,8 @@ frontendTestRules newBuild = do
         removeFilesAfter "frontend/coverage" ["//*"]
 
 -- * Create distribution
-distributionRules :: UseNewBuild -> Rules ()
-distributionRules newBuild = do
+distributionRules :: UseNewBuild -> OptimisationLevel -> Rules ()
+distributionRules newBuild opt = do
   "urls.txt" %> \_ -> do
     tc <- askOracle (TeamCity ())
     nginxconfpath <- askOracle (NginxConfPath ())
@@ -586,7 +588,7 @@ distributionRules newBuild = do
         ++ "with Shake when running from TeamCity"
     when (null nginxconfpath) $ do
       fail "ERROR: NGINX_CONF_PATH is empty"
-    let routingListPath = componentTargetPath newBuild . mkExeName
+    let routingListPath = componentTargetPath newBuild opt . mkExeName
                           $ "routinglist"
     need [routingListPath]
     command_ [] routingListPath [nginxconfpath]
@@ -624,7 +626,7 @@ distributionRules newBuild = do
     command_ [Shell] "tar" $ ["-czf","_build/kontrakcja.tar.gz"] ++ distFiles
 
     where
-      binaryPath = componentTargetPath DontUseNewBuild
+      binaryPath = componentTargetPath DontUseNewBuild DefaultOptimisation
 
       -- | For each given exe component, generate a rule for copying
       -- it to 'dist/build/compname', if needed.
@@ -632,7 +634,7 @@ distributionRules newBuild = do
       copyBinariesRules binaryNames =
         whenNewBuild newBuild $ \_ ->
           forM_ binaryNames $ \binaryName -> do
-            let sourcePath = componentTargetPath newBuild binaryName
+            let sourcePath = componentTargetPath newBuild opt binaryName
                 targetPath = binaryPath binaryName
             targetPath %> \_ -> do
               liftIO $ createDirectoryIfMissing True (takeDirectory targetPath)
@@ -746,21 +748,21 @@ transifexUsageMsg = unlines $
   , "English texts."
   ]
 
-runTX :: UseNewBuild -> String -> [String] -> Action ()
-runTX newBuild a args = do
-  let scriptPath = componentTargetPath newBuild . mkExeName $ "transifex"
+runTX :: UseNewBuild -> OptimisationLevel -> String -> [String] -> Action ()
+runTX newBuild opt a args = do
+  let scriptPath = componentTargetPath newBuild opt . mkExeName $ "transifex"
   need [scriptPath]
   command_ [] scriptPath ([a] ++ args)
 
-runTransifexUsageScript :: UseNewBuild -> Action ()
-runTransifexUsageScript newBuild = do
-  let scriptPath = componentTargetPath newBuild . mkExeName $ "transifex"
+runTransifexUsageScript :: UseNewBuild -> OptimisationLevel -> Action ()
+runTransifexUsageScript newBuild opt = do
+  let scriptPath = componentTargetPath newBuild opt . mkExeName $ "transifex"
   need [scriptPath]
   -- 'transifex' prints out usage info if no command provided.
   cmd scriptPath
 
-runTransifexFixScript :: UseNewBuild -> Action ()
-runTransifexFixScript newBuild = runTX newBuild "fix" []
+runTransifexFixScript :: UseNewBuild -> OptimisationLevel -> Action ()
+runTransifexFixScript newBuild opt = runTX newBuild opt "fix" []
 
 -- Transifex synch commands take USER PASSWORD [LANG] as parameters.
 -- USER and PASSWORD are obligatory and ShakeFlags can have different
@@ -776,39 +778,42 @@ transifexServerParams flags = do
     findPassword xs = listToMaybe [ p | TransifexPassword p <- xs]
     findLang     xs = listToMaybe [ l | TransifexLang l     <- xs ]
 
-runTransifexDiffScript :: UseNewBuild -> [ShakeFlag] -> Action ()
-runTransifexDiffScript newBuild flags = do
+runTransifexDiffScript :: UseNewBuild -> OptimisationLevel -> [ShakeFlag]
+                       -> Action ()
+runTransifexDiffScript newBuild opt flags = do
   (u,p,ml) <- transifexServerParams flags
   case ml of
-    Just l -> runTX newBuild "diff-lang" [u, p, l]
-    _      -> runTX newBuild "diff-all" [u, p]
+    Just l -> runTX newBuild opt "diff-lang" [u, p, l]
+    _      -> runTX newBuild opt "diff-all" [u, p]
 
-runTransifexPushScript :: UseNewBuild -> [ShakeFlag] -> Action ()
-runTransifexPushScript newBuild flags = do
+runTransifexPushScript :: UseNewBuild -> OptimisationLevel -> [ShakeFlag]
+                       -> Action ()
+runTransifexPushScript newBuild opt flags = do
   (u,p,ml) <- transifexServerParams flags
   case ml of
-    Nothing   -> runTX newBuild "push-lang" [u, p, "en"]
-    Just "en" -> runTX newBuild "push-lang" [u, p, "en"]
+    Nothing   -> runTX newBuild opt "push-lang" [u, p, "en"]
+    Just "en" -> runTX newBuild opt "push-lang" [u, p, "en"]
     Just _    -> do
       fail "TX push command has to be run ONLY with language 'en'"
 
-runTransifexMergeScript :: UseNewBuild -> [ShakeFlag] -> Action ()
-runTransifexMergeScript newBuild flags = do
+runTransifexMergeScript :: UseNewBuild -> OptimisationLevel -> [ShakeFlag]
+                        -> Action ()
+runTransifexMergeScript newBuild opt flags = do
   (u,p,ml) <- transifexServerParams flags
   case ml of
-    Just l -> runTX newBuild "merge-lang" [u, p, l]
-    _      -> runTX newBuild "merge-all" [u, p]
+    Just l -> runTX newBuild opt "merge-lang" [u, p, l]
+    _      -> runTX newBuild opt "merge-all" [u, p]
 
-runDetectOldLocalizationsScript :: UseNewBuild -> Action ()
-runDetectOldLocalizationsScript newBuild = do
-  let scriptPath = componentTargetPath newBuild .
+runDetectOldLocalizationsScript :: UseNewBuild -> OptimisationLevel -> Action ()
+runDetectOldLocalizationsScript newBuild opt = do
+  let scriptPath = componentTargetPath newBuild opt .
                    mkExeName $ "detect_old_localizations"
   need [scriptPath]
   cmd scriptPath
 
-runDetectOldTemplatesScript :: UseNewBuild -> Action ()
-runDetectOldTemplatesScript newBuild = do
-  let scriptPath = componentTargetPath newBuild .
+runDetectOldTemplatesScript :: UseNewBuild -> OptimisationLevel -> Action ()
+runDetectOldTemplatesScript newBuild opt = do
+  let scriptPath = componentTargetPath newBuild opt .
                    mkExeName $ "detect_old_templates"
   need [scriptPath]
   cmd scriptPath
@@ -818,9 +823,9 @@ runTakeReferenceScreenshotsScript = do
   need ["scripts/take_reference_screenshots.py"]
   cmd "python scripts/take_reference_screenshots.py"
 
-runLocalization :: UseNewBuild -> Action ()
-runLocalization newBuild = do
-  let exePath = componentTargetPath newBuild .
+runLocalization :: UseNewBuild -> OptimisationLevel -> Action ()
+runLocalization newBuild opt = do
+  let exePath = componentTargetPath newBuild opt .
                 mkExeName $ "localization"
   need [exePath]
   cmd  exePath
