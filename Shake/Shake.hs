@@ -133,7 +133,7 @@ checkPrerequisites = do
     (takeWhile dotOrNum . drop 11)
   requireVersion "lessc" ["--version"] (makeVersion [2,5,0])
     (takeWhile dotOrNum . drop 6)
-  requireVersion "cabal" ["--numeric-version"] (makeVersion [1,24,0]) id
+  requireVersion "cabal" ["--numeric-version"] (makeVersion [2,4,0]) id
   requireVersion "alex"  ["--version"] (makeVersion [3,1,0])
     (takeWhile dotOrNum . drop 13)
   requireVersion "happy" ["--version"] (makeVersion [1,18,0])
