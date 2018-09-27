@@ -121,7 +121,9 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
         Just (NetsFITupasAuthentication_ authentication)  ->
           renderTemplate "_identifiedByFITupasText" $
           F.value "name" $ netsFITupasSignatoryName authentication
-        Nothing -> return ""
+
+        Just (SMSPinAuthentication_ _)  -> return ""
+        Nothing                         -> return ""
 
     esignature <- dbQuery $ GetESignature $ signatorylinkid signatory
     nameFromText <- case esignature of
