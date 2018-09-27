@@ -140,4 +140,5 @@ kontraMigrations = [
   , usersAddDataRetentionPolicy
   , featureFlagsAddStandardAuthAndFlagsForAdmin
   , featureFlagsAddEmailInvitation
+  , featureFlagsAddEmailConfirmation
   ]

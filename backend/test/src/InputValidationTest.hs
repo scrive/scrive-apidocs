@@ -267,7 +267,7 @@ propValidCompanyNumberWhitespaceIsEmpty = propWhitespaceIsEmpty asValidCompanyNu
 
 propValidCompanyNumberRestrictsChars :: String -> Property
 propValidCompanyNumberRestrictsChars =
-   propJustAllowed asValidCompanyNumber [isDigit, (`elem` ['a'..'z']), (`elem` ['A'..'Z']), (=='-')]
+   propJustAllowed asValidCompanyNumber [isDigit, (`elem` ['a'..'z']), (`elem` ['A'..'Z']), (`elem` ['-', ' '])]
 
 propValidCompanyNumberGoodExamples :: [CompanyNumberChar] -> Property
 propValidCompanyNumberGoodExamples ns =

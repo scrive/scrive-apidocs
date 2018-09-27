@@ -9,6 +9,8 @@ module.exports = React.createClass({
       return false;
     } else if (!Subscription.currentSubscription().currentUserFeatures().canUseSMSConfirmations()) {
       return dm != "mobile" && dm != "email_mobile";
+    } else if (!Subscription.currentSubscription().currentUserFeatures().canUseEmailConfirmations()) {
+      return dm != "email" && dm != "email_mobile";
     } else {
       return true;
     }

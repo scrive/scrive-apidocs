@@ -7,6 +7,7 @@ module FeatureFlags.Migrations (
 , featureFlagsDropCompanyID
 , featureFlagsAddStandardAuthAndFlagsForAdmin
 , featureFlagsAddEmailInvitation
+, featureFlagsAddEmailConfirmation
 ) where
 
 import Control.Monad.Catch
@@ -162,5 +163,15 @@ featureFlagsAddEmailInvitation = Migration {
         sqlAddColumn $ tblColumn { colName = "can_use_email_invitations", colType = BoolT, colNullable = False, colDefault = Just "true" }
       , sqlAddColumn $ tblColumn { colName = "can_use_api_invitations", colType = BoolT, colNullable = False, colDefault = Just "true" }
       , sqlAddColumn $ tblColumn { colName = "can_use_pad_invitations", colType = BoolT, colNullable = False, colDefault = Just "true" }
+      ]
+}
+
+featureFlagsAddEmailConfirmation :: (MonadThrow m, MonadDB m) => Migration m
+featureFlagsAddEmailConfirmation = Migration {
+  mgrTableName = tblName tableFeatureFlags
+, mgrFrom = 8
+, mgrAction = StandardMigration .
+    runQuery_ $ sqlAlterTable (tblName tableFeatureFlags)  [
+        sqlAddColumn $ tblColumn { colName = "can_use_email_confirmations", colType = BoolT, colNullable = False, colDefault = Just "true" }
       ]
 }
