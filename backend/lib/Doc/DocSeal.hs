@@ -104,13 +104,24 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
                            then return ""
                            else renderTemplate "_contractsealingtextspersonalNumberText" $ F.value "idnumber" personalnumber
 
-    eauthentication <- dbQuery $ GetEAuthenticationWithoutSession $ signatorylinkid signatory
+    eauthentication <- dbQuery $
+      GetEAuthenticationWithoutSession $ signatorylinkid signatory
+
     identifiedNameText <- case eauthentication of
-        Just (CGISEBankIDAuthentication_ authentication) -> renderTemplate "_identifiedBySwedishBankIDText" $ F.value "name" $ cgisebidaSignatoryName authentication
-        Just (NetsNOBankIDAuthentication_ authentication) -> renderTemplate "_identifiedByNOBankIDText" $ F.value "name" $ netsNOBankIDSignatoryName authentication
-        Just (NetsDKNemIDAuthentication_ authentication) -> renderTemplate "_identifiedByDKNemIDText" $ F.value "name" $ netsDKNemIDSignatoryName authentication
-        Just (NetsFITupasAuthentication_ authentication) -> renderTemplate "_identifiedByFITupasText" $ F.value "name" $ netsFITupasSignatoryName authentication
-        _ -> return ""
+
+        Just (CGISEBankIDAuthentication_ authentication)  ->
+          renderTemplate "_identifiedBySwedishBankIDText" $
+          F.value "name" $ cgisebidaSignatoryName authentication
+        Just (NetsNOBankIDAuthentication_ authentication) ->
+          renderTemplate "_identifiedByNOBankIDText" $
+          F.value "name" $ netsNOBankIDSignatoryName authentication
+        Just (NetsDKNemIDAuthentication_ authentication)  ->
+          renderTemplate "_identifiedByDKNemIDText" $
+          F.value "name" $ netsDKNemIDSignatoryName authentication
+        Just (NetsFITupasAuthentication_ authentication)  ->
+          renderTemplate "_identifiedByFITupasText" $
+          F.value "name" $ netsFITupasSignatoryName authentication
+        Nothing -> return ""
 
     esignature <- dbQuery $ GetESignature $ signatorylinkid signatory
     nameFromText <- case esignature of
