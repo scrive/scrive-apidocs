@@ -647,6 +647,7 @@
 "_historyParty":"Party",
 "_historyTime":"Time",
 "_identifiedByDKNemIDText":"Identified by Danish NemID as \"$name$\"",
+"_identifiedByFITupasText":"Identified by Finnish TUPAS as \"$name$\"",
 "_identifiedByNOBankIDText":"Identified by Norwegian BankID as \"$name$\"",
 "_identifiedBySwedishBankIDText":"Identified by Swedish BankID as \"$name$\"",
 "_identifyWithPinEnterPin":"Enter your SMS PIN",

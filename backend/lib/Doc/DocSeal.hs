@@ -109,6 +109,7 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
         Just (CGISEBankIDAuthentication_ authentication) -> renderTemplate "_identifiedBySwedishBankIDText" $ F.value "name" $ cgisebidaSignatoryName authentication
         Just (NetsNOBankIDAuthentication_ authentication) -> renderTemplate "_identifiedByNOBankIDText" $ F.value "name" $ netsNOBankIDSignatoryName authentication
         Just (NetsDKNemIDAuthentication_ authentication) -> renderTemplate "_identifiedByDKNemIDText" $ F.value "name" $ netsDKNemIDSignatoryName authentication
+        Just (NetsFITupasAuthentication_ authentication) -> renderTemplate "_identifiedByFITupasText" $ F.value "name" $ netsFITupasSignatoryName authentication
         _ -> return ""
 
     esignature <- dbQuery $ GetESignature $ signatorylinkid signatory

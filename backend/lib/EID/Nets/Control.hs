@@ -456,7 +456,7 @@ checkNetsSignStatus nets_conf did slid = do
                           getSdoDetRsDk <- netsCall nets_conf (GetSDODetailsRequest $ gsdorsB64SDOBytes getSdoRs) xpGetSDODetailsResponseDK (show did)
                           logInfo "NETS DK Sign succeeded!" $ logObject_ getOrdStRs
                           when (isNothing m_ipaddress) $
-                            logInfo_ "NETS DK Sign does not inlude IP address"
+                            logInfo_ "NETS DK Sign does not include IP address"
                           dbUpdate $ ESign.MergeNetsDKNemIDSignature slid NetsDKNemIDSignature
                             { netsdkSignatoryName = gsdodrsdkSignerCN getSdoDetRsDk
                             , netsdkSignedText = nsoTextToBeSigned nso
