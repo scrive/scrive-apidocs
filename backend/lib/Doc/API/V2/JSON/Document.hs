@@ -74,7 +74,9 @@ fieldAccessToken (DocumentAccess { daAccessMode }) =
   case daAccessMode of
        AuthorDocumentAccess         -> accessTokenField
        CompanyAdminDocumentAccess _ -> accessTokenField
-       _                            -> pure ()
+       CompanySharedDocumentAccess  -> pure ()
+       SignatoryDocumentAccess _    -> pure ()
+       SystemAdminDocumentAccess    -> pure ()
   where
     accessTokenField = fieldReadonly "access_token"
                        documentmagichash "Document access token"
@@ -85,8 +87,8 @@ fieldShareableLink DocumentAccess{ daAccessMode } =
        AuthorDocumentAccess         -> hashField
        CompanyAdminDocumentAccess _ -> hashField
        CompanySharedDocumentAccess  -> hashField
-       _                            -> pure ()
-
+       SignatoryDocumentAccess _    -> pure ()
+       SystemAdminDocumentAccess    -> pure ()
    where
      hashField :: Ap (FieldDef Document) ()
      hashField =
