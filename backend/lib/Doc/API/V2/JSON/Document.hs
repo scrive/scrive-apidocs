@@ -72,18 +72,20 @@ unjsonDocument da = objectOf $
 fieldAccessToken :: DocumentAccess -> Ap (FieldDef Document) ()
 fieldAccessToken (DocumentAccess { daAccessMode }) =
   case daAccessMode of
-       AuthorDocumentAccess -> accessTokenField
+       AuthorDocumentAccess         -> accessTokenField
        CompanyAdminDocumentAccess _ -> accessTokenField
-       _ -> pure ()
-  where accessTokenField = fieldReadonly "access_token" documentmagichash "Document access token"
+       _                            -> pure ()
+  where
+    accessTokenField = fieldReadonly "access_token"
+                       documentmagichash "Document access token"
 
 fieldShareableLink :: DocumentAccess -> Ap (FieldDef Document) ()
 fieldShareableLink DocumentAccess{ daAccessMode } =
      case daAccessMode of
-       AuthorDocumentAccess -> hashField
+       AuthorDocumentAccess         -> hashField
        CompanyAdminDocumentAccess _ -> hashField
-       CompanySharedDocumentAccess -> hashField
-       _ -> pure ()
+       CompanySharedDocumentAccess  -> hashField
+       _                            -> pure ()
 
    where
      hashField :: Ap (FieldDef Document) ()

@@ -23,11 +23,17 @@ data DocumentAccess = DocumentAccess {
   }
 
 data DocumentAccessMode =
-    SignatoryDocumentAccess SignatoryLinkID -- Person looking at document is this signatory
-  | AuthorDocumentAccess -- Person looking at document is an author
-  | CompanyAdminDocumentAccess (Maybe SignatoryLinkID) -- Person looking at document is an admin of author
-  | CompanySharedDocumentAccess  -- Person looking at document is in company of author and document is shared
-  | SystemAdminDocumentAccess  -- Person looking at document is an admin of author
+    SignatoryDocumentAccess SignatoryLinkID
+    -- ^ Person looking at the document is this signatory.
+  | AuthorDocumentAccess
+    -- ^ Person looking at the document is an author.
+  | CompanyAdminDocumentAccess (Maybe SignatoryLinkID)
+    -- ^ Person looking at the document is an admin of author.
+  | CompanySharedDocumentAccess
+    -- ^ Person looking at the document is in the author's company and the
+    -- document is shared.
+  | SystemAdminDocumentAccess
+    -- ^ Person looking at the document is an admin of author.
 
 canSeeSignlinks :: DocumentAccess -> Bool
 canSeeSignlinks (DocumentAccess { daAccessMode = AuthorDocumentAccess}) = True
