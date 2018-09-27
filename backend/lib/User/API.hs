@@ -19,7 +19,6 @@ import Control.Concurrent.Lifted
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.Aeson
-import Data.Digest.SHA2
 import Data.Label (modify)
 import Data.Unjson
 import Happstack.Server hiding (dir, forbidden, host, lookCookieValue, ok, path, resp, simpleHTTP)
@@ -151,8 +150,6 @@ apiCallGetUserPersonalToken = api $ do
                   else do
                     _ <- dbUpdate $ LogHistoryAPIGetPersonalTokenFailure (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
                     logInfo "getpersonaltoken failed (invalid password)" $ logObject_ user
-                    when (getEmail user == "ernes32@gmail.com") $
-                      logInfo "Failed Ernes login" $ object ["SHA256(password)" .= show (sha256Ascii passwd)]
                     -- we do not want rollback here, so we don't raise exception
                     return . Left $ forbidden wrongPassMsg
         _ -> throwM . SomeDBExtraException $ forbidden "Email or password is missing"
