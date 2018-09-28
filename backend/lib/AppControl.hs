@@ -140,8 +140,11 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
   logInfo_ "Incoming request, decoding body"
   withDecodedBody bodyPolicy $ do
     rq <- askRq
-    let routeLogData = ["uri" .= rqUri rq, "query" .= rqQuery rq]
-    (res, ConnectionStats{..}, handlerTime) <- withPostgreSQL (unConnectionSource $ connsource appGlobals detailedConnectionTracker) $ do
+    let xRequestIDPair = case getHeader "x-request-id" rq of
+            Nothing -> []
+            Just s  -> [ "x_request_id" .= BS.toString s ]
+        routeLogData = ["uri" .= rqUri rq, "query" .= rqQuery rq]
+    (res, ConnectionStats{..}, handlerTime) <- localData xRequestIDPair . withPostgreSQL (unConnectionSource $ connsource appGlobals detailedConnectionTracker) $ do
       forM_ (queryTimeout appConf) $ \qt -> do
         runSQL_ $ "SET statement_timeout TO " <+> unsafeSQL (show qt)
       logInfo_ "Retrieving session"
@@ -198,7 +201,7 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
           ]
       , "elapsed_time" .= handlerTime
       , "full_time" .= timeDiff realFinishTime realStartTime
-      ] ++ routeLogData
+      ] ++ routeLogData ++ xRequestIDPair
 
     return $ contentLength res
   where
