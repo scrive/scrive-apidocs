@@ -261,8 +261,14 @@ var Task = require("../navigation/task");
             bankIDSigning.setStatus(s);
             setTimeout(checkSigning, 1000);
           },
-          function (s) {
-            bankIDSigning.setStatus(s);
+          function (xhr) {
+            if (xhr.status === 0) {
+              setTimeout(function () {
+                checkSigning();
+              }, 1000);
+              return;
+            }
+            bankIDSigning.setStatus(xhr);
             bankIDSigning.triggerFail();
             self.handleFinishAfterSwedishBankIDFailed();
           }
