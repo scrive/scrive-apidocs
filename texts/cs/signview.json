@@ -162,6 +162,7 @@
 "_signviewLegalAgreementPoint2":"",
 "_signviewLegalAgreementPoint3":"",
 "_signviewLegalAgreementText":"",
+"_signviewLegalAgreementTextBottom":"",
 "_signviewSigningFailed":"Je nám líto, ale během podepisování dokumentu se vyskytla chyba. Zkuste to prosím znovu.",
 "_smsDocumentErrorAuthor":"Službě Scrive se nepodařilo zpracovat dokument $documenttitle:noescape()$ a postup podepisování byl zrušen. V případě jakýchkoliv dotazů nám napište na adresu support@scrive.com.",
 "_smsDocumentErrorSignatory":"Službě Scrive se nepodařilo zpracovat dokument $documenttitle:noescape()$ a postup podepisování byl zrušen. V případě jakýchkoliv dotazů nám napište na adresu support@scrive.com.",

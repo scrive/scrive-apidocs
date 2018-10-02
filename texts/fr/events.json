@@ -3,6 +3,7 @@
 "_AttachGuardtimeSealedFileEvidenceTextSimple":"Le document a été scellé à l'aide d'une signature numérique.",
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive a préparé le document PDF finalisé.",
 "_AuthenticatedToViewEvidenceArchiveDKNemID":"",
+"_AuthenticatedToViewEvidenceArchiveFITupas":"",
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"a vérifié l'identité à partir de l'identifiant bancaire norvégien, en vue d'accéder au document.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"a vérifié l'identité à partir de l'identifiant bancaire suédois, en vue d'accéder au document.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"",

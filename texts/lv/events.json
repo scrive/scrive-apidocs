@@ -3,6 +3,7 @@
 "_AttachGuardtimeSealedFileEvidenceTextSimple":"Dokumentu apstiprināja ar elektronisko parakstu.",
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive sagatavoja PDF galaversiju.",
 "_AuthenticatedToViewEvidenceArchiveDKNemID":"",
+"_AuthenticatedToViewEvidenceArchiveFITupas":"",
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Pārbaudīja personas identitāti ar Norvēģijas BankID, lai nodrošinātu piekļuvi dokumentam.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Pārbaudīja personas identitāti ar Zviedrijas BankID, lai nodrošinātu piekļuvi dokumentam.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"",

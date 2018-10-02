@@ -162,6 +162,7 @@
 "_signviewLegalAgreementPoint2":"",
 "_signviewLegalAgreementPoint3":"",
 "_signviewLegalAgreementText":"",
+"_signviewLegalAgreementTextBottom":"",
 "_signviewSigningFailed":"Der Signierungs-Vorgang hat leider nicht funktioniert. Bitte versuchen Sie es erneut.",
 "_smsDocumentErrorAuthor":"Scrive konnte das Dokument $documenttitle:noescape()$ nicht bearbeiten und der Signierungsprozess wurde abgebrochen. Wenn Sie dazu Fragen haben, kontaktieren Sie uns bitte unter support@scrive.com",
 "_smsDocumentErrorSignatory":"Scrive konnte das Dokument $documenttitle:noescape()$ nicht bearbeiten und der Signierungsprozess wurde abgebrochen. Wenn Sie dazu Fragen haben, kontaktieren Sie uns bitte unter support@scrive.com",

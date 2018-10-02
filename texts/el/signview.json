@@ -162,6 +162,7 @@
 "_signviewLegalAgreementPoint2":"",
 "_signviewLegalAgreementPoint3":"",
 "_signviewLegalAgreementText":"",
+"_signviewLegalAgreementTextBottom":"",
 "_signviewSigningFailed":"Λυπούμαστε, έγινε κάποιο λάθος ενώ υπογράφατε το έγγραφο. Παρακαλώ προσπαθήστε ξανά.  ",
 "_smsDocumentErrorAuthor":"Η υπηρεσία Scrive δεν μπόρεσε να διαχειριστεί το έγγραφο $documenttitle:noescape()$ και η διαδικασία υπογραφής έχει ακυρωθεί. Αν έχετε ερωτήσεις, παρακαλώ επικοινωνήστε μαζί μας στο support@scrive.com",
 "_smsDocumentErrorSignatory":"Η υπηρεσία Scrive δεν μπόρεσε να διαχειριστεί το έγγραφο $documenttitle:noescape()$ και η διαδικασία υπογραφής έχει ακυρωθεί. Αν έχετε ερωτήσεις, παρακαλώ επικοινωνήστε μαζί μας στο support@scrive.com ",

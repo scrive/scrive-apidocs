@@ -162,6 +162,7 @@
 "_signviewLegalAgreementPoint2":"",
 "_signviewLegalAgreementPoint3":"",
 "_signviewLegalAgreementText":"",
+"_signviewLegalAgreementTextBottom":"",
 "_signviewSigningFailed":"Vabandame, midagi läks dokumendi allkirjastamisel valesti. Palun proovige uuesti.",
 "_smsDocumentErrorAuthor":"Scrive ei suutnud dokumenti $documenttitle:noescape()$ hallata ja allkirjastamisprotsess tühistati. Küsimuste korral võtke meiega ühendust aadressil support@scrive.com",
 "_smsDocumentErrorSignatory":"Scrive ei suutnud dokumenti $documenttitle:noescape()$ hallata ja allkirjastamisprotsess tühistati. Küsimuste korral võtke meiega ühendust aadressil support@scrive.com",

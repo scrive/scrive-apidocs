@@ -162,6 +162,7 @@
 "_signviewLegalAgreementPoint2":"",
 "_signviewLegalAgreementPoint3":"",
 "_signviewLegalAgreementText":"",
+"_signviewLegalAgreementTextBottom":"",
 "_signviewSigningFailed":"Beklager, noget gik galt under signeringsprocessen af dette dokument. Prøv venligst igen.",
 "_smsDocumentErrorAuthor":"Scrive kunne ikke håndtere dokumentet $documenttitle:noescape()$, og signeringsprocessen er derfor blevet annulleret. Har du spørgsmål, bedes du kontakte os på support@scrive.com",
 "_smsDocumentErrorSignatory":"Scrive kunne ikke håndtere dokumentet $documenttitle:noescape()$, og signeringsprocessen er derfor blevet annulleret. Har du spørgsmål, bedes du kontakte os på support@scrive.com.",

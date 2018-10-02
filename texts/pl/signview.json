@@ -162,6 +162,7 @@
 "_signviewLegalAgreementPoint2":"",
 "_signviewLegalAgreementPoint3":"",
 "_signviewLegalAgreementText":"",
+"_signviewLegalAgreementTextBottom":"",
 "_signviewSigningFailed":"Niestety coś poszło nie tak podczas składania podpisu. Spróbuj ponownie.",
 "_smsDocumentErrorAuthor":"Scrive nie mógł przetworzyć dokumentu $documenttitle:noescape()$, w związku z czym procedura składania podpisu została przerwana. W razie jakichkolwiek pytań zapraszamy do kontaktu pod adresem support@scrive.com",
 "_smsDocumentErrorSignatory":"Scrive nie mógł przetworzyć dokumentu $documenttitle:noescape()$, w związku z czym procedura składania podpisu została przerwana. W razie jakichkolwiek pytań zapraszamy do kontaktu pod adresem support@scrive.com",

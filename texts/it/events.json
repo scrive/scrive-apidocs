@@ -3,6 +3,7 @@
 "_AttachGuardtimeSealedFileEvidenceTextSimple":"Il documento è stato protetto con firma digitale.",
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive ha creato il PDF definitivo.",
 "_AuthenticatedToViewEvidenceArchiveDKNemID":"",
+"_AuthenticatedToViewEvidenceArchiveFITupas":"",
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Verificare la propria identità con il BankID norvegese per accedere al documento.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Verificare la propria identità con il BankID svedese per accedere al documento.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"",

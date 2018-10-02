@@ -162,6 +162,7 @@
 "_signviewLegalAgreementPoint2":"",
 "_signviewLegalAgreementPoint3":"",
 "_signviewLegalAgreementText":"",
+"_signviewLegalAgreementTextBottom":"",
 "_signviewSigningFailed":"Atsiprašome, kažkas sutriko pasirašant dokumentą. Pabandykite dar kartą.",
 "_smsDocumentErrorAuthor":"„Scrive“ negalėjo apdoroti $documenttitle:noescape()$ dokumento, todėl pasirašymo eiga nutraukta. Jei kilo klausimų, susisiekite su mumis adresu support@scrive.com",
 "_smsDocumentErrorSignatory":"„Scrive“ negalėjo apdoroti $documenttitle:noescape()$ dokumento, todėl pasirašymo eiga nutraukta. Jei kilo klausimų, susisiekite su mumis adresu support@scrive.com",

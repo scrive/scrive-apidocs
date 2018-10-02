@@ -162,6 +162,7 @@
 "_signviewLegalAgreementPoint2":"",
 "_signviewLegalAgreementPoint3":"",
 "_signviewLegalAgreementText":"",
+"_signviewLegalAgreementTextBottom":"",
 "_signviewSigningFailed":"Því miður misfórst eitthvað við undirskrift skjalsins. Vinsamlegast reyndu aftur.",
 "_smsDocumentErrorAuthor":"Scrive gat ekki meðhöndlað skjalið $documenttitle:noescape()$ og hætt hefur verið við undirskriftarferlið. Ef þú hefur einhverjar spurningar skaltu hafa samband á netfangið support@scrive.com",
 "_smsDocumentErrorSignatory":"Scrive gat ekki meðhöndlað skjalið $documenttitle:noescape()$ og hætt hefur verið við undirskriftarferlið. Ef þú hefur einhverjar spurningar skaltu hafa samband á netfangið support@scrive.com",

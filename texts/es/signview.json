@@ -162,6 +162,7 @@
 "_signviewLegalAgreementPoint2":"",
 "_signviewLegalAgreementPoint3":"",
 "_signviewLegalAgreementText":"",
+"_signviewLegalAgreementTextBottom":"",
 "_signviewSigningFailed":"Lo sentimos, hubo algún fallo durante la firma del documento. Por favor inténtelo de nuevo. ",
 "_smsDocumentErrorAuthor":"Scrive no pudo gestionar el documento $documenttitle:noescape()$ y el proceso de firma ha sido cancelado. Si tiene alguna pregunta, por favor contáctenos aquí support@scrive.com",
 "_smsDocumentErrorSignatory":"Scrive no pudo gestionar el documento $documenttitle:noescape()$ y el proceso de firma ha sido cancelado. Si tiene alguna pregunta, por favor contáctenos aquí support@scrive.com",
