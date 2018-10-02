@@ -25,6 +25,7 @@ import Configuration
 import Database.Redis.Configuration
 import DB
 import DB.PostgreSQL
+import FeatureFlags.Model
 import FileStorage
 import Happstack.Server.ReqHandler
 import Log.Configuration
@@ -151,5 +152,16 @@ initDatabaseEntries appConf = do
         ug <- dbUpdate . UserGroupCreate $ def
         _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) (get ugID ug,True) LANG_EN (get bdid bd) ByAdmin
         dbUpdate $ UserGroupUpdate $ set ugInvoicing (Invoice EnterprisePlan) ug
+        Features fAdmins fUsers <- getFeaturesFor $ get ugID ug
+        -- enable everything for initial admins
+        let fAdmins' = fAdmins { ffCanUseDKAuthenticationToView = True
+                               , ffCanUseDKAuthenticationToSign = True
+                               , ffCanUseFIAuthenticationToView = True
+                               , ffCanUseNOAuthenticationToView = True
+                               , ffCanUseNOAuthenticationToSign = True
+                               , ffCanUseSEAuthenticationToView = True
+                               , ffCanUseSEAuthenticationToSign = True
+                               }
+        updateFeaturesFor (get ugID ug) $ Features fAdmins' fUsers
         return ()
       Just _ -> return () -- user exist, do not add it
