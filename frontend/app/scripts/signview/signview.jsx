@@ -45,7 +45,11 @@ var _ = require("underscore");
         loggedInAsAuthor: this.props.loggedInAsAuthor
       });
 
-      return {model: model, overlay: false, showArrow: true, pixelWidth: 1040};
+      return {model: model,
+              overlay: false,
+              showArrow: true,
+              pixelWidth: 1040,
+              highlighting: false};
     },
 
     childContextTypes: {
@@ -190,6 +194,14 @@ var _ = require("underscore");
       }
     },
 
+    onStartHighlighting: function () {
+      this.setState({highlighting: true});
+    },
+
+    onStopHighlighting: function () {
+      this.setState({highlighting: false});
+    },
+
     addArrowRef: function (arrowComponent) {
       this.arrowRefs.push(arrowComponent);
     },
@@ -263,6 +275,8 @@ var _ = require("underscore");
                   dimControls={this.state.overlay}
                   model={doc.mainfile()}
                   signview={model}
+                  onStartHighlighting={this.onStartHighlighting}
+                  onStopHighlighting={this.onStopHighlighting}
                 />
               }
               {/* else */ !model.hasAccessToDocument() &&
@@ -298,6 +312,7 @@ var _ = require("underscore");
                   enableOverlay={this.enableOverlay}
                   disableOverlay={this.disableOverlay}
                   showLegalText={this.props.showLegalText}
+                  highlighting={this.state.highlighting}
                 />
               }
               {/* if */ doc.showfooter() &&

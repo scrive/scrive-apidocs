@@ -43,7 +43,9 @@ module.exports = React.createClass({
     model: React.PropTypes.instanceOf(File).isRequired,
     signview: React.PropTypes.instanceOf(Backbone.Model).isRequired,
     dimControls: React.PropTypes.bool.isRequired,
-    pixelWidth: React.PropTypes.number.isRequired
+    pixelWidth: React.PropTypes.number.isRequired,
+    onStartHighlighting: React.PropTypes.func.isRequired,
+    onStopHighlighting: React.PropTypes.func.isRequired
   },
 
   contextTypes: {
@@ -387,6 +389,7 @@ module.exports = React.createClass({
   // HIGHLIGHTING
   handleStartHighlight: function () {
     this.setState({highlighting: true});
+    this.props.onStartHighlighting();
   },
 
   handleNewHighlight: function (pageno, canvas) {
@@ -406,6 +409,7 @@ module.exports = React.createClass({
 
   handleCancelHighlighting: function () {
     this.setState({highlighting: false});
+    this.props.onStopHighlighting();
   },
 
   handleStartRemovingHighlighting: function () {

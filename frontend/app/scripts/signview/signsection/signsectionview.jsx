@@ -38,7 +38,8 @@ var Task = require("../navigation/task");
       pixelWidth: React.PropTypes.number.isRequired,
       enableOverlay: React.PropTypes.func.isRequired,
       disableOverlay: React.PropTypes.func.isRequired,
-      showLegalText: React.PropTypes.bool.isRequired
+      showLegalText: React.PropTypes.bool.isRequired,
+      highlighting: React.PropTypes.bool.isRequired
     },
 
     contextTypes: {
@@ -523,7 +524,7 @@ var Task = require("../navigation/task");
           {/* if */ this.isOnStep("sign") &&
             <SignSign
               model={this.props.model}
-              canSign={this.canSignDocument()}
+              canSign={this.canSignDocument() && !this.props.highlighting}
               onSign={this.handleNext}
               onReject={this.handleSetStep("reject")}
             />
@@ -533,7 +534,7 @@ var Task = require("../navigation/task");
               model={this.props.model}
               title={doc.title()}
               name={sig.name()}
-              canSign={this.canSignDocument()}
+              canSign={this.canSignDocument() && !this.props.highlighting}
               onSign={this.handleSign}
               onReject={this.handleSetStep("reject")}
               showLegalText={this.props.showLegalText}
