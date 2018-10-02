@@ -143,4 +143,5 @@ kontraMigrations = [
   , featureFlagsAddFIAuthToView
   , addFIAuthChecksToEIDAuthentications
   , addShareableLinkHashToDocuments
+  , featureFlagsAddEmailConfirmation
   ]

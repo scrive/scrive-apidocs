@@ -8,6 +8,7 @@ module FeatureFlags.Migrations (
 , featureFlagsAddStandardAuthAndFlagsForAdmin
 , featureFlagsAddEmailInvitation
 , featureFlagsAddFIAuthToView
+, featureFlagsAddEmailConfirmation
 ) where
 
 import Control.Monad.Catch
@@ -173,5 +174,15 @@ featureFlagsAddFIAuthToView = Migration {
 , mgrAction = StandardMigration $ do
     runQuery_ $ sqlAlterTable (tblName tableFeatureFlags)  [ sqlAddColumn $
         tblColumn { colName = "can_use_fi_authentication_to_view", colType = BoolT, colNullable = False, colDefault = Just "true" }
+      ]
+}
+
+featureFlagsAddEmailConfirmation :: (MonadThrow m, MonadDB m) => Migration m
+featureFlagsAddEmailConfirmation = Migration {
+  mgrTableName = tblName tableFeatureFlags
+, mgrFrom = 9
+, mgrAction = StandardMigration .
+    runQuery_ $ sqlAlterTable (tblName tableFeatureFlags)  [
+        sqlAddColumn $ tblColumn { colName = "can_use_email_confirmations", colType = BoolT, colNullable = False, colDefault = Just "true" }
       ]
 }

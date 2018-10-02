@@ -54,7 +54,7 @@ import qualified UserGroupAccounts.UserGroupAccountsControl as UserGroupAccounts
 
 staticRoutes :: Bool -> Route (Kontra Response)
 staticRoutes production = choice
-     [  allLangDirs $                          hGet $ toK0 $ sendRedirect $ LinkDesignView
+     [  allLangDirs $                          hGet $ toK0 $ handleLoginGet
      ,  allLangDirs $  dir "pricing"         $ hGet $ toK0 $ sendRedirect $ LinkPermanentRedirect "/services/online/pricing/"
 
      -- Top level handlers - buttons on top bar, when user is logged in

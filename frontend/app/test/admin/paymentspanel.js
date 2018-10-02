@@ -110,6 +110,7 @@ describe("admin/paymentspanel", function () {
         canUseStandardAuthenticationToView: true,
         canUseStandardAuthenticationToSign: true,
         canUseEmailInvitations: true,
+        canUseEmailConfirmations: true,
         canUseAPIInvitations: true,
         canUsePadInvitations: true
       },
@@ -133,6 +134,7 @@ describe("admin/paymentspanel", function () {
         canUseStandardAuthenticationToView: true,
         canUseStandardAuthenticationToSign: true,
         canUseEmailInvitations: true,
+        canUseEmailConfirmations: true,
         canUseAPIInvitations: true,
         canUsePadInvitations: true
       }

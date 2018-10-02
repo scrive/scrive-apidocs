@@ -168,6 +168,9 @@ var Subscription = Backbone.Model.extend({
             can_use_email_invitations: pick(
               f.canUseEmailInvitations, ff.canUseEmailInvitations()
             ),
+            can_use_email_confirmations: pick(
+              f.canUseEmailConfirmations, ff.canUseEmailConfirmations()
+            ),
             can_use_api_invitations: pick(
               f.canUseAPIInvitations, ff.canUseAPIInvitations()
             ),
@@ -242,6 +245,7 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
     "can_use_standard_authentication_to_view": true,
     "can_use_standard_authentication_to_sign": true,
     "can_use_email_invitations": true,
+    "can_use_email_confirmations": true,
     "can_use_api_invitations": true,
     "can_use_pad_invitations": true
   },
@@ -302,6 +306,9 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
   canUseEmailInvitations: function () {
      return this.get("can_use_email_invitations");
   },
+  canUseEmailConfirmations: function () {
+     return this.get("can_use_email_confirmations");
+  },
   canUseAPIInvitations: function () {
      return this.get("can_use_api_invitations");
   },
@@ -345,8 +352,6 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       return "email";
     else if (this.canUseSMSInvitations())
       return "mobile";
-    else if (this.canUseEmailInvitations() && this.canUseSMSInvitations())
-      return "email_mobile";
     else if (this.canUseAPIInvitations())
       return "api";
     else if (this.canUsePadInvitations())
@@ -354,6 +359,14 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
     else
       // Should not happen, just in case
       return "email";
+  },
+  firstAllowedConfirmationDelivery: function () {
+    if (this.canUseEmailConfirmations())
+      return "email";
+    else if (this.canUseSMSConfirmations())
+      return "mobile";
+    else
+      return "none";
   },
   canUseNonstandardAuthenticationToView: function () {
     return this.canUseDKAuthenticationToView() ||
@@ -388,6 +401,7 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       can_use_standard_authentication_to_view: args.can_use_standard_authentication_to_view,
       can_use_standard_authentication_to_sign: args.can_use_standard_authentication_to_sign,
       can_use_email_invitations: args.can_use_email_invitations,
+      can_use_email_confirmations: args.can_use_email_confirmations,
       can_use_api_invitations: args.can_use_api_invitations,
       can_use_pad_invitations: args.can_use_pad_invitations
     };

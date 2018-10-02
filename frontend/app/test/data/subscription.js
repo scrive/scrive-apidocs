@@ -20,6 +20,7 @@ module.exports = {
       "can_use_dk_authentication_to_view": true,
       "can_use_sms_confirmations": true,
       "can_use_email_invitations": true,
+      "can_use_email_confirmations": true,
       "can_use_api_invitations": true,
       "can_use_pad_invitations": true
     },
@@ -42,6 +43,7 @@ module.exports = {
       "can_use_dk_authentication_to_view": true,
       "can_use_sms_confirmations": true,
       "can_use_email_invitations": true,
+      "can_use_email_confirmations": true,
       "can_use_api_invitations": true,
       "can_use_pad_invitations": true
     }

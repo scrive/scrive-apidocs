@@ -213,6 +213,17 @@ module.exports = React.createClass({
       }
     }
 
+    if (!Subscription.currentSubscription().currentUserFeatures().canUseEmailConfirmations()) {
+
+      if (sig.confirmationdelivery() != "email") {
+        deliveryTypes = _.without(deliveryTypes, "email");
+      }
+
+      if (sig.confirmationdelivery() != "email_mobile") {
+        deliveryTypes = _.without(deliveryTypes, "email_mobile");
+      }
+    }
+
     return _.map(deliveryTypes, function (t) {
       return {name: self.confirmationDeliveryText(t), value: t};
     });

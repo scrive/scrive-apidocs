@@ -1,3 +1,5 @@
+from scrivepy import StandardField, Scrive
+
 from selenium import webdriver
 from selenium.webdriver.support import expected_conditions
 
@@ -252,3 +254,53 @@ def check_many_pages(test, drv, api):
     # scroll to verification page and take a screenshot
     drv.execute('$(window).scrollTop($(".pagediv").last().offset().top)')
     drv.screenshot()
+
+
+# api points to legal-text@skrivapa.se on staging
+# which has legal text set up
+legal_text_api = Scrive(client_credentials_identifier='276bdb1423dc9d22_177',
+                        client_credentials_secret='670d2515397e8e48',
+                        token_credentials_identifier='abf77432cb27129d_146',
+                        token_credentials_secret='248fc0622099aa0d',
+                        api_hostname='staging.scrive.com')
+
+
+def check_legal_text(test, drv, api):
+    api = legal_text_api
+
+    doc = test.create_standard_doc(u'basic sign', api_override=api)
+    doc = api.update_document(doc)
+    doc = api.ready(doc)
+
+    # open signview
+    drv.open_url(doc.other_signatory().absolute_sign_url())
+    drv.wait_for_element('.scroll-arrow.down')
+    drv.scroll_to_bottom()
+
+    # click final sign button and wait for confirmation modal
+    # with legal text to show up
+    drv.wait_for_element_and_click('.section.sign .button.action')
+    drv.wait_for_element('.above-overlay')
+    drv.screenshot(first_sleep_for=1)
+
+
+def check_legal_text_pinsms(test, drv, api):
+    api = legal_text_api
+
+    doc = test.create_standard_doc(u'basic sign', api_override=api)
+    doc.other_signatory().authentication_method = 'sms_pin'
+    doc.other_signatory().fields.add(StandardField(name='mobile',
+                                                   value=u'+48607123456'))
+    doc = api.update_document(doc)
+    doc = api.ready(doc)
+
+    # open signview
+    drv.open_url(doc.other_signatory().absolute_sign_url())
+    drv.wait_for_element('.scroll-arrow.down')
+    drv.scroll_to_bottom()
+
+    # click final sign button and wait for confirmation modal
+    # with legal text to show up
+    drv.wait_for_element_and_click('.section.sign .button.action')
+    drv.wait_for_element('.above-overlay')
+    drv.screenshot(first_sleep_for=1)

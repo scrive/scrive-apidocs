@@ -23,6 +23,7 @@ module.exports = React.createClass({
       document: this.props.document,
       signs: true,
       delivery_method: currFF.firstAllowedInvitationDelivery(),
+      confirmation_delivery_method: currFF.firstAllowedConfirmationDelivery(),
       authentication_method_to_view: currFF.firstAllowedAuthenticationToView(),
       authentication_method_to_sign: currFF.firstAllowedAuthenticationToSign()
     });

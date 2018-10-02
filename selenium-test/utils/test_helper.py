@@ -48,11 +48,12 @@ class TestHelper(object):
         signatory.full_name = full_name
         return signatory
 
-    def create_standard_doc(self, title):
+    def create_standard_doc(self, title, api_override=None):
         '''
         Create standard document. Requires manual update call.
         '''
-        doc = self._api.create_document_from_file(self.PDF_PATH)
+        api = api_override or self._api
+        doc = api.create_document_from_file(self.PDF_PATH)
         doc.title = title
         lang = self._driver._lang if self._driver else 'en'
         doc.language = Language(lang)

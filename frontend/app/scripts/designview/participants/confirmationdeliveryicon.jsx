@@ -5,10 +5,12 @@ var Subscription = require("../../account/subscription");
 module.exports = React.createClass({
   isAllowedConfirmationMethod: function (dm) {
     var sig = this.props.model;
-    if (sig.isLastViewer() && sig.confirmationdelivery() == "none") {
+    if (sig.isLastViewer() && dm === "none") {
       return false;
     } else if (!Subscription.currentSubscription().currentUserFeatures().canUseSMSConfirmations()) {
       return dm != "mobile" && dm != "email_mobile";
+    } else if (!Subscription.currentSubscription().currentUserFeatures().canUseEmailConfirmations()) {
+      return dm != "email" && dm != "email_mobile";
     } else {
       return true;
     }
@@ -20,7 +22,8 @@ module.exports = React.createClass({
     });
     var cdms = ["email", "mobile", "email_mobile", "none"];
     var i = (_.indexOf(cdms, sig.confirmationdelivery()) + 1) || 0;
-    while (!this.isAllowedConfirmationMethod(cdms[i % cdms.length])) {
+    // <100 is just to make sure that in case of bugs we will not spin forever
+    while (!this.isAllowedConfirmationMethod(cdms[i % cdms.length]) && i < 100) {
       i++;
     }
     sig.setConfirmationDelivery(cdms[i % cdms.length]);

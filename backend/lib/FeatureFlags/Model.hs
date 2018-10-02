@@ -6,6 +6,7 @@ module FeatureFlags.Model(
   , firstAllowedAuthenticationToView
   , firstAllowedAuthenticationToSign
   , firstAllowedInvitationDelivery
+  , firstAllowedConfirmationDelivery
 ) where
 
 import Control.Monad.Catch
@@ -13,7 +14,7 @@ import Control.Monad.State
 import Data.Unjson
 
 import DB
-import Doc.Data.SignatoryLink (AuthenticationToSignMethod(..), AuthenticationToViewMethod(..), DeliveryMethod(..))
+import Doc.Data.SignatoryLink
 import UserGroup.Data
 
 data Features = Features {
@@ -46,6 +47,7 @@ data FeatureFlags = FeatureFlags {
   , ffCanUseStandardAuthenticationToView :: Bool
   , ffCanUseStandardAuthenticationToSign :: Bool
   , ffCanUseEmailInvitations :: Bool
+  , ffCanUseEmailConfirmations :: Bool
   , ffCanUseAPIInvitations :: Bool
   , ffCanUsePadInvitations :: Bool
 } deriving (Eq, Ord, Show)
@@ -71,6 +73,7 @@ instance Unjson FeatureFlags where
     <*> field "can_use_standard_authentication_to_view" ffCanUseStandardAuthenticationToView "TODO desc"
     <*> field "can_use_standard_authentication_to_sign" ffCanUseStandardAuthenticationToSign "TODO desc"
     <*> field "can_use_email_invitations" ffCanUseEmailInvitations "TODO desc"
+    <*> field "can_use_email_confirmations" ffCanUseEmailConfirmations "TODO desc"
     <*> fieldDef "can_use_api_invitations" True ffCanUseAPIInvitations "TODO desc"
     <*> fieldDef "can_use_pad_invitations" True ffCanUsePadInvitations "TODO desc"
 
@@ -111,11 +114,16 @@ firstAllowedInvitationDelivery :: FeatureFlags -> DeliveryMethod
 firstAllowedInvitationDelivery ff
   | ffCanUseEmailInvitations ff = EmailDelivery
   | ffCanUseSMSInvitations ff   = MobileDelivery
-  | ffCanUseEmailInvitations ff && ffCanUseSMSInvitations ff = EmailAndMobileDelivery
   | ffCanUseAPIInvitations ff   = APIDelivery
   | ffCanUsePadInvitations ff   = PadDelivery
   -- Someone can turn off all FFs, not recommended
   | otherwise = EmailDelivery
+
+firstAllowedConfirmationDelivery :: FeatureFlags -> ConfirmationDeliveryMethod
+firstAllowedConfirmationDelivery ff
+  | ffCanUseEmailConfirmations ff = EmailConfirmationDelivery
+  | ffCanUseSMSConfirmations ff   = MobileConfirmationDelivery
+  | otherwise = NoConfirmationDelivery
 
 data GetFeatureFlags = GetFeatureFlags UserGroupID Bool
 instance (MonadDB m,MonadThrow m) => DBQuery m GetFeatureFlags FeatureFlags where
@@ -149,6 +157,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateFeatureFlags Bool where
       sqlSet "can_use_standard_authentication_to_view" $ ffCanUseStandardAuthenticationToView ff
       sqlSet "can_use_standard_authentication_to_sign" $ ffCanUseStandardAuthenticationToSign ff
       sqlSet "can_use_email_invitations" $ ffCanUseEmailInvitations ff
+      sqlSet "can_use_email_confirmations" $ ffCanUseEmailConfirmations ff
       sqlSet "can_use_api_invitations" $ ffCanUseAPIInvitations ff
       sqlSet "can_use_pad_invitations" $ ffCanUsePadInvitations ff
       sqlWhereEq "user_group_id" ugid
@@ -175,11 +184,12 @@ selectFeatureFlagsSelectors = do
   sqlResult "feature_flags.can_use_standard_authentication_to_view"
   sqlResult "feature_flags.can_use_standard_authentication_to_sign"
   sqlResult "feature_flags.can_use_email_invitations"
+  sqlResult "feature_flags.can_use_email_confirmations"
   sqlResult "feature_flags.can_use_api_invitations"
   sqlResult "feature_flags.can_use_pad_invitations"
 
 fetchFeatureFlags :: (Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool,
-  Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool) -> FeatureFlags
+  Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool) -> FeatureFlags
 fetchFeatureFlags (
     can_use_templates
   , can_use_branding
@@ -200,6 +210,7 @@ fetchFeatureFlags (
   , can_use_standard_authentication_to_view
   , can_use_standard_authentication_to_sign
   , can_use_email_invitations
+  , can_use_email_confirmations
   , can_use_api_invitations
   , can_use_pad_invitations
   ) = FeatureFlags {
@@ -222,6 +233,7 @@ fetchFeatureFlags (
   , ffCanUseStandardAuthenticationToView = can_use_standard_authentication_to_view
   , ffCanUseStandardAuthenticationToSign = can_use_standard_authentication_to_sign
   , ffCanUseEmailInvitations = can_use_email_invitations
+  , ffCanUseEmailConfirmations = can_use_email_confirmations
   , ffCanUseAPIInvitations = can_use_api_invitations
   , ffCanUsePadInvitations = can_use_pad_invitations
   }

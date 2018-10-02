@@ -54,6 +54,7 @@ module.exports = React.createClass({
         canUseStandardAuthenticationToView: features.canUseStandardAuthenticationToView(),
         canUseStandardAuthenticationToSign: features.canUseStandardAuthenticationToSign(),
         canUseEmailInvitations: features.canUseEmailInvitations(),
+        canUseEmailConfirmations: features.canUseEmailConfirmations(),
         canUseAPIInvitations: features.canUseAPIInvitations(),
         canUsePadInvitations: features.canUsePadInvitations()
       };
@@ -217,6 +218,7 @@ module.exports = React.createClass({
               {this.renderTRForOptionWithCheckbox("Can use branding","canUseBranding")}
               {this.renderTRForOptionWithCheckbox("Can use mass sendout","canUseMassSendout")}
               {this.renderTRForOptionWithCheckbox("Can use email invitations","canUseEmailInvitations")}
+              {this.renderTRForOptionWithCheckbox("Can use email confirmations","canUseEmailConfirmations")}
               {this.renderTRForOptionWithCheckbox("Can use link (i.e. API) invitations","canUseAPIInvitations")}
               {this.renderTRForOptionWithCheckbox("Can use in-person invitations","canUsePadInvitations")}
               {this.renderTROptionSeparator("Attachments")}
