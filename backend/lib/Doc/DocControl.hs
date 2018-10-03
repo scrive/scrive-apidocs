@@ -292,7 +292,7 @@ handleSignShow did slid = logDocumentAndSignatory did slid $ do
       switchLang $ getLang doc
       ctx <- getContext -- Order is important since ctx after switchLang changes
       ad <- getAnalyticsData
-      needsToIdentify <- signatoryNeedsToIdentifyToView invitedlink
+      needsToIdentify <- signatoryNeedsToIdentifyToView invitedlink doc
       if needsToIdentify
         then doc `withDocument` do
           addEventForVisitingSigningPageIfNeeded VisitedViewForAuthenticationEvidence invitedlink
@@ -396,7 +396,6 @@ handleIssueShowGet docid = withUserTOS $ \_ -> do
   mauthoruser <- maybe (return Nothing) (dbQuery . GetUserByIDIncludeDeleted) (maybesignatory authorsiglink)
 
   let isincompany = isJust muser && ((usergroupid <$> muser) == (usergroupid <$> mauthoruser))
-      isauthororincompany = isauthor || isincompany
       msiglink = find (isSigLinkFor muser) $ documentsignatorylinks document
   ad <- getAnalyticsData
 
@@ -405,10 +404,21 @@ handleIssueShowGet docid = withUserTOS $ \_ -> do
     (True,  _)                       -> do
        -- Never cache design view. IE8 hack. Should be fixed in different wasy
        internalResponse <$> (setHeaderBS "Cache-Control" "no-cache" <$> (simpleHtmlResponse =<< pageDocumentDesign ctx document ad))
-    (False, _) | isauthororincompany -> do
-       internalResponse <$> pageDocumentView ctx document msiglink (isincompany)
-    (False, Just siglink)            -> do
-       internalResponse <$> (simpleHtmlResponse =<< pageDocumentSignView ctx document siglink ad)
+    (False, Just sl)
+      | isauthor -> if isClosed document
+        -- If authenticate to view archived is set for author, we can't show him
+        -- the signed document in author's view before he authenticates.
+        then signatoryNeedsToIdentifyToView sl document >>= \case
+          True  -> fmap internalResponse . simpleHtmlResponse
+                     =<< pageDocumentIdentifyView ctx document sl ad
+          False -> internalResponse <$> pageDocumentView ctx document msiglink isincompany
+        else internalResponse <$> pageDocumentView ctx document msiglink isincompany
+      | otherwise -> do
+       -- Simply loading pageDocumentSignView doesn't work when signatory needs
+       -- to authenticate to view, redirect to proper sign view.
+       return $ internalResponse $ LinkSignDocNoMagicHash docid (signatorylinkid sl)
+    (False, Nothing) | isincompany -> do
+      internalResponse <$> pageDocumentView ctx document msiglink isincompany
     _                                -> do
        internalError
 
@@ -547,8 +557,10 @@ checkFileAccessWith fid msid mmh mdid mattid =
        doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh
        guardThatDocumentIsReadableBySignatories doc
        sl <- guardJust $ getSigLinkFor sid doc
-       whenM (signatoryNeedsToIdentifyToView sl) $ do
-         unless (isAuthor sl) $ do
+       whenM (signatoryNeedsToIdentifyToView sl doc) $ do
+         -- If document is not closed, author never needs to identify to
+         -- view. However if it's closed, then he might need to.
+         when (isClosed doc || not (isAuthor sl)) $ do
            internalError
        indoc <- dbQuery $ FileInDocument did fid
        when (not indoc) $ internalError

@@ -1,7 +1,7 @@
 module Doc.SMSPin.Migrations
-    (
-      addPKToSignatorySMSPin
+    ( addPKToSignatorySMSPin
     , addSMSPinTypeToSMSMSPin
+    , addGeneratedAtToSMSPin
     ) where
 
 import DB
@@ -34,4 +34,16 @@ addSMSPinTypeToSMSMSPin = Migration {
             , sqlAddPK (tblName tableSignatorySMSPins)
                    (fromJust . pkOnColumns $ ["phone_number", "signatory_link_id", "pin_type"])
         ]
+  }
+
+addGeneratedAtToSMSPin :: MonadDB m => Migration m
+addGeneratedAtToSMSPin = Migration {
+    mgrTableName = tblName tableSignatorySMSPins
+  , mgrFrom = 3
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable (tblName tableSignatorySMSPins)
+        [ sqlAddColumn $ tblColumn { colName = "generated_at", colType = TimestampWithZoneT, colNullable = False, colDefault = Just "now()" }
+        ]
+      runQuery_ $ sqlAlterTable (tblName tableSignatorySMSPins)
+        [ sqlAlterColumn "generated_at" "DROP DEFAULT" ]
   }

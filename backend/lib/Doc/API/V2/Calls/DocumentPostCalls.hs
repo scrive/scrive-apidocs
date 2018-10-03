@@ -18,6 +18,7 @@ module Doc.API.V2.Calls.DocumentPostCalls (
 , docApiV2Callback
 , docApiV2SetSharing
 , docApiV2SigSetAuthenticationToView
+, docApiV2SigSetAuthenticationToViewArchived
 , docApiV2SigSetAuthenticationToSign
 , docApiV2SigChangeEmailAndMobile
 , docApiV2GenerateShareableLink
@@ -500,8 +501,24 @@ docApiV2SetSharing = api $ do
 
   return $ Accepted ()
 
-docApiV2SigSetAuthenticationToView :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
-docApiV2SigSetAuthenticationToView did slid = logDocumentAndSignatory did slid . api $ do
+----------------------------------------
+
+docApiV2SigSetAuthenticationToView
+  :: Kontrakcja m
+  => DocumentID -> SignatoryLinkID -> m Response
+docApiV2SigSetAuthenticationToView =
+  docApiV2SigSetAuth AuthenticationToView
+
+docApiV2SigSetAuthenticationToViewArchived
+  :: Kontrakcja m
+  => DocumentID -> SignatoryLinkID -> m Response
+docApiV2SigSetAuthenticationToViewArchived =
+  docApiV2SigSetAuth AuthenticationToViewArchived
+
+docApiV2SigSetAuth
+  :: Kontrakcja m
+  => AuthenticationKind -> DocumentID -> SignatoryLinkID -> m Response
+docApiV2SigSetAuth authKind did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
@@ -512,10 +529,10 @@ docApiV2SigSetAuthenticationToView did slid = logDocumentAndSignatory did slid .
     guardSignatoryHasNotSigned slid =<< theDocument
     guardSignatoryHasNotIdentifiedToView slid =<< theDocument
     -- Parameters
-    authentication_type <- apiV2ParameterObligatory (ApiV2ParameterTextUnjson "authentication_type" unjsonAuthenticationToViewMethod)
+    authType <- apiV2ParameterObligatory (ApiV2ParameterTextUnjson "authentication_type" unjsonAuthenticationToViewMethod)
     mSSN_ <- (fmap T.unpack) <$> apiV2ParameterOptional (ApiV2ParameterText "personal_number")
     mMobile_ <- (fmap T.unpack) <$> apiV2ParameterOptional (ApiV2ParameterText "mobile_number")
-    (mSSN, mMobile) <- case authentication_type of
+    (mSSN, mMobile) <- case authType of
       StandardAuthenticationToView -> return (Nothing, Nothing)
       SMSPinAuthenticationToView   -> return (Nothing, mMobile_)
       SEBankIDAuthenticationToView -> return (mSSN_, Nothing)
@@ -523,11 +540,13 @@ docApiV2SigSetAuthenticationToView did slid = logDocumentAndSignatory did slid .
       DKNemIDAuthenticationToView  -> return (mSSN_, Nothing)
       FITupasAuthenticationToView  -> return (mSSN_, Nothing)
     -- Check conditions on parameters and signatory
-    guardCanSetAuthenticationToViewForSignatoryWithValues slid authentication_type mSSN mMobile =<< theDocument
+    guardCanSetAuthenticationToViewForSignatoryWithValues slid authKind authType mSSN mMobile =<< theDocument
     -- API call actions
-    dbUpdate $ ChangeAuthenticationToViewMethod slid authentication_type mSSN mMobile actor
+    dbUpdate $ ChangeAuthenticationToViewMethod slid authKind authType mSSN mMobile actor
     -- Return
     Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
+
+----------------------------------------
 
 docApiV2SigSetAuthenticationToSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSetAuthenticationToSign did slid = logDocumentAndSignatory did slid . api $ do

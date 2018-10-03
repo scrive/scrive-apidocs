@@ -131,6 +131,8 @@ unjsonSignatory da =  objectOf $
         <**> (pure $ \sd s -> s { signatorylinkdeliverymethod = sd }))
   <**> (fieldDefBy "authentication_method_to_view" (signatorylinkauthenticationtoviewmethod def) signatorylinkauthenticationtoviewmethod "Signatory authentication to view method" unjsonAuthenticationToViewMethod
         <**> (pure $ \satv s -> s { signatorylinkauthenticationtoviewmethod = satv }))
+  <**> (fieldDefBy "authentication_method_to_view_archived" (signatorylinkauthenticationtoviewarchivedmethod def) signatorylinkauthenticationtoviewarchivedmethod "Signatory authentication to view archived method" unjsonAuthenticationToViewMethod
+        <**> (pure $ \satva s -> s { signatorylinkauthenticationtoviewarchivedmethod = satva }))
   <**> (fieldDefBy "authentication_method_to_sign" (signatorylinkauthenticationtosignmethod def) signatorylinkauthenticationtosignmethod "Signatory authentication to sign method" unjsonAuthenticationToSignMethod
         <**> (pure $ \sats s -> s { signatorylinkauthenticationtosignmethod = sats }))
   <**> (fieldDefBy "confirmation_delivery_method" (signatorylinkconfirmationdeliverymethod def) signatorylinkconfirmationdeliverymethod "Signatory confirmation delivery method" unjsonConfirmationDeliveryMethod

@@ -11,6 +11,7 @@ module Doc.API.V2.Calls.SignatoryCalls (
 , docApiV2SetHighlightForPage
 ) where
 
+import Control.Conditional (whenM)
 import Data.Unjson
 import Happstack.Server.Types
 import Text.JSON.Types (JSValue(..))
@@ -34,12 +35,12 @@ import Doc.DocMails (sendPinCode)
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocumentMonad
-import Doc.DocUtils (getSignatoryAttachment)
+import Doc.DocUtils
 import Doc.Logging
 import Doc.Model
 import Doc.SignatoryLinkID
 import Doc.Signing.Model
-import Doc.SMSPin.Model (GetSignatoryPin(..), SMSPinType(..))
+import Doc.SMSPin.Model
 import EID.Authentication.Model (MergeSMSPinAuthentication(..))
 import EID.Signature.Model
 import EvidenceLog.Model
@@ -233,23 +234,36 @@ docApiV2SigSendSmsPinToSign did slid = logDocumentAndSignatory did slid . api $ 
     -- Return
     return $ Accepted ()
 
+guardAuthenticateToViewWithPin
+  :: (Kontrakcja m, DocumentMonad m)
+  => DocumentID
+  -> SignatoryLinkID
+  -> m (AuthenticationKind, SignatoryLink)
+guardAuthenticateToViewWithPin did slid = do
+  guardThatObjectVersionMatchesIfProvided did
+  signatoryAuthMethod <- theDocument >>= \doc -> case documentstatus doc of
+    Pending -> do
+      guardSignatoryHasNotSigned slid doc
+      return signatorylinkauthenticationtoviewmethod
+    Closed  -> return signatorylinkauthenticationtoviewarchivedmethod
+    _       -> apiError $ documentStateError
+                            "The document status should be Pending or Closed"
+  sl <- guardGetSignatoryFromIdForDocument slid
+  when (signatoryAuthMethod sl /= SMSPinAuthenticationToView) $ do
+    apiError $ signatoryStateError "Signatory authentication method to view is not SMS PIN"
+  (, sl) . mkAuthKind <$> theDocument
+
 docApiV2SigSendSmsPinToView :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSendSmsPinToView did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
   mh <- getMagicHashForSignatoryAction did slid
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
-    -- Guards
-    guardThatObjectVersionMatchesIfProvided did
-    guardDocumentStatus Pending =<< theDocument
-    guardSignatoryHasNotSigned slid =<< theDocument
-    sl <- guardGetSignatoryFromIdForDocument slid
-    when (signatorylinkauthenticationtoviewmethod sl /= SMSPinAuthenticationToView) $ do
-      apiError $ signatoryStateError "Signatory authentication method to view is not SMS PIN"
+    (authKind, sl) <- guardAuthenticateToViewWithPin did slid
     mobile <- case asValidPhoneForSMS (getMobile sl) of
                 Good v -> return v
                 _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"
     -- API call actions
-    pin <- dbQuery $ GetSignatoryPin SMSPinToView slid mobile
+    pin <- dbQuery $ GetSignatoryPin (authKindToPinType authKind) slid mobile
     sendPinCode sl mobile pin
     -- Return
     return $ Accepted ()
@@ -260,27 +274,24 @@ docApiV2SigIdentifyToViewWithSmsPin did slid = logDocumentAndSignatory did slid 
   mh <- getMagicHashForSignatoryAction did slid
   ctx <- getContext
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
-    -- Guards
-    guardThatObjectVersionMatchesIfProvided did
-    guardDocumentStatus Pending =<< theDocument
-    guardSignatoryHasNotSigned slid =<< theDocument
-    sl <- guardGetSignatoryFromIdForDocument slid
-    when (signatorylinkauthenticationtoviewmethod sl /= SMSPinAuthenticationToView) $ do
-      apiError $ signatoryStateError "Signatory authentication method to view is not SMS PIN"
+    (authKind, sl) <- guardAuthenticateToViewWithPin did slid
     mobile <- case asValidPhoneForSMS (getMobile sl) of
                 Good v -> return v
                 _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"
     pin <- fmap T.unpack $ apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
-    validPin <- checkSignatoryPinToView slid pin
+    validPin <- checkSignatoryPinToView (authKindToPinType authKind) slid pin
     when (not validPin) $ do
       apiError $ requestParameterInvalid "sms_pin" "invalid SMS PIN"
     sess <- getCurrentSession
-    dbUpdate $ MergeSMSPinAuthentication (sesID sess) slid (T.pack mobile)
+    dbUpdate $ MergeSMSPinAuthentication authKind (sesID sess) slid (T.pack mobile)
     let eventFields = do
           F.value "signatory_mobile" mobile
           F.value "provider_sms_pin" True
     sActor <- signatoryActor ctx sl
-    void $ dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence (eventFields) (Just sl) Nothing sActor
+    -- Record evidence only for auth-to-view (i.e. if the document is not
+    -- closed).
+    whenM ((== AuthenticationToView) . mkAuthKind <$> theDocument) $ do
+      void $ dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence (eventFields) (Just sl) Nothing sActor
     return $ Accepted ()
 
 docApiV2SigSetAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response

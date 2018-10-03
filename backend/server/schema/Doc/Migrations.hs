@@ -16,6 +16,7 @@ module Doc.Migrations (
   , addConsentTitleToSignatoryLink
   , removeSearchTermsIndex
   , addShareableLinkHashToDocuments
+  , addAuthenticationToViewArchivedMethodToSignatories
 ) where
 
 import Data.Int
@@ -23,6 +24,19 @@ import Database.PostgreSQL.PQTypes.Checks
 
 import DB
 import Doc.Tables
+
+addAuthenticationToViewArchivedMethodToSignatories :: MonadDB m => Migration m
+addAuthenticationToViewArchivedMethodToSignatories = Migration {
+    mgrTableName = tblName tableSignatoryLinks
+  , mgrFrom = 33
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable "signatory_links"
+        [ sqlAddColumn tblColumn { colName = "authentication_to_view_archived_method", colType = SmallIntT, colNullable = False, colDefault = Just "1" }
+        ]
+      runQuery_ $ sqlAlterTable "signatory_links"
+        [ sqlAlterColumn "authentication_to_view_archived_method" "DROP DEFAULT"
+        ]
+  }
 
 removeSearchTermsIndex :: MonadDB m => Migration m
 removeSearchTermsIndex = Migration {

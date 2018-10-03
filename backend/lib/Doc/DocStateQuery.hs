@@ -32,7 +32,8 @@ module Doc.DocStateQuery
     , getDocByDocIDForAuthorOrAuthorsCompanyAdmin
     , getMagicHashForDocumentSignatoryWithUser
     , signatoryNeedsToIdentifyToView
-    , getDocumentAndSignatoryForEID
+    , getDocumentAndSignatoryForEIDAuth
+    , getDocumentAndSignatoryForEIDSign
     ) where
 
 import Control.Monad.Catch (throwM)
@@ -40,6 +41,7 @@ import Log
 
 import API.V2.Errors
 import DB
+import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.Model
@@ -160,38 +162,77 @@ getMagicHashForDocumentSignatoryWithUser did sigid user = do
 signatoryNeedsToIdentifyToView
   :: (Kontrakcja m)
   => SignatoryLink
+  -> Document
   -> m Bool
-signatoryNeedsToIdentifyToView sl = do
-  if hasSigned sl
-    then return False
-    else case (signatorylinkauthenticationtoviewmethod sl) of
+signatoryNeedsToIdentifyToView sl doc =
+  if isClosed doc
+  then check AuthenticationToViewArchived signatorylinkauthenticationtoviewarchivedmethod
+  else check AuthenticationToView          signatorylinkauthenticationtoviewmethod
+  where
+    check authKind signatoryAuthMethod = case signatoryAuthMethod sl of
       StandardAuthenticationToView -> return False
       authtoview -> do
         sid <- get ctxsessionid <$> getContext
-        mauthindb <- dbQuery (GetEAuthentication sid $ signatorylinkid sl)
+        mauthindb <- dbQuery (GetEAuthentication authKind sid $ signatorylinkid sl)
         return $ case mauthindb of
           Nothing -> True
           Just authindb -> not $ authViewMatchesAuth authtoview authindb
 
-
--- | Fetch the document and signatory for e-signing or e-auth. Checks
--- that the document is in the correct state and the signatory hasn't
--- signed yet. Requires session token to be set.
-getDocumentAndSignatoryForEID
+-- | Fetch the document and signatory for e-auth. If there is no session token
+-- for the document, checks documents of a current user before giving up as
+-- authentication can be requested from author's view.
+getDocumentAndSignatoryForEIDAuth
   :: Kontrakcja m
   => DocumentID
   -> SignatoryLinkID
   -> m (Document,SignatoryLink)
-getDocumentAndSignatoryForEID did slid = dbQuery (GetDocumentSessionToken slid) >>= \case
+getDocumentAndSignatoryForEIDAuth did slid =
+  dbQuery (GetDocumentSessionToken slid) >>= \case
+    Just mh -> do
+      logInfo_ "Document token found"
+      doc <- dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh)
+      return (doc, fromJust $ getSigLinkFor slid doc)
+    Nothing -> do
+      -- Authentication to view archived in author's view case. There is no
+      -- magic hash, just find the document in the archive.
+      logInfo_ "No document token, checking logged user's documents"
+      (getContextUser <$> getContext) >>= \case
+        Just user -> do
+          doc <- dbQuery $ GetDocument (DocumentsVisibleToUser $ userid user)
+                                       [DocumentFilterByDocumentID did]
+          let slink = fromJust $ getSigLinkFor slid doc
+          if maybesignatory slink == Just (userid user)
+            then return (doc, slink)
+            else do
+              logInfo_ "Current user is not author of the document"
+              respond404
+        Nothing   -> do
+          logInfo_ "No user found"
+          respond404
+
+-- | Fetch the document and signatory for e-signing. Checks that the document is
+-- in the correct state and the signatory hasn't signed yet. Requires session
+-- token to be set.
+getDocumentAndSignatoryForEIDSign
+  :: Kontrakcja m
+  => DocumentID
+  -> SignatoryLinkID
+  -> m (Document,SignatoryLink)
+getDocumentAndSignatoryForEIDSign did slid = dbQuery (GetDocumentSessionToken slid) >>= \case
   Just mh -> do
     logInfo_ "Document token found"
     doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
-    -- this should always succeed as we already got the document
+    -- This should always succeed as we already got the document.
     let slink = fromJust $ getSigLinkFor slid doc
     when (hasSigned slink) $ do
       logInfo_ "Signatory already signed the document"
       respond404
-    return (doc,slink)
+    -- Check that signatory uses EID for signing.
+    let am = signatorylinkauthenticationtosignmethod slink
+    when (am == StandardAuthenticationToSign || am == SMSPinAuthenticationToSign) $ do
+      logInfo "Signatory has incorrect authentication to sign method" $
+        object [ "method" .= show am ]
+    return (doc, slink)
   Nothing -> do
     logInfo_ "No document token found"
     respond404

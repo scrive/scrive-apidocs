@@ -17,10 +17,10 @@ import Control.Monad.State
 import Data.ByteString (ByteString)
 import Data.Foldable as F
 import Data.Int
-import Data.Time
 import qualified Data.Text as T
 
 import DB
+import Doc.Data.SignatoryLink
 import Doc.SignatoryLinkID
 import EID.CGI.GRP.Data
 import EID.Nets.Data
@@ -79,43 +79,38 @@ instance ToSQL AuthenticationProvider where
   toSQL NetsDKNemID  = toSQL (3::Int16)
   toSQL SMSPinAuth   = toSQL (4::Int16)
   toSQL NetsFITupas  = toSQL (5::Int16)
+
 ----------------------------------------
 
 -- | General version of inserting some authentication for a given signatory or replacing existing one.
-data MergeAuthenticationInternal = MergeAuthenticationInternal SessionID SignatoryLinkID (forall v n. (MonadState v n, SqlSet v) => n ())
+data MergeAuthenticationInternal = MergeAuthenticationInternal AuthenticationKind SessionID SignatoryLinkID (forall v n. (MonadState v n, SqlSet v) => n ())
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeAuthenticationInternal () where
-  update (MergeAuthenticationInternal sid slid setDedicatedAuthFields) = do
-    loopOnUniqueViolation . withSavepoint "merge_bank_id_authentication" $ do
-      runQuery01_ selectSignatorySignTime
-      msign_time :: Maybe UTCTime <- fetchOne runIdentity
-      when (isJust msign_time) $ do
-        unexpectedError "signatory already signed, can't merge authentication"
+  update (MergeAuthenticationInternal authKind sid slid setDedicatedAuthFields) = do
+    -- Note: after document is signed, existing eid_authentication record will
+    -- keep being overwritten every time authenticate to view archived routine
+    -- is completed.
+    loopOnUniqueViolation . withSavepoint "merge_authentication_internal" $ do
       success <- runQuery01 . sqlUpdate "eid_authentications" $ do
         setFields
         sqlWhereEq "signatory_link_id" slid
-        -- replace the signature only if signatory hasn't signed yet
-        sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime) <+> "IS NULL"
+        sqlWhereEq "auth_kind" authKind
       when (not success) $ do
         runQuery_ . sqlInsertSelect "eid_authentications" "" $ do
           setFields
     where
-      selectSignatorySignTime = do
-        sqlSelect "signatory_links" $ do
-          sqlResult "sign_time"
-          sqlWhereEq "id" slid
-
       setFields :: (MonadState v n, SqlSet v) => n ()
       setFields = do
         sqlSet "signatory_link_id" slid
+        sqlSet "auth_kind" authKind
         sqlSet "session_id" sid
         setDedicatedAuthFields
 
 
 -- | Insert bank id authentication for a given signatory or replace the existing one.
-data MergeCGISEBankIDAuthentication = MergeCGISEBankIDAuthentication SessionID SignatoryLinkID CGISEBankIDAuthentication
+data MergeCGISEBankIDAuthentication = MergeCGISEBankIDAuthentication AuthenticationKind SessionID SignatoryLinkID CGISEBankIDAuthentication
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeCGISEBankIDAuthentication () where
-  update (MergeCGISEBankIDAuthentication sid slid CGISEBankIDAuthentication{..}) = do
-    dbUpdate $ MergeAuthenticationInternal sid slid $ do
+  update (MergeCGISEBankIDAuthentication authKind sid slid CGISEBankIDAuthentication{..}) = do
+    dbUpdate $ MergeAuthenticationInternal authKind sid slid $ do
         sqlSet "provider" CgiGrpBankID
         sqlSet "signature" cgisebidaSignature
         sqlSet "signatory_name" cgisebidaSignatoryName
@@ -124,10 +119,10 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeCGISEBankIDAuthentication (
         sqlSet "signatory_ip" cgisebidaSignatoryIP
 
 -- | Insert bank id authentication for a given signatory or replace the existing one.
-data MergeNetsNOBankIDAuthentication = MergeNetsNOBankIDAuthentication SessionID SignatoryLinkID NetsNOBankIDAuthentication
+data MergeNetsNOBankIDAuthentication = MergeNetsNOBankIDAuthentication AuthenticationKind SessionID SignatoryLinkID NetsNOBankIDAuthentication
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsNOBankIDAuthentication () where
-  update (MergeNetsNOBankIDAuthentication sid slid NetsNOBankIDAuthentication{..}) = do
-    dbUpdate $ MergeAuthenticationInternal sid slid $ do
+  update (MergeNetsNOBankIDAuthentication authKind sid slid NetsNOBankIDAuthentication{..}) = do
+    dbUpdate $ MergeAuthenticationInternal authKind sid slid $ do
         sqlSet "provider" NetsNOBankID
         sqlSet "internal_provider" netsNOBankIDInternalProvider
         sqlSet "signature" netsNOBankIDCertificate
@@ -136,36 +131,36 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsNOBankIDAuthentication 
         sqlSet "signatory_date_of_birth" netsNOBankIDDateOfBirth
 
 -- | Insert NemID authentication for a given signatory or replace the existing one.
-data MergeNetsDKNemIDAuthentication = MergeNetsDKNemIDAuthentication SessionID SignatoryLinkID NetsDKNemIDAuthentication
+data MergeNetsDKNemIDAuthentication = MergeNetsDKNemIDAuthentication AuthenticationKind SessionID SignatoryLinkID NetsDKNemIDAuthentication
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsDKNemIDAuthentication () where
-  update (MergeNetsDKNemIDAuthentication sid slid NetsDKNemIDAuthentication{..}) = do
-    dbUpdate $ MergeAuthenticationInternal sid slid $ do
+  update (MergeNetsDKNemIDAuthentication authKind sid slid NetsDKNemIDAuthentication{..}) = do
+    dbUpdate $ MergeAuthenticationInternal authKind sid slid $ do
         sqlSet "provider" NetsDKNemID
         sqlSet "internal_provider" netsDKNemIDInternalProvider
         sqlSet "signature" netsDKNemIDCertificate
         sqlSet "signatory_name" netsDKNemIDSignatoryName
         sqlSet "signatory_date_of_birth" netsDKNemIDDateOfBirth
 
-data MergeSMSPinAuthentication = MergeSMSPinAuthentication SessionID SignatoryLinkID T.Text
+data MergeSMSPinAuthentication = MergeSMSPinAuthentication AuthenticationKind SessionID SignatoryLinkID T.Text
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeSMSPinAuthentication () where
-  update (MergeSMSPinAuthentication sid slid mobile) = do
-    dbUpdate $ MergeAuthenticationInternal sid slid $ do
+  update (MergeSMSPinAuthentication authKind sid slid mobile) = do
+    dbUpdate $ MergeAuthenticationInternal authKind sid slid $ do
         sqlSet "provider" SMSPinAuth
         sqlSet "signatory_phone_number" mobile
 
 -- | Insert NemID authentication for a given signatory or replace the existing one.
-data MergeNetsFITupasAuthentication = MergeNetsFITupasAuthentication SessionID SignatoryLinkID NetsFITupasAuthentication
+data MergeNetsFITupasAuthentication = MergeNetsFITupasAuthentication AuthenticationKind SessionID SignatoryLinkID NetsFITupasAuthentication
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsFITupasAuthentication () where
-  update (MergeNetsFITupasAuthentication sid slid NetsFITupasAuthentication{..}) = do
-    dbUpdate $ MergeAuthenticationInternal sid slid $ do
+  update (MergeNetsFITupasAuthentication authKind sid slid NetsFITupasAuthentication{..}) = do
+    dbUpdate $ MergeAuthenticationInternal authKind sid slid $ do
         sqlSet "provider" NetsFITupas
         sqlSet "signatory_name" netsFITupasSignatoryName
         sqlSet "signatory_date_of_birth" netsFITupasDateOfBirth
 
 -- Get authentication - internal - just to unify code
-data GetEAuthenticationInternal = GetEAuthenticationInternal SignatoryLinkID (Maybe SessionID)
+data GetEAuthenticationInternal = GetEAuthenticationInternal AuthenticationKind SignatoryLinkID (Maybe SessionID)
 instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthenticationInternal (Maybe EAuthentication) where
-  query (GetEAuthenticationInternal slid msid) = do
+  query (GetEAuthenticationInternal authKind slid msid) = do
     runQuery_ . sqlSelect "eid_authentications" $ do
       sqlResult "provider"
       sqlResult "internal_provider"
@@ -177,19 +172,19 @@ instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthenticationInternal (Mayb
       sqlResult "ocsp_response"
       sqlResult "signatory_ip"
       sqlWhereEq "signatory_link_id" slid
+      sqlWhereEq "auth_kind" authKind
       F.forM_ msid $ sqlWhereEq "session_id"
     fetchMaybe fetchEAuthentication
 
 -- | Get signature for a given signatory. Used when generating evidence long after user has signed.
-data GetEAuthenticationWithoutSession = GetEAuthenticationWithoutSession SignatoryLinkID
+data GetEAuthenticationWithoutSession = GetEAuthenticationWithoutSession AuthenticationKind SignatoryLinkID
 instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthenticationWithoutSession (Maybe EAuthentication) where
-  query (GetEAuthenticationWithoutSession slid) = query (GetEAuthenticationInternal slid Nothing)
-
+  query (GetEAuthenticationWithoutSession authKind slid) = query (GetEAuthenticationInternal authKind slid Nothing)
 
 -- | Get signature for a given signatory and session.
-data GetEAuthentication = GetEAuthentication SessionID SignatoryLinkID
+data GetEAuthentication = GetEAuthentication AuthenticationKind SessionID SignatoryLinkID
 instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthentication (Maybe EAuthentication) where
-  query (GetEAuthentication sid slid) = query (GetEAuthenticationInternal slid (Just sid) )
+  query (GetEAuthentication authKind sid slid) = query (GetEAuthenticationInternal authKind slid (Just sid) )
 
 fetchEAuthentication :: (AuthenticationProvider, (Maybe Int16), Maybe ByteString, Maybe T.Text, Maybe T.Text, Maybe T.Text, Maybe T.Text, Maybe ByteString, Maybe T.Text) -> EAuthentication
 fetchEAuthentication (provider, internal_provider, msignature, msignatory_name, signatory_personal_number, signatory_phone_number, signatory_dob, ocsp_response, msignatory_ip) = case provider of

@@ -220,7 +220,7 @@ ctSignatoryAttachment = CompositeType {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable {
     tblName = "signatory_links"
-  , tblVersion = 33
+  , tblVersion = 34
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
@@ -249,6 +249,7 @@ tableSignatoryLinks = tblTable {
     , tblColumn { colName = "allows_highlighting", colType = BoolT, colNullable = False, colDefault = Just "false" }
     , tblColumn { colName = "hide_pn_elog", colType = BoolT, colNullable = False, colDefault = Just "false" }
     , tblColumn { colName = "consent_title", colType = TextT, colNullable = True }
+    , tblColumn { colName = "authentication_to_view_archived_method", colType = SmallIntT, colNullable = False }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
@@ -292,6 +293,7 @@ ctSignatoryLink = CompositeType {
   , CompositeColumn { ccName = "rejection_time", ccType = TimestampWithZoneT }
   , CompositeColumn { ccName = "rejection_reason", ccType = TextT }
   , CompositeColumn { ccName = "authentication_to_view_method", ccType = SmallIntT }
+  , CompositeColumn { ccName = "authentication_to_view_archived_method", ccType = SmallIntT }
   , CompositeColumn { ccName = "authentication_to_sign_method", ccType = SmallIntT }
   , CompositeColumn { ccName = "delivery_method", ccType = SmallIntT }
   , CompositeColumn { ccName = "confirmation_delivery_method", ccType = SmallIntT }

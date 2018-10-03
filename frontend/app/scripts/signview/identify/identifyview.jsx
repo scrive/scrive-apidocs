@@ -29,31 +29,35 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
     },
     stateFromProps: function (props) {
       var model;
-      if (this.props.doc.currentSignatory().seBankIDAuthenticationToView()) {
-        model = new SwedishIdentifyModel({
-          doc: this.props.doc,
-          siglinkid: this.props.siglinkid
-        });
-      } else if (this.props.doc.currentSignatory().noBankIDAuthenticationToView()) {
-        model = new NorwegianIdentifyModel({
-          doc: this.props.doc,
-          siglinkid: this.props.siglinkid
-        });
-      } else if (this.props.doc.currentSignatory().dkNemIDAuthenticationToView()) {
-        model = new DanishIdentifyModel({
-          doc: this.props.doc,
-          siglinkid: this.props.siglinkid
-        });
-      } else if (this.props.doc.currentSignatory().fiTupasAuthenticationToView()) {
-      model = new FinnishIdentifyModel({
+      var args = {
         doc: this.props.doc,
         siglinkid: this.props.siglinkid
-      });
-      } else if (this.props.doc.currentSignatory().smsPinAuthenticationToView()) {
-        model = new SMSPinIdentifyModel({
-          doc: this.props.doc,
-          siglinkid: this.props.siglinkid
-        });
+      };
+      var sig = args.doc.currentSignatory();
+      if (args.doc.closed()) {
+        if (sig.seBankIDAuthenticationToViewArchived()) {
+          model = new SwedishIdentifyModel(args);
+        } else if (sig.noBankIDAuthenticationToViewArchived()) {
+          model = new NorwegianIdentifyModel(args);
+        } else if (sig.dkNemIDAuthenticationToViewArchived()) {
+          model = new DanishIdentifyModel(args);
+        } else if (sig.fiTupasAuthenticationToViewArchived()) {
+          model = new FinnishIdentifyModel(args);
+        } else if (sig.smsPinAuthenticationToViewArchived()) {
+          model = new SMSPinIdentifyModel(args);
+        }
+      } else {
+        if (sig.seBankIDAuthenticationToView()) {
+          model = new SwedishIdentifyModel(args);
+        } else if (sig.noBankIDAuthenticationToView()) {
+          model = new NorwegianIdentifyModel(args);
+        } else if (sig.dkNemIDAuthenticationToView()) {
+          model = new DanishIdentifyModel(args);
+        } else if (sig.fiTupasAuthenticationToView()) {
+          model = new FinnishIdentifyModel(args);
+        } else if (sig.smsPinAuthenticationToView()) {
+          model = new SMSPinIdentifyModel(args);
+        }
       }
       return {model: model};
     },

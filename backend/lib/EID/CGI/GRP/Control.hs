@@ -26,6 +26,7 @@ import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocumentID
 import Doc.DocumentMonad
+import Doc.DocUtils
 import Doc.Model.Query
 import Doc.SignatoryLinkID
 import EID.Authentication.Model
@@ -70,7 +71,7 @@ handleAuthRequest did slid = do
     case get ctxcgigrpconfig ctx of
       Nothing -> noConfigurationError "CGI Group"
       Just cc -> return cc
-  (doc,_) <- getDocumentAndSignatoryForEID did slid
+  (doc,_) <- getDocumentAndSignatoryForEIDAuth did slid
   mcompany_display_name <- getCompanyDisplayName doc
   mcompany_service_id   <- getCompanyServiceID doc
   pn <- getField "personal_number" >>= \case
@@ -110,7 +111,7 @@ handleSignRequest did slid = do
     case get ctxcgigrpconfig ctx of
       Nothing -> noConfigurationError "CGI Group"
       Just cc -> return cc
-  (doc,_) <- getDocumentAndSignatoryForEID did slid
+  (doc,_) <- getDocumentAndSignatoryForEIDSign did slid
   mcompany_display_name <- getCompanyDisplayName doc
   mcompany_service_id   <- getCompanyServiceID doc
   tbs <- textToBeSigned doc
@@ -244,14 +245,14 @@ checkCGIAuthStatus did slid = do
     case get ctxcgigrpconfig ctx of
       Nothing -> noConfigurationError "CGI Group"
       Just cc -> return cc
-  (doc,sl) <- getDocumentAndSignatoryForEID did slid
+  (doc, sl) <- getDocumentAndSignatoryForEIDAuth did slid
   mcompany_display_name <- getCompanyDisplayName doc
   mcompany_service_id   <- getCompanyServiceID doc
   mcgiTransaction <- dbQuery (GetCgiGrpTransaction CgiGrpAuth slid)
   case mcgiTransaction of
     Nothing -> do
       sesid <- get ctxsessionid <$> getContext
-      success <- isJust <$> (dbQuery $ GetEAuthentication sesid slid)
+      success <- isJust <$> (dbQuery $ GetEAuthentication (mkAuthKind doc) sesid slid)
       if (success)
         then return $ Right Complete
         else return $ Left ExpiredTransaction
@@ -293,7 +294,7 @@ checkCGIAuthStatus did slid = do
                 let ocspResponse = mk_binary $ just_lookup "Validation.ocsp.response" crsAttributes
                 let ipAddress = just_lookup "ipAddress" crsAttributes
 
-                dbUpdate $ MergeCGISEBankIDAuthentication session_id slid CGISEBankIDAuthentication {
+                dbUpdate $ MergeCGISEBankIDAuthentication (mkAuthKind doc) session_id slid CGISEBankIDAuthentication {
                     cgisebidaSignatoryName = signatoryName
                   , cgisebidaSignatoryPersonalNumber = signatoryPersonalNumber
                   , cgisebidaSignatoryIP = ipAddress
@@ -301,15 +302,17 @@ checkCGIAuthStatus did slid = do
                   , cgisebidaOcspResponse = ocspResponse
                 }
                 ctx <- getContext
-                let eventFields = do
-                      F.value "hide_pn" $ signatorylinkhidepn sl
-                      F.value "signatory_name" signatoryName
-                      F.value "signatory_personal_number" signatoryPersonalNumber
-                      F.value "signatory_ip" ipAddress
-                      F.value "provider_sebankid" True
-                      F.value "signature" $ B64.encode signature
-                      F.value "ocsp_response" $ B64.encode ocspResponse
-                withDocument doc $
+                -- Do not update evidence log if document is closed
+                -- (authentication to view archived case).
+                unless (isClosed doc) . withDocument doc $ do
+                  let eventFields = do
+                        F.value "hide_pn" $ signatorylinkhidepn sl
+                        F.value "signatory_name" signatoryName
+                        F.value "signatory_personal_number" signatoryPersonalNumber
+                        F.value "signatory_ip" ipAddress
+                        F.value "provider_sebankid" True
+                        F.value "signature" $ B64.encode signature
+                        F.value "ocsp_response" $ B64.encode ocspResponse
                   void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence  (eventFields) (Just sl) Nothing =<< signatoryActor ctx sl
                 dbUpdate $ ChargeUserGroupForSEBankIDAuthentication did
                 return $ Right Complete

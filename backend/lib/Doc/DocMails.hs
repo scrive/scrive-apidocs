@@ -14,7 +14,7 @@ module Doc.DocMails (
   , MailT
   ) where
 
-import Control.Conditional ((<|), (|>), ifM)
+import Control.Conditional ((<|), (|>), ifM, whenM)
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Crypto.RNG
@@ -411,7 +411,9 @@ sendPinCode:: (MonadLog m, TemplatesMonad m, MonadThrow m, DocumentMonad m, Cryp
 sendPinCode sl phone pin = do
   ctx <- getContext
   doc <- theDocument
-  void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg
+  -- Record evidence only for auth-to-view (i.e. if the document is not closed).
+  whenM ((== AuthenticationToView) . mkAuthKind <$> theDocument) $ do
+    void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg
               SMSPinSendEvidence
               (return ())
               (Just sl)

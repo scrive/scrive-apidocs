@@ -411,6 +411,7 @@ javascriptLocalisation =
                , roleSignatory : "$_designViewAddPartiesRoleSignatory()$"
                , roleViewer : "$_designViewAddPartiesRoleViewer()$"
                , authenticationToView : "$_designViewAddPartiesAuthenticationToView()$"
+               , authenticationToViewArchived : "$_designViewAddPartiesAuthenticationToViewArchived()$"
                , authenticationToViewStandard : "$_designViewAddPartiesAuthenticationToViewStandard()$"
                , authenticationToViewSEBankID : "$_designViewAddPartiesAuthenticationtoViewSEBankID()$"
                , authenticationToViewNOBankID : "$_designViewAddPartiesAuthenticationtoViewNOBankID()$"
@@ -680,6 +681,7 @@ javascriptLocalisation =
             signatory : {
                 editAuthenticationToViewMethod: "$_docviewSignatoryeditAuthenticationToViewMethod()$"
               , editAuthenticationToSignMethod: "$_docviewSignatoryeditAuthenticationToSignMethod()$"
+              , editAuthenticationToViewArchivedMethod: "$_docviewSignatoryeditAuthenticationToViewArchivedMethod()$"
               , showLinkDelivery: "$_docviewSignatoryShowLinkDelivery()$"
               , invitationOrder: "$_docviewSignatoryInvitationOrderLabel()$"
               , invitationMethod: "$_docviewSignatoryInvitationMethodLabel()$"
@@ -693,6 +695,7 @@ javascriptLocalisation =
               , roleSignatory: "$_docviewSignatoryRoleSignatory()$"
               , roleViewer: "$_docviewSignatoryRoleViewer()$"
               , authenticationToView: "$_docviewSignatoryAuthenticationToViewMethodLabel()$"
+              , authenticationToViewArchived: "$_docviewSignatoryAuthenticationToViewArchivedMethodLabel()$"
               , authenticationToViewStandard: "$_docviewSignatoryAuthenticationToViewStandard()$"
               , authenticationToViewSEBankID: "$_docviewSignatoryAuthenticationToViewSEBankID()$"
               , authenticationToViewNOBankID: "$_docviewSignatoryAuthenticationToViewNOBankID()$"
@@ -745,6 +748,9 @@ javascriptLocalisation =
               , flashMessageInvalidNOSSNAndPhone: "$_docviewChangeAuthenticationToViewFlashMessageInvalidNOSSNAndPhone()$"
               , errorFlashMessage: "$_docviewChangeAuthenticationToViewFlashMessageError()$"
             },
+            changeAuthenticationToViewArchived : {
+                title: "$_docviewChangeAuthenticationToViewArchivedModalTitle()$"
+            },
             changeAuthentication : {
                 title: "$_docviewChangeAuthenticationModalTitle()$"
               , accept: "$_docviewChangeAuthenticationModalAccept()$"
@@ -752,6 +758,7 @@ javascriptLocalisation =
               , placeholderSEEID: "$_docviewChangeAuthenticationModalPlaceholderSEEID()$"
               , placeholderNOEID: "$_docviewChangeAuthenticationModalPlaceholderNOEID()$"
               , placeholderDKEID: "$_docviewChangeAuthenticationModalPlaceholderDKEID()$"
+              , placeholderFITupas: "$_docviewChangeAuthenticationModalPlaceholderFITupas()$"
               , placeholderPhone: "$_docviewChangeAuthenticationModalPlaceholderPhone()$"
               , valueInfotext: "$_docviewChangeAuthenticationModalValueInfotext()$"
               , errorFlashMessage: "$_docviewChangeAuthenticationModalErrorFlashMessage()$"

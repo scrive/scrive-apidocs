@@ -8,6 +8,7 @@ var EmptyValidation = require("../../../js/validation.js").EmptyValidation;
 var PhoneValidation = require("../../../js/validation.js").PhoneValidation;
 var SSNForSEBankIDValidation = require("../../../js/validation.js").SSNForSEBankIDValidation;
 var SSNForDKNemIDValidation = require("../../../js/validation.js").SSNForDKNemIDValidation;
+var SSNForFITupasValidation = require("../../../js/validation.js").SSNForFITupasValidation;
 var $ = require("jquery");
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
@@ -19,7 +20,7 @@ var Modal = require("../../common/modal");
 
   var ChangeAuthenticationModalModel = Backbone.Model.extend({
     initialize: function (args) {
-      this.setNewAuthenticationMethod(this.signatory().authenticationToSign());
+      this.setNewAuthenticationMethod(this.signatory().authenticationToViewArchived());
     },
 
     document: function () {
@@ -46,7 +47,9 @@ var Modal = require("../../common/modal");
         if (this.isNewAuthenticationPINbySMS()) {
           this.setNewAuthenticationValue(signatory.mobile());
         }
-        if (this.isNewAuthenticationSEBankID() || this.isNewAuthenticationDKNemID()) {
+        if (this.isNewAuthenticationSEBankID()
+            || this.isNewAuthenticationDKNemID()
+            || this.isNewAuthenticationFITupas()) {
           this.setNewAuthenticationValue(signatory.personalnumber());
         }
         if (this.isNewAuthenticationNOBankID()) {
@@ -77,6 +80,10 @@ var Modal = require("../../common/modal");
 
     isNewAuthenticationDKNemID: function () {
       return this.newAuthenticationMethod() == "dk_nemid";
+    },
+
+    isNewAuthenticationFITupas: function () {
+      return this.newAuthenticationMethod() == "fi_tupas";
     },
 
     isAuthenticationValueInvalid: function () {
@@ -123,6 +130,8 @@ var Modal = require("../../common/modal");
           );
         }
       }
+      // There is no NOBankID here, because authentication value is empty in
+      // that case.
       return false;
     },
 
@@ -153,15 +162,17 @@ var Modal = require("../../common/modal");
     getAuthenticationMethodNameText: function () {
       var model = this.props.model;
       if (model.isNewAuthenticationStandard()) {
-        return localization.docview.signatory.authenticationToSignStandard;
+        return localization.docview.signatory.authenticationToViewStandard;
       } else if (model.isNewAuthenticationPINbySMS()) {
-        return localization.docview.signatory.authenticationToSignSMSPin;
+        return localization.docview.signatory.authenticationToViewSMSPin;
       } else if (model.isNewAuthenticationSEBankID()) {
-        return localization.docview.signatory.authenticationToSignSEBankID;
+        return localization.docview.signatory.authenticationToViewSEBankID;
       } else if (model.isNewAuthenticationNOBankID()) {
-        return localization.docview.signatory.authenticationToSignNOBankID;
+        return localization.docview.signatory.authenticationToViewNOBankID;
       } else if (model.isNewAuthenticationDKNemID()) {
-        return localization.docview.signatory.authenticationToSignDKNemID;
+        return localization.docview.signatory.authenticationToViewDKNemID;
+      } else if (model.isNewAuthenticationFITupas()) {
+        return localization.docview.signatory.authenticationToViewFITupas;
       }
     },
 
@@ -180,7 +191,9 @@ var Modal = require("../../common/modal");
       var text = "";
       if (model.isNewAuthenticationPINbySMS()) {
         text = localization.phone;
-      } else if (model.isNewAuthenticationSEBankID() || model.isNewAuthenticationDKNemID()) {
+      } else if (model.isNewAuthenticationSEBankID()
+                 || model.isNewAuthenticationDKNemID()
+                 || model.isNewAuthenticationFITupas()) {
         text = localization.docsignview.personalNumberLabel;
       }
       // there is no NOBankID here, because authentication value is empty in that case.
@@ -198,6 +211,8 @@ var Modal = require("../../common/modal");
         text = localization.docview.changeAuthentication.placeholderNOEID;
       } else if (model.isNewAuthenticationDKNemID()) {
         text = localization.docview.changeAuthentication.placeholderDKEID;
+      } else if (model.isNewAuthenticationFITupas()) {
+        text = localization.docview.changeAuthentication.placeholderFITupas;
       }
       return text;
     },
@@ -210,12 +225,12 @@ var Modal = require("../../common/modal");
 
       var isAvailable = function (auth) {
         return sig.authenticationMethodsCanMix(sig.authenticationToView(),
-                                               auth,
-                                               sig.authenticationToViewArchived());
+                                               sig.authenticationToSign(),
+                                               auth);
       };
 
       var standard = {
-        name: localization.docview.signatory.authenticationToSignStandard,
+        name: localization.docview.signatory.authenticationToViewStandard,
         selected: model.isNewAuthenticationStandard(),
         value: "standard"
       };
@@ -224,7 +239,7 @@ var Modal = require("../../common/modal");
       }
 
       var sebankid = {
-        name: localization.docview.signatory.authenticationToSignSEBankID,
+        name: localization.docview.signatory.authenticationToViewSEBankID,
         selected: model.isNewAuthenticationSEBankID(),
         value: "se_bankid"
       };
@@ -233,7 +248,7 @@ var Modal = require("../../common/modal");
       }
 
       var nobankid = {
-        name: localization.docview.signatory.authenticationToSignNOBankID,
+        name: localization.docview.signatory.authenticationToViewNOBankID,
         selected: model.isNewAuthenticationNOBankID(),
         value: "no_bankid"
       };
@@ -242,7 +257,7 @@ var Modal = require("../../common/modal");
       }
 
       var dknemid = {
-        name: localization.docview.signatory.authenticationToSignDKNemID,
+        name: localization.docview.signatory.authenticationToViewDKNemID,
         selected: model.isNewAuthenticationDKNemID(),
         value: "dk_nemid"
       };
@@ -250,8 +265,17 @@ var Modal = require("../../common/modal");
         options.push(dknemid);
       }
 
+      var fitupas = {
+        name: localization.docview.signatory.authenticationToViewFITupas,
+        selected: model.isNewAuthenticationFITupas(),
+        value: "fi_tupas"
+      };
+      if (ff.canUseFIAuthenticationToView() && isAvailable(fitupas.value)) {
+        options.push(fitupas);
+      }
+
       var sms = {
-        name: localization.docview.signatory.authenticationToSignSMSPin,
+        name: localization.docview.signatory.authenticationToViewSMSPin,
         selected: model.isNewAuthenticationPINbySMS(),
         value: "sms_pin"
       };
@@ -330,7 +354,9 @@ module.exports = React.createClass({
   onAccept: function () {
     var authmethod = this._model.newAuthenticationMethod();
     var authvalue = this._model.newAuthenticationValue();
-    var personalNumber = (this._model.isNewAuthenticationSEBankID() || this._model.isNewAuthenticationDKNemID())
+    var personalNumber = (this._model.isNewAuthenticationSEBankID()
+                          || this._model.isNewAuthenticationDKNemID()
+                          || this._model.isNewAuthenticationFITupas())
                          ? authvalue : undefined;
     var mobileNumber = this._model.isNewAuthenticationPINbySMS() ? authvalue : undefined;
 
@@ -354,24 +380,24 @@ module.exports = React.createClass({
     LoadingDialog.open();
 
     var self = this;
-    this._model.signatory().changeAuthenticationToSign(authmethod, personalNumber, mobileNumber).sendAjax(
-      function () {
-        self.props.onAction();
-      },
-      function (err) {
-        LoadingDialog.close();
-        new FlashMessage({
-          content: localization.docview.changeAuthentication.errorFlashMessage,
-          type: "error"
+    this._model.signatory().changeAuthenticationToViewArchived(
+      authmethod, personalNumber, mobileNumber).sendAjax(
+        function () {
+          self.props.onAction();
+        },
+        function (err) {
+          LoadingDialog.close();
+          new FlashMessage({
+            content: localization.docview.changeAuthentication.errorFlashMessage,
+            type: "error"
+          });
         });
-      }
-    );
   },
   render: function () {
     return (
       <Modal.Container active={this.props.active} width={420}>
         <Modal.Header
-          title={localization.docview.changeAuthentication.title}
+          title={localization.docview.changeAuthenticationToViewArchived.title}
           showClose={true}
           onClose={this.props.onClose}
         />

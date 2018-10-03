@@ -6,6 +6,7 @@ var DeliveryIcon = require("./deliveryicon");
 var AuthToSignIcon = require("./authtosignicon");
 var ConfirmationDeliveryIcon = require("./confirmationdeliveryicon");
 var SecondaryConfirmationDeliveryIcon = require("./secondaryconfirmationdeliveryicon");
+var AuthToViewArchivedIcon = require("./authtoviewarchivedicon");
 var ParticipantSettings = require("./participantsettings");
 var ParticipantFields = require("./participantfields");
 var Track = require("../../common/track");
@@ -47,8 +48,7 @@ module.exports = React.createClass({
     var heightOfUnexpandedSignatory = 42;  // Height each signatory description when signatory is not expanded
     var verticalMarginOfFields = 16;
     var heightOfField = 50; // Height each field row
-    // Height of 7 selects at bottom of signatory on 4 rows and their vertical margin
-    var heightOfParticipantSettings = 16 + 4 * (62 + 16);
+    var heightOfParticipantSettings = 252; // Height of 8 selects at bottom of signatory
     var heightOfExpandedSignatoryHeader = 42;
     var height = heightOfUnexpandedSignatory;
 
@@ -128,6 +128,7 @@ module.exports = React.createClass({
             <AuthToSignIcon model={sig}/>
             <ConfirmationDeliveryIcon model={sig}/>
             <SecondaryConfirmationDeliveryIcon model={sig}/>
+            <AuthToViewArchivedIcon model={sig}/>
           </div>
           <div className="design-view-action-participant-details">
             <ParticipantFields

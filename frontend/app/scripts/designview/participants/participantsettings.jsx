@@ -130,7 +130,48 @@ module.exports = React.createClass({
     }
 
     authTypes = _.filter(authTypes, function (authToView) {
-      return sig.authenticationMethodsCanMix(authToView, sig.authenticationToSign());
+      return sig.authenticationMethodsCanMix(authToView,
+                                             sig.authenticationToSign(),
+                                             sig.authenticationToViewArchived());
+    });
+
+    return _.map(authTypes, function (t) {
+      return {name: self.authenticationToViewText(t), value: t};
+    });
+  },
+  authenticationToViewArchivedOptions: function () {
+    var self = this;
+    var sig = this.props.model;
+    var authTypes = !sig.signs()
+        ? ["standard"]
+        : ["standard", "se_bankid", "no_bankid", "dk_nemid", "fi_tupas", "sms_pin"];
+
+    if (sig.signs()) {
+      var ff = Subscription.currentSubscription().currentUserFeatures();
+      if (!ff.canUseStandardAuthenticationToView() && !sig.standardAuthenticationToViewArchived()) {
+        authTypes = _.without(authTypes, "standard");
+      }
+      if (!ff.canUseSEAuthenticationToView() && !sig.seBankIDAuthenticationToViewArchived()) {
+        authTypes = _.without(authTypes, "se_bankid");
+      }
+      if (!ff.canUseNOAuthenticationToView() && !sig.noBankIDAuthenticationToViewArchived()) {
+        authTypes = _.without(authTypes, "no_bankid");
+      }
+      if (!ff.canUseDKAuthenticationToView() && !sig.dkNemIDAuthenticationToViewArchived()) {
+        authTypes = _.without(authTypes, "dk_nemid");
+      }
+      if (!ff.canUseSMSPinAuthenticationToView() && !sig.smsPinAuthenticationToViewArchived()) {
+        authTypes = _.without(authTypes, "sms_pin");
+      }
+      if (!ff.canUseFIAuthenticationToView() && !sig.fiTupasAuthenticationToViewArchived()) {
+        authTypes = _.without(authTypes, "fi_tupas");
+      }
+    }
+
+    authTypes = _.filter(authTypes, function (authToViewArchived) {
+      return sig.authenticationMethodsCanMix(sig.authenticationToView(),
+                                             sig.authenticationToSign(),
+                                             authToViewArchived);
     });
 
     return _.map(authTypes, function (t) {
@@ -175,7 +216,9 @@ module.exports = React.createClass({
     }
 
     authTypes = _.filter(authTypes, function (authToSign) {
-      return sig.authenticationMethodsCanMix(sig.authenticationToView(), authToSign);
+      return sig.authenticationMethodsCanMix(sig.authenticationToView(),
+                                             authToSign,
+                                             sig.authenticationToViewArchived());
     });
 
     return _.map(authTypes, function (t) {
@@ -278,6 +321,7 @@ module.exports = React.createClass({
     var sig = this.props.model;
     return (
       <div className="design-view-action-participant-details-participation">
+
         <div className="design-view-action-participant-details-participation-row">
 
           <span className="design-view-action-participant-details-participation-box">
@@ -287,7 +331,7 @@ module.exports = React.createClass({
               isOptionSelected={function (o) {
                 return sig.signorder() == o.value;
               }}
-              width={454}
+              width={297}
               options={self.signorderOptions()}
               onSelect={function (v) {
                 Track.track("Choose sign order", {
@@ -305,7 +349,7 @@ module.exports = React.createClass({
               isOptionSelected={function (o) {
                 return (sig.isLastViewer() ? "none" : sig.delivery()) == o.value;
               }}
-              width={454}
+              width={297}
               options={self.deliveryOptions()}
               onSelect={function (v) {
                 Track.track("Choose delivery method", {
@@ -318,9 +362,6 @@ module.exports = React.createClass({
             />
           </span>
 
-        </div>
-        <div className="design-view-action-participant-details-participation-row">
-
           <span className="design-view-action-participant-details-participation-box">
             <label className="label">{localization.designview.addParties.authenticationToView}</label>
             <Select
@@ -328,7 +369,7 @@ module.exports = React.createClass({
               isOptionSelected={function (o) {
                 return (sig.signs() ? sig.authenticationToView() : "standard") == o.value;
               }}
-              width={454}
+              width={297}
               options={self.authenticationToViewOptions()}
               onSelect={function (v) {
                 Track.track("Choose auth", {
@@ -348,6 +389,10 @@ module.exports = React.createClass({
             />
           </span>
 
+        </div>
+
+        <div className="design-view-action-participant-details-participation-row">
+
           <span className="design-view-action-participant-details-participation-box">
             <label className="label">{localization.designview.addParties.role}</label>
             <Select
@@ -357,7 +402,7 @@ module.exports = React.createClass({
                 localization.designview.addParties.roleSignatory :
                 localization.designview.addParties.roleViewer
               }
-              width={454}
+              width={297}
               options={self.roleOptions()}
               onSelect={function (v) {
                 Track.track("Choose participant role", {
@@ -378,8 +423,7 @@ module.exports = React.createClass({
             />
           </span>
 
-        </div>
-        <div className="design-view-action-participant-details-participation-row">
+          <span className="design-view-action-participant-details-participation-box" />
 
           <span className="design-view-action-participant-details-participation-box">
             <label className="label">{localization.designview.addParties.authenticationToSign}</label>
@@ -388,7 +432,7 @@ module.exports = React.createClass({
               isOptionSelected={function (o) {
                 return (sig.signs() ? sig.authenticationToSign() : "standard") == o.value;
               }}
-              width={454}
+              width={297}
               options={self.authenticationToSignOptions()}
               onSelect={function (v) {
                 Track.track("Choose auth", {
@@ -408,12 +452,16 @@ module.exports = React.createClass({
             />
           </span>
 
+        </div>
+
+        <div className="design-view-action-participant-details-participation-row last-row">
+
           <span className="design-view-action-participant-details-participation-box">
             <label className="label">{localization.designview.addParties.confirmation}</label>
             <Select
               ref="confirmation-delivery-select"
               isOptionSelected={function (o) { return o.selected; }}
-              width={454}
+              width={297}
               options={self.confirmationDeliveryOptions()}
               onSelect={function (v) {
                 Track.track("Choose confirmation delivery method", {
@@ -430,15 +478,12 @@ module.exports = React.createClass({
             />
           </span>
 
-        </div>
-        <div className="design-view-action-participant-details-participation-row last-row">
-
           <span className="design-view-action-participant-details-participation-box">
             <label className="label">{localization.designview.addParties.secondaryConfirmation}</label>
             <Select
               ref="secondary-confirmation-delivery-select"
               isOptionSelected={function (o) { return o.selected; }}
-              width={454}
+              width={297}
               options={self.secondaryConfirmationDeliveryOptions()}
               onSelect={function (v) {
                 Track.track("Choose confirmation delivery method", {
@@ -457,7 +502,33 @@ module.exports = React.createClass({
             />
           </span>
 
-       </div>
+          <span className="design-view-action-participant-details-participation-box">
+            <label className="label">{localization.designview.addParties.authenticationToViewArchived}</label>
+            <Select
+              ref="authentication-select"
+              isOptionSelected={function (o) {
+                return (sig.signs() ? sig.authenticationToViewArchived() : "standard") == o.value;
+              }}
+              width={297}
+              options={self.authenticationToViewArchivedOptions()}
+              onSelect={function (v) {
+                Track.track("Choose auth archived", {
+                  Where: "select"
+                });
+                sig.setAuthenticationToViewArchived(v);
+              }}
+              onClickWhenInactive={function () {
+                if (sig.signs()) {
+                  self.refs.blockingModal.openContactUsModal();
+                } else {
+                  new FlashMessage({type: "error", content: localization.designview.viewerCantHaveAuthorisation});
+                }
+              }}
+            />
+          </span>
+
+        </div>
+
         <BlockingModal ref="blockingModal"/>
       </div>
     );

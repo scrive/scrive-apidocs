@@ -130,7 +130,7 @@ guardGetSignatoryFromIdForDocument slid = do
 guardSignatoryNeedsToIdentifyToView :: Kontrakcja m => SignatoryLinkID -> Document -> m ()
 guardSignatoryNeedsToIdentifyToView slid doc = do
   let msl = getSigLinkFor slid doc
-  identifyToView <- signatoryNeedsToIdentifyToView (fromJust msl)
+  identifyToView <- signatoryNeedsToIdentifyToView (fromJust msl) doc
   when (identifyToView && (not $ isAuthor msl))
     (apiError $ signatoryStateError "Authorization to view needed before signing")
 
@@ -139,10 +139,17 @@ guardSignatoryHasNotIdentifiedToView slid doc =
   when (signatorylinkidentifiedtoview . fromJust $ getSigLinkFor slid doc)
     (apiError $ signatoryStateError "The party has already identified to view")
 
-guardCanSetAuthenticationToViewForSignatoryWithValues :: Kontrakcja m => SignatoryLinkID -> AuthenticationToViewMethod -> Maybe String -> Maybe String -> Document -> m ()
-guardCanSetAuthenticationToViewForSignatoryWithValues slid authToView mSSN mMobile doc = do
+guardCanSetAuthenticationToViewForSignatoryWithValues :: Kontrakcja m => SignatoryLinkID -> AuthenticationKind -> AuthenticationToViewMethod -> Maybe String -> Maybe String -> Document -> m ()
+guardCanSetAuthenticationToViewForSignatoryWithValues slid authKind authType mSSN mMobile doc = do
   let sl = fromJust $ getSigLinkFor slid doc
-  guardAuthenticationMethodsCanMix authToView $ signatorylinkauthenticationtosignmethod sl
+      authToView = case authKind of
+        AuthenticationToView         -> authType
+        AuthenticationToViewArchived -> signatorylinkauthenticationtoviewmethod sl
+      authToViewArchived = case authKind of
+        AuthenticationToView         -> signatorylinkauthenticationtoviewarchivedmethod sl
+        AuthenticationToViewArchived -> authType
+      authToSign = signatorylinkauthenticationtosignmethod sl
+  guardAuthenticationMethodsCanMix authToView authToSign authToViewArchived
   -- Check if either a valid SSN for authToView is set or is provided
   case mSSN of
     Nothing -> unless (isValidSSNForAuthenticationToView authToView $ getPersonalNumber sl) $
@@ -176,7 +183,8 @@ guardCanSetAuthenticationToSignForSignatoryWithValue :: Kontrakcja m => Signator
 guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobile doc = do
   let sl = fromJust $ getSigLinkFor slid doc
       authToView = signatorylinkauthenticationtoviewmethod sl
-  guardAuthenticationMethodsCanMix authToView authToSign
+      authToViewArchived = signatorylinkauthenticationtoviewarchivedmethod sl
+  guardAuthenticationMethodsCanMix authToView authToSign authToViewArchived
   case authToSign of
     StandardAuthenticationToSign -> return ()
     SEBankIDAuthenticationToSign -> do
@@ -223,10 +231,18 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
             Good _ -> return ()
 
 
-guardAuthenticationMethodsCanMix :: Kontrakcja m => AuthenticationToViewMethod -> AuthenticationToSignMethod -> m ()
-guardAuthenticationMethodsCanMix authtoview authtosign = do
-  when (not $ authenticationMethodsCanMix authtoview authtosign)
-    (apiError $ signatoryStateError $ "Can't mix " <> (T.pack $ show authtoview) <> " and " <> (T.pack $ show authtosign) <> ".")
+guardAuthenticationMethodsCanMix :: Kontrakcja m => AuthenticationToViewMethod -> AuthenticationToSignMethod -> AuthenticationToViewMethod -> m ()
+guardAuthenticationMethodsCanMix authToView authToSign authToViewArchived = do
+  when (not $ authenticationMethodsCanMix authToView authToSign authToViewArchived)
+    (apiError $ signatoryStateError $ mconcat
+      [ "Can't mix "
+      , T.pack $ show authToView
+      , ", "
+      , T.pack $ show authToSign
+      , " and "
+      , T.pack $ show authToViewArchived
+      , " (archived)."
+      ])
 
 guardSignatoryHasNotSigned :: Kontrakcja m => SignatoryLinkID -> Document -> m ()
 guardSignatoryHasNotSigned slid doc =

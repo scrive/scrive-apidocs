@@ -19,6 +19,7 @@ import Doc.API.V1.DocumentToJSON
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentMonad
+import Doc.DocUtils
 import Doc.Model
 import Doc.SignatoryScreenshots
 import EID.Authentication.Model
@@ -330,7 +331,7 @@ testChangeAuthenticationToViewMethod = do
   assertEqual "Response code should be 202" 202 (rsCode resSEBankIDAgain)
 
   (sessionid, ctx')<- runTestKontra reqSEBankIDAgain ctx $ getNonTempSessionID
-  dbUpdate $ MergeCGISEBankIDAuthentication sessionid validsiglinkid $
+  dbUpdate $ MergeCGISEBankIDAuthentication (mkAuthKind doc) sessionid validsiglinkid $
     CGISEBankIDAuthentication {
         cgisebidaSignatoryName = "AName"
       , cgisebidaSignatoryPersonalNumber = "BName"

@@ -113,6 +113,66 @@ ChangeAuthenticationToViewMethodFITupasToDKNemIDEvidenceLog = The user <span cla
 ###
 ChangeAuthenticationToViewMethodFITupasToSMSPinEvidenceLog = The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Finnish TUPAS” to “PIN by SMS”.
 ###
+ChangeAuthenticationToViewArchivedMethodStandardToSEBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “no extra authentication” to “Swedish BankID”.
+###
+ChangeAuthenticationToViewArchivedMethodStandardToNOBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “no extra authentication” to “Norwegian BankID”.
+###
+ChangeAuthenticationToViewArchivedMethodSEBankIDToStandardEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Swedish BankID” to “no extra authentication”.
+###
+ChangeAuthenticationToViewArchivedMethodSEBankIDToNOBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Swedish BankID” to “Norwegian BankID”.
+###
+ChangeAuthenticationToViewArchivedMethodNOBankIDToStandardEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Norwegian BankID” to “no extra authentication”.
+###
+ChangeAuthenticationToViewArchivedMethodNOBankIDToSEBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Norwegian BankID” to “Swedish BankID”.
+###
+ChangeAuthenticationToViewArchivedMethodDKNemIDToStandardEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Danish NemID” to “no extra authentication”.
+###
+ChangeAuthenticationToViewArchivedMethodDKNemIDToSEBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Danish NemID” to “Swedish BankID”.
+###
+ChangeAuthenticationToViewArchivedMethodDKNemIDToNOBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Danish NemID” to “Norwegian BankID”.
+###
+ChangeAuthenticationToViewArchivedMethodStandardToDKNemIDEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “no extra authentication” to “Danish NemID”.
+###
+ChangeAuthenticationToViewArchivedMethodSEBankIDToDKNemIDEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Swedish BankID” to “Danish NemID”.
+###
+ChangeAuthenticationToViewArchivedMethodNOBankIDToDKNemIDEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Norwegian BankID” to “Danish NemID”.
+###
+ChangeAuthenticationToViewArchivedMethodStandardToSMSPinEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “no extra authentication” to “PIN by SMS”.
+###
+ChangeAuthenticationToViewArchivedMethodNOBankIDToSMSPinEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Norwegian BankID” to “PIN by SMS”.
+###
+ChangeAuthenticationToViewArchivedMethodSEBankIDToSMSPinEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Swedish BankID” to “PIN by SMS”.
+###
+ChangeAuthenticationToViewArchivedMethodDKNemIDToSMSPinEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Danish NemID” to “PIN by SMS”.
+###
+ChangeAuthenticationToViewArchivedMethodSMSPinToStandardEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “PIN by SMS” to “no extra authentication”.
+###
+ChangeAuthenticationToViewArchivedMethodSMSPinToNOBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “PIN by SMS” to “Norwegian BankID”.
+###
+ChangeAuthenticationToViewArchivedMethodSMSPinToSEBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “PIN by SMS” to “Swedish BankID”.
+###
+ChangeAuthenticationToViewArchivedMethodSMSPinToDKNemIDEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “PIN by SMS” to “Danish NemID”.
+###
+ChangeAuthenticationToViewArchivedMethodStandardToFITupasEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “no extra authentication” to “Finnish TUPAS”.
+###
+ChangeAuthenticationToViewArchivedMethodNOBankIDToFITupasEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Norwegian BankID” to “Finnish TUPAS”.
+###
+ChangeAuthenticationToViewArchivedMethodSEBankIDToFITupasEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Swedish BankID” to “Finnish TUPAS”.
+###
+ChangeAuthenticationToViewArchivedMethodDKNemIDToFITupasEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Danish NemID” to “Finnish TUPAS”.
+###
+ChangeAuthenticationToViewArchivedMethodSMSPinToFITupasEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “PIN by SMS” to “Finnish TUPAS”.
+###
+ChangeAuthenticationToViewArchivedMethodFITupasToStandardEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Finnish TUPAS” to “no extra authentication”.
+###
+ChangeAuthenticationToViewArchivedMethodFITupasToNOBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Finnish TUPAS” to “Norwegian BankID”.
+###
+ChangeAuthenticationToViewArchivedMethodFITupasToSEBankIDEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Finnish TUPAS” to “Swedish BankID”.
+###
+ChangeAuthenticationToViewArchivedMethodFITupasToDKNemIDEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Finnish TUPAS” to “Danish NemID”.
+###
+ChangeAuthenticationToViewArchivedMethodFITupasToSMSPinEvidenceLog = The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Finnish TUPAS” to “PIN by SMS”.
+###
 ChangeAuthenticationToSignMethodDKNemIDToNOBankIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Danish NemID” to "Norwegian BankID”.
 ###
 ChangeAuthenticationToSignMethodDKNemIDToStandardEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “Danish NemID” to “no extra authentication”.

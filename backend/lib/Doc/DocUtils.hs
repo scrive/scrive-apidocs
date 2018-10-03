@@ -11,6 +11,7 @@
 
 module Doc.DocUtils(
     renderLocalListTemplate
+  , mkAuthKind
   , documentcurrentsignorder
   , documentprevioussignorder
   , isLastViewer
@@ -62,6 +63,14 @@ renderListTemplateHelper renderFunc list =
      else renderFunc "nomorethanonelist" $ F.value "list" list
 
 -- OTHER UTILS
+
+-- | Construct AuthenticationKind from a Document. Document must be either in
+-- Pending or Closed state.
+mkAuthKind :: Document -> AuthenticationKind
+mkAuthKind doc = case documentstatus doc of
+  Pending -> AuthenticationToView
+  Closed  -> AuthenticationToViewArchived
+  status  -> unexpectedError $ "invalid status: " ++ show status
 
 -- | The document's current sign order is either the sign order of the
 -- next partner(s) that should sign; or in case all partners have

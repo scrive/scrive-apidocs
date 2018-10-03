@@ -227,7 +227,7 @@ simplyfiedEventText mactor sim dee = do
                   F.value "eid_signatory_name" $ Just netsdkSignatoryName
                   F.value "provider_dknemid" True
           when (evType dee == Current AuthenticatedToViewEvidence) $ do
-            dbQuery (GetEAuthenticationWithoutSession slinkid) >>= \case
+            dbQuery (GetEAuthenticationWithoutSession AuthenticationToView slinkid) >>= \case
               Nothing -> return ()
               Just esig -> case esig of
                 CGISEBankIDAuthentication_ n -> do

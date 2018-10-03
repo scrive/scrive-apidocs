@@ -30,6 +30,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         user_id: undefined,
         authentication_method_to_sign: "standard",
         authentication_method_to_view: "standard",
+        authentication_method_to_view_archived: "standard",
         delivery_method: "email",
         confirmation_delivery_method : "email",
         allows_highlighting: false,
@@ -496,26 +497,50 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     noBankIDAuthenticationToView: function() {
           return this.get("authentication_method_to_view") == "no_bankid" && this.signs();
     },
-    noBankIDAuthenticationToSign: function() {
-          return this.get("authentication_method_to_sign") == "no_bankid" && this.signs();
-    },
     dkNemIDAuthenticationToView: function() {
           return this.get("authentication_method_to_view") == "dk_nemid" && this.signs();
-    },
-    smsPinAuthenticationToView: function() {
-          return this.get("authentication_method_to_view") == "sms_pin" && this.signs();
     },
     fiTupasAuthenticationToView: function() {
           return this.get("authentication_method_to_view") == "fi_tupas" && this.signs();
     },
-    dkNemIDAuthenticationToSign: function() {
-          return this.get("authentication_method_to_sign") == "dk_nemid" && this.signs();
+    smsPinAuthenticationToView: function() {
+          return this.get("authentication_method_to_view") == "sms_pin" && this.signs();
+    },
+    standardAuthenticationToViewArchived: function() {
+        return this.get("authentication_method_to_view_archived") == "standard"
+            && this.signs();
+    },
+    seBankIDAuthenticationToViewArchived: function() {
+        return this.get("authentication_method_to_view_archived") == "se_bankid"
+            && this.signs();
+    },
+    noBankIDAuthenticationToViewArchived: function() {
+        return this.get("authentication_method_to_view_archived") == "no_bankid"
+            && this.signs();
+    },
+    dkNemIDAuthenticationToViewArchived: function() {
+        return this.get("authentication_method_to_view_archived") == "dk_nemid"
+            && this.signs();
+    },
+    fiTupasAuthenticationToViewArchived: function() {
+        return this.get("authentication_method_to_view_archived") == "fi_tupas"
+            && this.signs();
+    },
+    smsPinAuthenticationToViewArchived: function() {
+        return this.get("authentication_method_to_view_archived") == "sms_pin"
+            && this.signs();
     },
     standardAuthenticationToSign: function() {
           return this.get("authentication_method_to_sign") == "standard" && this.signs();
     },
     seBankIDAuthenticationToSign: function() {
           return this.get("authentication_method_to_sign") == "se_bankid" && this.signs();
+    },
+    noBankIDAuthenticationToSign: function() {
+          return this.get("authentication_method_to_sign") == "no_bankid" && this.signs();
+    },
+    dkNemIDAuthenticationToSign: function() {
+          return this.get("authentication_method_to_sign") == "dk_nemid" && this.signs();
     },
     smsPinAuthenticationToSign: function() {
           return this.get("authentication_method_to_sign") == "sms_pin" && this.signs();
@@ -636,6 +661,15 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
                 mobile_number: mobileNumber
         });
     },
+    changeAuthenticationToViewArchived: function(authenticationType, personalNumber, mobileNumber) {
+        return new Submit({
+                url: "/api/frontend/documents/" + this.document().documentid() + "/" + this.signatoryid() + "/setauthenticationtoviewarchived",
+                method: "POST",
+                authentication_type: authenticationType,
+                personal_number: personalNumber,
+                mobile_number: mobileNumber
+        });
+    },
     changeAuthenticationToSign: function(authenticationType, personalNumber, mobileNumber) {
         return new Submit({
                 url: "/api/frontend/documents/" + this.document().documentid() + "/" + this.signatoryid() + "/setauthenticationtosign",
@@ -732,6 +766,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
               reject_redirect_url : this.rejectredirect(),
               authentication_method_to_sign: this.authenticationToSign(),
               authentication_method_to_view: this.authenticationToView(),
+              authentication_method_to_view_archived: this.authenticationToViewArchived(),
               delivery_method: this.delivery(),
               confirmation_delivery_method : this.confirmationdelivery(),
               allows_highlighting : this.allowshighlighting(),
@@ -786,43 +821,56 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     authenticationToView: function() {
         return this.get('authentication_method_to_view');
     },
-    authenticationMethodsCanMix: function(authToView, authToSign) {
-      if (  authToView === "no_bankid" && authToSign === "se_bankid"
-         || authToView === "no_bankid" && authToSign === "dk_nemid"
-         || authToView === "dk_nemid"  && authToSign === "se_bankid"
-         || authToView === "dk_nemid"  && authToSign === "no_bankid"
-         || authToView === "se_bankid" && authToSign === "no_bankid"
-         || authToView === "se_bankid" && authToSign === "dk_nemid"
-         || authToView === "fi_tupas" && authToSign === "se_bankid"
-         || authToView === "fi_tupas" && authToSign === "no_bankid"
-         || authToView === "fi_tupas" && authToSign === "dk_nemid"
-         ) {
-        return false;
-      } else {
-        return true;
-      }
+    authenticationToViewArchived: function() {
+        return this.get('authentication_method_to_view_archived');
+    },
+  authenticationMethodsCanMix: function(authToView, authToSign, authToViewArchived) {
+    var intersect = function(as, bs) {
+      return as.filter(function (item) {
+        return bs.indexOf(item) > -1;
+      });
+    }
+    // maximum of 1 national EID is allowed per signatory
+    var eids = ["se_bankid", "no_bankid", "dk_nemid", "fi_tupas"];
+    return (1 >= intersect( eids, [authToSign, authToView, authToViewArchived]).length);
     },
     setAuthenticationToView: function(a) {
+        var canMix = this.authenticationMethodsCanMix(a, this.authenticationToSign(), this.authenticationToViewArchived());
         this.set({
           "authentication_method_to_view" : a,
-          // Don't mix swedish and norwegian bankid
-          "authentication_method_to_sign" :
-            (this.authenticationMethodsCanMix(a, this.authenticationToSign())
+          "authentication_method_to_sign" : canMix
             ? this.authenticationToSign()
-            : "standard")
+            : "standard",
+          "authentication_method_to_view_archived" : canMix
+            ? this.authenticationToViewArchived()
+            : "standard"
+        });
+    },
+    setAuthenticationToViewArchived: function(a) {
+        var canMix = this.authenticationMethodsCanMix(a, this.authenticationToSign(), this.authenticationToViewArchived());
+        this.set({
+          "authentication_method_to_view" : canMix
+            ? this.authenticationToView()
+            : "standard",
+          "authentication_method_to_sign" : canMix
+            ? this.authenticationToSign()
+            : "standard",
+          "authentication_method_to_view_archived" : a,
         });
     },
     authenticationToSign: function() {
         return this.get('authentication_method_to_sign');
     },
     setAuthenticationToSign: function(a) {
+        var canMix = this.authenticationMethodsCanMix(a, this.authenticationToSign(), this.authenticationToViewArchived());
         this.set({
-          "authentication_method_to_sign":a,
-          // Don't mix swedish and norwegian bankid
-          "authentication_method_to_view":
-            (this.authenticationMethodsCanMix(this.authenticationToView(), a)
+          "authentication_method_to_view" : canMix
             ? this.authenticationToView()
-            : "standard")
+            : "standard",
+          "authentication_method_to_sign" : a,
+          "authentication_method_to_view_archived" : canMix
+            ? this.authenticationToViewArchived()
+            : "standard"
         });
     },
     authenticationToSignFieldValue: function() {
@@ -911,12 +959,16 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         }
     },
     needsPersonalNumber: function() {
-        return (this.seBankIDAuthenticationToSign()
-             || this.seBankIDAuthenticationToView()
-             || this.noBankIDAuthenticationToView()
-             || this.dkNemIDAuthenticationToSign()
-             || this.dkNemIDAuthenticationToView()
-             || this.fiTupasAuthenticationToView());
+      return this.seBankIDAuthenticationToSign()
+        || this.seBankIDAuthenticationToView()
+        || this.seBankIDAuthenticationToViewArchived()
+        || this.noBankIDAuthenticationToView()
+        || this.noBankIDAuthenticationToViewArchived()
+        || this.dkNemIDAuthenticationToSign()
+        || this.dkNemIDAuthenticationToView()
+        || this.dkNemIDAuthenticationToViewArchived()
+        || this.fiTupasAuthenticationToView()
+        || this.fiTupasAuthenticationToViewArchived();
     },
     needsPersonalNumberFilledByAuthor: function() {
         return (this.seBankIDAuthenticationToView()
@@ -952,16 +1004,23 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     },
 
     needsMobile: function() {
-      return this.mobileDelivery() || this.emailMobileDelivery()
-        || this.hasConfirmationMobile() || this.noBankIDAuthenticationToView()
+      return this.mobileDelivery()
+        || this.emailMobileDelivery()
+        || this.hasConfirmationMobile()
+        || this.noBankIDAuthenticationToView()
+        || this.noBankIDAuthenticationToViewArchived()
         || this.smsPinAuthenticationToView()
+        || this.smsPinAuthenticationToViewArchived()
         || this.smsPinAuthenticationToSign();
     },
 
     mobileIsObligatory: function() {
       // Mobile number is needed for NO BankID, but is not obligatory
-      return this.mobileDelivery() || this.emailMobileDelivery()
-        || this.hasConfirmationMobile() || this.smsPinAuthenticationToView()
+      return this.mobileDelivery()
+        || this.emailMobileDelivery()
+        || this.hasConfirmationMobile()
+        || this.smsPinAuthenticationToView()
+        || this.smsPinAuthenticationToViewArchived()
         || this.smsPinAuthenticationToSign();
     },
 

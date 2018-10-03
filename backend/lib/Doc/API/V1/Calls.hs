@@ -508,7 +508,7 @@ apiCallV1CheckSign did slid = logDocumentAndSignatory did slid . api $ do
       (throwM . SomeDBExtraException $ conflictError $ "Document not pending")
     whenM (hasSigned <$> fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
       (throwM . SomeDBExtraException $ conflictError $ "Document already signed")
-    whenM (signatoryNeedsToIdentifyToView =<< fromJust . getSigLinkFor slid <$> theDocument) $ do
+    whenM (theDocument >>= \doc -> signatoryNeedsToIdentifyToView (fromJust $ getSigLinkFor slid doc) doc) $ do
       (throwM . SomeDBExtraException $ forbidden "Authorization to view is needed")
     checkAuthenticationToSignMethodAndValue slid
     authorization <- signatorylinkauthenticationtosignmethod <$> fromJust . getSigLinkFor slid <$> theDocument
@@ -557,7 +557,7 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
       (throwM . SomeDBExtraException $ conflictError $ "Document not pending")
     whenM (hasSigned <$> fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
       (throwM . SomeDBExtraException $ conflictError $ "Document already signed")
-    whenM (signatoryNeedsToIdentifyToView =<< fromJust . getSigLinkFor slid <$> theDocument) $ do
+    whenM (theDocument >>= \doc -> signatoryNeedsToIdentifyToView (fromJust $ getSigLinkFor slid doc) doc) $ do
       (throwM . SomeDBExtraException $ forbidden "Authorization to view is needed")
     unlessM (allRequiredAuthorAttachmentsAreAccepted acceptedAuthorAttachments) $ do
       unlessM (isAuthor <$> fromJust . getSigLinkFor slid <$> theDocument) $ do -- Author does not need to accept attachments
@@ -782,7 +782,7 @@ apiCallV1ChangeAuthenticationToView did slid = logDocumentAndSignatory did slid 
       Just phone -> unless (isValidPhoneForAuthenticationToView authtoview phone) $
         throwM . SomeDBExtraException $ badInput "The phone number you provided is not valid for the authentication method"
     -- Change authentication method and return Document JSON
-    dbUpdate $ ChangeAuthenticationToViewMethod slid authtoview mSSN mPhone actor
+    dbUpdate $ ChangeAuthenticationToViewMethod slid AuthenticationToView authtoview mSSN mPhone actor
     Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
   where
     isValidSSNForAuthenticationToView :: AuthenticationToViewMethod -> String -> Bool
@@ -878,7 +878,9 @@ apiCallV1ChangeAuthenticationToSign did slid = logDocumentAndSignatory did slid 
 
 guardAuthenticationMethodsCanMix :: Kontrakcja m => AuthenticationToViewMethod -> AuthenticationToSignMethod -> m ()
 guardAuthenticationMethodsCanMix authtoview authtosign = do
-  when (not $ authenticationMethodsCanMix authtoview authtosign)
+  -- API v1 doesn't deal with auth-to-view-archived
+  let authToViewArchived = StandardAuthenticationToView
+  when (not $ authenticationMethodsCanMix authtoview authtosign authToViewArchived)
     (throwM . SomeDBExtraException $ badInput $ "Can't mix " <> show authtoview <> " and " <> show authtosign <> ".")
 
 apiCallV1Remind :: Kontrakcja m => DocumentID -> m Response
@@ -1132,13 +1134,14 @@ apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
   doc <- do
            case (msid, mmh, maccesstoken) of
             (Just sid, Just mh, _) -> do
-              (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
-                sl <- apiGuardJustM  (serverError "Signatory does not exist") $ getSigLinkFor sid <$> theDocument
-                guardThatDocumentIsReadableBySignatories =<< theDocument
-                whenM (signatoryNeedsToIdentifyToView sl) $ do
-                  unless (isAuthor sl) $ do
+              (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` theDocument >>= \doc -> do
+                sl <- apiGuardJustM  (serverError "Signatory does not exist") $
+                        pure $ getSigLinkFor sid doc
+                guardThatDocumentIsReadableBySignatories doc
+                whenM (signatoryNeedsToIdentifyToView sl doc) $ do
+                  when (isClosed doc || not (isAuthor sl)) $ do
                     throwM . SomeDBExtraException $ forbidden "Authorization to view is needed"
-                theDocument
+                return doc
             (_, _, Just _) -> getDocByDocIDAndAccessTokenV1 did maccesstoken
             _ ->  do
                   (user, _actor, external) <- getAPIUser APIDocCheck
@@ -1177,13 +1180,14 @@ apiCallV1DownloadFile did fileid nameForBrowser = logDocumentAndFile did fileid 
   doc <- do
            case (msid, mmh, maccesstoken) of
             (Just sid, Just mh, _) -> do
-              (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
-                sl <- apiGuardJustM  (serverError "Signatory does not exist") $ getSigLinkFor sid <$> theDocument
-                guardThatDocumentIsReadableBySignatories =<< theDocument
-                whenM (signatoryNeedsToIdentifyToView sl) $ do
-                  unless (isAuthor sl) $ do
+              (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` theDocument >>= \doc -> do
+                sl <- apiGuardJustM  (serverError "Signatory does not exist") $
+                        pure (getSigLinkFor sid doc)
+                guardThatDocumentIsReadableBySignatories doc
+                whenM (signatoryNeedsToIdentifyToView sl doc) $ do
+                  when (isClosed doc || not (isAuthor sl)) $ do
                     throwM . SomeDBExtraException $ forbidden "Authorization to view is needed"
-                theDocument
+                return doc
             (_, _, Just _accesstoken) -> getDocByDocIDAndAccessTokenV1 did maccesstoken
             _ ->  do
                   (user, _actor, external) <- getAPIUser APIDocCheck

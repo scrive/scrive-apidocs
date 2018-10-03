@@ -60,6 +60,7 @@ documentAPIV2  = dir "documents" $ choice [
   , param $ param $ dir "sign"                    $ hPost $ toK2 $ docApiV2SigSign
   , param $ param $ dir "check"                   $ hPost $ toK2 $ docApiV2SigCheck
   , param $ param $ dir "setauthenticationtoview" $ hPost $ toK2 $ docApiV2SigSetAuthenticationToView
+  , param $ param $ dir "setauthenticationtoviewarchived" $ hPost $ toK2 $ docApiV2SigSetAuthenticationToViewArchived
   , param $ param $ dir "setauthenticationtosign" $ hPost $ toK2 $ docApiV2SigSetAuthenticationToSign
   , param $ param $ dir "changeemailandmobile"    $ hPost $ toK2 $ docApiV2SigChangeEmailAndMobile
   , param $ param $ dir "reject"                  $ hPost $ toK2 $ docApiV2SigReject

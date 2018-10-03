@@ -137,8 +137,8 @@ checkSignatoryPinToSign slid (SignatoryFieldsValuesForSigning fields) pin = do
   pin' <- dbQuery $ GetSignatoryPin SMSPinToSign slid mobile
   return $ pin == pin'
 
-checkSignatoryPinToView :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> String -> m Bool
-checkSignatoryPinToView slid pin = do
+checkSignatoryPinToView :: (Kontrakcja m, DocumentMonad m) => SMSPinType -> SignatoryLinkID -> String -> m Bool
+checkSignatoryPinToView pinType slid pin = do
   sl <- guardGetSignatoryFromIdForDocument slid
-  pin' <- dbQuery $ GetSignatoryPin SMSPinToView slid (getMobile sl)
+  pin' <- dbQuery $ GetSignatoryPin pinType slid (getMobile sl)
   return $ pin == pin'

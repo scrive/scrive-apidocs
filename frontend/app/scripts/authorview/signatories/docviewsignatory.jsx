@@ -4,6 +4,7 @@ var BackboneMixin = require("../../common/backbone_mixin");
 var Backbone = require("backbone");
 var LanguageService = require("../../common/language_service");
 var ChangeAuthenticationToViewModal = require("./changeauthenticationtoviewmodal");
+var ChangeAuthenticationToViewArchivedModal = require("./changeauthenticationtoviewarchivedmodal");
 var ChangeAuthenticationToSignModal = require("./changeauthenticationtosignmodal");
 var ChangeSignatoryDetailModal = require("./changesignatorydetailmodal");
 var ChangeEmailAndMobileModal = require("./changeemailandmobilemodal");
@@ -31,6 +32,7 @@ var EmailModal = require("../../common/email_modal");
         showShowAPIDeliveryModal: false,
         showChangeAuthenticationToSignMethodModal: false,
         showChangeAuthenticationToViewMethodModal: false,
+        showChangeAuthenticationToViewArchivedMethodModal: false,
         showChangeEmailModal: false,
         showChangeMobileModal: false,
         showChangeEmailAndMobileModal: false,
@@ -375,9 +377,18 @@ var EmailModal = require("../../common/email_modal");
       this.setState({showChangeAuthenticationToViewMethodModal: false});
     },
 
+    handleChangeAuthenticationToViewArchivedMethod: function () {
+      this.setState({showChangeAuthenticationToViewArchivedMethodModal: true});
+    },
+
+    onChangeAuthenticationToViewArchivedMethodModalClose: function () {
+      this.setState({showChangeAuthenticationToViewArchivedMethodModal: false});
+    },
+
     handleChangeAuthenticationToSignMethod: function () {
       this.setState({showChangeAuthenticationToSignMethodModal: true});
     },
+
 
     onChangeAuthenticationToSignMethodModalClose: function () {
       this.setState({showChangeAuthenticationToSignMethodModal: false});
@@ -451,6 +462,23 @@ var EmailModal = require("../../common/email_modal");
       } else if (signatory.fiTupasAuthenticationToView()) {
         return localization.docview.signatory.authenticationToViewFITupas;
       } else if (signatory.smsPinAuthenticationToView()) {
+        return localization.docview.signatory.authenticationToViewSMSPin;
+      }
+    },
+
+    getAuthenticationToViewArchivedMethodText: function () {
+      var signatory = this.props.signatory;
+      if (signatory.standardAuthenticationToViewArchived()) {
+        return localization.docview.signatory.authenticationToViewStandard;
+      } else if (signatory.seBankIDAuthenticationToViewArchived()) {
+        return localization.docview.signatory.authenticationToViewSEBankID;
+      } else if (signatory.noBankIDAuthenticationToViewArchived()) {
+        return localization.docview.signatory.authenticationToViewNOBankID;
+      } else if (signatory.dkNemIDAuthenticationToViewArchived()) {
+        return localization.docview.signatory.authenticationToViewDKNemID;
+      } else if (signatory.fiTupasAuthenticationToViewArchived()) {
+        return localization.docview.signatory.authenticationToViewFITupas;
+      } else if (signatory.smsPinAuthenticationToViewArchived()) {
         return localization.docview.signatory.authenticationToViewSMSPin;
       }
     },
@@ -671,6 +699,20 @@ var EmailModal = require("../../common/email_modal");
                   {localization.docview.signatory.secondaryConfirmation}: {this.getConfirmationAttachments()}
                 </span>
               </div>
+              {/* if */ signatory.signs() &&
+                <div className="fieldrow">
+                  {/* if */ this.hasChangeAuthenticationToView() &&
+                    <a className="edit clickable" onClick={this.handleChangeAuthenticationToViewArchivedMethod}>
+                      {localization.docview.signatory.editAuthenticationToViewArchivedMethod}
+                    </a>
+                  }
+                  <span className="authentication-to-view field"
+                        title={this.getAuthenticationToViewArchivedMethodText()}>
+                    {localization.docview.signatory.authenticationToViewArchived}:
+                      {this.getAuthenticationToViewArchivedMethodText()}
+                  </span>
+                </div>
+              }
             </div>
           }
           <div className={"statusbox " + (this.hasAnyOptions() ? "" : "last")} >
@@ -757,6 +799,14 @@ var EmailModal = require("../../common/email_modal");
             key={"change-auth-view-modal-" + signatory.signatoryid()}
             signatory={signatory}
             onClose={this.onChangeAuthenticationToViewMethodModalClose}
+            onAction={this.props.onAction}
+          />
+
+          <ChangeAuthenticationToViewArchivedModal
+            active={this.state.showChangeAuthenticationToViewArchivedMethodModal}
+            key={"change-auth-view-archived-modal-" + signatory.signatoryid()}
+            signatory={signatory}
+            onClose={this.onChangeAuthenticationToViewArchivedMethodModalClose}
             onAction={this.props.onAction}
           />
 

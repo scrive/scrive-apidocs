@@ -31,6 +31,8 @@ module Util.SignatoryLinkUtils (
   authToSignNeedsMobileNumber
        ) where
 
+import qualified Data.Set as S
+
 import Doc.DocStateData
 import Doc.SignatoryLinkID
 import EID.Authentication.Model
@@ -162,17 +164,48 @@ isSigLinkFor i sl = maybe False (isJustSigLinkFor i) (getMaybeSignatoryLink sl)
 getSigLinkFor :: (SignatoryLinkIdentity a) => a -> Document -> Maybe SignatoryLink
 getSigLinkFor a d = find (isSigLinkFor a) (documentsignatorylinks d)
 
-authenticationMethodsCanMix :: AuthenticationToViewMethod -> AuthenticationToSignMethod -> Bool
-authenticationMethodsCanMix NOBankIDAuthenticationToView SEBankIDAuthenticationToSign = False
-authenticationMethodsCanMix NOBankIDAuthenticationToView DKNemIDAuthenticationToSign  = False
-authenticationMethodsCanMix DKNemIDAuthenticationToView  SEBankIDAuthenticationToSign = False
-authenticationMethodsCanMix DKNemIDAuthenticationToView  NOBankIDAuthenticationToSign = False
-authenticationMethodsCanMix SEBankIDAuthenticationToView NOBankIDAuthenticationToSign = False
-authenticationMethodsCanMix SEBankIDAuthenticationToView DKNemIDAuthenticationToSign  = False
-authenticationMethodsCanMix FITupasAuthenticationToView  SEBankIDAuthenticationToSign = False
-authenticationMethodsCanMix FITupasAuthenticationToView  NOBankIDAuthenticationToSign = False
-authenticationMethodsCanMix FITupasAuthenticationToView  DKNemIDAuthenticationToSign  = False
-authenticationMethodsCanMix _ _ = True
+----------------------------------------
+
+-- | Internal helper type for checking whether authentication types can mix.
+data MixAuthMethod
+  = MAM_Standard
+  | MAM_SEBankID
+  | MAM_NOBankID
+  | MAM_DKNemID
+  | MAM_SMSPin
+  | MAM_FITupas
+  deriving (Eq, Ord, Show)
+
+atvToMix :: AuthenticationToViewMethod -> MixAuthMethod
+atvToMix StandardAuthenticationToView = MAM_Standard
+atvToMix SEBankIDAuthenticationToView = MAM_SEBankID
+atvToMix NOBankIDAuthenticationToView = MAM_NOBankID
+atvToMix DKNemIDAuthenticationToView  = MAM_DKNemID
+atvToMix SMSPinAuthenticationToView   = MAM_SMSPin
+atvToMix FITupasAuthenticationToView  = MAM_FITupas
+
+atsToMix :: AuthenticationToSignMethod -> MixAuthMethod
+atsToMix StandardAuthenticationToSign = MAM_Standard
+atsToMix SEBankIDAuthenticationToSign = MAM_SEBankID
+atsToMix SMSPinAuthenticationToSign   = MAM_SMSPin
+atsToMix NOBankIDAuthenticationToSign = MAM_NOBankID
+atsToMix DKNemIDAuthenticationToSign  = MAM_DKNemID
+
+authenticationMethodsCanMix
+  :: AuthenticationToViewMethod
+  -> AuthenticationToSignMethod
+  -> AuthenticationToViewMethod
+  -> Bool
+authenticationMethodsCanMix authToView authToSign authToViewArchived =
+  let auths = S.fromList [ atvToMix authToView
+                         , atsToMix authToSign
+                         , atvToMix authToViewArchived
+                         ]
+      eids  = S.fromList [MAM_SEBankID, MAM_NOBankID, MAM_DKNemID, MAM_FITupas]
+  -- We allow at most one EID authentication method within a signatory.
+  in length (auths `S.intersection` eids) <= 1
+
+----------------------------------------
 
 authViewMatchesAuth :: AuthenticationToViewMethod -> EAuthentication -> Bool
 authViewMatchesAuth NOBankIDAuthenticationToView NetsNOBankIDAuthentication_{} = True

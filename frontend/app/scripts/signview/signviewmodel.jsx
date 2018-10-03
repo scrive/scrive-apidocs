@@ -200,11 +200,16 @@ var Track = require("../common/track");
       var signatory = this.document().currentSignatory();
       var field = signatory.personalnumberField();
       if (field != undefined && (!field.hasPlacements()) && field.obligatory()) {
-        if (signatory.noBankIDAuthenticationToView()) {
+        if (signatory.noBankIDAuthenticationToView()
+            || signatory.noBankIDAuthenticationToViewArchived()) {
           return !new SSNForNOBankIDValidation().validateData(field.value());
-        } else if (signatory.seBankIDAuthenticationToView() || signatory.seBankIDAuthenticationToSign()) {
+        } else if (signatory.seBankIDAuthenticationToView()
+                   || signatory.seBankIDAuthenticationToViewArchived()
+                   || signatory.seBankIDAuthenticationToSign()) {
           return !new SSNForSEBankIDValidation().validateData(field.value());
-        } else if (signatory.dkNemIDAuthenticationToView() || signatory.dkNemIDAuthenticationToSign()) {
+        } else if (signatory.dkNemIDAuthenticationToView()
+                   || signatory.dkNemIDAuthenticationToViewArchived()
+                   || signatory.dkNemIDAuthenticationToSign()) {
           return !new SSNForDKNemIDValidation().validateData(field.value());
         } else if (signatory.fiTupasAuthenticationToView()) {
           return !new SSNForFITupasValidation().validateData(field.value());

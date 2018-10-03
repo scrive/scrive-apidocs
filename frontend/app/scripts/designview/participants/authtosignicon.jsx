@@ -39,7 +39,7 @@ module.exports = React.createClass({
         this.refs.blockingModal.openContactUsModal();
       } else {
         ams = ams.filter(function (am) {
-            return sig.authenticationMethodsCanMix(sig.authenticationToView(), am);
+            return sig.authenticationMethodsCanMix(sig.authenticationToView(), am, sig.authenticationToViewArchived());
          });
         // newIndex will be 0 ("standard") if the selected method is not enabled anymore
         var newIndex = _.indexOf(ams, sig.authenticationToSign()) + 1;

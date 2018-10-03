@@ -2,7 +2,8 @@ module EID.Authentication.Migrations (
     addSignatoryIPToEIDAuthentications
   , addSMSPinAuthAdjustmentsToEIDAuthentications
   , addFIAuthChecksToEIDAuthentications
-) where
+  , addAuthenticationKindToEIDAuthentications
+  ) where
 
 import DB
 import EID.Authentication.Tables
@@ -53,4 +54,21 @@ addFIAuthChecksToEIDAuthentications = Migration {
             Check "check_nets_fi_tupas_authentications_have_all_required_fields"
                 "provider = 5 AND signatory_name IS NOT NULL AND signatory_date_of_birth IS NOT NULL OR provider <> 5"
           ]
+  }
+
+addAuthenticationKindToEIDAuthentications :: MonadDB m => Migration m
+addAuthenticationKindToEIDAuthentications = Migration {
+    mgrTableName = tblName tableEIDAuthentications
+  , mgrFrom = 5
+  , mgrAction = StandardMigration $ do
+      let tname = tblName tableEIDAuthentications
+      runQuery_ . sqlDropIndex tname $ indexOnColumn "signatory_link_id"
+      runQuery_ $ sqlAlterTable tname
+        [ sqlDropPK tname
+        , sqlAddColumn tblColumn { colName = "auth_kind", colType = SmallIntT, colNullable = False, colDefault = Just "1" }
+        ]
+      runQuery_ $ sqlAlterTable tname
+        [ sqlAlterColumn "auth_kind" "DROP DEFAULT"
+        , sqlAddPK tname . fromJust $ pkOnColumns ["signatory_link_id", "auth_kind"]
+        ]
   }

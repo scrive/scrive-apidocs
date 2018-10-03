@@ -214,28 +214,27 @@ var Modal = require("../../common/modal");
       var sig = model.signatory();
       var options = [];
 
+      var isAvailable = function (auth) {
+        return sig.authenticationMethodsCanMix(auth,
+                                               sig.authenticationToSign(),
+                                               sig.authenticationToViewArchived());
+      };
+
       var standard = {
         name: localization.docview.signatory.authenticationToViewStandard,
         selected: model.isAuthenticationStandard(),
         value: model.standardAuthenticationValue()
       };
-      if (sig.standardAuthenticationToView() ||
-          ff.canUseStandardAuthenticationToView()
-         ) {
+      if (ff.canUseStandardAuthenticationToView() && isAvailable(standard.value)) {
         options.push(standard);
       }
-
 
       var seBankid = {
         name: localization.docview.signatory.authenticationToViewSEBankID,
         selected: model.isAuthenticationSEBankID(),
         value: model.SEBankIDAuthenticationValue()
       };
-
-      if (sig.seBankIDAuthenticationToView() ||
-         (ff.canUseSEAuthenticationToView()
-           && !sig.dkNemIDAuthenticationToSign()
-           && !sig.noBankIDAuthenticationToSign())) {
+      if (ff.canUseSEAuthenticationToView() && isAvailable(seBankid.value)) {
         options.push(seBankid);
       }
 
@@ -244,12 +243,7 @@ var Modal = require("../../common/modal");
         selected: model.isAuthenticationNOBankID(),
         value: model.NOBankIDAuthenticationValue()
       };
-
-      if (sig.noBankIDAuthenticationToView() ||
-         (ff.canUseNOAuthenticationToView()
-           && !sig.dkNemIDAuthenticationToSign()
-           && !sig.seBankIDAuthenticationToSign())
-      ) {
+      if (ff.canUseNOAuthenticationToView() && isAvailable(noBankid.value)) {
         options.push(noBankid);
       }
 
@@ -258,12 +252,7 @@ var Modal = require("../../common/modal");
         selected: model.isAuthenticationDKNemID(),
         value: model.DKNemIDAuthenticationValue()
       };
-
-      if (sig.dkNemIDAuthenticationToView() ||
-         (ff.canUseDKAuthenticationToView()
-          && !sig.seBankIDAuthenticationToSign()
-          && !sig.noBankIDAuthenticationToSign())
-      ) {
+      if (ff.canUseDKAuthenticationToView() && isAvailable(dkNemid.value)) {
         options.push(dkNemid);
       }
 
@@ -272,13 +261,7 @@ var Modal = require("../../common/modal");
         selected: model.isAuthenticationFITupas(),
         value: model.FITupasAuthenticationValue()
       };
-
-      if (sig.fiTupasAuthenticationToView() ||
-         (ff.canUseFIAuthenticationToView()
-          && !sig.seBankIDAuthenticationToSign()
-          && !sig.noBankIDAuthenticationToSign()
-          && !sig.dkNemIDAuthenticationToSign())
-      ) {
+      if (ff.canUseFIAuthenticationToView() && isAvailable(fiTupas.value)) {
         options.push(fiTupas);
       }
 
@@ -287,10 +270,7 @@ var Modal = require("../../common/modal");
         selected: model.isAuthenticationSMSPin(),
         value: model.SMSPinAuthenticationValue()
       };
-
-      if (sig.smsPinAuthenticationToView() ||
-          ff.canUseSMSPinAuthenticationToView()
-      ) {
+      if (ff.canUseSMSPinAuthenticationToView() && isAvailable(smsPin.value)) {
         options.push(smsPin);
       }
 

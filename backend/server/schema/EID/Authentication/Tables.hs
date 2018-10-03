@@ -5,7 +5,7 @@ import DB
 tableEIDAuthentications :: Table
 tableEIDAuthentications = tblTable {
   tblName = "eid_authentications"
-, tblVersion = 5
+, tblVersion = 6
 , tblColumns = [
     tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
   , tblColumn { colName = "provider", colType = SmallIntT, colNullable = False }
@@ -18,9 +18,9 @@ tableEIDAuthentications = tblTable {
   , tblColumn { colName = "signatory_phone_number", colType = TextT }
   , tblColumn { colName = "signatory_date_of_birth", colType = TextT}
   , tblColumn { colName = "signatory_ip", colType = TextT }
+  , tblColumn { colName = "auth_kind", colType = SmallIntT, colNullable = False }
   ]
--- only one authentication per signatory. can be relaxed later if necessary.
-, tblPrimaryKey = pkOnColumn "signatory_link_id"
+, tblPrimaryKey = pkOnColumns ["signatory_link_id", "auth_kind"]
 , tblChecks = [
       -- Minimal checks to guarantee that fetch error on fromJust will not happen
       Check "check_cgi_se_bankid_authentications_have_all_required_fields"
@@ -41,8 +41,5 @@ tableEIDAuthentications = tblTable {
     (fkOnColumn "session_id" "sessions" "id") {
       fkOnDelete = ForeignKeySetNull
     }
-  ]
-, tblIndexes = [
-    indexOnColumn "signatory_link_id"
   ]
 }

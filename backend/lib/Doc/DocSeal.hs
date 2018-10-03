@@ -105,8 +105,7 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
                            else renderTemplate "_contractsealingtextspersonalNumberText" $ F.value "idnumber" personalnumber
 
     eauthentication <- dbQuery $
-      GetEAuthenticationWithoutSession $ signatorylinkid signatory
-
+      GetEAuthenticationWithoutSession AuthenticationToView $ signatorylinkid signatory
     identifiedNameText <- case eauthentication of
 
         Just (CGISEBankIDAuthentication_ authentication)  ->

@@ -25,7 +25,7 @@ module.exports = React.createClass({
   },
   onClick: function () {
     var sig = this.props.model;
-    Track.track("Choose auth to view", {
+    Track.track("Choose auth to view archived", {
       Where: "icon"
     });
     if (!sig.signs()) {
@@ -39,37 +39,37 @@ module.exports = React.createClass({
         this.refs.blockingModal.openContactUsModal();
       } else {
         ams = ams.filter(function (am) {
-            return sig.authenticationMethodsCanMix(am, sig.authenticationToSign(), sig.authenticationToViewArchived());
+            return sig.authenticationMethodsCanMix(sig.authenticationToView(), sig.authenticationToSign(), am);
         });
         // newIndex will be 0 ("standard") if the selected auth method is not enabled anymore
-        var newIndex = _.indexOf(ams, sig.authenticationToView()) + 1;
+        var newIndex = _.indexOf(ams, sig.authenticationToViewArchived()) + 1;
         // the new auth can stay the same ("standard"), if the other methods are not compatible
         // with auth to view
-        sig.setAuthenticationToView(ams[newIndex % ams.length]);
+        sig.setAuthenticationToViewArchived(ams[newIndex % ams.length]);
       }
     }
   },
   icon: function () {
     var sig = this.props.model;
-    if (sig.standardAuthenticationToView() || !sig.signs()) {
+    if (sig.standardAuthenticationToViewArchived() || !sig.signs()) {
       return "design-view-action-participant-icon-auth-to-view-icon-noauth";
-    } else if (sig.seBankIDAuthenticationToView()) {
+    } else if (sig.seBankIDAuthenticationToViewArchived()) {
       return "design-view-action-participant-icon-auth-to-view-icon-se-bankid";
-    } else if (sig.noBankIDAuthenticationToView()) {
+    } else if (sig.noBankIDAuthenticationToViewArchived()) {
       return "design-view-action-participant-icon-auth-to-view-icon-no-bankid";
-    } else if (sig.dkNemIDAuthenticationToView()) {
+    } else if (sig.dkNemIDAuthenticationToViewArchived()) {
       return "design-view-action-participant-icon-auth-to-view-icon-dk-nemid";
-    } else if (sig.fiTupasAuthenticationToView()) {
+    } else if (sig.fiTupasAuthenticationToViewArchived()) {
       return "design-view-action-participant-icon-auth-to-view-icon-fi-tupas";
-    } else if (sig.smsPinAuthenticationToView()) {
+    } else if (sig.smsPinAuthenticationToViewArchived()) {
       return "design-view-action-participant-icon-auth-to-view-icon-sms-pin";
     }
   },
   title: function () {
-    var title = [localization.designview.addParties.authenticationToView];
+    var title = [localization.designview.addParties.authenticationToViewArchived];
 
     var authMethod = (
-      this.props.model.signs() ? this.props.model.authenticationToView() : "standard"
+      this.props.model.signs() ? this.props.model.authenticationToViewArchived() : "standard"
     );
 
     if (authMethod == "standard") {

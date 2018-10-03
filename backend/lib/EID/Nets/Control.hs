@@ -30,6 +30,7 @@ import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocumentID
 import Doc.DocumentMonad
+import Doc.DocUtils
 import Doc.Model
 import Doc.SignatoryLinkID
 import EID.CGI.GRP.Control (guardThatPersonalNumberMatches)
@@ -132,7 +133,7 @@ handleResolve = do
           link <- currentLink
           return $ internalResponse $ LinkExternal $ replace (ctxDomainUrl ctx) (netsTransactionDomain nt) link
         (Just nt, Just art) -> do
-          (doc,sl) <- getDocumentAndSignatoryForEID (netsDocumentID nt) (netsSignatoryID nt)
+          (doc,sl) <- getDocumentAndSignatoryForEIDAuth (netsDocumentID nt) (netsSignatoryID nt)
           certErrorHandler <- mkCertErrorHandler
           debugFunction <- mkDebugFunction
           let netsAuth =  CurlAuthBasic (netsMerchantIdentifier netsconf) (netsMerchantPassword netsconf)
@@ -197,15 +198,16 @@ handleResolveNetsNOBankID res doc nt sl ctx = do
       return False
     else do
       -- Put NO BankID transaction in DB
-      dbUpdate $ EID.MergeNetsNOBankIDAuthentication sessionID (netsSignatoryID nt) $ NetsNOBankIDAuthentication {
+      dbUpdate $ EID.MergeNetsNOBankIDAuthentication (mkAuthKind doc) sessionID (netsSignatoryID nt) $ NetsNOBankIDAuthentication {
             netsNOBankIDInternalProvider = internal_provider
           , netsNOBankIDSignatoryName = signatoryName
           , netsNOBankIDPhoneNumber = mphone
           , netsNOBankIDDateOfBirth = dob
           , netsNOBankIDCertificate = certificate
         }
-
-      withDocument doc $ do
+      -- Record evidence only for auth-to-view (i.e. if the document is not
+      -- closed).
+      when (mkAuthKind doc == AuthenticationToView) . withDocument doc $ do
         --Add evidence
         let eventFields = do
              F.value "signatory_name" signatoryName
@@ -259,14 +261,16 @@ handleResolveNetsDKNemID res doc nt sl ctx = do
       let certificate = decodeCertificate $ attributeFromAssertion "CERTIFICATE" $ assertionAttributes res
 
       -- Put DK Nem ID transaction in DB
-      dbUpdate $ EID.MergeNetsDKNemIDAuthentication sessionID (netsSignatoryID nt) $ NetsDKNemIDAuthentication {
+      dbUpdate $ EID.MergeNetsDKNemIDAuthentication (mkAuthKind doc) sessionID (netsSignatoryID nt) $ NetsDKNemIDAuthentication {
             netsDKNemIDInternalProvider = internal_provider
           , netsDKNemIDSignatoryName = signatoryName
           , netsDKNemIDDateOfBirth = dob
           , netsDKNemIDCertificate = certificate
         }
 
-      withDocument doc $ do
+      -- Record evidence only for auth-to-view (i.e. if the document is not
+      -- closed).
+      when (mkAuthKind doc == AuthenticationToView) . withDocument doc $ do
         --Add evidence
         let eventFields = do
              F.value "signatory_name" signatoryName
@@ -305,12 +309,14 @@ handleResolveNetsFITupas res doc nt sl ctx = do
       return False
     else do
       -- Put FI TUPAS Nem ID transaction in DB
-      dbUpdate $ EID.MergeNetsFITupasAuthentication sessionID (netsSignatoryID nt) $ NetsFITupasAuthentication {
+      dbUpdate $ EID.MergeNetsFITupasAuthentication (mkAuthKind doc) sessionID (netsSignatoryID nt) $ NetsFITupasAuthentication {
             netsFITupasSignatoryName = signatoryName
           , netsFITupasDateOfBirth = dob
         }
 
-      withDocument doc $ do
+      -- Record evidence only for auth-to-view (i.e. if the document is not
+      -- closed).
+      when (mkAuthKind doc == AuthenticationToView) . withDocument doc $ do
         --Add evidence
         let eventFields = do
              F.value "signatory_name" signatoryName

@@ -4,6 +4,7 @@ module Doc.Data.SignatoryLink (
   , SignInfo(..)
   , DeliveryStatus(..)
   , CSVUpload(..)
+  , AuthenticationKind(..)
   , AuthenticationToViewMethod(..)
   , AuthenticationToSignMethod(..)
   , DeliveryMethod(..)
@@ -103,6 +104,34 @@ instance FromSQL [[String]] where
 instance ToSQL [[String]] where
   type PQDest [[String]] = PQDest String
   toSQL = jsonToSQL
+
+---------------------------------
+
+-- | Kind of an authentication to view.
+data AuthenticationKind
+  = AuthenticationToView
+  | AuthenticationToViewArchived
+    deriving (Eq, Ord, Show)
+
+instance PQFormat AuthenticationKind where
+  pqFormat = pqFormat @Int16
+
+instance FromSQL AuthenticationKind where
+  type PQBase AuthenticationKind = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      1 -> return AuthenticationToView
+      2 -> return AuthenticationToViewArchived
+      _ -> throwM RangeError {
+        reRange = [(1, 2)]
+      , reValue = n
+      }
+
+instance ToSQL AuthenticationKind where
+  type PQDest AuthenticationKind = PQDest Int16
+  toSQL AuthenticationToView         = toSQL (1::Int16)
+  toSQL AuthenticationToViewArchived = toSQL (2::Int16)
 
 ---------------------------------
 
@@ -289,7 +318,8 @@ data SignatoryLink = SignatoryLink {
 , signatorylinkrejectredirecturl          :: !(Maybe String)
 , signatorylinkrejectiontime              :: !(Maybe UTCTime)
 , signatorylinkrejectionreason            :: !(Maybe String)
-, signatorylinkauthenticationtoviewmethod :: !AuthenticationToViewMethod
+, signatorylinkauthenticationtoviewmethod         :: !AuthenticationToViewMethod
+, signatorylinkauthenticationtoviewarchivedmethod :: !AuthenticationToViewMethod
 , signatorylinkauthenticationtosignmethod :: !AuthenticationToSignMethod
 , signatorylinkdeliverymethod             :: !DeliveryMethod
 , signatorylinkconfirmationdeliverymethod :: !ConfirmationDeliveryMethod
@@ -326,6 +356,7 @@ instance Default SignatoryLink where
   , signatorylinkrejectiontime = Nothing
   , signatorylinkrejectionreason = Nothing
   , signatorylinkauthenticationtoviewmethod = StandardAuthenticationToView
+  , signatorylinkauthenticationtoviewarchivedmethod = StandardAuthenticationToView
   , signatorylinkauthenticationtosignmethod = StandardAuthenticationToSign
   , signatorylinkdeliverymethod = EmailDelivery
   , signatorylinkconfirmationdeliverymethod = EmailConfirmationDelivery
@@ -371,6 +402,7 @@ signatoryLinksSelectors = [
   , "signatory_links.rejection_time"
   , "signatory_links.rejection_reason"
   , "signatory_links.authentication_to_view_method"
+  , "signatory_links.authentication_to_view_archived_method"
   , "signatory_links.authentication_to_sign_method"
   , "signatory_links.delivery_method"
   , "signatory_links.confirmation_delivery_method"
@@ -381,13 +413,13 @@ signatoryLinksSelectors = [
   , "ARRAY(SELECT (" <> mintercalate ", " signatoryConsentQuestionsSelectors <> ")::signatory_consent_question FROM signatory_link_consent_questions WHERE signatory_links.id = signatory_link_consent_questions.signatory_link_id ORDER BY position ASC)"
   ]
 
-type instance CompositeRow SignatoryLink = (SignatoryLinkID, CompositeArray1 SignatoryField, Bool, Bool, SignOrder, MagicHash, Maybe UserID, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, DeliveryStatus, DeliveryStatus, Maybe UTCTime, Maybe UTCTime, Maybe [[String]], CompositeArray1 SignatoryAttachment,CompositeArray1 HighlightedPage, Maybe String, Maybe String, Maybe UTCTime, Maybe String, AuthenticationToViewMethod, AuthenticationToSignMethod, DeliveryMethod, ConfirmationDeliveryMethod, Bool, Bool, Bool, Maybe String, CompositeArray1 SignatoryConsentQuestion)
+type instance CompositeRow SignatoryLink = (SignatoryLinkID, CompositeArray1 SignatoryField, Bool, Bool, SignOrder, MagicHash, Maybe UserID, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, DeliveryStatus, DeliveryStatus, Maybe UTCTime, Maybe UTCTime, Maybe [[String]], CompositeArray1 SignatoryAttachment,CompositeArray1 HighlightedPage, Maybe String, Maybe String, Maybe UTCTime, Maybe String, AuthenticationToViewMethod, AuthenticationToViewMethod, AuthenticationToSignMethod, DeliveryMethod, ConfirmationDeliveryMethod, Bool, Bool, Bool, Maybe String, CompositeArray1 SignatoryConsentQuestion)
 
 instance PQFormat SignatoryLink where
   pqFormat = "%signatory_link"
 
 instance CompositeFromSQL SignatoryLink where
-  toComposite (slid, CompositeArray1 fields, is_author, is_partner, sign_order, magic_hash, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_contents, CompositeArray1 attachments, CompositeArray1 highlighted_pages, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_to_view_method, authentication_to_sign_method, delivery_method, confirmation_delivery_method, allows_highlighting, has_identified, hide_pn, consent_title, CompositeArray1 consent_questions) = SignatoryLink {
+  toComposite (slid, CompositeArray1 fields, is_author, is_partner, sign_order, magic_hash, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_contents, CompositeArray1 attachments, CompositeArray1 highlighted_pages, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_to_view_method, authentication_to_view_archived_method, authentication_to_sign_method, delivery_method, confirmation_delivery_method, allows_highlighting, has_identified, hide_pn, consent_title, CompositeArray1 consent_questions) = SignatoryLink {
     signatorylinkid = slid
   , signatoryfields = fields
   , signatoryisauthor = is_author
@@ -410,6 +442,7 @@ instance CompositeFromSQL SignatoryLink where
   , signatorylinkrejectiontime = mrejection_time
   , signatorylinkrejectionreason = mrejection_reason
   , signatorylinkauthenticationtoviewmethod = authentication_to_view_method
+  , signatorylinkauthenticationtoviewarchivedmethod = authentication_to_view_archived_method
   , signatorylinkauthenticationtosignmethod = authentication_to_sign_method
   , signatorylinkdeliverymethod = delivery_method
   , signatorylinkconfirmationdeliverymethod = confirmation_delivery_method

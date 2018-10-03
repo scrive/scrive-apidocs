@@ -150,6 +150,7 @@ insertSignatoryLinks did links = do
     sqlSetList "rejection_time" $ signatorylinkrejectiontime <$> links
     sqlSetList "rejection_reason" $ signatorylinkrejectionreason <$> links
     sqlSetList "authentication_to_view_method" $ signatorylinkauthenticationtoviewmethod <$> links
+    sqlSetList "authentication_to_view_archived_method" $ signatorylinkauthenticationtoviewarchivedmethod <$> links
     sqlSetList "authentication_to_sign_method" $ signatorylinkauthenticationtosignmethod <$> links
     sqlSetList "delivery_method" $ signatorylinkdeliverymethod <$> links
     sqlSetList "confirmation_delivery_method" $ signatorylinkconfirmationdeliverymethod <$> links
@@ -598,9 +599,9 @@ instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m)
           (F.value "oldphone" oldphone >> F.value "newphone" phone)
           actor
 
-data ChangeAuthenticationToViewMethod = ChangeAuthenticationToViewMethod SignatoryLinkID AuthenticationToViewMethod (Maybe String) (Maybe String) Actor
+data ChangeAuthenticationToViewMethod = ChangeAuthenticationToViewMethod SignatoryLinkID AuthenticationKind AuthenticationToViewMethod (Maybe String) (Maybe String) Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeAuthenticationToViewMethod () where
-  update (ChangeAuthenticationToViewMethod slid newAuthToView mSSN mPhone actor) = do
+  update (ChangeAuthenticationToViewMethod slid authKind newAuthToView mSSN mPhone actor) = do
     updateDocumentWithID $ const $ do
       -- Get the signatory link before the update
       sl <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid Nothing
@@ -608,7 +609,10 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
       let mobileField =  getFieldByIdentity MobileFI $ signatoryfields sl
       -- Update the authentication to view method
       kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
-        sqlSet "authentication_to_view_method" newAuthToView
+        let authField = case authKind of
+              AuthenticationToView         -> "authentication_to_view_method"
+              AuthenticationToViewArchived -> "authentication_to_view_archived_method"
+        sqlSet authField newAuthToView
         sqlWhereEq "id" slid
         sqlWhereSignatoryIsPartner
         sqlWhereSignatoryHasNotSigned
@@ -618,18 +622,22 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
           sqlWhereDocumentStatusIs Pending
       -- If the AuthenticationToViewMethod does *not* need a personal number we
       -- need to check if it is still needed, otherwise make the field
-      -- non-obligatory
-      -- If it *does* need it, we need to make sure the field is there and maybe
-      -- update the value
+      -- non-obligatory If it *does* need it, we need to make sure the field is
+      -- there and maybe update the value
+      let authToSign = signatorylinkauthenticationtosignmethod sl
+          otherAuthToView = case authKind of
+            AuthenticationToView -> signatorylinkauthenticationtoviewarchivedmethod sl
+            AuthenticationToViewArchived -> signatorylinkauthenticationtoviewmethod sl
       case authToViewNeedsPersonalNumber newAuthToView of
-        -- When new AuthenticationToViewMethod doesn't need a personal number,
-        -- we check that AuthenticationToSignMethod doesn't need it,
-        -- and set it to optional if we don't need it anymore
-        False -> when
-          (not $ authToSignNeedsPersonalNumber (signatorylinkauthenticationtosignmethod sl)
-            && (isJust $ ssnField)
-            && (not . null $ fromMaybe [] $ fmap fieldPlacements $ ssnField)
-          ) $
+        -- When new authentication to view method doesn't need a personal
+        -- number, we check if the authentication to view method of the other
+        -- kind or authentication to sign need it or if there are placements for
+        -- this field. We set it to optional if none of the above is true.
+        False -> when (and
+          [ not $ authToViewNeedsPersonalNumber otherAuthToView
+          , not $ authToSignNeedsPersonalNumber authToSign
+          , maybe False (null . fieldPlacements) ssnField
+          ]) $
           runQuery_ $ sqlUpdate "signatory_link_fields" $ do
            sqlSet "obligatory" False
            sqlWhereEq "signatory_link_id" slid
@@ -670,43 +678,87 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
       -- If the AuthenticationToViewMethod needs a mobile number field, check
       -- if it exists for the signatory and make sure it is there, optionally
       -- also update with the value supplied
-      when (authToViewNeedsMobileNumber newAuthToView) $ do
-        let oldPhone = fromMaybe "" $ fieldTextValue =<< mobileField
-            newPhone = fromMaybe "" mPhone
-        case mobileField of
-          Nothing -> runQuery_ . sqlInsert "signatory_link_fields" $ do
-            sqlSet "signatory_link_id" slid
-            sqlSet "obligatory" False
-            sqlSet "value_text" newPhone
-            sqlSet "type" MobileFT
-            sqlSet "editable_by_signatory" $ False
-          Just _ -> kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
-            sqlSet "value_text" $ fromMaybe oldPhone mPhone
-            sqlWhereEq "signatory_link_id" slid
-            sqlWhereEq "type" MobileFT
-        -- Add an EvidenceLog event if the value changed
-        when (newPhone /= oldPhone) $ do
-          sl' <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid Nothing
-          void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
-            UpdateFieldMobileEvidence
-            (do F.value "value" newPhone
-                F.value "previousvalue" oldPhone
-                when (newPhone == "") (F.value "newblank" True)
-                when (oldPhone == "") (F.value "prvblank" True)
-            )
-            (Just sl')
-            Nothing
-            actor
+      case authToViewNeedsMobileNumber newAuthToView of
+        -- When new authentication to view method doesn't need a mobile number,
+        -- we check if the authentication to view method of the other kind or
+        -- authentication to sign need it or if there are placements for this
+        -- field. We set it to optional if none of the above is true.
+        False -> when (and
+          [ not $ authToViewNeedsMobileNumber otherAuthToView
+          , not $ authToSignNeedsMobileNumber authToSign
+          , maybe False (null . fieldPlacements) mobileField
+          ]) $
+          runQuery_ $ sqlUpdate "signatory_link_fields" $ do
+           sqlSet "obligatory" False
+           sqlSet "editable_by_signatory" False
+           sqlWhereEq "signatory_link_id" slid
+           sqlWhereEq "type" MobileFT
+        True -> do
+          let oldPhone = fromMaybe "" $ fieldTextValue =<< mobileField
+              newPhone = fromMaybe "" mPhone
+          case mobileField of
+            Nothing -> runQuery_ . sqlInsert "signatory_link_fields" $ do
+              sqlSet "signatory_link_id" slid
+              sqlSet "value_text" newPhone
+              sqlSet "type" MobileFT
+              case authKind of
+                AuthenticationToView -> do
+                  sqlSet "obligatory" False
+                  sqlSet "editable_by_signatory" False
+                AuthenticationToViewArchived -> do
+                  -- Signatory needs to fill these out during signing in order to
+                  -- be able to authenticate to view after.
+                  sqlSet "obligatory" True
+                  sqlSet "editable_by_signatory" True
+            Just _ -> kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
+              sqlSet "value_text" $ fromMaybe oldPhone mPhone
+              sqlWhereEq "signatory_link_id" slid
+              sqlWhereEq "type" MobileFT
+              case authKind of
+                AuthenticationToView         -> return ()
+                AuthenticationToViewArchived -> do
+                  -- Signatory needs to fill these out during signing in order to
+                  -- be able to authenticate to view after.
+                  sqlSet "obligatory" True
+                  sqlSet "editable_by_signatory" True
+          -- Add an EvidenceLog event if the value changed
+          when (newPhone /= oldPhone) $ do
+            sl' <- theDocumentID >>= \did ->
+              dbQuery $ GetSignatoryLinkByID did slid Nothing
+            void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+              UpdateFieldMobileEvidence
+              (do F.value "value" newPhone
+                  F.value "previousvalue" oldPhone
+                  when (newPhone == "") (F.value "newblank" True)
+                  when (oldPhone == "") (F.value "prvblank" True)
+              )
+              (Just sl')
+              Nothing
+              actor
 
       -- Finally, add event in EvidenceLog for changed authentication
       sl' <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid Nothing
       addChangeAuthenticationToViewEvidenceEvent sl' (signatorylinkauthenticationtoviewmethod sl, newAuthToView)
 
-    where insertEvidenceFor :: (DocumentMonad m, TemplatesMonad m, MonadThrow m) => SignatoryLink -> CurrentEvidenceEventType -> m ()
-          insertEvidenceFor sl e = void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg e (return ()) (Just sl) Nothing actor
+    where
+      insertEvidenceFor
+        :: (DocumentMonad m, TemplatesMonad m, MonadThrow m)
+        => SignatoryLink -> CurrentEvidenceEventType -> m ()
+      insertEvidenceFor sl e = void . update $
+        InsertEvidenceEventWithAffectedSignatoryAndMsg e (return ())
+                                                       (Just sl) Nothing actor
 
-          addChangeAuthenticationToViewEvidenceEvent :: (DocumentMonad m, TemplatesMonad m, MonadThrow m) => SignatoryLink -> (AuthenticationToViewMethod, AuthenticationToViewMethod) -> m ()
-          addChangeAuthenticationToViewEvidenceEvent sl (authtoviewfrom, authtoviewto) = mapM_ (insertEvidenceFor sl) $ maybeToList $ authViewChangeToEvidence (authtoviewfrom, authtoviewto)
+      addChangeAuthenticationToViewEvidenceEvent
+        :: (DocumentMonad m, TemplatesMonad m, MonadThrow m)
+        => SignatoryLink
+        -> (AuthenticationToViewMethod, AuthenticationToViewMethod)
+        -> m ()
+      addChangeAuthenticationToViewEvidenceEvent sl (authtoviewfrom, authtoviewto) = do
+        let changeToEvidence = case authKind of
+              AuthenticationToView         -> authViewChangeToEvidence
+              AuthenticationToViewArchived -> authViewArchivedChangeToEvidence
+        mapM_ (insertEvidenceFor sl) . maybeToList $
+          changeToEvidence (authtoviewfrom, authtoviewto)
 
 data ChangeAuthenticationToSignMethod = ChangeAuthenticationToSignMethod SignatoryLinkID AuthenticationToSignMethod (Maybe String) (Maybe String) Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeAuthenticationToSignMethod () where
@@ -718,6 +770,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
           slSSNField    = getFieldByIdentity PersonalNumberFI $ signatoryfields sl
           slMobileField = getFieldByIdentity MobileFI $ signatoryfields sl
           slAuthToView  = signatorylinkauthenticationtoviewmethod sl
+          slAuthToViewArchived = signatorylinkauthenticationtoviewarchivedmethod sl
           maybeFieldHasPlacements :: Maybe SignatoryField -> Bool
           maybeFieldHasPlacements Nothing = False
           maybeFieldHasPlacements (Just sf) = not . null $ fieldPlacements sf
@@ -741,6 +794,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
         (False, SEBankIDAuthenticationToSign) -> when
           ( maybeFieldHasPlacements slSSNField
             && (not $ authToViewNeedsPersonalNumber slAuthToView)
+            && (not $ authToViewNeedsPersonalNumber slAuthToViewArchived)
           )
           ( kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
               sqlSet "obligatory" False
@@ -751,6 +805,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
         (False, NOBankIDAuthenticationToSign) -> when
           ( maybeFieldHasPlacements slSSNField
             && (not $ authToViewNeedsPersonalNumber slAuthToView)
+            && (not $ authToViewNeedsPersonalNumber slAuthToViewArchived)
           )
           ( kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
               sqlSet "obligatory" False
@@ -761,6 +816,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
         (False, DKNemIDAuthenticationToSign) -> when
           ( maybeFieldHasPlacements slSSNField
             && (not $ authToViewNeedsPersonalNumber slAuthToView)
+            && (not $ authToViewNeedsPersonalNumber slAuthToViewArchived)
           )
           ( kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
               sqlSet "obligatory" False
@@ -771,6 +827,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
         (False, SMSPinAuthenticationToSign) -> when
           ( maybeFieldHasPlacements slMobileField
             && (not $ authToViewNeedsMobileNumber slAuthToView)
+            && (not $ authToViewNeedsMobileNumber slAuthToViewArchived)
           )
           ( kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
               sqlSet "obligatory" False
