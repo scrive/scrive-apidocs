@@ -480,6 +480,7 @@ var RemoveModalContent = React.createClass({
               <p>{localization.archive.templates.shareableLink.showText}</p>
               <InfoTextInput
                 inputtype="text"
+                className="shareable-link-url"
                 ref="input"
                 readonly={true}
                 disabled={false}
