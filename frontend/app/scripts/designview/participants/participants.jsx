@@ -31,7 +31,7 @@ module.exports = React.createClass({
     var heightOfUnexpandedSignatory = 60;  // Height each signatory description when signatory is not expanded
     var heightOfSignatoryPadding = 14; // height of paddings between each signatory
     var heightOfField = 50; // Height each field row
-    var heightOfParticipantSettings = 172; // Height of 6 selects at bottom of signatory
+    var heightOfParticipantSettings = 328; // Height of 7 selects at bottom of signatory
     var heightOfParticipantBorder = 4;
     var height = 0;
 

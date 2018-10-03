@@ -99,15 +99,17 @@ remindMailNotSigned automatic forMail customMessage document signlink = do
         F.value "companyname" $ emptyToNothing $ getCompanyName document
 
 
-documentAttachedFields :: (MailContextMonad m, MonadDB m, MonadThrow m, MonadTime m) => Bool -> SignatoryLink -> Bool -> Document -> Fields m ()
-documentAttachedFields forMail signlink documentAttached document = do
+documentAttachableFields :: (MailContextMonad m, MonadDB m, MonadThrow m, MonadTime m) => Bool -> SignatoryLink -> Bool -> Bool -> Document -> Fields m ()
+documentAttachableFields forMail signlink documentAttachable forceLink document = do
   mctx <- getMailContext
   F.value "sign" $ signatoryispartner signlink
-  F.value "documentAttached" documentAttached
+  F.value "documentAttachable" documentAttachable
+  F.value "forceLink" forceLink
+  F.value "documentAttached" $ documentAttachable && not forceLink
   F.value "ispreview" $ not $ forMail
   F.value "mainfilelink" $ protectLink forMail mctx $ LinkMainFile document signlink
   now <- currentTime
-  F.value "availabledate" $ formatTimeSimple $ (30 `daysAfter` now)
+  F.value "availabledate" $ formatTimeYMD $ 30 `daysAfter` now
 
 remindMailSigned :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, MailContextMonad m)
                  => Bool
@@ -119,14 +121,14 @@ remindMailSigned :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, Mai
 remindMailSigned forMail customMessage document signlink documentAttached = do
     documentMailWithDocLang document (templateName "remindMailSigned") $ do
             F.value "custommessage" $ asCustomMessage <$> customMessage
-            documentAttachedFields forMail signlink documentAttached document
+            documentAttachableFields forMail signlink documentAttached False document
 
 mailForwardSigned :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, MailContextMonad m)
                  => SignatoryLink -> Bool -> Document
                  -> m Mail
 mailForwardSigned sl documentAttached document = do
   documentMailWithDocLang document (templateName "mailForwardSigned") $ do
-    documentAttachedFields True sl documentAttached document
+    documentAttachableFields True sl documentAttached False document
 
 
 mailDocumentRejected :: (MonadDB m, MonadThrow m, TemplatesMonad m, MailContextMonad m)
@@ -233,10 +235,15 @@ mailClosedContent :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, Ma
                       -> Document
                       -> m String
 mailClosedContent ispreview document = do
-     content <$> mailDocumentClosed ispreview (fromJust $ getAuthorSigLink document) False True document
+     content <$> mailDocumentClosed ispreview (fromJust $ getAuthorSigLink document) False True False document
 
-mailDocumentClosed :: (MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m, MailContextMonad m) => Bool -> SignatoryLink -> Bool -> Bool -> Document -> m Mail
-mailDocumentClosed ispreview sl sealFixed documentAttached document = do
+mailDocumentClosed :: ( MailContextMonad m, MonadDB m, MonadThrow m, MonadTime m
+                      , TemplatesMonad m )
+                   => Bool -> SignatoryLink -> Bool
+                   -> Bool -- ^ Would the attachments fit inside an email?
+                   -> Bool -- ^ Force link usage.
+                   -> Document -> m Mail
+mailDocumentClosed ispreview sl sealFixed documentAttachable forceLink document = do
    mctx <- getMailContext
    partylist <- renderLocalListTemplate document $ map getSmartName $ filter isSignatory (documentsignatorylinks document)
    let mainfile = fromMaybe (unsafeFileID 0) (mainfileid <$> documentsealedfile document `mplus` documentfile document) -- For preview we don't have a sealedd file yet
@@ -251,7 +258,7 @@ mailDocumentClosed ispreview sl sealFixed documentAttached document = do
           | otherwise -> Just $ makeFullLink mctx $ show (LinkSignDoc (documentid document) sl)
         F.value "previewLink" $ show $ LinkDocumentPreview (documentid document) (Nothing <| ispreview |> Just sl) (mainfile) 150
         F.value "sealFixed" $ sealFixed
-        documentAttachedFields (not ispreview) sl documentAttached document
+        documentAttachableFields (not ispreview) sl documentAttachable forceLink document
         F.value "closingtime" $ formatTime' "%Y-%m-%d %H:%M %Z" $ getLastSignedTime document
         F.value "custommessage" $ asCustomMessage <$> if (isAuthor sl && not ispreview)
                                     then Nothing

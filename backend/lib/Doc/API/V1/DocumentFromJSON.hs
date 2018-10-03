@@ -54,11 +54,13 @@ instance FromJSValue ConfirmationDeliveryMethod where
   fromJSValue = do
     j <- fromJSValue
     return $ case j of
-      Just "email" -> Just EmailConfirmationDelivery
-      Just "mobile"-> Just MobileConfirmationDelivery
-      Just "email_mobile"-> Just EmailAndMobileConfirmationDelivery
-      Just "none"-> Just NoConfirmationDelivery
-      _            -> Nothing
+      Just "email"             -> Just EmailConfirmationDelivery
+      Just "mobile"            -> Just MobileConfirmationDelivery
+      Just "email_mobile"      -> Just EmailAndMobileConfirmationDelivery
+      Just "none"              -> Just NoConfirmationDelivery
+      Just "email_link"        -> Just EmailLinkConfirmationDelivery
+      Just "email_link_mobile" -> Just EmailLinkAndMobileConfirmationDelivery
+      _                        -> Nothing
 
 
 instance FromJSValue TipSide where

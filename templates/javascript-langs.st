@@ -428,6 +428,9 @@ javascriptLocalisation =
                , confirmationSMS : "$_designViewAddPartiesConfirmationSMS()$"
                , confirmationEmailSMS : "$_designViewAddPartiesConfirmationEmailSMS()$"
                , confirmationNone : "$_designViewAddPartiesConfirmationNone()$"
+               , confirmationLink : "$_designViewAddPartiesConfirmationLink()$"
+               , confirmationAttachments : "$_designViewAddPartiesConfirmationAttachments()$"
+               , secondaryConfirmation : "$_designViewAddPartiesSecondaryConfirmation()$"
              }
              , addMultisend: "$_designViewAddMultisend()$"
              , viewCSV: "$_designViewViewCSV()$"
@@ -707,6 +710,9 @@ javascriptLocalisation =
               , confirmationSMS: "$_docviewSignatoryConfirmationSMS()$"
               , confirmationEmailSMS: "$_docviewSignatoryConfirmationEmailSMS()$"
               , confirmationNone: "$_docviewSignatoryConfirmationNone()$"
+              , secondaryConfirmation: "$_docviewSignatorySecondaryConfirmation()$"
+              , secondaryConfirmationAttachments: "$_docviewSignatorySecondaryConfirmationAttachments()$"
+              , secondaryConfirmationLink: "$_docviewSignatorySecondaryConfirmationLink()$"
             },
             showLinkDelivery : {
                 title: "$_docviewShowLinkDeliveryModalTitle()$"

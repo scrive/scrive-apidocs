@@ -94,8 +94,10 @@ unjsonDeliveryMethod = unjsonEnumBy "DeliveryMethod" [
 unjsonConfirmationDeliveryMethod :: UnjsonDef ConfirmationDeliveryMethod
 unjsonConfirmationDeliveryMethod = unjsonEnumBy "ConfirmationDeliveryMethod" [
       (EmailConfirmationDelivery, "email")
+    , (EmailLinkConfirmationDelivery, "email_link")
     , (MobileConfirmationDelivery, "mobile")
     , (EmailAndMobileConfirmationDelivery, "email_mobile")
+    , (EmailLinkAndMobileConfirmationDelivery, "email_link_mobile")
     , (NoConfirmationDelivery, "none")
     ]
 

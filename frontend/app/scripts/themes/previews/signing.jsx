@@ -49,9 +49,6 @@ module.exports = React.createClass({
                   <div style={{"backgroundColor": model.brandColor()}} className="sample-sign-view-header">
                       <div className="logo"><img src={model.logo()} /></div>
                       <div style={{"color": model.brandTextColor()}} className="header-text">
-                        {/* if */ self.props.showPDFDownload &&
-                          <DownloadPdfIcon className="download-icon" style={{"fill": model.brandTextColor()}}/>
-                        }
                         {localization.sampleSignView.signViewHeader}
                       </div>
                       <div style={{"clear": "both"}}></div>
@@ -60,7 +57,14 @@ module.exports = React.createClass({
                 <div style={{"fontFamily": model.font()}} className="content">
                   <div className="innercontent">
                      <div className="sample-controls">
-                      Signing document: Demo contract
+                       {/* if */ self.props.showPDFDownload &&
+                         <div className="download-container">
+                           <DownloadPdfIcon className="download-icon" />
+                         </div>
+                       }
+                       <div className="document-title">
+                         Signing document: Demo contract
+                       </div>
                      </div>
                      <div className="section contentheader">
                         <div className="instructions">

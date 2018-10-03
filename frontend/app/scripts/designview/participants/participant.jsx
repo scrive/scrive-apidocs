@@ -5,6 +5,7 @@ var AuthToViewIcon = require("./authtoviewicon");
 var DeliveryIcon = require("./deliveryicon");
 var AuthToSignIcon = require("./authtosignicon");
 var ConfirmationDeliveryIcon = require("./confirmationdeliveryicon");
+var SecondaryConfirmationDeliveryIcon = require("./secondaryconfirmationdeliveryicon");
 var ParticipantSettings = require("./participantsettings");
 var ParticipantFields = require("./participantfields");
 var Track = require("../../common/track");
@@ -43,14 +44,17 @@ module.exports = React.createClass({
   height: function () {
     var sig = this.props.model;
     var heightOfParticipantBorder = 4;
-    var heightOfUnexpandedSignatory = 46;  // Height each signatory description when signatory is not expanded
+    var heightOfUnexpandedSignatory = 42;  // Height each signatory description when signatory is not expanded
+    var verticalMarginOfFields = 16;
     var heightOfField = 50; // Height each field row
-    var heightOfParticipantSettings = 172; // Height of 6 selects at bottom of signatory
-    var heightOfExpandedSignatoryHeader = 58;
+    // Height of 7 selects at bottom of signatory on 4 rows and their vertical margin
+    var heightOfParticipantSettings = 16 + 4 * (62 + 16);
+    var heightOfExpandedSignatoryHeader = 42;
     var height = heightOfUnexpandedSignatory;
 
     if (this.props.currentParticipantDetail === sig) {
       height = heightOfExpandedSignatoryHeader + heightOfParticipantBorder;
+      height += verticalMarginOfFields;
       height += heightOfParticipantSettings;
       var fields = 0;
       var nameIncluded = false;
@@ -123,6 +127,7 @@ module.exports = React.createClass({
             <RoleIcon model={sig}/>
             <AuthToSignIcon model={sig}/>
             <ConfirmationDeliveryIcon model={sig}/>
+            <SecondaryConfirmationDeliveryIcon model={sig}/>
           </div>
           <div className="design-view-action-participant-details">
             <ParticipantFields

@@ -7,6 +7,7 @@ var HighlightedPage = require("./highlightedpage.js").HighlightedPage;
 var Submit = require("./submits.js").Submit;
 var Mail = require("./confirmationsWithEmails.js").Mail;
 var ConsentModule = require("./consentmodule").ConsentModule;
+var Subscription = require("../scripts/account/subscription");
 
 /* Signatories model */
 
@@ -457,7 +458,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         this.set({ deliveryGoldfishMemory : this.get("delivery_method") });
         this.set({ confirmationDeliveryWasNone : this.get("confirmation_delivery_method") == "none" });
         if (this.get("confirmationDeliveryWasNone")) {
-          this.set({ confirmationdelivery : _.contains(["email", "mobile", "email_mobile"], this.get("delivery_method")) ? this.get("delivery_method") : "email"});
+          this.set({ confirmationdelivery : _.contains(["email", "email_link", "mobile", "email_mobile", "email_link_mobile"], this.get("delivery_method")) ? this.get("delivery_method") : "email"});
         }
         this.set({delivery_method: "pad"});
       } else if (previousLastViewerState && !this.lastViewerState) {
@@ -537,17 +538,73 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     noneDelivery : function() {
           return this.isLastViewer();
     },
+
     emailConfirmationDelivery: function() {
-          return this.get("confirmation_delivery_method") == "email";
+      return this.get("confirmation_delivery_method") == "email";
     },
+
+    emailLinkConfirmationDelivery: function() {
+      return this.get("confirmation_delivery_method") == "email_link";
+    },
+
+    anyEmailConfirmationDelivery: function() {
+      return this.emailConfirmationDelivery()
+        || this.emailLinkConfirmationDelivery();
+    },
+
     mobileConfirmationDelivery: function() {
-          return this.get("confirmation_delivery_method") == "mobile";
+      return this.get("confirmation_delivery_method") == "mobile";
     },
+
     emailMobileConfirmationDelivery: function() {
-          return this.get("confirmation_delivery_method") == "email_mobile";
+      return this.get("confirmation_delivery_method") == "email_mobile";
     },
+
+    emailLinkMobileConfirmationDelivery: function() {
+      return this.get("confirmation_delivery_method") == "email_link_mobile";
+    },
+
+    anyEmailMobileConfirmationDelivery: function() {
+      return this.emailMobileConfirmationDelivery()
+        || this.emailLinkMobileConfirmationDelivery();
+    },
+
     noneConfirmationDelivery: function() {
-          return this.get("confirmation_delivery_method") == "none";
+      return this.get("confirmation_delivery_method") == "none";
+    },
+
+    hasConfirmationEmail: function() {
+      return this.anyEmailConfirmationDelivery()
+        || this.anyEmailMobileConfirmationDelivery();
+    },
+
+    hasConfirmationMobile: function() {
+      return this.mobileConfirmationDelivery()
+        || this.anyEmailMobileConfirmationDelivery();
+    },
+
+    hasConfirmationEmailLink: function() {
+      return this.emailLinkConfirmationDelivery()
+        || this.emailLinkMobileConfirmationDelivery();
+    },
+
+    hasConfirmationEmailAttachments: function() {
+      return this.emailConfirmationDelivery()
+        || this.emailMobileConfirmationDelivery();
+    },
+
+    synchDelivery: function () {
+      if (this.anyEmailConfirmationDelivery()) {
+        this.setDeliverySynchedWithConfirmationDelivery("email");
+      } else if (this.mobileConfirmationDelivery()
+                 && Subscription.currentSubscription().currentUserFeatures().canUseSMSInvitations()) {
+        this.setDeliverySynchedWithConfirmationDelivery("mobile");
+      } else if (this.anyEmailMobileConfirmationDelivery()
+                 && Subscription.currentSubscription().currentUserFeatures().canUseSMSInvitations()) {
+        this.setDeliverySynchedWithConfirmationDelivery("email_mobile");
+      } else if (this.noneConfirmationDelivery()) {
+        this.setDeliverySynchedWithConfirmationDelivery("email");
+      }
     },
     remind: function(customtext) {
         return new Submit({
@@ -700,8 +757,14 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     setConfirmationDelivery: function(d) {
         this.set({confirmation_delivery_method:d, confirmationDeliverySynchedWithDelivery : false});
     },
-    setConfirmationDeliverySynchedWithDelivery: function(d) {
-        this.set({confirmation_delivery_method:d});
+    setConfirmationDeliverySynchedWithDelivery: function(dm) {
+      const cdm = dm;
+      if(dm == "email" && this.hasConfirmationEmailLink()) {
+        cdm = "email_link";
+      } else if(dm == "email_mobile" && this.hasConfirmationEmailLink()) {
+        cdm = "email_link_mobile";
+      }
+      this.set({confirmation_delivery_method: cdm});
     },
     isConfirmationDeliverySynchedWithDelivery : function() {
       return this.get("confirmationDeliverySynchedWithDelivery");
@@ -709,8 +772,10 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     initDeliveryAndConfirmationDeliverySynchFlags : function() {
       if (
         (this.emailDelivery() && this.emailConfirmationDelivery()) ||
+        (this.emailDelivery() && this.emailLinkConfirmationDelivery()) ||
         (this.mobileDelivery() && this.mobileConfirmationDelivery()) ||
         (this.emailMobileDelivery() && this.emailMobileConfirmationDelivery()) ||
+        (this.emailMobileDelivery() && this.emailLinkMobileConfirmationDelivery()) ||
         (this.padDelivery() && this.emailDelivery())
       ) {
         this.set({deliverySynchedWithConfirmationDelivery : true, confirmationDeliverySynchedWithDelivery : true});
@@ -885,18 +950,23 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
             }
         }
     },
+
     needsMobile: function() {
-        return this.mobileDelivery() || this.emailMobileDelivery() || this.mobileConfirmationDelivery() ||
-               this.emailMobileConfirmationDelivery() || this.noBankIDAuthenticationToView() ||
-               this.smsPinAuthenticationToView() || this.smsPinAuthenticationToSign();
+      return this.mobileDelivery() || this.emailMobileDelivery()
+        || this.hasConfirmationMobile() || this.noBankIDAuthenticationToView()
+        || this.smsPinAuthenticationToView()
+        || this.smsPinAuthenticationToSign();
     },
+
     mobileIsObligatory: function() {
-        // Mobile number is needed for NO BankID, but is not obligatory
-        return this.mobileDelivery() || this.emailMobileDelivery() || this.mobileConfirmationDelivery() ||
-               this.emailMobileConfirmationDelivery() || this.smsPinAuthenticationToView() || this.smsPinAuthenticationToSign();
+      // Mobile number is needed for NO BankID, but is not obligatory
+      return this.mobileDelivery() || this.emailMobileDelivery()
+        || this.hasConfirmationMobile() || this.smsPinAuthenticationToView()
+        || this.smsPinAuthenticationToSign();
     },
+
     needsEmail: function() {
-        return this.emailDelivery() || this.emailMobileDelivery() || this.emailConfirmationDelivery() || this.emailMobileConfirmationDelivery();
+        return this.emailDelivery() || this.emailMobileDelivery() || this.hasConfirmationEmail();
     },
     ensureEmail: function() {
         var signatory = this;

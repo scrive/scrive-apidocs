@@ -69,7 +69,11 @@ mailContractClosedMainP =
         <br/>
       $endif$
     $else$
-      $_mailContractClosedContentLinked()$
+      $if(forceLink)$
+        $_mailContractClosedContentLinked()$
+      $else$
+        $_mailContractClosedContentLinkedTooBig()$
+      $endif$
       $if(!hasaccount)$
         $_mailContractClosedContentLinkedNoAccount()$
         $if(custommessage)$
@@ -80,7 +84,7 @@ mailContractClosedMainP =
           <br/>
         $endif$
         <br/>
-        $nicebutton(link=mainfilelink; text=_mailContractClosedContentLinkedNoAccountButton())$
+        $nicebutton(link=doclink; text=_mailContractClosedContentLinkedButton())$
       $else$
         $_mailContractClosedContentLinkedAccount()$
         $if(custommessage)$
@@ -91,7 +95,7 @@ mailContractClosedMainP =
           <br/>
         $endif$
         <br/>
-        $nicebutton(link=doclink; text=_mailContractClosedContentLinkedAccountButton())$
+        $nicebutton(link=doclink; text=_mailContractClosedContentLinkedButton())$
       $endif$
     $endif$
 ####

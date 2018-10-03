@@ -23,6 +23,8 @@ module Doc.DocInfo(
   , documentStatusesAccessibleBySignatories
 ) where
 
+import Data.Time
+
 import Doc.DocStateData
 import MinutesTime
 
@@ -96,9 +98,13 @@ getLastSignedTime doc =
   maximum $ unixEpoch : [signtime si | SignatoryLink {maybesigninfo = Just si} <- documentsignatorylinks doc]
 
 -- | Can signatories see the document?
-isAccessibleBySignatories :: Document -> Bool
-isAccessibleBySignatories doc =
-  documentstatus doc `elem` documentStatusesAccessibleBySignatories
+isAccessibleBySignatories :: UTCTime -> Document -> Bool
+isAccessibleBySignatories now doc =
+  -- It adds 31 days and stops at midnight so that, counting days, it is
+  -- accessible for 30 days.
+  let limit = (addUTCTime (31*24*3600) (documentmtime doc)) { utctDayTime = 0 }
+  in documentstatus doc `elem` documentStatusesAccessibleBySignatories
+     && (isPending doc || now < limit)
 
 -- | Statuses in which a document is accessible by signatories.
 documentStatusesAccessibleBySignatories :: [DocumentStatus]

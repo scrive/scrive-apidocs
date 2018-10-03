@@ -41,6 +41,8 @@ documentAPIV2  = dir "documents" $ choice [
 
   , param $ dir "files" $ dir "main"               $ hGet $ toK2 $ \docID (_ :: String) -> docApiV2FilesMain docID
   , param $ dir "files" $ dir "main"               $ hGet $ toK1 $ docApiV2FilesMain
+  , param $ dir "files" $ dir "zip"                $ hGet $ toK2 $ \docID (_ :: String) -> docApiV2FilesFull docID
+  , param $ dir "files" $ dir "zip"                $ hGet $ toK1 $ docApiV2FilesFull
   , param $ dir "files"                            $ hGet $ toK3 $ \docID fileID fname -> docApiV2FilesGet docID fileID (Just fname)
   , param $ dir "files"                            $ hGet $ toK2 $ \docID fileID -> docApiV2FilesGet docID fileID Nothing
   , param $ dir "files" $ param $ dir "pagescount" $ hGet $ toK2 $ docApiV2FilesPagesCount

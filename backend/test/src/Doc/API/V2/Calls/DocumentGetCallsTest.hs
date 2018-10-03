@@ -3,7 +3,7 @@ module Doc.API.V2.Calls.DocumentGetCallsTest (apiV2DocumentGetCallsTests) where
 import Control.Monad.IO.Class
 import Data.Aeson (Value(String))
 import Data.Default
-import Data.Time (UTCTime(..), fromGregorian)
+import Data.Time (UTCTime(..), addUTCTime, fromGregorian)
 import Happstack.Server
 import Log
 import Test.Framework
@@ -12,19 +12,30 @@ import qualified Data.Text as T
 import BrandedDomain.BrandedDomain
 import Context
 import DB.Query (dbUpdate)
+import DB.TimeZoneName (mkTimeZoneName)
 import Doc.API.V2.AesonTestUtils
 import Doc.API.V2.Calls.CallsTestUtils
 import Doc.API.V2.Calls.DocumentGetCalls
 import Doc.API.V2.Calls.DocumentPostCalls
 import Doc.API.V2.Calls.SignatoryCalls (docApiV2SigSign)
 import Doc.API.V2.Mock.TestUtils
+import Doc.Data.Document (Document(..))
 import Doc.Data.DocumentStatus (DocumentStatus(..))
+import Doc.Data.SignatoryAttachment (SignatoryAttachment(..))
+import Doc.Data.SignatoryLink (AuthenticationToSignMethod(..), SignatoryLink(..))
+import Doc.DocInfo
 import Doc.DocumentID (DocumentID, unsafeDocumentID)
-import Doc.DocumentMonad (withDocumentID)
-import Doc.Model.Update (SetDocumentSharing(..), updateMTimeAndObjectVersion)
+import Doc.DocumentMonad (withDocument, withDocumentID)
+import Doc.Model.Query (GetDocumentByDocumentID(..))
+import Doc.Model.Update
+import Doc.SignatoryLinkID
+import Doc.SignatoryScreenshots (emptySignatoryScreenshots)
+import Doc.Tokens.Model
+import File.Storage (saveNewFile)
 import TestingUtil
 import TestKontra
 import UserGroup.Data
+import Util.Actor
 import Util.QRCode
 
 apiV2DocumentGetCallsTests :: TestEnvSt -> Test
@@ -41,7 +52,9 @@ apiV2DocumentGetCallsTests env = testGroup "APIv2DocumentGetCalls" $
   , testThat "API v2 Files - Main"          env testDocApiV2FilesMain
   , testThat "API v2 Files - Pages"         env testDocApiV2FilesPages
   , testThat "API v2 Files - Get"           env testDocApiV2FilesGet
+  , testThat "API v2 Files - Full"          env testDocApiV2FilesFull
   , testThat "API v2 Texts"                 env testDocApiV2Texts
+  , testThat "API v2 Get - Not after 30 days for signatories" env testDocApiV2GetFailsAfter30Days
   ]
 
 testDocApiV2List :: TestEnv ()
@@ -69,6 +82,29 @@ testDocApiV2Get = do
   getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
   assertEqual "Mock Document from `docApiV2Get` should match from `docApiV2New`" getMockDoc newMockDoc
   assertEqual "Document viewer should be" "signatory" (getMockDocViewerRole getMockDoc)
+
+testDocApiV2GetFailsAfter30Days :: TestEnv ()
+testDocApiV2GetFailsAfter30Days = do
+  user <- addNewRandomUser
+  let check s = isNothing (maybesignatory s) && not (signatoryisauthor s)
+  doc <- addRandomDocumentWithAuthorAndCondition user $ \doc ->
+    isClosed doc && any check (documentsignatorylinks doc)
+  let Just sl = find check (documentsignatorylinks doc)
+
+  req <- mkRequest GET []
+  ctx <- anonymousContext <$> mkContext def
+  (_, ctx') <- runTestKontra req ctx $ do
+    dbUpdate $ AddDocumentSessionToken (signatorylinkid sl) (signatorymagichash sl)
+
+  let vars = [ ("signatory_id", inText . show . fromSignatoryLinkID . signatorylinkid $ sl)
+             , ("access_token", inText . show . signatorymagichash $ sl)
+             ]
+      ctxWithin30Days = set ctxtime (addUTCTime (29*24*3600) (documentmtime doc)) ctx'
+      ctxAfter30Days  = set ctxtime (addUTCTime (31*24*3600) (documentmtime doc)) ctx'
+  _ <- testRequestHelper ctxWithin30Days GET vars (docApiV2Get (documentid doc)) 200
+  _ <- testRequestHelper ctxAfter30Days  GET vars (docApiV2Get (documentid doc)) 410
+
+  return ()
 
 mockDocToShortID :: MockDoc -> DocumentID
 mockDocToShortID md = read $ reverse $ take 6 $ reverse $ show (getMockDocId md)
@@ -347,6 +383,87 @@ testDocApiV2FilesGet = do
       (rsp,_) <- runTestKontra req ctx $ docApiV2FilesGet did fid Nothing
       assertEqual ("Successful `docApiV2FilesGet` " ++ desc ++ " response code")
         expected_code (rsCode rsp)
+
+testDocApiV2FilesFull :: TestEnv ()
+testDocApiV2FilesFull = do
+  now  <- currentTime
+  user <- addNewRandomUser
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
+  req  <- mkRequest GET []
+
+  initDoc <- addRandomDocumentWithAuthorAndCondition user $ \d ->
+    isPreparation d && isSignable d
+    && map signatoryispartner (documentsignatorylinks d) == [False, True]
+    && signatorylinkauthenticationtosignmethod (documentsignatorylinks d !! 1)
+       == StandardAuthenticationToSign
+    && all (null . signatoryattachments) (documentsignatorylinks d)
+  let did = documentid initDoc
+      att  = def { signatoryattachmentname = "sig_att" }
+
+  -- Add attachments to the generated document.
+  _ <- do
+    let mkFile name add =
+          "{\"name\":\"" <> name
+          <> ".pdf\",\"required\":false,\"add_to_sealed_file\":"
+          <> (if add then "true" else "false")
+          <> ",\"file_param\":\"" <> name <> "_file\"}"
+        vars = [ ( "attachments", inText $ "[" <> mkFile "merged" True <> ","
+                                           <> mkFile "not_merged" False <> "]" )
+               , ( "merged_file"
+                 , inFile $ inTestDir "pdfs/simple-rotate-90.pdf" )
+               , ( "not_merged_file"
+                 , inFile $ inTestDir "pdfs/simple-rotate-90.pdf" )
+               ]
+    _ <- testRequestHelper ctx POST vars
+                           (docApiV2SetAttachments (documentid initDoc)) 200
+
+    let [sl1, sl2] = documentsignatorylinks initDoc
+        sl2' = sl2 { signatoryattachments = [att] }
+        sls  = [sl1, sl2']
+    withDocumentID did $ randomUpdate $ ResetSignatoryDetails sls $ systemActor now
+
+  doc <- randomQuery $ GetDocumentByDocumentID did
+
+  do
+    (files, _) <- runTestKontra req ctx $ docApiV2FilesFullForTests doc
+    assertEqual "Main file + two attachments" 3 (length files)
+    assertBool "Has merged.pdf" $ "merged.pdf" `elem` map fst files
+    assertBool "Has not_merged.pdf" $ "not_merged.pdf" `elem` map fst files
+
+  -- Sign and upload signatory attachment but don't close.
+  withDocument doc $ do
+    tz <- mkTimeZoneName "Europe/Stockholm"
+    randomUpdate $ PreparationToPending (systemActor now) tz
+    let [_, sl] = documentsignatorylinks doc
+    fid <- saveNewFile "some_name.pdf" "Some contents"
+    randomUpdate $ SaveSigAttachment (signatorylinkid sl) att fid
+                                     (systemActor now)
+    randomUpdate $ SignDocument (signatorylinkid sl) (signatorymagichash sl)
+                                Nothing Nothing emptySignatoryScreenshots
+                                (systemActor now)
+
+  do
+    signedDoc <- randomQuery $ GetDocumentByDocumentID did
+    (files, _) <- runTestKontra req ctx $ docApiV2FilesFullForTests signedDoc
+    assertEqual "Main file + two attachments + one signatory attachment"
+                4 (length files)
+    assertBool "Has merged.pdf" $ "merged.pdf" `elem` map fst files
+    assertBool "Has not_merged.pdf" $ "not_merged.pdf" `elem` map fst files
+    assertBool "Has sig_att.pdf" $ "sig_att.pdf" `elem` map fst files
+
+  -- Close the document.
+  withDocumentID did $ randomUpdate $ CloseDocument (systemActor now)
+  _ <- testRequestHelper ctx POST [] (docApiV2FilesFull did) 503
+
+  -- Seal the document.
+  sealTestDocument ctx did
+  closedDoc <- randomQuery $ GetDocumentByDocumentID did
+  do
+    (files, _) <- runTestKontra req ctx $ docApiV2FilesFullForTests closedDoc
+    assertEqual "Main file + one unmerged attachment" 2 (length files)
+    assertBool "Does not have merged.pdf" $ "merged.pdf" `notElem` map fst files
+    assertBool "Does not have sig_att.pdf" $ "sig_att.pdf" `notElem` map fst files
+    assertBool "Has not_merged.pdf" $ "not_merged.pdf" `elem` map fst files
 
 testDocApiV2Texts :: TestEnv ()
 testDocApiV2Texts = do

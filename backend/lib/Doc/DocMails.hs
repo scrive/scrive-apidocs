@@ -235,37 +235,56 @@ sendReminderEmail custommessage actor automatic siglink = logSignatory (signator
 -- document that wasn't digitally sealed, so now we resend the
 -- document with digital seal.  If the main file is deemed too large
 -- to attach, a link to it is used instead of attaching it.
-sendClosedEmails :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, MailContextMonad m) => Bool -> Document -> m ()
+sendClosedEmails :: ( CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m
+                    , TemplatesMonad m, MailContextMonad m )
+                 => Bool -> Document -> m ()
 sendClosedEmails sealFixed document = do
     mailattachments <- makeMailAttachments document True
     let signatorylinks = documentsignatorylinks document
+
     forM_ signatorylinks $ \sl -> do
-      let sendMail = do
-            mail <- mailDocumentClosed False sl sealFixed (not (null mailattachments)) document
-            let scheduleEmailFunc
-                  | signatoryisauthor sl = scheduleEmailSendout
-                  | otherwise            = scheduleEmailSendoutWithAuthorSender (documentid document)
-            scheduleEmailFunc $ mail { to = [getMailAddress sl]
-                                     , attachments = attachments mail ++ mailattachments
-                                     , kontraInfoForMail = (Just $ OtherDocumentMail $ documentid document)
-                                     , replyTo =
-                                          let maybeAuthor = find signatoryisauthor signatorylinks
-                                          in if signatoryisauthor sl && isJust maybeAuthor
-                                                then Nothing
-                                                else fmap getMailAddress maybeAuthor
-                                     }
-      let sendSMS withMail = (scheduleSMS document =<< smsClosedNotification document sl withMail sealFixed)
-      let useMail = isGood $ asValidEmail $ getEmail sl
-          useSMS = isGood $  asValidPhoneForSMS $ getMobile sl
-      case (signatorylinkconfirmationdeliverymethod sl) of
+      let scheduleEmailFunc
+            | signatoryisauthor sl = scheduleEmailSendout
+            | otherwise =
+                scheduleEmailSendoutWithAuthorSender (documentid document)
+
+          sendMail forceLink = do
+            mail <- mailDocumentClosed False sl sealFixed
+                                       (not (null mailattachments))
+                                       forceLink document
+            scheduleEmailFunc $ mail
+              { to = [getMailAddress sl]
+              , attachments =
+                  attachments mail ++ if forceLink then [] else mailattachments
+              , kontraInfoForMail =
+                  Just $ OtherDocumentMail $ documentid document
+              , replyTo =
+                  let maybeAuthor = find signatoryisauthor signatorylinks
+                  in if signatoryisauthor sl && isJust maybeAuthor
+                       then Nothing
+                       else fmap getMailAddress maybeAuthor
+              }
+
+      let sendSMS withMail =
+            scheduleSMS document =<< smsClosedNotification document sl withMail sealFixed
+
+      let useMail = isGood $ asValidEmail       $ getEmail  sl
+          useSMS  = isGood $ asValidPhoneForSMS $ getMobile sl
+
+      case signatorylinkconfirmationdeliverymethod sl of
         NoConfirmationDelivery -> return ()
-        EmailConfirmationDelivery -> when useMail $ sendMail
+        EmailConfirmationDelivery -> when useMail $ sendMail False
+        EmailLinkConfirmationDelivery -> when useMail $ sendMail True
         MobileConfirmationDelivery -> when useSMS $ sendSMS False
         EmailAndMobileConfirmationDelivery -> do
-                                              when useMail $ sendMail
-                                              when useSMS  $ sendSMS useMail
+          when useMail $ sendMail False
+          when useSMS  $ sendSMS useMail
+        EmailLinkAndMobileConfirmationDelivery -> do
+          when useMail $ sendMail True
+          when useSMS  $ sendSMS useMail
 
-
+-- | Construct the list of attachments. Return nothing if the attachments would
+-- be above the maximum size.
 makeMailAttachments :: (MonadDB m, MonadThrow m) => Document -> Bool -> m [(String, Either BS.ByteString FileID)]
 makeMailAttachments doc withAttachments = map (\(n,f) -> (n, Right $ fileid f)) <$> if (isClosed doc)
   then makeMailAttachmentsForClosedDocument doc withAttachments

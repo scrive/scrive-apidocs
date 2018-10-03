@@ -8,9 +8,9 @@ module.exports = React.createClass({
     if (sig.isLastViewer() && dm === "none") {
       return false;
     } else if (!Subscription.currentSubscription().currentUserFeatures().canUseSMSConfirmations()) {
-      return dm != "mobile" && dm != "email_mobile";
+      return dm != "mobile" && dm != "email_mobile" && dm != "email_link_mobile";
     } else if (!Subscription.currentSubscription().currentUserFeatures().canUseEmailConfirmations()) {
-      return dm != "email" && dm != "email_mobile";
+      return dm != "email" && dm != "email_mobile" && dm != "email_link_mobile";
     } else {
       return true;
     }
@@ -21,56 +21,45 @@ module.exports = React.createClass({
       Where: "icon"
     });
     var cdms = ["email", "mobile", "email_mobile", "none"];
-    var i = (_.indexOf(cdms, sig.confirmationdelivery()) + 1) || 0;
+    var current = sig.confirmationdelivery();
+    if (current == "email_link") {
+      current = "email";
+    } else if (current == "email_link_mobile") {
+      current = "email_mobile";
+    }
+    var i = (_.indexOf(cdms, current) + 1) || 0;
     // <100 is just to make sure that in case of bugs we will not spin forever
     while (!this.isAllowedConfirmationMethod(cdms[i % cdms.length]) && i < 100) {
       i++;
     }
     sig.setConfirmationDelivery(cdms[i % cdms.length]);
     if (sig.isDeliverySynchedWithConfirmationDelivery()) {
-      this.synchDelivery();
-    }
-  },
-  synchDelivery: function () {
-    var sig = this.props.model;
-    if (sig.emailConfirmationDelivery() &&
-        Subscription.currentSubscription().currentUserFeatures().canUseEmailInvitations()) {
-      sig.setDeliverySynchedWithConfirmationDelivery("email");
-    } else if (sig.mobileConfirmationDelivery() &&
-        Subscription.currentSubscription().currentUserFeatures().canUseSMSInvitations()) {
-      sig.setDeliverySynchedWithConfirmationDelivery("mobile");
-    } else if (sig.emailMobileConfirmationDelivery() &&
-        Subscription.currentSubscription().currentUserFeatures().canUseSMSInvitations() &&
-        Subscription.currentSubscription().currentUserFeatures().canUseEmailInvitations()) {
-      sig.setDeliverySynchedWithConfirmationDelivery("email_mobile");
-    } else if (sig.noneConfirmationDelivery() &&
-        Subscription.currentSubscription().currentUserFeatures().canUseEmailInvitations()) {
-      sig.setDeliverySynchedWithConfirmationDelivery("email");
+      sig.synchDelivery();
     }
   },
   icon: function () {
     var sig = this.props.model;
-    if (sig.confirmationdelivery() == "email") {
+    if (sig.anyEmailConfirmationDelivery()) {
       return "design-view-action-participant-confirmation-icon-email";
-    } else if (sig.confirmationdelivery() == "mobile") {
+    } else if (sig.mobileConfirmationDelivery()) {
       return "design-view-action-participant-confirmation-icon-phone";
-    } else if (sig.confirmationdelivery() == "email_mobile") {
+    } else if (sig.anyEmailMobileConfirmationDelivery()) {
       return "design-view-action-participant-confirmation-icon-email-mobile";
-    } else if (sig.confirmationdelivery() == "none") {
+    } else if (sig.noneConfirmationDelivery()) {
       return "design-view-action-participant-confirmation-icon-empty";
     }
   },
   title: function () {
     var title = [localization.designview.addParties.confirmation];
+    var sig = this.props.model;
 
-    var confirmationMethod = this.props.model.confirmationdelivery();
-    if (confirmationMethod == "email") {
+    if (sig.anyEmailConfirmationDelivery()) {
       title.push(localization.designview.addParties.confirmationEmail);
-    } else if (confirmationMethod == "mobile") {
+    } else if (sig.mobileConfirmationDelivery()) {
       title.push(localization.designview.addParties.confirmationSMS);
-    } else if (confirmationMethod == "email_mobile") {
+    } else if (sig.anyEmailMobileConfirmationDelivery()) {
       title.push(localization.designview.addParties.confirmationEmailSMS);
-    } else if (confirmationMethod == "none") {
+    } else if (sig.noneConfirmationDelivery()) {
       title.push(localization.designview.addParties.confirmationNone);
     }
 

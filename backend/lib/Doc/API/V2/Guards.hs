@@ -27,6 +27,7 @@ module Doc.API.V2.Guards (
 , guardThatDocumentIsReadableBySignatories
 ) where
 
+import Log
 import qualified Data.Text as T
 
 import API.V2
@@ -250,24 +251,31 @@ guardThatDocumentCanBeStarted doc = do
     when (isNothing $ documentfile doc) $ do
        apiError $ documentStateError "Document must have a file before it can be started"
     return ()
+
  where
     signatoryHasValidDeliverySettings sl = (isAuthor sl) || case (signatorylinkdeliverymethod sl) of
       EmailDelivery  ->  isGood $ asValidEmail $ getEmail sl
       MobileDelivery ->  isGood $ asValidPhoneForSMS $ getMobile sl
       EmailAndMobileDelivery -> (isGood $ asValidPhoneForSMS $ getMobile sl) && (isGood $ asValidEmail $ getEmail sl)
       _ -> True
+
     signatoryHasValidConfirmationSettings sl = isAuthor sl || case signatorylinkconfirmationdeliverymethod sl of
-      EmailConfirmationDelivery -> null (getEmail sl) || isGood (asValidEmail $ getEmail sl)
-      MobileConfirmationDelivery -> null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl)
-      EmailAndMobileConfirmationDelivery -> (null (getEmail sl) || isGood (asValidEmail $ getEmail sl)) && (null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl))
+      EmailConfirmationDelivery -> checkEmailForConfirmation sl
+      EmailLinkConfirmationDelivery -> checkEmailForConfirmation sl
+      MobileConfirmationDelivery -> checkMobileForConfirmation sl
+      EmailAndMobileConfirmationDelivery -> checkEmailAndMobileForConfirmation sl
+      EmailLinkAndMobileConfirmationDelivery -> checkEmailAndMobileForConfirmation sl
       NoConfirmationDelivery -> True
+
     signatoryHasValidAuthSettings sl = authToSignIsValid sl
+
     authToSignIsValid sl = case signatorylinkauthenticationtosignmethod sl of
       SEBankIDAuthenticationToSign -> null (getPersonalNumber sl) || (isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl)
       NOBankIDAuthenticationToSign -> null (getPersonalNumber sl) || (isGood $ asValidNOBankIdPersonalNumber $ getPersonalNumber sl)
       DKNemIDAuthenticationToSign  -> null (getPersonalNumber sl) || (isGood $ asValidDanishSSN $ getPersonalNumber sl)
       SMSPinAuthenticationToSign -> isJust (getFieldByIdentity MobileFI $ signatoryfields sl) && (null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl))
       StandardAuthenticationToSign -> True
+
     signatoryHasValidSSNForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of
       SEBankIDAuthenticationToView -> isGood $ asValidSwedishSSN   $ getPersonalNumber sl
       NOBankIDAuthenticationToView -> isGood $ asValidNorwegianSSN $ getPersonalNumber sl
@@ -275,10 +283,18 @@ guardThatDocumentCanBeStarted doc = do
       FITupasAuthenticationToView  -> isGood $ asValidFinnishSSN   $ getPersonalNumber sl
       SMSPinAuthenticationToView   -> True
       StandardAuthenticationToView -> True
+
     signatoryHasValidMobileForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of
       NOBankIDAuthenticationToView -> (isGood $ asValidPhoneForNorwegianBankID (getMobile sl )) || (isEmpty $ asValidPhoneForNorwegianBankID (getMobile sl))
       SMSPinAuthenticationToView -> isGood $ asValidPhoneForSMS (getMobile sl)
       _ -> True
+
+    checkEmailForConfirmation sl =
+      null (getEmail sl) || isGood (asValidEmail $ getEmail sl)
+    checkMobileForConfirmation sl =
+      null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl)
+    checkEmailAndMobileForConfirmation sl =
+      checkEmailForConfirmation sl && checkMobileForConfirmation sl
 
 guardThatRadioButtonValuesAreValid :: Kontrakcja m => SignatoryLinkID -> SignatoryFieldsValuesForSigning -> Document -> m ()
 guardThatRadioButtonValuesAreValid slid (SignatoryFieldsValuesForSigning signfields) doc = do
@@ -358,10 +374,8 @@ guardDocumentReadAccess mslid doc = do
   mSessionSignatory <- maybe (return Nothing) (getDocumentSignatoryMagicHash $ documentid doc) mslid
   case mSessionSignatory of
     Just sl -> do
-      case signatoryisauthor sl of
-        True -> return ()
-        False -> guardThatDocumentIsReadableBySignatories doc
-      guardThatDocumentIsReadableBySignatories doc
+      unless (signatoryisauthor sl) $
+        guardThatDocumentIsReadableBySignatories doc
       return $ documentAccessForSlid (signatorylinkid sl) doc
     Nothing -> do
       (user,_) <- getAPIUser APIDocCheck
@@ -371,8 +385,9 @@ guardDocumentReadAccess mslid doc = do
       return $ documentAccessForUser user doc
 
 guardThatDocumentIsReadableBySignatories :: Kontrakcja m => Document -> m ()
-guardThatDocumentIsReadableBySignatories doc =
-  unless (isAccessibleBySignatories doc) $
+guardThatDocumentIsReadableBySignatories doc = do
+  now <- currentTime
+  unless (isAccessibleBySignatories now doc) $
     apiError $ documentStateErrorWithCode 410 $
       "The document has expired or has been withdrawn. (status: "
       <> T.pack (show (documentstatus doc)) <> ")"

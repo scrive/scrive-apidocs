@@ -472,13 +472,24 @@ var EmailModal = require("../../common/email_modal");
 
     getConfirmationMethod: function () {
       var signatory = this.props.signatory;
-      if (signatory.emailConfirmationDelivery()) {
+      if (signatory.anyEmailConfirmationDelivery()) {
         return localization.docview.signatory.confirmationEmail;
       } else if (signatory.mobileConfirmationDelivery()) {
         return localization.docview.signatory.confirmationSMS;
-      } else if (signatory.emailMobileConfirmationDelivery()) {
+      } else if (signatory.anyEmailMobileConfirmationDelivery()) {
         return localization.docview.signatory.confirmationEmailSMS;
       } else if (signatory.noneConfirmationDelivery()) {
+        return localization.docview.signatory.confirmationNone;
+      }
+    },
+
+    getConfirmationAttachments: function () {
+      var sig = this.props.signatory;
+      if (sig.hasConfirmationEmailLink() || sig.mobileConfirmationDelivery()) {
+        return localization.docview.signatory.secondaryConfirmationLink;
+      } else if (sig.hasConfirmationEmailAttachments()) {
+        return localization.docview.signatory.secondaryConfirmationAttachments;
+      } else {
         return localization.docview.signatory.confirmationNone;
       }
     },
@@ -653,6 +664,11 @@ var EmailModal = require("../../common/email_modal");
               <div className="fieldrow">
                 <span className="confirmationmethod field" title={this.getConfirmationMethod()}>
                   {localization.docview.signatory.confirmation}: {this.getConfirmationMethod()}
+                </span>
+              </div>
+              <div className="fieldrow">
+                <span className="confirmationattachments field" title={this.getConfirmationAttachments()}>
+                  {localization.docview.signatory.secondaryConfirmation}: {this.getConfirmationAttachments()}
                 </span>
               </div>
             </div>

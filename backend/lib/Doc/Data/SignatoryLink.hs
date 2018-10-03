@@ -222,6 +222,8 @@ data ConfirmationDeliveryMethod
   | MobileConfirmationDelivery
   | EmailAndMobileConfirmationDelivery
   | NoConfirmationDelivery
+  | EmailLinkConfirmationDelivery
+  | EmailLinkAndMobileConfirmationDelivery
     deriving (Eq, Ord, Show)
 
 instance PQFormat ConfirmationDeliveryMethod where
@@ -236,17 +238,21 @@ instance FromSQL ConfirmationDeliveryMethod where
       2 -> return MobileConfirmationDelivery
       3 -> return EmailAndMobileConfirmationDelivery
       4 -> return NoConfirmationDelivery
+      5 -> return EmailLinkConfirmationDelivery
+      6 -> return EmailLinkAndMobileConfirmationDelivery
       _ -> throwM RangeError {
-        reRange = [(1, 4)]
+        reRange = [(1, 6)]
       , reValue = n
       }
 
 instance ToSQL ConfirmationDeliveryMethod where
   type PQDest ConfirmationDeliveryMethod = PQDest Int16
-  toSQL EmailConfirmationDelivery           = toSQL (1::Int16)
-  toSQL MobileConfirmationDelivery          = toSQL (2::Int16)
-  toSQL EmailAndMobileConfirmationDelivery  = toSQL (3::Int16)
-  toSQL NoConfirmationDelivery              = toSQL (4::Int16)
+  toSQL EmailConfirmationDelivery              = toSQL (1::Int16)
+  toSQL MobileConfirmationDelivery             = toSQL (2::Int16)
+  toSQL EmailAndMobileConfirmationDelivery     = toSQL (3::Int16)
+  toSQL NoConfirmationDelivery                 = toSQL (4::Int16)
+  toSQL EmailLinkConfirmationDelivery          = toSQL (5::Int16)
+  toSQL EmailLinkAndMobileConfirmationDelivery = toSQL (6::Int16)
 
 ---------------------------------
 

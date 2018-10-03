@@ -393,37 +393,55 @@ apiCallV1Ready did = logDocument did . api $ do
       postDocumentPreparationChange authorsignsimmediately timezone
       dbUpdate $ ChargeUserGroupForStartingDocument did
       Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
+
   where
     signatoryHasValidDeliverySettings sl = case (signatorylinkdeliverymethod sl) of
       EmailDelivery  ->  isGood $ asValidEmail $ getEmail sl
       MobileDelivery ->  isGood $ asValidPhoneForSMS $ getMobile sl
       EmailAndMobileDelivery -> (isGood $ asValidPhoneForSMS $ getMobile sl) && (isGood $ asValidEmail $ getEmail sl)
       _ -> True
+
     signatoryHasValidConfirmationSettings sl = case signatorylinkconfirmationdeliverymethod sl of
-      EmailConfirmationDelivery -> null (getEmail sl) || isGood (asValidEmail $ getEmail sl)
-      MobileConfirmationDelivery -> null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl)
-      EmailAndMobileConfirmationDelivery -> (null (getEmail sl) || isGood (asValidEmail $ getEmail sl)) && (null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl))
+      EmailConfirmationDelivery -> checkEmailForConfirmation sl
+      MobileConfirmationDelivery -> checkMobileForConfirmation sl
+      EmailAndMobileConfirmationDelivery ->
+        checkEmailAndMobileForConfirmation sl
       NoConfirmationDelivery -> True
+      EmailLinkConfirmationDelivery -> checkEmailForConfirmation sl
+      EmailLinkAndMobileConfirmationDelivery ->
+        checkEmailAndMobileForConfirmation sl
+
     fixFieldsForConfirmationDeliveryIfNeeded sl = case (signatorylinkconfirmationdeliverymethod sl) of
       EmailConfirmationDelivery -> do
-        when (not (null (getEmail sl)) && isBad (asValidEmail $ getEmail sl)) $ do
+        unless (checkEmailForConfirmation sl) $ do
           dbUpdate $ ClearSignatoryEmail $ signatorylinkid sl
       MobileConfirmationDelivery -> do
-        when (not (null (getMobile sl)) && isBad (asValidPhoneForSMS $ getMobile sl)) $ do
+        unless (checkMobileForConfirmation sl) $ do
           dbUpdate $ ClearSignatoryMobile $ signatorylinkid sl
       EmailAndMobileConfirmationDelivery -> do
-        when (not (null (getEmail sl)) && isBad (asValidEmail $ getEmail sl)) $ do
+        unless (checkEmailForConfirmation sl) $ do
           dbUpdate $ ClearSignatoryEmail $ signatorylinkid sl
-        when (not (null (getEmail sl)) && isBad (asValidPhoneForSMS $ getMobile sl)) $ do
+        unless (checkMobileForConfirmation sl) $ do
           dbUpdate $ ClearSignatoryMobile $ signatorylinkid sl
       NoConfirmationDelivery -> return ()
+      EmailLinkConfirmationDelivery -> do
+        unless (checkEmailForConfirmation sl) $ do
+          dbUpdate $ ClearSignatoryEmail $ signatorylinkid sl
+      EmailLinkAndMobileConfirmationDelivery -> do
+        unless (checkEmailForConfirmation sl) $ do
+          dbUpdate $ ClearSignatoryEmail $ signatorylinkid sl
+        unless (checkMobileForConfirmation sl) $ do
+          dbUpdate $ ClearSignatoryMobile $ signatorylinkid sl
+
     signatoryHasValidAuthSettings sl = authToSignIsValid sl
+
     authToSignIsValid sl = getPersonalNumber sl == "" || case signatorylinkauthenticationtosignmethod sl of
       SEBankIDAuthenticationToSign -> isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl
       NOBankIDAuthenticationToSign -> False -- Norwegian Nets eSigning is not supported in API v1
       DKNemIDAuthenticationToSign  -> False -- Danish Nets eSigning is not supported in API v1
       StandardAuthenticationToSign -> True
       SMSPinAuthenticationToSign   -> True
+
     signatoryHasValidSSNForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of
       SEBankIDAuthenticationToView -> isGood $ asValidSwedishSSN $ getPersonalNumber sl
       NOBankIDAuthenticationToView -> isGood $ asValidNorwegianSSN $ getPersonalNumber sl
@@ -431,6 +449,7 @@ apiCallV1Ready did = logDocument did . api $ do
       FITupasAuthenticationToView  -> False -- Finnish TUPAS auth to view is not supported in API v1
       SMSPinAuthenticationToView   -> True
       StandardAuthenticationToView -> True
+
     signatoryHasValidPhoneForIdentifyToView sl =
       let resultValidPhone = asValidPhoneForNorwegianBankID $ getMobile sl in
       case signatorylinkauthenticationtoviewmethod sl of
@@ -440,6 +459,13 @@ apiCallV1Ready did = logDocument did . api $ do
         FITupasAuthenticationToView  -> False -- Finnish TUPAS auth to view is not supported in API v1
         SMSPinAuthenticationToView   -> isGood $ asValidPhoneForSMS $ getMobile sl
         StandardAuthenticationToView -> True
+
+    checkEmailForConfirmation sl =
+      null (getEmail sl) || isGood (asValidEmail $ getEmail sl)
+    checkMobileForConfirmation sl =
+      null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl)
+    checkEmailAndMobileForConfirmation sl =
+      checkEmailForConfirmation sl && checkMobileForConfirmation sl
 
 apiCallV1Cancel :: Kontrakcja m =>  DocumentID -> m Response
 apiCallV1Cancel did = logDocument did . api $ do
@@ -1436,7 +1462,8 @@ allRequiredAuthorAttachmentsAreAccepted :: (Kontrakcja m, DocumentMonad m) => [F
 allRequiredAuthorAttachmentsAreAccepted acceptedAttachments = allRequiredAttachmentsAreOnList acceptedAttachments <$> theDocument
 
 guardThatDocumentIsReadableBySignatories :: Kontrakcja m => Document -> m ()
-guardThatDocumentIsReadableBySignatories doc =
-  unless (isAccessibleBySignatories doc) $ throwM $ SomeDBExtraException $
+guardThatDocumentIsReadableBySignatories doc = do
+  now <- currentTime
+  unless (isAccessibleBySignatories now doc) $ throwM $ SomeDBExtraException $
     forbidden $ "The document has expired or has been withdrawn. (status: "
                 ++ show (documentstatus doc) ++ ")"

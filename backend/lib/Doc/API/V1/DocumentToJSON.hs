@@ -299,6 +299,8 @@ instance ToJSValue ConfirmationDeliveryMethod where
   toJSValue MobileConfirmationDelivery = toJSValue ("mobile"::String)
   toJSValue EmailAndMobileConfirmationDelivery = toJSValue ("email_mobile"::String)
   toJSValue NoConfirmationDelivery = toJSValue ("none"::String)
+  toJSValue EmailLinkConfirmationDelivery = toJSValue ("email_link"::String)
+  toJSValue EmailLinkAndMobileConfirmationDelivery = toJSValue ("email_link_mobile"::String)
 
 instance ToJSValue DeliveryMethod where
   toJSValue EmailDelivery  = toJSValue ("email"::String)

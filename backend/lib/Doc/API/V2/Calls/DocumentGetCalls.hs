@@ -6,12 +6,16 @@ module Doc.API.V2.Calls.DocumentGetCalls (
 , docApiV2History
 , docApiV2EvidenceAttachments
 , docApiV2FilesMain
+, docApiV2FilesFull
 , docApiV2FilesPage
 , docApiV2FilesPagesCount
 , docApiV2FilesGet
 , docApiV2Texts
+-- * Functions for tests
+, docApiV2FilesFullForTests
 ) where
 
+import Codec.Archive.Zip
 import Control.Monad.Base
 import Control.Monad.IO.Class (liftIO)
 import Data.Char
@@ -19,14 +23,16 @@ import Data.Time
 import Data.Unjson
 import Happstack.Server.Types
 import Log
+import System.FilePath ((<.>), takeExtension)
 import Text.JSON.Types (JSValue(..))
-import qualified Data.ByteString.Lazy as BSL (fromStrict)
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T
 import qualified Text.JSON as J
 
 import API.V2
 import API.V2.Parameters
-import AppView (respondWithPDF)
+import AppView (respondWithPDF, respondWithZipFile)
 import DB
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.Guards
@@ -34,6 +40,7 @@ import Doc.API.V2.JSON.Document
 import Doc.API.V2.JSON.List
 import Doc.API.V2.JSON.Misc (evidenceAttachmentsToJSONBS)
 import Doc.Data.MainFile
+import Doc.DocInfo
 import Doc.DocSeal (presealDocumentFile)
 import Doc.DocStateData
 import Doc.DocStateQuery (getDocByDocIDAndAccessTokenV2)
@@ -260,6 +267,76 @@ docApiV2FilesPage did fid pagenumber = logDocument did . api . withDocFileAccess
       logAttention "Rendering PDF page failed" $ object [ "page" .= show pagenumber]
       apiError $ serverError "Rendering PDF page failed"
     headers = mkHeaders [("Cache-Control", "max-age=604800"), ("Content-Type", "image/png")]
+
+docApiV2FilesFull :: Kontrakcja m => DocumentID -> m Response
+docApiV2FilesFull did = logDocument did . api . withDocAccess did $ \doc -> do
+  download <- apiV2ParameterDefault False (ApiV2ParameterBool "as_download")
+
+  files <- docApiV2FilesFullInternal doc
+  now <- currentTime
+  let epochBase = UTCTime { utctDay = fromGregorian 1970 1 1, utctDayTime = 0 }
+      epoch     = round $ diffUTCTime now epochBase
+      contents = BSL.toStrict $ fromArchive $
+        foldr (\(n,c) -> addEntryToArchive (toEntry n epoch (BSL.fromStrict c)))
+              emptyArchive files
+
+  return $ Ok $ respondWithZipFile download contents
+
+docApiV2FilesFullInternal :: Kontrakcja m => Document -> m [(FilePath, BS.ByteString)]
+docApiV2FilesFullInternal doc = do
+    mainFile <- case documentstatus doc of
+      Closed -> do
+        mFile <- fileFromMainFile (documentsealedfile doc)
+        case mFile of
+          Nothing -> apiError $ documentStateErrorWithCode 503
+            "The sealed PDF for the document is not ready yet, please wait and\
+            \ try again"
+          Just file -> (mkFileName (documenttitle doc),) <$> getFileContents file
+
+      _ -> do
+        mFile <- fileFromMainFile (documentfile doc)
+        case mFile of
+          Nothing -> apiError $ resourceNotFound "The document has no main file"
+          Just file -> do
+            presealFile <- presealDocumentFile doc file
+            case presealFile of
+              Left err -> apiError $ serverError (T.pack err)
+              Right contents -> return (filename file, contents)
+
+    let separateAuthorAttachments =
+          filter (if isClosed doc
+                    then not . authorattachmentaddtosealedfile
+                    else const True)
+                 (documentauthorattachments doc)
+
+        separateSignatoryAttachments
+          | isClosed doc = []
+          | otherwise = concatMap signatoryattachments
+                                  (documentsignatorylinks doc)
+
+    authorAttachmentFiles <- forM separateAuthorAttachments $ \att -> do
+      file     <- dbQuery $ GetFileByFileID $ authorattachmentfileid att
+      contents <- getFileContents file
+      return (mkFileName (authorattachmentname att), contents)
+
+    signatoryAttachmentFiles <-
+      fmap catMaybes . forM separateSignatoryAttachments $ \att -> do
+        case signatoryattachmentfile att of
+          Nothing -> return Nothing
+          Just fid -> do
+            file     <- dbQuery $ GetFileByFileID fid
+            contents <- getFileContents file
+            return $ Just (mkFileName (signatoryattachmentname att), contents)
+
+    return $ mainFile : authorAttachmentFiles ++ signatoryAttachmentFiles
+
+  where
+    mkFileName name
+      | takeExtension name == ".pdf" = name
+      | otherwise = name <.> "pdf"
+
+docApiV2FilesFullForTests :: Kontrakcja m => Document -> m [(FilePath, BS.ByteString)]
+docApiV2FilesFullForTests = docApiV2FilesFullInternal
 
 -------------------------------------------------------------------------------
 

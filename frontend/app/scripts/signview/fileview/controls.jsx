@@ -14,6 +14,7 @@ import ZoomInIcon from "../../icons/zoom_in_icon.svg";
 import ZoomOutIcon from "../../icons/zoom_out_icon.svg";
 import HighlightIcon from "../../icons/highlight_icon.svg";
 import ClearHighlightIcon from "../../icons/clear_highlight_icon.svg";
+import DownloadDocumentButton from "./downloaddocumentbutton";
 
 import vars from "../../../less/signview/vars.less";
 
@@ -191,6 +192,12 @@ module.exports = React.createClass({
     }
   },
 
+  showDownloadButton: function () {
+    const doc = this.context.document;
+    return !this.props.highlightingMode && !this.props.removingHighlightingMode
+      && (doc.showpdfdownload() || doc.closed());
+  },
+
   renderControls: function () {
     const doc = this.context.document;
     const {top, left, width, className} = this.state;
@@ -203,12 +210,17 @@ module.exports = React.createClass({
       width: width
     };
 
-    const buttonsClass = classNames({
-      "hidden": this.isHiddenByBlink() || doc.isUnavailableForSign(),
-      "buttons": true});
+    const buttonsClass = classNames("buttons right", {
+      "hidden": this.isHiddenByBlink() || doc.isUnavailableForSign()
+    });
 
     return (
       <div style={divStyle} className={classNames("controls", className)}>
+        {/* if */ this.showDownloadButton() &&
+          <div className="buttons left">
+            <DownloadDocumentButton document={this.context.document} />
+          </div>
+        }
         <div className="status">
             <HtmlTextWithSubstitution
               secureText={this.statusText()}

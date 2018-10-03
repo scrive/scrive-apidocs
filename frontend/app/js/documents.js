@@ -1021,5 +1021,41 @@ var Document = exports.Document = Backbone.Model.extend({
         },
         ajaxerror: errorCallback
       });
+    },
+
+    hasSeveralFiles: function () {
+      const attachments = this.authorattachments();
+
+      if(this.closed()) {
+        return _.any(attachments, function(att) {
+          return !att.add_to_sealed_file;
+        });
+      } else {
+        const has_sig_atts = _.any(this.signatories(), function (sig) {
+          return _.any(sig.attachments(), function (att) {
+            return att.hasFile();
+          });
+	});
+        return attachments.length > 0 || has_sig_atts;
+      }
+    },
+
+    downloadLink: function (asDownload) {
+      const isZip = this.hasSeveralFiles();
+
+      if (isZip) {
+        name = name.replace(/\.pdf$/i, ".zip");
+      }
+
+      const link = "/api/frontend/documents/" + this.documentid() + "/files/"
+        + (isZip ? "zip" : "main") + "/" + encodeURIComponent(this.title())
+        + "." + (isZip ? "zip" : "pdf") + "?as_download=" + !!asDownload
+        + (this.currentSignatory()
+           ? "&signatory_id=" + this.currentSignatory().signatoryid() : "");
+
+      return {
+        link: link,
+        isZip: isZip
+      };
     }
 });

@@ -94,7 +94,7 @@
   float:left;
   height: 100%;
   overflow: hidden;
-  width: 200px;
+  width: 178px;
 
   .box-sizing(border-box);
 }
@@ -105,7 +105,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  width: 180px;
+  width: 168px;
 }
 
 .design-view-action-participant-info-email {
@@ -114,7 +114,7 @@
   height: 100%;
   margin-left: 3px;
   overflow: hidden;
-  width: 268px;
+  width: 258px;
 
   .box-sizing(border-box);
 }
@@ -125,7 +125,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  width: 250px;
+  width: 230px;
 }
 
 .design-view-action-participant-info-company {
@@ -133,7 +133,7 @@
   float:left;
   height: 100%;
   overflow: hidden;
-  width: 182px;
+  width: 170px;
 
   .box-sizing(border-box);
 }
@@ -144,7 +144,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  width: 162px;
+  width: 150px;
 }
 
 /**************************/
@@ -419,7 +419,33 @@
   text-align: center;
 }
 
+/**************************/
 
+.design-view-action-participant-confirmation-secondary {
+  display: inline-block;
+  border-left: 2px solid @white;
+  float:left;
+  height: 100%;
+  width: 44px;
+  .box-sizing(border-box);
+  .user-select(none);
+}
+
+.design-view-action-participant-confirmation-icon-link {
+  background-image: url(~"@{img-base-url}/sprite-participation-icons4.png");
+  background-position: (-@device-icon-width * 15) 0;
+  height: @device-icon-height;
+  width: @device-icon-width;
+}
+
+.design-view-action-participant-confirmation-icon-attachments {
+  background-image: url(~"@{img-base-url}/attachment-icon.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 15px 16px;
+  height: @device-icon-height;
+  width: @device-icon-width;
+}
 
 // input boxes in participants
 // -------------------------
@@ -518,10 +544,10 @@
   display: inline-block;
   margin-bottom: 10px;
   vertical-align: top;
-  width: 297px;
+  width: 454px;
 
   &.select .select-opts {
-    width : 297px;
+    width : 454px;
   }
 
 }
@@ -563,7 +589,7 @@
     .design-view-action-participant-details-participation-box {
       display: inline-block;
       margin-right: 14px;
-      width: 300px;
+      width: 457px;
     }
   }
 }

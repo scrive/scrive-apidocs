@@ -2027,8 +2027,8 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeDocuments Int where
         sqlWhereNotExists . sqlSelect "signatory_links sl" $ do
           sqlJoinOn "document_session_tokens dst" "sl.id = dst.signatory_link_id"
           sqlWhere "sl.document_id = d.id"
-        -- Document hasn't changed for a month:
-        -- so that `availabledate` in `documentAttachedFields` works
+        -- Document hasn't changed for a month
+        -- so that `availabledate` in `documentAttachableFields` works
         sqlWhere $ "d.mtime" <+> "<=" <?> (30 `daysBefore` now)
 
       -- Blank out sensitive data.

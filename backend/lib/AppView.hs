@@ -13,6 +13,7 @@ module AppView(
               , simpleUnjsonResponse
               , simpleHtmlResponse
               , respondWithPDF
+              , respondWithZipFile
               , unsupportedBrowserPage
               , standardPageFields
               , entryPointFields
@@ -249,8 +250,14 @@ simpleHtmlResponse :: Kontrakcja m => String -> m Response
 simpleHtmlResponse s = ok $ toResponseBS (BS.fromString "text/html;charset=utf-8") $ BSL.fromString s
 
 respondWithPDF :: Bool -> BS.ByteString -> Response
-respondWithPDF forceDownload contents =
-  setHeaderBS "Content-Type" "application/pdf" $
+respondWithPDF = respondWithDownloadContents "application/pdf"
+
+respondWithZipFile :: Bool -> BS.ByteString -> Response
+respondWithZipFile = respondWithDownloadContents "application/zip"
+
+respondWithDownloadContents :: BS.ByteString -> Bool -> BS.ByteString -> Response
+respondWithDownloadContents mimeType forceDownload contents =
+  setHeaderBS "Content-Type" mimeType $
   (if forceDownload then setHeaderBS "Content-Disposition" "attachment" else id) $
   Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
 

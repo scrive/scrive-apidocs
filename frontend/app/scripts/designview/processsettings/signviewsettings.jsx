@@ -34,10 +34,7 @@ var SignviewSettingsModel = Backbone.Model.extend({
     return this.get("showHeader");
   },
   setShowHeader: function (b) {
-    this.set({"showHeader": b, "showPDFDownload": b});
-  },
-  setShowHeaderAndPdfDownload: function (b) {
-    this.set({"showHeader": b, "showPDFDownload": b});
+    this.set("showHeader", b);
   },
   showRejectOption: function () {
     return this.get("showRejectOption");
@@ -88,21 +85,13 @@ var SignviewSettingsView = React.createClass({
               <Checkbox
                 checked={model.showHeader()}
                 label={localization.designview.signviewsettings.showheader}
-                onChange={function (c) { model.setShowHeaderAndPdfDownload(c); }}
+                onChange={function (c) { model.setShowHeader(c); }}
               />
-              <div className="indented">
-                <Checkbox
-                  checked={model.showPDFDownload()}
-                  label={localization.designview.signviewsettings.showpdfdownload}
-                  onChange={function (c) {
-                    if (c) {
-                      model.setShowHeaderAndPdfDownload(c);
-                    } else {
-                      model.setShowPdfDownload(c);
-                    }
-                  }}
-                />
-              </div>
+              <Checkbox
+                checked={model.showPDFDownload()}
+                label={localization.designview.signviewsettings.showpdfdownload}
+                onChange={function (c) { model.setShowPdfDownload(c); }}
+              />
               <Checkbox
                 checked={model.showRejectOption()}
                 label={localization.designview.signviewsettings.showrejectoption}

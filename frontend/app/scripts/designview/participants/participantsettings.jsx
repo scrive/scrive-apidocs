@@ -182,6 +182,7 @@ module.exports = React.createClass({
       return {name: self.authenticationToSignText(t), value: t};
     });
   },
+
   confirmationDeliveryText: function (t) {
     if (t == "email") {
       return localization.designview.addParties.confirmationEmail;
@@ -193,10 +194,11 @@ module.exports = React.createClass({
       return localization.designview.addParties.confirmationNone;
     }
   },
+
   confirmationDeliveryOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var deliveryTypes =  ["email", "mobile", "email_mobile", "none"];
+    var deliveryTypes = ["email", "mobile", "email_mobile", "none"];
 
     if (sig.isLastViewer() && sig.confirmationdelivery() != "none") {
       deliveryTypes = _.without(deliveryTypes, "none");
@@ -225,9 +227,52 @@ module.exports = React.createClass({
     }
 
     return _.map(deliveryTypes, function (t) {
-      return {name: self.confirmationDeliveryText(t), value: t};
+      const selected = (t == "email" && sig.anyEmailConfirmationDelivery())
+            || (t == "mobile" && sig.mobileConfirmationDelivery())
+            || (t == "email_mobile" && sig.anyEmailMobileConfirmationDelivery())
+            || (t == "none" && sig.noneConfirmationDelivery());
+
+      return {
+        name: self.confirmationDeliveryText(t),
+        value: t,
+        selected: selected
+      };
     });
   },
+
+  secondaryConfirmationDeliveryText: function (t) {
+    if (t == "link") {
+      return localization.designview.addParties.confirmationLink;
+    } else if (t == "attachments") {
+      return localization.designview.addParties.confirmationAttachments;
+    } else if (t == "none") {
+      return localization.designview.addParties.confirmationNone;
+    }
+  },
+
+  secondaryConfirmationDeliveryOptions: function () {
+    const self = this;
+    const sig = this.props.model;
+
+    var types = ["none"];
+    if (sig.hasConfirmationEmail()) {
+      types = ["attachments", "link"];
+    } else if (sig.mobileConfirmationDelivery()) {
+      types = ["link"];
+    }
+
+    return _.map(types, function (t) {
+      const selected = (t == "link" && sig.hasConfirmationEmailLink())
+            || (t == "attachments" && sig.hasConfirmationEmailAttachments());
+
+      return {
+        name: self.secondaryConfirmationDeliveryText(t),
+        value: t,
+        selected: selected
+      };
+    });
+  },
+
   render: function () {
     var self = this;
     var sig = this.props.model;
@@ -242,7 +287,7 @@ module.exports = React.createClass({
               isOptionSelected={function (o) {
                 return sig.signorder() == o.value;
               }}
-              width={297}
+              width={454}
               options={self.signorderOptions()}
               onSelect={function (v) {
                 Track.track("Choose sign order", {
@@ -260,7 +305,7 @@ module.exports = React.createClass({
               isOptionSelected={function (o) {
                 return (sig.isLastViewer() ? "none" : sig.delivery()) == o.value;
               }}
-              width={297}
+              width={454}
               options={self.deliveryOptions()}
               onSelect={function (v) {
                 Track.track("Choose delivery method", {
@@ -273,6 +318,9 @@ module.exports = React.createClass({
             />
           </span>
 
+        </div>
+        <div className="design-view-action-participant-details-participation-row">
+
           <span className="design-view-action-participant-details-participation-box">
             <label className="label">{localization.designview.addParties.authenticationToView}</label>
             <Select
@@ -280,7 +328,7 @@ module.exports = React.createClass({
               isOptionSelected={function (o) {
                 return (sig.signs() ? sig.authenticationToView() : "standard") == o.value;
               }}
-              width={297}
+              width={454}
               options={self.authenticationToViewOptions()}
               onSelect={function (v) {
                 Track.track("Choose auth", {
@@ -299,9 +347,6 @@ module.exports = React.createClass({
               }}
             />
           </span>
-        </div>
-
-        <div className="design-view-action-participant-details-participation-row last-row">
 
           <span className="design-view-action-participant-details-participation-box">
             <label className="label">{localization.designview.addParties.role}</label>
@@ -312,7 +357,7 @@ module.exports = React.createClass({
                 localization.designview.addParties.roleSignatory :
                 localization.designview.addParties.roleViewer
               }
-              width={297}
+              width={454}
               options={self.roleOptions()}
               onSelect={function (v) {
                 Track.track("Choose participant role", {
@@ -333,6 +378,9 @@ module.exports = React.createClass({
             />
           </span>
 
+        </div>
+        <div className="design-view-action-participant-details-participation-row">
+
           <span className="design-view-action-participant-details-participation-box">
             <label className="label">{localization.designview.addParties.authenticationToSign}</label>
             <Select
@@ -340,7 +388,7 @@ module.exports = React.createClass({
               isOptionSelected={function (o) {
                 return (sig.signs() ? sig.authenticationToSign() : "standard") == o.value;
               }}
-              width={297}
+              width={454}
               options={self.authenticationToSignOptions()}
               onSelect={function (v) {
                 Track.track("Choose auth", {
@@ -364,21 +412,52 @@ module.exports = React.createClass({
             <label className="label">{localization.designview.addParties.confirmation}</label>
             <Select
               ref="confirmation-delivery-select"
-              isOptionSelected={function (o) {
-                return sig.confirmationdelivery() == o.value;
-              }}
-              width={297}
+              isOptionSelected={function (o) { return o.selected; }}
+              width={454}
               options={self.confirmationDeliveryOptions()}
               onSelect={function (v) {
                 Track.track("Choose confirmation delivery method", {
                   Where: "select"
                 });
-                sig.setConfirmationDelivery(v);
+                var cdm = v;
+                if (v == "email" && sig.hasConfirmationEmailLink()) {
+                  cdm = "email_link";
+                } else if (v == "email_mobile" && sig.hasConfirmationEmailLink()) {
+                  cdm = "email_link_mobile";
+                }
+                sig.setConfirmationDelivery(cdm);
               }}
             />
           </span>
 
         </div>
+        <div className="design-view-action-participant-details-participation-row last-row">
+
+          <span className="design-view-action-participant-details-participation-box">
+            <label className="label">{localization.designview.addParties.secondaryConfirmation}</label>
+            <Select
+              ref="secondary-confirmation-delivery-select"
+              isOptionSelected={function (o) { return o.selected; }}
+              width={454}
+              options={self.secondaryConfirmationDeliveryOptions()}
+              onSelect={function (v) {
+                Track.track("Choose confirmation delivery method", {
+                  Where: "select"
+                });
+                if (sig.emailConfirmationDelivery() && v == "link") {
+                  sig.setConfirmationDelivery("email_link");
+                } else if (sig.emailLinkConfirmationDelivery() && v == "attachments") {
+                  sig.setConfirmationDelivery("email");
+                } else if (sig.emailMobileConfirmationDelivery() && v == "link") {
+                  sig.setConfirmationDelivery("email_link_mobile");
+                } else if (sig.emailLinkMobileConfirmationDelivery() && v == "attachments") {
+                  sig.setConfirmationDelivery("email_mobile");
+                }
+              }}
+            />
+          </span>
+
+       </div>
         <BlockingModal ref="blockingModal"/>
       </div>
     );

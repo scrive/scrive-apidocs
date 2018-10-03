@@ -39,6 +39,7 @@ var ConfirmationDeliveryIcon = require("../../../scripts/designview/participants
       confirmationDeliveryIcon.forceUpdate();
       TestUtils.Simulate.click(confirmationDeliveryIcon.getDOMNode());
       var confirmationDeliveryMethod5 = signatory.get("confirmation_delivery_method");
+      assert.notEqual(confirmationDeliveryMethod4, confirmationDeliveryMethod5);
       assert.equal(confirmationDeliveryMethod5, confirmationDeliveryMethod1);
     });
 
