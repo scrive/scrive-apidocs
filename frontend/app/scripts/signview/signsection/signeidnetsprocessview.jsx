@@ -54,7 +54,7 @@ var classNames = require("classnames");
         }
       });
 
-      return {model: model, error: false, hasBeenSigned: false};
+      return {model: model, error: false, signStatus: "choose_signing_method"};
     },
 
     getBackboneModels: function () {
@@ -62,7 +62,6 @@ var classNames = require("classnames");
     },
 
     componentDidMount: function () {
-      this.state.model.initiateTransaction();
       window.addEventListener("message", this.onIFrameMessage);
     },
 
@@ -144,8 +143,33 @@ var classNames = require("classnames");
         this.props.onBack();
       }
       if (msgType === "signed") {
-        this.setState({hasBeenSigned: true});
+        this.setState({signStatus: "signed"});
       }
+    },
+
+    onNOBankIDSigningMethodClassic: function () {
+      this.state.model.initiateTransaction("nobankid_classic");
+      this.setState({signStatus: "signing_in_progress"});
+    },
+
+    onNOBankIDSigningMethodMobile: function () {
+      this.state.model.initiateTransaction("nobankid_mobile");
+      this.setState({signStatus: "signing_in_progress"});
+    },
+
+    onNemIDSigningMethodEmployeeKeycard: function () {
+      this.state.model.initiateTransaction("dknemid_employee_keycard");
+      this.setState({signStatus: "signing_in_progress"});
+    },
+
+    onNemIDSigningMethodEmployeeKeyfile: function () {
+      this.state.model.initiateTransaction("dknemid_employee_keyfile");
+      this.setState({signStatus: "signing_in_progress"});
+    },
+
+    onNemIDSigningMethodPersonalKeycard: function () {
+      this.state.model.initiateTransaction("dknemid_personal_keycard");
+      this.setState({signStatus: "signing_in_progress"});
     },
 
     onCancel: function () {
@@ -184,7 +208,7 @@ var classNames = require("classnames");
             <span className={logoClass}/>
             {confirmationTitle}
           </h1>
-          {/* if */ !this.state.hasBeenSigned &&
+          {/* if */ (this.state.signStatus == "signing_in_progress") &&
             <div>
               <iframe
                 ref="iframe"
@@ -200,7 +224,56 @@ var classNames = require("classnames");
               </div>
             </div>
           }
-          {/* if */ this.state.hasBeenSigned &&
+          {/* if */ (this.state.signStatus == "choose_signing_method") && signatory.noBankIDAuthenticationToSign() &&
+            <div>
+              <div className="nets-sign-process">
+                {localization.docsignview.eleg.bankid.signChooseMethod}
+              </div>
+              <Button
+                text={localization.docsignview.eleg.bankid.signNOSignMethodClassic}
+                onClick={this.onNOBankIDSigningMethodClassic}
+                className="button-block"
+              />
+              <Button
+                text={localization.docsignview.eleg.bankid.signNOSignMethodMobile}
+                onClick={this.onNOBankIDSigningMethodMobile}
+                className="button-block"
+              />
+              <Button
+                text={localization.cancel}
+                className="transparent-button button-block"
+                onClick={this.onCancel}
+              />
+            </div>
+          }
+          {/* if */ (this.state.signStatus == "choose_signing_method") && signatory.dkNemIDAuthenticationToSign() &&
+            <div>
+              <div className="nets-sign-process">
+                {localization.docsignview.eleg.bankid.signChooseMethod}
+              </div>
+              <Button
+                text={localization.docsignview.eleg.bankid.signDKSignMethodPersonalKeycard}
+                onClick={this.onNemIDSigningMethodPersonalKeycard}
+                className="button-block"
+              />
+              <Button
+                text={localization.docsignview.eleg.bankid.signDKSignMethodEmployeeKeycard}
+                onClick={this.onNemIDSigningMethodEmployeeKeycard}
+                className="button-block"
+              />
+              <Button
+                text={localization.docsignview.eleg.bankid.signDKSignMethodEmployeeKeyfile}
+                onClick={this.onNemIDSigningMethodEmployeeKeyfile}
+                className="button-block"
+              />
+              <Button
+                text={localization.cancel}
+                className="transparent-button button-block"
+                onClick={this.onCancel}
+              />
+            </div>
+          }
+          {/* if */ (this.state.signStatus == "signed") &&
             <h2>{successText}</h2>
           }
         </div>

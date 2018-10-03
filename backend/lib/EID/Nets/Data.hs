@@ -20,6 +20,7 @@ module EID.Nets.Data (
 
     , NetsSignOrder(..)
     , NetsSignProvider(..)
+    , NetsSignProviderMethod(..)
     , InsertOrderRequest(..)
     , InsertOrderResponse(..)
     , xpInsertOrderResponse
@@ -274,6 +275,14 @@ netsSignProviderText :: NetsSignProvider -> T.Text
 netsSignProviderText NetsSignNO = "no_bankid"
 netsSignProviderText NetsSignDK = "dk_nemid"
 
+data NetsSignProviderMethod =
+    NetsSignNOClassic
+  | NetsSignNOMobile
+  | NetsSignDKEmployeeKeycard
+  | NetsSignDKEmployeeKeyfile
+  | NetsSignDKPersonalKeycard
+  deriving (Eq, Ord, Show)
+
 data NetsSignOrder = NetsSignOrder
   { nsoSignOrderID :: !SignOrderUUID
   , nsoSignatoryLinkID :: !SignatoryLinkID
@@ -297,10 +306,10 @@ instance Loggable NetsSignOrder where
 
 -- NETS SIGNING - Insert Order Request
 
-data InsertOrderRequest = InsertOrderRequest NetsSignOrder NetsSignConfig T.Text
+data InsertOrderRequest = InsertOrderRequest NetsSignOrder NetsSignProviderMethod NetsSignConfig T.Text
 
 instance ToXML InsertOrderRequest where
-  toXML (InsertOrderRequest NetsSignOrder{..} NetsSignConfig{..} host_part) =
+  toXML (InsertOrderRequest NetsSignOrder{..} method NetsSignConfig{..} host_part) =
     element "InsertOrder" $ do
       element "OrderID" . T.pack . show $ nsoSignOrderID
       element "Documents" $ do
@@ -316,23 +325,32 @@ instance ToXML InsertOrderRequest where
         element "Signer" $ do
           element "EndUserSigner" $ do
             element "LocalSignerReference" ("signer_1" :: T.Text)
-            element "AcceptedPKIs" $ case nsoProvider of
-              NetsSignNO -> do
+            element "AcceptedPKIs" $ case method of
+              NetsSignNOMobile -> do
                 element "BankIDNOMobile" $ do
                   element "CertificatePolicy" ("Personal" :: T.Text)
+              NetsSignNOClassic -> do
                 element "BankID" $ do
                   element "CertificatePolicy" ("Personal" :: T.Text)
-              NetsSignDK -> do
-                -- Nets is unable to accept 2 "NemID" elements,
-                -- so the workaround is to use NemID and NemID-OpenSign for
-                -- 2 different policies
+              -- Nets does not support, that the Signer chooses one of
+              -- Employee keycard or Personal keycard. We have to know before
+              -- starting the InsertOrder.
+              -- We use the same approach in NOBankID for consistency.
+              NetsSignDKEmployeeKeycard -> do
                 element "NemID" $ do
-                  element "CertificatePolicy" ("Personal" :: T.Text)
+                  element "CertificatePolicy" ("Employee" :: T.Text)
                   element "SignerID" $ do
                     element "IDType" ("SSN" :: T.Text)
                     element "IDValue" nsoSSN
+              NetsSignDKEmployeeKeyfile -> do
                 element "NemID-OpenSign" $ do
                   element "CertificatePolicy" ("Employee" :: T.Text)
+                  element "SignerID" $ do
+                    element "IDType" ("SSN" :: T.Text)
+                    element "IDValue" nsoSSN
+              NetsSignDKPersonalKeycard -> do
+                element "NemID" $ do
+                  element "CertificatePolicy" ("Personal" :: T.Text)
                   element "SignerID" $ do
                     element "IDType" ("SSN" :: T.Text)
                     element "IDValue" nsoSSN

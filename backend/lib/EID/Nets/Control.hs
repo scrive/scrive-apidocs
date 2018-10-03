@@ -359,16 +359,30 @@ handleSignRequest did slid = do
           [ Handler $ \(NetsSignParsingError _) -> return () ]
       _ -> return ()
     auth_to_sign <- signatorylinkauthenticationtosignmethod <$> fromJust . getSigLinkFor slid <$> theDocument
-    (provider, mSSN) <- case auth_to_sign of
-      NOBankIDAuthenticationToSign -> return (NetsSignNO, Nothing)
+    (provider, eidmethod, mSSN) <- case auth_to_sign of
+      NOBankIDAuthenticationToSign -> do
+        eidmethod' <- getField "eid_method" >>= \case
+          Just "nobankid_classic" -> return NetsSignNOClassic
+          Just "nobankid_mobile" -> return NetsSignNOMobile
+          _ -> do
+            logAttention_ "Missing or invalid eid_method for NO"
+            respond404
+        return (NetsSignNO, eidmethod', Nothing)
       DKNemIDAuthenticationToSign  -> do
         pn <- getField "personal_number" >>= \case
           (Just pn) -> return pn
           _ -> do
             logInfo_ "No personal number"
             respond404
+        eidmethod' <- getField "eid_method" >>= \case
+          Just "dknemid_employee_keycard" -> return NetsSignDKEmployeeKeycard
+          Just "dknemid_employee_keyfile" -> return NetsSignDKEmployeeKeyfile
+          Just "dknemid_personal_keycard" -> return NetsSignDKPersonalKeycard
+          _ -> do
+            logAttention_ "Missing or invalid eid_method for DK"
+            respond404
         guardThatPersonalNumberMatches slid pn =<< theDocument
-        return (NetsSignDK, Just . T.pack . filter ('-' /=) $ pn)
+        return (NetsSignDK, eidmethod', Just . T.pack . filter ('-' /=) $ pn)
       _ -> do
         logAttention "NetsSign: unsupported auth to sign method" $ object [
             identifier did
@@ -377,7 +391,7 @@ handleSignRequest did slid = do
         internalError
     let nso = NetsSignOrder nsoID slid provider (T.pack tbs) (sesID sess) (5 `minutesAfter` now) False mSSN
     host_part <- T.pack <$> getHttpsHostpart
-    insOrdRs <- netsCall conf (InsertOrderRequest nso conf host_part) xpInsertOrderResponse (show did)
+    insOrdRs <- netsCall conf (InsertOrderRequest nso eidmethod conf host_part) xpInsertOrderResponse (show did)
     getSignProcRs <- netsCall conf (GetSigningProcessesRequest nso) xpGetSigningProcessesResponse (show did)
     dbUpdate $ MergeNetsSignOrder nso
     return $ object [
@@ -454,24 +468,22 @@ checkNetsSignStatus nets_conf did slid = do
                       dbUpdate $ ChargeUserGroupForNOBankIDSignature (documentid doc)
                       return $ NetsSignStatusSuccess
                     NetsSignDK -> do
-                      getSignerSSNAndIPAddress (gsdorsB64SDOBytes getSdoRs) >>= \case
-                        (Nothing, _) -> do
-                          logAttention_ "Required Danish NemID attributes were not found."
-                          return $ NetsSignStatusFailure NetsFaultAPIError
-                        (Just signer_ssn, m_ipaddress) -> do
-                          getSdoDetRsDk <- netsCall nets_conf (GetSDODetailsRequest $ gsdorsB64SDOBytes getSdoRs) xpGetSDODetailsResponseDK (show did)
-                          logInfo "NETS DK Sign succeeded!" $ logObject_ getOrdStRs
-                          when (isNothing m_ipaddress) $
-                            logInfo_ "NETS DK Sign does not include IP address"
-                          dbUpdate $ ESign.MergeNetsDKNemIDSignature slid NetsDKNemIDSignature
-                            { netsdkSignatoryName = gsdodrsdkSignerCN getSdoDetRsDk
-                            , netsdkSignedText = nsoTextToBeSigned nso
-                            , netsdkB64SDO = gsdorsB64SDOBytes getSdoRs
-                            , netsdkSignatorySSN = signer_ssn
-                            , netsdkSignatoryIP = fromMaybe "" m_ipaddress
-                            }
-                          dbUpdate $ ChargeUserGroupForDKNemIDSignature (documentid doc)
-                          return $ NetsSignStatusSuccess
+                      getSignerSSNAndIPAddress (gsdorsB64SDOBytes getSdoRs) >>= \(m_signer_ssn, m_ipaddress) -> do
+                        getSdoDetRsDk <- netsCall nets_conf (GetSDODetailsRequest $ gsdorsB64SDOBytes getSdoRs) xpGetSDODetailsResponseDK (show did)
+                        logInfo "NETS DK Sign succeeded!" $ logObject_ getOrdStRs
+                        when (isNothing m_ipaddress) $
+                          logInfo_ "NETS DK Sign does not include IP address"
+                        when (isNothing m_signer_ssn) $
+                          logInfo_ "NETS DK Sign does not include personal number"
+                        dbUpdate $ ESign.MergeNetsDKNemIDSignature slid NetsDKNemIDSignature
+                          { netsdkSignatoryName = gsdodrsdkSignerCN getSdoDetRsDk
+                          , netsdkSignedText = nsoTextToBeSigned nso
+                          , netsdkB64SDO = gsdorsB64SDOBytes getSdoRs
+                          , netsdkSignatorySSN = fromMaybe "" m_signer_ssn
+                          , netsdkSignatoryIP = fromMaybe "" m_ipaddress
+                          }
+                        dbUpdate $ ChargeUserGroupForDKNemIDSignature (documentid doc)
+                        return $ NetsSignStatusSuccess
 
   where
     netsStatusFailure nets_fault = do

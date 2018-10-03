@@ -576,10 +576,11 @@ $if(provider_nobankid)$
 </p>
 $endif$
 $if(provider_dknemid)$
+<p>Signing transaction with $provider()$ was restricted to ID number: $if(signatory_personal_number_from_signlink)$$personalNumber(value=signatory_personal_number_from_signlink)$$else$$personalNumber(value=signatory_personal_number)$$endif$</p>
 <p>Data returned from $provider()$:
   <br/>Name: $signatory_name$
-  <br/>ID number: $personalNumber(value=signatory_personal_number)$
-  <br/>IP: $signatory_ip$
+  $if(signatory_personal_number)$<br/>ID number: $personalNumber(value=signatory_personal_number)$$endif$
+  $if(signatory_ip)$<br/>IP: $signatory_ip$$endif$
 </p>
 $endif$
 <br/>

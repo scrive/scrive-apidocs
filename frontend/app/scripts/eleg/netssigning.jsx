@@ -79,12 +79,13 @@ module.exports = Backbone.Model.extend({
     /*
     * Workflow logic functions
     */
-    initiateTransaction: function () {
+    initiateTransaction: function (eidMethod) {
       var self = this;
       new Submit({
         method: "POST",
         url: "/nets/sign/" + self.document().documentid() + "/" + self.signatory().signatoryid(),
         personal_number: self.signatory().personalnumber(),
+        eid_method: eidMethod,
         ajaxsuccess: function (resp, s, xhr) {
           if (resp.nets_sign_url) {
             self.setSignUrl(resp.nets_sign_url);
