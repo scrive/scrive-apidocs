@@ -793,13 +793,13 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         this.set({confirmation_delivery_method:d, confirmationDeliverySynchedWithDelivery : false});
     },
     setConfirmationDeliverySynchedWithDelivery: function(dm) {
-      const cdm = dm;
+      var cdm_deadbeef = dm;
       if(dm == "email" && this.hasConfirmationEmailLink()) {
-        cdm = "email_link";
+        cdm_deadbeef = "email_link";
       } else if(dm == "email_mobile" && this.hasConfirmationEmailLink()) {
-        cdm = "email_link_mobile";
+        cdm_deadbeef = "email_link_mobile";
       }
-      this.set({confirmation_delivery_method: cdm});
+      this.set({confirmation_delivery_method: cdm_deadbeef});
     },
     isConfirmationDeliverySynchedWithDelivery : function() {
       return this.get("confirmationDeliverySynchedWithDelivery");
