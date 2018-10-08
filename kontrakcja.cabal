@@ -73,7 +73,8 @@ Library
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
-  Exposed-modules: API.APIVersion
+  Exposed-modules: AccessControl.Data
+                 , API.APIVersion
                  , API.Logging
                  , API.Monad.V1
                  , API.V2

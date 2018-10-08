@@ -20,6 +20,7 @@ import Happstack.StaticRouting
 import Log
 import qualified Data.Text as T
 
+import AccessControl.Data
 import API.V2
 import API.V2.Errors
 import API.V2.Parameters
@@ -36,7 +37,7 @@ import User.Email (Email(..))
 import User.Model
 import UserGroup.Data
 import UserGroup.Data.PaymentPlan
-import UserGroup.Model
+import UserGroup.Model (UserGroupCreate(..), UserGroupGet(..), UserGroupGetAllChildren(..), UserGroupUpdate(..))
 
 partnerAPI :: Route (Kontra Response)
 partnerAPI = dir "api" $ choice
@@ -60,32 +61,25 @@ partnerAPIV1 = dir "partner" $ choice
 
 -- | Create a user group as a child of the partner's user group (root of the tree).
 partnerApiCallV1CompanyCreate :: Kontrakcja m => PartnerID -> m Response
-partnerApiCallV1CompanyCreate pid = logPartner pid . api $ do
-  (apiuser, _actor) <- getAPIUser APIPersonal
-  guardThatUserCanAdministerPartnerID apiuser pid
-  (ptUserGroupID <$> (dbQuery $ GetPartnerByID pid)) >>= \case
-
-    Nothing -> do
-      let errMsg = "No root user group could be found for given partner identifier."
-      logInfo "Partner API" $ object [ "error_message" .= errMsg ]
-      apiError $ serverError errMsg
-
-    Just partnerUserGroupID -> do
-      let ugBase = set ugParentGroupID (Just partnerUserGroupID)
-                 . set ugInvoicing     (BillItem $ Just FreePlan)
-                 $ def
-      ugu <- apiV2ParameterObligatory $ ApiV2ParameterJSON
-                                            "json"
-                                            unjsonUserGroupForUpdate
-      let ug = updateUserGroupWithUserGroupForUpdate ugBase ugu
-      (eUserGroup :: Either SomeException UserGroup) <- try . dbUpdate . UserGroupCreate $ ug
-      case eUserGroup of
-        Left exc -> do
-            let errMsg = "The user group could not be created; " <> (T.pack . show $ exc)
-            apiError . serverError $ errMsg
-        Right ug' ->
-            Created <$> return (unjsonUserGroupForUpdate,
-                                userGroupToUserGroupForUpdate ug')
+partnerApiCallV1CompanyCreate pid =
+  logPartner pid . api $ do
+    ((ptUserGroupID <$>) <$> dbQuery $ GetPartnerByID pid) >>= \case
+      Nothing -> noUsrGrpErrPartner
+      Just partnerUsrGrpID -> do
+        let acc = [ makePolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
+        apiAccessControl acc noPrvErr $ do
+          let ugBase = set ugParentGroupID (Just partnerUsrGrpID)
+                     . set ugInvoicing     (BillItem $ Just FreePlan)
+                     $ def
+          ugu <- apiV2ParameterObligatory $
+                   ApiV2ParameterJSON "json" unjsonUserGroupForUpdate
+          let ug = updateUserGroupWithUserGroupForUpdate ugBase ugu
+          (eUserGroup :: Either SomeException UserGroup) <- try . dbUpdate . UserGroupCreate $ ug
+          case eUserGroup of
+            Left exc -> do
+                srvLogErr $ "The user group could not be created; " <> (T.pack . show $ exc)
+            Right ug' ->
+                Created <$> return (unjsonUserGroupForUpdate, userGroupToUserGroupForUpdate ug')
 
 partnerApiCallV1CompanyUpdate :: ( MonadCatch m
                                  , Kontrakcja m)
@@ -94,193 +88,203 @@ partnerApiCallV1CompanyUpdate :: ( MonadCatch m
                               -> m Response
 partnerApiCallV1CompanyUpdate pid ugid =
   logPartnerAndUserGroup pid ugid . api $ do
-    (apiuser, _actor) <- getAPIUser APIPersonal
-    guardThatUserCanAdministerPartnerID apiuser pid
-    ug <- guardThatPartnerIDCanAdministerUserGroupID pid ugid
-    uguJSON <- apiV2ParameterObligatory $ ApiV2ParameterAeson "json"
-    ugu <- case (Unjson.update (userGroupToUserGroupForUpdate ug)
-                               unjsonUserGroupForUpdate uguJSON) of
-        (Unjson.Result value []) ->
-          return value
-        (Unjson.Result _ errs) ->
-          let errMsg = "Errors while parsing user group data:" <+>
-                       (T.pack . show $ errs)
-          in apiError . requestParameterParseError "json" $ errMsg
-    let ug' = updateUserGroupWithUserGroupForUpdate ug ugu
-    -- `UserGroupUpdate` has no boolean return status so we `try` instead.
-    (eDidUpdate :: Either SomeException ()) <- try . dbUpdate $ UserGroupUpdate ug'
-    when (isLeft eDidUpdate) $
-      apiError $ serverError "The user group details could not be updated."
-    updatedUserGroup <- apiGuardJustM
-      (serverError "Was not able to retrieve updated company")
-      (dbQuery . UserGroupGet $ get ugID ug)
-    return . Ok $ (unjsonUserGroupForUpdate, userGroupToUserGroupForUpdate updatedUserGroup)
+    ((ptUserGroupID <$>) <$> dbQuery $ GetPartnerByID pid) >>= \case
+      Nothing -> noUsrGrpErrPartner
+      Just partnerUsrGrpID -> do
+        -- for backwards compatibility we check _both_ that the user is allowed
+        -- to update the specified partner _and_ the user group. In the future
+        -- this should be unnecessary.
+        let acc =  [ makePolicyItem (UpdateA, UserGroupR, ugid)
+                   , makePolicyItem (UpdateA, UserGroupR, partnerUsrGrpID) ]
+        apiAccessControl acc noPrvErr $ do
+          dbQuery (UserGroupGet ugid) >>= \case
+            Nothing -> noUsrGrpErr
+            Just ug -> do
+              uguJSON <- apiV2ParameterObligatory $ ApiV2ParameterAeson "json"
+              ugu <- case (Unjson.update (userGroupToUserGroupForUpdate ug)
+                                         unjsonUserGroupForUpdate uguJSON) of
+                  (Unjson.Result value []) ->
+                    return value
+                  (Unjson.Result _ errs) ->
+                    rqPrmErr $ "Errors while parsing user group data:" <+> (T.pack . show $ errs)
+              let ug' = updateUserGroupWithUserGroupForUpdate ug ugu
+              (eDidUpdate :: Either SomeException ()) <- try . dbUpdate $ UserGroupUpdate ug'
+              when (isLeft eDidUpdate) $
+                srvLogErr "The user group details could not be updated."
+              updatedUserGroup <- apiGuardJustM
+                (serverError "Was not able to retrieve updated company")
+                (dbQuery . UserGroupGet $ get ugID ug)
+              return . Ok $ (unjsonUserGroupForUpdate, userGroupToUserGroupForUpdate updatedUserGroup)
 
 partnerApiCallV1CompanyGet :: Kontrakcja m => PartnerID -> UserGroupID -> m Response
 partnerApiCallV1CompanyGet pid ugid =
   logPartnerAndUserGroup pid ugid . api $ do
-    (apiuser, _actor) <- getAPIUser APIPersonal
-    guardThatUserCanAdministerPartnerID apiuser pid
-    ug <- guardThatPartnerIDCanAdministerUserGroupID pid ugid
-    Ok <$> return (unjsonUserGroupForUpdate,
-                   userGroupToUserGroupForUpdate ug)
+    ((ptUserGroupID <$>) <$> dbQuery $ GetPartnerByID pid) >>= \case
+      Nothing -> noUsrGrpErrPartner
+      Just partnerUsrGrpID -> do
+        -- for backwards compatibility we check _both_ that the user is allowed
+        -- to update the specified partner _and_ the user group. In the future
+        -- this should be unnecessary.
+        let acc = [ makePolicyItem (ReadA, UserGroupR, ugid)
+                  , makePolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
+            -- see @note for `partnerApiCallV1CompaniesGet`
+        apiAccessControl acc noPrvErr $ do
+          (dbQuery $ UserGroupGet ugid) >>= \case
+            Nothing -> noUsrGrpErr
+            Just userGroup -> do
+              Ok <$> return (unjsonUserGroupForUpdate,
+                             userGroupToUserGroupForUpdate userGroup)
 
 partnerApiCallV1CompaniesGet :: Kontrakcja m => PartnerID -> m Response
 partnerApiCallV1CompaniesGet pid =
   logPartner pid . api $ do
-    (apiuser, _actor) <- getAPIUser APIPersonal
-    guardThatUserCanAdministerPartnerID apiuser pid
-
-    (ptUserGroupID <$> (dbQuery $ GetPartnerByID pid)) >>= \case
-      Nothing -> do
-        let errMsg = "No root user group could be found for given partner identifier."
-        logInfo "Partner API" $ object [ "error_message" .= errMsg ]
-        apiError $ serverError errMsg
-      Just partnerUserGroupID -> do
-        userGroups <- dbQuery $ UserGroupGetAllChildren partnerUserGroupID
-        Ok <$> return (unjsonUserGroupsForUpdate,
-                       userGroupToUserGroupForUpdate <$> userGroups)
+    ((ptUserGroupID <$>) <$> dbQuery $ GetPartnerByID pid) >>= \case
+      Nothing -> noUsrGrpErrPartner
+      Just partnerUsrGrpID -> do
+        let acc = [ makePolicyItem (ReadA, UserGroupR, partnerUsrGrpID)
+                  , makePolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
+       -- @note The last entry is just a trick to keep company admins from
+       -- reading the companies - as of now we only want partner admins to be
+       -- able to read, even though in the future this will change. The trick
+       -- relies on the fact that only partner admins have `(CreateA,
+       -- UserGroupR, partnerUsrGrpID)`; cf. instance for HasPermissions of
+       -- (AccessRole UserGroupID) in AccessControl.Data...around line 95
+        apiAccessControl acc noPrvErr $ do
+          userGroups <- dbQuery $ UserGroupGetAllChildren partnerUsrGrpID
+          Ok <$> return (unjsonUserGroupsForUpdate,
+                         userGroupToUserGroupForUpdate <$> userGroups)
 
 partnerApiCallV1UserCreate :: Kontrakcja m => PartnerID -> UserGroupID -> m Response
 partnerApiCallV1UserCreate pid ugid =
   logPartnerAndUserGroup pid ugid . api $ do
-    (apiuser, _actor) <- getAPIUser APIPersonal
-    guardThatUserCanAdministerPartnerID apiuser pid
-    _ug <- guardThatPartnerIDCanAdministerUserGroupID pid ugid
-    (userInfo, hasAcceptedTOS, lang) <- do
-      userForUpdate <- apiV2ParameterObligatory $ ApiV2ParameterJSON "json" unjsonUserForUpdate
-      return ( userInfoFromUserForUpdate userForUpdate
-             , ufuHasAcceptedTOS userForUpdate
-             , ufuLang userForUpdate
-             )
-    guardValidEmailAndNoExistingUser (useremail userInfo) Nothing
-    when (not hasAcceptedTOS) $
-      apiError $ requestParameterInvalid
-                   "has_accepted_tos"
-                   ("The user must accept the Scrive Terms of Service" <+>
-                    "to create an account")
-    newUser <- apiGuardJustM
-      (serverError "The user could not be created")
-      (createUser (useremail userInfo)
-                  (userfstname userInfo, usersndname userInfo)
-                  (ugid, False)
-                  lang
-                  PartnerInvitation)
+    ((ptUserGroupID <$>) <$> dbQuery $ GetPartnerByID pid) >>= \case
+      Nothing -> noUsrGrpErrPartner
+      Just partnerUsrGrpID -> do
+        let acc = [ makePolicyItem (CreateA, UserR, ugid)
+                  , makePolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
 
-    let uid = userid newUser
-    didUpdate <- dbUpdate $ SetUserInfo uid userInfo
-    when (not didUpdate) $
-      apiError $ serverError "Could not update user details"
-    when hasAcceptedTOS $
-      currentTime >>= void . dbUpdate . AcceptTermsOfService uid
-    -- re-get from DB to go to the source of truth
-    userRefreshed <- apiGuardJustM
-      (serverError "Could not retrieve updated user details")
-      (dbQuery $ GetUserByID uid)
-    Created <$> return (unjsonUserForUpdate, userToUserForUpdate userRefreshed)
+                  {- This last one is blocking for all but partner admins.             -}
+                  {- Cf. `HasPermissions` instance for `(AccessRole UserGroupID)`      -}
+                  {- Maybe we don't need to have the _exact_ same behaviour as before? -}
+        apiAccessControl acc noPrvErr $ do
+          (userInfo, hasAcceptedTOS, lang) <- do
+            userForUpdate <- apiV2ParameterObligatory $ ApiV2ParameterJSON "json" unjsonUserForUpdate
+            return ( userInfoFromUserForUpdate userForUpdate
+                   , ufuHasAcceptedTOS userForUpdate
+                   , ufuLang userForUpdate )
+          guardValidEmailAndNoExistingUser (useremail userInfo) Nothing
+          when (not hasAcceptedTOS) tosNotAcceptedErr
+
+          -- API call actions
+          newUser <- apiGuardJustM
+            (serverError "The user could not be created")
+            (createUser (useremail userInfo)
+                        (userfstname userInfo, usersndname userInfo)
+                        (ugid, False)
+                        lang
+                        PartnerInvitation)
+
+          let uid = userid newUser
+          didUpdate <- dbUpdate $ SetUserInfo uid userInfo
+          when (not didUpdate) $ srvLogErr "Could not update user details"
+          when hasAcceptedTOS $
+            currentTime >>= void . dbUpdate . AcceptTermsOfService uid
+          -- re-get from DB to go to the source of truth
+          userRefreshed <- apiGuardJustM
+            (serverError "Could not retrieve updated user details")
+            (dbQuery $ GetUserByID uid)
+          -- Result
+          Created <$> return (unjsonUserForUpdate, userToUserForUpdate userRefreshed)
+
 
 partnerApiCallV1UserGet :: Kontrakcja m => PartnerID -> UserID -> m Response
 partnerApiCallV1UserGet pid uid =
   logPartnerAndUser pid uid . api $ do
-    (apiuser, _actor) <- getAPIUser APIPersonal
-    guardThatUserCanAdministerPartnerID apiuser pid
-    user <- guardThatPartnerIDCanAdministerUserID pid uid
-    Ok <$> return (unjsonUserForUpdate, userToUserForUpdate user)
+    ((ptUserGroupID <$>) <$> dbQuery $ GetPartnerByID pid) >>= \case
+      Nothing -> noUsrGrpErrPartner
+      Just partnerUsrGrpID -> do
+        let acc = [ makePolicyItem (ReadA, UserR, uid)
+                  , makePolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
+            -- see @note for `partnerApiCallV1CompaniesGet`
+        apiAccessControl acc noPrvErr $ do
+          (dbQuery . GetUserByID $ uid) >>= \case
+            Nothing -> do
+              apiError $ resourceNotFound "A user with that ID was not found"
+            Just user -> do
+              Ok <$> return (unjsonUserForUpdate, userToUserForUpdate user)
 
 partnerApiCallV1CompanyUsersGet :: Kontrakcja m => PartnerID -> UserGroupID -> m Response
 partnerApiCallV1CompanyUsersGet pid ugid =
   logPartnerAndUserGroup pid ugid . api $ do
-    (apiuser, _actor) <- getAPIUser APIPersonal
-    guardThatUserCanAdministerPartnerID apiuser pid
-    _ug <- guardThatPartnerIDCanAdministerUserGroupID pid ugid
-    users <- dbQuery $ UserGroupGetUsers ugid
-    -- Result
-    Ok <$> return (unjsonUsersForUpdate, userToUserForUpdate <$> users)
+    ((ptUserGroupID <$>) <$> dbQuery $ GetPartnerByID pid) >>= \case
+      Nothing -> noUsrGrpErrPartner
+      Just partnerUsrGrpID -> do
+        let acc = [ makePolicyItem  (ReadA, UserGroupR, ugid)
+                  , makePolicyItem  (CreateA, UserGroupR, partnerUsrGrpID)]
+            -- see @note for `partnerApiCallV1CompaniesGet`
+        apiAccessControl acc noPrvErr $ do
+          users <- dbQuery $ UserGroupGetUsers ugid
+          Ok <$> return (unjsonUsersForUpdate, userToUserForUpdate <$> users)
 
 partnerApiCallV1UserUpdate :: Kontrakcja m => PartnerID -> UserID -> m Response
-partnerApiCallV1UserUpdate pid userID =
-  logPartnerAndUser pid userID . api $ do
-    -- Permissions
-    (apiuser, _actor) <- getAPIUser APIPersonal
-    -- Guards
-    guardThatUserCanAdministerPartnerID apiuser pid
-    user <- guardThatPartnerIDCanAdministerUserID pid userID
-    -- Parameters
-    ufuJSON <- apiV2ParameterObligatory $ ApiV2ParameterAeson "json"
-    ufu <- case (Unjson.update (userToUserForUpdate user) unjsonUserForUpdate ufuJSON) of
-        (Result value []) ->
-          return value
-        (Result _ errs) ->
-          apiError $ requestParameterParseError "json" $ "Errors while parsing user data:" <+> T.pack (show errs)
-    let userInfo = userInfoFromUserForUpdate ufu
+partnerApiCallV1UserUpdate pid uid =
+  logPartnerAndUser pid uid . api $ do
+    ((ptUserGroupID <$>) <$> dbQuery $ GetPartnerByID pid) >>= \case
+      Nothing -> noUsrGrpErrPartner
+      Just partnerUsrGrpID -> do
+        let acc = [ makePolicyItem (UpdateA, UserR, uid)
+                  , makePolicyItem (UpdateA, UserGroupR, partnerUsrGrpID) ]
+            -- see @note for `partnerApiCallV1CompaniesGet`
+        apiAccessControl acc noPrvErr $ do
+          user <- guardThatUserExists uid
+          ufuJSON <- apiV2ParameterObligatory $ ApiV2ParameterAeson "json"
+          ufu <- case (Unjson.update (userToUserForUpdate user) unjsonUserForUpdate ufuJSON) of
+              (Result value []) -> return value
+              (Result _ errs) -> rqPrmErr ("Errors while parsing user data:" <+> T.pack (show errs))
+          let userInfo = userInfoFromUserForUpdate ufu
 
-    -- More guards
-    guardValidEmailAndNoExistingUser (useremail userInfo) (Just userID)
-    when (not $ ufuHasAcceptedTOS ufu) $
-      apiError $ requestParameterInvalid "has_accepted_tos" "The user must accept the Scrive Terms of Service to use it."
-    -- API call actions
-    didUpdateInfo     <- dbUpdate $ SetUserInfo userID userInfo
-    didUpdateSettings <- dbUpdate $ SetUserSettings userID $ (usersettings user) { lang = ufuLang ufu }
-    when (not $ didUpdateInfo && didUpdateSettings) $
-      apiError $ serverError "Could not update user"
-    -- re-fetch original to get what's really in the DB.
-    userFromDB <- apiGuardJustM
-      (serverError "The updated user could not be fetched from the database.")
-      (dbQuery $ GetUserByID userID)
-    -- Result
-    Ok <$> return (unjsonUserForUpdate, userToUserForUpdate userFromDB)
+          guardValidEmailAndNoExistingUser (useremail userInfo) (Just uid)
+          when (not $ ufuHasAcceptedTOS ufu) $ tosNotAcceptedErr
+          didUpdateInfo     <- dbUpdate $ SetUserInfo uid userInfo
+          didUpdateSettings <- dbUpdate $ SetUserSettings uid (UserSettings (ufuLang ufu) def)
+          -- @todo fix retention policy ^
+          when (not $ didUpdateInfo && didUpdateSettings) $
+            srvLogErr "Could not update user"
+          -- re-fetch original to get what's really in the DB.
+          userFromDB <- apiGuardJustM
+            (serverError "The updated user could not be fetched from the database.")
+            (dbQuery $ GetUserByID uid)
+          Ok <$> return (unjsonUserForUpdate, userToUserForUpdate userFromDB)
 
 partnerApiCallV1UserGetPersonalToken :: Kontrakcja m => PartnerID -> UserID -> m Response
-partnerApiCallV1UserGetPersonalToken pid userID =
-  logPartnerAndUser pid userID . api $ do
-    -- Permissions
-    (apiuser, _actor) <- getAPIUser APIPersonal
-    -- Guards
-    guardThatUserCanAdministerPartnerID apiuser pid
-    user <- guardThatPartnerIDCanAdministerUserID pid userID
-    -- API call actions
-    _ <- dbUpdate $ CreatePersonalToken (userid user)
-    token <- apiGuardJustM
-      (serverError "Could not get user personal token")
-      (dbQuery $ GetPersonalToken (userid user))
-    -- Result
-    --return $ Ok $ J.JSObject (J.toJSObject token)
-    return $ Ok (unjsonOAuthAuthorization, token)
+partnerApiCallV1UserGetPersonalToken pid uid =
+  logPartnerAndUser pid uid . api $ do
+    ((ptUserGroupID <$>) <$> dbQuery $ GetPartnerByID pid) >>= \case
+      Nothing -> noUsrGrpErrPartner
+      Just partnerUsrGrpID -> do
+        let acc = [ makePolicyItem (CreateA, UserPersonalTokenR, uid)
+                  , makePolicyItem (ReadA, UserPersonalTokenR, uid)
+                  , makePolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
+                  -- see @note for `partnerApiCallV1CompaniesGet`
+        apiAccessControl acc noPrvErr $ do
+          user <- guardThatUserExists uid -- @todo for now...
+          _ <- dbUpdate $ CreatePersonalToken (userid user) -- @todo in the future: avoid this DB hit?
+          token <- apiGuardJustM
+            (serverError "Could not get user personal token")
+            (dbQuery $ GetPersonalToken (userid user))
+          return $ Ok (unjsonOAuthAuthorization, token)
 
 ----------------------------------------------------------------------------------------------------
 --                                   Unexported local helpers                                     --
 ----------------------------------------------------------------------------------------------------
 
--- Checks that the non-superuser partner is allowed to operate on the supplied
--- `PartnerID`.  If not, throws.
-guardThatUserCanAdministerPartnerID :: Kontrakcja m => User -> PartnerID -> m ()
-guardThatUserCanAdministerPartnerID user pid = do
-  isPartnerAdmin <- dbQuery $ IsUserPartnerAdmin (userid user) pid
-  if isPartnerAdmin
-     then return ()
-     else apiError insufficientPrivileges
-
-guardThatPartnerIDCanAdministerUserGroupID :: Kontrakcja m => PartnerID -> UserGroupID -> m UserGroup
-guardThatPartnerIDCanAdministerUserGroupID pid ugid = do
-  mug <- dbQuery $ UserGroupGet ugid
-  case mug of
-    Nothing -> apiError $ resourceNotFound "A user group with that ID was not found"
-    Just ug -> do
-      (ptUserGroupID <$> (dbQuery $ GetPartnerByID pid)) >>= \case
-        Nothing -> apiError $ serverError "No user group found for supplied partner ID"
-        Just pugid ->
-          if (Just pugid /= get ugParentGroupID ug)
-          then apiError insufficientPrivileges
-          else return ug
-
-guardThatPartnerIDCanAdministerUserID :: Kontrakcja m => PartnerID -> UserID -> m User
-guardThatPartnerIDCanAdministerUserID pid uid = do
+guardThatUserExists :: Kontrakcja m => UserID -> m User
+guardThatUserExists uid = do
   mUser <- dbQuery $ GetUserByID uid
   case mUser of
     Nothing -> apiError $ resourceNotFound "A user with that ID was not found"
-    Just user -> do
-      _ug <- guardThatPartnerIDCanAdministerUserGroupID pid (usergroupid user)
-      return user
+    Just user -> return user
+
 
 guardValidEmailAndNoExistingUser :: Kontrakcja m => Email -> Maybe UserID -> m ()
 guardValidEmailAndNoExistingUser email muid = do
@@ -292,3 +296,39 @@ guardValidEmailAndNoExistingUser email muid = do
         (Just _, Just True) -> return ()
         _ -> apiError $ requestParameterInvalid "email" "A user with that email address already exists."
     _ -> apiError $ requestParameterInvalid "email" "The email address is invalid"
+
+
+tosNotAcceptedErr :: (Kontrakcja m) => m a
+tosNotAcceptedErr = do
+  apiError $ requestParameterInvalid
+               "has_accepted_tos"
+               ("The user must accept the Scrive Terms of Service" <+>
+                "to create an account")
+
+srvLogErr :: (Kontrakcja m) => T.Text -> m a
+srvLogErr t = do
+  logInfo "Partner API" $ object [ "error_message" .= t]
+  apiError $ serverError t
+
+noUsrGrpErr :: (Kontrakcja m) => m a
+noUsrGrpErr =
+  srvLogErr "The user group could not be retrieved."
+
+noUsrGrpErrPartner :: (Kontrakcja m) => m a
+noUsrGrpErrPartner =
+  srvLogErr $ "The user group could not be retrieved " <>
+              "for the given partner identifier.."
+
+noPrvErr :: (Kontrakcja m) => m a
+noPrvErr = apiError insufficientPrivileges
+
+rqPrmErr :: (Kontrakcja m) => T.Text -> m a
+rqPrmErr t = do
+  logInfo "Partner API" $ object [ "error_message" .= t]
+  apiError . requestParameterParseError "json" $ t
+
+apiAccessControl :: (Kontrakcja m) => AccessPolicy -> m a -> m a -> m a
+apiAccessControl accessPolicy err ma = do
+  apiuser <- fst <$> getAPIUser APIPersonal
+  roles <- dbQuery . GetUserRoles $ apiuser
+  accessControl roles accessPolicy err ma

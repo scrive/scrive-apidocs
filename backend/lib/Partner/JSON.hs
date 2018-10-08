@@ -127,8 +127,6 @@ instance Default UserGroupForUpdate where
           , uguUserGroupCountry = ""
           }
 
--- We're not changing the labels to use user group terminology in the first run,
--- since this is already out in the wild.
 unjsonUserGroupForUpdate :: UnjsonDef UserGroupForUpdate
 unjsonUserGroupForUpdate = objectOf $ pure def
         <*   fieldReadonly "id" uguUserGroupID "The company ID"
@@ -170,7 +168,6 @@ userGroupToUserGroupForUpdate ug
       , uguUserGroupCountry = get ugaCountry ugAddress'
       }
   where ugAddress' = get ugAddress ug
-
 
 updateUserGroupWithUserGroupForUpdate :: UserGroup -> UserGroupForUpdate -> UserGroup
 updateUserGroupWithUserGroupForUpdate ug UserGroupForUpdate{..} =

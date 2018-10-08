@@ -48,9 +48,9 @@ testPartnerCompanyCreate = do
       rq_newCompany_resp_fp = inTestDir "json/partner_api_v1/resp-partnerCompanyCreate.json"
 
   -- First partner, create user group
-  (ctx, partner_ugid1) <- testJSONCtxWithPartnerGroupID
+  (ctx1, partner_ugid1) <- testJSONCtxWithPartnerGroupID
   let pid1 = unsafeUserGroupIDToPartnerID partner_ugid1
-  _ <- runApiJSONTest ctx POST (partnerApiCallV1CompanyCreate pid1) rq_newCompany_params 201 rq_newCompany_resp_fp
+  _ <- runApiJSONTest ctx1 POST (partnerApiCallV1CompanyCreate pid1) rq_newCompany_params 201 rq_newCompany_resp_fp
 
   -- Second partner, create user group
   (ctx2, partner_ugid2) <- testJSONCtxWithPartnerGroupID
@@ -67,10 +67,44 @@ testPartnerCompanyCreate = do
   assertEqual ("We should get a 403 response") 403 (rsCode randomRes2)
 
   -- User should only be able to create company for administrated partner ids
-  (crossRes1,_) <- runTestKontra randomReq ctx $ partnerApiCallV1CompanyCreate pid2
+  (crossRes1,_) <- runTestKontra randomReq ctx1 $ partnerApiCallV1CompanyCreate pid2
   (crossRes2,_) <- runTestKontra randomReq ctx2 $ partnerApiCallV1CompanyCreate pid1
   assertEqual ("We should get a 403 response") 403 (rsCode crossRes1)
   assertEqual ("We should get a 403 response") 403 (rsCode crossRes2)
+
+  {- test role combinations; use the first user and partner structure generated -}
+  let (Just uid) = userid <$> get ctxmaybeuser ctx1
+
+  -- 1) only a partner admin; should succeed
+  void . dbUpdate $ SetUserCompanyAdmin uid False
+  (Just usr') <- dbQuery . GetUserByID $ uid
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr') ctx1)
+           POST
+           (partnerApiCallV1CompanyCreate pid1)
+           rq_newCompany_params
+           201
+
+  -- 2) not a partner admin but a company admin; should fail
+  void . dbUpdate $ RemovePartnerAdmin uid pid1
+  void . dbUpdate $ SetUserCompanyAdmin uid True
+  (Just usr'') <- dbQuery . GetUserByID $ uid
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr'') ctx1)
+           POST
+           (partnerApiCallV1CompanyCreate pid1)
+           rq_newCompany_params
+           403
+
+  -- 3) not a partner admin, nor a company admin; should fail
+  void . dbUpdate $ SetUserCompanyAdmin uid False
+  (Just usr''') <- dbQuery . GetUserByID $ uid
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr''') ctx1)
+           POST
+           (partnerApiCallV1CompanyCreate pid1)
+           rq_newCompany_params
+           403
 
   return ()
 
@@ -99,6 +133,40 @@ testPartnerCompanyUpdate = do
   assertEqual ("We should get a 403 response") 403 (rsCode crossRes1)
   assertEqual ("We should get a 403 response") 403 (rsCode crossRes2)
   assertEqual ("We should get a 403 response") 403 (rsCode crossRes3)
+
+  {- test role combinations; use the first user and partner structure generated -}
+  let (Just uid) = userid <$> get ctxmaybeuser ctx
+
+  -- 1) user is a partner admin; should succeed
+  void . dbUpdate $ SetUserCompanyAdmin uid False
+  (Just usr') <- dbQuery . GetUserByID $ uid
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr') ctx)
+           POST
+           (partnerApiCallV1CompanyUpdate pid cid)
+           rq_companyUpdate_params
+           200
+
+  -- 2) not a partner admin but a company admin; should fail
+  void . dbUpdate $ RemovePartnerAdmin uid pid
+  void . dbUpdate $ SetUserCompanyAdmin uid True
+  (Just usr'') <- dbQuery . GetUserByID $ uid
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr'') ctx)
+           POST
+           (partnerApiCallV1CompanyUpdate pid cid)
+           rq_companyUpdate_params
+           403
+
+  -- 3) not a partner admin, nor a company admin; should fail
+  void . dbUpdate $ SetUserCompanyAdmin uid False
+  (Just usr''') <- dbQuery . GetUserByID $ uid
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr''') ctx)
+           POST
+           (partnerApiCallV1CompanyUpdate pid cid)
+           []
+           403
 
   return ()
 
@@ -150,6 +218,40 @@ testPartnerCompanyGet = do
   assertEqual ("We should get a 403 response") 403 (rsCode crossRes2)
   assertEqual ("We should get a 403 response") 403 (rsCode crossRes3)
 
+  {- test role combinations; use the first user and partner structure generated -}
+  let (Just uid) = userid <$> get ctxmaybeuser ctx
+
+  -- 1) user is a partner admin; should succeed
+  void . dbUpdate $ SetUserCompanyAdmin uid False
+  (Just usr') <- dbQuery . GetUserByID $ uid
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr') ctx)
+           POST
+           (partnerApiCallV1CompanyGet pid cid)
+           []
+           200
+
+  -- 2) not a partner admin but a company admin; should fail
+  void . dbUpdate $ RemovePartnerAdmin uid pid
+  void . dbUpdate $ SetUserCompanyAdmin uid True
+  (Just usr'') <- dbQuery . GetUserByID $ uid
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr'') ctx)
+           POST
+           (partnerApiCallV1CompanyGet pid cid)
+           []
+           403
+
+  -- 3) not a partner admin, nor a company admin; should fail
+  void . dbUpdate $ SetUserCompanyAdmin uid False
+  (Just usr''') <- dbQuery . GetUserByID $ uid
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr''') ctx)
+           POST
+           (partnerApiCallV1CompanyGet pid cid)
+           []
+           403
+
   return ()
 
 testPartnerCompaniesGet :: TestEnv ()
@@ -176,6 +278,40 @@ testPartnerCompaniesGet = do
   (randomRes,_) <- runTestKontra randomReq randomCtx $ partnerApiCallV1CompaniesGet pidA
   assertEqual ("We should get a 403 response") 403 (rsCode randomRes)
 
+  {- test role combinations; use the first user and partner structure generated -}
+  let (Just uid) = userid <$> get ctxmaybeuser ctxA
+
+  -- 1) only a partner admin; should succeed
+  void . dbUpdate $ SetUserCompanyAdmin uid False
+  (Just usr') <- dbQuery . GetUserByID $ uid
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr') ctxA)
+           POST
+           (partnerApiCallV1CompaniesGet pidA)
+           []
+           200
+
+  -- 2) not a partner admin but a company admin; should fail
+  void . dbUpdate $ RemovePartnerAdmin uid pidA
+  void . dbUpdate $ SetUserCompanyAdmin uid True
+  (Just usr'') <- dbQuery . GetUserByID $ uid
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr'') ctxA)
+           POST
+           (partnerApiCallV1CompaniesGet pidA)
+           []
+           403
+
+  -- 3) not a partner admin, nor a company admin; should fail
+  void . dbUpdate $ SetUserCompanyAdmin uid False
+  (Just usr''') <- dbQuery . GetUserByID $ uid
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr''') ctxA)
+           POST
+           (partnerApiCallV1CompaniesGet pidA)
+           []
+           403
+
   return ()
 
 testPartnerCompanyUserNew :: TestEnv ()
@@ -200,6 +336,49 @@ testPartnerCompanyUserNew = do
   (alreadyExistsRes,_) <- runTestKontra rq_newUserAlreadyExists_params ctx $ partnerApiCallV1UserCreate pid cid
   assertEqual ("We should get a 400 response") 400 (rsCode alreadyExistsRes)
 
+  {- test role combinations; use the first user and partner structure generated -}
+  let (Just uid) = userid <$> get ctxmaybeuser ctx
+  -- cannot reuse old user email
+  newUserGoodJSON' <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-good3.json"
+  let rq_newUserGood_params' = [ ("json", inTextBS newUserGoodJSON') ]
+
+  -- 1) user is a partner admin; should succeed
+  void . dbUpdate $ SetUserCompanyAdmin uid False
+  (Just usr') <- dbQuery . GetUserByID $ uid
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr') ctx)
+           POST
+           (partnerApiCallV1UserCreate pid cid)
+           rq_newUserGood_params'
+           201
+
+  newUserGoodJSON'' <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-good4.json"
+  let rq_newUserGood_params'' = [ ("json", inTextBS newUserGoodJSON'') ]
+
+  -- 2) not a partner admin but a company admin; should fail
+  void . dbUpdate $ RemovePartnerAdmin uid pid
+  void . dbUpdate $ SetUserCompanyAdmin uid True
+  (Just usr'') <- dbQuery . GetUserByID $ uid
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr'') ctx)
+           POST
+           (partnerApiCallV1UserCreate pid cid)
+           rq_newUserGood_params''
+           403
+
+  newUserGoodJSON''' <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-good5.json"
+  let rq_newUserGood_params''' = [ ("json", inTextBS newUserGoodJSON''') ]
+
+  -- 3) not a partner admin, nor a company admin; should fail
+  void . dbUpdate $ SetUserCompanyAdmin uid False
+  (Just usr''') <- dbQuery . GetUserByID $ uid
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr''') ctx)
+           POST
+           (partnerApiCallV1UserCreate pid cid)
+           rq_newUserGood_params'''
+           403
+
   return ()
 
 testPartnerUserUpdate :: TestEnv ()
@@ -218,6 +397,40 @@ testPartnerUserUpdate = do
   rq_tos <- mkRequestWithHeaders POST [ ("json", inTextBS updateUserNoToSJSON) ] []
   (tosResult,_) <- runTestKontra rq_tos ctx $ partnerApiCallV1UserUpdate pid uid
   assertEqual ("We should get a 400 response") 400 (rsCode tosResult)
+
+  {- test role combinations; use the first user and partner structure generated -}
+  let (Just uidAdmin) = userid <$> get ctxmaybeuser ctx
+
+  -- 1) user is a partner admin; should succeed
+  void . dbUpdate $ SetUserCompanyAdmin uidAdmin False
+  (Just usr') <- dbQuery . GetUserByID $ uidAdmin
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr') ctx)
+           POST
+           (partnerApiCallV1UserUpdate pid uid)
+           rq_updateUser_params
+           200
+
+  -- 2) not a partner admin but a company admin; should fail
+  void . dbUpdate $ RemovePartnerAdmin uidAdmin pid
+  void . dbUpdate $ SetUserCompanyAdmin uidAdmin True
+  (Just usr'') <- dbQuery . GetUserByID $ uidAdmin
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr'') ctx)
+           POST
+           (partnerApiCallV1UserUpdate pid uid)
+           rq_updateUser_params
+           403
+
+  -- 3) not a partner admin, nor a company admin; should fail
+  void . dbUpdate $ SetUserCompanyAdmin uidAdmin False
+  (Just usr''') <- dbQuery . GetUserByID $ uidAdmin
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr''') ctx)
+           POST
+           (partnerApiCallV1UserUpdate pid uid)
+           rq_updateUser_params
+           403
 
   return ()
 
@@ -284,6 +497,40 @@ testPartnerUserGet = do
   let rq_GetUser_resp_fp = inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
   _ <- runApiJSONTest ctx GET (partnerApiCallV1UserGet pid uid) [] 200 rq_GetUser_resp_fp
 
+  {- test role combinations; use the first user and partner structure generated -}
+  let (Just uidAdmin) = userid <$> get ctxmaybeuser ctx
+
+  -- 1) only a partner admin; should succeed
+  void . dbUpdate $ SetUserCompanyAdmin uidAdmin False
+  (Just usr') <- dbQuery . GetUserByID $ uidAdmin
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr') ctx)
+           POST
+           (partnerApiCallV1UserGet pid uid)
+           []
+           200
+
+  -- 2) not a partner admin but a company admin; should fail
+  void . dbUpdate $ RemovePartnerAdmin uidAdmin pid
+  void . dbUpdate $ SetUserCompanyAdmin uidAdmin True
+  (Just usr'') <- dbQuery . GetUserByID $ uidAdmin
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr'') ctx)
+           POST
+           (partnerApiCallV1UserGet pid uid)
+           []
+           403
+
+  -- 3) not a partner admin, nor a company admin; should fail
+  void . dbUpdate $ SetUserCompanyAdmin uidAdmin False
+  (Just usr''') <- dbQuery . GetUserByID $ uidAdmin
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr''') ctx)
+           POST
+           (partnerApiCallV1UserGet pid uid)
+           []
+           403
+
   return ()
 
 testPartnerCompanyUsersGet :: TestEnv ()
@@ -298,6 +545,40 @@ testPartnerCompanyUsersGet = do
   -- get users of the company should work
   let rq_GetUsers_resp_fp = inTestDir "json/partner_api_v1/param-partnerCompanyUsersGet.json"
   _ <- runApiJSONTest ctx GET (partnerApiCallV1CompanyUsersGet pid cid) [] 200 rq_GetUsers_resp_fp
+
+  {- test role combinations; use the first user and partner structure generated -}
+  let (Just uidAdmin) = userid <$> get ctxmaybeuser ctx
+
+  -- 1) only a partner admin; should succeed
+  void . dbUpdate $ SetUserCompanyAdmin uidAdmin False
+  (Just usr') <- dbQuery . GetUserByID $ uidAdmin
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr') ctx)
+           POST
+           (partnerApiCallV1CompanyUsersGet pid cid)
+           []
+           200
+
+  -- 2) not a partner admin but a company admin; should fail
+  void . dbUpdate $ RemovePartnerAdmin uidAdmin pid
+  void . dbUpdate $ SetUserCompanyAdmin uidAdmin True
+  (Just usr'') <- dbQuery . GetUserByID $ uidAdmin
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr'') ctx)
+           POST
+           (partnerApiCallV1CompanyUsersGet pid cid)
+           []
+           403
+
+  -- 3) not a partner admin, nor a company admin; should fail
+  void . dbUpdate $ SetUserCompanyAdmin uidAdmin False
+  (Just usr''') <- dbQuery . GetUserByID $ uidAdmin
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr''') ctx)
+           POST
+           (partnerApiCallV1CompanyUsersGet pid cid)
+           []
+           403
 
   return ()
 
@@ -325,6 +606,40 @@ testPartnersUserGetTokens = do
   docNewReq <- mkRequestWithHeaders POST [] [ ( "authorization", [authStr] ) ]
   (newDocResp,_) <- runTestKontra docNewReq ctx' $ docApiV2New
   assertEqual "We should get a 201 response" 201 (rsCode newDocResp)
+
+  {- test role combinations; use the first user and partner structure generated -}
+  let (Just uidAdmin) = userid <$> get ctxmaybeuser ctx
+
+  -- 1) only a partner admin; should succeed
+  void . dbUpdate $ SetUserCompanyAdmin uidAdmin False
+  (Just usr') <- dbQuery . GetUserByID $ uidAdmin
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr') ctx)
+           GET
+           (partnerApiCallV1UserGetPersonalToken pid uid)
+           []
+           200
+
+  -- 2) not a partner admin but a company admin; should fail
+  void . dbUpdate $ RemovePartnerAdmin uidAdmin pid
+  void . dbUpdate $ SetUserCompanyAdmin uidAdmin True
+  (Just usr'') <- dbQuery . GetUserByID $ uidAdmin
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr'') ctx)
+           POST
+           (partnerApiCallV1UserGetPersonalToken pid uid)
+           []
+           403
+
+  -- 3) not a partner admin, nor a company admin; should fail
+  void . dbUpdate $ SetUserCompanyAdmin uidAdmin False
+  (Just usr''') <- dbQuery . GetUserByID $ uidAdmin
+  void $ runApiJSONTestNoResChk
+           (set ctxmaybeuser (Just usr''') ctx)
+           POST
+           (partnerApiCallV1UserGetPersonalToken pid uid)
+           []
+           403
 
   return ()
 
@@ -384,6 +699,18 @@ runApiJSONTest ctx httpMethod apiCall httpHeaders expectedRsCode jsonFile = do
   testJSONWith jsonFile (rsBody res)
   let Just jsonValue = decode (rsBody res) :: Maybe Value
   return jsonValue
+
+runApiJSONTestNoResChk :: Context             -- ^ Context to run the test in
+                       -> Method              -- ^ HTTP Method to use for API Call
+                       -> KontraTest Response -- ^ The API call to use
+                       -> [(String,Input)]    -- ^ List of API call parameters
+                       -> Int                 -- ^ Expected response code
+                       -> TestEnv ()
+runApiJSONTestNoResChk ctx httpMethod apiCall httpHeaders expectedRsCode = do
+  req <- mkRequestWithHeaders httpMethod httpHeaders []
+  (res,_) <- runTestKontra req ctx $ apiCall
+  assertEqual ("We should get a " ++ show expectedRsCode ++ " response") expectedRsCode (rsCode res)
+  return ()
 
 testJSONWith :: FilePath -> BS.ByteString -> TestEnv ()
 testJSONWith = testJSONWithDynamicKeys [ "id"

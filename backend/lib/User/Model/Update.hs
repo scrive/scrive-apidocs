@@ -15,6 +15,7 @@ module User.Model.Update (
   , DisableUserTOTP(..)
   , SetUserSettings(..)
   , MakeUserPartnerAdmin(..)
+  , RemovePartnerAdmin(..)
   ) where
 
 import Control.Monad.Catch
@@ -31,6 +32,7 @@ import Doc.Data.SignatoryField
 import Doc.DocStateData (DocumentStatus(..))
 import IPAddress
 import Log.Identifier
+import Partner.Model (PartnerID)
 import User.Data.SignupMethod
 import User.Data.User
 import User.Email
@@ -365,3 +367,11 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m MakeUserPartnerAdmi
         runQuery01 . sqlInsert "partner_admins" $ do
           sqlSet "user_id" uid
           sqlSet "partner_id" ugid
+
+-- this is only for testing.
+data RemovePartnerAdmin = RemovePartnerAdmin UserID PartnerID
+instance (MonadDB m, MonadThrow m) => DBUpdate m RemovePartnerAdmin Bool where
+  update (RemovePartnerAdmin uid pid) = do
+    runQuery01 . sqlDelete "partner_admins" $ do
+      sqlWhere ("user_id =" <?> uid)
+      sqlWhere ("partner_id =" <?> pid)
