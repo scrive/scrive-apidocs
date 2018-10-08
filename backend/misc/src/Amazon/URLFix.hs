@@ -36,7 +36,7 @@ checkAndFixURL s3action (FileStorageAWS correctURL _) = do
     , AWS.s3operation = HEAD
     }
   case res of
-    Left (AWS.AWSError "NoSuchKey" _) -> do
+    Left (AWS.AWSError err _) | err == "NoSuchKey" || err == "NotFound" -> do
       logInfo "Skipping S3 URL fix as it is already correct" $ object
         [ "correct_url" .= correctURL
         ]
