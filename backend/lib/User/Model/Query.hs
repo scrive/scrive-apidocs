@@ -3,6 +3,7 @@ module User.Model.Query (
   , GetUserGroupAccountsCountMainDomainBranding(..)
   , GetUserGroupAccountsCountTotal(..)
   , GetUserGroupAdmins(..)
+  , GetUserRoles(..)
   , GetUsageStats(..)
   , UsageStatsFor(..)
   , GetUserByID(..)
@@ -23,10 +24,12 @@ import Data.Char
 import Data.Int
 import qualified Data.Text as T
 
+import AccessControl.Data (AccessRole(..))
 import Chargeable.Model
 import DB
 import Doc.DocStateData (DocumentStatus(..))
 import MinutesTime
+import Partner.Model (GetUserPartnerAdminUserGroups(..))
 import User.Data.Stats
 import User.Data.User
 import User.Email
@@ -40,6 +43,15 @@ import UserGroup.Data.PaymentPlan
 
 data GetUserWherePasswordAlgorithmIsEarlierThan =
   GetUserWherePasswordAlgorithmIsEarlierThan PasswordAlgorithm
+
+data GetUserRoles = GetUserRoles User
+instance (MonadDB m, MonadThrow m) => DBQuery m GetUserRoles [AccessRole UserGroupID] where
+  query (GetUserRoles u) = do
+    let usrGrpID = usergroupid u
+    partnerUsrGrpIDs <- query . GetUserPartnerAdminUserGroups . userid $ u
+    return $ (map UserGroupAdminAR partnerUsrGrpIDs) <>
+             (if useriscompanyadmin u then [UserAdminAR usrGrpID] else []) <>
+             [UserAR usrGrpID]
 
 instance (MonadDB m, MonadThrow m) =>
   DBQuery m GetUserWherePasswordAlgorithmIsEarlierThan (Maybe User) where
