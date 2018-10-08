@@ -58,9 +58,14 @@ runJavaTextExtract json content = do
     let config = runJSONGen $ do
                    value "rects" rects
                    value "input" tmpin
+    let specContent = BS.fromString $ show $ J.pp_value (toJSValue config)
 
+    logInfo "Temp file write" $ Log.object [ "bytes_written" .= (BS.length content)
+                                           , "originator" .= ("runJavaTextExtract" :: Text) ]
     liftIO $ BS.writeFile tmpin content
-    liftIO $ BS.writeFile specpath (BS.fromString $ show $ J.pp_value (toJSValue config))
+    logInfo "Temp file write" $ Log.object [ "bytes_written" .= (BS.length specContent)
+                                           , "originator" .= ("runJavaTextExtract" :: Text) ]
+    liftIO $ BS.writeFile specpath specContent
     (code, stdout, stderr) <- liftIO $ do
       readProcessWithExitCode "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "extract-texts", specpath] (BSL.empty)
     case code of

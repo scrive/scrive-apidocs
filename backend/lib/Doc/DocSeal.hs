@@ -361,6 +361,8 @@ findOutAttachmentDesc sim tmppath document = logDocument (documentid document) $
         attachmentNumText <- renderLocalTemplate document "_attachedDocument" $ do
                                      F.value "number" num
         let attachmentPath = tmppath </> attachmentNumText ++ takeExtension name
+        logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length contents)
+                                           , "originator" .= ("findOutAttachmentDesc" :: T.Text) ]
         liftIO $ BS.writeFile attachmentPath contents
 
         attachedToSealedFileText <- if addContent
@@ -629,7 +631,11 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
     lconf <- getPdfToolsLambdaConf
     theDocument >>= \d -> if (useOldFlattening lconf d)
       then runOldFlatteningAndWriteResultToFile tmpin content tmppath
-      else liftIO $ BS.writeFile tmpin content
+      else do
+        liftIO $ BS.writeFile tmpin content
+        logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length content)
+                                           , "originator" .= ("sealDocumentFile" :: T.Text) ]
+
     checkboxMapping <- liftIO $ readCheckboxImagesMapping
     radiobuttonMapping <- liftIO $ readRadiobuttonImagesMapping
     elog <- dbQuery $ GetEvidenceLog documentid
@@ -660,7 +666,10 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
     lconf <- getPdfToolsLambdaConf
     if (useOldFlattening lconf document)
       then runOldFlatteningAndWriteResultToFile tmpin content tmppath
-      else liftIO $ BS.writeFile tmpin content
+      else do
+        liftIO $ BS.writeFile tmpin content
+        logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length content)
+                                           , "originator" .= ("presealDocumentFile" :: T.Text) ]
     checkboxMapping <- liftIO $ readCheckboxImagesMapping
     radiobuttonMapping <- liftIO $ readRadiobuttonImagesMapping
     let extendedFlattening = useExtendedFlattening lconf document
@@ -705,6 +714,7 @@ runLambdaSealing _tmppath fn spec = do
                           (return ())
                           (systemActor now)
 
+
 runLambdaPresealing :: ( CryptoRNG m, MonadBaseControl IO m
                           , MonadFileStorage m, MonadDB m, MonadIO m, MonadLog m
                           , MonadMask m, PdfToolsLambdaConfMonad m
@@ -727,6 +737,8 @@ runOldFlatteningAndWriteResultToFile outputpath content tmppath = do
   logInfo_ "Started flattening with old pdftools"
   let inputpathforflattening = tmppath ++ "/input_for_flattening.pdf"
   liftIO $ BS.writeFile inputpathforflattening content
+  logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length content)
+                                     , "originator" .= ("runOldFlatteningAndWriteResultToFile" :: T.Text) ]
   let sealspecpath = tmppath ++ "/sealspec.json"
   liftIO $ BS.writeFile sealspecpath $ BS.fromString $ show $ JSON.pp_value $ JSON.runJSONGen $ do
         JSON.value "input" inputpathforflattening
@@ -744,6 +756,10 @@ runOldFlatteningAndWriteResultToFile outputpath content tmppath = do
             "stderr" `equalsExternalBSL` stderr
           ]
         liftIO $ BS.writeFile outputpath content
+        logInfo "Temp file write" $
+          object [ "bytes_written" .= (BS.length content)
+                 , "originator" .= ("runOldFlatteningAndWriteResultToFile" :: T.Text) ]
+
 
 useExtendedFlattening ::  PdfToolsLambdaConf -> Document -> Bool
 useExtendedFlattening lconf document = case (get pdfToolsUserGroupsWithExtendedFlattening lconf , documentauthorugid document) of

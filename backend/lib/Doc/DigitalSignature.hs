@@ -8,6 +8,7 @@ import Control.Monad.Catch
 import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Crypto.RNG (CryptoRNG)
+import Data.Text (Text)
 import Log
 import System.Exit (ExitCode(..))
 import System.FilePath ((</>))
@@ -36,6 +37,8 @@ addDigitalSignature = theDocumentID >>= \did ->
   Just file <- fileFromMainFile =<< (documentsealedfile <$>theDocument)
   content <- getFileContents file
   let mainpath = tmppath </> "main.pdf"
+  logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length content)
+                                     , "originator" .= ("addDigitalSignature" :: Text) ]
   liftIO $ BS.writeFile mainpath content
   now <- currentTime
   gtconf <- getGuardTimeConf
@@ -77,6 +80,8 @@ extendDigitalSignature = do
   withSystemTempDirectory' ("ExtendSignature-" ++ show did ++ "-") $ \tmppath -> do
     content <- getFileContents file
     let sealedpath = tmppath </> "sealed.pdf"
+    logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length content)
+                                       , "originator" .= ("extendDigitalSignature" :: Text) ]
     liftIO $ BS.writeFile sealedpath content
     now <- currentTime
     res <- digitallyExtendFile now sealedpath (filename file)

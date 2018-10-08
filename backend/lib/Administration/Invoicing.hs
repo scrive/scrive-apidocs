@@ -12,6 +12,7 @@ import Log
 import System.Exit (ExitCode(..))
 import System.FilePath ((</>))
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.Text as T
 
 import Chargeable.Model
 import DB
@@ -34,6 +35,8 @@ uploadInvoicing sftpConfig = do
     let csvReport = renderCSV $ csvHeader report : csvContent report
     withSystemTempDirectory' "invoicing_reports" $ \tmpDir -> do
       let filePath = tmpDir </> (csvFilename report)
+      logInfo "Temp file write" $ object [ "bytes_written" .= (BSL.length csvReport)
+                                         , "originator" .= ("uploadInvoicing" :: T.Text) ]
       liftIO $ BSL.writeFile filePath csvReport
       logInfo_ "Sending invoicing report to sftp server"
       (exitCode, _stdout, stderr) <-  sftpTransfer sftpConfig filePath

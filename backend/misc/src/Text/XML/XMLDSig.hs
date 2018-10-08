@@ -32,7 +32,12 @@ signXMLDSig user_privkey_file user_cert_file tmpdirsuffix xml = do
   signed_xml_bs <- withSystemTempDirectory' ("XMLDSig-" ++ tmpdirsuffix ++ "-") $ \tmppath -> do
     let xml_file        = tmppath </> "doc-x509.xml"
         signed_xml_file = tmppath </> "doc-signed-x509.xml"
-    liftIO . BS.writeFile xml_file . T.encodeUtf8 . TL.toStrict . renderText TX.def . wrapXMLDSigTmpl . toXML $ xml
+        xmlFileContent = T.encodeUtf8 . TL.toStrict . renderText TX.def . wrapXMLDSigTmpl . toXML $ xml
+    logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length xmlFileContent)
+                                       , "originator" .= ("signXMLDSig" :: TL.Text) ]
+
+    liftIO $ BS.writeFile xml_file xmlFileContent
+
     let args =
           [ "--sign"
           , "--output", signed_xml_file
@@ -49,6 +54,9 @@ signXMLDSig user_privkey_file user_cert_file tmpdirsuffix xml = do
           ]
         return Nothing
       True -> (Just <$>) . liftIO . BS.readFile $ signed_xml_file
+  whenJust signed_xml_bs (\bs -> logInfo "Temp file read" $
+                                   object [ "bytes_read" .= (BS.length bs)
+                                          , "originator" .= ("signXMLDSig" :: TL.Text) ])
   return signed_xml_bs
 
 wrapXMLDSigTmpl :: XML -> TX.Document

@@ -6,6 +6,7 @@ module Doc.Anchors (
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Int
+import Data.Text (Text)
 import Log
 import System.Exit
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
@@ -13,7 +14,7 @@ import Text.JSON.FromJSValue
 import Text.JSON.Gen hiding (object)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.Lazy.UTF8 as BSL
+import qualified Data.ByteString.Lazy.UTF8 as BSL hiding (length)
 import qualified Data.Map as Map hiding (map)
 import qualified Data.Ord as Ord
 import qualified Text.JSON as J
@@ -42,9 +43,13 @@ getAnchorPositions pdfcontent anchors = do
           value "text" (placementanchortext anc)
           value "index" (placementanchorindex anc)
         configpath = tmppath ++ "/find-texts.json"
-
+        configContent = BSL.fromString $ show $ J.pp_value (toJSValue config)
+    logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length pdfcontent)
+                                       , "originator" .= ("getAnchorPositions" :: Text) ]
     liftIO $ BS.writeFile inputpath pdfcontent
-    liftIO $ BSL.writeFile configpath (BSL.fromString $ show $ J.pp_value (toJSValue config))
+    logInfo "Temp file write" $ object [ "bytes_written" .= (BSL.length configContent)
+                                       , "originator" .= ("getAnchorPositions" :: Text) ]
+    liftIO $ BSL.writeFile configpath configContent
 
     (code,stdout,stderr) <- liftIO $ do
       readProcessWithExitCode "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "find-texts", configpath] (BSL.empty)

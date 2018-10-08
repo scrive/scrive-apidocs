@@ -47,6 +47,8 @@ extractAttachment doc aname = do
 extractAttachmentsListFromFileContent :: (MonadLog m, MonadBaseControl IO m) => BS.ByteString -> m [T.Text]
 extractAttachmentsListFromFileContent content = withSystemTempDirectory' ("extract-attachments-") $ \tmppath -> do
         let tmpin = tmppath ++ "/input.pdf"
+        logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length content)
+                                           , "originator" .= ("extractAttachmentsListFromFileContent" :: T.Text) ]
         liftBase $ BS.writeFile tmpin content
         (code, stdout, stderr) <- liftBase $ do
           readProcessWithExitCode "pdfdetach" ["-list", tmpin] (BSL.empty)
@@ -72,6 +74,8 @@ extractAttachmentFromFileContent name content = withSystemTempDirectory' ("extra
           Just attachmentIndex -> do
             let tmpin =  tmppath ++ "/input.pdf"
             let outfile = tmppath ++ "/out"
+            logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length content)
+                                               , "originator" .= ("extractAttachmentFromFileContent" :: T.Text) ]
             liftBase $ BS.writeFile tmpin content
             (code, _, stderr) <- liftBase $ do
               readProcessWithExitCode "pdfdetach" ["-save", show (attachmentIndex + 1) , "-o", outfile, tmpin] (BSL.empty)
