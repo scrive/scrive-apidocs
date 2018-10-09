@@ -416,7 +416,9 @@ handleIssueShowGet docid = withUserTOS $ \_ -> do
       | otherwise -> do
        -- Simply loading pageDocumentSignView doesn't work when signatory needs
        -- to authenticate to view, redirect to proper sign view.
-       return $ internalResponse $ LinkSignDocNoMagicHash docid (signatorylinkid sl)
+       -- We need link with magic hash for non-author signatories, that
+       -- view the document from their archive
+       return $ internalResponse $ LinkSignDoc docid sl
     (False, Nothing) | isincompany -> do
       internalResponse <$> pageDocumentView ctx document msiglink isincompany
     _                                -> do
