@@ -3,6 +3,7 @@ module Partner.APITest (partnerAPITests) where
 
 import Control.Monad.IO.Class
 import Data.Aeson
+import Data.Int (Int64)
 import Happstack.Server
 import Test.Framework
 import qualified Data.ByteString.Lazy as B
@@ -21,7 +22,6 @@ import TestingUtil.JSON
 import TestKontra as T
 import User.Model
 import UserGroup.Data
-import UserGroup.Model
 
 partnerAPITests :: TestEnvSt -> Test
 partnerAPITests env = testGroup "PartnerAPI"
@@ -48,13 +48,11 @@ testPartnerCompanyCreate = do
       rq_newCompany_resp_fp = inTestDir "json/partner_api_v1/resp-partnerCompanyCreate.json"
 
   -- First partner, create user group
-  (ctx1, partner_ugid1) <- testJSONCtxWithPartnerGroupID
-  let pid1 = unsafeUserGroupIDToPartnerID partner_ugid1
+  (ctx1, pid1) <- testJSONCtxWithPartnerGroupID
   _ <- runApiJSONTest ctx1 POST (partnerApiCallV1CompanyCreate pid1) rq_newCompany_params 201 rq_newCompany_resp_fp
 
   -- Second partner, create user group
-  (ctx2, partner_ugid2) <- testJSONCtxWithPartnerGroupID
-  let pid2 = unsafeUserGroupIDToPartnerID partner_ugid2
+  (ctx2, pid2) <- testJSONCtxWithPartnerGroupID
   _ <- runApiJSONTest ctx2 POST (partnerApiCallV1CompanyCreate pid2) rq_newCompany_params 201 rq_newCompany_resp_fp
 
   -- Random  user shouldn't be able to create company
@@ -86,7 +84,7 @@ testPartnerCompanyCreate = do
            201
 
   -- 2) not a partner admin but a company admin; should fail
-  void . dbUpdate $ RemovePartnerAdmin uid pid1
+  void . dbUpdate $ RemovePartnerAdmin uid (unsafePartnerID pid1)
   void . dbUpdate $ SetUserCompanyAdmin uid True
   (Just usr'') <- dbQuery . GetUserByID $ uid
   void $ runApiJSONTestNoResChk
@@ -148,7 +146,7 @@ testPartnerCompanyUpdate = do
            200
 
   -- 2) not a partner admin but a company admin; should fail
-  void . dbUpdate $ RemovePartnerAdmin uid pid
+  void . dbUpdate $ RemovePartnerAdmin uid (unsafePartnerID pid)
   void . dbUpdate $ SetUserCompanyAdmin uid True
   (Just usr'') <- dbQuery . GetUserByID $ uid
   void $ runApiJSONTestNoResChk
@@ -232,7 +230,7 @@ testPartnerCompanyGet = do
            200
 
   -- 2) not a partner admin but a company admin; should fail
-  void . dbUpdate $ RemovePartnerAdmin uid pid
+  void . dbUpdate $ RemovePartnerAdmin uid (unsafePartnerID pid)
   void . dbUpdate $ SetUserCompanyAdmin uid True
   (Just usr'') <- dbQuery . GetUserByID $ uid
   void $ runApiJSONTestNoResChk
@@ -292,7 +290,7 @@ testPartnerCompaniesGet = do
            200
 
   -- 2) not a partner admin but a company admin; should fail
-  void . dbUpdate $ RemovePartnerAdmin uid pidA
+  void . dbUpdate $ RemovePartnerAdmin uid (unsafePartnerID pidA)
   void . dbUpdate $ SetUserCompanyAdmin uid True
   (Just usr'') <- dbQuery . GetUserByID $ uid
   void $ runApiJSONTestNoResChk
@@ -356,7 +354,7 @@ testPartnerCompanyUserNew = do
   let rq_newUserGood_params'' = [ ("json", inTextBS newUserGoodJSON'') ]
 
   -- 2) not a partner admin but a company admin; should fail
-  void . dbUpdate $ RemovePartnerAdmin uid pid
+  void . dbUpdate $ RemovePartnerAdmin uid (unsafePartnerID pid)
   void . dbUpdate $ SetUserCompanyAdmin uid True
   (Just usr'') <- dbQuery . GetUserByID $ uid
   void $ runApiJSONTestNoResChk
@@ -412,7 +410,7 @@ testPartnerUserUpdate = do
            200
 
   -- 2) not a partner admin but a company admin; should fail
-  void . dbUpdate $ RemovePartnerAdmin uidAdmin pid
+  void . dbUpdate $ RemovePartnerAdmin uidAdmin (unsafePartnerID pid)
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin True
   (Just usr'') <- dbQuery . GetUserByID $ uidAdmin
   void $ runApiJSONTestNoResChk
@@ -511,7 +509,7 @@ testPartnerUserGet = do
            200
 
   -- 2) not a partner admin but a company admin; should fail
-  void . dbUpdate $ RemovePartnerAdmin uidAdmin pid
+  void . dbUpdate $ RemovePartnerAdmin uidAdmin (unsafePartnerID pid)
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin True
   (Just usr'') <- dbQuery . GetUserByID $ uidAdmin
   void $ runApiJSONTestNoResChk
@@ -560,7 +558,7 @@ testPartnerCompanyUsersGet = do
            200
 
   -- 2) not a partner admin but a company admin; should fail
-  void . dbUpdate $ RemovePartnerAdmin uidAdmin pid
+  void . dbUpdate $ RemovePartnerAdmin uidAdmin (unsafePartnerID pid)
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin True
   (Just usr'') <- dbQuery . GetUserByID $ uidAdmin
   void $ runApiJSONTestNoResChk
@@ -621,7 +619,7 @@ testPartnersUserGetTokens = do
            200
 
   -- 2) not a partner admin but a company admin; should fail
-  void . dbUpdate $ RemovePartnerAdmin uidAdmin pid
+  void . dbUpdate $ RemovePartnerAdmin uidAdmin (unsafePartnerID pid)
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin True
   (Just usr'') <- dbQuery . GetUserByID $ uidAdmin
   void $ runApiJSONTestNoResChk
@@ -651,25 +649,24 @@ testPartnersUserGetTokens = do
 -- fit the current use case
 -- Will need some love and care...
 
-testHelperPartnerCompanyCreate :: TestEnv (Context, PartnerID, UserGroupID)
+testHelperPartnerCompanyCreate :: TestEnv (Context, Int64, UserGroupID)
 testHelperPartnerCompanyCreate = do
-  (ctx, partner_ugid) <- testJSONCtxWithPartnerGroupID
-  let pid = unsafeUserGroupIDToPartnerID partner_ugid
+  (ctx, partnerUgID) <- testJSONCtxWithPartnerGroupID
   newCompanyJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerCompanyCreate.json"
   let rq_newCompany_params = [ ("json", inTextBS newCompanyJSON) ]
       rq_newCompany_resp_fp = inTestDir "json/partner_api_v1/resp-partnerCompanyCreate.json"
-  respValue <- runApiJSONTest ctx POST (partnerApiCallV1CompanyCreate pid) rq_newCompany_params 201 rq_newCompany_resp_fp
+  respValue <- runApiJSONTest ctx POST (partnerApiCallV1CompanyCreate partnerUgID) rq_newCompany_params 201 rq_newCompany_resp_fp
   let Object respObject = respValue
       Just (String cid) = H.lookup "id" respObject
-  return (ctx, pid, unsafeUserGroupID $ read $ T.unpack cid)
+  return (ctx, partnerUgID, unsafeUserGroupID $ read $ T.unpack cid)
 
-testHelperPartnerUserCreate :: TestEnv (Context, PartnerID, UserID)
+testHelperPartnerUserCreate :: TestEnv (Context, Int64, UserID)
 testHelperPartnerUserCreate = do
   (ctx,pid,company_ugid) <- testHelperPartnerCompanyCreate
   uid <- testHelperPartnerCompanyUserCreate ctx pid company_ugid
   return (ctx, pid, uid)
 
-testHelperPartnerCompanyUserCreate :: Context -> PartnerID -> UserGroupID -> TestEnv UserID
+testHelperPartnerCompanyUserCreate :: Context -> Int64 -> UserGroupID -> TestEnv UserID
 testHelperPartnerCompanyUserCreate ctx pid company_ugid = do
   newUserGoodJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
   let rq_newUserGood_params = [ ("json", inTextBS newUserGoodJSON) ]
@@ -679,11 +676,13 @@ testHelperPartnerCompanyUserCreate ctx pid company_ugid = do
       Just (String uid) = H.lookup "id" respObject
   return $ unsafeUserID $ read $ T.unpack uid
 
-testJSONCtxWithPartnerGroupID :: TestEnv (Context, UserGroupID)
+-- we produce the UserGroupID as an Int64 since that is now what the partners
+-- API expect for its handlers.
+testJSONCtxWithPartnerGroupID :: TestEnv (Context, Int64)
 testJSONCtxWithPartnerGroupID = do
   (partnerAdminUser, partnerAdminUserGroup) <- addNewRandomPartnerUser
   ctx <- (set ctxmaybeuser (Just partnerAdminUser)) <$> mkContext def
-  return (ctx, get ugID partnerAdminUserGroup)
+  return (ctx, fromUserGroupID . get ugID $ partnerAdminUserGroup)
 
 runApiJSONTest :: Context             -- ^ Context to run the test in
                -> Method              -- ^ HTTP Method to use for API Call

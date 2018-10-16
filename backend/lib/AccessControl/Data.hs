@@ -87,7 +87,6 @@ evalNeededPermExpr :: (Permission -> Bool) -> NeededPermissionsExpr -> Bool
 evalNeededPermExpr f (NeededPermissionsExprBase p) = f p
 evalNeededPermExpr f (NeededPermissionsExprOr aces) = or $ fmap (evalNeededPermExpr f) aces
 evalNeededPermExpr f (NeededPermissionsExprAnd aces) = and $ fmap (evalNeededPermExpr f) aces
-
 -- | Interface for anything that could grant you some 'Permission's.  The
 -- monadic context is there due to future features.
 class HasPermissions s where

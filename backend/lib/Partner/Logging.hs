@@ -11,11 +11,44 @@ import Partner.PartnerID
 import User.UserID
 import UserGroup.Data
 
-logPartner :: MonadLog m => PartnerID -> m r -> m r
-logPartner pid = localData [identifier pid]
+logPartner :: MonadLog m
+           => Maybe PartnerID
+           -- ^ Any legacy partner ID that we want to log
+           -> UserGroupID
+           -- ^ The user group for the partner or the root of the
+           -- user group structure
+           -> m r
+           -> m r
+logPartner mpid pugid =
+  localData $ [ identifier mpid
+              , identifierMapLabel ("partner_"<>) pugid ]
 
-logPartnerAndUserGroup :: MonadLog m => PartnerID -> UserGroupID -> m r -> m r
-logPartnerAndUserGroup pid ugid = localData [identifier pid, identifier ugid]
+logPartnerAndUserGroup :: MonadLog m
+                       => Maybe PartnerID
+                       -- ^ Any legacy partner ID that we want to log
+                       -> UserGroupID
+                       -- ^ The user group for the partner or the root of the
+                       -- user group structure
+                       -> UserGroupID
+                       -- ^ The user group being touched under the above partner
+                       -- (the root)
+                       -> m r
+                       -> m r
+logPartnerAndUserGroup mpid pugid ugid =
+  localData $ [ identifier mpid
+              , identifierMapLabel ("partner_"<>) pugid
+              , identifier ugid ]
 
-logPartnerAndUser :: MonadLog m => PartnerID -> UserID -> m r -> m r
-logPartnerAndUser pid uid = localData [identifier pid, identifier uid]
+logPartnerAndUser :: MonadLog m
+                  => Maybe PartnerID
+                  -- ^ Any legacy partner ID that we want to log
+                  -> UserGroupID
+                  -- ^ The user group for the partner
+                  -> UserID
+                  -- ^ The user being touched
+                  -> m r
+                  -> m r
+logPartnerAndUser mpid pugid uid =
+  localData $ [ identifier mpid
+              , identifierMapLabel ("partner_"<>) pugid
+              , identifier uid ]
