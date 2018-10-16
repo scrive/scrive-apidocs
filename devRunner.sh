@@ -4,7 +4,7 @@ echo "DEV RUNNER:"
 echo ""
 
 echo "MIGRATING DATABASE"
-dist/build/kontrakcja-migrate/kontrakcja-migrate
+cabal new-run kontrakcja-migrate
 
 echo ""
 echo "STARTING S3 SERVER"
@@ -15,21 +15,21 @@ echo "STARTING S3 SERVER"
     sleep 1
 
 echo "STARTING MAILER SERVER"
-    dist/build/mailing-server/mailing-server &
+    cabal new-run mailing-server &
     echo $! > _mailer_pid
     echo "started mailer with pid $(cat _mailer_pid)"
     sleep 1
 
 echo ""
 echo "STARTING SMS SERVER"
-    dist/build/messenger-server/messenger-server &
+    cabal new-run messenger-server &
     echo $! > _mailer_pid
     echo "started sms sender with pid $(cat _mailer_pid)"
     sleep 1
 
 echo ""
 echo "STARTING CRON SERVER"
-    dist/build/cron/cron &
+    cabal new-run cron &
     echo $! > _cron_pid
     echo "started mailer with pid $(cat _cron_pid)"
     sleep 1
@@ -54,7 +54,7 @@ fi
 
 echo ""
 echo "STARTING MAIN SERVER"
-    dist/build/kontrakcja-server/kontrakcja-server "$@" &
+    cabal new-run kontrakcja-server "$@" &
     echo $! > _server_pid
     echo "started server with pid $(cat _server_pid)"
 
