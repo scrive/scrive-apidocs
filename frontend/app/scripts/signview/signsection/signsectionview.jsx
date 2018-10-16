@@ -405,12 +405,9 @@ var Task = require("../navigation/task");
       var pinParam = signatory.smsPinAuthenticationToSign() ? {sms_pin: pin} : {};
 
       document.checksign(function () {
-        self.setStep("process");
-        self.setSignedStatus(0);
-
         new FlashMessagesCleaner();
-
         document.takeSigningScreenshot(function () {
+          self.setStep("process");
           self.setSignedStatus(1);
 
           Track.track_timeout("Accept", {"Accept": "sign document"});
