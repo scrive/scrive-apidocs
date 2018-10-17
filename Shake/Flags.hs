@@ -3,12 +3,14 @@
 module Shake.Flags (ShakeFlag(..)
                    ,OptimisationLevel(..)
                    ,Pattern
+                   ,EnableExecutableDynamic
                    ,shakeFlags) where
 
 import Data.Bifunctor
 import System.Console.GetOpt
 
 type Pattern = String
+type EnableExecutableDynamic = Bool
 
 data OptimisationLevel = NoOptimisation
                        | DefaultOptimisation
@@ -29,6 +31,7 @@ data ShakeFlag = TransifexUser     String
                | NewBuild
                | OldBuild
                | OptimisationLevel OptimisationLevel
+               | DisableExecutableDynamic
                | CreateDB
                | TestPattern       Pattern
   deriving Eq
@@ -50,7 +53,11 @@ shakeFlags =
     (optArg
      (bimap id OptimisationLevel . optimisationLevelFromString)
      (OptimisationLevel NoOptimisation) "NUM")
-    "Build the back end with optimisation enabled"
+    "Build the back end with optimisation enabled (use this in production)"
+  , Option ""
+    [ "disable-executable-dynamic"]
+    (noArg DisableExecutableDynamic)
+    "Disable dynamic linking for the back end (use this in production)"
   , Option ""  ["create-db"]  (noArg  CreateDB)
     "Use a new DB for tests. See 'help-env' for relevant env var settings."
   , Option "p" ["pattern"]    (reqArg TestPattern       "PATTERN")

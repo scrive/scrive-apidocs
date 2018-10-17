@@ -29,6 +29,7 @@ fi
 rm ghc-pkg.list
 
 # Build and run the Shake script.
+# The list of packages in scope MUST be kept in sync with Shake.GetHsDeps.
 mkdir -p _shake
 ghc -hide-all-packages \
     -package Cabal \
@@ -40,6 +41,7 @@ ghc -hide-all-packages \
     -package directory \
     -package extra \
     -package filepath \
+    -package mtl \
     -package pretty \
     -package process \
     -package shake \

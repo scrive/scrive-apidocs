@@ -19,6 +19,9 @@ getHsDeps mainIs = do
         -- We use 'getHsDeps' only on 'Shake/Shake.hs', so this is
         -- fine. Otherwise GHC would get confused by the package
         -- environment file.
+        --
+        -- The list of packages in scope MUST be kept in sync with the
+        -- one in shake.sh.
       , "-package", "Cabal"
       , "-package", "aeson"
       , "-package", "attoparsec"
@@ -28,6 +31,7 @@ getHsDeps mainIs = do
       , "-package", "directory"
       , "-package", "extra"
       , "-package", "filepath"
+      , "-package", "mtl"
       , "-package", "pretty"
       , "-package", "process"
       , "-package", "shake"

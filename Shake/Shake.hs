@@ -7,6 +7,7 @@
 
 import Control.Exception  (IOException, SomeException, catch, evaluate)
 import Control.Monad
+import Control.Monad.Writer (execWriter, tell)
 import Data.Char
 import Data.List.Extra    (intersperse, trim)
 import Data.Maybe
@@ -176,7 +177,8 @@ main = do
   cabalFile    <- parseCabalFile "kontrakcja.cabal"
   shakeArgsWith (opts ver) shakeFlags $ \flags targets -> return . Just $ do
     newBuild <- liftIO $ mkUseNewBuild flags cabalFile
-    let opt   = getOptimisationLevel flags
+    let opt        = getOptimisationLevel flags
+        exeDynamic = DisableExecutableDynamic `notElem` flags
 
     if null targets then want ["help"] else want targets
 
@@ -228,7 +230,7 @@ main = do
 
     -- * Rules
     componentBuildRules   newBuild opt cabalFile
-    serverBuildRules      newBuild opt cabalFile
+    serverBuildRules      newBuild opt exeDynamic cabalFile
     serverTestRules       newBuild opt cabalFile
                           (mkCreateDBWithTestConf flags)
                           [pat | TestPattern pat <- flags]
@@ -245,29 +247,32 @@ getOptimisationLevel flags =
   last (NoOptimisation : [ optlevel | OptimisationLevel optlevel <- flags ])
 
 -- | Server build rules
-serverBuildRules :: UseNewBuild -> OptimisationLevel -> CabalFile -> Rules ()
-serverBuildRules newBuild opt cabalFile = do
-  ifNewBuild newBuild (serverNewBuildRules opt cabalFile)
-                      (serverOldBuildRules opt cabalFile)
+serverBuildRules :: UseNewBuild -> OptimisationLevel -> EnableExecutableDynamic
+                 -> CabalFile
+                 -> Rules ()
+serverBuildRules newBuild opt exeDynamic cabalFile = do
+  ifNewBuild newBuild (serverNewBuildRules opt exeDynamic cabalFile)
+                      (serverOldBuildRules opt exeDynamic cabalFile)
   "_build" </> "db-docs" </> "kontra.html" %> buildDBDocs
 
-getCabalConfigureFlags :: OptimisationLevel -> Action [String]
-getCabalConfigureFlags opt = do
-  tc           <- askOracle (TeamCity ())
+getCabalConfigureFlags :: OptimisationLevel -> EnableExecutableDynamic
+                       -> Action [String]
+getCabalConfigureFlags opt exeDynamic = do
   testCoverage <- askOracle (BuildTestCoverage ())
   flags0       <- askOracle (BuildCabalConfigureOptions ())
-  let flags  = if tc then ["-fenable-routinglist",flags0]
-               else [flags0]
-      flags' = if testCoverage then "--enable-coverage":flags
-               else flags
-      flags''= case opt of
-                MaxOptimisation     -> "-O2":flags'
-                DefaultOptimisation -> flags'
-                NoOptimisation      -> "-O0":flags'
-  return flags''
+  return . execWriter $ do
+    tell [flags0]
+    when testCoverage $ tell ["--enable-coverage"]
+    case opt of
+      MaxOptimisation     -> tell ["-O2"]
+      DefaultOptimisation -> return ()
+      NoOptimisation      -> tell ["-O0"]
+    when exeDynamic $ tell ["--enable-executable-dynamic"]
 
-serverNewBuildRules :: OptimisationLevel -> CabalFile -> FilePath -> Rules ()
-serverNewBuildRules opt cabalFile buildDir = do
+serverNewBuildRules :: OptimisationLevel -> EnableExecutableDynamic
+                    -> CabalFile -> FilePath
+                    -> Rules ()
+serverNewBuildRules opt exeDynamic cabalFile buildDir = do
   let cabalFiles = ["cabal.project.freeze", "kontrakcja.cabal"]
 
   "_build/cabal-update" %>>> do
@@ -276,7 +281,7 @@ serverNewBuildRules opt cabalFile buildDir = do
 
   "cabal.project.local" %> \_ -> do
     need ("_build/cabal-update":cabalFiles)
-    flags <- getCabalConfigureFlags opt
+    flags <- getCabalConfigureFlags opt exeDynamic
     command [Shell] "cabal" ("new-configure":flags)
 
   "_build/cabal-build" %>>> do
@@ -304,8 +309,9 @@ serverNewBuildRules opt cabalFile buildDir = do
 
   "cabal-clean" ~> cmd "cabal new-clean"
 
-serverOldBuildRules :: OptimisationLevel -> CabalFile -> Rules ()
-serverOldBuildRules opt cabalFile = do
+serverOldBuildRules :: OptimisationLevel -> EnableExecutableDynamic -> CabalFile
+                    -> Rules ()
+serverOldBuildRules opt exeDynamic cabalFile = do
   let cabalFiles = ["cabal.config", "kontrakcja.cabal"]
 
   "cabal.sandbox.config" %> \_ -> do
@@ -343,7 +349,7 @@ serverOldBuildRules opt cabalFile = do
     -- Need to clean for flags to be effective.
     command_ [] "cabal" ["clean"]
 
-    flags <- getCabalConfigureFlags opt
+    flags <- getCabalConfigureFlags opt exeDynamic
     command [Shell] "cabal" ("configure":"--enable-tests":flags)
 
   "dist/setup-config" %> \_ -> do
