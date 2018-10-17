@@ -27,6 +27,7 @@ module Doc.API.V2.Guards (
 , guardThatDocumentIsReadableBySignatories
 ) where
 
+import Control.Conditional (whenM)
 import Log
 import qualified Data.Text as T
 
@@ -130,9 +131,11 @@ guardGetSignatoryFromIdForDocument slid = do
 guardSignatoryNeedsToIdentifyToView :: Kontrakcja m => SignatoryLinkID -> Document -> m ()
 guardSignatoryNeedsToIdentifyToView slid doc = do
   let msl = getSigLinkFor slid doc
-  identifyToView <- signatoryNeedsToIdentifyToView (fromJust msl) doc
-  when (identifyToView && (not $ isAuthor msl))
-    (apiError $ signatoryStateError "Authorization to view needed before signing")
+  -- We let author bypass authentication to view, but only if the document was
+  -- not yet closed (i.e. we're not dealing with authenticate to view archived).
+  unless (isAuthor msl && not (isClosed doc)) $ do
+    whenM (signatoryNeedsToIdentifyToView (fromJust msl) doc) $ do
+      (apiError $ signatoryStateError "Authorization to view needed before signing")
 
 guardSignatoryHasNotIdentifiedToView :: Kontrakcja m => SignatoryLinkID -> Document -> m ()
 guardSignatoryHasNotIdentifiedToView slid doc =

@@ -167,7 +167,7 @@ signatoryNeedsToIdentifyToView
 signatoryNeedsToIdentifyToView sl doc =
   if isClosed doc
   then check AuthenticationToViewArchived signatorylinkauthenticationtoviewarchivedmethod
-  else check AuthenticationToView          signatorylinkauthenticationtoviewmethod
+  else check AuthenticationToView         signatorylinkauthenticationtoviewmethod
   where
     check authKind signatoryAuthMethod = case signatoryAuthMethod sl of
       StandardAuthenticationToView -> return False
