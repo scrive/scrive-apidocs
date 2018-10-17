@@ -1,14 +1,6 @@
-{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE DeriveDataTypeable         #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-
-#ifndef MIN_VERSION_shake
-#define MIN_VERSION_shake(a,b,c) 0
-#endif
-
-#if MIN_VERSION_shake(0,16,0)
 {-# LANGUAGE TypeFamilies               #-}
-#endif
 
 module Shake.Oracles where
 
@@ -52,7 +44,6 @@ newtype TeamCityBuildS3Conf = TeamCityBuildS3Conf ()
 newtype CreateTestDBWithConfData = CreateTestDBWithConfData ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 
-#if MIN_VERSION_shake(0,16,0)
 type instance RuleResult GhcVersion                 = String
 type instance RuleResult TeamCity                   = Bool
 type instance RuleResult NginxConfPath              = String
@@ -67,7 +58,6 @@ type instance RuleResult TeamCityBuildDBName        = String
 type instance RuleResult TeamCityBuildLambdaConf    = String
 type instance RuleResult TeamCityBuildS3Conf        = String
 type instance RuleResult CreateTestDBWithConfData   = (String, String, String, String)
-#endif
 
 addOracles :: Rules ()
 addOracles = do

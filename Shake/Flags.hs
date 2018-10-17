@@ -52,7 +52,7 @@ shakeFlags =
     , "optimisation", "optimization" ]
     (optArg
      (bimap id OptimisationLevel . optimisationLevelFromString)
-     (OptimisationLevel NoOptimisation) "NUM")
+     (OptimisationLevel DefaultOptimisation) "NUM")
     "Build the back end with optimisation enabled (use this in production)"
   , Option ""
     [ "disable-executable-dynamic"]
