@@ -1,11 +1,6 @@
-{-# LANGUAGE CPP                 #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE TypeApplications    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-
-#ifndef MIN_VERSION_Cabal
-#define MIN_VERSION_Cabal(x,y,z) 0
-#endif
 
 module Shake.Cabal ( CabalFile(packageId, allExtensions)
                    , parseCabalFile
@@ -29,21 +24,13 @@ import qualified Data.Map.Strict                               as M
 import           Data.Maybe
 import           Distribution.Backpack.ComponentsGraph
 import           Distribution.Compat.Graph                     as Graph
-#if MIN_VERSION_Cabal(2,2,0)
 import           Distribution.Compat.Lens                      as Lens
-#endif
 import           Distribution.PackageDescription               hiding
                                                                (allExtensions)
 import qualified Distribution.PackageDescription               as PkgDesc
 import           Distribution.PackageDescription.Configuration
-#if MIN_VERSION_Cabal(2,2,0)
 import           Distribution.PackageDescription.Parsec
-#else
-import           Distribution.PackageDescription.Parse
-#endif
-#if MIN_VERSION_Cabal(2,2,0)
 import           Distribution.Types.BuildInfo.Lens             as Lens
-#endif
 import           Distribution.Types.Component
 import           Distribution.Types.ComponentName
 import           Distribution.Types.ComponentRequestedSpec
@@ -107,15 +94,7 @@ data CabalFile = CabalFile {
   }
 
 cabalComponentHsSourceDirs :: Component -> [FilePath]
-#if MIN_VERSION_Cabal(2,2,0)
 cabalComponentHsSourceDirs = Lens.view (Lens.buildInfo . Lens.hsSourceDirs)
-#else
-cabalComponentHsSourceDirs (CLib   l) = hsSourceDirs . libBuildInfo        $ l
-cabalComponentHsSourceDirs (CExe   e) = hsSourceDirs . buildInfo           $ e
-cabalComponentHsSourceDirs (CFLib  f) = hsSourceDirs . foreignLibBuildInfo $ f
-cabalComponentHsSourceDirs (CTest  t) = hsSourceDirs . testBuildInfo       $ t
-cabalComponentHsSourceDirs (CBench b) = hsSourceDirs . benchmarkBuildInfo  $ b
-#endif
 
 -- | Parse a .cabal file.
 parseCabalFile :: FilePath -> IO CabalFile

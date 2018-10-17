@@ -1,5 +1,3 @@
-{-# LANGUAGE CPP #-}
-
 -- | Various new-build related utilities.
 --
 
@@ -12,16 +10,9 @@ module Shake.NewBuild (UseNewBuild(DontUseNewBuild)
                       ,hpcPaths
                       ,componentBuildRules) where
 
-#ifndef MIN_VERSION_base
-#define MIN_VERSION_base(x,y,z) 0
-#endif
-
 import Control.Monad
 import Data.List.Extra (trim)
 import Data.Maybe
-#if !MIN_VERSION_base(4,11,0)
-import Data.Monoid
-#endif
 import Data.Version
 import Data.Version.Extra (readVersion)
 import Development.Shake
