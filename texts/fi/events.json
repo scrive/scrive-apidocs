@@ -3,7 +3,7 @@
 "_AttachGuardtimeSealedFileEvidenceTextSimple":"Dokumentti sinetöitiin digitaalisella allekirjoituksella.",
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive valmisti lopullisen PDF:n.",
 "_AuthenticatedToViewEvidenceArchiveDKNemID":"Vahvisti henkilöllisyytensä tanskalaisen NemID:n kanssa päästäkseen käsiksi dokumenttiin.",
-"_AuthenticatedToViewEvidenceArchiveFITupas":"",
+"_AuthenticatedToViewEvidenceArchiveFITupas":"Vahvisti henkilöllisyytensä suomalaisen TUPAS-järjestelmän kautta päästäkseen käsiksi dokumenttiin.",
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Vahvisti henkilöllisyytensä norjalaisen BankID:n kanssa päästäkseen käsiksi dokumenttiin.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Vahvisti henkilöllisyytensä ruotsalaisen BankID:n kanssa päästäkseen käsiksi dokumenttiin.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Vahvisti henkilöllisyytensä tekstiviestitse lähetetyn PIN-numeron kanssa päästäkseen käsiksi dokumenttiin.",
