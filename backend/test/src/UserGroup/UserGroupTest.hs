@@ -1,15 +1,21 @@
 {-# LANGUAGE OverloadedStrings #-}
 module UserGroup.UserGroupTest (userGroupTests) where
 
+import Control.Monad.Catch (try)
 import Data.Foldable (foldlM)
 import Data.Int
+import Happstack.Server
 import Test.Framework
 import Test.QuickCheck
 
+import Administration.AdministrationControl (handleCompanyChange)
+import Context
 import DB
 import Doc.SignatoryLinkID ()
+import KontraError
 import TestingUtil
 import TestKontra as T
+import User.Email
 import User.Model
 import UserGroup.Data
 import UserGroup.Model
@@ -25,6 +31,7 @@ userGroupTests env  = testGroup "UserGroup"
   , testThat "Test moving a group cannot form a cycle" env testMoveGroupCycleError
   , testThat "Test find a parent group, where charging happens" env testFindInheritedPricePlan
   , testThat "Cannot delete a UserGroup with subgroups" env testCannotDeleteUserGroupWithSubgroups
+  , testThat "Test setting user group parents" env testChangeUserGroupParent
   ]
 
 testCreateGroups :: TestEnv ()
@@ -190,6 +197,60 @@ testCannotDeleteUserGroupWithSubgroups = do
   -- deleting group B works
   runSQL_ $ "DELETE from user_groups where id = " <?> get ugID ugB
 
+
+testChangeUserGroupParent :: TestEnv ()
+testChangeUserGroupParent = do
+  usrGrp <- addNewUserGroup
+  parentUsrGrp <- addNewUserGroup
+  let usrGrpID = get ugID usrGrp
+      parentUsrGrpID = get ugID parentUsrGrp
+      usrEmail = "testuseremail@scrive.com"
+  Just user <- addNewUserToUserGroup "Froggie" "Freddie" usrEmail usrGrpID
+  ctx <- (set ctxmaybeuser $ Just user) <$> mkContext def
+
+  let params1 = [("companypartnerid", inText . show $ parentUsrGrpID)]
+  req1 <- mkRequest POST params1
+
+  -- user has no admin rights so we should get a `Respond404`
+  (eErrRes :: Either KontraError ((),Context)) <- do
+    try (runTestKontra req1 ctx $ handleCompanyChange usrGrpID)
+  assertLeft eErrRes
+
+  -- -- user gets admin rights
+  let ctx' = (set ctxadminaccounts [Email usrEmail]) ctx
+  mUsrGrpParentBefore <- join <$> ((get ugParentGroupID) <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
+  assertEqual "User group has no parent" mUsrGrpParentBefore Nothing
+  _ <- runTestKontra req1 ctx' $ handleCompanyChange usrGrpID
+  mUsrGrpParentAfter <- join <$> (get ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
+  assertEqual "User group parent has been set correctly" mUsrGrpParentAfter $ Just parentUsrGrpID
+
+  -- setting a grandparent should not work
+  grandParentUsrGrp <- addNewUserGroup
+  let grandParentUsrGrpID = get ugID grandParentUsrGrp
+      params2 = [("companypartnerid", inText . show $ grandParentUsrGrpID)]
+  req2 <- mkRequest POST params2
+  (eErrRes' :: Either SomeDBExtraException ((),Context)) <- do
+    try (runTestKontra req2 ctx' $ handleCompanyChange parentUsrGrpID)
+  assertLeft eErrRes'
+
+  -- Setting a parent that already has a parent should not work. We'll reuse
+  -- usrGrp since it now has one.
+  usrGrp' <- addNewUserGroup
+  let usrGrpID' = get ugID usrGrp'
+      params3 = [("companypartnerid", inText . show $ usrGrpID)]
+  req3 <- mkRequest POST params3
+  (eErrRes'' :: Either SomeDBExtraException ((),Context)) <- do
+    try (runTestKontra req3 ctx' $ handleCompanyChange usrGrpID')
+  assertLeft eErrRes''
+
+  -- removing parent should work
+  let params4 = [("companypartnerid", inText "")]
+  req4 <- mkRequest POST params4
+  mUsrGrpParentBefore' <- join <$> (get ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID )
+  assertEqual "User group parent still set" mUsrGrpParentBefore' $ Just parentUsrGrpID
+  _ <- runTestKontra req4 ctx' $ handleCompanyChange usrGrpID
+  mUsrGrpParentAfter' <- join <$> (get ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
+  assertEqual "User group parent has been removed" mUsrGrpParentAfter' Nothing
 
 newtype ARootUserGroup = ARootUserGroup { unARootUserGroup :: UserGroup }
 

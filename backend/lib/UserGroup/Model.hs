@@ -156,7 +156,6 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetWithParents (Maybe (
           fetchMany toComposite
         return . Just $ (ug, parents)
 
-
 data UserGroupUpdate = UserGroupUpdate UserGroup
 instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () where
   update (UserGroupUpdate new_ug) = do
@@ -329,14 +328,6 @@ ugInvoicingSelectors = [
     "invoicing_type"
   , "payment_plan"
   ]
-
--- | Set `user_group_id` for `partners` - does _one_ by `id`
-data SetPartnerUserGroupID = SetPartnerUserGroupID PartnerID UserGroupID
-instance (MonadDB m, MonadThrow m) => DBUpdate m SetPartnerUserGroupID Bool where
-  update (SetPartnerUserGroupID pID ugid) = do
-    runQuery01 . sqlUpdate "partners" $ do
-      sqlSet "user_group_id" ugid
-      sqlWhereEq "id" pID
 
 unsafeUserGroupIDToPartnerID :: UserGroupID -> PartnerID
 unsafeUserGroupIDToPartnerID = unsafePartnerID . fromUserGroupID

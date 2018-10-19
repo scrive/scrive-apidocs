@@ -2,7 +2,6 @@ module Partner.Model (
   PartnerID
 , Partner(..)
 , GetPartners(..)
-, IsUserPartnerAdmin(..)
 , GetPartnerByID(..)
 , GetUserPartnerAdminUserGroups(..)
 , InsertPartnerForTests(..)
@@ -42,14 +41,6 @@ instance (MonadDB m, MonadLog m) => DBQuery m GetPartners [Partner] where
       mapM_ sqlResult $ partnerSelector
       sqlOrderBy "id"
     fetchMany fetchPartner
-
-data IsUserPartnerAdmin = IsUserPartnerAdmin UserID PartnerID
-instance (MonadDB m, MonadThrow m, MonadLog m) => DBQuery m IsUserPartnerAdmin Bool where
-  query (IsUserPartnerAdmin uid pid) = do
-    runQuery01 . sqlSelect "partner_admins" $ do
-      sqlWhereEq "user_id" uid
-      sqlWhereEq "partner_id" pid
-      sqlResult "TRUE"
 
 data GetPartnerByID = GetPartnerByID PartnerID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetPartnerByID Partner where

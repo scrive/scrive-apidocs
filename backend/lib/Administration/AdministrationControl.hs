@@ -12,6 +12,7 @@ module Administration.AdministrationControl(
             adminonlyRoutes
           , daveRoutes
           , jsonCompanies -- for tests
+          , handleCompanyChange -- for tests
           ) where
 
 import Data.Char
@@ -73,7 +74,6 @@ import KontraLink
 import Mails.Model
 import MinutesTime
 import PadApplication.Data (padAppModeFromText)
-import Partner.Model
 import Routing
 import Theme.Control
 import User.CallbackScheme.Model
@@ -355,26 +355,30 @@ handleMergeToOtherCompany ugid_source = onlySalesOrAdmin $ do
 handleCompanyChange :: Kontrakcja m => UserGroupID -> m ()
 handleCompanyChange ugid = onlySalesOrAdmin $ do
   ug <- guardJustM $ dbQuery $ UserGroupGet ugid
-  mcompanyname <- getField "companyname"
-  uginfochange <- getUserGroupSettingsChange
-  ugaddresschange <- getUserGroupAddressChange
+  mCompanyName <- getField "companyname"
+  ugInfoChange <- getUserGroupSettingsChange
+  ugAddressChange <- getUserGroupAddressChange
 
-  mpartnerusergroupid <- getOptionalField asValidUserGroupID "companypartnerid"
-  mnewparentugid <- case mpartnerusergroupid of
+  mTryParentUserGroupID <- getOptionalField asValidUserGroupID "companypartnerid"
+  mNewParentUserGroupID <- case mTryParentUserGroupID of
     Nothing -> return Nothing
-    Just partnerusergroupid -> do
-      partners <- dbQuery GetPartners
-      -- check, if this company is a partner. We must not set partner_id of partners.
-      let thisUserGroupIsPartner = ugid `elem` (catMaybes $ fmap ptUserGroupID partners)
-      case thisUserGroupIsPartner of
-        True  -> internalError
-        False -> if (Just partnerusergroupid) `elem` (ptUserGroupID <$> partners)
-          then return $ Just partnerusergroupid
-          else internalError
-  let ug' = set ugParentGroupID mnewparentugid
-          . maybe id (set ugName . T.pack) mcompanyname
-          . modify ugSettings uginfochange
-          . modify ugAddress ugaddresschange
+    Just tryParentUserGroupID -> do
+      -- The suggested parent must not itself have parents and the user group we
+      -- want to set it for cannot have children since we want a maximum depth
+      -- of 2 for legacy reasons. This restriction will be lifted or relaxed in
+      -- the future.
+      let errTxt = "Cannot set parent: tree depth limit reached."
+      parentHasParents <- (isJust . join . (get ugParentGroupID <$>)) <$>
+                            (dbQuery . UserGroupGet $ tryParentUserGroupID)
+      hasChildren <- not . null . (get ugID <$>) <$> (dbQuery . UserGroupGetAllChildren $ ugid)
+      if (hasChildren || parentHasParents)
+      then V2.apiError . V2.serverError $ errTxt
+      else return . Just $ tryParentUserGroupID
+
+  let ug' = set ugParentGroupID mNewParentUserGroupID
+          . maybe id (set ugName . T.pack) mCompanyName
+          . modify ugSettings ugInfoChange
+          . modify ugAddress ugAddressChange
           $ ug
   guardThatDataRetentionPolicyIsValid
     (get (ugsDataRetentionPolicy . ugSettings) ug') Nothing
