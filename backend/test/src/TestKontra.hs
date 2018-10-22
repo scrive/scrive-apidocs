@@ -365,6 +365,7 @@ mkContext lang = do
         -- We use real lambda config here because we want our tests to check it
         -- This lambda and s3 bucket are dedicated for tests and development
         , _ctxpdftoolslambdaconf = pdfSealLambdaConf
+        , _ctxmaybeapiuser = Nothing
     }
 
 testGTConf :: GuardTimeConf

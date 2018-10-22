@@ -81,7 +81,7 @@ instance ToAPIResponse () where
 -- This defines the possible outputs of the API.
 apiRun :: (Kontrakcja m, ToAPIResponse v) => m (APIResponse v) -> m Response
 apiRun acc =
-  (toAPIResponse <$> logUserCompanyIPAndApiVersion V2 acc) `catches` [
+  (toAPIResponse <$> runAcc) `catches` [
       Handler $ \ex@(SomeDBExtraException e) -> do
         -- API handler always returns a valid response. Due to that appHandler will not rollback - and we need to do it here
         rollback
@@ -97,6 +97,8 @@ apiRun acc =
           rsCode = httpCodeFromSomeDBExtraException ex'
         }
     ]
+  where
+    runAcc = addAPIUserToContext >> logUserCompanyIPAndApiVersion V2 acc
 
 apiLog :: Kontrakcja m => m Response -> m Response
 apiLog acc = do

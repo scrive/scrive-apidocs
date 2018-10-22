@@ -185,8 +185,15 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
           Left response -> do
             rollback -- if exception was thrown, rollback everything
             return response
+            -- just take the first user we find. We prefer the user, which was  used during API call.
+        let mUser = get ctxmaybeapiuser ctx' <|> get ctxmaybeuser ctx' <|> get ctxmaybepaduser ctx'
+            res' = case mUser of
+              Nothing -> res
+              Just user -> setHeader "X-Scrive-UserID" (show . userid $ user)
+                . setHeader "X-Scrive-UserGroupID" (show . usergroupid $ user)
+                $ res
 
-        return (res, timeDiff finishTime startTime)
+        return (res', timeDiff finishTime startTime)
 
       stats <- getConnectionStats
       return (res, stats, handlerTime)
@@ -349,4 +356,5 @@ appHandler handleRoutes appConf appGlobals = runHandler . localRandomID "handler
         , _ctxisapilogenabled    = isAPILogEnabled appConf
         , _ctxnetssignconfig     = netsSignConfig appConf
         , _ctxpdftoolslambdaconf = pdfToolsLambdaConf appConf
+        , _ctxmaybeapiuser       = Nothing
         }

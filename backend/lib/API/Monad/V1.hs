@@ -212,7 +212,7 @@ jsonError rest = runJSONGen $ do
 -- | convert the return type to the appropriate response
 -- This defines the possible outputs of the api.
 api :: (Kontrakcja m, ToAPIResponse v) => m v -> m Response
-api acc = (toAPIResponse <$> logUserCompanyIPAndApiVersion V1 acc) `catches` [
+api acc = (toAPIResponse <$> runAcc) `catches` [
     Handler $ \ex@(SomeDBExtraException e) -> do
       -- API handler always returns a valid response. Due to that appHandler will not rollback - and we need to do it here
       rollback
@@ -223,6 +223,9 @@ api acc = (toAPIResponse <$> logUserCompanyIPAndApiVersion V1 acc) `catches` [
         rsCode = httpCodeFromSomeDBExtraException ex
       }
   ]
+  where
+    runAcc = addAPIUserToContext >> logUserCompanyIPAndApiVersion V1 acc
+
 
 apiGuardL' :: (Kontrakcja m, APIGuard m a b) => m a -> m b
 apiGuardL' acc = apiGuard' =<< acc

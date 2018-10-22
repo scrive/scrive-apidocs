@@ -51,6 +51,8 @@ data Context = Context
     , _ctxisapilogenabled     :: Bool
     , _ctxnetssignconfig      :: Maybe NetsSignConfig
     , _ctxpdftoolslambdaconf  :: PdfToolsLambdaConf
+    , _ctxmaybeapiuser        :: Maybe User -- ^ The user which was effectively used for API call (this includes api/frontned)
+                                            -- This might be the user from session, if the OAuth authorization was missing.
     }
 
 -- | anonymousContext changes given context into one that does not hold any user details.
@@ -58,4 +60,5 @@ data Context = Context
 anonymousContext :: Context -> Context
 anonymousContext ctx = ctx { _ctxmaybeuser    = Nothing
                            , _ctxmaybepaduser = Nothing
+                           , _ctxmaybeapiuser = Nothing
                            , _ctxsessionid    = tempSessionID }
