@@ -67,8 +67,8 @@ data AppGlobals = AppGlobals {
 
 -- | Determines the lang of the current user (whether they are logged
 -- in or not), by checking their settings, the request, and cookies.
-getStandardLang :: ( HasLang a, ServerMonad m, FilterMonad Response m, MonadIO m
-                   , Functor m, MonadLog m, MonadCatch m )
+getStandardLang :: ( HasLang a, ServerMonad m, FilterMonad Response m
+                   , MonadIO m, MonadLog m, MonadCatch m )
                 => Maybe a -> m Lang
 getStandardLang muser = do
   rq <- askRq
