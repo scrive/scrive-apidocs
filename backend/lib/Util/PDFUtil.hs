@@ -11,7 +11,6 @@ module Util.PDFUtil
     , FileError(..)
     , preCheckPDF
     , preCheckPDFs
-    , preCheckPDFsWithoutRemovingJavascript
     , getNumberOfPDFPages
     , pickPages
     , clipHighlightImageFromPage
@@ -123,6 +122,7 @@ data FileError = FileSizeError Int Int
                | FileFormatError
                | FileNormalizeError BSL.ByteString
                | FileRemoveJavaScriptError BSL.ByteString
+               | FileFlatteningError BSL.ByteString
                | FileSealingError BSL.ByteString
                | FileOtherError String
                deriving (Eq, Ord, Show, Read, Typeable)
@@ -135,9 +135,11 @@ preCheckPDFsHelper contents tmppath =
     runExceptT $ do
       mapM_ checkSize contents
       checkRemoveJavaScript
+      checkFlatten
       mapM_ checkNormalize $ zip [1..] contents
       mapM readOutput [1..length contents]
   where
+    flattenedpath    num = tmppath ++ "/flattened"  ++ show num ++ ".pdf"
     jsremovedpath    num = tmppath ++ "/jsremoved"  ++ show num ++ ".pdf"
     jsremovespecpath num = tmppath ++ "/jsremove"   ++ show num ++ ".json"
     normalizedpath   num = tmppath ++ "/normalized" ++ show num ++ ".pdf"
@@ -170,15 +172,25 @@ preCheckPDFsHelper contents tmppath =
                                                               , BSL.pack "\n"
                                                               , stderr
                                                               ]
-
+    checkFlatten = do
+      forM_ (take (length contents) [1..]) $ \num -> do
+        (code, stdout, stderr) <- liftBase $
+          readProcessWithExitCode "java" (["-jar", "scrivepdftools/scrivepdftoolsflattener.jar", jsremovedpath num,flattenedpath num]) (BSL.empty)
+        case code of
+          ExitSuccess -> return ()
+          ExitFailure _ -> do
+            throwError $ FileFlatteningError $ BSL.concat [ BSL.pack ("Exit failure \n")
+                                                              , stdout
+                                                              , BSL.pack "\n"
+                                                              , stderr
+                                                              ]
     checkNormalize (num, content) = do
-
       -- dont rely on mutool exit code - for mupdf-1.6 it's always 1
       -- just check if the output file is there
       (_, stdout, stderr) <- liftBase $ readProcessWithExitCode "mutool"
                                    [ "clean"
                                    , "-gg"
-                                   , jsremovedpath num
+                                   , flattenedpath num
                                    , normalizedpath num
                                    ] BSL.empty
       flag <- liftBase $ doesFileExist $ normalizedpath num
@@ -198,67 +210,7 @@ preCheckPDFsHelper contents tmppath =
     readOutput num = do
       bs <- liftBase . BS.readFile $ normalizedpath num
       logInfo "Temp file read" $ object [ "bytes_read" .= (BS.length bs)
-                                        , "originator" .= ("preCheckPDFsHelperWithoutRemovingJavascript" :: Text) ]
-      return bs
-
-preCheckPDFsHelperWithoutRemovingJavascript :: (MonadLog m, MonadBaseControl IO m)
-                                            => [BS.ByteString]
-                                            -> String
-                                            -> m (Either FileError [BS.ByteString])
-preCheckPDFsHelperWithoutRemovingJavascript contents tmppath =
-    runExceptT $ do
-      mapM_ checkSize contents
-      writeSource
-      mapM_ checkNormalize $ zip [1..] contents
-      mapM readOutput [1..length contents]
-  where
-    normalizedpath   num = tmppath ++ "/normalized" ++ show num ++ ".pdf"
-    sourcepath       num = tmppath ++ "/source"     ++ show num ++ ".pdf"
-
-    sizeLimit = 10 * 1000 * 1000
-
-    checkSize content = let contentLength = BS.length content
-                        in when (contentLength > sizeLimit) $
-                             throwError (FileSizeError sizeLimit contentLength)
-
-    writeSource = do
-      forM_ (zip [1..] contents) $ \(num, content) -> do
-        liftBase $ BS.writeFile (sourcepath num) content
-        logInfo "Temp file write" $
-          object [ "bytes_written" .= (BS.length content)
-                 , "originator" .= ("preCheckPDFsHelperWithoutRemovingJavascript" :: Text) ]
-
-    checkNormalize (num, content) = do
-
-      -- dont rely on mutool exit code - for mupdf-1.6 it's always 1
-      -- just check if the output file is there
-      (_, stdout, stderr) <- liftBase $ readProcessWithExitCode "mutool"
-                                      [ "clean"
-                                      , "-gg"
-                                      , sourcepath num
-                                      , normalizedpath num
-                                      ] BSL.empty
-      flag <- liftBase $ doesFileExist $ normalizedpath num
-      when (not flag) $ do
-        liftBase $ do
-          systmp <- getTemporaryDirectory
-          (_path,handle) <- openTempFile systmp ("pre-normalize-failed-.pdf")
-          BS.hPutStr handle content
-          hClose handle
-        logInfo "Temp file write" $
-          object [ "bytes_written" .= (BS.length content)
-                 , "originator" .= ("preCheckPDFsHelperWithoutRemovingJavascript" :: Text) ]
-
-        throwError $ FileNormalizeError $ BSL.concat [ BSL.pack ("Exit failure \n")
-                                                     , stdout
-                                                     , BSL.pack "\n"
-                                                     , stderr
-                                                     ]
-
-    readOutput num = do
-      bs <- liftBase . BS.readFile $ normalizedpath num
-      logInfo "Temp file read" $ object [ "bytes_read" .= (BS.length bs)
-                                        , "originator" .= ("preCheckPDFsHelperWithoutRemovingJavascript" :: Text) ]
+                                        , "originator" .= ("preCheckPDFsHelper" :: Text) ]
       return bs
 
 -- | The 'preCheckPDF' function should be invoked just after receiving
@@ -291,20 +243,6 @@ preCheckPDFs contents =
         ]
       Right _ -> return ()
     return res
-
-preCheckPDFsWithoutRemovingJavascript :: (MonadLog m, MonadBaseControl IO m) => [BS.ByteString]
-            -> m (Either FileError [BS.ByteString])
-preCheckPDFsWithoutRemovingJavascript contents =
-  withSystemTempDirectory' "precheck" $ \tmppath -> do
-    res <- preCheckPDFsHelperWithoutRemovingJavascript contents tmppath
-      `E.catch` \(e::IOError) -> return (Left (FileOtherError (show e)))
-    case res of
-      Left x -> logInfo "preCheckPDFsHelperWithoutRemovingJavascript failed" $ object [
-          "error" .= show x
-        ]
-      Right _ -> return ()
-    return res
-
 
 preCheckPDF :: (MonadLog m, MonadBaseControl IO m) => BS.ByteString
             -> m (Either FileError BS.ByteString)
