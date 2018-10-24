@@ -96,7 +96,8 @@ startNewSession session mnewuid mnewpaduid = do
 
 updateSession :: ( FilterMonad Response m, MonadLog m, MonadDB m, MonadThrow m
                  , ServerMonad m, MonadIO m, MonadBase IO m )
-              => Session -> SessionID -> (Maybe UserID) -> (Maybe UserID) -> m ()
+              => Session -> SessionID -> (Maybe UserID) -> (Maybe UserID)
+              -> m ()
 updateSession old_ses new_ses_id new_muser new_mpad_user = do
   case new_ses_id == tempSessionID of
     -- We have no session and we want to log in some user
@@ -122,14 +123,16 @@ updateSession old_ses new_ses_id new_muser new_mpad_user = do
     False | sesID old_ses /= new_ses_id -> do
       mses <- dbQuery $ GetSession new_ses_id
       case mses of
-        Nothing -> logInfo_ "updateSession failed while trying to switch session"
+        Nothing   ->
+          logInfo_ "updateSession failed while trying to switch session"
         Just sess -> do
           let new_sess = sess { sesUserID = new_muser
                               , sesPadUserID = new_mpad_user }
           success <- dbUpdate . UpdateSession $ new_sess
           startSessionCookie new_sess
-          when (not success) $
-            logInfo_ "UpdateSession didn't update session where it should have to"
+          unless success $
+            logInfo_
+            "UpdateSession didn't update session when it should have had"
     _ -> return ()
 
 getUserFromSession :: (MonadDB m, MonadThrow m) => Session -> m (Maybe User)
@@ -219,17 +222,19 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateSession Bool where
       sqlWhereEq "id" sesID
 
 fetchSession
-  :: (SessionID, Maybe UserID, Maybe UserID, UTCTime, MagicHash, MagicHash, String)
+  :: ( SessionID, Maybe UserID, Maybe UserID
+     , UTCTime, MagicHash, MagicHash, String )
   -> Session
-fetchSession (sid, m_user_id, m_pad_user_id, expires, token, csrf_token, domain) =
+fetchSession ( sid, m_user_id, m_pad_user_id
+             , expires, token, csrf_token, domain ) =
   Session
-    { sesID = sid
-    , sesUserID = m_user_id
+    { sesID        = sid
+    , sesUserID    = m_user_id
     , sesPadUserID = m_pad_user_id
-    , sesExpires = expires
-    , sesToken = token
+    , sesExpires   = expires
+    , sesToken     = token
     , sesCSRFToken = csrf_token
-    , sesDomain = domain
+    , sesDomain    = domain
     }
 
 -- | We allow for at most 51 sessions with the same user_id, so if there
