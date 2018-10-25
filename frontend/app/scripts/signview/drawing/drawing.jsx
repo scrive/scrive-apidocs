@@ -197,6 +197,12 @@ module.exports = Backbone.Model.extend({
       drawingArea.addEventListener("MSPointerDown", drawing(self.drawingtoolDown, DrawingUtils.MS_METHOD), true);
       drawingArea.addEventListener("MSPointerMove", drawing(self.drawingtoolMove, DrawingUtils.MS_METHOD), true);
       drawingArea.addEventListener("MSPointerUp", drawing(self.drawingtoolUp, DrawingUtils.MS_METHOD), true);
+    } else if (window.PointerEvent) {
+      // desktop chrome with touch screens >= 70 fails first 'if', but still supports the following code
+      // try this as a last resort, to make sure we do not break anything on mobile
+      drawingArea.addEventListener("touchstart", drawing(self.drawingtoolDown, DrawingUtils.TOUCH_METHOD));
+      drawingArea.addEventListener("touchmove", drawing(self.drawingtoolMove, DrawingUtils.TOUCH_METHOD));
+      drawingArea.addEventListener("touchend", drawing(self.drawingtoolUp, DrawingUtils.TOUCH_METHOD));
     }
 
     $(drawingArea).mousedown(drawing(self.drawingtoolDown, DrawingUtils.MOUSE_METHOD));
