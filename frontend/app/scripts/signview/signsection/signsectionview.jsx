@@ -230,25 +230,40 @@ var Task = require("../navigation/task");
         return this.context.blinkArrow();
       }
 
-      var errorCallback = function (xhr) {
-        if (xhr.status == 403) {
-          ReloadManager.stopBlocking();
-          ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
-        } else {
-          ReloadManager.stopBlocking();
-          self.errorModal(xhr);
-        }
-      };
-
-      document.checksign(function () {
+      var successCallback = function () {
         new FlashMessagesCleaner();
         var timeout = window.SIGN_TIMEOUT || 0;
         setTimeout(function () {
-          document.sign(errorCallback, function (newDocument, oldDocument) {
+          document.sign(errorCallback("sign"), function (newDocument, oldDocument) {
             self.handleWaitingForSwedishBankID(bankIDSigning);
           }, {}).send();
         }, timeout);
-      }, errorCallback, {}).send();
+      };
+
+      var errorCallback = function (apicall) {
+        return function (xhr) {
+          if (xhr.status == 403) {
+            ReloadManager.stopBlocking();
+            ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
+          } else if (xhr.status === undefined || xhr.status === 0) {
+            // let's retry in a second
+            setTimeout(function () {
+              if (apicall === "check") {
+                document.checksign(successCallback, errorCallback("check"), {}).send();
+              } else {
+                document.sign(errorCallback("sign"), function (newDocument, oldDocument) {
+                  self.handleWaitingForSwedishBankID(bankIDSigning);
+                }, {}).send();
+              }
+            }, 1000);
+          } else {
+            ReloadManager.stopBlocking();
+            self.errorModal(xhr);
+          }
+        };
+      };
+
+      document.checksign(successCallback, errorCallback("check"), {}).send();
     },
 
     handleWaitingForSwedishBankID: function (bankIDSigning) {
@@ -405,12 +420,9 @@ var Task = require("../navigation/task");
       var pinParam = signatory.smsPinAuthenticationToSign() ? {sms_pin: pin} : {};
 
       document.checksign(function () {
-        self.setStep("process");
-        self.setSignedStatus(0);
-
         new FlashMessagesCleaner();
-
         document.takeSigningScreenshot(function () {
+          self.setStep("process");
           self.setSignedStatus(1);
 
           Track.track_timeout("Accept", {"Accept": "sign document"});

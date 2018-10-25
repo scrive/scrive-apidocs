@@ -216,11 +216,9 @@ if __name__ == '__main__':
         time.sleep(2)  # wait for pages to load
         wait_for_element(driver, '.section.sign .button.action').click()
         time.sleep(1)  # wait for confirm signing modal to be shown
-        driver.execute_script('window.SIGN_TIMEOUT = 5000')
+        save_screenshot(driver, '/tmp/desktop.png')
         wait_for_element(driver,
                          '.section.sign.above-overlay .button.action').click()
-        time.sleep(1)  # wait for signinginprogress modal to be shown
-        save_screenshot(driver, '/tmp/desktop.png')
         wait_for_element_to_disappear(driver, '.above-overlay')
 
         # user smaller size, so small screen mode is enabled
@@ -231,11 +229,9 @@ if __name__ == '__main__':
         driver.execute_script('window.scrollTo(0, 99999)')
         wait_for_element(driver, '.section.sign .button.action').click()
         time.sleep(1)  # wait for confirm signing modal to be shown
-        driver.execute_script('window.SIGN_TIMEOUT = 5000')
+        save_screenshot(driver, '/tmp/mobile.png')
         wait_for_element(driver,
                          '.section.sign.above-overlay .button.action').click()
-        time.sleep(1)  # wait for signinginprogress modal to be shown
-        save_screenshot(driver, '/tmp/mobile.png')
 
     # Creating screenshots for bankid signing - desktop and mobile version
     doc_data = api.createfromfile('backend/test/pdfs/simple.pdf')

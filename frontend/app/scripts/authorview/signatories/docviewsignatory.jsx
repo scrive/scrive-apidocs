@@ -708,7 +708,7 @@ var EmailModal = require("../../common/email_modal");
                   }
                   <span className="authentication-to-view field"
                         title={this.getAuthenticationToViewArchivedMethodText()}>
-                    {localization.docview.signatory.authenticationToViewArchived}:
+                    {localization.docview.signatory.authenticationToViewArchived}:{" "}
                       {this.getAuthenticationToViewArchivedMethodText()}
                   </span>
                 </div>

@@ -253,7 +253,6 @@ partnerApiCallV1UserGetPersonalToken ptOrUgID uid = do
         (serverError "Could not get user personal token")
         (dbQuery $ GetPersonalToken (userid user))
       return $ Ok (unjsonOAuthAuthorization, token)
-
 ----------------------------------------------------------------------------------------------------
 --                                   Unexported local helpers                                     --
 ----------------------------------------------------------------------------------------------------
