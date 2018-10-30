@@ -294,11 +294,10 @@ getScreenshots = do
 
 testSignDocumentEvidenceLog :: TestEnv ()
 testSignDocumentEvidenceLog = do
-  pdfSealLambdaConf <- tePdfToolsLambdaConf <$> ask
+  pdfSealLambdaConf <- asks (get tePdfToolsLambdaConf)
+  author            <- addNewRandomUser
+  screenshots       <- getScreenshots
 
-  author <- addNewRandomUser
-
-  screenshots <- getScreenshots
   addRandomDocumentWithAuthorAndCondition author (
       isSignable &&
       isPending &&

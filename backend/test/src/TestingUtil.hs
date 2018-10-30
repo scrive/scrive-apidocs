@@ -1024,13 +1024,13 @@ addRandomDocumentWithFile fileid rda = do
       case (p adoc, invariantProblems now adoc) of
         (True, Nothing) -> return adoc
         (False, _)  -> do
-          rej <- asks teRejectedDocuments
+          rej <- asks (get teRejectedDocuments)
           liftIO $ (atomically . modifyTVar' rej) (+1)
           --liftIO $ print $ "did not pass condition; doc: " ++ show adoc
           worker now user p file
 
         (_, Just _problems) -> do
-          rej <- asks teRejectedDocuments
+          rej <- asks (get teRejectedDocuments)
           liftIO $ (atomically . modifyTVar' rej) (+1)
           -- am I right that random document should not have invariantProblems?
           --uncomment this to find out why the doc was rejected

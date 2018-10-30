@@ -2,7 +2,7 @@ module TestKontra (
       KontraTest
     , inTestDir
     , TestEnv(..)
-    , TestEnvSt(..)
+    , module TestEnvSt
     , runTestEnv
     , ununTestEnv
     , runTestKontra
@@ -29,7 +29,7 @@ import Control.Concurrent.STM
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
-import Control.Monad.State.Strict
+import Control.Monad.State.Strict hiding (get, modify)
 import Control.Monad.Trans.Control
 import Crypto.RNG
 import Data.Time
@@ -40,10 +40,10 @@ import Log
 import System.FilePath
 import Text.StringTemplates.Templates
 import qualified Control.Exception.Lifted as E
+import qualified Control.Monad.State.Strict as State
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Map as M
-import qualified Database.Redis as R
 import qualified Text.StringTemplates.TemplatesLoader as TL
 
 import BrandedDomain.Model
@@ -51,16 +51,16 @@ import Context.Internal
 import DB
 import DB.PostgreSQL
 import FileStorage
-import FileStorage.Amazon.Config
 import GuardTime.Class
 import Happstack.Server.ReqHandler
 import IPAddress
 import Kontra
 import Log.Configuration
 import MinutesTime
-import PdfToolsLambda.Conf
 import Session.SessionID as SessionID
 import Templates
+import TestEnvSt
+import TestEnvSt.Internal
 import TestFileStorage
 import User.Lang
 
@@ -68,32 +68,6 @@ inTestDir :: FilePath -> FilePath
 inTestDir = ("backend/test" </>)
 
 type KontraTest = KontraG TestFileStorageT
-
-data TestEnvSt = TestEnvSt {
-    teConnSource         :: !BasicConnectionSource
-  , teStaticConnSource   :: !BasicConnectionSource
-  , teTransSettings      :: !TransactionSettings
-  , teRNGState           :: !CryptoRNGState
-  , teRunLogger          :: !(forall m r . LogT m r -> m r)
-  , teActiveTests        :: !(TVar (Bool, Int))
-  , teGlobalTemplates    :: !KontrakcjaGlobalTemplates
-  , teRejectedDocuments  :: !(TVar Int)
-  , teOutputDirectory    :: !(Maybe String)
-    -- ^ Put the test artifact output in this directory, if given.
-  , teStagingTests       :: !Bool
-  , tePdfToolsLambdaConf :: PdfToolsLambdaConf
-  , teAmazonConfig       :: Maybe AmazonConfig
-  , teFileMemCache       :: FileMemCache
-  , teRedisConn          :: Maybe R.Connection
-  }
-
-data TestEnvStRW = TestEnvStRW {
-    terwTimeDelay   :: !NominalDiffTime
-    -- ^ Modifies currentTime, when taken from IO.
-  , terwCurrentTime :: !(Maybe UTCTime)
-    -- ^ When 'Nothing', currentTime is taken from IO.
-  , terwRequestURI  :: !String
-  }
 
 type InnerTestEnv =
   TestFileStorageT (StateT TestEnvStRW (ReaderT TestEnvSt (LogT (DBT IO))))
@@ -107,30 +81,32 @@ newtype TestEnv a = TestEnv { unTestEnv :: InnerTestEnv a }
 
 runTestEnv :: TestEnvSt -> TestEnv () -> IO ()
 runTestEnv st m = do
-  can_be_run <- fst <$> atomically (readTVar $ teActiveTests st)
+  can_be_run <- fst <$> atomically (readTVar $ get teActiveTests st)
   when can_be_run $ do
-    atomically . modifyTVar' (teActiveTests st) $ second (succ $!)
+    atomically . modifyTVar' (get teActiveTests st) $ second (succ $!)
     E.finally
-      (runDBT (unConnectionSource . teStaticConnSource $ st) (teTransSettings st)
+      (runDBT
+        (unConnectionSource . get teStaticConnSource $ st)
+        (get teTransSettings st)
         (ununTestEnv st $ withTestDB m))
-      (atomically . modifyTVar' (teActiveTests st) $ second (pred $!))
+      (atomically . modifyTVar' (get teActiveTests st) $ second (pred $!))
 
 ununTestEnv :: TestEnvSt -> TestEnv a -> DBT IO a
 ununTestEnv st =
-  teRunLogger st
+  (unRunLogger . get teRunLogger $ st)
   . flip runReaderT st
   -- for each test start with no time delay
   . flip evalStateT TestEnvStRW
-      { terwTimeDelay = 0
-      , terwCurrentTime = Nothing
-      , terwRequestURI = "http://testkontra.fake"
+      { _terwTimeDelay   = 0
+      , _terwCurrentTime = Nothing
+      , _terwRequestURI  = "http://testkontra.fake"
       }
   . evalTestFileStorageT
-      ((, teRedisConn st, teFileMemCache st) <$> teAmazonConfig st)
+      ((, get teRedisConn st, get teFileMemCache st) <$> get teAmazonConfig st)
   . unTestEnv
 
 instance CryptoRNG TestEnv where
-  randomBytes n = asks teRNGState >>= liftIO . randomBytesIO n
+  randomBytes n = asks (get teRNGState) >>= liftIO . randomBytesIO n
 
 instance MonadDB TestEnv where
   runQuery = TestEnv . runQuery
@@ -146,8 +122,8 @@ instance MonadDB TestEnv where
     -- 'withNewConnection' is called, we actually want to spawn a
     -- different one, thus we can't use current (static) connection
     -- source, so we need one that actually creates new connections.
-    ConnectionSource pool <- asks teConnSource
-    runLogger <- asks teRunLogger
+    ConnectionSource pool <- asks (get teConnSource)
+    runLogger <- asks (unRunLogger . get teRunLogger)
     TestEnv . liftTestFileStorageT $
       \fsVar -> StateT $
       \terw -> ReaderT $
@@ -162,20 +138,20 @@ instance MonadDB TestEnv where
 
 instance MonadTime TestEnv where
   currentTime = do
-    mtesttime <- gets terwCurrentTime
+    mtesttime <- gets (get terwCurrentTime)
     case mtesttime of
       -- we use static time
       Just testtime -> return testtime
       -- we use IO time, but with a configurable delay
       Nothing -> do
-        delay <- gets terwTimeDelay
+        delay <- gets (get terwTimeDelay)
         now   <- liftIO getCurrentTime
         return $ addUTCTime delay now
 
 instance TemplatesMonad TestEnv where
   getTemplates = getTextTemplatesByLanguage $ codeFromLang def
   getTextTemplatesByLanguage langStr = do
-    globaltemplates <- teGlobalTemplates <$> ask
+    globaltemplates <- asks (get teGlobalTemplates)
     return $ TL.localizedVersion langStr globaltemplates
 
 instance MonadBaseControl IO TestEnv where
@@ -194,10 +170,10 @@ runTestKontraHelper :: BasicConnectionSource -> Request -> Context
                     -> KontraG TestFileStorageT a
                     -> TestEnv (a, Context, Response -> Response)
 runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
-  now <- currentTime
-  rng <- asks teRNGState
-  runLogger <- asks teRunLogger
-  ts <- getTransactionSettings
+  now       <- currentTime
+  rng       <- asks (get teRNGState)
+  runLogger <- asks (unRunLogger . get teRunLogger)
+  ts        <- getTransactionSettings
   -- commit previous changes and do not begin new transaction as runDBT
   -- does it and we don't want these pesky warnings about transaction
   -- being already in progress
@@ -220,35 +196,33 @@ class RunnableTestKontra a where
 
 instance RunnableTestKontra a where
   runTestKontra rq ctx tk = do
-    cs <- asks teConnSource
+    cs <- asks (get teConnSource)
     (res, ctx', _) <- runTestKontraHelper cs rq ctx tk
     return (res, ctx')
 
 instance {-# OVERLAPPING #-} RunnableTestKontra Response where
   runTestKontra rq ctx tk = do
-    cs <- asks teConnSource
+    cs <- asks (get teConnSource)
     (res, ctx', f) <- runTestKontraHelper cs rq ctx tk
     return (f res, ctx')
 
 -- | Modifies time, but does not change, whether the time is static or from IO.
 modifyTestTime :: (MonadState TestEnvStRW m) => (UTCTime -> UTCTime) -> m ()
 modifyTestTime modtime = do
-  mtesttime <- gets terwCurrentTime
+  mtesttime <- gets (get terwCurrentTime)
   case mtesttime of
     Just testtime ->
-      modify $ \terw -> terw
-               { terwCurrentTime = Just $ modtime testtime }
+      State.modify $ set terwCurrentTime (Just $ modtime testtime)
     Nothing       ->
-      modify $ \terw -> terw
-               { terwTimeDelay = diffUTCTime (modtime unixEpoch) unixEpoch }
+      State.modify $ set terwTimeDelay (diffUTCTime (modtime unixEpoch) unixEpoch)
 
 -- | Sets time and also stops time flow
 setTestTime :: (MonadState TestEnvStRW m) => UTCTime -> m ()
-setTestTime currtime = modify (\terw -> terw { terwCurrentTime = Just currtime })
+setTestTime currtime = State.modify $ set terwCurrentTime (Just currtime)
 
 -- | Sets current uri of all test requests
 setRequestURI :: (MonadState TestEnvStRW m) => String -> m ()
-setRequestURI uri = modify (\terw -> terw { terwRequestURI = uri })
+setRequestURI uri = State.modify $ set terwRequestURI uri
 
 -- Various helpers for constructing appropriate Context/Request.
 
@@ -322,7 +296,7 @@ mkRequestWithHeaders :: (MonadState TestEnvStRW m, MonadIO m)
                      => Method -> [(String, Input)] -> [(String, [String])]
                      -> m Request
 mkRequestWithHeaders method vars headers = do
-    uri <- gets terwRequestURI
+    uri <- gets (get terwRequestURI)
     liftIO $ do
       rqbody <- newEmptyMVar
       ib <- newMVar vars
@@ -349,10 +323,10 @@ mkRequestWithHeaders method vars headers = do
 -- | Constructs initial context with given templates
 mkContext :: Lang -> TestEnv Context
 mkContext lang = do
-  pdfSealLambdaConf <- tePdfToolsLambdaConf <$> ask
-  globaltemplates <- teGlobalTemplates <$> ask
-  time <- currentTime
-  bd <- dbQuery $ GetMainBrandedDomain
+  pdfSealLambdaConf <- asks (get tePdfToolsLambdaConf)
+  globaltemplates   <- asks (get teGlobalTemplates)
+  time              <- currentTime
+  bd                <- dbQuery $ GetMainBrandedDomain
   liftIO $ do
     filecache <- newFileMemCache 52428800
     return Context {

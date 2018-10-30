@@ -26,9 +26,9 @@ runTestCronUntilIdle ctx = do
   -- Running consumers spawns additional processes with their own DB transactions,
   -- which do not see changes of the test transaction ... unless there is a commit.
   commit
-  ConnectionSource pool <- asks teConnSource
-  pdfSealLambdaConf <- tePdfToolsLambdaConf <$> ask
-  mAmazonConfig     <- teAmazonConfig       <$> ask
+  ConnectionSource pool <- asks (get teConnSource)
+  pdfSealLambdaConf     <- asks (get tePdfToolsLambdaConf)
+  mAmazonConfig         <- asks (get teAmazonConfig)
 
   -- Will not be used, because Planhat is not configured when testing, but it is a parameter for cronConsumer.
   reqManager <- newTlsManager
