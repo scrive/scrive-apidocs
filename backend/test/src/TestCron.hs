@@ -22,21 +22,23 @@ import qualified CronEnv
 
 runTestCronUntilIdle :: Context -> TestEnv ()
 runTestCronUntilIdle ctx = do
-  -- This is intented to run as part of a test and tests are usually one big transaction.
-  -- Running consumers spawns additional processes with their own DB transactions,
-  -- which do not see changes of the test transaction ... unless there is a commit.
+  -- This is intended to run as part of a test and tests are usually
+  -- one big transaction. Running consumers spawns additional
+  -- processes with their own DB transactions, which do not see
+  -- changes of the test transaction ... unless there is a commit.
   commit
   ConnectionSource pool <- asks (get teConnSource)
   pdfSealLambdaConf     <- asks (get tePdfToolsLambdaConf)
   mAmazonConfig         <- asks (get teAmazonConfig)
 
-  -- Will not be used, because Planhat is not configured when testing, but it is a parameter for cronConsumer.
+  -- Will not be used, because Planhat is not configured when testing,
+  -- but it is a parameter for cronConsumer.
   reqManager <- newTlsManager
 
   let -- for testing, one of each is sufficient
       cronConf = CronConf {
           cronAmazonConfig       = fromMaybe (AmazonConfig "" 0 "" "" "")
-                                             mAmazonConfig
+                                   mAmazonConfig
         , cronDBConfig           =
             "user='kontra' password='kontra' dbname='kontrakcja'"
         , cronMaxDBConnections   = 100
@@ -46,7 +48,8 @@ runTestCronUntilIdle ctx = do
         , cronGuardTimeConf      = testGTConf
         , cronCgiGrpConfig       = Nothing
         , cronMixpanelToken      = Nothing
-        , cronNtpServers         = [ show n ++ ".ubuntu.pool.ntp.org" | n <- [0..3] ]
+        , cronNtpServers         = [ show n ++ ".ubuntu.pool.ntp.org"
+                                   | n <- [0..3] ]
         , cronSalesforceConf     = Nothing
         , cronInvoicingSFTPConf  = Nothing
         , cronPlanhatConf        = Nothing
@@ -115,7 +118,8 @@ runTestCronUntilIdle ctx = do
     stats <- newTVar $ replicate (length cronPartRunners) False
     return (sigs, stats)
 
-  -- To simplify things, runDB and runCronEnv requirements are added to the TestEnv. So then runDB and runCronEnv can be just "id".
+  -- To simplify things, runDB and runCronEnv requirements are added
+  -- to the TestEnv. So then runDB and runCronEnv can be just "id".
   (\m -> runReaderT m cronEnvData)
     . foldr1 (.) (finalizeRunner <$> (zip cronPartRunners idleSignals))
     $ whileM_ (not <$> allSignalsTrue idleSignals idleStatuses) $ return ()
@@ -127,4 +131,6 @@ allSignalsTrue idleSignals idleStatuses = liftIO . atomically $ do
   all id <$> readTVar idleStatuses
 
 takeAnyMVar :: [TMVar a] -> STM (Int, a)
-takeAnyMVar = foldr1 orElse . fmap (\(idx,t) -> liftM (idx,) $ takeTMVar t) . zip [0..]
+takeAnyMVar = foldr1 orElse .
+              fmap (\(idx,t) -> liftM (idx,) $ takeTMVar t) .
+              zip [0..]
