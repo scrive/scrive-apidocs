@@ -13,7 +13,7 @@ import IPAddress
 import MagicHash (MagicHash)
 import PdfToolsLambda.Conf
 import Salesforce.Conf
-import Session.SessionID
+import Session.SessionID as SessionID
 import Templates
 import User.Email
 import User.Model
@@ -80,4 +80,4 @@ anonymousContext :: Context -> Context
 anonymousContext ctx = ctx { _ctxmaybeuser    = Nothing
                            , _ctxmaybepaduser = Nothing
                            , _ctxmaybeapiuser = Nothing
-                           , _ctxsessionid    = tempSessionID }
+                           , _ctxsessionid    = SessionID.tempSessionID }

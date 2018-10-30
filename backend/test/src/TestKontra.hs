@@ -59,7 +59,7 @@ import Kontra
 import Log.Configuration
 import MinutesTime
 import PdfToolsLambda.Conf
-import Session.SessionID
+import Session.SessionID as SessionID
 import Templates
 import TestFileStorage
 import User.Lang
@@ -377,7 +377,7 @@ mkContext lang = do
         , _ctxmaybepaduser       = Nothing
         , _ctxusehttps           = False
         , _ctxgtconf             = testGTConf
-        , _ctxsessionid          = tempSessionID
+        , _ctxsessionid          = SessionID.tempSessionID
         , _ctxtrackjstoken       = Nothing
         , _ctxmixpaneltoken      = Nothing
         , _ctxgatoken            = Nothing

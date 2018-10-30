@@ -1,5 +1,5 @@
 module Session.Data (
-    module Session.SessionID
+    module SessionID
   , Session(..)
   , emptySession
   ) where
@@ -12,7 +12,7 @@ import Happstack.Server hiding (Session)
 import DB
 import MagicHash
 import MinutesTime
-import Session.SessionID
+import Session.SessionID as SessionID
 import User.UserID
 import Utils.HTTP
 
@@ -26,14 +26,16 @@ data Session = Session {
   , sesDomain    :: String
   } deriving (Eq, Show, Typeable)
 
-emptySession :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m, ServerMonad m) => m Session
+emptySession :: ( CryptoRNG m, MonadDB m, MonadThrow m
+                , MonadTime m, ServerMonad m )
+             => m Session
 emptySession = do
   now <- currentTime
   token <- random
   csrf_token <- random
   domain <- currentDomain
   return Session {
-    sesID        = tempSessionID
+    sesID        = SessionID.tempSessionID
   , sesUserID    = Nothing
   , sesPadUserID = Nothing
   , sesExpires   = now
