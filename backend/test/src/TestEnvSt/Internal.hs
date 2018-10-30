@@ -1,17 +1,17 @@
 module TestEnvSt.Internal where
 
-import DB.PostgreSQL
-import FileStorage
-import FileStorage.Amazon.Config
-import PdfToolsLambda.Conf
-import Templates
-
 import Control.Concurrent.STM.TVar
 import Crypto.RNG
 import Data.Time
 import Database.PostgreSQL.PQTypes.Transaction.Settings
 import Log.Monad
 import qualified Database.Redis as R
+
+import DB.PostgreSQL
+import FileStorage
+import FileStorage.Amazon.Config
+import PdfToolsLambda.Conf
+import Templates
 
 newtype RunLogger = RunLogger { unRunLogger :: (forall m r . LogT m r -> m r) }
 
