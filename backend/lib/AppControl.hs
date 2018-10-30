@@ -152,16 +152,17 @@ appHandler handleRoutes appConf appGlobals = runHandler
         routeLogData = ["uri" .= rqUri rq, "query" .= rqQuery rq]
     (res, ConnectionStats{..}, handlerTime) <-
       localData xRequestIDPair .
-      withPostgreSQL (unConnectionSource $ connsource appGlobals detailedConnectionTracker) $ do
+      withPostgreSQL (unConnectionSource $
+                      connsource appGlobals detailedConnectionTracker) $ do
       forM_ (queryTimeout appConf) $ \qt -> do
         runSQL_ $ "SET statement_timeout TO " <+> unsafeSQL (show qt)
       logInfo_ "Retrieving session"
       session <- getCurrentSession
       logInfo_ "Initializing context"
       ctx <- createContext session
-      -- commit is needed after getting session from the database
+      -- Commit is needed after getting session from the database
       -- since session expiration date is updated while getting it,
-      -- which results in pgsql locking the row. then, if request
+      -- which results in pgsql locking the row. Then, if request
       -- handler somehow gets stuck, transaction is left open for
       -- some time, row remains locked and subsequent attempts to
       -- refresh the page will fail, because they will try to
@@ -195,13 +196,16 @@ appHandler handleRoutes appConf appGlobals = runHandler
           Left response -> do
             rollback -- if exception was thrown, rollback everything
             return response
-            -- just take the first user we find. We prefer the user, which was  used during API call.
-        let mUser = get ctxmaybeapiuser ctx' <|> get ctxmaybeuser ctx' <|> get ctxmaybepaduser ctx'
+            -- just take the first user we find. We prefer the user
+            -- which was used during API call.
+        let mUser = get ctxmaybeapiuser ctx' <|>
+              get ctxmaybeuser ctx' <|> get ctxmaybepaduser ctx'
             res' = case mUser of
               Nothing -> res
-              Just user -> setHeader "X-Scrive-UserID" (show . userid $ user)
-                . setHeader "X-Scrive-UserGroupID" (show . usergroupid $ user)
-                $ res
+              Just user ->
+                setHeader "X-Scrive-UserID"      (show . userid      $ user) .
+                setHeader "X-Scrive-UserGroupID" (show . usergroupid $ user) $
+                res
 
         return (res', timeDiff finishTime startTime)
 

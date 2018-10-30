@@ -19,26 +19,42 @@ import User.Email
 import User.Model
 
 data Context = Context
-    { _ctxmaybeuser           :: Maybe User -- ^ The logged in user. Is Nothing when there is no one logged in.
-    , _ctxtime                :: UTCTime -- ^ The time of the request.
-    , _ctxclientname          :: Maybe String -- ^ Client identification from header Client-Name or if that's missing: User-Agent
-    , _ctxclienttime          :: Maybe UTCTime -- ^ Client-local time when an action was performed (e.g. signing a document)
-    , _ctxipnumber            :: IPAddress -- ^ The ip number of the client.
-    , _ctxproduction          :: Bool -- ^ Is this server the production server?
-    , _ctxcdnbaseurl          :: Maybe String -- ^ CDN base URL if one shouild be used
-    , _ctxtemplates           :: KontrakcjaTemplates -- ^ The set of templates to render text for the ctxlang
-    , _ctxglobaltemplates     :: KontrakcjaGlobalTemplates -- ^ All of the templates for all valid langs
-    , _ctxlang                :: Lang -- ^ The current context lang
+    { _ctxmaybeuser           :: Maybe User
+      -- ^ The logged in user. Is Nothing when there is no one logged in.
+    , _ctxtime                :: UTCTime
+      -- ^ The time of the request.
+    , _ctxclientname          :: Maybe String
+      -- ^ Client identification from header Client-Name or if that's
+      -- missing: User-Agent.
+    , _ctxclienttime          :: Maybe UTCTime
+      -- ^ Client-local time when an action was performed
+      -- (e.g. signing a document).
+    , _ctxipnumber            :: IPAddress
+      -- ^ The IP number of the client.
+    , _ctxproduction          :: Bool
+      -- ^ Is this server the production server?
+    , _ctxcdnbaseurl          :: Maybe String
+      -- ^ CDN base URL if one shouild be used.
+    , _ctxtemplates           :: KontrakcjaTemplates
+      -- ^ The set of templates to render text for the context's language.
+    , _ctxglobaltemplates     :: KontrakcjaGlobalTemplates
+      -- ^ All of the templates for all valid languages.
+    , _ctxlang                :: Lang
+      -- ^ The current context's language.
     , _ctxismailbackdooropen  :: Bool
-    , _ctxmailnoreplyaddress  :: String -- ^ The "noreply" address used when sending email
+    , _ctxmailnoreplyaddress  :: String
+      -- ^ The "noreply" address used when sending email.
     , _ctxcgigrpconfig        :: Maybe CgiGrpConfig
-    , _ctxgtconf              :: GuardTimeConf -- ^ GuardTime configuration
+    , _ctxgtconf              :: GuardTimeConf
+      -- ^ GuardTime configuration.
     , _ctxmrediscache         :: Maybe R.Connection
     , _ctxfilecache           :: FileMemCache
-    , _ctxxtoken              :: MagicHash -- ^ The XToken for combatting CSRF
-    , _ctxadminaccounts       :: [Email] -- ^
-    , _ctxsalesaccounts       :: [Email] -- ^
-    , _ctxmaybepaduser        :: Maybe User -- ^ If we are loged in to the pad view
+    , _ctxxtoken              :: MagicHash
+      -- ^ The XToken for combating CSRF.
+    , _ctxadminaccounts       :: [Email]
+    , _ctxsalesaccounts       :: [Email]
+    , _ctxmaybepaduser        :: Maybe User
+      -- ^ If we are logged in to the pad view.
     , _ctxusehttps            :: Bool
     , _ctxsessionid           :: SessionID
     , _ctxtrackjstoken        :: Maybe String
@@ -51,12 +67,15 @@ data Context = Context
     , _ctxisapilogenabled     :: Bool
     , _ctxnetssignconfig      :: Maybe NetsSignConfig
     , _ctxpdftoolslambdaconf  :: PdfToolsLambdaConf
-    , _ctxmaybeapiuser        :: Maybe User -- ^ The user which was effectively used for API call (this includes api/frontned)
-                                            -- This might be the user from session, if the OAuth authorization was missing.
+    , _ctxmaybeapiuser        :: Maybe User
+    -- ^ The user which was effectively used for API call (this
+    -- includes api/frontend) This might be the user from session, if
+    -- the OAuth authorization was missing.
     }
 
--- | anonymousContext changes given context into one that does not hold any user details.
--- | use this if your action requires different for of authentication
+-- | 'anonymousContext' changes given context into a one that does not
+-- hold any user credentials.  Use this if your action requires
+-- different form of authentication.
 anonymousContext :: Context -> Context
 anonymousContext ctx = ctx { _ctxmaybeuser    = Nothing
                            , _ctxmaybepaduser = Nothing

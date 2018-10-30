@@ -25,12 +25,12 @@ import Util.SignatoryLinkUtils
 
 sessionsTests :: TestEnvSt -> Test
 sessionsTests env = testGroup "Sessions" [
-    testThat "can create new session" env testNewSessionInsertion
-  , testThat "can update existing session" env testSessionUpdate
-  , testThat "can insert document ticket" env testDocumentTicketInsertion
+    testThat "can create new session"       env testNewSessionInsertion
+  , testThat "can update existing session"  env testSessionUpdate
+  , testThat "can insert document ticket"   env testDocumentTicketInsertion
   , testThat "can reinsert document ticket" env testDocumentTicketReinsertion
-  , testThat "can add eleg transaction" env testElegTransactionInsertion
-  , testThat "can update eleg transaction" env testElegTransactionUpdate
+  , testThat "can add eleg transaction"     env testElegTransactionInsertion
+  , testThat "can update eleg transaction"  env testElegTransactionUpdate
   ]
 
 testNewSessionInsertion :: TestEnv ()
@@ -45,25 +45,32 @@ testNewSessionInsertion = do
 
 testSessionUpdate :: TestEnv ()
 testSessionUpdate = do
-  uid <- testUser
+  uid              <- testUser
   (Just sess, ctx) <- insertNewSession uid
-  _ <- do
+  void $ do
     rq <- mkRequest GET []
-    runTestKontra rq ctx $ updateSession sess (sesID sess) (sesUserID sess) (Just uid)
+    runTestKontra rq ctx $
+      updateSession sess (sesID sess) (sesUserID sess) (Just uid)
+
   msess' <- getSession (sesID sess) (sesToken sess) "some.domain.com"
-  assertBool "modified session successfully taken from the database" (isJust msess')
+  assertBool "modified session successfully taken from the database"
+    (isJust msess')
 
   let sess' = fromJust msess'
-  assertEqual "session successfully modified" (sesPadUserID sess') (Just uid)
+  assertEqual "session successfully modified"
+    (sesPadUserID sess') (Just uid)
 
   msess'' <- getSession (sesID sess) (sesToken sess) "other.domain.com"
-  assertBool "we should only be able to fetch session where domain does match" (isNothing msess'')
+  assertBool "we should only be able to fetch session where domain does match"
+    (isNothing msess'')
 
 
 testDocumentTicketInsertion :: TestEnv ()
 testDocumentTicketInsertion = replicateM_ 10 $ do
   (_, _, ctx) <- addDocumentAndInsertToken
-  runSQL_ $ "SELECT COUNT(*) FROM document_session_tokens WHERE session_id =" <?> get ctxsessionid ctx
+  runSQL_ $
+    "SELECT COUNT(*) FROM document_session_tokens WHERE session_id ="
+    <?> get ctxsessionid ctx
   tokens :: Int64 <- fetchOne runIdentity
   assertEqual "token successfully inserted into the database" 1 tokens
 
@@ -74,25 +81,30 @@ testDocumentTicketReinsertion = replicateM_ 10 $ do
     let Just asl = getAuthorSigLink doc
     rq <- mkRequest GET []
     runTestKontra rq ctx $ do
-      dbUpdate $ AddDocumentSessionToken (signatorylinkid asl) (signatorymagichash asl)
+      dbUpdate $ AddDocumentSessionToken
+        (signatorylinkid asl) (signatorymagichash asl)
   return ()
 
 testElegTransactionInsertion :: TestEnv ()
 testElegTransactionInsertion = replicateM_ 10 $ do
   (mtrans, _) <- addCgiGrpTransaction
-  assertBool "cgi grp transaction successfully inserted into the database" $ isJust mtrans
+  assertBool "cgi grp transaction successfully inserted into the database"
+    (isJust mtrans)
 
 testElegTransactionUpdate :: TestEnv ()
 testElegTransactionUpdate = replicateM_ 10 $ do
   (Just trans, ctx) <- addCgiGrpTransaction
   let newtrans = case trans of
-        (CgiGrpAuthTransaction slid tid orf sid) ->  (CgiGrpAuthTransaction slid tid orf sid)
-        (CgiGrpSignTransaction slid _ tid orf sid) -> (CgiGrpSignTransaction slid "new order ref"  tid orf sid)
+        (CgiGrpAuthTransaction slid tid orf sid)   ->
+          (CgiGrpAuthTransaction slid tid orf sid)
+        (CgiGrpSignTransaction slid _ tid orf sid) ->
+          (CgiGrpSignTransaction slid "new order ref"  tid orf sid)
   (mtrans', _) <- do
     rq <- mkRequest GET []
     runTestKontra rq ctx $ do
       dbUpdate $ MergeCgiGrpTransaction newtrans
-      dbQuery (GetCgiGrpTransaction (cgiTransactionType newtrans) (cgiSignatoryLinkID trans))
+      dbQuery  $ GetCgiGrpTransaction
+        (cgiTransactionType newtrans) (cgiSignatoryLinkID trans)
   assertBool "cgi grp transaction present is the database" $ isJust mtrans'
   let Just trans' = mtrans'
   assertBool "cgi grp transaction properly modified" $ newtrans == trans'
@@ -110,23 +122,26 @@ insertNewSession uid = do
   -- session and modifying normal code to get access to it seems like
   -- a bad idea
   runSQL_ "SELECT id FROM sessions ORDER BY id DESC LIMIT 1"
-  sid <- fetchOne runIdentity
+  sid   <- fetchOne runIdentity
   msess <- getSession sid (sesToken sess) "some.domain.com"
   return (msess, ctx)
 
 addDocumentAndInsertToken :: TestEnv (User, Document, Context)
 addDocumentAndInsertToken = do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable && isPending)
+  doc    <- addRandomDocumentWithAuthorAndCondition author
+            (isSignable && isPending)
   (_, ctx) <- do
     let Just asl = getAuthorSigLink doc
-    rq <- mkRequest GET []
+    rq  <- mkRequest GET []
     ctx <- mkContext def
     runTestKontra rq ctx $ do
       sess <- emptySession
-      dbUpdate $ AddDocumentSessionToken (signatorylinkid asl) (signatorymagichash asl)
+      dbUpdate $ AddDocumentSessionToken
+        (signatorylinkid asl) (signatorymagichash asl)
       ctx' <- getContext
-      updateSession sess (get ctxsessionid ctx') (sesUserID sess) (sesPadUserID sess)
+      updateSession sess
+        (get ctxsessionid ctx') (sesUserID sess) (sesPadUserID sess)
   return (author, doc, ctx)
 
 
@@ -134,19 +149,26 @@ addCgiGrpTransaction :: TestEnv (Maybe CgiGrpTransaction, Context)
 addCgiGrpTransaction = do
   (_, doc, ctx) <- addDocumentAndInsertToken
   let Just asl = getAuthorSigLink doc
-  trans_ <-rand 20 arbitrary
+  trans_ <- rand 20 arbitrary
   let trans = case trans_ of
-        (CgiGrpAuthTransaction _  tid orf _) ->  (CgiGrpAuthTransaction (signatorylinkid asl) tid orf $ get ctxsessionid ctx)
-        (CgiGrpSignTransaction _  tbs tid orf _) -> (CgiGrpSignTransaction (signatorylinkid asl) tbs tid orf $ get ctxsessionid ctx)
+        (CgiGrpAuthTransaction _  tid orf _)     ->
+          CgiGrpAuthTransaction (signatorylinkid asl) tid orf $
+          get ctxsessionid ctx
+        (CgiGrpSignTransaction _  tbs tid orf _) ->
+          CgiGrpSignTransaction (signatorylinkid asl) tbs tid orf $
+          get ctxsessionid ctx
   rq <- mkRequest GET []
   runTestKontra rq ctx $ do
     dbUpdate $ MergeCgiGrpTransaction trans
-    dbQuery $ GetCgiGrpTransaction (cgiTransactionType trans) $ signatorylinkid asl
+    dbQuery  $ GetCgiGrpTransaction
+      (cgiTransactionType trans) (signatorylinkid asl)
 
 testUser :: TestEnv UserID
 testUser = do
-  bd <- dbQuery $ GetMainBrandedDomain
-  pwd <- createPassword "admin"
-  ug <- dbUpdate . UserGroupCreate $ def
-  Just user <- dbUpdate $ AddUser ("Andrzej", "Rybczak") "andrzej@scrive.com" (Just pwd) (get ugID ug,True) def (get bdid bd) AccountRequest
+  bd        <- dbQuery $ GetMainBrandedDomain
+  pwd       <- createPassword "admin"
+  ug        <- dbUpdate $ UserGroupCreate def
+  Just user <- dbUpdate $ AddUser
+    ("Andrzej", "Rybczak") "andrzej@scrive.com"
+    (Just pwd) (get ugID ug, True) def (get bdid bd) AccountRequest
   return $ userid user
