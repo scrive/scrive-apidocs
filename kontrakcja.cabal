@@ -1323,6 +1323,9 @@ Test-suite kontrakcja-test
                  SignupTest
                  TestConf
                  TestCron
+                 TestEnvSt
+                 TestEnvSt.Internal
+                 TestEnvSt.Labels
                  TestFileStorage
                  TestKontra
                  TestingUtil
