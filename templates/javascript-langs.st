@@ -681,7 +681,17 @@ javascriptLocalisation =
                       , invalidParametersCanChange : "$_elegBankInvalidParametersCanChange()$"
                       , invalidParametersCantChange : "$_elegBankInvalidParametersCantChange()$"
                   }
-              }
+                , nets : {
+                    errorExpiredTransaction : "$_elegNetsErrorExpiredTransaction()$"
+                  , errorGeneric : "$_elegNetsErrorGeneric()$"
+                  , errorAPI : "$_elegNetsErrorAPI()$"
+                  , errorCanceledByMerchant: "$_elegNetsErrorCanceledByMerchant()$"
+                  , errorExpired : "$_elegNetsErrorExpired()$"
+                  , errorExpiredByProxy: "$_elegNetsErrorExpiredByProxy()$"
+                  , errorRejectedBySigner: "$_elegNetsErrorRejectedBySigner()$"
+                  , transactionInProgress: "$_elegNetsTransactionInProgress()$"
+                  }
+             }
         }
         , docview : {
             signatory : {

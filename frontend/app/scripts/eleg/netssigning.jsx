@@ -71,10 +71,35 @@ module.exports = Backbone.Model.extend({
       return this.autoStartToken() == undefined;
     },
     isFaultStatus: function () {
-      return BankIDUtils.isFaultStatus(this.status());
+      var status = this.status();
+      return status == "nets_error_expired_transaction"
+        || status == "nets_error_api"
+        || status == "nets_error_canceled_by_merchant"
+        || status == "nets_error_expired"
+        || status == "nets_error_expired_by_proxy"
+        || status == "nets_error_rejected_by_signer";
     },
     statusMessage: function () {
-      return BankIDUtils.statusMessage(true, this.status(), this.signatory());
+      var status = this.status();
+      if (status == "nets_error_expired_transaction") {
+        return localization.docsignview.eleg.nets.errorExpiredTransaction;
+      } else if (status == "nets_error_api") {
+        return localization.docsignview.eleg.nets.errorAPI;
+      } else if (status == "nets_error_canceled_by_merchant") {
+        return localization.docsignview.eleg.nets.errorCanceledByMerchant;
+      } else if (status == "nets_error_expired") {
+        return localization.docsignview.eleg.nets.errorExpired;
+      } else if (status == "nets_error_expired_by_proxy") {
+        return localization.docsignview.eleg.nets.errorExpiredByProxy;
+      } else if (status == "nets_error_rejected_by_signer") {
+        return localization.docsignview.eleg.nets.errorRejectedBySigner;
+      // This is not and error state and should not ever be used, but we add it
+      // for sake of completeness
+      } else if (status == "nets_in_progress") {
+        return localization.docsignview.eleg.nets.transactionInProgress;
+      } else {
+        return localization.docsignview.eleg.nets.errorGeneric;
+      }
     },
     /*
     * Workflow logic functions
