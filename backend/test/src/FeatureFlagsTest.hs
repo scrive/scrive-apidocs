@@ -53,3 +53,4 @@ testNewCompanyFeatureFlagDefaults  = do
           assertEqual "New company can use email confirmation" True (ffCanUseEmailConfirmations ff)
           assertEqual "New company can use API invitation" True (ffCanUseAPIInvitations ff)
           assertEqual "New company can use Pad invitation" True (ffCanUsePadInvitations ff)
+          assertEqual "New company can use Shareable Links" True (ffCanUseShareableLinks ff)

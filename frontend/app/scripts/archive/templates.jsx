@@ -396,36 +396,40 @@ var RemoveModalContent = React.createClass({
               className="archive-table-link-column-header"
               rendering={function(r) {
                 const d = new Document(r.get("listObjectData"));
-                if(d.shareableLink()) {
-                  return (
-                    <div>
-                      <div
-                        className="shareable-link-icon-show"
-                        onClick={self.openShowShareableLinkModal(d)}
-                        title={localization.archive.templates.shareableLink.showTooltip}
-                      />
-                      <div
-                        className="shareable-link-icon-regenerate"
-                        onClick={self.openGenerateShareableLinkModal(d)}
-                        title={localization.archive.templates.shareableLink.regenerateTooltip}
-                      />
-                      <div
-                        className="shareable-link-icon-discard"
-                        onClick={self.openDiscardShareableLinkModal(d)}
-                        title={localization.archive.templates.shareableLink.discardTooltip}
-                      />
-                    </div>
-                  );
+                if (Subscription.currentSubscription().currentUserFeatures().canUseShareableLinks()) {
+                  if(d.shareableLink()) {
+                    return (
+                      <div>
+                        <div
+                          className="shareable-link-icon-show"
+                          onClick={self.openShowShareableLinkModal(d)}
+                          title={localization.archive.templates.shareableLink.showTooltip}
+                        />
+                        <div
+                          className="shareable-link-icon-regenerate"
+                          onClick={self.openGenerateShareableLinkModal(d)}
+                          title={localization.archive.templates.shareableLink.regenerateTooltip}
+                        />
+                        <div
+                          className="shareable-link-icon-discard"
+                          onClick={self.openDiscardShareableLinkModal(d)}
+                          title={localization.archive.templates.shareableLink.discardTooltip}
+                        />
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div>
+                        <div
+                          className="shareable-link-icon-generate"
+                          onClick={self.openGenerateShareableLinkModal(d)}
+                          title={localization.archive.templates.shareableLink.generateTooltip}
+                        />
+                      </div>
+                    );
+                  }
                 } else {
-                  return (
-                    <div>
-                      <div
-                        className="shareable-link-icon-generate"
-                        onClick={self.openGenerateShareableLinkModal(d)}
-                        title={localization.archive.templates.shareableLink.generateTooltip}
-                      />
-                    </div>
-                  );
+                  return <div></div>;
                 }
               }}
             />

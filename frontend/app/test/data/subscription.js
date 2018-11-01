@@ -22,7 +22,8 @@ module.exports = {
       "can_use_email_invitations": true,
       "can_use_email_confirmations": true,
       "can_use_api_invitations": true,
-      "can_use_pad_invitations": true
+      "can_use_pad_invitations": true,
+      "can_use_shareable_links": true
     },
     "regular_users": {
       "can_use_sms_invitations": true,
@@ -45,7 +46,8 @@ module.exports = {
       "can_use_email_invitations": true,
       "can_use_email_confirmations": true,
       "can_use_api_invitations": true,
-      "can_use_pad_invitations": true
+      "can_use_pad_invitations": true,
+      "can_use_shareable_links": true
     }
   },
   "number_of_users": 1,

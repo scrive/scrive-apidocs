@@ -147,4 +147,5 @@ kontraMigrations = [
   , addAuthenticationToViewArchivedMethodToSignatories
   , addGeneratedAtToSMSPin
   , addAuthenticationKindToEIDAuthentications
+  , featureFlagsAddShareableLinks
   ]

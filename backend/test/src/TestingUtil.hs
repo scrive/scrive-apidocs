@@ -230,7 +230,7 @@ instance Arbitrary FeatureFlags where
   arbitrary = do
     (a, b, c, d, e, f, g, h, i, j) <- arbitrary
     (k, l, m, n, o, p, q, r, s, t) <- arbitrary
-    (u, v) <- arbitrary
+    (u, v, w) <- arbitrary
     return $ FeatureFlags {
         ffCanUseTemplates                    = a
       , ffCanUseBranding                     = b
@@ -254,6 +254,7 @@ instance Arbitrary FeatureFlags where
       , ffCanUseAPIInvitations               = s
       , ffCanUsePadInvitations               = t
       , ffCanUseFIAuthenticationToView       = u
+      , ffCanUseShareableLinks               = w
       }
 
 instance Arbitrary Features where

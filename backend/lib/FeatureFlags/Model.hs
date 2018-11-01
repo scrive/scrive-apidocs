@@ -50,6 +50,7 @@ data FeatureFlags = FeatureFlags {
   , ffCanUseEmailConfirmations :: Bool
   , ffCanUseAPIInvitations :: Bool
   , ffCanUsePadInvitations :: Bool
+  , ffCanUseShareableLinks :: Bool
 } deriving (Eq, Ord, Show)
 
 instance Unjson FeatureFlags where
@@ -76,6 +77,7 @@ instance Unjson FeatureFlags where
     <*> field "can_use_email_confirmations" ffCanUseEmailConfirmations "TODO desc"
     <*> fieldDef "can_use_api_invitations" True ffCanUseAPIInvitations "TODO desc"
     <*> fieldDef "can_use_pad_invitations" True ffCanUsePadInvitations "TODO desc"
+    <*> field "can_use_shareable_links" ffCanUseShareableLinks "TODO desc"
 
 getFeaturesFor :: (MonadDB m, MonadThrow m) => UserGroupID -> m Features
 getFeaturesFor ugid = do
@@ -160,6 +162,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateFeatureFlags Bool where
       sqlSet "can_use_email_confirmations" $ ffCanUseEmailConfirmations ff
       sqlSet "can_use_api_invitations" $ ffCanUseAPIInvitations ff
       sqlSet "can_use_pad_invitations" $ ffCanUsePadInvitations ff
+      sqlSet "can_use_shareable_links" $ ffCanUseShareableLinks ff
       sqlWhereEq "user_group_id" ugid
       sqlWhereEq "flags_for_admin" forAdmins
 
@@ -187,9 +190,10 @@ selectFeatureFlagsSelectors = do
   sqlResult "feature_flags.can_use_email_confirmations"
   sqlResult "feature_flags.can_use_api_invitations"
   sqlResult "feature_flags.can_use_pad_invitations"
+  sqlResult "feature_flags.can_use_shareable_links"
 
 fetchFeatureFlags :: (Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool,
-  Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool) -> FeatureFlags
+  Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool) -> FeatureFlags
 fetchFeatureFlags (
     can_use_templates
   , can_use_branding
@@ -213,6 +217,7 @@ fetchFeatureFlags (
   , can_use_email_confirmations
   , can_use_api_invitations
   , can_use_pad_invitations
+  , can_use_shareable_links
   ) = FeatureFlags {
     ffCanUseTemplates = can_use_templates
   , ffCanUseBranding = can_use_branding
@@ -236,4 +241,5 @@ fetchFeatureFlags (
   , ffCanUseEmailConfirmations = can_use_email_confirmations
   , ffCanUseAPIInvitations = can_use_api_invitations
   , ffCanUsePadInvitations = can_use_pad_invitations
+  , ffCanUseShareableLinks = can_use_shareable_links
   }
