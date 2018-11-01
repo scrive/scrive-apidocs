@@ -852,14 +852,11 @@ javascriptLocalisation =
                               EUR: "$OnePriceEURPerMonth()$"
                             , SEK: "$OnePriceSEKPerMonth()$"
                         }
-                        , priceMonthly : {
-                              EUR: "$OnePriceMonthlyEURPerMonth()$"
-                            , SEK: "$OnePriceMonthlySEKPerMonth()$"
-                        }
                         , users: "$_paymentPlanOneUsers()$"
                         , support: "$_paymentPlanOneSupport()$"
                         , evidencePackage: "$_paymentPlanOneEvidencePackage()$"
                         , basicBranding: "$_paymentPlanOneBasicBranding()$"
+                        , billedAnnually: "$_paymentPlanOneBilledAnnually()$"
                         , languages: "$_paymentPlanOneLanguages()$"
                     }
            }

@@ -128,81 +128,79 @@ module.exports = React.createClass({
                 <tr className="plan-options-tr">
 
 
-                  <td
-                    className={classNames({
-                      "plan-option-td": true,
-                      "hidden": this.expandedOnAnything() && !this.expandedOnePlan()
-                    })}
-                  >
-                    <div className="plan-option">
-                      <div className="plan-option-header">
-                        {localization.payments.plans.one.name}
-                      </div>
-                      <div className="plan-option-features">
-                        <div className="plan-option-feature-item">
-                          {localization.payments.plans.one.users}
+                  { /* if */ this.oneYearMode() &&
+                    <td
+                      className={classNames({
+                        "plan-option-td": true,
+                        "hidden": this.expandedOnAnything() && !this.expandedOnePlan()
+                      })}
+                    >
+                      <div className="plan-option">
+                        <div className="plan-option-header">
+                          {localization.payments.plans.one.name}
                         </div>
-                        <div className="plan-option-feature-item">
-                          {localization.payments.plans.one.support}
+                        <div className="plan-option-features">
+                          <div className="plan-option-feature-item">
+                            {localization.payments.plans.one.users}
+                          </div>
+                          <div className="plan-option-feature-item">
+                            {localization.payments.plans.one.support}
+                          </div>
+                          <div className="plan-option-feature-item">
+                            {localization.payments.plans.one.evidencePackage}
+                          </div>
+                          <div className="plan-option-feature-item">
+                            {localization.payments.plans.one.basicBranding}
+                          </div>
+                          <div className="plan-option-feature-item">
+                            {localization.payments.plans.one.languages}
+                          </div>
                         </div>
-                        <div className="plan-option-feature-item">
-                          {localization.payments.plans.one.evidencePackage}
-                        </div>
-                        <div className="plan-option-feature-item">
-                          {localization.payments.plans.one.basicBranding}
-                        </div>
-                        <div className="plan-option-feature-item">
-                          {localization.payments.plans.one.languages}
-                        </div>
-                      </div>
-                      <div className="plan-option-price">
-                        { /* if */ this.useSEK() &&
-                          <span>
-                            <span className="price">
-                              {this.oneYearMode() ?
-                                localization.payments.plans.one.price.SEK :
-                                localization.payments.plans.one.priceMonthly.SEK
-                              }
+                        <div className="plan-option-price">
+                          { /* if */ this.useSEK() &&
+                            <span>
+                              <span className="price">
+                                {localization.payments.plans.one.price.SEK}
+                              </span>
+                              <span className="unit">
+                                {localization.payments.priceUnit.SEK}
+                              </span>
                             </span>
-                            <span className="unit">
-                              {localization.payments.priceUnit.SEK}
+                          }
+                          { /* if */ this.useEURO() &&
+                            <span>
+                              <span className="price">
+                                {localization.payments.plans.one.price.EUR}
+                              </span>
+                              <span className="unit">
+                                {localization.payments.priceUnit.EUR}
+                              </span>
                             </span>
-                          </span>
-                        }
-                        { /* if */ this.useEURO() &&
-                          <span>
-                            <span className="price">
-                              {this.oneYearMode() ?
-                                localization.payments.plans.one.price.EUR :
-                                localization.payments.plans.one.priceMonthly.EUR
-                              }
-                            </span>
-                            <span className="unit">
-                              {localization.payments.priceUnit.EUR}
-                            </span>
-                          </span>
-                        }
+                          }
+                        </div>
+                        <div className="plan-option-label">
+                          <span>{localization.payments.plans.one.billedAnnually}</span>
+                        </div>
+                        <div className="plan-option-action">
+                          { /* if */  !this.expandedOnePlan() &&
+                            <Button
+                              size="big"
+                              text={localization.payments.contact}
+                              type="action"
+                              onClick={this.expandOnOnePlan}
+                            />
+                          }
+                          { /* else */ this.expandedOnePlan() &&
+                            <Button
+                              size="big"
+                              text={localization.cancel}
+                              onClick={this.expandOnNothing}
+                            />
+                          }
+                        </div>
                       </div>
-                      <div className="plan-option-action">
-                        { /* if */  !this.expandedOnePlan() &&
-                          <Button
-                            size="big"
-                            text={localization.payments.contact}
-                            type="action"
-                            onClick={this.expandOnOnePlan}
-                          />
-                        }
-                        { /* else */ this.expandedOnePlan() &&
-                          <Button
-                            size="big"
-                            text={localization.cancel}
-                            onClick={this.expandOnNothing}
-                          />
-                        }
-                      </div>
-                    </div>
-                  </td>
-
+                    </td>
+                  }
 
                   <td
                     className={classNames({
@@ -214,20 +212,51 @@ module.exports = React.createClass({
                       <div className="plan-option-header">
                         {localization.payments.plans.team.name}
                       </div>
-                      <div className="plan-option-features">
-                        <div className="plan-option-feature-item">
-                          {localization.payments.plans.team.users}
+                      { /* if */ this.oneYearMode() &&
+                        <div className="plan-option-features">
+                          <div className="plan-option-feature-item">
+                            {localization.payments.plans.team.users}
+                          </div>
+                          <div className="plan-option-feature-item">
+                            {localization.payments.plans.team.allFromOnePlan}
+                          </div>
+                          <div className="plan-option-feature-item">
+                            {localization.payments.plans.team.sla}
+                          </div>
+                          <div className="plan-option-feature-item">
+                            {localization.payments.plans.team.salesforce}
+                          </div>
                         </div>
-                        <div className="plan-option-feature-item">
-                          {localization.payments.plans.team.allFromOnePlan}
+                      }
+                      { /* else */ !this.oneYearMode() &&
+                        <div className="plan-option-features">
+                          <div className="plan-option-feature-item">
+                            {localization.payments.plans.team.users}
+                          </div>
+                          { /* the following are copied from one plan,
+                            because one plan is not visible in monthly mode */
+                          }
+                          <div className="plan-option-feature-item">
+                            {localization.payments.plans.one.support}
+                          </div>
+                          <div className="plan-option-feature-item">
+                            {localization.payments.plans.one.evidencePackage}
+                          </div>
+                          <div className="plan-option-feature-item">
+                            {localization.payments.plans.one.basicBranding}
+                          </div>
+                          <div className="plan-option-feature-item">
+                            {localization.payments.plans.one.languages}
+                          </div>
+                          { /* end of copied */ }
+                          <div className="plan-option-feature-item">
+                            {localization.payments.plans.team.sla}
+                          </div>
+                          <div className="plan-option-feature-item">
+                            {localization.payments.plans.team.salesforce}
+                          </div>
                         </div>
-                        <div className="plan-option-feature-item">
-                          {localization.payments.plans.team.sla}
-                        </div>
-                        <div className="plan-option-feature-item">
-                          {localization.payments.plans.team.salesforce}
-                        </div>
-                      </div>
+                      }
                       <div className="plan-option-price">
                         { /* if */ this.useSEK() &&
                           <span>
@@ -256,6 +285,7 @@ module.exports = React.createClass({
                           </span>
                         }
                       </div>
+                      <div className="plan-option-label" />
                       <div className="plan-option-action">
                         { /* if */  !this.expandedTeamPlan() &&
                           <Button
@@ -332,6 +362,7 @@ module.exports = React.createClass({
                           </span>
                         }
                       </div>
+                      <div className="plan-option-label" />
                       <div className="plan-option-action">
                         { /* if */  !this.expandedCompanyPlan() &&
                           <Button
@@ -384,6 +415,7 @@ module.exports = React.createClass({
                           {localization.payments.plans.enterprise.priceOffer}
                         </span>
                       </div>
+                      <div className="plan-option-label" />
                       <div className="plan-option-action">
                         { /* if */  !this.expandedEnterprisePlan() &&
                           <Button
