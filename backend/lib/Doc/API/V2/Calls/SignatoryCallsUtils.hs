@@ -151,10 +151,19 @@ checkSignatoryPinToSign slid (SignatoryFieldsValuesForSigning fields) pin = do
     (False, _) -> apiError $ requestParameterInvalid "fields"
                     "Does not contain a mobile number field, author has not set one for the signatory"
   pin' <- dbQuery $ GetSignatoryPin SMSPinToSign slid mobile
+  when (pin /= pin') $ logInfo "Invalid pin for signing" $ object [ "supplied pin" .= pin
+                                                                 , "expected pin" .= pin'
+                                                                 , "slid" .= show slid
+                                                                 ]
   return $ pin == pin'
+
 
 checkSignatoryPinToView :: (Kontrakcja m, DocumentMonad m) => SMSPinType -> SignatoryLinkID -> String -> m Bool
 checkSignatoryPinToView pinType slid pin = do
   sl <- guardGetSignatoryFromIdForDocument slid
   pin' <- dbQuery $ GetSignatoryPin pinType slid (getMobile sl)
+  when (pin /= pin') $ logInfo "Invalid pin for identify" $ object [ "supplied pin" .= pin
+                                                                  , "expected pin" .= pin'
+                                                                  , "slid" .= show slid
+                                                                  ]
   return $ pin == pin'
