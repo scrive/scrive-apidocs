@@ -53,6 +53,7 @@ import Analytics.Include
 import AppView
 import Attachment.AttachmentID (AttachmentID)
 import Attachment.Model
+import Chargeable.Model
 import Cookies
 import DB
 import DB.TimeZoneName
@@ -273,6 +274,7 @@ handleSignFromTemplate tplID mh = logDocument tplID $ do
                        \ template" $ object [identifier docID]
           respondLinkInvalid
         Just sl -> do
+          dbUpdate $ ChargeUserGroupForShareableLink docID
           dbUpdate $ AddDocumentSessionToken (signatorylinkid sl)
                                              (signatorymagichash sl)
           sendRedirect $ LinkSignDocNoMagicHash docID $ signatorylinkid sl
