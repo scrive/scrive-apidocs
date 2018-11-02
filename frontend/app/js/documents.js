@@ -1028,7 +1028,7 @@ var Document = exports.Document = Backbone.Model.extend({
 
       if(this.closed()) {
         return _.any(attachments, function(att) {
-          return !att.add_to_sealed_file;
+          return !att.isAddToSealedFile();
         });
       } else {
         const has_sig_atts = _.any(this.signatories(), function (sig) {
