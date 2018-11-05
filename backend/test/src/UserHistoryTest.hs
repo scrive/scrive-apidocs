@@ -208,8 +208,8 @@ testHandlerForDetailsChanged = do
       <$> mkContext def
     req <- mkRequest POST [ ("fstname", inText "Karol")
                           , ("sndname", inText "Samborski")
-                          , ("personalnumber", inText "123")
-                          , ("phone", inText "2221122")
+                          , ("personalnumber", inText "1234567890")
+                          , ("phone", inText "+222112233")
                           , ("companyposition", inText "Engineer")
                           ]
     _ <- runTestKontra req ctx $ apiCallUpdateUserProfile
@@ -221,9 +221,9 @@ testHandlerForDetailsChanged = do
                $ compareEventDataFromList [
                       ("first_name", "", "Karol")
                     , ("last_name", "", "Samborski")
-                    , ("personal_number", "", "123")
+                    , ("personal_number", "", "1234567890")
                     , ("company_position", "", "Engineer")
-                    , ("phone", "", "2221122")
+                    , ("phone", "", "+222112233")
                     ]
                $ history
 

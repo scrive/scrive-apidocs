@@ -54,7 +54,7 @@ splitCSVContents x = SS.fromString guessedQuoteMark guessedSeparator (x ++ "\n")
 -}
 decodeByteString :: BSL8.ByteString -> String
 decodeByteString bs =
-  guessBest . map  (BS.toString . toStrict) . lefts $ (Left bs) : map (\enc -> convertStrictly enc "UTF-8" bs) alternativeEncodings
+  guessBest . map  (BS.toString . toStrict) . lefts $ map (\enc -> convertStrictly enc "UTF-8" bs) alternativeEncodings ++ [Left bs]
   where
     {- |
         I picked these because these seem to be what Excel 2007 is outputting on my Windows machine if you choose to Save As ...

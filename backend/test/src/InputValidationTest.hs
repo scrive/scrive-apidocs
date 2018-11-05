@@ -39,35 +39,33 @@ inputValidationTests _ = testGroup "InputValidation"
         [ testProperty "strips surrounding whitespace" propValidNameStripsWhitespace
         , testCase "null is counted as empty" testValidNameNullIsEmpty
         , testProperty "whitespace only is counted as empty" propValidNameWhitespaceIsEmpty
-        , testProperty "can only contain alpha, space, apostrophe and hyphen"
+        , testProperty "can only contain alpha, space and hyphen"
                        propValidNameRestrictsChars
         , testProperty "good examples pass" propValidNameGoodExamples ]
     , testGroup "asValidCompanyName"
         [ testProperty "strips surrounding whitespace" propValidCompanyNameStripsWhitespace
         , testCase "null is counted as empty" testValidCompanyNameNullIsEmpty
         , testProperty "whitespace only is counted as empty" propValidCompanyNameWhitespaceIsEmpty
-        , testProperty "can only contain alphanumeric, spaces and chars &\'@():,!.-?"
-                       propValidCompanyNameRestrictsChars
         , testProperty "good examples pass" propValidCompanyNameGoodExamples ]
     , testGroup "asValidCompanyNumber"
         [ testProperty "strips surrounding whitespace" propValidCompanyNumberStripsWhitespace
         , testCase "null is counted as empty" testValidCompanyNumberNullIsEmpty
         , testProperty "whitespace only is counted as empty" propValidCompanyNumberWhitespaceIsEmpty
-        , testProperty "can only contain hyphen, digits [0-9] or ascii chars [A-Z] [a-z]"
+        , testProperty "can only contain hyphen, digits [0-9] or letters"
                        propValidCompanyNumberRestrictsChars
         , testProperty "good examples pass" propValidCompanyNumberGoodExamples ]
     , testGroup "asValidAddress"
         [ testProperty "strips surrounding whitespace" propValidAddressStripsWhitespace
         , testCase "null is counted as empty" testValidAddressNullIsEmpty
         , testProperty "whitespace only is counted as empty" propValidAddressWhitespaceIsEmpty
-        , testProperty "can only contain alphanumeric, spaces and chars \'():,/.#-"
+        , testProperty "can only contain alphanumeric, spaces and chars '():,/.#-"
                        propValidAddressRestrictsChars
         , testProperty "good examples pass" propValidAddressGoodExamples ]
     , testGroup "asValidPosition"
         [ testProperty "strips surrounding whitespace" propValidPositionStripsWhitespace
         , testCase "null is counted as empty" testValidPositionNullIsEmpty
         , testProperty "whitespace only is counted as empty" propValidPositionWhitespaceIsEmpty
-        , testProperty "can only contain alphanumeric, spaces and chars &():,-"
+        , testProperty "can only contain alphanumeric, spaces and chars &'():,-"
                        propValidPositionRestrictsChars
         , testProperty "good examples pass" propValidPositionGoodExamples ]
     , testGroup "asValidCheckBox"
@@ -211,7 +209,7 @@ propValidNameWhitespaceIsEmpty = propWhitespaceIsEmpty asValidName
 
 propValidNameRestrictsChars :: String -> Property
 propValidNameRestrictsChars =
-   propJustAllowed asValidName (isAlphaNum : isMark : isNumber : isPunctuation : isSpace : isSymbol : [])
+   propJustAllowed asValidName [isAlphaNum, isNumber, isSpace, (=='-')]
 
 propValidNameGoodExamples :: [NameChar] -> Property
 propValidNameGoodExamples ns =
@@ -224,7 +222,7 @@ propValidNameGoodExamples ns =
 newtype NameChar = NameChar { nc :: Char } deriving Show
 
 instance Arbitrary NameChar where
-    arbitrary = oneof . map (return . NameChar) $ "aAż '-"
+    arbitrary = oneof . map (return . NameChar) $ "aAż 2-"
 
 propValidCompanyNameStripsWhitespace :: [WhitespaceChar] -> [CompanyNameChar] -> Property
 propValidCompanyNameStripsWhitespace ws ns =
@@ -236,10 +234,6 @@ testValidCompanyNameNullIsEmpty = testNullIsEmpty asValidCompanyName
 
 propValidCompanyNameWhitespaceIsEmpty :: [WhitespaceChar] -> Property
 propValidCompanyNameWhitespaceIsEmpty = propWhitespaceIsEmpty asValidCompanyName
-
-propValidCompanyNameRestrictsChars :: String -> Property
-propValidCompanyNameRestrictsChars =
-   propJustAllowed asValidCompanyName (isAlphaNum : isMark : isNumber : isPunctuation : isSpace : isSymbol : [])
 
 propValidCompanyNameGoodExamples :: [CompanyNameChar] -> Property
 propValidCompanyNameGoodExamples ns =
@@ -267,7 +261,7 @@ propValidCompanyNumberWhitespaceIsEmpty = propWhitespaceIsEmpty asValidCompanyNu
 
 propValidCompanyNumberRestrictsChars :: String -> Property
 propValidCompanyNumberRestrictsChars =
-   propJustAllowed asValidCompanyNumber [isDigit, (`elem` ['a'..'z']), (`elem` ['A'..'Z']), (`elem` ['-', ' '])]
+   propJustAllowed asValidCompanyNumber [isAlphaNum, isDigit, (`elem` ['-', ' '])]
 
 propValidCompanyNumberGoodExamples :: [CompanyNumberChar] -> Property
 propValidCompanyNumberGoodExamples ns =
@@ -295,7 +289,7 @@ propValidAddressWhitespaceIsEmpty = propWhitespaceIsEmpty asValidAddress
 
 propValidAddressRestrictsChars :: String -> Property
 propValidAddressRestrictsChars =
-   propJustAllowed asValidAddress (isAlphaNum : map (==) " \'():,/.#-")
+   propJustAllowed asValidAddress [isAlphaNum, (`elem` (' ': " '():,/.#-"))]
 
 propValidAddressGoodExamples :: [AddressChar] -> Property
 propValidAddressGoodExamples as =
@@ -323,7 +317,7 @@ propValidPositionWhitespaceIsEmpty = propWhitespaceIsEmpty asValidPosition
 
 propValidPositionRestrictsChars :: String -> Property
 propValidPositionRestrictsChars =
-   propJustAllowed asValidPosition (isAlphaNum : map (==) " &():,-")
+   propJustAllowed asValidPosition (isAlpha : isDigit : map (==) " &'():,-")
 
 propValidPositionGoodExamples :: [PositionChar] -> Property
 propValidPositionGoodExamples ps =

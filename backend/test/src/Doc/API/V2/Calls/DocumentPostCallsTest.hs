@@ -645,7 +645,7 @@ testDocApiV2SigChangeEmailAndMobile = do
         assertEqual "Document status should match after 'start' call" Pending (getMockDocStatus mockDoc)
         return (did, getMockDocSigLinkId 1 mockDoc, getMockDocSigLinkId 2 mockDoc)
 
-
+  liftIO $ print "DUPA0"
   -- You should not be able to change the author's email or mobile
   do
     (did, author_slid, _slid) <- documentForTest
@@ -655,7 +655,7 @@ testDocApiV2SigChangeEmailAndMobile = do
       (docApiV2SigChangeEmailAndMobile did author_slid) 409
     void $ jsonTestRequestHelper ctx POST [param_mobile valid_mobile]
       (docApiV2SigChangeEmailAndMobile did author_slid) 409
-
+  liftIO $ print "DUPA1"
   -- Should work for other signatory
   do
     (did, _author_slid, slid) <- documentForTest
@@ -663,7 +663,7 @@ testDocApiV2SigChangeEmailAndMobile = do
     void $ testRequestHelper ctx POST [param_email invalid_email, param_mobile invalid_mobile]
       (docApiV2SigChangeEmailAndMobile did slid) 400
     void $ testRequestHelper ctx POST [param_email valid_email, param_mobile invalid_mobile]
-      (docApiV2SigChangeEmailAndMobile did slid) 409
+      (docApiV2SigChangeEmailAndMobile did slid) 400
     void $ testRequestHelper ctx POST [param_email invalid_email, param_mobile valid_mobile]
       (docApiV2SigChangeEmailAndMobile did slid) 400
     -- Then test valid case
@@ -671,7 +671,7 @@ testDocApiV2SigChangeEmailAndMobile = do
       (docApiV2SigChangeEmailAndMobile did slid) 200
     assertEqual "Email should have changed" valid_email (getMockDocSigLinkEmail 2 emailAndPhone)
     assertEqual "Mobile should have changed" valid_mobile (getMockDocSigLinkMobileNumber 2 emailAndPhone)
-
+  liftIO $ print "DUPA2"
   do
     (did, _author_slid, slid) <- documentForTest
     void $ testRequestHelper ctx POST [param_email invalid_email]
@@ -680,13 +680,15 @@ testDocApiV2SigChangeEmailAndMobile = do
       (docApiV2SigChangeEmailAndMobile did slid) 200
     assertEqual "Email should have changed" valid_email (getMockDocSigLinkEmail 2 emailOnly)
     assertEqual "Mobile should NOT have changed" orig_mobile (getMockDocSigLinkMobileNumber 2 emailOnly)
-
+  liftIO $ print "DUPA3"
   do
     (did, _author_slid, slid) <- documentForTest
     void $ testRequestHelper ctx POST [param_mobile invalid_mobile]
-      (docApiV2SigChangeEmailAndMobile did slid) 409
+      (docApiV2SigChangeEmailAndMobile did slid) 400
+    liftIO $ print "DUPA4"
     mobileOnly <- mockDocTestRequestHelper ctx POST [param_mobile valid_mobile]
       (docApiV2SigChangeEmailAndMobile did slid) 200
+    liftIO $ print "DUPA5"
     assertEqual "Email should NOT have changed" orig_email (getMockDocSigLinkEmail 2 mobileOnly)
     assertEqual "Mobile should have changed" valid_mobile (getMockDocSigLinkMobileNumber 2 mobileOnly)
 

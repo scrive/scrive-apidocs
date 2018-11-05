@@ -76,10 +76,6 @@ OnePriceSEKPerMonth=300
 ###
 OnePriceEURPerMonth=30
 ###
-OnePriceMonthlySEKPerMonth=370
-###
-OnePriceMonthlyEURPerMonth=37
-###
 TeamPriceSEKPerMonth=4500
 ###
 TeamPriceEURPerMonth=450

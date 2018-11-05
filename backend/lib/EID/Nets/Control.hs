@@ -83,11 +83,24 @@ formatDOB s = case T.splitOn "." s of
                [day, month, year] -> day <> month <> (T.drop 2 year)
                _ -> unexpectedError "Nets returned date of birth in invalid format"
 
--- First 6 digits have the same format in both DK and FI personal numbers - DDMMYY
-dobFromDKOrFIPersonalNumber :: String -> T.Text
-dobFromDKOrFIPersonalNumber personalnumber = case T.chunksOf 2 (T.pack $ take 6 $ personalnumber) of
+dobFromDKPersonalNumber :: String -> T.Text
+dobFromDKPersonalNumber personalnumber = case T.chunksOf 2 (T.pack $ take 6 $ personalnumber) of
   [day, month, year] -> day <> "." <> month <> "." <> year
   _ -> unexpectedError $ "This personal number cannot be formatted to date: " <> personalnumber
+
+-- In FI we can extract century from the "separator" character of SSN
+dobFromFIPersonalNumber :: String -> T.Text
+dobFromFIPersonalNumber personalnumber = case T.chunksOf 2 (T.pack $ take 6 $ personalnumber) of
+  [day, month, year] -> day <> "." <> month <> "." <> century <> year
+  _ -> formatError
+  where
+    century = case (head . drop 6 $ personalnumber) of
+        '-' -> "19"
+        '+' -> "18"
+        'A' -> "20"
+        'a' -> "20"
+        _   -> formatError
+    formatError = unexpectedError $ "This personal number cannot be formatted to date: " <> personalnumber
 
 cnFromDN ::T.Text -> T.Text
 cnFromDN dn =
@@ -245,7 +258,7 @@ handleResolveNetsDKNemID res doc nt sl ctx = do
       signatoryName = cnFromDN $ attributeFromAssertion "DN" $ assertionAttributes res
       ssn_sl = T.pack $ getPersonalNumber sl
       ssn_nets = attributeFromAssertion "DK_SSN" $ assertionAttributes res
-      dob = dobFromDKOrFIPersonalNumber $ getPersonalNumber sl
+      dob = dobFromDKPersonalNumber $ getPersonalNumber sl
       mpid = lookup "DK_DAN_PID" $ assertionAttributes res
 
   let normalizeSSN = T.filter (/= '-')
@@ -287,9 +300,8 @@ handleResolveNetsFITupas :: Kontrakcja m => GetAssertionResponse -> Document -> 
 handleResolveNetsFITupas res doc nt sl ctx = do
   sessionID <- get ctxsessionid <$> getContext
   let signatoryName = cnFromDN $ attributeFromAssertion "DN" $ assertionAttributes res
-      ssn_sl = T.pack $ getPersonalNumber sl
-      ssn_nets = attributeFromAssertion "FI_SSN" $ assertionAttributes res
-      dob = dobFromDKOrFIPersonalNumber $ getPersonalNumber sl
+      dob_nets = attributeFromAssertion "DOB" $ assertionAttributes res
+      dob_sl = dobFromFIPersonalNumber $ getPersonalNumber sl
       mpid = attributeFromAssertion "FI_TUPAS_PID" $ assertionAttributes res
       allowed_banks = ["nordea", "opbank", "danske", "handelsbanken", "aland"
                       , "sbank", "aktia", "popbank", "savingsbank"]
@@ -298,12 +310,11 @@ handleResolveNetsFITupas res doc nt sl ctx = do
         then bankStr
         else unexpectedError $ "invalid field in FI_TUPAS_BANK: " <+> T.unpack bankStr
 
-  let normalizeSSN = T.toUpper
-  if (normalizeSSN ssn_sl /= normalizeSSN ssn_nets)
+  if (dob_nets /= dob_sl)
     then do
-      logAttention "SSN from NETS does not match SSN from SignatoryLink." $ object [
-          "ssn_sl"   .= ssn_sl
-        , "ssn_nets" .= ssn_nets
+      logAttention "DOB from NETS does not match DOB from SSN in SignatoryLink." $ object [
+          "dob_sl"   .= dob_sl
+        , "dob_nets" .= dob_nets
         , "provider" .= ("fi_tupas" :: T.Text)
         ]
       return False
@@ -311,7 +322,7 @@ handleResolveNetsFITupas res doc nt sl ctx = do
       -- Put FI TUPAS Nem ID transaction in DB
       dbUpdate $ EID.MergeNetsFITupasAuthentication (mkAuthKind doc) sessionID (netsSignatoryID nt) $ NetsFITupasAuthentication {
             netsFITupasSignatoryName = signatoryName
-          , netsFITupasDateOfBirth = dob
+          , netsFITupasDateOfBirth = dob_nets
         }
 
       -- Record evidence only for auth-to-view (i.e. if the document is not
@@ -321,7 +332,7 @@ handleResolveNetsFITupas res doc nt sl ctx = do
         let eventFields = do
              F.value "signatory_name" signatoryName
              F.value "provider_fitupas" True
-             F.value "signatory_dob" dob
+             F.value "signatory_dob" dob_nets
              F.value "signatory_pid" mpid
              F.value "signatory_bank_name" bankName
         void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence  (eventFields) (Just sl) Nothing =<< signatoryActor ctx sl

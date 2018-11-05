@@ -526,6 +526,16 @@ javascriptLocalisation =
               , mustAcceptTOS: "$_flashMessageMustAcceptTOS()$"
               , wrongEmail : "$_emptyOrNotValidEmail()$"
               , passwordOldPasswordNotValid : "$_flashMessageBadOldPassword()$"
+              , wrongName : "$_flashWrongName()$"
+              , wrongCountry : "$_flashWrongCountry()$"
+              , wrongCity : "$_flashWrongCity()$"
+              , wrongZip : "$_flashWrongZip()$"
+              , wrongCompanyAddress : "$_flashWrongCompanyAddress()$"
+              , wrongCompanyNumber : "$_flashWrongCompanyNumber()$"
+              , wrongCompanyName : "$_flashWrongCompanyName()$"
+              , wrongPosition : "$_flashWrongPosition()$"
+              , wrongPersonalNumber : "$_flashWrongPersonalNumber()$"
+              , wrongPhone : "$_flashWrongPhone()$"
          }
          , pad : {
                 cleanImage : "$_padCleanImage()$"
@@ -681,7 +691,17 @@ javascriptLocalisation =
                       , invalidParametersCanChange : "$_elegBankInvalidParametersCanChange()$"
                       , invalidParametersCantChange : "$_elegBankInvalidParametersCantChange()$"
                   }
-              }
+                , nets : {
+                    errorExpiredTransaction : "$_elegNetsErrorExpiredTransaction()$"
+                  , errorGeneric : "$_elegNetsErrorGeneric()$"
+                  , errorAPI : "$_elegNetsErrorAPI()$"
+                  , errorCanceledByMerchant: "$_elegNetsErrorCanceledByMerchant()$"
+                  , errorExpired : "$_elegNetsErrorExpired()$"
+                  , errorExpiredByProxy: "$_elegNetsErrorExpiredByProxy()$"
+                  , errorRejectedBySigner: "$_elegNetsErrorRejectedBySigner()$"
+                  , transactionInProgress: "$_elegNetsTransactionInProgress()$"
+                  }
+             }
         }
         , docview : {
             signatory : {
@@ -842,14 +862,11 @@ javascriptLocalisation =
                               EUR: "$OnePriceEURPerMonth()$"
                             , SEK: "$OnePriceSEKPerMonth()$"
                         }
-                        , priceMonthly : {
-                              EUR: "$OnePriceMonthlyEURPerMonth()$"
-                            , SEK: "$OnePriceMonthlySEKPerMonth()$"
-                        }
                         , users: "$_paymentPlanOneUsers()$"
                         , support: "$_paymentPlanOneSupport()$"
                         , evidencePackage: "$_paymentPlanOneEvidencePackage()$"
                         , basicBranding: "$_paymentPlanOneBasicBranding()$"
+                        , billedAnnually: "$_paymentPlanOneBilledAnnually()$"
                         , languages: "$_paymentPlanOneLanguages()$"
                     }
            }
@@ -1108,6 +1125,7 @@ javascriptLocalisation =
               , emailAlreadyInUse : "$_flashCantChangeEmail()$"
               , changeEmailMailSent : "$_flashMessageChangeEmailMailSent()$"
               , userDeletionModalTitle : "$_userDeletionModalTitle()$"
+              , generalError : "$_accountDetaulsGeneralError()$"
               , userDeletionModalMessage : {
                     line1 : "$_userDeletionModalMessageLine1()$"
                   , line2 : "$_userDeletionModalMessageLine2()$"

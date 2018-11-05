@@ -55,3 +55,4 @@ _shake/
 _build/
 db-docs/
 ghc-pkg.list
+*.log
