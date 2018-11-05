@@ -526,6 +526,16 @@ javascriptLocalisation =
               , mustAcceptTOS: "$_flashMessageMustAcceptTOS()$"
               , wrongEmail : "$_emptyOrNotValidEmail()$"
               , passwordOldPasswordNotValid : "$_flashMessageBadOldPassword()$"
+              , wrongName : "$_flashWrongName()$"
+              , wrongCountry : "$_flashWrongCountry()$"
+              , wrongCity : "$_flashWrongCity()$"
+              , wrongZip : "$_flashWrongZip()$"
+              , wrongCompanyAddress : "$_flashWrongCompanyAddress()$"
+              , wrongCompanyNumber : "$_flashWrongCompanyNumber()$"
+              , wrongCompanyName : "$_flashWrongCompanyName()$"
+              , wrongPosition : "$_flashWrongPosition()$"
+              , wrongPersonalNumber : "$_flashWrongPersonalNumber()$"
+              , wrongPhone : "$_flashWrongPhone()$"
          }
          , pad : {
                 cleanImage : "$_padCleanImage()$"
@@ -1115,6 +1125,7 @@ javascriptLocalisation =
               , emailAlreadyInUse : "$_flashCantChangeEmail()$"
               , changeEmailMailSent : "$_flashMessageChangeEmailMailSent()$"
               , userDeletionModalTitle : "$_userDeletionModalTitle()$"
+              , generalError : "$_accountDetaulsGeneralError()$"
               , userDeletionModalMessage : {
                     line1 : "$_userDeletionModalMessageLine1()$"
                   , line2 : "$_userDeletionModalMessageLine2()$"

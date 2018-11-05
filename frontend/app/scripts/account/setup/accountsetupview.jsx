@@ -44,7 +44,7 @@ var AccountSetupView = React.createClass({
     };
   },
   componentWillMount: function () {
-    this._fullNameValidation = new Validation.NameValidation();
+    this._fullNameValidation = (new Validation.NameValidation()).concat(new Validation.NotEmptyValidation());
     this._passwordValidation = new Validation.PasswordValidation({
       callback: this.onPasswordValidationFail,
       message: localization.validation.passwordLessThanMinLength,

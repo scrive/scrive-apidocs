@@ -37,6 +37,7 @@ module.exports = React.createClass({
                   <InfoTextInput
                     ref="companyname"
                     name="companyname"
+                    className={!model.companynameValid() ? "redborder" : ""}
                     value={model.companyname()}
                     onChange={this.onCompanynameChange}
                     readonly={readonly}
@@ -49,6 +50,7 @@ module.exports = React.createClass({
                   <InfoTextInput
                     ref="companynumber"
                     name="companynumber"
+                    className={!model.companynumberValid() ? "redborder" : ""}
                     value={model.companynumber()}
                     onChange={this.onCompanynumberChange}
                     readonly={readonly}
@@ -61,6 +63,7 @@ module.exports = React.createClass({
                   <InfoTextInput
                     ref="companyaddress"
                     name="companyaddress"
+                    className={!model.companyaddressValid() ? "redborder" : ""}
                     value={model.companyaddress()}
                     onChange={this.onCompanyaddressChange}
                     readonly={readonly}
@@ -73,6 +76,7 @@ module.exports = React.createClass({
                   <InfoTextInput
                     ref="companyzip"
                     name="companyzip"
+                    className={!model.companyzipValid() ? "redborder" : ""}
                     value={model.companyzip()}
                     onChange={this.onCompanyzipChange}
                     readonly={readonly}
@@ -85,6 +89,7 @@ module.exports = React.createClass({
                   <InfoTextInput
                     ref="companycity"
                     name="companycity"
+                    className={!model.companycityValid() ? "redborder" : ""}
                     value={model.companycity()}
                     onChange={this.onCompanycityChange}
                     readonly={readonly}
@@ -97,6 +102,7 @@ module.exports = React.createClass({
                   <InfoTextInput
                     ref="companycountry"
                     name="companycountry"
+                    className={!model.companycountryValid() ? "redborder" : ""}
                     value={model.companycountry()}
                     onChange={this.onCompanycountryChange}
                     readonly={readonly}

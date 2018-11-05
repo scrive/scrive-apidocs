@@ -69,7 +69,7 @@ unjsonUserForUpdate = objectOf $ pure def
               (unjsonWithValidationOrEmpty asValidName)
               <**> (pure $ \lname ufu -> ufu { ufuLastName = lname }))
         <**> (fieldBy "personal_number" ufuPersonalNumber "A user's personal number"
-              (unjsonWithValidationOrEmpty asValidName)
+              (unjsonWithValidationOrEmpty asValidPersonalNumber)
               <**> (pure $ \pnumber ufu -> ufu { ufuPersonalNumber = pnumber }))
         <**> (fieldBy "phone" ufuPhone "A user's phone"
               (unjsonWithValidationOrEmpty asValidPhone)
@@ -142,10 +142,10 @@ unjsonUserGroupForUpdate = objectOf $ pure def
         <**> (field "zip" uguUserGroupZip "Company zip"
               <**> (pure $ \cz cfu -> cfu { uguUserGroupZip = cz }))
         <**> (fieldBy "city" uguUserGroupCity "Company city"
-              (unjsonWithValidationOrEmptyText (\s -> pack <$> (asValidName . unpack $ s)))
+              (unjsonWithValidationOrEmptyText (\s -> pack <$> (asValidCity . unpack $ s)))
               <**> (pure $ \cci cfu -> cfu { uguUserGroupCity = cci }))
         <**> (fieldBy "country" uguUserGroupCountry "Company country"
-              (unjsonWithValidationOrEmptyText (\s -> pack <$> (asValidName . unpack $ s)))
+              (unjsonWithValidationOrEmptyText (\s -> pack <$> (asValidCountry . unpack $ s)))
               <**> (pure $ \cco cfu -> cfu { uguUserGroupCountry = cco }))
 
 unjsonUserGroupsForUpdate :: UnjsonDef [UserGroupForUpdate]
