@@ -210,6 +210,23 @@ module.exports = React.createClass({
       width: width
     };
 
+    var numberOfButtonsOnTheRight = 0;
+    if (highlightingMode || removingHighlightingMode) {
+      numberOfButtonsOnTheRight = 1;
+    } else {
+      if (canRemoveHighlighting) {
+        numberOfButtonsOnTheRight++;
+      }
+      if (canHighlight) {
+        numberOfButtonsOnTheRight++;
+      }
+      if (canZoomIn || canZoomOut) {
+        numberOfButtonsOnTheRight += 2;
+      }
+    }
+    const usedWidth = numberOfButtonsOnTheRight * vars.signviewControlsWidth + (this.showDownloadButton() ? 84 : 0);
+    const statusStyle = {width: "calc(100% - " + usedWidth + "px)"};
+
     const buttonsClass = classNames("buttons right", {
       "hidden": this.isHiddenByBlink() || doc.isUnavailableForSign()
     });
@@ -221,7 +238,7 @@ module.exports = React.createClass({
             <DownloadDocumentButton document={this.context.document} />
           </div>
         }
-        <div className="status">
+        <div className="status" style={statusStyle}>
             <HtmlTextWithSubstitution
               secureText={this.statusText()}
               subs={{
