@@ -3,6 +3,7 @@
 
 module User.JSON (
     userJSON,
+    userJSONWithCallBackInfo,
     companyJSON,
     userStatsToJSON,
     companyStatsToJSON,
@@ -19,12 +20,31 @@ import qualified Data.Text as T
 import DataRetentionPolicy
 import MinutesTime
 import PadApplication.Data
+import User.CallbackScheme.Model (UserCallbackScheme(..))
 import User.Model
 import UserGroup.Data
 import Util.HasSomeUserInfo
 
 userJSON :: User -> UserGroup -> JSValue
-userJSON user company = runJSONGen $ do
+userJSON user company = runJSONGen $ userJSONUserDetails user company
+
+userJSONWithCallBackInfo :: User -> UserGroup -> Maybe UserCallbackScheme -> JSValue
+userJSONWithCallBackInfo user company callback = runJSONGen $ do
+    userJSONUserDetails user company
+    value "callback_is_editable" $ case callback of
+      Nothing -> True
+      Just (ConstantUrlSchemeV2 _) -> True
+      Just _ -> False
+    value "callbackurl" $ case callback of
+      Nothing -> ("" :: String)
+      Just (ConstantUrlSchemeV2 url) -> (url :: String)
+      Just (ConstantUrlScheme _) -> "Existing ConstantUrlScheme"
+      Just (SalesforceScheme _) -> "Existing SalesforceScheme"
+      Just (BasicAuthScheme _ _) -> "Existing BasicAuthScheme"
+      Just (OAuth2Scheme _ _ _ _) -> "Existing OAuth2Scheme"
+
+userJSONUserDetails :: User -> UserGroup -> JSONGen ()
+userJSONUserDetails user company = do
     value "id" $ show $ userid user
     value "fstname" $ getFirstName user
     value "sndname" $ getLastName user
@@ -34,7 +54,7 @@ userJSON user company = runJSONGen $ do
     value "phone" $ userphone $ userinfo user
     value "companyadmin" $ useriscompanyadmin user
     value "companyposition" $ usercompanyposition $ userinfo user
-    value "lang"   $ codeFromLang $ getLang user
+    value "lang" $ codeFromLang $ getLang user
     value "company" $ companyJSON False company
 
 companyJSON :: Bool -> UserGroup -> JSValue

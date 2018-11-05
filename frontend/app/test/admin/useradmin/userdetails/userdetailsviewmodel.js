@@ -23,7 +23,7 @@ describe("admin/useradmin/userdetails/userdetailsviewmodel", function () {
     assert.equal(model.get("accountType"), "");
   });
 
-  it("should return Submit configured for saving details", function () {
+  it("should return Submit configured for saving details (callback editable)", function() {
     var model = new UserDetailsViewModel({
       userId: "1",
       fstname: "fstname",
@@ -35,7 +35,9 @@ describe("admin/useradmin/userdetails/userdetailsviewmodel", function () {
       companyposition: "companyposition",
       companyname: "companyname",
       companyid: "companyid",
-      accountType: "accountType"
+      accountType: "accountType",
+      callbackurl: "callbackurl",
+      callback_is_editable: true
     });
 
     var submit = model.saveDetails();
@@ -49,6 +51,38 @@ describe("admin/useradmin/userdetails/userdetailsviewmodel", function () {
     assert.equal(submit.get("userlang"), "lang");
     assert.equal(submit.get("usercompanyposition"), "companyposition");
     assert.equal(submit.get("useraccounttype"), "accountType");
+    assert.equal(submit.get("usercallbackurl"), "callbackurl");
+  });
+
+  it("should return Submit configured for saving details (callback not editable)", function() {
+    var model = new UserDetailsViewModel({
+      userId: "1",
+      fstname: "fstname",
+      sndname: "sndname",
+      personalnumber: "personalnumber",
+      email: "email",
+      phone: "phone",
+      lang: "lang",
+      companyposition: "companyposition",
+      companyname: "companyname",
+      companyid: "companyid",
+      accountType: "accountType",
+      callbackurl: "callbackurl",
+      callback_is_editable: false
+    });
+
+    var submit = model.saveDetails();
+    assert.equal(submit.get("url"), "/adminonly/useradmin/1");
+    assert.equal(submit.get("method"), "POST");
+    assert.equal(submit.get("userfstname"), "fstname");
+    assert.equal(submit.get("usersndname"), "sndname");
+    assert.equal(submit.get("userpersonalnumber"), "personalnumber");
+    assert.equal(submit.get("useremail"), "email");
+    assert.equal(submit.get("userphone"), "phone");
+    assert.equal(submit.get("userlang"), "lang");
+    assert.equal(submit.get("usercompanyposition"), "companyposition");
+    assert.equal(submit.get("useraccounttype"), "accountType");
+    assert.equal(submit.get("usercallbackurl"), "");
   });
 
   it("should return Submit configured for resending invitation", function () {

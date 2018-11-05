@@ -55,6 +55,8 @@ var DetailsEditorView = React.createClass({
     companyname: React.PropTypes.string.isRequired,
     companyid: React.PropTypes.string.isRequired,
     accountType: React.PropTypes.string.isRequired,
+    callback_is_editable: React.PropTypes.string.isRequired,
+    callbackurl: React.PropTypes.string.isRequired,
     onDisableTwoFA: React.PropTypes.func.isRequired,
     onFieldChange: React.PropTypes.func.isRequired
   },
@@ -84,6 +86,9 @@ var DetailsEditorView = React.createClass({
   },
   onDisableTwoFA: function () {
     this.props.onDisableTwoFA();
+  },
+  onCallbackUrlChange: function (event) {
+    this.props.onFieldChange("callbackurl", event.target.value);
   },
   render: function () {
     var self = this;
@@ -224,6 +229,23 @@ var DetailsEditorView = React.createClass({
                 options={ACCOUNT_TYPE_OPTIONS}
                 textWidth={240}
                 onSelect={this.onAccountTypeChange}
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <label>Callback URL</label>
+            </td>
+            <td>
+              <input
+                name="callbackurl"
+                type="text"
+                disabled={!this.props.callback_is_editable}
+                value={this.props.callbackurl}
+                onChange={this.onCallbackUrlChange}
+                style={!this.props.callback_is_editable
+                  ? {backgroundColor: "#ddd"}
+                  : undefined}
               />
             </td>
           </tr>

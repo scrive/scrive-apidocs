@@ -14,6 +14,8 @@ var User = exports.User = Backbone.Model.extend({
       personalnumber    : "",
       phone             : "",
       companyposition   : "",
+      callback_is_editable : true,
+      callbackurl       : "",
       usercompanyname   : "",
       usercompanynumber : "",
       lang : "sv",
@@ -60,6 +62,12 @@ var User = exports.User = Backbone.Model.extend({
   companyposition : function() {
      return this.get("companyposition");
   },
+  callback_is_editable : function() {
+     return this.get("callback_is_editable");
+  },
+  callbackurl : function() {
+     return this.get("callbackurl");
+  },
   usercompanyname : function() {
      return this.get("usercompanyname");
   },
@@ -89,6 +97,8 @@ var User = exports.User = Backbone.Model.extend({
       usercompanynumber : args.usercompanynumber,
       lang : args.lang,
       companyadmin : args.companyadmin,
+      callback_is_editable   : args.callback_is_editable,
+      callbackurl   : args.callbackurl,
       company   : args.company != undefined ? new Company(args.company) : undefined,
       ready : true
     };

@@ -232,7 +232,7 @@ apiCallGetUserProfile :: Kontrakcja m => m Response
 apiCallGetUserProfile =  api $ do
   (user, _ , _) <- getAPIUserWithAnyPrivileges
   ug <- getUserGroupForUser user
-  return $ Ok $ userJSON user $ ug
+  return $ Ok $ userJSON user ug
 
 apiCallGetSubscription :: Kontrakcja m => m Response
 apiCallGetSubscription =  api $ do

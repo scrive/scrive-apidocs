@@ -52,7 +52,9 @@ var UserDetailsView = React.createClass({
         companyposition: this.props.user.companyposition(),
         companyname: this.props.user.company().companyname(),
         companyid: this.props.user.company().companyid(),
-        accountType: accountType
+        accountType: accountType,
+        callback_is_editable: this.props.user.callback_is_editable(),
+        callbackurl: this.props.user.callbackurl()
       },
       {
         silent: true
@@ -163,6 +165,8 @@ var UserDetailsView = React.createClass({
               companyname={this.props.viewModel.get("companyname")}
               companyid={this.props.viewModel.get("companyid")}
               accountType={this.props.viewModel.get("accountType")}
+              callback_is_editable={this.props.viewModel.get("callback_is_editable")}
+              callbackurl={this.props.viewModel.get("callbackurl")}
               onDisableTwoFA={this.onDisableTwoFA}
               onFieldChange={this.onDetailsEditorFieldChange}
             />

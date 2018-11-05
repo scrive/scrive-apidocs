@@ -15,7 +15,9 @@ var UserDetailsViewModel = Backbone.Model.extend({
     companyposition: "",
     companyname: "",
     companyid: "",
-    accountType: ""
+    accountType: "",
+    callbackurl: "",
+    callback_is_editable: ""
   },
   saveDetails: function () {
     return new Submit({
@@ -28,7 +30,10 @@ var UserDetailsViewModel = Backbone.Model.extend({
       useremail: this.get("email").trim(),
       usercompanyposition: this.get("companyposition").trim(),
       userlang: this.get("lang"),
-      useraccounttype: this.get("accountType")
+      useraccounttype: this.get("accountType"),
+      usercallbackurl: this.get("callback_is_editable")
+        ? this.get("callbackurl").trim()
+        : ""
     });
   },
   resendInvitation: function () {

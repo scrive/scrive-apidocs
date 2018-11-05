@@ -33,6 +33,7 @@ import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
+import qualified Data.String.Utils as SU (strip)
 import qualified Data.Text as T
 import qualified Data.Text.ICU.Normalize as ICU
 import qualified Data.Unjson as Unjson
@@ -177,8 +178,9 @@ showAdminUsers uid = onlySalesOrAdmin $ do
 handleUserGetProfile:: Kontrakcja m => UserID -> m JSValue
 handleUserGetProfile uid = onlySalesOrAdmin $ do
   user <- guardJustM $ dbQuery $ GetUserByID uid
+  callback <- dbQuery $ GetUserCallbackSchemeByUserID uid
   ug <- getUserGroupForUser user
-  return $ userJSON user ug
+  return $ userJSONWithCallBackInfo user ug callback
 
 handleCompanyGetProfile:: Kontrakcja m => UserGroupID -> m JSValue
 handleCompanyGetProfile ugid = onlySalesOrAdmin $ do
@@ -243,6 +245,19 @@ jsonUsersList = onlySalesOrAdmin $ do
 handleUserChange :: Kontrakcja m => UserID -> m JSValue
 handleUserChange uid = onlySalesOrAdmin $ do
   ctx <- getContext
+  callback <- dbQuery $ GetUserCallbackSchemeByUserID uid
+  maybeNewUrl <- getField "usercallbackurl"
+  let newUrl = SU.strip $ fromJust maybeNewUrl
+  case callback of
+    Nothing -> if null newUrl
+      then return () -- Don't add a callback with an empty URL
+      else dbUpdate $ UpdateUserCallbackScheme uid (ConstantUrlSchemeV2 newUrl)
+    Just (ConstantUrlSchemeV2 url) -> do
+      case (null newUrl, newUrl == url) of
+        (True, _) -> dbUpdate $ DeleteUserCallbackScheme uid -- Delete callback if textbox emptied
+        (False, True) -> return () -- Don't update if no change
+        (False, False) -> dbUpdate $ UpdateUserCallbackScheme uid (ConstantUrlSchemeV2 newUrl)
+    Just _ -> return () -- Do not allow changing the callback if an existing other type is there
   museraccounttype <- getField "useraccounttype"
   olduser <- guardJustM $ dbQuery $ GetUserByID uid
   user <- case (museraccounttype,useriscompanyadmin olduser) of
