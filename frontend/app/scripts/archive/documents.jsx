@@ -12,7 +12,7 @@ var Submit = require("../../js/submits.js").Submit;
 var _ = require("underscore");
 var FlashMessage = require("../../js/flashmessages.js").FlashMessage;
 var Track = require("../common/track");
-
+var DaysInputWithCalendar = require("../common/daysinputwithcalendar");
 var TimeFilterOptionsMixin = require("./timefilteroptionsmixin");
 var HtmlTextWithSubstitution = require("../common/htmltextwithsubstitution");
 var Modal = require("../common/modal");
@@ -94,24 +94,7 @@ var ProlongModal = React.createClass({
     onAccept: React.PropTypes.func.isRequired,
   },
   getInitialState: function () {
-    return {acceptVisible: true,
-            days: "1"};
-  },
-  componentDidMount: function () {
-    this.calendar = new Calendar.Calendar({
-      on: $(this.refs.calendarButton.getDOMNode()),
-      days: this.state.days,
-      change: this.onCalendarChange
-    });
-  },
-  componentDidUpdate: function (prevProps, prevState) {
-    if (prevState.days != this.state.days) {
-      this.calendar.setDays(parseInt(this.state.days));
-      this.setState({acceptVisible: !isNaN(parseInt(this.state.days, 10))});
-    }
-  },
-  onCalendarChange: function (value) {
-    this.setState({days: "" + value});
+    return {days: "1"};
   },
   onDaysInputChange: function (value) {
     this.setState({days: value});
@@ -120,7 +103,6 @@ var ProlongModal = React.createClass({
     this.setState(this.getInitialState());
   },
   onAccept: function () {
-    this.calendar.close();
     this.props.onAccept(this.state.days);
   },
   text: function () {
@@ -164,25 +146,26 @@ var ProlongModal = React.createClass({
         <Modal.Content>
           <div className="prolongmodal">
             {this.text()}
-            <InfoTextInput
-              ref="daysInput"
-              infotext="1"
-              value={this.state.days}
+            <DaysInputWithCalendar
+              ref="reminderEditor"
+              infotext="-"
+              label={localization.prolongmodal.days}
+              labelClassName="archive-prolong-modal-calendar-label"
+              days={this.state.days}
+              canBeEmpty={false}
+              minDays={1}
+              maxDays={365}
               onChange={this.onDaysInputChange}
             />
-            <div className="text">{localization.prolongmodal.days}</div>
-            <div ref="calendarButton" className="calendarbutton"></div>
           </div>
         </Modal.Content>
         <Modal.Footer>
           <Modal.CancelButton onClick={this.props.onClose} />
-          {this.state.acceptVisible &&
-            <Modal.AcceptButton
-              type="cancel"
-              text={localization.archive.documents.prolong.action}
-              onClick={this.onAccept}
-             />
-          }
+          <Modal.AcceptButton
+            type="cancel"
+            text={localization.archive.documents.prolong.action}
+            onClick={this.onAccept}
+          />
         </Modal.Footer>
       </Modal.Container>
     );
