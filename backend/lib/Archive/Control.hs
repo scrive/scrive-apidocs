@@ -59,6 +59,10 @@ handleArchiveDocumentsAction actionStr docPermission m = do
   when (sort (map documentid docs) /= sort ids) $ failWithMsg user ids "Retrieved documents didn't match specified document ids"
   if all (docPermission user) docs
   then do
+    logInfo "Archive operation" $ object [ "action" .= actionStr
+                                         , identifier $ userid user
+                                         , identifier ids
+                                         ]
     let actor = userActor ctx user
     forM docs $ flip withDocument $ m (user, actor)
   else do
