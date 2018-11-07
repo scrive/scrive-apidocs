@@ -28,8 +28,13 @@ var generateVersionId = function() {
   }
   var stringToEncode = lst.join('.');
 
-  var hexEncodedString = new Buffer(stringToEncode).toString('hex');
-  return hexEncodedString;
+  var bufferedString;
+  if (Buffer.from && Buffer.from !== Uint8Array.from) {
+    bufferedString = Buffer.from(stringToEncode);
+  } else {
+    bufferedString = new Buffer(stringToEncode);
+  }
+  return bufferedString.toString("hex");
 };
 
 module.exports = generateVersionId;
