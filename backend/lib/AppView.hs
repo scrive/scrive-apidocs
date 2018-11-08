@@ -219,19 +219,8 @@ standardPageFields ctx mugidandui ad = do
                       Nothing -> (get (bdBrowserTitle . ctxbrandeddomain) ctx)
   entryPointFields ctx
 
--- Official documentation states that JSON mime type is
--- 'application/json'. IE8 for anything that starts with
--- 'application/*' invokes 'Download file...' dialog box and does not
--- allow JavaScript XHR to see the response. Therefore we have to
--- ignore the standard and output something that matches 'text/*', we
--- use 'text/javascript' for this purpose.
---
--- If future we should return 'application/json' for all browsers
--- except for IE8. We do not have access to 'Agent' string at this
--- point though, so we go this hackish route for everybody.
-
 jsonContentType :: BS.ByteString
-jsonContentType = "text/plain; charset=utf-8"
+jsonContentType = "application/json; charset=utf-8"
 
 simpleJsonResponse :: (JSON.JSON a, FilterMonad Response m) => a -> m Response
 simpleJsonResponse = ok . toResponseBS jsonContentType . BSL.fromString . JSON.encode
@@ -241,7 +230,6 @@ simpleAesonResponse = ok . toResponseBS jsonContentType . A.encode . A.toJSON
 
 simpleUnjsonResponse :: (FilterMonad Response m) => UnjsonDef a -> a -> m Response
 simpleUnjsonResponse unjson a = ok $ toResponseBS jsonContentType $ unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjson a
-
 
 {- |
    Changing our pages into reponses
