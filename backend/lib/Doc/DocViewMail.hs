@@ -285,7 +285,7 @@ mailDocumentAwaitingForAuthor authorlang document = do
 
 -- helpers
 makeFullLink :: MailContext -> String -> String
-makeFullLink mctx link = mctxDomainUrl mctx ++ link
+makeFullLink mctx link = get mctxDomainUrl mctx ++ link
 
 protectLink :: Bool -> MailContext -> KontraLink -> Maybe String
 protectLink forMail mctx link
@@ -304,7 +304,7 @@ documentMailFields doc mctx = do
                   . LP.get (just . uguiMailTheme . ugUI . just) $ mug
     theme <- dbQuery $ GetTheme themeid
     return $ do
-      F.value "ctxhostpart" $ mctxDomainUrl mctx
+      F.value "ctxhostpart" $ get mctxDomainUrl mctx
       F.value "ctxlang" (codeFromLang $ get mctxlang mctx)
       F.value "documenttitle" $ documenttitle doc
       F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc

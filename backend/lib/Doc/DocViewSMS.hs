@@ -97,6 +97,7 @@ smsFields document siglink = do
     mctx <- lift $ getMailContext
     F.value "creatorname" $ getSmartName <$> getAuthorSigLink document
     F.value "documenttitle" $ documenttitle document
-    F.value "link" $ mctxDomainUrl mctx ++ show (LinkSignDoc (documentid document) siglink)
+    F.value "link" $ get mctxDomainUrl mctx ++
+      show (LinkSignDoc (documentid document) siglink)
     now <- currentTime
     F.value "availabledate" $ formatTimeYMD $ 30 `daysAfter` now

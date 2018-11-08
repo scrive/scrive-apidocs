@@ -39,7 +39,7 @@ mailNewUserGroupUserInvite ctx invited inviter ug link expires = do
   theme <- dbQuery . GetTheme . fromMaybe (get (bdMailTheme . ctxbrandeddomain) ctx) . get (uguiMailTheme . ugUI) $ ug
   kontramail (get ctxmailnoreplyaddress ctx) (get ctxbrandeddomain ctx) theme "mailNewCompanyUserInvite" $ do
     basicUserGroupInviteFields invited inviter ug
-    basicLinkFields (ctxDomainUrl ctx) link
+    basicLinkFields (get ctxDomainUrl ctx) link
     brandingMailFields theme
     F.value "creatorname" $ getSmartName inviter
     F.value "expiredate" $ formatTimeYMD expires
@@ -52,7 +52,7 @@ mailTakeoverSingleUserInvite ctx invited inviter ug link = do
   --invite in the language of the existing user rather than in the inviter's language
   kontramaillocal (get ctxmailnoreplyaddress ctx) (get ctxbrandeddomain ctx) theme invited  "mailTakeoverSingleUserInvite" $ do
     basicUserGroupInviteFields invited inviter ug
-    basicLinkFields (ctxDomainUrl ctx) link
+    basicLinkFields (get ctxDomainUrl ctx) link
     brandingMailFields theme
 
 basicUserGroupInviteFields :: (TemplatesMonad m, HasSomeUserInfo a, HasSomeUserInfo b) => a -> b -> UserGroup -> Fields m ()

@@ -198,7 +198,7 @@ standardPageFields ctx mugidandui ad = do
   F.value "langcode"  $ codeFromLang $ get ctxlang ctx
   F.value "logged"    $ isJust (get ctxmaybeuser ctx)
   F.value "padlogged" $ isJust (get ctxmaybepaduser ctx)
-  F.value "hostpart"  $ ctxDomainUrl ctx
+  F.value "hostpart"  $ get ctxDomainUrl ctx
   F.value "production" (get ctxproduction ctx)
   F.value "brandingdomainid" (show $ get (bdid . ctxbrandeddomain) ctx)
   F.value "brandinguserid" (fmap (show . userid)

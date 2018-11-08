@@ -7,14 +7,16 @@ module Context (
   , module Context.Labels
   ) where
 
+import Data.Label
+
 import BrandedDomain.BrandedDomain
 import Context.Internal
 import Context.Labels
 import MailContext.Internal (MailContext(..))
 import User.Data.User (User)
 
-ctxDomainUrl :: Context -> String
-ctxDomainUrl = get (bdUrl . ctxbrandeddomain)
+ctxDomainUrl :: Context :-> String
+ctxDomainUrl = bdUrl . ctxbrandeddomain
 
 -- | Get a user from `Context` (user takes precedence over pad user).
 getContextUser :: Context -> Maybe User

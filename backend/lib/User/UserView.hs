@@ -50,7 +50,7 @@ resetPasswordMail ctx user setpasslink = do
     theme  "passwordChangeLinkMail" $ do
     F.value "personemail"  $ getEmail user
     F.value "passwordlink" $ show setpasslink
-    F.value "ctxhostpart"  $ ctxDomainUrl ctx
+    F.value "ctxhostpart"  $ get ctxDomainUrl ctx
     brandingMailFields theme
 
 newUserMail :: (TemplatesMonad m,MonadDB m,MonadThrow m) => Context -> String -> KontraLink -> m Mail
@@ -60,7 +60,7 @@ newUserMail ctx emailaddress activatelink = do
     (get ctxbrandeddomain ctx) theme "newUserMail" $ do
     F.value "email"        $ emailaddress
     F.value "activatelink" $ show activatelink
-    F.value "ctxhostpart"  $ ctxDomainUrl ctx
+    F.value "ctxhostpart"  $ get ctxDomainUrl ctx
     brandingMailFields theme
 
 
@@ -72,7 +72,7 @@ mailNewAccountCreatedByAdmin ctx lang email setpasslink = do
     F.value "email"         $ email
     F.value "passwordlink"  $ show setpasslink
     F.value "creatorname"   $ maybe "" getSmartName (get ctxmaybeuser ctx)
-    F.value "ctxhostpart"   $ ctxDomainUrl ctx
+    F.value "ctxhostpart"   $ get ctxDomainUrl ctx
     brandingMailFields theme
 
 
@@ -83,7 +83,7 @@ mailEmailChangeRequest ctx user newemail link = do
     theme "mailRequestChangeEmail" $ do
     F.value "fullname" $ getFullName user
     F.value "newemail" $ unEmail newemail
-    F.value "ctxhostpart" $ ctxDomainUrl ctx
+    F.value "ctxhostpart" $ get ctxDomainUrl ctx
     F.value "link" $ show link
     brandingMailFields theme
 

@@ -179,12 +179,12 @@ setup2FA = V2.api $ do
      then V2.Ok <$> runJSONGenT (value "twofactor_active" True)
      else do
        key <- createTOTPKey
-       ok <- dbUpdate $ SetUserTOTPKey (userid user) key
+       ok  <- dbUpdate $ SetUserTOTPKey (userid user) key
        if ok
          then do
            let email = useremail . userinfo $ user
-           url <- ctxDomainUrl <$> getContext
-           qrCode <- liftIO $ makeQRFromURLEmailAndKey url email key
+           url      <- get ctxDomainUrl <$> getContext
+           qrCode   <- liftIO $ makeQRFromURLEmailAndKey url email key
            return . V2.Ok <$> runJSONGen $ do
              value "twofactor_active" False
              value "qr_code" (BS.unpack . Base64.encode . unQRCode $ qrCode)

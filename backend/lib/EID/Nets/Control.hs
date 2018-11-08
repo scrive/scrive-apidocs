@@ -132,8 +132,10 @@ flashMessageUserHasIdentifiedWithDifferentSSN =
 
 handleResolve :: Kontrakcja m => m InternalKontraResponse
 handleResolve = do
-  ctx <- getContext
-  case (get ctxnetsconfig ctx) of
+  ctx            <- getContext
+  let mnetsconfig = get ctxnetsconfig ctx
+      domainUrl   = get ctxDomainUrl  ctx
+  case mnetsconfig of
     Nothing -> do
       logAttention_ "Request to resolve nets authorization when no nets config available"
       internalError
@@ -141,10 +143,10 @@ handleResolve = do
       mnt <-  getField "TARGET"
       mart <- getField "SAMLart"
       case (join $ fmap decodeNetsTarget mnt,mart) of
-        (Just nt, _) | ctxDomainUrl ctx /= netsTransactionDomain nt -> do
+        (Just nt, _) | domainUrl /= netsTransactionDomain nt -> do
           -- Nets can redirect us from branded domain to main domain. We need to jump back to branded domain for cookies
           link <- currentLink
-          return $ internalResponse $ LinkExternal $ replace (ctxDomainUrl ctx) (netsTransactionDomain nt) link
+          return $ internalResponse $ LinkExternal $ replace domainUrl (netsTransactionDomain nt) link
         (Just nt, Just art) -> do
           (doc,sl) <- getDocumentAndSignatoryForEIDAuth (netsDocumentID nt) (netsSignatoryID nt)
           certErrorHandler <- mkCertErrorHandler
