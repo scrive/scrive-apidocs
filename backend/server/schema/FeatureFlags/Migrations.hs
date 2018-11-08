@@ -9,6 +9,7 @@ module FeatureFlags.Migrations (
 , featureFlagsAddEmailInvitation
 , featureFlagsAddFIAuthToView
 , featureFlagsAddEmailConfirmation
+, featureFlagsAddShareableLinks
 ) where
 
 import Control.Monad.Catch
@@ -184,5 +185,15 @@ featureFlagsAddEmailConfirmation = Migration {
 , mgrAction = StandardMigration .
     runQuery_ $ sqlAlterTable (tblName tableFeatureFlags)  [
         sqlAddColumn $ tblColumn { colName = "can_use_email_confirmations", colType = BoolT, colNullable = False, colDefault = Just "true" }
+      ]
+}
+
+featureFlagsAddShareableLinks :: (MonadThrow m, MonadDB m) => Migration m
+featureFlagsAddShareableLinks = Migration {
+  mgrTableName = tblName tableFeatureFlags
+, mgrFrom = 10
+, mgrAction = StandardMigration .
+    runQuery_ $ sqlAlterTable (tblName tableFeatureFlags)  [
+        sqlAddColumn $ tblColumn { colName = "can_use_shareable_links", colType = BoolT, colNullable = False, colDefault = Just "true" }
       ]
 }
