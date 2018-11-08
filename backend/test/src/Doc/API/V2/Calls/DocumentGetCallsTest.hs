@@ -92,7 +92,7 @@ _testDocApiV2GetFailsAfter30Days = do
   let Just sl = find check (documentsignatorylinks doc)
 
   req <- mkRequest GET []
-  ctx <- anonymousContext <$> mkContext def
+  ctx <- anonymiseContext <$> mkContext def
   (_, ctx') <- runTestKontra req ctx $ do
     dbUpdate $ AddDocumentSessionToken (signatorylinkid sl) (signatorymagichash sl)
 

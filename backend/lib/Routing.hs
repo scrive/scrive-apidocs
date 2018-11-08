@@ -173,7 +173,4 @@ guardXToken action = do
     Just xtokenString | get ctxxtoken ctx `elem` tokensFromString xtokenString -> action
     _ -> do -- Requests authorized by something else then xtoken, can't access session data or change context stuff.
       logInfo "Invalid xtoken value, anonymousing context" $ object ["xtoken" .= mxtokenString]
-      modifyContext anonymousContext
-      res <- action
-      modifyContext (\_ -> ctx)
-      return res
+      withAnonymousContext action

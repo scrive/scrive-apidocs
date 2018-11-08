@@ -609,7 +609,7 @@ testDownloadSignviewBrandingAccess = do
 testGetCancelledDocument :: TestEnv ()
 testGetCancelledDocument = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx <- anonymousContext . set ctxmaybeuser (Just user) <$> mkContext def
+  ctx <- anonymiseContext . set ctxmaybeuser (Just user) <$> mkContext def
 
   doc <- addRandomDocumentWithAuthorAndCondition user $ \d ->
     isPending d && isSignable d
@@ -648,7 +648,7 @@ testDocumentFromShareableTemplate = do
   mh <- random
   withDocument tpl $ randomUpdate $ UpdateShareableLinkHash $ Just mh
 
-  ctx <- anonymousContext <$> mkContext def
+  ctx <- anonymiseContext <$> mkContext def
   req <- mkRequest GET []
   (res, ctx') <- runTestKontra req ctx $
     handleSignFromTemplate (documentid tpl) mh
