@@ -31,11 +31,11 @@ import Session.SessionID as SessionID
 import User.Model
 import Utils.HTTP
 
--- | Gets non temporary session id from Context. If current session id
--- is temporary, it inserts new, empty session into database and returns
--- its id (needed when document ticket/eleg transaction needs to be
--- inserted into the database, but current session is temporary), also
--- modifying Context to carry modified id.
+-- | Get a non-temporary session ID from Context. If the current
+-- session ID is temporary, insert a new empty session into the
+-- database and return its ID (needed when the document ticket/eleg
+-- transaction needs to be inserted into the database, but current
+-- session is temporary), also modifying Context to carry modified ID.
 getNonTempSessionID :: ( CryptoRNG m, KontraMonad m, MonadDB m
                        , MonadThrow m, MonadTime m, ServerMonad m )
                     => m SessionID
@@ -58,8 +58,8 @@ getNonTempSessionID = do
          expires token csrf_token domain)
       return $ sesID session
 
--- | Get current session based on cookies set.
--- If no session is available, return new, empty session.
+-- | Get the current session based on cookies set.
+-- If no session is available, return a new empty session.
 
 -- IE 10 is sending cookies for both domain and subdomain (scrive.com
 -- & nj.scrive.com) We need to read them both, since we have no idea
