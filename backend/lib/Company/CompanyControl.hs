@@ -64,7 +64,6 @@ adminRoutes = choice
 
 handleGetCompanyBranding :: Kontrakcja m => Maybe UserGroupID -> m Aeson.Value
 handleGetCompanyBranding mugid = do
-  _ctx <- getContext
   withCompanyAdminOrAdminOnly mugid $ \ug -> do
     return $ Unjson.unjsonToJSON'
       (Options { pretty = True, indent = 2, nulls = True })
