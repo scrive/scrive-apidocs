@@ -2,7 +2,7 @@ module Context (
     Context
   , ctxDomainUrl
   , getContextUser
-  , anonymousContext
+  , anonymiseContext
   , contextToMailContext
   , module Context.Labels
   ) where

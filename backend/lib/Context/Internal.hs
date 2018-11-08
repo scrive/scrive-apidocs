@@ -73,11 +73,11 @@ data Context = Context
     -- the OAuth authorization was missing.
     }
 
--- | 'anonymousContext' changes given context into a one that does not
+-- | 'anonymiseContext' changes given context into a one that does not
 -- hold any user credentials.  Use this if your action requires
 -- different form of authentication.
-anonymousContext :: Context -> Context
-anonymousContext ctx = ctx { _ctxmaybeuser    = Nothing
+anonymiseContext :: Context -> Context
+anonymiseContext ctx = ctx { _ctxmaybeuser    = Nothing
                            , _ctxmaybepaduser = Nothing
                            , _ctxmaybeapiuser = Nothing
                            , _ctxsessionid    = SessionID.tempSessionID }
