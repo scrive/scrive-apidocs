@@ -73,7 +73,7 @@ renderFromBodyWithFields :: Kontrakcja m
                -> m Response
 renderFromBodyWithFields content fields = do
   ctx <- getContext
-  ad <- getAnalyticsData
+  ad  <- getAnalyticsData
   res <- simpleHtmlResponse =<< pageFromBody ctx ad content fields
   return res
 

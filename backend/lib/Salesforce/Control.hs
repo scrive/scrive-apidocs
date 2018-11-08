@@ -26,16 +26,21 @@ handleSalesforceIntegration  = withUser $ \user -> do
     Nothing -> noConfigurationError "Salesforce"
     Just sc -> do
       mcode <- getField "code"
-      mstate <- getField "state" -- Internal salesforce param. We use it to hold url to redirect user after authorization flow is done.
+      mstate <- getField "state" -- Internal salesforce param. We use
+                                 -- it to hold url to redirect user
+                                 -- after authorization flow is done.
       case mcode of
-        Nothing   ->  (internalResponse . LinkExternal) <$> (flip runReaderT sc (initAuthorizationWorkflowUrl mstate))
+        Nothing   ->  (internalResponse . LinkExternal) <$>
+                      (flip runReaderT sc (initAuthorizationWorkflowUrl mstate))
         Just code -> do
           mtoken <- flip runReaderT sc (getRefreshTokenFromCode code)
           case mtoken of
             Left _      -> internalError
             Right token -> do
-              dbUpdate $ UpdateUserCallbackScheme (userid user) (SalesforceScheme token)
-              return $ internalResponse $ fromMaybe LinkDesignView (LinkExternal <$> mstate)
+              dbUpdate $ UpdateUserCallbackScheme (userid user)
+                (SalesforceScheme token)
+              return $ internalResponse $ fromMaybe LinkDesignView
+                (LinkExternal <$> mstate)
 
 {- Returns access keys for salesforce user. User by the salesforce plugin to start oauth wokflow. Keys are hardcoded in config file. -}
 getSalesforceKeys :: Kontrakcja m => m JSValue

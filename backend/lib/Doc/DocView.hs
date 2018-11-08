@@ -209,7 +209,7 @@ gtVerificationPage :: Kontrakcja m => m Response
 gtVerificationPage =  do
   ctx <- getContext
   ad <- getAnalyticsData
-  if( get (bdMainDomain . ctxbrandeddomain) ctx)
+  if (get (bdMainDomain . ctxbrandeddomain) ctx)
   then do
     content <- renderTemplate "gtVerificationPage" $ do
       standardPageFields ctx Nothing ad

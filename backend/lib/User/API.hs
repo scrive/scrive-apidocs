@@ -505,7 +505,8 @@ apiCallSetSalesforceCallbacks :: Kontrakcja m => m Response
 apiCallSetSalesforceCallbacks = do
   salesforceFullDebugLog
   V2.api $ do
-    -- We allow all permission although workflow with Partners API should use APIPersonal.
+    -- We allow all permission although workflow with Partners API
+    -- should use APIPersonal.
     (user, _ ) <- V2.getAPIUserWithAnyPrivileges
     ctx <- getContext
     case (get ctxsalesforceconf ctx) of
@@ -516,7 +517,8 @@ apiCallSetSalesforceCallbacks = do
         case mtoken of
           Left emsg -> V2.apiError $ V2.requestFailed $ T.pack emsg
           Right token -> do
-            dbUpdate $ UpdateUserCallbackScheme (userid user) (SalesforceScheme token)
+            dbUpdate $ UpdateUserCallbackScheme (userid user)
+              (SalesforceScheme token)
             return $ V2.Ok $ runJSONGen $ value "status" ("ok"::String)
 
 apiCallLoginUserAndGetSession :: Kontrakcja m => m Response

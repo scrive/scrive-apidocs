@@ -512,18 +512,18 @@ handleResend docid signlinkid = guardLoggedInOrThrowInternalError $ do
 handlePadList :: Kontrakcja m => m Response
 handlePadList = do
   ctx <- getContext
-  ad <- getAnalyticsData
+  ad  <- getAnalyticsData
   case getContextUser ctx of
-    Just _ -> simpleHtmlResponse =<< pageDocumentPadList ctx  ad
-    _ -> simpleHtmlResponse =<< pageDocumentPadListLogin ctx  ad
+    Just _  -> simpleHtmlResponse =<< pageDocumentPadList ctx  ad
+    Nothing -> simpleHtmlResponse =<< pageDocumentPadListLogin ctx  ad
 
 handleToStart :: Kontrakcja m => m Response
 handleToStart = do
   ctx <- getContext
-  ad <- getAnalyticsData
+  ad  <- getAnalyticsData
   case (get ctxmaybeuser ctx) of
-    Just _ -> simpleHtmlResponse =<< pageDocumentToStartList ctx  ad
-    _ -> simpleHtmlResponse =<< pageDocumentToStartLogin ctx  ad
+    Just _  -> simpleHtmlResponse =<< pageDocumentToStartList  ctx ad
+    Nothing -> simpleHtmlResponse =<< pageDocumentToStartLogin ctx ad
 
 checkFileAccess :: Kontrakcja m => FileID -> m ()
 checkFileAccess fid = do

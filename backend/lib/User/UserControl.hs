@@ -211,7 +211,7 @@ handleAcceptTOSPost = do
 
 handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m InternalKontraResponse
 handleAccountSetupGet uid token sm = do
-  ctx <- getContext
+  ctx   <- getContext
   muser <- getUserAccountRequestUser uid token
   case (muser, userhasacceptedtermsofservice =<< muser) of
     (Just user, Nothing) -> do
@@ -234,7 +234,8 @@ handleAccountSetupGet uid token sm = do
       flashmessage <- case sm of
         CompanyInvitation -> flashMessageUserAccountRequestExpiredCompany
         _                 -> flashMessageUserAccountRequestExpired
-      return . internalResponseWithFlash flashmessage . LinkLogin $ get ctxlang ctx
+      return . internalResponseWithFlash flashmessage . LinkLogin $
+        get ctxlang ctx
 
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m JSValue
 handleAccountSetupPost uid token sm = do

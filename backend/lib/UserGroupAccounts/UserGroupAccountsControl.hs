@@ -273,8 +273,8 @@ handleGetBecomeUserGroupAccount ugid = withUser $ \user -> do
       flashmessage <- flashMessageBecomeCompanyLogInDifferentUser
       return $ internalResponseWithFlash flashmessage LinkAccount
     _ -> do
+      ug  <- guardJustM $ dbQuery $ UserGroupGet ugid
       ctx <- getContext
-      ug <- guardJustM $ dbQuery $ UserGroupGet ugid
       internalResponse <$> (pageDoYouWantToBeCompanyAccount ctx ug)
 
 handlePostBecomeUserGroupAccount :: Kontrakcja m => UserGroupID -> m InternalKontraResponse

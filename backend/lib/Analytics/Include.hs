@@ -38,10 +38,10 @@ getAnalyticsData = do
   musergroup <- case muser of
     Just user -> dbQuery . UserGroupGet . usergroupid $ user
     _         -> return Nothing
-  token       <- get ctxmixpaneltoken <$> getContext
-  gaToken     <- get ctxgatoken <$> getContext
-  hubspotConf <- get ctxhubspotconf <$> getContext
-  lang        <- get ctxlang <$> getContext
+  token       <- getContextField ctxmixpaneltoken
+  gaToken     <- getContextField ctxgatoken
+  hubspotConf <- getContextField ctxhubspotconf
+  lang        <- getContextField ctxlang
 
 
   return $ AnalyticsData { aUser         = muser
