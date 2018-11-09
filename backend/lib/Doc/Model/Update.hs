@@ -1915,7 +1915,7 @@ instance (MonadDB m, MonadTime m) => DBUpdate m RemoveOldDrafts Int where
 data SetSigAttachments = SetSigAttachments SignatoryLinkID [SignatoryAttachment] Actor
 instance (DocumentMonad m) => DBUpdate m SetSigAttachments () where
   update (SetSigAttachments slid sigatts _actor) = updateDocumentWithID $ const $ do
-    void $doDeleteAll
+    void $ doDeleteAll
     forM_ sigatts doInsertOne
     where
      doDeleteAll = runQuery $ "DELETE FROM signatory_attachments WHERE signatory_link_id =" <?> slid
