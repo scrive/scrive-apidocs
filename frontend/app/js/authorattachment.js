@@ -24,8 +24,8 @@ var $ = require("jquery");
         }
       },
 
-      pageUrl: function (pageNo) {
-        var pixelWidth = this.pixelWidth();
+      pageUrl: function (pageNo, pixelWidth) {
+        pixelWidth = pixelWidth || this.pixelWidth();
         return "/pages/" + this.fileid() + "/" + pageNo + this.queryPart({"pixelwidth": pixelWidth});
       },
 
