@@ -75,7 +75,7 @@ handleArchiveDocumentsAction actionStr docPermission m = do
 
 handleArchiveDocumentsAction' :: Kontrakcja m => String -> (User -> Document -> Bool) -> ((User, Actor) -> DocumentT m a) -> m JSValue
 handleArchiveDocumentsAction' actionStr docPermission m = do
-  _ <- handleArchiveDocumentsAction actionStr docPermission m
+  void $ handleArchiveDocumentsAction actionStr docPermission m
   J.runJSONGenT (return ())
 
 handleDelete :: Kontrakcja m => m JSValue

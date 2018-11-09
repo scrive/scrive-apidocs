@@ -34,26 +34,26 @@ testListDocs = do
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   req <- mkRequest POST [ ("expectedType", inText "text")
                        , ("file", inFile $ inTestDir "pdfs/simple.pdf")]
-  _ <- runTestKontra req ctx $ apiCallV1CreateFromFile
+  void $ runTestKontra req ctx $ apiCallV1CreateFromFile
   doc:_ <- randomQuery $ GetDocumentsByAuthor (userid user)
   req' <- mkRequest POST [("json", inText cont)]
-  _ <- runTestKontra req' ctx $ apiCallV1Update $ documentid doc
+  void $ runTestKontra req' ctx $ apiCallV1Update $ documentid doc
   req'' <- mkRequest POST []
-  _ <- runTestKontra req'' ctx $ apiCallV1Ready $ documentid doc
+  void $ runTestKontra req'' ctx $ apiCallV1Ready $ documentid doc
 
   -- send a doc to author from someoneelse
   (Just user2) <- addNewUser "Jackie" "Chan" "jackie@chan.com"
   ctx2 <- (set ctxmaybeuser (Just user2)) <$> mkContext def
   req2 <- mkRequest POST [ ("expectedType", inText "text")
                         , ("file", inFile $ inTestDir "pdfs/simple.pdf")]
-  _ <- runTestKontra req2 ctx2 $ apiCallV1CreateFromFile
+  void $ runTestKontra req2 ctx2 $ apiCallV1CreateFromFile
   doc2:_ <- randomQuery $ GetDocumentsByAuthor (userid user2)
   let cont2 = replace "example@example.com" "bob@blue.com" $ -- send to bob
                 replace "\"signorder\":2" "\"signorder\":1" cont -- reset sign order to 1
   req2' <- mkRequest POST [("json", inText cont2)]
-  _ <- runTestKontra req2' ctx2 $ apiCallV1Update $ documentid doc2
+  void $ runTestKontra req2' ctx2 $ apiCallV1Update $ documentid doc2
   req2'' <- mkRequest POST []
-  _ <- runTestKontra req2'' ctx2 $ apiCallV1Ready $ documentid doc2
+  void $ runTestKontra req2'' ctx2 $ apiCallV1Ready $ documentid doc2
 
   req3 <- mkRequest GET []
   (rsp, _) <- runTestKontra req3 ctx $ apiCallV1List

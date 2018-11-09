@@ -317,7 +317,7 @@ serverOldBuildRules opt exeDynamic cabalFile = do
     cmd (EchoStdout True) "cabal update"
 
   "_build/cabal-install-deps" %>>> do
-    _ <- askOracleWith (GhcVersion ()) ""
+    void $ askOracleWith (GhcVersion ()) ""
     need cabalFiles
     need [ "cabal.sandbox.config"
          , "_build/cabal-update"

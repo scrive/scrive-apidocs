@@ -158,9 +158,9 @@ handleCheckCGIAuthStatusWithRedirect did slid = do
   case msci of
     Nothing -> internalError -- This should never happend
     Just sci -> do
-      _ <- guardJustM $ unsafeSessionTakeover sci
+      void $ guardJustM $ unsafeSessionTakeover sci
       return ()
-  _ <- checkCGIAuthStatus did slid -- There is no reason to process results of collect. We will redirect to link from param anyway
+  void $ checkCGIAuthStatus did slid -- There is no reason to process results of collect. We will redirect to link from param anyway
   murl <- getField "url"
   case murl of
     Nothing -> internalError -- This should never happend

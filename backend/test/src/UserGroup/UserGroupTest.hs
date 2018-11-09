@@ -139,7 +139,7 @@ testMoveGroup = do
   (_, ugids) <- foldlM createGroupsWithUsers ([Nothing],[]) [1..4]
   -- take Root.Left group and move it to Root.Right....Right group
   Just ug1 <- dbQuery . UserGroupGet $ ugids !! 1
-  _ <- dbUpdate . UserGroupUpdate . set ugParentGroupID (Just $ ugids !! 14) $ ug1
+  void $ dbUpdate . UserGroupUpdate . set ugParentGroupID (Just $ ugids !! 14) $ ug1
   -- parentpath of new leaf in moved group should be 6 items long
   Just (_ug10, parentugs) <- dbQuery . UserGroupGetWithParents $ ugids !! 10
   assertEqual ("Fetched all parents of leaf group") 6 (length parentugs)
@@ -220,7 +220,7 @@ testChangeUserGroupParent = do
   let ctx' = (set ctxadminaccounts [Email usrEmail]) ctx
   mUsrGrpParentBefore <- join <$> ((get ugParentGroupID) <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
   assertEqual "User group has no parent" mUsrGrpParentBefore Nothing
-  _ <- runTestKontra req1 ctx' $ handleCompanyChange usrGrpID
+  void $ runTestKontra req1 ctx' $ handleCompanyChange usrGrpID
   mUsrGrpParentAfter <- join <$> (get ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
   assertEqual "User group parent has been set correctly" mUsrGrpParentAfter $ Just parentUsrGrpID
 
@@ -248,7 +248,7 @@ testChangeUserGroupParent = do
   req4 <- mkRequest POST params4
   mUsrGrpParentBefore' <- join <$> (get ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID )
   assertEqual "User group parent still set" mUsrGrpParentBefore' $ Just parentUsrGrpID
-  _ <- runTestKontra req4 ctx' $ handleCompanyChange usrGrpID
+  void $ runTestKontra req4 ctx' $ handleCompanyChange usrGrpID
   mUsrGrpParentAfter' <- join <$> (get ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
   assertEqual "User group parent has been removed" mUsrGrpParentAfter' Nothing
 

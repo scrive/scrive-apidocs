@@ -44,21 +44,21 @@ handleActivate mfstname msndname (actvuser,ug) signupmethod = do
   ugname <- (fromMaybe (get ugName ug) . fmap T.pack) <$> getField "company"
   position <- fromMaybe "" <$> getField "position"
 
-  _ <- dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser) {
+  void $ dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser) {
       userfstname = fromMaybe "" mfstname
     , usersndname = fromMaybe "" msndname
     , userphone = phone
     , usercompanyposition = position
   }
-  _ <- dbUpdate . UserGroupUpdate . set ugName ugname $ ug
-  _ <- dbUpdate $ LogHistoryUserInfoChanged (userid actvuser)
+  void $ dbUpdate . UserGroupUpdate . set ugName ugname $ ug
+  void $ dbUpdate $ LogHistoryUserInfoChanged (userid actvuser)
     (get ctxipnumber ctx) (get ctxtime ctx) (userinfo actvuser)
     ((userinfo actvuser) { userfstname = fromMaybe "" mfstname , usersndname =  fromMaybe "" msndname })
     (userid <$> get ctxmaybeuser ctx)
-  _ <- dbUpdate $ LogHistoryPasswordSetup (userid actvuser) (get ctxipnumber ctx) (get ctxtime ctx) (userid <$> get ctxmaybeuser ctx)
-  _ <- dbUpdate $ AcceptTermsOfService (userid actvuser) (get ctxtime ctx)
-  _ <- dbUpdate $ LogHistoryTOSAccept (userid actvuser) (get ctxipnumber ctx) (get ctxtime ctx) (userid <$> get ctxmaybeuser ctx)
-  _ <- dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
+  void $ dbUpdate $ LogHistoryPasswordSetup (userid actvuser) (get ctxipnumber ctx) (get ctxtime ctx) (userid <$> get ctxmaybeuser ctx)
+  void $ dbUpdate $ AcceptTermsOfService (userid actvuser) (get ctxtime ctx)
+  void $ dbUpdate $ LogHistoryTOSAccept (userid actvuser) (get ctxipnumber ctx) (get ctxtime ctx) (userid <$> get ctxmaybeuser ctx)
+  void $ dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
 
   dbUpdate $ ConnectSignatoriesToUser (Email $ getEmail actvuser) (userid actvuser) (14 `daysBefore` get ctxtime ctx)
 

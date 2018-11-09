@@ -49,11 +49,11 @@ testPartnerCompanyCreate = do
 
   -- First partner, create user group
   (ctx1, pid1) <- testJSONCtxWithPartnerGroupID
-  _ <- runApiJSONTest ctx1 POST (partnerApiCallV1CompanyCreate pid1) rq_newCompany_params 201 rq_newCompany_resp_fp
+  void $ runApiJSONTest ctx1 POST (partnerApiCallV1CompanyCreate pid1) rq_newCompany_params 201 rq_newCompany_resp_fp
 
   -- Second partner, create user group
   (ctx2, pid2) <- testJSONCtxWithPartnerGroupID
-  _ <- runApiJSONTest ctx2 POST (partnerApiCallV1CompanyCreate pid2) rq_newCompany_params 201 rq_newCompany_resp_fp
+  void $ runApiJSONTest ctx2 POST (partnerApiCallV1CompanyCreate pid2) rq_newCompany_params 201 rq_newCompany_resp_fp
 
   -- Random  user shouldn't be able to create company
   randomUser <- addNewRandomUser
@@ -115,7 +115,7 @@ testPartnerCompanyUpdate = do
   -- Update should work
   (ctx,pid,cid) <- testHelperPartnerCompanyCreate
 
-  _ <- runApiJSONTest ctx POST (partnerApiCallV1CompanyUpdate pid cid) rq_companyUpdate_params 200 rq_companyUpdate_resp_fp
+  void $ runApiJSONTest ctx POST (partnerApiCallV1CompanyUpdate pid cid) rq_companyUpdate_params 200 rq_companyUpdate_resp_fp
 
   -- Random user shouldn't be able to update
   randomUser <- addNewRandomUser
@@ -177,7 +177,7 @@ testPartnerCompanyPartialUpdate = do
 
   -- Update should work
   (ctx,pid,cid) <- testHelperPartnerCompanyCreate
-  _ <- runApiJSONTest ctx POST (partnerApiCallV1CompanyUpdate pid cid) rq_companyUpdate_params 200 rq_companyUpdate_resp_fp
+  void $ runApiJSONTest ctx POST (partnerApiCallV1CompanyUpdate pid cid) rq_companyUpdate_params 200 rq_companyUpdate_resp_fp
 
   return ()
 
@@ -189,7 +189,7 @@ testPartnerCompanyIdUpdate = do
 
   -- Update should work
   (ctx,pid,cid) <- testHelperPartnerCompanyCreate
-  _ <- runApiJSONTest ctx POST (partnerApiCallV1CompanyUpdate pid cid) rq_companyUpdate_params 200 rq_companyUpdate_resp_fp
+  void $ runApiJSONTest ctx POST (partnerApiCallV1CompanyUpdate pid cid) rq_companyUpdate_params 200 rq_companyUpdate_resp_fp
 
   return ()
 
@@ -199,7 +199,7 @@ testPartnerCompanyGet = do
 
   -- User should be able to get company
   (ctx,pid,cid) <- testHelperPartnerCompanyCreate
-  _ <- runApiJSONTest ctx POST (partnerApiCallV1CompanyGet pid cid) [] 200 rq_companyUpdate_resp_fp
+  void $ runApiJSONTest ctx POST (partnerApiCallV1CompanyGet pid cid) [] 200 rq_companyUpdate_resp_fp
 
   -- Random user shouldn't be able to update
   randomUser <- addNewRandomUser
@@ -260,13 +260,13 @@ testPartnerCompaniesGet = do
 
   -- partnerA can list companies -> [only companyA]
   let rq_companiesList_resp_fp = inTestDir "json/partner_api_v1/resp-partnerCompaniesList.json"
-  _ <- runApiJSONTest ctxA POST (partnerApiCallV1CompaniesGet pidA) [] 200 rq_companiesList_resp_fp
+  void $ runApiJSONTest ctxA POST (partnerApiCallV1CompaniesGet pidA) [] 200 rq_companiesList_resp_fp
 
   -- create companyB supervised by partnerB
   (_ctxB,_pidB,_cidB) <- testHelperPartnerCompanyCreate
 
   -- partnerA can list only his companies -> [still only companyA]
-  _ <- runApiJSONTest ctxA POST (partnerApiCallV1CompaniesGet pidA) [] 200 rq_companiesList_resp_fp
+  void $ runApiJSONTest ctxA POST (partnerApiCallV1CompaniesGet pidA) [] 200 rq_companiesList_resp_fp
 
   -- create randomUser
   randomUser <- addNewRandomUser
@@ -322,7 +322,7 @@ testPartnerCompanyUserNew = do
   newUserGoodJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
   let rq_newUserGood_params = [ ("json", inTextBS newUserGoodJSON) ]
       rq_newUserGood_resp_fp = inTestDir "json/partner_api_v1/resp-partnerCompanyUserNew-good.json"
-  _ <- runApiJSONTest ctx POST (partnerApiCallV1UserCreate pid cid) rq_newUserGood_params 201 rq_newUserGood_resp_fp
+  void $ runApiJSONTest ctx POST (partnerApiCallV1UserCreate pid cid) rq_newUserGood_params 201 rq_newUserGood_resp_fp
 
   -- If Terms of Service have not been agreed to, then we should not create a user
   newUserBadToSJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-no-tos.json"
@@ -389,7 +389,7 @@ testPartnerUserUpdate = do
   updateUserJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerUserUpdate-good.json"
   let rq_updateUser_params = [ ("json", inTextBS updateUserJSON) ]
       rq_UpdateUser_resp_fp = inTestDir "json/partner_api_v1/resp-partnerUserUpdate-good.json"
-  _ <- runApiJSONTest ctx POST (partnerApiCallV1UserUpdate pid uid) rq_updateUser_params 200 rq_UpdateUser_resp_fp
+  void $ runApiJSONTest ctx POST (partnerApiCallV1UserUpdate pid uid) rq_updateUser_params 200 rq_UpdateUser_resp_fp
 
   -- Updating has_accepted_tos should not work
   updateUserNoToSJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerUserUpdate-no-tos.json"
@@ -442,7 +442,7 @@ testPartnerUserUpdateEmailToExisting = do
   newUserGood1JSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
   let rq_newUserGood1_params = [ ("json", inTextBS newUserGood1JSON) ]
       rq_newUserGood1_resp_fp = inTestDir "json/partner_api_v1/resp-partnerCompanyUserNew-good.json"
-  _ <- runApiJSONTest ctx POST (partnerApiCallV1UserCreate pid cid) rq_newUserGood1_params 201 rq_newUserGood1_resp_fp
+  void $ runApiJSONTest ctx POST (partnerApiCallV1UserCreate pid cid) rq_newUserGood1_params 201 rq_newUserGood1_resp_fp
 
   -- Normal creation of another user should work
   newUserGood2JSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-good2.json"
@@ -470,7 +470,7 @@ testPartnerUserPartialUpdate = do
   updateUserJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerUserPartialUpdate-good.json"
   let rq_updateUser_params = [ ("json", inTextBS updateUserJSON) ]
       rq_UpdateUser_resp_fp = inTestDir "json/partner_api_v1/resp-partnerUserPartialUpdate-good.json"
-  _ <- runApiJSONTest ctx POST (partnerApiCallV1UserUpdate pid uid) rq_updateUser_params 200 rq_UpdateUser_resp_fp
+  void $ runApiJSONTest ctx POST (partnerApiCallV1UserUpdate pid uid) rq_updateUser_params 200 rq_UpdateUser_resp_fp
 
   return ()
 
@@ -483,7 +483,7 @@ testPartnerUserIdUpdate = do
   updateUserJSON <- liftIO $ B.readFile $ inTestDir "json/partner_api_v1/param-partnerUserIdUpdate.json"
   let rq_updateUser_params = [ ("json", inTextBS updateUserJSON) ]
       rq_UpdateUser_resp_fp = inTestDir "json/partner_api_v1/resp-partnerUserIdUpdate.json"
-  _ <- runApiJSONTest ctx POST (partnerApiCallV1UserUpdate pid uid) rq_updateUser_params 200 rq_UpdateUser_resp_fp
+  void $ runApiJSONTest ctx POST (partnerApiCallV1UserUpdate pid uid) rq_updateUser_params 200 rq_UpdateUser_resp_fp
 
   return ()
 
@@ -494,7 +494,7 @@ testPartnerUserGet = do
 
   -- Normal get user should work
   let rq_GetUser_resp_fp = inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
-  _ <- runApiJSONTest ctx GET (partnerApiCallV1UserGet pid uid) [] 200 rq_GetUser_resp_fp
+  void $ runApiJSONTest ctx GET (partnerApiCallV1UserGet pid uid) [] 200 rq_GetUser_resp_fp
 
   {- test role combinations; use the first user and partner structure generated -}
   let (Just uidAdmin) = userid <$> get ctxmaybeuser ctx
@@ -543,7 +543,7 @@ testPartnerCompanyUsersGet = do
 
   -- get users of the company should work
   let rq_GetUsers_resp_fp = inTestDir "json/partner_api_v1/param-partnerCompanyUsersGet.json"
-  _ <- runApiJSONTest ctx GET (partnerApiCallV1CompanyUsersGet pid cid) [] 200 rq_GetUsers_resp_fp
+  void $ runApiJSONTest ctx GET (partnerApiCallV1CompanyUsersGet pid cid) [] 200 rq_GetUsers_resp_fp
 
   {- test role combinations; use the first user and partner structure generated -}
   let (Just uidAdmin) = userid <$> get ctxmaybeuser ctx

@@ -19,5 +19,5 @@ collectClockError ntpServers = do
       ]
     return Nothing
   freq <- liftBase getFrequency
-  _ <- dbUpdate $ InsertClockOffsetFrequency moffset freq
+  void $ dbUpdate $ InsertClockOffsetFrequency moffset freq
   return ()

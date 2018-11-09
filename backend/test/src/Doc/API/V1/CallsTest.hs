@@ -90,7 +90,7 @@ testUpdateDoc updateJsonPath = do
 
   do
      req <- mkRequest POST [("json", inText cont)]
-     _ <- runTestKontra req ctx $ apiCallV1Update $ documentid doc
+     void $ runTestKontra req ctx $ apiCallV1Update $ documentid doc
      return ()
 
   do
@@ -110,7 +110,7 @@ testOAuthCreateDoc = do
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   -- Create OAuth API tokens
   let uid = userid user
-  _ <- dbUpdate $ CreateAPIToken uid
+  void $ dbUpdate $ CreateAPIToken uid
   (apitoken, apisecret) : _ <- dbQuery $ GetAPITokensForUser uid
   time <- rand 10 arbitrary
   Just (tok, sec) <- dbUpdate $ RequestTempCredentials
@@ -160,8 +160,8 @@ testPersonalAccessCredentialsCreateDoc = do
 
   -- Get the personal access token
   let uid = userid user
-  _ <- dbUpdate $ DeletePersonalToken uid
-  _ <- dbUpdate $ CreatePersonalToken uid
+  void $ dbUpdate $ DeletePersonalToken uid
+  void $ dbUpdate $ CreatePersonalToken uid
   Just (OAuthAuthorization{..}) <- dbQuery $ GetPersonalToken uid
 
   let authStr = "oauth_signature_method=\"PLAINTEXT\""
@@ -200,8 +200,8 @@ testUpdateDocToSaved useOAuth = do
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
   authStr <- if useOAuth then do
-    _ <- dbUpdate $ DeletePersonalToken (userid user)
-    _ <- dbUpdate $ CreatePersonalToken (userid user)
+    void $ dbUpdate $ DeletePersonalToken (userid user)
+    void $ dbUpdate $ CreatePersonalToken (userid user)
     Just (OAuthAuthorization{..}) <- dbQuery $ GetPersonalToken (userid user)
 
     return $ Just $ "oauth_signature_method=\"PLAINTEXT\""
@@ -674,7 +674,7 @@ testCloseEvidenceAttachments = do
       randomUpdate $ \t-> SignDocument     (signatorylinkid sl) (signatorymagichash sl) Nothing Nothing emptySignatoryScreenshots (systemActor t)
     )
 
-  _ <- runTestKontra req ctx $ withDocument doc $ do
+  void $ runTestKontra req ctx $ withDocument doc $ do
       randomUpdate $ \t -> CloseDocument (systemActor t)
       postDocumentClosedActions True False  `E.catch` (\(_::KontraError) -> return False)
 

@@ -186,7 +186,7 @@ userGroupSettingsSplitIdleDocTimeout = Migration {
             { colName = "idle_doc_timeout_error", colType = SmallIntT }
         ]
 
-      _ <- runSQL
+      void $ runSQL
        "UPDATE user_group_settings SET\
        \ idle_doc_timeout_preparation = idle_doc_timeout,\
        \ idle_doc_timeout_closed      = idle_doc_timeout,\

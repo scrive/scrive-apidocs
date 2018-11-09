@@ -249,8 +249,8 @@ handleUserChange uid = onlySalesOrAdmin $ do
     (Just "companyadminaccount",  False) -> do
       --then we just want to make this account an admin
       newuser <- guardJustM $ do
-        _ <- dbUpdate $ SetUserCompanyAdmin uid True
-        _ <- dbUpdate $ LogHistoryDetailsChanged uid (get ctxipnumber ctx) (get ctxtime ctx)
+        void $ dbUpdate $ SetUserCompanyAdmin uid True
+        void $ dbUpdate $ LogHistoryDetailsChanged uid (get ctxipnumber ctx) (get ctxtime ctx)
              [("is_company_admin", "false", "true")]
              (userid <$> get ctxmaybeuser ctx)
         dbQuery $ GetUserByID uid
@@ -258,8 +258,8 @@ handleUserChange uid = onlySalesOrAdmin $ do
     (Just "companystandardaccount", True) -> do
       --then we just want to downgrade this account to a standard
       newuser <- guardJustM $ do
-        _ <- dbUpdate $ SetUserCompanyAdmin uid False
-        _ <- dbUpdate
+        void $ dbUpdate $ SetUserCompanyAdmin uid False
+        void $ dbUpdate
                  $ LogHistoryDetailsChanged uid (get ctxipnumber ctx) (get ctxtime ctx)
                                             [("is_company_admin", "true", "false")]
                                             (userid <$> get ctxmaybeuser ctx)
@@ -268,13 +268,13 @@ handleUserChange uid = onlySalesOrAdmin $ do
     _ -> return olduser
   infoChange <- getUserInfoChange
   let applyChanges = do
-        _ <- dbUpdate $ SetUserInfo uid $ infoChange $ userinfo user
-        _ <- dbUpdate
+        void $ dbUpdate $ SetUserInfo uid $ infoChange $ userinfo user
+        void $ dbUpdate
               $ LogHistoryUserInfoChanged uid (get ctxipnumber ctx) (get ctxtime ctx)
                     (userinfo user) (infoChange $ userinfo user)
                     (userid <$> get ctxmaybeuser ctx)
         settingsChange <- getUserSettingsChange
-        _ <- dbUpdate $ SetUserSettings uid $ settingsChange $ usersettings user
+        void $ dbUpdate $ SetUserSettings uid $ settingsChange $ usersettings user
         return ()
   if (useremail (infoChange $ userinfo user) /= useremail (userinfo user))
     then do
@@ -300,20 +300,20 @@ handleUserPasswordChange uid = onlySalesOrAdmin $ do
   let time     = get ctxtime ctx
       ipnumber = get ctxipnumber ctx
       admin    = get ctxmaybeuser ctx
-  _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
-  _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) ipnumber time (userid <$> admin)
+  void $ dbUpdate $ SetUserPassword (userid user) passwordhash
+  void $ dbUpdate $ LogHistoryPasswordSetup (userid user) ipnumber time (userid <$> admin)
   runJSONGenT $ value "changed" True
 
 handleDeleteInvite :: Kontrakcja m => UserGroupID -> UserID -> m ()
 handleDeleteInvite ugid uid = onlySalesOrAdmin $ do
-  _ <- dbUpdate $ RemoveUserGroupInvite ugid uid
+  void $ dbUpdate $ RemoveUserGroupInvite ugid uid
   return ()
 
 handleDeleteUser :: Kontrakcja m => UserID -> m ()
 handleDeleteUser uid = onlySalesOrAdmin $ do
-  _ <- dbUpdate $ RemoveUserUserGroupInvites uid
-  _ <- dbUpdate $ DeleteUserCallbackScheme uid
-  _ <- dbUpdate $ DeleteUser uid
+  void $ dbUpdate $ RemoveUserUserGroupInvites uid
+  void $ dbUpdate $ DeleteUserCallbackScheme uid
+  void $ dbUpdate $ DeleteUser uid
   return ()
 
 handleDisable2FAForUser :: Kontrakcja m => UserID -> m ()
@@ -325,7 +325,7 @@ handleDisable2FAForUser uid = onlySalesOrAdmin $ do
        r <- dbUpdate $ DisableUserTOTP uid
        if r
           then do
-            _ <- dbUpdate $ LogHistoryTOTPDisable uid (get ctxipnumber ctx) (get ctxtime ctx)
+            void $ dbUpdate $ LogHistoryTOTPDisable uid (get ctxipnumber ctx) (get ctxtime ctx)
             return ()
           else
             internalError
@@ -334,8 +334,8 @@ handleDisable2FAForUser uid = onlySalesOrAdmin $ do
 handleMoveUserToDifferentCompany :: Kontrakcja m => UserID -> m ()
 handleMoveUserToDifferentCompany uid = onlySalesOrAdmin $ do
   ugid <- guardJustM $ readField "companyid"
-  _ <- dbUpdate $ SetUserUserGroup uid ugid
-  _ <- dbUpdate $ SetUserCompanyAdmin uid False
+  void $ dbUpdate $ SetUserUserGroup uid ugid
+  void $ dbUpdate $ SetUserCompanyAdmin uid False
   return ()
 
 
@@ -344,11 +344,11 @@ handleMergeToOtherCompany ugid_source = onlySalesOrAdmin $ do
   ugid_target <- guardJustM $ readField "companyid"
   users <- dbQuery $ UserGroupGetUsers ugid_source
   forM_ users $ \u -> do
-      _ <- dbUpdate $ SetUserUserGroup (userid u) ugid_target
+      void $ dbUpdate $ SetUserUserGroup (userid u) ugid_target
       return ()
   invites <- dbQuery $ UserGroupGetInvites ugid_source
   forM_ invites $ \i-> do
-      _ <- dbUpdate $ RemoveUserGroupInvite ugid_source (inviteduserid i)
+      void $ dbUpdate $ RemoveUserGroupInvite ugid_source (inviteduserid i)
       return ()
 
 {- | Handling company details change. It reads user info change -}
@@ -571,7 +571,7 @@ resealFile docid = onlyAdmin $ withDocumentID docid $ do
   logInfo_ "Trying to reseal document (only superadmin can do that)"
   ctx <- getContext
   actor <- guardJust $ mkAdminActor ctx
-  _ <- dbUpdate $ InsertEvidenceEvent
+  void $ dbUpdate $ InsertEvidenceEvent
           ResealedPDF
           (return ())
           actor
@@ -745,7 +745,7 @@ updateBrandedDomain xbdid = onlySalesOrAdmin $ do
       internalError
      Right js -> case (Unjson.parse unjsonBrandedDomain js) of
         (Result newDomain []) -> do
-          _ <- dbUpdate $ UpdateBrandedDomain $
+          void $ dbUpdate $ UpdateBrandedDomain $
                  copy bdid obd $
                  copy bdMainDomain obd $
                  newDomain

@@ -37,7 +37,7 @@ applyDraftDataToDocument draft actor = do
     unlessM (isPreparation <$> theDocument) $ do
       theDocument >>= \doc -> logInfo "Document is not in preparation" $ logObject_ doc
       throwM $ SomeDBExtraException $ serverError "applyDraftDataToDocument failed"
-    _ <- theDocument >>= \doc -> dbUpdate $ UpdateDraft doc{
+    void $ theDocument >>= \doc -> dbUpdate $ UpdateDraft doc{
                                   documenttitle = documenttitle draft
                                 , documentinvitetext = documentinvitetext draft
                                 , documentconfirmtext = documentconfirmtext draft

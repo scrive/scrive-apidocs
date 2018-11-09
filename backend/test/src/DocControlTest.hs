@@ -421,7 +421,7 @@ testSendingReminderClearsDeliveryInformation = do
                          _ -> False) `withDocumentM` do
     sl <- head . reverse . documentsignatorylinks <$> theDocument
     let actor  =  systemActor $ get ctxtime ctx
-    _ <- dbUpdate $ MarkInvitationRead (signatorylinkid sl) actor
+    void $ dbUpdate $ MarkInvitationRead (signatorylinkid sl) actor
     -- who cares which one, just pick the last one
     req <- mkRequest POST []
     (_link, _ctx') <- do
@@ -440,7 +440,7 @@ testDocumentFromTemplate = do
     ctx <- (set ctxmaybeuser (Just user))
       <$> mkContext def
     req <- mkRequest POST []
-    _ <- runTestKontra req ctx $ apiCallV1CreateFromTemplate (documentid doc)
+    void $ runTestKontra req ctx $ apiCallV1CreateFromTemplate (documentid doc)
     docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
     assertBool "No new document" (length docs2 == 1+ length docs1)
 
@@ -451,13 +451,13 @@ testDocumentFromTemplateShared = do
     doc <- addRandomDocumentWithAuthorAndCondition author (\d -> case documenttype d of
                                                             Template -> True
                                                             _ -> False)
-    _ <- randomUpdate $ SetDocumentSharing [documentid doc] True
+    void $ randomUpdate $ SetDocumentSharing [documentid doc] True
     (Just user) <- addNewUserToUserGroup "ccc" "ddd" "zzz@zzz.pl" ugid
     docs1 <- randomQuery $ GetDocumentsByAuthor (userid user)
     ctx <- (set ctxmaybeuser (Just user))
       <$> mkContext def
     req <- mkRequest POST []
-    _ <- runTestKontra req ctx $ apiCallV1CreateFromTemplate (documentid doc)
+    void $ runTestKontra req ctx $ apiCallV1CreateFromTemplate (documentid doc)
     docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
     assertEqual "New document should have been created" (1+length docs1) (length docs2)
 
@@ -472,7 +472,7 @@ testDocumentDeleteInBulk = do
     ctx <- (set ctxmaybeuser (Just author)) <$> mkContext def
     req <- mkRequest POST [("documentids",  inText $ (show $ documentid <$> docs))]
 
-    _ <- runTestKontra req ctx $ handleDelete
+    void $ runTestKontra req ctx $ handleDelete
     docs2 <- dbQuery $ GetDocumentsByAuthor (userid author)
     assertEqual "Documents are deleted" 0 (length docs2)
 
@@ -567,7 +567,7 @@ testDownloadSignviewBrandingAccess = do
             file
   withDocumentID (documentid doc) $ do
     d <- theDocument
-    _ <- randomUpdate $ ResetSignatoryDetails ([
+    void $ randomUpdate $ ResetSignatoryDetails ([
                       (def {   signatoryfields = (signatoryfields $ fromJust $ getAuthorSigLink d)
                                       , signatoryisauthor = True
                                       , signatoryispartner = False

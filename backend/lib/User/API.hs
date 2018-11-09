@@ -148,7 +148,7 @@ apiCallGetUserPersonalToken = api $ do
                     (Nothing, True, Just _) ->
                       unexpectedError "TOTP condition should not happen"
                   else do
-                    _ <- dbUpdate $ LogHistoryAPIGetPersonalTokenFailure (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
+                    void $ dbUpdate $ LogHistoryAPIGetPersonalTokenFailure (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
                     logInfo "getpersonaltoken failed (invalid password)" $ logObject_ user
                     -- we do not want rollback here, so we don't raise exception
                     return . Left $ forbidden wrongPassMsg
@@ -165,7 +165,7 @@ apiCallGetUserPersonalToken = api $ do
              attemptCount <- dbQuery $ GetUserRecentAuthFailureCount (userid user)
              if attemptCount <= 5
                then do
-                 _ <- dbUpdate $ LogHistoryAPIGetPersonalTokenSuccess uid (get ctxipnumber ctx) (get ctxtime ctx)
+                 void $ dbUpdate $ LogHistoryAPIGetPersonalTokenSuccess uid (get ctxipnumber ctx) (get ctxtime ctx)
                  return $ Right $ Ok (unjsonOAuthAuthorization, t)
                else
                  -- use an ambiguous message, so that this cannot be used to determine
@@ -203,7 +203,7 @@ confirm2FA = V2.api $ do
            r <- dbUpdate $ ConfirmUserTOTPSetup (userid user)
            if r
               then do
-                _ <- dbUpdate $ LogHistoryTOTPEnable (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
+                void $ dbUpdate $ LogHistoryTOTPEnable (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
                 return . V2.Ok <$> runJSONGen $ do
                   value "twofactor_active" r
                   value "totp_valid" True
@@ -222,7 +222,7 @@ disable2FA = V2.api $ do
        r <- dbUpdate $ DisableUserTOTP (userid user)
        if r
           then do
-            _ <- dbUpdate $ LogHistoryTOTPDisable (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
+            void $ dbUpdate $ LogHistoryTOTPDisable (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
             V2.Ok <$> runJSONGenT (value "twofactor_active" False)
           else
             V2.apiError $ V2.serverError "Could not disable TOTP"
@@ -252,11 +252,11 @@ apiCallChangeUserPassword = api $ do
           if (maybeVerifyPassword (userpassword user) oldpassword)
             then do
               passwordhash <- createPassword password
-              _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
-              _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) (get ctxipnumber ctx) (get ctxtime ctx) (Just $ userid $ user)
+              void $ dbUpdate $ SetUserPassword (userid user) passwordhash
+              void $ dbUpdate $ LogHistoryPasswordSetup (userid user) (get ctxipnumber ctx) (get ctxtime ctx) (Just $ userid $ user)
               Ok <$> (runJSONGenT $ value "changed" True)
             else do
-              _ <- dbUpdate $ LogHistoryPasswordSetupReq (userid user) (get ctxipnumber ctx) (get ctxtime ctx) (Just $ userid $ user)
+              void $ dbUpdate $ LogHistoryPasswordSetupReq (userid user) (get ctxipnumber ctx) (get ctxtime ctx) (Just $ userid $ user)
               Ok <$> (runJSONGenT $ value "changed" False)
      _ ->  throwM . SomeDBExtraException $ serverError "Newpassword fields do not match Scrive standard"
 
@@ -267,7 +267,7 @@ apiCallLoginUser = api $ do
 
   redirectUrl <- apiGuardJustM (badInput "Redirect URL not provided or invalid.") $ getField "redirect"
 
-  _ <- dbUpdate $ LogHistoryLoginSuccess (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
+  void $ dbUpdate $ LogHistoryLoginSuccess (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
   logUserToContext $ Just user
   sendRedirect $ LinkExternal redirectUrl
 
@@ -303,8 +303,8 @@ apiCallUpdateUserProfile = api $ do
   mlang <- (join . (fmap langFromCode)) <$> getField "lang"
   when_ (isJust mlang) $ dbUpdate $ SetUserSettings (userid user) $ (usersettings user) { lang = fromJust mlang  }
 
-  _ <- dbUpdate $ SetUserInfo (userid user) ui
-  _ <- dbUpdate $ LogHistoryUserInfoChanged (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
+  void $ dbUpdate $ SetUserInfo (userid user) ui
+  void $ dbUpdate $ LogHistoryUserInfoChanged (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
                                                (userinfo user) ui (userid <$> get ctxmaybeuser ctx)
   if (useriscompanyadmin user)
     then do
@@ -324,7 +324,7 @@ apiCallUpdateUserProfile = api $ do
                 $ set (ugaCity . ugAddress) city
                 $ set (ugaCountry . ugAddress) country
                 $ ug
-      _ <- dbUpdate $ UserGroupUpdate ug'
+      void $ dbUpdate $ UserGroupUpdate ug'
       Ok <$> (runJSONGenT $ value "changed" True)
     else do
       fs <- mapM getField ["companyname", "companynumber", "companyaddress", "companyzip", "companycity", "companycountry"]
@@ -393,7 +393,7 @@ apiCallSignup = api $ do
     -- return ambiguous response in both cases to prevent a security issue
     Nothing -> runJSONGenT $ value "sent" True
     Just user -> do
-          _ <- dbUpdate $ SetUserInfo (userid user) $ (userinfo user)
+          void $ dbUpdate $ SetUserInfo (userid user) $ (userinfo user)
             { userphone = phone, usercompanyposition = companyPosition }
           sendNewUserMail user
           l <- newUserAccountRequestLink lang (userid user) AccountRequest
@@ -437,7 +437,7 @@ sendPasswordReminder user = do
     Just pr@PasswordReminder{..} -> case prRemainedEmails of
       0 -> return ()
       n -> do
-        _ <- dbUpdate $ UpdatePasswordReminder $ pr { prRemainedEmails = n - 1 }
+        void $ dbUpdate $ UpdatePasswordReminder $ pr { prRemainedEmails = n - 1 }
         sendResetPasswordMail ctx (LinkPasswordReminder prUserID prToken)
     _ -> do
       link <- newPasswordReminderLink $ userid user
@@ -573,8 +573,8 @@ apiCallDeleteUser = V2.api $ do
       V2.conflictError $ userNotDeletableReasonToString reason
     Nothing -> return ()
 
-  _ <- dbUpdate $ DeleteUser (userid user)
-  _ <- dbUpdate $ LogHistoryAccountDeleted (userid user) noIP (get ctxtime ctx)
+  void $ dbUpdate $ DeleteUser (userid user)
+  void $ dbUpdate $ LogHistoryAccountDeleted (userid user) noIP (get ctxtime ctx)
 
   return $ V2.Ok ()
 
@@ -610,7 +610,7 @@ apiCallSetDataRetentionPolicy = V2.api $ do
   guardThatDataRetentionPolicyIsValid drp $ Just ugDRP
 
   let settings' = (usersettings user) { dataretentionpolicy = drp }
-  _ <- dbUpdate $ SetUserSettings (userid user) settings'
+  void $ dbUpdate $ SetUserSettings (userid user) settings'
 
   return $ V2.Ok ()
 

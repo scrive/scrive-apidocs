@@ -148,7 +148,7 @@ sendSMSHelper LocalSender{..} ShortMessage{..} = localData [identifier smID] $ d
   case localOpenCommand of
     Nothing  -> return ()
     Just cmd -> do
-      _ <- liftBase $ createProcess (proc cmd [filename]) {
+      void $ liftBase $ createProcess (proc cmd [filename]) {
           std_in  = Inherit
         , std_out = Inherit
         , std_err = Inherit

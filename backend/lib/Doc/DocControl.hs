@@ -180,7 +180,7 @@ handleNewDocument = withUser $ \user -> do
             , signatorylinkauthenticationtoviewmethod = authToView
             , signatorylinkauthenticationtosignmethod = authToSign
             }
-      _ <- dbUpdate $ ResetSignatoryDetails [authorsiglink', othersiglink'] actor
+      void $ dbUpdate $ ResetSignatoryDetails [authorsiglink', othersiglink'] actor
       dbUpdate $ SetDocumentUnsavedDraft True
       logInfo "New document created" $ logObject_ doc
       return $ internalResponse $ LinkIssueDoc (documentid doc)
@@ -210,7 +210,7 @@ handleAfterSigning slid = logSignatory slid $ do
   maybeuser <- dbQuery $ GetUserByEmail (Email $ getEmail signatorylink)
   case maybeuser of
     Just user | isJust $ userhasacceptedtermsofservice user-> do
-      _ <- dbUpdate $ SaveDocumentForUser user slid
+      void $ dbUpdate $ SaveDocumentForUser user slid
       return ()
     _ -> return ()
 
@@ -506,7 +506,7 @@ handleResend docid signlinkid = guardLoggedInOrThrowInternalError $ do
     signlink <- guardJust . getSigLinkFor signlinkid =<< theDocument
     customMessage <- fmap strip <$> getField "customtext"
     actor <- guardJustM $ fmap mkAuthorActor getContext
-    _ <- sendReminderEmail customMessage actor False signlink
+    void $ sendReminderEmail customMessage actor False signlink
     return ()
 
 handlePadList :: Kontrakcja m => m Response

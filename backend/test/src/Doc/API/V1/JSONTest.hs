@@ -277,25 +277,25 @@ testList = do
   testJSONWith (inTestDir "json/api_v1/test_8_list_of_documents_after_saving.json") (rsBody resList2)
 
   reqReady1 <- mkRequestWithHeaders POST [] []
-  _ <- runTestKontra reqReady1 ctx $ apiCallV1Ready did1
+  void $ runTestKontra reqReady1 ctx $ apiCallV1Ready did1
 
   reqReady2 <- mkRequestWithHeaders POST [] []
-  _ <- runTestKontra reqReady2 ctx $ apiCallV1Ready did2
+  void $ runTestKontra reqReady2 ctx $ apiCallV1Ready did2
 
   reqReady3 <- mkRequestWithHeaders POST [] []
-  _ <- runTestKontra reqReady3 ctx $ apiCallV1Ready did3
+  void $ runTestKontra reqReady3 ctx $ apiCallV1Ready did3
 
   reqReady4 <- mkRequestWithHeaders POST [] []
-  _ <- runTestKontra reqReady4 ctx $ apiCallV1Ready did4
+  void $ runTestKontra reqReady4 ctx $ apiCallV1Ready did4
 
   reqCancel <- mkRequestWithHeaders POST [] []
-  _ <- runTestKontra reqCancel ctx $ apiCallV1Cancel did2
+  void $ runTestKontra reqCancel ctx $ apiCallV1Cancel did2
 
   reqSign <- mkRequestWithHeaders POST [("fields", inText "[]")] []
-  _ <- runTestKontra reqSign ctx $ apiCallV1Sign did3 did3sig
+  void $ runTestKontra reqSign ctx $ apiCallV1Sign did3 did3sig
 
   reqReject <- mkRequestWithHeaders POST [] []
-  _ <- runTestKontra reqReject ctx $ apiCallV1Reject did4 did4sig
+  void $ runTestKontra reqReject ctx $ apiCallV1Reject did4 did4sig
 
   reqList3 <- mkRequestWithHeaders GET [("sort", inText "status")] []
   (resList3, _) <- runTestKontra reqList3 ctx $ apiCallV1List
@@ -340,10 +340,10 @@ testSignWithSignature = do
   didSig <- head <$> getSignatoryLinksID (rsBody resDoc2)
 
   reqReady <- mkRequestWithHeaders POST [] []
-  _ <- runTestKontra reqReady ctx $ apiCallV1Ready did
+  void $ runTestKontra reqReady ctx $ apiCallV1Ready did
 
   reqSign <- mkRequestWithHeaders POST [("fields", inText "[{\"name\":\"Signature 1\",\"value\":\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA4RpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMDE0IDc5LjE1Njc5NywgMjAxNC8wOC8yMC0wOTo1MzowMiAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDpiMWYzNzg3MS00YzVlLTNmNDEtOWJmYS02YzE2ZTAxYTZlOTAiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6QTNEQ0Y1MjBBMzBGMTFFNEI1MUI4QjU5NzQ3QjEwRkUiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6QTNEQ0Y1MUZBMzBGMTFFNEI1MUI4QjU5NzQ3QjEwRkUiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTQgKFdpbmRvd3MpIj4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6YjFmMzc4NzEtNGM1ZS0zZjQxLTliZmEtNmMxNmUwMWE2ZTkwIiBzdFJlZjpkb2N1bWVudElEPSJhZG9iZTpkb2NpZDpwaG90b3Nob3A6MDFjNGUwNDItNWY0My0xMWU0LWE1ZGItZjNlMTY0YjQ0ZGY1Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+Pn7U7QAABBZJREFUeNrEV2tMk1cYflpAsJQCLYUWEOQy7YZxIuUi02hABU1G2ObMNIvLNHMEjE5Fjf7wFhNmvCSLxEs0mfuBmXFsauImm27Lpq5UxYg6mdMBcimUXigtBOTmOceP6mdb2hJYn+TNl3PO9533Oed93+d8R7CocDk45BErJZZJLAQTgy5iWmIHiVXRDiE3sIvYZWILJ9A5hYTzQX3tpB3+3Mp34//HHmLVdAc2w3copQQyfEgggxII9SEBib8nb72RlIgFc+cgRaVCTLQCoRIJ6+/v70d3Tw8anjah7t/H+OO6Bo//q/eKgYCU4bCrQXmEDJtKipA2a6bHE96pvY8jJ06huVXn0ftCVwNRkXJ89eU+B+cDAwMwGE142twCU2cnhof5/FNnzkD5gTIkJyZ4RMBlCDYUfYYImdTerrlbi4pz3+Nh3SMMDA7a+0PEYkZyxbL3kBAfx/pEosnYsWk9Pt+4lYXJ6x2IksuhTn2b53zH3jLce/CQ55zCarPh92s3UFK6nb03gtiYaLyTmT62EEyNn8JrX9fcxNDQ0KgT0dCUn/ya1+dJ7jgNwevO4uNiPYpnc0srdpcdIKktYG2LpWtsBJ7UN7LkEnATvZu/GJMCAthOPKj7B7bubpcT3tDeGp8y/KJ4LZYuynX6UafFQlarQ5teD73BAL3egPaODjQ2NbMK8QYuq+DYqdOQhoUhKz3NYSwsNJTZjLdUTsPw3cVL+OmXqw4l6gx+SaoUpyfhIMl2mt1P6hsgDg6GTBoOf3/3wimRhDDSSQlTcU2jdZu8oyohr1yEQshlMigUkVBERkJJnsqoKGax0UqIxcEO35whunH6zNnxIeAOMUolli7OwYeFBfY+m60bH6xaM2oonO5p0aerIBC+qIDGphb8+PMVtwRadDqc/KaCaEgc0lNnsT66K+EkV6hke0VgTqaabS1Fh8GIqqu/sZzwBFarjdfue/bMeyXU3r7DOxFXf7zCI+cRJEcy1bPt7VZdGzuu6WIKluQhm0gzzSW3VaBrayfxzIWfnx9rp6im483p09BltcJkNhPZHXQ4tnPnz8O2Devs/woUFecq0dvXh6OH9yM7Q03+KbIhDQ+D5laN+yTMX5iDjUSMRtRwBDShqNhQNZwcFMT0ICgo0OF7zc3b2LP/ED5ZuRwfvV/IK+8ly1a6F6LLV35FW7se69auRlxszEvGhBBdMTVn6O3tw9kfLuDbyvPMmclk5o2bOy3elSF1SH8ystLVmJacSDRAjmCRCIGBL1ZNY2wkTuobGlFTew9//lXNym8EAeQM2bK+GHOzMtBhNOJw+XHcvf/3+OvAWCHkrku+QhclUO1DAlpK4JAPCRwUcrdUX9wNqc8q4SsXxXxiVPStE+jUyvnI53ziuQADAOgNb6y3aUMlAAAAAElFTkSuQmCC\",\"type\":\"signature\"}]")] []
-  _ <- runTestKontra reqSign ctx $ apiCallV1Sign did didSig
+  void $ runTestKontra reqSign ctx $ apiCallV1Sign did didSig
   sealTestDocument ctx did
 
   reqGet <- mkRequestWithHeaders GET [] []

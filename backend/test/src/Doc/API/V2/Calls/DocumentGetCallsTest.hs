@@ -62,9 +62,9 @@ testDocApiV2List = do
   user <- addNewRandomUser
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
-  _ <- testDocApiV2New' ctx
-  _ <- testDocApiV2New' ctx
-  _ <- testDocApiV2New' ctx
+  void $ testDocApiV2New' ctx
+  void $ testDocApiV2New' ctx
+  void $ testDocApiV2New' ctx
 
   listJSON <- jsonTestRequestHelper ctx GET [] docApiV2List 200
   listArray <- lookupObjectArray "documents" listJSON
@@ -101,8 +101,8 @@ _testDocApiV2GetFailsAfter30Days = do
              ]
       ctxWithin30Days = set ctxtime (addUTCTime (29*24*3600) (documentmtime doc)) ctx'
       ctxAfter30Days  = set ctxtime (addUTCTime (31*24*3600) (documentmtime doc)) ctx'
-  _ <- testRequestHelper ctxWithin30Days GET vars (docApiV2Get (documentid doc)) 200
-  _ <- testRequestHelper ctxAfter30Days  GET vars (docApiV2Get (documentid doc)) 410
+  void $ testRequestHelper ctxWithin30Days GET vars (docApiV2Get (documentid doc)) 200
+  void $ testRequestHelper ctxAfter30Days  GET vars (docApiV2Get (documentid doc)) 410
 
   return ()
 
@@ -231,7 +231,7 @@ testDocApiV2GetShared = do
   ctxauthor <- (set ctxmaybeuser (Just author)) <$> mkContext def
   did <- getMockDocId <$> testDocApiV2New' ctxauthor
 
-  _ <- mockDocTestRequestHelper ctxauthor POST [("document", inText "{\"is_template\":true}")] (docApiV2Update did) 200
+  void $ mockDocTestRequestHelper ctxauthor POST [("document", inText "{\"is_template\":true}")] (docApiV2Update did) 200
   setshare <- withDocumentID did $ do
     dbUpdate $ SetDocumentSharing [did] True
   assert setshare
@@ -257,10 +257,10 @@ testDocApiV2History = do
 
   checkHistoryHasNItems 0
 
-  _ <- mockDocTestRequestHelper ctx POST [] (docApiV2Start did) 200
+  void $ mockDocTestRequestHelper ctx POST [] (docApiV2Start did) 200
   checkHistoryHasNItems 1
 
-  _ <- mockDocTestRequestHelper ctx POST [] (docApiV2Cancel did) 200
+  void $ mockDocTestRequestHelper ctx POST [] (docApiV2Cancel did) 200
   checkHistoryHasNItems 2
 
 testDocApiV2HistoryPermissionCheck :: TestEnv ()
@@ -272,8 +272,8 @@ testDocApiV2HistoryPermissionCheck = do
 
   did <- getMockDocId <$> testDocApiV2New' ctxWithAuthor
 
-  _ <- jsonTestRequestHelper ctxWithAuthor GET [] (docApiV2History did) 200
-  _ <- jsonTestRequestHelper ctxWithOtherUser GET [] (docApiV2History did) 403
+  void $ jsonTestRequestHelper ctxWithAuthor GET [] (docApiV2History did) 200
+  void $ jsonTestRequestHelper ctxWithOtherUser GET [] (docApiV2History did) 403
   return ()
 
 
@@ -285,7 +285,7 @@ testDocApiV2EvidenceAttachments = do
   let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
 
-  _ <- mockDocTestRequestHelper ctx
+  void $ mockDocTestRequestHelper ctx
     POST
       [ ("fields", inText "[]")
       , ("accepted_author_attachments", inText "[]")
@@ -401,7 +401,7 @@ testDocApiV2FilesFull = do
       att  = def { signatoryattachmentname = "sig_att" }
 
   -- Add attachments to the generated document.
-  _ <- do
+  void $ do
     let mkFile name add =
           "{\"name\":\"" <> name
           <> ".pdf\",\"required\":false,\"add_to_sealed_file\":"
@@ -414,7 +414,7 @@ testDocApiV2FilesFull = do
                , ( "not_merged_file"
                  , inFile $ inTestDir "pdfs/simple-rotate-90.pdf" )
                ]
-    _ <- testRequestHelper ctx POST vars
+    void $ testRequestHelper ctx POST vars
                            (docApiV2SetAttachments (documentid initDoc)) 200
 
     let [sl1, sl2] = documentsignatorylinks initDoc
@@ -453,7 +453,7 @@ testDocApiV2FilesFull = do
 
   -- Close the document.
   withDocumentID did $ randomUpdate $ CloseDocument (systemActor now)
-  _ <- testRequestHelper ctx POST [] (docApiV2FilesFull did) 503
+  void $ testRequestHelper ctx POST [] (docApiV2FilesFull did) 503
 
   -- Seal the document.
   sealTestDocument ctx did

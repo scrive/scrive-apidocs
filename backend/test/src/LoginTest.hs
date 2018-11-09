@@ -61,7 +61,7 @@ testSuccessfulLoginToPadQueue  = do
 
 testCantLoginWithInvalidUser :: TestEnv ()
 testCantLoginWithInvalidUser = do
-    _ <- createTestUser
+    void $ createTestUser
     ctx <- mkContext def
     req <- mkRequest POST [("email", inText "emily@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost
@@ -69,7 +69,7 @@ testCantLoginWithInvalidUser = do
 
 testCantLoginWithInvalidPassword :: TestEnv ()
 testCantLoginWithInvalidPassword = do
-    _ <- createTestUser
+    void $ createTestUser
     ctx <- mkContext def
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "invalid"), ("loginType", inText "RegularLogin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost
@@ -114,7 +114,7 @@ testCanLoginWithRedirect = do
     -- Test that call with fail if "url" for redirection is not provided
   req4 <- mkRequest GET [("session_id", inText . unpack $ sessionid)]
   assertRaisesInternalError $ do
-    _ <- runTestKontra req4 ctx handleLoginWithRedirectGet
+    void $ runTestKontra req4 ctx handleLoginWithRedirectGet
     return ()
 
   -- Test that session_id is valid for more then one redirect
@@ -138,7 +138,7 @@ testCanLoginWithRedirect = do
 
 testCantLoginAfterFailedAttempts :: TestEnv ()
 testCantLoginAfterFailedAttempts = do
-  _ <- createTestUser
+  void $ createTestUser
   ctx <- mkContext def
   -- we fail to login 6 times
   req1 <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "invalid"), ("loginType", inText "RegularLogin")]

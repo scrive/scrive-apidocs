@@ -28,7 +28,7 @@ testApiV1DoesNotBreakApiV2 = do
   updateAllBS <- liftIO $ B.readFile $ inTestDir "json/api_v1/forwards_comp_req_update_all.json"
   let rq_update_params = [ ("document", inTextBS updateAllBS) ]
       rq_update_json = inTestDir "json/api_v1/forwards_comp_res_update_all.json"
-  _ <- runApiJSONTest ctx POST (docApiV2Update did) rq_update_params 200 rq_update_json
+  void $ runApiJSONTest ctx POST (docApiV2Update did) rq_update_params 200 rq_update_json
 
   reqGet <- mkRequestWithHeaders GET [] []
   (apiV1Doc, _) <- runTestKontra reqGet ctx $ apiCallV1Get did
@@ -39,6 +39,6 @@ testApiV1DoesNotBreakApiV2 = do
   -- API v1 DocumentToJson sorts signatory fields when generating JSON
   -- API v2 does not, so results of update calls are different
   let rq_update_json2 = inTestDir "json/api_v1/forwards_comp_res_update_all2.json"
-  _ <- runApiJSONTest ctx POST (docApiV2Get did) [] 200 rq_update_json2
+  void $ runApiJSONTest ctx POST (docApiV2Get did) [] 200 rq_update_json2
 
   return ()

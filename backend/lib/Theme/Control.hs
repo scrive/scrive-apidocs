@@ -68,7 +68,7 @@ handleUpdateThemeForDomain did tid =  do
       internalError
     Right js -> case (Unjson.parse unjsonTheme js) of
       (Result newTheme []) -> do
-        _ <- dbUpdate $ UpdateThemeForDomain did newTheme {themeID = themeID theme}
+        void $ dbUpdate $ UpdateThemeForDomain did newTheme {themeID = themeID theme}
         return ()
       _ -> internalError
 
@@ -84,7 +84,7 @@ handleUpdateThemeForUserGroup ugid tid =  do
     internalError
    Right js -> case (Unjson.parse unjsonTheme js) of
         (Result newTheme []) -> do
-          _ <- dbUpdate $ UpdateThemeForUserGroup ugid newTheme {themeID = themeID theme}
+          void $ dbUpdate $ UpdateThemeForUserGroup ugid newTheme {themeID = themeID theme}
           return ()
         _ -> internalError
 

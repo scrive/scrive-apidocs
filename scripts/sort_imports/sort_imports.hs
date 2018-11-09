@@ -47,15 +47,15 @@ parseSymbols = P.choice [
   ]
   where
     parseSymbolList = do
-      _ <- P.char '('
+      void $ P.char '('
       P.skipSpace
       symbols <- (`P.sepBy` P.char ',') $ do
         P.skipSpace
         symbol <- P.choice [
             do -- operator
-              _ <- P.char '('
+              void $ P.char '('
               op <- P.takeWhile1 (/= ')')
-              _ <- P.char ')'
+              void $ P.char ')'
               return $ "(" <> op <> ")"
           , P.takeWhile1 ((not . isSpace) <&&> (/= '(') <&&> (/= ')') <&&> (/= ','))
           ]
@@ -64,7 +64,7 @@ parseSymbols = P.choice [
         P.skipSpace
         return $ symbol <> ctors
       P.skipSpace
-      _ <- P.char ')'
+      void $ P.char ')'
       P.skipSpace
       return $ sort symbols
 
@@ -90,7 +90,7 @@ compareImport ignore_qualified a b = mconcat [
 
 parseImport :: P.Parser Import
 parseImport = do
-  _ <- P.string "import"
+  void $ P.string "import"
   P.skipSpace
   is_qualified <- P.option False (P.string "qualified" *> P.skipSpace $> True)
   package      <- P.option Nothing
@@ -115,7 +115,7 @@ parseImport = do
 
     parseAlias :: P.Parser T.Text
     parseAlias = do
-      _ <- P.string "as"
+      void $ P.string "as"
       P.skipSpace
       alias <- P.takeWhile1 $ (not . isSpace) <&&> (/= '(')
       P.skipSpace

@@ -683,12 +683,12 @@ addSealedEvidenceEvents actor = do
   forM_ notAddedAttachments $ \a -> do
     contents <- getFileIDContents $ authorattachmentfileid a
     let hash = filter (not . isSpace) $ show $ sha256 $ BB.unpack contents
-    _ <- update $ InsertEvidenceEvent
+    void $ update $ InsertEvidenceEvent
         AuthorAttachmentHashComputed
         (F.value "attachment_name" (authorattachmentname a) >> F.value "hash" hash)
         actor
     return ()
-  _ <- update $ InsertEvidenceEvent
+  void $ update $ InsertEvidenceEvent
         AttachSealedFileEvidence
         (return ())
         actor

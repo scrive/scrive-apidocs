@@ -109,13 +109,13 @@ handlePostChangeEmail uid hash =  withUser $ \user -> do
                       mnewemail
       flashmessage <- if changed
         then do
-            _ <- dbUpdate $ LogHistoryDetailsChanged (userid user) ipnumber time
+            void $ dbUpdate $ LogHistoryDetailsChanged (userid user) ipnumber time
                                                      [("email", unEmail $ useremail $ userinfo user, unEmail $ fromJust mnewemail)]
                                                      (Just $ userid user)
             flashMessageYourEmailHasChanged
         else
             flashMessageProblemWithEmailChange
-      _ <- dbUpdate $ DeleteEmailChangeRequest uid
+      void $ dbUpdate $ DeleteEmailChangeRequest uid
       return $ internalResponseWithFlash flashmessage $ LinkAccount
     Just _password -> do
       flashmessage <-  flashMessageProblemWithPassword
@@ -203,8 +203,8 @@ handleAcceptTOSPost = do
   tos <- getDefaultedField False asValidCheckBox "tos"
   case tos of
     Just True -> do
-      _ <- dbUpdate $ AcceptTermsOfService userid time
-      _ <- dbUpdate $ LogHistoryTOSAccept  userid ipnumber time (Just userid)
+      void $ dbUpdate $ AcceptTermsOfService userid time
+      void $ dbUpdate $ LogHistoryTOSAccept  userid ipnumber time (Just userid)
       return ()
     _ -> internalError
 
@@ -249,10 +249,10 @@ handleAccountSetupPost uid token sm = do
     else do
       mfstname <- getOptionalField asValidName "fstname"
       msndname <- getOptionalField asValidName "sndname"
-      _ <- handleActivate mfstname msndname (user,ug) sm
-      _ <- dbUpdate $ DeleteUserAccountRequest uid
+      void $ handleActivate mfstname msndname (user,ug) sm
+      void $ dbUpdate $ DeleteUserAccountRequest uid
       ctx <- getContext
-      _ <- dbUpdate $ SetUserSettings (userid user) $ (usersettings user) { lang = get ctxlang ctx }
+      void $ dbUpdate $ SetUserSettings (userid user) $ (usersettings user) { lang = get ctxlang ctx }
       link <- getHomeOrDesignViewLink
       J.runJSONGenT $ do
         J.value "ok" True
@@ -293,10 +293,10 @@ handlePasswordReminderPost uid token = do
           ipnumber  = get ctxipnumber ctx
           maybeuser = get ctxmaybeuser ctx
       password <- guardJustM $ getField "password"
-      _ <- dbUpdate $ DeletePasswordReminder uid
+      void $ dbUpdate $ DeletePasswordReminder uid
       passwordhash <- createPassword password
-      _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
-      _ <- dbUpdate $ LogHistoryPasswordSetup (userid user) ipnumber time
+      void $ dbUpdate $ SetUserPassword (userid user) passwordhash
+      void $ dbUpdate $ LogHistoryPasswordSetup (userid user) ipnumber time
            (userid <$> maybeuser)
       logUserToContext $ Just user
       J.runJSONGenT $ do

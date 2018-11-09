@@ -250,7 +250,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserEmail Bool where
       sqlSet "email" $ map toLower $ unEmail email
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
-    _ <- update $ UpdateDraftsAndTemplatesWithUserData uid
+    void $ update $ UpdateDraftsAndTemplatesWithUserData uid
     return res
 
 data SetUserInfo = SetUserInfo UserID UserInfo
@@ -265,7 +265,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserInfo Bool where
       sqlSet "email" $ map toLower $ unEmail $ useremail info
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
-    _ <- update $ UpdateDraftsAndTemplatesWithUserData uid
+    void $ update $ UpdateDraftsAndTemplatesWithUserData uid
     return res
 
 data SetUserPassword = SetUserPassword UserID Password

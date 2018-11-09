@@ -53,7 +53,7 @@ newEmailChangeRequest uid new_email = do
   -- being logged in on more than one machine), but the possibility that
   -- two users logged to the same account will invoke this function at
   -- the same time is basically 0.
-  _ <- dbUpdate $ DeleteEmailChangeRequest uid
+  void $ dbUpdate $ DeleteEmailChangeRequest uid
   dbUpdate . CreateEmailChangeRequest $ EmailChangeRequest uid expires new_email token
 
 newEmailChangeRequestLink :: (MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => UserID -> Email -> m KontraLink

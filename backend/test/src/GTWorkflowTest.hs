@@ -73,7 +73,7 @@ testExtendingIsNotRescheduledForPurgedDocs = do
   let slid = getMockDocSigLinkId 1 mockDoc
 
   -- Sign document
-  _ <- mockDocTestRequestHelper ctx
+  void $ mockDocTestRequestHelper ctx
     POST
       [ ("fields", inText "[]")
       , ("accepted_author_attachments", inText "[]")

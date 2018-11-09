@@ -51,7 +51,7 @@ assertTemplateIsValidXML t =
 testNoUnnecessaryDoubleDivs :: Assertion
 testNoUnnecessaryDoubleDivs = do
   templates <- getAllTemplates
-  _ <- mapM assertNoUnnecessaryDoubleDivs $ filter isIncluded templates
+  void $ mapM assertNoUnnecessaryDoubleDivs $ filter isIncluded templates
   assertSuccess
 
 testNoNestedP :: Assertion
@@ -65,7 +65,7 @@ testNoNestedP = do
 
 assertNoNestedP :: [String] -> KontrakcjaTemplates -> Assertion
 assertNoNestedP tnames templates = do
-  _ <- forM (filter (not . (flip elem) excludedTemplates) tnames) $ \n -> do
+  void $ forM (filter (not . (flip elem) excludedTemplates) tnames) $ \n -> do
     let t = renderTemplateMain templates n ([]::[(String, String)]) id
     case parseStringAsXML (n, removeScripts $ removeDocTypeDeclaration t) of
       Left  msg -> assertFailure msg

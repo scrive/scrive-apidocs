@@ -47,10 +47,10 @@ newUserAccountRequest uid = do
   case ma of
     Just a -> do
       let a' = a { uarExpires = expires }
-      _ <- dbUpdate $ UpdateUserAccountRequest a'
+      void $ dbUpdate $ UpdateUserAccountRequest a'
       return a'
     Nothing -> do
-      _ <- dbUpdate $ DeleteUserAccountRequest uid
+      void $ dbUpdate $ DeleteUserAccountRequest uid
       dbUpdate . CreateUserAccountRequest $ UserAccountRequest uid expires token
 
 newUserAccountRequestLink :: (MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => Lang -> UserID -> SignupMethod -> m KontraLink
@@ -68,7 +68,7 @@ expireUserAccountRequests = do
   prs <- dbQuery GetExpiredUserAccountRequests
   forM_ prs $ \UserAccountRequest{uarUserID} -> do
     res <- try . localData [identifier uarUserID] $ do
-      _ <- dbUpdate $ DeleteUserAccountRequest uarUserID
+      void $ dbUpdate $ DeleteUserAccountRequest uarUserID
       musertos <- (fmap userhasacceptedtermsofservice) <$> dbQuery (GetUserByIDIncludeDeleted uarUserID)
       case musertos of
         Just Nothing -> do

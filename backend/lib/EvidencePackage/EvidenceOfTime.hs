@@ -58,7 +58,7 @@ generateEvidenceOfTimeData intervals inputFilePath outputFilePath offsets' = do
   writeFile inputFilePath ""
   V.forM_ distData $ \(x, emp_x, est_x, err) ->
     appendFile inputFilePath $ (intercalate " " . map show $ [x, emp_x, est_x, err]) ++ "\n"
-  _ <- system $ smconcat [
+  void $ system $ smconcat [
       "gnuplot -e"
     , "\""
     , "inputfile='" ++ inputFilePath ++ "';"

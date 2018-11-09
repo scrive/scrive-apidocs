@@ -251,7 +251,7 @@ docApiV2Remind did = logDocument did . api $ do
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument
     -- API call actions
-    _ <- sendAllReminderEmailsExceptAuthor actor False
+    void $ sendAllReminderEmailsExceptAuthor actor False
     -- Result
     return $ Accepted ()
 
@@ -273,7 +273,7 @@ docApiV2Forward did = logDocument did . api $ do
     noAttachments <- apiV2ParameterDefault False (ApiV2ParameterBool "no_attachments")
     -- API call actions
     asiglink <- fromJust <$> getAuthorSigLink <$> theDocument
-    _ <- sendForwardEmail validEmail noContent noAttachments asiglink
+    void $ sendForwardEmail validEmail noContent noAttachments asiglink
     -- Return
     return $ Accepted ()
 
@@ -383,7 +383,7 @@ docApiV2SetAttachments did = logDocument did . api $ do
         when (not (fileWasAlreadyAnAttachment fid || attachmentFromAttachmentArchive)) $
             apiError $ resourceNotFound $ "File id" <+> (T.pack . show $ fid)
               <+> "can't be used. It may not exist or you don't have permission to use it."
-        _ <- dbUpdate $ AddDocumentAttachment (aadName ad) (aadRequired ad) (aadAddToSealedFile ad) fid actor
+        void $ dbUpdate $ AddDocumentAttachment (aadName ad) (aadRequired ad) (aadAddToSealedFile ad) fid actor
         return Nothing
       Right fp -> return $ Just (ad, fp)
     let newFileContentsWithDetails = catMaybes newFileContentsWithDetails'
@@ -616,7 +616,7 @@ docApiV2SigChangeEmailAndMobile did slid = logDocumentAndSignatory did slid . ap
     -- so we need a new SL from DB.
     sl' <- fromJust . getSigLinkFor slid <$> theDocument
     -- We always send both email and mobile invitations, even when nothing was changed.
-    _ <- sendInvitationEmail1 sl'
+    void $ sendInvitationEmail1 sl'
     -- API call actions
     Ok . (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 

@@ -90,7 +90,7 @@ handleLoginPost = do
                               now <- currentTime
                               let onBadTOTP = do
                                     logInfo "User login failed (invalid TOTP code provided)" $ logObject_ user
-                                    _ <- dbUpdate $ LogHistoryLoginTOTPFailure userid (get ctxipnumber ctx) (get ctxtime ctx)
+                                    void $ dbUpdate $ LogHistoryLoginTOTPFailure userid (get ctxipnumber ctx) (get ctxtime ctx)
                                     J.runJSONGenT $ do
                                       J.value "logged" False
                                       J.value "totp_correct" False
@@ -112,7 +112,7 @@ handleLoginPost = do
 
                 Just u@User{userpassword} | not (maybeVerifyPassword userpassword passwd) -> do
                         logInfo "User login failed (invalid password)" $ logObject_ u
-                        _ <- if padlogin
+                        void $ if padlogin
                           then dbUpdate $ LogHistoryPadLoginFailure (userid u) (get ctxipnumber ctx) (get ctxtime ctx)
                           else dbUpdate $ LogHistoryLoginFailure (userid u) (get ctxipnumber ctx) (get ctxtime ctx)
                         J.runJSONGenT $ J.value "logged" False
@@ -122,7 +122,7 @@ handleLoginPost = do
                             logPair_ u
                           , "ip" .= show (get ctxipnumber ctx)
                           ]
-                        _ <- if padlogin
+                        void $ if padlogin
                           then dbUpdate $ LogHistoryPadLoginFailure (userid u) (get ctxipnumber ctx) (get ctxtime ctx)
                           else dbUpdate $ LogHistoryLoginFailure (userid u) (get ctxipnumber ctx) (get ctxtime ctx)
 
@@ -138,7 +138,7 @@ handleLoginPost = do
                 Just u -> do
                   {- MR: useraccountsuspended must be true here. This is a hack for Hi3G. It will be removed in future -}
                         logInfo "User login failed (user account suspended)" $ object [logPair_ u]
-                        _ <- if padlogin
+                        void $ if padlogin
                           then dbUpdate $ LogHistoryPadLoginFailure (userid u) (get ctxipnumber ctx) (get ctxtime ctx)
                           else dbUpdate $ LogHistoryLoginFailure (userid u) (get ctxipnumber ctx) (get ctxtime ctx)
                         J.runJSONGenT $ J.value "logged" False
@@ -173,10 +173,10 @@ handleLoginPost = do
             _ -> return ()
           if padlogin
             then do
-              _ <- dbUpdate $ LogHistoryPadLoginSuccess (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
+              void $ dbUpdate $ LogHistoryPadLoginSuccess (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
               logPadUserToContext muuser
             else do
-              _ <- dbUpdate $ LogHistoryLoginSuccess (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
+              void $ dbUpdate $ LogHistoryLoginSuccess (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
               logUserToContext muuser
           J.runJSONGenT $ J.value "logged" True
 
@@ -210,5 +210,5 @@ handleLoginWithRedirectGet = do
   -- user logs out from the original login link session. We want the original link
   -- to keep redirecting as intended. User may need to login again using his email and
   -- password depending on the redirect destination.
-  _ <- unsafeSessionTakeover sci
+  void $ unsafeSessionTakeover sci
   return $ internalResponse $ LinkExternal url

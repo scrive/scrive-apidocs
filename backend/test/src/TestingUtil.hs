@@ -859,7 +859,7 @@ addNewRandomUser = do
                  , userphone           = phone
                  , useremail           = Email em
                  }
-  _ <- dbUpdate $ SetUserInfo (userid user) userinfo
+  void $ dbUpdate $ SetUserInfo (userid user) userinfo
   return user
 
 addNewRandomUserWithCompany :: ( CryptoRNG m, MonadDB m
@@ -882,7 +882,7 @@ addNewRandomUserWithCompany = do
                  , userphone           = phone
                  , useremail           = Email em
                  }
-  _ <- dbUpdate $ SetUserInfo (userid user) userinfo
+  void $ dbUpdate $ SetUserInfo (userid user) userinfo
   return (user, ugid)
 
 addNewRandomUserWithPassword :: ( CryptoRNG m, MonadDB m
@@ -893,22 +893,22 @@ addNewRandomUserWithPassword password = do
   randomUser <- addNewRandomUser
   -- set his password
   passwordhash <- createPassword password
-  _ <- dbUpdate $ SetUserPassword (userid randomUser) passwordhash
+  void $ dbUpdate $ SetUserPassword (userid randomUser) passwordhash
   return randomUser
 
 addNewRandomCompanyUser :: UserGroupID -> Bool -> TestEnv User
 addNewRandomCompanyUser ugid isadmin = do
   User{userid} <- addNewRandomUser
-  _ <- dbUpdate $ SetUserUserGroup userid ugid
-  _ <- dbUpdate $ SetUserCompanyAdmin userid isadmin
+  void $ dbUpdate $ SetUserUserGroup userid ugid
+  void $ dbUpdate $ SetUserCompanyAdmin userid isadmin
   Just user <- dbQuery $ GetUserByID userid
   return user
 
 addNewRandomUserGroupUser :: UserGroupID -> Bool -> TestEnv User
 addNewRandomUserGroupUser ugid isadmin = do
   User{userid} <- addNewRandomUser
-  _ <- dbUpdate $ SetUserUserGroup userid ugid
-  _ <- dbUpdate $ SetUserCompanyAdmin userid isadmin
+  void $ dbUpdate $ SetUserUserGroup userid ugid
+  void $ dbUpdate $ SetUserCompanyAdmin userid isadmin
   Just user <- dbQuery $ GetUserByID userid
   return user
 

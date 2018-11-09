@@ -41,7 +41,7 @@ testChangeEmailAddress :: TestEnv ()
 testChangeEmailAddress = do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- createPassword "abc123"
-  _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
+  void $ dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext def
@@ -76,7 +76,7 @@ testChangeEmailAddress = do
 testNeedEmailToBeUniqueToRequestChange :: TestEnv ()
 testNeedEmailToBeUniqueToRequestChange = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
-  _ <- addNewUser "Jim" "Bob" "jim@bob.com"
+  void $ addNewUser "Jim" "Bob" "jim@bob.com"
   ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext def
 
@@ -95,7 +95,7 @@ testEmailChangeFailsIfActionIDIsWrong :: TestEnv ()
 testEmailChangeFailsIfActionIDIsWrong = do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- createPassword "abc123"
-  _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
+  void $ dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext def
@@ -111,7 +111,7 @@ testEmailChangeFailsIfMagicHashIsWrong :: TestEnv ()
 testEmailChangeFailsIfMagicHashIsWrong = do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- createPassword "abc123"
-  _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
+  void $ dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext def
@@ -129,7 +129,7 @@ testEmailChangeIfForAnotherUser :: TestEnv ()
 testEmailChangeIfForAnotherUser = do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- createPassword "abc123"
-  _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
+  void $ dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   Just anotheruser <- addNewUser "Fred" "Frog" "fred@frog.com"
   ctx <- (set ctxmaybeuser (Just user))
@@ -145,7 +145,7 @@ testEmailChangeFailsIfEmailInUse:: TestEnv ()
 testEmailChangeFailsIfEmailInUse = do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- createPassword "abc123"
-  _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
+  void $ dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext def
@@ -162,7 +162,7 @@ testEmailChangeFailsIfPasswordWrong :: TestEnv ()
 testEmailChangeFailsIfPasswordWrong = do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- createPassword "abc123"
-  _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
+  void $ dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext def
@@ -179,7 +179,7 @@ testEmailChangeFailsIfNoPassword :: TestEnv ()
 testEmailChangeFailsIfNoPassword = do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
   passwordhash <- createPassword "abc123"
-  _ <- dbUpdate $ SetUserPassword (userid user') passwordhash
+  void $ dbUpdate $ SetUserPassword (userid user') passwordhash
   Just user <- dbQuery $ GetUserByID (userid user')
   ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext def
@@ -197,7 +197,7 @@ testGetUserInfoWithOAuthTokens = do
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   -- Create OAuth API tokens
   let uid = userid user
-  _ <- dbUpdate $ CreateAPIToken uid
+  void $ dbUpdate $ CreateAPIToken uid
   (apitoken, apisecret) : _ <- dbQuery $ GetAPITokensForUser uid
   time <- rand 10 arbitrary
   Just (tok, sec) <- dbUpdate $ RequestTempCredentials
@@ -234,8 +234,8 @@ testLoginUsingAPI = do
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
   let uid = userid user
-  _ <- dbUpdate $ DeletePersonalToken uid
-  _ <- dbUpdate $ CreatePersonalToken uid
+  void $ dbUpdate $ DeletePersonalToken uid
+  void $ dbUpdate $ CreatePersonalToken uid
   Just (OAuthAuthorization{..}) <- dbQuery $ GetPersonalToken uid
 
   let authStr = "oauth_signature_method=\"PLAINTEXT\""

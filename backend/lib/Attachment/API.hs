@@ -80,7 +80,7 @@ attachmentsApiV2Create = api $ do
   file <- apiV2ParameterObligatory $ ApiV2ParameterFilePDF "file"
 
   let title = fromMaybe (takeBaseName (filename file)) (T.unpack <$> mTitle)
-  _ <- dbUpdate $ NewAttachment (userid user) title (fileid file) actor
+  void $ dbUpdate $ NewAttachment (userid user) title (fileid file) actor
 
   return $ Created ()
 

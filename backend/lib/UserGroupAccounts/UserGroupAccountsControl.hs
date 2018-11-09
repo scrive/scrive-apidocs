@@ -167,13 +167,13 @@ handleAddUserGroupAccount = withCompanyAdmin $ \(user, ug) -> do
       (Nothing) -> do
         --create a new company user
         newuser' <- guardJustM $ createUser (Email email) (fstname, sndname) (get ugID ug,False) (get ctxlang ctx) CompanyInvitation
-        _ <- dbUpdate $
+        void $ dbUpdate $
              LogHistoryUserInfoChanged (userid newuser') (get ctxipnumber ctx) (get ctxtime ctx)
                                        (userinfo newuser')
                                        ((userinfo newuser') { userfstname = fstname , usersndname = sndname })
                                        (userid <$> get ctxmaybeuser ctx)
         newuser <- guardJustM $ dbQuery $ GetUserByID (userid newuser')
-        _ <- sendNewUserGroupUserMail user ug newuser
+        void $ sendNewUserGroupUserMail user ug newuser
         runJSONGenT $ value "added" True
       (Just existinguser) ->
         if (usergroupid existinguser == get ugID ug)
@@ -183,8 +183,8 @@ handleAddUserGroupAccount = withCompanyAdmin $ \(user, ug) -> do
             users <- dbQuery . UserGroupGetUsers . usergroupid $ existinguser
             if (length users == 1)
               then do
-                _ <- sendTakeoverSingleUserMail user ug existinguser
-                _ <- dbUpdate $ AddUserGroupInvite $ UserGroupInvite (userid existinguser) (get ugID ug)
+                void $ sendTakeoverSingleUserMail user ug existinguser
+                void $ dbUpdate $ AddUserGroupInvite $ UserGroupInvite (userid existinguser) (get ugID ug)
                 runJSONGenT $ value "added" True
               else do
                 runJSONGenT $ value "added" False
@@ -200,7 +200,7 @@ handleResendToUserGroupAccount = withCompanyAdmin $ \(user, ug) -> do
   if (usergroupid newuser /= get ugID ug)
      then  do
        -- We need to check if there is a company invitation, and if it is, we send takeover email again
-       _ <- guardJustM $ dbQuery $ GetUserGroupInvite (get ugID ug) resendid
+       void $ guardJustM $ dbQuery $ GetUserGroupInvite (get ugID ug) resendid
        sendTakeoverSingleUserMail user ug newuser
      else  do
        -- Else we just send an email
@@ -234,7 +234,7 @@ handleChangeRoleOfUserGroupAccount = withCompanyAdmin $ \(_user, ug) -> do
   makeadmin <- getField "makeadmin"
   changeuser <- guardJustM $ dbQuery $ GetUserByID changeid
   unless (usergroupid changeuser == get ugID ug) internalError --make sure user is in same company
-  _ <- dbUpdate $ SetUserCompanyAdmin changeid (makeadmin == Just "true")
+  void $ dbUpdate $ SetUserCompanyAdmin changeid (makeadmin == Just "true")
   runJSONGenT $ value "changed" True
 
 {- |
@@ -249,15 +249,15 @@ handleRemoveUserGroupAccount = withCompanyAdmin $ \(_user, ug) -> do
   case (get ugID ug == usergroupid removeuser,isdeletable) of
     (True,True) -> do
             -- We remove user, so we also want to drop all invites - they should be invalid at this point anyway.
-             _ <- dbUpdate $ RemoveUserUserGroupInvites (userid removeuser)
-             _ <- dbUpdate $ DeleteUserCallbackScheme $ userid removeuser
-             _ <- dbUpdate $ DeleteUser (userid removeuser)
+             void $ dbUpdate $ RemoveUserUserGroupInvites (userid removeuser)
+             void $ dbUpdate $ DeleteUserCallbackScheme $ userid removeuser
+             void $ dbUpdate $ DeleteUser (userid removeuser)
              runJSONGenT $ value "removed" True
     (True,False) -> do
              runJSONGenT $ value "removed" False
     _            -> do
              -- We remove only this invite - user account in different company will still be valid
-             _ <- dbUpdate $ RemoveUserGroupInvite (get ugID ug) (userid removeuser)
+             void $ dbUpdate $ RemoveUserGroupInvite (get ugID ug) (userid removeuser)
              runJSONGenT $ value "removed" True
 
 {- |
@@ -279,11 +279,11 @@ handleGetBecomeUserGroupAccount ugid = withUser $ \user -> do
 
 handlePostBecomeUserGroupAccount :: Kontrakcja m => UserGroupID -> m InternalKontraResponse
 handlePostBecomeUserGroupAccount ugid = withUser $ \user -> do
-  _ <- guardJustM $ dbQuery $ GetUserGroupInvite ugid (userid user)
+  void $ guardJustM $ dbQuery $ GetUserGroupInvite ugid (userid user)
   newug <- guardJustM $ dbQuery $ UserGroupGet ugid
-  _ <- dbUpdate $ SetUserCompanyAdmin (userid user) False
-  _ <- dbUpdate $ SetUserUserGroup (userid user) (get ugID newug)
-  _ <- dbUpdate $ RemoveUserGroupInvite ugid (userid user)
+  void $ dbUpdate $ SetUserCompanyAdmin (userid user) False
+  void $ dbUpdate $ SetUserUserGroup (userid user) (get ugID newug)
+  void $ dbUpdate $ RemoveUserGroupInvite ugid (userid user)
   -- if we are inviting a user with a plan to join the company, we
   -- should delete their personal plan
   flashmessage <- flashMessageUserHasBecomeCompanyAccount newug

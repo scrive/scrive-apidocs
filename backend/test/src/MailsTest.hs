@@ -43,7 +43,7 @@ testBrandedDocumentMails :: TestEnv ()
 testBrandedDocumentMails = do
   ug <- addNewUserGroup
   author <- addNewRandomCompanyUser (get ugID ug) False
-  _ <- dbUpdate $ UserGroupUpdate (set ugUI def ug)
+  void $ dbUpdate $ UserGroupUpdate (set ugUI def ug)
   sendDocumentMails author
 
 testDocumentMails ::TestEnv ()
@@ -56,7 +56,7 @@ sendDocumentMails author = do
   forM_ allLangs $ \l ->  do
       -- make  the context, user and document all use the same lang
       ctx <- mkContext l
-      _ <- dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { lang = l }
+      void $ dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { lang = l }
       let aa = authorActor ctx author
       req <- mkRequest POST []
       runTestKontra req ctx $ (randomUpdate (NewDocument author "Document title" Signable defaultTimeZoneName 0 aa)) `withDocumentM` do

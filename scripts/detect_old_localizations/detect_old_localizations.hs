@@ -368,7 +368,7 @@ main = do
       unusedLocalization = foldl intersectLocalizations
                              mainLocalization cleanedLocalizations
   hPutStrLn stderr "Warnings:"
-  _ <- forM logs $ hPutStrLn stderr
+  void $ forM logs $ hPutStrLn stderr
   putStrLn "******************************"
   putStrLn "Unused localization calls:"
   let prunedLocalization = pruneLocalization unusedLocalization

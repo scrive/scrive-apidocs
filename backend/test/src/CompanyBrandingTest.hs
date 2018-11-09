@@ -135,7 +135,7 @@ testDeleteCompanyTheme = do
   req1 <- mkRequest POST []
   ((), _) <- runTestKontra req1 ctx $ handleDeleteTheme Nothing (themeID newTheme)
   assertRaisesDBException $ do
-    _ <- dbQuery $ GetTheme (themeID newTheme)
+    void $ dbQuery $ GetTheme (themeID newTheme)
     return ()
   return ()
 
@@ -248,11 +248,11 @@ testBrandingCacheChangesIfOneOfThemesIsSetToDefault = do
                 set uguiServiceTheme  (Just $ themeID newTheme) $
                 get ugUI ug
 
-  _ <- dbUpdate $ UserGroupUpdate $ set ugUI newUgUI ug
+  void $ dbUpdate $ UserGroupUpdate $ set ugUI newUgUI ug
   (Just ugui1) <- (get ugUI <$>) <$> (dbQuery $ UserGroupGet $ get ugID ug)
   adlerSum1 <- brandingAdler32 ctx $ Just (get ugID ug, ugui1)
 
-  _ <- dbUpdate $ UserGroupUpdate $ set ugUI (set uguiServiceTheme Nothing ugui1) ug
+  void $ dbUpdate $ UserGroupUpdate $ set ugUI (set uguiServiceTheme Nothing ugui1) ug
   (Just ugui2) <- (get ugUI <$>) <$> (dbQuery $ UserGroupGet $ get ugID ug)
   adlerSum2 <- brandingAdler32 ctx $ Just (get ugID ug, ugui2)
 

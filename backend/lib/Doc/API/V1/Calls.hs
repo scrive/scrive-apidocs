@@ -892,7 +892,7 @@ apiCallV1Remind did = logDocument did . api $ do
     hasPermission <- isAuthorOrAuthorsAdmin user <$> theDocument
     when (not hasPermission) $
       throwM . SomeDBExtraException $ serverError "Permission problem. Not an author[s admin]."
-    _ <- sendAllReminderEmailsExceptAuthor actor False
+    void $ sendAllReminderEmailsExceptAuthor actor False
     Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
 
 apiCallV1Forward :: Kontrakcja m => DocumentID -> m Response
@@ -912,7 +912,7 @@ apiCallV1Forward did = logDocument did . api $ do
           (Just s, _)      -> s == "true"
           (Nothing, True)  -> True
           (Nothing, False) -> False
-    _ <- sendForwardEmail email noContent noAttachments asiglink -- Make sure we only send out the document with the author's signatory link when it is closed, otherwise the link may be abused
+    void $ sendForwardEmail email noContent noAttachments asiglink -- Make sure we only send out the document with the author's signatory link when it is closed, otherwise the link may be abused
     Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
 
 apiCallV1Delete :: Kontrakcja m => DocumentID -> m Response

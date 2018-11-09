@@ -4,6 +4,7 @@
 
 module Shake.Oracles where
 
+import Control.Monad
 import Data.Maybe
 import Data.Time.Clock
 import Data.Time.Format
@@ -63,42 +64,42 @@ addOracles :: Rules ()
 addOracles = do
   -- * Oracles for using environment variables.
   -- See Shake documentation or newtype declarations for some background.
-  _ <- addOracle $ \(GhcVersion _) ->
+  void $ addOracle $ \(GhcVersion _) ->
                      withVerbosity Silent $
                      (fromStdout <$>
                       cmd "ghc --numeric-version" :: Action String)
-  _ <- addOracle $ \(TeamCity _) ->
+  void $ addOracle $ \(TeamCity _) ->
                      not . null . fromMaybe ""
                      <$> getEnv "TEAMCITY_VERSION"
-  _ <- addOracle $ \(TeamCityBuildDBConnString _)  ->
+  void $ addOracle $ \(TeamCityBuildDBConnString _)  ->
                      fromMaybe "" <$> getEnv "DB_BUILD_ADMIN_CONN_STRING"
-  _ <- addOracle $ \(TeamCityBuildDBName _)  ->
+  void $ addOracle $ \(TeamCityBuildDBName _)  ->
                      fromMaybe "" <$> getEnv "BUILD_DB_NAME"
-  _ <- addOracle $ \(TeamCityBuildLambdaConf _)  ->
+  void $ addOracle $ \(TeamCityBuildLambdaConf _)  ->
                      fromMaybe "" <$> getEnv "TEST_LAMBDA_CONF"
-  _ <- addOracle $ \(TeamCityBuildS3Conf _)  ->
+  void $ addOracle $ \(TeamCityBuildS3Conf _)  ->
                      fromMaybe "" <$> getEnv "TEST_S3_CONF"
 
   -- This is needed by our build.
   -- FIXME should be part of SHAKE_BUILD_ env vars?
-  _ <- addOracle $ \(NginxConfPath _) ->
+  void $ addOracle $ \(NginxConfPath _) ->
                      fromMaybe "" <$> getEnv "NGINX_CONF_PATH"
   -- These are our build options
-  _ <- addOracle $ \(BuildTarget _)        ->
+  void $ addOracle $ \(BuildTarget _)        ->
                      fromMaybe "" <$> getEnv "SHAKE_BUILD_TARGET"
-  _ <- addOracle $ \(BuildSandbox _)       ->
+  void $ addOracle $ \(BuildSandbox _)       ->
                      fromMaybe "" <$> getEnv "SHAKE_BUILD_SANDBOX"
-  _ <- addOracle $ \(BuildTestConfPath _)  ->
+  void $ addOracle $ \(BuildTestConfPath _)  ->
                      fromMaybe "" <$> getEnv "SHAKE_BUILD_TEST_CONF_PATH"
-  _ <- addOracle $ \(BuildDev _)     ->
+  void $ addOracle $ \(BuildDev _)     ->
                      not . null . fromMaybe ""
                      <$> getEnv "SHAKE_BUILD_DEV"
-  _ <- addOracle $ \(BuildTestCoverage _) ->
+  void $ addOracle $ \(BuildTestCoverage _) ->
                      not . null . fromMaybe ""
                      <$> getEnv "SHAKE_BUILD_TEST_COVERAGE"
-  _ <- addOracle $ \(BuildCabalConfigureOptions _)  ->
+  void $ addOracle $ \(BuildCabalConfigureOptions _)  ->
                      fromMaybe "" <$> getEnv "SHAKE_BUILD_CABAL_CONFIGURE_OPTS"
-  _ <- addOracle $ \(CreateTestDBWithConfData _) -> do
+  void $ addOracle $ \(CreateTestDBWithConfData _) -> do
     tc  <- askOracle (TeamCity ())
     now <- liftIO $ getCurrentTime
     let defDBName     = formatTime defaultTimeLocale

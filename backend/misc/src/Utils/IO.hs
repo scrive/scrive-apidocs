@@ -19,9 +19,9 @@ waitForTermination :: IO ()
 waitForTermination = do
   istty <- queryTerminal stdInput
   mv <- newEmptyMVar
-  _ <- installHandler softwareTermination (CatchOnce (putMVar mv ())) Nothing
+  void $ installHandler softwareTermination (CatchOnce (putMVar mv ())) Nothing
   when istty $ do
-    _ <- installHandler keyboardSignal (CatchOnce (putMVar mv ())) Nothing
+    void $ installHandler keyboardSignal (CatchOnce (putMVar mv ())) Nothing
     return ()
   takeMVar mv
 

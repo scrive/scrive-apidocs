@@ -197,14 +197,14 @@ handleDeliveredInvitation mailNoreplyAddress bd slid timeDiff = do
         }
       time <- currentTime
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) slid
-      _ <- dbUpdate $ SetEmailInvitationDeliveryStatus slid Delivered actor
+      void $ dbUpdate $ SetEmailInvitationDeliveryStatus slid Delivered actor
       return ()
     Nothing -> return ()
 
 handleOpenedInvitation :: (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => SignatoryLinkID -> String -> Maybe UserID -> m ()
 handleOpenedInvitation slid email muid = do
   now  <- currentTime
-  _ <- dbUpdate $ MarkInvitationRead slid
+  void $ dbUpdate $ MarkInvitationRead slid
           (mailSystemActor now muid email slid)
   return ()
 
@@ -230,7 +230,7 @@ handleUndeliveredInvitation mailNoreplyAddress bd slid = do
                   | otherwise -> do
       time <- currentTime
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) slid
-      _ <- dbUpdate $ SetEmailInvitationDeliveryStatus slid Undelivered actor
+      void $ dbUpdate $ SetEmailInvitationDeliveryStatus slid Undelivered actor
       mail <- mailUndeliveredInvitation mailNoreplyAddress bd signlink =<< theDocument
       theDocument >>= \d -> scheduleEmailSendout $ mail {
         to = [getMailAddress $ fromJust $ getAuthorSigLink d]

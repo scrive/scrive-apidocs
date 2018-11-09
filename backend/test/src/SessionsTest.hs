@@ -77,7 +77,7 @@ testDocumentTicketInsertion = replicateM_ 10 $ do
 testDocumentTicketReinsertion :: TestEnv ()
 testDocumentTicketReinsertion = replicateM_ 10 $ do
   (_, doc, ctx) <- addDocumentAndInsertToken
-  _ <- do
+  void $ do
     let Just asl = getAuthorSigLink doc
     rq <- mkRequest GET []
     runTestKontra rq ctx $ do

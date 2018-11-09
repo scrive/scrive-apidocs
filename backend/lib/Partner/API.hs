@@ -248,7 +248,7 @@ partnerApiCallV1UserGetPersonalToken ptOrUgID uid = do
               , makePolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
     apiAccessControl acc noPrvErr $ do
       user <- guardThatUserExists uid -- @todo for now...
-      _ <- dbUpdate $ CreatePersonalToken (userid user) -- @todo in the future: avoid this DB hit?
+      void $ dbUpdate $ CreatePersonalToken (userid user) -- @todo in the future: avoid this DB hit?
       token <- apiGuardJustM
         (serverError "Could not get user personal token")
         (dbQuery $ GetPersonalToken (userid user))

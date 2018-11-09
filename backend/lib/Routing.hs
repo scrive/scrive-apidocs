@@ -73,7 +73,7 @@ instance ToResp InternalKontraResponse where
   toResp ikr = do
     case getFlashMessage ikr of
       Just f -> do
-        _ <- addFlashCookie (toCookieValue f)
+        void $ addFlashCookie (toCookieValue f)
         return ()
       Nothing -> return ()
     toResp (eitherify ikr)

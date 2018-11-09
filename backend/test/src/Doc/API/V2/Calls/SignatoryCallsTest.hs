@@ -44,7 +44,7 @@ testDocApiV2SigCheck = do
   let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
 
-  _ <- testRequestHelper ctx
+  void $ testRequestHelper ctx
     POST
       [ ("fields", inText "[]")
       , ("accepted_author_attachments", inText "[]")

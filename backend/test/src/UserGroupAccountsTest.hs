@@ -51,7 +51,7 @@ test_addInviteForNewEmail :: TestEnv ()
 test_addInviteForNewEmail = do
   ug <- addNewUserGroup
   (user1, _) <- addNewAdminUserAndUserGroup "a@a.com" "Anna" "Android"
-  _ <- dbUpdate $ AddUserGroupInvite $ mkInvite ug user1
+  void $ dbUpdate $ AddUserGroupInvite $ mkInvite ug user1
   assertCompanyInvitesAre ug [mkInvite ug user1]
 
 test_removingExistingInvite :: TestEnv ()
@@ -59,14 +59,14 @@ test_removingExistingInvite = do
   ug <- addNewUserGroup
   (user, _) <- addNewAdminUserAndUserGroup "a@a.com" "Anna" "Android"
 
-  _ <- dbUpdate $ AddUserGroupInvite $ mkInvite ug user
-  _ <- dbUpdate $ RemoveUserGroupInvite (get ugID ug) (userid user)
+  void $ dbUpdate $ AddUserGroupInvite $ mkInvite ug user
+  void $ dbUpdate $ RemoveUserGroupInvite (get ugID ug) (userid user)
   assertCompanyInvitesAre ug []
 
 test_removingNonExistantInvite :: TestEnv ()
 test_removingNonExistantInvite = do
   ug <- addNewUserGroup
-  _ <- dbUpdate $ RemoveUserGroupInvite (get ugID ug) (unsafeUserID 0)
+  void $ dbUpdate $ RemoveUserGroupInvite (get ugID ug) (unsafeUserID 0)
   assertCompanyInvitesAre ug []
 
 test_addingANewCompanyAccount :: TestEnv ()
@@ -126,7 +126,7 @@ test_resendingInviteToNewCompanyAccount :: TestEnv ()
 test_resendingInviteToNewCompanyAccount = do
   (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Just newuser <- addNewUserToUserGroup "Bob" "Blue" "bob@blue.com" (get ugID ug)
-  _ <- dbUpdate $ AddUserGroupInvite $ mkInvite ug newuser
+  void $ dbUpdate $ AddUserGroupInvite $ mkInvite ug newuser
 
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
@@ -169,7 +169,7 @@ test_switchingAdminToStandardUser :: TestEnv ()
 test_switchingAdminToStandardUser = do
   (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Just standarduser <- addNewUserToUserGroup "Bob" "Blue" "bob@blue.com" (get ugID ug)
-  _ <- dbUpdate $ SetUserCompanyAdmin (userid standarduser) True
+  void $ dbUpdate $ SetUserCompanyAdmin (userid standarduser) True
   Just adminuser <- dbQuery $ GetUserByID (userid user)
 
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
@@ -192,7 +192,7 @@ test_removingCompanyAccountInvite = do
   (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   (standarduser,_) <- addNewAdminUserAndUserGroup "Bob" "Blue" "jony@blue.com"
 
-  _ <- dbUpdate $ AddUserGroupInvite $ mkInvite ug standarduser
+  void $ dbUpdate $ AddUserGroupInvite $ mkInvite ug standarduser
 
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 
@@ -212,7 +212,7 @@ test_removingCompanyAccountWorks = do
   doc <- addRandomDocumentWithAuthorAndCondition standarduser (\d -> documentstatus d `elem` [Closed])
   let docid = documentid doc
 
-  _ <- dbUpdate $ AddUserGroupInvite $ mkInvite ug standarduser
+  void $ dbUpdate $ AddUserGroupInvite $ mkInvite ug standarduser
 
   ctx <- (set ctxmaybeuser (Just adminuser)) <$> mkContext def
 
@@ -244,7 +244,7 @@ test_privateUserTakoverWorks = do
   docid <- documentid <$> addRandomDocumentWithAuthorAndCondition user (\d -> not $ (documentstatus d) `elem` [Preparation])
 
 
-  _ <- dbUpdate $ AddUserGroupInvite $ mkInvite ug user
+  void $ dbUpdate $ AddUserGroupInvite $ mkInvite ug user
 
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
 

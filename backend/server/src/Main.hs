@@ -139,8 +139,8 @@ initDatabaseEntries appConf = do
     -- Add some host_clock entries in "dev" mode if there are no valid samples
     clockErrors <- dbQuery $ HC.GetNClockErrorEstimates 10
     when (not $ HC.enoughClockErrorOffsetSamples clockErrors) $ do
-      _ <- dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.001) 0.5
-      _ <- dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.0015) 0.5
+      void $ dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.001) 0.5
+      void $ dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.0015) 0.5
       return ()
   flip mapM_ (initialUsers appConf) $ \(email, passwordstring) -> do
     -- create initial database entries
@@ -150,7 +150,7 @@ initDatabaseEntries appConf = do
       Nothing -> do
         bd <- dbQuery $ GetMainBrandedDomain
         ug <- dbUpdate . UserGroupCreate $ def
-        _ <- dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) (get ugID ug,True) LANG_EN (get bdid bd) ByAdmin
+        void $ dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) (get ugID ug,True) LANG_EN (get bdid bd) ByAdmin
         dbUpdate $ UserGroupUpdate $ set ugInvoicing (Invoice EnterprisePlan) ug
         Features fAdmins fUsers <- getFeaturesFor $ get ugID ug
         -- enable everything for initial admins

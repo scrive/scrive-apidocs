@@ -91,7 +91,7 @@ test_getUserByID_returnsTheRightUser = do
 test_setUserEmail_GetByEmail :: TestEnv ()
 test_setUserEmail_GetByEmail = do
   Just user' <- addNewUser "Emily" "Green" "emily@green.com"
-  _ <- dbUpdate $ SetUserEmail (userid user') $ Email "Emily@green.coM"
+  void $ dbUpdate $ SetUserEmail (userid user') $ Email "Emily@green.coM"
   Just user <- dbQuery $ GetUserByID $ userid user'
   queriedUser <- dbQuery $ GetUserByEmail (Email "emily@green.com")
   assert (isJust queriedUser)
@@ -103,7 +103,7 @@ test_setUserEmail_GetByEmail = do
 test_setUserEmail_works :: TestEnv ()
 test_setUserEmail_works = do
   Just user' <- addNewUser "Emily" "Green" "emily@green.com"
-  _ <- dbUpdate $ SetUserEmail (userid user') $ Email "other@email.com"
+  void $ dbUpdate $ SetUserEmail (userid user') $ Email "other@email.com"
   Just user <- dbQuery $ GetUserByID $ userid user'
   queriedUser <- dbQuery $ GetUserByEmail (Email "emily@green.com")
   assert (isNothing queriedUser)
@@ -115,7 +115,7 @@ test_setUserPassword_changesPassword :: TestEnv ()
 test_setUserPassword_changesPassword = do
   Just user <- addNewUser "Emily" "Green" "emily@green.com"
   passwordhash <- createPassword "Secret Password!"
-  _ <- dbUpdate $ SetUserPassword (userid user) passwordhash
+  void $ dbUpdate $ SetUserPassword (userid user) passwordhash
   queriedUser <- dbQuery $ GetUserByEmail (Email "emily@green.com")
   assert $ maybeVerifyPassword (userpassword (fromJust queriedUser)) "Secret Password!"
 

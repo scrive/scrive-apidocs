@@ -224,7 +224,7 @@ testUserNoDeletionIfPendingDocuments :: TestEnv ()
 testUserNoDeletionIfPendingDocuments = do
   (anna, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
   now <- currentTime
-  _ <- dbUpdate $ AcceptTermsOfService (userid anna) now
+  void $ dbUpdate $ AcceptTermsOfService (userid anna) now
 
   Just bob <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (get ugID ug)
 
@@ -261,9 +261,9 @@ testUserDeletionOwnershipTransfer = do
   Just bob <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (get ugID ug)
 
   now <- currentTime
-  _ <- dbUpdate $ AcceptTermsOfService (userid anna) now
-  _ <- dbUpdate $ AcceptTermsOfService (userid bob)  now
-  _ <- dbUpdate $ SetUserCompanyAdmin  (userid bob)  True
+  void $ dbUpdate $ AcceptTermsOfService (userid anna) now
+  void $ dbUpdate $ AcceptTermsOfService (userid bob)  now
+  void $ dbUpdate $ SetUserCompanyAdmin  (userid bob)  True
 
   sharedTemplate <- addRandomDocumentWithAuthorAndCondition anna $ \doc ->
     isDocumentShared doc
@@ -334,7 +334,7 @@ testUserSetDataRetentionPolicyOnlyIfAsStrict = do
       companyDRP <- rand 10 arbitrary
 
       let ug' = set (ugsDataRetentionPolicy . ugSettings) companyDRP ug
-      _ <- dbUpdate $ UserGroupUpdate ug'
+      void $ dbUpdate $ UserGroupUpdate ug'
 
       let drpBS = unjsonToByteStringLazy unjsonDataRetentionPolicy userDRP
       req <- mkRequest POST [("data_retention_policy", inTextBS drpBS)]

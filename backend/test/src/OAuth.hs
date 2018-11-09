@@ -42,7 +42,7 @@ testCreateAPIToken = do
   assertBool "GetAPITokensForUser did not return the token just created (second user)." $ length ls2 == 1
   ls' <- dbQuery $ GetAPITokensForUser (userid singleuser)
   assertBool "GetAPITokensForUser should return 1 token." $ length ls' == 1
-  _ <- dbUpdate $ CreateAPIToken (userid singleuser)
+  void $ dbUpdate $ CreateAPIToken (userid singleuser)
   ls'' <- dbQuery $ GetAPITokensForUser (userid singleuser)
   assertBool "GetAPITokensForUser should return 2 tokens." $ length ls'' == 2
   
@@ -58,11 +58,11 @@ testCreateAPIToken = do
 testDeleteAPIToken :: TestEnv ()
 testDeleteAPIToken = do
   singleuser <- addNewRandomUser
-  _ <- dbUpdate $ CreateAPIToken (userid singleuser)
+  void $ dbUpdate $ CreateAPIToken (userid singleuser)
   ls <- dbQuery $ GetAPITokensForUser (userid singleuser)
   assertBool "GetAPITokensForUser did not return the token just created." $ length ls == 1
   let (apitoken,_):_ = ls
-  _ <- dbUpdate $ DeleteAPIToken (userid singleuser) apitoken
+  void $ dbUpdate $ DeleteAPIToken (userid singleuser) apitoken
   ls' <- dbQuery $ GetAPITokensForUser (userid singleuser)
   assertBool "GetAPITokensForUser did not delete the token." $ length ls' == 0
   
@@ -81,7 +81,7 @@ testRTCSecurity = do
   
   -- api secret must match api token
   user <- addNewRandomUser
-  _ <- dbUpdate $ CreateAPIToken (userid user)
+  void $ dbUpdate $ CreateAPIToken (userid user)
   ls <- dbQuery $ GetAPITokensForUser (userid user)
   assertBool "GetAPITokensForUser did not return the token just created." $ length ls == 1
   let (apitoken, apisecret):_ = ls
@@ -125,7 +125,7 @@ testVerifyCredentials = do
   assertBool "VerifyCredentials: temp token that does not exist should return Nothing." $ isNothing mvc
   
   -- userid must exist
-  _ <- dbUpdate $ CreateAPIToken (userid apiuser)
+  void $ dbUpdate $ CreateAPIToken (userid apiuser)
   (apitoken,apisecret):_ <- dbQuery $ GetAPITokensForUser (userid apiuser)
   mcr <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback = fromJust $ parseURI "http://www.google.com/"
                                                                  , tcAPIToken = apitoken
@@ -149,7 +149,7 @@ testVerifyCredentials = do
     Nothing -> assertFailure "RequestTempCredentials should work!"
     Just (tok', _) -> do
       user1 <- addNewRandomUser
-      _ <- dbUpdate $ VerifyCredentials tok' (userid user1) time
+      void $ dbUpdate $ VerifyCredentials tok' (userid user1) time
       user2 <- addNewRandomUser
       mvc'' <- dbUpdate $ VerifyCredentials tok' (userid user2) time
       assertBool "VerifyCredentials: second user verifying should not work." $ isNothing mvc''
@@ -160,7 +160,7 @@ testRequestAccessToken = do
   apiclient <- addNewRandomUser
   user      <- addNewRandomUser
   time      <- rand 10 arbitrary  
-  _ <- dbUpdate $ CreateAPIToken (userid apiclient)
+  void $ dbUpdate $ CreateAPIToken (userid apiclient)
   (apitoken,apisecret):_ <- dbQuery $ GetAPITokensForUser (userid apiclient)  
   Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = fromJust $ parseURI "http://www.google.com/"
                                                                              , tcAPIToken   = apitoken
@@ -225,7 +225,7 @@ testOAuthFlow = do
   apiclient <- addNewRandomUser
   user      <- addNewRandomUser
   time      <- rand 10 arbitrary  
-  _ <- dbUpdate $ CreateAPIToken (userid apiclient)
+  void $ dbUpdate $ CreateAPIToken (userid apiclient)
   (apitoken,apisecret):_ <- dbQuery $ GetAPITokensForUser (userid apiclient)  
   Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = fromJust $ parseURI "http://www.google.com/"
                                                                              , tcAPIToken   = apitoken
@@ -247,7 +247,7 @@ testOAuthFlowWithDeny :: TestEnv ()
 testOAuthFlowWithDeny = do
   apiclient <- addNewRandomUser
   time      <- rand 10 arbitrary  
-  _ <- dbUpdate $ CreateAPIToken (userid apiclient)
+  void $ dbUpdate $ CreateAPIToken (userid apiclient)
   (apitoken,apisecret):_ <- dbQuery $ GetAPITokensForUser (userid apiclient)  
   Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = fromJust $ parseURI "http://www.google.com/"
                                                                              , tcAPIToken   = apitoken
@@ -269,7 +269,7 @@ testGetGrantedPrivileges = do
   apiclient <- addNewRandomUser
   user      <- addNewRandomUser
   time      <- rand 10 arbitrary  
-  _ <- dbUpdate $ CreateAPIToken (userid apiclient)
+  void $ dbUpdate $ CreateAPIToken (userid apiclient)
   (apitoken,apisecret):_ <- dbQuery $ GetAPITokensForUser (userid apiclient)  
   Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = fromJust $ parseURI "http://www.google.com/"
                                                                              , tcAPIToken   = apitoken
@@ -293,7 +293,7 @@ testDeletePrivileges = do
   apiclient <- addNewRandomUser
   user      <- addNewRandomUser
   time      <- rand 10 arbitrary  
-  _ <- dbUpdate $ CreateAPIToken (userid apiclient)
+  void $ dbUpdate $ CreateAPIToken (userid apiclient)
   (apitoken,apisecret):_ <- dbQuery $ GetAPITokensForUser (userid apiclient)  
   Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = fromJust $ parseURI "http://www.google.com/"
                                                                              , tcAPIToken   = apitoken
@@ -309,7 +309,7 @@ testDeletePrivileges = do
                                                                  , trVerifier = ver
                                                                  }) time
   
-  _ <- dbUpdate $ DeletePrivileges (userid user) (atID t)
+  void $ dbUpdate $ DeletePrivileges (userid user) (atID t)
   ps <- dbQuery $ GetGrantedPrivileges (userid user)
   assertBool "DeletePrivileges: should have 0 privileges granted." $ ps == []
 
@@ -318,7 +318,7 @@ testDeletePrivilege = do
   apiclient <- addNewRandomUser
   user      <- addNewRandomUser
   time      <- rand 10 arbitrary  
-  _ <- dbUpdate $ CreateAPIToken (userid apiclient)
+  void $ dbUpdate $ CreateAPIToken (userid apiclient)
   (apitoken,apisecret):_ <- dbQuery $ GetAPITokensForUser (userid apiclient)  
   Just (tok, sec) <- dbUpdate $ RequestTempCredentials (OAuthTempCredRequest { tcCallback   = fromJust $ parseURI "http://www.google.com/"
                                                                              , tcAPIToken   = apitoken
@@ -334,7 +334,7 @@ testDeletePrivilege = do
                                                                  , trVerifier = ver
                                                                  }) time
   
-  _ <- dbUpdate $ DeletePrivilege (userid user) (atID t) APIDocCreate
+  void $ dbUpdate $ DeletePrivilege (userid user) (atID t) APIDocCreate
   ps <- dbQuery $ GetGrantedPrivileges (userid user)
   assertBool "DeletePrivileges: should have 0 privileges granted." $ ps == []
 
@@ -353,7 +353,7 @@ testPersonalToken = do
   r' <- dbUpdate $ CreatePersonalToken (userid user)
   assertBool "Should have failed!" $ not r'
   
-  _ <- dbUpdate $ DeletePersonalToken (userid user)
+  void $ dbUpdate $ DeletePersonalToken (userid user)
   mt'' <- dbQuery $ GetPersonalToken (userid user)
   assertBool "GetPersonalToken: should return Nothing with User who just deleted." $ mt'' == Nothing
   

@@ -51,7 +51,7 @@ once ps = do
           -- something has changed, we need to kill old process
           putStrLn $ "Terminating " ++ (psExecutable ps)
           terminateProcess pid
-          _ <- waitForProcess pid
+          void $ waitForProcess pid
           putStrLn $ "Terminated " ++ (psExecutable ps)
           -- it should be dead by now, we can over loop
           return (ps { psPid = Nothing, psLastModified = Nothing })

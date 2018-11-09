@@ -181,8 +181,8 @@ testMany' (allargs, ts) runLogger rng = do
     defineTriggers kontraTriggers
     offsets <- dbQuery $ HC.GetNClockErrorEstimates 10
     when (not $ HC.enoughClockErrorOffsetSamples offsets) $ do
-      _ <- dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.001) 0.5
-      _ <- dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.0015) 0.5
+      void $ dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.001) 0.5
+      void $ dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.0015) 0.5
       return ()
     commit
 

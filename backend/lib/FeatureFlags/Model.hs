@@ -87,8 +87,8 @@ getFeaturesFor ugid = do
 
 updateFeaturesFor :: (MonadDB m, MonadThrow m) => UserGroupID -> Features -> m ()
 updateFeaturesFor ugid fs = do
-  _ <- dbUpdate (UpdateFeatureFlags ugid (fAdminUsers fs) True)
-  _ <- dbUpdate (UpdateFeatureFlags ugid (fRegularUsers fs) False)
+  void $ dbUpdate (UpdateFeatureFlags ugid (fAdminUsers fs) True)
+  void $ dbUpdate (UpdateFeatureFlags ugid (fRegularUsers fs) False)
   return ()
 
 firstAllowedAuthenticationToView :: FeatureFlags -> AuthenticationToViewMethod

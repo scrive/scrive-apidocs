@@ -230,7 +230,7 @@ exportFile ctxs3action@AWS.S3Action{AWS.s3bucket = (_:_)}
     return (result, realToFrac $ diffUTCTime finishTime startTime :: Double)
   case result of
     Right _ -> do
-      _ <- dbUpdate $ FileMovedToAWS fileid url aes
+      void $ dbUpdate $ FileMovedToAWS fileid url aes
       commit
       logInfo "AWS uploaded" $ object [
           "url" .= (bucket </> url)

@@ -36,7 +36,7 @@ applyDraftDataToDocument draft actor = do
     unlessM (isPreparation <$> theDocument) $ do
       theDocument >>= \doc -> logInfo "API V2 - Document is not in preparation" $ logObject_ doc
       apiError $ serverError "Could not apply draft data to document as document is not in preparation."
-    _ <- theDocument >>= \doc -> dbUpdate $ UpdateDraft doc{
+    void $ theDocument >>= \doc -> dbUpdate $ UpdateDraft doc{
                                   documenttitle = documenttitle draft
                                 , documentinvitetext = documentinvitetext draft
                                 , documentconfirmtext = documentconfirmtext draft

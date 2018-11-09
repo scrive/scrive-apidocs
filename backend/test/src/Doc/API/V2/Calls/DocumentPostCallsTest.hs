@@ -143,7 +143,7 @@ testDocApiV2SigUpdateNoConsentResponses = do
 
   contents <- liftIO $ readFile $
     inTestDir "json/api_v2/test-DocUpdateNoConsentResponses.json"
-  _ <- testRequestHelper ctx
+  void $ testRequestHelper ctx
     POST [("document", inText contents)] (docApiV2Update did) 200
 
   withDocumentID did $ do
@@ -286,7 +286,7 @@ testDocApiV2SetAttachmentsIncrementally = do
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
   did <- getMockDocId <$> testDocApiV2New' ctx
 
-  _ <- mockDocTestRequestHelper ctx
+  void $ mockDocTestRequestHelper ctx
     POST [
       ("attachments", inText "[{\"name\" : \"A1\", \"required\" : false, \"add_to_sealed_file\" : true, \"file_param\" : \"attachment_0\"}]")
     , ("attachment_0", inFile $ inTestDir "pdfs/simple-rotate-90.pdf")
@@ -317,7 +317,7 @@ testDocApiV2SetAttachmentsIncrementally = do
     assertBool "Attachment 'A2' should have a file set" (getMockDocAuthorAttachmentHasFile 2 mda)
 
   -- It returns an error if two attachments have the same name.
-  _ <- testRequestHelper ctx
+  void $ testRequestHelper ctx
     POST [
       ("attachments", inText "[{\"name\" : \"A2\", \"required\" : true, \"add_to_sealed_file\" : false, \"file_param\" : \"other_attachment\"}, {\"name\" : \"A2\", \"required\" : true, \"add_to_sealed_file\" : false, \"file_param\" : \"yet_another_attachment\"}]")
     , ("other_attachment", inFile $ inTestDir "pdfs/simple-rotate-180.pdf")
