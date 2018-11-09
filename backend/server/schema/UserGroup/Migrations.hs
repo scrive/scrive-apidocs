@@ -213,3 +213,12 @@ userGroupSettingsAddImmediateTrash = Migration {
             }
         ]
   }
+
+userGroupAddGINIdx :: MonadDB m => Migration m
+userGroupAddGINIdx = Migration {
+    mgrTableName = tblName tableUserGroups
+  , mgrFrom = 4
+  , mgrAction = StandardMigration $ do
+      runQuery_ . sqlCreateIndex (tblName tableUserGroups) $
+                  (indexOnColumnWithMethod "parent_group_path" GIN)
+  }

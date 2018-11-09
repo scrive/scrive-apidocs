@@ -5,7 +5,7 @@ import DB
 tableUserGroups :: Table
 tableUserGroups = tblTable {
     tblName = "user_groups"
-  , tblVersion = 4
+  , tblVersion = 5
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "parent_group_id", colType = BigIntT, colNullable = True }
@@ -14,6 +14,8 @@ tableUserGroups = tblTable {
     , tblColumn { colName = "deleted", colType = TimestampWithZoneT }
     ]
   , tblPrimaryKey = pkOnColumn "id"
+  , tblIndexes = [
+      (indexOnColumnWithMethod "parent_group_path" GIN) ]
   , tblForeignKeys = [
       -- do not allow to delete groups which still contains some other groups
       -- always must delete the child groups explicitely
