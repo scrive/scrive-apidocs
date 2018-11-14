@@ -34,15 +34,17 @@ data AnalyticsData = AnalyticsData { aUser           :: Maybe User
 
 getAnalyticsData :: Kontrakcja m => m AnalyticsData
 getAnalyticsData = do
-  muser    <- get ctxmaybeuser <$> getContext
+  ctx <- getContext
+
+  let muser       = get ctxmaybeuser     ctx
+      token       = get ctxmixpaneltoken ctx
+      hubspotConf = get ctxhubspotconf   ctx
+      gaToken     = get ctxgatoken       ctx
+      lang        = get ctxlang          ctx
+
   musergroup <- case muser of
     Just user -> dbQuery . UserGroupGet . usergroupid $ user
-    _         -> return Nothing
-  token       <- get ctxmixpaneltoken <$> getContext
-  gaToken     <- get ctxgatoken <$> getContext
-  hubspotConf <- get ctxhubspotconf <$> getContext
-  lang        <- get ctxlang <$> getContext
-
+    Nothing   -> return Nothing
 
   return $ AnalyticsData { aUser         = muser
                          , aUserGroup    = musergroup
