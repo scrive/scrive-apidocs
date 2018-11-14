@@ -18,8 +18,8 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.Text as T
 
 import DB (MonadDB)
-import Doc.Types.MainFile
 import Doc.DocStateData (Document(..), documentsealedfile)
+import Doc.Types.MainFile
 import File.Storage
 import Log.Utils
 import Utils.Directory

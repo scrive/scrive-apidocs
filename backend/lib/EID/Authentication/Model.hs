@@ -20,8 +20,8 @@ import Data.Int
 import qualified Data.Text as T
 
 import DB
-import Doc.Types.SignatoryLink
 import Doc.SignatoryLinkID
+import Doc.Types.SignatoryLink
 import EID.CGI.GRP.Types
 import EID.Nets.Types
 import Session.SessionID

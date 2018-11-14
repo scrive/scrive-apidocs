@@ -23,11 +23,11 @@ import Data.Unjson
 import Database.PostgreSQL.PQTypes
 
 import DB.Derive
+import Doc.SignatoryLinkID
 import Doc.Types.HighlightedPage
 import Doc.Types.SignatoryAttachment
 import Doc.Types.SignatoryConsentQuestion
 import Doc.Types.SignatoryField
-import Doc.SignatoryLinkID
 import IPAddress
 import MagicHash
 import MinutesTime

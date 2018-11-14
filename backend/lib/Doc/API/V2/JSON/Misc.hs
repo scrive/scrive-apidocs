@@ -32,9 +32,9 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Text as T
 
 import Doc.API.V2.JSON.Utils
-import Doc.Types.SignatoryLink
 import Doc.DocStateData
 import Doc.DocumentID
+import Doc.Types.SignatoryLink
 import KontraLink
 import User.Lang
 import qualified Data.ByteString.RFC2397 as RFC2397

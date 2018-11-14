@@ -19,8 +19,8 @@ module Doc.SignatoryFieldUtils (
     , fieldTextCustomValidation
   ) where
 
-import Doc.Types.SignatoryField
 import Doc.SignatoryFieldID
+import Doc.Types.SignatoryField
 import File.FileID
 
 data FieldValue

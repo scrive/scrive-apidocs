@@ -23,8 +23,8 @@ import User.Email
 import User.Model
 import User.PasswordReminder
 import User.UserControl
-import UserGroup.Types
 import UserGroup.Model
+import UserGroup.Types
 
 loginTests :: TestEnvSt -> Test
 loginTests env = testGroup "Login" [

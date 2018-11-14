@@ -36,9 +36,9 @@ import Routing
 import User.Action (createUser)
 import User.Email (Email(..))
 import User.Model
+import UserGroup.Model (UserGroupCreate(..), UserGroupGet(..), UserGroupGetImmediateChildren(..), UserGroupUpdate(..))
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
-import UserGroup.Model (UserGroupCreate(..), UserGroupGet(..), UserGroupGetImmediateChildren(..), UserGroupUpdate(..))
 
 partnerAPI :: Route (Kontra Response)
 partnerAPI = dir "api" $ choice

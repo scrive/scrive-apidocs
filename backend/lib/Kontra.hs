@@ -41,8 +41,8 @@ import KontraMonad
 import MailContext (MailContextMonad(..))
 import PdfToolsLambda.Conf
 import Session.Cookies
-import Session.Types
 import Session.Model
+import Session.Types
 import Templates
 import User.Model
 import Utils.HTTP

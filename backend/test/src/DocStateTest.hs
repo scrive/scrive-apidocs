@@ -40,8 +40,8 @@ import TestKontra
 import TestKontra (mkContext)
 import Text.XML.DirtyContent (renderXMLContent)
 import User.Model
-import UserGroup.Types
 import UserGroup.Model
+import UserGroup.Types
 import Util.Actor
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo

@@ -27,21 +27,21 @@ import Log
 import BrandedDomain.BrandedDomainID
 import DataRetentionPolicy
 import DB
+import Doc.DocStateData (DocumentStatus(..))
 import Doc.Types.Document (DocumentSharing(..), DocumentType(..))
 import Doc.Types.SignatoryField
-import Doc.DocStateData (DocumentStatus(..))
 import IPAddress
 import Log.Identifier
 import Partner.Model (PartnerID)
-import User.Types.SignupMethod
-import User.Types.User
 import User.Email
 import User.Lang
 import User.Model.Query
 import User.Password
+import User.Types.SignupMethod
+import User.Types.User
 import User.UserID
-import UserGroup.Types
 import UserGroup.Model
+import UserGroup.Types
 import Util.HasSomeUserInfo
 
 data AcceptTermsOfService = AcceptTermsOfService UserID UTCTime

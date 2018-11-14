@@ -11,8 +11,8 @@ import qualified Data.Text as T
 
 import DB
 import Doc.SignatoryLinkID
-import EID.Nets.Types
 import EID.Nets.SignID
+import EID.Nets.Types
 import Session.SessionID
 
 selectNetsSignOrderSelectorsList :: [SQL]

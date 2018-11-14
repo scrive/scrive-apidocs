@@ -36,9 +36,9 @@ import Doc.SignatoryLinkID
 import EID.CGI.GRP.Control (guardThatPersonalNumberMatches)
 import EID.Nets.Call
 import EID.Nets.Config
-import EID.Nets.Types
 import EID.Nets.Model
 import EID.Nets.SignID
+import EID.Nets.Types
 import EvidenceLog.Model
 import FlashMessage
 import Happstack.Fields
@@ -52,8 +52,8 @@ import Network.SOAP.Call
 import Network.SOAP.Transport.Curl (curlTransport)
 import Network.XMLCurl (CurlAuth(..), SSL(..), mkCertErrorHandler, mkDebugFunction)
 import Routing
-import Session.Types
 import Session.Model
+import Session.Types
 import Templates
 import Text.XML.Parser
 import User.Lang

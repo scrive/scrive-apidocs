@@ -12,6 +12,7 @@ module Doc.DocStateData (
   , module Doc.Types.SignatoryLink
   ) where
 
+import Doc.SignatoryFieldUtils
 import Doc.Types.AuthorAttachment
 import Doc.Types.Document
 import Doc.Types.DocumentStatus
@@ -21,5 +22,4 @@ import Doc.Types.MainFile
 import Doc.Types.SignatoryAttachment
 import Doc.Types.SignatoryConsentQuestion
 import Doc.Types.SignatoryField
-import Doc.SignatoryFieldUtils
 import Doc.Types.SignatoryLink

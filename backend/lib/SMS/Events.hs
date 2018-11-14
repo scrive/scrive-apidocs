@@ -35,9 +35,9 @@ import EvidenceLog.Model
 import KontraLink
 import Log.Identifier
 import Mails.SendMail
-import SMS.Types
 import SMS.Model
 import SMS.SMS
+import SMS.Types
 import Templates
 import Theme.Model
 import User.Model

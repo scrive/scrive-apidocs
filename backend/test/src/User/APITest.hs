@@ -22,22 +22,22 @@ import Attachment.Model
 import Context
 import DataRetentionPolicy
 import DB
-import Doc.Types.Document
-import Doc.Types.DocumentStatus
-import Doc.Types.SignatoryLink
 import Doc.DocInfo
 import Doc.DocumentMonad
 import Doc.Model.Query
 import Doc.Model.Update
 import Doc.SignatoryLinkID ()
+import Doc.Types.Document
+import Doc.Types.DocumentStatus
+import Doc.Types.SignatoryLink
 import MinutesTime
 import TestingUtil
 import TestKontra as T
 import User.API
 import User.Email
 import User.Model
-import UserGroup.Types
 import UserGroup.Model
+import UserGroup.Types
 import Util.Actor
 import Util.QRCode
 

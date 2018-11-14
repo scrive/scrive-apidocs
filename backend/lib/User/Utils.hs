@@ -17,8 +17,8 @@ import Kontra
 import KontraLink
 import User.Model
 import User.UserView
-import UserGroup.Types
 import UserGroup.Model
+import UserGroup.Types
 import Util.MonadUtils
 
 {- |

@@ -30,11 +30,11 @@ import qualified Text.StringTemplates.Fields as F
 
 import DB
 import DB.XML ()
-import Doc.Types.SignatoryLink
 import Doc.DocStateData (AuthenticationToSignMethod(..), DeliveryMethod(..), SignatoryLink(..))
 import Doc.DocumentID
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
 import Doc.SignatoryLinkID
+import Doc.Types.SignatoryLink
 import IPAddress
 import MinutesTime
 import Text.XML.Content (parseXMLContent)

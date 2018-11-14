@@ -116,8 +116,8 @@ import MagicHash
 import MinutesTime
 import User.Email
 import User.Model
-import UserGroup.Types
 import UserGroup.Model
+import UserGroup.Types
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils

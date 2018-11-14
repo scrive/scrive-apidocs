@@ -18,8 +18,8 @@ import DB
 import TestingUtil
 import TestKontra as T
 import Theme.Model
-import UserGroup.Types
 import UserGroup.Model
+import UserGroup.Types
 import Util.MonadUtils
 
 companyControlTests :: TestEnvSt -> Test

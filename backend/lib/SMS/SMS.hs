@@ -16,9 +16,9 @@ import Chargeable.Model
 import DB
 import Doc.DocStateData
 import Log.Identifier
-import SMS.Types (SMSProvider(..))
 import SMS.KontraInfoForSMS
 import SMS.Model
+import SMS.Types (SMSProvider(..))
 
 data SMS = SMS {
     smsMSISDN     :: String -- ^ Number of recipient in international form (+NNXXYYYYYYY)

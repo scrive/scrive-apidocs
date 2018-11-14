@@ -33,8 +33,8 @@ import Kontra
 import Theme.Model
 import User.Model
 import User.Utils
-import UserGroup.Types
 import UserGroup.Model
+import UserGroup.Types
 import Util.MonadUtils
 
 handleServiceBranding :: Kontrakcja m => BrandedDomainID -> String -> String -> m Response

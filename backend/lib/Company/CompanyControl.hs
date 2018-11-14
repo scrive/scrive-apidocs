@@ -29,8 +29,8 @@ import Routing (hGet, hPost, toK0, toK1, toK2)
 import Theme.Control
 import Theme.ThemeID
 import User.Utils
-import UserGroup.Types
 import UserGroup.Model
+import UserGroup.Types
 import Util.MonadUtils
 
 routes :: Route (Kontra Response)

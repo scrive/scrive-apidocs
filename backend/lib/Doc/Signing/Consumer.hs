@@ -23,9 +23,6 @@ import Doc.Action
 import Doc.API.V2.Calls.SignatoryCallsUtils
 import Doc.API.V2.JSON.Fields
 import Doc.API.V2.JSON.SignatoryConsentQuestion
-import Doc.Types.AuthorAttachment
-import Doc.Types.Document
-import Doc.Types.SignatoryLink
 import Doc.DocControl
 import Doc.DocumentMonad
 import Doc.Model.Query
@@ -33,6 +30,9 @@ import Doc.Model.Update
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots
 import Doc.Signing.Model
+import Doc.Types.AuthorAttachment
+import Doc.Types.Document
+import Doc.Types.SignatoryLink
 import EID.CGI.GRP.Config
 import EID.CGI.GRP.Control
 import EID.CGI.GRP.Types

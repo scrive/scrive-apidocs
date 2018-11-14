@@ -51,8 +51,8 @@ import Redirect
 import Routing
 import Salesforce.AuthorizationWorkflow
 import Session.Cookies
-import Session.Types
 import Session.Model
+import Session.Types
 import ThirdPartyStats.Core
 import User.Action
 import User.CallbackScheme.Model
@@ -67,9 +67,9 @@ import User.UserAccountRequest
 import User.UserControl
 import User.UserView
 import User.Utils
+import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.Subscription
-import UserGroup.Model
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.QRCode (unQRCode)

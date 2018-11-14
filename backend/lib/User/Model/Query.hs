@@ -30,13 +30,13 @@ import DB
 import Doc.DocStateData (DocumentStatus(..))
 import MinutesTime
 import Partner.Model (GetUserPartnerAdminUserGroups(..))
-import User.Types.Stats
-import User.Types.User
 import User.Email
 import User.History.Model
 import User.Model.Filter
 import User.Model.OrderBy
 import User.Password
+import User.Types.Stats
+import User.Types.User
 import User.UserID
 import UserGroup.Types (UserGroupID)
 import UserGroup.Types.PaymentPlan

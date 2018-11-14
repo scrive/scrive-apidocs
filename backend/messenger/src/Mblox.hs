@@ -15,8 +15,8 @@ import qualified Data.ByteString.Lazy.UTF8 as BS
 
 import DB
 import Messenger
-import SMS.Types
 import SMS.Model
+import SMS.Types
 
 handleMbloxEvents :: Messenger Response
 handleMbloxEvents = localDomain "handleMbloxEvents" . flip E.catch (\(e :: SomeException) -> logInfo "Logging exception" (object ["exception" .= show e]) >> throwIO e) $ do

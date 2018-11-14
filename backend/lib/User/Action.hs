@@ -22,8 +22,8 @@ import MinutesTime
 import User.Email
 import User.History.Model
 import User.Model
-import UserGroup.Types
 import UserGroup.Model
+import UserGroup.Types
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 

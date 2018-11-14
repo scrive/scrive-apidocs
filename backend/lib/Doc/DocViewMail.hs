@@ -36,8 +36,8 @@ import MinutesTime
 import Templates
 import Theme.Model
 import User.Model
-import UserGroup.Types
 import UserGroup.Model
+import UserGroup.Types
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils

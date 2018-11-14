@@ -19,10 +19,6 @@ import Doc.API.V2.Calls.DocumentGetCalls
 import Doc.API.V2.Calls.DocumentPostCalls
 import Doc.API.V2.Calls.SignatoryCalls (docApiV2SigSign)
 import Doc.API.V2.Mock.TestUtils
-import Doc.Types.Document (Document(..))
-import Doc.Types.DocumentStatus (DocumentStatus(..))
-import Doc.Types.SignatoryAttachment (SignatoryAttachment(..))
-import Doc.Types.SignatoryLink (AuthenticationToSignMethod(..), SignatoryLink(..))
 import Doc.DocInfo
 import Doc.DocumentID (DocumentID, unsafeDocumentID)
 import Doc.DocumentMonad (withDocument, withDocumentID)
@@ -31,6 +27,10 @@ import Doc.Model.Update
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots (emptySignatoryScreenshots)
 import Doc.Tokens.Model
+import Doc.Types.Document (Document(..))
+import Doc.Types.DocumentStatus (DocumentStatus(..))
+import Doc.Types.SignatoryAttachment (SignatoryAttachment(..))
+import Doc.Types.SignatoryLink (AuthenticationToSignMethod(..), SignatoryLink(..))
 import File.Storage (saveNewFile)
 import TestingUtil
 import TestKontra

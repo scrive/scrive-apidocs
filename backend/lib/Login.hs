@@ -31,8 +31,8 @@ import User.Email
 import User.History.Model
 import User.Model
 import User.TwoFactor (verifyTOTPCode)
-import UserGroup.Types
 import UserGroup.Model
+import UserGroup.Types
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Utils.HTTP

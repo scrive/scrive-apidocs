@@ -9,8 +9,8 @@ import Log.Class
 
 import BrandedDomain.Model
 import DB
-import Doc.Types.Document
 import Doc.DocumentMonad
+import Doc.Types.Document
 
 documentSealingNotificationChannel :: Channel
 documentSealingNotificationChannel = "document_sealing"

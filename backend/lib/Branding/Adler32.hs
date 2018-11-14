@@ -16,8 +16,8 @@ import Context
 import DB
 import Theme.Model
 import User.Model
-import UserGroup.Types
 import UserGroup.Model
+import UserGroup.Types
 import VersionTH
 
 brandingAdler32 :: (MonadDB m, MonadThrow m) => Context -> Maybe (UserGroupID, UserGroupUI) -> m String

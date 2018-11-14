@@ -33,12 +33,12 @@ import Purging.Files
 import Session.Model (DeleteExpiredSessions(..))
 import SMS.Events
 import ThirdPartyStats.Core
-import User.Types.User (User(..))
 import User.EmailChangeRequest (DeleteExpiredEmailChangeRequests(..))
 import User.Model.Query (GetUserWherePasswordAlgorithmIsEarlierThan(..))
 import User.Model.Update (SetUserPassword(..))
 import User.Password (PasswordAlgorithm(..), strengthenPassword)
 import User.PasswordReminder (DeleteExpiredPasswordReminders(..))
+import User.Types.User (User(..))
 import User.UserAccountRequest (expireUserAccountRequests)
 import Utils.List
 import qualified CronEnv

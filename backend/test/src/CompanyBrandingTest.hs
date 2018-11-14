@@ -21,8 +21,8 @@ import TestKontra
 import Theme.Model
 import Theme.View
 import User.Model
-import UserGroup.Types
 import UserGroup.Model
+import UserGroup.Types
 
 companyBrandingTests :: TestEnvSt -> Test
 companyBrandingTests env = testGroup "CompanyBranding" [

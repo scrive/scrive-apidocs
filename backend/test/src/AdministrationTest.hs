@@ -15,9 +15,9 @@ import MinutesTime
 import TestingUtil
 import TestKontra as T
 import User.Email
+import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
-import UserGroup.Model
 import Util.CSVUtil (CSV(..))
 
 administrationTests :: TestEnvSt -> Test

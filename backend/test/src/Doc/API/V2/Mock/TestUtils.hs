@@ -63,10 +63,10 @@ import Happstack.Server
 import Context
 import Doc.API.V2.AesonTestUtils (jsonTestRequestHelper, lookupObjectArray, testRequestHelper)
 import Doc.API.V2.Mock.MockDocInternal
-import Doc.Types.DocumentStatus (DocumentStatus(..))
-import Doc.Types.SignatoryLink (AuthenticationToSignMethod(..), AuthenticationToViewMethod(..))
 import Doc.DocumentID (DocumentID)
 import Doc.SignatoryLinkID (SignatoryLinkID)
+import Doc.Types.DocumentStatus (DocumentStatus(..))
+import Doc.Types.SignatoryLink (AuthenticationToSignMethod(..), AuthenticationToViewMethod(..))
 import File.FileID
 import TestKontra
 

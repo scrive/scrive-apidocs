@@ -47,8 +47,8 @@ import Kontra
 import Log.Identifier
 import Log.Utils
 import MinutesTime
-import Session.Types
 import Session.Model
+import Session.Types
 import Templates
 import Text.JSON.Convert
 import User.Model

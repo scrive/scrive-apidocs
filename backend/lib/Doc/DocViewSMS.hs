@@ -22,12 +22,12 @@ import Doc.DocStateData hiding (DocumentStatus(..))
 import KontraLink
 import MailContext
 import MinutesTime
-import SMS.Types
 import SMS.SMS
+import SMS.Types
 import Templates
 import User.Model
-import UserGroup.Types
 import UserGroup.Model
+import UserGroup.Types
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.Monoid

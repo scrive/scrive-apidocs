@@ -17,8 +17,8 @@ import Doc.DocStateData
 import Doc.DocumentMonad (withDocument)
 import Doc.Model
 import File.Storage
-import SMS.Types (SMSProvider(..))
 import SMS.SMS
+import SMS.Types (SMSProvider(..))
 import TestingUtil
 import TestKontra as T
 import UserGroup.Types

@@ -25,9 +25,9 @@ import MessengerServerConf
 import MinutesTime
 import Monitoring
 import Sender
-import SMS.Types
 import SMS.Model
 import SMS.Tables
+import SMS.Types
 import Utils.IO
 import Utils.Network
 

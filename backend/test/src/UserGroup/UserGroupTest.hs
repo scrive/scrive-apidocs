@@ -17,9 +17,9 @@ import TestingUtil
 import TestKontra as T
 import User.Email
 import User.Model
-import UserGroup.Types
-import UserGroup.Data.PaymentPlan
 import UserGroup.Model
+import UserGroup.Types
+import UserGroup.Types.PaymentPlan
 
 userGroupTests :: TestEnvSt -> Test
 userGroupTests env  = testGroup "UserGroup"

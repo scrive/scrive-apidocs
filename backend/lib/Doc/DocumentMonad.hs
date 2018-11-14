@@ -16,9 +16,9 @@ import Log
 import DB
 import DB.RowCache (GetRow, RowCacheT, rowCache, rowCacheID, runRowCacheT, runRowCacheTID, updateRow, updateRowWithID)
 import Doc.Class
-import Doc.Types.Document
 import Doc.DocumentID (DocumentID)
 import Doc.Logging
+import Doc.Types.Document
 import FileStorage.Class
 
 -- | A monad transformer that has a 'DocumentMonad' instance

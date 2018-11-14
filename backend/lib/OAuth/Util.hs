@@ -22,8 +22,8 @@ import Happstack.Fields
 import Kontra
 import OAuth.Model
 import OAuth.Parse
-import User.Types.User
 import User.Model.Query
+import User.Types.User
 import Util.Actor
 import Utils.Read
 

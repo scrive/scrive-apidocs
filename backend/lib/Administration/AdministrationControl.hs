@@ -84,9 +84,9 @@ import User.JSON
 import User.UserControl
 import User.UserView
 import User.Utils
+import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.Subscription
-import UserGroup.Model
 import UserGroupAccounts.Model
 import Util.Actor
 import Util.HasSomeUserInfo

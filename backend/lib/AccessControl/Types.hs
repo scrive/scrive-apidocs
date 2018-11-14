@@ -16,8 +16,8 @@ import Log
 
 import DB
 import User.UserID
-import UserGroup.Types
 import UserGroup.Model
+import UserGroup.Types
 
 -- | The roles we use are mostly rooted in some user group; rather than have
 -- this implicit in implementation we expose it in the constructors. The meaning

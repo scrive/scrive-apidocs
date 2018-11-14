@@ -12,9 +12,9 @@ import Chargeable.Model (GetNumberOfDocumentsStartedThisMonth(..))
 import DB
 import FeatureFlags.Model
 import User.Model.Query (UserGroupGetUsers(..))
+import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
-import UserGroup.Model
 import Util.MonadUtils
 
 data Subscription = Subscription {

@@ -39,7 +39,6 @@ import Doc.API.V2.Guards
 import Doc.API.V2.JSON.Document
 import Doc.API.V2.JSON.List
 import Doc.API.V2.JSON.Misc (evidenceAttachmentsToJSONBS)
-import Doc.Types.MainFile
 import Doc.DocInfo
 import Doc.DocSeal (presealDocumentFile)
 import Doc.DocStateData
@@ -51,6 +50,7 @@ import Doc.Logging
 import Doc.Model
 import Doc.SignatoryLinkID
 import Doc.Texts
+import Doc.Types.MainFile
 import EvidenceLog.Model
 import EvidenceLog.View
 import File.File

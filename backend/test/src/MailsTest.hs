@@ -25,8 +25,8 @@ import TestKontra as T
 import User.Model
 import User.UserAccountRequest
 import User.UserView
-import UserGroup.Types
 import UserGroup.Model
+import UserGroup.Types
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils

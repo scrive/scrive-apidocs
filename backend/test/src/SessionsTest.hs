@@ -14,13 +14,13 @@ import Doc.DocStateData
 import Doc.Tokens.Model
 import EID.CGI.GRP.Transaction.Model
 import KontraMonad
-import Session.Types
 import Session.Model
+import Session.Types
 import TestingUtil
 import TestKontra as T
 import User.Model
-import UserGroup.Types
 import UserGroup.Model
+import UserGroup.Types
 import Util.SignatoryLinkUtils
 
 sessionsTests :: TestEnvSt -> Test

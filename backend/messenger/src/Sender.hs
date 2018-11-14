@@ -28,8 +28,8 @@ import DB
 import Log.Identifier
 import Log.Utils
 import MessengerServerConf
-import SMS.Types
 import SMS.Model
+import SMS.Types
 import Utils.IO
 
 data Sender = Sender {

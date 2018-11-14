@@ -17,11 +17,11 @@ import qualified Data.ByteString as BS
 
 import DB (dbUpdate)
 import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
-import Doc.Types.Document (documentsealedfile)
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
 import Doc.DocUtils (fileFromMainFile)
 import Doc.Model (AppendExtendedSealedFile(..), AppendSealedFile(..))
 import Doc.SealStatus (SealStatus(..))
+import Doc.Types.Document (documentsealedfile)
 import File.File (filename)
 import File.Storage
 import GuardTime (GuardTimeConfMonad, getGuardTimeConf)

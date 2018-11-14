@@ -23,10 +23,10 @@ import DataRetentionPolicy
 import DB
 import Log.Identifier
 import MinutesTime
-import User.Types.SignupMethod
 import User.Email
 import User.Lang
 import User.Password
+import User.Types.SignupMethod
 import User.UserID
 import UserGroup.Types
 import Util.HasSomeUserInfo

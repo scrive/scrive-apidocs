@@ -10,8 +10,8 @@ import Log
 import DB
 import Happstack.Fields
 import Messenger
-import SMS.Types
 import SMS.Model
+import SMS.Types
 
 handleTeliaCallGuideEvents :: Messenger Response
 handleTeliaCallGuideEvents = localDomain "handleTeliaCallGuideEvents" . flip E.catch (\(e :: SomeException) -> logInfo "Logging exception" (object ["exception" .= show e]) >> throwIO e) $ do

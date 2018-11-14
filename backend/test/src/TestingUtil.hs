@@ -72,9 +72,9 @@ import TestKontra
 import User.Email
 import User.Model
 import User.Password.Internal (Password(..))
+import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
-import UserGroup.Model
 import Util.Actor
 import qualified KontraError as KE
 import qualified Text.XML.Content as C

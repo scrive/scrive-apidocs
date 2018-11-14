@@ -4,15 +4,15 @@ import Test.Framework
 
 import Chargeable.Model
 import DB
-import Doc.Types.Document
 import Doc.DocInfo
+import Doc.Types.Document
 import MinutesTime
 import TestingUtil
 import TestKontra
 import User.Email
 import User.Model
-import UserGroup.Types
 import UserGroup.Model
+import UserGroup.Types
 
 sortByEmail :: [User] -> [User]
 sortByEmail = sortBy (\a b -> compare (f a) (f b))

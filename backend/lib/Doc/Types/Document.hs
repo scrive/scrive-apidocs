@@ -20,13 +20,13 @@ import qualified Data.Set as S
 
 import DB.RowCache (HasID(..), ID)
 import DB.TimeZoneName
+import Doc.DocumentID
+import Doc.SealStatus (HasGuardtimeSignature(..), SealStatus)
 import Doc.Types.AuthorAttachment
 import Doc.Types.DocumentStatus
 import Doc.Types.DocumentTag
 import Doc.Types.MainFile
 import Doc.Types.SignatoryLink
-import Doc.DocumentID
-import Doc.SealStatus (HasGuardtimeSignature(..), SealStatus)
 import IPAddress
 import Log.Identifier
 import MagicHash
