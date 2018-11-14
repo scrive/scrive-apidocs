@@ -73,7 +73,7 @@ Library
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
-  Exposed-modules: AccessControl.Data
+  Exposed-modules: AccessControl.Types
                  , API.APIVersion
                  , API.Logging
                  , API.Monad.V1
@@ -140,7 +140,7 @@ Library
                  , Database.Redis.Configuration
                  , Database.Redis.Helpers
                  , Doc.API
-                 , Doc.API.Callback.Data
+                 , Doc.API.Callback.Types
                  , Doc.API.Callback.Execute
                  , Doc.API.Callback.Model
                  , Doc.API.Callback.Tables
@@ -173,19 +173,19 @@ Library
                  , Doc.AutomaticReminder.Tables
                  , Doc.Class
                  , Doc.Conditions
-                 , Doc.Data.AuthorAttachment
-                 , Doc.Data.CheckboxPlacementsUtils
-                 , Doc.Data.Document
-                 , Doc.Data.DocumentStatus
-                 , Doc.Data.DocumentTag
-                 , Doc.Data.HighlightedPage
-                 , Doc.Data.MainFile
-                 , Doc.Data.RadiobuttonPlacementsUtils
-                 , Doc.Data.SignatoryAttachment
-                 , Doc.Data.SignatoryConsentQuestion
-                 , Doc.Data.SignatoryField
-                 , Doc.Data.SignatoryFieldUtils
-                 , Doc.Data.SignatoryLink
+                 , Doc.Types.AuthorAttachment
+                 , Doc.CheckboxPlacementsUtils
+                 , Doc.Types.Document
+                 , Doc.Types.DocumentStatus
+                 , Doc.Types.DocumentTag
+                 , Doc.Types.HighlightedPage
+                 , Doc.Types.MainFile
+                 , Doc.RadiobuttonPlacementsUtils
+                 , Doc.Types.SignatoryAttachment
+                 , Doc.Types.SignatoryConsentQuestion
+                 , Doc.Types.SignatoryField
+                 , Doc.SignatoryFieldUtils
+                 , Doc.Types.SignatoryLink
                  , Doc.DigitalSignature
                  , Doc.DocControl
                  , Doc.DocInfo
@@ -241,13 +241,13 @@ Library
                  , EID.Authentication.Tables
                  , EID.CGI.GRP.Config
                  , EID.CGI.GRP.Control
-                 , EID.CGI.GRP.Data
+                 , EID.CGI.GRP.Types
                  , EID.CGI.GRP.Transaction.Model
                  , EID.CGI.GRP.Transaction.Tables
                  , EID.Nets.Call
                  , EID.Nets.Config
                  , EID.Nets.Control
-                 , EID.Nets.Data
+                 , EID.Nets.Types
                  , EID.Nets.Migrations
                  , EID.Nets.Model
                  , EID.Nets.SignID
@@ -308,7 +308,7 @@ Library
                  , MailContext
                  , MailContext.Class
                  , MailingServerConf
-                 , Mails.Data
+                 , Mails.Types
                  , Mails.Events
                  , Mails.FromKontra.Tables
                  , Mails.KontraInfoForMail
@@ -331,7 +331,7 @@ Library
                  , OAuth.Util
                  , OAuth.View
                  , PadApplication.API
-                 , PadApplication.Data
+                 , PadApplication.Types
                  , Partner.API
                  , Partner.JSON
                  , Partner.Logging
@@ -354,7 +354,7 @@ Library
                  , Routing
                  , RoutingTable
                  , SFTPConfig
-                 , SMS.Data
+                 , SMS.Types
                  , SMS.Events
                  , SMS.FromKontra.Tables
                  , SMS.KontraInfoForSMS
@@ -366,7 +366,7 @@ Library
                  , Salesforce.Control
                  , ServerUtils.ServerUtils
                  , Session.Cookies
-                 , Session.Data
+                 , Session.Types
                  , Session.Model
                  , Session.SessionID
                  , Session.Tables
@@ -398,9 +398,9 @@ Library
                  , User.Action
                  , User.CallbackScheme.Model
                  , User.CallbackScheme.Tables
-                 , User.Data.SignupMethod
-                 , User.Data.Stats
-                 , User.Data.User
+                 , User.Types.SignupMethod
+                 , User.Types.Stats
+                 , User.Types.User
                  , User.Email
                  , User.EmailChangeRequest
                  , User.EmailChangeRequest.Tables
@@ -427,9 +427,9 @@ Library
                  , User.UserID
                  , User.UserView
                  , User.Utils
-                 , UserGroup.Data
-                 , UserGroup.Data.PaymentPlan
-                 , UserGroup.Data.Subscription
+                 , UserGroup.Types
+                 , UserGroup.Types.PaymentPlan
+                 , UserGroup.Types.Subscription
                  , UserGroup.Internal
                  , UserGroup.Labels
                  , UserGroup.Model
@@ -947,7 +947,7 @@ Executable mailing-server
                  MailJet
                  Mailer
                  MailingServerConf
-                 Mails.Data
+                 Mails.Types
                  Mails.Model
                  Mails.Tables
                  MemCache
@@ -1096,7 +1096,7 @@ Executable messenger-server
                  MinutesTime
                  Monitoring
                  SFTPConfig
-                 SMS.Data
+                 SMS.Types
                  SMS.Model
                  SMS.Tables
                  Sender
