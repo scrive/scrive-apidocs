@@ -40,7 +40,7 @@ getNonTempSessionID :: ( CryptoRNG m, KontraMonad m, MonadDB m
                        , MonadThrow m, MonadTime m, ServerMonad m )
                     => m SessionID
 getNonTempSessionID = do
-  sid <- (get ctxsessionid) `liftM` getContext
+  sid <- get ctxsessionid <$> getContext
   if sid == SessionID.tempSessionID
     then do
       new_sid <- insertEmptySession
