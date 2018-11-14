@@ -14,7 +14,7 @@ import DB
 import Planhat.Communication
 import Planhat.Config
 import User.Model (GetUserGroupAccountsCountActive(..), GetUserGroupAccountsCountMainDomainBranding(..), GetUserGroupAccountsCountTotal(..))
-import UserGroup.Data
+import UserGroup.Types
 
 doDailyPlanhatStats :: ( MonadDB m
                        , MonadLog m

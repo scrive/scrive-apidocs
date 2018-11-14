@@ -31,7 +31,7 @@ import Text.JSON.Gen
 
 import DB
 import IPAddress
-import User.Data.User
+import User.Types.User
 import User.Email
 import User.UserID
 import qualified VersionTH

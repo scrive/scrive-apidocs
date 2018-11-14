@@ -29,7 +29,7 @@ import Happstack.Fields
 import Kontra
 import Theme.Model
 import Theme.View
-import UserGroup.Data
+import UserGroup.Types
 import Util.MonadUtils
 
 handleGetTheme:: Kontrakcja m => ThemeID -> m Aeson.Value

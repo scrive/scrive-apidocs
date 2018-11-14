@@ -88,7 +88,7 @@ import Redirect
 import User.Email
 import User.Model
 import User.Utils
-import UserGroup.Data.Subscription
+import UserGroup.Types.Subscription
 import UserGroup.Model (UserGroupGet(..))
 import Util.Actor
 import Util.HasSomeUserInfo

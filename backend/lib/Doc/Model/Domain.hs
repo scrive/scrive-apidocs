@@ -12,7 +12,7 @@ import Doc.DocInfo
 import Doc.DocStateData
 import MagicHash
 import User.UserID
-import UserGroup.Data
+import UserGroup.Types
 
 -- | Document security domain.
 --

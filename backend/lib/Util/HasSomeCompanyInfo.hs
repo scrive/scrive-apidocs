@@ -16,7 +16,7 @@ module Util.HasSomeCompanyInfo (
 import qualified Data.Text as T
 
 import Doc.DocStateData
-import UserGroup.Data
+import UserGroup.Types
 import Util.SignatoryLinkUtils
 
 -- | Anything that might have a company name and number

@@ -1,4 +1,4 @@
-module Doc.Data.RadiobuttonPlacementsUtils (
+module Doc.Types.RadiobuttonPlacementsUtils (
     -- Checking and fixing sizes
       radiobuttonPlacementHasValidRadiobuttonRatio
     -- Tools for sealing
@@ -9,7 +9,7 @@ module Doc.Data.RadiobuttonPlacementsUtils (
 
 import qualified Data.ByteString.Char8 as BS
 
-import Doc.Data.SignatoryField
+import Doc.Types.SignatoryField
 
 smallSize :: Double
 smallSize = 0.014736 -- ~ 14px / 1040px

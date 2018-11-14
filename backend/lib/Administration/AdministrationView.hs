@@ -20,7 +20,7 @@ import qualified Text.StringTemplates.Fields as F
 import AppView
 import Kontra
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 
 adminMainPage :: TemplatesMonad m => Context -> m String
 adminMainPage ctx = renderTemplate "adminsmain" $ do

@@ -22,7 +22,7 @@ import qualified Text.JSON as J
 import API.APIVersion
 import CronEnv
 import DB
-import Doc.API.Callback.Data
+import Doc.API.Callback.Types
 import Doc.API.V1.DocumentToJSON
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.JSON.Document
@@ -40,7 +40,7 @@ import Salesforce.AuthorizationWorkflow
 import Salesforce.Conf
 import User.CallbackScheme.Model
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 import UserGroup.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils

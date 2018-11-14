@@ -48,7 +48,7 @@ import EvidenceLog.Model
 import File.File (File(..))
 import InputValidation (Result(..), asValidPhoneForSMS)
 import Kontra
-import Session.Data (Session(sesID))
+import Session.Types (Session(sesID))
 import Session.Model (getCurrentSession)
 import User.Lang
 import Util.Actor

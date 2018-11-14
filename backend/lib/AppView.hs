@@ -46,8 +46,8 @@ import Kontra
 import ThirdPartyStats.Core
 import User.Lang
 import User.Model
-import UserGroup.Data
-import UserGroup.Data.Subscription
+import UserGroup.Types
+import UserGroup.Types.Subscription
 import UserGroup.Model
 import Utils.HTTP
 import Utils.Monoid

@@ -6,7 +6,7 @@ import Data.Typeable
 import Text.JSON.Gen
 
 import DB
-import Doc.Data.SignatoryLink
+import Doc.Types.SignatoryLink
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.SignatoryConsentQuestionID
@@ -14,7 +14,7 @@ import Doc.SignatoryLinkID
 import MagicHash
 import MinutesTime
 import User.UserID
-import UserGroup.Data
+import UserGroup.Types
 
 -- This is the part where we define all that could possibly go wrong
 -- with a document.

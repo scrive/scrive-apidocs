@@ -4,14 +4,14 @@ import Test.Framework
 
 import Chargeable.Model
 import DB
-import Doc.Data.Document
+import Doc.Types.Document
 import Doc.DocInfo
 import MinutesTime
 import TestingUtil
 import TestKontra
 import User.Email
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 import UserGroup.Model
 
 sortByEmail :: [User] -> [User]

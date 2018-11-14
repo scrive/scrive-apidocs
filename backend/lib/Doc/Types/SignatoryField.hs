@@ -1,4 +1,4 @@
-module Doc.Data.SignatoryField (
+module Doc.Types.SignatoryField (
     FieldType(..)
   , NameOrder(..)
   , PlacementID

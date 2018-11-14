@@ -14,12 +14,12 @@ import Doc.DocStateData
 import Doc.Tokens.Model
 import EID.CGI.GRP.Transaction.Model
 import KontraMonad
-import Session.Data
+import Session.Types
 import Session.Model
 import TestingUtil
 import TestKontra as T
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 import UserGroup.Model
 import Util.SignatoryLinkUtils
 

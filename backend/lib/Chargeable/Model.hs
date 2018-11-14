@@ -23,9 +23,9 @@ import Data.Typeable
 import DB
 import Doc.DocumentID
 import MinutesTime
-import SMS.Data (SMSProvider(..))
+import SMS.Types (SMSProvider(..))
 import User.UserID
-import UserGroup.Data
+import UserGroup.Types
 
 data ChargeableItem =
   CIStartingDocument       |

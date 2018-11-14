@@ -17,7 +17,7 @@ import HubSpot.Conf
 import Kontra
 import MinutesTime
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 import UserGroup.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo

@@ -6,7 +6,7 @@ import qualified Data.Text as T
 
 import API.V2
 import DataRetentionPolicy
-import Doc.Data.DocumentStatus
+import Doc.Types.DocumentStatus
 import Kontra
 
 -- | Check that the data retention policy is valid. If another DRP is given,

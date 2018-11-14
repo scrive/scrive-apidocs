@@ -1,10 +1,10 @@
-module Doc.Data.MainFile (
+module Doc.Types.MainFile (
     MainFile(..)
   , mainFilesSelectors
   ) where
 
 import DB
-import Doc.Data.DocumentStatus
+import Doc.Types.DocumentStatus
 import Doc.SealStatus
 import File.FileID
 

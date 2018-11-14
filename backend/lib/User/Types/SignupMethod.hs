@@ -1,4 +1,4 @@
-module User.Data.SignupMethod where
+module User.Types.SignupMethod where
 
 import Data.Int (Int16)
 import Happstack.Server (FromReqURI(..))

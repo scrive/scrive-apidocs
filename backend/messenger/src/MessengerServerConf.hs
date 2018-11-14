@@ -13,7 +13,7 @@ import Data.Word
 
 import Log.Configuration
 import Monitoring
-import SMS.Data
+import SMS.Types
 import Utils.TH
 
 data MessengerServerConf = MessengerServerConf {

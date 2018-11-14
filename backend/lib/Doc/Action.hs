@@ -50,7 +50,7 @@ import ThirdPartyStats.Planhat
 import User.Email
 import User.Model
 import User.Utils
-import UserGroup.Data
+import UserGroup.Types
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.MonadUtils

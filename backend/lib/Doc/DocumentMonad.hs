@@ -16,7 +16,7 @@ import Log
 import DB
 import DB.RowCache (GetRow, RowCacheT, rowCache, rowCacheID, runRowCacheT, runRowCacheTID, updateRow, updateRowWithID)
 import Doc.Class
-import Doc.Data.Document
+import Doc.Types.Document
 import Doc.DocumentID (DocumentID)
 import Doc.Logging
 import FileStorage.Class

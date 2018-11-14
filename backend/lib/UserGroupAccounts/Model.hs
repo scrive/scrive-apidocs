@@ -14,7 +14,7 @@ import Control.Monad.State
 
 import DB
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 
 {- |
     A UserGroupInvite is a record

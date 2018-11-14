@@ -12,7 +12,7 @@ import DB
 import Doc.DocumentID
 import Doc.SignatoryLinkID
 import Log.Identifier
-import SMS.Data
+import SMS.Types
 
 data KontraInfoForSMSType = DocumentInvitationSMST | DocumentPinSendoutSMST | OtherDocumentSMST
   deriving (Eq, Ord, Show)

@@ -22,7 +22,7 @@ import TestingUtil
 import TestKontra as T
 import User.Email
 import User.UserAccountRequest
-import UserGroup.Data
+import UserGroup.Types
 import UserGroupAccounts.Model
 import UserGroupAccounts.UserGroupAccountsControl
 import Util.HasSomeUserInfo

@@ -31,7 +31,7 @@ import Doc.Model.Query
 import Doc.SignatoryLinkID
 import EID.Authentication.Model
 import EID.CGI.GRP.Config
-import EID.CGI.GRP.Data
+import EID.CGI.GRP.Types
 import EID.CGI.GRP.Transaction.Model
 import EID.Signature.Model
 import EvidenceLog.Model
@@ -44,10 +44,10 @@ import Network.SOAP.Transport.Curl (curlTransport)
 import Network.XMLCurl (CurlAuth(..), SSL(..), mkCertErrorHandler, mkDebugFunction)
 import Routing
 import Session.Cookies
-import Session.Data
+import Session.Types
 import Session.Model
 import Templates
-import UserGroup.Data
+import UserGroup.Types
 import UserGroup.Model
 import Util.Actor
 import Util.HasSomeUserInfo

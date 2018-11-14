@@ -16,16 +16,16 @@ import Doc.API.V2.Calls.DocumentPostCalls
 import Doc.API.V2.Calls.SignatoryCalls (docApiV2SigSign)
 import Doc.API.V2.Mock.TestUtils
 import Doc.Class
-import Doc.Data.Document
-import Doc.Data.DocumentStatus (DocumentStatus(..))
-import Doc.Data.SignatoryConsentQuestion (SignatoryConsentQuestion(..))
-import Doc.Data.SignatoryLink (AuthenticationToSignMethod(..), AuthenticationToViewMethod(..), SignatoryLink(..))
+import Doc.Types.Document
+import Doc.Types.DocumentStatus (DocumentStatus(..))
+import Doc.Types.SignatoryConsentQuestion (SignatoryConsentQuestion(..))
+import Doc.Types.SignatoryLink (AuthenticationToSignMethod(..), AuthenticationToViewMethod(..), SignatoryLink(..))
 import Doc.DocumentMonad (withDocumentID)
 import Doc.Model.Query
 import Doc.Model.Update (SetDocumentSharing(..), TimeoutDocument(..))
 import TestingUtil
 import TestKontra
-import UserGroup.Data
+import UserGroup.Types
 import Util.Actor (userActor)
 
 apiV2DocumentPostCallsTests :: TestEnvSt -> Test

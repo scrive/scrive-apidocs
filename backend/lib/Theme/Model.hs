@@ -24,7 +24,7 @@ import qualified Data.ByteString.Char8 as BS
 import BrandedDomain.BrandedDomainID
 import DB
 import Theme.ThemeID
-import UserGroup.Data
+import UserGroup.Types
 
 data Theme = Theme {
     themeID                       :: !ThemeID

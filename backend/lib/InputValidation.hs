@@ -67,7 +67,7 @@ import IPAddress
 import Kontra
 import User.Email
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 import Utils.String
 
 {- |

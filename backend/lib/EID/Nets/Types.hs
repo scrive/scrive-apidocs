@@ -1,4 +1,4 @@
-module EID.Nets.Data (
+module EID.Nets.Types (
       NetsNOBankIDInternalProvider(..)
     , unsafeNetsNOBankIDInternalProviderFromInt16
     , NetsNOBankIDAuthentication(..)

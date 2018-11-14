@@ -19,7 +19,7 @@ import Data.Int
 import Data.Label
 import Data.Unjson
 
-import Doc.Data.DocumentStatus
+import Doc.Types.DocumentStatus
 
 data DataRetentionPolicy = DataRetentionPolicy
   { _drpIdleDocTimeoutPreparation :: Maybe Int16

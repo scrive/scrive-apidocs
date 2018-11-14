@@ -1,4 +1,4 @@
-module Doc.Data.Document (
+module Doc.Types.Document (
     DocumentType(..)
   , DocumentSharing(..)
   , StatusClass(..)
@@ -20,11 +20,11 @@ import qualified Data.Set as S
 
 import DB.RowCache (HasID(..), ID)
 import DB.TimeZoneName
-import Doc.Data.AuthorAttachment
-import Doc.Data.DocumentStatus
-import Doc.Data.DocumentTag
-import Doc.Data.MainFile
-import Doc.Data.SignatoryLink
+import Doc.Types.AuthorAttachment
+import Doc.Types.DocumentStatus
+import Doc.Types.DocumentTag
+import Doc.Types.MainFile
+import Doc.Types.SignatoryLink
 import Doc.DocumentID
 import Doc.SealStatus (HasGuardtimeSignature(..), SealStatus)
 import IPAddress
@@ -32,7 +32,7 @@ import Log.Identifier
 import MagicHash
 import MinutesTime
 import User.Lang
-import UserGroup.Data
+import UserGroup.Types
 
 data DocumentType = Signable | Template
   deriving (Eq, Ord, Show, Read)

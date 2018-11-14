@@ -20,7 +20,7 @@ import Data.Int
 
 import DB
 import MinutesTime
-import SMS.Data
+import SMS.Types
 
 messengerJobSelectors :: [SQL]
 messengerJobSelectors = ["id", "attempts"]

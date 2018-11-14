@@ -7,7 +7,7 @@ import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import MagicHash (MagicHash)
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils

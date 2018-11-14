@@ -16,12 +16,12 @@ import qualified Data.Text as T
 
 import Chargeable.Model
 import DB
-import Doc.Data.Document (DocumentType(..))
-import Doc.Data.DocumentStatus (DocumentStatus(..))
+import Doc.Types.Document (DocumentType(..))
+import Doc.Types.DocumentStatus (DocumentStatus(..))
 import Log.Utils
 import MinutesTime
 import SFTPConfig
-import UserGroup.Data
+import UserGroup.Types
 import Util.CSVUtil (CSV(..), renderCSV)
 import Utils.Directory (withSystemTempDirectory')
 import Utils.IO (sftpTransfer)

@@ -17,7 +17,7 @@ import TestingUtil
 import TestKontra as T
 import User.Lang
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 import UserGroup.Model
 
 langTests :: TestEnvSt -> Test

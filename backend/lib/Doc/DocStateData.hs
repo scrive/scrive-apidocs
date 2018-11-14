@@ -1,25 +1,25 @@
 module Doc.DocStateData (
-    module Doc.Data.AuthorAttachment
-  , module Doc.Data.Document
-  , module Doc.Data.DocumentStatus
-  , module Doc.Data.DocumentTag
-  , module Doc.Data.HighlightedPage
-  , module Doc.Data.MainFile
-  , module Doc.Data.SignatoryAttachment
-  , module Doc.Data.SignatoryConsentQuestion
-  , module Doc.Data.SignatoryField
-  , module Doc.Data.SignatoryFieldUtils
-  , module Doc.Data.SignatoryLink
+    module Doc.Types.AuthorAttachment
+  , module Doc.Types.Document
+  , module Doc.Types.DocumentStatus
+  , module Doc.Types.DocumentTag
+  , module Doc.Types.HighlightedPage
+  , module Doc.Types.MainFile
+  , module Doc.Types.SignatoryAttachment
+  , module Doc.Types.SignatoryConsentQuestion
+  , module Doc.Types.SignatoryField
+  , module Doc.Types.SignatoryFieldUtils
+  , module Doc.Types.SignatoryLink
   ) where
 
-import Doc.Data.AuthorAttachment
-import Doc.Data.Document
-import Doc.Data.DocumentStatus
-import Doc.Data.DocumentTag
-import Doc.Data.HighlightedPage
-import Doc.Data.MainFile
-import Doc.Data.SignatoryAttachment
-import Doc.Data.SignatoryConsentQuestion
-import Doc.Data.SignatoryField
-import Doc.Data.SignatoryFieldUtils
-import Doc.Data.SignatoryLink
+import Doc.Types.AuthorAttachment
+import Doc.Types.Document
+import Doc.Types.DocumentStatus
+import Doc.Types.DocumentTag
+import Doc.Types.HighlightedPage
+import Doc.Types.MainFile
+import Doc.Types.SignatoryAttachment
+import Doc.Types.SignatoryConsentQuestion
+import Doc.Types.SignatoryField
+import Doc.Types.SignatoryFieldUtils
+import Doc.Types.SignatoryLink

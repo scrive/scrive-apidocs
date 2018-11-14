@@ -1,5 +1,5 @@
 module Mails.Model (
-    module Mails.Data
+    module Mails.Types
   , mailerJobSelectors
   , mailerJobFetcher
   , GetCurrentSenderType(..)
@@ -30,7 +30,7 @@ import Data.Time
 
 import DB
 import MagicHash
-import Mails.Data
+import Mails.Types
 import MinutesTime
 
 mailerJobSelectors :: [SQL]

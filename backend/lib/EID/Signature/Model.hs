@@ -2,11 +2,11 @@ module EID.Signature.Model (
     ESignature(..)
   , module EID.Signature.Legacy
   , SignatureProvider(..)
-  -- from EID.CGI.GRP.Data
+  -- from EID.CGI.GRP.Types
   , CGISEBankIDSignature(..)
   , MergeCGISEBankIDSignature(..)
   , GetESignature(..)
-  -- from EID.Nets.Data
+  -- from EID.Nets.Types
   , NetsNOBankIDSignature(..)
   , MergeNetsNOBankIDSignature(..)
   , NetsDKNemIDSignature(..)
@@ -23,8 +23,8 @@ import qualified Data.Text as T
 
 import DB
 import Doc.SignatoryLinkID
-import EID.CGI.GRP.Data
-import EID.Nets.Data
+import EID.CGI.GRP.Types
+import EID.Nets.Types
 import EID.Signature.Legacy
 
 -- If one more type of a signature is to be added, follow the

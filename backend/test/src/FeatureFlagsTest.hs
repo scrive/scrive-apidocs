@@ -6,7 +6,7 @@ import Test.QuickCheck
 import FeatureFlags.Model
 import TestingUtil
 import TestKontra
-import UserGroup.Data
+import UserGroup.Types
 
 featureFlagsTest :: TestEnvSt -> Test
 featureFlagsTest env = testGroup "FeatureFlags" [

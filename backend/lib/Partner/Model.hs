@@ -15,7 +15,7 @@ import Log
 import DB
 import Partner.Partner
 import User.UserID
-import UserGroup.Data
+import UserGroup.Types
 
 fetchPartner :: (PartnerID, String, Bool, Maybe UserGroupID) -> Partner
 fetchPartner (pid, pname, pdef, mugid) =

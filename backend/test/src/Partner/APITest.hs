@@ -21,7 +21,7 @@ import TestingUtil
 import TestingUtil.JSON
 import TestKontra as T
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 
 partnerAPITests :: TestEnvSt -> Test
 partnerAPITests env = testGroup "PartnerAPI"

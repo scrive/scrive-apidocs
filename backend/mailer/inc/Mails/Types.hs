@@ -1,4 +1,4 @@
-module Mails.Data (
+module Mails.Types (
     SenderType(..)
   , JobType(..)
   , MailerJob(..)

@@ -1,4 +1,4 @@
-module Doc.Data.DocumentStatus (
+module Doc.Types.DocumentStatus (
     DocumentStatus(..)
   ) where
 

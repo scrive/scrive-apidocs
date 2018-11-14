@@ -1,4 +1,4 @@
-module Doc.Data.SignatoryConsentQuestion (
+module Doc.Types.SignatoryConsentQuestion (
     SignatoryConsentQuestion(..)
   , signatoryConsentQuestionsSelectors
   ) where

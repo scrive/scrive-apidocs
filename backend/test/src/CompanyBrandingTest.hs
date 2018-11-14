@@ -21,7 +21,7 @@ import TestKontra
 import Theme.Model
 import Theme.View
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 import UserGroup.Model
 
 companyBrandingTests :: TestEnvSt -> Test

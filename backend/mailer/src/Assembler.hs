@@ -25,7 +25,7 @@ import Data.ByteString.Utils (splitEvery)
 import DB
 import File.Storage
 import HtmlToTxt
-import Mails.Data
+import Mails.Types
 import MinutesTime
 
 assembleContent :: (CryptoRNG m, MonadDB m, MonadIO m, MonadMask m, MonadBaseControl IO m, MonadLog m, MonadFileStorage m, MonadTime m) => Mail -> m BSL.ByteString

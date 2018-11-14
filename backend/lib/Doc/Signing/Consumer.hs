@@ -23,9 +23,9 @@ import Doc.Action
 import Doc.API.V2.Calls.SignatoryCallsUtils
 import Doc.API.V2.JSON.Fields
 import Doc.API.V2.JSON.SignatoryConsentQuestion
-import Doc.Data.AuthorAttachment
-import Doc.Data.Document
-import Doc.Data.SignatoryLink
+import Doc.Types.AuthorAttachment
+import Doc.Types.Document
+import Doc.Types.SignatoryLink
 import Doc.DocControl
 import Doc.DocumentMonad
 import Doc.Model.Query
@@ -35,10 +35,10 @@ import Doc.SignatoryScreenshots
 import Doc.Signing.Model
 import EID.CGI.GRP.Config
 import EID.CGI.GRP.Control
-import EID.CGI.GRP.Data
+import EID.CGI.GRP.Types
 import EID.Nets.Config
 import EID.Nets.Control (checkNetsSignStatus)
-import EID.Nets.Data (NetsSignStatus(..), netsFaultText)
+import EID.Nets.Types (NetsSignStatus(..), netsFaultText)
 import EID.Signature.Model
 import File.FileID
 import FileStorage

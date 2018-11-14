@@ -42,7 +42,7 @@ import File.File
 import File.Model
 import Templates
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 import UserGroup.Model
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo

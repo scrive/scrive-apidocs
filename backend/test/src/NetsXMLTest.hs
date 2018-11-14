@@ -8,7 +8,7 @@ import Text.XML.Cursor
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T
 
-import EID.Nets.Data
+import EID.Nets.Types
 import TestingUtil
 import TestKontra
 import Text.XML.Parser

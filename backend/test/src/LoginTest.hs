@@ -23,7 +23,7 @@ import User.Email
 import User.Model
 import User.PasswordReminder
 import User.UserControl
-import UserGroup.Data
+import UserGroup.Types
 import UserGroup.Model
 
 loginTests :: TestEnvSt -> Test

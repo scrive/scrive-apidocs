@@ -1,4 +1,4 @@
-module Doc.Data.SignatoryAttachment (
+module Doc.Types.SignatoryAttachment (
     SignatoryAttachment(..)
   , signatoryAttachmentsSelectors
   ) where

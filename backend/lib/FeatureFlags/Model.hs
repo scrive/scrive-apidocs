@@ -14,8 +14,8 @@ import Control.Monad.State
 import Data.Unjson
 
 import DB
-import Doc.Data.SignatoryLink
-import UserGroup.Data
+import Doc.Types.SignatoryLink
+import UserGroup.Types
 
 data Features = Features {
     fAdminUsers :: FeatureFlags

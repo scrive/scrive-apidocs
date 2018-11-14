@@ -6,7 +6,7 @@ module Partner.Partner
     ) where
 
 import Partner.PartnerID
-import UserGroup.Data
+import UserGroup.Types
 
 data Partner = Partner {
       ptID :: !PartnerID

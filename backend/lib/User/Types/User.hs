@@ -1,4 +1,4 @@
-module User.Data.User
+module User.Types.User
     ( composeFullName
     , fetchUser
     , fetchUserWithUserGroupName
@@ -23,12 +23,12 @@ import DataRetentionPolicy
 import DB
 import Log.Identifier
 import MinutesTime
-import User.Data.SignupMethod
+import User.Types.SignupMethod
 import User.Email
 import User.Lang
 import User.Password
 import User.UserID
-import UserGroup.Data
+import UserGroup.Types
 import Util.HasSomeUserInfo
 
 data User = User {

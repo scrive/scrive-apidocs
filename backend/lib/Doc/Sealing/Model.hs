@@ -9,7 +9,7 @@ import Log.Class
 
 import BrandedDomain.Model
 import DB
-import Doc.Data.Document
+import Doc.Types.Document
 import Doc.DocumentMonad
 
 documentSealingNotificationChannel :: Channel

@@ -60,11 +60,11 @@ import KontraMonad
 import MagicHash (MagicHash, unsafeMagicHash)
 import MailContext
 import MinutesTime
-import PadApplication.Data
+import PadApplication.Types
 import Partner.Model
 import PdfToolsLambda.Conf
 import Session.SessionID
-import SMS.Data (SMSProvider(..))
+import SMS.Types (SMSProvider(..))
 import System.Random.CryptoRNG ()
 import Templates
 import TestFileStorage (liftTestFileStorageT, runTestFileStorageT)
@@ -72,8 +72,8 @@ import TestKontra
 import User.Email
 import User.Model
 import User.Password.Internal (Password(..))
-import UserGroup.Data
-import UserGroup.Data.PaymentPlan
+import UserGroup.Types
+import UserGroup.Types.PaymentPlan
 import UserGroup.Model
 import Util.Actor
 import qualified KontraError as KE

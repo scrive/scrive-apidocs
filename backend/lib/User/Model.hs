@@ -3,9 +3,9 @@ module User.Model
       module UserExports,
     ) where
 
-import User.Data.SignupMethod as UserExports
-import User.Data.Stats as UserExports
-import User.Data.User as UserExports
+import User.Types.SignupMethod as UserExports
+import User.Types.Stats as UserExports
+import User.Types.User as UserExports
 import User.Lang as UserExports
 import User.Model.Filter as UserExports
 import User.Model.OrderBy as UserExports

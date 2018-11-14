@@ -18,7 +18,7 @@ import Log
 import API.APIVersion
 import CronEnv
 import DB
-import Doc.API.Callback.Data
+import Doc.API.Callback.Types
 import Doc.API.Callback.Execute
 import Doc.DocStateData
 import Doc.DocumentID

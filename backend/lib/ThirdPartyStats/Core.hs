@@ -36,7 +36,7 @@ import MinutesTime ()
 import Text.JSON.Orphans ()
 import User.Email
 import User.UserID (UserID, unsafeUserID)
-import UserGroup.Data
+import UserGroup.Types
 
 -- | The various types of values a property can take.
 data PropValue

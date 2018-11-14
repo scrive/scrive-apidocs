@@ -35,7 +35,7 @@ import MinutesTime
 import User.Email
 import User.History.Model
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 import Utils.String
 
 instance (InspectXML a, Show a) => InspectXML [a] where

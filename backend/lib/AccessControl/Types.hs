@@ -1,5 +1,5 @@
 {-# LANGUAGE ExistentialQuantification #-}
-module AccessControl.Data
+module AccessControl.Types
   ( accessControl
   , AccessAction(..)
   , AccessPolicy
@@ -16,7 +16,7 @@ import Log
 
 import DB
 import User.UserID
-import UserGroup.Data
+import UserGroup.Types
 import UserGroup.Model
 
 -- | The roles we use are mostly rooted in some user group; rather than have

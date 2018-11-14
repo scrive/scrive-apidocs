@@ -1,4 +1,4 @@
-module User.Data.Stats
+module User.Types.Stats
     (
       DocumentStats(..)
     , StatsPartition(..)

@@ -1,4 +1,4 @@
-module Doc.Data.DocumentTag (
+module Doc.Types.DocumentTag (
     DocumentTag(..)
   , documentTagsSelectors
   ) where

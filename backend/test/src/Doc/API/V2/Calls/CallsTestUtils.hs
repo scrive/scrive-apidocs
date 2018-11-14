@@ -8,7 +8,7 @@ import Happstack.Server
 import Context
 import Doc.API.V2.Calls.DocumentPostCalls
 import Doc.API.V2.Mock.TestUtils
-import Doc.Data.DocumentStatus (DocumentStatus(..))
+import Doc.Types.DocumentStatus (DocumentStatus(..))
 import TestingUtil
 import TestKontra
 

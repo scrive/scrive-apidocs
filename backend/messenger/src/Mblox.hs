@@ -15,7 +15,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BS
 
 import DB
 import Messenger
-import SMS.Data
+import SMS.Types
 import SMS.Model
 
 handleMbloxEvents :: Messenger Response

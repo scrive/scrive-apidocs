@@ -21,7 +21,7 @@ import Happstack.StaticRouting
 import Log
 import qualified Data.Text as T
 
-import AccessControl.Data
+import AccessControl.Types
 import API.V2
 import API.V2.Errors
 import API.V2.Parameters
@@ -36,8 +36,8 @@ import Routing
 import User.Action (createUser)
 import User.Email (Email(..))
 import User.Model
-import UserGroup.Data
-import UserGroup.Data.PaymentPlan
+import UserGroup.Types
+import UserGroup.Types.PaymentPlan
 import UserGroup.Model (UserGroupCreate(..), UserGroupGet(..), UserGroupGetImmediateChildren(..), UserGroupUpdate(..))
 
 partnerAPI :: Route (Kontra Response)
@@ -141,7 +141,7 @@ partnerApiCallV1CompaniesGet ptOrUgID = do
     -- able to read, even though in the future this will change. The trick
     -- relies on the fact that only partner admins have `(CreateA,
     -- UserGroupR, partnerUsrGrpID)`; cf. instance for HasPermissions of
-    -- (AccessRole UserGroupID) in AccessControl.Data...around line 95
+    -- (AccessRole UserGroupID) in AccessControl.Types...around line 95
     apiAccessControl acc noPrvErr $ do
       userGroups <- dbQuery $ UserGroupGetImmediateChildren partnerUsrGrpID
       Ok <$> return (unjsonUserGroupsForUpdate,

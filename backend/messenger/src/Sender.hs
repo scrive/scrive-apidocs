@@ -28,7 +28,7 @@ import DB
 import Log.Identifier
 import Log.Utils
 import MessengerServerConf
-import SMS.Data
+import SMS.Types
 import SMS.Model
 import Utils.IO
 

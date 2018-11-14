@@ -15,8 +15,8 @@ import MinutesTime
 import TestingUtil
 import TestKontra as T
 import User.Email
-import UserGroup.Data
-import UserGroup.Data.PaymentPlan
+import UserGroup.Types
+import UserGroup.Types.PaymentPlan
 import UserGroup.Model
 import Util.CSVUtil (CSV(..))
 

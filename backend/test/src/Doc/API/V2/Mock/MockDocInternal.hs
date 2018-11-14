@@ -4,7 +4,7 @@ import Data.Default
 import Data.Unjson
 
 import Doc.API.V2.JSON.Misc (unjsonSignatoryRole)
-import Doc.Data.SignatoryLink (SignatoryRole(..))
+import Doc.Types.SignatoryLink (SignatoryRole(..))
 
 data MockDoc = MockDoc {
     mockDocId                 :: !String

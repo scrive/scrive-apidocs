@@ -50,7 +50,7 @@ import User.PasswordReminder
 import User.UserAccountRequest
 import User.UserView
 import User.Utils
-import UserGroup.Data
+import UserGroup.Types
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 

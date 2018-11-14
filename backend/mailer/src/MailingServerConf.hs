@@ -15,7 +15,7 @@ import Data.Word
 import Database.Redis.Configuration
 import FileStorage.Amazon.Config
 import Log.Configuration
-import Mails.Data
+import Mails.Types
 import Monitoring
 import Utils.TH
 

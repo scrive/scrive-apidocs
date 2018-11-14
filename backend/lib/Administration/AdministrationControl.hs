@@ -74,7 +74,7 @@ import Kontra
 import KontraLink
 import Mails.Model
 import MinutesTime
-import PadApplication.Data (padAppModeFromText)
+import PadApplication.Types (padAppModeFromText)
 import Routing
 import Theme.Control
 import User.CallbackScheme.Model
@@ -84,8 +84,8 @@ import User.JSON
 import User.UserControl
 import User.UserView
 import User.Utils
-import UserGroup.Data
-import UserGroup.Data.Subscription
+import UserGroup.Types
+import UserGroup.Types.Subscription
 import UserGroup.Model
 import UserGroupAccounts.Model
 import Util.Actor

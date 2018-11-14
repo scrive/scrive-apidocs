@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-module Doc.Data.SignatoryLink (
+module Doc.Types.SignatoryLink (
     SignOrder(..)
   , SignInfo(..)
   , DeliveryStatus(..)
@@ -23,10 +23,10 @@ import Data.Unjson
 import Database.PostgreSQL.PQTypes
 
 import DB.Derive
-import Doc.Data.HighlightedPage
-import Doc.Data.SignatoryAttachment
-import Doc.Data.SignatoryConsentQuestion
-import Doc.Data.SignatoryField
+import Doc.Types.HighlightedPage
+import Doc.Types.SignatoryAttachment
+import Doc.Types.SignatoryConsentQuestion
+import Doc.Types.SignatoryField
 import Doc.SignatoryLinkID
 import IPAddress
 import MagicHash

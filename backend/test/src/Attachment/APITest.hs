@@ -15,7 +15,7 @@ import MinutesTime
 import TestingUtil
 import TestKontra
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 import Util.Actor
 
 attachmentAPITests :: TestEnvSt -> Test

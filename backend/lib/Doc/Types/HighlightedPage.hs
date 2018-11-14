@@ -1,4 +1,4 @@
-module Doc.Data.HighlightedPage (
+module Doc.Types.HighlightedPage (
     HighlightedPage(..)
   , highlightedPagesSelectors
   ) where

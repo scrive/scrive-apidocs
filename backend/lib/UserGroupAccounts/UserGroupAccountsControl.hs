@@ -31,7 +31,7 @@ import User.History.Model
 import User.UserAccountRequest
 import User.UserControl
 import User.Utils
-import UserGroup.Data
+import UserGroup.Types
 import UserGroup.Model
 import UserGroupAccounts.Model
 import UserGroupAccounts.UserGroupAccountsView

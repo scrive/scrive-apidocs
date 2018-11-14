@@ -1,4 +1,4 @@
-module Doc.Data.SignatoryFieldUtils (
+module Doc.Types.SignatoryFieldUtils (
       FieldValue(..)
     , getTextValueOfField
     , getFieldByIdentity
@@ -19,7 +19,7 @@ module Doc.Data.SignatoryFieldUtils (
     , fieldTextCustomValidation
   ) where
 
-import Doc.Data.SignatoryField
+import Doc.Types.SignatoryField
 import Doc.SignatoryFieldID
 import File.FileID
 

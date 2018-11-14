@@ -12,7 +12,7 @@ import DB
 import PadApplication.API
 import TestingUtil
 import TestKontra
-import UserGroup.Data
+import UserGroup.Types
 import UserGroupAccountsTest (addNewAdminUserAndUserGroup)
 
 padAplicationAPITests :: TestEnvSt -> Test

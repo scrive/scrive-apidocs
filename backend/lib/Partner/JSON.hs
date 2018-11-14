@@ -19,7 +19,7 @@ import Data.Unjson
 import InputValidation
 import User.Email (Email(..))
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 
 data UserForUpdate = UserForUpdate {
       ufuId :: String

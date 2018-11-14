@@ -1,4 +1,4 @@
-module Doc.Data.AuthorAttachment (
+module Doc.Types.AuthorAttachment (
     AuthorAttachment(..)
   , authorAttachmentsSelectors
   ) where

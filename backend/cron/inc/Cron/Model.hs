@@ -33,7 +33,7 @@ import Purging.Files
 import Session.Model (DeleteExpiredSessions(..))
 import SMS.Events
 import ThirdPartyStats.Core
-import User.Data.User (User(..))
+import User.Types.User (User(..))
 import User.EmailChangeRequest (DeleteExpiredEmailChangeRequests(..))
 import User.Model.Query (GetUserWherePasswordAlgorithmIsEarlierThan(..))
 import User.Model.Update (SetUserPassword(..))

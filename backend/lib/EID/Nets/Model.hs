@@ -11,7 +11,7 @@ import qualified Data.Text as T
 
 import DB
 import Doc.SignatoryLinkID
-import EID.Nets.Data
+import EID.Nets.Types
 import EID.Nets.SignID
 import Session.SessionID
 

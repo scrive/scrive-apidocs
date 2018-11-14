@@ -1,4 +1,4 @@
-module Doc.API.Callback.Data (
+module Doc.API.Callback.Types (
     CallbackID
   , DocumentAPICallback(..)
   ) where

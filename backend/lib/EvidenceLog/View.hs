@@ -23,7 +23,7 @@ import Doc.DocStateData
 import Doc.Model (GetDocumentsBySignatoryLinkIDs(..))
 import Doc.SignatoryIdentification (SignatoryIdentifierMap, siFullName, siLink, signatoryIdentifier, signatoryIdentifierMap)
 import EID.Authentication.Model
-import EID.Nets.Data
+import EID.Nets.Types
 import EID.Signature.Model
 import EvidenceLog.Model
 import MinutesTime

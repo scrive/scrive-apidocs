@@ -22,7 +22,7 @@ import Happstack.Fields
 import Kontra
 import OAuth.Model
 import OAuth.Parse
-import User.Data.User
+import User.Types.User
 import User.Model.Query
 import Util.Actor
 import Utils.Read

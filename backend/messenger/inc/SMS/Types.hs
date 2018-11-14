@@ -1,4 +1,4 @@
-module SMS.Data (
+module SMS.Types (
     JobType(..)
   , MessengerJob(..)
   , SMSProvider(..)

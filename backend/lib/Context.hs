@@ -13,7 +13,7 @@ import BrandedDomain.BrandedDomain
 import Context.Internal
 import Context.Labels
 import MailContext.Internal (MailContext(..))
-import User.Data.User (User)
+import User.Types.User (User)
 
 ctxDomainUrl :: Context :-> String
 ctxDomainUrl = bdUrl . ctxbrandeddomain

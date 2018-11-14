@@ -28,7 +28,7 @@ import Mails.SendMail (Mail, kontramail, kontramaillocal)
 import MinutesTime
 import Theme.Model
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 import Util.HasSomeUserInfo
 
 ----------------------------------------------------------------------------

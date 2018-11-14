@@ -16,7 +16,7 @@ import Chargeable.Model
 import DB
 import Doc.DocStateData
 import Log.Identifier
-import SMS.Data (SMSProvider(..))
+import SMS.Types (SMSProvider(..))
 import SMS.KontraInfoForSMS
 import SMS.Model
 

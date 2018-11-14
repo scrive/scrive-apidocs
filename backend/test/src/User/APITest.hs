@@ -22,9 +22,9 @@ import Attachment.Model
 import Context
 import DataRetentionPolicy
 import DB
-import Doc.Data.Document
-import Doc.Data.DocumentStatus
-import Doc.Data.SignatoryLink
+import Doc.Types.Document
+import Doc.Types.DocumentStatus
+import Doc.Types.SignatoryLink
 import Doc.DocInfo
 import Doc.DocumentMonad
 import Doc.Model.Query
@@ -36,7 +36,7 @@ import TestKontra as T
 import User.API
 import User.Email
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 import UserGroup.Model
 import Util.Actor
 import Util.QRCode

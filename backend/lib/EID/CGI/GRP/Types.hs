@@ -1,4 +1,4 @@
-module EID.CGI.GRP.Data (
+module EID.CGI.GRP.Types (
     CGISEBankIDSignature(..)
   , CGISEBankIDAuthentication(..)
   , GrpFault(..)

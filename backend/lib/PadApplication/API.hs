@@ -18,12 +18,12 @@ import BrandedDomain.BrandedDomain
 import DB.Query
 import Happstack.Fields
 import Kontra
-import PadApplication.Data
+import PadApplication.Types
 import Routing
 import Theme.Model
 import Theme.View
 import User.Utils
-import UserGroup.Data
+import UserGroup.Types
 import qualified API.V2 as V2
 
 padApplicationAPI :: Route (Kontra Response)

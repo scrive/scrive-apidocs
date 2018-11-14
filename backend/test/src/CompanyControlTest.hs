@@ -18,7 +18,7 @@ import DB
 import TestingUtil
 import TestKontra as T
 import Theme.Model
-import UserGroup.Data
+import UserGroup.Types
 import UserGroup.Model
 import Util.MonadUtils
 

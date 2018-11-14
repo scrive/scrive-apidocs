@@ -26,7 +26,7 @@ import Log.Identifier
 import MagicHash
 import MinutesTime
 import Session.Cookies
-import Session.Data
+import Session.Types
 import Session.SessionID as SessionID
 import User.Model
 import Utils.HTTP

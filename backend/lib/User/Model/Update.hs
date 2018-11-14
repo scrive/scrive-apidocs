@@ -27,20 +27,20 @@ import Log
 import BrandedDomain.BrandedDomainID
 import DataRetentionPolicy
 import DB
-import Doc.Data.Document (DocumentSharing(..), DocumentType(..))
-import Doc.Data.SignatoryField
+import Doc.Types.Document (DocumentSharing(..), DocumentType(..))
+import Doc.Types.SignatoryField
 import Doc.DocStateData (DocumentStatus(..))
 import IPAddress
 import Log.Identifier
 import Partner.Model (PartnerID)
-import User.Data.SignupMethod
-import User.Data.User
+import User.Types.SignupMethod
+import User.Types.User
 import User.Email
 import User.Lang
 import User.Model.Query
 import User.Password
 import User.UserID
-import UserGroup.Data
+import UserGroup.Types
 import UserGroup.Model
 import Util.HasSomeUserInfo
 

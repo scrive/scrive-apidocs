@@ -24,22 +24,22 @@ import Data.Char
 import Data.Int
 import qualified Data.Text as T
 
-import AccessControl.Data (AccessRole(..))
+import AccessControl.Types (AccessRole(..))
 import Chargeable.Model
 import DB
 import Doc.DocStateData (DocumentStatus(..))
 import MinutesTime
 import Partner.Model (GetUserPartnerAdminUserGroups(..))
-import User.Data.Stats
-import User.Data.User
+import User.Types.Stats
+import User.Types.User
 import User.Email
 import User.History.Model
 import User.Model.Filter
 import User.Model.OrderBy
 import User.Password
 import User.UserID
-import UserGroup.Data (UserGroupID)
-import UserGroup.Data.PaymentPlan
+import UserGroup.Types (UserGroupID)
+import UserGroup.Types.PaymentPlan
 
 data GetUserWherePasswordAlgorithmIsEarlierThan =
   GetUserWherePasswordAlgorithmIsEarlierThan PasswordAlgorithm

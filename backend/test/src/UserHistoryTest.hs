@@ -21,7 +21,7 @@ import User.History.Model
 import User.Model
 import User.UserAccountRequest
 import User.UserControl
-import UserGroup.Data
+import UserGroup.Types
 import UserGroup.Model
 
 userHistoryTests :: TestEnvSt -> Test

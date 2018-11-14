@@ -1,4 +1,4 @@
-module UserGroup.Data.Subscription (
+module UserGroup.Types.Subscription (
     Subscription(..)
   , getSubscription
   ) where
@@ -12,8 +12,8 @@ import Chargeable.Model (GetNumberOfDocumentsStartedThisMonth(..))
 import DB
 import FeatureFlags.Model
 import User.Model.Query (UserGroupGetUsers(..))
-import UserGroup.Data
-import UserGroup.Data.PaymentPlan
+import UserGroup.Types
+import UserGroup.Types.PaymentPlan
 import UserGroup.Model
 import Util.MonadUtils
 

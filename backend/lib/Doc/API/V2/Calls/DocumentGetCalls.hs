@@ -39,7 +39,7 @@ import Doc.API.V2.Guards
 import Doc.API.V2.JSON.Document
 import Doc.API.V2.JSON.List
 import Doc.API.V2.JSON.Misc (evidenceAttachmentsToJSONBS)
-import Doc.Data.MainFile
+import Doc.Types.MainFile
 import Doc.DocInfo
 import Doc.DocSeal (presealDocumentFile)
 import Doc.DocStateData

@@ -13,7 +13,7 @@ import qualified Data.Text as Text
 
 import Planhat.Config (PlanhatConf(..))
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 
 phActionURL :: PlanhatConf -> String
 phActionURL PlanhatConf{..} =

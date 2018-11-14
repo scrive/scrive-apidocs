@@ -39,8 +39,8 @@ import qualified Text.StringTemplates.Fields as F
 
 import DB
 import DB.TimeZoneName
-import Doc.Data.CheckboxPlacementsUtils (CheckboxImagesMapping, getCheckboxImage, readCheckboxImagesMapping)
-import Doc.Data.RadiobuttonPlacementsUtils (RadiobuttonImagesMapping, getRadiobuttonImage, readRadiobuttonImagesMapping)
+import Doc.Types.CheckboxPlacementsUtils (CheckboxImagesMapping, getCheckboxImage, readCheckboxImagesMapping)
+import Doc.Types.RadiobuttonPlacementsUtils (RadiobuttonImagesMapping, getRadiobuttonImage, readRadiobuttonImagesMapping)
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)
@@ -51,7 +51,7 @@ import Doc.Model
 import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryIdentification (SignatoryIdentifierMap, siInitials, signatoryIdentifier)
 import EID.Authentication.Model
-import EID.Nets.Data
+import EID.Nets.Types
 import EID.Signature.Model
 import EvidenceLog.Model
 import EvidenceLog.View

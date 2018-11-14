@@ -42,7 +42,7 @@ import Kontra
 import KontraLink
 import User.Model
 import User.Utils
-import UserGroup.Data
+import UserGroup.Types
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 

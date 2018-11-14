@@ -10,7 +10,7 @@ import API.APIVersion
 import Kontra
 import Log.Identifier
 import OAuth.Util
-import User.Data.User
+import User.Types.User
 
 logUserCompanyIPAndApiVersion :: Kontrakcja m => APIVersion -> m a -> m a
 logUserCompanyIPAndApiVersion apiversion acc = do

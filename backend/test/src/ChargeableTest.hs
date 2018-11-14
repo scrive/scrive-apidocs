@@ -17,11 +17,11 @@ import Doc.DocStateData
 import Doc.DocumentMonad (withDocument)
 import Doc.Model
 import File.Storage
-import SMS.Data (SMSProvider(..))
+import SMS.Types (SMSProvider(..))
 import SMS.SMS
 import TestingUtil
 import TestKontra as T
-import UserGroup.Data
+import UserGroup.Types
 import UserGroupAccounts.Model
 import Util.Actor
 import Util.SignatoryLinkUtils

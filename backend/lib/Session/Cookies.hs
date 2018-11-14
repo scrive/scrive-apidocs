@@ -14,7 +14,7 @@ import Happstack.Server hiding (Session, addCookie)
 
 import Cookies
 import MagicHash
-import Session.Data
+import Session.Types
 import Utils.HTTP
 
 -- | Info that we store in cookies.

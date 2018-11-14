@@ -10,7 +10,7 @@ import Context
 import DataRetentionPolicy
 import MinutesTime
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 
 pageArchive :: TemplatesMonad m => Context -> User -> Maybe UserGroup -> UTCTime -> m String
 pageArchive ctx user mug mt = renderTemplate "pageDocumentsList" $ do

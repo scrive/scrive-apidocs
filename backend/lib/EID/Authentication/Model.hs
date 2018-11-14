@@ -1,7 +1,7 @@
 module EID.Authentication.Model (
     EAuthentication(..)
   , AuthenticationProvider(..)
-  -- from EID.CGI.GRP.Data
+  -- from EID.CGI.GRP.Types
   , CGISEBankIDAuthentication(..)
   , MergeCGISEBankIDAuthentication(..)
   , MergeNetsNOBankIDAuthentication(..)
@@ -20,10 +20,10 @@ import Data.Int
 import qualified Data.Text as T
 
 import DB
-import Doc.Data.SignatoryLink
+import Doc.Types.SignatoryLink
 import Doc.SignatoryLinkID
-import EID.CGI.GRP.Data
-import EID.Nets.Data
+import EID.CGI.GRP.Types
+import EID.Nets.Types
 import Session.SessionID
 
 -- If one more type of a signature is to be added, follow the

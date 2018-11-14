@@ -16,7 +16,7 @@ import KontraMonad
 import MagicHash
 import OAuth.Model
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 
 {- |
    All the links available for responses

@@ -1,4 +1,4 @@
-module Session.Data (
+module Session.Types (
     module SessionID
   , Session(..)
   , emptySession

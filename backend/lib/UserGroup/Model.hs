@@ -24,10 +24,10 @@ import Text.JSON.Gen
 import DataRetentionPolicy
 import DB
 import Partner.Model
-import User.Data.User
+import User.Types.User
 import User.UserID
-import UserGroup.Data
-import UserGroup.Data.PaymentPlan
+import UserGroup.Types
+import UserGroup.Types.PaymentPlan
 
 data UserGroupCreate = UserGroupCreate UserGroup
 instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where

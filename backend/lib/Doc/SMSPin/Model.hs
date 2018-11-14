@@ -11,7 +11,7 @@ import Data.Int
 import Data.Time
 
 import DB
-import Doc.Data.SignatoryLink
+import Doc.Types.SignatoryLink
 import Doc.SignatoryLinkID
 
 data SMSPinType

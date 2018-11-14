@@ -9,7 +9,7 @@ import qualified Data.Set as Set
 import qualified Data.Text as T
 
 import DB.TimeZoneName
-import Doc.Data.CheckboxPlacementsUtils
+import Doc.Types.CheckboxPlacementsUtils
 import Doc.DocStateData
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID

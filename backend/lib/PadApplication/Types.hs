@@ -1,4 +1,4 @@
-module PadApplication.Data (
+module PadApplication.Types (
     PadAppMode(..)
   , padAppModeText
   , padAppModeFromText

@@ -1,4 +1,4 @@
-module Doc.Data.CheckboxPlacementsUtils (
+module Doc.Types.CheckboxPlacementsUtils (
     -- Checking and fixing sizes
       checkboxPlacementHasValidCheckboxRatio
     , fixCheckboxPlacementRatioIfInvalid
@@ -10,7 +10,7 @@ module Doc.Data.CheckboxPlacementsUtils (
 
 import qualified Data.ByteString.Char8 as BS
 
-import Doc.Data.SignatoryField
+import Doc.Types.SignatoryField
 
 -- Valid sizes. Exact size is synched with frontend.
 defaultCheckboxRatio :: Double

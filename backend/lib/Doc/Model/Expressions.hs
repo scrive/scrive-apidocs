@@ -4,7 +4,7 @@ module Doc.Model.Expressions (
   ) where
 
 import DB
-import Doc.Data.SignatoryLink
+import Doc.Types.SignatoryLink
 
 documentLatestSignTimeExpression :: SQL
 documentLatestSignTimeExpression = parenthesize $

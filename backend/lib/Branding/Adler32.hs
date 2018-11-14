@@ -16,7 +16,7 @@ import Context
 import DB
 import Theme.Model
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 import UserGroup.Model
 import VersionTH
 

@@ -10,7 +10,7 @@ import Log
 import DB
 import Happstack.Fields
 import Messenger
-import SMS.Data
+import SMS.Types
 import SMS.Model
 
 handleTeliaCallGuideEvents :: Messenger Response

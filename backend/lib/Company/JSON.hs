@@ -11,7 +11,7 @@ import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BSC8
 
 import DB
-import UserGroup.Data
+import UserGroup.Types
 
 unjsonUserGroupUI :: UnjsonDef UserGroupUI
 unjsonUserGroupUI = objectOf $ unjsonUserGroupUIFields

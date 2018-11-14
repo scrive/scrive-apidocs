@@ -9,7 +9,7 @@ import Log
 import Log.Identifier
 import Partner.PartnerID
 import User.UserID
-import UserGroup.Data
+import UserGroup.Types
 
 logPartner :: MonadLog m
            => Maybe PartnerID

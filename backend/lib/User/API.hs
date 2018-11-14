@@ -51,7 +51,7 @@ import Redirect
 import Routing
 import Salesforce.AuthorizationWorkflow
 import Session.Cookies
-import Session.Data
+import Session.Types
 import Session.Model
 import ThirdPartyStats.Core
 import User.Action
@@ -67,8 +67,8 @@ import User.UserAccountRequest
 import User.UserControl
 import User.UserView
 import User.Utils
-import UserGroup.Data
-import UserGroup.Data.Subscription
+import UserGroup.Types
+import UserGroup.Types.Subscription
 import UserGroup.Model
 import Util.HasSomeUserInfo
 import Util.MonadUtils

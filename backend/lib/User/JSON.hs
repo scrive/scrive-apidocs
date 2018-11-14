@@ -19,10 +19,10 @@ import qualified Data.Text as T
 
 import DataRetentionPolicy
 import MinutesTime
-import PadApplication.Data
+import PadApplication.Types
 import User.CallbackScheme.Model (UserCallbackScheme(..))
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 import Util.HasSomeUserInfo
 
 userJSON :: User -> UserGroup -> JSValue

@@ -32,10 +32,10 @@ import DataRetentionPolicy
 import DB
 import IPAddress
 import Log.Identifier
-import PadApplication.Data
-import SMS.Data
+import PadApplication.Types
+import SMS.Types
 import Theme.ThemeID
-import UserGroup.Data.PaymentPlan
+import UserGroup.Types.PaymentPlan
 
 data UserGroup = UserGroup {
     _ugID            :: UserGroupID

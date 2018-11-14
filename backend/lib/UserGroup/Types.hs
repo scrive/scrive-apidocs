@@ -1,4 +1,4 @@
-module UserGroup.Data (
+module UserGroup.Types (
     module UserGroup.Internal
   , module UserGroup.Labels
   ) where

@@ -41,7 +41,7 @@ import TestingUtil
 import TestKontra as T
 import Theme.Model
 import User.Model
-import UserGroup.Data
+import UserGroup.Types
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
