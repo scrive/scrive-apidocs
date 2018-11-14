@@ -1,4 +1,4 @@
-module Doc.Types.CheckboxPlacementsUtils (
+module Doc.CheckboxPlacementsUtils (
     -- Checking and fixing sizes
       checkboxPlacementHasValidCheckboxRatio
     , fixCheckboxPlacementRatioIfInvalid

@@ -1,4 +1,4 @@
-module Doc.Types.RadiobuttonPlacementsUtils (
+module Doc.RadiobuttonPlacementsUtils (
     -- Checking and fixing sizes
       radiobuttonPlacementHasValidRadiobuttonRatio
     -- Tools for sealing

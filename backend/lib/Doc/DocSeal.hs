@@ -39,8 +39,8 @@ import qualified Text.StringTemplates.Fields as F
 
 import DB
 import DB.TimeZoneName
-import Doc.Types.CheckboxPlacementsUtils (CheckboxImagesMapping, getCheckboxImage, readCheckboxImagesMapping)
-import Doc.Types.RadiobuttonPlacementsUtils (RadiobuttonImagesMapping, getRadiobuttonImage, readRadiobuttonImagesMapping)
+import Doc.CheckboxPlacementsUtils (CheckboxImagesMapping, getCheckboxImage, readCheckboxImagesMapping)
+import Doc.RadiobuttonPlacementsUtils (RadiobuttonImagesMapping, getRadiobuttonImage, readRadiobuttonImagesMapping)
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentMonad (DocumentMonad, theDocument, theDocumentID)

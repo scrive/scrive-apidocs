@@ -8,7 +8,7 @@ module Doc.DocStateData (
   , module Doc.Types.SignatoryAttachment
   , module Doc.Types.SignatoryConsentQuestion
   , module Doc.Types.SignatoryField
-  , module Doc.Types.SignatoryFieldUtils
+  , module Doc.SignatoryFieldUtils
   , module Doc.Types.SignatoryLink
   ) where
 
@@ -21,5 +21,5 @@ import Doc.Types.MainFile
 import Doc.Types.SignatoryAttachment
 import Doc.Types.SignatoryConsentQuestion
 import Doc.Types.SignatoryField
-import Doc.Types.SignatoryFieldUtils
+import Doc.SignatoryFieldUtils
 import Doc.Types.SignatoryLink

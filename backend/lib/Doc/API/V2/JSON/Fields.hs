@@ -17,8 +17,8 @@ import qualified Data.Text as T
 
 import Doc.API.V2.JSON.Misc ()
 import Doc.API.V2.JSON.Utils
-import Doc.Types.CheckboxPlacementsUtils
-import Doc.Types.RadiobuttonPlacementsUtils
+import Doc.CheckboxPlacementsUtils
+import Doc.RadiobuttonPlacementsUtils
 import Doc.DocStateData
 import Doc.SignatoryFieldID
 import qualified Data.ByteString.RFC2397 as RFC2397

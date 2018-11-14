@@ -1,4 +1,4 @@
-module Doc.Types.SignatoryFieldUtils (
+module Doc.SignatoryFieldUtils (
       FieldValue(..)
     , getTextValueOfField
     , getFieldByIdentity
