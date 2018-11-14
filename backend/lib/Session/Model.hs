@@ -49,14 +49,20 @@ getNonTempSessionID = do
     else return sid
   where
     insertEmptySession = do
-      token <- random
+      token      <- random
       csrf_token <- random
-      expires <- sessionNowModifier `liftM` currentTime
-      domain <- currentDomain
-      session <- update $ CreateSession
-        (Session SessionID.tempSessionID Nothing Nothing
-         expires token csrf_token domain)
-      return $ sesID session
+      expires    <- sessionNowModifier <$> currentTime
+      domain     <- currentDomain
+      session    <- update . CreateSession $
+                    Session { sesID        = SessionID.tempSessionID
+                            , sesUserID    = Nothing
+                            , sesPadUserID = Nothing
+                            , sesExpires   = expires
+                            , sesToken     = token
+                            , sesCSRFToken = csrf_token
+                            , sesDomain    = domain
+                            }
+      return . sesID $ session
 
 -- | Get the current session based on cookies set.
 -- If no session is available, return a new empty session.
@@ -71,7 +77,7 @@ getCurrentSession = currentSessionInfoCookies >>= getSessionFromCookies
   where
     getSessionFromCookies (cs:css) = do
       domain <- currentDomain
-      mses <- getSession (cookieSessionID cs) (cookieSessionToken cs) domain
+      mses   <- getSession (cookieSessionID cs) (cookieSessionToken cs) domain
       case mses of
         Just ses -> return ses
         Nothing  -> getSessionFromCookies css
