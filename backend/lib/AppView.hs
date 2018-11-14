@@ -121,19 +121,19 @@ currentSubscriptionJSON = do
 notFoundPage :: Kontrakcja m => m Response
 notFoundPage = pageWhereLanguageCanBeInUrl $ do
   ctx <- getContext
-  ad <- getAnalyticsData
+  ad  <- getAnalyticsData
   simpleHtmlResponse =<< renderTemplate "notFound" (standardPageFields ctx Nothing ad)
 
 linkInvalidPage :: Kontrakcja m => m Response
 linkInvalidPage = pageWhereLanguageCanBeInUrl $ do
   ctx <- getContext
-  ad <- getAnalyticsData
+  ad  <- getAnalyticsData
   simpleHtmlResponse =<< renderTemplate "linkInvalid" (standardPageFields ctx Nothing ad)
 
 internalServerErrorPage :: Kontrakcja m => m Response
 internalServerErrorPage =  pageWhereLanguageCanBeInUrl $ do
   ctx <- getContext
-  ad <- getAnalyticsData
+  ad  <- getAnalyticsData
   simpleHtmlResponse =<< renderTemplate "internalServerError" (standardPageFields ctx Nothing ad)
 
 pageWhereLanguageCanBeInUrl :: Kontrakcja m => m Response -> m Response
@@ -167,7 +167,7 @@ enableCookiesPage = do
       "cookies" .= map (second cookieToJson) cookies
     ]
   ctx <- getContext
-  ad <- getAnalyticsData
+  ad  <- getAnalyticsData
   case cookies of
     [] -> do
       -- there are still no cookies, client probably disabled them
