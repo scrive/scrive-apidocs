@@ -43,26 +43,23 @@ getNonTempSessionID = do
   sid <- get ctxsessionid <$> getContext
   if sid == SessionID.tempSessionID
     then do
-      new_sid <- insertEmptySession
+      new_sid <- sesID <$> insertEmptySession
       modifyContext $ set ctxsessionid new_sid
       return new_sid
     else return sid
   where
     insertEmptySession = do
-      token      <- random
-      csrf_token <- random
-      expires    <- sessionNowModifier <$> currentTime
-      domain     <- currentDomain
-      session    <- update . CreateSession $
-                    Session { sesID        = SessionID.tempSessionID
-                            , sesUserID    = Nothing
-                            , sesPadUserID = Nothing
-                            , sesExpires   = expires
-                            , sesToken     = token
-                            , sesCSRFToken = csrf_token
-                            , sesDomain    = domain
-                            }
-      return . sesID $ session
+      sesToken     <- random
+      sesCSRFToken <- random
+      sesExpires   <- sessionNowModifier <$> currentTime
+      sesDomain    <- currentDomain
+
+      update . CreateSession $ Session
+        { sesID        = SessionID.tempSessionID
+        , sesUserID    = Nothing
+        , sesPadUserID = Nothing
+        , ..
+        }
 
 -- | Get the current session based on cookies set.
 -- If no session is available, return a new empty session.
@@ -228,17 +225,9 @@ fetchSession
   :: ( SessionID, Maybe UserID, Maybe UserID
      , UTCTime, MagicHash, MagicHash, String )
   -> Session
-fetchSession ( sid, m_user_id, m_pad_user_id
-             , expires, token, csrf_token, domain ) =
-  Session
-    { sesID        = sid
-    , sesUserID    = m_user_id
-    , sesPadUserID = m_pad_user_id
-    , sesExpires   = expires
-    , sesToken     = token
-    , sesCSRFToken = csrf_token
-    , sesDomain    = domain
-    }
+fetchSession ( sesID, sesUserID, sesPadUserID
+             , sesExpires, sesToken, sesCSRFToken, sesDomain ) =
+  Session {..}
 
 -- | We allow for at most 51 sessions with the same user_id, so if there
 -- are more, just delete the oldest ones. Note: only 50 sessions are left
