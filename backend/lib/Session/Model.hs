@@ -89,11 +89,7 @@ startNewSession :: ( FilterMonad Response m, MonadLog m, MonadDB m
 startNewSession _       Nothing Nothing    = internalError
 startNewSession session mnewuid mnewpaduid = do
   let uid = fromJust $ (mnewuid `mplus` mnewpaduid)
-  n <- deleteSuperfluousUserSessions uid
-  logInfo "Superfluous sessions of user removed from the database" $ object [
-      identifier uid
-    , "sessions" .= n
-    ]
+  deleteSuperfluousUserSessions uid
   expires <- sessionNowModifier <$> currentTime
   dbUpdate . CreateSession $ session {
       sesExpires   = expires
@@ -249,8 +245,12 @@ fetchSession ( sid, m_user_id, m_pad_user_id
 -- because we do deletion BEFORE inserting new session. This is better
 -- because this way we can be sure that newest session will always end
 -- up in the database.
-deleteSuperfluousUserSessions :: MonadDB m => UserID -> m Int
+deleteSuperfluousUserSessions :: (MonadDB m, MonadLog m) => UserID -> m ()
 deleteSuperfluousUserSessions uid = do
-  runQuery $
-    "DELETE FROM sessions WHERE id IN (SELECT id FROM sessions WHERE user_id ="
-    <?> uid <+> "ORDER BY expires DESC OFFSET 50)"
+  n <- runQuery $
+       "DELETE FROM sessions WHERE id IN (SELECT id FROM sessions WHERE user_id ="
+       <?> uid <+> "ORDER BY expires DESC OFFSET 50)"
+  logInfo "Superfluous sessions of user removed from the database" $ object
+    [ identifier uid
+    , "sessions" .= n
+    ]
