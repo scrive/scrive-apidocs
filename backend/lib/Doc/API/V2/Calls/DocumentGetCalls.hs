@@ -50,7 +50,6 @@ import Doc.Logging
 import Doc.Model
 import Doc.SignatoryLinkID
 import Doc.Texts
-import Doc.Types.MainFile
 import EvidenceLog.Model
 import EvidenceLog.View
 import File.File

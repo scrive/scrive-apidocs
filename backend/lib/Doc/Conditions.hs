@@ -10,7 +10,6 @@ import Doc.DocStateData
 import Doc.DocumentID
 import Doc.SignatoryConsentQuestionID
 import Doc.SignatoryLinkID
-import Doc.Types.SignatoryLink
 import MagicHash
 import MinutesTime
 import User.UserID
