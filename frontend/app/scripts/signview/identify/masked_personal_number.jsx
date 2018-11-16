@@ -14,8 +14,6 @@ var MaskedPersonalNumber = React.createClass({
     return this.props.number.substr(0, this.props.number.length - digits) + Array(digits + 1).join("*");
   },
   maskNumberText: function () {
-    var result = this.props.placeholder || "";
-
     if (this.props.number) {
       if (this.props.isNorwegian) {
         return this.maskNumber(5);
@@ -27,7 +25,7 @@ var MaskedPersonalNumber = React.createClass({
         return this.maskNumber(4);
       }
     }
-    return "";
+    return this.props.placeholder || "";
   },
   render: function () {
     return <b>{this.maskNumberText()}</b>;
