@@ -160,7 +160,7 @@ instance FromJSValue VerifyResult where
                         Just ("true" :: String) -> Valid <$> (GuardtimeSignature <$> time <*> extended <*> extensible)
                         _ -> Just $ Invalid "not last revision"
         minvalid <- fromJSValueFieldCustom "invalid" $ do
-                      liftM (fmap Invalid) $ fromJSValueField "reason"
+                      liftM (fmap (Invalid . (show :: JSValue -> String))) $ fromJSValueField "reason"
         mproblem <- fromJSValueFieldCustom "error" $ do
                       liftM (fmap $ Problem BSL.empty BSL.empty) $ fromJSValueField "reason"
         return $ mvalid `mplus` minvalid `mplus` mproblem
