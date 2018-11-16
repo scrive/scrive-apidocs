@@ -641,7 +641,7 @@
 "_flashWrongName":"El nombre debe contener letras, dígitos, guiones y espacios (hasta 100 caracteres)",
 "_flashWrongPersonalNumber":"El número personal debe contener 10 o 12 dígitos (guiones y espacios serán quitados)",
 "_flashWrongPhone":"El número de teléfono debe empezar con + y contener sólo dígitos (al menos 9). Espacios, paréntesis y guiones serán quitados",
-"_flashWrongPosition":"El campo de posición debe contener como mucho 100 letras, números, espacios, apóstrofes, símbolos &, paréntesis, dos puntos y comas",
+"_flashWrongPosition":"El campo de posición debe contener como mucho 100 letras, números, espacios, apóstrofes, símbolos &amp;, paréntesis, dos puntos y comas",
 "_flashWrongZip":"El código postal debe contener al menos 20 caracteres",
 "_fontSizeBig":"Grande",
 "_fontSizeCustom":"Personalizado",
