@@ -283,7 +283,7 @@ main = do
   if null dirs
     then do
       prog <- getProgName
-      putStrLn $ "Usage: " ++ prog ++ " [--check] [--suffix=SUFFIX] [--align-unqualified] [--alias-alignment=N] [--import-grouping=none|external-external|internal-external] <directories>"
+      putStrLn $ "Usage: " ++ prog ++ " [--check] [--suffix=SUFFIX] [--align-unqualified] [--alias-alignment=N] [--import-grouping=none|external-internal|internal-external] <directories>"
     else do
       let (check, style, suffix) = get_options args
       putStrLn $ "Using " ++ show style
