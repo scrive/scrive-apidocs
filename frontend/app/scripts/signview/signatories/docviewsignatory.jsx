@@ -4,6 +4,7 @@ var Backbone = require("backbone");
 var LanguageService = require("../../common/language_service");
 var ViewSize = require("../viewsize");
 var classNames = require("classnames");
+var MaskedPersonalNumber = require("../identify/masked_personal_number");
 
 module.exports = React.createClass({
     displayName: "DocViewSignatory",
@@ -66,6 +67,26 @@ module.exports = React.createClass({
         return "sprite-signview-sent.png";
       }
     },
+    censoredPersonalNumber: function () {
+      const sig = this.props.signatory;
+      const personalNumber = sig.personalnumber().trim();
+      if (sig.current() || sig.document().currentViewerIsAuthor()) {
+        return personalNumber;
+      }
+      const isNorwegian = (sig.noBankIDAuthenticationToView() ||
+                           sig.noBankIDAuthenticationToSign() ||
+                           sig.noBankIDAuthenticationToViewArchived());
+      const isDanish = (sig.dkNemIDAuthenticationToView() ||
+                        sig.dkNemIDAuthenticationToSign() ||
+                        sig.dkNemIDAuthenticationToViewArchived());
+      const isFinnish = (sig.fiTupasAuthenticationToView() ||
+                         sig.fiTupasAuthenticationToViewArchived());
+      const mpn = new MaskedPersonalNumber({number: personalNumber,
+                                            isNorwegian: isNorwegian,
+                                            isDanish: isDanish,
+                                            isFinnish: isFinnish});
+      return mpn.maskNumberText();
+    },
     render: function () {
       var signatory = this.props.signatory;
       var smallView = ViewSize.isSmall();
@@ -99,12 +120,9 @@ module.exports = React.createClass({
         });
       }
 
-      if (signatory.personalnumber()) {
+      if (signatory.personalnumber() && !signatory.hidePN()) {
         const info = {label: localization.docsignview.personalNumberLabel,
-                      text: signatory.personalnumber().trim() || localization.docsignview.notEntered};
-        if (signatory.hidePN()) {
-          info["textClass"] = "censor-screenshot";
-        }
+                      text: this.censoredPersonalNumber() || localization.docsignview.notEntered};
         infoList.push(info);
       }
 

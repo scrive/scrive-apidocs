@@ -74,7 +74,6 @@
 
     &.right {
       float: right;
-      min-width: 196px;
       text-align: right;
 
       button, a.button {
@@ -96,16 +95,16 @@
     background-color: white;
     background-repeat: no-repeat;
     border: 0;
-    height: @signview-controls-height - 2;
+    height: @signview-controls-width;
     padding: 0;
-    width: @signview-controls-height - 2;
+    width: @signview-controls-width;
     opacity: 0.8;
     padding: 3px;
     font-size: 10px;
     vertical-align: top;
 
     &.download {
-      padding-top: (@signview-controls-height - 2 - 27) / 2;
+      padding-top: (@signview-controls-width - 27) / 2;
     }
 
     &:focus {

@@ -58,7 +58,7 @@ import Cookies
 import DB
 import DB.TimeZoneName
 import Doc.API.Callback.Model
-import Doc.Conditions (DocumentDoesNotExist(..), SignatoryTokenDoesNotMatch(..))
+import Doc.Conditions
 import Doc.DocInfo
 import Doc.DocMails
 import Doc.DocStateData
@@ -247,6 +247,7 @@ handleSignShowSaveMagicHash did sid mh = logDocumentAndSignatory did sid $
   )
   `catchDBExtraException` (\(DocumentDoesNotExist _) -> respond404)
   `catchDBExtraException` (\SignatoryTokenDoesNotMatch -> respondLinkInvalid)
+  `catchDBExtraException` (\(_ :: DocumentWasPurged) -> respondLinkInvalid)
 
 handleSignFromTemplate :: Kontrakcja m => DocumentID -> MagicHash -> m Response
 handleSignFromTemplate tplID mh = logDocument tplID $ do

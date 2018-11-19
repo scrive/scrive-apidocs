@@ -639,7 +639,7 @@
 "_flashWrongCompanyNumber":"Company number must contain only 4-50 letters, numbers, spaces or hyphens",
 "_flashWrongCountry":"Country must contain at most 60 characters",
 "_flashWrongName":"Name may contain only letters, digits, hyphens and spaces (up to 100 characters)",
-"_flashWrongPersonalNumber":"Personal number must contain 10 or12 digits (hyphens and spaces will be stripped)",
+"_flashWrongPersonalNumber":"Personal number must contain 10 or 12 digits (hyphens and spaces will be stripped)",
 "_flashWrongPhone":"Phone number must start with + and contain only digits (at least 9). Spaces, brackets and hyphens will be stripped",
 "_flashWrongPosition":"Position field must contain at most 100 letters, numbers, spaces, apostrophes, hyphens, ampersands, brackets, colons and commas",
 "_flashWrongZip":"Zip code must contain at most 20 characters",

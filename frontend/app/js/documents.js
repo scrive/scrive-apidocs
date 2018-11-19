@@ -455,7 +455,7 @@ var Document = exports.Document = Backbone.Model.extend({
               method: "POST",
               document: JSON.stringify(this.draftData()),
               ajaxsuccess : function() {if (callback != undefined) callback();}
-         }), function(ec) {if (ec == 403) window.location.reload()});
+         }), function(ec) {if (ec === 403 || ec === 401) window.location.reload()});
     },
     afterSave: function(f) {
         this.get("saveQueue").finishWith(f);

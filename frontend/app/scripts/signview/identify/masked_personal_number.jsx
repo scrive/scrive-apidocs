@@ -13,22 +13,22 @@ var MaskedPersonalNumber = React.createClass({
     //   "*".repeat(digits) is not supported by some browsers - like PhantomJS :(
     return this.props.number.substr(0, this.props.number.length - digits) + Array(digits + 1).join("*");
   },
-  render: function () {
-    var result = this.props.placeholder || "";
-
+  maskNumberText: function () {
     if (this.props.number) {
       if (this.props.isNorwegian) {
-        result = this.maskNumber(5);
+        return this.maskNumber(5);
       } else if (this.props.isDanish) {
-        result = this.maskNumber(4);
+        return this.maskNumber(4);
       } else if (this.props.isFinnish) {
-        result = this.maskNumber(4);
+        return this.maskNumber(4);
       } else {
-        result = this.maskNumber(4);
+        return this.maskNumber(4);
       }
     }
-
-    return <b>{result}</b>;
+    return this.props.placeholder || "";
+  },
+  render: function () {
+    return <b>{this.maskNumberText()}</b>;
   }
 });
 
