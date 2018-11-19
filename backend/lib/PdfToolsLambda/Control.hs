@@ -1,6 +1,7 @@
 module PdfToolsLambda.Control (
     callPdfToolsSealing
   , callPdfToolsPresealing
+  , callPdfToolsCleaning
 ) where
 
 import Control.Monad.Base
@@ -14,6 +15,7 @@ import System.Exit
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
+import qualified Data.Text as T
 import qualified Text.JSON as JSON
 import qualified Text.JSON.Gen as JSON
 
@@ -28,24 +30,36 @@ import PdfToolsLambda.Response
 import PdfToolsLambda.Spec
 import Utils.IO
 
+data PdfToolsAction = PdfToolsActionSealing | PdfToolsActionCleaning
+
+pdfToolsActionName :: PdfToolsAction -> T.Text
+pdfToolsActionName PdfToolsActionSealing = "seal"
+pdfToolsActionName PdfToolsActionCleaning = "clean"
+
 callPdfToolsSealing ::
   (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadDB m, MonadLog m) =>
   PdfToolsLambdaConf -> SealSpec -> m (Maybe BS.ByteString)
 callPdfToolsSealing lc spec = do
   inputData <- sealSpecToLambdaSpec spec
-  executePdfToolsLambdaSealCall lc inputData
+  executePdfToolsLambdaActionCall lc PdfToolsActionSealing inputData
 
 callPdfToolsPresealing ::
   (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadDB m, MonadLog m) =>
   PdfToolsLambdaConf -> PreSealSpec -> m (Maybe BS.ByteString)
 callPdfToolsPresealing lc spec = do
   inputData <- presealSpecToLambdaSpec spec
-  executePdfToolsLambdaSealCall lc inputData
+  executePdfToolsLambdaActionCall lc PdfToolsActionSealing inputData
 
-executePdfToolsLambdaSealCall
-  :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadDB m, MonadLog m)
-  => PdfToolsLambdaConf -> BSL.ByteString -> m (Maybe BS.ByteString)
-executePdfToolsLambdaSealCall lc inputData = do
+callPdfToolsCleaning ::
+  (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m) =>
+  PdfToolsLambdaConf -> BSL.ByteString -> m (Maybe BS.ByteString)
+callPdfToolsCleaning lc inputFileContent = do
+  executePdfToolsLambdaActionCall lc PdfToolsActionCleaning inputFileContent
+--
+executePdfToolsLambdaActionCall
+  :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
+  => PdfToolsLambdaConf -> PdfToolsAction -> BSL.ByteString -> m (Maybe BS.ByteString)
+executePdfToolsLambdaActionCall lc action inputData = do
   let amazonConfig = get pdfToolsLambdaS3Config lc
   uploadedDataFileName <- sendDataFileToAmazon amazonConfig inputData
   case uploadedDataFileName of
@@ -62,7 +76,7 @@ executePdfToolsLambdaSealCall lc inputData = do
           ,  get pdfToolsLambdaGatewayUrl lc
           ]
           (BSL.fromString $ JSON.encode $ JSON.runJSONGen $ do
-            JSON.value "action" ("seal"::String)
+            JSON.value "action" $ T.unpack $ pdfToolsActionName action
             JSON.value "s3FileName" s3FileName
           )
       case exitcode of
@@ -73,26 +87,53 @@ executePdfToolsLambdaSealCall lc inputData = do
             , "errorMessage" .= msg
             ]
           return $ Nothing
-        ExitSuccess -> do
-          case (parsePdfToolsLambdaSealingResponse stdout) of
-            SealSuccess resultS3Name -> do
-              mresdata <- getDataFromAmazon amazonConfig resultS3Name
-              case mresdata of
-                Just resdata -> return $ Just $ BSL.toStrict resdata
-                Nothing -> do
-                  logAttention "Failed to fetch lambda result from S3" $ object $ [
-                      "stdout" `equalsExternalBSL` stdout
-                    , "stderr" `equalsExternalBSL` stderr
-                    , "s3FileName" .= s3FileName
-                    ]
-                  return Nothing
-            SealFail errorMessage -> do
-              logInfo "Lambda sealing failed" $ object [
-                  "stdout" `equalsExternalBSL` stdout
-                , "stderr" `equalsExternalBSL` stderr
-                , "errorMessage" .= errorMessage
-                ]
-              return $ Nothing
+        ExitSuccess -> case action of
+          PdfToolsActionSealing -> parseSealingResponse lc stdout
+          PdfToolsActionCleaning -> parseCleaningResponse lc stdout
+
+parseSealingResponse :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
+  => PdfToolsLambdaConf -> BSL.ByteString -> m (Maybe BS.ByteString)
+parseSealingResponse lc stdout = do
+  let amazonConfig = get pdfToolsLambdaS3Config lc
+  case (parsePdfToolsLambdaSealingResponse stdout) of
+    SealSuccess resultS3Name -> do
+      mresdata <- getDataFromAmazon amazonConfig resultS3Name
+      case mresdata of
+        Just resdata -> return $ Just $ BSL.toStrict resdata
+        Nothing -> do
+          logAttention "Failed to fetch lambda sealing result from S3" $ object $ [
+              "stdout" `equalsExternalBSL` stdout
+            , "resultS3Name" .= resultS3Name
+            ]
+          return Nothing
+    SealFail errorMessage -> do
+      logInfo "Lambda sealing failed" $ object [
+          "stdout" `equalsExternalBSL` stdout
+        , "errorMessage" .= errorMessage
+        ]
+      return $ Nothing
+
+parseCleaningResponse :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
+  => PdfToolsLambdaConf -> BSL.ByteString -> m (Maybe BS.ByteString)
+parseCleaningResponse lc stdout = do
+  let amazonConfig = get pdfToolsLambdaS3Config lc
+  case (parsePdfToolsLambdaCleaningResponse stdout) of
+    CleanSuccess resultS3Name -> do
+      mresdata <- getDataFromAmazon amazonConfig resultS3Name
+      case mresdata of
+        Just resdata -> return $ Just $ BSL.toStrict resdata
+        Nothing -> do
+          logAttention "Failed to fetch lambda cleaning result from S3" $ object $ [
+              "stdout" `equalsExternalBSL` stdout
+            , "resultS3Name" .= resultS3Name
+            ]
+          return Nothing
+    CleanFail errorMessage -> do
+      logInfo "Lambda cleaning failed" $ object [
+          "stdout" `equalsExternalBSL` stdout
+        , "errorMessage" .= errorMessage
+        ]
+      return $ Nothing
 
 sendDataFileToAmazon :: ( CryptoRNG m, MonadBase IO m, MonadCatch m
                         , MonadLog m, MonadThrow m )

@@ -17,8 +17,10 @@ module Util.PDFUtil
     ) where
 
 import Control.Monad.Base
+import Control.Monad.Catch
 import Control.Monad.Except
 import Control.Monad.Trans.Control
+import Crypto.RNG
 import Data.Aeson
 import Data.Text (Text)
 import Data.Typeable
@@ -32,21 +34,11 @@ import System.Timeout.Lifted
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
-import qualified Data.Unjson as Unjson
 
 import Log.Utils
+import PdfToolsLambda.Conf
+import PdfToolsLambda.Control
 import Utils.Directory
-
-data RemoveJavaScriptSpec = RemoveJavaScriptSpec
-    { input          :: String
-    , output         :: String
-    }
-    deriving (Eq,Ord,Show,Read)
-
-unjsonRemoveJavaScriptSpec :: Unjson.UnjsonDef RemoveJavaScriptSpec
-unjsonRemoveJavaScriptSpec = Unjson.objectOf $ pure RemoveJavaScriptSpec
-    <*> Unjson.field "input" input "Path for source document"
-    <*> Unjson.field "output" output "Output path"
 
 renderPage :: forall m. (MonadBaseControl IO m, MonadLog m)
   => BS.ByteString
@@ -121,13 +113,13 @@ renderPage fileContent pageNo widthInPixels = do
 data FileError = FileSizeError Int Int
                | FileFormatError
                | FileNormalizeError BSL.ByteString
-               | FileRemoveJavaScriptError BSL.ByteString
+               | FileRemoveJavaScriptError
                | FileFlatteningError BSL.ByteString
                | FileSealingError BSL.ByteString
                | FileOtherError String
                deriving (Eq, Ord, Show, Read, Typeable)
 
-preCheckPDFsHelper :: (MonadLog m, MonadBaseControl IO m)
+preCheckPDFsHelper :: (CryptoRNG m, MonadBaseControl IO m, MonadCatch m, MonadLog m, PdfToolsLambdaConfMonad m)
                    => [BS.ByteString]
                    -> String
                    -> m (Either FileError [BS.ByteString])
@@ -139,11 +131,12 @@ preCheckPDFsHelper contents tmppath =
       mapM_ checkNormalize $ zip [1..] contents
       mapM readOutput [1..length contents]
   where
+    flattenedpath :: Int -> String
     flattenedpath    num = tmppath ++ "/flattened"  ++ show num ++ ".pdf"
+    jsremovedpath :: Int -> String
     jsremovedpath    num = tmppath ++ "/jsremoved"  ++ show num ++ ".pdf"
-    jsremovespecpath num = tmppath ++ "/jsremove"   ++ show num ++ ".json"
+    normalizedpath :: Int -> String
     normalizedpath   num = tmppath ++ "/normalized" ++ show num ++ ".pdf"
-    sourcepath       num = tmppath ++ "/source"     ++ show num ++ ".pdf"
 
     sizeLimit = 10 * 1000 * 1000
 
@@ -153,25 +146,12 @@ preCheckPDFsHelper contents tmppath =
 
     checkRemoveJavaScript = do
       forM_ (zip [1..] contents) $ \(num, content) -> do
-        logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length content)
-                                           , "originator" .= ("preCheckPDFs" :: Text) ]
-        liftBase $ BS.writeFile (sourcepath num) content
-        let config = RemoveJavaScriptSpec { input = sourcepath num, output = jsremovedpath num }
-            json_config = Unjson.unjsonToByteStringLazy unjsonRemoveJavaScriptSpec config
-        logInfo "Temp file write" $ object [ "bytes_written" .= (BSL.length json_config)
-                                           , "originator" .= ("preCheckPDFsHelper" :: Text) ]
-        liftBase $ BSL.writeFile (jsremovespecpath num) json_config
-      let jsremovespecpaths = map jsremovespecpath [1..length contents]
-      (code, stdout, stderr) <- liftBase $
-        readProcessWithExitCode "java" (["-jar", "scrivepdftools/scrivepdftools.jar", "remove-javascript"] ++ jsremovespecpaths) (BSL.empty)
-      case code of
-        ExitSuccess -> return ()
-        ExitFailure _ -> do
-          throwError $ FileRemoveJavaScriptError $ BSL.concat [ BSL.pack ("Exit failure \n")
-                                                              , stdout
-                                                              , BSL.pack "\n"
-                                                              , stderr
-                                                              ]
+        lc <- lift $ getPdfToolsLambdaConf
+        nc <- lift $ callPdfToolsCleaning lc $ BSL.fromChunks [content]
+        case nc of
+             Just c -> liftBase $ BS.writeFile (jsremovedpath num) c
+             Nothing -> throwError $ FileRemoveJavaScriptError
+
     checkFlatten = do
       forM_ (take (length contents) [1..]) $ \num -> do
         (code, stdout, stderr) <- liftBase $
@@ -197,9 +177,9 @@ preCheckPDFsHelper contents tmppath =
       when (not flag) $ do
         liftBase $ do
           systmp <- getTemporaryDirectory
-          (_path,handle) <- openTempFile systmp ("pre-normalize-failed-.pdf")
-          BS.hPutStr handle content
-          hClose handle
+          (_path,h) <- openTempFile systmp ("pre-normalize-failed-.pdf")
+          BS.hPutStr h content
+          hClose h
 
         throwError $ FileNormalizeError $ BSL.concat [ BSL.pack ("Exit failure \n")
                                                      , stdout
@@ -231,7 +211,7 @@ preCheckPDFsHelper contents tmppath =
 -- Return value is either a 'BS.ByteString' with normalized document
 -- content or 'FileError' enumeration stating what is going on.
 --
-preCheckPDFs :: (MonadLog m, MonadBaseControl IO m) => [BS.ByteString]
+preCheckPDFs :: (CryptoRNG m, MonadBaseControl IO m, MonadCatch m, MonadLog m, PdfToolsLambdaConfMonad m) => [BS.ByteString]
             -> m (Either FileError [BS.ByteString])
 preCheckPDFs contents =
   withSystemTempDirectory' "precheck" $ \tmppath -> do
@@ -244,7 +224,7 @@ preCheckPDFs contents =
       Right _ -> return ()
     return res
 
-preCheckPDF :: (MonadLog m, MonadBaseControl IO m) => BS.ByteString
+preCheckPDF :: (CryptoRNG m, MonadBaseControl IO m, MonadCatch m, MonadLog m, PdfToolsLambdaConfMonad m) => BS.ByteString
             -> m (Either FileError BS.ByteString)
 preCheckPDF content = do
   res <- preCheckPDFs [content]
@@ -257,9 +237,9 @@ preCheckPDF content = do
 getNumberOfPDFPages :: BS.ByteString -> IO (Either String Int)
 getNumberOfPDFPages content = do
   systmp <- getTemporaryDirectory
-  (path, handle) <- openTempFile systmp "mutool-input.pdf"
-  BS.hPutStr handle content
-  hClose handle
+  (path, h) <- openTempFile systmp "mutool-input.pdf"
+  BS.hPutStr h content
+  hClose h
   (exitCode, stdout', stderr') <- readProcessWithExitCode "mutool" ["info", path] BSL.empty
   removeFile path
   return $ case exitCode of
