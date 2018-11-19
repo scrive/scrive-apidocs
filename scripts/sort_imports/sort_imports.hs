@@ -172,9 +172,8 @@ convert style@Style{..} modules source = T.unlines . concat $ [
   , map (showImport style) first_import_group
   , separator_if $ not $ null first_import_group
   , map (showImport style) second_import_group
-  , separator_if $ not $ null second_import_group
-  , rest
-  ]
+  , separator_if $ ((not . null $ second_import_group) && (not . null $ rest))
+  , rest ]
   where
     (header, body) = break is_import . T.lines $ source
     (import_section, rest) = break (not . (T.null <||> is_import <||> is_indented)) body
@@ -203,11 +202,13 @@ foldThroughHsFiles basepath f iacc = do
     run acc path = do
       is_dir  <- doesDirectoryExist fullpath
       is_file <- doesFileExist fullpath
-      case (is_file && (".hs" `isSuffixOf` path || ".lhs" `isSuffixOf` path), is_dir) of
+      case (is_file && any (`isSuffixOf` path) extensions, is_dir) of
         (True, False) -> f acc fullpath
         (False, True) -> foldThroughHsFiles fullpath f acc
         _             -> return acc
       where
+        extensions = [".hs", ".hsc", ".lhs"]
+
         fullpath = basepath ++ "/" ++ path
 
 -- | Collect modules and file paths from given directories.
