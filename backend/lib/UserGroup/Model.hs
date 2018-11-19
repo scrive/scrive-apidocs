@@ -6,10 +6,10 @@ module UserGroup.Model (
   , UserGroupsGetFiltered(..)
   , UserGroupUpdate(..)
   , UserGetAllParentGroups(..)
-  , UserGroupGetAllChildren(..)
+  , UserGroupGetImmediateChildren(..)
   , UserGroupsFormCycle(..)
   , UserGroupFilter(..)
-  , ugInherited
+  , ugInherited -- exported for tests
   , unsafeUserGroupIDToPartnerID
   , minUserGroupIdleDocTimeout
   , maxUserGroupIdleDocTimeout
@@ -126,9 +126,9 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetByUserID UserGroup w
       sqlWhereEq "users.id" uid
     fetchOne toComposite
 
-data UserGroupGetAllChildren = UserGroupGetAllChildren UserGroupID
-instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetAllChildren [UserGroup] where
-  query (UserGroupGetAllChildren ugid) = do
+data UserGroupGetImmediateChildren = UserGroupGetImmediateChildren UserGroupID
+instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetImmediateChildren [UserGroup] where
+  query (UserGroupGetImmediateChildren ugid) = do
     runQuery_ . sqlSelect "user_groups" $ do
       mapM_ sqlResult userGroupSelectors
       sqlWhereEq "parent_group_id" ugid

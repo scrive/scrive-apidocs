@@ -27,6 +27,11 @@ var DetailsEditorView = React.createClass({
     country: React.PropTypes.string.isRequired,
     ipaddressmasklist: React.PropTypes.string.isRequired,
     partnerid: React.PropTypes.number.isRequired,
+    parentgrouppath: React.PropTypes.arrayOf(
+      React.PropTypes.shape({
+          group_id: React.PropTypes.string.IsRequired,
+          group_name: React.PropTypes.string.IsRequired
+        })),
     cgidisplayname: React.PropTypes.string,
     cgiserviceid: React.PropTypes.string,
     idledoctimeoutpreparation: React.PropTypes.number,
@@ -215,6 +220,21 @@ var DetailsEditorView = React.createClass({
             <td>
               Leave is empty for Scrive. SF is 9197237133460633368.
               Only Partner Manager is allowed to make changes in this field.
+            </td>
+          </tr>
+          <tr>
+            <td><label>Parent group path</label></td>
+            <td>{_.chain(this.props.parentgrouppath).map(function (userGroup) {
+                return (
+                  <a href={userGroup.group_id}>
+                    {userGroup.group_name} ({userGroup.group_id})
+                  </a>
+                );
+              }).reverse().map(function (link) {
+                return [link, " > "];
+              }).flatten().initial().value()}
+            </td>
+            <td>
             </td>
           </tr>
           <tr>

@@ -38,7 +38,7 @@ import User.Email (Email(..))
 import User.Model
 import UserGroup.Data
 import UserGroup.Data.PaymentPlan
-import UserGroup.Model (UserGroupCreate(..), UserGroupGet(..), UserGroupGetAllChildren(..), UserGroupUpdate(..))
+import UserGroup.Model (UserGroupCreate(..), UserGroupGet(..), UserGroupGetImmediateChildren(..), UserGroupUpdate(..))
 
 partnerAPI :: Route (Kontra Response)
 partnerAPI = dir "api" $ choice
@@ -143,7 +143,7 @@ partnerApiCallV1CompaniesGet ptOrUgID = do
     -- UserGroupR, partnerUsrGrpID)`; cf. instance for HasPermissions of
     -- (AccessRole UserGroupID) in AccessControl.Data...around line 95
     apiAccessControl acc noPrvErr $ do
-      userGroups <- dbQuery $ UserGroupGetAllChildren partnerUsrGrpID
+      userGroups <- dbQuery $ UserGroupGetImmediateChildren partnerUsrGrpID
       Ok <$> return (unjsonUserGroupsForUpdate,
                      userGroupToUserGroupForUpdate <$> userGroups)
 

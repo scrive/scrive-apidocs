@@ -185,7 +185,8 @@ handleUserGetProfile uid = onlySalesOrAdmin $ do
 handleCompanyGetProfile:: Kontrakcja m => UserGroupID -> m JSValue
 handleCompanyGetProfile ugid = onlySalesOrAdmin $ do
   ug <- guardJustM . dbQuery . UserGroupGet $ ugid
-  return $ companyJSON True ug
+  ugAndParentPath <- guardJustM . dbQuery . UserGroupGetWithParents $ ugid
+  return $ companyJSON True ug (snd ugAndParentPath)
 
 showAdminCompany :: Kontrakcja m => UserGroupID -> m String
 showAdminCompany ugid = onlySalesOrAdmin $ do
@@ -375,22 +376,7 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
   ugAddressChange <- getUserGroupAddressChange
 
   mTryParentUserGroupID <- getOptionalField asValidUserGroupID "companypartnerid"
-  mNewParentUserGroupID <- case mTryParentUserGroupID of
-    Nothing -> return Nothing
-    Just tryParentUserGroupID -> do
-      -- The suggested parent must not itself have parents and the user group we
-      -- want to set it for cannot have children since we want a maximum depth
-      -- of 2 for legacy reasons. This restriction will be lifted or relaxed in
-      -- the future.
-      let errTxt = "Cannot set parent: tree depth limit reached."
-      parentHasParents <- (isJust . join . (get ugParentGroupID <$>)) <$>
-                            (dbQuery . UserGroupGet $ tryParentUserGroupID)
-      hasChildren <- not . null . (get ugID <$>) <$> (dbQuery . UserGroupGetAllChildren $ ugid)
-      if (hasChildren || parentHasParents)
-      then V2.apiError . V2.serverError $ errTxt
-      else return . Just $ tryParentUserGroupID
-
-  let ug' = set ugParentGroupID mNewParentUserGroupID
+  let ug' = set ugParentGroupID mTryParentUserGroupID
           . maybe id (set ugName . T.pack) mCompanyName
           . modify ugSettings ugInfoChange
           . modify ugAddress ugAddressChange

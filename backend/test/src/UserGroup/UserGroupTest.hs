@@ -224,24 +224,23 @@ testChangeUserGroupParent = do
   mUsrGrpParentAfter <- join <$> (get ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
   assertEqual "User group parent has been set correctly" mUsrGrpParentAfter $ Just parentUsrGrpID
 
-  -- setting a grandparent should not work
   grandParentUsrGrp <- addNewUserGroup
   let grandParentUsrGrpID = get ugID grandParentUsrGrp
       params2 = [("companypartnerid", inText . show $ grandParentUsrGrpID)]
   req2 <- mkRequest POST params2
-  (eErrRes' :: Either SomeDBExtraException ((),Context)) <- do
-    try (runTestKontra req2 ctx' $ handleCompanyChange parentUsrGrpID)
-  assertLeft eErrRes'
+  void $ runTestKontra req2 ctx' $ handleCompanyChange parentUsrGrpID
+  mUsrGrpGrandParentAfter <- join <$> (get ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ parentUsrGrpID)
+  assertEqual "User group grandparent has been set correctly" mUsrGrpGrandParentAfter $ Just grandParentUsrGrpID
 
-  -- Setting a parent that already has a parent should not work. We'll reuse
+  -- Setting a parent that already has a parent should work. We'll reuse
   -- usrGrp since it now has one.
   usrGrp' <- addNewUserGroup
   let usrGrpID' = get ugID usrGrp'
       params3 = [("companypartnerid", inText . show $ usrGrpID)]
   req3 <- mkRequest POST params3
-  (eErrRes'' :: Either SomeDBExtraException ((),Context)) <- do
-    try (runTestKontra req3 ctx' $ handleCompanyChange usrGrpID')
-  assertLeft eErrRes''
+  void $ runTestKontra req3 ctx' $ handleCompanyChange usrGrpID'
+  mUsrGrpParentAfter' <- join <$> (get ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID')
+  assertEqual "User group parent that has parent has been set correctly" mUsrGrpParentAfter' $ Just usrGrpID
 
   -- removing parent should work
   let params4 = [("companypartnerid", inText "")]
@@ -249,8 +248,8 @@ testChangeUserGroupParent = do
   mUsrGrpParentBefore' <- join <$> (get ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID )
   assertEqual "User group parent still set" mUsrGrpParentBefore' $ Just parentUsrGrpID
   void $ runTestKontra req4 ctx' $ handleCompanyChange usrGrpID
-  mUsrGrpParentAfter' <- join <$> (get ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
-  assertEqual "User group parent has been removed" mUsrGrpParentAfter' Nothing
+  mUsrGrpParentAfter'' <- join <$> (get ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
+  assertEqual "User group parent has been removed" mUsrGrpParentAfter'' Nothing
 
 newtype ARootUserGroup = ARootUserGroup { unARootUserGroup :: UserGroup }
 

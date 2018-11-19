@@ -47,6 +47,7 @@ var CompanyDetailsView = React.createClass({
         country: this.props.company.country(),
         ipaddressmasklist: this.props.company.ipaddressmasklist(),
         partnerid: this.props.company.partnerid(),
+        parentgrouppath: this.props.company.parentgrouppath(),
         cgidisplayname: this.props.company.cgidisplayname(),
         cgiserviceid: this.props.company.cgiserviceid(),
         idledoctimeoutpreparation: this.props.company.idledoctimeoutpreparation(),
@@ -116,6 +117,7 @@ var CompanyDetailsView = React.createClass({
                 this.props.viewModel.get("ipaddressmasklist")
               }
               partnerid={this.props.viewModel.get("partnerid")}
+              parentgrouppath={this.props.viewModel.get("parentgrouppath")}
               cgidisplayname={this.props.viewModel.get("cgidisplayname")}
               cgiserviceid={this.props.viewModel.get("cgiserviceid")}
               idledoctimeoutpreparation={this.props.viewModel.get("idledoctimeoutpreparation")}

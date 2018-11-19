@@ -14,6 +14,7 @@ var CompanyDetailsViewModel = Backbone.Model.extend(
       country: "",
       ipaddressmasklist: "",
       partnerid: 1,
+      parentgrouppath: [],
       cgidisplayname: null,
       cgiserviceid: null,
       idledoctimeoutpreparation: null,

@@ -54,11 +54,11 @@ userJSONUserDetails user company = do
     value "phone" $ userphone $ userinfo user
     value "companyadmin" $ useriscompanyadmin user
     value "companyposition" $ usercompanyposition $ userinfo user
-    value "lang" $ codeFromLang $ getLang user
-    value "company" $ companyJSON False company
+    value "lang"   $ codeFromLang $ getLang user
+    value "company" $ companyJSON False company []
 
-companyJSON :: Bool -> UserGroup -> JSValue
-companyJSON forAdmin ug = runJSONGen $ do
+companyJSON :: Bool -> UserGroup -> [UserGroup] -> JSValue
+companyJSON forAdmin ug parentGroupPath  = runJSONGen $ do
     value "companyid" $ show $ get ugID ug
     value "address" $ unpack $ get (ugaAddress . ugAddress) ug
     value "city" $ unpack $ get (ugaCity  . ugAddress) ug
@@ -80,6 +80,9 @@ companyJSON forAdmin ug = runJSONGen $ do
     value "padappmode" $ unpack $ padAppModeText $ get (ugsPadAppMode . ugSettings) ug
     value "padearchiveenabled" $ get (ugsPadEarchiveEnabled . ugSettings) ug
     when forAdmin $ value "partnerid" $ show <$> (get ugParentGroupID ug)
+    when forAdmin $ objects "parentgrouppath" . for parentGroupPath $ \parent -> do
+      value "group_id" . show . get ugID $ parent
+      value "group_name" . T.unpack . get ugName $ parent
   where
     unpack :: T.Text -> String
     unpack = T.unpack
