@@ -23,4 +23,3 @@ import Doc.Data.SignatoryConsentQuestion
 import Doc.Data.SignatoryField
 import Doc.Data.SignatoryFieldUtils
 import Doc.Data.SignatoryLink
-

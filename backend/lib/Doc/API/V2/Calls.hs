@@ -7,4 +7,3 @@ module Doc.API.V2.Calls (
 import Doc.API.V2.Calls.DocumentGetCalls
 import Doc.API.V2.Calls.DocumentPostCalls
 import Doc.API.V2.Calls.SignatoryCalls
-

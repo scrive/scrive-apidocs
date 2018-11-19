@@ -7,4 +7,3 @@ module Doc.Model
 import Doc.Model.Query
 import Doc.Model.Search
 import Doc.Model.Update
-

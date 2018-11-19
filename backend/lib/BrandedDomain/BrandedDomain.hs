@@ -7,4 +7,3 @@ module BrandedDomain.BrandedDomain
 import BrandedDomain.BrandedDomain.Internal
 import BrandedDomain.BrandedDomain.Labels
 import BrandedDomain.BrandedDomainID
-

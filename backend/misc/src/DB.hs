@@ -14,4 +14,3 @@ import Database.PostgreSQL.PQTypes.SQL.Builder
 import DB.Derive
 import DB.Query
 import DB.Utils
-
