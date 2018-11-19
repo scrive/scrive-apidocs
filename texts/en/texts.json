@@ -500,7 +500,7 @@
 "_docListTabsTrash":"Trash",
 "_documentAttachedBy":"Attached by $identifier$",
 "_documentSealedOn":"Finalised on $time$",
-"_documentSentOnBy":"Initiated on $time$ by $identifier$ ",
+"_documentSentOnBy":"Initiated on $time$ by $identifier$",
 "_documentText":"Document",
 "_docviewChangeAuthenticationModalAccept":"Save",
 "_docviewChangeAuthenticationModalErrorEID":"Invalid personal ID number",
