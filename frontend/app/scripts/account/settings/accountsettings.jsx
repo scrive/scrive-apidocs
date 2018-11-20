@@ -1,6 +1,5 @@
 var Backbone = require("backbone");
-var PhoneValidation = require("../../../js/validation.js").PhoneValidation;
-var EmptyValidation = require("../../../js/validation.js").EmptyValidation;
+var V = require("../../../js/validation.js");
 var Submit = require("../../../js/submits.js").Submit;
 var User = require("../../../js/account/user.js").User;
 var FlashMessages = require("../../../js/flashmessages.js");
@@ -13,6 +12,19 @@ var $ = require("jquery");
 module.exports = Backbone.Model.extend({
   initialize: function () {
     var self = this;
+    var validate = function (validation) {
+      return new validation().or(new V.EmptyValidation());
+    };
+    this._nameValidation = validate(V.NameValidation);
+    this._phoneValidation = validate(V.PhoneValidation);
+    this._personalNumberValidation = validate(V.PersonalNumberValidation);
+    this._positionValidation = validate(V.PositionValidation);
+    this._companyNameValidation = validate(V.CompanyNameValidation);
+    this._companyNumberValidation = validate(V.CompanyNumberValidation);
+    this._companyAddressValidation = validate(V.CompanyAddressValidation);
+    this._companyZipValidation = validate(V.CompanyZipValidation);
+    this._companyCityValidation = validate(V.CompanyCityValidation);
+    this._companyCountryValidation = validate(V.CompanyCountryValidation);
     var user = new User({});
     this.set({"user": user});
     user.bind("change", function () {
@@ -79,8 +91,38 @@ module.exports = Backbone.Model.extend({
   setPhone: function (v) {
      this.set({"phone": v});
   },
+  fstnameValid: function (v) {
+    return this._nameValidation.validateData(this.fstname());
+  },
+  sndnameValid: function (v) {
+    return this._nameValidation.validateData(this.sndname());
+  },
+  personalnumberValid: function (v) {
+    return this._personalNumberValidation.validateData(this.personnumber());
+  },
+  positionValid: function (v) {
+    return this._positionValidation.validateData(this.companyposition());
+  },
+  companynameValid: function (v) {
+    return this._companyNameValidation.validateData(this.companyname());
+  },
+  companynumberValid: function (v) {
+    return this._companyNumberValidation.validateData(this.companynumber());
+  },
+  companyaddressValid: function (v) {
+    return this._companyAddressValidation.validateData(this.companyaddress());
+  },
+  companyzipValid: function (v) {
+    return this._companyZipValidation.validateData(this.companyzip());
+  },
+  companycityValid: function (v) {
+    return this._companyCityValidation.validateData(this.companycity());
+  },
+  companycountryValid: function (v) {
+    return this._companyCountryValidation.validateData(this.companycountry());
+  },
   phoneValid: function () {
-    return new PhoneValidation().or(new EmptyValidation()).validateData(this.phone());
+    return this._phoneValidation.validateData(this.phone());
   },
   companyname: function () {
      return this.get("companyname");
@@ -177,26 +219,28 @@ module.exports = Backbone.Model.extend({
       newemail: self.newemail()
     }).send();
   },
-  updateProfile: function (callback) {
-    return new Submit({
-      method: "POST",
-      url: "/api/frontend/updateprofile",
-      ajax: true,
-      ajaxsuccess: callback,
-      fstname: this.fstname(),
-      sndname: this.sndname(),
-      personalnumber: this.personnumber(),
-      email: this.email(),
-      phone: this.phone(),
-      lang: this.lang(),
-      companyname: this.companyname(),
-      companynumber: this.companynumber(),
-      companyposition: this.companyposition(),
-      companyaddress: this.companyaddress(),
-      companyzip: this.companyzip(),
-      companycity: this.companycity(),
-      companycountry: this.companycountry()
-    }).send();
+  updateProfile: function (callback, errorCallback) {
+    var data = {method: "POST",
+                url: "/api/frontend/updateprofile",
+                ajax: true,
+                ajaxsuccess: callback,
+                ajaxerror: errorCallback,
+                fstname: this.fstname(),
+                sndname: this.sndname(),
+                personalnumber: this.personnumber(),
+                email: this.email(),
+                phone: this.phone(),
+                lang: this.lang(),
+                companyposition: this.companyposition()};
+    if (this.user().companyadmin()) {
+      data["companyname"] = this.companyname();
+      data["companynumber"] = this.companynumber();
+      data["companyaddress"] = this.companyaddress();
+      data["companyzip"] = this.companyzip();
+      data["companycity"] = this.companycity();
+      data["companycountry"] = this.companycountry();
+    }
+    return new Submit(data).send();
   },
 
   deleteUser: function (email, success, error) {
@@ -219,24 +263,46 @@ module.exports = Backbone.Model.extend({
     }).send();
   },
 
-  valid: function () {
-    var number = this.companynumber();
-    var message = null;
-    var validCharsRegex = /^[a-zA-Z0-9- ]*$/;
-    if (number.length > 50) {
-      message = localization.validation.companyNumberTooLong;
-    } else if (number.match(validCharsRegex) === null) {
-      message = localization.validation.companyNumberInvalidChars;
+  validateUserSettings: function () {
+    if (!this.fstnameValid()) {
+      return this._nameValidation.message();
+    } else if (!this.sndnameValid()) {
+      return this._nameValidation.message();
+    } else if (!this.personalnumberValid()) {
+      return this._personalNumberValidation.message();
     } else if (!this.phoneValid()) {
-      message = localization.account.accountDetails.invalidPhone;
+      return this._phoneValidation.message();
+    } else if (!this.positionValid()) {
+      return this._positionValidation.message();
     }
-    if (message !== null) {
-      new FlashMessage({content: message, type: "error"});
+  },
+
+  validateCompanySettings: function () {
+    if (!this.companynameValid()) {
+      return this._companyNameValidation.message();
+    } else if (!this.companynumberValid()) {
+      return this._companyNumberValidation.message();
+    } else if (!this.companyaddressValid()) {
+      return this._companyAddressValidation.message();
+    } else if (!this.companyzipValid()) {
+      return this._companyZipValidation.message();
+    } else if (!this.companycityValid()) {
+      return this._companyCityValidation.message();
+    } else if (!this.companycountryValid()) {
+      return this._companyCountryValidation.message();
+    }
+  },
+
+  valid: function () {
+    var errorMessage = this.validateUserSettings() || this.validateCompanySettings();
+    if (errorMessage !== undefined) {
+      new FlashMessage({content: errorMessage, type: "error"});
       return false;
     } else {
       return true;
     }
   },
+
   save: function () {
     var self  = this;
     if (!self.valid()) {
@@ -265,6 +331,11 @@ module.exports = Backbone.Model.extend({
         });
         self.user().fetch({cache: false, processData: true});
       }
+    }, function () {
+      new FlashMessage({
+        content: localization.account.accountDetails.generalError,
+        type: "error"
+      });
     });
   },
   refresh: function () {

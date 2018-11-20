@@ -114,6 +114,7 @@ testPartnerCompanyUpdate = do
 
   -- Update should work
   (ctx,pid,cid) <- testHelperPartnerCompanyCreate
+
   _ <- runApiJSONTest ctx POST (partnerApiCallV1CompanyUpdate pid cid) rq_companyUpdate_params 200 rq_companyUpdate_resp_fp
 
   -- Random user shouldn't be able to update

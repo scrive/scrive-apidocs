@@ -30,10 +30,13 @@ unjsonPdfToolsLambdaConf = objectOf $ pure PdfToolsLambdaConf
       "Amazon bucket configuration"
   <*> fieldOpt "user_groups_with_extended_flattening"
       _pdfToolsUserGroupsWithExtendedFlattening
-      "Pdfs of documents created by this user groups should be treat differently by pdftools due to backward compatiblility (CORE-783)"
+      ("PDFs of documents created by these user groups should be "
+       <> "treated differently by pdftools due to backwards compatiblility "
+       <> "(see CORE-783)")
   <*> fieldOpt "user_groups_with_old_flattening"
       _pdfToolsUserGroupsWithOldFlattening
-      "Pdfs of documents created by this user groups should get an additional flattening with old pdftools (CORE-851)"
+      ("PDFs of documents created by these user groups should get "
+       <> "an additional flattening with old pdftools (see CORE-851)")
 
 instance Unjson PdfToolsLambdaConf where
   unjsonDef = unjsonPdfToolsLambdaConf
@@ -49,8 +52,11 @@ instance (
   ) => PdfToolsLambdaConfMonad (t m) where
     getPdfToolsLambdaConf = lift getPdfToolsLambdaConf
 
-newtype PdfToolsLambdaConfT m a = PdfToolsLambdaConfT { unPdfToolsLambdaConfT :: ReaderT PdfToolsLambdaConf m a }
-  deriving (Alternative, Applicative, Functor, Monad, MonadPlus, MonadIO, MonadTrans, MonadBase b, MonadThrow, MonadCatch, MonadMask)
+newtype PdfToolsLambdaConfT m a =
+  PdfToolsLambdaConfT { unPdfToolsLambdaConfT :: ReaderT PdfToolsLambdaConf m a }
+  deriving ( Alternative, Applicative, Functor, Monad
+           , MonadPlus, MonadIO, MonadTrans, MonadBase b
+           , MonadThrow, MonadCatch, MonadMask )
 
 instance MonadBaseControl b m => MonadBaseControl b (PdfToolsLambdaConfT m) where
   type StM (PdfToolsLambdaConfT m) a = ComposeSt PdfToolsLambdaConfT m a
@@ -66,7 +72,8 @@ instance MonadTransControl PdfToolsLambdaConfT where
   {-# INLINE liftWith #-}
   {-# INLINE restoreT #-}
 
-instance {-# OVERLAPPING #-} Monad m => PdfToolsLambdaConfMonad (PdfToolsLambdaConfT m) where
+instance {-# OVERLAPPING #-} Monad m =>
+  PdfToolsLambdaConfMonad (PdfToolsLambdaConfT m) where
   getPdfToolsLambdaConf = PdfToolsLambdaConfT ask
 
 runPdfToolsLambdaConfT :: PdfToolsLambdaConf -> PdfToolsLambdaConfT m a -> m a

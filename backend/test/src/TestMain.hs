@@ -73,6 +73,7 @@ import SessionsTest
 import SignupTest
 import Templates (readGlobalTemplates)
 import TestConf
+import TestEnvSt.Internal
 import TestKontra
 import ThirdPartyStats
 import User.APITest
@@ -146,10 +147,10 @@ stagingTests = [
 
 modifyTestEnv :: [String] -> ([String], TestEnvSt -> TestEnvSt)
 modifyTestEnv [] = ([], id)
-modifyTestEnv ("--staging-tests":r) = second (. (\te -> te{ teStagingTests = True})) $
-                                   modifyTestEnv r
-modifyTestEnv ("--output-dir":d:r) = second (. (\te -> te{ teOutputDirectory = Just d})) $
-                                   modifyTestEnv r
+modifyTestEnv ("--staging-tests":r) =
+  second (. set teStagingTests True) $ modifyTestEnv r
+modifyTestEnv ("--output-dir":d:r) =
+  second (. set teOutputDirectory (Just d)) $ modifyTestEnv r
 modifyTestEnv (d:r) = first (d:) $ modifyTestEnv r
 
 
@@ -173,7 +174,8 @@ testMany' (allargs, ts) runLogger rng = do
   let connSettings = pgConnSettings (testDBConfig tconf)
       extrasOptions = def
   runLogger . runDBT (unConnectionSource . simpleSource $ connSettings []) def $ do
-    migrateDatabase extrasOptions kontraExtensions kontraDomains kontraTables kontraMigrations
+    migrateDatabase extrasOptions kontraExtensions
+      kontraDomains kontraTables kontraMigrations
     defineFunctions kontraFunctions
     defineComposites kontraComposites
     defineTriggers kontraTriggers
@@ -184,37 +186,40 @@ testMany' (allargs, ts) runLogger rng = do
       return ()
     commit
 
-  staticSource <- (\conn -> ConnectionSource $ ConnectionSourceM { withConnection = ($ conn) }) <$> connect (connSettings kontraComposites)
+  staticSource <-
+    (\conn -> ConnectionSource $ ConnectionSourceM { withConnection = ($ conn) })
+    <$> connect (connSettings kontraComposites)
   cs <- poolSource (connSettings kontraComposites) 1 10 50
 
-  active_tests <- atomically $ newTVar (True, 0)
+  active_tests       <- atomically $ newTVar (True, 0)
   rejected_documents <- atomically $ newTVar 0
-  memcache <- newFileMemCache $ fromMaybe 200000000 $ testLocalFileCacheSize tconf
-  mRedisConn <- T.forM (testRedisCacheConfig tconf) mkRedisConnection
+  memcache           <- newFileMemCache $
+                        fromMaybe 200000000 $ testLocalFileCacheSize tconf
+  mRedisConn         <- T.forM (testRedisCacheConfig tconf) mkRedisConnection
   let env = envf $ TestEnvSt {
-        teConnSource        = cs
-      , teStaticConnSource  = staticSource
-      , teTransSettings     = def
-      , teRNGState          = rng
-      , teRunLogger         = runLogger
-      , teGlobalTemplates   = templates
-      , teActiveTests       = active_tests
-      , teRejectedDocuments = rejected_documents
-      , teOutputDirectory   = Nothing
-      , teStagingTests      = False
-      , tePdfToolsLambdaConf = testPdfToolsLambdaConf tconf
-      , teAmazonConfig      = testAmazonConfig tconf
-      , teFileMemCache      = memcache
-      , teRedisConn         = mRedisConn
+        _teConnSource         = cs
+      , _teStaticConnSource   = staticSource
+      , _teTransSettings      = def
+      , _teRNGState           = rng
+      , _teRunLogger          = RunLogger runLogger
+      , _teGlobalTemplates    = templates
+      , _teActiveTests        = active_tests
+      , _teRejectedDocuments  = rejected_documents
+      , _teOutputDirectory    = Nothing
+      , _teStagingTests       = False
+      , _tePdfToolsLambdaConf = testPdfToolsLambdaConf tconf
+      , _teAmazonConfig       = testAmazonConfig tconf
+      , _teFileMemCache       = memcache
+      , _teRedisConn          = mRedisConn
       }
-      ts' = if teStagingTests env
-        then stagingTests ++ ts
-        else ts
-  case teOutputDirectory env of
+      ts' = if get teStagingTests env
+            then stagingTests ++ ts
+            else ts
+  case (get teOutputDirectory env) of
     Nothing -> return ()
     Just d  -> createDirectoryIfMissing True d
   E.finally (defaultMainWithArgs (map ($ env) ts') args) $ do
-    -- upon interruption (eg. Ctrl+C), prevent next tests in line
+    -- Upon interruption (eg. Ctrl+C), prevent next tests in line
     -- from running and wait until all that are running are finished.
     atomically . modifyTVar' active_tests $ first (const False)
     atomically $ do
@@ -228,7 +233,8 @@ testMany' (allargs, ts) runLogger rng = do
 
 -- | Useful for running an individual test in ghci like so:
 --
--- >  testone flip (testThat "") testPreparationAttachCSVUploadNonExistingSignatoryLink
+-- > testone flip (testThat "")
+-- > testPreparationAttachCSVUploadNonExistingSignatoryLink
 testone :: (TestEnvSt -> Test) -> IO ()
 testone t = do
   args <- getArgs

@@ -134,6 +134,11 @@ var Document = require("../../../js/documents.js").Document;
             </div>
             <div className="col-sm-6 right">
               <div className="button-group small-buttons">
+                { /* if */ !showPages &&
+                  <div className="author-attachment-preview">
+                    <img src={model.pageUrl(1, 50)} />
+                  </div>
+                }
                 <Button
                   className={showHideButtonClass}
                   text={showPages ? localization.signviewHide : localization.reviewPDF}

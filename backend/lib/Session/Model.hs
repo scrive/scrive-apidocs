@@ -27,6 +27,7 @@ import MagicHash
 import MinutesTime
 import Session.Cookies
 import Session.Data
+import Session.SessionID as SessionID
 import User.Model
 import Utils.HTTP
 
@@ -35,13 +36,12 @@ import Utils.HTTP
 -- its id (needed when document ticket/eleg transaction needs to be
 -- inserted into the database, but current session is temporary), also
 -- modifying Context to carry modified id.
-
 getNonTempSessionID :: ( CryptoRNG m, KontraMonad m, MonadDB m
                        , MonadThrow m, MonadTime m, ServerMonad m )
                     => m SessionID
 getNonTempSessionID = do
   sid <- (get ctxsessionid) `liftM` getContext
-  if sid == tempSessionID
+  if sid == SessionID.tempSessionID
     then do
       new_sid <- insertEmptySession
       modifyContext $ set ctxsessionid new_sid
@@ -53,8 +53,9 @@ getNonTempSessionID = do
       csrf_token <- random
       expires <- sessionNowModifier `liftM` currentTime
       domain <- currentDomain
-      session <- update $ CreateSession $
-        Session tempSessionID Nothing Nothing expires token csrf_token domain
+      session <- update $ CreateSession
+        (Session SessionID.tempSessionID Nothing Nothing
+         expires token csrf_token domain)
       return $ sesID session
 
 -- | Get current session based on cookies set.
@@ -99,7 +100,7 @@ updateSession :: ( FilterMonad Response m, MonadLog m, MonadDB m, MonadThrow m
               => Session -> SessionID -> (Maybe UserID) -> (Maybe UserID)
               -> m ()
 updateSession old_ses new_ses_id new_muser new_mpad_user = do
-  case new_ses_id == tempSessionID of
+  case new_ses_id == SessionID.tempSessionID of
     -- We have no session and we want to log in some user
     True | (isJust new_muser || isJust new_mpad_user) -> do
       startNewSession old_ses new_muser new_mpad_user >>= startSessionCookie

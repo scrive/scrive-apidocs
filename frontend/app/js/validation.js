@@ -112,17 +112,17 @@ var EmailValidation = exports.EmailValidation = Validation.extend({
 });
 
 var PhoneValidation = exports.PhoneValidation = Validation.extend({
-     defaults: {
-            validates: function(t) {
-                /* After trimming and removal of ignorable characters
-                 * mobile phone number is required to have 11 digits
-                 * including country code. Prefix it with plus sign.
-                 */
-                var z = t.replace(/-/g, "").replace(/\s/g, "");
-                var regex = new RegExp(defs.PATTERN_PHONE, "i");
-                return regex.test(z);
-            },
-            message: "Wrong phone number format!"
+     defaults: {validates: function (t) {
+                             /* After trimming and removal of ignorable characters
+                              * mobile phone number is required to have 9 digits
+                              * including country code. Prefix it with plus sign.
+                              * must match asValidPhone in backend code
+                              */
+                             t = t.replace(/[-() ]/g, "");
+                             var regex = new RegExp("^\\+[0-9]{9,}$", "i");
+                             return regex.test(t);
+                           },
+                message: localization.validation.wrongPhone
     }
 });
 
@@ -136,27 +136,12 @@ var PhoneValidationNO = exports.PhoneValidationNO = Validation.extend({
     }
 });
 
-// we want to match international characters
-// http://stackoverflow.com/questions/1073412/javascript-validation-issue-with-international-characters
-// u0021-007E is ASCII special characters (see http://www.unicode.org/charts/PDF/U0000.pdf)
-// If we want to match more see: http://www.unicode.org/charts/
-var nameCharactersRegex = /[^a-z\u0021-\u007E\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF-' ]/;
-
 var NameValidation = exports.NameValidation = Validation.extend({
-    defaults: {
-            validates: function(t) {
-                var t = $.trim(t);
-
-                if (t.length === 0 || t.length > 100) {
-                    return false;
-                }
-                if (nameCharactersRegex.test(t)) {
-                    return false;
-                }
-
-                return true;
-            },
-            message: "Name may contain only alphabetic characters, apostrophe, hyphen or space!"
+    defaults: {validates: function(t) {
+                            var regex = new RegExp(defs.PATTERN_NAME, "i");
+                            return regex.test(t.trim());
+                          },
+               message: localization.validation.wrongName
     }
 });
 
@@ -284,6 +269,79 @@ var PasswordEqValidation = exports.PasswordEqValidation = Validation.extend({
             return t == p1;
         },
         message: "The two passwords don't match!"
+    }
+});
+
+// general personal number (in account section)
+var PersonalNumberValidation = exports.PersonalNumberValidation = Validation.extend({
+    defaults: {validates: function (t) {
+                            t = t.replace(/[-+ ]/g, "");
+                            return /^[0-9]{10,12}$/i.test(t);
+                          },
+               message: localization.validation.wrongPersonalNumber
+    }
+});
+
+var PositionValidation = exports.PositionValidation = Validation.extend({
+    defaults: {validates: function(t) {
+                            var regex = new RegExp(defs.PATTERN_POSITION, "i");
+                            return regex.test(t.trim());
+                          },
+               message: localization.validation.wrongPosition
+    }
+});
+
+// must match asValidCompanyName in backend code
+var CompanyNameValidation = exports.CompanyNameValidation = Validation.extend({
+    defaults: {validates: function (t) {
+                            return t.trim().length <= 100;
+                          },
+               message: localization.validation.wrongCompanyName
+    }
+});
+
+var CompanyNumberValidation = exports.CompanyNumberValidation = Validation.extend({
+    defaults: {validates: function(t) {
+                            var regex = new RegExp(defs.PATTERN_COMPANY_NUMBER, "i");
+                            return regex.test(t.trim());
+                          },
+               message: localization.validation.wrongCompanyNumber
+    }
+});
+
+var CompanyAddressValidation = exports.CompanyAddressValidation = Validation.extend({
+    defaults: {validates: function (t) {
+                            var regex = new RegExp(defs.PATTERN_ADDRESS, "i");
+                            return regex.test(t.trim());
+                          },
+               message: localization.validation.wrongCompanyAddress
+    }
+});
+
+// must match asValidZip in backend code
+var CompanyZipValidation = exports.CompanyZipValidation = Validation.extend({
+    defaults: {validates: function (t) {
+                            return t.trim().length <= 20;
+                          },
+               message: localization.validation.wrongZip
+    }
+});
+
+// must match asValidCity in backend code
+var CompanyCityValidation = exports.CompanyCityValidation = Validation.extend({
+    defaults: {validates: function (t) {
+                            return t.trim().length <= 60;
+                          },
+               message: localization.validation.wrongCity
+    }
+});
+
+// must match asValidCountry in backend code
+var CompanyCountryValidation = exports.CompanyCountryValidation = Validation.extend({
+    defaults: {validates: function (t) {
+                            return t.trim().length <= 60;
+                          },
+               message: localization.validation.wrongCountry
     }
 });
 

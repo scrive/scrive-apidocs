@@ -3,8 +3,6 @@ module User.UserControl(
   , sendChangeToExistingEmailInternalWarningMail
   , handleGetChangeEmail
   , handlePostChangeEmail
-  , getUserInfoUpdate
-  , getUserGroupAddressUpdate
   , handleUsageStatsJSONForUserDays
   , handleUsageStatsJSONForUserMonths
   , isUserDeletable
@@ -26,7 +24,6 @@ import Data.Time.Clock
 import Log
 import Text.JSON (JSValue(..))
 import Text.StringTemplates.Templates
-import qualified Data.Text as T
 import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 
@@ -123,40 +120,6 @@ handlePostChangeEmail uid hash =  withUser $ \user -> do
     Just _password -> do
       flashmessage <-  flashMessageProblemWithPassword
       return $ internalResponseWithFlash flashmessage $ LinkAccount
-
-getUserInfoUpdate :: Kontrakcja m => m (UserInfo -> UserInfo)
-getUserInfoUpdate  = do
-    -- a lot doesn't have validation rules defined, but i put in what we do have
-    mfstname          <- getOptionalField asValidName "fstname"
-    msndname          <- getOptionalField asValidName "sndname"
-    mpersonalnumber   <- getField "personalnumber"
-    mphone            <- getField "phone"
-    mcompanyposition  <- getOptionalField asValidPosition "companyposition"
-    return $ \ui ->
-        ui {
-            userfstname         = fromMaybe (userfstname         ui) mfstname
-          , usersndname         = fromMaybe (usersndname         ui) msndname
-          , userpersonalnumber  = fromMaybe (userpersonalnumber  ui) mpersonalnumber
-          , usercompanyposition = fromMaybe (usercompanyposition ui) mcompanyposition
-          , userphone           = fromMaybe (userphone           ui) mphone
-        }
-
-getUserGroupAddressUpdate :: Kontrakcja m => m (UserGroupAddress -> UserGroupAddress)
-getUserGroupAddressUpdate = do
-    -- a lot doesn't have validation rules defined, but i put in what we do have
-  mcompanynumber <- getValidField asValidCompanyNumber "companynumber"
-  mcompanyaddress <- getValidField asValidAddress "companyaddress"
-  mcompanyzip <- getField "companyzip"
-  mcompanycity <- getField "companycity"
-  mcompanycountry <- getField "companycountry"
-  return $
-      maybe id (set ugaCompanyNumber . T.pack) mcompanynumber
-    . maybe id (set ugaAddress       . T.pack) mcompanyaddress
-    . maybe id (set ugaZip           . T.pack) mcompanyzip
-    . maybe id (set ugaCity          . T.pack) mcompanycity
-    . maybe id (set ugaCountry       . T.pack) mcompanycountry
-  where
-    getValidField = getDefaultedField ""
 
 handleUsageStatsJSONForUserDays :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserDays = do

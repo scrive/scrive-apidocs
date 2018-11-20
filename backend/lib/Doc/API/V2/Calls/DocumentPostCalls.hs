@@ -579,6 +579,9 @@ docApiV2SigChangeEmailAndMobile did slid = logDocumentAndSignatory did slid . ap
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument
     guardSignatoryHasNotSigned slid =<< theDocument
+    sl <- guardGetSignatoryFromIdForDocument slid
+    when (isAuthor sl)
+      (apiError $ signatoryStateError "Cannot change email or mobile of document author")
     -- Parameters
     -- We are not using `asValidPhoneForSMS`, as we might not need to be so
     -- strict. Instead `guardThatDocumentCanBeStarted` checks stuff later.
@@ -586,9 +589,6 @@ docApiV2SigChangeEmailAndMobile did slid = logDocumentAndSignatory did slid . ap
     validEmail <- apiV2ParameterOptional (ApiV2ParameterTextWithValidation "email" asValidEmail)
     -- Guard Parameters
     when (isNothing validMobile && isNothing validEmail ) (apiError $ requestParameterMissing "mobile_number or email")
-    sl <- guardGetSignatoryFromIdForDocument slid
-    when (isAuthor sl)
-      (apiError $ signatoryStateError "Cannot change email or mobile of document author")
     let hasMobileField = isJust . getFieldByIdentity MobileFI . signatoryfields $ sl
         hasEmailField  = isJust . getFieldByIdentity EmailFI  . signatoryfields $ sl
     when (isJust validMobile && not hasMobileField)

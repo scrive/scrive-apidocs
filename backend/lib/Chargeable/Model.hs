@@ -12,6 +12,7 @@ module Chargeable.Model (
   , ChargeUserGroupForClosingDocument(..)
   , GetNumberOfDocumentsStartedThisMonth(..)
   , ChargeUserGroupForClosingSignature(..)
+  , ChargeUserGroupForShareableLink(..)
   ) where
 
 import Control.Monad.Catch
@@ -38,7 +39,8 @@ data ChargeableItem =
   CIClosingSignature       |
   CINOBankIDSignature      |
   CIDKNemIDSignature       |
-  CIFITupasAuthentication
+  CIFITupasAuthentication  |
+  CIShareableLink
   deriving (Eq, Ord, Show, Typeable)
 
 instance PQFormat ChargeableItem where
@@ -63,8 +65,9 @@ instance FromSQL ChargeableItem where
       10 -> return CINOBankIDSignature
       11 -> return CIDKNemIDSignature
       12 -> return CIFITupasAuthentication
+      13 -> return CIShareableLink
       _  -> throwM RangeError {
-        reRange = [(1, 12)]
+        reRange = [(1, 13)]
       , reValue = n
       }
 
@@ -82,6 +85,7 @@ instance ToSQL ChargeableItem where
   toSQL CINOBankIDSignature      = toSQL (10::Int16)
   toSQL CIDKNemIDSignature       = toSQL (11::Int16)
   toSQL CIFITupasAuthentication  = toSQL (12::Int16)
+  toSQL CIShareableLink          = toSQL (13::Int16)
 
 ----------------------------------------
 
@@ -145,6 +149,11 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupFor
 data ChargeUserGroupForClosingSignature = ChargeUserGroupForClosingSignature DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForClosingSignature () where
   update (ChargeUserGroupForClosingSignature document_id) = update (ChargeUserGroupFor CIClosingSignature 1 document_id)
+
+-- | Charge user group of the author of the document for using a shareable link
+data ChargeUserGroupForShareableLink = ChargeUserGroupForShareableLink DocumentID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForShareableLink () where
+  update (ChargeUserGroupForShareableLink document_id) = update (ChargeUserGroupFor CIShareableLink 1 document_id)
 
 data ChargeUserGroupFor = ChargeUserGroupFor ChargeableItem Int32 DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupFor () where

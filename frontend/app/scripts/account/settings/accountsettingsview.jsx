@@ -115,6 +115,7 @@ module.exports = React.createClass({
                   <InfoTextInput
                     ref="fstname"
                     name="fstname"
+                    className={!model.fstnameValid() ? "redborder" : ""}
                     value={model.fstname()}
                     onChange={this.onFstnameChange}
                   />
@@ -128,6 +129,7 @@ module.exports = React.createClass({
                   <InfoTextInput
                     ref="sndname"
                     name="sndname"
+                    className={!model.sndnameValid() ? "redborder" : ""}
                     value={model.sndname()}
                     onChange={this.onSndnameChange}
                   />
@@ -141,6 +143,7 @@ module.exports = React.createClass({
                   <InfoTextInput
                     ref="personalnumber"
                     name="personalnumber"
+                    className={!model.personalnumberValid() ? "redborder" : ""}
                     value={model.personnumber()}
                     onChange={this.onPersonnumberChange}
                   />
@@ -227,6 +230,7 @@ module.exports = React.createClass({
                   <InfoTextInput
                     ref="companyposition"
                     name="companyposition"
+                    className={!model.positionValid() ? "redborder" : ""}
                     value={model.companyposition()}
                     onChange={this.onCompanypositionChange}
                   />

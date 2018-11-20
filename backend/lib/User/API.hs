@@ -19,7 +19,6 @@ import Control.Concurrent.Lifted
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.Aeson
-import Data.Label (modify)
 import Data.Unjson
 import Happstack.Server hiding (dir, forbidden, host, lookCookieValue, ok, path, resp, simpleHTTP)
 import Happstack.Server.Internal.Cookie
@@ -34,6 +33,7 @@ import qualified Data.Map as Map
 import qualified Data.Text as T
 
 import API.Monad.V1
+import API.V2.Parameters
 import Context
 import DataRetentionPolicy
 import DataRetentionPolicy.Guards
@@ -275,26 +275,65 @@ apiCallUpdateUserProfile :: Kontrakcja m => m Response
 apiCallUpdateUserProfile = api $ do
   (user, _ , _) <- getAPIUser APIPersonal
   ctx <- getContext
-  infoUpdate <- getUserInfoUpdate
+
+  -- allow empty strings through validation
+  let emptyOK _ "" = Good ""
+      emptyOK v s = v s
+
+      getParameter name validation prevValue = do
+        mx <- apiV2ParameterOptional $ ApiV2ParameterTextWithValidation name $ emptyOK validation
+        return $ fromMaybe prevValue mx
+
+      getUserParameter n v prevValue =
+        T.unpack <$> (getParameter n v $ T.pack $ prevValue $ userinfo user)
+
+  companyposition <- getUserParameter "companyposition" asValidPosition usercompanyposition
+  phone <- getUserParameter "phone" asValidPhone userphone
+  personalnumber <- getUserParameter "personalnumber" asValidPersonalNumber userpersonalnumber
+  fstname <- getUserParameter "fstname" asValidName userfstname
+  sndname <- getUserParameter "sndname" asValidName usersndname
+
+  let ui = (userinfo user) { userfstname         = fstname
+                           , usersndname         = sndname
+                           , userpersonalnumber  = personalnumber
+                           , usercompanyposition = companyposition
+                           , userphone           = phone
+                           }
 
   mlang <- (join . (fmap langFromCode)) <$> getField "lang"
   when_ (isJust mlang) $ dbUpdate $ SetUserSettings (userid user) $ (usersettings user) { lang = fromJust mlang  }
 
-  _ <- dbUpdate $ SetUserInfo (userid user) (infoUpdate $ userinfo user)
+  _ <- dbUpdate $ SetUserInfo (userid user) ui
   _ <- dbUpdate $ LogHistoryUserInfoChanged (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
-                                               (userinfo user) (infoUpdate $ userinfo user)
-                                               (userid <$> get ctxmaybeuser ctx)
+                                               (userinfo user) ui (userid <$> get ctxmaybeuser ctx)
   if (useriscompanyadmin user)
     then do
       ug <- getUserGroupForUser user
-      mcompanyname <- getDefaultedField "" asValidCompanyName "companyname"
-      ugaddressupdate <- getUserGroupAddressUpdate
-      _ <- dbUpdate . UserGroupUpdate
-        . maybe id (set ugName . T.pack) mcompanyname
-        . modify ugAddress ugaddressupdate
-        $ ug
+      companyname <- getParameter "companyname" asValidCompanyName $ get ugName ug
+      let getAddrParameter n v prevValue =
+            getParameter n v $ get (prevValue . ugAddress) ug
+      number <- getAddrParameter "companynumber" asValidCompanyNumber ugaCompanyNumber
+      address <- getAddrParameter "companyaddress" asValidAddress ugaAddress
+      zip' <- getAddrParameter "companyzip" asValidZip ugaZip
+      city <- getAddrParameter "companycity" asValidCity ugaCity
+      country <- getAddrParameter "companycountry" asValidCountry ugaCountry
+      let ug' =   set ugName companyname
+                $ set (ugaCompanyNumber . ugAddress) number
+                $ set (ugaAddress . ugAddress) address
+                $ set (ugaZip . ugAddress) zip'
+                $ set (ugaCity . ugAddress) city
+                $ set (ugaCountry . ugAddress) country
+                $ ug
+      _ <- dbUpdate $ UserGroupUpdate ug'
       Ok <$> (runJSONGenT $ value "changed" True)
-    else  Ok <$> (runJSONGenT $ value "changed" True)
+    else do
+      fs <- mapM getField ["companyname", "companynumber", "companyaddress", "companyzip", "companycity", "companycountry"]
+      when (any isJust fs) $ V2.apiError $
+        V2.APIError { errorType = V2.InsufficientPrivileges
+                    , errorHttpCode = 403
+                    , errorMessage = "You do not have permission to perform this action on company settings"
+                    }
+      Ok <$> (runJSONGenT $ value "changed" True)
 
 apiCallChangeEmail :: Kontrakcja m => m Response
 apiCallChangeEmail = api $ do

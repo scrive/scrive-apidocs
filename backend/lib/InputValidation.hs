@@ -18,6 +18,7 @@ module InputValidation
     , asValidCompanyName
     , asValidCompanyNumber
     , asValidNOBankIdPersonalNumber
+    , asValidPersonalNumber
     , asValidSEBankIdPersonalNumber
     , asValidAddress
     , asValidPhone
@@ -40,6 +41,9 @@ module InputValidation
     , asValidNorwegianSSN
     , asValidDanishSSN
     , asValidFinnishSSN
+    , asValidZip
+    , asValidCity
+    , asValidCountry
     , asWord32
 ) where
 
@@ -240,6 +244,15 @@ withFailure :: Kontrakcja m => (Input, Result a) -> m a
 withFailure (_,Good x) = return x
 withFailure _        = internalError
 
+checkFormatWithSensitive :: Bool -> T.Text -> String -> Result String
+checkFormatWithSensitive caseSensitive format input | isValidFormat input = return input
+                                                    | otherwise = Bad
+  where isValidFormat = isJust . Rx.find (Rx.regex opts format) . T.pack
+        opts = if caseSensitive then [] else [Rx.CaseInsensitive]
+
+checkFormat :: T.Text -> String -> Result String
+checkFormat = checkFormatWithSensitive True
+
 -- | Creates a clean and validated email.
 --
 -- Validating emails is bizarrely hard.  These rules define a subset
@@ -279,15 +292,11 @@ asValidEmail input =
     stripWhitespace input
     >>= checkIfEmpty
     >>= checkLengthIsMax 200
-    >>= checkFormat
+    >>= checkFormatWithSensitive False emailFormat
     >>= mkLowerCase
     where
-          checkFormat :: String -> Result String
-          checkFormat email | isValidFormat email = return email
-                            | otherwise = Bad
-          isValidFormat :: String -> Bool
-          -- This must match PATTERN_EMAIL in frontend code
-          isValidFormat = isJust . Rx.find (Rx.regex [Rx.CaseInsensitive] "^[a-zA-Z0-9&._%+-]+@(\\p{L}|[0-9.-])+[.][a-z]{2,}$") . T.pack
+      -- This must match PATTERN_EMAIL in frontend code
+      emailFormat = "^[a-zA-Z0-9&._%+-]+@(\\p{L}|[0-9.-])+[.][a-z]{2,}$"
 
 {- |
     Creates an email that hasn't been completely validated.  It still does handy things
@@ -331,42 +340,71 @@ asDirtyPassword input = checkIfEmpty input
 
 {- |
     Creates a clean and validated name (works for first or second)
-    White list: Alphanumeric characters, Marks, Numbers (incl. Roman numerals, etc), Punctuation, Whitespace, Symbols
+    White list: Letters, digits, spaces and hyphens
     Size: Up to 100 chars
+    Must match PATTERN_NAME in frontend code
 -}
 asValidName :: String -> Result String
 asValidName input =
     stripWhitespace input
     >>= checkIfEmpty
-    >>= checkLengthIsMax 100
-    >>= checkOnly [isPrint]
-
+    >>= checkFormatWithSensitive False "^[- 0-9\\p{L}]{0,100}$"
 
 {- |
-    Creates a clean and validated company name.
-    White list: Alphanumeric characters, Marks, Numbers (incl. Roman numerals, etc), Punctuation, Whitespace, Symbols
+    Barely validates company names.
     Size: Up to 100 chars
+    Must match CompanyNameValidation in frontend code
 -}
 asValidCompanyName :: String -> Result String
 asValidCompanyName input =
-    (Good $ map (\ch -> if ch == '\t' then ' ' else ch) input)
-    >>= stripWhitespace
+    stripWhitespace input
     >>= checkIfEmpty
     >>= checkLengthIsMax 100
-    >>= checkOnly [isPrint]
 
 {- |
     Creates a clean and validated company number.
-    White list: Alphabetic characters, Numeric characters, punctuation
+    White list: Alphabetic characters, Numeric characters, spaces and hyphens
     Size: From 4 to 50 chars
+    Regex must match PATTERN_COMPANY_NUMBER in frontend code
 -}
 asValidCompanyNumber :: String -> Result String
 asValidCompanyNumber input =
     stripWhitespace input
     >>= checkIfEmpty
-    >>= checkLengthIsMax 50
-    >>= checkOnly [isDigit, (`elem` ['a'..'z']), (`elem` ['A'..'Z']), (`elem` ['-', ' '])]
+    >>= checkFormatWithSensitive False "^[- 0-9\\p{L}]{4,50}$"
 
+{- |
+    Barely validates zip codes.
+    Size: 1..20 chars
+    Must match CompanyZipValidation in frontend code
+-}
+asValidZip :: String -> Result String
+asValidZip input =
+    stripWhitespace input
+    >>= checkIfEmpty
+    >>= checkLengthIsMax 20
+
+{- |
+    Barely validates city names.
+    Size: 1..60 chars
+    Must match CompanyCityValidation in frontend code
+-}
+asValidCity :: String -> Result String
+asValidCity input =
+    stripWhitespace input
+    >>= checkIfEmpty
+    >>= checkLengthIsMax 60
+
+{- |
+    Barely validates country names.
+    Size: 1..60 chars
+    Must match CompanyCountryValidation in frontend code
+-}
+asValidCountry :: String -> Result String
+asValidCountry input =
+    stripWhitespace input
+    >>= checkIfEmpty
+    >>= checkLengthIsMax 60
 
 {- |
     Validated swedish personal number.
@@ -464,16 +502,31 @@ asValidNOBankIdPersonalNumber input =
              | otherwise -> Bad)
 
 {- |
+    Creates a clean and validated personal number that should cover all personal number variants
+    White list: Digits, hyphens, plus (to be stripped)
+    Size: 10-12
+    Must match PersonalNumberValidation in frontend code
+-}
+asValidPersonalNumber :: String -> Result String
+asValidPersonalNumber input =
+    stripAllWhitespace input
+    >>= filterOutCharacters "-+"
+    >>= checkOnly [isDigit]
+    >>= (\xs -> if
+             | length xs `elem` [10..12] -> return xs
+             | otherwise -> Bad)
+
+{- |
     Creates a clean and validated address.
     White list: Space, Apostrophe ', Open and close brackets (), Colon :, Comma , Forward slash //, Full-stop ., Hash #, Hyphen -, Alphabetic characters, Numeric characters
-    Size: Up to 200 chars
+    Size: Up to 100 chars
+    Regex must match PATTERN_ADDRESS in frontend code
 -}
 asValidAddress :: String -> Result String
 asValidAddress input =
     stripWhitespace input
     >>= checkIfEmpty
-    >>= checkLengthIsMax 200
-    >>= checkOnly (isAlphaNum : map (==) " \'():,/.#-")
+    >>= checkFormatWithSensitive False "^[- '():,/.#0-9\\p{L}]{0,100}$"
 
 asValidUserGroupID :: String -> Result UserGroupID
 asValidUserGroupID input = checkIfEmpty input
@@ -504,13 +557,13 @@ asValidIPAddressWithMaskList input =
     Creates a clean and validated company position.
     White list: Space, Ampersand &, Apostrophe ', Open and close brackets (), Colon :, Comma , Hyphen -, Alphabetic characters, Numeric characters
     Size: Up to 100 chars
+    Regex must match PATTERN_POSITION in frontend code
 -}
 asValidPosition :: String -> Result String
 asValidPosition input =
     stripWhitespace input
     >>= checkIfEmpty
-    >>= checkLengthIsMax 200
-    >>= checkOnly (isAlphaNum : map (==) " &():,-")
+    >>= checkFormatWithSensitive False "^[- &'():,0-9\\p{L}]{0,100}$"
 
 {- |
     Creates a Bool result for a check box, depending on whether it was set to "on" or "off".
@@ -527,14 +580,15 @@ asValidCheckBox input =
 
 
 {- |
-    No idea how this validator should look like
+    Strip all whitespace, braces and hyphens
+    Must start with a + and be followed by at least 9 digits
+    Must match PhoneValidation in frontend code
 -}
 asValidPhone :: String -> Result String
 asValidPhone input =
-    stripWhitespace input
-    >>= checkIfEmpty
-    >>= checkLengthIsMax 100
-    >>= checkOnly (isAlphaNum : map (==) " +-()")
+    stripAllWhitespace input
+    >>= filterOutCharacters "-()"
+    >>= checkFormat "^\\+[0-9]{9,}$"
 
 asValidPhoneForSMS :: String -> Result String
 asValidPhoneForSMS input =

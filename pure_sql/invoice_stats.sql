@@ -105,6 +105,7 @@ CREATE OR REPLACE FUNCTION print_csv(date_from TIMESTAMPTZ, date_to TIMESTAMPTZ)
         "Danish NemID signatures" BIGINT,
         "Danish NemID authorization" BIGINT,
         "Finnish TUPAS authorization" BIGINT,
+        "Shareable links used" BIGINT,
         "Telia SMSes sent (physical)" BIGINT,
         "Users at start of period" BIGINT,
         "Users at end of period" BIGINT,
@@ -226,6 +227,12 @@ CREATE OR REPLACE FUNCTION print_csv(date_from TIMESTAMPTZ, date_to TIMESTAMPTZ)
            , (SELECT sum(chi.quantity)
                 FROM chargeable_items chi
                WHERE chi.user_group_id = user_groups.id
+                 AND chi.type = 13
+                 AND chi.time >= period.from
+                 AND chi.time <= period.to) as "Shareable links used"
+           , (SELECT sum(chi.quantity)
+                FROM chargeable_items chi
+               WHERE chi.user_group_id = user_groups.id
                  AND chi.type = 5
                  AND chi.time >= period.from
                  AND chi.time <= period.to) as "Telia SMSes sent (physical)"
@@ -269,6 +276,7 @@ CREATE OR REPLACE FUNCTION print_csv(date_from TIMESTAMPTZ, date_to TIMESTAMPTZ)
              OR report."Danish NemID signatures" > 0
              OR report."Danish NemID authorization" > 0
              OR report."Finnish TUPAS authorization" > 0
+             OR report."Shareable links used" > 0
              OR report."Users at start of period" > 0
              OR report."Users at end of period" > 0
           ORDER BY 1, 2;

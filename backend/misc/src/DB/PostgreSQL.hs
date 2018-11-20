@@ -12,19 +12,22 @@ import Database.PostgreSQL.PQTypes.Internal.Connection
 import Database.PostgreSQL.PQTypes.Model.CompositeType
 import Log
 
-type BasicConnectionSource   = ConnectionSource '[MonadBase IO, MonadMask]
-type TrackedConnectionSource = ConnectionSource '[MonadBase IO, MonadMask, MonadLog]
+type BasicConnectionSource   =
+  ConnectionSource '[MonadBase IO, MonadMask]
+type TrackedConnectionSource =
+  ConnectionSource '[MonadBase IO, MonadMask, MonadLog]
 
 newtype ConnectionTracker = ConnectionTracker {
     unConnectionTracker :: forall m. MonadLog m => Int -> Int -> m ()
   }
 
 maxConnectionTracker :: Int -> ConnectionTracker
-maxConnectionTracker maxConnections = ConnectionTracker $ \allocatedNow availableNow -> do
-  when (allocatedNow == maxConnections && availableNow == 0) $ do
-    logAttention "Limit of available database connections reached" $ object [
+maxConnectionTracker maxConnections = ConnectionTracker $
+  \allocatedNow availableNow -> do
+    when (allocatedNow == maxConnections && availableNow == 0) $ do
+      logAttention "Limit of available database connections reached" $ object [
         "allocated" .= allocatedNow
-      ]
+        ]
 
 detailedConnectionTracker :: ConnectionTracker
 detailedConnectionTracker = ConnectionTracker $ \allocatedNow availableNow -> do

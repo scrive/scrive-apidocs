@@ -53,11 +53,12 @@ import Analytics.Include
 import AppView
 import Attachment.AttachmentID (AttachmentID)
 import Attachment.Model
+import Chargeable.Model
 import Cookies
 import DB
 import DB.TimeZoneName
 import Doc.API.Callback.Model
-import Doc.Conditions (DocumentDoesNotExist(..), SignatoryTokenDoesNotMatch(..))
+import Doc.Conditions
 import Doc.DocInfo
 import Doc.DocMails
 import Doc.DocStateData
@@ -246,6 +247,7 @@ handleSignShowSaveMagicHash did sid mh = logDocumentAndSignatory did sid $
   )
   `catchDBExtraException` (\(DocumentDoesNotExist _) -> respond404)
   `catchDBExtraException` (\SignatoryTokenDoesNotMatch -> respondLinkInvalid)
+  `catchDBExtraException` (\(_ :: DocumentWasPurged) -> respondLinkInvalid)
 
 handleSignFromTemplate :: Kontrakcja m => DocumentID -> MagicHash -> m Response
 handleSignFromTemplate tplID mh = logDocument tplID $ do
@@ -273,6 +275,7 @@ handleSignFromTemplate tplID mh = logDocument tplID $ do
                        \ template" $ object [identifier docID]
           respondLinkInvalid
         Just sl -> do
+          dbUpdate $ ChargeUserGroupForShareableLink docID
           dbUpdate $ AddDocumentSessionToken (signatorylinkid sl)
                                              (signatorymagichash sl)
           sendRedirect $ LinkSignDocNoMagicHash docID $ signatorylinkid sl
