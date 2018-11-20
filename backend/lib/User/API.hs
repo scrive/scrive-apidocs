@@ -277,10 +277,7 @@ apiCallUpdateUserProfile = api $ do
   ctx <- getContext
 
   -- allow empty strings through validation
-  let emptyOK _ "" = Good ""
-      emptyOK v s = v s
-
-      getParameter name validation prevValue = do
+  let getParameter name validation prevValue = do
         mx <- apiV2ParameterOptional $ ApiV2ParameterTextWithValidation name $ emptyOK validation
         return $ fromMaybe prevValue mx
 

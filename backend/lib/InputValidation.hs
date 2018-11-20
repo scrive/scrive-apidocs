@@ -6,6 +6,7 @@ module InputValidation
     , isGood
     , isBad
     , isEmpty
+    , emptyOK
     , resultToMaybe
     , getOptionalField
     , getDefaultedField
@@ -121,6 +122,10 @@ isBad _ = False
 isEmpty :: Result a -> Bool
 isEmpty Empty = True
 isEmpty _ = False
+
+emptyOK :: Monoid a => (String -> Result a) -> (String -> Result a)
+emptyOK _ ""  = Good mempty
+emptyOK val s = val s
 
 {- |
     Use this to get and validate most of the usual fields.  If the field
