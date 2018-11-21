@@ -42,7 +42,7 @@ import Text.XML.DirtyContent (XMLContent(..))
 import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo (getEmail)
-import Util.SignatoryLinkUtils (getSigLinkFor)
+import Util.SignatoryLinkUtils (getSigLinkFor, isApprover, isSignatory, isViewer)
 import VersionTH
 import qualified HostClock.Model as HC
 
@@ -75,7 +75,8 @@ data EventRenderTarget =
  | EventForArchive
   deriving (Enum, Eq, Ord, Bounded, Show)
 
-eventTextTemplateName :: EventRenderTarget -> CurrentEvidenceEventType -> String
+eventTextTemplateName :: EventRenderTarget -> CurrentEvidenceEventType
+                      -> String
 eventTextTemplateName t e =  show e ++ suffix t
   where suffix EventForEvidenceLog       = "Log"
         suffix EventForArchive           = "Archive"
@@ -91,8 +92,9 @@ signatoryLinkTemplateFields sl = do
   F.value "email"       $ signatorylinkdeliverymethod sl == EmailDelivery
   F.value "mobile"      $ signatorylinkdeliverymethod sl == MobileDelivery
   F.value "emailmobile" $ signatorylinkdeliverymethod sl == EmailAndMobileDelivery
-  F.value "viewing"     $ not $ signatoryispartner sl
-  F.value "signing"     $ signatoryispartner sl
+  F.value "viewing"     $ isViewer sl
+  F.value "signing"     $ isSignatory sl
+  F.value "approving"   $ isApprover sl
 
 
 -- | Create evidence text that goes into evidence log
@@ -412,7 +414,9 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewArchivedMethodFITupasToSMSPinEvidence    |
   ChangeAuthenticationToViewArchivedMethodFITupasToSEBankIDEvidence  |
   ChangeAuthenticationToViewArchivedMethodFITupasToNOBankIDEvidence  |
-  ChangeAuthenticationToViewArchivedMethodFITupasToDKNemIDEvidence
+  ChangeAuthenticationToViewArchivedMethodFITupasToDKNemIDEvidence   |
+  ApprovedByApproverPartyEvidence |
+  RejectDocumentByApproverEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -678,6 +682,8 @@ instance ToSQL EvidenceEventType where
   toSQL (Current ChangeAuthenticationToViewArchivedMethodFITupasToSEBankIDEvidence) = toSQL (189::Int16)
   toSQL (Current ChangeAuthenticationToViewArchivedMethodFITupasToNOBankIDEvidence) = toSQL (190::Int16)
   toSQL (Current ChangeAuthenticationToViewArchivedMethodFITupasToDKNemIDEvidence) = toSQL (191::Int16)
+  toSQL (Current ApprovedByApproverPartyEvidence                                 ) = toSQL (192::Int16)
+  toSQL (Current RejectDocumentByApproverEvidence                                ) = toSQL (193::Int16)
 
 instance FromSQL EvidenceEventType where
   type PQBase EvidenceEventType = PQBase Int16
@@ -875,8 +881,10 @@ instance FromSQL EvidenceEventType where
       189 -> return (Current ChangeAuthenticationToViewArchivedMethodFITupasToSEBankIDEvidence)
       190 -> return (Current ChangeAuthenticationToViewArchivedMethodFITupasToNOBankIDEvidence)
       191 -> return (Current ChangeAuthenticationToViewArchivedMethodFITupasToDKNemIDEvidence)
+      192 -> return (Current ApprovedByApproverPartyEvidence                                 )
+      193 -> return (Current RejectDocumentByApproverEvidence                                )
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 191)]
+        reRange = [(1, 193)]
       , reValue = n
       }
 

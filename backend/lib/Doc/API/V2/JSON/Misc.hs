@@ -2,6 +2,7 @@
 module Doc.API.V2.JSON.Misc (
   utcTimeToAPIFormat
 , unjsonDocumentStatus
+, unjsonSignatoryRole
 , unjsonDeliveryStatus
 , unjsonAuthenticationToViewMethod
 , unjsonAuthenticationToSignMethod
@@ -31,6 +32,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Text as T
 
 import Doc.API.V2.JSON.Utils
+import Doc.Data.SignatoryLink
 import Doc.DocStateData
 import Doc.DocumentID
 import KontraLink
@@ -46,21 +48,27 @@ utcTimeToAPIFormat time = T.pack (formatTime defaultTimeLocale (iso8601DateForma
 -- Unjson for few simple enum types used
 unjsonDocumentStatus :: UnjsonDef DocumentStatus
 unjsonDocumentStatus = unjsonEnumBy "DocumentStatus" [
-      (Preparation, "preparation")
-    , (Pending, "pending")
-    , (Closed, "closed")
-    , (Canceled, "canceled")
-    , (Timedout, "timedout")
-    , (Rejected, "rejected")
+      (Preparation,   "preparation")
+    , (Pending,       "pending")
+    , (Closed,        "closed")
+    , (Canceled,      "canceled")
+    , (Timedout,      "timedout")
+    , (Rejected,      "rejected")
     , (DocumentError, "document_error")
     ]
 
+unjsonSignatoryRole :: UnjsonDef SignatoryRole
+unjsonSignatoryRole = unjsonEnumBy "SignatoryRole"
+    [ (SignatoryRoleViewer,       "viewer")
+    , (SignatoryRoleApprover,     "approver")
+    , (SignatoryRoleSigningParty, "signing_party") ]
+
 unjsonDeliveryStatus :: UnjsonDef DeliveryStatus
 unjsonDeliveryStatus = unjsonEnumBy "DeliveryStatus" [
-      (Delivered, "delivered")
+      (Delivered,   "delivered")
     , (Undelivered, "not_delivered")
-    , (Unknown, "unknown")
-    , (Deferred, "deferred")
+    , (Unknown,     "unknown")
+    , (Deferred,    "deferred")
     ]
 
 unjsonAuthenticationToViewMethod :: UnjsonDef AuthenticationToViewMethod
@@ -68,9 +76,9 @@ unjsonAuthenticationToViewMethod = unjsonEnumBy "AuthenticationToViewMethod" [
       (StandardAuthenticationToView, "standard")
     , (SEBankIDAuthenticationToView, "se_bankid")
     , (NOBankIDAuthenticationToView, "no_bankid")
-    , (DKNemIDAuthenticationToView, "dk_nemid")
-    , (FITupasAuthenticationToView, "fi_tupas")
-    , (SMSPinAuthenticationToView, "sms_pin")
+    , (DKNemIDAuthenticationToView,  "dk_nemid")
+    , (FITupasAuthenticationToView,  "fi_tupas")
+    , (SMSPinAuthenticationToView,   "sms_pin")
     ]
 
 unjsonAuthenticationToSignMethod :: UnjsonDef AuthenticationToSignMethod
@@ -78,27 +86,27 @@ unjsonAuthenticationToSignMethod = unjsonEnumBy "AuthenticationToSignMethod" [
       (StandardAuthenticationToSign, "standard")
     , (SEBankIDAuthenticationToSign, "se_bankid")
     , (NOBankIDAuthenticationToSign, "no_bankid")
-    , (DKNemIDAuthenticationToSign, "dk_nemid")
-    , (SMSPinAuthenticationToSign, "sms_pin")
+    , (DKNemIDAuthenticationToSign,  "dk_nemid")
+    , (SMSPinAuthenticationToSign,   "sms_pin")
     ]
 
 unjsonDeliveryMethod :: UnjsonDef DeliveryMethod
 unjsonDeliveryMethod = unjsonEnumBy "DeliveryMethod" [
-      (EmailDelivery, "email")
-    , (PadDelivery, "pad")
-    , (APIDelivery, "api")
-    , (MobileDelivery, "mobile")
+      (EmailDelivery,          "email")
+    , (PadDelivery,            "pad")
+    , (APIDelivery,            "api")
+    , (MobileDelivery,         "mobile")
     , (EmailAndMobileDelivery, "email_mobile")
     ]
 
 unjsonConfirmationDeliveryMethod :: UnjsonDef ConfirmationDeliveryMethod
 unjsonConfirmationDeliveryMethod = unjsonEnumBy "ConfirmationDeliveryMethod" [
-      (EmailConfirmationDelivery, "email")
-    , (EmailLinkConfirmationDelivery, "email_link")
-    , (MobileConfirmationDelivery, "mobile")
-    , (EmailAndMobileConfirmationDelivery, "email_mobile")
+      (EmailConfirmationDelivery,              "email")
+    , (EmailLinkConfirmationDelivery,          "email_link")
+    , (MobileConfirmationDelivery,             "mobile")
+    , (EmailAndMobileConfirmationDelivery,     "email_mobile")
     , (EmailLinkAndMobileConfirmationDelivery, "email_link_mobile")
-    , (NoConfirmationDelivery, "none")
+    , (NoConfirmationDelivery,                 "none")
     ]
 
 unjsonLang :: UnjsonDef Lang

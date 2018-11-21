@@ -24,14 +24,15 @@ var RoleIcon = require("../../../scripts/designview/participants/roleicon");
         , element: $("body")[0]
       }));
 
-      var signs1 = signatory.signs()
+      assert.isTrue(signatory.signs());
       TestUtils.Simulate.click(orderIcon.getDOMNode());
-      var signs2 = signatory.signs()
-      assert.notEqual(signs1, signs2);
+      assert.isTrue(signatory.views());
       orderIcon.forceUpdate();
       TestUtils.Simulate.click(orderIcon.getDOMNode());
-      var signs3 = signatory.signs()
-      assert.equal(signs3, signs1);
+      assert.isTrue(signatory.approves());
+      orderIcon.forceUpdate();
+      TestUtils.Simulate.click(orderIcon.getDOMNode());
+      assert.isTrue(signatory.signs());
     });
 
 

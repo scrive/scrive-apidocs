@@ -63,7 +63,10 @@ documentOrderByToSQL DocumentOrderByType = def {
   , dobrName = "doc_order_type"
   }
 documentOrderByToSQL DocumentOrderByPartners = def {
-    dobrExpr = parenthesize $ selectSignatoryLinksSmartNames "documents.author_id <> signatory_links.id AND signatory_links.is_partner"
+    dobrExpr = parenthesize . selectSignatoryLinksSmartNames $
+               "documents.author_id <> signatory_links.id"
+               <+> "AND signatory_links.signatory_role ="
+               <?> SignatoryRoleSigningParty
   , dobrName = "doc_order_partners"
   }
 documentOrderByToSQL DocumentOrderByAuthor = def {

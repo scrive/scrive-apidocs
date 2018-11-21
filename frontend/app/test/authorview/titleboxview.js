@@ -232,12 +232,11 @@ describe("authorview/titleboxview", function () {
     document_.set("status", "pending");
     sinon.stub(document_, "currentSignatoryCanSign").returns(false);
     sinon.stub(document_, "currentViewerIsAuthor").returns(true);
-    sinon.stub(document_, "signatoriesThatCanSignNowOnPad").returns([
+    sinon.stub(document_, "signatoriesThatCanSignOrApproveNowOnPad").returns([
       document_.signatories()[1]
     ]);
 
     var component = renderComponent();
-
     assert.lengthOf(
       $(".s-give-to-next-signatory-pad-button", React.findDOMNode(component)), 1
     );
@@ -303,7 +302,7 @@ describe("authorview/titleboxview", function () {
     document_.set("status", "pending");
     sinon.stub(document_, "currentSignatoryCanSign").returns(false);
     sinon.stub(document_, "currentViewerIsAuthor").returns(true);
-    sinon.stub(document_, "signatoriesThatCanSignNowOnPad").returns([
+    sinon.stub(document_, "signatoriesThatCanSignOrApproveNowOnPad").returns([
       document_.signatories()[1]
     ]);
 

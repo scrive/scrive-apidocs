@@ -24,7 +24,7 @@ var GiveToNextSignatoryPadModalContent = React.createClass({
   },
   getInitialState: function () {
     return {
-      padNextSignatory: this.props.document.signatoriesThatCanSignNowOnPad()[0]
+      padNextSignatory: this.props.document.signatoriesThatCanSignOrApproveNowOnPad()[0]
     };
   },
   componentDidUpdate: function (prevProps, prevState) {
@@ -40,7 +40,7 @@ var GiveToNextSignatoryPadModalContent = React.createClass({
   render: function () {
     var self = this;
     var options = [];
-    var signatories = this.props.document.signatoriesThatCanSignNowOnPad();
+    var signatories = this.props.document.signatoriesThatCanSignOrApproveNowOnPad();
     var firstSignatoryName = null;
 
     if (signatories.length > 1) {
@@ -151,7 +151,7 @@ module.exports = React.createClass({
       !this.canGoToSignView() &&
       this.props.document.currentViewerIsAuthor() &&
       this.props.document.pending() &&
-      this.props.document.signatoriesThatCanSignNowOnPad().length > 0
+      this.props.document.signatoriesThatCanSignOrApproveNowOnPad().length > 0
     );
   },
   withdraw: function () {
@@ -220,7 +220,7 @@ module.exports = React.createClass({
     var self = this;
     var document_ = this.props.document;
 
-    var sig = document_.signatoriesThatCanSignNowOnPad()[0];
+    var sig = document_.signatoriesThatCanSignOrApproveNowOnPad()[0];
     if (sig == undefined) {
       return;
     }

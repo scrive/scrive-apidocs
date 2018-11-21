@@ -358,7 +358,10 @@ apiCallV1Ready did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
     auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) .getAuthorSigLink) <$> theDocument
-    ifM ((isPending  && not . any hasSigned . documentsignatorylinks) <$> theDocument)
+    ifM ((isPending &&
+          all (isSignatoryAndHasNotSigned || isApproverAndHasNotApproved) .
+          documentsignatorylinks) <$>
+          theDocument)
      {-then-} (Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument))
      {-else-} $ do
       checkObjectVersionIfProvided did
@@ -488,7 +491,7 @@ apiCallV1Reject did slid = logDocumentAndSignatory did slid . api $ do
     Just sll <- getSigLinkFor slid <$> theDocument
     customtext <- fmap strip <$> getField "customtext"
     switchLang . getLang =<< theDocument
-    (dbUpdate . RejectDocument slid customtext =<< signatoryActor ctx sll)
+    (dbUpdate . RejectDocument slid (isApprover sll) customtext =<< signatoryActor ctx sll)
         `catchDBExtraException` (\(DocumentStatusShouldBe _ _ i) -> throwM . SomeDBExtraException $ conflictError $ "Document not pending but " ++ show i)
         `catchDBExtraException` (\(SignatoryHasAlreadySigned {}) -> throwM . SomeDBExtraException $ conflictError $ "Signatory has already signed")
     postDocumentRejectedChange slid customtext =<< theDocument
@@ -506,7 +509,7 @@ apiCallV1CheckSign did slid = logDocumentAndSignatory did slid . api $ do
   (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
     whenM (not <$> isPending <$> theDocument ) $ do
       (throwM . SomeDBExtraException $ conflictError $ "Document not pending")
-    whenM (hasSigned <$> fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
+    whenM (isSignatoryAndHasSigned . getSigLinkFor slid <$> theDocument) $ do
       (throwM . SomeDBExtraException $ conflictError $ "Document already signed")
     whenM (theDocument >>= \doc -> signatoryNeedsToIdentifyToView (fromJust $ getSigLinkFor slid doc) doc) $ do
       (throwM . SomeDBExtraException $ forbidden "Authorization to view is needed")
@@ -553,9 +556,9 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
   acceptedAuthorAttachments <- getAcceptedAuthorAttachments
   olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh -- We store old document, as it is needed by postDocumentXXX calls
   olddoc `withDocument` ( do
-    whenM (not <$> isPending <$> theDocument ) $ do
+    whenM (not . isPending <$> theDocument ) $ do
       (throwM . SomeDBExtraException $ conflictError $ "Document not pending")
-    whenM (hasSigned <$> fromJust . getSigLinkFor slid <$> theDocument) $ do -- We can use fromJust since else we would not get access to document
+    whenM (isSignatoryAndHasSigned . getSigLinkFor slid <$> theDocument) $ do
       (throwM . SomeDBExtraException $ conflictError $ "Document already signed")
     whenM (theDocument >>= \doc -> signatoryNeedsToIdentifyToView (fromJust $ getSigLinkFor slid doc) doc) $ do
       (throwM . SomeDBExtraException $ forbidden "Authorization to view is needed")
@@ -744,10 +747,12 @@ apiCallV1ChangeAuthenticationToView did slid = logDocumentAndSignatory did slid 
     sl <- getSigLinkFor slid <$> theDocument >>= \case
       Nothing -> throwM . SomeDBExtraException $ badInput $ "Signatory link id " ++ (show slid) ++ " not valid for document id " ++ (show did)
       Just sl -> return sl
-    when (not . signatoryispartner $ sl) $
-      throwM . SomeDBExtraException $ badInput $ "Signatory link id " ++ (show slid) ++ " is a viewer and does not sign"
-    when (isJust . maybesigninfo $ sl) $
+    when (not . isSignatory $ sl) $
+      throwM . SomeDBExtraException $ badInput $ "Signatory link id " ++ (show slid) ++ " is a viewer or approver and does not sign"
+    when (isSignatoryAndHasSigned sl) $
       throwM . SomeDBExtraException $ badInput $ "Signatory link id " ++ (show slid) ++ " has already signed"
+    when (isApproverAndHasApproved sl) $
+      throwM . SomeDBExtraException $ badInput $ "Signatory link id " ++ (show slid) ++ " has already approved"
     when (signatorylinkidentifiedtoview sl) $
       throwM . SomeDBExtraException $ badInput $ "Signatory link id " ++ (show slid) ++ " has already identified to view"
     -- Get the POST data and check it
@@ -815,7 +820,7 @@ apiCallV1ChangeAuthenticationToSign did slid = logDocumentAndSignatory did slid 
         Nothing ->
           throwM . SomeDBExtraException $ badInput $ "Signatory link id " ++ (show slid) ++ " not valid for document id " ++ (show did)
         Just sl -> return sl
-      when (isJust . maybesigninfo $ sl) $
+      when (isSignatoryAndHasSigned sl) $
           throwM . SomeDBExtraException $ badInput $ "Signatory link id " ++ (show slid) ++ " has already signed"
       -- Get the POST data and check it
       authentication_type  <- getField "authentication_type"

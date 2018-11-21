@@ -10,6 +10,7 @@ import qualified Control.Monad.State.Lazy as State
 import qualified Data.Text as T
 
 import DB
+import Doc.Conditions
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.Model.Expressions
@@ -45,7 +46,6 @@ data DocumentFilter
   | DocumentFilterTemplate                    -- ^ Document is template
   | DocumentFilterDeleted Bool                -- ^ Only deleted (=True) or non-deleted (=False) documents.
   | DocumentFilterLinkIsAuthor Bool           -- ^ Only documents visible by signatory_links.is_author equal to param
-  | DocumentFilterLinkIsPartner Bool          -- ^ Only documents visible by signatory_links.is_partner equal to param
   | DocumentFilterUnsavedDraft Bool           -- ^ Only documents with unsaved draft flag equal to this one
   | DocumentFilterByModificationTimeAfter UTCTime -- ^ That were modified after given time
   deriving Show
@@ -114,9 +114,6 @@ documentFilterToSQL (DocumentFilterLinkIsAuthor flag) = do
   where
     op = if flag then "=" else "<>"
 
-documentFilterToSQL (DocumentFilterLinkIsPartner flag) = do
-  sqlWhereEq "signatory_links.is_partner" flag
-
 documentFilterToSQL (DocumentFilterUnsavedDraft flag) =
   sqlWhereAny
     [ sqlWhereEq "documents.unsaved_draft" flag
@@ -129,7 +126,7 @@ documentFilterToSQL (DocumentFilterByAuthor userid) = do
   sqlWhereEq "signatory_links.user_id" userid
 
 documentFilterToSQL (DocumentFilterByCanSign userid) = do
-  sqlWhere "signatory_links.is_partner"
+  sqlWhereSignatoryRoleIsSigningParty
   sqlWhereEq "signatory_links.user_id" userid
   sqlWhereEq "documents.status" Pending
   sqlWhereIsNULL "signatory_links.sign_time"
@@ -138,11 +135,11 @@ documentFilterToSQL (DocumentFilterByCanSign userid) = do
 documentFilterToSQL (DocumentFilterSignNowOnPad) = do
   sqlWhereEq "documents.status" Pending
   sqlWhereExists $ sqlSelect "signatory_links AS sl5" $ do
-                      sqlWhere "sl5.document_id = signatory_links.document_id"
-                      sqlWhere "sl5.is_partner"
-                      sqlWhereIsNULL "sl5.sign_time"
-                      sqlWhereEqSql "sl5.sign_order" documentSignOrderExpression
-                      sqlWhereEq "sl5.delivery_method" PadDelivery
+    sqlWhere       "sl5.document_id = signatory_links.document_id"
+    sqlWhere     $ "sl5.signatory_role =" <?> SignatoryRoleSigningParty
+    sqlWhereIsNULL "sl5.sign_time"
+    sqlWhereEqSql  "sl5.sign_order"      documentSignOrderExpression
+    sqlWhereEq     "sl5.delivery_method" PadDelivery
 
 documentFilterToSQL (DocumentFilterByDocumentID did) = do
   sqlWhereEq "documents.id" did

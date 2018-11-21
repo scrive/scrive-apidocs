@@ -507,7 +507,7 @@ var Field = exports.Field = Backbone.Model.extend({
       return true;
     },
     canBeSetByRecipent : function() {
-      if (this.signatory().isViewer()) {
+      if (this.signatory().views() && !this.signatory().author()) {
         return false;
       } else if (this.isEmail()) {
         return !(this.signatory().emailDelivery() || this.signatory().emailMobileDelivery());

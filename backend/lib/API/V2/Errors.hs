@@ -201,8 +201,8 @@ tryToConvertConditionalExceptionIntoAPIError  =  foldr (.) id [
     , convertUserShouldBeSelfOrCompanyAdmin
     , convertUserShouldBeDirectlyOrIndirectlyRelatedToDocument
     , convertSignatoryLinkDoesNotExist
-    , convertSignatoryHasNotYetSigned
-    , convertSignatoryIsNotPartner
+    , convertSigningPartyHasNotYetSignedOrApproved
+    , convertSignatoryRoleIsNotSigningParty
     , convertSignatoryHasAlreadySigned
     , convertSignatoryTokenDoesNotMatch
     , convertDocumentObjectVersionDoesNotMatch
@@ -257,16 +257,19 @@ convertSignatoryLinkDoesNotExist (SomeDBExtraException ex) =
     Just (SignatoryLinkDoesNotExist sig) ->  SomeDBExtraException $ signatoryStateError $ "Signatory"  <+> T.pack (show sig) <+> "does not exists"
     Nothing -> (SomeDBExtraException ex)
 
-convertSignatoryHasNotYetSigned :: SomeDBExtraException -> SomeDBExtraException
-convertSignatoryHasNotYetSigned (SomeDBExtraException ex) =
+convertSigningPartyHasNotYetSignedOrApproved :: SomeDBExtraException
+                                             -> SomeDBExtraException
+convertSigningPartyHasNotYetSignedOrApproved (SomeDBExtraException ex) =
   case cast ex of
-    Just (SignatoryHasNotYetSigned {}) ->  SomeDBExtraException $ signatoryStateError $ "Signatory has not signed yet"
+    Just (SigningPartyHasNotYetSignedOrApproved {}) ->
+      SomeDBExtraException $ signatoryStateError $
+      "Signing party has not signed or approved yet"
     Nothing -> (SomeDBExtraException ex)
 
-convertSignatoryIsNotPartner :: SomeDBExtraException -> SomeDBExtraException
-convertSignatoryIsNotPartner (SomeDBExtraException ex) =
+convertSignatoryRoleIsNotSigningParty :: SomeDBExtraException -> SomeDBExtraException
+convertSignatoryRoleIsNotSigningParty (SomeDBExtraException ex) =
   case cast ex of
-    Just (SignatoryIsNotPartner {}) ->  SomeDBExtraException $ signatoryStateError $ "Signatory should not sign this document"
+    Just (SignatoryRoleIsNotSigningParty {}) ->  SomeDBExtraException $ signatoryStateError $ "Signatory should not sign this document"
     Nothing -> (SomeDBExtraException ex)
 
 convertSignatoryHasAlreadySigned :: SomeDBExtraException -> SomeDBExtraException

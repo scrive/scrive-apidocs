@@ -56,8 +56,10 @@ var EmailModal = require("../../common/email_modal");
     signatorySummary: function () {
       var signatory = this.props.signatory;
       var document = signatory.document();
-      if (signatory.signdate() != undefined) {
+      if (signatory.signs() && signatory.hasSigned()) {
         return localization.signatoryMessage.signed;
+      } else if (signatory.approves() && signatory.hasSigned()) {
+        return localization.signatoryMessage.approved;
       } else if (document.timedout() || document.canceled() || document.rejected()) {
         return localization.docsignview.unavailableForSign;
       } else if (signatory.rejecteddate() != undefined) {
@@ -89,7 +91,7 @@ var EmailModal = require("../../common/email_modal");
           || (document.pending() && signatory.hasSigned())) {
         return false;
       }
-      var canGetInvitation = (!signatory.signs() || !signatory.hasSigned()) && (
+      var canGetInvitation = (signatory.views() || !signatory.hasSigned()) && (
            signatory.emailDelivery()
         || signatory.mobileDelivery()
         || signatory.emailMobileDelivery()
@@ -123,6 +125,7 @@ var EmailModal = require("../../common/email_modal");
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
         && signatory.document().pending()
         && !signatory.hasSigned()
+        && !signatory.author()
         && signatory.emailMobileDelivery();
     },
 
@@ -135,6 +138,15 @@ var EmailModal = require("../../common/email_modal");
         && signatory.emailDelivery();
     },
 
+    hasChangeMobileOption: function () {
+      var signatory = this.props.signatory;
+      return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
+        && signatory.document().pending()
+        && !signatory.hasSigned()
+        && !signatory.author()
+        && signatory.mobileDelivery();
+    },
+
     hasExtraSignatoryDetails: function () {
       var signatory = this.props.signatory;
       return signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin();
@@ -145,7 +157,7 @@ var EmailModal = require("../../common/email_modal");
       var currentFeatures = Subscription.currentSubscription().currentUserFeatures();
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
         && signatory.document().pending()
-        && signatory.signs()
+        && signatory.canHaveAuthenticationToView()
         && !signatory.hasSigned()
         && !signatory.hasAuthenticatedToView()
         && (!signatory.standardAuthenticationToView() || currentFeatures.canUseNonstandardAuthenticationToView());
@@ -156,25 +168,16 @@ var EmailModal = require("../../common/email_modal");
       var currentFeatures = Subscription.currentSubscription().currentUserFeatures();
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
         && signatory.document().pending()
-        && signatory.signs()
+        && signatory.canHaveAuthenticationToSign()
         && !signatory.hasSigned()
         && (!signatory.standardAuthenticationToSign() || currentFeatures.canUseNonstandardAuthenticationToSign());
-    },
-
-    hasChangeMobileOption: function () {
-      var signatory = this.props.signatory;
-      return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
-        && signatory.document().pending()
-        && !signatory.hasSigned()
-        && !signatory.author()
-        && signatory.mobileDelivery();
     },
 
     hasGoToSignviewOption: function () {
       var signatory = this.props.signatory;
       return signatory.document().currentViewerIsAuthor()
       && signatory.document().pending()
-      && signatory.canSign()
+      && signatory.canSignOrApprove()
       && signatory.padDelivery();
     },
 
@@ -331,7 +334,7 @@ var EmailModal = require("../../common/email_modal");
       var useInvitationMethod;
       Track.track("Click send reminder", {"Signatory index": signatory.signIndex()});
 
-      if (signatory.isViewer()) {
+      if (signatory.views() && !signatory.author()) {
         if (document.closed()) {
           // viewer of signed document should use confirmation method
           useInvitationMethod = false;
@@ -405,7 +408,7 @@ var EmailModal = require("../../common/email_modal");
       var signatory = this.props.signatory;
       return signatory.document().currentViewerIsAuthor()
       && signatory.document().pending()
-      && signatory.canSign()
+      && signatory.canSignOrApprove()
       && signatory.apiDelivery();
     },
 
@@ -444,6 +447,8 @@ var EmailModal = require("../../common/email_modal");
       var signatory = this.props.signatory;
       if (signatory.signs()) {
         return localization.docview.signatory.roleSignatory;
+      } else if (signatory.approves()) {
+        return localization.docview.signatory.roleApprover;
       } else {
         return localization.docview.signatory.roleViewer;
       }
@@ -660,7 +665,7 @@ var EmailModal = require("../../common/email_modal");
                   {localization.docview.signatory.invitationMethod}: {this.getDeliveryMethod()}
                 </span>
               </div>
-              {/* if */ signatory.signs() &&
+              {/* if */ (signatory.signs() || signatory.approves()) &&
                 <div className="fieldrow">
                   {/* if */ this.hasChangeAuthenticationToView() &&
                     <a className="edit clickable" onClick={this.handleChangeAuthenticationToViewMethod}>

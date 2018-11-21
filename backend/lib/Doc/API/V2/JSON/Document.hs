@@ -22,6 +22,7 @@ import Doc.API.V2.JSON.Utils
 import Doc.DocInfo
 import Doc.DocStateData
 import KontraLink
+import Util.SignatoryLinkUtils
 
 unjsonDocument :: DocumentAccess -> UnjsonDef Document
 unjsonDocument da = objectOf $
@@ -102,47 +103,78 @@ unjsonSignatoryArray da = arrayOf (unjsonSignatory da)
 
 unjsonSignatory :: DocumentAccess -> UnjsonDef SignatoryLink
 unjsonSignatory da =  objectOf $
-       pure def
+  pure
+  (\is_signatory msignatoryrole
+    fields mbTitleQs signorder
+    msuccredirecturl mrejredirecturl
+    mcsvupload deliverymethod 
+    authtoviewmethod authtoviewarchivedmethod
+    authtosignmethod confirmdeliverymethod
+    allowshighlighting hidepn sattachments ->
+     let (title,qs) = maybe defTitleQs id mbTitleQs
+         defTitleQs = ( signatorylinkconsenttitle def
+                      , signatorylinkconsentquestions def )
+         defSigRole = signatoryRoleFromBool is_signatory
+     in def { signatoryrole                   = fromMaybe
+                                                defSigRole msignatoryrole
+            , signatoryfields                 = fields
+            , signatorylinkconsenttitle       = title
+            , signatorylinkconsentquestions   = qs
+            , signatorysignorder              = signorder
+            , signatorylinksignredirecturl    = fmap emptyIfNaughty
+                                                msuccredirecturl
+            , signatorylinkrejectredirecturl  = fmap emptyIfNaughty
+                                                mrejredirecturl
+            , signatorylinkcsvupload          = mcsvupload
+              -- ^ Check only one csv for whole doc
+            , signatorylinkdeliverymethod     = deliverymethod
+            , signatorylinkauthenticationtoviewmethod
+                                              = authtoviewmethod
+            , signatorylinkauthenticationtoviewarchivedmethod
+                                              = authtoviewarchivedmethod
+            , signatorylinkauthenticationtosignmethod
+                                              = authtosignmethod
+            , signatorylinkconfirmationdeliverymethod
+                                              = confirmdeliverymethod
+            , signatorylinkallowshighlighting = allowshighlighting
+            , signatorylinkhidepn             = hidepn
+            , signatoryattachments            = sattachments
+            })
   <*   (fieldReadonly "id" signatorylinkid "Signatory ID")
   <*   (fieldReadOnlyOpt "user_id"  maybesignatory "User ID for the signatory")
   <*   (fieldReadonly "is_author" signatoryisauthor "Whether signatory is document author")
-  <**> (fieldDef "is_signatory" (signatoryispartner def) signatoryispartner "Whether the signatory signs the document (or is a viewer)"
-        <**> (pure $ \isa s -> s { signatoryispartner = isa }))
-  <**> (fieldDefBy "fields"  (signatoryfields def) signatoryfields "Signatory fields" unjsonSignatoryFields
-        <**> (pure $ \fs s -> s { signatoryfields = fs }))
-  <**> (fieldOptBy "consent_module" (\s -> if null (signatorylinkconsentquestions s) then Nothing else Just (signatorylinkconsenttitle s, signatorylinkconsentquestions s)) "Signatory consent module" unjsonSignatoryConsentModule
-        <**> (pure $ \mPair s -> case mPair of { Nothing -> s; Just (t, qs) -> s { signatorylinkconsenttitle = t, signatorylinkconsentquestions = qs } }))
-  <**> (fieldDef "sign_order"  (signatorysignorder def) signatorysignorder "Signatory sign order"
-        <**> (pure $ \so s-> s { signatorysignorder = so }))
+  <*>  (fieldDef "is_signatory" (isSignatory (def :: SignatoryLink))
+        isSignatory
+        "Whether the signatory signs the document (or is a viewer/approver)")
+  <*>  (fieldOptBy "signatory_role" (Just . signatoryrole)
+        "Signatory role: 'viewer', 'approver', 'signing_party'."
+        unjsonSignatoryRole)
+  <*>  (fieldDefBy "fields"  (signatoryfields def) signatoryfields "Signatory fields" unjsonSignatoryFields)
+  <*>  (fieldOptBy "consent_module"
+         (\s -> if null (signatorylinkconsentquestions s)
+                then Nothing
+                else Just (signatorylinkconsenttitle s, signatorylinkconsentquestions s))
+         "Signatory consent module" unjsonSignatoryConsentModule )
+  <*>  (fieldDef "sign_order"  (signatorysignorder def) signatorysignorder "Signatory sign order")
   <*   (fieldReadOnlyOpt "sign_time" (fmap utcTimeToAPIFormat . fmap signtime . maybesigninfo) "Time when signatory signed the document")
   <*   (fieldReadOnlyOpt "seen_time" (fmap utcTimeToAPIFormat . fmap signtime . maybeseeninfo) "Time when signatory opened the document in browser" )
   <*   (fieldReadOnlyOpt "read_invitation_time" (fmap utcTimeToAPIFormat . maybereadinvite) "Time when signatory read invitation" )
   <*   (fieldReadOnlyOpt "rejected_time" (fmap utcTimeToAPIFormat . signatorylinkrejectiontime) "Time when signatory rejected the document" )
   <*   (fieldReadOnlyOpt "rejection_reason" signatorylinkrejectionreason "Message from the signatory to explain rejection")
-  <**> (fieldOpt "sign_success_redirect_url" signatorylinksignredirecturl ("URL to redirect the signatory after signing the document")
-        <**> (pure $ \mrd s -> s { signatorylinksignredirecturl = fmap emptyIfNaughty mrd }))
-  <**> (fieldOpt "reject_redirect_url" signatorylinkrejectredirecturl ("URL to redirect the signatory after rejecting the document")
-        <**> (pure $ \mrd s -> s { signatorylinkrejectredirecturl = fmap emptyIfNaughty mrd }))
+  <*>  (fieldOpt "sign_success_redirect_url" signatorylinksignredirecturl ("URL to redirect the signatory after signing the document"))
+  <*>  (fieldOpt "reject_redirect_url" signatorylinkrejectredirecturl ("URL to redirect the signatory after rejecting the document"))
   <*   (fieldReadonlyBy "email_delivery_status" mailinvitationdeliverystatus "Email invitation delivery status" unjsonDeliveryStatus)
   <*   (fieldReadonlyBy "mobile_delivery_status" smsinvitationdeliverystatus "SMS invitation delivery status" unjsonDeliveryStatus)
   <*   (fieldReadonly "has_authenticated_to_view" signatorylinkidentifiedtoview "Signatory has already authenticated to view")
-  <**> (fieldOptBy "csv" signatorylinkcsvupload "CSV upload for multipart" unjsonCSVUpload <**> (pure $ \mcsv s -> s { signatorylinkcsvupload = mcsv })) -- Check only one csv for whole doc
-  <**> (fieldDefBy "delivery_method" (signatorylinkdeliverymethod def) signatorylinkdeliverymethod "Signatory invitation delivery method" unjsonDeliveryMethod
-        <**> (pure $ \sd s -> s { signatorylinkdeliverymethod = sd }))
-  <**> (fieldDefBy "authentication_method_to_view" (signatorylinkauthenticationtoviewmethod def) signatorylinkauthenticationtoviewmethod "Signatory authentication to view method" unjsonAuthenticationToViewMethod
-        <**> (pure $ \satv s -> s { signatorylinkauthenticationtoviewmethod = satv }))
-  <**> (fieldDefBy "authentication_method_to_view_archived" (signatorylinkauthenticationtoviewarchivedmethod def) signatorylinkauthenticationtoviewarchivedmethod "Signatory authentication to view archived method" unjsonAuthenticationToViewMethod
-        <**> (pure $ \satva s -> s { signatorylinkauthenticationtoviewarchivedmethod = satva }))
-  <**> (fieldDefBy "authentication_method_to_sign" (signatorylinkauthenticationtosignmethod def) signatorylinkauthenticationtosignmethod "Signatory authentication to sign method" unjsonAuthenticationToSignMethod
-        <**> (pure $ \sats s -> s { signatorylinkauthenticationtosignmethod = sats }))
-  <**> (fieldDefBy "confirmation_delivery_method" (signatorylinkconfirmationdeliverymethod def) signatorylinkconfirmationdeliverymethod "Signatory confirmation delivery method" unjsonConfirmationDeliveryMethod
-        <**> (pure $ \scd s -> s { signatorylinkconfirmationdeliverymethod = scd }))
-  <**> (fieldDef "allows_highlighting" (signatorylinkallowshighlighting def) signatorylinkallowshighlighting "Areas of main PDF can be highlighted during signing"
-        <**> (pure $ \sah s -> s { signatorylinkallowshighlighting = sah }))
-  <**> (fieldDef "hide_personal_number" (signatorylinkhidepn def) signatorylinkhidepn "Signatory's personal number should be hidden"
-        <**> (pure $ \shpe s -> s { signatorylinkhidepn = shpe }))
-  <**> (fieldDefBy "attachments"  (signatoryattachments def) signatoryattachments "Signatory attachments" (arrayOf unjsonSignatoryAttachment)
-        <**> (pure $ \sa s -> s { signatoryattachments = sa }))
+  <*>  (fieldOptBy "csv" signatorylinkcsvupload "CSV upload for multipart" unjsonCSVUpload)
+  <*>  (fieldDefBy "delivery_method" (signatorylinkdeliverymethod def) signatorylinkdeliverymethod "Signatory invitation delivery method" unjsonDeliveryMethod)
+  <*>  (fieldDefBy "authentication_method_to_view" (signatorylinkauthenticationtoviewmethod def) signatorylinkauthenticationtoviewmethod "Signatory authentication to view method" unjsonAuthenticationToViewMethod)
+  <*>  (fieldDefBy "authentication_method_to_view_archived" (signatorylinkauthenticationtoviewarchivedmethod def) signatorylinkauthenticationtoviewarchivedmethod "Signatory authentication to view archived method" unjsonAuthenticationToViewMethod)
+  <*>  (fieldDefBy "authentication_method_to_sign" (signatorylinkauthenticationtosignmethod def) signatorylinkauthenticationtosignmethod "Signatory authentication to sign method" unjsonAuthenticationToSignMethod)
+  <*>  (fieldDefBy "confirmation_delivery_method" (signatorylinkconfirmationdeliverymethod def) signatorylinkconfirmationdeliverymethod "Signatory confirmation delivery method" unjsonConfirmationDeliveryMethod)
+  <*>  (fieldDef "allows_highlighting" (signatorylinkallowshighlighting def) signatorylinkallowshighlighting "Areas of main PDF can be highlighted during signing")
+  <*>  (fieldDef "hide_personal_number" (signatorylinkhidepn def) signatorylinkhidepn "Signatory's personal number should be hidden")
+  <*>  (fieldDefBy "attachments"  (signatoryattachments def) signatoryattachments "Signatory attachments" (arrayOf unjsonSignatoryAttachment))
   <*   (fieldReadonlyBy "highlighted_pages" signatoryhighlightedpages "Highlighted page during signing" (arrayOf unjsonHighlightedPage))
   <*   (fieldReadOnlyOpt "api_delivery_url" (\sl ->
           if (daStatus da /= Preparation && signatorylinkdeliverymethod sl == APIDelivery && canSeeSignlinks da)

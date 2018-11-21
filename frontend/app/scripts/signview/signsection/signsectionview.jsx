@@ -7,8 +7,10 @@ var TransitionMixin = require("./transition_mixin");
 var TaskMixin = require("../navigation/task_mixin");
 var SignFinish = require("./signfinishview");
 var SignSign = require("./signsignview");
+var SignApprove = require("./signapproveview");
 var SignReject = require("./signrejectview");
 var SignSigning = require("./signsigningview");
+var SignApproving = require("./signapprovingview");
 var SignProcess = require("./signprocessview");
 var SignPin = require("./signpin");
 var SignInputPin = require("./signinputpinview");
@@ -87,9 +89,14 @@ var Task = require("../navigation/task");
     getInitialStep: function () {
       var document = this.props.model.document();
       var signatory = document.currentSignatory();
+      var isApprover = signatory.approves();
       var hasPinAuth = signatory.smsPinAuthenticationToSign();
       var hasEIDAuth = signatory.seBankIDAuthenticationToSign();
       var hasEIDNets = signatory.noBankIDAuthenticationToSign() || signatory.dkNemIDAuthenticationToSign();
+
+      if (isApprover) {
+        return "approve";
+      }
 
       if (hasPinAuth) {
         return "pin";
@@ -113,7 +120,8 @@ var Task = require("../navigation/task");
     isValidStep: function (step) {
       var steps = [
         "sign", "finish", "signing", "process", "eid", "eid-process", "pin",
-        "input-pin", "reject", "eid-nets", "eid-nets-process"
+        "input-pin", "reject", "eid-nets", "eid-nets-process", "approve",
+        "approving"
       ];
 
       var valid = steps.indexOf(step) > -1;
@@ -175,7 +183,7 @@ var Task = require("../navigation/task");
 
     shouldHaveOverlay: function (step) {
       step = step || this.state.step;
-      var noOverlayStep = ["sign", "finish", "pin", "eid", "eid-nets"];
+      var noOverlayStep = ["sign", "approve", "finish", "pin", "eid", "eid-nets"];
       return !(noOverlayStep.indexOf(step) > -1);
     },
 
@@ -272,7 +280,7 @@ var Task = require("../navigation/task");
       var document = self.props.model.document();
       var checkSigning = function () {
         document.checkingSigning(
-          function () { self.handleAfterSignRedirectOrReload(); },
+          function () { self.handleAfterSignOrApproveRedirectOrReload(); },
           function (s) {
             bankIDSigning.setStatus(s);
             setTimeout(checkSigning, 1000);
@@ -344,7 +352,7 @@ var Task = require("../navigation/task");
       var document = self.props.model.document();
       var checkSigning = function () {
         document.checkingSigning(
-          function () { self.handleAfterSignRedirectOrReload(); },
+          function () { self.handleAfterSignOrApproveRedirectOrReload(); },
           function (s) {
             netsSigning.setStatus(s);
             setTimeout(checkSigning, 1000);
@@ -431,13 +439,36 @@ var Task = require("../navigation/task");
           setTimeout(function () {
             document.sign(errorCallback, function (newDocument, oldDocument) {
               self.setSignedStatus(2);
-              self.handleAfterSignRedirectOrReload();
+              self.handleAfterSignOrApproveRedirectOrReload();
             }, pinParam).send();
           }, timeout);
         });
       }, errorCallback, pinParam).send();
     },
-    handleAfterSignRedirectOrReload: function () {
+    handleApprove: function () {
+      var self = this;
+      var model = self.props.model;
+      var document = self.props.model.document();
+      var signatory = document.currentSignatory();
+
+      var errorCallback = function (xhr) {
+          if (xhr.status == 403) {
+            ReloadManager.stopBlocking();
+            ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
+          } else {
+            ReloadManager.stopBlocking();
+            self.errorModal(xhr);
+          }
+      };
+
+
+      document.approve(errorCallback, function (newDocument, oldDocument) {
+        self.handleAfterSignOrApproveRedirectOrReload();
+      }).send();
+
+    },
+
+    handleAfterSignOrApproveRedirectOrReload: function () {
       var self = this;
       var model = self.props.model;
       var document = self.props.model.document();
@@ -509,10 +540,6 @@ var Task = require("../navigation/task");
       });
     },
 
-    handleNext: function () {
-      this.setStep("signing");
-    },
-
     render: function () {
       var self = this;
       var model = this.props.model;
@@ -537,7 +564,15 @@ var Task = require("../navigation/task");
             <SignSign
               model={this.props.model}
               canSign={this.canSignDocument() && !this.props.highlighting}
-              onSign={this.handleNext}
+              onSign={this.handleSetStep("signing")}
+              onReject={this.handleSetStep("reject")}
+            />
+          }
+          {/* if */ this.isOnStep("approve") &&
+            <SignApprove
+              model={this.props.model}
+              canApprove={true}
+              onApprove={this.handleSetStep("approving")}
               onReject={this.handleSetStep("reject")}
             />
           }
@@ -561,6 +596,16 @@ var Task = require("../navigation/task");
               onBack={this.handleSetStep("sign")}
               onSign={this.handleSign}
               showLegalText={this.props.showLegalText}
+            />
+          }
+          {/* if */ this.isOnStep("approving") &&
+            <SignApproving
+              model={this.props.model}
+              title={doc.title()}
+              name={sig.name() || localization.process.nonsignatoryname}
+              canApprove={this.canSignDocument()}
+              onApprove={this.handleApprove}
+              onBack={this.handleSetStep("approve")}
             />
           }
           {/* if */ this.isOnStep("process") &&

@@ -172,11 +172,9 @@ signatoryNeedsToIdentifyToView sl doc =
     check authKind signatoryAuthMethod = case signatoryAuthMethod sl of
       StandardAuthenticationToView -> return False
       authtoview -> do
-        sid <- get ctxsessionid <$> getContext
+        sid       <- get ctxsessionid <$> getContext
         mauthindb <- dbQuery (GetEAuthentication authKind sid $ signatorylinkid sl)
-        return $ case mauthindb of
-          Nothing -> True
-          Just authindb -> not $ authViewMatchesAuth authtoview authindb
+        return $ maybe True (not . authViewMatchesAuth authtoview) mauthindb
 
 -- | Fetch the document and signatory for e-auth. If there is no session token
 -- for the document, checks documents of a current user before giving up as
@@ -224,7 +222,7 @@ getDocumentAndSignatoryForEIDSign did slid = dbQuery (GetDocumentSessionToken sl
     doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
     -- This should always succeed as we already got the document.
     let slink = fromJust $ getSigLinkFor slid doc
-    when (hasSigned slink) $ do
+    when (isSignatoryAndHasSigned slink) $ do
       logInfo_ "Signatory already signed the document"
       respond404
     -- Check that signatory uses EID for signing.

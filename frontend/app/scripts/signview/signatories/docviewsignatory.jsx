@@ -19,8 +19,10 @@ module.exports = React.createClass({
     signatorySummary: function () {
       var signatory = this.props.signatory;
       var document = signatory.document();
-      if (signatory.signdate() != undefined) {
+      if (signatory.signdate() != undefined && signatory.signs()) {
         return localization.signatoryMessage.signed;
+      } else if (signatory.signdate() != undefined && signatory.approves()) {
+        return localization.signatoryMessage.approved;
       } else if (document.timedout() || document.canceled() || document.rejected()) {
         return localization.docsignview.unavailableForSign;
       } else if (signatory.rejecteddate() != undefined) {
@@ -49,6 +51,8 @@ module.exports = React.createClass({
         return "sprite-signview-draft.png";
       } else if (sigStatus === "signed") {
         return "sprite-signview-signed.png";
+      } else if (sigStatus === "approved") {
+        return "sprite-signview-approved.png";
       } else if (sigStatus === "cancelled") {
         return "sprite-signview-cancelled.png";
       } else if (sigStatus === "timeouted") {

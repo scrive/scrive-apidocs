@@ -142,6 +142,7 @@ docApiV2Update did = logDocument did . api $ do
         apiError $ requestParameterParseError "document" $ "Errors while parsing document data:" <+> T.pack (show errs)
     -- API call actions
     applyDraftDataToDocument draftData actor
+    guardThatAuthorIsNotApprover =<< theDocument
     -- Result
     Ok <$> (unjsonDocument da,) <$> theDocument
 
@@ -512,20 +513,26 @@ docApiV2SigSetAuthenticationToViewArchived =
 docApiV2SigSetAuth
   :: Kontrakcja m
   => AuthenticationKind -> DocumentID -> SignatoryLinkID -> m Response
-docApiV2SigSetAuth authKind did slid = logDocumentAndSignatory did slid . api $ do
+docApiV2SigSetAuth authKind did slid =
+  logDocumentAndSignatory did slid . api $ do
+
   -- Permissions
   (user, actor) <- getAPIUser APIDocSend
   withDocumentID did $ do
     -- Guards
-    guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
+    guardThatUserIsAuthorOrCompanyAdmin user          =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
-    guardDocumentStatus Pending =<< theDocument
-    guardSignatoryHasNotSigned slid =<< theDocument
-    guardSignatoryHasNotIdentifiedToView slid =<< theDocument
+    guardDocumentStatus Pending                       =<< theDocument
+    guardSigningPartyHasNeitherSignedNorApproved slid =<< theDocument
+    guardSignatoryHasNotIdentifiedToView slid         =<< theDocument
     -- Parameters
-    authType <- apiV2ParameterObligatory (ApiV2ParameterTextUnjson "authentication_type" unjsonAuthenticationToViewMethod)
-    mSSN_ <- (fmap T.unpack) <$> apiV2ParameterOptional (ApiV2ParameterText "personal_number")
-    mMobile_ <- (fmap T.unpack) <$> apiV2ParameterOptional (ApiV2ParameterText "mobile_number")
+    authType <- apiV2ParameterObligatory
+      (ApiV2ParameterTextUnjson "authentication_type"
+       unjsonAuthenticationToViewMethod)
+    mSSN_    <- (fmap T.unpack) <$>
+                apiV2ParameterOptional (ApiV2ParameterText "personal_number")
+    mMobile_ <- (fmap T.unpack) <$>
+                apiV2ParameterOptional (ApiV2ParameterText "mobile_number")
     (mSSN, mMobile) <- case authType of
       StandardAuthenticationToView -> return (Nothing, Nothing)
       SMSPinAuthenticationToView   -> return (Nothing, mMobile_)
@@ -534,11 +541,17 @@ docApiV2SigSetAuth authKind did slid = logDocumentAndSignatory did slid . api $ 
       DKNemIDAuthenticationToView  -> return (mSSN_, Nothing)
       FITupasAuthenticationToView  -> return (mSSN_, Nothing)
     -- Check conditions on parameters and signatory
-    guardCanSetAuthenticationToViewForSignatoryWithValues slid authKind authType mSSN mMobile =<< theDocument
+    guardCanSetAuthenticationToViewForSignatoryWithValues
+      slid authKind authType mSSN mMobile
+      =<< theDocument
+
     -- API call actions
-    dbUpdate $ ChangeAuthenticationToViewMethod slid authKind authType mSSN mMobile actor
+    dbUpdate $
+      ChangeAuthenticationToViewMethod slid authKind authType
+      mSSN mMobile actor
     -- Return
-    Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
+    Ok <$>
+      (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 
 ----------------------------------------
 

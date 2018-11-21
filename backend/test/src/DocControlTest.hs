@@ -129,11 +129,11 @@ testLastPersonSigningADocumentClosesIt = do
                randomUpdate $ ResetSignatoryDetails ([
                       (def {   signatoryfields = (signatoryfields $ fromJust $ getAuthorSigLink d)
                                       , signatoryisauthor = True
-                                      , signatoryispartner = False
+                                      , signatoryrole     = SignatoryRoleViewer
                                       , maybesignatory = Just $ userid user })
                     , (def {   signatorysignorder = SignOrder 1
                                       , signatoryisauthor = False
-                                      , signatoryispartner = True
+                                      , signatoryrole     = SignatoryRoleSigningParty
                                       , signatoryfields = [
                                           fieldForTests (NameFI (NameOrder 1)) "Fred"
                                         , fieldForTests (NameFI (NameOrder 2)) "Frog"
@@ -145,14 +145,15 @@ testLastPersonSigningADocumentClosesIt = do
     do t <- documentctime <$> theDocument
        tz <- mkTimeZoneName "Europe/Stockholm"
        randomUpdate $ PreparationToPending (systemActor t) tz
-    let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
-    siglink <- head . filter isUnsigned .documentsignatorylinks <$> theDocument
+    siglink <- head . filter isSignatoryAndHasNotSigned .
+               documentsignatorylinks <$> theDocument
 
     do t <- documentctime <$> theDocument
        randomUpdate . MarkDocumentSeen (signatorylinkid siglink) (signatorymagichash siglink)
                  =<< signatoryActor (set ctxtime t ctx) siglink
 
-    assertEqual "One left to sign" 1 . length . filter isUnsigned . documentsignatorylinks =<< theDocument
+    assertEqual "One left to sign" 1 . length .
+      filter isSignatoryAndHasNotSigned . documentsignatorylinks =<< theDocument
 
     preq <- mkRequest GET [ ]
     (_,ctx') <- updateDocumentWithID $ \did ->
@@ -163,10 +164,11 @@ testLastPersonSigningADocumentClosesIt = do
                       lift . runTestKontra req ctx' $ apiCallV1Sign did (signatorylinkid siglink)
 
     assertEqual "In closed state" Closed .documentstatus =<< theDocument
-    --TODO: this should be commented out really, I guess it's a bug
-    --assertEqual "None left to sign" 0 (length $ filter isUnsigned (documentsignatorylinks doc))
-    --emails <- dbQuery GetEmails
-    --assertEqual "Confirmation email sent" 1 (length emails)
+    -- TODO: this should be commented out really, I guess it's a bug
+    -- assertEqual "None left to sign" 0 (length $ filter
+    -- isSignatoryAndHasNotSigned (documentsignatorylinks doc)) emails
+    -- <- dbQuery GetEmails assertEqual "Confirmation email sent" 1
+    -- (length emails)
 
 
 testSigningWithPin :: TestEnv ()
@@ -196,12 +198,12 @@ testSigningWithPin = do
         (def {
             signatoryfields = signatoryfields $ fromJust $ getAuthorSigLink d
           , signatoryisauthor = True
-          , signatoryispartner = False
+          , signatoryrole     = SignatoryRoleViewer
           , maybesignatory = Just $ userid user1 })
           , (def {
               signatorysignorder = SignOrder 1
             , signatoryisauthor = False
-            , signatoryispartner = True
+            , signatoryrole     = SignatoryRoleSigningParty
             , signatorylinkauthenticationtosignmethod = SMSPinAuthenticationToSign
             , signatorylinkdeliverymethod = MobileDelivery
             , signatoryfields = [
@@ -219,8 +221,8 @@ testSigningWithPin = do
       assertEqual "Ready call was successful" 202 (rsCode rdyrsp)
       runSQL ("SELECT * FROM chargeable_items WHERE type = 1 AND user_id =" <?> userid user1 <+> "AND user_group_id =" <?> ugid1 <+> "AND document_id =" <?> documentid d)
         >>= assertBool "Author and the company get charged for the delivery" . (> 0)
-    let isUnsigned sl = isSignatory sl && isNothing (maybesigninfo sl)
-    siglink <- head . filter isUnsigned .documentsignatorylinks <$> theDocument
+    siglink <- head . filter isSignatoryAndHasNotSigned .
+               documentsignatorylinks <$> theDocument
 
     --do t <- documentctime <$> theDocument
     --   randomUpdate . MarkDocumentSeen (signatorylinkid siglink) (signatorymagichash siglink)
@@ -390,21 +392,25 @@ testDownloadFileWithAuthToView :: TestEnv ()
 testDownloadFileWithAuthToView = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- mkContext def
-  doc <- addRandomDocumentWithAuthorAndCondition
-            user
-            (\d -> documentstatus d == Pending
-                     && length (documentsignatorylinks d) == 2
-                     && (signatorylinkauthenticationtoviewmethod (documentsignatorylinks d !! 1) /= StandardAuthenticationToView)
-                     && (not $ hasSigned (documentsignatorylinks d !! 1))
-                     && (isSignatory (documentsignatorylinks d !! 1))
-                     && case documenttype d of
-                         Signable -> True
-                         _ -> False)
+  doc <- addRandomDocumentWithAuthorAndCondition user
+         (\d ->    documentstatus d == Pending
+                && length (documentsignatorylinks d) == 2
+                && (signatorylinkauthenticationtoviewmethod
+                    (documentsignatorylinks d !! 1)
+                    /= StandardAuthenticationToView)
+                && (isSignatoryAndHasNotSigned (documentsignatorylinks d !! 1))
+                && case documenttype d of
+                     Signable -> True
+                     _        -> False)
   let sl = head $ reverse $ documentsignatorylinks $ doc
   req1 <- mkRequest GET []
-  (_,ctx') <- runTestKontra req1 ctx $ handleSignShowSaveMagicHash (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
-  req2 <- mkRequest GET [("signatorylinkid",inText $ show (signatorylinkid sl) )]
-  (res2,_) <- runTestKontra req2 ctx' $  apiCallV1DownloadMainFile  (documentid doc) "anything.pdf"
+  (_,ctx') <- runTestKontra req1 ctx $
+              handleSignShowSaveMagicHash
+              (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
+  req2     <- mkRequest GET [( "signatorylinkid"
+                             , inText $ show (signatorylinkid sl) )]
+  (res2,_) <- runTestKontra req2 ctx' $
+              apiCallV1DownloadMainFile (documentid doc) "anything.pdf"
   assertEqual "Response should be 403" 403 (rsCode res2)
 
 testSendingReminderClearsDeliveryInformation :: TestEnv ()
@@ -570,11 +576,11 @@ testDownloadSignviewBrandingAccess = do
     void $ randomUpdate $ ResetSignatoryDetails ([
                       (def {   signatoryfields = (signatoryfields $ fromJust $ getAuthorSigLink d)
                                       , signatoryisauthor = True
-                                      , signatoryispartner = False
+                                      , signatoryrole     = SignatoryRoleViewer
                                       , maybesignatory = Just $ userid user })
                     , (def {   signatorysignorder = SignOrder 1
                                       , signatoryisauthor = False
-                                      , signatoryispartner = True
+                                      , signatoryrole     = SignatoryRoleSigningParty
                                       , signatoryfields = [
                                           fieldForTests (NameFI (NameOrder 1)) "Fred"
                                         , fieldForTests (NameFI (NameOrder 2)) "Frog"

@@ -17,6 +17,7 @@ module Doc.Migrations (
   , removeSearchTermsIndex
   , addShareableLinkHashToDocuments
   , addAuthenticationToViewArchivedMethodToSignatories
+  , changeIsPartnerColumnToSignatoryRole
 ) where
 
 import Data.Int
@@ -315,4 +316,17 @@ addShareableLinkHashToDocuments = Migration
       runQuery_ $ sqlAlterTable (tblName tableDocuments)
         [ sqlAddColumn tblColumn { colName = "shareable_link_hash", colType = BigIntT }
         ]
+  }
+
+changeIsPartnerColumnToSignatoryRole :: MonadDB m => Migration m
+changeIsPartnerColumnToSignatoryRole = Migration
+  { mgrTableName = tblName tableSignatoryLinks
+  , mgrFrom = 34
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable "signatory_links"
+        [ sqlAlterColumn "is_partner"
+          "SET DATA TYPE smallint USING CASE WHEN false THEN 1 ELSE 2 END"
+        ]
+      runQuery_ $ sqlAlterTable "signatory_links"
+        [ "RENAME COLUMN is_partner TO signatory_role" ]
   }

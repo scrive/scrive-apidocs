@@ -42,8 +42,12 @@ testTranslationFilesAreJSONSAndSorted = do
 
 
 isSorted :: JSValue -> Assertion
-isSorted (JSObject jso) = assertBool "Translations jsons are not sorted. Use './transifex/transifex.sh fix' to fix it" $ (map fst $ fromJSObject jso) == (sort (map fst $ fromJSObject jso))
-isSorted _ = assertFailure  "Illegal structures in translation file for lang"
+isSorted (JSObject jso) =
+  assertBool ("Translation JSONs are not sorted. " <>
+               "Use './shake.sh transifex-fix' to fix this.") $
+  (map fst $ fromJSObject jso) == (sort (map fst $ fromJSObject jso))
+isSorted _              = assertFailure
+  "Illegal structures in translation file for lang"
 
 
 testTranslationsHaveSameStructure :: Assertion

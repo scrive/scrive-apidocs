@@ -69,7 +69,7 @@ sendDocumentMails author = do
         islf <- rand 10 arbitrary
 
         now <- currentTime
-        let sigs = [def {signatoryfields = signatoryfields asl, signatoryisauthor = True,signatoryispartner = True, maybesignatory = maybesignatory asl} , def {signatoryfields = islf, signatoryispartner = True}]
+        let sigs = [def {signatoryfields = signatoryfields asl, signatoryisauthor = True, signatoryrole = SignatoryRoleSigningParty, maybesignatory = maybesignatory asl} , def {signatoryfields = islf, signatoryrole = SignatoryRoleSigningParty}]
         True <- randomUpdate $ ResetSignatoryDetails sigs (systemActor now)
         tz <- mkTimeZoneName "Europe/Stockholm"
         randomUpdate $ PreparationToPending (systemActor now) tz
@@ -89,8 +89,12 @@ sendDocumentMails author = do
         checkMail "Undelivered invitation" $  mailUndeliveredInvitation (get ctxmailnoreplyaddress ctx) (get ctxbrandeddomain ctx) sl =<< theDocument
         checkMail "Delivered invitation"   $  mailDeliveredInvitation (get ctxmailnoreplyaddress ctx) (get ctxbrandeddomain ctx) sl =<< theDocument
         --remind mails
-        checkMail "Reminder notsigned" $ mailDocumentRemind False Nothing sl True =<< theDocument
-        checkMail "Reminder notsigned" $ mailDocumentRemind True Nothing sl True =<< theDocument
+        checkMail "Reminder notsigned" $ do
+          doc <- theDocument
+          mailDocumentRemind False Nothing doc sl True
+        checkMail "Reminder notsigned" $ do
+          doc <- theDocument
+          mailDocumentRemind True Nothing doc sl True
         --reject mail
         checkMail "Reject"  $ mailDocumentRejected True Nothing True sl =<< theDocument
         checkMail "Reject"  $ mailDocumentRejected True Nothing False sl =<< theDocument
@@ -103,7 +107,10 @@ sendDocumentMails author = do
         -- Sending closed email
         checkMail "Closed" $ mailDocumentClosed False sl False False False =<< theDocument
         -- Reminder after send
-        checkMail "Reminder signed" $ theDocument >>= \d -> mailDocumentRemind True Nothing (head $ documentsignatorylinks d) True d
+        checkMail "Reminder signed" $ do
+          doc <- theDocument
+          mailDocumentRemind True Nothing doc
+            (head $ documentsignatorylinks doc) True
   commit
 
 

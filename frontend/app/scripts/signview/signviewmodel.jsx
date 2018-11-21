@@ -122,7 +122,7 @@ var Track = require("../common/track");
 
     hasSignSection: function () {
       var signatory = this.document().currentSignatory();
-      return this.document().currentSignatoryCanSign() && this.hasArrows();
+      return this.document().currentSignatoryCanSignOrApprove() && this.hasArrows();
     },
 
     hasSignatoriesSection: function () {
@@ -255,7 +255,7 @@ var Track = require("../common/track");
 
     hasArrows: function () {
       var file = this.document().mainfile();
-      return this.document().ready() && this.document().currentSignatoryCanSign()
+      return this.document().ready() && this.document().currentSignatoryCanSignOrApprove()
         && file.ready() && file.view && file.view.ready();
     },
 
@@ -290,7 +290,7 @@ var Track = require("../common/track");
     },
 
     hasAccessToDocument: function () {
-      return !this.document().isUnavailableForSign();
+      return !this.document().isUnavailableForSignOrApprove();
     },
 
     recall: function (f) {

@@ -15,7 +15,7 @@ var Subscription = require("../scripts/account/subscription");
 var Signatory = exports.Signatory = Backbone.Model.extend({
     defaults: {
         id: 0,
-        is_signatory: true,
+        signatory_role: "signing_party",
         is_author: false,
         fields: [{type: "name",   order : 1},
                  {type: "name",   order : 2},
@@ -116,13 +116,15 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         return "problem";
       } else if (document.status() === "preparation") {
         return "draft";
-      }  else if (signatory.signdate()) {
+      } else if (signatory.signs() && signatory.hasSigned()) {
         return "signed";
+      } else if (signatory.approves() && signatory.hasSigned()) {
+        return "approved";
       } else if (document.status() === "canceled") {
         return "cancelled";
-      }  else if (document.status() === "timedout") {
+      } else if (document.status() === "timedout") {
         return "timeouted";
-      }  else if (document.status() === "rejected") {
+      } else if (document.status() === "rejected") {
         return "rejected";
       } else if (signatory.seendate()) {
         return "opened";
@@ -232,7 +234,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
        var signatory = this;
        if (signatory.isCsv())
         return localization.csv.title;
-       if (signatory.signs() &&  signatory.author())
+       if (signatory.signs() && signatory.author())
         return localization.process.authorsignatoryname + " " + signatory.signIndex();
        else if(signatory.author())
         return localization.process.authorname;
@@ -321,8 +323,20 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
          this.set({sign_order: parseInt(i + "")});
          this.document().checkLastViewerChange();
     },
+    signatoryRole: function() {
+         return this.get("signatory_role");
+    },
+    setSignatoryRole: function(v) {
+         return this.set({"signatory_role":v});
+    },
     signs: function() {
-         return this.get("is_signatory");
+         return this.signatoryRole() == "signing_party";
+    },
+    views: function() {
+         return this.signatoryRole() == "viewer";
+    },
+    approves: function() {
+         return this.signatoryRole() == "approver";
     },
     signsuccessredirect : function() {
           return this.get("sign_success_redirect_url");
@@ -331,7 +345,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
           return this.get("reject_redirect_url");
     },
     makeSignatory: function(args) {
-      this.set({ is_signatory: true });
+      this.setSignatoryRole("signing_party");
       this.document().checkLastViewerChange();
       if (args != undefined
           && args.authenticationToView != undefined
@@ -347,7 +361,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
       }
     },
     makeViewer: function() {
-      this.set({is_signatory: false});
+      this.setSignatoryRole("viewer");
       this.document().checkLastViewerChange();
       _.each(this.signatures(),function(s) {
          s.removeAllPlacements();
@@ -358,6 +372,15 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
 
       this.setAuthenticationToSign("standard");
       this.setAuthenticationToView("standard");
+    },
+    makeApprover: function() {
+      this.setSignatoryRole("approver");
+      this.document().checkLastViewerChange();
+      this.setAuthenticationToSign("standard");
+      _.each(this.fields(),function(s) {
+         s.removeAllPlacements();
+      });
+
     },
     hasAuthenticatedToView: function() {
         return this.get("has_authenticated_to_view");
@@ -436,19 +459,31 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
             this.signorder() == this.document().signorder();
         return canSign;
     },
-    ableToSign : function() { // Same as can sign but does not check document state.
-        return   this.signs() &&
+    canApprove: function() {
+        var canApprove = this.document().pending() &&
+            this.approves() &&
+            !this.hasSigned() &&
+            this.signorder() == this.document().signorder();
+        return canApprove;
+    },
+    canSignOrApprove: function() {
+        return this.canSign() || this.canApprove();
+    },
+    ableToSign : function() {
+        return   (this.signs()) &&
                 !this.hasSigned() &&
                  this.signorder() == this.document().signorder();
     },
-    isViewer : function() {
-        return !this.author() && !this.signs();
+    ableToSignOrApprove : function() {
+        return   (this.signs() || this.approves()) &&
+                !this.hasSigned() &&
+                 this.signorder() == this.document().signorder();
     },
     isLastViewer : function() {
       var self = this;
-      return (!this.signs() &&
+      return (this.views() &&
               _.all(this.document().signatories(), function(s) {
-                return !s.signs() || s.signorder() < self.signorder();
+                return !(s.signs() || s.approves()) || s.signorder() < self.signorder();
               }));
     },
     checkLastViewerChange : function() {
@@ -488,62 +523,78 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     hasPlacedRadioGroups: function() {
         return (this.fieldsByType("radiogroup").length > 0);
     },
+    canHaveAuthenticationToView: function() {
+        return this.signs() || this.approves();
+    },
     standardAuthenticationToView: function() {
-          return this.get("authentication_method_to_view") == "standard" && this.signs();
+          return this.get("authentication_method_to_view") == "standard" && this.canHaveAuthenticationToView();
     },
     seBankIDAuthenticationToView: function() {
-          return this.get("authentication_method_to_view") == "se_bankid" && this.signs();
+          return this.get("authentication_method_to_view") == "se_bankid" && this.canHaveAuthenticationToView();
     },
     noBankIDAuthenticationToView: function() {
-          return this.get("authentication_method_to_view") == "no_bankid" && this.signs();
+          return this.get("authentication_method_to_view") == "no_bankid" && this.canHaveAuthenticationToView();
     },
     dkNemIDAuthenticationToView: function() {
-          return this.get("authentication_method_to_view") == "dk_nemid" && this.signs();
+          return this.get("authentication_method_to_view") == "dk_nemid" && this.canHaveAuthenticationToView();
     },
     fiTupasAuthenticationToView: function() {
-          return this.get("authentication_method_to_view") == "fi_tupas" && this.signs();
+          return this.get("authentication_method_to_view") == "fi_tupas" && this.canHaveAuthenticationToView();
     },
     smsPinAuthenticationToView: function() {
-          return this.get("authentication_method_to_view") == "sms_pin" && this.signs();
+          return this.get("authentication_method_to_view") == "sms_pin" && this.canHaveAuthenticationToView();
+    },
+    canHaveAuthenticationToViewArchived: function() {
+        return this.signs() || this.approves();
     },
     standardAuthenticationToViewArchived: function() {
         return this.get("authentication_method_to_view_archived") == "standard"
-            && this.signs();
+            && this.canHaveAuthenticationToViewArchived();
     },
     seBankIDAuthenticationToViewArchived: function() {
         return this.get("authentication_method_to_view_archived") == "se_bankid"
-            && this.signs();
+            && this.canHaveAuthenticationToViewArchived();
     },
     noBankIDAuthenticationToViewArchived: function() {
         return this.get("authentication_method_to_view_archived") == "no_bankid"
-            && this.signs();
+            && this.canHaveAuthenticationToViewArchived();
     },
     dkNemIDAuthenticationToViewArchived: function() {
         return this.get("authentication_method_to_view_archived") == "dk_nemid"
-            && this.signs();
+            && this.canHaveAuthenticationToViewArchived();
     },
     fiTupasAuthenticationToViewArchived: function() {
         return this.get("authentication_method_to_view_archived") == "fi_tupas"
-            && this.signs();
+            && this.canHaveAuthenticationToViewArchived();
     },
     smsPinAuthenticationToViewArchived: function() {
         return this.get("authentication_method_to_view_archived") == "sms_pin"
-            && this.signs();
+            && this.canHaveAuthenticationToViewArchived();
+    },
+    canHaveAuthenticationToSign: function() {
+        // Not supported for Approvers
+        return this.signs();
     },
     standardAuthenticationToSign: function() {
-          return this.get("authentication_method_to_sign") == "standard" && this.signs();
+          return this.get("authentication_method_to_sign") == "standard" && this.canHaveAuthenticationToSign();
     },
     seBankIDAuthenticationToSign: function() {
-          return this.get("authentication_method_to_sign") == "se_bankid" && this.signs();
+          return this.get("authentication_method_to_sign") == "se_bankid" && this.canHaveAuthenticationToSign();
     },
     noBankIDAuthenticationToSign: function() {
-          return this.get("authentication_method_to_sign") == "no_bankid" && this.signs();
+          return this.get("authentication_method_to_sign") == "no_bankid" && this.canHaveAuthenticationToSign();
     },
     dkNemIDAuthenticationToSign: function() {
-          return this.get("authentication_method_to_sign") == "dk_nemid" && this.signs();
+          return this.get("authentication_method_to_sign") == "dk_nemid" && this.canHaveAuthenticationToSign();
+    },
+    noBankIDAuthenticationToSign: function() {
+          return this.get("authentication_method_to_sign") == "no_bankid" && this.canHaveAuthenticationToSign();
+    },
+    dkNemIDAuthenticationToSign: function() {
+          return this.get("authentication_method_to_sign") == "dk_nemid" && this.canHaveAuthenticationToSign();
     },
     smsPinAuthenticationToSign: function() {
-          return this.get("authentication_method_to_sign") == "sms_pin" && this.signs();
+          return this.get("authentication_method_to_sign") == "sms_pin" && this.canHaveAuthenticationToSign();
     },
     emailDelivery: function() {
           return this.get("delivery_method") == "email";
@@ -756,7 +807,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
                   return field.draftData();
               }),
               is_author: this.author(),
-              is_signatory: this.signs(),
+              signatory_role: this.signatoryRole(),
               sign_order: this.signorder(),
               attachments: _.map(this.attachments(), function(att) {
                   return att.draftData();

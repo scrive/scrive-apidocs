@@ -139,9 +139,12 @@ postDocumentCanceledChange doc@Document{..} = logDocument documentid $ do
   logDocEvent "Doc Canceled" author [] doc
 
 
--- | After a party has signed - check if we need to close document and
--- take further actions.
-postDocumentPendingChange :: (CryptoRNG m, TemplatesMonad m, MonadFileStorage m, MonadBaseControl IO m, DocumentMonad m, MonadMask m, MonadLog m, MonadIO m, MailContextMonad m, GuardTimeConfMonad m)
+-- | After a party has signed or approved - check if we need to close
+-- document and take further actions.
+postDocumentPendingChange :: ( CryptoRNG m, TemplatesMonad m, MonadFileStorage m
+                             , MonadBaseControl IO m, DocumentMonad m
+                             , MonadMask m, MonadLog m, MonadIO m
+                             , MailContextMonad m, GuardTimeConfMonad m )
                           => Document -> m ()
 postDocumentPendingChange olddoc = do
   unlessM (isPending <$> theDocument) $
@@ -149,9 +152,10 @@ postDocumentPendingChange olddoc = do
 
   dbUpdate $ ChargeUserGroupForClosingSignature (documentid olddoc)
 
-  ifM (allSignatoriesSigned <$> theDocument)
+  ifM (allPartiesSignedOrApproved <$> theDocument)
   {-then-} (do
-      theDocument >>= \d -> logInfo "All have signed, document will be closed" $ logObject_ d
+      theDocument >>= \d ->
+        logInfo "All have signed, document will be closed" $ logObject_ d
       time <- get mctxtime <$> getMailContext
       dbUpdate $ CloseDocument (systemActor time)
       dbUpdate $ ChargeUserGroupForClosingDocument $ documentid olddoc
@@ -165,14 +169,19 @@ postDocumentPendingChange olddoc = do
       asyncLogEvent SetUserProps
                     (userMixpanelData author now)
                     EventMixpanel
-      dbUpdate . ScheduleDocumentSealing . get (bdid . mctxcurrentBrandedDomain) =<< getMailContext)
+      dbUpdate . ScheduleDocumentSealing . get (bdid . mctxcurrentBrandedDomain)
+        =<< getMailContext)
   {-else-} $ do
       theDocument >>= triggerAPICallbackIfThereIsOne
-      whenM ((\d -> documentcurrentsignorder d /= documentcurrentsignorder olddoc) <$> theDocument) $ do
+      whenM (((/=) (documentcurrentsignorder olddoc) .
+               documentcurrentsignorder) <$> theDocument) $ do
         theDocument >>= \d -> logInfo "Resending invitation emails" $ logObject_ d
         sendInvitationEmails False
   where
-    allSignatoriesSigned = all (isSignatory --> hasSigned) . documentsignatorylinks
+    allPartiesSignedOrApproved =
+      all (   (isSignatory --> isSignatoryAndHasSigned)
+           && (isApprover  --> isApproverAndHasApproved)) .
+      documentsignatorylinks
     userMixpanelData author time =
         [ UserIDProp (userid author)
         , someProp "Last Doc Closed" time ]

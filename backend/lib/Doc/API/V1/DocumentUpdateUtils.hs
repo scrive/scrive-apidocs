@@ -169,7 +169,7 @@ newSignatorySignatoryLinkIsChangingSignatoryLink newsl sl =
         (signatorylinkid newsl /= signatorylinkid sl)
      || (not $ fieldsListsAreAlmostEqual (signatoryfields newsl) (signatoryfields sl))
      || (signatoryisauthor newsl /= signatoryisauthor sl)
-     || (signatoryispartner newsl /= signatoryispartner sl)
+     || (signatoryrole newsl /= signatoryrole sl)
      || (signatorysignorder newsl /= signatorysignorder sl)
      || (signatoryattachments newsl /= signatoryattachments sl)
      || (signatorylinkcsvupload newsl /= signatorylinkcsvupload sl)

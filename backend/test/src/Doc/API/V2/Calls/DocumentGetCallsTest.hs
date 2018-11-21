@@ -37,6 +37,7 @@ import TestKontra
 import UserGroup.Data
 import Util.Actor
 import Util.QRCode
+import Util.SignatoryLinkUtils
 
 apiV2DocumentGetCallsTests :: TestEnvSt -> Test
 apiV2DocumentGetCallsTests env = testGroup "APIv2DocumentGetCalls" $
@@ -393,7 +394,7 @@ testDocApiV2FilesFull = do
 
   initDoc <- addRandomDocumentWithAuthorAndCondition user $ \d ->
     isPreparation d && isSignable d
-    && map signatoryispartner (documentsignatorylinks d) == [False, True]
+    && map isSignatory (documentsignatorylinks d) == [False, True]
     && signatorylinkauthenticationtosignmethod (documentsignatorylinks d !! 1)
        == StandardAuthenticationToSign
     && all (null . signatoryattachments) (documentsignatorylinks d)

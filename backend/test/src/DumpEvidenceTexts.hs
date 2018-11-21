@@ -55,7 +55,7 @@ dumpEvidenceTexts now lang doc' = do
                 , fieldForTests (NameFI $ NameOrder 2) "Author"
                 , fieldForTests EmailFI "author@example.com"
                ]
-            , signatoryispartner = True
+            , signatoryrole   = SignatoryRoleSigningParty
             , signatorylinkid = unsafeSignatoryLinkID 1
             }
   let Just time = parseTime' "%d-%m-%Y" "01-01-2013"
@@ -70,14 +70,14 @@ dumpEvidenceTexts now lang doc' = do
                     , actorWho = "the author (" ++
                                  fromJust (actorEmail actor) ++ ")"
                     }
-  let evidencetypes = [minBound .. maxBound]
+  let evidencetypes = ([minBound .. maxBound] :: [CurrentEvidenceEventType])
   let asl = def
             {   signatoryfields = [
                       fieldForTests (NameFI $ NameOrder 1) "Sven"
                     , fieldForTests (NameFI $ NameOrder 2) "Signatory"
                     , fieldForTests EmailFI "signatory@example.com"
                 ]
-            , signatoryispartner = True
+            , signatoryrole = SignatoryRoleSigningParty
             , signatorylinkdeliverymethod = EmailAndMobileDelivery
             , signatorylinkid = unsafeSignatoryLinkID 2
             }

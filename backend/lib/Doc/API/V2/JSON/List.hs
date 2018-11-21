@@ -17,15 +17,16 @@ import MinutesTime
 import User.UserID
 import qualified Doc.Model.Filter as DF
 
--- All sorting and filtering types defined in this module are internal to API V2.
--- Sorting and filtering used by API is different then sorting and filtering defined
--- in Doc.Model
+-- All sorting and filtering types defined in this module are internal
+-- to API V2.  Sorting and filtering used by API is different then
+-- sorting and filtering defined in Doc.Model.
 
 defaultDocumentAPISort :: [DocumentAPISort]
 defaultDocumentAPISort = [DocumentAPISort DocumentAPISortTime DocumentAPISortDesc]
 
--- Note that types defined here aren't even exported, since only Unjson instance is used, and result
--- of parsing is converted immediately to sorting and filtering defined in Doc.Model
+-- Note that types defined here aren't even exported, since only
+-- Unjson instance is used, and result of parsing is converted
+-- immediately to sorting and filtering defined in Doc.Model
 
 data DocumentAPISort = DocumentAPISort DocumentAPISortOn DocumentAPISortOrder
 

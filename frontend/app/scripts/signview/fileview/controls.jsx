@@ -184,6 +184,8 @@ module.exports = React.createClass({
         return localization.docsignview.controlsStatus.viewingRejected;
       } else if (doc.isSigning()) {
         return localization.docsignview.controlsStatus.viewingSigning;
+      } else if (doc.isApproving()) {
+        return localization.docsignview.controlsStatus.viewingApproving;
       } else if (doc.pending()) {
         return localization.docsignview.controlsStatus.viewingPending;
       } else {
@@ -228,7 +230,7 @@ module.exports = React.createClass({
     const statusStyle = {width: "calc(100% - " + usedWidth + "px)"};
 
     const buttonsClass = classNames("buttons right", {
-      "hidden": this.isHiddenByBlink() || doc.isUnavailableForSign()
+      "hidden": this.isHiddenByBlink() || doc.isUnavailableForSignOrApprove()
     });
 
     return (

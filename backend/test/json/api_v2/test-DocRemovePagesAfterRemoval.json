@@ -7,6 +7,7 @@
       "user_id": "169976",
       "is_author": true,
       "is_signatory": false,
+      "signatory_role": "viewer",
       "fields": [
         {
           "type": "email",
@@ -62,6 +63,7 @@
       "user_id": null,
       "is_author": false,
       "is_signatory": false,
+      "signatory_role": "viewer",
       "fields": [
         {
           "type": "name",

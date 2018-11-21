@@ -601,7 +601,11 @@ daveDocument documentid = onlyAdmin $ do
         F.value "daveBody" $  inspectXML document
         F.value "id" $ show documentid
         F.value "closed" $ documentstatus document == Closed
-        F.value "couldBeclosed" $ isDocumentError document && all (isSignatory --> hasSigned) (documentsignatorylinks document)
+        F.value "couldBeclosed" $
+          isDocumentError document &&
+          all (isSignatory --> isSignatoryAndHasSigned
+            && isApprover  --> isApproverAndHasApproved)
+          (documentsignatorylinks document)
       return $ Right r
      else return $ Left $ LinkDaveDocument documentid
 

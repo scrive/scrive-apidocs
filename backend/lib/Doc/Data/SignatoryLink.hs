@@ -9,6 +9,8 @@ module Doc.Data.SignatoryLink (
   , AuthenticationToSignMethod(..)
   , DeliveryMethod(..)
   , ConfirmationDeliveryMethod(..)
+  , SignatoryRole(..)
+  , signatoryRoleFromBool
   , SignatoryLink(..)
   , signatoryLinksSelectors
   ) where
@@ -283,6 +285,39 @@ instance ToSQL ConfirmationDeliveryMethod where
   toSQL EmailLinkConfirmationDelivery          = toSQL (5::Int16)
   toSQL EmailLinkAndMobileConfirmationDelivery = toSQL (6::Int16)
 
+-- | Role through which the document is accessed.
+data SignatoryRole = SignatoryRoleViewer
+                   | SignatoryRoleSigningParty
+                   | SignatoryRoleApprover
+  deriving (Eq, Ord, Show)
+
+-- | True == SigningParty, False == Viewer.
+signatoryRoleFromBool :: Bool -> SignatoryRole
+signatoryRoleFromBool signs = if signs then SignatoryRoleSigningParty
+                              else SignatoryRoleViewer
+
+instance PQFormat SignatoryRole where
+  pqFormat = pqFormat @Int16
+
+instance FromSQL SignatoryRole where
+  type PQBase SignatoryRole = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      1 -> return SignatoryRoleViewer
+      2 -> return SignatoryRoleSigningParty
+      3 -> return SignatoryRoleApprover
+      _ -> throwM RangeError {
+        reRange = [(1,3)]
+      , reValue = n
+      }
+
+instance ToSQL SignatoryRole where
+  type PQDest SignatoryRole       = PQDest Int16
+  toSQL SignatoryRoleViewer       = toSQL (1::Int16)
+  toSQL SignatoryRoleSigningParty = toSQL (2::Int16)
+  toSQL SignatoryRoleApprover     = toSQL (3::Int16)
+
 ---------------------------------
 
 data SignatoryLink = SignatoryLink {
@@ -290,14 +325,15 @@ data SignatoryLink = SignatoryLink {
 , signatoryfields                         :: ![SignatoryField]
 -- | True if signatory is an author of the document
 , signatoryisauthor                       :: !Bool
--- | True if signatory participates in signing process
-, signatoryispartner                      :: !Bool
+-- | Signatory role: viewer, signing party, approver
+, signatoryrole                           :: !SignatoryRole
 , signatorysignorder                      :: !SignOrder
 -- | Authentication code
 , signatorymagichash                      :: !MagicHash
 -- | If this document has been saved to an account, that is the user id
 , maybesignatory                          :: !(Maybe UserID)
--- | When a person has signed this document
+-- | When a person has signed this document (or approved, in case when
+-- signatory role is approver).
 , maybesigninfo                           :: !(Maybe SignInfo)
 -- | When a person has first seen this document
 , maybeseeninfo                           :: !(Maybe SignInfo)
@@ -337,7 +373,7 @@ instance Default SignatoryLink where
     signatorylinkid = unsafeSignatoryLinkID 0
   , signatoryfields = []
   , signatoryisauthor = False
-  , signatoryispartner = False
+  , signatoryrole = SignatoryRoleViewer
   , signatorysignorder = SignOrder 1
   , signatorymagichash = unsafeMagicHash 0
   , maybesignatory = Nothing
@@ -381,7 +417,7 @@ signatoryLinksSelectors = [
     "signatory_links.id"
   , "ARRAY(SELECT (" <> mintercalate ", " signatoryFieldsSelectors <> ")::signatory_field FROM signatory_link_fields WHERE signatory_links.id = signatory_link_fields.signatory_link_id ORDER BY signatory_link_fields.id)"
   , "documents.author_id = signatory_links.id"
-  , "signatory_links.is_partner"
+  , "signatory_links.signatory_role"
   , "signatory_links.sign_order"
   , "signatory_links.token"
   , "signatory_links.user_id"
@@ -413,17 +449,17 @@ signatoryLinksSelectors = [
   , "ARRAY(SELECT (" <> mintercalate ", " signatoryConsentQuestionsSelectors <> ")::signatory_consent_question FROM signatory_link_consent_questions WHERE signatory_links.id = signatory_link_consent_questions.signatory_link_id ORDER BY position ASC)"
   ]
 
-type instance CompositeRow SignatoryLink = (SignatoryLinkID, CompositeArray1 SignatoryField, Bool, Bool, SignOrder, MagicHash, Maybe UserID, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, DeliveryStatus, DeliveryStatus, Maybe UTCTime, Maybe UTCTime, Maybe [[String]], CompositeArray1 SignatoryAttachment,CompositeArray1 HighlightedPage, Maybe String, Maybe String, Maybe UTCTime, Maybe String, AuthenticationToViewMethod, AuthenticationToViewMethod, AuthenticationToSignMethod, DeliveryMethod, ConfirmationDeliveryMethod, Bool, Bool, Bool, Maybe String, CompositeArray1 SignatoryConsentQuestion)
+type instance CompositeRow SignatoryLink = (SignatoryLinkID, CompositeArray1 SignatoryField, Bool, SignatoryRole, SignOrder, MagicHash, Maybe UserID, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, DeliveryStatus, DeliveryStatus, Maybe UTCTime, Maybe UTCTime, Maybe [[String]], CompositeArray1 SignatoryAttachment,CompositeArray1 HighlightedPage, Maybe String, Maybe String, Maybe UTCTime, Maybe String, AuthenticationToViewMethod, AuthenticationToViewMethod, AuthenticationToSignMethod, DeliveryMethod, ConfirmationDeliveryMethod, Bool, Bool, Bool, Maybe String, CompositeArray1 SignatoryConsentQuestion)
 
 instance PQFormat SignatoryLink where
   pqFormat = "%signatory_link"
 
 instance CompositeFromSQL SignatoryLink where
-  toComposite (slid, CompositeArray1 fields, is_author, is_partner, sign_order, magic_hash, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_contents, CompositeArray1 attachments, CompositeArray1 highlighted_pages, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_to_view_method, authentication_to_view_archived_method, authentication_to_sign_method, delivery_method, confirmation_delivery_method, allows_highlighting, has_identified, hide_pn, consent_title, CompositeArray1 consent_questions) = SignatoryLink {
+  toComposite (slid, CompositeArray1 fields, is_author, signatory_role, sign_order, magic_hash, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_contents, CompositeArray1 attachments, CompositeArray1 highlighted_pages, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_to_view_method, authentication_to_view_archived_method, authentication_to_sign_method, delivery_method, confirmation_delivery_method, allows_highlighting, has_identified, hide_pn, consent_title, CompositeArray1 consent_questions) = SignatoryLink {
     signatorylinkid = slid
   , signatoryfields = fields
   , signatoryisauthor = is_author
-  , signatoryispartner = is_partner
+  , signatoryrole = signatory_role
   , signatorysignorder = sign_order
   , signatorymagichash = magic_hash
   , maybesignatory = muser_id

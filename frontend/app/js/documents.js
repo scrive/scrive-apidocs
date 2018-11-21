@@ -57,6 +57,10 @@ var Document = exports.Document = Backbone.Model.extend({
         var sigs = _.filter(this.signatories(),function(sig) {return sig.ableToSign() && sig.padDelivery()});
         return _.sortBy(sigs,function(sig) {return sig.author()? 2 : 1});
     },
+    signatoriesThatCanSignOrApproveNowOnPad: function() {
+        var sigs = _.filter(this.signatories(),function(sig) {return sig.ableToSignOrApprove() && sig.padDelivery()});
+        return _.sortBy(sigs,function(sig) {return sig.author()? 2 : 1});
+    },
     setDefaultTitle: function () {
       var date = new Date();
       var pad = function (n) { return ("0" + n).slice(-2); };
@@ -428,6 +432,26 @@ var Document = exports.Document = Backbone.Model.extend({
             }
         }).addMany(extraSignFields);
     },
+    approve : function(errorCallback, successCallback) {
+        var document = this;
+        return new Submit({
+            url : "/api/frontend/documents/" + document.documentid() +  "/" + document.currentSignatory().signatoryid() + "/approve",
+            method: "POST",
+            ajax: true,
+            ajaxsuccess : function(newDocumentRaw) {
+              newDocument = new Document(new Document({}).parse(newDocumentRaw)),
+              oldDocument = document;
+              successCallback(newDocument, oldDocument);
+            },
+            ajaxerror : function(xhr) {
+              if (errorCallback != undefined) {
+                errorCallback(xhr);
+              } else {
+                window.location.reload();
+              }
+            }
+        });
+    },
     clone : function(callback) {
        var document = this;
          return new Submit({
@@ -623,7 +647,7 @@ var Document = exports.Document = Backbone.Model.extend({
       var max = _.max(this.signatories(), function (s) { return s.signorder(); }).signorder();
       var res = max;
       _.each(this.signatories(), function (s) {
-        if (s.signs() && !s.hasSigned()) {
+        if ((s.signs() || s.approves()) && !s.hasSigned()) {
           res = Math.min(res, s.signorder());
         }
       });
@@ -709,23 +733,28 @@ var Document = exports.Document = Backbone.Model.extend({
 
         var aidx = this.author().signorder();
         return ! _.any(this.signatories(), function(sig) {
-            return sig.signs() && sig.signorder() < aidx;
+            return (sig.signs() || sig.approves()) && sig.signorder() < aidx;
             });
 
     },
     authorIsOnlySignatory : function() {
-       for (var i = 0; i < this.signatories().length; ++i)
-         if (this.signatories()[i].signs() && !this.signatories()[i].author())
-                    return false;
-       return this.author().signs();
+       return this.author().signs() && _.all(this.signatories(), function(sig) {
+           return !sig.author() && !sig.signs() && !sig.approves();
+       })
     },
     isSigning: function() {
         var signatory = this.currentSignatory();
         return signatory != undefined && this.pending() && signatory.signs() && !signatory.hasSigned();
     },
+    isApproving: function() {
+        var signatory = this.currentSignatory();
+        return signatory != undefined && this.pending() && signatory.approves() && !signatory.hasSigned();
+    },
     isReviewing: function() {
         var signatory = this.currentSignatory();
-        return (signatory != undefined) && (this.pending() || this.closed()) && !signatory.signs();
+        return (signatory != undefined)
+            && (this.pending() || this.closed())
+            && !signatory.signs() && !signatory.approves();
     },
     isSignedNotClosed: function() {
         var signatory = this.currentSignatory();
@@ -735,11 +764,14 @@ var Document = exports.Document = Backbone.Model.extend({
         var signatory = this.currentSignatory();
         return signatory != undefined && signatory.hasSigned() && this.closed();
     },
-    isUnavailableForSign: function() {
+    isUnavailableForSignOrApprove: function() {
         return !this.pending() && !this.closed();
     },
     currentSignatoryCanSign: function() {
       return this.currentSignatory() && this.currentSignatory().canSign();
+    },
+    currentSignatoryCanSignOrApprove: function() {
+      return this.currentSignatory() && this.currentSignatory().canSignOrApprove();
     },
     signatoriesWhoSign: function() {
         return _.filter(this.signatories(), function(sig) {

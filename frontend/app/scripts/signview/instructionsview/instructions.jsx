@@ -17,19 +17,22 @@ module.exports = React.createClass({
   headlineText: function () {
     var doc = this.props.model;
     var sig = doc.currentSignatory();
-    var welcomeUser = sig && sig.name() != "" && sig.canSign();
+    var docIsSigningOrApproving = doc.isSigning() || doc.isApproving();
+    var welcomeUser = sig && sig.name() != "" && sig.canSignOrApprove();
 
-    if (doc.isSigning() && welcomeUser) {
+    if (docIsSigningOrApproving && welcomeUser) {
       return localization.docsignview.followTheArrowWithUserName;
-    } else if (doc.isSigning()) {
+    } else if (docIsSigningOrApproving) {
       return localization.docsignview.followTheArrow;
     } else if (doc.isReviewing()) {
       return localization.docsignview.reviewDocument;
-    } else if (doc.isSignedAndClosed()) {
+    } else if (sig.signs() && doc.isSignedAndClosed()) {
       return localization.docsignview.signedAndClosed;
-    } else if (doc.isSignedNotClosed()) {
+    } else if (sig.signs() && doc.isSignedNotClosed()) {
       return localization.docsignview.signedNotClosed;
-    } else if (doc.isUnavailableForSign()) {
+    } else if (sig.approves() && sig.hasSigned()) {
+      return localization.docsignview.approved;
+    } else if (doc.isUnavailableForSignOrApprove()) {
       return localization.docsignview.unavailableForSign;
     } else {
       return localization.docsignview.unavailableForSign;
@@ -60,7 +63,7 @@ module.exports = React.createClass({
     var seleniumClass = "";
     if (doc.isSignedAndClosed()) {
       seleniumClass = "s-header-doc-signed";
-    } else if (doc.isUnavailableForSign()) {
+    } else if (doc.isUnavailableForSignOrApprove()) {
       seleniumClass = "s-header-doc-cancelled";
     }
 

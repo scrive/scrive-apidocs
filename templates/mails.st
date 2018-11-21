@@ -108,7 +108,7 @@ mailAuthorRejectContractMail=
       $_mailRejectMailTitleContract()$
       $nicemail(
         mailheader = _mailRejectMailTitleContract();
-        mailp1 = _mailRejectMailContentRejected();
+        mailp1 = mailRejectMailContentRejected();
         mailp2 = _mailRejectMailContentRejected2();
         mailspacing2 = "";
         mailp3 = mailRejectMailContentHeader();
@@ -121,11 +121,18 @@ mailRejectContractMail=
       $_mailRejectMailTitleContract()$
       $nicemail(
         mailheader = _mailRejectMailTitleContract();
-        mailp1 = _mailRejectMailContentRejected();
+        mailp1 = mailRejectMailContentRejected();
         mailspacing1 = "";
         mailp2 = mailRejectMailContentHeader();
         footer = null
       )$
+####
+mailRejectMailContentRejected=
+$if(rejectorIsApprover)$
+  $_mailRejectMailContentRejectedByApprover()$
+$else$
+  $_mailRejectMailContentRejected()$
+$endif$
 ####
 mailRejectLoginButton=
 <div class="email-preview-hidden">
@@ -170,6 +177,8 @@ mailInvitationTitleContract=
         $_mailInvitationToSignTitleContract()$
     $elseif(send)$
         $_mailInvitationToSignTitleContract()$
+    $elseif(approve)$
+        $_mailInvitationToApproveTitleContract()$
     $elseif(view)$
         $_mailInvitationToViewTitleContract()$
     $endif$
@@ -198,7 +207,13 @@ mailInvitationToSignContractGoToActionMarkup=
           actionname=_mailInvitationToSignGoToActionName();
           actiondescription=_mailInvitationToSignGoToActionDescription()
       )$
-    $elseif(view)$
+    $elseif(approve)$
+      $gmailGoToActionMarkup(
+          actionurl=link;
+          actionname=_mailInvitationToApproveGoToActionName();
+          actiondescription=_mailInvitationToApproveGoToActionDescription()
+      )$
+   $elseif(view)$
       $gmailGoToActionMarkup(
           actionurl=link;
           actionname=_mailInvitationToViewGoToActionName();
@@ -212,6 +227,9 @@ mailInvitationToSignContractIntructions=
 mailInvitationCustomHeader=
 $if(sign)$
   $_mailInvitationToSignContractDefaultHeader()$
+  <br/>
+$elseif(approve)$
+  $_mailInvitationToApproveDefaultHeader()$
   <br/>
 $elseif(view)$
   $_mailInvitationToViewDefaultHeader()$
@@ -270,6 +288,8 @@ $endif$
 remindMailSignedContractStandardHeaderSendRequest=
 $if(sign)$
   $_remindMailSignedContractStandardHeaderSendRequest()$
+$elseif(approve)$
+  $_remindMailSignedContractStandardHeaderSendRequestApprove()$
 $else$
   $_remindMailSignedContractStandardHeaderSendRequestReview()$
 $endif$
@@ -289,6 +309,8 @@ remindMailNotSignedContract=
 remindMailNotSignedTitleContract=
 $if(sign)$
   $_remindMailNotSignedTitleContract()$
+$elseif(approve)$
+  $_remindMailNotSignedTitleContractApprove()$
 $else$
   $_remindMailNotSignedTitleContractReview()$
 $endif$
@@ -299,6 +321,12 @@ $if(sign)$
       actionurl=link;
       actionname=_mailInvitationToSignGoToActionName();
       actiondescription=_mailInvitationToSignGoToActionDescription()
+  )$
+$elseif(approve)$
+  $gmailGoToActionMarkup(
+      actionurl=link;
+      actionname=_mailInvitationToApproveGoToActionName();
+      actiondescription=_mailInvitationToApproveGoToActionDescription()
   )$
 $else$
   $gmailGoToActionMarkup(
@@ -314,6 +342,8 @@ $if(automatic)$
 $else$
         $if(sign)$
                 $_remindMailNotSignedContractBody()$
+        $elseif(approve)$
+                $_remindMailNotApprovedContractBody()$
         $else$
                 $_remindMailNotReviewedContractBody()$
         $endif$

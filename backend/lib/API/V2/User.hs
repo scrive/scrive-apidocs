@@ -58,7 +58,8 @@ getAPIUserWithPad priv = getAPIUserWith getContextUser [priv]
 --
 -- Used to return `m (MagicHash, Maybe User)` but we don't seem to need the
 -- `User`, can be reintroduced if really needed
-getMagicHashForSignatoryAction :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m MagicHash
+getMagicHashForSignatoryAction :: Kontrakcja m
+                               => DocumentID -> SignatoryLinkID -> m MagicHash
 getMagicHashForSignatoryAction did slid = do
   mSessionMagicHash <- dbQuery $ GetDocumentSessionToken slid
   case mSessionMagicHash of
@@ -74,7 +75,9 @@ getMagicHashForSignatoryAction did slid = do
 -- `DocumentID` and `SignatoryLinkID`
 --
 -- Will give a `Nothing` if there is no matching session
-getDocumentSignatoryMagicHash :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Maybe SignatoryLink)
+getDocumentSignatoryMagicHash :: Kontrakcja m
+                              => DocumentID -> SignatoryLinkID
+                              -> m (Maybe SignatoryLink)
 getDocumentSignatoryMagicHash did slid = do
   mMagicHash <- dbQuery $ GetDocumentSessionToken slid
   case (mMagicHash) of

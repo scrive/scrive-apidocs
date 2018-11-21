@@ -173,7 +173,7 @@ data CGISignStatus = CGISignStatusSuccess | CGISignStatusInProgress ProgressStat
 checkCGISignStatus :: (MonadDB m, MonadThrow m, MonadMask m, MonadLog m, MonadBaseControl IO m) => CgiGrpConfig -> DocumentID -> SignatoryLinkID -> m CGISignStatus
 checkCGISignStatus CgiGrpConfig{..}  did slid = do
   doc <- dbQuery $ GetDocumentByDocumentID did
-  if (not (isPending doc) || hasSigned (fromJust $ getSigLinkFor slid doc))
+  if (not (isPending doc) || isSignatoryAndHasSigned (getSigLinkFor slid doc))
     then return  CGISignStatusAlreadySigned
     else do
       logInfo_ "Fetching signature"

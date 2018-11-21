@@ -28,7 +28,7 @@ module.exports = React.createClass({
     Track.track("Choose auth to view", {
       Where: "icon"
     });
-    if (!sig.signs()) {
+    if (sig.views()) {
       new FlashMessage({type: "error", content: localization.designview.viewerCantHaveAuthorisation});
     } else {
       var superthis = this;
@@ -51,7 +51,7 @@ module.exports = React.createClass({
   },
   icon: function () {
     var sig = this.props.model;
-    if (sig.standardAuthenticationToView() || !sig.signs()) {
+    if (sig.standardAuthenticationToView() || sig.views()) {
       return "design-view-action-participant-icon-auth-to-view-icon-noauth";
     } else if (sig.seBankIDAuthenticationToView()) {
       return "design-view-action-participant-icon-auth-to-view-icon-se-bankid";

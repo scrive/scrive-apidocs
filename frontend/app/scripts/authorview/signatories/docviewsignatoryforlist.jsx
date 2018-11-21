@@ -20,8 +20,10 @@ var classNames = require("classnames");
     signatorySummary: function () {
       var signatory = this.props.signatory;
       var document = signatory.document();
-      if (signatory.signdate() != undefined) {
+      if (signatory.signs() && signatory.hasSigned()) {
         return localization.signatoryMessage.signed;
+      } else if (signatory.approves() && signatory.hasSigned()) {
+        return localization.signatoryMessage.approved;
       } else if (document.timedout() || document.canceled() || document.rejected()) {
         return localization.docsignview.unavailableForSign;
       } else if (signatory.rejecteddate() != undefined) {

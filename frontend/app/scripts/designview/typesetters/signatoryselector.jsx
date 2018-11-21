@@ -30,12 +30,18 @@ var Track = require("../../common/track");
       }
     },
 
+    availableSignatories: function () {
+       var field = this.props.field;
+       return field.signatory().document().signatories().filter(function (s) {
+         return !s.approves() && (!s.views() || !field.isSignature());
+       });
+    },
+
     render: function () {
       var field = this.props.field;
       var sig = field.signatory();
-      var doc = sig.document();
 
-      var options = doc.signatories().map(function (s) {
+      var options = this.availableSignatories().map(function (s) {
         return {
           name: s.nameOrEmail() || s.nameInDocument(),
           value: s,

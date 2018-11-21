@@ -12,9 +12,10 @@ import Data.Set (Set)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
-import Doc.DocStateData (Document, SignatoryLink, documentsignatorylinks, signatoryisauthor, signatoryispartner, signatorylinkid)
+import Doc.DocStateData (Document, SignatoryLink, documentsignatorylinks, signatoryisauthor, signatorylinkid)
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import Util.HasSomeUserInfo (getFullName)
+import Util.SignatoryLinkUtils (isApprover, isSignatory)
 
 type SignatoryIdentifierMap = Map SignatoryLinkID SignatoryIdentifier
 
@@ -26,10 +27,14 @@ data SignatoryIdentifier = SignatoryIdentifier
   deriving Show
 
 -- | Return the full name plus unique initials for a signatory
-signatoryIdentifier :: SignatoryIdentifierMap -> SignatoryLinkID -> String -> Maybe String
+signatoryIdentifier :: SignatoryIdentifierMap -> SignatoryLinkID -> String
+                    -> Maybe String
 signatoryIdentifier sim slid emptyNamePlaceholder = do
   si <- Map.lookup slid sim
-  return $ (if null (siFullName si) then emptyNamePlaceholder else siFullName si) ++ " (" ++ siInitials si ++ ")"
+  return $ (if null (siFullName si)
+            then emptyNamePlaceholder
+            else siFullName si)
+    ++ " (" ++ siInitials si ++ ")"
 
 -- | Create a map with unique identifiers (name, initials) over a
 -- sequence of documents, stemming from restarted signing processes.
@@ -41,23 +46,34 @@ signatoryIdentifier sim slid emptyNamePlaceholder = do
 -- The author is always included even if not signing (but only the
 -- author link associated with the last document in the list).  This
 -- is to support the "Initiator" box on the verification page.
-signatoryIdentifierMap :: Bool -> [Document] -> Set SignatoryLinkID -> SignatoryIdentifierMap
-signatoryIdentifierMap includeviewers docs slids =
+signatoryIdentifierMap :: Bool -> [Document] -> Set SignatoryLinkID
+                       -> SignatoryIdentifierMap
+signatoryIdentifierMap includenonsigning docs slids =
   Map.fromList $
-    zipWith3 (\esl name is -> (esignatorylinkid esl, SignatoryIdentifier (Map.lookup (esignatorylinkid esl) slmap) name is))
-      slsAndMissing
-      names
-      initials
+    zipWith3
+    (\esl name is ->
+        let sl = esignatorylinkid esl
+        in (sl, SignatoryIdentifier (Map.lookup sl slmap) name is))
+    slsAndMissing
+    names
+    initials
   where
-  esignatorylinkid = either signatorylinkid id
-  slmap = Map.fromList [(signatorylinkid s, s) | d <- docs, s <- documentsignatorylinks d]
-  names = map (either getFullName (const "")) slsAndMissing
-  initials = uniqueStrings $ enumerateEmpty $ map (map head . words) names
-  sls = filter (\s -> includeviewers || signatoryispartner s
-                                     || signatoryisauthor s) $ concatMap documentsignatorylinks docs
-  slsAndMissing = sortBy (compare `on` esignatorylinkid) $ (map Left sls) ++ (map Right missing)
-  missing = Set.toList $
-            slids Set.\\ Set.fromList (map signatorylinkid sls)
+    esignatorylinkid = either signatorylinkid id
+
+    slmap         = Map.fromList [(signatorylinkid s, s)
+                                 | d <- docs, s <- documentsignatorylinks d]
+    names         = map (either getFullName (const "")) slsAndMissing
+    initials      = uniqueStrings $ enumerateEmpty $
+                       map (map head . words) names
+    sls           = filter (\s -> includenonsigning
+                                  || isSignatory s
+                                  || isApprover s
+                                  || signatoryisauthor s) $
+                    concatMap documentsignatorylinks docs
+    slsAndMissing = sortBy (compare `on` esignatorylinkid) $
+                    (map Left sls) ++ (map Right missing)
+    missing       = Set.toList $
+                    slids Set.\\ Set.fromList (map signatorylinkid sls)
 
 -- | Replace all empty strings in a list with "1", "2", ...
 enumerateEmpty :: [String] -> [String]

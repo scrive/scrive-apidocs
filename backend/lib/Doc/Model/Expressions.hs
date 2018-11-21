@@ -4,10 +4,22 @@ module Doc.Model.Expressions (
   ) where
 
 import DB
+import Doc.Data.SignatoryLink
 
 documentLatestSignTimeExpression :: SQL
-documentLatestSignTimeExpression = "(SELECT max(signatory_links.sign_time) FROM signatory_links WHERE signatory_links.document_id = documents.id)"
+documentLatestSignTimeExpression = parenthesize $
+  "SELECT max(signatory_links.sign_time)"
+  <+> "FROM signatory_links"
+  <+> "WHERE signatory_links.document_id = documents.id"
 
 documentSignOrderExpression :: SQL
-documentSignOrderExpression =
-  "(COALESCE((SELECT min(signatory_links.sign_order) FROM signatory_links WHERE signatory_links.document_id = documents.id AND signatory_links.is_partner AND signatory_links.sign_time IS NULL), 1))"
+documentSignOrderExpression = parenthesize $
+  "COALESCE((SELECT min(signatory_links.sign_order)"
+  <+> "FROM signatory_links"
+  <+> "WHERE signatory_links.document_id = documents.id"
+  <+> "AND"
+  <+> parenthesize
+      (     "signatory_links.signatory_role =" <?> SignatoryRoleSigningParty
+        <+> "OR"
+        <+> "signatory_links.signatory_role =" <?> SignatoryRoleApprover )
+  <+> "AND signatory_links.sign_time IS NULL), 1)"

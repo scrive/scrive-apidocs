@@ -96,7 +96,7 @@ handleDelete = do
              let Just (sl@SignatoryLink{signatorylinkid}) = getSigLinkFor user doc
              ctx <- getContext
              sl_actor <- signatoryActor ctx sl
-             dbUpdate $ RejectDocument signatorylinkid  Nothing sl_actor
+             dbUpdate $ RejectDocument signatorylinkid (isApprover sl) Nothing sl_actor
              theDocument >>= postDocumentRejectedChange signatorylinkid Nothing
         dbUpdate $ ArchiveDocument (userid user) actor
 

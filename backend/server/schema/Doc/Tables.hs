@@ -220,7 +220,7 @@ ctSignatoryAttachment = CompositeType {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable {
     tblName = "signatory_links"
-  , tblVersion = 34
+  , tblVersion = 35
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
@@ -236,7 +236,7 @@ tableSignatoryLinks = tblTable {
     , tblColumn { colName = "really_deleted", colType = TimestampWithZoneT }
     , tblColumn { colName = "csv_contents", colType = TextT }
     , tblColumn { colName = "sign_redirect_url", colType = TextT }
-    , tblColumn { colName = "is_partner", colType = BoolT, colNullable = False }
+    , tblColumn { colName = "signatory_role", colType = SmallIntT, colNullable = False }
     , tblColumn { colName = "rejection_time", colType = TimestampWithZoneT }
     , tblColumn { colName = "rejection_reason", colType = TextT }
     , tblColumn { colName = "authentication_to_sign_method", colType = SmallIntT, colNullable = False }
@@ -272,7 +272,7 @@ ctSignatoryLink = CompositeType {
     CompositeColumn { ccName = "id", ccType = BigIntT }
   , CompositeColumn { ccName = "signatory_fields", ccType = ArrayT $ CustomT "signatory_field" }
   , CompositeColumn { ccName = "is_author", ccType = BoolT }
-  , CompositeColumn { ccName = "is_partner", ccType = BoolT }
+  , CompositeColumn { ccName = "signatory_role", ccType = SmallIntT }
   , CompositeColumn { ccName = "sign_order", ccType = IntegerT }
   , CompositeColumn { ccName = "token", ccType = BigIntT }
   , CompositeColumn { ccName = "user_id", ccType = BigIntT }

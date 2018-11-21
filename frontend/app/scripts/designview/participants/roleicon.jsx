@@ -8,7 +8,7 @@ module.exports = React.createClass({
     Track.track("Choose participant role", {
       Where: "icon"
     });
-    if (!sig.signs()) {
+    if (sig.approves() || (sig.views() && sig.author())) {
       var currFF = Subscription.currentSubscription().currentUserFeatures();
       var args = {
         deliveryMethod: currFF.firstAllowedInvitationDelivery(),
@@ -16,16 +16,20 @@ module.exports = React.createClass({
         authenticationToSign: currFF.firstAllowedAuthenticationToSign()
       };
       sig.makeSignatory(args);
-    } else {
+    } else if (sig.signs()) {
       sig.makeViewer();
+    } else {
+      sig.makeApprover();
     }
   },
   icon: function () {
     var sig = this.props.model;
-    if (!sig.signs()) {
-      return "design-view-action-participant-icon-role-icon-viewer";
-    } else {
+    if (sig.signs()) {
       return "design-view-action-participant-icon-role-icon-signatory";
+    } else if (sig.approves()) {
+      return "design-view-action-participant-icon-role-icon-approver";
+    } else {
+      return "design-view-action-participant-icon-role-icon-viewer";
     }
   },
   title: function () {
@@ -33,6 +37,8 @@ module.exports = React.createClass({
 
     if (this.props.model.signs()) {
       title.push(localization.designview.addParties.roleSignatory);
+    } else if (this.props.model.approves()) {
+      title.push(localization.designview.addParties.roleApprover);
     } else {
       title.push(localization.designview.addParties.roleViewer);
     }

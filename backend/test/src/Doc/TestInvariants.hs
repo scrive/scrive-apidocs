@@ -27,6 +27,7 @@ invariantProblems now document =
  -}
 documentInvariants :: [UTCTime -> Document -> Maybe String]
 documentInvariants = [ documentHasOneAuthor
+                     , authorCannotBeAnApprover
                      , noDeletedSigLinksForSigning
                      , noSigningOrSeeingInPrep
                      , connectedSigLinkOnTemplateOrPreparation
@@ -59,6 +60,15 @@ documentHasOneAuthor _ document =
     length authors == 1
 
 {- |
+   Test the invariant that an author cannot be an approver.
+-}
+authorCannotBeAnApprover :: UTCTime -> Document -> Maybe String
+authorCannotBeAnApprover _ document =
+  let authors = (filter isAuthor $ documentsignatorylinks document) in
+  assertInvariant "author cannot be an approver" $
+    all (not . isApprover) authors
+
+{- |
    We don't expect to find any deleted documents in Pending state.
    Basically, you can't delete what needs to be signed.
  -}
@@ -75,7 +85,7 @@ noSigningOrSeeingInPrep :: UTCTime -> Document -> Maybe String
 noSigningOrSeeingInPrep _ document =
   assertInvariant "document has seen and/or signed siglinks when still in Preparation" $
     isPreparation document -->
-    none (hasSigned || hasSeen) (documentsignatorylinks document)
+    none (isSignatoryAndHasSigned || hasSeen) (documentsignatorylinks document)
 
 {- |
   Each of signatory links per document should have different id.
@@ -119,16 +129,18 @@ signatoryLimit _ document =
 allSignedWhenClosed :: UTCTime -> Document -> Maybe String
 allSignedWhenClosed _ document =
   assertInvariant "some signatories are not signed when it is closed" $
-  isClosed document --> all (isSignatory --> hasSigned) (documentsignatorylinks document)
+  isClosed document -->
+  all (isSignatory --> isSignatoryAndHasSigned) (documentsignatorylinks document)
 
 {- | All signed implies all closed
  -}
 closedWhenAllSigned :: UTCTime -> Document -> Maybe String
 closedWhenAllSigned _ document =
   assertInvariant "all signatories signed but doc is not closed" $
-  (any isSignatory (documentsignatorylinks document) &&
-   all (isSignatory --> hasSigned) (documentsignatorylinks document)) -->
-  (isClosed document || isPreparation document || isDocumentError document)
+  let sigLinks = documentsignatorylinks document
+  in (   any isSignatory sigLinks
+      && all (isSignatory --> isSignatoryAndHasSigned) sigLinks ) -->
+     (isClosed document || isPreparation document || isDocumentError document)
 
 
 {- | If a sig has signed, all his attachments are uploaded
@@ -136,7 +148,9 @@ closedWhenAllSigned _ document =
 hasSignedAttachments :: UTCTime -> Document -> Maybe String
 hasSignedAttachments _ document =
   assertInvariant "a signatory has signed without attaching his requested attachment" $
-  all (hasSigned --> (all (isJust . signatoryattachmentfile) . (signatoryattachments))) (documentsignatorylinks document)
+  all (isSignatoryAndHasSigned -->
+       (all (isJust . signatoryattachmentfile) . signatoryattachments))
+  (documentsignatorylinks document)
 
 {- |
    Has signed implies has seen.
@@ -144,7 +158,7 @@ hasSignedAttachments _ document =
 seenWhenSigned :: UTCTime -> Document -> Maybe String
 seenWhenSigned _ document =
   assertInvariant "some signatories have signed but not seen" $
-    all (hasSigned --> hasSeen) (documentsignatorylinks document)
+    all (isSignatoryAndHasSigned --> hasSeen) (documentsignatorylinks document)
 -}
 
 {- |
@@ -190,8 +204,9 @@ atLeastOneSignatory _ document =
  -}
 notSignatoryNotSigned :: UTCTime -> Document -> Maybe String
 notSignatoryNotSigned _ document =
-  assertInvariant "there are non-signatories who have signed" $
-    (all ((not . isSignatory) --> (not . hasSigned)) (documentsignatorylinks document))
+  assertInvariant "there are non-signatories/approvers who have signed/approved" $
+    (all ((not . (isSignatory || isApprover)) --> (not . isJust . maybesigninfo))
+      (documentsignatorylinks document))
 
 {- |
    Maximum number of custom fields

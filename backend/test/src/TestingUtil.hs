@@ -87,7 +87,8 @@ instance Show XMLChar where
   show = show . unXMLChar
 
 instance Arbitrary XMLChar where
-  arbitrary = elements (map XMLChar ("\n\r\t" ++ [' '..'~'] ++ ['\160'..'\255']))
+  arbitrary = elements
+              (map XMLChar ("\n\r\t" ++ [' '..'~'] ++ ['\160'..'\255']))
 
 instance Arbitrary C.XMLContent where
   arbitrary = C.cdata . pack . map unXMLChar <$> arbitrary
@@ -116,8 +117,16 @@ instance Arbitrary NotNullWord8 where
 instance Arbitrary SignOrder where
   arbitrary = SignOrder <$> arbitrary
 
+instance Arbitrary SignatoryRole where
+  -- This cuts down on the number of generated documents.
+  arbitrary = frequency [ (2, return SignatoryRoleSigningParty)
+                        , (1, return SignatoryRoleApprover)
+                        , (1, return SignatoryRoleViewer) ]
+
+
 instance Arbitrary DocumentTag where
-  arbitrary = DocumentTag <$> (fromSNN <$> arbitrary) <*> (fromSNN <$> arbitrary)
+  arbitrary = DocumentTag <$> (fromSNN <$> arbitrary)
+                          <*> (fromSNN <$> arbitrary)
 
 instance Arbitrary UserID where
   arbitrary = unsafeUserID . abs <$> arbitrary
@@ -166,7 +175,7 @@ genMaybeUnicodeString :: Gen (Maybe String)
 genMaybeUnicodeString = oneof [ pure Nothing, Just <$> genUnicodeString ]
 
 instance Arbitrary UserGroup where
-  arbitrary = (\name minfo maddress mui invoicing -> UserGroup emptyUserGroupID Nothing name maddress minfo invoicing mui)
+  arbitrary = (UserGroup emptyUserGroupID Nothing)
     <$> arbitrary
     <*> arbitrary
     <*> arbitrary
@@ -266,10 +275,10 @@ instance Arbitrary Features where
 instance Arbitrary UTCTime where
   arbitrary = posixSecondsToUTCTime . fromInteger <$> arbitrary
 
--- |Sometimes we get and object that is not as random as we would
--- expect for some reason, like an author signatory link that by default
--- does not have any fields attached. This is a class to make it more
--- random - so to attach this fields for example.
+-- | Sometimes we get an object that is not as random as we would
+-- expect for some reason, like an author signatorylink that by
+-- default does not have any fields attached. This is a class to make
+-- such objects more random - so to attach these fields for example.
 class ExtendWithRandomness a where
     moreRandom :: a -> Gen a
     extendRandomness :: a -> TestEnv a
@@ -304,6 +313,7 @@ instance Arbitrary SignatoryLink where
                 else return Nothing
 
     delivery <- arbitrary
+    role <- arbitrary
     authenticationToSign <- arbitrary
     authenticationToView <- arbitrary
     (cmTitle, cmQuestions) <- oneof
@@ -315,7 +325,7 @@ instance Arbitrary SignatoryLink where
       { signatorylinkid                         = unsafeSignatoryLinkID 0
       , signatoryfields                         = fields
       , signatoryisauthor                       = False
-      , signatoryispartner                      = True
+      , signatoryrole                           = role
       , signatorysignorder                      = SignOrder 1
       , signatorymagichash                      = mh
       , maybesigninfo                           = signinfo
@@ -462,21 +472,21 @@ instance Arbitrary FieldPlacement where
     (x :: Int) <- choose (1, 10)
     f <- arbitrary
     return $ FieldPlacement
-      { placementid         = tempPlacementID
-      , placementxrel       = fromIntegral a / fromIntegral x
-      , placementyrel       = fromIntegral b / fromIntegral x
-      , placementwrel       = fromIntegral c / fromIntegral x
-      , placementhrel       = fromIntegral d / fromIntegral x
-      , placementfsrel      = fromIntegral e / fromIntegral x
-      , placementpage       = f
-      , placementtipside    = Nothing
-      , placementanchors    = []
+      { placementid      = tempPlacementID
+      , placementxrel    = fromIntegral a / fromIntegral x
+      , placementyrel    = fromIntegral b / fromIntegral x
+      , placementwrel    = fromIntegral c / fromIntegral x
+      , placementhrel    = fromIntegral d / fromIntegral x
+      , placementfsrel   = fromIntegral e / fromIntegral x
+      , placementpage    = f
+      , placementtipside = Nothing
+      , placementanchors = []
       }
 
 instance Arbitrary FieldType where
   arbitrary = do
-    elements [ NameFT, EmailFT, CompanyFT, CompanyNumberFT
-             , PersonalNumberFT, TextFT ]
+    elements [ NameFT, EmailFT, CompanyFT
+             , CompanyNumberFT, PersonalNumberFT, TextFT ]
 
 instance Arbitrary SignatoryField where
   arbitrary = do
@@ -713,7 +723,7 @@ signatoryLinkExample1 = def
   , signatorylinkdeleted                    = Nothing
   , signatorylinkreallydeleted              = Nothing
   , signatoryisauthor                       = False
-  , signatoryispartner                      = True
+  , signatoryrole                           = SignatoryRoleSigningParty
   , signatorysignorder                      = SignOrder 1
   , signatoryfields                         =
       [ fieldForTests (NameFI $ NameOrder 1) "Eric"
@@ -762,25 +772,27 @@ addNewUserGroup = do
     dbUpdate . UserGroupCreate $ ug
 
 addNewRandomFile :: ( CryptoRNG m, MonadBase IO m, MonadCatch m, MonadDB m
-                    , MonadFileStorage m, MonadLog m, MonadThrow m, MonadTime m
-                    ) => m FileID
+                    , MonadFileStorage m, MonadLog m, MonadThrow m
+                    , MonadTime m )
+                 => m FileID
 addNewRandomFile = do
-  fn <- rand 1 $ elements [ inTestDir "pdfs/simple.pdf"
-                          , inTestDir "pdfs/telia.pdf"
-                          , inTestDir "pdfs/hp-designjet.pdf"
-                          , inTestDir "pdfs/visa-application.pdf"
-                          ]
+  fn <- rand 1 $ elements
+    [ inTestDir "pdfs/simple.pdf"
+    , inTestDir "pdfs/telia.pdf"
+    , inTestDir "pdfs/hp-designjet.pdf"
+    , inTestDir "pdfs/visa-application.pdf"
+    ]
   cnt <- liftBase $ BS.readFile fn
   saveNewFile fn cnt
 
 addNewUser :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
-           => String -> String -> String
-           -> m (Maybe User)
+           => String -> String -> String -> m (Maybe User)
 addNewUser firstname secondname email = do
   bd <- dbQuery $ GetMainBrandedDomain
   ug <- dbUpdate $ UserGroupCreate def
-  dbUpdate $ AddUser (firstname, secondname) email
-    Nothing (get ugID ug,True) def (get bdid bd) AccountRequest
+  dbUpdate $ AddUser (firstname, secondname) email Nothing
+    (get ugID ug,True) def (get bdid bd)
+    AccountRequest
 
 addNewUserWithCompany :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
                       => String
@@ -790,32 +802,37 @@ addNewUserWithCompany :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
 addNewUserWithCompany firstname secondname email = do
   bd <- dbQuery $ GetMainBrandedDomain
   ug <- dbUpdate $ UserGroupCreate def
-  mUser <- dbUpdate $ AddUser (firstname, secondname) email
-    Nothing (get ugID ug,True) def (get bdid bd) AccountRequest
+  mUser <- dbUpdate $ AddUser (firstname, secondname) email Nothing
+           (get ugID ug,True) def (get bdid bd)
+           AccountRequest
   case mUser of
     Nothing -> return Nothing
     Just user -> return $ Just (user, get ugID ug)
 
--- | Create user and add it to a company as non-admin user.
+-- | Create a new user and add it to a company as a non-admin.
 addNewCompanyUser :: String -> String -> String -> UserGroupID
                   -> TestEnv (Maybe User)
-addNewCompanyUser firstname secondname email ugid = do
-  bd <- dbQuery $ GetMainBrandedDomain
-  dbQuery (UserGroupGet ugid) >>= \case
-    Nothing -> return Nothing
-    Just _ug ->
-      dbUpdate $ AddUser (firstname, secondname) email Nothing (ugid, False) def
-                         (get bdid bd) CompanyInvitation
+addNewCompanyUser = addNewCompanyUser' DontMakeAdmin
 
--- | Create user and add it to a company as admin.
+-- | Create a new user and add it to a company as an admin.
 addNewCompanyAdminUser :: String -> String -> String -> UserGroupID
                        -> TestEnv (Maybe User)
-addNewCompanyAdminUser firstname secondname email ugid = do
+addNewCompanyAdminUser = addNewCompanyUser' MakeAdmin
+
+data MakeAdmin = DontMakeAdmin | MakeAdmin
+  deriving Eq
+
+-- | Create a new user and add it to a company as either an admin or a
+-- non-admin.
+addNewCompanyUser' :: MakeAdmin -> String -> String -> String -> UserGroupID
+                   -> TestEnv (Maybe User)
+addNewCompanyUser' makeAdmin firstname secondname email ugid = do
   bd <- dbQuery $ GetMainBrandedDomain
   dbQuery (UserGroupGet ugid) >>= \case
     Nothing -> return Nothing
     Just _ug ->
-      dbUpdate $ AddUser (firstname, secondname) email Nothing (ugid, True) def
+      dbUpdate $ AddUser (firstname, secondname) email Nothing
+                         (ugid, makeAdmin == MakeAdmin) def
                          (get bdid bd) CompanyInvitation
 
 -- | Create user and add it to a new user group as admin.
@@ -834,13 +851,14 @@ addNewUserToUserGroup :: String -> String -> String -> UserGroupID
 addNewUserToUserGroup firstname secondname email ugid = do
   bd <- dbQuery $ GetMainBrandedDomain
   dbQuery (UserGroupGet ugid) >>= \case
-    Nothing -> return Nothing
+    Nothing  -> return Nothing
     Just _ug ->
-      dbUpdate $ AddUser (firstname, secondname) email
-      Nothing (ugid,True) def (get bdid bd) CompanyInvitation
+      dbUpdate $ AddUser (firstname, secondname) email Nothing
+      (ugid,True) def (get bdid bd)
+      CompanyInvitation
 
-addNewRandomUser :: ( CryptoRNG m, MonadDB m
-                    , MonadThrow m, MonadLog m, MonadMask m)
+addNewRandomUser :: ( CryptoRNG m, MonadDB m, MonadThrow m
+                    , MonadLog m, MonadMask m )
                  => m User
 addNewRandomUser = do
   fn <- rand 10 $ arbString 3 30
@@ -862,8 +880,8 @@ addNewRandomUser = do
   void $ dbUpdate $ SetUserInfo (userid user) userinfo
   return user
 
-addNewRandomUserWithCompany :: ( CryptoRNG m, MonadDB m
-                               , MonadThrow m, MonadLog m, MonadMask m)
+addNewRandomUserWithCompany :: ( CryptoRNG m, MonadDB m, MonadThrow m
+                               , MonadLog m, MonadMask m )
                             => m (User, UserGroupID)
 addNewRandomUserWithCompany = do
   fn <- rand 10 $ arbString 3 30
@@ -871,8 +889,8 @@ addNewRandomUserWithCompany = do
   em <- rand 10 arbEmail
   Just (user, ugid) <- addNewUserWithCompany fn ln em
   -- change the user to have some distinct personal information
-  personal_number <- rand 10 $ arbString 3 30
-  company_position <- rand 10 $ arbString 3 30
+  personal_number        <- rand 10 $ arbString 3 30
+  company_position       <- rand 10 $ arbString 3 30
   phone <- rand 10 $ arbString 3 30
   let userinfo = UserInfo
                  { userfstname         = fn
@@ -885,8 +903,8 @@ addNewRandomUserWithCompany = do
   void $ dbUpdate $ SetUserInfo (userid user) userinfo
   return (user, ugid)
 
-addNewRandomUserWithPassword :: ( CryptoRNG m, MonadDB m
-                                , MonadThrow m, MonadLog m, MonadMask m )
+addNewRandomUserWithPassword :: ( CryptoRNG m, MonadDB m, MonadThrow m
+                                , MonadLog m, MonadMask m )
                              => String -> m User
 addNewRandomUserWithPassword password = do
   -- create random user
@@ -914,8 +932,8 @@ addNewRandomUserGroupUser ugid isadmin = do
 
 addNewRandomPartnerUser :: TestEnv (User, UserGroup)
 addNewRandomPartnerUser = do
-  -- To use UserGroups as if they are Partners, we need to generate a UserGroupID
-  -- which is not a PartnerID.
+  -- To use UserGroups as if they are Partners, we need to generate a
+  -- UserGroupID which is not a PartnerID.
   partners <- dbQuery GetPartners
   -- Try to generate a userGroup and always check whether the ugid is
   -- already a partnerID.
@@ -971,12 +989,6 @@ randomDocumentAllowsDefault user = RandomDocumentAllows
   , randomDocumentCondition       = const True
   }
 
-addRandomDocumentWithAuthor :: User -> TestEnv DocumentID
-addRandomDocumentWithAuthor user =
-  documentid <$>
-  addRandomDocument (randomDocumentAllowsDefault user)
-
-
 randomSigLinkByStatus :: DocumentStatus -> Gen SignatoryLink
 randomSigLinkByStatus Closed = do
   (sl, sign, seen) <- arbitrary
@@ -991,46 +1003,57 @@ randomSigLinkByStatus _ = arbitrary
 
 randomAuthorLinkByStatus :: DocumentStatus -> Gen SignatoryLink
 randomAuthorLinkByStatus Closed = do
+  rl <- elements [SignatoryRoleViewer, SignatoryRoleSigningParty]
   (sl, sign, seen) <- arbitrary
   return $ sl
     { maybesigninfo     = Just sign
     , maybeseeninfo     = Just seen
     , signatoryisauthor = True
+    , signatoryrole     = rl
     }
 randomAuthorLinkByStatus Preparation = do
-  (sl) <- arbitrary
+  rl <- elements [SignatoryRoleViewer, SignatoryRoleSigningParty]
+  sl <- arbitrary
   return $ sl
     { maybesigninfo     = Nothing
     , maybeseeninfo     = Nothing
     , signatoryisauthor = True
+    , signatoryrole     = rl
     }
 randomAuthorLinkByStatus Pending = do
-  (sl) <- arbitrary
+  rl <- elements [SignatoryRoleViewer, SignatoryRoleSigningParty]
+  sl <- arbitrary
   return $ sl
     { maybesigninfo     = Nothing
     , maybeseeninfo     = Nothing
     , signatoryisauthor = True
+    , signatoryrole     = rl
     }
-randomAuthorLinkByStatus _ = arbitrary
+randomAuthorLinkByStatus _ = do
+  rl <- elements [SignatoryRoleViewer, SignatoryRoleSigningParty]
+  sl <- arbitrary
+  return $ sl { signatoryrole = rl }
+
+addRandomDocumentWithAuthor :: User -> TestEnv DocumentID
+addRandomDocumentWithAuthor user =
+  documentid <$> addRandomDocumentWithAuthor' user
+
+addRandomDocumentWithAuthor' :: User -> TestEnv Document
+addRandomDocumentWithAuthor' user =
+  addRandomDocument (randomDocumentAllowsDefault user)
 
 addRandomDocumentWithAuthorAndCondition
   :: User -> (Document -> Bool)
   -> TestEnv Document
 addRandomDocumentWithAuthorAndCondition user p =
-  addRandomDocument2 user (\x -> x { randomDocumentCondition = p})
+  addRandomDocument $
+  (randomDocumentAllowsDefault user) { randomDocumentCondition = p }
 
-addRandomDocument2
-  :: User -> (RandomDocumentAllows -> RandomDocumentAllows)
-  -> TestEnv Document
-addRandomDocument2 user refine =
-  addRandomDocument (refine (randomDocumentAllowsDefault user))
-
-addRandomDocumentWithAuthorAndConditionAndFile
-  :: User -> (Document -> Bool) -> FileID
-  -> TestEnv Document
+addRandomDocumentWithAuthorAndConditionAndFile ::
+  User -> (Document -> Bool) -> FileID -> TestEnv Document
 addRandomDocumentWithAuthorAndConditionAndFile user p file =
-  addRandomDocumentWithFile file
-  ((randomDocumentAllowsDefault user) { randomDocumentCondition = p})
+  addRandomDocumentWithFile file $
+  (randomDocumentAllowsDefault user) { randomDocumentCondition = p}
 
 addRandomDocument :: RandomDocumentAllows -> TestEnv Document
 addRandomDocument rda = do
@@ -1068,13 +1091,13 @@ addRandomDocumentWithFile fileid rda = do
                      , documenttitle = title
                      }
 
-      partner <- rand 10 arbitrary
+      role <- rand 10 arbitrary
       asl' <- rand 10 $ randomAuthorLinkByStatus status
       userDetails <- signatoryFieldsFromUser user
       let asl = asl'
-            { maybesignatory = Just (userid user)
+            { maybesignatory  = Just (userid user)
             , signatoryfields = userDetails
-            , signatoryispartner = partner
+            , signatoryrole   = role
             }
 
       let alllinks = asl : siglinks
@@ -1138,10 +1161,6 @@ untilCondition :: (Monad m) => (b -> Bool) -> m b -> m b
 untilCondition cond gen = do
   v <- gen
   if cond v then return v else untilCondition cond gen
-
-addRandomDocumentWithAuthor' :: User -> TestEnv Document
-addRandomDocumentWithAuthor' user =
-  addRandomDocumentWithAuthorAndCondition user (const True)
 
 -- Random gen
 
@@ -1231,7 +1250,8 @@ assertSuccess = assertBool "not success?!" True
 
 assertJust :: MonadIO m => Maybe a -> m ()
 assertJust (Just _) = assertSuccess
-assertJust Nothing = assertFailure "Should have returned Just but returned Nothing"
+assertJust Nothing = assertFailure
+  "Should have returned Just but returned Nothing"
 
 assertRight :: (Show a, MonadIO m) => Either a b -> m ()
 assertRight (Right _) = assertSuccess
@@ -1240,7 +1260,8 @@ assertRight (Left a)  = assertFailure $
 
 assertLeft :: MonadIO m => Either a b -> m ()
 assertLeft (Left _) = assertSuccess
-assertLeft _ = assertFailure "Should have returned Left but returned Right"
+assertLeft _ = assertFailure
+  "Should have returned Left but returned Right"
 
 assertNothing :: MonadIO m => Maybe a -> m ()
 assertNothing Nothing  = assertSuccess
@@ -1272,10 +1293,11 @@ assertEqualJson msg expected got = unless (expected == got) $ do
     ] ++ map ((" * " ++) . show) (A.patchOperations $ A.diff got expected)
 
 assertRaisesInternalError :: (Show v, MonadIO m, MonadMask m) =>  m v -> m ()
-assertRaisesInternalError a = catchJust (\case
-  KE.Respond404      -> Nothing
-  KE.InternalError _ -> Just ()
-  KE.LinkInvalid     -> Nothing)
+assertRaisesInternalError a = catchJust
+  (\case
+      KE.Respond404      -> Nothing
+      KE.InternalError _ -> Just ()
+      KE.LinkInvalid     -> Nothing)
   (a >>= assertFailure . ("Expecting InternalError but got " ++) . show)
   return
 
@@ -1342,7 +1364,7 @@ fieldForTests (NameFI no) v = SignatoryNameField $ NameField {
     , snfObligatory             = True
     , snfShouldBeFilledBySender = False
     , snfPlacements             = []
-  }
+    }
 fieldForTests CompanyFI v = SignatoryCompanyField $ CompanyField {
       scfID                     = (unsafeSignatoryFieldID 0)
     , scfValue                  = v
@@ -1367,7 +1389,7 @@ fieldForTests CompanyNumberFI v  =
     , scnfObligatory             = True
     , scnfShouldBeFilledBySender = False
     , scnfPlacements             = []
-  }
+    }
 fieldForTests EmailFI v =  SignatoryEmailField $ EmailField {
       sefID                     = (unsafeSignatoryFieldID 0)
     , sefValue                  = v

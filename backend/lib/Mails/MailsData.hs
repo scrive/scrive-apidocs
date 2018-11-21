@@ -31,16 +31,21 @@ instance ToJSON MailAddress where
     ]
 
 -- | Structure for holding mails. If from is not set mail will be send
--- as SkrivaPa admin (fromMails Config).
+-- as Scrive admin (fromMails Config).
 data Mail = Mail {
-    to              :: [MailAddress]
-  , originator      :: String -- Name of service sending email. Default is Scrive
-  , originatorEmail :: String -- Adress of no reply email
-  , replyTo     :: Maybe MailAddress
-  , title       :: String
-  , content     :: String
-  , attachments :: [(String, Either BS.ByteString FileID)] -- list of attachments (name,content)
-  , kontraInfoForMail :: Maybe KontraInfoForMail -- Connection between this message and some entity in kontrakcja
+    to                :: [MailAddress]
+  , originator        :: String
+    -- ^ Name of service sending email. Default is Scrive.
+  , originatorEmail   :: String
+    -- ^ Adress of no reply email
+  , replyTo           :: Maybe MailAddress
+  , title             :: String
+  , content           :: String
+  , attachments       :: [( String
+                          , Either BS.ByteString FileID )]
+    -- ^ List of attachments (name,content).
+  , kontraInfoForMail :: Maybe KontraInfoForMail
+    -- ^ Connection between this message and some entity in kontrakcja.
   } deriving (Eq, Ord, Show)
 
 

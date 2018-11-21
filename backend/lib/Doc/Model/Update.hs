@@ -50,6 +50,7 @@ module Doc.Model.Update
   , SetIsReceipt(..)
   , SetShowFooter(..)
   , AddAcceptedAuthorAttachmentsEvents(..)
+  , ApproveDocument(..)
   , SignDocument(..)
   , CloneDocumentWithUpdatedAuthor(..)
   , StoreDocumentForTesting(..)
@@ -132,7 +133,7 @@ insertSignatoryLinks did links = do
     sqlSet "document_id" did
     sqlSetListWithDefaults "id" $ map (\sl -> if (unsafeSignatoryLinkID 0 == signatorylinkid sl) then Nothing else (Just $ signatorylinkid sl)) links
     sqlSetList "user_id" $ maybesignatory <$> links
-    sqlSetList "is_partner" $ signatoryispartner <$> links
+    sqlSetList "signatory_role" $ signatoryrole <$> links
     sqlSetList "token" $ signatorymagichash <$> links
     sqlSetList "sign_order"$ signatorysignorder <$> links
     sqlSetList "sign_time" $ fmap signtime <$> maybesigninfo <$> links
@@ -599,24 +600,35 @@ instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m)
           (F.value "oldphone" oldphone >> F.value "newphone" phone)
           actor
 
-data ChangeAuthenticationToViewMethod = ChangeAuthenticationToViewMethod SignatoryLinkID AuthenticationKind AuthenticationToViewMethod (Maybe String) (Maybe String) Actor
-instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeAuthenticationToViewMethod () where
-  update (ChangeAuthenticationToViewMethod slid authKind newAuthToView mSSN mPhone actor) = do
+data ChangeAuthenticationToViewMethod =
+  ChangeAuthenticationToViewMethod SignatoryLinkID
+                                   AuthenticationKind AuthenticationToViewMethod
+                                   (Maybe String) (Maybe String) Actor
+
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) =>
+  DBUpdate m ChangeAuthenticationToViewMethod () where
+
+  update (ChangeAuthenticationToViewMethod slid
+          authKind newAuthToView
+          mSSN mPhone actor) = do
     updateDocumentWithID $ const $ do
       -- Get the signatory link before the update
-      sl <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid Nothing
-      let ssnField =  getFieldByIdentity PersonalNumberFI $ signatoryfields sl
-      let mobileField =  getFieldByIdentity MobileFI $ signatoryfields sl
+      sl <- (\did -> dbQuery $ GetSignatoryLinkByID did slid Nothing)
+            =<< theDocumentID
+      let ssnField    = getFieldByIdentity PersonalNumberFI $ signatoryfields sl
+          mobileField = getFieldByIdentity MobileFI $ signatoryfields sl
       -- Update the authentication to view method
       kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
         let authField = case authKind of
-              AuthenticationToView         -> "authentication_to_view_method"
-              AuthenticationToViewArchived -> "authentication_to_view_archived_method"
+              AuthenticationToView         ->
+                "authentication_to_view_method"
+              AuthenticationToViewArchived ->
+                "authentication_to_view_archived_method"
         sqlSet authField newAuthToView
         sqlWhereEq "id" slid
-        sqlWhereSignatoryIsPartner
-        sqlWhereSignatoryHasNotSigned
-        sqlWhereSignatoryHasNotAuthenticatedToView
+        sqlWhereSignatoryRoleIsSigningPartyOrApprover
+        sqlWhereSigningPartyHasNotSignedOrApproved
+        sqlWhereSigningPartyHasNotAuthenticatedToView
         sqlWhereExists $ sqlSelect "documents" $ do
           sqlWhere "documents.id = signatory_links.document_id"
           sqlWhereDocumentStatusIs Pending
@@ -626,8 +638,10 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
       -- there and maybe update the value
       let authToSign = signatorylinkauthenticationtosignmethod sl
           otherAuthToView = case authKind of
-            AuthenticationToView -> signatorylinkauthenticationtoviewarchivedmethod sl
-            AuthenticationToViewArchived -> signatorylinkauthenticationtoviewmethod sl
+            AuthenticationToView         ->
+              signatorylinkauthenticationtoviewarchivedmethod sl
+            AuthenticationToViewArchived ->
+              signatorylinkauthenticationtoviewmethod sl
       case authToViewNeedsPersonalNumber newAuthToView of
         -- When new authentication to view method doesn't need a personal
         -- number, we check if the authentication to view method of the other
@@ -647,23 +661,28 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
         -- Maybe setting the value too along the way
         True -> do
           case ssnField of
-            Nothing -> runQuery_ . sqlInsert "signatory_link_fields" $ do
-              sqlSet "signatory_link_id" slid
-              sqlSet "obligatory" True
-              sqlSet "value_text" $ fromMaybe "" mSSN
-              sqlSet "type" PersonalNumberFT
-            Just _ -> kRun1OrThrowWhyNot $ sqlUpdate "signatory_link_fields" $ do
-              sqlSet "obligatory" True
-              case mSSN of
-                Nothing -> return ()
-                Just ssn -> sqlSet "value_text" ssn
-              sqlWhereEq "signatory_link_id" slid
-              sqlWhereEq "type" PersonalNumberFT
-          -- Add event in EvidenceLog if the new personal number is different to the old one
+            Nothing ->
+              runQuery_ . sqlInsert "signatory_link_fields" $
+              do sqlSet "signatory_link_id" slid
+                 sqlSet "obligatory" True
+                 sqlSet "value_text" $ fromMaybe "" mSSN
+                 sqlSet "type" PersonalNumberFT
+            Just _ ->
+              kRun1OrThrowWhyNot $
+              sqlUpdate "signatory_link_fields" $
+              do sqlSet "obligatory" True
+                 case mSSN of
+                   Nothing  -> return ()
+                   Just ssn -> sqlSet "value_text" ssn
+                 sqlWhereEq "signatory_link_id" slid
+                 sqlWhereEq "type" PersonalNumberFT
+          -- Add event to the EvidenceLog if the new personal number is
+          -- different to the old one.
           let oldSSN = fromMaybe "" $ fieldTextValue =<< ssnField
               newSSN = fromMaybe "" mSSN
           when (isJust mSSN && newSSN /= oldSSN) $ do
-            sl' <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid Nothing
+            sl' <- (\did -> dbQuery $ GetSignatoryLinkByID did slid Nothing)
+                   =<< theDocumentID
             void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
               UpdateFieldPersonalNumberEvidence
               (do F.value "value" newSSN
@@ -737,8 +756,10 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
               actor
 
       -- Finally, add event in EvidenceLog for changed authentication
-      sl' <- theDocumentID >>= \did -> dbQuery $ GetSignatoryLinkByID did slid Nothing
-      addChangeAuthenticationToViewEvidenceEvent sl' (signatorylinkauthenticationtoviewmethod sl, newAuthToView)
+      sl' <- (\did -> dbQuery $ GetSignatoryLinkByID did slid Nothing)
+             =<< theDocumentID
+      addChangeAuthenticationToViewEvidenceEvent sl'
+        (signatorylinkauthenticationtoviewmethod sl, newAuthToView)
 
     where
       insertEvidenceFor
@@ -778,8 +799,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeA
       kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
         sqlSet "authentication_to_sign_method" newAuthToSign
         sqlWhereEq "id" slid
-        sqlWhereSignatoryIsPartner
-        sqlWhereSignatoryHasNotSigned
+        sqlWhereSignatoryRoleIsSigningParty
+        sqlWhereSigningPartyHasNotSignedOrApproved
         sqlWhereExists $ sqlSelect "documents" $ do
           sqlWhere "documents.id = signatory_links.document_id"
           sqlWhereDocumentStatusIs Pending
@@ -986,7 +1007,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m CloseDo
                    sqlWhereDocumentIDIs docid
                    sqlWhereDocumentTypeIs Signable
                    sqlWhereDocumentStatusIs Pending
-                   sqlWhereAllSignatoriesHaveSigned
+                   sqlWhereAllSigningPartiesHaveSignedOrApproved
       updateMTimeAndObjectVersion (actorTime actor)
     void $ update $ InsertEvidenceEvent
                 CloseDocumentEvidence
@@ -1004,7 +1025,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m DeleteS
         sqlResult "signatory_attachments.name"
         sqlWhereEq "signatory_attachments.name" (signatoryattachmentname sa)
         sqlWhereSignatoryLinkIDIs slid
-        sqlWhereSignatoryHasNotSigned
+        sqlWhereSigningPartyHasNotSignedOrApproved
 
     void $ update $ InsertEvidenceEvent
                     DeleteSigAttachmentEvidence
@@ -1065,14 +1086,16 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, Mo
     let ctime = actorTime actor
     magichash <- random
     authorFields <- signatoryFieldsFromUser user
-    let authorlink0 = signLinkFromDetails' authorFields True True (SignOrder 1) [] magichash
+    let authorlink0 = signLinkFromDetails' authorFields True
+                      SignatoryRoleSigningParty (SignOrder 1) [] magichash
 
     let authorlink = authorlink0 {
                            maybesignatory = Just $ userid user }
 
     othersignatories <- sequence $ replicate nrOfOtherSignatories $ do
                           mh <- random
-                          return $ signLinkFromDetails' emptySignatoryFields False True (SignOrder 2) [] mh
+                          return $ signLinkFromDetails' emptySignatoryFields False
+                                   SignatoryRoleSigningParty (SignOrder 2) [] mh
     token <- random
     let doc = def
                   { documenttitle                = title
@@ -1088,38 +1111,37 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, Mo
 
     insertDocument doc
 
-data RejectDocument = RejectDocument SignatoryLinkID (Maybe String) Actor
-instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m RejectDocument () where
-  update (RejectDocument slid customtext actor) = do
+data RejectDocument = RejectDocument SignatoryLinkID Bool (Maybe String) Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) =>
+  DBUpdate m RejectDocument () where
+  update (RejectDocument slid byApprover customtext actor) = do
     updateDocumentWithID $ \docid -> do
       let time = actorTime actor
       kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
-                                       sqlSet "status" Rejected
-                                       sqlFrom "signatory_links"
-                                       sqlWhere "signatory_links.document_id = documents.id"
+        sqlSet "status" Rejected
+        sqlFrom "signatory_links"
+        sqlWhere "signatory_links.document_id = documents.id"
 
-                                       sqlWhereDocumentIDIs docid
-                                       sqlWhereSignatoryLinkIDIs slid
-                                       sqlWhereDocumentTypeIs Signable
-                                       sqlWhereDocumentStatusIs Pending
+        sqlWhereDocumentIDIs docid
+        sqlWhereSignatoryLinkIDIs slid
+        sqlWhereDocumentTypeIs Signable
+        sqlWhereDocumentStatusIs Pending
 
       kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
-                                       sqlSet "rejection_time" time
-                                       sqlSet "rejection_reason" customtext
-                                       sqlFrom "documents"
-                                       sqlWhere "signatory_links.document_id = documents.id"
-                                       sqlWhereSignatoryIsPartner
-                                       sqlWhereSignatoryHasNotSigned
-                                       sqlWhereDocumentIDIs docid
-                                       sqlWhereSignatoryLinkIDIs slid
+        sqlSet "rejection_time" time
+        sqlSet "rejection_reason" customtext
+        sqlFrom "documents"
+        sqlWhere "signatory_links.document_id = documents.id"
+        sqlWhereSignatoryRoleIsSigningPartyOrApprover
+        sqlWhereSigningPartyHasNotSignedOrApproved
+        sqlWhereDocumentIDIs docid
+        sqlWhereSignatoryLinkIDIs slid
       updateMTimeAndObjectVersion (actorTime actor)
-
+    let event = if byApprover
+          then RejectDocumentByApproverEvidence
+          else RejectDocumentEvidence
     void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
-                  RejectDocumentEvidence
-                  (return ())
-                  Nothing
-                  customtext
-                  actor
+      event (return ()) Nothing customtext actor
 
 data RestartDocument = RestartDocument Document Actor
 instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) => DBUpdate m RestartDocument (Maybe Document) where
@@ -1165,7 +1187,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
                               , signatorymagichash = magichash
                               , signatoryfields            = newFields
                               , signatoryisauthor          = signatoryisauthor sl
-                              , signatoryispartner         = signatoryispartner sl
+                              , signatoryrole              = signatoryrole sl
                               , signatorysignorder         = signatorysignorder sl
                               , signatorylinkcsvupload       = signatorylinkcsvupload sl
                               , signatoryattachments         = signatoryattachments sl
@@ -1470,6 +1492,38 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpd
         (Just saNothingToUploadText)
         actor
 
+data ApproveDocument = ApproveDocument SignatoryLinkID MagicHash Actor
+instance ( DocumentMonad m, TemplatesMonad m
+         , MonadThrow m, CryptoRNG m, MonadTime m ) =>
+         DBUpdate m ApproveDocument () where
+  update (ApproveDocument slid mh actor) = do
+    updateDocumentWithID $ \docid -> do
+      let ipnumber = fromMaybe noIP $ actorIP actor
+          time     = actorTime actor
+      kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
+        sqlFrom  "documents"
+        -- We're reusing maybesigninfo for the approver role.
+        sqlSet   "sign_ip"               ipnumber
+        sqlSet   "sign_time"             time
+        sqlWhere "documents.id = signatory_links.document_id"
+        sqlWhereDocumentIDIs             docid
+        sqlWhereSignatoryLinkIDIs        slid
+        sqlWhereDocumentTypeIs           Signable
+        sqlWhereDocumentStatusIs         Pending
+        sqlWhereSignatoryRoleIsApprover
+        sqlWhereSignatoryLinkMagicHashIs mh
+      updateMTimeAndObjectVersion (actorTime actor)
+    sl <- theDocumentID >>=
+          \docid -> query $ GetSignatoryLinkByID docid slid Nothing
+    let signatureFields = return ()
+    void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+        ApprovedByApproverPartyEvidence
+        signatureFields
+        (Just sl)
+        Nothing
+        actor
+
+
 data SignDocument = SignDocument SignatoryLinkID MagicHash (Maybe ESignature) (Maybe String) SignatoryScreenshots Actor
 instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
          , MonadFileStorage m, MonadLog m, MonadThrow m, MonadTime m
@@ -1491,24 +1545,24 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
       let ipnumber = fromMaybe noIP $ actorIP actor
           time     = actorTime actor
       kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
-           sqlFrom "documents"
-           sqlSet "sign_ip"                            ipnumber
-           sqlSet "sign_time"                          time
+           sqlFrom  "documents"
+           sqlSet   "sign_ip"        ipnumber
+           sqlSet   "sign_time"      time
            sqlWhere "documents.id = signatory_links.document_id"
-           sqlWhereDocumentIDIs docid
+           sqlWhereDocumentIDIs      docid
            sqlWhereSignatoryLinkIDIs slid
-           sqlWhereDocumentTypeIs Signable
-           sqlWhereDocumentStatusIs Pending
-           sqlWhereSignatoryIsPartner
-           sqlWhereSignatoryHasNotSigned
+           sqlWhereDocumentTypeIs    Signable
+           sqlWhereDocumentStatusIs  Pending
+           sqlWhereSignatoryRoleIsSigningParty
+           sqlWhereSigningPartyHasNotSignedOrApproved
            sqlWhereAuthSign
            sqlWhereSignatoryLinkMagicHashIs mh
       updateMTimeAndObjectVersion (actorTime actor)
     sl <- theDocumentID >>= \docid -> query $ GetSignatoryLinkByID docid slid Nothing
     let signatureFields = case (mesig, mpin) of
-          (Just LegacyBankIDSignature_{}, _) -> legacy_signature_error
-          (Just LegacyTeliaSignature_{}, _) -> legacy_signature_error
-          (Just LegacyNordeaSignature_{}, _) -> legacy_signature_error
+          (Just LegacyBankIDSignature_{}, _)       -> legacy_signature_error
+          (Just LegacyTeliaSignature_{}, _)        -> legacy_signature_error
+          (Just LegacyNordeaSignature_{}, _)       -> legacy_signature_error
           (Just LegacyMobileBankIDSignature_{}, _) -> legacy_signature_error
           (Just (CGISEBankIDSignature_ CGISEBankIDSignature{..}), _) -> do
             F.value "hide_pn" $ signatorylinkhidepn sl
@@ -1704,7 +1758,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m PostRem
 
          sqlWhereDocumentIDIs docid
          sqlWhereSignatoryLinkIDIs (signatorylinkid sl)
-         sqlWhereSignatoryHasNotSigned
+         sqlWhereSigningPartyHasNotSignedOrApproved
          sqlWhereDocumentStatusIs Pending
        updateMTimeAndObjectVersion (actorTime actor)
 
@@ -2316,7 +2370,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
       , checkEqualBy (==) "signatorylinkcsvupload" signatorylinkcsvupload
       , \s1' s2' -> checkEqualSignatoryFields "signatoryfields" (signatoryfields s1') (signatoryfields s2')
       , checkEqualBy (==) "signatoryisauthor" (signatoryisauthor)
-      , checkEqualBy (==) "signatoryispartner" (signatoryispartner)
+      , checkEqualBy (==) "signatoryrole" (signatoryrole)
       , checkEqualBy (==) "signatorysignorder" (signatorysignorder)
       , checkEqualBy eqMaybeUtcTime "signatorylinkrejectiontime" signatorylinkrejectiontime
       , checkEqualBy (==) "signatorylinkrejectionreason" signatorylinkrejectionreason

@@ -18,6 +18,7 @@ javascriptLocalisation =
              , zoomOut1: "$_ZoomOut1()$"
              , zoomOut2: "$_ZoomOut2()$"
              , signviewConfirmation: "$_contractSignConfirmation()$"
+             , signviewApproveConfirmation: "$_contractApproveConfirmation()$"
              , signviewConfirmationSignaturesPlaced: "$_contractSignConfirmationSignaturePlaced()$"
              , signviewLegalAgreement: {
                    textTop: "$_signviewLegalAgreementText()$"
@@ -158,6 +159,7 @@ javascriptLocalisation =
                        , read : "$_signatoryMessageIfSignatoryReaddate()$"
                        , delivered : "$_signatoryMessageIfSignatoryDeliveredEmail()$"
                        , signed : "$_signatoryMessageIfSigned()$"
+                       , approved : "$_signatoryMessageIfApproved()$"
                        , other : "$_signatoryMessageIfElse()$"
                        , waiting : "$_signatoryMessageWaiting()$"
                        , deliveryproblem : "$_signatoryMessageDeliveryProblem()$"
@@ -219,6 +221,7 @@ javascriptLocalisation =
                cancelmodaltextwithsignatures: "$_contractcancelmodaltextwithsignatures()$",
                rejectbuttontext: "$_contractrejectbuttontext()$",
                rejectbuttontextwithoutreason: "$_contractrejectbuttontextwithoutreason()$",
+               approvebuttontext: "$_contractapprovebuttontext()$",
                signbuttontext: "$_contractsignbuttontext()$",
                signbuttontextfromsignaturedrawing: "$_contractsignbuttontextfromsignaturedrawing()$",
                signatorycancelmodaltitle: "$_contractsignatorycancelmodaltitle()$",
@@ -410,6 +413,7 @@ javascriptLocalisation =
                , role : "$_designViewAddPartiesRole()$"
                , roleSignatory : "$_designViewAddPartiesRoleSignatory()$"
                , roleViewer : "$_designViewAddPartiesRoleViewer()$"
+               , roleApprover : "$_designViewAddPartiesRoleApprover()$"
                , authenticationToView : "$_designViewAddPartiesAuthenticationToView()$"
                , authenticationToViewArchived : "$_designViewAddPartiesAuthenticationToViewArchived()$"
                , authenticationToViewStandard : "$_designViewAddPartiesAuthenticationToViewStandard()$"
@@ -483,6 +487,7 @@ javascriptLocalisation =
              , startSigningModalTextWithSendout : "$_designViewStartSigningModalTextWithSendout()$"
              , lastViewerOnlyGetsConfirmation : "$_designViewLastViewerOnlyGetsConfirmation()$"
              , viewerCantHaveAuthorisation : "$_designViewViewerCantHaveAuthorisation()$"
+             , approverCantHaveAuthorisationToSign : "$_designViewApproverCantHaveAuthorisationToSign()$"
              , removePage : {
                  modalTitle : "$_designViewRemovePageModalTitle()$"
                , modalBody1 : "$_designViewRemovePageModalBody1()$"
@@ -618,6 +623,7 @@ javascriptLocalisation =
              , reviewDocument: "$_reviewDocument()$"
              , signedNotClosed: "$_signedNotClosed()$"
              , signedAndClosed: "$_signedAndClosed()$"
+             , approved: "$_approved()$"
              , unavailableForSign: "$_unavailableForSign()$"
              , dueDate: "$_dueDate()$"
              , companyNumberLabel: "$_companyNumberLabel()$"
@@ -646,6 +652,7 @@ javascriptLocalisation =
                 , clearingHighlight: "$_controlsStatusClearingHighlight()$"
                 , viewingPending   : "$_controlsStatusViewingPending()$"
                 , viewingSigning   : "$_controlsStatusViewingSigning()$"
+                , viewingApproving : "$_controlsStatusViewingApproving()$"
                 , viewingClosed    : "$_controlsStatusViewingClosed()$"
                 , viewingCanceled  : "$_controlsStatusViewingCanceled()$"
                 , viewingRejected  : "$_controlsStatusViewingRejected()$"
@@ -716,6 +723,7 @@ javascriptLocalisation =
               , invitationLink: "$_docviewSignatoryInvitationLink()$"
               , invitationNone: "$_docviewSignatoryInvitationNone()$"
               , role: "$_docviewSignatoryRoleLabel()$"
+              , roleApprover: "$_docviewSignatoryRoleApprover()$"
               , roleSignatory: "$_docviewSignatoryRoleSignatory()$"
               , roleViewer: "$_docviewSignatoryRoleViewer()$"
               , authenticationToView: "$_docviewSignatoryAuthenticationToViewMethodLabel()$"

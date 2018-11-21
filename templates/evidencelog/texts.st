@@ -222,6 +222,8 @@ DeleteSigAttachmentEvidenceLog=The party <span class="actor"/> deleted the attac
 ###
 ErrorSealingDocumentEvidenceLog=Due to a system error Scrive eSign failed to finalise the Evidence Package (as defined in the Service Description) before sealing with a digital signature.
 ###
+ApproveInvitationDeliveredByEmailLog=Scrive eSign’s external email delivery system reported that the invitation to approve the document sent via email to <span class="signatory"/> was delivered.
+###
 ReviewInvitationDeliveredByEmailLog=Scrive eSign’s external email delivery system reported that the invitation to review the document sent via email to <span class="signatory"/> was delivered.
 ###
 SigningInvitationDeliveredByEmailLog=Scrive eSign’s external email delivery system reported that the invitation to sign the document sent via email to <span class="signatory"/> was delivered.
@@ -230,6 +232,8 @@ SigningInvitationDeliveredByEmailLog=Scrive eSign’s external email delivery sy
 InvitationDeliveredByEmailLog=*
 $if(signing)$
   $SigningInvitationDeliveredByEmailLog()$
+$elseif(approving)$
+  $ApproveInvitationDeliveredByEmailLog()$
 $elseif(viewing)$
   $ReviewInvitationDeliveredByEmailLog()$
 $endif$
@@ -237,12 +241,16 @@ $endif$
 InvitationDeliveredByEmailSimple=*
 $if(signing)$
   $_InvitationDeliveredByEmailTextToSignSimple()$
+$elseif(approving)$
+  $_InvitationDeliveredByEmailTextToApproveSimple()$
 $elseif(viewing)$
   $_InvitationDeliveredByEmailTextToReviewSimple()$
 $endif$
 ###
 InvitationDeliveredByEmailArchive=$InvitationDeliveredByEmailSimple()$
 ###
+###
+ApproveInvitationDeliveredBySMSLog=Scrive eSign’s external SMS delivery system reported that the invitation to approve the document sent via SMS to <span class="signatory"/> was delivered.
 ###
 ReviewInvitationDeliveredBySMSLog=Scrive eSign’s external SMS delivery system reported that the invitation to review the document sent via SMS to <span class="signatory"/> was delivered.
 ###
@@ -252,6 +260,8 @@ SigningInvitationDeliveredBySMSLog=Scrive eSign’s external SMS delivery system
 InvitationDeliveredBySMSLog=*
 $if(signing)$
   $SigningInvitationDeliveredBySMSLog()$
+$elseif(approving)$
+  $ApproveInvitationDeliveredBySMSLog()$
 $elseif(viewing)$
   $ReviewInvitationDeliveredBySMSLog()$
 $endif$
@@ -259,6 +269,8 @@ $endif$
 InvitationDeliveredBySMSSimple=*
 $if(signing)$
   $_InvitationDeliveredBySMSTextToSignSimple()$
+$elseif(approving)$
+  $_InvitationDeliveredBySMSTextToApproveSimple()$
 $elseif(viewing)$
   $_InvitationDeliveredBySMSTextToReviewSimple()$
 $endif$
@@ -266,17 +278,23 @@ $endif$
 InvitationDeliveredBySMSArchive=$InvitationDeliveredBySMSSimple()$
 ###
 ###
-SigningInvitationEvidenceLogEmail=Scrive eSign sent an invitation to sign the document via email to <span class="signatory"/>. The invitation included a link that when clicked lead to Scrive eSign’s online interface to sign documents. $invitationCustomMessageTextIfThereIsOne()$
+SigningInvitationEvidenceLogEmail=Scrive eSign sent an invitation to sign the document via email to <span class="signatory"/>. The invitation included a link that when clicked led to Scrive eSign’s online interface to sign documents. $invitationCustomMessageTextIfThereIsOne()$
 ###
-SigningInvitationEvidenceLogSMS=Scrive eSign sent an invitation to sign the document via SMS to <span class="signatory"/>. The invitation included a link that when clicked lead to Scrive eSign’s online interface to sign documents. $invitationCustomMessageTextIfThereIsOne()$
+SigningInvitationEvidenceLogSMS=Scrive eSign sent an invitation to sign the document via SMS to <span class="signatory"/>. The invitation included a link that when clicked led to Scrive eSign’s online interface to sign documents. $invitationCustomMessageTextIfThereIsOne()$
 ###
-SigningInvitationEvidenceLogEmailSMS=Scrive eSign sent an invitation to sign the document via email and SMS to <span class="signatory"/>. The invitation included a link that when clicked lead to Scrive eSign’s online interface to sign documents. $invitationCustomMessageTextIfThereIsOne()$
+SigningInvitationEvidenceLogEmailSMS=Scrive eSign sent an invitation to sign the document via email and SMS to <span class="signatory"/>. The invitation included a link that when clicked led to Scrive eSign’s online interface to sign documents. $invitationCustomMessageTextIfThereIsOne()$
 ###
-ReviewInvitationEvidenceLogEmail=Scrive eSign sent an invitation to review the document via email to <span class="signatory"/>. The invitation included a link that when clicked lead to Scrive eSign’s online interface to review documents. $invitationCustomMessageTextIfThereIsOne()$
+ApproveInvitationEvidenceLogEmail=Scrive eSign sent an invitation to approve the document via email to <span class="signatory"/>. The invitation included a link that when clicked led to Scrive eSign’s online interface to approve documents. $invitationCustomMessageTextIfThereIsOne()$
 ###
-ReviewInvitationEvidenceLogSMS=Scrive eSign sent an invitation to review the document via SMS to <span class="signatory"/>. The invitation included a link that when clicked lead to Scrive eSign’s online interface to review documents. $invitationCustomMessageTextIfThereIsOne()$
+ApproveInvitationEvidenceLogSMS=Scrive eSign sent an invitation to approve the document via SMS to <span class="signatory"/>. The invitation included a link that when clicked led to Scrive eSign’s online interface to approve documents. $invitationCustomMessageTextIfThereIsOne()$
 ###
-ReviewInvitationEvidenceLogEmailSMS=Scrive eSign sent an invitation to review the document via email and SMS to <span class="signatory"/>. The invitation included a link that when clicked lead to Scrive eSign’s online interface to review documents. $invitationCustomMessageTextIfThereIsOne()$
+ApproveInvitationEvidenceLogEmailSMS=Scrive eSign sent an invitation to approve the document via email and SMS to <span class="signatory"/>. The invitation included a link that when clicked led to Scrive eSign’s online interface to approve documents. $invitationCustomMessageTextIfThereIsOne()$
+###
+ReviewInvitationEvidenceLogEmail=Scrive eSign sent an invitation to review the document via email to <span class="signatory"/>. The invitation included a link that when clicked led to Scrive eSign’s online interface to review documents. $invitationCustomMessageTextIfThereIsOne()$
+###
+ReviewInvitationEvidenceLogSMS=Scrive eSign sent an invitation to review the document via SMS to <span class="signatory"/>. The invitation included a link that when clicked led to Scrive eSign’s online interface to review documents. $invitationCustomMessageTextIfThereIsOne()$
+###
+ReviewInvitationEvidenceLogEmailSMS=Scrive eSign sent an invitation to review the document via email and SMS to <span class="signatory"/>. The invitation included a link that when clicked led to Scrive eSign’s online interface to review documents. $invitationCustomMessageTextIfThereIsOne()$
 ###
 InvitationEvidenceLog=*
 $if(signing)$
@@ -286,6 +304,14 @@ $if(signing)$
       $SigningInvitationEvidenceLogSMS()$
   $elseif(emailmobile)$
       $SigningInvitationEvidenceLogEmailSMS()$
+  $endif$
+$elseif(approving)$
+  $if(email)$
+      $ApproveInvitationEvidenceLogEmail()$
+  $elseif(mobile)$
+      $ApproveInvitationEvidenceLogSMS()$
+  $elseif(emailmobile)$
+      $ApproveInvitationEvidenceLogEmailSMS()$
   $endif$
 $elseif(viewing)$
   $if(email)$
@@ -306,6 +332,14 @@ $if(signing)$
   $elseif(emailmobile)$
         $_InvitationEvidenceTextToSignArchiveSimpleEmailSMS()$
   $endif$
+$elseif(approving)$
+  $if(email)$
+        $_InvitationEvidenceTextToApproveArchiveSimpleEmail()$
+  $elseif(mobile)$
+        $_InvitationEvidenceTextToApproveArchiveSimpleSMS()$
+  $elseif(emailmobile)$
+        $_InvitationEvidenceTextToApproveArchiveSimpleEmailSMS()$
+  $endif$
 $elseif(viewing)$
   $if(email)$
         $_InvitationEvidenceTextToReviewArchiveSimpleEmail()$
@@ -320,20 +354,29 @@ InvitationUndeliveredByEmailLog=Scrive eSign’s external email delivery system 
 ###
 InvitationUndeliveredByEmailArchive=$_InvitationUndeliveredByEmailTextSimpleArchive()$
 ###
+InvitationUndeliveredByEmailVerificationPages=$_InvitationUndeliveredByEmailTextSimpleNotArchive()$
+###
+###
 InvitationUndeliveredBySMSLog=Scrive eSign’s external SMS delivery system reported that the invitation sent via SMS to <span class="signatory"/> could not be delivered and continued attempts were cancelled.
 ###
 InvitationUndeliveredBySMSArchive=$_InvitationUndeliveredBySMSTextSimpleArchive()$
+###
+InvitationUndeliveredBySMSVerificationPages=$_InvitationUndeliveredBySMSTextSimpleNotArchive()$
 ###
 MarkInvitationReadEvidenceLog=Scrive eSign’s external email delivery system reported that the invitation sent to $signatory_email$ was opened.
 ###
 MarkInvitationReadEvidenceSimple=*
 $if(signing)$
   $_MarkInvitationReadEvidenceTextToSignSimple()$
+$elseif(approving)$
+  $_MarkInvitationReadEvidenceTextToApproveSimple()$
 $elseif(viewing)$
   $_MarkInvitationReadEvidenceTextToReviewSimple()$
 $endif$
 ###
 MarkInvitationReadEvidenceArchive=$MarkInvitationReadEvidenceSimple()$
+###
+MarkInvitationReadEvidenceVerificationPages=$MarkInvitationReadEvidenceSimple()$
 ###
 ###
 PreparationToPendingEvidenceLog=The initiator <span class="actor"/> initiated the signing workflow and Scrive eSign a) locked the signing workflow from further editing, b) set the signing workflow language to $lang$, c) set the signing due date to $timeouttime$ UTC,$if(timezone)$ d) set the time zone to $timezone$$endif$ and e) initiated the signing workflow.
@@ -352,6 +395,15 @@ $if(text)$
   $_RejectDocumentEvidenceTextSimpleArchiveWithText()$
 $else$
   $_RejectDocumentEvidenceTextSimpleArchive()$
+$endif$
+###
+RejectDocumentByApproverEvidenceLog=The signatory <span class="actor"/> rejected the invitation to approve and Scrive eSign disabled the possibility to sign for all parties.$if(text)$ The rejection message from the signatory <span class="actor"/> was: <BR/> <i>$text$</i>$endif$
+###
+RejectDocumentByApproverEvidenceArchive=*
+$if(text)$
+  $_RejectDocumentByApproverEvidenceTextSimpleArchiveWithText()$
+$else$
+  $_RejectDocumentByApproverEvidenceTextSimpleArchive()$
 $endif$
 ###
 ReminderSendLog=*
@@ -393,6 +445,26 @@ $elseif(viewing)$
       $_ReviewReminderSendEmailSMSLogWithText()$
     $else$
       $_ReviewReminderSendEmailSMSLog()$
+    $endif$
+  $endif$
+$elseif(approving)$
+  $if(email)$
+    $if(text)$
+      $_ApproveReminderSendEmailLogWithText()$
+    $else$
+      $_ApproveReminderSendEmailLog()$
+    $endif$
+  $elseif(mobile)$
+    $if(text)$
+      $_ApproveReminderSendSMSLogWithText()$
+    $else$
+      $_ApproveReminderSendSMSLog()$
+    $endif$
+  $elseif(emailmobile)$
+    $if(text)$
+      $_ApproveReminderSendEmailSMSLogWithText()$
+    $else$
+      $_ApproveReminderSendEmailSMSLog()$
     $endif$
   $endif$
 $endif$
@@ -438,7 +510,26 @@ $elseif(viewing)$
         $_ReminderSendTextToReviewArchiveEmailSMS()$
       $endif$
   $endif$
-$endif$
+$elseif(approving)$
+  $if(email)$
+      $if(text)$
+        $_ReminderSendTextToApproveArchiveEmailWithText()$
+      $else$
+        $_ReminderSendTextToApproveArchiveEmail()$
+      $endif$
+  $elseif(mobile)$
+      $if(text)$
+        $_ReminderSendTextToApproveArchiveSMSWithText()$
+      $else$
+        $_ReminderSendTextToApproveArchiveSMS()$
+      $endif$
+  $elseif(emailmobile)$
+      $if(text)$
+        $_ReminderSendTextToApproveArchiveEmailSMSWithText()$
+      $else$
+        $_ReminderSendTextToApproveArchiveEmailSMS()$
+      $endif$
+  $endif$$endif$
 ###
 ###
 RemovedFromPadDeviceLog=The invitation to signatory <span class="signatory"/> to sign the document by in-person meeting was withdrawn by <span class="actor"/>.
@@ -497,11 +588,15 @@ $endif$
 ###
 SignatorySignLinkVisitedLog=The party <span class="actor"/> opened the document in Scrive eSign’s online interface to sign documents.
 ###
+SignatoryApproveLinkVisitedLog=The party <span class="actor"/> opened the document in Scrive eSign’s online interface to approve documents.
+###
 SignatoryReviewLinkVisitedLog=The party <span class="actor"/> opened the document in Scrive eSign’s online interface to review documents.
 ###
 SignatoryLinkVisitedLog=*
 $if(signing)$
   $SignatorySignLinkVisitedLog()$
+$elseif(approving)$
+  $SignatoryApproveLinkVisitedLog()$
 $elseif(viewing)$
   $SignatoryReviewLinkVisitedLog()$
 $endif$
@@ -600,6 +695,9 @@ $if(text)$$if(!mobile)$ $_invitationCustomMessageTextToSign()$ $endif$$endif$
 invitationCustomMessageTextToReviewIfThereIsOne=
 $if(text)$$if(!mobile)$ $_invitationCustomMessageTextToReview()$ $endif$$endif$
 ###
+invitationCustomMessageTextToApproveIfThereIsOne=
+$if(text)$$if(!mobile)$ $_invitationCustomMessageTextToApprove()$ $endif$$endif$
+###
 CancelDocumenElegEvidenceText=$_CancelDocumenElegEvidenceText()$
 ###
 ###
@@ -609,11 +707,15 @@ VisitedViewForSigningEvidenceArchive=$_VisitedViewForSigningEvidenceArchive()$
 ###
 VisitedViewForSigningEvidenceLogForSign=The party <span class="actor"/> opened the document in Scrive eSign’s online interface to sign documents.
 ###
+VisitedViewForSigningEvidenceLogForApproval=The party <span class="actor"/> opened the document in Scrive eSign’s online interface to approve documents.
+###
 VisitedViewForSigningEvidenceLogForReview=The party <span class="actor"/> opened the document in Scrive eSign’s online interface to review documents.
 ###
 VisitedViewForSigningEvidenceLog=*
 $if(signing)$
   $VisitedViewForSigningEvidenceLogForSign()$
+$elseif(approving)$
+  $VisitedViewForSigningEvidenceLogForApproval()$
 $elseif(viewing)$
   $VisitedViewForSigningEvidenceLogForReview()$
 $endif$
@@ -691,4 +793,8 @@ PageHighlightingClearedLog=Highlighting was removed from page $pageno$ while <sp
 ConsentQuestionAnsweredLog=The party <span class="signatory"/> answered the question "$question$" by "$response$".
 ###
 ConsentQuestionAnsweredWithDescriptionLog=The party <span class="signatory"/> answered the question "$question$" by "$response$". The question's detailed description had the title "$description_title$" and the text "$description_text$".
+###
+ApprovedByApproverPartyEvidenceArchive=$_ApprovedByApproverPartyEvidenceArchive()$
+###
+ApprovedByApproverPartyEvidenceLog=The approver party <span class="signatory"/> approved the document.
 ###

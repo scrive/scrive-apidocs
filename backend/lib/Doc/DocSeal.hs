@@ -447,7 +447,9 @@ createSealingTextsForDocument document hostpart = do
 
   return sealingTexts
 
-sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, MonadLog m, MonadFileStorage m, MonadBaseControl IO m)
+sealSpecFromDocument :: ( MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m
+                        , MonadLog m, MonadFileStorage m
+                        , MonadBaseControl IO m )
                      => Bool
                      -> CheckboxImagesMapping
                      -> RadiobuttonImagesMapping
@@ -461,7 +463,10 @@ sealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, Mo
                      -> String
                      -> String
                      -> m Seal.SealSpec
-sealSpecFromDocument extendedFlattening checkboxMapping radiobuttonMapping hostpart document elog offsets eotData content tmppath inputpath outputpath = do
+sealSpecFromDocument extendedFlattening checkboxMapping
+                     radiobuttonMapping hostpart
+                     document elog offsets eotData content
+                     tmppath inputpath outputpath = do
   -- Form initials from signing parties
   sim <- getSignatoryIdentifierMap False elog
 
@@ -477,24 +482,31 @@ sealSpecFromDocument extendedFlattening checkboxMapping radiobuttonMapping hostp
       paddeddocid = pad0 20 (show docid)
       Just authorsiglink = getAuthorSigLink document
 
-  persons <- sequence $ [ personExFromSignatoryLink inputpath (documenttimezonename document) sim checkboxMapping radiobuttonMapping s
-                    | s <- documentsignatorylinks document
-                    , signatoryispartner $ s
-                ]
+  persons <- sequence $
+    [ personExFromSignatoryLink inputpath
+      (documenttimezonename document) sim checkboxMapping radiobuttonMapping s
+    | s <- documentsignatorylinks document
+    , isSignatory $ s
+    ]
 
-  secretaries <- sequence $ [ personFromSignatory inputpath (documenttimezonename document) sim checkboxMapping radiobuttonMapping $ s
-                    | s <- documentsignatorylinks document
-                    , not . signatoryispartner $ s
-                ]
+  secretaries <- sequence $
+    [ personFromSignatory inputpath
+      (documenttimezonename document) sim checkboxMapping radiobuttonMapping $ s
+    | s <- documentsignatorylinks document
+    , not . isSignatory $ s
+    ]
 
-  initiator <- if (signatoryispartner authorsiglink)
-                then return Nothing
-                else Just <$> (personFromSignatory inputpath (documenttimezonename document) sim checkboxMapping radiobuttonMapping authorsiglink)
+  initiator <-
+    if (isSignatory authorsiglink)
+    then return Nothing
+    else Just <$> (personFromSignatory inputpath
+                   (documenttimezonename document) sim
+                   checkboxMapping radiobuttonMapping authorsiglink)
 
   let initials = intercalate ", " $ catMaybes
                    [ siInitials <$> Map.lookup (signatorylinkid s) sim
                    | s <- documentsignatorylinks document
-                   , signatoryispartner s
+                   , isSignatory s
                    ]
 
   staticTexts <- createSealingTextsForDocument document hostpart
@@ -503,27 +515,34 @@ sealSpecFromDocument extendedFlattening checkboxMapping radiobuttonMapping hostp
   let htmlevents = suppressRepeatedEvents elog
   elogsim <- getSignatoryIdentifierMap True htmlevents
   htmllogs <- htmlDocFromEvidenceLog (documenttitle document) elogsim htmlevents
-  let evidenceattachment = Seal.SealAttachment { Seal.fileName = "Appendix 3 Evidence Log.html"
-                                               , Seal.mimeType = Nothing
-                                               , Seal.fileContent = BS.fromString htmllogs }
-  htmlEvidenceOfTime <- evidenceOfTimeHTML (documenttitle document) offsets eotData
-  let evidenceOfTime = Seal.SealAttachment { Seal.fileName = "Appendix 4 Evidence of Time.html"
-                                           , Seal.mimeType = Nothing
-                                           , Seal.fileContent = BS.fromString htmlEvidenceOfTime }
+  let evidenceattachment =
+        Seal.SealAttachment
+        { Seal.fileName = "Appendix 3 Evidence Log.html"
+        , Seal.mimeType = Nothing
+        , Seal.fileContent = BS.fromString htmllogs }
+  htmlEvidenceOfTime <- evidenceOfTimeHTML (documenttitle document)
+                        offsets eotData
+  let evidenceOfTime =
+        Seal.SealAttachment
+        { Seal.fileName = "Appendix 4 Evidence of Time.html"
+        , Seal.mimeType = Nothing
+        , Seal.fileContent = BS.fromString htmlEvidenceOfTime }
   evidenceOfIntent <- evidenceOfIntentAttachment elogsim document
 
   -- documentation files
   let docAttachments =
-        [ Seal.SealAttachment { Seal.fileName = name
-                              , Seal.mimeType = Nothing
-                              , Seal.fileContent = doc
-                              }
+        [ Seal.SealAttachment
+          { Seal.fileName = name
+          , Seal.mimeType = Nothing
+          , Seal.fileContent = doc }
         | (name, doc) <- docs ]
 
   eNumberOfPages <- liftIO $ getNumberOfPDFPages content
   numberOfPages <- case eNumberOfPages of
     Left e -> do
-      logAttention "Calculating number of pages of document failed, falling back to 1" $ object [
+      logAttention
+        "Calculating number of pages of document failed, falling back to 1" $
+        object [
           "reason" .= e
         ]
       return 1
@@ -538,20 +557,27 @@ sealSpecFromDocument extendedFlattening checkboxMapping radiobuttonMapping hostp
   attachedByText <- do
     emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
     renderLocalTemplate document "_documentSentOnBy" $ do
-      F.value "identifier" $ signatoryIdentifier sim (signatorylinkid authorsiglink) emptyNamePlaceholder
-      F.valueM "time" $ mapM (formatUTCTimeForVerificationPage (documenttimezonename document)) (signtime <$> documentinvitetime document)
+      F.value "identifier" $
+        signatoryIdentifier sim (
+        signatorylinkid authorsiglink) emptyNamePlaceholder
+      F.valueM "time" $
+        mapM (formatUTCTimeForVerificationPage (documenttimezonename document))
+        (signtime <$> documentinvitetime document)
 
   sealedOn <- do
     renderLocalTemplate document "_documentSealedOn" $ do
-      F.valueM "time" $ formatUTCTimeForVerificationPage (documenttimezonename document) (getLastSignedTime document)
+      F.valueM "time" $ formatUTCTimeForVerificationPage
+        (documenttimezonename document) (getLastSignedOrApprovedTime document)
 
   mainDocumentText <- renderLocalTemplate document "_mainDocument"
                       $ (return ())
 
-  documentNumberText <- renderLocalTemplate document "_contractsealingtextsDocumentNumber" $ do
+  documentNumberText <-
+    renderLocalTemplate document  "_contractsealingtextsDocumentNumber" $ do
     F.value "documentnumber" $ paddeddocid
 
-  initialsText <- renderLocalTemplate document "_contractsealingtextsInitialsText" $ do
+  initialsText <-
+    renderLocalTemplate document "_contractsealingtextsInitialsText" $ do
     F.value "initials" $ initials
 
   let title = T.unpack $ ICU.normalize ICU.NFC $ T.pack $ documenttitle document
@@ -566,7 +592,10 @@ sealSpecFromDocument extendedFlattening checkboxMapping radiobuttonMapping hostp
         , Seal.initialsText   = initialsText
         , Seal.hostpart       = hostpart
         , Seal.staticTexts    = staticTexts
-        , Seal.attachments    = docAttachments ++ [evidenceattachment, evidenceOfTime, evidenceOfIntent]
+        , Seal.attachments    = docAttachments ++
+                                [ evidenceattachment
+                                , evidenceOfTime
+                                , evidenceOfIntent ]
         , Seal.disableFooter = documentisreceipt document
         , Seal.extendedFlattening = extendedFlattening
         , Seal.filesList      =
@@ -580,7 +609,9 @@ sealSpecFromDocument extendedFlattening checkboxMapping radiobuttonMapping hostp
                           } ] ++ additionalAttachments
         }
 
-presealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m, MonadLog m, MonadFileStorage m, MonadBaseControl IO m)
+presealSpecFromDocument :: ( MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m
+                           , MonadLog m, MonadFileStorage m
+                           , MonadBaseControl IO m )
                         => Bool
                         -> CheckboxImagesMapping
                         -> RadiobuttonImagesMapping
@@ -588,14 +619,18 @@ presealSpecFromDocument :: (MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m,
                         -> String
                         -> String
                         -> m Seal.PreSealSpec
-presealSpecFromDocument extendedFlattening checkboxMapping radiobuttonMapping document inputpath outputpath = do
-       fields <- concat <$> mapM (fieldsFromSignatory checkboxMapping radiobuttonMapping) (documentsignatorylinks document)
-       return $ Seal.PreSealSpec
-            { Seal.pssInput          = inputpath
-            , Seal.pssOutput         = outputpath
-            , Seal.pssFields         = fields
-            , Seal.pssExtendedFlattening = extendedFlattening
-            }
+presealSpecFromDocument extendedFlattening
+                        checkboxMapping radiobuttonMapping
+                        document inputpath outputpath = do
+  fields <- concat <$>
+            mapM (fieldsFromSignatory checkboxMapping radiobuttonMapping)
+            (documentsignatorylinks document)
+  return $ Seal.PreSealSpec
+    { Seal.pssInput          = inputpath
+    , Seal.pssOutput         = outputpath
+    , Seal.pssFields         = fields
+    , Seal.pssExtendedFlattening = extendedFlattening
+    }
 
 sealDocument :: (CryptoRNG m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadMask m, MonadLog m, MonadFileStorage m, PdfToolsLambdaConfMonad m)
              => String -> m ()

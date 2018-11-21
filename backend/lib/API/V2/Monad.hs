@@ -47,19 +47,27 @@ instance ToAPIResponse Response where
 
 instance ToAPIResponse BSL.ByteString where
   toAPIResponse bs  =
-    setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ bs
+    setHeader "Content-Type" "text/plain; charset=UTF-8" $
+    Web.toResponse $ bs
 
 instance ToAPIResponse JSValue where
   toAPIResponse jv =
-    setHeader "Content-Type" "application/json; charset=UTF-8" $ Web.toResponse $ encode jv
+    setHeader "Content-Type" "application/json; charset=UTF-8" $
+    Web.toResponse $ encode jv
 
 instance ToAPIResponse A.Value where
   toAPIResponse aesonvalue =
-    setHeader "Content-Type" "application/json; charset=UTF-8" $ Web.toResponse $ A.encode aesonvalue
+    setHeader "Content-Type" "application/json; charset=UTF-8" $
+    Web.toResponse $
+    A.encode aesonvalue
 
 instance ToAPIResponse (UnjsonDef a,a) where
   toAPIResponse (unjson,a) =
-    setHeader "Content-Type" "application/json; charset=UTF-8" $ Web.toResponse $ unjsonToByteStringLazy' (Options { pretty = False, indent = 0, nulls = True }) unjson a
+    setHeader "Content-Type" "application/json; charset=UTF-8" $
+    Web.toResponse $
+    unjsonToByteStringLazy' unjsonOpts unjson a
+    where
+      unjsonOpts = Options { pretty = False, indent = 0, nulls = True }
 
 instance ToAPIResponse CSV where
   toAPIResponse v = let r1 = Web.toResponse $ v in
@@ -83,7 +91,8 @@ apiRun :: (Kontrakcja m, ToAPIResponse v) => m (APIResponse v) -> m Response
 apiRun acc =
   (toAPIResponse <$> runAcc) `catches` [
       Handler $ \ex@(SomeDBExtraException e) -> do
-        -- API handler always returns a valid response. Due to that appHandler will not rollback - and we need to do it here
+        -- API handler always returns a valid response. Due to that
+        -- appHandler will not rollback - and we need to do it here
         rollback
         -- For some exceptions we do a conversion to APIError
         let ex' = tryToConvertConditionalExceptionIntoAPIError ex
@@ -136,7 +145,11 @@ apiLog acc = do
     apiCallParam (name, Right contents) =
       case BSU.length contents > 50000 of
         False -> CallLogParam name (BSU.toString contents)
-        True  -> CallLogParam name (BSU.toString $ BS.concat [BS.take 50000 $ contents, "...", BSU.fromString . show . BS.length $ contents, " bytes of data"])
+        True  -> CallLogParam name
+          (BSU.toString $ BS.concat
+            [ BS.take 50000 $ contents, "..."
+            , BSU.fromString . show . BS.length $ contents
+            , " bytes of data" ])
 
 isAPIV2Call :: Request -> Bool
 isAPIV2Call rq = "/api/v2/" `isPrefixOf` rqUri rq

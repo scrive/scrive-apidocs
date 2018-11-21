@@ -18,7 +18,7 @@ module Doc.DocInfo(
   , isDocumentShared
   , isSignable
   , isTemplate
-  , getLastSignedTime
+  , getLastSignedOrApprovedTime
   , isAccessibleBySignatories
   , documentStatusesAccessibleBySignatories
 ) where
@@ -27,75 +27,59 @@ import Data.Time
 
 import Doc.DocStateData
 import MinutesTime
+import Util.SignatoryLinkUtils
 
 -- Predicates on document status
 
-{- |
-   Is the document pending?
- -}
+-- | Is the document pending?
 isPending :: Document -> Bool
-isPending doc = Pending == documentstatus doc
+isPending        =   (==) Pending       . documentstatus
 
-{- |
-   Is the document in preparation?
- -}
+-- | Is the document in preparation?
 isPreparation :: Document -> Bool
-isPreparation doc = Preparation == documentstatus doc
+isPreparation    =   (==) Preparation   . documentstatus
 
-{- |
-   Is the document Closed?
- -}
+-- | Is the document Closed?
 isClosed :: Document -> Bool
-isClosed doc = Closed == documentstatus doc
+isClosed         =   (==) Closed        . documentstatus
 
-{- |
-   Is the document canceled?
- -}
+-- | Is the document canceled?
 isCanceled :: Document -> Bool
-isCanceled doc = Canceled == documentstatus doc
+isCanceled       =   (==) Canceled      . documentstatus
 
-{- |
-   Is the document timedout?
- -}
+-- | Is the document timedout?
 isTimedout :: Document -> Bool
-isTimedout doc = Timedout == documentstatus doc
+isTimedout       =   (==) Timedout      . documentstatus
 
-{- |
-   Is the document rejected?
- -}
+-- | Is the document rejected?
 isRejected :: Document -> Bool
-isRejected doc = Rejected == documentstatus doc
+isRejected       =   (==) Rejected      . documentstatus
 
-{- |
-   Is document error?
- -}
+-- | Is document error?
 isDocumentError :: Document -> Bool
-isDocumentError doc =  DocumentError == documentstatus doc
+isDocumentError  =   (==) DocumentError . documentstatus
 
-{- |
-   Is the document signable?
- -}
+-- | Is the document signable?
 isSignable :: Document -> Bool
-isSignable doc = documenttype doc == Signable
+isSignable       =   (==) Signable      . documenttype
 
-{- |
-   Is the document a template?
- -}
+-- | Is the document a template?
 isTemplate :: Document -> Bool
-isTemplate d = documenttype d == Template
+isTemplate       =   (==) Template      . documenttype
 
-{- |
-   Is document shared?
- -}
+-- | Is document shared?
 isDocumentShared :: Document -> Bool
-isDocumentShared doc = Shared == documentsharing doc && isTemplate doc
+isDocumentShared =  ((==) Shared . documentsharing)
+                 && isTemplate
 
-{- |
-  Get the time of the last signature as Int. Returns unixEpoch when there are no signatures.
--}
-getLastSignedTime :: Document -> UTCTime
-getLastSignedTime doc =
-  maximum $ unixEpoch : [signtime si | SignatoryLink {maybesigninfo = Just si} <- documentsignatorylinks doc]
+-- | Get the time of the last signature/approval as Int. Returns unixEpoch when
+-- there are no signatures/approvals.
+getLastSignedOrApprovedTime :: Document -> UTCTime
+getLastSignedOrApprovedTime doc =
+  maximum $ unixEpoch :
+  [ signtime si
+  | SignatoryLink { maybesigninfo = Just si } <-
+      filter (isSignatory || isApprover) . documentsignatorylinks $ doc ]
 
 -- | Can signatories see the document?
 isAccessibleBySignatories :: UTCTime -> Document -> Bool

@@ -114,11 +114,22 @@ signDocument slid mh fields acceptedAuthorAttachments
         acceptanceText <- renderTemplate "_authorAttachmentsUnderstoodContent"
                           (F.value "attachment_name" $ authorattachmentname a)
         return (acceptanceText,a)
-    notUploadedSignatoryAttachmentsText <- renderTemplate_ "_pageDocumentForAuthorHelpersLocalDialogsAttachmentmarkasnotuploaded"
-    let notUploadedSignatoryAttachmentsWithText = zip notUploadedSignatoryAttachments (repeat notUploadedSignatoryAttachmentsText)
-    dbUpdate . AddAcceptedAuthorAttachmentsEvents sl acceptedAuthorAttachments authorAttachmentsWithAcceptanceText =<< signatoryActor ctx sl
-    dbUpdate . AddNotUploadedSignatoryAttachmentsEvents sl notUploadedSignatoryAttachmentsWithText =<< signatoryActor ctx sl
-  guardGetSignatoryFromIdForDocument slid >>= \sl -> dbUpdate . SignDocument slid mh mesig mpin screenshots =<< signatoryActor ctx sl
+    notUploadedSignatoryAttachmentsText <-
+      renderTemplate_
+      "_pageDocumentForAuthorHelpersLocalDialogsAttachmentmarkasnotuploaded"
+    let notUploadedSignatoryAttachmentsWithText =
+          zip notUploadedSignatoryAttachments
+          (repeat notUploadedSignatoryAttachmentsText)
+    dbUpdate . AddAcceptedAuthorAttachmentsEvents sl
+      acceptedAuthorAttachments authorAttachmentsWithAcceptanceText
+      =<< signatoryActor ctx sl
+    dbUpdate . AddNotUploadedSignatoryAttachmentsEvents sl
+      notUploadedSignatoryAttachmentsWithText
+      =<< signatoryActor ctx sl
+
+  guardGetSignatoryFromIdForDocument slid
+    >>= \sl -> dbUpdate . SignDocument slid mh mesig mpin screenshots
+    =<< signatoryActor ctx sl
 
 
 fieldsToFieldsWithFiles :: ( CryptoRNG m, MonadBase IO m, MonadCatch m

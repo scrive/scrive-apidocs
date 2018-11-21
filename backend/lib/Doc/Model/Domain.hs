@@ -47,12 +47,12 @@ data DocumentDomain
 -- 2. User can see a document when:
 --     a. document is signable
 --     b. document is not in Preparation
---     c. user was invited to sign (is_partner = TRUE)
+--     c. user was invited to sign or approve (based on signatory_role field value)
 --     d. its sign order says it is ok to see
 -- 3. User can see a document when:
 --     a. document is signable
 --     b. document is not in Preparation
---     c. user was invited to view (is_partner = FALSE)
+--     c. user was invited to view (based on signatory_role field value)
 -- 4. User can see a document when:
 --     a. document is template
 --     b. its author is in the same company
@@ -90,7 +90,7 @@ documentDomainToSQL (DocumentsVisibleToUser uid) = do
   sqlWhere $ "users.user_group_id = (SELECT u.user_group_id FROM users u WHERE u.id =" <?> uid <> ")"
   sqlWhereAny [
       userIsAuthor
-    , userIsPartnerAndHasAppropriateSignOrder
+    , userIsSignatoryOrApproverAndHasAppropriateSignOrder
     , userIsViewer
     , isCompanySharedTemplate
     , isCompanyDocumentIfAdmin
@@ -100,22 +100,24 @@ documentDomainToSQL (DocumentsVisibleToUser uid) = do
       sqlWhereEq "users.id" uid
       sqlWhere "documents.author_id = signatory_links.id"
 
-    userIsPartnerAndHasAppropriateSignOrder = do
+    userIsSignatoryOrApproverAndHasAppropriateSignOrder = do
       sqlWhereEq "users.id" uid
       sqlWhereEq "documents.type" Signable
       sqlWhereIn "documents.status" documentStatusesAccessibleBySignatories
-      sqlWhere "signatory_links.is_partner"
+      sqlWhereSignatoryRoleIsSigningPartyOrApprover
       sqlWhereNotExists . sqlSelect "signatory_links AS osl" $ do
         sqlWhere "signatory_links.document_id = osl.document_id"
         sqlWhere "osl.sign_time IS NULL"
-        sqlWhere "osl.is_partner"
+        sqlWhere . parenthesize $
+          "osl.signatory_role ="    <?> SignatoryRoleSigningParty <+>
+          "OR osl.signatory_role =" <?> SignatoryRoleApprover
         sqlWhere "osl.sign_order < signatory_links.sign_order"
 
     userIsViewer = do
       sqlWhereEq "users.id" uid
       sqlWhereEq "documents.type" Signable
       sqlWhereNotEq "documents.status" Preparation
-      sqlWhere "NOT signatory_links.is_partner"
+      sqlWhereSignatoryRoleIsViewer
 
     isCompanySharedTemplate = do
       sqlWhere "documents.author_id = signatory_links.id"

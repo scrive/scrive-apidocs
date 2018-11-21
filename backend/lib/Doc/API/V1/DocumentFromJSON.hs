@@ -100,7 +100,7 @@ instance MatchWithJSValue SignatoryLink where
 instance FromJSValueWithUpdate SignatoryLink where
     fromJSValueWithUpdate ms = do
         author <- fromJSValueField "author"
-        signs  <- fromJSValueField "signs"
+        role   <- fmap signatoryRoleFromBool <$> fromJSValueField "signs"
         mfields <- fromJSValueFieldCustom "fields" (fromJSValueManyWithUpdate $ fromMaybe [] (signatoryfields <$> ms))
         signorder <- fromJSValueField "signorder"
         attachments <- fromJSValueField "attachments"
@@ -126,7 +126,7 @@ instance FromJSValueWithUpdate SignatoryLink where
                   -- reject update with constraints error.
                   , signatoryfields        = nubBy (\f1 f2 -> fieldIdentity f1 == fieldIdentity f2) fields
                   , signatoryisauthor      = updateWithDefaultAndField False signatoryisauthor author
-                  , signatoryispartner     = updateWithDefaultAndField False signatoryispartner signs
+                  , signatoryrole          = updateWithDefaultAndField SignatoryRoleViewer signatoryrole role
                   , signatorylinkcsvupload       = updateWithDefaultAndField Nothing signatorylinkcsvupload csv
                   , signatoryattachments         = updateSignatoryAttachmentList (fmap signatoryattachments ms) attachments
                   , signatorylinksignredirecturl = updateWithDefaultAndField Nothing signatorylinksignredirecturl sredirecturl

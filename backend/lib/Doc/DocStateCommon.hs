@@ -19,17 +19,17 @@ trueOrMessage True  _ = Nothing
 
 signLinkFromDetails' :: [SignatoryField]
                      -> Bool
-                     -> Bool
+                     -> SignatoryRole
                      -> SignOrder
                      -> [SignatoryAttachment]
                      -> MagicHash
                      -> SignatoryLink
-signLinkFromDetails' fields author partner sorder attachments magichash =
+signLinkFromDetails' fields author role sorder attachments magichash =
   def { signatorylinkid                         = unsafeSignatoryLinkID 0
       , signatoryfields                         = map signatoryLinkClearField
                                                   fields -- clean signatures
       , signatoryisauthor                       = author
-      , signatoryispartner                      = partner
+      , signatoryrole                           = role
       , signatorysignorder                      = sorder
       , signatorymagichash                      = magichash
       , maybesignatory                          = Nothing

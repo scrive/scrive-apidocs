@@ -77,28 +77,33 @@ mkAuthKind doc = case documentstatus doc of
 -- signed already: the largest sign order among all signatories.
 documentcurrentsignorder :: Document -> SignOrder
 documentcurrentsignorder doc =
-    case filter notSignedPartner sigs of
+    case filter notSignedOrApproved sigs of
          [] -> maximum $ map signatorysignorder sigs
          xs -> minimum $ map signatorysignorder xs
     where
-        sigs = documentsignatorylinks doc
-        notSignedPartner siglnk = isNothing (maybesigninfo siglnk)
-          && signatoryispartner siglnk -- we exclude non-signatories
+      sigs                       = documentsignatorylinks doc
+      notSignedOrApproved siglnk =
+        -- we exclude viewers
+        (isSignatoryAndHasNotSigned || isApproverAndHasNotApproved) siglnk
 
 -- | The document's previous sign order is either the sign order of
 -- the last partner(s) that signed, or zero in case nobody has signed
 -- yet.
 documentprevioussignorder :: Document -> SignOrder
 documentprevioussignorder doc =
-    case filter (isJust . maybesigninfo) (documentsignatorylinks doc) of
-         [] -> SignOrder (-1) -- Allow for signorder 0 (default value of an integer when JSON serializing and not setting a value)
-         xs -> maximum $ map signatorysignorder xs
+    case filter (isSignatoryAndHasSigned || isApproverAndHasApproved)
+         (documentsignatorylinks doc) of
+      [] -> SignOrder (-1) -- Allow for signorder 0 (default value of
+                           -- an integer when JSON serializing and not
+                           -- setting a value)
+      xs -> maximum $ map signatorysignorder xs
 
--- | True if signatory is a viewer and all other document partners' signorder are smaller
+-- | True if the given signatory is a viewer and all other parties
+-- (regardless of type) have smaller signorders.
 isLastViewer :: Document -> SignatoryLink -> Bool
 isLastViewer doc sl =
-      not (signatoryispartner sl)
-  && all (\s -> not (signatoryispartner s) || signatorysignorder s < signatorysignorder sl)
+     isViewer sl
+  && all (\s -> isViewer s || signatorysignorder s < signatorysignorder sl)
          (documentsignatorylinks doc)
 
 {- |
@@ -195,10 +200,8 @@ isEligibleForReminder document@Document{documentstatus} siglink =
                                       || (mailinvitationdeliverystatus siglink /= Undelivered && mailinvitationdeliverystatus siglink /= Deferred)
                                       || (smsinvitationdeliverystatus siglink /= Undelivered && smsinvitationdeliverystatus siglink /= Deferred)
                                       )
-    && wasNotSigned
-    && signatoryispartner siglink
+    && ((isSignatoryAndHasNotSigned || isApproverAndHasNotApproved) siglink)
   where
-    wasNotSigned = isNothing (maybesigninfo siglink)
     signatoryActivated = isActivatedSignatory (documentcurrentsignorder document) siglink
     dontShowAnyReminder = documentstatus `elem` [Timedout, Canceled, Rejected]
     documentDeliverableTosignatory =  signatorylinkdeliverymethod siglink `elem` [EmailDelivery, MobileDelivery, EmailAndMobileDelivery]
@@ -208,8 +211,7 @@ canAuthorSignNow :: Document -> Bool
 canAuthorSignNow doc =
      isPending doc
   && documentcurrentsignorder doc >= signatorysignorder author
-  && (not . hasSigned $ author)
-  && isSignatory author
+  && isSignatoryAndHasNotSigned author
   where
     author = case getAuthorSigLink doc of
       Just a -> a
@@ -221,10 +223,7 @@ canSignatorySignNow :: Document -> SignatoryLink -> Bool
 canSignatorySignNow doc sl =
   isPending doc
   && documentcurrentsignorder doc >= signatorysignorder sl
-  && (not . hasSigned $ sl)
-  && isSignatory sl
-
-
+  && isSignatoryAndHasNotSigned sl
 
 {- |
    Has the signatory's sign order come up?

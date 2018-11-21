@@ -15,6 +15,7 @@ import Data.Aeson.Types
 import Data.Default
 import Data.Int
 import Database.PostgreSQL.PQTypes
+import Database.PostgreSQL.PQTypes.SQL.Builder
 import qualified Data.Set as S
 
 import DB.RowCache (HasID(..), ID)
@@ -104,6 +105,7 @@ data StatusClass
   | SCInitiated
   | SCOpenedAuthToView
   | SCAuthenticatedToView
+  | SCApproved
     deriving (Eq, Ord, Enum, Bounded)
 
 instance PQFormat StatusClass where
@@ -131,8 +133,9 @@ instance FromSQL StatusClass where
       15 -> return SCInitiated
       16 -> return SCOpenedAuthToView
       17 -> return SCAuthenticatedToView
+      18 -> return SCApproved
       _ -> throwM RangeError {
-        reRange = [(1, 17)]
+        reRange = [(1, 18)]
       , reValue = n
       }
 
@@ -155,6 +158,7 @@ instance ToSQL StatusClass where
   toSQL SCInitiated       = toSQL (15::Int16)
   toSQL SCOpenedAuthToView    = toSQL (16::Int16)
   toSQL SCAuthenticatedToView = toSQL (17::Int16)
+  toSQL SCApproved        = toSQL (18::Int16)
 
 instance Show StatusClass where
   show SCInitiated = "initiated"
@@ -174,6 +178,7 @@ instance Show StatusClass where
   show SCExtended = "extended"
   show SCOpenedAuthToView = "authenticationview"
   show SCAuthenticatedToView = "authenticated"
+  show SCApproved = "approved"
 
 instance Read StatusClass where
   readsPrec _ str =
@@ -322,8 +327,18 @@ documentsSelectors = [
 documentStatusClassExpression :: SQL
 documentStatusClassExpression = mconcat [
     "(SELECT COALESCE((SELECT min(" <> statusClassCaseExpression <> ")"
-  , "FROM signatory_links WHERE signatory_links.document_id = documents.id AND signatory_links.is_partner),"
-  , "(SELECT " <> statusClassCaseExpressionForDocument <> ")," <?> SCDraft <> "))::SMALLINT"
+  , "FROM signatory_links "
+  , "WHERE signatory_links.document_id = documents.id "
+  , "AND" <+>
+    parenthesize
+    ( "signatory_links.signatory_role =" <?> SignatoryRoleSigningParty <+>
+      "OR" <+>
+      "signatory_links.signatory_role =" <?> SignatoryRoleApprover )
+  , "),"
+  , "(SELECT " <>
+    statusClassCaseExpressionForDocument <> "),"
+    <?> SCDraft
+  , "))::SMALLINT"
   ]
   where
     -- FIXME: Add to DB.SQL functionality that encodes CASE expression.

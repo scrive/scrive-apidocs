@@ -472,7 +472,10 @@ signatoryForListCSV customFields doc sl = [
             , maybe "" formatTimeSimple $ maybereadinvite sl
             , maybe "" formatTimeSimple $ signtime <$> maybeseeninfo sl
             , maybe "" formatTimeSimple $ signtime <$> maybesigninfo sl
-            , if signatoryispartner sl then "Signing party" else "Viewer"
+            , case signatoryrole sl of
+                SignatoryRoleSigningParty -> "Signing party"
+                SignatoryRoleViewer       -> "Viewer"
+                SignatoryRoleApprover     -> "Approver"
             , getFullName sl
             , getEmail sl
             , getPersonalNumber sl

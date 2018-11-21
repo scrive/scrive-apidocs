@@ -149,4 +149,5 @@ kontraMigrations = [
   , addAuthenticationKindToEIDAuthentications
   , featureFlagsAddShareableLinks
   , userGroupAddGINIdx
+  , changeIsPartnerColumnToSignatoryRole
   ]

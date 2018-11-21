@@ -97,21 +97,27 @@ sendDocumentErrorEmail author document = do
    Send emails to all of the invited parties, respecting the sign order.
    ??: Should this be in DocControl or in an email-specific file?
  -}
-sendInvitationEmails :: (CryptoRNG m, MonadThrow m, MonadLog m, TemplatesMonad m, DocumentMonad m, MailContextMonad m) => Bool -> m ()
+sendInvitationEmails :: ( CryptoRNG m, MonadThrow m, MonadLog m
+                        , TemplatesMonad m, DocumentMonad m, MailContextMonad m )
+                     => Bool -> m ()
 sendInvitationEmails authorsignsimmediately = do
   signlinks <- theDocument >>= \d -> return
                   [sl | sl <- documentsignatorylinks d
                       , matchingSignOrder d sl
                       , not (authorsignsimmediately && onlyAuthorSigns d)
-                      , signatorylinkdeliverymethod sl `elem` [EmailDelivery, MobileDelivery,EmailAndMobileDelivery]
-                      , not $ hasSigned sl
-                      , ((not $ isAuthor sl) || (isAuthor sl && not authorsignsimmediately))
+                      , signatorylinkdeliverymethod sl `elem`
+                        [EmailDelivery, MobileDelivery,EmailAndMobileDelivery]
+                      , notSignedOrNotApprovedOrIsAViewer sl
+                      , ((not $ isAuthor sl)
+                         || (isAuthor sl && not authorsignsimmediately))
                   ]
   forM_ signlinks sendInvitationEmail1
-  where matchingSignOrder d sl = so > documentprevioussignorder d
-                              && so <= documentcurrentsignorder d
-          where so = signatorysignorder sl
-        onlyAuthorSigns d = all (\sl -> isAuthor sl || not (signatoryispartner sl)) (documentsignatorylinks d)
+  where matchingSignOrder d sl = let so = signatorysignorder sl
+                                 in  so >  documentprevioussignorder d
+                                 &&  so <= documentcurrentsignorder d
+        onlyAuthorSigns d =
+          all (\sl -> isAuthor sl || not (isSignatory || isApprover $ sl))
+          (documentsignatorylinks d)
 
 {- |
    Helper function to send emails to invited parties
@@ -125,7 +131,10 @@ sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
   sent <- sendNotifications signatorylink False
 
     (do
-      mail <- theDocument >>= mailInvitation True (Sign <| isSignatory signatorylink |> View) (Just signatorylink)
+      let invitationTo = if | isSignatory signatorylink -> Sign
+                            | isApprover  signatorylink -> Approve
+                            | otherwise                 -> View
+      mail <- theDocument >>= mailInvitation True invitationTo (Just signatorylink)
       -- ?? Do we need to read in the contents? -EN
       -- _attachmentcontent <- liftIO $ documentFileID document >>= getFileContents ctx
       scheduleEmailSendoutWithAuthorSenderThroughService
@@ -167,63 +176,84 @@ sendInvitationEmail1 authorsiglink = do
             theDocument >>= \doc -> scheduleSMS doc $ sms { SMS.kontraInfoForSMS = Just $ SMS.DocumentInvitationSMS (documentid doc) (signatorylinkid authorsiglink)}
           )
 
-{- |
-    Send a reminder email (and update the modification time on the document)
--}
-sendReminderEmail :: (MonadLog m, MonadCatch m, TemplatesMonad m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
-                          Maybe String -> Actor -> Bool -> SignatoryLink  -> m SignatoryLink
-sendReminderEmail custommessage actor automatic siglink = logSignatory (signatorylinkid siglink) $ do
+
+-- | Send a reminder email (and update the modification time on the document).
+sendReminderEmail :: ( MonadLog m, MonadCatch m, TemplatesMonad m, CryptoRNG m
+                     , DocumentMonad m, MailContextMonad m)
+                  => Maybe String -> Actor -> Bool -> SignatoryLink
+                  -> m SignatoryLink
+sendReminderEmail custommessage actor automatic siglink =
+  logSignatory (signatorylinkid siglink) $ do
   doc <- theDocument
   let domail = do
-       mailattachments <- makeMailAttachments doc True
-       mail <- mailDocumentRemind automatic custommessage siglink (not (null mailattachments)) doc
-       docid <- theDocumentID
-       scheduleEmailSendoutWithAuthorSenderThroughService docid $ mail {
-           to = [getMailAddress siglink]
-         -- We only collect delivery information, if signatory had not signed yet
-         , kontraInfoForMail = if (isNothing $ maybesigninfo siglink)
-            then Just $ DocumentInvitationMail (documentid doc) (signatorylinkid siglink)
-            else Just $ OtherDocumentMail $ documentid doc
-         -- We only add attachment after document is signed
-         , attachments = attachments mail ++ (if documentstatus doc == DS.Closed
-          then mailattachments
-          else [])
-       }
+        mailattachments <- makeMailAttachments doc True
+        mail            <- mailDocumentRemind automatic custommessage doc
+                           siglink (not (null mailattachments))
+        docid           <- theDocumentID
+        scheduleEmailSendoutWithAuthorSenderThroughService docid $ mail
+          { to                = [getMailAddress siglink]
+          -- We only collect delivery information, if signatory had not
+          -- signed yet
+          , kontraInfoForMail = if notSignedOrNotApprovedOrIsAViewer siglink
+                                then Just $ DocumentInvitationMail
+                                     (documentid doc) (signatorylinkid siglink)
+                                else Just $ OtherDocumentMail $ documentid doc
+          -- We only add attachment after document is signed
+          , attachments       = attachments mail ++
+                                (if documentstatus doc == DS.Closed
+                                 then mailattachments
+                                 else [])
+          }
       dosms = scheduleSMS doc =<< smsReminder automatic doc siglink
-      useInvitationMethod = case ( documentstatus doc
-                                 , maybesigninfo siglink
-                                 , signatoryispartner siglink
-                                 , signatorylinkconfirmationdeliverymethod siglink
-                                 ) of
-                              (_, Just _, True, NoConfirmationDelivery) -> True -- partner that signed, but has no
-                                                                               -- confirmation method should
-                                                                               -- fallback to invitation method
-                              (_, Just _, True, _) -> False -- partner that signed should use confirmation method
-                              (_, Nothing, True, _) -> True -- partner that didn't sign should use invitation method
-                              (DS.Closed, _, False, NoConfirmationDelivery) -> True -- viewer of signed document with no
-                                                                                -- confirmation method, should
-                                                                                -- fallback to invitation method
-                              (DS.Closed, _, False, _) -> False -- viewer of signed document should use confirmation method
-                              (_, _, False, _)  -> True  -- viewer of pending document should use invitation method
-      invMethod = signatorylinkdeliverymethod siglink
-      confMethod = signatorylinkconfirmationdeliverymethod siglink
-      (sendemail, sendsms) = if useInvitationMethod then
-                                 ( invMethod `elem` [EmailDelivery, EmailAndMobileDelivery]
-                                 , invMethod `elem` [MobileDelivery, EmailAndMobileDelivery]
-                                 )
-                             else
-                                 ( confMethod `elem` [EmailConfirmationDelivery, EmailAndMobileConfirmationDelivery]
-                                 , confMethod `elem` [MobileConfirmationDelivery, EmailAndMobileConfirmationDelivery]
-                                 )
+      useInvitationMethod =
+        case ( documentstatus doc
+             , maybesigninfo siglink
+             , isSignatory siglink || isApprover siglink
+             , signatorylinkconfirmationdeliverymethod siglink
+             ) of
+          (_, Just _,    True, NoConfirmationDelivery)  -> True
+          -- ^ a signing party or approver that signed/approved, but has
+          -- no confirmation method, should fallback to invitation
+          -- method.
+
+          (_, Just _,    True, _)                       -> False
+          -- ^ a signing party or approver that signed/approved should
+          -- use confirmation method.
+
+          (_, Nothing,   True, _)                       -> True
+          -- ^ a signing party/approver that didn't sign/approve
+          -- should use invitation method.
+
+          (DS.Closed, _, False, NoConfirmationDelivery) -> True
+          -- ^ viewer of signed document with no confirmation method,
+          -- should fallback to invitation method.
+
+          (DS.Closed, _, False, _)                      -> False
+          -- ^ viewer of signed document should use confirmation method.
+
+          (_,         _, False, _)                      -> True
+          -- ^ viewer of pending document should use invitation method.
+
+      invMethod            = signatorylinkdeliverymethod siglink
+      confMethod           = signatorylinkconfirmationdeliverymethod siglink
+      (sendemail, sendsms) =
+        if useInvitationMethod then
+          ( invMethod `elem`  [ EmailDelivery,  EmailAndMobileDelivery ]
+          , invMethod `elem`  [ MobileDelivery, EmailAndMobileDelivery ] )
+        else
+          ( confMethod `elem` [ EmailConfirmationDelivery
+                              , EmailAndMobileConfirmationDelivery ]
+          , confMethod `elem` [ MobileConfirmationDelivery
+                              , EmailAndMobileConfirmationDelivery ] )
 
   sent <- case (sendemail, sendsms) of
-           (True, True) -> domail >> dosms >> return True
-           (True, False) -> domail >> return True
-           (False, True) -> dosms >> return True
+           (True,  True ) -> domail >> dosms >> return True
+           (True,  False) -> domail >> return True
+           (False, True ) -> dosms  >> return True
            (False, False) -> return False
 
   when sent $ do
-    when (isPending doc &&  not (hasSigned siglink)) $ do
+    when (isPending doc && notSignedOrNotApprovedOrIsAViewer siglink) $ do
       -- Reset delivery status if the signatory has not signed yet
       logInfo_ "Reminder mail send for signatory that has not signed"
       dbUpdate $ PostReminderSend siglink custommessage automatic actor
@@ -458,3 +488,8 @@ runMailT templates mailNoreplyAddress doc m = do
         , _mctxmailNoreplyAddress   = mailNoreplyAddress
         }
   runTemplatesT (getLang doc, templates) . runMailContextT mctx $ m
+
+-- Local utils
+notSignedOrNotApprovedOrIsAViewer :: SignatoryLink -> Bool
+notSignedOrNotApprovedOrIsAViewer =
+  isSignatoryAndHasNotSigned || isApproverAndHasNotApproved || isViewer

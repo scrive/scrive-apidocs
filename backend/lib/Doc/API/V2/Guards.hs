@@ -17,11 +17,15 @@ module Doc.API.V2.Guards (
 , guardSignatoryHasNotIdentifiedToView
 , guardCanSetAuthenticationToViewForSignatoryWithValues
 , guardCanSetAuthenticationToSignForSignatoryWithValue
+, guardSignatoryRoleIs
+, guardApproverHasNotApproved
 , guardSignatoryHasNotSigned
+, guardSigningPartyHasNeitherSignedNorApproved
 , guardThatAllAttachmentsAreAcceptedOrIsAuthor
 , guardThatAllSignatoryAttachmentsAreUploadedOrMarked
 , guardThatRadioButtonValuesAreValid
 , guardThatAllConsentQuestionsHaveResponse
+, guardThatAuthorIsNotApprover
 -- * Joined guard for read-only functions
 , guardDocumentReadAccess
 , guardThatDocumentIsReadableBySignatories
@@ -64,7 +68,8 @@ guardThatDocumentIs f text doc = unless (f doc) $ apiError $ documentStateError 
 
 -- | Guard that the document status matches, otherwise throw a `documentStateError`
 guardDocumentStatus :: Kontrakcja m => DocumentStatus -> Document -> m ()
-guardDocumentStatus s doc = unless (documentstatus doc == s) $ apiError $ documentStateError errorMsg
+guardDocumentStatus s doc = unless (documentstatus doc == s) $
+                            (apiError . documentStateError $ errorMsg)
   where errorMsg = "The document status should be '" <> (T.pack $ show s) <> "'."
 
 -- | Internal function used in all guards on User
@@ -137,50 +142,87 @@ guardSignatoryNeedsToIdentifyToView slid doc = do
     whenM (signatoryNeedsToIdentifyToView (fromJust msl) doc) $ do
       (apiError $ signatoryStateError "Authorization to view needed before signing")
 
-guardSignatoryHasNotIdentifiedToView :: Kontrakcja m => SignatoryLinkID -> Document -> m ()
+guardSignatoryHasNotIdentifiedToView :: Kontrakcja m
+                                     => SignatoryLinkID -> Document
+                                     -> m ()
 guardSignatoryHasNotIdentifiedToView slid doc =
   when (signatorylinkidentifiedtoview . fromJust $ getSigLinkFor slid doc)
     (apiError $ signatoryStateError "The party has already identified to view")
 
-guardCanSetAuthenticationToViewForSignatoryWithValues :: Kontrakcja m => SignatoryLinkID -> AuthenticationKind -> AuthenticationToViewMethod -> Maybe String -> Maybe String -> Document -> m ()
-guardCanSetAuthenticationToViewForSignatoryWithValues slid authKind authType mSSN mMobile doc = do
-  let sl = fromJust $ getSigLinkFor slid doc
-      authToView = case authKind of
-        AuthenticationToView         -> authType
-        AuthenticationToViewArchived -> signatorylinkauthenticationtoviewmethod sl
-      authToViewArchived = case authKind of
-        AuthenticationToView         -> signatorylinkauthenticationtoviewarchivedmethod sl
-        AuthenticationToViewArchived -> authType
-      authToSign = signatorylinkauthenticationtosignmethod sl
+guardCanSetAuthenticationToViewForSignatoryWithValues
+  :: Kontrakcja m
+  => SignatoryLinkID
+  -> AuthenticationKind -> AuthenticationToViewMethod
+  -> Maybe String -> Maybe String -> Document
+  -> m ()
+guardCanSetAuthenticationToViewForSignatoryWithValues
+  slid authKind authType mSSN mMobile doc = do
   guardAuthenticationMethodsCanMix authToView authToSign authToViewArchived
   -- Check if either a valid SSN for authToView is set or is provided
   case mSSN of
-    Nothing -> unless (isValidSSNForAuthenticationToView authToView $ getPersonalNumber sl) $
-      (apiError $ signatoryStateError "Signatory does not have a valid personal number for the authentication method and you did not provide one")
-    Just ssn -> unless (isValidSSNForAuthenticationToView authToView ssn) $
-      (apiError $ signatoryStateError "The personal number you provided is not valid for the authentication method")
+    Nothing     -> unless (isValidSSNForAuthenticationToView authToView $
+                           getPersonalNumber sl) $
+      (apiStateError $ "Signatory does not have a valid personal number "
+        <> "for the authentication method and you did not provide one")
+
+    Just ssn    -> unless (isValidSSNForAuthenticationToView authToView ssn) $
+      (apiStateError $ "The personal number you provided is not valid "
+        <> "for the authentication method")
+
   -- Check if either a valid mobile for authToView is set or is provided
   case mMobile of
-    Nothing -> unless (isValidMobileForAuthenticationToView authToView $ getMobile sl) $
-      (apiError $ signatoryStateError "Party does not have a valid mobile number set for the authentication method and you did not provide one")
-    Just mobile -> unless (isValidMobileForAuthenticationToView authToView mobile) $
-      (apiError $ signatoryStateError "The mobile number you provided is not valid for the authentication method")
+    Nothing     -> unless (isValidMobileForAuthenticationToView authToView $
+                       getMobile sl) $
+      (apiStateError $ "Party does not have a valid mobile number set "
+        <> "for the authentication method and you did not provide one")
+
+    Just mobile -> unless
+      (isValidMobileForAuthenticationToView authToView mobile) $
+      (apiStateError $ "The mobile number you provided is not valid "
+        <>"for the authentication method")
   where
-    isValidSSNForAuthenticationToView :: AuthenticationToViewMethod -> String -> Bool
-    isValidSSNForAuthenticationToView StandardAuthenticationToView _ = True
-    isValidSSNForAuthenticationToView SMSPinAuthenticationToView   _ = True
-    isValidSSNForAuthenticationToView SEBankIDAuthenticationToView ssn = isGood $ asValidSwedishSSN   ssn
-    isValidSSNForAuthenticationToView NOBankIDAuthenticationToView ssn = isGood $ asValidNorwegianSSN ssn
-    isValidSSNForAuthenticationToView DKNemIDAuthenticationToView  ssn = isGood $ asValidDanishSSN    ssn
-    isValidSSNForAuthenticationToView FITupasAuthenticationToView  ssn = isGood $ asValidFinnishSSN   ssn
-    isValidMobileForAuthenticationToView :: AuthenticationToViewMethod -> String -> Bool
-    isValidMobileForAuthenticationToView StandardAuthenticationToView _ = True
-    isValidMobileForAuthenticationToView SMSPinAuthenticationToView mobile = isGood (asValidPhoneForSMS mobile)
-    isValidMobileForAuthenticationToView SEBankIDAuthenticationToView _ = True
-    isValidMobileForAuthenticationToView DKNemIDAuthenticationToView  _ = True
-    isValidMobileForAuthenticationToView NOBankIDAuthenticationToView mobile = isGood phoneValidation || isEmpty phoneValidation
-      where phoneValidation = asValidPhoneForNorwegianBankID mobile
-    isValidMobileForAuthenticationToView FITupasAuthenticationToView  _ = True
+    sl                 = fromJust $ getSigLinkFor slid doc
+    apiStateError      = apiError . signatoryStateError
+
+    authToView         = case authKind of
+                           AuthenticationToView         -> authType
+                           AuthenticationToViewArchived ->
+                             signatorylinkauthenticationtoviewmethod sl
+    authToViewArchived = case authKind of
+                           AuthenticationToView         ->
+                             signatorylinkauthenticationtoviewarchivedmethod sl
+                           AuthenticationToViewArchived -> authType
+    authToSign         = signatorylinkauthenticationtosignmethod sl
+
+    isValidSSNForAuthenticationToView
+      :: AuthenticationToViewMethod -> String -> Bool
+    isValidSSNForAuthenticationToView StandardAuthenticationToView _      =
+      True
+    isValidSSNForAuthenticationToView SMSPinAuthenticationToView   _      =
+      True
+    isValidSSNForAuthenticationToView SEBankIDAuthenticationToView    ssn =
+      isGood . asValidSwedishSSN   $ ssn
+    isValidSSNForAuthenticationToView NOBankIDAuthenticationToView    ssn =
+      isGood . asValidNorwegianSSN $ ssn
+    isValidSSNForAuthenticationToView DKNemIDAuthenticationToView     ssn =
+      isGood . asValidDanishSSN    $ ssn
+    isValidSSNForAuthenticationToView FITupasAuthenticationToView     ssn =
+      isGood . asValidFinnishSSN   $ ssn
+
+    isValidMobileForAuthenticationToView
+      :: AuthenticationToViewMethod -> String -> Bool
+    isValidMobileForAuthenticationToView StandardAuthenticationToView _      =
+      True
+    isValidMobileForAuthenticationToView SMSPinAuthenticationToView mobile   =
+      isGood . asValidPhoneForSMS $ mobile
+    isValidMobileForAuthenticationToView SEBankIDAuthenticationToView _      =
+      True
+    isValidMobileForAuthenticationToView DKNemIDAuthenticationToView  _      =
+      True
+    isValidMobileForAuthenticationToView NOBankIDAuthenticationToView mobile =
+      (isGood || isEmpty) $ asValidPhoneForNorwegianBankID mobile
+    isValidMobileForAuthenticationToView FITupasAuthenticationToView  _      =
+      True
 
 guardCanSetAuthenticationToSignForSignatoryWithValue :: Kontrakcja m => SignatoryLinkID -> AuthenticationToSignMethod -> Maybe String -> Maybe String -> Document -> m ()
 guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobile doc = do
@@ -234,7 +276,11 @@ guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobil
             Good _ -> return ()
 
 
-guardAuthenticationMethodsCanMix :: Kontrakcja m => AuthenticationToViewMethod -> AuthenticationToSignMethod -> AuthenticationToViewMethod -> m ()
+guardAuthenticationMethodsCanMix
+  :: Kontrakcja m
+  => AuthenticationToViewMethod -> AuthenticationToSignMethod
+  -> AuthenticationToViewMethod
+  -> m ()
 guardAuthenticationMethodsCanMix authToView authToSign authToViewArchived = do
   when (not $ authenticationMethodsCanMix authToView authToSign authToViewArchived)
     (apiError $ signatoryStateError $ mconcat
@@ -247,10 +293,38 @@ guardAuthenticationMethodsCanMix authToView authToSign authToViewArchived = do
       , " (archived)."
       ])
 
-guardSignatoryHasNotSigned :: Kontrakcja m => SignatoryLinkID -> Document -> m ()
+guardSignatoryRoleIs :: Kontrakcja m
+                     => SignatoryRole -> SignatoryLinkID -> Document -> m ()
+guardSignatoryRoleIs roleExpected slid doc = do
+  let msl            = getSigLinkFor slid doc
+      roleActual     = signatoryrole <$> msl
+      showRoleActual = maybe "<none>" show roleActual
+  when (maybe True ((/=) roleExpected) roleActual) $
+    (apiError . signatoryStateError . T.pack $
+     "Wrong signatory role, expected '" ++ show roleExpected ++
+      "', but got '" ++ showRoleActual ++ "'")
+
+guardApproverHasNotApproved :: Kontrakcja m
+                            => SignatoryLinkID -> Document -> m ()
+guardApproverHasNotApproved  slid doc =
+  when (isApproverAndHasApproved $ getSigLinkFor slid doc) $
+  (apiError . signatoryStateError $
+    "The approver has already approved")
+
+guardSignatoryHasNotSigned :: Kontrakcja m
+                           => SignatoryLinkID -> Document -> m ()
 guardSignatoryHasNotSigned slid doc =
-  when (hasSigned . fromJust $ getSigLinkFor slid doc)
-    (apiError $ signatoryStateError $ T.pack $ "The signatory has already signed")
+  when (isSignatoryAndHasSigned $ getSigLinkFor slid doc) $
+  (apiError . signatoryStateError $ "The signatory has already signed")
+
+guardSigningPartyHasNeitherSignedNorApproved :: Kontrakcja m
+                                             => SignatoryLinkID -> Document
+                                             -> m ()
+guardSigningPartyHasNeitherSignedNorApproved slid doc =
+  when ((isApproverAndHasApproved || isSignatoryAndHasSigned) $
+        getSigLinkFor slid doc) $
+  (apiError . signatoryStateError $
+    "The signing party has either signed or approved already")
 
 -- Checks if document can be started. Throws matching API exception if it does not
 guardThatDocumentCanBeStarted :: Kontrakcja m => Document -> m ()
@@ -267,6 +341,14 @@ guardThatDocumentCanBeStarted doc = do
        apiError $ documentStateError "Some parties have an invalid personal/mobile numbers, their 'authentication_to_sign' requires it to be valid or empty."
     unless (all signatoryHasValidMobileForIdentifyToView $ documentsignatorylinks doc) $ do
        apiError $ documentStateError "Some parties have an invalid mobile number and it is required for identification to view document."
+    when (any (isAuthor && isApprover) $ documentsignatorylinks doc) $ do
+       apiError $ documentStateError "Author can't be an approver"
+    unless (all signatoryThatIsApproverHasStandardAuthToSign $ documentsignatorylinks doc) $ do
+       apiError $ documentStateError "All approvers have to have standard authentication to sign"
+    unless (all signatoryThatIsApproverHasNoPlacements $ documentsignatorylinks doc) $ do
+       apiError $ documentStateError "No approver can have placed fields"
+    unless (any isSignatory $ documentsignatorylinks doc) $ do
+       apiError $ documentStateError "Document has to have at least one signing party"
     when (isNothing $ documentfile doc) $ do
        apiError $ documentStateError "Document must have a file before it can be started"
     return ()
@@ -307,6 +389,12 @@ guardThatDocumentCanBeStarted doc = do
       NOBankIDAuthenticationToView -> (isGood $ asValidPhoneForNorwegianBankID (getMobile sl )) || (isEmpty $ asValidPhoneForNorwegianBankID (getMobile sl))
       SMSPinAuthenticationToView -> isGood $ asValidPhoneForSMS (getMobile sl)
       _ -> True
+
+    signatoryThatIsApproverHasStandardAuthToSign sl = (not $ isApprover sl)
+      || (signatorylinkauthenticationtosignmethod sl == StandardAuthenticationToSign)
+
+    signatoryThatIsApproverHasNoPlacements sl = (not $ isApprover sl)
+      || (null $ concat $ fieldPlacements <$> signatoryfields sl)
 
     checkEmailForConfirmation sl =
       null (getEmail sl) || isGood (asValidEmail $ getEmail sl)
@@ -357,10 +445,17 @@ guardThatConsentModulesAreOnSigningParties :: Kontrakcja m => Document -> m ()
 guardThatConsentModulesAreOnSigningParties doc =
   forM_ (documentsignatorylinks doc) $ \signatory -> do
     case signatorylinkconsenttitle signatory of
-      Just _ | not (signatoryispartner signatory) ->
+      Just _ | not (isSignatory signatory) ->
         apiError $ requestParameterInvalid "consent_module"
           "Consent module not allowed on non-signing party"
       _ -> return ()
+
+guardThatAuthorIsNotApprover :: Kontrakcja m => Document -> m ()
+guardThatAuthorIsNotApprover doc =
+    if any (isAuthor && isApprover) (documentsignatorylinks doc)
+      then apiError $ requestParameterInvalid "document"
+          "Author can't be an approver"
+      else return ()
 
 guardThatAllConsentQuestionsHaveResponse :: Kontrakcja m => SignatoryLinkID -> SignatoryConsentResponsesForSigning -> Document -> m ()
 guardThatAllConsentQuestionsHaveResponse slid (SignatoryConsentResponsesForSigning responses) doc = do

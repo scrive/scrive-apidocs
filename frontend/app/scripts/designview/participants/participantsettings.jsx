@@ -80,10 +80,25 @@ module.exports = React.createClass({
     });
   },
   roleOptions: function () {
-    return [
-      {name: localization.designview.addParties.roleSignatory, value: "signatory", selected: this.props.model.signs()},
-      {name: localization.designview.addParties.roleViewer, value: "viewer", selected: !this.props.model.signs()}
-    ];
+    let options = [];
+    options.push({
+      name: localization.designview.addParties.roleSignatory,
+      value: "signatory",
+      selected: this.props.model.signs()
+    });
+    options.push({
+      name: localization.designview.addParties.roleViewer,
+      value: "viewer",
+      selected: !this.props.model.signs()
+    });
+    if (!this.props.model.author()) {
+      options.push({
+        name: localization.designview.addParties.roleApprover,
+        value: "approver",
+        selected: this.props.model.approves()
+      });
+    }
+    return options;
   },
   authenticationToViewText: function (t) {
     if (t == "standard") {
@@ -400,7 +415,9 @@ module.exports = React.createClass({
               name={
                 sig.signs() ?
                 localization.designview.addParties.roleSignatory :
-                localization.designview.addParties.roleViewer
+                  (sig.approves() ?
+                  localization.designview.addParties.roleApprover :
+                  localization.designview.addParties.roleViewer)
               }
               width={297}
               options={self.roleOptions()}
@@ -416,6 +433,8 @@ module.exports = React.createClass({
                     authenticationToSign: currFF.firstAllowedAuthenticationToSign()
                   };
                   sig.makeSignatory(args);
+                } else if (v === "approver") {
+                  sig.makeApprover();
                 } else if (v === "viewer") {
                   sig.makeViewer();
                 }

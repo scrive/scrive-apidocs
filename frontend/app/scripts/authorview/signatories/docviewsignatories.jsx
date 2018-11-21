@@ -34,7 +34,7 @@ var _ = require("underscore");
     hasAutomaticReminder: function () {
       var document = this.props.document;
       var hasNotSigned = _.any(document.signatories(), function (s) {
-        return s.signs() && !s.hasSigned() && !s.padDelivery();
+        return (s.signs() || s.approves()) && !s.hasSigned() && !s.padDelivery();
       });
 
       return document.pending()

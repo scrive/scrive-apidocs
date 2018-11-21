@@ -66,13 +66,26 @@ smsInvitationToAuthor :: (MailContextMonad m, MonadDB m, MonadTime m, MonadThrow
 smsInvitationToAuthor doc sl = do
   mkSMS doc sl (Just $ DocumentInvitationSMS (documentid doc) (signatorylinkid sl)) =<< renderLocalTemplate doc "_smsInvitationToAuthor" (smsFields doc sl)
 
-smsReminder :: (MailContextMonad m, MonadDB m, MonadThrow m, MonadTime m, TemplatesMonad m) => Bool -> Document -> SignatoryLink -> m SMS
-smsReminder automatic doc sl = mkSMS doc sl smstypesignatory =<< renderLocalTemplate doc template (smsFields doc sl)
-  where (smstypesignatory, template) = case maybesigninfo sl of
-          Just _  -> (Just $ (OtherDocumentSMS $ documentid doc), templateName "_smsReminderSigned")
-          Nothing | automatic -> (invitation, templateName "_smsReminderAutomatic")
-                  | otherwise -> (invitation, templateName "_smsReminder")
-        invitation = Just $ DocumentInvitationSMS (documentid doc) (signatorylinkid sl)
+smsReminder :: ( MailContextMonad m, MonadDB m
+               , MonadThrow m, MonadTime m, TemplatesMonad m )
+            => Bool -> Document -> SignatoryLink -> m SMS
+smsReminder automatic doc sl =
+  mkSMS doc sl smstypesignatory
+  =<< renderLocalTemplate doc template (smsFields doc sl)
+  where
+    (smstypesignatory, template) =
+      if | isSignatoryAndHasSigned sl || isApproverAndHasApproved sl
+                         -> ( Just $ (OtherDocumentSMS $ documentid doc)
+                            , templateName "_smsReminderSigned" )
+         | automatic && isApprover sl
+                         -> ( invitation
+                            , templateName "_smsReminderApproveAutomatic" )
+         | automatic     -> ( invitation, templateName "_smsReminderAutomatic" )
+         | isApprover sl -> ( invitation, templateName "_smsReminderApprove" )
+         | otherwise     -> ( invitation, templateName "_smsReminder" )
+
+    invitation = Just $ DocumentInvitationSMS
+                        (documentid doc) (signatorylinkid sl)
 
 smsClosedNotification :: (MailContextMonad m, MonadDB m, MonadTime m, MonadThrow m, TemplatesMonad m) => Document -> SignatoryLink -> Bool -> Bool -> m SMS
 smsClosedNotification doc sl withEmail sealFixed = do

@@ -126,11 +126,11 @@ test_startDocumentCharging = do
         randomUpdate $ ResetSignatoryDetails ([
               (def {   signatoryfields = (signatoryfields $ fromJust $ getAuthorSigLink doc)
                               , signatoryisauthor = True
-                              , signatoryispartner = False
+                              , signatoryrole     = SignatoryRoleViewer
                               , maybesignatory = Just $ userid user })
             , (def {   signatorysignorder = SignOrder 1
                               , signatoryisauthor = False
-                              , signatoryispartner = True
+                              , signatoryrole = SignatoryRoleSigningParty
                               , signatoryfields = [
                                   fieldForTests (NameFI (NameOrder 1)) "Fred"
                                 , fieldForTests (NameFI (NameOrder 2)) "Frog"

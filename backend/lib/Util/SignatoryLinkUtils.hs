@@ -14,11 +14,16 @@ module Util.SignatoryLinkUtils (
   isSigLinkFor,
   getAuthorSigLink,
   getAuthorName,
-  hasSigned,
+  isSignatoryAndHasSigned,
+  isSignatoryAndHasNotSigned,
+  isApproverAndHasApproved,
+  isApproverAndHasNotApproved,
   isAuthor,
   isAuthorOrAuthorsAdmin,
   isDocumentVisibleToUser,
   isSignatory,
+  isApprover,
+  isViewer,
   getSigLinkFor,
   hasSeen,
   SignatoryLinkIdentity,
@@ -77,7 +82,8 @@ instance SignatoryLinkIdentity SignatoryLinkID where
    Identify a User based on UserID or Email (if UserID fails).
  -}
 instance SignatoryLinkIdentity User where
-  isJustSigLinkFor u sl = isSigLinkFor (userid u) sl || isSigLinkFor (getEmail u) sl
+  isJustSigLinkFor u sl =
+    isSigLinkFor (userid u) sl || isSigLinkFor (getEmail u) sl
 
 instance (SignatoryLinkIdentity a) => SignatoryLinkIdentity (Maybe a) where
   isJustSigLinkFor (Just a) sl = isSigLinkFor a sl
@@ -114,19 +120,48 @@ instance (SignatoryLinkIdentity a) => MaybeSignatoryLink (Document, a) where
 getAuthorSigLink :: Document -> Maybe SignatoryLink
 getAuthorSigLink doc = getSigLinkFor signatoryisauthor doc
 
-{- |
-   Given a Document, return the best guess at the author's name:
-     * First Name + Last Name
-     * email address if no name info
--}
+
+-- | Given a Document, return the best guess at the author's name:
+--     * First Name + Last Name
+--     * email address if no name info
 getAuthorName :: Document -> String
 getAuthorName doc = maybe "" getSmartName $ getAuthorSigLink doc
 
-{- |
-   Does the given SignatoryLink have SignInfo (meaning the signatory has signed)?
- -}
-hasSigned :: (MaybeSignatoryLink msl) => msl -> Bool
-hasSigned msl = maybe False (isJust . maybesigninfo) (getMaybeSignatoryLink msl)
+hasSignInfoAndRoleIs :: (MaybeSignatoryLink msl)
+                     => SignatoryRole -> msl -> Bool
+hasSignInfoAndRoleIs role msl = maybe False
+  (\sl -> (isJust . maybesigninfo $ sl) && (signatoryrole sl == role))
+  (getMaybeSignatoryLink msl)
+
+hasNoSignInfoAndRoleIs :: (MaybeSignatoryLink msl)
+                       => SignatoryRole -> msl -> Bool
+hasNoSignInfoAndRoleIs role msl = maybe False
+  (\sl -> (isNothing . maybesigninfo $ sl) && (signatoryrole sl == role))
+  (getMaybeSignatoryLink msl)
+
+-- | Does the given SignatoryLink belong to a signing party and does
+-- it have a SignInfo (meaning the signatory has signed)?
+isSignatoryAndHasSigned :: (MaybeSignatoryLink msl) => msl -> Bool
+isSignatoryAndHasSigned = hasSignInfoAndRoleIs SignatoryRoleSigningParty
+
+-- | Does the given SignatoryLink belong to a signing party that has
+-- NOT signed yet?
+--
+-- Note that @not . isSignatoryAndHasSigned@ is subtly different from
+-- @isSignatoryAndHasNotSigned@ - the former can be (vacuously) True
+-- when the signlink belongs to a viewer or an approver.
+isSignatoryAndHasNotSigned :: (MaybeSignatoryLink msl) => msl -> Bool
+isSignatoryAndHasNotSigned = hasNoSignInfoAndRoleIs SignatoryRoleSigningParty
+
+-- | Does the given SignatoryLink belong to an approver and does it have a
+-- SignInfo (meaning the document was approved)?
+isApproverAndHasApproved :: (MaybeSignatoryLink msl) => msl -> Bool
+isApproverAndHasApproved = hasSignInfoAndRoleIs SignatoryRoleApprover
+
+-- | Does the given SignatoryLink belong to an approver that has NOT
+-- approved the document yet?
+isApproverAndHasNotApproved :: (MaybeSignatoryLink msl) => msl -> Bool
+isApproverAndHasNotApproved = hasNoSignInfoAndRoleIs SignatoryRoleApprover
 
 {- |
    Does the given SignatoryLink have a maybeseeninfo (is has been seen)?
@@ -141,27 +176,40 @@ isAuthor :: (MaybeSignatoryLink msl) => msl -> Bool
 isAuthor = isSigLinkFor signatoryisauthor
 
 isAuthorOrAuthorsAdmin :: User -> Document -> Bool
-isAuthorOrAuthorsAdmin user doc = isAuthor (doc, user) || (useriscompanyadmin user && documentauthorugid doc == Just (usergroupid user))
+isAuthorOrAuthorsAdmin user doc =
+  isAuthor (doc, user) ||
+  (useriscompanyadmin user && documentauthorugid doc == Just (usergroupid user))
 
 isDocumentVisibleToUser :: User -> Document -> Bool
-isDocumentVisibleToUser user doc = isJust (getSigLinkFor user doc) || isAuthorOrAuthorsAdmin user doc
+isDocumentVisibleToUser user doc =
+  isJust (getSigLinkFor user doc) || isAuthorOrAuthorsAdmin user doc
 
-{- |
-   Is the given SignatoryLink marked as a signatory (someone who can must sign)?
- -}
+
+-- | Is the given SignatoryLink marked as a signatory (someone who must sign)?
 isSignatory :: (MaybeSignatoryLink msl) => msl -> Bool
-isSignatory = isSigLinkFor signatoryispartner
+isSignatory = isSigLinkFor ((==) SignatoryRoleSigningParty . signatoryrole)
 
-{- |
-   Does i identify sl?
- -}
-isSigLinkFor :: (MaybeSignatoryLink sl, SignatoryLinkIdentity i) => i -> sl -> Bool
+-- | Is the given SignatoryLink marked as an approver (someone who
+-- must approve the document)?
+isApprover :: (MaybeSignatoryLink msl) => msl -> Bool
+isApprover  = isSigLinkFor ((==) SignatoryRoleApprover     . signatoryrole)
+
+-- | Is the given SignatoryLink marked as a viewer (someone who can
+-- review the document)?
+isViewer :: (MaybeSignatoryLink msl) => msl -> Bool
+isViewer    = isSigLinkFor ((==) SignatoryRoleViewer       . signatoryrole)
+
+
+
+-- | Does i identify sl?
+isSigLinkFor :: (MaybeSignatoryLink sl, SignatoryLinkIdentity i)
+             => i -> sl -> Bool
 isSigLinkFor i sl = maybe False (isJustSigLinkFor i) (getMaybeSignatoryLink sl)
 
-{- |
-  Get the SignatoryLink from a document given a matching value.
- -}
-getSigLinkFor :: (SignatoryLinkIdentity a) => a -> Document -> Maybe SignatoryLink
+
+-- | Get the SignatoryLink from a document given a matching value.
+getSigLinkFor :: (SignatoryLinkIdentity a)
+              => a -> Document -> Maybe SignatoryLink
 getSigLinkFor a d = find (isSigLinkFor a) (documentsignatorylinks d)
 
 ----------------------------------------

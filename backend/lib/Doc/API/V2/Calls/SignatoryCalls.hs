@@ -1,6 +1,7 @@
 module Doc.API.V2.Calls.SignatoryCalls (
   docApiV2SigReject
 , docApiV2SigCheck
+, docApiV2SigApprove
 , docApiV2SigSign
 , docApiV2SigIdentifyToViewWithSmsPin
 , docApiV2SigSendSmsPinToSign
@@ -58,23 +59,31 @@ docApiV2SigReject :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigReject did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
   mh <- getMagicHashForSignatoryAction did slid
-  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh)
+    `withDocumentM` do
+
     -- Guards
     guardThatObjectVersionMatchesIfProvided did
-    guardDocumentStatus Pending =<< theDocument
-    guardSignatoryHasNotSigned slid =<< theDocument
+    guardDocumentStatus      Pending                  =<< theDocument
+    guardSigningPartyHasNeitherSignedNorApproved slid =<< theDocument
+
     -- Parameters
-    rejectReason <- (fmap $ T.unpack . T.strip) <$> apiV2ParameterOptional (ApiV2ParameterText "reason")
+    rejectReason <- (fmap $ T.unpack . T.strip)
+                    <$> apiV2ParameterOptional (ApiV2ParameterText "reason")
+
     -- API call actions
-    ctx <- getContext
-    sl <- guardGetSignatoryFromIdForDocument slid
+    sl    <- guardGetSignatoryFromIdForDocument slid
+    ctx   <- getContext
     actor <- signatoryActor ctx sl
+
     switchLang . getLang =<< theDocument
-    dbUpdate $ RejectDocument slid rejectReason actor
+    dbUpdate $ RejectDocument  slid (isApprover sl) rejectReason actor
     postDocumentRejectedChange slid rejectReason =<< theDocument
+
     -- Result
     doc <- theDocument
-    return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc),d)) doc
+    return $ Ok $
+      (\d -> (unjsonDocument (documentAccessForSlid slid doc),d)) doc
 
 
 docApiV2SigSigningStatusCheck :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
@@ -87,7 +96,7 @@ docApiV2SigSigningStatusCheck did slid = logDocumentAndSignatory did slid . api 
     lastCheckStatus <- dbQuery $ GetDocumentSigningLastCheckStatus slid
     return $ Ok $ JSObject (J.toJSObject $ [
         ("in_progress", JSBool isDocumentSigningInProgress)
-      , ("signed", JSBool $ hasSigned sl)
+      , ("signed", JSBool $ isSignatoryAndHasSigned sl)
       , ("last_check_status", case lastCheckStatus of
           Nothing -> JSNull
           Just t -> JSString $ J.toJSString $ T.unpack t
@@ -143,6 +152,37 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
       DKNemIDAuthenticationToSign  -> return ()
     -- Return
     return $ Ok ()
+
+docApiV2SigApprove :: Kontrakcja m => DocumentID -> SignatoryLinkID
+                   -> m Response
+docApiV2SigApprove did slid = logDocumentAndSignatory did slid . api $ do
+  -- Permissions
+  mh     <- getMagicHashForSignatoryAction did slid
+  olddoc <- dbQuery
+            (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh)
+
+  olddoc `withDocument` do
+
+    -- Guards
+    guardThatObjectVersionMatchesIfProvided    did
+    guardSignatoryNeedsToIdentifyToView        slid =<< theDocument
+    guardSignatoryRoleIs SignatoryRoleApprover slid =<< theDocument
+    guardApproverHasNotApproved                slid =<< theDocument
+
+    -- API call actions
+    sl    <- guardGetSignatoryFromIdForDocument slid
+    ctx   <- getContext
+    actor <- signatoryActor ctx sl
+
+    switchLang . getLang =<< theDocument
+    dbUpdate $ ApproveDocument slid mh actor
+    postDocumentPendingChange olddoc
+
+    -- Result
+    doc <- theDocument
+    return $ Ok $
+      (\d -> (unjsonDocument (documentAccessForSlid slid doc),d)) doc
+
 
 docApiV2SigSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do

@@ -123,8 +123,11 @@ instance MonadDB m => DBQuery m GetDocumentTags (S.Set DocumentTag) where
       sqlWhereEq "document_id" did
     S.fromList <$> fetchMany toComposite
 
-data GetSignatoryLinkByID = GetSignatoryLinkByID DocumentID SignatoryLinkID (Maybe MagicHash)
-instance (MonadDB m, MonadThrow m) => DBQuery m GetSignatoryLinkByID SignatoryLink where
+data GetSignatoryLinkByID =
+  GetSignatoryLinkByID DocumentID SignatoryLinkID (Maybe MagicHash)
+
+instance (MonadDB m, MonadThrow m) =>
+  DBQuery m GetSignatoryLinkByID SignatoryLink where
   query (GetSignatoryLinkByID did slid mmh) = do
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "signatory_links" $ do
       sqlJoinOn "documents" "signatory_links.document_id = documents.id"

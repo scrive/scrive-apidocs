@@ -567,6 +567,7 @@
 "_docviewSignatoryInvitationOrderLabel":"Invitation order",
 "_docviewSignatoryInvitationPad":"in-person meeting",
 "_docviewSignatoryInvitationSMS":"SMS",
+"_docviewSignatoryRoleApprover":"approver",
 "_docviewSignatoryRoleLabel":"Role",
 "_docviewSignatoryRoleSignatory":"signing party",
 "_docviewSignatoryRoleViewer":"viewer",
