@@ -143,8 +143,20 @@
   background-image: url('/img/icon-delete.png');
 }
 
-.shareable-link-url {
+.info-text-input.shareable-link-url {
   input {
     min-width: 550px;
+  }
+
+  .shareable-link-icon-copy {
+    &:extend(.shareable-link-icon);
+    margin-top: 0px;
+
+    background-color: transparent;
+    background-image: url('/img/icon-copy.svg');
+
+    &:hover {
+      background-color: transparent;
+    }
   }
 }

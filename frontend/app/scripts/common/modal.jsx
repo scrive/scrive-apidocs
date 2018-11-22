@@ -47,7 +47,8 @@ var Container = exports.Container = React.createClass({
     onShow: React.PropTypes.func,
     onHide: React.PropTypes.func,
     onClose: React.PropTypes.func,
-    id: React.PropTypes.string
+    id: React.PropTypes.string,
+    marginTop: React.PropTypes.number
   },
 
   getInitialState: function () {
@@ -105,11 +106,12 @@ var Container = exports.Container = React.createClass({
     var minimalMargin = 20;
     var computedWidth = $(window).width() - 2 * minimalMargin;
     var width = Math.min(this.props.width || 640, computedWidth);
+    var marginTop = this.props.marginTop || 50;
     var left = Math.floor(($(window).width() - width) / 2);
 
     var containerStyle = {
       marginLeft: Math.max(left, minimalMargin) + $(window).scrollLeft(),
-      marginTop: 50 + $(window).scrollTop(),
+      marginTop: marginTop + $(window).scrollTop(),
       marginBottom: 50,
       width: width
     };

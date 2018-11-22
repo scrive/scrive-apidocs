@@ -73,7 +73,8 @@ var _ = require("underscore");
 
       // More
       buttonTitle     : React.PropTypes.string,
-      buttonClassName : React.PropTypes.string
+      buttonClassName : React.PropTypes.string,
+      buttonToolTip   : React.PropTypes.string
     },
     getDefaultProps : function() {
         return {
@@ -255,9 +256,10 @@ var _ = require("underscore");
            {/*if*/ this.props.onRemove != undefined &&
               <div ref="close" className="closer" onClick={this.props.onRemove}/>
            }
-           {/*if*/ (this.props.buttonTitle != undefined && this.props.onButtonClick != undefined) &&
+           {/*if*/ (this.props.onButtonClick != undefined) &&
               <div className="internal-button-wrapper">
                 <div
+                  title={this.props.buttonTooltip}
                   className={"internal-button " + (this.props.buttonClassName || "")}
                   onClick={this.props.onButtonClick}
                 >

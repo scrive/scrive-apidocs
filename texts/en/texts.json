@@ -929,6 +929,8 @@
 "_tablestatusesViewedOnline":"Reviewed online",
 "_tbsYouSignWithEleg":"I sign the document \"$document_title$\" with transaction number $document_id$.",
 "_templatesShareableLinkColumn":"Link",
+"_templatesShareableLinkCopyButtonTooltip": "Copy to clipboard",
+"_templatesShareableLinkCopySucceeded": "Copied to clipboard!",
 "_templatesShareableLinkDiscardButton":"Discard",
 "_templatesShareableLinkDiscardText":"Do you really want to discard this shareable link? When someone uses a discarded link, an error message will be displayed.",
 "_templatesShareableLinkDiscardTitle":"Discard shareable link",

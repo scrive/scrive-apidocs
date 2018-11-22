@@ -988,6 +988,8 @@ javascriptLocalisation =
                       , discardButton: "$_templatesShareableLinkDiscardButton()$"
                       , discardingSucceeded: "$_templatesShareableLinkDiscardingSucceeded()$"
                       , discardingFailed: "$_templatesShareableLinkDiscardingFailed()$"
+                      , copyButtonTooltip: "$_templatesShareableLinkCopyButtonTooltip()$"
+                      , copySucceeded: "$_templatesShareableLinkCopySucceeded()$"
                     }
                 }
             ,  attachments : {

@@ -50,6 +50,7 @@ var FlashMessage = exports.FlashMessage = function (args) {
       {
         type: args.type,
         content: args.content,
+        hideTimeout: args.hideTimeout,
         onHide: onHide
       }
     ),

@@ -203,6 +203,19 @@ var RemoveModalContent = React.createClass({
       };
     },
 
+    copyShareableLinkToClipboard: function() {
+      var self = this;
+      return function() {
+        self.selectShareableLink();
+        document.execCommand("copy");
+        new FlashMessage({
+          type: "success",
+          content: localization.archive.templates.shareableLink.copySucceeded,
+          hideTimeout: 2000
+          });
+      };
+    },
+
     openGenerateShareableLinkModal: function(template) {
       var self = this;
       return function() {
@@ -474,7 +487,8 @@ var RemoveModalContent = React.createClass({
           </Modal.Container>
 
           <Modal.Container active={self.state.showShareableLinkModal}
-                           onClose={this.closeShowShareableLinkModal}>
+                           onClose={this.closeShowShareableLinkModal}
+                           marginTop={100}>
             <Modal.Header
               title={localization.archive.templates.shareableLink.showTitle}
               showClose={true}
@@ -483,6 +497,7 @@ var RemoveModalContent = React.createClass({
             <Modal.Content>
               <p>{localization.archive.templates.shareableLink.showText}</p>
               <InfoTextInput
+                id="template-shareable-link"
                 inputtype="text"
                 className="shareable-link-url"
                 ref="input"
@@ -490,6 +505,9 @@ var RemoveModalContent = React.createClass({
                 disabled={false}
                 value={templateShareableLink}
                 onClick={this.selectShareableLink}
+                buttonClassName="shareable-link-icon-copy"
+                buttonTooltip={localization.archive.templates.shareableLink.copyButtonTooltip}
+                onButtonClick={this.copyShareableLinkToClipboard()}
               />
             </Modal.Content>
             <Modal.Footer>

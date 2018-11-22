@@ -5,15 +5,17 @@ var $ = require("jquery");
 var FlashMessageView = React.createClass({
   propTypes: {
     type: React.PropTypes.string.isRequired,
-    content: React.PropTypes.string.isRequired
+    content: React.PropTypes.string.isRequired,
+    hideTimeout: React.PropTypes.number
   },
   getInitialState: function () {
     return {visible: false};
   },
   componentDidMount: function () {
+    var timeout = this.props.hideTimeout || 10000;
     this.getDOMNode().addEventListener("transitionend", this.onTransitionEnd);
     this._showTimeout = window.setTimeout(this.show, 100);
-    this._hideTimeout = window.setTimeout(this.hide, 10000);
+    this._hideTimeout = window.setTimeout(this.hide, timeout);
   },
   componentWillUnmount: function () {
     this.getDOMNode().removeEventListener(
