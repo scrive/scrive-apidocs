@@ -15,6 +15,9 @@ _server_pid
 _grunt_pid
 _s3_pid
 s3files/
+test_s3files/
+test_data/
+template.yaml
 kontrakcja_test.conf
 kontrakcja-server
 *.cookies

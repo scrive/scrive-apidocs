@@ -33,7 +33,7 @@ module.exports = function(config) {
 
     autoWatch: false,
 
-    browsers: ["ChromeCanary"],
+    browsers: ["PhantomJS"],
 
     singleRun: false,
 

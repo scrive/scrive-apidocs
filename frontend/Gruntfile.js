@@ -181,7 +181,8 @@ module.exports = function (grunt) {
         }
       },
       generateLocalization: {
-        command: (newBuild ? "cabal new-run localization" : "./dist/build/localization/localization"),
+        command: (process.env.LOCALIZATION_BIN ||
+                  (newBuild ? "cabal new-run localization" : "./dist/build/localization/localization")),
         options: {
           execOptions: {
             cwd: "<%= yeoman.kontrakcja %>"
@@ -414,6 +415,19 @@ module.exports = function (grunt) {
       "uglify:dev",
       "uglify:signview",
       "concurrent:watch"
+    ]);
+  });
+
+  grunt.registerTask("build:nix", function (target) {
+    grunt.task.run([
+      "clean:dist",
+      "updateLocalization",
+      "compileStyles",
+      "buildJs",
+      "cssmin:dist",
+      "deploybuild:dist",
+      "concurrent:dist",
+      "shell:updateLastBuilt"
     ]);
   });
 
