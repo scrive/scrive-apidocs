@@ -18,6 +18,7 @@ import TestKontra as T
 import User.Email
 import User.Model
 import UserGroup.Data
+import UserGroup.Data.PaymentPlan
 import UserGroup.Model
 
 userGroupTests :: TestEnvSt -> Test
@@ -32,6 +33,7 @@ userGroupTests env  = testGroup "UserGroup"
   , testThat "Test find a parent group, where charging happens" env testFindInheritedPricePlan
   , testThat "Cannot delete a UserGroup with subgroups" env testCannotDeleteUserGroupWithSubgroups
   , testThat "Test setting user group parents" env testChangeUserGroupParent
+  , testThat "User group root must have invoice" env testUserGroupRootMustHaveInvoice
   ]
 
 testCreateGroups :: TestEnv ()
@@ -180,7 +182,7 @@ testFindInheritedPricePlan = do
     . set ugInvoicing     None
     $ ugB0
   Just ugwithparents <- dbQuery . UserGroupGetWithParents . get ugID $ ugB
-  assertEqual "A is the charging group" (ugPaymentPlan ugA) . ugInherited ugPaymentPlan $ ugwithparents
+  assertEqual "A is the charging group" (ugPaymentPlan ugA) . Just . ugwpPaymentPlan $ ugwithparents
 
 
 testCannotDeleteUserGroupWithSubgroups :: TestEnv ()
@@ -250,6 +252,26 @@ testChangeUserGroupParent = do
   void $ runTestKontra req4 ctx' $ handleCompanyChange usrGrpID
   mUsrGrpParentAfter'' <- join <$> (get ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
   assertEqual "User group parent has been removed" mUsrGrpParentAfter'' Nothing
+
+testUserGroupRootMustHaveInvoice :: TestEnv ()
+testUserGroupRootMustHaveInvoice = do
+  ug0 <- unARootUserGroup <$> rand 10 arbitrary
+  -- creating a root with ugInvoicing other than Invoice fails
+  assertRaisesKontra (\(UserGroupRootHasNotInvoice _) -> True)
+    . dbUpdate . UserGroupCreate . set ugInvoicing None $ ug0
+  assertRaisesKontra (\(UserGroupRootHasNotInvoice _) -> True)
+    . dbUpdate . UserGroupCreate . set ugInvoicing (BillItem Nothing) $ ug0
+  assertRaisesKontra (\(UserGroupRootHasNotInvoice _) -> True)
+    . dbUpdate . UserGroupCreate . set ugInvoicing (BillItem (Just FreePlan)) $ ug0
+
+  ug1 <- dbUpdate . UserGroupCreate $ ug0
+  -- updating a root with ugInvoicing other than Invoice fails
+  assertRaisesKontra (\(UserGroupRootHasNotInvoice _) -> True)
+    . dbUpdate . UserGroupUpdate . set ugInvoicing None $ ug1
+  assertRaisesKontra (\(UserGroupRootHasNotInvoice _) -> True)
+    . dbUpdate . UserGroupUpdate . set ugInvoicing (BillItem Nothing) $ ug1
+  assertRaisesKontra (\(UserGroupRootHasNotInvoice _) -> True)
+    . dbUpdate . UserGroupUpdate . set ugInvoicing (BillItem (Just FreePlan)) $ ug1
 
 newtype ARootUserGroup = ARootUserGroup { unARootUserGroup :: UserGroup }
 

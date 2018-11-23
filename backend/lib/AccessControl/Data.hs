@@ -127,12 +127,12 @@ instance NeedsPermissions (AccessAction, AccessResource, UserGroupID) where
     -- @todo: important DB-optimisation point: retrieve only the list of parent IDs.
     (dbQuery . UserGroupGetWithParents $ usrGrpID) >>= \case
       Nothing -> unexpectedError $ "No user group with ID" <+> (show $ usrGrpID)
-      Just (ug, ugAncestors) -> do
+      Just ugwp ->
         -- By specification, it should be enough to have permission for the
         -- wanted action on _any_ parent.
-        return . NeededPermissionsExprOr $
-                   map (\g -> NeededPermissionsExprBase (Permission action target $ get ugID g))
-                       (ug:ugAncestors)
+        return . NeededPermissionsExprOr
+          . map (\g -> NeededPermissionsExprBase (Permission action target $ get ugID g))
+          $ ugwpToUGList ugwp
 
 -- | Convenience instance only since access is enforced on group level.
 instance NeedsPermissions (AccessAction, AccessResource, UserID) where

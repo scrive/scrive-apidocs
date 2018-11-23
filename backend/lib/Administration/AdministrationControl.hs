@@ -185,8 +185,11 @@ handleUserGetProfile uid = onlySalesOrAdmin $ do
 handleCompanyGetProfile:: Kontrakcja m => UserGroupID -> m JSValue
 handleCompanyGetProfile ugid = onlySalesOrAdmin $ do
   ug <- guardJustM . dbQuery . UserGroupGet $ ugid
-  ugAndParentPath <- guardJustM . dbQuery . UserGroupGetWithParents $ ugid
-  return $ companyJSON True ug (snd ugAndParentPath)
+  grpWithParents <- ugwpToUGList <$> (guardJustM . dbQuery . UserGroupGetWithParents $ ugid)
+  let parentGroupPath = case grpWithParents of
+        []     -> []
+        (_:xs) -> xs
+  return $ companyJSON True ug parentGroupPath
 
 showAdminCompany :: Kontrakcja m => UserGroupID -> m String
 showAdminCompany ugid = onlySalesOrAdmin $ do

@@ -2,6 +2,9 @@ module UserGroup.Internal (
     UserGroup(..)
   , ugInvoicingType
   , ugPaymentPlan
+  , ugwpPaymentPlan
+  , ugwpToUGList
+  , ugrFromUG
   , UserGroupID(..)
   , emptyUserGroupID
   , unsafeUserGroupID
@@ -16,7 +19,7 @@ module UserGroup.Internal (
 import Data.Binary
 import Data.Default
 import Data.Int
-import Data.Text
+import Data.Text (Text)
 import Data.Unjson
 import Happstack.Server
 import qualified Control.Exception.Lifted as E
@@ -42,7 +45,17 @@ data UserGroup = UserGroup {
   , _ugUI            :: UserGroupUI
   } deriving (Show, Eq)
 
-type UserGroupWithParents = (UserGroup, [UserGroup])
+data UserGroupRoot = UserGroupRoot
+  { _ugrID            :: UserGroupID
+  , _ugrName          :: Text
+  , _ugrAddress       :: UserGroupAddress
+  , _ugrSettings      :: UserGroupSettings
+  , _ugrPaymentPlan   :: PaymentPlan  -- user group root always must have Invoice
+  , _ugrUI            :: UserGroupUI
+  } deriving (Show, Eq)
+
+-- UserGroup list is ordered from Leaf to Child of Root)
+type UserGroupWithParents = (UserGroupRoot, [UserGroup])
 
 data UserGroupInvoicing =
     None
@@ -183,6 +196,48 @@ instance Default UserGroup where
       }
     , _ugUI = def
     }
+
+-- USER GROUP ROOT
+
+ugrFromUG :: UserGroup -> Maybe UserGroupRoot
+ugrFromUG ug = do
+  payment_plan <- case _ugInvoicing ug of
+    None -> Nothing
+    BillItem _ -> Nothing
+    Invoice pp -> Just pp -- the root of usergroup tree must have Invoice
+  case _ugParentGroupID ug of
+    Just _ -> Nothing
+    Nothing -> Just $ UserGroupRoot
+      { _ugrID = _ugID ug
+      , _ugrName = _ugName ug
+      , _ugrSettings = _ugSettings ug
+      , _ugrPaymentPlan = payment_plan
+      , _ugrAddress = _ugAddress ug
+      , _ugrUI = _ugUI ug
+      }
+
+ugFromUGRoot :: UserGroupRoot -> UserGroup
+ugFromUGRoot ugr = UserGroup
+  { _ugID = _ugrID ugr
+  , _ugName = _ugrName ugr
+  , _ugParentGroupID = Nothing
+  , _ugInvoicing = Invoice . _ugrPaymentPlan $ ugr
+  , _ugSettings = _ugrSettings ugr
+  , _ugAddress = _ugrAddress ugr
+  , _ugUI = _ugrUI ugr
+  }
+
+
+
+-- USER GROUP WITH PARENTS
+ugwpPaymentPlan :: UserGroupWithParents -> PaymentPlan
+ugwpPaymentPlan (ug_root, ug_children_path) =
+  fromMaybe (_ugrPaymentPlan ug_root) . listToMaybe . catMaybes
+    . map ugPaymentPlan $ ug_children_path
+
+ugwpToUGList :: UserGroupWithParents -> [UserGroup]
+ugwpToUGList (ug_root, ug_children_path) =
+  ug_children_path ++ [ugFromUGRoot ug_root]
 
 newtype UserGroupID = UserGroupID Int64
   deriving (Eq, Ord)

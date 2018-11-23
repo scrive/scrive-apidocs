@@ -8,8 +8,8 @@ module UserGroup.Model (
   , UserGetAllParentGroups(..)
   , UserGroupGetImmediateChildren(..)
   , UserGroupsFormCycle(..)
+  , UserGroupRootHasNotInvoice(..)
   , UserGroupFilter(..)
-  , ugInherited -- exported for tests
   , unsafeUserGroupIDToPartnerID
   , minUserGroupIdleDocTimeout
   , maxUserGroupIdleDocTimeout
@@ -29,12 +29,10 @@ import User.UserID
 import UserGroup.Data
 import UserGroup.Data.PaymentPlan
 
-ugInherited :: (UserGroup -> Maybe a) -> UserGroupWithParents -> Maybe a
-ugInherited getter (ug, parents) = listToMaybe . catMaybes . fmap getter $ ug:parents
-
 data UserGroupCreate = UserGroupCreate UserGroup
 instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
   update (UserGroupCreate ug) = do
+    guardIfUserGroupIsRootThenItHasInvoice ug
     new_parentpath <- case get ugParentGroupID ug of
       Nothing -> return . Array1 $ ([] :: [UserGroupID])
       Just parentid -> do
@@ -136,7 +134,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetImmediateChildren [U
     fetchMany toComposite
 
 data UserGroupGetWithParents = UserGroupGetWithParents UserGroupID
-instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetWithParents (Maybe (UserGroup,[UserGroup])) where
+instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetWithParents (Maybe UserGroupWithParents) where
   query (UserGroupGetWithParents ugid) = do
     mug <- dbQuery . UserGroupGet $ ugid
     case mug of
@@ -154,11 +152,17 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetWithParents (Maybe (
             mapM_ sqlResult userGroupSelectors
             sqlOrderBy "ordinality"
           fetchMany toComposite
-        return . Just $ (ug, parents)
+        let (ug_root0, ug_children_path) = case reverse parents of
+              []                -> (ug, [])
+              (ugr:ug_rev_path) -> (ugr, ug : reverse ug_rev_path)
+        case ugrFromUG ug_root0 of
+          Nothing      -> return Nothing
+          Just ug_root -> return $ Just (ug_root, ug_children_path)
 
 data UserGroupUpdate = UserGroupUpdate UserGroup
 instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () where
   update (UserGroupUpdate new_ug) = do
+    guardIfUserGroupIsRootThenItHasInvoice new_ug
     let ugid = get ugID new_ug
     -- update group info
     let ugs = get ugSettings new_ug
@@ -258,6 +262,27 @@ instance ToJSValue UserGroupsFormCycle where
       value "user_group_id" (show ugid)
 
 instance DBExtraException UserGroupsFormCycle
+
+guardIfUserGroupIsRootThenItHasInvoice
+  :: (MonadDB m, MonadThrow m) => UserGroup -> m ()
+guardIfUserGroupIsRootThenItHasInvoice ug = case get ugParentGroupID ug of
+  Just _  -> return ()
+  Nothing -> case get ugInvoicing ug of
+    Invoice _  -> return ()
+    BillItem _ -> errorNotInvoice
+    None       -> errorNotInvoice
+  where
+    errorNotInvoice = throwM . SomeDBExtraException . UserGroupRootHasNotInvoice . get ugID $ ug
+
+data UserGroupRootHasNotInvoice = UserGroupRootHasNotInvoice UserGroupID
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue UserGroupRootHasNotInvoice where
+  toJSValue (UserGroupRootHasNotInvoice ugid) = runJSONGen $ do
+    value "message" ("User Group tree root doesn't have Invoice as invoicing" :: String)
+    value "user_group_id" (show ugid)
+
+instance DBExtraException UserGroupRootHasNotInvoice
 
 data UserGetAllParentGroups = UserGetAllParentGroups User
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGetAllParentGroups [UserGroup] where
