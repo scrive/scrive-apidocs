@@ -17,3 +17,7 @@ package kontrakcja
     -- ^ Ideally we'd like to enable '+RTS -A32m' for all deps,
     -- however that triggers a rebuild of all deps due to
     -- https://github.com/haskell/cabal/issues/5575.
+
+package text-icu
+    extra-include-dirs: /usr/local/opt/icu4c/include
+    extra-lib-dirs: /usr/local/opt/icu4c/lib
