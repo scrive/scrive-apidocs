@@ -10,7 +10,9 @@ var TEAM_DOCUMENT_LIMIT = 100;
 
 var Subscription = Backbone.Model.extend({
   defaults: {
+    "invoicing_type": "none",
     "payment_plan": "free",
+    "inherited_plan": "",
     "number_of_users": 0,
     "started_last_month": 0,
     "features_admin_users": undefined,
@@ -46,6 +48,12 @@ var Subscription = Backbone.Model.extend({
   },
   paymentplan: function () {
      return this.get("payment_plan");
+  },
+  invoicingtype: function () {
+     return this.get("invoicing_type");
+  },
+  inheritedplan: function () {
+     return this.get("inherited_plan");
   },
   hasFreePlan: function () {
      return this.paymentplan() == "free";
@@ -187,9 +195,12 @@ var Subscription = Backbone.Model.extend({
         regular_users: pickToFeature(nsd.regularUserFeatures, false)
     };
     var newSubscription = {
-        payment_plan: pick(nsd.selectedPlan, this.paymentplan()),
+        invoicing_type: pick(nsd.selectedInvoicingType, this.invoicingtype()),
         features: features
     };
+    if (pick(nsd.selectedPlan, this.paymentplan()) !== "inherit") {
+      newSubscription["payment_plan"] = pick(nsd.selectedPlan, this.paymentplan());
+    }
     new Submit({
       method: "POST",
       url: "/adminonly/companyadmin/updatesubscription/" + this.companyid(),
@@ -199,6 +210,8 @@ var Subscription = Backbone.Model.extend({
   },
   parse: function (args) {
     return {
+      invoicing_type: args.invoicing_type,
+      inherited_plan: args.inherited_plan,
       payment_plan: args.payment_plan,
       number_of_users: args.number_of_users,
       started_last_month: args.started_last_month,

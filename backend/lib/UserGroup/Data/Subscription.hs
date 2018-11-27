@@ -3,6 +3,7 @@ module UserGroup.Data.Subscription (
   , getSubscription
   ) where
 
+import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Time
 import Data.Unjson
@@ -13,31 +14,38 @@ import FeatureFlags.Model
 import User.Model.Query (UserGroupGetUsers(..))
 import UserGroup.Data
 import UserGroup.Data.PaymentPlan
+import UserGroup.Model
+import Util.MonadUtils
 
 data Subscription = Subscription {
-    ugSubPaymentPlan  :: Maybe PaymentPlan
-  , ugSubCountUsers   :: Maybe Int
-  , ugSubCountDocsMTD :: Maybe Int
-  , ugSubFeatures     :: Features
+    ugSubInvoicingType        :: InvoicingType
+  , ugSubPaymentPlan          :: Maybe PaymentPlan
+  , ugSubInheritedPaymentPlan :: Maybe PaymentPlan
+  , ugSubCountUsers           :: Maybe Int
+  , ugSubCountDocsMTD         :: Maybe Int
+  , ugSubFeatures             :: Features
 } deriving (Eq, Ord, Show)
 
 instance Unjson Subscription where
   unjsonDef = objectOf $ Subscription
-    <$> fieldOpt "payment_plan" ugSubPaymentPlan "Payment plan"
+    <$> field "invoicing_type" ugSubInvoicingType "Invoicing type"
+    <*> fieldOpt "payment_plan" ugSubPaymentPlan "Payment plan"
+    <*> fieldOpt "inherited_plan" ugSubInheritedPaymentPlan "Inherited payment plan"
     <*> fieldOpt "number_of_users" ugSubCountUsers "Number of active users"
     <*> fieldOpt "started_last_month" ugSubCountDocsMTD "Number of documents started month to date"
     <*> field "features" ugSubFeatures "Features enabled"
 
-getSubscription :: (MonadDB m, MonadThrow m, MonadTime m) => UserGroup -> m Subscription
+getSubscription :: (MonadDB m, MonadBase IO m, MonadThrow m, MonadTime m) => UserGroup -> m Subscription
 getSubscription ug = do
   let ugid = get ugID ug
   users <- dbQuery $ UserGroupGetUsers ugid
+  ugwps <- guardJustM . dbQuery $ UserGroupGetWithParents ugid
   docsMTD  <- fromIntegral <$> dbQuery (GetNumberOfDocumentsStartedThisMonth ugid)
   fs <- getFeaturesFor ugid
-  return Subscription { ugSubPaymentPlan = ugPaymentPlan ug
+  return Subscription { ugSubInvoicingType = ugInvoicingType ug
+                      , ugSubPaymentPlan = ugPaymentPlan ug
+                      , ugSubInheritedPaymentPlan = ugwpInheritedPaymentPlan ugwps
                       , ugSubCountUsers = Just $ length users
                       , ugSubCountDocsMTD = Just docsMTD
                       , ugSubFeatures = fs
                       }
-
-

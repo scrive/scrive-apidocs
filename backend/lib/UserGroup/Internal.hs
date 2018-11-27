@@ -1,7 +1,9 @@
 module UserGroup.Internal (
-    UserGroup(..)
+    InvoicingType(..)
+  , UserGroup(..)
   , ugInvoicingType
   , ugPaymentPlan
+  , ugwpInheritedPaymentPlan
   , ugwpPaymentPlan
   , ugwpToUGList
   , ugrFromUG
@@ -67,7 +69,7 @@ data InvoicingType =
     InvoicingTypeNone
   | InvoicingTypeBillItem
   | InvoicingTypeInvoice
-  deriving (Read, Show)
+  deriving (Eq, Ord)
 
 data UserGroupSettings = UserGroupSettings {
     _ugsIPAddressMaskList   :: [IPAddressWithMask]
@@ -99,6 +101,17 @@ data UserGroupAddress = UserGroupAddress {
 
 -- INVOICING
 
+instance Show InvoicingType where
+  show InvoicingTypeNone     = "none"
+  show InvoicingTypeBillItem = "billitem"
+  show InvoicingTypeInvoice  = "invoice"
+
+instance Read InvoicingType where
+  readsPrec _ "none"     = [(InvoicingTypeNone, "")]
+  readsPrec _ "billitem" = [(InvoicingTypeBillItem, "")]
+  readsPrec _ "invoice"  = [(InvoicingTypeInvoice, "")]
+  readsPrec _ _  = []
+
 instance PQFormat InvoicingType where
   pqFormat = pqFormat @Int16
 
@@ -120,6 +133,11 @@ instance ToSQL InvoicingType where
   toSQL InvoicingTypeNone     = toSQL (1::Int16)
   toSQL InvoicingTypeBillItem = toSQL (2::Int16)
   toSQL InvoicingTypeInvoice  = toSQL (3::Int16)
+
+instance Unjson InvoicingType where
+  unjsonDef = unjsonInvmapR
+                ((maybe (fail "Can't parse InvoicingType") return) . maybeRead)
+                show unjsonDef
 
 ugInvoicingType :: UserGroup -> InvoicingType
 ugInvoicingType ug = case _ugInvoicing ug of
@@ -234,6 +252,11 @@ ugwpPaymentPlan :: UserGroupWithParents -> PaymentPlan
 ugwpPaymentPlan (ug_root, ug_children_path) =
   fromMaybe (_ugrPaymentPlan ug_root) . listToMaybe . catMaybes
     . map ugPaymentPlan $ ug_children_path
+
+ugwpInheritedPaymentPlan :: UserGroupWithParents -> Maybe PaymentPlan
+ugwpInheritedPaymentPlan (_,[]) = Nothing -- root node has noone to inherit from
+ugwpInheritedPaymentPlan (root, (_:parents_tail)) =
+  Just . ugwpPaymentPlan $ (root, parents_tail)
 
 ugwpToUGList :: UserGroupWithParents -> [UserGroup]
 ugwpToUGList (ug_root, ug_children_path) =

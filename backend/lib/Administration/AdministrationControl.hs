@@ -713,19 +713,17 @@ handleCompanyUpdateSubscription ugid = onlySalesOrAdmin . V2.api $ do
   ug <- guardJustM . dbQuery . UserGroupGet $ ugid
   subscription <- apiV2ParameterObligatory (ApiV2ParameterJSON "subscription" unjsonDef)
 
-  let updateInvoicingWith pp = case get ugInvoicing ug of
-        None         -> None
-        BillItem mpp -> BillItem . fmap (const pp) $ mpp
-        Invoice _    -> Invoice pp
-      newInvoicing =
-        case ugSubPaymentPlan subscription of
-          Nothing -> get ugInvoicing ug
-          Just pp -> updateInvoicingWith pp
+  let newInvoicing =
+        case (ugSubInvoicingType subscription,
+              ugSubPaymentPlan subscription) of
+          (InvoicingTypeNone, _) -> None
+          (InvoicingTypeBillItem, mpp@_) -> BillItem mpp
+          (InvoicingTypeInvoice, Just pp) -> Invoice pp
+          (InvoicingTypeInvoice, Nothing) -> unexpectedError "payment plan missing for Invoice type"
 
   dbUpdate . UserGroupUpdate . set ugInvoicing newInvoicing $ ug
   updateFeaturesFor ugid (ugSubFeatures subscription)
   return $ V2.Accepted ()
-
 
 jsonBrandedDomainsList ::Kontrakcja m => m Aeson.Value
 jsonBrandedDomainsList = onlySalesOrAdmin $ do

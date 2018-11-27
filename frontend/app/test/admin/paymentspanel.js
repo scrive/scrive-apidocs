@@ -57,7 +57,7 @@ describe("admin/paymentspanel", function () {
     assert.equal(checkboxes.size(), 44);
     // We should have one select (for price plan)
     var selects = $(".select", component.getDOMNode());
-    assert.equal(selects.size(), 1);
+    assert.equal(selects.size(), 2);
     // We there should be no disabled checkboxes
     var disabledCheckboxes = $(".checkbox.disabled", component.getDOMNode());
     assert.equal(disabledCheckboxes.size(), 0);

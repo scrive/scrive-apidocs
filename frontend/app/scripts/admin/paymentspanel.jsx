@@ -70,9 +70,10 @@ module.exports = React.createClass({
         regularUserFeatures: regularUserFeatures
       });
     },
-    savePlan: function() {
+    saveBilling: function() {
       var self = this;
       this.state.subscription.updateSubscriptionAsAdmin({
+          selectedInvoicingType : self.state.selectedInvoicingType,
           selectedPlan : self.state.selectedPlan,
           adminUserFeatures: self.state.adminUserFeatures,
           regularUserFeatures: self.state.regularUserFeatures
@@ -121,6 +122,11 @@ module.exports = React.createClass({
           regularUserFeatures: regularUserFeatures
       });
     },
+    changeInvoicingType: function(v) {
+      this.setState({
+          selectedInvoicingType: v,
+      });
+    },
     componentWillUpdate: function() {
       if (!this.state.initiated) {
         this.initStateFromSubscription();
@@ -164,7 +170,35 @@ module.exports = React.createClass({
     render: function() {
       var self = this;
       var subscription = this.state.subscription;
+      var selectedInvoicingType = this.state.selectedInvoicingType;
       var selectedPlan = this.state.selectedPlan;
+      var inheritedPlan = subscription.inheritedplan()?(" (" + subscription.inheritedplan()) + ")":"";
+      var planOptions = function (it) {
+        var obj =
+          { "none":
+            [
+              {value : "inherit", name : "Inherit" + inheritedPlan},
+            ],
+          "billitem":
+            [
+              {value : "inherit", name : "Inherit" + inheritedPlan},
+              {value : "free", name : "Free"},
+              {value : "one",  name : "One"},
+              {value : "team",  name : "Team"},
+              {value : "enterprise",  name : "Enterprise"},
+              {value : "trial",  name : "Trial"}
+            ],
+          "invoice":
+            [
+              {value : "free", name : "Free"},
+              {value : "one",  name : "One"},
+              {value : "team",  name : "Team"},
+              {value : "enterprise",  name : "Enterprise"},
+              {value : "trial",  name : "Trial"}
+            ] };
+        return obj[it?it:subscription.invoicingtype()];
+      };
+
       return (
         <div className="tab-container account">
           { /* if */ subscription.ready() && this.state.initiated &&
@@ -183,6 +217,32 @@ module.exports = React.createClass({
                   {subscription.numberOfUsers()}
                 </td>
               </tr>
+
+              <tr>
+                <td>
+                  Invoicing type
+                </td>
+                <td>
+                  <Select
+                    style={{display: "inline-block"}}
+                    options={[
+                      {value : "none", name : "None"},
+                      {value : "billitem", name : "BillItem"},
+                      {value : "invoice",  name : "Invoice"}
+                    ]}
+                    isOptionSelected={function(o) {
+                      if (selectedInvoicingType) {
+                        return selectedInvoicingType === o.value
+                      } else {
+                        return o.value === subscription.invoicingtype();
+                      }
+                    }}
+                    onSelect={this.changeInvoicingType}
+                  />
+                </td>
+              </tr>
+
+
               <tr>
                 <td>
                   Price plan
@@ -190,13 +250,7 @@ module.exports = React.createClass({
                 <td>
                   <Select
                     style={{display: "inline-block"}}
-                    options={[
-                      {value : "free", name : "Free"},
-                      {value : "one",  name : "One"},
-                      {value : "team",  name : "Team"},
-                      {value : "enterprise",  name : "Enterprise"},
-                      {value : "trial",  name : "Trial"},
-                    ]}
+                    options={planOptions(selectedInvoicingType)}
                     isOptionSelected={function(o) {
                       if (selectedPlan) {
                         return selectedPlan === o.value
@@ -246,7 +300,7 @@ module.exports = React.createClass({
                   <Button
                     type="action"
                     text="Save"
-                    onClick={self.savePlan}
+                    onClick={self.saveBilling}
                   />
                 </td>
                 <td>

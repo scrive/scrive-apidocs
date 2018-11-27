@@ -1,4 +1,5 @@
 module.exports = {
+  "invoicing_type":"none",
   "payment_plan": "enterprise",
   "features": {
     "admin_users": {
