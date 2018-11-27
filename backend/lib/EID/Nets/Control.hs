@@ -409,7 +409,7 @@ handleSignRequest did slid = do
     getSignProcRs <- netsCall conf (GetSigningProcessesRequest nso) xpGetSigningProcessesResponse (show did)
     dbUpdate $ MergeNetsSignOrder nso
     let nets_sign_url = gsprsSignURL getSignProcRs
-          <> maybe "" (("?presetid=" <>) . textBase64Encode) m_no_ssn
+          <> maybe "" (("&presetid=" <>) . textBase64Encode) m_no_ssn
     logInfo "Nets signing started" $ object [
         "nets_sign_url" .= nets_sign_url
       , logPair_ insOrdRs
