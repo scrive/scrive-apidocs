@@ -42,6 +42,7 @@ import EID.Nets.SignID
 import EvidenceLog.Model
 import FlashMessage
 import Happstack.Fields
+import InputValidation
 import InternalResponse
 import Kontra hiding (InternalError)
 import KontraLink
@@ -370,15 +371,17 @@ handleSignRequest did slid = do
           [ Handler $ \(NetsSignParsingError _) -> return () ]
       _ -> return ()
     auth_to_sign <- signatorylinkauthenticationtosignmethod <$> fromJust . getSigLinkFor slid <$> theDocument
-    (provider, eidmethod, mSSN) <- case auth_to_sign of
+    (provider, eidmethod, mSSN, m_no_ssn) <- case auth_to_sign of
       NOBankIDAuthenticationToSign -> do
-        eidmethod' <- getField "eid_method" >>= \case
-          Just "nobankid_classic" -> return NetsSignNOClassic
-          Just "nobankid_mobile" -> return NetsSignNOMobile
+        (eidmethod', m_no_ssn) <- getField "eid_method" >>= \case
+          Just "nobankid_classic" -> do
+            m_no_ssn <- getNOPersonalNumber <$> theDocument
+            return (NetsSignNOClassic, m_no_ssn)
+          Just "nobankid_mobile" -> return (NetsSignNOMobile, Nothing)
           _ -> do
             logAttention_ "Missing or invalid eid_method for NO"
             respond404
-        return (NetsSignNO, eidmethod', Nothing)
+        return (NetsSignNO, eidmethod', Nothing, m_no_ssn)
       DKNemIDAuthenticationToSign  -> do
         pn <- getField "personal_number" >>= \case
           (Just pn) -> return pn
@@ -393,7 +396,7 @@ handleSignRequest did slid = do
             logAttention_ "Missing or invalid eid_method for DK"
             respond404
         guardThatPersonalNumberMatches slid pn =<< theDocument
-        return (NetsSignDK, eidmethod', Just . T.pack . filter ('-' /=) $ pn)
+        return (NetsSignDK, eidmethod', Just . T.pack . filter ('-' /=) $ pn, Nothing)
       _ -> do
         logAttention "NetsSign: unsupported auth to sign method" $ object [
             identifier did
@@ -405,11 +408,23 @@ handleSignRequest did slid = do
     insOrdRs <- netsCall conf (InsertOrderRequest nso eidmethod conf host_part) xpInsertOrderResponse (show did)
     getSignProcRs <- netsCall conf (GetSigningProcessesRequest nso) xpGetSigningProcessesResponse (show did)
     dbUpdate $ MergeNetsSignOrder nso
-    return $ object [
-        "nets_sign_url" .= gsprsSignURL getSignProcRs
+    let nets_sign_url = gsprsSignURL getSignProcRs
+          <> maybe "" (("?presetid=" <>) . textBase64Encode) m_no_ssn
+    logInfo "Nets signing started" $ object [
+        "nets_sign_url" .= nets_sign_url
       , logPair_ insOrdRs
       , logPair_ getSignProcRs
       ]
+    return $ object
+      [ "nets_sign_url" .= nets_sign_url ]
+  where
+    getNOPersonalNumber :: Document -> Maybe T.Text
+    getNOPersonalNumber doc = do
+      sl <- getSigLinkFor slid doc
+      T.pack <$> (resultToMaybe . asValidNorwegianSSN . getPersonalNumber $ sl)
+
+    textBase64Encode :: T.Text -> T.Text
+    textBase64Encode = T.decodeUtf8 . B64.encode . T.encodeUtf8
 
 -- | Generate text to be signed that represents contents of the document.
 textToBeSigned :: TemplatesMonad m => Document -> m String
