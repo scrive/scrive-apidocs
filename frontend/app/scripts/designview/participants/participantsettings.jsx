@@ -89,7 +89,7 @@ module.exports = React.createClass({
     options.push({
       name: localization.designview.addParties.roleViewer,
       value: "viewer",
-      selected: !this.props.model.signs()
+      selected: this.props.model.views()
     });
     if (!this.props.model.author()) {
       options.push({
