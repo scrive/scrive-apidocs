@@ -7,6 +7,8 @@ module Doc.API.V2.Calls.DocumentPostCalls (
 , docApiV2Cancel
 , docApiV2Trash
 , docApiV2Delete
+, docApiV2TrashMultiple
+, docApiV2DeleteMultiple
 , docApiV2Remind
 , docApiV2Forward
 , docApiV2SetFile
@@ -51,7 +53,7 @@ import Doc.API.V2.JSON.AttachmentDetails
 import Doc.API.V2.JSON.Document
 import Doc.API.V2.JSON.Misc
 import Doc.AutomaticReminder.Model (setAutomaticReminder)
-import Doc.DocInfo (isPending, isTimedout)
+import Doc.DocInfo (isTimedout)
 import Doc.DocMails (sendAllReminderEmailsExceptAuthor, sendForwardEmail, sendInvitationEmail1)
 import Doc.DocStateData
 import Doc.DocumentID
@@ -69,6 +71,7 @@ import MinutesTime
 import OAuth.Model
 import User.Email (Email(..))
 import User.Model
+import Util.Actor (Actor)
 import Util.HasSomeUserInfo (getEmail, getMobile)
 import Util.PDFUtil
 import Util.SignatoryLinkUtils (getAuthorSigLink, getSigLinkFor, isAuthor)
@@ -120,6 +123,7 @@ docApiV2NewFromTemplate did = logDocument did . api $ do
       , logPair ("template_"<>) template
       ]
     return $ Created (unjsonDocument $ documentAccessForUser user newDoc, newDoc)
+
 
 docApiV2Update :: Kontrakcja m => DocumentID -> m Response
 docApiV2Update did = logDocument did . api $ do
@@ -209,37 +213,72 @@ docApiV2Cancel did = logDocument did . api $ do
 
 
 docApiV2Trash :: Kontrakcja m => DocumentID -> m Response
-docApiV2Trash did = logDocument did . api $ do
-  -- Permissions
-  (user, actor) <- getAPIUser APIDocSend
-  withDocumentID did $ do
-    -- Guards
-    msl <- getSigLinkFor user <$> theDocument
-    when (not . isJust $ msl) $ -- This might be a user with an account
-      guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
-    guardThatObjectVersionMatchesIfProvided did
-    guardThatDocumentIs (not . isPending) "Pending documents can not be trashed or deleted" =<< theDocument
-    -- API call actions
-    dbUpdate $ ArchiveDocument (userid user) actor
-    -- Result
-    Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
+docApiV2Trash = docApiV2TrashDeleteCommon ArchiveDocument
 
 
 docApiV2Delete :: Kontrakcja m => DocumentID -> m Response
-docApiV2Delete did = logDocument did . api $ do
+docApiV2Delete = docApiV2TrashDeleteCommon ReallyDeleteDocument
+
+
+docApiV2TrashDeleteCommon
+  :: (Kontrakcja m, DBUpdate (DocumentT m) t b)
+  => (UserID -> Actor -> t)
+  -> DocumentID
+  -> m Response
+docApiV2TrashDeleteCommon dbAction did = logDocument did . api $ do
   -- Permissions
   (user, actor) <- getAPIUser APIDocSend
+  -- Guards
+  guardThatDocumentCanBeTrashedOrDeletedByUser user did
   withDocumentID did $ do
-    -- Guards
-    msl <- getSigLinkFor user <$> theDocument
-    when (not . isJust $ msl) $ -- This might be a user with an account
-      guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
-    guardThatObjectVersionMatchesIfProvided did
-    guardThatDocumentIs (not . isPending) "Pending documents can not be trashed or deleted" =<< theDocument
     -- API call actions
-    dbUpdate $ ReallyDeleteDocument (userid user) actor
+    void . dbUpdate $ dbAction (userid user) actor
     -- Result
     Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
+
+
+docApiV2TrashMultiple :: Kontrakcja m => m Response
+docApiV2TrashMultiple = docApiV2TrashDeleteMultipleCommon ArchiveDocument
+
+
+docApiV2DeleteMultiple :: Kontrakcja m => m Response
+docApiV2DeleteMultiple = docApiV2TrashDeleteMultipleCommon ReallyDeleteDocument
+
+
+docApiV2TrashDeleteMultipleCommon
+  :: (Kontrakcja m, DBUpdate (DocumentT m) t b)
+  => (UserID -> Actor -> t)
+  -> m Response
+docApiV2TrashDeleteMultipleCommon dbAction = api $ do
+  -- Permissions
+  (user, actor) <- getAPIUser APIDocSend
+  -- Parameters
+  dids <- apiV2ParameterObligatory $ ApiV2ParameterJSON "document_ids"
+            $ arrayOf unjsonDef
+  -- Guards
+  when (length dids > 100)
+    . apiError $ requestParameterInvalid "document_ids"
+      "document_ids parameter can't have more than 100 positions"
+  when (length dids == 0)
+    . apiError $ requestParameterInvalid "document_ids"
+      "document_ids parameter can't be an empty list"
+  when (length (nub dids) /= length dids )
+    . apiError $ requestParameterInvalid "document_ids"
+      "document_ids parameter can't contain duplicates"
+  forM_  dids $ guardThatDocumentCanBeTrashedOrDeletedByUser user
+  -- API call actions
+  forM_ dids $ \did -> withDocumentID did
+    . dbUpdate $ dbAction (userid user) actor
+  -- Result
+  let docDomain = DocumentsVisibleToUser $ userid user
+      docFilter = [DocumentFilterByDocumentIDs dids]
+      limits    = (0, 100, 100)
+      docQuery  = GetDocumentsWithSoftLimit docDomain docFilter [] limits
+      docAccess = \d -> (documentAccessForUser user d, d)
+      headers   = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
+  (docCount, allDocs) <- dbQuery $ docQuery
+  let jsonBS = listToJSONBS (docCount, docAccess <$> allDocs)
+  return . Ok $ Response 200 headers nullRsFlags jsonBS Nothing
 
 
 docApiV2Remind :: Kontrakcja m => DocumentID -> m Response
@@ -317,7 +356,7 @@ docApiV2RemovePages did = logDocument did . api $ do
     pages <- apiV2ParameterObligatory (ApiV2ParameterAeson "pages")
 
     when (length pages > 100) $ do
-      apiError $ requestParameterInvalid "pages" "Pages parameter can't have more then 100 positions"
+      apiError $ requestParameterInvalid "pages" "Pages parameter can't have more than 100 positions"
     when (length pages == 0) $
       apiError $ requestParameterInvalid "pages" "Pages parameter can't be an empty list"
     when (length (nub pages) /= length pages ) $
@@ -485,15 +524,27 @@ docApiV2Callback did = logDocument did . api $ do
 
 docApiV2SetSharing :: Kontrakcja m => m Response
 docApiV2SetSharing = api $ do
+  -- Permissions
   (user, _) <- getAPIUser APIDocCreate
-  ids       <- apiV2ParameterObligatory $ ApiV2ParameterJSON "document_ids" $
-                 arrayOf unjsonDef
+  -- Parameters
+  dids      <- apiV2ParameterObligatory $ ApiV2ParameterJSON "document_ids"
+                $ arrayOf unjsonDef
   sharing   <- apiV2ParameterObligatory $ ApiV2ParameterBool "shared"
-
-  forM_ ids $ \i -> withDocumentID i $ do
+  -- Guards
+  when (length dids > 100)
+    . apiError $ requestParameterInvalid "document_ids"
+      "document_ids parameter can't have more than 100 positions"
+  when (length dids == 0)
+    . apiError $ requestParameterInvalid "document_ids"
+      "document_ids parameter can't be an empty list"
+  when (length (nub dids) /= length dids )
+    . apiError $ requestParameterInvalid "document_ids"
+      "document_ids parameter can't contain duplicates"
+  forM_ dids $ \did -> withDocumentID did $
     guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
-    dbUpdate $ SetDocumentSharing [i] sharing
-
+  -- API call actions
+  void . dbUpdate $ SetDocumentSharing dids sharing
+  -- Return
   return $ Accepted ()
 
 ----------------------------------------

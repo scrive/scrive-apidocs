@@ -13,6 +13,7 @@ module Doc.API.V2.Mock.TestUtils (
 , jsonTestRequestHelper
 -- * MockDoc Helper Functions
 , mockDocTestRequestHelper
+, mockDocTestRequestHelperMultiple
 , mockDocFromValue
 , mockDocToInput
 , mockDocIsShared
@@ -60,7 +61,7 @@ import Data.Unjson
 import Happstack.Server
 
 import Context
-import Doc.API.V2.AesonTestUtils (jsonTestRequestHelper, testRequestHelper)
+import Doc.API.V2.AesonTestUtils (jsonTestRequestHelper, lookupObjectArray, testRequestHelper)
 import Doc.API.V2.Mock.MockDocInternal
 import Doc.Data.DocumentStatus (DocumentStatus(..))
 import Doc.Data.SignatoryLink (AuthenticationToSignMethod(..), AuthenticationToViewMethod(..))
@@ -78,6 +79,15 @@ mockDocTestRequestHelper :: Context -> Method -> [(String, Input)]
                          -> KontraTest Response -> Int -> TestEnv MockDoc
 mockDocTestRequestHelper c m p f i =
   mockDocFromValue <$> jsonTestRequestHelper c m p f i
+
+-- | For conveniently doing a test API call that returns a list of Document JSON.
+-- Uses `jsonTestRequestHelper` but parses the result using `mockDocFromValue`
+mockDocTestRequestHelperMultiple :: Context -> Method -> [(String, Input)]
+                         -> KontraTest Response -> Int -> TestEnv [MockDoc]
+mockDocTestRequestHelperMultiple c m p f i = do
+  listJSON <- jsonTestRequestHelper c m p f i
+  listArray <- lookupObjectArray "documents" listJSON
+  forM listArray (return . mockDocFromValue)
 
 mockDocFromValue :: Value -> MockDoc
 mockDocFromValue v = case parse mockDocUnjson v of

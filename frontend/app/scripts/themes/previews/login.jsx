@@ -32,7 +32,7 @@ module.exports = React.createClass({
       var currentUpdateId = self._updateCounter;
       if (this.state.iconBrandTextColor != self.props.model.brandTextColor()) {
         setTimeout(function() {
-          // We will update state only if this is latest update or last update happend more then 200ms ago
+          // We will update state only if this is latest update or last update happend more than 200ms ago
           if (self._updateCounter == currentUpdateId || (Math.abs(new Date().getTime() - self.state.updateTime) > 200)) {
             self.setState(self.updatedState())}
           }

@@ -109,7 +109,7 @@ staticRoutes production = choice
      , allLangDirs $ dir "verify" $ hPostNoXToken $ toK0 $ DocControl.handleVerify
 
      -- UserControl
-     , dir "account"                    $ hGet  $ toK0 $ UserControl.handleAccountGet
+     , dir "account" $ hGet  $ toK0 $ UserControl.handleAccountGet
      , dir "account" $ hGet $ toK2 $ UserControl.handleGetChangeEmail
      , dir "account" $ hPost $ toK2 $ UserControl.handlePostChangeEmail
      , dir "account" $ dir "company" $ Company.routes

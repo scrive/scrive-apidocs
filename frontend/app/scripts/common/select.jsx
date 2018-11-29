@@ -39,7 +39,7 @@ Usage:
     ]}
   />
 
-  NOTE: Select with less then two options will always be inactive.
+  NOTE: Select with less than two options will always be inactive.
 */
 
 var EXTRA_BUTTON_WIDTH = 27;

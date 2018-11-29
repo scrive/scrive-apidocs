@@ -28,7 +28,9 @@ documentAPIV2  = dir "documents" $ choice [
   , param $ dir "prolong"         $ hPost $ toK1 $ docApiV2Prolong
   , param $ dir "cancel"          $ hPost $ toK1 $ docApiV2Cancel
   , param $ dir "trash"           $ hPost $ toK1 $ docApiV2Trash
+  , dir "trash"                   $ hPost $ toK0 $ docApiV2TrashMultiple
   , param $ dir "delete"          $ hPost $ toK1 $ docApiV2Delete
+  , dir "delete"                  $ hPost $ toK0 $ docApiV2DeleteMultiple
   , param $ dir "remind"          $ hPost $ toK1 $ docApiV2Remind
   , param $ dir "forward"         $ hPost $ toK1 $ docApiV2Forward
   , param $ dir "setattachments"  $ hPost $ toK1 $ docApiV2SetAttachments

@@ -38,7 +38,7 @@ module.exports = React.createClass({
             loadLater={self.props.loadLater}
             paramsFunction = {function(text,_selectfiltering,sorting,offset) {
               var params  = {
-                // Limit is set to more then amount of companies we are displaing. This way we can get information if there are more pages.
+                // Limit is set to more than amount of companies we are displaing. This way we can get information if there are more pages.
                 limit: usersLimit + 1,
                 offset : offset
               };

@@ -39,6 +39,10 @@ apiV2DocumentPostCallsTests env = testGroup "APIv2DocumentPostCalls"
   , testThat "API v2 Cancel"                                env testDocApiV2Cancel
   , testThat "API v2 Trash"                                 env testDocApiV2Trash
   , testThat "API v2 Delete"                                env testDocApiV2Delete
+  , testThat "API v2 Trash (Multiple)"                      env testDocApiV2TrashMultiple
+  , testThat "API v2 Trash (Multiple) - DocID Limit"        env testDocApiV2TrashMultipleLimit  -- checks anti-DoS measure
+  , testThat "API v2 Delete (Multiple)"                     env testDocApiV2DeleteMultiple
+  , testThat "API v2 Delete (Multiple) - DocID Limit"       env testDocApiV2DeleteMultipleLimit -- checks anti-DoS measure
   , testThat "API v2 Remind"                                env testDocApiV2Remind
   , testThat "API v2 Forward"                               env testDocApiV2Forward
   , testThat "API v2 Set file"                              env testDocApiV2SetFile
@@ -50,6 +54,7 @@ apiV2DocumentPostCallsTests env = testGroup "APIv2DocumentPostCalls"
   , testThat "API v2 Restart"                               env testDocApiV2Restart
   , testThat "API v2 Callback"                              env testDocApiV2Callback
   , testThat "API v2 Set sharing"                           env testDocApiV2SetSharing
+  , testThat "API v2 Set sharing - DocID Limit"             env testDocApiV2SetSharingLimit     -- checks anti-DoS measure
   , testThat "API v2 Set signatory authentication to-view"  env testDocApiV2SigSetAuthenticationToView
   , testThat "API v2 Set signatory authentication to-sign"  env testDocApiV2SigSetAuthenticationToSign
   , testThat "API v2 Change email and mobile"               env testDocApiV2SigChangeEmailAndMobile
@@ -158,7 +163,6 @@ testDocApiV2Start = do
   ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
   void  $ testDocApiV2Start' ctx
 
-
 testDocApiV2Prolong :: TestEnv ()
 testDocApiV2Prolong = do
   user    <- addNewRandomUser
@@ -202,6 +206,56 @@ testDocApiV2Delete = do
   mockDoc <- mockDocTestRequestHelper ctx POST [] (docApiV2Delete did) 200
   assertEqual "Document should be trashed after call" True (getMockDocIsTrashed mockDoc)
   assertEqual "Document should be deleted after call" True (getMockDocIsDeleted mockDoc)
+
+testDocApiV2TrashMultiple :: TestEnv ()
+testDocApiV2TrashMultiple = do
+  user <- addNewRandomUser
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
+  did1 <- getMockDocId <$> testDocApiV2New' ctx
+  did2 <- getMockDocId <$> testDocApiV2New' ctx
+  did3 <- getMockDocId <$> testDocApiV2New' ctx
+  let input = [("document_ids", inText . show $ map show [did1, did2, did3])]
+  mockDocs <- mockDocTestRequestHelperMultiple ctx POST input docApiV2TrashMultiple 200
+  forM_ mockDocs $ \mockDoc -> do
+    assertEqual "Document should be trashed after call" True $ getMockDocIsTrashed mockDoc
+
+-- IMPORTANT NOTE: This test checks that the document_ids length limit functions.
+--                 This is important to mitigate a potential DoS attack vector.
+testDocApiV2TrashMultipleLimit :: TestEnv ()
+testDocApiV2TrashMultipleLimit = do
+  user <- addNewRandomUser
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
+  let input = [("document_ids", inText . show $ map show [1..101])]
+  response <- testRequestHelper ctx POST input docApiV2TrashMultiple 400
+  assertBool "DocApiV2TrashMultiple should error if given more than 100 document_ids"
+    ("document_ids parameter can't have more than 100 positions"
+      `BS.isInfixOf` BSL.toStrict response)
+
+testDocApiV2DeleteMultiple :: TestEnv ()
+testDocApiV2DeleteMultiple = do
+  user <- addNewRandomUser
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
+  did1 <- getMockDocId <$> testDocApiV2New' ctx
+  did2 <- getMockDocId <$> testDocApiV2New' ctx
+  did3 <- getMockDocId <$> testDocApiV2New' ctx
+  let input = [("document_ids", inText . show $ map show [did1, did2, did3])]
+  void $ mockDocTestRequestHelperMultiple ctx POST input docApiV2TrashMultiple 200
+  mockDocs <- mockDocTestRequestHelperMultiple ctx POST input docApiV2DeleteMultiple 200
+  forM_ mockDocs $ \mockDoc -> do
+    assertEqual "Document should be trashed after call" True $ getMockDocIsTrashed mockDoc
+    assertEqual "Document should be deleted after call" True $ getMockDocIsDeleted mockDoc
+
+-- IMPORTANT NOTE: This test checks that the document_ids length limit functions.
+--                 This is important to mitigate a potential DoS attack vector.
+testDocApiV2DeleteMultipleLimit :: TestEnv ()
+testDocApiV2DeleteMultipleLimit = do
+  user <- addNewRandomUser
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
+  let input = [("document_ids", inText . show $ map show [1..101])]
+  response <- testRequestHelper ctx POST input docApiV2DeleteMultiple 400
+  assertBool "docApiV2DeleteMultiple should error if given more than 100 document_ids"
+    ("document_ids parameter can't have more than 100 positions"
+      `BS.isInfixOf` BSL.toStrict response)
 
 testDocApiV2Remind :: TestEnv ()
 testDocApiV2Remind = do
@@ -355,7 +409,6 @@ testDocApiV2SetAutoReminder = do
   -- FIXME setting this doesn't update the auto remind time
   -- immediately, bug in core?  assertJust auto_remind_time
 
-
 testDocApiV2Clone :: TestEnv ()
 testDocApiV2Clone = do
   user    <- addNewRandomUser
@@ -420,7 +473,6 @@ testDocApiV2Callback = do
   -- Should work after document is cancelled too
   void $ testRequestHelper ctx POST [] (docApiV2Callback did) 202
 
-
 testDocApiV2SetSharing :: TestEnv ()
 testDocApiV2SetSharing = do
   user <- addNewRandomUser
@@ -441,6 +493,19 @@ testDocApiV2SetSharing = do
     isShared <- mockDocIsShared <$> mockDocTestRequestHelper ctx
       GET [] (docApiV2Get did) 200
     assertEqual "Document should have correct sharing" value isShared
+
+-- IMPORTANT NOTE: This test checks that the document_ids length limit functions.
+--                 This is important to mitigate a potential DoS attack vector.
+testDocApiV2SetSharingLimit :: TestEnv ()
+testDocApiV2SetSharingLimit = do
+  user <- addNewRandomUser
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext def
+  let idList = show $ map show [1..101]
+      input = [("document_ids", inText idList), ("shared", inText "true")]
+  response <- testRequestHelper ctx POST input docApiV2SetSharing 400
+  assertBool "docApiV2SetSharing should error if given more than 100 document_ids"
+    ("document_ids parameter can't have more than 100 positions"
+      `BS.isInfixOf` BSL.toStrict response)
 
 testDocApiV2SigSetAuthenticationToView :: TestEnv ()
 testDocApiV2SigSetAuthenticationToView = do

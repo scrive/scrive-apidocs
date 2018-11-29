@@ -117,7 +117,7 @@ testCanLoginWithRedirect = do
     void $ runTestKontra req4 ctx handleLoginWithRedirectGet
     return ()
 
-  -- Test that session_id is valid for more then one redirect
+  -- Test that session_id is valid for more than one redirect
   let redirecturl2 = "/otherarbitrary/url/path"
   req5 <- mkRequest GET
     [ ("session_id", inText . unpack $ sessionid)

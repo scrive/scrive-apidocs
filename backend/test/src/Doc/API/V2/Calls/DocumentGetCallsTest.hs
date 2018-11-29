@@ -83,6 +83,7 @@ testDocApiV2Get = do
   getMockDoc <- mockDocTestRequestHelper ctx GET [] (docApiV2Get did) 200
   assertEqual "Mock Document from `docApiV2Get` should match from `docApiV2New`" getMockDoc newMockDoc
   assertEqual "Document viewer should be" "signatory" (getMockDocViewerRole getMockDoc)
+
 -- temporarily disabled
 _testDocApiV2GetFailsAfter30Days :: TestEnv ()
 _testDocApiV2GetFailsAfter30Days = do

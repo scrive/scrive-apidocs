@@ -3,6 +3,7 @@ module Doc.API.V2.Guards (
   guardThatDocumentIs
 , guardDocumentStatus
 , guardThatDocumentCanBeStarted
+, guardThatDocumentCanBeTrashedOrDeletedByUser
 , guardThatObjectVersionMatchesIfProvided
 , guardThatConsentModulesAreOnSigningParties
 , guardThatAttachmentDetailsAreConsistent
@@ -47,7 +48,7 @@ import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocumentID
-import Doc.DocumentMonad (DocumentMonad, theDocument)
+import Doc.DocumentMonad (DocumentMonad, theDocument, withDocumentID)
 import Doc.DocUtils
 import Doc.Model.Query
 import Doc.SignatoryLinkID
@@ -71,6 +72,14 @@ guardDocumentStatus :: Kontrakcja m => DocumentStatus -> Document -> m ()
 guardDocumentStatus s doc = unless (documentstatus doc == s) $
                             (apiError . documentStateError $ errorMsg)
   where errorMsg = "The document status should be '" <> (T.pack $ show s) <> "'."
+
+guardThatDocumentCanBeTrashedOrDeletedByUser :: Kontrakcja m => User -> DocumentID -> m ()
+guardThatDocumentCanBeTrashedOrDeletedByUser user did = withDocumentID did $ do
+  msl <- getSigLinkFor user <$> theDocument
+  when (not . isJust $ msl) $ -- This might be a user with an account
+    guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
+  guardThatObjectVersionMatchesIfProvided did
+  guardThatDocumentIs (not . isPending) "Pending documents can not be trashed or deleted" =<< theDocument
 
 -- | Internal function used in all guards on User
 -- Helps code reuse and keep error messages consistent
