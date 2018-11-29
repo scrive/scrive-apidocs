@@ -437,7 +437,7 @@ apiCallV1Ready did = logDocument did . api $ do
 
     authToSignIsValid sl = getPersonalNumber sl == "" || case signatorylinkauthenticationtosignmethod sl of
       SEBankIDAuthenticationToSign -> isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl
-      NOBankIDAuthenticationToSign -> null (getPersonalNumber sl) || (isGood $ asValidNorwegianSSN $ getPersonalNumber sl)
+      NOBankIDAuthenticationToSign -> isGood $ asValidNorwegianSSN $ getPersonalNumber sl
       DKNemIDAuthenticationToSign  -> False -- Danish Nets eSigning is not supported in API v1
       StandardAuthenticationToSign -> True
       SMSPinAuthenticationToSign   -> True
