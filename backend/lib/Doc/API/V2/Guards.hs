@@ -28,6 +28,7 @@ module Doc.API.V2.Guards (
 ) where
 
 import Control.Conditional (whenM)
+import Data.Either (rights)
 import Log
 import qualified Data.Text as T
 
@@ -109,14 +110,14 @@ guardThatObjectVersionMatchesIfProvided did = do
 
 guardThatAttachmentDetailsAreConsistent :: Kontrakcja m => [AttachmentDetails] -> m ()
 guardThatAttachmentDetailsAreConsistent ads = do
-    guardUnique $ map aadFileOrFileParam ads
+    guardUnique $ rights $ map aadFileOrFileParam ads
     guardUnique $ map aadName ads
 
   where
     guardUnique :: (Kontrakcja m, Eq a) => [a] -> m ()
     guardUnique xs
       | hasDuplicates xs = apiError $ requestParameterInvalid "attachments"
-          "Attachments must have a unique name, file ID and/or file parameter."
+          "Attachments must have a unique name and/or file parameter."
       | otherwise = return ()
 
     hasDuplicates :: Eq a => [a] -> Bool
