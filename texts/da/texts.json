@@ -641,7 +641,7 @@
 "_flashWrongName":"Navn må kun indeholde bogstaver, cifre, bindestreger og mellemrum (op til 100 tegn)",
 "_flashWrongPersonalNumber":"CPR-nummeret skal indeholder 10 eller 12 cifre (bindestreger og mellemrum vil blive slettet)",
 "_flashWrongPhone":"Telefonnummer skal begynde med + og må kun indeholde cifre (minimum 9). Mellemrum, parenteser og bindestreger fjernes.",
-"_flashWrongPosition":"Stedangivelse må max. indeholde 100 tegn ( bogstaver, tal, mellemrum, apostrof, bindestreg, &-tegn, parenteser, kolon og kommaer)",
+"_flashWrongPosition":"Stedangivelse må max. indeholde 100 tegn ( bogstaver, tal, mellemrum, apostrof, bindestreg, &amp;-tegn, parenteser, kolon og kommaer)",
 "_flashWrongZip":"Postnummer må max. indeholde 20 tegn",
 "_fontSizeBig":"Stor",
 "_fontSizeCustom":"Tilpas",

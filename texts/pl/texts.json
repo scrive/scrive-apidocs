@@ -641,7 +641,7 @@
 "_flashWrongName":"Nazwa może zawierać wyłącznie litery, cyfry, dywizy oraz odstępy (do 100 znaków)",
 "_flashWrongPersonalNumber":"Osobisty numer identyfikacyjny musi zawierać 10 lub 12 cyfr (dywizy oraz odstępy będą usuwane)",
 "_flashWrongPhone":"Numer telefonu powinien rozpoczynać się od + i zawierać tylko cyfry (co najmniej 9). Odstępy, nawiasy oraz dywizy będą usuwane",
-"_flashWrongPosition":"Pole pozycji może zawierać maksymalnie 100 liter, cyfr, odstępów, apostrofów, dywizów, znaków \"et\", nawiasów, dwukropków oraz przecinków",
+"_flashWrongPosition":"Pole pozycji może zawierać maksymalnie 100 liter, cyfr, odstępów, apostrofów, dywizów, znaków &amp;, nawiasów, dwukropków oraz przecinków",
 "_flashWrongZip":"Kod pocztowy może zawierać maksymalnie 20 znaków",
 "_fontSizeBig":"Duża",
 "_fontSizeCustom":"Dopasuj",
