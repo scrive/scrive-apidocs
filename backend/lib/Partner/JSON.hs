@@ -69,10 +69,10 @@ unjsonUserForUpdate = objectOf $ pure def
               (unjsonWithValidationOrEmpty asValidName)
               <**> (pure $ \lname ufu -> ufu { ufuLastName = lname }))
         <**> (fieldBy "personal_number" ufuPersonalNumber "A user's personal number"
-              (unjsonWithValidationOrEmpty asValidPersonalNumber)
+              (unjsonWithValidationOrEmpty $ emptyOK asValidPersonalNumber)
               <**> (pure $ \pnumber ufu -> ufu { ufuPersonalNumber = pnumber }))
         <**> (fieldBy "phone" ufuPhone "A user's phone"
-              (unjsonWithValidationOrEmpty asValidPhone)
+              (unjsonWithValidationOrEmpty $ emptyOK asValidPhone)
               <**> (pure $ \phone ufu -> ufu { ufuPhone = phone }))
         <**> (fieldBy "company_position" ufuCompanyPosition "A user's company position"
               (unjsonWithValidationOrEmpty asValidPosition)

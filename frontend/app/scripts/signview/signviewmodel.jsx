@@ -130,7 +130,8 @@ var Track = require("../common/track");
     },
 
     hasAuthorAttachmentsSection: function () {
-      return this.document().authorattachments().length > 0;
+      const doc = this.document();
+      return !doc.canceled() && !doc.rejected() && doc.authorattachments().length > 0;
     },
 
     hasExtraDetailsSection: function () {
