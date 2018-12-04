@@ -47,7 +47,8 @@ data AppConf = AppConf {
   , isMailBackdoorOpen :: Bool
     -- ^ If true allows admins to access last mail send. Used by
     -- selenium.
-  , mailNoreplyAddress   :: String             -- ^ Noreply address used when sending email
+  , mailNoreplyAddress   :: String             -- ^ Noreply address used when sending
+                                               -- email.
   , cgiGrpConfig       :: Maybe CgiGrpConfig   -- ^ CGI GRP (E-ID) configuration
   , admins             :: [Email]
     -- ^ E-mail addresses of people regarded as admins.

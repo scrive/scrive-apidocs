@@ -39,7 +39,8 @@ import UserGroup.Data
 import Utils.String
 
 instance (InspectXML a, Show a) => InspectXML [a] where
-    inspectXML l = "<ul>" ++ (concatMap (\s -> "<li>" ++ (inspectXML s) ++ "</li>") l) ++ "</ul>"
+    inspectXML l =
+      "<ul>" ++ (concatMap (\s -> "<li>" ++ (inspectXML s) ++ "</li>") l) ++ "</ul>"
 
 instance (InspectXML a, Show a) => InspectXML (Maybe a) where
     inspectXML Nothing = "Nothing"
@@ -48,8 +49,11 @@ instance (InspectXML a, Show a) => InspectXML (Maybe a) where
 instance (InspectXML a, InspectXML b, Show a, Show b) => InspectXML (a, b) where
     inspectXML (a, b) = "(" ++ inspectXML a ++ "," ++ inspectXML b ++ ")"
 
-instance (InspectXML a, InspectXML b, InspectXML c, Show a, Show b, Show c) => InspectXML (a, b, c) where
-    inspectXML (a, b, c) = "(" ++ inspectXML a ++ "," ++ inspectXML b ++ "," ++ inspectXML c ++ ")"
+instance ( InspectXML a, InspectXML b, InspectXML c
+         , Show a, Show b, Show c ) =>
+         InspectXML (a, b, c) where
+  inspectXML (a, b, c) =
+    "(" ++ inspectXML a ++ "," ++ inspectXML b ++ "," ++ inspectXML c ++ ")"
 
 $(deriveInspectXML ''MainFile)
 $(deriveInspectXML ''Document)
@@ -71,7 +75,8 @@ instance InspectXML SignatoryField where
     show (fieldIdentity field) ++ " " ++ value ++ ", " ++
     (if fieldIsObligatory field then "obligatory, " else "optional, ") ++
     (if fieldShouldBeFilledBySender field then "filled by sender, " else "") ++
-    (if (fieldEditableBySignatory field == Just True) then "editable by signatory, " else "") ++
+    (if (fieldEditableBySignatory field == Just True) then "editable by signatory, "
+     else "") ++
     "<br/>placements: " ++ inspectXML (fieldPlacements field)
     where
       value = case (fieldType field) of
@@ -95,14 +100,19 @@ instance InspectXML SignatoryLinkID where
 instance InspectXML UserID where
     inspectXML x =  "<a href='/dave/user/" ++ show x ++ "'>"  ++ show x ++"</a>"
 instance InspectXML File where
-    inspectXML file = "<a href='" ++ (inspectXML $ LinkDaveFile (fileid file) (filename file)) ++"'>" ++ show (fileid file)++ "/" ++ inspectXML (filename file) ++"</a>"
+    inspectXML file =
+      "<a href='" ++ (inspectXML $ LinkDaveFile (fileid file) (filename file)) ++"'>" ++
+      show (fileid file)++ "/" ++ inspectXML (filename file) ++"</a>"
 instance InspectXML FileID where
-    inspectXML fileid = "<a href='" ++ (inspectXML $ LinkDaveFile fileid (show fileid)) ++"'>" ++ show fileid ++ "</a>"
+    inspectXML fileid =
+      "<a href='" ++ (inspectXML $ LinkDaveFile fileid (show fileid)) ++ "'>" ++
+      show fileid ++ "</a>"
 instance InspectXML (S.Set DocumentTag) where
   inspectXML = inspectXML . S.toList
 
 instance InspectXML BrandedDomainID where
-    inspectXML x = "<a href='/adminonly/brandeddomain/" ++ show x ++ "'>"  ++ show x ++"</a>"
+    inspectXML x =
+      "<a href='/adminonly/brandeddomain/" ++ show x ++ "'>"  ++ show x ++ "</a>"
 
 instance {-# OVERLAPPING #-} InspectXML String where
   inspectXML str = "\"" ++ escapeString str ++ "\""

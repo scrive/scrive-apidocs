@@ -9,7 +9,8 @@ tableDocumentExtendingConsumers = tblTable {
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "name", colType = TextT, colNullable = False }
-    , tblColumn { colName = "last_activity", colType = TimestampWithZoneT, colNullable = False }
+    , tblColumn { colName = "last_activity", colType = TimestampWithZoneT
+                , colNullable = False }
     ]
     , tblPrimaryKey = pkOnColumn "id"
   }
