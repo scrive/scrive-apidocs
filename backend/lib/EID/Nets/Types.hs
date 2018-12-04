@@ -62,8 +62,8 @@ import Data.Int
 import Data.Time
 import Network.SOAP.Parsing.Cursor (readT)
 import Prelude hiding (empty)
-import Text.XML.Cursor hiding (element)
-import Text.XML.Writer hiding (content, many, node)
+import Text.XML.Cursor as XML hiding (element)
+import Text.XML.Writer as XML hiding (content, many, node)
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
@@ -77,7 +77,7 @@ import EID.Nets.SignID
 import Log.Identifier
 import MinutesTime
 import Session.SessionID
-import Text.XML.Parser
+import Text.XML.Parser as XML
 
 data NetsNOBankIDInternalProvider
   = NetsNOBankIDStandard
@@ -612,7 +612,7 @@ xpCancelOrderResponse = XMLParser $ \cursor -> listToMaybe $ cursor
       corsTransactionRef = readT "TransRef" rs
     }
 
-readTs :: [T.Text] -> Cursor -> T.Text
+readTs :: [T.Text] -> XML.Cursor -> T.Text
 readTs names cursor = T.concat $ cursor $/ laxElements names content
   where
     laxElements = foldr (.) id . fmap (&/) . fmap laxElement
