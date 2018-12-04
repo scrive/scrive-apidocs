@@ -125,8 +125,10 @@ unjsonSignatory da =  objectOf $
                                                 msuccredirecturl
             , signatorylinkrejectredirecturl  = fmap emptyIfNaughty
                                                 mrejredirecturl
+
+              -- Check only one .csv for the whole doc.
             , signatorylinkcsvupload          = mcsvupload
-              -- ^ Check only one csv for whole doc
+
             , signatorylinkdeliverymethod     = deliverymethod
             , signatorylinkauthenticationtoviewmethod
                                               = authtoviewmethod

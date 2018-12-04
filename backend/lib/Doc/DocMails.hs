@@ -211,28 +211,29 @@ sendReminderEmail custommessage actor automatic siglink =
              , isSignatory siglink || isApprover siglink
              , signatorylinkconfirmationdeliverymethod siglink
              ) of
-          (_, Just _,    True, NoConfirmationDelivery)  -> True
-          -- ^ a signing party or approver that signed/approved, but has
+
+          -- A signing party or approver that signed/approved, but has
           -- no confirmation method, should fallback to invitation
           -- method.
+          (_, Just _,    True, NoConfirmationDelivery)  -> True
 
-          (_, Just _,    True, _)                       -> False
-          -- ^ a signing party or approver that signed/approved should
+          -- A signing party or approver that signed/approved should
           -- use confirmation method.
+          (_, Just _,    True, _)                       -> False
 
-          (_, Nothing,   True, _)                       -> True
-          -- ^ a signing party/approver that didn't sign/approve
+          -- A signing party/approver that didn't sign/approve
           -- should use invitation method.
+          (_, Nothing,   True, _)                       -> True
 
+          -- A viewer of a signed document with no confirmation
+          -- method, should fallback to invitation method.
           (DS.Closed, _, False, NoConfirmationDelivery) -> True
-          -- ^ viewer of signed document with no confirmation method,
-          -- should fallback to invitation method.
 
+          -- A viewer of a signed document should use confirmation method.
           (DS.Closed, _, False, _)                      -> False
-          -- ^ viewer of signed document should use confirmation method.
 
+          -- A viewer of a pending document should use invitation method.
           (_,         _, False, _)                      -> True
-          -- ^ viewer of pending document should use invitation method.
 
       invMethod            = signatorylinkdeliverymethod siglink
       confMethod           = signatorylinkconfirmationdeliverymethod siglink
