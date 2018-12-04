@@ -63,7 +63,7 @@ test_invoicingReport = do
   (_, ug2)  <- addNewAdminUserAndUserGroup "Anna" "A2" "a2@android.com"
   (_, ug3)  <- addNewAdminUserAndUserGroup "Bob"  "B1" "b1@example.com"
   void $ addNewUserToUserGroup "Bob" "B2" "b2@blue.com" (get ugID ug3)
-  void $ dbUpdate $ UserGroupUpdate $ set ugInvoicing (Invoice OnePlan) $ ug1
+  void $ dbUpdate $ UserGroupUpdate $ set ugInvoicing (Invoice OnePlan)  $ ug1
   void $ dbUpdate $ UserGroupUpdate $ set ugInvoicing (Invoice TeamPlan) $ ug2
   void $ dbUpdate $ UserGroupUpdate $ set ugInvoicing (Invoice EnterprisePlan)
     $ ug3
@@ -71,7 +71,7 @@ test_invoicingReport = do
   did1 <- addRandomDocumentWithAuthorAndCondition u1 (isClosed && isSignable)
   void $ dbUpdate $ ChargeUserGroupForClosingDocument $ documentid did1
 
-  ct <- currentTime
+  ct  <- currentTime
   csv <- dbQuery $ InvoicingReport $ 1 `daysAfter` ct
   assertBool
     "There are some rows in invoicing csv if there are some companies in DB"
