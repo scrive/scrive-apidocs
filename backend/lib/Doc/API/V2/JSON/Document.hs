@@ -107,7 +107,7 @@ unjsonSignatory da =  objectOf $
   (\is_signatory msignatoryrole
     fields mbTitleQs signorder
     msuccredirecturl mrejredirecturl
-    mcsvupload deliverymethod 
+    mcsvupload deliverymethod
     authtoviewmethod authtoviewarchivedmethod
     authtosignmethod confirmdeliverymethod
     allowshighlighting hidepn sattachments ->
