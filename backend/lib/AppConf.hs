@@ -37,7 +37,8 @@ data AppConf = AppConf {
   , maxDBConnections   :: Int                  -- ^ limit of db connections
   , queryTimeout       :: Maybe Int            -- ^ timeout for DB queries
   , redisCacheConfig   :: Maybe RedisConfig    -- ^ redis configuration
-  , localFileCacheSize :: Int                  -- ^ size of local cache for files
+  , localFileCacheSize :: Int                  -- ^ size of local cache for
+                                               -- files
   , logConfig          :: LogConfig            -- ^ logging configuration
   , production         :: Bool
     -- ^ production flag, enables some production stuff, disables some
@@ -47,8 +48,8 @@ data AppConf = AppConf {
   , isMailBackdoorOpen :: Bool
     -- ^ If true allows admins to access last mail send. Used by
     -- selenium.
-  , mailNoreplyAddress   :: String             -- ^ Noreply address used when sending
-                                               -- email.
+  , mailNoreplyAddress   :: String             -- ^ Noreply address used when
+                                               -- sending email.
   , cgiGrpConfig       :: Maybe CgiGrpConfig   -- ^ CGI GRP (E-ID) configuration
   , admins             :: [Email]
     -- ^ E-mail addresses of people regarded as admins.
@@ -57,7 +58,8 @@ data AppConf = AppConf {
   , initialUsers       :: [(Email,String)]
     -- ^ E-mail and passwords for initial users.
   , mixpanelToken      :: Maybe String         -- ^ For mixpanel integration.
-  , gaToken            :: Maybe String         -- ^ For Google Analytics integration.
+  , gaToken            :: Maybe String         -- ^ For Google Analytics
+                                               -- integration.
   , trackjsToken       :: Maybe String         -- ^ For Track.js integration.
   , hubspotConf        :: Maybe HubSpotConf    -- ^ For Hubspot integration.
   , salesforceConf     :: Maybe SalesforceConf -- ^ Configuration of Salesforce.
