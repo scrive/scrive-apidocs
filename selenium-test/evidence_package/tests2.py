@@ -80,9 +80,9 @@ def check_all_attachments_included(test, api):
 
 
 def check_guardtime_extended_sigs(test, api):
-    two_months_ago = datetime.now() - timedelta(days=60)
-    month_year = 'Just (%d,%d)' % (two_months_ago.month,
-                                   two_months_ago.year)
+    three_months_ago = datetime.now() - timedelta(days=90)
+    month_year = 'Just (%d,%d)' % (three_months_ago.month,
+                                   three_months_ago.year)
     time_filter = '(%s,%s)' % (month_year, month_year)
     filters = [{'name': 'status', 'value': '[signed]'},
                {'name': 'time', 'value': time_filter}]
