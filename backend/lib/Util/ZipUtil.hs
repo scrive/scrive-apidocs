@@ -5,7 +5,7 @@ import Happstack.Server (ToMessage(..), setHeader)
 import qualified Data.ByteString.UTF8 as BS
 
 data ZipArchive = ZipArchive String Archive
-    
+
 instance ToMessage ZipArchive where
   toMessage (ZipArchive _ archive) = fromArchive archive
   toContentType _ = BS.fromString "archive/zip"
