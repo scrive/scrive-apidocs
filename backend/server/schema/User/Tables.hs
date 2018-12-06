@@ -37,7 +37,12 @@ tableUsers = tblTable {
       , tblColumn { colName = "home_folder_id", colType = BigIntT, colNullable = True }
       ]
   , tblPrimaryKey = pkOnColumn "id"
-  , tblChecks = [Check "check_users_lowercase_email" "email = lower(email)"]
+  , tblChecks =
+    [ tblCheck
+      { chkName = "check_users_lowercase_email"
+      , chkCondition = "email = lower(email)"
+      }
+    ]
   , tblForeignKeys = [
       fkOnColumn "user_group_id" "user_groups" "id"
     , fkOnColumn "home_folder_id" "folders" "id"

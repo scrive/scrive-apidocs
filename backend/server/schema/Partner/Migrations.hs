@@ -63,9 +63,9 @@ partnersAddUserGroupID = Migration {
     runQuery_ $ sqlAlterTable tname
       [
         sqlAddColumn $ tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = True }
-      , sqlAddFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
+      , sqlAddValidFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
       ]
-    runQuery_ $ sqlCreateIndex tname $ indexOnColumn "user_group_id"
+    runQuery_ $ sqlCreateIndexSequentially tname $ indexOnColumn "user_group_id"
 }
 
 dropPartnerAdmins :: MonadDB m => Migration m

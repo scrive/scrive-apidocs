@@ -69,11 +69,15 @@ tableDocuments = tblTable {
     , indexOnColumn "shareable_link_hash"
     ]
   , tblChecks =
-      [ Check "check_documents_pending_are_not_purged"
-              "status <> 2 OR purged_time IS NULL"
-      , Check "check_from_shareable_link_has_template_id"
-              "from_shareable_link = false OR template_id IS NOT NULL"
-      ]
+    [ tblCheck
+      { chkName = "check_documents_pending_are_not_purged"
+      , chkCondition = "status <> 2 OR purged_time IS NULL"
+      }
+    , tblCheck
+      { chkName = "check_from_shareable_link_has_template_id"
+      , chkCondition = "from_shareable_link = false OR template_id IS NOT NULL"
+      }
+    ]
   }
 
 ctDocument :: CompositeType
@@ -481,34 +485,78 @@ tableSignatoryLinkFields = tblTable {
     , tblColumn { colName = "custom_validation_tooltip", colType = TextT, colNullable = True }
     ]
   , tblPrimaryKey = pkOnColumn "id"
-  , tblChecks = [
-      Check "check_signatory_link_fields_name_fields_are_well_defined" $
-        "type = 1 AND name_order IS NOT NULL AND value_bool IS NULL AND value_file_id IS NULL AND value_text IS NOT NULL AND radio_button_group_values IS NULL"
-        <+> "OR type <> 1"
-    , Check "check_signatory_link_fields_signatures_are_well_defined" $
-        "type = 8 AND name_order IS NULL AND value_bool IS NULL AND value_text IS NULL AND radio_button_group_values IS NULL"
-        <+> "OR type <> 8"
-    , Check "check_signatory_link_fields_checkboxes_are_well_defined" $
-        "type = 9 AND name_order IS NULL AND value_bool IS NOT NULL AND value_file_id IS NULL AND value_text IS NULL AND radio_button_group_values IS NULL"
-        <+> "OR type <> 9"
-    , Check "check_signatory_link_fields_other_text_fields_are_well_defined" $
-        "(type = ANY (ARRAY[3, 4, 5, 6, 7, 10])) AND name_order IS NULL AND value_bool IS NULL AND value_file_id IS NULL AND value_text IS NOT NULL AND radio_button_group_values IS NULL"
-        <+> "OR NOT (type = ANY (ARRAY[3, 4, 5, 6, 7, 10]))"
-    , Check "check_signatory_link_fields_radio_buttons_are_well_defined" $
-        "type = 11 AND name_order IS NULL AND value_bool IS NULL AND value_file_id IS NULL AND radio_button_group_values IS NOT NULL"
-        <+> "OR type <> 11"
-    , Check "check_signatory_link_fields_editable_by_signatory__well_defined" $
-        "(type = ANY (ARRAY[6, 10])) AND editable_by_signatory IS NOT NULL"
-        <+> "OR (type <> ALL (ARRAY[6, 10])) AND editable_by_signatory IS NULL"
+  , tblChecks =
+    [ tblCheck
+      { chkName = "check_signatory_link_fields_name_fields_are_well_defined"
+      , chkCondition =
+              "type = 1 \
+          \AND name_order IS NOT NULL \
+          \AND value_bool IS NULL \
+          \AND value_file_id IS NULL \
+          \AND value_text IS NOT NULL \
+          \AND radio_button_group_values IS NULL \
+          \OR type <> 1"
+      }
+    , tblCheck
+      { chkName = "check_signatory_link_fields_signatures_are_well_defined"
+      , chkCondition =
+              "type = 8 \
+          \AND name_order IS NULL \
+          \AND value_bool IS NULL \
+          \AND value_text IS NULL \
+          \AND radio_button_group_values IS NULL \
+          \OR type <> 8"
+      }
+    , tblCheck
+      { chkName = "check_signatory_link_fields_checkboxes_are_well_defined"
+      , chkCondition =
+              "type = 9 \
+          \AND name_order IS NULL \
+          \AND value_bool IS NOT NULL \
+          \AND value_file_id IS NULL \
+          \AND value_text IS NULL \
+          \AND radio_button_group_values IS NULL \
+          \OR type <> 9"
+      }
+    , tblCheck
+      { chkName = "check_signatory_link_fields_other_text_fields_are_well_defined"
+      , chkCondition =
+             "(type = ANY (ARRAY[3, 4, 5, 6, 7, 10])) \
+          \AND name_order IS NULL \
+          \AND value_bool IS NULL \
+          \AND value_file_id IS NULL \
+          \AND value_text IS NOT NULL \
+          \AND radio_button_group_values IS NULL \
+          \OR NOT (type = ANY (ARRAY[3, 4, 5, 6, 7, 10]))"
+      }
+    , tblCheck
+      { chkName = "check_signatory_link_fields_radio_buttons_are_well_defined"
+      , chkCondition =
+              "type = 11 \
+          \AND name_order IS NULL \
+          \AND value_bool IS NULL \
+          \AND value_file_id IS NULL \
+          \AND radio_button_group_values IS NOT NULL \
+          \OR type <> 11"
+      }
+    , tblCheck
+      { chkName = "check_signatory_link_fields_editable_by_signatory__well_defined"
+      , chkCondition =
+             "(type = ANY (ARRAY[6, 10])) AND editable_by_signatory IS NOT NULL \
+          \OR (type <> ALL (ARRAY[6, 10])) AND editable_by_signatory IS NULL"
+      }
       -- custom validation is only available for custom text field, but is not mandatory
-    , Check "check_signatory_link_fields_custom_validations_are_well_defined" $
-                "custom_validation_pattern IS NULL \
-            \AND custom_validation_positive_example IS NULL \
-            \AND custom_validation_tooltip IS NULL \
-         \OR type = 7 \
-            \AND custom_validation_pattern IS NOT NULL \
-            \AND custom_validation_positive_example IS NOT NULL \
-            \AND custom_validation_tooltip IS NOT NULL"
+    , tblCheck
+      { chkName = "check_signatory_link_fields_custom_validations_are_well_defined"
+      , chkCondition =
+                 "custom_validation_pattern \       \IS NULL \
+             \AND custom_validation_positive_example IS NULL \
+             \AND custom_validation_tooltip \       \IS NULL \
+          \OR \  \type = 7 \
+             \AND custom_validation_pattern \       \IS NOT NULL \
+             \AND custom_validation_positive_example IS NOT NULL \
+             \AND custom_validation_tooltip \       \IS NOT NULL"
+      }
     ]
   , tblForeignKeys = [
         (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }
@@ -624,10 +672,13 @@ tableSignatoryLinkConsentQuestions = tblTable {
     , tblColumn { colName = "description_text",  colType = TextT,      colNullable = True }
     ]
   , tblPrimaryKey = pkOnColumn "id"
-  , tblChecks = [
-      Check "description_all_or_nothing"
-        "description_title IS NOT NULL AND description_text IS NOT NULL\
+  , tblChecks =
+    [ tblCheck
+      { chkName = "description_all_or_nothing"
+      , chkCondition =
+            "description_title IS NOT NULL AND description_text IS NOT NULL\
         \ OR description_title IS NULL AND description_text IS NULL"
+      }
     ]
   , tblForeignKeys = [
       (fkOnColumn "signatory_link_id" "signatory_links" "id") { fkOnDelete = ForeignKeyCascade }

@@ -30,7 +30,7 @@ companiesAddPartnerID = Migration {
                                                  , colType = BigIntT
                                                  , colNullable = True
                                                  }
-                              , sqlAddFK tableCompaniesName $
+                              , sqlAddValidFK tableCompaniesName $
                                     (fkOnColumn "partner_id" "partners" "id" )
                                       { fkOnDelete = ForeignKeySetNull } ]
     runSQL_ "UPDATE companies SET partner_id = (SELECT partners.id FROM partners WHERE partners.default_partner) WHERE partner_id IS NULL"
@@ -85,9 +85,9 @@ companiesAddUserGroupID = Migration {
     runQuery_ $ sqlAlterTable tname
       [
         sqlAddColumn $ tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = True }
-      , sqlAddFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
+      , sqlAddValidFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
       ]
-    runQuery_ . sqlCreateIndex tname $ indexOnColumn "user_group_id"
+    runQuery_ . sqlCreateIndexSequentially tname $ indexOnColumn "user_group_id"
 }
 
 companiesMakeUserGroupIDNotNull :: MonadDB m => Migration m
@@ -99,7 +99,7 @@ companiesMakeUserGroupIDNotNull = Migration {
       runQuery_ . sqlAlterTable tname $
         [ sqlAlterColumn "user_group_id" "SET NOT NULL"
         , sqlDropFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
-        , sqlAddFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade }
+        , sqlAddValidFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade }
         ]
   }
 

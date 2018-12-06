@@ -115,11 +115,14 @@ createTableUserGroupInvoicings = Migration {
     , tblForeignKeys = [
         (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade }
       ]
-    , tblChecks = [
-        Check "user_group_invoicing_type_matches_payplan" $
-             "invoicing_type = 1 AND payment_plan IS NULL \
-          \OR invoicing_type = 2 \
-          \OR invoicing_type = 3 AND payment_plan IS NOT NULL"
+    , tblChecks =
+      [ tblCheck
+        { chkName = "user_group_invoicing_type_matches_payplan"
+        , chkCondition =
+               "invoicing_type = 1 AND payment_plan IS NULL \
+            \OR invoicing_type = 2 \
+            \OR invoicing_type = 3 AND payment_plan IS NOT NULL"
+        }
       ]
     }
   }
@@ -130,7 +133,6 @@ userGroupsAdjustIDSequence = Migration {
   , mgrFrom = 1
   , mgrAction = StandardMigration $
       runSQL_ "SELECT setval('user_groups_id_seq', max(id)) FROM companies"
-
   }
 
 usergroupsBumpVersionAfterDroppingCompanies :: MonadDB m => Migration m
@@ -219,7 +221,7 @@ userGroupAddGINIdx = Migration {
     mgrTableName = tblName tableUserGroups
   , mgrFrom = 4
   , mgrAction = StandardMigration $ do
-      runQuery_ . sqlCreateIndex (tblName tableUserGroups) $
+      runQuery_ . sqlCreateIndexSequentially (tblName tableUserGroups) $
                   (indexOnColumnWithMethod "parent_group_path" GIN)
   }
 
@@ -234,10 +236,10 @@ addUserGroupHomeFolderID =
            [ sqlAddColumn tblColumn
              { colName = "home_folder_id", colType = BigIntT
              , colNullable = True }
-           , sqlAddFK tname $ (fkOnColumn "home_folder_id" "folders" "id")
+           , sqlAddValidFK tname $ (fkOnColumn "home_folder_id" "folders" "id")
              { fkOnDelete = ForeignKeyRestrict }
            ]
-         runQuery_ . sqlCreateIndex tname $ indexOnColumn "home_folder_id"
+         runQuery_ . sqlCreateIndexSequentially tname $ indexOnColumn "home_folder_id"
      }
 
 

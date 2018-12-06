@@ -170,11 +170,14 @@ tableUserGroupInvoicings = tblTable {
   , tblForeignKeys = [
       (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade }
     ]
-  , tblChecks = [
-      Check "user_group_invoicing_type_matches_payplan" $
-           "invoicing_type = 1 AND payment_plan IS NULL \
-        \OR invoicing_type = 2 \
-        \OR invoicing_type = 3 AND payment_plan IS NOT NULL"
+  , tblChecks =
+    [ tblCheck
+      { chkName = "user_group_invoicing_type_matches_payplan"
+      , chkCondition =
+             "invoicing_type = 1 AND payment_plan IS NULL \
+          \OR invoicing_type = 2 \
+          \OR invoicing_type = 3 AND payment_plan IS NOT NULL"
+      }
     ]
   }
 

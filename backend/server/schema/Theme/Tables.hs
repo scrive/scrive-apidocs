@@ -27,7 +27,7 @@ tableThemes = tblTable {
   , tblPrimaryKey = pkOnColumn "id"
   }
 
-tableThemeOwnership:: Table
+tableThemeOwnership :: Table
 tableThemeOwnership = tblTable {
     tblName = "theme_owners"
   , tblVersion = 4
@@ -37,9 +37,13 @@ tableThemeOwnership = tblTable {
     , tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = True  }
     ]
   , tblPrimaryKey = pkOnColumn "theme_id"
-  , tblChecks = [Check "check_theme_is_owned_by_user_group_or_domain" $
-          "(user_group_id IS \  \NULL OR domain_id IS \  \NULL) \
-      \AND (user_group_id IS NOT NULL OR domain_id IS NOT NULL)"
+  , tblChecks =
+    [ tblCheck
+      { chkName = "check_theme_is_owned_by_user_group_or_domain"
+      , chkCondition =
+            "(user_group_id IS \  \NULL OR domain_id IS \  \NULL) \
+        \AND (user_group_id IS NOT NULL OR domain_id IS NOT NULL)"
+      }
     ]
   , tblForeignKeys = [
       (fkOnColumn "domain_id" "branded_domains" "id") { fkOnDelete = ForeignKeyCascade }
@@ -53,7 +57,12 @@ domainColor = Domain {
   , domType = TextT
   , domNullable = False
   , domDefault = Nothing
-  , domChecks = mkChecks [Check "color_hex" "VALUE ~ '^#[0-9a-f]{6}$'::text"]
+  , domChecks = mkChecks
+    [ tblCheck
+      { chkName = "color_hex"
+      , chkCondition = "VALUE ~ '^#[0-9a-f]{6}$'::text"
+      }
+    ]
 }
 
 domainFont :: Domain
@@ -62,7 +71,11 @@ domainFont = Domain {
     , domType = TextT
     , domNullable = False
     , domDefault = Nothing
-    , domChecks = mkChecks [Check "font_in_set" sql]
+    , domChecks = mkChecks
+      [ tblCheck
+        { chkName = "font_in_set"
+        , chkCondition = sql
+        }]
   } where sql = rawSQL (T.intercalate " OR " $ map value fonts) ()
           value font = T.concat ["VALUE = '", font, "'::text"]
           fonts :: [T.Text] = ["\"arial black\",sans-serif"

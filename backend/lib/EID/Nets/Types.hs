@@ -69,7 +69,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
-import DB
+import DB hiding (Cursor)
 import Doc.DocumentID
 import Doc.SignatoryLinkID
 import EID.Nets.Config

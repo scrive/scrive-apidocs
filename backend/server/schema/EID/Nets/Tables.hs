@@ -35,11 +35,14 @@ tableNetsSignOrders = tblTable {
     indexOnColumn "session_id"
   , (indexOnColumn "order_id") { idxUnique = True }
   ]
-, tblChecks = [
-    Check "check_nets_sign_orders_ssn_is_well_defined" $
-      -- Norwegian Nets eSigning does not need SSN,
-      -- but Danish Nets eSigning does.
-          "provider = 1 AND ssn IS NULL\
-      \ OR provider = 2 AND ssn IS NOT NULL"
+, tblChecks =
+  [ tblCheck
+    { chkName = "check_nets_sign_orders_ssn_is_well_defined"
+    , chkCondition =
+        -- Norwegian Nets eSigning does not need SSN, but Danish Nets eSigning
+        -- does.
+           "provider = 1 AND ssn IS \  \NULL \
+        \OR provider = 2 AND ssn IS NOT NULL"
+    }
   ]
 }

@@ -18,7 +18,7 @@ addObjectIndexes = Migration {
 , mgrFrom = 2
 , mgrAction = StandardMigration $ do
   runSQL_ "ALTER INDEX idx__logs__time RENAME TO idx__logs__$time$"
-  mapM_ (runQuery_ . sqlCreateIndex (tblName tableLogs) . indexOnColumn) [
+  mapM_ (runQuery_ . sqlCreateIndexSequentially (tblName tableLogs) . indexOnColumn) [
       "(data ->> 'document_id'::text)"
     , "(data ->> 'file_id'::text)"
     , "(data ->> 'signatory_link_id'::text)"
@@ -32,7 +32,7 @@ addColumnDomain = Migration {
 , mgrFrom = 1
 , mgrAction = StandardMigration $ do
   let tname = tblName tableLogs
-  runQuery_ $ sqlCreateIndex tname $ indexOnColumn "component"
+  runQuery_ $ sqlCreateIndexSequentially tname $ indexOnColumn "component"
   runQuery_ $ sqlAlterTable tname [sqlAddColumn tblColumn {
     colName = "domain"
   , colType = ArrayT TextT

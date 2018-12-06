@@ -21,18 +21,51 @@ tableEIDAuthentications = tblTable {
   , tblColumn { colName = "auth_kind", colType = SmallIntT, colNullable = False }
   ]
 , tblPrimaryKey = pkOnColumns ["signatory_link_id", "auth_kind"]
-, tblChecks = [
-      -- Minimal checks to guarantee that fetch error on fromJust will not happen
-      Check "check_cgi_se_bankid_authentications_have_all_required_fields"
-          "provider = 1 AND ocsp_response IS NOT NULL AND signatory_personal_number IS NOT NULL AND signature IS NOT NULL AND signatory_name IS NOT NULL OR provider <> 1"
-    , Check "check_nets_se_bankid_authentications_have_all_required_fields"
-          "provider = 2 AND internal_provider IS NOT NULL AND signatory_date_of_birth IS NOT NULL AND signature IS NOT NULL AND signatory_name IS NOT NULL OR provider <> 2"
-    , Check "check_nets_dk_nemid_authentications_have_all_required_fields"
-          "provider = 3 AND signature IS NOT NULL AND signatory_name IS NOT NULL OR provider <> 3"
-    , Check "check_sms_pin_authentications_have_all_required_fields"
-          "provider = 4 AND signatory_phone_number IS NOT NULL OR provider <> 4"
-    , Check "check_nets_fi_tupas_authentications_have_all_required_fields"
-          "provider = 5 AND signatory_name IS NOT NULL AND signatory_date_of_birth IS NOT NULL OR provider <> 5"
+, tblChecks =
+  [ -- Minimal checks to guarantee that fetch error on fromJust will not happen
+    tblCheck
+    { chkName = "check_cgi_se_bankid_authentications_have_all_required_fields"
+    , chkCondition =
+          "provider = 1 \
+      \AND ocsp_response IS NOT NULL \
+      \AND signatory_personal_number IS NOT NULL \
+      \AND signature IS NOT NULL \
+      \AND signatory_name IS NOT NULL \
+      \OR provider <> 1"
+    }
+  , tblCheck
+    { chkName = "check_nets_se_bankid_authentications_have_all_required_fields"
+    , chkCondition =
+            "provider = 2 \
+        \AND internal_provider IS NOT NULL \
+        \AND signatory_date_of_birth IS NOT NULL \
+        \AND signature IS NOT NULL \
+        \AND signatory_name IS NOT NULL \
+        \OR provider <> 2"
+    }
+  , tblCheck
+    { chkName = "check_nets_dk_nemid_authentications_have_all_required_fields"
+    , chkCondition =
+            "provider = 3 \
+        \AND signature IS NOT NULL \
+        \AND signatory_name IS NOT NULL \
+        \OR provider <> 3"
+    }
+  , tblCheck
+    { chkName = "check_sms_pin_authentications_have_all_required_fields"
+    , chkCondition =
+            "provider = 4 \
+        \AND signatory_phone_number IS NOT NULL \
+        \OR provider <> 4"
+    }
+  , tblCheck
+    { chkName = "check_nets_fi_tupas_authentications_have_all_required_fields"
+    , chkCondition =
+            "provider = 5 \
+        \AND signatory_name IS NOT NULL \
+        \AND signatory_date_of_birth IS NOT NULL \
+        \OR provider <> 5"
+    }
   ]
 , tblForeignKeys = [
     (fkOnColumn "signatory_link_id" "signatory_links" "id") {

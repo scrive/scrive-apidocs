@@ -29,6 +29,7 @@ optimiseUsersHistoryIndexes = let tname = tblName tableUsersHistory in
       mapM_ runQuery_ [
           sqlDropIndex   tname $ indexOnColumn "user_id"
         , sqlDropIndex   tname $ indexOnColumn "performing_user_id"
-        , sqlCreateIndex tname $ indexOnColumns ["user_id", "event_type", "\"time\""]
+        , sqlCreateIndexSequentially tname $
+          indexOnColumns ["user_id", "event_type", "\"time\""]
         ]
   }

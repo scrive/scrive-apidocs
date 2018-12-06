@@ -94,9 +94,9 @@ featureFlagsAddUserGroupID = Migration {
     runQuery_ $ sqlAlterTable tname
       [
         sqlAddColumn $ tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = True }
-      ,  sqlAddFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
+      ,  sqlAddValidFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
       ]
-    runQuery_ . sqlCreateIndex tname $ indexOnColumn "user_group_id"
+    runQuery_ . sqlCreateIndexSequentially tname $ indexOnColumn "user_group_id"
 }
 
 
@@ -110,7 +110,7 @@ featureFlagsDropCompanyID = Migration {
           sqlAlterColumn "user_group_id" "SET NOT NULL"
         , sqlDropFK tname $ (fkOnColumn "company_id" "companies" "id")
         , sqlDropFK tname $ (fkOnColumn "user_group_id" "user_groups" "id")
-        , sqlAddFK  tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade }
+        , sqlAddValidFK  tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyCascade }
         , sqlDropPK tname
         , sqlAddPK tname (fromJust $ pkOnColumn "user_group_id")
         , sqlDropColumn "company_id"

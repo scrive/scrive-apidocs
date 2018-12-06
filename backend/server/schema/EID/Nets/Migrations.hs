@@ -64,10 +64,13 @@ netsSignOrdersAddProviderAndSSN = Migration {
     runSQL_ $ "UPDATE nets_sign_orders SET provider = 1"
     runQuery_ $ sqlAlterTable (tblName tableNetsSignOrders)
       [ sqlAlterColumn "provider" "SET NOT NULL"
-      , sqlAddCheck $ Check "check_nets_sign_orders_ssn_is_well_defined" $
-          -- Norwegian Nets eSigning does not need SSN,
-          -- but Danish Nets eSigning does.
-              "provider = 1 AND ssn IS NULL\
-          \ OR provider = 2 AND ssn IS NOT NULL"
+      , sqlAddValidCheck $ tblCheck
+        { chkName = "check_nets_sign_orders_ssn_is_well_defined"
+        , chkCondition =
+            -- Norwegian Nets eSigning does not need SSN,
+            -- but Danish Nets eSigning does.
+               "provider = 1 AND ssn IS \  \NULL \
+            \OR provider = 2 AND ssn IS NOT NULL"
+        }
       ]
 }
