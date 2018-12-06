@@ -21,6 +21,7 @@ import Crypto.RNG
 import Log
 import Text.StringTemplates.Templates (TemplatesMonad, TemplatesT)
 import qualified Data.ByteString as BS
+import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.Model
 import DB
@@ -149,11 +150,15 @@ sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
       theDocument >>= \doc -> scheduleSMS doc $ sms { SMS.kontraInfoForSMS = Just $ SMS.DocumentInvitationSMS (documentid doc) (signatorylinkid signatorylink)}
     )
 
+  let eventFields = do
+        F.value "used_email_address" . email $ getMailAddress signatorylink
+        F.value "used_mobile_number" $ getMobile signatorylink
+
   when sent $ do
     documentinvitetext <$> theDocument >>= \text ->
             void $ dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
               InvitationEvidence
-              (return ())
+              eventFields
               (Just signatorylink)
               (Just text <| text /= "" |> Nothing)
               (systemActor $ get mctxtime mctx)
