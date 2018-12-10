@@ -679,7 +679,7 @@ $if(provider_dknemid)$
 </p>
 $endif$
 <br/>
-<p>Signature: <div>$signature$</div></p>
+<p>Signature: <div>$personalNumber(value=signature)$</div></p>
 $if(provider_sebankid)$
 <p>Online Certificate Status Protocol (OCSP) Response:
   <div>$ocsp_response$</div>
@@ -756,7 +756,7 @@ elegVerificationAuth=
 </p>
 <br/>
 $if(signature)$
-<p>Signature: <div>$signature$</div></p>
+<p>Signature: <div>$personalNumber(value=signature)$</div></p>
 $endif$
 $if(ocsp_response)$
 <p>Online Certificate Status Protocol (OCSP) Response: <div>$ocsp_response$</div></p>
