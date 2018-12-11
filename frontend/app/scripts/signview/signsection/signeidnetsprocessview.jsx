@@ -188,6 +188,7 @@ var classNames = require("classnames");
         "center-block": true
       });
       var bankID = this.state.model;
+      var document = this.state.model.document();
       var signatory = this.state.model.signatory();
       var confirmationTitle;
       var logoClass;
@@ -202,12 +203,18 @@ var classNames = require("classnames");
         logoClass = classNames({"bankid-logo-nets": true, "dk-nemid-logo": true});
         successText = localization.signDKNemIDSuccess;
       }
+      var transctionNumberText = localization.docsignview.eleg.bankid.transactionNumber;
+      var transactionNumberFirst = String(document.id).slice(0, -4);
+      var transactionNumberLast = String(document.id).slice(-4);
       return (
         <div className={divClass}>
           <h1 className="nets-sign-process">
             <span className={logoClass}/>
             {confirmationTitle}
           </h1>
+          <p className="eid-process-view-doc-id">
+            {transctionNumberText} {transactionNumberFirst}<em>{transactionNumberLast}</em>
+          </p>
           {/* if */ (this.state.signStatus == "signing_in_progress") &&
             <div>
               <iframe
