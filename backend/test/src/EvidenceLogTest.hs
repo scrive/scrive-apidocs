@@ -88,6 +88,9 @@ evidenceLogTemplateVariables = Set.fromList
   , "response"          -- Consent question's response
   , "description_title" -- Consent question's detailed description title
   , "description_text"  -- Consent question's detailed description text
+  , "emailmobile"       -- This relates to the bug found by MR and described in evidenceLogTemplatesWellDefined definition.
+  , "used_email_address" -- Email address which was used to invite (for use in evidence log)
+  , "used_mobile_number" -- SMS telnum which was used to invite (for use in evidence log)
   ]
 
 -- Attachment name                                       , "name"

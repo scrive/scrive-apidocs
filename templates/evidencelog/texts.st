@@ -278,11 +278,11 @@ $endif$
 InvitationDeliveredBySMSArchive=$InvitationDeliveredBySMSSimple()$
 ###
 ###
-SigningInvitationEvidenceLogEmail=Scrive eSign sent an invitation to sign the document via email to <span class="signatory"/>. The invitation included a link that when clicked led to Scrive eSign’s online interface to sign documents. $invitationCustomMessageTextIfThereIsOne()$
+SigningInvitationEvidenceLogEmail=Scrive eSign sent an invitation to sign the document via email ($used_email_address$) to <span class="signatory"/>. The invitation included a link that when clicked led to Scrive eSign’s online interface to sign documents. $invitationCustomMessageTextIfThereIsOne()$
 ###
-SigningInvitationEvidenceLogSMS=Scrive eSign sent an invitation to sign the document via SMS to <span class="signatory"/>. The invitation included a link that when clicked led to Scrive eSign’s online interface to sign documents. $invitationCustomMessageTextIfThereIsOne()$
+SigningInvitationEvidenceLogSMS=Scrive eSign sent an invitation to sign the document via SMS ($used_mobile_number$) to <span class="signatory"/>. The invitation included a link that when clicked led to Scrive eSign’s online interface to sign documents. $invitationCustomMessageTextIfThereIsOne()$
 ###
-SigningInvitationEvidenceLogEmailSMS=Scrive eSign sent an invitation to sign the document via email and SMS to <span class="signatory"/>. The invitation included a link that when clicked led to Scrive eSign’s online interface to sign documents. $invitationCustomMessageTextIfThereIsOne()$
+SigningInvitationEvidenceLogEmailSMS=Scrive eSign sent an invitation to sign the document via email ($used_email_address$) and SMS ($used_mobile_number$) to <span class="signatory"/>. The invitation included a link that when clicked led to Scrive eSign’s online interface to sign documents. $invitationCustomMessageTextIfThereIsOne()$
 ###
 ApproveInvitationEvidenceLogEmail=Scrive eSign sent an invitation to approve the document via email to <span class="signatory"/>. The invitation included a link that when clicked led to Scrive eSign’s online interface to approve documents. $invitationCustomMessageTextIfThereIsOne()$
 ###
@@ -298,28 +298,28 @@ ReviewInvitationEvidenceLogEmailSMS=Scrive eSign sent an invitation to review th
 ###
 InvitationEvidenceLog=*
 $if(signing)$
-  $if(email)$
-      $SigningInvitationEvidenceLogEmail()$
+  $if(emailmobile)$
+      $SigningInvitationEvidenceLogEmailSMS()$
   $elseif(mobile)$
       $SigningInvitationEvidenceLogSMS()$
-  $elseif(emailmobile)$
-      $SigningInvitationEvidenceLogEmailSMS()$
+  $elseif(email)$
+      $SigningInvitationEvidenceLogEmail()$
   $endif$
 $elseif(approving)$
-  $if(email)$
-      $ApproveInvitationEvidenceLogEmail()$
+  $if(emailmobile)$
+      $ApproveInvitationEvidenceLogEmailSMS()$
   $elseif(mobile)$
       $ApproveInvitationEvidenceLogSMS()$
-  $elseif(emailmobile)$
-      $ApproveInvitationEvidenceLogEmailSMS()$
+  $elseif(email)$
+      $ApproveInvitationEvidenceLogEmail()$
   $endif$
 $elseif(viewing)$
-  $if(email)$
-      $ReviewInvitationEvidenceLogEmail()$
+  $if(emailmobile)$
+      $ReviewInvitationEvidenceLogEmailSMS()$
   $elseif(mobile)$
       $ReviewInvitationEvidenceLogSMS()$
-  $elseif(emailmobile)$
-      $ReviewInvitationEvidenceLogEmailSMS()$
+  $elseif(email)$
+      $ReviewInvitationEvidenceLogEmail()$
   $endif$
 $endif$
 ###
