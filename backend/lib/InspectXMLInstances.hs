@@ -40,7 +40,8 @@ import Utils.String
 
 instance (InspectXML a, Show a) => InspectXML [a] where
     inspectXML l =
-      "<ul>" ++ (concatMap (\s -> "<li>" ++ (inspectXML s) ++ "</li>") l) ++ "</ul>"
+      "<ul>" ++ (concatMap (\s -> "<li>" ++ (inspectXML s) ++ "</li>") l) ++
+      "</ul>"
 
 instance (InspectXML a, Show a) => InspectXML (Maybe a) where
     inspectXML Nothing = "Nothing"
@@ -75,8 +76,8 @@ instance InspectXML SignatoryField where
     show (fieldIdentity field) ++ " " ++ value ++ ", " ++
     (if fieldIsObligatory field then "obligatory, " else "optional, ") ++
     (if fieldShouldBeFilledBySender field then "filled by sender, " else "") ++
-    (if (fieldEditableBySignatory field == Just True) then "editable by signatory, "
-     else "") ++
+    (if (fieldEditableBySignatory field == Just True)
+     then "editable by signatory, " else "") ++
     "<br/>placements: " ++ inspectXML (fieldPlacements field)
     where
       value = case (fieldType field) of
@@ -94,15 +95,17 @@ instance InspectXML SignatoryConsentQuestionID where
 
 --Link creating types
 instance InspectXML DocumentID where
-    inspectXML x = "<a href='/dave/document/" ++ show x ++ "/'>"  ++ show x ++"</a>"
+    inspectXML x =
+      "<a href='/dave/document/" ++ show x ++ "/'>"  ++ show x ++ "</a>"
 instance InspectXML SignatoryLinkID where
     inspectXML x =  "<a href='" ++ show x ++ "'>" ++ show x ++"</a>"
 instance InspectXML UserID where
     inspectXML x =  "<a href='/dave/user/" ++ show x ++ "'>"  ++ show x ++"</a>"
 instance InspectXML File where
     inspectXML file =
-      "<a href='" ++ (inspectXML $ LinkDaveFile (fileid file) (filename file)) ++"'>" ++
-      show (fileid file)++ "/" ++ inspectXML (filename file) ++"</a>"
+      "<a href='" ++
+      (inspectXML $ LinkDaveFile (fileid file) (filename file)) ++
+      "'>" ++ show (fileid file) ++ "/" ++ inspectXML (filename file) ++"</a>"
 instance InspectXML FileID where
     inspectXML fileid =
       "<a href='" ++ (inspectXML $ LinkDaveFile fileid (show fileid)) ++ "'>" ++
@@ -112,7 +115,8 @@ instance InspectXML (S.Set DocumentTag) where
 
 instance InspectXML BrandedDomainID where
     inspectXML x =
-      "<a href='/adminonly/brandeddomain/" ++ show x ++ "'>"  ++ show x ++ "</a>"
+      "<a href='/adminonly/brandeddomain/" ++ show x ++ "'>"  ++ show x ++
+      "</a>"
 
 instance {-# OVERLAPPING #-} InspectXML String where
   inspectXML str = "\"" ++ escapeString str ++ "\""
