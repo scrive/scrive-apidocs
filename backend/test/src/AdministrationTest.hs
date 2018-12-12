@@ -21,16 +21,21 @@ import UserGroup.Types.PaymentPlan
 import Util.CSVUtil (CSV(..))
 
 administrationTests :: TestEnvSt -> Test
-administrationTests env = testGroup "AdministrationControl" [
-                             testThat "Searching for companies in adminonly works" env test_jsonCompanies
-                           , testThat "InvoicingReport doesn't trigger exception in a simple case" env test_invoicingReport
-                          ]
+administrationTests env =
+  testGroup "AdministrationControl"
+  [ testThat "Searching for companies in adminonly works" env test_jsonCompanies
+  , testThat "InvoicingReport doesn't trigger exception in a simple case" env
+    test_invoicingReport
+  ]
 
 test_jsonCompanies :: TestEnv ()
 test_jsonCompanies = do
-  (_adminuser1, _ug1) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
-  (adminuser2, ug2) <- addNewAdminUserAndUserGroup "Jet" "Li" "jet.li@example.com"
-  Just _standarduser2 <- addNewUserToUserGroup "Bob" "Blue" "jony@blue.com" (get ugID ug2)
+  (_adminuser1, _ug1) <- addNewAdminUserAndUserGroup "Anna" "Android"
+                         "anna@android.com"
+  (adminuser2, ug2)   <- addNewAdminUserAndUserGroup "Jet" "Li"
+                         "jet.li@example.com"
+  Just _standarduser2 <- addNewUserToUserGroup "Bob" "Blue"
+                         "jony@blue.com" (get ugID ug2)
   void $ dbUpdate . UserGroupUpdate . set ugInvoicing (Invoice OnePlan) $ ug2
 
   ctx <- (set ctxmaybeuser     (Just adminuser2) .
@@ -55,16 +60,19 @@ test_jsonCompanies = do
 test_invoicingReport:: TestEnv ()
 test_invoicingReport = do
   (u1, ug1) <- addNewAdminUserAndUserGroup "Anna" "A1" "a1@android.com"
-  (_, ug2) <- addNewAdminUserAndUserGroup "Anna" "A2" "a2@android.com"
-  (_, ug3) <- addNewAdminUserAndUserGroup "Bob" "B1" "b1@example.com"
+  (_, ug2)  <- addNewAdminUserAndUserGroup "Anna" "A2" "a2@android.com"
+  (_, ug3)  <- addNewAdminUserAndUserGroup "Bob"  "B1" "b1@example.com"
   void $ addNewUserToUserGroup "Bob" "B2" "b2@blue.com" (get ugID ug3)
-  void $ dbUpdate $ UserGroupUpdate $ set ugInvoicing (Invoice OnePlan) $ ug1
+  void $ dbUpdate $ UserGroupUpdate $ set ugInvoicing (Invoice OnePlan)  $ ug1
   void $ dbUpdate $ UserGroupUpdate $ set ugInvoicing (Invoice TeamPlan) $ ug2
-  void $ dbUpdate $ UserGroupUpdate $ set ugInvoicing (Invoice EnterprisePlan) $ ug3
+  void $ dbUpdate $ UserGroupUpdate $ set ugInvoicing (Invoice EnterprisePlan)
+    $ ug3
 
   did1 <- addRandomDocumentWithAuthorAndCondition u1 (isClosed && isSignable)
   void $ dbUpdate $ ChargeUserGroupForClosingDocument $ documentid did1
 
-  ct <- currentTime
+  ct  <- currentTime
   csv <- dbQuery $ InvoicingReport $ 1 `daysAfter` ct
-  assertBool "There are some rows in invoicing csv if there are some companies in DB" (length (csvContent csv) > 0)
+  assertBool
+    "There are some rows in invoicing csv if there are some companies in DB"
+    (length (csvContent csv) > 0)
