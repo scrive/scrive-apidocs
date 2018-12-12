@@ -13,7 +13,7 @@ import qualified Data.ByteString.Lazy as BSL
 import DB
 import Planhat.Communication
 import Planhat.Config
-import User.Model (GetUserGroupAccountsCountActive(..), GetUserGroupAccountsCountMainDomainBranding(..), GetUserGroupAccountsCountTotal(..))
+import User.Model (GetUserGroupAccountsCountActive(..), GetUserGroupAccountsCountTotal(..))
 import UserGroup.Types
 
 doDailyPlanhatStats :: ( MonadDB m
@@ -29,28 +29,25 @@ doDailyPlanhatStats phConf reqManager = do
   logInfo_ "Generating Planhat user stats"
   usersTotal  <- dbQuery GetUserGroupAccountsCountTotal
   usersActive <- dbQuery GetUserGroupAccountsCountActive
-  usersMainDomainBranding <- dbQuery GetUserGroupAccountsCountMainDomainBranding
 
   -- metrics; the Planhat metrics API endpoint accepts a list so we concatenate
   -- the updates to be efficient
   logPlanhatErrors =<< (liftIO $ do
     httpLbs (mkPlanhatRequest
-              phConf
-              phMetricsURL
-              (JSON.toJSON $
-                (planhatMetricJSONs "users_total" usersTotal now) <>
-                (planhatMetricJSONs "users_active" usersActive now) <>
-                (planhatMetricJSONs "users_main_branding" usersMainDomainBranding now)))
+               phConf
+               phMetricsURL
+               (JSON.toJSON $
+                 (planhatMetricJSONs "users_total" usersTotal now) <>
+                 (planhatMetricJSONs "users_active" usersActive now)))
             reqManager)
+    where
 
-  where
+      planhatMetricJSONs :: String -> [(UserGroupID, UserGroupID, Int64)] -> UTCTime -> [JSON.Value]
+      planhatMetricJSONs dimensionId uts now = map (\(invoiceUgid, ugid, k) ->
+        planhatMetricJSON dimensionId k invoiceUgid ugid now) uts
 
-    planhatMetricJSONs :: String -> [(UserGroupID, Int64)] -> UTCTime -> [JSON.Value]
-    planhatMetricJSONs dimensionId uts now = map (\(ugid, k) ->
-      planhatMetricJSON dimensionId k ugid now) uts
-
-    logPlanhatErrors :: (MonadLog m) => Response BSL.ByteString-> m ()
-    logPlanhatErrors res = do
-      case maybeErrors . getResponseBody $ res of
-        Nothing -> return ()
-        Just errObject -> logInfo "Planhat call error" $ errObject
+      logPlanhatErrors :: (MonadLog m) => Response BSL.ByteString-> m ()
+      logPlanhatErrors res = do
+        case maybeErrors . getResponseBody $ res of
+          Nothing -> return ()
+          Just errObject -> logInfo "Planhat call error" $ errObject

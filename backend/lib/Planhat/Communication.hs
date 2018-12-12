@@ -59,9 +59,22 @@ planhatActionJSON actionTag email userId time =
                 , "externalId" .= (show . unUserID $ userId)
                 , "date"       .= time ]
 
-planhatMetricJSON :: String -> Int64 -> UserGroupID -> UTCTime -> JSON.Value
-planhatMetricJSON dimensionId value ugid time =
-    JSON.object [ "companyExternalId" .= (Text.pack $ show ugid)
-                , "dimensionId"       .= dimensionId
-                , "value"             .= value
-                , "date"              .= time ]
+planhatMetricJSON
+    :: String
+    -- | The name of the dimension used.
+    -> Int64
+    -- | Just a counter.
+    -> UserGroupID
+    -- | @rootugid@: the @UserGroupID@ of the invoicing parent user group.
+    -> UserGroupID
+    -- | @sugid@: the @UserGroupID@ of the subgroup to which a dimension belongs.
+    -> UTCTime
+    -- | Just a timestamp.
+    -> JSON.Value
+planhatMetricJSON dimensionId value invoiceUgid sugid time =
+    JSON.object
+      [ "companyExternalId" .= (Text.pack $ show invoiceUgid)
+      , "dimensionId"       .= dimensionId
+      , "value"             .= value
+      , "date"              .= time
+      , "assetExtId"        .= (Text.pack $ show sugid)]

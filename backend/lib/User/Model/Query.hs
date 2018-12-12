@@ -1,6 +1,5 @@
 module User.Model.Query (
     GetUserGroupAccountsCountActive(..)
-  , GetUserGroupAccountsCountMainDomainBranding(..)
   , GetUserGroupAccountsCountTotal(..)
   , GetUserGroupAdmins(..)
   , GetUserRoles(..)
@@ -38,7 +37,7 @@ import User.Password
 import User.Types.Stats
 import User.Types.User
 import User.UserID
-import UserGroup.Types (UserGroupID)
+import UserGroup.Types
 import UserGroup.Types.PaymentPlan
 
 data GetUserWherePasswordAlgorithmIsEarlierThan =
@@ -96,82 +95,107 @@ instance MonadDB m => DBQuery m UserGroupGetUsersIncludeDeleted [User] where
     fetchMany fetchUser
 
 data GetUserGroupAccountsCountTotal = GetUserGroupAccountsCountTotal
-instance (MonadDB m, MonadThrow m) => DBQuery m GetUserGroupAccountsCountTotal [(UserGroupID, Int64)] where
+instance (MonadDB m, MonadThrow m)
+  => DBQuery m GetUserGroupAccountsCountTotal [(UserGroupID, UserGroupID, Int64)] where
   query GetUserGroupAccountsCountTotal = do
     runQuery_ $ sqlSelect "users u" $ do
-      sqlJoinOn "user_group_invoicings uginv" "u.user_group_id = uginv.user_group_id"
-      sqlResult "u.user_group_id"
-      sqlResult "count(u.id)"
-      sqlWhereIsNotScriveEmail "u.email"
-      sqlWhereIsNULL "u.deleted"
-      sqlWhereNotEq "uginv.payment_plan" FreePlan
-      sqlGroupBy "u.user_group_id"
-    fetchMany id
+      sqlWithClosestInvoicingID "closest_invoicing_parent"
 
-data GetUserGroupAccountsCountMainDomainBranding = GetUserGroupAccountsCountMainDomainBranding
-instance (MonadDB m, MonadThrow m) => DBQuery m GetUserGroupAccountsCountMainDomainBranding [(UserGroupID, Int64)] where
-  query GetUserGroupAccountsCountMainDomainBranding = do
-    runQuery_ $ sqlSelect "users u" $ do
-      sqlJoinOn "user_group_invoicings uginv" "u.user_group_id = uginv.user_group_id"
-      sqlResult "u.user_group_id"
+      sqlJoinOn "user_groups ug" "ug.id = u.user_group_id"
+      sqlJoinOn "user_group_invoicings ugi" "ugi.user_group_id = u.user_group_id"
+      sqlJoinOn "closest_invoicing_parent cip" "cip.user_group_id = u.user_group_id"
+
+      sqlResult "cip.parent_user_group_id"
+      sqlResult "ug.id"
       sqlResult "count(u.id)"
+
+      sqlGroupBy "cip.parent_user_group_id"
+      sqlGroupBy "ug.id"
+
       sqlWhereIsNotScriveEmail "u.email"
       sqlWhereIsNULL "u.deleted"
-      sqlWhereNotEq "uginv.payment_plan" FreePlan
-      sqlWhere ("u.associated_domain_id = (SELECT b.id FROM branded_domains b " <>
-                "WHERE b.main_domain=TRUE LIMIT 1)")
-      sqlGroupBy "u.user_group_id"
+      sqlWhere . sqlConcatOR $ [isNotFree, hasParent]
+
     fetchMany id
+      where hasParent = "ug.parent_group_id IS NOT NULL"
+            isNotFree = "ugi.payment_plan <>" <?> FreePlan
 
 data GetUserGroupAccountsCountActive = GetUserGroupAccountsCountActive
-instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetUserGroupAccountsCountActive [(UserGroupID, Int64)] where
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetUserGroupAccountsCountActive [(UserGroupID, UserGroupID, Int64)] where
   query GetUserGroupAccountsCountActive = do
     now <- currentTime
     runQuery_ $ activeUsersQuery now
     fetchMany id
-
       where
-
         activeUsersQuery :: UTCTime -> SQL
-        activeUsersQuery now = ("SELECT user_group_id, count(user_id) FROM") <+>
-                           (
-                            "(" <+>
-                            loggedInRecently now <+>
-                            "UNION" <+>
-                            docSentRecently now <+>
-                            ")"
-                           ) <+>
-                           "as active_users GROUP BY user_group_id;"
+        activeUsersQuery now =
+          "SELECT parent_invoicing, user_group_id, count(user_id) FROM" <+>
+          parenthesize (parenthesize (loggedInRecently now) <+>
+                        "UNION" <+>
+                        parenthesize (docSentRecently now)) <+>
+          "AS active_users GROUP BY parent_invoicing, user_group_id;"
 
-        -- this query would benefit by having more work_mem since it's merge
-        -- sorting on disc with a mere 4MB - and 8MB is _not_ enough, but 20
-        -- _is_, currently anyway.
+        -- This query would benefit by having more `work_mem` since it's merge
+        -- sorting on disc with a mere 4MB; 8MB was not enough, but 20
+        -- _was_ at the time of checking.
         loggedInRecently :: UTCTime -> SQL
         loggedInRecently now = toSQLCommand $
           sqlSelect "users u" $ do
-            sqlJoinOn "users_history h" "u.id = h.user_id"
+            -- set up CTEs to get closest invoicing parent
+            sqlWithClosestInvoicingID "closest_invoicing_parent"
+
+            sqlJoinOn "user_groups ug" "u.user_group_id = ug.id"
             sqlJoinOn "user_group_invoicings ugi" "ugi.user_group_id = u.user_group_id"
+            sqlJoinOn "closest_invoicing_parent cip" "cip.user_group_id = u.user_group_id"
+            sqlJoinOn "users_history h" "u.id = h.user_id"
+
+            sqlResult "cip.parent_user_group_id parent_invoicing"
             sqlResult "u.user_group_id AS user_group_id"
             sqlResult "u.id AS user_id"
+
             sqlWhereEq "h.event_type" UserLoginSuccess
-            sqlWhereNotEq "ugi.payment_plan" FreePlan
+            sqlWhere . sqlConcatOR $ [isNotFree, hasParent]
             sqlWhereIsNotScriveEmail "u.email"
+
+            -- No need to group by "u.user_group_id" since we do that on the PK
+            -- in the same table;
+            -- cf. https://www.postgresql.org/docs/current/sql-select.html#SQL-GROUPBY
+            sqlGroupBy "cip.parent_user_group_id"
             sqlGroupBy "u.id"
+
             sqlHaving $ "max(h.time) > (" <?> now <+> " - interval '4 weeks')"
 
         docSentRecently :: UTCTime -> SQL
         docSentRecently now = toSQLCommand $
-          sqlSelect "chargeable_items i" $ do
-            sqlJoinOn "users u" "u.id = i.user_id"
-            sqlJoinOn "user_group_invoicings ugi" "ugi.user_group_id = i.user_group_id"
-            sqlResult "i.user_group_id AS user_group_id"
-            sqlResult "i.user_id AS user_id"
-            sqlWhereEq "i.\"type\"" CIStartingDocument
-            sqlWhereNotEq "ugi.payment_plan" FreePlan
+          sqlSelect "users as u" $ do
+            -- set up CTEs to get closest invoicing parent
+            sqlWithClosestInvoicingID "closest_invoicing_parent"
+
+            sqlJoinOn "chargeable_items as ci" "u.id = ci.user_id"
+            sqlJoinOn "user_groups as ug" "ug.id = u.user_group_id"
+            sqlJoinOn "user_group_invoicings as ugi" "ugi.user_group_id = ci.user_group_id"
+            sqlJoinOn "closest_invoicing_parent as cip" "cip.user_group_id = u.user_group_id"
+
+            sqlResult "cip.parent_user_group_id as parent_invoicing"
+            sqlResult "u.user_group_id as user_group_id"
+            sqlResult "u.id as user_id"
+
+            sqlWhereEq "ci.\"type\"" CIStartingDocument
+            sqlWhere . sqlConcatOR $ [isNotFree, hasParent]
             sqlWhereIsNotScriveEmail "u.email"
-            sqlGroupBy "i.user_id"
-            sqlGroupBy "i.user_group_id"
-            sqlHaving $ "max(i.time) > (" <?> now <+> " - interval '4 weeks')"
+
+            -- No need to group by "u.user_group_id" since we do that on the PK
+            -- in the same table; cf. above.
+            sqlGroupBy "cip.parent_user_group_id "
+            sqlGroupBy "u.id"
+
+            sqlHaving $ "max(ci.time) > (" <?> now <+> " - interval '4 weeks')"
+
+        hasParent :: SQL
+        hasParent = "ug.parent_group_id IS NOT NULL"
+
+        isNotFree :: SQL
+        isNotFree = "ugi.payment_plan <>" <?> FreePlan
 
 data GetUserGroupAdmins = GetUserGroupAdmins UserGroupID
 instance MonadDB m => DBQuery m GetUserGroupAdmins [User] where
@@ -313,3 +337,25 @@ sqlWhereIsNotScriveEmail :: (MonadState v m, SqlWhere v) => SQL -> m ()
 sqlWhereIsNotScriveEmail field = do
   sqlWhere $ field <+> "NOT LIKE '%@scrive.%'"
   sqlWhere $ field <+> "NOT LIKE '%@skrivapa.%'"
+
+-- | Get the user group id of a group and that of the closest parent that has
+-- invoicing set. The SQL param is for convenient naming at point of use to keep
+-- the names locally in the sources.
+sqlWithClosestInvoicingID :: (MonadState SqlSelect m) => SQL -> m ()
+sqlWithClosestInvoicingID publicName = do
+  sqlWith "invoicing_parents" . sqlSelect ("user_groups ug," <+>
+               "unnest(array_prepend(ug.id, ug.parent_group_path)) WITH ORDINALITY") $ do
+    sqlJoinOn "user_group_invoicings ugi" "ugi.user_group_id = unnest"
+    sqlResult "ug.id user_group_id"
+    sqlResult "unnest parent_user_group_id"
+    sqlResult "ordinality parent_order"
+    sqlWhereEq "ugi.invoicing_type" InvoicingTypeInvoice
+  sqlWith "closest_invoicing_parent_order_id" . sqlSelect "invoicing_parents ip" $ do
+    sqlResult "ip.user_group_id user_group_id"
+    sqlResult "min(ip.parent_order) parent_order"
+    sqlGroupBy "ip.user_group_id"
+  sqlWith publicName . sqlSelect "invoicing_parents ip" $ do
+    sqlJoinOn "closest_invoicing_parent_order_id cipoid" "ip.user_group_id = cipoid.user_group_id"
+    sqlResult "ip.user_group_id user_group_id"
+    sqlResult "ip.parent_user_group_id parent_user_group_id"
+    sqlWhere "ip.parent_order = cipoid.parent_order"
