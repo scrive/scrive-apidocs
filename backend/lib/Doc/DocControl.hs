@@ -65,7 +65,7 @@ import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocumentID
 import Doc.DocumentMonad (DocumentMonad, theDocument, withDocument, withDocumentID, withDocumentM)
-import Doc.DocUtils (fileFromMainFile)
+import Doc.DocUtils (canSignatorySignNow, fileFromMainFile)
 import Doc.DocView
 import Doc.DocViewMail
 import Doc.Logging
@@ -398,7 +398,9 @@ handleIssueShowGet docid = withUserTOS $ \_ -> do
       isauthor = (userid <$> muser) == maybesignatory authorsiglink
   mauthoruser <- maybe (return Nothing) (dbQuery . GetUserByIDIncludeDeleted) (maybesignatory authorsiglink)
 
-  let isincompany = isJust muser && ((usergroupid <$> muser) == (usergroupid <$> mauthoruser))
+  let isincompany = case muser of
+        Nothing -> False
+        Just user -> useriscompanyadmin user && Just (usergroupid user) == (usergroupid <$> mauthoruser)
       msiglink = find (isSigLinkFor muser) $ documentsignatorylinks document
   ad <- getAnalyticsData
 
@@ -416,16 +418,16 @@ handleIssueShowGet docid = withUserTOS $ \_ -> do
                      =<< pageDocumentIdentifyView ctx document sl ad
           False -> internalResponse <$> pageDocumentView ctx document msiglink isincompany
         else internalResponse <$> pageDocumentView ctx document msiglink isincompany
-      | otherwise -> do
+      | canSignatorySignNow document sl -> do
        -- Simply loading pageDocumentSignView doesn't work when signatory needs
        -- to authenticate to view, redirect to proper sign view.
        -- We need link with magic hash for non-author signatories, that
        -- view the document from their archive
        return $ internalResponse $ LinkSignDoc docid sl
-    (False, Nothing) | isincompany -> do
-      internalResponse <$> pageDocumentView ctx document msiglink isincompany
-    _                                -> do
-       internalError
+      | isincompany -> internalResponse <$> pageDocumentView ctx document msiglink isincompany
+      | otherwise -> internalError -- can this happen at all?
+    (False, Nothing) | isincompany -> internalResponse <$> pageDocumentView ctx document msiglink isincompany
+    _ -> internalError
 
 
 {- We return pending message if file is still pending, else we return JSON with number of pages-}
