@@ -134,6 +134,14 @@ properties:
       - se_bankid
       - no_bankid
       - dk_nemid
+  authentication_method_to_view_archived:
+    type: string
+    default: standard
+    enum:
+      - standard
+      - se_bankid
+      - no_bankid
+      - dk_nemid
   authentication_method_to_sign:
     type: string
     default: standard
@@ -340,6 +348,7 @@ example:
     "csv": null,
     "delivery_method": "pad",
     "authentication_method_to_view": "standard",
+    "authentication_method_to_view_archived": "standard",
     "authentication_method_to_sign": "standard",
     "confirmation_delivery_method": "none",
     "allows_highlighting": true,
