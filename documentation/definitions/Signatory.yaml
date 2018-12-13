@@ -134,6 +134,7 @@ properties:
       - se_bankid
       - no_bankid
       - dk_nemid
+      - fi_tupas
   authentication_method_to_view_archived:
     type: string
     default: standard
@@ -142,6 +143,7 @@ properties:
       - se_bankid
       - no_bankid
       - dk_nemid
+      - fi_tupas
   authentication_method_to_sign:
     type: string
     default: standard
