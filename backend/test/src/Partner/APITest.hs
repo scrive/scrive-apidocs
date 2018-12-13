@@ -57,7 +57,7 @@ testPartnerCompanyCreate = do
 
   -- Random  user shouldn't be able to create company
   randomUser <- addNewRandomUser
-  randomCtx <- (set ctxmaybeuser (Just randomUser)) <$> mkContext def
+  randomCtx <- (set ctxmaybeuser (Just randomUser)) <$> mkContext defaultLang
   randomReq <- mkRequestWithHeaders POST [] []
   (randomRes1,_) <- runTestKontra randomReq randomCtx $ partnerApiCallV1CompanyCreate pid1
   (randomRes2,_) <- runTestKontra randomReq randomCtx $ partnerApiCallV1CompanyCreate pid2
@@ -119,7 +119,7 @@ testPartnerCompanyUpdate = do
 
   -- Random user shouldn't be able to update
   randomUser <- addNewRandomUser
-  randomCtx <- (set ctxmaybeuser (Just randomUser)) <$> mkContext def
+  randomCtx <- (set ctxmaybeuser (Just randomUser)) <$> mkContext defaultLang
   randomReq <- mkRequestWithHeaders POST [ ("json", inTextBS companyUpdateJSON) ] []
   (randomRes,_) <- runTestKontra randomReq randomCtx $ partnerApiCallV1CompanyUpdate pid cid
   assertEqual ("We should get a 403 response") 403 (rsCode randomRes)
@@ -203,7 +203,7 @@ testPartnerCompanyGet = do
 
   -- Random user shouldn't be able to update
   randomUser <- addNewRandomUser
-  randomCtx <- (set ctxmaybeuser (Just randomUser)) <$> mkContext def
+  randomCtx <- (set ctxmaybeuser (Just randomUser)) <$> mkContext defaultLang
   randomReq <- mkRequestWithHeaders POST [] []
   (randomRes,_) <- runTestKontra randomReq randomCtx $ partnerApiCallV1CompanyGet pid cid
   assertEqual ("We should get a 403 response") 403 (rsCode randomRes)
@@ -272,7 +272,7 @@ testPartnerCompaniesGet = do
   randomUser <- addNewRandomUser
 
   -- random user is denied listing companies of partnerA
-  randomCtx <- (set ctxmaybeuser (Just randomUser)) <$> mkContext def
+  randomCtx <- (set ctxmaybeuser (Just randomUser)) <$> mkContext defaultLang
   randomReq <- mkRequestWithHeaders POST [] []
   (randomRes,_) <- runTestKontra randomReq randomCtx $ partnerApiCallV1CompaniesGet pidA
   assertEqual ("We should get a 403 response") 403 (rsCode randomRes)
@@ -597,7 +597,7 @@ testPartnersUserGetTokens = do
       Just (String accesssecret) = H.lookup "accesssecret" respObject
 
   -- Should be able to create a new document using these tokens
-  ctx' <- mkContext def
+  ctx' <- mkContext defaultLang
   let authStr = "oauth_signature_method=\"PLAINTEXT\""
              ++ ",oauth_consumer_key=\"" ++ T.unpack apitoken ++ "\""
              ++ ",oauth_token=\"" ++ T.unpack accesstoken ++"\""
@@ -682,7 +682,7 @@ testHelperPartnerCompanyUserCreate ctx pid company_ugid = do
 testJSONCtxWithPartnerGroupID :: TestEnv (Context, Int64)
 testJSONCtxWithPartnerGroupID = do
   (partnerAdminUser, partnerAdminUserGroup) <- addNewRandomPartnerUser
-  ctx <- (set ctxmaybeuser (Just partnerAdminUser)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just partnerAdminUser)) <$> mkContext defaultLang
   return (ctx, fromUserGroupID . get ugID $ partnerAdminUserGroup)
 
 runApiJSONTest :: Context             -- ^ Context to run the test in

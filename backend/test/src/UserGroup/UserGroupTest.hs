@@ -208,7 +208,7 @@ testChangeUserGroupParent = do
       parentUsrGrpID = get ugID parentUsrGrp
       usrEmail = "testuseremail@scrive.com"
   Just user <- addNewUserToUserGroup "Froggie" "Freddie" usrEmail usrGrpID
-  ctx <- (set ctxmaybeuser $ Just user) <$> mkContext def
+  ctx <- (set ctxmaybeuser $ Just user) <$> mkContext defaultLang
 
   let params1 = [("companypartnerid", inText . show $ parentUsrGrpID)]
   req1 <- mkRequest POST params1

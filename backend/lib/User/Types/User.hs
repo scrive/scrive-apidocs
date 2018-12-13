@@ -1,5 +1,7 @@
 module User.Types.User
     ( composeFullName
+    , defaultUser
+    , defaultUserInfo
     , fetchUser
     , fetchUserWithUserGroupName
     , selectUsersSQL
@@ -77,8 +79,9 @@ instance HasSomeUserInfo UserInfo where
   getPersonalNumber = userpersonalnumber
   getMobile         = userphone
 
-instance Default User where
-    def = User {
+defaultUser :: User
+defaultUser =
+  User {
     userid                        = unsafeUserID 0
   , userpassword                  = Nothing
   , usertotp                      = Nothing
@@ -87,14 +90,15 @@ instance Default User where
   , useraccountsuspended          = False
   , userhasacceptedtermsofservice = Nothing
   , usersignupmethod              = ByAdmin
-  , userinfo                      = def
+  , userinfo                      = defaultUserInfo
   , usersettings                  = UserSettings LANG_EN def
   , userassociateddomainid        = unsafeBrandedDomainID 0
   , usergroupid                   = emptyUserGroupID
   }
 
-instance Default UserInfo where
-    def = UserInfo {
+defaultUserInfo :: UserInfo
+defaultUserInfo =
+  UserInfo {
     userfstname         = ""
   , usersndname         = ""
   , userpersonalnumber  = ""

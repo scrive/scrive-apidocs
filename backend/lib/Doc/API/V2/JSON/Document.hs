@@ -26,7 +26,7 @@ import Util.SignatoryLinkUtils
 
 unjsonDocument :: DocumentAccess -> UnjsonDef Document
 unjsonDocument da = objectOf $
-       pure def
+       pure defaultDocument
   <*   fieldReadonly "id" documentid "Document ID"
   <**> (field "title" documenttitle "Document title"
         <**> (pure $ \t d -> d { documenttitle = t }))

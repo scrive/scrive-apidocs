@@ -118,7 +118,7 @@ testDetailsChanged = do
 testHandlerForLoginAttempt :: TestEnv ()
 testHandlerForLoginAttempt = do
     user <- createTestUser
-    ctx <- mkContext def
+    ctx <- mkContext defaultLang
     req <- mkRequest POST [ ("email", inText "karol@skrivapa.se")
                           , ("password", inText "test")
                           ]
@@ -131,7 +131,7 @@ testHandlerForLoginAttempt = do
 testHandlerForLoginSuccess :: TestEnv ()
 testHandlerForLoginSuccess = do
     user <- createTestUser
-    ctx <- mkContext def
+    ctx <- mkContext defaultLang
     req <- mkRequest POST [ ("email", inText "karol@skrivapa.se")
                           , ("password", inText "test_password")
                           ]
@@ -145,7 +145,7 @@ testHandlerForPasswordSetup :: TestEnv ()
 testHandlerForPasswordSetup = do
     user <- createTestUser
     ctx <- (set ctxmaybeuser (Just user))
-      <$> mkContext def
+      <$> mkContext defaultLang
     req <- mkRequest POST [ ("oldpassword", inText "test_password")
                           , ("password", inText "test1111test")
                           ]
@@ -159,7 +159,7 @@ testHandlerForPasswordSetupReq :: TestEnv ()
 testHandlerForPasswordSetupReq = do
     user <- createTestUser
     ctx <- (set ctxmaybeuser (Just user))
-      <$> mkContext def
+      <$> mkContext defaultLang
     req <- mkRequest POST [ ("oldpassword", inText "test")
                           , ("password", inText "test1111test")
                           ]
@@ -171,7 +171,7 @@ testHandlerForPasswordSetupReq = do
 
 testHandlerForAccountCreated :: TestEnv ()
 testHandlerForAccountCreated = do
-    ctx <- mkContext def
+    ctx <- mkContext defaultLang
     req <- mkRequest POST [ ("email", inText "test@test.com")]
     void $ runTestKontra req ctx $ apiCallSignup
     Just user <- dbQuery $ GetUserByEmail $ Email "test@test.com"
@@ -185,7 +185,7 @@ testHandlerForAccountCreated = do
 
 testHandlerForTOSAccept :: TestEnv ()
 testHandlerForTOSAccept = do
-    ctx <- mkContext def
+    ctx <- mkContext defaultLang
     req1 <- mkRequest POST [("email", inText "karol@skrivapa.se")]
     (_, ctx1) <- runTestKontra req1 ctx $ apiCallSignup
     UserAccountRequest{..} <- head <$> getAccountCreatedActions
@@ -205,7 +205,7 @@ testHandlerForDetailsChanged :: TestEnv ()
 testHandlerForDetailsChanged = do
     user <- createTestUser
     ctx <- (set ctxmaybeuser (Just user))
-      <$> mkContext def
+      <$> mkContext defaultLang
     req <- mkRequest POST [ ("fstname", inText "Karol")
                           , ("sndname", inText "Samborski")
                           , ("personalnumber", inText "1234567890")
@@ -247,7 +247,7 @@ createTestUser = do
                                 "karol@skrivapa.se"
                                 (Just pwd)
                                 (get ugID ug, True)
-                                def
+                                defaultLang
                                 (get bdid bd)
                                 AccountRequest
     case muser of

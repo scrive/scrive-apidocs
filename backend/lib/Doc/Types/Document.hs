@@ -3,6 +3,7 @@ module Doc.Types.Document (
   , DocumentSharing(..)
   , StatusClass(..)
   , Document(..)
+  , defaultDocument
   , documentsSelectors
   , documentStatusClassExpression
   , documentfile
@@ -12,7 +13,6 @@ module Doc.Types.Document (
 
 import Control.Monad.Catch
 import Data.Aeson.Types
-import Data.Default
 import Data.Int
 import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.SQL.Builder
@@ -234,8 +234,9 @@ instance Loggable Document where
     ]
   logDefaultLabel _ = "document"
 
-instance Default Document where
-  def = Document {
+defaultDocument :: Document
+defaultDocument =
+  Document {
     documentid = unsafeDocumentID 0
   , documenttitle = ""
   , documentsignatorylinks = []
@@ -260,7 +261,7 @@ instance Default Document where
   , documentsharing = Private
   , documenttags = S.empty
   , documentauthorattachments = []
-  , documentlang = def
+  , documentlang = defaultLang
   , documentstatusclass = SCDraft
   , documentapiv1callbackurl = Nothing
   , documentapiv2callbackurl = Nothing

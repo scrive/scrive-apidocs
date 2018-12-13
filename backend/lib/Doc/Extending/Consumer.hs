@@ -23,6 +23,7 @@ import FileStorage
 import GuardTime
 import Log.Identifier
 import Templates
+import User.Lang (defaultLang)
 
 data DocumentExtendingConsumer = DocumentExtendingConsumer {
     decDocumentID :: !DocumentID
@@ -67,7 +68,7 @@ documentExtendingConsumer guardTimeConf templates pool
     runExtending dec = do
       resultisok <- withPostgreSQL pool
         . withDocumentM (dbQuery $ GetDocumentByDocumentID $ decDocumentID dec)
-        . runTemplatesT (def, templates)
+        . runTemplatesT (defaultLang, templates)
         . runGuardTimeConfT guardTimeConf
         $ extendDigitalSignature
       case resultisok of

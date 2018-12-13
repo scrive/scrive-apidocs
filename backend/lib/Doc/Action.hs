@@ -308,7 +308,7 @@ findAndTimeoutDocuments = do
   docs <- dbQuery $ GetTimeoutedButPendingDocumentsChunk now 100
   forM_ docs $ flip withDocument $ do
     gt <- asks ceTemplates
-    runTemplatesT (def, gt) $ dbUpdate $ TimeoutDocument (systemActor now)
+    runTemplatesT (defaultLang, gt) $ dbUpdate $ TimeoutDocument (systemActor now)
     triggerAPICallbackIfThereIsOne =<< theDocument
     logInfo_ "Document timed out"
   when (not (null docs)) $ do

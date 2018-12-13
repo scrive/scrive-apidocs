@@ -15,6 +15,7 @@ import MinutesTime
 import TestingUtil
 import TestKontra as T
 import User.Email
+import User.Lang (defaultLang)
 import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
@@ -39,7 +40,8 @@ test_jsonCompanies = do
   void $ dbUpdate . UserGroupUpdate . set ugInvoicing (Invoice OnePlan) $ ug2
 
   ctx <- (set ctxmaybeuser     (Just adminuser2) .
-          set ctxadminaccounts [Email "jet.li@example.com"]) <$> mkContext def
+          set ctxadminaccounts [Email "jet.li@example.com"]) <$>
+          mkContext defaultLang
 
   req2 <- mkRequest GET [ ("nonFree", inText "true")
                        , ("limit", inText "10")

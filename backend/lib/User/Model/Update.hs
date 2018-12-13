@@ -183,7 +183,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool wh
       sqlSet "company_position" ("" :: String)
       sqlSet "phone"            ("" :: String)
       sqlSet "email"            ("" :: String)
-      sqlSet "lang"             (def :: Lang)
+      sqlSet "lang"             (defaultLang :: Lang)
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
 

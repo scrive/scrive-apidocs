@@ -1097,7 +1097,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, Mo
                           return $ signLinkFromDetails' emptySignatoryFields False
                                    SignatoryRoleSigningParty (SignOrder 2) [] mh
     token <- random
-    let doc = def
+    let doc = defaultDocument
                   { documenttitle                = title
                   , documentsignatorylinks       = authorlink : othersignatories
                   , documenttype                 = documenttype

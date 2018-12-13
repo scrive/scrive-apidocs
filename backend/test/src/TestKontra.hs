@@ -149,7 +149,7 @@ instance MonadTime TestEnv where
         return $ addUTCTime delay now
 
 instance TemplatesMonad TestEnv where
-  getTemplates = getTextTemplatesByLanguage $ codeFromLang def
+  getTemplates = getTextTemplatesByLanguage $ codeFromLang defaultLang
   getTextTemplatesByLanguage langStr = do
     globaltemplates <- asks (get teGlobalTemplates)
     return $ TL.localizedVersion langStr globaltemplates
