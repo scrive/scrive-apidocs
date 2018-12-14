@@ -100,20 +100,21 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, s
         templates <- asks ceTemplates
         msl <- getSigLinkFor slid <$> theDocument
         case (eventType,msl) of
-          (SMSEvent phone SMSDelivered, Just sl) -> runTemplatesT (def, templates) $ do
-            logInfo "SMS with PIN delivered" $ object [
-                "recipient" .= phone
-              , "sms_original_phone" .= smsOrigMsisdn
-              ]
-            time <- currentTime
-            let actor = mailSystemActor time (maybesignatory sl) (getEmail sl) slid
-            void $ dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
-              SMSPinDeliveredEvidence
-              (return ())
-              (Just sl)
-              (Just smsOrigMsisdn)
-              (actor)
-          _ -> return ()
+          (SMSEvent phone SMSDelivered, Just sl) ->
+            runTemplatesT (defaultLang, templates) $ do
+              logInfo "SMS with PIN delivered" $ object [
+                  "recipient" .= phone
+                , "sms_original_phone" .= smsOrigMsisdn ]
+              time <- currentTime
+              let actor = mailSystemActor time (maybesignatory sl) (getEmail sl) slid
+              void $ dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+                SMSPinDeliveredEvidence
+                (return ())
+                (Just sl)
+                (Just smsOrigMsisdn)
+                (actor)
+          _ ->
+            return ()
     processEvent (eid, _ , eventType, Just (OtherDocumentSMS did), smsOrigMsisdn) =
       withDocumentID did $ do
         void $ dbUpdate $ MarkSMSEventAsRead eid

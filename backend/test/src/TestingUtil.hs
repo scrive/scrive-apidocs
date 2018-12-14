@@ -297,7 +297,7 @@ class ExtendWithRandomness a where
 
 arbitraryAuthorActor :: TestEnv Actor
 arbitraryAuthorActor = do
-  ctx <- mkContext def
+  ctx <- mkContext defaultLang
   authorActor ctx <$> rand 10 arbitrary
 
 arbitrarySystemActor :: (Functor m, CryptoRNG m) => m Actor
@@ -305,7 +305,7 @@ arbitrarySystemActor = systemActor <$> rand 10 arbitrary
 
 arbitrarySignatoryActor :: TestEnv Actor
 arbitrarySignatoryActor = do
-  ctx <- mkContext def
+  ctx <- mkContext defaultLang
   sl <- rand 10 arbitrary
   withDocumentID (unsafeDocumentID 0) $ signatoryActor ctx sl
 
@@ -416,7 +416,7 @@ instance Arbitrary Document where
     ddaystosign <- elements [1, 10, 99]
     dtimeouttime <- arbitrary
     documentshareablelinkhash <- arbitrary
-    return $ def
+    return $ defaultDocument
       { documentstatus = dstatus
       , documenttype = dtype
       , documentsharing = dsharing
@@ -805,7 +805,7 @@ addNewUser firstname secondname email = do
   bd <- dbQuery $ GetMainBrandedDomain
   ug <- dbUpdate $ UserGroupCreate def
   dbUpdate $ AddUser (firstname, secondname) email Nothing
-    (get ugID ug,True) def (get bdid bd)
+    (get ugID ug,True) defaultLang (get bdid bd)
     AccountRequest
 
 addNewUserWithCompany :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
@@ -817,7 +817,7 @@ addNewUserWithCompany firstname secondname email = do
   bd <- dbQuery $ GetMainBrandedDomain
   ug <- dbUpdate $ UserGroupCreate def
   mUser <- dbUpdate $ AddUser (firstname, secondname) email Nothing
-           (get ugID ug,True) def (get bdid bd)
+           (get ugID ug,True) defaultLang (get bdid bd)
            AccountRequest
   case mUser of
     Nothing -> return Nothing
@@ -846,7 +846,7 @@ addNewCompanyUser' makeAdmin firstname secondname email ugid = do
     Nothing -> return Nothing
     Just _ug ->
       dbUpdate $ AddUser (firstname, secondname) email Nothing
-                         (ugid, makeAdmin == MakeAdmin) def
+                         (ugid, makeAdmin == MakeAdmin) defaultLang
                          (get bdid bd) CompanyInvitation
 
 -- | Create user and add it to a new user group as admin.
@@ -856,7 +856,12 @@ addNewAdminUserAndUserGroup firstname secondname email = do
   ug <- addNewUserGroup
   bd <- dbQuery $ GetMainBrandedDomain
   Just user <- dbUpdate $ AddUser
-    (firstname, secondname) email Nothing (get ugID ug, True) def (get bdid bd)
+    (firstname, secondname)
+    email
+    Nothing
+    (get ugID ug, True)
+    defaultLang
+    (get bdid bd)
     CompanyInvitation
   return (user, ug)
 
@@ -868,7 +873,7 @@ addNewUserToUserGroup firstname secondname email ugid = do
     Nothing  -> return Nothing
     Just _ug ->
       dbUpdate $ AddUser (firstname, secondname) email Nothing
-      (ugid,True) def (get bdid bd)
+      (ugid,True) defaultLang (get bdid bd)
       CompanyInvitation
 
 addNewRandomUser :: ( CryptoRNG m, MonadDB m, MonadThrow m

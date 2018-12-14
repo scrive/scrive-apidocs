@@ -74,7 +74,7 @@ test_addingANewCompanyAccount = do
   (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
   ctx <- (set ctxmaybeuser (Just user))
-    <$> mkContext def
+    <$> mkContext defaultLang
 
   req <- mkRequest POST [ ("add", inText "True")
                         , ("email", inText "bob@blue.com")
@@ -103,7 +103,7 @@ test_addingExistingCompanyUserAsCompanyAccount :: TestEnv ()
 test_addingExistingCompanyUserAsCompanyAccount = do
   (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   (existinguser, existingug) <- addNewAdminUserAndUserGroup "Bob" "Blue" "bob@blue.com"
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
   req <- mkRequest POST [ ("add", inText "True")
                         , ("email", inText "bob@blue.com")
                         , ("fstname", inText "Bob")
@@ -128,7 +128,7 @@ test_resendingInviteToNewCompanyAccount = do
   Just newuser <- addNewUserToUserGroup "Bob" "Blue" "bob@blue.com" (get ugID ug)
   void $ dbUpdate $ AddUserGroupInvite $ mkInvite ug newuser
 
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
   req <- mkRequest POST [ ("resend", inText "True")
                         , ("resendid", inText $ show (userid newuser))
@@ -150,7 +150,7 @@ test_switchingStandardToAdminUser = do
   (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Just standarduser <- addNewUserToUserGroup "Bob" "Blue" "bob@blue.com" (get ugID ug)
 
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
   req <- mkRequest POST [ ("changerole", inText "True")
                         , ("changeid", inText $ show (userid standarduser))
@@ -172,7 +172,7 @@ test_switchingAdminToStandardUser = do
   void $ dbUpdate $ SetUserCompanyAdmin (userid standarduser) True
   Just adminuser <- dbQuery $ GetUserByID (userid user)
 
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
   req <- mkRequest POST [ ("changerole", inText "True")
                         , ("changeid", inText $ show (userid adminuser))
@@ -194,7 +194,7 @@ test_removingCompanyAccountInvite = do
 
   void $ dbUpdate $ AddUserGroupInvite $ mkInvite ug standarduser
 
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
   req <- mkRequest POST [ ("remove", inText "True")
                         , ("removeid", inText $ show $ userid standarduser)
@@ -214,7 +214,7 @@ test_removingCompanyAccountWorks = do
 
   void $ dbUpdate $ AddUserGroupInvite $ mkInvite ug standarduser
 
-  ctx <- (set ctxmaybeuser (Just adminuser)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just adminuser)) <$> mkContext defaultLang
 
   companydocs1 <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid adminuser) [DocumentFilterUnsavedDraft False] [] maxBound
   assertEqual "Company admin sees users docs before user delete" 1 (length companydocs1)
@@ -246,7 +246,7 @@ test_privateUserTakoverWorks = do
 
   void $ dbUpdate $ AddUserGroupInvite $ mkInvite ug user
 
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
   req <- mkRequest POST []
   (res, _) <- runTestKontra req ctx $ handlePostBecomeUserGroupAccount (get ugID ug)
@@ -272,7 +272,7 @@ test_mustBeInvitedForTakeoverToWork = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
 
   ctx <- (set ctxmaybeuser (Just user))
-    <$> mkContext def
+    <$> mkContext defaultLang
 
   req <- mkRequest POST []
   (l, _ctx') <- runTestKontra req ctx $

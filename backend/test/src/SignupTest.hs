@@ -27,7 +27,7 @@ signupTests env = testGroup "Signup" [
 
 testSignupAndActivate :: TestEnv ()
 testSignupAndActivate = do
-  ctx <- mkContext def
+  ctx <- mkContext defaultLang
 
   -- enter the email to signup
   ctx1 <- signupForAccount ctx "andrzej@skrivapa.se"
@@ -47,7 +47,7 @@ testSignupAndActivate = do
 
 testLoginEventRecordedWhenLoggedInAfterActivation :: TestEnv ()
 testLoginEventRecordedWhenLoggedInAfterActivation = do
-  ctx <- mkContext def
+  ctx <- mkContext defaultLang
 
   -- enter the email to signup
   ctx1 <- signupForAccount ctx "andrzej@skrivapa.se"

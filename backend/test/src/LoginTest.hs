@@ -42,7 +42,7 @@ loginTests env = testGroup "Login" [
 testSuccessfulLogin :: TestEnv ()
 testSuccessfulLogin = do
     uid <- createTestUser
-    ctx <- mkContext def
+    ctx <- mkContext defaultLang
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost
     assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" True)
@@ -52,7 +52,7 @@ testSuccessfulLogin = do
 testSuccessfulLoginToPadQueue :: TestEnv ()
 testSuccessfulLoginToPadQueue  = do
     uid <- createTestUser
-    ctx <- mkContext def
+    ctx <- mkContext defaultLang
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("pad", inText "true")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost
     assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" True)
@@ -62,7 +62,7 @@ testSuccessfulLoginToPadQueue  = do
 testCantLoginWithInvalidUser :: TestEnv ()
 testCantLoginWithInvalidUser = do
     void $ createTestUser
-    ctx <- mkContext def
+    ctx <- mkContext defaultLang
     req <- mkRequest POST [("email", inText "emily@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost
     loginFailureChecks res ctx'
@@ -70,7 +70,7 @@ testCantLoginWithInvalidUser = do
 testCantLoginWithInvalidPassword :: TestEnv ()
 testCantLoginWithInvalidPassword = do
     void $ createTestUser
-    ctx <- mkContext def
+    ctx <- mkContext defaultLang
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "invalid"), ("loginType", inText "RegularLogin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost
     loginFailureChecks res ctx'
@@ -78,7 +78,7 @@ testCantLoginWithInvalidPassword = do
 testSuccessfulLoginSavesAStatEvent :: TestEnv ()
 testSuccessfulLoginSavesAStatEvent = do
   uid <- createTestUser
-  ctx <- mkContext def
+  ctx <- mkContext defaultLang
   req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
   (_res, ctx') <- runTestKontra req ctx $ handleLoginPost
   assertBool "User was logged into context" $ (userid <$> get ctxmaybeuser ctx') == Just uid
@@ -90,7 +90,7 @@ testCanLoginWithRedirect = do
   logInfo_ $ "Generated password: " <> pack password
   randomUser <- addNewRandomUserWithPassword password
   -- get access tokens using an email and password
-  ctx <- mkContext def
+  ctx <- mkContext defaultLang
   req1 <- mkRequest GET
     [ ("email", inText $ unEmail $ useremail $ userinfo randomUser)
     , ("password", inText password)
@@ -139,7 +139,7 @@ testCanLoginWithRedirect = do
 testCantLoginAfterFailedAttempts :: TestEnv ()
 testCantLoginAfterFailedAttempts = do
   void $ createTestUser
-  ctx <- mkContext def
+  ctx <- mkContext defaultLang
   -- we fail to login 6 times
   req1 <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "invalid"), ("loginType", inText "RegularLogin")]
   forM_ [1..6] $ \_ -> do
@@ -166,9 +166,16 @@ createUserAndResetPassword = do
   bd <- dbQuery $ GetMainBrandedDomain
   pwd <- createPassword "admin"
   ug <- dbUpdate $ UserGroupCreate def
-  Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (get ugID ug, True) def (get bdid bd) AccountRequest
+  Just user <- dbUpdate $ AddUser
+    ("", "")
+    "andrzej@skrivapa.se"
+    (Just pwd)
+    (get ugID ug, True)
+    defaultLang
+    (get bdid bd)
+    AccountRequest
   PasswordReminder{..} <- newPasswordReminder $ userid user
-  ctx <- mkContext def
+  ctx <- mkContext defaultLang
   req <- mkRequest POST [("password", inText "password123")]
   (_, ctx') <- runTestKontra req ctx $ handlePasswordReminderPost prUserID prToken
   req2 <- mkRequest GET []
@@ -186,5 +193,12 @@ createTestUser = do
     bd <- dbQuery $ GetMainBrandedDomain
     pwd <- createPassword "admin"
     ug <- dbUpdate $ UserGroupCreate def
-    Just User{userid} <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (get ugID ug, True) def (get bdid bd) AccountRequest
+    Just User{userid} <- dbUpdate $ AddUser
+      ("", "")
+      "andrzej@skrivapa.se"
+      (Just pwd)
+      (get ugID ug, True)
+      defaultLang
+      (get bdid bd)
+      AccountRequest
     return userid

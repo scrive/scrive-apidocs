@@ -113,7 +113,7 @@ insertNewSession :: UserID -> TestEnv (Maybe Session, Context)
 insertNewSession uid = do
   (sess, ctx) <- do
     rq <- mkRequestWithHeaders GET [] [("host",["some.domain.com"])]
-    ctx <- mkContext def
+    ctx <- mkContext defaultLang
     runTestKontra rq ctx $ do
       initialSession <- emptySession
       updateSession initialSession  (sesID initialSession) (Just uid) Nothing
@@ -134,7 +134,7 @@ addDocumentAndInsertToken = do
   (_, ctx) <- do
     let Just asl = getAuthorSigLink doc
     rq  <- mkRequest GET []
-    ctx <- mkContext def
+    ctx <- mkContext defaultLang
     runTestKontra rq ctx $ do
       sess <- emptySession
       dbUpdate $ AddDocumentSessionToken
@@ -169,6 +169,11 @@ testUser = do
   pwd       <- createPassword "admin"
   ug        <- dbUpdate $ UserGroupCreate def
   Just user <- dbUpdate $ AddUser
-    ("Andrzej", "Rybczak") "andrzej@scrive.com"
-    (Just pwd) (get ugID ug, True) def (get bdid bd) AccountRequest
+    ("Andrzej", "Rybczak")
+    "andrzej@scrive.com"
+    (Just pwd)
+    (get ugID ug, True)
+    defaultLang
+    (get bdid bd)
+    AccountRequest
   return $ userid user

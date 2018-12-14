@@ -36,7 +36,7 @@ testLoggedInLangSwitching :: TestEnv ()
 testLoggedInLangSwitching = do
     --create a new swedish user - after login from english page - he should still use swedish
     user <- createTestUser LANG_SV
-    ctx0 <- (set ctxlang LANG_EN) <$> mkContext def
+    ctx0 <- (set ctxlang LANG_EN) <$> mkContext defaultLang
     req0 <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
     (_, ctx1) <- runTestKontra req0 ctx0 $ handleLoginPost
 
@@ -59,7 +59,7 @@ testLoggedInLangSwitching = do
 testDocumentLangSwitchToEnglish :: TestEnv ()
 testDocumentLangSwitchToEnglish = do
   user <- createTestUser LANG_SV
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
   doc <- createTestDoc user (get ctxtime ctx)
 
   --make sure the doc lang matches the author lang
@@ -69,7 +69,7 @@ testDocumentLangSwitchToEnglish = do
 testDocumentLangSwitchToSwedish :: TestEnv ()
 testDocumentLangSwitchToSwedish = do
   user <- createTestUser LANG_EN
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
   doc <- createTestDoc user (get ctxtime ctx)
 
   -- make sure the doc lang matches the author's lang

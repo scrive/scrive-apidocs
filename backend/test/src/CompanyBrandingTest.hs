@@ -20,6 +20,7 @@ import TestingUtil
 import TestKontra
 import Theme.Model
 import Theme.View
+import User.Lang (defaultLang)
 import User.Model
 import UserGroup.Model
 import UserGroup.Types
@@ -42,7 +43,7 @@ testFetchCompanyBranding = do
   ugid <- (get ugID) <$> addNewUserGroup
   Just user <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" ugid
   ctx <- (set ctxmaybeuser (Just user))
-    <$> mkContext def
+    <$> mkContext defaultLang
   req1 <- mkRequest GET []
   (avalue1, _) <- runTestKontra req1 ctx $ handleGetCompanyBranding Nothing
   case decode (BSL.toString $ A.encode avalue1) of
@@ -57,7 +58,7 @@ testFetchCompanyBranding = do
 
 testFetchDomainThemes:: TestEnv ()
 testFetchDomainThemes = do
-  ctx <-  mkContext def
+  ctx <-  mkContext defaultLang
   req1 <- mkRequest GET []
   (avalue, _) <- runTestKontra req1 ctx $ handleGetDomainThemes
   case decode (BSL.toString $  A.encode avalue) of
@@ -68,7 +69,7 @@ testUpdateCompanyTheme:: TestEnv ()
 testUpdateCompanyTheme = do
   ug <- addNewUserGroup
   Just user <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (get ugID ug)
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
   mainbd <- dbQuery $ GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (get bdMailTheme mainbd)
@@ -128,7 +129,7 @@ testDeleteCompanyTheme = do
   ug <- addNewUserGroup
   Just user <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (get ugID ug)
   ctx <- (set ctxmaybeuser (Just user))
-    <$> mkContext def
+    <$> mkContext defaultLang
   mainbd <- dbQuery $ GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (get bdMailTheme mainbd)
   newTheme <- dbUpdate $ InsertNewThemeForUserGroup (get ugID ug) mailTheme
@@ -148,7 +149,7 @@ testNormalUserCantChangeOrDeleteTheme = do
   Just user2 <- dbQuery $ GetUserByID (userid user1)
 
   ctx <- (set ctxmaybeuser (Just user2))
-    <$> mkContext def
+    <$> mkContext defaultLang
 
   mainbd <- dbQuery $ GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (get bdMailTheme mainbd)
@@ -176,7 +177,7 @@ testChangeCompanyUI:: TestEnv ()
 testChangeCompanyUI = do
   ug <- addNewUserGroup
   Just user <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (get ugID ug)
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
   mainbd <- dbQuery $ GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (get bdMailTheme mainbd)
@@ -205,7 +206,7 @@ testNormalUseCantChangeCompanyUI = do
   Just user1 <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (get ugID ug)
   True <-  dbUpdate $ SetUserCompanyAdmin (userid user1) False
   Just user2 <- dbQuery $ GetUserByID (userid user1)
-  ctx <- (set ctxmaybeuser (Just user2)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user2)) <$> mkContext defaultLang
 
   mainbd <- dbQuery $ GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (get bdMailTheme mainbd)
@@ -238,7 +239,7 @@ testNormalUseCantChangeCompanyUI = do
 testBrandingCacheChangesIfOneOfThemesIsSetToDefault:: TestEnv ()
 testBrandingCacheChangesIfOneOfThemesIsSetToDefault = do
   ug <- addNewUserGroup
-  ctx <- mkContext def
+  ctx <- mkContext defaultLang
 
   mainbd <- dbQuery $ GetMainBrandedDomain
   signviewTheme <- dbQuery $ GetTheme (get bdSignviewTheme mainbd)

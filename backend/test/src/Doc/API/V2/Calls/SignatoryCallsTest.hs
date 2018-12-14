@@ -1,6 +1,5 @@
 module Doc.API.V2.Calls.SignatoryCallsTest (apiV2SignatoryCallsTests) where
 
-import Data.Default
 import Happstack.Server
 import Test.Framework
 
@@ -14,6 +13,7 @@ import Doc.Types.DocumentStatus (DocumentStatus(..))
 import Doc.Types.SignatoryLink (AuthenticationToSignMethod(SMSPinAuthenticationToSign))
 import TestingUtil
 import TestKontra
+import User.Lang (defaultLang)
 
 apiV2SignatoryCallsTests :: TestEnvSt -> Test
 apiV2SignatoryCallsTests env = testGroup "APIv2SignatoryCalls" $
@@ -27,7 +27,7 @@ apiV2SignatoryCallsTests env = testGroup "APIv2SignatoryCalls" $
 testDocApiV2SigReject :: TestEnv ()
 testDocApiV2SigReject = do
   user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
   mockDoc <- testDocApiV2Start' ctx
   let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
@@ -39,7 +39,7 @@ testDocApiV2SigReject = do
 testDocApiV2SigCheck :: TestEnv ()
 testDocApiV2SigCheck = do
   user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
   mockDoc <- testDocApiV2Start' ctx
   let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
@@ -56,7 +56,7 @@ testDocApiV2SigCheck = do
 testDocApiV2SigSign :: TestEnv ()
 testDocApiV2SigSign = do
   user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
   mockDoc <- testDocApiV2Start' ctx
   let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
@@ -74,7 +74,7 @@ testDocApiV2SigSign = do
 testDocApiV2SigSendSmsPin :: TestEnv ()
 testDocApiV2SigSendSmsPin = do
   user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
   mockDoc <- testDocApiV2New' ctx
   let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
@@ -92,7 +92,7 @@ testDocApiV2SigSendSmsPin = do
 testDocApiV2SigSetAttachment :: TestEnv ()
 testDocApiV2SigSetAttachment = do
   user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
   mockDoc <- testDocApiV2New' ctx
   let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc

@@ -460,7 +460,7 @@ instance FromJSValueWithUpdate Document where
         let daystosign'  = min 365 $ max 1 $ updateWithDefaultAndField 14 documentdaystosign daystosign
         let daystoremind' = min daystosign' <$> max 1 <$> updateWithDefaultAndField Nothing documentdaystoremind daystoremind
 
-        return $ Just def {
+        return $ Just defaultDocument {
             documenttitle = updateWithDefaultAndField "" documenttitle title,
             documentlang  = updateWithDefaultAndField LANG_SV documentlang lang,
             documentinvitetext = case (invitationmessage) of

@@ -16,13 +16,13 @@ import qualified Data.ByteString.Lazy.UTF8 as BS
 import qualified Data.HashMap.Strict as H
 
 import Context
-import DB
 import Doc.API.V2.Calls
 import Doc.DocumentID
 import Doc.SignatoryLinkID ()
 import TestingUtil
 import TestingUtil.JSON
 import TestKontra as T
+import User.Lang (defaultLang)
 
 apiV2JSONTests :: TestEnvSt -> Test
 apiV2JSONTests env = testGroup "DocAPIV2JSON"
@@ -43,7 +43,7 @@ apiV2JSONTests env = testGroup "DocAPIV2JSON"
 testJSONCtx :: TestEnv Context
 testJSONCtx = do
   (Just user)  <- addNewUser "BobTest" "JonesTest" "test@scrive.com"
-  (set ctxmaybeuser (Just user)) <$> mkContext def
+  (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
 runApiJSONTest :: Context             -- ^ Context to run the test in
                -> Method              -- ^ HTTP Method to use for API Call

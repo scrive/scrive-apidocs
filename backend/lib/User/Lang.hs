@@ -2,12 +2,12 @@ module User.Lang (
     Lang(..)
   , HasLang(..)
   , codeFromLang
+  , defaultLang
   , langFromCode
   , langFromHTTPHeader
   , allLangs
   ) where
 
-import Data.Default
 import Data.Int
 import Data.List.Split
 import Database.PostgreSQL.PQTypes
@@ -36,8 +36,8 @@ data Lang = LANG_SV
           | LANG_PL
   deriving (Bounded, Enum, Show, Read, Ord, Eq)
 
-instance Default Lang where
-  def = LANG_SV
+defaultLang :: Lang
+defaultLang = LANG_SV
 
 instance FromReqURI Lang where
   fromReqURI = maybeRead

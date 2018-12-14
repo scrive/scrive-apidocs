@@ -6,11 +6,11 @@ import Happstack.Server
 import Test.Framework
 import qualified Data.HashMap.Strict as H
 
-import DB
 import Doc.SignatoryLinkID ()
 import Monitor.API
 import TestingUtil
 import TestKontra as T
+import User.Lang (defaultLang)
 
 monitorAPITests :: TestEnvSt -> Test
 monitorAPITests env = testGroup "MonitorAPI"
@@ -19,7 +19,7 @@ monitorAPITests env = testGroup "MonitorAPI"
 
 testMonitorStatusGet :: TestEnv ()
 testMonitorStatusGet = do
-  ctx <- mkContext def
+  ctx <- mkContext defaultLang
   req1 <- mkRequest GET []
   (res1,_) <- runTestKontra req1 ctx $ apiCallMonitorStatusGet
   let Just (Object resObject1) = decode (rsBody res1) :: Maybe Value

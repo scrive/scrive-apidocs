@@ -63,7 +63,7 @@ testUpdateDoc updateJsonPath = do
   cont <- liftIO $ readFile updateJsonPath
 
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
   do
      req <- mkRequest POST [ ("expectedType", inText "text")
@@ -107,7 +107,7 @@ testUpdateDoc updateJsonPath = do
 testOAuthCreateDoc :: TestEnv ()
 testOAuthCreateDoc = do
   user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
   -- Create OAuth API tokens
   let uid = userid user
   void $ dbUpdate $ CreateAPIToken uid
@@ -156,7 +156,7 @@ testOAuthCreateDoc = do
 testPersonalAccessCredentialsCreateDoc :: TestEnv ()
 testPersonalAccessCredentialsCreateDoc = do
   user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
   -- Get the personal access token
   let uid = userid user
@@ -197,7 +197,7 @@ testSetAutoReminder = do
 testUpdateDocToSaved :: Bool -> TestEnv ()
 testUpdateDocToSaved useOAuth = do
   user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
   authStr <- if useOAuth then do
     void $ dbUpdate $ DeletePersonalToken (userid user)
@@ -345,7 +345,7 @@ testChangeAuthenticationToViewMethod = do
 
   -- Check that we can't change authentication to view if we are logged as user not connected to document
   user2 <- addNewRandomUser
-  ctx2 <- (set ctxmaybeuser (Just user2)) <$> mkContext def
+  ctx2 <- (set ctxmaybeuser (Just user2)) <$> mkContext defaultLang
   (resBadUser, _) <- runTestKontra reqSEBankIDValid10digits ctx2 $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
   assertEqual "Response code should be 403" 403 (rsCode resBadUser)
 
@@ -370,7 +370,7 @@ testChangeAuthenticationToSignMethod = do
   assertEqual "Response code should be 202" 202 (rsCode res)
 
   user2 <- addNewRandomUser
-  ctx2 <- (set ctxmaybeuser (Just user2)) <$> mkContext def
+  ctx2 <- (set ctxmaybeuser (Just user2)) <$> mkContext defaultLang
   (resBadUser, _) <- runTestKontra req ctx2 $ apiCallV1ChangeAuthenticationToSign (documentid doc) validsiglinkid
   assertEqual "Response code should be 403" 403 (rsCode resBadUser)
 
@@ -407,7 +407,7 @@ testChangeAuthenticationToSignMethodWithEmptyAuthenticationValue = do
 testChangeMainFile :: TestEnv ()
 testChangeMainFile = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
   req <- mkRequest POST [ ("expectedType", inText "text")
                         , ("file", inFile $ inTestDir "pdfs/simple.pdf")]
@@ -452,7 +452,7 @@ testChangeMainFileMovePlacementsWithNegativeIndex = do
   let anchorpdf2 = inTestDir "pdfs/anchor-avis-contract-2.pdf"
 
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
   req <- mkRequest POST [ ("expectedType", inText "text")
                         , ("file", inFile anchorpdf1)]
@@ -534,7 +534,7 @@ testChangeMainFileMovePlacements = do
   let noanchorpdf = inTestDir "pdfs/simple.pdf"
 
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
   req <- mkRequest POST [ ("expectedType", inText "text")
                         , ("file", inFile anchorpdf1)]
@@ -660,7 +660,7 @@ assertEqualDouble msg x y = do assertEqual msg x y
 testCloseEvidenceAttachments:: TestEnv ()
 testCloseEvidenceAttachments = do
   author <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just author)) <$> mkContext def
+  ctx <- (set ctxmaybeuser (Just author)) <$> mkContext defaultLang
   doc <- addRandomDocumentWithAuthorAndCondition author
     (isSignable && isPending
      && (all ((==) StandardAuthenticationToSign . signatorylinkauthenticationtosignmethod) . documentsignatorylinks)

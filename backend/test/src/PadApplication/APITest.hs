@@ -10,10 +10,10 @@ import qualified Data.Label.Partial as FCP
 import qualified Data.Text as T
 
 import Context
-import DB
 import PadApplication.API
 import TestingUtil
 import TestKontra
+import User.Lang (defaultLang)
 import UserGroup.Types
 import UserGroupAccountsTest (addNewAdminUserAndUserGroup)
 
@@ -26,7 +26,7 @@ testPadApplicationPadInfoGet :: TestEnv ()
 testPadApplicationPadInfoGet = do
   (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
-  ctx1 <- (set ctxmaybeuser (Just user)) <$> mkContext def
+  ctx1 <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
   req1 <- mkRequest GET []
   (res1, _ctx2) <- runTestKontra req1 ctx1 apiCallGetPadInfo
   let Just (Object resObject1) = decode (rsBody res1) :: Maybe Value

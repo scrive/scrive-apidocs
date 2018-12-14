@@ -99,7 +99,7 @@ sendDocumentMails author = do
         checkMail "Reject"  $ mailDocumentRejected True Nothing True sl =<< theDocument
         checkMail "Reject"  $ mailDocumentRejected True Nothing False sl =<< theDocument
         -- awaiting author email
-        checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor (def :: Lang) =<< theDocument
+        checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor (defaultLang :: Lang) =<< theDocument
         -- Virtual signing
         randomUpdate . SignDocument (signatorylinkid sl) (signatorymagichash sl) Nothing Nothing SignatoryScreenshots.emptySignatoryScreenshots
                                    =<< (signatoryActor (set ctxtime (10 `minutesAfter` now) ctx) sl)
