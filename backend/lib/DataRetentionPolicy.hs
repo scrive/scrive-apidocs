@@ -2,6 +2,7 @@
 
 module DataRetentionPolicy
   ( DataRetentionPolicy(..)
+  , defaultDataRetentionPolicy
   , drpIdleDocTimeout
   , drpIdleDocTimeoutPreparation
   , drpIdleDocTimeoutClosed
@@ -14,7 +15,6 @@ module DataRetentionPolicy
   , unjsonDataRetentionPolicy
   ) where
 
-import Data.Default
 import Data.Int
 import Data.Label
 import Data.Unjson
@@ -43,8 +43,9 @@ drpIdleDocTimeout = \case
   DocumentError -> drpIdleDocTimeoutError
   Pending       -> lens (const Nothing) (const id)
 
-instance Default DataRetentionPolicy where
-  def = DataRetentionPolicy
+defaultDataRetentionPolicy :: DataRetentionPolicy
+defaultDataRetentionPolicy =
+  DataRetentionPolicy
     { _drpIdleDocTimeoutPreparation = Nothing
     , _drpIdleDocTimeoutClosed      = Nothing
     , _drpIdleDocTimeoutCanceled    = Nothing
@@ -88,6 +89,7 @@ unjsonDataRetentionPolicy = objectOf $ DataRetentionPolicy
                "Number of days before moving rejected documents to trash"
   <*> fieldOpt "idle_doc_timeout_error" (get drpIdleDocTimeoutError)
                "Number of days before moving documents with errors to trash"
-  <*> fieldDef "immediate_trash" (get drpImmediateTrash def)
+  <*> fieldDef "immediate_trash"
+               (get drpImmediateTrash defaultDataRetentionPolicy)
                (get drpImmediateTrash)
                "Option to delete documents in trash immediately"

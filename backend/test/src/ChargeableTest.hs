@@ -124,11 +124,13 @@ test_startDocumentCharging = do
 
       True <- withDocument doc $ do
         randomUpdate $ ResetSignatoryDetails ([
-              (def {   signatoryfields = (signatoryfields $ fromJust $ getAuthorSigLink doc)
+              (defaultSignatoryLink {
+                                signatoryfields = (signatoryfields $ fromJust $ getAuthorSigLink doc)
                               , signatoryisauthor = True
                               , signatoryrole     = SignatoryRoleViewer
                               , maybesignatory = Just $ userid user })
-            , (def {   signatorysignorder = SignOrder 1
+            , (defaultSignatoryLink {
+                                signatorysignorder = SignOrder 1
                               , signatoryisauthor = False
                               , signatoryrole = SignatoryRoleSigningParty
                               , signatoryfields = [

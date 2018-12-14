@@ -641,7 +641,7 @@ testSaveSigAttachmentEvidenceLog = do
   author <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (isPreparation && isSignable) `withDocumentM` do
     file <- addNewRandomFile
-    let sa = def
+    let sa = defaultSignatoryAttachment
     theDocument >>= \d -> randomUpdate $ \t->SetSigAttachments (signatorylinkid $ (documentsignatorylinks d) !! 0)
                           [sa] (systemActor t)
     tz <- mkTimeZoneName "Europe/Stockholm"
@@ -665,7 +665,7 @@ testDeleteSigAttachmentAlreadySigned = do
       && (((==) 2) . length . documentsignatorylinks)) `withDocumentM` do
     file <- addNewRandomFile
     sl <- (\d -> (documentsignatorylinks d) !! 1) <$> theDocument
-    let sa = def
+    let sa = defaultSignatoryAttachment
     void $randomUpdate $ \t->SetSigAttachments (signatorylinkid $ sl)
                           [sa] (systemActor t)
     tz <- mkTimeZoneName "Europe/Stockholm"
@@ -684,7 +684,7 @@ testDeleteSigAttachmentEvidenceLog = do
   author <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author isPreparation `withDocumentM` do
     file <- addNewRandomFile
-    let sa = def
+    let sa = defaultSignatoryAttachment
           { signatoryattachmentfile        = Just file
           , signatoryattachmentfilename    = Just "afile.ran"
           }
@@ -1244,7 +1244,7 @@ testSealDocument = replicateM_ 1 $ do
     atts  <- replicateM 2 $ do
              file <- addNewRandomFile
 
-             let att = def
+             let att = defaultSignatoryAttachment
                    { signatoryattachmentfile     = Just file
                    , signatoryattachmentfilename = Just "afile.ran"
                    , signatoryattachmentname     = show file
@@ -1332,7 +1332,9 @@ testNotPreparationResetSignatoryDetailsAlwaysLeft = replicateM_ 10 $ do
     mt <- rand 10 arbitrary
     sf <- signatoryFieldsFromUser author
     --execute
-    success <- dbUpdate $ ResetSignatoryDetails [def { signatoryfields = sf}] (systemActor mt)
+    success <- dbUpdate $ ResetSignatoryDetails
+      [defaultSignatoryLink { signatoryfields = sf}]
+      (systemActor mt)
     --assert
     assert $ not success
 
@@ -1343,7 +1345,12 @@ testPreparationResetSignatoryDetailsAlwaysRight = replicateM_ 10 $ do
   addRandomDocumentWithAuthorAndCondition author isPreparation `withDocumentM` do
     mt <- rand 10 arbitrary
     --execute
-    success <- dbUpdate $ ResetSignatoryDetails [def { signatoryisauthor = True , maybesignatory = Just $ userid author}] (systemActor mt)
+    success <- dbUpdate $ ResetSignatoryDetails
+      [defaultSignatoryLink {
+            signatoryisauthor = True
+          , maybesignatory = Just $ userid author
+      }]
+      (systemActor mt)
     --assert
     assert success
     assertInvariants =<< theDocument
@@ -1355,7 +1362,10 @@ testPreparationResetSignatoryDetails2Works = replicateM_ 10 $ do
   addRandomDocumentWithAuthorAndCondition author isPreparation `withDocumentM` do
     mt <- rand 10 arbitrary
     --execute
-    let newData1 = def {   signatoryisauthor = True , maybesignatory = Just $ userid author}
+    let newData1 = defaultSignatoryLink {
+            signatoryisauthor = True
+          , maybesignatory = Just $ userid author
+          }
     success1 <- dbUpdate $ ResetSignatoryDetails [newData1] (systemActor mt)
     assert success1
     assertInvariants =<< theDocument
@@ -1363,7 +1373,13 @@ testPreparationResetSignatoryDetails2Works = replicateM_ 10 $ do
     assertEqual "Proper delivery method set" [EmailDelivery] (map signatorylinkdeliverymethod sls)
     assertEqual "Proper authentication method set" [StandardAuthenticationToSign] (map signatorylinkauthenticationtosignmethod sls)
 
-    let newData2 =  def { signatoryisauthor = True, maybesignatory = Just $ userid author , signatorylinkdeliverymethod = PadDelivery, signatorylinkauthenticationtosignmethod= SEBankIDAuthenticationToSign }
+    let newData2 =  defaultSignatoryLink {
+              signatoryisauthor = True
+            , maybesignatory = Just $ userid author
+            , signatorylinkdeliverymethod = PadDelivery
+            , signatorylinkauthenticationtosignmethod =
+                SEBankIDAuthenticationToSign
+            }
     success2 <- dbUpdate $ ResetSignatoryDetails [newData2] (systemActor mt)
     assert success2
     sls2 <- documentsignatorylinks <$> theDocument
@@ -1381,7 +1397,9 @@ testNoDocumentResetSignatoryDetailsAlwaysLeft = replicateM_ 10 $ do
   -- non-existent docid
 
   assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
-    withDocumentID a $ dbUpdate $ ResetSignatoryDetails [def { signatoryisauthor = True } ] (systemActor mt)
+    withDocumentID a $ dbUpdate $ ResetSignatoryDetails
+      [defaultSignatoryLink { signatoryisauthor = True } ]
+      (systemActor mt)
 
 testGetDocumentsSharedInCompany :: TestEnv ()
 testGetDocumentsSharedInCompany = replicateM_ 10 $ do
@@ -1689,13 +1707,13 @@ testUpdateSigAttachmentsAttachmentsOk = replicateM_ 10 $ do
     file1 <- addNewRandomFile
     file2 <- addNewRandomFile
     --execute
-    let att1 = def
+    let att1 = defaultSignatoryAttachment
           { signatoryattachmentfile = Just file1
           , signatoryattachmentfilename = Just "afile1.ran"
           , signatoryattachmentname = "att1"
           , signatoryattachmentdescription = "att1 description"
           }
-    let att2 = def
+    let att2 = defaultSignatoryAttachment
           { signatoryattachmentname = "att2"
           , signatoryattachmentdescription = "att2 description"
           }

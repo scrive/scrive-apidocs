@@ -18,7 +18,7 @@ unjsonAttachments = objectOf $
 
 unjsonAttachment :: UnjsonDef Attachment
 unjsonAttachment =  objectOf $
-       pure def
+       pure defaultAttachment
   <*   (fieldReadonly "id" attachmentid "Attachment ID")
   <*   (fieldReadonly "title" attachmenttitle "User ID for the signatory")
   <*   (fieldReadonly "time" (utcTimeToAPIFormat . attachmentmtime) "Time of attachment creation")

@@ -208,7 +208,7 @@ instance Default UserGroup where
     , _ugName = ""
     , _ugSettings = Just $ UserGroupSettings {
         _ugsIPAddressMaskList   = []
-      , _ugsDataRetentionPolicy = def
+      , _ugsDataRetentionPolicy = defaultDataRetentionPolicy
       , _ugsCGIDisplayName      = Nothing
       , _ugsCGIServiceID        = Nothing
       , _ugsSMSProvider         = SMSDefault

@@ -1,9 +1,8 @@
 module Doc.Types.SignatoryAttachment (
     SignatoryAttachment(..)
+  , defaultSignatoryAttachment
   , signatoryAttachmentsSelectors
   ) where
-
-import Data.Default
 
 import DB
 import File.FileID
@@ -42,5 +41,6 @@ instance CompositeFromSQL SignatoryAttachment where
   , signatoryattachmentrequired = required
   }
 
-instance Default SignatoryAttachment where
-  def = SignatoryAttachment Nothing Nothing "att1_name" "att1_desc" True
+defaultSignatoryAttachment :: SignatoryAttachment
+defaultSignatoryAttachment =
+  SignatoryAttachment Nothing Nothing "att1_name" "att1_desc" True

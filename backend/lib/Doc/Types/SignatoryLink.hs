@@ -13,10 +13,10 @@ module Doc.Types.SignatoryLink (
   , signatoryRoleFromBool
   , SignatoryLink(..)
   , signatoryLinksSelectors
+  , defaultSignatoryLink
   ) where
 
 import Control.Monad.Catch
-import Data.Default
 import Data.Functor.Invariant
 import Data.Int
 import Data.Unjson
@@ -368,8 +368,9 @@ data SignatoryLink = SignatoryLink {
 , signatorylinkconsentquestions           :: ![SignatoryConsentQuestion]
 } deriving (Show)
 
-instance Default SignatoryLink where
-  def = SignatoryLink {
+defaultSignatoryLink :: SignatoryLink
+defaultSignatoryLink =
+  SignatoryLink {
     signatorylinkid = unsafeSignatoryLinkID 0
   , signatoryfields = []
   , signatoryisauthor = False

@@ -1,7 +1,5 @@
 module Doc.DocStateCommon where
 
-import Data.Default
-
 import Doc.DocStateData
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
@@ -25,7 +23,8 @@ signLinkFromDetails' :: [SignatoryField]
                      -> MagicHash
                      -> SignatoryLink
 signLinkFromDetails' fields author role sorder attachments magichash =
-  def { signatorylinkid                         = unsafeSignatoryLinkID 0
+  defaultSignatoryLink {
+        signatorylinkid                         = unsafeSignatoryLinkID 0
       , signatoryfields                         = map signatoryLinkClearField
                                                   fields -- clean signatures
       , signatoryisauthor                       = author

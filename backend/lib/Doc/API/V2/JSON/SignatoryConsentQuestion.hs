@@ -4,7 +4,6 @@ module Doc.API.V2.JSON.SignatoryConsentQuestion
   , unjsonSignatoryConsentResponsesForSigning
   ) where
 
-import Data.Default
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import qualified Data.Aeson as Aeson
@@ -22,7 +21,7 @@ unjsonSignatoryConsentModule = objectOf $ (,)
   where
     unjsonQuestion :: UnjsonDef SignatoryConsentQuestion
     unjsonQuestion = objectOf $
-           pure def
+           pure defaultSignatoryConsentQuestion
       <*   (fieldReadonly "id" scqID "Question ID")
       <**> (field "title" scqTitle "Title" <**> pure (\t q -> q { scqTitle = t }))
       <**> (field "positive_option" scqPositiveOption "Text of the positive answer" <**> pure (\po q -> q { scqPositiveOption = po }))

@@ -5,7 +5,6 @@ import Control.Monad.Catch
 import Control.Monad.Reader (asks)
 import Control.Monad.Trans (liftIO)
 import Data.Decimal (realFracToDecimal)
-import Data.Default (def)
 import Data.Function (on)
 import Log
 import System.FilePath ((</>))
@@ -71,7 +70,7 @@ dumpEvidenceTexts now lang doc' = do
                                  fromJust (actorEmail actor) ++ ")"
                     }
   let evidencetypes = ([minBound .. maxBound] :: [CurrentEvidenceEventType])
-  let asl = def
+  let asl = defaultSignatoryLink
             {   signatoryfields = [
                       fieldForTests (NameFI $ NameOrder 1) "Sven"
                     , fieldForTests (NameFI $ NameOrder 2) "Signatory"

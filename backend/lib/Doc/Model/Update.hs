@@ -1183,7 +1183,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
                                              case f of
                                                SignatorySignatureField sf -> SignatorySignatureField $ sf{ssfValue = Nothing}
                                                _ -> f
-                           return $ def {
+                           return $ defaultSignatoryLink {
                                 signatorylinkid            = (unsafeSignatoryLinkID 0)
                               , signatorymagichash = magichash
                               , signatoryfields            = newFields

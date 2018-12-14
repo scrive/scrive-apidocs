@@ -1,7 +1,6 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 module Archive.View (pageArchive) where
 
-import Data.Default
 import Text.StringTemplates.Templates
 import qualified Text.StringTemplates.Fields as F
 
@@ -18,8 +17,8 @@ pageArchive ctx user ugwp mt = renderTemplate "pageDocumentsList" $ do
   F.value "month" $ formatTime' "%m" mt
   F.value "year" $ formatTime' "%Y" mt
   F.value "hasdataretentionpolicy" $
-    dataretentionpolicy (usersettings user) /= def
-    || get ugsDataRetentionPolicy (ugwpSettings ugwp) /= def
+    dataretentionpolicy (usersettings user) /= defaultDataRetentionPolicy
+    || get ugsDataRetentionPolicy (ugwpSettings ugwp) /= defaultDataRetentionPolicy
   F.value "immediatetrash" $
     get drpImmediateTrash (dataretentionpolicy (usersettings user))
     || (get (drpImmediateTrash . ugsDataRetentionPolicy) . ugwpSettings) ugwp
