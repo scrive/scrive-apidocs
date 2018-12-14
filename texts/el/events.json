@@ -1,5 +1,5 @@
 { 
-"_ApproveReminderSendEmailLog":"",
+"_ApproveReminderSendEmailLog":"Η υπηρεσία Scrive eSign έστειλε μια υπενθύμιση για έγκριση μέσω μηνύματος ηλεκτρονικού ταχυδρομείου στον $signatory$ κατόπιν αξίωσης του χρήστη $actor$.",
 "_ApproveReminderSendEmailLogWithText":"",
 "_ApproveReminderSendEmailSMSLog":"",
 "_ApproveReminderSendEmailSMSLogWithText":"",
