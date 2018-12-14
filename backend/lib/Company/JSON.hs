@@ -10,7 +10,6 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BSC8
 
-import DB
 import UserGroup.Types
 
 unjsonUserGroupUI :: UnjsonDef UserGroupUI
@@ -23,7 +22,7 @@ unjsonUserGroupUIWithCompanyID uid = objectOf $ unjsonUserGroupUIFields
   <* (fieldReadonly "companyid" (const uid) "Company id")
 
 unjsonUserGroupUIFields :: Ap (FieldDef UserGroupUI) UserGroupUI
-unjsonUserGroupUIFields = pure def
+unjsonUserGroupUIFields = pure defaultUserGroupUI
   <**>  (fieldOpt "mailTheme" (get uguiMailTheme) "Id of a mail theme"
     <**> (pure $ set uguiMailTheme))
   <**>  (fieldOpt "signviewTheme" (get uguiSignviewTheme) "Id of a signview theme"

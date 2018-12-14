@@ -1,11 +1,11 @@
 module Partner.PartnerID (
     PartnerID
+  , defaultPartnerID
   , unsafePartnerID
   , unPartnerID
   ) where
 
 import Data.Binary as B
-import Data.Default (Default(..))
 import Data.Int
 import Data.Typeable
 import Data.Unjson
@@ -22,8 +22,8 @@ deriving newtype instance Show PartnerID
 instance PQFormat PartnerID where
   pqFormat = pqFormat @Int64
 
-instance Default PartnerID where
-  def = unsafePartnerID 0
+defaultPartnerID :: PartnerID
+defaultPartnerID = unsafePartnerID 0
 
 instance FromReqURI PartnerID where
   fromReqURI = maybeRead

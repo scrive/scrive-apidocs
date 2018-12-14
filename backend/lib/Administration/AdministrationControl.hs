@@ -412,7 +412,7 @@ handleCreateUser = onlySalesOrAdmin $ do
     fstname <- guardJustM $ getField "fstname"
     sndname <- guardJustM $ getField "sndname"
     lang <- guardJustM $ join <$> fmap langFromCode <$> getField "lang"
-    ug <- dbUpdate . UserGroupCreate $ def
+    ug <- dbUpdate . UserGroupCreate $ defaultUserGroup
     muser <- createNewUserByAdmin email (fstname, sndname) (get ugID ug, True) lang
     runJSONGenT $ case muser of
       Nothing -> do

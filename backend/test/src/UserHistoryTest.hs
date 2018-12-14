@@ -242,7 +242,7 @@ createTestUser :: TestEnv User
 createTestUser = do
     bd <- dbQuery $ GetMainBrandedDomain
     pwd <- createPassword "test_password"
-    ug <- dbUpdate $ UserGroupCreate def
+    ug <- dbUpdate $ UserGroupCreate defaultUserGroup
     muser <- dbUpdate $ AddUser ("", "")
                                 "karol@skrivapa.se"
                                 (Just pwd)

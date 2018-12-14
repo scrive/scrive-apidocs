@@ -149,7 +149,7 @@ initDatabaseEntries appConf = do
     case maybeuser of
       Nothing -> do
         bd <- dbQuery $ GetMainBrandedDomain
-        ug <- dbUpdate . UserGroupCreate $ def
+        ug <- dbUpdate . UserGroupCreate $ defaultUserGroup
         void $ dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) (get ugID ug,True) LANG_EN (get bdid bd) ByAdmin
         dbUpdate $ UserGroupUpdate $ set ugInvoicing (Invoice EnterprisePlan) ug
         Features fAdmins fUsers <- getFeaturesFor $ get ugID ug

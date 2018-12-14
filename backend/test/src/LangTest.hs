@@ -86,6 +86,6 @@ createTestUser :: Lang -> TestEnv User
 createTestUser lang = do
     bd <- dbQuery $ GetMainBrandedDomain
     pwd <- createPassword "admin"
-    ug <- dbUpdate $ UserGroupCreate def
+    ug <- dbUpdate $ UserGroupCreate defaultUserGroup
     Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (get ugID ug, True) lang (get bdid bd) AccountRequest
     return user

@@ -165,7 +165,7 @@ createUserAndResetPassword :: TestEnv (User, Context)
 createUserAndResetPassword = do
   bd <- dbQuery $ GetMainBrandedDomain
   pwd <- createPassword "admin"
-  ug <- dbUpdate $ UserGroupCreate def
+  ug <- dbUpdate $ UserGroupCreate defaultUserGroup
   Just user <- dbUpdate $ AddUser
     ("", "")
     "andrzej@skrivapa.se"
@@ -192,7 +192,7 @@ createTestUser :: TestEnv UserID
 createTestUser = do
     bd <- dbQuery $ GetMainBrandedDomain
     pwd <- createPassword "admin"
-    ug <- dbUpdate $ UserGroupCreate def
+    ug <- dbUpdate $ UserGroupCreate defaultUserGroup
     Just User{userid} <- dbUpdate $ AddUser
       ("", "")
       "andrzej@skrivapa.se"

@@ -770,7 +770,7 @@ addNewUserGroup = do
     ugacountry <- rand 10 (T.pack <$> arbString 3 30)
     let ug = set ugName          ugname
           . set ugAddress       uga
-          $ def
+          $ defaultUserGroup
         uga = Just $ UserGroupAddress
           { _ugaCompanyNumber = ugacompanynumber
           , _ugaAddress       = ugaaddress
@@ -803,7 +803,7 @@ addNewUser :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
            => String -> String -> String -> m (Maybe User)
 addNewUser firstname secondname email = do
   bd <- dbQuery $ GetMainBrandedDomain
-  ug <- dbUpdate $ UserGroupCreate def
+  ug <- dbUpdate $ UserGroupCreate defaultUserGroup
   dbUpdate $ AddUser (firstname, secondname) email Nothing
     (get ugID ug,True) defaultLang (get bdid bd)
     AccountRequest
@@ -815,7 +815,7 @@ addNewUserWithCompany :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
                       -> m (Maybe (User, UserGroupID))
 addNewUserWithCompany firstname secondname email = do
   bd <- dbQuery $ GetMainBrandedDomain
-  ug <- dbUpdate $ UserGroupCreate def
+  ug <- dbUpdate $ UserGroupCreate defaultUserGroup
   mUser <- dbUpdate $ AddUser (firstname, secondname) email Nothing
            (get ugID ug,True) defaultLang (get bdid bd)
            AccountRequest
