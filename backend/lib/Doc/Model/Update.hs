@@ -120,6 +120,7 @@ import UserGroup.Model
 import UserGroup.Types
 import Util.Actor
 import Util.HasSomeUserInfo
+import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import Utils.Image
 import Utils.Monad
@@ -1638,8 +1639,8 @@ instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m)
       magichash <- random
       sl' <-  case mUser of
         Just user | isAuthor sl -> do
-          ug <- query . UserGroupGetByUserID . userid $ user
-          return $ replaceSignatoryUser sl user ug
+          ugwp <- query . UserGroupGetWithParentsByUserID . userid $ user
+          return $ replaceSignatoryUser sl user ugwp
         _ -> return sl
       return sl'
         { signatorylinkid = unsafeSignatoryLinkID 0
@@ -2221,40 +2222,49 @@ document is idle for a signatory if
    4. the signatory belongs to the same company as the author, and
    5. it's been more than idle_doc_timeout_STATUS days since the document was modified.
 -}
-archiveIdleDocuments :: (MonadLog m, MonadDB m, MonadThrow m) => UTCTime -> m Int
+archiveIdleDocuments
+  :: (MonadLog m, MonadDB m, MonadThrow m, MonadBase IO m)
+  => UTCTime -> m Int
 archiveIdleDocuments now = do
   ugs <- dbQuery $ UserGroupsGetFiltered [UGWithAnyIdleDocTimeoutSet] Nothing
-  fmap sum . forM ugs $ \ug -> do
-    let ugid = get ugID ug
-        ugDRP = get (ugsDataRetentionPolicy . ugSettings) ug
-    users <- dbQuery $ UserGroupGetUsersIncludeDeleted ugid
-    fmap sum . forM users $ \user -> do
-      let uid     = userid user
-          userDRP = dataretentionpolicy $ usersettings user
-          drp     = makeStricterDataRetentionPolicy ugDRP userDRP
-      logInfo "archiveIdleDocuments starting for user in user_group" $ object [
-          identifier ugid
-        , identifier uid
-        ]
-      startTime <- currentTime
-      archived <- foldM
-        (\acc status ->
-          case get (drpIdleDocTimeout status) drp of
-            Just timeoutDays -> do
-              n <- dbUpdate $ ArchiveIdleDocumentsForUserInUserGroup
-                     uid ugid status timeoutDays now
-              return $ acc + n
-            Nothing -> return acc)
-        0 [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError]
-      commit
-      finishTime <- currentTime
-      logInfo "archiveIdleDocuments finished for user in user_group" $ object [
-          identifier ugid
-        , identifier uid
-        , "elapsed_time" .= (realToFrac (diffUTCTime finishTime startTime) :: Double)
-        , "signatory_links_archived" .= archived
-        ]
-      return archived
+  fmap sum . forM ugs $ \ug_with_drp -> do
+    let ugid = get ugID ug_with_drp
+    -- even though we know that this UG has DRP, we will use the safe way
+    ugwp <- guardJustM . dbQuery . UserGroupGetWithParents $ ugid
+    let ug_drp = get ugsDataRetentionPolicy . ugwpSettings $ ugwp
+    -- Get recursive all children, who inherit this DRP property.
+    -- This requires another level of queries, but it just means 2 queries per
+    -- UserGroup (1 for getting children + 1 for getting users)
+    children_ugs <- ugGetChildrenInheritingProperty ugid (get ugSettings)
+    fmap sum . forM (ug_with_drp:children_ugs) $ \ug_with_inherited_drp -> do
+      users <- dbQuery $ UserGroupGetUsersIncludeDeleted $ get ugID ug_with_inherited_drp
+      fmap sum . forM users $ \user -> do
+        let uid      = userid user
+            user_drp = dataretentionpolicy $ usersettings user
+            drp      = makeStricterDataRetentionPolicy ug_drp user_drp
+        logInfo "archiveIdleDocuments starting for user in user_group" $ object [
+            identifier ugid
+          , identifier uid
+          ]
+        startTime <- currentTime
+        archived <- foldM
+          (\acc status ->
+            case get (drpIdleDocTimeout status) drp of
+              Just timeoutDays -> do
+                n <- dbUpdate $ ArchiveIdleDocumentsForUserInUserGroup
+                       uid ugid status timeoutDays now
+                return $ acc + n
+              Nothing -> return acc)
+          0 [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError]
+        commit
+        finishTime <- currentTime
+        logInfo "archiveIdleDocuments finished for user in user_group" $ object [
+            identifier ugid
+          , identifier uid
+          , "elapsed_time" .= (realToFrac (diffUTCTime finishTime startTime) :: Double)
+          , "signatory_links_archived" .= archived
+          ]
+        return archived
 
 data ArchiveIdleDocumentsForUserInUserGroup = ArchiveIdleDocumentsForUserInUserGroup UserID UserGroupID DocumentStatus Int16 UTCTime
 instance MonadDB m => DBUpdate m ArchiveIdleDocumentsForUserInUserGroup Int where

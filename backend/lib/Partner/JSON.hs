@@ -155,29 +155,40 @@ unjsonUserGroupsForUpdate = objectOf $
   "List of companies"
   (arrayOf unjsonUserGroupForUpdate)
 
-userGroupToUserGroupForUpdate :: UserGroup -> UserGroupForUpdate
-userGroupToUserGroupForUpdate ug
-  = UserGroupForUpdate
-      {
-        uguUserGroupID      = pack . show $ get ugID ug -- unsafeUserGroupID
-      , uguUserGroupName    = get ugName ug
-      , uguUserGroupNumber  = get ugaCompanyNumber ugAddress'
-      , uguUserGroupAddress = get ugaAddress ugAddress'
-      , uguUserGroupZip     = get ugaZip ugAddress'
-      , uguUserGroupCity    = get ugaCity ugAddress'
-      , uguUserGroupCountry = get ugaCountry ugAddress'
-      }
-  where ugAddress' = get ugAddress ug
+-- This is intended for PartnerAPI only. It uses inherited data and the caller
+-- does not know about UserGroups or inheritance
+userGroupToUserGroupForUpdate :: UserGroupWithParents -> UserGroupForUpdate
+userGroupToUserGroupForUpdate ugwp =
+  let ug = ugwpUG ugwp
+      ug_address = ugwpAddress ugwp
+  in  UserGroupForUpdate
+        { uguUserGroupID      = pack . show $ get ugID ug
+        , uguUserGroupName    = get ugName ug
+        , uguUserGroupNumber  = get ugaCompanyNumber ug_address
+        , uguUserGroupAddress = get ugaAddress ug_address
+        , uguUserGroupZip     = get ugaZip ug_address
+        , uguUserGroupCity    = get ugaCity ug_address
+        , uguUserGroupCountry = get ugaCountry ug_address
+        }
 
-updateUserGroupWithUserGroupForUpdate :: UserGroup -> UserGroupForUpdate -> UserGroup
-updateUserGroupWithUserGroupForUpdate ug UserGroupForUpdate{..} =
-  set ugName uguUserGroupName . set ugAddress muga $ ug
-  where muga = set ugaCompanyNumber uguUserGroupNumber .
-               set ugaAddress       uguUserGroupAddress .
-               set ugaZip           uguUserGroupZip .
-               set ugaCity          uguUserGroupCity .
-               set ugaCountry       uguUserGroupCountry $
-               get ugAddress ug
+-- This is intended for PartnerAPI only. We compare the set values with
+-- inherited data and update only if there is any change.
+updateUserGroupWithUserGroupForUpdate :: UserGroupWithParents -> UserGroupForUpdate -> UserGroup
+updateUserGroupWithUserGroupForUpdate ugwp UserGroupForUpdate{..} =
+  let ug = ugwpUG ugwp
+      old_address = ugwpAddress ugwp
+      new_address = UserGroupAddress
+        { _ugaCompanyNumber = uguUserGroupNumber
+        , _ugaAddress       = uguUserGroupAddress
+        , _ugaZip           = uguUserGroupZip
+        , _ugaCity          = uguUserGroupCity
+        , _ugaCountry       = uguUserGroupCountry
+        }
+      -- don't stop inheriting address, unless it has been changed
+      updateAddress = case new_address == old_address of
+        True  -> id
+        False -> set ugAddress $ Just new_address
+  in  set ugName uguUserGroupName . updateAddress $ ug
 
 -------------------------------------------------------------------------------
 -- Utils                                                                    ---

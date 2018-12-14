@@ -49,7 +49,7 @@ import ThirdPartyStats.Core
 import ThirdPartyStats.Planhat
 import User.Email
 import User.Model
-import User.Utils
+import UserGroup.Model
 import UserGroup.Types
 import Util.Actor
 import Util.HasSomeUserInfo
@@ -59,7 +59,7 @@ import Util.SignatoryLinkUtils
 -- | Log a document event, adding some standard properties.
 logDocEvent :: (MonadDB m, MonadThrow m, MonadTime m) => EventName -> User -> [EventProperty] -> Document -> m ()
 logDocEvent name user extraProps doc = do
-  ug <- getUserGroupForUser user
+  ug <- dbQuery . UserGroupGetByUserID . userid $ user
   now <- currentTime
   let uid = userid user
       email = Email $ getEmail user

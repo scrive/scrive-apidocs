@@ -34,6 +34,8 @@ userGroupTests env  = testGroup "UserGroup"
   , testThat "Cannot delete a UserGroup with subgroups" env testCannotDeleteUserGroupWithSubgroups
   , testThat "Test setting user group parents" env testChangeUserGroupParent
   , testThat "User group root must have invoice" env testUserGroupRootMustHaveInvoice
+  , testThat "User group root must have address" env testUserGroupRootMustHaveAddress
+  , testThat "User group root must have settings" env testUserGroupRootMustHaveSettings
   ]
 
 testCreateGroups :: TestEnv ()
@@ -47,7 +49,7 @@ testCreateGroups = do
     createGroups :: [Maybe UserGroupID] -> Int -> TestEnv [Maybe UserGroupID]
     createGroups mparent_ids level = (concat <$>) . forM mparent_ids $ \mparent_id -> do
       ug0 <- case level of
-        1 -> unARootUserGroup <$> rand 10 arbitrary
+        1 -> ugFromUGRoot <$> rand 10 arbitrary
         _ -> rand 10 arbitrary
       ug1 <- dbUpdate . UserGroupCreate . set ugParentGroupID mparent_id $ ug0
       return . replicate 2 . Just . get ugID $ ug1
@@ -63,7 +65,7 @@ testCreateGroupsWithUsers = do
     createGroupsWithUsers :: [Maybe UserGroupID] -> Int -> TestEnv [Maybe UserGroupID]
     createGroupsWithUsers mparent_ids level = (concat <$>) . forM mparent_ids $ \mparent_id -> do
       ug0 <- case level of
-        1 -> unARootUserGroup <$> rand 10 arbitrary
+        1 -> ugFromUGRoot <$> rand 10 arbitrary
         _ -> rand 10 arbitrary
       ug1 <- dbUpdate . UserGroupCreate . set ugParentGroupID mparent_id $ ug0
       u <- addNewRandomUser
@@ -81,7 +83,7 @@ testGetAllUsersOfTopGroup = do
     createGroupsWithUsers (mparent_ids, ugids) level = do
       new_ugids <- forM mparent_ids $ \mparent_id -> do
         ug0 <- case level of
-          1 -> unARootUserGroup <$> rand 10 arbitrary
+          1 -> ugFromUGRoot <$> rand 10 arbitrary
           _ -> rand 10 arbitrary
         ug1 <- dbUpdate . UserGroupCreate . set ugParentGroupID mparent_id $ ug0
         u <- addNewRandomUser
@@ -92,7 +94,7 @@ testGetAllUsersOfTopGroup = do
 
 testGetUserGroup :: TestEnv ()
 testGetUserGroup = do
-  ug0 <- unARootUserGroup <$> rand 10 arbitrary
+  ug0 <- ugFromUGRoot <$> rand 10 arbitrary
   ug1 <- dbUpdate . UserGroupCreate $ ug0
   Just _ug2 <- dbQuery . UserGroupGet . get ugID $ ug1
   return ()
@@ -109,7 +111,7 @@ testGetAllGroupsOfUser = do
     createGroupsWithUsers (mparent_ids, uids) level = do
       (new_ugids, new_uids) <- (unzip <$>) . forM mparent_ids $ \mparent_id -> do
         ug0 <- case level of
-          1 -> unARootUserGroup <$> rand 10 arbitrary
+          1 -> ugFromUGRoot <$> rand 10 arbitrary
           _ -> rand 10 arbitrary
         ug1 <- dbUpdate . UserGroupCreate . set ugParentGroupID mparent_id $ ug0
         u <- addNewRandomUser
@@ -153,7 +155,7 @@ testMoveGroup = do
     createGroupsWithUsers (mparent_ids, ugids) level = do
       new_ugids <- forM mparent_ids $ \mparent_id -> do
         ug0 <- case level of
-          1 -> unARootUserGroup <$> rand 10 arbitrary
+          1 -> ugFromUGRoot <$> rand 10 arbitrary
           _ -> rand 10 arbitrary
         ug1 <- dbUpdate . UserGroupCreate . set ugParentGroupID mparent_id $ ug0
         u <- addNewRandomUser
@@ -164,7 +166,7 @@ testMoveGroup = do
 
 testMoveGroupCycleError :: TestEnv ()
 testMoveGroupCycleError = do
-  ugA0 <- unARootUserGroup <$> rand 10 arbitrary
+  ugA0 <- ugFromUGRoot <$> rand 10 arbitrary
   ugA <- dbUpdate . UserGroupCreate $ ugA0
   -- make B child of A
   ugB0 <- rand 10 arbitrary
@@ -174,7 +176,7 @@ testMoveGroupCycleError = do
 
 testFindInheritedPricePlan :: TestEnv ()
 testFindInheritedPricePlan = do
-  ugA0 <- unARootUserGroup <$> rand 10 arbitrary
+  ugA0 <- ugFromUGRoot <$> rand 10 arbitrary
   ugA <- dbUpdate . UserGroupCreate $ ugA0
   ugB0 <- rand 10 arbitrary
   ugB <- dbUpdate . UserGroupCreate
@@ -187,7 +189,7 @@ testFindInheritedPricePlan = do
 
 testCannotDeleteUserGroupWithSubgroups :: TestEnv ()
 testCannotDeleteUserGroupWithSubgroups = do
-  ugA0 <- unARootUserGroup <$> rand 10 arbitrary
+  ugA0 <- ugFromUGRoot <$> rand 10 arbitrary
   ugA <- dbUpdate . UserGroupCreate $ ugA0
   -- make B child of A
   ugB0 <- rand 10 arbitrary
@@ -255,35 +257,44 @@ testChangeUserGroupParent = do
 
 testUserGroupRootMustHaveInvoice :: TestEnv ()
 testUserGroupRootMustHaveInvoice = do
-  ug0 <- unARootUserGroup <$> rand 10 arbitrary
+  ug0 <- ugFromUGRoot <$> rand 10 arbitrary
   -- creating a root with ugInvoicing other than Invoice fails
-  assertRaisesKontra (\(UserGroupRootHasNotInvoice _) -> True)
+  assertRaisesKontra (\(UserGroupIsInvalidAsRoot _) -> True)
     . dbUpdate . UserGroupCreate . set ugInvoicing None $ ug0
-  assertRaisesKontra (\(UserGroupRootHasNotInvoice _) -> True)
+  assertRaisesKontra (\(UserGroupIsInvalidAsRoot _) -> True)
     . dbUpdate . UserGroupCreate . set ugInvoicing (BillItem Nothing) $ ug0
-  assertRaisesKontra (\(UserGroupRootHasNotInvoice _) -> True)
+  assertRaisesKontra (\(UserGroupIsInvalidAsRoot _) -> True)
     . dbUpdate . UserGroupCreate . set ugInvoicing (BillItem (Just FreePlan)) $ ug0
 
   ug1 <- dbUpdate . UserGroupCreate $ ug0
   -- updating a root with ugInvoicing other than Invoice fails
-  assertRaisesKontra (\(UserGroupRootHasNotInvoice _) -> True)
+  assertRaisesKontra (\(UserGroupIsInvalidAsRoot _) -> True)
     . dbUpdate . UserGroupUpdate . set ugInvoicing None $ ug1
-  assertRaisesKontra (\(UserGroupRootHasNotInvoice _) -> True)
+  assertRaisesKontra (\(UserGroupIsInvalidAsRoot _) -> True)
     . dbUpdate . UserGroupUpdate . set ugInvoicing (BillItem Nothing) $ ug1
-  assertRaisesKontra (\(UserGroupRootHasNotInvoice _) -> True)
+  assertRaisesKontra (\(UserGroupIsInvalidAsRoot _) -> True)
     . dbUpdate . UserGroupUpdate . set ugInvoicing (BillItem (Just FreePlan)) $ ug1
 
-newtype ARootUserGroup = ARootUserGroup { unARootUserGroup :: UserGroup }
+testUserGroupRootMustHaveAddress :: TestEnv ()
+testUserGroupRootMustHaveAddress = do
+  ug0 <- ugFromUGRoot <$> rand 10 arbitrary
+  -- creating a root without address fails
+  assertRaisesKontra (\(UserGroupIsInvalidAsRoot _) -> True)
+    . dbUpdate . UserGroupCreate . set ugAddress Nothing $ ug0
 
-instance Arbitrary ARootUserGroup where
-  arbitrary = (\ug pp ui address info -> ARootUserGroup $ ug {
-      _ugInvoicing = Invoice pp
-    , _ugUI        = ui
-    , _ugSettings  = info
-    , _ugAddress   = address
-    })
-    <$> arbitrary
-    <*> arbitrary
-    <*> arbitrary
-    <*> arbitrary
-    <*> arbitrary
+  ug1 <- dbUpdate . UserGroupCreate $ ug0
+  -- clearing address from root fails
+  assertRaisesKontra (\(UserGroupIsInvalidAsRoot _) -> True)
+    . dbUpdate . UserGroupUpdate . set ugAddress Nothing $ ug1
+
+testUserGroupRootMustHaveSettings :: TestEnv ()
+testUserGroupRootMustHaveSettings = do
+  ug0 <- ugFromUGRoot <$> rand 10 arbitrary
+  -- creating a root without settings fails
+  assertRaisesKontra (\(UserGroupIsInvalidAsRoot _) -> True)
+    . dbUpdate . UserGroupCreate . set ugSettings Nothing $ ug0
+
+  ug1 <- dbUpdate . UserGroupCreate $ ug0
+  -- clearing settings from root fails
+  assertRaisesKontra (\(UserGroupIsInvalidAsRoot _) -> True)
+    . dbUpdate . UserGroupUpdate . set ugSettings Nothing $ ug1

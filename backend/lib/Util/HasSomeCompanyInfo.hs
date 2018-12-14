@@ -40,6 +40,6 @@ instance HasSomeCompanyInfo Document where
   getCompanyName   doc = maybe "" getCompanyName   $ getAuthorSigLink doc
   getCompanyNumber doc = maybe "" getCompanyNumber $ getAuthorSigLink doc
 
-instance HasSomeCompanyInfo UserGroup where
-  getCompanyName   = T.unpack . get ugName
-  getCompanyNumber = T.unpack . get (ugaCompanyNumber . ugAddress)
+instance HasSomeCompanyInfo UserGroupWithParents where
+  getCompanyName   = T.unpack . get ugName . ugwpUG
+  getCompanyNumber = T.unpack . get ugaCompanyNumber . ugwpAddress

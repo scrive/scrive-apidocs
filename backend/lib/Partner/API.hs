@@ -36,7 +36,7 @@ import Routing
 import User.Action (createUser)
 import User.Email (Email(..))
 import User.Model
-import UserGroup.Model (UserGroupCreate(..), UserGroupGet(..), UserGroupGetImmediateChildren(..), UserGroupUpdate(..))
+import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
 
@@ -67,18 +67,22 @@ partnerApiCallV1CompanyCreate ptOrUgID = do
   logPartner mPartnerID partnerUsrGrpID . api $ do
     let acc = [ makePolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
     apiAccessControl acc noPrvErr $ do
-      let ugBase = set ugParentGroupID (Just partnerUsrGrpID)
+      ugwp_partner <- apiGuardJustM (serverError "Was not able to retrieve partner")
+        . dbQuery . UserGroupGetWithParents $ partnerUsrGrpID
+      let ug_new = set ugParentGroupID (Just partnerUsrGrpID)
                  . set ugInvoicing     (BillItem $ Just FreePlan)
                  $ def
       ugu <- apiV2ParameterObligatory $
                ApiV2ParameterJSON "json" unjsonUserGroupForUpdate
-      let ug = updateUserGroupWithUserGroupForUpdate ugBase ugu
+      let ug = updateUserGroupWithUserGroupForUpdate (ugwpAddChild ug_new ugwp_partner) ugu
       (eUserGroup :: Either SomeException UserGroup) <- try . dbUpdate . UserGroupCreate $ ug
       case eUserGroup of
         Left exc -> do
             srvLogErr $ "The user group could not be created; " <> (T.pack . show $ exc)
-        Right ug' ->
-            Created <$> return (unjsonUserGroupForUpdate, userGroupToUserGroupForUpdate ug')
+        Right ug' -> do
+            ugwp <- apiGuardJustM (serverError "Was not able to retrieve newly created company")
+              . dbQuery . UserGroupGetWithParents . get ugID $ ug'
+            Created <$> return (unjsonUserGroupForUpdate, userGroupToUserGroupForUpdate ugwp)
 
 partnerApiCallV1CompanyUpdate :: ( MonadCatch m
                                  , Kontrakcja m )
@@ -94,24 +98,24 @@ partnerApiCallV1CompanyUpdate ptOrUgID ugid = do
     let acc =  [ makePolicyItem (UpdateA, UserGroupR, ugid)
                , makePolicyItem (UpdateA, UserGroupR, partnerUsrGrpID) ]
     apiAccessControl acc noPrvErr $ do
-      dbQuery (UserGroupGet ugid) >>= \case
+      dbQuery (UserGroupGetWithParents ugid) >>= \case
         Nothing -> noUsrGrpErr
-        Just ug -> do
+        Just ugwp -> do
           uguJSON <- apiV2ParameterObligatory $ ApiV2ParameterAeson "json"
-          ugu <- case (Unjson.update (userGroupToUserGroupForUpdate ug)
+          ugu <- case (Unjson.update (userGroupToUserGroupForUpdate ugwp)
                                      unjsonUserGroupForUpdate uguJSON) of
               (Unjson.Result value []) ->
                 return value
               (Unjson.Result _ errs) ->
                 rqPrmErr $ "Errors while parsing user group data:" <+> (T.pack . show $ errs)
-          let ug' = updateUserGroupWithUserGroupForUpdate ug ugu
+          let ug' = updateUserGroupWithUserGroupForUpdate ugwp ugu
           (eDidUpdate :: Either SomeException ()) <- try . dbUpdate $ UserGroupUpdate ug'
           when (isLeft eDidUpdate) $
             srvLogErr "The user group details could not be updated."
-          updatedUserGroup <- apiGuardJustM
+          ugwp_updated <- apiGuardJustM
             (serverError "Was not able to retrieve updated company")
-            (dbQuery . UserGroupGet $ get ugID ug)
-          return . Ok $ (unjsonUserGroupForUpdate, userGroupToUserGroupForUpdate updatedUserGroup)
+            (dbQuery . UserGroupGetWithParents $ ugid)
+          return . Ok $ (unjsonUserGroupForUpdate, userGroupToUserGroupForUpdate ugwp_updated)
 
 partnerApiCallV1CompanyGet :: Kontrakcja m => Int64 -> UserGroupID -> m Response
 partnerApiCallV1CompanyGet ptOrUgID ugid = do
@@ -124,11 +128,11 @@ partnerApiCallV1CompanyGet ptOrUgID ugid = do
               , makePolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
         -- see @note for `partnerApiCallV1CompaniesGet`
     apiAccessControl acc noPrvErr $ do
-      (dbQuery $ UserGroupGet ugid) >>= \case
+      (dbQuery $ UserGroupGetWithParents ugid) >>= \case
         Nothing -> noUsrGrpErr
-        Just userGroup -> do
+        Just ugwp -> do
           Ok <$> return (unjsonUserGroupForUpdate,
-                         userGroupToUserGroupForUpdate userGroup)
+                         userGroupToUserGroupForUpdate ugwp)
 
 partnerApiCallV1CompaniesGet :: Kontrakcja m => Int64 -> m Response
 partnerApiCallV1CompaniesGet ptOrUgID = do
@@ -143,9 +147,11 @@ partnerApiCallV1CompaniesGet ptOrUgID = do
     -- UserGroupR, partnerUsrGrpID)`; cf. instance for HasPermissions of
     -- (AccessRole UserGroupID) in AccessControl.Types...around line 95
     apiAccessControl acc noPrvErr $ do
-      userGroups <- dbQuery $ UserGroupGetImmediateChildren partnerUsrGrpID
+      user_groups <- dbQuery $ UserGroupGetImmediateChildren partnerUsrGrpID
+      user_groups_with_parents <- fmap catMaybes . forM user_groups $ \ug ->
+        dbQuery . UserGroupGetWithParents . get ugID $ ug
       Ok <$> return (unjsonUserGroupsForUpdate,
-                     userGroupToUserGroupForUpdate <$> userGroups)
+                     userGroupToUserGroupForUpdate <$> user_groups_with_parents)
 
 partnerApiCallV1UserCreate :: Kontrakcja m => Int64 -> UserGroupID -> m Response
 partnerApiCallV1UserCreate ptOrUgID ugid = do

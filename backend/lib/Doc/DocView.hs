@@ -41,7 +41,7 @@ import File.FileID
 import Kontra
 import KontraLink
 import User.Model
-import User.Utils
+import UserGroup.Model
 import UserGroup.Types
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -88,7 +88,7 @@ pageDocumentSignView ctx document siglink ad = do
           Nothing -> unexpectedError "Impossible happened: this document was not saved to an account"
           Just authorid' -> authorid'
   authoruser <- fmap fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
-  authorug <- getUserGroupForUser authoruser
+  authorugwp <- dbQuery . UserGroupGetWithParentsByUserID . userid $ authoruser
   let loggedAsSignatory = (isJust $ maybesignatory siglink) && (maybesignatory siglink) == (userid <$> getContextUser ctx);
   let loggedAsAuthor = (Just authorid == (userid <$> getContextUser ctx));
   let docjson = unjsonToByteStringLazy' (Options { pretty = False, indent = 0, nulls = True }) (unjsonDocument (documentAccessForSlid (signatorylinkid siglink) document)) document
@@ -105,8 +105,8 @@ pageDocumentSignView ctx document siglink ad = do
           StandardAuthenticationToView -> show $ LinkDocumentPreview (documentid document) (Just siglink) mainfile 600
           _ -> show LinkPreviewLockedImage
       F.value "b64documentdata" $ B64.encode $ docjson
-      F.value "legaltext" $ get (ugsLegalText . ugSettings) authorug
-      standardPageFields ctx (Just (get ugID authorug, get ugUI authorug)) ad -- Branding for signview depends only on authors company
+      F.value "legaltext" $ get ugsLegalText . ugwpSettings $ authorugwp
+      standardPageFields ctx (Just (get ugID $ ugwpUG authorugwp, get ugUI $ ugwpUG authorugwp)) ad -- Branding for signview depends only on authors company
 
 pageDocumentIdentifyView :: Kontrakcja m
                     => Context
@@ -117,7 +117,7 @@ pageDocumentIdentifyView :: Kontrakcja m
 pageDocumentIdentifyView ctx document siglink ad = do
   let authorid = fromJust $ getAuthorSigLink document >>= maybesignatory
   auser <- fmap fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
-  authorug <- getUserGroupForUser auser
+  authorug <- dbQuery . UserGroupGetByUserID . userid $ auser
 
   renderTemplate "pageDocumentIdentifyView" $ do
       F.value "documentid" $ show $ documentid document

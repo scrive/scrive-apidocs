@@ -44,7 +44,7 @@ getSubscription ug = do
   fs <- getFeaturesFor ugid
   return Subscription { ugSubInvoicingType = ugInvoicingType ug
                       , ugSubPaymentPlan = ugPaymentPlan ug
-                      , ugSubInheritedPaymentPlan = ugwpInheritedPaymentPlan ugwps
+                      , ugSubInheritedPaymentPlan = ugwpPaymentPlan <$> ugwpOnlyParents ugwps
                       , ugSubCountUsers = Just $ length users
                       , ugSubCountDocsMTD = Just docsMTD
                       , ugSubFeatures = fs

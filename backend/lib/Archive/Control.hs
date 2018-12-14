@@ -150,9 +150,9 @@ handleListCSV= do
 -- | Main view of the archive
 showArchive :: Kontrakcja m => m InternalKontraResponse
 showArchive = withUserTOS $ \(user,tostime) -> do
-    mug <- dbQuery . UserGroupGet . usergroupid $ user
+    ugwp <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
     ctx <- getContext
-    pb <-  pageArchive ctx user mug tostime
+    pb <-  pageArchive ctx user ugwp tostime
     internalResponse <$> renderFromBodyWithFields pb (F.value "archive" True)
 
 -- Zip utils

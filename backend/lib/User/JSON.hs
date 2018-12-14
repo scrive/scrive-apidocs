@@ -5,11 +5,13 @@ module User.JSON (
     userJSON,
     userJSONWithCallBackInfo,
     companyJSON,
+    companyJSONAdminOnly,
     userStatsToJSON,
     companyStatsToJSON,
     userNotDeletableReasonToString
     ) where
 
+import Data.Functor.Identity
 import Data.String (IsString(..))
 import Text.JSON
 import Text.JSON.Gen
@@ -25,12 +27,13 @@ import User.Model
 import UserGroup.Types
 import Util.HasSomeUserInfo
 
-userJSON :: User -> UserGroup -> JSValue
-userJSON user company = runJSONGen $ userJSONUserDetails user company
+userJSON :: User -> UserGroupWithParents -> JSValue
+userJSON user ugwp = runJSONGen $ userJSONUserDetails user ugwp
 
-userJSONWithCallBackInfo :: User -> UserGroup -> Maybe UserCallbackScheme -> JSValue
-userJSONWithCallBackInfo user company callback = runJSONGen $ do
-    userJSONUserDetails user company
+userJSONWithCallBackInfo
+  :: User -> UserGroupWithParents -> Maybe UserCallbackScheme -> JSValue
+userJSONWithCallBackInfo user ugwp callback = runJSONGen $ do
+    userJSONUserDetails user ugwp
     value "callback_is_editable" $ case callback of
       Nothing -> True
       Just (ConstantUrlSchemeV2 _) -> True
@@ -43,8 +46,8 @@ userJSONWithCallBackInfo user company callback = runJSONGen $ do
       Just (BasicAuthScheme _ _) -> "Existing BasicAuthScheme"
       Just (OAuth2Scheme _ _ _ _) -> "Existing OAuth2Scheme"
 
-userJSONUserDetails :: User -> UserGroup -> JSONGen ()
-userJSONUserDetails user company = do
+userJSONUserDetails :: User -> UserGroupWithParents -> JSONGen ()
+userJSONUserDetails user ugwp = do
     value "id" $ show $ userid user
     value "fstname" $ getFirstName user
     value "sndname" $ getLastName user
@@ -55,37 +58,70 @@ userJSONUserDetails user company = do
     value "companyadmin" $ useriscompanyadmin user
     value "companyposition" $ usercompanyposition $ userinfo user
     value "lang"   $ codeFromLang $ getLang user
-    value "company" $ companyJSON False company []
+    value "company" $ companyJSON ugwp
 
-companyJSON :: Bool -> UserGroup -> [UserGroup] -> JSValue
-companyJSON forAdmin ug parentGroupPath  = runJSONGen $ do
+companyJSON :: UserGroupWithParents -> JSValue
+companyJSON ugwp = do
+  runJSONGen $ do
+    value "companyid" . show . get ugID $ ugwpUG ugwp
+    value "companyname" . T.unpack $ get ugName $ ugwpUG ugwp
+    companyAddressJson $ ugwpAddress ugwp
+    companySettingsJson $ ugwpSettings ugwp
+
+companyJSONAdminOnly :: UserGroupWithParents -> JSValue
+companyJSONAdminOnly ugwp = do
+  let ug = ugwpUG ugwp
+      activeAddress = ugwpAddress ugwp
+      activeSettings = ugwpSettings ugwp
+      mInheritedAddress = ugwpAddress <$> ugwpOnlyParents ugwp
+      mInheritedSettings = ugwpSettings <$> ugwpOnlyParents ugwp
+      ugParentPath = maybe [] ugwpToList . ugwpOnlyParents $ ugwp
+      ugSettingsIsInherited = isNothing . get ugSettings $ ug
+      ugAddressIsInherited = isNothing . get ugAddress $ ug
+  runJSONGen $ do
     value "companyid" $ show $ get ugID ug
-    value "address" $ unpack $ get (ugaAddress . ugAddress) ug
-    value "city" $ unpack $ get (ugaCity  . ugAddress) ug
-    value "country" $ unpack $ get (ugaCountry . ugAddress) ug
-    value "zip" $ unpack $ get (ugaZip . ugAddress) ug
-    value "companyname" $ unpack $ get ugName ug
-    value "companynumber" $ unpack $ get (ugaCompanyNumber . ugAddress) ug
-    value "cgidisplayname" $ unpack <$> get (ugsCGIDisplayName . ugSettings) ug
-    value "cgiserviceid" $ unpack <$> get (ugsCGIServiceID . ugSettings) ug
-    value "ipaddressmasklist" $ intercalate "," $ fmap show $  get (ugsIPAddressMaskList . ugSettings) ug
-    value "idledoctimeoutpreparation" $ get (drpIdleDocTimeoutPreparation . ugsDataRetentionPolicy . ugSettings) ug
-    value "idledoctimeoutclosed" $ get (drpIdleDocTimeoutClosed . ugsDataRetentionPolicy . ugSettings) ug
-    value "idledoctimeoutcanceled" $ get (drpIdleDocTimeoutCanceled . ugsDataRetentionPolicy . ugSettings) ug
-    value "idledoctimeouttimedout" $ get (drpIdleDocTimeoutTimedout . ugsDataRetentionPolicy . ugSettings) ug
-    value "idledoctimeoutrejected" $ get (drpIdleDocTimeoutRejected . ugsDataRetentionPolicy . ugSettings) ug
-    value "idledoctimeouterror" $ get (drpIdleDocTimeoutError . ugsDataRetentionPolicy . ugSettings) ug
-    value "immediatetrash" $ get (drpImmediateTrash . ugsDataRetentionPolicy . ugSettings) ug
-    value "smsprovider" $ show $ get (ugsSMSProvider . ugSettings) ug
-    value "padappmode" $ unpack $ padAppModeText $ get (ugsPadAppMode . ugSettings) ug
-    value "padearchiveenabled" $ get (ugsPadEarchiveEnabled . ugSettings) ug
-    when forAdmin $ value "partnerid" $ show <$> (get ugParentGroupID ug)
-    when forAdmin $ objects "parentgrouppath" . for parentGroupPath $ \parent -> do
+    companyAddressJson activeAddress
+    value "companyname" $ T.unpack $ get ugName ug
+    companySettingsJson $ activeSettings
+
+    whenJust (mInheritedAddress) $
+      object "companyinheritedaddress" . companyAddressJson
+    value "companyaddressisinherited" ugAddressIsInherited
+
+    whenJust (mInheritedSettings) $
+      object "companyinheritedinfo" . companySettingsJson
+    value "companyinfoisinherited" ugSettingsIsInherited
+
+    value "partnerid" . fmap show $ get ugParentGroupID ug
+    objects "parentgrouppath" . for ugParentPath $ \parent -> do
       value "group_id" . show . get ugID $ parent
       value "group_name" . T.unpack . get ugName $ parent
-  where
-    unpack :: T.Text -> String
-    unpack = T.unpack
+
+companyAddressJson :: UserGroupAddress -> JSONGenT Identity ()
+companyAddressJson uga = do
+  value "address"       . T.unpack $ get ugaAddress       uga
+  value "city"          . T.unpack $ get ugaCity          uga
+  value "country"       . T.unpack $ get ugaCountry       uga
+  value "zip"           . T.unpack $ get ugaZip           uga
+  value "companynumber" . T.unpack $ get ugaCompanyNumber uga
+
+companySettingsJson :: UserGroupSettings -> JSONGenT Identity ()
+companySettingsJson ugs = do
+  let drp = get ugsDataRetentionPolicy ugs
+  value "ipaddressmasklist" . intercalate "," . fmap show
+    $ get ugsIPAddressMaskList ugs
+  value "cgidisplayname" . fmap T.unpack $ get ugsCGIDisplayName ugs
+  value "cgiserviceid" . fmap T.unpack $ get ugsCGIServiceID ugs
+  value "smsprovider" . show $ get ugsSMSProvider ugs
+  value "padappmode" . T.unpack . padAppModeText $ get ugsPadAppMode ugs
+  value "padearchiveenabled" $ get ugsPadEarchiveEnabled ugs
+  value "idledoctimeoutpreparation" $ get drpIdleDocTimeoutPreparation drp
+  value "idledoctimeoutclosed" $ get drpIdleDocTimeoutClosed drp
+  value "idledoctimeoutcanceled" $ get drpIdleDocTimeoutCanceled drp
+  value "idledoctimeouttimedout" $ get drpIdleDocTimeoutTimedout drp
+  value "idledoctimeoutrejected" $ get drpIdleDocTimeoutRejected drp
+  value "idledoctimeouterror" $ get drpIdleDocTimeoutError drp
+  value "immediatetrash" $ get drpImmediateTrash drp
 
 userStatsToJSON :: (UTCTime -> String) -> [UserUsageStats] -> JSValue
 userStatsToJSON formatTime uuss = runJSONGen . objects "stats" . for uuss $ \uus -> do

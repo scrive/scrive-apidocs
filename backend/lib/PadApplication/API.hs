@@ -22,7 +22,8 @@ import PadApplication.Types
 import Routing
 import Theme.Model
 import Theme.View
-import User.Utils
+import User.Types.User
+import UserGroup.Model
 import UserGroup.Types
 import qualified API.V2 as V2
 
@@ -62,7 +63,7 @@ apiCallGetPadClientTheme :: Kontrakcja m => m Response
 apiCallGetPadClientTheme = api $ do
   ctx <- getContext
   (user, _ , _) <- getAPIUserWithAnyPrivileges
-  ug <- getUserGroupForUser user
+  ug <- dbQuery . UserGroupGetByUserID . userid $ user
   theme <- dbQuery $ GetTheme $ fromMaybe
     (get (bdSignviewTheme . ctxbrandeddomain) ctx)
     (get (uguiSignviewTheme . ugUI) ug)
@@ -71,8 +72,8 @@ apiCallGetPadClientTheme = api $ do
 apiCallGetPadInfo :: Kontrakcja m => m Response
 apiCallGetPadInfo = V2.api $ do
   (user, _ , _) <- getAPIUserWithAnyPrivileges
-  ug <- getUserGroupForUser user
+  ugwp <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
   return $ V2.Ok $ object [
-      "app_mode" .= (padAppModeText . get (ugsPadAppMode . ugSettings) $ ug)
-    , "e_archive_enabled" .= (get (ugsPadEarchiveEnabled . ugSettings) $ ug)
+      "app_mode" .= (padAppModeText . get ugsPadAppMode . ugwpSettings $ ugwp)
+    , "e_archive_enabled" .= (get ugsPadEarchiveEnabled . ugwpSettings $ ugwp)
     ]

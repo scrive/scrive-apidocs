@@ -197,10 +197,11 @@ handleResendToUserGroupAccount :: Kontrakcja m => m JSValue
 handleResendToUserGroupAccount = withCompanyAdmin $ \(user, ug) -> do
   resendid <- getCriticalField asValidUserID "resendid"
   newuser <- guardJustM $ dbQuery $ GetUserByID resendid
-  if (usergroupid newuser /= get ugID ug)
+  let ugid = get ugID ug
+  if (usergroupid newuser /= ugid)
      then  do
        -- We need to check if there is a company invitation, and if it is, we send takeover email again
-       void $ guardJustM $ dbQuery $ GetUserGroupInvite (get ugID ug) resendid
+       void $ guardJustM $ dbQuery $ GetUserGroupInvite ugid resendid
        sendTakeoverSingleUserMail user ug newuser
      else  do
        -- Else we just send an email

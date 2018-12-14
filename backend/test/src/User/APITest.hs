@@ -16,6 +16,8 @@ import qualified Codec.Binary.Base32 as B32
 import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.HashMap.Strict as H
+import qualified Data.Label.Base as FCP
+import qualified Data.Label.Partial as FCP
 import qualified Data.Text.Encoding as TE
 
 import Attachment.Model
@@ -333,7 +335,7 @@ testUserSetDataRetentionPolicyOnlyIfAsStrict = do
       userDRP    <- rand 10 arbitrary
       companyDRP <- rand 10 arbitrary
 
-      let ug' = set (ugsDataRetentionPolicy . ugSettings) companyDRP ug
+      let ug' = fromJust $ FCP.set (ugsDataRetentionPolicy . FCP.just . ugSettings) companyDRP ug
       void $ dbUpdate $ UserGroupUpdate ug'
 
       let drpBS = unjsonToByteStringLazy unjsonDataRetentionPolicy userDRP

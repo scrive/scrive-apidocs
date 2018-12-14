@@ -10,7 +10,10 @@ import Log
 import Test.Framework
 import Test.QuickCheck
 import qualified Data.ByteString as BS
+import qualified Data.Label.Base as FCP
+import qualified Data.Label.Partial as FCP
 import qualified Data.Set as S
+import qualified Data.Text as T
 
 import Context (ctxpdftoolslambdaconf, ctxtime)
 import DataRetentionPolicy
@@ -45,6 +48,7 @@ import UserGroup.Types
 import Util.Actor
 import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
+import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import qualified Doc.Screenshot as Screenshot
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
@@ -369,8 +373,9 @@ testNewDocumentForNonCompanyUser = replicateM_ 10 $ do
 testNewDocumentForACompanyUser :: TestEnv ()
 testNewDocumentForACompanyUser = replicateM_ 10 $ do
   ug <- addNewUserGroup
+  ugwp <- guardJustM . dbQuery . UserGroupGetWithParents . get ugID $ ug
   result <- performNewDocumentWithRandomUser (Just ug) (Signable) "doc title"
-  assertGoodNewDocument (Just ug) (Signable) "doc title" result
+  assertGoodNewDocument (Just ugwp) (Signable) "doc title" result
 
 testRejectDocumentEvidenceLog :: TestEnv ()
 testRejectDocumentEvidenceLog = replicateM_ 10 $ do
@@ -738,8 +743,8 @@ performNewDocumentWithRandomUser mug doctype title = do
   doc <- randomUpdate $ NewDocument user title doctype defaultTimeZoneName 0 aa
   return (user, get ctxtime ctx, doc)
 
-assertGoodNewDocument :: Maybe UserGroup -> DocumentType -> String -> (User, UTCTime, Document) -> TestEnv ()
-assertGoodNewDocument mug doctype title (user, time, doc) = do
+assertGoodNewDocument :: Maybe UserGroupWithParents -> DocumentType -> String -> (User, UTCTime, Document) -> TestEnv ()
+assertGoodNewDocument mugwp doctype title (user, time, doc) = do
     assertEqual "Correct title" title (documenttitle doc)
     assertEqual "Correct type" doctype (documenttype doc)
     assertEqual "Doc has user's lang" (getLang user) (getLang doc)
@@ -757,8 +762,8 @@ assertGoodNewDocument mug doctype title (user, time, doc) = do
     assertEqual "link last name matches author's" (getLastName user) (getLastName siglink)
     assertEqual "link email matches author's" (getEmail user) (getEmail siglink)
     assertEqual "link personal number matches author's" (getPersonalNumber user) (getPersonalNumber siglink)
-    assertEqual "link company name matches company's" (getCompanyName mug) (getCompanyName siglink)
-    assertEqual "link company number matches company's" (getCompanyNumber mug) (getCompanyNumber siglink)
+    assertEqual "link company name matches company's" (getCompanyName mugwp) (getCompanyName siglink)
+    assertEqual "link company number matches company's" (getCompanyNumber mugwp) (getCompanyNumber siglink)
     assertEqual "link company number matches company's" (getMobile user) (getMobile siglink)
     assertEqual "link signatory matches author id" (Just $ userid user) (maybesignatory siglink)
 
@@ -1043,8 +1048,8 @@ testPurgeDocumentImmediateTrash = replicateM_ 10 $ do
         isNothing (signatorylinkdeleted sl)
         && isJust (signatorylinkreallydeleted sl)
 
-  dbUpdate $ UserGroupUpdate $
-    set (drpImmediateTrash . ugsDataRetentionPolicy . ugSettings) True ug
+  dbUpdate . UserGroupUpdate . fromJust $
+    FCP.set (drpImmediateTrash . ugsDataRetentionPolicy . FCP.just . ugSettings) True ug
 
   do
     archived <- dbUpdate $ PurgeDocuments 1
@@ -1065,9 +1070,9 @@ testArchiveIdleDocument = replicateM_ 10 $ do
   void $ addRandomDocumentWithAuthorAndCondition author2 $ \d ->
          documentstatus d == documentstatus doc
 
-  let oldUGS = get ugSettings ug
+  let oldUGS = fromJust $ get ugSettings ug
       newUGS = set (drpIdleDocTimeout (documentstatus doc) . ugsDataRetentionPolicy) (Just 1) $ oldUGS
-  void $ dbUpdate . UserGroupUpdate . set ugSettings newUGS $ ug
+  void $ dbUpdate . UserGroupUpdate . set ugSettings (Just newUGS) $ ug
 
   archived1 <- archiveIdleDocuments (documentmtime doc)
   assertEqual "Archived zero idle documents (too early)" 0 archived1
@@ -1630,7 +1635,7 @@ testCreateFromTemplateCompanyField = replicateM_ 10 $ do
   void $ withDocumentID docid' $ dbUpdate $ DocumentFromTemplate (systemActor mt)
   doc' <- dbQuery $ GetDocumentByDocumentID docid'
   let [author] = filter isAuthor $ documentsignatorylinks doc'
-  assertEqual "Author signatory link user group name is not same as his user group" (getCompanyName ug) (getCompanyName author)
+  assertEqual "Author signatory link user group name is not same as his user group" (get ugName ug) (T.pack $ getCompanyName author)
 
 testAddDocumentAttachmentFailsIfNotPreparation :: TestEnv ()
 testAddDocumentAttachmentFailsIfNotPreparation = replicateM_ 10 $ do

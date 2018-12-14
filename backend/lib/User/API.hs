@@ -66,7 +66,6 @@ import User.TwoFactor
 import User.UserAccountRequest
 import User.UserControl
 import User.UserView
-import User.Utils
 import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.Subscription
@@ -231,13 +230,13 @@ disable2FA = V2.api $ do
 apiCallGetUserProfile :: Kontrakcja m => m Response
 apiCallGetUserProfile =  api $ do
   (user, _ , _) <- getAPIUserWithAnyPrivileges
-  ug <- getUserGroupForUser user
-  return $ Ok $ userJSON user ug
+  ugwp <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
+  return $ Ok $ userJSON user ugwp
 
 apiCallGetSubscription :: Kontrakcja m => m Response
 apiCallGetSubscription =  api $ do
   (user, _ , _) <- getAPIUserWithAnyPrivileges
-  ug <- getUserGroupForUser user
+  ug <- dbQuery . UserGroupGetByUserID . userid $ user
   sub <- getSubscription ug
   return . Ok $ unjsonToJSON unjsonDef sub
 
@@ -305,23 +304,32 @@ apiCallUpdateUserProfile = api $ do
                                                (userinfo user) ui (userid <$> get ctxmaybeuser ctx)
   if (useriscompanyadmin user)
     then do
-      ug <- getUserGroupForUser user
+      ugwp <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
+      let ug = ugwpUG ugwp
       companyname <- getParameter "companyname" asValidCompanyName $ get ugName ug
       let getAddrParameter n v prevValue =
-            getParameter n v $ get (prevValue . ugAddress) ug
+            getParameter n v $ get prevValue . ugwpAddress $ ugwp
       number <- getAddrParameter "companynumber" asValidCompanyNumber ugaCompanyNumber
       address <- getAddrParameter "companyaddress" asValidAddress ugaAddress
       zip' <- getAddrParameter "companyzip" asValidZip ugaZip
       city <- getAddrParameter "companycity" asValidCity ugaCity
       country <- getAddrParameter "companycountry" asValidCountry ugaCountry
-      let ug' =   set ugName companyname
-                $ set (ugaCompanyNumber . ugAddress) number
-                $ set (ugaAddress . ugAddress) address
-                $ set (ugaZip . ugAddress) zip'
-                $ set (ugaCity . ugAddress) city
-                $ set (ugaCountry . ugAddress) country
-                $ ug
-      void $ dbUpdate $ UserGroupUpdate ug'
+      let ug' = set ugName companyname ug
+          new_address = UserGroupAddress
+            { _ugaCompanyNumber = number
+            , _ugaAddress       = address
+            , _ugaZip           = zip'
+            , _ugaCity          = city
+            , _ugaCountry       = country
+            }
+          ug'' = case get ugAddress ug of
+            Just _ ->
+              -- change address directly if it wasn't inherited
+              set ugAddress (Just new_address) ug
+            Nothing -> case new_address == ugwpAddress ugwp of
+              True -> ug'  -- no change => we keep inheriting the address
+              False -> set ugAddress (Just new_address) ug'  -- stop inheriting
+      void $ dbUpdate $ UserGroupUpdate ug''
       Ok <$> (runJSONGenT $ value "changed" True)
     else do
       fs <- mapM getField ["companyname", "companynumber", "companyaddress", "companyzip", "companycity", "companycountry"]
@@ -585,8 +593,8 @@ apiCallGetDataRetentionPolicy = V2.api $ do
   user <- guardJust $ getContextUser ctx
 
   let drp = dataretentionpolicy $ usersettings user
-  ug <- dbQuery $ UserGroupGetByUserID $ userid user
-  let ugDRP = get (ugsDataRetentionPolicy . ugSettings) ug
+  ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ userid user
+  let ugDRP = get ugsDataRetentionPolicy $ ugwpSettings ugwp
 
   return $ V2.Ok $ object
     [ "data_retention_policy" .= unjsonToJSON unjsonDataRetentionPolicy drp
@@ -599,8 +607,8 @@ apiCallSetDataRetentionPolicy = V2.api $ do
   ctx  <- getContext
   user <- guardJust $ getContextUser ctx
 
-  ug <- dbQuery $ UserGroupGetByUserID $ userid user
-  let ugDRP = get (ugsDataRetentionPolicy . ugSettings) ug
+  ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ userid user
+  let ugDRP = get ugsDataRetentionPolicy $ ugwpSettings ugwp
   drp <- V2.apiV2ParameterObligatory $
     V2.ApiV2ParameterJSON "data_retention_policy"
     unjsonDataRetentionPolicy

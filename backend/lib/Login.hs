@@ -74,8 +74,8 @@ handleLoginPost = do
             maybeuser <- dbQuery $ GetUserByEmail (Email email)
             ipIsOK <- case maybeuser of
                         Just u -> do
-                             ug <- dbQuery $ UserGroupGetByUserID (userid u)
-                             let masklist = get (ugsIPAddressMaskList . ugSettings) ug
+                             ugwp <- dbQuery $ UserGroupGetWithParentsByUserID (userid u)
+                             let masklist = get ugsIPAddressMaskList $ ugwpSettings ugwp
                              return $ null masklist || (any (ipAddressIsInNetwork (get ctxipnumber ctx)) masklist)
                         Nothing -> return True
             case maybeuser of

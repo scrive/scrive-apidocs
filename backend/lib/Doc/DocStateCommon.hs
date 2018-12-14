@@ -120,16 +120,16 @@ replaceSignatoryData siglink fstname sndname email mobile company personalnumber
 -}
 replaceSignatoryUser :: SignatoryLink
                      -> User
-                     -> UserGroup
+                     -> UserGroupWithParents
                      -> SignatoryLink
-replaceSignatoryUser siglink user ug =
+replaceSignatoryUser siglink user ugwp =
   (replaceSignatoryData
      siglink
      (getFirstName      user)
      (getLastName       user)
      (getEmail          user)
      (getMobile         user)
-     (getCompanyName    ug)
+     (getCompanyName    ugwp)
      (getPersonalNumber user)
-     (getCompanyNumber  ug)
+     (getCompanyNumber  ugwp)
   ) { maybesignatory = Just $ userid user }

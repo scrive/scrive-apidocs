@@ -32,7 +32,6 @@ import Doc.Model.Query
 import Kontra
 import Theme.Model
 import User.Model
-import User.Utils
 import UserGroup.Model
 import UserGroup.Types
 import Util.MonadUtils
@@ -54,7 +53,7 @@ getServiceTheme bdID muser = do
   case muser of
     Nothing -> dbQuery $ GetTheme $ get bdServiceTheme bd
     Just user -> do
-      ug <- getUserGroupForUser user
+      ug <- dbQuery . UserGroupGetByUserID . userid $ user
       dbQuery . GetTheme . fromMaybe (get bdServiceTheme bd) . get (uguiServiceTheme . ugUI) $ ug
 
 handleLoginBranding :: Kontrakcja m => BrandedDomainID -> String -> m Response
@@ -104,7 +103,7 @@ getSignviewThemeWithoutDocument bdID uid = do
   bd <- dbQuery $ GetBrandedDomainByID bdID
   muser <- dbQuery $ GetUserByID uid
   user <- guardJust muser
-  ug <- getUserGroupForUser user
+  ug <- dbQuery . UserGroupGetByUserID . userid $ user
   dbQuery . GetTheme . fromMaybe (get bdSignviewTheme bd) . get (uguiSignviewTheme . ugUI) $ ug
 
 loginLogo :: Kontrakcja m => BrandedDomainID -> String -> m Response
@@ -128,7 +127,7 @@ emailLogo bdID uid _ = do
   bd <- dbQuery $ GetBrandedDomainByID bdID
   muser <- dbQuery $ GetUserByID uid
   user <- guardJust muser
-  ug <- getUserGroupForUser user
+  ug <- dbQuery . UserGroupGetByUserID . userid $ user
   theme <- dbQuery . GetTheme . fromMaybe (get bdMailTheme bd) . get (uguiMailTheme . ugUI) $ ug
   return (imageResponse $ themeLogo theme)
 
@@ -154,7 +153,7 @@ faviconIcon bdID uidstr _ = do
         case muser of
           Nothing -> return Nothing
           Just user -> do
-            ug <- getUserGroupForUser user
+            ug <- dbQuery . UserGroupGetByUserID . userid $ user
             return . get (uguiFavicon . ugUI) $ ug
 
   bd <- dbQuery $ GetBrandedDomainByID bdID

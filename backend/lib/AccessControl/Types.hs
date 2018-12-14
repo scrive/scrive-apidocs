@@ -132,7 +132,7 @@ instance NeedsPermissions (AccessAction, AccessResource, UserGroupID) where
         -- wanted action on _any_ parent.
         return . NeededPermissionsExprOr
           . map (\g -> NeededPermissionsExprBase (Permission action target $ get ugID g))
-          $ ugwpToUGList ugwp
+          $ ugwpToList ugwp
 
 -- | Convenience instance only since access is enforced on group level.
 instance NeedsPermissions (AccessAction, AccessResource, UserID) where

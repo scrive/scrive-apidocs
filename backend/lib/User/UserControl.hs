@@ -50,6 +50,7 @@ import User.PasswordReminder
 import User.UserAccountRequest
 import User.UserView
 import User.Utils
+import UserGroup.Model
 import UserGroup.Types
 import Util.HasSomeUserInfo
 import Util.MonadUtils
@@ -215,7 +216,7 @@ handleAccountSetupGet uid token sm = do
   muser <- getUserAccountRequestUser uid token
   case (muser, userhasacceptedtermsofservice =<< muser) of
     (Just user, Nothing) -> do
-      ug <-  getUserGroupForUser user
+      ug <-  dbQuery . UserGroupGetByUserID . userid $ user
       ad <- getAnalyticsData
       content <- renderTemplate "accountSetupPage" $ do
         standardPageFields ctx (Just (get ugID ug, get ugUI ug)) ad
@@ -240,7 +241,7 @@ handleAccountSetupGet uid token sm = do
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m JSValue
 handleAccountSetupPost uid token sm = do
   user <- guardJustM $ getUserAccountRequestUser uid token
-  ug <-  getUserGroupForUser user
+  ug <-  dbQuery . UserGroupGetByUserID . userid $ user
   if isJust $ userhasacceptedtermsofservice user
     then do
       J.runJSONGenT $ do

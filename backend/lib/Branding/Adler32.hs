@@ -28,8 +28,8 @@ brandingAdler32 ctx mugidandui = do
     case getContextUser ctx of
       Nothing -> return ""
       Just user -> do
-        ug2 <- dbQuery . UserGroupGetByUserID . userid $ user
-        userGroupUIAdler32 (get ugID ug2, get ugUI ug2)
+        ug <- dbQuery . UserGroupGetByUserID . userid $ user
+        userGroupUIAdler32 (get ugID ug, get ugUI ug)
   return $ BSC8.unpack $ adler32BS $ BSC8.pack $ concat $ [ad1,ad2,ad3,show versionID]
 
 

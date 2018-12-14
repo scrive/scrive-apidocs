@@ -1,6 +1,5 @@
 module User.Utils (
-      getUserGroupForUser
-    , guardLoggedInOrThrowInternalError
+      guardLoggedInOrThrowInternalError
     , withUserTOS
     , withUser
     , withUserAndGroup
@@ -8,7 +7,6 @@ module User.Utils (
     , withCompanyAdminOrAdminOnly
 ) where
 
-import Control.Monad.Catch
 import Data.Time.Clock (UTCTime)
 
 import DB
@@ -20,12 +18,6 @@ import User.UserView
 import UserGroup.Model
 import UserGroup.Types
 import Util.MonadUtils
-
-{- |
-    This looks up the company for the given user.
--}
-getUserGroupForUser :: (MonadDB m, MonadThrow m) => User -> m UserGroup
-getUserGroupForUser user = dbQuery $ UserGroupGetByUserID $ userid user
 
 {- |
    Guard against a GET/POST with no logged in user.

@@ -3,9 +3,13 @@ module UserGroup.Internal (
   , UserGroup(..)
   , ugInvoicingType
   , ugPaymentPlan
-  , ugwpInheritedPaymentPlan
+  , ugwpOnlyParents
   , ugwpPaymentPlan
-  , ugwpToUGList
+  , ugwpSettings
+  , ugwpAddress
+  , ugwpToList
+  , ugwpUG
+  , ugwpAddChild
   , ugrFromUG
   , UserGroupID(..)
   , emptyUserGroupID
@@ -16,6 +20,8 @@ module UserGroup.Internal (
   , UserGroupUI(..)
   , UserGroupInvoicing(..)
   , UserGroupWithParents
+  , UserGroupRoot(..)
+  , ugFromUGRoot
   ) where
 
 import Data.Binary
@@ -41,8 +47,8 @@ data UserGroup = UserGroup {
     _ugID            :: UserGroupID
   , _ugParentGroupID :: Maybe UserGroupID
   , _ugName          :: Text
-  , _ugAddress       :: UserGroupAddress
-  , _ugSettings      :: UserGroupSettings
+  , _ugAddress       :: Maybe UserGroupAddress
+  , _ugSettings      :: Maybe UserGroupSettings
   , _ugInvoicing     :: UserGroupInvoicing
   , _ugUI            :: UserGroupUI
   } deriving (Show, Eq)
@@ -170,8 +176,8 @@ type instance CompositeRow UserGroup = (
   , Maybe UserGroupID
   , Text
   , Composite UserGroupInvoicing
-  , Composite UserGroupSettings
-  , Composite UserGroupAddress
+  , Maybe (Composite UserGroupSettings)
+  , Maybe (Composite UserGroupAddress)
   , Composite UserGroupUI
   )
 
@@ -179,14 +185,20 @@ instance PQFormat UserGroup where
   pqFormat = "%user_group"
 
 instance CompositeFromSQL UserGroup where
-  toComposite (ugid, mparentgroupid, name, cinvoicing, cinfos, caddresses, cuis) = UserGroup {
-      _ugID = ugid
-    , _ugParentGroupID = mparentgroupid
-    , _ugName = name
-    , _ugSettings = unComposite cinfos
+  toComposite
+    ( _ugID
+    , _ugParentGroupID
+    , _ugName
+    , cinvoicing
+    , cinfos
+    , caddresses
+    , cuis) =
+    UserGroup
+    { _ugSettings  = unComposite <$> cinfos
     , _ugInvoicing = unComposite cinvoicing
-    , _ugAddress = unComposite caddresses
-    , _ugUI = unComposite cuis
+    , _ugAddress   = unComposite <$> caddresses
+    , _ugUI        = unComposite cuis
+    , ..
     }
 
 instance Default UserGroup where
@@ -194,7 +206,7 @@ instance Default UserGroup where
       _ugID = emptyUserGroupID
     , _ugParentGroupID = Nothing
     , _ugName = ""
-    , _ugSettings = UserGroupSettings {
+    , _ugSettings = Just $ UserGroupSettings {
         _ugsIPAddressMaskList   = []
       , _ugsDataRetentionPolicy = def
       , _ugsCGIDisplayName      = Nothing
@@ -205,7 +217,7 @@ instance Default UserGroup where
       , _ugsLegalText           = False
       }
     , _ugInvoicing = Invoice FreePlan
-    , _ugAddress = UserGroupAddress {
+    , _ugAddress = Just $ UserGroupAddress {
         _ugaCompanyNumber = ""
       , _ugaAddress       = ""
       , _ugaZip           = ""
@@ -219,20 +231,20 @@ instance Default UserGroup where
 
 ugrFromUG :: UserGroup -> Maybe UserGroupRoot
 ugrFromUG ug = do
-  payment_plan <- case _ugInvoicing ug of
+  -- the root of usergroup tree must have Invoice, Settings, Address, UI
+  -- and Feature Flags
+  _ugrPaymentPlan <- case _ugInvoicing ug of
     None -> Nothing
     BillItem _ -> Nothing
-    Invoice pp -> Just pp -- the root of usergroup tree must have Invoice
-  case _ugParentGroupID ug of
-    Just _ -> Nothing
-    Nothing -> Just $ UserGroupRoot
-      { _ugrID = _ugID ug
-      , _ugrName = _ugName ug
-      , _ugrSettings = _ugSettings ug
-      , _ugrPaymentPlan = payment_plan
-      , _ugrAddress = _ugAddress ug
-      , _ugrUI = _ugUI ug
-      }
+    Invoice pp -> Just pp  -- the root of usergroup tree must have Invoice
+  _ugrSettings <- _ugSettings ug  -- the root of usergroup tree must have Settings
+  _ugrAddress <- _ugAddress ug  -- the root of usergroup tree must have Address
+  return $ UserGroupRoot
+    { _ugrID = _ugID ug
+    , _ugrName = _ugName ug
+    , _ugrUI = _ugUI ug
+    , ..
+    }
 
 ugFromUGRoot :: UserGroupRoot -> UserGroup
 ugFromUGRoot ugr = UserGroup
@@ -240,27 +252,40 @@ ugFromUGRoot ugr = UserGroup
   , _ugName = _ugrName ugr
   , _ugParentGroupID = Nothing
   , _ugInvoicing = Invoice . _ugrPaymentPlan $ ugr
-  , _ugSettings = _ugrSettings ugr
-  , _ugAddress = _ugrAddress ugr
+  , _ugSettings = Just $ _ugrSettings ugr
+  , _ugAddress = Just $ _ugrAddress ugr
   , _ugUI = _ugrUI ugr
   }
 
-
-
 -- USER GROUP WITH PARENTS
+ugwpOnlyParents :: UserGroupWithParents -> Maybe UserGroupWithParents
+ugwpOnlyParents (_,[]) = Nothing -- root is leaf, nothing would be left
+ugwpOnlyParents (root, (_:parents_tail)) = Just (root, parents_tail)
+
+ugwpInherit :: (UserGroupRoot -> a) -> (UserGroup -> Maybe a) -> UserGroupWithParents -> a
+ugwpInherit ugrProperty ugProperty (ug_root, ug_children_path) =
+  fromMaybe (ugrProperty ug_root) . listToMaybe . catMaybes
+    . map ugProperty $ ug_children_path
+
 ugwpPaymentPlan :: UserGroupWithParents -> PaymentPlan
-ugwpPaymentPlan (ug_root, ug_children_path) =
-  fromMaybe (_ugrPaymentPlan ug_root) . listToMaybe . catMaybes
-    . map ugPaymentPlan $ ug_children_path
+ugwpPaymentPlan = ugwpInherit _ugrPaymentPlan ugPaymentPlan
 
-ugwpInheritedPaymentPlan :: UserGroupWithParents -> Maybe PaymentPlan
-ugwpInheritedPaymentPlan (_,[]) = Nothing -- root node has noone to inherit from
-ugwpInheritedPaymentPlan (root, (_:parents_tail)) =
-  Just . ugwpPaymentPlan $ (root, parents_tail)
+ugwpSettings :: UserGroupWithParents -> UserGroupSettings
+ugwpSettings = ugwpInherit _ugrSettings _ugSettings
 
-ugwpToUGList :: UserGroupWithParents -> [UserGroup]
-ugwpToUGList (ug_root, ug_children_path) =
+ugwpAddress :: UserGroupWithParents -> UserGroupAddress
+ugwpAddress = ugwpInherit _ugrAddress _ugAddress
+
+ugwpToList :: UserGroupWithParents -> [UserGroup]
+ugwpToList (ug_root, ug_children_path) =
   ug_children_path ++ [ugFromUGRoot ug_root]
+
+ugwpUG :: UserGroupWithParents -> UserGroup
+ugwpUG (root, [])  = ugFromUGRoot root
+ugwpUG (_, (ug:_)) = ug
+
+ugwpAddChild :: UserGroup -> UserGroupWithParents -> UserGroupWithParents
+ugwpAddChild ug (root, children_path) = (root, ug:children_path)
 
 newtype UserGroupID = UserGroupID Int64
   deriving (Eq, Ord)

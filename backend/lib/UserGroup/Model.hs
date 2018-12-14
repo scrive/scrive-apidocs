@@ -3,13 +3,15 @@ module UserGroup.Model (
   , UserGroupGet(..)
   , UserGroupGetByUserID(..)
   , UserGroupGetWithParents(..)
+  , UserGroupGetWithParentsByUserID(..)
   , UserGroupsGetFiltered(..)
   , UserGroupUpdate(..)
   , UserGetAllParentGroups(..)
   , UserGroupGetImmediateChildren(..)
   , UserGroupsFormCycle(..)
-  , UserGroupRootHasNotInvoice(..)
+  , UserGroupIsInvalidAsRoot(..)
   , UserGroupFilter(..)
+  , ugGetChildrenInheritingProperty
   , unsafeUserGroupIDToPartnerID
   , minUserGroupIdleDocTimeout
   , maxUserGroupIdleDocTimeout
@@ -32,7 +34,7 @@ import UserGroup.Types.PaymentPlan
 data UserGroupCreate = UserGroupCreate UserGroup
 instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
   update (UserGroupCreate ug) = do
-    guardIfUserGroupIsRootThenItHasInvoice ug
+    guardIfHasNoParentThenIsValidRoot ug
     new_parentpath <- case get ugParentGroupID ug of
       Nothing -> return . Array1 $ ([] :: [UserGroupID])
       Just parentid -> do
@@ -49,34 +51,9 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
       sqlResult "id"
     ugid <- fetchOne runIdentity
     -- insert group info
-    let ugs = get ugSettings ug
-    runQuery_ . sqlInsert "user_group_settings" $ do
-      sqlSet "user_group_id" ugid
-      sqlSet "ip_address_mask_list" $ case get ugsIPAddressMaskList ugs of
-        [] -> Nothing
-        x  -> Just (show x)
-      let drp = get ugsDataRetentionPolicy ugs
-      sqlSet "idle_doc_timeout_preparation" . get drpIdleDocTimeoutPreparation $ drp
-      sqlSet "idle_doc_timeout_closed" . get drpIdleDocTimeoutClosed $ drp
-      sqlSet "idle_doc_timeout_canceled" . get drpIdleDocTimeoutCanceled $ drp
-      sqlSet "idle_doc_timeout_timedout" . get drpIdleDocTimeoutTimedout $ drp
-      sqlSet "idle_doc_timeout_rejected" . get drpIdleDocTimeoutRejected $ drp
-      sqlSet "idle_doc_timeout_error" . get drpIdleDocTimeoutError $ drp
-      sqlSet "immediate_trash" . get drpImmediateTrash $ drp
-      sqlSet "cgi_display_name" . get ugsCGIDisplayName $ ugs
-      sqlSet "cgi_service_id" . get ugsCGIServiceID $ ugs
-      sqlSet "sms_provider" . get ugsSMSProvider $ ugs
-      sqlSet "pad_app_mode" . get ugsPadAppMode $ ugs
-      sqlSet "pad_earchive_enabled" . get ugsPadEarchiveEnabled $ ugs
+    whenJust (get ugSettings ug) $ insertUserGroupSettings ugid
     -- insert group address
-    let uga = get ugAddress ug
-    runQuery_ . sqlInsert "user_group_addresses" $ do
-      sqlSet "user_group_id" ugid
-      sqlSet "company_number" . get ugaCompanyNumber $ uga
-      sqlSet "address" . get ugaAddress $ uga
-      sqlSet "zip" . get ugaZip $ uga
-      sqlSet "city" . get ugaCity $ uga
-      sqlSet "country" . get ugaCountry $ uga
+    whenJust (get ugAddress ug) $ insertUserGroupAddress ugid
     -- insert invoicing
     runQuery_ . sqlInsert "user_group_invoicings" $ do
         sqlSet "user_group_id" ugid
@@ -106,6 +83,39 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
     runQuery_ . sqlInsert "feature_flags" $ newAccountFlags True
 
     return . set ugID ugid $ ug
+
+insertUserGroupSettings
+  :: (MonadDB m, MonadThrow m) => UserGroupID -> UserGroupSettings -> m ()
+insertUserGroupSettings ugid ugs =
+  runQuery_ . sqlInsert "user_group_settings" $ do
+    sqlSet "user_group_id" ugid
+    sqlSet "ip_address_mask_list" $ case get ugsIPAddressMaskList ugs of
+      [] -> Nothing
+      x  -> Just (show x)
+    let drp = get ugsDataRetentionPolicy ugs
+    sqlSet "idle_doc_timeout_preparation" . get drpIdleDocTimeoutPreparation $ drp
+    sqlSet "idle_doc_timeout_closed" . get drpIdleDocTimeoutClosed $ drp
+    sqlSet "idle_doc_timeout_canceled" . get drpIdleDocTimeoutCanceled $ drp
+    sqlSet "idle_doc_timeout_timedout" . get drpIdleDocTimeoutTimedout $ drp
+    sqlSet "idle_doc_timeout_rejected" . get drpIdleDocTimeoutRejected $ drp
+    sqlSet "idle_doc_timeout_error" . get drpIdleDocTimeoutError $ drp
+    sqlSet "immediate_trash" . get drpImmediateTrash $ drp
+    sqlSet "cgi_display_name" . get ugsCGIDisplayName $ ugs
+    sqlSet "cgi_service_id" . get ugsCGIServiceID $ ugs
+    sqlSet "sms_provider" . get ugsSMSProvider $ ugs
+    sqlSet "pad_app_mode" . get ugsPadAppMode $ ugs
+    sqlSet "pad_earchive_enabled" . get ugsPadEarchiveEnabled $ ugs
+
+insertUserGroupAddress
+  :: (MonadDB m, MonadThrow m) => UserGroupID -> UserGroupAddress -> m ()
+insertUserGroupAddress ugid uga =
+  runQuery_ . sqlInsert "user_group_addresses" $ do
+    sqlSet "user_group_id" ugid
+    sqlSet "company_number" . get ugaCompanyNumber $ uga
+    sqlSet "address" . get ugaAddress $ uga
+    sqlSet "zip" . get ugaZip $ uga
+    sqlSet "city" . get ugaCity $ uga
+    sqlSet "country" . get ugaCountry $ uga
 
 data UserGroupGet = UserGroupGet UserGroupID
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGet (Maybe UserGroup) where
@@ -139,60 +149,56 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetWithParents (Maybe U
     mug <- dbQuery . UserGroupGet $ ugid
     case mug of
       Nothing -> return Nothing
-      Just ug -> do
-        parents <- do
-          -- JOIN does not guarantee to preserve order of rows, so we add ORDINALITY and ORDER BY it.
-          -- WITH ORDINALITY can only appear inside FROM clause after a function call.
-          runQuery_ . sqlSelect "user_groups" $ do
-            sqlWith "parentids" . sqlSelect "user_groups, unnest(parent_group_path) WITH ORDINALITY" $ do
-              sqlResult "unnest as id"
-              sqlResult "ordinality"
-              sqlWhereEq "id" ugid
-            sqlJoinOn "parentids" "parentids.id = user_groups.id"
-            mapM_ sqlResult userGroupSelectors
-            sqlOrderBy "ordinality"
-          fetchMany toComposite
-        let (ug_root0, ug_children_path) = case reverse parents of
-              []                -> (ug, [])
-              (ugr:ug_rev_path) -> (ugr, ug : reverse ug_rev_path)
-        case ugrFromUG ug_root0 of
-          Nothing      -> return Nothing
-          Just ug_root -> return $ Just (ug_root, ug_children_path)
+      Just ug -> Just <$> (dbQuery $ UserGroupGetWithParentsByUG ug)
+
+data UserGroupGetWithParentsByUG = UserGroupGetWithParentsByUG UserGroup
+instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetWithParentsByUG UserGroupWithParents where
+  query (UserGroupGetWithParentsByUG ug) = do
+    let ugid = get ugID ug
+    parents <- do
+      -- JOIN does not guarantee to preserve order of rows, so we add ORDINALITY and ORDER BY it.
+      -- WITH ORDINALITY can only appear inside FROM clause after a function call.
+      runQuery_ . sqlSelect "user_groups" $ do
+        sqlWith "parentids" . sqlSelect "user_groups, unnest(parent_group_path) WITH ORDINALITY" $ do
+          sqlResult "unnest as id"
+          sqlResult "ordinality"
+          sqlWhereEq "id" ugid
+        sqlJoinOn "parentids" "parentids.id = user_groups.id"
+        mapM_ sqlResult userGroupSelectors
+        sqlOrderBy "ordinality"
+      fetchMany toComposite
+    let (ug_root0, ug_children_path) = case reverse parents of
+          []                -> (ug, [])
+          (ugr:ug_rev_path) -> (ugr, ug : reverse ug_rev_path)
+    case ugrFromUG ug_root0 of
+      Nothing      ->
+        throwM . SomeDBExtraException . UserGroupIsInvalidAsRoot $ ug_root0
+      Just ug_root -> return (ug_root, ug_children_path)
+
+data UserGroupGetWithParentsByUserID = UserGroupGetWithParentsByUserID UserID
+instance (MonadDB m, MonadThrow m)
+  => DBQuery m UserGroupGetWithParentsByUserID UserGroupWithParents where
+  query (UserGroupGetWithParentsByUserID uid) = do
+    runQuery_ $ sqlSelect "user_groups" $ do
+      sqlJoinOn "users" "users.user_group_id = user_groups.id"
+      mapM_ sqlResult userGroupSelectors
+      sqlWhereEq "users.id" uid
+    ug <- fetchOne toComposite
+    dbQuery . UserGroupGetWithParentsByUG $ ug
 
 data UserGroupUpdate = UserGroupUpdate UserGroup
 instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () where
   update (UserGroupUpdate new_ug) = do
-    guardIfUserGroupIsRootThenItHasInvoice new_ug
+    guardIfHasNoParentThenIsValidRoot new_ug
     let ugid = get ugID new_ug
-    -- update group info
-    let ugs = get ugSettings new_ug
-    runQuery_ . sqlUpdate "user_group_settings" $ do
+    -- update group settings
+    runQuery_ . sqlDelete "user_group_settings" $ do
       sqlWhereEq "user_group_id" ugid
-      sqlSet "ip_address_mask_list" $ case get ugsIPAddressMaskList ugs of
-        [] -> Nothing
-        x  -> Just (show x)
-      let drp = get ugsDataRetentionPolicy ugs
-      sqlSet "idle_doc_timeout_preparation" . get drpIdleDocTimeoutPreparation $ drp
-      sqlSet "idle_doc_timeout_closed" . get drpIdleDocTimeoutClosed $ drp
-      sqlSet "idle_doc_timeout_canceled" . get drpIdleDocTimeoutCanceled $ drp
-      sqlSet "idle_doc_timeout_timedout" . get drpIdleDocTimeoutTimedout $ drp
-      sqlSet "idle_doc_timeout_rejected" . get drpIdleDocTimeoutRejected $ drp
-      sqlSet "idle_doc_timeout_error" . get drpIdleDocTimeoutError $ drp
-      sqlSet "immediate_trash" . get drpImmediateTrash $ drp
-      sqlSet "cgi_display_name" . get ugsCGIDisplayName $ ugs
-      sqlSet "cgi_service_id" . get ugsCGIServiceID $ ugs
-      sqlSet "sms_provider" . get ugsSMSProvider $ ugs
-      sqlSet "pad_app_mode" . get ugsPadAppMode $ ugs
-      sqlSet "pad_earchive_enabled" . get ugsPadEarchiveEnabled $ ugs
+    whenJust (get ugSettings new_ug) $ insertUserGroupSettings ugid
     -- insert group address
-    let uga = get ugAddress new_ug
-    runQuery_ . sqlUpdate "user_group_addresses" $ do
+    runQuery_ . sqlDelete "user_group_addresses" $ do
       sqlWhereEq "user_group_id" ugid
-      sqlSet "company_number" . get ugaCompanyNumber $ uga
-      sqlSet "address" . get ugaAddress $ uga
-      sqlSet "zip" . get ugaZip $ uga
-      sqlSet "city" . get ugaCity $ uga
-      sqlSet "country" . get ugaCountry $ uga
+    whenJust (get ugAddress new_ug) $ insertUserGroupAddress ugid
     -- update invoicing
     runQuery_ . sqlUpdate "user_group_invoicings" $ do
       sqlWhereEq "user_group_id" ugid
@@ -263,26 +269,24 @@ instance ToJSValue UserGroupsFormCycle where
 
 instance DBExtraException UserGroupsFormCycle
 
-guardIfUserGroupIsRootThenItHasInvoice
+guardIfHasNoParentThenIsValidRoot
   :: (MonadDB m, MonadThrow m) => UserGroup -> m ()
-guardIfUserGroupIsRootThenItHasInvoice ug = case get ugParentGroupID ug of
-  Just _  -> return ()
-  Nothing -> case get ugInvoicing ug of
-    Invoice _  -> return ()
-    BillItem _ -> errorNotInvoice
-    None       -> errorNotInvoice
-  where
-    errorNotInvoice = throwM . SomeDBExtraException . UserGroupRootHasNotInvoice . get ugID $ ug
+guardIfHasNoParentThenIsValidRoot ug =
+  case get ugParentGroupID ug of
+    Just _  -> return ()
+    Nothing -> case ugrFromUG ug of
+      Just _  -> return ()
+      Nothing -> throwM . SomeDBExtraException . UserGroupIsInvalidAsRoot $ ug
 
-data UserGroupRootHasNotInvoice = UserGroupRootHasNotInvoice UserGroupID
-  deriving (Eq, Ord, Show, Typeable)
+data UserGroupIsInvalidAsRoot = UserGroupIsInvalidAsRoot UserGroup
+  deriving (Eq, Show, Typeable)
 
-instance ToJSValue UserGroupRootHasNotInvoice where
-  toJSValue (UserGroupRootHasNotInvoice ugid) = runJSONGen $ do
-    value "message" ("User Group tree root doesn't have Invoice as invoicing" :: String)
-    value "user_group_id" (show ugid)
+instance ToJSValue UserGroupIsInvalidAsRoot where
+  toJSValue (UserGroupIsInvalidAsRoot ug) = runJSONGen $ do
+    value "message" ("User Group is invalid as root" :: String)
+    value "user_group" (show ug)
 
-instance DBExtraException UserGroupRootHasNotInvoice
+instance DBExtraException UserGroupIsInvalidAsRoot
 
 data UserGetAllParentGroups = UserGetAllParentGroups User
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGetAllParentGroups [UserGroup] where
@@ -404,6 +408,17 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupsGetFiltered [UserGroup
       escape '%' = "\\%"
       escape '_' = "\\_"
       escape c = [c]
+
+
+-- Get recursively all children, which inherit a property of this group.
+-- UserGroup inherits property, when the property is Nothing.
+ugGetChildrenInheritingProperty :: (MonadDB m, MonadThrow m) =>  UserGroupID -> (UserGroup -> Maybe a) -> m [UserGroup]
+ugGetChildrenInheritingProperty ugid ugProperty = do
+  children <- dbQuery . UserGroupGetImmediateChildren $ ugid
+  let inheriting_children = filter (isNothing . ugProperty) children
+  grandchildren <- fmap concat . forM inheriting_children
+    $ \c -> ugGetChildrenInheritingProperty (get ugID c) ugProperty
+  return $ inheriting_children ++ grandchildren
 
 -- Synchronize these definitions with frontend/app/js/account/company.js
 minUserGroupIdleDocTimeout :: Int16

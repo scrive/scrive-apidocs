@@ -42,8 +42,10 @@ mkSMS doc sl mkontraInfoForSMS msgBody = do
       case muser of
         Nothing -> return (Nothing, SMSDefault)
         Just user -> do
-          ug <- dbQuery . UserGroupGetByUserID . userid $ user
-          return (fmap T.unpack . get (uguiSmsOriginator . ugUI) $ ug, get (ugsSMSProvider . ugSettings) ug)
+          ugwp <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
+          return
+            ( fmap T.unpack . get (uguiSmsOriginator . ugUI) . ugwpUG $ ugwp
+            , get ugsSMSProvider . ugwpSettings $ ugwp)
   let originator = fromMaybe
         (get (bdSmsOriginator . mctxcurrentBrandedDomain) mctx)
         (justEmptyToNothing moriginator)

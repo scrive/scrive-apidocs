@@ -17,7 +17,6 @@ module Administration.AdministrationControl(
 
 import Data.Char
 import Data.Functor.Invariant
-import Data.Label (modify)
 import Data.Unjson
 import GHC.Int (Int16)
 import Happstack.Server hiding (dir, https, path, simpleHTTP)
@@ -83,7 +82,6 @@ import User.History.Model
 import User.JSON
 import User.UserControl
 import User.UserView
-import User.Utils
 import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.Subscription
@@ -179,17 +177,12 @@ handleUserGetProfile:: Kontrakcja m => UserID -> m JSValue
 handleUserGetProfile uid = onlySalesOrAdmin $ do
   user <- guardJustM $ dbQuery $ GetUserByID uid
   callback <- dbQuery $ GetUserCallbackSchemeByUserID uid
-  ug <- getUserGroupForUser user
-  return $ userJSONWithCallBackInfo user ug callback
+  ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ uid
+  return $ userJSONWithCallBackInfo user ugwp callback
 
 handleCompanyGetProfile:: Kontrakcja m => UserGroupID -> m JSValue
-handleCompanyGetProfile ugid = onlySalesOrAdmin $ do
-  ug <- guardJustM . dbQuery . UserGroupGet $ ugid
-  grpWithParents <- ugwpToUGList <$> (guardJustM . dbQuery . UserGroupGetWithParents $ ugid)
-  let parentGroupPath = case grpWithParents of
-        []     -> []
-        (_:xs) -> xs
-  return $ companyJSON True ug parentGroupPath
+handleCompanyGetProfile ugid = onlySalesOrAdmin $
+  companyJSONAdminOnly <$> (guardJustM . dbQuery . UserGroupGetWithParents $ ugid)
 
 showAdminCompany :: Kontrakcja m => UserGroupID -> m String
 showAdminCompany ugid = onlySalesOrAdmin $ do
@@ -210,15 +203,21 @@ jsonCompanies = onlySalesOrAdmin $ do
                      True ->  return [UGWithNonFreePricePlan]
                      False -> return []
     ugs <- dbQuery $ UserGroupsGetFiltered (textFilter ++ usersFilter ++ pplanFilter) (Just (offset, limit))
+    -- get address for those companies, which inherit it
+    ugsWithAddress <- forM ugs $ \ug -> case get ugAddress ug of
+      Just uga -> return (ug, uga)
+      Nothing -> ((ug,) . ugwpAddress)
+        <$> (guardJustM . dbQuery . UserGroupGetWithParents $ get ugID ug)
     runJSONGenT $ do
-            valueM "companies" $ forM ugs $ \ug -> runJSONGenT $ do
-              value "id"             . show . get ugID $ ug
-              value "companyname"    . T.unpack . get ugName $ ug
-              value "companynumber"  . T.unpack . get (ugaCompanyNumber . ugAddress) $ ug
-              value "companyaddress" . T.unpack . get (ugaAddress       . ugAddress) $ ug
-              value "companyzip"     . T.unpack . get (ugaZip           . ugAddress) $ ug
-              value "companycity"    . T.unpack . get (ugaCity          . ugAddress) $ ug
-              value "companycountry" . T.unpack . get (ugaCountry       . ugAddress) $ ug
+      valueM "companies" $ forM ugsWithAddress $ \(ug, uga) ->
+        runJSONGenT $ do
+          value "id"             . show . get ugID $ ug
+          value "companyname"    . T.unpack . get ugName $ ug
+          value "companynumber"  . T.unpack . get ugaCompanyNumber $ uga
+          value "companyaddress" . T.unpack . get ugaAddress       $ uga
+          value "companyzip"     . T.unpack . get ugaZip           $ uga
+          value "companycity"    . T.unpack . get ugaCity          $ uga
+          value "companycountry" . T.unpack . get ugaCountry       $ uga
 
 jsonUsersList ::Kontrakcja m => m JSValue
 jsonUsersList = onlySalesOrAdmin $ do
@@ -373,20 +372,38 @@ handleMergeToOtherCompany ugid_source = onlySalesOrAdmin $ do
 {- | Handling company details change. It reads user info change -}
 handleCompanyChange :: Kontrakcja m => UserGroupID -> m ()
 handleCompanyChange ugid = onlySalesOrAdmin $ do
-  ug <- guardJustM $ dbQuery $ UserGroupGet ugid
+  ugwp <- guardJustM $ dbQuery $ UserGroupGetWithParents ugid
   mCompanyName <- getField "companyname"
-  ugInfoChange <- getUserGroupSettingsChange
+  mUGSettingsIsInherited <- fmap (==("true"::String))
+    <$> getField "companyinfoisinherited"
+  ugSettingsChange <- getUserGroupSettingsChange
+  mUGAddressIsInherited <- fmap (==("true"::String))
+    <$> getField "companyaddressisinherited"
   ugAddressChange <- getUserGroupAddressChange
-
   mTryParentUserGroupID <- getOptionalField asValidUserGroupID "companypartnerid"
-  let ug' = set ugParentGroupID mTryParentUserGroupID
-          . maybe id (set ugName . T.pack) mCompanyName
-          . modify ugSettings ugInfoChange
-          . modify ugAddress ugAddressChange
-          $ ug
+
+  let oldUG = ugwpUG ugwp
+      setSettings =
+        if   fromMaybe (isNothing $ get ugSettings oldUG) mUGSettingsIsInherited
+        then set ugSettings Nothing
+        else set ugSettings . Just . ugSettingsChange $ ugwpSettings ugwp
+      setAddress =
+        if   fromMaybe (isNothing $ get ugAddress oldUG) mUGAddressIsInherited
+        then set ugAddress Nothing
+        else set ugAddress . Just . ugAddressChange $ ugwpAddress ugwp
+      newUG =
+          set ugParentGroupID mTryParentUserGroupID
+        . maybe id (set ugName . T.pack) mCompanyName
+        . setSettings
+        . setAddress
+        $ ugwpUG ugwp
+
+  newSettings <- guardJust . listToMaybe . catMaybes $
+    [ get ugSettings newUG
+    , ugwpSettings <$> ugwpOnlyParents ugwp ]
   guardThatDataRetentionPolicyIsValid
-    (get (ugsDataRetentionPolicy . ugSettings) ug') Nothing
-  dbUpdate $ UserGroupUpdate ug'
+    (get ugsDataRetentionPolicy newSettings) Nothing
+  dbUpdate $ UserGroupUpdate newUG
   return $ ()
 
 handleCreateUser :: Kontrakcja m => m JSValue

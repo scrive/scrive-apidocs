@@ -76,6 +76,7 @@ import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
 import Util.Actor
+import Util.MonadUtils
 import qualified KontraError as KE
 import qualified Text.XML.Content as C
 import qualified Text.XML.DirtyContent as D
@@ -176,6 +177,14 @@ genMaybeUnicodeString = oneof [ pure Nothing, Just <$> genUnicodeString ]
 
 instance Arbitrary UserGroup where
   arbitrary = (UserGroup emptyUserGroupID Nothing)
+    <$> arbitrary
+    <*> arbitrary
+    <*> arbitrary
+    <*> arbitrary
+    <*> arbitrary
+
+instance Arbitrary UserGroupRoot where
+  arbitrary = UserGroupRoot emptyUserGroupID
     <$> arbitrary
     <*> arbitrary
     <*> arbitrary
@@ -762,7 +771,7 @@ addNewUserGroup = do
     let ug = set ugName          ugname
           . set ugAddress       uga
           $ def
-        uga = UserGroupAddress
+        uga = Just $ UserGroupAddress
           { _ugaCompanyNumber = ugacompanynumber
           , _ugaAddress       = ugaaddress
           , _ugaZip           = ugazip
@@ -770,6 +779,11 @@ addNewUserGroup = do
           , _ugaCountry       = ugacountry
           }
     dbUpdate . UserGroupCreate $ ug
+
+addNewUserGroupWithParents :: TestEnv UserGroupWithParents
+addNewUserGroupWithParents = do
+  ug <- addNewUserGroup
+  guardJustM . dbQuery . UserGroupGetWithParents $ get ugID ug
 
 addNewRandomFile :: ( CryptoRNG m, MonadBase IO m, MonadCatch m, MonadDB m
                     , MonadFileStorage m, MonadLog m, MonadThrow m

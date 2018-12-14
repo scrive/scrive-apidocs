@@ -111,7 +111,8 @@ isLastViewer doc sl =
  -}
 signatoryFieldsFromUser :: (MonadDB m, MonadThrow m) => User -> m [SignatoryField]
 signatoryFieldsFromUser user = do
-  ug <- dbQuery . UserGroupGetByUserID . userid $ user
+  ugwp <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
+  let ug = ugwpUG ugwp
   return $
         [ SignatoryNameField $ NameField {
               snfID                     = (unsafeSignatoryFieldID 0)
@@ -171,11 +172,11 @@ signatoryFieldsFromUser user = do
             else []
         )
           ++
-        (if (not $ null $ getCompanyNumber ug)
+        (if (not $ null $ getCompanyNumber ugwp)
            then [
               SignatoryCompanyNumberField $ CompanyNumberField {
                   scnfID                     = (unsafeSignatoryFieldID 0)
-                , scnfValue                  = getCompanyNumber ug
+                , scnfValue                  = getCompanyNumber ugwp
                 , scnfObligatory             = False
                 , scnfShouldBeFilledBySender = False
                 , scnfPlacements             = []

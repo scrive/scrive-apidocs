@@ -5,6 +5,8 @@ import Data.Aeson
 import Happstack.Server
 import Test.Framework
 import qualified Data.HashMap.Strict as H
+import qualified Data.Label.Base as FCP
+import qualified Data.Label.Partial as FCP
 import qualified Data.Text as T
 
 import Context
@@ -33,8 +35,8 @@ testPadApplicationPadInfoGet = do
 
   assertEqual ("We should get a 200 response") 200 (rsCode res1)
   assertEqual "We should get the same e_archive_enabled"
-              (get ugsPadEarchiveEnabled . get ugSettings $ ug)
-              res1padearchiveenabled
+    (fromJust . FCP.get (ugsPadEarchiveEnabled . FCP.just . ugSettings) $ ug)
+    res1padearchiveenabled
   assertEqual "We should get the same app_mode"
               "list_view"
               (T.unpack res1padappmode)

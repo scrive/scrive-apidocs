@@ -9,6 +9,7 @@ where
 import Text.JSON
 import Text.JSON.Gen
 import Text.StringTemplates.Templates
+import qualified Data.Text as T
 import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 
@@ -19,7 +20,6 @@ import MinutesTime
 import User.Model
 import UserGroup.Model
 import UserGroup.Types
-import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Utils.Monoid
 import Utils.String
@@ -80,7 +80,7 @@ instance ToJSValue AnalyticsData where
     mnop (J.value "Position") $ emptyToNothing $ escapeString <$> usercompanyposition <$> userinfo  <$> aUser
 
     mnop (J.value "Company Status") $ escapeString <$> (\u -> if (useriscompanyadmin u) then "admin" else "sub") <$> aUser
-    mnop (J.value "Company Name") $ emptyToNothing $ escapeString <$> getCompanyName  <$> aUserGroup
+    mnop (J.value "Company Name") $ emptyToNothing $ escapeString <$> (T.unpack . get ugName) <$> aUserGroup
 
     mnop (J.value "Signup Method") $ emptyToNothing $ escapeString <$> show <$> usersignupmethod <$> aUser
 
