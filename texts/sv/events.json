@@ -1,7 +1,7 @@
 { 
 "_ApproveReminderSendEmailLog":"Scrive eSign skickade en påminnelse att godkänna via e-post till $signatory$ på begäran av användaren $actor$.",
 "_ApproveReminderSendEmailLogWithText":"Scrive eSign skickade en påminnelse att godkänna via e-post till $signatory$ på begäran av användaren $actor$. Påminnelsemeddelandet från användaren $actor$ var: <BR/> <i>$text$</i>.",
-"_ApproveReminderSendEmailSMSLog":"Scrive eSign skickade en påminnelse att godkänna via e-post och SMS till $signatory$ på begäran av användaren actor$.",
+"_ApproveReminderSendEmailSMSLog":"Scrive eSign skickade en påminnelse att godkänna via e-post och SMS till $signatory$ på begäran av användaren $actor$.",
 "_ApproveReminderSendEmailSMSLogWithText":"Scrive eSign skickade en påminnelse att godkänna via e-post och SMS till $signatory$ på begäran av användaren $actor$. Påminnelsemeddelandet från användaren $actor$ var: <BR/> <i>$text$</i>.",
 "_ApproveReminderSendSMSLog":"Scrive eSign skickade en påminnelse att godkänna via SMS till $signatory$ på begäran av användaren $actor$.",
 "_ApproveReminderSendSMSLogWithText":"Scrive eSign skickade en påminnelse att godkänna via SMS till $signatory$ på begäran av användaren $actor$. Påminnelsemeddelandet från användaren $actor$ var: <BR/> <i>$text$</i>.",
