@@ -2,13 +2,13 @@ module InputValidationTest (inputValidationTests) where
 
 import Data.Char
 import Data.Int
-import qualified Data.Text as T
-import qualified Data.Text.ICU as Rx
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.HUnit (Assertion, assert)
 import Test.QuickCheck ((==>), Arbitrary(..), Property, mapSize, oneof, property)
+import qualified Data.Text as T
+import qualified Data.Text.ICU as Rx
 
 import InputValidation
 import TestKontra
