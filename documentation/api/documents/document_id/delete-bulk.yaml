@@ -1,0 +1,38 @@
+---
+post:
+
+  summary: Delete one or more documents
+
+  tags:
+    - Modify
+
+  description: |
+    Delete one or more documents that are in Trash.
+
+    *OAuth Privileges required: `DOC_SEND`*
+
+  parameters:
+    - name: document_ids
+      in: formData
+      type: string
+      format: application/json
+      required: true
+
+      description: |
+        List of document IDs of templates to share or unshare.
+
+      schema:
+        type: array
+        default: []
+        example: ["3","4"]
+        items:
+          type: string
+    - $ref: ../../../extras/parameters.yaml#/ObjectVersion
+
+  responses:
+    200:
+      $ref: ../../../extras/responses.yaml#/Document
+    409:
+      description: Pending documents can not be trashed or deleted.
+      # FIXME It is possible to add a schema here, although APIError is too general
+    # TODO Add document_state_error; The document is in Trash already.

@@ -848,8 +848,14 @@ paths:
   /documents/{document_id}/trash:
     $ref: ./api/documents/document_id/trash.yaml
 
+  /documents/trash:
+    $ref: ./api/documents/document_id/trash-bulk.yaml
+
   /documents/{document_id}/delete:
     $ref: ./api/documents/document_id/delete.yaml
+
+  /documents/delete:
+    $ref: ./api/documents/document_id/delete-bulk.yaml
 
   /documents/{document_id}/forward:
     $ref: ./api/documents/document_id/forward.yaml
