@@ -68,13 +68,13 @@ info:
 
     ## Environments & IP Addresses
 
-    This section provides details on the IP addresses used by the Scrive Service. You may want to whitelist 
-    these addresses in your firewalls for outgoing traffic but more importantly for incoming traffic from 
+    This section provides details on the IP addresses used by the Scrive Service. You may want to whitelist
+    these addresses in your firewalls for outgoing traffic but more importantly for incoming traffic from
     Scrive eSign when using callbacks.
 
     <aside class="warning">
-    Do not call the API using these IP addresses directly! Server Name Identification (SNI) is used to 
-    route calls to different services on the same IP address and thus hostnames must be used to reliably reach 
+    Do not call the API using these IP addresses directly! Server Name Identification (SNI) is used to
+    route calls to different services on the same IP address and thus hostnames must be used to reliably reach
     the service you intend to integrate with.
     </aside>
 
@@ -849,8 +849,14 @@ paths:
   /documents/{document_id}/trash:
     $ref: ./api/documents/document_id/trash.yaml
 
+  /documents/trash:
+    $ref: ./api/documents/document_id/trash-bulk.yaml
+
   /documents/{document_id}/delete:
     $ref: ./api/documents/document_id/delete.yaml
+
+  /documents/delete:
+    $ref: ./api/documents/document_id/delete-bulk.yaml
 
   /documents/{document_id}/forward:
     $ref: ./api/documents/document_id/forward.yaml
