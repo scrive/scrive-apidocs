@@ -618,6 +618,10 @@ This is the only officially supported encoding for our API.
 <td>2018-06-01</td>
 <td>Add <code>dk_nemid</code> (Danish NemID) to <code>authentication_to_sign</code></td>
 </tr>
+<tr>
+<td>2018-12-17</td>
+<td>New <code>Signatory</code> field <code>signatory_role</code>, supercedes <code>is_signatory</code>.</td>
+</tr>
 </tbody></table>
 <h2 id='environments-amp-ip-addresses'>Environments &amp; IP Addresses</h2>
 <p>This section provides details on the IP addresses used by the Scrive Service. You may want to whitelist 
@@ -2963,6 +2967,7 @@ the file name.</p>
       </span><span class="s2">"user_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1404"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"is_author"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
       </span><span class="s2">"is_signatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"signatory_role"</span><span class="p">:</span><span class="w"> </span><span class="s2">"viewer"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
         </span><span class="p">{</span><span class="w">
           </span><span class="s2">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"name"</span><span class="p">,</span><span class="w">
@@ -3021,6 +3026,7 @@ the file name.</p>
       </span><span class="s2">"user_id"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="s2">"is_author"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
       </span><span class="s2">"is_signatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"signatory_role"</span><span class="p">:</span><span class="w"> </span><span class="s2">"signing_party"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
         </span><span class="p">{</span><span class="w">
           </span><span class="s2">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"name"</span><span class="p">,</span><span class="w">
@@ -3245,9 +3251,34 @@ here.</p>
 
 <div class="json-schema">
 
-<p>Whether this party is a signatory to the document, otherwise they are
-viewers and will not sign the document.</p>
+<p>Deprecated, please use <code>signatory_role</code> instead.
+If true, this party is a signatory to the document, otherwise
+they are a viewer or an approver and will not sign the
+document. If both <code>is_signatory</code> and <code>signatory_role</code> are
+present, <code>is_signatory</code> takes precedence if their values are
+inconsistent (this is done for backwards compatibility).</p>
 
+
+</div>
+
+<h6><code>signatory_role</code> <code>(string, enum)</code></h6>
+
+<div class="json-schema">
+
+<p>Signatory role: viewer, approver, or a signing party. Only signing
+parties can sign documents, viewers only have view access, and
+approvers can additionally approve or reject.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>viewer</code></li>
+<li><code>signing_party</code></li>
+<li><code>approver</code></li>
+
+</ul>
 
 </div>
 
@@ -6063,6 +6094,7 @@ The list API call can filter based on document tags.</p>
       </span><span class="s2">"user_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1404"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"is_author"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
       </span><span class="s2">"is_signatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"signatory_role"</span><span class="p">:</span><span class="w"> </span><span class="s2">"viewer"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
         </span><span class="p">{</span><span class="w">
           </span><span class="s2">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"name"</span><span class="p">,</span><span class="w">
@@ -6121,6 +6153,7 @@ The list API call can filter based on document tags.</p>
       </span><span class="s2">"user_id"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="s2">"is_author"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
       </span><span class="s2">"is_signatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"signatory_role"</span><span class="p">:</span><span class="w"> </span><span class="s2">"signing_party"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
         </span><span class="p">{</span><span class="w">
           </span><span class="s2">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"name"</span><span class="p">,</span><span class="w">
@@ -6345,9 +6378,34 @@ here.</p>
 
 <div class="json-schema">
 
-<p>Whether this party is a signatory to the document, otherwise they are
-viewers and will not sign the document.</p>
+<p>Deprecated, please use <code>signatory_role</code> instead.
+If true, this party is a signatory to the document, otherwise
+they are a viewer or an approver and will not sign the
+document. If both <code>is_signatory</code> and <code>signatory_role</code> are
+present, <code>is_signatory</code> takes precedence if their values are
+inconsistent (this is done for backwards compatibility).</p>
 
+
+</div>
+
+<h5><code>signatory_role</code> <code>(string, enum)</code></h5>
+
+<div class="json-schema">
+
+<p>Signatory role: viewer, approver, or a signing party. Only signing
+parties can sign documents, viewers only have view access, and
+approvers can additionally approve or reject.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>viewer</code></li>
+<li><code>signing_party</code></li>
+<li><code>approver</code></li>
+
+</ul>
 
 </div>
 
@@ -9114,6 +9172,7 @@ be changed.</p>
   </span><span class="s2">"user_id"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
   </span><span class="s2">"is_author"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
   </span><span class="s2">"is_signatory"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"signatory_role"</span><span class="p">:</span><span class="w"> </span><span class="s2">"signing_party"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"fields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
       </span><span class="s2">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"name"</span><span class="p">,</span><span class="w">
@@ -9265,9 +9324,34 @@ here.</p>
 
 <div class="json-schema">
 
-<p>Whether this party is a signatory to the document, otherwise they are
-viewers and will not sign the document.</p>
+<p>Deprecated, please use <code>signatory_role</code> instead.
+If true, this party is a signatory to the document, otherwise
+they are a viewer or an approver and will not sign the
+document. If both <code>is_signatory</code> and <code>signatory_role</code> are
+present, <code>is_signatory</code> takes precedence if their values are
+inconsistent (this is done for backwards compatibility).</p>
 
+
+</div>
+
+<h3><code>signatory_role</code> <code>(string, enum)</code></h3>
+
+<div class="json-schema">
+
+<p>Signatory role: viewer, approver, or a signing party. Only signing
+parties can sign documents, viewers only have view access, and
+approvers can additionally approve or reject.</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>viewer</code></li>
+<li><code>signing_party</code></li>
+<li><code>approver</code></li>
+
+</ul>
 
 </div>
 
