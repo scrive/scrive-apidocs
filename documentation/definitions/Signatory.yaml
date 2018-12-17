@@ -26,10 +26,12 @@ properties:
     readOnly: true
   is_signatory:
     description: |
-      Whether this party is a signatory to the document, otherwise
-      they are viewers and will not sign the document. This field is
-      optional when updating the document: if a `signatory_role` field
-      is present, the value of this field is ignored.
+      Deprecated, please use `signatory_role` instead.
+      If true, this party is a signatory to the document, otherwise
+      they are a viewer or an approver and will not sign the
+      document. If both `is_signatory` and `signatory_role` are
+      present, `is_signatory` takes precedence if their values are
+      inconsistent (this is done for backwards compatibility).
     type: boolean
   signatory_role:
     $ref: ./SignatoryRole.yaml
