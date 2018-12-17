@@ -15,7 +15,6 @@ module User.Types.User
 
 import Data.Aeson
 import Data.ByteString (ByteString)
-import Data.Default
 import Data.Int (Int16)
 import Data.String.Utils (strip)
 import qualified Data.Text as T
@@ -91,7 +90,7 @@ defaultUser =
   , userhasacceptedtermsofservice = Nothing
   , usersignupmethod              = ByAdmin
   , userinfo                      = defaultUserInfo
-  , usersettings                  = UserSettings LANG_EN def
+  , usersettings                  = defaultUserSettings
   , userassociateddomainid        = unsafeBrandedDomainID 0
   , usergroupid                   = emptyUserGroupID
   }
@@ -111,6 +110,9 @@ data UserSettings  = UserSettings
   { lang                :: Lang
   , dataretentionpolicy :: DataRetentionPolicy
   } deriving (Eq, Ord, Show)
+
+defaultUserSettings :: UserSettings
+defaultUserSettings = UserSettings LANG_EN defaultDataRetentionPolicy
 
 instance HasLang User where
   getLang = getLang . usersettings

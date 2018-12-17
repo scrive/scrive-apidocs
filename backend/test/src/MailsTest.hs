@@ -69,7 +69,17 @@ sendDocumentMails author = do
         islf <- rand 10 arbitrary
 
         now <- currentTime
-        let sigs = [def {signatoryfields = signatoryfields asl, signatoryisauthor = True, signatoryrole = SignatoryRoleSigningParty, maybesignatory = maybesignatory asl} , def {signatoryfields = islf, signatoryrole = SignatoryRoleSigningParty}]
+        let sigs = [defaultSignatoryLink {
+                         signatoryfields = signatoryfields asl
+                       , signatoryisauthor = True
+                       , signatoryrole = SignatoryRoleSigningParty
+                       , maybesignatory = maybesignatory asl
+                       }
+                   , defaultSignatoryLink {
+                         signatoryfields = islf
+                       , signatoryrole = SignatoryRoleSigningParty
+                       }
+                   ]
         True <- randomUpdate $ ResetSignatoryDetails sigs (systemActor now)
         tz <- mkTimeZoneName "Europe/Stockholm"
         randomUpdate $ PreparationToPending (systemActor now) tz

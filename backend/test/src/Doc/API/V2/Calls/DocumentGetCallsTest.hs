@@ -2,7 +2,6 @@ module Doc.API.V2.Calls.DocumentGetCallsTest (apiV2DocumentGetCallsTests) where
 
 import Control.Monad.IO.Class
 import Data.Aeson (Value(String))
-import Data.Default
 import Data.Time (UTCTime(..), addUTCTime, fromGregorian)
 import Happstack.Server
 import Log
@@ -29,7 +28,7 @@ import Doc.SignatoryScreenshots (emptySignatoryScreenshots)
 import Doc.Tokens.Model
 import Doc.Types.Document (Document(..))
 import Doc.Types.DocumentStatus (DocumentStatus(..))
-import Doc.Types.SignatoryAttachment (SignatoryAttachment(..))
+import Doc.Types.SignatoryAttachment (SignatoryAttachment(..), defaultSignatoryAttachment)
 import Doc.Types.SignatoryLink (AuthenticationToSignMethod(..), SignatoryLink(..))
 import File.Storage (saveNewFile)
 import TestingUtil
@@ -401,7 +400,7 @@ testDocApiV2FilesFull = do
        == StandardAuthenticationToSign
     && all (null . signatoryattachments) (documentsignatorylinks d)
   let did = documentid initDoc
-      att  = def { signatoryattachmentname = "sig_att" }
+      att  = defaultSignatoryAttachment { signatoryattachmentname = "sig_att" }
 
   -- Add attachments to the generated document.
   void $ do

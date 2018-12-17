@@ -330,7 +330,7 @@ instance Arbitrary SignatoryLink where
       , return (Nothing, [])
       ]
     hidePN <- arbitrary
-    return $ def
+    return $ defaultSignatoryLink
       { signatorylinkid                         = unsafeSignatoryLinkID 0
       , signatoryfields                         = fields
       , signatoryisauthor                       = False
@@ -357,7 +357,7 @@ instance Arbitrary SignatoryConsentQuestion where
       , return Nothing
       ]
 
-    return $ def
+    return $ defaultSignatoryConsentQuestion
       { scqTitle          = title
       , scqPositiveOption = po
       , scqNegativeOption = no
@@ -720,7 +720,7 @@ arbEmail = do
   return $ n ++ "@" ++ d ++ "." ++ t
 
 signatoryLinkExample1 :: SignatoryLink
-signatoryLinkExample1 = def
+signatoryLinkExample1 = defaultSignatoryLink
   { signatorylinkid                         = unsafeSignatoryLinkID 0
   , signatorymagichash                      = unsafeMagicHash 0
   , maybesignatory                          = Nothing

@@ -127,11 +127,13 @@ testLastPersonSigningADocumentClosesIt = do
 
     True <- do d <- theDocument
                randomUpdate $ ResetSignatoryDetails ([
-                      (def {   signatoryfields = (signatoryfields $ fromJust $ getAuthorSigLink d)
+                      (defaultSignatoryLink {
+                                        signatoryfields = (signatoryfields $ fromJust $ getAuthorSigLink d)
                                       , signatoryisauthor = True
                                       , signatoryrole     = SignatoryRoleViewer
                                       , maybesignatory = Just $ userid user })
-                    , (def {   signatorysignorder = SignOrder 1
+                    , (defaultSignatoryLink {
+                                        signatorysignorder = SignOrder 1
                                       , signatoryisauthor = False
                                       , signatoryrole     = SignatoryRoleSigningParty
                                       , signatoryfields = [
@@ -195,12 +197,12 @@ testSigningWithPin = do
             file `withDocumentM` do
     d <- theDocument
     True <- randomUpdate $ ResetSignatoryDetails ([
-        (def {
+        (defaultSignatoryLink {
             signatoryfields = signatoryfields $ fromJust $ getAuthorSigLink d
           , signatoryisauthor = True
           , signatoryrole     = SignatoryRoleViewer
           , maybesignatory = Just $ userid user1 })
-          , (def {
+          , (defaultSignatoryLink {
               signatorysignorder = SignOrder 1
             , signatoryisauthor = False
             , signatoryrole     = SignatoryRoleSigningParty
@@ -574,11 +576,13 @@ testDownloadSignviewBrandingAccess = do
   withDocumentID (documentid doc) $ do
     d <- theDocument
     void $ randomUpdate $ ResetSignatoryDetails ([
-                      (def {   signatoryfields = (signatoryfields $ fromJust $ getAuthorSigLink d)
+                      (defaultSignatoryLink {
+                                        signatoryfields = (signatoryfields $ fromJust $ getAuthorSigLink d)
                                       , signatoryisauthor = True
                                       , signatoryrole     = SignatoryRoleViewer
                                       , maybesignatory = Just $ userid user })
-                    , (def {   signatorysignorder = SignOrder 1
+                    , (defaultSignatoryLink {
+                                        signatorysignorder = SignOrder 1
                                       , signatoryisauthor = False
                                       , signatoryrole     = SignatoryRoleSigningParty
                                       , signatoryfields = [

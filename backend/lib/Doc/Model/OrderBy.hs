@@ -6,8 +6,6 @@ module Doc.Model.OrderBy
   , addMTimeSorting
   ) where
 
-import Data.Default
-
 import DB
 import Doc.DocStateData
 
@@ -29,8 +27,9 @@ data DocumentOrderByRep = DocumentOrderByRep {
   , dobrOrder :: !SQL
   }
 
-instance Default DocumentOrderByRep where
-  def = DocumentOrderByRep {
+defaultDocumentOrderByRep :: DocumentOrderByRep
+defaultDocumentOrderByRep =
+  DocumentOrderByRep {
       dobrExpr  = ""
     , dobrName  = ""
     , dobrOrder = ""
@@ -38,38 +37,38 @@ instance Default DocumentOrderByRep where
 
 -- | Convert DocumentOrderBy enumeration into proper SQL order by statement
 documentOrderByToSQL :: DocumentOrderBy -> DocumentOrderByRep
-documentOrderByToSQL DocumentOrderByTitle = def {
+documentOrderByToSQL DocumentOrderByTitle = defaultDocumentOrderByRep {
     dobrExpr = "documents.title"
   , dobrName = "doc_order_title"
   }
-documentOrderByToSQL DocumentOrderByMTime = def {
+documentOrderByToSQL DocumentOrderByMTime = defaultDocumentOrderByRep {
     dobrExpr = "documents.mtime"
   , dobrName = "doc_order_mtime"
   }
-documentOrderByToSQL DocumentOrderByCTime = def {
+documentOrderByToSQL DocumentOrderByCTime = defaultDocumentOrderByRep {
     dobrExpr = "documents.ctime"
   , dobrName = "doc_order_ctime"
   }
-documentOrderByToSQL DocumentOrderByStatus = def {
+documentOrderByToSQL DocumentOrderByStatus = defaultDocumentOrderByRep {
     dobrExpr = "documents.status"
   , dobrName = "doc_order_status"
   }
-documentOrderByToSQL DocumentOrderByStatusClass = def {
+documentOrderByToSQL DocumentOrderByStatusClass = defaultDocumentOrderByRep {
     dobrExpr = documentStatusClassExpression
   , dobrName = "doc_order_status_class"
   }
-documentOrderByToSQL DocumentOrderByType = def {
+documentOrderByToSQL DocumentOrderByType = defaultDocumentOrderByRep {
     dobrExpr = "documents.type"
   , dobrName = "doc_order_type"
   }
-documentOrderByToSQL DocumentOrderByPartners = def {
+documentOrderByToSQL DocumentOrderByPartners = defaultDocumentOrderByRep {
     dobrExpr = parenthesize . selectSignatoryLinksSmartNames $
                "documents.author_id <> signatory_links.id"
                <+> "AND signatory_links.signatory_role ="
                <?> SignatoryRoleSigningParty
   , dobrName = "doc_order_partners"
   }
-documentOrderByToSQL DocumentOrderByAuthor = def {
+documentOrderByToSQL DocumentOrderByAuthor = defaultDocumentOrderByRep {
     dobrExpr = parenthesize $ selectSignatoryLinksSmartNames "documents.author_id = signatory_links.id"
   , dobrName = "doc_order_author"
   }

@@ -1,10 +1,10 @@
 module Doc.Types.SignatoryConsentQuestion (
     SignatoryConsentQuestion(..)
+  , defaultSignatoryConsentQuestion
   , signatoryConsentQuestionsSelectors
   ) where
 
 import Data.Data
-import Data.Default
 import Database.PostgreSQL.PQTypes
 
 import Doc.SignatoryConsentQuestionID
@@ -29,8 +29,9 @@ signatoryConsentQuestionsSelectors = [
   , "signatory_link_consent_questions.description_text"
   ]
 
-instance Default SignatoryConsentQuestion where
-  def = SignatoryConsentQuestion {
+defaultSignatoryConsentQuestion :: SignatoryConsentQuestion
+defaultSignatoryConsentQuestion =
+  SignatoryConsentQuestion {
       scqID             = unsafeSignatoryConsentQuestionID 0
     , scqTitle          = ""
     , scqPositiveOption = ""

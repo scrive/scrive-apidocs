@@ -2,7 +2,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Doc.API.V1.DocumentFromJSON (AuthorAttachmentDetails(..)) where
 
-import Data.Default
 import Data.String.Utils (strip)
 import Text.JSON.FromJSValue
 import qualified Data.Set as Set
@@ -116,7 +115,7 @@ instance FromJSValueWithUpdate SignatoryLink where
         confirmationdelivery' <-  fromJSValueField "confirmationdelivery"
         allowshighlighting' <-  fromJSValueField "allowshighlighting"
         case (mfields) of
-             (Just fields) -> return $ Just $ def {
+             (Just fields) -> return $ Just $ defaultSignatoryLink {
                     signatorylinkid        = fromMaybe (unsafeSignatoryLinkID 0) (signatorylinkid <$> ms)
                   , signatorysignorder     = updateWithDefaultAndField (SignOrder 1) signatorysignorder (SignOrder <$> signorder)
                   -- nubBy comment: At some point, we accepted

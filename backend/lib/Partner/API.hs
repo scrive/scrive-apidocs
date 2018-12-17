@@ -25,6 +25,7 @@ import AccessControl.Types
 import API.V2
 import API.V2.Errors
 import API.V2.Parameters
+import DataRetentionPolicy (defaultDataRetentionPolicy)
 import DB
 import InputValidation (Result(..), asValidEmail)
 import Kontra
@@ -235,7 +236,9 @@ partnerApiCallV1UserUpdate ptOrUgID uid = do
       guardValidEmailAndNoExistingUser (useremail userInfo) (Just uid)
       when (not $ ufuHasAcceptedTOS ufu) $ tosNotAcceptedErr
       didUpdateInfo     <- dbUpdate $ SetUserInfo uid userInfo
-      didUpdateSettings <- dbUpdate $ SetUserSettings uid (UserSettings (ufuLang ufu) def)
+      didUpdateSettings <- dbUpdate $ SetUserSettings
+        uid
+        (UserSettings (ufuLang ufu) defaultDataRetentionPolicy)
       -- @todo fix retention policy ^
       when (not $ didUpdateInfo && didUpdateSettings) $
         srvLogErr "Could not update user"

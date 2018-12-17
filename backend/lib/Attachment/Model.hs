@@ -1,6 +1,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 module Attachment.Model
-  ( NewAttachment(..)
+  ( defaultAttachment
+  , NewAttachment(..)
   , Attachment(..)
   , DeleteAttachments(..)
   , SetAttachmentsSharing(..)
@@ -15,7 +16,6 @@ where
 import Control.Monad.Catch
 import Control.Monad.State.Class
 import Crypto.RNG
-import Data.Default
 import qualified Data.Text as T
 
 import Attachment.AttachmentID
@@ -36,8 +36,9 @@ data Attachment = Attachment
   , attachmentdeleted :: Bool
   } deriving (Eq, Show)
 
-instance Default Attachment where
-  def = Attachment {
+defaultAttachment :: Attachment
+defaultAttachment =
+  Attachment {
     attachmentid = unsafeAttachmentID 0
   , attachmenttitle = ""
   , attachmentctime = unixEpoch
