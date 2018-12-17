@@ -167,7 +167,7 @@ testUser :: TestEnv UserID
 testUser = do
   bd        <- dbQuery $ GetMainBrandedDomain
   pwd       <- createPassword "admin"
-  ug        <- dbUpdate $ UserGroupCreate def
+  ug        <- dbUpdate $ UserGroupCreate defaultUserGroup
   Just user <- dbUpdate $ AddUser
     ("Andrzej", "Rybczak")
     "andrzej@scrive.com"

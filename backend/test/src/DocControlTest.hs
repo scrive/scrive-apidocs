@@ -701,7 +701,7 @@ testGetDocumentWithTemporaryMagicHash = do
   mh <- dbUpdate $ NewTemporaryMagicHash slid expiration
 
   do
-    ctx <- mkContext def
+    ctx <- mkContext defaultLang
     req <- mkRequest GET []
     (res, _) <- runTestKontra req ctx $
       handleSignShowSaveMagicHash did slid mh
@@ -710,7 +710,7 @@ testGetDocumentWithTemporaryMagicHash = do
   setTestTime $ 3 `daysAfter` now
 
   do
-    ctx <- mkContext def
+    ctx <- mkContext defaultLang
     req <- mkRequest GET []
     eRes <- E.try $ runTestKontra req ctx $
       handleSignShowSaveMagicHash did slid mh
@@ -722,7 +722,7 @@ testGetDocumentWithTemporaryMagicHash = do
         assertEqual "Should throw LinkInvalid" LinkInvalid err
 
   do
-    ctx <- mkContext def
+    ctx <- mkContext defaultLang
     runSQL_ "UPDATE cron_jobs SET run_at = to_timestamp(0)\
             \ WHERE id = 'temporary_magic_hashes_purge'"
     runTestCronUntilIdle ctx

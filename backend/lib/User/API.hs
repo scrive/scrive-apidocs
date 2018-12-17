@@ -391,7 +391,7 @@ apiCallSignup = api $ do
                Just user | isJust $ userhasacceptedtermsofservice user -> sendPasswordReminder user >> return Nothing
                          | otherwise -> return $ Just user
                Nothing ->  do
-                 let ug0 = set ugName (T.pack companyName) def
+                 let ug0 = set ugName (T.pack companyName) defaultUserGroup
                  ug <- dbUpdate $ UserGroupCreate ug0
                  createUser (Email email) (firstname,lastname) (get ugID ug,True) lang AccountRequest
   case muser' of

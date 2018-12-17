@@ -12,7 +12,6 @@ module Partner.JSON (
   , updateUserGroupWithUserGroupForUpdate
   ) where
 
-import Data.Default
 import Data.Text (Text, pack, unpack)
 import Data.Unjson
 
@@ -33,18 +32,19 @@ data UserForUpdate = UserForUpdate {
     , ufuHasAcceptedTOS :: Bool
     }
 
-instance Default UserForUpdate where
-    def = UserForUpdate {
-            ufuId = ""
-          , ufuEmail = Email ""
-          , ufuFirstName = ""
-          , ufuLastName = ""
-          , ufuPersonalNumber = ""
-          , ufuPhone = ""
-          , ufuCompanyPosition = ""
-          , ufuLang = LANG_EN
-          , ufuHasAcceptedTOS = False
-          }
+defaultUserForUpdate :: UserForUpdate
+defaultUserForUpdate =
+  UserForUpdate {
+    ufuId = ""
+  , ufuEmail = Email ""
+  , ufuFirstName = ""
+  , ufuLastName = ""
+  , ufuPersonalNumber = ""
+  , ufuPhone = ""
+  , ufuCompanyPosition = ""
+  , ufuLang = LANG_EN
+  , ufuHasAcceptedTOS = False
+  }
 
 userInfoFromUserForUpdate :: UserForUpdate -> UserInfo
 userInfoFromUserForUpdate UserForUpdate{..} =
@@ -57,7 +57,7 @@ userInfoFromUserForUpdate UserForUpdate{..} =
            }
 
 unjsonUserForUpdate :: UnjsonDef UserForUpdate
-unjsonUserForUpdate = objectOf $ pure def
+unjsonUserForUpdate = objectOf $ pure defaultUserForUpdate
         <*   fieldReadonly "id" ufuId "The user's ID"
         <**> (fieldBy "email" ufuEmail "A user's email"
               (unjsonEmail)
@@ -115,20 +115,20 @@ data UserGroupForUpdate = UserGroupForUpdate
     , uguUserGroupCountry :: Text
     } deriving (Show)
 
-instance Default UserGroupForUpdate where
-    def = UserGroupForUpdate
-          {
-            uguUserGroupID = ""
-          , uguUserGroupName = ""
-          , uguUserGroupNumber = ""
-          , uguUserGroupAddress = ""
-          , uguUserGroupZip = ""
-          , uguUserGroupCity = ""
-          , uguUserGroupCountry = ""
-          }
+defaultUserGroupForUpdate :: UserGroupForUpdate
+defaultUserGroupForUpdate =
+  UserGroupForUpdate {
+    uguUserGroupID = ""
+  , uguUserGroupName = ""
+  , uguUserGroupNumber = ""
+  , uguUserGroupAddress = ""
+  , uguUserGroupZip = ""
+  , uguUserGroupCity = ""
+  , uguUserGroupCountry = ""
+  }
 
 unjsonUserGroupForUpdate :: UnjsonDef UserGroupForUpdate
-unjsonUserGroupForUpdate = objectOf $ pure def
+unjsonUserGroupForUpdate = objectOf $ pure defaultUserGroupForUpdate
         <*   fieldReadonly "id" uguUserGroupID "The company ID"
         <**> (fieldBy "name" uguUserGroupName "Company name"
               (unjsonWithValidationOrEmptyText (\s -> pack <$> (asValidCompanyName . unpack $ s)))

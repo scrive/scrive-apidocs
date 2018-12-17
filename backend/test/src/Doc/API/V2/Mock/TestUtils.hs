@@ -56,7 +56,6 @@ module Doc.API.V2.Mock.TestUtils (
 ) where
 
 import Data.Aeson
-import Data.Default
 import Data.Unjson
 import Happstack.Server
 
@@ -311,8 +310,8 @@ setMockDocSigLinkStandardField i fieldType value =
   setForSigNumberFromMockDoc i
     $ \msl -> msl { mockSigLinkFields = newField : oldFieldsWithoutFieldType msl }
   where
-    newField = def { mockSigFieldType = fieldType
-                   , mockSigFieldValue = Just value }
+    newField = defaultMockSigField { mockSigFieldType = fieldType
+                                   , mockSigFieldValue = Just value }
     oldFieldsWithoutFieldType msl =
       filter (\slf -> mockSigFieldType slf /= fieldType)
         (mockSigLinkFields msl)
@@ -321,7 +320,7 @@ addStandardSigLinksToMockDoc :: Int -> MockDoc -> MockDoc
 addStandardSigLinksToMockDoc i md =
   md { mockDocParties = mockDocParties md ++ newParties }
   where
-    newParties = replicate i def
+    newParties = replicate i defaultMockSigLink
 
 -- * Internal use only!
 -----------------------

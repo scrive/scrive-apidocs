@@ -1,6 +1,7 @@
 module UserGroup.Internal (
     InvoicingType(..)
   , UserGroup(..)
+  , defaultUserGroup
   , ugInvoicingType
   , ugPaymentPlan
   , ugwpOnlyParents
@@ -18,6 +19,7 @@ module UserGroup.Internal (
   , UserGroupSettings(..)
   , UserGroupAddress(..)
   , UserGroupUI(..)
+  , defaultUserGroupUI
   , UserGroupInvoicing(..)
   , UserGroupWithParents
   , UserGroupRoot(..)
@@ -25,7 +27,6 @@ module UserGroup.Internal (
   ) where
 
 import Data.Binary
-import Data.Default
 import Data.Int
 import Data.Text (Text)
 import Data.Unjson
@@ -201,8 +202,9 @@ instance CompositeFromSQL UserGroup where
     , ..
     }
 
-instance Default UserGroup where
-  def = UserGroup {
+defaultUserGroup :: UserGroup
+defaultUserGroup =
+  UserGroup {
       _ugID = emptyUserGroupID
     , _ugParentGroupID = Nothing
     , _ugName = ""
@@ -224,7 +226,7 @@ instance Default UserGroup where
       , _ugaCity          = ""
       , _ugaCountry       = ""
       }
-    , _ugUI = def
+    , _ugUI = defaultUserGroupUI
     }
 
 -- USER GROUP ROOT
@@ -418,8 +420,9 @@ instance CompositeFromSQL UserGroupUI where
     faviconFromBinary (Just f) = if (BS.null f) then Nothing else Just f
     faviconFromBinary Nothing = Nothing
 
-instance Default UserGroupUI where
-  def = UserGroupUI {
+defaultUserGroupUI :: UserGroupUI
+defaultUserGroupUI =
+  UserGroupUI {
       _uguiMailTheme     = Nothing
     , _uguiSignviewTheme = Nothing
     , _uguiServiceTheme  = Nothing

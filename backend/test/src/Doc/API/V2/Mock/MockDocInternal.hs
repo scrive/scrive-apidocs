@@ -1,6 +1,5 @@
 module Doc.API.V2.Mock.MockDocInternal where
 
-import Data.Default
 import Data.Unjson
 
 import Doc.API.V2.JSON.Misc (unjsonSignatoryRole)
@@ -211,8 +210,9 @@ instance Unjson MockSigLink where
     <*> field    "attachments"                   mockSigLinkAttachments          ""
     <*> fieldOpt "api_delivery_url"              mockSigLinkAPIDeliveryURL       ""
 
-instance Default MockSigLink where
-  def = MockSigLink
+defaultMockSigLink :: MockSigLink
+defaultMockSigLink =
+  MockSigLink
     { mockSigLinkId                     = "does not get used"
     , mockSigLinkUserId                 = Nothing
     , mockSigLinkIsAuthor               = False
@@ -262,8 +262,9 @@ instance Unjson MockSigField where
     <*> fieldOpt "name"                       mockSigFieldName                   ""
     <*> fieldOpt "signature"                  mockSigFieldSignature              ""
 
-instance Default MockSigField where
-  def = MockSigField
+defaultMockSigField :: MockSigField
+defaultMockSigField =
+  MockSigField
     { mockSigFieldType                   = "email"
     , mockSigFieldIsObligatory           = True
     , mockSigFieldShouldBeFilledBySender = True

@@ -72,7 +72,7 @@ partnerApiCallV1CompanyCreate ptOrUgID = do
         . dbQuery . UserGroupGetWithParents $ partnerUsrGrpID
       let ug_new = set ugParentGroupID (Just partnerUsrGrpID)
                  . set ugInvoicing     (BillItem $ Just FreePlan)
-                 $ def
+                 $ defaultUserGroup
       ugu <- apiV2ParameterObligatory $
                ApiV2ParameterJSON "json" unjsonUserGroupForUpdate
       let ug = updateUserGroupWithUserGroupForUpdate (ugwpAddChild ug_new ugwp_partner) ugu
