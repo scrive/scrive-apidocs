@@ -104,19 +104,22 @@ unjsonSignatoryArray da = arrayOf (unjsonSignatory da)
 unjsonSignatory :: DocumentAccess -> UnjsonDef SignatoryLink
 unjsonSignatory da =  objectOf $
   pure
-  (\is_signatory msignatoryrole
+  (\m_is_signatory msignatoryrole
     fields mbTitleQs signorder
     msuccredirecturl mrejredirecturl
-    mcsvupload deliverymethod 
+    mcsvupload deliverymethod
     authtoviewmethod authtoviewarchivedmethod
     authtosignmethod confirmdeliverymethod
     allowshighlighting hidepn sattachments ->
      let (title,qs) = maybe defTitleQs id mbTitleQs
          defTitleQs = ( signatorylinkconsenttitle def
                       , signatorylinkconsentquestions def )
-         defSigRole = signatoryRoleFromBool is_signatory
-     in def { signatoryrole                   = fromMaybe
-                                                defSigRole msignatoryrole
+         sigRole = case (m_is_signatory, msignatoryrole) of
+           (Nothing, Nothing)                       -> signatoryrole def
+           (Nothing, Just role)                     -> role
+           (Just False, Just SignatoryRoleApprover) -> SignatoryRoleApprover
+           (Just is_signatory, _)                   -> signatoryRoleFromBool is_signatory
+     in def { signatoryrole                   = sigRole
             , signatoryfields                 = fields
             , signatorylinkconsenttitle       = title
             , signatorylinkconsentquestions   = qs
@@ -143,8 +146,8 @@ unjsonSignatory da =  objectOf $
   <*   (fieldReadonly "id" signatorylinkid "Signatory ID")
   <*   (fieldReadOnlyOpt "user_id"  maybesignatory "User ID for the signatory")
   <*   (fieldReadonly "is_author" signatoryisauthor "Whether signatory is document author")
-  <*>  (fieldDef "is_signatory" (isSignatory (def :: SignatoryLink))
-        isSignatory
+  <*>  (fieldOpt "is_signatory"
+        (Just . isSignatory)
         "Whether the signatory signs the document (or is a viewer/approver)")
   <*>  (fieldOptBy "signatory_role" (Just . signatoryrole)
         "Signatory role: 'viewer', 'approver', 'signing_party'."
