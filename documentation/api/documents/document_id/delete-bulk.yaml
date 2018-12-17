@@ -19,7 +19,7 @@ post:
       required: true
 
       description: |
-        List of document IDs of templates to share or unshare.
+        List of document IDs to delete.
 
       schema:
         type: array
