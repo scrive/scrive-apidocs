@@ -124,6 +124,9 @@ var Subscription = Backbone.Model.extend({
             ff = self.featuresForAdminUsers();
         return ({
             can_use_templates: pick(f.canUseTemplates, ff.canUseTemplates()),
+            can_use_shareable_links: pick(
+              f.canUseShareableLinks, ff.canUseShareableLinks()
+            ),
             can_use_branding: pick(f.canUseBranding, ff.canUseBranding()),
             can_use_author_attachments: pick(
                 f.canUseAuthorAttachments, ff.canUseAuthorAttachments()
@@ -184,9 +187,6 @@ var Subscription = Backbone.Model.extend({
             ),
             can_use_pad_invitations: pick(
               f.canUsePadInvitations, ff.canUsePadInvitations()
-            ),
-            can_use_shareable_links: pick(
-              f.canUseShareableLinks, ff.canUseShareableLinks()
             )
         });
     };
@@ -244,6 +244,7 @@ var Features = exports.Features = Backbone.Model.extend({
 var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
   defaults: {
     "can_use_templates": true,
+    "can_use_shareable_links": true,
     "can_use_branding": true,
     "can_use_author_attachments": true,
     "can_use_signatory_attachments": true,
@@ -263,11 +264,13 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
     "can_use_email_invitations": true,
     "can_use_email_confirmations": true,
     "can_use_api_invitations": true,
-    "can_use_pad_invitations": true,
-    "can_use_shareable_links": true
+    "can_use_pad_invitations": true
   },
   canUseTemplates: function () {
      return this.get("can_use_templates");
+  },
+  canUseShareableLinks: function () {
+     return this.get("can_use_shareable_links");
   },
   canUseBranding: function () {
      return this.get("can_use_branding");
@@ -331,9 +334,6 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
   },
   canUsePadInvitations: function () {
      return this.get("can_use_pad_invitations");
-  },
-  canUseShareableLinks: function () {
-     return this.get("can_use_shareable_links");
   },
   firstAllowedAuthenticationToView: function () {
     if (this.canUseStandardAuthenticationToView())
@@ -403,6 +403,7 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
   parse: function (args) {
      return {
       can_use_templates: args.can_use_templates,
+      can_use_shareable_links: args.can_use_shareable_links,
       can_use_branding: args.can_use_branding,
       can_use_author_attachments: args.can_use_author_attachments,
       can_use_signatory_attachments: args.can_use_signatory_attachments,
@@ -423,8 +424,7 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       can_use_email_invitations: args.can_use_email_invitations,
       can_use_email_confirmations: args.can_use_email_confirmations,
       can_use_api_invitations: args.can_use_api_invitations,
-      can_use_pad_invitations: args.can_use_pad_invitations,
-      can_use_shareable_links: args.can_use_shareable_links
+      can_use_pad_invitations: args.can_use_pad_invitations
     };
   }
 });

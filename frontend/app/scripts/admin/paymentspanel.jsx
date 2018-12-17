@@ -36,6 +36,7 @@ module.exports = React.createClass({
     initFeatureFlagsFromFeatures : function(features) {
       return {
         canUseTemplates: features.canUseTemplates(),
+        canUseShareableLinks: features.canUseShareableLinks(),
         canUseBranding: features.canUseBranding(),
         canUseAuthorAttachments: features.canUseAuthorAttachments(),
         canUseSignatoryAttachments: features.canUseSignatoryAttachments(),
@@ -269,6 +270,7 @@ module.exports = React.createClass({
               </tr>
               {this.renderTROptionSeparator("General features")}
               {this.renderTRForOptionWithCheckbox("Can use templates","canUseTemplates")}
+              {this.renderTRForOptionWithCheckbox("Can use shareable links","canUseShareableLinks")}
               {this.renderTRForOptionWithCheckbox("Can use branding","canUseBranding")}
               {this.renderTRForOptionWithCheckbox("Can use mass sendout","canUseMassSendout")}
               {this.renderTRForOptionWithCheckbox("Can use email invitations","canUseEmailInvitations")}
