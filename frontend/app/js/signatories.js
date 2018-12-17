@@ -372,15 +372,16 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
 
       this.setAuthenticationToSign("standard");
       this.setAuthenticationToView("standard");
+      this.setAllowsHighlighting(false);
     },
     makeApprover: function() {
       this.setSignatoryRole("approver");
       this.document().checkLastViewerChange();
       this.setAuthenticationToSign("standard");
+      this.setAllowsHighlighting(false);
       _.each(this.fields(),function(s) {
          s.removeAllPlacements();
       });
-
     },
     hasAuthenticatedToView: function() {
         return this.get("has_authenticated_to_view");
@@ -820,7 +821,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
               authentication_method_to_view_archived: this.authenticationToViewArchived(),
               delivery_method: this.delivery(),
               confirmation_delivery_method : this.confirmationdelivery(),
-              allows_highlighting : this.allowshighlighting(),
+              allows_highlighting : this.allowsHighlighting(),
               hide_personal_number: this.hidePN(),
               consent_module: this.consentModule() ? this.consentModule().draftData() : null
         };
@@ -1105,8 +1106,11 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
          }
       }
     },
-    allowshighlighting: function() {
+    allowsHighlighting: function() {
       return this.get("allows_highlighting");
+    },
+    setAllowsHighlighting: function(v) {
+      this.set({allows_highlighting: v});
     },
     hidePN: function() {
       return this.get("hide_personal_number");

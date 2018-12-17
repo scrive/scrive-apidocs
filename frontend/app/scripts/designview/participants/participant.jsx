@@ -48,7 +48,8 @@ module.exports = React.createClass({
     var heightOfUnexpandedSignatory = 42;  // Height each signatory description when signatory is not expanded
     var verticalMarginOfFields = 16;
     var heightOfField = 50; // Height each field row
-    var heightOfParticipantSettings = 252; // Height of 8 selects at bottom of signatory
+    // Height of 1 row of checkboxes and 3 rows of selects at bottom of signatory
+    var heightOfParticipantSettings = 280;
     var heightOfExpandedSignatoryHeader = 42;
     var height = heightOfUnexpandedSignatory;
 

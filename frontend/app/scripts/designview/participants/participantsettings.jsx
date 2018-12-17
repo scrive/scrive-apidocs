@@ -1,5 +1,6 @@
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var React = require("react");
+var Checkbox = require("../../common/checkbox");
 var Select = require("../../common/select");
 var Track = require("../../common/track");
 var LanguageService = require("../../common/language_service");
@@ -336,6 +337,17 @@ module.exports = React.createClass({
     var sig = this.props.model;
     return (
       <div className="design-view-action-participant-details-participation">
+
+        <div className="design-view-action-participant-details-participation-row">
+          <Checkbox
+             checked={sig.allowsHighlighting()}
+             className={(!sig.signs()) ? "checkbox-hidden" : undefined}
+             toolTip={localization.designview.addParties.allowHighlightingTooltip}
+             label={localization.designview.addParties.allowHighlighting}
+             onChange={ function (c) { sig.setAllowsHighlighting(c); } }
+          />
+
+        </div>
 
         <div className="design-view-action-participant-details-participation-row">
 

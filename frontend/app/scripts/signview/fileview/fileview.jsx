@@ -112,7 +112,7 @@ module.exports = React.createClass({
       } else {
         const doc = this.context.document;
         const currentSig = doc.currentSignatory();
-        const currentSigCanHighlight = currentSig.canSign() && currentSig.allowshighlighting();
+        const currentSigCanHighlight = currentSig.canSign() && currentSig.allowsHighlighting();
         if (currentSigCanHighlight && !this.state.highlighting) {
           this.handleStartHighlight();
         } else if (currentSigCanHighlight && this.state.highlighting) {
@@ -436,7 +436,7 @@ module.exports = React.createClass({
     const file = this.props.model;
     const doc = this.context.document;
     const currentSig = doc.currentSignatory();
-    const currentSigCanHighlight = currentSig.canSign() && currentSig.allowshighlighting();
+    const currentSigCanHighlight = currentSig.canSign() && currentSig.allowsHighlighting();
     const currentSigHasHighlight = currentSig.highlightedPages().length > 0 || currentSig.willGetHighlighedPageSoon();
 
     const authorName = doc.author() && doc.author().name() ? doc.author().name() : "Author";

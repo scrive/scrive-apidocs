@@ -31,7 +31,7 @@ module.exports = React.createClass({
 
   canEditHighlighting: function () {
     var doc = this.props.document;
-    return doc.currentSignatoryCanSign() && doc.currentSignatory().allowshighlighting();
+    return doc.currentSignatoryCanSign() && doc.currentSignatory().allowsHighlighting();
   },
 
   showHighlighting: function () {

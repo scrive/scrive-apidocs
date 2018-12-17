@@ -27,7 +27,8 @@ var Track = require("./track");
       checked: React.PropTypes.bool.isRequired,
       disabled: React.PropTypes.bool,
       customEventName: React.PropTypes.bool,
-      onChange: React.PropTypes.func
+      onChange: React.PropTypes.func,
+      toolTip: React.PropTypes.string
     },
 
     getDefaultProps : function() {
@@ -56,7 +57,11 @@ var Track = require("./track");
       });
 
       return (
-        <div className={classNames("checkbox-box",this.props.className)} onClick={this.handleClick}>
+        <div
+          className={classNames("checkbox-box",this.props.className)}
+          onClick={this.handleClick}
+          title={this.props.toolTip}
+          >
           <div className="checkbox-box-wrapper">
             <div className={checkboxClasses} style={this.props.style} tabIndex="0" onKeyDown={this.handleKeyDn}>
               <div className="checkmark" />

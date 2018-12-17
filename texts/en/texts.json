@@ -372,6 +372,8 @@
 "_designViewAddAnchor":"Add",
 "_designViewAddField":"Add field",
 "_designViewAddMultisend":"Add multi send",
+"_designViewAddPartiesAllowHighlighting":"Allow highlighting",
+"_designViewAddPartiesAllowHighlightingTooltip": "Allow signing party to highlight sections of the document during signing",
 "_designViewAddPartiesAuthentication":"Authentication to sign",
 "_designViewAddPartiesAuthenticationDKNemID":"Danish NemID",
 "_designViewAddPartiesAuthenticationNOBankID":"Norwegian BankID",

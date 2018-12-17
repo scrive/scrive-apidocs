@@ -436,6 +436,8 @@ javascriptLocalisation =
                , confirmationLink : "$_designViewAddPartiesConfirmationLink()$"
                , confirmationAttachments : "$_designViewAddPartiesConfirmationAttachments()$"
                , secondaryConfirmation : "$_designViewAddPartiesSecondaryConfirmation()$"
+               , allowHighlighting: "$_designViewAddPartiesAllowHighlighting()$"
+               , allowHighlightingTooltip: "$_designViewAddPartiesAllowHighlightingTooltip()$"
              }
              , addMultisend: "$_designViewAddMultisend()$"
              , viewCSV: "$_designViewViewCSV()$"
