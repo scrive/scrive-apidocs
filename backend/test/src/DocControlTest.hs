@@ -3,6 +3,7 @@ module DocControlTest (docControlTests) where
 import Control.Monad.Trans
 import Crypto.RNG
 import Data.Bifunctor
+import Data.Int
 import Happstack.Server
 import Test.Framework
 import Text.JSON.Gen (toJSValue)
@@ -37,6 +38,7 @@ import KontraError
 import MagicHash
 import Mails.Model
 import MinutesTime
+import TestCron
 import TestingUtil
 import TestKontra as T
 import Theme.Model
@@ -72,6 +74,8 @@ docControlTests env = testGroup "DocControl" [
   , testThat "We can't get a document as a signatory if it has been cancelled" env testGetCancelledDocument
   , testThat "Generate document to sign from shareable template"
              env testDocumentFromShareableTemplate
+  , testThat "We can get a document using a temporary magic hash if it is not expired"
+             env testGetDocumentWithTemporaryMagicHash
   ]
 
 testUploadingFile :: TestEnv ()
@@ -619,7 +623,7 @@ testDownloadSignviewBrandingAccess = do
 testGetCancelledDocument :: TestEnv ()
 testGetCancelledDocument = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx <- anonymiseContext . set ctxmaybeuser (Just user) <$> mkContext defaultLang
+  ctx <- mkContext defaultLang
 
   doc <- addRandomDocumentWithAuthorAndCondition user $ \d ->
     isPending d && isSignable d
@@ -658,7 +662,7 @@ testDocumentFromShareableTemplate = do
   mh <- random
   withDocument tpl $ randomUpdate $ UpdateShareableLinkHash $ Just mh
 
-  ctx <- anonymiseContext <$> mkContext defaultLang
+  ctx <- mkContext defaultLang
   req <- mkRequest GET []
   (res, ctx') <- runTestKontra req ctx $
     handleSignFromTemplate (documentid tpl) mh
@@ -681,3 +685,48 @@ testDocumentFromShareableTemplate = do
   req' <- mkRequest GET []
   (res', _) <- runTestKontra req' ctx' $ handleSignShow did slid
   assertEqual "Status is 200" 200 (rsCode res')
+
+testGetDocumentWithTemporaryMagicHash :: TestEnv ()
+testGetDocumentWithTemporaryMagicHash = do
+  Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
+
+  doc <- addRandomDocumentWithAuthorAndCondition user $ \d ->
+    isPending d && isSignable d
+  let did       = documentid doc
+      signatory = head $ documentsignatorylinks doc
+      slid      = signatorylinkid signatory
+
+  now <- currentTime
+  let expiration = 2 `daysAfter` now
+  mh <- dbUpdate $ NewTemporaryMagicHash slid expiration
+
+  do
+    ctx <- mkContext def
+    req <- mkRequest GET []
+    (res, _) <- runTestKontra req ctx $
+      handleSignShowSaveMagicHash did slid mh
+    assertEqual "Status is 303" 303 (rsCode res)
+
+  setTestTime $ 3 `daysAfter` now
+
+  do
+    ctx <- mkContext def
+    req <- mkRequest GET []
+    eRes <- E.try $ runTestKontra req ctx $
+      handleSignShowSaveMagicHash did slid mh
+
+    case eRes of
+      Right (res, _) ->
+        assertFailure $ "Should have failed, returned code " ++ show (rsCode res)
+      Left err ->
+        assertEqual "Should throw LinkInvalid" LinkInvalid err
+
+  do
+    ctx <- mkContext def
+    runSQL_ "UPDATE cron_jobs SET run_at = to_timestamp(0)\
+            \ WHERE id = 'temporary_magic_hashes_purge'"
+    runTestCronUntilIdle ctx
+    runQuery_ $ "SELECT COUNT(*) FROM signatory_link_magic_hashes\
+                \ WHERE signatory_link_id =" <?> slid
+    c <- fetchOne runIdentity
+    assertEqual "Magic hash count should be 0" (0 :: Int64) c

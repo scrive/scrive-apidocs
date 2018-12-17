@@ -360,10 +360,16 @@ instance ToJSValue SignatoryTokenDoesNotMatch where
 
 instance DBExtraException SignatoryTokenDoesNotMatch
 
-sqlWhereSignatoryLinkMagicHashIs :: (MonadState v m, SqlWhere v)
-                                 => MagicHash -> m ()
-sqlWhereSignatoryLinkMagicHashIs mh = sqlWhereE SignatoryTokenDoesNotMatch $
-  "signatory_links.token =" <?> mh
+sqlWhereMagicHashIsValidForSignatoryLink :: (MonadState v m, SqlWhere v)
+                                         => UTCTime -> MagicHash -> m ()
+sqlWhereMagicHashIsValidForSignatoryLink now mh =
+  sqlWhereAnyE SignatoryTokenDoesNotMatch
+    [ sqlWhereEq "signatory_links.token" mh
+    , sqlWhereExists . sqlSelect "signatory_link_magic_hashes" $ do
+        sqlWhere "signatory_link_magic_hashes.signatory_link_id = signatory_links.id"
+        sqlWhere $ "signatory_link_magic_hashes.expiration_time >" <?> now
+        sqlWhereEq "signatory_link_magic_hashes.hash" mh
+    ]
 
 data DocumentObjectVersionDoesNotMatch = DocumentObjectVersionDoesNotMatch
     { documentOdocumentObjectVersionDocumentID :: DocumentID

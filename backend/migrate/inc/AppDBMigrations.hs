@@ -150,4 +150,6 @@ kontraMigrations = [
   , featureFlagsAddShareableLinks
   , userGroupAddGINIdx
   , changeIsPartnerColumnToSignatoryRole
+  , createSignatoryLinkMagicHashes
+  , addTemporaryMagicHashesPurgeJob
   ]

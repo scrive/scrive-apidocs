@@ -18,6 +18,7 @@ module Doc.Migrations (
   , addShareableLinkHashToDocuments
   , addAuthenticationToViewArchivedMethodToSignatories
   , changeIsPartnerColumnToSignatoryRole
+  , createSignatoryLinkMagicHashes
 ) where
 
 import Data.Int
@@ -329,4 +330,26 @@ changeIsPartnerColumnToSignatoryRole = Migration
         ]
       runQuery_ $ sqlAlterTable "signatory_links"
         [ "RENAME COLUMN is_partner TO signatory_role" ]
+  }
+
+createSignatoryLinkMagicHashes :: MonadDB m => Migration m
+createSignatoryLinkMagicHashes = Migration
+  { mgrTableName = tblName tableSignatoryLinkMagicHashes
+  , mgrFrom = 0
+  , mgrAction = StandardMigration $ createTable True tblTable
+      { tblName = "signatory_link_magic_hashes"
+      , tblVersion = 1
+      , tblColumns =
+          [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+          , tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
+          , tblColumn { colName = "hash", colType = BigIntT, colNullable = False }
+          , tblColumn { colName = "expiration_time", colType = TimestampWithZoneT, colNullable = False }
+          ]
+      , tblPrimaryKey = pkOnColumn "id"
+      , tblForeignKeys =
+          [ (fkOnColumn "signatory_link_id" "signatory_links" "id")
+              { fkOnDelete = ForeignKeyCascade }
+          ]
+      , tblIndexes = [tblIndex { idxColumns = ["hash", "signatory_link_id"], idxUnique = True }]
+      }
   }

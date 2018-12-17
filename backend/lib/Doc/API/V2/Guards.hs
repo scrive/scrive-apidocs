@@ -34,7 +34,6 @@ module Doc.API.V2.Guards (
 
 import Control.Conditional (whenM)
 import Data.Either (rights)
-import Log
 import qualified Data.Text as T
 
 import API.V2
@@ -510,8 +509,7 @@ guardDocumentReadAccess mslid doc = do
 
 guardThatDocumentIsReadableBySignatories :: Kontrakcja m => Document -> m ()
 guardThatDocumentIsReadableBySignatories doc = do
-  now <- currentTime
-  unless (isAccessibleBySignatories now doc) $
+  unless (isAccessibleBySignatories doc) $
     apiError $ documentStateErrorWithCode 410 $
       "The document has expired or has been withdrawn. (status: "
       <> T.pack (show (documentstatus doc)) <> ")"

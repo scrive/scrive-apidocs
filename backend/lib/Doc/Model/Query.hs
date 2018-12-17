@@ -126,15 +126,16 @@ instance MonadDB m => DBQuery m GetDocumentTags (S.Set DocumentTag) where
 data GetSignatoryLinkByID =
   GetSignatoryLinkByID DocumentID SignatoryLinkID (Maybe MagicHash)
 
-instance (MonadDB m, MonadThrow m) =>
+instance (MonadDB m, MonadThrow m, MonadTime m) =>
   DBQuery m GetSignatoryLinkByID SignatoryLink where
   query (GetSignatoryLinkByID did slid mmh) = do
+    now <- currentTime
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "signatory_links" $ do
       sqlJoinOn "documents" "signatory_links.document_id = documents.id"
       mapM_ sqlResult signatoryLinksSelectors
       sqlWhereDocumentIDForSignatoryIs did
       sqlWhereSignatoryLinkIDIs slid
-      F.mapM_ sqlWhereSignatoryLinkMagicHashIs mmh
+      F.mapM_ (sqlWhereMagicHashIsValidForSignatoryLink now) mmh
 
 selectDocuments :: DocumentDomain
                 -> [DocumentFilter]
@@ -223,9 +224,10 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsBySignatoryLinkIDs [
     fetchMany toComposite
 
 data GetDocumentByDocumentIDSignatoryLinkIDMagicHash = GetDocumentByDocumentIDSignatoryLinkIDMagicHash DocumentID SignatoryLinkID MagicHash
-instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash Document where
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash Document where
   query (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) = do
     -- FIXME: Use domains/filters.
+    now <- currentTime
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereDocumentIDIs did
@@ -236,7 +238,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentIDSignatory
          -- example if sign order allows to see the document. For now
          -- we are sloppy and let a person see the document.
          sqlWhereSignatoryLinkIDIs slid
-         sqlWhereSignatoryLinkMagicHashIs mh
+         sqlWhereMagicHashIsValidForSignatoryLink now mh
       sqlWhereDocumentWasNotPurged
 
 data GetDocumentByDocumentIDAndShareableLinkHash = GetDocumentByDocumentIDAndShareableLinkHash DocumentID MagicHash

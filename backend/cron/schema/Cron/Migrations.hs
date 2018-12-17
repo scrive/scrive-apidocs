@@ -10,6 +10,7 @@ module Cron.Migrations (
   , addUserGroupMigrationJob
   , removeUserGroupMigrationJob
   , addAttachmentsPurgeJob
+  , addTemporaryMagicHashesPurgeJob
 ) where
 
 import Control.Monad.Catch
@@ -112,4 +113,12 @@ addAttachmentsPurgeJob = Migration
   , mgrFrom = 14
   , mgrAction = StandardMigration $
       runSQL_ "INSERT INTO cron_jobs (id, run_at) VALUES ('attachments_purge', to_timestamp(0))"
+  }
+
+addTemporaryMagicHashesPurgeJob :: (MonadDB m, MonadThrow m) => Migration m
+addTemporaryMagicHashesPurgeJob = Migration
+  { mgrTableName = tblName tableCronJobs
+  , mgrFrom = 15
+  , mgrAction = StandardMigration $
+      runSQL_ "INSERT INTO cron_jobs (id, run_at) VALUES ('temporary_magic_hashes_purge', to_timestamp(0))"
   }

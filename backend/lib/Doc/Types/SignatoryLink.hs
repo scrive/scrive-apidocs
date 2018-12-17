@@ -14,6 +14,9 @@ module Doc.Types.SignatoryLink (
   , SignatoryLink(..)
   , signatoryLinksSelectors
   , defaultSignatoryLink
+  , TemporaryMagicHash(..)
+  , signatoryLinkMagicHashesSelectors
+  , isValidSignatoryMagicHash
   ) where
 
 import Control.Monad.Catch
@@ -320,6 +323,35 @@ instance ToSQL SignatoryRole where
 
 ---------------------------------
 
+signatoryLinkMagicHashesSelectors :: [SQL]
+signatoryLinkMagicHashesSelectors =
+  [ "signatory_link_magic_hashes.hash"
+  , "signatory_link_magic_hashes.expiration_time"
+  ]
+
+data TemporaryMagicHash = TemporaryMagicHash
+  { temporaryMagicHashHash           :: MagicHash
+  , temporaryMagicHashExpirationTime :: UTCTime
+  } deriving (Eq, Show)
+
+instance PQFormat TemporaryMagicHash where
+  pqFormat = "%signatory_link_magic_hash"
+
+type instance CompositeRow TemporaryMagicHash = (MagicHash, UTCTime)
+
+instance CompositeFromSQL TemporaryMagicHash where
+  toComposite (hash, time) = TemporaryMagicHash hash time
+
+-- | Check if the given magic hash is the permanent hash or one of the
+-- temporary hashes. It relies on the assumption that the 'SignatoryLink'
+-- contains only valid hashes. (See the WHERE statement in the query.)
+isValidSignatoryMagicHash :: MagicHash -> SignatoryLink -> Bool
+isValidSignatoryMagicHash mh sl =
+  mh == signatorymagichash sl
+  || mh `elem` map temporaryMagicHashHash (signatorytemporarymagichashes sl)
+
+---------------------------------
+
 data SignatoryLink = SignatoryLink {
   signatorylinkid                         :: !SignatoryLinkID
 , signatoryfields                         :: ![SignatoryField]
@@ -328,8 +360,9 @@ data SignatoryLink = SignatoryLink {
 -- | Signatory role: viewer, signing party, approver
 , signatoryrole                           :: !SignatoryRole
 , signatorysignorder                      :: !SignOrder
--- | Authentication code
+-- | Authentication codes
 , signatorymagichash                      :: !MagicHash
+, signatorytemporarymagichashes           :: ![TemporaryMagicHash]
 -- | If this document has been saved to an account, that is the user id
 , maybesignatory                          :: !(Maybe UserID)
 -- | When a person has signed this document (or approved, in case when
@@ -377,6 +410,7 @@ defaultSignatoryLink =
   , signatoryrole = SignatoryRoleViewer
   , signatorysignorder = SignOrder 1
   , signatorymagichash = unsafeMagicHash 0
+  , signatorytemporarymagichashes = []
   , maybesignatory = Nothing
   , maybesigninfo = Nothing
   , maybeseeninfo = Nothing
@@ -421,6 +455,7 @@ signatoryLinksSelectors = [
   , "signatory_links.signatory_role"
   , "signatory_links.sign_order"
   , "signatory_links.token"
+  , "ARRAY(SELECT (" <> mintercalate ", " signatoryLinkMagicHashesSelectors <> ")::signatory_link_magic_hash FROM signatory_link_magic_hashes WHERE signatory_links.id = signatory_link_magic_hashes.signatory_link_id AND signatory_link_magic_hashes.expiration_time > now())"
   , "signatory_links.user_id"
   , "signatory_links.sign_time"
   , "signatory_links.sign_ip"
@@ -450,19 +485,20 @@ signatoryLinksSelectors = [
   , "ARRAY(SELECT (" <> mintercalate ", " signatoryConsentQuestionsSelectors <> ")::signatory_consent_question FROM signatory_link_consent_questions WHERE signatory_links.id = signatory_link_consent_questions.signatory_link_id ORDER BY position ASC)"
   ]
 
-type instance CompositeRow SignatoryLink = (SignatoryLinkID, CompositeArray1 SignatoryField, Bool, SignatoryRole, SignOrder, MagicHash, Maybe UserID, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, DeliveryStatus, DeliveryStatus, Maybe UTCTime, Maybe UTCTime, Maybe [[String]], CompositeArray1 SignatoryAttachment,CompositeArray1 HighlightedPage, Maybe String, Maybe String, Maybe UTCTime, Maybe String, AuthenticationToViewMethod, AuthenticationToViewMethod, AuthenticationToSignMethod, DeliveryMethod, ConfirmationDeliveryMethod, Bool, Bool, Bool, Maybe String, CompositeArray1 SignatoryConsentQuestion)
+type instance CompositeRow SignatoryLink = (SignatoryLinkID, CompositeArray1 SignatoryField, Bool, SignatoryRole, SignOrder, MagicHash, CompositeArray1 TemporaryMagicHash, Maybe UserID, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, DeliveryStatus, DeliveryStatus, Maybe UTCTime, Maybe UTCTime, Maybe [[String]], CompositeArray1 SignatoryAttachment,CompositeArray1 HighlightedPage, Maybe String, Maybe String, Maybe UTCTime, Maybe String, AuthenticationToViewMethod, AuthenticationToViewMethod, AuthenticationToSignMethod, DeliveryMethod, ConfirmationDeliveryMethod, Bool, Bool, Bool, Maybe String, CompositeArray1 SignatoryConsentQuestion)
 
 instance PQFormat SignatoryLink where
   pqFormat = "%signatory_link"
 
 instance CompositeFromSQL SignatoryLink where
-  toComposite (slid, CompositeArray1 fields, is_author, signatory_role, sign_order, magic_hash, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_contents, CompositeArray1 attachments, CompositeArray1 highlighted_pages, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_to_view_method, authentication_to_view_archived_method, authentication_to_sign_method, delivery_method, confirmation_delivery_method, allows_highlighting, has_identified, hide_pn, consent_title, CompositeArray1 consent_questions) = SignatoryLink {
+  toComposite (slid, CompositeArray1 fields, is_author, signatory_role, sign_order, magic_hash, CompositeArray1 magic_hashes, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_contents, CompositeArray1 attachments, CompositeArray1 highlighted_pages, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_to_view_method, authentication_to_view_archived_method, authentication_to_sign_method, delivery_method, confirmation_delivery_method, allows_highlighting, has_identified, hide_pn, consent_title, CompositeArray1 consent_questions) = SignatoryLink {
     signatorylinkid = slid
   , signatoryfields = fields
   , signatoryisauthor = is_author
   , signatoryrole = signatory_role
   , signatorysignorder = sign_order
   , signatorymagichash = magic_hash
+  , signatorytemporarymagichashes = magic_hashes
   , maybesignatory = muser_id
   , maybesigninfo = SignInfo <$> msign_time <*> msign_ip
   , maybeseeninfo = SignInfo <$> mseen_time <*> mseen_ip

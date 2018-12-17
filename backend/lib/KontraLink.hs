@@ -31,8 +31,9 @@ data KontraLink
     | LinkChangeUserEmail UserID MagicHash
     | LinkSignDoc DocumentID SignatoryLink
     | LinkSignDocPad DocumentID SignatoryLinkID
-    | LinkMainFile Document SignatoryLink
+    | LinkMainFile Document SignatoryLink MagicHash
     | LinkSignDocNoMagicHash DocumentID SignatoryLinkID
+    | LinkSignDocMagicHash DocumentID SignatoryLinkID MagicHash
     | LinkIssueDoc DocumentID
     | LinkEvidenceAttachment DocumentID String
     | LinkCompanyTakeover UserGroupID
@@ -78,11 +79,13 @@ instance Show KontraLink where
                  "/"++ show (signatorymagichash signatorylink)
     showsPrec _ (LinkSignDocPad did slid) =
         (++) $ "/sp/" ++ show did ++ "/" ++ show slid
-    showsPrec _ (LinkMainFile document signatorylink) =
+    showsPrec _ (LinkMainFile document signatorylink mh) =
         (++) $ "/download/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
-                 "/"++ show (signatorymagichash signatorylink) ++ "/"++ urlEncode (documenttitle document) ++ ".pdf"
+                 "/"++ show mh ++ "/"++ urlEncode (documenttitle document) ++ ".pdf"
     showsPrec _ (LinkSignDocNoMagicHash documentid signatorylinkid) =
         (++) $ "/s/" ++ show documentid ++ "/" ++ show signatorylinkid
+    showsPrec _ (LinkSignDocMagicHash documentid signatorylinkid mh) =
+        (++) $ "/s/" ++ show documentid ++ "/" ++ show signatorylinkid ++ "/" ++ show mh
     showsPrec _ (LinkPasswordReminder aid hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash
     showsPrec _ (LinkAccountCreated lang uid hash sm) = (++) $ langFolder lang  ++ "/accountsetup/" ++ show uid ++ "/" ++ show hash ++ "/" ++ show sm
     showsPrec _ LoopBack = (++) $ "/" -- this should never be used

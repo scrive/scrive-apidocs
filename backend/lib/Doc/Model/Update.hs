@@ -71,6 +71,8 @@ module Doc.Model.Update
   , AddNotUploadedSignatoryAttachmentsEvents(..)
   , UpdateShareableLinkHash(..)
   , updateMTimeAndObjectVersion
+  , NewTemporaryMagicHash(..)
+  , PurgeExpiredTemporaryMagicHashes(..)
   ) where
 
 import Control.Arrow (second)
@@ -606,7 +608,7 @@ data ChangeAuthenticationToViewMethod =
                                    AuthenticationKind AuthenticationToViewMethod
                                    (Maybe String) (Maybe String) Actor
 
-instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) =>
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) =>
   DBUpdate m ChangeAuthenticationToViewMethod () where
 
   update (ChangeAuthenticationToViewMethod slid
@@ -783,7 +785,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) =>
           changeToEvidence (authtoviewfrom, authtoviewto)
 
 data ChangeAuthenticationToSignMethod = ChangeAuthenticationToSignMethod SignatoryLinkID AuthenticationToSignMethod (Maybe String) (Maybe String) Actor
-instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeAuthenticationToSignMethod () where
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m ChangeAuthenticationToSignMethod () where
   update (ChangeAuthenticationToSignMethod slid newAuthToSign mSSN mPhone actor) = do
     updateDocumentWithID $ const $ do
       -- Get the SignatoryLink before the updates
@@ -1056,14 +1058,14 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m MarkDoc
               sqlWhere "documents.id = signatory_links.document_id"
               sqlWhereDocumentIDIs did
               sqlWhereSignatoryLinkIDIs slid
-              sqlWhereSignatoryLinkMagicHashIs mh
+              sqlWhereMagicHashIsValidForSignatoryLink time mh
               sqlWhereDocumentTypeIs (Signable)
               sqlIgnore $ sqlWhere "signatory_links.seen_time IS NULL"
               sqlIgnore $ sqlWhere "signatory_links.sign_time IS NULL"
               sqlWhereDocumentStatusIsOneOf [Pending, Timedout, Canceled, DocumentError, Rejected]
 
 data MarkInvitationRead = MarkInvitationRead SignatoryLinkID Actor
-instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m MarkInvitationRead Bool where
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m MarkInvitationRead Bool where
   update (MarkInvitationRead slid actor) = do
     success <- updateDocumentWithID $ \did -> do
         let time = actorTime actor
@@ -1381,7 +1383,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocu
   update (SetDocumentLang lang _actor) = updateWithoutEvidence "lang" lang
 
 data SetEmailInvitationDeliveryStatus = SetEmailInvitationDeliveryStatus SignatoryLinkID DeliveryStatus Actor
-instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetEmailInvitationDeliveryStatus Bool where
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m SetEmailInvitationDeliveryStatus Bool where
   update (SetEmailInvitationDeliveryStatus slid status actor) = do
     sig <- theDocumentID >>= \did -> query $ GetSignatoryLinkByID did slid Nothing
     updateDocumentWithID $ \did -> do
@@ -1413,7 +1415,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetEmai
     return True
 
 data SetSMSInvitationDeliveryStatus = SetSMSInvitationDeliveryStatus SignatoryLinkID DeliveryStatus Actor
-instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetSMSInvitationDeliveryStatus Bool where
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m SetSMSInvitationDeliveryStatus Bool where
   update (SetSMSInvitationDeliveryStatus slid status actor) = do
     sig <- theDocumentID >>= \did -> query $ GetSignatoryLinkByID did slid Nothing
     updateDocumentWithID $ \did -> do
@@ -1512,7 +1514,7 @@ instance ( DocumentMonad m, TemplatesMonad m
         sqlWhereDocumentTypeIs           Signable
         sqlWhereDocumentStatusIs         Pending
         sqlWhereSignatoryRoleIsApprover
-        sqlWhereSignatoryLinkMagicHashIs mh
+        sqlWhereMagicHashIsValidForSignatoryLink time mh
       updateMTimeAndObjectVersion (actorTime actor)
     sl <- theDocumentID >>=
           \docid -> query $ GetSignatoryLinkByID docid slid Nothing
@@ -1557,7 +1559,7 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
            sqlWhereSignatoryRoleIsSigningParty
            sqlWhereSigningPartyHasNotSignedOrApproved
            sqlWhereAuthSign
-           sqlWhereSignatoryLinkMagicHashIs mh
+           sqlWhereMagicHashIsValidForSignatoryLink time mh
       updateMTimeAndObjectVersion (actorTime actor)
     sl <- theDocumentID >>= \docid -> query $ GetSignatoryLinkByID docid slid Nothing
     let signatureFields = case (mesig, mpin) of
@@ -2427,3 +2429,19 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
     liftEqMaybe f (Just t1) (Just t2) = f t1 t2
     liftEqMaybe _ Nothing   Nothing   = True
     liftEqMaybe _ _         _         = False
+
+data NewTemporaryMagicHash = NewTemporaryMagicHash SignatoryLinkID UTCTime
+instance (CryptoRNG m, MonadDB m) => DBUpdate m NewTemporaryMagicHash MagicHash where
+  update (NewTemporaryMagicHash slid time) = do
+    hash <- random
+    runQuery_ . sqlInsert "signatory_link_magic_hashes" $ do
+      sqlSet "hash" hash
+      sqlSet "signatory_link_id" slid
+      sqlSet "expiration_time" time
+    return hash
+
+data PurgeExpiredTemporaryMagicHashes = PurgeExpiredTemporaryMagicHashes
+instance (MonadDB m, MonadTime m) => DBUpdate m PurgeExpiredTemporaryMagicHashes () where
+  update _ = do
+    now <- currentTime
+    runSQL_ $ "DELETE FROM signatory_link_magic_hashes WHERE expiration_time <" <?> now

@@ -68,6 +68,7 @@ data JobType
   | StrengthenPasswords
   | UserAccountRequestEvaluation
   | AttachmentsPurge
+  | TemporaryMagicHashesPurge
   deriving (Eq, Ord, Show)
 
 jobTypeMapper :: [(JobType, T.Text)]
@@ -95,6 +96,7 @@ jobTypeMapper = [
   , (DocumentSearchUpdate, "document_search_update")
   , (DocumentsAuthorIDMigration, "document_author_id_job")
   , (AttachmentsPurge, "attachments_purge")
+  , (TemporaryMagicHashesPurge, "temporary_magic_hashes_purge")
   ]
 
 instance PQFormat JobType where
@@ -305,6 +307,11 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
         purgedCount <- dbUpdate PurgeAttachments
         logInfo "Purged attachments" $ object ["purged" .= purgedCount]
       return . RerunAfter $ iminutes 10
+    TemporaryMagicHashesPurge -> do
+      runDB $ do
+        purgedCount <- dbUpdate PurgeExpiredTemporaryMagicHashes
+        logInfo "Purged temporary magic hashes" $ object ["purged" .= purgedCount]
+      return . RerunAfter $ ihours 1
   endTime <- currentTime
   logInfo "Job processed successfully" $ object [
       "elapsed_time" .= (realToFrac (diffUTCTime endTime startTime) :: Double)

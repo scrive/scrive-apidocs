@@ -85,6 +85,7 @@ import Doc.SignatoryScreenshots (SignatoryScreenshots, emptySignatoryScreenshots
 import Doc.SMSPin.Model
 import Doc.Texts
 import Doc.Tokens.Model
+import Doc.Types.SignatoryLink (isValidSignatoryMagicHash)
 import EID.Signature.Model
 import EvidenceLog.Model
 import EvidenceLog.View
@@ -969,7 +970,7 @@ apiCallV1Get did = logDocument did . api $ do
     (Just slid,Just mh) -> do
        sl <- maybe (throwM $ SomeDBExtraException $ serverError "No document found") return  $ getSigLinkFor slid doc
        guardThatDocumentIsReadableBySignatories doc
-       when (signatorymagichash sl /= mh) $ throwM . SomeDBExtraException $ serverError "No document found"
+       when (not (isValidSignatoryMagicHash mh sl)) $ throwM . SomeDBExtraException $ serverError "No document found"
        switchLang $ getLang doc
 
        Ok <$> (documentJSONV1 Nothing False (signatoryisauthor sl) (Just sl) doc)
@@ -1472,7 +1473,6 @@ allRequiredAuthorAttachmentsAreAccepted acceptedAttachments = allRequiredAttachm
 
 guardThatDocumentIsReadableBySignatories :: Kontrakcja m => Document -> m ()
 guardThatDocumentIsReadableBySignatories doc = do
-  now <- currentTime
-  unless (isAccessibleBySignatories now doc) $ throwM $ SomeDBExtraException $
+  unless (isAccessibleBySignatories doc) $ throwM $ SomeDBExtraException $
     forbidden $ "The document has expired or has been withdrawn. (status: "
                 ++ show (documentstatus doc) ++ ")"

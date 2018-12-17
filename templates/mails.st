@@ -60,7 +60,7 @@ mailContractClosedMainP =
     $endif$
     <br/>
     <br/>
-    $if(documentAttached)$
+    $if(!mainfilelink)$
       $_mailContractClosedContentAttached()$
       <br/>
       <br/>
@@ -164,7 +164,7 @@ mailForwardSigned =
       )$
 ####
 mailDocumentAttachedOrLinked =
- $if(documentAttached)$
+ $if(!mainfilelink)$
    $attached$
  $else$
    $_mailDocumentLinked()$
@@ -263,7 +263,7 @@ remindMailSignedStandardHeader=
   $remindMailSignedContractStandardHeaderSendRequest()$
   <br/>
   <br/>
-  $if(documentAttached)$
+  $if(!mainfilelink)$
     $_remindMailSignedContractStandardHeaderSendRequest2()$
   $else$
     $_mailDocumentLinked()$
@@ -278,7 +278,7 @@ $if(custommessage)$
 $else$
       <div class="editable" name="custommessage"></div>
 $endif$
-$if(!documentAttached)$
+$if(!mainfilelink)$
   $if(custommessage)$
     <br/>
   $endif$

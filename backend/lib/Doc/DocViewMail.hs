@@ -17,7 +17,9 @@ module Doc.DocViewMail
 
 import Control.Conditional ((<|), (|>))
 import Control.Monad.Catch
+import Crypto.RNG
 import Data.Label.Base
+import Data.Time (UTCTime(..))
 import Text.StringTemplates.Templates
 import qualified Data.Label.Partial as LP
 import qualified Text.StringTemplates.Fields as F
@@ -28,8 +30,10 @@ import DB
 import Doc.DocInfo (getLastSignedOrApprovedTime)
 import Doc.DocStateData
 import Doc.DocUtils
+import Doc.Model.Update
 import File.FileID
 import KontraLink
+import MagicHash (MagicHash)
 import MailContext
 import Mails.SendMail
 import MinutesTime
@@ -44,7 +48,7 @@ import Util.SignatoryLinkUtils
 import Utils.Color
 import Utils.Monoid
 
-mailDocumentRemind :: ( MonadDB m, MonadThrow m, MonadTime m
+mailDocumentRemind :: ( CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m
                       , TemplatesMonad m, MailContextMonad m )
                    => Bool -> Maybe String -> Document -> SignatoryLink -> Bool
                    -> m Mail
@@ -58,14 +62,13 @@ mailDocumentRemind automatic customMessage doc sigLink documentAttached =
     _                   ->
       remindMailSigned    True customMessage doc sigLink documentAttached
 
-mailDocumentRemindContent :: ( MonadDB m, MonadThrow m, MonadTime m
+mailDocumentRemindContent :: ( CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m
                              , TemplatesMonad m, MailContextMonad m )
                           => Maybe String -> Document -> SignatoryLink -> Bool
                           -> m String
-mailDocumentRemindContent customMessage doc sigLink documentAttached =
-  content <$>
-  case ( documentstatus doc, maybesigninfo sigLink
-       , isSignatory sigLink || isApprover sigLink ) of
+mailDocumentRemindContent customMessage doc sigLink documentAttached = do
+  content <$> case ( documentstatus doc, maybesigninfo sigLink
+                   , isSignatory sigLink || isApprover sigLink ) of
     (_, Nothing, True)  ->
       remindMailNotSigned False False customMessage doc sigLink
     (Pending, _, False) ->
@@ -73,7 +76,7 @@ mailDocumentRemindContent customMessage doc sigLink documentAttached =
     _                   ->
       remindMailSigned    False customMessage doc sigLink documentAttached
 
-remindMailNotSigned :: ( MonadDB m, MonadThrow m, TemplatesMonad m
+remindMailNotSigned :: ( CryptoRNG m, MonadDB m, MonadThrow m, TemplatesMonad m
                        , MailContextMonad m )
                     => Bool -> Bool -> Maybe String -> Document -> SignatoryLink
                     -> m Mail
@@ -86,9 +89,9 @@ remindMailNotSigned automatic forMail customMessage document signlink = do
       (templateName "remindMailNotSignedContract") $ do
         F.value "sign" $ isSignatory signlink
         F.value "approve" $ isApprover signlink
-        F.value  "custommessage" $ asCustomMessage <$> customMessage
-        F.value  "authorname" authorname
-        F.value  "automatic" automatic
+        F.value "custommessage" $ asCustomMessage <$> customMessage
+        F.value "authorname" authorname
+        F.value "automatic" automatic
         F.value "partners" $
           map getSmartName $
           filter isSignatory (documentsignatorylinks document)
@@ -130,25 +133,26 @@ remindMailNotSigned automatic forMail customMessage document signlink = do
         F.value "companyname" $ emptyToNothing $ getCompanyName document
 
 
-documentAttachableFields :: ( MailContextMonad m, MonadDB m, MonadThrow m
-                          , MonadTime m )
-                       => Bool -> SignatoryLink -> Bool -> Bool -> Document
-                       -> Fields m ()
-documentAttachableFields forMail signlink
-                         documentAttachable forceLink document = do
+documentAttachableFields :: ( CryptoRNG m, MailContextMonad m, MonadDB m
+                            , MonadThrow m, MonadTime m )
+                         => Bool -> SignatoryLink -> Bool
+                         -> Maybe (MagicHash, UTCTime)
+                            -- ^ If we need a link, give a magic hash
+                         -> Document -> Fields m ()
+documentAttachableFields forMail signlink forceLink mmh document = do
   mctx <- getMailContext
-  F.value "sign"               $ isSignatory signlink
-  F.value "approve"            $ isApprover signlink
-  F.value "documentAttachable" $ documentAttachable
-  F.value "forceLink"          $ forceLink
-  F.value "documentAttached"   $ documentAttachable && not forceLink
-  F.value "ispreview"          $ not $ forMail
-  F.value "mainfilelink"       $ protectLink forMail mctx $
-    LinkMainFile document signlink
-  now <- currentTime
-  F.value "availabledate"      $ formatTimeYMD $ 30 `daysAfter` now
+  F.value "sign"      $ isSignatory signlink
+  F.value "approve"   $ isApprover signlink
+  F.value "forceLink" $ forceLink
+  F.value "ispreview" $ not $ forMail
+  case mmh of
+    Nothing -> return ()
+    Just (mh, expiration) -> do
+      F.value "mainfilelink" $ protectLink forMail mctx $
+        LinkMainFile document signlink mh
+      F.value "availabledate" $ formatTimeYMD expiration
 
-remindMailSigned :: ( MonadDB m, MonadThrow m, MonadTime m
+remindMailSigned :: ( CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m
                     , TemplatesMonad m, MailContextMonad m )
                  => Bool
                  -> Maybe String
@@ -157,18 +161,19 @@ remindMailSigned :: ( MonadDB m, MonadThrow m, MonadTime m
                  -> Bool
                  -> m Mail
 remindMailSigned forMail customMessage document signlink documentAttached = do
-    documentMailWithDocLang document (templateName "remindMailSigned") $ do
-            F.value "custommessage" $ asCustomMessage <$> customMessage
-            documentAttachableFields forMail signlink documentAttached False document
+  mhtime <- makeTemporaryMagicHash signlink documentAttached False
+  documentMailWithDocLang document (templateName "remindMailSigned") $ do
+    F.value "custommessage" $ asCustomMessage <$> customMessage
+    documentAttachableFields forMail signlink False mhtime document
 
-mailForwardSigned :: ( MonadDB m, MonadThrow m, MonadTime m
+mailForwardSigned :: ( CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m
                      , TemplatesMonad m, MailContextMonad m )
                   => SignatoryLink -> Bool -> Document
                   -> m Mail
 mailForwardSigned sl documentAttached document = do
+  mmh <- makeTemporaryMagicHash sl documentAttached False
   documentMailWithDocLang document (templateName "mailForwardSigned") $ do
-    documentAttachableFields True sl documentAttached False document
-
+    documentAttachableFields True sl False mmh document
 
 mailDocumentRejected :: ( MonadDB m, MonadThrow m, TemplatesMonad m
                         , MailContextMonad m )
@@ -294,23 +299,21 @@ mailInvitation forMail
             (signatoryattachmentname sa, getSmartName link)
         F.value "companyname" $ emptyToNothing $ getCompanyName document
 
-
 mailInvitationContent :: ( MonadDB m, MonadThrow m, TemplatesMonad m
                          , MailContextMonad m )
                       => Bool -> InvitationTo -> Maybe SignatoryLink -> Document
                       -> m String
-mailInvitationContent  forMail invitationto msiglink document = do
-     content <$> mailInvitation forMail invitationto msiglink document
+mailInvitationContent forMail invitationto msiglink document = do
+  content <$> mailInvitation forMail invitationto msiglink document
 
-
-mailClosedContent :: ( MonadDB m, MonadThrow m, MonadTime m
+mailClosedContent :: ( CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m
                      , TemplatesMonad m, MailContextMonad m )
                   => Bool -> Document -> m String
 mailClosedContent ispreview document =
-     content <$> mailDocumentClosed ispreview
-       (fromJust $ getAuthorSigLink document) False True False document
+  content <$> mailDocumentClosed ispreview
+    (fromJust $ getAuthorSigLink document) False True False document
 
-mailDocumentClosed :: ( MailContextMonad m, MonadDB m, MonadThrow m, MonadTime m
+mailDocumentClosed :: ( CryptoRNG m, MailContextMonad m, MonadDB m, MonadThrow m, MonadTime m
                       , TemplatesMonad m )
                    => Bool -> SignatoryLink -> Bool
                    -> Bool -- ^ Would the attachments fit inside an email?
@@ -318,6 +321,7 @@ mailDocumentClosed :: ( MailContextMonad m, MonadDB m, MonadThrow m, MonadTime m
                    -> Document -> m Mail
 mailDocumentClosed ispreview sl sealFixed documentAttachable forceLink document = do
    mctx <- getMailContext
+   mmh <- makeTemporaryMagicHash sl documentAttachable forceLink
    partylist <- renderLocalListTemplate document $
                 map getSmartName $
                 filter isSignatory (documentsignatorylinks document)
@@ -340,7 +344,7 @@ mailDocumentClosed ispreview sl sealFixed documentAttachable forceLink document 
           LinkDocumentPreview (documentid document)
           (Nothing <| ispreview |> Just sl) (mainfile) 150
         F.value "sealFixed" $ sealFixed
-        documentAttachableFields (not ispreview) sl documentAttachable forceLink document
+        documentAttachableFields (not ispreview) sl forceLink mmh document
         F.value "closingtime" $
           formatTime' "%Y-%m-%d %H:%M %Z" $
           getLastSignedOrApprovedTime document
@@ -452,3 +456,18 @@ brandingMailFields theme = do
 
 asCustomMessage :: String -> [String]
 asCustomMessage = lines
+
+-- | Create a temporary hash valid for 30 days if we need to send a link.
+-- Otherwise, return Nothing.
+makeTemporaryMagicHash
+  :: (CryptoRNG m, MonadDB m, MonadTime m) => SignatoryLink -> Bool -> Bool
+  -> m (Maybe (MagicHash, UTCTime))
+makeTemporaryMagicHash sl documentAttachable forceLink = do
+  if documentAttachable && not forceLink
+    then return Nothing
+    else do
+      now <- currentTime
+      -- Make it valid until the end of the 30th day.
+      let expiration = (30 `daysAfter` now) { utctDayTime = 86399 }
+      mh <- dbUpdate $ NewTemporaryMagicHash (signatorylinkid sl) expiration
+      return $ Just (mh, expiration)

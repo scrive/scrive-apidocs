@@ -84,7 +84,7 @@ getDocumentSignatoryMagicHash did slid = do
     Nothing -> return Nothing
     Just mh -> withDocumentID did $ do
       sl <- apiGuardJustM (documentNotFound did) $ getSigLinkFor slid <$> theDocument
-      if mh == signatorymagichash sl
+      if isValidSignatoryMagicHash mh sl
           then return $ Just sl
           else apiError $ documentActionForbidden
 

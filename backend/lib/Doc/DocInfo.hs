@@ -82,14 +82,9 @@ getLastSignedOrApprovedTime doc =
       filter (isSignatory || isApprover) . documentsignatorylinks $ doc ]
 
 -- | Can signatories see the document?
-isAccessibleBySignatories :: UTCTime -> Document -> Bool
-isAccessibleBySignatories _now doc =
-  -- It adds 31 days and stops at midnight so that, counting days, it is
-  -- accessible for 30 days.
-  let _limit = (addUTCTime (31*24*3600) (documentmtime doc)) { utctDayTime = 0 }
-  in documentstatus doc `elem` documentStatusesAccessibleBySignatories
-  -- TEMPORARILY DISABLED
-  -- && (isPending doc || now < limit)
+isAccessibleBySignatories :: Document -> Bool
+isAccessibleBySignatories doc =
+  documentstatus doc `elem` documentStatusesAccessibleBySignatories
 
 -- | Statuses in which a document is accessible by signatories.
 documentStatusesAccessibleBySignatories :: [DocumentStatus]

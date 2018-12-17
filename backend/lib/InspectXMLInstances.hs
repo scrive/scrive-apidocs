@@ -70,6 +70,7 @@ $(deriveInspectXML ''UserHistoryEvent)
 $(deriveInspectXML ''SignatoryLink)
 $(deriveInspectXML ''PlacementAnchor)
 $(deriveInspectXML ''SignatoryConsentQuestion)
+$(deriveInspectXML ''TemporaryMagicHash)
 
 instance InspectXML SignatoryField where
   inspectXML field =

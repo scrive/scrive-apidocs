@@ -275,6 +275,7 @@ ctSignatoryLink = CompositeType {
   , CompositeColumn { ccName = "signatory_role", ccType = SmallIntT }
   , CompositeColumn { ccName = "sign_order", ccType = IntegerT }
   , CompositeColumn { ccName = "token", ccType = BigIntT }
+  , CompositeColumn { ccName = "temporary_magic_hashes", ccType = ArrayT $ CustomT "signatory_link_magic_hash" }
   , CompositeColumn { ccName = "user_id", ccType = BigIntT }
   , CompositeColumn { ccName = "sign_time", ccType = TimestampWithZoneT }
   , CompositeColumn { ccName = "sign_ip", ccType = IntegerT }
@@ -304,6 +305,35 @@ ctSignatoryLink = CompositeType {
   , CompositeColumn { ccName = "consent_questions", ccType = ArrayT $ CustomT "signatory_consent_question" }
   ]
 }
+
+---------------------------------
+
+tableSignatoryLinkMagicHashes :: Table
+tableSignatoryLinkMagicHashes = tblTable
+  { tblName = "signatory_link_magic_hashes"
+  , tblVersion = 1
+  , tblColumns =
+      [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+      , tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
+      , tblColumn { colName = "hash", colType = BigIntT, colNullable = False }
+      , tblColumn { colName = "expiration_time", colType = TimestampWithZoneT, colNullable = False }
+      ]
+  , tblPrimaryKey = pkOnColumn "id"
+  , tblForeignKeys =
+      [ (fkOnColumn "signatory_link_id" "signatory_links" "id")
+          { fkOnDelete = ForeignKeyCascade }
+      ]
+  , tblIndexes = [tblIndex { idxColumns = ["hash", "signatory_link_id"], idxUnique = True }]
+  }
+
+ctSignatoryLinkMagicHash :: CompositeType
+ctSignatoryLinkMagicHash = CompositeType
+  { ctName = "signatory_link_magic_hash"
+  , ctColumns =
+      [ CompositeColumn { ccName = "hash", ccType = BigIntT }
+      , CompositeColumn { ccName = "expiration_time", ccType = TimestampWithZoneT }
+      ]
+  }
 
 ---------------------------------
 
