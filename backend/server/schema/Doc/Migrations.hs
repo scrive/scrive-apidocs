@@ -325,7 +325,7 @@ changeIsPartnerColumnToSignatoryRole = Migration
   , mgrAction = StandardMigration $ do
       runQuery_ $ sqlAlterTable "signatory_links"
         [ sqlAlterColumn "is_partner"
-          "SET DATA TYPE smallint USING CASE WHEN false THEN 1 ELSE 2 END"
+          "SET DATA TYPE smallint USING CASE is_partner WHEN false THEN 1 ELSE 2 END"
         ]
       runQuery_ $ sqlAlterTable "signatory_links"
         [ "RENAME COLUMN is_partner TO signatory_role" ]
