@@ -28,7 +28,7 @@ testDocApiV2SigReject :: TestEnv ()
 testDocApiV2SigReject = do
   user <- addNewRandomUser
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
-  mockDoc <- testDocApiV2Start' ctx
+  mockDoc <- testDocApiV2StartNew ctx
   let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
 
@@ -40,7 +40,7 @@ testDocApiV2SigCheck :: TestEnv ()
 testDocApiV2SigCheck = do
   user <- addNewRandomUser
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
-  mockDoc <- testDocApiV2Start' ctx
+  mockDoc <- testDocApiV2StartNew ctx
   let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
 
@@ -57,7 +57,7 @@ testDocApiV2SigSign :: TestEnv ()
 testDocApiV2SigSign = do
   user <- addNewRandomUser
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
-  mockDoc <- testDocApiV2Start' ctx
+  mockDoc <- testDocApiV2StartNew ctx
   let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
 

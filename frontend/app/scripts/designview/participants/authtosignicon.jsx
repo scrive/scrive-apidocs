@@ -26,10 +26,11 @@ module.exports = React.createClass({
     Track.track("Choose auth", {
       Where: "icon"
     });
-    if (sig.views()) {
-      new FlashMessage({type: "error", content: localization.designview.viewerCantHaveAuthorisation});
-    } else if (sig.approves()) {
-      new FlashMessage({type: "error", content: localization.designview.approverCantHaveAuthorisationToSign});
+    if (!sig.signs()) {
+      new FlashMessage(
+        {type: "error",
+         content: localization.designview.notAllowedToChangeAuthenticationMethod
+        });
     } else {
       var superthis = this;
       var ams = ["standard", "se_bankid", "no_bankid", "dk_nemid", "sms_pin"]

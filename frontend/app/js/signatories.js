@@ -371,7 +371,6 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
       });
 
       this.setAuthenticationToSign("standard");
-      this.setAuthenticationToView("standard");
       this.setAllowsHighlighting(false);
     },
     makeApprover: function() {
@@ -382,6 +381,8 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
       _.each(this.fields(),function(s) {
          s.removeAllPlacements();
       });
+
+      this.setAuthenticationToSign("standard");
     },
     hasAuthenticatedToView: function() {
         return this.get("has_authenticated_to_view");
@@ -524,56 +525,44 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     hasPlacedRadioGroups: function() {
         return (this.fieldsByType("radiogroup").length > 0);
     },
-    canHaveAuthenticationToView: function() {
-        return this.signs() || this.approves();
-    },
     standardAuthenticationToView: function() {
-          return this.get("authentication_method_to_view") == "standard" && this.canHaveAuthenticationToView();
+          return this.get("authentication_method_to_view") == "standard";
     },
     seBankIDAuthenticationToView: function() {
-          return this.get("authentication_method_to_view") == "se_bankid" && this.canHaveAuthenticationToView();
+          return this.get("authentication_method_to_view") == "se_bankid";
     },
     noBankIDAuthenticationToView: function() {
-          return this.get("authentication_method_to_view") == "no_bankid" && this.canHaveAuthenticationToView();
+          return this.get("authentication_method_to_view") == "no_bankid";
     },
     dkNemIDAuthenticationToView: function() {
-          return this.get("authentication_method_to_view") == "dk_nemid" && this.canHaveAuthenticationToView();
+          return this.get("authentication_method_to_view") == "dk_nemid";
     },
     fiTupasAuthenticationToView: function() {
-          return this.get("authentication_method_to_view") == "fi_tupas" && this.canHaveAuthenticationToView();
+          return this.get("authentication_method_to_view") == "fi_tupas";
     },
     smsPinAuthenticationToView: function() {
-          return this.get("authentication_method_to_view") == "sms_pin" && this.canHaveAuthenticationToView();
-    },
-    canHaveAuthenticationToViewArchived: function() {
-        return this.signs() || this.approves();
+          return this.get("authentication_method_to_view") == "sms_pin";
     },
     standardAuthenticationToViewArchived: function() {
-        return this.get("authentication_method_to_view_archived") == "standard"
-            && this.canHaveAuthenticationToViewArchived();
+        return this.get("authentication_method_to_view_archived") == "standard";
     },
     seBankIDAuthenticationToViewArchived: function() {
-        return this.get("authentication_method_to_view_archived") == "se_bankid"
-            && this.canHaveAuthenticationToViewArchived();
+        return this.get("authentication_method_to_view_archived") == "se_bankid";
     },
     noBankIDAuthenticationToViewArchived: function() {
-        return this.get("authentication_method_to_view_archived") == "no_bankid"
-            && this.canHaveAuthenticationToViewArchived();
+        return this.get("authentication_method_to_view_archived") == "no_bankid";
     },
     dkNemIDAuthenticationToViewArchived: function() {
-        return this.get("authentication_method_to_view_archived") == "dk_nemid"
-            && this.canHaveAuthenticationToViewArchived();
+        return this.get("authentication_method_to_view_archived") == "dk_nemid";
     },
     fiTupasAuthenticationToViewArchived: function() {
-        return this.get("authentication_method_to_view_archived") == "fi_tupas"
-            && this.canHaveAuthenticationToViewArchived();
+        return this.get("authentication_method_to_view_archived") == "fi_tupas";
     },
     smsPinAuthenticationToViewArchived: function() {
-        return this.get("authentication_method_to_view_archived") == "sms_pin"
-            && this.canHaveAuthenticationToViewArchived();
+        return this.get("authentication_method_to_view_archived") == "sms_pin";
     },
     canHaveAuthenticationToSign: function() {
-        // Not supported for Approvers
+        // Not supported for Viewers or Approvers
         return this.signs();
     },
     standardAuthenticationToSign: function() {

@@ -157,7 +157,6 @@ var EmailModal = require("../../common/email_modal");
       var currentFeatures = Subscription.currentSubscription().currentUserFeatures();
       return (signatory.document().currentViewerIsAuthor() || signatory.document().currentViewerIsAuthorsCompanyAdmin())
         && signatory.document().pending()
-        && signatory.canHaveAuthenticationToView()
         && !signatory.hasSigned()
         && !signatory.hasAuthenticatedToView()
         && (!signatory.standardAuthenticationToView() || currentFeatures.canUseNonstandardAuthenticationToView());
@@ -665,18 +664,16 @@ var EmailModal = require("../../common/email_modal");
                   {localization.docview.signatory.invitationMethod}: {this.getDeliveryMethod()}
                 </span>
               </div>
-              {/* if */ (signatory.signs() || signatory.approves()) &&
-                <div className="fieldrow">
-                  {/* if */ this.hasChangeAuthenticationToView() &&
-                    <a className="edit clickable" onClick={this.handleChangeAuthenticationToViewMethod}>
-                      {localization.docview.signatory.editAuthenticationToViewMethod}
-                    </a>
-                  }
-                  <span className="authentication-to-view field" title={this.getAuthenticationToViewMethodText()}>
-                    {localization.docview.signatory.authenticationToView}: {this.getAuthenticationToViewMethodText()}
-                  </span>
-                </div>
-              }
+              <div className="fieldrow">
+                {/* if */ this.hasChangeAuthenticationToView() &&
+                  <a className="edit clickable" onClick={this.handleChangeAuthenticationToViewMethod}>
+                    {localization.docview.signatory.editAuthenticationToViewMethod}
+                  </a>
+                }
+                <span className="authentication-to-view field" title={this.getAuthenticationToViewMethodText()}>
+                  {localization.docview.signatory.authenticationToView}: {this.getAuthenticationToViewMethodText()}
+                </span>
+              </div>
               <div className="fieldrow">
                 <span className="role field" title={this.getRole()}>
                   {localization.docview.signatory.role}: {this.getRole()}
@@ -704,20 +701,18 @@ var EmailModal = require("../../common/email_modal");
                   {localization.docview.signatory.secondaryConfirmation}: {this.getConfirmationAttachments()}
                 </span>
               </div>
-              {/* if */ signatory.signs() &&
-                <div className="fieldrow">
-                  {/* if */ this.hasChangeAuthenticationToView() &&
-                    <a className="edit clickable" onClick={this.handleChangeAuthenticationToViewArchivedMethod}>
-                      {localization.docview.signatory.editAuthenticationToViewArchivedMethod}
-                    </a>
-                  }
-                  <span className="authentication-to-view field"
-                        title={this.getAuthenticationToViewArchivedMethodText()}>
-                    {localization.docview.signatory.authenticationToViewArchived}:{" "}
-                      {this.getAuthenticationToViewArchivedMethodText()}
-                  </span>
-                </div>
-              }
+              <div className="fieldrow">
+                {/* if */ this.hasChangeAuthenticationToView() &&
+                  <a className="edit clickable" onClick={this.handleChangeAuthenticationToViewArchivedMethod}>
+                    {localization.docview.signatory.editAuthenticationToViewArchivedMethod}
+                  </a>
+                }
+                <span className="authentication-to-view field"
+                      title={this.getAuthenticationToViewArchivedMethodText()}>
+                  {localization.docview.signatory.authenticationToViewArchived}:{" "}
+                    {this.getAuthenticationToViewArchivedMethodText()}
+                </span>
+              </div>
             </div>
           }
           <div className={"statusbox " + (this.hasAnyOptions() ? "" : "last")} >

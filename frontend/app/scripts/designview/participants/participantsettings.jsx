@@ -119,30 +119,26 @@ module.exports = React.createClass({
   authenticationToViewOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var authTypes = !sig.signs()
-          ? ["standard"]
-          : ["standard", "se_bankid", "no_bankid", "dk_nemid", "fi_tupas", "sms_pin"];
+    var authTypes = ["standard", "se_bankid", "no_bankid", "dk_nemid", "fi_tupas", "sms_pin"];
 
-    if (sig.signs()) {
-      var ff = Subscription.currentSubscription().currentUserFeatures();
-      if (!ff.canUseStandardAuthenticationToView() && !sig.standardAuthenticationToView()) {
-        authTypes = _.without(authTypes, "standard");
-      }
-      if (!ff.canUseSEAuthenticationToView() && !sig.seBankIDAuthenticationToView()) {
-        authTypes = _.without(authTypes, "se_bankid");
-      }
-      if (!ff.canUseNOAuthenticationToView() && !sig.noBankIDAuthenticationToView()) {
-        authTypes = _.without(authTypes, "no_bankid");
-      }
-      if (!ff.canUseDKAuthenticationToView() && !sig.dkNemIDAuthenticationToView()) {
-        authTypes = _.without(authTypes, "dk_nemid");
-      }
-      if (!ff.canUseSMSPinAuthenticationToView() && !sig.smsPinAuthenticationToView()) {
-        authTypes = _.without(authTypes, "sms_pin");
-      }
-      if (!ff.canUseFIAuthenticationToView() && !sig.fiTupasAuthenticationToView()) {
-        authTypes = _.without(authTypes, "fi_tupas");
-      }
+    var ff = Subscription.currentSubscription().currentUserFeatures();
+    if (!ff.canUseStandardAuthenticationToView() && !sig.standardAuthenticationToView()) {
+      authTypes = _.without(authTypes, "standard");
+    }
+    if (!ff.canUseSEAuthenticationToView() && !sig.seBankIDAuthenticationToView()) {
+      authTypes = _.without(authTypes, "se_bankid");
+    }
+    if (!ff.canUseNOAuthenticationToView() && !sig.noBankIDAuthenticationToView()) {
+      authTypes = _.without(authTypes, "no_bankid");
+    }
+    if (!ff.canUseDKAuthenticationToView() && !sig.dkNemIDAuthenticationToView()) {
+      authTypes = _.without(authTypes, "dk_nemid");
+    }
+    if (!ff.canUseSMSPinAuthenticationToView() && !sig.smsPinAuthenticationToView()) {
+      authTypes = _.without(authTypes, "sms_pin");
+    }
+    if (!ff.canUseFIAuthenticationToView() && !sig.fiTupasAuthenticationToView()) {
+      authTypes = _.without(authTypes, "fi_tupas");
     }
 
     authTypes = _.filter(authTypes, function (authToView) {
@@ -158,30 +154,26 @@ module.exports = React.createClass({
   authenticationToViewArchivedOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var authTypes = !sig.signs()
-        ? ["standard"]
-        : ["standard", "se_bankid", "no_bankid", "dk_nemid", "fi_tupas", "sms_pin"];
+    var authTypes = ["standard", "se_bankid", "no_bankid", "dk_nemid", "fi_tupas", "sms_pin"];
 
-    if (sig.signs()) {
-      var ff = Subscription.currentSubscription().currentUserFeatures();
-      if (!ff.canUseStandardAuthenticationToView() && !sig.standardAuthenticationToViewArchived()) {
-        authTypes = _.without(authTypes, "standard");
-      }
-      if (!ff.canUseSEAuthenticationToView() && !sig.seBankIDAuthenticationToViewArchived()) {
-        authTypes = _.without(authTypes, "se_bankid");
-      }
-      if (!ff.canUseNOAuthenticationToView() && !sig.noBankIDAuthenticationToViewArchived()) {
-        authTypes = _.without(authTypes, "no_bankid");
-      }
-      if (!ff.canUseDKAuthenticationToView() && !sig.dkNemIDAuthenticationToViewArchived()) {
-        authTypes = _.without(authTypes, "dk_nemid");
-      }
-      if (!ff.canUseSMSPinAuthenticationToView() && !sig.smsPinAuthenticationToViewArchived()) {
-        authTypes = _.without(authTypes, "sms_pin");
-      }
-      if (!ff.canUseFIAuthenticationToView() && !sig.fiTupasAuthenticationToViewArchived()) {
-        authTypes = _.without(authTypes, "fi_tupas");
-      }
+    var ff = Subscription.currentSubscription().currentUserFeatures();
+    if (!ff.canUseStandardAuthenticationToView() && !sig.standardAuthenticationToViewArchived()) {
+      authTypes = _.without(authTypes, "standard");
+    }
+    if (!ff.canUseSEAuthenticationToView() && !sig.seBankIDAuthenticationToViewArchived()) {
+      authTypes = _.without(authTypes, "se_bankid");
+    }
+    if (!ff.canUseNOAuthenticationToView() && !sig.noBankIDAuthenticationToViewArchived()) {
+      authTypes = _.without(authTypes, "no_bankid");
+    }
+    if (!ff.canUseDKAuthenticationToView() && !sig.dkNemIDAuthenticationToViewArchived()) {
+      authTypes = _.without(authTypes, "dk_nemid");
+    }
+    if (!ff.canUseSMSPinAuthenticationToView() && !sig.smsPinAuthenticationToViewArchived()) {
+      authTypes = _.without(authTypes, "sms_pin");
+    }
+    if (!ff.canUseFIAuthenticationToView() && !sig.fiTupasAuthenticationToViewArchived()) {
+      authTypes = _.without(authTypes, "fi_tupas");
     }
 
     authTypes = _.filter(authTypes, function (authToViewArchived) {
@@ -392,9 +384,9 @@ module.exports = React.createClass({
           <span className="design-view-action-participant-details-participation-box">
             <label className="label">{localization.designview.addParties.authenticationToView}</label>
             <Select
-              ref="delivery-select"
+              ref="authentication-select"
               isOptionSelected={function (o) {
-                return (sig.signs() ? sig.authenticationToView() : "standard") == o.value;
+                return sig.authenticationToView() == o.value;
               }}
               width={297}
               options={self.authenticationToViewOptions()}
@@ -405,12 +397,13 @@ module.exports = React.createClass({
                 sig.setAuthenticationToView(v);
               }}
               onClickWhenInactive={function () {
-                if (sig.signs()) {
-                  if (Subscription.currentSubscription().hasFreePlan()) {
-                    self.refs.blockingModal.openContactUsModal();
-                  }
+                if (Subscription.currentSubscription().hasFreePlan()) {
+                  self.refs.blockingModal.openContactUsModal();
                 } else {
-                  new FlashMessage({type: "error", content: localization.designview.viewerCantHaveAuthorisation});
+                  new FlashMessage(
+                    {type: "error",
+                     content: localization.designview.notAllowedToChangeAuthenticationMethod
+                    });
                 }
               }}
             />
@@ -472,12 +465,12 @@ module.exports = React.createClass({
                 sig.setAuthenticationToSign(v);
               }}
               onClickWhenInactive={function () {
-                if (sig.signs()) {
-                  if (Subscription.currentSubscription().hasFreePlan()) {
-                    self.refs.blockingModal.openContactUsModal();
-                  }
+                if (Subscription.currentSubscription().hasFreePlan()) {
+                  self.refs.blockingModal.openContactUsModal();
                 } else {
-                  new FlashMessage({type: "error", content: localization.designview.viewerCantHaveAuthorisation});
+                  new FlashMessage(
+                    {type: "error",
+                     content: localization.designview.notAllowedToChangeAuthenticationMethod});
                 }
               }}
             />
@@ -538,7 +531,7 @@ module.exports = React.createClass({
             <Select
               ref="authentication-select"
               isOptionSelected={function (o) {
-                return (sig.signs() ? sig.authenticationToViewArchived() : "standard") == o.value;
+                return sig.authenticationToViewArchived() == o.value;
               }}
               width={297}
               options={self.authenticationToViewArchivedOptions()}
@@ -549,10 +542,13 @@ module.exports = React.createClass({
                 sig.setAuthenticationToViewArchived(v);
               }}
               onClickWhenInactive={function () {
-                if (sig.signs()) {
+                if (Subscription.currentSubscription().hasFreePlan()) {
                   self.refs.blockingModal.openContactUsModal();
                 } else {
-                  new FlashMessage({type: "error", content: localization.designview.viewerCantHaveAuthorisation});
+                  new FlashMessage(
+                    {type: "error",
+                     content: localization.designview.notAllowedToChangeAuthenticationMethod
+                    });
                 }
               }}
             />

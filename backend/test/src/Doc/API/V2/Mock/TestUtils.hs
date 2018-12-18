@@ -9,6 +9,8 @@
 module Doc.API.V2.Mock.TestUtils (
 -- * Re-export
   MockDoc -- DON'T EXPOSE INTERNALS
+, MockSigLink
+, defaultMockSigLink
 , testRequestHelper
 , jsonTestRequestHelper
 -- * MockDoc Helper Functions
@@ -43,6 +45,7 @@ module Doc.API.V2.Mock.TestUtils (
 , getMockDocSigLinkHasSigned
 , getMockDocSigLinkHasRejected
 , getMockDocSigLinkAuthToViewMethod
+, getMockDocSigLinkAuthToViewArchivedMethod
 , getMockDocSigLinkAuthToSignMethod
 , setMockDocSigLinkAuthToSignMethod
 , getMockDocSigLinkPersonalNumber
@@ -50,9 +53,14 @@ module Doc.API.V2.Mock.TestUtils (
 , getMockDocSigLinkMobileNumber
 , getMockDocSigLinkAttachmentsLength
 , getMockDocSigLinkAttachmentHasFile
+, setMockDocSigLinkConfirmationDeliveryMethod
+, setMockDocSigLinkDeliveryMethod
 , setMockDocSigLinkAttachments
+, setMockDocSigLinkSignatoryRole
 , setMockDocSigLinkStandardField
+, getMockDocUserSigLinkId
 , addStandardSigLinksToMockDoc
+, addSigLinksToMockDoc
 ) where
 
 import Data.Aeson
@@ -65,7 +73,7 @@ import Doc.API.V2.Mock.MockDocInternal
 import Doc.DocumentID (DocumentID)
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import Doc.Types.DocumentStatus (DocumentStatus(..))
-import Doc.Types.SignatoryLink (AuthenticationToSignMethod(..), AuthenticationToViewMethod(..))
+import Doc.Types.SignatoryLink (AuthenticationToSignMethod(..), AuthenticationToViewMethod(..), SignatoryRole(..))
 import File.FileID
 import TestKontra
 
@@ -225,6 +233,15 @@ getMockDocSigLinkId i md =
     "Could not read SignatoryLinkID for signatory " ++ show i
     ++ "using `maybeRead` from MockDoc:\n" ++ show md
 
+getMockDocUserSigLinkId :: Int -> MockDoc -> SignatoryLinkID
+getMockDocUserSigLinkId userId md =
+  case (maybeRead $ mockSigLinkId $ getMockSigLinkFromUserId userId md) of
+    Just slid -> slid
+    Nothing   -> unexpectedError $
+      "Could not read SignatoryLinkID for user " ++ show userId
+      ++ "using `maybeRead` from MockDoc:\n" ++ show md
+
+
 getMockDocSigLinkHasSigned :: Int -> MockDoc -> Bool
 getMockDocSigLinkHasSigned i md =
   isJust . mockSigLinkSignTime . getMockSigLinkNumber i $ md
@@ -233,18 +250,49 @@ getMockDocSigLinkHasRejected :: Int -> MockDoc -> Bool
 getMockDocSigLinkHasRejected i md =
   isJust . mockSigLinkRejectedTime . getMockSigLinkNumber i $ md
 
-getMockDocSigLinkAuthToViewMethod :: Int -> MockDoc -> AuthenticationToViewMethod
+getMockDocSigLinkAuthToViewMethod ::
+  Int -> MockDoc -> AuthenticationToViewMethod
 getMockDocSigLinkAuthToViewMethod i md =
-  case mockSigLinkAuthMethodToView . getMockSigLinkNumber i $ md of
-    "standard"  -> StandardAuthenticationToView
-    "se_bankid" -> SEBankIDAuthenticationToView
-    "no_bankid" -> NOBankIDAuthenticationToView
-    "dk_nemid"  -> DKNemIDAuthenticationToView
-    "fi_tupas"  -> FITupasAuthenticationToView
-    "sms_pin"   -> SMSPinAuthenticationToView
-    _ -> unexpectedError $
+  case
+    authenticationToViewMethodFromString $
+    mockSigLinkAuthMethodToView .
+    getMockSigLinkNumber i $ md
+  of
+    Just authMethod -> authMethod
+    Nothing ->
+      unexpectedError $
          "Could not parse AuthenticationToViewMethod from MockDoc:\n"
          ++ show md
+
+getMockDocSigLinkAuthToViewArchivedMethod :: Int -> MockDoc -> AuthenticationToViewMethod
+getMockDocSigLinkAuthToViewArchivedMethod i md =
+  case
+    authenticationToViewMethodFromString $
+    mockSigLinkAuthMethodToViewArchived .
+    getMockSigLinkNumber i $ md
+  of
+    Just authMethod -> authMethod
+    Nothing ->
+      unexpectedError $
+         "Could not parse AuthenticationToViewArchivedMethod from MockDoc:\n"
+         ++ show md
+
+authenticationToViewMethodFromString ::
+  String -> Maybe AuthenticationToViewMethod
+authenticationToViewMethodFromString "standard" =
+  Just StandardAuthenticationToView
+authenticationToViewMethodFromString "se_bankid" =
+  Just SEBankIDAuthenticationToView
+authenticationToViewMethodFromString "no_bankid" =
+  Just NOBankIDAuthenticationToView
+authenticationToViewMethodFromString "dk_nemid" =
+  Just DKNemIDAuthenticationToView
+authenticationToViewMethodFromString "fi_tupas" =
+  Just FITupasAuthenticationToView
+authenticationToViewMethodFromString "sms_pin" =
+  Just SMSPinAuthenticationToView
+authenticationToViewMethodFromString _ =
+  Nothing
 
 getMockDocSigLinkAuthToSignMethod :: Int -> MockDoc -> AuthenticationToSignMethod
 getMockDocSigLinkAuthToSignMethod i md =
@@ -305,6 +353,19 @@ setMockDocSigLinkAttachments i namesdesc = setForSigNumberFromMockDoc i
                }
   )
 
+setMockDocSigLinkDeliveryMethod :: String -> MockSigLink -> MockSigLink
+setMockDocSigLinkDeliveryMethod deliveryMethod sigLink =
+  sigLink { mockSigLinkDeliveryMethod = deliveryMethod }
+
+setMockDocSigLinkConfirmationDeliveryMethod :: String -> MockSigLink -> MockSigLink
+setMockDocSigLinkConfirmationDeliveryMethod deliveryMethod sigLink =
+  sigLink { mockSigLinkConfirmationDelivery = deliveryMethod }
+
+setMockDocSigLinkSignatoryRole ::
+  SignatoryRole -> MockSigLink -> MockSigLink
+setMockDocSigLinkSignatoryRole role sigLink =
+  sigLink { mockSigLinkSignatoryRole = role }
+
 setMockDocSigLinkStandardField :: Int -> String -> String -> MockDoc -> MockDoc
 setMockDocSigLinkStandardField i fieldType value =
   setForSigNumberFromMockDoc i
@@ -318,9 +379,11 @@ setMockDocSigLinkStandardField i fieldType value =
 
 addStandardSigLinksToMockDoc :: Int -> MockDoc -> MockDoc
 addStandardSigLinksToMockDoc i md =
+  addSigLinksToMockDoc (replicate i defaultMockSigLink) md
+
+addSigLinksToMockDoc :: [MockSigLink] -> MockDoc -> MockDoc
+addSigLinksToMockDoc newParties md =
   md { mockDocParties = mockDocParties md ++ newParties }
-  where
-    newParties = replicate i defaultMockSigLink
 
 -- * Internal use only!
 -----------------------
@@ -340,6 +403,15 @@ getMockSigLinkNumber num mockdoc
       "getMockSigLinkNumber could not get index " ++ show num
       ++ " from MockDoc:\n" ++ show mockdoc
   | otherwise = (mockDocParties mockdoc) !! (num-1)
+
+-- | Internal use only
+getMockSigLinkFromUserId :: Int -> MockDoc -> MockSigLink
+getMockSigLinkFromUserId userId mockDoc =
+  case find (\link -> elem (show userId) (mockSigLinkUserId link)) (mockDocParties mockDoc) of
+    Just link -> link
+    Nothing -> unexpectedError $
+      "getMockSigLinkFromUserId could not find a link for user " ++ show userId
+      ++ " from MockDoc:\n" ++ show mockDoc
 
 -- | Internal use only
 getFieldValueOfTypeForSigNumberFromMockDoc :: Int -> String -> MockDoc -> String

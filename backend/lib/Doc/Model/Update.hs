@@ -629,7 +629,6 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) =>
                 "authentication_to_view_archived_method"
         sqlSet authField newAuthToView
         sqlWhereEq "id" slid
-        sqlWhereSignatoryRoleIsSigningPartyOrApprover
         sqlWhereSigningPartyHasNotSignedOrApproved
         sqlWhereSigningPartyHasNotAuthenticatedToView
         sqlWhereExists $ sqlSelect "documents" $ do

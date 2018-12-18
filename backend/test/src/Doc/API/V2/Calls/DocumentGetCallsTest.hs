@@ -115,7 +115,7 @@ testDocApiV2GetShortCode :: TestEnv ()
 testDocApiV2GetShortCode = do
   user <- addNewRandomUser
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
-  newMockDoc <- testDocApiV2Start' ctx
+  newMockDoc <- testDocApiV2StartNew ctx
   let shortDid = mockDocToShortID newMockDoc
 
   -- Test that everything works normally...
@@ -165,7 +165,7 @@ testDocApiV2GetQRCode :: TestEnv ()
 testDocApiV2GetQRCode = do
   user <- addNewRandomUser
   ctx  <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
-  newMockDoc <- testDocApiV2Start' ctx
+  newMockDoc <- testDocApiV2StartNew ctx
   let did  = getMockDocId newMockDoc
       slid = getMockDocSigLinkId 1 newMockDoc
 
@@ -283,7 +283,7 @@ testDocApiV2EvidenceAttachments :: TestEnv ()
 testDocApiV2EvidenceAttachments = do
   user <- addNewRandomUser
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
-  mockDoc <- testDocApiV2Start' ctx
+  mockDoc <- testDocApiV2StartNew ctx
   let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
 

@@ -68,7 +68,7 @@ testExtendingIsNotRescheduledForPurgedDocs = do
   user <- addNewRandomUser
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
   -- Create a document
-  mockDoc <- testDocApiV2Start' ctx
+  mockDoc <- testDocApiV2StartNew ctx
   let did = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
 

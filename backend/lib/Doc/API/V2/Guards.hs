@@ -169,24 +169,23 @@ guardCanSetAuthenticationToViewForSignatoryWithValues
   guardAuthenticationMethodsCanMix authToView authToSign authToViewArchived
   -- Check if either a valid SSN for authToView is set or is provided
   case mSSN of
-    Nothing     -> unless (isValidSSNForAuthenticationToView authToView $
+    Nothing     -> unless (isValidSSNForAuthenticationToView authType $
                            getPersonalNumber sl) $
       (apiStateError $ "Signatory does not have a valid personal number "
         <> "for the authentication method and you did not provide one")
 
-    Just ssn    -> unless (isValidSSNForAuthenticationToView authToView ssn) $
+    Just ssn    -> unless (isValidSSNForAuthenticationToView authType ssn) $
       (apiStateError $ "The personal number you provided is not valid "
         <> "for the authentication method")
-
   -- Check if either a valid mobile for authToView is set or is provided
   case mMobile of
-    Nothing     -> unless (isValidMobileForAuthenticationToView authToView $
+    Nothing     -> unless (isValidMobileForAuthenticationToView authType $
                        getMobile sl) $
       (apiStateError $ "Party does not have a valid mobile number set "
         <> "for the authentication method and you did not provide one")
 
     Just mobile -> unless
-      (isValidMobileForAuthenticationToView authToView mobile) $
+      (isValidMobileForAuthenticationToView authType mobile) $
       (apiStateError $ "The mobile number you provided is not valid "
         <>"for the authentication method")
   where

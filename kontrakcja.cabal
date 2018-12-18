@@ -1246,6 +1246,7 @@ Test-suite kontrakcja-test
                  Doc.API.V2.Calls.CallsTestUtils
                  Doc.API.V2.Calls.DocumentGetCallsTest
                  Doc.API.V2.Calls.DocumentPostCallsTest
+                 Doc.API.V2.Calls.SetAuthenticationCallsTest
                  Doc.API.V2.Calls.SignatoryCallsTest
                  Doc.API.V2.CallsTest
                  Doc.API.V2.JSONTest

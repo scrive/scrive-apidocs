@@ -89,7 +89,6 @@
 "_VisitedViewForAuthenticationEvidenceArchive":"Opened the view to verify their identity before viewing the document.",
 "_VisitedViewForSigningEvidenceArchive":"The document was opened online.",
 "_designViewAddPartiesRoleApprover":"Approver",
-"_designViewApproverCantHaveAuthorisationToSign":"Authentication method cannot be set for an approver",
 "_invitationCustomMessageTextToApprove":"The invitation to approve the document contained the following message: <BR/> <i>$text$</i>",
 "_invitationCustomMessageTextToReview":"The invitation to review the document contained the following message: <BR/> <i>$text$</i>",
 "_invitationCustomMessageTextToSign":"The invitation to sign the document contained the following message: <BR/> <i>$text$</i>"

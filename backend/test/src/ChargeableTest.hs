@@ -153,7 +153,7 @@ test_closeDocAndSigCharging = do
           "AND quantity = 1 AND user_group_id =" <?> usergroupid user
 
   -- Test that closing document in V1 adds a chargeable item
-  mockDocV1 <- testDocApiV2Start' ctx
+  mockDocV1 <- testDocApiV2StartNew ctx
   let didV1 = getMockDocId mockDocV1
   let slidV1 = getMockDocSigLinkId 1 mockDocV1
 
@@ -169,7 +169,7 @@ test_closeDocAndSigCharging = do
     assertEqual "Company was charged for closing one document" (1 :: Int64)
 
   -- Test that closing document in V2 adds a chargeable item
-  mockDocV2 <- testDocApiV2Start' ctx
+  mockDocV2 <- testDocApiV2StartNew ctx
   let didV2 = getMockDocId mockDocV2
   let slidV2 = getMockDocSigLinkId 1 mockDocV2
 

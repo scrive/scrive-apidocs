@@ -155,29 +155,30 @@ instance Unjson MockViewer where
     <*> fieldOpt  "signatory_id"  mockViewerSigId  "MockViewer SigId"
 
 data MockSigLink = MockSigLink {
-    mockSigLinkId                     :: !String
-  , mockSigLinkUserId                 :: !(Maybe String)
-  , mockSigLinkIsAuthor               :: !Bool
-  , mockSigLinkSignatoryRole          :: !SignatoryRole
-  , mockSigLinkFields                 :: ![MockSigField]
-  , mockSigLinkSignOrder              :: !Int
-  , mockSigLinkSignTime               :: !(Maybe String)
-  , mockSigLinkSeenTime               :: !(Maybe String)
-  , mockSigLinkReadInvitationTime     :: !(Maybe String)
-  , mockSigLinkRejectedTime           :: !(Maybe String)
-  , mockSigLinkSignRedirectURL        :: !(Maybe String)
-  , mockSigLinkRejectRedirectURL      :: !(Maybe String)
-  , mockSigLinkEmailDeliveryStatus    :: !String
-  , mockSigLinkMobileDeliveryStatus   :: !String
-  , mockSigLinkCSV                    :: !(Maybe String)
-  , mockSigLinkDeliveryMethod         :: !String
-  , mockSigLinkAuthMethodToView       :: !String
-  , mockSigLinkAuthMethodToSign       :: !String
-  , mockSigLinkConfirmationDelivery   :: !String
-  , mockSigLinkAllowsHighlighting     :: !Bool
-  , mockSigLinkHighlightedPages       :: ![MockSigHighlightedPage]
-  , mockSigLinkAttachments            :: ![MockSigAttachment]
-  , mockSigLinkAPIDeliveryURL         :: !(Maybe String)
+    mockSigLinkId                       :: !String
+  , mockSigLinkUserId                   :: !(Maybe String)
+  , mockSigLinkIsAuthor                 :: !Bool
+  , mockSigLinkSignatoryRole            :: !SignatoryRole
+  , mockSigLinkFields                   :: ![MockSigField]
+  , mockSigLinkSignOrder                :: !Int
+  , mockSigLinkSignTime                 :: !(Maybe String)
+  , mockSigLinkSeenTime                 :: !(Maybe String)
+  , mockSigLinkReadInvitationTime       :: !(Maybe String)
+  , mockSigLinkRejectedTime             :: !(Maybe String)
+  , mockSigLinkSignRedirectURL          :: !(Maybe String)
+  , mockSigLinkRejectRedirectURL        :: !(Maybe String)
+  , mockSigLinkEmailDeliveryStatus      :: !String
+  , mockSigLinkMobileDeliveryStatus     :: !String
+  , mockSigLinkCSV                      :: !(Maybe String)
+  , mockSigLinkDeliveryMethod           :: !String
+  , mockSigLinkAuthMethodToView         :: !String
+  , mockSigLinkAuthMethodToViewArchived :: !String
+  , mockSigLinkAuthMethodToSign         :: !String
+  , mockSigLinkConfirmationDelivery     :: !String
+  , mockSigLinkAllowsHighlighting       :: !Bool
+  , mockSigLinkHighlightedPages         :: ![MockSigHighlightedPage]
+  , mockSigLinkAttachments              :: ![MockSigAttachment]
+  , mockSigLinkAPIDeliveryURL           :: !(Maybe String)
 } deriving (Show, Eq)
 
 instance Ord MockSigLink where
@@ -185,57 +186,59 @@ instance Ord MockSigLink where
 
 instance Unjson MockSigLink where
   unjsonDef = objectOf $ pure MockSigLink
-    <*> field    "id"                            mockSigLinkId                   ""
-    <*> fieldOpt "user_id"                       mockSigLinkUserId               ""
-    <*> field    "is_author"                     mockSigLinkIsAuthor             ""
-    <*> fieldBy  "signatory_role"                mockSigLinkSignatoryRole        ""
+    <*> field    "id"                                     mockSigLinkId                       ""
+    <*> fieldOpt "user_id"                                mockSigLinkUserId                   ""
+    <*> field    "is_author"                              mockSigLinkIsAuthor                 ""
+    <*> fieldBy  "signatory_role"                         mockSigLinkSignatoryRole            ""
         unjsonSignatoryRole
-    <*> field    "fields"                        mockSigLinkFields               ""
-    <*> field    "sign_order"                    mockSigLinkSignOrder            ""
-    <*> fieldOpt "sign_time"                     mockSigLinkSignTime             ""
-    <*> fieldOpt "seen_time"                     mockSigLinkSeenTime             ""
-    <*> fieldOpt "read_invitation_time"          mockSigLinkReadInvitationTime   ""
-    <*> fieldOpt "rejected_time"                 mockSigLinkRejectedTime         ""
-    <*> fieldOpt "sign_success_redirect_url"     mockSigLinkSignRedirectURL      ""
-    <*> fieldOpt "reject_redirect_url"           mockSigLinkRejectRedirectURL    ""
-    <*> field    "email_delivery_status"         mockSigLinkEmailDeliveryStatus  ""
-    <*> field    "mobile_delivery_status"        mockSigLinkMobileDeliveryStatus ""
-    <*> fieldOpt "csv"                           mockSigLinkCSV                  ""
-    <*> field    "delivery_method"               mockSigLinkDeliveryMethod       ""
-    <*> field    "authentication_method_to_view" mockSigLinkAuthMethodToView     ""
-    <*> field    "authentication_method_to_sign" mockSigLinkAuthMethodToSign     ""
-    <*> field    "confirmation_delivery_method"  mockSigLinkConfirmationDelivery ""
-    <*> field    "allows_highlighting"           mockSigLinkAllowsHighlighting   ""
-    <*> field    "highlighted_pages"             mockSigLinkHighlightedPages     ""
-    <*> field    "attachments"                   mockSigLinkAttachments          ""
-    <*> fieldOpt "api_delivery_url"              mockSigLinkAPIDeliveryURL       ""
+    <*> field    "fields"                                 mockSigLinkFields                   ""
+    <*> field    "sign_order"                             mockSigLinkSignOrder                ""
+    <*> fieldOpt "sign_time"                              mockSigLinkSignTime                 ""
+    <*> fieldOpt "seen_time"                              mockSigLinkSeenTime                 ""
+    <*> fieldOpt "read_invitation_time"                   mockSigLinkReadInvitationTime       ""
+    <*> fieldOpt "rejected_time"                          mockSigLinkRejectedTime             ""
+    <*> fieldOpt "sign_success_redirect_url"              mockSigLinkSignRedirectURL          ""
+    <*> fieldOpt "reject_redirect_url"                    mockSigLinkRejectRedirectURL        ""
+    <*> field    "email_delivery_status"                  mockSigLinkEmailDeliveryStatus      ""
+    <*> field    "mobile_delivery_status"                 mockSigLinkMobileDeliveryStatus     ""
+    <*> fieldOpt "csv"                                    mockSigLinkCSV                      ""
+    <*> field    "delivery_method"                        mockSigLinkDeliveryMethod           ""
+    <*> field    "authentication_method_to_view"          mockSigLinkAuthMethodToView         ""
+    <*> field    "authentication_method_to_view_archived" mockSigLinkAuthMethodToViewArchived ""
+    <*> field    "authentication_method_to_sign"          mockSigLinkAuthMethodToSign         ""
+    <*> field    "confirmation_delivery_method"           mockSigLinkConfirmationDelivery     ""
+    <*> field    "allows_highlighting"                    mockSigLinkAllowsHighlighting       ""
+    <*> field    "highlighted_pages"                      mockSigLinkHighlightedPages         ""
+    <*> field    "attachments"                            mockSigLinkAttachments              ""
+    <*> fieldOpt "api_delivery_url"                       mockSigLinkAPIDeliveryURL           ""
 
 defaultMockSigLink :: MockSigLink
 defaultMockSigLink =
   MockSigLink
-    { mockSigLinkId                     = "does not get used"
-    , mockSigLinkUserId                 = Nothing
-    , mockSigLinkIsAuthor               = False
-    , mockSigLinkSignatoryRole          = SignatoryRoleSigningParty
-    , mockSigLinkFields                 = []
-    , mockSigLinkSignOrder              = 1
-    , mockSigLinkSignTime               = Nothing
-    , mockSigLinkSeenTime               = Nothing
-    , mockSigLinkReadInvitationTime     = Nothing
-    , mockSigLinkRejectedTime           = Nothing
-    , mockSigLinkSignRedirectURL        = Nothing
-    , mockSigLinkRejectRedirectURL      = Nothing
-    , mockSigLinkEmailDeliveryStatus    = "does not get used"
-    , mockSigLinkMobileDeliveryStatus   = "does not get used"
-    , mockSigLinkCSV                    = Nothing
-    , mockSigLinkDeliveryMethod         = "email_mobile"
-    , mockSigLinkAuthMethodToView       = "standard"
-    , mockSigLinkAuthMethodToSign       = "standard"
-    , mockSigLinkConfirmationDelivery   = "email_mobile"
-    , mockSigLinkAllowsHighlighting     = False
-    , mockSigLinkHighlightedPages       = []
-    , mockSigLinkAttachments            = []
-    , mockSigLinkAPIDeliveryURL         = Nothing
+    { mockSigLinkId                       = "does not get used"
+    , mockSigLinkUserId                   = Nothing
+    , mockSigLinkIsAuthor                 = False
+    , mockSigLinkSignatoryRole            = SignatoryRoleSigningParty
+    , mockSigLinkFields                   = []
+    , mockSigLinkSignOrder                = 1
+    , mockSigLinkSignTime                 = Nothing
+    , mockSigLinkSeenTime                 = Nothing
+    , mockSigLinkReadInvitationTime       = Nothing
+    , mockSigLinkRejectedTime             = Nothing
+    , mockSigLinkSignRedirectURL          = Nothing
+    , mockSigLinkRejectRedirectURL        = Nothing
+    , mockSigLinkEmailDeliveryStatus      = "does not get used"
+    , mockSigLinkMobileDeliveryStatus     = "does not get used"
+    , mockSigLinkCSV                      = Nothing
+    , mockSigLinkDeliveryMethod           = "email_mobile"
+    , mockSigLinkAuthMethodToView         = "standard"
+    , mockSigLinkAuthMethodToViewArchived = "standard"
+    , mockSigLinkAuthMethodToSign         = "standard"
+    , mockSigLinkConfirmationDelivery     = "email_mobile"
+    , mockSigLinkAllowsHighlighting       = False
+    , mockSigLinkHighlightedPages         = []
+    , mockSigLinkAttachments              = []
+    , mockSigLinkAPIDeliveryURL           = Nothing
     }
 
 data MockSigField = MockSigField {

@@ -28,30 +28,26 @@ module.exports = React.createClass({
     Track.track("Choose auth to view archived", {
       Where: "icon"
     });
-    if (!sig.signs()) {
-      new FlashMessage({type: "error", content: localization.designview.viewerCantHaveAuthorisation});
+    var superthis = this;
+    var ams = ["standard", "se_bankid", "no_bankid", "dk_nemid", "fi_tupas", "sms_pin"]
+              .filter(function (am) { return superthis.isAllowedAuthenticationMethod(am); });
+    if (ams.length <= 1) {
+      // if no auth methods are enabled, tell customer, that they can purchase them
+      this.refs.blockingModal.openContactUsModal();
     } else {
-      var superthis = this;
-      var ams = ["standard", "se_bankid", "no_bankid", "dk_nemid", "fi_tupas", "sms_pin"]
-                .filter(function (am) { return superthis.isAllowedAuthenticationMethod(am); });
-      if (ams.length <= 1) {
-        // if no auth methods are enabled, tell customer, that they can purchase them
-        this.refs.blockingModal.openContactUsModal();
-      } else {
-        ams = ams.filter(function (am) {
-            return sig.authenticationMethodsCanMix(sig.authenticationToView(), sig.authenticationToSign(), am);
-        });
-        // newIndex will be 0 ("standard") if the selected auth method is not enabled anymore
-        var newIndex = _.indexOf(ams, sig.authenticationToViewArchived()) + 1;
-        // the new auth can stay the same ("standard"), if the other methods are not compatible
-        // with auth to view
-        sig.setAuthenticationToViewArchived(ams[newIndex % ams.length]);
-      }
+      ams = ams.filter(function (am) {
+        return sig.authenticationMethodsCanMix(sig.authenticationToView(), sig.authenticationToSign(), am);
+      });
+      // newIndex will be 0 ("standard") if the selected auth method is not enabled anymore
+      var newIndex = _.indexOf(ams, sig.authenticationToViewArchived()) + 1;
+      // the new auth can stay the same ("standard"), if the other methods are not compatible
+      // with auth to view
+      sig.setAuthenticationToViewArchived(ams[newIndex % ams.length]);
     }
   },
   icon: function () {
     var sig = this.props.model;
-    if (sig.standardAuthenticationToViewArchived() || !sig.signs()) {
+    if (sig.standardAuthenticationToViewArchived()) {
       return "design-view-action-participant-icon-auth-to-view-icon-noauth";
     } else if (sig.seBankIDAuthenticationToViewArchived()) {
       return "design-view-action-participant-icon-auth-to-view-icon-se-bankid";

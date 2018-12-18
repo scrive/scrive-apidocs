@@ -876,28 +876,44 @@ addNewUserToUserGroup firstname secondname email ugid = do
       (ugid,True) defaultLang (get bdid bd)
       CompanyInvitation
 
-addNewRandomUser :: ( CryptoRNG m, MonadDB m, MonadThrow m
-                    , MonadLog m, MonadMask m )
-                 => m User
-addNewRandomUser = do
+addNewUserFromInfo :: UserInfo -> ( CryptoRNG m
+                                  , MonadDB m
+                                  , MonadThrow m
+                                  , MonadLog m
+                                  , MonadMask m ) => m User
+addNewUserFromInfo userInfo@(UserInfo { userfstname = firstName
+                                      , usersndname = lastName
+                                      , useremail = Email {unEmail = email}}) = do
+  Just user <- addNewUser firstName lastName email
+  void $ dbUpdate $ SetUserInfo (userid user) userInfo
+  return user
+
+randomPersonalNumber :: CryptoRNG m => m String
+randomPersonalNumber = rand 10 $ arbString 3 30
+
+randomUserInfo :: CryptoRNG m => m UserInfo
+randomUserInfo = do
   fn <- rand 10 $ arbString 3 30
   ln <- rand 10 $ arbString 3 30
   em <- rand 10 arbEmail
-  Just user <- addNewUser fn ln em
   -- change the user to have some distinct personal information
-  personal_number <- rand 10 $ arbString 3 30
+  personal_number <- randomPersonalNumber
   company_position <- rand 10 $ arbString 3 30
   phone <- rand 10 $ arbString 3 30
-  let userinfo = UserInfo
-                 { userfstname         = fn
-                 , usersndname         = ln
-                 , userpersonalnumber  = personal_number
-                 , usercompanyposition = company_position
-                 , userphone           = phone
-                 , useremail           = Email em
-                 }
-  void $ dbUpdate $ SetUserInfo (userid user) userinfo
-  return user
+  return UserInfo { userfstname         = fn
+                  , usersndname         = ln
+                  , userpersonalnumber  = personal_number
+                  , usercompanyposition = company_position
+                  , userphone           = phone
+                  , useremail           = Email em
+                  }
+
+addNewRandomUser :: ( CryptoRNG m
+                    , MonadDB m
+                    , MonadThrow m
+                    , MonadLog m
+                    , MonadMask m ) => m User
+addNewRandomUser = do randomUserInfo >>= addNewUserFromInfo
 
 addNewRandomUserWithCompany :: ( CryptoRNG m, MonadDB m, MonadThrow m
                                , MonadLog m, MonadMask m )

@@ -553,18 +553,18 @@ docApiV2SigSetAuthenticationToView
   :: Kontrakcja m
   => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSetAuthenticationToView =
-  docApiV2SigSetAuth AuthenticationToView
+  docApiV2SigSetAuthToView AuthenticationToView
 
 docApiV2SigSetAuthenticationToViewArchived
   :: Kontrakcja m
   => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSetAuthenticationToViewArchived =
-  docApiV2SigSetAuth AuthenticationToViewArchived
+  docApiV2SigSetAuthToView AuthenticationToViewArchived
 
-docApiV2SigSetAuth
+docApiV2SigSetAuthToView
   :: Kontrakcja m
   => AuthenticationKind -> DocumentID -> SignatoryLinkID -> m Response
-docApiV2SigSetAuth authKind did slid =
+docApiV2SigSetAuthToView authKind did slid =
   logDocumentAndSignatory did slid . api $ do
 
   -- Permissions
