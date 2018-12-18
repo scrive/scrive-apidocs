@@ -106,11 +106,17 @@ instance InspectXML File where
     inspectXML file =
       "<a href='" ++
       (inspectXML $ LinkDaveFile (fileid file) (filename file)) ++
-      "'>" ++ show (fileid file) ++ "/" ++ inspectXML (filename file) ++"</a>"
+      "'>" ++ show (fileid file) ++ "/" ++ inspectXML (filename file) ++
+      "</a> " ++ fileAccessLogged
 instance InspectXML FileID where
     inspectXML fileid =
-      "<a href='" ++ (inspectXML $ LinkDaveFile fileid (show fileid)) ++ "'>" ++
-      show fileid ++ "</a>"
+      "<a href='" ++ (inspectXML $ LinkDaveFile fileid (show fileid)) ++
+      "'>" ++ show fileid ++ "</a> " ++ fileAccessLogged
+
+fileAccessLogged :: String
+fileAccessLogged =
+  "(<strong style='color: red'>ACCESS TO THIS FILE IS LOGGED</strong>)"
+
 instance InspectXML (S.Set DocumentTag) where
   inspectXML = inspectXML . S.toList
 

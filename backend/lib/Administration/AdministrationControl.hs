@@ -71,6 +71,7 @@ import InternalResponse
 import IPAddress ()
 import Kontra
 import KontraLink
+import Log.Identifier
 import Mails.Model
 import MinutesTime
 import PadApplication.Types (padAppModeFromText)
@@ -664,16 +665,26 @@ daveUserGroup ugid = onlyAdmin $ do
   return $ inspectXML ug
 
 daveFile :: Kontrakcja m => FileID -> String -> m Response
-daveFile fileid' _title = onlyAdmin $ do
-   file <- dbQuery $ GetFileByFileID fileid'
-   contents <- getFileContents file
-   if BS.null contents
-      then internalError
-      else do
-        let fname = filter (/=',') $ filename file -- Chrome does not like commas in this header
-            fname' = T.unpack $ ICU.normalize ICU.NFC $ T.pack fname -- http2 doesnt like non-normalized utf8
-        return $ setHeader "Content-Disposition" ("attachment;filename=" ++ fname')
-                 $ Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+daveFile fileid _title = onlyAdmin $ do
+  now <- currentTime
+  user <- guardJust . getContextUser =<< getContext
+  logInfo "File accessed through dave" $ object
+    [ identifier fileid
+    , identifier $ userid user
+    , "timestamp" .= now
+    ]
+  file <- dbQuery $ GetFileByFileID fileid
+  contents <- getFileContents file
+  if BS.null contents
+    then internalError
+    else do
+      let -- Chrome does not like commas in this header
+          fname = filter (/=',') $ filename file
+          -- http2 doesnt like non-normalized utf8
+          fname' = T.unpack $ ICU.normalize ICU.NFC $ T.pack fname
+      return
+        $ setHeader "Content-Disposition" ("attachment;filename=" ++ fname')
+        $ Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
 
 randomScreenshotForTest :: Kontrakcja m => m Response
 randomScreenshotForTest = do
