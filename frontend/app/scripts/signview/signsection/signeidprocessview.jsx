@@ -114,13 +114,15 @@ var classNames = require("classnames");
       var title = localization.docsignview.eleg.bankid.faultModalTitle;
       var ssn = this.props.ssn;
       var hasError = this.state.error;
-
+      var document = model.document();
       var divClass = classNames({
         "col-xs-6": !ViewSize.isSmall(),
         "col-xs-12": ViewSize.isSmall(),
         "center-block": true
       });
-
+      var transctionNumberText = localization.docsignview.eleg.bankid.transactionNumber;
+      var transactionNumberFirst = String(document.id).slice(0, -4);
+      var transactionNumberLast = String(document.id).slice(-4);
       return (
         <div className={divClass}>
           <h1>
@@ -129,6 +131,9 @@ var classNames = require("classnames");
               <span className="bankid-logo regular-bankid-logo" />
             </div>
             {localization.docsignview.eleg.bankid.signSEConfirmationTitle}
+            <p className="eid-process-view-doc-id">
+              {transctionNumberText} {transactionNumberFirst}<em>{transactionNumberLast}</em>
+            </p>
           </h1>
           <p>
             {model.statusMessage()}
