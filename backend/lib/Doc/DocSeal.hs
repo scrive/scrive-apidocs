@@ -22,19 +22,14 @@ import Data.Digest.SHA2
 import Data.Function (on)
 import Data.Time
 import Log
-import System.Exit
 import System.FilePath ((</>), takeExtension, takeFileName)
-import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import Text.StringTemplates.Templates
 import qualified Data.ByteString as BB
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import qualified Data.Text as T
 import qualified Data.Text.ICU.Normalize as ICU
-import qualified Text.JSON.Gen as JSON
-import qualified Text.JSON.Pretty as JSON (pp_value)
 import qualified Text.StringTemplates.Fields as F
 
 import DB
@@ -63,7 +58,6 @@ import File.Model
 import File.Storage
 import Kontra
 import Log.Identifier
-import Log.Utils (equalsExternalBSL)
 import PdfToolsLambda.Conf
 import PdfToolsLambda.Control
 import Templates
@@ -450,8 +444,7 @@ createSealingTextsForDocument document hostpart = do
 sealSpecFromDocument :: ( MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m
                         , MonadLog m, MonadFileStorage m
                         , MonadBaseControl IO m )
-                     => Bool
-                     -> CheckboxImagesMapping
+                     => CheckboxImagesMapping
                      -> RadiobuttonImagesMapping
                      -> String
                      -> Document
@@ -463,7 +456,7 @@ sealSpecFromDocument :: ( MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m
                      -> String
                      -> String
                      -> m Seal.SealSpec
-sealSpecFromDocument extendedFlattening checkboxMapping
+sealSpecFromDocument checkboxMapping
                      radiobuttonMapping hostpart
                      document elog offsets eotData content
                      tmppath inputpath outputpath = do
@@ -597,7 +590,6 @@ sealSpecFromDocument extendedFlattening checkboxMapping
                                 , evidenceOfTime
                                 , evidenceOfIntent ]
         , Seal.disableFooter = documentisreceipt document
-        , Seal.extendedFlattening = extendedFlattening
         , Seal.filesList      =
           [ Seal.FileDesc { fileTitle = title
                           , fileRole = mainDocumentText
@@ -612,15 +604,13 @@ sealSpecFromDocument extendedFlattening checkboxMapping
 presealSpecFromDocument :: ( MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m
                            , MonadLog m, MonadFileStorage m
                            , MonadBaseControl IO m )
-                        => Bool
-                        -> CheckboxImagesMapping
+                        => CheckboxImagesMapping
                         -> RadiobuttonImagesMapping
                         -> Document
                         -> String
                         -> String
                         -> m Seal.PreSealSpec
-presealSpecFromDocument extendedFlattening
-                        checkboxMapping radiobuttonMapping
+presealSpecFromDocument checkboxMapping radiobuttonMapping
                         document inputpath outputpath = do
   fields <- concat <$>
             mapM (fieldsFromSignatory checkboxMapping radiobuttonMapping)
@@ -629,7 +619,6 @@ presealSpecFromDocument extendedFlattening
     { Seal.pssInput          = inputpath
     , Seal.pssOutput         = outputpath
     , Seal.pssFields         = fields
-    , Seal.pssExtendedFlattening = extendedFlattening
     }
 
 sealDocument :: (CryptoRNG m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadMask m, MonadLog m, MonadFileStorage m, PdfToolsLambdaConfMonad m)
@@ -663,13 +652,9 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
     let tmpin = tmppath ++ "/input.pdf"
     let tmpout = tmppath ++ "/output.pdf"
     content <- getFileContents file
-    lconf <- getPdfToolsLambdaConf
-    theDocument >>= \d -> if (useOldFlattening lconf d)
-      then runOldFlatteningAndWriteResultToFile tmpin content tmppath
-      else do
-        liftIO $ BS.writeFile tmpin content
-        logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length content)
-                                           , "originator" .= ("sealDocumentFile" :: T.Text) ]
+    liftIO $ BS.writeFile tmpin content
+    logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length content)
+                                        , "originator" .= ("sealDocumentFile" :: T.Text) ]
 
     checkboxMapping <- liftIO $ readCheckboxImagesMapping
     radiobuttonMapping <- liftIO $ readRadiobuttonImagesMapping
@@ -683,8 +668,7 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
         (systemActor now)
     eotData <- liftBase $ generateEvidenceOfTimeData 100 (tmppath ++ "/eot_samples.txt") (tmppath ++ "/eot_graph.svg") (map HC.offset offsets)
     spec <- theDocument >>= \d -> do
-      let extendedFlattening = useExtendedFlattening lconf d
-      sealSpecFromDocument extendedFlattening checkboxMapping radiobuttonMapping hostpart d elog offsets eotData content tmppath tmpin tmpout
+      sealSpecFromDocument checkboxMapping radiobuttonMapping hostpart d elog offsets eotData content tmppath tmpin tmpout
     runLambdaSealing tmppath filename spec
 
 -- | Generate file that has all placements printed on it. It will look same as final version except for footers and verification page.
@@ -698,17 +682,12 @@ presealDocumentFile document@Document{documentid} file@File{fileid} =
     let tmpin = tmppath ++ "/input.pdf"
     let tmpout = tmppath ++ "/output.pdf"
     content <- getFileContents file
-    lconf <- getPdfToolsLambdaConf
-    if (useOldFlattening lconf document)
-      then runOldFlatteningAndWriteResultToFile tmpin content tmppath
-      else do
-        liftIO $ BS.writeFile tmpin content
-        logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length content)
-                                           , "originator" .= ("presealDocumentFile" :: T.Text) ]
+    liftIO $ BS.writeFile tmpin content
+    logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length content)
+                                       , "originator" .= ("presealDocumentFile" :: T.Text) ]
     checkboxMapping <- liftIO $ readCheckboxImagesMapping
     radiobuttonMapping <- liftIO $ readRadiobuttonImagesMapping
-    let extendedFlattening = useExtendedFlattening lconf document
-    spec <- presealSpecFromDocument extendedFlattening checkboxMapping radiobuttonMapping document tmpin tmpout
+    spec <- presealSpecFromDocument checkboxMapping radiobuttonMapping document tmpin tmpout
     runLambdaPresealing tmppath spec
 
 addSealedEvidenceEvents ::  (MonadBaseControl IO m, MonadDB m, MonadLog m, TemplatesMonad m, MonadIO m, DocumentMonad m, MonadFileStorage m, MonadMask m)
@@ -767,41 +746,3 @@ runLambdaPresealing _tmppath spec = do
         -- show JSON'd config as that's what the java app is fed.
         return $ Left "Error when preprinting fields on PDF"
 
-runOldFlatteningAndWriteResultToFile :: (MonadIO m, MonadLog m) => String -> BS.ByteString -> String -> m ()
-runOldFlatteningAndWriteResultToFile outputpath content tmppath = do
-  logInfo_ "Started flattening with old pdftools"
-  let inputpathforflattening = tmppath ++ "/input_for_flattening.pdf"
-  liftIO $ BS.writeFile inputpathforflattening content
-  logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length content)
-                                     , "originator" .= ("runOldFlatteningAndWriteResultToFile" :: T.Text) ]
-  let sealspecpath = tmppath ++ "/sealspec.json"
-  liftIO $ BS.writeFile sealspecpath $ BS.fromString $ show $ JSON.pp_value $ JSON.runJSONGen $ do
-        JSON.value "input" inputpathforflattening
-        JSON.value "output" outputpath
-        JSON.value "fields" ([] :: [String])
-        JSON.value "preseal" True
-        JSON.value "extendedFlattening" False
-  (code,_stdout,stderr) <- liftIO $ readProcessWithExitCode "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "add-verification-pages", sealspecpath] (BSL.empty)
-  case code of
-    ExitSuccess -> do
-        logInfo_ "Flattening with old pdftools succeed"
-        return $ ()
-    ExitFailure _ -> do
-        logAttention "Flattening with old pdftools failed" $ object [
-            "stderr" `equalsExternalBSL` stderr
-          ]
-        liftIO $ BS.writeFile outputpath content
-        logInfo "Temp file write" $
-          object [ "bytes_written" .= (BS.length content)
-                 , "originator" .= ("runOldFlatteningAndWriteResultToFile" :: T.Text) ]
-
-
-useExtendedFlattening ::  PdfToolsLambdaConf -> Document -> Bool
-useExtendedFlattening lconf document = case (get pdfToolsUserGroupsWithExtendedFlattening lconf , documentauthorugid document) of
-  (Just ids, Just ugi) -> ugi `elem` ids
-  _ -> False
-
-useOldFlattening ::  PdfToolsLambdaConf -> Document -> Bool
-useOldFlattening lconf document = case (get pdfToolsUserGroupsWithOldFlattening lconf , documentauthorugid document) of
-  (Just ids, Just ugi) -> ugi `elem` ids
-  _ -> False

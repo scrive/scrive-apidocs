@@ -28,15 +28,6 @@ unjsonPdfToolsLambdaConf = objectOf $ pure PdfToolsLambdaConf
   <*> field "amazon_s3"
       _pdfToolsLambdaS3Config
       "Amazon bucket configuration"
-  <*> fieldOpt "user_groups_with_extended_flattening"
-      _pdfToolsUserGroupsWithExtendedFlattening
-      ("PDFs of documents created by these user groups should be "
-       <> "treated differently by pdftools due to backwards compatiblility "
-       <> "(see CORE-783)")
-  <*> fieldOpt "user_groups_with_old_flattening"
-      _pdfToolsUserGroupsWithOldFlattening
-      ("PDFs of documents created by these user groups should get "
-       <> "an additional flattening with old pdftools (see CORE-851)")
 
 instance Unjson PdfToolsLambdaConf where
   unjsonDef = unjsonPdfToolsLambdaConf

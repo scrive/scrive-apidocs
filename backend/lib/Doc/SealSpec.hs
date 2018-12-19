@@ -90,7 +90,6 @@ data SealSpec = SealSpec
     , attachments    :: [SealAttachment]
     , filesList      :: [FileDesc]
     , disableFooter  :: Bool
-    , extendedFlattening :: Bool
     }
     deriving (Eq,Ord,Show,Read)
 
@@ -109,7 +108,6 @@ data PreSealSpec = PreSealSpec
     { pssInput  :: String
     , pssOutput :: String
     , pssFields :: [Field]
-    , pssExtendedFlattening :: Bool
     }
     deriving (Eq,Ord,Show,Read)
 

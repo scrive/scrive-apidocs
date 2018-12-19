@@ -38,7 +38,6 @@ sealSpecToLambdaSpec spec = do
     , "documentNumberText" .= documentNumberText spec
     , "initialsText" .= initialsText spec
     , "dontAddFooterToEveryPage" .= disableFooter spec
-    , "extendedFlattening" .= extendedFlattening spec
     , "staticTexts" .= staticTextsJSON (staticTexts spec)
     ]
 
@@ -51,7 +50,6 @@ presealSpecToLambdaSpec spec = do
   return $ Aeson.encode $ Aeson.object $ [
       "preseal" .= True
     , "fields" .= fields_
-    , "extendedFlattening" .= pssExtendedFlattening spec
     , "mainFileInput" .= Aeson.object [
         "base64Content" .= (T.decodeUtf8 $ B64.encode mfc)
       ]
