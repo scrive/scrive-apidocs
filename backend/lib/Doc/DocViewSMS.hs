@@ -60,40 +60,35 @@ smsDocumentErrorAuthor
      , TemplatesMonad m )
   => Document -> SignatoryLink -> m SMS
 smsDocumentErrorAuthor doc sl = do
-  mhtime <- makeTemporaryMagicHash sl
-  mkSMS doc sl (Just $ OtherDocumentSMS $ documentid doc) =<< renderLocalTemplate doc "_smsDocumentErrorAuthor" (smsFields doc sl mhtime)
+  mkSMS doc sl (Just $ OtherDocumentSMS $ documentid doc) =<< renderLocalTemplate doc "_smsDocumentErrorAuthor" (smsFields doc)
 
 smsDocumentErrorSignatory
   :: ( CryptoRNG m, MailContextMonad m, MonadDB m, MonadThrow m, MonadTime m
      , TemplatesMonad m )
   => Document -> SignatoryLink -> m SMS
 smsDocumentErrorSignatory doc sl = do
-  mhtime <- makeTemporaryMagicHash sl
-  mkSMS doc sl (Just $ OtherDocumentSMS $ documentid doc) =<< renderLocalTemplate doc "_smsDocumentErrorSignatory" (smsFields doc sl mhtime)
+  mkSMS doc sl (Just $ OtherDocumentSMS $ documentid doc) =<< renderLocalTemplate doc "_smsDocumentErrorSignatory" (smsFields doc)
 
 smsInvitation
   :: ( CryptoRNG m, MailContextMonad m, MonadDB m, MonadThrow m, MonadTime m
      , TemplatesMonad m )
   => SignatoryLink -> Document -> m SMS
 smsInvitation sl doc = do
-  mhtime <- makeTemporaryMagicHash sl
   mkSMS doc sl (Just $ DocumentInvitationSMS (documentid doc) (signatorylinkid sl)) =<<
-    renderLocalTemplate doc (templateName "_smsInvitationToSign" <| isSignatory sl |> templateName "_smsInvitationToView") (smsFields doc sl mhtime)
+    renderLocalTemplate doc (templateName "_smsInvitationToSign" <| isSignatory sl |> templateName "_smsInvitationToView") (smsFields doc >> smsLinkFields doc sl)
 
 smsInvitationToAuthor
   :: ( CryptoRNG m, MailContextMonad m, MonadDB m, MonadTime m, MonadThrow m
      , TemplatesMonad m )
   => Document -> SignatoryLink -> m SMS
 smsInvitationToAuthor doc sl = do
-  mhtime <- makeTemporaryMagicHash sl
-  mkSMS doc sl (Just $ DocumentInvitationSMS (documentid doc) (signatorylinkid sl)) =<< renderLocalTemplate doc "_smsInvitationToAuthor" (smsFields doc sl mhtime)
+  mkSMS doc sl (Just $ DocumentInvitationSMS (documentid doc) (signatorylinkid sl)) =<< renderLocalTemplate doc "_smsInvitationToAuthor" (smsFields doc >> smsLinkFields doc sl)
 
 smsReminder :: ( CryptoRNG m, MailContextMonad m, MonadDB m
                , MonadThrow m, MonadTime m, TemplatesMonad m )
             => Bool -> Document -> SignatoryLink -> m SMS
 smsReminder automatic doc sl = do
-  mhtime <- makeTemporaryMagicHash sl
-  contents <- renderLocalTemplate doc template (smsFields doc sl mhtime)
+  contents <- renderLocalTemplate doc template (smsFields doc >> smsLinkFields doc sl)
   mkSMS doc sl smstypesignatory contents
   where
     (smstypesignatory, template) =
@@ -115,8 +110,7 @@ smsClosedNotification
      , TemplatesMonad m )
   => Document -> SignatoryLink -> Bool -> Bool -> m SMS
 smsClosedNotification doc sl withEmail sealFixed = do
-  mhtime <- makeTemporaryMagicHash sl
-  mkSMS doc sl (Just $ OtherDocumentSMS $ documentid doc) =<< (renderLocalTemplate doc template $ smsFields doc sl mhtime)
+  mkSMS doc sl (Just $ OtherDocumentSMS $ documentid doc) =<< (renderLocalTemplate doc template $ smsFields doc >> smsLinkFields doc sl)
     where
       template = case (sealFixed, withEmail) of
         (True, True) -> templateName "_smsCorrectedNotificationWithEmail"
@@ -129,27 +123,29 @@ smsRejectNotification
      , TemplatesMonad m )
   => Document -> SignatoryLink -> SignatoryLink -> m SMS
 smsRejectNotification doc sl rejector = do
-  mhtime <- makeTemporaryMagicHash sl
-  mkSMS doc sl (Just $ OtherDocumentSMS $ documentid doc) =<< renderLocalTemplate doc "_smsRejectNotification" (smsFields doc sl mhtime >> F.value "rejectorName" (getSmartName rejector))
+  mkSMS doc sl (Just $ OtherDocumentSMS $ documentid doc) =<< renderLocalTemplate doc "_smsRejectNotification" (smsFields doc >> F.value "rejectorName" (getSmartName rejector))
 
 smsPinCodeSendout
   :: ( CryptoRNG m, MailContextMonad m, MonadDB m, MonadTime m, MonadThrow m
      , TemplatesMonad m )
   => Document -> SignatoryLink -> String -> String -> m SMS
 smsPinCodeSendout doc sl phone pin = do
-  mhtime <- makeTemporaryMagicHash sl
-  sms <- mkSMS doc sl (Just $ DocumentPinSendoutSMS (documentid doc) (signatorylinkid sl)) =<< renderLocalTemplate doc "_smsPinSendout" (smsFields doc sl mhtime >> F.value "pin" pin)
+  sms <- mkSMS doc sl (Just $ DocumentPinSendoutSMS (documentid doc) (signatorylinkid sl)) =<< renderLocalTemplate doc "_smsPinSendout" (smsFields doc >> F.value "pin" pin)
   return sms {smsMSISDN = phone}
 
-smsFields
-  :: (MailContextMonad m, TemplatesMonad m)
-  => Document -> SignatoryLink -> (MagicHash, UTCTime) -> Fields m ()
-smsFields document sl (mh, expiration) = do
-  mctx <- lift $ getMailContext
+smsFields :: TemplatesMonad m => Document -> Fields m ()
+smsFields document = do
   F.value "creatorname" $ getSmartName <$> getAuthorSigLink document
   F.value "documenttitle" $ documenttitle document
+
+smsLinkFields
+  :: (CryptoRNG m, MailContextMonad m, MonadDB m, MonadTime m, TemplatesMonad m)
+  => Document -> SignatoryLink -> Fields m ()
+smsLinkFields doc sl = do
+  mctx <- lift $ getMailContext
+  (mh, expiration) <- lift $ makeTemporaryMagicHash sl
   F.value "link" $ get mctxDomainUrl mctx ++
-    show (LinkSignDocMagicHash (documentid document) (signatorylinkid sl) mh)
+    show (LinkSignDocMagicHash (documentid doc) (signatorylinkid sl) mh)
   F.value "availabledate" $ formatTimeYMD expiration
 
 -- | Create a temporary hash valid for 30 days.
