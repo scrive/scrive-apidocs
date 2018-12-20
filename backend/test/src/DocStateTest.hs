@@ -46,7 +46,6 @@ import User.Model
 import UserGroup.Model
 import UserGroup.Types
 import Util.Actor
-import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Util.SignatoryLinkUtils
@@ -762,10 +761,13 @@ assertGoodNewDocument mugwp doctype title (user, time, doc) = do
     assertEqual "link last name matches author's" (getLastName user) (getLastName siglink)
     assertEqual "link email matches author's" (getEmail user) (getEmail siglink)
     assertEqual "link personal number matches author's" (getPersonalNumber user) (getPersonalNumber siglink)
-    assertEqual "link company name matches company's" (getCompanyName mugwp) (getCompanyName siglink)
-    assertEqual "link company number matches company's" (getCompanyNumber mugwp) (getCompanyNumber siglink)
+    assertEqual "link company name matches company's" companyNameFromUserGroup (getCompanyName siglink)
+    assertEqual "link company number matches company's" companyNumberFromUserGroup (getCompanyNumber siglink)
     assertEqual "link company number matches company's" (getMobile user) (getMobile siglink)
     assertEqual "link signatory matches author id" (Just $ userid user) (maybesignatory siglink)
+      where
+        companyNameFromUserGroup = maybe "" (T.unpack . get ugName . ugwpUG) mugwp
+        companyNumberFromUserGroup = maybe "" (T.unpack . get ugaCompanyNumber . ugwpAddress) mugwp
 
 testCancelDocumentCancelsDocument :: TestEnv ()
 testCancelDocumentCancelsDocument = replicateM_ 10 $ do

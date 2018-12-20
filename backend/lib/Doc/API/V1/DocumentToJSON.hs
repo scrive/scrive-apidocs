@@ -34,7 +34,6 @@ import File.Storage
 import KontraLink
 import MinutesTime
 import User.Model
-import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.Image

@@ -14,6 +14,10 @@ module Util.SignatoryLinkUtils (
   isSigLinkFor,
   getAuthorSigLink,
   getAuthorName,
+  getCompanyName,
+  getCompanyNumber,
+  getAuthorCompanyName,
+  getAuthorCompanyNumber,
   isSignatoryAndHasSigned,
   isSignatoryAndHasNotSigned,
   isApproverAndHasApproved,
@@ -120,12 +124,23 @@ instance (SignatoryLinkIdentity a) => MaybeSignatoryLink (Document, a) where
 getAuthorSigLink :: Document -> Maybe SignatoryLink
 getAuthorSigLink doc = getSigLinkFor signatoryisauthor doc
 
-
 -- | Given a Document, return the best guess at the author's name:
 --     * First Name + Last Name
 --     * email address if no name info
 getAuthorName :: Document -> String
 getAuthorName doc = maybe "" getSmartName $ getAuthorSigLink doc
+
+getCompanyName :: SignatoryLink -> String
+getCompanyName = getTextValueOfField CompanyFI . signatoryfields
+
+getCompanyNumber :: SignatoryLink -> String
+getCompanyNumber = getTextValueOfField CompanyNumberFI . signatoryfields
+
+getAuthorCompanyName :: Document -> String
+getAuthorCompanyName doc = maybe "" getCompanyName $ getAuthorSigLink doc
+
+getAuthorCompanyNumber :: Document -> String
+getAuthorCompanyNumber doc = maybe "" getCompanyNumber $ getAuthorSigLink doc
 
 hasSignInfoAndRoleIs :: (MaybeSignatoryLink msl)
                      => SignatoryRole -> msl -> Bool

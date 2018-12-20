@@ -42,7 +42,6 @@ import Theme.Model
 import User.Model
 import UserGroup.Model
 import UserGroup.Types
-import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.Color
@@ -130,7 +129,7 @@ remindMailNotSigned automatic forMail customMessage document signlink = do
             (signatoryattachmentname sa, getSmartName link)
         F.value "nojavascriptmagic" $ True
         F.value "javascriptmagic" $ False
-        F.value "companyname" $ emptyToNothing $ getCompanyName document
+        F.value "companyname" $ emptyToNothing $ getAuthorCompanyName document
 
 
 documentAttachableFields :: ( CryptoRNG m, MailContextMonad m, MonadDB m
@@ -193,7 +192,7 @@ mailDocumentRejected forMail customMessage forAuthor rejector document = do
         F.value "signatorylinkid" $ show $ signatorylinkid rejector
         F.value "custommessage" $ asCustomMessage <$> customMessage
         F.value "hascustommessage" $ isJust customMessage
-        F.value "companyname" $ emptyToNothing $ getCompanyName document
+        F.value "companyname" $ emptyToNothing $ getAuthorCompanyName document
         F.value "loginlink" $ show $ LinkIssueDoc $ documentid document
   where template = if forAuthor then
                        templateName "mailAuthorRejectContractMail"
@@ -297,7 +296,7 @@ mailInvitation forMail
                documentsignatorylinks document) $
           \(link, sa) ->
             (signatoryattachmentname sa, getSmartName link)
-        F.value "companyname" $ emptyToNothing $ getCompanyName document
+        F.value "companyname" $ emptyToNothing $ getAuthorCompanyName document
 
 mailInvitationContent :: ( MonadDB m, MonadThrow m, TemplatesMonad m
                          , MailContextMonad m )
@@ -332,7 +331,7 @@ mailDocumentClosed ispreview sl sealFixed documentAttachable forceLink document 
    documentMailWithDocLang document (templateName "mailContractClosed") $ do
         F.value "partylist" $ partylist
         F.value "signatoryname" $ getSmartName sl
-        F.value "companyname" $ emptyToNothing $ getCompanyName document
+        F.value "companyname" $ emptyToNothing $ getAuthorCompanyName document
         F.value "hasaccount" $ isJust $ maybesignatory sl
         F.value "doclink" $ if
           | ispreview -> Nothing
@@ -384,7 +383,7 @@ mailDocumentAwaitingForAuthor authorlang document = do
         F.value "someonesigned" $
           not $ null $
           filter isSignatoryAndHasSigned (documentsignatorylinks document)
-        F.value "companyname" $ emptyToNothing $ getCompanyName document
+        F.value "companyname" $ emptyToNothing $ getAuthorCompanyName document
         F.value "previewLink" $ show $
           LinkDocumentPreview (documentid document)
           (getAuthorSigLink document) mainfile 150

@@ -62,7 +62,6 @@ import PdfToolsLambda.Conf
 import PdfToolsLambda.Control
 import Templates
 import Util.Actor
-import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.PDFUtil
 import Util.SignatoryLinkUtils

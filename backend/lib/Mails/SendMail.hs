@@ -31,7 +31,6 @@ import Mails.Model hiding (Mail)
 import Templates
 import Theme.Model
 import User.Lang
-import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.String

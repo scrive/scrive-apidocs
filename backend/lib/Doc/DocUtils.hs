@@ -44,7 +44,6 @@ import Templates
 import User.Model
 import UserGroup.Model
 import UserGroup.Types
-import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
@@ -172,11 +171,11 @@ signatoryFieldsFromUser user = do
             else []
         )
           ++
-        (if (not $ null $ getCompanyNumber ugwp)
+        (if (not . null . getUGCompanyNumber $ ugwp)
            then [
               SignatoryCompanyNumberField $ CompanyNumberField {
                   scnfID                     = (unsafeSignatoryFieldID 0)
-                , scnfValue                  = getCompanyNumber ugwp
+                , scnfValue                  = getUGCompanyNumber ugwp
                 , scnfObligatory             = False
                 , scnfShouldBeFilledBySender = False
                 , scnfPlacements             = []
@@ -184,6 +183,8 @@ signatoryFieldsFromUser user = do
              ]
            else []
         )
+          where
+            getUGCompanyNumber = T.unpack . get ugaCompanyNumber . ugwpAddress
 
 {- |
     Checks whether a signatory link is eligible for sending a reminder.

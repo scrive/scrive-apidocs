@@ -1,12 +1,13 @@
 module Doc.DocStateCommon where
 
+import qualified Data.Text as T
+
 import Doc.DocStateData
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import MagicHash (MagicHash)
 import User.Model
 import UserGroup.Types
-import Util.HasSomeCompanyInfo
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
@@ -128,7 +129,10 @@ replaceSignatoryUser siglink user ugwp =
      (getLastName       user)
      (getEmail          user)
      (getMobile         user)
-     (getCompanyName    ugwp)
+     (getUGCompanyName ugwp)
      (getPersonalNumber user)
-     (getCompanyNumber  ugwp)
+     (getUGCompanyNumber  ugwp)
   ) { maybesignatory = Just $ userid user }
+    where
+      getUGCompanyName = T.unpack . get ugName . ugwpUG
+      getUGCompanyNumber = T.unpack . get ugaCompanyNumber . ugwpAddress

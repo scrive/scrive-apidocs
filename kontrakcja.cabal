@@ -441,7 +441,6 @@ Library
                  , UserGroupAccounts.UserGroupAccountsView
                  , Util.Actor
                  , Util.CSVUtil
-                 , Util.HasSomeCompanyInfo
                  , Util.HasSomeUserInfo
                  , Util.MonadUtils
                  , Util.PDFUtil
