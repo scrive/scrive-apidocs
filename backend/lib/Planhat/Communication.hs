@@ -60,16 +60,13 @@ planhatActionJSON actionTag email userId time =
                 , "date"       .= time ]
 
 planhatMetricJSON
-    :: String
-    -- | The name of the dimension used.
-    -> Int64
-    -- | Just a counter.
-    -> UserGroupID
-    -- | @rootugid@: the @UserGroupID@ of the invoicing parent user group.
-    -> UserGroupID
-    -- | @sugid@: the @UserGroupID@ of the subgroup to which a dimension belongs.
-    -> UTCTime
-    -- | Just a timestamp.
+    :: String      -- ^ The name of the dimension used.
+    -> Int64       -- ^ Value (usually a counter).
+    -> UserGroupID -- ^ @rootugid@: the @UserGroupID@ of the invoicing
+                   -- parent user group.
+    -> UserGroupID -- ^ @sugid@: the @UserGroupID@ of the subgroup to
+                   -- which a dimension belongs.
+    -> UTCTime     -- ^ Timestamp.
     -> JSON.Value
 planhatMetricJSON dimensionId value invoiceUgid sugid time =
     JSON.object
