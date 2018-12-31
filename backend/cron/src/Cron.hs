@@ -11,8 +11,6 @@ import System.Environment
 import qualified Data.Text.IO as T
 import qualified Data.Traversable as F
 
-import Amazon.Consumer
-import Amazon.URLFix
 import AppDBTables
 import Configuration
 import Cron.Model
@@ -112,8 +110,6 @@ main = do
           templates pool (cronMailNoreplyAddress cronConf) (cronConsumerSigningMaxJobs cronConf)
         docExtending = documentExtendingConsumer
           (cronGuardTimeConf cronConf) templates pool (cronConsumerExtendingMaxJobs cronConf)
-        amazonFileUpload = amazonUploadConsumer (cronAmazonConfig cronConf) pool (cronConsumerAmazonMaxJobs cronConf)
-        amazonURLFix = amazonURLFixConsumer (cronAmazonConfig cronConf) pool
         apiCallbacks = documentAPICallback runCronEnv (cronConsumerAPICallbackMaxJobs cronConf)
         cron = cronConsumer cronConf reqManager mmixpanel mplanhat runCronEnv runDB (cronConsumerCronMaxJobs cronConf)
 
@@ -123,8 +119,5 @@ main = do
       . finalize (localDomain "document signing"   $ runConsumer docSigning       pool)
       . finalize (localDomain "document extending" $ runConsumer docExtending     pool)
       . finalize (localDomain "api callbacks"      $ runConsumer apiCallbacks     pool)
-      -- CORE-478: Those two should go away when the remaining tasks are done.
-      . finalize (localDomain "amazon file upload" $ runConsumer amazonFileUpload pool)
-      . finalize (localDomain "amazon url fix"     $ runConsumer amazonURLFix     pool)
       . finalize (localDomain "cron"               $ runConsumer cron             pool)
       $ liftBase waitForTermination

@@ -11,9 +11,13 @@ import Control.Monad.Trans
 import Crypto.RNG
 import Data.Time
 import Log
+import System.FilePath
 import qualified Crypto.Hash.SHA1 as SHA1
+import qualified Data.ByteString.Base16 as Base16
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.UTF8 as BSUTF
+import qualified Network.HTTP as HTTP
 
 import Crypto
 import DB
@@ -21,7 +25,6 @@ import File.File
 import File.Model
 import FileStorage.Class (MonadFileStorage)
 import Log.Identifier
-import qualified FileStorage.Amazon as A
 import qualified FileStorage.Class as FS
 
 -- | Create a new file, by uploading content straight to the underlying file
@@ -40,8 +43,7 @@ saveNewFile fName fContent = do
   startTime <- liftBase getCurrentTime
   emptyFile <- dbUpdate $ NewEmptyFileForAWS fName fContent
   let fid    = fileid emptyFile
-      awsUrl = A.urlFromFile emptyFile
-      -- CORE-478: urlFromFile should be moved in this module
+      awsUrl = urlFromFile emptyFile
   Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
   let encryptedContent = aesEncrypt aes fContent
   localData [identifier fid] $ do
@@ -96,3 +98,23 @@ getFileIDContents fid = do
     , identifier fid
     ]
   return result
+
+-- | Convert a file to Amazon URL. We use the following format:
+--
+-- > "file" </> fileid </> checksum </> filename
+--
+-- where filename and checksum will be urlencoded (percent encoded in UTF-8).
+-- File name is preserved fully, that means you should supply file
+-- extension already in place.
+--
+-- Note: Someday we might decide to publish temporarily externally
+-- available links to files on Amazon. File names are already in
+-- place, but Content-type is not, this will need to be fixed.
+urlFromFile :: File -> String
+urlFromFile File{filename, fileid, filechecksum} =
+  -- here we use BSC.unpack, as HTTP.urlEncode
+  -- does only %-escaping for 8bit values
+  "file"
+    </> show fileid
+    </> (BS.unpack . Base16.encode $ filechecksum)
+    </> (HTTP.urlEncode . BS.unpack . BSUTF.fromString $ filename)

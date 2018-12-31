@@ -86,9 +86,6 @@ Library
                  , Administration.AdministrationControl
                  , Administration.AdministrationView
                  , Administration.Invoicing
-                 , Amazon.Consumer
-                 , Amazon.Tables
-                 , Amazon.URLFix
                  , Analytics.Include
                  , AppConf
                  , AppControl
@@ -739,7 +736,6 @@ Executable kontrakcja-migrate
   Main-is: AppDBMain.hs
   GHC-options: -main-is AppDBMain
   Other-Modules: Amazon.Migrations
-                 Amazon.Tables
                  AppDBConfig
                  AppDBMigrations
                  AppDBTables
@@ -1213,7 +1209,6 @@ Test-suite kontrakcja-test
   Other-Modules: AccountInfoTest
                  AdministrationTest
                  Amazon.Migrations
-                 Amazon.Tables
                  AppDBMigrations
                  AppDBTables
                  ArchiveTest

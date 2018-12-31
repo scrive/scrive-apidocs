@@ -1,13 +1,12 @@
- module Amazon.Migrations where
+module Amazon.Migrations where
 
 import Database.PostgreSQL.PQTypes.Checks
 
-import Amazon.Tables
 import DB
 
 createAmazonUploadJobs :: MonadDB m => Migration m
 createAmazonUploadJobs = Migration {
-    mgrTableName = tblName tableAmazonUploadJobs
+    mgrTableName = "amazon_upload_jobs"
   , mgrFrom = 0
   , mgrAction = StandardMigration $ createTable True tblTable {
       tblName = "amazon_upload_jobs"
@@ -31,7 +30,7 @@ createAmazonUploadJobs = Migration {
 
 createAmazonUploadConsumers :: MonadDB m => Migration m
 createAmazonUploadConsumers = Migration {
-    mgrTableName = tblName tableAmazonUploadConsumers
+    mgrTableName = "amazon_upload_consumers"
   , mgrFrom = 0
   , mgrAction = StandardMigration $ createTable True tblTable {
       tblName = "amazon_upload_consumers"
@@ -47,7 +46,7 @@ createAmazonUploadConsumers = Migration {
 
 createAmazonURLFixJobs :: MonadDB m => Migration m
 createAmazonURLFixJobs = Migration {
-    mgrTableName = tblName tableAmazonURLFixJobs
+    mgrTableName = "amazon_url_fix_jobs"
   , mgrFrom = 0
   , mgrAction = StandardMigration $ do
       createTable True tblTable {
@@ -73,7 +72,7 @@ createAmazonURLFixJobs = Migration {
 
 createAmazonURLFixConsumers :: MonadDB m => Migration m
 createAmazonURLFixConsumers = Migration {
-    mgrTableName = tblName tableAmazonURLFixConsumers
+    mgrTableName = "amazon_url_fix_consumers"
   , mgrFrom = 0
   , mgrAction = StandardMigration $ createTable True tblTable {
       tblName = "amazon_url_fix_consumers"
@@ -85,4 +84,32 @@ createAmazonURLFixConsumers = Migration {
       ]
     , tblPrimaryKey = pkOnColumn "id"
     }
+  }
+
+dropAmazonURLFixJobs :: MonadDB m => Migration m
+dropAmazonURLFixJobs = Migration
+  { mgrTableName = "amazon_url_fix_jobs"
+  , mgrFrom = 1
+  , mgrAction = DropTableMigration DropTableRestrict
+  }
+
+dropAmazonURLFixConsumers :: MonadDB m => Migration m
+dropAmazonURLFixConsumers = Migration
+  { mgrTableName = "amazon_url_fix_consumers"
+  , mgrFrom = 1
+  , mgrAction = DropTableMigration DropTableRestrict
+  }
+
+dropAmazonUploadJobs :: MonadDB m => Migration m
+dropAmazonUploadJobs = Migration
+  { mgrTableName = "amazon_upload_jobs"
+  , mgrFrom = 1
+  , mgrAction = DropTableMigration DropTableRestrict
+  }
+
+dropAmazonUploadConsumers :: MonadDB m => Migration m
+dropAmazonUploadConsumers = Migration
+  { mgrTableName = "amazon_upload_consumers"
+  , mgrFrom = 1
+  , mgrAction = DropTableMigration DropTableRestrict
   }

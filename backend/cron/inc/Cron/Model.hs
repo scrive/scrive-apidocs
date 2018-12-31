@@ -42,11 +42,9 @@ import User.Types.User (User(..))
 import User.UserAccountRequest (expireUserAccountRequests)
 import Utils.List
 import qualified CronEnv
-import qualified FileStorage.Amazon as AWS
 
 data JobType
-  = AmazonUpload -- CORE-478: should be removed
-  | AsyncEventsProcessing
+  = AsyncEventsProcessing
   | ClockErrorCollection
   | DocumentAutomaticRemindersEvaluation
   | DocumentSearchUpdate
@@ -72,9 +70,8 @@ data JobType
   deriving (Eq, Ord, Show)
 
 jobTypeMapper :: [(JobType, T.Text)]
-jobTypeMapper = [
-    (AmazonUpload, "amazon_upload")
-  , (AsyncEventsProcessing, "async_events_processing")
+jobTypeMapper =
+  [ (AsyncEventsProcessing, "async_events_processing")
   , (ClockErrorCollection, "clock_error_collection")
   , (DocumentAutomaticRemindersEvaluation, "document_automatic_reminders_evaluation")
   , (DocumentsPurge, "documents_purge")
@@ -164,13 +161,6 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
   logInfo_ "Processing job"
   startTime <- currentTime
   action <- case cjType of
-    -- CORE-478: should be removed
-    AmazonUpload -> do
-      let amazonConfig = cronAmazonConfig cronConf
-      moved <- runCronEnv (AWS.uploadSomeFilesToAmazon (Just amazonConfig) 10)
-      if moved
-        then return . RerunAfter $ iseconds 1
-        else return . RerunAfter $ iminutes 1
     AsyncEventsProcessing -> do
       runDB $ do
         let processMaximum = 200

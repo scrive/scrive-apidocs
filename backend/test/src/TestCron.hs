@@ -7,7 +7,6 @@ import Database.PostgreSQL.Consumers
 import Log
 import Network.HTTP.Client.TLS (newTlsManager)
 
-import Amazon.Consumer
 import Context
 import Cron.Model
 import CronConf
@@ -60,7 +59,6 @@ runTestCronUntilIdle ctx = do
         , cronConsumerSigningMaxJobs     = 1
         , cronConsumerExtendingMaxJobs   = 1
         , cronConsumerAPICallbackMaxJobs = 1
-        , cronConsumerAmazonMaxJobs      = 1
         , cronNetsSignConfig = Nothing
         , cronPdfToolsLambdaConf = pdfSealLambdaConf
         }
@@ -93,12 +91,6 @@ runTestCronUntilIdle ctx = do
           , runConsumerWithIdleSignal . modTimeout
             $ documentAPICallback {-runCronEnv-} id
                 (cronConsumerAPICallbackMaxJobs cronConf)
-          )
-        -- CORE-478: This should go.
-        , ( "amazon file upload"
-          , runConsumerWithIdleSignal . modTimeout
-            $ amazonUploadConsumer (cronAmazonConfig cronConf) pool
-                (cronConsumerAmazonMaxJobs cronConf)
           )
         , ( "cron"
           , runConsumerWithIdleSignal . modTimeout

@@ -46,7 +46,6 @@ data CronConf = CronConf {
   , cronConsumerSigningMaxJobs :: !Int
   , cronConsumerExtendingMaxJobs :: !Int
   , cronConsumerAPICallbackMaxJobs :: !Int
-  , cronConsumerAmazonMaxJobs :: !Int
   , cronNetsSignConfig :: Maybe NetsSignConfig
   , cronPdfToolsLambdaConf :: PdfToolsLambdaConf
   } deriving (Eq, Show)
@@ -113,9 +112,6 @@ unjsonCronConf = objectOf $ pure CronConf
   <*> field "consumer_api_callback_max_jobs"
       cronConsumerAPICallbackMaxJobs
       "Maximum number of jobs running the Document API Callback Consumer"
-  <*> field "consumer_amazon_max_jobs"
-      cronConsumerAmazonMaxJobs
-      "Maximum number of jobs running the Amazon Document Upload Consumer"
   <*> fieldOpt "nets_sign"
       cronNetsSignConfig
       "Configuration of Nets for ESigning"

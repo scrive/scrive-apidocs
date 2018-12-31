@@ -3,7 +3,6 @@ module File.Model (
     , FileMovedToAWS(..)
     , GetFileByFileID(..)
     , GetMaybeFileByFileID(..)
-    , GetFilesThatShouldBeMovedToAmazon(..)
     , NewEmptyFileForAWS(..)
     , PurgeFile(..)
     ) where
@@ -66,21 +65,6 @@ instance MonadDB m => DBUpdate m FileMovedToAWS () where
         sqlSet "aes_iv" $ aesIV aes
         sqlWhereFileIDIs fid
         sqlWhereFileWasNotPurged
-
-data GetFilesThatShouldBeMovedToAmazon = GetFilesThatShouldBeMovedToAmazon Int
-instance (MonadDB m, MonadThrow m) => DBQuery m GetFilesThatShouldBeMovedToAmazon [File] where
-  query (GetFilesThatShouldBeMovedToAmazon n) = do
-    runQuery_ $ sqlSelect "files" $ do
-      mapM_ sqlResult filesSelectors
-      sqlWhere "content IS NOT NULL"
-      -- GetFilesThatShouldBeMovedToAmazon is kept only temporarily
-      -- until we finish transition to Consumer AWS upload
-      -- see case #3358
-      sqlWhereNotExists . sqlSelect "amazon_upload_jobs" $ do
-          sqlWhere "files.id = amazon_upload_jobs.id"
-      sqlOrderBy "id"
-      sqlLimit n
-    fetchMany fetchFile
 
 data PurgeFile = PurgeFile FileID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m PurgeFile () where

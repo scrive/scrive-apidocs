@@ -152,4 +152,9 @@ kontraMigrations = [
   , changeIsPartnerColumnToSignatoryRole
   , createSignatoryLinkMagicHashes
   , addTemporaryMagicHashesPurgeJob
+  , dropAmazonURLFixJobs
+  , dropAmazonURLFixConsumers
+  , dropAmazonUploadJobs
+  , dropAmazonUploadConsumers
+  , removeAmazonUploadJob
   ]

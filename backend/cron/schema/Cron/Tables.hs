@@ -45,7 +45,7 @@ tableCronWorkers = tblTable {
 tableCronJobs :: Table
 tableCronJobs = tblTable {
     tblName = "cron_jobs"
-  , tblVersion = 16
+  , tblVersion = 17
   , tblColumns = [
     -- Type of the task.
       tblColumn { colName = "id", colType = TextT, colNullable = False }
@@ -71,8 +71,7 @@ tableCronJobs = tblTable {
   where
     tasks :: [Text]
     tasks = [
-        "amazon_upload"
-      , "async_events_processing"
+        "async_events_processing"
       , "clock_error_collection"
       , "document_automatic_reminders_evaluation"
       , "documents_archive_idle"

@@ -9,7 +9,6 @@ module AppDBTables (
 
 import Database.PostgreSQL.PQTypes.Model
 
-import Amazon.Tables
 import Attachment.Tables
 import BrandedDomain.Tables
 import Chargeable.Tables
@@ -153,8 +152,6 @@ kontraTables =
   , tableThemeOwnership
   , tableEIDAuthentications
   , tableHighlightedPages
-  , tableAmazonUploadConsumers
-  , tableAmazonUploadJobs
   , tableFeatureFlags
   , tableNetsSignOrders
   ] ++ cronTables
@@ -165,8 +162,6 @@ kontraTables =
   , tableKontraInfoForSMSes
   , tableAPILogs
   , tableSignatoryLinkConsentQuestions
-  , tableAmazonURLFixConsumers
-  , tableAmazonURLFixJobs
   , tableUserGroupSettings
   , tableUserGroupInvoicings
   , tableUserGroupUIs
