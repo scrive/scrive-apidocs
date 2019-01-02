@@ -89,7 +89,6 @@
 "_VisitedViewForAuthenticationEvidenceArchive":"Heeft het overzicht geopend om zijn/haar identiteit te bevestiging alvorens het document te bekijken.",
 "_VisitedViewForSigningEvidenceArchive":"Het document is online geopend.",
 "_designViewAddPartiesRoleApprover":"",
-"_designViewApproverCantHaveAuthorisationToSign":"",
 "_invitationCustomMessageTextToApprove":"",
 "_invitationCustomMessageTextToReview":"De uitnodiging om het document te bekijken bevatte de volgende mededeling: <BR/> <i>$text$</i>",
 "_invitationCustomMessageTextToSign":"De uitnodiging om het document te ondertekenen bevatte de volgende mededeling: <BR/><i>$text$</i>"

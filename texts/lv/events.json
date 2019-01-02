@@ -89,7 +89,6 @@
 "_VisitedViewForAuthenticationEvidenceArchive":"Atvēra skatu, lai pārbaudītu identitāti pirms dokumenta apskatīšanas.",
 "_VisitedViewForSigningEvidenceArchive":"Dokumentu atvēra tiešsaistē.",
 "_designViewAddPartiesRoleApprover":"",
-"_designViewApproverCantHaveAuthorisationToSign":"",
 "_invitationCustomMessageTextToApprove":"",
 "_invitationCustomMessageTextToReview":"Uzaicinājumā pārskatīt dokumentu bija rakstīts: <BR/> <i>$text$</i>",
 "_invitationCustomMessageTextToSign":"Uzaicinājumā parakstīt dokumentu bija rakstīts: <BR/> <i>$text$</i>"

@@ -89,7 +89,6 @@
 "_VisitedViewForAuthenticationEvidenceArchive":"Åpnet visningen for å verifisere identiteten deres før visning av dokumentet. ",
 "_VisitedViewForSigningEvidenceArchive":"Dokumentet ble åpnet på nett.",
 "_designViewAddPartiesRoleApprover":"",
-"_designViewApproverCantHaveAuthorisationToSign":"",
 "_invitationCustomMessageTextToApprove":"",
 "_invitationCustomMessageTextToReview":"Invitasjonen til å lese gjennom dokumentet inneholdt følgende melding: <BR/> <i>$text$</i>",
 "_invitationCustomMessageTextToSign":"Invitasjonen til å signere dokumentet inneholdt følgende melding: <BR/> <i>$text$</i>"

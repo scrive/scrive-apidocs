@@ -84,6 +84,7 @@
 "_elegSignSEConfirmationText":"<strong class='put-signatory-name-here'></strong>, Sie signieren mit schwedischer BankID. Nach dem Signieren wird Ihre Signatur durch den E-Signierungsdienst von Scrive registriert.",
 "_elegSignSEConfirmationTextNoName":"Sie signieren mit schwedischer BankID. Nach dem Signieren wird Ihre Signatur durch den E-Signierungsdienst von Scrive registriert.",
 "_elegSignSEConfirmationTitle":"Signieren mit schwedischer BankID",
+"_elegSignTransactionNumber":"",
 "_email":"E-Mail",
 "_enterSMSPin":"Geben Sie Ihre SMS-PIN ein",
 "_errorMessagePrefix":"Der zurückgegebene Fehler war:",
