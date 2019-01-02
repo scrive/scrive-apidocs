@@ -169,7 +169,7 @@ testTranslationsHaveSameEscapeSequences = do
   lErrors <- forM (allValues :: [Lang]) $ \l -> do
     let translationTemplates = sort $ templates ! (codeFromLang l)
     let cmpFunc = case l of
-                    LANG_LT -> compareEscapeSequecesForLatvian
+                    LANG_LT -> compareEscapeSequecesForLithuanian
                     _ -> compareEscapeSequeces
     let errors = catMaybes $ checkEscapeSequencesTexts cmpFunc sourceTemplates translationTemplates
     case errors of
@@ -202,12 +202,12 @@ compareEscapeSequeces s t =
     then Just "Escaped sequences don't match"
     else Nothing
 
--- Latvian has different aproach for quotations
+-- Lithuanian has different aproach for quotations
 -- 1) It often uses '„' and '“' chars instead of '"'
 -- 2) It uses quotation for every foreign name. So there will be many more quotations
 
-compareEscapeSequecesForLatvian:: String -> String -> Maybe String
-compareEscapeSequecesForLatvian s t =
+compareEscapeSequecesForLithuanian:: String -> String -> Maybe String
+compareEscapeSequecesForLithuanian s t =
   if (countEscapes0 s > countEscapes0 t + countLatvianExtraQuotes t ||
       countEscapes1 s > countEscapes1 t + countLatvianExtraQuotes t ||
       countEscapes2 s > countEscapes2 t + countLatvianExtraQuotes t ||
@@ -215,7 +215,7 @@ compareEscapeSequecesForLatvian s t =
       countEOLs s /= countEOLs t         ||
       countGTs s /=  countGTs t          ||
       countLTs s /=  countLTs t)
-    then Just $ "Escaped sequences don't match for Latvia"
+    then Just $ "Escaped sequences don't match for Lithuania"
     else Nothing
 
 
