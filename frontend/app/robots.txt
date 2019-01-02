@@ -11,3 +11,4 @@ Disallow: /preview/
 Disallow: /s/
 Disallow: /tag/
 Disallow: */accountsetup/
+Disallow: /plugins/

@@ -1399,6 +1399,7 @@ Test-suite kontrakcja-test
                , test-framework-hunit
                , test-framework-quickcheck2
                , text
+               , text-icu
                , threads
                , time
                , transformers

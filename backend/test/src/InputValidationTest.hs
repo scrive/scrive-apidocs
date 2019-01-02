@@ -7,6 +7,8 @@ import Test.Framework.Providers.HUnit (testCase)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.HUnit (Assertion, assert)
 import Test.QuickCheck ((==>), Arbitrary(..), Property, mapSize, oneof, property)
+import qualified Data.Text as T
+import qualified Data.Text.ICU as Rx
 
 import InputValidation
 import TestKontra
@@ -289,7 +291,7 @@ propValidAddressWhitespaceIsEmpty = propWhitespaceIsEmpty asValidAddress
 
 propValidAddressRestrictsChars :: String -> Property
 propValidAddressRestrictsChars =
-   propJustAllowed asValidAddress [isAlphaNum, (`elem` (' ': " '():,/.#-"))]
+   propJustAllowed asValidAddress [isAlphaNum, isUnicodeChar, (`elem` (' ': " '():,/.#-"))]
 
 propValidAddressGoodExamples :: [AddressChar] -> Property
 propValidAddressGoodExamples as =
@@ -463,6 +465,9 @@ startsWithWhitespace (x:_) = isSpace x
 
 endsWithWhitespace :: String -> Bool
 endsWithWhitespace = startsWithWhitespace . reverse
+
+isUnicodeChar :: Char -> Bool
+isUnicodeChar = isJust . Rx.find (Rx.regex [] "\\p{L}") . T.pack . (:[])
 
 isWhitespace :: String -> Bool
 isWhitespace = all isSpace

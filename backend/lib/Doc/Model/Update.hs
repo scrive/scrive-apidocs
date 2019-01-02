@@ -882,6 +882,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
             UpdateFieldPersonalNumberEvidence
             (do F.value "value" newSSN
                 F.value "previousvalue" oldSSN
+                F.value "hide_pn" $ signatorylinkhidepn sl'
                 when (newSSN == "") (F.value "newblank" True)
                 when (oldSSN == "") (F.value "prvblank" True)
             )
@@ -1856,6 +1857,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateF
                         Just (SignatoryTextField f) -> do
                           F.value "customfieldname" $ stfName f
                           F.value "fieldname" $ stfName f
+                        Just (SignatoryPersonalNumberField _) -> do
+                          F.value "hide_pn" $ signatorylinkhidepn sl
                         Just (SignatoryCheckboxField f) -> do
                           F.value "fieldname" $ schfName f
                           when (not $ emptyValue newValue) $ do

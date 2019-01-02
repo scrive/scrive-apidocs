@@ -53,11 +53,11 @@ $daveBody:noescape()$
 <BR/>
 <BR/>
 <BR/>
-$if(couldBeclosed)$
-  <form method="post" action="/dave/reseal/$id$">
-    <input type="submit" value="Reseal"> </input>
+$if(couldBeClosed)$
+  <form method="post" action="/dave/postpending/$id$">
+    <input type="submit" value="Postpending"> </input>
   </form>
-$elseif(closed)$
+$elseif(couldBeResealed)$
   <form method="post" action="/dave/reseal/$id$">
     <input type="submit" value="Reseal"> </input>
   </form>

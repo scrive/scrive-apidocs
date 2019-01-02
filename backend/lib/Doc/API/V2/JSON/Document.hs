@@ -103,7 +103,7 @@ unjsonSignatoryArray da = arrayOf (unjsonSignatory da)
 unjsonSignatory :: DocumentAccess -> UnjsonDef SignatoryLink
 unjsonSignatory da =  objectOf $
   pure
-  (\is_signatory msignatoryrole
+  (\m_is_signatory msignatoryrole
     fields mbTitleQs signorder
     msuccredirecturl mrejredirecturl
     mcsvupload deliverymethod
@@ -114,39 +114,41 @@ unjsonSignatory da =  objectOf $
          link = defaultSignatoryLink
          defTitleQs = ( signatorylinkconsenttitle link
                       , signatorylinkconsentquestions link )
-         defSigRole = signatoryRoleFromBool is_signatory
-     in link { signatoryrole                   = fromMaybe
-                                                defSigRole msignatoryrole
-            , signatoryfields                 = fields
-            , signatorylinkconsenttitle       = title
-            , signatorylinkconsentquestions   = qs
-            , signatorysignorder              = signorder
-            , signatorylinksignredirecturl    = fmap emptyIfNaughty
-                                                msuccredirecturl
-            , signatorylinkrejectredirecturl  = fmap emptyIfNaughty
-                                                mrejredirecturl
+         sigRole = case (m_is_signatory, msignatoryrole) of
+           (Nothing, Nothing)                       -> signatoryrole link
+           (Nothing, Just role)                     -> role
+           (Just False, Just SignatoryRoleApprover) -> SignatoryRoleApprover
+           (Just is_signatory, _)                   -> signatoryRoleFromBool is_signatory
+     in link { signatoryrole                   = sigRole
+             , signatoryfields                 = fields
+             , signatorylinkconsenttitle       = title
+             , signatorylinkconsentquestions   = qs
+             , signatorysignorder              = signorder
+             , signatorylinksignredirecturl    = fmap emptyIfNaughty
+                                                 msuccredirecturl
+             , signatorylinkrejectredirecturl  = fmap emptyIfNaughty
+                                                 mrejredirecturl
 
-              -- Check only one .csv for the whole doc.
-            , signatorylinkcsvupload          = mcsvupload
+               -- Check only one .csv for the whole doc.
+             , signatorylinkcsvupload          = mcsvupload
 
-            , signatorylinkdeliverymethod     = deliverymethod
-            , signatorylinkauthenticationtoviewmethod
-                                              = authtoviewmethod
-            , signatorylinkauthenticationtoviewarchivedmethod
-                                              = authtoviewarchivedmethod
-            , signatorylinkauthenticationtosignmethod
-                                              = authtosignmethod
-            , signatorylinkconfirmationdeliverymethod
-                                              = confirmdeliverymethod
-            , signatorylinkallowshighlighting = allowshighlighting
-            , signatorylinkhidepn             = hidepn
-            , signatoryattachments            = sattachments
-            })
+             , signatorylinkdeliverymethod     = deliverymethod
+             , signatorylinkauthenticationtoviewmethod
+                                               = authtoviewmethod
+             , signatorylinkauthenticationtoviewarchivedmethod
+                                               = authtoviewarchivedmethod
+             , signatorylinkauthenticationtosignmethod
+                                               = authtosignmethod
+             , signatorylinkconfirmationdeliverymethod
+                                               = confirmdeliverymethod
+             , signatorylinkallowshighlighting = allowshighlighting
+             , signatorylinkhidepn             = hidepn
+             , signatoryattachments            = sattachments
+             })
   <*   (fieldReadonly "id" signatorylinkid "Signatory ID")
   <*   (fieldReadOnlyOpt "user_id"  maybesignatory "User ID for the signatory")
   <*   (fieldReadonly "is_author" signatoryisauthor "Whether signatory is document author")
-  <*>  (fieldDef "is_signatory" (isSignatory defaultSignatoryLink)
-        isSignatory
+  <*>  (fieldOpt "is_signatory" (Just . isSignatory)
         "Whether the signatory signs the document (or is a viewer/approver)")
   <*>  (fieldOptBy "signatory_role" (Just . signatoryrole)
         "Signatory role: 'viewer', 'approver', 'signing_party'."

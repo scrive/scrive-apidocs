@@ -46,11 +46,10 @@ import BrandedDomain.Model
 import DataRetentionPolicy
 import DataRetentionPolicy.Guards
 import DB
-import Doc.Action (postDocumentClosedActions)
+import Doc.Action (postDocumentClosedActions, postDocumentPendingChange)
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.JSON.Document
 import Doc.API.V2.JSON.List
-import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocumentMonad (withDocumentID)
@@ -158,6 +157,7 @@ daveRoutes =
      , dir "userhistory"   $ hGet $ toK1 $ daveUserHistory
      , dir "usergroup"       $ hGet $ toK1 $ daveUserGroup
      , dir "reseal" $ hPost $ toK1 $ resealFile
+     , dir "postpending" $ hPost $ toK1 $ triggerPostPending
      , dir "file"   $ hGet  $ toK2 $ daveFile
      , dir "backdoor" $ hGet $ handleBackdoorQuery
      , dir "randomscreenshot" $ hGet $ toK0 $ randomScreenshotForTest
@@ -600,6 +600,14 @@ resealFile docid = onlyAdmin $ withDocumentID docid $ do
   void $ postDocumentClosedActions False True
   return LoopBack
 
+-- This method can be used to force postDocumentPendingChange on a doc
+-- e.g. when everybody signed but doc is still pending
+triggerPostPending :: Kontrakcja m => DocumentID -> m KontraLink
+triggerPostPending did = onlyAdmin $ withDocumentID did $ do
+  logInfo_ "Trying to trigger postDocumentPendingChange on document (only superadmin can do that)"
+  doc <- dbQuery $ GetDocumentByDocumentID did
+  postDocumentPendingChange doc
+  return LoopBack
 
 {- |
    Used by super users to inspect a particular document.
@@ -619,14 +627,15 @@ daveDocument documentid = onlyAdmin $ do
      then do
       document <- dbQuery $ GetDocumentForDave documentid
       r <- renderTemplate "daveDocument" $ do
+        let everybodySignedAndStatusIn statuses =
+              (documentstatus document `elem` statuses) &&
+                all (isSignatory --> isSignatoryAndHasSigned
+                  && isApprover  --> isApproverAndHasApproved)
+                (documentsignatorylinks document)
         F.value "daveBody" $  inspectXML document
         F.value "id" $ show documentid
-        F.value "closed" $ documentstatus document == Closed
-        F.value "couldBeclosed" $
-          isDocumentError document &&
-          all (isSignatory --> isSignatoryAndHasSigned
-            && isApprover  --> isApproverAndHasApproved)
-          (documentsignatorylinks document)
+        F.value "couldBeResealed" $ everybodySignedAndStatusIn [Closed, DocumentError]
+        F.value "couldBeClosed" $ everybodySignedAndStatusIn [DocumentError, Pending]
       return $ Right r
      else return $ Left $ LinkDaveDocument documentid
 
