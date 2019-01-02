@@ -178,7 +178,7 @@ describe("admin/companyadmin/companydetails/companydetails", function () {
     var setCall = component.props.viewModel.set.firstCall;
     assert.equal(setCall.args[0].companyId, "1");
     assert.equal(setCall.args[0].name, "name");
-    assert.equal(setCall.args[0].number, "number");
+    assert.equal(setCall.args[0].companynumber, "number");
     assert.equal(setCall.args[0].address, "address");
     assert.equal(setCall.args[0].zip, "zip");
     assert.equal(setCall.args[0].city, "city");
@@ -328,7 +328,7 @@ describe("admin/companyadmin/companydetails/companydetails", function () {
     var viewModel = new CompanyDetailsViewModel({
       companyId: "1",
       name: "name",
-      number: "number",
+      companynumber: "number",
       address: "address",
       zip: "zip",
       city: "city",
@@ -358,7 +358,7 @@ describe("admin/companyadmin/companydetails/companydetails", function () {
     assert.equal(detailsEditor.props.companyId, "1");
     assert.equal(detailsEditor.props.companyId, "1");
     assert.equal(detailsEditor.props.name, "name");
-    assert.equal(detailsEditor.props.number, "number");
+    assert.equal(detailsEditor.props.companynumber, "number");
     assert.equal(detailsEditor.props.address, "address");
     assert.equal(detailsEditor.props.zip, "zip");
     assert.equal(detailsEditor.props.city, "city");
@@ -385,7 +385,7 @@ describe("admin/companyadmin/companydetails/companydetails", function () {
     var viewModel = new CompanyDetailsViewModel({
       companyId: "1",
       name: "name",
-      number: "number",
+      companynumber: "companynumber",
       address: "address",
       zip: "zip",
       city: "city",

@@ -20,12 +20,16 @@ var Company = exports.Company = Backbone.Model.extend({
       cgidisplayname : "",
       cgiserviceid : "",
       ipaddressmasklist : "",
-      partnerid : null,
+      parentid : null,
       parentgrouppath : [],
       smsprovider : "",
       ready : false,
       padappmode : "list_view",
-      padearchiveenabled : true
+      padearchiveenabled : true,
+      companyaddressisinherited: false,
+      companysettingsisinherited: false,
+      companyinheritedaddress: null,
+      companyinheritedsettings: null
   },
   initialize : function(args) {
     if (args.forAdmin && args.companyid != undefined)
@@ -55,8 +59,8 @@ var Company = exports.Company = Backbone.Model.extend({
   ipaddressmasklist: function() {
      return this.get("ipaddressmasklist");
   },
-  partnerid: function() {
-     return this.get("partnerid");
+  parentid: function() {
+     return this.get("parentid");
   },
   parentgrouppath: function() {
      return this.get("parentgrouppath");
@@ -111,6 +115,18 @@ var Company = exports.Company = Backbone.Model.extend({
   padearchiveenabled: function(){
      return this.get("padearchiveenabled");
   },
+  companyaddressisinherited: function(){
+     return this.get("companyaddressisinherited");
+  },
+  companysettingsisinherited: function(){
+     return this.get("companysettingsisinherited");
+  },
+  companyinheritedaddress: function(){
+     return this.get("companyinheritedaddress");
+  },
+  companyinheritedsettings: function(){
+     return this.get("companyinheritedsettings");
+  },
   ready : function() {
      return this.get("ready");
   },
@@ -124,7 +140,7 @@ var Company = exports.Company = Backbone.Model.extend({
       city      : args.city,
       country    : args.country,
       ipaddressmasklist : args.ipaddressmasklist,
-      partnerid : args.partnerid,
+      parentid : args.parentid,
       parentgrouppath : args.parentgrouppath,
       cgidisplayname : args.cgidisplayname,
       cgiserviceid : args.cgiserviceid,
@@ -138,6 +154,11 @@ var Company = exports.Company = Backbone.Model.extend({
       smsprovider : args.smsprovider,
       padappmode : args.padappmode,
       padearchiveenabled : args.padearchiveenabled,
+      // do not set inherited, when the inherited values are not provided
+      companyaddressisinherited: args.companyinheritedaddress && args.companyaddressisinherited,
+      companysettingsisinherited: args.companyinheritedsettings && args.companysettingsisinherited,
+      companyinheritedaddress: args.companyinheritedaddress,
+      companyinheritedsettings: args.companyinheritedsettings,
       ready : true
     };
   }

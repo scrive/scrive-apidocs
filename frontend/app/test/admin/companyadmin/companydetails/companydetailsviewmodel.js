@@ -12,7 +12,7 @@ describe("admin/companyadmin/companydetails/companydetailsviewmodel", function (
     var model = new CompanyDetailsViewModel();
     assert.equal(model.get("companyId"), "");
     assert.equal(model.get("name"), "");
-    assert.equal(model.get("number"), "");
+    assert.equal(model.get("companynumber"), "");
     assert.equal(model.get("address"), "");
     assert.equal(model.get("zip"), "");
     assert.equal(model.get("city"), "");
@@ -36,7 +36,7 @@ describe("admin/companyadmin/companydetails/companydetailsviewmodel", function (
     var model = new CompanyDetailsViewModel({
       companyId: "1",
       name: "name",
-      number: "number",
+      companynumber: "number",
       address: "address",
       zip: "zip",
       city: "city",

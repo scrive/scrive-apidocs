@@ -89,10 +89,10 @@ companyJSONAdminOnly ugwp = do
     value "companyaddressisinherited" ugAddressIsInherited
 
     whenJust (mInheritedSettings) $
-      object "companyinheritedinfo" . companySettingsJson
-    value "companyinfoisinherited" ugSettingsIsInherited
+      object "companyinheritedsettings" . companySettingsJson
+    value "companysettingsisinherited" ugSettingsIsInherited
 
-    value "partnerid" . fmap show $ get ugParentGroupID ug
+    value "parentid" . fmap show $ get ugParentGroupID ug
     objects "parentgrouppath" . for ugParentPath $ \parent -> do
       value "group_id" . show . get ugID $ parent
       value "group_name" . T.unpack . get ugName $ parent

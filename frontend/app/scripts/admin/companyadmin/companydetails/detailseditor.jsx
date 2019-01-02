@@ -3,6 +3,7 @@ var _ = require("underscore");
 
 var CompanyDetailsViewModel = require("./companydetailsviewmodel");
 var Select = require("../../../common/select");
+var FlashMessage = require("../../../../js/flashmessages.js").FlashMessage;
 
 var SMS_PROVIDER_OPTIONS = [
   {name: "Default", value: "SMSDefault"},
@@ -15,23 +16,47 @@ var PAD_APP_MODE_OPTIONS = [
   {name: "QR code", value: "qr_code"}
 ];
 
+var addressPropTypes = React.PropTypes.shape({
+  companynumber: React.PropTypes.string.isRequired,
+  address: React.PropTypes.string.isRequired,
+  zip: React.PropTypes.string.isRequired,
+  city: React.PropTypes.string.isRequired,
+  country: React.PropTypes.string.isRequired
+});
+
+var settingsPropTypes = React.PropTypes.shape({
+  ipaddressmasklist: React.PropTypes.string.isRequired,
+  cgidisplayname: React.PropTypes.string,
+  cgiserviceid: React.PropTypes.string,
+  idledoctimeoutpreparation: React.PropTypes.number,
+  idledoctimeoutclosed: React.PropTypes.number,
+  idledoctimeoutcanceled: React.PropTypes.number,
+  idledoctimeouttimedout: React.PropTypes.number,
+  idledoctimeoutrejected: React.PropTypes.number,
+  idledoctimeouterror: React.PropTypes.number,
+  immediatetrash: React.PropTypes.bool,
+  smsprovider: React.PropTypes.string.isRequired,
+  padappmode: React.PropTypes.string.isRequired,
+  padearchiveenabled: React.PropTypes.bool.isRequired
+});
+
 var DetailsEditorView = React.createClass({
   mixins: [React.addons.PureRenderMixin],
   propTypes: {
     companyId: React.PropTypes.string.isRequired,
     name: React.PropTypes.string.isRequired,
-    number: React.PropTypes.string.isRequired,
+    parentid: React.PropTypes.number.isRequired,
+    parentgrouppath: React.PropTypes.arrayOf(
+      React.PropTypes.shape({
+          group_id: React.PropTypes.string.IsRequired,
+          group_name: React.PropTypes.string.IsRequired
+        })).isRequired,
+    companynumber: React.PropTypes.string.isRequired,
     address: React.PropTypes.string.isRequired,
     zip: React.PropTypes.string.isRequired,
     city: React.PropTypes.string.isRequired,
     country: React.PropTypes.string.isRequired,
     ipaddressmasklist: React.PropTypes.string.isRequired,
-    partnerid: React.PropTypes.number.isRequired,
-    parentgrouppath: React.PropTypes.arrayOf(
-      React.PropTypes.shape({
-          group_id: React.PropTypes.string.IsRequired,
-          group_name: React.PropTypes.string.IsRequired
-        })),
     cgidisplayname: React.PropTypes.string,
     cgiserviceid: React.PropTypes.string,
     idledoctimeoutpreparation: React.PropTypes.number,
@@ -44,13 +69,18 @@ var DetailsEditorView = React.createClass({
     smsprovider: React.PropTypes.string.isRequired,
     padappmode: React.PropTypes.string.isRequired,
     padearchiveenabled: React.PropTypes.bool.isRequired,
+
+    addressIsInherited: React.PropTypes.bool.isRequired,
+    inheritedAddress: addressPropTypes,
+    settingsIsInherited: React.PropTypes.bool.isRequired,
+    inheritedSettings: settingsPropTypes,
     onFieldChange: React.PropTypes.func.isRequired
   },
   onNameChange: function (event) {
     this.props.onFieldChange("name", event.target.value);
   },
   onNumberChange: function (event) {
-    this.props.onFieldChange("number", event.target.value);
+    this.props.onFieldChange("companynumber", event.target.value);
   },
   onAddressChange: function (event) {
     this.props.onFieldChange("address", event.target.value);
@@ -67,8 +97,8 @@ var DetailsEditorView = React.createClass({
   onIpaddressmasklistChange: function (event) {
     this.props.onFieldChange("ipaddressmasklist", event.target.value);
   },
-  onPartneridChange: function (event) {
-    this.props.onFieldChange("partnerid", event.target.value);
+  onParentidChange: function (event) {
+    this.props.onFieldChange("parentid", event.target.value);
   },
   onCgidisplaynameChange: function (event) {
     this.props.onFieldChange("cgidisplayname", event.target.value);
@@ -102,6 +132,30 @@ var DetailsEditorView = React.createClass({
   },
   onPadearchiveenabledChange: function (event) {
     this.props.onFieldChange("padearchiveenabled", event.target.checked);
+  },
+  onAddressIsInheritedChange: function (event) {
+    if (!this.props.inheritedAddress && event.target.checked) {
+      // we are trying to inherit, but there is no parent (no inherited address)
+      new FlashMessage({
+        content: "Top level user group cannot inherit",
+        type: "error"
+      });
+      event.target.checked = false;
+    } else {
+      this.props.onFieldChange("addressIsInherited", event.target.checked);
+    }
+  },
+  onSettingsIsInheritedChange: function (event) {
+    if (!this.props.inheritedSettings && event.target.checked) {
+      // we are trying to inherit, but there is no parent (no inherited settings)
+      new FlashMessage({
+        content: "Top level user group cannot inherit",
+        type: "error"
+      });
+      event.target.checked = false;
+    } else {
+      this.props.onFieldChange("settingsIsInherited", event.target.checked);
+    }
   },
   render: function () {
     var self = this;
@@ -142,79 +196,14 @@ var DetailsEditorView = React.createClass({
             </td>
           </tr>
           <tr>
-            <td><label>Number</label></td>
+            <td><label>Parent User Group ID</label></td>
             <td>
               <input
-                name="number"
+                name="parentid"
                 type="text"
-                value={this.props.number}
-                onChange={this.onNumberChange}
-              />
-            </td>
-          </tr>
-          <tr>
-            <td><label>Address</label></td>
-            <td>
-              <input
-                name="address"
-                type="text"
-                value={this.props.address}
-                onChange={this.onAddressChange}
-              />
-            </td>
-          </tr>
-          <tr>
-            <td><label>Zip</label></td>
-            <td>
-              <input
-                name="zip"
-                type="text"
-                value={this.props.zip}
-                onChange={this.onZipChange}
-              />
-            </td>
-          </tr>
-          <tr>
-            <td><label>City</label></td>
-            <td>
-              <input
-                name="city"
-                type="text"
-                value={this.props.city}
-                onChange={this.onCityChange}
-              />
-            </td>
-          </tr>
-          <tr>
-            <td><label>Country</label></td>
-            <td>
-              <input
-                name="country"
-                type="text"
-                value={this.props.country}
-                onChange={this.onCountryChange}
-              />
-            </td>
-          </tr>
-          <tr>
-            <td><label>IP address mask</label></td>
-            <td>
-              <input
-                name="ipaddressmasklist"
-                type="text"
-                value={this.props.ipaddressmasklist}
-                onChange={this.onIpaddressmasklistChange}
-              />
-            </td>
-          </tr>
-          <tr>
-            <td><label>Partner User Group ID</label></td>
-            <td>
-              <input
-                name="partnerid"
-                type="text"
-                value={this.props.partnerid}
-                onChange={this.onPartneridChange}
+                value={this.props.parentid}
+                disabled={this.props.settingsIsInherited}
+                onChange={this.onParentidChange}
               />
             </td>
             <td>
@@ -237,6 +226,117 @@ var DetailsEditorView = React.createClass({
             <td>
             </td>
           </tr>
+          <tr><td colSpan={3}><hr/></td></tr>
+          <tr>
+            <td><label>Inherit address</label></td>
+            <td>
+              <input
+                name="companyaddressisinherited"
+                type="checkbox"
+                checked={this.props.addressIsInherited}
+                onChange={this.onAddressIsInheritedChange}
+              />
+            </td>
+            <td>If enabled, all address fields will be inherited from the parent user group.</td>
+          </tr>
+          <tr>
+            <td><label>Number</label></td>
+            <td>
+              <input
+                name="number"
+                type="text"
+                value={ this.props.addressIsInherited
+                      ? this.props.inheritedAddress.companynumber
+                      : this.props.companynumber }
+                disabled={this.props.addressIsInherited}
+                onChange={this.onNumberChange}
+
+              />
+            </td>
+          </tr>
+          <tr>
+            <td><label>Address</label></td>
+            <td>
+              <input
+                name="address"
+                type="text"
+                value={ this.props.addressIsInherited
+                      ? this.props.inheritedAddress.address
+                      : this.props.address }
+                disabled={ this.props.addressIsInherited}
+                onChange={this.onAddressChange}
+              />
+            </td>
+          </tr>
+          <tr>
+            <td><label>Zip</label></td>
+            <td>
+              <input
+                name="zip"
+                type="text"
+                value={ this.props.addressIsInherited
+                      ? this.props.inheritedAddress.zip
+                      : this.props.zip}
+                disabled={this.props.addressIsInherited}
+                onChange={this.onZipChange}
+              />
+            </td>
+          </tr>
+          <tr>
+            <td><label>City</label></td>
+            <td>
+              <input
+                name="city"
+                type="text"
+                value={ this.props.addressIsInherited
+                      ? this.props.inheritedAddress.city
+                      : this.props.city}
+                disabled={this.props.addressIsInherited}
+                onChange={this.onCityChange}
+              />
+            </td>
+          </tr>
+          <tr>
+            <td><label>Country</label></td>
+            <td>
+              <input
+                name="country"
+                type="text"
+                value={ this.props.addressIsInherited
+                      ? this.props.inheritedAddress.country
+                      : this.props.country}
+                disabled={this.props.addressIsInherited}
+                onChange={this.onCountryChange}
+              />
+            </td>
+          </tr>
+          <tr><td colSpan={3}><hr/></td></tr>
+          <tr>
+            <td><label>Inherit settings</label></td>
+            <td>
+              <input
+                name="companysettingsisinherited"
+                type="checkbox"
+                checked={this.props.settingsIsInherited}
+                onChange={this.onSettingsIsInheritedChange}
+              />
+            </td>
+            <td>If enabled, all settings will be inherited from the parent user group.</td>
+          </tr>
+          <tr>
+            <td><label>IP address mask</label></td>
+            <td>
+              <input
+                name="ipaddressmasklist"
+                type="text"
+                value={ this.props.settingsIsInherited
+                      ? this.props.inheritedSettings.ipaddressmasklist
+                      : this.props.ipaddressmasklist}
+                disabled={this.props.settingsIsInherited}
+                onChange={this.onIpaddressmasklistChange}
+              />
+            </td>
+          </tr>
           <tr>
             <td><label>CGI display name (BankID only)</label></td>
             <td>
@@ -244,7 +344,10 @@ var DetailsEditorView = React.createClass({
                 name="cgidisplayname"
                 maxLength={40}
                 type="text"
-                value={this.props.cgidisplayname}
+                value={ this.props.settingsIsInherited
+                      ? this.props.inheritedSettings.cgidisplayname
+                      : this.props.cgidisplayname}
+                disabled={this.props.settingsIsInherited}
                 onChange={this.onCgidisplaynameChange}
               />
             </td>
@@ -259,7 +362,10 @@ var DetailsEditorView = React.createClass({
                 name="cgiserviceid"
                 maxLength={30}
                 type="text"
-                value={this.props.cgiserviceid}
+                value={ this.props.settingsIsInherited
+                      ? this.props.inheritedSettings.cgiserviceid
+                      : this.props.cgiserviceid}
+                disabled={this.props.settingsIsInherited}
                 onChange={this.onCgiserviceidChange}
               />
             </td>
@@ -273,10 +379,15 @@ var DetailsEditorView = React.createClass({
               <Select
                 className="company-details-select-sms-provider"
                 isOptionSelected={function (option) {
-                  return self.props.smsprovider == option.value;
+                  if (self.props.settingsIsInherited) {
+                    return self.props.inheritedSettings.smsprovider == option.value;
+                  } else {
+                    return self.props.smsprovider == option.value;
+                  }
                 }}
                 options={SMS_PROVIDER_OPTIONS}
                 textWidth={240}
+                disabled={this.props.settingsIsInherited}
                 onSelect={this.onSmsproviderChange}
               />
             </td>
@@ -287,10 +398,15 @@ var DetailsEditorView = React.createClass({
               <Select
                 className="company-details-select-pad-app-mode"
                 isOptionSelected={function (option) {
-                  return self.props.padappmode == option.value;
+                  if (self.props.settingsIsInherited) {
+                    return self.props.inheritedSettings.padappmode == option.value;
+                  } else {
+                    return self.props.padappmode == option.value;
+                  }
                 }}
                 options={PAD_APP_MODE_OPTIONS}
                 textWidth={240}
+                disabled={this.props.settingsIsInherited}
                 onSelect={this.onPadappmodeChange}
               />
             </td>
@@ -301,7 +417,10 @@ var DetailsEditorView = React.createClass({
               <input
                 name="padearchiveenabled"
                 type="checkbox"
-                checked={this.props.padearchiveenabled}
+                checked={ this.props.settingsIsInherited
+                      ? this.props.inheritedSettings.padearchiveenabled
+                      : this.props.padearchiveenabled}
+                disabled={this.props.settingsIsInherited}
                 onChange={this.onPadearchiveenabledChange}
               />
             </td>
@@ -313,7 +432,10 @@ var DetailsEditorView = React.createClass({
               <input
                 name="companyimmediatetrash"
                 type="checkbox"
-                checked={this.props.immediatetrash}
+                checked={ this.props.settingsIsInherited
+                      ? this.props.inheritedSettings.immediatetrash
+                      : this.props.immediatetrash}
+                disabled={this.props.settingsIsInherited}
                 onChange={this.onImmediateTrashChange}
               />
             </td>
@@ -343,7 +465,10 @@ var DetailsEditorView = React.createClass({
                     max={CompanyDetailsViewModel.IDLE_DOC_TIMEOUT_MAX}
                     name={name}
                     type="number"
-                    value={self.props[name]}
+                    value={ self.props.settingsIsInherited
+                          ? self.props.inheritedSettings[name]
+                          : self.props[name]}
+                    disabled={self.props.settingsIsInherited}
                     onChange={self.onIdledoctimeoutChange(name)}
                   />
                 </td>

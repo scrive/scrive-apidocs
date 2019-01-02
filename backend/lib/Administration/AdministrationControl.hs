@@ -376,12 +376,12 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
   ugwp <- guardJustM $ dbQuery $ UserGroupGetWithParents ugid
   mCompanyName <- getField "companyname"
   mUGSettingsIsInherited <- fmap (==("true"::String))
-    <$> getField "companyinfoisinherited"
+    <$> getField "companysettingsisinherited"
   ugSettingsChange <- getUserGroupSettingsChange
   mUGAddressIsInherited <- fmap (==("true"::String))
     <$> getField "companyaddressisinherited"
   ugAddressChange <- getUserGroupAddressChange
-  mTryParentUserGroupID <- getOptionalField asValidUserGroupID "companypartnerid"
+  mTryParentUserGroupID <- getOptionalField asValidUserGroupID "companyparentid"
 
   let oldUG = ugwpUG ugwp
       setSettings =

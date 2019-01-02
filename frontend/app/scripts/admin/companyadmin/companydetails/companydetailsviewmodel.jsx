@@ -7,14 +7,16 @@ var CompanyDetailsViewModel = Backbone.Model.extend(
     defaults: {
       companyId: "",
       name: "",
-      number: "",
+      parentid: null,
+      parentgrouppath: [],
+      companynumber: "",
       address: "",
       zip: "",
       city: "",
       country: "",
+      addressIsInherited: false,
+      inheritedAddress: null,
       ipaddressmasklist: "",
-      partnerid: 1,
-      parentgrouppath: [],
       cgidisplayname: null,
       cgiserviceid: null,
       idledoctimeoutpreparation: null,
@@ -26,20 +28,22 @@ var CompanyDetailsViewModel = Backbone.Model.extend(
       immediatetrash: false,
       smsprovider: "",
       padappmode: "",
-      padearchiveenabled: true
+      padearchiveenabled: true,
+      settingsIsInherited: false,
+      inheritedSettings: null
     },
     saveDetails: function () {
       return new Submit({
         url: "/adminonly/companyadmin/" + this.get("companyId"),
         method: "POST",
         companyname: this.get("name"),
-        companynumber: this.get("number"),
+        companyparentid: this.get("parentid"),
+        companynumber: this.get("companynumber"),
         companyaddress: this.get("address"),
         companyzip: this.get("zip"),
         companycity: this.get("city"),
         companycountry: this.get("country"),
         companyipaddressmasklist: this.get("ipaddressmasklist"),
-        companypartnerid: this.get("partnerid"),
         companycgidisplayname: this.get("cgidisplayname"),
         companycgiserviceid: this.get("cgiserviceid"),
         companyidledoctimeoutpreparation: this.get("idledoctimeoutpreparation"),
@@ -51,7 +55,9 @@ var CompanyDetailsViewModel = Backbone.Model.extend(
         companyidledoctimeouterror: this.get("idledoctimeouterror"),
         companysmsprovider: this.get("smsprovider"),
         companypadappmode: this.get("padappmode"),
-        companypadearchiveenabled: this.get("padearchiveenabled")
+        companypadearchiveenabled: this.get("padearchiveenabled"),
+        companyaddressisinherited: this.get("addressIsInherited"),
+        companysettingsisinherited: this.get("settingsIsInherited")
       });
     },
     mergeToCompany: function (newCompanyId) {

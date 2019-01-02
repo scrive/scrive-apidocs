@@ -40,14 +40,14 @@ var CompanyDetailsView = React.createClass({
       {
         companyId: this.props.companyId,
         name: this.props.company.companyname(),
-        number: this.props.company.companynumber(),
+        parentid: this.props.company.parentid(),
+        parentgrouppath: this.props.company.parentgrouppath(),
+        companynumber: this.props.company.companynumber(),
         address: this.props.company.address(),
         zip: this.props.company.zip(),
         city: this.props.company.city(),
         country: this.props.company.country(),
         ipaddressmasklist: this.props.company.ipaddressmasklist(),
-        partnerid: this.props.company.partnerid(),
-        parentgrouppath: this.props.company.parentgrouppath(),
         cgidisplayname: this.props.company.cgidisplayname(),
         cgiserviceid: this.props.company.cgiserviceid(),
         idledoctimeoutpreparation: this.props.company.idledoctimeoutpreparation(),
@@ -59,7 +59,11 @@ var CompanyDetailsView = React.createClass({
         immediatetrash: this.props.company.immediatetrash(),
         smsprovider: this.props.company.smsprovider(),
         padappmode: this.props.company.padappmode(),
-        padearchiveenabled: this.props.company.padearchiveenabled()
+        padearchiveenabled: this.props.company.padearchiveenabled(),
+        addressIsInherited: this.props.company.companyaddressisinherited(),
+        settingsIsInherited: this.props.company.companysettingsisinherited(),
+        inheritedAddress: this.props.company.companyinheritedaddress(),
+        inheritedSettings: this.props.company.companyinheritedsettings()
       },
       {
         silent: true
@@ -108,7 +112,7 @@ var CompanyDetailsView = React.createClass({
             <DetailsEditorView
               companyId={this.props.viewModel.get("companyId")}
               name={this.props.viewModel.get("name")}
-              number={this.props.viewModel.get("number")}
+              companynumber={this.props.viewModel.get("companynumber")}
               address={this.props.viewModel.get("address")}
               zip={this.props.viewModel.get("zip")}
               city={this.props.viewModel.get("city")}
@@ -116,7 +120,7 @@ var CompanyDetailsView = React.createClass({
               ipaddressmasklist={
                 this.props.viewModel.get("ipaddressmasklist")
               }
-              partnerid={this.props.viewModel.get("partnerid")}
+              parent={this.props.viewModel.get("parentid")}
               parentgrouppath={this.props.viewModel.get("parentgrouppath")}
               cgidisplayname={this.props.viewModel.get("cgidisplayname")}
               cgiserviceid={this.props.viewModel.get("cgiserviceid")}
@@ -132,6 +136,10 @@ var CompanyDetailsView = React.createClass({
               padearchiveenabled={
                 this.props.viewModel.get("padearchiveenabled")
               }
+              addressIsInherited={this.props.viewModel.get("addressIsInherited")}
+              settingsIsInherited={this.props.viewModel.get("settingsIsInherited")}
+              inheritedAddress={this.props.viewModel.get("inheritedAddress")}
+              inheritedSettings={this.props.viewModel.get("inheritedSettings")}
               onFieldChange={this.onDetailsEditorFieldChange}
             />
 

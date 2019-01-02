@@ -23,7 +23,7 @@ describe("admin/companyadmin/companydetails/detailseditor", function () {
       {
         companyId: "companyId",
         name: "name",
-        number: "number",
+        companynumber: "companynumber",
         address: "address",
         zip: "zip",
         city: "city",
@@ -93,16 +93,16 @@ describe("admin/companyadmin/companydetails/detailseditor", function () {
     );
   });
 
-  it("should render the number field", function () {
+  it("should render the companynumber field", function () {
     var component = renderComponent();
 
     var input = $("input[name=number]", component.getDOMNode());
 
     assert.lengthOf(input, 1);
-    assert.equal(input.val(), component.props.number);
+    assert.equal(input.val(), component.props.companynumber);
   });
 
-  it("should propagate change of the number field", function () {
+  it("should propagate change of the companynumber field", function () {
     var component = renderComponent();
 
     var input = $("input[name=number]", component.getDOMNode());
@@ -110,7 +110,7 @@ describe("admin/companyadmin/companydetails/detailseditor", function () {
     TestUtils.Simulate.change(input[0]);
 
     assert.isTrue(
-      component.props.onFieldChange.calledWith("number", "changed")
+      component.props.onFieldChange.calledWith("companynumber", "changed")
     );
   });
 
