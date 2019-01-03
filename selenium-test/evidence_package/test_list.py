@@ -68,11 +68,12 @@ REMOTE_DEVICES_FOR_SCREENSHOTS = [{'browserName': "chrome",
                                    'platformVersion': '9.3',
                                    'platformName': 'iOS',
                                    'screenshot-prefix': 'iphone'},
-                                  {'browserName': 'Browser',
-                                   'appiumVersion': '1.5.3',
-                                   'deviceName': 'Samsung Galaxy S4 Emulator',
+                                  {'browserName': 'Chrome',
+                                   'appiumVersion': '1.8.1',
+                                   'deviceName':
+                                   'Samsung Galaxy S9 FHD GoogleAPI Emulator',
                                    'deviceOrientation': 'portrait',
-                                   'platformVersion': '4.4',
+                                   'platformVersion': '7.1',
                                    'platformName': 'Android',
                                    'screenshot-prefix': 'android'}]
 
