@@ -1,0 +1,24 @@
+---
+post:
+
+  summary: Login and get session
+
+  tags:
+    - User
+
+  description: |
+    OAuth authorization. Returns session id.
+
+  parameters:
+    - name: personal_token
+      in: formData
+      format: application/json
+      required: true
+      description: |
+        Must be of type [`OAuthAuthorization`](#oauthauthorization)
+      $ref: ../../scrive_api.yaml#/definitions/OAuthAuthorization
+
+  responses:
+    200:
+      description: |
+        Returns a JSON with `session_id`

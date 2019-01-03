@@ -1,0 +1,24 @@
+---
+$schema: "http://json-schema.org/draft-04/schema#"
+title: OAuthAuthorization
+type: object
+description: |
+properties:
+  apitoken:
+    type: object
+    properties:
+      atID:
+        type: integer
+      atToken:
+        type: integer
+  apisecret:
+    type: integer
+  accesstoken:
+    type: object
+    properties:
+      atID:
+        type: integer
+      atToken:
+        type: integer
+  accesssecret:
+    type: integer

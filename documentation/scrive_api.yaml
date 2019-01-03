@@ -923,8 +923,33 @@ paths:
 
   # User
 
+  /loginandgetsession:
+    $ref: ./api/user/loginandgetsession.yaml
+
+  /2fa/setup:
+    $ref: ./api/user/2fa-setup.yaml
+
+  /2fa/confirm:
+    $ref: ./api/user/2fa-confirm.yaml
+
+  /2fa/disable:
+    $ref: ./api/user/2fa-disable.yaml
+
+  /isuserdeletable:
+    $ref: ./api/user/isuserdeletable.yaml
+
+  /deleteuser:
+    $ref: ./api/user/deleteuser.yaml
+
+  /dataretentionpolicy:
+    $ref: ./api/user/get-dataretentionpolicy.yaml
+
+  /dataretentionpolicy/set:
+    $ref: ./api/user/post-dataretentionpolicy.yaml
+
   /usagestats/days:
     $ref: ./api/user/getusagestatsdays.yaml
+
   /usagestats/months:
     $ref: ./api/user/getusagestatsmonths.yaml
 
@@ -962,6 +987,12 @@ definitions:
     $ref: ./definitions/Attachment.yaml
   AttachmentListFilter:
     $ref: ./definitions/AttachmentListFilter.yaml
+  DataRetentionPolicy:
+    $ref: ./definitions/DataRetentionPolicy.yaml
+  DataRetentionPolicies:
+    $ref: ./definitions/DataRetentionPolicies.yaml
+  OAuthAuthorization:
+    $ref: ./definitions/OAuthAuthorization.yaml
   UserStats:
     $ref: ./definitions/UserStats.yaml
 
