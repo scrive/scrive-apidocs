@@ -25,6 +25,7 @@ import Text.JSON.Gen
 
 import DataRetentionPolicy
 import DB
+import FeatureFlags.Model
 import Partner.Model
 import User.Types.User
 import User.UserID
@@ -69,18 +70,8 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
       sqlSet "sms_originator" . get uguiSmsOriginator $ ugui
       sqlSet "favicon" . get uguiFavicon $ ugui
 
-    let newAccountFlags forAdmins = do
-          sqlSet "can_use_dk_authentication_to_view" False
-          sqlSet "can_use_dk_authentication_to_sign" False
-          sqlSet "can_use_fi_authentication_to_view" False
-          sqlSet "can_use_no_authentication_to_view" False
-          sqlSet "can_use_no_authentication_to_sign" False
-          sqlSet "can_use_se_authentication_to_view" False
-          sqlSet "can_use_se_authentication_to_sign" False
-          sqlSet "user_group_id" ugid
-          sqlSet "flags_for_admin" forAdmins
-    runQuery_ . sqlInsert "feature_flags" $ newAccountFlags False
-    runQuery_ . sqlInsert "feature_flags" $ newAccountFlags True
+    -- insert Features
+    whenJust (get ugFeatures ug) $ insertFeatures ugid
 
     return . set ugID ugid $ ug
 
@@ -116,6 +107,17 @@ insertUserGroupAddress ugid uga =
     sqlSet "zip" . get ugaZip $ uga
     sqlSet "city" . get ugaCity $ uga
     sqlSet "country" . get ugaCountry $ uga
+
+insertFeatures :: (MonadDB m, MonadThrow m) => UserGroupID -> Features -> m ()
+insertFeatures ugid features = do
+  runQuery_ . sqlInsert "feature_flags" $ do
+    setFeatureFlagsSql $ fRegularUsers features
+    sqlSet "user_group_id" ugid
+    sqlSet "flags_for_admin" False
+  runQuery_ . sqlInsert "feature_flags" $ do
+    setFeatureFlagsSql $ fAdminUsers features
+    sqlSet "user_group_id" ugid
+    sqlSet "flags_for_admin" True
 
 data UserGroupGet = UserGroupGet UserGroupID
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGet (Maybe UserGroup) where
@@ -195,7 +197,7 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () 
     runQuery_ . sqlDelete "user_group_settings" $ do
       sqlWhereEq "user_group_id" ugid
     whenJust (get ugSettings new_ug) $ insertUserGroupSettings ugid
-    -- insert group address
+    -- update group address
     runQuery_ . sqlDelete "user_group_addresses" $ do
       sqlWhereEq "user_group_id" ugid
     whenJust (get ugAddress new_ug) $ insertUserGroupAddress ugid
@@ -224,6 +226,11 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () 
       chkUgOwnsTheme uguiMailTheme ugui ugid
       chkUgOwnsTheme uguiSignviewTheme ugui ugid
       chkUgOwnsTheme uguiServiceTheme ugui ugid
+
+    -- update feature flags
+    runQuery_ . sqlDelete "feature_flags" $ do
+      sqlWhereEq "user_group_id" ugid
+    whenJust (get ugFeatures new_ug) $ insertFeatures ugid
 
     -- updated group may have children already, these need to be adjusted
     Array1 (old_parentpath :: [UserGroupID])<- do
@@ -313,6 +320,8 @@ userGroupSelectors = [
   , "(SELECT (" <> mintercalate ", " ugSettingsSelectors <> ")::user_group_setting FROM user_group_settings WHERE user_groups.id = user_group_settings.user_group_id)"
   , "(SELECT (" <> mintercalate ", " ugAddressSelectors <> ")::user_group_address FROM user_group_addresses WHERE user_groups.id = user_group_addresses.user_group_id)"
   , "(SELECT (" <> mintercalate ", " ugUISelectors <> ")::user_group_ui FROM user_group_uis WHERE user_groups.id = user_group_uis.user_group_id)"
+  , "(SELECT (" <> mintercalate ", " selectFeatureFlagsSelectors <> ")::feature_flags_ct FROM feature_flags WHERE user_groups.id = feature_flags.user_group_id AND feature_flags.flags_for_admin)"
+  , "(SELECT (" <> mintercalate ", " selectFeatureFlagsSelectors <> ")::feature_flags_ct FROM feature_flags WHERE user_groups.id = feature_flags.user_group_id AND NOT feature_flags.flags_for_admin)"
   ]
 
 ugSettingsSelectors :: [SQL]

@@ -66,6 +66,8 @@ kontraComposites = [
   , ctSignatoryLinkMagicHash
   , ctSignatoryLink
   , ctDocument
+  , ctFeatureFlags
+
   -- user group composites
   , ctUserGroupInvoicing
   , ctUserGroupSettings

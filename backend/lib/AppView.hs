@@ -95,12 +95,12 @@ pageFromBody ctx ad bodytext fields = do
     F.valueM "httplink" $ getHttpHostpart
     fields
 
-userGroupForPage  :: Kontrakcja m => m (Maybe UserGroup)
-userGroupForPage = do
+userGroupWithParentsForPage  :: Kontrakcja m => m (Maybe UserGroupWithParents)
+userGroupWithParentsForPage = do
   ctx <- getContext
   case (get ctxmaybeuser ctx) of
-       Nothing -> return Nothing
-       Just user -> fmap Just $ dbQuery $ UserGroupGetByUserID (userid user)
+    Nothing -> return Nothing
+    Just user -> fmap Just $ dbQuery $ UserGroupGetWithParentsByUserID (userid user)
 
 userGroupUIForPage  :: Kontrakcja m => m (Maybe (UserGroupID, UserGroupUI))
 userGroupUIForPage = do
@@ -113,9 +113,9 @@ userGroupUIForPage = do
 
 currentSubscriptionJSON :: Kontrakcja m => m (Maybe A.Value)
 currentSubscriptionJSON = do
-  mug <- userGroupForPage
-  case mug of
-    Just ug -> Just . unjsonToJSON unjsonDef <$> getSubscription ug
+  mugwp <- userGroupWithParentsForPage
+  case mugwp of
+    Just ugwp -> Just . unjsonToJSON unjsonDef <$> getSubscription ugwp
     Nothing -> return Nothing
 
 notFoundPage :: Kontrakcja m => m Response

@@ -151,17 +151,21 @@ initDatabaseEntries appConf = do
         bd <- dbQuery $ GetMainBrandedDomain
         ug <- dbUpdate . UserGroupCreate $ defaultUserGroup
         void $ dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) (get ugID ug,True) LANG_EN (get bdid bd) ByAdmin
-        dbUpdate $ UserGroupUpdate $ set ugInvoicing (Invoice EnterprisePlan) ug
-        Features fAdmins fUsers <- getFeaturesFor $ get ugID ug
+        let features = fromJust $ get ugFeatures ug
         -- enable everything for initial admins
-        let fAdmins' = fAdmins { ffCanUseDKAuthenticationToView = True
-                               , ffCanUseDKAuthenticationToSign = True
-                               , ffCanUseFIAuthenticationToView = True
-                               , ffCanUseNOAuthenticationToView = True
-                               , ffCanUseNOAuthenticationToSign = True
-                               , ffCanUseSEAuthenticationToView = True
-                               , ffCanUseSEAuthenticationToSign = True
-                               }
-        updateFeaturesFor (get ugID ug) $ Features fAdmins' fUsers
-        return ()
+        let adminFeatures = (fromJust $ get ugFeatures ug)
+              { fAdminUsers = (fAdminUsers features)
+                  { ffCanUseDKAuthenticationToView = True
+                  , ffCanUseDKAuthenticationToSign = True
+                  , ffCanUseFIAuthenticationToView = True
+                  , ffCanUseNOAuthenticationToView = True
+                  , ffCanUseNOAuthenticationToSign = True
+                  , ffCanUseSEAuthenticationToView = True
+                  , ffCanUseSEAuthenticationToSign = True
+                  }
+              }
+        dbUpdate . UserGroupUpdate
+          . set ugInvoicing (Invoice EnterprisePlan)
+          . set ugFeatures (Just adminFeatures)
+          $ ug
       Just _ -> return () -- user exist, do not add it

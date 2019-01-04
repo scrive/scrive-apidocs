@@ -88,8 +88,8 @@ import Redirect
 import User.Email
 import User.Model
 import User.Utils
-import UserGroup.Model (UserGroupGet(..))
-import UserGroup.Types.Subscription
+import UserGroup.Model
+import UserGroup.Types
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.MonadUtils
@@ -113,9 +113,9 @@ handleNewDocument = withUser $ \user -> do
   -- Default document on the frontend has different requirements,
   -- this sets up the signatories to match those requirements.
   (authToView, authToSign, invitationDelivery, confirmationDelivery) <- do
-    ug <- guardJustM . dbQuery $ UserGroupGet (usergroupid user)
-    features <- ugSubFeatures <$> getSubscription ug
-    let ff = if useriscompanyadmin user
+    ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ userid user
+    let features = ugwpFeatures ugwp
+        ff = if useriscompanyadmin user
                 then fAdminUsers features
                 else fRegularUsers features
     return ( firstAllowedAuthenticationToView ff

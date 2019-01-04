@@ -8,6 +8,7 @@ module UserGroup.Internal (
   , ugwpPaymentPlan
   , ugwpSettings
   , ugwpAddress
+  , ugwpFeatures
   , ugwpToList
   , ugwpUG
   , ugwpAddChild
@@ -37,6 +38,7 @@ import qualified Data.ByteString.Char8 as BS
 
 import DataRetentionPolicy
 import DB
+import FeatureFlags.Model
 import IPAddress
 import Log.Identifier
 import PadApplication.Types
@@ -52,6 +54,7 @@ data UserGroup = UserGroup {
   , _ugSettings      :: Maybe UserGroupSettings
   , _ugInvoicing     :: UserGroupInvoicing
   , _ugUI            :: UserGroupUI
+  , _ugFeatures      :: Maybe Features
   } deriving (Show, Eq)
 
 data UserGroupRoot = UserGroupRoot
@@ -61,6 +64,7 @@ data UserGroupRoot = UserGroupRoot
   , _ugrSettings      :: UserGroupSettings
   , _ugrPaymentPlan   :: PaymentPlan  -- user group root always must have Invoice
   , _ugrUI            :: UserGroupUI
+  , _ugrFeatures      :: Features
   } deriving (Show, Eq)
 
 -- UserGroup list is ordered from Leaf to Child of Root)
@@ -180,6 +184,8 @@ type instance CompositeRow UserGroup = (
   , Maybe (Composite UserGroupSettings)
   , Maybe (Composite UserGroupAddress)
   , Composite UserGroupUI
+  , Maybe (Composite FeatureFlags)  -- for admins
+  , Maybe (Composite FeatureFlags)  -- for regular users
   )
 
 instance PQFormat UserGroup where
@@ -193,12 +199,18 @@ instance CompositeFromSQL UserGroup where
     , cinvoicing
     , cinfos
     , caddresses
-    , cuis) =
+    , cuis
+    , cAdminFeatureFlags
+    , cRegularFeatureFlags
+    ) =
     UserGroup
     { _ugSettings  = unComposite <$> cinfos
     , _ugInvoicing = unComposite cinvoicing
     , _ugAddress   = unComposite <$> caddresses
     , _ugUI        = unComposite cuis
+    , _ugFeatures  = Features
+        <$> (unComposite <$> cAdminFeatureFlags)
+        <*> (unComposite <$> cRegularFeatureFlags)
     , ..
     }
 
@@ -227,6 +239,7 @@ defaultUserGroup =
       , _ugaCountry       = ""
       }
     , _ugUI = defaultUserGroupUI
+    , _ugFeatures = Just $ defaultFeatures FreePlan
     }
 
 -- USER GROUP ROOT
@@ -237,10 +250,11 @@ ugrFromUG ug = do
   -- and Feature Flags
   _ugrPaymentPlan <- case _ugInvoicing ug of
     None -> Nothing
-    BillItem _ -> Nothing
-    Invoice pp -> Just pp  -- the root of usergroup tree must have Invoice
-  _ugrSettings <- _ugSettings ug  -- the root of usergroup tree must have Settings
-  _ugrAddress <- _ugAddress ug  -- the root of usergroup tree must have Address
+    BillItem _ -> Nothing         -- the root of usergroup tree must have:
+    Invoice pp -> Just pp         --   Invoice
+  _ugrSettings <- _ugSettings ug  --   Settings
+  _ugrAddress <- _ugAddress ug    --   Address
+  _ugrFeatures <- _ugFeatures ug  --   Features
   return $ UserGroupRoot
     { _ugrID = _ugID ug
     , _ugrName = _ugName ug
@@ -257,6 +271,7 @@ ugFromUGRoot ugr = UserGroup
   , _ugSettings = Just $ _ugrSettings ugr
   , _ugAddress = Just $ _ugrAddress ugr
   , _ugUI = _ugrUI ugr
+  , _ugFeatures = Just $ _ugrFeatures ugr
   }
 
 -- USER GROUP WITH PARENTS
@@ -277,6 +292,9 @@ ugwpSettings = ugwpInherit _ugrSettings _ugSettings
 
 ugwpAddress :: UserGroupWithParents -> UserGroupAddress
 ugwpAddress = ugwpInherit _ugrAddress _ugAddress
+
+ugwpFeatures :: UserGroupWithParents -> Features
+ugwpFeatures = ugwpInherit _ugrFeatures _ugFeatures
 
 ugwpToList :: UserGroupWithParents -> [UserGroup]
 ugwpToList (ug_root, ug_children_path) =

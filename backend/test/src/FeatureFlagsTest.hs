@@ -3,9 +3,11 @@ module FeatureFlagsTest (featureFlagsTest) where
 import Test.Framework
 import Test.QuickCheck
 
+import DB
 import FeatureFlags.Model
 import TestingUtil
 import TestKontra
+import UserGroup.Model
 import UserGroup.Types
 
 featureFlagsTest :: TestEnvSt -> Test
@@ -16,17 +18,17 @@ featureFlagsTest env = testGroup "FeatureFlags" [
 
 testUpdateFeatureFlagsWorks :: TestEnv ()
 testUpdateFeatureFlagsWorks = do
-  ugid <- (get ugID) <$> addNewUserGroup
+  ug <- addNewUserGroup
   replicateM_ 100 $  do
     (fs :: Features) <- rand 10 arbitrary
-    updateFeaturesFor ugid fs
-    fs' <- getFeaturesFor ugid
-    assertEqual "Updating feature flags works" fs fs'
+    dbUpdate . UserGroupUpdate $ set ugFeatures (Just fs) ug
+    ug' <- fmap fromJust . dbQuery . UserGroupGet $ get ugID ug
+    assertEqual "Updating feature flags works" (Just fs) (get ugFeatures ug')
 
 testNewCompanyFeatureFlagDefaults :: TestEnv ()
 testNewCompanyFeatureFlagDefaults  = do
   ug <- addNewUserGroup
-  fs <- getFeaturesFor (get ugID ug)
+  let fs = fromJust $ get ugFeatures ug
   checkNewAccountFlags (fAdminUsers fs)
   checkNewAccountFlags (fRegularUsers fs)
 

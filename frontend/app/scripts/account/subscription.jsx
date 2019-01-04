@@ -15,8 +15,9 @@ var Subscription = Backbone.Model.extend({
     "inherited_plan": "",
     "number_of_users": 0,
     "started_last_month": 0,
-    "features_admin_users": undefined,
-    "features_regular_users": undefined,
+    "features": undefined,
+    "inhetired_features": undefined,
+    "features_is_inherited": false,
     "current_user_is_admin": undefined,
     "ready": false
   },
@@ -26,11 +27,28 @@ var Subscription = Backbone.Model.extend({
     else
       this.url = "/api/frontend/getsubscription";
 
-    if (args != undefined && args.features) {
+    if (args && args.features) {
       var adminFF = new FeatureFlag(args.features.admin_users);
       var regularFF = new FeatureFlag(args.features.regular_users);
-      this.set({"features_admin_users": adminFF, "features_regular_users": regularFF});
+      this.set({"features": new Features({
+        "admin_users": adminFF,
+        "regular_users": regularFF
+      })});
+    } else {
+      this.set({"features": this.noFeatures()});
     }
+
+    this.set({"features_is_inherited": !!(args && args.features_is_inherited)});
+
+    if (args && args.inherited_features) {
+      var inheritedAdminFF = new FeatureFlag(args.inherited_features.admin_users);
+      var inheritedRegularFF = new FeatureFlag(args.inherited_features.regular_users);
+      this.set({"inherited_features": {
+        "admin_users": inheritedAdminFF,
+        "regular_users": inheritedRegularFF
+      }});
+    }
+    // keep inherited features as undefined, if they are not available
 
     if (args.current_user_is_admin != undefined) {
        this.set({"current_user_is_admin": args.current_user_is_admin});
@@ -80,26 +98,48 @@ var Subscription = Backbone.Model.extend({
      return this.get("current_user_is_admin");
   },
 
-  noFeatures: function () {
+  noFeatureFlags: function () {
     return new FeatureFlag({});
   },
 
-  featuresForAdminUsers: function () {
-    return this.get("features_admin_users") || this.noFeatures();
+  noFeatures: function () {
+    return new Features({
+      "regular_users": this.noFeatureFlags(),
+      "admin_users": this.noFeatureFlags()
+    });
   },
 
-  featuresForRegularUsers: function () {
-    return this.get("features_regular_users") || this.noFeatures();
+  features: function () {
+    return this.get("features") || this.noFeatures();
   },
 
+  inheritedFeatures: function () {
+    return this.get("inherited_features");
+  },
+
+  featuresIsInherited: function () {
+    return this.get("features_is_inherited") || false;
+  },
+
+  // actually - current use feature flags
   currentUserFeatures: function () {
      var isAdmin = this.currentUserIsAdmin();
-     if (isAdmin != undefined && isAdmin) {
-       return this.featuresForAdminUsers();
-     } else if (isAdmin != undefined && !isAdmin) {
-       return this.featuresForRegularUsers();
+     var currentFeatures = undefined;
+     if (!this.featuresIsInherited()) {
+       currentFeatures = this.features();
+     } else if (this.inheritedFeatures()) {
+       currentFeatures = this.inheritedFeatures();
      } else {
-       return this.noFeatures();
+       // defensive programming. This really should not happen.
+       console.log("Inherited features are missing!");
+       currentFeatures = this.noFeatures();
+     }
+     if (isAdmin != undefined && isAdmin) {
+       return currentFeatures.adminUsers();
+     } else if (isAdmin != undefined && !isAdmin) {
+       return currentFeatures.regularUsers();
+     } else {
+       return this.noFeatureFlags();
      }
   },
   isOverLimit: function (numberOfDocs) {
@@ -115,91 +155,43 @@ var Subscription = Backbone.Model.extend({
   },
   updateSubscriptionAsAdmin: function (nsd, callback) {
     var self = this;
-    var pick = function (param, currentValue) {
-        return _.isUndefined(param) ? currentValue : param;
-    };
-    var pickToFeature = function (f, forAdmin) {
-        var ff = self.featuresForRegularUsers();
-        if (forAdmin)
-            ff = self.featuresForAdminUsers();
-        return ({
-            can_use_templates: pick(f.canUseTemplates, ff.canUseTemplates()),
-            can_use_shareable_links: pick(
-              f.canUseShareableLinks, ff.canUseShareableLinks()
-            ),
-            can_use_branding: pick(f.canUseBranding, ff.canUseBranding()),
-            can_use_author_attachments: pick(
-                f.canUseAuthorAttachments, ff.canUseAuthorAttachments()
-            ),
-            can_use_signatory_attachments: pick(
-                f.canUseSignatoryAttachments, ff.canUseSignatoryAttachments()
-            ),
-            can_use_mass_sendout: pick(
-                f.canUseMassSendout, ff.canUseMassSendout()
-            ),
-            can_use_sms_invitations: pick(
-                f.canUseSMSInvitations, ff.canUseSMSInvitations()
-            ),
-            can_use_sms_confirmations: pick(
-                f.canUseSMSConfirmations, ff.canUseSMSConfirmations()
-            ),
-            can_use_dk_authentication_to_view: pick(
-                f.canUseDKAuthenticationToView, ff.canUseDKAuthenticationToView()
-            ),
-            can_use_dk_authentication_to_sign: pick(
-                f.canUseDKAuthenticationToSign, ff.canUseDKAuthenticationToSign()
-            ),
-            can_use_fi_authentication_to_view: pick(
-                f.canUseFIAuthenticationToView, ff.canUseFIAuthenticationToView()
-            ),
-            can_use_no_authentication_to_view: pick(
-                f.canUseNOAuthenticationToView, ff.canUseNOAuthenticationToView()
-            ),
-            can_use_no_authentication_to_sign: pick(
-                f.canUseNOAuthenticationToSign, ff.canUseNOAuthenticationToSign()
-            ),
-            can_use_se_authentication_to_view: pick(
-                f.canUseSEAuthenticationToView, ff.canUseSEAuthenticationToView()
-            ),
-            can_use_se_authentication_to_sign: pick(
-                f.canUseSEAuthenticationToSign, ff.canUseSEAuthenticationToSign()
-            ),
-            can_use_sms_pin_authentication_to_view: pick(
-              f.canUseSMSPinAuthenticationToView, ff.canUseSMSPinAuthenticationToView()
-            ),
-            can_use_sms_pin_authentication_to_sign: pick(
-              f.canUseSMSPinAuthenticationToSign, ff.canUseSMSPinAuthenticationToSign()
-            ),
-            can_use_standard_authentication_to_view: pick(
-              f.canUseStandardAuthenticationToView, ff.canUseStandardAuthenticationToView()
-            ),
-            can_use_standard_authentication_to_sign: pick(
-              f.canUseStandardAuthenticationToSign, ff.canUseStandardAuthenticationToSign()
-            ),
-            can_use_email_invitations: pick(
-              f.canUseEmailInvitations, ff.canUseEmailInvitations()
-            ),
-            can_use_email_confirmations: pick(
-              f.canUseEmailConfirmations, ff.canUseEmailConfirmations()
-            ),
-            can_use_api_invitations: pick(
-              f.canUseAPIInvitations, ff.canUseAPIInvitations()
-            ),
-            can_use_pad_invitations: pick(
-              f.canUsePadInvitations, ff.canUsePadInvitations()
-            )
-        });
-    };
-    var features = {
-        admin_users: pickToFeature(nsd.adminUserFeatures, true),
-        regular_users: pickToFeature(nsd.regularUserFeatures, false)
+    var fromFeatureFlags = function (ff) {
+      return ({
+        can_use_templates: ff.canUseTemplates,
+        can_use_shareable_links: ff.canUseShareableLinks,
+        can_use_branding: ff.canUseBranding,
+        can_use_author_attachments: ff.canUseAuthorAttachments,
+        can_use_signatory_attachments: ff.canUseSignatoryAttachments,
+        can_use_mass_sendout: ff.canUseMassSendout,
+        can_use_sms_invitations: ff.canUseSMSInvitations,
+        can_use_sms_confirmations: ff.canUseSMSConfirmations,
+        can_use_dk_authentication_to_view: ff.canUseDKAuthenticationToView,
+        can_use_dk_authentication_to_sign: ff.canUseDKAuthenticationToSign,
+        can_use_fi_authentication_to_view: ff.canUseFIAuthenticationToView,
+        can_use_no_authentication_to_view: ff.canUseNOAuthenticationToView,
+        can_use_no_authentication_to_sign: ff.canUseNOAuthenticationToSign,
+        can_use_se_authentication_to_view: ff.canUseSEAuthenticationToView,
+        can_use_se_authentication_to_sign: ff.canUseSEAuthenticationToSign,
+        can_use_sms_pin_authentication_to_view: ff.canUseSMSPinAuthenticationToView,
+        can_use_sms_pin_authentication_to_sign: ff.canUseSMSPinAuthenticationToSign,
+        can_use_standard_authentication_to_view: ff.canUseStandardAuthenticationToView,
+        can_use_standard_authentication_to_sign: ff.canUseStandardAuthenticationToSign,
+        can_use_email_invitations: ff.canUseEmailInvitations,
+        can_use_email_confirmations: ff.canUseEmailConfirmations,
+        can_use_api_invitations: ff.canUseAPIInvitations,
+        can_use_pad_invitations: ff.canUsePadInvitations
+      });
     };
     var newSubscription = {
-        invoicing_type: pick(nsd.selectedInvoicingType, this.invoicingtype()),
-        features: features
+      invoicing_type: nsd.selectedInvoicingType,
+      features_is_inherited: nsd.featuresIsInherited,
+      features: {
+        admin_users: fromFeatureFlags(nsd.features.adminUsers),
+        regular_users: fromFeatureFlags(nsd.features.regularUsers)
+      }
     };
-    if (pick(nsd.selectedPlan, this.paymentplan()) !== "inherit") {
-      newSubscription["payment_plan"] = pick(nsd.selectedPlan, this.paymentplan());
+    if (nsd.selectedPlan !== "inherit") {
+      newSubscription["payment_plan"] = nsd.selectedPlan;
     }
     new Submit({
       method: "POST",
@@ -209,14 +201,35 @@ var Subscription = Backbone.Model.extend({
     }).sendAjax();
   },
   parse: function (args) {
+    var features = undefined;
+    var featuresIsInherited = args.features_is_inherited;
+    var inheritedFeatures = undefined;
+    if (args.features) {
+      features = new Features({
+        "admin_users": new FeatureFlag(args.features.admin_users),
+        "regular_users": new FeatureFlag(args.features.regular_users)
+      });
+    } else {
+      features = new Features({
+        "admin_users": new FeatureFlag({}),
+        "regular_users": new FeatureFlag({})
+      });
+    }
+    if (args.inherited_features) {
+      inheritedFeatures = new Features({
+        "admin_users": new FeatureFlag(args.inherited_features.admin_users),
+        "regular_users": new FeatureFlag(args.inherited_features.regular_users)
+      });
+    } // no else. If there are no inherited features, they stay undefined.
     return {
       invoicing_type: args.invoicing_type,
       inherited_plan: args.inherited_plan,
       payment_plan: args.payment_plan,
       number_of_users: args.number_of_users,
       started_last_month: args.started_last_month,
-      features_admin_users: new FeatureFlag(args.features.admin_users),
-      features_regular_users: new FeatureFlag(args.features.regular_users),
+      features: features,
+      inherited_features: inheritedFeatures,
+      features_is_inherited: featuresIsInherited,
       ready: true
     };
   }
@@ -234,10 +247,17 @@ var Features = exports.Features = Backbone.Model.extend({
      return this.get("regular_users");
   },
   parse: function (args) {
-    return {
-      admin_users: new FeatureFlag(args.admin_users),
-      regular_users: new FeatureFlag(args.regular_users)
-    };
+    if (args) {
+      return {
+        admin_users: new FeatureFlag(args.admin_users),
+        regular_users: new FeatureFlag(args.regular_users)
+      };
+    } else {
+      return {
+        admin_users: new FeatureFlag({}),
+        regular_users: new FeatureFlag({})
+      };
+    }
   }
 });
 
@@ -253,6 +273,7 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
     "can_use_sms_confirmations": true,
     "can_use_dk_authentication_to_view": true,
     "can_use_dk_authentication_to_sign": true,
+    "can_use_fi_authentication_to_view": true,
     "can_use_no_authentication_to_view": true,
     "can_use_no_authentication_to_sign": true,
     "can_use_se_authentication_to_view": true,
@@ -401,7 +422,7 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
       this.canUseDKAuthenticationToSign();
   },
   parse: function (args) {
-     return {
+    return {
       can_use_templates: args.can_use_templates,
       can_use_shareable_links: args.can_use_shareable_links,
       can_use_branding: args.can_use_branding,

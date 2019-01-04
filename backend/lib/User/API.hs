@@ -236,8 +236,8 @@ apiCallGetUserProfile =  api $ do
 apiCallGetSubscription :: Kontrakcja m => m Response
 apiCallGetSubscription =  api $ do
   (user, _ , _) <- getAPIUserWithAnyPrivileges
-  ug <- dbQuery . UserGroupGetByUserID . userid $ user
-  sub <- getSubscription ug
+  ugwp <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
+  sub <- getSubscription ugwp
   return . Ok $ unjsonToJSON unjsonDef sub
 
 apiCallChangeUserPassword :: Kontrakcja m => m Response

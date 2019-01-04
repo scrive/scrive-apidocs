@@ -58,7 +58,6 @@ import Doc.Screenshot (Screenshot(..))
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots (SignatoryScreenshots(..))
 import EvidenceLog.Model
-import FeatureFlags.Model
 import File.File
 import File.Model
 import File.Storage
@@ -742,24 +741,29 @@ handleAdminCompanyUsageStatsMonths ugid = onlySalesOrAdmin $ do
 
 handleCompanyGetSubscription :: Kontrakcja m => UserGroupID -> m Aeson.Value
 handleCompanyGetSubscription ugid = onlySalesOrAdmin $ do
-  ug <- guardJustM . dbQuery . UserGroupGet $ ugid
-  unjsonToJSON unjsonDef <$> getSubscription ug
+  ugwp <- guardJustM . dbQuery . UserGroupGetWithParents $ ugid
+  unjsonToJSON unjsonDef <$> getSubscription ugwp
 
 handleCompanyUpdateSubscription :: Kontrakcja m => UserGroupID -> m Response
 handleCompanyUpdateSubscription ugid = onlySalesOrAdmin . V2.api $ do
-  ug <- guardJustM . dbQuery . UserGroupGet $ ugid
+  ugwp <- guardJustM . dbQuery . UserGroupGetWithParents $ ugid
   subscription <- apiV2ParameterObligatory (ApiV2ParameterJSON "subscription" unjsonDef)
 
   let newInvoicing =
-        case (ugSubInvoicingType subscription,
-              ugSubPaymentPlan subscription) of
+        case (ugSubInvoicingType subscription, ugSubPaymentPlan subscription) of
           (InvoicingTypeNone, _) -> None
           (InvoicingTypeBillItem, mpp@_) -> BillItem mpp
           (InvoicingTypeInvoice, Just pp) -> Invoice pp
           (InvoicingTypeInvoice, Nothing) -> unexpectedError "payment plan missing for Invoice type"
+      newFeaturesIsInherited = ugSubFeaturesIsInherited subscription
+      mNewFeatures = ugSubFeatures subscription
+      mInheritedFeatures = ugwpFeatures <$> ugwpOnlyParents ugwp
+      setFeatures = case (newFeaturesIsInherited, mNewFeatures, mInheritedFeatures) of
+        (True , _, Just _) -> set ugFeatures Nothing
+        (False, Just newFeatures, _) -> set ugFeatures $ Just newFeatures
+        _ -> unexpectedError "invalid combination of features and inheriting"
 
-  dbUpdate . UserGroupUpdate . set ugInvoicing newInvoicing $ ug
-  updateFeaturesFor ugid (ugSubFeatures subscription)
+  dbUpdate . UserGroupUpdate . set ugInvoicing newInvoicing . setFeatures . ugwpUG $ ugwp
   return $ V2.Accepted ()
 
 jsonBrandedDomainsList ::Kontrakcja m => m Aeson.Value

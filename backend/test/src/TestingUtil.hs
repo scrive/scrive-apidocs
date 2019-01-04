@@ -182,10 +182,12 @@ instance Arbitrary UserGroup where
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
+    <*> arbitrary
 
 instance Arbitrary UserGroupRoot where
   arbitrary = UserGroupRoot emptyUserGroupID
     <$> arbitrary
+    <*> arbitrary
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary

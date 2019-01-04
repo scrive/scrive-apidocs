@@ -61,14 +61,29 @@ module.exports = React.createClass({
       };
     },
     initStateFromSubscription : function() {
-      var adminFs   = this.state.subscription.featuresForAdminUsers();
-      var regularFs = this.state.subscription.featuresForRegularUsers();
-      var adminUserFeatures   = this.initFeatureFlagsFromFeatures(adminFs);
-      var regularUserFeatures = this.initFeatureFlagsFromFeatures(regularFs);
+      var inheritedFeatures = undefined;
+      if (this.state.subscription.inheritedFeatures()) {
+        inheritedFeatures = {
+          adminUsers : this.initFeatureFlagsFromFeatures(
+            this.state.subscription.inheritedFeatures().adminUsers()),
+          regularUsers : this.initFeatureFlagsFromFeatures(
+            this.state.subscription.inheritedFeatures().regularUsers())
+        };
+      }
+      var featuresIsInherited = this.state.subscription.featuresIsInherited();
+      var features = {
+        adminUsers : this.initFeatureFlagsFromFeatures(
+          this.state.subscription.features().adminUsers()),
+        regularUsers : this.initFeatureFlagsFromFeatures(
+          this.state.subscription.features().regularUsers())
+      };
       this.setState({
         initiated: true,
-        adminUserFeatures: adminUserFeatures,
-        regularUserFeatures: regularUserFeatures
+        features: features,
+        inheritedFeatures: inheritedFeatures,
+        featuresIsInherited: featuresIsInherited,
+        selectedInvoicingType: this.state.subscription.invoicingtype(),
+        selectedPlan: this.state.subscription.paymentplan()
       });
     },
     saveBilling: function() {
@@ -76,16 +91,16 @@ module.exports = React.createClass({
       this.state.subscription.updateSubscriptionAsAdmin({
           selectedInvoicingType : self.state.selectedInvoicingType,
           selectedPlan : self.state.selectedPlan,
-          adminUserFeatures: self.state.adminUserFeatures,
-          regularUserFeatures: self.state.regularUserFeatures
+          features : self.state.features,
+          featuresIsInherited : self.state.featuresIsInherited
         }, function () {
           new FlashMessage({ type: "success", content: "Saved" });
           self.reload();
         });
     },
     changePlan: function(v) {
-      var adminUserFeatures = this.state.adminUserFeatures;
-      var regularUserFeatures = this.state.regularUserFeatures;
+      var adminUserFeatures = this.state.features.adminUsers;
+      var regularUserFeatures = this.state.features.regularUsers;
       if (v == "free") {
           adminUserFeatures.canUseDKAuthenticationToView = false;
           adminUserFeatures.canUseDKAuthenticationToSign = false;
@@ -133,6 +148,18 @@ module.exports = React.createClass({
         this.initStateFromSubscription();
       }
     },
+    onFeaturesIsInheritedChange: function (event) {
+      if (!this.state.inheritedFeatures && event.target.checked) {
+        // we are trying to inherit, but there is no parent (no inherited features)
+        new FlashMessage({
+          content: "Top level user group cannot inherit",
+          type: "error"
+        });
+        event.target.checked = false;
+      } else {
+        this.setState({featuresIsInherited : event.target.checked });
+      }
+    },
     renderTROptionSeparator: function (desc) {
       return (
         <tr><td><strong>{desc}</strong></td></tr>
@@ -140,29 +167,40 @@ module.exports = React.createClass({
     },
     renderTRForOptionWithCheckbox: function (desc, stateProp) {
       var self = this;
-      var adminUserFeatures = this.state.adminUserFeatures;
-      var regularUserFeatures = this.state.regularUserFeatures;
+      var localFeatures = undefined;
+      var checkboxIsDisabled = undefined;
+      var regularOnChange = undefined;
+      var adminOnChange = undefined
+      if (this.state.featuresIsInherited) {
+        checkboxIsDisabled = true;
+        localFeatures = this.state.inheritedFeatures;
+      } else {
+        checkboxIsDisabled = !this.props.forAdmin;
+        localFeatures = this.state.features;
+        regularOnChange = function (v) {
+          localFeatures.regularUsers[stateProp] = v;
+          self.setState({features: localFeatures});
+        };
+        adminOnChange = function (v) {
+          localFeatures.adminUsers[stateProp] = v;
+          self.setState({features: localFeatures});
+        };
+      }
       return (
         <tr>
           <td>{desc}</td>
           <td>
             <Checkbox
-              disabled={!this.props.forAdmin}
-              checked={regularUserFeatures[stateProp]}
-              onChange={function (v) {
-                  regularUserFeatures[stateProp] = v;
-                  self.setState({regularUserFeatures: regularUserFeatures});
-              }}
+              disabled={checkboxIsDisabled}
+              checked={localFeatures.regularUsers[stateProp]}
+              onChange={regularOnChange}
             />
           </td>
           <td>
             <Checkbox
-              disabled={!this.props.forAdmin}
-              checked={adminUserFeatures[stateProp]}
-              onChange={function (v) {
-                  adminUserFeatures[stateProp] = v;
-                  self.setState({adminUserFeatures: adminUserFeatures});
-              }}
+              disabled={checkboxIsDisabled}
+              checked={localFeatures.adminUsers[stateProp]}
+              onChange={adminOnChange}
             />
           </td>
         </tr>
@@ -262,6 +300,18 @@ module.exports = React.createClass({
                     onSelect={this.changePlan}
                   />
                 </td>
+              </tr>
+              <tr><td colSpan={3}><hr/></td></tr>
+              <tr>
+                <td><label>Inherit feature flags</label></td>
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={this.state.featuresIsInherited}
+                    onChange={this.onFeaturesIsInheritedChange}
+                  />
+                </td>
+                <td>If enabled, all feature flags will be inherited from the parent user group.</td>
               </tr>
               <tr>
                 <td></td>
