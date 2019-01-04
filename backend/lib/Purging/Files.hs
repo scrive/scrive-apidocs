@@ -1,16 +1,14 @@
 module Purging.Files (
     MarkOrphanFilesForPurgeAfter(..)
-  , purgeOrphanFile
+  , purgeFile
   ) where
 
 import Control.Monad.Catch
-import Control.Monad.IO.Class
-import Data.Time.Clock (diffUTCTime)
 import Log
 import qualified Data.Text as T
 
 import DB
-import File.Conditions
+import File.File
 import File.Model
 import FileStorage.Class
 import Log.Identifier
@@ -102,51 +100,26 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
       , "  JOIN documents d ON sl.document_id = d.id"
       , " WHERE d.purged_time IS NULL"
       , ")"
-      -- Actual purge
-      , "UPDATE files"
-      , "   SET purge_at =" <?> now <+> "+" <?> interval
-      , " WHERE id IN (SELECT id FROM files_to_purge LIMIT" <?> limit <> ")"
+      -- Actual purge.
+      , "INSERT INTO file_purge_jobs (id, run_at, attempts)"
+      , "SELECT id," <?> now <+> "+" <?> interval <+> ", 0"
+      , "FROM files_to_purge LIMIT" <?> limit
       , "RETURNING id"
       ]
     fetchMany runIdentity
 
-purgeOrphanFile :: forall m. ( MonadDB m, MonadCatch m, MonadFileStorage m
-                             , MonadIO m , MonadLog m, MonadThrow m
-                             , MonadTime m ) => Int -> m Bool
-purgeOrphanFile batchSize = do
-  now0 <- currentTime
-  runQuery_ . sqlSelect "files" $ do
-    sqlResult "id"
-    sqlResult "amazon_url"
-    sqlResult "content IS NULL"
-    sqlWhereFileWasNotPurged
-    sqlWhere $ "purge_at <" <?> now0
-    sqlOrderBy "purge_at"
-    sqlLimit batchSize
-  fetchMany id >>= \case
-    []    -> return False
-    files -> do
-      mapM_ purge (files :: [(FileID, Maybe String, Bool)])
-      now1 <- currentTime
-      let timeDelta = realToFrac $ diffUTCTime now1 now0 :: Double
-      logInfo "Purged files" $ object [
-                    "elapsed_time" .= timeDelta
-                  , "batch_size" .= batchSize
-                  ]
-      return True
-  where
-    purge :: (FileID, Maybe String, Bool) -> m ()
-    purge (fid, mamazonUrl, isOnAmazon) = do
-      eRes <- case (mamazonUrl, isOnAmazon) of
-        (Just amazonUrl, True) -> try $ deleteSavedContents amazonUrl
-        _ -> return $ Right ()
-      case eRes of
-        Right () -> do
-          dbUpdate $ PurgeFile fid
-          commit
-        Left err -> do
-          logAttention "Purging file failed, it couldn't be removed from Amazon" $ object [
-              identifier fid
-            , "error" .= show (err :: FileStorageException)
-            ]
-          rollback
+purgeFile
+  :: (MonadCatch m, MonadDB m, MonadFileStorage m, MonadLog m, MonadThrow m)
+  => File -> m ()
+purgeFile File{ fileid, filestorage = FileStorageAWS url _ } = do
+  eRes <- try $ deleteSavedContents url
+  case eRes of
+    Right _ -> do
+      void $ dbUpdate $ PurgeFile fileid
+      commit
+    Left err -> do
+      logAttention "Purging file failed, it couldn't be removed from Amazon" $ object
+        [ identifier fileid
+        , "error" .= show (err :: FileStorageException)
+        ]
+      rollback

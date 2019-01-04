@@ -786,6 +786,7 @@ Executable kontrakcja-migrate
                  EvidenceLog.Tables
                  FeatureFlags.Migrations
                  FeatureFlags.Tables
+                 File.Migrations
                  File.Tables
                  UserGroup.Migrations
                  UserGroup.Tables
