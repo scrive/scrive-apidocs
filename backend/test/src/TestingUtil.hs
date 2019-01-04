@@ -1007,7 +1007,9 @@ data RandomDocumentAllows = RandomDocumentAllows
   , randomDocumentAllowedStatuses :: [DocumentStatus]
   , randomDocumentAllowedSharings :: [DocumentSharing]
   , randomDocumentAuthor          :: User
-  , randomDocumentCondition       :: Document -> Bool
+  , randomDocumentChecker         :: Document -> Maybe Document
+  -- ^ Return Nothing to reject the document or Just with a potentially
+  -- modified document to accept it.
   }
 
 randomDocumentAllowsDefault :: User -> RandomDocumentAllows
@@ -1023,7 +1025,7 @@ randomDocumentAllowsDefault user = RandomDocumentAllows
                                     ]
   , randomDocumentAllowedSharings = documentAllSharings
   , randomDocumentAuthor          = user
-  , randomDocumentCondition       = const True
+  , randomDocumentChecker         = Just
   }
 
 randomSigLinkByStatus :: DocumentStatus -> Gen SignatoryLink
@@ -1083,14 +1085,20 @@ addRandomDocumentWithAuthorAndCondition
   :: User -> (Document -> Bool)
   -> TestEnv Document
 addRandomDocumentWithAuthorAndCondition user p =
+  addRandomDocumentWithAuthorAndCondition' user $ onCondition p
+
+addRandomDocumentWithAuthorAndCondition'
+  :: User -> (Document -> Maybe Document)
+  -> TestEnv Document
+addRandomDocumentWithAuthorAndCondition' user checker =
   addRandomDocument $
-  (randomDocumentAllowsDefault user) { randomDocumentCondition = p }
+  (randomDocumentAllowsDefault user) { randomDocumentChecker = checker }
 
 addRandomDocumentWithAuthorAndConditionAndFile ::
   User -> (Document -> Bool) -> FileID -> TestEnv Document
 addRandomDocumentWithAuthorAndConditionAndFile user p file =
   addRandomDocumentWithFile file $
-  (randomDocumentAllowsDefault user) { randomDocumentCondition = p}
+  (randomDocumentAllowsDefault user) { randomDocumentChecker = onCondition p }
 
 addRandomDocument :: RandomDocumentAllows -> TestEnv Document
 addRandomDocument rda = do
@@ -1101,14 +1109,14 @@ addRandomDocumentWithFile :: FileID -> RandomDocumentAllows -> TestEnv Document
 addRandomDocumentWithFile fileid rda = do
   now <- currentTime
   let user = randomDocumentAuthor rda
-      p = randomDocumentCondition rda
+      checker = randomDocumentChecker rda
   file <- dbQuery $ GetFileByFileID fileid
   --liftIO $ print $ "about to generate document"
-  document <- worker now user p file
+  document <- worker now user checker file
   docid <- dbUpdate $ StoreDocumentForTesting document
   dbQuery $ GetDocumentByDocumentID docid
   where
-    worker now user p file = do
+    worker now user checker file = do
       doc' <- rand 10 arbitrary
       xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
       status <- if xtype /= Signable
@@ -1151,22 +1159,29 @@ addRandomDocumentWithFile fileid rda = do
                 closedfile ++
                 [MainFile fileid Preparation Missing (filename file)]
             }
-      case (p adoc, invariantProblems now adoc) of
-        (True, Nothing) -> return adoc
-        (False, _)  -> do
+
+      case checker adoc of
+        Nothing -> do
           rej <- asks (get teRejectedDocuments)
           liftIO $ (atomically . modifyTVar' rej) (+1)
           --liftIO $ print $ "did not pass condition; doc: " ++ show adoc
-          worker now user p file
+          worker now user checker file
+        Just acceptedDoc -> do
+          case invariantProblems now acceptedDoc of
+            Nothing -> return acceptedDoc
+            Just _problems -> do
+              rej <- asks (get teRejectedDocuments)
+              liftIO $ (atomically . modifyTVar' rej) (+1)
+              -- am I right that random document should not have invariantProblems?
+              --uncomment this to find out why the doc was rejected
+              --print adoc
+              --liftIO $ print $ "rejecting doc: " ++ _problems
+              worker now user checker file
 
-        (_, Just _problems) -> do
-          rej <- asks (get teRejectedDocuments)
-          liftIO $ (atomically . modifyTVar' rej) (+1)
-          -- am I right that random document should not have invariantProblems?
-          --uncomment this to find out why the doc was rejected
-          --print adoc
-          --liftIO $ print $ "rejecting doc: " ++ _problems
-          worker now user p file
+onCondition :: (a -> Bool) -> a -> Maybe a
+onCondition p x
+  | p x = Just x
+  | otherwise = Nothing
 
 -- | Synchronously seal a document.
 sealTestDocument :: Context -> DocumentID -> TestEnv ()

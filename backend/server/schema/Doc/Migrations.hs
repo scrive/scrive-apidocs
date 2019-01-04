@@ -19,6 +19,7 @@ module Doc.Migrations (
   , addAuthenticationToViewArchivedMethodToSignatories
   , changeIsPartnerColumnToSignatoryRole
   , createSignatoryLinkMagicHashes
+  , addTemplateInfoToDocuments
 ) where
 
 import Data.Int
@@ -352,4 +353,25 @@ createSignatoryLinkMagicHashes = Migration
           ]
       , tblIndexes = [tblIndex { idxColumns = ["hash", "signatory_link_id"], idxUnique = True }]
       }
+  }
+
+addTemplateInfoToDocuments :: MonadDB m => Migration m
+addTemplateInfoToDocuments = Migration
+  { mgrTableName = tblName tableDocuments
+  , mgrFrom = 48
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable "documents"
+        [ sqlAddColumn tblColumn
+            { colName = "template_id", colType = BigIntT }
+        , sqlAddColumn tblColumn
+            { colName = "from_shareable_link"
+            , colType = BoolT
+            , colNullable = False
+            , colDefault = Just "false"
+            }
+        , sqlAddCheck $ Check
+            "check_from_shareable_link_has_template_id"
+            "from_shareable_link = false OR template_id IS NOT NULL"
+        ]
+      runQuery_ . sqlCreateIndex "documents" $ indexOnColumn "template_id"
   }

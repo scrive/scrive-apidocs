@@ -214,7 +214,7 @@ apiCallV1CreateFromTemplate did = logDocument did . api $ do
   when (documentDeletedForUser template $ userid user) $
     throwM $ SomeDBExtraException $ serverError "Template is deleted"
   (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user) template actor id) >>=) $ flip withDocumentID $ do
-    dbUpdate $ DocumentFromTemplate actor
+    dbUpdate $ DocumentFromTemplate (documentid template) actor
     when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft True
     newDoc <- theDocument
     logInfo "New document created from template" $ object [

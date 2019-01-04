@@ -256,8 +256,11 @@ handleSignFromTemplate tplID mh = logDocument tplID $ do
 
   let actor = systemActor $ get ctxtime ctx
   mDocID <- withDocument tpl $
-    dbUpdate $ CloneDocumentWithUpdatedAuthor Nothing tpl actor $ \doc ->
-      doc { documenttype = Signable }
+    dbUpdate $ CloneDocumentWithUpdatedAuthor Nothing tpl actor $ \doc -> doc
+      { documenttype = Signable
+      , documenttemplateid = Just (documentid tpl)
+      , documentfromshareablelink = True
+      }
 
   case mDocID of
     Nothing -> do
@@ -275,7 +278,7 @@ handleSignFromTemplate tplID mh = logDocument tplID $ do
                        \ template" $ object [identifier docID]
           respondLinkInvalid
         Just sl -> do
-          dbUpdate $ ChargeUserGroupForShareableLink docID
+          dbUpdate $ ChargeUserGroupForStartingDocument docID
           dbUpdate $ AddDocumentSessionToken (signatorylinkid sl)
                                              (signatorymagichash sl)
           sendRedirect $ LinkSignDocNoMagicHash docID $ signatorylinkid sl

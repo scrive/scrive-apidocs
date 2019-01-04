@@ -302,4 +302,5 @@ testJSONWith = testJSONWithDynamicKeys [ "id"
                                        , "timeout_time"
                                        , "title"
                                        , "user_id"
+                                       , "template_id"
                                        ]

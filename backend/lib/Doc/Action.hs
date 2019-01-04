@@ -159,6 +159,8 @@ postDocumentPendingChange olddoc = do
       time <- get mctxtime <$> getMailContext
       dbUpdate $ CloseDocument (systemActor time)
       dbUpdate $ ChargeUserGroupForClosingDocument $ documentid olddoc
+      when (documentfromshareablelink olddoc) $ do
+        dbUpdate $ ChargeUserGroupForShareableLink $ documentid olddoc
       author <- theDocument >>= getDocAuthor
       theDocument >>= logDocEvent "Doc Closed" author []
       -- report

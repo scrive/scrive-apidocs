@@ -114,7 +114,7 @@ docApiV2NewFromTemplate did = logDocument did . api $ do
   -- API call actions
   template <- dbQuery $ GetDocumentByDocumentID $ did
   (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user) template actor id) >>=) $ flip withDocumentID $ do
-    dbUpdate $ DocumentFromTemplate actor
+    dbUpdate $ DocumentFromTemplate (documentid template) actor
     dbUpdate $ SetDocumentUnsavedDraft False
   -- Result
     newDoc <- theDocument

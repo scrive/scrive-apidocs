@@ -157,4 +157,5 @@ kontraMigrations = [
   , dropAmazonUploadJobs
   , dropAmazonUploadConsumers
   , removeAmazonUploadJob
+  , addTemplateInfoToDocuments
   ]

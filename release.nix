@@ -53,7 +53,7 @@ in rec {
     pkgs.lib.overrideDerivation drv (super: {
       buildInputs = with pkgs; super.buildInputs ++
         [ gnuplot imagemagick mupdf pngquant poppler_utils qrencode zbar zulu8
-          aws-sam-cli postgresql rubyEnv curl lessc glibcLocales
+          aws-sam-cli postgresql rubyEnv curl lessc glibcLocales xmlsec
         ];
 
       checkPhase = ''

@@ -68,6 +68,8 @@ unjsonDocument da = objectOf $
   <*   (fieldReadonly "is_deleted" (propertyForCurrentSignatory da (isJust . signatorylinkreallydeleted)) "Whether document has been deleted")
   <*   (fieldReadonlyBy "viewer" (\d -> Just $ viewerForDocument da d) "Document viewer" unjsonDocumentViewer)
   <*   fieldShareableLink da
+  <*   fieldReadOnlyOpt "template_id" documenttemplateid "Document ID of the template from which the document was generated"
+  <*   fieldReadonly "from_shareable_link" documentfromshareablelink "Whether the document was created by a shareable link"
 
 fieldAccessToken :: DocumentAccess -> Ap (FieldDef Document) ()
 fieldAccessToken (DocumentAccess { daAccessMode }) =

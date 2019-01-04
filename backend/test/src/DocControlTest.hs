@@ -19,6 +19,7 @@ import Archive.Control
 import BrandedDomain.BrandedDomain
 import Branding.Control
 import Branding.CSS
+import Chargeable.Model
 import Context
 import DB
 import DB.TimeZoneName (mkTimeZoneName)
@@ -657,8 +658,25 @@ testGetCancelledDocument = do
 testDocumentFromShareableTemplate :: TestEnv ()
 testDocumentFromShareableTemplate = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
-  tpl <- addRandomDocumentWithAuthorAndCondition user $ \d ->
-    isTemplate d && any (not . isAuthor) (documentsignatorylinks d)
+  tpl <- addRandomDocumentWithAuthorAndCondition' user $ \d -> do
+    (sl1, sl2) <- case documentsignatorylinks d of
+      x:y:_ -> return (x,y)
+      _ -> Nothing
+
+    let sl1' = sl1 { signatoryrole = SignatoryRoleViewer }
+        sl2' = sl2
+          { signatoryrole = SignatoryRoleSigningParty
+          , signatorylinkauthenticationtoviewmethod =
+              StandardAuthenticationToView
+          , signatorylinkauthenticationtosignmethod =
+              StandardAuthenticationToSign
+          }
+
+    return d
+      { documenttype = Template
+      , documentsignatorylinks = [sl1', sl2']
+      }
+
   mh <- random
   withDocument tpl $ randomUpdate $ UpdateShareableLinkHash $ Just mh
 
@@ -681,10 +699,25 @@ testDocumentFromShareableTemplate = do
               (documenttitle doc) (documenttitle tpl)
   assertEqual "Shouldn't have a shareable link hash"
               Nothing (documentshareablelinkhash doc)
+  assertEqual "Should have a reference to the template"
+              (Just (documentid tpl)) (documenttemplateid doc)
+  assertEqual "Should be marked as created by a shareable link"
+              True (documentfromshareablelink doc)
 
-  req' <- mkRequest GET []
-  (res', _) <- runTestKontra req' ctx' $ handleSignShow did slid
+  (res', ctx'') <- runTestKontra req ctx' $ handleSignShow did slid
   assertEqual "Status is 200" 200 (rsCode res')
+
+  req' <- mkRequest POST [("fields", inText "[]")]
+  (res'', _) <- runTestKontra req' ctx'' $ apiCallV1Sign did slid
+  assertEqual "Status is 202" 202 (rsCode res'')
+
+  forM_ [CIStartingDocument, CIShareableLink, CIClosingDocument] $ \typ -> do
+    runQuery_ $
+      "SELECT COUNT(*) FROM chargeable_items WHERE type =" <?> typ
+      <+> "AND document_id =" <?> did
+    c <- fetchOne runIdentity
+    assertEqual ("Should have been charged with " ++ show typ)
+                1 (c :: Int64)
 
 testGetDocumentWithTemporaryMagicHash :: TestEnv ()
 testGetDocumentWithTemporaryMagicHash = do

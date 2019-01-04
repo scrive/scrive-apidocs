@@ -370,6 +370,8 @@ insertDocument document@(Document{..}) = do
     sqlSet "time_zone_name" documenttimezonename
     sqlSet "author_id" $ unsafeDocumentID 0
     sqlSet "shareable_link_hash" documentshareablelinkhash
+    sqlSet "template_id" documenttemplateid
+    sqlSet "from_shareable_link" documentfromshareablelink
     sqlResult "documents.id"
   did <- fetchOne runIdentity
   insertSignatoryLinks did documentsignatorylinks
@@ -1680,12 +1682,13 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m Templat
        sqlWhereEq "status" Preparation
 
 
-data DocumentFromTemplate = DocumentFromTemplate Actor
+data DocumentFromTemplate = DocumentFromTemplate DocumentID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m DocumentFromTemplate () where
-  update (DocumentFromTemplate _actor) = updateDocumentWithID $ \did -> do
+  update (DocumentFromTemplate tplID _actor) = updateDocumentWithID $ \did -> do
     kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
        sqlSet "status" Preparation
        sqlSet "type" Signable
+       sqlSet "template_id" $ Just tplID
        sqlWhereDocumentIDIs did
        sqlWhereEq "status" Preparation
 

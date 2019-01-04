@@ -1626,7 +1626,7 @@ testCreateFromSharedTemplate = do
   newuser <- addNewRandomUser
 
   docid' <- fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor (Just newuser) doc (systemActor mt) id)
-  void $ withDocumentID docid' $ dbUpdate $ DocumentFromTemplate (systemActor mt)
+  void $ withDocumentID docid' $ dbUpdate $ DocumentFromTemplate (documentid doc) (systemActor mt)
 
   ndoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   let [author1] = filter isAuthor $ documentsignatorylinks doc
@@ -1652,7 +1652,7 @@ testCreateFromTemplateCompanyField = replicateM_ 10 $ do
            dbQuery $ GetDocumentByDocumentID docid
   user' <- fromJust <$> (dbQuery $ GetUserByID (userid user))
   docid' <- fromJust <$> (dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user') doc (systemActor mt) id)
-  void $ withDocumentID docid' $ dbUpdate $ DocumentFromTemplate (systemActor mt)
+  void $ withDocumentID docid' $ dbUpdate $ DocumentFromTemplate (documentid doc) (systemActor mt)
   doc' <- dbQuery $ GetDocumentByDocumentID docid'
   let [author] = filter isAuthor $ documentsignatorylinks doc'
   assertEqual "Author signatory link user group name is not same as his user group" (get ugName ug) (T.pack $ getCompanyName author)
@@ -1983,7 +1983,7 @@ testPreparationToPendingSignablePreparationRight = replicateM_ 10 $ do
   addRandomDocument (randomDocumentAllowsDefault author)
          { randomDocumentAllowedTypes = documentSignableTypes
          , randomDocumentAllowedStatuses = [Preparation]
-         , randomDocumentCondition = (any isSignatory . documentsignatorylinks) &&
+         , randomDocumentChecker = onCondition $ (any isSignatory . documentsignatorylinks) &&
           (isJust . documentfile) &&
           ((==) 1 . length . filter isAuthor . documentsignatorylinks)
          } `withDocumentM` do
@@ -2216,7 +2216,7 @@ testCloseDocumentSignableButNotEverybodyHasSigned = replicateM_ 10 $ do
   addRandomDocument (randomDocumentAllowsDefault author)
          { randomDocumentAllowedTypes = documentSignableTypes
          , randomDocumentAllowedStatuses = [Pending]
-         , randomDocumentCondition =
+         , randomDocumentChecker = onCondition $
            (\doc -> length (documentsignatorylinks doc) > 1) &&
            (not . all (isSignatory --> isSignatoryAndHasSigned) .
             documentsignatorylinks)
@@ -2230,7 +2230,7 @@ testCloseDocumentNotSignableNothing = replicateM_ 10 $ do
   author <- addNewRandomUser
   addRandomDocument (randomDocumentAllowsDefault author)
          { randomDocumentAllowedTypes = documentAllTypes \\ documentSignableTypes
-         , randomDocumentCondition =
+         , randomDocumentChecker = onCondition $
              not . all (isSignatory --> isSignatoryAndHasSigned) .
              documentsignatorylinks
          } `withDocumentM` do
@@ -2252,7 +2252,7 @@ testCancelDocumentNotSignableNothing = replicateM_ 10 $ do
   time <- rand 10 arbitrary
   addRandomDocument (randomDocumentAllowsDefault author)
          { randomDocumentAllowedTypes = documentAllTypes \\ documentSignableTypes
-         , randomDocumentCondition =
+         , randomDocumentChecker = onCondition $
              not . all (isSignatory --> isSignatoryAndHasSigned) .
              documentsignatorylinks
          } `withDocumentM` do
@@ -2280,7 +2280,7 @@ testSetDocumentTitleRight = replicateM_ 10 $ do
   author <- addNewRandomUser
   actor <- arbitraryAuthorActor
   addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentCondition = (not . isClosed)
+         { randomDocumentChecker = onCondition (not . isClosed)
          } `withDocumentM` do
     let title = "my new cool title"
     success <- randomUpdate $ SetDocumentTitle title actor
@@ -2300,7 +2300,7 @@ testSetDocumentDaysToSignRight = replicateM_ 10 $ do
   author <- addNewRandomUser
   actor <- arbitraryAuthorActor
   addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentCondition = not . isClosed
+         { randomDocumentChecker = onCondition $ not . isClosed
          } `withDocumentM` do
     let daystosign = 15
     success1 <- randomUpdate $ SetDaysToSign daystosign actor
@@ -2313,7 +2313,7 @@ testSetShowHeader = replicateM_ 10 $ do
   author <- addNewRandomUser
   actor <- arbitraryAuthorActor
   targetValue <- rand 10 arbitrary
-  addRandomDocument (randomDocumentAllowsDefault author)  { randomDocumentCondition = isPreparation } `withDocumentM` do
+  addRandomDocument (randomDocumentAllowsDefault author)  { randomDocumentChecker = onCondition isPreparation } `withDocumentM` do
     success <- randomUpdate $ SetShowHeader targetValue actor
     newValue <- documentshowheader <$> theDocument
     assertEqual "SetShowHeader changes value to target value" targetValue newValue
@@ -2324,7 +2324,7 @@ testSetShowPDFDownload = replicateM_ 10 $ do
   author <- addNewRandomUser
   actor <- arbitraryAuthorActor
   targetValue <- rand 10 arbitrary
-  addRandomDocument (randomDocumentAllowsDefault author)  { randomDocumentCondition = isPreparation } `withDocumentM` do
+  addRandomDocument (randomDocumentAllowsDefault author)  { randomDocumentChecker = onCondition isPreparation } `withDocumentM` do
     success <- randomUpdate $ SetShowPDFDownload targetValue actor
     newValue <- documentshowpdfdownload <$> theDocument
     assertEqual "SetShowPDFDownload changes value to target value" targetValue newValue
@@ -2335,7 +2335,7 @@ testSetShowRejectOption = replicateM_ 10 $ do
   author <- addNewRandomUser
   actor <- arbitraryAuthorActor
   targetValue <- rand 10 arbitrary
-  addRandomDocument (randomDocumentAllowsDefault author)  { randomDocumentCondition = isPreparation } `withDocumentM` do
+  addRandomDocument (randomDocumentAllowsDefault author)  { randomDocumentChecker = onCondition isPreparation } `withDocumentM` do
     success <- randomUpdate $ SetShowRejectOption targetValue actor
     newValue <- documentshowrejectoption <$> theDocument
     assertEqual "SetShowRejectOption changes value to target value" targetValue newValue
@@ -2346,7 +2346,7 @@ testSetAllowRejectReason = replicateM_ 10 $ do
   author <- addNewRandomUser
   actor <- arbitraryAuthorActor
   targetValue <- rand 10 arbitrary
-  addRandomDocument (randomDocumentAllowsDefault author)  { randomDocumentCondition = isPreparation } `withDocumentM` do
+  addRandomDocument (randomDocumentAllowsDefault author)  { randomDocumentChecker = onCondition isPreparation } `withDocumentM` do
     success <- randomUpdate $ SetAllowRejectReason targetValue actor
     newValue <- documentallowrejectreason <$> theDocument
     assertEqual "SetAllowRejectReason changes value to target value" targetValue newValue
@@ -2357,7 +2357,7 @@ testSetShowFooter = replicateM_ 10 $ do
   author <- addNewRandomUser
   actor <- arbitraryAuthorActor
   targetValue <- rand 10 arbitrary
-  addRandomDocument (randomDocumentAllowsDefault author)  { randomDocumentCondition = isPreparation } `withDocumentM` do
+  addRandomDocument (randomDocumentAllowsDefault author)  { randomDocumentChecker = onCondition isPreparation } `withDocumentM` do
     success <- randomUpdate $ SetShowFooter targetValue actor
     newValue <- documentshowfooter <$> theDocument
     assertEqual "SetShowFooter changes value to target value" targetValue newValue

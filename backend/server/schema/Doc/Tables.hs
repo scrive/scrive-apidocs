@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 48
+  , tblVersion = 49
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -40,6 +40,8 @@ tableDocuments = tblTable {
     , tblColumn { colName = "archive_search_fts", colType = TSVectorT, colNullable = True }
     , tblColumn { colName = "author_user_id", colType = BigIntT, colNullable = True }
     , tblColumn { colName = "shareable_link_hash", colType = BigIntT }
+    , tblColumn { colName = "template_id", colType = BigIntT }
+    , tblColumn { colName = "from_shareable_link", colType = BoolT, colNullable = False, colDefault = Just "false" }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
@@ -59,11 +61,14 @@ tableDocuments = tblTable {
     , uniqueIndexOnColumn "author_id"
     , (indexOnColumnWithMethod "archive_search_fts" GIN)
     , indexOnColumn "author_user_id"
+    , indexOnColumn "template_id"
     ]
-  , tblChecks = [
-        Check "check_documents_pending_are_not_purged"
-          "status <> 2 OR purged_time IS NULL"
-    ]
+  , tblChecks =
+      [ Check "check_documents_pending_are_not_purged"
+              "status <> 2 OR purged_time IS NULL"
+      , Check "check_from_shareable_link_has_template_id"
+              "from_shareable_link = false OR template_id IS NOT NULL"
+      ]
   }
 
 ctDocument :: CompositeType
@@ -105,6 +110,8 @@ ctDocument = CompositeType {
   , CompositeColumn { ccName = "author_user_group_id", ccType = BigIntT }
   , CompositeColumn { ccName = "status_class", ccType = SmallIntT }
   , CompositeColumn { ccName = "shareable_link_hash", ccType = BigIntT }
+  , CompositeColumn { ccName = "template_id", ccType = BigIntT }
+  , CompositeColumn { ccName = "from_shareable_link", ccType = BoolT }
   ]
 }
 
