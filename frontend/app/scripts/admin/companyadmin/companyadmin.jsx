@@ -12,6 +12,7 @@ var PaymentsPanel = require("../paymentspanel");
 var StatsView = require("../../stats/stats");
 var TabViewer = require("../../common/tabviewer");
 var TemplatesList = require("../templateslist");
+var UserGroupStructure = require("../usergroupstructure");
 
 var CompanyAdminView = React.createClass({
   propTypes: {
@@ -34,6 +35,9 @@ var CompanyAdminView = React.createClass({
             companyid={this.props.companyId}
             loadLater={false}
           />
+        </TabViewer.TabViewerTab>
+        <TabViewer.TabViewerTab hash="structure" title="Company tree">
+          <UserGroupStructure companyid={this.props.companyId}/>
         </TabViewer.TabViewerTab>
         <TabViewer.TabViewerTab
           hash="branding"

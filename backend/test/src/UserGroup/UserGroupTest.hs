@@ -103,9 +103,8 @@ testGetAllGroupsOfUser :: TestEnv ()
 testGetAllGroupsOfUser = do
   -- create a 5 level tree, each parent 2 subgroups
   (lastuid:_) <- (reverse . snd) <$> foldlM createGroupsWithUsers ([Nothing],[]) [1..5]
-  Just lastu <- dbQuery . GetUserByID $ lastuid
-  ugs <- dbQuery . UserGetAllParentGroups $ lastu
-  assertEqual ("Fetched all groups of user") 5 (length ugs)
+  ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ lastuid
+  assertEqual ("Fetched all groups of user") 5 (length $ ugwpToList ugwp)
   where
     createGroupsWithUsers :: ([Maybe UserGroupID], [UserID]) -> Int -> TestEnv ([Maybe UserGroupID], [UserID])
     createGroupsWithUsers (mparent_ids, uids) level = do

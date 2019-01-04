@@ -9,3 +9,4 @@ mkLabel ''UserGroup
 mkLabel ''UserGroupSettings
 mkLabel ''UserGroupUI
 mkLabel ''UserGroupAddress
+mkLabel ''UserGroupWithChildren

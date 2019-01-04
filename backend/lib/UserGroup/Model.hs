@@ -6,8 +6,8 @@ module UserGroup.Model (
   , UserGroupGetWithParentsByUserID(..)
   , UserGroupsGetFiltered(..)
   , UserGroupUpdate(..)
-  , UserGetAllParentGroups(..)
   , UserGroupGetImmediateChildren(..)
+  , UserGroupGetAllChildrenRecursive(..)
   , UserGroupsFormCycle(..)
   , UserGroupIsInvalidAsRoot(..)
   , UserGroupFilter(..)
@@ -27,7 +27,6 @@ import DataRetentionPolicy
 import DB
 import FeatureFlags.Model
 import Partner.Model
-import User.Types.User
 import User.UserID
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
@@ -258,7 +257,7 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () 
     -- update all child groups parentpaths
     runQuery_ . sqlUpdate "user_groups" $ do
       -- to remove multiple items at once from ARRAY, there is only slicing available
-      -- inside slicing, we must to specify the index of last item
+      -- inside slicing, we must specify index of the last item
       -- we cut old items from start and then prepend the new parent path
       sqlSetCmd "parent_group_path" $ "array_cat(parent_group_path[ 1"<>
                                                                  ": ( array_length(parent_group_path, 1)"<>
@@ -294,22 +293,6 @@ instance ToJSValue UserGroupIsInvalidAsRoot where
     value "user_group" (show ug)
 
 instance DBExtraException UserGroupIsInvalidAsRoot
-
-data UserGetAllParentGroups = UserGetAllParentGroups User
-instance (MonadDB m, MonadThrow m) => DBQuery m UserGetAllParentGroups [UserGroup] where
-  query (UserGetAllParentGroups u) = do
-    Array1 (parentpath :: [UserGroupID]) <- do
-      runQuery_ . sqlSelect "user_groups" $ do
-        sqlResult "parent_group_path"
-        sqlWhereEq "id" . usergroupid $ u
-      fetchOne runIdentity
-    runQuery_ . sqlSelect "user_groups" $ do
-      mapM_ sqlResult userGroupSelectors
-      sqlWhereAny [
-          sqlWhereEq "id" . usergroupid $ u
-        , sqlWhereIn "id" parentpath
-        ]
-    fetchMany toComposite
 
 userGroupSelectors :: [SQL]
 userGroupSelectors = [
@@ -428,6 +411,20 @@ ugGetChildrenInheritingProperty ugid ugProperty = do
   grandchildren <- fmap concat . forM inheriting_children
     $ \c -> ugGetChildrenInheritingProperty (get ugID c) ugProperty
   return $ inheriting_children ++ grandchildren
+
+-- Get all children recursively
+data UserGroupGetAllChildrenRecursive = UserGroupGetAllChildrenRecursive UserGroupID
+instance (MonadDB m, MonadThrow m)
+  => DBQuery m UserGroupGetAllChildrenRecursive [UserGroupWithChildren] where
+  query (UserGroupGetAllChildrenRecursive ugid) = do
+    runQuery_ $ sqlSelect "user_groups" $ do
+      mapM_ sqlResult userGroupSelectors
+      sqlWhere $ "parent_group_path @> " <?> (Array1 [ugid])
+    allChildren <- fetchMany toComposite
+    let directChildren parentID = filter ((==Just parentID) . get ugParentGroupID) allChildren
+        mkChildren parentID = mkChild <$> directChildren parentID
+        mkChild ug = UserGroupWithChildren ug . mkChildren $ get ugID ug
+    return $ mkChildren ugid
 
 -- Synchronize these definitions with frontend/app/js/account/company.js
 minUserGroupIdleDocTimeout :: Int16

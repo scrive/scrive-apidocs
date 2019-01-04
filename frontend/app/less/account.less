@@ -12,6 +12,40 @@
   }
 }
 
+.user-group-structure {
+  #topUL {
+    margin: 0;
+    padding: 0;
+  }
+  ul {
+    list-style-type: none;
+    list-style-position: outside;
+    list-style-image: none;
+    display: block;
+    padding-inline-start: 40px;
+    li {
+      text-align: left;
+    }
+  }
+  /* Create the caret/arrow with a unicode, and style it */
+  .caret::before {
+    content: "\25B6";
+    color: black;
+    display: inline-block;
+    margin-right: 6px;
+    transform: rotate(90deg);
+  }
+  .leaf::before {
+    content: "\2022";
+    color: black;
+    display: inline-block;
+    margin-right: 6px;
+  }
+  .strong {
+    font-weight: bold;
+  }
+}
+
 .account-settings {
   padding-top: 23px;
 }

@@ -133,6 +133,8 @@ adminonlyRoutes =
         , dir "companyadmin" $ dir "getsubscription" $ hGet $ toK1 $ handleCompanyGetSubscription
         , dir "companyadmin" $ dir "updatesubscription" $ hPost $ toK1 $ handleCompanyUpdateSubscription
 
+        , dir "companyadmin" $ dir "getstructure" $ hGet $ toK1 $ handleCompanyGetStructure
+
         , dir "documentslist" $ hGet $ toK0 $ jsonDocuments
 
         , dir "companies" $ hGet $ toK0 $ jsonCompanies
@@ -765,6 +767,22 @@ handleCompanyUpdateSubscription ugid = onlySalesOrAdmin . V2.api $ do
 
   dbUpdate . UserGroupUpdate . set ugInvoicing newInvoicing . setFeatures . ugwpUG $ ugwp
   return $ V2.Accepted ()
+
+handleCompanyGetStructure :: Kontrakcja m => UserGroupID -> m Aeson.Value
+handleCompanyGetStructure ugid = onlySalesOrAdmin $ do
+  ugwp <- guardJustM . dbQuery . UserGroupGetWithParents $ ugid
+  let root = ugwpRoot ugwp
+  children <- dbQuery . UserGroupGetAllChildrenRecursive $ get ugID root
+  return $ object
+    [ "user_group_structure" .= (ugWithChildrenToJson $ UserGroupWithChildren root children) ]
+  where
+    ugWithChildrenToJson (UserGroupWithChildren ug children) = object [
+        "group" .= object
+          [ "name" .= get ugName ug
+          , identifier $ get ugID ug
+          ]
+      , "children" .= map ugWithChildrenToJson children
+      ]
 
 jsonBrandedDomainsList ::Kontrakcja m => m Aeson.Value
 jsonBrandedDomainsList = onlySalesOrAdmin $ do

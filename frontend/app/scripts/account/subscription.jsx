@@ -16,7 +16,7 @@ var Subscription = Backbone.Model.extend({
     "number_of_users": 0,
     "started_last_month": 0,
     "features": undefined,
-    "inhetired_features": undefined,
+    "inherited_features": undefined,
     "features_is_inherited": false,
     "current_user_is_admin": undefined,
     "ready": false

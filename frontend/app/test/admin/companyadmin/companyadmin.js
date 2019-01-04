@@ -85,11 +85,12 @@ describe("admin/companyadmin/companyadmin", function () {
     assert.equal($("li:nth-child(1)", tabs).text(), "<");
     assert.equal($("li:nth-child(2)", tabs).text(), "Company details");
     assert.equal($("li:nth-child(3)", tabs).text(), "Company users");
-    assert.equal($("li:nth-child(4)", tabs).text(), "Branding");
-    assert.equal($("li:nth-child(5)", tabs).text(), "Payments");
-    assert.equal($("li:nth-child(6)", tabs).text(), "Statistics");
-    assert.equal($("li:nth-child(7)", tabs).text(), "Templates");
-    assert.equal($("li:nth-child(8)", tabs).text(), "Documents");
+    assert.equal($("li:nth-child(4)", tabs).text(), "Company tree");
+    assert.equal($("li:nth-child(5)", tabs).text(), "Branding");
+    assert.equal($("li:nth-child(6)", tabs).text(), "Payments");
+    assert.equal($("li:nth-child(7)", tabs).text(), "Statistics");
+    assert.equal($("li:nth-child(8)", tabs).text(), "Templates");
+    assert.equal($("li:nth-child(9)", tabs).text(), "Documents");
   });
 
   it("should not render templates or documents tab if not for admin", function () {
@@ -97,7 +98,7 @@ describe("admin/companyadmin/companyadmin", function () {
 
     var tabs = $(".tabs", component.getDOMNode());
 
-    assert.isTrue($("li:nth-child(7)", tabs).length == 0);
+    assert.isTrue($("li:nth-child(8)", tabs).length == 0);
   });
 
 
@@ -129,7 +130,7 @@ describe("admin/companyadmin/companyadmin", function () {
   it("should activate the branding tab by clicking on it", function (done) {
     var component = renderComponent();
 
-    var tab = $(".tabs li:nth-child(4)", component.getDOMNode());
+    var tab = $(".tabs li:nth-child(5)", component.getDOMNode());
     TestUtils.Simulate.click(tab[0]);
 
     util.waitUntil(
@@ -146,7 +147,7 @@ describe("admin/companyadmin/companyadmin", function () {
   it("should activate the payments tab by clicking on it", function (done) {
     var component = renderComponent();
 
-    var tab = $(".tabs li:nth-child(5)", component.getDOMNode());
+    var tab = $(".tabs li:nth-child(6)", component.getDOMNode());
     TestUtils.Simulate.click(tab[0]);
 
     util.waitUntil(
@@ -163,7 +164,7 @@ describe("admin/companyadmin/companyadmin", function () {
   it("should activate the statistics tab by clicking on it", function (done) {
     var component = renderComponent();
 
-    var tab = $(".tabs li:nth-child(6)", component.getDOMNode());
+    var tab = $(".tabs li:nth-child(7)", component.getDOMNode());
     TestUtils.Simulate.click(tab[0]);
 
     util.waitUntil(
@@ -180,7 +181,7 @@ describe("admin/companyadmin/companyadmin", function () {
   it("should activate the templates tab by clicking on it", function (done) {
     var component = renderComponent();
 
-    var tab = $(".tabs li:nth-child(7)", component.getDOMNode());
+    var tab = $(".tabs li:nth-child(8)", component.getDOMNode());
     TestUtils.Simulate.click(tab[0]);
 
     util.waitUntil(
@@ -197,7 +198,7 @@ describe("admin/companyadmin/companyadmin", function () {
   it("should activate the documents tab by clicking on it", function (done) {
     var component = renderComponent();
 
-    var tab = $(".tabs li:nth-child(8)", component.getDOMNode());
+    var tab = $(".tabs li:nth-child(9)", component.getDOMNode());
     TestUtils.Simulate.click(tab[0]);
 
     util.waitUntil(
@@ -259,7 +260,7 @@ describe("admin/companyadmin/companyadmin", function () {
   it("should configure and render the branding view when its tab is active", function (done) {
     var component = renderComponent();
 
-    var tab = $(".tabs li:nth-child(4)", component.getDOMNode());
+    var tab = $(".tabs li:nth-child(5)", component.getDOMNode());
     TestUtils.Simulate.click(tab[0]);
 
     util.waitUntil(
@@ -282,7 +283,7 @@ describe("admin/companyadmin/companyadmin", function () {
   it("should configure and render the payments view when its tab is active", function (done) {
     var component = renderComponent();
 
-    var tab = $(".tabs li:nth-child(5)", component.getDOMNode());
+    var tab = $(".tabs li:nth-child(6)", component.getDOMNode());
     TestUtils.Simulate.click(tab[0]);
 
     util.waitUntil(
@@ -305,7 +306,7 @@ describe("admin/companyadmin/companyadmin", function () {
   it("should configure and render the statistics view when its tab is active", function (done) {
     var component = renderComponent();
 
-    var tab = $(".tabs li:nth-child(6)", component.getDOMNode());
+    var tab = $(".tabs li:nth-child(7)", component.getDOMNode());
     TestUtils.Simulate.click(tab[0]);
 
     util.waitUntil(
@@ -327,7 +328,7 @@ describe("admin/companyadmin/companyadmin", function () {
   it("should configure and render the templates view when its tab is active", function (done) {
     var component = renderComponent();
 
-    var tab = $(".tabs li:nth-child(7)", component.getDOMNode());
+    var tab = $(".tabs li:nth-child(8)", component.getDOMNode());
     TestUtils.Simulate.click(tab[0]);
 
     util.waitUntil(
@@ -351,7 +352,7 @@ describe("admin/companyadmin/companyadmin", function () {
   it("should configure and render the documents view when its tab is active", function (done) {
     var component = renderComponent();
 
-    var tab = $(".tabs li:nth-child(8)", component.getDOMNode());
+    var tab = $(".tabs li:nth-child(9)", component.getDOMNode());
     TestUtils.Simulate.click(tab[0]);
 
     util.waitUntil(

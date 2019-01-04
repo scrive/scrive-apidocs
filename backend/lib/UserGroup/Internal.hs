@@ -11,6 +11,7 @@ module UserGroup.Internal (
   , ugwpFeatures
   , ugwpToList
   , ugwpUG
+  , ugwpRoot
   , ugwpAddChild
   , ugrFromUG
   , UserGroupID(..)
@@ -25,6 +26,7 @@ module UserGroup.Internal (
   , UserGroupWithParents
   , UserGroupRoot(..)
   , ugFromUGRoot
+  , UserGroupWithChildren(..)
   ) where
 
 import Data.Binary
@@ -69,6 +71,12 @@ data UserGroupRoot = UserGroupRoot
 
 -- UserGroup list is ordered from Leaf to Child of Root)
 type UserGroupWithParents = (UserGroupRoot, [UserGroup])
+
+-- UserGroup and all its children down to the bottom
+data UserGroupWithChildren = UserGroupWithChildren
+  { _ugwcGroup :: UserGroup
+  , _ugwcChildren :: [UserGroupWithChildren]
+  }
 
 data UserGroupInvoicing =
     None
@@ -303,6 +311,9 @@ ugwpToList (ug_root, ug_children_path) =
 ugwpUG :: UserGroupWithParents -> UserGroup
 ugwpUG (root, [])  = ugFromUGRoot root
 ugwpUG (_, (ug:_)) = ug
+
+ugwpRoot :: UserGroupWithParents -> UserGroup
+ugwpRoot (root, _) = ugFromUGRoot root
 
 ugwpAddChild :: UserGroup -> UserGroupWithParents -> UserGroupWithParents
 ugwpAddChild ug (root, children_path) = (root, ug:children_path)
