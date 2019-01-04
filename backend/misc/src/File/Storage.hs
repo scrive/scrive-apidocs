@@ -36,37 +36,49 @@ import qualified FileStorage.Class as FS
 --
 -- If the upload fails then the new NewEmptyFileForAWS is purged, and an
 -- exception is thrown.
-saveNewFile :: ( MonadBase IO m, MonadCatch m, MonadLog m, MonadDB m
-               , MonadThrow m, CryptoRNG m, MonadFileStorage m )
-            => String -> BS.ByteString -> m FileID
+saveNewFile
+  :: ( MonadBase IO m, MonadCatch m, MonadLog m, MonadDB m
+     , MonadThrow m, CryptoRNG m, MonadFileStorage m )
+  => String -> BS.ByteString -> m FileID
 saveNewFile fName fContent = do
   startTime <- liftBase getCurrentTime
   emptyFile <- dbUpdate $ NewEmptyFileForAWS fName fContent
   let fid    = fileid emptyFile
       awsUrl = urlFromFile emptyFile
-  Right aes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
-  let encryptedContent = aesEncrypt aes fContent
-  localData [identifier fid] $ do
-    eRes <- try $ FS.saveNewContents awsUrl $ BSL.fromStrict encryptedContent
-    case eRes of
-      Right () -> do
-        dbUpdate $ FileMovedToAWS fid awsUrl aes
-        let file = emptyFile { filestorage = FileStorageAWS awsUrl aes }
-        finishTime <- liftBase getCurrentTime
-        logInfo "newFile: new file successfully created with content in S3" $ object [
-            logPair_ file
-          , "elapsed_time" .= (realToFrac $ diffUTCTime finishTime startTime :: Double)
-          ]
-        return fid
-      Left err@(FS.FileStorageException msg) -> do
-        let attnMsg = "newFile: failed to upload to AWS, purging file"
-        logAttention attnMsg $ object [
+  eaes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
+  case eaes of
+    Left err -> do
+      logAttention "saveNewFile: failed to create AES config, purging file" $
+        object [
             logPair_ emptyFile
-          , "error" .= msg
+          , "error" .= err
           ]
-        dbUpdate $ PurgeFile fid
-        logAttention "newFileInAmazon: purged file" $ object [identifier fid]
-        throwM err
+      unexpectedError err
+    Right aes -> localData [identifier fid] $ do
+      let encryptedContent = aesEncrypt aes fContent
+      eRes <- try $ FS.saveNewContents awsUrl $ BSL.fromStrict encryptedContent
+      case eRes of
+        Right () -> do
+          dbUpdate $ FileMovedToAWS fid awsUrl aes
+          let file = emptyFile { filestorage = FileStorageAWS awsUrl aes }
+          finishTime <- liftBase getCurrentTime
+          logInfo "newFile: new file successfully created with content in S3" $
+            object [
+                logPair_ file
+              , "elapsed_time" .= (realToFrac $
+                                   diffUTCTime finishTime startTime :: Double)
+              ]
+          return fid
+        Left err@(FS.FileStorageException msg) -> do
+          let attnMsg = "newFile: failed to upload to AWS, purging file"
+          logAttention attnMsg $
+            object [
+                logPair_ emptyFile
+              , "error" .= msg
+              ]
+          dbUpdate $ PurgeFile fid
+          logAttention "newFileInAmazon: purged file" $ object [identifier fid]
+          throwM err
 
 -- | Get file contents from the underlying storage and decrypt the contents
 -- returning them as BS.

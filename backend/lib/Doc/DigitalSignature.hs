@@ -31,14 +31,23 @@ import Util.Actor (systemActor)
 import Utils.Directory (withSystemTempDirectory')
 import qualified GuardTime as GT
 
-addDigitalSignature :: (CryptoRNG m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, DocumentMonad m, MonadFileStorage m, GuardTimeConfMonad m, TemplatesMonad m) => m Bool
+addDigitalSignature
+  :: ( CryptoRNG m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m
+     , DocumentMonad m, MonadFileStorage m, GuardTimeConfMonad m, TemplatesMonad m)
+  => m Bool
 addDigitalSignature = theDocumentID >>= \did ->
-  withSystemTempDirectory' ("DigitalSignature-" ++ show did ++ "-") $ \tmppath -> do
-  Just file <- fileFromMainFile =<< (documentsealedfile <$>theDocument)
+  withSystemTempDirectory'
+  ("DigitalSignature-" ++ show did ++ "-") $ \tmppath -> do
+  mfile <- fileFromMainFile =<< (documentsealedfile <$> theDocument)
+  file <- case mfile of
+    Nothing   -> unexpectedError "addDigitalSignature: File is not sealed"
+    Just file -> return file
   content <- getFileContents file
   let mainpath = tmppath </> "main.pdf"
-  logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length content)
-                                     , "originator" .= ("addDigitalSignature" :: Text) ]
+  logInfo "Temp file write" $ object [
+      "bytes_written" .= (BS.length content)
+    , "originator" .= ("addDigitalSignature" :: Text)
+    ]
   liftIO $ BS.writeFile mainpath content
   now <- currentTime
   gtconf <- getGuardTimeConf
@@ -72,10 +81,18 @@ addDigitalSignature = theDocumentID >>= \did ->
         ]
       return False
 
--- | Extend a document: replace the digital signature with a keyless one.  Trigger callbacks.
-extendDigitalSignature :: (MonadBaseControl IO m, MonadIO m, MonadMask m, MonadLog m, CryptoRNG m, DocumentMonad m, MonadFileStorage m, GuardTimeConfMonad m, TemplatesMonad m) => m Bool
+-- | Extend a document: replace the digital signature with a keyless
+-- one.  Trigger callbacks.
+extendDigitalSignature
+  :: ( MonadBaseControl IO m, MonadIO m, MonadMask m, MonadLog m, CryptoRNG m
+     , DocumentMonad m, MonadFileStorage m, GuardTimeConfMonad m, TemplatesMonad m)
+  => m Bool
 extendDigitalSignature = do
-  Just file <- fileFromMainFile =<< (documentsealedfile <$>theDocument)
+  mfile <- fileFromMainFile =<< (documentsealedfile <$> theDocument)
+  file <- case mfile of
+    Nothing   -> unexpectedError "extendDigitalSignature: File is not sealed"
+    Just file -> return file
+
   did <- theDocumentID
   withSystemTempDirectory' ("ExtendSignature-" ++ show did ++ "-") $ \tmppath -> do
     content <- getFileContents file

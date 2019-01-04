@@ -309,10 +309,11 @@ insertMainFiles documentid rfiles = do
     sqlSetList "document_status" $ mainfiledocumentstatus <$> files
     sqlSetList "seal_status" $ mainfilesealstatus <$> files
 
-insertSignatoryScreenshots :: ( CryptoRNG m, MonadBase IO m, MonadCatch m
-                              , MonadDB m, MonadFileStorage m, MonadLog m
-                              , MonadThrow m, MonadTime m )
-                           => [(SignatoryLinkID, SignatoryScreenshots)] -> m Int
+insertSignatoryScreenshots
+  :: ( CryptoRNG m, MonadBase IO m, MonadCatch m
+     , MonadDB m, MonadFileStorage m, MonadLog m
+     , MonadThrow m, MonadTime m )
+  => [(SignatoryLinkID, SignatoryScreenshots)] -> m Int
 insertSignatoryScreenshots l = do
   let (slids, types, times, ss) = unzip4 $ f "first" first
                                         <> f "signing" signing

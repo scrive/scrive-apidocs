@@ -60,7 +60,9 @@ sendDocumentMails author = do
       let aa = authorActor ctx author
       req <- mkRequest POST []
       runTestKontra req ctx $ (randomUpdate (NewDocument author "Document title" Signable defaultTimeZoneName 0 aa)) `withDocumentM` do
-        True <- dbUpdate $ SetDocumentLang l (systemActor $ get ctxtime ctx)
+        res <- dbUpdate $ SetDocumentLang l (systemActor $ get ctxtime ctx)
+        unless res $
+          unexpectedError "Expected True"
 
         asl <- head . documentsignatorylinks <$> theDocument
         file <- addNewRandomFile
@@ -80,14 +82,19 @@ sendDocumentMails author = do
                        , signatoryrole = SignatoryRoleSigningParty
                        }
                    ]
-        True <- randomUpdate $ ResetSignatoryDetails sigs (systemActor now)
+        success <- randomUpdate $ ResetSignatoryDetails sigs (systemActor now)
+        unless success $
+          unexpectedError "Expected True"
         tz <- mkTimeZoneName "Europe/Stockholm"
         randomUpdate $ PreparationToPending (systemActor now) tz
         asl2 <- head . documentsignatorylinks <$> theDocument
         randomUpdate . MarkDocumentSeen (signatorylinkid asl2) (signatorymagichash asl2)
              =<< signatoryActor ctx asl2
         randomUpdate $ SignDocument (signatorylinkid asl2) (signatorymagichash asl2) Nothing Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor now)
-        [sl] <- filter (not . isAuthor) . documentsignatorylinks <$> theDocument
+        sls <- filter (not . isAuthor) . documentsignatorylinks <$> theDocument
+        sl  <- case sls of
+          [sl] -> return sl
+          _    -> unexpectedError "Expected only a single sig link!"
         --Invitation Mails
         let checkMail s mg = do
                               logInfo_ $ "Checking mail" <+> T.pack s

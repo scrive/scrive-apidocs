@@ -3,9 +3,9 @@ module Company.JSON
   , unjsonUserGroupUIWithCompanyID
   ) where
 
-import Control.Applicative.Free
 import Data.Functor.Invariant
 import Data.Unjson
+import qualified Control.Applicative.Free as AltF
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BSC8
@@ -21,7 +21,7 @@ unjsonUserGroupUIWithCompanyID :: UserGroupID -> UnjsonDef UserGroupUI
 unjsonUserGroupUIWithCompanyID uid = objectOf $ unjsonUserGroupUIFields
   <* (fieldReadonly "companyid" (const uid) "Company id")
 
-unjsonUserGroupUIFields :: Ap (FieldDef UserGroupUI) UserGroupUI
+unjsonUserGroupUIFields :: AltF.Ap (FieldDef UserGroupUI) UserGroupUI
 unjsonUserGroupUIFields = pure defaultUserGroupUI
   <**>  (fieldOpt "mailTheme" (get uguiMailTheme) "Id of a mail theme"
     <**> (pure $ set uguiMailTheme))

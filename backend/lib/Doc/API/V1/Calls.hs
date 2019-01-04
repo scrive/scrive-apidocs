@@ -483,13 +483,16 @@ apiCallV1Cancel did = logDocument did . api $ do
       postDocumentCanceledChange =<< theDocument
       Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
 
-apiCallV1Reject :: Kontrakcja m =>  DocumentID -> SignatoryLinkID -> m Response
+apiCallV1Reject :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 apiCallV1Reject did slid = logDocumentAndSignatory did slid . api $ do
   checkObjectVersionIfProvided did
   (mh,mu) <- getMagicHashAndUserForSignatoryAction did slid
   dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
-    ctx <- getContext
-    Just sll <- getSigLinkFor slid <$> theDocument
+    ctx  <- getContext
+    msll <- getSigLinkFor slid <$> theDocument
+    sll  <- case msll of
+      Nothing  -> unexpectedError "apiCallV1Reject: Couldn't get sig link!"
+      Just sll -> return sll
     customtext <- fmap strip <$> getField "customtext"
     switchLang . getLang =<< theDocument
     (dbUpdate . RejectDocument slid (isApprover sll) customtext =<< signatoryActor ctx sll)

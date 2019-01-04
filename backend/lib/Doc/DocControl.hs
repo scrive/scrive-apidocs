@@ -598,7 +598,7 @@ prepareEmailPreview docid slid = do
     content <- flip E.catch (\(E.SomeException _) -> return "") $ case mailtype of
          "remind" -> do
              doc <- getDocByDocID docid
-             Just sl <- return $ getSigLinkFor slid doc
+             let Just sl = getSigLinkFor slid doc
              mailattachments <- makeMailAttachments doc True
              mailDocumentRemindContent Nothing doc sl (not (null mailattachments))
          "invite" -> do

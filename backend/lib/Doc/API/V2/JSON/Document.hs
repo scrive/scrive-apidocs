@@ -3,11 +3,11 @@ module Doc.API.V2.JSON.Document (
 , listToJSONBS
 ) where
 
-import Control.Applicative.Free
 import Data.ByteString.Builder
 import Data.Functor.Invariant
 import Data.String.Utils (strip)
 import Data.Unjson
+import qualified Control.Applicative.Free as AltF
 import qualified Data.ByteString.Lazy.Char8 as BSC
 import qualified Data.Set as Set
 
@@ -71,7 +71,7 @@ unjsonDocument da = objectOf $
   <*   fieldReadOnlyOpt "template_id" documenttemplateid "Document ID of the template from which the document was generated"
   <*   fieldReadonly "from_shareable_link" documentfromshareablelink "Whether the document was created by a shareable link"
 
-fieldAccessToken :: DocumentAccess -> Ap (FieldDef Document) ()
+fieldAccessToken :: DocumentAccess -> AltF.Ap (FieldDef Document) ()
 fieldAccessToken (DocumentAccess { daAccessMode }) =
   case daAccessMode of
        AuthorDocumentAccess         -> accessTokenField
@@ -83,7 +83,7 @@ fieldAccessToken (DocumentAccess { daAccessMode }) =
     accessTokenField = fieldReadonly "access_token"
                        documentmagichash "Document access token"
 
-fieldShareableLink :: DocumentAccess -> Ap (FieldDef Document) ()
+fieldShareableLink :: DocumentAccess -> AltF.Ap (FieldDef Document) ()
 fieldShareableLink DocumentAccess{ daAccessMode } =
      case daAccessMode of
        AuthorDocumentAccess         -> hashField
@@ -92,7 +92,7 @@ fieldShareableLink DocumentAccess{ daAccessMode } =
        SignatoryDocumentAccess _    -> pure ()
        SystemAdminDocumentAccess    -> pure ()
    where
-     hashField :: Ap (FieldDef Document) ()
+     hashField :: AltF.Ap (FieldDef Document) ()
      hashField =
        fieldOpt "shareable_link"
                 (\doc -> show . LinkTemplateShareableLink (documentid doc)

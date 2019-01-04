@@ -573,9 +573,10 @@ jsonDocuments = onlyAdmin $ do
 handleBackdoorQuery :: Kontrakcja m => m Response
 handleBackdoorQuery = onlySalesOrAdmin $ onlyBackdoorOpen $ do
   emailAddress <- guardJustM $ getField "email_address"
-  emailTitle <- guardJustM $ getField "email_title"
-  Just startDate <- MinutesTime.parseTimeISO <$> (guardJustM $ getField "start_date")
-  memail <- dbQuery $ GetEmailForRecipient emailAddress emailTitle startDate
+  emailTitle   <- guardJustM $ getField "email_title"
+  startDate    <- guardJustM $
+                  (join . fmap MinutesTime.parseTimeISO <$> getField "start_date")
+  memail       <- dbQuery $ GetEmailForRecipient emailAddress emailTitle startDate
   case memail of
     Nothing -> respond404
     Just email -> renderFromBody $ mailContent email

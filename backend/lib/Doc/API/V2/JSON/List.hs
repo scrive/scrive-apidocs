@@ -4,8 +4,8 @@ module Doc.API.V2.JSON.List (
 , defaultDocumentAPISort
 ) where
 
-import Control.Applicative.Free
 import Data.Unjson
+import qualified Control.Applicative.Free as AltF
 import qualified Data.Text as T
 
 import DB
@@ -107,10 +107,10 @@ instance Unjson DocumentAPIFilter where
       , (DocumentAPIFilterCanBeSignedBy (unsafeUserID 0), unjsonDocumentAPIFilterCanBeSignedBy)
     ]
     where
-      filterMatch :: (DocumentAPIFilter,Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter) -> (T.Text, DocumentAPIFilter -> Bool, Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter)
+      filterMatch :: (DocumentAPIFilter,AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter) -> (T.Text, DocumentAPIFilter -> Bool, AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter)
       filterMatch (df,a) = (filterType df, \f -> filterType df == filterType f, a)
 
-unjsonDocumentAPIFilterStatuses:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterStatuses:: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterStatuses = pure DocumentAPIFilterStatuses
   <*  fieldReadonly "filter_by" filterType "Type of filter"
   <*> fieldBy "statuses" unsafeDocumentAPIFilterStatuses "Statuses to filter on" (arrayOf unjsonDocumentStatus)
@@ -119,7 +119,7 @@ unjsonDocumentAPIFilterStatuses = pure DocumentAPIFilterStatuses
     unsafeDocumentAPIFilterStatuses(DocumentAPIFilterStatuses fs) = fs
     unsafeDocumentAPIFilterStatuses _ = unexpectedError "unsafeDocumentAPIFilterStatus"
 
-unjsonDocumentAPIFilterTime :: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterTime :: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterTime = pure DocumentAPIFilterTime
   <*  fieldReadonly "filter_by" filterType "Type of filter"
   <*> fieldOpt "start_time" unsafeDocumentAPIFilterStartTime "Only documents after start time"
@@ -132,7 +132,7 @@ unjsonDocumentAPIFilterTime = pure DocumentAPIFilterTime
     unsafeDocumentAPIFilterEndTime (DocumentAPIFilterTime _ e) = e
     unsafeDocumentAPIFilterEndTime _ = unexpectedError "unsafeDocumentAPIFilterEndTime"
 
-unjsonDocumentAPIFilterTag:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterTag:: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterTag = pure DocumentAPIFilterTag
   <*  fieldReadonly "filter_by" filterType "Type of filter"
   <*> field "name" unsafeDocumentAPIFilterTagName "Name of tag to filter on"
@@ -145,11 +145,11 @@ unjsonDocumentAPIFilterTag = pure DocumentAPIFilterTag
     unsafeDocumentAPIFilterTagValue (DocumentAPIFilterTag _ v) = v
     unsafeDocumentAPIFilterTagValue _ = unexpectedError "unsafeDocumentAPIFilterTagValue"
 
-unjsonDocumentAPIFilterIsAuthor:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterIsAuthor:: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterIsAuthor = pure DocumentAPIFilterIsAuthor
   <*  fieldReadonly "filter_by" filterType "Type of filter"
 
-unjsonDocumentAPIFilterIsAuthoredBy:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterIsAuthoredBy:: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterIsAuthoredBy = pure DocumentAPIFilterIsAuthoredBy
   <*  fieldReadonly "filter_by" filterType "Type of filter"
   <*> field "user_id" unsafeDocumentAPIFilterUserID "Id of author"
@@ -158,28 +158,28 @@ unjsonDocumentAPIFilterIsAuthoredBy = pure DocumentAPIFilterIsAuthoredBy
     unsafeDocumentAPIFilterUserID (DocumentAPIFilterIsAuthoredBy uid) = uid
     unsafeDocumentAPIFilterUserID _ = unexpectedError "unsafeDocumentAPIFilterStatus"
 
-unjsonDocumentAPIFilterIsSignableOnPad :: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterIsSignableOnPad :: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterIsSignableOnPad = pure DocumentAPIFilterIsSignableOnPad
   <*  fieldReadonly "filter_by" filterType "Type of filter"
 
 
-unjsonDocumentAPIFilterIsTemplate:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterIsTemplate:: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterIsTemplate = pure DocumentAPIFilterIsTemplate
   <*  fieldReadonly "filter_by" filterType "Type of filter"
 
-unjsonDocumentAPIFilterIsNotTemplate:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterIsNotTemplate:: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterIsNotTemplate = pure DocumentAPIFilterIsNotTemplate
   <*  fieldReadonly "filter_by" filterType "Type of filter"
 
-unjsonDocumentAPIFilterIsInTrash:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterIsInTrash:: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterIsInTrash = pure DocumentAPIFilterIsInTrash
   <*  fieldReadonly "filter_by" filterType "Type of filter"
 
-unjsonDocumentAPIFilterIsNotInTrash:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterIsNotInTrash:: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterIsNotInTrash = pure DocumentAPIFilterIsNotInTrash
   <*  fieldReadonly "filter_by" filterType "Type of filter"
 
-unjsonDocumentAPIFilterByText:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterByText:: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterByText = pure DocumentAPIFilterByText
   <*  fieldReadonly "filter_by" filterType "Type of filter"
   <*> field "text" unsafeDocumentAPIFilterText "Text to filter on"
@@ -188,7 +188,7 @@ unjsonDocumentAPIFilterByText = pure DocumentAPIFilterByText
     unsafeDocumentAPIFilterText (DocumentAPIFilterByText text) = text
     unsafeDocumentAPIFilterText _ = unexpectedError "unsafeDocumentAPIFilterText"
 
-unjsonDocumentAPIFilterCanBeSignedBy:: Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
+unjsonDocumentAPIFilterCanBeSignedBy:: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
 unjsonDocumentAPIFilterCanBeSignedBy = pure DocumentAPIFilterCanBeSignedBy
   <*  fieldReadonly "filter_by" filterType "Type of filter"
   <*> field "user_id" unsafeDocumentAPIFilterUserID "Id of user that can sign"

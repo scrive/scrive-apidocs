@@ -23,5 +23,5 @@ apiCallMonitorStatusGet  = V2.api $ do
   -- Do something useless to see, whether database works.
   -- Should crash with HTTP 500, when database is not available
   runQuery_ ("SELECT TRUE" :: SQL)
-  True <- guardJustM $ fetchMaybe runIdentity
+  (_true::Bool) <- guardJustM $ fetchMaybe runIdentity
   return $ V2.Ok $ object [ "status" .= ("ok"::String) ]

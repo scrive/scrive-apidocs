@@ -10,6 +10,7 @@ module Doc.SignatoryScreenshots
 import Control.Monad.Base (MonadBase)
 import Control.Monad.Trans (MonadIO, liftIO)
 import Control.Monad.Trans.Control (MonadBaseControl)
+import Control.Monad.Trans.Maybe (MaybeT(..), runMaybeT)
 import Text.JSON (JSValue(..), Result(..), decode, fromJSString)
 import Text.JSON.FromJSValue
 import Text.JSON.Gen (runJSONGen, value)
@@ -42,28 +43,36 @@ instance FromJSValue SignatoryScreenshots where
 
 instance ToJSValue SignatoryScreenshots where
   toJSValue ss = runJSONGen $ do
-    f "first" (fmap toJSValue . first)
-    f "signing" (fmap toJSValue . signing)
+    f "first"     (fmap toJSValue . first)
+    f "signing"   (fmap toJSValue . signing)
     f "reference" (fmap (either toJSValue toJSValue) . reference)
-   where f n v = case v ss of
-                   Nothing -> return ()
-                   Just s  -> value n s
+   where f n v = maybe (return ()) (value n) (v ss)
 
 referencePath :: String -> FilePath
 referencePath name = "files/reference_screenshots/" ++ name ++ ".json"
 
 validReferenceName :: String -> Bool
-validReferenceName n = n `elem` ["author", "mobile", "standard", "mobile_bankid", "standard_bankid"]
+validReferenceName n = n `elem` [
+    "author"
+  , "mobile"
+  , "standard"
+  , "mobile_bankid"
+  , "standard_bankid"
+  ]
 
-resolveReferenceScreenshotNames :: (MonadBase IO m, MonadBaseControl IO m, MonadIO m) => SignatoryScreenshots -> m (Maybe SignatoryScreenshots)
+resolveReferenceScreenshotNames
+  :: (MonadBase IO m, MonadBaseControl IO m, MonadIO m)
+  => SignatoryScreenshots
+  -> m (Maybe SignatoryScreenshots)
 resolveReferenceScreenshotNames s =
   case reference s of
-    Nothing -> return $ Just s
-    Just (Right _) -> return $ Just s
-    Just (Left name) | validReferenceName name -> do
-        Ok json <- decode <$> (liftIO $ readFile $ referencePath name)
-        Just r <- return $ fromJSValue json
-        return $ Just $ s{ reference = Just (Right r) }
+    Nothing                     -> return $ Just s
+    Just (Right _)              -> return $ Just s
+    Just (Left name)
+      | validReferenceName name -> (runMaybeT $ do
+          Ok json <- decode <$> (liftIO . readFile . referencePath $ name)
+          r       <- MaybeT . return $ fromJSValue json
+          return $ s { reference = Just (Right r) })
         `E.catch`
-          \E.SomeException{} -> return Nothing
-    _ -> return Nothing
+        \E.SomeException{}      -> return Nothing
+      | otherwise               -> return Nothing

@@ -371,8 +371,8 @@ testNewDocumentForNonCompanyUser = replicateM_ 10 $ do
 
 testNewDocumentForACompanyUser :: TestEnv ()
 testNewDocumentForACompanyUser = replicateM_ 10 $ do
-  ug <- addNewUserGroup
-  ugwp <- guardJustM . dbQuery . UserGroupGetWithParents . get ugID $ ug
+  ug     <- addNewUserGroup
+  ugwp   <- guardJustM . dbQuery . UserGroupGetWithParents . get ugID $ ug
   result <- performNewDocumentWithRandomUser (Just ug) (Signable) "doc title"
   assertGoodNewDocument (Just ugwp) (Signable) "doc title" result
 
@@ -385,8 +385,8 @@ testRejectDocumentEvidenceLog = replicateM_ 10 $ do
      && ((<=) 2 . length . documentsignatorylinks)
      && (all (isSignatoryAndHasNotSigned || isApproverAndHasNotApproved) .
          filter (not . isAuthor) . documentsignatorylinks)) `withDocumentM` do
-    Just sl <- getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$>
-               theDocument
+    sl <- guardJustM $getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$>
+          theDocument
     randomUpdate $ \t -> RejectDocument (signatorylinkid sl) (isApprover sl)
                          Nothing (systemActor t)
 
@@ -448,11 +448,11 @@ testSignDocumentEvidenceLog = do
       (all isSignatory . documentsignatorylinks) &&
       (all ((==) StandardAuthenticationToSign . signatorylinkauthenticationtosignmethod) . documentsignatorylinks)
     ) `withDocumentM` do
-      Just asl <- getSigLinkFor (isAuthor::SignatoryLink->Bool) <$> theDocument
+      asl <- guardJustM $ getSigLinkFor (isAuthor::SignatoryLink->Bool) <$> theDocument
       randomUpdate $ \t -> MarkDocumentSeen (signatorylinkid asl) (signatorymagichash asl) (systemActor t)
       randomUpdate $ \t -> SignDocument  (signatorylinkid asl) (signatorymagichash asl) Nothing Nothing screenshots (systemActor t)
 
-      Just sl <- getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$> theDocument
+      sl <- guardJustM $ getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$> theDocument
       randomUpdate $ \t -> MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
       randomUpdate $ \t -> SignDocument  (signatorylinkid sl) (signatorymagichash sl) Nothing Nothing screenshots (systemActor t)
 
@@ -477,11 +477,11 @@ testSignDocumentSearchData = do
       (all ((==) StandardAuthenticationToSign . signatorylinkauthenticationtosignmethod) . documentsignatorylinks)
     ) `withDocumentM` do
 
-      Just asl <- getSigLinkFor (isAuthor::SignatoryLink->Bool) <$> theDocument
+      asl <- guardJustM $ getSigLinkFor (isAuthor::SignatoryLink->Bool) <$> theDocument
       randomUpdate $ \t -> MarkDocumentSeen (signatorylinkid asl) (signatorymagichash asl) (systemActor t)
       randomUpdate $ \t -> SignDocument  (signatorylinkid asl) (signatorymagichash asl) Nothing Nothing screenshots (systemActor t)
 
-      Just sl <- getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$> theDocument
+      sl <- guardJustM $ getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$> theDocument
       randomUpdate $ \t -> MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
       randomUpdate $ \t -> SignDocument  (signatorylinkid sl) (signatorymagichash sl) Nothing Nothing screenshots (systemActor t)
 
@@ -557,7 +557,7 @@ testDocumentAuthorUserID = do
           assertEqual "Document author_user_id is updated upon document creation"
                       mDocAuthorUserID (Just $ userid author)
 
-      Just asl <- getSigLinkFor (isAuthor::SignatoryLink->Bool) <$> theDocument
+      asl <- guardJustM $ getSigLinkFor (isAuthor::SignatoryLink->Bool) <$> theDocument
       randomUpdate $ \t -> MarkDocumentSeen (signatorylinkid asl) (signatorymagichash asl) (systemActor t)
       dbQuery (GetAuthorUserID docID) >>= \mDocAuthorUserID ->
           assertEqual "Document author_user_id is not changed after document seen by author"
@@ -567,7 +567,8 @@ testDocumentAuthorUserID = do
           assertEqual "Document author_user_id is not changed after document signed by author"
                       mDocAuthorUserID (Just $ userid author)
 
-      Just sl <- getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$> theDocument
+      sl <- guardJustM $ getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$>
+            theDocument
 
       randomUpdate $ \t -> MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
       dbQuery (GetAuthorUserID docID) >>= \mDocAuthorUserID ->
@@ -621,8 +622,8 @@ testMarkInvitationReadEvidenceLog :: TestEnv ()
 testMarkInvitationReadEvidenceLog = do
   author <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (isSignable && isPending) `withDocumentM` do
-    Just sl <- getAuthorSigLink <$> theDocument
-    now <- currentTime
+    sl      <- guardJustM $ getAuthorSigLink <$> theDocument
+    now     <- currentTime
     success <- randomUpdate $ MarkInvitationRead (signatorylinkid sl) (mailSystemActor now Nothing (getEmail sl) (signatorylinkid sl))
     assert success
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
@@ -716,7 +717,7 @@ testChangeSignatoryEmailEvidenceLog :: TestEnv ()
 testChangeSignatoryEmailEvidenceLog = do
   author <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (isPending && ((<=) 2 . length . documentsignatorylinks)) `withDocumentM` do
-    Just sl <- getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$> theDocument
+    sl <- guardJustM $ getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$> theDocument
     success <- randomUpdate $ \t-> ChangeSignatoryEmail (signatorylinkid sl) Nothing "email@email.com" (systemActor t)
     assert success
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
@@ -860,7 +861,7 @@ testChangeAuthenticationToSignMethod = replicateM_ 10 $ do
       && ( all ((==) StandardAuthenticationToSign . signatorylinkauthenticationtosignmethod) . documentsignatorylinks)
       && ( all isSignatory . documentsignatorylinks)
     ) `withDocumentM` do
-      Just sl <- getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$> theDocument
+      sl <- guardJustM $ getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$> theDocument
 
       randomUpdate $ \t->ChangeAuthenticationToSignMethod (signatorylinkid sl) SMSPinAuthenticationToSign Nothing Nothing (systemActor t)
       lg1 <- dbQuery . GetEvidenceLog  =<< theDocumentID
@@ -1084,9 +1085,9 @@ testArchiveIdleDocument = replicateM_ 10 $ do
 -- for this stuff postgres implementation is stricter, with happstack it just left the doc unchanged
 testArchiveDocumentUnrelatedUserLeft :: TestEnv ()
 testArchiveDocumentUnrelatedUserLeft = replicateM_ 10 $ do
-  author <- addNewRandomUser
+  author        <- addNewRandomUser
+  unrelateduser <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
-    unrelateduser <- addNewRandomUser
     assertRaisesKontra (\UserShouldBeDirectlyOrIndirectlyRelatedToDocument {} -> True) $
       randomUpdate $ \t -> ArchiveDocument (userid unrelateduser) (systemActor t)
 
@@ -1101,9 +1102,9 @@ testArchiveDocumentCompanyStandardLeft = replicateM_ 10 $ do
 
 testRestoreArchivedDocumentUnrelatedUserLeft :: TestEnv ()
 testRestoreArchivedDocumentUnrelatedUserLeft = replicateM_ 10 $ do
-  author <- addNewRandomUser
+  author        <- addNewRandomUser
+  unrelateduser <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
-    unrelateduser <- addNewRandomUser
     randomUpdate $ \t -> ArchiveDocument (userid author) (systemActor t)
     assertRaisesKontra (\UserShouldBeDirectlyOrIndirectlyRelatedToDocument {} -> True)$ do
       randomUpdate $ \t->RestoreArchivedDocument unrelateduser (systemActor t)
@@ -1785,7 +1786,7 @@ testUpdateConsentResponsesForSigningSuccess = do
               (isSignable && isPending && hasConsentModule author)
 
   withDocument doc $ do
-    Just sl <- getSigLinkFor author <$> theDocument
+    sl <- guardJustM $ getSigLinkFor author <$> theDocument
     let questions = signatorylinkconsentquestions sl
     responses <- mapM (\q -> (scqID q,) <$> rand 10 arbitrary) questions
 
@@ -1793,7 +1794,7 @@ testUpdateConsentResponsesForSigningSuccess = do
                            (SignatoryConsentResponsesForSigning responses)
                            (systemActor t)
 
-    Just sl' <- getSigLinkFor author <$> theDocument
+    sl' <- guardJustM $  getSigLinkFor author <$> theDocument
     let questions' = signatorylinkconsentquestions sl'
         responses' = map (\q -> (scqID q, scqResponse q)) questions'
     assertBool "Some responses are missing or wrong"
@@ -1814,7 +1815,7 @@ testUpdateConsentResponsesForSigningWrongQuestionID = do
               (isSignable && isPending && hasConsentModule author)
 
   withDocument doc $ do
-    Just sl <- getSigLinkFor author <$> theDocument
+    sl <- guardJustM $ getSigLinkFor author <$> theDocument
     let questions = signatorylinkconsentquestions sl
         goodResponses = map (\q -> (scqID q, True)) questions
         badResponse =
@@ -1831,7 +1832,7 @@ testSignDocumentNonSignableLeft :: TestEnv ()
 testSignDocumentNonSignableLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (not . isSignable) `withDocumentM` do
-    Just sl <- getSigLinkFor author <$> theDocument
+    sl <- guardJustM $ getSigLinkFor author <$> theDocument
     assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $ do
       randomUpdate $ \si t -> SignDocument (signatorylinkid sl) (signatorymagichash sl) si Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
 
@@ -1839,7 +1840,7 @@ testSignDocumentSignableNotPendingLeft :: TestEnv ()
 testSignDocumentSignableNotPendingLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (isSignable && (not . isPending)) `withDocumentM` do
-    Just sl <- getSigLinkFor author <$> theDocument
+    sl <- guardJustM $ getSigLinkFor author <$> theDocument
     assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $ do
       randomUpdate $ \si t -> SignDocument (signatorylinkid sl) (signatorymagichash sl) si Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
 
@@ -1854,10 +1855,10 @@ testSignDocumentSignablePendingRight = replicateM_ 10 $ do
              && isSignatoryAndHasNotSigned) .
       documentsignatorylinks
     ) `withDocumentM` do
-    Just sl <- find (   (== StandardAuthenticationToSign) .
-                        signatorylinkauthenticationtosignmethod
-                     && isSignatoryAndHasNotSigned ) .
-               documentsignatorylinks <$> theDocument
+    sl <- guardJustM $ find (   (== StandardAuthenticationToSign) .
+                                    signatorylinkauthenticationtosignmethod
+                             && isSignatoryAndHasNotSigned ) .
+                       documentsignatorylinks <$> theDocument
     time <- rand 10 arbitrary
 
     randomUpdate $
@@ -1880,10 +1881,10 @@ testSignDocumentSignablePendingSEBankIDRight = replicateM_ 10 $ do
       documentsignatorylinks
     ) `withDocumentM` do
 
-    Just sl <- find (   (== SEBankIDAuthenticationToSign) .
-                        signatorylinkauthenticationtosignmethod
-                     && isSignatoryAndHasNotSigned ) .
-               documentsignatorylinks <$> theDocument
+    sl <- guardJustM $ find (   (== SEBankIDAuthenticationToSign) .
+                                    signatorylinkauthenticationtosignmethod
+                             && isSignatoryAndHasNotSigned ) .
+                       documentsignatorylinks <$> theDocument
     time    <- rand 10 arbitrary
 
     randomUpdate $ MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl)
@@ -1904,10 +1905,10 @@ testSignDocumentSignablePendingNOBankIDRight = replicateM_ 10 $ do
               && isSignatoryAndHasNotSigned ) .
       documentsignatorylinks
     ) `withDocumentM` do
-    Just sl <- find (   (== NOBankIDAuthenticationToSign) .
-                        signatorylinkauthenticationtosignmethod
-                     && isSignatoryAndHasNotSigned ) .
-               documentsignatorylinks <$> theDocument
+    sl <- guardJustM $ find (   (== NOBankIDAuthenticationToSign) .
+                                     signatorylinkauthenticationtosignmethod
+                             && isSignatoryAndHasNotSigned ) .
+                       documentsignatorylinks <$> theDocument
     time <- rand 10 arbitrary
 
     randomUpdate $ MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl)
@@ -1927,10 +1928,10 @@ testSignDocumentSignablePendingDKNemIDRight = replicateM_ 10 $ do
               && isSignatoryAndHasNotSigned ) .
       documentsignatorylinks
     ) `withDocumentM` do
-    Just sl <- find (   (== DKNemIDAuthenticationToSign) .
-                        signatorylinkauthenticationtosignmethod
-                     && isSignatoryAndHasNotSigned ) .
-               documentsignatorylinks <$> theDocument
+    sl <- guardJustM $ find (   (== DKNemIDAuthenticationToSign) .
+                                    signatorylinkauthenticationtosignmethod
+                             && isSignatoryAndHasNotSigned ) .
+                       documentsignatorylinks <$> theDocument
     time <- rand 10 arbitrary
     randomUpdate $ MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl)
       (systemActor time)
@@ -1997,7 +1998,7 @@ testRejectDocumentNotSignableLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
   ctx <- mkContext defaultLang
   addRandomDocumentWithAuthorAndCondition author (not . isSignable) `withDocumentM` do
-    Just sl <- getSigLinkFor author <$> theDocument
+    sl   <- guardJustM $ getSigLinkFor author <$> theDocument
     time <- rand 10 arbitrary
     assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $ do
       randomUpdate $ RejectDocument (signatorylinkid sl) (isApprover sl) Nothing
@@ -2008,7 +2009,7 @@ testRejectDocumentSignableNotPendingLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
   ctx <- mkContext defaultLang
   addRandomDocumentWithAuthorAndCondition author (isSignable && not . isPending) `withDocumentM` do
-    Just sl <- getSigLinkFor author <$> theDocument
+    sl   <- guardJustM $ getSigLinkFor author <$> theDocument
     time <- rand 10 arbitrary
     assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $ do
       randomUpdate $ RejectDocument (signatorylinkid sl) (isApprover sl) Nothing
@@ -2030,7 +2031,7 @@ testRejectDocumentSignablePendingRight = replicateM_ 10 $ do
   ctx <- mkContext defaultLang
   addRandomDocumentWithAuthorAndCondition author (isSignable && isPending) `withDocumentM` do
     slid <- rand 10 . elements . map signatorylinkid . filter isSignatory . documentsignatorylinks =<< theDocument
-    Just sl <- getSigLinkFor slid <$> theDocument
+    sl   <- guardJustM $ getSigLinkFor slid <$> theDocument
     time <- rand 10 arbitrary
     let sa = signatoryActor (set ctxtime time ctx) sl
     randomUpdate . RejectDocument slid (isApprover sl) Nothing =<< sa
@@ -2043,7 +2044,7 @@ testRejectDocumentSignablePendingRight = replicateM_ 10 $ do
      && any isApprover . documentsignatorylinks)
     `withDocumentM` do
     slid <- rand 10 . elements . map signatorylinkid . filter isApprover . documentsignatorylinks =<< theDocument
-    Just sl <- getSigLinkFor slid <$> theDocument
+    sl   <- guardJustM $ getSigLinkFor slid <$> theDocument
     time <- rand 10 arbitrary
     let sa = signatoryActor (set ctxtime time ctx) sl
     randomUpdate . RejectDocument slid (isApprover sl) Nothing =<< sa
@@ -2060,8 +2061,8 @@ testApproveDocumentSignablePendingRight = replicateM_ 10 $ do
     `withDocumentM` do
     slid <- rand 10 . elements . map signatorylinkid .
             filter isApprover . documentsignatorylinks =<< theDocument
-    Just sl <- getSigLinkFor slid <$> theDocument
-    time    <- rand 10 arbitrary
+    sl   <- guardJustM $ getSigLinkFor slid <$> theDocument
+    time <- rand 10 arbitrary
     let sa = signatoryActor (set ctxtime time ctx) sl
         mh = signatorymagichash sl
     randomUpdate . ApproveDocument slid mh =<< sa
@@ -2082,7 +2083,7 @@ testMarkInvitationRead = replicateM_ 10 $ do
                =<< signatoryActor (set ctxtime time ctx) sl'
 
     assert success
-    Just sl <- getSigLinkFor slid <$> theDocument
+    sl <- guardJustM $ getSigLinkFor slid <$> theDocument
     assertEqual "Invitation read time should be set." (Just True) (liftA2 compareTime (Just time) (maybereadinvite sl))
 
 testMarkInvitationReadDocDoesntExist :: TestEnv ()
@@ -2152,7 +2153,8 @@ testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight = repl
                   time <- rand 10 arbitrary
                   let sa = signatoryActor (set ctxtime time ctx) sl
                   randomUpdate . MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) =<< sa
-                  Just tsl <- getSigLinkFor (signatorylinkid sl) <$> theDocument
+                  tsl <- guardJustM $ getSigLinkFor (signatorylinkid sl) <$>
+                         theDocument
                   assertBool "Signatorylink should be marked seen now." (hasSeen tsl)
 
 testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft :: TestEnv ()
@@ -2173,7 +2175,7 @@ testSetInvitationDeliveryStatusNotSignableLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (not . isSignable) `withDocumentM` do
     actor <- arbitrarySystemActor
-    Just sl <- getAuthorSigLink <$> theDocument
+    sl    <- guardJustM $ getAuthorSigLink <$> theDocument
     assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $ do
       success <- randomUpdate $ \st-> SetEmailInvitationDeliveryStatus (signatorylinkid sl) st actor
       assert $ not success

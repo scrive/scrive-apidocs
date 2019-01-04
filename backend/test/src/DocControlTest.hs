@@ -47,6 +47,7 @@ import User.Model
 import UserGroup.Types
 import Util.Actor
 import Util.HasSomeUserInfo
+import Util.MonadUtils
 import Util.SignatoryLinkUtils
 
 docControlTests :: TestEnvSt -> Test
@@ -130,7 +131,8 @@ testLastPersonSigningADocumentClosesIt = do
                      && all ((==) EmailDelivery . signatorylinkdeliverymethod) (documentsignatorylinks d))
             file `withDocumentM` do
 
-    True <- do d <- theDocument
+    success <- do
+               d <- theDocument
                randomUpdate $ ResetSignatoryDetails ([
                       (defaultSignatoryLink {
                                         signatoryfields = (signatoryfields $ fromJust $ getAuthorSigLink d)
@@ -147,7 +149,8 @@ testLastPersonSigningADocumentClosesIt = do
                                         , fieldForTests EmailFI "fred@frog.com"
                                         ]})
                  ]) (systemActor $ documentctime d)
-
+    unless success $
+      unexpectedError "Expected True"
 
     do t <- documentctime <$> theDocument
        tz <- mkTimeZoneName "Europe/Stockholm"
@@ -201,7 +204,7 @@ testSigningWithPin = do
                      && all ((==) EmailDelivery . signatorylinkdeliverymethod) (documentsignatorylinks d))
             file `withDocumentM` do
     d <- theDocument
-    True <- randomUpdate $ ResetSignatoryDetails ([
+    success <- randomUpdate $ ResetSignatoryDetails ([
         (defaultSignatoryLink {
             signatoryfields = signatoryfields $ fromJust $ getAuthorSigLink d
           , signatoryisauthor = True
@@ -221,6 +224,8 @@ testSigningWithPin = do
             ]
           })
       ]) (systemActor $ documentctime d)
+    unless success $
+      unexpectedError "Expected True"
 
     req <- mkRequest POST []
     (rdyrsp, _) <- lift . runTestKontra req ctx $ apiCallV1Ready $ documentid d
@@ -439,7 +444,7 @@ testSendingReminderClearsDeliveryInformation = do
     req <- mkRequest POST []
     (_link, _ctx') <- do
       updateDocumentWithID $ \did -> lift . runTestKontra req ctx $ withDocumentID did $ sendReminderEmail Nothing actor False sl
-    Just sl' <- find (\t -> signatorylinkid t == signatorylinkid sl) . documentsignatorylinks <$> theDocument
+    sl' <- guardJustM $ find (\t -> signatorylinkid t == signatorylinkid sl) . documentsignatorylinks <$> theDocument
     assertEqual "Invitation is not delivered" (Unknown) (mailinvitationdeliverystatus sl')
 
 

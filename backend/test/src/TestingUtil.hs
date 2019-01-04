@@ -4,6 +4,7 @@ module TestingUtil where
 import Control.Concurrent.STM
 import Control.Monad.Base
 import Control.Monad.Catch
+import Control.Monad.Fail
 import Control.Monad.Reader.Class
 import Control.Monad.Trans
 import Crypto.RNG
@@ -880,6 +881,7 @@ addNewUserToUserGroup firstname secondname email ugid = do
 
 addNewUserFromInfo :: UserInfo -> ( CryptoRNG m
                                   , MonadDB m
+                                  , MonadFail m
                                   , MonadThrow m
                                   , MonadLog m
                                   , MonadMask m ) => m User
@@ -912,12 +914,13 @@ randomUserInfo = do
 
 addNewRandomUser :: ( CryptoRNG m
                     , MonadDB m
+                    , MonadFail m
                     , MonadThrow m
                     , MonadLog m
                     , MonadMask m ) => m User
 addNewRandomUser = do randomUserInfo >>= addNewUserFromInfo
 
-addNewRandomUserWithCompany :: ( CryptoRNG m, MonadDB m, MonadThrow m
+addNewRandomUserWithCompany :: ( CryptoRNG m, MonadDB m, MonadFail m, MonadThrow m
                                , MonadLog m, MonadMask m )
                             => m (User, UserGroupID)
 addNewRandomUserWithCompany = do
@@ -940,7 +943,7 @@ addNewRandomUserWithCompany = do
   void $ dbUpdate $ SetUserInfo (userid user) userinfo
   return (user, ugid)
 
-addNewRandomUserWithPassword :: ( CryptoRNG m, MonadDB m, MonadThrow m
+addNewRandomUserWithPassword :: ( CryptoRNG m, MonadDB m, MonadFail m, MonadThrow m
                                 , MonadLog m, MonadMask m )
                              => String -> m User
 addNewRandomUserWithPassword password = do

@@ -86,10 +86,14 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
 --
 -- Attachments, companies and documents purged separately.
 data DeleteUser = DeleteUser UserID
-instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m DeleteUser Bool where
+instance (MonadDB m, MonadThrow m, MonadTime m) =>
+  DBUpdate m DeleteUser Bool where
   update (DeleteUser uid) = do
-    now       <- currentTime
-    Just user <- query $ GetUserByID uid
+    now   <- currentTime
+    muser <- query $ GetUserByID uid
+    user  <- case muser of
+      Nothing   -> unexpectedError $ "Couldn't find user " <> show uid
+      Just user -> return user
 
     runQuery_ $ sqlDelete "email_change_requests" $ sqlWhereEq "user_id" uid
     runQuery_ $ sqlDelete "oauth_access_token"    $ sqlWhereEq "user_id" uid

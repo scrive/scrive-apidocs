@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 module TestKontra (
       KontraTest
     , inTestDir
@@ -28,6 +29,7 @@ import Control.Concurrent
 import Control.Concurrent.STM
 import Control.Monad.Base
 import Control.Monad.Catch
+import Control.Monad.Fail
 import Control.Monad.Reader
 import Control.Monad.State.Strict hiding (get, modify)
 import Control.Monad.Trans.Control
@@ -75,9 +77,12 @@ type InnerTestEnv =
 newtype TestEnv a = TestEnv { unTestEnv :: InnerTestEnv a }
   deriving
     ( Applicative, Functor, Monad, MonadBase IO
-    , MonadCatch, MonadIO, MonadLog, MonadMask
+    , MonadCatch, MonadIO, MonadFail, MonadLog, MonadMask
     , MonadReader TestEnvSt, MonadState TestEnvStRW
     , MonadThrow )
+
+deriving instance MonadFail m => MonadFail (LogT m)
+deriving instance MonadFail m => MonadFail (DBT m)
 
 runTestEnv :: TestEnvSt -> TestEnv () -> IO ()
 runTestEnv st m = do

@@ -38,27 +38,25 @@ import UserGroupAccounts.UserGroupAccountsView
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 
-{- |
-    Gets the ajax data for the company accounts list.
--}
+-- | Get the ajax data for the company accounts list.
 handleUserGroupAccounts :: Kontrakcja m => m JSValue
 handleUserGroupAccounts = withCompanyAdmin $ \(_user, ug) -> do
   handleUserGroupAccountsInternal . get ugID $ ug
 
-{- |
-    Gets the ajax data for the company accounts list.
--}
+-- | Get the ajax data for the company accounts list.
 handleUserGroupAccountsForAdminOnly :: Kontrakcja m => UserGroupID -> m JSValue
 handleUserGroupAccountsForAdminOnly ugid = onlySalesOrAdmin $ do
   handleUserGroupAccountsInternal ugid
 
-{- |
-    This creates the JSON for either the admin only user or the logged in
-    company admin.
--}
+-- | Create the JSON for either the admin only user or the logged in
+-- company admin.
 handleUserGroupAccountsInternal :: Kontrakcja m => UserGroupID -> m JSValue
 handleUserGroupAccountsInternal ugid = do
-  Just user <- get ctxmaybeuser <$> getContext
+  muser <- get ctxmaybeuser <$> getContext
+  user <- case muser of
+    Nothing   -> unexpectedError
+                 "handleUserGroupAccountsInternal: No user in Context!"
+    Just user -> return user
   users <- dbQuery . UserGroupGetUsers $ ugid
   deletableuserids <- map userid <$> filterM isUserDeletable users
   invites <- dbQuery $ UserGroupGetInvitesWithUsersData ugid
