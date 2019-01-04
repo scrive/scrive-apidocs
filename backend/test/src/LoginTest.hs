@@ -2,6 +2,7 @@ module LoginTest (loginTests) where
 
 import Data.Aeson
 import Data.Text
+import Data.Time.Clock.POSIX
 import Happstack.Server
 import Log
 import Test.Framework
@@ -16,6 +17,7 @@ import DB
 import InternalResponse
 import KontraLink
 import Login
+import Session.Model
 import TestingUtil
 import TestKontra as T
 import User.API
@@ -34,14 +36,33 @@ loginTests env = testGroup "Login" [
     , testThat "can't login with invalid password" env testCantLoginWithInvalidPassword
     , testThat "logging in records a user login stat event" env testSuccessfulLoginSavesAStatEvent
     , testThat "you get logged in after you reset a password" env assertResettingPasswordLogsIn
-    , testThat "when you're logged in after resetting a password a user login stat event is recorded" env assertResettingPasswordRecordsALoginEvent
+    , testThat "when you're logged in after resetting a password a user login stat event is recorded"
+        env assertResettingPasswordRecordsALoginEvent
     , testThat "can use login link" env testCanLoginWithRedirect
     , testThat "can't login after many failed attempts" env testCantLoginAfterFailedAttempts
+    , testThat "can't generate a token for a user that doesn't exist"
+        env testLoginGetTokenForPersonalCredentialsFailsIfUserDoesntExist
+    , testThat "can't generate a login_token for a user that the caller doesn't have permssion for"
+        env testLoginGetTokenForPersonalCredentialsFailsIfCallingUserDoesntHavePermission
+    , testThat "can generate a login_token for same user as is currently logged in"
+        env testLoginGetTokenForPersonalCredentialsSucceedsForOwnUser
+    , testThat "can generate a login_token for user in UserGroup that currently logged in user is admin of"
+        env testLoginGetTokenForPersonalCredentialsSucceedsForAdminUserInUserGroup
+    , testThat "can't generate a login_token for user in UserGroup that currently logged in user is not admin of"
+        env testLoginGetTokenForPersonalCredentialsFailsForNonAdminUserInUserGroup
+    , testThat "can't use apiCallGetUserPersonalToken with non-existent login_token"
+        env testLoginGetUserPersonalTokenFailsWithUnkownToken
+    , testThat "can't use apiCallGetUserPersonalToken with both a login_token and email/password"
+        env testLoginGetUserPersonalTokenFailsWithLoginTokenAndEmailPassword
+    , testThat "can't use apiCallGetUserPersonalToken with an expired login_token"
+        env testLoginGetUserPersonalTokenFailsWithExpiredToken
+    , testThat "can use apiCallGetUserPersonalToken with a valid login_token"
+        env testLoginGetUserPersonalTokenSucceedsWithValidToken
     ]
 
 testSuccessfulLogin :: TestEnv ()
 testSuccessfulLogin = do
-    uid <- createTestUser
+    uid <- userid <$> createTestUser
     ctx <- mkContext defaultLang
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost
@@ -51,7 +72,7 @@ testSuccessfulLogin = do
 
 testSuccessfulLoginToPadQueue :: TestEnv ()
 testSuccessfulLoginToPadQueue  = do
-    uid <- createTestUser
+    uid <- userid <$> createTestUser
     ctx <- mkContext defaultLang
     req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("pad", inText "true")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost
@@ -77,7 +98,7 @@ testCantLoginWithInvalidPassword = do
 
 testSuccessfulLoginSavesAStatEvent :: TestEnv ()
 testSuccessfulLoginSavesAStatEvent = do
-  uid <- createTestUser
+  uid <- userid <$> createTestUser
   ctx <- mkContext defaultLang
   req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
   (_res, ctx') <- runTestKontra req ctx $ handleLoginPost
@@ -161,6 +182,133 @@ assertResettingPasswordRecordsALoginEvent = do
   (user, ctx) <- createUserAndResetPassword
   assertEqual "User was logged into context" (Just $ userid user) (userid <$> get ctxmaybeuser ctx)
 
+testLoginGetTokenForPersonalCredentialsFailsIfUserDoesntExist :: TestEnv ()
+testLoginGetTokenForPersonalCredentialsFailsIfUserDoesntExist = do
+    ctx <- mkContext defaultLang
+    req <- mkRequest GET []
+    let uid = unsafeUserID 999
+    res <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid)
+    let expCode = 404
+    assertEqual ("should return " ++ show expCode) expCode (rsCode res)
+
+testLoginGetTokenForPersonalCredentialsFailsIfCallingUserDoesntHavePermission :: TestEnv ()
+testLoginGetTokenForPersonalCredentialsFailsIfCallingUserDoesntHavePermission = do
+    user <- createTestUser
+    ctx  <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
+    uid2 <- userid <$> createTestUser' "thomas.busby@scrive.com"
+    req  <- mkRequest GET []
+    res  <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid2)
+    let expCode = 403
+    assertEqual ("should return " ++ show expCode) expCode (rsCode res)
+
+testLoginGetTokenForPersonalCredentialsSucceedsForOwnUser :: TestEnv ()
+testLoginGetTokenForPersonalCredentialsSucceedsForOwnUser = do
+    user <- createTestUser
+    ctx  <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
+    req  <- mkRequest GET []
+    let uid = userid user
+    res  <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid)
+    let expCode = 200
+    assertEqual ("should return " ++ show expCode) expCode (rsCode res)
+
+testLoginGetTokenForPersonalCredentialsSucceedsForAdminUserInUserGroup :: TestEnv ()
+testLoginGetTokenForPersonalCredentialsSucceedsForAdminUserInUserGroup = do
+    (user, ug) <- addNewAdminUserAndUserGroup "Thomas" "Busby" "thomas.busby@scrive.com"
+    ctx  <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
+    uid2 <- userid <$> createTestUser' "zaphod.beeblebrox@scrive.com"
+    void . dbUpdate . SetUserUserGroup uid2 $ _ugID ug
+    req  <- mkRequest GET []
+    res  <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid2)
+    let expCode = 200
+    assertEqual ("should return " ++ show expCode) expCode (rsCode res)
+
+testLoginGetTokenForPersonalCredentialsFailsForNonAdminUserInUserGroup :: TestEnv ()
+testLoginGetTokenForPersonalCredentialsFailsForNonAdminUserInUserGroup = do
+    ug   <- addNewUserGroup
+    user <- createTestUser' "thomas.busby@scrive.com"
+    ctx  <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
+    let uid1 = userid user
+    uid2 <- userid <$> createTestUser' "zaphod.beeblebrox@scrive.com"
+    void . dbUpdate . SetUserUserGroup uid1 $ _ugID ug
+    void . dbUpdate . SetUserUserGroup uid2 $ _ugID ug
+    req  <- mkRequest GET []
+    res  <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid2)
+    let expCode = 403
+    assertEqual ("should return " ++ show expCode) expCode (rsCode res)
+
+testLoginGetUserPersonalTokenFailsWithUnkownToken :: TestEnv ()
+testLoginGetUserPersonalTokenFailsWithUnkownToken = do
+    ctx <- mkContext defaultLang
+    req <- mkRequest POST [("login_token", inText "68a7ab308d713979")]
+    res <- fst <$> runTestKontra req ctx apiCallGetUserPersonalToken
+    let expCode = 403
+    assertEqual ("should return " ++ show expCode) expCode (rsCode res)
+
+testLoginGetUserPersonalTokenFailsWithLoginTokenAndEmailPassword :: TestEnv ()
+testLoginGetUserPersonalTokenFailsWithLoginTokenAndEmailPassword = do
+    ctx <- mkContext defaultLang
+    req <- mkRequest POST
+      [ ("email", inText "zaphod.beeblebrox@scrive.com")
+      , ("password", inText "heartofgold")
+      , ("login_token", inText "68a7ab308d713979")
+      ]
+    res <- fst <$> runTestKontra req ctx apiCallGetUserPersonalToken
+    let expCode = 403
+    assertEqual ("should return " ++ show expCode) expCode (rsCode res)
+
+testLoginGetUserPersonalTokenFailsWithExpiredToken :: TestEnv ()
+testLoginGetUserPersonalTokenFailsWithExpiredToken = do
+    -- Set up user with permissions to generate token for second user
+    (user, ug) <- addNewAdminUserAndUserGroup "Thomas" "Busby" "thomas.busby@scrive.com"
+    ctx  <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
+    uid2 <- userid <$> createTestUser' "zaphod.beeblebrox@scrive.com"
+    void . dbUpdate . SetUserUserGroup uid2 $ _ugID ug
+    -- Generate an expired login_token for uid2
+    hash <- dbUpdate $ NewTemporaryLoginToken uid2 $ posixSecondsToUTCTime 1547768401
+    req <- mkRequest POST [("login_token", inText $ show hash)]
+    res <- fst <$> runTestKontra req ctx apiCallGetUserPersonalToken
+    let expCode = 403
+    assertEqual ("should return " ++ show expCode) expCode (rsCode res)
+
+testLoginGetUserPersonalTokenSucceedsWithValidToken :: TestEnv ()
+testLoginGetUserPersonalTokenSucceedsWithValidToken = do
+    -- Set up user with permissions to generate token for second user
+    (user, ug) <- addNewAdminUserAndUserGroup "Thomas" "Busby" "thomas.busby@scrive.com"
+    ctx  <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
+    uid2 <- userid <$> createTestUser' "zaphod.beeblebrox@scrive.com"
+    void . dbUpdate . SetUserUserGroup uid2 $ _ugID ug
+    -- Generate a valid login_token for uid2
+    hash <- dbUpdate $ NewTemporaryLoginToken uid2 $ posixSecondsToUTCTime 4547768401
+    req <- mkRequest POST [("login_token", inText $ show hash)]
+    res <- fst <$> runTestKontra req ctx apiCallGetUserPersonalToken
+    let expCode = 200
+    assertEqual ("should return " ++ show expCode) expCode (rsCode res)
+
+-- Helper Functions
+
+loginFailureChecks :: JSValue -> Context -> TestEnv ()
+loginFailureChecks res ctx = do
+    assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" False)
+    assertBool "User wasn't logged into context" $ get ctxmaybeuser ctx == Nothing
+
+createTestUser :: TestEnv User
+createTestUser = createTestUser' "andrzej@skrivapa.se"
+
+createTestUser' :: String -> TestEnv User
+createTestUser' email = do
+    bd <- dbQuery $ GetMainBrandedDomain
+    pwd <- createPassword "admin"
+    ug <- dbUpdate $ UserGroupCreate defaultUserGroup
+    Just user <- dbUpdate $ AddUser
+      ("", "")
+      email
+      (Just pwd)
+      (get ugID ug, True)
+      defaultLang
+      (get bdid bd)
+      AccountRequest
+    return user
+
 createUserAndResetPassword :: TestEnv (User, Context)
 createUserAndResetPassword = do
   bd <- dbQuery $ GetMainBrandedDomain
@@ -181,24 +329,3 @@ createUserAndResetPassword = do
   req2 <- mkRequest GET []
   (_res, ctx'') <- runTestKontra req2 ctx' apiCallGetUserProfile
   return (user, ctx'')
-
-
-loginFailureChecks :: JSValue -> Context -> TestEnv ()
-loginFailureChecks res ctx = do
-    assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" False)
-    assertBool "User wasn't logged into context" $ get ctxmaybeuser ctx == Nothing
-
-createTestUser :: TestEnv UserID
-createTestUser = do
-    bd <- dbQuery $ GetMainBrandedDomain
-    pwd <- createPassword "admin"
-    ug <- dbUpdate $ UserGroupCreate defaultUserGroup
-    Just User{userid} <- dbUpdate $ AddUser
-      ("", "")
-      "andrzej@skrivapa.se"
-      (Just pwd)
-      (get ugID ug, True)
-      defaultLang
-      (get bdid bd)
-      AccountRequest
-    return userid

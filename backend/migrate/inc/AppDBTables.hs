@@ -172,4 +172,5 @@ kontraTables =
   , tableSignatoryLinkMagicHashes
   , tableFilePurgeConsumers
   , tableFilePurgeJobs
+  , tableTemporaryLoginTokens
   ]

@@ -7,6 +7,8 @@ module Session.Model (
   , getSession
   , startNewSession
   , DeleteExpiredSessions(..)
+  , PurgeExpiredTemporaryLoginTokens(..)
+  , NewTemporaryLoginToken(..)
   ) where
 
 import Control.Monad.Base
@@ -228,6 +230,23 @@ fetchSession
 fetchSession ( sesID, sesUserID, sesPadUserID
              , sesExpires, sesToken, sesCSRFToken, sesDomain ) =
   Session {..}
+
+data PurgeExpiredTemporaryLoginTokens = PurgeExpiredTemporaryLoginTokens
+instance (MonadDB m, MonadTime m) => DBUpdate m PurgeExpiredTemporaryLoginTokens () where
+  update _ = do
+    -- Expired tokens should remain in the DB for 12h to provide better error messages
+    purgeTime <- ((12 * 60) `minutesBefore`) <$> currentTime
+    runSQL_ $ "DELETE FROM temporary_login_tokens WHERE expiration_time <=" <?> purgeTime
+
+data NewTemporaryLoginToken = NewTemporaryLoginToken UserID UTCTime
+instance (CryptoRNG m, MonadDB m) => DBUpdate m NewTemporaryLoginToken MagicHash where
+  update (NewTemporaryLoginToken uid expiryTime) = do
+    hash <- random
+    runQuery_ . sqlInsert "temporary_login_tokens" $ do
+      sqlSet "hash" hash
+      sqlSet "user_id" uid
+      sqlSet "expiration_time" expiryTime
+    return hash
 
 -- | We allow for at most 51 sessions with the same user_id, so if there
 -- are more, just delete the oldest ones. Note: only 50 sessions are left

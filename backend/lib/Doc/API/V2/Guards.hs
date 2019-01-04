@@ -8,6 +8,7 @@ module Doc.API.V2.Guards (
 , guardThatConsentModulesAreOnSigningParties
 , guardThatAttachmentDetailsAreConsistent
 -- * User guards
+, guardThatUserExists
 , guardThatUserIsAuthor
 , guardThatUserIsAuthorOrCompanyAdmin
 , guardThatUserIsAuthorOrDocumentIsShared
@@ -94,6 +95,13 @@ guardDocumentAuthorIs condition doc = do
   author <- apiGuardJustM (serverError msgNoUser) $ dbQuery $ GetUserByIDIncludeDeleted authorUserId
   when (not $ condition author) $ do
     apiError documentActionForbidden
+
+guardThatUserExists :: Kontrakcja m => UserID -> m User
+guardThatUserExists uid = do
+  mUser <- dbQuery $ GetUserByID uid
+  case mUser of
+    Nothing -> apiError $ resourceNotFound "A user with that ID was not found"
+    Just user -> return user
 
 guardThatUserIsAuthor :: Kontrakcja m => User -> Document -> m ()
 guardThatUserIsAuthor user = guardDocumentAuthorIs (\a -> userid user == userid a)

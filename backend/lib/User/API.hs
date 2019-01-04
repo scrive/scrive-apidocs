@@ -12,9 +12,11 @@ module User.API (
     confirm2FA,
     disable2FA,
     apiCallDeleteUser,
-    apiCallSetDataRetentionPolicy
+    apiCallSetDataRetentionPolicy,
+    apiCallGetTokenForPersonalCredentials
   ) where
 
+import Control.Monad (when)
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.Aeson
@@ -26,13 +28,17 @@ import Text.JSON.Gen hiding (object)
 import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
+import qualified Text.JSON as J
 
+import AccessControl.Types
 import API.Monad.V1
 import API.V2.Parameters
+import API.V2.Utils
 import Context
 import DataRetentionPolicy
 import DataRetentionPolicy.Guards
 import DB
+import Doc.API.V2.Guards (guardThatUserExists)
 import Happstack.Fields
 import InputValidation
 import IPAddress
@@ -40,6 +46,7 @@ import Kontra
 import KontraLink
 import Log.Identifier
 import Mails.SendMail
+import MinutesTime
 import OAuth.Model
 import OAuth.Util
 import Redirect
@@ -66,7 +73,7 @@ import UserGroup.Types
 import UserGroup.Types.Subscription
 import Util.HasSomeUserInfo
 import Util.MonadUtils
-import Util.QRCode (unQRCode)
+import Util.QRCode (encodeQR, unQRCode)
 import Utils.Monad
 import qualified API.V2 as V2
 import qualified API.V2.Errors as V2
@@ -113,6 +120,8 @@ userAPIV2 = choice [
   dir "usagestats" $ dir "days" $ hGet $ toK0 $ User.UserControl.handleUsageStatsJSONForUserDays,
   dir "usagestats" $ dir "months" $ hGet $ toK0 $ User.UserControl.handleUsageStatsJSONForUserMonths,
 
+  dir "gettokenforpersonalcredentials" $ hPost $ toK1 $ apiCallGetTokenForPersonalCredentials,
+
   userAPIV1
   ]
 
@@ -121,8 +130,9 @@ apiCallGetUserPersonalToken = api $ do
     memail  <- getField "email"
     mpasswd <- getField "password"
     mtotpcode <- getOptionalField asWord32 "totp"
-    case (memail, mpasswd) of
-        (Just email, Just passwd) -> do
+    mlogintoken <- apiV2ParameterOptional (ApiV2ParameterRead "login_token")
+    case (memail, mpasswd, mlogintoken) of
+        (Just email, Just passwd, Nothing) -> do
             -- check the user things here
             muser <- dbQuery $ GetUserByEmail (Email email)
             case muser of
@@ -134,24 +144,39 @@ apiCallGetUserPersonalToken = api $ do
                 ctx <- getContext
                 if maybeVerifyPassword (userpassword user) passwd
                   then case (usertotp user, usertotpactive user, mtotpcode) of
+                    -- No TOTP is active
                     (_, False, _) -> returnTokenFor ctx user
+                    -- TOTP is active and present
                     (Just totp, True, Just totpcode) -> do
                       now <- currentTime
                       if verifyTOTPCode totp now totpcode
-                         then returnTokenFor ctx user
-                         else return . Left $ forbidden "TOTP incorrect"
+                          then returnTokenFor ctx user
+                          else return . Left $ forbidden "TOTP incorrect"
+                    -- TOTP is active but not present
                     (_, True, Nothing) ->
                       return . Left $ forbidden "TOTP code missing"
                     (Nothing, True, Just _) ->
                       unexpectedError "TOTP condition should not happen"
                   else do
-                    void $ dbUpdate $ LogHistoryAPIGetPersonalTokenFailure (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
+                    void . dbUpdate $ LogHistoryAPIGetPersonalTokenFailure (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
                     logInfo "getpersonaltoken failed (invalid password)" $ logObject_ user
                     -- we do not want rollback here, so we don't raise exception
                     return . Left $ forbidden wrongPassMsg
-        _ -> throwM . SomeDBExtraException $ forbidden "Email or password is missing"
+        (Nothing, Nothing, Just logintoken) -> do
+            -- validate the login token here
+            now <- currentTime
+            muserAndExpired <- dbQuery $ GetUserByTempLoginToken now logintoken
+            case muserAndExpired of
+              Nothing -> return . Left $ forbidden invalidTokenMsg
+              Just (user, expired) -> if expired
+                then return . Left $ forbidden "This token has expired"
+                else (`returnTokenFor` user) =<< getContext
+        (Just _, Just _, Just _) -> do
+            return . Left $ forbidden "You must provide either an Email/password or a login_token (but not both)."
+        _ -> throwM . SomeDBExtraException $ forbidden "Email/password or login_token is missing"
   where
     wrongPassMsg = "Email and password don't match"
+    invalidTokenMsg = "The login_token provided is invalid"
     returnTokenFor ctx user = do
       let uid = userid user
       _success <- dbUpdate $ CreatePersonalToken uid
@@ -168,6 +193,7 @@ apiCallGetUserPersonalToken = api $ do
                  -- use an ambiguous message, so that this cannot be used to determine
                  -- whether a user has an account with Scrive
                  throwM . SomeDBExtraException $ forbidden wrongPassMsg
+
 
 setup2FA :: Kontrakcja m => m Response
 setup2FA = V2.api $ do
@@ -615,3 +641,28 @@ apiCallSetDataRetentionPolicy = V2.api $ do
 
   return $ V2.Ok ()
 
+apiCallGetTokenForPersonalCredentials :: Kontrakcja m => UserID -> m Response
+apiCallGetTokenForPersonalCredentials uid = V2.api $ do
+  -- Guards
+  void $ guardThatUserExists uid
+  let acc = [ mkAccPolicyItem (UpdateA, UserR, uid) ]
+  apiAccessControl acc $ do
+    minutes <- apiV2ParameterDefault defaultMinutes $ ApiV2ParameterInt "minutes"
+    when (minutes < 1 || minutes > maxMinutes) invalidMinsParamError
+    -- Create login token
+    expirationTime <- (minutes `minutesAfter`) <$> currentTime
+    hash <- dbUpdate $ NewTemporaryLoginToken uid expirationTime
+    qrCode <- liftIO . encodeQR . J.encode . runJSONGen $ do
+      value "type" ("token_personal_credentials_v1" :: String)
+      value "token" $ show hash
+    -- Return token info and QR code as JSON
+    return . V2.Ok . runJSONGen $ do
+      value "login_token" $ show hash
+      value "qr_code" $ BS.unpack . Base64.encode . unQRCode $ qrCode
+      value "expiration_time" $ show expirationTime
+        where
+          defaultMinutes = 5
+          maxMinutes = 30
+          invalidMinsParamError = V2.apiError . V2.requestParameterInvalid "minutes"
+            $ "The value given is larger than the allowed maximum of "
+            <> (T.pack $ show maxMinutes) <> " or below 1."

@@ -2523,12 +2523,12 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
 
 data NewTemporaryMagicHash = NewTemporaryMagicHash SignatoryLinkID UTCTime
 instance (CryptoRNG m, MonadDB m) => DBUpdate m NewTemporaryMagicHash MagicHash where
-  update (NewTemporaryMagicHash slid time) = do
+  update (NewTemporaryMagicHash slid expiryTime) = do
     hash <- random
     runQuery_ . sqlInsert "signatory_link_magic_hashes" $ do
       sqlSet "hash" hash
       sqlSet "signatory_link_id" slid
-      sqlSet "expiration_time" time
+      sqlSet "expiration_time" expiryTime
     return hash
 
 data PurgeExpiredTemporaryMagicHashes = PurgeExpiredTemporaryMagicHashes

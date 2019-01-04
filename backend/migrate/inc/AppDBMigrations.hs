@@ -171,4 +171,7 @@ kontraMigrations = [
   , addCanBeForwardedToSignatories
   , featureFlagsAddForwarding
   , addShowArrow
+  , createTemporaryLoginTokensTable
+  , addTemporaryLoginTokensPurgeJob
   ]
+

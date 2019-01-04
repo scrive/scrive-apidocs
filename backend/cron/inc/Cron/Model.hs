@@ -30,7 +30,7 @@ import Mails.Events
 import MinutesTime
 import Planhat
 import Purging.Files
-import Session.Model (DeleteExpiredSessions(..))
+import Session.Model (DeleteExpiredSessions(..), PurgeExpiredTemporaryLoginTokens(..))
 import SMS.Events
 import ThirdPartyStats.Core
 import User.EmailChangeRequest (DeleteExpiredEmailChangeRequests(..))
@@ -66,6 +66,7 @@ data JobType
   | UserAccountRequestEvaluation
   | AttachmentsPurge
   | TemporaryMagicHashesPurge
+  | TemporaryLoginTokensPurge
   deriving (Eq, Ord, Show)
 
 jobTypeMapper :: [(JobType, T.Text)]
@@ -92,6 +93,7 @@ jobTypeMapper =
   , (DocumentsAuthorIDMigration, "document_author_id_job")
   , (AttachmentsPurge, "attachments_purge")
   , (TemporaryMagicHashesPurge, "temporary_magic_hashes_purge")
+  , (TemporaryLoginTokensPurge, "temporary_login_tokens_purge")
   ]
 
 instance PQFormat JobType where
@@ -291,6 +293,11 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
         purgedCount <- dbUpdate PurgeExpiredTemporaryMagicHashes
         logInfo "Purged temporary magic hashes" $ object ["purged" .= purgedCount]
       return . RerunAfter $ ihours 1
+    TemporaryLoginTokensPurge -> do
+      runDB $ do
+        purgedCount <- dbUpdate PurgeExpiredTemporaryLoginTokens
+        logInfo "Purged temporary login tokens" $ object ["purged" .= purgedCount]
+      return . RerunAfter $ iminutes 60
   endTime <- currentTime
   logInfo "Job processed successfully" $ object [
       "elapsed_time" .= (realToFrac (diffUTCTime endTime startTime) :: Double)

@@ -86,6 +86,7 @@ Library
                  , API.V2.MonadUtils
                  , API.V2.Parameters
                  , API.V2.User
+                 , API.V2.Utils
                  , Administration.AdministrationControl
                  , Administration.AdministrationView
                  , Administration.Invoicing

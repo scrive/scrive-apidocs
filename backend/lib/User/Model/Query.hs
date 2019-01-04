@@ -8,6 +8,7 @@ module User.Model.Query (
   , GetUserByID(..)
   , GetUserByIDIncludeDeleted(..)
   , GetUserByEmail(..)
+  , GetUserByTempLoginToken(..)
   , GetUserWherePasswordAlgorithmIsEarlierThan(..)
   , GetUsersWithUserGroupNames(..)
   , IsUserDeletable(..)
@@ -28,6 +29,7 @@ import AccessControl.Types (AccessRole(..))
 import Chargeable.Model
 import DB
 import Doc.DocStateData (DocumentStatus(..))
+import MagicHash
 import MinutesTime
 import User.Email
 import User.History.Model
@@ -81,6 +83,22 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetUserByEmail (Maybe User) wher
   query (GetUserByEmail email) = do
     runQuery_ $ selectUsersSQL <+> "WHERE deleted IS NULL AND email =" <?> map toLower (unEmail email)
     fetchMaybe fetchUser
+
+data GetUserByTempLoginToken = GetUserByTempLoginToken UTCTime MagicHash
+instance (MonadDB m, MonadThrow m) => DBQuery m GetUserByTempLoginToken (Maybe (User, Bool)) where
+  query (GetUserByTempLoginToken now logintoken) = do
+    runQuery_ $ sqlSelect "temporary_login_tokens" $ do
+      sqlResult "user_id"
+      sqlResult $ "expiration_time <=" <?> now
+      sqlWhere $ "hash =" <?> logintoken
+    mrow <- fetchMaybe id
+    case mrow of
+      Nothing -> return Nothing
+      Just (uid, expired) -> do
+        muser <- dbQuery $ GetUserByID uid
+        case muser of
+          Nothing -> return Nothing -- In theory, this state shouldn't occur
+          Just user -> return $ Just (user, expired)
 
 data UserGroupGetUsers = UserGroupGetUsers UserGroupID
 instance MonadDB m => DBQuery m UserGroupGetUsers [User] where

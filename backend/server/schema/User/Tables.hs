@@ -46,3 +46,17 @@ tableUsers = tblTable {
     , (indexOnColumn "email") { idxUnique = True, idxWhere = Just ("deleted IS NULL") }
     ]
   }
+
+tableTemporaryLoginTokens :: Table
+tableTemporaryLoginTokens = tblTable
+  { tblName = "temporary_login_tokens"
+  , tblVersion = 1
+  , tblColumns =
+      [ tblColumn { colName = "hash", colType = BigIntT, colNullable = False }
+      , tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
+      , tblColumn { colName = "expiration_time", colType = TimestampWithZoneT, colNullable = False }
+      ]
+  , tblPrimaryKey = pkOnColumn "hash"
+  , tblForeignKeys =
+      [ (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade } ]
+  }

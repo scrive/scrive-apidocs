@@ -23,10 +23,11 @@ import qualified Data.Text as T
 
 import AccessControl.Types
 import API.V2
-import API.V2.Errors
 import API.V2.Parameters
+import API.V2.Utils
 import DataRetentionPolicy (defaultDataRetentionPolicy)
 import DB
+import Doc.API.V2.Guards (guardThatUserExists)
 import InputValidation (Result(..), asValidEmail)
 import Kontra
 import OAuth.Model
@@ -67,7 +68,7 @@ partnerApiCallV1CompanyCreate ptOrUgID = do
   (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
   logPartner mPartnerID partnerUsrGrpID . api $ do
     let acc = [ mkAccPolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
-    apiAccessControl acc noPrvErr $ do
+    apiAccessControl acc $ do
       ugwp_partner <- apiGuardJustM (serverError "Was not able to retrieve partner")
         . dbQuery . UserGroupGetWithParents $ partnerUsrGrpID
       let ug_new = set ugParentGroupID (Just partnerUsrGrpID)
@@ -98,7 +99,7 @@ partnerApiCallV1CompanyUpdate ptOrUgID ugid = do
     -- this should be unnecessary.
     let acc =  [ mkAccPolicyItem (UpdateA, UserGroupR, ugid)
                , mkAccPolicyItem (UpdateA, UserGroupR, partnerUsrGrpID) ]
-    apiAccessControl acc noPrvErr $ do
+    apiAccessControl acc $ do
       dbQuery (UserGroupGetWithParents ugid) >>= \case
         Nothing -> noUsrGrpErr
         Just ugwp -> do
@@ -128,7 +129,7 @@ partnerApiCallV1CompanyGet ptOrUgID ugid = do
     let acc = [ mkAccPolicyItem (ReadA, UserGroupR, ugid)
               , mkAccPolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
         -- see @note for `partnerApiCallV1CompaniesGet`
-    apiAccessControl acc noPrvErr $ do
+    apiAccessControl acc $ do
       (dbQuery $ UserGroupGetWithParents ugid) >>= \case
         Nothing -> noUsrGrpErr
         Just ugwp -> do
@@ -147,7 +148,7 @@ partnerApiCallV1CompaniesGet ptOrUgID = do
     -- relies on the fact that only partner admins have `(CreateA,
     -- UserGroupR, partnerUsrGrpID)`; cf. instance for HasPermissions of
     -- (AccessRole UserGroupID) in AccessControl.Types...around line 95
-    apiAccessControl acc noPrvErr $ do
+    apiAccessControl acc $ do
       user_groups <- dbQuery $ UserGroupGetImmediateChildren partnerUsrGrpID
       user_groups_with_parents <- fmap catMaybes . forM user_groups $ \ug ->
         dbQuery . UserGroupGetWithParents . get ugID $ ug
@@ -163,7 +164,7 @@ partnerApiCallV1UserCreate ptOrUgID ugid = do
               {- This last one is blocking for all but partner admins.             -}
               {- Cf. `HasPermissions` instance for `(AccessRole UserGroupID)`      -}
               {- Maybe we don't need to have the _exact_ same behaviour as before? -}
-    apiAccessControl acc noPrvErr $ do
+    apiAccessControl acc $ do
       (userInfo, hasAcceptedTOS, lang) <- do
         userForUpdate <- apiV2ParameterObligatory $ ApiV2ParameterJSON "json" unjsonUserForUpdate
         return ( userInfoFromUserForUpdate userForUpdate
@@ -200,7 +201,7 @@ partnerApiCallV1UserGet ptOrUgID uid = do
     let acc = [ mkAccPolicyItem (ReadA, UserR, uid)
               , mkAccPolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
         -- see @note for `partnerApiCallV1CompaniesGet`
-    apiAccessControl acc noPrvErr $ do
+    apiAccessControl acc $ do
       (dbQuery . GetUserByID $ uid) >>= \case
         Nothing -> do
           apiError $ resourceNotFound "A user with that ID was not found"
@@ -214,7 +215,7 @@ partnerApiCallV1CompanyUsersGet ptOrUgID ugid = do
     let acc = [ mkAccPolicyItem  (ReadA, UserGroupR, ugid)
               , mkAccPolicyItem  (CreateA, UserGroupR, partnerUsrGrpID)]
         -- see @note for `partnerApiCallV1CompaniesGet`
-    apiAccessControl acc noPrvErr $ do
+    apiAccessControl acc $ do
       users <- dbQuery $ UserGroupGetUsers ugid
       Ok <$> return (unjsonUsersForUpdate, userToUserForUpdate <$> users)
 
@@ -225,7 +226,7 @@ partnerApiCallV1UserUpdate ptOrUgID uid = do
     let acc = [ mkAccPolicyItem (UpdateA, UserR, uid)
               , mkAccPolicyItem (UpdateA, UserGroupR, partnerUsrGrpID) ]
         -- see @note for `partnerApiCallV1CompaniesGet`
-    apiAccessControl acc noPrvErr $ do
+    apiAccessControl acc $ do
       user <- guardThatUserExists uid
       ufuJSON <- apiV2ParameterObligatory $ ApiV2ParameterAeson "json"
       ufu <- case (Unjson.update (userToUserForUpdate user) unjsonUserForUpdate ufuJSON) of
@@ -255,7 +256,7 @@ partnerApiCallV1UserGetPersonalToken ptOrUgID uid = do
     let acc = [ mkAccPolicyItem (CreateA, UserPersonalTokenR, uid)
               , mkAccPolicyItem (ReadA, UserPersonalTokenR, uid)
               , mkAccPolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
-    apiAccessControl acc noPrvErr $ do
+    apiAccessControl acc $ do
       user <- guardThatUserExists uid -- @todo for now...
       void $ dbUpdate $ CreatePersonalToken (userid user) -- @todo in the future: avoid this DB hit?
       token <- apiGuardJustM
@@ -265,14 +266,6 @@ partnerApiCallV1UserGetPersonalToken ptOrUgID uid = do
 ----------------------------------------------------------------------------------------------------
 --                                   Unexported local helpers                                     --
 ----------------------------------------------------------------------------------------------------
-
-guardThatUserExists :: Kontrakcja m => UserID -> m User
-guardThatUserExists uid = do
-  mUser <- dbQuery $ GetUserByID uid
-  case mUser of
-    Nothing -> apiError $ resourceNotFound "A user with that ID was not found"
-    Just user -> return user
-
 
 guardValidEmailAndNoExistingUser :: Kontrakcja m => Email -> Maybe UserID -> m ()
 guardValidEmailAndNoExistingUser email muid = do
@@ -304,22 +297,12 @@ noUsrGrpErr =
 
 noUsrGrpErrPartner :: (Kontrakcja m) => m a
 noUsrGrpErrPartner =
-  srvLogErr $ "The user group could not be retrieved " <>
-              "for the given partner identifier."
-
-noPrvErr :: (Kontrakcja m) => m a
-noPrvErr = apiError insufficientPrivileges
+  srvLogErr $ "The user group could not be retrieved for the given partner identifier."
 
 rqPrmErr :: (Kontrakcja m) => T.Text -> m a
 rqPrmErr t = do
   logInfo "Partner API" $ object [ "error_message" .= t]
   apiError . requestParameterParseError "json" $ t
-
-apiAccessControl :: (Kontrakcja m) => AccessPolicy -> m a -> m a -> m a
-apiAccessControl accessPolicy err ma = do
-  apiuser <- fst <$> getAPIUser APIPersonal
-  roles <- dbQuery . GetUserRoles $ apiuser
-  accessControl roles accessPolicy err ma
 
 resolveUserGroupID
   :: Kontrakcja m

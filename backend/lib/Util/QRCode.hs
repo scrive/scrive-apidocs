@@ -32,7 +32,7 @@ encodeQR msg = withSystemTempFile "qr.png" $ \path handle -> do
                          , "--size", "20"
                          -- Makes a 580x580px ~0.5 KiB image.
                          ]
-  QRCode <$> (BS.readFile path)
+  QRCode <$> BS.readFile path
 
 decodeQR :: QRCode -> IO String
 decodeQR (QRCode bsdata) =  withSystemTempFile "qr.png" $ \path handle -> do

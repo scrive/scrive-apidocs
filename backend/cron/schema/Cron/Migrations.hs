@@ -13,6 +13,7 @@ module Cron.Migrations (
   , addTemporaryMagicHashesPurgeJob
   , removeAmazonUploadJob
   , removePurgeOrphanFileJob
+  , addTemporaryLoginTokensPurgeJob
 ) where
 
 import Control.Monad.Catch
@@ -139,4 +140,12 @@ removePurgeOrphanFileJob = Migration
   , mgrFrom = 17
   , mgrAction = StandardMigration $
       runSQL_ "DELETE FROM cron_jobs WHERE id = 'purge_orphan_file'"
+  }
+
+addTemporaryLoginTokensPurgeJob :: (MonadDB m, MonadThrow m) => Migration m
+addTemporaryLoginTokensPurgeJob = Migration
+  { mgrTableName = tblName tableCronJobs
+  , mgrFrom = 18
+  , mgrAction = StandardMigration $
+      runSQL_ "INSERT INTO cron_jobs (hash, run_at) VALUES ('temporary_login_tokens_purge', to_timestamp(0))"
   }
