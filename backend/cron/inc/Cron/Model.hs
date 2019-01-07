@@ -59,7 +59,6 @@ data JobType
   | OldDraftsRemoval
   | OldLogsRemoval
   | PasswordRemindersEvaluation
-  | PurgeOrphanFile
   | PushPlanhatStats
   | SessionsEvaluation
   | SMSEventsProcessing
@@ -84,7 +83,6 @@ jobTypeMapper =
   , (OldDraftsRemoval, "old_drafts_removal")
   , (OldLogsRemoval, "old_logs_removal")
   , (PasswordRemindersEvaluation, "password_reminders_evaluation")
-  , (PurgeOrphanFile, "purge_orphan_file")
   , (PushPlanhatStats, "push_planhat_stats")
   , (SessionsEvaluation, "sessions_evaluation")
   , (SMSEventsProcessing, "sms_events_processing")
@@ -251,12 +249,6 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
     PasswordRemindersEvaluation -> do
       runDB . dbUpdate $ DeleteExpiredPasswordReminders
       return . RerunAfter $ ihours 1
-    PurgeOrphanFile -> do
-      let batchSize = 500
-      found <- runCronEnv $ purgeOrphanFile batchSize
-      return . RerunAfter $ if found
-                            then iseconds 5
-                            else iminutes 5
     PushPlanhatStats -> do
       case cronPlanhatConf cronConf of
         Nothing -> do

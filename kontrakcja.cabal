@@ -1286,6 +1286,7 @@ Test-suite kontrakcja-test
                  FeatureFlags.Migrations
                  FeatureFlags.Tables
                  FeatureFlagsTest
+                 File.Migrations
                  File.Tables
                  FileTest
                  FlashMessages
