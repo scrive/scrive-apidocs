@@ -3,8 +3,6 @@
 # tools a developer needs to compile and run the project.
 #
 # Some things are missing though:
-# - You need to have a PostgreSQL instance running to build and test the project
-#   with shake.
 # - If you want to run the Scrive PDF tools with SAM when running tests, you
 #   have to install Docker and your user must be able to create containers.
 #
@@ -15,29 +13,29 @@
 
 { compiler ? "ghc844"
 
-, scrivepdftools ? builtins.fetchGit {
-    url = "https://github.com/scrive/new-scrive-pdf-tools.git";
-    rev = "cd1df73f12dfcdc61bdd7c021310ee04ef6fb012";
+, scrivepdftoolsSource ? builtins.fetchGit {
+    url = "git@github.com:scrive/new-scrive-pdf-tools.git";
+    rev = "0ea006685cfc90db5c9199580aad070e14d2810e";
   }
 
-, nixpkgs-revision ? (builtins.replaceStrings ["\n"] [""]
+, nixpkgsRevision ? (builtins.replaceStrings ["\n"] [""]
     (builtins.readFile ./nix/nixpkgs-revision))
 
-, nixpkgs-source ? builtins.fetchGit {
+, nixpkgsSource ? builtins.fetchGit {
     url = "https://github.com/NixOS/nixpkgs.git";
-    rev = nixpkgs-revision;
+    rev = nixpkgsRevision;
   }
 }:
 
 let 
   # This configuration overloads some packages.
   config = import ./nix/nixpkgs-config.nix { inherit compiler; };
-  nixpkgs = import nixpkgs-source { inherit config; };
+  nixpkgs = import nixpkgsSource { inherit config; };
 
   inherit (nixpkgs) pkgs;
   inherit (pkgs) stdenv;
 
-  scrivepdftools = import (scrivepdftools + /release.nix) { inherit nixpkgs; };
+  scrivepdftools = import (scrivepdftoolsSource + /release.nix) { inherit nixpkgs; };
 
   release = import ./release.nix {
     inherit compiler nixpkgs;
@@ -59,6 +57,8 @@ let
     ]
   );
 
+  sigshield = import ./nix/sigshield.nix { inherit nixpkgs; };
+
   # This contains additional tools we need in the development environment which
   # are not part of the packages already.
   devShell = pkgs.mkShell {
@@ -70,9 +70,11 @@ let
       alex
       happy
       nodePackages.grunt-cli
-      phantomjs
       pkgs.cabal-install
+      pkgs.jq
       postgresql
+      sigshield
+      which
     ];
   };
 
@@ -87,7 +89,10 @@ pkgs.mkShell {
   ];
 
   shellHook = with pkgs; ''
-    export LD_LIBRARY_PATH=${curl.out}/lib:${icu.dev}/lib:${glibc}/lib:$LD_LIBRARY_PATH
-    export PHANTOMJS_BIN=${phantomjs}/bin/phantomjs
+    export LD_LIBRARY_PATH=${curl.out}/lib:${icu.dev}/lib:$LD_LIBRARY_PATH
+    export PHANTOMJS_BIN=${phantomjs2}/bin/phantomjs
+
+    scrivepdftools="${scrivepdftools.scrivepdftools}"
+    ${builtins.readFile ./nix/kontrakcja-shell-setup.sh}
   '';
 }

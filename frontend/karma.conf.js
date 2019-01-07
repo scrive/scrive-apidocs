@@ -9,6 +9,7 @@ module.exports = function(config) {
     frameworks: ["mocha", "sinon-chai"],
 
     files: [
+      "./node_modules/phantomjs-polyfill/bind-polyfill.js",
       "./app/localization/*.en.js",
       "./app/bower_components/jquery/dist/jquery.js",
       "./app/bower_components/moment/moment.js",

@@ -22,7 +22,7 @@ in rec {
       # them.
       excluded = [
         "dist" "dist-newstyle" ".git" "shell.nix" "release.nix" "nix"
-        "test_data" "test_s3files"
+        "test_data" "test_s3files" "_nix_local"
       ];
 
       src = builtins.filterSource

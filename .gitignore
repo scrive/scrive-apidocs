@@ -15,8 +15,8 @@ _server_pid
 _grunt_pid
 _s3_pid
 s3files/
-test_s3files/
-test_data/
+_sam_pid
+_nix_local/
 template.yaml
 kontrakcja_test.conf
 kontrakcja-server
