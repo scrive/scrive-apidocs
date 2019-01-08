@@ -167,4 +167,5 @@ kontraMigrations = [
   , createFilePurgeConsumers
   , createFilePurgeJobs
   , dropContentAndPurgeAtFromFiles
+  , removePurgeOrphanFileJob
   ]

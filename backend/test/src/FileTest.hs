@@ -1,5 +1,6 @@
 module FileTest (fileTests) where
 
+import Data.Int
 import Happstack.Server.SimpleHTTP
 import Test.Framework
 import Test.QuickCheck
@@ -11,8 +12,10 @@ import File.File
 import File.Model
 import File.Storage
 import Purging.Files
+import TestCron
 import TestingUtil
 import TestKontra
+import User.Lang
 
 fileTests :: TestEnvSt -> Test
 fileTests env = testGroup "Files" [
@@ -24,7 +27,8 @@ fileTests env = testGroup "Files" [
   --Basic DB operations
   testThat "File insert persists content"  env testFileNewFile,
 
-  testThat "File purging works"  env testPurgeFiles
+  testThat "File purging works"  env testPurgeFiles,
+  testThat "File purging consumer works" env testFilePurgingConsumer
   ]
 
 testFileIDReadShow :: TestEnv ()
@@ -56,17 +60,34 @@ testFileDoesNotExist = replicateM_ 5 $ do
 testPurgeFiles :: TestEnv ()
 testPurgeFiles  = replicateM_ 100 $ do
   let maxMarked = 1000
-  (name,content) <- fileData
+  (name, content) <- fileData
   fid <- saveNewFile name content
   fidsToPurge <- dbUpdate $ MarkOrphanFilesForPurgeAfter maxMarked mempty
   assertEqual "File successfully marked for purge" [fid] fidsToPurge
   dbUpdate $ PurgeFile fid
 
   assertRaisesKontra (\FileWasPurged {} -> True) $ do
-     dbQuery $ GetFileByFileID fid
+    dbQuery $ GetFileByFileID fid
 
   orphanFidsAfterPurge <- dbUpdate $ MarkOrphanFilesForPurgeAfter maxMarked mempty
   assertEqual "File not marked for purge after it was purged" [] orphanFidsAfterPurge
+
+testFilePurgingConsumer :: TestEnv ()
+testFilePurgingConsumer = do
+  (name, content) <- fileData
+  -- This file is not referenced anywhere, it should therefore be purged.
+  fid <- saveNewFile name content
+
+  void $ dbUpdate $ MarkOrphanFilesForPurgeAfter 1000 mempty
+
+  ctx <- mkContext defaultLang
+  runTestCronUntilIdle ctx
+
+  runSQL_ $
+    "SELECT COUNT(*) FROM files WHERE id =" <?> fid <+> "AND purged_time IS NOT NULL"
+  c <- fetchOne runIdentity
+
+  assertEqual "should be purged" (1 :: Int64) c
 
 viewableS :: TestEnv String
 viewableS = rand 10 $ arbString 10 100

@@ -12,6 +12,7 @@ module Cron.Migrations (
   , addAttachmentsPurgeJob
   , addTemporaryMagicHashesPurgeJob
   , removeAmazonUploadJob
+  , removePurgeOrphanFileJob
 ) where
 
 import Control.Monad.Catch
@@ -130,4 +131,12 @@ removeAmazonUploadJob = Migration
   , mgrFrom = 16
   , mgrAction = StandardMigration $
       runSQL_ "DELETE FROM cron_jobs WHERE id = 'amazon_upload'"
+  }
+
+removePurgeOrphanFileJob :: (MonadDB m, MonadThrow m) => Migration m
+removePurgeOrphanFileJob = Migration
+  { mgrTableName = tblName tableCronJobs
+  , mgrFrom = 17
+  , mgrAction = StandardMigration $
+      runSQL_ "DELETE FROM cron_jobs WHERE id = 'purge_orphan_file'"
   }

@@ -1,6 +1,5 @@
 module Purging.Files (
     MarkOrphanFilesForPurgeAfter(..)
-  , purgeFile
   , filePurgingConsumer
   ) where
 
@@ -44,7 +43,8 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
            , ("signatory_attachments", "file_id")
            , ("signatory_screenshots", "file_id")
            , ("signatory_link_fields", "value_file_id")
-           , ("highlighted_pages", "file_id")
+           , ("highlighted_pages",     "file_id")
+           , ("file_purge_jobs",       "id")
            ]
 
     when (sort expected_refs /= sort refs) $ do
@@ -53,8 +53,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
     runSQL_ $ smconcat [
         "WITH files_to_purge AS ("
       , "SELECT id FROM files"
-      , " WHERE purge_at IS NULL"
-      , "   AND purged_time IS NULL"
+      , " WHERE purged_time IS NULL"
       -- File is connected as a main file to a document that is
       -- available to somebody.
       , "EXCEPT ALL"
@@ -105,6 +104,9 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
       , "  JOIN signatory_links sl ON hp.signatory_link_id = sl.id"
       , "  JOIN documents d ON sl.document_id = d.id"
       , " WHERE d.purged_time IS NULL"
+      -- It is already in the queue to be purged.
+      , "EXCEPT ALL"
+      , "SELECT j.id FROM file_purge_jobs j"
       , ")"
       -- Actual purge.
       , "INSERT INTO file_purge_jobs (id, run_at, attempts)"

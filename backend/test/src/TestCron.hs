@@ -16,6 +16,7 @@ import Doc.Extending.Consumer
 import Doc.Sealing.Consumer
 import Doc.Signing.Consumer
 import FileStorage.Amazon.Config
+import Purging.Files
 import TestKontra
 import qualified CronEnv
 
@@ -59,6 +60,7 @@ runTestCronUntilIdle ctx = do
         , cronConsumerSigningMaxJobs     = 1
         , cronConsumerExtendingMaxJobs   = 1
         , cronConsumerAPICallbackMaxJobs = 1
+        , cronConsumerFilePurgingMaxJobs = 1
         , cronNetsSignConfig = Nothing
         , cronPdfToolsLambdaConf = pdfSealLambdaConf
         }
@@ -97,6 +99,10 @@ runTestCronUntilIdle ctx = do
             $ cronConsumer cronConf reqManager {-mmixpanel-} Nothing
                 {-mplanhat-} Nothing {-runCronEnv-} id {-runDB-} id
                 (cronConsumerCronMaxJobs cronConf)
+          )
+        , ( "file purging"
+          , runConsumerWithIdleSignal . modTimeout
+            $ filePurgingConsumer pool (cronConsumerFilePurgingMaxJobs cronConf)
           )
         ]
       cronEnvData = CronEnv.CronEnv (cronSalesforceConf cronConf)
