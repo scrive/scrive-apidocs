@@ -26,6 +26,7 @@ import FileStorage
 import KontraError
 import Log.Configuration
 import Monitoring
+import Purging.Files
 import Templates
 import ThirdPartyStats.Core
 import ThirdPartyStats.Mixpanel
@@ -112,6 +113,7 @@ main = do
           (cronGuardTimeConf cronConf) templates pool (cronConsumerExtendingMaxJobs cronConf)
         apiCallbacks = documentAPICallback runCronEnv (cronConsumerAPICallbackMaxJobs cronConf)
         cron = cronConsumer cronConf reqManager mmixpanel mplanhat runCronEnv runDB (cronConsumerCronMaxJobs cronConf)
+        filePurging = filePurgingConsumer pool (cronConsumerFilePurgingMaxJobs cronConf)
 
     runCryptoRNGT rng
       . runFileStorageT (cronAmazonConfig cronConf, mrediscache, filecache)
@@ -120,4 +122,5 @@ main = do
       . finalize (localDomain "document extending" $ runConsumer docExtending     pool)
       . finalize (localDomain "api callbacks"      $ runConsumer apiCallbacks     pool)
       . finalize (localDomain "cron"               $ runConsumer cron             pool)
+      . finalize (localDomain "file purging"       $ runConsumer filePurging      pool)
       $ liftBase waitForTermination

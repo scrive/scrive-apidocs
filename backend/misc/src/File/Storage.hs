@@ -48,8 +48,8 @@ saveNewFile fName fContent = do
   case eaes of
     Left err -> do
       logAttention "saveNewFile: failed to create AES config, purging file" $
-        object [
-            logPair_ emptyFile
+        object
+          [ identifier fid
           , "error" .= err
           ]
       unexpectedError err

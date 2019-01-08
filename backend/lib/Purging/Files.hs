@@ -1,15 +1,21 @@
 module Purging.Files (
     MarkOrphanFilesForPurgeAfter(..)
   , purgeFile
+  , filePurgingConsumer
   ) where
 
+import Control.Monad.Base
 import Control.Monad.Catch
+import Data.Int
+import Database.PostgreSQL.Consumers.Config
 import Log
 import qualified Data.Text as T
 
 import DB
+import DB.PostgreSQL
 import File.File
 import File.Model
+import File.Tables
 import FileStorage.Class
 import Log.Identifier
 
@@ -110,16 +116,35 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
 
 purgeFile
   :: (MonadCatch m, MonadDB m, MonadFileStorage m, MonadLog m, MonadThrow m)
-  => File -> m ()
-purgeFile File{ fileid, filestorage = FileStorageAWS url _ } = do
-  eRes <- try $ deleteSavedContents url
-  case eRes of
-    Right _ -> do
-      void $ dbUpdate $ PurgeFile fileid
-      commit
-    Left err -> do
-      logAttention "Purging file failed, it couldn't be removed from Amazon" $ object
-        [ identifier fileid
-        , "error" .= show (err :: FileStorageException)
-        ]
-      rollback
+  => FileID -> m Result
+purgeFile fid = do
+  File{ filestorage = FileStorageAWS url _ } <- dbQuery $ GetFileByFileID fid
+  deleteSavedContents url
+  void $ dbUpdate $ PurgeFile fid
+  return $ Ok Remove
+
+onFailure :: MonadLog m => SomeException -> (FileID, Int32) -> m Action
+onFailure exc (fid, attempts) = do
+  logAttention "Purging file failed, it couldn't be removed from Amazon" . object $
+    [ identifier fid
+    , "error" .= show exc
+    ]
+  let delay = min (24*60) (2^attempts)
+  return . RerunAfter $ iminutes delay
+
+filePurgingConsumer
+  :: ( MonadBase IO m, MonadCatch m, MonadFileStorage m, MonadLog m, MonadMask m
+     , MonadThrow m )
+  => ConnectionSourceM m -> Int -> ConsumerConfig m FileID (FileID, Int32)
+filePurgingConsumer pool maxJobs = ConsumerConfig
+  { ccJobsTable = tblName tableFilePurgeJobs
+  , ccConsumersTable = tblName tableFilePurgeConsumers
+  , ccJobSelectors = ["id", "attempts"]
+  , ccJobFetcher = id
+  , ccJobIndex = fst
+  , ccNotificationChannel = Nothing
+  , ccNotificationTimeout = 3 * 1000 * 1000
+  , ccMaxRunningJobs = maxJobs
+  , ccProcessJob = withPostgreSQL pool . withTransaction . purgeFile . fst
+  , ccOnException = onFailure
+  }
