@@ -15,21 +15,16 @@ module User.API (
     apiCallSetDataRetentionPolicy
   ) where
 
-import Control.Concurrent.Lifted
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Data.Aeson
 import Data.Unjson
 import Happstack.Server hiding (dir, forbidden, host, lookCookieValue, ok, path, resp, simpleHTTP)
-import Happstack.Server.Internal.Cookie
 import Happstack.StaticRouting
 import Log
 import Text.JSON.Gen hiding (object)
 import qualified Data.ByteString.Base64 as Base64
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.Lazy.UTF8 as BSL
-import qualified Data.ByteString.UTF8 as UTF8
-import qualified Data.Map as Map
 import qualified Data.Text as T
 
 import API.Monad.V1
@@ -477,7 +472,6 @@ apiCallUserGetCallbackScheme = api $ do
 
 apiCallTestSalesforceIntegration :: Kontrakcja m => m Response
 apiCallTestSalesforceIntegration = do
-  salesforceFullDebugLog
   api $ do
     (user, _ , _) <- getAPIUser APIDocCheck
     scheme <- dbQuery $ GetUserCallbackSchemeByUserID $ userid user
@@ -508,7 +502,6 @@ apiCallTestSalesforceIntegration = do
 
 apiCallSetSalesforceCallbacks :: Kontrakcja m => m Response
 apiCallSetSalesforceCallbacks = do
-  salesforceFullDebugLog
   V2.api $ do
     -- We allow all permission although workflow with Partners API
     -- should use APIPersonal.
@@ -619,32 +612,3 @@ apiCallSetDataRetentionPolicy = V2.api $ do
 
   return $ V2.Ok ()
 
--- salesforceFullDebugLog is for debugging salesforce issues - should be removed before 1.10.2018
-salesforceFullDebugLog :: Kontrakcja m => m ()
-salesforceFullDebugLog = do
-  rq <- askRq
-  mbody <- liftIO (tryReadMVar $ rqInputsBody rq)
-  logInfo "Full info for salesforce related requests - should be removed before 1.10.2018" $ object [
-      "uri" .= rqUri rq
-    , "request" .= (show (rqMethod rq) ++ " " ++ rqUri rq ++ rqQuery rq)
-    , "post variables" .= (map showNamedInput $ fromMaybe [] mbody)
-    , "http headers" .= (concatMap showNamedHeader . Map.toList $ rqHeaders rq)
-    , "http cookies" .= (map showNamedCookie $ rqCookies rq)
-    ]
-
-showNamedCookie :: (String, Cookie) -> String
-showNamedCookie (_name,cookie) = mkCookieHeader Nothing cookie
-
-showNamedHeader :: (a, HeaderPair) -> [String]
-showNamedHeader (_nm,hd) | hName hd == UTF8.fromString "cookie" = []
-showNamedHeader (_nm,hd) = map showHeaderLine (hValue hd)
-  where
-    showHeaderLine value' = UTF8.toString (hName hd) ++ ": " ++ UTF8.toString value'
-
-showNamedInput :: (String, Input) -> String
-showNamedInput (name,input) = name ++ ": " ++
-    case inputFilename input of
-      Just filename -> filename
-      _ -> case inputValue input of
-             Left _tmpfilename -> "<<content in /tmp>>"
-             Right value' -> show (BSL.toString value')
