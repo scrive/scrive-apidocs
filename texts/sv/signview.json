@@ -84,6 +84,7 @@
 "_elegSignSEConfirmationText":"<strong class='put-signatory-name-here'></strong>, du kommer att signera med svenskt BankID. När du har signerat kommer din signatur att registreras av e-signeringstjänsten Scrive.",
 "_elegSignSEConfirmationTextNoName":"Du kommer att signera med svenskt BankID. När du har signerat kommer din signatur att registreras av e-signeringstjänsten Scrive.",
 "_elegSignSEConfirmationTitle":"Signera med svenskt BankID",
+"_elegSignTransactionNumber":"",
 "_email":"E-post",
 "_enterSMSPin":"Skriv in din SMS PIN",
 "_errorMessagePrefix":"Returnerat felmeddelande:",

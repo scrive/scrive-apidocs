@@ -89,7 +89,6 @@
 "_VisitedViewForAuthenticationEvidenceArchive":"Opnaði notandasýnina til að staðfesta auðkenni sitt áður en skjalið var skoðað.",
 "_VisitedViewForSigningEvidenceArchive":"Skjalið var opnað á netinu.",
 "_designViewAddPartiesRoleApprover":"",
-"_designViewApproverCantHaveAuthorisationToSign":"",
 "_invitationCustomMessageTextToApprove":"",
 "_invitationCustomMessageTextToReview":"Boð um að fara yfir skjalið innihéldu eftirfarandi skilaboð: <BR/> <i>$text$</i>",
 "_invitationCustomMessageTextToSign":"Boð um að fara skrifa undir skjalið innihéldu eftirfarandi skilaboð: <BR/> <i>$text$</i>"

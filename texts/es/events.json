@@ -89,7 +89,6 @@
 "_VisitedViewForAuthenticationEvidenceArchive":"Verifique su identidad en la vista previa antes de ver el documento por completo.",
 "_VisitedViewForSigningEvidenceArchive":"El documento fue abierto en internet.",
 "_designViewAddPartiesRoleApprover":"",
-"_designViewApproverCantHaveAuthorisationToSign":"",
 "_invitationCustomMessageTextToApprove":"",
 "_invitationCustomMessageTextToReview":"La invitación a revisar el documento contenía el siguiente mensaje: <BR/> <i>$text$</i>",
 "_invitationCustomMessageTextToSign":"La invitación a firmar el documento contenía el siguiente mensaje: <BR/> <i>$text$</i>"

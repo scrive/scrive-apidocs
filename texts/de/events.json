@@ -89,7 +89,6 @@
 "_VisitedViewForAuthenticationEvidenceArchive":"Öffnete die Ansicht, um die Identität zu bestätigen und das Dokument anzuschauen. ",
 "_VisitedViewForSigningEvidenceArchive":"Das Dokument wurde online geöffnet.",
 "_designViewAddPartiesRoleApprover":"",
-"_designViewApproverCantHaveAuthorisationToSign":"",
 "_invitationCustomMessageTextToApprove":"",
 "_invitationCustomMessageTextToReview":"Die Einladung, das Dokument zu überprüfen, enthielt folgende Mitteilung: <BR/> <i>$text$</i>",
 "_invitationCustomMessageTextToSign":"Die Einladung, das Dokument zu signieren, enthielt folgende Mitteilung: <BR/> <i>$text$</i>"
