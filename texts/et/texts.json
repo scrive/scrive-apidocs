@@ -450,7 +450,7 @@
 "_designViewMandatoryForRecipient":"Saaja jaoks kohustuslik",
 "_designViewMandatoryForSender":"Saatja jaoks kohustuslik",
 "_designViewMoreSettings":"Täiendavad seaded",
-"_designViewNotAllowedToChangeAuthenticationMethod":"Teiste autentimisviiside määramine on keelatud.",
+"_designViewNotAllowedToChangeAuthenticationMethod":"",
 "_designViewOptionalField":"Valikuline",
 "_designViewOptionalMandatory":"Valikuline/kohustuslik",
 "_designViewRecipientsLanguage":"Saaja keel",
