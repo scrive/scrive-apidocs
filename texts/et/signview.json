@@ -84,7 +84,7 @@
 "_elegSignSEConfirmationText":"<strong class='put-signatory-name-here'></strong>, allkirjastate Rootsi BankID abil. Allkirjastamise järel registreeritakse Teie allkiri Scrive e-allkirjastamisteenusega.",
 "_elegSignSEConfirmationTextNoName":"Allkirjastate Rootsi BankID abil. Allkirjastamise järel registreeritakse Teie allkiri Scrive e-allkirjastamisteenusega.",
 "_elegSignSEConfirmationTitle":"Allkirjasta Rootsi BankID abil",
-"_elegSignTransactionNumber":"Tehingu number",
+"_elegSignTransactionNumber":"",
 "_email":"E-mail",
 "_enterSMSPin":"Sisestage enda SMS PIN",
 "_errorMessagePrefix":"Vea põhjus:",
