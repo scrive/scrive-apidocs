@@ -110,6 +110,9 @@ userAPIV2 = choice [
   dir "dataretentionpolicy" $ hGet $ toK0 $ apiCallGetDataRetentionPolicy,
   dir "dataretentionpolicy" $ dir "set" $ hPost $ toK0 $ apiCallSetDataRetentionPolicy,
 
+  dir "usagestats" $ dir "days" $ hGet $ toK0 $ User.UserControl.handleUsageStatsJSONForUserDays,
+  dir "usagestats" $ dir "months" $ hGet $ toK0 $ User.UserControl.handleUsageStatsJSONForUserMonths,
+
   userAPIV1
   ]
 

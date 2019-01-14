@@ -22,17 +22,15 @@ var StatsView = React.createClass({
     } else if (this.props.companyId) {
       return "/adminonly/companyadmin/usagestats";
     } else {
-      return "/account/usagestats";
+      return "/api/frontend/usagestats";
     }
   },
   enrichUrl: function (url) {
-    var result = url + "/";
+    var result = url;
     if (this.props.userId) {
-      result += this.props.userId;
+      result += "/" + this.props.userId;
     } else if (this.props.companyId) {
-      result += this.props.companyId;
-    } else {
-      result += "json";
+      result += "/" + this.props.companyId;
     }
 
     if (this.props.withCompany) {
@@ -55,6 +53,11 @@ var StatsView = React.createClass({
             withCompany={this.props.withCompany}
           />
         </div>
+        <div className="usagestatsjson">
+          <a href={this.urlForScope(SCOPE_DAYS)} target="_blank">
+            {localization.account.stats.openAsJson}
+          </a>
+        </div>
 
         <h2>{localization.account.stats.last6months}</h2>
         <div className="jsmonthtable">
@@ -63,6 +66,11 @@ var StatsView = React.createClass({
             url={this.urlForScope(SCOPE_MONTHS)}
             withCompany={this.props.withCompany}
           />
+        </div>
+        <div className="usagestatsjson">
+          <a href={this.urlForScope(SCOPE_MONTHS)} target="_blank">
+            {localization.account.stats.openAsJson}
+          </a>
         </div>
       </div>
     );

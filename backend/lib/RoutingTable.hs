@@ -113,8 +113,6 @@ staticRoutes production = choice
      , dir "account" $ hGet $ toK2 $ UserControl.handleGetChangeEmail
      , dir "account" $ hPost $ toK2 $ UserControl.handlePostChangeEmail
      , dir "account" $ dir "company" $ Company.routes
-     , dir "account" $ dir "usagestats" $ dir "days"   $ dir "json" $ hGet $ toK0 $ UserControl.handleUsageStatsJSONForUserDays
-     , dir "account" $ dir "usagestats" $ dir "months" $ dir "json" $ hGet $ toK0 $ UserControl.handleUsageStatsJSONForUserMonths
      , dir "accepttos" $ hGet  $ toK0 $ UserControl.handleAcceptTOSGet
      , dir "accepttos" $ hPost $ toK0 $ UserControl.handleAcceptTOSPost
 

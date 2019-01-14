@@ -1211,6 +1211,7 @@ javascriptLocalisation =
               , columnClosedDocuments : "$_closedDocuments()$"
               , columnSendDocuments :"$_sentDocuments()$"
               , columnClosedSignatures : "$_closedSignatures()$"
+              , openAsJson : "$_openAsJson()$"
             }
           , subscription : "$_Subscription()$"
           , dataRetention : {

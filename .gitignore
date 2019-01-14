@@ -42,6 +42,7 @@ frontend/app/localization/*.js
 /.ignore
 /.emacs.desktop
 /.emacs.desktop.lock
+*.swp
 .elc
 auto-save-list
 tramp

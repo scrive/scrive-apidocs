@@ -68,7 +68,7 @@ describe("stats/stats", function () {
     var component = renderComponent();
 
     var baseUrl = component.baseUrl();
-    assert.equal(baseUrl, "/account/usagestats");
+    assert.equal(baseUrl, "/api/frontend/usagestats");
   });
 
   it("should append user ID to URL for user admin view", function () {
@@ -85,39 +85,32 @@ describe("stats/stats", function () {
     assert.equal(result, "/stats/companyId");
   });
 
-  it("should append format name to URL for account view", function () {
-    var component = renderComponent();
-
-    var result = component.enrichUrl("/stats");
-    assert.equal(result, "/stats/json");
-  });
-
   it("should add withCompany qs argument to company stats URL", function () {
     var component = renderComponent({withCompany: true});
 
     var result = component.enrichUrl("/stats");
-    assert.equal(result, "/stats/json?withCompany=true")
+    assert.equal(result, "/stats?withCompany=true")
   });
 
   it("should not add withCompany qs argument to user stats URL", function () {
     var component = renderComponent({withCompany: false});
 
     var result = component.enrichUrl("/stats");
-    assert.equal(result, "/stats/json")
+    assert.equal(result, "/stats")
   });
 
   it("should generate URL for last 30 days stats", function () {
     var component = renderComponent();
 
     var result = component.urlForScope("days");
-    assert.equal(result, "/account/usagestats/days/json");
+    assert.equal(result, "/api/frontend/usagestats/days");
   });
 
   it("should generate URL for last 6 months stats", function () {
     var component = renderComponent();
 
     var result = component.urlForScope("months");
-    assert.equal(result, "/account/usagestats/months/json");
+    assert.equal(result, "/api/frontend/usagestats/months");
   });
 
   it("should configure and render stats table for the last 30 days stats", function () {
@@ -133,7 +126,7 @@ describe("stats/stats", function () {
     assert.isFalse(last30DaysStatsView.props.withCompany);
     assert.equal(
       last30DaysStatsView.props.url,
-      "/account/usagestats/days/json"
+      "/api/frontend/usagestats/days"
     );
   });
 
@@ -150,7 +143,7 @@ describe("stats/stats", function () {
     assert.isFalse(last30DaysStatsView.props.withCompany);
     assert.equal(
       last30DaysStatsView.props.url,
-      "/account/usagestats/days/json"
+      "/api/frontend/usagestats/days"
     );
   });
 });
