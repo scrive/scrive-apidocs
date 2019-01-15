@@ -68,6 +68,7 @@ info:
     | 2018-12-17  | Add documentation for `authentication_method_to_view_archived` |
     | 2018-12-17  | Add documentation for `/documents/trash` and `/documents/delete` bulk endpoints |
     | 2018-12-17  | Add `fi_tupas` (Finnish EID) to `authentication_method_to_view`/`authentication_method_to_view_archived` |
+    | 2019-01-03  | Add `usagestats` endpoints
 
     ## Environments & IP Addresses
 
@@ -776,6 +777,7 @@ tags:
   - name: Modify
   - name: Sign
   - name: Attachment
+  - name: User
   - name: Internal
 
 paths:
@@ -919,6 +921,14 @@ paths:
   /attachments/setsharing:
     $ref: ./api/attachments/setsharing.yaml
 
+  # User
+
+  /usagestats/days:
+    $ref: ./api/user/getusagestatsdays.yaml
+  /usagestats/months:
+    $ref: ./api/user/getusagestatsmonths.yaml
+
+
 definitions:
   Document:
     $ref: ./definitions/Document.yaml
@@ -952,6 +962,8 @@ definitions:
     $ref: ./definitions/Attachment.yaml
   AttachmentListFilter:
     $ref: ./definitions/AttachmentListFilter.yaml
+  UserStats:
+    $ref: ./definitions/UserStats.yaml
 
 parameters:
   $ref: ./extras/parameters.yaml
