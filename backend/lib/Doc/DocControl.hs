@@ -57,7 +57,10 @@ import Chargeable.Model
 import Cookies
 import DB
 import DB.TimeZoneName
+import Doc.Action
 import Doc.API.Callback.Model
+import Doc.API.V2.DocumentUpdateUtils
+import Doc.API.V2.Guards (guardDocumentStatus, guardThatDocumentCanBeStarted)
 import Doc.Conditions
 import Doc.DocInfo
 import Doc.DocMails
@@ -85,6 +88,7 @@ import KontraLink
 import Log.Identifier
 import MagicHash
 import Redirect
+import Text.JSON.Convert
 import User.Email
 import User.Model
 import User.Utils
@@ -254,7 +258,7 @@ handleSignFromTemplate tplID mh = logDocument tplID $ do
   ctx <- getContext
   tpl <- dbQuery $ GetDocumentByDocumentIDAndShareableLinkHash tplID mh
 
-  let actor = systemActor $ get ctxtime ctx
+  let actor = contextActor ctx
   mDocID <- withDocument tpl $
     dbUpdate $ CloneDocumentWithUpdatedAuthor Nothing tpl actor $ \doc -> doc
       { documenttype = Signable
@@ -268,10 +272,26 @@ handleSignFromTemplate tplID mh = logDocument tplID $ do
       respondLinkInvalid
 
     Just docID -> withDocumentID docID $ do
-      timezone <- documenttimezonename <$> theDocument
-      dbUpdate $ PreparationToPending actor timezone
+      let startDocument = do
+            -- Guards
+            guardDocumentStatus Preparation =<< theDocument
+            guardThatDocumentCanBeStarted =<< theDocument
+            -- Parameters
+            timezone <- documenttimezonename <$> theDocument
+            clearDocFields actor
+            dbUpdate $ PreparationToPending actor timezone
+            t <- get ctxtime <$> getContext
+            dbUpdate $ SetDocumentInviteTime t actor
+            postDocumentPreparationChange False timezone
+      startDocument `catches` [
+        Handler $ \(SomeDBExtraException e) -> do
+          -- We are not rolling back here, because respondLinkInvalid will do it.
+          logInfo "SignFromTemplate Error:" $ object [
+              "extra_exception" .= jsonToAeson (J.toJSValue e)
+            ]
+          respondLinkInvalid
+        ]
       mSL <- (find (not . isAuthor) . documentsignatorylinks) <$> theDocument
-
       case mSL of
         Nothing -> do
           logAttention "Can't find suitable signatory for shareable\

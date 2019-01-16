@@ -9,6 +9,7 @@ module Util.Actor (
   , mkAuthorActor
   , mkAdminActor
   , apiActor
+  , contextActor
   ) where
 
 import Data.Typeable
