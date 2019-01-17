@@ -59,17 +59,16 @@ testFileDoesNotExist = replicateM_ 5 $ do
 
 testPurgeFiles :: TestEnv ()
 testPurgeFiles  = replicateM_ 100 $ do
-  let maxMarked = 1000
   (name, content) <- fileData
   fid <- saveNewFile name content
-  fidsToPurge <- dbUpdate $ MarkOrphanFilesForPurgeAfter maxMarked mempty
+  fidsToPurge <- dbUpdate $ MarkOrphanFilesForPurgeAfter mempty
   assertEqual "File successfully marked for purge" [fid] fidsToPurge
   dbUpdate $ PurgeFile fid
 
   assertRaisesKontra (\FileWasPurged {} -> True) $ do
     dbQuery $ GetFileByFileID fid
 
-  orphanFidsAfterPurge <- dbUpdate $ MarkOrphanFilesForPurgeAfter maxMarked mempty
+  orphanFidsAfterPurge <- dbUpdate $ MarkOrphanFilesForPurgeAfter mempty
   assertEqual "File not marked for purge after it was purged" [] orphanFidsAfterPurge
 
 testFilePurgingConsumer :: TestEnv ()
@@ -78,7 +77,7 @@ testFilePurgingConsumer = do
   -- This file is not referenced anywhere, it should therefore be purged.
   fid <- saveNewFile name content
 
-  void $ dbUpdate $ MarkOrphanFilesForPurgeAfter 1000 mempty
+  void $ dbUpdate $ MarkOrphanFilesForPurgeAfter mempty
 
   ctx <- mkContext defaultLang
   runTestCronUntilIdle ctx

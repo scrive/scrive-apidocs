@@ -18,9 +18,9 @@ import File.Tables
 import FileStorage.Class
 import Log.Identifier
 
-data MarkOrphanFilesForPurgeAfter = MarkOrphanFilesForPurgeAfter Int Interval
+data MarkOrphanFilesForPurgeAfter = MarkOrphanFilesForPurgeAfter Interval
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesForPurgeAfter [FileID] where
-  update (MarkOrphanFilesForPurgeAfter limit interval) = do
+  update (MarkOrphanFilesForPurgeAfter interval) = do
     now <- currentTime
     -- Check if the database still looks similar to what the code below
     -- was written for.
@@ -111,7 +111,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
       -- Actual purge.
       , "INSERT INTO file_purge_jobs (id, run_at, attempts)"
       , "SELECT id," <?> now <+> "+" <?> interval <+> ", 0"
-      , "FROM files_to_purge LIMIT" <?> limit
+      , "FROM files_to_purge"
       , "RETURNING id"
       ]
     fetchMany runIdentity

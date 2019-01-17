@@ -216,15 +216,12 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
       let timeDelay = if eventsDone == eventLimit then 1 else 5
       return . RerunAfter $ iseconds timeDelay
     MarkOrphanFilesForPurge -> do
-      let maxMarked = 100000
-          -- Share the string between all the log messages.
+      let -- Share the string between all the log messages.
           orphanFileMarked = "Orphan file marked for purge"
-      fids <- runDB . dbUpdate . MarkOrphanFilesForPurgeAfter maxMarked $ idays 7
+      fids <- runDB . dbUpdate . MarkOrphanFilesForPurgeAfter $ idays 7
       forM_ fids $ \fid -> logInfo orphanFileMarked $ object [identifier fid]
       -- If maximum amount of files was marked, run it again shortly after.
-      if length fids == maxMarked
-        then return . RerunAfter $ iseconds 1
-        else RerunAt . nextDayAtHour 2 <$> currentTime
+      RerunAt . nextDayAtHour 2 <$> currentTime
     OldDraftsRemoval -> do
       runDB $ do
         delCount <- dbUpdate $ RemoveOldDrafts 100
