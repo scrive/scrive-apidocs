@@ -3,7 +3,6 @@ module Partner.Model (
 , Partner(..)
 , GetPartners(..)
 , GetPartnerByID(..)
-, GetUserPartnerAdminUserGroups(..)
 , InsertPartnerForTests(..)
 , unsafePartnerID
 , unPartnerID
@@ -14,7 +13,6 @@ import Log
 
 import DB
 import Partner.Partner
-import User.UserID
 import UserGroup.Types
 
 fetchPartner :: (PartnerID, String, Bool, Maybe UserGroupID) -> Partner
@@ -59,14 +57,3 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m InsertPartnerForTes
       sqlSet "name" . ptName $ pt
       sqlSet "default_partner" False -- @note one can't create a new default partner
       sqlSet "user_group_id" . ptUserGroupID $ pt
-
-data GetUserPartnerAdminUserGroups = GetUserPartnerAdminUserGroups UserID
-instance (MonadDB m, MonadThrow m) => DBQuery m GetUserPartnerAdminUserGroups [UserGroupID] where
-  query (GetUserPartnerAdminUserGroups uid) = do
-    runQuery_ . sqlSelect "partner_admins pa" $ do
-      sqlJoinOn "partners p" "pa.partner_id = p.id"
-      sqlWhereEq "pa.user_id" uid
-      sqlResult "p.user_group_id"
-    -- partners.user_group_id is nullable, hence this
-    (mgs :: [Maybe UserGroupID]) <- fetchMany runIdentity
-    return . catMaybes $ mgs

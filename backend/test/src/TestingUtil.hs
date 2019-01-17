@@ -31,6 +31,7 @@ import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Text as T
 import qualified Test.HUnit as T
 
+import AccessControl.Model
 import BrandedDomain.BrandedDomain
 import BrandedDomain.BrandedDomainID
 import BrandedDomain.Model
@@ -1001,8 +1002,9 @@ addNewRandomPartnerUser = do
               , ptDefaultPartner = False
               , ptUserGroupID = Just $ get ugID partnerAdminUserGroup
               }
-      True <- dbUpdate $ MakeUserPartnerAdmin
-        (userid partnerAdminUser) (get ugID partnerAdminUserGroup)
+      True <- dbUpdate $ AccessControlInsertUserGroupAdmin
+              (userid partnerAdminUser)
+              (get ugID partnerAdminUserGroup)
       return (partnerAdminUser, partnerAdminUserGroup)
 
 data RandomDocumentAllows = RandomDocumentAllows

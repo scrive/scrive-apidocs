@@ -73,7 +73,10 @@ Library
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
-  Exposed-modules: AccessControl.Types
+  Exposed-modules: AccessControl.Migrations
+                 , AccessControl.Model
+                 , AccessControl.Tables
+                 , AccessControl.Types
                  , API.APIVersion
                  , API.Logging
                  , API.Monad.V1
@@ -735,7 +738,9 @@ Executable kontrakcja-migrate
 
   Main-is: AppDBMain.hs
   GHC-options: -main-is AppDBMain
-  Other-Modules: Amazon.Migrations
+  Other-Modules: AccessControl.Tables
+                 AccessControl.Migrations
+                 Amazon.Migrations
                  AppDBConfig
                  AppDBMigrations
                  AppDBTables
@@ -1206,7 +1211,9 @@ Test-suite kontrakcja-test
 
   Main-is:       TestMain.hs
   GHC-options: -main-is TestMain
-  Other-Modules: AccountInfoTest
+  Other-Modules: AccessControl.Migrations
+                 AccessControl.Tables
+                 AccountInfoTest
                  AdministrationTest
                  Amazon.Migrations
                  AppDBMigrations

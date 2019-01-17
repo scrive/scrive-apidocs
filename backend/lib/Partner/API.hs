@@ -66,7 +66,7 @@ partnerApiCallV1CompanyCreate :: Kontrakcja m => Int64 -> m Response
 partnerApiCallV1CompanyCreate ptOrUgID = do
   (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
   logPartner mPartnerID partnerUsrGrpID . api $ do
-    let acc = [ makePolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
+    let acc = [ mkAccPolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
     apiAccessControl acc noPrvErr $ do
       ugwp_partner <- apiGuardJustM (serverError "Was not able to retrieve partner")
         . dbQuery . UserGroupGetWithParents $ partnerUsrGrpID
@@ -96,8 +96,8 @@ partnerApiCallV1CompanyUpdate ptOrUgID ugid = do
     -- for backwards compatibility we check _both_ that the user is allowed
     -- to update the specified partner _and_ the user group. In the future
     -- this should be unnecessary.
-    let acc =  [ makePolicyItem (UpdateA, UserGroupR, ugid)
-               , makePolicyItem (UpdateA, UserGroupR, partnerUsrGrpID) ]
+    let acc =  [ mkAccPolicyItem (UpdateA, UserGroupR, ugid)
+               , mkAccPolicyItem (UpdateA, UserGroupR, partnerUsrGrpID) ]
     apiAccessControl acc noPrvErr $ do
       dbQuery (UserGroupGetWithParents ugid) >>= \case
         Nothing -> noUsrGrpErr
@@ -125,8 +125,8 @@ partnerApiCallV1CompanyGet ptOrUgID ugid = do
     -- for backwards compatibility we check _both_ that the user is allowed
     -- to update the specified partner _and_ the user group. In the future
     -- this should be unnecessary.
-    let acc = [ makePolicyItem (ReadA, UserGroupR, ugid)
-              , makePolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
+    let acc = [ mkAccPolicyItem (ReadA, UserGroupR, ugid)
+              , mkAccPolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
         -- see @note for `partnerApiCallV1CompaniesGet`
     apiAccessControl acc noPrvErr $ do
       (dbQuery $ UserGroupGetWithParents ugid) >>= \case
@@ -139,8 +139,8 @@ partnerApiCallV1CompaniesGet :: Kontrakcja m => Int64 -> m Response
 partnerApiCallV1CompaniesGet ptOrUgID = do
   (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
   logPartner mPartnerID partnerUsrGrpID . api $ do
-    let acc = [ makePolicyItem (ReadA, UserGroupR, partnerUsrGrpID)
-              , makePolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
+    let acc = [ mkAccPolicyItem (ReadA, UserGroupR, partnerUsrGrpID)
+              , mkAccPolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
     -- @note The last entry is just a trick to keep company admins from
     -- reading the companies - as of now we only want partner admins to be
     -- able to read, even though in the future this will change. The trick
@@ -158,8 +158,8 @@ partnerApiCallV1UserCreate :: Kontrakcja m => Int64 -> UserGroupID -> m Response
 partnerApiCallV1UserCreate ptOrUgID ugid = do
   (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
   logPartnerAndUserGroup mPartnerID partnerUsrGrpID ugid . api $ do
-    let acc = [ makePolicyItem (CreateA, UserR, ugid)
-              , makePolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
+    let acc = [ mkAccPolicyItem (CreateA, UserR, ugid)
+              , mkAccPolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
               {- This last one is blocking for all but partner admins.             -}
               {- Cf. `HasPermissions` instance for `(AccessRole UserGroupID)`      -}
               {- Maybe we don't need to have the _exact_ same behaviour as before? -}
@@ -197,8 +197,8 @@ partnerApiCallV1UserGet :: Kontrakcja m => Int64 -> UserID -> m Response
 partnerApiCallV1UserGet ptOrUgID uid = do
   (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
   logPartnerAndUser mPartnerID partnerUsrGrpID uid . api $ do
-    let acc = [ makePolicyItem (ReadA, UserR, uid)
-              , makePolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
+    let acc = [ mkAccPolicyItem (ReadA, UserR, uid)
+              , mkAccPolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
         -- see @note for `partnerApiCallV1CompaniesGet`
     apiAccessControl acc noPrvErr $ do
       (dbQuery . GetUserByID $ uid) >>= \case
@@ -211,8 +211,8 @@ partnerApiCallV1CompanyUsersGet :: Kontrakcja m => Int64 -> UserGroupID -> m Res
 partnerApiCallV1CompanyUsersGet ptOrUgID ugid = do
   (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
   logPartnerAndUserGroup mPartnerID partnerUsrGrpID ugid . api $ do
-    let acc = [ makePolicyItem  (ReadA, UserGroupR, ugid)
-              , makePolicyItem  (CreateA, UserGroupR, partnerUsrGrpID)]
+    let acc = [ mkAccPolicyItem  (ReadA, UserGroupR, ugid)
+              , mkAccPolicyItem  (CreateA, UserGroupR, partnerUsrGrpID)]
         -- see @note for `partnerApiCallV1CompaniesGet`
     apiAccessControl acc noPrvErr $ do
       users <- dbQuery $ UserGroupGetUsers ugid
@@ -222,8 +222,8 @@ partnerApiCallV1UserUpdate :: Kontrakcja m => Int64 -> UserID -> m Response
 partnerApiCallV1UserUpdate ptOrUgID uid = do
   (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
   logPartnerAndUser mPartnerID partnerUsrGrpID uid . api $ do
-    let acc = [ makePolicyItem (UpdateA, UserR, uid)
-              , makePolicyItem (UpdateA, UserGroupR, partnerUsrGrpID) ]
+    let acc = [ mkAccPolicyItem (UpdateA, UserR, uid)
+              , mkAccPolicyItem (UpdateA, UserGroupR, partnerUsrGrpID) ]
         -- see @note for `partnerApiCallV1CompaniesGet`
     apiAccessControl acc noPrvErr $ do
       user <- guardThatUserExists uid
@@ -252,9 +252,9 @@ partnerApiCallV1UserGetPersonalToken :: Kontrakcja m => Int64 -> UserID -> m Res
 partnerApiCallV1UserGetPersonalToken ptOrUgID uid = do
   (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
   logPartnerAndUser mPartnerID partnerUsrGrpID uid . api $ do
-    let acc = [ makePolicyItem (CreateA, UserPersonalTokenR, uid)
-              , makePolicyItem (ReadA, UserPersonalTokenR, uid)
-              , makePolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
+    let acc = [ mkAccPolicyItem (CreateA, UserPersonalTokenR, uid)
+              , mkAccPolicyItem (ReadA, UserPersonalTokenR, uid)
+              , mkAccPolicyItem (CreateA, UserGroupR, partnerUsrGrpID) ]
     apiAccessControl acc noPrvErr $ do
       user <- guardThatUserExists uid -- @todo for now...
       void $ dbUpdate $ CreatePersonalToken (userid user) -- @todo in the future: avoid this DB hit?

@@ -23,12 +23,12 @@ import Data.Char
 import Data.Int
 import qualified Data.Text as T
 
+import AccessControl.Model
 import AccessControl.Types (AccessRole(..))
 import Chargeable.Model
 import DB
 import Doc.DocStateData (DocumentStatus(..))
 import MinutesTime
-import Partner.Model (GetUserPartnerAdminUserGroups(..))
 import User.Email
 import User.History.Model
 import User.Model.Filter
@@ -44,13 +44,13 @@ data GetUserWherePasswordAlgorithmIsEarlierThan =
   GetUserWherePasswordAlgorithmIsEarlierThan PasswordAlgorithm
 
 data GetUserRoles = GetUserRoles User
-instance (MonadDB m, MonadThrow m) => DBQuery m GetUserRoles [AccessRole UserGroupID] where
+instance (MonadDB m, MonadThrow m) => DBQuery m GetUserRoles [AccessRole] where
   query (GetUserRoles u) = do
     let usrGrpID = usergroupid u
-    partnerUsrGrpIDs <- query . GetUserPartnerAdminUserGroups . userid $ u
-    return $ (map UserGroupAdminAR partnerUsrGrpIDs) <>
+    userDBRoles <- query . AccessControlGetRolesByUser . userid $ u
+    return $ userDBRoles <>
              (if useriscompanyadmin u then [UserAdminAR usrGrpID] else []) <>
-             [UserAR usrGrpID]
+             [UserGroupMemberAR usrGrpID, UserAR $ userid u]
 
 instance (MonadDB m, MonadThrow m) =>
   DBQuery m GetUserWherePasswordAlgorithmIsEarlierThan (Maybe User) where

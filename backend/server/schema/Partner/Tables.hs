@@ -1,6 +1,5 @@
 module Partner.Tables (
   tablePartners
-, tablePartnerAdmins
 ) where
 
 import Data.Int
@@ -38,20 +37,4 @@ tablePartners = tblTable {
             sqlSet "default_partner" True
             sqlResult "id"
       }
-  }
-
-tablePartnerAdmins :: Table
-tablePartnerAdmins = tblTable {
-    tblName = "partner_admins"
-  , tblVersion = 1
-  , tblColumns =
-      [ tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
-      , tblColumn { colName = "partner_id", colType = BigIntT, colNullable = False}
-      ]
-  , tblPrimaryKey = pkOnColumns ["partner_id", "user_id"]
-  , tblIndexes = []
-  , tblForeignKeys =
-      [ (fkOnColumn "user_id" "users" "id")  { fkOnDelete = ForeignKeyCascade }
-      , (fkOnColumn "partner_id" "partners" "id") { fkOnDelete = ForeignKeyCascade }
-      ]
   }

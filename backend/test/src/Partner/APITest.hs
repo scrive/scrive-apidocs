@@ -11,12 +11,12 @@ import qualified Data.ByteString.Lazy.UTF8 as BS
 import qualified Data.HashMap.Strict as H
 import qualified Data.Text as T
 
+import AccessControl.Model
 import Context
 import DB
 import Doc.API.V2.Calls.DocumentPostCalls (docApiV2New)
 import Doc.SignatoryLinkID ()
 import Partner.API
-import Partner.Model
 import TestingUtil
 import TestingUtil.JSON
 import TestKontra as T
@@ -84,7 +84,7 @@ testPartnerCompanyCreate = do
            201
 
   -- 2) not a partner admin but a company admin; should fail
-  void . dbUpdate $ RemovePartnerAdmin uid (unsafePartnerID pid1)
+  void . dbUpdate $ AccessControlRemoveUserGroupAdminRole uid (unsafeUserGroupID pid1)
   void . dbUpdate $ SetUserCompanyAdmin uid True
   (Just usr'') <- dbQuery . GetUserByID $ uid
   void $ runApiJSONTestNoResChk
@@ -147,7 +147,7 @@ testPartnerCompanyUpdate = do
            200
 
   -- 2) not a partner admin but a company admin; should fail
-  void . dbUpdate $ RemovePartnerAdmin uid (unsafePartnerID pid)
+  void . dbUpdate $ AccessControlRemoveUserGroupAdminRole uid (unsafeUserGroupID pid)
   void . dbUpdate $ SetUserCompanyAdmin uid True
   (Just usr'') <- dbQuery . GetUserByID $ uid
   void $ runApiJSONTestNoResChk
@@ -231,7 +231,7 @@ testPartnerCompanyGet = do
            200
 
   -- 2) not a partner admin but a company admin; should fail
-  void . dbUpdate $ RemovePartnerAdmin uid (unsafePartnerID pid)
+  void . dbUpdate $ AccessControlRemoveUserGroupAdminRole uid (unsafeUserGroupID pid)
   void . dbUpdate $ SetUserCompanyAdmin uid True
   (Just usr'') <- dbQuery . GetUserByID $ uid
   void $ runApiJSONTestNoResChk
@@ -291,7 +291,7 @@ testPartnerCompaniesGet = do
            200
 
   -- 2) not a partner admin but a company admin; should fail
-  void . dbUpdate $ RemovePartnerAdmin uid (unsafePartnerID pidA)
+  void . dbUpdate $ AccessControlRemoveUserGroupAdminRole uid (unsafeUserGroupID pidA)
   void . dbUpdate $ SetUserCompanyAdmin uid True
   (Just usr'') <- dbQuery . GetUserByID $ uid
   void $ runApiJSONTestNoResChk
@@ -355,7 +355,7 @@ testPartnerCompanyUserNew = do
   let rq_newUserGood_params'' = [ ("json", inTextBS newUserGoodJSON'') ]
 
   -- 2) not a partner admin but a company admin; should fail
-  void . dbUpdate $ RemovePartnerAdmin uid (unsafePartnerID pid)
+  void . dbUpdate $ AccessControlRemoveUserGroupAdminRole uid (unsafeUserGroupID pid)
   void . dbUpdate $ SetUserCompanyAdmin uid True
   (Just usr'') <- dbQuery . GetUserByID $ uid
   void $ runApiJSONTestNoResChk
@@ -411,7 +411,7 @@ testPartnerUserUpdate = do
            200
 
   -- 2) not a partner admin but a company admin; should fail
-  void . dbUpdate $ RemovePartnerAdmin uidAdmin (unsafePartnerID pid)
+  void . dbUpdate $ AccessControlRemoveUserGroupAdminRole uidAdmin (unsafeUserGroupID pid)
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin True
   (Just usr'') <- dbQuery . GetUserByID $ uidAdmin
   void $ runApiJSONTestNoResChk
@@ -510,7 +510,7 @@ testPartnerUserGet = do
            200
 
   -- 2) not a partner admin but a company admin; should fail
-  void . dbUpdate $ RemovePartnerAdmin uidAdmin (unsafePartnerID pid)
+  void . dbUpdate $ AccessControlRemoveUserGroupAdminRole uidAdmin (unsafeUserGroupID pid)
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin True
   (Just usr'') <- dbQuery . GetUserByID $ uidAdmin
   void $ runApiJSONTestNoResChk
@@ -559,7 +559,7 @@ testPartnerCompanyUsersGet = do
            200
 
   -- 2) not a partner admin but a company admin; should fail
-  void . dbUpdate $ RemovePartnerAdmin uidAdmin (unsafePartnerID pid)
+  void . dbUpdate $ AccessControlRemoveUserGroupAdminRole uidAdmin (unsafeUserGroupID pid)
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin True
   (Just usr'') <- dbQuery . GetUserByID $ uidAdmin
   void $ runApiJSONTestNoResChk
@@ -620,7 +620,7 @@ testPartnersUserGetTokens = do
            200
 
   -- 2) not a partner admin but a company admin; should fail
-  void . dbUpdate $ RemovePartnerAdmin uidAdmin (unsafePartnerID pid)
+  void . dbUpdate $ AccessControlRemoveUserGroupAdminRole uidAdmin (unsafeUserGroupID pid)
   void . dbUpdate $ SetUserCompanyAdmin uidAdmin True
   (Just usr'') <- dbQuery . GetUserByID $ uidAdmin
   void $ runApiJSONTestNoResChk

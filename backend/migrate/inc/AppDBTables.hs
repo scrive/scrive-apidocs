@@ -9,6 +9,7 @@ module AppDBTables (
 
 import Database.PostgreSQL.PQTypes.Model
 
+import AccessControl.Tables
 import Attachment.Tables
 import BrandedDomain.Tables
 import Chargeable.Tables
@@ -109,11 +110,11 @@ kontraTables =
   , tableUserGroups
   , tablePartners
   , tableUsers
-  , tablePartnerAdmins
   , tableUsersHistory
   , tableCompanyInvites
   , tableFiles
   , tableDocuments
+  , tableAccessControl
   , tableMainFiles
   , tableSignatoryLinks
   , tableAuthorAttachments

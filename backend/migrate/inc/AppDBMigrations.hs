@@ -5,6 +5,7 @@ module AppDBMigrations (
 import Control.Monad.Catch
 import Log
 
+import AccessControl.Migrations
 import Amazon.Migrations
 import BrandedDomain.Migrations
 import Chargeable.Migrations
@@ -39,8 +40,8 @@ kontraMigrations = [
     documentSigningJobsUseJson
   , addIsReceiptToDocument
   , createTablePartners
-  , companiesAddPartnerID
   , createTablePartnerAdmins
+  , companiesAddPartnerID
   , addAllowsHighlightingToSignatories
   , createHighlightedPagesTable
   , normalizeCheckboxesSize
@@ -158,4 +159,8 @@ kontraMigrations = [
   , dropAmazonUploadConsumers
   , removeAmazonUploadJob
   , addTemplateInfoToDocuments
+  , createTableAccessControl
+  , migratePartnerAdmins
+  , dropPartnerAdmins
+  , accesscontrolBumpVersionAfterDropingPartnerAdmins
   ]

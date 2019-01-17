@@ -2,6 +2,7 @@ module Partner.Migrations (
   createTablePartners
 , createTablePartnerAdmins
 , partnersAddUserGroupID
+, dropPartnerAdmins
 ) where
 
 import Database.PostgreSQL.PQTypes.Checks
@@ -34,7 +35,7 @@ createTablePartners = Migration {
 
 createTablePartnerAdmins :: MonadDB m => Migration m
 createTablePartnerAdmins = Migration {
-    mgrTableName = tblName tablePartnerAdmins
+    mgrTableName = "partner_admins"
   , mgrFrom = 0
   , mgrAction = StandardMigration $ do
       createTable True tblTable {
@@ -65,5 +66,11 @@ partnersAddUserGroupID = Migration {
       , sqlAddFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
       ]
     runQuery_ $ sqlCreateIndex tname $ indexOnColumn "user_group_id"
-
 }
+
+dropPartnerAdmins :: MonadDB m => Migration m
+dropPartnerAdmins = Migration
+  { mgrTableName = "partner_admins"
+  , mgrFrom = 1
+  , mgrAction = DropTableMigration DropTableRestrict
+  }

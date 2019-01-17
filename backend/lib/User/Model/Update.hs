@@ -14,8 +14,6 @@ module User.Model.Update (
   , ConfirmUserTOTPSetup(..)
   , DisableUserTOTP(..)
   , SetUserSettings(..)
-  , MakeUserPartnerAdmin(..)
-  , RemovePartnerAdmin(..)
   ) where
 
 import Control.Monad.Catch
@@ -31,8 +29,6 @@ import Doc.DocStateData (DocumentStatus(..))
 import Doc.Types.Document (DocumentSharing(..), DocumentType(..))
 import Doc.Types.SignatoryField
 import IPAddress
-import Log.Identifier
-import Partner.Model (PartnerID)
 import User.Email
 import User.Lang
 import User.Model.Query
@@ -353,29 +349,3 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateDraftsAndTemplatesWithUse
         sqlWhere "signatory_links.id = signatory_link_fields.signatory_link_id"
         sqlWhereEq "documents.status" Preparation
         sqlWhereEq "signatory_links.user_id" userid
-
--- this is only for testing.
-data MakeUserPartnerAdmin = MakeUserPartnerAdmin UserID UserGroupID
-instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m MakeUserPartnerAdmin Bool where
-  update (MakeUserPartnerAdmin uid ugid) = do
-    -- guard that the user is member of that "partner" user group
-    user_ug <- dbQuery . UserGroupGetByUserID $ uid
-    case (ugid == get ugID user_ug) of
-      False -> do
-        logAttention "User is not member of this usergroup" $ object [
-              identifier uid
-            , identifier ugid
-            ]
-        return False
-      True ->
-        runQuery01 . sqlInsert "partner_admins" $ do
-          sqlSet "user_id" uid
-          sqlSet "partner_id" ugid
-
--- this is only for testing.
-data RemovePartnerAdmin = RemovePartnerAdmin UserID PartnerID
-instance (MonadDB m, MonadThrow m) => DBUpdate m RemovePartnerAdmin Bool where
-  update (RemovePartnerAdmin uid pid) = do
-    runQuery01 . sqlDelete "partner_admins" $ do
-      sqlWhere ("user_id =" <?> uid)
-      sqlWhere ("partner_id =" <?> pid)
