@@ -19,13 +19,16 @@ import Doc.DocumentID
 -- invalidated.
 
 class MonadDB m => DocumentMonad m where
-  -- | Retrieve the document from the cache, or from the database if necessary.
+  -- | Retrieve the document from the cache, or from the database if
+  -- necessary.
   theDocument :: m Document
   -- | Return the document's ID.
   theDocumentID :: m DocumentID
-  -- | Perform an operation that modifies the document in the database, given the document.
+  -- | Perform an operation that modifies the document in the
+  -- database, given the document.
   updateDocument :: (Document -> m a) -> m a
-  -- | Perform an operation that modifies the document in the database, given the document's ID
+  -- | Perform an operation that modifies the document in the
+  -- database, given the document's ID.
   updateDocumentWithID :: (DocumentID -> m a) -> m a
 
 -- | Generic, overlapping instance.

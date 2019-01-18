@@ -85,11 +85,11 @@ partnerApiCallV1CompanyCreate ptOrUgID = do
               . dbQuery . UserGroupGetWithParents . get ugID $ ug'
             Created <$> return (unjsonUserGroupForUpdate, userGroupToUserGroupForUpdate ugwp)
 
-partnerApiCallV1CompanyUpdate :: ( MonadCatch m
-                                 , Kontrakcja m )
-                              => Int64
-                              -> UserGroupID
-                              -> m Response
+partnerApiCallV1CompanyUpdate
+  :: ( MonadCatch m, Kontrakcja m )
+  => Int64
+  -> UserGroupID
+  -> m Response
 partnerApiCallV1CompanyUpdate ptOrUgID ugid = do
   (mPartnerID, partnerUsrGrpID) <- resolveUserGroupID ptOrUgID
   logPartnerAndUserGroup mPartnerID partnerUsrGrpID ugid . api $ do
@@ -321,12 +321,14 @@ apiAccessControl accessPolicy err ma = do
   roles <- dbQuery . GetUserRoles $ apiuser
   accessControl roles accessPolicy err ma
 
-resolveUserGroupID :: Kontrakcja m
-                   => Int64
-                   -- ^ Argument to be checked whether it is a `PartnerID` or a `UserGroupID`
-                   -> m (Maybe PartnerID, UserGroupID)
-                   -- ^ If the original argument is a PartnerID return this along with the
-                   -- `UserGroupID` (mostly for logging purposes).
+resolveUserGroupID
+  :: Kontrakcja m
+  -- | Argument to be checked whether it is a 'PartnerID' or a
+  -- 'UserGroupID'.
+  => Int64
+  -- | If the original argument is a @PartnerID@, return this along with
+  -- the `UserGroupID` (mostly for logging purposes).
+  -> m (Maybe PartnerID, UserGroupID)
 resolveUserGroupID k = do
   (ePartner :: Either SomeException Partner) <- do
     try . dbQuery . GetPartnerByID . unsafePartnerID $ k

@@ -227,8 +227,8 @@ unsonTipSide = unjsonEnumBy "TipSide" [
     , (RightTip, "right")
     ]
 
--- Signatory fields value reading for signing. We need a dedicated datatype that will hold values that will be stored in files later
-
+-- | Signatory fields value reading for signing. We need a dedicated
+-- data type that will hold values that will be stored in files later.
 data SignatoryFieldTMPValue = StringFTV String
   | BoolFTV Bool
   | FileFTV BS.ByteString
