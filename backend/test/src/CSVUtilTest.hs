@@ -26,7 +26,7 @@ csvUtilTests _ = testGroup "CSVUtil"
 
 testCSVFile :: String -> Assertion
 testCSVFile = assertMatchesLinux
-  
+
 assertMatchesLinux :: String -> Assertion
 assertMatchesLinux file = do
   linuxcsv <- getLinuxCSV
