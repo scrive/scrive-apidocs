@@ -8,9 +8,12 @@ import qualified Doc.EvidenceAttachments as E
 
 evidenceAttachmentsTest :: TestEnvSt -> Test
 evidenceAttachmentsTest env = testGroup "EvidenceAttachments"
-  [ testThat "Sealed file has evidence attachments (version 1)" env sealedFileHasEvidenceAttachmentsVersion1
-  , testThat "Sealed file has evidence attachments (version 2)" env sealedFileHasEvidenceAttachmentsVersion2
-  , testThat "Sealed file has evidence attachments (version 3)" env sealedFileHasEvidenceAttachmentsVersion3
+  [ testThat "Sealed file has evidence attachments (version 1)" env
+    sealedFileHasEvidenceAttachmentsVersion1
+  , testThat "Sealed file has evidence attachments (version 2)" env
+    sealedFileHasEvidenceAttachmentsVersion2
+  , testThat "Sealed file has evidence attachments (version 3)" env
+    sealedFileHasEvidenceAttachmentsVersion3
   ]
 
 sealedFileHasEvidenceAttachmentsVersion1 :: TestEnv ()

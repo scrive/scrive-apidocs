@@ -24,18 +24,34 @@ import User.Lang (defaultLang)
 
 apiV2JSONTests :: TestEnvSt -> Test
 apiV2JSONTests env = testGroup "DocAPIV2JSON"
-  [ testThat "Test API v2 'new' and 'get' call response structure" env testDocNewGet
-  , testThat "Test API v2 'new', 'update' and 'newfromtemplate' call response structure" env testDocNewFromTemplate
-  , testThat "Test API v2 'new' and 'start' call response structure" env testDocNewAndStart
-  , testThat "Test API v2 'new', 'update' and 'start' call with metadata on some fields" env testDocNewAndStartWithMetadataInFields
-  , testThat "Test API v2 'update' with single empty signatory object" env testDocUpdateEmptySignatory
-  , testThat "Test API v2 'update' with new empty signatory object" env testDocUpdateNewSignatory
-  , testThat "Test API v2 'update' changing all non read-only fields" env testDocUpdateAll
-  , testThat "Test API v2 'update' with invalid radiogroup definition in json fails" env testDocUpdateInvalidRadioGroup
-  , testThat "Test API v2 'update' with new signatory and empty fields" env testDocUpdateNewFields
-  , testThat "Test API v2 'setfile'" env testDocSetFile
-  , testThat "Test API v2 'list' response structure" env testDocList
-  , testThat "Test API v2 'removepages' with placements on many diffferent pages" env testDocRemovePages
+  [ testThat "Test API v2 'new' and 'get' call response structure"
+    env testDocNewGet
+  , testThat "Test API v2 'new', 'update' and 'newfromtemplate' \
+             \call response structure"
+    env testDocNewFromTemplate
+  , testThat "Test API v2 'new' and 'start' call response structure"
+    env testDocNewAndStart
+  , testThat "Test API v2 'new', 'update' and 'start' call \
+             \with metadata on some fields"
+    env testDocNewAndStartWithMetadataInFields
+  , testThat "Test API v2 'update' with single empty signatory object"
+    env testDocUpdateEmptySignatory
+  , testThat "Test API v2 'update' with new empty signatory object"
+    env testDocUpdateNewSignatory
+  , testThat "Test API v2 'update' changing all non read-only fields"
+    env testDocUpdateAll
+  , testThat "Test API v2 'update' with invalid radiogroup definition \
+             \in json fails"
+    env testDocUpdateInvalidRadioGroup
+  , testThat "Test API v2 'update' with new signatory and empty fields"
+    env testDocUpdateNewFields
+  , testThat "Test API v2 'setfile'"
+    env testDocSetFile
+  , testThat "Test API v2 'list' response structure"
+    env testDocList
+  , testThat "Test API v2 'removepages' with placements \
+             \on many diffferent pages"
+    env testDocRemovePages
   ]
 
 testJSONCtx :: TestEnv Context
