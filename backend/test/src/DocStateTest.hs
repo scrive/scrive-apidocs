@@ -9,7 +9,6 @@ import Data.Text (unpack)
 import Log
 import Test.Framework
 import Test.QuickCheck
-import qualified Data.ByteString as BS
 import qualified Data.Label.Base as FCP
 import qualified Data.Label.Partial as FCP
 import qualified Data.Set as S
@@ -426,14 +425,16 @@ testRestartDocumentKeepsHidePN = do
 getScreenshots :: TestEnv SignatoryScreenshots.SignatoryScreenshots
 getScreenshots = do
   now <- currentTime
-  first_ <- liftIO $ BS.readFile $ inTestDir "screenshots/s1.jpg"
-  signing <- liftIO $ BS.readFile $ inTestDir "screenshots/s2.jpg"
-  let mkss i = Just $ Screenshot.Screenshot{ Screenshot.time = now
-                                           , Screenshot.image = i
-                                           }
-  return $ SignatoryScreenshots.emptySignatoryScreenshots{ SignatoryScreenshots.first = mkss first_
-                                     , SignatoryScreenshots.signing = mkss signing
-                                     }
+  first_  <- readTestFileAsBS "screenshots/s1.jpg"
+  signing <- readTestFileAsBS "screenshots/s2.jpg"
+  let mkss i = Just $ Screenshot.Screenshot
+        { Screenshot.time  = now
+        , Screenshot.image = i
+        }
+  return $ SignatoryScreenshots.emptySignatoryScreenshots
+    { SignatoryScreenshots.first = mkss first_
+    , SignatoryScreenshots.signing = mkss signing
+    }
 
 testSignDocumentEvidenceLog :: TestEnv ()
 testSignDocumentEvidenceLog = do

@@ -1,12 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Partner.APITest (partnerAPITests) where
 
-import Control.Monad.IO.Class
 import Data.Aeson
 import Data.Int (Int64)
 import Happstack.Server
 import Test.Framework
-import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString.Lazy.UTF8 as BS
 import qualified Data.HashMap.Strict as H
 import qualified Data.Text as T
@@ -57,7 +55,7 @@ partnerAPITests env = testGroup "PartnerAPI"
 
 testPartnerCompanyCreate :: TestEnv ()
 testPartnerCompanyCreate = do
-  newCompanyJSON <- liftIO . B.readFile . inTestDir $
+  newCompanyJSON <- readTestFile
                     "json/partner_api_v1/param-partnerCompanyCreate.json"
   let rq_newCompany_params  = [ ("json", inTextBS newCompanyJSON) ]
       rq_newCompany_resp_fp = inTestDir
@@ -133,7 +131,7 @@ testPartnerCompanyCreate = do
 testPartnerCompanyUpdate :: TestEnv ()
 testPartnerCompanyUpdate = do
   companyUpdateJSON <-
-    liftIO . B.readFile . inTestDir $
+    readTestFile
     "json/partner_api_v1/param-partnerCompanyUpdate.json"
   let rq_companyUpdate_params  = [ ("json", inTextBS companyUpdateJSON) ]
       rq_companyUpdate_resp_fp =
@@ -206,7 +204,7 @@ testPartnerCompanyUpdate = do
 
 testPartnerCompanyPartialUpdate :: TestEnv ()
 testPartnerCompanyPartialUpdate = do
-  companyUpdateJSON <- liftIO . B.readFile . inTestDir $
+  companyUpdateJSON <- readTestFile
                        "json/partner_api_v1/param-partnerCompanyPartialUpdate.json"
   let rq_companyUpdate_params  = [ ("json", inTextBS companyUpdateJSON) ]
       rq_companyUpdate_resp_fp = inTestDir
@@ -222,7 +220,7 @@ testPartnerCompanyPartialUpdate = do
 
 testPartnerCompanyIdUpdate :: TestEnv ()
 testPartnerCompanyIdUpdate = do
-  companyUpdateJSON <- liftIO . B.readFile . inTestDir $
+  companyUpdateJSON <- readTestFile
     "json/partner_api_v1/param-partnerCompanyIdUpdate.json"
   let rq_companyUpdate_params  = [ ("json", inTextBS companyUpdateJSON) ]
       rq_companyUpdate_resp_fp = inTestDir
@@ -376,7 +374,7 @@ testPartnerCompanyUserNew = do
   (ctx,pid,cid) <- testHelperPartnerCompanyCreate
 
   -- Normal user creation should work
-  newUserGoodJSON <- liftIO . B.readFile . inTestDir $
+  newUserGoodJSON <- readTestFile $
                      "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
   let rq_newUserGood_params  = [ ("json", inTextBS newUserGoodJSON) ]
       rq_newUserGood_resp_fp = inTestDir
@@ -387,7 +385,7 @@ testPartnerCompanyUserNew = do
 
   -- If Terms of Service have not been agreed to, then we should not create a user
   newUserBadToSJSON <-
-    liftIO . B.readFile . inTestDir $
+    readTestFile
     "json/partner_api_v1/param-partnerCompanyUserNew-no-tos.json"
   rq_newUserBadToS_params <-
     mkRequestWithHeaders POST
@@ -406,7 +404,7 @@ testPartnerCompanyUserNew = do
   {- test role combinations; use the first user and partner structure generated -}
   let (Just uid) = userid <$> get ctxmaybeuser ctx
   -- cannot reuse old user email
-  newUserGoodJSON' <- liftIO . B.readFile . inTestDir $
+  newUserGoodJSON' <- readTestFile
                       "json/partner_api_v1/param-partnerCompanyUserNew-good3.json"
   let rq_newUserGood_params' = [ ("json", inTextBS newUserGoodJSON') ]
 
@@ -420,7 +418,7 @@ testPartnerCompanyUserNew = do
            rq_newUserGood_params'
            201
 
-  newUserGoodJSON'' <- liftIO . B.readFile . inTestDir $
+  newUserGoodJSON'' <- readTestFile
                        "json/partner_api_v1/param-partnerCompanyUserNew-good4.json"
   let rq_newUserGood_params'' = [ ("json", inTextBS newUserGoodJSON'') ]
 
@@ -436,7 +434,7 @@ testPartnerCompanyUserNew = do
            403
 
   newUserGoodJSON''' <-
-    liftIO . B.readFile . inTestDir $
+    readTestFile
     "json/partner_api_v1/param-partnerCompanyUserNew-good5.json"
   let rq_newUserGood_params''' = [ ("json", inTextBS newUserGoodJSON''') ]
 
@@ -458,7 +456,7 @@ testPartnerUserUpdate = do
   (ctx,pid,uid) <- testHelperPartnerUserCreate
 
   -- Normal user update should work
-  updateUserJSON <- liftIO . B.readFile . inTestDir $
+  updateUserJSON <- readTestFile
                     "json/partner_api_v1/param-partnerUserUpdate-good.json"
   let rq_updateUser_params  = [ ("json", inTextBS updateUserJSON) ]
       rq_UpdateUser_resp_fp =
@@ -468,7 +466,7 @@ testPartnerUserUpdate = do
     rq_updateUser_params 200 rq_UpdateUser_resp_fp
 
   -- Updating has_accepted_tos should not work
-  updateUserNoToSJSON <- liftIO . B.readFile . inTestDir $
+  updateUserNoToSJSON <- readTestFile
                          "json/partner_api_v1/param-partnerUserUpdate-no-tos.json"
   rq_tos <- mkRequestWithHeaders POST [ ("json", inTextBS updateUserNoToSJSON) ] []
   (tosResult,_) <- runTestKontra rq_tos ctx $
@@ -517,7 +515,7 @@ testPartnerUserUpdateEmailToExisting = do
   (ctx,pid,cid) <- testHelperPartnerCompanyCreate
 
   -- Normal user creation should work
-  newUserGood1JSON <- liftIO . B.readFile . inTestDir $
+  newUserGood1JSON <- readTestFile
                       "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
   let rq_newUserGood1_params  = [ ("json", inTextBS newUserGood1JSON) ]
       rq_newUserGood1_resp_fp =
@@ -527,7 +525,7 @@ testPartnerUserUpdateEmailToExisting = do
     rq_newUserGood1_params 201 rq_newUserGood1_resp_fp
 
   -- Normal creation of another user should work
-  newUserGood2JSON <- liftIO . B.readFile . inTestDir $
+  newUserGood2JSON <- readTestFile
                       "json/partner_api_v1/param-partnerCompanyUserNew-good2.json"
   let rq_newUserGood2_params  = [ ("json", inTextBS newUserGood2JSON) ]
       rq_newUserGood2_resp_fp =
@@ -541,7 +539,7 @@ testPartnerUserUpdateEmailToExisting = do
 
   -- When user with email already exists, we must not modify email
   updateToExistingEmailJSON <-
-    liftIO . B.readFile . inTestDir $
+    readTestFile
     "json/partner_api_v1/param-partnerUserEmailUpdate.json"
   rq_updateToExistingEmail_params <-
     mkRequestWithHeaders POST
@@ -558,7 +556,7 @@ testPartnerUserPartialUpdate = do
   (ctx,pid,uid) <- testHelperPartnerUserCreate
 
   -- Normal user update should work
-  updateUserJSON <- liftIO . B.readFile . inTestDir $
+  updateUserJSON <- readTestFile
                     "json/partner_api_v1/param-partnerUserPartialUpdate-good.json"
   let rq_updateUser_params = [ ("json", inTextBS updateUserJSON) ]
       rq_UpdateUser_resp_fp =
@@ -575,7 +573,7 @@ testPartnerUserIdUpdate = do
   (ctx,pid,uid) <- testHelperPartnerUserCreate
 
   -- Normal user update should work
-  updateUserJSON <- liftIO . B.readFile . inTestDir $
+  updateUserJSON <- readTestFile
                     "json/partner_api_v1/param-partnerUserIdUpdate.json"
   let rq_updateUser_params  = [ ("json", inTextBS updateUserJSON) ]
       rq_UpdateUser_resp_fp = inTestDir
@@ -762,7 +760,7 @@ testPartnersUserGetTokens = do
 testHelperPartnerCompanyCreate :: TestEnv (Context, UserGroupID, UserGroupID)
 testHelperPartnerCompanyCreate = do
   (ctx, partnerUgID) <- testJSONCtxWithPartnerGroupID
-  newCompanyJSON <- liftIO . B.readFile . inTestDir $
+  newCompanyJSON <- readTestFile
                     "json/partner_api_v1/param-partnerCompanyCreate.json"
   let rq_newCompany_params  = [ ("json", inTextBS newCompanyJSON) ]
       rq_newCompany_resp_fp = inTestDir
@@ -783,7 +781,7 @@ testHelperPartnerUserCreate = do
 testHelperPartnerCompanyUserCreate
   :: Context -> Int64 -> UserGroupID -> TestEnv UserID
 testHelperPartnerCompanyUserCreate ctx pid company_ugid = do
-  newUserGoodJSON <- liftIO . B.readFile . inTestDir $
+  newUserGoodJSON <- readTestFile
                      "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
   let rq_newUserGood_params  = [ ("json", inTextBS newUserGoodJSON) ]
       rq_newUserGood_resp_fp = inTestDir

@@ -2,7 +2,6 @@ module ArchiveTest (archiveTests) where
 
 -- import Control.Monad
 
-import Control.Monad.Trans
 import Data.String.Utils (replace)
 import Happstack.Server
 import Test.Framework
@@ -26,7 +25,7 @@ archiveTests env = testGroup "Archive" $
 
 testListDocs :: TestEnv ()
 testListDocs = do
-  cont <- liftIO $ readFile $ inTestDir "json/document1.json"
+  cont        <- readTestFileAsStr "json/document1.json"
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
 
   -- send a doc as author
@@ -35,7 +34,7 @@ testListDocs = do
                        , ("file", inFile $ inTestDir "pdfs/simple.pdf")]
   void $ runTestKontra req ctx $ apiCallV1CreateFromFile
   doc:_ <- randomQuery $ GetDocumentsByAuthor (userid user)
-  req' <- mkRequest POST [("json", inText cont)]
+  req'  <- mkRequest POST [("json", inText cont)]
   void $ runTestKontra req' ctx $ apiCallV1Update $ documentid doc
   req'' <- mkRequest POST []
   void $ runTestKontra req'' ctx $ apiCallV1Ready $ documentid doc

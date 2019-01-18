@@ -2,6 +2,9 @@
 module TestKontra (
       KontraTest
     , inTestDir
+    , readTestFile
+    , readTestFileAsBS
+    , readTestFileAsStr
     , TestEnv(..)
     , module TestEnvSt
     , runTestEnv
@@ -43,6 +46,8 @@ import System.FilePath
 import Text.StringTemplates.Templates
 import qualified Control.Exception.Lifted as E
 import qualified Control.Monad.State.Strict as State
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Map as M
@@ -68,6 +73,16 @@ import User.Lang
 
 inTestDir :: FilePath -> FilePath
 inTestDir = ("backend/test" </>)
+
+readTestFile :: MonadIO m => FilePath -> m BSL.ByteString
+readTestFile = liftIO . BSL.readFile . inTestDir
+
+readTestFileAsBS :: MonadIO m => FilePath -> m BS.ByteString
+readTestFileAsBS = liftIO . BS.readFile . inTestDir
+
+readTestFileAsStr :: MonadIO m => FilePath -> m String
+readTestFileAsStr = liftIO . readFile . inTestDir
+
 
 type KontraTest = KontraG TestFileStorageT
 

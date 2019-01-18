@@ -1,10 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Doc.API.V1.ForwardsCompatibilityTest (apiV1ForwardsCompatibilityTests) where
 
-import Control.Monad.IO.Class
 import Happstack.Server
 import Test.Framework
-import qualified Data.ByteString.Lazy as B
 
 import Doc.API.V1.Calls
 import Doc.API.V2.Calls
@@ -25,7 +23,7 @@ testApiV1DoesNotBreakApiV2 = do
   let rq_new_params = [ ("file", inFile $ inTestDir "pdfs/simple.pdf") ]
   (did,_) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFP_new_file_saved
 
-  updateAllBS <- liftIO $ B.readFile $ inTestDir "json/api_v1/forwards_comp_req_update_all.json"
+  updateAllBS <- readTestFile "json/api_v1/forwards_comp_req_update_all.json"
   let rq_update_params = [ ("document", inTextBS updateAllBS) ]
       rq_update_json = inTestDir "json/api_v1/forwards_comp_res_update_all.json"
   void $ runApiJSONTest ctx POST (docApiV2Update did) rq_update_params 200 rq_update_json

@@ -6,12 +6,10 @@ module Doc.API.V2.JSONTest (
 , testJSONCtx
 ) where
 
-import Control.Monad.IO.Class
 import Data.Aeson
 import Data.Text (unpack)
 import Happstack.Server
 import Test.Framework
-import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString.Lazy.UTF8 as BS
 import qualified Data.HashMap.Strict as H
 
@@ -148,7 +146,7 @@ testDocNewAndStartWithMetadataInFields = do
   ctx <- testJSONCtx
   let rq_new_params = [ ("file", inFile $ inTestDir "pdfs/simple.pdf") ]
   (did,_) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFP_new_file_saved
-  documentWithMetaInFields <- liftIO $ B.readFile $ inTestDir "json/api_v2/param-update-with-metatata-in-fields.json"
+  documentWithMetaInFields <- readTestFile "json/api_v2/param-update-with-metatata-in-fields.json"
   req <- mkRequestWithHeaders POST [ ("document", inTextBS documentWithMetaInFields) ] []
   (_,_) <- runTestKontra req ctx $ docApiV2Update did
   void $ runApiJSONTest ctx POST (docApiV2Start did) [] 200 $ inTestDir "json/api_v2/test-DocStartedWithMetadataInFields.json"
@@ -161,7 +159,7 @@ testDocUpdateEmptySignatory = do
   let rq_new_params = [ ("file", inFile $ inTestDir "pdfs/simple.pdf") ]
   (did,_) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFP_new_file_saved
 
-  update1SigBS <- liftIO $ B.readFile $ inTestDir "json/api_v2/param-update-1emptysig.json"
+  update1SigBS <- readTestFile "json/api_v2/param-update-1emptysig.json"
   let rq_update_params = [ ("document", inTextBS update1SigBS) ]
       rq_update_json = inTestDir "json/api_v2/test-DocUpdateEmptySignatory.json"
   void $ runApiJSONTest ctx POST (docApiV2Update did) rq_update_params 200 rq_update_json
@@ -174,7 +172,7 @@ testDocUpdateNewSignatory = do
   let rq_new_params = [ ("file", inFile $ inTestDir "pdfs/simple.pdf") ]
   (did,_) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFP_new_file_saved
 
-  update2SigBS <- liftIO $ B.readFile $ inTestDir "json/api_v2/param-update-2emptysig.json"
+  update2SigBS <- readTestFile "json/api_v2/param-update-2emptysig.json"
   let rq_update_params = [ ("document", inTextBS update2SigBS) ]
       rq_update_json = inTestDir "json/api_v2/test-DocUpdateNewSignatory.json"
   void $ runApiJSONTest ctx POST (docApiV2Update did) rq_update_params 200 rq_update_json
@@ -187,7 +185,7 @@ testDocUpdateAll = do
   let rq_new_params = [ ("file", inFile $ inTestDir "pdfs/simple.pdf") ]
   (did,_) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFP_new_file_saved
 
-  updateAllBS <- liftIO $ B.readFile $ inTestDir "json/api_v2/param-update-all.json"
+  updateAllBS <- readTestFile "json/api_v2/param-update-all.json"
   let rq_update_params = [ ("document", inTextBS updateAllBS) ]
       rq_update_json = inTestDir "json/api_v2/test-DocUpdateAll.json"
   void $ runApiJSONTest ctx POST (docApiV2Update did) rq_update_params 200 rq_update_json
@@ -200,11 +198,11 @@ testDocUpdateInvalidRadioGroup = do
   let rq_new_params = [ ("file", inFile $ inTestDir "pdfs/simple.pdf") ]
   (did,_) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFP_new_file_saved
 
-  updateAllBS1 <- liftIO $ B.readFile $ inTestDir "json/api_v2/param-update-invalid-radiogroup-1.json"
+  updateAllBS1 <- readTestFile "json/api_v2/param-update-invalid-radiogroup-1.json"
   let rq_update_params1 = [ ("document", inTextBS updateAllBS1) ]
   runApiTest ctx POST (docApiV2Update did) rq_update_params1 400
 
-  updateAllBS2 <- liftIO $ B.readFile $ inTestDir "json/api_v2/param-update-invalid-radiogroup-2.json"
+  updateAllBS2 <- readTestFile "json/api_v2/param-update-invalid-radiogroup-2.json"
   let rq_update_params2 = [ ("document", inTextBS updateAllBS2) ]
   runApiTest ctx POST (docApiV2Update did) rq_update_params2 400
 
@@ -217,7 +215,7 @@ testDocUpdateNewFields = do
   let rq_new_params = [ ("file", inFile $ inTestDir "pdfs/simple.pdf") ]
   (did,_) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 jsonFP_new_file_saved
 
-  updateNewFieldsBS <- liftIO $ B.readFile $ inTestDir "json/api_v2/param-update-fields.json"
+  updateNewFieldsBS <- readTestFile "json/api_v2/param-update-fields.json"
   let rq_update_params = [ ("document", inTextBS updateNewFieldsBS) ]
       rq_update_json = inTestDir "json/api_v2/test-DocUpdateNewFields.json"
   void $ runApiJSONTest ctx POST (docApiV2Update did) rq_update_params 200 rq_update_json
@@ -269,7 +267,7 @@ testDocList = do
   assertEqual ("We should get a " ++ show 200 ++ " response") 200 (rsCode resFilterPending)
   testJSONWith (inTestDir "json/api_v2/test-DocListEmpty.json") (rsBody resFilterPending)
 
-  allFiltersJSONBS <- liftIO $ B.readFile $ inTestDir "json/api_v2/param-list-all.json"
+  allFiltersJSONBS <- readTestFile "json/api_v2/param-list-all.json"
   let rq_all_filters_param = [ ("filter", inTextBS allFiltersJSONBS) ]
   reqAllFilters <- mkRequestWithHeaders GET rq_all_filters_param []
   (resAllFilters,_) <- runTestKontra reqAllFilters ctx $ docApiV2List
@@ -281,7 +279,7 @@ testDocRemovePages = do
   let rq_new_params = [ ("file", inFile $ inTestDir "pdfs/50page.pdf") ]
   (did,_) <- runApiJSONTest ctx POST docApiV2New rq_new_params 201 (inTestDir "json/api_v2/result-new-50page.json")
 
-  update1SigBS <- liftIO $ B.readFile $ inTestDir "json/api_v2/param-update-removepages.json"
+  update1SigBS <- readTestFile "json/api_v2/param-update-removepages.json"
   let rq_update_params = [ ("document", inTextBS update1SigBS) ]
       rq_update_res_json = inTestDir "json/api_v2/test-DocRemovePagesUpdateResult.json"
   void $ runApiJSONTest ctx POST (docApiV2Update did) rq_update_params 200 rq_update_res_json

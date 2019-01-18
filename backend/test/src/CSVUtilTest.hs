@@ -4,7 +4,6 @@ import System.FilePath
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit (Assertion, assert, assertEqual)
-import qualified Data.ByteString.Lazy as BSL
 
 import TestKontra
 import Util.CSVUtil
@@ -38,7 +37,7 @@ getLinuxCSV = getCSV "linux.csv"
 
 getCSV :: String -> IO [[String]]
 getCSV file = do
-  contents <- BSL.readFile $ inTestDir $ "csv" </> file
+  contents <- readTestFile $ "csv" </> file
   let mresults = parseCSV contents
   case mresults of
     Left err -> do

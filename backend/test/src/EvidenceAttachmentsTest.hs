@@ -1,8 +1,6 @@
 module EvidenceAttachmentsTest (evidenceAttachmentsTest) where
 
-import Control.Monad.Trans
 import Test.Framework (Test, testGroup)
-import qualified Data.ByteString.Char8 as BS
 
 import TestingUtil
 import TestKontra
@@ -17,21 +15,24 @@ evidenceAttachmentsTest env = testGroup "EvidenceAttachments"
 
 sealedFileHasEvidenceAttachmentsVersion1 :: TestEnv ()
 sealedFileHasEvidenceAttachmentsVersion1 = do
-  attachments <- E.extractAttachmentsListFromFileContent =<< liftIO (BS.readFile (inTestDir "pdfs/sealed.pdf"))
+  attachments <- E.extractAttachmentsListFromFileContent
+                 =<< readTestFileAsBS "pdfs/sealed.pdf"
   assertEqual "mismatched evidence attachment names"
     [ "evidenceOfIntent.html", "evidencelog.html", "readme.html", "signatureverification.html" ]
     (sort attachments)
 
 sealedFileHasEvidenceAttachmentsVersion2 :: TestEnv ()
 sealedFileHasEvidenceAttachmentsVersion2 = do
-  attachments <- E.extractAttachmentsListFromFileContent =<< liftIO (BS.readFile (inTestDir "pdfs/sealed-2.pdf"))
+  attachments <- E.extractAttachmentsListFromFileContent
+                 =<< readTestFileAsBS "pdfs/sealed-2.pdf"
   assertEqual "mismatched evidence attachment names"
     [ "DigitalSignatureDocumentation.html", "EvidenceDocumentation.html", "EvidenceLog.html", "EvidenceofIntent.html" ]
     (sort attachments)
 
 sealedFileHasEvidenceAttachmentsVersion3 :: TestEnv ()
 sealedFileHasEvidenceAttachmentsVersion3 = do
-  attachments <- E.extractAttachmentsListFromFileContent =<< liftIO (BS.readFile (inTestDir "pdfs/sealed-3.pdf"))
+  attachments <- E.extractAttachmentsListFromFileContent
+                 =<< readTestFileAsBS "pdfs/sealed-3.pdf"
   assertEqual "mismatched evidence attachment names"
     [ "Appendix 1 Evidence Quality Framework.html"
     , "Appendix 2 Service Description.html"

@@ -1,13 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Doc.API.V1.JSONTest (apiV1JSONTests) where
 
-import Control.Monad.IO.Class
 import Data.Aeson
 import Data.Int
 import Data.Text (Text, unpack)
 import Happstack.Server
 import Test.Framework
-import qualified Data.ByteString.Lazy as B
 import qualified Data.ByteString.Lazy.UTF8 as BS
 import qualified Data.HashMap.Strict as H
 import qualified Data.Vector as V
@@ -162,7 +160,7 @@ testUpdateWithReplacementFields = do
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
   testJSONWith (inTestDir "json/api_v1/test_5_create.json") (rsBody resDoc)
   did <- getDocumentID (rsBody resDoc)
-  jsonFileBS <- liftIO $ B.readFile $ inTestDir "json/api_v1/test_5_update.json"
+  jsonFileBS <- readTestFile "json/api_v1/test_5_update.json"
 
   reqUpdate1 <- mkRequestWithHeaders POST [("json", inTextBS jsonFileBS)] []
   (resUpdate1, _) <- runTestKontra reqUpdate1 ctx $ apiCallV1Update did
@@ -196,7 +194,7 @@ testUpdateWithSubset = do
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
   testJSONWith (inTestDir "json/api_v1/test_6_create.json") (rsBody resDoc)
   did <- getDocumentID (rsBody resDoc)
-  jsonFileBS <- liftIO $ B.readFile $ inTestDir "json/api_v1/test_6_update.json"
+  jsonFileBS <- readTestFile "json/api_v1/test_6_update.json"
 
   reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS jsonFileBS)] []
   (resUpdate, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
@@ -219,7 +217,7 @@ testUpdateWithAllFeatures = do
   testJSONWith (inTestDir "json/api_v1/test_7_create.json") (rsBody resDoc)
   did <- getDocumentID (rsBody resDoc)
 
-  jsonFileBS <- liftIO $ B.readFile $ inTestDir "json/api_v1/test_7_update.json"
+  jsonFileBS <- readTestFile "json/api_v1/test_7_update.json"
 
   reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS jsonFileBS)] []
   (_, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
@@ -334,7 +332,7 @@ testSignWithSignature = do
   testJSONWith (inTestDir "json/api_v1/test_9_create.json") (rsBody resDoc1)
   did <- getDocumentID (rsBody resDoc1)
 
-  jsonFileBS <- liftIO $ B.readFile $ inTestDir "json/api_v1/test_9_update.json"
+  jsonFileBS <- readTestFile "json/api_v1/test_9_update.json"
 
   reqUpdate <- mkRequestWithHeaders POST [("json", inTextBS jsonFileBS)] []
   (resDoc2, _) <- runTestKontra reqUpdate ctx $ apiCallV1Update did
