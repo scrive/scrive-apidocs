@@ -92,7 +92,7 @@ testPartnerCompanyCreate = do
   assertEqual ("We should get a 403 response") 403 (rsCode crossRes1)
   assertEqual ("We should get a 403 response") 403 (rsCode crossRes2)
 
-  {- test role combinations; use the first user and partner structure generated -}
+  -- Test role combinations; use the first user and partner structure generated.
   let (Just uid) = userid <$> get ctxmaybeuser ctx1
 
   -- 1) only a partner admin; should succeed
@@ -165,7 +165,8 @@ testPartnerCompanyUpdate = do
   assertEqual ("We should get a 403 response") 403 (rsCode crossRes2)
   assertEqual ("We should get a 403 response") 403 (rsCode crossRes3)
 
-  {- test role combinations; use the first user and partner structure generated -}
+  -- Test role combinations; use the first user and partner structure
+  -- generated.
   let (Just uid) = userid <$> get ctxmaybeuser ctx
 
   -- 1) user is a partner admin; should succeed
@@ -204,8 +205,8 @@ testPartnerCompanyUpdate = do
 
 testPartnerCompanyPartialUpdate :: TestEnv ()
 testPartnerCompanyPartialUpdate = do
-  companyUpdateJSON <- readTestFile
-                       "json/partner_api_v1/param-partnerCompanyPartialUpdate.json"
+  companyUpdateJSON <-
+    readTestFile "json/partner_api_v1/param-partnerCompanyPartialUpdate.json"
   let rq_companyUpdate_params  = [ ("json", inTextBS companyUpdateJSON) ]
       rq_companyUpdate_resp_fp = inTestDir
         "json/partner_api_v1/resp-partnerCompanyPartialUpdate.json"
@@ -247,7 +248,8 @@ testPartnerCompanyGet = do
 
   -- Random user shouldn't be able to update
   randomUser    <- addNewRandomUser
-  randomCtx     <- (set ctxmaybeuser (Just randomUser)) <$> mkContext defaultLang
+  randomCtx     <- (set ctxmaybeuser (Just randomUser)) <$>
+                   mkContext defaultLang
   randomReq     <- mkRequestWithHeaders POST [] []
   (randomRes,_) <- runTestKontra randomReq randomCtx $
                    partnerApiCallV1CompanyGet (fromUserGroupID pid) cid
@@ -265,7 +267,8 @@ testPartnerCompanyGet = do
   assertEqual ("We should get a 403 response") 403 (rsCode crossRes2)
   assertEqual ("We should get a 403 response") 403 (rsCode crossRes3)
 
-  {- test role combinations; use the first user and partner structure generated -}
+  -- Test role combinations; use the first user and partner structure
+  -- generated.
   let (Just uid) = userid <$> get ctxmaybeuser ctx
 
   -- 1) user is a partner admin; should succeed
@@ -332,7 +335,7 @@ testPartnerCompaniesGet = do
                    partnerApiCallV1CompaniesGet (fromUserGroupID pidA)
   assertEqual ("We should get a 403 response") 403 (rsCode randomRes)
 
-  {- test role combinations; use the first user and partner structure generated -}
+  -- Test role combinations; use the first user and partner structure generated.
   let (Just uid) = userid <$> get ctxmaybeuser ctxA
 
   -- 1) only a partner admin; should succeed
@@ -374,7 +377,7 @@ testPartnerCompanyUserNew = do
   (ctx,pid,cid) <- testHelperPartnerCompanyCreate
 
   -- Normal user creation should work
-  newUserGoodJSON <- readTestFile $
+  newUserGoodJSON <- readTestFile
                      "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
   let rq_newUserGood_params  = [ ("json", inTextBS newUserGoodJSON) ]
       rq_newUserGood_resp_fp = inTestDir
@@ -383,7 +386,8 @@ testPartnerCompanyUserNew = do
     (partnerApiCallV1UserCreate (fromUserGroupID pid) cid)
     rq_newUserGood_params 201 rq_newUserGood_resp_fp
 
-  -- If Terms of Service have not been agreed to, then we should not create a user
+  -- If Terms of Service have not been agreed to, then we should not
+  -- create a user.
   newUserBadToSJSON <-
     readTestFile
     "json/partner_api_v1/param-partnerCompanyUserNew-no-tos.json"
@@ -395,17 +399,19 @@ testPartnerCompanyUserNew = do
   assertEqual ("We should get a 400 response") 400 (rsCode badToSRes)
 
   -- When user with email already exists, we should not create a user
-  rq_newUserAlreadyExists_params <- mkRequestWithHeaders
-                                    POST [ ("json", inTextBS newUserGoodJSON) ] []
+  rq_newUserAlreadyExists_params <-
+    mkRequestWithHeaders
+    POST [ ("json", inTextBS newUserGoodJSON) ] []
   (alreadyExistsRes,_) <- runTestKontra rq_newUserAlreadyExists_params ctx $
                           partnerApiCallV1UserCreate (fromUserGroupID pid) cid
   assertEqual ("We should get a 400 response") 400 (rsCode alreadyExistsRes)
 
-  {- test role combinations; use the first user and partner structure generated -}
+  -- Test role combinations; use the first user and partner structure
+  -- generated.
   let (Just uid) = userid <$> get ctxmaybeuser ctx
   -- cannot reuse old user email
-  newUserGoodJSON' <- readTestFile
-                      "json/partner_api_v1/param-partnerCompanyUserNew-good3.json"
+  newUserGoodJSON' <-
+    readTestFile "json/partner_api_v1/param-partnerCompanyUserNew-good3.json"
   let rq_newUserGood_params' = [ ("json", inTextBS newUserGoodJSON') ]
 
   -- 1) user is a partner admin; should succeed
@@ -418,8 +424,8 @@ testPartnerCompanyUserNew = do
            rq_newUserGood_params'
            201
 
-  newUserGoodJSON'' <- readTestFile
-                       "json/partner_api_v1/param-partnerCompanyUserNew-good4.json"
+  newUserGoodJSON'' <-
+    readTestFile "json/partner_api_v1/param-partnerCompanyUserNew-good4.json"
   let rq_newUserGood_params'' = [ ("json", inTextBS newUserGoodJSON'') ]
 
   -- 2) not a partner admin but a company admin; should fail
@@ -466,14 +472,16 @@ testPartnerUserUpdate = do
     rq_updateUser_params 200 rq_UpdateUser_resp_fp
 
   -- Updating has_accepted_tos should not work
-  updateUserNoToSJSON <- readTestFile
-                         "json/partner_api_v1/param-partnerUserUpdate-no-tos.json"
-  rq_tos <- mkRequestWithHeaders POST [ ("json", inTextBS updateUserNoToSJSON) ] []
+  updateUserNoToSJSON <-
+    readTestFile "json/partner_api_v1/param-partnerUserUpdate-no-tos.json"
+  rq_tos <- mkRequestWithHeaders POST
+            [ ("json", inTextBS updateUserNoToSJSON) ] []
   (tosResult,_) <- runTestKontra rq_tos ctx $
                    partnerApiCallV1UserUpdate (fromUserGroupID pid) uid
   assertEqual ("We should get a 400 response") 400 (rsCode tosResult)
 
-  {- test role combinations; use the first user and partner structure generated -}
+  -- Test role combinations; use the first user and partner structure
+  -- generated.
   let (Just uidAdmin) = userid <$> get ctxmaybeuser ctx
 
   -- 1) user is a partner admin; should succeed
@@ -514,9 +522,9 @@ testPartnerUserUpdateEmailToExisting = do
 
   (ctx,pid,cid) <- testHelperPartnerCompanyCreate
 
-  -- Normal user creation should work
-  newUserGood1JSON <- readTestFile
-                      "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
+  -- Normal user creation should work.
+  newUserGood1JSON <-
+    readTestFile "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
   let rq_newUserGood1_params  = [ ("json", inTextBS newUserGood1JSON) ]
       rq_newUserGood1_resp_fp =
         inTestDir "json/partner_api_v1/resp-partnerCompanyUserNew-good.json"
@@ -524,9 +532,9 @@ testPartnerUserUpdateEmailToExisting = do
     (partnerApiCallV1UserCreate (fromUserGroupID pid) cid)
     rq_newUserGood1_params 201 rq_newUserGood1_resp_fp
 
-  -- Normal creation of another user should work
-  newUserGood2JSON <- readTestFile
-                      "json/partner_api_v1/param-partnerCompanyUserNew-good2.json"
+  -- Normal creation of another user should work.
+  newUserGood2JSON <-
+    readTestFile "json/partner_api_v1/param-partnerCompanyUserNew-good2.json"
   let rq_newUserGood2_params  = [ ("json", inTextBS newUserGood2JSON) ]
       rq_newUserGood2_resp_fp =
         inTestDir "json/partner_api_v1/resp-partnerCompanyUserNew-good2.json"
@@ -556,8 +564,8 @@ testPartnerUserPartialUpdate = do
   (ctx,pid,uid) <- testHelperPartnerUserCreate
 
   -- Normal user update should work
-  updateUserJSON <- readTestFile
-                    "json/partner_api_v1/param-partnerUserPartialUpdate-good.json"
+  updateUserJSON <-
+    readTestFile "json/partner_api_v1/param-partnerUserPartialUpdate-good.json"
   let rq_updateUser_params = [ ("json", inTextBS updateUserJSON) ]
       rq_UpdateUser_resp_fp =
         inTestDir "json/partner_api_v1/resp-partnerUserPartialUpdate-good.json"
@@ -576,8 +584,8 @@ testPartnerUserIdUpdate = do
   updateUserJSON <- readTestFile
                     "json/partner_api_v1/param-partnerUserIdUpdate.json"
   let rq_updateUser_params  = [ ("json", inTextBS updateUserJSON) ]
-      rq_UpdateUser_resp_fp = inTestDir
-                              "json/partner_api_v1/resp-partnerUserIdUpdate.json"
+      rq_UpdateUser_resp_fp =
+        inTestDir "json/partner_api_v1/resp-partnerUserIdUpdate.json"
   void $ runApiJSONTest ctx POST
     (partnerApiCallV1UserUpdate (fromUserGroupID pid) uid)
     rq_updateUser_params 200 rq_UpdateUser_resp_fp
@@ -589,14 +597,15 @@ testPartnerUserGet = do
 
   (ctx,pid,uid) <- testHelperPartnerUserCreate
 
-  -- Normal get user should work
+  -- Normal get user should work.
   let rq_GetUser_resp_fp =
         inTestDir "json/partner_api_v1/param-partnerCompanyUserNew-good.json"
   void $ runApiJSONTest ctx GET
     (partnerApiCallV1UserGet (fromUserGroupID pid) uid)
     [] 200 rq_GetUser_resp_fp
 
-  {- test role combinations; use the first user and partner structure generated -}
+  -- Test role combinations; use the first user and partner structure
+  -- generated.
   let (Just uidAdmin) = userid <$> get ctxmaybeuser ctx
 
   -- 1) only a partner admin; should succeed
@@ -642,13 +651,14 @@ testPartnerCompanyUsersGet = do
   _uid <- testHelperPartnerCompanyUserCreate ctx (fromUserGroupID pid) cid
 
   -- get users of the company should work
-  let rq_GetUsers_resp_fp = inTestDir
-                            "json/partner_api_v1/param-partnerCompanyUsersGet.json"
+  let rq_GetUsers_resp_fp =
+        inTestDir "json/partner_api_v1/param-partnerCompanyUsersGet.json"
   void $ runApiJSONTest ctx GET
     (partnerApiCallV1CompanyUsersGet (fromUserGroupID pid) cid)
     [] 200 rq_GetUsers_resp_fp
 
-  {- test role combinations; use the first user and partner structure generated -}
+  -- Test role combinations; use the first user and partner structure
+  -- generated.
   let (Just uidAdmin) = userid <$> get ctxmaybeuser ctx
 
   -- 1) only a partner admin; should succeed
@@ -713,7 +723,8 @@ testPartnersUserGetTokens = do
   (newDocResp,_) <- runTestKontra docNewReq ctx' $ docApiV2New
   assertEqual "We should get a 201 response" 201 (rsCode newDocResp)
 
-  {- test role combinations; use the first user and partner structure generated -}
+  -- Test role combinations; use the first user and partner structure
+  -- generated.
   let (Just uidAdmin) = userid <$> get ctxmaybeuser ctx
 
   -- 1) only a partner admin; should succeed
@@ -752,9 +763,12 @@ testPartnersUserGetTokens = do
 --------
 -- Utils
 --------
--- * These are copied over from API V2 JSON tests
--- They haven't been changed much and have just been minimally reworked so as to
--- fit the current use case
+
+-- These are copied over from API V2 JSON tests
+--
+-- They haven't been changed much and have just been minimally
+-- reworked so as to fit the current use case.
+--
 -- Will need some love and care...
 
 testHelperPartnerCompanyCreate :: TestEnv (Context, UserGroupID, UserGroupID)
@@ -763,8 +777,8 @@ testHelperPartnerCompanyCreate = do
   newCompanyJSON <- readTestFile
                     "json/partner_api_v1/param-partnerCompanyCreate.json"
   let rq_newCompany_params  = [ ("json", inTextBS newCompanyJSON) ]
-      rq_newCompany_resp_fp = inTestDir
-                              "json/partner_api_v1/resp-partnerCompanyCreate.json"
+      rq_newCompany_resp_fp =
+        inTestDir "json/partner_api_v1/resp-partnerCompanyCreate.json"
   respValue <- runApiJSONTest ctx POST
                (partnerApiCallV1CompanyCreate $ fromUserGroupID partnerUgID)
                rq_newCompany_params 201 rq_newCompany_resp_fp
@@ -775,7 +789,8 @@ testHelperPartnerCompanyCreate = do
 testHelperPartnerUserCreate :: TestEnv (Context, UserGroupID, UserID)
 testHelperPartnerUserCreate = do
   (ctx,pid,company_ugid) <- testHelperPartnerCompanyCreate
-  uid <- testHelperPartnerCompanyUserCreate ctx (fromUserGroupID pid) company_ugid
+  uid <- testHelperPartnerCompanyUserCreate ctx (fromUserGroupID pid)
+         company_ugid
   return (ctx, pid, uid)
 
 testHelperPartnerCompanyUserCreate
@@ -833,10 +848,11 @@ runApiJSONTestNoResChk ctx httpMethod apiCall httpHeaders expectedRsCode = do
   return ()
 
 testJSONWith :: FilePath -> BS.ByteString -> TestEnv ()
-testJSONWith = testJSONWithDynamicKeys [ "id"
-                                       , "accesssecret"
-                                       , "accesstoken"
-                                       , "apisecret"
-                                       , "apitoken"
-                                       , "partner_id"
-                                       ]
+testJSONWith = testJSONWithDynamicKeys
+  [ "id"
+  , "accesssecret"
+  , "accesstoken"
+  , "apisecret"
+  , "apitoken"
+  , "partner_id"
+  ]
