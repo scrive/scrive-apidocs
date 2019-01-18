@@ -22,7 +22,7 @@ var CompanyAdminView = React.createClass({
   render: function () {
     return (
       <TabViewer.TabViewer>
-        <TabViewer.TabViewerTab title="<" url="/adminonly#companyadmin" />
+        <TabViewer.TabViewerTab title="<" url="/adminonly-old#companyadmin" />
         <TabViewer.TabViewerTab
           initial={true}
           hash="details"

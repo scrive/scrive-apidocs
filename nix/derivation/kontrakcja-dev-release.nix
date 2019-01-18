@@ -28,7 +28,16 @@ let
   kontrakcja-frontend = import ./kontrakcja-frontend.nix {
     inherit nixpkgs kontrakcja kontrakcja-src;
   };
+
+  kontrakcja-frontend-elm = import ./kontrakcja-frontend-elm.nix {
+    inherit nixpkgs kontrakcja-src;
+  };
 in
 {
-  inherit kontrakcja kontrakcja-frontend kontrakcja-shake;
+  inherit
+    kontrakcja
+    kontrakcja-frontend
+    kontrakcja-shake
+    kontrakcja-frontend-elm
+  ;
 }

@@ -17,7 +17,7 @@ module.exports = React.createClass({
       };
     },
     userLink : function(d) {
-      return "/adminonly/useradmin/" + d.field("id");
+      return "/adminonly-old/useradmin/" + d.field("id");
     },
     onCreateUserModalClose: function (reload) {
       if (reload === true) {

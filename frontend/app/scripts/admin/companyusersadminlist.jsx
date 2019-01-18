@@ -21,7 +21,7 @@ module.exports = React.createClass({
     },
     accountLink : function(d) {
       if (d.field("id") != "") {
-        return "/adminonly/useradmin/" + d.field("id");
+        return "/adminonly-old/useradmin/" + d.field("id");
       }
     },
     openDeleteInvitationModal : function(d) {

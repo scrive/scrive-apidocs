@@ -1,0 +1,24 @@
+###
+adminElmMain=$doctype()$
+  $htmlopentag()$
+    <head>
+      <title>Scrive AdminOnly</title>
+      <link rel="stylesheet" type="text/css" href="$cdnbaseurl$/adminonly-assets/app-$versioncode$.css"/>
+      $IECompatibilityMetaTag()$
+    </head>
+    <body>
+      <div id="elm-mount" class="container">
+        <div class="row align-items-center justify-content-center">
+          <div class="col-lg-4 col-md-6 col-sm-8 col-10 alert alert-light" role="alert">
+            <h1>Scrive AdminOnly</h1>
+            <p>Loading...</p>
+          </div>
+        </div>
+      </div>
+    </body>
+    <script>
+    window.cdnBaseUrl="$cdnbaseurl$"
+    </script>
+    <script src="$cdnbaseurl$/adminonly-assets/adminonly-elm-$versioncode$.js" crossorigin="anonymous"></script>
+  $htmlclosingtag()$
+####

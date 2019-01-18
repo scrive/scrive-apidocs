@@ -74,7 +74,7 @@ var UserDetailsView = React.createClass({
   },
   onDeleteSuccess: function () {
     window.location.href = (
-      "/adminonly/companyadmin/" + this.props.viewModel.get("companyid") +
+      "/adminonly/companyadmin-old/" + this.props.viewModel.get("companyid") +
       "/#users"
     );
   },

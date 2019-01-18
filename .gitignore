@@ -61,3 +61,8 @@ _build/
 db-docs/
 ghc-pkg.list
 *.log
+
+# Frontend stuff
+frontend-elm/elm-stuff/
+frontend-elm/node_modules/
+frontend-elm/dist/

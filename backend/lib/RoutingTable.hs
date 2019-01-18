@@ -161,7 +161,8 @@ staticRoutes production = choice
   , (dir "salesforce" . dir "integration" . hGet . toK0)
     Salesforce.handleSalesforceIntegration
   , dir "salesforce" $ dir "keys" $ hGet $ toK0 $ Salesforce.getSalesforceKeys
-  , dir "adminonly" $ Administration.adminonlyRoutes
+  , dir "adminonly"     Administration.adminonlyRoutes
+  , dir "adminonly-old" Administration.adminonlyOldRoutes
   , dir "dave" $ Administration.daveRoutes
   , allLangDirs $ dir "unsupported_browser" $ hGet $ toK0 $ unsupportedBrowserPage
   , (allLangDirs . dir "enable-cookies" . dir "enable-cookies.html" . hGetAllowHttp . toK0
@@ -193,6 +194,10 @@ staticRoutes production = choice
   , remainingPath GET
   $   runWebSandboxT (runPlusSandboxT $ serveDirectory DisableBrowsing [] staticDir)
   >>= either return (maybe respond404 return)
+  , dir "adminonly-assets"
+  $ remainingPath GET
+  $ runWebSandboxT (runPlusSandboxT $ serveDirectory DisableBrowsing [] adminElmStaticDir)
+  >>= either return (maybe respond404 return)
 
      -- public services
   , dir "parsecsv" $ hPost $ toK0 $ ServerUtils.handleParseCSV
@@ -215,4 +220,8 @@ staticRoutes production = choice
   , dir "api" $ dir "v2" $ remainingPath GET $ toK0 noAPIV2CallFoundHandler
   , dir "api" $ dir "v2" $ remainingPath POST $ toK0 noAPIV2CallFoundHandler
   ]
-  where staticDir = if (production) then "frontend/dist" else "frontend/app"
+  where
+    staticDir         = if (production) then "frontend/dist" else "frontend/app"
+    adminElmStaticDir = if (production)
+      then "frontend/dist/adminonly-assets"
+      else "frontend-elm/dist/adminonly-assets"

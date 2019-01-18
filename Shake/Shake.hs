@@ -202,7 +202,7 @@ main = do
     -- * Main targets
     "all" ~> need ["server", "frontend"]
     "server" ~> need ["_build/cabal-build"]
-    "frontend" ~> need ["_build/grunt-build"]
+    "frontend" ~> need ["adminonly-elm", "_build/grunt-build"]
 
     "haddock" ~> need ["_build/cabal-haddock.tar.gz"]
     "db-docs" ~> need ["_build" </> "db-docs" </> "kontra.html"]
@@ -696,6 +696,11 @@ frontendBuildRules newBuild = do
     sourceRoot <- askOracle (SourceRoot ())
     need ["_build/npm-install"]
     cmd [Cwd $ sourceRoot </> "frontend"] "grunt" ["clean", gruntNewBuildArg newBuild]
+
+  "adminonly-elm" ~> do
+    sourceRoot <- askOracle (SourceRoot ())
+    Exit _     <- cmd [Cwd $ sourceRoot </> "frontend-elm"] "npm" ["install"]
+    cmd [Cwd $ sourceRoot </> "frontend-elm"] "npm" ["run", "build"]
 
 -- | Frontend test rules
 frontendTestRules :: UseNewBuild -> Rules ()

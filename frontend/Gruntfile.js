@@ -25,6 +25,7 @@ module.exports = function (grunt) {
   var yeomanConfig = {
     app: require("./bower.json").appPath || "app",
     dist: "dist",
+    adminElm: "../frontend-elm",
     kontrakcjaRoot: sourceDir,
     kontrakcjaWorkspace: workspaceDir
   };
@@ -113,6 +114,9 @@ module.exports = function (grunt) {
 
     clean: {
       dist: {
+        options: {
+          force: true
+        },
         files: [
           {
             dot: true,
@@ -120,8 +124,10 @@ module.exports = function (grunt) {
               ".tmp",
               "<%= yeoman.app %>/compiled/",
               "<%= yeoman.app %>/localization/",
+              "<%= yeoman.app %>/adminonly-assets/",
               "<%= yeoman.dist %>/*",
-              "!<%= yeoman.dist %>/.git*"
+              "!<%= yeoman.dist %>/.git*",
+              "<%= yeoman.adminElm %>/dist/*"
             ]
           }
         ]
@@ -164,6 +170,22 @@ module.exports = function (grunt) {
       },
       updateLastBuilt: {
         command: "echo '$(date +%s)' > <%= yeoman.dist %>/LAST_BUILT"
+      },
+      buildAdminElm: {
+        command: "npm run build",
+        options: {
+          execOptions: {
+            cwd: "<%= yeoman.adminElm %>"
+          }
+        }
+      },
+      watchAdminElm: {
+        command: "npm run watch",
+        options: {
+          execOptions: {
+            cwd: "<%= yeoman.adminElm %>"
+          }
+        }
       },
       compileLocalization: {
         // We can't just invoke `../shake.sh localization` because
@@ -208,6 +230,15 @@ module.exports = function (grunt) {
               "pdf/**/*",
               "localization/*.*.js"
             ]
+          },
+          {
+            expand: true,
+            dot: true,
+            cwd: "<%= yeoman.adminElm %>/dist",
+            dest: "<%= yeoman.dist %>",
+            src: [
+              "adminonly-assets/**/*"
+            ]
           }
         ]
       },
@@ -239,7 +270,12 @@ module.exports = function (grunt) {
     concurrent: {
       dist: ["copy:dist", "copy:apiExplorer"],
       watch: {
-        tasks: ["watch", "webpack:allWatch", "webpack:signviewWatch"],
+        tasks: [
+          "watch",
+          "webpack:allWatch",
+          "webpack:signviewWatch",
+          "shell:watchAdminElm"
+        ],
         options: {logConcurrentOutput: true}
       }
     },
@@ -394,6 +430,7 @@ module.exports = function (grunt) {
       "compileGenerateLocalization",
       "compileStyles",
       "buildJs",
+      "shell:buildAdminElm",
       "cssmin:dist",
       "deploybuild:dist",
       "concurrent:dist",
@@ -420,6 +457,7 @@ module.exports = function (grunt) {
       "updateLocalization",
       "compileStyles",
       "buildJs",
+      "shell:buildAdminElm",
       "cssmin:dist",
       "deploybuild:dist",
       "concurrent:dist",

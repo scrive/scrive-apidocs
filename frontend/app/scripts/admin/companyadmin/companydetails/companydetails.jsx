@@ -95,7 +95,7 @@ var CompanyDetailsView = React.createClass({
   },
   onMergeSuccess: function (newCompanyId) {
     FlashMessageAfterReload({type: "success", content: "Merged"});
-    window.location.href = "/adminonly/companyadmin/" + newCompanyId;
+    window.location.href = "/adminonly-old/companyadmin/" + newCompanyId;
   },
   onMergeError: function () {
     new FlashMessage({type: "error", content: "Failed"});

@@ -10,7 +10,9 @@
 -----------------------------------------------------------------------------
 module Administration.AdministrationControl (
             adminonlyRoutes
+          , adminonlyOldRoutes
           , daveRoutes
+          , showAdminMainPage
           , jsonCompanies -- for tests
           , handleCompanyChange -- for tests
           , handleTriggerMigrateFolders -- for tests
@@ -23,7 +25,7 @@ import Data.Int (Int16, Int32)
 import Data.Time (diffUTCTime)
 import Data.Unjson
 import Happstack.Server hiding (dir, https, path, simpleHTTP)
-import Happstack.StaticRouting (Route, choice, dir)
+import Happstack.StaticRouting (Route, choice, dir, remainingPath)
 import Log
 import Text.JSON
 import Text.JSON.Gen hiding (object)
@@ -108,10 +110,10 @@ adminonlyRoutes :: Route (Kontra Response)
 adminonlyRoutes =
   fmap onlySalesOrAdmin
     $ choice
-    $ [ hGet $ toK0 $ showAdminMainPage
+    $ [ hGet $ showAdminElmMainPage
+      , dir "page" $ remainingPath GET showAdminElmMainPage
       , dir "createuser" $ hPost $ toK0 $ handleCreateUser
       , dir "userslist" $ hGet $ toK0 $ jsonUsersList
-      , dir "useradmin" $ hGet $ toK1 $ showAdminUsers
       , dir "useradmin" $ dir "details" $ hGet $ toK1 $ handleUserGetProfile
       , dir "useradmin" $ hPost $ toK1 $ handleUserChange
       , dir "useradmin" $ dir "changepassword" $ hPost $ toK1 $ handleUserPasswordChange
@@ -128,7 +130,6 @@ adminonlyRoutes =
       , (dir "useradmin" . dir "shareablelinkstats" . dir "months" . hGet . toK1)
         $ handleAdminUserShareableLinksStats PartitionByMonth
       , dir "useradmin" $ dir "sendinviteagain" $ hPost $ toK0 $ sendInviteAgain
-      , dir "companyadmin" $ hGet $ toK1 $ showAdminCompany
       , dir "companyadmin" $ dir "details" $ hGet $ toK1 $ handleCompanyGetProfile
       , dir "companyadmin" $ hPost $ toK1 $ handleCompanyChange
       , dir "companyadmin" $ dir "merge" $ hPost $ toK1 $ handleMergeToOtherCompany
@@ -168,6 +169,15 @@ adminonlyRoutes =
       , dir "triggermigratedocuments" $ hGet $ toK1 handleTriggerMigrateDocuments
       ]
 
+adminonlyOldRoutes :: Route (Kontra Response)
+adminonlyOldRoutes =
+  fmap onlySalesOrAdmin
+    $ choice
+    $ [ hGet $ toK0 showAdminMainPage
+      , dir "useradmin" $ hGet $ toK1 $ showAdminUsers
+      , dir "companyadmin" $ hGet $ toK1 $ showAdminCompany
+      ]
+
 daveRoutes :: Route (Kontra Response)
 daveRoutes =
   fmap onlyAdmin
@@ -184,10 +194,18 @@ daveRoutes =
       , dir "randomscreenshot" $ hGet $ toK0 $ randomScreenshotForTest
       ]
 {- | Main page. Redirects users to other admin panels -}
+
 showAdminMainPage :: Kontrakcja m => m String
 showAdminMainPage = onlySalesOrAdmin $ do
   ctx <- getContext
   adminMainPage ctx
+
+{- | Main page. Redirects users to other admin panels -}
+showAdminElmMainPage :: Kontrakcja m => m Response
+showAdminElmMainPage = onlySalesOrAdmin $ do
+  ctx  <- getContext
+  page <- adminElmMainPage ctx
+  simpleHtmlResponse $ T.pack page
 
 {- | Process view for finding a user in basic administration -}
 showAdminUsers :: Kontrakcja m => UserID -> m String

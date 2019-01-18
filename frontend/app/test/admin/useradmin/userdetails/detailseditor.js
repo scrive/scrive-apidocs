@@ -218,7 +218,7 @@ describe("admin/useradmin/userdetails/detailseditor", function () {
     var link = $("a.user-details-company-link", component.getDOMNode());
 
     assert.lengthOf(link, 1);
-    assert.equal(link.attr("href"), "/adminonly/companyadmin/companyid");
+    assert.equal(link.attr("href"), "/adminonly-old/companyadmin/companyid");
     assert.equal(link.text(), "Link to company companyname");
   });
 
