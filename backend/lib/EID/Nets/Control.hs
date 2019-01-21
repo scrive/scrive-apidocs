@@ -57,6 +57,7 @@ import Session.Types
 import Templates
 import Text.XML.Parser
 import User.Lang
+import User.Types.User
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -149,6 +150,12 @@ handleResolve = do
           link <- currentLink
           return $ internalResponse $ LinkExternal $ replace domainUrl (netsTransactionDomain nt) link
         (Just nt, Just art) -> do
+          let mUserId = userid <$> getContextUser ctx
+          logInfo "Information about requested nets authorization before assertion request" $ object [
+              identifier (netsDocumentID nt)
+            , identifier (netsSignatoryID nt)
+            , identifier mUserId
+            ]
           (doc,sl) <- getDocumentAndSignatoryForEIDAuth (netsDocumentID nt) (netsSignatoryID nt)
           certErrorHandler <- mkCertErrorHandler
           debugFunction <- mkDebugFunction
@@ -158,6 +165,12 @@ handleResolve = do
           if ("Success" `T.isInfixOf` assertionStatusCode res)
              then do
                let provider = decodeProvider $ attributeFromAssertion "IDPROVIDER" $ assertionAttributes res
+               logInfo "Information about requested nets authorization after assertion request" $ object [
+                   identifier (netsDocumentID nt)
+                 , identifier (netsSignatoryID nt)
+                 , identifier mUserId
+                 , "provider" .= show provider
+                 ]
                resolve <- case provider of
                  EID.NetsNOBankID -> return handleResolveNetsNOBankID
                  EID.NetsDKNemID  -> return handleResolveNetsDKNemID
@@ -177,7 +190,10 @@ handleResolve = do
                    return $ internalResponseWithFlash flashmessage $ LinkExternal $ netsReturnURL nt
              else do
                logInfo "Checking assertion with Nets failed. Signatory redirected back and should see identify view." $ object [
-                  "assertion_code" .= assertionStatusCode res
+                    "assertion_code"    .= assertionStatusCode res
+                  , identifier (netsDocumentID nt)
+                  , identifier (netsSignatoryID nt)
+                  , identifier mUserId
                  ]
                return $ internalResponse $ LinkExternal $ netsReturnURL nt
         _ -> do
