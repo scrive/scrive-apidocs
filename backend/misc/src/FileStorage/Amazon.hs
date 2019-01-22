@@ -63,31 +63,37 @@ saveContentsToAmazon config url contents = do
       md5_header = [("Content-MD5", (mkMD5 (AWS.obj_data obj)))]
       mkMD5 = BSC.unpack . Base64.encode . MD5.hashlazy
 
+
 getContentsFromAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m)
                       => AmazonConfig -> String -> m BSL.ByteString
-getContentsFromAmazon config url = do
-  let action = s3ActionFromConfig config HTTP.GET url
-  logInfo "Attempting to fetch file from AWS" $ object ["url" .= url]
+getContentsFromAmazon config url = getContentsFromAmazonWithRetry True
+  where
+  getContentsFromAmazonWithRetry willRetry = do
+    let action = s3ActionFromConfig config HTTP.GET url
+    logInfo "Attempting to fetch file from AWS" $ object ["url" .= url]
 
-  startTime  <- liftBase getCurrentTime
-  result     <- liftBase $ AWS.runAction action
-  finishTime <- liftBase getCurrentTime
-  let diff = realToFrac $ diffUTCTime finishTime startTime :: Double
+    startTime  <- liftBase getCurrentTime
+    result     <- liftBase $ AWS.runAction action
+    finishTime <- liftBase getCurrentTime
+    let diff = realToFrac $ diffUTCTime finishTime startTime :: Double
 
-  case result of
-    Right rsp -> do
-      logInfo "Fetching file from AWS succeeded" $ object
-        [ "elapsed_time" .= diff
-        , "url"          .= url
-        ]
-      return $ HTTP.rspBody rsp
-    Left err -> do
-      logAttention "Fetching file from AWS failed" $ object
-        [ "error"        .= show err
-        , "elapsed_time" .= diff
-        , "url"          .= url
-        ]
-      throwM $ FileStorageException $ show err
+    case result of
+      Right rsp -> do
+        logInfo "Fetching file from AWS succeeded" $ object
+          [ "elapsed_time" .= diff
+          , "url"          .= url
+          ]
+        return $ HTTP.rspBody rsp
+      Left err -> do
+        logAttention "Fetching file from AWS failed" $ object
+          [ "error"        .= show err
+          , "elapsed_time" .= diff
+          , "url"          .= url
+          , "will_retry"   .= willRetry
+          ]
+        if (willRetry)
+        then getContentsFromAmazonWithRetry False
+        else throwM $ FileStorageException $ show err
 
 deleteContentsFromAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m)
                          => AmazonConfig -> String -> m ()
