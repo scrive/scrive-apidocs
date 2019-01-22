@@ -5,20 +5,10 @@ type: object
 description: |
 properties:
   apitoken:
-    type: object
-    properties:
-      atID:
-        type: integer
-      atToken:
-        type: integer
+    type: string
   apisecret:
-    type: integer
+    type: string
   accesstoken:
-    type: object
-    properties:
-      atID:
-        type: integer
-      atToken:
-        type: integer
+    type: string
   accesssecret:
-    type: integer
+    type: string
