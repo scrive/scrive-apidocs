@@ -74,8 +74,8 @@ migratePartnerAdmins = Migration
                   \ON p.id = pa.partner_id"
   }
 
-accesscontrolBumpVersionAfterDropingPartnerAdmins :: MonadDB m => Migration m
-accesscontrolBumpVersionAfterDropingPartnerAdmins = Migration {
+accesscontrolBumpVersionAfterDroppingPartnerAdmins :: MonadDB m => Migration m
+accesscontrolBumpVersionAfterDroppingPartnerAdmins = Migration {
     mgrTableName = tblName tableAccessControl
   , mgrFrom = 2
   , mgrAction = StandardMigration $ return ()

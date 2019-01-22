@@ -133,8 +133,8 @@ userGroupsAdjustIDSequence = Migration {
 
   }
 
-usergroupsBumpVersionAfterDropingCompanies :: MonadDB m => Migration m
-usergroupsBumpVersionAfterDropingCompanies = Migration {
+usergroupsBumpVersionAfterDroppingCompanies :: MonadDB m => Migration m
+usergroupsBumpVersionAfterDroppingCompanies = Migration {
     mgrTableName = tblName tableUserGroups
   , mgrFrom = 2
   , mgrAction = StandardMigration $ return ()

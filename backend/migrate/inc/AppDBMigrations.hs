@@ -131,7 +131,7 @@ kontraMigrations = [
   , usersDropCompanyID
   , companyUIsDropTable
   , companiesDropTable
-  , usergroupsBumpVersionAfterDropingCompanies
+  , usergroupsBumpVersionAfterDroppingCompanies
   , actuallyDeletePreviouslyDeletedUser
   , usergroupsAddDeleted
   , addAttachmentsPurgeJob
@@ -162,5 +162,5 @@ kontraMigrations = [
   , createTableAccessControl
   , migratePartnerAdmins
   , dropPartnerAdmins
-  , accesscontrolBumpVersionAfterDropingPartnerAdmins
+  , accesscontrolBumpVersionAfterDroppingPartnerAdmins
   ]
