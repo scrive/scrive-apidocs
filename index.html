@@ -426,6 +426,30 @@
             <a href="#user-2" class="toc-h1 toc-link" data-title="user">User</a>
               <ul class="toc-list-h2">
                   <li>
+                    <a href="#login-and-get-session" class="toc-h2 toc-link" data-title="login-and-get-session">Login and get session</a>
+                  </li>
+                  <li>
+                    <a href="#setup-2fa" class="toc-h2 toc-link" data-title="setup-2fa">Setup 2FA</a>
+                  </li>
+                  <li>
+                    <a href="#confirm-2fa" class="toc-h2 toc-link" data-title="confirm-2fa">Confirm 2FA</a>
+                  </li>
+                  <li>
+                    <a href="#disable-2fa" class="toc-h2 toc-link" data-title="disable-2fa">Disable 2FA</a>
+                  </li>
+                  <li>
+                    <a href="#is-user-deletable" class="toc-h2 toc-link" data-title="is-user-deletable">Is user deletable?</a>
+                  </li>
+                  <li>
+                    <a href="#delete-user" class="toc-h2 toc-link" data-title="delete-user">Delete user</a>
+                  </li>
+                  <li>
+                    <a href="#get-data-retention-policies" class="toc-h2 toc-link" data-title="get-data-retention-policies">Get data retention policies</a>
+                  </li>
+                  <li>
+                    <a href="#set-data-retention-policies" class="toc-h2 toc-link" data-title="set-data-retention-policies">Set data retention policies</a>
+                  </li>
+                  <li>
                     <a href="#get-usage-stats-for-days" class="toc-h2 toc-link" data-title="get-usage-stats-for-days">Get usage stats for days</a>
                   </li>
                   <li>
@@ -434,7 +458,7 @@
               </ul>
           </li>
           <li>
-            <a href="#responses-38" class="toc-h1 toc-link" data-title="responses">Responses</a>
+            <a href="#responses-46" class="toc-h1 toc-link" data-title="responses">Responses</a>
               <ul class="toc-list-h2">
                   <li>
                     <a href="#document" class="toc-h2 toc-link" data-title="document">Document</a>
@@ -494,6 +518,15 @@
                   </li>
                   <li>
                     <a href="#attachment-list-filter" class="toc-h2 toc-link" data-title="attachment-list-filter">Attachment List Filter</a>
+                  </li>
+                  <li>
+                    <a href="#dataretentionpolicy" class="toc-h2 toc-link" data-title="dataretentionpolicy">DataRetentionPolicy</a>
+                  </li>
+                  <li>
+                    <a href="#dataretentionpolicies" class="toc-h2 toc-link" data-title="dataretentionpolicies">DataRetentionPolicies</a>
+                  </li>
+                  <li>
+                    <a href="#oauthauthorization" class="toc-h2 toc-link" data-title="oauthauthorization">OAuthAuthorization</a>
                   </li>
                   <li>
                     <a href="#userstats" class="toc-h2 toc-link" data-title="userstats">UserStats</a>
@@ -1679,6 +1712,70 @@ Scrive eSign system returning errors.</p>
 </a>
 </p>
 <h2 id='user'>User</h2>
+<p>
+<a href="#apiv2loginandgetsession">
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/loginandgetsession</code>
+</strong>
+</a>
+</p>
+
+<p>
+<a href="#apiv22fasetup">
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/2fa/setup</code>
+</strong>
+</a>
+</p>
+
+<p>
+<a href="#apiv22faconfirm">
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/2fa/confirm</code>
+</strong>
+</a>
+</p>
+
+<p>
+<a href="#apiv22fadisable">
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/2fa/disable</code>
+</strong>
+</a>
+</p>
+
+<p>
+<a href="#apiv2isuserdeletable">
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/isuserdeletable</code>
+</strong>
+</a>
+</p>
+
+<p>
+<a href="#apiv2deleteuser">
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/deleteuser</code>
+</strong>
+</a>
+</p>
+
+<p>
+<a href="#apiv2dataretentionpolicy">
+<strong>
+<code class="operation-method operation-method-GET">GET  /api/v2/dataretentionpolicy</code>
+</strong>
+</a>
+</p>
+
+<p>
+<a href="#apiv2dataretentionpolicyset">
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/dataretentionpolicy/set</code>
+</strong>
+</a>
+</p>
+
 <p>
 <a href="#apiv2usagestatsdays">
 <strong>
@@ -3083,6 +3180,163 @@ the file name.</p>
 </td> </tr>
 </table>
 <h1 id='user-2'>User</h1>
+<div><a id="apiv2loginandgetsession"></a></div>
+<h2 id='login-and-get-session'>Login and get session</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/loginandgetsession</code>
+</strong>
+</p>
+
+<p>OAuth authorization. Returns session id.</p>
+<h3 id='parameters-36'>Parameters</h3>
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><p><code>personal_token</code><br/><em>required</em></p></td><td><p>Must be of type <a href="#oauthauthorization"><code>OAuthAuthorization</code></a></p>
+</td><td><p>object<br><em>application/json</em></p></td><td>formData</td></tr>
+</table>
+<h3 id='responses-36'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>Returns a JSON with <code>session_id</code></p>
+</td> </tr>
+</table>
+
+<div><a id="apiv22fasetup"></a></div>
+<h2 id='setup-2fa'>Setup 2FA</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/2fa/setup</code>
+</strong>
+</p>
+
+<p>If already activated, returns true,
+else triggers QR code generation</p>
+<h3 id='responses-37'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>A JSON with the <code>twofactor_active</code> flag and (if not activated yet) a <code>qr_code</code></p>
+</td> </tr>
+</table>
+
+<div><a id="apiv22faconfirm"></a></div>
+<h2 id='confirm-2fa'>Confirm 2FA</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/2fa/confirm</code>
+</strong>
+</p>
+
+<p>Activates 2-factor-authentication if 2-factor code from QR code is valid</p>
+<h3 id='parameters-37'>Parameters</h3>
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><p><code>totp</code><br/><em>required</em></p></td><td><p>2-factor code</p>
+</td><td></td><td>query</td></tr>
+</table>
+<h3 id='responses-38'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>A JSON with the <code>twofactor_active</code> flag and <code>totp_valid</code> flag</p>
+</td> </tr>
+<tr> <td>400</td> <td><p>2-factor code from QR code is invalid</p>
+</td> </tr>
+</table>
+
+<div><a id="apiv22fadisable"></a></div>
+<h2 id='disable-2fa'>Disable 2FA</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/2fa/disable</code>
+</strong>
+</p>
+
+<p>Disables 2-factor-authentication</p>
+<h3 id='responses-39'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>A JSON with the <code>twofactor_active</code> flag</p>
+</td> </tr>
+</table>
+
+<div><a id="apiv2isuserdeletable"></a></div>
+<h2 id='is-user-deletable'>Is user deletable?</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/isuserdeletable</code>
+</strong>
+</p>
+
+<p>Returns an object with boolean flag</p>
+<h3 id='responses-40'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>A JSON with the <code>deletable</code> flag and (if not deletable) a <code>reason</code></p>
+</td> </tr>
+</table>
+
+<div><a id="apiv2deleteuser"></a></div>
+<h2 id='delete-user'>Delete user</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/deleteuser</code>
+</strong>
+</p>
+
+<p>undefined</p>
+<h3 id='parameters-38'>Parameters</h3>
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><p><code>email</code><br/><em>required</em></p></td><td><p>User's email</p>
+</td><td></td><td>query</td></tr>
+</table>
+<h3 id='responses-41'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>The user was deleted succesfully. The body is empty</p>
+</td> </tr>
+<tr> <td>400</td> <td><p>Email parameter isn't provided or doesn't match the user's email</p>
+</td> </tr>
+</table>
+
+<div><a id="apiv2dataretentionpolicy"></a></div>
+<h2 id='get-data-retention-policies'>Get data retention policies</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-GET">GET  /api/v2/dataretentionpolicy</code>
+</strong>
+</p>
+
+<p>Returns an object with user and company data detention policies</p>
+<h3 id='responses-42'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>An object with data retention policies properties.</p>
+</td> </tr>
+</table>
+
+<div><a id="apiv2dataretentionpolicyset"></a></div>
+<h2 id='set-data-retention-policies'>Set data retention policies</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/dataretentionpolicy/set</code>
+</strong>
+</p>
+
+<p>Returns an object with user and company data detention policies</p>
+<h3 id='parameters-39'>Parameters</h3>
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><p><code>data_retention_policy</code><br/><em>required</em></p></td><td><p>Must be of type <a href="#dataretentionpolicy"><code>DataRetentionPolicy</code></a></p>
+</td><td><p>object<br><em>application/json</em></p></td><td>formData</td></tr>
+</table>
+<h3 id='responses-43'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>The data retention policy has been updated. The body is empty.</p>
+</td> </tr>
+</table>
+
 <div><a id="apiv2usagestatsdays"></a></div>
 <h2 id='get-usage-stats-for-days'>Get usage stats for days</h2>
 <p>
@@ -3092,13 +3346,13 @@ the file name.</p>
 </p>
 
 <p>Retrieve usage statistics for the last 30 days</p>
-<h3 id='parameters-36'>Parameters</h3>
+<h3 id='parameters-40'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>withCompany</code><br/><em>optional</em></p></td><td><p>Boolean flag for showing company information in the response.</p>
 </td><td><p>string</p></td><td>query</td></tr>
 </table>
-<h3 id='responses-36'>Responses</h3>
+<h3 id='responses-44'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON object with the statistics on usage:
@@ -3115,20 +3369,20 @@ count of documents on different stages of the process</p>
 </p>
 
 <p>Retrieve usage statistics for the last 6 months</p>
-<h3 id='parameters-37'>Parameters</h3>
+<h3 id='parameters-41'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>withCompany</code><br/><em>optional</em></p></td><td><p>Boolean flag for showing company information in the response.</p>
 </td><td><p>string</p></td><td>query</td></tr>
 </table>
-<h3 id='responses-37'>Responses</h3>
+<h3 id='responses-45'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON object with the statistics on usage:
 count of documents on different stages of the process</p>
 </td> </tr>
 </table>
-<h1 id='responses-38'>Responses</h1><h2 id='document'>Document</h2>
+<h1 id='responses-46'>Responses</h1><h2 id='document'>Document</h2>
 <p>The document metadata as a JSON.</p>
 <h3 id='document-2'>Document</h3>
 <p><code>(object)</code></p>
@@ -14606,6 +14860,299 @@ The elements of this array must match *at least one* of the following properties
 </div>
 
 <p></div></p>
+
+<p></div></p>
+<h2 id='dataretentionpolicy'>DataRetentionPolicy</h2>
+<p><code>(object)</code></p>
+
+<blockquote>
+<h3 id='example-json-for-quot-dataretentionpolicy-quot'>Example JSON: for &quot;DataRetentionPolicy&quot;</h3></blockquote>
+<pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"idle_doc_timeout_canceled"</span><span class="p">:</span><span class="w"> </span><span class="mi">45</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"immediate_trash"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"idle_doc_timeout_error"</span><span class="p">:</span><span class="w"> </span><span class="mi">67</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"idle_doc_timeout_preparation"</span><span class="p">:</span><span class="w"> </span><span class="mi">32</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+<div class="json-schema">
+
+<p>An object with data retention policy properties.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h3><code>immediate_trash</code> (boolean)</h3>
+
+
+<div class="json-schema">
+
+<p>Option to delete documents in trash immediately</p>
+
+
+</div>
+
+<h3><code>idle_doc_timeout_preparation</code> (integer)</h3>
+
+<div class="json-schema">
+
+<p>Number of days before moving documents in preparation to trash</p>
+
+
+</div>
+
+<h3><code>idle_doc_timeout_closed</code> (integer)</h3>
+
+<div class="json-schema">
+
+<p>Number of days before moving closed documents to trash</p>
+
+
+</div>
+
+<h3><code>idle_doc_timeout_canceled</code> (integer)</h3>
+
+<div class="json-schema">
+
+<p>Number of days before moving cancelled documents to trash</p>
+
+
+</div>
+
+<h3><code>idle_doc_timeout_timedout</code> (integer)</h3>
+
+<div class="json-schema">
+
+<p>Number of days before moving timed out documents to trash</p>
+
+
+</div>
+
+<h3><code>idle_doc_timeout_rejected</code> (integer)</h3>
+
+<div class="json-schema">
+
+<p>Number of days before moving rejected documents to trash</p>
+
+
+</div>
+
+<h3><code>idle_doc_timeout_error</code> (integer)</h3>
+
+<div class="json-schema">
+
+<p>Number of days before moving documents with errors to trash</p>
+
+
+</div>
+
+<p></div></p>
+<h2 id='dataretentionpolicies'>DataRetentionPolicies</h2>
+<p><code>(object)</code></p>
+
+<blockquote>
+<h3 id='example-json-for-quot-dataretentionpolicies-quot'>Example JSON: for &quot;DataRetentionPolicies&quot;</h3></blockquote>
+<pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"company_data_retention_policy"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"immediate_trash"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"data_retention_policy"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"idle_doc_timeout_canceled"</span><span class="p">:</span><span class="w"> </span><span class="mi">45</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"immediate_trash"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"idle_doc_timeout_error"</span><span class="p">:</span><span class="w"> </span><span class="mi">67</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"idle_doc_timeout_preparation"</span><span class="p">:</span><span class="w"> </span><span class="mi">32</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+<div class="json-schema">
+
+<p>An object with data retention policies properties.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h3><code>company_data_retention_policy</code> <code>(object)</code></h3>
+
+
+<div class="json-schema">
+
+<p>An object with data retention policy properties.</p>
+
+
+<p>The <code>company_data_retention_policy</code> object has the following properties:</p>
+
+<h4><code>immediate_trash</code> (boolean)</h4>
+
+
+<div class="json-schema">
+
+<p>Option to delete documents in trash immediately</p>
+
+
+</div>
+
+<h4><code>idle_doc_timeout_preparation</code> (integer)</h4>
+
+<div class="json-schema">
+
+<p>Number of days before moving documents in preparation to trash</p>
+
+
+</div>
+
+<h4><code>idle_doc_timeout_closed</code> (integer)</h4>
+
+<div class="json-schema">
+
+<p>Number of days before moving closed documents to trash</p>
+
+
+</div>
+
+<h4><code>idle_doc_timeout_canceled</code> (integer)</h4>
+
+<div class="json-schema">
+
+<p>Number of days before moving cancelled documents to trash</p>
+
+
+</div>
+
+<h4><code>idle_doc_timeout_timedout</code> (integer)</h4>
+
+<div class="json-schema">
+
+<p>Number of days before moving timed out documents to trash</p>
+
+
+</div>
+
+<h4><code>idle_doc_timeout_rejected</code> (integer)</h4>
+
+<div class="json-schema">
+
+<p>Number of days before moving rejected documents to trash</p>
+
+
+</div>
+
+<h4><code>idle_doc_timeout_error</code> (integer)</h4>
+
+<div class="json-schema">
+
+<p>Number of days before moving documents with errors to trash</p>
+
+
+</div>
+
+<p></div></p>
+
+<h3><code>data_retention_policy</code> <code>(object)</code></h3>
+
+<div class="json-schema">
+
+<p>An object with data retention policy properties.</p>
+
+
+<p>The <code>data_retention_policy</code> object has the following properties:</p>
+
+<h4><code>immediate_trash</code> (boolean)</h4>
+
+
+<div class="json-schema">
+
+<p>Option to delete documents in trash immediately</p>
+
+
+</div>
+
+<h4><code>idle_doc_timeout_preparation</code> (integer)</h4>
+
+<div class="json-schema">
+
+<p>Number of days before moving documents in preparation to trash</p>
+
+
+</div>
+
+<h4><code>idle_doc_timeout_closed</code> (integer)</h4>
+
+<div class="json-schema">
+
+<p>Number of days before moving closed documents to trash</p>
+
+
+</div>
+
+<h4><code>idle_doc_timeout_canceled</code> (integer)</h4>
+
+<div class="json-schema">
+
+<p>Number of days before moving cancelled documents to trash</p>
+
+
+</div>
+
+<h4><code>idle_doc_timeout_timedout</code> (integer)</h4>
+
+<div class="json-schema">
+
+<p>Number of days before moving timed out documents to trash</p>
+
+
+</div>
+
+<h4><code>idle_doc_timeout_rejected</code> (integer)</h4>
+
+<div class="json-schema">
+
+<p>Number of days before moving rejected documents to trash</p>
+
+
+</div>
+
+<h4><code>idle_doc_timeout_error</code> (integer)</h4>
+
+<div class="json-schema">
+
+<p>Number of days before moving documents with errors to trash</p>
+
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+<h2 id='oauthauthorization'>OAuthAuthorization</h2>
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>This object has the following properties:</p>
+
+<h3><code>apitoken</code> (string)</h3>
+
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>apisecret</code> (string)</h3>
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>accesstoken</code> (string)</h3>
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>accesssecret</code> (string)</h3>
+
+<div class="json-schema">
+
+</div>
 
 <p></div></p>
 <h2 id='userstats'>UserStats</h2>
