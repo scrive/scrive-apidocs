@@ -42,15 +42,14 @@ saveNewFile
   => String -> BS.ByteString -> m FileID
 saveNewFile fName fContent = do
   startTime <- liftBase getCurrentTime
-  emptyFile <- dbUpdate $ NewEmptyFileForAWS fName fContent
-  let fid    = fileid emptyFile
-      awsUrl = urlFromFile emptyFile
+  (fid, checksum) <- dbUpdate $ NewEmptyFileForAWS fName fContent
+  let awsUrl = urlFromFile fid fName checksum
   eaes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
   case eaes of
     Left err -> do
       logAttention "saveNewFile: failed to create AES config, purging file" $
-        object [
-            logPair_ emptyFile
+        object
+          [ identifier fid
           , "error" .= err
           ]
       unexpectedError err
@@ -59,8 +58,7 @@ saveNewFile fName fContent = do
       eRes <- try $ FS.saveNewContents awsUrl $ BSL.fromStrict encryptedContent
       case eRes of
         Right () -> do
-          dbUpdate $ FileMovedToAWS fid awsUrl aes
-          let file = emptyFile { filestorage = FileStorageAWS awsUrl aes }
+          file <- dbUpdate $ FileMovedToAWS fid awsUrl aes
           finishTime <- liftBase getCurrentTime
           logInfo "newFile: new file successfully created with content in S3" $
             object [
@@ -72,8 +70,8 @@ saveNewFile fName fContent = do
         Left err@(FS.FileStorageException msg) -> do
           let attnMsg = "newFile: failed to upload to AWS, purging file"
           logAttention attnMsg $
-            object [
-                logPair_ emptyFile
+            object
+              [ identifier fid
               , "error" .= msg
               ]
           dbUpdate $ PurgeFile fid
@@ -84,7 +82,6 @@ saveNewFile fName fContent = do
 -- returning them as BS.
 getFileContents :: (MonadFileStorage m, MonadIO m, MonadLog m, MonadThrow m)
                 => File -> m BS.ByteString
-getFileContents File{ filestorage = FileStorageMemory contents } = return contents
 getFileContents file@File{ fileid, filestorage = FileStorageAWS url aes } =
   localData [identifier fileid] $ do
     encrypted <- FS.getSavedContents url
@@ -111,7 +108,7 @@ getFileIDContents fid = do
     ]
   return result
 
--- | Convert a file to Amazon URL. We use the following format:
+-- | Build the Amazon URL for a file. We use the following format:
 --
 -- > "file" </> fileid </> checksum </> filename
 --
@@ -122,11 +119,11 @@ getFileIDContents fid = do
 -- Note: Someday we might decide to publish temporarily externally
 -- available links to files on Amazon. File names are already in
 -- place, but Content-type is not, this will need to be fixed.
-urlFromFile :: File -> String
-urlFromFile File{filename, fileid, filechecksum} =
+urlFromFile :: FileID -> String -> BS.ByteString -> String
+urlFromFile fid name checksum =
   -- here we use BSC.unpack, as HTTP.urlEncode
   -- does only %-escaping for 8bit values
   "file"
-    </> show fileid
-    </> (BS.unpack . Base16.encode $ filechecksum)
-    </> (HTTP.urlEncode . BS.unpack . BSUTF.fromString $ filename)
+    </> show fid
+    </> (BS.unpack . Base16.encode $ checksum)
+    </> (HTTP.urlEncode . BS.unpack . BSUTF.fromString $ name)

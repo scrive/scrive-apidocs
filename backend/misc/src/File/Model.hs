@@ -36,35 +36,34 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetMaybeFileByFileID (Maybe File
       sqlWhereFileWasNotPurged
     fetchMaybe fetchFile
 
+-- | Insert a new 'File' in the DB without any URL nor AES configuration.
+-- At the moment, it is only by 'saveNewFile' which immediately adds the missing
+-- information or purges the file.
 data NewEmptyFileForAWS = NewEmptyFileForAWS String BS.ByteString
-instance (MonadDB m, MonadThrow m) => DBUpdate m NewEmptyFileForAWS File where
+instance (MonadDB m, MonadThrow m)
+  => DBUpdate m NewEmptyFileForAWS (FileID, BS.ByteString) where
   update (NewEmptyFileForAWS fname fcontent) = do
     let fchecksum = SHA1.hash fcontent
         fsize     = (fromIntegral . BS.length $ fcontent :: Int32)
     runQuery_ $ sqlInsert "files" $ do
       sqlSet "name"     fname
-      sqlSet "content"  (Nothing :: Maybe BS.ByteString)
       sqlSet "checksum" fchecksum
       sqlSet "size"     fsize
       sqlResult "id"
     fid <- fetchOne runIdentity
-    return $ File { fileid       = fid
-                  , filename     = fname
-                  , filestorage  = FileStorageMemory fcontent
-                  , filechecksum = fchecksum
-                  , filesize     = fsize
-                  }
+    return (fid, fchecksum)
 
 data FileMovedToAWS = FileMovedToAWS FileID String AESConf
-instance MonadDB m => DBUpdate m FileMovedToAWS () where
-  update (FileMovedToAWS fid url aes) =
+instance (MonadDB m, MonadThrow m) => DBUpdate m FileMovedToAWS File where
+  update (FileMovedToAWS fid url aes) = do
     runQuery_ $ sqlUpdate "files" $ do
-        sqlSet "content" (Nothing :: Maybe BS.ByteString)
-        sqlSet "amazon_url" url
-        sqlSet "aes_key" $ aesKey aes
-        sqlSet "aes_iv" $ aesIV aes
-        sqlWhereFileIDIs fid
-        sqlWhereFileWasNotPurged
+      sqlSet "amazon_url" url
+      sqlSet "aes_key" $ aesKey aes
+      sqlSet "aes_iv" $ aesIV aes
+      sqlWhereFileIDIs fid
+      sqlWhereFileWasNotPurged
+      mapM_ sqlResult filesSelectors
+    fetchOne fetchFile
 
 data PurgeFile = PurgeFile FileID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m PurgeFile () where
@@ -74,14 +73,12 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m PurgeFile () where
       sqlSet "purged_time" now
       sqlSet "name" ("" :: String)
       sqlSet "amazon_url" (Nothing :: Maybe String)
-      sqlSetCmd "content" "NULL"
       sqlWhereFileIDIs fid
 
 filesSelectors :: [SQL]
 filesSelectors = [
     "id"
   , "name"
-  , "content"
   , "amazon_url"
   , "checksum"
   , "aes_key"
@@ -89,33 +86,21 @@ filesSelectors = [
   , "size"
   ]
 
-fetchFile :: (FileID, String, Maybe BS.ByteString, Maybe String, BS.ByteString, Maybe BS.ByteString, Maybe BS.ByteString, Int32) -> File
-fetchFile (fid, fname, content, mamazon_url, checksum, maes_key, maes_iv, size) = File {
+fetchFile :: (FileID, String, Maybe String, BS.ByteString, Maybe BS.ByteString, Maybe BS.ByteString, Int32) -> File
+fetchFile (fid, fname, mamazon_url, checksum, maes_key, maes_iv, size) = File {
         fileid = fid
       , filename = fname
       , filestorage =
         -- Here we need to support the following cases:
         --
-        --  * plain data in the database: just return content
-        --  * encrypted data in the database (backward compatibility only):
-        --      decrypt and return content
         --  * encrypted data in Amazon S3: return (url, aes)
+        --  * missing URL: error (see NewEmptyFileForAWS)
         --  * invalid AES key: error out at this place
-        --
-        -- Binary data in database is temporary: next cron run should
-        -- move it to Amazon.  Encrypted data in database is backward
-        -- compatibility only: we are not going to put entrypted data
-        -- anymore, but we need to handle some leftovers that may be
-        -- lingering there.
-        case content of
-          Just mem -> case eaes of
-            Nothing          -> FileStorageMemory mem
-            Just (Right aes) -> FileStorageMemory (aesDecrypt aes mem)
-            Just (Left msg)  -> err msg
-          Nothing -> case (mamazon_url, eaes) of
-            (Just url, Just (Right aes)) -> FileStorageAWS url aes
-            (Just _,   Just (Left msg))  -> err msg
-            d                                  -> unexpectedError $ "invalid AWS data for file with id =" <+> show fid <> ":" <+> show d
+        case (mamazon_url, eaes) of
+          (Just url, Just (Right aes)) -> FileStorageAWS url aes
+          (Just _,   Just (Left msg))  -> err msg
+          d -> unexpectedError $ "invalid AWS data for file with id ="
+            <+> show fid <> ":" <+> show d
       , filechecksum = checksum
       , filesize = size
     }

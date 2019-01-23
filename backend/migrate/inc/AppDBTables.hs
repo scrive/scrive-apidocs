@@ -170,4 +170,6 @@ kontraTables =
   , tableUserGroupUIs
   , tableUserGroupAddresses
   , tableSignatoryLinkMagicHashes
+  , tableFilePurgeConsumers
+  , tableFilePurgeJobs
   ]

@@ -20,6 +20,7 @@ import EID.Authentication.Migrations
 import EID.Nets.Migrations
 import EID.Signature.Migrations
 import FeatureFlags.Migrations
+import File.Migrations
 import Mails.FromKontra.Migrations
 import Mails.Migrations
 import Partner.Migrations
@@ -163,4 +164,8 @@ kontraMigrations = [
   , migratePartnerAdmins
   , dropPartnerAdmins
   , accesscontrolBumpVersionAfterDroppingPartnerAdmins
+  , createFilePurgeConsumers
+  , createFilePurgeJobs
+  , dropContentAndPurgeAtFromFiles
+  , removePurgeOrphanFileJob
   ]

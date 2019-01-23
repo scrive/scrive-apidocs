@@ -786,6 +786,7 @@ Executable kontrakcja-migrate
                  EvidenceLog.Tables
                  FeatureFlags.Migrations
                  FeatureFlags.Tables
+                 File.Migrations
                  File.Tables
                  UserGroup.Migrations
                  UserGroup.Tables
@@ -1285,6 +1286,7 @@ Test-suite kontrakcja-test
                  FeatureFlags.Migrations
                  FeatureFlags.Tables
                  FeatureFlagsTest
+                 File.Migrations
                  File.Tables
                  FileTest
                  FlashMessages

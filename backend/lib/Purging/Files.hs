@@ -1,23 +1,26 @@
 module Purging.Files (
     MarkOrphanFilesForPurgeAfter(..)
-  , purgeOrphanFile
+  , filePurgingConsumer
   ) where
 
+import Control.Monad.Base
 import Control.Monad.Catch
-import Control.Monad.IO.Class
-import Data.Time.Clock (diffUTCTime)
+import Data.Int
+import Database.PostgreSQL.Consumers.Config
 import Log
 import qualified Data.Text as T
 
 import DB
-import File.Conditions
+import DB.PostgreSQL
+import File.File
 import File.Model
+import File.Tables
 import FileStorage.Class
 import Log.Identifier
 
-data MarkOrphanFilesForPurgeAfter = MarkOrphanFilesForPurgeAfter Int Interval
+data MarkOrphanFilesForPurgeAfter = MarkOrphanFilesForPurgeAfter Interval
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesForPurgeAfter [FileID] where
-  update (MarkOrphanFilesForPurgeAfter limit interval) = do
+  update (MarkOrphanFilesForPurgeAfter interval) = do
     now <- currentTime
     -- Check if the database still looks similar to what the code below
     -- was written for.
@@ -40,7 +43,8 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
            , ("signatory_attachments", "file_id")
            , ("signatory_screenshots", "file_id")
            , ("signatory_link_fields", "value_file_id")
-           , ("highlighted_pages", "file_id")
+           , ("highlighted_pages",     "file_id")
+           , ("file_purge_jobs",       "id")
            ]
 
     when (sort expected_refs /= sort refs) $ do
@@ -49,8 +53,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
     runSQL_ $ smconcat [
         "WITH files_to_purge AS ("
       , "SELECT id FROM files"
-      , " WHERE purge_at IS NULL"
-      , "   AND purged_time IS NULL"
+      , " WHERE purged_time IS NULL"
       -- File is connected as a main file to a document that is
       -- available to somebody.
       , "EXCEPT ALL"
@@ -101,52 +104,49 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
       , "  JOIN signatory_links sl ON hp.signatory_link_id = sl.id"
       , "  JOIN documents d ON sl.document_id = d.id"
       , " WHERE d.purged_time IS NULL"
+      -- It is already in the queue to be purged.
+      , "EXCEPT ALL"
+      , "SELECT j.id FROM file_purge_jobs j"
       , ")"
-      -- Actual purge
-      , "UPDATE files"
-      , "   SET purge_at =" <?> now <+> "+" <?> interval
-      , " WHERE id IN (SELECT id FROM files_to_purge LIMIT" <?> limit <> ")"
+      -- Actual purge.
+      , "INSERT INTO file_purge_jobs (id, run_at, attempts)"
+      , "SELECT id," <?> now <+> "+" <?> interval <+> ", 0"
+      , "FROM files_to_purge"
       , "RETURNING id"
       ]
     fetchMany runIdentity
 
-purgeOrphanFile :: forall m. ( MonadDB m, MonadCatch m, MonadFileStorage m
-                             , MonadIO m , MonadLog m, MonadThrow m
-                             , MonadTime m ) => Int -> m Bool
-purgeOrphanFile batchSize = do
-  now0 <- currentTime
-  runQuery_ . sqlSelect "files" $ do
-    sqlResult "id"
-    sqlResult "amazon_url"
-    sqlResult "content IS NULL"
-    sqlWhereFileWasNotPurged
-    sqlWhere $ "purge_at <" <?> now0
-    sqlOrderBy "purge_at"
-    sqlLimit batchSize
-  fetchMany id >>= \case
-    []    -> return False
-    files -> do
-      mapM_ purge (files :: [(FileID, Maybe String, Bool)])
-      now1 <- currentTime
-      let timeDelta = realToFrac $ diffUTCTime now1 now0 :: Double
-      logInfo "Purged files" $ object [
-                    "elapsed_time" .= timeDelta
-                  , "batch_size" .= batchSize
-                  ]
-      return True
-  where
-    purge :: (FileID, Maybe String, Bool) -> m ()
-    purge (fid, mamazonUrl, isOnAmazon) = do
-      eRes <- case (mamazonUrl, isOnAmazon) of
-        (Just amazonUrl, True) -> try $ deleteSavedContents amazonUrl
-        _ -> return $ Right ()
-      case eRes of
-        Right () -> do
-          dbUpdate $ PurgeFile fid
-          commit
-        Left err -> do
-          logAttention "Purging file failed, it couldn't be removed from Amazon" $ object [
-              identifier fid
-            , "error" .= show (err :: FileStorageException)
-            ]
-          rollback
+purgeFile
+  :: (MonadCatch m, MonadDB m, MonadFileStorage m, MonadLog m, MonadThrow m)
+  => FileID -> m Result
+purgeFile fid = do
+  File{ filestorage = FileStorageAWS url _ } <- dbQuery $ GetFileByFileID fid
+  deleteSavedContents url
+  void $ dbUpdate $ PurgeFile fid
+  return $ Ok Remove
+
+onFailure :: MonadLog m => SomeException -> (FileID, Int32) -> m Action
+onFailure exc (fid, attempts) = do
+  logAttention "Purging file failed, it couldn't be removed from Amazon" . object $
+    [ identifier fid
+    , "error" .= show exc
+    ]
+  let delay = min attempts 7
+  return . RerunAfter $ idays delay
+
+filePurgingConsumer
+  :: ( MonadBase IO m, MonadCatch m, MonadFileStorage m, MonadLog m, MonadMask m
+     , MonadThrow m )
+  => ConnectionSourceM m -> Int -> ConsumerConfig m FileID (FileID, Int32)
+filePurgingConsumer pool maxJobs = ConsumerConfig
+  { ccJobsTable = tblName tableFilePurgeJobs
+  , ccConsumersTable = tblName tableFilePurgeConsumers
+  , ccJobSelectors = ["id", "attempts"]
+  , ccJobFetcher = id
+  , ccJobIndex = fst
+  , ccNotificationChannel = Nothing
+  , ccNotificationTimeout = 3 * 1000 * 1000
+  , ccMaxRunningJobs = maxJobs
+  , ccProcessJob = withPostgreSQL pool . withTransaction . purgeFile . fst
+  , ccOnException = onFailure
+  }

@@ -59,7 +59,6 @@ data JobType
   | OldDraftsRemoval
   | OldLogsRemoval
   | PasswordRemindersEvaluation
-  | PurgeOrphanFile
   | PushPlanhatStats
   | SessionsEvaluation
   | SMSEventsProcessing
@@ -84,7 +83,6 @@ jobTypeMapper =
   , (OldDraftsRemoval, "old_drafts_removal")
   , (OldLogsRemoval, "old_logs_removal")
   , (PasswordRemindersEvaluation, "password_reminders_evaluation")
-  , (PurgeOrphanFile, "purge_orphan_file")
   , (PushPlanhatStats, "push_planhat_stats")
   , (SessionsEvaluation, "sessions_evaluation")
   , (SMSEventsProcessing, "sms_events_processing")
@@ -218,15 +216,12 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
       let timeDelay = if eventsDone == eventLimit then 1 else 5
       return . RerunAfter $ iseconds timeDelay
     MarkOrphanFilesForPurge -> do
-      let maxMarked = 100000
-          -- Share the string between all the log messages.
+      let -- Share the string between all the log messages.
           orphanFileMarked = "Orphan file marked for purge"
-      fids <- runDB . dbUpdate . MarkOrphanFilesForPurgeAfter maxMarked $ idays 7
+      fids <- runDB . dbUpdate . MarkOrphanFilesForPurgeAfter $ idays 7
       forM_ fids $ \fid -> logInfo orphanFileMarked $ object [identifier fid]
       -- If maximum amount of files was marked, run it again shortly after.
-      if length fids == maxMarked
-        then return . RerunAfter $ iseconds 1
-        else RerunAt . nextDayAtHour 2 <$> currentTime
+      RerunAt . nextDayAtHour 2 <$> currentTime
     OldDraftsRemoval -> do
       runDB $ do
         delCount <- dbUpdate $ RemoveOldDrafts 100
@@ -251,12 +246,6 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
     PasswordRemindersEvaluation -> do
       runDB . dbUpdate $ DeleteExpiredPasswordReminders
       return . RerunAfter $ ihours 1
-    PurgeOrphanFile -> do
-      let batchSize = 500
-      found <- runCronEnv $ purgeOrphanFile batchSize
-      return . RerunAfter $ if found
-                            then iseconds 5
-                            else iminutes 5
     PushPlanhatStats -> do
       case cronPlanhatConf cronConf of
         Nothing -> do
