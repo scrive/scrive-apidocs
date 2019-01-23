@@ -131,8 +131,8 @@ onFailure exc (fid, attempts) = do
     [ identifier fid
     , "error" .= show exc
     ]
-  let delay = min (24*60) (2^attempts)
-  return . RerunAfter $ iminutes delay
+  let delay = min attempts 7
+  return . RerunAfter $ idays delay
 
 filePurgingConsumer
   :: ( MonadBase IO m, MonadCatch m, MonadFileStorage m, MonadLog m, MonadMask m
