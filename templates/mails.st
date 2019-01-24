@@ -470,7 +470,15 @@ invitationMailUndelivered=
 ####
 invitationMailUndeliveredMainP =
        <br/>
+$if(signing)$
        $_invitationMailUndeliveredContentBody()$
+$endif$
+$if(viewing)$
+       $_invitationMailUndeliveredContentBodyViewing()$
+$endif$
+$if(approving)$
+       $_invitationMailUndeliveredContentBodyApproving()$
+$endif$
        <br/>
        <br/>
        $_invitationMailUndeliveredContentBodyFirst()$

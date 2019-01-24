@@ -269,6 +269,9 @@ mailUndeliveredInvitation mailNoreplyAddress bd signlink doc =do
     F.value "documenttitle" $ documenttitle doc
     F.value "email" $ getEmail signlink
     F.value "name" $ getFullName signlink
+    F.value "signing" $ signatoryrole signlink == SignatoryRoleSigningParty
+    F.value "viewing" $ signatoryrole signlink == SignatoryRoleViewer
+    F.value "approving" $ signatoryrole signlink == SignatoryRoleApprover
     F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
     F.value "ctxhostpart" $ get bdUrl bd
     brandingMailFields theme

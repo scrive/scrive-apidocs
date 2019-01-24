@@ -686,6 +686,8 @@
 "_invitationMailDeliveredAfterDeferredContentBody":"We notified you in an earlier email that we were having difficulties delivering an email. After subsequent attempts we have successfully delivered the invitation to <strong>$email$</strong> to e-sign the document <strong>$documenttitle$</strong>.",
 "_invitationMailDeliveredAfterDeferredTitle":"Successfully delivered",
 "_invitationMailUndeliveredContentBody":"Unfortunately the invitation to e-sign the document <strong>$documenttitle$</strong> could not be delivered to <strong>$name$ &lt;$email$&gt;</strong>. This may be because the recipient's mail server is experiencing difficulties, or because the email address you have provided is incorrect.",
+"_invitationMailUndeliveredContentBodyApproving":"Unfortunately the invitation to approve the document <strong>$documenttitle$</strong> could not be delivered to <strong>$name$ &lt;$email$&gt;</strong>. This may be because the recipient's mail server is experiencing difficulties, or because the email address you have provided is incorrect.",
+"_invitationMailUndeliveredContentBodyViewing":"Unfortunately the invitation to view the document <strong>$documenttitle$</strong> could not be delivered to <strong>$name$ &lt;$email$&gt;</strong>. This may be because the recipient's mail server is experiencing difficulties, or because the email address you have provided is incorrect.",
 "_invitationMailUndeliveredContentBodyButton":"Open document",
 "_invitationMailUndeliveredContentBodyFirst":"To confirm the email address and resend the invitation:",
 "_invitationMailUndeliveredContentInstructionStep1":"Click \"Change email\"",
