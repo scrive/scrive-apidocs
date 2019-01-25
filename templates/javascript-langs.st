@@ -371,6 +371,7 @@ javascriptLocalisation =
                 , showrejectoption: "$_signviewSettingsShowRejectOption()$"
                 , allowrejectreason: "$_signviewSettingsAllowRejectReason()$"
                 , showfooter: "$_signviewSettingsShowFooter()$"
+                , showarrow: "$_signviewSettingsShowArrow()$"
                 , title: "$_signviewSettingsTitle()$"
                 , button: "$_signviewSettingsButton()$"
                }
@@ -638,6 +639,8 @@ javascriptLocalisation =
          , docsignview : {
                followTheArrow: "$_followTheArrow()$"
              , followTheArrowWithUserName: "$_followTheArrowWithUserName()$"
+             , readAndSign: "$_readAndSign()$"
+             , readAndSignWithUserName: "$_readAndSignWithUserName()$"
              , reviewDocument: "$_reviewDocument()$"
              , signedNotClosed: "$_signedNotClosed()$"
              , signedAndClosed: "$_signedAndClosed()$"

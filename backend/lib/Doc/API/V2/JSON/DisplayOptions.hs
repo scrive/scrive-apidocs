@@ -15,6 +15,7 @@ data DocumentDisplayOptions = DocumentDisplayOptions {
   , allowRejectReason :: Bool
   , showFooter :: Bool
   , isReceipt :: Bool
+  , showArrow :: Bool
 }
 
 documentDisplayOptions :: Document -> DocumentDisplayOptions
@@ -25,6 +26,7 @@ documentDisplayOptions doc = DocumentDisplayOptions {
     , allowRejectReason = documentallowrejectreason doc
     , showFooter = documentshowfooter doc
     , isReceipt = documentisreceipt doc
+    , showArrow = documentshowarrow doc
   }
 
 applyDisplayOptionsToDocument :: DocumentDisplayOptions -> Document -> Document
@@ -35,6 +37,7 @@ applyDisplayOptionsToDocument displayOptions doc = doc {
     , documentallowrejectreason = allowRejectReason displayOptions
     , documentshowfooter = showFooter displayOptions
     , documentisreceipt = isReceipt displayOptions
+    , documentshowarrow = showArrow displayOptions
   }
 
 unjsonDocumentDisplayOptions :: UnjsonDef DocumentDisplayOptions
@@ -45,3 +48,4 @@ unjsonDocumentDisplayOptions = objectOf $ pure DocumentDisplayOptions
     <*> field "allow_reject_reason" allowRejectReason "Show textarea for typing in the reason for rejection"
     <*> field "show_footer" showFooter "Show footer while signing"
     <*> field "document_is_receipt" isReceipt "Act as if document is receipt"
+    <*> field "show_arrow" showArrow "Show auto-scroll arrow while signing"

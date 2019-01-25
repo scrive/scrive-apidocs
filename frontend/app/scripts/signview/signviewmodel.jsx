@@ -260,8 +260,12 @@ var Track = require("../common/track");
 
     hasArrows: function () {
       var file = this.document().mainfile();
-      return this.document().ready() && this.document().currentSignatoryCanSignOrApprove()
-        && file.ready() && file.view && file.view.ready();
+      return this.document().ready()
+        && this.document().currentSignatoryCanSignOrApprove()
+        && this.document().showArrow()
+        && file.ready()
+        && file.view
+        && file.view.ready();
     },
 
     hasDonePostRenderTasks: function () {

@@ -152,6 +152,8 @@
 "_phone":"Mobile",
 "_phonePlaceholder":"Mobile (+46701234567)",
 "_pinWillBeSentTo":"The PIN will be sent by SMS to",
+"_readAndSign":"Please read the document and sign it below",
+"_readAndSignWithUserName":"<span class='signatory-name'></span>, please read the document and sign it below",
 "_reloadPage":"Reload page",
 "_remindMailNotApprovedContractBody":"<strong>$authorname$</strong> wants to remind you to approve the document <strong>$documenttitle$</strong>.",
 "_remindMailNotReviewedContractBody":"<strong>$authorname$</strong> wants to remind you to review the document <strong>$documenttitle$</strong>.",

@@ -20,10 +20,20 @@ module.exports = React.createClass({
     var docIsSigningOrApproving = doc.isSigning() || doc.isApproving();
     var welcomeUser = sig && sig.name() != "" && sig.canSignOrApprove();
 
-    if (docIsSigningOrApproving && welcomeUser) {
-      return localization.docsignview.followTheArrowWithUserName;
-    } else if (docIsSigningOrApproving) {
-      return localization.docsignview.followTheArrow;
+    if (docIsSigningOrApproving) {
+      if (doc.showArrow()) {
+        if (welcomeUser) {
+          return localization.docsignview.followTheArrowWithUserName;
+        } else {
+          return localization.docsignview.followTheArrow;
+        }
+      } else {
+        if (welcomeUser) {
+          return localization.docsignview.readAndSignWithUserName;
+        } else {
+          return localization.docsignview.readAndSign;
+        }
+      }
     } else if (doc.isReviewing()) {
       return localization.docsignview.reviewDocument;
     } else if (sig.signs() && doc.isSignedAndClosed()) {

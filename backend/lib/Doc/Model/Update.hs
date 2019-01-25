@@ -50,6 +50,7 @@ module Doc.Model.Update
   , SetAllowRejectReason(..)
   , SetIsReceipt(..)
   , SetShowFooter(..)
+  , SetShowArrow(..)
   , AddAcceptedAuthorAttachmentsEvents(..)
   , ApproveDocument(..)
   , SignDocument(..)
@@ -390,6 +391,7 @@ insertDocument document@(Document{..}) = do
     sqlSet "shareable_link_hash" documentshareablelinkhash
     sqlSet "template_id" documenttemplateid
     sqlSet "from_shareable_link" documentfromshareablelink
+    sqlSet "show_arrow" documentshowarrow
     sqlResult "documents.id"
   did <- fetchOne runIdentity
   insertSignatoryLinks did documentsignatorylinks
@@ -1447,6 +1449,10 @@ data SetShowFooter = SetShowFooter Bool Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetShowFooter Bool where
   update (SetShowFooter bool _actor) = updateWithoutEvidence "show_footer" bool
 
+data SetShowArrow = SetShowArrow Bool Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetShowArrow Bool where
+  update (SetShowArrow bool _actor) = updateWithoutEvidence "show_arrow" bool
+
 data SetDaysToSign = SetDaysToSign Int32 Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDaysToSign Bool where
   update (SetDaysToSign days _actor) = updateWithoutEvidence "days_to_sign" days
@@ -2100,6 +2106,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateD
     , update $ SetShowFooter (documentshowfooter document) actor
     , update $ SetIsReceipt (documentisreceipt document) actor
     , update $ SetDocumentTags (documenttags document) actor
+    , update $ SetShowArrow (documentshowarrow document) actor
     , update $ SetDocumentAPICallbackURL V1 (documentapiv1callbackurl document)
     , update $ SetDocumentAPICallbackURL V2 (documentapiv2callbackurl document)
     , update $ SetDocumentTimeZoneName (documenttimezonename document)

@@ -89,7 +89,8 @@
     "show_reject_option": true,
     "allow_reject_reason": true,
     "show_footer": true,
-    "document_is_receipt": false
+    "document_is_receipt": false,
+    "show_arrow": true
   },
   "invitation_message": "",
   "confirmation_message": "",

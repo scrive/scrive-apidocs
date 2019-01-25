@@ -161,6 +161,8 @@ docStateTests env = testGroup "DocState"
     env testSetAllowRejectReason
   , testThat "SetShowFooter succeeds"
     env testSetShowFooter
+  , testThat "SetShowArrow succeeds"
+    env testSetShowArrow
 
   , testThat "GetTimeoutedButPendingDocuments works as expected"
     env testGetTimedOutButPendingDocuments
@@ -2365,6 +2367,17 @@ testSetShowFooter = replicateM_ 10 $ do
     newValue <- documentshowfooter <$> theDocument
     assertEqual "SetShowFooter changes value to target value" targetValue newValue
     assertEqual "SetShowFooter return success" success True
+
+testSetShowArrow :: TestEnv ()
+testSetShowArrow = replicateM_ 10 $ do
+  author <- addNewRandomUser
+  actor <- arbitraryAuthorActor
+  targetValue <- rand 10 arbitrary
+  addRandomDocument (randomDocumentAllowsDefault author)  { randomDocumentChecker = onCondition isPreparation } `withDocumentM` do
+    success <- randomUpdate $ SetShowArrow targetValue actor
+    newValue <- documentshowarrow <$> theDocument
+    assertEqual "SetShowArrow changes value to target value" targetValue newValue
+    assertEqual "SetShowArrow return success" success True
 
 assertInvariants :: (MonadIO m, MonadTime m) => Document -> m ()
 assertInvariants document = do

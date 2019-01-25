@@ -21,6 +21,7 @@ module Doc.Migrations (
   , createSignatoryLinkMagicHashes
   , addTemplateInfoToDocuments
   , addCanBeForwardedToSignatories
+  , addShowArrow
 ) where
 
 import Data.Int
@@ -385,4 +386,20 @@ addTemplateInfoToDocuments = Migration
             "from_shareable_link = false OR template_id IS NOT NULL"
         ]
       runQuery_ . sqlCreateIndex "documents" $ indexOnColumn "template_id"
+  }
+
+
+addShowArrow :: MonadDB m => Migration m
+addShowArrow = Migration {
+    mgrTableName = tblName tableDocuments
+  , mgrFrom = 49
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable "documents" [
+          sqlAddColumn tblColumn
+            { colName = "show_arrow"
+            , colType = BoolT
+            , colNullable = False
+            , colDefault = Just "true"
+            }
+        ]
   }

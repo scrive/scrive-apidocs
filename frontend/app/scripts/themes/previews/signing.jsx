@@ -21,7 +21,8 @@ module.exports = React.createClass({
         showRejectOption: true,
         allowRejectReason: true,
         showPDFDownload: true,
-        showFooter: true
+        showFooter: true,
+        showArrow: true
       };
     },
     componentDidUpdate: function() {
@@ -66,13 +67,15 @@ module.exports = React.createClass({
                          Signing document: Demo contract
                        </div>
                      </div>
-                     <div className="section contentheader">
-                        <div className="instructions">
-                          <span>Follow the <span style={{"color": model.actionColor()}} className="arrowtext">ARROW</span></span>
-                        </div>
-                      </div>
+                     {/*if*/ (self.props.showArrow) &&
+                       <div className="section contentheader">
+                         <div className="instructions">
+                            <span>Follow the <span style={{"color": model.actionColor()}} className="arrowtext">ARROW</span></span>
+                         </div>
+                       </div>
+                     }
                       <div className="document">
-                              <ArrowDown className="downarrow"/>
+                              {/*if*/ (self.props.showArrow) && <ArrowDown className="downarrow"/> }
                               <div className="field mandatoryfield">
                                   <div className="placedfield mandatoryplacedfield" style={{"borderColor": model.actionColor()}}>
                                       <div className="placedfieldvalue">{localization.sampleSignView.email}</div>

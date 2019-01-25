@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 49
+  , tblVersion = 50
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -42,6 +42,7 @@ tableDocuments = tblTable {
     , tblColumn { colName = "shareable_link_hash", colType = BigIntT }
     , tblColumn { colName = "template_id", colType = BigIntT }
     , tblColumn { colName = "from_shareable_link", colType = BoolT, colNullable = False, colDefault = Just "false" }
+    , tblColumn { colName = "show_arrow", colType = BoolT, colNullable = False, colDefault = Just "true" }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
@@ -112,6 +113,7 @@ ctDocument = CompositeType {
   , CompositeColumn { ccName = "shareable_link_hash", ccType = BigIntT }
   , CompositeColumn { ccName = "template_id", ccType = BigIntT }
   , CompositeColumn { ccName = "from_shareable_link", ccType = BoolT }
+  , CompositeColumn { ccName = "show_arrow", ccType = BoolT }
   ]
 }
 

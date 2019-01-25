@@ -20,7 +20,8 @@ var SignviewSettingsModel = Backbone.Model.extend({
       showRejectOption: args.document.showrejectoption() == undefined ? true : args.document.showrejectoption(),
       allowRejectReason: args.document.allowrejectreason() == undefined ? true : args.document.allowrejectreason(),
       showPDFDownload: args.document.showpdfdownload() == undefined ? true : args.document.showpdfdownload(),
-      showFooter: args.document.showfooter() == undefined ? true : args.document.showfooter()
+      showFooter: args.document.showfooter() == undefined ? true : args.document.showfooter(),
+      showArrow: args.document.showArrow() == undefined ? true : args.document.showArrow()
     });
     theme.fetch({cache: false});
   },
@@ -62,6 +63,12 @@ var SignviewSettingsModel = Backbone.Model.extend({
   },
   setShowFooter: function (b) {
     this.set("showFooter", b);
+  },
+  showArrow: function () {
+    return this.get("showArrow");
+  },
+  setShowArrow: function (b) {
+    this.set("showArrow", b);
   },
   ready: function () {
     return this.document().ready() && this.theme().ready();
@@ -121,6 +128,11 @@ var SignviewSettingsView = React.createClass({
                 label={localization.designview.signviewsettings.showfooter}
                 onChange={function (c) { model.setShowFooter(c); }}
               />
+              <Checkbox
+                checked={model.showArrow()}
+                label={localization.designview.signviewsettings.showarrow}
+                onChange={function (c) { model.setShowArrow(c); }}
+              />
             </div>
             <div className="container">
               <SignviewPreview
@@ -129,6 +141,7 @@ var SignviewSettingsView = React.createClass({
                 allowRejectReason={model.allowRejectReason()}
                 showPDFDownload={model.showPDFDownload()}
                 showFooter={model.showFooter()}
+                showArrow={model.showArrow()}
                 model={model.theme()}
               />
             </div>
@@ -149,6 +162,7 @@ module.exports = React.createClass({
     this.props.document.setAllowrejectreason(this._model.allowRejectReason());
     this.props.document.setShowpdfdownload(this._model.showPDFDownload());
     this.props.document.setShowfooter(this._model.showFooter());
+    this.props.document.setShowArrow(this._model.showArrow());
     this.props.document.save();
 
     this.close();

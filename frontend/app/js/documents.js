@@ -207,6 +207,12 @@ var Document = exports.Document = Backbone.Model.extend({
     confirmationmessage : function() {
         return this.get("confirmationmessage");
     },
+    showArrow: function() {
+        return this.get("showarrow");
+    },
+    setShowArrow: function(showArrow) {
+        return this.set({"showarrow": showArrow});
+    },
     confirmMail: function() {
       return new Mail({
         document: this,
@@ -574,7 +580,8 @@ var Document = exports.Document = Backbone.Model.extend({
             show_reject_option: this.get("showrejectoption"),
             allow_reject_reason: this.get("allowrejectreason"),
             show_footer: this.get("showfooter"),
-            document_is_receipt: this.get("documentisreceipt")
+            document_is_receipt: this.get("documentisreceipt"),
+            show_arrow: this.get("showarrow")
           }
       };
     },
@@ -851,6 +858,7 @@ var Document = exports.Document = Backbone.Model.extend({
        allowrejectreason: args.display_options.allow_reject_reason,
        documentisreceipt:  args.display_options.document_is_receipt,
        showfooter: args.display_options.show_footer,
+       showarrow: args.display_options.show_arrow,
        invitationmessage: args.invitation_message,
        confirmationmessage: args.confirmation_message,
        timezone: args.timezone,

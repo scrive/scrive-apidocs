@@ -170,4 +170,5 @@ kontraMigrations = [
   , removePurgeOrphanFileJob
   , addCanBeForwardedToSignatories
   , featureFlagsAddForwarding
+  , addShowArrow
   ]

@@ -1,4 +1,4 @@
-{ 
+{
 "_Accept":"Accept",
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
@@ -930,6 +930,7 @@
 "_signviewMessage":"Message",
 "_signviewSettingsAllowRejectReason":"Allow rejection comment",
 "_signviewSettingsButton":"Signing page settings",
+"_signviewSettingsShowArrow":"Show auto-scroll arrow",
 "_signviewSettingsShowFooter":"Show footer",
 "_signviewSettingsShowHeader":"Show header",
 "_signviewSettingsShowPDFDownload":"Show PDF link",

@@ -262,7 +262,8 @@
     "show_reject_option": false,
     "allow_reject_reason": false,
     "show_footer": false,
-    "document_is_receipt": true
+    "document_is_receipt": true,
+    "show_arrow": false
   },
   "invitation_message": "#☭ҖINVITATION_MESSAGE",
   "confirmation_message": "#☭ҖINVITATION_MESSAGE",
