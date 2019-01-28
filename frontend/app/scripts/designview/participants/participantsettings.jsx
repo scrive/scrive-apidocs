@@ -119,7 +119,9 @@ module.exports = React.createClass({
   authenticationToViewOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var authTypes = ["standard", "se_bankid", "no_bankid", "dk_nemid", "fi_tupas", "sms_pin"];
+    var allAuthTypes = ["standard", "se_bankid", "no_bankid",
+                        "dk_nemid", "fi_tupas", "sms_pin"];
+    var authTypes = allAuthTypes.slice(0);
 
     var ff = Subscription.currentSubscription().currentUserFeatures();
     if (!ff.canUseStandardAuthenticationToView() && !sig.standardAuthenticationToView()) {
@@ -147,14 +149,20 @@ module.exports = React.createClass({
                                              sig.authenticationToViewArchived());
     });
 
-    return _.map(authTypes, function (t) {
-      return {name: self.authenticationToViewText(t), value: t};
+    return _.map(allAuthTypes, function (t) {
+      var result = {name: self.authenticationToViewText(t), value: t};
+      if (!_.contains(authTypes, t)) {
+        result.disabled = true;
+      }
+      return result;
     });
   },
   authenticationToViewArchivedOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var authTypes = ["standard", "se_bankid", "no_bankid", "dk_nemid", "fi_tupas", "sms_pin"];
+    var allAuthTypes = ["standard", "se_bankid", "no_bankid",
+                        "dk_nemid", "fi_tupas", "sms_pin"];
+    var authTypes = allAuthTypes.slice(0);
 
     var ff = Subscription.currentSubscription().currentUserFeatures();
     if (!ff.canUseStandardAuthenticationToView() && !sig.standardAuthenticationToViewArchived()) {
@@ -182,8 +190,12 @@ module.exports = React.createClass({
                                              authToViewArchived);
     });
 
-    return _.map(authTypes, function (t) {
-      return {name: self.authenticationToViewText(t), value: t};
+    return _.map(allAuthTypes, function (t) {
+      var result = {name: self.authenticationToViewText(t), value: t};
+      if (!_.contains(authTypes, t)) {
+        result.disabled = true;
+      }
+      return result;
     });
   },
   authenticationToSignText: function (t) {
@@ -202,7 +214,8 @@ module.exports = React.createClass({
   authenticationToSignOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var authTypes = !sig.signs() ? ["standard"] : ["standard", "se_bankid", "no_bankid", "dk_nemid", "sms_pin"];
+    var allAuthTypes = !sig.signs() ? ["standard"] : ["standard", "se_bankid", "no_bankid", "dk_nemid", "sms_pin"];
+    var authTypes = allAuthTypes.slice(0);
 
     if (sig.signs()) {
       var ff = Subscription.currentSubscription().currentUserFeatures();
@@ -229,8 +242,12 @@ module.exports = React.createClass({
                                              sig.authenticationToViewArchived());
     });
 
-    return _.map(authTypes, function (t) {
-      return {name: self.authenticationToSignText(t), value: t};
+    return _.map(allAuthTypes, function (t) {
+      var result =  {name: self.authenticationToSignText(t), value: t};
+      if (!_.contains(authTypes, t)) {
+        result.disabled = true;
+      }
+      return result;
     });
   },
 

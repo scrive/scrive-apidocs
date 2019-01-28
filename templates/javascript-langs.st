@@ -876,6 +876,7 @@ javascriptLocalisation =
                         , basicBranding: "$_paymentPlanOneBasicBranding()$"
                         , billedAnnually: "$_paymentPlanOneBilledAnnually()$"
                         , languages: "$_paymentPlanOneLanguages()$"
+                        , eid: "$_paymentPlanOneEID()$"
                     }
            }
            , table: {
