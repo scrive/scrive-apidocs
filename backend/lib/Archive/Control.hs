@@ -1,6 +1,7 @@
 module Archive.Control
        (
        handleDelete,
+       handleProlong,
        handleReallyDelete,
        handleSendReminders,
        handleRestore,
@@ -28,6 +29,7 @@ import AppView
 import Archive.View
 import DB
 import Doc.Action
+import Doc.API.Callback.Model (triggerAPICallbackIfThereIsOne)
 import Doc.API.V1.DocumentToJSON (allCustomTextOrCheckboxOrRadioGroupFields, docForListCSVHeaderV1, docForListCSVV1)
 import Doc.API.V2.JSON.List
 import Doc.DocInfo (isPending)
@@ -99,6 +101,16 @@ handleDelete = do
              dbUpdate $ RejectDocument signatorylinkid (isApprover sl) Nothing sl_actor
              theDocument >>= postDocumentRejectedChange signatorylinkid Nothing
         dbUpdate $ ArchiveDocument (userid user) actor
+
+handleProlong :: Kontrakcja m => m JSValue
+handleProlong = do
+  let prolongable user doc = isAuthorOrAuthorsAdmin user doc && documentstatus doc == Timedout
+  days <- getCriticalField asValidNumber "days"
+  when (days < 1 || days > 365) internalError
+  handleArchiveDocumentsAction' "prolong documents" prolongable $ \(_, actor) -> do
+    doc <- theDocument
+    dbUpdate $ ProlongDocument days (documenttimezonename doc) actor
+    triggerAPICallbackIfThereIsOne =<< theDocument
 
 handleReallyDelete :: Kontrakcja m => m JSValue
 handleReallyDelete = do

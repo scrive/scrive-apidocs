@@ -84,6 +84,7 @@ staticRoutes production = choice
      , dir "d"                     $ hGet  $ toK1 $ DocControl.handleIssueShowGet
      , dir "d" $ dir "save"         $ hPost $ toK1 $ DocControl.handleMarkAsSaved
      , dir "d" $ dir "delete"       $ hPost $ toK0 $ ArchiveControl.handleDelete
+     , dir "d" $ dir "prolong"      $ hPost $ toK0 $ ArchiveControl.handleProlong
      , dir "d" $ dir "reallydelete" $ hPost $ toK0 $ ArchiveControl.handleReallyDelete
      , dir "d" $ dir "remind"       $ hPost $ toK0 $ ArchiveControl.handleSendReminders
      , dir "d" $ dir "restore"      $ hPost $ toK0 $ ArchiveControl.handleRestore
