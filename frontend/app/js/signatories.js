@@ -35,6 +35,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         confirmation_delivery_method : "email",
         allows_highlighting: false,
         hide_personal_number: false,
+        can_forward: false,
         consent_module: null,
         // Internal properties used by design view for "goldfish" memory
         deliverySynchedWithConfirmationDelivery : true,
@@ -42,7 +43,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         deliveryGoldfishMemory : null,
         confirmationDeliveryWasNone  : false,
         highlightedPages : [],
-        willGetHighlighedPageSoon: false
+        willGetHighlighedPageSoon: false,
     },
 
     initialize: function(args) {
@@ -337,6 +338,9 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     },
     approves: function() {
          return this.signatoryRole() == "approver";
+    },
+    isForwarded: function() {
+         return this.signatoryRole() == "forwarded_party";
     },
     signsuccessredirect : function() {
           return this.get("sign_success_redirect_url");
@@ -693,6 +697,24 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
               reason: customtext.trim() || undefined
           });
     },
+    forward: function(customtext,textFieldsWithValues) {
+        var textFieldsWithValues = textFieldsWithValues.map(function(fwv) {
+          return {
+            type : fwv.field.type()
+          , order : fwv.field.order() || undefined
+          , name : fwv.field.name() || undefined
+          , value : fwv.newValue
+          }
+        });
+
+        return new Submit({
+              url: "/api/frontend/documents/" + this.document().documentid() + "/" + this.document().currentSignatory().signatoryid() + "/forwardsigning",
+              method: "POST",
+              ajax : true,
+              fields : JSON.stringify(textFieldsWithValues),
+              message: customtext.trim() || undefined
+          });
+    },
     changeAuthenticationToView: function(authenticationType, personalNumber, mobileNumber) {
         return new Submit({
                 url: "/api/frontend/documents/" + this.document().documentid() + "/" + this.signatoryid() + "/setauthenticationtoview",
@@ -812,6 +834,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
               confirmation_delivery_method : this.confirmationdelivery(),
               allows_highlighting : this.allowsHighlighting(),
               hide_personal_number: this.hidePN(),
+              can_forward: this.canForward(),
               consent_module: this.consentModule() ? this.consentModule().draftData() : null
         };
     },
@@ -1103,6 +1126,12 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     },
     hidePN: function() {
       return this.get("hide_personal_number");
+    },
+    canForward: function() {
+      return this.get("can_forward");
+    },
+    setCanForward: function(v) {
+      return this.set({"can_forward":v});
     },
     bindBubble: function() {
         var signatory = this;

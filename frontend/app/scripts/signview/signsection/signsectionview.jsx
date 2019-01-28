@@ -9,6 +9,7 @@ var SignFinish = require("./signfinishview");
 var SignSign = require("./signsignview");
 var SignApprove = require("./signapproveview");
 var SignReject = require("./signrejectview");
+var SignForward = require("./signforwardview");
 var SignSigning = require("./signsigningview");
 var SignApproving = require("./signapprovingview");
 var SignProcess = require("./signprocessview");
@@ -121,7 +122,7 @@ var Task = require("../navigation/task");
       var steps = [
         "sign", "finish", "signing", "process", "eid", "eid-process", "pin",
         "input-pin", "reject", "eid-nets", "eid-nets-process", "approve",
-        "approving"
+        "approving", "forward"
       ];
 
       var valid = steps.indexOf(step) > -1;
@@ -226,6 +227,43 @@ var Task = require("../navigation/task");
             });
           }
         });
+      });
+    },
+    stringifiedForwardedDocumentData: function (doc, fieldsWithValues) {
+      var name = doc.currentSignatory().name();
+      var nfs = _.filter(fieldsWithValues, function (f) { return f.field.isName(); });
+      if (nfs.length > 0) {
+        var snfs = _.sortBy(nfs, function (f) { return f.field.order(); });
+        name = _.reduce(snfs, function (acc, nf) { return acc + " " + nf.newValue; }, "");
+      }
+      name = name.trim() || localization.notNamedParty;
+      var values = {
+        name: name,
+        title: doc.title(),
+        delivery_method: doc.currentSignatory().get("delivery_method"),
+        forsigning: doc.currentSignatory().signs()
+      };
+      return JSON.stringify(values);
+    },
+    handleForward: function (messageText, fieldsWithValues) {
+      var model = this.props.model;
+      var doc = model.document();
+      var sdata = this.stringifiedForwardedDocumentData(doc, fieldsWithValues);
+      doc.currentSignatory().forward(messageText, fieldsWithValues).sendAjax(function () {
+        Cookies.set("forwarded_data", sdata);
+        window.location = window.location.protocol + "//" + window.location.host +
+          "/" + doc.lang() + "/afterforward/" + doc.documentid();
+      }, function (xhr) {
+        if (xhr.status == 403) {
+          ScreenBlockingDialog.open({header: localization.sessionTimedoutInSignview});
+        } else {
+          new FlashMessage({
+            type: "error",
+            content: localization.signviewForwardingFailed,
+            className: "flash-signview",
+            withReload: true
+          });
+        }
       });
     },
     handleSignSwedishEID: function (bankIDSigning) {
@@ -565,6 +603,7 @@ var Task = require("../navigation/task");
               model={this.props.model}
               canSign={this.canSignDocument() && !this.props.highlighting}
               onSign={this.handleSetStep("signing")}
+              onForward={this.handleSetStep("forward")}
               onReject={this.handleSetStep("reject")}
             />
           }
@@ -573,6 +612,7 @@ var Task = require("../navigation/task");
               model={this.props.model}
               canApprove={true}
               onApprove={this.handleSetStep("approving")}
+              onForward={this.handleSetStep("forward")}
               onReject={this.handleSetStep("reject")}
             />
           }
@@ -583,6 +623,7 @@ var Task = require("../navigation/task");
               name={sig.name()}
               canSign={this.canSignDocument() && !this.props.highlighting}
               onSign={this.handleSign}
+              onForward={this.handleSetStep("forward")}
               onReject={this.handleSetStep("reject")}
               showLegalText={this.props.showLegalText}
             />
@@ -627,6 +668,7 @@ var Task = require("../navigation/task");
               ssn={sig.personalnumber()}
               thisDevice={this.state.eidThisDevice}
               onReject={this.handleSetStep("reject")}
+              onForward={this.handleSetStep("forward")}
               onSign={ function (thisDevice) {
                   doc.takeSigningScreenshot(function () {
                     self.handleStartEID(thisDevice);
@@ -654,6 +696,7 @@ var Task = require("../navigation/task");
               canSign={this.canSignDocument()}
               ssn={sig.personalnumber()}
               onReject={this.handleSetStep("reject")}
+              onForward={this.handleSetStep("forward")}
               onSign={ function () {
                   doc.takeSigningScreenshot(function () {
                     self.handleStartNets();
@@ -678,6 +721,7 @@ var Task = require("../navigation/task");
               askForPhone={this.state.askForPhone}
               field={phoneField}
               onReject={this.handleSetStep("reject")}
+              onForward={this.handleSetStep("forward")}
               onNext={this.handlePin}
             />
           }
@@ -688,6 +732,13 @@ var Task = require("../navigation/task");
               onBack={this.handleSetStep("pin")}
               onSign={this.handleSign}
               showLegalText={this.props.showLegalText}
+            />
+          }
+          {/* if */ this.isOnStep("forward") &&
+            <SignForward
+              model={this.props.model}
+              onBack={this.handleSetStep(this.state.initialStep)}
+              onForward={this.handleForward}
             />
           }
           {/* if */ this.isOnStep("reject") &&

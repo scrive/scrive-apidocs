@@ -475,6 +475,8 @@ signatoryForListCSV customFields doc sl = [
                 SignatoryRoleSigningParty -> "Signing party"
                 SignatoryRoleViewer       -> "Viewer"
                 SignatoryRoleApprover     -> "Approver"
+                SignatoryRoleForwardedSigningParty -> "Forwarded party"
+                SignatoryRoleForwardedApprover -> "Forwarded party"
             , getFullName sl
             , getEmail sl
             , getPersonalNumber sl

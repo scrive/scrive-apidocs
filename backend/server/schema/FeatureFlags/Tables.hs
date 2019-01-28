@@ -8,7 +8,7 @@ import DB
 tableFeatureFlags :: Table
 tableFeatureFlags = tblTable {
     tblName = "feature_flags"
-  , tblVersion = 11
+  , tblVersion = 12
   , tblColumns = [
       tblColumn { colName = "can_use_templates", colType = BoolT, colNullable = False, colDefault = Just "true" }
     , tblColumn { colName = "can_use_branding", colType = BoolT, colNullable = False, colDefault = Just "true" }
@@ -37,6 +37,7 @@ tableFeatureFlags = tblTable {
     , tblColumn { colName = "can_use_fi_authentication_to_view", colType = BoolT, colNullable = False, colDefault = Just "true" }
     , tblColumn { colName = "can_use_email_confirmations", colType = BoolT, colNullable = False, colDefault = Just "true" }
     , tblColumn { colName = "can_use_shareable_links", colType = BoolT, colNullable = False, colDefault = Just "true" }
+    , tblColumn { colName = "can_use_forwarding", colType = BoolT, colNullable = False, colDefault = Just "true" }
     ]
   , tblPrimaryKey = pkOnColumns ["user_group_id", "flags_for_admin"]
   , tblForeignKeys = [
@@ -71,5 +72,6 @@ ctFeatureFlags = CompositeType {
     , CompositeColumn { ccName = "can_use_api_invitations", ccType = BoolT }
     , CompositeColumn { ccName = "can_use_pad_invitations", ccType = BoolT }
     , CompositeColumn { ccName = "can_use_shareable_links", ccType = BoolT }
+    , CompositeColumn { ccName = "can_use_forwarding", ccType = BoolT }
     ]
   }

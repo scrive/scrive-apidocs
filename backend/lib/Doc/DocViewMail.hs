@@ -4,6 +4,8 @@ module Doc.DocViewMail
     , mailDocumentErrorForAuthor
     , mailDocumentErrorForSignatory
     , mailDocumentRejected
+    , mailForwardSigningForAuthor
+    , mailForwardSigningForNewSignatory
     , mailDocumentRemind
     , mailDocumentRemindContent
     , mailForwardSigned
@@ -198,6 +200,41 @@ mailDocumentRejected forMail customMessage forAuthor rejector document = do
                        templateName "mailAuthorRejectContractMail"
                    else
                        templateName "mailRejectContractMail"
+
+mailForwardSigningForAuthor :: ( MonadDB m, MonadThrow m, TemplatesMonad m
+                        , MailContextMonad m )
+                     => SignatoryLink
+                     -> SignatoryLink
+                     -> Document
+                     -> m Mail
+mailForwardSigningForAuthor originalsl newsl doc = do
+   fromName <- smartOrUnnamedName originalsl doc
+   toName <- smartOrUnnamedName newsl doc
+   documentMailWithDocLang doc "mailForwardSigningForAuthorMail" $ do
+        F.value "fromName" fromName
+        F.value "toName" $ toName
+        F.value "loginlink" $ show $ LinkIssueDoc $ documentid doc
+
+mailForwardSigningForNewSignatory :: ( MonadDB m, MonadThrow m, TemplatesMonad m
+                        , MailContextMonad m )
+                     => Maybe String
+                     -> SignatoryLink
+                     -> SignatoryLink
+                     -> Document
+                     -> m Mail
+mailForwardSigningForNewSignatory message originalsl newsl doc = do
+   mctx <- getMailContext
+   fromName <- smartOrUnnamedName originalsl doc
+   toName <- smartOrUnnamedName newsl doc
+   documentMailWithDocLang doc "mailForwardSigningForNewSignatory" $ do
+        F.value "hasforwardmessage" $ isJust message
+        F.value "forwardmessage" $ asCustomMessage <$> message
+        F.value "hasinvitationmessage" $ (documentinvitetext doc) /= ""
+        F.value "invitationmessage" $ asCustomMessage (documentinvitetext doc)
+        F.value "fromName" $ fromName
+        F.value "toName" $ toName
+        F.value "authorname" $ getSmartName <$> getAuthorSigLink doc
+        F.value "link" $ makeFullLink mctx $ show $ (LinkSignDoc (documentid doc) newsl)
 
 smartOrUnnamedName :: TemplatesMonad m => SignatoryLink -> Document -> m String
 smartOrUnnamedName sl doc

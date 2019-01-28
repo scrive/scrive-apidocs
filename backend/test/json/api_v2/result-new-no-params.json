@@ -63,7 +63,8 @@
       "api_delivery_url": null,
       "hide_personal_number": false,
       "has_authenticated_to_view":false,
-      "consent_module": null
+      "consent_module": null,
+      "can_forward": false
     }
   ],
   "file": null,

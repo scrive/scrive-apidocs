@@ -126,6 +126,7 @@ historyEventType (Current VisitedViewForAuthenticationEvidence) = True
 historyEventType (Current VisitedViewForSigningEvidence)        = True
 historyEventType (Current AuthenticatedToViewEvidence)          = True
 historyEventType (Current ApprovedByApproverPartyEvidence)      = True
+historyEventType (Current ForwardedSigingEvidence)              = True
 historyEventType _                                              = False
 
 
@@ -159,6 +160,7 @@ getEvidenceEventStatusClass (Current VisitedViewForAuthenticationEvidence) = SCO
 getEvidenceEventStatusClass (Current VisitedViewForSigningEvidence)        = SCOpened
 getEvidenceEventStatusClass (Current AuthenticatedToViewEvidence)          = SCAuthenticatedToView
 getEvidenceEventStatusClass (Current ApprovedByApproverPartyEvidence)      = SCApproved
+getEvidenceEventStatusClass (Current ForwardedSigingEvidence)              = SCSent
 getEvidenceEventStatusClass _                                              = SCError
 
 -- Remove signatory events that happen after signing (link visited,

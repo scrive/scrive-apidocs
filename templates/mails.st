@@ -102,6 +102,58 @@ mailContractClosedMainP =
 mailDocumentCorrectionBodyWikiURL=
 <a href='http://en.wikipedia.org/wiki/Digital_signature'>http://en.wikipedia.org/wiki/Digital_signature</a>
 ####
+#### FORWARD SIGNING MAIL
+####
+mailForwardSigningForAuthorMail=
+      $_mailForwardSigningForAuthorTitle()$
+      $nicemail(
+        mailheader = _mailForwardSigningForAuthorHeader();
+        mailp1 = _mailForwardSigningForAuthorContent();
+        mailspacing2 = "";
+        mailp2 = mailForwardSigningForAuthorButton();
+        footer = null
+      )$
+###
+###
+mailForwardSigningForAuthorButton=
+<div>
+  $nicebutton(link=concat(a1=ctxhostpart;a2=loginlink); text=_mailForwardSigningForAuthorButton())$
+</div>
+####
+####
+mailForwardSigningForNewSignatory=
+$_mailForwardSigningForNewSignatoryTitle()$
+$nicemail(
+    mailp1 = mailForwardSigningForNewSignatoryDescription();
+    mailspacing1 = "<br/>";
+    mailp2 = mailInvitationToSignContractIntructions()
+)$
+####
+mailForwardSigningForNewSignatoryDescription=
+$_mailForwardSigningForNewSignatoryDescriptionBase()$
+<br/>
+
+$if(hasforwardmessage)$
+  <br/>
+  $_mailForwardMessageDescription()$:
+  <br/>
+  <p>$forwardmessage:br()$</p>
+$endif$
+
+$if(hasinvitationmessage)$
+  <br/>
+  $_mailInvitationMessageDescription()$:
+  <br/>
+  <p>$invitationmessage:br()$</p>
+$endif$
+###
+###
+mailForwardSigningForNewSignatoryButton=
+<div>
+  $nicebutton(link=concat(a1=ctxhostpart;a2=link); text=_mailForwardSigningForNewSignatoryButton())$
+</div>
+####
+####
 #### REJECTED MAIL
 ####
 mailAuthorRejectContractMail=

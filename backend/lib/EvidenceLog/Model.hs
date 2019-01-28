@@ -93,9 +93,8 @@ signatoryLinkTemplateFields sl = do
   F.value "mobile"      $ signatorylinkdeliverymethod sl == MobileDelivery
   F.value "emailmobile" $ signatorylinkdeliverymethod sl == EmailAndMobileDelivery
   F.value "viewing"     $ isViewer sl
-  F.value "signing"     $ isSignatory sl
-  F.value "approving"   $ isApprover sl
-
+  F.value "signing"     $ isSignatory sl || signatoryrole sl == SignatoryRoleForwardedSigningParty
+  F.value "approving"   $ isApprover sl || signatoryrole sl == SignatoryRoleForwardedApprover
 
 -- | Create evidence text that goes into evidence log
 evidenceLogText :: (DocumentMonad m, TemplatesMonad m, MonadDB m, MonadThrow m)
@@ -416,7 +415,8 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewArchivedMethodFITupasToNOBankIDEvidence  |
   ChangeAuthenticationToViewArchivedMethodFITupasToDKNemIDEvidence   |
   ApprovedByApproverPartyEvidence |
-  RejectDocumentByApproverEvidence
+  RejectDocumentByApproverEvidence |
+  ForwardedSigingEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -684,6 +684,7 @@ instance ToSQL EvidenceEventType where
   toSQL (Current ChangeAuthenticationToViewArchivedMethodFITupasToDKNemIDEvidence) = toSQL (191::Int16)
   toSQL (Current ApprovedByApproverPartyEvidence                                 ) = toSQL (192::Int16)
   toSQL (Current RejectDocumentByApproverEvidence                                ) = toSQL (193::Int16)
+  toSQL (Current ForwardedSigingEvidence                                         ) = toSQL (194::Int16)
 
 instance FromSQL EvidenceEventType where
   type PQBase EvidenceEventType = PQBase Int16
@@ -883,8 +884,9 @@ instance FromSQL EvidenceEventType where
       191 -> return (Current ChangeAuthenticationToViewArchivedMethodFITupasToDKNemIDEvidence)
       192 -> return (Current ApprovedByApproverPartyEvidence                                 )
       193 -> return (Current RejectDocumentByApproverEvidence                                )
+      194 -> return (Current ForwardedSigingEvidence                                         )
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 193)]
+        reRange = [(1, 194)]
       , reValue = n
       }
 

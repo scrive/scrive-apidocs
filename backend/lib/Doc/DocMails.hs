@@ -7,6 +7,7 @@ module Doc.DocMails (
   , sendForwardEmail
   , sendClosedEmails
   , sendRejectEmails
+  , sendForwardSigningMessages
   , sendDocumentErrorEmail
   , sendPinCode
   , makeMailAttachments
@@ -384,6 +385,67 @@ sendRejectEmails customMessage signalink document = do
          scheduleEmailSendout $ mail { to = [getMailAddress sl] }
       )
       (scheduleSMS document =<< smsRejectNotification document sl signalink)
+
+sendForwardSigningMessages:: Kontrakcja m => Maybe String -> SignatoryLink -> SignatoryLink -> Document -> m ()
+sendForwardSigningMessages customMessage originalSignatory newSignatory doc = do
+  sendForwardSigningMessagesForNewSignatory customMessage originalSignatory newSignatory doc
+  when (not $ isAuthor originalSignatory) $ do
+    sendForwardSigningMessagesToAuthor originalSignatory newSignatory doc
+  return ()
+
+sendForwardSigningMessagesForNewSignatory:: Kontrakcja m => Maybe String -> SignatoryLink -> SignatoryLink -> Document -> m ()
+sendForwardSigningMessagesForNewSignatory customMessage originalsiglink newsiglink doc = do
+    let sendMail = do
+          mail <- mailForwardSigningForNewSignatory customMessage originalsiglink newsiglink doc
+          scheduleEmailSendout $ mail {
+              to = [getMailAddress newsiglink]
+            , kontraInfoForMail = Just $ DocumentInvitationMail (documentid doc) (signatorylinkid newsiglink)
+            }
+
+    let sendSMS =
+          scheduleSMS doc =<< smsForwardSigningForNewSignatory originalsiglink newsiglink doc
+
+    let useMail = isGood $ asValidEmail       $ getEmail  newsiglink
+        useSMS  = isGood $ asValidPhoneForSMS $ getMobile newsiglink
+
+    case signatorylinkdeliverymethod newsiglink of
+      APIDelivery -> return ()
+      PadDelivery -> return ()
+      EmailDelivery -> when useMail $ sendMail
+      MobileDelivery -> when useSMS $ sendSMS
+      EmailAndMobileDelivery -> do
+        when useMail $ sendMail
+        when useSMS  $ sendSMS
+
+sendForwardSigningMessagesToAuthor:: Kontrakcja m => SignatoryLink -> SignatoryLink -> Document -> m ()
+sendForwardSigningMessagesToAuthor originalsiglink newsiglink doc = do
+    let authorsiglink = fromJust $ getAuthorSigLink doc
+    let sendMail = do
+          mail <- mailForwardSigningForAuthor originalsiglink newsiglink doc
+          scheduleEmailSendout $ mail {
+              to = [getMailAddress authorsiglink]
+            , kontraInfoForMail = Just $ OtherDocumentMail $ documentid doc
+            }
+
+    let sendSMS =
+          scheduleSMS doc =<< smsForwardSigningForAuthor originalsiglink newsiglink doc
+
+    let useMail = isGood $ asValidEmail       $ getEmail  authorsiglink
+        useSMS  = isGood $ asValidPhoneForSMS $ getMobile authorsiglink
+
+    case signatorylinkconfirmationdeliverymethod authorsiglink of
+      NoConfirmationDelivery -> return ()
+      EmailConfirmationDelivery -> when useMail $ sendMail
+      EmailLinkConfirmationDelivery -> when useMail $ sendMail
+      MobileConfirmationDelivery -> when useSMS $ sendSMS
+      EmailAndMobileConfirmationDelivery -> do
+        when useMail $ sendMail
+        when useSMS  $ sendSMS
+      EmailLinkAndMobileConfirmationDelivery -> do
+        when useMail $ sendMail
+        when useSMS  $ sendSMS
+
+
 
 {- |
    Send reminder to all parties in document that can sign

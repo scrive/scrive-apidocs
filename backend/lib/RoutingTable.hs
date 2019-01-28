@@ -107,6 +107,7 @@ staticRoutes production = choice
 
      , allLangDirs $ dir "verify" $ hGet  $ toK0 $ DocControl.handleShowVerificationPage
      , allLangDirs $ dir "verify" $ hPostNoXToken $ toK0 $ DocControl.handleVerify
+     , allLangDirs $ dir "afterforward" $ hGet $ toK1 $ DocControl.handleShowAfterForward
 
      -- UserControl
      , dir "account" $ hGet  $ toK0 $ UserControl.handleAccountGet

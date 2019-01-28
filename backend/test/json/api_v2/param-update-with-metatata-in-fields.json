@@ -18,6 +18,7 @@
             }
          ],
          "consent_module":null,
+         "can_forward": false,
          "sign_order":1,
          "sign_time":null,
          "seen_time":null,
@@ -104,6 +105,7 @@
             }
          ],
          "consent_module":null,
+         "can_forward": false,
          "sign_order":1,
          "sign_time":null,
          "seen_time":null,

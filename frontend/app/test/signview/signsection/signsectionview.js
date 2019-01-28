@@ -18,6 +18,10 @@ var SignSectionView = require("../../../scripts/signview/signsection/signsection
       return true;
     },
 
+    hasForwardOption: function () {
+      return false;
+    },
+
     tasks: function () {
       return {
         notCompletedTasks: function () {

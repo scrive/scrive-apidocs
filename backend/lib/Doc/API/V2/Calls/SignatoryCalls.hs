@@ -1,5 +1,6 @@
 module Doc.API.V2.Calls.SignatoryCalls (
   docApiV2SigReject
+, docApiV2SigForwardSigning
 , docApiV2SigCheck
 , docApiV2SigApprove
 , docApiV2SigSign
@@ -79,6 +80,41 @@ docApiV2SigReject did slid = logDocumentAndSignatory did slid . api $ do
     switchLang . getLang =<< theDocument
     dbUpdate $ RejectDocument  slid (isApprover sl) rejectReason actor
     postDocumentRejectedChange slid rejectReason =<< theDocument
+
+    -- Result
+    doc <- theDocument
+    return $ Ok $
+      (\d -> (unjsonDocument (documentAccessForSlid slid doc),d)) doc
+
+
+docApiV2SigForwardSigning :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
+docApiV2SigForwardSigning did slid = logDocumentAndSignatory did slid . api $ do
+  -- Permissions
+  mh <- getMagicHashForSignatoryAction did slid
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh)
+    `withDocumentM` do
+
+    -- Guards
+    guardThatObjectVersionMatchesIfProvided did
+    guardDocumentStatus      Pending                  =<< theDocument
+    guardSigningPartyHasNeitherSignedNorApproved slid =<< theDocument
+    guardThatDocumentHasntBeenForwadedTooManyTimes =<< theDocument
+
+    -- Parameters
+    forwardMessage <- (fmap $ T.unpack . T.strip)
+      <$> apiV2ParameterOptional (ApiV2ParameterText "message")
+    (SignatoryTextFieldIDsWithNewTexts textFieldIDsWithNewText) <- apiV2ParameterObligatory
+      (ApiV2ParameterJSON "fields" unjsonSignatoryTextFieldIDsWithNewTexts)
+
+    -- API call actions
+    originalSignatory <- guardGetSignatoryFromIdForDocument slid
+    ctx   <- getContext
+    actor <- signatoryActor ctx originalSignatory
+
+    switchLang . getLang =<< theDocument
+    newslid <- dbUpdate $ ForwardSigning originalSignatory forwardMessage textFieldIDsWithNewText actor
+
+    postDocumentForwardChange forwardMessage originalSignatory newslid =<< theDocument
 
     -- Result
     doc <- theDocument

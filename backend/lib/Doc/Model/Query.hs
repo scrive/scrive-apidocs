@@ -239,6 +239,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetDocumentByDocume
          -- we are sloppy and let a person see the document.
          sqlWhereSignatoryLinkIDIs slid
          sqlWhereMagicHashIsValidForSignatoryLink now mh
+         sqlWhereSignatoryLinkIsNotForwaded
       sqlWhereDocumentWasNotPurged
 
 data GetDocumentByDocumentIDAndShareableLinkHash = GetDocumentByDocumentIDAndShareableLinkHash DocumentID MagicHash

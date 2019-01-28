@@ -227,7 +227,7 @@ ctSignatoryAttachment = CompositeType {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable {
     tblName = "signatory_links"
-  , tblVersion = 35
+  , tblVersion = 36
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
@@ -257,6 +257,8 @@ tableSignatoryLinks = tblTable {
     , tblColumn { colName = "hide_pn_elog", colType = BoolT, colNullable = False, colDefault = Just "false" }
     , tblColumn { colName = "consent_title", colType = TextT, colNullable = True }
     , tblColumn { colName = "authentication_to_view_archived_method", colType = SmallIntT, colNullable = False }
+    , tblColumn { colName = "can_be_forwarded", colType = BoolT, colNullable = False, colDefault = Just "false" }
+
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
@@ -308,6 +310,7 @@ ctSignatoryLink = CompositeType {
   , CompositeColumn { ccName = "allows_highlighting", ccType = BoolT}
   , CompositeColumn { ccName = "has_identified_to_view", ccType = BoolT }
   , CompositeColumn { ccName = "hide_pn_elog", ccType = BoolT}
+  , CompositeColumn { ccName = "can_be_forwarded", ccType = BoolT}
   , CompositeColumn { ccName = "consent_title", ccType = TextT }
   , CompositeColumn { ccName = "consent_questions", ccType = ArrayT $ CustomT "signatory_consent_question" }
   ]

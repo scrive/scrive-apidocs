@@ -22,6 +22,7 @@ module Doc.API.V2.Guards (
 , guardApproverHasNotApproved
 , guardSignatoryHasNotSigned
 , guardSigningPartyHasNeitherSignedNorApproved
+, guardThatDocumentHasntBeenForwadedTooManyTimes
 , guardThatAllAttachmentsAreAcceptedOrIsAuthor
 , guardThatAllSignatoryAttachmentsAreUploadedOrMarked
 , guardThatRadioButtonValuesAreValid
@@ -333,6 +334,14 @@ guardSigningPartyHasNeitherSignedNorApproved slid doc =
         getSigLinkFor slid doc) $
   (apiError . signatoryStateError $
     "The signing party has either signed or approved already")
+
+guardThatDocumentHasntBeenForwadedTooManyTimes :: Kontrakcja m
+                                             => Document
+                                             -> m ()
+guardThatDocumentHasntBeenForwadedTooManyTimes doc =
+  when (length (filter isForwarded $ documentsignatorylinks doc) > 100) $
+  (apiError . documentStateError $
+    "This document has been forwarded too many times already")
 
 -- Checks if document can be started. Throws matching API exception if it does not
 guardThatDocumentCanBeStarted :: Kontrakcja m => Document -> m ()

@@ -21,6 +21,7 @@ module Doc.Model.Update
   , PurgeDocuments(..)
   , archiveIdleDocuments
   , RejectDocument(..)
+  , ForwardSigning(..)
   , RemoveDocumentAttachments(..)
   , ResetSignatoryDetails(..)
   , RestartDocument(..)
@@ -129,9 +130,51 @@ import Utils.Monad
 import qualified DB.TimeZoneName as TimeZoneName
 import qualified Doc.Screenshot as Screenshot
 
+-- insertAsAdditionalSignatoryLink
+insertAsAdditionalSignatoryLink :: (MonadDB m, MonadLog m, MonadThrow m) => DocumentID -> SignatoryLink -> m SignatoryLinkID
+insertAsAdditionalSignatoryLink did sl = do
+  slid <- head <$> insertSignatoryLinksOnly did [(sl {signatorylinkid = unsafeSignatoryLinkID 0 , signatoryisauthor = False})]
+  insertSignatoryAttachments [(slid, att) | att <- signatoryattachments sl]
+  insertSignatoryLinkFields [(slid, f) | f <- signatoryfields sl]
+  insertSignatoryConsentQuestions [(slid, cq) | cq <- signatorylinkconsentquestions sl]
+  return slid
+
 insertSignatoryLinks :: (MonadDB m, MonadLog m, MonadThrow m) => DocumentID -> [SignatoryLink] -> m ()
 insertSignatoryLinks _ [] = return ()
 insertSignatoryLinks did links = do
+  ids <- insertSignatoryLinksOnly did links
+  -- Update IDs.
+  let linksWithID = zipWith (\sl slid -> sl { signatorylinkid = slid }) links ids
+
+  -- Update the document to reference the author and bail if there
+  -- isn't exactly one.
+  case filter signatoryisauthor linksWithID of
+    [author] -> do
+      runQuery_ . sqlUpdate "documents" $ do
+        sqlSet "author_id" $ signatorylinkid author
+        -- we denormalise due to load
+        sqlSet "author_user_id" $ maybesignatory author
+        sqlWhereEq "id" did
+    authors -> do
+      logAttention "Document doesn't have exactly one author" $ object [
+          identifier did
+        , identifier $ map signatorylinkid authors
+        ]
+      unexpectedError "Invalid document"
+
+  insertSignatoryAttachments
+    [(signatorylinkid sl, att) | sl <- linksWithID, att <- signatoryattachments sl]
+
+  insertSignatoryLinkFields
+    [(signatorylinkid sl, fld) | sl <- linksWithID, fld <- signatoryfields sl]
+
+  insertSignatoryConsentQuestions
+    [(signatorylinkid sl, cq) | sl <- linksWithID, cq <- signatorylinkconsentquestions sl]
+
+
+insertSignatoryLinksOnly :: MonadDB m =>  DocumentID -> [SignatoryLink] -> m [SignatoryLinkID]
+insertSignatoryLinksOnly _ [] = return []
+insertSignatoryLinksOnly did links = do
   runQuery_ . sqlInsert "signatory_links" $ do
     sqlSet "document_id" did
     sqlSetListWithDefaults "id" $ map (\sl -> if (unsafeSignatoryLinkID 0 == signatorylinkid sl) then Nothing else (Just $ signatorylinkid sl)) links
@@ -160,37 +203,11 @@ insertSignatoryLinks did links = do
     sqlSetList "confirmation_delivery_method" $ signatorylinkconfirmationdeliverymethod <$> links
     sqlSetList "allows_highlighting" $ signatorylinkallowshighlighting <$> links
     sqlSetList "hide_pn_elog" $ signatorylinkhidepn <$> links
+    sqlSetList "can_be_forwarded" $ signatorylinkcanbeforwarded <$> links
     sqlSetList "consent_title" $ signatorylinkconsenttitle <$> links
     sqlResult "id"
 
-  -- Update IDs.
-  linksWithID <- zipWith (\sl slid -> sl { signatorylinkid = slid }) links
-    <$> fetchMany runIdentity
-
-  -- Update the document to reference the author and bail if there
-  -- isn't exactly one.
-  case filter signatoryisauthor linksWithID of
-    [author] -> do
-      runQuery_ . sqlUpdate "documents" $ do
-        sqlSet "author_id" $ signatorylinkid author
-        -- we denormalise due to load
-        sqlSet "author_user_id" $ maybesignatory author
-        sqlWhereEq "id" did
-    authors -> do
-      logAttention "Document doesn't have exactly one author" $ object [
-          identifier did
-        , identifier $ map signatorylinkid authors
-        ]
-      unexpectedError "Invalid document"
-
-  insertSignatoryAttachments
-    [(signatorylinkid sl, att) | sl <- linksWithID, att <- signatoryattachments sl]
-
-  insertSignatoryLinkFields
-    [(signatorylinkid sl, fld) | sl <- linksWithID, fld <- signatoryfields sl]
-
-  insertSignatoryConsentQuestions
-    [(signatorylinkid sl, cq) | sl <- linksWithID, cq <- signatorylinkconsentquestions sl]
+  fetchMany runIdentity
 
 insertSignatoryAttachments :: MonadDB m => [(SignatoryLinkID, SignatoryAttachment)] -> m ()
 insertSignatoryAttachments [] = return ()
@@ -396,10 +413,10 @@ insertNewDocument doc = do
 newFromDocumentID :: (MonadDB m, MonadThrow m, MonadLog m, CryptoRNG m) => (Document -> Document) -> DocumentID -> m (Maybe Document)
 newFromDocumentID f docid = do
   doc <- query $ GetDocumentByDocumentID docid
-  newFromDocument f doc
+  Just <$> insertNewDocument (f doc)
 
-newFromDocument :: (MonadDB m, MonadThrow m, MonadLog m, CryptoRNG m) => (Document -> Document) -> Document -> m (Maybe Document)
-newFromDocument f doc = Just <$> insertNewDocument (f doc)
+newFromDocument :: (MonadDB m, MonadThrow m, MonadLog m, CryptoRNG m) => Document -> m (Maybe Document)
+newFromDocument doc = Just <$> insertNewDocument doc
 
 data ArchiveDocument = ArchiveDocument UserID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m ArchiveDocument () where
@@ -1117,6 +1134,64 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, Mo
 
     insertDocument doc
 
+
+data ForwardSigning = ForwardSigning SignatoryLink (Maybe String) [(FieldIdentity, T.Text)] Actor
+instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadLog m) =>
+  DBUpdate m ForwardSigning SignatoryLinkID where
+  update (ForwardSigning sl message fieldsWithVTexts actor) = do
+    updateDocumentWithID $ \docid -> do
+      let originalsl = signatorylinkid sl
+      magichash :: MagicHash <- random
+      newslid <- insertAsAdditionalSignatoryLink docid $ sl {
+            signatorylinkid = unsafeSignatoryLinkID 0
+          , signatoryisauthor = False
+          , maybesignatory = Nothing
+          , signatorymagichash = magichash
+          , maybesigninfo = Nothing
+          , maybeseeninfo = Nothing
+          , mailinvitationdeliverystatus = Unknown
+          , smsinvitationdeliverystatus = Unknown
+          , signatoryfields = updatedFields fieldsWithVTexts (signatoryfields sl)
+        }
+
+      kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
+        sqlSet "signatory_role" $ if isApprover sl
+          then SignatoryRoleForwardedApprover
+          else SignatoryRoleForwardedSigningParty
+        sqlWhereSignatoryLinkIDIs originalsl
+
+      runQuery_ $ sqlDelete "field_placements" $ do
+        sqlWhereInSql "signatory_field_id" $ sqlSelect "signatory_link_fields" $ do
+            sqlWhereEq "signatory_link_id" originalsl
+            sqlResult "id"
+
+      runQuery_ $ sqlDelete "signatory_link_fields" $ do
+        sqlWhereEq "signatory_link_id" originalsl
+        sqlWhereIn "type" [CheckboxFT, SignatureFT, RadioGroupFT]
+
+      runQuery_ $ sqlDelete "signatory_attachments" $ do
+        sqlWhereEq "signatory_link_id" originalsl
+
+      nsl <- dbQuery $ GetSignatoryLinkByID docid newslid Nothing
+      void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+        ForwardedSigingEvidence (return ()) (Just nsl) message actor
+
+      updateMTimeAndObjectVersion (actorTime actor)
+
+      return newslid
+    where
+      updatedFields :: [(FieldIdentity, T.Text) ] -> [SignatoryField] -> [SignatoryField]
+      updatedFields [] slfs = slfs
+      updatedFields (tf:fs) slfs = updatedFields fs $ updateTextField tf slfs
+
+      updateTextField :: (FieldIdentity, T.Text) -> [SignatoryField] -> [SignatoryField]
+      updateTextField _ [] = []
+      updateTextField (fi,t) (slf:slfs) =
+        let rest = (updateTextField (fi,t) slfs)
+        in if (fi == fieldIdentity slf)
+          then (setTextValue (T.unpack t) slf):rest
+          else slf:rest
+
 data RejectDocument = RejectDocument SignatoryLinkID Bool (Maybe String) Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) =>
   DBUpdate m RejectDocument () where
@@ -1155,7 +1230,8 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
     mndoc <- tryToGetRestarted
     case mndoc of
       Right newdoc -> do
-        md <- newFromDocument (const newdoc) doc
+        let newSls d = filter (not . isForwarded) $ documentsignatorylinks d
+        md <- newFromDocument $ newdoc {documentsignatorylinks = newSls newdoc}
         case md of
           Nothing -> return Nothing
           Just d -> do
@@ -1204,6 +1280,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
                               , signatorylinkdeliverymethod       = signatorylinkdeliverymethod sl
                               , signatorylinkconfirmationdeliverymethod       = signatorylinkconfirmationdeliverymethod sl
                               , signatorylinkhidepn = signatorylinkhidepn sl
+                              , signatorylinkcanbeforwarded = signatorylinkcanbeforwarded sl
                               , maybesignatory = if (isAuthor sl) then maybesignatory sl else Nothing
                           }
       return doc {documentstatus = Preparation,

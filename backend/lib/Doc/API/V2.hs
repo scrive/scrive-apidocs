@@ -67,6 +67,7 @@ documentAPIV2  = dir "documents" $ choice [
   , param $ param $ dir "setauthenticationtosign" $ hPost $ toK2 $ docApiV2SigSetAuthenticationToSign
   , param $ param $ dir "changeemailandmobile"    $ hPost $ toK2 $ docApiV2SigChangeEmailAndMobile
   , param $ param $ dir "reject"                  $ hPost $ toK2 $ docApiV2SigReject
+  , param $ param $ dir "forwardsigning"          $ hPost $ toK2 $ docApiV2SigForwardSigning
   , param $ param $ dir "sendsmspin"              $ hPost $ toK2 $ docApiV2SigSendSmsPinToSign
   , param $ param $ dir "sendsmspintoview"        $ hPost $ toK2 $ docApiV2SigSendSmsPinToView
   , param $ param $ dir "smspinidentifytoview"    $ hPost $ toK2 $ docApiV2SigIdentifyToViewWithSmsPin

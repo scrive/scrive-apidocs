@@ -28,6 +28,7 @@ module Util.SignatoryLinkUtils (
   isSignatory,
   isApprover,
   isViewer,
+  isForwarded,
   getSigLinkFor,
   hasSeen,
   SignatoryLinkIdentity,
@@ -214,7 +215,14 @@ isApprover  = isSigLinkFor ((==) SignatoryRoleApprover     . signatoryrole)
 isViewer :: (MaybeSignatoryLink msl) => msl -> Bool
 isViewer    = isSigLinkFor ((==) SignatoryRoleViewer       . signatoryrole)
 
-
+-- | Is the given SignatoryLink marked as a forwarder
+isForwarded :: (MaybeSignatoryLink msl) => msl -> Bool
+isForwarded = isSigLinkFor ((`elem` forwadedRoles) . signatoryrole)
+  where
+    forwadedRoles =
+      [ SignatoryRoleForwardedSigningParty
+      , SignatoryRoleForwardedApprover
+      ]
 
 -- | Does i identify sl?
 isSigLinkFor :: (MaybeSignatoryLink sl, SignatoryLinkIdentity i)

@@ -3,6 +3,8 @@ module Doc.API.V2.JSON.Fields (
   unjsonSignatoryFields
 , unjsonSignatoryFieldsValuesForSigning
 , SignatoryFieldsValuesForSigning(..)
+, unjsonSignatoryTextFieldIDsWithNewTexts
+, SignatoryTextFieldIDsWithNewTexts(..)
 , SignatoryFieldTMPValue(..)
 ) where
 
@@ -249,6 +251,19 @@ unsafeFileFromSignatoryFieldTMPValue :: SignatoryFieldTMPValue -> BS.ByteString
 unsafeFileFromSignatoryFieldTMPValue (FileFTV a) = a
 unsafeFileFromSignatoryFieldTMPValue (StringFTV _) = unexpectedError "unsafeFileFromSignatoryFieldTMPValue: Sting instead of File"
 unsafeFileFromSignatoryFieldTMPValue (BoolFTV _) = unexpectedError "unsafeFileFromSignatoryFieldTMPValue: Bool instead of File"
+
+newtype SignatoryTextFieldIDsWithNewTexts = SignatoryTextFieldIDsWithNewTexts [(FieldIdentity, T.Text)] deriving Show
+
+unjsonSignatoryTextFieldIDsWithNewTexts:: UnjsonDef SignatoryTextFieldIDsWithNewTexts
+unjsonSignatoryTextFieldIDsWithNewTexts = invmap SignatoryTextFieldIDsWithNewTexts (\(SignatoryTextFieldIDsWithNewTexts a) -> a) (arrayOf unjsonSignatoryTextFieldWithValue)
+  where
+    unjsonSignatoryTextFieldWithValue = unjsonInvmapR toTextOnly fromTextOnly unjsonSignatoryFieldValue
+    fromTextOnly (fi,t) = (fi, StringFTV $ T.unpack t)
+    toTextOnly (CheckboxFI _,_) = fail "Checkbox found when expecting a text field"
+    toTextOnly (SignatureFI _,_) = fail "Signature found when expecting a text field"
+    toTextOnly (RadioGroupFI _,_) = fail "Radio group found when expecting a text field"
+    toTextOnly (fi, StringFTV v) = return (fi, T.pack v)
+    toTextOnly _ = fail "Invalid text field value"
 
 newtype SignatoryFieldsValuesForSigning = SignatoryFieldsValuesForSigning [(FieldIdentity, SignatoryFieldTMPValue)] deriving Show
 

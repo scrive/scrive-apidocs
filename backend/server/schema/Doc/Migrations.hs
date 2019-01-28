@@ -20,6 +20,7 @@ module Doc.Migrations (
   , changeIsPartnerColumnToSignatoryRole
   , createSignatoryLinkMagicHashes
   , addTemplateInfoToDocuments
+  , addCanBeForwardedToSignatories
 ) where
 
 import Data.Int
@@ -331,6 +332,16 @@ changeIsPartnerColumnToSignatoryRole = Migration
         ]
       runQuery_ $ sqlAlterTable "signatory_links"
         [ "RENAME COLUMN is_partner TO signatory_role" ]
+  }
+
+addCanBeForwardedToSignatories  :: MonadDB m => Migration m
+addCanBeForwardedToSignatories  = Migration {
+    mgrTableName = tblName tableSignatoryLinks
+  , mgrFrom = 35
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable "signatory_links" [
+          sqlAddColumn tblColumn { colName = "can_be_forwarded", colType = BoolT, colNullable = False, colDefault = Just "false" }
+        ]
   }
 
 createSignatoryLinkMagicHashes :: MonadDB m => Migration m

@@ -216,6 +216,26 @@ sqlWhereSignatoryLinkIDIs :: (MonadState v m, SqlWhere v)
 sqlWhereSignatoryLinkIDIs slid =
   sqlWhereE (SignatoryLinkDoesNotExist slid) ("signatory_links.id =" <?> slid)
 
+data SignatoryLinkIsForwarded = SignatoryLinkIsForwarded
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue SignatoryLinkIsForwarded where
+  toJSValue (SignatoryLinkIsForwarded) = runJSONGen $ do
+    value "message"           ("Signatory link is forwaded" :: String)
+
+instance DBExtraException SignatoryLinkIsForwarded
+
+sqlWhereSignatoryLinkIsNotForwaded :: (MonadState v m, SqlWhere v)
+                                   => m ()
+sqlWhereSignatoryLinkIsNotForwaded =
+  sqlWhereE (SignatoryLinkIsForwarded) ("signatory_links.signatory_role NOT IN " <+>
+    parenthesize (sqlConcatComma (map sqlParam forwadedRoles)))
+  where
+    forwadedRoles =
+      [ SignatoryRoleForwardedSigningParty
+      , SignatoryRoleForwardedApprover
+      ]
+
 
 data SigningPartyHasNotYetSignedOrApproved = SigningPartyHasNotYetSignedOrApproved
   deriving (Eq, Ord, Show, Typeable)

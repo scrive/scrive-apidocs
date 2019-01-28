@@ -1,6 +1,7 @@
 module Doc.Action (
     postDocumentPreparationChange
   , postDocumentRejectedChange
+  , postDocumentForwardChange
   , postDocumentCanceledChange
   , postDocumentPendingChange
   , postDocumentClosedActions
@@ -26,7 +27,7 @@ import Doc.API.Callback.Model
 import Doc.AutomaticReminder.Model
 import Doc.DigitalSignature (addDigitalSignature)
 import Doc.DocInfo
-import Doc.DocMails (sendClosedEmails, sendDocumentErrorEmail, sendInvitationEmails, sendRejectEmails)
+import Doc.DocMails (sendClosedEmails, sendDocumentErrorEmail, sendForwardSigningMessages, sendInvitationEmails, sendRejectEmails)
 import Doc.DocSeal (sealDocument)
 import Doc.DocStateData
 import Doc.DocumentMonad
@@ -128,6 +129,17 @@ postDocumentRejectedChange siglinkid customMessage doc@Document{..} = logDocumen
         (get ctxmaybeuser ctx)
   sendRejectEmails customMessage (fromJust $ getSigLinkFor siglinkid doc) doc
   return ()
+
+postDocumentForwardChange :: Kontrakcja m => Maybe String ->  SignatoryLink -> SignatoryLinkID -> Document -> m ()
+postDocumentForwardChange customMessage originalSignatory newslid doc = logDocument (documentid doc)$ do
+  let newsl = fromJust (getSigLinkFor newslid doc)
+  triggerAPICallbackIfThereIsOne doc
+  unless (isPending doc) $
+    stateMismatchError "originalSignatory" Pending doc
+  logInfo "Sending forward emails for document" $ logObject_ doc
+  sendForwardSigningMessages customMessage originalSignatory newsl doc
+  return ()
+
 
 postDocumentCanceledChange :: Kontrakcja m => Document -> m ()
 postDocumentCanceledChange doc@Document{..} = logDocument documentid $ do

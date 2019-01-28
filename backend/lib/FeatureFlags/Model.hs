@@ -51,6 +51,7 @@ data FeatureFlags = FeatureFlags
   , ffCanUseAPIInvitations :: Bool
   , ffCanUsePadInvitations :: Bool
   , ffCanUseShareableLinks :: Bool
+  , ffCanUseForwarding :: Bool
   } deriving (Eq, Ord, Show)
 
 instance Unjson FeatureFlags where
@@ -78,12 +79,13 @@ instance Unjson FeatureFlags where
     <*> fieldDef "can_use_api_invitations" True ffCanUseAPIInvitations "TODO desc"
     <*> fieldDef "can_use_pad_invitations" True ffCanUsePadInvitations "TODO desc"
     <*> field "can_use_shareable_links" ffCanUseShareableLinks "TODO desc"
+    <*> field "can_use_forwarding" ffCanUseForwarding "TODO desc"
 
 
 type instance CompositeRow FeatureFlags =
   ( Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool
   , Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool
-  , Bool, Bool, Bool
+  , Bool, Bool, Bool, Bool
   )
 
 instance PQFormat FeatureFlags where
@@ -114,6 +116,7 @@ instance CompositeFromSQL FeatureFlags where
     , ffCanUseAPIInvitations
     , ffCanUsePadInvitations
     , ffCanUseShareableLinks
+    , ffCanUseForwarding
     ) =
     FeatureFlags{..}
 
@@ -180,6 +183,7 @@ defaultFeatures paymentPlan = Features ff ff
       , ffCanUseAPIInvitations = True
       , ffCanUsePadInvitations = True
       , ffCanUseShareableLinks = True
+      , ffCanUseForwarding = True
       }
     ff = case paymentPlan of
       FreePlan -> ffAllTrue
@@ -218,6 +222,7 @@ setFeatureFlagsSql ff = do
   sqlSet "can_use_api_invitations" $ ffCanUseAPIInvitations ff
   sqlSet "can_use_pad_invitations" $ ffCanUsePadInvitations ff
   sqlSet "can_use_shareable_links" $ ffCanUseShareableLinks ff
+  sqlSet "can_use_forwarding" $ ffCanUseForwarding ff
 
 selectFeatureFlagsSelectors :: [SQL]
 selectFeatureFlagsSelectors =
@@ -244,4 +249,5 @@ selectFeatureFlagsSelectors =
   , "feature_flags.can_use_api_invitations"
   , "feature_flags.can_use_pad_invitations"
   , "feature_flags.can_use_shareable_links"
+  , "feature_flags.can_use_forwarding"
   ]

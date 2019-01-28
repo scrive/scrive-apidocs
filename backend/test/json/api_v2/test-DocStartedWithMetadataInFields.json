@@ -66,7 +66,8 @@
 
          ],
          "api_delivery_url":null,
-         "consent_module":null
+         "consent_module":null,
+         "can_forward": false
       },
       {
          "id":"44918",
@@ -154,7 +155,8 @@
 
          ],
          "api_delivery_url":"/s/8516/44918/c8b649788fe4dadc",
-         "consent_module":null
+         "consent_module":null,
+          "can_forward": false
       }
    ],
    "file":{

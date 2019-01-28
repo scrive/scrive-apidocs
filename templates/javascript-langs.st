@@ -101,6 +101,7 @@ javascriptLocalisation =
              , esigningpoweredbyscrive : "$PoweredByScrive()$"
              , sessionTimedoutInSignview : "$_sessionTimedoutInSignview()$"
              , signviewSigningFailed : "$_signviewSigningFailed()$"
+             , signviewForwardingFailed: "$_signviewForwardingFailed()$"
              , signup : "$_signUp()$"
              , more : "$_more()$"
              , signviewAttachmentUploadedInOtherWindow : "$_signviewAttachmentUploadedInOtherWindow()$"
@@ -152,6 +153,19 @@ javascriptLocalisation =
                }
              , reject : {
                          send : "$_pageDocumentForSignContentRejectFooterReject()$"
+               }
+             , forward : {
+                         forward : "$_forwardForward()$"
+                       , forwardtootherperson : "$_forwardToOtherPerson()$"
+                       , messageforotherperson : "$_forwardMessageForOtherPerson()$"
+                       , typeyourmessagehere : "$_forwardTypeYourMessageHere()$"
+                       , otherpersondetails : "$_forwardOtherPersonDetails()$"
+                       , send : "$_forwardSend()$"
+                       , forwardedConfirmationTitle : "$_forwardedConfirmationTitle()$"
+                       , forwardedConfirmationThankYou : "$_forwardedConfirmationThankYou()$"
+                       , forwardedConfirmationDescriptionSigning : "$_forwardedConfirmationDescriptionSigning()$"
+                       , forwardedConfirmationDescriptionApproving : "$_forwardedConfirmationDescriptionApproving()$"
+                       , forwardedConfirmationClosePage : "$_forwardedConfirmationClosePage()$"
                }
              , signatoryMessage : {
                          rejected : "$_signatoryMessageIfSignatoryRejected()$"
@@ -219,6 +233,7 @@ javascriptLocalisation =
                cancelmodaltitle: "$_contractcancelmodaltitle()$",
                cancelmodaltext: "$_contractcancelmodaltext()$",
                cancelmodaltextwithsignatures: "$_contractcancelmodaltextwithsignatures()$",
+               forwardtext: "$_forwardToAnotherParty()$",
                rejectbuttontext: "$_contractrejectbuttontext()$",
                rejectbuttontextwithoutreason: "$_contractrejectbuttontextwithoutreason()$",
                approvebuttontext: "$_contractapprovebuttontext()$",
@@ -438,6 +453,8 @@ javascriptLocalisation =
                , secondaryConfirmation : "$_designViewAddPartiesSecondaryConfirmation()$"
                , allowHighlighting: "$_designViewAddPartiesAllowHighlighting()$"
                , allowHighlightingTooltip: "$_designViewAddPartiesAllowHighlightingTooltip()$"
+               , allowForward: "$_designViewAddPartiesAllowForward()$"
+               , allowForwardTooltip: "$_designViewAddPartiesAllowForwardTooltip()$"
              }
              , addMultisend: "$_designViewAddMultisend()$"
              , viewCSV: "$_designViewViewCSV()$"

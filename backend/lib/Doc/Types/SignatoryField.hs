@@ -24,6 +24,7 @@ module Doc.Types.SignatoryField (
   , getTextValueOfField
   , fieldTextValue
   , TextCustomValidation(..)
+  , setTextValue
   ) where
 
 import Control.Monad.Catch
@@ -496,3 +497,15 @@ getTextValueOfField fi sfs =
   case (getFieldByIdentity fi sfs) of
     Just f  -> fromMaybe "" (fieldTextValue f)
     Nothing -> ""
+
+setTextValue :: String -> SignatoryField -> SignatoryField
+setTextValue t (SignatoryNameField f)             = SignatoryNameField $ f {snfValue = t}
+setTextValue t (SignatoryCompanyField f)          = SignatoryCompanyField $ f {scfValue = t}
+setTextValue t (SignatoryPersonalNumberField f)   = SignatoryPersonalNumberField $ f {spnfValue = t}
+setTextValue t (SignatoryCompanyNumberField f)    = SignatoryCompanyNumberField $ f {scnfValue = t}
+setTextValue t (SignatoryEmailField f)            = SignatoryEmailField $ f {sefValue = t}
+setTextValue t (SignatoryMobileField f)           = SignatoryMobileField $ f {smfValue = t}
+setTextValue t (SignatoryTextField f)             = SignatoryTextField $ f { stfValue = t}
+setTextValue _ sf@(SignatoryCheckboxField _)      = sf
+setTextValue _ sf@(SignatorySignatureField _)     = sf
+setTextValue _ sf@(SignatoryRadioGroupField _)    = sf

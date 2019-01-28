@@ -18,7 +18,8 @@ var classNames = require("classnames");
       model: React.PropTypes.instanceOf(Backbone.Model).isRequired,
       canApprove: React.PropTypes.bool.isRequired,
       onApprove: React.PropTypes.func.isRequired,
-      onReject: React.PropTypes.func.isRequired
+      onReject: React.PropTypes.func.isRequired,
+      onForward: React.PropTypes.func.isRequired
     },
 
     contextTypes: {
@@ -58,6 +59,7 @@ var classNames = require("classnames");
       var model = this.props.model;
       var doc = model.document();
       var sig = doc.currentSignatory();
+      var canHaveForwardButton = model.hasForwardOption();
 
       var buttonClass = classNames({
         "button-block": true,
@@ -79,6 +81,14 @@ var classNames = require("classnames");
             text={localization.process.approvebuttontext}
             onClick={this.handleApprove}
           />
+          {/* if */ canHaveForwardButton &&
+            <Button
+              ref="forwardButton"
+              className="button-block small-button-block"
+              text={localization.process.forwardtext}
+              onClick={this.props.onForward}
+            />
+          }
           <Button
             ref="rejectButton"
             className="button-block small-button-block"

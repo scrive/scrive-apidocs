@@ -323,22 +323,39 @@ module.exports = React.createClass({
       };
     });
   },
+  hasForwardCheckbox: function () {
+    var sig = this.props.model;
+    var ff = Subscription.currentSubscription().currentUserFeatures();
+    var signatoryCanForward = !sig.author() && !sig.views() && !sig.padDelivery() && !sig.apiDelivery();
+    return signatoryCanForward && (sig.canForward() || ff.canUseForwarding());
+  },
 
   render: function () {
     var self = this;
     var sig = this.props.model;
+
     return (
       <div className="design-view-action-participant-details-participation">
 
         <div className="design-view-action-participant-details-participation-row">
+          <div className="design-view-action-participant-details-participation-box">
           <Checkbox
-             checked={sig.allowsHighlighting()}
-             className={(!sig.signs()) ? "checkbox-hidden" : undefined}
-             toolTip={localization.designview.addParties.allowHighlightingTooltip}
-             label={localization.designview.addParties.allowHighlighting}
-             onChange={ function (c) { sig.setAllowsHighlighting(c); } }
+            checked={sig.allowsHighlighting()}
+            className={(!sig.signs()) ? "checkbox-hidden" : undefined}
+            toolTip={localization.designview.addParties.allowHighlightingTooltip}
+            label={localization.designview.addParties.allowHighlighting}
+            onChange={ function (c) { sig.setAllowsHighlighting(c); } }
           />
-
+          </div>
+          <div className="design-view-action-participant-details-participation-box">
+          <Checkbox
+            checked={sig.canForward()}
+            className={(self.hasForwardCheckbox()) ? undefined : "checkbox-hidden" }
+            label={localization.designview.addParties.allowForward}
+            toolTip={localization.designview.addParties.allowForwardTooltip}
+            onChange={function (v) { sig.setCanForward(v); }}
+          />
+          </div>
         </div>
 
         <div className="design-view-action-participant-details-participation-row">
@@ -553,9 +570,7 @@ module.exports = React.createClass({
               }}
             />
           </span>
-
         </div>
-
         <BlockingModal ref="blockingModal"/>
       </div>
     );

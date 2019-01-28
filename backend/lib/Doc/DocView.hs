@@ -18,6 +18,7 @@ module Doc.DocView (
   , pageDocumentToStartLogin
   , pageDocumentToStartView
   , gtVerificationPage
+  , afterForwardPage
   ) where
 
 import Data.Unjson
@@ -34,6 +35,7 @@ import Doc.API.V2.DocumentAccess
 import Doc.API.V2.JSON.Document
 import Doc.DocInfo
 import Doc.DocStateData
+import Doc.DocumentID
 import Doc.DocUtils
 import Doc.DocViewMail
 import EID.Nets.Config
@@ -215,3 +217,12 @@ gtVerificationPage =  do
       standardPageFields ctx Nothing ad
     simpleHtmlResponse content
   else respond404
+
+afterForwardPage :: Kontrakcja m => DocumentID -> m String
+afterForwardPage did = do
+  ctx <- getContext
+  ad <- getAnalyticsData
+  renderTemplate "afterForwardPage" $ do
+      F.value "documentid" $ show $ did
+      standardPageFields ctx Nothing ad
+

@@ -793,3 +793,7 @@ ApprovedByApproverPartyEvidenceArchive=$_ApprovedByApproverPartyEvidenceArchive(
 ###
 ApprovedByApproverPartyEvidenceLog=The approver party <span class="signatory"/> approved the document.
 ###
+ForwardedSigingEvidenceLog=<span class="actor"/> has forwarded the document to <span class="signatory"/>.
+###
+ForwardedSigingEvidenceArchive=Forwarded the document to $signatory$.
+###

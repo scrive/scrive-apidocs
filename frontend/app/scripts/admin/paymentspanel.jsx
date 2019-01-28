@@ -57,7 +57,8 @@ module.exports = React.createClass({
         canUseEmailInvitations: features.canUseEmailInvitations(),
         canUseEmailConfirmations: features.canUseEmailConfirmations(),
         canUseAPIInvitations: features.canUseAPIInvitations(),
-        canUsePadInvitations: features.canUsePadInvitations()
+        canUsePadInvitations: features.canUsePadInvitations(),
+        canUseForwarding: features.canUseForwarding()
       };
     },
     initStateFromSubscription : function() {
@@ -327,6 +328,7 @@ module.exports = React.createClass({
               {this.renderTRForOptionWithCheckbox("Can use email confirmations","canUseEmailConfirmations")}
               {this.renderTRForOptionWithCheckbox("Can use link (i.e. API) invitations","canUseAPIInvitations")}
               {this.renderTRForOptionWithCheckbox("Can use in-person invitations","canUsePadInvitations")}
+              {this.renderTRForOptionWithCheckbox("Can use forwarding","canUseForwarding")}
               {this.renderTROptionSeparator("Attachments")}
               {this.renderTRForOptionWithCheckbox("Can use author attachments","canUseAuthorAttachments")}
               {this.renderTRForOptionWithCheckbox("Can use signatory attachments","canUseSignatoryAttachments")}

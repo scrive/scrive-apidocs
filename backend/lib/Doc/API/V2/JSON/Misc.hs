@@ -58,9 +58,12 @@ unjsonDocumentStatus = unjsonEnumBy "DocumentStatus" [
 
 unjsonSignatoryRole :: UnjsonDef SignatoryRole
 unjsonSignatoryRole = unjsonEnumBy "SignatoryRole"
-    [ (SignatoryRoleViewer,       "viewer")
-    , (SignatoryRoleApprover,     "approver")
-    , (SignatoryRoleSigningParty, "signing_party") ]
+    [ (SignatoryRoleViewer,         "viewer")
+    , (SignatoryRoleApprover,       "approver")
+    , (SignatoryRoleSigningParty,   "signing_party")
+    , (SignatoryRoleForwardedSigningParty, "forwarded_party")
+    , (SignatoryRoleForwardedApprover,  "forwarded_party")
+    ]
 
 unjsonDeliveryStatus :: UnjsonDef DeliveryStatus
 unjsonDeliveryStatus = unjsonEnumBy "DeliveryStatus" [

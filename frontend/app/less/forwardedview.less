@@ -1,0 +1,119 @@
+@import 'branding/variables';
+
+.forwarded-view {
+  min-height: 100%;
+  min-width: 1018px;
+  position: relative;
+  width: 100%;
+
+  .pageheader {
+    background: @brand-primary;
+    border-bottom: solid #DEE4ED 1px;
+    min-width: 1018px;
+    width: 100%;
+
+    .content {
+      display: table;
+      height: auto;
+      margin: auto;
+      width: 1018px;
+    }
+
+    .logowrapper {
+      display:table-cell;
+      vertical-align : middle;
+
+      .logo {
+        margin-left: 38px;
+        margin-top: 25px;
+        margin-bottom: 25px;
+
+        max-width: 172px;
+        max-height: 52px;
+      }
+    }
+
+    &.full-width-header {
+      .logowrapper .logo {
+        margin-left: 0;
+      }
+    }
+  }
+
+  .pagefooter {
+    background: @white;
+    border-top: solid #DEE4ED 1px;
+    bottom: 0;
+    color: #333333;
+    height: 120px;
+    min-width: 1018px;
+    position: absolute;
+    width: 100%;
+
+    .content {
+      margin: auto;
+      padding-top: 40px;
+      width: 1018px;
+
+      .poweredbyscrive {
+        margin: 0 auto;
+        text-align: center;
+
+        .logo {
+          background-image : url(~"@{img-base-url}/logo-small-grey.png");
+          display: inline-block;
+          height: 16px;
+          margin-left: 2px;
+          width: 80px;
+        }
+      }
+    }
+  }
+
+
+  .forwarded-view-body {
+    width: 1040px;
+    margin: auto;
+    position: relative;
+    display: block;
+    top: 0px;
+
+    .title {
+      background: @white;
+      line-height: 51px;
+      white-space: nowrap;
+      font-weight: 400;
+      font-size: 18px;
+      box-sizing: border-box;
+      padding: 0 45px;
+      text-overflow: ellipsis;
+      border-bottom: 1px solid #f1f1f1;
+      border-top: 1px solid #f1f1f1;
+
+    }
+
+    .message {
+      background: @white;
+      box-sizing: border-box;
+      border-bottom: 1px solid #f1f1f1;
+      min-height: 51px;
+      text-align: center;
+      padding: 45px;
+
+      h1 {
+        color: #505050;
+        font-size: 28px;
+        font-weight: 300;
+        line-height: 1em;
+        letter-spacing: -1px;
+        margin-bottom: 8px;
+      }
+
+      .description {
+        margin: 3px;
+        font-size: 16px;
+
+      }
+    }
+  }
+}

@@ -62,6 +62,7 @@ var SignFinishView = React.createClass({
     var doc = model.document();
 
     var canHaveRejectButton = model.hasRejectOption();
+    var canHaveForwardButton = model.hasForwardOption();
 
     var buttonClass = classNames({
       "button-block": true,
@@ -88,6 +89,14 @@ var SignFinishView = React.createClass({
           text={localization.process.signbuttontext}
           onClick={this.handleSign}
         />
+        {/* if */ canHaveForwardButton &&
+            <Button
+              ref="forwardButton"
+              className="button-block small-button-block"
+              text={localization.process.forwardtext}
+              onClick={this.props.onForward}
+            />
+         }
         {/* if */ canHaveRejectButton &&
           <Button
             ref="rejectButton"

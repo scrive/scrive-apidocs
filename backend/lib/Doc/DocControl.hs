@@ -22,6 +22,7 @@ module Doc.DocControl(
     , showPreview
     , showPreviewForSignatory
     , handleFilePages
+    , handleShowAfterForward
     , handleShowVerificationPage
     , handleVerify
     , handleMarkAsSaved
@@ -247,6 +248,7 @@ handleSignShowSaveMagicHash did sid mh = logDocumentAndSignatory did sid $
   )
   `catchDBExtraException` (\(DocumentDoesNotExist _) -> respond404)
   `catchDBExtraException` (\SignatoryTokenDoesNotMatch -> respondLinkInvalid)
+  `catchDBExtraException` (\SignatoryLinkIsForwarded -> respondLinkInvalid)
   `catchDBExtraException` (\(_ :: DocumentWasPurged) -> respondLinkInvalid)
 
 handleSignFromTemplate :: Kontrakcja m => DocumentID -> MagicHash -> m Response
@@ -609,6 +611,9 @@ prepareEmailPreview docid slid = do
              mailClosedContent True doc
          _ -> fail "prepareEmailPreview"
     J.runJSONGenT $ J.value "content" content
+
+handleShowAfterForward :: Kontrakcja m =>  DocumentID -> m Response
+handleShowAfterForward did = withAnonymousContext $ simpleHtmlResponse =<< afterForwardPage did
 
 -- GuardTime verification page. This can't be external since its a page in our system.
 -- withAnonymousContext so the verify page looks like the user is not logged in

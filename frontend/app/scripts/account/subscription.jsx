@@ -179,7 +179,8 @@ var Subscription = Backbone.Model.extend({
         can_use_email_invitations: ff.canUseEmailInvitations,
         can_use_email_confirmations: ff.canUseEmailConfirmations,
         can_use_api_invitations: ff.canUseAPIInvitations,
-        can_use_pad_invitations: ff.canUsePadInvitations
+        can_use_pad_invitations: ff.canUsePadInvitations,
+        can_use_forwarding: ff.canUseForwarding
       });
     };
     var newSubscription = {
@@ -355,6 +356,9 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
   },
   canUsePadInvitations: function () {
      return this.get("can_use_pad_invitations");
+  },
+  canUseForwarding: function () {
+     return this.get("can_use_forwarding");
   },
   firstAllowedAuthenticationToView: function () {
     if (this.canUseStandardAuthenticationToView())

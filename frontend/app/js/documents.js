@@ -814,7 +814,7 @@ var Document = exports.Document = Backbone.Model.extend({
      if (self.file() != undefined) self.file().off();
 
      var signatories = args.parties || [];
-
+     signatories =_.filter(signatories, function(s) { return s.role != "forwarded_party"; });
      return {
        id: args.id,
        title: args.title,

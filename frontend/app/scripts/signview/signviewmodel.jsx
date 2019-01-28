@@ -120,6 +120,10 @@ var Track = require("../common/track");
       return this.document().showrejectoption();
     },
 
+    hasForwardOption: function () {
+      return this.document().currentSignatory().canForward() && this.hasArrows();
+    },
+
     hasSignSection: function () {
       var signatory = this.document().currentSignatory();
       return this.document().currentSignatoryCanSignOrApprove() && this.hasArrows();

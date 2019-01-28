@@ -6,6 +6,8 @@ module Doc.DocViewSMS (
     , smsReminder
     , smsClosedNotification
     , smsRejectNotification
+    , smsForwardSigningForAuthor
+    , smsForwardSigningForNewSignatory
     , smsPinCodeSendout
     ) where
 
@@ -125,6 +127,29 @@ smsRejectNotification
 smsRejectNotification doc sl rejector = do
   mkSMS doc sl (Just $ OtherDocumentSMS $ documentid doc) =<< renderLocalTemplate doc "_smsRejectNotification" (smsFields doc >> F.value "rejectorName" (getSmartName rejector))
 
+smsForwardSigningForAuthor
+  :: (MailContextMonad m, MonadDB m, MonadTime m, MonadThrow m
+  , TemplatesMonad m) => SignatoryLink -> SignatoryLink -> Document -> m SMS
+smsForwardSigningForAuthor originalsl newsl doc = do
+  let alink = fromJust $ getAuthorSigLink doc
+  message <- renderLocalTemplate doc "_smsForwardSigningForAuthor" $ do
+    smsFields doc
+    F.value "fromName" (getSmartName originalsl)
+    F.value "toName" (getSmartName newsl)
+  mkSMS doc alink (Just $ OtherDocumentSMS $ documentid doc) message
+
+
+smsForwardSigningForNewSignatory
+  :: (CryptoRNG m, MailContextMonad m, MonadDB m, MonadTime m, MonadThrow m
+  , TemplatesMonad m) => SignatoryLink -> SignatoryLink -> Document -> m SMS
+smsForwardSigningForNewSignatory originalsl newsl doc = do
+  message <- renderLocalTemplate doc "_smsForwardSigningForNewSignatory" $ do
+    smsFields doc
+    smsLinkFields doc newsl
+    F.value "fromName" (getSmartName originalsl)
+    F.value "toName" (getSmartName newsl)
+  mkSMS doc newsl (Just $ DocumentInvitationSMS (documentid doc) (signatorylinkid newsl)) message
+
 smsPinCodeSendout
   :: ( CryptoRNG m, MailContextMonad m, MonadDB m, MonadTime m, MonadThrow m
      , TemplatesMonad m )
@@ -133,10 +158,13 @@ smsPinCodeSendout doc sl phone pin = do
   sms <- mkSMS doc sl (Just $ DocumentPinSendoutSMS (documentid doc) (signatorylinkid sl)) =<< renderLocalTemplate doc "_smsPinSendout" (smsFields doc >> F.value "pin" pin)
   return sms {smsMSISDN = phone}
 
-smsFields :: TemplatesMonad m => Document -> Fields m ()
+smsFields :: (TemplatesMonad m, MailContextMonad m) => Document -> Fields m ()
 smsFields document = do
+  mctx <- lift $ getMailContext
   F.value "creatorname" $ getSmartName <$> getAuthorSigLink document
   F.value "documenttitle" $ documenttitle document
+  F.value "authorlink" $ get mctxDomainUrl mctx ++
+      show (LinkIssueDoc (documentid document))
 
 smsLinkFields
   :: (CryptoRNG m, MailContextMonad m, MonadDB m, MonadTime m, TemplatesMonad m)
@@ -158,3 +186,4 @@ makeTemporaryMagicHash sl = do
   let expiration = (30 `daysAfter` now) { utctDayTime = 86399 }
   mh <- dbUpdate $ NewTemporaryMagicHash (signatorylinkid sl) expiration
   return (mh, expiration)
+

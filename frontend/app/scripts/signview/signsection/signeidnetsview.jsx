@@ -71,6 +71,7 @@ var SignLegalAgreement = require("./signlegalagreement");
       canSign: React.PropTypes.bool.isRequired,
       ssn: React.PropTypes.string.isRequired,
       onReject: React.PropTypes.func.isRequired,
+      onForward: React.PropTypes.func.isRequired,
       onSign: React.PropTypes.func.isRequired,
       showLegalText: React.PropTypes.bool.isRequired
     },
@@ -82,6 +83,7 @@ var SignLegalAgreement = require("./signlegalagreement");
     render: function () {
       var model = this.props.model;
       var canHaveRejectButton = model.hasRejectOption();
+      var canHaveForwardButton = model.hasForwardOption();
       var self = this;
       var ssn = self.props.ssn;
       var name = self.props.name;
@@ -170,6 +172,14 @@ var SignLegalAgreement = require("./signlegalagreement");
             onClick={function () { self.props.onSign(); }}
             text={localization.process.signbuttontext}
           />
+          {/* if */ canHaveForwardButton &&
+            <Button
+              ref="forwardButton"
+              className="button-block small-button-block"
+              text={localization.process.forwardtext}
+              onClick={this.props.onForward}
+            />
+          }
           {/* if */ canHaveRejectButton &&
             <Button
               ref="rejectButton"

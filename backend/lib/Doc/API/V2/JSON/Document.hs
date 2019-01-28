@@ -111,7 +111,8 @@ unjsonSignatory da =  objectOf $
     mcsvupload deliverymethod
     authtoviewmethod authtoviewarchivedmethod
     authtosignmethod confirmdeliverymethod
-    allowshighlighting hidepn sattachments ->
+    allowshighlighting hidepn
+    canforward sattachments ->
      let (title,qs) = maybe defTitleQs id mbTitleQs
          link = defaultSignatoryLink
          defTitleQs = ( signatorylinkconsenttitle link
@@ -133,7 +134,6 @@ unjsonSignatory da =  objectOf $
 
                -- Check only one .csv for the whole doc.
              , signatorylinkcsvupload          = mcsvupload
-
              , signatorylinkdeliverymethod     = deliverymethod
              , signatorylinkauthenticationtoviewmethod
                                                = authtoviewmethod
@@ -142,11 +142,12 @@ unjsonSignatory da =  objectOf $
              , signatorylinkauthenticationtosignmethod
                                                = authtosignmethod
              , signatorylinkconfirmationdeliverymethod
-                                               = confirmdeliverymethod
-             , signatorylinkallowshighlighting = allowshighlighting
-             , signatorylinkhidepn             = hidepn
-             , signatoryattachments            = sattachments
-             })
+                                              = confirmdeliverymethod
+            , signatorylinkallowshighlighting = allowshighlighting
+            , signatorylinkhidepn             = hidepn
+            , signatorylinkcanbeforwarded     = canforward
+            , signatoryattachments            = sattachments
+            })
   <*   (fieldReadonly "id" signatorylinkid "Signatory ID")
   <*   (fieldReadOnlyOpt "user_id"  maybesignatory "User ID for the signatory")
   <*   (fieldReadonly "is_author" signatoryisauthor "Whether signatory is document author")
@@ -180,6 +181,7 @@ unjsonSignatory da =  objectOf $
   <*>  (fieldDefBy "confirmation_delivery_method" (signatorylinkconfirmationdeliverymethod defaultSignatoryLink) signatorylinkconfirmationdeliverymethod "Signatory confirmation delivery method" unjsonConfirmationDeliveryMethod)
   <*>  (fieldDef "allows_highlighting" (signatorylinkallowshighlighting defaultSignatoryLink) signatorylinkallowshighlighting "Areas of main PDF can be highlighted during signing")
   <*>  (fieldDef "hide_personal_number" (signatorylinkhidepn defaultSignatoryLink) signatorylinkhidepn "Signatory's personal number should be hidden")
+  <*>  (fieldDef "can_forward" (signatorylinkcanbeforwarded defaultSignatoryLink) signatorylinkcanbeforwarded "Signatory can forward signing process")
   <*>  (fieldDefBy "attachments"  (signatoryattachments defaultSignatoryLink) signatoryattachments "Signatory attachments" (arrayOf unjsonSignatoryAttachment))
   <*   (fieldReadonlyBy "highlighted_pages" signatoryhighlightedpages "Highlighted page during signing" (arrayOf unjsonHighlightedPage))
   <*   (fieldReadOnlyOpt "api_delivery_url" (\sl ->

@@ -168,4 +168,6 @@ kontraMigrations = [
   , createFilePurgeJobs
   , dropContentAndPurgeAtFromFiles
   , removePurgeOrphanFileJob
+  , addCanBeForwardedToSignatories
+  , featureFlagsAddForwarding
   ]

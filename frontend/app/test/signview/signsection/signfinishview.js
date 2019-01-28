@@ -23,6 +23,9 @@ var FakeSignViewModel = Backbone.Model.extend({
   },
   hasRejectOption: function () {
     return true;
+  },
+  hasForwardOption: function () {
+    return false;
   }
 });
 

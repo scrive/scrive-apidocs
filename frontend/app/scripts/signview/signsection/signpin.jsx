@@ -20,6 +20,7 @@ var classNames = require("classnames");
       canSign: React.PropTypes.bool.isRequired,
       field: React.PropTypes.instanceOf(Field).isRequired,
       onReject: React.PropTypes.func.isRequired,
+      onForward: React.PropTypes.func.isRequired,
       onNext: React.PropTypes.func.isRequired
     },
 
@@ -73,6 +74,8 @@ var classNames = require("classnames");
     render: function () {
       var model = this.props.model;
       var canHaveRejectButton = model.hasRejectOption();
+      var canHaveForwardButton = model.hasForwardOption();
+
       var field = this.props.field;
       var askForPhone = this.props.askForPhone;
       var canSign = this.props.canSign;
@@ -126,6 +129,14 @@ var classNames = require("classnames");
             text={localization.next}
             onClick={function (e) { if (canSign) { onNext(e); } }}
           />
+          {/* if */ canHaveForwardButton &&
+            <Button
+              ref="forwardButton"
+              className="button-block small-button-block"
+              text={localization.process.forwardtext}
+              onClick={this.props.onForward}
+            />
+          }
           {/* if */ canHaveRejectButton &&
             <Button
               ref="rejectButton"

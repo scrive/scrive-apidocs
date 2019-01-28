@@ -1,4 +1,4 @@
-{
+{ 
 "_DeletePDF":"Delete",
 "_RequestedAttachments":"Requested attachments",
 "_ReviewPDF":"Show",
@@ -92,6 +92,12 @@
 "_firstname":"First name",
 "_followTheArrow":"Follow the <span class='arrowtext'>ARROW</span>",
 "_followTheArrowWithUserName":"<span class='signatory-name'></span>, follow the <span class='arrowtext'>ARROW</span>",
+"_forwardForward":"Forward",
+"_forwardMessageForOtherPerson":"Message to recipient",
+"_forwardOtherPersonDetails":"Recipent details",
+"_forwardSend":"Send",
+"_forwardToOtherPerson":"If you are not the right person to sign, you can forward this to a different party and let them sign instead of you",
+"_forwardTypeYourMessageHere":"Type your message here",
 "_invalidPhone":"Wrong format. Correct format is +46701234567",
 "_invalidPin":"Wrong PIN, please try again",
 "_lastname":"Last name",
@@ -186,6 +192,7 @@
 "_signinginprogressmodalAction1":"Saves collected evidence",
 "_signinginprogressmodalAction2":"Registers your signature",
 "_signviewAttachmentUploadedInOtherWindow":"Sorry, we are unable to upload your file because this document is open in another window. Please reload your page to continue.",
+"_signviewForwardingFailed":"Forwarding document failed",
 "_signviewLegalAgreementPoint1":"you have read the entire document",
 "_signviewLegalAgreementPoint2":"you agree to each of the terms in the document",
 "_signviewLegalAgreementPoint3":"you have full power and authority to sign this document‌.",

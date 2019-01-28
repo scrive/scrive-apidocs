@@ -54,7 +54,7 @@ describe("admin/paymentspanel", function () {
     var checkboxes = $(".checkbox", component.getDOMNode());
     // We should have 22 x 2 checkboxes. One for each option.
     // 2 sets - one for regular user, one for admin
-    assert.equal(checkboxes.size(), 46);
+    assert.equal(checkboxes.size(), 48);
     // We should have one select (for price plan)
     var selects = $(".select", component.getDOMNode());
     assert.equal(selects.size(), 2);
@@ -72,7 +72,7 @@ describe("admin/paymentspanel", function () {
     component.forceUpdate();
     // We should have 22 x 2 checkboxes. One for each option.
     // 2 sets - one for regular user, one for admin
-    assert.equal(checkboxes.size(), 46);
+    assert.equal(checkboxes.size(), 48);
 
   });
 
@@ -115,7 +115,8 @@ describe("admin/paymentspanel", function () {
           canUseEmailInvitations: true,
           canUseEmailConfirmations: true,
           canUseAPIInvitations: true,
-          canUsePadInvitations: true
+          canUsePadInvitations: true,
+          canUseForwarding: true
         },
         regularUsers: {
           canUseTemplates: true,
@@ -140,18 +141,19 @@ describe("admin/paymentspanel", function () {
           canUseEmailInvitations: true,
           canUseEmailConfirmations: true,
           canUseAPIInvitations: true,
-          canUsePadInvitations: true
+          canUsePadInvitations: true,
+          canUseForwarding: true
         }
       }
     });
     component.forceUpdate();
     var checkedCheckboxes = $(".checkbox.checked", component.getDOMNode());
-    assert.equal(checkedCheckboxes.size(), 42); // 4 options were set to false
+    assert.equal(checkedCheckboxes.size(), 44); // 4 options were set to false
 
     TestUtils.Simulate.click(checkedCheckboxes[0]); // Lets pick one to uncheck
     component.forceUpdate();
     var changedCheckedCheckboxes = $(".checkbox.checked", component.getDOMNode());
-    assert.equal(changedCheckedCheckboxes.size(), 41);
+    assert.equal(changedCheckedCheckboxes.size(), 43);
 
 
   });

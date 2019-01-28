@@ -60,6 +60,7 @@ var classNames = require("classnames");
       var sig = doc.currentSignatory();
 
       var canHaveRejectButton = model.hasRejectOption();
+      var canHaveForwardButton = model.hasForwardOption();
 
       var buttonClass = classNames({
         "button-block": true,
@@ -81,6 +82,14 @@ var classNames = require("classnames");
             text={localization.next}
             onClick={this.handleSign}
           />
+          {/* if */ canHaveForwardButton &&
+            <Button
+              ref="forwardButton"
+              className="button-block small-button-block"
+              text={localization.process.forwardtext}
+              onClick={this.props.onForward}
+            />
+          }
           {/* if */ canHaveRejectButton &&
             <Button
               ref="rejectButton"
