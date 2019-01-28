@@ -147,6 +147,9 @@ module.exports = React.createClass({
                             {localization.payments.plans.one.support}
                           </div>
                           <div className="plan-option-feature-item">
+                            {localization.payments.plans.one.eid}
+                          </div>
+                          <div className="plan-option-feature-item">
                             {localization.payments.plans.one.evidencePackage}
                           </div>
                           <div className="plan-option-feature-item">

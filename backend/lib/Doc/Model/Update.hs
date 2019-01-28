@@ -1281,6 +1281,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
                               , signatorylinkconfirmationdeliverymethod       = signatorylinkconfirmationdeliverymethod sl
                               , signatorylinkhidepn = signatorylinkhidepn sl
                               , signatorylinkcanbeforwarded = signatorylinkcanbeforwarded sl
+                              , signatorylinkallowshighlighting = signatorylinkallowshighlighting sl
                               , maybesignatory = if (isAuthor sl) then maybesignatory sl else Nothing
                           }
       return doc {documentstatus = Preparation,

@@ -26,6 +26,7 @@ module Doc.API.V2.Guards (
 , guardThatAllAttachmentsAreAcceptedOrIsAuthor
 , guardThatAllSignatoryAttachmentsAreUploadedOrMarked
 , guardThatRadioButtonValuesAreValid
+, guardThatSignaturesAreFilled
 , guardThatAllConsentQuestionsHaveResponse
 , guardThatAuthorIsNotApprover
 -- * Joined guard for read-only functions
@@ -35,6 +36,7 @@ module Doc.API.V2.Guards (
 
 import Control.Conditional (whenM)
 import Data.Either (rights)
+import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
 
 import API.V2
@@ -429,6 +431,16 @@ guardThatRadioButtonValuesAreValid slid (SignatoryFieldsValuesForSigning signfie
       radioValIsValid _ = True -- non radio group fields are skipped
   when (not $ all radioValIsValid signfields) $
     apiError $ signatoryStateError "RadioGroup selected value is not in allowed values."
+
+guardThatSignaturesAreFilled :: Kontrakcja m => SignatoryLinkID -> SignatoryFieldsValuesForSigning -> Document -> m ()
+guardThatSignaturesAreFilled slid (SignatoryFieldsValuesForSigning signfields) doc = do
+  let sl = fromJust $ getSigLinkFor slid doc
+      signatureIsFilled (fi@(SignatureFI _), FileFTV contents) = fromMaybe False $ do
+        SignatorySignatureField ssf <- getFieldByIdentity fi $ signatoryfields sl
+        return $ not (ssfObligatory ssf) || length (ssfPlacements ssf) == 0 || BS.length contents > 0
+      signatureIsFilled _ = True -- non signature fields are skipped
+  when (not $ all signatureIsFilled signfields) $
+    apiError $ signatoryStateError "Signature missing."
 
 guardThatAllAttachmentsAreAcceptedOrIsAuthor :: Kontrakcja m => SignatoryLinkID -> [FileID] -> Document -> m ()
 guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAttachments doc = do

@@ -245,6 +245,7 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
     fields                          <- apiV2ParameterObligatory
       (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValuesForSigning)
     guardThatRadioButtonValuesAreValid slid fields =<< theDocument
+    guardThatSignaturesAreFilled slid fields =<< theDocument
     consentResponses                <- apiV2ParameterDefault
       (SignatoryConsentResponsesForSigning [])
       (ApiV2ParameterJSON "consent_responses"

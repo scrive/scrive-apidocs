@@ -661,20 +661,27 @@ testGetCancelledDocument = do
     assertEqual "Status is 200" 200 (rsCode res)
 
 testDocumentFromShareableTemplate :: TestEnv ()
-testDocumentFromShareableTemplate = do
-  Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
+testDocumentFromShareableTemplate = replicateM_ 10 $ do
+  user <- addNewRandomUser
   tpl <- addRandomDocumentWithAuthorAndCondition' user $ \d -> do
     (sl1, sl2) <- case documentsignatorylinks d of
       x:y:_ -> return (x,y)
       _ -> Nothing
 
-    let sl1' = sl1 { signatoryrole = SignatoryRoleViewer }
+    let sl1' = sl1
+          { signatoryrole = SignatoryRoleViewer
+          , signatorylinkauthenticationtoviewmethod =
+              StandardAuthenticationToView
+          , signatorylinkauthenticationtosignmethod =
+              StandardAuthenticationToSign
+          }
         sl2' = sl2
           { signatoryrole = SignatoryRoleSigningParty
           , signatorylinkauthenticationtoviewmethod =
               StandardAuthenticationToView
           , signatorylinkauthenticationtosignmethod =
               StandardAuthenticationToSign
+          , signatorylinkdeliverymethod = APIDelivery
           }
 
     return d
