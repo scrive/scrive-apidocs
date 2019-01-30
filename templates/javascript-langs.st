@@ -157,6 +157,7 @@ javascriptLocalisation =
              , forward : {
                          forward : "$_forwardForward()$"
                        , forwardtootherperson : "$_forwardToOtherPerson()$"
+                       , forwardtootherpersonapproving : "$_forwardToOtherPersonApproving()$"
                        , messageforotherperson : "$_forwardMessageForOtherPerson()$"
                        , typeyourmessagehere : "$_forwardTypeYourMessageHere()$"
                        , otherpersondetails : "$_forwardOtherPersonDetails()$"

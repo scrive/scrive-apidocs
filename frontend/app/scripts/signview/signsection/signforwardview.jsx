@@ -59,7 +59,8 @@ var InfoTextInput = require("../../common/infotextinput");
           <div className="row">
             <div className="col-sm-12">
               <h1>{localization.forward.forward}</h1>
-              <p>{localization.forward.forwardtootherperson}</p>
+              <p>{sig.signs() ? localization.forward.forwardtootherperson
+                              : localization.forward.forwardtootherpersonapproving}</p>
 
             </div>
           </div>

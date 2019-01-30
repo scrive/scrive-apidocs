@@ -97,6 +97,7 @@
 "_forwardOtherPersonDetails":"Recipent details",
 "_forwardSend":"Send",
 "_forwardToOtherPerson":"If you are not the right person to sign, you can forward this to a different party and let them sign instead of you",
+"_forwardToOtherPersonApproving":"If you are not the right person to approve, you can forward this to a different party and let them approve instead of you",
 "_forwardTypeYourMessageHere":"Type your message here",
 "_invalidPhone":"Wrong format. Correct format is +46701234567",
 "_invalidPin":"Wrong PIN, please try again",

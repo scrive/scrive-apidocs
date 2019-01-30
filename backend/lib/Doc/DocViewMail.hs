@@ -213,6 +213,7 @@ mailForwardSigningForAuthor originalsl newsl doc = do
    documentMailWithDocLang doc "mailForwardSigningForAuthorMail" $ do
         F.value "fromName" fromName
         F.value "toName" $ toName
+        F.value "signing" $ signatoryrole newsl == SignatoryRoleSigningParty
         F.value "loginlink" $ show $ LinkIssueDoc $ documentid doc
 
 mailForwardSigningForNewSignatory :: ( MonadDB m, MonadThrow m, TemplatesMonad m
@@ -234,6 +235,7 @@ mailForwardSigningForNewSignatory message originalsl newsl doc = do
         F.value "fromName" $ fromName
         F.value "toName" $ toName
         F.value "authorname" $ getSmartName <$> getAuthorSigLink doc
+        F.value "signing" $ signatoryrole newsl == SignatoryRoleSigningParty
         F.value "link" $ makeFullLink mctx $ show $ (LinkSignDoc (documentid doc) newsl)
 
 smartOrUnnamedName :: TemplatesMonad m => SignatoryLink -> Document -> m String
