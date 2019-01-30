@@ -97,6 +97,7 @@
 "_forwardOtherPersonDetails":"",
 "_forwardSend":"",
 "_forwardToOtherPerson":"",
+"_forwardToOtherPersonApproving":"",
 "_forwardTypeYourMessageHere":"",
 "_invalidPhone":"Chybný formát. Správný formát je +420123456789",
 "_invalidPin":"Chybný kód PIN, zkuste kód zadat znovu",

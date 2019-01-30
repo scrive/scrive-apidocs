@@ -97,6 +97,7 @@
 "_forwardOtherPersonDetails":"",
 "_forwardSend":"",
 "_forwardToOtherPerson":"",
+"_forwardToOtherPersonApproving":"",
 "_forwardTypeYourMessageHere":"",
 "_invalidPhone":"Neteisingas formatas. Teisingas yra toks: +46701234567",
 "_invalidPin":"Neteisingas PIN, pabandykite dar kartą",

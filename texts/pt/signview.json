@@ -97,6 +97,7 @@
 "_forwardOtherPersonDetails":"",
 "_forwardSend":"",
 "_forwardToOtherPerson":"",
+"_forwardToOtherPersonApproving":"",
 "_forwardTypeYourMessageHere":"",
 "_invalidPhone":"Formato errado. O formato correcto é +46701234567",
 "_invalidPin":"PIN errado; tente novamente",

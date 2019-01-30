@@ -97,6 +97,7 @@
 "_forwardOtherPersonDetails":"",
 "_forwardSend":"",
 "_forwardToOtherPerson":"",
+"_forwardToOtherPersonApproving":"",
 "_forwardTypeYourMessageHere":"",
 "_invalidPhone":"Λανθασμένη μορφοποίηση. Η σωστή μορφοποίηση είναι +46701234567",
 "_invalidPin":"Λανθασμένο PIN, παρακαλώ προσπαθήστε ξανά",

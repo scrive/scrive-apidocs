@@ -97,6 +97,7 @@
 "_forwardOtherPersonDetails":"",
 "_forwardSend":"",
 "_forwardToOtherPerson":"",
+"_forwardToOtherPersonApproving":"",
 "_forwardTypeYourMessageHere":"",
 "_invalidPhone":"Väärä muoto. Oikea muoto on +358401234567",
 "_invalidPin":"Väärä PIN, ole hyvä ja yritä uudestaan",
