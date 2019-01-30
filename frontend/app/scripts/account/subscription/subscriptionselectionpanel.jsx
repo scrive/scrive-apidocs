@@ -240,6 +240,9 @@ module.exports = React.createClass({
                             because one plan is not visible in monthly mode */
                           }
                           <div className="plan-option-feature-item">
+                            {localization.payments.plans.one.eid}
+                          </div>
+                          <div className="plan-option-feature-item">
                             {localization.payments.plans.one.support}
                           </div>
                           <div className="plan-option-feature-item">
@@ -336,6 +339,21 @@ module.exports = React.createClass({
                         <div className="plan-option-feature-item">
                           {localization.payments.plans.company.accountManager}
                         </div>
+                        { !this.oneYearMode() &&
+                          <div className="plan-option-feature-item">
+                            {"\u00A0"}
+                          </div>
+                        }
+                        { !this.oneYearMode() &&
+                          <div className="plan-option-feature-item">
+                            {"\u00A0"}
+                          </div>
+                        }
+                        { !this.oneYearMode() &&
+                          <div className="plan-option-feature-item">
+                            {"\u00A0"}
+                          </div>
+                        }
                       </div>
                       <div className="plan-option-price">
                         { /* if */ this.useSEK() &&
@@ -412,6 +430,21 @@ module.exports = React.createClass({
                         <div className="plan-option-feature-item">
                           {localization.payments.plans.enterprise.customDevelopment}
                         </div>
+                        { !this.oneYearMode() &&
+                          <div className="plan-option-feature-item">
+                            {"\u00A0"}
+                          </div>
+                        }
+                        { !this.oneYearMode() &&
+                          <div className="plan-option-feature-item">
+                            {"\u00A0"}
+                          </div>
+                        }
+                        { !this.oneYearMode() &&
+                          <div className="plan-option-feature-item">
+                            {"\u00A0"}
+                          </div>
+                        }
                       </div>
                       <div className="plan-option-price">
                         <span className="price">
