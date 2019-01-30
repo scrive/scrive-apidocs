@@ -75,7 +75,7 @@ var InfoTextInput = require("../../common/infotextinput");
                         <InfoTextInput
                           style={{"width": "250px"}}
                           infotext={tf.nicename()}
-                          value={self.getNewValue(tf) || tf.value()}
+                          value={self.getNewValue(tf) !== undefined ? self.getNewValue(tf) : tf.value()}
                           onChange={function (v) { self.setNewValue(tf, v); }}
                         />
                       </div>
