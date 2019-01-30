@@ -453,7 +453,7 @@
 "_designViewMandatoryForRecipient":"Obligatoire pour le destinataire",
 "_designViewMandatoryForSender":"Obligatoire pour l'expéditeur",
 "_designViewMoreSettings":"Plus de paramètres",
-"_designViewNotAllowedToChangeAuthenticationMethod":"Vous ne pouvez définir aucune autre méthode d'authentification.",
+"_designViewNotAllowedToChangeAuthenticationMethod":"",
 "_designViewOptionalField":"Facultatif",
 "_designViewOptionalMandatory":"Facultatif/Obligatoire",
 "_designViewRecipientsLanguage":"Langue du destinataire",

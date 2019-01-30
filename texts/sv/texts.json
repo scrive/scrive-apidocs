@@ -453,7 +453,7 @@
 "_designViewMandatoryForRecipient":"Obligatorisk för mottagaren",
 "_designViewMandatoryForSender":"Obligatorisk för avsändaren",
 "_designViewMoreSettings":"Fler inställningar",
-"_designViewNotAllowedToChangeAuthenticationMethod":"Du kan inte ställa in en annan autentiseringsmetod.",
+"_designViewNotAllowedToChangeAuthenticationMethod":"",
 "_designViewOptionalField":"Ej obligatoriskt",
 "_designViewOptionalMandatory":"Valfri/Obligatorisk",
 "_designViewRecipientsLanguage":"Mottagarens språk",
