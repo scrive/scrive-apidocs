@@ -688,8 +688,12 @@ docApiV2GenerateShareableLink :: Kontrakcja m => DocumentID -> m Response
 docApiV2GenerateShareableLink did = logDocument did . api $ do
   (user, _) <- getAPIUser APIDocCreate
   withDocumentID did $ do
-    guardThatUserIsAuthor user =<< theDocument
-    guardThatDocumentIs isTemplate "The document is not a template." =<< theDocument
+    doc <- theDocument
+    guardThatUserIsAuthor user doc
+    guardThatDocumentIs isTemplate "The document is not a template." doc
+    let doc' = doc { documenttype = Signable }
+    guardThatDocumentCanBeStarted doc'
+
     hash <- random
     dbUpdate $ UpdateShareableLinkHash $ Just hash
     (\d -> Ok (unjsonDocument $ documentAccessForUser user d, d)) <$> theDocument

@@ -274,9 +274,15 @@ var RemoveModalContent = React.createClass({
         self.openShowShareableLinkModal(tpl)();
         self.reload();
       }, function(resp) {
+        console.log(resp);
+        var errorMessage =
+          localization.archive.templates.shareableLink.generationFailed;
+        if (resp.responseJSON.error_message) {
+          errorMessage += " (" + resp.responseJSON.error_message + ")";
+        }
         new FlashMessage({
           type: "error",
-          content: localization.archive.templates.shareableLink.generationFailed
+          content: errorMessage
         });
       }).sendAjax();
     },
