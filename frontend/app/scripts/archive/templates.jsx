@@ -278,7 +278,7 @@ var RemoveModalContent = React.createClass({
         var errorMessage =
           localization.archive.templates.shareableLink.generationFailed;
         if (resp.responseJSON.error_message) {
-          errorMessage += " (" + resp.responseJSON.error_message + ")";
+          errorMessage += " " + resp.responseJSON.error_message;
         }
         new FlashMessage({
           type: "error",
