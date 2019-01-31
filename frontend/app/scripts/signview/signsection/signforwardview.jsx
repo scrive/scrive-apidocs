@@ -59,7 +59,8 @@ var InfoTextInput = require("../../common/infotextinput");
           <div className="row">
             <div className="col-sm-12">
               <h1>{localization.forward.forward}</h1>
-              <p>{localization.forward.forwardtootherperson}</p>
+              <p>{sig.signs() ? localization.forward.forwardtootherperson
+                              : localization.forward.forwardtootherpersonapproving}</p>
 
             </div>
           </div>
@@ -74,7 +75,7 @@ var InfoTextInput = require("../../common/infotextinput");
                         <InfoTextInput
                           style={{"width": "250px"}}
                           infotext={tf.nicename()}
-                          value={self.getNewValue(tf) || tf.value()}
+                          value={self.getNewValue(tf) !== undefined ? self.getNewValue(tf) : tf.value()}
                           onChange={function (v) { self.setNewValue(tf, v); }}
                         />
                       </div>

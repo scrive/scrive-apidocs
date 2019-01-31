@@ -108,11 +108,19 @@ mailForwardSigningForAuthorMail=
       $_mailForwardSigningForAuthorTitle()$
       $nicemail(
         mailheader = _mailForwardSigningForAuthorHeader();
-        mailp1 = _mailForwardSigningForAuthorContent();
+        mailp1 = mailForwardSigningForAuthorContent();
         mailspacing2 = "";
         mailp2 = mailForwardSigningForAuthorButton();
         footer = null
       )$
+###
+###
+mailForwardSigningForAuthorContent=
+$if(signing)$
+  $_mailForwardSigningForAuthorContent()$
+$else$
+  $_mailForwardSigningForAuthorContentApproving()$
+$endif$
 ###
 ###
 mailForwardSigningForAuthorButton=
@@ -130,7 +138,11 @@ $nicemail(
 )$
 ####
 mailForwardSigningForNewSignatoryDescription=
-$_mailForwardSigningForNewSignatoryDescriptionBase()$
+$if(signing)$
+  $_mailForwardSigningForNewSignatoryDescriptionBase()$
+$else$
+  $_mailForwardSigningForNewSignatoryDescriptionBaseApproving()$
+$endif$
 <br/>
 
 $if(hasforwardmessage)$

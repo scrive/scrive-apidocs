@@ -157,6 +157,7 @@ javascriptLocalisation =
              , forward : {
                          forward : "$_forwardForward()$"
                        , forwardtootherperson : "$_forwardToOtherPerson()$"
+                       , forwardtootherpersonapproving : "$_forwardToOtherPersonApproving()$"
                        , messageforotherperson : "$_forwardMessageForOtherPerson()$"
                        , typeyourmessagehere : "$_forwardTypeYourMessageHere()$"
                        , otherpersondetails : "$_forwardOtherPersonDetails()$"
@@ -931,6 +932,13 @@ javascriptLocalisation =
                             , errorMessage   : "$_flashMessageNoBulkDocumentRemindsSent()$"
                             , emptyMessage : "$_noDocumentChosen()$"
                             , notAvailableMessage : "$_youCantSendRemindersToThisDocuments()$"
+                        }
+                    , prolong : {
+                              action: "$_archiveProlong()$"
+                            , body : "$_listLocalDialogsBodyProlong()$"
+                            , emptyMessage : "$_noDocumentChosen()$"
+                            , invalidMessage : "$_flashMessageDocumentArchiveInvalidProlong()$"
+                            , successMessage : "$_listprolongedflashmessagesuccess()$"
                         }
                     , cancel : {
                               action: "$_listcancelbuttontext()$"
