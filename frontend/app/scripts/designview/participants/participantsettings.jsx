@@ -123,7 +123,8 @@ module.exports = React.createClass({
                         "dk_nemid", "fi_tupas", "sms_pin"];
     var authTypes = allAuthTypes.slice(0);
 
-    var ff = Subscription.currentSubscription().currentUserFeatures();
+    var subscription = Subscription.currentSubscription();
+    var ff = subscription.currentUserFeatures();
     if (!ff.canUseStandardAuthenticationToView() && !sig.standardAuthenticationToView()) {
       authTypes = _.without(authTypes, "standard");
     }
@@ -149,13 +150,19 @@ module.exports = React.createClass({
                                              sig.authenticationToViewArchived());
     });
 
-    return _.map(allAuthTypes, function (t) {
-      var result = {name: self.authenticationToViewText(t), value: t};
+    var result = [];
+    _.each(allAuthTypes, function (t) {
+      var option = {name: self.authenticationToViewText(t), value: t};
+      // free users should see disabled options, others must have had
+      // them disabled by admin
       if (!_.contains(authTypes, t)) {
-        result.disabled = true;
+        option.disabled = true;
       }
-      return result;
+      if (_.contains(authTypes, t) || subscription.hasFreePlan()) {
+        result.push(option);
+      }
     });
+    return result;
   },
   authenticationToViewArchivedOptions: function () {
     var self = this;
@@ -164,7 +171,8 @@ module.exports = React.createClass({
                         "dk_nemid", "fi_tupas", "sms_pin"];
     var authTypes = allAuthTypes.slice(0);
 
-    var ff = Subscription.currentSubscription().currentUserFeatures();
+    var subscription = Subscription.currentSubscription();
+    var ff = subscription.currentUserFeatures();
     if (!ff.canUseStandardAuthenticationToView() && !sig.standardAuthenticationToViewArchived()) {
       authTypes = _.without(authTypes, "standard");
     }
@@ -190,13 +198,19 @@ module.exports = React.createClass({
                                              authToViewArchived);
     });
 
-    return _.map(allAuthTypes, function (t) {
-      var result = {name: self.authenticationToViewText(t), value: t};
+    var result = [];
+    _.each(allAuthTypes, function (t) {
+      var option = {name: self.authenticationToViewText(t), value: t};
+      // free users should see disabled options, others must have had
+      // them disabled by admin
       if (!_.contains(authTypes, t)) {
-        result.disabled = true;
+        option.disabled = true;
       }
-      return result;
+      if (_.contains(authTypes, t) || subscription.hasFreePlan()) {
+        result.push(option);
+      }
     });
+    return result;
   },
   authenticationToSignText: function (t) {
     if (t == "standard") {
@@ -218,7 +232,8 @@ module.exports = React.createClass({
     var authTypes = allAuthTypes.slice(0);
 
     if (sig.signs()) {
-      var ff = Subscription.currentSubscription().currentUserFeatures();
+      var subscription = Subscription.currentSubscription();
+      var ff = subscription.currentUserFeatures();
       if (!ff.canUseStandardAuthenticationToSign() && !sig.standardAuthenticationToSign()) {
         authTypes = _.without(authTypes, "standard");
       }
@@ -242,13 +257,19 @@ module.exports = React.createClass({
                                              sig.authenticationToViewArchived());
     });
 
-    return _.map(allAuthTypes, function (t) {
-      var result =  {name: self.authenticationToSignText(t), value: t};
+    var result = [];
+    _.each(allAuthTypes, function (t) {
+      var option = {name: self.authenticationToSignText(t), value: t};
+      // free users should see disabled options, others must have had
+      // them disabled by admin
       if (!_.contains(authTypes, t)) {
-        result.disabled = true;
+        option.disabled = true;
       }
-      return result;
+      if (_.contains(authTypes, t) || subscription.hasFreePlan()) {
+        result.push(option);
+      }
     });
+    return result;
   },
 
   confirmationDeliveryText: function (t) {
