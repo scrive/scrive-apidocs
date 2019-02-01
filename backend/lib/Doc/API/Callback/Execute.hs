@@ -90,6 +90,8 @@ executeStandardCallback mBasicAuth doc dac = logDocument (documentid doc) $ do
   case (exitcode, httpCode) of
     (ExitSuccess, n) | n < 300 -> do
       logInfo "API callback executeStandardCallback succeeded" $ logObject_ dac
+      now <- currentTime
+      dbUpdate $ SetDocumentApiCallbackResult (documentid doc) $ Just $ "Success " ++ show now
       return True
     (ExitSuccess, _) -> do
       logInfo "API callback executeStandardCallback failed" $ object [
@@ -97,6 +99,15 @@ executeStandardCallback mBasicAuth doc dac = logDocument (documentid doc) $ do
         , "stderr" `equalsExternalBSL` stderr
         , "stdout" `equalsExternalBSL` stdout
         ]
+      now <- currentTime
+      let msg = concat [ "Failure "
+                       , show now ++ "\n"
+                       , "stdout: "
+                       , BSL.unpack stdout ++ "\n"
+                       , "stderr: "
+                       , BSL.unpack stderr
+                       ]
+      dbUpdate $ SetDocumentApiCallbackResult (documentid doc) $ Just msg
       return False
     (ExitFailure ec, _) -> do
       logInfo "API callback executeStandardCallback failed" $ object [
@@ -105,6 +116,15 @@ executeStandardCallback mBasicAuth doc dac = logDocument (documentid doc) $ do
         , "stderr" `equalsExternalBSL` stderr
         , "stdout" `equalsExternalBSL` stdout
         ]
+      now <- currentTime
+      let msg = concat [ "Failure "
+                       , show now ++ "\n"
+                       , "stdout: "
+                       , BSL.unpack stdout ++ "\n"
+                       , "stderr: "
+                       , BSL.unpack stderr
+                       ]
+      dbUpdate $ SetDocumentApiCallbackResult (documentid doc) $ Just msg
       return False
   where
     curlParams =  [

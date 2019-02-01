@@ -9,7 +9,7 @@
 -- InspectXMLInstances with InspectXML he should do it.
 -----------------------------------------------------------------------------
 
-module InspectXMLInstances() where
+module InspectXMLInstances (ExtraDocument(..)) where
 
 import Data.Int
 import Text.JSON
@@ -72,6 +72,9 @@ $(deriveInspectXML ''PlacementAnchor)
 $(deriveInspectXML ''SignatoryConsentQuestion)
 $(deriveInspectXML ''TemporaryMagicHash)
 
+data ExtraDocument = ExtraDocument String
+  deriving Show
+
 instance InspectXML SignatoryField where
   inspectXML field =
     show (fieldIdentity field) ++ " " ++ value ++ ", " ++
@@ -93,6 +96,11 @@ instance InspectXML SignatoryField where
 
 instance InspectXML SignatoryConsentQuestionID where
   inspectXML = show
+
+-- this must be manually updated to match Document instance
+instance InspectXML ExtraDocument
+  where inspectXML (ExtraDocument callbackResult) =
+          table "DocumentExtra" $ concat [table "API Callback result" $ inspectXML callbackResult]
 
 --Link creating types
 instance InspectXML DocumentID where

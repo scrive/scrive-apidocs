@@ -47,6 +47,7 @@ daveDocument=
 <div class="mainContainer" >
   <div class="body-container">
 $daveBody:noescape()$
+$extraDaveBody:noescape()$
 
 <div style="border:10px solid red;padding:10px">
 <center> <h1>This option is extreme. Use this only if really needed </h1></center>

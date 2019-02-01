@@ -27,6 +27,7 @@ module Doc.Model.Query
   , CheckDocumentObjectVersionIs(..)
   , DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor(..)
   , GetRandomSignatoryLinkIDThatSignedRecently(..)
+  , GetDocumentAPICallbackResult(..)
   ) where
 
 import Control.Monad.Catch
@@ -199,6 +200,15 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentForDave Document wher
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereDocumentIDIs did
+
+data GetDocumentAPICallbackResult = GetDocumentAPICallbackResult DocumentID
+instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentAPICallbackResult (Maybe String) where
+  query (GetDocumentAPICallbackResult did) = do
+    runQuery_ . sqlSelect "api_callback_result" $ do
+      sqlResult "callback_result"
+      sqlWhereEq "document_id" did
+      sqlLimit 1
+    fetchMaybe runIdentity
 
 data GetDocumentBySignatoryLinkID = GetDocumentBySignatoryLinkID SignatoryLinkID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentBySignatoryLinkID Document where
