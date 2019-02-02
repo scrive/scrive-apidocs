@@ -28,16 +28,16 @@ whiteList = S.fromList [ "newTemplateTitle"
                        -- they are needed.
                        , "CancelDocumenElegEvidenceText"
                        , "SignatoryLinkVisitedArchive"
-                       -- Seems like templates defined as parameters are not detected.
-                       -- See $nicemail() uses.
+                       -- Seems like templates defined as parameters
+                       -- are not detected.  See $nicemail() uses.
                        , "mailForwardSigningForAuthorMail"
                        , "mailForwardSigningForNewSignatory"
                        , "mailForwardSigningForNewSignatoryButton"
                        ]
 
 kontraExtensions :: [Extension]
-kontraExtensions = map EnableExtension [
-    BangPatterns
+kontraExtensions = map EnableExtension
+  [ BangPatterns
   , ConstraintKinds
   , DeriveDataTypeable
   , DeriveFunctor
