@@ -5,6 +5,7 @@ module MagicHash
   ( MagicHash
   , unsafeMagicHash
   , unMagicHash
+  , showOnlyLastFourCharacters
   ) where
 
 import Control.Arrow
@@ -66,3 +67,9 @@ unsafeMagicHash = MagicHash
 -- reason about the consequences of using the internal number.
 unMagicHash :: MagicHash -> Int64
 unMagicHash (MagicHash mh) = mh
+
+showOnlyLastFourCharacters :: MagicHash -> String
+showOnlyLastFourCharacters mh =
+  let asString = show mh
+      len = length asString
+    in map (\(i, c) -> if i <= 4 then c else '*') $ zip [len, (len - 1) .. 1 ] asString

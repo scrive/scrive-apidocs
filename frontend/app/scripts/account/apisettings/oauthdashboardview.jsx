@@ -5,7 +5,7 @@ var CallbackScheme = require("./callbackscheme");
 var CallbackSchemeView = require("./callbackschemeview");
 var Button = require("../../common/button");
 var Submit = require("../../../js/submits.js").Submit;
-
+var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 
 
 module.exports = React.createClass({
@@ -66,6 +66,38 @@ module.exports = React.createClass({
         ajaxsuccess: function() {self.refs.personaltokenlist.reload();}
       }).send();
     },
+    copyPersonalCredentialsToClipboard: function(token) {
+      var credentialsAsString =
+        "API token: " + token.field("apitoken") + ", " +
+        "API secret: " + token.field("apisecret") + ", " +
+        "access token: " + token.field("accesstoken") + ", " +
+        "access secret: " + token.field("accesssecret");
+
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(credentialsAsString);
+      } else {
+        var fallbackCopyTextToClipboard = function (text) {
+          var textArea = document.createElement("textarea");
+          textArea.style.position = 'fixed';
+          textArea.style.top = 0;
+          textArea.style.left = 0;
+          textArea.style.opacity = 0;
+          textArea.value = text;
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+        }
+        fallbackCopyTextToClipboard(credentialsAsString);
+      }
+
+      new FlashMessage({
+        type: "success",
+        content: localization.apiDashboard.personalTokenCopySucceeded,
+        hideTimeout: 2000
+        });
+    },
     render: function() {
       var self = this;
       return (
@@ -117,6 +149,11 @@ module.exports = React.createClass({
                 loadLater={true}
                 dataFetcher={function(d) {return d.personal_tokens;}}
               >
+                <List.ListHeader availableWhen={function(model) {
+                  return model.ready() && model.list().length != 0 && !model.list().at(0).field("hidden");}}
+                >
+                  <div className="oauth-section-warning">{localization.apiDashboard.personalTokenWarning}</div>
+                </List.ListHeader>
                 <List.Column
                   name="Client credentials identifier"
                   width="120px"
@@ -128,17 +165,7 @@ module.exports = React.createClass({
                   name="Client credentials secret"
                   width="120px"
                   rendering={function(d) {
-                      if (d.getProperty("hiddenSecret"))
-                        return (<div>{d.field("apisecret")}</div>);
-                      else
-                        return (
-                          <span
-                            onClick={function() {d.setProperty("hiddenSecret",true)}}
-                            className="oauth-hidden-token"
-                          >
-                            {localization.apiDashboard.reveal}
-                          </span>
-                        );
+                    return (<div>{d.field("apisecret")}</div>);
                   }}
                 />
                 <List.Column
@@ -152,17 +179,23 @@ module.exports = React.createClass({
                   name="Token credentials secret"
                   width="120px"
                   rendering={function(d) {
-                      if (d.getProperty("hiddenAccess"))
-                        return (<div>{d.field("accesssecret")}</div>);
-                      else
-                        return (
-                          <span
-                            onClick={function() {d.setProperty("hiddenAccess",true)}}
-                            className="oauth-hidden-token"
-                          >
-                            {localization.apiDashboard.reveal}
-                          </span>
-                        );
+                    return (<div>{d.field("accesssecret")}</div>);
+                  }}
+                />
+                <List.Column
+                  name=""
+                  width="20px"
+                  rendering={function(d) {
+                    if (!d.field("hidden")) {
+                    return (
+                      <div className='oauth-copy-token'
+                        onClick={function() {self.copyPersonalCredentialsToClipboard(d)}}
+                        title={localization.apiDashboard.personalTokenCopyTooltip}
+                      >
+                      </div>);
+                    } else {
+                      return (<div></div>);
+                    }
                   }}
                 />
                 <List.Column

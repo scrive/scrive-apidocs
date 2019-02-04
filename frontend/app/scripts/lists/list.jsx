@@ -9,8 +9,8 @@ var ListSelectActions = require("./listselectaction");
 var SelectFilter = require("./selectfilter");
 var SelectAjaxFilter = require("./selectajaxfilter");
 var SelectFromToFilter = require("./selectfromtofilter");
-var ListHeader = require("./listfooter");
-var ListFooter = require("./listheader");
+var ListHeader = require("./listheader");
+var ListFooter = require("./listfooter");
 var Column = require("./column");
 var Sublist = require("./sublist");
 var ListSubHeader = require("./listsubheader");
@@ -128,7 +128,8 @@ var List = React.createClass({
       var header = this.listheader();
       var footer = this.listfooter();
       var subheader = this.listsubheader();
-      var hasFirstTopBar = header != undefined || selectfilters.length > 0 || (selectactions != undefined && textfiltering != undefined);
+      var showHeader = header != undefined && (header.props.availableWhen == undefined || header.props.availableWhen(model));
+      var hasFirstTopBar = showHeader || selectfilters.length > 0 || (selectactions != undefined && textfiltering != undefined);
       var hasSecondTopBar =  actions.length >0 || selectactions != undefined ||  (!hasFirstTopBar && textfiltering != undefined);
       var hasAnyTopBar = hasFirstTopBar || hasSecondTopBar;
       var rows = model.list() === undefined ? [] : model.list();
@@ -142,7 +143,7 @@ var List = React.createClass({
               {/*if*/ (hasFirstTopBar) &&
                 <div>
                   <div className="col float-left">
-                    {/*if*/ (header != undefined) &&
+                    {/*if*/ showHeader &&
                       (header)
                     }
 

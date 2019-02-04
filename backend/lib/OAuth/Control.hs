@@ -121,12 +121,22 @@ tokenCredRequest = api $ do
                     ("oauth_token_secret", show accesssecret)
                   ]
 
+-- Fetch personal token:
+-- if newly created - in plain text, if older - with only last digits shown
 apiDashboardPersonalTokens :: Kontrakcja m => m Value
 apiDashboardPersonalTokens = do
   ctx <- getContext
   user <- guardJust . get ctxmaybeuser $ ctx
-  ls <- map (unjsonToJSON unjsonOAuthAuthorization) <$> maybeToList <$> (dbQuery $ GetPersonalToken (userid user))
-  return $ object [ "personal_tokens" .= ls ]
+  let mRecentToken = dbQuery $ GetRecentPersonalToken (userid user) 5 -- created in the last 5 min
+  recentAsList <- map (unjsonToJSON unjsonOAuthAuthorization) <$> maybeToList <$> mRecentToken
+  if (not . null) recentAsList
+    then
+      return $ object [ "personal_tokens" .= recentAsList ]
+    else do
+      let mToken = dbQuery $ GetPersonalToken (userid user)
+      tokenAsList <- map (unjsonToJSON unjsonOAuthAuthorizationHideSecrets . toOAuthAuthorizationHideSecrets)
+        <$> maybeToList <$> mToken
+      return $ object [ "personal_tokens" .= tokenAsList ]
 
 apiDashboardAPITokens :: Kontrakcja m => m JSValue
 apiDashboardAPITokens = do

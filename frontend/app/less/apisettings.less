@@ -16,7 +16,7 @@
 
   .oauth-section {
     margin-bottom: 55px;
-    
+
     &:last-child {
       margin-bottom: 0;
     }
@@ -43,6 +43,30 @@
       margin: 15px 0 15px;
       position: relative;
       text-align: left;
+    }
+
+    .oauth-section-warning {
+      display: inline-block;
+      font-weight: bold;
+      font-size: 1.1em;
+      line-height: 1.1em;
+      color: @brand-secondary;
+    }
+
+    .oauth-copy-token {
+      display: inline-block;
+      height: 20px;
+      width: 20px;
+      margin-left: 10px;
+
+      cursor: pointer;
+
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 17px 17px;
+
+      background-color: transparent;
+      background-image: url('/img/icon-copy.svg');
     }
   }
 

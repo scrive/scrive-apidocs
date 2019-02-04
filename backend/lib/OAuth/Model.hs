@@ -112,6 +112,24 @@ data OAuthAuthorization = OAuthAuthorization {
 , oaAccessSecret :: MagicHash
 } deriving (Show, Eq)
 
+data OAuthAuthorizationHideSecrets = OAuthAuthorizationHideSecrets {
+  oahsAPIToken     :: APIToken
+, oahsAPISecret    :: String
+, oahsAccessToken  :: APIToken
+, oahsAccessSecret :: String
+, oahsHidden       :: Bool
+} deriving (Show, Eq)
+
+toOAuthAuthorizationHideSecrets :: OAuthAuthorization -> OAuthAuthorizationHideSecrets
+toOAuthAuthorizationHideSecrets oauth =
+  OAuthAuthorizationHideSecrets{
+      oahsAPIToken     = oaAPIToken oauth
+    , oahsAPISecret    = (showOnlyLastFourCharacters . oaAPISecret) oauth
+    , oahsAccessToken  = oaAccessToken oauth
+    , oahsAccessSecret = (showOnlyLastFourCharacters . oaAccessSecret) oauth
+    , oahsHidden       = True
+    }
+
 unjsonOAuthAuthorization :: UnjsonDef OAuthAuthorization
 unjsonOAuthAuthorization = objectOf $ pure OAuthAuthorization
   <*> fieldBy "apitoken"
@@ -128,6 +146,26 @@ unjsonOAuthAuthorization = objectOf $ pure OAuthAuthorization
   <*> field "accesssecret"
       oaAccessSecret
       "OAuth access secret"
+
+unjsonOAuthAuthorizationHideSecrets :: UnjsonDef OAuthAuthorizationHideSecrets
+unjsonOAuthAuthorizationHideSecrets = objectOf $ pure OAuthAuthorizationHideSecrets
+  <*> fieldBy "apitoken"
+      oahsAPIToken
+      "OAuth API token"
+      unjsonAPIToken
+  <*> field "apisecret"
+      oahsAPISecret
+      "OAuth API secret"
+  <*> fieldBy "accesstoken"
+      oahsAccessToken
+      "OAuth access token"
+      unjsonAPIToken
+  <*> field "accesssecret"
+      oahsAccessSecret
+      "OAuth access secret"
+  <*> field "hidden"
+      oahsHidden
+      "OAuth api and access secrets are hidden"
 
 -- APIToken Management
 
@@ -441,6 +479,28 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetPersonalToken (Maybe OAuthAut
              <> "JOIN oauth_api_token t on a.api_token_id = t.id "
              <> "WHERE a.user_id = $1 AND t.user_id = $2 AND a.id IN (SELECT access_token_id FROM oauth_privilege WHERE access_token_id = a.id AND privilege = $3)")
             (userid, userid, APIPersonal)
+    fetchMaybe $ \(ti, tt, ts, i, t, s) ->
+      OAuthAuthorization
+        { oaAPIToken     = APIToken ti tt
+        , oaAPISecret    = ts
+        , oaAccessToken  = APIToken i t
+        , oaAccessSecret = s
+        }
+
+{- |
+   Get personal token if it was newly created
+ -}
+data GetRecentPersonalToken = GetRecentPersonalToken UserID Int
+instance (MonadDB m, MonadTime m, MonadThrow m) => DBQuery m GetRecentPersonalToken (Maybe OAuthAuthorization) where
+  query (GetRecentPersonalToken userid recencyMinutes) = do
+    now <- currentTime
+    runQuery_ $ rawSQL ("SELECT t.id, t.api_token, t.api_secret, a.id, a.access_token, a.access_secret "
+             <> "FROM oauth_access_token a "
+             <> "JOIN oauth_api_token t on a.api_token_id = t.id "
+             <> "WHERE a.user_id = $1 AND t.user_id = $2 "
+             <> "AND a.id IN (SELECT access_token_id FROM oauth_privilege WHERE access_token_id = a.id AND privilege = $3) "
+             <> "AND a.created > $4 - INTERVAL '$5 minute'")
+            (userid, userid, APIPersonal, now, recencyMinutes)
     fetchMaybe $ \(ti, tt, ts, i, t, s) ->
       OAuthAuthorization
         { oaAPIToken     = APIToken ti tt

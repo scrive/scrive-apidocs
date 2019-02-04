@@ -6,6 +6,7 @@ import Test.QuickCheck
 
 import DB
 import MagicHash
+import MinutesTime
 import OAuth.Model
 import TestingUtil
 import TestKontra
@@ -23,7 +24,8 @@ oauthTest env = testGroup "OAuth" [
   testThat "GetGrantedPrivileges"                 env testGetGrantedPrivileges,
   testThat "DeletePrivileges"                     env testDeletePrivileges,
   testThat "DeletePrivilege"                      env testDeletePrivilege,
-  testThat "PersonalToken"                        env testPersonalToken
+  testThat "PersonalToken"                        env testPersonalToken,
+  testThat "RecentPersonalToken"                  env testRecentPersonalToken
   ]
 
 -- test model
@@ -355,4 +357,26 @@ testPersonalToken = do
 
   void $ dbUpdate $ DeletePersonalToken (userid user)
   mt'' <- dbQuery $ GetPersonalToken (userid user)
+  assertBool "GetPersonalToken: should return Nothing with User who just deleted." $ mt'' == Nothing
+
+testRecentPersonalToken :: TestEnv ()
+testRecentPersonalToken = do
+  user      <- addNewRandomUser
+  mt <- dbQuery $ GetRecentPersonalToken (userid user) 5
+  assertBool "GetPersonalToken: should return Nothing with new User." $ mt == Nothing
+
+  r <- dbUpdate $ CreatePersonalToken (userid user)
+  assertBool "Should have worked!" $ r
+
+  recent5min <- dbQuery $ GetRecentPersonalToken (userid user) 5
+  assertBool "GetRecentPersonalToken: should return Just! for 5-min recent token" $ isJust recent5min
+
+  now <- currentTime
+  setTestTime $ 6 `minutesAfter` now
+
+  recent5min' <- dbQuery $ GetRecentPersonalToken (userid user) 5
+  assertBool "GetRecentPersonalToken: should return Nothing for 5-min recent token" $ recent5min' == Nothing
+
+  void $ dbUpdate $ DeletePersonalToken (userid user)
+  mt'' <- dbQuery $ GetRecentPersonalToken (userid user) 5
   assertBool "GetPersonalToken: should return Nothing with User who just deleted." $ mt'' == Nothing
