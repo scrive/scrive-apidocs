@@ -132,11 +132,12 @@ smsForwardSigningForAuthor
   , TemplatesMonad m) => SignatoryLink -> SignatoryLink -> Document -> m SMS
 smsForwardSigningForAuthor originalsl newsl doc = do
   let alink = fromJust $ getAuthorSigLink doc
-      template = if signatoryrole newsl == SignatoryRoleSigningParty then
-                   "_smsForwardSigningForAuthor"
-                 else
-                   "_smsForwardSigningForAuthorApproving"
-  message <- renderLocalTemplate doc template $ do
+      doRender
+        | signatoryrole newsl == SignatoryRoleSigningParty
+        = renderLocalTemplate doc "_smsForwardSigningForAuthor"
+        | otherwise
+        = renderLocalTemplate doc "_smsForwardSigningForAuthorApproving"
+  message <- doRender $ do
     smsFields doc
     F.value "fromName" (getSmartName originalsl)
     F.value "toName" (getSmartName newsl)
@@ -147,11 +148,12 @@ smsForwardSigningForNewSignatory
   :: (CryptoRNG m, MailContextMonad m, MonadDB m, MonadTime m, MonadThrow m
   , TemplatesMonad m) => SignatoryLink -> SignatoryLink -> Document -> m SMS
 smsForwardSigningForNewSignatory originalsl newsl doc = do
-  let template = if signatoryrole newsl == SignatoryRoleSigningParty then
-                   "_smsForwardSigningForNewSignatory"
-                 else
-                   "_smsForwardSigningForNewSignatoryApproving"
-  message <- renderLocalTemplate doc template $ do
+  let doRender
+        | signatoryrole newsl == SignatoryRoleSigningParty
+        = renderLocalTemplate doc "_smsForwardSigningForNewSignatory"
+        | otherwise
+        = renderLocalTemplate doc "_smsForwardSigningForNewSignatoryApproving"
+  message <- doRender $ do
     smsFields doc
     smsLinkFields doc newsl
     F.value "fromName" (getSmartName originalsl)
