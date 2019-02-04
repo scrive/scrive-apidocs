@@ -147,5 +147,5 @@ addTemporaryLoginTokensPurgeJob = Migration
   { mgrTableName = tblName tableCronJobs
   , mgrFrom = 18
   , mgrAction = StandardMigration $
-      runSQL_ "INSERT INTO cron_jobs (hash, run_at) VALUES ('temporary_login_tokens_purge', to_timestamp(0))"
+      runSQL_ "INSERT INTO cron_jobs (id, run_at) VALUES ('temporary_login_tokens_purge', to_timestamp(0))"
   }
