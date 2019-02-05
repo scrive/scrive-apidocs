@@ -9,6 +9,7 @@ import Control.Monad.Time
 import Crypto.RNG
 import Data.Int
 import Data.Time
+import Log
 
 import DB
 import Doc.SignatoryLinkID
@@ -48,7 +49,7 @@ instance ToSQL SMSPinType where
 
 data GetSignatoryPin = GetSignatoryPin SMSPinType SignatoryLinkID String
 
-instance (MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => DBQuery m GetSignatoryPin String where
+instance (MonadLog m, MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => DBQuery m GetSignatoryPin String where
   query (GetSignatoryPin pintype slid phone) = do
     runQuery_ . sqlSelect "signatory_sms_pins" $ do
       sqlResult "pin"
@@ -64,6 +65,10 @@ instance (MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => DBQuery m GetSig
         then return pin
         else do
           newPin <- show <$> randomR (1000, 9999)
+          logInfo "Generating new pin" $
+            object [ "new pin" .= newPin
+                   , "reason" .= ("previous one was too old" :: String)
+                   ]
           runQuery_ $ sqlUpdate "signatory_sms_pins" $ do
             sqlSet "pin" newPin
             sqlSet "generated_at" now
@@ -73,6 +78,10 @@ instance (MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => DBQuery m GetSig
           return newPin
       Nothing -> do
             newPin <- show <$> randomR (1000, 9999)
+            logInfo "Generating new pin" $
+              object [ "new pin" .= newPin
+                     , "reason" .= ("no previous pin" :: String)
+                     ]
             runQuery_ $ sqlInsert "signatory_sms_pins" $ do
               sqlSet "pin" newPin
               sqlSet "generated_at" now
