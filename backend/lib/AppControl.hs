@@ -67,9 +67,10 @@ data AppGlobals = AppGlobals {
 
 -- | Determines the lang of the current user (whether they are logged
 -- in or not), by checking their settings, the request, and cookies.
-getStandardLang :: ( HasLang a, ServerMonad m, FilterMonad Response m
-                   , MonadIO m, MonadLog m, MonadCatch m )
-                => Maybe a -> m Lang
+getStandardLang
+  :: ( HasLang a, ServerMonad m, FilterMonad Response m
+     , MonadIO m, MonadLog m, MonadCatch m )
+  => Maybe a -> m Lang
 getStandardLang muser = do
   rq <- askRq
   let mlangcookie = lookCookieValue "lang" $ rqHeaders rq
@@ -81,9 +82,10 @@ getStandardLang muser = do
   addCookie (MaxAge (60*60*24*366)) newlangcookie
   return newlang
 
-maybeReadTemplates :: (MonadBaseControl IO m, MonadLog m)
-                   => Bool -> MVar (UTCTime, KontrakcjaGlobalTemplates)
-                   -> m KontrakcjaGlobalTemplates
+maybeReadTemplates
+  :: (MonadBaseControl IO m, MonadLog m)
+  => Bool -> MVar (UTCTime, KontrakcjaGlobalTemplates)
+  -> m KontrakcjaGlobalTemplates
 maybeReadTemplates production mvar | production = snd <$> readMVar mvar
 maybeReadTemplates _ mvar = modifyMVar mvar $ \(modtime, templates) -> do
   modtime' <- liftBase getTemplatesModTime
