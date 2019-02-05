@@ -22,11 +22,16 @@ logUserCompanyIPAndApiVersion apiversion acc = do
         , identifier $ usergroupid user
         ]
   ctx <- getContext
-  let apiversionandip = [identifier apiversion, "ip" .= show (get ctxipnumber ctx)]
+  let apiversionandip =
+        [ identifier apiversion
+        , "ip" .= show (get ctxipnumber ctx)
+        ]
   localData (userandcompanyids ++ apiversionandip) $ do
     logInfo_ "API call"
     acc
 
--- Stick the user, which accesses API into the context
+-- | Stick the user that accesses API into the context.
 addAPIUserToContext :: Kontrakcja m => m ()
-addAPIUserToContext = getMaybeAPIUserWithAnyPrivileges >>= modifyContext . set ctxmaybeapiuser
+addAPIUserToContext =
+  getMaybeAPIUserWithAnyPrivileges >>=
+  modifyContext . set ctxmaybeapiuser
