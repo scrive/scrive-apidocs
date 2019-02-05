@@ -297,7 +297,8 @@ noUsrGrpErr =
 
 noUsrGrpErrPartner :: (Kontrakcja m) => m a
 noUsrGrpErrPartner =
-  srvLogErr $ "The user group could not be retrieved for the given partner identifier."
+  srvLogErr $
+  "The user group could not be retrieved for the given partner identifier."
 
 rqPrmErr :: (Kontrakcja m) => T.Text -> m a
 rqPrmErr t = do
@@ -306,12 +307,12 @@ rqPrmErr t = do
 
 resolveUserGroupID
   :: Kontrakcja m
-  -- | Argument to be checked whether it is a 'PartnerID' or a
-  -- 'UserGroupID'.
   => Int64
-  -- | If the original argument is a @PartnerID@, return this along with
-  -- the `UserGroupID` (mostly for logging purposes).
+  -- ^ Argument to be checked whether it is a 'PartnerID' or a
+  -- 'UserGroupID'.
   -> m (Maybe PartnerID, UserGroupID)
+  -- ^ If the original argument is a 'PartnerID', return this along
+  -- with the 'UserGroupID' (mostly for logging purposes).
 resolveUserGroupID k = do
   (ePartner :: Either SomeException Partner) <- do
     try . dbQuery . GetPartnerByID . unsafePartnerID $ k
