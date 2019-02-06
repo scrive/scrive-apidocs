@@ -31,6 +31,7 @@ import qualified InputValidation as V
 data ApiV2Parameter a where
   ApiV2ParameterBool  :: T.Text -> ApiV2Parameter Bool
   ApiV2ParameterInt   :: T.Text -> ApiV2Parameter Int
+  ApiV2ParameterDouble   :: T.Text -> ApiV2Parameter Double
   ApiV2ParameterText  :: T.Text -> ApiV2Parameter T.Text
   ApiV2ParameterTextWithValidation
       :: T.Text -> (String -> V.Result String) -> ApiV2Parameter T.Text
@@ -66,6 +67,7 @@ apiV2ParameterDefault d p = do
 apiV2ParameterOptional :: Kontrakcja m => ApiV2Parameter a -> m (Maybe a)
 
 apiV2ParameterOptional (ApiV2ParameterInt name) = apiParameterUsingMaybeRead name
+apiV2ParameterOptional (ApiV2ParameterDouble name) = apiParameterUsingMaybeRead name
 apiV2ParameterOptional (ApiV2ParameterText name) = fmap T.pack <$> getField (T.unpack name)
 apiV2ParameterOptional (ApiV2ParameterRead name) = apiParameterUsingMaybeRead name
 
@@ -202,6 +204,7 @@ apiParameterUsingMaybeRead name = do
 getParameterName :: ApiV2Parameter a -> T.Text
 getParameterName (ApiV2ParameterBool n) = n
 getParameterName (ApiV2ParameterInt n) = n
+getParameterName (ApiV2ParameterDouble n) = n
 getParameterName (ApiV2ParameterText n) = n
 getParameterName (ApiV2ParameterTextWithValidation n _) = n
 getParameterName (ApiV2ParameterRead n) = n

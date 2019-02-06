@@ -25,6 +25,7 @@ module Doc.API.V2.Calls.DocumentPostCalls (
 , docApiV2SigChangeEmailAndMobile
 , docApiV2GenerateShareableLink
 , docApiV2DiscardShareableLink
+, docApiV2AddImage
 ) where
 
 import Control.Monad.Base
@@ -53,6 +54,7 @@ import Doc.API.V2.JSON.AttachmentDetails
 import Doc.API.V2.JSON.Document
 import Doc.API.V2.JSON.Misc
 import Doc.AutomaticReminder.Model (setAutomaticReminder)
+import Doc.DocAddImage (addImageToDocumentFile)
 import Doc.DocInfo (isTimedout)
 import Doc.DocMails (sendAllReminderEmailsExceptAuthor, sendForwardEmail, sendInvitationEmail1)
 import Doc.DocStateData
@@ -706,3 +708,48 @@ docApiV2DiscardShareableLink did = logDocument did . api $ do
     guardThatDocumentIs isTemplate "The document is not a template." =<< theDocument
     dbUpdate $ UpdateShareableLinkHash Nothing
     return $ Accepted ()
+
+docApiV2AddImage :: Kontrakcja m => DocumentID -> m Response
+docApiV2AddImage did = logDocument did . api $ do
+  -- Permissions
+  (user, actor) <- getAPIUser APIDocCreate
+  withDocumentID did $ do
+    -- Guards
+    guardThatUserIsAuthor user =<< theDocument
+    guardThatObjectVersionMatchesIfProvided did
+    guardDocumentStatus Preparation =<< theDocument
+
+    -- Parameters
+    image  <- apiV2ParameterObligatory (ApiV2ParameterBase64PNGImage "image")
+    pageno <- apiV2ParameterObligatory (ApiV2ParameterInt "pageno")
+    x      <- apiV2ParameterObligatory (ApiV2ParameterDouble "x")
+    y      <- apiV2ParameterObligatory (ApiV2ParameterDouble "y")
+
+    when (pageno < 1) $ do
+      apiError $ requestParameterInvalid "pageno" "Page number should be >= 1"
+    when (x < 0 || x > 1 || y < 0 || y > 1) $ do
+      apiError $ requestParameterInvalid "x or y" "X and Y positions should be between 0 and 1"
+
+    -- Generating and replacing PDF
+    mfile <- fileFromMainFile =<< documentfile <$> theDocument
+    case mfile of
+      Nothing -> apiError $ documentStateError "Document does not have a main file"
+      Just file -> do
+        content <- getFileContents file
+        enop <- liftBase $ getNumberOfPDFPages content
+        case enop of
+          Left _ -> apiError $ serverError "Can't extract number of pages from PDF"
+          Right nop -> do
+            when (pageno > nop) $ do
+              apiError $ requestParameterInvalid "pageno" "Page index is higher than number of pages"
+
+            mnewcontent <- addImageToDocumentFile did file image (fromIntegral pageno) x y
+            case mnewcontent of
+              Left _ -> apiError $ serverError "Adding image to main file has failed"
+              Right newcontent -> do
+                nfileid <- saveNewFile (filename file) newcontent
+                dbUpdate $ DetachFile actor
+                dbUpdate $ AttachFile nfileid actor
+
+    -- Result
+    Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument

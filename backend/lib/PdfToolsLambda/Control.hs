@@ -2,6 +2,7 @@ module PdfToolsLambda.Control (
     callPdfToolsSealing
   , callPdfToolsPresealing
   , callPdfToolsCleaning
+  , callPdfToolsAddImage
 ) where
 
 import Control.Monad.Base
@@ -20,6 +21,7 @@ import qualified Text.JSON as JSON
 import qualified Text.JSON.Gen as JSON
 
 import DB
+import Doc.AddImageSpec
 import Doc.SealSpec
 import FileStorage.Amazon
 import FileStorage.Amazon.Config
@@ -30,11 +32,15 @@ import PdfToolsLambda.Response
 import PdfToolsLambda.Spec
 import Utils.IO
 
-data PdfToolsAction = PdfToolsActionSealing | PdfToolsActionCleaning
+data PdfToolsAction =
+    PdfToolsActionSealing
+  | PdfToolsActionCleaning
+  | PdfToolsActionAddImage
 
 pdfToolsActionName :: PdfToolsAction -> T.Text
 pdfToolsActionName PdfToolsActionSealing = "seal"
 pdfToolsActionName PdfToolsActionCleaning = "clean"
+pdfToolsActionName PdfToolsActionAddImage = "addimage"
 
 callPdfToolsSealing ::
   (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadDB m, MonadLog m) =>
@@ -55,6 +61,14 @@ callPdfToolsCleaning ::
   PdfToolsLambdaConf -> BSL.ByteString -> m (Maybe BS.ByteString)
 callPdfToolsCleaning lc inputFileContent = do
   executePdfToolsLambdaActionCall lc PdfToolsActionCleaning inputFileContent
+
+callPdfToolsAddImage ::
+  (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadDB m, MonadLog m) =>
+  PdfToolsLambdaConf -> AddImageSpec -> m (Maybe BS.ByteString)
+callPdfToolsAddImage lc spec = do
+  inputData <- addImageSpecToLambdaSpec spec
+  executePdfToolsLambdaActionCall lc PdfToolsActionAddImage inputData
+
 --
 executePdfToolsLambdaActionCall
   :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
@@ -88,7 +102,8 @@ executePdfToolsLambdaActionCall lc action inputData = do
             ]
           return $ Nothing
         ExitSuccess -> case action of
-          PdfToolsActionSealing -> parseSealingResponse lc stdout
+          PdfToolsActionSealing  -> parseSealingResponse lc stdout
+          PdfToolsActionAddImage -> parseAddImageResponse lc stdout
           PdfToolsActionCleaning -> parseCleaningResponse lc stdout
 
 parseSealingResponse :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
@@ -134,6 +149,29 @@ parseCleaningResponse lc stdout = do
         , "errorMessage" .= errorMessage
         ]
       return $ Nothing
+
+parseAddImageResponse :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
+  => PdfToolsLambdaConf -> BSL.ByteString -> m (Maybe BS.ByteString)
+parseAddImageResponse lc stdout = do
+  let amazonConfig = get pdfToolsLambdaS3Config lc
+  case (parsePdfToolsLambdaAddImageResponse stdout) of
+    AddImageSuccess resultS3Name -> do
+      mresdata <- getDataFromAmazon amazonConfig resultS3Name
+      case mresdata of
+        Just resdata -> return $ Just $ BSL.toStrict resdata
+        Nothing -> do
+          logAttention "Failed to fetch lambda add image result from S3" $ object $ [
+              "stdout" `equalsExternalBSL` stdout
+            , "resultS3Name" .= resultS3Name
+            ]
+          return Nothing
+    AddImageFail errorMessage -> do
+      logInfo "Lambda add image failed" $ object [
+          "stdout" `equalsExternalBSL` stdout
+        , "errorMessage" .= errorMessage
+        ]
+      return $ Nothing
+
 
 sendDataFileToAmazon :: ( CryptoRNG m, MonadBase IO m, MonadCatch m
                         , MonadLog m, MonadThrow m )

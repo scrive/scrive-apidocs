@@ -66,6 +66,9 @@ apiV2DocumentPostCallsTests env = testGroup "APIv2DocumentPostCalls"
              env testDocApiV2GenerateShareableLink
   , testThat "API v2 Discard shareable link for template"
              env testDocApiV2DiscardShareableLink
+
+  , testThat "API v2 Add image"
+             env testDocApiV2AddImage
   ]
 
 testDocApiV2New :: TestEnv ()
@@ -611,3 +614,22 @@ testDocApiV2DiscardShareableLink = replicateM_ 10 $ do
 
   doc' <- randomQuery $ GetDocumentByDocumentID $ documentid doc
   assertNothing $ documentshareablelinkhash doc'
+
+testDocApiV2AddImage :: TestEnv ()
+testDocApiV2AddImage = do
+  user <- addNewRandomUser
+  ctx  <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
+  did  <- getMockDocId <$> testDocApiV2New' ctx
+
+  do -- File changes and name stays the same when adding images
+    mocDocFile <- mockDocTestRequestHelper ctx
+      POST [("file", inFile $ inTestDir "pdfs/simple.pdf")]
+      (docApiV2SetFile did) 200
+    mockDocFileWithImage  <- mockDocTestRequestHelper ctx
+      POST [("image", inText "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAABHNCSVQICAgIfAhkiAAAABVJREFUCJljvPJq+38GKGBiQAIoHAB+fwN657AIuwAAAABJRU5ErkJggg==")
+          , ("pageno", inText "1")
+          , ("x", inText "0.5")
+          , ("y", inText "0.5")]
+      (docApiV2AddImage did) 200
+    assertBool "After adding image file name is not changed" (getMockDocFileName mockDocFileWithImage == getMockDocFileName mocDocFile)
+    assertBool "After adding image file changes" (getMockDocFileId mockDocFileWithImage /= getMockDocFileId mocDocFile)

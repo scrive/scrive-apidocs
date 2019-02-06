@@ -38,6 +38,7 @@ documentAPIV2  = dir "documents" $ choice [
   , param $ dir "clone"           $ hPost $ toK1 $ docApiV2Clone
   , param $ dir "restart"         $ hPost $ toK1 $ docApiV2Restart
   , param $ dir "callback"        $ hPost $ toK1 $ docApiV2Callback
+  , param $ dir "addimage"        $ hPost $ toK1 $ docApiV2AddImage
 
   , dir "templates" $ dir "setsharing" $ hPost $ toK0 $ docApiV2SetSharing
 

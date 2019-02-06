@@ -1,6 +1,7 @@
 module PdfToolsLambda.Spec (
     sealSpecToLambdaSpec
   , presealSpecToLambdaSpec
+  , addImageSpecToLambdaSpec
 ) where
 
 import Control.Monad.Base
@@ -12,6 +13,7 @@ import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.Text.Encoding as T
 
 import DB
+import Doc.AddImageSpec
 import Doc.SealSpec
 
 sealSpecToLambdaSpec ::
@@ -149,6 +151,27 @@ sealSpecForFile fd = do
           ]
         ]
       _ -> []
+
+
+addImageSpecToLambdaSpec ::
+  (MonadDB m, MonadLog m, MonadBase IO m)
+  => AddImageSpec -> m BSL.ByteString
+addImageSpecToLambdaSpec spec = do
+  mfc <- liftBase $  BS.readFile $ addImageInput spec
+  return $ Aeson.encode $ Aeson.object $ [
+      "documentNumberText" .= addImageDocumentNumberText spec
+    , "image" .= Aeson.object [
+        "x" .= addImageX spec
+      , "y" .= addImageY spec
+      , "page" .= addImagePage spec
+      , "fileInput" .= Aeson.object [
+          "base64Content" .= (T.decodeUtf8 $ B64.encode $ addImageImageBinary spec)
+        ]
+      ]
+    , "mainFileInput" .= Aeson.object [
+        "base64Content" .= (T.decodeUtf8 $ B64.encode mfc)
+      ]
+    ]
 
 staticTextsJSON :: SealingTexts -> Aeson.Value
 staticTextsJSON st =  Aeson.object [

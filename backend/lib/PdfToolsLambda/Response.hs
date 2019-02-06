@@ -3,6 +3,8 @@ module PdfToolsLambda.Response (
   , PdfToolsLambdaSealingResponse(..)
   , parsePdfToolsLambdaCleaningResponse
   , PdfToolsLambdaCleaningResponse(..)
+  , parsePdfToolsLambdaAddImageResponse
+  , PdfToolsLambdaAddImageResponse(..)
 ) where
 
 import Data.Functor.Identity
@@ -37,5 +39,19 @@ parsePdfToolsLambdaCleaningResponse bsj = case (decode $ BSL.toString bsj) of
         merror <- fromJSValueField "error"
         return $ CleanFail $ fromMaybe "No error message provided" merror
   _ -> CleanFail "Response is not a valid json"
+
+
+data PdfToolsLambdaAddImageResponse = AddImageSuccess String | AddImageFail String
+
+parsePdfToolsLambdaAddImageResponse :: BSL.ByteString -> PdfToolsLambdaAddImageResponse
+parsePdfToolsLambdaAddImageResponse bsj = case (decode $ BSL.toString bsj) of
+  Ok jsvalue -> runIdentity $ withJSValue jsvalue $ do
+    ms3FileName <- fromJSValueField "resultS3FileName"
+    case ms3FileName of
+      Just s3FileName -> return $ AddImageSuccess s3FileName
+      _ -> do
+        merror <- fromJSValueField "error"
+        return $ AddImageFail $ fromMaybe "No error message provided" merror
+  _ -> AddImageFail "Response is not a valid json"
 
 

@@ -189,6 +189,7 @@ Library
                  , Doc.Types.SignatoryLink
                  , Doc.DigitalSignature
                  , Doc.DocControl
+                 , Doc.DocAddImage
                  , Doc.DocInfo
                  , Doc.DocMails
                  , Doc.DocSeal
@@ -206,6 +207,7 @@ Library
                  , Doc.Extending.Model
                  , Doc.Extending.Tables
                  , Doc.Functions
+                 , Doc.AddImageSpec
                  , Doc.Logging
                  , Doc.Model
                  , Doc.Model.Domain
