@@ -2,6 +2,7 @@ var React = require("react");
 
 var CompanyAccountsTable = require("./companyaccountstable");
 var StatsView = require("../../stats/stats");
+var ShareableLinkStatsView = require("../../stats/shareablelinkstats");
 var TabViewer = require("../../common/tabviewer");
 
 var CompanyAccountsAndStatsView = React.createClass({
@@ -25,6 +26,12 @@ var CompanyAccountsAndStatsView = React.createClass({
               title={localization.account.stats.name}
             >
               <StatsView withCompany={true} />
+            </TabViewer.TabViewerTab>
+            <TabViewer.TabViewerTab
+              hash="company-shareable-link-stats"
+              title={localization.account.stats.shareableLinksName}
+            >
+              <ShareableLinkStatsView />
             </TabViewer.TabViewerTab>
           </TabViewer.TabViewer>
         </div>

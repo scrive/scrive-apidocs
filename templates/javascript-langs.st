@@ -1236,10 +1236,12 @@ javascriptLocalisation =
             }
           , stats : {
                 name : "$_HeadUsageStats()$"
+              , shareableLinksName: "$_HeadShareableLinksStats()$"
               , last30days : "$_last30Days()$"
               , last6months : "$_last6Months()$"
               , columnDate: "$_usageStatsDate()$"
               , columnSender : "$_statsSender()$"
+              , columnTemplateTitle : "$_statsTemplateTitle()$"
               , columnClosedDocuments : "$_closedDocuments()$"
               , columnSendDocuments :"$_sentDocuments()$"
               , columnClosedSignatures : "$_closedSignatures()$"

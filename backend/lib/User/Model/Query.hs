@@ -4,6 +4,7 @@ module User.Model.Query (
   , GetUserGroupAdmins(..)
   , GetUserRoles(..)
   , GetUsageStats(..)
+  , GetUsageStatsOnShareableLinks(..)
   , UsageStatsFor(..)
   , GetUserByID(..)
   , GetUserByIDIncludeDeleted(..)
@@ -284,27 +285,16 @@ instance (MonadDB m, MonadTime m) => DBQuery m GetUsageStats [UserUsageStats] wh
       sqlSelectChargeableItem :: UTCTime -> SQL -> ChargeableItem -> SqlSelect
       sqlSelectChargeableItem now quantityName chItem =
         sqlSelect "chargeable_items chi" $ do
-          sqlResult $ dateTrunc "chi.time" <+> "AS time_window"
+          sqlResult $ dateTrunc "chi.time" statsPartition <+> "AS time_window"
           sqlResult "chi.user_id AS uid"
           sqlResult $ "sum(chi.quantity) AS" <+> quantityName
           sqlWhereEq "chi.type" chItem
-          sqlWhere $ "chi.time" <+> ">=" <+> startingDate now
+          sqlWhere $ "chi.time" <+> ">=" <+> startingDate now interval statsPartition
           sqlGroupBy "time_window"
           sqlGroupBy "chi.user_id"
           case forWhom of
             UsageStatsForUser      uid  -> sqlWhereEq "chi.user_id" uid
             UsageStatsForUserGroup ugid -> sqlWhereEq "chi.user_group_id" ugid
-
-      startingDate :: UTCTime -> SQL
-      startingDate now = dateTrunc (sqlParam now <+> "-" <?> interval)
-
-      dateTrunc :: SQL -> SQL
-      dateTrunc time = "date_trunc('" <> granularity <> "', " <> time <> ")"
-
-      granularity :: SQL
-      granularity = case statsPartition of
-        PartitionByDay   -> "day"
-        PartitionByMonth -> "month"
 
       fetchUserUsageStats :: (UTCTime, String, String, Int64, Int64, Int64)
                           -> UserUsageStats
@@ -320,6 +310,78 @@ instance (MonadDB m, MonadTime m) => DBQuery m GetUsageStats [UserUsageStats] wh
           , dsSignaturesClosed = sigs_closed
           }
         }
+
+data GetUsageStatsOnShareableLinks =
+  GetUsageStatsOnShareableLinks UsageStatsFor StatsPartition Interval
+
+instance (MonadDB m, MonadTime m) => DBQuery m GetUsageStatsOnShareableLinks [ShareableLinkUsageStats] where
+  query (GetUsageStatsOnShareableLinks forWhom statsPartition interval) = do
+    now <- currentTime
+    -- Fetches relevant documents and then groups them by the
+    -- timestamps (trimmed to the precision we want) and by template ids to
+    -- achieve desired partitioning. It is also worth noting that it
+    -- doesn't return time windows where all numbers would equal 0.
+    runQuery_ . sqlSelect ("docs_sent FULL JOIN" <+>
+                           "docs_closed USING (time_window, tid) JOIN" <+>
+                           "documents d ON (tid = d.id)") $ do
+      -- define the CTEs for the appropriate quantities
+      forM_ [ ("docs_sent",   CIStartingDocument)
+            , ("docs_closed", CIClosingDocument)] $ \(qName, chItem) -> do
+            sqlWith qName (sqlSelectChargeableItem now qName chItem)
+      -- Fetch joined data and sort it appropriately.
+      sqlResult "time_window"
+      sqlResult "tid"
+      sqlResult "d.title"
+      sqlResult "COALESCE(docs_sent, 0) AS docs_sent"
+      sqlResult "COALESCE(docs_closed, 0) AS docs_closed"
+      sqlOrderBy "time_window DESC"
+      sqlOrderBy "docs_sent DESC"
+      sqlOrderBy "docs_closed DESC"
+      sqlOrderBy "tid"
+    fetchMany fetchShareableLinkUsageStats
+
+    where
+
+      sqlSelectChargeableItem :: UTCTime -> SQL -> ChargeableItem -> SqlSelect
+      sqlSelectChargeableItem now quantityName chItem =
+        sqlSelect "chargeable_items chi JOIN documents d ON (chi.document_id = d.id)" $ do
+          sqlResult $ dateTrunc "chi.time" statsPartition <+> "AS time_window"
+          sqlResult "d.template_id AS tid"
+          sqlResult $ "sum(chi.quantity) AS" <+> quantityName
+          sqlWhereEq "chi.type" chItem
+          sqlWhere $ "chi.time" <+> ">=" <+> startingDate now interval statsPartition
+          sqlWhereEq "d.from_shareable_link" True
+          sqlGroupBy "time_window"
+          sqlGroupBy "d.template_id"
+          case forWhom of
+            UsageStatsForUser      uid  -> sqlWhereEq "chi.user_id" uid
+            UsageStatsForUserGroup ugid -> sqlWhereEq "chi.user_group_id" ugid
+
+      fetchShareableLinkUsageStats :: (UTCTime, Int64, String, Int64, Int64)
+                                   -> ShareableLinkUsageStats
+      fetchShareableLinkUsageStats ( time_window_start, template_id
+                                   , template_title, docs_sent, docs_closed) =
+        ShareableLinkUsageStats {
+          slusTimeWindowStart = time_window_start
+        , slusTemplateId      = template_id
+        , slusTemplateTitle   = template_title
+        , slusTemplateStats   = TemplateStats {
+            tsDocumentsSent     = docs_sent
+          , tsDocumentsClosed   = docs_closed
+          }
+        }
+
+startingDate :: UTCTime -> Interval -> StatsPartition -> SQL
+startingDate now interval statsPartition =
+  dateTrunc (sqlParam now <+> "-" <?> interval) statsPartition
+
+dateTrunc :: SQL -> StatsPartition -> SQL
+dateTrunc time statsPartition = "date_trunc('" <> granularity <> "', " <> time <> ")"
+  where
+    granularity :: SQL
+    granularity = case statsPartition of
+      PartitionByDay   -> "day"
+      PartitionByMonth -> "month"
 
 data GetUsersWithUserGroupNames = GetUsersWithUserGroupNames [UserFilter] [AscDesc UserOrderBy] (Int, Int)
 instance MonadDB m => DBQuery m GetUsersWithUserGroupNames [(User, T.Text)] where

@@ -5,6 +5,7 @@ module User.UserControl(
   , handlePostChangeEmail
   , handleUsageStatsJSONForUserDays
   , handleUsageStatsJSONForUserMonths
+  , handleUsageStatsJSONForShareableLinks
   , isUserDeletable
   , sendNewUserMail
   , createNewUserByAdmin
@@ -16,8 +17,8 @@ module User.UserControl(
   , handlePasswordReminderPost
   , handleContactSales
   , UsageStatsFor(..)
-  , getDaysStats   -- Exported for admin section
-  , getMonthsStats -- Exported for admin section
+  , getUsageStats -- Exported for admin section
+  , getShareableLinksStats -- Exported for admin section
 ) where
 
 import Data.Time.Clock
@@ -126,42 +127,63 @@ handleUsageStatsJSONForUserDays :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserDays = do
   user <- guardJustM $ get ctxmaybeuser <$> getContext
   withCompany <- isFieldSet "withCompany"
-  if (useriscompanyadmin user && withCompany)
-    then getDaysStats (UsageStatsForUserGroup $ usergroupid user)
-    else getDaysStats (UsageStatsForUser $ userid user)
-
+  getUsageStats PartitionByDay $
+    if (useriscompanyadmin user && withCompany)
+      then UsageStatsForUserGroup $ usergroupid user
+      else UsageStatsForUser $ userid user
 
 handleUsageStatsJSONForUserMonths :: Kontrakcja m => m JSValue
 handleUsageStatsJSONForUserMonths = do
   user  <- guardJustM $ get ctxmaybeuser <$> getContext
   withCompany <- isFieldSet "withCompany"
-  if (useriscompanyadmin user && withCompany)
-    then getMonthsStats (UsageStatsForUserGroup $ usergroupid user)
-    else getMonthsStats (UsageStatsForUser $ userid user)
+  getUsageStats PartitionByMonth $
+    if (useriscompanyadmin user && withCompany)
+      then UsageStatsForUserGroup $ usergroupid user
+      else UsageStatsForUser $ userid user
 
-getDaysStats :: Kontrakcja m => UsageStatsFor -> m JSValue
-getDaysStats forWhom = getStats PartitionByDay (idays 30) forWhom
+handleUsageStatsJSONForShareableLinks :: Kontrakcja m => StatsPartition -> m JSValue
+handleUsageStatsJSONForShareableLinks statsPartition = do
+  user <- guardJustM $ get ctxmaybeuser <$> getContext
+  getShareableLinksStats statsPartition $
+    if useriscompanyadmin user
+      then UsageStatsForUserGroup $ usergroupid user
+      else UsageStatsForUser $ userid user
 
-getMonthsStats :: Kontrakcja m => UsageStatsFor -> m JSValue
-getMonthsStats forWhom = getStats PartitionByMonth (imonths 6) forWhom
 
-getStats :: Kontrakcja m
-         => StatsPartition -> Interval -> UsageStatsFor
-         -> m JSValue
-getStats statsPartition interval forWhom =
-  case forWhom of
-    UsageStatsForUser _uid -> do
-      stats <- dbQuery $ GetUsageStats forWhom statsPartition interval
-      return $ userStatsToJSON timeFormat stats
-    UsageStatsForUserGroup _ugid -> do
-      totalS <- renderTemplate_ "statsOrgTotal"
-      stats <- dbQuery $ GetUsageStats forWhom statsPartition interval
-      return $ companyStatsToJSON timeFormat totalS stats
-  where timeFormat :: UTCTime -> String
-        timeFormat = case statsPartition of
-          PartitionByDay   -> formatTimeYMD
-          PartitionByMonth -> formatTime' "%Y-%m"
+getStatsInterval :: StatsPartition -> Interval
+getStatsInterval statsPartition = case statsPartition of
+  PartitionByDay   -> idays 30
+  PartitionByMonth -> imonths 6
 
+getUsageStats :: Kontrakcja m => StatsPartition -> UsageStatsFor -> m JSValue
+getUsageStats statsPartition forWhom =
+  let interval = getStatsInterval statsPartition in do
+    stats <- dbQuery $ GetUsageStats forWhom statsPartition interval
+    case forWhom of
+      UsageStatsForUser _uid ->
+        return $ userStatsToJSON (timeFormat statsPartition) stats
+      UsageStatsForUserGroup _ugid -> do
+        totalS <- renderTemplate_ "statsOrgTotal"
+        return $ companyStatsToJSON (timeFormat statsPartition) totalS stats
+
+getShareableLinksStats :: Kontrakcja m
+                       => StatsPartition -> UsageStatsFor -> m JSValue
+getShareableLinksStats statsPartition forWhom =
+  let interval = getStatsInterval statsPartition in do
+    stats <- dbQuery $ GetUsageStatsOnShareableLinks forWhom statsPartition interval
+    case forWhom of
+      UsageStatsForUser _uid -> do
+        allLinksS <- renderTemplate_ "statsShareableLinksTotal"
+        return $ shareableLinkStatsToJSON (timeFormat statsPartition) allLinksS stats
+      UsageStatsForUserGroup _ugid -> do
+        totalS <- renderTemplate_ "statsOrgTotal"
+        return $ shareableLinkStatsToJSON (timeFormat statsPartition) totalS stats
+
+
+timeFormat :: StatsPartition -> UTCTime -> String
+timeFormat statsPartition = case statsPartition of
+  PartitionByDay   -> formatTimeYMD
+  PartitionByMonth -> formatTime' "%Y-%m"
 {- |
     Checks for live documents owned by the user.
 -}

@@ -15,7 +15,7 @@ var UserDetailsView = require(
   "../../../scripts/admin/useradmin/userdetails/userdetails"
 ).UserDetailsView;
 
-var StatsView = require("../../../scripts/stats/stats");
+var StatsTabsView = require("../../../scripts/stats/statstabs");
 
 var DocumentsList = require("../../../scripts/admin/documentslist");
 
@@ -102,7 +102,7 @@ describe("admin/useradmin/useradmin", function () {
       },
       function () {
         assert.equal(window.location.hash, "#stats");
-        done(); 
+        done();
       }
     );
   });
@@ -119,7 +119,7 @@ describe("admin/useradmin/useradmin", function () {
       },
       function () {
         assert.equal(window.location.hash, "#documents");
-        done(); 
+        done();
       }
     );
   });
@@ -157,11 +157,11 @@ describe("admin/useradmin/useradmin", function () {
         return tab.hasClass("active");
       },
       function () {
-        var statsView = TestUtils.findRenderedComponentWithType(
-          component, StatsView
+        var statsTabsView = TestUtils.findRenderedComponentWithType(
+          component, StatsTabsView
         );
 
-        assert.equal(statsView.props.userId, "1");
+        assert.equal(statsTabsView.props.userId, "1");
 
         done();
       }

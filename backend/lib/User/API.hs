@@ -122,6 +122,11 @@ userAPIV2 = choice [
 
   dir "gettokenforpersonalcredentials" $ hPost $ toK1 $ apiCallGetTokenForPersonalCredentials,
 
+  dir "usagestats" $ dir "shareablelink" $ dir "days" $ hGet $ toK0
+    $ User.UserControl.handleUsageStatsJSONForShareableLinks PartitionByDay,
+  dir "usagestats" $ dir "shareablelink" $ dir "months" $ hGet $ toK0
+    $ User.UserControl.handleUsageStatsJSONForShareableLinks PartitionByMonth,
+
   userAPIV1
   ]
 

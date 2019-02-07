@@ -29,7 +29,7 @@ var PaymentsPanel = require(
   "../../../scripts/admin/paymentspanel"
 );
 
-var StatsView = require("../../../scripts/stats/stats");
+var StatsTabsView = require("../../../scripts/stats/statstabs");
 
 var TemplatesList = require("../../../scripts/admin/templateslist");
 
@@ -315,10 +315,10 @@ describe("admin/companyadmin/companyadmin", function () {
       },
       function () {
         var statisticsView = TestUtils.findRenderedComponentWithType(
-          component, StatsView
+          component, StatsTabsView
         );
 
-        assert.equal(statisticsView.props.companyId, "1");
+        assert.equal(statisticsView.props.groupId, "1");
 
         done();
       }

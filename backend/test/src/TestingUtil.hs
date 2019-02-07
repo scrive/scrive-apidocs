@@ -1016,6 +1016,8 @@ data RandomDocumentAllows = RandomDocumentAllows
   , randomDocumentChecker         :: Document -> Maybe Document
   -- ^ Return Nothing to reject the document or Just with a potentially
   -- modified document to accept it.
+  , randomDocumentSharedLink      :: Bool
+  , randomDocumentTemplateId      :: Maybe DocumentID
   }
 
 randomDocumentAllowsDefault :: User -> RandomDocumentAllows
@@ -1032,6 +1034,8 @@ randomDocumentAllowsDefault user = RandomDocumentAllows
   , randomDocumentAllowedSharings = documentAllSharings
   , randomDocumentAuthor          = user
   , randomDocumentChecker         = Just
+  , randomDocumentSharedLink      = False
+  , randomDocumentTemplateId      = Nothing
   }
 
 randomSigLinkByStatus :: DocumentStatus -> Gen SignatoryLink
@@ -1106,6 +1110,15 @@ addRandomDocumentWithAuthorAndConditionAndFile user p file =
   addRandomDocumentWithFile file $
   (randomDocumentAllowsDefault user) { randomDocumentChecker = onCondition p }
 
+addRandomDocumentFromShareableLinkWithTemplateId
+  :: User -> DocumentID -> TestEnv Document
+addRandomDocumentFromShareableLinkWithTemplateId user templateId =
+  addRandomDocument $
+  (randomDocumentAllowsDefault user) {
+      randomDocumentSharedLink = True
+    , randomDocumentTemplateId = Just templateId
+  }
+
 addRandomDocument :: RandomDocumentAllows -> TestEnv Document
 addRandomDocument rda = do
   file <- addNewRandomFile
@@ -1140,6 +1153,8 @@ addRandomDocumentWithFile fileid rda = do
                      , documentstatus = status
                      , documentsharing = sharing
                      , documenttitle = title
+                     , documentfromshareablelink = randomDocumentSharedLink rda
+                     , documenttemplateid = randomDocumentTemplateId rda
                      }
 
       role <- rand 10 arbitrary

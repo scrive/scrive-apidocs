@@ -27,7 +27,7 @@ module.exports = React.createClass({
             className="sender"
             rendering={function (d) {
               return (
-                <div
+                <div className="expandable-stats"
                   onClick={function () {
                     d.toggleExpand();
                   }}
@@ -47,27 +47,28 @@ module.exports = React.createClass({
             rendering={function (d, i) {
               return [
                 <td key="1">
-                  <div style={{"marginLeft": "10px"}}>
+                  <div className="expanded-stats-column">
                     {d.field("user_stats")[i].date}
                   </div>
                 </td>,
                 <td key="2">
-                  <div style={{"marginLeft": "10px"}}>
+                  <div className="expanded-stats-column">
                     {d.field("user_stats")[i].name}
                   </div>
                 </td>,
                 <td key="3">
-                  <div style={{"marginLeft": "10px"}}>
+                  <div className="expanded-stats-column">
                     {d.field("user_stats")[i].closed}
                   </div>
                 </td>,
                 <td key="4">
-                  <div style={{"marginLeft": "10px"}}>
+                  <div className="expanded-stats-column">
                     {d.field("user_stats")[i].sent}
                   </div>
                 </td>,
                 <td key="5">
-                  <div style={{"marginLeft": "10px"}}>{d.field("user_stats")[i].signatures}
+                  <div className="expanded-stats-column">
+                    {d.field("user_stats")[i].signatures}
                   </div>
                 </td>
               ];

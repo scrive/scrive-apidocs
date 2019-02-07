@@ -7,7 +7,7 @@ var CompanyAccountsAndStatsView = require(
 );
 var CompanyBrandingPanel = require("./branding/companybrandingpanel");
 var DataRetentionView = require("./dataretention/dataretentionview");
-var StatsView = require("../stats/stats");
+var StatsTabsView = require("../stats/statstabs");
 var Subscription = require("../../scripts/account/subscription");
 var SubscriptionPanel = require("./subscription/subscriptionpanel");
 var TabViewer = require("../common/tabviewer");
@@ -82,7 +82,7 @@ var AccountView = React.createClass({
               trackEvent="View Stats Tab"
             >
               <div className="tab-container">
-                <StatsView withCompany={this.props.companyAdmin} />
+                <StatsTabsView withCompany={this.props.companyAdmin} />
               </div>
             </TrackingView>
           </TabViewer.TabViewerTab>

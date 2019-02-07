@@ -9,7 +9,7 @@ var CompanyDetailsViewFactory = require(
 var CompanyUsersAdminList = require("../companyusersadminlist");
 var DocumentsList = require("../documentslist");
 var PaymentsPanel = require("../paymentspanel");
-var StatsView = require("../../stats/stats");
+var StatsTabsView = require("../../stats/statstabs");
 var TabViewer = require("../../common/tabviewer");
 var TemplatesList = require("../templateslist");
 var UserGroupStructure = require("../usergroupstructure");
@@ -60,7 +60,7 @@ var CompanyAdminView = React.createClass({
           />
         </TabViewer.TabViewerTab>
         <TabViewer.TabViewerTab hash="stats" title="Statistics">
-          <StatsView companyId={this.props.companyId} withCompany={true} />
+          <StatsTabsView withCompany={true} groupId={this.props.companyId} />
         </TabViewer.TabViewerTab>
         { /* if */ (this.props.forAdmin) && (
           <TabViewer.TabViewerTab hash="templates" title="Templates">

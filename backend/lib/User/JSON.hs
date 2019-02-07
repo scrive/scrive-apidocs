@@ -8,6 +8,7 @@ module User.JSON (
     companyJSONAdminOnly,
     userStatsToJSON,
     companyStatsToJSON,
+    shareableLinkStatsToJSON,
     userNotDeletableReasonToString
     ) where
 
@@ -152,6 +153,26 @@ companyStatsToJSON formatTime textName uuss = runJSONGen . objects "stats" . for
     uussGrouped = groupBy sameTimeWindow uuss
       where
         sameTimeWindow u1 u2 = uusTimeWindowStart u1 == uusTimeWindowStart u2
+
+shareableLinkStatsToJSON :: (UTCTime -> String) -> String -> [ShareableLinkUsageStats] -> JSValue
+shareableLinkStatsToJSON formatTime textName sluss = runJSONGen . objects "stats" . for slussGrouped $ \slusGroup -> do
+  let summary = foldMap slusTemplateStats slusGroup
+  value "date" . formatTime . slusTimeWindowStart $ head slusGroup
+  value "name" textName
+  value "sent" $ tsDocumentsSent summary
+  value "closed" $ tsDocumentsClosed summary
+  objects "template_stats" . for slusGroup $ \slus -> do
+    let TemplateStats{..} = slusTemplateStats slus
+    value "date" . formatTime $ slusTimeWindowStart slus
+    value "id" . show $ slusTemplateId slus
+    value "title" $ slusTemplateTitle slus
+    value "sent" tsDocumentsSent
+    value "closed" tsDocumentsClosed
+  where
+    slussGrouped :: [[ShareableLinkUsageStats]]
+    slussGrouped = groupBy sameTimeWindow sluss
+      where
+        sameTimeWindow sl1 sl2 = slusTimeWindowStart sl1 == slusTimeWindowStart sl2
 
 instance ToJSValue UserNotDeletableReason where
   toJSValue reason =

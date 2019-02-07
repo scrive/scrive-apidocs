@@ -5,6 +5,7 @@ import Test.Framework
 import Chargeable.Model
 import DB
 import Doc.DocInfo
+import Doc.DocumentID
 import Doc.Types.Document
 import MinutesTime
 import TestingUtil
@@ -41,6 +42,12 @@ userStateTests env = testGroup "UserState" [
   , testGroup "user usage statistics" [
       testThat "can fetch statistics by user id" env test_userUsageStatisticsByUser,
       testThat "can fetch statistics by company id" env test_userUsageStatisticsByCompany
+    ]
+  , testGroup "user shareable link statistics" [
+      testThat "can fetch shareable link statistics by user id" env test_userShareableLinkStatisticsByUser,
+      testThat "can fetch shareable link statistics by user id for correct user only" env
+        test_userShareableLinkStatisticsByUserOnlyCorrectUser,
+      testThat "can fetch shareable link statistics by group id" env test_userShareableLinkStatisticsByGroup
     ]
   , testThat "UserGroupGetUsers/UserGroupGetUsersIncludeDeleted works" env test_userGroupGetUsers
   , testThat "SetUserUserGroup works" env test_setUserCompany
@@ -181,6 +188,58 @@ test_userUsageStatisticsByCompany = do
     1 (dsDocumentsClosed . uusDocumentStats $ uus1)
   assertEqual "Statistics for Bob are correct"
     1 (dsDocumentsClosed . uusDocumentStats $ uus2)
+
+test_userShareableLinkStatisticsByUser :: TestEnv ()
+test_userShareableLinkStatisticsByUser = do
+  Just user <- addNewUser "Emily" "Green" "email"
+  template <- addRandomDocumentWithAuthor' user
+  doc <- addRandomDocumentFromShareableLinkWithTemplateId user (documentid template)
+  void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc)
+  res <- dbQuery $
+         GetUsageStatsOnShareableLinks (UsageStatsForUser $ userid user)
+         PartitionByMonth (iyears 2000)
+  assertEqual "Document present in stats" 1 (length res)
+  let [ShareableLinkUsageStats{..}] = res
+  assertEqual "Template ID in statistics is correct" (fromDocumentID $ documentid template) slusTemplateId
+  assertEqual "Template title in statistics is correct" (documenttitle template) slusTemplateTitle
+  assertEqual "Statistics are correct" 1 $ tsDocumentsClosed slusTemplateStats
+
+test_userShareableLinkStatisticsByUserOnlyCorrectUser :: TestEnv ()
+test_userShareableLinkStatisticsByUserOnlyCorrectUser = do
+  Just user1 <- addNewUser "Emily" "Green" "email"
+  Just user2 <- addNewUser "Emily2" "Green" "email2"
+  template <- addRandomDocumentWithAuthor' user1
+  doc1 <- addRandomDocumentFromShareableLinkWithTemplateId user1 (documentid template)
+  doc2 <- addRandomDocumentFromShareableLinkWithTemplateId user2 (documentid template)
+  void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc1)
+  void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc2)
+  res <- dbQuery $
+         GetUsageStatsOnShareableLinks (UsageStatsForUser $ userid user2)
+         PartitionByMonth (iyears 2000)
+  assertEqual "Document present in stats" 1 (length res)
+  let [ShareableLinkUsageStats{..}] = res
+  assertEqual "Template ID in statistics is correct" (fromDocumentID $ documentid template) slusTemplateId
+  assertEqual "Template title in statistics is correct" (documenttitle template) slusTemplateTitle
+  assertEqual "Statistics are correct" 1 $ tsDocumentsClosed slusTemplateStats
+
+test_userShareableLinkStatisticsByGroup :: TestEnv ()
+test_userShareableLinkStatisticsByGroup = do
+  ugid <- (get ugID) <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
+  Just user1 <- addNewUserToUserGroup "Emily" "Green" "emily@green.com" ugid
+  Just user2 <- addNewUserToUserGroup "Bob" "Blue" "bob@gblue.com" ugid
+  template <- addRandomDocumentWithAuthor' user1
+  doc1 <- addRandomDocumentFromShareableLinkWithTemplateId user1 (documentid template)
+  doc2 <- addRandomDocumentFromShareableLinkWithTemplateId user2 (documentid template)
+  void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc1)
+  void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc2)
+  res <- dbQuery $
+         GetUsageStatsOnShareableLinks (UsageStatsForUserGroup ugid)
+         PartitionByMonth (iyears 2000)
+  assertEqual "Document present in stats" 1 (length res)
+  let [ShareableLinkUsageStats{..}] = res
+  assertEqual "Template ID in statistics is correct" (fromDocumentID $ documentid template) slusTemplateId
+  assertEqual "Template title in statistics is correct" (documenttitle template) slusTemplateTitle
+  assertEqual "Statistics are correct" 2 $ tsDocumentsClosed slusTemplateStats
 
 test_setUserCompany :: TestEnv ()
 test_setUserCompany = do

@@ -115,6 +115,11 @@ adminonlyRoutes =
         , dir "useradmin" $ dir "usagestats" $ dir "days" $ hGet $ toK1 handleAdminUserUsageStatsDays
         , dir "useradmin" $ dir "usagestats" $ dir "months" $ hGet $ toK1 handleAdminUserUsageStatsMonths
 
+        , dir "useradmin" $ dir "shareablelinkstats" $ dir "days" $ hGet
+          $ toK1 $ handleAdminUserShareableLinksStats PartitionByDay
+        , dir "useradmin" $ dir "shareablelinkstats" $ dir "months" $ hGet
+          $ toK1 $ handleAdminUserShareableLinksStats PartitionByMonth
+
         , dir "useradmin" $ dir "sendinviteagain" $ hPost $ toK0 $ sendInviteAgain
 
         , dir "companyadmin" $ hGet $ toK1 $ showAdminCompany
@@ -129,6 +134,11 @@ adminonlyRoutes =
         , dir "companyaccounts" $ hGet  $ toK1 $ UserGroupAccounts.handleUserGroupAccountsForAdminOnly
         , dir "companyadmin" $ dir "usagestats" $ dir "days" $ hGet $ toK1 handleAdminCompanyUsageStatsDays
         , dir "companyadmin" $ dir "usagestats" $ dir "months" $ hGet $ toK1 handleAdminCompanyUsageStatsMonths
+
+        , dir "companyadmin" $ dir "shareablelinkstats" $ dir "days" $ hGet
+          $ toK1 $ handleAdminCompanyShareableLinksStats PartitionByDay
+        , dir "companyadmin" $ dir "shareablelinkstats" $ dir "months" $ hGet
+          $ toK1 $ handleAdminCompanyShareableLinksStats PartitionByMonth
 
         , dir "companyadmin" $ dir "getsubscription" $ hGet $ toK1 $ handleCompanyGetSubscription
         , dir "companyadmin" $ dir "updatesubscription" $ hPost $ toK1 $ handleCompanyUpdateSubscription
@@ -722,8 +732,8 @@ handleAdminUserUsageStatsDays uid = onlySalesOrAdmin $ do
   user <- guardJustM $ dbQuery $ GetUserByID uid
   withCompany <- isFieldSet "withCompany"
   if (useriscompanyadmin user && withCompany)
-    then getDaysStats (UsageStatsForUserGroup $ usergroupid user)
-    else getDaysStats (UsageStatsForUser $ userid user)
+    then getUsageStats PartitionByDay (UsageStatsForUserGroup $ usergroupid user)
+    else getUsageStats PartitionByDay (UsageStatsForUser $ userid user)
 
 
 handleAdminUserUsageStatsMonths :: Kontrakcja m => UserID -> m JSValue
@@ -731,16 +741,28 @@ handleAdminUserUsageStatsMonths uid = onlySalesOrAdmin $ do
   user <- guardJustM $ dbQuery $ GetUserByID uid
   withCompany <- isFieldSet "withCompany"
   if (useriscompanyadmin user && withCompany)
-    then getMonthsStats (UsageStatsForUserGroup $ usergroupid user)
-    else getMonthsStats (UsageStatsForUser $ userid user)
+    then getUsageStats PartitionByMonth (UsageStatsForUserGroup $ usergroupid user)
+    else getUsageStats PartitionByMonth (UsageStatsForUser $ userid user)
 
 handleAdminCompanyUsageStatsDays :: Kontrakcja m => UserGroupID -> m JSValue
-handleAdminCompanyUsageStatsDays ugid = onlySalesOrAdmin $ do
-  getDaysStats (UsageStatsForUserGroup ugid)
+handleAdminCompanyUsageStatsDays ugid = onlySalesOrAdmin $
+  getUsageStats PartitionByDay (UsageStatsForUserGroup ugid)
 
 handleAdminCompanyUsageStatsMonths :: Kontrakcja m => UserGroupID -> m JSValue
-handleAdminCompanyUsageStatsMonths ugid = onlySalesOrAdmin $ do
-  getMonthsStats (UsageStatsForUserGroup ugid)
+handleAdminCompanyUsageStatsMonths ugid = onlySalesOrAdmin $
+  getUsageStats PartitionByMonth (UsageStatsForUserGroup ugid)
+
+
+handleAdminUserShareableLinksStats :: Kontrakcja m => StatsPartition -> UserID -> m JSValue
+handleAdminUserShareableLinksStats statsPartition uid = onlySalesOrAdmin $ do
+  getShareableLinksStats statsPartition (UsageStatsForUser uid)
+
+handleAdminCompanyShareableLinksStats :: Kontrakcja m
+                                      => StatsPartition -> UserGroupID
+                                      -> m JSValue
+handleAdminCompanyShareableLinksStats statsPartition ugid = onlySalesOrAdmin $ do
+  getShareableLinksStats statsPartition (UsageStatsForUserGroup ugid)
+
 
 handleCompanyGetSubscription :: Kontrakcja m => UserGroupID -> m Aeson.Value
 handleCompanyGetSubscription ugid = onlySalesOrAdmin $ do

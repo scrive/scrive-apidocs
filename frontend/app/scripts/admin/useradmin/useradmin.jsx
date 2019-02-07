@@ -2,7 +2,7 @@ var ClassNames = require("classnames");
 var React = require("react");
 
 var DocumentsList = require("../documentslist");
-var StatsView = require("../../stats/stats");
+var StatsTabsView = require("../../stats/statstabs");
 var TabViewer = require("../../common/tabviewer");
 var UserDetailsViewFactory = require(
   "./userdetails/userdetails"
@@ -25,7 +25,7 @@ var UserAdminView = React.createClass({
           {UserDetailsViewFactory(this.props.userId)}
         </TabViewer.TabViewerTab>
         <TabViewer.TabViewerTab hash="stats" title="Statistics">
-          <StatsView userId={this.props.userId} withCompany={false} />
+          <StatsTabsView userId={this.props.userId} withCompany={false} />
         </TabViewer.TabViewerTab>
         { /* if */ (this.props.forAdmin) && (
           <TabViewer.TabViewerTab hash="documents" title="Documents">

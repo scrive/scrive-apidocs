@@ -16,6 +16,9 @@ showAccount =
 
 #####
 statsOrgTotal=$_statsOrgTotal()$
+#####
+#####
+statsShareableLinksTotal=$_statsShareableLinksTotal()$
 ####
 pageDoYouWantToBeCompanyAccount=
 <div class="mainContainer" >
