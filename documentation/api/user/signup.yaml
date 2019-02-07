@@ -1,0 +1,55 @@
+---
+post:
+  summary: Signup Request
+  tags:
+    - User
+  description: |
+    Handles submission of the signup form.
+    Normally this would create the user, (in the process mailing them an activation link),
+    but if the user already exists, we check to see if they have accepted the tos.  If they haven't,
+    then we send them a new activation link because probably the old one expired or was lost.
+    If they have then we stop the signup.
+  parameters:
+    - name: email
+      in: formData
+      type: email
+      required: true
+      description: Has to be a valid email
+    - name: firstName
+      in: formData
+      type: string
+      required: false
+      description: Has to be a valid name
+    - name: lastName
+      in: formData
+      type: string
+      required: false
+      description: Has to be a valid name
+    - name: phone
+      in: formData
+      type: string
+      required: false
+      description: Has to be a valid phone
+    - name: companyName
+      in: formData
+      type: string
+      required: false
+      description: Has to be a valid company name
+    - name: companyPosition
+      in: formData
+      type: string
+      required: false
+      description: Has to be a valid position
+    - name: lang
+      in: formData
+      type: string
+      required: false
+      description: |
+        Has to be a valid lang code [`LanguageCode`](#language-code)
+      $ref: ../../definitions/LanguageCode.yaml
+  responses:
+    200:
+      description: |
+        Response will be one of:
+          * `{"sent":true}`
+          * `{"sent":false}`

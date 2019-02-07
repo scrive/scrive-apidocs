@@ -988,6 +988,9 @@ paths:
   /usagestats/months:
     $ref: ./api/user/getusagestatsmonths.yaml
 
+  /signup:
+    $ref: ./api/user/signup.yaml
+
 
 definitions:
   Document:
@@ -1032,6 +1035,8 @@ definitions:
     $ref: ./definitions/UserStats.yaml
   LoginToken:
     $ref: ./definitions/LoginToken.yaml
+  LanguageCode:
+    $ref: ./definitions/LanguageCode.yaml
 
 parameters:
   $ref: ./extras/parameters.yaml

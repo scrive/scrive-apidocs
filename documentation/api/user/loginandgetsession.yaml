@@ -7,7 +7,13 @@ post:
     - User
 
   description: |
-    OAuth authorization. Returns session id.
+    This call allows creation of a link, which leads user directly to
+    any page on scrive.com without going through the login page. This
+    creates better user experience.
+    Login user using his OAuth tokens. The tokens have to be acquired
+    by /api/v2/getpersonaltoken.
+    The call the returns a session id, which can be used to create a link like
+    `https://scrive.com/loginwithredirect?session_id=SESSION_ID&url=PATH_INSIDE_SCRIVE_COM`.
 
   parameters:
     - name: personal_token
@@ -21,4 +27,26 @@ post:
   responses:
     200:
       description: |
-        Returns a JSON with `session_id`
+        For example:
+        ```json
+        {
+          "session_id" : "45468-a2510867954321d0"
+        }
+    400:
+      description: |
+        When credentials are incorrectly formatted:
+        ```json
+        {
+          "error_type":"request_parameters_missing"
+        , "error_message":"The parameter 'personal_token' was missing. Please refer to our API documentation"
+        , "http_code":400
+        }
+    401:
+      description: |
+        When credentials are invalid:
+        ```json
+        {
+          "error_type":"invalid_authorisation"
+        , "error_message":"No valid access credentials were provided. Please refer to our API documentation The problem was: OAuth credentials are invalid or they may not have sufficientprivileges"
+        , "http_code":401
+        }
