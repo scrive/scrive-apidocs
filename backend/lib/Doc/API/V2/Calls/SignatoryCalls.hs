@@ -49,6 +49,7 @@ import EvidenceLog.Model
 import File.File (File(..))
 import InputValidation (Result(..), asValidPhoneForSMS)
 import Kontra
+import Log
 import Session.Model (getCurrentSession)
 import Session.Types (Session(sesID))
 import User.Lang
@@ -168,6 +169,9 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
     guardThatAllSignatoryAttachmentsAreUploadedOrMarked slid notUploadedSignatoryAttachments =<< theDocument
     checkAuthenticationToSignMethodAndValue slid
     fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValuesForSigning)
+    let SignatoryFieldsValuesForSigning tmpFields = fields
+        fieldsShortLog = map (\(fi, sftv) -> (fi, signatoryFieldTMPValueShortLog sftv)) tmpFields
+    logInfo "Fields provided for signing" $ object ["fields" .= show fieldsShortLog]
     guardThatRadioButtonValuesAreValid slid fields =<< theDocument
     consentResponses <- apiV2ParameterDefault
       (SignatoryConsentResponsesForSigning [])
@@ -244,6 +248,9 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
       (ApiV2ParameterJSON "not_uploaded_signatory_attachments" unjsonDef)
     fields                          <- apiV2ParameterObligatory
       (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValuesForSigning)
+    let SignatoryFieldsValuesForSigning tmpFields = fields
+        fieldsShortLog = map (\(fi, sftv) -> (fi, signatoryFieldTMPValueShortLog sftv)) tmpFields
+    logInfo "Fields provided for signing" $ object ["fields" .= show fieldsShortLog]
     guardThatRadioButtonValuesAreValid slid fields =<< theDocument
     guardThatSignaturesAreFilled slid fields =<< theDocument
     consentResponses                <- apiV2ParameterDefault
