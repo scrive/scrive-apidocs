@@ -11,6 +11,10 @@ import Database.PostgreSQL.Consumers
 import Database.PostgreSQL.PQTypes
 import Log
 import Network.HTTP.Client (Manager)
+import System.Exit (ExitCode(..))
+import System.Posix.Directory (changeWorkingDirectory, getWorkingDirectory)
+import System.Process.ByteString.Lazy (readProcessWithExitCode)
+import qualified Data.ByteString.Lazy as BSL hiding (length)
 import qualified Data.Text as T
 
 import Administration.Invoicing
@@ -40,6 +44,7 @@ import User.Password (PasswordAlgorithm(..), strengthenPassword)
 import User.PasswordReminder (DeleteExpiredPasswordReminders(..))
 import User.Types.User (User(..))
 import User.UserAccountRequest (expireUserAccountRequests)
+import Utils.Directory (withSystemTempDirectory')
 import Utils.List
 import qualified CronEnv
 
@@ -56,6 +61,7 @@ data JobType
   | InvoicingUpload
   | MailEventsProcessing
   | MarkOrphanFilesForPurge
+  | MonthlyInvoice
   | OldDraftsRemoval
   | OldLogsRemoval
   | PasswordRemindersEvaluation
@@ -81,6 +87,7 @@ jobTypeMapper =
   , (InvoicingUpload, "invoice_upload")
   , (MailEventsProcessing, "mail_events_processing")
   , (MarkOrphanFilesForPurge, "mark_orphan_files_for_purge")
+  , (MonthlyInvoice, "monthly_invoice")
   , (OldDraftsRemoval, "old_drafts_removal")
   , (OldLogsRemoval, "old_logs_removal")
   , (PasswordRemindersEvaluation, "password_reminders_evaluation")
@@ -224,6 +231,32 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
       forM_ fids $ \fid -> logInfo orphanFileMarked $ object [identifier fid]
       -- If maximum amount of files was marked, run it again shortly after.
       RerunAt . nextDayAtHour 2 <$> currentTime
+    MonthlyInvoice -> do
+      case cronMonthlyInvoiceScript cronConf of
+        Nothing -> do
+          logInfo_ "Monthly-invoice script path is missing; skipping"
+        Just invoiceScript -> do
+          withSystemTempDirectory' "monthly_invoice" $ \tmpDir -> do
+            pwd <- liftIO $ getWorkingDirectory
+            void $ liftIO $ changeWorkingDirectory tmpDir
+            let args =
+                  [
+                    T.unpack $ cronDBConfig cronConf
+                    , "-f"
+                    , invoiceScript
+                  ]
+            (code, stdout, stderr) <- liftIO $ readProcessWithExitCode "psql" args BSL.empty
+            void $ case (code == ExitSuccess) of
+              False ->
+                logAttention "Running monthly-invoice psql script has failed" $ object [
+                    "exit_code" .= show code
+                  , "stdout" `equalsExternalBSL` stdout
+                  , "stderr" `equalsExternalBSL` stderr
+                  ]
+              True ->
+                runCronEnv $ Mails.Events.sendMailWithMonthlyInvoice tmpDir
+            liftIO $ changeWorkingDirectory pwd
+      RerunAt . beginningOfNextMonthAtHour 1 <$> currentTime      
     OldDraftsRemoval -> do
       runDB $ do
         delCount <- dbUpdate $ RemoveOldDrafts 100

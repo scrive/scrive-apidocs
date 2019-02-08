@@ -179,4 +179,5 @@ kontraMigrations = [
   , addNotificationDeliveryMethodToSignatories
   , featureFlagsAddNotificationDeliveryMethod
   , addIndexForEfficientJoinToSignatoryLinkMagicHashes
+  , addMonthlyInvoiceJob
   ]

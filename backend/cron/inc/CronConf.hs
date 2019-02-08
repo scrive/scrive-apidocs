@@ -49,6 +49,7 @@ data CronConf = CronConf {
   , cronConsumerFilePurgingMaxJobs :: !Int
   , cronNetsSignConfig :: Maybe NetsSignConfig
   , cronPdfToolsLambdaConf :: PdfToolsLambdaConf
+  , cronMonthlyInvoiceScript :: !(Maybe String)
   } deriving (Eq, Show)
 
 unjsonCronConf :: UnjsonDef CronConf
@@ -122,6 +123,9 @@ unjsonCronConf = objectOf $ pure CronConf
   <*> field "pdftools_lambda"
       cronPdfToolsLambdaConf
       "Configuration of PdfTools Lambda"
+  <*> fieldOpt "monthly_invoice_script"
+      cronMonthlyInvoiceScript
+      "Monthly-invoice .sql script"
 
 instance Unjson CronConf where
   unjsonDef = unjsonCronConf
