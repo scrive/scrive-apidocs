@@ -68,7 +68,8 @@ main = withCurlDo $ do
     Nothing   -> return ()
   let connSettings = pgConnSettings $ dbConfig appConf
       extrasOptions = def { eoEnforcePKs = True }
-  pool <- liftBase $ createPoolSource (connSettings kontraComposites) (maxDBConnections appConf)
+  pool <- liftBase $ createPoolSource
+          (connSettings kontraComposites) (maxDBConnections appConf)
   rng <- newCryptoRNGState
   (errs, lr) <- mkLogRunner "kontrakcja" (logConfig appConf) rng
   mapM_ T.putStrLn errs
@@ -84,10 +85,11 @@ main = withCurlDo $ do
       dbUpdate $ SetMainDomainURL $ mainDomainUrl appConf
 
     appGlobals <- do
-      templates <- liftBase (newMVar =<< liftM2 (,) getTemplatesModTime readGlobalTemplates)
+      templates <- liftBase $
+                   newMVar =<< (,) <$> getTemplatesModTime <*> readGlobalTemplates
       mrediscache <- F.forM (redisCacheConfig appConf) mkRedisConnection
-      filecache <- newFileMemCache $ localFileCacheSize appConf
-      hostname <- liftBase getHostName
+      filecache   <- newFileMemCache $ localFileCacheSize appConf
+      hostname    <- liftBase getHostName
       return AppGlobals {
           templates          = templates
         , mrediscache        = mrediscache
@@ -124,16 +126,17 @@ startSystem appGlobals appConf = E.bracket startServer stopServer waitForTerm
         (runlogger appGlobals) $ appHandler routes appConf appGlobals
     stopServer = killThread
     waitForTerm _ = do
-      withPostgreSQL (unConnectionSource $ connsource appGlobals (maxConnectionTracker $ maxDBConnections appConf)) . runCryptoRNGT (cryptorng appGlobals) $ do
+      let trackedConnSource =
+            unConnectionSource $
+            connsource appGlobals (maxConnectionTracker $ maxDBConnections appConf)
+      withPostgreSQL trackedConnSource . runCryptoRNGT (cryptorng appGlobals) $
         initDatabaseEntries appConf
       liftBase $ waitForTermination
       logInfo_ "Termination request received"
 
-initDatabaseEntries :: ( CryptoRNG m
-                       , MonadDB m
-                       , MonadThrow m
-                       , MonadLog m
-                       , MonadMask m) => AppConf -> m ()
+initDatabaseEntries
+  :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+  => AppConf -> m ()
 initDatabaseEntries appConf = do
   when (not $ production appConf) $ do
     -- Add some host_clock entries in "dev" mode if there are no valid samples
@@ -144,13 +147,15 @@ initDatabaseEntries appConf = do
       return ()
   flip mapM_ (initialUsers appConf) $ \(email, passwordstring) -> do
     -- create initial database entries
-    passwd <- createPassword passwordstring
+    passwd    <- createPassword passwordstring
     maybeuser <- dbQuery $ GetUserByEmail email
     case maybeuser of
       Nothing -> do
         bd <- dbQuery $ GetMainBrandedDomain
         ug <- dbUpdate . UserGroupCreate $ defaultUserGroup
-        void $ dbUpdate $ AddUser ("", "") (unEmail email) (Just passwd) (get ugID ug,True) LANG_EN (get bdid bd) ByAdmin
+        void $ dbUpdate $ AddUser ("", "")
+          (unEmail email) (Just passwd) (get ugID ug, True)
+          LANG_EN (get bdid bd) ByAdmin
         let features = fromJust $ get ugFeatures ug
         -- enable everything for initial admins
         let adminFeatures = (fromJust $ get ugFeatures ug)
