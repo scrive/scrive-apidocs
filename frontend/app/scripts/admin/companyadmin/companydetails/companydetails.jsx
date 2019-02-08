@@ -120,7 +120,7 @@ var CompanyDetailsView = React.createClass({
               ipaddressmasklist={
                 this.props.viewModel.get("ipaddressmasklist")
               }
-              parent={this.props.viewModel.get("parentid")}
+              parentid={this.props.viewModel.get("parentid")}
               parentgrouppath={this.props.viewModel.get("parentgrouppath")}
               cgidisplayname={this.props.viewModel.get("cgidisplayname")}
               cgiserviceid={this.props.viewModel.get("cgiserviceid")}
