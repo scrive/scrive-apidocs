@@ -16,6 +16,7 @@ module Doc.API.V2.Calls.SignatoryCalls (
 import Control.Conditional (whenM)
 import Data.Unjson
 import Happstack.Server.Types
+import Log
 import Text.JSON.Types (JSValue(..))
 import qualified Data.Text as T
 import qualified Text.JSON as J
@@ -49,7 +50,6 @@ import EvidenceLog.Model
 import File.File (File(..))
 import InputValidation (Result(..), asValidPhoneForSMS)
 import Kontra
-import Log
 import Session.Model (getCurrentSession)
 import Session.Types (Session(sesID))
 import User.Lang
