@@ -406,6 +406,8 @@ data SignatoryLink = SignatoryLink {
 -- | Consent module
 , signatorylinkconsenttitle               :: !(Maybe String)
 , signatorylinkconsentquestions           :: ![SignatoryConsentQuestion]
+-- | Status of confirmation email delivery
+, signatorylinkmailconfirmationdeliverystatus :: !DeliveryStatus
 } deriving (Show)
 
 defaultSignatoryLink :: SignatoryLink
@@ -444,6 +446,7 @@ defaultSignatoryLink =
   , signatorylinkcanbeforwarded = False
   , signatorylinkconsenttitle = Nothing
   , signatorylinkconsentquestions = []
+  , signatorylinkmailconfirmationdeliverystatus = Unknown
   }
 
 instance HasSomeUserInfo SignatoryLink where
@@ -492,15 +495,16 @@ signatoryLinksSelectors = [
   , "signatory_links.can_be_forwarded"
   , "signatory_links.consent_title"
   , "ARRAY(SELECT (" <> mintercalate ", " signatoryConsentQuestionsSelectors <> ")::signatory_consent_question FROM signatory_link_consent_questions WHERE signatory_links.id = signatory_link_consent_questions.signatory_link_id ORDER BY position ASC)"
+  , "signatory_links.mail_confirmation_delivery_status"
   ]
 
-type instance CompositeRow SignatoryLink = (SignatoryLinkID, CompositeArray1 SignatoryField, Bool, SignatoryRole, SignOrder, MagicHash, CompositeArray1 TemporaryMagicHash, Maybe UserID, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, DeliveryStatus, DeliveryStatus, Maybe UTCTime, Maybe UTCTime, Maybe [[String]], CompositeArray1 SignatoryAttachment,CompositeArray1 HighlightedPage, Maybe String, Maybe String, Maybe UTCTime, Maybe String, AuthenticationToViewMethod, AuthenticationToViewMethod, AuthenticationToSignMethod, DeliveryMethod, ConfirmationDeliveryMethod, Bool, Bool, Bool, Bool, Maybe String, CompositeArray1 SignatoryConsentQuestion)
+type instance CompositeRow SignatoryLink = (SignatoryLinkID, CompositeArray1 SignatoryField, Bool, SignatoryRole, SignOrder, MagicHash, CompositeArray1 TemporaryMagicHash, Maybe UserID, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, DeliveryStatus, DeliveryStatus, Maybe UTCTime, Maybe UTCTime, Maybe [[String]], CompositeArray1 SignatoryAttachment,CompositeArray1 HighlightedPage, Maybe String, Maybe String, Maybe UTCTime, Maybe String, AuthenticationToViewMethod, AuthenticationToViewMethod, AuthenticationToSignMethod, DeliveryMethod, ConfirmationDeliveryMethod, Bool, Bool, Bool, Bool, Maybe String, CompositeArray1 SignatoryConsentQuestion, DeliveryStatus)
 
 instance PQFormat SignatoryLink where
   pqFormat = "%signatory_link"
 
 instance CompositeFromSQL SignatoryLink where
-  toComposite (slid, CompositeArray1 fields, is_author, signatory_role, sign_order, magic_hash, CompositeArray1 magic_hashes, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_contents, CompositeArray1 attachments, CompositeArray1 highlighted_pages, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_to_view_method, authentication_to_view_archived_method, authentication_to_sign_method, delivery_method, confirmation_delivery_method, allows_highlighting, has_identified, hide_pn, canbeforwarded, consent_title, CompositeArray1 consent_questions) = SignatoryLink {
+  toComposite (slid, CompositeArray1 fields, is_author, signatory_role, sign_order, magic_hash, CompositeArray1 magic_hashes, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_contents, CompositeArray1 attachments, CompositeArray1 highlighted_pages, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_to_view_method, authentication_to_view_archived_method, authentication_to_sign_method, delivery_method, confirmation_delivery_method, allows_highlighting, has_identified, hide_pn, canbeforwarded, consent_title, CompositeArray1 consent_questions, signatorylinkmailconfirmationdeliverystatus) = SignatoryLink {
     signatorylinkid = slid
   , signatoryfields = fields
   , signatoryisauthor = is_author
@@ -534,4 +538,5 @@ instance CompositeFromSQL SignatoryLink where
   , signatorylinkcanbeforwarded = canbeforwarded
   , signatorylinkconsenttitle = consent_title
   , signatorylinkconsentquestions = consent_questions
+  , signatorylinkmailconfirmationdeliverystatus
   }

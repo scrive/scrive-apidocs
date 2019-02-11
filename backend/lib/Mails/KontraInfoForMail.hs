@@ -15,11 +15,15 @@ import Doc.SignatoryLinkID
 import Log.Identifier
 import Mails.Model
 
-data KontraInfoForMailType = DocumentInvitationMailT | OtherDocumentMailT
+data KontraInfoForMailType
+  = DocumentInvitationMailT
+  | DocumentConfirmationMailT
+  | OtherDocumentMailT
   deriving (Eq, Ord, Show)
 
 data KontraInfoForMail
   = DocumentInvitationMail DocumentID SignatoryLinkID
+  | DocumentConfirmationMail DocumentID SignatoryLinkID
   | OtherDocumentMail DocumentID
   deriving (Eq, Ord, Show)
 
@@ -29,6 +33,11 @@ instance Loggable KontraInfoForMail where
           , identifier did
           , identifier slid
           ]
+  logValue (DocumentConfirmationMail did slid) = object
+    [ "type" .= ("confirmation" :: T.Text)
+    , identifier did
+    , identifier slid
+    ]
   logValue (OtherDocumentMail did) = object $ [
             "type" .= ("other"::T.Text)
           , identifier did
@@ -47,8 +56,9 @@ instance FromSQL KontraInfoForMailType where
     case n :: Int16 of
       1 -> return DocumentInvitationMailT
       2 -> return OtherDocumentMailT
+      3 -> return DocumentConfirmationMailT
       _ -> throwM RangeError {
-        reRange = [(1, 2)]
+        reRange = [(1, 3)]
       , reValue = n
       }
 
@@ -56,6 +66,7 @@ instance ToSQL KontraInfoForMailType where
   type PQDest KontraInfoForMailType = PQDest Int16
   toSQL DocumentInvitationMailT     = toSQL (1::Int16)
   toSQL OtherDocumentMailT          = toSQL (2::Int16)
+  toSQL DocumentConfirmationMailT   = toSQL (3::Int16)
 
 data AddKontraInfoForMail = AddKontraInfoForMail MailID KontraInfoForMail
 instance (MonadDB m, MonadThrow m) => DBUpdate m AddKontraInfoForMail Bool where
@@ -65,6 +76,10 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddKontraInfoForMail Bool where
       case mfdi of
         (DocumentInvitationMail did slid) -> do
            sqlSet "mail_type" DocumentInvitationMailT
+           sqlSet "document_id" did
+           sqlSet "signatory_link_id" slid
+        (DocumentConfirmationMail did slid) -> do
+           sqlSet "mail_type" DocumentConfirmationMailT
            sqlSet "document_id" did
            sqlSet "signatory_link_id" slid
         (OtherDocumentMail did) -> do
@@ -84,5 +99,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetKontraInfoForMail (Maybe Kont
 fetchKontraInfoForMail :: (KontraInfoForMailType, Maybe DocumentID, Maybe SignatoryLinkID) -> KontraInfoForMail
 fetchKontraInfoForMail (DocumentInvitationMailT, Just did, Just sig)  = DocumentInvitationMail did sig
 fetchKontraInfoForMail (DocumentInvitationMailT, _, _)  = (unexpectedError "Failed to fetch KontraInfoForMail (DocumentInvitationMailT)")
+fetchKontraInfoForMail (DocumentConfirmationMailT, Just did, Just sig)  = DocumentConfirmationMail did sig
+fetchKontraInfoForMail (DocumentConfirmationMailT, _, _)  = (unexpectedError "Failed to fetch KontraInfoForMail (DocumentConfirmationMailT)")
 fetchKontraInfoForMail (OtherDocumentMailT, Just did, Nothing)  = OtherDocumentMail did
 fetchKontraInfoForMail (OtherDocumentMailT, _, _)  = (unexpectedError "Failed to fetch KontraInfoForMail (OtherDocumentMailT)")

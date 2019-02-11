@@ -173,5 +173,5 @@ kontraMigrations = [
   , addShowArrow
   , createTemporaryLoginTokensTable
   , addTemporaryLoginTokensPurgeJob
+  , addMailConfirmationDeliveryStatusToSignatoryLinks
   ]
-

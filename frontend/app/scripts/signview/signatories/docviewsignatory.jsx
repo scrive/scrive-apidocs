@@ -19,7 +19,9 @@ module.exports = React.createClass({
     signatorySummary: function () {
       var signatory = this.props.signatory;
       var document = signatory.document();
-      if (signatory.signdate() != undefined && signatory.signs()) {
+      if (signatory.status() == "confirmationdeliveryproblem") {
+        return localization.signatoryMessage.confirmationdeliveryproblem;
+      } else if (signatory.signdate() != undefined && signatory.signs()) {
         return localization.signatoryMessage.signed;
       } else if (signatory.signdate() != undefined && signatory.approves()) {
         return localization.signatoryMessage.approved;
@@ -64,6 +66,8 @@ module.exports = React.createClass({
       } else if (sigStatus === "read") {
         return "sprite-signview-read.png";
       } else if (sigStatus === "deliveryproblem") {
+        return "sprite-signview-deliveryproblem.png";
+      } else if (sigStatus === "confirmationdeliveryproblem") {
         return "sprite-signview-deliveryproblem.png";
       } else if (sigStatus === "delivered") {
         return "sprite-signview-delivered.png";

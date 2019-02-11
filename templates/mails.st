@@ -607,6 +607,45 @@ invitationSMSUndeliveredMainP =
            </tr>
          </table>
        </div>
+###
+### UNDELIVERED CONFIRMATION MAIL
+###
+confirmationMailUndelivered=
+    $_confirmationMailUndeliveredTitle()$
+    $nicemail(
+        mailheader=_confirmationMailUndeliveredTitle();
+        mailp1=confirmationMailUndeliveredMainP()
+    )$
+####
+####
+confirmationMailUndeliveredMainP =
+       <br/>
+       $_confirmationMailUndeliveredContentBody()$
+       <br/>
+       <br/>
+       $_confirmationMailUndeliveredContentBodyFirst()$
+       <div style="margin-left: 50px;">
+         <table>
+           <tr>
+             <td valign="top" style="font-family: $nicemailfont()$;">1.</td>
+             <td style="font-family: $nicemailfont()$;">
+               $_confirmationMailUndeliveredContentInstructionSteps()$
+               <br/>
+               <div style="margin-bottom: 10px;"></div>
+               $nicebutton(link=concat(a1=ctxhostpart;a2=documentlink); text=_confirmationMailUndeliveredContentBodyButton())$
+               <div style="margin-top: 10px;"></div>
+             </td>
+           </tr>
+           <tr>
+             <td valign="top" style="font-family: $nicemailfont()$;">2.</td>
+             <td style="font-family: $nicemailfont()$;">$_confirmationMailUndeliveredContentInstructionStep1()$</td>
+           </tr>
+           <tr>
+             <td valign="top" style="font-family: $nicemailfont()$;">3.</td>
+             <td style="font-family: $nicemailfont()$;">$_confirmationMailUndeliveredContentInstructionStep2()$</td>
+           </tr>
+         </table>
+       </div>
 ####
 #### DOCUMENT ERROR
 ####

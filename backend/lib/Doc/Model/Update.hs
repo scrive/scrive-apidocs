@@ -42,6 +42,7 @@ module Doc.Model.Update
   , SetEmailInvitationDeliveryStatus(..)
   , SetFieldPlacements(..)
   , SetSMSInvitationDeliveryStatus(..)
+  , SetEmailConfirmationDeliveryStatus(..)
   , SetInviteText(..)
   , SetConfirmText(..)
   , SetShowHeader(..)
@@ -1532,6 +1533,39 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
         actor
     return True
 
+data SetEmailConfirmationDeliveryStatus = SetEmailConfirmationDeliveryStatus SignatoryLinkID DeliveryStatus Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m SetEmailConfirmationDeliveryStatus Bool where
+  update (SetEmailConfirmationDeliveryStatus slid status actor) = do
+    sig <- theDocumentID >>= \did -> query $ GetSignatoryLinkByID did slid Nothing
+    updateDocumentWithID $ \did -> do
+      kRun1OrThrowWhyNot $  sqlUpdate "signatory_links" $ do
+          sqlFrom "documents"
+          sqlJoin "signatory_links AS signatory_links_old"
+          sqlWhere "signatory_links.id = signatory_links_old.id"
+          sqlSet "mail_confirmation_delivery_status" status
+          sqlWhereSignatoryLinkIDIs slid
+          sqlWhereDocumentIDIs did
+          sqlWhereDocumentTypeIs Signable
+    nsig <- theDocumentID >>= \did -> query $ GetSignatoryLinkByID did slid Nothing
+    let changed =
+          signatorylinkmailconfirmationdeliverystatus sig
+          /= signatorylinkmailconfirmationdeliverystatus nsig
+
+    when_ (changed && status == Delivered) $
+      update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+        ConfirmationDeliveredByEmail
+        (return ())
+        (Just nsig)
+        Nothing
+        actor
+    when_ (changed && status == Undelivered) $
+      update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+        ConfirmationUndeliveredByEmail
+        (return ())
+        (Just nsig)
+        Nothing
+        actor
+    return True
 
 data SetDocumentSharing = SetDocumentSharing [DocumentID] Bool
 instance (MonadDB m, TemplatesMonad m) => DBUpdate m SetDocumentSharing Bool where

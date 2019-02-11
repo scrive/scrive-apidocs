@@ -416,7 +416,9 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewArchivedMethodFITupasToDKNemIDEvidence   |
   ApprovedByApproverPartyEvidence |
   RejectDocumentByApproverEvidence |
-  ForwardedSigingEvidence
+  ForwardedSigingEvidence |
+  ConfirmationDeliveredByEmail |
+  ConfirmationUndeliveredByEmail
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -685,6 +687,8 @@ instance ToSQL EvidenceEventType where
   toSQL (Current ApprovedByApproverPartyEvidence                                 ) = toSQL (192::Int16)
   toSQL (Current RejectDocumentByApproverEvidence                                ) = toSQL (193::Int16)
   toSQL (Current ForwardedSigingEvidence                                         ) = toSQL (194::Int16)
+  toSQL (Current ConfirmationDeliveredByEmail) = toSQL (195::Int16)
+  toSQL (Current ConfirmationUndeliveredByEmail) = toSQL (196::Int16)
 
 instance FromSQL EvidenceEventType where
   type PQBase EvidenceEventType = PQBase Int16
@@ -885,8 +889,10 @@ instance FromSQL EvidenceEventType where
       192 -> return (Current ApprovedByApproverPartyEvidence                                 )
       193 -> return (Current RejectDocumentByApproverEvidence                                )
       194 -> return (Current ForwardedSigingEvidence                                         )
+      195 -> return (Current ConfirmationDeliveredByEmail)
+      196 -> return (Current ConfirmationUndeliveredByEmail)
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 194)]
+        reRange = [(1, 196)]
       , reValue = n
       }
 

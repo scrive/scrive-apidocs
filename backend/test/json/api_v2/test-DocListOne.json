@@ -54,6 +54,7 @@
       "reject_redirect_url": null,
       "email_delivery_status": "unknown",
       "mobile_delivery_status": "unknown",
+      "confirmation_email_delivery_status": "unknown",
       "csv": null,
       "delivery_method": "email",
       "authentication_method_to_view": "standard",

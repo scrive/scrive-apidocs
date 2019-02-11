@@ -20,7 +20,9 @@ var classNames = require("classnames");
     signatorySummary: function () {
       var signatory = this.props.signatory;
       var document = signatory.document();
-      if (signatory.signs() && signatory.hasSigned()) {
+      if (signatory.status() == "confirmationdeliveryproblem") {
+        return localization.signatoryMessage.confirmationdeliveryproblem;
+      } else if (signatory.signs() && signatory.hasSigned()) {
         return localization.signatoryMessage.signed;
       } else if (signatory.approves() && signatory.hasSigned()) {
         return localization.signatoryMessage.approved;

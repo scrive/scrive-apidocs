@@ -61,7 +61,7 @@ scheduleEmailSendoutWithAuthorSender did m = do
   scheduleEmailSendoutHelper name m
 
 scheduleEmailSendoutHelper :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => String -> Mail ->  m ()
-scheduleEmailSendoutHelper authorname  mail@Mail{..} = do
+scheduleEmailSendoutHelper authorname mail@Mail{..} = do
   logInfo "Sending mail" $ object [
       "originator" .= originator
     ]

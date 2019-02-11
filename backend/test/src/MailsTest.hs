@@ -105,6 +105,10 @@ sendDocumentMails author = do
         checkMail "Deferred invitation"    $  mailDeferredInvitation (get ctxmailnoreplyaddress ctx) (get ctxbrandeddomain ctx) sl =<< theDocument
         checkMail "Undelivered invitation" $  mailUndeliveredInvitation (get ctxmailnoreplyaddress ctx) (get ctxbrandeddomain ctx) sl =<< theDocument
         checkMail "Delivered invitation"   $  mailDeliveredInvitation (get ctxmailnoreplyaddress ctx) (get ctxbrandeddomain ctx) sl =<< theDocument
+        checkMail "Undelivered confirmation" $ do
+          doc <- theDocument
+          mailUndeliveredConfirmation (get ctxmailnoreplyaddress ctx)
+            (get ctxbrandeddomain ctx) sl doc
         --remind mails
         checkMail "Reminder notsigned" $ do
           doc <- theDocument

@@ -176,6 +176,7 @@
 "_signViewSigAttachmentBoxChooseFile":"Upload attachment",
 "_signViewSignatoriesTitle":"Signing parties",
 "_signWithSMSPin":"Sign with PIN by SMS",
+"_signatoryConfirmationMessageDeliveryProblem":"Confirmation delivery problem",
 "_signatoryMessageDeliveryProblem":"Delivery problem",
 "_signatoryMessageIfApproved":"Approved",
 "_signatoryMessageIfElse":"Sent",

@@ -797,3 +797,6 @@ ForwardedSigingEvidenceLog=<span class="actor"/> has forwarded the document to <
 ###
 ForwardedSigingEvidenceArchive=Forwarded the document to $signatory$.
 ###
+ConfirmationDeliveredByEmailLog=Scrive eSign’s external email delivery system reported that the confirmation sent via email to <span class="signatory"/> was delivered.
+###
+ConfirmationUndeliveredByEmailLog=Scrive eSign’s external email delivery system reported that the confirmation sent via email to <span class="signatory"/> could not be delivered and continued attempts were cancelled.

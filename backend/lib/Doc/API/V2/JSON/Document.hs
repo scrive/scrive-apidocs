@@ -172,6 +172,7 @@ unjsonSignatory da =  objectOf $
   <*>  (fieldOpt "reject_redirect_url" signatorylinkrejectredirecturl ("URL to redirect the signatory after rejecting the document"))
   <*   (fieldReadonlyBy "email_delivery_status" mailinvitationdeliverystatus "Email invitation delivery status" unjsonDeliveryStatus)
   <*   (fieldReadonlyBy "mobile_delivery_status" smsinvitationdeliverystatus "SMS invitation delivery status" unjsonDeliveryStatus)
+  <*   (fieldReadonlyBy "confirmation_email_delivery_status" signatorylinkmailconfirmationdeliverystatus "Email confirmation delivery status" unjsonDeliveryStatus)
   <*   (fieldReadonly "has_authenticated_to_view" signatorylinkidentifiedtoview "Signatory has already authenticated to view")
   <*>  (fieldOptBy "csv" signatorylinkcsvupload "CSV upload for multipart" unjsonCSVUpload)
   <*>  (fieldDefBy "delivery_method" (signatorylinkdeliverymethod defaultSignatoryLink) signatorylinkdeliverymethod "Signatory invitation delivery method" unjsonDeliveryMethod)

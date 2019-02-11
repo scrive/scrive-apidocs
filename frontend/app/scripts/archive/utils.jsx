@@ -121,7 +121,9 @@ var capitaliseFirstLetter = require("../common/capitalise_first_letter");
       return "problem";
     } else if (d.field("status") === "preparation") {
       return "draft";
-    }  else if (s.sign_time) {
+    } else if (s.confirmation_email_delivery_status === "not_delivered") {
+      return "confirmationdeliveryproblem";
+    } else if (s.sign_time) {
       return "signed";
     } else if (d.field("status") === "canceled") {
       return "cancelled";

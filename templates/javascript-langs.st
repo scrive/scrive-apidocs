@@ -128,6 +128,7 @@ javascriptLocalisation =
                  , timeouted       : "$_tooltiptimedout()$"
                  , template : "$_tooltiptemplate()$"
                  , problem           : "$_tooltiperror()$"
+                 , confirmationdeliveryproblem : "$_tooltipconfirmationdeliveryproblem()$"
              }
              , listand : "$_listand()$"
              , searchBoxButtonText : "$_searchBoxButtonText()$"
@@ -178,6 +179,7 @@ javascriptLocalisation =
                        , other : "$_signatoryMessageIfElse()$"
                        , waiting : "$_signatoryMessageWaiting()$"
                        , deliveryproblem : "$_signatoryMessageDeliveryProblem()$"
+                       , confirmationdeliveryproblem : "$_signatoryConfirmationMessageDeliveryProblem()$"
                     }
             , authorAttachmentBoxHeader : "$_signViewNotsignedbymeAttachmentBoxHead()$"
             , evidenceAttachmentBoxHeader : "$_evidenceAttachmentBoxHeader()$"

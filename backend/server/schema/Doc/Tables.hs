@@ -229,7 +229,7 @@ ctSignatoryAttachment = CompositeType {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable {
     tblName = "signatory_links"
-  , tblVersion = 36
+  , tblVersion = 37
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
@@ -260,7 +260,7 @@ tableSignatoryLinks = tblTable {
     , tblColumn { colName = "consent_title", colType = TextT, colNullable = True }
     , tblColumn { colName = "authentication_to_view_archived_method", colType = SmallIntT, colNullable = False }
     , tblColumn { colName = "can_be_forwarded", colType = BoolT, colNullable = False, colDefault = Just "false" }
-
+    , tblColumn { colName = "mail_confirmation_delivery_status", colType = SmallIntT, colNullable = False, colDefault = Just "3" }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
@@ -315,6 +315,7 @@ ctSignatoryLink = CompositeType {
   , CompositeColumn { ccName = "can_be_forwarded", ccType = BoolT}
   , CompositeColumn { ccName = "consent_title", ccType = TextT }
   , CompositeColumn { ccName = "consent_questions", ccType = ArrayT $ CustomT "signatory_consent_question" }
+  , CompositeColumn { ccName = "mail_confirmation_delivery_status", ccType = SmallIntT }
   ]
 }
 

@@ -22,6 +22,7 @@ module Doc.Migrations (
   , addTemplateInfoToDocuments
   , addCanBeForwardedToSignatories
   , addShowArrow
+  , addMailConfirmationDeliveryStatusToSignatoryLinks
 ) where
 
 import Data.Int
@@ -388,18 +389,32 @@ addTemplateInfoToDocuments = Migration
       runQuery_ . sqlCreateIndex "documents" $ indexOnColumn "template_id"
   }
 
-
 addShowArrow :: MonadDB m => Migration m
-addShowArrow = Migration {
-    mgrTableName = tblName tableDocuments
+addShowArrow = Migration
+  { mgrTableName = tblName tableDocuments
   , mgrFrom = 49
   , mgrAction = StandardMigration $ do
-      runQuery_ $ sqlAlterTable "documents" [
-          sqlAddColumn tblColumn
+      runQuery_ $ sqlAlterTable "documents"
+        [ sqlAddColumn tblColumn
             { colName = "show_arrow"
             , colType = BoolT
             , colNullable = False
             , colDefault = Just "true"
+            }
+        ]
+  }
+
+addMailConfirmationDeliveryStatusToSignatoryLinks :: MonadDB m => Migration m
+addMailConfirmationDeliveryStatusToSignatoryLinks = Migration
+  { mgrTableName = tblName tableSignatoryLinks
+  , mgrFrom = 36
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable "signatory_links"
+        [ sqlAddColumn tblColumn
+            { colName = "mail_confirmation_delivery_status"
+            , colType = SmallIntT
+            , colNullable = False
+            , colDefault = Just "3"
             }
         ]
   }

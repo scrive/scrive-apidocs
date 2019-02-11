@@ -294,7 +294,8 @@ sendClosedEmails sealFixed document = do
               , attachments =
                   attachments mail ++ if forceLink then [] else mailattachments
               , kontraInfoForMail =
-                  Just $ OtherDocumentMail $ documentid document
+                  Just $ DocumentConfirmationMail (documentid document)
+                    (signatorylinkid sl)
               , replyTo =
                   let maybeAuthor = find signatoryisauthor signatorylinks
                   in if signatoryisauthor sl && isJust maybeAuthor

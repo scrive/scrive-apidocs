@@ -22,6 +22,8 @@ module.exports = {
       return localization.statusToolTip.read;
     } else if (status === "deliveryproblem") {
       return localization.statusToolTip.deliveryproblem;
+    } else if (status === "confirmationdeliveryproblem") {
+      return localization.statusToolTip.confirmationdeliveryproblem;
     } else if (status === "delivered") {
       return localization.statusToolTip.delivered;
     } else if (status === "sent") {

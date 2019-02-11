@@ -13,11 +13,13 @@ module Mails.Events (
   , mailDeliveredInvitation
   , mailDeferredInvitation
   , mailUndeliveredInvitation
+  , mailUndeliveredConfirmation
   ) where
 
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Crypto.RNG
+import Data.Functor ((<&>))
 import Data.Time
 import Log
 import Text.StringTemplates.Templates hiding (runTemplatesT)
@@ -31,7 +33,6 @@ import CronEnv
 import DB
 import Doc.API.Callback.Model
 import Doc.DocStateData
-import Doc.DocumentID
 import Doc.DocumentMonad (DocumentMonad, theDocument, withDocumentID)
 import Doc.DocViewMail
 import Doc.Logging
@@ -66,12 +67,21 @@ processEvents limit = do
                        Just mailSendTimeStamp -> Just $ floor $ toRational $ mailSendTimeStamp `diffUTCTime` now
       templates <- asks ceTemplates
       mkontraInfoForMail <- dbQuery $ GetKontraInfoForMail mid
+      markEventAsRead eid
       case mkontraInfoForMail of
-        Nothing -> markEventAsRead eid
-        Just (DocumentInvitationMail docid slid) -> do
-          handleEventInvitation docid slid eid timeDiff templates eventType mailNoreplyAddress
-        Just (OtherDocumentMail docid) -> do
-          handleEventOtherMail docid eid timeDiff templates eventType
+        Nothing -> return ()
+        Just (DocumentInvitationMail docid slid) -> forExistingDocument docid $
+          handleEventInvitation slid timeDiff templates eventType mailNoreplyAddress
+        Just (DocumentConfirmationMail docid slid) -> forExistingDocument docid $
+          handleEventConfirmation slid timeDiff templates eventType mailNoreplyAddress
+        Just (OtherDocumentMail docid) -> forExistingDocument docid $
+          handleEventOtherMail timeDiff eventType
+
+    forExistingDocument docid action = do
+      exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor docid
+      if exists
+        then logDocument docid $ withDocumentID docid action
+        else logInfo_ "Email event for purged/non-existing document"
 
 markEventAsRead :: (MonadLog m, MonadThrow m, MonadDB m) => EventID -> m ()
 markEventAsRead eid = do
@@ -80,101 +90,77 @@ markEventAsRead eid = do
   when (not success) $
     logAttention_ "Couldn't mark event as read"
 
+logEmails :: MonadLog m => String -> String -> m ()
+logEmails signemail email = logInfo "Comparing emails" $ object
+  [ "signatory_email" .= signemail
+  , "event_email" .= email
+  ]
+
 handleEventInvitation
-  :: (MonadLog m, CryptoRNG m, MonadCatch m, MonadDB m)
-  => DocumentID -> SignatoryLinkID -> EventID -> Maybe Int -> GlobalTemplates -> Event -> String -> m ()
-handleEventInvitation docid slid eid timeDiff templates eventType mailNoreplyAddress =
-  logDocumentAndSignatory docid slid $ do
-    exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor docid
-    if not exists
-      then do
-        logInfo_ "Email event for purged/non-existing document"
-        markEventAsRead eid
-    else do
-      logInfo_ "Processing invitation event"
-      withDocumentID docid $ do
-        markEventAsRead eid
-        bd <- (maybesignatory =<<) . getAuthorSigLink <$> theDocument >>= \case
-                    Nothing -> dbQuery $ GetMainBrandedDomain
-                    Just uid -> do
-                      dbQuery $ GetBrandedDomainByUserID uid
-        msl <- getSigLinkFor slid <$> theDocument
-        let muid = maybe Nothing maybesignatory msl
-        let signemail = maybe "" getEmail msl
-        let logEmails email = logInfo "Comparing emails" $ object [
-                  "signatory_email" .= signemail
-                , "event_email" .= email
-                ]
-            -- since when email is reported deferred author has a possibility to
-            -- change email address, we don't want to send him emails reporting
-            -- success/failure for old signatory address, so we need to compare
-            -- addresses here (for dropped/bounce events)
-            handleEv (SendGridEvent email ev _) = do
-              logEmails email
-              case ev of
-                SG_Opened -> handleOpenedInvitation slid email muid
-                SG_Delivered _ -> handleDeliveredInvitation mailNoreplyAddress bd slid timeDiff
-                -- we send notification that email is reported deferred after
-                -- fifth attempt has failed - this happens after ~10 minutes
-                -- from sendout
-                SG_Deferred _ 5 -> handleDeferredInvitation mailNoreplyAddress bd slid email
-                SG_Dropped _ -> when (signemail == email) $ handleUndeliveredInvitation mailNoreplyAddress bd slid
-                SG_Bounce _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation mailNoreplyAddress bd slid
-                _ -> return ()
-            handleEv (MailGunEvent email ev) = do
-              logEmails email
-              case ev of
-                MG_Opened -> handleOpenedInvitation slid email muid
-                MG_Delivered -> handleDeliveredInvitation mailNoreplyAddress bd slid timeDiff
-                MG_Bounced _ _ _ -> when (signemail == email) $ handleUndeliveredInvitation mailNoreplyAddress bd slid
-                MG_Dropped _ -> when (signemail == email) $ handleUndeliveredInvitation mailNoreplyAddress bd slid
-                _ -> return ()
-            handleEv (SocketLabsEvent email ev) = do
-              logEmails email
-              case ev of
-                SL_Opened -> handleOpenedInvitation slid email muid
-                SL_Delivered -> handleDeliveredInvitation mailNoreplyAddress bd slid timeDiff
-                SL_Failed 0 5001 -> handleDeliveredInvitation mailNoreplyAddress bd slid timeDiff -- out of office/autoreply; https://support.socketlabs.com/index.php/Knowledgebase/Article/View/123
-                SL_Failed _ _-> when (signemail == email) $ handleUndeliveredInvitation mailNoreplyAddress bd slid
-                _ -> return ()
-            handleEv (MailJetEvent email ev) = do
-              logEmails email
-              case ev of
-                MJ_Open -> handleOpenedInvitation slid email muid
-                MJ_Sent -> handleDeliveredInvitation mailNoreplyAddress bd slid timeDiff
-                MJ_Bounce_Hard -> handleUndeliveredInvitation mailNoreplyAddress bd slid
-                MJ_Blocked -> handleUndeliveredInvitation mailNoreplyAddress bd slid
-                _ -> return ()
-        theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ handleEv eventType
+  :: (DocumentMonad m, MonadLog m, CryptoRNG m, MonadCatch m, MonadDB m)
+  => SignatoryLinkID -> Maybe Int -> GlobalTemplates -> Event -> String -> m ()
+handleEventInvitation slid timeDiff templates eventType mailNoreplyAddress =
+  logSignatory slid $ do
+    logInfo_ "Processing invitation event"
+
+    (muid, signemail) <- theDocument <&> \doc -> case getSigLinkFor slid doc of
+      Nothing -> (Nothing, "")
+      Just sl -> (maybesignatory sl, getEmail sl)
+    let (email, nev) = normaliseEvent signemail eventType
+    bd <- theDocument >>= \doc -> case getAuthorSigLink doc >>= maybesignatory of
+      Nothing -> dbQuery $ GetMainBrandedDomain
+      Just uid -> dbQuery $ GetBrandedDomainByUserID uid
+
+    logEmails signemail email
+    theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ case nev of
+      EmailOpenedEvent -> handleOpenedInvitation slid email muid
+      DeliveryEvent Delivered ->
+        handleDeliveredInvitation mailNoreplyAddress bd slid timeDiff
+      DeliveryEvent Undelivered ->
+        handleUndeliveredInvitation mailNoreplyAddress bd slid
+      DeliveryEvent Deferred ->
+        handleDeferredInvitation mailNoreplyAddress bd slid email
+      _ -> return ()
+
+handleEventConfirmation
+  :: ( CryptoRNG m, DocumentMonad m, MonadCatch m, MonadLog m, MonadThrow m
+     , MonadDB m )
+  => SignatoryLinkID -> Maybe Int -> GlobalTemplates -> Event
+  -> String -> m ()
+handleEventConfirmation slid timeDiff templates eventType
+                        mailNoreplyAddress =
+  logSignatory slid $ do
+    logInfo_ "Processing confirmation event"
+
+    signemail <- (maybe "" getEmail . getSigLinkFor slid) <$> theDocument
+    let (email, nev) = normaliseEvent signemail eventType
+    bd <- theDocument >>= \doc -> case getAuthorSigLink doc >>= maybesignatory of
+      Nothing -> dbQuery $ GetMainBrandedDomain
+      Just uid -> dbQuery $ GetBrandedDomainByUserID uid
+
+    logEmails signemail email
+    theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ case nev of
+      DeliveryEvent Delivered ->
+        handleDeliveredConfirmation slid timeDiff
+      DeliveryEvent Undelivered ->
+        handleUndeliveredConfirmation mailNoreplyAddress bd slid
+      DeliveryEvent Deferred -> handleDeferredConfirmation slid
+      _ -> handleEventLoggingDeliveryTime signemail timeDiff eventType
 
 handleEventOtherMail
-  :: (MonadLog m, MonadThrow m, MonadDB m)
-  => DocumentID -> EventID -> Maybe Int -> GlobalTemplates -> Event -> m ()
-handleEventOtherMail docid eid timeDiff templates eventType = logDocument docid $ do
-  exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor docid
-  if not exists
-    then do
-      logInfo_ "Email event for purged/non-existing document"
-      markEventAsRead eid
-  else do
-    logInfo_ "Processing related mail event"
-    withDocumentID docid $ do
-      let handleEv (SendGridEvent _ ev _) = case ev of
-                                              SG_Delivered _ -> logDeliveryTime timeDiff
-                                              _ -> return ()
-          handleEv (MailGunEvent _ ev) = case ev of
-                                           MG_Delivered -> logDeliveryTime timeDiff
-                                           _ -> return ()
-          handleEv (SocketLabsEvent _ ev) = case ev of
-                                              SL_Delivered -> logDeliveryTime timeDiff
-                                              SL_Failed 0 5001 -> logDeliveryTime timeDiff -- out of office/autoreply; https://support.socketlabs.com/index.php/Knowledgebase/Article/View/123
-                                              _ -> return ()
-          handleEv (MailJetEvent _ ev) = case ev of
-                                              MJ_Sent -> logDeliveryTime timeDiff
-                                              _ -> return ()
-      -- no templates are used here, so runTemplatesT is not necessary, right? XXX
-      theDocument >>= \doc -> runTemplatesT (getLang doc, templates) $ handleEv eventType
-      markEventAsRead eid
+  :: (DocumentMonad m, MonadLog m, MonadThrow m, MonadDB m)
+  => Maybe Int -> Event -> m ()
+handleEventOtherMail timeDiff eventType = do
+  logInfo_ "Processing related mail event"
+  handleEventLoggingDeliveryTime "" timeDiff eventType
+
+handleEventLoggingDeliveryTime
+  :: (DocumentMonad m, MonadLog m, MonadThrow m)
+  => String -> Maybe Int -> Event -> m ()
+handleEventLoggingDeliveryTime signemail timeDiff eventType = do
+  case snd $ normaliseEvent signemail eventType of
+    DeliveryEvent Delivered -> logDeliveryTime timeDiff
+    _ -> return ()
 
 logDeliveryTime :: (DocumentMonad m, MonadLog m, MonadThrow m) => Maybe Int -> m ()
 logDeliveryTime timeDiff = theDocument >>= \d -> do
@@ -238,6 +224,54 @@ handleUndeliveredInvitation mailNoreplyAddress bd slid = do
       triggerAPICallbackIfThereIsOne =<< theDocument
     Nothing -> return ()
 
+handleDeliveredConfirmation
+  :: (DocumentMonad m, MonadCatch m, MonadLog m, TemplatesMonad m)
+  => SignatoryLinkID -> Maybe Int -> m ()
+handleDeliveredConfirmation slid timeDiff = do
+  logDeliveryTime timeDiff
+  mSL <- getSigLinkFor slid <$> theDocument
+  case mSL of
+    Nothing -> return ()
+    Just sl -> do
+      time <- currentTime
+      let actor = mailSystemActor time (maybesignatory sl) (getEmail sl) slid
+      void $ dbUpdate $ SetEmailConfirmationDeliveryStatus slid Delivered actor
+      triggerAPICallbackIfThereIsOne =<< theDocument
+
+handleUndeliveredConfirmation
+  :: ( CryptoRNG m, DocumentMonad m, MonadCatch m, MonadLog m, MonadThrow m
+     , TemplatesMonad m )
+  => String -> BrandedDomain -> SignatoryLinkID -> m ()
+handleUndeliveredConfirmation mailNoreplyAddress bd slid = do
+  mSL <- getSigLinkFor slid <$> theDocument
+  case mSL of
+    Nothing -> return ()
+    Just sl -> do
+      time <- currentTime
+      let actor = mailSystemActor time (maybesignatory sl) (getEmail sl) slid
+      void $ dbUpdate $ SetEmailConfirmationDeliveryStatus slid Undelivered actor
+      triggerAPICallbackIfThereIsOne =<< theDocument
+
+      mAuthorSL <- getAuthorSigLink <$> theDocument
+      case mAuthorSL of
+        Just authorSL | signatorylinkid authorSL /= slid -> do
+          mail <- mailUndeliveredConfirmation mailNoreplyAddress bd sl =<< theDocument
+          scheduleEmailSendout $ mail { to = [getMailAddress authorSL] }
+        _ -> return ()
+
+handleDeferredConfirmation
+  :: (DocumentMonad m, MonadCatch m, MonadLog m, TemplatesMonad m)
+  => SignatoryLinkID -> m ()
+handleDeferredConfirmation slid = do
+  mSL <- getSigLinkFor slid <$> theDocument
+  case mSL of
+    Nothing -> return ()
+    Just sl -> do
+      time <- currentTime
+      let actor = mailSystemActor time (maybesignatory sl) (getEmail sl) slid
+      void $ dbUpdate $ SetEmailConfirmationDeliveryStatus slid Deferred actor
+      triggerAPICallbackIfThereIsOne =<< theDocument
+
 mailDeliveredInvitation :: (TemplatesMonad m, MonadDB m, MonadThrow m) => String -> BrandedDomain -> SignatoryLink -> Document -> m Mail
 mailDeliveredInvitation mailNoreplyAddress bd signlink doc =do
   theme <- dbQuery $ GetTheme $ get bdMailTheme bd
@@ -247,7 +281,6 @@ mailDeliveredInvitation mailNoreplyAddress bd signlink doc =do
     F.value "documenttitle" $ documenttitle doc
     F.value "ctxhostpart" $ get bdUrl bd
     brandingMailFields theme
-
 
 mailDeferredInvitation ::(TemplatesMonad m, MonadDB m, MonadThrow m) => String -> BrandedDomain -> SignatoryLink -> Document -> m Mail
 mailDeferredInvitation mailNoreplyAddress bd sl doc = do
@@ -259,7 +292,6 @@ mailDeferredInvitation mailNoreplyAddress bd sl doc = do
     F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
     F.value "ctxhostpart" $ get bdUrl bd
     brandingMailFields theme
-
 
 mailUndeliveredInvitation :: (TemplatesMonad m, MonadDB m, MonadThrow m) => String -> BrandedDomain -> SignatoryLink -> Document -> m Mail
 mailUndeliveredInvitation mailNoreplyAddress bd signlink doc =do
@@ -275,3 +307,73 @@ mailUndeliveredInvitation mailNoreplyAddress bd signlink doc =do
     F.value "unsigneddoclink" $ show $ LinkIssueDoc $ documentid doc
     F.value "ctxhostpart" $ get bdUrl bd
     brandingMailFields theme
+
+mailUndeliveredConfirmation
+  :: (MonadDB m, MonadThrow m, TemplatesMonad m)
+  => String -> BrandedDomain -> SignatoryLink -> Document -> m Mail
+mailUndeliveredConfirmation mailNoreplyAddress bd sl doc = do
+  theme <- dbQuery $ GetTheme $ get bdMailTheme bd
+  kontramail mailNoreplyAddress bd theme "confirmationMailUndelivered" $ do
+    F.value "authorname" $ getFullName $ fromJust $ getAuthorSigLink doc
+    F.value "email" $ getEmail sl
+    F.value "name" $ getFullName sl
+    F.value "documenttitle" $ documenttitle doc
+    F.value "documentlink" $ show $ LinkIssueDoc $ documentid doc
+    F.value "ctxhostpart" $ get bdUrl bd
+    brandingMailFields theme
+
+data NormalisedEvent
+  = DeliveryEvent DeliveryStatus
+  | EmailOpenedEvent
+  | OtherEvent
+
+-- Since when email is reported deferred author has a possibility to
+-- change email address, we don't want to send him emails reporting
+-- success/failure for old signatory address, so we need to compare
+-- addresses here (for dropped/bounce events.)
+--
+-- We send notification that email is reported deferred after
+-- fifth attempt has failed - this happens after ~10 minutes
+-- from sendout.
+normaliseEvent :: String -> Event -> (String, NormalisedEvent)
+normaliseEvent currentEmail = \case
+  SendGridEvent email ev _ -> (email, normaliseSendGridEvent email ev)
+  MailGunEvent email ev -> (email, normaliseMailGunEvent email ev)
+  SocketLabsEvent email ev -> (email, normaliseSocketLabsEvent email ev)
+  MailJetEvent email ev -> (email, normaliseMailJetEvent ev)
+
+  where
+    normaliseSendGridEvent :: String -> SendGridEvent -> NormalisedEvent
+    normaliseSendGridEvent email = \case
+      SG_Opened -> EmailOpenedEvent
+      SG_Dropped _ | currentEmail == email -> DeliveryEvent Undelivered
+      SG_Deferred _ 5 -> DeliveryEvent Deferred
+      SG_Bounce _ _ _ | currentEmail == email -> DeliveryEvent Undelivered
+      SG_Delivered _ -> DeliveryEvent Delivered
+      _ -> OtherEvent
+
+    normaliseMailGunEvent :: String -> MailGunEvent -> NormalisedEvent
+    normaliseMailGunEvent email = \case
+      MG_Opened -> EmailOpenedEvent
+      MG_Delivered -> DeliveryEvent Delivered
+      MG_Bounced _ _ _  | currentEmail == email -> DeliveryEvent Undelivered
+      MG_Dropped _ | currentEmail == email -> DeliveryEvent Undelivered
+      _ -> OtherEvent
+
+    normaliseSocketLabsEvent :: String -> SocketLabsEvent -> NormalisedEvent
+    normaliseSocketLabsEvent email = \case
+      SL_Opened -> EmailOpenedEvent
+      SL_Delivered -> DeliveryEvent Delivered
+      -- 5001 = out of office / autoreply.
+      -- See https://support.socketlabs.com/index.php/Knowledgebase/Article/View/123
+      SL_Failed 0 5001 -> DeliveryEvent Delivered
+      SL_Failed _ _ | currentEmail == email -> DeliveryEvent Undelivered
+      _ -> OtherEvent
+
+    normaliseMailJetEvent :: MailJetEvent -> NormalisedEvent
+    normaliseMailJetEvent = \case
+      MJ_Open -> EmailOpenedEvent
+      MJ_Sent -> DeliveryEvent Delivered
+      MJ_Bounce_Hard -> DeliveryEvent Undelivered
+      MJ_Blocked -> DeliveryEvent Undelivered
+      _ -> OtherEvent

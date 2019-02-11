@@ -117,6 +117,8 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         return "problem";
       } else if (document.status() === "preparation") {
         return "draft";
+      } else if (signatory.undeliveredMailConfirmation()) {
+        return "confirmationdeliveryproblem";
       } else if (signatory.signs() && signatory.hasSigned()) {
         return "signed";
       } else if (signatory.approves() && signatory.hasSigned()) {
@@ -313,6 +315,9 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     },
     undeliveredSMSInvitation: function() {
           return this.get("mobile_delivery_status") === "not_delivered";
+    },
+    undeliveredMailConfirmation: function() {
+      return this.get("confirmation_email_delivery_status") === "not_delivered";
     },
     apideliveryurl: function() {
           return this.get("api_delivery_url");

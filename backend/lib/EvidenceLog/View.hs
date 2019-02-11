@@ -161,6 +161,8 @@ getEvidenceEventStatusClass (Current VisitedViewForSigningEvidence)        = SCO
 getEvidenceEventStatusClass (Current AuthenticatedToViewEvidence)          = SCAuthenticatedToView
 getEvidenceEventStatusClass (Current ApprovedByApproverPartyEvidence)      = SCApproved
 getEvidenceEventStatusClass (Current ForwardedSigingEvidence)              = SCSent
+getEvidenceEventStatusClass (Current ConfirmationDeliveredByEmail)         = SCDelivered
+getEvidenceEventStatusClass (Current ConfirmationUndeliveredByEmail)       = SCDeliveryProblem
 getEvidenceEventStatusClass _                                              = SCError
 
 -- Remove signatory events that happen after signing (link visited,
@@ -195,11 +197,13 @@ authorEvents _                                      = False
 -- Events that should be considered as performed by the system even if
 -- actor states different.
 systemEvents  :: EvidenceEventType -> Bool
-systemEvents (Current InvitationDeliveredByEmail)   = True
-systemEvents (Current InvitationUndeliveredByEmail) = True
-systemEvents (Current InvitationDeliveredBySMS)     = True
-systemEvents (Current InvitationUndeliveredBySMS)   = True
-systemEvents _                                      = False
+systemEvents (Current InvitationDeliveredByEmail)     = True
+systemEvents (Current InvitationUndeliveredByEmail)   = True
+systemEvents (Current InvitationDeliveredBySMS)       = True
+systemEvents (Current InvitationUndeliveredBySMS)     = True
+systemEvents (Current ConfirmationDeliveredByEmail)   = True
+systemEvents (Current ConfirmationUndeliveredByEmail) = True
+systemEvents _                                        = False
 
 -- Empty events - they should be skipped, as they don't provide enough
 -- information to show to user.
