@@ -11,6 +11,7 @@ module FeatureFlags.Migrations (
 , featureFlagsAddEmailConfirmation
 , featureFlagsAddShareableLinks
 , featureFlagsAddForwarding
+, featureFlagsRemoveDefaultValuesFromColumns
 ) where
 
 import Control.Monad.Catch
@@ -206,5 +207,38 @@ featureFlagsAddForwarding = Migration {
 , mgrAction = StandardMigration .
     runQuery_ $ sqlAlterTable (tblName tableFeatureFlags)  [
         sqlAddColumn $ tblColumn { colName = "can_use_forwarding", colType = BoolT, colNullable = False, colDefault = Just "true" }
+      ]
+}
+
+featureFlagsRemoveDefaultValuesFromColumns :: (MonadThrow m, MonadDB m) => Migration m
+featureFlagsRemoveDefaultValuesFromColumns = Migration {
+  mgrTableName = tblName tableFeatureFlags
+, mgrFrom = 12
+, mgrAction = StandardMigration .
+    runQuery_ $ sqlAlterTable (tblName tableFeatureFlags)  [
+          sqlAlterColumn "can_use_templates" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_branding" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_author_attachments" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_signatory_attachments" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_mass_sendout" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_sms_invitations" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_sms_confirmations" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_dk_authentication_to_view" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_no_authentication_to_view" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_se_authentication_to_view" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_se_authentication_to_sign" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_sms_pin_authentication_to_sign" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_no_authentication_to_sign" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_sms_pin_authentication_to_view" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_dk_authentication_to_sign" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_standard_authentication_to_view" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_standard_authentication_to_sign" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_email_invitations" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_api_invitations" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_pad_invitations" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_fi_authentication_to_view" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_email_confirmations" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_shareable_links" "DROP DEFAULT"
+        , sqlAlterColumn "can_use_forwarding" "DROP DEFAULT"
       ]
 }
