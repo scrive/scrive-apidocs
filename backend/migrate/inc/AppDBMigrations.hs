@@ -170,10 +170,10 @@ kontraMigrations = [
   , removePurgeOrphanFileJob
   , addCanBeForwardedToSignatories
   , featureFlagsAddForwarding
+  , createApiCallbackResults
   , addShowArrow
   , createTemporaryLoginTokensTable
   , addTemporaryLoginTokensPurgeJob
   , addMailConfirmationDeliveryStatusToSignatoryLinks
   , featureFlagsRemoveDefaultValuesFromColumns
-  , createApiCallbackResults
   ]
