@@ -19,7 +19,8 @@ var OAuthConfirationModel = exports.OAuthConfirationModel = Backbone.Model.exten
     readPermission   : false,
     createPermission : false,
     sendPermission   : false,
-    token : ""
+    token : "",
+    askFor2FA: false
     }
   ,
   logged : function() {
@@ -40,6 +41,13 @@ var OAuthConfirationModel = exports.OAuthConfirationModel = Backbone.Model.exten
   token : function() {
       return this.get("token");
   },
+  askFor2FA: function() {
+      return this.get("askFor2FA");
+  },
+  startAskingFor2FA: function() {
+      this.set({"askFor2FA": true}, {silent: true});
+      this.trigger("change:askFor2FA");
+  },
   deny : function() {
       new Submit({
           method: "POST",
@@ -55,20 +63,23 @@ var OAuthConfirationModel = exports.OAuthConfirationModel = Backbone.Model.exten
           oauth_token : this.token()
         }).send();
   },
-  login : function(email,password) {
+  login : function(email,password,totp) {
+    var self = this;
     new Submit({
           method: "POST",
           url: "/login",
           ajax: true,
           email : email,
           password : password,
+          totp: totp,
           ajaxsuccess: function(rs) {
             if (rs.logged == true)
             {
               window.location = window.location;
             }
-            else
-            {
+            else if (!self.askFor2FA() && rs.totp_missing) {
+              self.startAskingFor2FA()
+            } else {
               new FlashMessage({ content: localization.loginModal.loginFailed, type: 'error'});
             }
           }
@@ -79,9 +90,10 @@ var OAuthConfirationModel = exports.OAuthConfirationModel = Backbone.Model.exten
 var OAuthConfirationView = Backbone.View.extend({
     model: OAuthConfirationModel,
     initialize: function (args) {
-        _.bindAll(this, 'render');
+        _.bindAll(this, 'render', 'renderUpdate2FA');
         this.extrasInTabsRow = args.extrasInTabsRow;
         this.model.bind('change', this.render);
+        this.model.bind('change:askFor2FA', this.renderUpdate2FA);
         this.model.view = this;
         this.render();
     },
@@ -127,6 +139,7 @@ var OAuthConfirationView = Backbone.View.extend({
     },
     loginBox : function() {
       var model = this.model;
+      var self = this;
       var box = $("<div class='login-box'/>");
       box.append($("<div/>").append($("<h2/>").text(localization.apiConfiration.loginAndAcceptTitle)));
       var emailinput = new InfoTextInput({
@@ -139,17 +152,30 @@ var OAuthConfirationView = Backbone.View.extend({
 
       emailinput.el().attr("autocomplete","false");
       box.append(emailinput.el());
-      var passwordinput = new InfoTextInput({
+      this.passwordinput = new InfoTextInput({
               infotext: localization.loginModal.password,
               value : "",
               inputtype : "password",
               cssClass : "big-input",
               name : "password",
-              onEnter : function() {  model.login(emailinput.value(),passwordinput.value());}
+              onEnter : function() {  model.login(emailinput.value(),self.passwordinput.value(),self.tokeninput.value());}
 
       });
-      passwordinput.el().attr("autocomplete","false");
-      box.append(passwordinput.el());
+      this.passwordinput.el().attr("autocomplete","false");
+      box.append(this.passwordinput.el());
+
+      this.tokeninput = new InfoTextInput({
+              infotext: localization.loginModal.twoFactor,
+              value : "",
+              inputtype : "number",
+              cssClass : "big-input",
+              name : "totp",
+              onEnter : function() {  model.login(emailinput.value(),self.passwordinput.value(),self.tokeninput.value());}
+      });
+      this.tokeninput.el().css("display","none");
+      this.tokeninput.el().attr("autocomplete","false");
+      box.append(this.tokeninput.el());
+
 
       var button = new Button({
                   size  : "small",
@@ -157,7 +183,7 @@ var OAuthConfirationView = Backbone.View.extend({
                   cssClass : "login-button",
                   text  : localization.apiConfiration.loginAndAccept,
                   onClick : function() {
-                        model.login(emailinput.value(),passwordinput.value());
+                        model.login(emailinput.value(),self.passwordinput.value(), self.tokeninput.value());
                     }
                 }).el();
       box.append(button);
@@ -173,6 +199,10 @@ var OAuthConfirationView = Backbone.View.extend({
       else
            mainContainer.append(this.acceptButton());
       return mainContainer;
+    },
+    renderUpdate2FA: function() {
+      var askFor2FA = this.model.askFor2FA();
+      this.tokeninput.el().css("display",askFor2FA ? "block": "none");
     },
     render: function () {
         var container = $(this.el);
