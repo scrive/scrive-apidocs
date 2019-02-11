@@ -76,6 +76,7 @@ module Doc.Model.Update
   , updateMTimeAndObjectVersion
   , NewTemporaryMagicHash(..)
   , PurgeExpiredTemporaryMagicHashes(..)
+  , SetDocumentApiCallbackResult(..)
   ) where
 
 import Control.Arrow (second)
@@ -2570,3 +2571,18 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeExpiredTemporaryMagicHashes
   update _ = do
     now <- currentTime
     runSQL_ $ "DELETE FROM signatory_link_magic_hashes WHERE expiration_time <" <?> now
+
+data SetDocumentApiCallbackResult = SetDocumentApiCallbackResult DocumentID (Maybe String)
+instance MonadDB m => DBUpdate m SetDocumentApiCallbackResult () where
+  update (SetDocumentApiCallbackResult did mtext) = do
+    -- this should be written as proper upsert, but hpq does not support it yet
+    -- not a problem, we don't care about any races for this
+    runQuery_ . sqlUpdate "api_callback_result" $ do
+      sqlSet "callback_result" mtext
+      sqlWhereEq "document_id" did
+    runQuery_ . sqlInsertSelect "api_callback_result" "" $ do
+      sqlSet "document_id" did
+      sqlSet "callback_result" mtext
+      sqlWhereNotExists . sqlSelect "api_callback_result acr" $ do
+        sqlResult "1"
+        sqlWhereEq "acr.document_id" did

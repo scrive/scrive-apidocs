@@ -64,7 +64,7 @@ import File.Storage
 import Happstack.Fields
 import InputValidation
 import InspectXML
-import InspectXMLInstances ()
+import InspectXMLInstances
 import InternalResponse
 import IPAddress ()
 import Kontra
@@ -638,13 +638,17 @@ daveDocument documentid = onlyAdmin $ do
     if "/" `isSuffixOf` location
      then do
       document <- dbQuery $ GetDocumentForDave documentid
+      mCallbackResult <- dbQuery $ GetDocumentAPICallbackResult documentid
       r <- renderTemplate "daveDocument" $ do
         let everybodySignedAndStatusIn statuses =
               (documentstatus document `elem` statuses) &&
                 all (isSignatory --> isSignatoryAndHasSigned
                   && isApprover  --> isApproverAndHasApproved)
                 (documentsignatorylinks document)
-        F.value "daveBody" $  inspectXML document
+            callbackResult = fromMaybe "Unknown" mCallbackResult
+            extraDoc = ExtraDocument callbackResult
+        F.value "daveBody" $ inspectXML document
+        F.value "extraDaveBody" $ inspectXML extraDoc
         F.value "id" $ show documentid
         F.value "couldBeResealed" $ everybodySignedAndStatusIn [Closed, DocumentError]
         F.value "couldBeClosed" $ everybodySignedAndStatusIn [DocumentError, Pending]

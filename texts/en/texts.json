@@ -464,7 +464,7 @@
 "_designViewMandatoryForRecipient":"Mandatory for recipient",
 "_designViewMandatoryForSender":"Mandatory for sender",
 "_designViewMoreSettings":"More settings",
-"_designViewNotAllowedToChangeAuthenticationMethod":"You are not allowed to set any other authentication method.",
+"_designViewNotAllowedToChangeAuthenticationMethod":"You cannot set any other authentication method.",
 "_designViewOptionalField":"Optional",
 "_designViewOptionalMandatory":"Optional/Mandatory",
 "_designViewRecipientsLanguage":"Recipient's language",

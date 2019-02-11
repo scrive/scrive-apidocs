@@ -6,6 +6,7 @@ module Doc.API.V2.JSON.Fields (
 , unjsonSignatoryTextFieldIDsWithNewTexts
 , SignatoryTextFieldIDsWithNewTexts(..)
 , SignatoryFieldTMPValue(..)
+, signatoryFieldTMPValueShortLog
 ) where
 
 import Data.Functor.Invariant
@@ -235,6 +236,13 @@ data SignatoryFieldTMPValue = StringFTV String
   | BoolFTV Bool
   | FileFTV BS.ByteString
   deriving (Eq, Ord, Show)
+
+signatoryFieldTMPValueShortLog :: SignatoryFieldTMPValue -> String
+signatoryFieldTMPValueShortLog (StringFTV s) | length s < 100 = s
+                                             | otherwise      = take 100 s ++ "..."
+signatoryFieldTMPValueShortLog (BoolFTV b) = show b
+signatoryFieldTMPValueShortLog (FileFTV bs) | BS.length bs < 100 = BS.unpack bs
+                                            | otherwise          = BS.unpack (BS.take 100 bs) ++ "..."
 
 
 unsafeStringFromSignatoryFieldTMPValue :: SignatoryFieldTMPValue -> String

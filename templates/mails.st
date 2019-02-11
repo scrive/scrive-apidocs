@@ -110,7 +110,8 @@ mailForwardSigningForAuthorMail=
         mailheader = _mailForwardSigningForAuthorHeader();
         mailp1 = mailForwardSigningForAuthorContent();
         mailspacing2 = "";
-        mailp2 = mailForwardSigningForAuthorButton();
+        mailp2 = _mailForwardSigningForAuthorButton();
+        mailp3 = mailForwardSigningForAuthorButton();
         footer = null
       )$
 ###
@@ -125,7 +126,7 @@ $endif$
 ###
 mailForwardSigningForAuthorButton=
 <div>
-  $nicebutton(link=concat(a1=ctxhostpart;a2=loginlink); text=_mailForwardSigningForAuthorButton())$
+  $nicebutton(link=concat(a1=ctxhostpart;a2=loginlink); text=_mailGoToDocument())$
 </div>
 ####
 ####

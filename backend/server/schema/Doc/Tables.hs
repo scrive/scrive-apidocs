@@ -641,3 +641,20 @@ ctSignatoryConsentQuestion = CompositeType {
     , CompositeColumn { ccName = "description_text",  ccType = TextT }
     ]
   }
+
+---------------------------------
+
+tableApiCallbackResult :: Table
+tableApiCallbackResult = tblTable {
+    tblName = "api_callback_result"
+  , tblVersion = 1
+  , tblColumns = [
+      tblColumn { colName = "document_id",     colType = BigIntT, colNullable = False }
+    , tblColumn { colName = "callback_result", colType = TextT }
+    ]
+  , tblPrimaryKey = pkOnColumn "document_id"
+  , tblForeignKeys = [
+      (fkOnColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyCascade }
+    ]
+  , tblIndexes = []
+  }

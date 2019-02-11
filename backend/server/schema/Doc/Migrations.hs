@@ -23,6 +23,7 @@ module Doc.Migrations (
   , addCanBeForwardedToSignatories
   , addShowArrow
   , addMailConfirmationDeliveryStatusToSignatoryLinks
+  , createApiCallbackResults
 ) where
 
 import Data.Int
@@ -417,4 +418,23 @@ addMailConfirmationDeliveryStatusToSignatoryLinks = Migration
             , colDefault = Just "3"
             }
         ]
+  }
+
+createApiCallbackResults :: MonadDB m => Migration m
+createApiCallbackResults = Migration
+  { mgrTableName = tblName tableApiCallbackResult
+  , mgrFrom = 0
+  , mgrAction = StandardMigration $ createTable True tblTable
+      { tblName = "api_callback_result"
+      , tblVersion = 1
+      , tblColumns = [
+          tblColumn { colName = "document_id",     colType = BigIntT, colNullable = False }
+        , tblColumn { colName = "callback_result", colType = TextT }
+        ]
+      , tblPrimaryKey = pkOnColumn "document_id"
+      , tblForeignKeys = [
+          (fkOnColumn "document_id" "documents" "id") { fkOnDelete = ForeignKeyCascade }
+        ]
+      , tblIndexes = []
+      }
   }

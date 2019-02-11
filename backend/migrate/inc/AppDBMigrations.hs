@@ -175,4 +175,5 @@ kontraMigrations = [
   , addTemporaryLoginTokensPurgeJob
   , addMailConfirmationDeliveryStatusToSignatoryLinks
   , featureFlagsRemoveDefaultValuesFromColumns
+  , createApiCallbackResults
   ]

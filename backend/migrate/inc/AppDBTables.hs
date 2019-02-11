@@ -173,4 +173,5 @@ kontraTables =
   , tableFilePurgeConsumers
   , tableFilePurgeJobs
   , tableTemporaryLoginTokens
+  , tableApiCallbackResult
   ]
