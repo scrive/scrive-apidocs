@@ -180,8 +180,10 @@ var Modal = require("../../common/modal");
       var text = "";
       if (model.isNewAuthenticationPINbySMS()) {
         text = localization.phone;
-      } else if (model.isNewAuthenticationSEBankID() || model.isNewAuthenticationDKNemID()) {
+      } else if (model.isNewAuthenticationSEBankID()) {
         text = localization.docsignview.personalNumberLabel;
+      } else if (model.isNewAuthenticationDKNemID()) {
+        text = localization.eID.idName.nemId;
       }
       // there is no NOBankID here, because authentication value is empty in that case.
       return text;

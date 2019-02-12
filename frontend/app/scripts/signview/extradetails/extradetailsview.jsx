@@ -164,6 +164,28 @@ var classNames = require("classnames");
       };
     },
 
+    localizationStringForSsn: function () {
+      var model = this.props.model;
+      var sig = model.document().currentSignatory();
+      switch (sig.authenticationToSign()) {
+        case "dk_nemid":
+          return localization.eID.idName.nemId;
+        default:
+          return localization.personalNumber;
+      }
+    },
+
+    localizationStringForSsnInfoText: function () {
+      var model = this.props.model;
+      var sig = model.document().currentSignatory();
+      switch (sig.authenticationToSign()) {
+        case "dk_nemid":
+          return localization.eID.infoText.nemId;
+        default:
+          return localization.personalNumber;
+      }
+    },
+
     render: function () {
       var self = this;
       var sig = this.props.model;
@@ -259,10 +281,10 @@ var classNames = require("classnames");
                 </DetailsItem>
               }
               {/* if */ this.state.askForSSN &&
-                <DetailsItem htmlFor="ssn" title={localization.personalNumber}>
+                <DetailsItem htmlFor="ssn" title={this.localizationStringForSsn()}>
                   <InfoTextInput
                     id="ssn"
-                    infotext={localization.ssnInfoText}
+                    infotext={this.localizationStringForSsnInfoText()}
                     ref="ssn"
                     tabIndex={3}
                     className={ssnClass}

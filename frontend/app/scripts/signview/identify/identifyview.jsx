@@ -80,6 +80,15 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
       }
     },
 
+    localizationStringForSsnInfoText: function () {
+      var model = this.state.model;
+      if (model.isDanish()) {
+        return localization.eID.infoText.nemId;
+      } else {
+        return localization.yourIdNumber;
+      }
+    },
+
     render: function () {
       var model = this.state.model;
       var doc = this.props.doc;
@@ -150,7 +159,7 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
                 </div>
                 { /* if */ (model.isSwedish() || model.isNorwegian() || model.isDanish() || model.isFinnish()) &&
                   <div>
-                    {localization.yourIdNumber} <MaskedPersonalNumber
+                    {this.localizationStringForSsnInfoText()} <MaskedPersonalNumber
                       number={personalNumber}
                       placeholder="Empty"
                       isNorwegian={model.isNorwegian()}

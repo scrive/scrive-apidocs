@@ -192,9 +192,10 @@ var Modal = require("../../common/modal");
       if (model.isNewAuthenticationPINbySMS()) {
         text = localization.phone;
       } else if (model.isNewAuthenticationSEBankID()
-                 || model.isNewAuthenticationDKNemID()
                  || model.isNewAuthenticationFITupas()) {
         text = localization.docsignview.personalNumberLabel;
+      } else if (model.isNewAuthenticationDKNemID()) {
+        text = localization.eID.idName.nemId;
       }
       // there is no NOBankID here, because authentication value is empty in that case.
       return text;
