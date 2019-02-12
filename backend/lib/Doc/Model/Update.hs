@@ -77,6 +77,7 @@ module Doc.Model.Update
   , NewTemporaryMagicHash(..)
   , PurgeExpiredTemporaryMagicHashes(..)
   , SetDocumentApiCallbackResult(..)
+  , AddCustomEvidenceEvent(..)
   ) where
 
 import Control.Arrow (second)
@@ -421,6 +422,16 @@ newFromDocumentID f docid = do
 
 newFromDocument :: (MonadDB m, MonadThrow m, MonadLog m, CryptoRNG m) => Document -> m (Maybe Document)
 newFromDocument doc = Just <$> insertNewDocument doc
+
+data AddCustomEvidenceEvent = AddCustomEvidenceEvent String Actor
+instance
+  (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) =>
+  DBUpdate m AddCustomEvidenceEvent () where
+  update (AddCustomEvidenceEvent text actor) = do
+    void $ update $ InsertEvidenceEvent
+      CustomEventEvidence
+      (do F.value "text" text)
+      actor
 
 data ArchiveDocument = ArchiveDocument UserID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m ArchiveDocument () where
@@ -1178,7 +1189,7 @@ instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadLog
 
       nsl <- dbQuery $ GetSignatoryLinkByID docid newslid Nothing
       void $ update $ InsertEvidenceEventWithAffectedSignatoryAndMsg
-        ForwardedSigingEvidence (return ()) (Just nsl) message actor
+        ForwardedSigningEvidence (return ()) (Just nsl) message actor
 
       updateMTimeAndObjectVersion (actorTime actor)
 

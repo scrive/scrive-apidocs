@@ -26,6 +26,7 @@ module Doc.API.V2.Calls.DocumentPostCalls (
 , docApiV2GenerateShareableLink
 , docApiV2DiscardShareableLink
 , docApiV2AddImage
+, docApiV2AddEvidenceEvent
 ) where
 
 import Control.Monad.Base
@@ -55,7 +56,7 @@ import Doc.API.V2.JSON.Document
 import Doc.API.V2.JSON.Misc
 import Doc.AutomaticReminder.Model (setAutomaticReminder)
 import Doc.DocAddImage (addImageToDocumentFile)
-import Doc.DocInfo (isTimedout)
+import Doc.DocInfo (isClosed, isTimedout)
 import Doc.DocMails (sendAllReminderEmailsExceptAuthor, sendForwardEmail, sendInvitationEmail1)
 import Doc.DocStateData
 import Doc.DocumentID
@@ -151,6 +152,21 @@ docApiV2Update did = logDocument did . api $ do
     guardThatAuthorIsNotApprover =<< theDocument
     -- Result
     Ok <$> (unjsonDocument da,) <$> theDocument
+
+
+docApiV2AddEvidenceEvent :: Kontrakcja m => DocumentID -> m Response
+docApiV2AddEvidenceEvent did = logDocument did . api $ do
+  (user, actor) <- getAPIUser APIDocCreate
+  withDocumentID did $ do
+    document <- theDocument
+    eventText <- apiV2ParameterObligatory (ApiV2ParameterText "text")
+    guardThatUserIsAuthorOrCompanyAdmin user document
+    guardThatDocumentIs (not . isTemplate) "The document is not a template." document
+    guardThatDocumentIs (not . isClosed)
+      "Evidence cannot be added to a closed document."
+      document
+    dbUpdate $ AddCustomEvidenceEvent (T.unpack eventText) actor
+    return $ Created ()
 
 
 docApiV2Start :: Kontrakcja m => DocumentID -> m Response

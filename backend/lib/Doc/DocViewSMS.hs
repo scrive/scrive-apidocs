@@ -134,9 +134,9 @@ smsForwardSigningForAuthor originalsl newsl doc = do
   let alink = fromJust $ getAuthorSigLink doc
       doRender
         | signatoryrole newsl == SignatoryRoleSigningParty
-        = renderLocalTemplate doc "_smsForwardSigningForAuthor"
+        = renderLocalTemplate doc (templateName "_smsForwardSigningForAuthor")
         | otherwise
-        = renderLocalTemplate doc "_smsForwardSigningForAuthorApproving"
+        = renderLocalTemplate doc (templateName "_smsForwardSigningForAuthorApproving")
   message <- doRender $ do
     smsFields doc
     F.value "fromName" (getSmartName originalsl)
@@ -150,9 +150,9 @@ smsForwardSigningForNewSignatory
 smsForwardSigningForNewSignatory originalsl newsl doc = do
   let doRender
         | signatoryrole newsl == SignatoryRoleSigningParty
-        = renderLocalTemplate doc "_smsForwardSigningForNewSignatory"
+        = renderLocalTemplate doc (templateName "_smsForwardSigningForNewSignatory")
         | otherwise
-        = renderLocalTemplate doc "_smsForwardSigningForNewSignatoryApproving"
+        = renderLocalTemplate doc (templateName "_smsForwardSigningForNewSignatoryApproving")
   message <- doRender $ do
     smsFields doc
     smsLinkFields doc newsl

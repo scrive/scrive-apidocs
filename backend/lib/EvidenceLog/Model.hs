@@ -416,9 +416,10 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewArchivedMethodFITupasToDKNemIDEvidence   |
   ApprovedByApproverPartyEvidence |
   RejectDocumentByApproverEvidence |
-  ForwardedSigingEvidence |
+  ForwardedSigningEvidence |
   ConfirmationDeliveredByEmail |
-  ConfirmationUndeliveredByEmail
+  ConfirmationUndeliveredByEmail |
+  CustomEventEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -686,9 +687,10 @@ instance ToSQL EvidenceEventType where
   toSQL (Current ChangeAuthenticationToViewArchivedMethodFITupasToDKNemIDEvidence) = toSQL (191::Int16)
   toSQL (Current ApprovedByApproverPartyEvidence                                 ) = toSQL (192::Int16)
   toSQL (Current RejectDocumentByApproverEvidence                                ) = toSQL (193::Int16)
-  toSQL (Current ForwardedSigingEvidence                                         ) = toSQL (194::Int16)
-  toSQL (Current ConfirmationDeliveredByEmail) = toSQL (195::Int16)
-  toSQL (Current ConfirmationUndeliveredByEmail) = toSQL (196::Int16)
+  toSQL (Current ForwardedSigningEvidence                                        ) = toSQL (194::Int16)
+  toSQL (Current ConfirmationDeliveredByEmail                                    ) = toSQL (195::Int16)
+  toSQL (Current ConfirmationUndeliveredByEmail                                  ) = toSQL (196::Int16)
+  toSQL (Current CustomEventEvidence                                             ) = toSQL (197::Int16)
 
 instance FromSQL EvidenceEventType where
   type PQBase EvidenceEventType = PQBase Int16
@@ -888,11 +890,12 @@ instance FromSQL EvidenceEventType where
       191 -> return (Current ChangeAuthenticationToViewArchivedMethodFITupasToDKNemIDEvidence)
       192 -> return (Current ApprovedByApproverPartyEvidence                                 )
       193 -> return (Current RejectDocumentByApproverEvidence                                )
-      194 -> return (Current ForwardedSigingEvidence                                         )
+      194 -> return (Current ForwardedSigningEvidence                                        )
       195 -> return (Current ConfirmationDeliveredByEmail)
       196 -> return (Current ConfirmationUndeliveredByEmail)
+      197 -> return (Current CustomEventEvidence                                             )
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 196)]
+        reRange = [(1, 197)]
       , reValue = n
       }
 

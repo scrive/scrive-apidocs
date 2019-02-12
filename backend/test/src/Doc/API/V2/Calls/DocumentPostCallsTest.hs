@@ -7,7 +7,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
 
 import Context
-import DB.Query (dbUpdate)
+import DB.Query (dbQuery, dbUpdate)
 import Doc.API.V2.AesonTestUtils
 import Doc.API.V2.Calls.CallsTestUtils
 import Doc.API.V2.Calls.DocumentGetCalls (docApiV2Get)
@@ -22,6 +22,7 @@ import Doc.Types.Document
 import Doc.Types.DocumentStatus (DocumentStatus(..))
 import Doc.Types.SignatoryConsentQuestion (SignatoryConsentQuestion(..))
 import Doc.Types.SignatoryLink (SignatoryLink(..))
+import EvidenceLog.Model
 import TestingUtil
 import TestKontra
 import User.Lang (defaultLang)
@@ -69,6 +70,8 @@ apiV2DocumentPostCallsTests env = testGroup "APIv2DocumentPostCalls"
 
   , testThat "API v2 Add image"
              env testDocApiV2AddImage
+  , testThat "API V2 Add evidence log event"
+             env testDocApiV2AddEvidenceLogEvent
   ]
 
 testDocApiV2New :: TestEnv ()
@@ -633,3 +636,23 @@ testDocApiV2AddImage = do
       (docApiV2AddImage did) 200
     assertBool "After adding image file name is not changed" (getMockDocFileName mockDocFileWithImage == getMockDocFileName mocDocFile)
     assertBool "After adding image file changes" (getMockDocFileId mockDocFileWithImage /= getMockDocFileId mocDocFile)
+
+testDocApiV2AddEvidenceLogEvent :: TestEnv ()
+testDocApiV2AddEvidenceLogEvent = do
+  user    <- addNewRandomUser
+  -- siglink <- rand 1 $ randomSigLinkByStatus Closed
+  ctx     <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
+  did     <- getMockDocId <$> testDocApiV2New' ctx
+
+  _ <- testRequestHelper
+    ctx
+    POST
+    [("text", inText $ "blarg")]
+    (docApiV2AddEvidenceEvent did) 201
+
+  lg <- dbQuery $ GetEvidenceLog did
+  let
+    rejectEvent e = evType e == Current CustomEventEvidence
+  assertJust $ find rejectEvent lg
+
+  return ()
