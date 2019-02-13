@@ -66,6 +66,24 @@ These files can then be used by other Nix files such as `shell.nix` and
 This is the file used by `nix-shell` to know what needs to be available in the
 development environment.
 
+## nix/haskell-deps.json
+
+Versions of Haskell dependencies are pinned into this file so that a change of
+`cabal.config` does not break `nix-shell`. Worst case scenario, if there is a
+mismatch, `cabal` will install them itself.
+
+# Upgrading to newer versions
+
+Two things need to be upgraded every now and then:
+
+* `nix/nixpkgs-revision` contains the commit hash of `nixpkgs`. This can be upgraded
+to the latest commit on `master` (https://github.com/NixOS/nixpkgs.git)
+* `nix/haskell-deps.json` can be generated automatically by running the following
+command.
+
+    nix-shell -p python37 python37Packages.pyyaml \
+      --run 'nix/read-cabal-config.py cabal.config' > nix/haskell-deps.json
+
 # Notes about Hydra
 
 `nix/hydra/spec.json` contains the configuration for the project. In addition

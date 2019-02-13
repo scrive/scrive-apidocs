@@ -47,11 +47,7 @@ let
       # Extract versions of kontrakcja's dependencies from cabal.config as the
       # versions from Nixpkgs don't necessarily match and we want to avoid
       # recompiling them twice.
-      cabalConfig = builtins.fromJSON (builtins.readFile (
-        pkgs.runCommand "cabal-config-json"
-          { buildInputs = with pkgs; [python36 python36Packages.pyyaml]; }
-          "python ${./read-cabal-config.py} ${../cabal.config} > $out"
-      ));
+      cabalConfig = builtins.fromJSON (builtins.readFile ./haskell-deps.json);
 
       # Attribute set of derivations for the packages in cabal.config.
       hackagePackages =
