@@ -742,8 +742,7 @@ testGetDocumentWithTemporaryMagicHash = do
       slid      = signatorylinkid signatory
 
   now <- currentTime
-  let expiration = 2 `daysAfter` now
-  mh <- dbUpdate $ NewTemporaryMagicHash slid expiration
+  (mh, _) <- makeTemporaryMagicHash' slid 2
 
   do
     ctx <- mkContext defaultLang

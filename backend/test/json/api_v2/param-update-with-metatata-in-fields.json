@@ -36,6 +36,7 @@
          "authentication_method_to_view":"standard",
          "authentication_method_to_sign":"standard",
          "confirmation_delivery_method":"email",
+         "notification_delivery_method": "none",
          "allows_highlighting":false,
          "hide_personal_number":false,
          "attachments":[

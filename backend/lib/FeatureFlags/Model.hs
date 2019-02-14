@@ -52,6 +52,7 @@ data FeatureFlags = FeatureFlags
   , ffCanUsePadInvitations :: Bool
   , ffCanUseShareableLinks :: Bool
   , ffCanUseForwarding :: Bool
+  , ffCanUseDocumentPartyNotifications :: Bool
   } deriving (Eq, Ord, Show)
 
 instance Unjson FeatureFlags where
@@ -80,12 +81,13 @@ instance Unjson FeatureFlags where
     <*> fieldDef "can_use_pad_invitations" True ffCanUsePadInvitations "TODO desc"
     <*> field "can_use_shareable_links" ffCanUseShareableLinks "TODO desc"
     <*> field "can_use_forwarding" ffCanUseForwarding "TODO desc"
+    <*> field "can_use_document_party_notifications" ffCanUseDocumentPartyNotifications "Can use document notifications"
 
 
 type instance CompositeRow FeatureFlags =
   ( Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool
   , Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool
-  , Bool, Bool, Bool, Bool
+  , Bool, Bool, Bool, Bool, Bool
   )
 
 instance PQFormat FeatureFlags where
@@ -117,6 +119,7 @@ instance CompositeFromSQL FeatureFlags where
     , ffCanUsePadInvitations
     , ffCanUseShareableLinks
     , ffCanUseForwarding
+    , ffCanUseDocumentPartyNotifications
     ) =
     FeatureFlags{..}
 
@@ -184,6 +187,7 @@ defaultFeatures paymentPlan = Features ff ff
       , ffCanUsePadInvitations = True
       , ffCanUseShareableLinks = True
       , ffCanUseForwarding = True
+      , ffCanUseDocumentPartyNotifications = False
       }
     ff = case paymentPlan of
       FreePlan -> ffAllTrue
@@ -223,6 +227,7 @@ setFeatureFlagsSql ff = do
   sqlSet "can_use_pad_invitations" $ ffCanUsePadInvitations ff
   sqlSet "can_use_shareable_links" $ ffCanUseShareableLinks ff
   sqlSet "can_use_forwarding" $ ffCanUseForwarding ff
+  sqlSet "can_use_document_party_notifications" $ ffCanUseDocumentPartyNotifications ff
 
 selectFeatureFlagsSelectors :: [SQL]
 selectFeatureFlagsSelectors =
@@ -250,4 +255,5 @@ selectFeatureFlagsSelectors =
   , "feature_flags.can_use_pad_invitations"
   , "feature_flags.can_use_shareable_links"
   , "feature_flags.can_use_forwarding"
+  , "feature_flags.can_use_document_party_notifications"
   ]

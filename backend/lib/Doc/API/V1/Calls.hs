@@ -560,6 +560,9 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
   acceptedAuthorAttachments <- getAcceptedAuthorAttachments
   olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh -- We store old document, as it is needed by postDocumentXXX calls
   olddoc `withDocument` ( do
+    document <- theDocument
+    let
+      signatoryLink = fromJust $ getSigLinkFor slid document
     whenM (not . isPending <$> theDocument ) $ do
       (throwM . SomeDBExtraException $ conflictError $ "Document not pending")
     whenM (isSignatoryAndHasSigned . getSigLinkFor slid <$> theDocument) $ do
@@ -575,7 +578,7 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
     case authorization of
       StandardAuthenticationToSign -> do
         signDocument slid mh fields acceptedAuthorAttachments Nothing Nothing screenshots
-        postDocumentPendingChange olddoc
+        postDocumentPendingChange olddoc signatoryLink
         handleAfterSigning slid
         (Right . Accepted) <$> (documentJSONV1 mu True True Nothing =<< theDocument)
 
@@ -584,7 +587,7 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
         if (isJust validPin)
           then do
             signDocument slid mh fields acceptedAuthorAttachments Nothing validPin screenshots
-            postDocumentPendingChange olddoc
+            postDocumentPendingChange olddoc signatoryLink
             handleAfterSigning slid
             (Right . Accepted) <$> (documentJSONV1 mu True True Nothing =<< theDocument)
           else (Left . Failed) <$> (J.runJSONGenT $ return ())
@@ -592,7 +595,7 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
       SEBankIDAuthenticationToSign -> dbQuery (GetESignature slid) >>= \case
         mesig@(Just _) -> do
           signDocument slid mh fields acceptedAuthorAttachments mesig Nothing screenshots
-          postDocumentPendingChange olddoc
+          postDocumentPendingChange olddoc signatoryLink
           handleAfterSigning slid
           (Right . Accepted) <$> (documentJSONV1 mu True True Nothing =<< theDocument)
         Nothing -> do

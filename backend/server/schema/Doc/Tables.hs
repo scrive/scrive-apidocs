@@ -229,7 +229,7 @@ ctSignatoryAttachment = CompositeType {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable {
     tblName = "signatory_links"
-  , tblVersion = 37
+  , tblVersion = 38
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
@@ -261,6 +261,7 @@ tableSignatoryLinks = tblTable {
     , tblColumn { colName = "authentication_to_view_archived_method", colType = SmallIntT, colNullable = False }
     , tblColumn { colName = "can_be_forwarded", colType = BoolT, colNullable = False, colDefault = Just "false" }
     , tblColumn { colName = "mail_confirmation_delivery_status", colType = SmallIntT, colNullable = False, colDefault = Just "3" }
+    , tblColumn { colName = "notification_delivery_method", colType = SmallIntT, colNullable = False }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
@@ -309,6 +310,7 @@ ctSignatoryLink = CompositeType {
   , CompositeColumn { ccName = "authentication_to_sign_method", ccType = SmallIntT }
   , CompositeColumn { ccName = "delivery_method", ccType = SmallIntT }
   , CompositeColumn { ccName = "confirmation_delivery_method", ccType = SmallIntT }
+  , CompositeColumn { ccName = "notification_delivery_method", ccType = SmallIntT }
   , CompositeColumn { ccName = "allows_highlighting", ccType = BoolT}
   , CompositeColumn { ccName = "has_identified_to_view", ccType = BoolT }
   , CompositeColumn { ccName = "hide_pn_elog", ccType = BoolT}

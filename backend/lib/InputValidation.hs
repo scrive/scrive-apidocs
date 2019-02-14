@@ -46,6 +46,8 @@ module InputValidation
     , asValidCity
     , asValidCountry
     , asWord32
+    , isValidEmail
+    , isValidPhoneForSMS
 ) where
 
 import Data.Char
@@ -752,6 +754,11 @@ asValidInviteText input =
     justText (c:cs)   = c : justText cs
     justText []       = []
 
+isValidEmail :: String -> Bool
+isValidEmail = isGood . asValidEmail
+
+isValidPhoneForSMS :: String -> Bool
+isValidPhoneForSMS = isGood . asValidPhoneForSMS
 
 {- |
     Lower cases everything

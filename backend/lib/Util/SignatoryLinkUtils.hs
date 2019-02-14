@@ -31,6 +31,7 @@ module Util.SignatoryLinkUtils (
   isForwarded,
   getSigLinkFor,
   hasSeen,
+  hasConfirmationDelivery,
   SignatoryLinkIdentity,
   MaybeSignatoryLink(..),
   authenticationMethodsCanMix,
@@ -54,6 +55,8 @@ import Util.HasSomeUserInfo
 -- TODO: clean up this mess. this is useless as it's so obscured by
 -- typeclasses that checking for a function that interests you takes
 -- ages.
+
+
 
 {- |
    Anything that could identify a SignatoryLink
@@ -185,6 +188,10 @@ isApproverAndHasNotApproved = hasNoSignInfoAndRoleIs SignatoryRoleApprover
 hasSeen :: (MaybeSignatoryLink msl) => msl -> Bool
 hasSeen msl = maybe False (isJust . maybeseeninfo) (getMaybeSignatoryLink msl)
 
+hasConfirmationDelivery :: SignatoryLink -> Bool
+hasConfirmationDelivery sl =
+  signatorylinkconfirmationdeliverymethod sl /= NoConfirmationDelivery
+
 {- |
    Is this SignatoryLink an author?
  -}
@@ -217,9 +224,9 @@ isViewer    = isSigLinkFor ((==) SignatoryRoleViewer       . signatoryrole)
 
 -- | Is the given SignatoryLink marked as a forwarder
 isForwarded :: (MaybeSignatoryLink msl) => msl -> Bool
-isForwarded = isSigLinkFor ((`elem` forwadedRoles) . signatoryrole)
+isForwarded = isSigLinkFor ((`elem` forwardedRoles) . signatoryrole)
   where
-    forwadedRoles =
+    forwardedRoles =
       [ SignatoryRoleForwardedSigningParty
       , SignatoryRoleForwardedApprover
       ]

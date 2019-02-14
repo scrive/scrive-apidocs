@@ -248,5 +248,5 @@ signFromESignature DocumentSigning{..} now = do
   actorWithUpdatedNameAndCurrentTime <- recreatedSignatoryActor now signingClientTime signingClientName signingClientIP4 slWithUpdatedName
   dbUpdate $ SignDocument signingSignatoryID magicHash (Just esig) Nothing signingScreenshots actorWithUpdatedNameAndCurrentTime
 
-  postDocumentPendingChange initialDoc
+  postDocumentPendingChange initialDoc sl
   handleAfterSigning signingSignatoryID

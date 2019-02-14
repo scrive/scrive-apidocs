@@ -132,6 +132,13 @@ sendDocumentMails author = do
           doc <- theDocument
           mailDocumentRemind True Nothing doc
             (head $ documentsignatorylinks doc) True
+
+        checkMail "Party process finalized" $ do
+          doc <- theDocument
+          mailPartyProcessFinalizedNotification
+            doc
+            (head $ documentsignatorylinks doc)
+            DocumentSigned
   commit
 
 

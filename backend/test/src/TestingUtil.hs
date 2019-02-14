@@ -278,6 +278,7 @@ instance Arbitrary FeatureFlags where
       , ffCanUseFIAuthenticationToView       = u
       , ffCanUseShareableLinks               = w
       , ffCanUseForwarding                   = x
+      , ffCanUseDocumentPartyNotifications   = x
       }
 
 instance Arbitrary Features where

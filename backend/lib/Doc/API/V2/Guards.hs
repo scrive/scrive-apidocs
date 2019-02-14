@@ -362,6 +362,8 @@ guardThatDocumentCanBeStarted doc = do
        apiError $ documentStateError "Some parties have an invalid email address or mobile number, their invitation 'delivery_method' requires it to be valid and not empty."
     unless (all signatoryHasValidConfirmationSettings $ documentsignatorylinks doc) $ do
        apiError $ documentStateError "Some parties have an invalid email address or mobile number, their 'confirmation_delivery_method' requires it to be valid or empty."
+    unless (all signatoryHasValidNotificationSettings $ documentsignatorylinks doc) $ do
+       apiError $ documentStateError "Some parties have an invalid email address or mobile number, their 'notification_delivery_method' requires it to be valid or empty."
     unless (all signatoryHasValidSSNForIdentifyToView $ documentsignatorylinks doc) $ do
        apiError $ documentStateError "Some parties have an invalid personal numbers, their 'authentication_to_view' requires it to be valid and not empty."
     unless (all signatoryHasValidAuthSettings $ documentsignatorylinks doc) $ do
@@ -382,18 +384,24 @@ guardThatDocumentCanBeStarted doc = do
 
  where
     signatoryHasValidDeliverySettings sl = (isAuthor sl) || case (signatorylinkdeliverymethod sl) of
-      EmailDelivery  ->  isGood $ asValidEmail $ getEmail sl
-      MobileDelivery ->  isGood $ asValidPhoneForSMS $ getMobile sl
-      EmailAndMobileDelivery -> (isGood $ asValidPhoneForSMS $ getMobile sl) && (isGood $ asValidEmail $ getEmail sl)
+      EmailDelivery  -> isValidEmail $ getEmail sl
+      MobileDelivery -> isValidPhoneForSMS $ getMobile sl
+      EmailAndMobileDelivery -> (isValidPhoneForSMS $ getMobile sl) && (isValidEmail $ getEmail sl)
       _ -> True
 
     signatoryHasValidConfirmationSettings sl = isAuthor sl || case signatorylinkconfirmationdeliverymethod sl of
-      EmailConfirmationDelivery -> checkEmailForConfirmation sl
-      EmailLinkConfirmationDelivery -> checkEmailForConfirmation sl
-      MobileConfirmationDelivery -> checkMobileForConfirmation sl
-      EmailAndMobileConfirmationDelivery -> checkEmailAndMobileForConfirmation sl
-      EmailLinkAndMobileConfirmationDelivery -> checkEmailAndMobileForConfirmation sl
+      EmailConfirmationDelivery -> isEmailValidOrEmpty sl
+      EmailLinkConfirmationDelivery -> isEmailValidOrEmpty sl
+      MobileConfirmationDelivery -> isMobileValidOrEmpty sl
+      EmailAndMobileConfirmationDelivery -> isEmailAndMobileValidOrEmpty sl
+      EmailLinkAndMobileConfirmationDelivery -> isEmailAndMobileValidOrEmpty sl
       NoConfirmationDelivery -> True
+
+    signatoryHasValidNotificationSettings sl = isAuthor sl || case signatorylinknotificationdeliverymethod sl of
+      NoNotificationDelivery -> True
+      EmailNotificationDelivery -> isEmailValidOrEmpty sl
+      MobileNotificationDelivery -> isMobileValidOrEmpty sl
+      EmailAndMobileNotificationDelivery -> isEmailAndMobileValidOrEmpty sl
 
     signatoryHasValidAuthSettings sl = authToSignIsValid sl
 
@@ -423,12 +431,12 @@ guardThatDocumentCanBeStarted doc = do
     signatoryThatIsApproverHasNoPlacements sl = (not $ isApprover sl)
       || (null $ concat $ fieldPlacements <$> signatoryfields sl)
 
-    checkEmailForConfirmation sl =
-      null (getEmail sl) || isGood (asValidEmail $ getEmail sl)
-    checkMobileForConfirmation sl =
-      null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl)
-    checkEmailAndMobileForConfirmation sl =
-      checkEmailForConfirmation sl && checkMobileForConfirmation sl
+    isEmailValidOrEmpty sl =
+      null (getEmail sl) || isValidEmail (getEmail sl)
+    isMobileValidOrEmpty sl =
+      null (getMobile sl) || isValidPhoneForSMS (getMobile sl)
+    isEmailAndMobileValidOrEmpty sl =
+      isEmailValidOrEmpty sl && isMobileValidOrEmpty sl
 
 guardThatRadioButtonValuesAreValid :: Kontrakcja m => SignatoryLinkID -> SignatoryFieldsValuesForSigning -> Document -> m ()
 guardThatRadioButtonValuesAreValid slid (SignatoryFieldsValuesForSigning signfields) doc = do

@@ -27,7 +27,7 @@ import Doc.API.Callback.Model
 import Doc.AutomaticReminder.Model
 import Doc.DigitalSignature (addDigitalSignature)
 import Doc.DocInfo
-import Doc.DocMails (sendClosedEmails, sendDocumentErrorEmail, sendForwardSigningMessages, sendInvitationEmails, sendRejectEmails)
+import Doc.DocMails (sendClosedEmails, sendDocumentErrorEmail, sendForwardSigningMessages, sendInvitationEmails, sendPartyProcessFinalizedNotification, sendRejectEmails)
 import Doc.DocSeal (sealDocument)
 import Doc.DocStateData
 import Doc.DocumentMonad
@@ -157,8 +157,8 @@ postDocumentPendingChange :: ( CryptoRNG m, TemplatesMonad m, MonadFileStorage m
                              , MonadBaseControl IO m, DocumentMonad m
                              , MonadMask m, MonadLog m, MonadIO m
                              , MailContextMonad m, GuardTimeConfMonad m )
-                          => Document -> m ()
-postDocumentPendingChange olddoc = do
+                          => Document -> SignatoryLink -> m ()
+postDocumentPendingChange olddoc signatoryLink = do
   unlessM (isPending <$> theDocument) $
     theDocument >>= stateMismatchError "postDocumentPendingChange" Pending
 
@@ -166,15 +166,15 @@ postDocumentPendingChange olddoc = do
 
   ifM (allPartiesSignedOrApproved <$> theDocument)
   {-then-} (do
-      theDocument >>= \d ->
-        logInfo "All have signed, document will be closed" $ logObject_ d
+      document <- theDocument
+      logInfo "All have signed, document will be closed" $ logObject_ document
       time <- get mctxtime <$> getMailContext
       dbUpdate $ CloseDocument (systemActor time)
       dbUpdate $ ChargeUserGroupForClosingDocument $ documentid olddoc
       when (documentfromshareablelink olddoc) $ do
         dbUpdate $ ChargeUserGroupForShareableLink $ documentid olddoc
-      author <- theDocument >>= getDocAuthor
-      theDocument >>= logDocEvent "Doc Closed" author []
+      author <- getDocAuthor document
+      logDocEvent "Doc Closed" author [] document
       -- report
       now <- currentTime
       asyncLogEvent SetUserProps
@@ -184,13 +184,18 @@ postDocumentPendingChange olddoc = do
                     (userMixpanelData author now)
                     EventMixpanel
       dbUpdate . ScheduleDocumentSealing . get (bdid . mctxcurrentBrandedDomain)
-        =<< getMailContext)
+        =<< getMailContext
+      if signatorylinkconfirmationdeliverymethod signatoryLink == NoConfirmationDelivery
+      then sendPartyProcessFinalizedNotification document signatoryLink
+      else return ())
   {-else-} $ do
+      document <- theDocument
       theDocument >>= triggerAPICallbackIfThereIsOne
       whenM (((/=) (documentcurrentsignorder olddoc) .
                documentcurrentsignorder) <$> theDocument) $ do
         theDocument >>= \d -> logInfo "Resending invitation emails" $ logObject_ d
         sendInvitationEmails False
+      sendPartyProcessFinalizedNotification document signatoryLink
   where
     allPartiesSignedOrApproved =
       all (   (isSignatory --> isSignatoryAndHasSigned)

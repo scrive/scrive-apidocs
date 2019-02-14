@@ -8,6 +8,7 @@ module Doc.API.V2.JSON.Misc (
 , unjsonAuthenticationToSignMethod
 , unjsonDeliveryMethod
 , unjsonConfirmationDeliveryMethod
+, unjsonNotificationDeliveryMethod
 , unjsonLang
 , unjsonAuthorAttachment
 , unjsonSignatoryAttachment
@@ -110,6 +111,15 @@ unjsonConfirmationDeliveryMethod = unjsonEnumBy "ConfirmationDeliveryMethod" [
     , (EmailLinkAndMobileConfirmationDelivery, "email_link_mobile")
     , (NoConfirmationDelivery,                 "none")
     ]
+
+unjsonNotificationDeliveryMethod :: UnjsonDef NotificationDeliveryMethod
+unjsonNotificationDeliveryMethod = unjsonEnumBy "NotificationDeliveryMethod" [
+      (NoNotificationDelivery,                 "none")
+    , (EmailNotificationDelivery,              "email")
+    , (MobileNotificationDelivery,             "mobile")
+    , (EmailAndMobileNotificationDelivery,     "email_mobile")
+    ]
+
 
 unjsonLang :: UnjsonDef Lang
 unjsonLang = unjsonEnum "Lang" (langFromCode . T.unpack) (T.pack . codeFromLang)

@@ -1,6 +1,7 @@
 module Doc.DocViewSMS (
       smsDocumentErrorAuthor
     , smsDocumentErrorSignatory
+    , smsPartyProcessFinalizedNotification
     , smsInvitation
     , smsInvitationToAuthor
     , smsReminder
@@ -15,7 +16,6 @@ import Control.Conditional ((<|), (|>))
 import Control.Monad.Catch
 import Control.Monad.Trans
 import Crypto.RNG
-import Data.Time (UTCTime(..))
 import Text.StringTemplates.Templates
 import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
@@ -24,8 +24,8 @@ import BrandedDomain.BrandedDomain
 import DB
 import Doc.DocStateData hiding (DocumentStatus(..))
 import Doc.Model.Update
+import Doc.Types.SignatoryLink (ProcessFinishedAction(..))
 import KontraLink
-import MagicHash (MagicHash)
 import MailContext
 import MinutesTime
 import SMS.SMS
@@ -70,6 +70,26 @@ smsDocumentErrorSignatory
   => Document -> SignatoryLink -> m SMS
 smsDocumentErrorSignatory doc sl = do
   mkSMS doc sl (Just $ OtherDocumentSMS $ documentid doc) =<< renderLocalTemplate doc "_smsDocumentErrorSignatory" (smsFields doc)
+
+smsPartyProcessFinalizedNotification ::
+  ( CryptoRNG m
+  , MailContextMonad m
+  , MonadDB m
+  , MonadThrow m
+  , MonadTime m
+  , TemplatesMonad m )
+  => Document -> SignatoryLink -> ProcessFinishedAction -> m SMS
+smsPartyProcessFinalizedNotification document signatoryLink action = do
+  let
+    info = DocumentPartyNotificationSMS
+      (documentid document)
+      (signatorylinkid signatoryLink)
+    template = case action of
+                  DocumentSigned -> templateName "_smsDocumentSignedNotification"
+                  DocumentApproved -> templateName "_smsDocumentApprovedNotification"
+    fields = smsFields document >> smsLinkFields document signatoryLink
+  content <- renderLocalTemplate document (templateName template) fields
+  mkSMS document signatoryLink (Just info) content
 
 smsInvitation
   :: ( CryptoRNG m, MailContextMonad m, MonadDB m, MonadThrow m, MonadTime m
@@ -181,19 +201,8 @@ smsLinkFields
   => Document -> SignatoryLink -> Fields m ()
 smsLinkFields doc sl = do
   mctx <- lift $ getMailContext
-  (mh, expiration) <- lift $ makeTemporaryMagicHash sl
+  (mh, expiration) <- lift $ makeTemporaryMagicHash (signatorylinkid sl)
   F.value "link" $ get mctxDomainUrl mctx ++
     show (LinkSignDocMagicHash (documentid doc) (signatorylinkid sl) mh)
   F.value "availabledate" $ formatTimeYMD expiration
-
--- | Create a temporary hash valid for 30 days.
-makeTemporaryMagicHash
-  :: (CryptoRNG m, MonadDB m, MonadTime m) => SignatoryLink
-  -> m (MagicHash, UTCTime)
-makeTemporaryMagicHash sl = do
-  now <- currentTime
-  -- Make it valid until the end of the 30th day.
-  let expiration = (30 `daysAfter` now) { utctDayTime = 86399 }
-  mh <- dbUpdate $ NewTemporaryMagicHash (signatorylinkid sl) expiration
-  return (mh, expiration)
 

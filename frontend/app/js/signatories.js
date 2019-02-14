@@ -32,7 +32,8 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         authentication_method_to_view: "standard",
         authentication_method_to_view_archived: "standard",
         delivery_method: "email",
-        confirmation_delivery_method : "email",
+        confirmation_delivery_method: "email",
+        notification_delivery_method: "none",
         allows_highlighting: false,
         hide_personal_number: false,
         can_forward: false,
@@ -681,6 +682,25 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         this.setDeliverySynchedWithConfirmationDelivery("email");
       }
     },
+
+    hasNotificationEmailAndMobile: function() {
+      return this.notificationDelivery() == "email_mobile";
+    },
+
+    hasNotificationEmail: function() {
+      var deliveryMethod = this.notificationDelivery();
+      return deliveryMethod == "email" || deliveryMethod == "email_mobile";
+    },
+
+    hasNotificationMobile: function() {
+      var deliveryMethod = this.notificationDelivery();
+      return deliveryMethod == "mobile" || deliveryMethod == "email_mobile";
+    },
+
+    hasNotification: function() {
+      return this.hasNotificationEmail() || this.hasNotificationMobile();
+    },
+
     remind: function(customtext) {
         return new Submit({
               url: "/resend/" + this.document().documentid() + "/" + this.signatoryid(),
@@ -837,6 +857,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
               authentication_method_to_view_archived: this.authenticationToViewArchived(),
               delivery_method: this.delivery(),
               confirmation_delivery_method : this.confirmationdelivery(),
+              notification_delivery_method : this.notificationDelivery(),
               allows_highlighting : this.allowsHighlighting(),
               hide_personal_number: this.hidePN(),
               can_forward: this.canForward(),
@@ -887,11 +908,18 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         this.set({deliverySynchedWithConfirmationDelivery : false, confirmationDeliverySynchedWithDelivery : false});
       }
     },
+    setNotificationDelivery: function(method) {
+      console.log("setting notification_delivery_method: " + method);
+      this.set({'notification_delivery_method': method});
+    },
+    notificationDelivery: function() {
+      return this.get('notification_delivery_method');
+    },
     authenticationToView: function() {
-        return this.get('authentication_method_to_view');
+      return this.get('authentication_method_to_view');
     },
     authenticationToViewArchived: function() {
-        return this.get('authentication_method_to_view_archived');
+      return this.get('authentication_method_to_view_archived');
     },
   authenticationMethodsCanMix: function(authToView, authToSign, authToViewArchived) {
     var intersect = function(as, bs) {
@@ -1076,6 +1104,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
       return this.mobileDelivery()
         || this.emailMobileDelivery()
         || this.hasConfirmationMobile()
+        || this.hasNotificationMobile()
         || this.noBankIDAuthenticationToView()
         || this.noBankIDAuthenticationToViewArchived()
         || this.smsPinAuthenticationToView()
@@ -1088,13 +1117,17 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
       return this.mobileDelivery()
         || this.emailMobileDelivery()
         || this.hasConfirmationMobile()
+        || this.hasNotificationMobile()
         || this.smsPinAuthenticationToView()
         || this.smsPinAuthenticationToViewArchived()
         || this.smsPinAuthenticationToSign();
     },
 
     needsEmail: function() {
-        return this.emailDelivery() || this.emailMobileDelivery() || this.hasConfirmationEmail();
+        return this.emailDelivery()
+        || this.emailMobileDelivery()
+        || this.hasNotificationEmail()
+        || this.hasConfirmationEmail();
     },
     ensureEmail: function() {
         var signatory = this;

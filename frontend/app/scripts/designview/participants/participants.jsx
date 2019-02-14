@@ -3,6 +3,7 @@ var BackboneMixin = require("../../common/backbone_mixin");
 var BrowserInfo = require("../../../js/utils/browserinfo.js").BrowserInfo;
 var Participant = require("./participant");
 var AddParticipants = require("./addparticipants");
+var Subscription = require("../../account/subscription");
 var $ = require("jquery");
 var _ = require("underscore");
 
@@ -31,8 +32,15 @@ module.exports = React.createClass({
     var heightOfUnexpandedSignatory = 60;  // Height each signatory description when signatory is not expanded
     var heightOfSignatoryPadding = 14; // height of paddings between each signatory
     var heightOfField = 50; // Height each field row
-    // Height of 1 row of checkboxes and 3 rows of selects at bottom of signatory
-    var heightOfParticipantSettings = 280;
+    // Height of 4 rows of selects at bottom of signatory
+
+    var userFeatures = Subscription.currentSubscription().currentUserFeatures();
+    var heightOfParticipantSettings;
+    if (userFeatures.canUseDocumentPartyNotifications()) {
+      heightOfParticipantSettings = 323;
+    } else {
+      heightOfParticipantSettings = 285;
+    }
     var heightOfParticipantBorder = 4;
     var height = 0;
 

@@ -217,6 +217,66 @@ $else$
   <div class="editable" name="custommessage"></div>
 $endif$
 ####
+#### NOTIFICATIONS
+####
+mailDocumentSignedNotification =
+      $_mailDocumentSignedNotificationTitle()$
+      $nicemail(
+        mailheader = _mailDocumentSignedNotificationTitle();
+        mailp1 = _mailDocumentSignedNotificationContent();
+        mailp2 = nicebutton(link=link; text=_mailGoToDocument());
+        footer = legalparagraph()
+      )$
+      $gmailGoToActionMarkup(
+          actionurl=link;
+          actionname=_mailInvitationToViewGoToActionName();
+          actiondescription=_mailInvitationToViewGoToActionDescription()
+      )$
+####
+mailDocumentSignedNotificationWithConfirmation =
+      $_mailDocumentSignedNotificationTitle()$
+      $nicemail(
+        mailheader = _mailDocumentSignedNotificationTitle();
+        mailp1 = _mailDocumentSignedNotificationContent();
+        mailp2 = _mailDocumentPartyProcessFinalizedWithConfirmationContent();
+        mailp3 = nicebutton(link=link; text=_mailGoToDocument());
+        footer = legalparagraph()
+      )$
+      $gmailGoToActionMarkup(
+          actionurl=link;
+          actionname=_mailInvitationToViewGoToActionName();
+          actiondescription=_mailInvitationToViewGoToActionDescription()
+      )$
+####
+mailDocumentApprovedNotification =
+      $_mailDocumentApprovedNotificationTitle()$
+      $nicemail(
+        mailheader = _mailDocumentApprovedNotificationTitle();
+        mailp1 = _mailDocumentApprovedNotificationContent();
+        mailp2 = nicebutton(link=link; text=_mailGoToDocument());
+        footer = legalparagraph()
+      )$
+      $gmailGoToActionMarkup(
+          actionurl=link;
+          actionname=_mailInvitationToViewGoToActionName();
+          actiondescription=_mailInvitationToViewGoToActionDescription()
+      )$
+####
+mailDocumentApprovedNotificationWithConfirmation =
+      $_mailDocumentApprovedNotificationTitle()$
+      $nicemail(
+        mailheader = _mailDocumentApprovedNotificationTitle();
+        mailp1 = _mailDocumentApprovedNotificationContent();
+        mailp2 = _mailDocumentPartyProcessFinalizedWithConfirmationContent();
+        mailp3 = nicebutton(link=link; text=_mailGoToDocument());
+        footer = legalparagraph()
+      )$
+      $gmailGoToActionMarkup(
+          actionurl=link;
+          actionname=_mailInvitationToViewGoToActionName();
+          actiondescription=_mailInvitationToViewGoToActionDescription()
+      )$
+####
 #### FORWARDING DOCUMENT
 ####
 mailForwardSigned =

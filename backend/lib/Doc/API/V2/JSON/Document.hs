@@ -105,14 +105,24 @@ unjsonSignatoryArray da = arrayOf (unjsonSignatory da)
 unjsonSignatory :: DocumentAccess -> UnjsonDef SignatoryLink
 unjsonSignatory da =  objectOf $
   pure
-  (\m_is_signatory msignatoryrole
-    fields mbTitleQs signorder
-    msuccredirecturl mrejredirecturl
-    mcsvupload deliverymethod
-    authtoviewmethod authtoviewarchivedmethod
-    authtosignmethod confirmdeliverymethod
-    allowshighlighting hidepn
-    canforward sattachments ->
+  (\m_is_signatory
+    msignatoryrole
+    fields
+    mbTitleQs
+    signorder
+    msuccredirecturl
+    mrejredirecturl
+    mcsvupload
+    deliverymethod
+    authtoviewmethod
+    authtoviewarchivedmethod
+    authtosignmethod
+    confirmationdeliverymethod
+    notificationdeliverymethod
+    allowshighlighting
+    hidepn
+    canforward
+    sattachments ->
      let (title,qs) = maybe defTitleQs id mbTitleQs
          link = defaultSignatoryLink
          defTitleQs = ( signatorylinkconsenttitle link
@@ -142,12 +152,14 @@ unjsonSignatory da =  objectOf $
              , signatorylinkauthenticationtosignmethod
                                                = authtosignmethod
              , signatorylinkconfirmationdeliverymethod
-                                              = confirmdeliverymethod
-            , signatorylinkallowshighlighting = allowshighlighting
-            , signatorylinkhidepn             = hidepn
+                                               = confirmationdeliverymethod
+             , signatorylinknotificationdeliverymethod
+                                               = notificationdeliverymethod
+             , signatorylinkallowshighlighting = allowshighlighting
+             , signatorylinkhidepn             = hidepn
             , signatorylinkcanbeforwarded     = canforward
-            , signatoryattachments            = sattachments
-            })
+             , signatoryattachments            = sattachments
+             })
   <*   (fieldReadonly "id" signatorylinkid "Signatory ID")
   <*   (fieldReadOnlyOpt "user_id"  maybesignatory "User ID for the signatory")
   <*   (fieldReadonly "is_author" signatoryisauthor "Whether signatory is document author")
@@ -180,6 +192,7 @@ unjsonSignatory da =  objectOf $
   <*>  (fieldDefBy "authentication_method_to_view_archived" (signatorylinkauthenticationtoviewarchivedmethod defaultSignatoryLink) signatorylinkauthenticationtoviewarchivedmethod "Signatory authentication to view archived method" unjsonAuthenticationToViewMethod)
   <*>  (fieldDefBy "authentication_method_to_sign" (signatorylinkauthenticationtosignmethod defaultSignatoryLink) signatorylinkauthenticationtosignmethod "Signatory authentication to sign method" unjsonAuthenticationToSignMethod)
   <*>  (fieldDefBy "confirmation_delivery_method" (signatorylinkconfirmationdeliverymethod defaultSignatoryLink) signatorylinkconfirmationdeliverymethod "Signatory confirmation delivery method" unjsonConfirmationDeliveryMethod)
+  <*>  (fieldDefBy "notification_delivery_method" (signatorylinknotificationdeliverymethod defaultSignatoryLink) signatorylinknotificationdeliverymethod "Signatory notification delivery method" unjsonNotificationDeliveryMethod)
   <*>  (fieldDef "allows_highlighting" (signatorylinkallowshighlighting defaultSignatoryLink) signatorylinkallowshighlighting "Areas of main PDF can be highlighted during signing")
   <*>  (fieldDef "hide_personal_number" (signatorylinkhidepn defaultSignatoryLink) signatorylinkhidepn "Signatory's personal number should be hidden")
   <*>  (fieldDef "can_forward" (signatorylinkcanbeforwarded defaultSignatoryLink) signatorylinkcanbeforwarded "Signatory can forward signing process")

@@ -14,12 +14,17 @@ import Doc.SignatoryLinkID
 import Log.Identifier
 import SMS.Types
 
-data KontraInfoForSMSType = DocumentInvitationSMST | DocumentPinSendoutSMST | OtherDocumentSMST
+data KontraInfoForSMSType =
+  DocumentInvitationSMST |
+  DocumentPinSendoutSMST |
+  DocumentPartyNotificationSMST |
+  OtherDocumentSMST
   deriving (Eq, Ord, Show)
 
 data KontraInfoForSMS =
   DocumentInvitationSMS DocumentID SignatoryLinkID |
   DocumentPinSendoutSMS DocumentID SignatoryLinkID |
+  DocumentPartyNotificationSMS DocumentID SignatoryLinkID |
   OtherDocumentSMS DocumentID
   deriving (Eq, Ord, Show)
 
@@ -35,6 +40,7 @@ instance FromSQL KontraInfoForSMSType where
       1 -> return DocumentInvitationSMST
       2 -> return DocumentPinSendoutSMST
       3 -> return OtherDocumentSMST
+      4 -> return DocumentPartyNotificationSMST
       _ -> throwM RangeError {
         reRange = [(1, 3)]
       , reValue = n
@@ -42,9 +48,10 @@ instance FromSQL KontraInfoForSMSType where
 
 instance ToSQL KontraInfoForSMSType where
   type PQDest KontraInfoForSMSType = PQDest Int16
-  toSQL DocumentInvitationSMST      = toSQL (1::Int16)
-  toSQL DocumentPinSendoutSMST      = toSQL (2::Int16)
-  toSQL OtherDocumentSMST           = toSQL (3::Int16)
+  toSQL DocumentInvitationSMST        = toSQL (1::Int16)
+  toSQL DocumentPinSendoutSMST        = toSQL (2::Int16)
+  toSQL OtherDocumentSMST             = toSQL (3::Int16)
+  toSQL DocumentPartyNotificationSMST = toSQL (4::Int16)
 
 instance Loggable KontraInfoForSMS where
   logValue (DocumentInvitationSMS did slid) = object [
@@ -54,6 +61,11 @@ instance Loggable KontraInfoForSMS where
     ]
   logValue (DocumentPinSendoutSMS did slid) = object [
        "type" .= ("pin_sendout" :: String)
+      , identifier did
+      , identifier slid
+    ]
+  logValue (DocumentPartyNotificationSMS did slid) = object [
+       "type" .= ("notification" :: String)
       , identifier did
       , identifier slid
     ]
@@ -78,6 +90,10 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddKontraInfoForSMS Bool where
            sqlSet "sms_type" DocumentPinSendoutSMST
            sqlSet "document_id" did
            sqlSet "signatory_link_id" slid
+        (DocumentPartyNotificationSMS did slid) -> do
+           sqlSet "sms_type" DocumentPartyNotificationSMST
+           sqlSet "document_id" did
+           sqlSet "signatory_link_id" slid
         (OtherDocumentSMS did) -> do
            sqlSet "sms_type" OtherDocumentSMST
            sqlSet "document_id" did
@@ -93,9 +109,19 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetKontraInfoForSMS (Maybe Kontr
     fetchMaybe fetchKontraInfoForSMS
 
 fetchKontraInfoForSMS :: (KontraInfoForSMSType, Maybe DocumentID, Maybe SignatoryLinkID) -> KontraInfoForSMS
-fetchKontraInfoForSMS (DocumentInvitationSMST, Just did, Just sig)  = DocumentInvitationSMS did sig
-fetchKontraInfoForSMS (DocumentInvitationSMST, _, _)  = unexpectedError "Failed to fetch KontraInfoForSMS (DocumentInvitationSMST)"
-fetchKontraInfoForSMS (DocumentPinSendoutSMST, Just did, Just sig)  = DocumentPinSendoutSMS did sig
-fetchKontraInfoForSMS (DocumentPinSendoutSMST, _, _)  = unexpectedError "Failed to fetch KontraInfoForSMS (DocumentPinSendoutSMST)"
-fetchKontraInfoForSMS (OtherDocumentSMST, Just did, Nothing)  = OtherDocumentSMS did
-fetchKontraInfoForSMS (OtherDocumentSMST, _, _)  =  unexpectedError "Failed to fetch KontraInfoForSMS (OtherDocumentSMST)"
+fetchKontraInfoForSMS (DocumentInvitationSMST, Just did, Just sig)  =
+  DocumentInvitationSMS did sig
+fetchKontraInfoForSMS (DocumentInvitationSMST, _, _)  =
+  unexpectedError "Failed to fetch KontraInfoForSMS (DocumentInvitationSMST)"
+fetchKontraInfoForSMS (DocumentPinSendoutSMST, Just did, Just sig)  =
+  DocumentPinSendoutSMS did sig
+fetchKontraInfoForSMS (DocumentPinSendoutSMST, _, _)  =
+  unexpectedError "Failed to fetch KontraInfoForSMS (DocumentPinSendoutSMST)"
+fetchKontraInfoForSMS (DocumentPartyNotificationSMST, Just did, Just sig) =
+  DocumentPartyNotificationSMS did sig
+fetchKontraInfoForSMS (DocumentPartyNotificationSMST, _, _) =
+  unexpectedError "Failed to fetch KontraInfoForSMS (DocumentPartyNotificationSMST)"
+fetchKontraInfoForSMS (OtherDocumentSMST, Just did, Nothing)  =
+  OtherDocumentSMS did
+fetchKontraInfoForSMS (OtherDocumentSMST, _, _)  =
+  unexpectedError "Failed to fetch KontraInfoForSMS (OtherDocumentSMST)"

@@ -180,7 +180,8 @@ var Subscription = Backbone.Model.extend({
         can_use_email_confirmations: ff.canUseEmailConfirmations,
         can_use_api_invitations: ff.canUseAPIInvitations,
         can_use_pad_invitations: ff.canUsePadInvitations,
-        can_use_forwarding: ff.canUseForwarding
+        can_use_forwarding: ff.canUseForwarding,
+        can_use_document_party_notifications: ff.canUseDocumentPartyNotifications
       });
     };
     var newSubscription = {
@@ -286,7 +287,8 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
     "can_use_email_invitations": true,
     "can_use_email_confirmations": true,
     "can_use_api_invitations": true,
-    "can_use_pad_invitations": true
+    "can_use_pad_invitations": true,
+    "can_use_document_party_notifications": false
   },
   canUseTemplates: function () {
      return this.get("can_use_templates");
@@ -359,6 +361,9 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
   },
   canUseForwarding: function () {
      return this.get("can_use_forwarding");
+  },
+  canUseDocumentPartyNotifications: function () {
+     return this.get("can_use_document_party_notifications");
   },
   firstAllowedAuthenticationToView: function () {
     if (this.canUseStandardAuthenticationToView())

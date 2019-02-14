@@ -169,6 +169,7 @@ instance InspectXML AuthenticationToViewMethod where
 instance InspectXML AuthenticationToSignMethod where
 instance InspectXML DeliveryMethod where
 instance InspectXML ConfirmationDeliveryMethod where
+instance InspectXML NotificationDeliveryMethod where
 instance InspectXML PlacementID where
 instance InspectXML DocumentSharing where
 instance InspectXML KontraLink where

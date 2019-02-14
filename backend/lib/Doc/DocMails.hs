@@ -9,6 +9,7 @@ module Doc.DocMails (
   , sendRejectEmails
   , sendForwardSigningMessages
   , sendDocumentErrorEmail
+  , sendPartyProcessFinalizedNotification
   , sendPinCode
   , makeMailAttachments
   , runMailT
@@ -36,6 +37,7 @@ import Doc.DocViewMail
 import Doc.DocViewSMS
 import Doc.Logging
 import Doc.Model
+import Doc.Types.SignatoryLink (isApprovingRole, isSigningRole)
 import EvidenceLog.Model (CurrentEvidenceEventType(..), InsertEvidenceEventWithAffectedSignatoryAndMsg(..))
 import File.File
 import File.Model
@@ -120,6 +122,51 @@ sendInvitationEmails authorsignsimmediately = do
         onlyAuthorSigns d =
           all (\sl -> isAuthor sl || not (isSignatory || isApprover $ sl))
           (documentsignatorylinks d)
+
+sendPartyProcessFinalizedNotification ::
+  ( CryptoRNG m, MailContextMonad m, MonadDB m, MonadLog m, MonadThrow m
+  , MonadTime m, TemplatesMonad m )
+  => Document -> SignatoryLink -> m ()
+sendPartyProcessFinalizedNotification document signatoryLink = do
+  case signatoryrole signatoryLink of
+    role | isSigningRole role ->
+      sendPartyProcessFinalizedNotification' document signatoryLink DocumentSigned
+    role | isApprovingRole role ->
+      sendPartyProcessFinalizedNotification' document signatoryLink DocumentApproved
+    _ ->
+      pure ()
+
+sendPartyProcessFinalizedNotification' ::
+  ( CryptoRNG m, MailContextMonad m, MonadDB m, MonadLog m, MonadThrow m
+  , MonadTime m, TemplatesMonad m )
+  => Document -> SignatoryLink -> ProcessFinishedAction -> m ()
+sendPartyProcessFinalizedNotification' document signatoryLink action = do
+  case signatorylinknotificationdeliverymethod signatoryLink of
+    NoNotificationDelivery ->
+      pure ()
+    EmailAndMobileNotificationDelivery ->
+      sendPartyProcessFinalizedNotificationEmail document signatoryLink action >>
+      sendPartyProcessFinalizedNotificationSms document signatoryLink action
+    EmailNotificationDelivery ->
+      sendPartyProcessFinalizedNotificationEmail document signatoryLink action
+    MobileNotificationDelivery ->
+      sendPartyProcessFinalizedNotificationSms document signatoryLink action
+
+sendPartyProcessFinalizedNotificationEmail ::
+  ( CryptoRNG m, MailContextMonad m, MonadDB m, MonadLog m, MonadThrow m
+  , MonadTime m, TemplatesMonad m )
+  => Document -> SignatoryLink -> ProcessFinishedAction -> m ()
+sendPartyProcessFinalizedNotificationEmail document signatoryLink action = do
+  email <- mailPartyProcessFinalizedNotification document signatoryLink action
+  scheduleEmailSendout email
+
+sendPartyProcessFinalizedNotificationSms ::
+  ( CryptoRNG m, MailContextMonad m, MonadDB m, MonadLog m, MonadThrow m
+  , MonadTime m, TemplatesMonad m )
+  => Document -> SignatoryLink -> ProcessFinishedAction -> m ()
+sendPartyProcessFinalizedNotificationSms document signatoryLink action = do
+  sms <- smsPartyProcessFinalizedNotification document signatoryLink action
+  scheduleSMS document sms
 
 {- |
    Helper function to send emails to invited parties

@@ -9,6 +9,8 @@ module Doc.Types.SignatoryLink (
   , AuthenticationToSignMethod(..)
   , DeliveryMethod(..)
   , ConfirmationDeliveryMethod(..)
+  , NotificationDeliveryMethod(..)
+  , ProcessFinishedAction(..)
   , SignatoryRole(..)
   , signatoryRoleFromBool
   , SignatoryLink(..)
@@ -17,6 +19,8 @@ module Doc.Types.SignatoryLink (
   , TemporaryMagicHash(..)
   , signatoryLinkMagicHashesSelectors
   , isValidSignatoryMagicHash
+  , isSigningRole
+  , isApprovingRole
   ) where
 
 import Control.Monad.Catch
@@ -36,6 +40,8 @@ import MagicHash
 import MinutesTime
 import User.UserID
 import Util.HasSomeUserInfo
+
+data ProcessFinishedAction = DocumentSigned | DocumentApproved
 
 newtype SignOrder = SignOrder { unSignOrder :: Int32 }
   deriving (Eq, Ord)
@@ -288,6 +294,37 @@ instance ToSQL ConfirmationDeliveryMethod where
   toSQL EmailLinkConfirmationDelivery          = toSQL (5::Int16)
   toSQL EmailLinkAndMobileConfirmationDelivery = toSQL (6::Int16)
 
+data NotificationDeliveryMethod
+  = EmailNotificationDelivery
+  | MobileNotificationDelivery
+  | EmailAndMobileNotificationDelivery
+  | NoNotificationDelivery
+    deriving (Eq, Ord, Show)
+
+instance PQFormat NotificationDeliveryMethod where
+  pqFormat = pqFormat @Int16
+
+instance ToSQL NotificationDeliveryMethod where
+  type PQDest NotificationDeliveryMethod = PQDest Int16
+  toSQL NoNotificationDelivery                 = toSQL (0::Int16)
+  toSQL EmailNotificationDelivery              = toSQL (1::Int16)
+  toSQL MobileNotificationDelivery             = toSQL (2::Int16)
+  toSQL EmailAndMobileNotificationDelivery     = toSQL (3::Int16)
+
+instance FromSQL NotificationDeliveryMethod where
+  type PQBase NotificationDeliveryMethod = PQBase Int16
+  fromSQL mbase = do
+    n <- fromSQL mbase
+    case n :: Int16 of
+      0 -> return NoNotificationDelivery
+      1 -> return EmailNotificationDelivery
+      2 -> return MobileNotificationDelivery
+      3 -> return EmailAndMobileNotificationDelivery
+      _ -> throwM RangeError {
+        reRange = [(0, 3)]
+      , reValue = n
+      }
+
 -- | Role through which the document is accessed.
 data SignatoryRole = SignatoryRoleViewer
                    | SignatoryRoleSigningParty
@@ -295,6 +332,24 @@ data SignatoryRole = SignatoryRoleViewer
                    | SignatoryRoleForwardedSigningParty
                    | SignatoryRoleForwardedApprover
   deriving (Eq, Ord, Show)
+
+signingRoles :: [SignatoryRole]
+signingRoles = [
+    SignatoryRoleSigningParty
+  , SignatoryRoleForwardedSigningParty
+  ]
+
+approvingRoles :: [SignatoryRole]
+approvingRoles = [
+    SignatoryRoleApprover
+  , SignatoryRoleForwardedApprover
+  ]
+
+isSigningRole :: SignatoryRole -> Bool
+isSigningRole role = elem role signingRoles
+
+isApprovingRole :: SignatoryRole -> Bool
+isApprovingRole role = elem role approvingRoles
 
 -- | True == SigningParty, False == Viewer.
 signatoryRoleFromBool :: Bool -> SignatoryRole
@@ -398,6 +453,7 @@ data SignatoryLink = SignatoryLink {
 , signatorylinkauthenticationtosignmethod :: !AuthenticationToSignMethod
 , signatorylinkdeliverymethod             :: !DeliveryMethod
 , signatorylinkconfirmationdeliverymethod :: !ConfirmationDeliveryMethod
+, signatorylinknotificationdeliverymethod :: !NotificationDeliveryMethod
 , signatorylinkallowshighlighting         :: !Bool
 -- | If a person has identified to view the document
 , signatorylinkidentifiedtoview           :: !Bool
@@ -440,6 +496,7 @@ defaultSignatoryLink =
   , signatorylinkauthenticationtosignmethod = StandardAuthenticationToSign
   , signatorylinkdeliverymethod = EmailDelivery
   , signatorylinkconfirmationdeliverymethod = EmailConfirmationDelivery
+  , signatorylinknotificationdeliverymethod = NoNotificationDelivery
   , signatorylinkallowshighlighting = False
   , signatorylinkidentifiedtoview = False
   , signatorylinkhidepn = False
@@ -489,6 +546,7 @@ signatoryLinksSelectors = [
   , "signatory_links.authentication_to_sign_method"
   , "signatory_links.delivery_method"
   , "signatory_links.confirmation_delivery_method"
+  , "signatory_links.notification_delivery_method"
   , "signatory_links.allows_highlighting"
   , "(SELECT EXISTS (SELECT 1 FROM eid_authentications WHERE signatory_links.id = eid_authentications.signatory_link_id))"
   , "signatory_links.hide_pn_elog"
@@ -498,13 +556,86 @@ signatoryLinksSelectors = [
   , "signatory_links.mail_confirmation_delivery_status"
   ]
 
-type instance CompositeRow SignatoryLink = (SignatoryLinkID, CompositeArray1 SignatoryField, Bool, SignatoryRole, SignOrder, MagicHash, CompositeArray1 TemporaryMagicHash, Maybe UserID, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, Maybe IPAddress, Maybe UTCTime, DeliveryStatus, DeliveryStatus, Maybe UTCTime, Maybe UTCTime, Maybe [[String]], CompositeArray1 SignatoryAttachment,CompositeArray1 HighlightedPage, Maybe String, Maybe String, Maybe UTCTime, Maybe String, AuthenticationToViewMethod, AuthenticationToViewMethod, AuthenticationToSignMethod, DeliveryMethod, ConfirmationDeliveryMethod, Bool, Bool, Bool, Bool, Maybe String, CompositeArray1 SignatoryConsentQuestion, DeliveryStatus)
+type instance CompositeRow SignatoryLink = (
+    SignatoryLinkID
+  , CompositeArray1 SignatoryField
+  , Bool
+  , SignatoryRole
+  , SignOrder
+  , MagicHash
+  , CompositeArray1 TemporaryMagicHash
+  , Maybe UserID
+  , Maybe UTCTime
+  , Maybe IPAddress
+  , Maybe UTCTime
+  , Maybe IPAddress
+  , Maybe UTCTime
+  , DeliveryStatus
+  , DeliveryStatus
+  , Maybe UTCTime
+  , Maybe UTCTime
+  , Maybe [[String]]
+  , CompositeArray1 SignatoryAttachment
+  , CompositeArray1 HighlightedPage
+  , Maybe String
+  , Maybe String
+  , Maybe UTCTime
+  , Maybe String
+  , AuthenticationToViewMethod
+  , AuthenticationToViewMethod
+  , AuthenticationToSignMethod
+  , DeliveryMethod
+  , ConfirmationDeliveryMethod
+  , NotificationDeliveryMethod
+  , Bool
+  , Bool
+  , Bool
+  , Bool
+  , Maybe String
+  , CompositeArray1 SignatoryConsentQuestion
+  , DeliveryStatus)
 
 instance PQFormat SignatoryLink where
   pqFormat = "%signatory_link"
 
 instance CompositeFromSQL SignatoryLink where
-  toComposite (slid, CompositeArray1 fields, is_author, signatory_role, sign_order, magic_hash, CompositeArray1 magic_hashes, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_contents, CompositeArray1 attachments, CompositeArray1 highlighted_pages, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_to_view_method, authentication_to_view_archived_method, authentication_to_sign_method, delivery_method, confirmation_delivery_method, allows_highlighting, has_identified, hide_pn, canbeforwarded, consent_title, CompositeArray1 consent_questions, signatorylinkmailconfirmationdeliverystatus) = SignatoryLink {
+  toComposite ( slid
+              , CompositeArray1 fields
+              , is_author
+              , signatory_role
+              , sign_order
+              , magic_hash
+              , CompositeArray1 magic_hashes
+              , muser_id
+              , msign_time
+              , msign_ip
+              , mseen_time
+              , mseen_ip
+              , mread_invite
+              , mail_invitation_delivery_status
+              , sms_invitation_delivery_status
+              , mdeleted
+              , mreally_deleted
+              , mcsv_contents
+              , CompositeArray1 attachments
+              , CompositeArray1 highlighted_pages
+              , msign_redirect_url
+              , mreject_redirect_url
+              , mrejection_time
+              , mrejection_reason
+              , authentication_to_view_method
+              , authentication_to_view_archived_method
+              , authentication_to_sign_method
+              , delivery_method
+              , confirmation_delivery_method
+              , notification_delivery_method
+              , allows_highlighting
+              , has_identified
+              , hide_pn
+              , canbeforwarded
+              , consent_title
+              , CompositeArray1 consent_questions
+              , signatorylinkmailconfirmationdeliverystatus) = SignatoryLink {
     signatorylinkid = slid
   , signatoryfields = fields
   , signatoryisauthor = is_author
@@ -532,6 +663,7 @@ instance CompositeFromSQL SignatoryLink where
   , signatorylinkauthenticationtosignmethod = authentication_to_sign_method
   , signatorylinkdeliverymethod = delivery_method
   , signatorylinkconfirmationdeliverymethod = confirmation_delivery_method
+  , signatorylinknotificationdeliverymethod = notification_delivery_method
   , signatorylinkallowshighlighting = allows_highlighting
   , signatorylinkidentifiedtoview = has_identified
   , signatorylinkhidepn = hide_pn

@@ -52,6 +52,7 @@
       "authentication_method_to_sign": "standard",
       "allows_highlighting": false,
       "confirmation_delivery_method": "email",
+      "notification_delivery_method": "none",
       "highlighted_pages": [],
       "attachments": [],
       "api_delivery_url": null,
@@ -153,6 +154,7 @@
       "authentication_method_to_view_archived": "standard",
       "authentication_method_to_sign": "sms_pin",
       "confirmation_delivery_method": "none",
+      "notification_delivery_method": "none",
       "allows_highlighting": false,
       "highlighted_pages": [],
       "attachments": [

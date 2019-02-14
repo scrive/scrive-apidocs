@@ -74,7 +74,10 @@ module Doc.Model.Update
   , AddNotUploadedSignatoryAttachmentsEvents(..)
   , UpdateShareableLinkHash(..)
   , updateMTimeAndObjectVersion
-  , NewTemporaryMagicHash(..)
+  , defaultTemporaryMagicHashValidDays
+  , makeTemporaryMagicHash
+  , makeTemporaryMagicHash'
+  , generateMagicHash
   , PurgeExpiredTemporaryMagicHashes(..)
   , SetDocumentApiCallbackResult(..)
   , AddCustomEvidenceEvent(..)
@@ -205,6 +208,7 @@ insertSignatoryLinksOnly did links = do
     sqlSetList "authentication_to_sign_method" $ signatorylinkauthenticationtosignmethod <$> links
     sqlSetList "delivery_method" $ signatorylinkdeliverymethod <$> links
     sqlSetList "confirmation_delivery_method" $ signatorylinkconfirmationdeliverymethod <$> links
+    sqlSetList "notification_delivery_method" $ signatorylinknotificationdeliverymethod <$> links
     sqlSetList "allows_highlighting" $ signatorylinkallowshighlighting <$> links
     sqlSetList "hide_pn_elog" $ signatorylinkhidepn <$> links
     sqlSetList "can_be_forwarded" $ signatorylinkcanbeforwarded <$> links
@@ -1294,6 +1298,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
                               , signatorylinkauthenticationtosignmethod = signatorylinkauthenticationtosignmethod sl
                               , signatorylinkdeliverymethod       = signatorylinkdeliverymethod sl
                               , signatorylinkconfirmationdeliverymethod       = signatorylinkconfirmationdeliverymethod sl
+                              , signatorylinknotificationdeliverymethod       = signatorylinknotificationdeliverymethod sl
                               , signatorylinkhidepn = signatorylinkhidepn sl
                               , signatorylinkcanbeforwarded = signatorylinkcanbeforwarded sl
                               , signatorylinkallowshighlighting = signatorylinkallowshighlighting sl
@@ -2566,6 +2571,29 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
     liftEqMaybe f (Just t1) (Just t2) = f t1 t2
     liftEqMaybe _ Nothing   Nothing   = True
     liftEqMaybe _ _         _         = False
+
+
+defaultTemporaryMagicHashValidDays :: Int
+defaultTemporaryMagicHashValidDays = 30
+
+-- | Create a temporary hash valid for the default number of days
+makeTemporaryMagicHash :: (CryptoRNG m, MonadDB m, MonadTime m) =>
+  SignatoryLinkID -> m (MagicHash, UTCTime)
+makeTemporaryMagicHash signatoryLinkId =
+  makeTemporaryMagicHash' signatoryLinkId defaultTemporaryMagicHashValidDays
+
+-- | Create a temporary hash valid for `validDays`
+makeTemporaryMagicHash' :: (CryptoRNG m, MonadDB m, MonadTime m) =>
+  SignatoryLinkID -> Int -> m (MagicHash, UTCTime)
+makeTemporaryMagicHash' signatoryLinkId validDays = do
+  now <- currentTime
+  -- Make it valid until the end of the 30th day.
+  let expiration = (validDays `daysAfter` now) { utctDayTime = 86399 }
+  mh <- dbUpdate $ NewTemporaryMagicHash signatoryLinkId expiration
+  return (mh, expiration)
+
+generateMagicHash :: (CryptoRNG m) => m MagicHash
+generateMagicHash = random
 
 data NewTemporaryMagicHash = NewTemporaryMagicHash SignatoryLinkID UTCTime
 instance (CryptoRNG m, MonadDB m) => DBUpdate m NewTemporaryMagicHash MagicHash where

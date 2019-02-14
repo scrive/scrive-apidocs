@@ -327,12 +327,15 @@ main = do
       allTemplates = S.fromList $ Map.keys templatesMap
       knownTemplates = go elogTemplates templatesMap S.empty topLevelTemplates
       unusedTemplates = allTemplates S.\\ knownTemplates
-  putStrLn "Templates that could be removed. Please double check them:"
   let couldBeRemoved = filter (not.null) $ S.toList $ unusedTemplates
-  putStr . unlines $ couldBeRemoved
   if null couldBeRemoved
-    then exitSuccess
-    else exitFailure
+    then do
+      putStrLn "Template check returned no unused templates."
+      exitSuccess
+    else do
+      putStrLn "Templates that could be removed. Please double check them:"
+      putStr . unlines $ couldBeRemoved
+      exitFailure
 
 
 

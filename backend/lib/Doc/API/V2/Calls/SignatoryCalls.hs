@@ -216,7 +216,7 @@ docApiV2SigApprove did slid = logDocumentAndSignatory did slid . api $ do
 
     switchLang . getLang =<< theDocument
     dbUpdate $ ApproveDocument slid mh actor
-    postDocumentPendingChange olddoc
+    postDocumentPendingChange olddoc sl
 
     -- Result
     doc <- theDocument
@@ -287,7 +287,10 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
         signDocument slid mh fields acceptedAttachments
           notUploadedSignatoryAttachments Nothing mpin screenshots
           consentResponses
-        postDocumentPendingChange olddoc
+        updatedDoc <- dbQuery $
+          GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
+        updatedSigLink <- guardGetSignatoryFromIdForDocument slid
+        postDocumentPendingChange updatedDoc updatedSigLink
         handleAfterSigning slid
         -- Return
        Just provider -> do

@@ -52,9 +52,9 @@ describe("admin/paymentspanel", function () {
   it("should render the payments panel", function () {
     var component = renderComponent();
     var checkboxes = $(".checkbox", component.getDOMNode());
-    // We should have 22 x 2 checkboxes. One for each option.
-    // 2 sets - one for regular user, one for admin
-    assert.equal(checkboxes.size(), 48);
+    // We should have 2 checkboxes for each option.
+    // One for regular user, one for admin users.
+    assert.equal(checkboxes.size(), 50);
     // We should have one select (for price plan)
     var selects = $(".select", component.getDOMNode());
     assert.equal(selects.size(), 2);
@@ -70,9 +70,9 @@ describe("admin/paymentspanel", function () {
     var checkboxes = $(".checkbox.disabled", component.getDOMNode());
 
     component.forceUpdate();
-    // We should have 22 x 2 checkboxes. One for each option.
-    // 2 sets - one for regular user, one for admin
-    assert.equal(checkboxes.size(), 48);
+    // We should have 2 checkboxes for each option.
+    // One for regular user, one for admin users.
+    assert.equal(checkboxes.size(), 50);
 
   });
 

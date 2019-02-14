@@ -59,6 +59,7 @@
       "authentication_method_to_sign": "standard",
       "allows_highlighting": false,
       "confirmation_delivery_method": "email",
+      "notification_delivery_method": "none",
       "highlighted_pages": [],
       "attachments": [],
       "api_delivery_url": null,

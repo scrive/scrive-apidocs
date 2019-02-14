@@ -618,7 +618,7 @@ triggerPostPending :: Kontrakcja m => DocumentID -> m KontraLink
 triggerPostPending did = onlyAdmin $ withDocumentID did $ do
   logInfo_ "Trying to trigger postDocumentPendingChange on document (only superadmin can do that)"
   doc <- dbQuery $ GetDocumentByDocumentID did
-  postDocumentPendingChange doc
+  postDocumentPendingChange doc defaultSignatoryLink
   return LoopBack
 
 {- |

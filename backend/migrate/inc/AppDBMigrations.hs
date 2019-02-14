@@ -176,4 +176,6 @@ kontraMigrations = [
   , addMailConfirmationDeliveryStatusToSignatoryLinks
   , featureFlagsRemoveDefaultValuesFromColumns
   , createApiCallbackResults
+  , addNotificationDeliveryMethodToSignatories
+  , featureFlagsAddNotificationDeliveryMethod
   ]

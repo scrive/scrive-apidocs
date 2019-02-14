@@ -80,6 +80,32 @@ module.exports = React.createClass({
       return {name: self.deliveryText(t), value: t};
     });
   },
+
+  notificationDeliveryMethodOptions: function () {
+    return [
+      {
+        name: localization.designview.addParties.notificationsNone,
+        value: "none",
+        selected: this.props.model.notificationDelivery() == "none"
+      },
+      {
+        name: localization.designview.addParties.notificationsEmail,
+        value: "email",
+        selected: this.props.model.notificationDelivery() == "email"
+      },
+      {
+        name: localization.designview.addParties.notificationsSMS,
+        value: "mobile",
+        selected: this.props.model.notificationDelivery() == "mobile"
+      },
+      {
+        name: localization.designview.addParties.notificationsEmailSMS,
+        value: "email_mobile",
+        selected: this.props.model.notificationDelivery() == "email_mobile"
+      }
+    ];
+  },
+
   roleOptions: function () {
     let options = [];
     options.push({
@@ -371,29 +397,56 @@ module.exports = React.createClass({
   render: function () {
     var self = this;
     var sig = this.props.model;
-
+    var userFeatures = Subscription.currentSubscription().currentUserFeatures();
     return (
       <div className="design-view-action-participant-details-participation">
 
         <div className="design-view-action-participant-details-participation-row">
-          <div className="design-view-action-participant-details-participation-box">
-          <Checkbox
-            checked={sig.allowsHighlighting()}
-            className={(!sig.signs()) ? "checkbox-hidden" : undefined}
-            toolTip={localization.designview.addParties.allowHighlightingTooltip}
-            label={localization.designview.addParties.allowHighlighting}
-            onChange={ function (c) { sig.setAllowsHighlighting(c); } }
-          />
-          </div>
-          <div className="design-view-action-participant-details-participation-box">
-          <Checkbox
-            checked={sig.canForward()}
-            className={(self.hasForwardCheckbox()) ? undefined : "checkbox-hidden" }
-            label={localization.designview.addParties.allowForward}
-            toolTip={localization.designview.addParties.allowForwardTooltip}
-            onChange={function (v) { sig.setCanForward(v); }}
-          />
-          </div>
+            <span
+              ref="notification-delivery"
+              className="design-view-action-participant-details-participation-box"
+              style={userFeatures.canUseDocumentPartyNotifications() ? {} : {display: "none"}}>
+            <label ref="notification-delivery-select-label" className="label">
+              {localization.designview.addParties.notifications}
+            </label>
+            <Select
+              ref="notification-delivery-select"
+              width={297}
+              options={self.notificationDeliveryMethodOptions()}
+              onSelect={function (v) {
+                Track.track("Choose notification delivery method", {Where: "select"});
+                sig.setNotificationDelivery(v);
+              }}
+            />
+          </span>
+
+          <span className="design-view-action-participant-details-participation-box"
+                style={{position: "relative"}}>
+            <span className="design-view-action-participant-details-participation-checkbox"
+                  style={userFeatures.canUseDocumentPartyNotifications() ? {} : {position: "static"}}>
+              <Checkbox
+                 checked={sig.allowsHighlighting()}
+                 className={(!sig.signs()) ? "checkbox-hidden" : undefined}
+                 toolTip={localization.designview.addParties.allowHighlightingTooltip}
+                 label={localization.designview.addParties.allowHighlighting}
+                 onChange={ function (c) { sig.setAllowsHighlighting(c); } }
+              />
+            </span>
+          </span>
+
+          <span className="design-view-action-participant-details-participation-box"
+                style={{position: "relative"}}>
+            <span className="design-view-action-participant-details-participation-checkbox"
+                  style={userFeatures.canUseDocumentPartyNotifications() ? {} : {position: "static"}}>
+              <Checkbox
+                 checked={sig.canForward()}
+                 className={(self.hasForwardCheckbox()) ? undefined : "checkbox-hidden" }
+                 label={localization.designview.addParties.allowForward}
+                 toolTip={localization.designview.addParties.allowForwardTooltip}
+                 onChange={function (v) { sig.setCanForward(v); }}
+              />
+            </span>
+          </span>
         </div>
 
         <div className="design-view-action-participant-details-participation-row">

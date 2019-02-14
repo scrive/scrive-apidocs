@@ -22,6 +22,7 @@ module Doc.Migrations (
   , addTemplateInfoToDocuments
   , addCanBeForwardedToSignatories
   , addShowArrow
+  , addNotificationDeliveryMethodToSignatories
   , addMailConfirmationDeliveryStatusToSignatoryLinks
   , createApiCallbackResults
 ) where
@@ -31,6 +32,24 @@ import Database.PostgreSQL.PQTypes.Checks
 
 import DB
 import Doc.Tables
+
+addNotificationDeliveryMethodToSignatories :: MonadDB m => Migration m
+addNotificationDeliveryMethodToSignatories =
+  let
+    tableName = tblName tableSignatoryLinks
+    columnName = "notification_delivery_method"
+  in
+    Migration {
+      mgrTableName = tableName
+    , mgrFrom = 37
+    , mgrAction = StandardMigration $ do
+        runQuery_ $ sqlAlterTable tableName
+          [ sqlAddColumn tblColumn { colName = columnName, colType = SmallIntT, colNullable = False, colDefault = Just "0" }
+          ]
+        runQuery_ $ sqlAlterTable tableName
+          [ sqlAlterColumn columnName "DROP DEFAULT"
+          ]
+    }
 
 addAuthenticationToViewArchivedMethodToSignatories :: MonadDB m => Migration m
 addAuthenticationToViewArchivedMethodToSignatories = Migration {

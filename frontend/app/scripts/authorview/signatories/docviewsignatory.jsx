@@ -164,6 +164,7 @@ var EmailModal = require("../../common/email_modal");
         && (!signatory.standardAuthenticationToView() || currentFeatures.canUseNonstandardAuthenticationToView());
 
     },
+
     hasChangeAuthenticationToSign: function () {
       var signatory = this.props.signatory;
       var currentFeatures = Subscription.currentSubscription().currentUserFeatures();
@@ -444,6 +445,19 @@ var EmailModal = require("../../common/email_modal");
       }
     },
 
+    getNotificationDeliveryMethod: function () {
+      var signatory = this.props.signatory;
+      if (signatory.hasNotificationEmailAndMobile()) {
+        return localization.docview.signatory.notificationEmailSMS;
+      } else if (signatory.hasNotificationMobile()) {
+        return localization.docview.signatory.notificationSMS;
+      } else if (signatory.hasNotificationEmail()) {
+        return localization.docview.signatory.notificationEmail;
+      } else {
+        return localization.docview.signatory.notificationNone;
+      }
+    },
+
     getRole: function () {
       var signatory = this.props.signatory;
       if (signatory.signs()) {
@@ -715,6 +729,16 @@ var EmailModal = require("../../common/email_modal");
                     {this.getAuthenticationToViewArchivedMethodText()}
                 </span>
               </div>
+              { /* if */
+                Subscription
+                  .currentSubscription()
+                  .currentUserFeatures()
+                  .canUseDocumentPartyNotifications() &&
+              <div className="fieldrow">
+                <span className="notificationdeliverymethod field" title={this.getDeliveryMethod()}>
+                  {localization.docview.signatory.notification}: {this.getNotificationDeliveryMethod()}
+                </span>
+              </div>}
             </div>
           }
           <div className={"statusbox " + (this.hasAnyOptions() ? "" : "last")} >

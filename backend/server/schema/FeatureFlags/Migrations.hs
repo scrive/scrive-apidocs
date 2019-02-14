@@ -11,6 +11,7 @@ module FeatureFlags.Migrations (
 , featureFlagsAddEmailConfirmation
 , featureFlagsAddShareableLinks
 , featureFlagsAddForwarding
+, featureFlagsAddNotificationDeliveryMethod
 , featureFlagsRemoveDefaultValuesFromColumns
 ) where
 
@@ -210,6 +211,7 @@ featureFlagsAddForwarding = Migration {
       ]
 }
 
+
 featureFlagsRemoveDefaultValuesFromColumns :: (MonadThrow m, MonadDB m) => Migration m
 featureFlagsRemoveDefaultValuesFromColumns = Migration {
   mgrTableName = tblName tableFeatureFlags
@@ -242,3 +244,20 @@ featureFlagsRemoveDefaultValuesFromColumns = Migration {
         , sqlAlterColumn "can_use_forwarding" "DROP DEFAULT"
       ]
 }
+
+featureFlagsAddNotificationDeliveryMethod :: MonadDB m => Migration m
+featureFlagsAddNotificationDeliveryMethod =
+  let
+    tableSpec = tableFeatureFlags
+    tableName = tblName tableSpec
+    columnName = "can_use_document_party_notifications"
+  in
+    Migration {
+      mgrTableName = tableName
+    , mgrFrom = 13
+    , mgrAction = StandardMigration $ do
+        runQuery_ $ sqlAlterTable tableName  [
+          sqlAddColumn $ tblColumn { colName = columnName, colType = BoolT, colNullable = False, colDefault = Just "false" }
+          ]
+        runQuery_ $ sqlAlterTable tableName [ sqlAlterColumn columnName "DROP DEFAULT" ]
+  }
