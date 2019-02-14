@@ -13,6 +13,7 @@ module Routing ( hGet
                , hDelete
                , hDeleteAllowHttp
                , hPut
+               , hPatch
                , hPostNoXToken
                , hPostAllowHttp
                , hPostNoXTokenHttp
@@ -24,7 +25,7 @@ module Routing ( hGet
                ) where
 
 import Data.List.Split
-import Happstack.Server (Method(DELETE, GET, POST, PUT), Response, ToMessage(..))
+import Happstack.Server (Method(DELETE, GET, PATCH, POST, PUT), Response, ToMessage(..))
 import Happstack.StaticRouting
 import Log
 import Text.JSON
@@ -96,6 +97,9 @@ hDeleteWrap = path DELETE
 hPutWrap :: Path Kontra Kontra a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
 hPutWrap = path PUT
 
+hPatchWrap :: Path Kontra Kontra a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
+hPatchWrap = path PATCH
+
 {- To change standard string to page -}
 page :: Kontra String -> Kontra Response
 page pageBody = do
@@ -116,6 +120,9 @@ hDeleteAllowHttp = hDeleteWrap allowHttp
 
 hPut :: Path Kontra Kontra a Response => a -> Route (Kontra Response)
 hPut = hPutWrap https
+
+hPatch :: Path Kontra Kontra a Response => a -> Route (Kontra Response)
+hPatch = hPatchWrap https
 
 hGetAllowHttp :: Path Kontra Kontra a Response => a -> Route (Kontra Response)
 hGetAllowHttp = hGetWrap allowHttp

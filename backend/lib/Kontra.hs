@@ -123,7 +123,7 @@ instance (MonadTrans fst, Monad (InnerKontra fst))
     => MailContextMonad (KontraG fst) where
   getMailContext = contextToMailContext <$> getContext
 
--- | Logged in user is admin with 2FA.
+-- | Logged in user is admin with 2FA (2FA only enforced for production = true)
 isAdmin :: Context -> Bool
 isAdmin ctx =
   case get ctxmaybeuser ctx of
@@ -132,7 +132,7 @@ isAdmin ctx =
                  && (usertotpactive user || not (get ctxproduction ctx))
 
 
--- | Logged in user is sales with 2FA.
+-- | Logged in user is sales with 2FA (2FA only enforced for production = true)
 isSales :: Context -> Bool
 isSales ctx =
   case get ctxmaybeuser ctx of

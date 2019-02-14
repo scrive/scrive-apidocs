@@ -2,13 +2,9 @@
 module UserGroup.JSON (
     unjsonUserGroup
   , unjsonUserGroupSettings
-  , unjsonIPAddressWithMask
-  , unjsonSMSProvider
-  , unjsonPadAppMode
   , unjsonUserGroupInvoicing
   , unjsonUserGroupAddress
   , unjsonUserGroupUI
-  , unjsonFavicon
 ) where
 
 import Data.ByteString
@@ -28,10 +24,10 @@ unjsonUserGroup :: UnjsonDef UserGroup
 unjsonUserGroup = objectOf $ pure defaultUserGroup
   -- I'd like to prevent the possibility of ugid being provided
   -- but this does not error if ugid is provided (it's only ignored)
-  <* (fieldReadonly "ugid" _ugID "UserGroup id")
+  <* (fieldReadonly "id" _ugID "UserGroup id")
   <**> (fieldBy "name" _ugName "UserGroup name" unjsonDef
     <**> (pure $ \name ug -> ug { _ugName = name }))
-  <**> (fieldOptBy "parent_ugid" _ugParentGroupID "Parent UserGroup ID" unjsonDef
+  <**> (fieldOptBy "parent_id" _ugParentGroupID "Parent UserGroup ID" unjsonDef
     <**> (pure $ \name ug -> ug { _ugParentGroupID = name }))
   <**> (fieldOptBy "settings" _ugSettings "UserGroup Settings" unjsonUserGroupSettings
     <**> (pure $ \settings ug -> ug { _ugSettings = settings }))
@@ -42,23 +38,23 @@ unjsonUserGroup = objectOf $ pure defaultUserGroup
 
 unjsonUserGroupSettings :: UnjsonDef UserGroupSettings
 unjsonUserGroupSettings = objectOf $ pure defaultUserGroupSettings
-  <**> (fieldBy "ipAddressMaskList" _ugsIPAddressMaskList "UserGroup settings ipAddressMaskList" unjsonIPAddressWithMask
+  <**> (fieldBy "ip_address_mask_list" _ugsIPAddressMaskList "UserGroup settings ip_address_mask_list" unjsonIPAddressWithMask
     <**> (pure $ \ipAddressMaskList ug -> ug { _ugsIPAddressMaskList = ipAddressMaskList }))
-  <**> (fieldBy "dataRetentionPolicy" _ugsDataRetentionPolicy "UserGroup settings dataRetentionPolicy" unjsonDataRetentionPolicy
+  <**> (fieldBy "data_retention_policy" _ugsDataRetentionPolicy "UserGroup settings data_retention_policy" unjsonDataRetentionPolicy
     <**> (pure $ \dataRetentionPolicy ug -> ug { _ugsDataRetentionPolicy = dataRetentionPolicy }))
-  <**> (fieldOptBy "cgiDisplayName" _ugsCGIDisplayName "UserGroup settings cgiDisplayName" unjsonDef
+  <**> (fieldOptBy "cgi_display_name" _ugsCGIDisplayName "UserGroup settings cgi_display_name" unjsonDef
     <**> (pure $ \cgiDisplayName ug -> ug { _ugsCGIDisplayName = cgiDisplayName }))
-  <**> (fieldOptBy "cgiServiceID" _ugsCGIServiceID "UserGroup settings cgiServiceID" unjsonDef
+  <**> (fieldOptBy "cgi_service_id" _ugsCGIServiceID "UserGroup settings cgi_service_id" unjsonDef
     <**> (pure $ \cgiServiceID ug -> ug { _ugsCGIServiceID = cgiServiceID }))
-  <**> (fieldBy "smsProvider" _ugsSMSProvider "UserGroup settings smsProvider" unjsonSMSProvider
+  <**> (fieldBy "sms_provider" _ugsSMSProvider "UserGroup settings sms_provider" unjsonSMSProvider
     <**> (pure $ \smsProvider ug -> ug { _ugsSMSProvider = smsProvider }))
-  <**> (fieldBy "padAppMode" _ugsPadAppMode "UserGroup settings padAppMode" unjsonPadAppMode
+  <**> (fieldBy "pad_app_mode" _ugsPadAppMode "UserGroup settings pad_app_mode" unjsonPadAppMode
     <**> (pure $ \padAppMode ug -> ug { _ugsPadAppMode = padAppMode }))
-  <**> (fieldBy "padEarchiveEnabled" _ugsPadEarchiveEnabled "UserGroup settings padEarchiveEnabled" unjsonDef
+  <**> (fieldBy "pad_earchive_enabled" _ugsPadEarchiveEnabled "UserGroup settings pad_earchive_enabled" unjsonDef
     <**> (pure $ \padEarchiveEnabled ug -> ug { _ugsPadEarchiveEnabled = padEarchiveEnabled }))
   -- I'd like to prevent the possibility of legalText being provided
   -- but this does not error if legalText is provided (it's only ignored)
-  <* (fieldReadonly "legalText" _ugsLegalText "UserGroup settings legalText")
+  <* (fieldReadonly "legal_text" _ugsLegalText "UserGroup settings legal_text")
 
 -- This still uses the Show/Read instances because it's a kind of number.
 -- Any attempt to parse IP addresses would just be a reimplementation of these instances.
@@ -106,15 +102,15 @@ unjsonUserGroupAddress = objectOf $ pure defaultUserGroupAddress
 
 unjsonUserGroupUI :: UnjsonDef UserGroupUI
 unjsonUserGroupUI = objectOf $ pure defaultUserGroupUI
-  <**> (fieldOptBy "mailTheme" _uguiMailTheme "UserGroup UI Mail Theme" unjsonDef
+  <**> (fieldOptBy "mail_theme" _uguiMailTheme "UserGroup UI Mail Theme" unjsonDef
     <**> (pure $ \mailTheme ug -> ug { _uguiMailTheme = mailTheme }))
-  <**> (fieldOptBy "signviewTheme" _uguiSignviewTheme "UserGroup UI Signview Theme" unjsonDef
+  <**> (fieldOptBy "signview_theme" _uguiSignviewTheme "UserGroup UI Signview Theme" unjsonDef
     <**> (pure $ \signviewTheme ug -> ug { _uguiSignviewTheme = signviewTheme }))
-  <**> (fieldOptBy "serviceTheme" _uguiServiceTheme "UserGroup UI Service Theme" unjsonDef
+  <**> (fieldOptBy "service_theme" _uguiServiceTheme "UserGroup UI Service Theme" unjsonDef
     <**> (pure $ \serviceTheme ug -> ug { _uguiServiceTheme = serviceTheme }))
-  <**> (fieldOptBy "browserTitle" _uguiBrowserTitle "UserGroup UI Browser Title" unjsonDef
+  <**> (fieldOptBy "browser_title" _uguiBrowserTitle "UserGroup UI Browser Title" unjsonDef
     <**> (pure $ \browserTitle ug -> ug { _uguiBrowserTitle = browserTitle }))
-  <**> (fieldOptBy "smsOriginator" _uguiSmsOriginator "UserGroup UI SMS Originator" unjsonDef
+  <**> (fieldOptBy "sms_originator" _uguiSmsOriginator "UserGroup UI SMS Originator" unjsonDef
     <**> (pure $ \smsOriginator ug -> ug { _uguiSmsOriginator = smsOriginator }))
   <**> (fieldOptBy "favicon" _uguiFavicon "UserGroup UI Favicon" unjsonFavicon
     <**> (pure $ \favicon ug -> ug { _uguiFavicon = favicon }))

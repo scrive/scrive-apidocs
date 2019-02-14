@@ -1,5 +1,6 @@
 module UserGroup.Model (
     UserGroupCreate(..)
+  , UserGroupDelete(..)
   , UserGroupGet(..)
   , UserGroupGetByUserID(..)
   , UserGroupGetWithParents(..)
@@ -77,6 +78,14 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
 
     return . set ugID ugid $ ug
 
+data UserGroupDelete = UserGroupDelete UserGroupID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m UserGroupDelete () where
+  update (UserGroupDelete ugid) = do
+    now <- currentTime
+    void . runQuery . sqlUpdate "user_groups" $ do
+      sqlSet "deleted" now
+      sqlWhereEq "id" $ Just ugid
+
 insertUserGroupSettings
   :: (MonadDB m, MonadThrow m) => UserGroupID -> UserGroupSettings -> m ()
 insertUserGroupSettings ugid ugs =
@@ -129,6 +138,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGet (Maybe UserGroup) w
     runQuery_ . sqlSelect "user_groups" $ do
       mapM_ sqlResult userGroupSelectors
       sqlWhereEq "id" ugid
+      sqlWhereIsNULL "deleted"
     fetchMaybe fetchUserGroup
 
 data UserGroupGetByUserID = UserGroupGetByUserID UserID
@@ -138,6 +148,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetByUserID UserGroup w
       sqlJoinOn "users" "users.user_group_id = user_groups.id"
       mapM_ sqlResult userGroupSelectors
       sqlWhereEq "users.id" uid
+      sqlWhereIsNULL "user_groups.deleted"
     fetchOne fetchUserGroup
 
 data UserGroupGetImmediateChildren = UserGroupGetImmediateChildren UserGroupID
@@ -171,6 +182,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetWithParentsByUG User
           sqlWhereEq "id" ugid
         sqlJoinOn "parentids" "parentids.id = user_groups.id"
         mapM_ sqlResult userGroupSelectors
+        sqlWhereIsNULL "user_groups.deleted"
         sqlOrderBy "ordinality"
       fetchMany fetchUserGroup
     let (ug_root0, ug_children_path) = case reverse parents of
@@ -189,6 +201,7 @@ instance (MonadDB m, MonadThrow m)
       sqlJoinOn "users" "users.user_group_id = user_groups.id"
       mapM_ sqlResult userGroupSelectors
       sqlWhereEq "users.id" uid
+      sqlWhereIsNULL "user_groups.deleted"
     ug <- fetchOne fetchUserGroup
     dbQuery . UserGroupGetWithParentsByUG $ ug
 
@@ -395,7 +408,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupsGetFiltered [UserGroup
        whenJust moffsetlimit $ \(offset, limit) -> do
          sqlOffset offset
          sqlLimit limit
-       sqlWhereIsNULL "deleted"
+       sqlWhereIsNULL "user_groups.deleted"
        sqlOrderBy "user_groups.id"
     fetchMany fetchUserGroup
     where

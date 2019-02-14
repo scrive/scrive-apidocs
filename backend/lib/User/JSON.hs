@@ -3,7 +3,11 @@
 
 module User.JSON (
     userJSON,
+    usersJSON,
+    userJSONWithCompany,
     userJSONWithCallBackInfo,
+    unjsonUser,
+    unjsonUserWithPassword,
     companyJSON,
     companyJSONAdminOnly,
     userStatsToJSON,
@@ -14,10 +18,12 @@ module User.JSON (
 
 import Data.Functor.Identity
 import Data.String (IsString(..))
+import Data.Unjson
 import Text.JSON
 import Text.JSON.Gen
 import Text.StringTemplate.GenericStandard ()
 import Text.StringTemplate.GenericStandard ()
+import qualified Control.Applicative.Free as CAF (Ap)
 import qualified Data.Text as T
 
 import DataRetentionPolicy
@@ -28,13 +34,22 @@ import User.Model
 import UserGroup.Types
 import Util.HasSomeUserInfo
 
-userJSON :: User -> UserGroupWithParents -> JSValue
-userJSON user ugwp = runJSONGen $ userJSONUserDetails user ugwp
+userJSON :: User -> JSValue
+userJSON user = runJSONGen $ userJSONUserDetails user
+
+usersJSON :: [User] -> JSValue
+usersJSON users = JSArray $ map (runJSONGen . userJSONUserDetails) users
+
+userJSONWithCompany :: User -> UserGroupWithParents -> JSValue
+userJSONWithCompany user ugwp = runJSONGen $ do
+  userJSONUserDetails user
+  value "company" $ companyJSON ugwp
 
 userJSONWithCallBackInfo
   :: User -> UserGroupWithParents -> Maybe UserCallbackScheme -> JSValue
 userJSONWithCallBackInfo user ugwp callback = runJSONGen $ do
-    userJSONUserDetails user ugwp
+    userJSONUserDetails user
+    value "company" $ companyJSON ugwp
     value "callback_is_editable" $ case callback of
       Nothing -> True
       Just (ConstantUrlSchemeV2 _) -> True
@@ -47,8 +62,8 @@ userJSONWithCallBackInfo user ugwp callback = runJSONGen $ do
       Just (BasicAuthScheme _ _) -> "Existing BasicAuthScheme"
       Just (OAuth2Scheme _ _ _ _) -> "Existing OAuth2Scheme"
 
-userJSONUserDetails :: User -> UserGroupWithParents -> JSONGen ()
-userJSONUserDetails user ugwp = do
+userJSONUserDetails :: User -> JSONGen ()
+userJSONUserDetails user = do
     value "id" $ show $ userid user
     value "fstname" $ getFirstName user
     value "sndname" $ getLastName user
@@ -59,7 +74,45 @@ userJSONUserDetails user ugwp = do
     value "companyadmin" $ useriscompanyadmin user
     value "companyposition" $ usercompanyposition $ userinfo user
     value "lang"   $ codeFromLang $ getLang user
-    value "company" $ companyJSON ugwp
+
+unjsonUser :: UnjsonDef User
+unjsonUser = unjsonUserPartial id
+
+unjsonUserWithPassword :: String -> UnjsonDef User
+unjsonUserWithPassword password = unjsonUserPartial
+  (<* (fieldReadonly "password" (const password) "User password"))
+
+-- This is a duplicate def since the UserGroup API needs to support parsing Users
+-- This JSON structure mimics userJSONUserDetails rather than the actual data structure
+unjsonUserPartial
+  :: (CAF.Ap (FieldDef User) User -> CAF.Ap (FieldDef User) User)
+  -> UnjsonDef User
+unjsonUserPartial passwordDef = objectOf $ passwordDef (pure defaultUser
+  <*   (fieldReadonly "id" userid "User ID")
+  <**> (fieldBy "fstname" getFirstName "User First Name" unjsonDef
+    <**> (pure $ \fstname user -> user { userinfo = (userinfo user) { userfstname = fstname } }))
+  <**> (fieldBy "sndname" getLastName "User Second Name" unjsonDef
+    <**> (pure $ \sndname user -> user { userinfo = (userinfo user) { usersndname = sndname } }))
+  <**> (fieldBy "email" (useremail . userinfo) "User Email" unjsonDef
+    <**> (pure $ \email user -> user { userinfo = (userinfo user) { useremail = email } }))
+  <**> (fieldBy "twofactor_active" usertotpactive "User Twofactor Active" unjsonDef
+    <**> (pure $ \totpactive user -> user { usertotpactive = totpactive }))
+  <**> (fieldBy "personalnumber" getPersonalNumber "User Personal Number" unjsonDef
+    <**> (pure $ \personalnumber user -> user { userinfo = (userinfo user) { userpersonalnumber = personalnumber } }))
+  <**> (fieldBy "phone" getMobile "User Phone Number" unjsonDef
+    <**> (pure $ \phone user -> user { userinfo = (userinfo user) { userphone = phone } }))
+  <**> (fieldBy "companyadmin" useriscompanyadmin "User Company Admin" unjsonDef
+    <**> (pure $ \useriscompanyadmin user -> user { useriscompanyadmin = useriscompanyadmin }))
+  <**> (fieldBy "companyposition" (usercompanyposition . userinfo) "User Company Position" unjsonDef
+    <**> (pure $ \companyposition user -> user { userinfo = (userinfo user) { usercompanyposition = companyposition } }))
+  <**> (fieldBy "lang" getLang "User Language" unjsonUserLang
+    <**> (pure $ \lang user -> user { usersettings = (usersettings user) { lang = lang } })))
+  where
+    unjsonUserLang :: UnjsonDef Lang
+    unjsonUserLang = unjsonInvmapR
+      ((maybe (fail "Can't parse Lang") return) . langFromCode)
+      codeFromLang
+      unjsonDef
 
 companyJSON :: UserGroupWithParents -> JSValue
 companyJSON ugwp = do

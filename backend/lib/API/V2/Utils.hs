@@ -52,3 +52,9 @@ isApiSales ctx = case get ctxmaybeapiuser ctx of
                 Nothing -> False
                 Just user -> (useremail (userinfo user) `elem` get ctxsalesaccounts ctx)
                             && (usertotpactive user || not (get ctxproduction ctx))
+
+userGroupOrAPIError :: UserGroupID -> m UserGroup
+userGroupOrAPIError ugid = dbQuery (UserGroupGet ugid) >>= \case
+  Nothing ->
+    apiError $ serverError "Impossible happened: No user group with ID, or deleted."
+  Just ug -> return ug
