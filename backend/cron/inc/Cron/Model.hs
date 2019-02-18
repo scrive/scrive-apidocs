@@ -11,8 +11,8 @@ import Database.PostgreSQL.Consumers
 import Database.PostgreSQL.PQTypes
 import Log
 import Network.HTTP.Client (Manager)
+import System.Directory (removeDirectoryRecursive)
 import System.Exit (ExitCode(..))
-import System.Posix.Directory (changeWorkingDirectory, getWorkingDirectory)
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import qualified Data.ByteString.Lazy as BSL hiding (length)
 import qualified Data.Text as T
@@ -44,7 +44,6 @@ import User.Password (PasswordAlgorithm(..), strengthenPassword)
 import User.PasswordReminder (DeleteExpiredPasswordReminders(..))
 import User.Types.User (User(..))
 import User.UserAccountRequest (expireUserAccountRequests)
-import Utils.Directory (withSystemTempDirectory')
 import Utils.List
 import qualified CronEnv
 
@@ -232,31 +231,33 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
       -- If maximum amount of files was marked, run it again shortly after.
       RerunAt . nextDayAtHour 2 <$> currentTime
     MonthlyInvoice -> do
-      case cronMonthlyInvoiceScript cronConf of
+      case cronMonthlyInvoiceConf cronConf of
         Nothing -> do
-          logInfo_ "Monthly-invoice script path is missing; skipping"
-        Just invoiceScript -> do
-          withSystemTempDirectory' "monthly_invoice" $ \tmpDir -> do
-            pwd <- liftIO $ getWorkingDirectory
-            void $ liftIO $ changeWorkingDirectory tmpDir
-            let args =
-                  [
-                    T.unpack $ cronDBConfig cronConf
-                    , "-f"
-                    , invoiceScript
-                  ]
-            (code, stdout, stderr) <- liftIO $ readProcessWithExitCode "psql" args BSL.empty
-            void $ case (code == ExitSuccess) of
-              False ->
-                logAttention "Running monthly-invoice psql script has failed" $ object [
-                    "exit_code" .= show code
-                  , "stdout" `equalsExternalBSL` stdout
-                  , "stderr" `equalsExternalBSL` stderr
-                  ]
-              True ->
-                runCronEnv $ Mails.Events.sendMailWithMonthlyInvoice tmpDir
-            liftIO $ changeWorkingDirectory pwd
-      RerunAt . beginningOfNextMonthAtHour 1 <$> currentTime      
+          logInfo_ "Monthly-invoice job configuration is missing; skipping"
+        Just invoiceConf -> do
+          let script       = scriptPath invoiceConf
+              name         = recipientName invoiceConf
+              emailAddress = recipientEmail invoiceConf
+              reportsDir   = "monthly-report"
+              args         =
+                [
+                  T.unpack $ cronDBConfig cronConf
+                  , "-f", script
+                  , "-v", "report_dir=" ++ reportsDir
+                ]
+          (code, stdout, stderr) <- liftIO $ readProcessWithExitCode "psql" args BSL.empty
+          void $ case (code == ExitSuccess) of
+            False ->
+              logAttention "Running monthly-invoice psql script has failed" $ object [
+                  "exit_code" .= show code
+                , "stdout" `equalsExternalBSL` stdout
+                , "stderr" `equalsExternalBSL` stderr
+                ]
+            True -> do
+              void $ runCronEnv $
+                Mails.Events.sendMailWithMonthlyInvoice reportsDir name emailAddress
+              liftIO $ removeDirectoryRecursive reportsDir
+      RerunAt . beginningOfNextMonthAtHour 5 <$> currentTime
     OldDraftsRemoval -> do
       runDB $ do
         delCount <- dbUpdate $ RemoveOldDrafts 100

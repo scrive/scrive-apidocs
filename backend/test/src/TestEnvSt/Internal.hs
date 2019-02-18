@@ -5,8 +5,10 @@ import Crypto.RNG
 import Data.Time
 import Database.PostgreSQL.PQTypes.Transaction.Settings
 import Log.Monad
+import qualified Data.Text as T
 import qualified Database.Redis as R
 
+import CronConf (CronMonthlyInvoiceConf(..))
 import DB.PostgreSQL
 import FileStorage
 import FileStorage.Amazon.Config
@@ -31,6 +33,8 @@ data TestEnvSt = TestEnvSt {
   , _teAmazonConfig       :: Maybe AmazonConfig
   , _teFileMemCache       :: FileMemCache
   , _teRedisConn          :: Maybe R.Connection
+  , _teCronDBConfig       :: !T.Text
+  , _teCronMonthlyInvoice :: Maybe CronMonthlyInvoiceConf
   }
 
 data TestEnvStRW = TestEnvStRW {

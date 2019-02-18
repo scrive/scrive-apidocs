@@ -381,16 +381,19 @@ normaliseEvent currentEmail = \case
       MJ_Blocked -> DeliveryEvent Undelivered
       _ -> OtherEvent
 
-sendMailWithMonthlyInvoice :: (MonadDB m, MonadThrow m, MonadIO m, CryptoRNG m, MonadLog m) => FilePath -> m ()
-sendMailWithMonthlyInvoice dir = do
+sendMailWithMonthlyInvoice
+  :: (MonadDB m, MonadThrow m, MonadIO m, CryptoRNG m, MonadLog m)
+  => FilePath -> String -> String
+  -> m ()
+sendMailWithMonthlyInvoice dir name emailAddress = do
   files <- liftIO $ listDirectory dir
   attachments <- liftIO $ sequence $ map (\f -> do
-          fileContent <- BS.readFile f
+          fileContent <- BS.readFile $ dir ++ "/" ++ f
           return (f, Left fileContent)) files
   let mail = emptyMail
         {
           title       = "Monthly invoice"
-        , to          = [ MailAddress "Invoicing Stats" "invoicing-stats@scrive.com"]
+        , to          = [MailAddress name emailAddress]
         , attachments = attachments
         }
   scheduleEmailSendout mail

@@ -1,5 +1,6 @@
 module CronConf (
-      CronConf(..)
+        CronConf(..)
+      , CronMonthlyInvoiceConf(..)
       , unjsonCronConf
   ) where
 
@@ -20,36 +21,36 @@ import SFTPConfig
 
 -- | Cron configuration: things like AWS, Postgres and Redis, NTP servers, etc.
 data CronConf = CronConf {
-    cronAmazonConfig       :: !AmazonConfig
+    cronAmazonConfig               :: !AmazonConfig
     -- ^ AWS configuration (bucket, access key, secret key).
-  , cronDBConfig           :: !T.Text               -- ^ Postgresql configuration.
-  , cronMaxDBConnections   :: !Int                  -- ^ Limit of db connections.
-  , cronRedisCacheConfig   :: !(Maybe RedisConfig)  -- ^ Redis configuration.
-  , cronLocalFileCacheSize :: !Int                  -- ^ Size of local cache for files.
-  , cronLogConfig          :: !LogConfig            -- ^ Logging configuration.
-  , cronGuardTimeConf      :: !GuardTimeConf        -- ^ GuardTime configuration.
-  , cronCgiGrpConfig       :: !(Maybe CgiGrpConfig) -- ^ CGI GRP (E-ID) configuration.
-  , cronMixpanelToken      :: !(Maybe String)       -- ^ For Mixpanel integration.
-  , cronNtpServers         :: ![String]
+  , cronDBConfig                   :: !T.Text               -- ^ Postgresql configuration.
+  , cronMaxDBConnections           :: !Int                  -- ^ Limit of db connections.
+  , cronRedisCacheConfig           :: !(Maybe RedisConfig)  -- ^ Redis configuration.
+  , cronLocalFileCacheSize         :: !Int                  -- ^ Size of local cache for files.
+  , cronLogConfig                  :: !LogConfig            -- ^ Logging configuration.
+  , cronGuardTimeConf              :: !GuardTimeConf        -- ^ GuardTime configuration.
+  , cronCgiGrpConfig               :: !(Maybe CgiGrpConfig) -- ^ CGI GRP (E-ID) configuration.
+  , cronMixpanelToken              :: !(Maybe String)       -- ^ For Mixpanel integration.
+  , cronNtpServers                 :: ![String]
     -- ^ List of NTP servers to contact to get an estimate of host clock
     -- error.
-  , cronSalesforceConf     :: !(Maybe SalesforceConf) -- ^ Salesforce configuration.
-  , cronInvoicingSFTPConf  :: !(Maybe SFTPConfig)
+  , cronSalesforceConf             :: !(Maybe SalesforceConf) -- ^ Salesforce configuration.
+  , cronInvoicingSFTPConf          :: !(Maybe SFTPConfig)
     -- ^ SFTP server for invoicing uploads.
-  , cronPlanhatConf        :: !(Maybe PlanhatConf)
+  , cronPlanhatConf                :: !(Maybe PlanhatConf)
     -- ^ To enable data push to Planhat
-  , cronMonitoringConf     :: !(Maybe MonitoringConf)
-  , cronMailNoreplyAddress :: String               -- ^ Noreply address used when sending email
+  , cronMonitoringConf             :: !(Maybe MonitoringConf)
+  , cronMailNoreplyAddress         :: String               -- ^ Noreply address used when sending email
     -- ^ Configure number of running jobs for individual Consumers
-  , cronConsumerCronMaxJobs :: !Int
-  , cronConsumerSealingMaxJobs :: !Int
-  , cronConsumerSigningMaxJobs :: !Int
-  , cronConsumerExtendingMaxJobs :: !Int
+  , cronConsumerCronMaxJobs        :: !Int
+  , cronConsumerSealingMaxJobs     :: !Int
+  , cronConsumerSigningMaxJobs     :: !Int
+  , cronConsumerExtendingMaxJobs   :: !Int
   , cronConsumerAPICallbackMaxJobs :: !Int
   , cronConsumerFilePurgingMaxJobs :: !Int
-  , cronNetsSignConfig :: Maybe NetsSignConfig
-  , cronPdfToolsLambdaConf :: PdfToolsLambdaConf
-  , cronMonthlyInvoiceScript :: !(Maybe String)
+  , cronNetsSignConfig             :: Maybe NetsSignConfig
+  , cronPdfToolsLambdaConf         :: PdfToolsLambdaConf
+  , cronMonthlyInvoiceConf         :: !(Maybe CronMonthlyInvoiceConf)
   } deriving (Eq, Show)
 
 unjsonCronConf :: UnjsonDef CronConf
@@ -123,9 +124,30 @@ unjsonCronConf = objectOf $ pure CronConf
   <*> field "pdftools_lambda"
       cronPdfToolsLambdaConf
       "Configuration of PdfTools Lambda"
-  <*> fieldOpt "monthly_invoice_script"
-      cronMonthlyInvoiceScript
-      "Monthly-invoice .sql script"
+  <*> fieldOpt "monthly_invoice"
+      cronMonthlyInvoiceConf
+      "Monthly-invoice job configuration"
 
 instance Unjson CronConf where
   unjsonDef = unjsonCronConf
+
+data CronMonthlyInvoiceConf = CronMonthlyInvoiceConf {
+    scriptPath     :: !String
+  , recipientName  :: !String
+  , recipientEmail :: !String
+} deriving (Eq, Show)
+
+unjsonCronMonthlyInvoiceConf :: UnjsonDef CronMonthlyInvoiceConf
+unjsonCronMonthlyInvoiceConf = objectOf $ pure CronMonthlyInvoiceConf
+  <*> field "script_path"
+      scriptPath
+      "Path to the .sql script on the disk"
+  <*> field "recipient_name"
+      recipientName
+      "Report recipient's name"
+  <*> field "recipient_email"
+      recipientEmail
+      "Report recipient's email"
+
+instance Unjson CronMonthlyInvoiceConf where
+  unjsonDef = unjsonCronMonthlyInvoiceConf

@@ -6,6 +6,7 @@ module TestConf (
 import Data.Unjson
 import qualified Data.Text as T
 
+import CronConf (CronMonthlyInvoiceConf(..))
 import Database.Redis.Configuration
 import FileStorage.Amazon.Config
 import PdfToolsLambda.Conf
@@ -15,11 +16,12 @@ import PdfToolsLambda.Conf
 -- configuraton, as well as a handy boolean indicating whether this is
 -- a production or development instance.
 data TestConf = TestConf {
-    testDBConfig           :: T.Text               -- ^ test postgresql configuration
-  , testPdfToolsLambdaConf :: PdfToolsLambdaConf   -- ^ pdf tools lambda configuration for tests
-  , testAmazonConfig       :: Maybe AmazonConfig   -- ^ Optional configuration for S3
-  , testLocalFileCacheSize :: Maybe Int            -- ^ Optional size for the local file cache
-  , testRedisCacheConfig   :: Maybe RedisConfig    -- ^ Optional configuration for the Redis file cache
+    testDBConfig               :: T.Text               -- ^ test postgresql configuration
+  , testPdfToolsLambdaConf     :: PdfToolsLambdaConf   -- ^ pdf tools lambda configuration for tests
+  , testAmazonConfig           :: Maybe AmazonConfig   -- ^ Optional configuration for S3
+  , testLocalFileCacheSize     :: Maybe Int            -- ^ Optional size for the local file cache
+  , testRedisCacheConfig       :: Maybe RedisConfig    -- ^ Optional configuration for the Redis file cache
+  , testCronMonthlyInvoiceConf :: Maybe CronMonthlyInvoiceConf
   } deriving (Eq, Show)
 
 unjsonTestConf :: UnjsonDef TestConf
@@ -39,6 +41,9 @@ unjsonTestConf = objectOf $ pure TestConf
   <*> fieldOpt "redis_cache"
       testRedisCacheConfig
       "Optional configuration for the Redis file cache"
+  <*> fieldOpt "cron_monthly_invoice"
+      testCronMonthlyInvoiceConf
+      "Monthly-invoice cron job configuration"
 
 instance Unjson TestConf where
   unjsonDef = unjsonTestConf

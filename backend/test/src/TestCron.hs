@@ -27,9 +27,11 @@ runTestCronUntilIdle ctx = do
   -- processes with their own DB transactions, which do not see
   -- changes of the test transaction ... unless there is a commit.
   commit
-  ConnectionSource pool <- asks (get teConnSource)
-  pdfSealLambdaConf     <- asks (get tePdfToolsLambdaConf)
-  mAmazonConfig         <- asks (get teAmazonConfig)
+  ConnectionSource pool  <- asks (get teConnSource)
+  pdfSealLambdaConf      <- asks (get tePdfToolsLambdaConf)
+  mAmazonConfig          <- asks (get teAmazonConfig)
+  cronDBConfig           <- asks (get teCronDBConfig)
+  cronMonthlyInvoiceConf <- asks (get teCronMonthlyInvoice)
 
   -- Will not be used, because Planhat is not configured when testing,
   -- but it is a parameter for cronConsumer.
@@ -39,8 +41,7 @@ runTestCronUntilIdle ctx = do
       cronConf = CronConf {
           cronAmazonConfig       = fromMaybe (AmazonConfig "" 0 "" "" "")
                                    mAmazonConfig
-        , cronDBConfig           =
-            "user='kontra' password='kontra' dbname='kontrakcja'"
+        , cronDBConfig           = cronDBConfig
         , cronMaxDBConnections   = 100
         , cronRedisCacheConfig   = Nothing
         , cronLocalFileCacheSize = 200000000
@@ -63,7 +64,7 @@ runTestCronUntilIdle ctx = do
         , cronConsumerFilePurgingMaxJobs = 1
         , cronNetsSignConfig = Nothing
         , cronPdfToolsLambdaConf = pdfSealLambdaConf
-        , cronMonthlyInvoiceScript = Nothing
+        , cronMonthlyInvoiceConf = cronMonthlyInvoiceConf
         }
 
       -- make timeouts small, so that the test runs faster
