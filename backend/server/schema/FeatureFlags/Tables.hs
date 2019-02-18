@@ -38,7 +38,7 @@ tableFeatureFlags = tblTable {
     , tblColumn { colName = "can_use_email_confirmations", colType = BoolT, colNullable = False }
     , tblColumn { colName = "can_use_shareable_links", colType = BoolT, colNullable = False }
     , tblColumn { colName = "can_use_forwarding", colType = BoolT, colNullable = False }
-    , tblColumn { colName = "can_use_document_party_notifications", colType = BoolT, colNullable = False, colDefault = Just "false" }
+    , tblColumn { colName = "can_use_document_party_notifications", colType = BoolT, colNullable = False }
     ]
   , tblPrimaryKey = pkOnColumns ["user_group_id", "flags_for_admin"]
   , tblForeignKeys = [
