@@ -22,6 +22,8 @@ newtype TeamCity = TeamCity ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 newtype NginxConfPath = NginxConfPath ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
+newtype NginxConfPathAlternative = NginxConfPathAlternative ()
+  deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 newtype BuildTarget = BuildTarget ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 newtype BuildSandbox = BuildSandbox ()
@@ -48,6 +50,7 @@ newtype CreateTestDBWithConfData = CreateTestDBWithConfData ()
 type instance RuleResult GhcVersion                 = String
 type instance RuleResult TeamCity                   = Bool
 type instance RuleResult NginxConfPath              = String
+type instance RuleResult NginxConfPathAlternative   = String
 type instance RuleResult BuildTarget                = String
 type instance RuleResult BuildSandbox               = String
 type instance RuleResult BuildTestConfPath          = String
@@ -84,6 +87,8 @@ addOracles = do
   -- FIXME should be part of SHAKE_BUILD_ env vars?
   void $ addOracle $ \(NginxConfPath _) ->
                      fromMaybe "" <$> getEnv "NGINX_CONF_PATH"
+  void $ addOracle $ \(NginxConfPathAlternative _) ->
+                     fromMaybe "" <$> getEnv "NGINX_CONF_PATH_ALTERNATIVE"
   -- These are our build options
   void $ addOracle $ \(BuildTarget _)        ->
                      fromMaybe "" <$> getEnv "SHAKE_BUILD_TARGET"
@@ -176,6 +181,10 @@ oracleHelpRule = do
     nginxconfpath <- askOracle (NginxConfPath ())
     explainVar "NGINX_CONF_PATH" "Used for generating NGINX urls.txt file"
     showVarVal nginxconfpath
+
+    nginxconfpathalternative <- askOracle (NginxConfPathAlternative ())
+    explainVar "NGINX_CONF_PATH_ALTERNATIVE" "Used for generating NGINX urls.txt file"
+    showVarVal nginxconfpathalternative
 
     putNormal ""
 

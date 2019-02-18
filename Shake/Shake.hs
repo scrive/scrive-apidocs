@@ -581,6 +581,7 @@ distributionRules newBuild opt = do
   "urls.txt" %> \_ -> do
     tc <- askOracle (TeamCity ())
     nginxconfpath <- askOracle (NginxConfPath ())
+    nginxconfpathalternative <- askOracle (NginxConfPathAlternative ())
     when (not tc) $ do
       fail $ "ERROR: routinglist executable is only built "
         ++ "with Shake when running from TeamCity"
@@ -588,8 +589,11 @@ distributionRules newBuild opt = do
       fail "ERROR: NGINX_CONF_PATH is empty"
     let routingListPath = componentTargetPath newBuild opt . mkExeName
                           $ "routinglist"
+        nginxconfpathalternative' = if null nginxconfpathalternative
+          then nginxconfpath
+          else nginxconfpathalternative
     need [routingListPath]
-    command_ [] routingListPath [nginxconfpath]
+    command_ [] routingListPath [nginxconfpath, nginxconfpathalternative']
     removeFilesAfter "." ["urls.txt"]
 
   let binaryNames = map mkExeName $

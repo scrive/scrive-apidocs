@@ -101,13 +101,24 @@ exceptions s = [s]
 
 main :: IO ()
 main = do
-  [include] <- getArgs
+  [include, includeAlternative] <- getArgs
   withFile "urls.txt" WriteMode $ \h -> do
     let urls = getUrls $ staticRoutes True
         urls' = ["/api/", "/adminonly"] ++ urls
-    forM_ urls' $ \url -> do
+        -- sort DESC to have "/a/b" coming before "/a"
+        sortedUrls = sortBy (\u1 u2 -> compare u2 u1) urls'
+        urlsWithAlternativeInclude = [
+            "/api/v2/documents/list"
+          , "/api/frontend/documents/list"
+          , "/api/v1/list"
+          ]
+    forM_ sortedUrls $ \url -> do
       hPutStrLn h $ "location ~ ^" ++ url ++ " {"
-      hPutStrLn h $ "    include " ++ include ++ ";"
+      hPutStrLn h $ "    include " ++
+        (if url `elem` urlsWithAlternativeInclude
+          then includeAlternative
+          else include)
+        ++ ";"
       hPutStrLn h "}"
     -- verify upload cap hack
     hPutStrLn h $ "location ~ ^/verify {"
