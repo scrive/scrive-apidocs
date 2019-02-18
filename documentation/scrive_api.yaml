@@ -773,6 +773,7 @@ schemes:
   - https
 
 tags:
+  - name: Monitor
   - name: Prepare
   - name: Get
   - name: Modify
