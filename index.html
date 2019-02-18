@@ -281,6 +281,9 @@
             <a href="#list-of-api-calls" class="toc-h1 toc-link" data-title="list-of-api-calls">List of API Calls</a>
               <ul class="toc-list-h2">
                   <li>
+                    <a href="#monitor" class="toc-h2 toc-link" data-title="monitor">Monitor</a>
+                  </li>
+                  <li>
                     <a href="#prepare" class="toc-h2 toc-link" data-title="prepare">Prepare</a>
                   </li>
                   <li>
@@ -294,6 +297,14 @@
                   </li>
                   <li>
                     <a href="#user" class="toc-h2 toc-link" data-title="user">User</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#monitor-2" class="toc-h1 toc-link" data-title="monitor">Monitor</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#get-the-system-status" class="toc-h2 toc-link" data-title="get-the-system-status">Get the system status</a>
                   </li>
               </ul>
           </li>
@@ -458,7 +469,7 @@
               </ul>
           </li>
           <li>
-            <a href="#responses-46" class="toc-h1 toc-link" data-title="responses">Responses</a>
+            <a href="#responses-47" class="toc-h1 toc-link" data-title="responses">Responses</a>
               <ul class="toc-list-h2">
                   <li>
                     <a href="#document" class="toc-h2 toc-link" data-title="document">Document</a>
@@ -693,6 +704,10 @@ This is the only officially supported encoding for our API.
 <tr>
 <td>2019-01-03</td>
 <td>Add <code>usagestats</code> endpoints</td>
+</tr>
+<tr>
+<td>2019-02-18</td>
+<td>Add monitoring endpoint which was already implemented but missing from this document</td>
 </tr>
 </tbody></table>
 <h2 id='environments-amp-ip-addresses'>Environments &amp; IP Addresses</h2>
@@ -1431,7 +1446,15 @@ the API.
 
 <p>We recommend writing integration code that handles the possibility of the
 Scrive eSign system returning errors.</p>
-<h1 id='list-of-api-calls'>List of API Calls</h1><h2 id='prepare'>Prepare</h2>
+<h1 id='list-of-api-calls'>List of API Calls</h1><h2 id='monitor'>Monitor</h2>
+<p>
+<a href="#apiv2monitorstatus">
+<strong>
+<code class="operation-method operation-method-GET">GET  /api/v2/monitor/status</code>
+</strong>
+</a>
+</p>
+<h2 id='prepare'>Prepare</h2>
 <p>
 <a href="#apiv2documentsnew">
 <strong>
@@ -1791,6 +1814,25 @@ Scrive eSign system returning errors.</p>
 </strong>
 </a>
 </p>
+<h1 id='monitor-2'>Monitor</h1>
+<div><a id="apiv2monitorstatus"></a></div>
+<h2 id='get-the-system-status'>Get the system status</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-GET">GET  /api/v2/monitor/status</code>
+</strong>
+</p>
+
+<p>Check the system status, no API credentials required.</p>
+<h3 id='responses'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>A simple JSON response with the system status:
+<code>{&quot;status&quot;:&quot;ok&quot;}</code></p>
+<p>Any other response implies there are system issues.
+We may add more fields and more details in the future.</p>
+</td> </tr>
+</table>
 <h1 id='prepare-2'>Prepare</h1>
 <div><a id="apiv2documentsnew"></a></div>
 <h2 id='new-document'>New document</h2>
@@ -1824,7 +1866,7 @@ All API operations are applied immediately, the &quot;saved&quot; flag simply
 represents visibility in the E-archive.</p>
 </td><td><p>boolean</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses'>Responses</h3>
+<h3 id='responses-2'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>201</td> <td><p>The document metadata as a JSON.</p>
@@ -1857,7 +1899,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-2'>Responses</h3>
+<h3 id='responses-3'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>201</td> <td><p>The document metadata as a JSON.</p>
@@ -1891,7 +1933,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-3'>Responses</h3>
+<h3 id='responses-4'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>201</td> <td><p>The document metadata as a JSON.</p>
@@ -1928,7 +1970,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-4'>Responses</h3>
+<h3 id='responses-5'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -1972,7 +2014,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-5'>Responses</h3>
+<h3 id='responses-6'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -2080,7 +2122,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-6'>Responses</h3>
+<h3 id='responses-7'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -2125,7 +2167,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-7'>Responses</h3>
+<h3 id='responses-8'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -2170,7 +2212,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-8'>Responses</h3>
+<h3 id='responses-9'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -2204,7 +2246,7 @@ is missing or invalid in the document is given.</li>
 Will not change.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
 </table>
-<h3 id='responses-9'>Responses</h3>
+<h3 id='responses-10'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -2234,7 +2276,7 @@ You can only get documents that you have access to.</p>
 Must be a pending document created or modified within the last 24 hours.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
 </table>
-<h3 id='responses-10'>Responses</h3>
+<h3 id='responses-11'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -2278,7 +2320,7 @@ This value can change before document is made ready for signing, and should
 not be used to identify signatories while document is a draft.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
 </table>
-<h3 id='responses-11'>Responses</h3>
+<h3 id='responses-12'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>PNG image, <code>content-type: image/png</code>.</p>
@@ -2328,7 +2370,7 @@ of documents in the order you provided.</p>
 <p>Must be of type <a href="#list-sorting">List Sorting</a>.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>query</td></tr>
 </table>
-<h3 id='responses-12'>Responses</h3>
+<h3 id='responses-13'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON object containing the total number of matching documents, and an
@@ -2361,7 +2403,7 @@ browser.</p>
 Will not change.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
 </table>
-<h3 id='responses-13'>Responses</h3>
+<h3 id='responses-14'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The PDF file.</p>
@@ -2403,7 +2445,7 @@ Will not change.</p>
 <tr><td><p><code>file_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a file available via Scrive.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
 </table>
-<h3 id='responses-14'>Responses</h3>
+<h3 id='responses-15'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The file</p>
@@ -2439,7 +2481,7 @@ Will not change.</p>
 Languages may be added or removed without notice.</p>
 </td><td><p>string</p></td><td>query</td></tr>
 </table>
-<h3 id='responses-15'>Responses</h3>
+<h3 id='responses-16'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The list of history items for this document.</p>
@@ -2471,7 +2513,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-16'>Responses</h3>
+<h3 id='responses-17'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>202</td> <td><p>A callback will be triggered for the document if a User or Document
@@ -2504,7 +2546,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-17'>Responses</h3>
+<h3 id='responses-18'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>202</td> <td><p>The call succeeded, reminders have been queued and will be sent to all
@@ -2538,7 +2580,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-18'>Responses</h3>
+<h3 id='responses-19'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -2572,7 +2614,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-19'>Responses</h3>
+<h3 id='responses-20'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -2605,7 +2647,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-20'>Responses</h3>
+<h3 id='responses-21'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -2635,7 +2677,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-21'>Responses</h3>
+<h3 id='responses-22'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -2668,7 +2710,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-22'>Responses</h3>
+<h3 id='responses-23'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -2698,7 +2740,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-23'>Responses</h3>
+<h3 id='responses-24'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -2739,7 +2781,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-24'>Responses</h3>
+<h3 id='responses-25'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>202</td> <td><p>The call succeeded, an email to the given address has been queued.</p>
@@ -2775,7 +2817,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-25'>Responses</h3>
+<h3 id='responses-26'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -2809,7 +2851,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-26'>Responses</h3>
+<h3 id='responses-27'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>201</td> <td><p>The document metadata as a JSON.</p>
@@ -2864,7 +2906,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-27'>Responses</h3>
+<h3 id='responses-28'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -2934,7 +2976,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-28'>Responses</h3>
+<h3 id='responses-29'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -2997,7 +3039,7 @@ operation if these match.
 Otherwise you will get a <code>HTTP 409</code>.</p>
 </td><td><p>integer</p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-29'>Responses</h3>
+<h3 id='responses-30'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
@@ -3034,7 +3076,7 @@ is provided.</li>
 <tr><td><p><code>shared</code><br/><em>required</em></p></td><td><p><code>true</code> to share, <code>false</code> to unshare.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-30'>Responses</h3>
+<h3 id='responses-31'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>202</td> <td><p>The change has succeeded. The body is empty.</p>
@@ -3076,7 +3118,7 @@ list of attachments in the order you provided.</p>
 <p>Must be of type <a href="#list-sorting">List Sorting</a>.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>query</td></tr>
 </table>
-<h3 id='responses-31'>Responses</h3>
+<h3 id='responses-32'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON object containing an array of attachments.</p>
@@ -3102,7 +3144,7 @@ the browser.</p>
 <tr><td><p><code>attachment_id</code><br/><em>required</em></p></td><td><p>Identifier for the attachment.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
 </table>
-<h3 id='responses-32'>Responses</h3>
+<h3 id='responses-33'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The attachment's PDF file.</p>
@@ -3127,7 +3169,7 @@ the file name.</p>
 <tr><td><p><code>file</code><br/><em>required</em></p></td><td><p>The PDF to use for the attachment.</p>
 </td><td><p>file<br><em>application/pdf</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-33'>Responses</h3>
+<h3 id='responses-34'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>201</td> <td><p>The attachment has been added. The body is empty.</p>
@@ -3149,7 +3191,7 @@ the file name.</p>
 <tr><td><p><code>attachment_ids</code><br/><em>required</em></p></td><td><p>List of attachment IDs of attachments to delete.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-34'>Responses</h3>
+<h3 id='responses-35'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The change has succeeded. The body is empty.</p>
@@ -3173,7 +3215,7 @@ the file name.</p>
 <tr><td><p><code>shared</code><br/><em>required</em></p></td><td><p><code>true</code> to share, <code>false</code> to unshare.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-35'>Responses</h3>
+<h3 id='responses-36'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>202</td> <td><p>The change has succeeded. The body is empty.</p>
@@ -3195,7 +3237,7 @@ the file name.</p>
 <tr><td><p><code>personal_token</code><br/><em>required</em></p></td><td><p>Must be of type <a href="#oauthauthorization"><code>OAuthAuthorization</code></a></p>
 </td><td><p>object<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-36'>Responses</h3>
+<h3 id='responses-37'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>Returns a JSON with <code>session_id</code></p>
@@ -3212,7 +3254,7 @@ the file name.</p>
 
 <p>If already activated, returns true,
 else triggers QR code generation</p>
-<h3 id='responses-37'>Responses</h3>
+<h3 id='responses-38'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON with the <code>twofactor_active</code> flag and (if not activated yet) a <code>qr_code</code></p>
@@ -3234,7 +3276,7 @@ else triggers QR code generation</p>
 <tr><td><p><code>totp</code><br/><em>required</em></p></td><td><p>2-factor code</p>
 </td><td></td><td>query</td></tr>
 </table>
-<h3 id='responses-38'>Responses</h3>
+<h3 id='responses-39'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON with the <code>twofactor_active</code> flag and <code>totp_valid</code> flag</p>
@@ -3252,7 +3294,7 @@ else triggers QR code generation</p>
 </p>
 
 <p>Disables 2-factor-authentication</p>
-<h3 id='responses-39'>Responses</h3>
+<h3 id='responses-40'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON with the <code>twofactor_active</code> flag</p>
@@ -3268,7 +3310,7 @@ else triggers QR code generation</p>
 </p>
 
 <p>Returns an object with boolean flag</p>
-<h3 id='responses-40'>Responses</h3>
+<h3 id='responses-41'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON with the <code>deletable</code> flag and (if not deletable) a <code>reason</code></p>
@@ -3290,7 +3332,7 @@ else triggers QR code generation</p>
 <tr><td><p><code>email</code><br/><em>required</em></p></td><td><p>User's email</p>
 </td><td></td><td>query</td></tr>
 </table>
-<h3 id='responses-41'>Responses</h3>
+<h3 id='responses-42'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The user was deleted succesfully. The body is empty</p>
@@ -3308,7 +3350,7 @@ else triggers QR code generation</p>
 </p>
 
 <p>Returns an object with user and company data detention policies</p>
-<h3 id='responses-42'>Responses</h3>
+<h3 id='responses-43'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>An object with data retention policies properties.</p>
@@ -3330,7 +3372,7 @@ else triggers QR code generation</p>
 <tr><td><p><code>data_retention_policy</code><br/><em>required</em></p></td><td><p>Must be of type <a href="#dataretentionpolicy"><code>DataRetentionPolicy</code></a></p>
 </td><td><p>object<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-43'>Responses</h3>
+<h3 id='responses-44'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The data retention policy has been updated. The body is empty.</p>
@@ -3352,7 +3394,7 @@ else triggers QR code generation</p>
 <tr><td><p><code>withCompany</code><br/><em>optional</em></p></td><td><p>Boolean flag for showing company information in the response.</p>
 </td><td><p>string</p></td><td>query</td></tr>
 </table>
-<h3 id='responses-44'>Responses</h3>
+<h3 id='responses-45'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON object with the statistics on usage:
@@ -3375,14 +3417,14 @@ count of documents on different stages of the process</p>
 <tr><td><p><code>withCompany</code><br/><em>optional</em></p></td><td><p>Boolean flag for showing company information in the response.</p>
 </td><td><p>string</p></td><td>query</td></tr>
 </table>
-<h3 id='responses-45'>Responses</h3>
+<h3 id='responses-46'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON object with the statistics on usage:
 count of documents on different stages of the process</p>
 </td> </tr>
 </table>
-<h1 id='responses-46'>Responses</h1><h2 id='document'>Document</h2>
+<h1 id='responses-47'>Responses</h1><h2 id='document'>Document</h2>
 <p>The document metadata as a JSON.</p>
 <h3 id='document-2'>Document</h3>
 <p><code>(object)</code></p>
