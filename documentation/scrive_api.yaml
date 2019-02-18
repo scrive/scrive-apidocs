@@ -69,6 +69,7 @@ info:
     | 2018-12-17  | Add documentation for `/documents/trash` and `/documents/delete` bulk endpoints |
     | 2018-12-17  | Add `fi_tupas` (Finnish EID) to `authentication_method_to_view`/`authentication_method_to_view_archived` |
     | 2019-01-03  | Add `usagestats` endpoints
+    | 2019-02-18  | Add monitoring endpoint which was already implemented but missing from this document |
 
     ## Environments & IP Addresses
 
@@ -772,6 +773,7 @@ schemes:
   - https
 
 tags:
+  - name: Monitor
   - name: Prepare
   - name: Get
   - name: Modify
@@ -781,6 +783,10 @@ tags:
   - name: Internal
 
 paths:
+
+  # Monitoring
+  /monitor/status:
+    $ref: ./api/monitor/status.yaml
 
   # Prepare
 
