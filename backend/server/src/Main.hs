@@ -82,7 +82,8 @@ main = withCurlDo $ do
 
     withPostgreSQL (unConnectionSource . simpleSource $ connSettings []) $ do
       checkDatabase extrasOptions kontraDomains kontraTables
-      dbUpdate $ SetMainDomainURL $ mainDomainUrl appConf
+      unless (readOnlyDatabase appConf) $ do
+        dbUpdate $ SetMainDomainURL $ mainDomainUrl appConf
 
     appGlobals <- do
       templates <- liftBase $

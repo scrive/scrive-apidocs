@@ -80,7 +80,8 @@ checkFieldsEqualAppConfCronConf
   (AppConf
     _httpBindAddress    _mainDomainUrl      _useHttps           amazonConfig
      dbConfig           _maxDBConnections   _queryTimeout       redisCacheConfig
-    _localFileCacheSize _logConfig          _production         _cdnBaseUrl
+    _localFileCacheSize _logConfig          _readOnlyDatabase    _production
+    _cdnBaseUrl
      guardTimeConf      _isMailBackdoorOpen  mailNoreplyAddress  cgiGrpConfig
     _admins             _sales              _initialUsers        mixpanelToken
     _gaToken            _trackjsToken       _hubspotConf         salesforceConf
@@ -117,7 +118,8 @@ checkFieldsEqualAppConfMailerConf
   (AppConf
     _httpBindAddress    _mainDomainUrl      _useHttps           amazonConfig
      dbConfig           _maxDBConnections   _queryTimeout       redisCacheConfig
-    _localFileCacheSize _logConfig          _production         _cdnBaseUrl
+    _localFileCacheSize _logConfig          _readOnlyDatabase   _production
+    _cdnBaseUrl
     _guardTimeConf      _isMailBackdoorOpen _mailNoreplyAddress _cgiGrpConfig
     _admins             _sales              _initialUsers       _mixpanelToken
     _gaToken            _trackjsToken       _hubspotConf        _salesforceConf
@@ -144,7 +146,8 @@ checkFieldsEqualAppConfMessengerConf
   (AppConf
     _httpBindAddress    _mainDomainUrl      _useHttps          _amazonConfig
      dbConfig           _maxDBConnections   _queryTimeout      _redisCacheConfig
-    _localFileCacheSize _logConfig          _production         _cdnBaseUrl
+    _localFileCacheSize _logConfig          _readOnlyDatabase  _production
+    _cdnBaseUrl
     _guardTimeConf      _isMailBackdoorOpen _mailNoreplyAddress _cgiGrpConfig
     _admins             _sales              _initialUsers       _mixpanelToken
     _gaToken            _trackjsToken       _hubspotConf        _salesforceConf
