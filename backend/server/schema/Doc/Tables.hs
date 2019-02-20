@@ -321,7 +321,7 @@ ctSignatoryLink = CompositeType {
 tableSignatoryLinkMagicHashes :: Table
 tableSignatoryLinkMagicHashes = tblTable
   { tblName = "signatory_link_magic_hashes"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns =
       [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
       , tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
@@ -333,7 +333,10 @@ tableSignatoryLinkMagicHashes = tblTable
       [ (fkOnColumn "signatory_link_id" "signatory_links" "id")
           { fkOnDelete = ForeignKeyCascade }
       ]
-  , tblIndexes = [tblIndex { idxColumns = ["hash", "signatory_link_id"], idxUnique = True }]
+  , tblIndexes =
+    [ indexOnColumn "signatory_link_id"
+    , uniqueIndexOnColumns ["hash", "signatory_link_id"]
+    ]
   }
 
 ctSignatoryLinkMagicHash :: CompositeType

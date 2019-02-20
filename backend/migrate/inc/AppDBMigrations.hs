@@ -171,4 +171,5 @@ kontraMigrations = [
   , addCanBeForwardedToSignatories
   , featureFlagsAddForwarding
   , createApiCallbackResults
+  , addIndexForEfficientJoinToSignatoryLinkMagicHashes
   ]
