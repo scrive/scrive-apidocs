@@ -1,5 +1,6 @@
-module Doc.Migrations (
-    addIsReceiptToDocument
+module Doc.Migrations
+  ( addIndexForEfficientJoinToSignatoryLinkMagicHashes
+  , addIsReceiptToDocument
   , addAllowsHighlightingToSignatories
   , addPKToDocumentTags
   , createHighlightedPagesTable
@@ -50,6 +51,18 @@ addNotificationDeliveryMethodToSignatories =
           [ sqlAlterColumn columnName "DROP DEFAULT"
           ]
     }
+
+addIndexForEfficientJoinToSignatoryLinkMagicHashes :: MonadDB m => Migration m
+addIndexForEfficientJoinToSignatoryLinkMagicHashes = Migration {
+    mgrTableName = tblName tableSignatoryLinkMagicHashes
+  , mgrFrom = 1
+  , mgrAction = StandardMigration $ do
+      runSQL_ $ smconcat
+        [ "CREATE INDEX"
+        , "idx__signatory_link_magic_hashes__signatory_link_id"
+        , "ON signatory_link_magic_hashes(signatory_link_id)"
+        ]
+  }
 
 addAuthenticationToViewArchivedMethodToSignatories :: MonadDB m => Migration m
 addAuthenticationToViewArchivedMethodToSignatories = Migration {

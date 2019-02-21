@@ -52,7 +52,10 @@ documentExtendingConsumer guardTimeConf templates pool
     }
   , ccJobIndex = decDocumentID
   , ccNotificationChannel = Nothing
-  , ccNotificationTimeout = 60 * 1000000 -- 1 minute
+  -- The amount of queued jobs in the table approximately equals the amount of
+  -- signed documents per month, so don't try to check for available jobs too
+  -- often as that requires full table scan.
+  , ccNotificationTimeout = 60 * 60 * 1000000 -- 1 hour
   , ccMaxRunningJobs = maxRunningJobs
   , ccProcessJob = \dec ->
       -- We put handling of DocumentWasPurged exception here, because

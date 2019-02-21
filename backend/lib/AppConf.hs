@@ -40,6 +40,7 @@ data AppConf = AppConf {
   , localFileCacheSize :: Int                  -- ^ size of local cache for
                                                -- files
   , logConfig          :: LogConfig            -- ^ logging configuration
+  , readOnlyDatabase   :: Bool
   , production         :: Bool
     -- ^ production flag, enables some production stuff, disables some
     -- development stuff
@@ -113,6 +114,9 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> field "logging"
       logConfig
       "Logging configuration"
+  <*> fieldDef "read_only_database" False
+      readOnlyDatabase
+      "Is database read-only?"
   <*> fieldDef "production" False
       production
       "Is this production server"
