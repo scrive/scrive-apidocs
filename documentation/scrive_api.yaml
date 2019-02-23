@@ -309,7 +309,7 @@ info:
     For callbacks to be triggered, you need to set the `api_callback_url` value
     on the Document.
     You can also trigger callbacks manually using the `callback` API call (this
-    call has no effect of the `api_callback_url` is not set).
+    call has no effect if the `api_callback_url` is not set).
 
     For certain use cases it is possible to instead have a "User callback
     scheme" defined.
