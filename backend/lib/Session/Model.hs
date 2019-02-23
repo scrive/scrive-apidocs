@@ -82,8 +82,9 @@ getCurrentSession = currentSessionInfoCookies >>= getSessionFromCookies
         Nothing  -> getSessionFromCookies css
     getSessionFromCookies [] = emptySession
 
-startNewSession :: ( FilterMonad Response m, MonadLog m, MonadDB m
-                   , MonadThrow m, ServerMonad m, MonadIO m, MonadBase IO m)
+startNewSession :: ( FilterMonad Response m, ServerMonad m
+                   , MonadDB m, MonadLog m, MonadThrow m
+                   , MonadIO m, MonadBase IO m )
                 => Session -> Maybe UserID -> Maybe UserID -> m Session
 startNewSession _       Nothing Nothing    = internalError
 startNewSession session mnewuid mnewpaduid = do
@@ -96,8 +97,9 @@ startNewSession session mnewuid mnewpaduid = do
     , sesPadUserID = mnewpaduid
     }
 
-updateSession :: ( FilterMonad Response m, MonadLog m, MonadDB m, MonadThrow m
-                 , ServerMonad m, MonadIO m, MonadBase IO m )
+updateSession :: ( FilterMonad Response m, ServerMonad m
+                 , MonadDB m, MonadLog m, MonadThrow m
+                 , MonadIO m, MonadBase IO m )
               => Session -> SessionID -> (Maybe UserID) -> (Maybe UserID)
               -> m ()
 updateSession old_ses new_ses_id new_muser new_mpad_user = do
@@ -120,7 +122,7 @@ updateSession old_ses new_ses_id new_muser new_mpad_user = do
         when (new_muser == Nothing && new_mpad_user == Nothing) $
           stopSessionCookie
     -- We got new session - now we need to generate a cookie for
-    -- it. We also update it with users logged in durring this
+    -- it. We also update it with users logged in during this
     -- handler.
     False | sesID old_ses /= new_ses_id -> do
       mses <- dbQuery $ GetSession new_ses_id
