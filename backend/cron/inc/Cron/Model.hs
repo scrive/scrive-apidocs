@@ -180,13 +180,13 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
                 [ "items_updated" .= ress ]
       now <- currentTime
       if now < todayAtHour 4 now
-      then RerunAfter <$> return (iseconds 2)
-      else RerunAt . nextDayMidnight <$> currentTime
+        then RerunAfter <$> return (iseconds 2)
+        else RerunAt . nextDayMidnight <$> currentTime
     DocumentsPurge -> do
       runDB $ do
-        purgedCount <- dbUpdate $ PurgeDocuments 30
-        logInfo "Purged documents" $ object [ "purged" .= purgedCount ]
-      return . RerunAfter $ iminutes 10
+        (purgedCount, time) <- timed . dbUpdate $ PurgeDocuments 30
+        logInfo "Purged documents" $ object ["purged" .= purgedCount, "time" .= time]
+      RerunAt . nextDayAtHour 2 <$> currentTime
     DocumentsArchiveIdle -> do
       now <- currentTime
       archived <- runDB $ archiveIdleDocuments now
@@ -220,10 +220,11 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
     MarkOrphanFilesForPurge -> do
       let -- Share the string between all the log messages.
           orphanFileMarked = "Orphan file marked for purge"
-      fids <- runDB . dbUpdate . MarkOrphanFilesForPurgeAfter $ idays 7
+      (fids, time) <- timed . runDB . dbUpdate . MarkOrphanFilesForPurgeAfter $ idays 7
+      logInfo "Purged files" $ object ["purged" .= length fids, "time" .= time]
       forM_ fids $ \fid -> logInfo orphanFileMarked $ object [identifier fid]
       -- If maximum amount of files was marked, run it again shortly after.
-      RerunAt . nextDayAtHour 2 <$> currentTime
+      RerunAt . nextDayAt 2 30 <$> currentTime
     OldDraftsRemoval -> do
       runDB $ do
         delCount <- dbUpdate $ RemoveOldDrafts 100

@@ -2,12 +2,15 @@ module Log.Utils (
     equalsExternalBS
   , equalsExternalBSL
   , localRandomID
+  , timed
   ) where
 
+import Control.Monad.Base
 import Crypto.RNG
 import Data.Aeson
 import Data.Aeson.Types
 import Data.Char
+import Data.Time
 import Log.Class
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Base64 as B64
@@ -39,3 +42,11 @@ localRandomID name action = do
   uuid <- randomBytes 8
   let b64uuid = T.decodeUtf8 $ B16.encode uuid
   localData [name .= b64uuid] action
+
+-- | Useful for logging how much time things took.
+timed :: MonadBase IO m => m r -> m (r, NominalDiffTime)
+timed mr = do
+  t1 <- liftBase getCurrentTime
+  r <- mr
+  t2 <- liftBase getCurrentTime
+  pure (r, diffUTCTime t2 t1)
