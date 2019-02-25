@@ -41,7 +41,6 @@ import DB
 import Doc.API.V2.Guards (guardThatUserExists)
 import Happstack.Fields
 import InputValidation
-import IPAddress
 import Kontra
 import KontraLink
 import Log.Identifier
@@ -606,7 +605,7 @@ apiCallDeleteUser = V2.api $ do
     Nothing -> return ()
 
   void $ dbUpdate $ DeleteUser (userid user)
-  void $ dbUpdate $ LogHistoryAccountDeleted (userid user) noIP (get ctxtime ctx)
+  void $ dbUpdate $ LogHistoryAccountDeleted (userid user) (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
 
   return $ V2.Ok ()
 

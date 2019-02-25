@@ -285,9 +285,9 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryUserInfoChanged Bool 
       [] -> return False
       _  -> update $ LogHistoryDetailsChanged userid ip time diff mpuser
 
-data LogHistoryAccountDeleted = LogHistoryAccountDeleted UserID IPAddress UTCTime
+data LogHistoryAccountDeleted = LogHistoryAccountDeleted UserID UserID IPAddress UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryAccountDeleted Bool where
-  update (LogHistoryAccountDeleted userid ip time) = addUserHistory
+  update (LogHistoryAccountDeleted userid deletinguserid ip time) = addUserHistory
     userid
     UserHistoryEvent {
         uheventtype = UserAccountDeleted
@@ -295,7 +295,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryAccountDeleted Bool w
       }
     ip
     time
-    Nothing
+    (Just deletinguserid)
 
 diffUserInfos :: UserInfo -> UserInfo -> [(String, String, String)]
 diffUserInfos old new = fstNameDiff
