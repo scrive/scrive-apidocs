@@ -550,6 +550,16 @@ var EmailModal = require("../../common/email_modal");
       return localization.reminder.formHead;
     },
 
+    getSsnLabel: function () {
+      var sig = this.props.signatory;
+      switch (sig.authenticationToSign()) {
+        case "dk_nemid":
+          return localization.eID.idName.nemId;
+        default:
+          return localization.docsignview.personalNumberLabel;
+      }
+    },
+
     onRemindViaEmailAndSMSModalClose: function () {
       this.setState({showRemindViaEmailAndSMSModal: false});
     },
@@ -656,7 +666,7 @@ var EmailModal = require("../../common/email_modal");
             {/* if */ signatory.personalnumber() &&
               <div className="fieldrow">
                 <span className="persnum field" title={signatory.personalnumber()}>
-                  {localization.docsignview.personalNumberLabel + ": " +
+                  {this.getSsnLabel() + ": " +
                     (signatory.personalnumber().trim() || localization.docsignview.notEntered)}
                 </span>
               </div>

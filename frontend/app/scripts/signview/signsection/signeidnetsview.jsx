@@ -146,12 +146,12 @@ var SignLegalAgreement = require("./signlegalagreement");
           }
           { /* if */ sig.dkNemIDAuthenticationToSign() && this.props.askForSSN &&
             <dl className="ssn-list">
-              <dt><label htmlFor="ssn">{localization.personalNumber}</label></dt>
+              <dt><label htmlFor="ssn">{localization.eID.idName.nemId}</label></dt>
               <dd>
                 <InfoTextInput
                   id="ssn"
                   ref="ssnInput"
-                  infotext={localization.ssnInfoText}
+                  infotext={localization.eID.infoText.nemId}
                   className={inputSSNClass}
                   value={fieldSSN.value()}
                   onChange={function (value) { fieldSSN.setValue(value); }}
@@ -160,7 +160,7 @@ var SignLegalAgreement = require("./signlegalagreement");
             </dl>
           }
           {/* else */ sig.dkNemIDAuthenticationToSign() && !this.props.askForSSN &&
-            <p className="ssn-text">{localization.personalNumber} <b>{ssn}</b></p>
+            <p className="ssn-text">{localization.eID.idName.nemId} <b>{ssn}</b></p>
           }
 
           <Button

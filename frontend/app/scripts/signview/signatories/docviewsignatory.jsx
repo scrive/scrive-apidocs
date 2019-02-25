@@ -95,6 +95,15 @@ module.exports = React.createClass({
                                             isFinnish: isFinnish});
       return mpn.maskNumberText();
     },
+    getSsnLabel: function () {
+      var sig = this.props.signatory;
+      switch (sig.authenticationToSign()) {
+        case "dk_nemid":
+          return localization.eID.idName.nemId;
+        default:
+          return localization.docsignview.personalNumberLabel;
+      }
+    },
     render: function () {
       var signatory = this.props.signatory;
       var smallView = ViewSize.isSmall();
@@ -129,7 +138,7 @@ module.exports = React.createClass({
       }
 
       if (signatory.personalnumber() && !signatory.hidePN()) {
-        const info = {label: localization.docsignview.personalNumberLabel,
+        const info = {label: this.getSsnLabel(),
                       text: this.censoredPersonalNumber() || localization.docsignview.notEntered};
         infoList.push(info);
       }

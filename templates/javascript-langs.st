@@ -1449,9 +1449,17 @@ javascriptLocalisation =
             , faviconDescription : "$_brandingCompanySettingsFaviconDescription()$"
             , uploadFavicon : "$_brandingCompanySettingsUploadFavicon()$"
           }
-      },
-      notNamedParty : "$_notNamedParty()$",
-      imageFileFormatNotSpportedIco : "$_imageFileFormatNotSpportedIco()$",
-      imageFileFormatNotSpported : "$_imageFileFormatNotSpported()$"
+      }
+      , notNamedParty : "$_notNamedParty()$"
+      , imageFileFormatNotSpportedIco : "$_imageFileFormatNotSpportedIco()$"
+      , imageFileFormatNotSpported : "$_imageFileFormatNotSpported()$"
+      , eID: {
+          idName: {
+              nemId: "$_eIdNameNemId()$"
+          }
+          , infoText: {
+              nemId: "$_eIdInfoTextNemId()$"
+          }
+      }
     };
 ###
