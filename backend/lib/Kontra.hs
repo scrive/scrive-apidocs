@@ -123,24 +123,24 @@ instance (MonadTrans fst, Monad (InnerKontra fst))
     => MailContextMonad (KontraG fst) where
   getMailContext = contextToMailContext <$> getContext
 
-{- Logged in user is admin with 2FA -}
+-- | Logged in user is admin with 2FA.
 isAdmin :: Context -> Bool
-isAdmin ctx = case get ctxmaybeuser ctx of
-                Nothing -> False
-                Just user -> (useremail (userinfo user) `elem` get ctxadminaccounts ctx)
-                            && (usertotpactive user || not (get ctxproduction ctx))
+isAdmin ctx =
+  case get ctxmaybeuser ctx of
+    Nothing -> False
+    Just user -> (useremail (userinfo user) `elem` get ctxadminaccounts ctx)
+                 && (usertotpactive user || not (get ctxproduction ctx))
 
 
-{- Logged in user is sales with 2FA -}
+-- | Logged in user is sales with 2FA.
 isSales :: Context -> Bool
-isSales ctx = case get ctxmaybeuser ctx of
-                Nothing -> False
-                Just user -> (useremail (userinfo user) `elem` get ctxsalesaccounts ctx)
-                            && (usertotpactive user || not (get ctxproduction ctx))
+isSales ctx =
+  case get ctxmaybeuser ctx of
+    Nothing -> False
+    Just user -> (useremail (userinfo user) `elem` get ctxsalesaccounts ctx)
+                 && (usertotpactive user || not (get ctxproduction ctx))
 
-{- |
-   Will 404 if not logged in as an admin.
--}
+-- | Will 404 if not logged in as an admin.
 onlyAdmin :: Kontrakcja m => m a -> m a
 onlyAdmin m = do
   admin <- isAdmin <$> getContext
@@ -148,9 +148,7 @@ onlyAdmin m = do
     then m
     else respond404
 
-{- |
-   Will 404 if not logged in as a sales admin.
--}
+-- | Will 404 if not logged in as a sales admin.
 onlySalesOrAdmin :: Kontrakcja m => m a -> m a
 onlySalesOrAdmin m = do
   admin <- (isAdmin || isSales) <$> getContext
@@ -158,9 +156,7 @@ onlySalesOrAdmin m = do
     then m
     else respond404
 
-{- |
-    Will 404 if the testing backdoor isn't open.
--}
+-- | Will 404 if the testing backdoor isn't open.
 onlyBackdoorOpen :: Kontrakcja m => m a -> m a
 onlyBackdoorOpen a = do
   backdoorOpen <- get ctxismailbackdooropen <$> getContext
@@ -168,9 +164,7 @@ onlyBackdoorOpen a = do
     then a
     else respond404
 
-{- |
-   Sticks the logged in user onto the context
--}
+-- | Sticks the logged in user onto the context.
 logUserToContext :: Kontrakcja m => Maybe User -> m ()
 logUserToContext user =
     modifyContext $ set ctxmaybeuser user
@@ -201,7 +195,9 @@ switchLang lang =
              (localizedVersion lang (get ctxglobaltemplates ctx))
              $ ctx
 
--- | Extract data from GET or POST request. Fail with 'internalError' if param
--- variable not present or when it cannot be read.
-getDataFnM :: (HasRqData m, MonadBase IO m, MonadIO m, ServerMonad m) => RqData a -> m a
+-- | Extract data from GET or POST request. Fail with 'internalError'
+-- if param variable not present or when it cannot be read.
+getDataFnM
+  :: (HasRqData m, MonadBase IO m, MonadIO m, ServerMonad m)
+  => RqData a -> m a
 getDataFnM fun = either (const internalError) return =<< getDataFn fun
