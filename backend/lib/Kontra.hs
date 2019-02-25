@@ -181,7 +181,7 @@ logPadUserToContext user =
 
 unsafeSessionTakeover :: Kontrakcja m => SessionCookieInfo -> m (Maybe Session)
 unsafeSessionTakeover SessionCookieInfo{..} = do
-  domain <- currentDomain
+  domain   <- currentDomain
   msession <- getSession cookieSessionID cookieSessionToken domain
   case msession of
    Nothing -> return Nothing

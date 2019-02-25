@@ -47,7 +47,8 @@ handleLoginGet = do
               localReferer = any checkPrefixes ["/","%2F"]
               naughtyRef   = any checkPrefixes ["javascript:","data:"]
               referer = if localReferer then dirtyReferer else Nothing
-          when naughtyRef $ logAttention_ "handleLoginGet: Somebody tried to XSS a referer"
+          when naughtyRef $
+            logAttention_ "handleLoginGet: Somebody tried to XSS a referer"
           ad <- getAnalyticsData
           content <- renderTemplate "loginPageWithBranding" $ do
             F.value "referer" $ fromMaybe "/" referer
@@ -56,9 +57,8 @@ handleLoginGet = do
           Right <$> simpleHtmlResponse content
        Just _ -> return $ Left LinkDesignView
 
-{- |
-   Handles submission of a login form.  On failure will redirect back to referer, if there is one.
--}
+-- | Handles the submission of a login form.  On failure will redirect
+-- back to referer, if there is one.
 handleLoginPost :: Kontrakcja m => m JSValue
 handleLoginPost = do
     padlogin <- isFieldSet "pad"
@@ -180,12 +180,10 @@ handleLoginPost = do
               logUserToContext muuser
           J.runJSONGenT $ J.value "logged" True
 
-{- |
-   Handles the logout, and sends user back to main page.
-
-   This should be removed when we rewrite header to React,
-   and we should only use handleLogoutAJAX then
--}
+-- | Handles logout and sends the user back to the main page.
+--
+-- This should be removed when we rewrite header to React, and we
+-- should only use handleLogoutAJAX then
 handleLogout :: Kontrakcja m => m Response
 handleLogout = do
     logUserToContext Nothing
@@ -204,11 +202,13 @@ handleLoginWithRedirectGet = do
   dirtyUrl <- guardJustM $ getField "url"
   let naughtyUrl = any (\s -> s `isPrefixOf` dirtyUrl) ["javascript:","data:"]
       url = if naughtyUrl then "" else dirtyUrl
-  when naughtyUrl $ logAttention_ "handleLoginWithRedirectGet: someone tried to XSS url field"
-  -- It may seems strange, that we do the same thing regardless whether the user
-  -- session exists. The reason is, that session from link may become invalid, when
-  -- user logs out from the original login link session. We want the original link
-  -- to keep redirecting as intended. User may need to login again using his email and
-  -- password depending on the redirect destination.
+  when naughtyUrl $
+    logAttention_ "handleLoginWithRedirectGet: someone tried to XSS url field"
+  -- It may seem strange that we do the same thing regardless of
+  -- whether the user session exists. The reason is that the session
+  -- from the link may become invalid when user logs out from the
+  -- original login link session. We want the original link to keep
+  -- redirecting as intended. The user may need to login again using
+  -- their email and password depending on the redirect destination.
   void $ unsafeSessionTakeover sci
   return $ internalResponse $ LinkExternal url
