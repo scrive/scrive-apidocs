@@ -24,5 +24,10 @@
     "port": 1234,
     "password": "bar",
     "database": 0
+  },
+  "_cron_monthly_invoice": {
+    "script_path": "pure_sql/invoice_stats.sql",
+    "recipient_name": "Invoicing Stats",
+    "recipient_email": "invoicing-stats@scrive.com"
   }
 }

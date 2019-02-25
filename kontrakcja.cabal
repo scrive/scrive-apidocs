@@ -1234,6 +1234,7 @@ Test-suite kontrakcja-test
                  Chargeable.Tables
                  ChargeableTest
                  Company.Migrations
+                 CronMonthlyInvoiceTest
                  UserGroupAccounts.Tables
                  UserGroupAccounts.Migrations
                  UserGroupAccountsTest

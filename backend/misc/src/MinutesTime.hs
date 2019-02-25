@@ -27,6 +27,7 @@ module MinutesTime (
   , nextDayMidnight
   , nextDayAtHour
   , todayAtHour
+  , beginningOfNextMonthAtHour
   ) where
 
 import Control.Monad.Time
@@ -154,4 +155,10 @@ nextDayAtHour hours time = UTCTime {
 todayAtHour :: Int -> UTCTime -> UTCTime
 todayAtHour hours time = time {
   utctDayTime = secondsToDiffTime . toInteger $ 3600 * hours
+}
+
+beginningOfNextMonthAtHour :: Int -> UTCTime -> UTCTime
+beginningOfNextMonthAtHour hours time = UTCTime {
+  utctDay = 1 `addGregorianMonthsClip` utctDay (beginingOfMonthUTC time)
+, utctDayTime = secondsToDiffTime . toInteger $ 3600 * hours
 }

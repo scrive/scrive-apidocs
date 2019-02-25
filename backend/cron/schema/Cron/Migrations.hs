@@ -14,6 +14,7 @@ module Cron.Migrations (
   , removeAmazonUploadJob
   , removePurgeOrphanFileJob
   , addTemporaryLoginTokensPurgeJob
+  , addMonthlyInvoiceJob
 ) where
 
 import Control.Monad.Catch
@@ -148,4 +149,12 @@ addTemporaryLoginTokensPurgeJob = Migration
   , mgrFrom = 18
   , mgrAction = StandardMigration $
       runSQL_ "INSERT INTO cron_jobs (id, run_at) VALUES ('temporary_login_tokens_purge', to_timestamp(0))"
+  }
+
+addMonthlyInvoiceJob :: (MonadDB m, MonadThrow m) => Migration m
+addMonthlyInvoiceJob = Migration {
+    mgrTableName = tblName tableCronJobs
+  , mgrFrom = 19
+  , mgrAction = StandardMigration $
+      runSQL_ "INSERT INTO cron_jobs (id, run_at) VALUES ('monthly_invoice', to_timestamp(0))"
   }

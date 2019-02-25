@@ -95,7 +95,7 @@ checkFieldsEqualAppConfCronConf
     _cronPlanhatConf              _cronMonitoringConf              cronMailNoreplyAddress
     _cronConsumerCronMaxJobs      _cronConsumerSealingMaxJobs     _cronConsumerSigningMaxJobs
     _cronConsumerExtendingMaxJobs _cronConsumerAPICallbackMaxJobs _cronConsumerFilePurgingMaxJobs
-     cronNetsSignConfig           cronPdfToolsLambdaConf)
+     cronNetsSignConfig           cronPdfToolsLambdaConf          _cronMonthlyInvoiceConf)
 
   = checkEq "amazon"               amazonConfig       cronAmazonConfig       *>
     checkEq "database"             dbConfig           cronDBConfig           *>

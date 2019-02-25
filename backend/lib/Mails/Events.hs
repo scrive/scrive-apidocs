@@ -14,6 +14,7 @@ module Mails.Events (
   , mailDeferredInvitation
   , mailUndeliveredInvitation
   , mailUndeliveredConfirmation
+  , sendMailWithMonthlyInvoice
   ) where
 
 import Control.Monad.Catch
@@ -22,8 +23,10 @@ import Crypto.RNG
 import Data.Functor ((<&>))
 import Data.Time
 import Log
+import System.Directory (listDirectory)
 import Text.StringTemplates.Templates hiding (runTemplatesT)
 import Text.StringTemplates.TemplatesLoader
+import qualified Data.ByteString.Char8 as BS
 import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.BrandedDomain
@@ -377,3 +380,20 @@ normaliseEvent currentEmail = \case
       MJ_Bounce_Hard -> DeliveryEvent Undelivered
       MJ_Blocked -> DeliveryEvent Undelivered
       _ -> OtherEvent
+
+sendMailWithMonthlyInvoice
+  :: (MonadDB m, MonadThrow m, MonadIO m, CryptoRNG m, MonadLog m)
+  => FilePath -> String -> String
+  -> m ()
+sendMailWithMonthlyInvoice dir name emailAddress = do
+  files <- liftIO $ listDirectory dir
+  attachments <- liftIO $ sequence $ map (\f -> do
+          fileContent <- BS.readFile $ dir ++ "/" ++ f
+          return (f, Left fileContent)) files
+  let mail = emptyMail
+        {
+          title       = "Monthly invoice"
+        , to          = [MailAddress name emailAddress]
+        , attachments = attachments
+        }
+  scheduleEmailSendout mail

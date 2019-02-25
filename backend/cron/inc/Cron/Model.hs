@@ -11,6 +11,10 @@ import Database.PostgreSQL.Consumers
 import Database.PostgreSQL.PQTypes
 import Log
 import Network.HTTP.Client (Manager)
+import System.Directory (removeDirectoryRecursive)
+import System.Exit (ExitCode(..))
+import System.Process.ByteString.Lazy (readProcessWithExitCode)
+import qualified Data.ByteString.Lazy as BSL hiding (length)
 import qualified Data.Text as T
 
 import Administration.Invoicing
@@ -56,6 +60,7 @@ data JobType
   | InvoicingUpload
   | MailEventsProcessing
   | MarkOrphanFilesForPurge
+  | MonthlyInvoice
   | OldDraftsRemoval
   | OldLogsRemoval
   | PasswordRemindersEvaluation
@@ -81,6 +86,7 @@ jobTypeMapper =
   , (InvoicingUpload, "invoice_upload")
   , (MailEventsProcessing, "mail_events_processing")
   , (MarkOrphanFilesForPurge, "mark_orphan_files_for_purge")
+  , (MonthlyInvoice, "monthly_invoice")
   , (OldDraftsRemoval, "old_drafts_removal")
   , (OldLogsRemoval, "old_logs_removal")
   , (PasswordRemindersEvaluation, "password_reminders_evaluation")
@@ -224,6 +230,34 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
       forM_ fids $ \fid -> logInfo orphanFileMarked $ object [identifier fid]
       -- If maximum amount of files was marked, run it again shortly after.
       RerunAt . nextDayAtHour 2 <$> currentTime
+    MonthlyInvoice -> do
+      case cronMonthlyInvoiceConf cronConf of
+        Nothing -> do
+          logInfo_ "Monthly-invoice job configuration is missing; skipping"
+        Just invoiceConf -> do
+          let script       = scriptPath invoiceConf
+              name         = recipientName invoiceConf
+              emailAddress = recipientEmail invoiceConf
+              reportsDir   = "monthly-report"
+              args         =
+                [
+                  T.unpack $ cronDBConfig cronConf
+                  , "-f", script
+                  , "-v", "report_dir=" ++ reportsDir
+                ]
+          (code, stdout, stderr) <- liftIO $ readProcessWithExitCode "psql" args BSL.empty
+          void $ case (code == ExitSuccess) of
+            False ->
+              logAttention "Running monthly-invoice psql script has failed" $ object [
+                  "exit_code" .= show code
+                , "stdout" `equalsExternalBSL` stdout
+                , "stderr" `equalsExternalBSL` stderr
+                ]
+            True -> do
+              void $ runCronEnv $
+                Mails.Events.sendMailWithMonthlyInvoice reportsDir name emailAddress
+              liftIO $ removeDirectoryRecursive reportsDir
+      RerunAt . beginningOfNextMonthAtHour 5 <$> currentTime
     OldDraftsRemoval -> do
       runDB $ do
         delCount <- dbUpdate $ RemoveOldDrafts 100

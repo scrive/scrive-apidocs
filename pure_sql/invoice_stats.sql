@@ -26,6 +26,9 @@
   `date_to` is missing, the very beginning of the current day will be
   used.
 
+- `report_dir` is the directory where report files will be created. If left
+   empty, the `monthly-invoice` will be used.
+
 */
 
 \set QUIET on
@@ -43,8 +46,9 @@ BEGIN;
 -- for `date_from`), unless this variable was initialised before running the
 -- script (e.g. on the command line by means of `-v`). That is why we check for
 -- that string in the step after this.
-\set date_from :date_from
-\set date_to   :date_to
+\set date_from  :date_from
+\set date_to    :date_to
+\set report_dir :report_dir
 
 SELECT CASE
   WHEN :'date_to' = ':date_to'
@@ -57,6 +61,12 @@ SELECT CASE
   THEN (date_trunc('month', timestamptz(:'date_to') - interval '1 day') :: TEXT)
   ELSE :'date_from'
 END AS "date_from" \gset
+
+SELECT CASE
+  WHEN :'report_dir' = ':report_dir'
+  THEN 'monthly-invoice'
+  ELSE :'report_dir'
+END AS "report_dir" \gset
 
 CREATE OR REPLACE FUNCTION escape_for_csv(str text)
 RETURNS text AS
@@ -633,8 +643,6 @@ CREATE TABLE report_aggregated AS
 -- format timestamps to use as dates in report file
 SELECT to_char((:'date_from' :: TIMESTAMPTZ), ('YYYYMMDD' :: TEXT)) AS "filedate_from" \gset
 SELECT to_char((:'date_to' :: TIMESTAMPTZ), ('YYYYMMDD' :: TEXT)) AS "filedate_to" \gset
--- update query buffer with current details for use in pipe; use is simply to add a date
-SELECT :'filedate_from' AS "From", :'filedate_to' AS "To";
 
 -- To get date in filename of the report: write current query buffer to
 -- shell, sed the dates out of it and change filename. We do it in this way since
@@ -642,8 +650,24 @@ SELECT :'filedate_from' AS "From", :'filedate_to' AS "To";
 -- 2) psql cannot name the file using the arguments supplied directly (in
 -- `\copy` command above).
 -- We add a UTF-8 BOM for the benefit of Excel imports.
-\w | printf '\xef\xbb\xbf' >> report_tmp.csv; cat report-master.csv >> report_tmp.csv; mv report_tmp.csv report-master-$(sed "s/.*\([0-9]\{8\}\).*\([0-9]\{8\}\).*/\1_\2/g").csv; rm report-master.csv; rm -f report_tmp.csv
+
+-- create directory for reports
+SELECT :'report_dir' AS "dir";
+\w | mkdir -p `sed "s/SELECT '\(.*\)' AS \"dir\";/\1/"`
+
+\! printf '\xef\xbb\xbf' >> report_tmp.csv;
+\! cat report-master.csv >> report_tmp.csv;
+-- update query buffer with current details for use in pipe; use is simply to add a date
+SELECT :'report_dir' AS "dir", :'filedate_from' AS "From", :'filedate_to' AS "To";
+\w | mv report_tmp.csv `sed "s/SELECT '\(.*\)' AS \"dir\".*\([0-9]\{8\}\).*\([0-9]\{8\}\).*/\1\/report-master-\2_\3.csv/"`;
+\! rm report-master.csv;
+\! rm -f report_tmp.csv
+
+\! printf '\xef\xbb\xbf' >> report_tmp.csv;
+\! cat report-aggregated.csv >> report_tmp.csv;
 -- update query buffer with date details again
-SELECT :'filedate_from' AS "From", :'filedate_to' AS "To";
-\w | printf '\xef\xbb\xbf' >> report_tmp.csv; cat report-aggregated.csv >> report_tmp.csv; mv report_tmp.csv report-aggregated-$(sed "s/.*\([0-9]\{8\}\).*\([0-9]\{8\}\).*/\1_\2/g").csv; rm report-aggregated.csv; rm -f report_tmp.csv;
+SELECT :'report_dir' AS "dir", :'filedate_from' AS "From", :'filedate_to' AS "To";
+\w | mv report_tmp.csv `sed "s/SELECT '\(.*\)' AS \"dir\".*\([0-9]\{8\}\).*\([0-9]\{8\}\).*/\1\/report-aggregated-\2_\3.csv/"`;
+\! rm report-aggregated.csv;
+\! rm -f report_tmp.csv;
 ROLLBACK;

@@ -28,6 +28,7 @@ import CompanyBrandingTest
 import CompanyControlTest
 import ConfigTests
 import Configuration
+import CronMonthlyInvoiceTest
 import CSSGenerationTest
 import CSVUtilTest
 import Database.Redis.Configuration
@@ -102,6 +103,7 @@ allTests = [
   , companyBrandingTests
   , companyControlTests
   , configTests
+  , cronMonthlyInvoiceTest
   , cssGenerationTests
   , csvUtilTests
   , docControlTests
@@ -211,6 +213,8 @@ testMany' (allargs, ts) runLogger rng = do
       , _teAmazonConfig       = testAmazonConfig tconf
       , _teFileMemCache       = memcache
       , _teRedisConn          = mRedisConn
+      , _teCronDBConfig       = testDBConfig tconf
+      , _teCronMonthlyInvoice = testCronMonthlyInvoiceConf tconf
       }
       ts' = if get teStagingTests env
             then stagingTests ++ ts

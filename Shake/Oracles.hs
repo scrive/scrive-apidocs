@@ -44,24 +44,27 @@ newtype TeamCityBuildLambdaConf = TeamCityBuildLambdaConf ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 newtype TeamCityBuildS3Conf = TeamCityBuildS3Conf ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
+newtype TeamCityBuildCronMonthlyInvoice = TeamCityBuildCronMonthlyInvoice ()
+  deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 newtype CreateTestDBWithConfData = CreateTestDBWithConfData ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 
-type instance RuleResult GhcVersion                 = String
-type instance RuleResult TeamCity                   = Bool
-type instance RuleResult NginxConfPath              = String
-type instance RuleResult NginxConfPathAlternative   = String
-type instance RuleResult BuildTarget                = String
-type instance RuleResult BuildSandbox               = String
-type instance RuleResult BuildTestConfPath          = String
-type instance RuleResult BuildDev                   = Bool
-type instance RuleResult BuildTestCoverage          = Bool
-type instance RuleResult BuildCabalConfigureOptions = String
-type instance RuleResult TeamCityBuildDBConnString  = String
-type instance RuleResult TeamCityBuildDBName        = String
-type instance RuleResult TeamCityBuildLambdaConf    = String
-type instance RuleResult TeamCityBuildS3Conf        = String
-type instance RuleResult CreateTestDBWithConfData   = (String, String, String, String)
+type instance RuleResult GhcVersion                      = String
+type instance RuleResult TeamCity                        = Bool
+type instance RuleResult NginxConfPath                   = String
+type instance RuleResult NginxConfPathAlternative        = String
+type instance RuleResult BuildTarget                     = String
+type instance RuleResult BuildSandbox                    = String
+type instance RuleResult BuildTestConfPath               = String
+type instance RuleResult BuildDev                        = Bool
+type instance RuleResult BuildTestCoverage               = Bool
+type instance RuleResult BuildCabalConfigureOptions      = String
+type instance RuleResult TeamCityBuildDBConnString       = String
+type instance RuleResult TeamCityBuildDBName             = String
+type instance RuleResult TeamCityBuildLambdaConf         = String
+type instance RuleResult TeamCityBuildS3Conf             = String
+type instance RuleResult TeamCityBuildCronMonthlyInvoice = String
+type instance RuleResult CreateTestDBWithConfData        = (String, String, String, String, String)
 
 addOracles :: Rules ()
 addOracles = do
@@ -82,6 +85,8 @@ addOracles = do
                      fromMaybe "" <$> getEnv "TEST_LAMBDA_CONF"
   void $ addOracle $ \(TeamCityBuildS3Conf _)  ->
                      fromMaybe "" <$> getEnv "TEST_S3_CONF"
+  void $ addOracle $ \(TeamCityBuildCronMonthlyInvoice _)  ->
+                     fromMaybe "" <$> getEnv "TEST_CRON_MONTHLY_INVOICE"
 
   -- This is needed by our build.
   -- FIXME should be part of SHAKE_BUILD_ env vars?
@@ -111,19 +116,23 @@ addOracles = do
                         "kontrakcja_test_%Y_%m_%d_%H_%M_%S"
                         now
         defConnString = "host='localhost' user='kontra' password='kontrapwd'"
-    connString <- if tc then askOracle (TeamCityBuildDBConnString ())
-                        else return defConnString
-    dbName     <- if tc then askOracle (TeamCityBuildDBName ())
-                        else return defDBName
-    lConf      <- if tc then askOracle (TeamCityBuildLambdaConf ())
-                        else error
-                        "AWS Lambda configuration for tests must be defined"
-                        :: m String
-    s3Conf     <- if tc then askOracle (TeamCityBuildS3Conf ())
-                        else error
-                        "AWS S3 configuration for tests must be defined"
-                        :: m String
-    return $ (dbName, connString, lConf, s3Conf)
+    connString      <- if tc then askOracle (TeamCityBuildDBConnString ())
+                             else return defConnString
+    dbName          <- if tc then askOracle (TeamCityBuildDBName ())
+                             else return defDBName
+    lConf           <- if tc then askOracle (TeamCityBuildLambdaConf ())
+                             else error
+                             "AWS Lambda configuration for tests must be defined"
+                             :: m String
+    s3Conf          <- if tc then askOracle (TeamCityBuildS3Conf ())
+                             else error
+                             "AWS S3 configuration for tests must be defined"
+                             :: m String
+    cronInvoiceConf <- if tc then askOracle (TeamCityBuildCronMonthlyInvoice ())
+                             else error
+                             "Cron monthly-invoice configuration for tests must be defined"
+                             :: m String
+    return $ (dbName, connString, lConf, s3Conf, cronInvoiceConf)
 
   return ()
 
