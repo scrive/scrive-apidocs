@@ -29,26 +29,31 @@ curl_exe :: String
 curl_exe = "curl"
 
 -- | This function executes curl as external program. Args are args.
-readCurl :: MonadBase IO m
-         => [String]                 -- ^ any arguments
-         -> BSL.ByteString           -- ^ standard input
-         -> m (ExitCode, BSL.ByteString, BSL.ByteString) -- ^ exitcode, stdout, stderr
-readCurl args input = liftBase $ readProcessWithExitCode curl_exe (["--max-time", "60", "-s", "-S"] ++ args) input
+readCurl
+  :: MonadBase IO m
+  => [String]                 -- ^ any arguments
+  -> BSL.ByteString           -- ^ standard input
+  -> m (ExitCode, BSL.ByteString, BSL.ByteString) -- ^ exitcode, stdout, stderr
+readCurl args input = liftBase $
+  readProcessWithExitCode curl_exe
+  (["--max-time", "60", "-s", "-S"] ++ args) input
 
-sftpTransfer :: (MonadBase IO m)
-             => SFTPConfig
-             -> FilePath
-             -> m (ExitCode, BSL.ByteString, BSL.ByteString)
+sftpTransfer
+  :: (MonadBase IO m)
+  => SFTPConfig
+  -> FilePath
+  -> m (ExitCode, BSL.ByteString, BSL.ByteString)
 sftpTransfer SFTPConfig{..} filePath = do
-      -- we want the directory specified to actually be interpreted as a
-      -- directory and not as a file
-      let sftpRemoteDir' = sftpRemoteDir <> if (last sftpRemoteDir /= '/')
-                                            then "/" else ""
-      readCurl (concat [ ["-T", filePath]
-                       , ["sftp://" <> sftpUser <> ":" <> sftpPassword <> "@" <>
-                          sftpHost <> sftpRemoteDir']
-                       ])
-               BSL.empty
+  -- We want the directory specified to actually be interpreted as a
+  -- directory and not as a file.
+  let sftpRemoteDir' = sftpRemoteDir <> if (last sftpRemoteDir /= '/')
+                                        then "/" else ""
+  readCurl
+    (concat [ ["-T", filePath]
+            , ["sftp://" <> sftpUser <> ":" <> sftpPassword <> "@" <>
+                sftpHost <> sftpRemoteDir']
+            ])
+    BSL.empty
 
 
 checkPathToExecutable :: FilePath -> IO FilePath
@@ -64,17 +69,17 @@ checkExecutableVersion path options = do
 
 importantExecutables :: [(T.Text, [String])]
 importantExecutables =
-  [ ("java", ["-version"])
-  , ("curl", ["-V"])
-  , ("mutool", ["-v"])
-  , ("pngquant", ["--version"])
-  , ("convert", ["--version"])
-  , ("identify", ["--version"])
-  , ("lessc", ["-v"])
-  , ("gnuplot", ["--version"])
+  [ ("java",      ["-version"])
+  , ("curl",      ["-V"])
+  , ("mutool",    ["-v"])
+  , ("pngquant",  ["--version"])
+  , ("convert",   ["--version"])
+  , ("identify",  ["--version"])
+  , ("lessc",     ["-v"])
+  , ("gnuplot",   ["--version"])
   , ("pdfdetach", ["-v"])
-  , ("qrencode", ["--version"])
-  , ("xmlsec1", ["--version"])
+  , ("qrencode",  ["--version"])
+  , ("xmlsec1",   ["--version"])
   ]
 
 checkExecutables :: (MonadLog m, MonadBase IO m, Functor m) => m ()
