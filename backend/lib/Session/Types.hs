@@ -30,10 +30,10 @@ emptySession :: ( CryptoRNG m, MonadDB m, MonadThrow m
                 , MonadTime m, ServerMonad m )
              => m Session
 emptySession = do
-  now <- currentTime
-  token <- random
+  now        <- currentTime
+  token      <- random
   csrf_token <- random
-  domain <- currentDomain
+  domain     <- currentDomain
   return Session {
     sesID        = SessionID.tempSessionID
   , sesUserID    = Nothing
