@@ -1,13 +1,20 @@
-module Utils.IO where
+module Utils.IO ( checkExecutables
+                , readCurl
+                , sftpTransfer
+                , waitForTermination
+                )
+where
 
 import Control.Concurrent
 import Control.Monad.Base
 import Log
+import System.Directory (findExecutable)
 import System.Exit
 import System.Posix.IO (stdInput)
 import System.Posix.Signals
 import System.Posix.Terminal (queryTerminal)
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
+import qualified Data.Aeson.Types as Aeson
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
 import qualified Data.Text as T
@@ -55,47 +62,43 @@ sftpTransfer SFTPConfig{..} filePath = do
             ])
     BSL.empty
 
-
-checkPathToExecutable :: FilePath -> IO FilePath
-checkPathToExecutable filepath = do
-    (_code',stdout',_stderr') <- readProcessWithExitCode "which" [filepath] (BSL.empty)
-    return $ BSL.toString stdout'
-
-checkExecutableVersion :: FilePath -> [String] -> IO String
-checkExecutableVersion path options = do
-    (_code',stdout',stderr') <- readProcessWithExitCode path options (BSL.empty)
-    return $ BSL.toString stdout' ++ BSL.toString stderr'
-
-
-importantExecutables :: [(T.Text, [String])]
-importantExecutables =
-  [ ("java",      ["-version"])
-  , ("curl",      ["-V"])
-  , ("mutool",    ["-v"])
-  , ("pngquant",  ["--version"])
-  , ("convert",   ["--version"])
-  , ("identify",  ["--version"])
-  , ("lessc",     ["-v"])
-  , ("gnuplot",   ["--version"])
-  , ("pdfdetach", ["-v"])
-  , ("qrencode",  ["--version"])
-  , ("xmlsec1",   ["--version"])
-  ]
-
-checkExecutables :: (MonadLog m, MonadBase IO m, Functor m) => m ()
+checkExecutables :: forall m . (MonadLog m, MonadBase IO m, Functor m) => m ()
 checkExecutables = logInfo "Checking paths to executables:" . object
-  =<< mapM check (sort importantExecutables)
+                   =<< mapM check (sort importantExecutables)
   where
-    check (filepath, options) = do
-      realpathlines <- lines `fmap` (liftBase $ checkPathToExecutable $ T.unpack filepath)
-      case realpathlines of
-        [] -> do
+    check :: (T.Text, [String]) -> m Aeson.Pair
+    check (filepath, options) =
+      checkFullExePath =<<
+      (liftBase . findExecutable . T.unpack $ filepath)
+      where
+        checkFullExePath Nothing = do
           logAttention "Not all important executables are present" $ object [
-              "executable" .= show filepath
+            "executable" .= show filepath
             ]
           liftBase exitFailure
-        (realpath:_) -> if null options
-          then return $ filepath .= realpath
-          else do
-            ver <- liftBase $ checkExecutableVersion realpath options
-            return $ filepath .= (realpath : lines ver)
+        checkFullExePath (Just fullpath) | null options
+          = return $ filepath .= fullpath
+        checkFullExePath (Just fullpath) | otherwise
+          = do ver <- liftBase $ readExecutableVersion fullpath options
+               return $ filepath .= (fullpath : lines ver)
+
+    readExecutableVersion :: FilePath -> [String] -> IO String
+    readExecutableVersion path options = do
+      (_code',stdout',stderr') <-
+        readProcessWithExitCode path options (BSL.empty)
+      return $ BSL.toString stdout' ++ BSL.toString stderr'
+
+    importantExecutables :: [(T.Text, [String])]
+    importantExecutables =
+      [ ("java",      ["-version"])
+      , ("curl",      ["-V"])
+      , ("mutool",    ["-v"])
+      , ("pngquant",  ["--version"])
+      , ("convert",   ["--version"])
+      , ("identify",  ["--version"])
+      , ("lessc",     ["-v"])
+      , ("gnuplot",   ["--version"])
+      , ("pdfdetach", ["-v"])
+      , ("qrencode",  ["--version"])
+      , ("xmlsec1",   ["--version"])
+      ]
