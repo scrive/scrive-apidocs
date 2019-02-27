@@ -7,6 +7,7 @@ where
 
 import Control.Concurrent
 import Control.Monad.Base
+import Data.Either
 import Log
 import System.Directory (findExecutable)
 import System.Exit
@@ -64,23 +65,33 @@ sftpTransfer SFTPConfig{..} filePath = do
 
 checkExecutables :: forall m . (MonadLog m, MonadBase IO m, Functor m) => m ()
 checkExecutables = logInfo "Checking paths to executables:" . object
-                   =<< mapM check (sort importantExecutables)
+                   =<< mapM logFullPathAndVersion
+                   =<< checkMissing
+                   =<< mapM findExe importantExecutables
   where
-    check :: (T.Text, [String]) -> m Aeson.Pair
-    check (filepath, options) =
-      checkFullExePath =<<
-      (liftBase . findExecutable . T.unpack $ filepath)
-      where
-        checkFullExePath Nothing = do
-          logAttention "Not all important executables are present" $ object [
-            "executable" .= show filepath
-            ]
-          liftBase exitFailure
-        checkFullExePath (Just fullpath) | null options
-          = return $ filepath .= fullpath
-        checkFullExePath (Just fullpath) | otherwise
-          = do ver <- liftBase $ readExecutableVersion fullpath options
-               return $ filepath .= (fullpath : lines ver)
+    findExe :: (T.Text, [String]) -> m (Either T.Text (T.Text, [String], FilePath))
+    findExe (name, options) =
+      maybe (Left name) (Right . (name, options,)) <$>
+      (liftBase . findExecutable . T.unpack $ name)
+
+    checkMissing :: [Either T.Text (T.Text, [String], FilePath)]
+                 -> m [(T.Text, [String], FilePath)]
+    checkMissing eithers = do
+      let (missing, present) = partitionEithers eithers
+      if null missing
+        then return present
+        else do
+        logAttention "Not all important executables are present" $ object [
+          "executables" .= missing
+          ]
+        liftBase exitFailure
+
+    logFullPathAndVersion :: (T.Text, [String], FilePath) -> m Aeson.Pair
+    logFullPathAndVersion (name, options, fullpath) | null options
+      = return $ name .= fullpath
+    logFullPathAndVersion (name, options, fullpath) | otherwise
+      = do ver <- liftBase $ readExecutableVersion fullpath options
+           return $ name .= (fullpath : lines ver)
 
     readExecutableVersion :: FilePath -> [String] -> IO String
     readExecutableVersion path options = do
