@@ -188,4 +188,5 @@ kontraMigrations = [
   , usersAddHomeFolderID
   , addFolderRolesChecks
   , addFolderIDColumnToDocuments
+  , addIndexOnShareableLinkHash
   ]
