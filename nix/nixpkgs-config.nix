@@ -79,10 +79,10 @@ let
       hspec-discover = callHackage "hspec-discover" "2.5.8" {};
       hspec-meta = callHackage "hspec-meta" "2.5.6" {};
 
-      # Make happstack-server work with network-2.8.0.0
-      happstack-server = pkgs.haskell.lib.appendPatch
-        hackagePackages.happstack-server
-        ./patches/happstack-server.cabal.patch;
+      # Make bloodhound work with http-client>=0.6.
+      bloodhound = pkgs.haskell.lib.appendPatch
+        hackagePackages.bloodhound
+        ./patches/bloodhound.cabal.patch;
 
       # Restore some packages that should not be overwritten because they fail
       # for some obscure reason.
@@ -102,5 +102,11 @@ in {
         };
       };
     };
+
+    # aws-sam-cli is broken in latest nixpkgs.
+    aws-sam-cli = (import (builtins.fetchGit {
+      url = "https://github.com/NixOS/nixpkgs.git";
+      rev = "1a04bd44145dda65720ea95c0471d5aa911caf11";
+    }) {}).aws-sam-cli;
   };
 }
