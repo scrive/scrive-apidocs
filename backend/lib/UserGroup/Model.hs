@@ -95,6 +95,7 @@ insertUserGroupSettings ugid ugs =
     sqlSet "sms_provider" . get ugsSMSProvider $ ugs
     sqlSet "pad_app_mode" . get ugsPadAppMode $ ugs
     sqlSet "pad_earchive_enabled" . get ugsPadEarchiveEnabled $ ugs
+    sqlSet "legal_text" . get ugsLegalText $ ugs
 
 insertUserGroupAddress
   :: (MonadDB m, MonadThrow m) => UserGroupID -> UserGroupAddress -> m ()
