@@ -350,10 +350,10 @@ apiCallUpdateUserProfile = api $ do
             , _ugaCity          = city
             , _ugaCountry       = country
             }
-          ug'' = case get ugAddress ug of
+          ug'' = case get ugAddress ug' of
             Just _ ->
               -- change address directly if it wasn't inherited
-              set ugAddress (Just new_address) ug
+              set ugAddress (Just new_address) ug'
             Nothing -> case new_address == ugwpAddress ugwp of
               True -> ug'  -- no change => we keep inheriting the address
               False -> set ugAddress (Just new_address) ug'  -- stop inheriting
