@@ -300,7 +300,7 @@
 "_confirmationMailUndeliveredContentBody":"Malheureusement, la confirmation pour le document <strong>$documenttitle$</strong> n'a pas pu être livrée à <strong>$name$ &lt;$email$&gt;</strong>. Il se peut que le serveur de messagerie électronique du destinataire éprouve des difficultés, ou encore que l'adresse électronique indiquée soit incorrecte.",
 "_confirmationMailUndeliveredContentBodyButton":"Ouvrir le document",
 "_confirmationMailUndeliveredContentBodyFirst":"Pour confirmer l'adresse électronique et renvoyer la confirmation :",
-"_confirmationMailUndeliveredContentInstructionStep1":"Cliquer sur l'option « Modifier l'adresse électronique »",
+"_confirmationMailUndeliveredContentInstructionStep1":"Cliquer sur l'option \"Modifier l'adresse électronique\"",
 "_confirmationMailUndeliveredContentInstructionStep2":"Confirmer l'adresse électronique et renvoyer",
 "_confirmationMailUndeliveredContentInstructionSteps":"Accéder au document à partir de vos e-archives ou en cliquant sur le bouton ci-dessous",
 "_confirmationMailUndeliveredTitle":"Échec d'envoi",
