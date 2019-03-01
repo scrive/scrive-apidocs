@@ -121,12 +121,14 @@ var Track = require("../common/track");
     },
 
     hasForwardOption: function () {
-      return this.document().currentSignatory().canForward() && this.hasArrows();
+      return this.document().currentSignatory().canForward()
+        && this.isReadyAndCanSignOrApprove();
     },
 
     hasSignSection: function () {
       var signatory = this.document().currentSignatory();
-      return this.document().currentSignatoryCanSignOrApprove() && this.hasArrows();
+      return this.document().currentSignatoryCanSignOrApprove()
+        && this.isReadyAndCanSignOrApprove();
     },
 
     hasSignatoriesSection: function () {
@@ -258,14 +260,17 @@ var Track = require("../common/track");
       );
     },
 
-    hasArrows: function () {
+    isReadyAndCanSignOrApprove: function () {
       var file = this.document().mainfile();
       return this.document().ready()
         && this.document().currentSignatoryCanSignOrApprove()
-        && this.document().showArrow()
         && file.ready()
         && file.view
         && file.view.ready();
+    },
+
+    hasArrows: function () {
+      return this.isReadyAndCanSignOrApprove() && this.document().showArrow();
     },
 
     hasDonePostRenderTasks: function () {
