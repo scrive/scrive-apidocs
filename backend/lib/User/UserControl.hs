@@ -22,6 +22,7 @@ module User.UserControl(
 ) where
 
 import Data.Time.Clock
+import Happstack.Server
 import Log
 import Text.JSON (JSValue(..))
 import Text.StringTemplates.Templates
@@ -55,6 +56,7 @@ import UserGroup.Model
 import UserGroup.Types
 import Util.HasSomeUserInfo
 import Util.MonadUtils
+import qualified API.V2 as V2
 
 handleAccountGet :: Kontrakcja m => m (InternalKontraResponse)
 handleAccountGet = withUserTOS $ \(user, _) -> do
@@ -123,23 +125,25 @@ handlePostChangeEmail uid hash =  withUser $ \user -> do
       flashmessage <-  flashMessageProblemWithPassword
       return $ internalResponseWithFlash flashmessage $ LinkAccount
 
-handleUsageStatsJSONForUserDays :: Kontrakcja m => m JSValue
-handleUsageStatsJSONForUserDays = do
-  user <- guardJustM $ get ctxmaybeuser <$> getContext
+handleUsageStatsJSONForUserDays :: Kontrakcja m => m Response
+handleUsageStatsJSONForUserDays = V2.api $ do
+  (user, _) <- V2.getAPIUserWithAnyPrivileges
   withCompany <- isFieldSet "withCompany"
-  getUsageStats PartitionByDay $
+  stats <- getUsageStats PartitionByDay $
     if (useriscompanyadmin user && withCompany)
       then UsageStatsForUserGroup $ usergroupid user
       else UsageStatsForUser $ userid user
+  return $ V2.Ok stats
 
-handleUsageStatsJSONForUserMonths :: Kontrakcja m => m JSValue
-handleUsageStatsJSONForUserMonths = do
-  user  <- guardJustM $ get ctxmaybeuser <$> getContext
+handleUsageStatsJSONForUserMonths :: Kontrakcja m => m Response
+handleUsageStatsJSONForUserMonths = V2.api $ do
+  (user, _) <- V2.getAPIUserWithAnyPrivileges
   withCompany <- isFieldSet "withCompany"
-  getUsageStats PartitionByMonth $
+  stats <- getUsageStats PartitionByMonth $
     if (useriscompanyadmin user && withCompany)
       then UsageStatsForUserGroup $ usergroupid user
       else UsageStatsForUser $ userid user
+  return $ V2.Ok stats
 
 handleUsageStatsJSONForShareableLinks :: Kontrakcja m => StatsPartition -> m JSValue
 handleUsageStatsJSONForShareableLinks statsPartition = do
