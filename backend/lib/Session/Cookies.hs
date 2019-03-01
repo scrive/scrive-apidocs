@@ -4,6 +4,7 @@ module Session.Cookies (
   , stopSessionCookie
   , sessionCookieInfoFromSession
   , currentSessionInfoCookies
+  , isXTokenCookieBroken
   , cookieNameSessionID
   , cookieNameXToken
   ) where
@@ -71,6 +72,16 @@ sessionCookieInfoFromSession s = SessionCookieInfo {
      cookieSessionID = sesID s
    , cookieSessionToken = sesToken s
   }
+
+isXTokenCookieBroken :: (FilterMonad Response m, ServerMonad m, MonadIO m)
+                          => m Bool
+isXTokenCookieBroken = do
+  sidCookie <- lookCookieValues cookieNameSessionID . rqHeaders <$> askRq
+  xtokenCookie <- lookCookieValues cookieNameXToken . rqHeaders <$> askRq
+  return $ case (sidCookie,xtokenCookie) of
+    (_:_, _:_) -> False
+    ([],[]) -> False
+    _ -> True
 
 -- | Read current session cookie from request.
 currentSessionInfoCookies :: ServerMonad m => m [SessionCookieInfo]

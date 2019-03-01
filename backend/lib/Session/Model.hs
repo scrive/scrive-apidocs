@@ -70,9 +70,16 @@ getNonTempSessionID = do
 -- & nj.scrive.com) We need to read them both, since we have no idea
 -- which is the right one.
 getCurrentSession :: ( CryptoRNG m, MonadDB m, MonadThrow m
-                     , ServerMonad m, MonadLog m )
+                     , ServerMonad m, MonadLog m, FilterMonad Response m, MonadIO m)
                   => m Session
-getCurrentSession = currentSessionInfoCookies >>= getSessionFromCookies
+getCurrentSession = do
+  bxt <- isXTokenCookieBroken
+  if bxt
+    then do
+      emptySession
+    else do
+      cookieSessions <- currentSessionInfoCookies
+      getSessionFromCookies cookieSessions
   where
     getSessionFromCookies (cs:css) = do
       domain <- currentDomain
@@ -108,7 +115,8 @@ updateSession old_ses new_ses_id new_muser new_mpad_user = do
     True | (isJust new_muser || isJust new_mpad_user) -> do
       startNewSession old_ses new_muser new_mpad_user >>= startSessionCookie
     -- We have no session and we don't want to log in some user
-    True -> return ()
+    -- We do however remove cookies for expired session etc.
+    True -> fixSessionCookiesIfBrokenOrSessionExpired
     -- We are updating existing session
     False | sesID old_ses == new_ses_id -> do
       when (sesUserID old_ses /= new_muser
@@ -176,6 +184,25 @@ getSession sid token domain = runMaybeT $ do
       return sesextended
     False ->
       return ses
+
+-- If there is session-id cookie but no xtoken cookie or session has expired
+-- but we still get cookie, then lets just clean cookies.
+
+fixSessionCookiesIfBrokenOrSessionExpired ::
+  ( MonadDB m, MonadThrow m, ServerMonad m, MonadLog m
+  , FilterMonad Response m, MonadIO m)
+  => m ()
+fixSessionCookiesIfBrokenOrSessionExpired = do
+  brokenXTokenCookie <- isXTokenCookieBroken
+  cookieSessions <- currentSessionInfoCookies
+  let someSessionCookieExists = not $ null cookieSessions
+  allSessionsExpiredOrDropped  <- and <$> forM cookieSessions (\cs -> isExpiredOrDroppedSession (cookieSessionID cs))
+  when (brokenXTokenCookie || (someSessionCookieExists && allSessionsExpiredOrDropped)) $ do
+    stopSessionCookie
+  where
+    isExpiredOrDroppedSession :: (MonadDB m, MonadThrow m, MonadTime m)
+              => SessionID -> m Bool
+    isExpiredOrDroppedSession sid = isNothing <$> dbQuery (GetSession sid)
 
 selectSessionSelectorsList :: [SQL]
 selectSessionSelectorsList = [ "id", "user_id", "pad_user_id"
