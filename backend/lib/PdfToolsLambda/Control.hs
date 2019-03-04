@@ -75,12 +75,14 @@ executePdfToolsLambdaActionCall
   => PdfToolsLambdaConf -> PdfToolsAction -> BSL.ByteString -> m (Maybe BS.ByteString)
 executePdfToolsLambdaActionCall lc action inputData = do
   let amazonConfig = get pdfToolsLambdaS3Config lc
+  logInfo_ "Uploading data to s3 for lamda"
   uploadedDataFileName <- sendDataFileToAmazon amazonConfig inputData
   case uploadedDataFileName of
     Nothing -> do
       logAttention_ "Failed to upload data to s3 for lambda"
       return Nothing
     Just s3FileName -> do
+      logInfo_ "Data uploaded to s3 for lambda"
       (exitcode, stdout, stderr) <-
         readCurl [
             "-X", "POST"
@@ -101,10 +103,12 @@ executePdfToolsLambdaActionCall lc action inputData = do
             , "errorMessage" .= msg
             ]
           return $ Nothing
-        ExitSuccess -> case action of
-          PdfToolsActionSealing  -> parseSealingResponse lc stdout
-          PdfToolsActionAddImage -> parseAddImageResponse lc stdout
-          PdfToolsActionCleaning -> parseCleaningResponse lc stdout
+        ExitSuccess -> do
+          logInfo_ "Response from lambda received"
+          case action of
+            PdfToolsActionSealing  -> parseSealingResponse lc stdout
+            PdfToolsActionAddImage -> parseAddImageResponse lc stdout
+            PdfToolsActionCleaning -> parseCleaningResponse lc stdout
 
 parseSealingResponse :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
   => PdfToolsLambdaConf -> BSL.ByteString -> m (Maybe BS.ByteString)
