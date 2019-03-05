@@ -440,6 +440,9 @@
                     <a href="#login-and-get-session" class="toc-h2 toc-link" data-title="login-and-get-session">Login and get session</a>
                   </li>
                   <li>
+                    <a href="#get-temporary-login_token-for-a-user" class="toc-h2 toc-link" data-title="get-temporary-login_token-for-a-user">Get temporary login_token for a user</a>
+                  </li>
+                  <li>
                     <a href="#setup-2fa" class="toc-h2 toc-link" data-title="setup-2fa">Setup 2FA</a>
                   </li>
                   <li>
@@ -469,7 +472,7 @@
               </ul>
           </li>
           <li>
-            <a href="#responses-47" class="toc-h1 toc-link" data-title="responses">Responses</a>
+            <a href="#responses-48" class="toc-h1 toc-link" data-title="responses">Responses</a>
               <ul class="toc-list-h2">
                   <li>
                     <a href="#document" class="toc-h2 toc-link" data-title="document">Document</a>
@@ -541,6 +544,9 @@
                   </li>
                   <li>
                     <a href="#userstats" class="toc-h2 toc-link" data-title="userstats">UserStats</a>
+                  </li>
+                  <li>
+                    <a href="#logintoken" class="toc-h2 toc-link" data-title="logintoken">LoginToken</a>
                   </li>
               </ul>
           </li>
@@ -708,6 +714,10 @@ This is the only officially supported encoding for our API.
 <tr>
 <td>2019-02-18</td>
 <td>Add monitoring endpoint which was already implemented but missing from this document</td>
+</tr>
+<tr>
+<td>2019-02-25</td>
+<td>Add <code>gettokenforpersonalcredentials</code> endpoint and update <code>getpersonaltoken</code> to accept <code>login_token</code>s</td>
 </tr>
 </tbody></table>
 <h2 id='environments-amp-ip-addresses'>Environments &amp; IP Addresses</h2>
@@ -1060,9 +1070,17 @@ special endpoint and supplying their login details.</p>
 </code></pre>
 <blockquote>
 <p>Replacing <code>{server_address}</code>, <code>{user_email}</code> and <code>{user_password}</code> to
-match your needs.</p>
+the appropriate values.</p>
 
-<p>This will return the personal access tokens as a JSON:</p>
+<p>Or, if you are using the <code>login_token</code> method:</p>
+</blockquote>
+<pre class="highlight shell"><code>curl -X POST <span class="s1">'https://{server_address}/api/v2/getpersonaltoken'</span> <span class="se">\</span>
+  --data-urlencode <span class="s1">'login_token={login_token}'</span>
+</code></pre>
+<blockquote>
+<p>Replacing <code>{server_address}</code>, <code>{login_token}</code> to the appropriate values.</p>
+
+<p>These two methods will both return the personal access tokens as a JSON:</p>
 </blockquote>
 <pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
   </span><span class="s2">"apitoken"</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">"987dfsd312sd76sh_123"</span><span class="w">
@@ -1103,6 +1121,12 @@ The personal access credentials are associated with the user and can be
 used instead of any other OAuth privileges, they are intended for special
 cases where OAuth is not a viable option, or for getting started quickly in
 a sandbox environment.</p>
+
+<p>There are two ways to use this endpoint. One is to provide the username and
+password of the user you are creating the personal access credentials for.
+The other is to provide a <code>login_token</code>. These are temporary tokens created
+by the <code>gettokenforpersonalcredentials</code> endpoint. These are demonstrated in
+the sidebar.</p>
 
 <aside class="warning">
 Storing personal access tokens outside of the Scrive eSign system is
@@ -1739,6 +1763,14 @@ Scrive eSign system returning errors.</p>
 <a href="#apiv2loginandgetsession">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/loginandgetsession</code>
+</strong>
+</a>
+</p>
+
+<p>
+<a href="#apiv2gettokenforpersonalcredentials{user_id}">
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/gettokenforpersonalcredentials/{user_id}</code>
 </strong>
 </a>
 </p>
@@ -3244,6 +3276,35 @@ the file name.</p>
 </td> </tr>
 </table>
 
+<div><a id="apiv2gettokenforpersonalcredentials{user_id}"></a></div>
+<h2 id='get-temporary-login_token-for-a-user'>Get temporary login_token for a user</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/gettokenforpersonalcredentials/{user_id}</code>
+</strong>
+</p>
+
+<p>Generate a temporary <code>login_token</code> which can be used with <code>getpersonaltoken</code>
+to get valid OAuth credentials for that user. The endpoint also returns a
+base64-encoded PNG image of a QR code. This QR code also contains the
+<code>login_token</code> embedded in a simple JSON structure. The only purpose of the
+JSON is to allow the potential for versioning in future.</p>
+
+<p>This feature is generally for use with Scrive mobile applications and will
+be supported in an upcoming relase.</p>
+<h3 id='parameters-37'>Parameters</h3>
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><p><code>minutes</code><br/><em>optional</em></p><p><em>default:</em> <code>5</code></p></td><td><p>How many minutes the <code>login_token</code> should be valid for (maximum of 30).</p>
+</td><td><p>integer</p></td><td>formData</td></tr>
+</table>
+<h3 id='responses-38'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>Returns a JSON containing <code>login_token</code>, <code>qr_code</code> and <code>expiration_time</code>.</p>
+</td> </tr>
+</table>
+
 <div><a id="apiv22fasetup"></a></div>
 <h2 id='setup-2fa'>Setup 2FA</h2>
 <p>
@@ -3254,7 +3315,7 @@ the file name.</p>
 
 <p>If already activated, returns true,
 else triggers QR code generation</p>
-<h3 id='responses-38'>Responses</h3>
+<h3 id='responses-39'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON with the <code>twofactor_active</code> flag and (if not activated yet) a <code>qr_code</code></p>
@@ -3270,13 +3331,13 @@ else triggers QR code generation</p>
 </p>
 
 <p>Activates 2-factor-authentication if 2-factor code from QR code is valid</p>
-<h3 id='parameters-37'>Parameters</h3>
+<h3 id='parameters-38'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>totp</code><br/><em>required</em></p></td><td><p>2-factor code</p>
 </td><td></td><td>query</td></tr>
 </table>
-<h3 id='responses-39'>Responses</h3>
+<h3 id='responses-40'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON with the <code>twofactor_active</code> flag and <code>totp_valid</code> flag</p>
@@ -3294,7 +3355,7 @@ else triggers QR code generation</p>
 </p>
 
 <p>Disables 2-factor-authentication</p>
-<h3 id='responses-40'>Responses</h3>
+<h3 id='responses-41'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON with the <code>twofactor_active</code> flag</p>
@@ -3310,7 +3371,7 @@ else triggers QR code generation</p>
 </p>
 
 <p>Returns an object with boolean flag</p>
-<h3 id='responses-41'>Responses</h3>
+<h3 id='responses-42'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON with the <code>deletable</code> flag and (if not deletable) a <code>reason</code></p>
@@ -3326,13 +3387,13 @@ else triggers QR code generation</p>
 </p>
 
 <p>undefined</p>
-<h3 id='parameters-38'>Parameters</h3>
+<h3 id='parameters-39'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>email</code><br/><em>required</em></p></td><td><p>User's email</p>
 </td><td></td><td>query</td></tr>
 </table>
-<h3 id='responses-42'>Responses</h3>
+<h3 id='responses-43'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The user was deleted succesfully. The body is empty</p>
@@ -3350,7 +3411,7 @@ else triggers QR code generation</p>
 </p>
 
 <p>Returns an object with user and company data detention policies</p>
-<h3 id='responses-43'>Responses</h3>
+<h3 id='responses-44'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>An object with data retention policies properties.</p>
@@ -3366,13 +3427,13 @@ else triggers QR code generation</p>
 </p>
 
 <p>Returns an object with user and company data detention policies</p>
-<h3 id='parameters-39'>Parameters</h3>
+<h3 id='parameters-40'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>data_retention_policy</code><br/><em>required</em></p></td><td><p>Must be of type <a href="#dataretentionpolicy"><code>DataRetentionPolicy</code></a></p>
 </td><td><p>object<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
-<h3 id='responses-44'>Responses</h3>
+<h3 id='responses-45'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>The data retention policy has been updated. The body is empty.</p>
@@ -3388,13 +3449,13 @@ else triggers QR code generation</p>
 </p>
 
 <p>Retrieve usage statistics for the last 30 days</p>
-<h3 id='parameters-40'>Parameters</h3>
+<h3 id='parameters-41'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>withCompany</code><br/><em>optional</em></p></td><td><p>Boolean flag for showing company information in the response.</p>
 </td><td><p>string</p></td><td>query</td></tr>
 </table>
-<h3 id='responses-45'>Responses</h3>
+<h3 id='responses-46'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON object with the statistics on usage:
@@ -3411,20 +3472,20 @@ count of documents on different stages of the process</p>
 </p>
 
 <p>Retrieve usage statistics for the last 6 months</p>
-<h3 id='parameters-41'>Parameters</h3>
+<h3 id='parameters-42'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>withCompany</code><br/><em>optional</em></p></td><td><p>Boolean flag for showing company information in the response.</p>
 </td><td><p>string</p></td><td>query</td></tr>
 </table>
-<h3 id='responses-46'>Responses</h3>
+<h3 id='responses-47'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>A JSON object with the statistics on usage:
 count of documents on different stages of the process</p>
 </td> </tr>
 </table>
-<h1 id='responses-47'>Responses</h1><h2 id='document'>Document</h2>
+<h1 id='responses-48'>Responses</h1><h2 id='document'>Document</h2>
 <p>The document metadata as a JSON.</p>
 <h3 id='document-2'>Document</h3>
 <p><code>(object)</code></p>
@@ -15331,6 +15392,44 @@ count of documents on different stages of the process</p>
 <p></div></p>
 
 <p></div></p>
+
+<p></div></p>
+<h2 id='logintoken'>LoginToken</h2>
+<p><code>(object)</code></p>
+
+<blockquote>
+<h3 id='example-json-for-quot-logintoken-quot'>Example JSON: for &quot;LoginToken&quot;</h3></blockquote>
+<pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"login_token"</span><span class="p">:</span><span class="w"> </span><span class="s2">"a537e5e43d5b4095"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"qr_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"iVBORw0KGgoAAAANSUhEUgAAAzQAAAM0AQMAAABXvPU0AAAABlBMVEUAAAD///+l2Z/dAAAAAnRSTlP//8i138cAAAAJcEhZcwAACxIAAAsSAdLdfvwAAAL8SURBVHic7dpLbuswDAVQ70D736V34AJFLFKfpJ28B9A9HBiRLd6jIWHnuP5PHRwOh8PhcDgcDofD4XA4HA6Hw+FwOBwOh8PhcP6Cc8zV+oOWL9d15l3fy88BHA6Hw+Fw6jrp/ib9Tno5rQe3DwEcDofD4XDqO9G6ZyP4HkZ+F8DhcDgcDucxTl4ePfgc30608cLhcDgcDufZTsTt9x0bkcPhcDgczsOcXVx+J3F/wnjVmTN3ARwOh8PhcIo7Uw39v7qsARwOh8PhcEo7+4oRZK03mdutHA6Hw+FwKjpTVyzyHxsGNkaQacv6+YPD4XA4HE5JJ1pfdS5xkRnnyQdoPeXISw6Hw+FwOFWdiVjS7/5pyBjiesfxad7hcDgcDodTxckvIebXDD0uDhD7diMIh8PhcDicRzjRPyUty2MM3g4e04DC4XA4HA6npJNDhsxd625LHlWGo3A4HA6Hw6nqTA15GV1TyJl/LQe9OBwOh8PhFHc+zCFn77qD81HOvCWecjgcDofDqe9Mo8UxVo6LA1wLlscSDofD4XA41Z0sRkjL95bpIyqIYTOHw+FwOJz6zkKcY8M9gkzjxpCZH3A4HA6HwyntBJHfSdwhMYJMw0iePoZf7+YQDofD4XA4xZwl6crEMocMbfH0WorD4XA4HE5dZ3kxcTvLr3tzXN62cTgcDofDqevc40bUFJIfDaPKm3QOh8PhcDiPcV7p072rO63HfTrAz3MIh8PhcDicEs6Uvtjn5hSrM+VxOBwOh8Op6uxq15XtH8/I4XA4HA6ntHPMFUPGd8P0ReO+92HzxeFwOBwOp7zThid9mfuvhQh7OW3K43A4HA6HU9eJHctyqpYPMD27luJwOBwOh/Mgp/Xnw7gxvaLIbzGOcR+Hw+FwOJzHOcf49WIIycSVD/Vq43A4HA6H8whnx+6SdnPI7igcDofD4XCKO1Otc0hO31XrR7lPxuFwOBwOp7TzT4vD4XA4HA6Hw+FwOBwOh8PhcDgcDofD4XA4HM5znS/lqLjLlQGH4gAAAABJRU5ErkJggg=="</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"expiration_time"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2019-02-25 10:50:00.507433116 UTC"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+<div class="json-schema">
+
+<p>Returns a JSON containing <code>login_token</code>, <code>qr_code</code> and <code>expiration_time</code>.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h3><code>login_token</code> (string)</h3>
+
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>qr_code</code> (string)</h3>
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>expiration_time</code> (string)</h3>
+
+<div class="json-schema">
+
+</div>
 
 <p></div></p>
 
