@@ -419,25 +419,25 @@ apiCallV1Ready did = logDocument did . api $ do
         checkEmailAndMobileForConfirmation sl
 
     fixFieldsForConfirmationDeliveryIfNeeded sl = case (signatorylinkconfirmationdeliverymethod sl) of
-      EmailConfirmationDelivery -> do
-        unless (checkEmailForConfirmation sl) $ do
+      EmailConfirmationDelivery ->
+        unless (checkEmailForConfirmation sl) $
           dbUpdate $ ClearSignatoryEmail $ signatorylinkid sl
-      MobileConfirmationDelivery -> do
-        unless (checkMobileForConfirmation sl) $ do
+      MobileConfirmationDelivery ->
+        unless (checkMobileForConfirmation sl) $
           dbUpdate $ ClearSignatoryMobile $ signatorylinkid sl
       EmailAndMobileConfirmationDelivery -> do
-        unless (checkEmailForConfirmation sl) $ do
+        unless (checkEmailForConfirmation sl) $
           dbUpdate $ ClearSignatoryEmail $ signatorylinkid sl
-        unless (checkMobileForConfirmation sl) $ do
+        unless (checkMobileForConfirmation sl) $
           dbUpdate $ ClearSignatoryMobile $ signatorylinkid sl
       NoConfirmationDelivery -> return ()
-      EmailLinkConfirmationDelivery -> do
-        unless (checkEmailForConfirmation sl) $ do
+      EmailLinkConfirmationDelivery ->
+        unless (checkEmailForConfirmation sl) $
           dbUpdate $ ClearSignatoryEmail $ signatorylinkid sl
       EmailLinkAndMobileConfirmationDelivery -> do
-        unless (checkEmailForConfirmation sl) $ do
+        unless (checkEmailForConfirmation sl) $
           dbUpdate $ ClearSignatoryEmail $ signatorylinkid sl
-        unless (checkMobileForConfirmation sl) $ do
+        unless (checkMobileForConfirmation sl) $
           dbUpdate $ ClearSignatoryMobile $ signatorylinkid sl
 
     signatoryHasValidAuthSettings sl = authToSignIsValid sl
