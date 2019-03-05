@@ -171,7 +171,8 @@ partnerApiCallV1UserCreate ptOrUgID ugid = do
                , ufuHasAcceptedTOS userForUpdate
                , ufuLang userForUpdate )
       guardValidEmailAndNoExistingUser (useremail userInfo) Nothing
-      when (not hasAcceptedTOS) tosNotAcceptedErr
+      unless hasAcceptedTOS $
+        tosNotAcceptedErr
 
       -- API call actions
       newUser <- apiGuardJustM
@@ -184,7 +185,8 @@ partnerApiCallV1UserCreate ptOrUgID ugid = do
 
       let uid = userid newUser
       didUpdate <- dbUpdate $ SetUserInfo uid userInfo
-      when (not didUpdate) $ srvLogErr "Could not update user details"
+      unless didUpdate $
+        srvLogErr "Could not update user details"
       when hasAcceptedTOS $
         currentTime >>= void . dbUpdate . AcceptTermsOfService uid
       -- re-get from DB to go to the source of truth
@@ -235,13 +237,14 @@ partnerApiCallV1UserUpdate ptOrUgID uid = do
       let userInfo = userInfoFromUserForUpdate ufu
 
       guardValidEmailAndNoExistingUser (useremail userInfo) (Just uid)
-      when (not $ ufuHasAcceptedTOS ufu) $ tosNotAcceptedErr
+      unless (ufuHasAcceptedTOS ufu) $
+        tosNotAcceptedErr
       didUpdateInfo     <- dbUpdate $ SetUserInfo uid userInfo
       didUpdateSettings <- dbUpdate $ SetUserSettings
         uid
         (UserSettings (ufuLang ufu) defaultDataRetentionPolicy)
       -- @todo fix retention policy ^
-      when (not $ didUpdateInfo && didUpdateSettings) $
+      unless (didUpdateInfo && didUpdateSettings) $
         srvLogErr "Could not update user"
       -- re-fetch original to get what's really in the DB.
       userFromDB <- apiGuardJustM

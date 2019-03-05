@@ -86,7 +86,7 @@ instance (CryptoRNG m, MonadDB m, MonadMask m)
           setFields
           sqlWhereEq "signatory_link_id" $ cgiSignatoryLinkID cgiTransaction
           sqlWhereEq "type" $ cgiTransactionType cgiTransaction
-        when (not success) $ do
+        unless success $
           runQuery_ . sqlInsert "cgi_grp_transactions" $ do
             setFields
       where

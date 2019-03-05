@@ -437,7 +437,7 @@ sendRejectEmails customMessage signalink document = do
 sendForwardSigningMessages:: Kontrakcja m => Maybe String -> SignatoryLink -> SignatoryLink -> Document -> m ()
 sendForwardSigningMessages customMessage originalSignatory newSignatory doc = do
   sendForwardSigningMessagesForNewSignatory customMessage originalSignatory newSignatory doc
-  when (not $ isAuthor originalSignatory) $ do
+  unless (isAuthor originalSignatory) $ do
     sendForwardSigningMessagesToAuthor originalSignatory newSignatory doc
   return ()
 

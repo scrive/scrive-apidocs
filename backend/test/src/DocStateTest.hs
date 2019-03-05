@@ -2149,7 +2149,7 @@ testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight = repl
   ctx <- mkContext defaultLang
   addRandomDocumentWithAuthorAndCondition author (isSignable && (not . (isClosed || isPreparation))) `withDocumentM` do
     (theDocument >>=) $ forEachSignatoryLink $ \sl ->
-                when (not $ hasSeen sl) $ do
+                unless (hasSeen sl) $ do
                   time <- rand 10 arbitrary
                   let sa = signatoryActor (set ctxtime time ctx) sl
                   randomUpdate . MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) =<< sa
@@ -2163,7 +2163,7 @@ testMarkDocumentSeenSignableSignatoryLinkIDBadMagicHashLeft = replicateM_ 10 $ d
   ctx <- mkContext defaultLang
   addRandomDocumentWithAuthorAndCondition author (isSignable && (not . (isClosed || isPreparation))) `withDocumentM` do
     (theDocument >>=) $ forEachSignatoryLink $ \sl ->
-      when (not $ hasSeen sl) $ do
+      unless (hasSeen sl) $ do
         mh <- untilCondition (\a -> a /= (signatorymagichash sl)) $ rand 1000 arbitrary
         time <- rand 10 arbitrary
         let sa = signatoryActor (set ctxtime time ctx) sl

@@ -1733,10 +1733,10 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
             F.value "signed_text" netsdkSignedText
             F.value "provider_dknemid" True
             F.value "signature" $ netsdkB64SDO
-            when (not . T.null $ netsdkSignatorySSN) $
+            unless (T.null netsdkSignatorySSN) $
               F.value "signatory_personal_number" netsdkSignatorySSN
             F.value "signatory_personal_number_from_signlink" . T.pack $ getPersonalNumber sl
-            when (not . T.null $ netsdkSignatoryIP) $
+            unless (T.null netsdkSignatoryIP) $
               F.value "signatory_ip" netsdkSignatoryIP
           (Nothing, Just _) -> do
             F.value "sms_pin" True
@@ -2003,7 +2003,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateF
                           F.value "hide_pn" $ signatorylinkhidepn sl
                         Just (SignatoryCheckboxField f) -> do
                           F.value "fieldname" $ schfName f
-                          when (not $ emptyValue newValue) $ do
+                          unless (emptyValue newValue) $ do
                             F.value "checked" $ schfName f
                         Just (SignatorySignatureField f) -> do
                           F.value "fieldname" $ ssfName f

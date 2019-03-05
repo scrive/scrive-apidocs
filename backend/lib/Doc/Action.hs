@@ -330,6 +330,6 @@ findAndTimeoutDocuments = do
     runTemplatesT (defaultLang, gt) $ dbUpdate $ TimeoutDocument (systemActor now)
     triggerAPICallbackIfThereIsOne =<< theDocument
     logInfo_ "Document timed out"
-  when (not (null docs)) $ do
+  unless (null docs) $ do
     commit
     findAndTimeoutDocuments

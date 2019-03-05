@@ -147,9 +147,9 @@ evidenceLogTemplatesWellDefined = do
             let te = filter (/="noescape") te'
             let errcontext = " in template " ++ tn
                   ++ " for language " ++ show l ++ ": "
-            when (not (null pe)) $ do
+            unless (null pe) $ do
               assertFailure $ "Parse error" ++ errcontext ++ show pe
-            when (not (null te)) $ do
+            unless (null te) $ do
               assertFailure $ "Unknown template function"
                 ++ errcontext ++ show te
             return freevars

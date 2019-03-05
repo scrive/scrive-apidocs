@@ -94,7 +94,7 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeAuthenticationInternal () w
         setFields
         sqlWhereEq "signatory_link_id" slid
         sqlWhereEq "auth_kind" authKind
-      when (not success) $ do
+      unless success $
         runQuery_ . sqlInsertSelect "eid_authentications" "" $ do
           setFields
     where

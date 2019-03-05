@@ -62,7 +62,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SwitchToSlaveSenderImmediately 
     success <- runQuery01 . sqlUpdate "mailer_jobs" $ do
       sqlSet "finished_at" (Nothing :: Maybe UTCTime)
       sqlWhereEq "id" job
-    when (not success) $ do
+    unless success $
       unexpectedError $ show job <+> "doesn't exist"
     where
       job = CollectServiceTestResult
@@ -74,7 +74,7 @@ instance (MonadDB m, MonadTime m, MonadThrow m) => DBUpdate m CollectServiceTest
     success <- runQuery01 . sqlUpdate "mailer_jobs" $ do
       sqlSetCmd "run_at" $ sqlParam now <+> "+" <?> int
       sqlWhereEq "id" job
-    when (not success) $ do
+    unless success $
       unexpectedError $ show job <+> "doesn't exist"
     where
       job = CollectServiceTestResult
@@ -85,7 +85,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m ScheduleServiceTest () where
     success <- runQuery01 . sqlUpdate "mailer_jobs" $ do
       sqlSet "run_at" unixEpoch
       sqlWhereEq "id" job
-    when (not success) $ do
+    unless success $
       unexpectedError $ show job <+> "doesn't exist"
     where
       job = PerformServiceTest
@@ -231,7 +231,7 @@ insertEmail service_test (token, sender, to, reply_to, title, content, attachmen
     sqlSet "service_test" service_test
     sqlResult "id"
   mid <- fetchOne runIdentity
-  when (not $ null attachments) $ do
+  unless (null attachments) $
     runQuery_ $ sqlInsert "mail_attachments" $ do
       sqlSet "mail_id" mid
       sqlSetList "name" names

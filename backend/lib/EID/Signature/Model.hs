@@ -106,8 +106,9 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeCGISEBankIDSignature () whe
         setFields
         sqlWhereEq "signatory_link_id" slid
         -- replace the signature only if signatory hasn't signed yet
-        sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime) <+> "IS NULL"
-      when (not success) $ do
+        sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime)
+          <+> "IS NULL"
+      unless success $
         runQuery_ . sqlInsertSelect "eid_signatures" "" $ do
           setFields
     where
@@ -143,7 +144,7 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsNOBankIDSignature () wh
         sqlWhereEq "signatory_link_id" slid
         -- replace the signature only if signatory hasn't signed yet
         sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime) <+> "IS NULL"
-      when (not success) $ do
+      unless success $ do
         runQuery_ . sqlInsertSelect "eid_signatures" "" $ do
           setFields
     where
@@ -175,7 +176,7 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsDKNemIDSignature () whe
         sqlWhereEq "signatory_link_id" slid
         -- replace the signature only if signatory hasn't signed yet
         sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime) <+> "IS NULL"
-      when (not success) $ do
+      unless success $ do
         runQuery_ . sqlInsertSelect "eid_signatures" "" $ do
           setFields
     where

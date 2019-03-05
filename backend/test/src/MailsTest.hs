@@ -174,7 +174,7 @@ validMail name m = do
         c'   = "<html>" <> TL.pack c <> "</html>"
              -- ^ XML parser freaks out if there's content after root element.
         exml = XML.parseText def c'
-    when (not . any isAlphaNum $ title m) $
+    unless (any isAlphaNum $ title m) $
       assertFailure ("Empty title of mail " ++ name)
     case exml of
       Left exc -> assertFailure $ "Invalid HTML mail " ++ name ++ " : " ++ c ++

@@ -123,9 +123,9 @@ updateSession old_ses new_ses_id new_muser new_mpad_user = do
             || sesPadUserID old_ses /= new_mpad_user) $ do
         success <- dbUpdate . UpdateSession $
           old_ses { sesUserID = new_muser, sesPadUserID = new_mpad_user}
-        when (not success) $
-          logInfo_ $ "UpdateSession didn't update session"
-          <> " where it should have to (existing session)"
+        unless success $
+          logInfo_ $ "UpdateSession didn't update session\
+                     \ when it should have (existing session)"
         -- We are logging out, remove session cookie
         when (new_muser == Nothing && new_mpad_user == Nothing) $
           stopSessionCookie

@@ -243,8 +243,9 @@ apiCallV1Update did = logDocument did . api $ do
     auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
     unlessM (isPreparation <$> theDocument) $ do
           checkObjectVersionIfProvidedAndThrowError did (serverError "Document is not a draft or template")
-    when (not $ (auid == userid user)) $ do
-          throwM . SomeDBExtraException $ serverError "Permission problem. Not an author."
+    unless (auid == userid user) $
+      throwM . SomeDBExtraException $
+      serverError "Permission problem. Not an author."
     jsons <- apiGuardL (badInput "The MIME part 'json' must exist and must be a JSON.") $ getDataFn' (look "json")
     json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $ case decode jsons of
                                                                                  J.Ok js -> Just js
@@ -274,8 +275,9 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
     auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
     unlessM (isPreparation <$> theDocument) $ do
           checkObjectVersionIfProvidedAndThrowError did (serverError "Document is not a draft or template")
-    when (not $ (auid == userid user)) $ do
-          throwM . SomeDBExtraException $ serverError "Permission problem. Not an author."
+    unless (auid == userid user) $
+      throwM . SomeDBExtraException $
+      serverError "Permission problem. Not an author."
     attachmentFilesWithDetails <- precheckNewAttachments =<< getAttachments 0 =<< theDocument
     (documentauthorattachments <$> theDocument >>=) $ mapM_ $ \att -> dbUpdate $ RemoveDocumentAttachments (authorattachmentfileid att) actor
     forM_ attachmentFilesWithDetails $ \(attfile, maad) -> do
@@ -366,8 +368,9 @@ apiCallV1Ready did = logDocument did . api $ do
      {-then-} (Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument))
      {-else-} $ do
       checkObjectVersionIfProvided did
-      when (not $ (auid == userid user)) $ do
-            throwM . SomeDBExtraException $ serverError "Permission problem. Not an author."
+      unless (auid == userid user) $
+        throwM . SomeDBExtraException $
+        serverError "Permission problem. Not an author."
       unlessM (isPreparation <$> theDocument) $ do
             checkObjectVersionIfProvidedAndThrowError did $ (conflictError "Document is not a draft")
       whenM (isTemplate <$> theDocument) $ do
@@ -683,8 +686,9 @@ apiCallV1Restart did = logDocument did . api $ do
     (user, actor, _) <- getAPIUser APIDocSend
     doc <- dbQuery $ GetDocumentByDocumentID $ did
     auid <- apiGuardJustM (serverError "No author found") $ return $ join $ maybesignatory <$> getAuthorSigLink doc
-    when (not $ (auid == userid user)) $ do
-          throwM . SomeDBExtraException $ serverError "Permission problem. Not an author."
+    unless (auid == userid user) $
+      throwM . SomeDBExtraException $
+      serverError "Permission problem. Not an author."
     when (documentstatus doc `elem` [Pending,Preparation, Closed] ) $ do
           throwM . SomeDBExtraException $ (conflictError "Document can not be restarted")
     newdocument <- apiGuardJustM (serverError "Document can't be restarted") $ dbUpdate $ RestartDocument doc actor
@@ -696,10 +700,12 @@ apiCallV1Prolong did = logDocument did . api $ do
     (user, actor, _) <- getAPIUser APIDocSend
     withDocumentID did $ do
       hasPermission <- isAuthorOrAuthorsAdmin user <$> theDocument
-      when (not hasPermission) $
-        throwM . SomeDBExtraException $ serverError "Permission problem. Not an author[s admin]."
-      unlessM (isTimedout <$> theDocument) $ do
-            throwM . SomeDBExtraException $ (conflictError "Document is not timedout")
+      unless hasPermission $
+        throwM . SomeDBExtraException $
+        serverError "Permission problem. Not an author[s admin]."
+      unlessM (isTimedout <$> theDocument) $
+        throwM . SomeDBExtraException $
+        conflictError "Document is not timedout"
       mdays <- getDefaultedField 1 asValidNumber "days"
       days <- case mdays of
            Nothing -> throwM . SomeDBExtraException $ (badInput "Number of days to sign must be a valid number, between 1 and 365")
@@ -718,11 +724,14 @@ apiCallV1SetAutoReminder did = logDocument did . api $ do
     checkObjectVersionIfProvided did
     (user, _actor, _) <- getAPIUser APIDocSend
     withDocumentID did $ do
-      auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
-      when (not $ (auid == userid user)) $ do
-            throwM . SomeDBExtraException $ serverError "Permission problem. Not an author."
-      unlessM (isPending <$> theDocument) $ do
-            throwM . SomeDBExtraException $ (conflictError "Document is not pending")
+      auid <- apiGuardJustM (serverError "No author found") $
+              ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
+      unless (auid == userid user) $
+        throwM . SomeDBExtraException $
+        serverError "Permission problem. Not an author."
+      unlessM (isPending <$> theDocument) $
+        throwM . SomeDBExtraException $
+        (conflictError "Document is not pending")
       mdays <- getOptionalField asValidNumber "days"
       days <- case mdays of
            Nothing -> return Nothing
@@ -754,8 +763,10 @@ apiCallV1ChangeAuthenticationToView did slid = logDocumentAndSignatory did slid 
     sl <- getSigLinkFor slid <$> theDocument >>= \case
       Nothing -> throwM . SomeDBExtraException $ badInput $ "Signatory link id " ++ (show slid) ++ " not valid for document id " ++ (show did)
       Just sl -> return sl
-    when (not . isSignatory $ sl) $
-      throwM . SomeDBExtraException $ badInput $ "Signatory link id " ++ (show slid) ++ " is a viewer or approver and does not sign"
+    unless (isSignatory sl) $
+      throwM . SomeDBExtraException $ badInput $
+      "Signatory link id " ++ (show slid)
+      ++ " is a viewer or approver and does not sign"
     when (isSignatoryAndHasSigned sl) $
       throwM . SomeDBExtraException $ badInput $ "Signatory link id " ++ (show slid) ++ " has already signed"
     when (isApproverAndHasApproved sl) $
@@ -892,8 +903,9 @@ guardAuthenticationMethodsCanMix :: Kontrakcja m => AuthenticationToViewMethod -
 guardAuthenticationMethodsCanMix authtoview authtosign = do
   -- API v1 doesn't deal with auth-to-view-archived
   let authToViewArchived = StandardAuthenticationToView
-  when (not $ authenticationMethodsCanMix authtoview authtosign authToViewArchived)
-    (throwM . SomeDBExtraException $ badInput $ "Can't mix " <> show authtoview <> " and " <> show authtosign <> ".")
+  unless (authenticationMethodsCanMix authtoview authtosign authToViewArchived) $
+    throwM . SomeDBExtraException $ badInput $
+    "Can't mix " <> show authtoview <> " and " <> show authtosign <> "."
 
 apiCallV1Remind :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Remind did = logDocument did . api $ do
@@ -902,8 +914,9 @@ apiCallV1Remind did = logDocument did . api $ do
     unlessM (isPending <$> theDocument) $ do
           throwM . SomeDBExtraException $ serverError "Can't send reminder for documents that are not pending"
     hasPermission <- isAuthorOrAuthorsAdmin user <$> theDocument
-    when (not hasPermission) $
-      throwM . SomeDBExtraException $ serverError "Permission problem. Not an author[s admin]."
+    unless hasPermission $
+      throwM . SomeDBExtraException $
+      serverError "Permission problem. Not an author[s admin]."
     void $ sendAllReminderEmailsExceptAuthor actor False
     Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
 
@@ -915,8 +928,9 @@ apiCallV1Forward did = logDocument did . api $ do
           throwM . SomeDBExtraException $ badInput "Only document that are signed can be forwarded"
     asiglink <- apiGuardJustM (serverError "No author found") $ getAuthorSigLink <$> theDocument
     auid <- apiGuardJustM (serverError "No author found") $ return $ maybesignatory asiglink
-    when (not $ (auid == userid user)) $ do
-          throwM . SomeDBExtraException $ serverError "Permission problem. Not an author."
+    unless (auid == userid user) $
+      throwM . SomeDBExtraException $
+      serverError "Permission problem. Not an author."
     email <- apiGuardJustM (badInput "Email adress is no valid.") $ getOptionalField  asValidEmail "email"
     noContent <- (== Just "true") <$> getField "nocontent"
     mNoAttachments <- getField "noattachments"
@@ -937,11 +951,12 @@ apiCallV1Delete did = logDocument did . api $ do
     msl <- getSigLinkFor user <$> theDocument
     let haspermission = (isJust msl)
                      || (isJust mauser && usergroupid (fromJust mauser) == usergroupid user && (useriscompanyadmin user))
-    when (not haspermission) $ do
-           throwM . SomeDBExtraException $ serverError "Permission problem. Not connected to document."
+    unless haspermission $
+      throwM . SomeDBExtraException $
+      serverError "Permission problem. Not connected to document."
     deleted <- dbUpdate $ ArchiveDocument (userid user) actor
-    when (not deleted) $ do
-           throwM . SomeDBExtraException $ conflictError "Document can't be deleted."
+    unless deleted $
+      throwM . SomeDBExtraException $ conflictError "Document can't be deleted."
     Accepted <$> (J.runJSONGenT $ return ())
 
 
@@ -955,11 +970,13 @@ apiCallV1ReallyDelete did = logDocument did . api $ do
     msl <- getSigLinkFor user <$> theDocument
     let haspermission = (isJust msl)
                      || (isJust mauser && usergroupid (fromJust mauser) == usergroupid user && (useriscompanyadmin user))
-    when (not haspermission) $ do
-           throwM . SomeDBExtraException $ serverError "Permission problem. Not connected to document."
+    unless haspermission $
+      throwM . SomeDBExtraException $
+      serverError "Permission problem. Not connected to document."
     reallydeleted <- dbUpdate $ ReallyDeleteDocument (userid user) actor
-    when (not reallydeleted) $ do
-           throwM . SomeDBExtraException $ conflictError "Document can't be really deleted."
+    unless reallydeleted $
+      throwM . SomeDBExtraException $
+      conflictError "Document can't be really deleted."
     Accepted <$> (J.runJSONGenT $ return ())
 
 
@@ -978,7 +995,8 @@ apiCallV1Get did = logDocument did . api $ do
     (Just slid,Just mh) -> do
        sl <- maybe (throwM $ SomeDBExtraException $ serverError "No document found") return  $ getSigLinkFor slid doc
        guardThatDocumentIsReadableBySignatories doc
-       when (not (isValidSignatoryMagicHash mh sl)) $ throwM . SomeDBExtraException $ serverError "No document found"
+       unless (isValidSignatoryMagicHash mh sl) $
+         throwM . SomeDBExtraException $ serverError "No document found"
        switchLang $ getLang doc
 
        Ok <$> (documentJSONV1 Nothing False (signatoryisauthor sl) (Just sl) doc)
@@ -1238,8 +1256,9 @@ apiCallV1ExtractTexts did fileid = logDocumentAndFile did fileid . api $ do
     unlessM (isPreparation <$> theDocument) $ do
       throwM . SomeDBExtraException $ serverError "Can't extract texts from documents that are not in preparation"
     auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
-    when (not $ (auid == userid user)) $ do
-      throwM . SomeDBExtraException $ serverError "Permission problem. Not an author."
+    unless (auid == userid user) $
+      throwM . SomeDBExtraException $
+      serverError "Permission problem. Not an author."
 
 
     jsons <- apiGuardL (badInput "The MIME part 'json' must exist and must be a JSON.") $ getDataFn' (look "json")
@@ -1267,8 +1286,9 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
     auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
     unlessM (isPreparation <$> theDocument) $ do
       throwM . SomeDBExtraException $ (serverError "Document is not a draft or template")
-    when (not $ (auid == userid user)) $ do
-          throwM . SomeDBExtraException $ serverError "Permission problem. Not an author."
+    unless (auid == userid user) $
+      throwM . SomeDBExtraException $
+      serverError "Permission problem. Not an author."
 
     moldfileid <- fmap mainfileid <$> documentfile  <$> theDocument
     fileinput <- getDataFn' (lookInput "file")
@@ -1390,7 +1410,7 @@ guardAuthorOrAuthorsAdmin user forbidenMessage = do
   let hasPermission = (docUserID == userid user) ||
                           ((usergroupid docUser == usergroupid user)
                             && (useriscompanyadmin user))
-  when (not hasPermission) $
+  unless hasPermission $
     throwM . SomeDBExtraException $ forbidden forbidenMessage
 
 getMagicHashAndUserForSignatoryAction :: (Kontrakcja m) =>  DocumentID -> SignatoryLinkID -> m (MagicHash,Maybe User)
