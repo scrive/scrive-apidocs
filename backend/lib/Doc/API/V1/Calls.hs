@@ -240,9 +240,11 @@ apiCallV1Update :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Update did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocCreate
   withDocumentID did $ do
-    auid <- apiGuardJustM (serverError "No author found") $ (maybesignatory <=< getAuthorSigLink) <$> theDocument
-    unlessM (isPreparation <$> theDocument) $ do
-          checkObjectVersionIfProvidedAndThrowError did (serverError "Document is not a draft or template")
+    auid <- apiGuardJustM (serverError "No author found") $
+            (maybesignatory <=< getAuthorSigLink) <$> theDocument
+    unlessM (isPreparation <$> theDocument) $
+      checkObjectVersionIfProvidedAndThrowError did
+      (serverError "Document is not a draft or template")
     unless (auid == userid user) $
       throwM . SomeDBExtraException $
       serverError "Permission problem. Not an author."
@@ -272,7 +274,8 @@ apiCallV1SetAuthorAttachemnts  :: Kontrakcja m => DocumentID -> m Response
 apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocCreate
   withDocumentID did $ do
-    auid <- apiGuardJustM (serverError "No author found") $ (maybesignatory <=< getAuthorSigLink) <$> theDocument
+    auid <- apiGuardJustM (serverError "No author found") $
+            (maybesignatory <=< getAuthorSigLink) <$> theDocument
     unlessM (isPreparation <$> theDocument) $ do
           checkObjectVersionIfProvidedAndThrowError did (serverError "Document is not a draft or template")
     unless (auid == userid user) $
@@ -360,7 +363,8 @@ apiCallV1Ready :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Ready did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
-    auid <- apiGuardJustM (serverError "No author found") $ (maybesignatory <=< getAuthorSigLink) <$> theDocument
+    auid <- apiGuardJustM (serverError "No author found") $
+            (maybesignatory <=< getAuthorSigLink) <$> theDocument
     ifM ((isPending &&
           all (isSignatoryAndHasNotSigned || isApproverAndHasNotApproved) .
           documentsignatorylinks) <$>
@@ -474,7 +478,7 @@ apiCallV1Ready did = logDocument did . api $ do
     checkEmailAndMobileForConfirmation sl =
       checkEmailForConfirmation sl && checkMobileForConfirmation sl
 
-apiCallV1Cancel :: Kontrakcja m =>  DocumentID -> m Response
+apiCallV1Cancel :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Cancel did = logDocument did . api $ do
     checkObjectVersionIfProvided did
     (user, actor, _) <- getAPIUser APIDocSend
@@ -1255,7 +1259,8 @@ apiCallV1ExtractTexts did fileid = logDocumentAndFile did fileid . api $ do
   withDocumentID did $ do
     unlessM (isPreparation <$> theDocument) $ do
       throwM . SomeDBExtraException $ serverError "Can't extract texts from documents that are not in preparation"
-    auid <- apiGuardJustM (serverError "No author found") $ (maybesignatory <=< getAuthorSigLink) <$> theDocument
+    auid <- apiGuardJustM (serverError "No author found") $
+            (maybesignatory <=< getAuthorSigLink) <$> theDocument
     unless (auid == userid user) $
       throwM . SomeDBExtraException $
       serverError "Permission problem. Not an author."
@@ -1283,7 +1288,8 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
   (user, actor, _) <- getAPIUser APIDocCreate
   checkObjectVersionIfProvided docid
   withDocumentID docid $ do
-    auid <- apiGuardJustM (serverError "No author found") $ (maybesignatory <=< getAuthorSigLink) <$> theDocument
+    auid <- apiGuardJustM (serverError "No author found") $
+            (maybesignatory <=< getAuthorSigLink) <$> theDocument
     unlessM (isPreparation <$> theDocument) $ do
       throwM . SomeDBExtraException $ (serverError "Document is not a draft or template")
     unless (auid == userid user) $
@@ -1390,30 +1396,42 @@ checkObjectVersionIfProvided did = do
     case mov of
         Just ov -> dbQuery $ CheckDocumentObjectVersionIs did ov
         Nothing -> return ()
-  `catchDBExtraException` (\DocumentObjectVersionDoesNotMatch {} -> throwM . SomeDBExtraException $ conflictError $ "Document object version does not match")
+  `catchDBExtraException`
+  (\DocumentObjectVersionDoesNotMatch {} ->
+      throwM . SomeDBExtraException .
+      conflictError $ "Document object version does not match")
 
-checkObjectVersionIfProvidedAndThrowError ::  (Kontrakcja m) => DocumentID -> APIError -> m ()
+checkObjectVersionIfProvidedAndThrowError
+  :: (Kontrakcja m) => DocumentID -> APIError -> m ()
 checkObjectVersionIfProvidedAndThrowError did err = do
     mov <- readField "objectversion"
     case mov of
-        Just ov -> (dbQuery $ CheckDocumentObjectVersionIs did ov)
-                      `catchDBExtraException` (\DocumentObjectVersionDoesNotMatch {} -> throwM . SomeDBExtraException $ conflictError $ "Document object version does not match")
-        Nothing -> return ()
+      Just ov ->
+        (dbQuery $ CheckDocumentObjectVersionIs did ov)
+        `catchDBExtraException`
+        (\DocumentObjectVersionDoesNotMatch {} ->
+            throwM . SomeDBExtraException .
+            conflictError $ "Document object version does not match")
+      Nothing -> return ()
     throwM . SomeDBExtraException $ err
 
 
 -- Utils
-guardAuthorOrAuthorsAdmin :: (Kontrakcja m,DocumentMonad m) => User -> String -> m ()
+guardAuthorOrAuthorsAdmin
+  :: (Kontrakcja m,DocumentMonad m) => User -> String -> m ()
 guardAuthorOrAuthorsAdmin user forbidenMessage = do
-  docUserID <- apiGuardJustM (serverError "No author found") $ (maybesignatory <=< getAuthorSigLink) <$> theDocument
-  docUser   <- apiGuardJustM (serverError "No user found for author") $ dbQuery $ GetUserByIDIncludeDeleted docUserID
+  docUserID <- apiGuardJustM (serverError "No author found") $
+               (maybesignatory <=< getAuthorSigLink) <$> theDocument
+  docUser   <- apiGuardJustM (serverError "No user found for author") $
+               dbQuery $ GetUserByIDIncludeDeleted docUserID
   let hasPermission = (docUserID == userid user) ||
                           ((usergroupid docUser == usergroupid user)
                             && (useriscompanyadmin user))
   unless hasPermission $
     throwM . SomeDBExtraException $ forbidden forbidenMessage
 
-getMagicHashAndUserForSignatoryAction :: (Kontrakcja m) =>  DocumentID -> SignatoryLinkID -> m (MagicHash,Maybe User)
+getMagicHashAndUserForSignatoryAction
+  :: (Kontrakcja m) => DocumentID -> SignatoryLinkID -> m (MagicHash, Maybe User)
 getMagicHashAndUserForSignatoryAction did sid = do
     mh' <- dbQuery $ GetDocumentSessionToken sid
     case mh' of
@@ -1456,8 +1474,8 @@ getFieldForSigning = do
             mval <- fromJSValueField "value"
             return $ case (mfi, mval) of
               -- omg, this special case for empty value is such bullshit.
-              (Just fi@(CheckboxFI _), Just "")  -> Just (fi, BoolFTV $ False)
-              (Just fi@(CheckboxFI _), Just _ )  -> Just (fi, BoolFTV $ True)
+              (Just fi@(CheckboxFI _), Just "")   -> Just (fi, BoolFTV $ False)
+              (Just fi@(CheckboxFI _), Just _ )   -> Just (fi, BoolFTV $ True)
               (Just fi@(SignatureFI _), Just "")  -> Just (fi, FileFTV "")
               (Just fi@(SignatureFI _), Just val) -> case (snd <$> RFC2397.decode (BS.pack val)) of
                 Just bv -> Just (fi, FileFTV bv)
