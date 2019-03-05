@@ -438,10 +438,10 @@ instance
       actor
 
 data ArchiveDocument = ArchiveDocument UserID Actor
-instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m ArchiveDocument () where
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m ArchiveDocument Bool where
   update (ArchiveDocument uid _actor) = updateDocumentWithID $ \did -> do
     now <- currentTime
-    kRunManyOrThrowWhyNot $ sqlUpdate "signatory_links" $ do
+    res <- runQuery $ sqlUpdate "signatory_links" $ do
         sqlSet "deleted" now
 
         sqlWhereExists $ sqlSelect "users" $ do
@@ -458,11 +458,13 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
           sqlWhereDocumentIsNotDeleted
           sqlWhereDocumentStatusIsOneOf [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError]
 
+    return (res > 0)
+
 data ReallyDeleteDocument = ReallyDeleteDocument UserID Actor
-instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m ReallyDeleteDocument () where
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m ReallyDeleteDocument Bool where
   update (ReallyDeleteDocument uid _actor) = updateDocumentWithID $ \did -> do
     now <- currentTime
-    kRunManyOrThrowWhyNot $ sqlUpdate "signatory_links" $ do
+    res <- runQuery $ sqlUpdate "signatory_links" $ do
         sqlSet "really_deleted" now
 
         sqlWhereExists $ sqlSelect "users" $ do
@@ -480,6 +482,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
           sqlWhereDocumentIsNotReallyDeleted
           sqlWhereDocumentStatusIsOneOf [Preparation, Closed, Canceled, Timedout, Rejected, DocumentError]
 
+    return (res > 0)
 
 -- | Attach a main file to a document associating it with preparation
 -- status.  Any old main file in preparation status will be removed.

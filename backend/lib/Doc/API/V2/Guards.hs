@@ -3,7 +3,8 @@ module Doc.API.V2.Guards (
   guardThatDocumentIs
 , guardDocumentStatus
 , guardThatDocumentCanBeStarted
-, guardThatDocumentCanBeTrashedOrDeletedByUser
+, guardThatDocumentCanBeTrashedByUser
+, guardThatDocumentCanBeDeletedByUser
 , guardThatObjectVersionMatchesIfProvided
 , guardThatConsentModulesAreOnSigningParties
 , guardThatAttachmentDetailsAreConsistent
@@ -77,13 +78,30 @@ guardDocumentStatus s doc = unless (documentstatus doc == s) $
                             (apiError . documentStateError $ errorMsg)
   where errorMsg = "The document status should be '" <> (T.pack $ show s) <> "'."
 
-guardThatDocumentCanBeTrashedOrDeletedByUser :: Kontrakcja m => User -> DocumentID -> m ()
-guardThatDocumentCanBeTrashedOrDeletedByUser user did = withDocumentID did $ do
+
+guardThatDocumentCanBeTrashedByUser :: Kontrakcja m => User -> DocumentID -> m ()
+guardThatDocumentCanBeTrashedByUser =
+  guardThatDocumentCanBeTrashedOrDeletedByUserWithCond (not . isJust . signatorylinkdeleted) "The document is in Trash"
+
+guardThatDocumentCanBeDeletedByUser :: Kontrakcja m => User -> DocumentID -> m ()
+guardThatDocumentCanBeDeletedByUser =
+  guardThatDocumentCanBeTrashedOrDeletedByUserWithCond (not . isJust . signatorylinkreallydeleted) "Document was purged"
+
+guardThatDocumentCanBeTrashedOrDeletedByUserWithCond :: Kontrakcja m => (SignatoryLink -> Bool) -> T.Text -> User -> DocumentID -> m ()
+guardThatDocumentCanBeTrashedOrDeletedByUserWithCond cond errorMsg user did = withDocumentID did $ do
+  let condAPIError = apiError . documentStateError $ errorMsg
   msl <- getSigLinkFor user <$> theDocument
-  when (not . isJust $ msl) $ -- This might be a user with an account
-    guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
+  case (msl) of -- This might be a user with an account
+    (Just sl) -> do
+      unless (cond sl) $ condAPIError
+    Nothing -> do
+      let msgNoAuthor = "Document doesn't have author signatory link connected with user account"
+      asl <- apiGuardJust (serverError msgNoAuthor) =<< (getAuthorSigLink <$> theDocument)
+      guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
+      unless (cond asl) $ condAPIError
   guardThatObjectVersionMatchesIfProvided did
   guardThatDocumentIs (not . isPending) "Pending documents can not be trashed or deleted" =<< theDocument
+
 
 -- | Internal function used in all guards on User
 -- Helps code reuse and keep error messages consistent

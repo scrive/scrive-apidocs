@@ -812,20 +812,16 @@ assertNoArchivedSigLink doc =
 testArchiveDocumentPendingLeft :: TestEnv ()
 testArchiveDocumentPendingLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
-  _doc0 <- addRandomDocumentWithAuthorAndCondition author isPending
-  _doc1 <- addRandomDocumentWithAuthorAndCondition author isPending
-
-  let doc = _doc1
-
-  assertRaisesKontra (\(DocumentStatusShouldBe {}) -> True) $
-               withDocument doc $ randomUpdate $ \t->ArchiveDocument (userid author) (systemActor t)
-
+  doc <- addRandomDocumentWithAuthorAndCondition author isPending
+  withDocument doc $ do
+    res <- randomUpdate $ \t->ArchiveDocument (userid author) (systemActor t)
+    assertEqual "Document that is pending can't be archived" False res
 
 testArchiveDocumentAuthorRight :: TestEnv ()
 testArchiveDocumentAuthorRight = replicateM_ 10 $ do
   author <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
-    randomUpdate $ \t->ArchiveDocument (userid author) (systemActor t)
+    void $ randomUpdate $ \t->ArchiveDocument (userid author) (systemActor t)
     assertOneArchivedSigLink =<< theDocument
 
 testArchiveDocumentCompanyAdminRight :: TestEnv ()
@@ -834,14 +830,14 @@ testArchiveDocumentCompanyAdminRight = replicateM_ 10 $ do
   author <- addNewRandomCompanyUser (get ugID ug) False
   adminuser <- addNewRandomCompanyUser (get ugID ug) True
   addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
-    randomUpdate $ \t->ArchiveDocument (userid adminuser) (systemActor t)
+    void $ randomUpdate $ \t->ArchiveDocument (userid adminuser) (systemActor t)
     assertOneArchivedSigLink =<< theDocument
 
 testRestoreArchivedDocumentAuthorRight :: TestEnv ()
 testRestoreArchivedDocumentAuthorRight = replicateM_ 10 $ do
   author <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
-    randomUpdate $ \t->ArchiveDocument (userid author) (systemActor t)
+    void $ randomUpdate $ \t->ArchiveDocument (userid author) (systemActor t)
     randomUpdate $ \t->RestoreArchivedDocument author (systemActor t)
     assertNoArchivedSigLink =<< theDocument
 
@@ -851,7 +847,7 @@ testRestoreArchiveDocumentCompanyAdminRight = replicateM_ 10 $ do
   author <- addNewRandomCompanyUser (get ugID ug) False
   adminuser <- addNewRandomCompanyUser (get ugID ug) True
   addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
-    randomUpdate $ \t->ArchiveDocument (userid author) (systemActor t)
+    void $ randomUpdate $ \t->ArchiveDocument (userid author) (systemActor t)
     randomUpdate $ \t->RestoreArchivedDocument adminuser (systemActor t)
 
     assertNoArchivedSigLink =<< theDocument
@@ -883,16 +879,19 @@ testReallyDeleteDocument = replicateM_ 10 $ do
   author <- addNewRandomUser
   doc <- addRandomDocumentWithAuthorAndCondition author (not . isPending)
 
-  assertRaisesKontra (\DocumentIsNotDeleted {} -> True) $
-    withDocument doc $ randomUpdate $ \t->ReallyDeleteDocument (userid author) (systemActor t)
-  withDocument doc $ randomUpdate $ \t->ArchiveDocument (userid author) (systemActor t)
-  withDocument doc $ randomUpdate $ \t->ReallyDeleteDocument (userid author) (systemActor t)
-  assertRaisesKontra (\DocumentIsReallyDeleted {} -> True) $
-    withDocument doc $ randomUpdate $ \t->ReallyDeleteDocument (userid author) (systemActor t)
+  withDocument doc $ do
+    res <- randomUpdate $ \t->ReallyDeleteDocument (userid author) (systemActor t)
+    assertEqual "Document that is not deleted can't be really deleted" False res
+
+  withDocument doc $ void $ randomUpdate $ \t->ArchiveDocument (userid author) (systemActor t)
+  withDocument doc $ void $ randomUpdate $ \t->ReallyDeleteDocument (userid author) (systemActor t)
+  withDocument doc $ do
+    res <- randomUpdate $ \t->ReallyDeleteDocument (userid author) (systemActor t)
+    assertEqual "Document can't be really deleted twice" False res
+
   docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author) [DocumentFilterByDocumentID (documentid doc)]
                      [] 1
   assertEqual "Really deleted documents are not visible to user" [] (map documentid docs)
-
 
 testReallyDeleteDocumentCompanyAdmin :: TestEnv ()
 testReallyDeleteDocumentCompanyAdmin = replicateM_ 10 $ do
@@ -900,10 +899,10 @@ testReallyDeleteDocumentCompanyAdmin = replicateM_ 10 $ do
   author <- addNewRandomCompanyUser (get ugID ug) False
   adminuser <- addNewRandomCompanyUser (get ugID ug) True
   addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
-    assertRaisesKontra (\DocumentIsNotDeleted {} -> True) $
-      randomUpdate $ \t->ReallyDeleteDocument (userid adminuser) (systemActor t)
-    randomUpdate $ \t->ArchiveDocument (userid adminuser) (systemActor t)
-    randomUpdate $ \t->ReallyDeleteDocument (userid adminuser) (systemActor t)
+    res <-randomUpdate $ \t->ReallyDeleteDocument (userid adminuser) (systemActor t)
+    assertEqual "Document that is not deleted can't be really deleted" False res
+    void $ randomUpdate $ \t->ArchiveDocument (userid adminuser) (systemActor t)
+    void $ randomUpdate $ \t->ReallyDeleteDocument (userid adminuser) (systemActor t)
     assertOneArchivedSigLink =<< theDocument
     doc <- theDocument
     docs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid author) [DocumentFilterByDocumentID (documentid doc)]
@@ -916,12 +915,10 @@ testReallyDeleteDocumentSomebodyElse = replicateM_ 10 $ do
   author <- addNewRandomCompanyUser (get ugID ug) False
   other <- addNewRandomCompanyUser (get ugID ug) False
   addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
-    assertRaisesKontra (\UserShouldBeSelfOrCompanyAdmin {} -> True) $
-      randomUpdate $ \t->ReallyDeleteDocument (userid other) (systemActor t)
-    assertRaisesKontra (\UserShouldBeSelfOrCompanyAdmin {} -> True) $
-      randomUpdate $ \t->ArchiveDocument (userid other) (systemActor t)
-    assertRaisesKontra (\UserShouldBeSelfOrCompanyAdmin {} -> True) $
-      randomUpdate $ \t->ReallyDeleteDocument (userid other) (systemActor t)
+    res1 <- randomUpdate $ \t->ArchiveDocument (userid other) (systemActor t)
+    assertEqual "ReallyDeleteDocument can be done by other user" False res1
+    res2 <- randomUpdate $ \t->ReallyDeleteDocument (userid other) (systemActor t)
+    assertEqual "ReallyDeleteDocument can be done by other user" False res2
     doc <- theDocument
     assertEqual "Expected no archived signatory links"
               0
@@ -937,7 +934,7 @@ testPurgeDocument = replicateM_ 10 $ do
   now <- currentTime
   archived1 <- dbUpdate $ PurgeDocuments 0
   assertEqual "Purged zero documents when not deleted" 0 archived1
-  withDocument doc $ randomUpdate $ \t -> ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
+  withDocument doc $ void $ randomUpdate $ \t -> ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
   archived2 <- dbUpdate $ PurgeDocuments 0
   assertEqual "Purged single document" 1 archived2
 
@@ -952,7 +949,7 @@ testPurgeDocumentUserSaved = replicateM_ 10 $ do
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isClosed d || isCanceled d || isRejected d)
   archived1 <- dbUpdate $ PurgeDocuments 1
   now <- currentTime
-  withDocument doc $ randomUpdate $ \t->ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
+  withDocument doc $ void $ randomUpdate $ \t->ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
   archived2 <- dbUpdate $ PurgeDocuments 1
   assertEqual "Purged zero documents before delete" 0 archived1
   assertEqual "Purged zero documents before time passed after delete" 0 archived2
@@ -963,7 +960,7 @@ testPurgeDocumentRemovesSensitiveData = replicateM_ 10 $ do
   author <- addNewRandomCompanyUser (get ugID ug) False
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
   now <- currentTime
-  withDocument doc $ randomUpdate $ \t -> ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
+  withDocument doc $ void $ randomUpdate $ \t -> ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
   void $ dbUpdate $ PurgeDocuments 0
   let sidsSql = "SELECT id FROM signatory_links WHERE document_id = " <?> documentid doc
 
@@ -1042,7 +1039,7 @@ testPurgeDocumentImmediateTrash = replicateM_ 10 $ do
   author <- addNewRandomCompanyUser (get ugID ug) False
   doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
   now <- currentTime
-  withDocument doc $ randomUpdate $ \t -> ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
+  withDocument doc $ void $ randomUpdate $ \t -> ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
 
   do
     archived <- dbUpdate $ PurgeDocuments 1 -- purge after 1 day
@@ -1091,8 +1088,8 @@ testArchiveDocumentUnrelatedUserLeft = replicateM_ 10 $ do
   author        <- addNewRandomUser
   unrelateduser <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
-    assertRaisesKontra (\UserShouldBeDirectlyOrIndirectlyRelatedToDocument {} -> True) $
-      randomUpdate $ \t -> ArchiveDocument (userid unrelateduser) (systemActor t)
+    res <- randomUpdate $ \t -> ArchiveDocument (userid unrelateduser) (systemActor t)
+    assertEqual "ArchiveDocument can be done by unrelated user" False res
 
 testArchiveDocumentCompanyStandardLeft :: TestEnv ()
 testArchiveDocumentCompanyStandardLeft = replicateM_ 10 $ do
@@ -1100,15 +1097,15 @@ testArchiveDocumentCompanyStandardLeft = replicateM_ 10 $ do
   author <- addNewRandomCompanyUser (get ugID ug) False
   standarduser <- addNewRandomCompanyUser (get ugID ug) False
   addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
-    assertRaisesKontra (\UserShouldBeSelfOrCompanyAdmin {} -> True) $
-      randomUpdate $ \t->ArchiveDocument (userid standarduser) (systemActor t)
+    res <- randomUpdate $ \t->ArchiveDocument (userid standarduser) (systemActor t)
+    assertEqual "ArchiveDocument can be done by user that is not company admin" False res
 
 testRestoreArchivedDocumentUnrelatedUserLeft :: TestEnv ()
 testRestoreArchivedDocumentUnrelatedUserLeft = replicateM_ 10 $ do
   author        <- addNewRandomUser
   unrelateduser <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
-    randomUpdate $ \t -> ArchiveDocument (userid author) (systemActor t)
+    void $ randomUpdate $ \t -> ArchiveDocument (userid author) (systemActor t)
     assertRaisesKontra (\UserShouldBeDirectlyOrIndirectlyRelatedToDocument {} -> True)$ do
       randomUpdate $ \t->RestoreArchivedDocument unrelateduser (systemActor t)
 
@@ -1118,7 +1115,7 @@ testRestoreArchiveDocumentCompanyStandardLeft = replicateM_ 10 $ do
   author <- addNewRandomCompanyUser (get ugID ug) False
   standarduser <- addNewRandomCompanyUser (get ugID ug) False
   addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
-    randomUpdate $ \t->ArchiveDocument (userid author) (systemActor t)
+    void $ randomUpdate $ \t->ArchiveDocument (userid author) (systemActor t)
     assertRaisesKontra (\UserShouldBeSelfOrCompanyAdmin {} -> True) $ do
       randomUpdate $ \t->RestoreArchivedDocument standarduser (systemActor t)
 
@@ -1134,7 +1131,7 @@ checkQueryDoesntContainArchivedDocs qry = replicateM_ 10 $ do
     did <- theDocumentID
     docsbeforearchive <- dbQuery (qry author)
     assertEqual "Expecting one doc before archive" [did] (map documentid docsbeforearchive)
-    randomUpdate $ \t->ArchiveDocument (userid author) (systemActor t)
+    void $ randomUpdate $ \t->ArchiveDocument (userid author) (systemActor t)
     docsafterarchive <- dbQuery (qry author)
     assertEqual "Expecting no docs after archive" [] (map documentid docsafterarchive)
     randomUpdate $ \t->RestoreArchivedDocument author (systemActor t)

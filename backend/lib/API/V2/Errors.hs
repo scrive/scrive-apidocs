@@ -405,7 +405,7 @@ convertDocumentIsReallyDeleted (SomeDBExtraException ex) =
   case cast ex of
     Just (DocumentIsReallyDeleted {})
       -> SomeDBExtraException . documentStateError $
-         "The document is deleted. It is not avaiable and will be purged soon"
+         "The document is deleted. It is not available and will be purged soon"
     Nothing
       -> SomeDBExtraException ex
 

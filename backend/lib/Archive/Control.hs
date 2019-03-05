@@ -100,7 +100,9 @@ handleDelete = do
              sl_actor <- signatoryActor ctx sl
              dbUpdate $ RejectDocument signatorylinkid (isApprover sl) Nothing sl_actor
              theDocument >>= postDocumentRejectedChange signatorylinkid Nothing
-        dbUpdate $ ArchiveDocument (userid user) actor
+        success <- dbUpdate $ ArchiveDocument (userid user) actor
+        unless (success) internalError
+
 
 handleProlong :: Kontrakcja m => m JSValue
 handleProlong = do
@@ -115,7 +117,8 @@ handleProlong = do
 handleReallyDelete :: Kontrakcja m => m JSValue
 handleReallyDelete = do
   handleArchiveDocumentsAction' "really delete documents" isDocumentVisibleToUser $ \(user, actor) -> do
-    dbUpdate $ ReallyDeleteDocument (userid user) actor
+    success <- dbUpdate $ ReallyDeleteDocument (userid user) actor
+    unless (success) internalError
 
 handleSendReminders :: Kontrakcja m => m JSValue
 handleSendReminders = handleArchiveDocumentsAction' "send reminders" isAuthorOrAuthorsAdmin $ \(_, actor) -> do

@@ -939,8 +939,9 @@ apiCallV1Delete did = logDocument did . api $ do
                      || (isJust mauser && usergroupid (fromJust mauser) == usergroupid user && (useriscompanyadmin user))
     when (not haspermission) $ do
            throwM . SomeDBExtraException $ serverError "Permission problem. Not connected to document."
-    dbUpdate $ ArchiveDocument (userid user) actor
-
+    deleted <- dbUpdate $ ArchiveDocument (userid user) actor
+    when (not deleted) $ do
+           throwM . SomeDBExtraException $ conflictError "Document can't be deleted."
     Accepted <$> (J.runJSONGenT $ return ())
 
 
@@ -956,8 +957,9 @@ apiCallV1ReallyDelete did = logDocument did . api $ do
                      || (isJust mauser && usergroupid (fromJust mauser) == usergroupid user && (useriscompanyadmin user))
     when (not haspermission) $ do
            throwM . SomeDBExtraException $ serverError "Permission problem. Not connected to document."
-    dbUpdate $ ReallyDeleteDocument (userid user) actor
-
+    reallydeleted <- dbUpdate $ ReallyDeleteDocument (userid user) actor
+    when (not reallydeleted) $ do
+           throwM . SomeDBExtraException $ conflictError "Document can't be really deleted."
     Accepted <$> (J.runJSONGenT $ return ())
 
 

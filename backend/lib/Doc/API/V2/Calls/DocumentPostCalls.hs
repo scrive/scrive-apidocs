@@ -231,43 +231,48 @@ docApiV2Cancel did = logDocument did . api $ do
 
 
 docApiV2Trash :: Kontrakcja m => DocumentID -> m Response
-docApiV2Trash = docApiV2TrashDeleteCommon ArchiveDocument
+docApiV2Trash = docApiV2TrashDeleteCommon guardThatDocumentCanBeTrashedByUser ArchiveDocument "Document can't be trashed"
 
 
 docApiV2Delete :: Kontrakcja m => DocumentID -> m Response
-docApiV2Delete = docApiV2TrashDeleteCommon ReallyDeleteDocument
+docApiV2Delete = docApiV2TrashDeleteCommon guardThatDocumentCanBeDeletedByUser ReallyDeleteDocument "Document can't be deleted"
 
 
 docApiV2TrashDeleteCommon
-  :: (Kontrakcja m, DBUpdate (DocumentT m) t b)
-  => (UserID -> Actor -> t)
+  :: (Kontrakcja m, DBUpdate (DocumentT m) t Bool)
+  => (User -> DocumentID -> m ())
+  -> (UserID -> Actor -> t)
+  -> T.Text
   -> DocumentID
   -> m Response
-docApiV2TrashDeleteCommon dbAction did = logDocument did . api $ do
+docApiV2TrashDeleteCommon guardAction dbAction errorMsg did = logDocument did . api $ do
   -- Permissions
   (user, actor) <- getAPIUser APIDocSend
   -- Guards
-  guardThatDocumentCanBeTrashedOrDeletedByUser user did
+  guardAction user did
   withDocumentID did $ do
     -- API call actions
-    void . dbUpdate $ dbAction (userid user) actor
+    success <- dbUpdate $ dbAction (userid user) actor
+    unless success $ apiError . documentStateError $ errorMsg
     -- Result
     Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 
 
 docApiV2TrashMultiple :: Kontrakcja m => m Response
-docApiV2TrashMultiple = docApiV2TrashDeleteMultipleCommon ArchiveDocument
+docApiV2TrashMultiple = docApiV2TrashDeleteMultipleCommon guardThatDocumentCanBeTrashedByUser ArchiveDocument "Document can't be trashed"
 
 
 docApiV2DeleteMultiple :: Kontrakcja m => m Response
-docApiV2DeleteMultiple = docApiV2TrashDeleteMultipleCommon ReallyDeleteDocument
+docApiV2DeleteMultiple = docApiV2TrashDeleteMultipleCommon guardThatDocumentCanBeDeletedByUser ReallyDeleteDocument "Document can't be deleted"
 
 
 docApiV2TrashDeleteMultipleCommon
-  :: (Kontrakcja m, DBUpdate (DocumentT m) t b)
-  => (UserID -> Actor -> t)
+  :: (Kontrakcja m, DBUpdate (DocumentT m) t Bool)
+  => (User -> DocumentID -> m ())
+  -> (UserID -> Actor -> t)
+  -> T.Text
   -> m Response
-docApiV2TrashDeleteMultipleCommon dbAction = api $ do
+docApiV2TrashDeleteMultipleCommon guardAction dbAction errorMsg = api $ do
   -- Permissions
   (user, actor) <- getAPIUser APIDocSend
   -- Parameters
@@ -283,10 +288,12 @@ docApiV2TrashDeleteMultipleCommon dbAction = api $ do
   when (length (nub dids) /= length dids )
     . apiError $ requestParameterInvalid "document_ids"
       "document_ids parameter can't contain duplicates"
-  forM_  dids $ guardThatDocumentCanBeTrashedOrDeletedByUser user
+  forM_  dids $ guardAction user
   -- API call actions
-  forM_ dids $ \did -> withDocumentID did
-    . dbUpdate $ dbAction (userid user) actor
+  forM_ dids $ \did -> withDocumentID did $ do
+    success <- dbUpdate $ dbAction (userid user) actor
+    unless success $ apiError . documentStateError $ T.concat [errorMsg, "(", T.pack (show did), ")"]
+
   -- Result
   let docDomain = DocumentsVisibleToUser $ userid user
       docFilter = [DocumentFilterByDocumentIDs dids]
