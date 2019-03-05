@@ -73,7 +73,7 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, s
             msl <- getSigLinkFor slid <$> theDocument
             let signphone = maybe "" getMobile msl
             templates <- asks ceTemplates
-            bd <- (maybesignatory =<<) . getAuthorSigLink <$> theDocument >>= \case
+            bd <- (maybesignatory <=< getAuthorSigLink) <$> theDocument >>= \case
               Nothing -> dbQuery $ GetMainBrandedDomain
               Just uid -> dbQuery $ GetBrandedDomainByUserID uid
             let host = get bdUrl bd

@@ -240,7 +240,7 @@ apiCallV1Update :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Update did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocCreate
   withDocumentID did $ do
-    auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
+    auid <- apiGuardJustM (serverError "No author found") $ (maybesignatory <=< getAuthorSigLink) <$> theDocument
     unlessM (isPreparation <$> theDocument) $ do
           checkObjectVersionIfProvidedAndThrowError did (serverError "Document is not a draft or template")
     unless (auid == userid user) $
@@ -272,7 +272,7 @@ apiCallV1SetAuthorAttachemnts  :: Kontrakcja m => DocumentID -> m Response
 apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocCreate
   withDocumentID did $ do
-    auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
+    auid <- apiGuardJustM (serverError "No author found") $ (maybesignatory <=< getAuthorSigLink) <$> theDocument
     unlessM (isPreparation <$> theDocument) $ do
           checkObjectVersionIfProvidedAndThrowError did (serverError "Document is not a draft or template")
     unless (auid == userid user) $
@@ -360,7 +360,7 @@ apiCallV1Ready :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Ready did = logDocument did . api $ do
   (user, actor, _) <- getAPIUser APIDocSend
   withDocumentID did $ do
-    auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) .getAuthorSigLink) <$> theDocument
+    auid <- apiGuardJustM (serverError "No author found") $ (maybesignatory <=< getAuthorSigLink) <$> theDocument
     ifM ((isPending &&
           all (isSignatoryAndHasNotSigned || isApproverAndHasNotApproved) .
           documentsignatorylinks) <$>
@@ -725,7 +725,7 @@ apiCallV1SetAutoReminder did = logDocument did . api $ do
     (user, _actor, _) <- getAPIUser APIDocSend
     withDocumentID did $ do
       auid <- apiGuardJustM (serverError "No author found") $
-              ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
+              (maybesignatory <=< getAuthorSigLink) <$> theDocument
       unless (auid == userid user) $
         throwM . SomeDBExtraException $
         serverError "Permission problem. Not an author."
@@ -1255,7 +1255,7 @@ apiCallV1ExtractTexts did fileid = logDocumentAndFile did fileid . api $ do
   withDocumentID did $ do
     unlessM (isPreparation <$> theDocument) $ do
       throwM . SomeDBExtraException $ serverError "Can't extract texts from documents that are not in preparation"
-    auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
+    auid <- apiGuardJustM (serverError "No author found") $ (maybesignatory <=< getAuthorSigLink) <$> theDocument
     unless (auid == userid user) $
       throwM . SomeDBExtraException $
       serverError "Permission problem. Not an author."
@@ -1283,7 +1283,7 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
   (user, actor, _) <- getAPIUser APIDocCreate
   checkObjectVersionIfProvided docid
   withDocumentID docid $ do
-    auid <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
+    auid <- apiGuardJustM (serverError "No author found") $ (maybesignatory <=< getAuthorSigLink) <$> theDocument
     unlessM (isPreparation <$> theDocument) $ do
       throwM . SomeDBExtraException $ (serverError "Document is not a draft or template")
     unless (auid == userid user) $
@@ -1405,7 +1405,7 @@ checkObjectVersionIfProvidedAndThrowError did err = do
 -- Utils
 guardAuthorOrAuthorsAdmin :: (Kontrakcja m,DocumentMonad m) => User -> String -> m ()
 guardAuthorOrAuthorsAdmin user forbidenMessage = do
-  docUserID <- apiGuardJustM (serverError "No author found") $ ((maybesignatory =<<) . getAuthorSigLink) <$> theDocument
+  docUserID <- apiGuardJustM (serverError "No author found") $ (maybesignatory <=< getAuthorSigLink) <$> theDocument
   docUser   <- apiGuardJustM (serverError "No user found for author") $ dbQuery $ GetUserByIDIncludeDeleted docUserID
   let hasPermission = (docUserID == userid user) ||
                           ((usergroupid docUser == usergroupid user)
