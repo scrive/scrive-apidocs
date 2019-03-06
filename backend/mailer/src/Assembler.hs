@@ -10,6 +10,7 @@ import Control.Monad.Trans.Control
 import Crypto.RNG
 import Crypto.RNG.Utils
 import Data.Char
+import Data.String.Utils
 import Log
 import Text.JSON.Gen as J
 import qualified Data.ByteString as BS
@@ -73,6 +74,9 @@ assembleContent Mail{..} = do
       footerRelated = "\r\n--" ++ boundaryRelated ++ "--\r\n"
       footerContent = "\r\n--" ++ boundaryAlternative ++ "--\r\n"
       footerEmail = "\r\n--" ++ boundaryMixed ++ "--\r\n"
+      -- mail content lines should not exceed 500chars for some mail servers
+      -- replace <br/> with <br/>\r\n
+      fixLineLengths = replace "<br/>\r\n\r\n" "<br/>\r\n" . replace "<br/>" "<br/>\r\n" . replace "<BR/>" "<br/>"
       attachmentType fname =
                 if (".pdf" `isSuffixOf` (map toLower fname))
                     then  "application/pdf"
@@ -115,7 +119,7 @@ assembleContent Mail{..} = do
     , BSLU.fromString $ htmlToTxt mailContent
     , BSLU.fromString headerContentRelated
     , BSLU.fromString headerContentHtml
-    , BSL.fromChunks [BSU.fromString mailContent]
+    , BSL.fromChunks [BSU.fromString $ fixLineLengths mailContent]
     ] ++ relatedAttContent ++
     [
       BSLU.fromString footerRelated
