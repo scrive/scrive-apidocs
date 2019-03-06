@@ -329,7 +329,7 @@ handleSignShow did slid = logDocumentAndSignatory did slid $ do
     Just magichash -> do
       doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid magichash
       invitedlink <- guardJust $ getSigLinkFor slid doc
-      -- We always switch to document langauge in case of pad signing
+      -- We always switch to document language in case of pad signing
       switchLang $ getLang doc
       ctx <- getContext -- Order is important since ctx after switchLang changes
       ad <- getAnalyticsData
