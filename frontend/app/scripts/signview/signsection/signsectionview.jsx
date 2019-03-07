@@ -195,7 +195,13 @@ var Task = require("../navigation/task");
     errorModal: function (xhr) {
       var document = this.props.model.document();
       var signatory = document.currentSignatory();
-      new ErrorModal(xhr, {"Document ID": document.documentid(), "Signatory ID": signatory.signatoryid()});
+      var requestid = xhr.getResponseHeader("X-Request-ID");
+      var details = {"Document ID": document.documentid(),
+                     "Signatory ID": signatory.signatoryid()};
+      if (requestid) {
+        details["Request ID"] = requestid;
+      }
+      new ErrorModal(xhr, details);
     },
 
     handleReject: function (text) {

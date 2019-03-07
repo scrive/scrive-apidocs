@@ -13,6 +13,11 @@ var ScreenBlockingDialog = require("../../js/dialog.js").ScreenBlockingDialog;
           {localization.signingErrorMessage1}
           <br/>
           {localization.signingErrorMessage2}
+          <br/>
+          <br/>
+          {localization.signingErrorMessage3}
+          <br/>
+          <br/>
         </div>
       );
     }
@@ -76,18 +81,10 @@ var ScreenBlockingDialog = require("../../js/dialog.js").ScreenBlockingDialog;
 
     var textDiv = $("<div/>");
     var contentDiv = $("<div/>").attr("class", "signviewerrormodal");
+    React.render(React.createElement(TextComponent, {}), textDiv[0]);
 
-    if (typeof xhr.status === "number" && xhr.status > 0) {
-      var errorMessage = "HTTP " + xhr.status;
-
-      if (xhr.responseJSON && xhr.responseJSON.error_message) {
-        errorMessage = xhr.responseJSON.error_message;
-        if (xhr.status == 409 && xhr.responseJSON.error_type == "document_state_error") {
-          errorMessage = localization.docsignview.unavailableForSign;
-        }
-      }
-
-      React.render(React.createElement(TextComponent, {}), textDiv[0]);
+    if (xhr.status === 409 && xhr.responseJSON.error_type == "document_state_error") {
+      errorMessage = localization.docsignview.unavailableForSign;
 
       var errorMessageDiv = $("<div/>");
       React.render(
@@ -96,7 +93,7 @@ var ScreenBlockingDialog = require("../../js/dialog.js").ScreenBlockingDialog;
       );
 
       errorMessageDiv.appendTo(contentDiv);
-    } else {
+    } else if (typeof xhr.status !== "number" || xhr.status === 0) {
       React.render(
         React.createElement(NetworkErrorMessageComponent, {}),
         textDiv[0]
