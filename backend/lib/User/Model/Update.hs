@@ -28,6 +28,7 @@ import DB
 import Doc.DocStateData (DocumentStatus(..))
 import Doc.Types.Document (DocumentSharing(..), DocumentType(..))
 import Doc.Types.SignatoryField
+import Folder.Types
 import IPAddress
 import User.Email
 import User.Lang
@@ -48,9 +49,9 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AcceptTermsOfService Bool where
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
 
-data AddUser = AddUser (String, String) String (Maybe Password) (UserGroupID, Bool) Lang BrandedDomainID SignupMethod
+data AddUser = AddUser (String, String) String (Maybe Password) (UserGroupID, Maybe FolderID, Bool) Lang BrandedDomainID SignupMethod
 instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
-  update (AddUser (fname, lname) email mpwd (ugid, admin) l ad sm) = do
+  update (AddUser (fname, lname) email mpwd (ugid, mFid, admin) l ad sm) = do
     mu <- query $ GetUserByEmail $ Email email
     case mu of
       Just _ -> return Nothing -- user with the same email address exists
@@ -74,6 +75,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
             sqlSet "deleted" (Nothing :: Maybe UTCTime)
             sqlSet "associated_domain_id" ad
             sqlSet "user_group_id" ugid
+            sqlSet "home_folder_id" mFid
             mapM_ sqlResult selectUsersSelectorsList
         fetchMaybe fetchUser
 

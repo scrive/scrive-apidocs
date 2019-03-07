@@ -13,5 +13,5 @@ import User.Model.Query
 apiAccessControl :: (Kontrakcja m) => AccessPolicy -> m a -> m a
 apiAccessControl acc ma = do
   apiuser <- fst <$> getAPIUser APIPersonal
-  roles <- dbQuery . GetUserRoles $ apiuser
+  roles <- dbQuery . GetRoles $ apiuser
   accessControl roles acc (apiError insufficientPrivileges) ma

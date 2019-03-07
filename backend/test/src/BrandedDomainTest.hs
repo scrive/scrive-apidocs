@@ -45,7 +45,7 @@ test_brandedDomainAssociatedDomain = do
 
   pwd <- createPassword "admin"
 
-  Just user <- dbUpdate $ AddUser
+  Just user <- createNewUser
     ("Andrzej", "Rybczak")
     "andrzej@scrive.com"
     (Just pwd)

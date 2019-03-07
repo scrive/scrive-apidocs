@@ -33,6 +33,7 @@ import EID.Signature.Tables
 import EvidenceLog.Tables
 import FeatureFlags.Tables
 import File.Tables
+import Folder.Tables
 import HostClock.Tables
 import Mails.FromKontra.Tables
 import Mails.Tables
@@ -107,6 +108,7 @@ kontraTables :: [Table]
 kontraTables =
   [ tableThemes
   , tableBrandedDomains
+  , tableFolders
   , tableUserGroups
   , tablePartners
   , tableUsers

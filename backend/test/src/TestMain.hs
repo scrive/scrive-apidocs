@@ -52,6 +52,7 @@ import FeatureFlagsTest
 import FileStorage
 import FileTest
 import FlashMessages
+import Folder.FolderTest
 import GTWorkflowTest
 import HtmlTest
 import InputValidationTest
@@ -116,6 +117,7 @@ allTests = [
   , fileTests
   , featureFlagsTest
   , flashMessagesTests
+  , folderTests
   , userGroupTests
   , htmlTests
   , inputValidationTests

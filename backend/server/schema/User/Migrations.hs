@@ -160,3 +160,21 @@ createTemporaryLoginTokensTable = Migration
         [ (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade } ]
     }
   }
+
+usersAddHomeFolderID :: MonadDB m => Migration m
+usersAddHomeFolderID =
+  let tname = tblName tableUsers in
+  Migration
+    { mgrTableName = tname
+    , mgrFrom = 27
+    , mgrAction = StandardMigration $ do
+        runQuery_ $ sqlAlterTable tname
+          [
+            sqlAddColumn $ tblColumn
+              { colName = "home_folder_id"
+              , colType = BigIntT
+              , colNullable = True }
+          , sqlAddFK tname (fkOnColumn "home_folder_id" "folders" "id")
+          ]
+        runQuery_ . sqlCreateIndex tname $ indexOnColumn "home_folder_id"
+    }

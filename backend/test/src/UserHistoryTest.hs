@@ -21,7 +21,6 @@ import User.History.Model
 import User.Model
 import User.UserAccountRequest
 import User.UserControl
-import UserGroup.Model
 import UserGroup.Types
 
 userHistoryTests :: TestEnvSt -> Test
@@ -242,8 +241,8 @@ createTestUser :: TestEnv User
 createTestUser = do
     bd <- dbQuery $ GetMainBrandedDomain
     pwd <- createPassword "test_password"
-    ug <- dbUpdate $ UserGroupCreate defaultUserGroup
-    muser <- dbUpdate $ AddUser ("", "")
+    ug <- addNewUserGroup
+    muser <- createNewUser ("", "")
                                 "karol@skrivapa.se"
                                 (Just pwd)
                                 (get ugID ug, True)

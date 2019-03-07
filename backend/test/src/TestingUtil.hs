@@ -9,6 +9,7 @@ import Control.Monad.Reader.Class
 import Control.Monad.Trans
 import Crypto.RNG
 import Data.Char
+import Data.Int
 import Data.Text (pack)
 import Data.Time.Clock
 import Data.Time.Clock.POSIX
@@ -56,6 +57,7 @@ import File.FileID
 import File.Model
 import File.Storage
 import FlashMessage
+import Folder.Model
 import GuardTime
 import IPAddress
 import KontraMonad
@@ -131,6 +133,10 @@ instance Arbitrary DocumentTag where
   arbitrary = DocumentTag <$> (fromSNN <$> arbitrary)
                           <*> (fromSNN <$> arbitrary)
 
+instance Arbitrary Folder where
+  arbitrary = (\name -> Folder emptyFolderID Nothing name)
+    <$> arbitrary
+
 instance Arbitrary UserID where
   arbitrary = unsafeUserID . abs <$> arbitrary
 
@@ -180,6 +186,7 @@ genMaybeUnicodeString = oneof [ pure Nothing, Just <$> genUnicodeString ]
 instance Arbitrary UserGroup where
   arbitrary = (UserGroup emptyUserGroupID Nothing)
     <$> arbitrary
+    <*> pure Nothing
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
@@ -189,6 +196,7 @@ instance Arbitrary UserGroup where
 instance Arbitrary UserGroupRoot where
   arbitrary = UserGroupRoot emptyUserGroupID
     <$> arbitrary
+    <*> pure Nothing
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
@@ -664,6 +672,7 @@ instance Arbitrary User where
     <*> arbitrary
     <*> pure (unsafeBrandedDomainID 0)
     <*> pure (unsafeUserGroupID 0)
+    <*> pure Nothing
 
 instance Arbitrary CgiGrpTransaction where
   arbitrary = CgiGrpSignTransaction
@@ -766,16 +775,21 @@ compareTime (UTCTime da ta) (UTCTime db tb) =
   && (((ta + picosecondsToDiffTime (10^9) >= tb) && (ta <= tb))
       || ((tb + picosecondsToDiffTime (10^9)) >= ta && (ta >= tb)))
 
-addNewUserGroup :: TestEnv UserGroup
-addNewUserGroup = do
+addNewUserGroup' :: Bool ->  TestEnv UserGroup
+addNewUserGroup' createFolder = do
+    mUgFolderID <- case createFolder of
+      False -> return Nothing
+      True ->
+        fmap (Just . get folderID) . dbUpdate $ FolderCreate defaultFolder
     ugname <- rand 10 (T.pack <$> arbString 3 30)
     ugacompanynumber <- rand 10 (T.pack <$> arbString 3 30)
     ugaaddress <- rand 10 (T.pack <$> arbString 3 30)
     ugazip <- rand 10 (T.pack <$> arbString 3 30)
     ugacity <- rand 10 (T.pack <$> arbString 3 30)
     ugacountry <- rand 10 (T.pack <$> arbString 3 30)
-    let ug = set ugName          ugname
-          . set ugAddress       uga
+    let ug = set ugName ugname
+          . set ugAddress uga
+          . set ugHomeFolderID mUgFolderID
           $ defaultUserGroup
         uga = Just $ UserGroupAddress
           { _ugaCompanyNumber = ugacompanynumber
@@ -786,9 +800,13 @@ addNewUserGroup = do
           }
     dbUpdate . UserGroupCreate $ ug
 
-addNewUserGroupWithParents :: TestEnv UserGroupWithParents
-addNewUserGroupWithParents = do
-  ug <- addNewUserGroup
+
+addNewUserGroup :: TestEnv UserGroup
+addNewUserGroup = addNewUserGroup' True
+
+addNewUserGroupWithParents :: Bool -> TestEnv UserGroupWithParents
+addNewUserGroupWithParents createFolder = do
+  ug <- addNewUserGroup' createFolder
   guardJustM . dbQuery . UserGroupGetWithParents $ get ugID ug
 
 addNewRandomFile :: ( CryptoRNG m, MonadBase IO m, MonadCatch m, MonadDB m
@@ -808,35 +826,51 @@ addNewRandomFile = do
 addNewUser :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
            => String -> String -> String -> m (Maybe User)
 addNewUser firstname secondname email = do
-  bd <- dbQuery $ GetMainBrandedDomain
-  ug <- dbUpdate $ UserGroupCreate defaultUserGroup
-  dbUpdate $ AddUser (firstname, secondname) email Nothing
-    (get ugID ug,True) defaultLang (get bdid bd)
-    AccountRequest
+  fmap fst <$> addNewUserWithCompany firstname secondname email True
 
 addNewUserWithCompany :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
                       => String
                       -> String
                       -> String
+                      -> Bool
                       -> m (Maybe (User, UserGroupID))
-addNewUserWithCompany firstname secondname email = do
-  bd <- dbQuery $ GetMainBrandedDomain
-  ug <- dbUpdate $ UserGroupCreate defaultUserGroup
-  mUser <- dbUpdate $ AddUser (firstname, secondname) email Nothing
-           (get ugID ug,True) defaultLang (get bdid bd)
-           AccountRequest
-  case mUser of
+addNewUserWithCompany firstname secondname email createFolders = do
+  ug <- addNewCompany createFolders
+  mUser <- addNewCompanyAdminUser firstname secondname email (get ugID ug)
+  return $ (,get ugID ug) <$> mUser
+
+addNewCompany
+  :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+  => Bool -> m UserGroup
+addNewCompany createFolders = do
+  mUgFolder <- case createFolders of
+    False -> return Nothing
+    True -> fmap Just . dbUpdate $ FolderCreate defaultFolder
+  dbUpdate . UserGroupCreate . set ugHomeFolderID (get folderID <$> mUgFolder) $ defaultUserGroup
+
+createNewUser
+ :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+ => (String, String) -> String -> Maybe Password -> (UserGroupID, Bool) -> Lang -> BrandedDomainID -> SignupMethod -> m (Maybe User)
+createNewUser names email mPasswd (ugid, isCompanyAdmin) lang bdID sm = do
+  -- create User home Folder, if the UserGroup has one
+  mUserFolder <- dbQuery (FolderGetUserGroupHome ugid) >>= \case
     Nothing -> return Nothing
-    Just user -> return $ Just (user, get ugID ug)
+    Just ugFolder ->
+      fmap Just . dbUpdate . FolderCreate
+        . set folderParentID (Just $ get folderID ugFolder) $ defaultFolder
+  dbUpdate $ AddUser names email mPasswd (ugid, get folderID <$> mUserFolder, isCompanyAdmin)
+    lang bdID sm
 
 -- | Create a new user and add it to a company as a non-admin.
-addNewCompanyUser :: String -> String -> String -> UserGroupID
-                  -> TestEnv (Maybe User)
+addNewCompanyUser
+  :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+  => String -> String -> String -> UserGroupID -> m (Maybe User)
 addNewCompanyUser = addNewCompanyUser' DontMakeAdmin
 
 -- | Create a new user and add it to a company as an admin.
-addNewCompanyAdminUser :: String -> String -> String -> UserGroupID
-                       -> TestEnv (Maybe User)
+addNewCompanyAdminUser
+  :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+  => String -> String -> String -> UserGroupID -> m (Maybe User)
 addNewCompanyAdminUser = addNewCompanyUser' MakeAdmin
 
 data MakeAdmin = DontMakeAdmin | MakeAdmin
@@ -844,14 +878,15 @@ data MakeAdmin = DontMakeAdmin | MakeAdmin
 
 -- | Create a new user and add it to a company as either an admin or a
 -- non-admin.
-addNewCompanyUser' :: MakeAdmin -> String -> String -> String -> UserGroupID
-                   -> TestEnv (Maybe User)
+addNewCompanyUser'
+  :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
+  => MakeAdmin -> String -> String -> String -> UserGroupID -> m (Maybe User)
 addNewCompanyUser' makeAdmin firstname secondname email ugid = do
   bd <- dbQuery $ GetMainBrandedDomain
   dbQuery (UserGroupGet ugid) >>= \case
     Nothing -> return Nothing
     Just _ug ->
-      dbUpdate $ AddUser (firstname, secondname) email Nothing
+      createNewUser (firstname, secondname) email Nothing
                          (ugid, makeAdmin == MakeAdmin) defaultLang
                          (get bdid bd) CompanyInvitation
 
@@ -859,9 +894,9 @@ addNewCompanyUser' makeAdmin firstname secondname email ugid = do
 addNewAdminUserAndUserGroup :: String -> String -> String
                             -> TestEnv (User, UserGroup)
 addNewAdminUserAndUserGroup firstname secondname email = do
-  ug <- addNewUserGroup
+  ug <- addNewUserGroup' True
   bd <- dbQuery $ GetMainBrandedDomain
-  Just user <- dbUpdate $ AddUser
+  Just user <- createNewUser
     (firstname, secondname)
     email
     Nothing
@@ -878,7 +913,7 @@ addNewUserToUserGroup firstname secondname email ugid = do
   dbQuery (UserGroupGet ugid) >>= \case
     Nothing  -> return Nothing
     Just _ug ->
-      dbUpdate $ AddUser (firstname, secondname) email Nothing
+      createNewUser (firstname, secondname) email Nothing
       (ugid,True) defaultLang (get bdid bd)
       CompanyInvitation
 
@@ -926,11 +961,16 @@ addNewRandomUser = do randomUserInfo >>= addNewUserFromInfo
 addNewRandomUserWithCompany :: ( CryptoRNG m, MonadDB m, MonadFail m, MonadThrow m
                                , MonadLog m, MonadMask m )
                             => m (User, UserGroupID)
-addNewRandomUserWithCompany = do
+addNewRandomUserWithCompany = addNewRandomUserWithCompany' True
+
+addNewRandomUserWithCompany' :: ( CryptoRNG m, MonadDB m, MonadFail m, MonadThrow m
+                               , MonadLog m, MonadMask m )
+                            => Bool -> m (User, UserGroupID)
+addNewRandomUserWithCompany' createFolders = do
   fn <- rand 10 $ arbString 3 30
   ln <- rand 10 $ arbString 3 30
   em <- rand 10 arbEmail
-  Just (user, ugid) <- addNewUserWithCompany fn ln em
+  Just (user, ugid) <- addNewUserWithCompany fn ln em createFolders
   -- change the user to have some distinct personal information
   personal_number        <- rand 10 $ arbString 3 30
   company_position       <- rand 10 $ arbString 3 30
@@ -1005,8 +1045,8 @@ addNewRandomPartnerUser = do
               , ptUserGroupID = Just $ get ugID partnerAdminUserGroup
               }
       True <- dbUpdate $ AccessControlInsertUserGroupAdmin
-              (userid partnerAdminUser)
-              (get ugID partnerAdminUserGroup)
+                           (userid partnerAdminUser)
+                           (get ugID partnerAdminUserGroup)
       return (partnerAdminUser, partnerAdminUserGroup)
 
 data RandomDocumentAllows = RandomDocumentAllows
@@ -1156,6 +1196,7 @@ addRandomDocumentWithFile fileid rda = do
                      , documenttitle = title
                      , documentfromshareablelink = randomDocumentSharedLink rda
                      , documenttemplateid = randomDocumentTemplateId rda
+                     , documentfolderid = userhomefolderid user
                      }
 
       role <- rand 10 arbitrary
@@ -1492,3 +1533,10 @@ fieldForTests (TextFI l) v = SignatoryTextField $ TextField {
   }
 fieldForTests _ _  = unexpectedError
                      "Can't use signature or checkbox fields with this function"
+
+
+assertSQLCount :: String -> Int64 -> SQL -> TestEnv ()
+assertSQLCount msg expectedCount sql = do
+  runSQL_ sql
+  count <- fetchOne runIdentity
+  assertEqual msg expectedCount count

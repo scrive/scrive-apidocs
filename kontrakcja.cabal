@@ -239,6 +239,13 @@ Library
                  , Doc.Tokens.Model
                  , Doc.Tokens.Tables
                  , Doc.Trigger
+                 , Folder.Types
+                 , Folder.Internal
+                 , Folder.Labels
+                 , Folder.Model 
+                 , Folder.Model.Query
+                 , Folder.Model.Update
+                 , Folder.Tables
                  , EID.Authentication.Migrations
                  , EID.Authentication.Model
                  , EID.Authentication.Tables
@@ -430,6 +437,7 @@ Library
                  , User.UserID
                  , User.UserView
                  , User.Utils
+                 , UserGroup
                  , UserGroup.Types
                  , UserGroup.Types.PaymentPlan
                  , UserGroup.Types.Subscription
@@ -779,6 +787,8 @@ Executable kontrakcja-migrate
                  Doc.Signing.Tables
                  Doc.Tables
                  Doc.Tokens.Tables
+                 Folder.Migrations
+                 Folder.Tables
                  EID.Authentication.Migrations
                  EID.Authentication.Tables
                  EID.CGI.GRP.Transaction.Tables
@@ -1275,6 +1285,9 @@ Test-suite kontrakcja-test
                  Doc.Trigger
                  DocControlTest
                  DocStateTest
+                 Folder.FolderTest
+                 Folder.Migrations
+                 Folder.Tables
                  DumpEvidenceTexts
                  EID.Authentication.Migrations
                  EID.Authentication.Tables
@@ -1381,6 +1394,7 @@ Test-suite kontrakcja-test
                , data-default
                , directory
                , exceptions
+               , extra
                , fclabels
                , fields-json
                , filepath

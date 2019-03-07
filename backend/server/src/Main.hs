@@ -27,6 +27,7 @@ import DB
 import DB.PostgreSQL
 import FeatureFlags.Model
 import FileStorage
+import Folder.Model
 import Happstack.Server.ReqHandler
 import Log.Configuration
 import Monitoring
@@ -153,9 +154,13 @@ initDatabaseEntries appConf = do
     case maybeuser of
       Nothing -> do
         bd <- dbQuery $ GetMainBrandedDomain
-        ug <- dbUpdate . UserGroupCreate $ defaultUserGroup
+        ugFolder <- dbUpdate . FolderCreate $ defaultFolder
+        ug <- dbUpdate . UserGroupCreate
+          . set ugHomeFolderID (Just $ get folderID ugFolder) $ defaultUserGroup
+        userFolder <- dbUpdate . FolderCreate
+          . set folderParentID (Just $ get folderID ugFolder) $ defaultFolder
         void $ dbUpdate $ AddUser ("", "")
-          (unEmail email) (Just passwd) (get ugID ug, True)
+          (unEmail email) (Just passwd) (get ugID ug, Just $ get folderID userFolder, True)
           LANG_EN (get bdid bd) ByAdmin
         let features = fromJust $ get ugFeatures ug
         -- enable everything for initial admins

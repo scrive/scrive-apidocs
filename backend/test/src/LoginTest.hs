@@ -25,7 +25,6 @@ import User.Email
 import User.Model
 import User.PasswordReminder
 import User.UserControl
-import UserGroup.Model
 import UserGroup.Types
 
 loginTests :: TestEnvSt -> Test
@@ -298,8 +297,8 @@ createTestUser' :: String -> TestEnv User
 createTestUser' email = do
     bd <- dbQuery $ GetMainBrandedDomain
     pwd <- createPassword "admin"
-    ug <- dbUpdate $ UserGroupCreate defaultUserGroup
-    Just user <- dbUpdate $ AddUser
+    ug <- addNewUserGroup
+    Just user <- createNewUser
       ("", "")
       email
       (Just pwd)
@@ -313,8 +312,8 @@ createUserAndResetPassword :: TestEnv (User, Context)
 createUserAndResetPassword = do
   bd <- dbQuery $ GetMainBrandedDomain
   pwd <- createPassword "admin"
-  ug <- dbUpdate $ UserGroupCreate defaultUserGroup
-  Just user <- dbUpdate $ AddUser
+  ug <- addNewUserGroup
+  Just user <- createNewUser
     ("", "")
     "andrzej@skrivapa.se"
     (Just pwd)

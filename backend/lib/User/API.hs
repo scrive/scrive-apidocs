@@ -39,6 +39,7 @@ import DataRetentionPolicy
 import DataRetentionPolicy.Guards
 import DB
 import Doc.API.V2.Guards (guardThatUserExists)
+import Folder.Model
 import Happstack.Fields
 import InputValidation
 import IPAddress
@@ -409,7 +410,7 @@ apiCallSignup = api $ do
   firstname       <- fromMaybe "" <$> getOptionalField asValidName "firstName"
   lastname        <- fromMaybe "" <$> getOptionalField asValidName "lastName"
   phone           <- fromMaybe "" <$> getOptionalField asValidPhone "phone"
-  companyName     <- fromMaybe "" <$> getOptionalField asValidCompanyName "companyName"
+  companyName     <- T.pack <$> fromMaybe "" <$> getOptionalField asValidCompanyName "companyName"
   companyPosition <- fromMaybe "" <$> getOptionalField asValidPosition "companyPosition"
   lang <- fromMaybe (get ctxlang ctx) <$> langFromCode <$> getField' "lang"
   switchLang lang
@@ -420,9 +421,11 @@ apiCallSignup = api $ do
                Just user | isJust $ userhasacceptedtermsofservice user -> sendPasswordReminder user >> return Nothing
                          | otherwise -> return $ Just user
                Nothing ->  do
-                 let ug0 = set ugName (T.pack companyName) defaultUserGroup
+                 ugFolder <- dbUpdate . FolderCreate $ defaultFolder
+                 let ug0 = set ugName companyName
+                       . set ugHomeFolderID (Just $ get folderID ugFolder) $ defaultUserGroup
                  ug <- dbUpdate $ UserGroupCreate ug0
-                 createUser (Email email) (firstname,lastname) (get ugID ug,True) lang AccountRequest
+                 createUser (Email email) (firstname,lastname) (get ugID ug, True) lang AccountRequest
   case muser' of
     -- return ambiguous response in both cases to prevent a security issue
     Nothing -> runJSONGenT $ value "sent" True

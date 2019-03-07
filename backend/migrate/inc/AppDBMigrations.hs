@@ -21,6 +21,7 @@ import EID.Nets.Migrations
 import EID.Signature.Migrations
 import FeatureFlags.Migrations
 import File.Migrations
+import Folder.Migrations
 import Mails.FromKontra.Migrations
 import Mails.Migrations
 import Partner.Migrations
@@ -180,4 +181,11 @@ kontraMigrations = [
   , featureFlagsAddNotificationDeliveryMethod
   , addIndexForEfficientJoinToSignatoryLinkMagicHashes
   , addMonthlyInvoiceJob
+  , createTableFolders
+  , addFolderTargetColumn
+  , addTargetChecks
+  , addUserGroupHomeFolderID
+  , usersAddHomeFolderID
+  , addFolderRolesChecks
+  , addFolderIDColumnToDocuments
   ]

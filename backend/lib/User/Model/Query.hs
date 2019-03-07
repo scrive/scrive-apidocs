@@ -1,8 +1,8 @@
 module User.Model.Query (
-    GetUserGroupAccountsCountActive(..)
+    GetRoles(..)
+  , GetUserGroupAccountsCountActive(..)
   , GetUserGroupAccountsCountTotal(..)
   , GetUserGroupAdmins(..)
-  , GetUserRoles(..)
   , GetUsageStats(..)
   , GetUsageStatsOnShareableLinks(..)
   , UsageStatsFor(..)
@@ -26,10 +26,11 @@ import Data.Int
 import qualified Data.Text as T
 
 import AccessControl.Model
-import AccessControl.Types (AccessRole(..))
+import AccessControl.Types
 import Chargeable.Model
 import DB
 import Doc.DocStateData (DocumentStatus(..))
+import Folder.Model
 import MagicHash
 import MinutesTime
 import User.Email
@@ -46,14 +47,33 @@ import UserGroup.Types.PaymentPlan
 data GetUserWherePasswordAlgorithmIsEarlierThan =
   GetUserWherePasswordAlgorithmIsEarlierThan PasswordAlgorithm
 
-data GetUserRoles = GetUserRoles User
-instance (MonadDB m, MonadThrow m) => DBQuery m GetUserRoles [AccessRole] where
-  query (GetUserRoles u) = do
-    let usrGrpID = usergroupid u
-    userDBRoles <- query . AccessControlGetRolesByUser . userid $ u
-    return $ userDBRoles <>
-             (if useriscompanyadmin u then [UserAdminAR usrGrpID] else []) <>
-             [UserGroupMemberAR usrGrpID, UserAR $ userid u]
+data GetRoles = GetRoles User
+instance (MonadDB m, MonadThrow m) => DBQuery m GetRoles [AccessRole] where
+  query (GetRoles u) = do
+    let ugid = usergroupid u
+        uid = userid u
+        isAdmin = useriscompanyadmin u
+    dbRolesByUser <- do
+      query . AccessControlGetRolesByUser $ uid
+    dbRolesByUserGroup <- do
+      query . AccessControlGetRolesByUserGroup $ ugid
+    -- Every user shall have DocumentAdminAR to his home folder
+    -- Every is_company_admin shall have DocumentAdminAR to the company home folder
+    mGroupHomeFolderID <- do
+      (get folderID <$>) <$> (query . FolderGetUserGroupHome $ ugid)
+    mUserHomeFolderID <- do
+      (get folderID <$>) <$> (query . FolderGetUserHome $ uid)
+    -- get company root folder
+    let adminOrUserRoles =
+          (if isAdmin then [UserAdminAR ugid] else [UserGroupMemberAR ugid]) <>
+          maybe []
+                (\hfid -> if isAdmin then [DocumentAdminAR hfid] else [])
+                mGroupHomeFolderID <>
+          maybe []
+                (\hfid -> [DocumentAdminAR hfid])
+                mUserHomeFolderID
+        derivedRoles = adminOrUserRoles <> [UserAR uid]
+    return $ dbRolesByUser <> dbRolesByUserGroup <> derivedRoles
 
 instance (MonadDB m, MonadThrow m) =>
   DBQuery m GetUserWherePasswordAlgorithmIsEarlierThan (Maybe User) where

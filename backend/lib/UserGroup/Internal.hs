@@ -29,6 +29,7 @@ module UserGroup.Internal (
   , UserGroupWithChildren(..)
   ) where
 
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Binary
 import Data.Int
 import Data.Text (Text)
@@ -41,6 +42,7 @@ import qualified Data.ByteString.Char8 as BS
 import DataRetentionPolicy
 import DB
 import FeatureFlags.Model
+import Folder.Types
 import IPAddress
 import Log.Identifier
 import PadApplication.Types
@@ -52,6 +54,11 @@ data UserGroup = UserGroup {
     _ugID            :: UserGroupID
   , _ugParentGroupID :: Maybe UserGroupID
   , _ugName          :: Text
+  -- Folder, where home folders are created for new users
+  -- it is a Maybe for slow migration purposes after that
+  -- the Maybe will be removed
+  -- The Maybe can be re-introduced, when we implement home folder inheritance
+  , _ugHomeFolderID  :: Maybe FolderID
   , _ugAddress       :: Maybe UserGroupAddress
   , _ugSettings      :: Maybe UserGroupSettings
   , _ugInvoicing     :: UserGroupInvoicing
@@ -62,6 +69,7 @@ data UserGroup = UserGroup {
 data UserGroupRoot = UserGroupRoot
   { _ugrID            :: UserGroupID
   , _ugrName          :: Text
+  , _ugrHomeFolderID  :: Maybe FolderID
   , _ugrAddress       :: UserGroupAddress
   , _ugrSettings      :: UserGroupSettings
   , _ugrPaymentPlan   :: PaymentPlan  -- user group root always must have Invoice
@@ -188,6 +196,7 @@ type instance CompositeRow UserGroup = (
     UserGroupID
   , Maybe UserGroupID
   , Text
+  , Maybe FolderID
   , Composite UserGroupInvoicing
   , Maybe (Composite UserGroupSettings)
   , Maybe (Composite UserGroupAddress)
@@ -204,6 +213,7 @@ instance CompositeFromSQL UserGroup where
     ( _ugID
     , _ugParentGroupID
     , _ugName
+    , _ugHomeFolderID
     , cinvoicing
     , cinfos
     , caddresses
@@ -228,6 +238,7 @@ defaultUserGroup =
       _ugID = emptyUserGroupID
     , _ugParentGroupID = Nothing
     , _ugName = ""
+    , _ugHomeFolderID = Nothing
     , _ugSettings = Just $ UserGroupSettings {
         _ugsIPAddressMaskList   = []
       , _ugsDataRetentionPolicy = defaultDataRetentionPolicy
@@ -266,6 +277,7 @@ ugrFromUG ug = do
   return $ UserGroupRoot
     { _ugrID = _ugID ug
     , _ugrName = _ugName ug
+    , _ugrHomeFolderID = _ugHomeFolderID ug
     , _ugrUI = _ugUI ug
     , ..
     }
@@ -274,6 +286,7 @@ ugFromUGRoot :: UserGroupRoot -> UserGroup
 ugFromUGRoot ugr = UserGroup
   { _ugID = _ugrID ugr
   , _ugName = _ugrName ugr
+  , _ugHomeFolderID = _ugrHomeFolderID ugr
   , _ugParentGroupID = Nothing
   , _ugInvoicing = Invoice . _ugrPaymentPlan $ ugr
   , _ugSettings = Just $ _ugrSettings ugr
@@ -322,6 +335,8 @@ newtype UserGroupID = UserGroupID Int64
   deriving (Eq, Ord)
 deriving newtype instance Read UserGroupID
 deriving newtype instance Show UserGroupID
+deriving newtype instance ToJSON UserGroupID
+deriving newtype instance FromJSON UserGroupID
 
 instance PQFormat UserGroupID where
   pqFormat = pqFormat @Int64

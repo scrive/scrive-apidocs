@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 50
+  , tblVersion = 51
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -43,6 +43,7 @@ tableDocuments = tblTable {
     , tblColumn { colName = "template_id", colType = BigIntT }
     , tblColumn { colName = "from_shareable_link", colType = BoolT, colNullable = False, colDefault = Just "false" }
     , tblColumn { colName = "show_arrow", colType = BoolT, colNullable = False, colDefault = Just "true" }
+    , tblColumn { colName = "folder_id", colType = BigIntT, colNullable = True }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys = [
@@ -52,6 +53,7 @@ tableDocuments = tblTable {
             fkDeferred = True
           }
       , (fkOnColumn "author_user_id" "users" "id")
+      , (fkOnColumn "folder_id" "folders" "id")
       ]
   , tblIndexes = [
       -- for list of documents in adminonly
@@ -63,6 +65,7 @@ tableDocuments = tblTable {
     , (indexOnColumnWithMethod "archive_search_fts" GIN)
     , indexOnColumn "author_user_id"
     , indexOnColumn "template_id"
+    , indexOnColumn "folder_id"
     ]
   , tblChecks =
       [ Check "check_documents_pending_are_not_purged"
@@ -114,6 +117,7 @@ ctDocument = CompositeType {
   , CompositeColumn { ccName = "template_id", ccType = BigIntT }
   , CompositeColumn { ccName = "from_shareable_link", ccType = BoolT }
   , CompositeColumn { ccName = "show_arrow", ccType = BoolT }
+  , CompositeColumn { ccName = "folder_id", ccType = BigIntT }
   ]
 }
 

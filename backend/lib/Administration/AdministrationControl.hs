@@ -13,10 +13,16 @@ module Administration.AdministrationControl(
           , daveRoutes
           , jsonCompanies -- for tests
           , handleCompanyChange -- for tests
+          , handleTriggerMigrateFolders -- for tests
+          , handleTriggerMigrateDocuments -- for tests
           ) where
 
+import Control.Monad.Catch (SomeException, try)
+import Control.Monad.IO.Class (liftIO)
 import Data.Char
+import Data.Either (rights)
 import Data.Functor.Invariant
+import Data.Time (diffUTCTime)
 import Data.Unjson
 import GHC.Int (Int16)
 import Happstack.Server hiding (dir, https, path, simpleHTTP)
@@ -61,6 +67,7 @@ import EvidenceLog.Model
 import File.File
 import File.Model
 import File.Storage
+import Folder.Model
 import Happstack.Fields
 import InputValidation
 import InspectXML
@@ -157,6 +164,11 @@ adminonlyRoutes =
         , dir "brandeddomain" $ dir "newtheme" $ hPost $ toK2 $ handleNewThemeForDomain
         , dir "brandeddomain" $ dir "updatetheme" $ hPost $ toK2 $ handleUpdateThemeForDomain
         , dir "brandeddomain" $ dir "deletetheme" $ hPost $ toK2$ handleDeleteThemeForDomain
+
+        -- migration trigging endpoints       
+        , dir "triggermigratefolders" $ hGet $ toK1 handleTriggerMigrateFolders
+        , dir "triggermigratedocuments" $ hGet $ toK1 handleTriggerMigrateDocuments
+
   ]
 
 daveRoutes :: Route (Kontra Response)
@@ -424,7 +436,8 @@ handleCreateUser = onlySalesOrAdmin $ do
     fstname <- guardJustM $ getField "fstname"
     sndname <- guardJustM $ getField "sndname"
     lang <- guardJustM $ join <$> fmap langFromCode <$> getField "lang"
-    ug <- dbUpdate . UserGroupCreate $ defaultUserGroup
+    ugFolder <- dbUpdate . FolderCreate $ defaultFolder
+    ug <- dbUpdate . UserGroupCreate . set ugHomeFolderID (Just $ get folderID ugFolder) $ defaultUserGroup
     muser <- createNewUserByAdmin email (fstname, sndname) (get ugID ug, True) lang
     runJSONGenT $ case muser of
       Nothing -> do
@@ -441,7 +454,7 @@ handlePostAdminCompanyUsers ugid = onlySalesOrAdmin $ do
   sndname <- fromMaybe "" <$> getOptionalField asValidName "sndname"
   lang <- guardJustM $ join <$> fmap langFromCode <$> getField "lang"
   admin <- isFieldSet "iscompanyadmin"
-  muser <- createNewUserByAdmin email (fstname, sndname) (ugid, admin) lang
+  muser <- createNewUserByAdmin email (fstname,sndname) (ugid, admin) lang
   runJSONGenT $ case muser of
     Nothing -> do
       value "success" False
@@ -810,6 +823,48 @@ handleCompanyGetStructure ugid = onlySalesOrAdmin $ do
           ]
       , "children" .= map ugWithChildrenToJson children
       ]
+
+handleTriggerMigrateDocuments :: Kontrakcja m => Integer -> m Aeson.Value
+handleTriggerMigrateDocuments limit = onlyAdmin $ do
+  logInfo_ "Starting migration batch for documents"
+  let limitWithUpperBound = minimum [limit, 10000]
+  startTime <- liftIO currentTime
+  docAndFdrs :: [(DocumentID, FolderID)] <- do
+    runQuery_ . sqlSelect "documents d" $ do
+      sqlJoinOn "users u" "u.id = d.author_user_id"
+      sqlResult "d.id"
+      sqlResult "u.home_folder_id"
+      sqlWhereIsNULL "d.folder_id"
+      sqlLimit limitWithUpperBound
+    fetchMany id
+
+  (results :: [Either SomeException ()]) <- do
+   forM docAndFdrs $ \(did, fdrid) ->
+     try $ (withDocumentID did (dbUpdate $ AddDocumentToFolder fdrid))
+  endTime <- liftIO currentTime
+  return . object $
+    [ "documents_linked" .= (length . rights $ results)
+    , "limit_used" .= limitWithUpperBound
+    , "elapsed_time" .= (realToFrac (diffUTCTime endTime startTime) :: Double)]
+
+-- `limit` is an `Integer` to not have to deal with overflows.
+handleTriggerMigrateFolders :: Kontrakcja m => Integer -> m Aeson.Value
+handleTriggerMigrateFolders limit = onlyAdmin $ do
+  logInfo_ "Starting migration batch for folders"
+  let limitWithUpperBound = minimum [limit, 10000]
+  startTime <- liftIO currentTime
+  (idsToUpdate :: [UserGroupID]) <- do
+    runQuery_ . sqlSelect "user_groups ug" $ do
+      sqlResult "ug.id as ug_id"
+      sqlWhereIsNULL "ug.home_folder_id"
+      sqlLimit limitWithUpperBound
+    fetchMany runIdentity
+  numberDone <- dbUpdate . AddFoldersToUserGroups $ idsToUpdate
+  endTime <- liftIO currentTime
+  return . object $
+    [ "home_folders_created" .= numberDone
+    , "limit_used" .= limitWithUpperBound
+    , "elapsed_time" .= (realToFrac (diffUTCTime endTime startTime) :: Double)]
 
 jsonBrandedDomainsList ::Kontrakcja m => m Aeson.Value
 jsonBrandedDomainsList = onlySalesOrAdmin $ do

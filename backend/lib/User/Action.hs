@@ -14,6 +14,7 @@ import qualified Data.Text as T
 import BrandedDomain.BrandedDomain
 import DB
 import Doc.Model
+import Folder.Model
 import Happstack.Fields
 import InputValidation
 import Kontra
@@ -82,8 +83,14 @@ createUser email names (ugid, iscompanyadmin) lang sm = do
   passwd <- randomPassword
   dbQuery (UserGroupGet ugid) >>= \case
     Nothing -> return Nothing
-    Just _ug -> do
-      muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) (ugid, iscompanyadmin) lang (get (bdid . ctxbrandeddomain) ctx) sm
+    Just ug -> do
+      -- create User home Folder, if the UserGroup has one
+      mUserFolder <- case get ugHomeFolderID ug of
+        Nothing -> return Nothing
+        Just ugFid ->
+          fmap Just . dbUpdate . FolderCreate
+            . set folderParentID (Just ugFid) $ defaultFolder
+      muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) (ugid, get folderID <$> mUserFolder, iscompanyadmin) lang (get (bdid . ctxbrandeddomain) ctx) sm
       whenJust muser $ \user ->
         void . dbUpdate $ LogHistoryAccountCreated (userid user) (get ctxipnumber ctx) (get ctxtime ctx) email (userid <$> getContextUser ctx)
       return muser

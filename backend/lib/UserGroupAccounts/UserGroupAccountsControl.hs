@@ -164,7 +164,7 @@ handleAddUserGroupAccount = withCompanyAdmin $ \(user, ug) -> do
   case (mexistinguser) of
       (Nothing) -> do
         --create a new company user
-        newuser' <- guardJustM $ createUser (Email email) (fstname, sndname) (get ugID ug,False) (get ctxlang ctx) CompanyInvitation
+        newuser' <- guardJustM $ createUser (Email email) (fstname, sndname) (get ugID ug, False) (get ctxlang ctx) CompanyInvitation
         void $ dbUpdate $
              LogHistoryUserInfoChanged (userid newuser') (get ctxipnumber ctx) (get ctxtime ctx)
                                        (userinfo newuser')

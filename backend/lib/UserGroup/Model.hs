@@ -48,6 +48,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
       sqlSet "parent_group_id" . get ugParentGroupID $ ug
       sqlSet "parent_group_path" $ new_parentpath
       sqlSet "name" . get ugName $ ug
+      sqlSet "home_folder_id" $ get ugHomeFolderID ug
       sqlResult "id"
     ugid <- fetchOne runIdentity
     -- insert group info
@@ -253,6 +254,7 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () 
       sqlSet "parent_group_id" . get ugParentGroupID $ new_ug
       sqlSet "parent_group_path" . Array1 $ new_parentpath
       sqlSet "name" . get ugName $ new_ug
+      sqlSet "home_folder_id" $ get ugHomeFolderID new_ug
       sqlWhereEq "id" ugid
     -- update all child groups parentpaths
     runQuery_ . sqlUpdate "user_groups" $ do
@@ -299,6 +301,7 @@ userGroupSelectors = [
     "user_groups.id"
   , "user_groups.parent_group_id"
   , "user_groups.name"
+  , "user_groups.home_folder_id"
   , "(SELECT (" <> mintercalate ", " ugInvoicingSelectors <> ")::user_group_invoicing FROM user_group_invoicings WHERE user_groups.id = user_group_invoicings.user_group_id)"
   , "(SELECT (" <> mintercalate ", " ugSettingsSelectors <> ")::user_group_setting FROM user_group_settings WHERE user_groups.id = user_group_settings.user_group_id)"
   , "(SELECT (" <> mintercalate ", " ugAddressSelectors <> ")::user_group_address FROM user_group_addresses WHERE user_groups.id = user_group_addresses.user_group_id)"

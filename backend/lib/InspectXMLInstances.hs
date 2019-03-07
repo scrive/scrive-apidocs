@@ -27,6 +27,7 @@ import Doc.SignatoryLinkID
 import File.File
 import File.FileID
 import FlashMessage
+import Folder.Types
 import InspectXML
 import IPAddress
 import KontraLink
@@ -183,3 +184,5 @@ instance InspectXML SealStatus
 instance InspectXML TimeZoneName
 instance InspectXML UserGroupID
 instance InspectXML UserGroup
+instance InspectXML Folder
+instance InspectXML FolderID

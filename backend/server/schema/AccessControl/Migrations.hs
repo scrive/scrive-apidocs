@@ -80,3 +80,58 @@ accesscontrolBumpVersionAfterDroppingPartnerAdmins = Migration {
   , mgrFrom = 2
   , mgrAction = StandardMigration $ return ()
   }
+
+addFolderTargetColumn :: MonadDB m => Migration m
+addFolderTargetColumn =
+  Migration
+  {
+    mgrTableName = tblName tableAccessControl
+  , mgrFrom = 3
+  , mgrAction = StandardMigration $ do
+    runQuery_ $
+      sqlAlterTable (tblName tableAccessControl)
+        [ sqlAddColumn $ tblColumn { colName = "trg_folder_id"
+                                   , colType = BigIntT
+                                   , colNullable = True }
+        , sqlAddFK (tblName tableAccessControl) $
+                   (fkOnColumn "trg_folder_id" "folders" "id")
+                     { fkOnDelete = ForeignKeyCascade }
+        ]
+    runQuery_ . sqlCreateIndex (tblName tableAccessControl) $
+                  (indexOnColumn "trg_folder_id")
+  }
+
+addTargetChecks :: MonadDB m => Migration m
+addTargetChecks =
+  Migration
+  {
+    mgrTableName = tblName tableAccessControl
+  , mgrFrom = 4
+  , mgrAction = StandardMigration $ do
+      let chkName = "check_access_control_exactly_one_trg"
+      runQuery_ . sqlAlterTable "access_control" $
+        [ sqlDropCheck $ Check chkName ""
+        , sqlAddCheck $
+            Check chkName
+                  "trg_user_id IS NOT NULL AND trg_user_group_id IS \  \NULL AND trg_folder_id IS \  \NULL \
+               \OR trg_user_id IS \  \NULL AND trg_user_group_id IS NOT NULL AND trg_folder_id IS \  \NULL \
+               \OR trg_user_id IS \  \NULL AND trg_user_group_id IS \  \NULL AND trg_folder_id IS NOT NULL"
+        ]
+  }
+
+addFolderRolesChecks :: MonadDB m => Migration m
+addFolderRolesChecks =
+  Migration
+  {
+    mgrTableName = tblName tableAccessControl
+  , mgrFrom = 5
+  , mgrAction = StandardMigration $ do
+      let chkAssocs =
+              [
+                -- DocumentAdminAR has FolderID trg
+                ("check_access_control_valid_doc_admin_ar",
+                 "role = 4 AND trg_folder_id IS NOT NULL OR role <> 4")
+              ]
+      runQuery_ . sqlAlterTable "access_control" $
+        [sqlAddCheck $ Check chkName chkSQL | (chkName, chkSQL) <- chkAssocs ]
+  }

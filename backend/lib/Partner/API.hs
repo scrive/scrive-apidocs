@@ -28,6 +28,7 @@ import API.V2.Utils
 import DataRetentionPolicy (defaultDataRetentionPolicy)
 import DB
 import Doc.API.V2.Guards (guardThatUserExists)
+import Folder.Model
 import InputValidation (Result(..), asValidEmail)
 import Kontra
 import OAuth.Model
@@ -71,8 +72,10 @@ partnerApiCallV1CompanyCreate ptOrUgID = do
     apiAccessControl acc $ do
       ugwp_partner <- apiGuardJustM (serverError "Was not able to retrieve partner")
         . dbQuery . UserGroupGetWithParents $ partnerUsrGrpID
+      newUgFolder <- dbUpdate . FolderCreate $ defaultFolder
       let ug_new = set ugParentGroupID (Just partnerUsrGrpID)
                  . set ugInvoicing     (BillItem $ Just FreePlan)
+                 . set ugHomeFolderID (Just $ get folderID newUgFolder)
                  $ defaultUserGroup
       ugu <- apiV2ParameterObligatory $
                ApiV2ParameterJSON "json" unjsonUserGroupForUpdate

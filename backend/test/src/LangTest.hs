@@ -17,7 +17,6 @@ import TestingUtil
 import TestKontra as T
 import User.Lang
 import User.Model
-import UserGroup.Model
 import UserGroup.Types
 
 langTests :: TestEnvSt -> Test
@@ -86,6 +85,6 @@ createTestUser :: Lang -> TestEnv User
 createTestUser lang = do
     bd <- dbQuery $ GetMainBrandedDomain
     pwd <- createPassword "admin"
-    ug <- dbUpdate $ UserGroupCreate defaultUserGroup
-    Just user <- dbUpdate $ AddUser ("", "") "andrzej@skrivapa.se" (Just pwd) (get ugID ug, True) lang (get bdid bd) AccountRequest
+    ug <- addNewUserGroup
+    Just user <- createNewUser ("", "") "andrzej@skrivapa.se" (Just pwd) (get ugID ug, True) lang (get bdid bd) AccountRequest
     return user

@@ -5,21 +5,24 @@ import DB
 tableUserGroups :: Table
 tableUserGroups = tblTable {
     tblName = "user_groups"
-  , tblVersion = 5
+  , tblVersion = 6
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "parent_group_id", colType = BigIntT, colNullable = True }
     , tblColumn { colName = "parent_group_path", colType = ArrayT BigIntT, colDefault = Just "ARRAY[]::bigint[]" }
     , tblColumn { colName = "name", colType = TextT }
     , tblColumn { colName = "deleted", colType = TimestampWithZoneT }
+    , tblColumn { colName = "home_folder_id", colType = BigIntT, colNullable = True }
     ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblIndexes = [
-      (indexOnColumnWithMethod "parent_group_path" GIN) ]
+      indexOnColumnWithMethod "parent_group_path" GIN
+    , indexOnColumn "home_folder_id" ]
   , tblForeignKeys = [
       -- do not allow to delete groups which still contains some other groups
       -- always must delete the child groups explicitely
       (fkOnColumn "parent_group_id" "user_groups" "id") { fkOnDelete = ForeignKeyRestrict }
+    , (fkOnColumn "home_folder_id" "folders" "id") { fkOnDelete = ForeignKeyRestrict }
     ]
   }
 
@@ -30,6 +33,7 @@ ctUserGroup = CompositeType {
       CompositeColumn { ccName = "id", ccType = BigIntT }
     , CompositeColumn { ccName = "name", ccType = TextT }
     , CompositeColumn { ccName = "parent_group_id", ccType = BigIntT }
+    , CompositeColumn { ccName = "home_folder_id", ccType = BigIntT }
     , CompositeColumn { ccName = "invoicing", ccType = CustomT "user_group_invoicing" }
     , CompositeColumn { ccName = "user_group_setting", ccType = CustomT "user_group_setting" }
     , CompositeColumn { ccName = "user_group_addresses", ccType = CustomT "user_group_address" }

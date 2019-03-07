@@ -180,8 +180,7 @@ testPartnerCompanyUpdate = do
            200
 
   -- 2) not a partner admin but a company admin; should fail
-  void . dbUpdate $
-    AccessControlRemoveUserGroupAdminRole uid pid
+  void . dbUpdate $ AccessControlRemoveUserGroupAdminRole uid pid
   void . dbUpdate $ SetUserCompanyAdmin uid True
   (Just usr'') <- dbQuery . GetUserByID $ uid
   void $ runApiJSONTestNoResChk
@@ -282,8 +281,7 @@ testPartnerCompanyGet = do
            200
 
   -- 2) not a partner admin but a company admin; should fail
-  void . dbUpdate $
-    AccessControlRemoveUserGroupAdminRole uid pid
+  void . dbUpdate $ AccessControlRemoveUserGroupAdminRole uid pid
   void . dbUpdate $ SetUserCompanyAdmin uid True
   (Just usr'') <- dbQuery . GetUserByID $ uid
   void $ runApiJSONTestNoResChk

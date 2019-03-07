@@ -5,7 +5,7 @@ import DB
 tableUsers :: Table
 tableUsers = tblTable {
     tblName = "users"
-  , tblVersion = 27
+  , tblVersion = 28
   , tblColumns = [
         tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
       , tblColumn { colName = "password", colType = BinaryT }
@@ -34,15 +34,18 @@ tableUsers = tblTable {
       , tblColumn { colName = "idle_doc_timeout_rejected", colType = SmallIntT }
       , tblColumn { colName = "idle_doc_timeout_error", colType = SmallIntT }
       , tblColumn { colName = "immediate_trash", colType = BoolT, colNullable = False, colDefault  = Just "false" }
+      , tblColumn { colName = "home_folder_id", colType = BigIntT, colNullable = True }
       ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblChecks = [Check "check_users_lowercase_email" "email = lower(email)"]
   , tblForeignKeys = [
       fkOnColumn "user_group_id" "user_groups" "id"
+    , fkOnColumn "home_folder_id" "folders" "id"
     , fkOnColumn "associated_domain_id" "branded_domains" "id"
     ]
   , tblIndexes = [
       indexOnColumn "user_group_id"
+    , indexOnColumn "home_folder_id"
     , (indexOnColumn "email") { idxUnique = True, idxWhere = Just ("deleted IS NULL") }
     ]
   }

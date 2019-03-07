@@ -455,3 +455,4 @@ clearTables = do
   runSQL_ "DELETE FROM user_group_settings"
   runSQL_ "DELETE FROM partners where not default_partner"
   runSQL_ "DELETE FROM access_control"
+  runSQL_ "DELETE FROM folders"

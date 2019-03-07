@@ -19,7 +19,6 @@ import Session.Types
 import TestingUtil
 import TestKontra as T
 import User.Model
-import UserGroup.Model
 import UserGroup.Types
 import Util.SignatoryLinkUtils
 
@@ -167,8 +166,8 @@ testUser :: TestEnv UserID
 testUser = do
   bd        <- dbQuery $ GetMainBrandedDomain
   pwd       <- createPassword "admin"
-  ug        <- dbUpdate $ UserGroupCreate defaultUserGroup
-  Just user <- dbUpdate $ AddUser
+  ug        <- addNewUserGroup
+  Just user <- createNewUser
     ("Andrzej", "Rybczak")
     "andrzej@scrive.com"
     (Just pwd)

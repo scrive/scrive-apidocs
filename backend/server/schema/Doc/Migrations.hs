@@ -26,6 +26,7 @@ module Doc.Migrations
   , addNotificationDeliveryMethodToSignatories
   , addMailConfirmationDeliveryStatusToSignatoryLinks
   , createApiCallbackResults
+  , addFolderIDColumnToDocuments
 ) where
 
 import Data.Int
@@ -469,4 +470,17 @@ createApiCallbackResults = Migration
         ]
       , tblIndexes = []
       }
+  }
+
+addFolderIDColumnToDocuments :: MonadDB m => Migration m
+addFolderIDColumnToDocuments = Migration
+  { mgrTableName = tblName tableDocuments
+  , mgrFrom = 50
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable "documents"
+        [ sqlAddColumn tblColumn
+            { colName = "folder_id", colType = BigIntT }
+        , sqlAddFK (tblName tableDocuments) $ (fkOnColumn "folder_id" "folders" "id")
+        ]
+      runQuery_ . sqlCreateIndex "documents" $ indexOnColumn "folder_id"
   }

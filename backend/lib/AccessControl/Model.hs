@@ -1,5 +1,6 @@
 module AccessControl.Model
   ( AccessControlGetRolesByUser(..)
+  , AccessControlGetRolesByUserGroup(..)
   , AccessControlInsertUserGroupAdmin(..)
   , AccessControlRemoveUserGroupAdminRole(..)
   ) where
@@ -8,7 +9,9 @@ import Control.Monad.Catch
 
 import AccessControl.Types
 import DB
+import Folder.Types
 import User.UserID
+import UserGroup.Model
 import UserGroup.Types
 
 rolesSelector :: [SQL]
@@ -16,6 +19,7 @@ rolesSelector =
   [ "role"
   , "trg_user_id"
   , "trg_user_group_id"
+  , "trg_folder_id"
   ]
 
 data AccessControlGetRolesByUser = AccessControlGetRolesByUser UserID
@@ -24,6 +28,22 @@ instance (MonadDB m, MonadThrow m) => DBQuery m AccessControlGetRolesByUser [Acc
     runQuery_ . sqlSelect "access_control" $ do
       mapM_ sqlResult $ rolesSelector
       sqlWhereEq "src_user_id" uid
+    fetchMany fetchAccessRole
+
+data AccessControlGetRolesByUserGroup =
+    AccessControlGetRolesByUserGroup UserGroupID
+instance (MonadDB m, MonadThrow m) =>
+  DBQuery m AccessControlGetRolesByUserGroup [AccessRole] where
+  query (AccessControlGetRolesByUserGroup ugid) = do
+    mugwp <- query . UserGroupGetWithParents $ ugid
+    let ugids =
+          case mugwp of
+            Nothing -> []
+            Just ugwp -> maybe [] (\(_, ugids') -> get ugID <$> ugids')
+                                  (ugwpOnlyParents ugwp)
+    runQuery_ . sqlSelect "access_control" $ do
+      mapM_ sqlResult $ rolesSelector
+      sqlWhereIn "src_user_group_id" ugids
     fetchMany fetchAccessRole
 
 -- @devnote maybe significant enough an event so we should always log it?
@@ -45,9 +65,19 @@ instance (MonadDB m, MonadThrow m) =>
       sqlWhereEq "src_user_id" uid
       sqlWhereEq "trg_user_group_id" ugid
 
-fetchAccessRole :: (AccessRoleType, Maybe UserID, Maybe UserGroupID) -> AccessRole
-fetchAccessRole (UserART           , Just usrID, Nothing      ) = UserAR usrID
-fetchAccessRole (UserGroupMemberART, Nothing   , Just usrGrpID) = UserGroupMemberAR usrGrpID
-fetchAccessRole (UserAdminART      , Nothing   , Just usrGrpID) = UserAdminAR usrGrpID
-fetchAccessRole (UserGroupAdminART , Nothing   , Just usrGrpID) = UserGroupAdminAR usrGrpID
+fetchAccessRole :: ( AccessRoleType
+                   , Maybe UserID
+                   , Maybe UserGroupID
+                   , Maybe FolderID
+                   ) -> AccessRole
+fetchAccessRole (UserART           , Just usrID, Nothing      , Nothing)
+  = UserAR usrID
+fetchAccessRole (UserGroupMemberART, Nothing   , Just usrGrpID, Nothing)
+  = UserGroupMemberAR usrGrpID
+fetchAccessRole (UserAdminART      , Nothing   , Just usrGrpID, Nothing)
+  = UserAdminAR usrGrpID
+fetchAccessRole (UserGroupAdminART , Nothing   , Just usrGrpID, Nothing)
+  = UserGroupAdminAR usrGrpID
+fetchAccessRole (DocumentAdminART  , Nothing   , Nothing      , Just fid)
+  = DocumentAdminAR  fid
 fetchAccessRole _ = unexpectedError "invalid access_control row in database"

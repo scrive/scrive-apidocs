@@ -15,11 +15,11 @@ module AccessControl.Types
 import Control.Monad.Catch
 import Data.Int (Int16)
 import Data.Typeable (Typeable, cast)
-import Data.Unjson
 import Log
 import qualified Control.Exception.Lifted as E
 
 import DB
+import Folder.Model
 import User.UserID
 import UserGroup.Model
 import UserGroup.Types
@@ -38,6 +38,8 @@ data AccessRole
   --   May e.g. CRUD users but not add user groups
   | UserGroupAdminAR UserGroupID
   -- ^ A user group admin; may do most things like adding and moving user groups
+  | DocumentAdminAR FolderID
+  -- ^ Document admin can do anything with documents in a Folder
   deriving (Eq, Show)
 
 -- | We need to discern between permissions and actions that affect users, user
@@ -48,6 +50,7 @@ data AccessResource
   | UserPolicyR
   | UserGroupPolicyR
   | UserPersonalTokenR
+  | DocumentR
   deriving (Eq, Show, Enum, Bounded)
 
 -- | Should be self-explanatory. The 'A' stands for 'Action'.
@@ -122,6 +125,8 @@ hasPermissions (UserAdminAR usrGrpID) =
     where allActions = [minBound..maxBound]
 hasPermissions (UserGroupAdminAR usrGrpID) =
   [ mkPerm usrGrpID res act | act <- [minBound..maxBound], res <- [minBound..maxBound] ]
+hasPermissions (DocumentAdminAR fid) =
+  map (mkPerm fid DocumentR) [minBound..maxBound]
 
 -- | Interface to get the proper combinations of 'Permission's needed to gain
 -- access permission.
@@ -131,7 +136,6 @@ class NeedsPermissions s where
 
 instance NeedsPermissions (AccessAction, AccessResource, UserGroupID) where
   neededPermissions (action, resource, usrGrpID) = do
-    -- @todo: important DB-optimisation point: retrieve only the list of parent IDs.
     (dbQuery . UserGroupGetWithParents $ usrGrpID) >>= \case
       Nothing -> unexpectedError $ "No user group with ID" <+> (show $ usrGrpID)
       Just ugwp -> do
@@ -140,6 +144,17 @@ instance NeedsPermissions (AccessAction, AccessResource, UserGroupID) where
         let mkExprBase g = NeededPermissionsExprBase
                              (Permission action resource $ get ugID g)
         return . NeededPermissionsExprOr . map mkExprBase $ ugwpToList ugwp
+
+instance NeedsPermissions (AccessAction, AccessResource, FolderID) where
+  neededPermissions (action, resource, fid) = do
+    (query . FolderGet $ fid) >>= \case
+      Nothing -> unexpectedError $ "No folder with ID" <+>
+                                   show fid
+      Just folder -> do
+        folderParents <- dbQuery . FolderGetParents $ fid
+        let mkExprBase g = NeededPermissionsExprBase
+                             (Permission action resource $ get folderID g)
+        return . NeededPermissionsExprOr . map mkExprBase $ (folder:folderParents)
 
 instance NeedsPermissions (AccessAction, AccessResource, UserID) where
   neededPermissions (action, resource, usrID) = do
@@ -171,6 +186,7 @@ data AccessRoleType
   | UserGroupMemberART
   | UserAdminART
   | UserGroupAdminART
+  | DocumentAdminART
   deriving (Eq)
 
 instance PQFormat AccessRoleType where
@@ -185,8 +201,9 @@ instance FromSQL AccessRoleType where
       1 -> return UserGroupMemberART
       2 -> return UserAdminART
       3 -> return UserGroupAdminART
+      4 -> return DocumentAdminART
       _  -> E.throwIO $ RangeError {
-        reRange = [(0, 3)]
+        reRange = [(0, 4)]
       , reValue = n
       }
 
@@ -196,24 +213,22 @@ instance ToSQL AccessRoleType where
   toSQL UserGroupMemberART = toSQL (1 :: Int16)
   toSQL UserAdminART       = toSQL (2 :: Int16)
   toSQL UserGroupAdminART  = toSQL (3 :: Int16)
+  toSQL DocumentAdminART   = toSQL (4 :: Int16)
 
 instance Show AccessRoleType where
   show UserART            = "user"
   show UserGroupMemberART = "user_group_member"
   show UserAdminART       = "user_admin"
   show UserGroupAdminART  = "user_group_admin"
+  show DocumentAdminART   = "document_admin"
 
 instance Read AccessRoleType where
   readsPrec _ "user"              = [(UserART, "")]
   readsPrec _ "user_admin"        = [(UserAdminART, "")]
   readsPrec _ "user_group_admin"  = [(UserGroupAdminART, "")]
   readsPrec _ "user_group_member" = [(UserGroupMemberART, "")]
+  readsPrec _ "document_admin"    = [(DocumentAdminART, "")]
   readsPrec _ _  = []
-
-instance Unjson AccessRoleType where
-  unjsonDef = unjsonInvmapR
-                ((maybe (fail "Can't parse AccessRoleType") return) . maybeRead)
-                show unjsonDef
 
 toAccessRoleType :: AccessRole -> AccessRoleType
 toAccessRoleType ar =
@@ -222,3 +237,4 @@ toAccessRoleType ar =
     UserGroupMemberAR _ -> UserGroupMemberART
     UserAdminAR       _ -> UserAdminART
     UserGroupAdminAR  _ -> UserGroupAdminART
+    DocumentAdminAR   _ -> DocumentAdminART

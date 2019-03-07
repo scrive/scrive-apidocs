@@ -26,6 +26,7 @@ import EvidenceLog.Model
 import TestingUtil
 import TestKontra
 import User.Lang (defaultLang)
+import User.Model
 import UserGroup.Types
 import Util.Actor (userActor)
 
@@ -86,16 +87,23 @@ testDocApiV2NewFromTemplate = do
   user <- addNewRandomUser
   ctx  <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
   did  <- getMockDocId <$> testDocApiV2New' ctx
+  tmpl <- dbQuery $ GetDocumentByDocumentID did
+  assertEqual "Document is in user's folder" (documentfolderid tmpl) (userhomefolderid user)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     is_template <- getMockDocIsTemplate <$> mockDocTestRequestHelper ctx
       POST [("document", inText "{\"is_template\":true}")]
       (docApiV2Update did) 200
     assertEqual "Document should be template" True is_template
+    tmpl2 <- dbQuery $ GetDocumentByDocumentID did
+    assertEqual "Template is still in user's folder" (documentfolderid tmpl2) (userhomefolderid user)
+
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
-    is_not_template <- getMockDocIsTemplate <$> mockDocTestRequestHelper ctx POST [] (docApiV2NewFromTemplate did) 201
-    assertEqual "New document should NOT be template" False is_not_template
+    mDoc <-  mockDocTestRequestHelper ctx POST [] (docApiV2NewFromTemplate did) 201
+    assertEqual "New document should NOT be template" False (getMockDocIsTemplate mDoc)
+    doc <- dbQuery . GetDocumentByDocumentID $ getMockDocId mDoc
+    assertEqual "New document is in user's folder" (documentfolderid doc) (userhomefolderid user)
 
 testDocApiV2NewFromTemplateShared :: TestEnv ()
 testDocApiV2NewFromTemplateShared = do
@@ -116,8 +124,11 @@ testDocApiV2NewFromTemplateShared = do
   ctx  <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
-    is_not_template <- getMockDocIsTemplate <$> mockDocTestRequestHelper ctx POST [] (docApiV2NewFromTemplate did) 201
-    assertEqual "New document should NOT be template" False is_not_template
+    mDoc <-  mockDocTestRequestHelper ctx POST [] (docApiV2NewFromTemplate did) 201
+    assertEqual "New document should NOT be template" False (getMockDocIsTemplate mDoc)
+    
+    doc <- dbQuery . GetDocumentByDocumentID $ getMockDocId mDoc
+    assertEqual "New document is in user's folder" (documentfolderid doc) (userhomefolderid user)
 
 testDocApiV2Update :: TestEnv ()
 testDocApiV2Update = do

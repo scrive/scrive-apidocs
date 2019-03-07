@@ -1,5 +1,6 @@
 module Doc.Model.Update
   ( AddDocumentAttachment(..)
+  , AddDocumentToFolder(..)
   , ArchiveDocument(..)
   , AttachFile(..)
   , DetachFile(..)
@@ -108,7 +109,7 @@ import Doc.Conditions
 import Doc.DocStateCommon
 import Doc.DocStateData
 import Doc.DocumentID
-import Doc.DocumentMonad (DocumentMonad, theDocumentID, updateDocument, updateDocumentWithID, withDocument)
+import Doc.DocumentMonad
 import Doc.DocUtils
 import Doc.Model.Query
 import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
@@ -120,6 +121,7 @@ import EID.Signature.Model
 import EvidenceLog.Model
 import File.FileID
 import File.Storage
+import Folder.Types
 import IPAddress
 import Log.Identifier
 import MagicHash
@@ -399,6 +401,7 @@ insertDocument document@(Document{..}) = do
     sqlSet "template_id" documenttemplateid
     sqlSet "from_shareable_link" documentfromshareablelink
     sqlSet "show_arrow" documentshowarrow
+    sqlSet "folder_id" documentfolderid
     sqlResult "documents.id"
   did <- fetchOne runIdentity
   insertSignatoryLinks did documentsignatorylinks
@@ -436,6 +439,19 @@ instance
       CustomEventEvidence
       (do F.value "text" text)
       actor
+
+data AddDocumentToFolder = AddDocumentToFolder FolderID
+instance ( DocumentMonad m
+         , TemplatesMonad m
+         , MonadThrow m
+         , MonadTime m
+         , MonadLog m)
+  => DBUpdate m AddDocumentToFolder () where
+  update (AddDocumentToFolder fdrid) = do
+    updateDocumentWithID $ \did -> do
+      kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
+        sqlSet "folder_id" fdrid
+        sqlWhereDocumentIDIs did
 
 data ArchiveDocument = ArchiveDocument UserID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m ArchiveDocument Bool where
@@ -1152,6 +1168,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, Mo
                   , documentauthorattachments    = []
                   , documentmagichash            = token
                   , documenttimezonename         = timezone
+                  , documentfolderid             = userhomefolderid user
                   }
 
     insertDocument doc
@@ -1798,6 +1815,7 @@ instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m)
       , documentctime = actorTime actor
       , documentmtime = actorTime actor
       , documentshareablelinkhash = Nothing
+      , documentfolderid = join $ userhomefolderid <$> mUser
       }
 
     return $ documentid <$> mDoc
