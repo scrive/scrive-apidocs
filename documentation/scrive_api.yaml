@@ -305,11 +305,16 @@ info:
     The Scrive eSign system can trigger API callbacks when some significant
     property of a Document changes, as for example, when a signing party signs
     the Document.
-    You can also trigger callbacks manually using the `callback` API call.
 
-    For a callback to be triggered, either the `api_callback_url` must be set
-    on the Document, or the Author should have a User callback scheme defined.
-    You will need to contact us to set up a User callback scheme.
+    For callbacks to be triggered, you need to set the `api_callback_url` value
+    on the Document.
+    You can also trigger callbacks manually using the `callback` API call (this
+    call has no effect if the `api_callback_url` is not set).
+
+    For certain use cases it is possible to instead have a "User callback
+    scheme" defined.
+    You will need to contact us to set this up, and setting callbacks on
+    Documents is the preferred solution.
 
     The Scrive eSign system will perform an `HTTP POST` request, with the
     following `POST` parameters:
