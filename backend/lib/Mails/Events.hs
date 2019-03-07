@@ -213,6 +213,7 @@ handleUndeliveredInvitation mailNoreplyAddress bd slid = do
   getSigLinkFor slid <$> theDocument >>= \case
     Just signlink | mailinvitationdeliverystatus signlink == Delivered -> do
       logInfo "Undelivered email event for email that was already delivered" $ object ["signatory_email" .= getEmail signlink]
+                  | signatoryAlreadyHandled signlink -> return ()
                   | otherwise -> do
       time <- currentTime
       let actor = mailSystemActor time (maybesignatory signlink) (getEmail signlink) slid
@@ -223,6 +224,12 @@ handleUndeliveredInvitation mailNoreplyAddress bd slid = do
       }
       triggerAPICallbackIfThereIsOne =<< theDocument
     Nothing -> return ()
+  where signatoryAlreadyHandled sl = case signatoryrole sl of
+          SignatoryRoleSigningParty -> isJust $ maybesigninfo sl
+          SignatoryRoleViewer -> isJust $ maybeseeninfo sl
+          SignatoryRoleApprover -> isJust $ maybesigninfo sl
+          SignatoryRoleForwardedSigningParty -> True
+          SignatoryRoleForwardedApprover -> True
 
 handleDeliveredConfirmation
   :: (DocumentMonad m, MonadCatch m, MonadLog m, TemplatesMonad m)
