@@ -28,19 +28,7 @@ module.exports = React.createClass({
       }
       else if( resp.totp_missing && !model.loginTotpView()) {
         model.goToLoginTotpView();
-      }
-      else if( resp.ipaddr ) {
-        Track.track('Error',{
-          Message: 'login failed due to IP restriction',
-          IP: resp.ipaddr,
-          Admin: resp.adminname
-        });
-        var text = $("<span>" + localization.loginModal.loginFailedBadIP + "</span>");
-        $(".put-ip-here",text).text(resp.ipaddr);
-        $(".put-adminname-here",text).text(resp.adminname);
-        new FlashMessage({ content: text, type : "error"});
-      }
-      else if(
+      } else if(
            (resp.totp_correct != undefined && !resp.totp_correct)
         || (model.loginTotpView() && resp.totp_missing != undefined && resp.totp_missing)
       ) {

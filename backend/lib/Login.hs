@@ -33,7 +33,6 @@ import User.Model
 import User.TwoFactor (verifyTOTPCode)
 import UserGroup.Model
 import UserGroup.Types
-import Util.HasSomeUserInfo
 import Util.MonadUtils
 import Utils.HTTP
 
@@ -125,16 +124,7 @@ handleLoginPost = do
                         void $ if padlogin
                           then dbUpdate $ LogHistoryPadLoginFailure (userid u) (get ctxipnumber ctx) (get ctxtime ctx)
                           else dbUpdate $ LogHistoryLoginFailure (userid u) (get ctxipnumber ctx) (get ctxtime ctx)
-
-                        ug <- dbQuery . UserGroupGetByUserID . userid $ u
-                        admins <- dbQuery . GetUserGroupAdmins . get ugID $ ug
-                        case admins of
-                          (admin:_) -> J.runJSONGenT $ do
-                                         J.value "logged" False
-                                         J.value "ipaddr" (show (get ctxipnumber ctx))
-                                         J.value "adminname" (getSmartName admin)
-                          _ -> J.runJSONGenT $ do
-                                         J.value "logged" False
+                        J.runJSONGenT $ J.value "logged" False
                 Just u -> do
                   {- MR: useraccountsuspended must be true here. This is a hack for Hi3G. It will be removed in future -}
                         logInfo "User login failed (user account suspended)" $ object [logPair_ u]
