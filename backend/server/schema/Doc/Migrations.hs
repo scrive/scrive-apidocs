@@ -27,6 +27,7 @@ module Doc.Migrations
   , addMailConfirmationDeliveryStatusToSignatoryLinks
   , createApiCallbackResults
   , addFolderIDColumnToDocuments
+  , addIndexOnShareableLinkHash
 ) where
 
 import Data.Int
@@ -483,4 +484,13 @@ addFolderIDColumnToDocuments = Migration
         , sqlAddFK (tblName tableDocuments) $ (fkOnColumn "folder_id" "folders" "id")
         ]
       runQuery_ . sqlCreateIndex "documents" $ indexOnColumn "folder_id"
+  }
+
+addIndexOnShareableLinkHash :: MonadDB m => Migration m
+addIndexOnShareableLinkHash = Migration
+  { mgrTableName = tblName tableDocuments
+  , mgrFrom = 51
+  , mgrAction = StandardMigration $ do
+      runQuery_ . sqlCreateIndex "documents" $
+        indexOnColumn "shareable_link_hash"
   }

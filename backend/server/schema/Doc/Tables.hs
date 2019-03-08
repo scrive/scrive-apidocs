@@ -5,7 +5,7 @@ import DB
 tableDocuments :: Table
 tableDocuments = tblTable {
     tblName = "documents"
-  , tblVersion = 51
+  , tblVersion = 52
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "title", colType = TextT, colNullable = False }
@@ -66,6 +66,7 @@ tableDocuments = tblTable {
     , indexOnColumn "author_user_id"
     , indexOnColumn "template_id"
     , indexOnColumn "folder_id"
+    , indexOnColumn "shareable_link_hash"
     ]
   , tblChecks =
       [ Check "check_documents_pending_are_not_purged"
