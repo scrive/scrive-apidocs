@@ -185,7 +185,7 @@ defaultFeatures paymentPlan = Features ff ff
       , ffCanUseEmailConfirmations = True
       , ffCanUseAPIInvitations = True
       , ffCanUsePadInvitations = True
-      , ffCanUseShareableLinks = True
+      , ffCanUseShareableLinks = False
       , ffCanUseForwarding = True
       , ffCanUseDocumentPartyNotifications = False
       }
