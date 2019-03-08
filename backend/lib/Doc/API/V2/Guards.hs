@@ -111,7 +111,7 @@ guardDocumentAuthorIs condition doc = do
   authorUserId <- apiGuardJust (serverError msgNoAuthor) $ (getAuthorSigLink doc >>= maybesignatory)
   let msgNoUser = "Document doesn't have author user account for the author signatory link"
   author <- apiGuardJustM (serverError msgNoUser) $ dbQuery $ GetUserByIDIncludeDeleted authorUserId
-  when (not $ condition author) $ do
+  unless (condition author) $ do
     apiError documentActionForbidden
 
 guardThatUserExists :: Kontrakcja m => UserID -> m User
@@ -319,7 +319,7 @@ guardAuthenticationMethodsCanMix
   -> AuthenticationToViewMethod
   -> m ()
 guardAuthenticationMethodsCanMix authToView authToSign authToViewArchived = do
-  when (not $ authenticationMethodsCanMix authToView authToSign authToViewArchived)
+  unless (authenticationMethodsCanMix authToView authToSign authToViewArchived)
     (apiError $ signatoryStateError $ mconcat
       [ "Can't mix "
       , T.pack $ show authToView
@@ -463,7 +463,7 @@ guardThatRadioButtonValuesAreValid slid (SignatoryFieldsValuesForSigning signfie
         SignatoryRadioGroupField srgf <- getFieldByIdentity fi $ signatoryfields sl
         return $ signval `elem` srgfValues srgf
       radioValIsValid _ = True -- non radio group fields are skipped
-  when (not $ all radioValIsValid signfields) $
+  unless (all radioValIsValid signfields) $
     apiError $ signatoryStateError "RadioGroup selected value is not in allowed values."
 
 guardThatSignaturesAreFilled :: Kontrakcja m => SignatoryLinkID -> SignatoryFieldsValuesForSigning -> Document -> m ()
@@ -473,7 +473,7 @@ guardThatSignaturesAreFilled slid (SignatoryFieldsValuesForSigning signfields) d
         SignatorySignatureField ssf <- getFieldByIdentity fi $ signatoryfields sl
         return $ not (ssfObligatory ssf) || length (ssfPlacements ssf) == 0 || BS.length contents > 0
       signatureIsFilled _ = True -- non signature fields are skipped
-  when (not $ all signatureIsFilled signfields) $
+  unless (all signatureIsFilled signfields) $
     apiError $ signatoryStateError "Signature missing."
 
 guardThatAllAttachmentsAreAcceptedOrIsAuthor :: Kontrakcja m => SignatoryLinkID -> [FileID] -> Document -> m ()

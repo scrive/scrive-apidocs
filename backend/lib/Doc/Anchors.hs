@@ -111,7 +111,7 @@ recalculateAnchoredFieldPlacements oldfileid newfileid = do
                         plc <- fieldPlacements fld,
                         anc <- placementanchors plc ]
 
-  when (not (null anchors)) $ do
+  unless (null anchors) $ do
     oldfilecontents <- getFileIDContents oldfileid
     newfilecontents <- getFileIDContents newfileid
     oldAnchorPositions <- getAnchorPositions oldfilecontents anchors

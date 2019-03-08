@@ -174,7 +174,7 @@ preCheckPDFsHelper contents tmppath =
                                    , normalizedpath num
                                    ] BSL.empty
       flag <- liftBase $ doesFileExist $ normalizedpath num
-      when (not flag) $ do
+      unless flag $ do
         liftBase $ do
           systmp <- getTemporaryDirectory
           (_path,h) <- openTempFile systmp ("pre-normalize-failed-.pdf")

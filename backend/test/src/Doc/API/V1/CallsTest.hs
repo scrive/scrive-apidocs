@@ -231,7 +231,7 @@ testUpdateDocToSaved useOAuth = do
   when useOAuth $ do
     assertEqual "The API created document should be saved (JSON)" True newSaved
     assertEqual "The API created document should be saved (DB)" False (documentunsaveddraft doc)
-  when (not useOAuth) $ do
+  unless useOAuth $ do
     assertEqual "The created document should not be saved (JSON)" False newSaved
     assertEqual "The created document should not be saved (DB)" True (documentunsaveddraft doc)
 

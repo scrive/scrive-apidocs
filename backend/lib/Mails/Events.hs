@@ -90,7 +90,7 @@ markEventAsRead :: (MonadLog m, MonadThrow m, MonadDB m) => EventID -> m ()
 markEventAsRead eid = do
   now <- currentTime
   success <- dbUpdate $ MarkEventAsRead eid now
-  when (not success) $
+  unless success $
     logAttention_ "Couldn't mark event as read"
 
 logEmails :: MonadLog m => String -> String -> m ()

@@ -117,7 +117,7 @@ documentJSONV1 muser forapi forauthor msl doc = do
       J.value "objectversion" $ documentobjectversion doc
       J.value "process" $ ("Contract"::String)
       J.value "isviewedbyauthor" $ isSigLinkFor muser (getAuthorSigLink doc)
-      when (not $ forapi) $ do
+      unless forapi $ do
         J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
         J.value "canbeprolonged" $ isAuthor msl && ((documentstatus doc) `elem` [Timedout])
         J.value "canbecanceled" $ (isAuthor msl || fromMaybe False (useriscompanyadmin <$> muser)) && documentstatus doc == Pending
@@ -280,7 +280,7 @@ placementJSON placement = runJSONGen $ do
     J.value "hrel" $ placementhrel placement
     J.value "fsrel" $ placementfsrel placement
     J.value "page" $ placementpage placement
-    when (not (null (placementanchors placement))) $ do
+    unless (null . placementanchors $ placement) $ do
       J.value "anchors" $ placementanchors placement
     J.value "tip" $ case (placementtipside placement) of
                          Just LeftTip -> Just ("left"::String)

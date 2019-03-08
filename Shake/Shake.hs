@@ -583,7 +583,7 @@ distributionRules newBuild opt = do
     tc <- askOracle (TeamCity ())
     nginxconfpath <- askOracle (NginxConfPath ())
     nginxconfpathalternative <- askOracle (NginxConfPathAlternative ())
-    when (not tc) $ do
+    unless tc $ do
       fail $ "ERROR: routinglist executable is only built "
         ++ "with Shake when running from TeamCity"
     when (null nginxconfpath) $ do

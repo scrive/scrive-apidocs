@@ -140,10 +140,10 @@ initDatabaseEntries
   :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
   => AppConf -> m ()
 initDatabaseEntries appConf = do
-  when (not $ production appConf) $ do
+  unless (production appConf) $ do
     -- Add some host_clock entries in "dev" mode if there are no valid samples
     clockErrors <- dbQuery $ HC.GetNClockErrorEstimates 10
-    when (not $ HC.enoughClockErrorOffsetSamples clockErrors) $ do
+    unless (HC.enoughClockErrorOffsetSamples clockErrors) $ do
       void $ dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.001) 0.5
       void $ dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.0015) 0.5
       return ()

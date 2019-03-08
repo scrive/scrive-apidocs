@@ -387,7 +387,7 @@ docApiV2SigIdentifyToViewWithSmsPin did slid = logDocumentAndSignatory did slid 
                 _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"
     pin <- fmap T.unpack $ apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
     validPin <- checkSignatoryPinToView (authKindToPinType authKind) slid pin
-    when (not validPin) $ do
+    unless validPin $ do
       apiError $ requestParameterInvalid "sms_pin" "invalid SMS PIN"
     sess <- getCurrentSession
     dbUpdate $ MergeSMSPinAuthentication authKind (sesID sess) slid (T.pack mobile)

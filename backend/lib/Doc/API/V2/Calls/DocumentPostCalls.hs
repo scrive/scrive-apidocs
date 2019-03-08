@@ -445,7 +445,7 @@ docApiV2SetAttachments did = logDocument did . api $ do
     newFileContentsWithDetails' <- forM attachmentDetails $ \ad ->  case (aadFileOrFileParam ad) of
       Left fid -> do
         attachmentFromAttachmentArchive <- (not null) <$> dbQuery (attachmentsQueryFor user fid)
-        when (not (fileWasAlreadyAnAttachment fid || attachmentFromAttachmentArchive)) $
+        unless (fileWasAlreadyAnAttachment fid || attachmentFromAttachmentArchive) $
             apiError $ resourceNotFound $ "File id" <+> (T.pack . show $ fid)
               <+> "can't be used. It may not exist or you don't have permission to use it."
         void $ dbUpdate $ AddDocumentAttachment (aadName ad) (aadRequired ad) (aadAddToSealedFile ad) fid actor

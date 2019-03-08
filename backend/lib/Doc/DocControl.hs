@@ -621,11 +621,11 @@ checkFileAccessWith fid msid mmh mdid mattid =
          when (isClosed doc || not (isAuthor sl)) $ do
            internalError
        indoc <- dbQuery $ FileInDocument did fid
-       when (not indoc) $ internalError
+       unless indoc $ internalError
     (_,_,Just did,_) -> guardLoggedInOrThrowInternalError $ do
        _doc <- getDocByDocID did
        indoc <- dbQuery $ FileInDocument did fid
-       when (not indoc) $ internalError
+       unless indoc $ internalError
     (_,_,_,Just attid) -> guardLoggedInOrThrowInternalError $ do
        user <- guardJustM $ get ctxmaybeuser <$> getContext
        atts <- dbQuery $ GetAttachments

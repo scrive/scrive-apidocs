@@ -36,7 +36,7 @@ instance (CryptoRNG m, MonadDB m, MonadMask m)
         success <- runQuery01 . sqlUpdate "nets_sign_orders" $ do
           setFields
           sqlWhereEq "signatory_link_id" $ nsoSignatoryLinkID
-        when (not success) $ do
+        unless success $
           runQuery_ . sqlInsert "nets_sign_orders" $ do
             setFields
       where

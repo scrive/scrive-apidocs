@@ -48,7 +48,7 @@ checkAuthenticationToSignMethodAndValue slid = do
     Just authMethod -> do
       siglink <- guardGetSignatoryFromIdForDocument slid
       let authOK = authMethod == signatorylinkauthenticationtosignmethod siglink
-      when (not authOK) $
+      unless authOK $
         apiError $ requestParameterInvalid "authentication_type" "does not match with document"
       case authMethod of
         StandardAuthenticationToSign -> return ()
