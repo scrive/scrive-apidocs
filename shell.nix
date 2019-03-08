@@ -15,7 +15,7 @@
 
 , scrivepdftoolsSource ? builtins.fetchGit {
     url = "git@github.com:scrive/new-scrive-pdf-tools.git";
-    rev = "0ea006685cfc90db5c9199580aad070e14d2810e";
+    rev = "40d520d1fc7d0a81338c945f24b7e881f70ce1ae";
   }
 
 , nixpkgsRevision ? (builtins.replaceStrings ["\n"] [""]
@@ -27,7 +27,7 @@
   }
 }:
 
-let 
+let
   # This configuration overloads some packages.
   config = import ./nix/nixpkgs-config.nix { inherit compiler; };
   nixpkgs = import nixpkgsSource { inherit config; };
