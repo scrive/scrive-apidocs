@@ -635,7 +635,6 @@
 "_flashMessageDocumentArchiveInvalidProlong":"Some of the selected documents can't be prolonged.",
 "_flashMessageInvalidEmailFormat":"The email address is incorrectly formatted.",
 "_flashMessageLoginPageRedirectReasonNotLoggedIn":"You are not logged in.",
-"_flashMessageLoginPageRedirectReasonWrongIPAddress":"You cannot access Scrive E-sign from IP <span class='put-ip-here'></span>. Please contact <span class='put-adminname-here'></span> who is your company administrator in Scrive.",
 "_flashMessageLoginPageRedirectReasonWrongMailOrPassword":"Incorrect email or password.",
 "_flashMessageMismatchedEmails":"The emails you entered do not match.",
 "_flashMessageMustAcceptTOS":"Please accept the Scrive Terms of Service to get started.",

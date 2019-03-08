@@ -1093,7 +1093,6 @@ javascriptLocalisation =
            , forgot : "$_forgot()$"
            , sendNewPassword : "$_loginModalForgotPasswordSendNewPassword()$"
            , loginFailed : "$_flashMessageLoginPageRedirectReasonWrongMailOrPassword()$"
-           , loginFailedBadIP : "$_flashMessageLoginPageRedirectReasonWrongIPAddress()$"
            , loginFailedBadTOTP : "$_flashMessageWrongTwoFactorCode()$"
            , invalidEmail : "$_flashEmailIncorectlyFormed()$"
            , passwordReminderMaybeSend : "$_flashMessageChangePasswordEmailMaybeSent()$"
