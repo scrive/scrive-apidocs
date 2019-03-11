@@ -225,14 +225,17 @@ userGroupAddGINIdx = Migration {
 
 addUserGroupHomeFolderID :: MonadDB m => Migration m
 addUserGroupHomeFolderID =
-    let tname = tblName tableUserGroups
-    in Migration
-         { mgrTableName = tname
-         , mgrFrom = 5
-         , mgrAction = StandardMigration $ do
-             runQuery_ . sqlAlterTable tname $
-               [ sqlAddColumn tblColumn { colName = "home_folder_id", colType = BigIntT, colNullable = True }
-               , sqlAddFK tname $ (fkOnColumn "home_folder_id" "folders" "id") { fkOnDelete = ForeignKeyRestrict }
-               ]
-             runQuery_ . sqlCreateIndex tname $ indexOnColumn "home_folder_id"
-         }
+  let tname = tblName tableUserGroups
+  in Migration
+     { mgrTableName = tname
+     , mgrFrom = 5
+     , mgrAction = StandardMigration $ do
+         runQuery_ . sqlAlterTable tname $
+           [ sqlAddColumn tblColumn
+             { colName = "home_folder_id", colType = BigIntT
+             , colNullable = True }
+           , sqlAddFK tname $ (fkOnColumn "home_folder_id" "folders" "id")
+             { fkOnDelete = ForeignKeyRestrict }
+           ]
+         runQuery_ . sqlCreateIndex tname $ indexOnColumn "home_folder_id"
+     }
