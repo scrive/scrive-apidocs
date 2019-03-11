@@ -163,9 +163,9 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
   action <- case cjType of
     AsyncEventsProcessing -> do
       runDB $ do
-        let processMaximum = 200
+        let processMaximum = 20
         asyncProcessEvents getEventProcessor (NoMoreThan processMaximum)
-      return . RerunAfter $ iseconds 10
+      return . RerunAfter $ iseconds 1
     ClockErrorCollection -> do
       runDB $ collectClockError (cronNtpServers cronConf)
       return . RerunAfter $ ihours 1
