@@ -13,7 +13,6 @@ module InputValidation
     , getCriticalField
     , asValidEmail
     , asDirtyEmail
-    , asValidPassword
     , asDirtyPassword
     , asValidName
     , asValidCompanyName
@@ -316,25 +315,6 @@ asDirtyEmail input =
     stripWhitespace input
     >>= checkIfEmpty
     >>= mkLowerCase
-
-{- |
-    Creates a clean and validated password.
-    White list: Alphabetic characters, Digits [0-9], Punctuation characters, and Symbols (such as $) or spaces (to accommodate people who like to use passphrases)
-    Rules: Must contain at least 2 Alphabetic characters, and 2 Digits [0-9]
-    Size: At least 8 chars.  No more than 250 chars.
--}
-asValidPassword :: String -> Result String
-asValidPassword input =
-    checkIfEmpty input
-    >>= checkLengthIsMin 8
-    >>= checkLengthIsMax 250
-    >>= checkOnly [isAlpha, isDigit, isPunctuation, isSymbol]
-    >>= checkContains1AlphaAndDigit
-    where
-          checkContains1AlphaAndDigit :: String -> Result String
-          checkContains1AlphaAndDigit pwd
-              | length (filter isAlpha pwd) >= 1 && length (filter isDigit pwd) >=1 = return pwd
-              | otherwise = Bad
 
 
 {- |

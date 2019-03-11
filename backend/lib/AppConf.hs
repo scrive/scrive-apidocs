@@ -16,6 +16,7 @@ import GuardTime (GuardTimeConf(..))
 import HubSpot.Conf (HubSpotConf(..))
 import Log.Configuration
 import Monitoring (MonitoringConf(..))
+import PasswordService.Conf
 import PdfToolsLambda.Conf
 import Salesforce.Conf
 import User.Email
@@ -75,6 +76,7 @@ data AppConf = AppConf {
     -- ^ Configuration of Nets for ESigning (BankID, NemID, ...)
   , pdfToolsLambdaConf :: PdfToolsLambdaConf
     -- ^ Configuration of PdfTools Lambda
+  , passwordServiceConf :: PasswordServiceConf
   } deriving (Eq, Show)
 
 unjsonAppConf :: UnjsonDef AppConf
@@ -174,6 +176,8 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> field "pdftools_lambda"
       pdfToolsLambdaConf
       "Configuration of PdfTools Lambda"
-
+  <*> fieldDef "password_service" defaultPasswordService
+      passwordServiceConf
+      "Configuration of password service"
 instance Unjson AppConf where
   unjsonDef = unjsonAppConf

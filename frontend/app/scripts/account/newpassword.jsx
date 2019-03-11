@@ -5,6 +5,7 @@ var FlashMessages = require("../../js/flashmessages.js");
 var InfoTextInput = require("../common/infotextinput");
 var Submits = require("../../js/submits.js");
 var Validation = require("../../js/validation.js");
+var PasswordService = require("../common/password_service");
 
 var NewPasswordView = React.createClass({
   propTypes: {
@@ -21,8 +22,7 @@ var NewPasswordView = React.createClass({
     this._passwordValidation = new Validation.PasswordValidation({
       callback: this.onPasswordValidationFail,
       message: localization.validation.passwordLessThanMinLength,
-      message_max: localization.validation.passwordExceedsMaxLength,
-      message_digits: localization.validation.passwordNeedsLetterAndDigit
+      message_max: localization.validation.passwordExceedsMaxLength
     });
   },
   validateAll: function () {
@@ -62,6 +62,7 @@ var NewPasswordView = React.createClass({
     this.setState({repeatPassword: value});
   },
   onSaveButtonClick: function () {
+    var self = this;
     if (!this.validateAll()) {
       new FlashMessages.FlashMessage({
         content: this._passwordValidationError,
@@ -70,15 +71,25 @@ var NewPasswordView = React.createClass({
 
       return;
     }
-
-    var submit = new Submits.Submit({
-      method: "POST",
-      url: this.props.url,
-      ajax: true,
-      password: this.state.password,
-      ajaxsuccess: this.onSubmitSuccess
-    });
-    submit.send();
+    PasswordService.checkPassword(
+      self.state.password,
+      function () {
+        var submit = new Submits.Submit({
+          method: "POST",
+          url: self.props.url,
+          ajax: true,
+          password: self.state.password,
+          ajaxsuccess: self.onSubmitSuccess
+        });
+        submit.send();
+      },
+      function () {
+        new FlashMessages.FlashMessage({
+          type: "error",
+          content: localization.validation.passwordCantBeUsed
+      });
+      }
+    );
   },
   render: function () {
     var logoURLParts = [

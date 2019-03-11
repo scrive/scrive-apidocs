@@ -43,7 +43,7 @@ test_brandedDomainAssociatedDomain = do
   let nbd = set bdUrl "http://localhost:8000" bd
   dbUpdate $ UpdateBrandedDomain nbd
 
-  pwd <- createPassword "admin"
+  pwd <- createPassword "password_8866"
 
   Just user <- createNewUser
     ("Andrzej", "Rybczak")

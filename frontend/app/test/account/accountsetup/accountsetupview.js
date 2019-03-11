@@ -11,6 +11,7 @@ var AccountSetupView = require(
 );
 var Submits = require("../../../js/submits.js");
 var Validation = require("../../../js/validation.js");
+var PasswordService = require("../../../scripts/common/password_service");
 
 describe("account/setup/accountsetupview", function () {
   var container = null;
@@ -20,8 +21,12 @@ describe("account/setup/accountsetupview", function () {
       React.unmountComponentAtNode(container);
       container = null;
     }
-
+    PasswordService.checkPassword.restore();
     util.cleanTimeoutsAndBody();
+  });
+
+  beforeEach(function () {
+    sinon.stub(PasswordService, "checkPassword", function(_,callback) {callback();});
   });
 
   var renderComponent = function (props) {
@@ -90,10 +95,6 @@ describe("account/setup/accountsetupview", function () {
       assert.equal(
         component._passwordValidation.get("message_max"),
         localization.validation.passwordExceedsMaxLength
-      );
-      assert.equal(
-        component._passwordValidation.get("message_digits"),
-        localization.validation.passwordNeedsLetterAndDigit
       );
     });
 
@@ -191,8 +192,8 @@ describe("account/setup/accountsetupview", function () {
       var component = renderComponent();
       component.setState({
         fullName: "",
-        password: "password123",
-        repeatPassword: "password123"
+        password: "password1234",
+        repeatPassword: "password1234"
       });
 
       var result = component.validateAll();
@@ -203,8 +204,8 @@ describe("account/setup/accountsetupview", function () {
       var component = renderComponent();
       component.setState({
         fullName: "Spam Eggs",
-        password: "password123",
-        repeatPassword: "password123"
+        password: "password1234",
+        repeatPassword: "password1234"
       });
 
       var result = component.validateAll();
@@ -329,8 +330,8 @@ describe("account/setup/accountsetupview", function () {
     it("should configure and send account setup request", function () {
       var component = renderComponent();
       component.setState({
-        password: "password123",
-        repeatPassword: "password123",
+        password: "password1234",
+        repeatPassword: "password1234",
         acceptTOS: true
       });
 
@@ -343,8 +344,8 @@ describe("account/setup/accountsetupview", function () {
         tos: "on",
         fstname: "Spam",
         sndname: "Eggs",
-        password: "password123",
-        password2: "password123",
+        password: "password1234",
+        password2: "password1234",
         phone: "+48123456789",
         company: "Spameggs",
         position: "CEO",

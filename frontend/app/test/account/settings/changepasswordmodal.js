@@ -8,6 +8,8 @@ var util = require("../../util");
 var ChangePasswordModal = require(
   "../../../scripts/account/settings/changepasswordmodal"
 );
+var PasswordService = require("../../../scripts/common/password_service");
+
 var FlashMessage = require("../../../js/flashmessages.js");
 var Submit = require("../../../js/submits.js");
 
@@ -26,6 +28,8 @@ describe("account/settings/changepasswordmodal", function () {
 
     sinon.stub(FlashMessage, "FlashMessage");
     sinon.stub(Submit, "Submit").returns(fakeSubmit);
+    sinon.stub(PasswordService, "checkPassword", function(_,callback) {callback();});
+
   });
 
   afterEach(function () {
@@ -36,6 +40,7 @@ describe("account/settings/changepasswordmodal", function () {
 
     FlashMessage.FlashMessage.restore();
     Submit.Submit.restore();
+    PasswordService.checkPassword.restore();
 
     util.cleanTimeoutsAndBody();
   });
@@ -178,10 +183,6 @@ describe("account/settings/changepasswordmodal", function () {
     component.onAcceptButtonClick();
     assert.isFalse(component.savePassword.called);
     assert.isTrue(FlashMessage.FlashMessage.calledWithNew());
-    assert.isTrue(FlashMessage.FlashMessage.calledWith({
-      type: "error",
-      content: localization.validation.passwordNeedsLetterAndDigit
-    }));
   });
 
   it("should display error message if new passwords aren't equal", function () {
@@ -190,8 +191,8 @@ describe("account/settings/changepasswordmodal", function () {
 
     component.setState({
       oldPassword: "spam",
-      newPassword: "eggs1234",
-      newPasswordAgain: "eggs"
+      newPassword: "eggs123412341234",
+      newPasswordAgain: "eggs12341234"
     });
 
     component.onAcceptButtonClick();
@@ -209,8 +210,8 @@ describe("account/settings/changepasswordmodal", function () {
 
     component.setState({
       oldPassword: "spam",
-      newPassword: "eggs1234",
-      newPasswordAgain: "eggs1234"
+      newPassword: "eggs12341234",
+      newPasswordAgain: "eggs12341234"
     });
 
     component.onAcceptButtonClick();

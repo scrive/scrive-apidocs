@@ -50,6 +50,7 @@ import Mails.SendMail
 import MinutesTime
 import OAuth.Model
 import OAuth.Util
+import PasswordService.Control
 import Redirect
 import Routing
 import Salesforce.AuthorizationWorkflow
@@ -127,7 +128,7 @@ userAPIV2 = choice [
     $ User.UserControl.handleUsageStatsJSONForShareableLinks PartitionByDay,
   dir "usagestats" $ dir "shareablelink" $ dir "months" $ hGet $ toK0
     $ User.UserControl.handleUsageStatsJSONForShareableLinks PartitionByMonth,
-
+  dir "checkpassword" $ hPost $ toK0 $ apiCallCheckPassword,
   userAPIV1
   ]
 
@@ -275,10 +276,10 @@ apiCallChangeUserPassword = api $ do
   ctx <- getContext
   (user, _ , _) <- getAPIUserWithAnyPrivileges
   oldpassword <- getField' "oldpassword"
-  mpassword <- getOptionalField asValidPassword "password"
-  case (mpassword) of
-     (Just password) ->
-          if (maybeVerifyPassword (userpassword user) oldpassword)
+  password <-  getField' "password"
+  goodPassword <- checkPassword (get ctxpasswordserviceconf ctx) password
+  if goodPassword
+    then if (maybeVerifyPassword (userpassword user) oldpassword)
             then do
               passwordhash <- createPassword password
               void $ dbUpdate $ SetUserPassword (userid user) passwordhash
@@ -287,7 +288,7 @@ apiCallChangeUserPassword = api $ do
             else do
               void $ dbUpdate $ LogHistoryPasswordSetupReq (userid user) (get ctxipnumber ctx) (get ctxtime ctx) (Just $ userid $ user)
               Ok <$> (runJSONGenT $ value "changed" False)
-     _ ->  throwM . SomeDBExtraException $ serverError "Newpassword fields do not match Scrive standard"
+    else throwM . SomeDBExtraException $ serverError "New password fields do not match Scrive standard"
 
 apiCallLoginUser :: Kontrakcja m => m Response
 apiCallLoginUser = api $ do
@@ -674,3 +675,10 @@ apiCallGetTokenForPersonalCredentials uid = V2.api $ do
           invalidMinsParamError = V2.apiError . V2.requestParameterInvalid "minutes"
             $ "The value given is larger than the allowed maximum of "
             <> (T.pack $ show maxMinutes) <> " or below 1."
+
+apiCallCheckPassword :: Kontrakcja m => m Response
+apiCallCheckPassword = api $ do
+  ctx <- getContext
+  password <- getField' "password"
+  goodPassword <- checkPassword (get ctxpasswordserviceconf ctx) password
+  Ok <$> (runJSONGenT $ value "valid" goodPassword)

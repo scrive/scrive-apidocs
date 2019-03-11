@@ -349,6 +349,8 @@ Library
                  , Partner.Partner
                  , Partner.PartnerID
                  , Partner.Tables
+                 , PasswordService.Conf
+                 , PasswordService.Control
                  , PdfToolsLambda.Conf
                  , PdfToolsLambda.Conf.Internal
                  , PdfToolsLambda.Conf.Labels

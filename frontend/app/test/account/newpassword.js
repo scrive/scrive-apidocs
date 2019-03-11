@@ -10,6 +10,8 @@ var NewPasswordView = require("../../scripts/account/newpassword");
 var FlashMessages = require("../../js/flashmessages.js");
 var Submits = require("../../js/submits.js");
 var Validation = require("../../js/validation.js");
+var PasswordService = require("../../scripts/common/password_service");
+
 
 describe("account/newpassword", function () {
   var container = null;
@@ -35,6 +37,8 @@ describe("account/newpassword", function () {
 
     sinon.stub(FlashMessages, "FlashMessage");
     sinon.stub(Submits, "Submit").returns(fakeSubmit);
+    sinon.stub(PasswordService, "checkPassword", function(_,callback) {callback();});
+
   });
 
   afterEach(function () {
@@ -45,6 +49,8 @@ describe("account/newpassword", function () {
 
     FlashMessages.FlashMessage.restore();
     Submits.Submit.restore();
+    PasswordService.checkPassword.restore();
+
 
     util.cleanTimeoutsAndBody();
   });
@@ -77,10 +83,6 @@ describe("account/newpassword", function () {
       assert.equal(
         component._passwordValidation.get("message_max"),
         localization.validation.passwordExceedsMaxLength
-      );
-      assert.equal(
-        component._passwordValidation.get("message_digits"),
-        localization.validation.passwordNeedsLetterAndDigit
       );
     });
   });
@@ -178,8 +180,8 @@ describe("account/newpassword", function () {
     it("should configure and send save password request", function () {
       var component = renderComponent();
       component.setState({
-        password: "password123",
-        repeatPassword: "password123"
+        password: "password1234",
+        repeatPassword: "password1234"
       });
 
       component.onSaveButtonClick();
@@ -188,7 +190,7 @@ describe("account/newpassword", function () {
         url: component.props.url,
         method: "POST",
         ajax: true,
-        password: "password123",
+        password: "password1234",
         ajaxsuccess: component.onSubmitSuccess
       }));
       assert.isTrue(fakeSubmit.send.called);

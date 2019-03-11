@@ -41,6 +41,7 @@ import Log.Identifier
 import MagicHash (MagicHash)
 import Mails.SendMail
 import MinutesTime
+import PasswordService.Control
 import User.Action
 import User.Email
 import User.EmailChangeRequest
@@ -316,15 +317,20 @@ handlePasswordReminderPost uid token = do
           ipnumber  = get ctxipnumber ctx
           maybeuser = get ctxmaybeuser ctx
       password <- guardJustM $ getField "password"
-      void $ dbUpdate $ DeletePasswordReminder uid
-      passwordhash <- createPassword password
-      void $ dbUpdate $ SetUserPassword (userid user) passwordhash
-      void $ dbUpdate $ LogHistoryPasswordSetup (userid user) ipnumber time
-           (userid <$> maybeuser)
-      logUserToContext $ Just user
-      J.runJSONGenT $ do
-          J.value "logged" True
-          J.value "location" $ show LinkDesignView
+      goodPassword <- checkPassword (get ctxpasswordserviceconf ctx) password
+      if (goodPassword)
+        then do
+          void $ dbUpdate $ DeletePasswordReminder uid
+          passwordhash <- createPassword password
+          void $ dbUpdate $ SetUserPassword (userid user) passwordhash
+          void $ dbUpdate $ LogHistoryPasswordSetup (userid user) ipnumber time
+            (userid <$> maybeuser)
+          logUserToContext $ Just user
+          J.runJSONGenT $ do
+            J.value "logged" True
+            J.value "location" $ show LinkDesignView
+        else do
+          J.runJSONGenT $ J.value "logged" False
     Just _ -> do
       {- MR: useraccountsuspended must be true here. This is a hack for Hi3G. It will be removed in future -}
       J.runJSONGenT $ J.value "logged" False

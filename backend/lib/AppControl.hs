@@ -377,5 +377,6 @@ appHandler handleRoutes appConf appGlobals = runHandler
         , _ctxisapilogenabled    = isAPILogEnabled appConf
         , _ctxnetssignconfig     = netsSignConfig appConf
         , _ctxpdftoolslambdaconf = pdfToolsLambdaConf appConf
+        , _ctxpasswordserviceconf = passwordServiceConf appConf
         , _ctxmaybeapiuser       = Nothing
         }

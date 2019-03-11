@@ -63,7 +63,7 @@ testSuccessfulLogin :: TestEnv ()
 testSuccessfulLogin = do
     uid <- userid <$> createTestUser
     ctx <- mkContext defaultLang
-    req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
+    req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "password_8866"), ("loginType", inText "RegularLogin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost
     assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" True)
     assertBool "User was logged into context" $ (userid <$> get ctxmaybeuser ctx') == Just uid
@@ -73,7 +73,7 @@ testSuccessfulLoginToPadQueue :: TestEnv ()
 testSuccessfulLoginToPadQueue  = do
     uid <- userid <$> createTestUser
     ctx <- mkContext defaultLang
-    req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("pad", inText "true")]
+    req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "password_8866"), ("pad", inText "true")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost
     assertBool "Response is propper JSON" $ res == (runJSONGen $ value "logged" True)
     assertBool "User was logged into context as pad user" $ (userid <$> get ctxmaybepaduser ctx') == Just uid
@@ -83,7 +83,7 @@ testCantLoginWithInvalidUser :: TestEnv ()
 testCantLoginWithInvalidUser = do
     void $ createTestUser
     ctx <- mkContext defaultLang
-    req <- mkRequest POST [("email", inText "emily@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
+    req <- mkRequest POST [("email", inText "emily@skrivapa.se"), ("password", inText "password_8866"), ("loginType", inText "RegularLogin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost
     loginFailureChecks res ctx'
 
@@ -91,7 +91,7 @@ testCantLoginWithInvalidPassword :: TestEnv ()
 testCantLoginWithInvalidPassword = do
     void $ createTestUser
     ctx <- mkContext defaultLang
-    req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "invalid"), ("loginType", inText "RegularLogin")]
+    req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "too_short"), ("loginType", inText "RegularLogin")]
     (res, ctx') <- runTestKontra req ctx $ handleLoginPost
     loginFailureChecks res ctx'
 
@@ -99,7 +99,7 @@ testSuccessfulLoginSavesAStatEvent :: TestEnv ()
 testSuccessfulLoginSavesAStatEvent = do
   uid <- userid <$> createTestUser
   ctx <- mkContext defaultLang
-  req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
+  req <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "password_8866"), ("loginType", inText "RegularLogin")]
   (_res, ctx') <- runTestKontra req ctx $ handleLoginPost
   assertBool "User was logged into context" $ (userid <$> get ctxmaybeuser ctx') == Just uid
 
@@ -167,7 +167,7 @@ testCantLoginAfterFailedAttempts = do
     loginFailureChecks res1 ctx1
 
   -- now even correct password does not work
-  req2 <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "admin"), ("loginType", inText "RegularLogin")]
+  req2 <- mkRequest POST [("email", inText "andrzej@skrivapa.se"), ("password", inText "password_8866"), ("loginType", inText "RegularLogin")]
   (res2, ctx2) <- runTestKontra req2 ctx $ handleLoginPost
   loginFailureChecks res2 ctx2
 
@@ -296,7 +296,7 @@ createTestUser = createTestUser' "andrzej@skrivapa.se"
 createTestUser' :: String -> TestEnv User
 createTestUser' email = do
     bd <- dbQuery $ GetMainBrandedDomain
-    pwd <- createPassword "admin"
+    pwd <- createPassword "password_8866"
     ug <- addNewUserGroup
     Just user <- createNewUser
       ("", "")
@@ -311,7 +311,7 @@ createTestUser' email = do
 createUserAndResetPassword :: TestEnv (User, Context)
 createUserAndResetPassword = do
   bd <- dbQuery $ GetMainBrandedDomain
-  pwd <- createPassword "admin"
+  pwd <- createPassword "password_8866"
   ug <- addNewUserGroup
   Just user <- createNewUser
     ("", "")
@@ -323,7 +323,7 @@ createUserAndResetPassword = do
     AccountRequest
   PasswordReminder{..} <- newPasswordReminder $ userid user
   ctx <- mkContext defaultLang
-  req <- mkRequest POST [("password", inText "password123")]
+  req <- mkRequest POST [("password", inText "password_8866")]
   (_, ctx') <- runTestKontra req ctx $ handlePasswordReminderPost prUserID prToken
   req2 <- mkRequest GET []
   (_res, ctx'') <- runTestKontra req2 ctx' apiCallGetUserProfile

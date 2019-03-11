@@ -242,21 +242,15 @@ var NumberValidation = exports.NumberValidation = Validation.extend({
 
 var PasswordValidation = exports.PasswordValidation = Validation.extend({
     defaults: {
-        validates: function(t) { return t.length >= 8; },
-        message: "Password must contain 8 characters at least!",
-        message_max: "Password must contain 250 characters at most!",
-        message_digits: "Password must have minimum one digits and one letters!"
+        validates: function(t) { return t.length >= 12; },
+        message: "Password must contain 12 characters at least!",
+        message_max: "Password must contain 250 characters at most!"
     },
     initialize: function() {
         this.set({"next": new Validation({
             callback: this.get("callback"),
             message: this.get("message_max"),
             validates: function(t) { return t.length <= 250; }})});
-
-        this.concat(new DigitsLettersValidation({
-            callback: this.get("callback"),
-            message: this.get("message_digits")
-        }));
 
     }
 });

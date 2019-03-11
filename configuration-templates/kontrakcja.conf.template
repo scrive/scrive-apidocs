@@ -76,6 +76,9 @@
          , "suffix"         : ""
          },
     "_api_call_log_enabled": false,
+    "password_service" : {
+      "password_service_url" : "https://api.pwnedpasswords.com"
+    },
     "pdftools_lambda" : {
       "gateway_url": "",
       "api_key": "",

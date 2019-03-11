@@ -165,7 +165,7 @@ addCgiGrpTransaction = do
 testUser :: TestEnv UserID
 testUser = do
   bd        <- dbQuery $ GetMainBrandedDomain
-  pwd       <- createPassword "admin"
+  pwd       <- createPassword "password_8866"
   ug        <- addNewUserGroup
   Just user <- createNewUser
     ("Andrzej", "Rybczak")

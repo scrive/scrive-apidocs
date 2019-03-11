@@ -38,7 +38,7 @@ testSignupAndActivate = do
   assertActivationPageOK ctx2
 
   -- activate the account using the signup details
-  (res, ctx3) <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "password12" "password12" (Just "123")
+  (res, ctx3) <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "password_8866" "password_8866" (Just "123")
   assertAccountActivatedFor uarUserID "Andrzej" "Rybczak" res ctx3
   Just uuser <- dbQuery $ GetUserByID  uarUserID
   assertEqual "Phone number was saved" "123" (userphone $ userinfo uuser)
@@ -54,7 +54,7 @@ testLoginEventRecordedWhenLoggedInAfterActivation = do
   UserAccountRequest{..} <- assertSignupSuccessful ctx1
 
   -- activate the account using the signup details
-  (res, ctx3) <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "password12" "password12" Nothing
+  (res, ctx3) <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "password_8866" "password_8866" Nothing
   assertAccountActivatedFor uarUserID "Andrzej" "Rybczak" res ctx3
 
 signupForAccount :: Context -> String -> TestEnv Context

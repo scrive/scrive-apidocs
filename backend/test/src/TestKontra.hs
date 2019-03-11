@@ -64,6 +64,7 @@ import IPAddress
 import Kontra
 import Log.Configuration
 import MinutesTime
+import PasswordService.Conf
 import Session.SessionID as SessionID
 import Templates
 import TestEnvSt
@@ -384,6 +385,7 @@ mkContext lang = do
         -- We use real Lambda config here because we want our tests to check it.
         -- This Lambda and S3 bucket are dedicated for tests and development.
         , _ctxpdftoolslambdaconf = pdfSealLambdaConf
+        , _ctxpasswordserviceconf = defaultPasswordService
         , _ctxmaybeapiuser       = Nothing
     }
 

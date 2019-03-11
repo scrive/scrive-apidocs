@@ -9,6 +9,7 @@ var HtmlTextWithSubstitution = require(
 );
 var HubSpot = require("../../common/hubspot_service");
 var InfoTextInput = require("../../common/infotextinput");
+var PasswordService = require("../../common/password_service");
 var Submits = require("../../../js/submits.js");
 var Track = require("../../common/track");
 var Validation = require("../../../js/validation.js");
@@ -48,8 +49,7 @@ var AccountSetupView = React.createClass({
     this._passwordValidation = new Validation.PasswordValidation({
       callback: this.onPasswordValidationFail,
       message: localization.validation.passwordLessThanMinLength,
-      message_max: localization.validation.passwordExceedsMaxLength,
-      message_digits: localization.validation.passwordNeedsLetterAndDigit
+      message_max: localization.validation.passwordExceedsMaxLength
     });
     this._repeatPasswordValidation = new Validation.PasswordEqValidation({
       with: this.repeatPasswordComparator
@@ -157,6 +157,7 @@ var AccountSetupView = React.createClass({
     this.setState({acceptTOS: !this.state.acceptTOS});
   },
   onCreateAccountButtonClick: function () {
+    var self = this;
     var acceptTOSValid = (this.state.acceptTOS === true);
     this.setState({
       fullNameValid: true,
@@ -168,36 +169,47 @@ var AccountSetupView = React.createClass({
 
     if (acceptTOSValid) {
       if (this.validateAll()) {
-        var urlParts = [
-          "", "accountsetup", this.props.userid, this.props.invitationId,
-          this.props.signupmethod
-        ];
+        PasswordService.checkPassword(
+          this.state.password,
+          function () {
+            var urlParts = [
+              "", "accountsetup", self.props.userid, self.props.invitationId,
+              self.props.signupmethod
+            ];
 
-        var words = _.filter(this.state.fullName.split(" "), function (word) {
-          return word.trim() != "";
-        });
+            var words = _.filter(self.state.fullName.split(" "), function (word) {
+              return word.trim() != "";
+            });
 
-        var fstname = words[0];
-        if (fstname === undefined) {
-          fstname = "";
-        }
-        var sndname = _.rest(words).join(" ");
+            var fstname = words[0];
+            if (fstname === undefined) {
+              fstname = "";
+            }
+            var sndname = _.rest(words).join(" ");
 
-        var submit = new Submits.Submit({
-          url: urlParts.join("/"),
-          method: "POST",
-          ajax: true,
-          tos: "on",
-          fstname: fstname,
-          sndname: sndname,
-          password: this.state.password,
-          password2: this.state.password,
-          phone: this.state.phone,
-          company: this.state.company,
-          position: this.state.position,
-          ajaxsuccess: this.onSubmitSuccess
-        });
-        submit.send();
+            var submit = new Submits.Submit({
+              url: urlParts.join("/"),
+              method: "POST",
+              ajax: true,
+              tos: "on",
+              fstname: fstname,
+              sndname: sndname,
+              password: self.state.password,
+              password2: self.state.password,
+              phone: self.state.phone,
+              company: self.state.company,
+              position: self.state.position,
+              ajaxsuccess: self.onSubmitSuccess
+            });
+            submit.send();
+          },
+          function () {
+            new FlashMessages.FlashMessage({
+              type: "error",
+              content: localization.validation.passwordCantBeUsed
+            });
+          }
+        );
       }
     }
   },

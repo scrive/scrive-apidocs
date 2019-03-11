@@ -11,6 +11,7 @@ import GuardTime (GuardTimeConf(..))
 import HubSpot.Conf
 import IPAddress
 import MagicHash (MagicHash)
+import PasswordService.Conf
 import PdfToolsLambda.Conf
 import Salesforce.Conf
 import Session.SessionID as SessionID
@@ -67,6 +68,7 @@ data Context = Context
     , _ctxisapilogenabled     :: Bool
     , _ctxnetssignconfig      :: Maybe NetsSignConfig
     , _ctxpdftoolslambdaconf  :: PdfToolsLambdaConf
+    , _ctxpasswordserviceconf :: PasswordServiceConf
     , _ctxmaybeapiuser        :: Maybe User
     -- ^ The user which was effectively used for API call (this
     -- includes api/frontend) This might be the user from session, if

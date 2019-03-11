@@ -3,12 +3,11 @@ module User.Action (
   , createUser
   ) where
 
-import Control.Conditional (whenM)
+import Control.Conditional (unlessM, whenM)
 import Control.Monad.Catch
 import Crypto.RNG
 import Log
 import Text.StringTemplates.Templates
-import qualified Data.Foldable as F
 import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomain
@@ -16,10 +15,10 @@ import DB
 import Doc.Model
 import Folder.Model
 import Happstack.Fields
-import InputValidation
 import Kontra
 import Log.Identifier
 import MinutesTime
+import PasswordService.Control
 import User.Email
 import User.History.Model
 import User.Model
@@ -63,10 +62,15 @@ handleActivate mfstname msndname (actvuser,ug) signupmethod = do
 
   dbUpdate $ ConnectSignatoriesToUser (Email $ getEmail actvuser) (userid actvuser) (14 `daysBefore` get ctxtime ctx)
 
-  mpassword <- getOptionalField asValidPassword "password"
-  F.forM_ mpassword $ \password -> do
-    passwordhash <- createPassword password
-    void . dbUpdate $ SetUserPassword (userid actvuser) passwordhash
+  mpassword <- getField "password"
+  case (mpassword) of
+    Just password -> do
+      unlessM (checkPassword (get ctxpasswordserviceconf ctx) password) $ do
+        logInfo_ "Can't activate account, 'password' is not good"
+        internalError
+      passwordhash <- createPassword password
+      void . dbUpdate $ SetUserPassword (userid actvuser) passwordhash
+    Nothing -> return ()
 
   tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)
 

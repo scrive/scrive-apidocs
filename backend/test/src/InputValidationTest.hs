@@ -6,7 +6,7 @@ import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.HUnit (Assertion, assert)
-import Test.QuickCheck ((==>), Arbitrary(..), Property, mapSize, oneof, property)
+import Test.QuickCheck ((==>), Arbitrary(..), Property, oneof, property)
 import qualified Data.Text as T
 import qualified Data.Text.ICU as Rx
 
@@ -28,13 +28,6 @@ inputValidationTests _ = testGroup "InputValidation"
         , testProperty "strips surrounding whitespace" propDirtyEmailStripsWhitespace
         , testCase "null is counted as empty" testDirtyEmailNullIsEmpty
         , testProperty "whitespace only is counted as empty" propDirtyEmailWhitespaceIsEmpty ]
-    , testGroup "asValidPassword"
-        [ testProperty "must be at least 8 chars" propValidPasswordMustBeAtLeast8Chars
-        , testCase "null is counted as empty" testValidPasswordNullIsEmpty
-        , testProperty "can only contain alpha, digit or punctuation"
-                       propValidPasswordOnlyAlphaDigitPuncAndSymbol
-        , testProperty "must contain alpha and digit" propValidPasswordMustContainAlphaAndDigit
-        , testProperty "good examples pass" propValidPasswordGoodExamples ]
     , testGroup "asDirtyPassword"
         [ testCase "null is counted as empty" testDirtyPasswordNullIsEmpty ]
     , testGroup "asValidName"
@@ -162,33 +155,6 @@ testDirtyEmailNullIsEmpty = testNullIsEmpty asDirtyEmail
 propDirtyEmailWhitespaceIsEmpty :: [WhitespaceChar] -> Property
 propDirtyEmailWhitespaceIsEmpty = propWhitespaceIsEmpty asDirtyEmail
 
-propValidPasswordMustBeAtLeast8Chars :: Property
-propValidPasswordMustBeAtLeast8Chars =
-    mapSize (const 20) $ \xs ->
-    propIsMinSize asValidPassword 8 $ map pc xs
-
-testValidPasswordNullIsEmpty :: Assertion
-testValidPasswordNullIsEmpty = testNullIsEmpty asValidPassword
-
-propValidPasswordOnlyAlphaDigitPuncAndSymbol :: String -> Property
-propValidPasswordOnlyAlphaDigitPuncAndSymbol =
-   propJustAllowed asValidPassword [isAlpha, isDigit, isPunctuation, isSymbol]
-
-propValidPasswordMustContainAlphaAndDigit :: Property
-propValidPasswordMustContainAlphaAndDigit =
-    mapSize (const 15) $ \ps ->
-    let xs = map pc ps in
-    length xs > 0
-      && not (any isAlpha xs && any isDigit xs)
-    ==> isBad $ asValidPassword xs
-
-propValidPasswordGoodExamples :: [PasswordChar] -> Property
-propValidPasswordGoodExamples ps =
-    let xs = map pc ps in
-    length xs > 8
-      && length xs < 25
-      && (length (filter isAlpha xs) >= 2 && length (filter isDigit xs) >= 2)
-     ==> isGood $ asValidPassword xs
 
 newtype PasswordChar = PasswordChar { pc :: Char } deriving Show
 
@@ -430,11 +396,6 @@ propJustAllowed f ps xs =
       && any isInvalidChar xs
     ==> isBad $ f xs
     where isInvalidChar c = all (\p -> not $ p c) ps
-
-propIsMinSize :: (String -> Result String) -> Int -> String -> Property
-propIsMinSize f n xs =
-    length xs < n && length xs > 0
-    ==> isBad $ f xs
 
 propStripWhitespace :: (String -> Result String) -> [WhitespaceChar] -> String -> Property
 propStripWhitespace f ws xs =

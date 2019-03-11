@@ -4,6 +4,7 @@ var FlashMessage = require("../../../js/flashmessages.js");
 var PasswordValidation = require(
   "../../../js/validation.js"
 ).PasswordValidation;
+var PasswordService = require("../../common/password_service");
 var Modal = require("../../common/modal");
 var Submit = require("../../../js/submits.js");
 
@@ -55,8 +56,7 @@ var ChangePasswordModal = React.createClass({
     var validation = new PasswordValidation({
       callback: onValidationFail,
       message: localization.validation.passwordLessThanMinLength,
-      message_max: localization.validation.passwordExceedsMaxLength,
-      message_digits: localization.validation.passwordNeedsLetterAndDigit
+      message_max: localization.validation.passwordExceedsMaxLength
     });
 
     if (!validation.validateData(this.state.newPassword)) {
@@ -67,7 +67,16 @@ var ChangePasswordModal = React.createClass({
         content: localization.validation.passwordsDontMatch
       });
     } else {
-      this.savePassword();
+      PasswordService.checkPassword(
+        this.state.newPassword,
+        this.savePassword,
+        function () {
+          new FlashMessage.FlashMessage({
+            type: "error",
+            content: localization.validation.passwordCantBeUsed
+        });
+        }
+      );
     }
   },
   onOldPasswordChange: function (event) {
