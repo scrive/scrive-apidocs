@@ -172,6 +172,7 @@ kontraMigrations = [
   , addCanBeForwardedToSignatories
   , featureFlagsAddForwarding
   , createApiCallbackResults
+  , addIndexForEfficientJoinToSignatoryLinkMagicHashes
   , addShowArrow
   , createTemporaryLoginTokensTable
   , addTemporaryLoginTokensPurgeJob
@@ -179,7 +180,6 @@ kontraMigrations = [
   , featureFlagsRemoveDefaultValuesFromColumns
   , addNotificationDeliveryMethodToSignatories
   , featureFlagsAddNotificationDeliveryMethod
-  , addIndexForEfficientJoinToSignatoryLinkMagicHashes
   , addMonthlyInvoiceJob
   , createTableFolders
   , addFolderTargetColumn
