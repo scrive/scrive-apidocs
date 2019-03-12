@@ -25,6 +25,7 @@ module MinutesTime (
   , beginingOfMonthUTC
   , beginningOfDay
   , nextDayMidnight
+  , nextDayAt
   , nextDayAtHour
   , todayAtHour
   , beginningOfNextMonthAtHour
@@ -146,11 +147,14 @@ beginningOfDay t = t { utctDayTime = 0 }
 nextDayMidnight :: UTCTime -> UTCTime
 nextDayMidnight = nextDayAtHour 0
 
-nextDayAtHour :: Int -> UTCTime -> UTCTime
-nextDayAtHour hours time = UTCTime {
+nextDayAt :: Int -> Int -> UTCTime -> UTCTime
+nextDayAt hours minutes time = UTCTime {
   utctDay = 1 `addDays` utctDay time
-, utctDayTime = secondsToDiffTime . toInteger $ 3600 * hours
+, utctDayTime = secondsToDiffTime . toInteger $ (3600 * hours) + (60 * minutes)
 }
+
+nextDayAtHour :: Int -> UTCTime -> UTCTime
+nextDayAtHour hours = nextDayAt hours 0
 
 todayAtHour :: Int -> UTCTime -> UTCTime
 todayAtHour hours time = time {

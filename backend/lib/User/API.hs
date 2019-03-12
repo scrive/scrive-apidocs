@@ -42,7 +42,6 @@ import Doc.API.V2.Guards (guardThatUserExists)
 import Folder.Model
 import Happstack.Fields
 import InputValidation
-import IPAddress
 import Kontra
 import KontraLink
 import Log.Identifier
@@ -353,10 +352,10 @@ apiCallUpdateUserProfile = api $ do
             , _ugaCity          = city
             , _ugaCountry       = country
             }
-          ug'' = case get ugAddress ug of
+          ug'' = case get ugAddress ug' of
             Just _ ->
               -- change address directly if it wasn't inherited
-              set ugAddress (Just new_address) ug
+              set ugAddress (Just new_address) ug'
             Nothing -> case new_address == ugwpAddress ugwp of
               True -> ug'  -- no change => we keep inheriting the address
               False -> set ugAddress (Just new_address) ug'  -- stop inheriting
@@ -610,7 +609,7 @@ apiCallDeleteUser = V2.api $ do
     Nothing -> return ()
 
   void $ dbUpdate $ DeleteUser (userid user)
-  void $ dbUpdate $ LogHistoryAccountDeleted (userid user) noIP (get ctxtime ctx)
+  void $ dbUpdate $ LogHistoryAccountDeleted (userid user) (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
 
   return $ V2.Ok ()
 

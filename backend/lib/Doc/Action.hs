@@ -223,6 +223,7 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
     whenM (isDocumentError <$> theDocument) $ do
       currentTime >>= dbUpdate . FixClosedErroredDocument . systemActor
 
+    logInfo_ "Running sealDocument"
     sealDocument $ get mctxDomainUrl mcxt
 
     -- Here there is a race condition: when we commit, other callers

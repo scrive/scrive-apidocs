@@ -668,6 +668,7 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
     eotData <- liftBase $ generateEvidenceOfTimeData 100 (tmppath ++ "/eot_samples.txt") (tmppath ++ "/eot_graph.svg") (map HC.offset offsets)
     spec <- theDocument >>= \d -> do
       sealSpecFromDocument checkboxMapping radiobuttonMapping hostpart d elog offsets eotData content tmppath tmpin tmpout
+    logInfo_ "Seal specification generated"
     runLambdaSealing tmppath filename spec
 
 -- | Generate file that has all placements printed on it. It will look same as final version except for footers and verification page.
@@ -715,9 +716,11 @@ runLambdaSealing :: ( CryptoRNG m, DocumentMonad m, MonadBaseControl IO m
 runLambdaSealing _tmppath fn spec = do
   now <- currentTime
   lambdaconf <- getPdfToolsLambdaConf
+  logInfo_ "Sealing document with lambda started"
   (msealedcontent :: Maybe BS.ByteString) <- callPdfToolsSealing lambdaconf spec
   case msealedcontent of
     Just sealedcontent -> do
+      logInfo_ "Sealing document with lambda finished"
       sealedfileid <- saveNewFile fn sealedcontent
       dbUpdate $ AppendSealedFile sealedfileid Missing (systemActor now)
     _ -> do

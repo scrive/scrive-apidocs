@@ -11,6 +11,7 @@ import Control.Monad.Base (MonadBase)
 import Control.Monad.Catch
 import Control.Monad.Reader (MonadIO, MonadTrans)
 import Control.Monad.Trans.Control (ComposeSt, MonadBaseControl(..), MonadTransControl(..), defaultLiftBaseWith, defaultLiftWith, defaultRestoreM, defaultRestoreT)
+import Data.Int
 import Log
 
 import DB
@@ -68,7 +69,13 @@ withDocumentM dm action = do
     action
 
 -- | Lock a document so that other transactions that attempt to lock or update the document will wait until the current transaction is done.
-lockDocument :: DocumentMonad m => m ()
+lockDocument :: (MonadLog m, DocumentMonad m) => m ()
 lockDocument = do
   did <- theDocumentID
+  runQuery_ ("SELECT pg_backend_pid()" :: SQL)
+  pids :: [Int32] <- fetchMany runIdentity
+  let pidstr = case pids of
+                 [] -> "UKNOWN"
+                 (pid:_) -> show pid
+  logInfo "Lock document" $ object ["pid" .= pidstr]
   runQuery_ $ "SELECT TRUE FROM documents WHERE id =" <?> did <+> "FOR UPDATE"

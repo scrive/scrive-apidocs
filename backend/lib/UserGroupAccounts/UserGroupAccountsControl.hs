@@ -241,16 +241,18 @@ handleChangeRoleOfUserGroupAccount = withCompanyAdmin $ \(_user, ug) -> do
     if they haven't yet accepted.
 -}
 handleRemoveUserGroupAccount :: Kontrakcja m => m JSValue
-handleRemoveUserGroupAccount = withCompanyAdmin $ \(_user, ug) -> do
+handleRemoveUserGroupAccount = withCompanyAdmin $ \(user, ug) -> do
   removeuid <- getCriticalField asValidUserID "removeid"
   removeuser <- guardJustM $ dbQuery $ GetUserByID $ removeuid
   isdeletable <- isUserDeletable removeuser
+  ctx <- getContext
   case (get ugID ug == usergroupid removeuser,isdeletable) of
     (True,True) -> do
             -- We remove user, so we also want to drop all invites - they should be invalid at this point anyway.
              void $ dbUpdate $ RemoveUserUserGroupInvites (userid removeuser)
              void $ dbUpdate $ DeleteUserCallbackScheme $ userid removeuser
              void $ dbUpdate $ DeleteUser (userid removeuser)
+             void $ dbUpdate $ LogHistoryAccountDeleted (userid removeuser) (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
              runJSONGenT $ value "removed" True
     (True,False) -> do
              runJSONGenT $ value "removed" False

@@ -33,6 +33,7 @@ import Doc.SMSPin.Model
 import EID.Signature.Model
 import File.Model
 import File.Storage
+import InputValidation (Result(..), asValidPhoneForSMS)
 import Kontra
 import MagicHash (MagicHash)
 import User.Model
@@ -157,8 +158,13 @@ checkSignatoryPinToSign slid (SignatoryFieldsValuesForSigning fields) pin = do
   let mobileEditableBySignatory = Just True == join (fieldEditableBySignatory <$> getFieldByIdentity MobileFI (signatoryfields sl))
   let slidMobile = getMobile sl
   mobile <- case (not (null slidMobile) && not mobileEditableBySignatory , lookup MobileFI fields) of
-    (True, _) -> return slidMobile
-    (False, Just (StringFTV v)) -> return v
+    (True, _) -> case asValidPhoneForSMS slidMobile of
+                  Good v -> return v
+                  _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"
+    (False, Just (StringFTV v)) -> case asValidPhoneForSMS v of
+                                    Good x -> return x
+                                    _ -> apiError $ requestParameterInvalid "fields"
+                                           "Does contain invalid mobile number field"
     (False, _) -> apiError $ requestParameterInvalid "fields"
                     "Does not contain a mobile number field, author has not set one for the signatory"
   pin' <- dbQuery $ GetSignatoryPin SMSPinToSign slid mobile
