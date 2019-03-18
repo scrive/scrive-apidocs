@@ -101,8 +101,8 @@ exceptions s = [s]
 
 main :: IO ()
 main = do
-  [include, includeAlternative] <- getArgs
-  withFile "urls.txt" WriteMode $ \h -> do
+  [fileName, include, includeAlternative] <- getArgs
+  withFile fileName WriteMode $ \h -> do
     let urls = getUrls $ staticRoutes True
         urls' = ["/api/", "/adminonly"] ++ urls
         -- sort DESC to have "/a/b" coming before "/a"
