@@ -287,10 +287,8 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
         signDocument slid mh fields acceptedAttachments
           notUploadedSignatoryAttachments Nothing mpin screenshots
           consentResponses
-        updatedDoc <- dbQuery $
-          GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
         updatedSigLink <- guardGetSignatoryFromIdForDocument slid
-        postDocumentPendingChange updatedDoc updatedSigLink
+        postDocumentPendingChange olddoc updatedSigLink
         handleAfterSigning slid
         -- Return
        Just provider -> do
