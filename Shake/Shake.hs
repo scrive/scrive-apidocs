@@ -594,8 +594,9 @@ distributionRules newBuild opt = do
           then nginxconfpath
           else nginxconfpathalternative
     need [routingListPath]
-    command_ [] routingListPath [nginxconfpath, nginxconfpathalternative']
-    removeFilesAfter "." ["urls.txt"]
+    command_ [] routingListPath ["urls.txt", nginxconfpath, nginxconfpath]
+    command_ [] routingListPath ["urls_list.txt", nginxconfpath, nginxconfpathalternative']
+    removeFilesAfter "." ["urls.txt", "urls_list.txt"]
 
   let binaryNames = map mkExeName $
                     [ "kontrakcja-server"
@@ -622,6 +623,7 @@ distributionRules newBuild opt = do
                     , "files"
                     , "texts"
                     , "urls.txt"
+                    , "urls_list.txt"
                     , "build-scripts/deployDevNginxRules.sh"
                     , "build-scripts/deployFeaturesTestbedNginxRules.sh"
                     , "certs"
