@@ -944,7 +944,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         });
     },
     setAuthenticationToViewArchived: function(a) {
-        var canMix = this.authenticationMethodsCanMix(a, this.authenticationToSign(), this.authenticationToViewArchived());
+        var canMix = this.authenticationMethodsCanMix(this.authenticationToView(), this.authenticationToSign(), a);
         this.set({
           "authentication_method_to_view" : canMix
             ? this.authenticationToView()
@@ -959,7 +959,7 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         return this.get('authentication_method_to_sign');
     },
     setAuthenticationToSign: function(a) {
-        var canMix = this.authenticationMethodsCanMix(a, this.authenticationToSign(), this.authenticationToViewArchived());
+        var canMix = this.authenticationMethodsCanMix(this.authenticationToView(), a, this.authenticationToViewArchived());
         this.set({
           "authentication_method_to_view" : canMix
             ? this.authenticationToView()
