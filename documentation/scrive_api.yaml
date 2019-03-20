@@ -70,6 +70,7 @@ info:
     | 2018-12-17  | Add `fi_tupas` (Finnish EID) to `authentication_method_to_view`/`authentication_method_to_view_archived` |
     | 2019-01-03  | Add `usagestats` endpoints
     | 2019-02-18  | Add monitoring endpoint which was already implemented but missing from this document |
+    | 2019-02-25  | Add `gettokenforpersonalcredentials` endpoint and update `getpersonaltoken` to accept `login_token`s
 
     ## Environments & IP Addresses
 
@@ -304,11 +305,16 @@ info:
     The Scrive eSign system can trigger API callbacks when some significant
     property of a Document changes, as for example, when a signing party signs
     the Document.
-    You can also trigger callbacks manually using the `callback` API call.
 
-    For a callback to be triggered, either the `api_callback_url` must be set
-    on the Document, or the Author should have a User callback scheme defined.
-    You will need to contact us to set up a User callback scheme.
+    For callbacks to be triggered, you need to set the `api_callback_url` value
+    on the Document.
+    You can also trigger callbacks manually using the `callback` API call (this
+    call has no effect if the `api_callback_url` is not set).
+
+    For certain use cases it is possible to instead have a "User callback
+    scheme" defined.
+    You will need to contact us to set this up, and setting callbacks on
+    Documents is the preferred solution.
 
     The Scrive eSign system will perform an `HTTP POST` request, with the
     following `POST` parameters:
@@ -369,9 +375,18 @@ info:
     ```
 
     > Replacing `{server_address}`, `{user_email}` and `{user_password}` to
-    > match your needs.
+    > the appropriate values.
     >
-    > This will return the personal access tokens as a JSON:
+    > Or, if you are using the `login_token` method:
+
+    ```bash
+    curl -X POST 'https://{server_address}/api/v2/getpersonaltoken' \
+      --data-urlencode 'login_token={login_token}'
+    ```
+
+    > Replacing `{server_address}`, `{login_token}` to the appropriate values.
+    >
+    > These two methods will both return the personal access tokens as a JSON:
 
     ```json
     {
@@ -410,6 +425,12 @@ info:
     used instead of any other OAuth privileges, they are intended for special
     cases where OAuth is not a viable option, or for getting started quickly in
     a sandbox environment.
+
+    There are two ways to use this endpoint. One is to provide the username and
+    password of the user you are creating the personal access credentials for.
+    The other is to provide a `login_token`. These are temporary tokens created
+    by the `gettokenforpersonalcredentials` endpoint. These are demonstrated in
+    the sidebar.
 
     <aside class="warning">
     Storing personal access tokens outside of the Scrive eSign system is
@@ -932,6 +953,9 @@ paths:
   /loginandgetsession:
     $ref: ./api/user/loginandgetsession.yaml
 
+  /gettokenforpersonalcredentials/{user_id}:
+    $ref: ./api/user/gettokenforpersonalcredentials.yaml
+
   /2fa/setup:
     $ref: ./api/user/2fa-setup.yaml
 
@@ -1001,6 +1025,8 @@ definitions:
     $ref: ./definitions/OAuthAuthorization.yaml
   UserStats:
     $ref: ./definitions/UserStats.yaml
+  LoginToken:
+    $ref: ./definitions/LoginToken.yaml
 
 parameters:
   $ref: ./extras/parameters.yaml
