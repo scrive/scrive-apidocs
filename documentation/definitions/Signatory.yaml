@@ -137,6 +137,7 @@ properties:
     default: standard
     enum:
       - standard
+      - sms_pin
       - se_bankid
       - no_bankid
       - dk_nemid
@@ -146,6 +147,7 @@ properties:
     default: standard
     enum:
       - standard
+      - sms_pin
       - se_bankid
       - no_bankid
       - dk_nemid
