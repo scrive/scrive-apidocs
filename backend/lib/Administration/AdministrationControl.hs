@@ -17,10 +17,8 @@ module Administration.AdministrationControl(
           , handleTriggerMigrateDocuments -- for tests
           ) where
 
-import Control.Monad.Catch (SomeException, try)
 import Control.Monad.IO.Class (liftIO)
 import Data.Char
-import Data.Either (rights)
 import Data.Functor.Invariant
 import Data.Time (diffUTCTime)
 import Data.Unjson
@@ -827,23 +825,22 @@ handleCompanyGetStructure ugid = onlySalesOrAdmin $ do
 handleTriggerMigrateDocuments :: Kontrakcja m => Integer -> m Aeson.Value
 handleTriggerMigrateDocuments limit = onlyAdmin $ do
   logInfo_ "Starting migration batch for documents"
-  let limitWithUpperBound = minimum [limit, 10000]
+  let limitWithUpperBound = minimum [limit, 50000]
   startTime <- liftIO currentTime
-  docAndFdrs :: [(DocumentID, FolderID)] <- do
-    runQuery_ . sqlSelect "documents d" $ do
-      sqlJoinOn "users u" "u.id = d.author_user_id"
-      sqlResult "d.id"
-      sqlResult "u.home_folder_id"
-      sqlWhereIsNULL "d.folder_id"
-      sqlLimit limitWithUpperBound
-    fetchMany id
-
-  (results :: [Either SomeException ()]) <- do
-   forM docAndFdrs $ \(did, fdrid) ->
-     try $ (withDocumentID did (dbUpdate $ AddDocumentToFolder fdrid))
+  numberUpdated <- do
+    runQuery . sqlUpdate "documents" $ do
+      sqlWith "docs_to_update" . sqlSelect "documents d" $ do
+        sqlJoinOn "users u" "u.id = d.author_user_id"
+        sqlResult "d.id as doc_id"
+        sqlResult "u.home_folder_id as folder_id"
+        sqlWhereIsNULL "d.folder_id"
+        sqlLimit limitWithUpperBound
+      sqlSetCmd "folder_id" "docs_to_update.folder_id"
+      sqlFrom "docs_to_update"
+      sqlWhere "id = docs_to_update.doc_id"
   endTime <- liftIO currentTime
   return . object $
-    [ "documents_linked" .= (length . rights $ results)
+    [ "documents_linked" .= numberUpdated
     , "limit_used" .= limitWithUpperBound
     , "elapsed_time" .= (realToFrac (diffUTCTime endTime startTime) :: Double)]
 
