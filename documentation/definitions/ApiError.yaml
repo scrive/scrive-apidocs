@@ -31,7 +31,7 @@ properties:
       - 409
       - 500
       - 603
-example:
+example: |
   {
     "error_type": "request_parameters_parse_error",
     "error_message": "The parameter 'document' could not be parsed. Please refer to our API documentation. Error details: Invalid JSON",

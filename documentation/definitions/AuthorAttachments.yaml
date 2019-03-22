@@ -43,7 +43,7 @@ items:
             Whether to add the attachment to the sealed file after signing
         file_id:
           type: integer
-example:
+example: |
   [
     {
       "name": "Attachment using ID",

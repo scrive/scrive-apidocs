@@ -104,7 +104,7 @@ properties:
 required:
   - type
   - name
-example:
+example: |
   {
     "type": "checkbox",
     "name": "Checkbox Name",

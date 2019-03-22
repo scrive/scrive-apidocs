@@ -6,7 +6,7 @@ description: |
 
   This can be used to show the progress of a document to the user.
 type: object
-example:
+example: |
   { "events": [
       {
         "status": "initiated",

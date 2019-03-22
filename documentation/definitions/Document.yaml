@@ -213,7 +213,7 @@ properties:
           - signatory
       signatory_id:
         type: string
-example:
+example: |
   {
     "id": "8222115557375075439",
     "title": "Contract for Magnus",

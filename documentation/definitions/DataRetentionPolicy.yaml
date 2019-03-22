@@ -4,11 +4,13 @@ title: DataRetentionPolicy
 type: object
 description: |
  An object with data retention policy properties.
-example: {
-  "idle_doc_timeout_canceled":45,
-  "immediate_trash":true,
-  "idle_doc_timeout_error":67,
-  "idle_doc_timeout_preparation":32}
+example: |
+  {
+    "idle_doc_timeout_canceled":45,
+    "immediate_trash":true,
+    "idle_doc_timeout_error":67,
+    "idle_doc_timeout_preparation":32
+  }
 properties:
   immediate_trash:
     type: boolean

@@ -272,7 +272,7 @@ properties:
     format: uri
   consent_module:
     $ref: ./SignatoryConsentModule.yaml
-example:
+example: |
   {
     "id": "189256",
     "user_id": null,

@@ -118,7 +118,7 @@ required:
   - selected_value
   - placements
   - values
-example:
+example: |
   {
     "type": "radiogroup",
     "name": "Large Radio buttons",

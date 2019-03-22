@@ -36,7 +36,7 @@ properties:
     type: string
     format: date-time
     readOnly: true
-example:
+example: |
   {
     "id": "2",
     "title": "Terms and conditions",
