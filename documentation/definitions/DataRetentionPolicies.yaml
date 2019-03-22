@@ -16,7 +16,7 @@ example: |
       "idle_doc_timeout_preparation":32
     }
   }
-  properties:
+properties:
   company_data_retention_policy:
     type: object
     $ref: ../scrive_api.yaml#/definitions/DataRetentionPolicy
