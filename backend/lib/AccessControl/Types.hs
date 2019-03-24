@@ -56,12 +56,11 @@ accessRoleTarget (AccessRoleUserGroup _ _ target) = target
 accessRoleTarget (AccessRoleImplicitUser _ target) = target
 accessRoleTarget (AccessRoleImplicitUserGroup _ target) = target
 
-
 accessRoleSetTarget :: AccessRoleTarget -> AccessRole -> AccessRole
-accessRoleSetTarget new_target (AccessRoleUser arid userid _) =
-  AccessRoleUser arid userid new_target
-accessRoleSetTarget new_target (AccessRoleUserGroup arid ugid _) =
-  AccessRoleUserGroup arid ugid new_target
+accessRoleSetTarget new_target (AccessRoleUser roleid userid _) =
+  AccessRoleUser roleid userid new_target
+accessRoleSetTarget new_target (AccessRoleUserGroup roleid ugid _) =
+  AccessRoleUserGroup roleid ugid new_target
 accessRoleSetTarget new_target (AccessRoleImplicitUser userid _) =
   AccessRoleImplicitUser userid new_target
 accessRoleSetTarget new_target (AccessRoleImplicitUserGroup ugid _) =

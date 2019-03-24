@@ -22,7 +22,7 @@ unjsonAccessRole = unjsonInvmapR
 unjsonAccessRoleJSON :: UnjsonDef AccessRoleJSON
 unjsonAccessRoleJSON = objectOf $ pure AccessRoleJSON
   <*> fieldOpt "id" roleID "AccessRoleJSON role ID"
-  <*> field "is_generated" isGenerated "AccessRoleJSON is generated role?"
+  <*> fieldOpt "is_generated" isGenerated "AccessRoleJSON is generated role?"
   <*> field "role_type" roleType "AccessRoleJSON role type"
   <*> fieldBy "source" source "AccessRoleJSON source" unjsonAccessRoleSourceJSON
   <*> fieldBy "target" target "AccessRoleJSON target" unjsonAccessRoleTargetJSON
@@ -53,7 +53,7 @@ unjsonAccessRoleTargetJSON = disjointUnionOf "type" [
 
 data AccessRoleJSON = AccessRoleJSON {
     roleID :: Maybe AccessRoleID
-  , isGenerated :: Bool
+  , isGenerated :: Maybe Bool
   , roleType :: AccessRoleType
   , source :: AccessRoleSourceJSON
   , target :: AccessRoleTargetJSON
@@ -71,28 +71,28 @@ data AccessRoleTargetJSON
 accessRoleToJSON :: AccessRole -> AccessRoleJSON
 accessRoleToJSON (AccessRoleUser rid uid target) = AccessRoleJSON {
     roleID = Just rid
-  , isGenerated = False
+  , isGenerated = Just False
   , roleType = toAccessRoleType target
   , source = AccessRoleUserSourceJSON uid
   , target = accessRoleTargetToJSON target
   }
 accessRoleToJSON (AccessRoleUserGroup rid ugid target) = AccessRoleJSON {
     roleID = Just rid
-  , isGenerated = False
+  , isGenerated = Just False
   , roleType = toAccessRoleType target
   , source = AccessRoleUserGroupSourceJSON ugid
   , target = accessRoleTargetToJSON target
   }
 accessRoleToJSON (AccessRoleImplicitUser uid target) = AccessRoleJSON {
     roleID = Nothing
-  , isGenerated = True
+  , isGenerated = Just True
   , roleType = toAccessRoleType target
   , source = AccessRoleUserSourceJSON uid
   , target = accessRoleTargetToJSON target
   }
 accessRoleToJSON (AccessRoleImplicitUserGroup ugid target) = AccessRoleJSON {
     roleID = Nothing
-  , isGenerated = True
+  , isGenerated = Just True
   , roleType = toAccessRoleType target
   , source = AccessRoleUserGroupSourceJSON ugid
   , target = accessRoleTargetToJSON target
@@ -106,7 +106,7 @@ accessRoleTargetToJSON (UserGroupAdminAR ugid) = UserGroupTargetJSON ugid
 accessRoleTargetToJSON (DocumentAdminAR fid) = FolderTargetJSON fid
 
 jsonToAccessRole :: AccessRoleJSON -> Maybe AccessRole
-jsonToAccessRole roleJson = return . constructor =<< roleTarget
+jsonToAccessRole roleJson = constructor <$> roleTarget
   where
     constructor = case (roleID roleJson, source roleJson) of
       (Just rid, AccessRoleUserSourceJSON uid) -> AccessRoleUser rid uid
