@@ -73,7 +73,9 @@ Library
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
-  Exposed-modules: AccessControl.Migrations
+  Exposed-modules: AccessControl.API
+                 , AccessControl.JSON
+                 , AccessControl.Migrations
                  , AccessControl.Model
                  , AccessControl.Tables
                  , AccessControl.Types
@@ -1231,7 +1233,8 @@ Test-suite kontrakcja-test
 
   Main-is:       TestMain.hs
   GHC-options: -main-is TestMain
-  Other-Modules: AccessControl.Migrations
+  Other-Modules: AccessControl.APITest
+                 AccessControl.Migrations
                  AccessControl.Tables
                  AccountInfoTest
                  AdministrationTest

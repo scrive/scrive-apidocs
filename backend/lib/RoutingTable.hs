@@ -8,6 +8,7 @@ module RoutingTable (
 import Happstack.Server hiding (dir, host, https, path, simpleHTTP)
 import Happstack.StaticRouting (Route, choice, dir, remainingPath)
 
+import AccessControl.API
 import API.V2 (noAPIV2CallFoundHandler)
 import AppView
 import Attachment.API
@@ -153,6 +154,7 @@ staticRoutes production = choice
 
      , allLangDirs $ dir "unsupported_browser" $ hGet $ toK0 $ unsupportedBrowserPage
      , allLangDirs $ dir "enable-cookies" $ dir "enable-cookies.html" $ hGetAllowHttp $ toK0 $ enableCookiesPage
+     , accessControlAPI
      , documentAPI
      , monitorAPI
      , partnerAPI

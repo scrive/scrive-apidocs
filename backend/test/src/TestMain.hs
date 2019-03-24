@@ -16,6 +16,7 @@ import qualified Data.ByteString as BS
 import qualified Data.Text.IO as T
 import qualified Data.Traversable as T
 
+import AccessControl.APITest
 import AccountInfoTest
 import AdministrationTest
 import AppDBMigrations
@@ -89,7 +90,8 @@ import qualified HostClock.Model as HC
 
 allTests :: [TestEnvSt -> Test]
 allTests = [
-    accountInfoTests
+    accessControlApiTests
+  , accountInfoTests
   , administrationTests
   , apiV1CallsTests
   , apiV1ForwardsCompatibilityTests
