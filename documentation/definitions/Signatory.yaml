@@ -17,7 +17,7 @@ properties:
     description: |
       If this party has an account on the Scrive eSign system, it will be set
       here.
-    type: integer
+    type: ['string', 'null']
     format: int64
     readOnly: true
   is_author:
@@ -77,23 +77,23 @@ properties:
     type: integer
     default: 1
   sign_time:
-    type: string
+    type: ['string', 'null']
     format: date-time
     readOnly: true
   seen_time:
-    type: string
+    type: ['string', 'null']
     format: date-time
     readOnly: true
   read_invitation_time:
-    type: string
+    type: ['string', 'null']
     format: date-time
     readOnly: true
   rejected_time:
-    type: string
+    type: ['string', 'null']
     format: date-time
     readOnly: true
   rejection_reason:
-    type: string
+    type: ['string', 'null']
     readOnly: true
     description: |
       Will only have a value if the signatory rejected the document, and will
@@ -103,19 +103,19 @@ properties:
   sign_success_redirect_url:
     description: |
       The URL to redirect this party after they have signed the document.
-    type: string
+    type: ['string', 'null']
     format: uri
   reject_redirect_url:
     description: |
       The URL to redirect this party if they reject the document.
-    type: string
+    type: ['string', 'null']
     format: uri
   email_delivery_status:
     $ref: ./SignatoryDeliveryStatus.yaml
   mobile_delivery_status:
     $ref: ./SignatoryDeliveryStatus.yaml
   csv:
-    type: array
+    type: ['array', 'null']
     items:
       type: array
       items:
@@ -268,10 +268,12 @@ properties:
 
       This will only be available after the signing process has been started,
       and will only be visible when accessing the document as the author.
-    type: string
+    type: ['string', 'null']
     format: uri
   consent_module:
-    $ref: ./SignatoryConsentModule.yaml
+    oneOf:
+      - type: 'null'
+      - $ref: ./SignatoryConsentModule.yaml
 example:
   {
     "id": "189256",

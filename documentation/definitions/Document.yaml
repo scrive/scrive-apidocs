@@ -39,7 +39,9 @@ properties:
       Can be `null` while a document is in preparation, but needs a file before
       the signing process can start.
   sealed_file:
-    $ref: ./File.yaml
+    oneOf:
+      - type: 'null'
+      - $ref: ./File.yaml
     description: |
       **The cryptographically sealed file.**
 
@@ -82,11 +84,11 @@ properties:
   timeout_time:
     description: |
       Time after which the document will timeout if it has not been signed.
-    type: string
+    type: ['string', 'null']
     format: date-time
     readOnly: true
   auto_remind_time:
-    type: string
+    type: ['string', 'null']
     format: date-time
     readOnly: true
   status:
@@ -95,7 +97,7 @@ properties:
     type: integer
     default: 90
   days_to_remind:
-    type: integer
+    type: ['integer', 'null']
   display_options:
     type: object
     properties:
@@ -152,7 +154,7 @@ properties:
       The URL to perform an API callback request.
 
       Please see [Callbacks](#callbacks) for details.
-    type: string
+    type: ['string', 'null']
     format: uri
   object_version:
     description: |
