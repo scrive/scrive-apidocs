@@ -28,7 +28,7 @@ properties:
           desription: |
             Text for the negative answer.
         response:
-          type: bool
+          type: boolean
           description: |
             Will be present when the party has answered the question. `true`
             when the signatory selected the positive response and `false`
