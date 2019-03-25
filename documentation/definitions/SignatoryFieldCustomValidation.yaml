@@ -2,7 +2,6 @@
 $schema: "http://json-schema.org/draft-04/schema#"
 title: SignatoryFieldCustomValidation
 type: object
-default: null
 description: |
   Optional. Describes how to validate the input to this field using a
   custom regular expression.
