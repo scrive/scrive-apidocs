@@ -16,7 +16,7 @@ items:
         - status
       statuses:
         items:
-          $ref: ../scrive_api.yaml#/definitions/DocumentStatus
+          $ref: ./DocumentStatus.yaml
         type: array
   - title: Filter by mtime
     type: object
