@@ -242,7 +242,7 @@ Library
                  , Folder.Types
                  , Folder.Internal
                  , Folder.Labels
-                 , Folder.Model 
+                 , Folder.Model
                  , Folder.Model.Query
                  , Folder.Model.Update
                  , Folder.Tables
@@ -440,6 +440,8 @@ Library
                  , User.UserView
                  , User.Utils
                  , UserGroup
+                 , UserGroup.API
+                 , UserGroup.JSON
                  , UserGroup.Types
                  , UserGroup.Types.PaymentPlan
                  , UserGroup.Types.Subscription
@@ -520,6 +522,7 @@ Library
                , ekg-statsd
                , exceptions
                , explicit-exception
+               , extra
                , fclabels
                , fields-json
                , filepath
@@ -1117,6 +1120,7 @@ Executable messenger-server
                  SMS.Tables
                  Sender
                  TeliaCallGuide
+                 Utils.Enum
                  Utils.IO
                  Utils.List
                  Utils.Network
@@ -1309,6 +1313,7 @@ Test-suite kontrakcja-test
                  File.Tables
                  FileTest
                  FlashMessages
+                 UserGroup.APITest
                  UserGroup.UserGroupTest
                  UserGroup.Migrations
                  UserGroup.Tables

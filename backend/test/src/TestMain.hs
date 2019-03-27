@@ -79,6 +79,7 @@ import TestEnvSt.Internal
 import TestKontra
 import ThirdPartyStats
 import User.APITest
+import UserGroup.APITest
 import UserGroup.UserGroupTest
 import UserGroupAccountsTest
 import UserHistoryTest
@@ -119,6 +120,7 @@ allTests = [
   , flashMessagesTests
   , folderTests
   , userGroupTests
+  , userGroupApiTests
   , htmlTests
   , inputValidationTests
   , jsonUtilTests

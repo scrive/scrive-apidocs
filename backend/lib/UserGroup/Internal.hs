@@ -2,6 +2,7 @@ module UserGroup.Internal (
     InvoicingType(..)
   , UserGroup(..)
   , defaultUserGroup
+  , defaultChildUserGroup
   , ugInvoicingType
   , ugPaymentPlan
   , ugwpOnlyParents
@@ -19,7 +20,9 @@ module UserGroup.Internal (
   , unsafeUserGroupID
   , fromUserGroupID
   , UserGroupSettings(..)
+  , defaultUserGroupSettings
   , UserGroupAddress(..)
+  , defaultUserGroupAddress
   , UserGroupUI(..)
   , defaultUserGroupUI
   , UserGroupInvoicing(..)
@@ -30,7 +33,6 @@ module UserGroup.Internal (
   ) where
 
 import Data.Aeson (FromJSON, ToJSON)
-import Data.Binary
 import Data.Int
 import Data.Text (Text)
 import Data.Unjson
@@ -86,6 +88,31 @@ data UserGroupWithChildren = UserGroupWithChildren
   , _ugwcChildren :: [UserGroupWithChildren]
   }
 
+defaultUserGroup :: UserGroup
+defaultUserGroup = ugFromUGRoot $ UserGroupRoot {
+    _ugrID = emptyUserGroupID
+  , _ugrName = ""
+  , _ugrHomeFolderID = Nothing
+  , _ugrSettings = defaultUserGroupSettings
+  , _ugrPaymentPlan = FreePlan
+  , _ugrAddress = defaultUserGroupAddress
+  , _ugrUI = defaultUserGroupUI
+  , _ugrFeatures = defaultFeatures FreePlan
+  }
+
+defaultChildUserGroup :: UserGroup
+defaultChildUserGroup = UserGroup {
+    _ugID = emptyUserGroupID
+  , _ugParentGroupID = Nothing
+  , _ugName = ""
+  , _ugHomeFolderID = Nothing
+  , _ugSettings = Nothing
+  , _ugInvoicing = None
+  , _ugAddress = Nothing
+  , _ugUI = defaultUserGroupUI
+  , _ugFeatures = Nothing
+  }
+
 data UserGroupInvoicing =
     None
   | BillItem (Maybe PaymentPlan)
@@ -109,6 +136,18 @@ data UserGroupSettings = UserGroupSettings {
   , _ugsLegalText           :: Bool
   } deriving (Show, Eq)
 
+defaultUserGroupSettings :: UserGroupSettings
+defaultUserGroupSettings = UserGroupSettings {
+    _ugsIPAddressMaskList   = []
+  , _ugsDataRetentionPolicy = defaultDataRetentionPolicy
+  , _ugsCGIDisplayName      = Nothing
+  , _ugsCGIServiceID        = Nothing
+  , _ugsSMSProvider         = SMSDefault
+  , _ugsPadAppMode          = ListView
+  , _ugsPadEarchiveEnabled  = True
+  , _ugsLegalText           = False
+  }
+
 data UserGroupUI = UserGroupUI {
     _uguiMailTheme     :: !(Maybe ThemeID)
   , _uguiSignviewTheme :: !(Maybe ThemeID)
@@ -118,6 +157,16 @@ data UserGroupUI = UserGroupUI {
   , _uguiFavicon       :: !(Maybe BS.ByteString)
 } deriving (Eq, Ord, Show)
 
+defaultUserGroupUI :: UserGroupUI
+defaultUserGroupUI = UserGroupUI {
+    _uguiMailTheme     = Nothing
+  , _uguiSignviewTheme = Nothing
+  , _uguiServiceTheme  = Nothing
+  , _uguiBrowserTitle  = Nothing
+  , _uguiSmsOriginator = Nothing
+  , _uguiFavicon       = Nothing
+  }
+
 data UserGroupAddress = UserGroupAddress {
     _ugaCompanyNumber :: Text
   , _ugaAddress       :: Text
@@ -125,6 +174,15 @@ data UserGroupAddress = UserGroupAddress {
   , _ugaCity          :: Text
   , _ugaCountry       :: Text
   } deriving (Eq, Ord, Show)
+
+defaultUserGroupAddress :: UserGroupAddress
+defaultUserGroupAddress = UserGroupAddress {
+    _ugaCompanyNumber = ""
+  , _ugaAddress       = ""
+  , _ugaZip           = ""
+  , _ugaCity          = ""
+  , _ugaCountry       = ""
+  }
 
 -- INVOICING
 
@@ -232,35 +290,6 @@ instance CompositeFromSQL UserGroup where
     , ..
     }
 
-defaultUserGroup :: UserGroup
-defaultUserGroup =
-  UserGroup {
-      _ugID = emptyUserGroupID
-    , _ugParentGroupID = Nothing
-    , _ugName = ""
-    , _ugHomeFolderID = Nothing
-    , _ugSettings = Just $ UserGroupSettings {
-        _ugsIPAddressMaskList   = []
-      , _ugsDataRetentionPolicy = defaultDataRetentionPolicy
-      , _ugsCGIDisplayName      = Nothing
-      , _ugsCGIServiceID        = Nothing
-      , _ugsSMSProvider         = SMSDefault
-      , _ugsPadAppMode          = ListView
-      , _ugsPadEarchiveEnabled  = True
-      , _ugsLegalText           = False
-      }
-    , _ugInvoicing = Invoice FreePlan
-    , _ugAddress = Just $ UserGroupAddress {
-        _ugaCompanyNumber = ""
-      , _ugaAddress       = ""
-      , _ugaZip           = ""
-      , _ugaCity          = ""
-      , _ugaCountry       = ""
-      }
-    , _ugUI = defaultUserGroupUI
-    , _ugFeatures = Just $ defaultFeatures FreePlan
-    }
-
 -- USER GROUP ROOT
 
 ugrFromUG :: UserGroup -> Maybe UserGroupRoot
@@ -365,8 +394,8 @@ instance Identifier UserGroupID where
   idDefaultLabel          = "user_group_id"
   idValue (UserGroupID k) = int64AsStringIdentifier k
 
-instance Binary UserGroupID where
-  put (UserGroupID ugid) = put ugid
+instance B.Binary UserGroupID where
+  put (UserGroupID ugid) = B.put ugid
   get = fmap UserGroupID B.get
 
 instance Unjson UserGroupID where
@@ -463,17 +492,6 @@ instance CompositeFromSQL UserGroupUI where
     -- We should interpret empty logos as no logos.
     faviconFromBinary (Just f) = if (BS.null f) then Nothing else Just f
     faviconFromBinary Nothing = Nothing
-
-defaultUserGroupUI :: UserGroupUI
-defaultUserGroupUI =
-  UserGroupUI {
-      _uguiMailTheme     = Nothing
-    , _uguiSignviewTheme = Nothing
-    , _uguiServiceTheme  = Nothing
-    , _uguiBrowserTitle  = Nothing
-    , _uguiSmsOriginator = Nothing
-    , _uguiFavicon       = Nothing
-    }
 
 -- ADDRESS
 

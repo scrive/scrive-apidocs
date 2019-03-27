@@ -8,6 +8,7 @@ module AccessControl.Types
   , AccessRole(..)
   , AccessRoleType(..)
   , NeedsPermissions(..)
+  , AccessPolicyItem
   , mkAccPolicy
   , mkAccPolicyItem)
   where

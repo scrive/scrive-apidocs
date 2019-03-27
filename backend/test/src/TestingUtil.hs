@@ -776,7 +776,13 @@ compareTime (UTCTime da ta) (UTCTime db tb) =
       || ((tb + picosecondsToDiffTime (10^9)) >= ta && (ta >= tb)))
 
 addNewUserGroup' :: Bool ->  TestEnv UserGroup
-addNewUserGroup' createFolder = do
+addNewUserGroup' createFolder = addNewUserGroupWithParent createFolder Nothing
+
+addNewUserGroup :: TestEnv UserGroup
+addNewUserGroup = addNewUserGroupWithParent False Nothing
+
+addNewUserGroupWithParent :: Bool -> Maybe UserGroupID -> TestEnv UserGroup
+addNewUserGroupWithParent createFolder mparent = do
     mUgFolderID <- case createFolder of
       False -> return Nothing
       True ->
@@ -790,7 +796,7 @@ addNewUserGroup' createFolder = do
     let ug = set ugName ugname
           . set ugAddress uga
           . set ugHomeFolderID mUgFolderID
-          $ defaultUserGroup
+          $ defaultUserGroup { _ugParentGroupID  = mparent }
         uga = Just $ UserGroupAddress
           { _ugaCompanyNumber = ugacompanynumber
           , _ugaAddress       = ugaaddress
@@ -799,10 +805,6 @@ addNewUserGroup' createFolder = do
           , _ugaCountry       = ugacountry
           }
     dbUpdate . UserGroupCreate $ ug
-
-
-addNewUserGroup :: TestEnv UserGroup
-addNewUserGroup = addNewUserGroup' True
 
 addNewUserGroupWithParents :: Bool -> TestEnv UserGroupWithParents
 addNewUserGroupWithParents createFolder = do

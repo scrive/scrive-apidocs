@@ -26,6 +26,7 @@ import Routing
 import Salesforce.Control as Salesforce
 import User.API
 import User.APILog.API
+import UserGroup.API
 import qualified Administration.AdministrationControl as Administration
 import qualified Archive.Control as ArchiveControl
 import qualified Branding.Control as Branding
@@ -156,6 +157,7 @@ staticRoutes production = choice
      , monitorAPI
      , partnerAPI
      , userAPI
+     , userGroupAPI
      , padApplicationAPI
      , oauth
      , apiLogAPI
