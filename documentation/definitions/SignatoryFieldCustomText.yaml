@@ -48,7 +48,9 @@ properties:
       template in the document UI design view, and use those values.
     $ref: ./SignatoryFieldStandardPlacements.yaml
   custom_validation:
-    $ref: ./SignatoryFieldCustomValidation.yaml
+    oneOf:
+      - type: 'null'
+      - $ref: ./SignatoryFieldCustomValidation.yaml
 required:
   - type
   - name
