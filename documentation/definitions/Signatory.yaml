@@ -142,6 +142,8 @@ properties:
       - no_bankid
       - dk_nemid
       - fi_tupas
+    description: |
+     This setting forces signatories to authenticate using the supplied identification method to view the document before signing.
   authentication_method_to_view_archived:
     type: string
     default: standard
@@ -152,6 +154,8 @@ properties:
       - no_bankid
       - dk_nemid
       - fi_tupas
+    description: |
+     This setting forces signatories to authenticate using the supplied identification method to view the document once it has been signed and resides in the e-archive.
   authentication_method_to_sign:
     type: string
     default: standard
