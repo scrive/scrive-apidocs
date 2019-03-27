@@ -3769,7 +3769,7 @@ party to a document.</p>
 
 </div>
 
-<h6><code>user_id</code> (integer, read only)</h6>
+<h6><code>user_id</code> (string,null, read only)</h6>
 
 <div class="json-schema">
 
@@ -5561,7 +5561,22 @@ depending on the field type.</p>
 
 <p></div></p>
 
-<h6><code>custom_validation</code> <code>(object)</code></h6>
+<h6><code>custom_validation</code> </h6>
+
+<div class="json-schema">
+
+The elements of this item must match *exactly one* of the following properties:
+
+<h6>(null)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6>SignatoryFieldCustomValidation</h6>
+
+<p><code>(object)</code></p>
 
 <div class="json-schema">
 
@@ -5569,9 +5584,7 @@ depending on the field type.</p>
 custom regular expression.</p>
 
 
-<p>Default: <code>null</code></p>
-
-<p>The <code>custom_validation</code> object has the following properties:</p>
+<p>This object has the following properties:</p>
 
 <h6><code>pattern</code> (string, required)</h6>
 
@@ -5607,6 +5620,8 @@ custom regular expression.</p>
 
 <p></div></p>
 
+<p></div></p>
+
 <h6><code>sign_order</code> (integer)</h6>
 
 <div class="json-schema">
@@ -5615,31 +5630,31 @@ custom regular expression.</p>
 
 </div>
 
-<h6><code>sign_time</code> (string, read only)</h6>
+<h6><code>sign_time</code> (string,null, read only)</h6>
 
 <div class="json-schema">
 
 </div>
 
-<h6><code>seen_time</code> (string, read only)</h6>
+<h6><code>seen_time</code> (string,null, read only)</h6>
 
 <div class="json-schema">
 
 </div>
 
-<h6><code>read_invitation_time</code> (string, read only)</h6>
+<h6><code>read_invitation_time</code> (string,null, read only)</h6>
 
 <div class="json-schema">
 
 </div>
 
-<h6><code>rejected_time</code> (string, read only)</h6>
+<h6><code>rejected_time</code> (string,null, read only)</h6>
 
 <div class="json-schema">
 
 </div>
 
-<h6><code>rejection_reason</code> (string, read only)</h6>
+<h6><code>rejection_reason</code> (string,null, read only)</h6>
 
 <div class="json-schema">
 
@@ -5651,7 +5666,7 @@ reject reason (<code>allow_reject_reason</code>).</p>
 
 </div>
 
-<h6><code>sign_success_redirect_url</code> (string)</h6>
+<h6><code>sign_success_redirect_url</code> (string,null)</h6>
 
 <div class="json-schema">
 
@@ -5660,7 +5675,7 @@ reject reason (<code>allow_reject_reason</code>).</p>
 
 </div>
 
-<h6><code>reject_redirect_url</code> (string)</h6>
+<h6><code>reject_redirect_url</code> (string,null)</h6>
 
 <div class="json-schema">
 
@@ -5709,29 +5724,11 @@ reject reason (<code>allow_reject_reason</code>).</p>
 
 </div>
 
-<h6><code>csv</code> (array)</h6>
-
-<div class="json-schema">
-
-<p>All array elements must be of type:</p>
-
-<h6>(array)</h6>
-
-
-<div class="json-schema">
-
-<p>All array elements must be of type:</p>
-
-<h6>(string)</h6>
-
+<h6><code>csv</code> (array,null)</h6>
 
 <div class="json-schema">
 
 </div>
-
-<p></div></p>
-
-<p></div></p>
 
 <h6><code>delivery_method</code> (string, enum)</h6>
 
@@ -6009,7 +6006,7 @@ when signing.</p>
 
 <p></div></p>
 
-<h6><code>api_delivery_url</code> (string)</h6>
+<h6><code>api_delivery_url</code> (string,null)</h6>
 
 <div class="json-schema">
 
@@ -6023,7 +6020,20 @@ and will only be visible when accessing the document as the author.</p>
 
 </div>
 
-<h6><code>consent_module</code> (object)</h6>
+<h6><code>consent_module</code> </h6>
+
+<div class="json-schema">
+
+The elements of this item must match *exactly one* of the following properties:
+
+<h6>(null)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6>(object)</h6>
 
 <div class="json-schema">
 
@@ -6032,7 +6042,7 @@ questions which must be answered by the signatory with either the positive
 or the negative option specified.</p>
 
 
-<p>The <code>consent_module</code> object has the following properties:</p>
+<p>This object has the following properties:</p>
 
 <h6><code>title</code> (string)</h6>
 
@@ -6079,7 +6089,7 @@ or the negative option specified.</p>
 
 </div>
 
-<h6><code>response</code> (bool)</h6>
+<h6><code>response</code> (boolean)</h6>
 
 <div class="json-schema">
 
@@ -6130,6 +6140,8 @@ when the signatory selected the negative response.</p>
 
 <p></div></p>
 
+<p></div></p>
+
 <h4><code>file</code> <code>(object)</code></h4>
 
 <div class="json-schema">
@@ -6155,7 +6167,7 @@ when the signatory selected the negative response.</p>
 
 <p></div></p>
 
-<h4><code>sealed_file</code> <code>(object)</code></h4>
+<h4><code>sealed_file</code> </h4>
 
 <div class="json-schema">
 
@@ -6166,20 +6178,41 @@ been signed by all parties, while the Scrive eSign system seals the
 document.</p>
 
 
-<p>The <code>sealed_file</code> object has the following properties:</p>
+The elements of this item must match *exactly one* of the following properties:
 
-<h5><code>id</code> (string, read only)</h5>
+<h5>(null)</h5>
+
+
+<div class="json-schema">
+
+</div>
+
+<h5>File</h5>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>A file that can be accessed using the
+<a href="#get-a-related-file">API call to download related files</a>.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h6><code>id</code> (string, read only)</h6>
 
 
 <div class="json-schema">
 
 </div>
 
-<h5><code>name</code> (string, read only)</h5>
+<h6><code>name</code> (string, read only)</h6>
 
 <div class="json-schema">
 
 </div>
+
+<p></div></p>
 
 <p></div></p>
 
@@ -6248,7 +6281,7 @@ attachments&quot; (<code>/{document_id}/setattachments</code>) API call.</p>
 
 </div>
 
-<h4><code>timeout_time</code> (string, read only)</h4>
+<h4><code>timeout_time</code> (string,null, read only)</h4>
 
 <div class="json-schema">
 
@@ -6257,7 +6290,7 @@ attachments&quot; (<code>/{document_id}/setattachments</code>) API call.</p>
 
 </div>
 
-<h4><code>auto_remind_time</code> (string, read only)</h4>
+<h4><code>auto_remind_time</code> (string,null, read only)</h4>
 
 <div class="json-schema">
 
@@ -6299,7 +6332,7 @@ be changed.</p>
 
 </div>
 
-<h4><code>days_to_remind</code> (integer)</h4>
+<h4><code>days_to_remind</code> (integer,null)</h4>
 
 <div class="json-schema">
 
@@ -6431,7 +6464,7 @@ been signed.</p>
 
 </div>
 
-<h4><code>api_callback_url</code> (string)</h4>
+<h4><code>api_callback_url</code> (string,null)</h4>
 
 <div class="json-schema">
 
@@ -6927,7 +6960,7 @@ party to a document.</p>
 
 </div>
 
-<h5><code>user_id</code> (integer, read only)</h5>
+<h5><code>user_id</code> (string,null, read only)</h5>
 
 <div class="json-schema">
 
@@ -8719,7 +8752,22 @@ depending on the field type.</p>
 
 <p></div></p>
 
-<h6><code>custom_validation</code> <code>(object)</code></h6>
+<h6><code>custom_validation</code> </h6>
+
+<div class="json-schema">
+
+The elements of this item must match *exactly one* of the following properties:
+
+<h6>(null)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6>SignatoryFieldCustomValidation</h6>
+
+<p><code>(object)</code></p>
 
 <div class="json-schema">
 
@@ -8727,9 +8775,7 @@ depending on the field type.</p>
 custom regular expression.</p>
 
 
-<p>Default: <code>null</code></p>
-
-<p>The <code>custom_validation</code> object has the following properties:</p>
+<p>This object has the following properties:</p>
 
 <h6><code>pattern</code> (string, required)</h6>
 
@@ -8765,6 +8811,8 @@ custom regular expression.</p>
 
 <p></div></p>
 
+<p></div></p>
+
 <h5><code>sign_order</code> (integer)</h5>
 
 <div class="json-schema">
@@ -8773,31 +8821,31 @@ custom regular expression.</p>
 
 </div>
 
-<h5><code>sign_time</code> (string, read only)</h5>
+<h5><code>sign_time</code> (string,null, read only)</h5>
 
 <div class="json-schema">
 
 </div>
 
-<h5><code>seen_time</code> (string, read only)</h5>
+<h5><code>seen_time</code> (string,null, read only)</h5>
 
 <div class="json-schema">
 
 </div>
 
-<h5><code>read_invitation_time</code> (string, read only)</h5>
+<h5><code>read_invitation_time</code> (string,null, read only)</h5>
 
 <div class="json-schema">
 
 </div>
 
-<h5><code>rejected_time</code> (string, read only)</h5>
+<h5><code>rejected_time</code> (string,null, read only)</h5>
 
 <div class="json-schema">
 
 </div>
 
-<h5><code>rejection_reason</code> (string, read only)</h5>
+<h5><code>rejection_reason</code> (string,null, read only)</h5>
 
 <div class="json-schema">
 
@@ -8809,7 +8857,7 @@ reject reason (<code>allow_reject_reason</code>).</p>
 
 </div>
 
-<h5><code>sign_success_redirect_url</code> (string)</h5>
+<h5><code>sign_success_redirect_url</code> (string,null)</h5>
 
 <div class="json-schema">
 
@@ -8818,7 +8866,7 @@ reject reason (<code>allow_reject_reason</code>).</p>
 
 </div>
 
-<h5><code>reject_redirect_url</code> (string)</h5>
+<h5><code>reject_redirect_url</code> (string,null)</h5>
 
 <div class="json-schema">
 
@@ -8867,29 +8915,11 @@ reject reason (<code>allow_reject_reason</code>).</p>
 
 </div>
 
-<h5><code>csv</code> (array)</h5>
-
-<div class="json-schema">
-
-<p>All array elements must be of type:</p>
-
-<h6>(array)</h6>
-
-
-<div class="json-schema">
-
-<p>All array elements must be of type:</p>
-
-<h6>(string)</h6>
-
+<h5><code>csv</code> (array,null)</h5>
 
 <div class="json-schema">
 
 </div>
-
-<p></div></p>
-
-<p></div></p>
 
 <h5><code>delivery_method</code> (string, enum)</h5>
 
@@ -9167,7 +9197,7 @@ when signing.</p>
 
 <p></div></p>
 
-<h5><code>api_delivery_url</code> (string)</h5>
+<h5><code>api_delivery_url</code> (string,null)</h5>
 
 <div class="json-schema">
 
@@ -9181,7 +9211,20 @@ and will only be visible when accessing the document as the author.</p>
 
 </div>
 
-<h5><code>consent_module</code> (object)</h5>
+<h5><code>consent_module</code> </h5>
+
+<div class="json-schema">
+
+The elements of this item must match *exactly one* of the following properties:
+
+<h6>(null)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6>(object)</h6>
 
 <div class="json-schema">
 
@@ -9190,7 +9233,7 @@ questions which must be answered by the signatory with either the positive
 or the negative option specified.</p>
 
 
-<p>The <code>consent_module</code> object has the following properties:</p>
+<p>This object has the following properties:</p>
 
 <h6><code>title</code> (string)</h6>
 
@@ -9237,7 +9280,7 @@ or the negative option specified.</p>
 
 </div>
 
-<h6><code>response</code> (bool)</h6>
+<h6><code>response</code> (boolean)</h6>
 
 <div class="json-schema">
 
@@ -9288,6 +9331,8 @@ when the signatory selected the negative response.</p>
 
 <p></div></p>
 
+<p></div></p>
+
 <h3><code>file</code> <code>(object)</code></h3>
 
 <div class="json-schema">
@@ -9313,7 +9358,7 @@ when the signatory selected the negative response.</p>
 
 <p></div></p>
 
-<h3><code>sealed_file</code> <code>(object)</code></h3>
+<h3><code>sealed_file</code> </h3>
 
 <div class="json-schema">
 
@@ -9324,20 +9369,41 @@ been signed by all parties, while the Scrive eSign system seals the
 document.</p>
 
 
-<p>The <code>sealed_file</code> object has the following properties:</p>
+The elements of this item must match *exactly one* of the following properties:
 
-<h4><code>id</code> (string, read only)</h4>
+<h4>(null)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4>File</h4>
+
+<p><code>(object)</code></p>
+
+<div class="json-schema">
+
+<p>A file that can be accessed using the
+<a href="#get-a-related-file">API call to download related files</a>.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h5><code>id</code> (string, read only)</h5>
 
 
 <div class="json-schema">
 
 </div>
 
-<h4><code>name</code> (string, read only)</h4>
+<h5><code>name</code> (string, read only)</h5>
 
 <div class="json-schema">
 
 </div>
+
+<p></div></p>
 
 <p></div></p>
 
@@ -9406,7 +9472,7 @@ attachments&quot; (<code>/{document_id}/setattachments</code>) API call.</p>
 
 </div>
 
-<h3><code>timeout_time</code> (string, read only)</h3>
+<h3><code>timeout_time</code> (string,null, read only)</h3>
 
 <div class="json-schema">
 
@@ -9415,7 +9481,7 @@ attachments&quot; (<code>/{document_id}/setattachments</code>) API call.</p>
 
 </div>
 
-<h3><code>auto_remind_time</code> (string, read only)</h3>
+<h3><code>auto_remind_time</code> (string,null, read only)</h3>
 
 <div class="json-schema">
 
@@ -9457,7 +9523,7 @@ be changed.</p>
 
 </div>
 
-<h3><code>days_to_remind</code> (integer)</h3>
+<h3><code>days_to_remind</code> (integer,null)</h3>
 
 <div class="json-schema">
 
@@ -9589,7 +9655,7 @@ been signed.</p>
 
 </div>
 
-<h3><code>api_callback_url</code> (string)</h3>
+<h3><code>api_callback_url</code> (string,null)</h3>
 
 <div class="json-schema">
 
@@ -9903,7 +9969,7 @@ party to a document.</p>
 
 </div>
 
-<h3><code>user_id</code> (integer, read only)</h3>
+<h3><code>user_id</code> (string,null, read only)</h3>
 
 <div class="json-schema">
 
@@ -11695,7 +11761,22 @@ depending on the field type.</p>
 
 <p></div></p>
 
-<h5><code>custom_validation</code> <code>(object)</code></h5>
+<h5><code>custom_validation</code> </h5>
+
+<div class="json-schema">
+
+The elements of this item must match *exactly one* of the following properties:
+
+<h6>(null)</h6>
+
+
+<div class="json-schema">
+
+</div>
+
+<h6>SignatoryFieldCustomValidation</h6>
+
+<p><code>(object)</code></p>
 
 <div class="json-schema">
 
@@ -11703,9 +11784,7 @@ depending on the field type.</p>
 custom regular expression.</p>
 
 
-<p>Default: <code>null</code></p>
-
-<p>The <code>custom_validation</code> object has the following properties:</p>
+<p>This object has the following properties:</p>
 
 <h6><code>pattern</code> (string, required)</h6>
 
@@ -11741,6 +11820,8 @@ custom regular expression.</p>
 
 <p></div></p>
 
+<p></div></p>
+
 <h3><code>sign_order</code> (integer)</h3>
 
 <div class="json-schema">
@@ -11749,31 +11830,31 @@ custom regular expression.</p>
 
 </div>
 
-<h3><code>sign_time</code> (string, read only)</h3>
+<h3><code>sign_time</code> (string,null, read only)</h3>
 
 <div class="json-schema">
 
 </div>
 
-<h3><code>seen_time</code> (string, read only)</h3>
+<h3><code>seen_time</code> (string,null, read only)</h3>
 
 <div class="json-schema">
 
 </div>
 
-<h3><code>read_invitation_time</code> (string, read only)</h3>
+<h3><code>read_invitation_time</code> (string,null, read only)</h3>
 
 <div class="json-schema">
 
 </div>
 
-<h3><code>rejected_time</code> (string, read only)</h3>
+<h3><code>rejected_time</code> (string,null, read only)</h3>
 
 <div class="json-schema">
 
 </div>
 
-<h3><code>rejection_reason</code> (string, read only)</h3>
+<h3><code>rejection_reason</code> (string,null, read only)</h3>
 
 <div class="json-schema">
 
@@ -11785,7 +11866,7 @@ reject reason (<code>allow_reject_reason</code>).</p>
 
 </div>
 
-<h3><code>sign_success_redirect_url</code> (string)</h3>
+<h3><code>sign_success_redirect_url</code> (string,null)</h3>
 
 <div class="json-schema">
 
@@ -11794,7 +11875,7 @@ reject reason (<code>allow_reject_reason</code>).</p>
 
 </div>
 
-<h3><code>reject_redirect_url</code> (string)</h3>
+<h3><code>reject_redirect_url</code> (string,null)</h3>
 
 <div class="json-schema">
 
@@ -11843,29 +11924,11 @@ reject reason (<code>allow_reject_reason</code>).</p>
 
 </div>
 
-<h3><code>csv</code> (array)</h3>
-
-<div class="json-schema">
-
-<p>All array elements must be of type:</p>
-
-<h4>(array)</h4>
-
-
-<div class="json-schema">
-
-<p>All array elements must be of type:</p>
-
-<h5>(string)</h5>
-
+<h3><code>csv</code> (array,null)</h3>
 
 <div class="json-schema">
 
 </div>
-
-<p></div></p>
-
-<p></div></p>
 
 <h3><code>delivery_method</code> (string, enum)</h3>
 
@@ -12143,7 +12206,7 @@ when signing.</p>
 
 <p></div></p>
 
-<h3><code>api_delivery_url</code> (string)</h3>
+<h3><code>api_delivery_url</code> (string,null)</h3>
 
 <div class="json-schema">
 
@@ -12157,7 +12220,20 @@ and will only be visible when accessing the document as the author.</p>
 
 </div>
 
-<h3><code>consent_module</code> (object)</h3>
+<h3><code>consent_module</code> </h3>
+
+<div class="json-schema">
+
+The elements of this item must match *exactly one* of the following properties:
+
+<h4>(null)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4>(object)</h4>
 
 <div class="json-schema">
 
@@ -12166,9 +12242,9 @@ questions which must be answered by the signatory with either the positive
 or the negative option specified.</p>
 
 
-<p>The <code>consent_module</code> object has the following properties:</p>
+<p>This object has the following properties:</p>
 
-<h4><code>title</code> (string)</h4>
+<h5><code>title</code> (string)</h5>
 
 
 <div class="json-schema">
@@ -12178,13 +12254,13 @@ or the negative option specified.</p>
 
 </div>
 
-<h4><code>questions</code> (array)</h4>
+<h5><code>questions</code> (array)</h5>
 
 <div class="json-schema">
 
 <p>All array elements must be of type:</p>
 
-<h5>(object)</h5>
+<h6>(object)</h6>
 
 
 <div class="json-schema">
@@ -12213,7 +12289,7 @@ or the negative option specified.</p>
 
 </div>
 
-<h6><code>response</code> (bool)</h6>
+<h6><code>response</code> (boolean)</h6>
 
 <div class="json-schema">
 
@@ -12251,6 +12327,8 @@ when the signatory selected the negative response.</p>
 
 
 </div>
+
+<p></div></p>
 
 <p></div></p>
 
@@ -14135,7 +14213,22 @@ depending on the field type.</p>
 
 <p></div></p>
 
-<h3><code>custom_validation</code> <code>(object)</code></h3>
+<h3><code>custom_validation</code> </h3>
+
+<div class="json-schema">
+
+The elements of this item must match *exactly one* of the following properties:
+
+<h4>(null)</h4>
+
+
+<div class="json-schema">
+
+</div>
+
+<h4>SignatoryFieldCustomValidation</h4>
+
+<p><code>(object)</code></p>
 
 <div class="json-schema">
 
@@ -14143,11 +14236,9 @@ depending on the field type.</p>
 custom regular expression.</p>
 
 
-<p>Default: <code>null</code></p>
+<p>This object has the following properties:</p>
 
-<p>The <code>custom_validation</code> object has the following properties:</p>
-
-<h4><code>pattern</code> (string, required)</h4>
+<h5><code>pattern</code> (string, required)</h5>
 
 
 <div class="json-schema">
@@ -14157,7 +14248,7 @@ custom regular expression.</p>
 
 </div>
 
-<h4><code>positive_example</code> (string, required)</h4>
+<h5><code>positive_example</code> (string, required)</h5>
 
 <div class="json-schema">
 
@@ -14166,7 +14257,7 @@ custom regular expression.</p>
 
 </div>
 
-<h4><code>tooltip</code> (string, required)</h4>
+<h5><code>tooltip</code> (string, required)</h5>
 
 <div class="json-schema">
 
@@ -14174,6 +14265,8 @@ custom regular expression.</p>
 
 
 </div>
+
+<p></div></p>
 
 <p></div></p>
 
