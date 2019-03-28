@@ -168,7 +168,7 @@ handleAddUserGroupAccount = withCompanyAdmin $ \(ctxuser, ug) -> do
   let acc = mkAccPolicy [ (CreateA, UserR, trgugid) ]
       err = unexpectedError "Insufficient privileges"  -- XXXFREDRIK???
       adminUser = maybe err id (get ctxmaybeuser ctx)
-  roles <- dbQuery . GetRoles $ adminUser -- XXXFREDRIK
+  roles <- dbQuery . GetRoles $ adminUser
   accessControl roles acc err $ do
     case mexistinguser of
         Nothing -> do
