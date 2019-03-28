@@ -9,7 +9,10 @@ module AccessControl.Types
   , AccessRoleType(..)
   , NeedsPermissions(..)
   , mkAccPolicy
-  , mkAccPolicyItem)
+  , mkAccPolicyItem
+  , roleHasPermission
+  )
+
   where
 
 import Control.Monad.Catch
@@ -171,10 +174,18 @@ instance NeedsPermissions AccessPolicyItem where
 accessControl :: (MonadCatch m, MonadDB m, MonadThrow m, MonadLog m)
               => [AccessRole] -> AccessPolicy -> m a -> m a -> m a
 accessControl roles accessPolicy err ma = do
-  let accHad = nub . join $ map hasPermissions roles
-  accNeeded <- NeededPermissionsExprAnd <$> mapM neededPermissions accessPolicy
-  let cond = evalNeededPermExpr (`elem` accHad) accNeeded
+  cond <- roleHasPermission roles accessPolicy
   if cond then ma else err
+
+roleHasPermission :: (MonadCatch m, MonadDB m, MonadThrow m, MonadLog m)
+                  => [AccessRole] -> AccessPolicy -> m Bool
+roleHasPermission roles accessPolicy = do
+  let accHad = getPermissions roles
+  accNeeded <- NeededPermissionsExprAnd <$> mapM neededPermissions accessPolicy
+  return $ evalNeededPermExpr (`elem` accHad) accNeeded
+
+getPermissions :: [AccessRole] -> [Permission]
+getPermissions roles = nub . join $ map hasPermissions roles
 
 -- IO (DB, frontend) boilerplate
 
