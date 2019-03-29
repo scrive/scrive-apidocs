@@ -112,4 +112,5 @@ checkExecutables = logInfo "Checking paths to executables:" . object
       , ("pdfdetach", ["-v"])
       , ("qrencode",  ["--version"])
       , ("xmlsec1",   ["--version"])
+      , ("psql",      ["--version"])
       ]
