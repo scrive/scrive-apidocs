@@ -160,6 +160,8 @@ getEvidenceEventStatusClass (Current VisitedViewForAuthenticationEvidence) = SCO
 getEvidenceEventStatusClass (Current VisitedViewForSigningEvidence)        = SCOpened
 getEvidenceEventStatusClass (Current AuthenticatedToViewEvidence)          = SCAuthenticatedToView
 getEvidenceEventStatusClass (Current ApprovedByApproverPartyEvidence)      = SCApproved
+getEvidenceEventStatusClass (Current ConfirmationDeliveredByEmail)         = SCDelivered
+getEvidenceEventStatusClass (Current ConfirmationUndeliveredByEmail)       = SCDeliveryProblem
 getEvidenceEventStatusClass (Current ForwardedSigningEvidence)             = SCSent
 getEvidenceEventStatusClass _                                              = SCError
 
