@@ -612,40 +612,76 @@ This is the only officially supported encoding for our API.
 </tr>
 </thead><tbody>
 <tr>
-<td>2016-10-14</td>
-<td>Pre-release of Scrive Document API Version 2</td>
+<td>2019-04-01</td>
+<td>Reordered the changelog - new changes are now on top.</td>
 </tr>
 <tr>
-<td>2016-10-27</td>
-<td>Small improvements to documentation following internal and customer feedback</td>
+<td>2019-03-27</td>
+<td>Clarified cases where fields can also have a null value.</td>
 </tr>
 <tr>
-<td>2016-12-17</td>
-<td>New optional <code>no_attachments</code> parameter for the <code>forward</code> API call</td>
+<td></td>
+<td>Clarified use of <code>authentication_method_to_*</code></td>
 </tr>
 <tr>
-<td>2017-01-17</td>
-<td>Add JSON fields related to highlighting</td>
+<td>2019-02-25</td>
+<td>Add <code>gettokenforpersonalcredentials</code> endpoint and update <code>getpersonaltoken</code> to accept <code>login_token</code>s</td>
 </tr>
 <tr>
-<td>2017-01-28</td>
-<td>Documentation of <code>removepages</code> API call</td>
+<td>2019-02-18</td>
+<td>Add monitoring endpoint which was already implemented but missing from this document</td>
 </tr>
 <tr>
-<td>2017-03-11</td>
-<td>Add <code>dk_nemid</code> (Danish NemID) to <code>authentication_to_view</code></td>
+<td>2019-01-03</td>
+<td>Add <code>usagestats</code> endpoints</td>
 </tr>
 <tr>
-<td>2017-05-15</td>
-<td>Add missing <code>company</code> standard signatory field</td>
+<td>2018-12-17</td>
+<td>Add <code>fi_tupas</code> (Finnish EID) to <code>authentication_method_to_view</code>/<code>authentication_method_to_view_archived</code></td>
 </tr>
 <tr>
-<td>2017-06-08</td>
-<td>Add <code>required</code> field to signatory attachments, optional attachments are now possible</td>
+<td></td>
+<td>Add documentation for <code>/documents/trash</code> and <code>/documents/delete</code> bulk endpoints</td>
 </tr>
 <tr>
-<td>2017-07-04</td>
-<td>Remove a comment about anchoring that was due to a bug, which has now been fixed</td>
+<td></td>
+<td>Add documentation for <code>authentication_method_to_view_archived</code></td>
+</tr>
+<tr>
+<td></td>
+<td>New signatory role: approver. New <code>Signatory</code> field <code>signatory_role</code>, supercedes <code>is_signatory</code>.</td>
+</tr>
+<tr>
+<td>2018-06-01</td>
+<td>Add <code>dk_nemid</code> (Danish NemID) to <code>authentication_to_sign</code></td>
+</tr>
+<tr>
+<td>2018-04-09</td>
+<td>Add a new field to the <a href="#signatory">Signatory JSON</a>: <code>consent_module</code></td>
+</tr>
+<tr>
+<td>2018-03-29</td>
+<td>Fix an omission where <code>no_bankid</code> (Norwegian BankID) was missing as an Authentication to Sign</td>
+</tr>
+<tr>
+<td>2018-03-26</td>
+<td>Add <code>rejection_reason</code> to the Signatory JSON and an API endpoint to control <a href="#share-or-unshare-templates">template sharing</a></td>
+</tr>
+<tr>
+<td>2018-02-28</td>
+<td>Fix a minor error in the <a href="#quick-start">Quick Start</a> guide</td>
+</tr>
+<tr>
+<td>2018-01-29</td>
+<td>Add an endpoint to <a href="#change-the-email-and-mobile-number-of-a-signatory">change the email and mobile number of a signatory</a></td>
+</tr>
+<tr>
+<td>2018-01-08</td>
+<td>Add an endpoint to <a href="#get-a-sign-link-as-a-qr-code">get a sign link as a QR code</a></td>
+</tr>
+<tr>
+<td>2017-11-15</td>
+<td>Custom validations for the <code>SignatoryFieldCustomField</code> are now supported</td>
 </tr>
 <tr>
 <td>2017-08-03</td>
@@ -660,64 +696,40 @@ This is the only officially supported encoding for our API.
 <td>Factor out <code>SignatoryFieldStandard</code> into <code>SignatoryFieldEmailMobile</code> to allow for <code>editable_by_signatory</code> property</td>
 </tr>
 <tr>
-<td>2017-11-15</td>
-<td>Custom validations for the <code>SignatoryFieldCustomField</code> are now supported</td>
+<td>2017-07-04</td>
+<td>Remove a comment about anchoring that was due to a bug, which has now been fixed</td>
 </tr>
 <tr>
-<td>2018-01-08</td>
-<td>Add an endpoint to <a href="#get-a-sign-link-as-a-qr-code">get a sign link as a QR code</a></td>
+<td>2017-06-08</td>
+<td>Add <code>required</code> field to signatory attachments, optional attachments are now possible</td>
 </tr>
 <tr>
-<td>2018-01-29</td>
-<td>Add an endpoint to <a href="#change-the-email-and-mobile-number-of-a-signatory">change the email and mobile number of a signatory</a></td>
+<td>2017-05-15</td>
+<td>Add missing <code>company</code> standard signatory field</td>
 </tr>
 <tr>
-<td>2018-02-28</td>
-<td>Fix a minor error in the <a href="#quick-start">Quick Start</a> guide</td>
+<td>2017-03-11</td>
+<td>Add <code>dk_nemid</code> (Danish NemID) to <code>authentication_to_view</code></td>
 </tr>
 <tr>
-<td>2018-03-26</td>
-<td>Add <code>rejection_reason</code> to the Signatory JSON and an API endpoint to control <a href="#share-or-unshare-templates">template sharing</a></td>
+<td>2017-01-28</td>
+<td>Documentation of <code>removepages</code> API call</td>
 </tr>
 <tr>
-<td>2018-03-29</td>
-<td>Fix an omission where <code>no_bankid</code> (Norwegian BankID) was missing as an Authentication to Sign</td>
+<td>2017-01-17</td>
+<td>Add JSON fields related to highlighting</td>
 </tr>
 <tr>
-<td>2018-04-09</td>
-<td>Add a new field to the <a href="#signatory">Signatory JSON</a>: <code>consent_module</code></td>
+<td>2016-12-17</td>
+<td>New optional <code>no_attachments</code> parameter for the <code>forward</code> API call</td>
 </tr>
 <tr>
-<td>2018-06-01</td>
-<td>Add <code>dk_nemid</code> (Danish NemID) to <code>authentication_to_sign</code></td>
+<td>2016-10-27</td>
+<td>Small improvements to documentation following internal and customer feedback</td>
 </tr>
 <tr>
-<td>2018-12-17</td>
-<td>New signatory role: approver. New <code>Signatory</code> field <code>signatory_role</code>, supercedes <code>is_signatory</code>.</td>
-</tr>
-<tr>
-<td>2018-12-17</td>
-<td>Add documentation for <code>authentication_method_to_view_archived</code></td>
-</tr>
-<tr>
-<td>2018-12-17</td>
-<td>Add documentation for <code>/documents/trash</code> and <code>/documents/delete</code> bulk endpoints</td>
-</tr>
-<tr>
-<td>2018-12-17</td>
-<td>Add <code>fi_tupas</code> (Finnish EID) to <code>authentication_method_to_view</code>/<code>authentication_method_to_view_archived</code></td>
-</tr>
-<tr>
-<td>2019-01-03</td>
-<td>Add <code>usagestats</code> endpoints</td>
-</tr>
-<tr>
-<td>2019-02-18</td>
-<td>Add monitoring endpoint which was already implemented but missing from this document</td>
-</tr>
-<tr>
-<td>2019-02-25</td>
-<td>Add <code>gettokenforpersonalcredentials</code> endpoint and update <code>getpersonaltoken</code> to accept <code>login_token</code>s</td>
+<td>2016-10-14</td>
+<td>Pre-release of Scrive Document API Version 2</td>
 </tr>
 </tbody></table>
 <h2 id='environments-amp-ip-addresses'>Environments &amp; IP Addresses</h2>
