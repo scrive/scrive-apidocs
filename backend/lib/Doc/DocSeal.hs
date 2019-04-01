@@ -332,7 +332,7 @@ findOutAttachmentDesc sim tmppath document = logDocument (documentid document) $
             eNumberOfPages <- liftIO $ getNumberOfPDFPages contents
             numberOfPages <- case eNumberOfPages of
               Left e -> do
-                logAttention "Calculating number of pages of document failed, falling back to 1" $ object [
+                logInfo "Calculating number of pages of document failed, falling back to 1" $ object [
                     "reason" .= e
                   ]
                 return 1
@@ -532,7 +532,7 @@ sealSpecFromDocument checkboxMapping
   eNumberOfPages <- liftIO $ getNumberOfPDFPages content
   numberOfPages <- case eNumberOfPages of
     Left e -> do
-      logAttention
+      logInfo
         "Calculating number of pages of document failed, falling back to 1" $
         object [
           "reason" .= e
