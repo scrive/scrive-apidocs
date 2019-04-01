@@ -44,33 +44,37 @@ info:
 
     | Date        | Details of changes                                         |
     | ----------- | ---------------------------------------------------------- |
-    | 2016-10-14  | Pre-release of Scrive Document API Version 2               |
-    | 2016-10-27  | Small improvements to documentation following internal and customer feedback |
-    | 2016-12-17  | New optional `no_attachments` parameter for the `forward` API call           |
-    | 2017-01-17  | Add JSON fields related to highlighting                    |
-    | 2017-01-28  | Documentation of `removepages` API call                    |
-    | 2017-03-11  | Add `dk_nemid` (Danish NemID) to `authentication_to_view`  |
-    | 2017-05-15  | Add missing `company` standard signatory field             |
-    | 2017-06-08  | Add `required` field to signatory attachments, optional attachments are now possible |
-    | 2017-07-04  | Remove a comment about anchoring that was due to a bug, which has now been fixed |
+    | 2019-04-01  | Reordered the changelog - new changes are now on top. |
+    | 2019-03-27  | Clarified cases where fields can also have a null value. |
+    |             | Clarified use of `authentication_method_to_*` |
+    | 2019-02-25  | Add `gettokenforpersonalcredentials` endpoint and update `getpersonaltoken` to accept `login_token`s |
+    | 2019-02-18  | Add monitoring endpoint which was already implemented but missing from this document |
+    | 2019-01-03  | Add `usagestats` endpoints
+    | 2018-12-17  | Add `fi_tupas` (Finnish EID) to `authentication_method_to_view`/`authentication_method_to_view_archived` |
+    |             | Add documentation for `/documents/trash` and `/documents/delete` bulk endpoints |
+    |             | Add documentation for `authentication_method_to_view_archived` |
+    |             | New signatory role: approver. New `Signatory` field `signatory_role`, supercedes `is_signatory`. |
+    | 2018-06-01  | Add `dk_nemid` (Danish NemID) to `authentication_to_sign` |
+    | 2018-04-09  | Add a new field to the [Signatory JSON](#signatory): `consent_module` |
+    | 2018-03-29  | Fix an omission where `no_bankid` (Norwegian BankID) was missing as an Authentication to Sign |
+    | 2018-03-26  | Add `rejection_reason` to the Signatory JSON and an API endpoint to control [template sharing](#share-or-unshare-templates) |
+    | 2018-02-28  | Fix a minor error in the [Quick Start](#quick-start) guide |
+    | 2018-01-29  | Add an endpoint to [change the email and mobile number of a signatory](#change-the-email-and-mobile-number-of-a-signatory) |
+    | 2018-01-08  | Add an endpoint to [get a sign link as a QR code](#get-a-sign-link-as-a-qr-code) |
+    | 2017-11-15  | Custom validations for the `SignatoryFieldCustomField` are now supported |
     | 2017-08-03  | Revamped definitions of signatory fields, it should now be much clearer |
     |             | Added `SignatoryFieldRadiogroup`, Scrive now supports radio button fields |
     |             | Factor out `SignatoryFieldStandard` into `SignatoryFieldEmailMobile` to allow for `editable_by_signatory` property |
-    | 2017-11-15  | Custom validations for the `SignatoryFieldCustomField` are now supported |
-    | 2018-01-08  | Add an endpoint to [get a sign link as a QR code](#get-a-sign-link-as-a-qr-code) |
-    | 2018-01-29  | Add an endpoint to [change the email and mobile number of a signatory](#change-the-email-and-mobile-number-of-a-signatory) |
-    | 2018-02-28  | Fix a minor error in the [Quick Start](#quick-start) guide |
-    | 2018-03-26  | Add `rejection_reason` to the Signatory JSON and an API endpoint to control [template sharing](#share-or-unshare-templates) |
-    | 2018-03-29  | Fix an omission where `no_bankid` (Norwegian BankID) was missing as an Authentication to Sign |
-    | 2018-04-09  | Add a new field to the [Signatory JSON](#signatory): `consent_module` |
-    | 2018-06-01  | Add `dk_nemid` (Danish NemID) to `authentication_to_sign` |
-    | 2018-12-17  | New signatory role: approver. New `Signatory` field `signatory_role`, supercedes `is_signatory`. |
-    | 2018-12-17  | Add documentation for `authentication_method_to_view_archived` |
-    | 2018-12-17  | Add documentation for `/documents/trash` and `/documents/delete` bulk endpoints |
-    | 2018-12-17  | Add `fi_tupas` (Finnish EID) to `authentication_method_to_view`/`authentication_method_to_view_archived` |
-    | 2019-01-03  | Add `usagestats` endpoints
-    | 2019-02-18  | Add monitoring endpoint which was already implemented but missing from this document |
-    | 2019-02-25  | Add `gettokenforpersonalcredentials` endpoint and update `getpersonaltoken` to accept `login_token`s
+    | 2017-07-04  | Remove a comment about anchoring that was due to a bug, which has now been fixed |
+    | 2017-06-08  | Add `required` field to signatory attachments, optional attachments are now possible |
+    | 2017-05-15  | Add missing `company` standard signatory field             |
+    | 2017-03-11  | Add `dk_nemid` (Danish NemID) to `authentication_to_view`  |
+    | 2017-01-28  | Documentation of `removepages` API call                    |
+    | 2017-01-17  | Add JSON fields related to highlighting                    |
+    | 2016-12-17  | New optional `no_attachments` parameter for the `forward` API call           |
+    | 2016-10-27  | Small improvements to documentation following internal and customer feedback |
+    | 2016-10-14  | Pre-release of Scrive Document API Version 2
+
 
     ## Environments & IP Addresses
 
