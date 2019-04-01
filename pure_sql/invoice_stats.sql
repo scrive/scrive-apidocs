@@ -553,6 +553,7 @@ CREATE TABLE report_master AS
   "Danish NemID signatures",
   "Danish NemID authorization",
   "Finnish TUPAS authorization",
+  "Shareable links used",
   "Telia SMSes sent (physical)",
   "Users at start of period",
   "Users at end of period",
