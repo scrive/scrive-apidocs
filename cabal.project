@@ -6,6 +6,7 @@
 -- packages: . ../path/to/log
 
 packages: .
+write-ghc-environment-files: always
 
 repository hackage.scrive.com
     url: http://hackage.scrive.com
