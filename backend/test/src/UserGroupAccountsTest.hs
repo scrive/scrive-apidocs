@@ -9,6 +9,7 @@ import Test.Framework
 import Text.JSON.Gen
 import qualified Control.Exception.Lifted as E
 
+import AccessControl.Model
 import Context
 import DB hiding (query, update)
 import Doc.DocStateData
@@ -35,8 +36,12 @@ companyAccountsTests env = testGroup "UserGroupAccounts" [
       , testThat "Removing a non-existant invite works" env test_removingNonExistantInvite
       ]
   , testGroup "Control" [
-        testThat "Admin user can add a new user to their company" env test_addingANewCompanyAccount
-      , testThat "Admin user can invite a company user to their company" env test_addingExistingCompanyUserAsCompanyAccount
+        testThat "Admin user can add a new user to their user group" env test_addingANewCompanyAccount
+      , testThat "Admin user can invite an existing user to their user group" env test_addingExistingCompanyUserAsCompanyAccount
+      , testThat "Admin user can add a new user to their user group with non-default user group targets" env
+                 test_addingANewCompanyAccountWithDifferentTarget
+      , testThat "Admin user can invite an existing user to their user group with non-default target" env
+                 test_addingExistingCompanyUserAsCompanyAccountWithDifferentTarget
       , testThat "Admin user can resend invite to a new user" env test_resendingInviteToNewCompanyAccount
       , testThat "Admin user can switch a standard user to admin" env test_switchingStandardToAdminUser
       , testThat "Admin user can switch an admin user to standard" env test_switchingAdminToStandardUser
@@ -44,6 +49,8 @@ companyAccountsTests env = testGroup "UserGroupAccounts" [
       , testThat "Admin user can remove a company account user" env test_removingCompanyAccountWorks
       , testThat "Existing private user can follow link to be taken over" env test_privateUserTakoverWorks
       , testThat "Company takeovers fail if there is no saved invite" env test_mustBeInvitedForTakeoverToWork
+
+
       ]
   ]
 
@@ -118,6 +125,77 @@ test_addingExistingCompanyUserAsCompanyAccount = do
                                                       (get ugID existingug)
 
   assertCompanyInvitesAre ug [mkInvite ug existinguser]
+
+  emails <- dbQuery GetEmailsForTest
+  assertEqual "An email was sent" 1 (length emails)
+
+test_addingANewCompanyAccountWithDifferentTarget :: TestEnv ()
+test_addingANewCompanyAccountWithDifferentTarget = do
+  let email = "andrzej@skrivapa.se"
+  (user, _ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" email
+  trgug <- addNewCompany False
+  let trgugid = get ugID trgug
+
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+
+  req <- mkRequest POST [ ("add", inText "True")
+                        , ("email", inText "bob@blue.com")
+                        , ("fstname", inText "Bob")
+                        , ("sndname", inText "Blue")
+                        , ("user_group_id", inText . show $ trgugid) ]
+
+  -- user does not yet have permission to move mvuser. Failure expected.
+  assertRaisesInternalError
+    (void $ runTestKontra req ctx handleAddUserGroupAccount)
+
+  -- user is given permission on target user group, so addition expected
+  void $ dbUpdate $ AccessControlInsertUserGroupAdmin (userid user) trgugid
+  (res, _) <- runTestKontra req ctx handleAddUserGroupAccount
+  assertBool "Response is propper JSON" $ res == (runJSONGen $ value "added" True)
+  Just newuser <- dbQuery $ GetUserByEmail (Email "bob@blue.com")
+  assertEqual "New user is in target user group"
+              trgugid
+              (usergroupid newuser)
+  assertEqual "New user is standard user" False (useriscompanyadmin newuser)
+  assertEqual "New user has the invited name" "Bob Blue" (getFullName newuser)
+  assertCompanyInvitesAre trgug []
+
+  actions <- getAccountCreatedActions
+  assertEqual "An AccountCreated action was made" 1 (length $ actions)
+
+  emails <- dbQuery GetEmailsForTest
+  assertEqual "An email was sent" 1 (length emails)
+
+test_addingExistingCompanyUserAsCompanyAccountWithDifferentTarget :: TestEnv ()
+test_addingExistingCompanyUserAsCompanyAccountWithDifferentTarget = do
+  (user, _ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
+  (existinguser, existingug) <- addNewAdminUserAndUserGroup "Bob" "Blue" "bob@blue.com"
+  trgug <- addNewCompany False
+  let trgugid = get ugID trgug
+
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  req <- mkRequest POST [ ("add", inText "True")
+                        , ("email", inText "bob@blue.com")
+                        , ("fstname", inText "Bob")
+                        , ("sndname", inText "Blue")
+                        , ("user_group_id", inText . show $ trgugid)
+                        ]
+  -- user does not yet have permission to move existinguser; failure expected.
+  assertRaisesInternalError
+    (void $ runTestKontra req ctx handleAddUserGroupAccount)
+
+  -- user is given permission on target user group; invite expected
+  void $ dbUpdate $ AccessControlInsertUserGroupAdmin (userid user) trgugid
+
+  (res, _) <- runTestKontra req ctx $ handleAddUserGroupAccount
+
+  assertBool "Response is propper JSON" $ res == (runJSONGen $ value "added" True)
+
+  Just updatedexistinguser <- dbQuery $ GetUserByID (userid existinguser)
+  assertEqual "Invited user's company stays the same" (usergroupid updatedexistinguser)
+                                                      (get ugID existingug)
+
+  assertCompanyInvitesAre trgug [mkInvite trgug existinguser]
 
   emails <- dbQuery GetEmailsForTest
   assertEqual "An email was sent" 1 (length emails)

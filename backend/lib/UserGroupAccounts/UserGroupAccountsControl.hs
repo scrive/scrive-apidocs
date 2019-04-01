@@ -16,6 +16,7 @@ import Data.Char
 import Text.JSON (JSValue(..))
 import Text.JSON.Gen
 
+import AccessControl.Types
 import DB
 import Happstack.Fields
 import InputValidation
@@ -155,37 +156,53 @@ companyAccountsSortingBy f ca1 ca2 = compare (map toUpper $ show $ f ca1) (map t
     by inviting them to be taken over.
 -}
 handleAddUserGroupAccount :: Kontrakcja m => m JSValue
-handleAddUserGroupAccount = withCompanyAdmin $ \(user, ug) -> do
+handleAddUserGroupAccount = withUserAndGroup $ \(user, ug) -> do
   ctx <- getContext
   email <-  guardJustM $ getOptionalField asValidEmail "email"
   fstname <- fromMaybe "" <$> getOptionalField asValidName "fstname"
   sndname <- fromMaybe "" <$> getOptionalField asValidName "sndname"
-  mexistinguser <- dbQuery $ GetUserByEmail $ Email email
-  case (mexistinguser) of
-      (Nothing) -> do
-        --create a new company user
-        newuser' <- guardJustM $ createUser (Email email) (fstname, sndname) (get ugID ug, False) (get ctxlang ctx) CompanyInvitation
-        void $ dbUpdate $
-             LogHistoryUserInfoChanged (userid newuser') (get ctxipnumber ctx) (get ctxtime ctx)
-                                       (userinfo newuser')
-                                       ((userinfo newuser') { userfstname = fstname , usersndname = sndname })
-                                       (userid <$> get ctxmaybeuser ctx)
-        newuser <- guardJustM $ dbQuery $ GetUserByID (userid newuser')
-        void $ sendNewUserGroupUserMail user ug newuser
-        runJSONGenT $ value "added" True
-      (Just existinguser) ->
-        if (usergroupid existinguser == get ugID ug)
-           then runJSONGenT $ value "added" False >> value "samecompany" True
-           else do
-            -- If user exists we allow takeover only if he is the only user in his company
-            users <- dbQuery . UserGroupGetUsers . usergroupid $ existinguser
-            if (length users == 1)
-              then do
-                void $ sendTakeoverSingleUserMail user ug existinguser
-                void $ dbUpdate $ AddUserGroupInvite $ UserGroupInvite (userid existinguser) (get ugID ug)
-                runJSONGenT $ value "added" True
-              else do
-                runJSONGenT $ value "added" False
+
+  mtrgug <- getOptionalField asValidUserGroupID "user_group_id" >>= \case
+    Nothing -> return Nothing -- non-existing parameter is OK
+    Just trgugid -> dbQuery (UserGroupGet trgugid) >>= \case
+      Nothing -> internalError -- non-existing UserGroup is not OK
+      Just trgug -> return $ Just trgug
+  let trgugid = get ugID $ fromMaybe ug mtrgug
+      acc = mkAccPolicy [ (CreateA, UserR, trgugid) ]
+  roles <- dbQuery . GetRoles $ user
+  -- use internalError here, because that's what withCompanyAdmin uses
+  accessControl roles acc internalError $ dbQuery (GetUserByEmail $ Email email) >>= \case
+    Nothing -> do
+      --create a new company user
+      newuser' <- guardJustM $ createUser (Email email)
+                                          (fstname, sndname)
+                                          (trgugid, False)
+                                          (get ctxlang ctx)
+                                          CompanyInvitation
+      void $ dbUpdate $
+            LogHistoryUserInfoChanged (userid newuser') (get ctxipnumber ctx) (get ctxtime ctx)
+                                      (userinfo newuser')
+                                      ((userinfo newuser') { userfstname = fstname , usersndname = sndname })
+                                      (userid <$> get ctxmaybeuser ctx)
+      newuser <- guardJustM $ dbQuery $ GetUserByID (userid newuser')
+      void $ sendNewUserGroupUserMail user ug newuser
+      runJSONGenT $ value "added" True
+    Just existinguser ->
+      if (usergroupid existinguser == trgugid)
+        then
+          runJSONGenT $ do
+              value "added" False
+              value "samecompany" True
+          else do
+          -- If user exists we allow takeover only if he is the only user in his company
+          users <- dbQuery . UserGroupGetUsers . usergroupid $ existinguser
+          if (length users == 1)
+            then do
+              void $ sendTakeoverSingleUserMail user ug existinguser
+              void $ dbUpdate $ AddUserGroupInvite $ UserGroupInvite (userid existinguser) trgugid
+              runJSONGenT $ value "added" True
+            else do
+              runJSONGenT $ value "added" False
 
 {- |
     Handles a resend by checking for the user and invite
