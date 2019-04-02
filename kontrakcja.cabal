@@ -73,7 +73,9 @@ Library
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   ghc-prof-options: -fprof-auto -fno-prof-count-entries -fprof-auto-calls
 
-  Exposed-modules: AccessControl.Migrations
+  Exposed-modules: AccessControl.API
+                 , AccessControl.JSON
+                 , AccessControl.Migrations
                  , AccessControl.Model
                  , AccessControl.Tables
                  , AccessControl.Types
@@ -242,7 +244,7 @@ Library
                  , Folder.Types
                  , Folder.Internal
                  , Folder.Labels
-                 , Folder.Model 
+                 , Folder.Model
                  , Folder.Model.Query
                  , Folder.Model.Update
                  , Folder.Tables
@@ -440,6 +442,8 @@ Library
                  , User.UserView
                  , User.Utils
                  , UserGroup
+                 , UserGroup.API
+                 , UserGroup.JSON
                  , UserGroup.Types
                  , UserGroup.Types.PaymentPlan
                  , UserGroup.Types.Subscription
@@ -520,6 +524,7 @@ Library
                , ekg-statsd
                , exceptions
                , explicit-exception
+               , extra
                , fclabels
                , fields-json
                , filepath
@@ -1117,6 +1122,7 @@ Executable messenger-server
                  SMS.Tables
                  Sender
                  TeliaCallGuide
+                 Utils.Enum
                  Utils.IO
                  Utils.List
                  Utils.Network
@@ -1227,7 +1233,8 @@ Test-suite kontrakcja-test
 
   Main-is:       TestMain.hs
   GHC-options: -main-is TestMain
-  Other-Modules: AccessControl.Migrations
+  Other-Modules: AccessControl.APITest
+                 AccessControl.Migrations
                  AccessControl.Tables
                  AccountInfoTest
                  AdministrationTest
@@ -1309,6 +1316,7 @@ Test-suite kontrakcja-test
                  File.Tables
                  FileTest
                  FlashMessages
+                 UserGroup.APITest
                  UserGroup.UserGroupTest
                  UserGroup.Migrations
                  UserGroup.Tables

@@ -11,6 +11,7 @@ module Folder.Internal (
 
 import Data.Int
 import Data.Text (Text)
+import Data.Unjson
 import Happstack.Server
 
 import DB
@@ -50,7 +51,7 @@ instance CompositeFromSQL Folder where
     }
 
 defaultFolder :: Folder
-defaultFolder = 
+defaultFolder =
     Folder
     {
       _folderID       = emptyFolderID
@@ -87,5 +88,11 @@ fromFolderID :: FolderID -> Int64
 fromFolderID (FolderID k) = k
 
 instance Identifier FolderID where
-  idDefaultLabel          = "folder_id"
+  idDefaultLabel       = "folder_id"
   idValue (FolderID k) = int64AsStringIdentifier k
+
+instance Unjson FolderID where
+  unjsonDef = unjsonInvmapR
+    ((maybe (fail "Can't parse FolderID") return) . maybeRead)
+    show
+    unjsonDef

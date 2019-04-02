@@ -72,7 +72,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetRoles [AccessRole] where
           maybe []
                 (\hfid -> [DocumentAdminAR hfid])
                 mUserHomeFolderID
-        derivedRoles = adminOrUserRoles <> [UserAR uid]
+        derivedRoles = AccessRoleImplicitUser uid <$> adminOrUserRoles <> [UserAR uid]
     return $ dbRolesByUser <> dbRolesByUserGroup <> derivedRoles
 
 instance (MonadDB m, MonadThrow m) =>

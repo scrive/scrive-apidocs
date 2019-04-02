@@ -2,6 +2,8 @@ module SMS.Types (
     JobType(..)
   , MessengerJob(..)
   , SMSProvider(..)
+  , codeFromSMSProvider
+  , smsProviderFromCode
   , ShortMessageID
   , ShortMessage(..)
   , SMSEventID
@@ -18,6 +20,7 @@ import qualified Data.Text as T
 
 import DB.Derive
 import Log.Identifier
+import Utils.Enum
 import Utils.List
 
 data JobType
@@ -56,7 +59,7 @@ data MessengerJob = MessengerJob {
 
 data SMSProvider = SMSDefault
                  | SMSTeliaCallGuide
-   deriving (Eq, Ord, Show, Read)
+  deriving (Bounded, Enum, Eq, Ord, Show, Read)
 
 instance PQFormat SMSProvider where
   pqFormat = pqFormat @Int16
@@ -77,6 +80,13 @@ instance ToSQL SMSProvider where
   type PQDest SMSProvider = PQDest Int16
   toSQL SMSDefault        = toSQL (1::Int16)
   toSQL SMSTeliaCallGuide = toSQL (2::Int16)
+
+codeFromSMSProvider :: SMSProvider -> String
+codeFromSMSProvider SMSDefault = "default"
+codeFromSMSProvider SMSTeliaCallGuide = "telia_call_guide"
+
+smsProviderFromCode :: String -> Maybe SMSProvider
+smsProviderFromCode s = find ((== s) . codeFromSMSProvider) allValues
 
 ----------------------------------------
 

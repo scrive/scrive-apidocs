@@ -1,5 +1,6 @@
 module AccessControl.Model
-  ( AccessControlGetRolesByUser(..)
+  ( AccessRoleGet(..)
+  , AccessControlGetRolesByUser(..)
   , AccessControlGetRolesByUserGroup(..)
   , AccessControlInsertUserGroupAdmin(..)
   , AccessControlRemoveUserGroupAdminRole(..)
@@ -16,11 +17,22 @@ import UserGroup.Types
 
 rolesSelector :: [SQL]
 rolesSelector =
-  [ "role"
+  [ "id"
+  , "role"
+  , "src_user_id"
+  , "src_user_group_id"
   , "trg_user_id"
   , "trg_user_group_id"
   , "trg_folder_id"
   ]
+
+data AccessRoleGet = AccessRoleGet AccessRoleID
+instance (MonadDB m, MonadThrow m) => DBQuery m AccessRoleGet (Maybe AccessRole) where
+  query (AccessRoleGet roleId) = do
+    runQuery_ . sqlSelect "access_control" $ do
+      mapM_ sqlResult $ rolesSelector
+      sqlWhereEq "id" roleId
+    fetchMaybe fetchAccessRole
 
 data AccessControlGetRolesByUser = AccessControlGetRolesByUser UserID
 instance (MonadDB m, MonadThrow m) => DBQuery m AccessControlGetRolesByUser [AccessRole] where
@@ -65,19 +77,44 @@ instance (MonadDB m, MonadThrow m) =>
       sqlWhereEq "src_user_id" uid
       sqlWhereEq "trg_user_group_id" ugid
 
-fetchAccessRole :: ( AccessRoleType
+fetchAccessRole :: ( AccessRoleID
+                   , AccessRoleType
+                   , Maybe UserID
+                   , Maybe UserGroupID
                    , Maybe UserID
                    , Maybe UserGroupID
                    , Maybe FolderID
                    ) -> AccessRole
-fetchAccessRole (UserART           , Just usrID, Nothing      , Nothing)
-  = UserAR usrID
-fetchAccessRole (UserGroupMemberART, Nothing   , Just usrGrpID, Nothing)
-  = UserGroupMemberAR usrGrpID
-fetchAccessRole (UserAdminART      , Nothing   , Just usrGrpID, Nothing)
-  = UserAdminAR usrGrpID
-fetchAccessRole (UserGroupAdminART , Nothing   , Just usrGrpID, Nothing)
-  = UserGroupAdminAR usrGrpID
-fetchAccessRole (DocumentAdminART  , Nothing   , Nothing      , Just fid)
-  = DocumentAdminAR  fid
+fetchAccessRole (rid, rtype, Just uid, Nothing, trg_uid, trg_ugid, trg_foler)
+  = AccessRoleUser rid uid $ fetchAccessRoleTarget
+    ( rtype
+    , trg_uid
+    , trg_ugid
+    , trg_foler
+    )
+fetchAccessRole (rid, rtype, Nothing, Just ugid, trg_uid, trg_ugid, trg_foler)
+  = AccessRoleUserGroup rid ugid $ fetchAccessRoleTarget
+    ( rtype
+    , trg_uid
+    , trg_ugid
+    , trg_foler
+    )
 fetchAccessRole _ = unexpectedError "invalid access_control row in database"
+
+fetchAccessRoleTarget :: ( AccessRoleType
+                         , Maybe UserID
+                         , Maybe UserGroupID
+                         , Maybe FolderID
+                         ) -> AccessRoleTarget
+fetchAccessRoleTarget (UserART           , Just usrID, Nothing      , Nothing)
+  = UserAR usrID
+fetchAccessRoleTarget (UserGroupMemberART, Nothing   , Just usrGrpID, Nothing)
+  = UserGroupMemberAR usrGrpID
+fetchAccessRoleTarget (UserAdminART      , Nothing   , Just usrGrpID, Nothing)
+  = UserAdminAR usrGrpID
+fetchAccessRoleTarget (UserGroupAdminART , Nothing   , Just usrGrpID, Nothing)
+  = UserGroupAdminAR usrGrpID
+fetchAccessRoleTarget (DocumentAdminART  , Nothing   , Nothing      , Just fid)
+  = DocumentAdminAR  fid
+fetchAccessRoleTarget _
+  = unexpectedError "invalid access_control row in database"

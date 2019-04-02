@@ -6,29 +6,54 @@ module AccessControl.Types
   , AccessPolicy
   , AccessResource(..)
   , AccessRole(..)
+  , accessRoleTarget
+  , AccessRoleTarget(..)
   , AccessRoleType(..)
   , NeedsPermissions(..)
+  , AccessPolicyItem
   , mkAccPolicy
-  , mkAccPolicyItem)
+  , mkAccPolicyItem
+  , AccessRoleID
+  , unsafeAccessRoleID
+  , emptyAccessRoleID
+  , fromAccessRoleID
+  )
   where
 
 import Control.Monad.Catch
-import Data.Int (Int16)
+import Data.Aeson (FromJSON, ToJSON)
+import Data.Int
 import Data.Typeable (Typeable, cast)
+import Data.Unjson
+import Happstack.Server
 import Log
 import qualified Control.Exception.Lifted as E
+import qualified Data.Binary as B
 
 import DB
 import Folder.Model
+import Log.Identifier
 import User.UserID
 import UserGroup.Model
 import UserGroup.Types
+
+data AccessRole
+  = AccessRoleUser AccessRoleID UserID AccessRoleTarget
+  | AccessRoleUserGroup AccessRoleID UserGroupID AccessRoleTarget
+  | AccessRoleImplicitUser UserID AccessRoleTarget
+  | AccessRoleImplicitUserGroup UserGroupID AccessRoleTarget
+
+accessRoleTarget :: AccessRole -> AccessRoleTarget
+accessRoleTarget (AccessRoleUser _ _ target) = target
+accessRoleTarget (AccessRoleUserGroup _ _ target) = target
+accessRoleTarget (AccessRoleImplicitUser _ target) = target
+accessRoleTarget (AccessRoleImplicitUserGroup _ target) = target
 
 -- | The roles we use are mostly rooted in some user group; rather than have
 -- this implicit in implementation we expose it in the constructors. The meaning
 -- is that for the supplied UserGroupID, say, the user has the role thus defined
 -- (e.g. 'UserGroupMemberAR 1234' would mean "for user group ID 1234 the user is a regular user")
-data AccessRole
+data AccessRoleTarget
   = UserAR UserID
   -- ^ A regular user; may read and edit himself
   | UserGroupMemberAR UserGroupID
@@ -106,7 +131,7 @@ mkPerm :: forall t. (Eq t, Typeable t, Show t) =>
        t -> AccessResource -> AccessAction -> Permission
 mkPerm t res act = Permission act res t
 
-hasPermissions :: AccessRole -> [Permission]
+hasPermissions :: AccessRoleTarget -> [Permission]
 hasPermissions (UserAR usrID) =
   -- user can read, update and delete himself
   map (mkPerm usrID UserR) [ReadA, UpdateA]
@@ -171,7 +196,7 @@ instance NeedsPermissions AccessPolicyItem where
 accessControl :: (MonadCatch m, MonadDB m, MonadThrow m, MonadLog m)
               => [AccessRole] -> AccessPolicy -> m a -> m a -> m a
 accessControl roles accessPolicy err ma = do
-  let accHad = nub . join $ map hasPermissions roles
+  let accHad = nub . join $ map (hasPermissions . accessRoleTarget) roles
   accNeeded <- NeededPermissionsExprAnd <$> mapM neededPermissions accessPolicy
   let cond = evalNeededPermExpr (`elem` accHad) accNeeded
   if cond then ma else err
@@ -202,7 +227,7 @@ instance FromSQL AccessRoleType where
       2 -> return UserAdminART
       3 -> return UserGroupAdminART
       4 -> return DocumentAdminART
-      _  -> E.throwIO $ RangeError {
+      _ -> E.throwIO $ RangeError {
         reRange = [(0, 4)]
       , reValue = n
       }
@@ -230,7 +255,13 @@ instance Read AccessRoleType where
   readsPrec _ "document_admin"    = [(DocumentAdminART, "")]
   readsPrec _ _  = []
 
-toAccessRoleType :: AccessRole -> AccessRoleType
+instance Unjson AccessRoleType where
+  unjsonDef = unjsonInvmapR
+    ((maybe (fail "Can't parse AccessRoleType") return) . maybeRead)
+    show
+    unjsonDef
+
+toAccessRoleType :: AccessRoleTarget -> AccessRoleType
 toAccessRoleType ar =
   case ar of
     UserAR            _ -> UserART
@@ -238,3 +269,49 @@ toAccessRoleType ar =
     UserAdminAR       _ -> UserAdminART
     UserGroupAdminAR  _ -> UserGroupAdminART
     DocumentAdminAR   _ -> DocumentAdminART
+
+-- AccessRoleID
+
+newtype AccessRoleID = AccessRoleID Int64
+  deriving (Eq, Ord)
+deriving newtype instance Read AccessRoleID
+deriving newtype instance Show AccessRoleID
+deriving newtype instance ToJSON AccessRoleID
+deriving newtype instance FromJSON AccessRoleID
+
+instance PQFormat AccessRoleID where
+  pqFormat = pqFormat @Int64
+
+instance FromSQL AccessRoleID where
+  type PQBase AccessRoleID = PQBase Int64
+  fromSQL mbase = AccessRoleID <$> fromSQL mbase
+
+instance ToSQL AccessRoleID where
+  type PQDest AccessRoleID = PQDest Int64
+  toSQL (AccessRoleID n) = toSQL n
+
+instance FromReqURI AccessRoleID where
+  fromReqURI = maybeRead
+
+unsafeAccessRoleID :: Int64 -> AccessRoleID
+unsafeAccessRoleID = AccessRoleID
+
+emptyAccessRoleID :: AccessRoleID
+emptyAccessRoleID = AccessRoleID 0
+
+fromAccessRoleID :: AccessRoleID -> Int64
+fromAccessRoleID (AccessRoleID ugid) = ugid
+
+instance Identifier AccessRoleID where
+  idDefaultLabel           = "access_role_id"
+  idValue (AccessRoleID k) = int64AsStringIdentifier k
+
+instance B.Binary AccessRoleID where
+  put (AccessRoleID ugid) = B.put ugid
+  get = fmap AccessRoleID B.get
+
+instance Unjson AccessRoleID where
+  unjsonDef = unjsonInvmapR
+    ((maybe (fail "Can't parse AccessRoleID") return) . maybeRead)
+    show
+    unjsonDef
