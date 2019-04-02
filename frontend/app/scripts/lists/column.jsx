@@ -15,11 +15,21 @@ module.exports = React.createClass({
     isSortable : function() {
       return this.props.sorting != undefined;
     },
+    isHidden : function() {
+      return !!this.props.ishidden && this.props.ishidden(this.props.model);
+    },
     render: function() {
       var self = this;
+      var thstyle = {"width" : this.props.width};
+      var tdstyle = {};
+      if (self.isHidden()) {
+        thstyle["display"] = "none";
+        tdstyle["display"] = "none";
+      };
+
       if (!this.props.data) { // We render a generic header for list - since there are no data to bind
         return (
-          <th className={this.className()} style={{"width" : this.props.width}}>
+          <th className={this.className()} style={thstyle}>
             {/*if*/ (this.isSelect()) &&
               (<div
                 className="checkbox"
@@ -52,7 +62,7 @@ module.exports = React.createClass({
           </th>);
       } else {
         return (
-          <td className={"row " + this.className()}>
+          <td className={"row " + this.className()} style={tdstyle}>
             {/*if*/ (this.isSelect()) &&
               (<div
                 className={"checkbox " + (this.props.data.isSelected() ? "checked" : "")}
