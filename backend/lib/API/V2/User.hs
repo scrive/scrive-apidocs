@@ -1,6 +1,7 @@
 module API.V2.User (
     getAPIUser
   , getAPIUserWithAnyPrivileges
+  , getAPIUserWithPrivileges
   , getAPIUserWithPad
   , getMagicHashForSignatoryAction
   , getDocumentSignatoryMagicHash

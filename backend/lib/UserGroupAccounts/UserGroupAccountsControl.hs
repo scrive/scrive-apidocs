@@ -69,7 +69,12 @@ handleUserGroupAccountsInternal ugid = do
     mkAccountFromUser u = CompanyAccount {
         camaybeuserid = userid u
       , cafullname = getFullName u
+      , cafstname = userfstname $ userinfo u
+      , casndname = usersndname $ userinfo u
       , caemail = getEmail u
+      , caphone = userphone $ userinfo u
+      , cassn = userpersonalnumber $ userinfo u
+      , caposition = usercompanyposition $ userinfo u
       , carole = if (useriscompanyadmin u)
                   then RoleAdmin
                   else RoleStandard
@@ -77,16 +82,23 @@ handleUserGroupAccountsInternal ugid = do
       , caactivated = isJust $ userhasacceptedtermsofservice u
       , catos = userhasacceptedtermsofservice u
       , catotpactive = usertotpactive u
+      , calang = Just $ lang $ usersettings u
       }
     mkAccountFromInvite (i,fn,ln,em) = CompanyAccount {
         camaybeuserid = inviteduserid i
       , cafullname = fn ++ " " ++ ln
+      , cafstname  = fn
+      , casndname  = ln
       , caemail = em
+      , caphone = ""
+      , cassn =  ""
+      , caposition = ""
       , carole = RoleInvite
       , cadeletable = True
       , caactivated = False
       , catos = Nothing
       , catotpactive = False
+      , calang = Nothing
       }
 
   textFilter <- getField "text" >>= \case
@@ -105,13 +117,20 @@ handleUserGroupAccountsInternal ugid = do
     objects "accounts" $ for (sortBy sortingWithOrder $ filter textFilter companyaccounts) $ \f -> do
       value "id" $ show $ camaybeuserid f
       value "fullname" $ cafullname f
+      value "fstname" $ cafstname f
+      value "sndname" $ casndname f
       value "email" $ caemail f
+      value "personalnumber" $ cassn f
+      value "phone" $ caphone f
+      value "companyposition" $ caposition f
       value "role" $ show $ carole f
       value "deletable" $ cadeletable f
       value "activated" $ caactivated f
       value "isctxuser" $ userid user == camaybeuserid f
       value "tos"       $ formatTimeISO <$> (catos f)
       value "twofactor_active" $ catotpactive f
+      value "lang" $ codeFromLang <$> calang f
+
 
 {- |
     A special data type used for just displaying stuff in the list
@@ -120,12 +139,18 @@ handleUserGroupAccountsInternal ugid = do
 data CompanyAccount = CompanyAccount
   { camaybeuserid :: UserID       -- ^ the account's or invites userid
   , cafullname    :: String       -- ^ the account's or invites fullname
+  , cafstname     :: String       -- ^ the account's or invites fstname
+  , casndname     :: String       -- ^ the account's or invites sndname
   , caemail       :: String       -- ^ the account's or invites email
+  , caphone       :: String       -- ^ the account's or invites phone (user account only)
+  , cassn         :: String       -- ^ the account's or invites ssn (user account only)
+  , caposition    :: String       -- ^ the account's or invites company position (user account only)
   , carole        :: Role         -- ^ the account's role (always Standard for invites)
   , cadeletable   :: Bool         -- ^ can the account be deleted, or do they have pending documents (always True for invites)?
   , caactivated   :: Bool         -- ^ is the account a full company user with accepted tos? (always False for invites)
   , catos         :: Maybe UTCTime -- ^ TOS time if any (always Nothing for invites)
   , catotpactive  :: Bool         -- ^ Whether TOTP two-factor authentication is active
+  , calang        :: Maybe Lang         -- ^ the account's language
   }
 
 data Role = RoleAdmin    -- ^ an admin user

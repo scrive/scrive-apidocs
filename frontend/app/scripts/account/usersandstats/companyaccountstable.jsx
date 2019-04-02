@@ -11,9 +11,11 @@ var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var Language = require("../../../js/utils/language.js").Language;
 var $ = require("jquery");
 var Modal = require("../../common/modal");
+var InfoTextInput = require("../../common/infotextinput");
 var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
 
 var CreateAccountModal = require("./createaccountmodal");
+var EditAccountModal = require("./editaccountmodal");
 
 var AccountOperationModalMixin = {
   userFullName: function () {
@@ -71,8 +73,10 @@ module.exports = React.createClass({
     getInitialState: function () {
       return {
         showCreateAccountModal: false,
+        showEditAccountModal: false,
         accountToRemove: null,
-        accountToReinvite: null
+        accountToReinvite: null,
+        accountToEdit: null
       };
     },
     componentDidMount: function () {
@@ -167,6 +171,24 @@ module.exports = React.createClass({
         }).sendAjax();
       }
     },
+
+    showEditAccountModal: function (user) {
+      Track.track("Click edit user");
+      this.setState({
+        showEditAccountModal: true,
+        accountToEdit: user
+      });
+    },
+    onEditAccountModalClose: function (reload) {
+      this.setState({showEditAccountModal: false});
+    },
+    onEditAccountModalAccept: function () {
+      var self = this;
+      self.setState({showEditAccountModal: false});
+      window.setTimeout(function() { self.reload(); }, 500);
+    },
+
+
     showResendInvitationModal: function (user) {
       this.setState({
         showResendInvitationModal: true,
@@ -294,7 +316,25 @@ module.exports = React.createClass({
             <List.Column
               name=""
               width="16px"
-              sorting="activated"
+              rendering={function(d) {
+                var role = d.field("role");
+                if (role != "RoleInvite") {
+                  return (
+                      <a
+                        className='edit icon'
+                        style={{marginTop : "3px"}}
+                        onClick={() => self.showEditAccountModal(d)}
+                      />
+                    );
+                } else {
+                  return (<span/>);
+                }
+              }}
+            />
+
+            <List.Column
+              name=""
+              width="16px"
               rendering={function(d) {
                 var canBeReinvited = !d.field("activated");
                 if (canBeReinvited) {
@@ -369,6 +409,15 @@ module.exports = React.createClass({
               />
             </Modal.Footer>
           </Modal.Container>
+
+          <EditAccountModal
+            active={self.state.showEditAccountModal}
+            account={self.state.accountToEdit}
+            onClose={self.onEditAccountModalClose}
+            onAccept={self.onEditAccountModalAccept}
+          />
+
+
         </div>
       );
     }

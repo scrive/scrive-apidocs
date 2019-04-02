@@ -1243,7 +1243,15 @@ javascriptLocalisation =
               , columnName :  "$_name()$"
               , columnEmail : "$_email()$"
               , columnRole :  "$_role()$"
-
+              , editModal : {
+                  editDetails : "$_modalEditUsersEditDetails()$"
+                , save : "$_modalEditUsersSave()$"
+                , change : "$_modalEditUsersChange()$"
+                , changeEmail: "$_modalEditUsersChangeEmail()$"
+                , requestSent:"$_modalEditUsersRequestSent()$"
+                , emailInUse: "$_modalEditUsersEmailInUse()$"
+                , settingsSaved: "$_modalEditUsersSettingsSaved()$"
+              }
             }
           , stats : {
                 name : "$_HeadUsageStats()$"

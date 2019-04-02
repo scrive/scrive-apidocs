@@ -123,6 +123,9 @@ userAPIV2 = choice [
 
   dir "gettokenforpersonalcredentials" $ hPost $ toK1 $ apiCallGetTokenForPersonalCredentials,
 
+  dir "updateusersprofile" $ hPost $ toK1 $ apiCallUpdateOtherUserProfile,
+  dir "changeusersemail" $ hPost $ toK1 $ apiCallChangeOtherUserEmail,
+
   dir "usagestats" $ dir "shareablelink" $ dir "days" $ hGet $ toK0
     $ User.UserControl.handleUsageStatsJSONForShareableLinks PartitionByDay,
   dir "usagestats" $ dir "shareablelink" $ dir "months" $ hGet $ toK0
@@ -384,7 +387,7 @@ apiCallChangeEmail = api $ do
            Ok <$> (runJSONGenT $ value "send" False)
          Nothing -> do
             changeemaillink <- newEmailChangeRequestLink (userid user) newemail
-            mail <- mailEmailChangeRequest ctx user newemail changeemaillink
+            mail <- mailEmailChangeRequest ctx Nothing user newemail changeemaillink
             scheduleEmailSendout (mail{to = [MailAddress{
                                     fullname = getFullName user
                                   , email = unEmail newemail }]})
@@ -681,3 +684,68 @@ apiCallCheckPassword = api $ do
   password <- getField' "password"
   goodPassword <- checkPassword (get ctxpasswordserviceconf ctx) password
   Ok <$> (runJSONGenT $ value "valid" goodPassword)
+
+guardCanChangeUser :: Kontrakcja m => User -> User -> m ()
+guardCanChangeUser adminuser otheruser = do
+  unless (useriscompanyadmin adminuser && (usergroupid adminuser == usergroupid otheruser)) $ do
+    throwM . SomeDBExtraException $ forbidden "Can't change this user details"
+
+apiCallUpdateOtherUserProfile  :: Kontrakcja m => UserID -> m Response
+apiCallUpdateOtherUserProfile affectedUserID = V2.api $ do
+  ctx <- getContext
+  (authorizingUser, _) <- V2.getAPIUserWithPrivileges [APIPersonal]
+  mAffectedUser <- dbQuery $ GetUserByID affectedUserID
+  case mAffectedUser of
+    Nothing -> throwM . SomeDBExtraException $ forbidden "User doesn't exist"
+    Just affectedUser -> do
+      guardCanChangeUser authorizingUser affectedUser
+      let getUserParameter n v prevValue = do
+            mx <- apiV2ParameterOptional $ ApiV2ParameterTextWithValidation n $ emptyOK v
+            return $ maybe (prevValue $ userinfo affectedUser) T.unpack mx
+
+      companyposition <- getUserParameter "companyposition" asValidPosition usercompanyposition
+      phone <- getUserParameter "phone" asValidPhone userphone
+      personalnumber <- getUserParameter "personalnumber" asValidPersonalNumber userpersonalnumber
+      fstname <- getUserParameter "fstname" asValidName userfstname
+      sndname <- getUserParameter "sndname" asValidName usersndname
+      let affectedUserNewInfo = (userinfo affectedUser) {
+          userfstname         = fstname
+        , usersndname         = sndname
+        , userpersonalnumber  = personalnumber
+        , usercompanyposition = companyposition
+        , userphone           = phone
+        }
+      void $ dbUpdate $ SetUserInfo affectedUserID affectedUserNewInfo
+      void $ dbUpdate $ LogHistoryUserInfoChanged affectedUserID (get ctxipnumber ctx) (get ctxtime ctx)
+                                               (userinfo affectedUser) affectedUserNewInfo
+                                               (Just $ userid authorizingUser)
+
+      mlang <- (join . (fmap langFromCode)) <$> getField "lang"
+      when_ (isJust mlang) $ dbUpdate $ SetUserSettings affectedUserID $ (usersettings affectedUser) { lang = fromJust mlang }
+
+
+      return $ V2.Ok $ (runJSONGen $ value "changed" True)
+
+
+apiCallChangeOtherUserEmail :: Kontrakcja m => UserID -> m Response
+apiCallChangeOtherUserEmail affectedUserID = V2.api $ do
+  ctx <- getContext
+  (authorizingUser, _) <- V2.getAPIUserWithPrivileges [APIPersonal]
+  mAffectedUser <- dbQuery $ GetUserByID affectedUserID
+  case mAffectedUser of
+    Nothing -> throwM . SomeDBExtraException $ forbidden "User doesn't exist"
+    Just affectedUser -> do
+      guardCanChangeUser authorizingUser affectedUser
+      newemail <- Email . T.unpack <$> (apiV2ParameterObligatory $ ApiV2ParameterTextWithValidation  "newemail" asValidEmail)
+      mexistinguser <- dbQuery $ GetUserByEmail newemail
+      case mexistinguser of
+        Just _existinguser -> do
+          sendChangeToExistingEmailInternalWarningMail affectedUser newemail
+          return $ V2.Ok $ (runJSONGen $ value "sent" False)
+        Nothing -> do
+            changeemaillink <- newEmailChangeRequestLink affectedUserID newemail
+            mail <- mailEmailChangeRequest ctx (Just authorizingUser) affectedUser newemail changeemaillink
+            scheduleEmailSendout (mail{to = [MailAddress{
+                                    fullname = getFullName affectedUser
+                                  , email = unEmail newemail }]})
+            return $ V2.Ok $ (runJSONGen $ value "sent" True)

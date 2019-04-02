@@ -763,7 +763,11 @@ mailRequestChangeEmail=
 ####
 mailRequestChangeEmailP=
   <br/>
-  $_mailRequestChangeEmailExplanation()$
+  $if(requestedby)$
+    $_mailRequestChangeEmailByAdminExplanation()$
+  $else$
+    $_mailRequestChangeEmailExplanation()$
+  $endif$
   <br/>
   <br/>
   $nicebutton(link=concat(a1=ctxhostpart;a2=link); text=_mailRequestChangeEmailButton())$

@@ -76,15 +76,16 @@ mailNewAccountCreatedByAdmin ctx lang email setpasslink = do
     brandingMailFields theme
 
 
-mailEmailChangeRequest :: (TemplatesMonad m, HasSomeUserInfo a,MonadDB m,MonadThrow m) => Context -> a -> Email -> KontraLink -> m Mail
-mailEmailChangeRequest ctx user newemail link = do
+mailEmailChangeRequest :: (TemplatesMonad m, MonadDB m,MonadThrow m) => Context -> Maybe User -> User -> Email -> KontraLink -> m Mail
+mailEmailChangeRequest ctx requestingUser changedUser newemail link = do
   theme <- dbQuery $ GetTheme $ get (bdMailTheme . ctxbrandeddomain) ctx
   kontramail (get ctxmailnoreplyaddress ctx) (get ctxbrandeddomain ctx)
     theme "mailRequestChangeEmail" $ do
-    F.value "fullname" $ getFullName user
+    F.value "fullname" $ getFullName changedUser
     F.value "newemail" $ unEmail newemail
     F.value "ctxhostpart" $ get ctxDomainUrl ctx
     F.value "link" $ show link
+    F.value "requestedby" $ getSmartName <$> requestingUser
     brandingMailFields theme
 
 -------------------------------------------------------------------------------

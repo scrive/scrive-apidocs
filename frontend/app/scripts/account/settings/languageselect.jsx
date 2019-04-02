@@ -2,31 +2,13 @@ var React = require("react");
 var Select = require("../../common/select");
 var $ = require("jquery");
 var _ = require("underscore");
+var Language = require("../../../js/utils/language.js").Language;
+
 
 module.exports = React.createClass({
   languages: function () {
     if (!this._languages) {
-      var knownLanguages = [
-        {name: localization.languages.enInEn, value: "en"},
-        {name: localization.languages.svInSv, value: "sv"},
-        {name: localization.languages.deInDe, value: "de"},
-        {name: localization.languages.frInFr, value: "fr"},
-        {name: localization.languages.itInIt, value: "it"},
-        {name: localization.languages.esInEs, value: "es"},
-        {name: localization.languages.ptInPt, value: "pt"},
-        {name: localization.languages.nlInNl, value: "nl"},
-        {name: localization.languages.daInDa, value: "da"},
-        {name: localization.languages.noInNo, value: "no"},
-        {name: localization.languages.elInEl, value: "el"},
-        {name: localization.languages.fiInFi, value: "fi"},
-        {name: localization.languages.isInIs, value: "is"},
-        {name: localization.languages.etInEt, value: "et"},
-        {name: localization.languages.lvInLv, value: "lv"},
-        {name: localization.languages.ltInLt, value: "lt"},
-        {name: localization.languages.csInCs, value: "cs"},
-        {name: localization.languages.plInPl, value: "pl"}
-      ];
-
+      var knownLanguages = Language.allLanguagesOptions();
       this._languages = _.sortBy(knownLanguages, function (l) {
         return l.name.toLowerCase();
       });
