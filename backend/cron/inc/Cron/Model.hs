@@ -1,5 +1,6 @@
 module Cron.Model (cronConsumer) where
 
+import Control.Arrow ((&&&))
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
@@ -72,35 +73,37 @@ data JobType
   | AttachmentsPurge
   | TemporaryMagicHashesPurge
   | TemporaryLoginTokensPurge
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Enum, Bounded)
 
 jobTypeMapper :: [(JobType, T.Text)]
 jobTypeMapper =
-  [ (AsyncEventsProcessing, "async_events_processing")
-  , (ClockErrorCollection, "clock_error_collection")
-  , (DocumentAutomaticRemindersEvaluation, "document_automatic_reminders_evaluation")
-  , (DocumentsPurge, "documents_purge")
-  , (DocumentsArchiveIdle, "documents_archive_idle")
-  , (EmailChangeRequestsEvaluation, "email_change_requests_evaluation")
-  , (FindAndTimeoutDocuments, "find_and_timeout_documents")
-  , (InvoicingUpload, "invoice_upload")
-  , (MailEventsProcessing, "mail_events_processing")
-  , (MarkOrphanFilesForPurge, "mark_orphan_files_for_purge")
-  , (MonthlyInvoice, "monthly_invoice")
-  , (OldDraftsRemoval, "old_drafts_removal")
-  , (OldLogsRemoval, "old_logs_removal")
-  , (PasswordRemindersEvaluation, "password_reminders_evaluation")
-  , (PushPlanhatStats, "push_planhat_stats")
-  , (SessionsEvaluation, "sessions_evaluation")
-  , (SMSEventsProcessing, "sms_events_processing")
-  , (StrengthenPasswords, "upgrade_password_algorithm")
-  , (UserAccountRequestEvaluation, "user_account_request_evaluation")
-  , (DocumentSearchUpdate, "document_search_update")
-  , (DocumentsAuthorIDMigration, "document_author_id_job")
-  , (AttachmentsPurge, "attachments_purge")
-  , (TemporaryMagicHashesPurge, "temporary_magic_hashes_purge")
-  , (TemporaryLoginTokensPurge, "temporary_login_tokens_purge")
-  ]
+  map (id &&& jobTypeToText) [minBound..maxBound]
+  where
+    jobTypeToText = \case
+      AsyncEventsProcessing                -> "async_events_processing"
+      ClockErrorCollection                 -> "clock_error_collection"
+      DocumentAutomaticRemindersEvaluation -> "document_automatic_reminders_evaluation"
+      DocumentsPurge                       -> "documents_purge"
+      DocumentsArchiveIdle                 -> "documents_archive_idle"
+      EmailChangeRequestsEvaluation        -> "email_change_requests_evaluation"
+      FindAndTimeoutDocuments              -> "find_and_timeout_documents"
+      InvoicingUpload                      -> "invoice_upload"
+      MailEventsProcessing                 -> "mail_events_processing"
+      MarkOrphanFilesForPurge              -> "mark_orphan_files_for_purge"
+      MonthlyInvoice                       -> "monthly_invoice"
+      OldDraftsRemoval                     -> "old_drafts_removal"
+      OldLogsRemoval                       -> "old_logs_removal"
+      PasswordRemindersEvaluation          -> "password_reminders_evaluation"
+      PushPlanhatStats                     -> "push_planhat_stats"
+      SessionsEvaluation                   -> "sessions_evaluation"
+      SMSEventsProcessing                  -> "sms_events_processing"
+      StrengthenPasswords                  -> "upgrade_password_algorithm"
+      UserAccountRequestEvaluation         -> "user_account_request_evaluation"
+      DocumentSearchUpdate                 -> "document_search_update"
+      DocumentsAuthorIDMigration           -> "document_author_id_job"
+      AttachmentsPurge                     -> "attachments_purge"
+      TemporaryMagicHashesPurge            -> "temporary_magic_hashes_purge"
+      TemporaryLoginTokensPurge            -> "temporary_login_tokens_purge"
 
 instance PQFormat JobType where
   pqFormat = pqFormat @T.Text
