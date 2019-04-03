@@ -2,7 +2,7 @@ module SMS.SMS (
     SMS(..)
   , KontraInfoForSMS(..)
   , AddKontraInfoForSMS(..)
-  , GetKontraInfoForSMS(..)
+  , GetKontraInfosForSMSes(..)
   , scheduleSMS
   ) where
 

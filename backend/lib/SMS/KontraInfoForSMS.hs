@@ -1,7 +1,7 @@
 module SMS.KontraInfoForSMS (
     KontraInfoForSMS(..)
   , AddKontraInfoForSMS(..)
-  , GetKontraInfoForSMS(..)
+  , GetKontraInfosForSMSes(..)
   ) where
 
 import Control.Monad.Catch
@@ -98,30 +98,32 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddKontraInfoForSMS Bool where
            sqlSet "sms_type" OtherDocumentSMST
            sqlSet "document_id" did
 
-data GetKontraInfoForSMS = GetKontraInfoForSMS ShortMessageID
-instance (MonadDB m, MonadThrow m) => DBQuery m GetKontraInfoForSMS (Maybe KontraInfoForSMS) where
-  query (GetKontraInfoForSMS smsid) = do
+data GetKontraInfosForSMSes = GetKontraInfosForSMSes [ShortMessageID]
+instance (MonadDB m, MonadThrow m) => DBQuery m GetKontraInfosForSMSes [(ShortMessageID, KontraInfoForSMS)] where
+  query (GetKontraInfosForSMSes smsids) = do
     runQuery_ . sqlSelect "kontra_info_for_smses" $ do
-                sqlWhereEq "sms_id" smsid
+                sqlWhereIn "sms_id" smsids
+                sqlResult "sms_id"
                 sqlResult "sms_type"
                 sqlResult "document_id"
                 sqlResult "signatory_link_id"
-    fetchMaybe fetchKontraInfoForSMS
+                sqlOrderBy "document_id"
+    fetchMany fetchKontraInfoForSMS
 
-fetchKontraInfoForSMS :: (KontraInfoForSMSType, Maybe DocumentID, Maybe SignatoryLinkID) -> KontraInfoForSMS
-fetchKontraInfoForSMS (DocumentInvitationSMST, Just did, Just sig)  =
-  DocumentInvitationSMS did sig
-fetchKontraInfoForSMS (DocumentInvitationSMST, _, _)  =
+fetchKontraInfoForSMS :: (ShortMessageID, KontraInfoForSMSType, Maybe DocumentID, Maybe SignatoryLinkID) -> (ShortMessageID, KontraInfoForSMS)
+fetchKontraInfoForSMS (smsid, DocumentInvitationSMST, Just did, Just sig)  =
+  (smsid, DocumentInvitationSMS did sig)
+fetchKontraInfoForSMS (_, DocumentInvitationSMST, _, _)  =
   unexpectedError "Failed to fetch KontraInfoForSMS (DocumentInvitationSMST)"
-fetchKontraInfoForSMS (DocumentPinSendoutSMST, Just did, Just sig)  =
-  DocumentPinSendoutSMS did sig
-fetchKontraInfoForSMS (DocumentPinSendoutSMST, _, _)  =
+fetchKontraInfoForSMS (smsid, DocumentPinSendoutSMST, Just did, Just sig)  =
+  (smsid, DocumentPinSendoutSMS did sig)
+fetchKontraInfoForSMS (_, DocumentPinSendoutSMST, _, _)  =
   unexpectedError "Failed to fetch KontraInfoForSMS (DocumentPinSendoutSMST)"
-fetchKontraInfoForSMS (DocumentPartyNotificationSMST, Just did, Just sig) =
-  DocumentPartyNotificationSMS did sig
-fetchKontraInfoForSMS (DocumentPartyNotificationSMST, _, _) =
+fetchKontraInfoForSMS (smsid, DocumentPartyNotificationSMST, Just did, Just sig) =
+  (smsid, DocumentPartyNotificationSMS did sig)
+fetchKontraInfoForSMS (_, DocumentPartyNotificationSMST, _, _) =
   unexpectedError "Failed to fetch KontraInfoForSMS (DocumentPartyNotificationSMST)"
-fetchKontraInfoForSMS (OtherDocumentSMST, Just did, Nothing)  =
-  OtherDocumentSMS did
-fetchKontraInfoForSMS (OtherDocumentSMST, _, _)  =
+fetchKontraInfoForSMS (smsid, OtherDocumentSMST, Just did, Nothing)  =
+  (smsid, OtherDocumentSMS did)
+fetchKontraInfoForSMS (_, OtherDocumentSMST, _, _)  =
   unexpectedError "Failed to fetch KontraInfoForSMS (OtherDocumentSMST)"

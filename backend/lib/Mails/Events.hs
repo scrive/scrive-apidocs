@@ -53,12 +53,25 @@ import Util.SignatoryLinkUtils
 processEvents :: (MonadDB m, MonadReader CronEnv m, MonadLog m, MonadCatch m, CryptoRNG m) => Int -> m Int
 processEvents limit = do
   -- We limit processing to <limit> events not to have issues with large number of documents locked.
+  -- kontra infos are retrieved in did ascending order to acquire locks without deadlocking
   events <- take limit <$> dbQuery GetUnreadEvents
-  forM_ events $ \event@(eid, mid, _) -> do
+  infos <- dbQuery $ GetKontraInfosForMails $ map (\(_, mid, _) -> mid) events
+  let findEventInfo mid' = find (\(_, mid, _) -> mid == mid') events
+      pushToTuple3 x (a, b, c) = (a, b, c, x)
+      eventInfos = catMaybes $ map (\(mid, info) -> pushToTuple3 info <$> findEventInfo mid) infos
+      eventsWithoutInfos = filter (\(_, mid, _) -> Nothing == find ((==mid).fst) infos) events
+  forM_ eventsWithoutInfos $ \(eid, mid, eventType) -> do
+    logInfo "Proccessing event without document info" $ object [
+            identifier eid
+          , identifier mid
+          , "event_type" .= show eventType
+          ]
+    markEventAsRead eid
+  forM_ eventInfos $ \event@(eid, mid, _, _) -> do
     localData [identifier eid, identifier mid] $ processEvent event
   return $ length events
   where
-    processEvent (eid, mid, eventType) = do
+    processEvent (eid, mid, eventType, kontraInfoForMail) = do
       now <- currentTime
       mailNoreplyAddress <- asks ceMailNoreplyAddress
       mmailSendTimeStamp <- dbQuery $ GetEmailSendoutTime mid
@@ -66,15 +79,13 @@ processEvents limit = do
                        Nothing -> Nothing
                        Just mailSendTimeStamp -> Just $ floor $ toRational $ mailSendTimeStamp `diffUTCTime` now
       templates <- asks ceTemplates
-      mkontraInfoForMail <- dbQuery $ GetKontraInfoForMail mid
       markEventAsRead eid
-      case mkontraInfoForMail of
-        Nothing -> return ()
-        Just (DocumentInvitationMail docid slid) -> forExistingDocument docid $
+      case kontraInfoForMail of
+        DocumentInvitationMail docid slid -> forExistingDocument docid $
           handleEventInvitation slid timeDiff templates eventType mailNoreplyAddress
-        Just (DocumentConfirmationMail docid slid) -> forExistingDocument docid $
+        DocumentConfirmationMail docid slid -> forExistingDocument docid $
           handleEventConfirmation slid timeDiff templates eventType mailNoreplyAddress
-        Just (OtherDocumentMail docid) -> forExistingDocument docid $
+        OtherDocumentMail docid -> forExistingDocument docid $
           handleEventOtherMail timeDiff eventType
 
     forExistingDocument docid action = do

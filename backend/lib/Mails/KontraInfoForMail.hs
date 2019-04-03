@@ -1,7 +1,7 @@
 module Mails.KontraInfoForMail (
     KontraInfoForMail(..)
   , AddKontraInfoForMail(..)
-  , GetKontraInfoForMail(..)
+  , GetKontraInfosForMails(..)
 ) where
 
 import Control.Monad.Catch
@@ -85,20 +85,22 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddKontraInfoForMail Bool where
            sqlSet "mail_type" OtherDocumentMailT
            sqlSet "document_id" did
 
-data GetKontraInfoForMail = GetKontraInfoForMail MailID
-instance (MonadDB m, MonadThrow m) => DBQuery m GetKontraInfoForMail (Maybe KontraInfoForMail) where
-  query (GetKontraInfoForMail mailid) = do
+data GetKontraInfosForMails = GetKontraInfosForMails [MailID]
+instance (MonadDB m, MonadThrow m) => DBQuery m GetKontraInfosForMails [(MailID, KontraInfoForMail)] where
+  query (GetKontraInfosForMails mailids) = do
     runQuery_ . sqlSelect "kontra_info_for_mails" $ do
-      sqlWhereEq "mail_id" mailid
+      sqlWhereIn "mail_id" mailids
+      sqlResult "mail_id"
       sqlResult "mail_type"
       sqlResult "document_id"
       sqlResult "signatory_link_id"
-    fetchMaybe fetchKontraInfoForMail
+      sqlOrderBy "document_id"
+    fetchMany fetchKontraInfoForMail
 
-fetchKontraInfoForMail :: (KontraInfoForMailType, Maybe DocumentID, Maybe SignatoryLinkID) -> KontraInfoForMail
-fetchKontraInfoForMail (DocumentInvitationMailT, Just did, Just sig)  = DocumentInvitationMail did sig
-fetchKontraInfoForMail (DocumentInvitationMailT, _, _)  = (unexpectedError "Failed to fetch KontraInfoForMail (DocumentInvitationMailT)")
-fetchKontraInfoForMail (DocumentConfirmationMailT, Just did, Just sig)  = DocumentConfirmationMail did sig
-fetchKontraInfoForMail (DocumentConfirmationMailT, _, _)  = (unexpectedError "Failed to fetch KontraInfoForMail (DocumentConfirmationMailT)")
-fetchKontraInfoForMail (OtherDocumentMailT, Just did, Nothing)  = OtherDocumentMail did
-fetchKontraInfoForMail (OtherDocumentMailT, _, _)  = (unexpectedError "Failed to fetch KontraInfoForMail (OtherDocumentMailT)")
+fetchKontraInfoForMail :: (MailID, KontraInfoForMailType, Maybe DocumentID, Maybe SignatoryLinkID) -> (MailID, KontraInfoForMail)
+fetchKontraInfoForMail (mid, DocumentInvitationMailT, Just did, Just sig)  = (mid, DocumentInvitationMail did sig)
+fetchKontraInfoForMail (_, DocumentInvitationMailT, _, _)  = (unexpectedError "Failed to fetch KontraInfoForMail (DocumentInvitationMailT)")
+fetchKontraInfoForMail (mid, DocumentConfirmationMailT, Just did, Just sig)  = (mid, DocumentConfirmationMail did sig)
+fetchKontraInfoForMail (_, DocumentConfirmationMailT, _, _)  = (unexpectedError "Failed to fetch KontraInfoForMail (DocumentConfirmationMailT)")
+fetchKontraInfoForMail (mid, OtherDocumentMailT, Just did, Nothing)  = (mid, OtherDocumentMail did)
+fetchKontraInfoForMail (_, OtherDocumentMailT, _, _)  = (unexpectedError "Failed to fetch KontraInfoForMail (OtherDocumentMailT)")

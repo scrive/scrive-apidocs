@@ -46,17 +46,29 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
 processEvents :: (MonadDB m, MonadBase IO m, MonadReader CronEnv m, MonadLog m, MonadCatch m, CryptoRNG m) => m ()
-processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, smsOrigMsisdn) -> do
-    mkontraInfoForSMS <- dbQuery $ GetKontraInfoForSMS smsid
+processEvents = do
+  events <- dbQuery GetUnreadSMSEvents
+  infos <- dbQuery $ GetKontraInfosForSMSes $ map (\(_, smsid, _, _) -> smsid) events
+  let findEventInfo smsid' = find (\(_, smsid, _, _) -> smsid == smsid') events
+      pushToTuple4 x (a, b, c, d) = (a, b, c, d, x)
+      eventInfos = catMaybes $ map (\(smsid, info) -> pushToTuple4 info <$> findEventInfo smsid) infos
+      eventsWithoutInfos = filter (\(_, smsid, _, _) -> Nothing == find ((==smsid).fst) infos) events
+  forM_ eventsWithoutInfos $ \(eid, smsid, eventType, _) -> do
+    logInfo "Proccessing event without document info" $ object [
+            identifier eid
+          , identifier smsid
+          , "event_type" .= show eventType
+          ]
+    void $ dbUpdate $ MarkSMSEventAsRead eid
+  forM_ eventInfos (\(eid, smsid, eventType, smsOrigMsisdn, kontraInfoForSMS) -> do
     logInfo "Messages.procesEvent: logging info" . object $ [
             identifier eid
           , identifier smsid
           , "event_type" .= show eventType
           ]
-    processEvent (eid, smsid, eventType, mkontraInfoForSMS, smsOrigMsisdn)
-  )
+    processEvent (eid, smsid, eventType, kontraInfoForSMS, smsOrigMsisdn))
   where
-    processEvent (eid, _, eventType, Just (DocumentInvitationSMS _did slid), smsOrigMsisdn) = do
+    processEvent (eid, _, eventType, DocumentInvitationSMS _did slid, smsOrigMsisdn) = do
       docs <- dbQuery $ GetDocumentsBySignatoryLinkIDs [slid]
       mailNoreplyAddress <- asks ceMailNoreplyAddress
       case docs of
@@ -94,7 +106,7 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, s
                       handleUndeliveredSMSInvitation mailNoreplyAddress bd host slid
             handleEv eventType
 
-    processEvent (eid, _, eventType, Just (DocumentPinSendoutSMS _did slid), smsOrigMsisdn) =
+    processEvent (eid, _, eventType, DocumentPinSendoutSMS _did slid, smsOrigMsisdn) =
       dbQuery (GetDocumentBySignatoryLinkID slid) >>= \doc' -> withDocument doc' $ do
         void $ dbUpdate $ MarkSMSEventAsRead eid
         templates <- asks ceTemplates
@@ -115,7 +127,7 @@ processEvents = dbQuery GetUnreadSMSEvents >>= mapM_ (\(eid, smsid, eventType, s
                 (actor)
           _ ->
             return ()
-    processEvent (eid, _ , eventType, Just (OtherDocumentSMS did), smsOrigMsisdn) =
+    processEvent (eid, _ , eventType, OtherDocumentSMS did, smsOrigMsisdn) =
       withDocumentID did $ do
         void $ dbUpdate $ MarkSMSEventAsRead eid
         case eventType of
