@@ -168,7 +168,7 @@ data CompanyAccount = CompanyAccount
   , catos         :: Maybe UTCTime -- ^ TOS time if any (always Nothing for invites)
   , catotpactive  :: Bool         -- ^ Whether TOTP two-factor authentication is active
   , calang        :: Maybe Lang         -- ^ the account's language
-  , caugname      :: String       -- ^ name use user's userGroup
+  , caugname      :: String       -- ^ name of user's userGroup
   }
 
 data Role = RoleAdmin    -- ^ an admin user
