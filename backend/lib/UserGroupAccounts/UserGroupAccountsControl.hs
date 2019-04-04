@@ -12,9 +12,11 @@ module UserGroupAccounts.UserGroupAccountsControl (
   , sendNewUserGroupUserMail
   ) where
 
+import Control.Monad.Extra (concatForM)
 import Data.Char
 import Text.JSON (JSValue(..))
 import Text.JSON.Gen
+import qualified Data.Text as T
 
 import AccessControl.Types
 import DB
@@ -41,32 +43,45 @@ import Util.MonadUtils
 
 -- | Get the ajax data for the company accounts list.
 handleUserGroupAccounts :: Kontrakcja m => m JSValue
-handleUserGroupAccounts = withCompanyAdmin $ \(_user, ug) -> do
-  handleUserGroupAccountsInternal . get ugID $ ug
+handleUserGroupAccounts = withUserAndGroup $ \(user,_) -> do
+  -- When a user has additional UserAdminAR role stored in database, return all the users,
+  -- which he can administer.
+  -- This intentionally uses UserAdminAR role instead of checking for (ReadA, UserR) permission,
+  -- because we want to avoid huge list of users for "partner admins" (UserGroupAdminART).
+  roles <- dbQuery . GetRoles $ user
+  let userAdminUgId = \case
+        UserAdminAR ugid -> Just ugid
+        _ -> Nothing
+  handleUserGroupAccountsInternal . mapMaybe userAdminUgId . fmap accessRoleTarget $ roles
 
 -- | Get the ajax data for the company accounts list.
 handleUserGroupAccountsForAdminOnly :: Kontrakcja m => UserGroupID -> m JSValue
 handleUserGroupAccountsForAdminOnly ugid = onlySalesOrAdmin $ do
-  handleUserGroupAccountsInternal ugid
+  handleUserGroupAccountsInternal [ugid]
 
 -- | Create the JSON for either the admin only user or the logged in
 -- company admin.
-handleUserGroupAccountsInternal :: Kontrakcja m => UserGroupID -> m JSValue
-handleUserGroupAccountsInternal ugid = do
+handleUserGroupAccountsInternal :: Kontrakcja m => [UserGroupID] -> m JSValue
+handleUserGroupAccountsInternal ugids = do
   muser <- get ctxmaybeuser <$> getContext
   user <- case muser of
     Nothing   -> unexpectedError
                  "handleUserGroupAccountsInternal: No user in Context!"
     Just user -> return user
-  users <- dbQuery . UserGroupGetUsers $ ugid
-  deletableuserids <- map userid <$> filterM isUserDeletable users
-  invites <- dbQuery $ UserGroupGetInvitesWithUsersData ugid
-  let isUser (invite,_,_,_) = (inviteduserid invite) `elem` map userid users
+  ugs <- forM ugids $ guardJustM . dbQuery . UserGroupGet
+  usersWithUgs <- concatForM ugs $ \ug -> do
+    users <- dbQuery . UserGroupGetUsers $ get ugID ug
+    return . zip users $ repeat ug
+  deletableuserids <- map userid <$> filterM isUserDeletable (map fst usersWithUgs)
+  invitesWithUgs <- concatForM ugs $ \ug -> do
+    invites <- dbQuery . UserGroupGetInvitesWithUsersData $ get ugID ug
+    return . zip invites $ repeat ug
+  let isUser ((invite,_,_,_),_) = (inviteduserid invite) `elem` map (userid . fst) usersWithUgs
   let
     companyaccounts =
-      map mkAccountFromUser users
-      ++ map mkAccountFromInvite (filter (not . isUser) invites)
-    mkAccountFromUser u = CompanyAccount {
+      map mkAccountFromUser usersWithUgs
+      ++ map mkAccountFromInvite (filter (not . isUser) invitesWithUgs)
+    mkAccountFromUser (u,ug) = CompanyAccount {
         camaybeuserid = userid u
       , cafullname = getFullName u
       , cafstname = userfstname $ userinfo u
@@ -83,8 +98,9 @@ handleUserGroupAccountsInternal ugid = do
       , catos = userhasacceptedtermsofservice u
       , catotpactive = usertotpactive u
       , calang = Just $ lang $ usersettings u
+      , caugname = T.unpack $ get ugName ug
       }
-    mkAccountFromInvite (i,fn,ln,em) = CompanyAccount {
+    mkAccountFromInvite ((i,fn,ln,em), ug) = CompanyAccount {
         camaybeuserid = inviteduserid i
       , cafullname = fn ++ " " ++ ln
       , cafstname  = fn
@@ -99,6 +115,7 @@ handleUserGroupAccountsInternal ugid = do
       , catos = Nothing
       , catotpactive = False
       , calang = Nothing
+      , caugname = T.unpack $ get ugName ug
       }
 
   textFilter <- getField "text" >>= \case
@@ -130,7 +147,7 @@ handleUserGroupAccountsInternal ugid = do
       value "tos"       $ formatTimeISO <$> (catos f)
       value "twofactor_active" $ catotpactive f
       value "lang" $ codeFromLang <$> calang f
-
+      value "company_name" $ caugname f
 
 {- |
     A special data type used for just displaying stuff in the list
@@ -151,6 +168,7 @@ data CompanyAccount = CompanyAccount
   , catos         :: Maybe UTCTime -- ^ TOS time if any (always Nothing for invites)
   , catotpactive  :: Bool         -- ^ Whether TOTP two-factor authentication is active
   , calang        :: Maybe Lang         -- ^ the account's language
+  , caugname      :: String       -- ^ name of user's userGroup
   }
 
 data Role = RoleAdmin    -- ^ an admin user
@@ -171,6 +189,7 @@ companyAccountsSorting "deletable" = companyAccountsSortingBy cadeletable
 companyAccountsSorting "activated" = companyAccountsSortingBy caactivated
 companyAccountsSorting "id" = companyAccountsSortingBy camaybeuserid
 companyAccountsSorting "twofactor_active" = companyAccountsSortingBy catotpactive
+companyAccountsSorting "company_name" = companyAccountsSortingBy caugname
 companyAccountsSorting _ = const $ const EQ
 
 companyAccountsSortingBy :: Show a => (CompanyAccount -> a) -> CompanyAccount -> CompanyAccount -> Ordering

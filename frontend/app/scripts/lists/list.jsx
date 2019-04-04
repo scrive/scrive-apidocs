@@ -217,7 +217,7 @@ var List = React.createClass({
                     return [(
                       <tr key={"tr-" + (d.id() || Math.random())}>
                         { columns.map(function(c) {
-                            return React.addons.cloneWithProps(c,{data: d, key : c.key || Math.random()});
+                            return React.addons.cloneWithProps(c,{data: d, key : c.key || Math.random(), model:model});
                           })
                         }
                       </tr>),sl];
