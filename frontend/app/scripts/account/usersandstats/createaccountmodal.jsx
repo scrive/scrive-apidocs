@@ -8,17 +8,20 @@ var Language = require("../../../js/utils/language.js").Language;
 var Modal = require("../../common/modal");
 var NotEmptyValidation = require("../../../js/validation.js").NotEmptyValidation;
 var Submit = require("../../../js/submits.js").Submit;
+var Select = require("../../common/select");
 
 module.exports = React.createClass({
   propTypes: {
     active: React.PropTypes.bool.isRequired,
-    onClose: React.PropTypes.func.isRequired
+    onClose: React.PropTypes.func.isRequired,
+    availableUserGroups: React.PropTypes.isRequired
   },
   getInitialState: function () {
     return {
       fstname: "",
       sndname: "",
       email: "",
+      userGroupID: null,
       hasEmailProblem: false
     };
   },
@@ -45,16 +48,29 @@ module.exports = React.createClass({
       fstname: "",
       sndname: "",
       email: "",
+      userGroupID: null,
       hasEmailProblem: false
     });
 
     this.props.onClose(reload);
+  },
+  userGroupOptions: function () {
+    return this.props.availableUserGroups.map(function (ug) {
+      return { name: ug.name, value: ug.ugid };
+    })
+  },
+  onUserGroupChange: function (v) {
+    this.setState({userGroupID: v});
   },
   onAccept: function () {
     var self = this;
     var validEmail = this.validateEmail();
 
     this.setState({hasEmailProblem: !validEmail});
+    var userGroupID = this.state.userGroupID;
+    if (this.props.availableUserGroups.length > 1 && !userGroupID) {
+      userGroupID = this.props.availableUserGroups[0].ugid;
+    }
 
     if (validEmail) {
       new Submit({
@@ -63,6 +79,7 @@ module.exports = React.createClass({
         fstname: this.state.fstname,
         sndname: this.state.sndname,
         email: this.state.email,
+        user_group_id: userGroupID,
         ajax: true,
         ajaxsuccess: function(resp) {
           if (resp.added) {
@@ -113,6 +130,7 @@ module.exports = React.createClass({
     var emailFieldClassName = classNames({
       "problem": this.state.hasEmailProblem
     });
+    var self = this;
 
     return (
       <Modal.Container active={this.props.active} width={533}>
@@ -158,6 +176,25 @@ module.exports = React.createClass({
                     />
                   </td>
                 </tr>
+                { this.userGroupOptions().length > 1 &&
+                <tr>
+                  <td>
+                    <label>{localization.company}</label>
+                  </td>
+                  <td>
+                    <div className='langSwitcher'>
+                      <Select
+                        width={328}
+                        options={this.userGroupOptions()}
+                        isOptionSelected={function(option) {
+                          return option.value  ==  self.state.userGroupID;
+                        }}
+                        onSelect={function(v) {self.onUserGroupChange(v);}}
+                      />
+                    </div>
+                  </td>
+                </tr>
+                }
               </table>
             </div>
           </div>
