@@ -20,7 +20,8 @@ import User.UserID
 accessControlAPI :: Route (Kontra Response)
 accessControlAPI = dir "api" $ choice
   [
-    dir "v2" $ accessControlAPIV2
+    dir "frontend" $ accessControlAPIV2
+  , dir "v2" $ accessControlAPIV2
   ]
 
 accessControlAPIV2 :: Route (Kontra Response)

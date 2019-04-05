@@ -76,7 +76,8 @@ module.exports = React.createClass({
         showEditAccountModal: false,
         accountToRemove: null,
         accountToReinvite: null,
-        accountToEdit: null
+        accountToEdit: null,
+        availableUserGroups: []
       };
     },
     componentDidMount: function () {
@@ -111,8 +112,85 @@ module.exports = React.createClass({
               {name: localization.account.companyAccounts.roleAdmin, value: "RoleAdmin"}];
     },
     showCreateAccountModal: function () {
-      Track.track('Click new account');
-      this.setState({showCreateAccountModal: true});
+      var self = this;
+      
+      var getUserID = function (consumeUserID) {
+        new Submit({
+          url: "/api/frontend/getprofile",
+          method: "GET",
+          ajax: true,
+          ajaxsuccess: function(resp) {
+            if (resp.id) {
+              consumeUserID(resp.id)
+            }
+          }
+        }).sendAjax();
+      };
+
+      var getUserAdminUGIDs = function(userID, consumeUGIDs) {
+        new Submit({
+          url: "/api/frontend/getuserroles/"+userID,
+          method: "GET",
+          ajax: true,
+          ajaxsuccess: function(resp) {
+            if (resp) {
+              consumeUGIDs(resp.filter(function (value) { 
+                // get user_admins
+                return value.role_type == "user_admin" && value.target.type == "user_group";
+              }).map(function (role) {
+                return role.target.id;
+              }));
+            }
+          }
+        }).sendAjax();
+      }
+
+      var getUserGroup = function(ugid, consumeUG) {
+        new Submit({
+          url: "/api/frontend/usergroups/"+ugid,
+          method: "GET",
+          ajax: true,
+          ajaxsuccess: function(resp) {
+            if (resp) {
+              consumeUG(resp);
+            }
+          }
+        }).sendAjax();
+      }
+
+      var mapCallbacks = function(inputArray, outputArray, worker, consumeOutputArray) {
+        if (inputArray.length < 1) {
+          consumeOutputArray(outputArray);
+        } else {
+          worker(inputArray[0], function(newOutputItem) {
+            var newInArr = inputArray.slice(0); // shallow clone
+            newInArr.shift();
+            var newOutArr = outputArray.slice(0); // shallow clone
+            newOutArr.push(newOutputItem);
+            mapCallbacks(newInArr, newOutArr, worker, consumeOutputArray);
+          });
+        }
+      }
+
+      getUserID( function (uid) {
+        getUserAdminUGIDs(uid, function (ugids) {
+          if (ugids.length > 1) {
+            mapCallbacks(ugids, [], getUserGroup, function(ugs) {
+              Track.track('Click new account');
+              self.setState({
+                  showCreateAccountModal: true
+                , availableUserGroups : ugs.slice(0)
+              });
+            });
+          } else {
+            Track.track('Click new account');
+              self.setState({
+                  showCreateAccountModal: true
+                , availableUserGroups : []
+              });
+          }
+        });
+      });
     },
     onCreateAccountModalClose: function (reload) {
       if (reload === true) {
@@ -394,6 +472,7 @@ module.exports = React.createClass({
 
           <CreateAccountModal
             active={self.state.showCreateAccountModal}
+            availableUserGroups={self.state.availableUserGroups}
             onClose={self.onCreateAccountModalClose}
           />
 

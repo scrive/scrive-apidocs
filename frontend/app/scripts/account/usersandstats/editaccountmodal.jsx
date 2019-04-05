@@ -15,8 +15,6 @@ var Modal = require("../../common/modal");
 var InfoTextInput = require("../../common/infotextinput");
 var V = require("../../../js/validation.js");
 
-var CreateAccountModal = require("./createaccountmodal");
-
 module.exports = React.createClass({
     propTypes : {
         active: React.PropTypes.bool.isRequired,

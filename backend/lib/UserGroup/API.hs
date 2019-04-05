@@ -17,7 +17,8 @@ import UserGroup.Types
 userGroupAPI :: Route (Kontra Response)
 userGroupAPI = dir "api" $ choice
   [
-    dir "v2" $ userGroupAPIV2
+    dir "frontend" $ userGroupAPIV2
+  , dir "v2" $ userGroupAPIV2
   ]
 
 userGroupAPIV2 :: Route (Kontra Response)
