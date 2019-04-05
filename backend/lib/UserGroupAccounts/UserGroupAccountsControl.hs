@@ -21,6 +21,7 @@ import qualified Data.Text as T
 import AccessControl.Model
 import AccessControl.Types
 import DB
+import Folder.Model
 import Happstack.Fields
 import InputValidation
 import InternalResponse
@@ -359,10 +360,17 @@ handlePostBecomeUserGroupAccount :: Kontrakcja m => UserGroupID -> m InternalKon
 handlePostBecomeUserGroupAccount ugid = withUser $ \user -> do
   void $ guardJustM $ dbQuery $ GetUserGroupInvite ugid (userid user)
   newug <- guardJustM $ dbQuery $ UserGroupGet ugid
-  void $ dbUpdate $ SetUserCompanyAdmin (userid user) False
-  void $ dbUpdate $ SetUserUserGroup (userid user) (get ugID newug)
-  void $ dbUpdate $ RemoveUserGroupInvite [ugid] (userid user)
-  -- if we are inviting a user with a plan to join the company, we
-  -- should delete their personal plan
-  flashmessage <- flashMessageUserHasBecomeCompanyAccount newug
-  return $ internalResponseWithFlash flashmessage LinkAccount
+  (get folderID <$>) <$> (dbQuery $ FolderGetUserGroupHome ugid) >>= \case
+    Nothing -> unexpectedError "no grp XXXFREDRIK change me"
+    Just newugfdrid -> do
+      let uid = userid user
+      void $ dbUpdate $ SetUserCompanyAdmin (userid user) False
+      void $ dbUpdate $ SetUserUserGroup (userid user) (get ugID newug)
+      let newhomefdr = set folderParentID (Just newugfdrid) defaultFolder
+      newhomefdrid <- (get folderID) <$> (dbUpdate $ FolderCreate newhomefdr)
+      void $ dbUpdate . SetUserHomeFolder uid $ newhomefdrid
+      void $ dbUpdate $ RemoveUserGroupInvite ugid (userid user)
+      -- if we are inviting a user with a plan to join the company, we
+      -- should delete their personal plan
+      flashmessage <- flashMessageUserHasBecomeCompanyAccount newug
+      return $ internalResponseWithFlash flashmessage LinkAccount
