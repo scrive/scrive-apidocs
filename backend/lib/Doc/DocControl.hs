@@ -123,7 +123,7 @@ handleNewDocument = withUser $ \user -> do
     else do
       docid <- handleNewDocument' user ugwp
       return . internalResponse $ LinkIssueDoc docid
-    
+
 handleNewDocument' :: Kontrakcja m => User -> UserGroupWithParents -> m DocumentID
 handleNewDocument' user ugwp = do
   ctx <- getContext
