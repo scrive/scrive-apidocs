@@ -126,26 +126,28 @@ data InvoicingType =
   deriving (Eq, Ord)
 
 data UserGroupSettings = UserGroupSettings {
-    _ugsIPAddressMaskList   :: [IPAddressWithMask]
-  , _ugsDataRetentionPolicy :: DataRetentionPolicy
-  , _ugsCGIDisplayName      :: Maybe Text
-  , _ugsCGIServiceID        :: Maybe Text
-  , _ugsSMSProvider         :: SMSProvider
-  , _ugsPadAppMode          :: PadAppMode
-  , _ugsPadEarchiveEnabled  :: Bool
-  , _ugsLegalText           :: Bool
+    _ugsIPAddressMaskList    :: [IPAddressWithMask]
+  , _ugsDataRetentionPolicy  :: DataRetentionPolicy
+  , _ugsCGIDisplayName       :: Maybe Text
+  , _ugsCGIServiceID         :: Maybe Text
+  , _ugsSMSProvider          :: SMSProvider
+  , _ugsPadAppMode           :: PadAppMode
+  , _ugsPadEarchiveEnabled   :: Bool
+  , _ugsLegalText            :: Bool
+  , _ugsRequireBPIDForNewDoc :: Bool
   } deriving (Show, Eq)
 
 defaultUserGroupSettings :: UserGroupSettings
 defaultUserGroupSettings = UserGroupSettings {
-    _ugsIPAddressMaskList   = []
-  , _ugsDataRetentionPolicy = defaultDataRetentionPolicy
-  , _ugsCGIDisplayName      = Nothing
-  , _ugsCGIServiceID        = Nothing
-  , _ugsSMSProvider         = SMSDefault
-  , _ugsPadAppMode          = ListView
-  , _ugsPadEarchiveEnabled  = True
-  , _ugsLegalText           = False
+    _ugsIPAddressMaskList    = []
+  , _ugsDataRetentionPolicy  = defaultDataRetentionPolicy
+  , _ugsCGIDisplayName       = Nothing
+  , _ugsCGIServiceID         = Nothing
+  , _ugsSMSProvider          = SMSDefault
+  , _ugsPadAppMode           = ListView
+  , _ugsPadEarchiveEnabled   = True
+  , _ugsLegalText            = False
+  , _ugsRequireBPIDForNewDoc = False
   }
 
 data UserGroupUI = UserGroupUI {
@@ -418,6 +420,7 @@ type instance CompositeRow UserGroupSettings = (
   , PadAppMode
   , Bool
   , Bool
+  , Bool
   )
 
 instance PQFormat UserGroupSettings where
@@ -439,6 +442,7 @@ instance CompositeFromSQL UserGroupSettings where
     , pad_app_mode
     , pad_earchive_enabled
     , legal_text
+    , require_bpid_for_new_document
     ) = UserGroupSettings {
       _ugsIPAddressMaskList         = maybe [] read ip_address_mask_list
     , _ugsDataRetentionPolicy = DataRetentionPolicy
@@ -456,6 +460,7 @@ instance CompositeFromSQL UserGroupSettings where
     , _ugsPadAppMode                = pad_app_mode
     , _ugsPadEarchiveEnabled        = pad_earchive_enabled
     , _ugsLegalText                 = legal_text
+    , _ugsRequireBPIDForNewDoc      = require_bpid_for_new_document
     }
 
 -- UI

@@ -97,6 +97,7 @@ insertUserGroupSettings ugid ugs =
     sqlSet "pad_app_mode" . get ugsPadAppMode $ ugs
     sqlSet "pad_earchive_enabled" . get ugsPadEarchiveEnabled $ ugs
     sqlSet "legal_text" . get ugsLegalText $ ugs
+    sqlSet "require_bpid_for_new_document" . get ugsRequireBPIDForNewDoc $ ugs
 
 insertUserGroupAddress
   :: (MonadDB m, MonadThrow m) => UserGroupID -> UserGroupAddress -> m ()
@@ -327,6 +328,7 @@ ugSettingsSelectors = [
   , "pad_app_mode"
   , "pad_earchive_enabled"
   , "legal_text"
+  , "require_bpid_for_new_document"
   ]
 
 ugAddressSelectors :: [SQL]

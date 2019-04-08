@@ -239,3 +239,19 @@ addUserGroupHomeFolderID =
            ]
          runQuery_ . sqlCreateIndex tname $ indexOnColumn "home_folder_id"
      }
+
+
+userGroupSettingsAddRequireBPIDForNewDocument :: MonadDB m => Migration m
+userGroupSettingsAddRequireBPIDForNewDocument = Migration {
+    mgrTableName = tblName tableUserGroupSettings
+  , mgrFrom = 4
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable (tblName tableUserGroupSettings)
+        [ sqlAddColumn $ tblColumn
+            { colName     = "require_bpid_for_new_document"
+            , colType     = BoolT
+            , colNullable = False
+            , colDefault  = Just "false"
+            }
+        ]
+  }
