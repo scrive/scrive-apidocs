@@ -189,4 +189,5 @@ kontraMigrations = [
   , addFolderRolesChecks
   , addFolderIDColumnToDocuments
   , addIndexOnShareableLinkHash
+  , userGroupSettingsAddRequireBPIDForNewDocument
   ]

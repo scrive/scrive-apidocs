@@ -30,6 +30,7 @@ module Doc.DocControl(
     , handlePadList
     , handleToStart
     , handleToStartShow
+    , handleNewDocumentWithBPID
 ) where
 
 import Control.Conditional (unlessM, whenM)
@@ -46,6 +47,7 @@ import Text.StringTemplates.Templates
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Traversable as T
 import qualified Text.JSON.Gen as J
@@ -105,6 +107,25 @@ import qualified GuardTime as GuardTime
 
 handleNewDocument :: Kontrakcja m => m InternalKontraResponse
 handleNewDocument = withUser $ \user -> do
+  ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ userid user
+  if get ugsRequireBPIDForNewDoc (ugwpSettings ugwp)
+    then do
+      -- This is a special feature for RBS (CORE-1081)
+      -- RBS needs to "force" their employees to enter their internal document 
+      -- number. To avoid adding this to designview, this extra step is added before
+      -- creating a new document.
+      -- When Scrive.Flow is functional, this should be removed and implemented using
+      -- Scrive.Flow.
+      ctx <- getContext
+      pb <- renderTemplate "showNewDocumentWithBPID" $ do
+        entryPointFields ctx
+      internalResponse <$> renderFromBodyWithFields pb (return ())
+    else do
+      docid <- handleNewDocument' user ugwp
+      return . internalResponse $ LinkIssueDoc docid
+
+handleNewDocument' :: Kontrakcja m => User -> UserGroupWithParents -> m DocumentID
+handleNewDocument' user ugwp = do
   ctx <- getContext
   title <- renderTemplate_ "newDocumentTitle"
   actor <- guardJustM $ mkAuthorActor <$> getContext
@@ -121,7 +142,6 @@ handleNewDocument = withUser $ \user -> do
   -- Default document on the frontend has different requirements,
   -- this sets up the signatories to match those requirements.
   (authToView, authToSign, invitationDelivery, confirmationDelivery) <- do
-    ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ userid user
     let features = ugwpFeatures ugwp
         ff = if useriscompanyadmin user
                 then fAdminUsers features
@@ -195,7 +215,7 @@ handleNewDocument = withUser $ \user -> do
       void $ dbUpdate $ ResetSignatoryDetails [authorsiglink', othersiglink'] actor
       dbUpdate $ SetDocumentUnsavedDraft True
       logInfo "New document created" $ logObject_ doc
-      return $ internalResponse $ LinkIssueDoc (documentid doc)
+  return $ documentid doc
 
 --
 --  Document state transitions are described in DocState.
@@ -691,6 +711,25 @@ handleMarkAsSaved docid = guardLoggedInOrThrowInternalError $ do
     whenM (isPreparation <$> theDocument) $
       dbUpdate (SetDocumentUnsavedDraft False)
     J.runJSONGenT $ return ()
+
+
+handleNewDocumentWithBPID :: Kontrakcja m => m InternalKontraResponse
+handleNewDocumentWithBPID = withUser $ \user -> do
+  actor <- guardJustM $ mkAuthorActor <$> getContext
+  bpid <- fromMaybe "" <$> getField "bpid"
+  ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ userid user
+  docid <- handleNewDocument' user ugwp
+  withDocumentID docid $ do
+    let tag = DocumentTag
+          { tagname  = "bpid"
+          , tagvalue = bpid
+          }
+    draftData <- theDocument >>= \doc -> return $ doc
+      { documenttags = S.insert tag $ documenttags doc
+      , documentshowarrow = False
+      }
+    applyDraftDataToDocument draftData actor
+  return . internalResponse . LinkIssueDoc $ docid
 
 -- | Add some event as signatory if this signatory has not signed yet,
 -- and document is pending
