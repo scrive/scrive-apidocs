@@ -153,7 +153,10 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetEmailSendoutTime (Maybe UTCTi
     runQuery01_ . sqlSelect "mails" $ do
       sqlResult "finished_at"
       sqlWhereEq "id" mid
-    fetchMaybe runIdentity
+    mres <- fetchMaybe runIdentity
+    case mres of
+      Just (Just res) -> return res
+      _ -> return Nothing
 
 data GetEmailForRecipient = GetEmailForRecipient String String UTCTime
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetEmailForRecipient (Maybe Mail) where
