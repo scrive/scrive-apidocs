@@ -254,7 +254,7 @@ asyncProcessEvents getEventProcessor numEvts = do
           Just process -> (unEventProcessor process) ename eprops
         case result of
           PutBack     -> asyncLogEvent ename eprops etype
-          Failed msg  -> logAttention "Event processing failed" $
+          Failed msg  -> logInfo "Event processing failed" $
                            object [ "event_name" .= show ename
                                   , "event_type" .= show etype
                                   , "reason"     .= msg ]

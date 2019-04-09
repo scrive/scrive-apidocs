@@ -1,6 +1,5 @@
 module Doc.Model.Update
   ( AddDocumentAttachment(..)
-  , AddDocumentToFolder(..)
   , ArchiveDocument(..)
   , AttachFile(..)
   , DetachFile(..)
@@ -121,7 +120,6 @@ import EID.Signature.Model
 import EvidenceLog.Model
 import File.FileID
 import File.Storage
-import Folder.Types
 import IPAddress
 import Log.Identifier
 import MagicHash
@@ -439,19 +437,6 @@ instance
       CustomEventEvidence
       (do F.value "text" text)
       actor
-
-data AddDocumentToFolder = AddDocumentToFolder FolderID
-instance ( DocumentMonad m
-         , TemplatesMonad m
-         , MonadThrow m
-         , MonadTime m
-         , MonadLog m)
-  => DBUpdate m AddDocumentToFolder () where
-  update (AddDocumentToFolder fdrid) = do
-    updateDocumentWithID $ \did -> do
-      kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
-        sqlSet "folder_id" fdrid
-        sqlWhereDocumentIDIs did
 
 data ArchiveDocument = ArchiveDocument UserID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m ArchiveDocument Bool where

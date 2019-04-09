@@ -33,7 +33,11 @@ module.exports = React.createClass({
   },
   addMultisendParticipant: function () {
     if (!Subscription.currentSubscription().currentUserFeatures().canUseMassSendout())  {
-      this.refs.blockingModal.openContactUsModal();
+      if (Subscription.currentSubscription().hasFreePlan()) {
+        this.refs.blockingModal.openContactUsModal();
+      } else {
+        // non-free plans don't get a modal, nothing should happen
+      }
     } else {
       Track.track("Click add CSV");
       this.setState({showCSVSignatoryDesignModal: true});
