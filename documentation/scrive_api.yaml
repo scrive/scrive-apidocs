@@ -44,6 +44,7 @@ info:
 
     | Date        | Details of changes                                         |
     | ----------- | ---------------------------------------------------------- |
+    | 2019-04-09  | Documented link confirmaiton delivery. |
     | 2019-04-01  | Reordered the changelog - new changes are now on top. |
     | 2019-03-27  | Clarified cases where fields can also have a null value. |
     |             | Clarified use of `authentication_method_to_*` |
