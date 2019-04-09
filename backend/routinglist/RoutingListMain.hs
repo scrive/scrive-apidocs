@@ -57,7 +57,10 @@ worker (MyHandler (Just n, _method') _ _) = do
   let n' = n - nParams
   case n' of
     0 -> return [""]
-    _ -> return ["SHOULD NOT HAPPEN"]
+    -- this will happen for rule without dir part inside choice
+    -- e.g. dir "a" $ choice [ hGet $ tok1 $ foo]
+    -- empty string should be ok in this case, might review this later
+    _ -> return [""]
 worker (MyChoice routes) = do
   let localState :: S.State s a -> S.State s a
       localState f = do
