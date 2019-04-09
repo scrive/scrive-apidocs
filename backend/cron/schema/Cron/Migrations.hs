@@ -15,6 +15,7 @@ module Cron.Migrations (
   , removePurgeOrphanFileJob
   , addTemporaryLoginTokensPurgeJob
   , addMonthlyInvoiceJob
+  , addCronStatsJob
 ) where
 
 import Control.Monad.Catch
@@ -157,4 +158,12 @@ addMonthlyInvoiceJob = Migration {
   , mgrFrom = 19
   , mgrAction = StandardMigration $
       runSQL_ "INSERT INTO cron_jobs (id, run_at) VALUES ('monthly_invoice', to_timestamp(0))"
+  }
+
+addCronStatsJob :: (MonadDB m, MonadThrow m) => Migration m
+addCronStatsJob = Migration {
+    mgrTableName = tblName tableCronJobs
+  , mgrFrom = 20
+  , mgrAction = StandardMigration $
+      runSQL_ "INSERT INTO cron_jobs (id, run_at) VALUES ('cron_stats', to_timestamp(0))"
   }

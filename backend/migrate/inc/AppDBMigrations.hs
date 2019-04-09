@@ -190,4 +190,5 @@ kontraMigrations = [
   , addFolderIDColumnToDocuments
   , addIndexOnShareableLinkHash
   , userGroupSettingsAddRequireBPIDForNewDocument
+  , addCronStatsJob
   ]

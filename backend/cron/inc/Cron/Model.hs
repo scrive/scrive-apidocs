@@ -21,6 +21,7 @@ import qualified Data.Text as T
 import Administration.Invoicing
 import Attachment.Model
 import CronConf
+import CronStats.Control
 import DB
 import Doc.Action
 import Doc.AutomaticReminder.Model (expireDocumentAutomaticReminders)
@@ -73,6 +74,7 @@ data JobType
   | AttachmentsPurge
   | TemporaryMagicHashesPurge
   | TemporaryLoginTokensPurge
+  | CronStats
   deriving (Eq, Ord, Show, Enum, Bounded)
 
 jobTypeMapper :: [(JobType, T.Text)]
@@ -104,6 +106,7 @@ jobTypeMapper =
       AttachmentsPurge                     -> "attachments_purge"
       TemporaryMagicHashesPurge            -> "temporary_magic_hashes_purge"
       TemporaryLoginTokensPurge            -> "temporary_login_tokens_purge"
+      CronStats                            -> "cron_stats"
 
 instance PQFormat JobType where
   pqFormat = pqFormat @T.Text
@@ -178,6 +181,9 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
     ClockErrorCollection -> do
       runDB $ collectClockError (cronNtpServers cronConf)
       return . RerunAfter $ ihours 1
+    CronStats -> do
+      runDB $ reportCronStats (cronStatsDConf cronConf)
+      return . RerunAfter $ iseconds 10
     DocumentAutomaticRemindersEvaluation -> do
       runCronEnv expireDocumentAutomaticReminders
       return . RerunAfter $ iminutes 1

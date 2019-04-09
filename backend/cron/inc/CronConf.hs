@@ -18,6 +18,7 @@ import PdfToolsLambda.Conf
 import Planhat
 import Salesforce.Conf
 import SFTPConfig
+import StatsD.Config
 
 -- | Cron configuration: things like AWS, Postgres and Redis, NTP servers, etc.
 data CronConf = CronConf {
@@ -51,6 +52,7 @@ data CronConf = CronConf {
   , cronNetsSignConfig             :: Maybe NetsSignConfig
   , cronPdfToolsLambdaConf         :: PdfToolsLambdaConf
   , cronMonthlyInvoiceConf         :: !(Maybe CronMonthlyInvoiceConf)
+  , cronStatsDConf                 :: !(Maybe StatsDConf)
   } deriving (Eq, Show)
 
 unjsonCronConf :: UnjsonDef CronConf
@@ -127,6 +129,9 @@ unjsonCronConf = objectOf $ pure CronConf
   <*> fieldOpt "monthly_invoice"
       cronMonthlyInvoiceConf
       "Monthly-invoice job configuration"
+  <*> fieldOpt "statsd"
+      cronStatsDConf
+      "StatsD configuration"
 
 instance Unjson CronConf where
   unjsonDef = unjsonCronConf

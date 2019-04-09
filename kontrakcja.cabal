@@ -125,6 +125,8 @@ Library
                  , Cron.Tables
                  , CronConf
                  , CronEnv
+                 , CronStats.Control
+                 , CronStats.Model
                  , Crypto
                  , DB
                  , DB.Derive
@@ -384,6 +386,8 @@ Library
                  , Session.Model
                  , Session.SessionID
                  , Session.Tables
+                 , StatsD.Communication
+                 , StatsD.Config
                  , System.Random.CryptoRNG
                  , Templates
                  , Text.JSON.Convert
@@ -1262,6 +1266,7 @@ Test-suite kontrakcja-test
                  ConfigTests
                  Cron.Migrations
                  Cron.Tables
+                 CronStatsTest
                  Doc.API.Callback.Tables
                  Doc.API.V1.CallsTest
                  Doc.API.V1.ForwardsCompatibilityTest

@@ -30,6 +30,7 @@ import CompanyControlTest
 import ConfigTests
 import Configuration
 import CronMonthlyInvoiceTest
+import CronStatsTest
 import CSSGenerationTest
 import CSVUtilTest
 import Database.Redis.Configuration
@@ -108,6 +109,7 @@ allTests = [
   , companyControlTests
   , configTests
   , cronMonthlyInvoiceTest
+  , cronStatsTest
   , cssGenerationTests
   , csvUtilTests
   , docControlTests

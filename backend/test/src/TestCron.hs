@@ -65,6 +65,7 @@ runTestCronUntilIdle ctx = do
         , cronNetsSignConfig = Nothing
         , cronPdfToolsLambdaConf = pdfSealLambdaConf
         , cronMonthlyInvoiceConf = cronMonthlyInvoiceConf
+        , cronStatsDConf = Nothing
         }
 
       -- make timeouts small, so that the test runs faster
