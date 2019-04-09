@@ -208,7 +208,7 @@
 "_smsDocumentErrorSignatory":"Scrive kunde inte hantera dokumentet $documenttitle:noescape()$ och signeringsprocessen har avbrutits. Kontakta oss på support@scrive.com om du har några frågor.",
 "_smsInvitationToSign":"$creatorname:noescape()$ har bjudit in dig att e-signera dokumentet $documenttitle:noescape()$. Följ länken för vidare instruktioner $link$",
 "_smsPinSendout":"Din PIN för $documenttitle:noescape()$ är $pin$",
-"_smsRejectNotification":"$rejectorName$ har avvisat att signera dokumentet $documenttitle:noescape()$. Signeringsprocessen har därför avbrutits. Följ länken för att se dokumentet $link$.",
+"_smsRejectNotification":"",
 "_smsReminder":"$creatorname$ vill påminna dig om att signera dokumentet $documenttitle:noescape()$. Följ länken för vidare instruktioner $link$",
 "_smsReminderApprove":"$creatorname$ vill påminna dig om att godkänna dokumentet $documenttitle:noescape()$. Följ länken för vidare instruktioner $link$",
 "_smsReminderApproveAutomatic":"Det här är en automatisk påminnelse att du inte har godkänt dokumentet $documenttitle:noescape()$ från $creatorname$ ännu. Följ länken för vidare instruktioner $link$",

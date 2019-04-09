@@ -208,7 +208,7 @@
 "_smsDocumentErrorSignatory":"Η υπηρεσία Scrive δεν μπόρεσε να διαχειριστεί το έγγραφο $documenttitle:noescape()$ και η διαδικασία υπογραφής έχει ακυρωθεί. Αν έχετε ερωτήσεις, παρακαλώ επικοινωνήστε μαζί μας στο support@scrive.com ",
 "_smsInvitationToSign":"$creatorname:noescape()$ σας έχει προσκαλέσει να υπογράψετε ηλεκτρονικά το έγγραφο $documenttitle:noescape()$. Ακολουθείστε τον σύνδεσμο για περαιτέρω οδηγίες $link$",
 "_smsPinSendout":"Το PIN σας για το $documenttitle:noescape()$ είναι $pin$",
-"_smsRejectNotification":"$rejectorName$ έχει απορρίψει την υπογραφή του εγγράφου $documenttitle:noescape()$. Ως εκ τούτου η διαδικασία υπογραφής έχει ακυρωθεί. Ακολουθείστε τον σύνδεσμο για να ελέγξετε το έγγραφο $link$",
+"_smsRejectNotification":"",
 "_smsReminder":"$creatorname$ θέλει να σας υπενθυμίσει την υπογραφή του εγγράφου $documenttitle:noescape()$. Ακολουθείστε τον σύνδεσμο για περαιτέρω οδηγίες $link$",
 "_smsReminderApprove":"Ο/Η $creatorname$ επιθυμεί να σας υπενθυμίσει την έγκριση του εγγράφου $documenttitle:noescape()$. Ακολουθήστε τον σύνδεσμο για περαιτέρω οδηγίες $link$",
 "_smsReminderApproveAutomatic":"Αυτή είναι μια αυτόματη υπενθύμιση ότι δεν έχετε υπογράψει το έγγραφο $documenttitle:noescape()$ from $creatorname$ ακόμα. Ακολουθήστε τον σύνδεσμο για περαιτέρω οδηγίες $link$",

@@ -208,7 +208,7 @@
 "_smsDocumentErrorSignatory":"Scrive gat ekki meðhöndlað skjalið $documenttitle:noescape()$ og hætt hefur verið við undirskriftarferlið. Ef þú hefur einhverjar spurningar skaltu hafa samband á netfangið support@scrive.com",
 "_smsInvitationToSign":"$creatorname:noescape()$ hefur boðið þér að skrifa rafrænt undir skjalið $documenttitle:noescape()$. Smelltu á hlekkinn til að fá frekari upplýsingar $link$",
 "_smsPinSendout":"PIN þitt fyrir $documenttitle:noescape()$ is $pin$",
-"_smsRejectNotification":"$rejectorName$ hefur hafnað því að skrifa undir skjalið $documenttitle:noescape()$. Því hefur verið hætt við undirskriftarferlið. Smelltu á hlekkinn til að skoða skjalið $link$",
+"_smsRejectNotification":"",
 "_smsReminder":"$creatorname$ vill minna þig á að skrifa undir skjalið $documenttitle:noescape()$. Smelltu á hlekkinn til að fá frekari upplýsingar $link$",
 "_smsReminderApprove":"",
 "_smsReminderApproveAutomatic":"",

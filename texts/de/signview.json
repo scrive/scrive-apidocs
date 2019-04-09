@@ -208,7 +208,7 @@
 "_smsDocumentErrorSignatory":"Scrive konnte das Dokument $documenttitle:noescape()$ nicht bearbeiten und der Signierungsprozess wurde abgebrochen. Wenn Sie dazu Fragen haben, kontaktieren Sie uns bitte unter support@scrive.com",
 "_smsInvitationToSign":"$creatorname:noescape()$ hat Sie eingeladen, das Dokument $documenttitle:noescape()$ zu e-signieren. Klicken Sie für weitere Anweisungen auf den Link $link$",
 "_smsPinSendout":"Ihre PIN für $documenttitle:noescape()$ lautet $pin$",
-"_smsRejectNotification":"$rejectorName$ hat die Signierung des Dokuments $documenttitle:noescape()$ abgelehnt. Der Signierungsprozess wurde deshalb abgebrochen. Klicken Sie auf den Link um das Dokument $link$ anzusehen. ",
+"_smsRejectNotification":"",
 "_smsReminder":"$creatorname$ will Sie daran erinnern, das Dokument $documenttitle:noescape()$ zu signieren. Klicken Sie für weitere Anweisungen auf den Link $link$",
 "_smsReminderApprove":"",
 "_smsReminderApproveAutomatic":"",

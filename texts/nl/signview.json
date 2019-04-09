@@ -208,7 +208,7 @@
 "_smsDocumentErrorSignatory":"Scrive kon het document $documenttitle:noescape()$ niet hanteren. Daarom is het ondertekeningsproces geannuleerd. Heeft u vragen, neem dan a.u.b. contact met ons op via support@scrive.com",
 "_smsInvitationToSign":"$creatorname:noescape()$ heeft u uitgenodigd om het document $documenttitle:noescape()$ te ondertekenen. Volg deze link voor verdere instructies $link$",
 "_smsPinSendout":"Uw PIN-code voor $documenttitle:noescape()$ is $pin$",
-"_smsRejectNotification":"$rejectorName$ heeft het ondertekenen van het document $documenttitle:noescape()$ afgewezen. Het ondertekeningsproces is daarom afgebroken. Volg de link om het document te bekijken: $link$",
+"_smsRejectNotification":"",
 "_smsReminder":"$creatorname$ wil u er aan herinneren het document $documenttitle:noescape()$ te ondertekenen. Volg de link voor verdere instructies: $link$",
 "_smsReminderApprove":"$creatorname$ wil u eraan herinneren om het document $documenttitle:noescape()$ te ondertekenen. Volg de link voor verdere instructies $link$",
 "_smsReminderApproveAutomatic":"DIt is een automatische herinnering dat u het document $documenttitle:noescape()$ van $creatorname$ nog niet heeft goedgekeurd. Volg de link voor verdere instructies $link$",

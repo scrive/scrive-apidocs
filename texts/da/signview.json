@@ -208,7 +208,7 @@
 "_smsDocumentErrorSignatory":"Scrive kunne ikke håndtere dokumentet $documenttitle:noescape()$, og signeringsprocessen er derfor blevet annulleret. Har du spørgsmål, bedes du kontakte os på support@scrive.com.",
 "_smsInvitationToSign":"$creatorname:noescape()$ har inviteret dig til at e-signere dokumentet $documenttitle:noescape()$. Følg linket for yderligere information $link$",
 "_smsPinSendout":"Din PIN for $documenttitle:noescape()$ er $pin$",
-"_smsRejectNotification":"$rejectorName$ har afvist at signere dokumentet $documenttitle:noescape()$. Signeringsprocessen er derfor blevet annulleret. Følg linket for at se dokumentet $link$",
+"_smsRejectNotification":"",
 "_smsReminder":"$creatorname$ ønsker at påminde dig om at signere dokumentet $documenttitle:noescape()$. Følg linket for yderligere information $link$",
 "_smsReminderApprove":"",
 "_smsReminderApproveAutomatic":"",

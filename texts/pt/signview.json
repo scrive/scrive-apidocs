@@ -208,7 +208,7 @@
 "_smsDocumentErrorSignatory":"Não foi possível o Scrive processar o documento $documenttitle:noescape()$ e o processo de assinatura foi cancelado. Se pretende colocar qualquer questão, contacte-nos para support@scrive.com",
 "_smsInvitationToSign":"$creatorname:noescape()$ convidou-o para assinar eletronicamente o documento $documenttitle:noescape()$. Siga a hiperligação para obter mais informações $link$",
 "_smsPinSendout":"O seu PIN para $documenttitle:noescape()$ é $pin$",
-"_smsRejectNotification":"$rejectorName$ rejeitou a assinatura do documento $documenttitle:noescape()$. O processo de assinatura foi assim cancelado. Siga a hiperligação para ver o documento $link$",
+"_smsRejectNotification":"",
 "_smsReminder":"$creatorname$ pretende lembrá-lo para assinar o documento $documenttitle:noescape()$. Siga a hiperligação para obter mais informações $link$",
 "_smsReminderApprove":"",
 "_smsReminderApproveAutomatic":"",
