@@ -733,6 +733,9 @@ testCloseDocumentEvidenceLog = do
     documentsignatorylinks <$> theDocument >>= \sls -> forM_  sls $ \sl -> when (isSignatory sl) $ do
       randomUpdate $ \t->MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
       randomUpdate $ \t->SignDocument (signatorylinkid sl) (signatorymagichash sl) Nothing Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
+    documentsignatorylinks <$> theDocument >>= \sls -> forM_  sls $ \sl -> when (isApprover sl) $ do
+      randomUpdate $ \t->MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
+      randomUpdate $ \t->ApproveDocument (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
     randomUpdate $ \t-> CloseDocument (systemActor t)
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
     assertJust $ find (\e -> evType e == Current CloseDocumentEvidence) lg
