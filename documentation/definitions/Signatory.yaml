@@ -1,4 +1,4 @@
-i---
+---
 $schema: "http://json-schema.org/draft-04/schema#"
 title: Signatory
 type: object
@@ -176,13 +176,13 @@ properties:
       - email_link_mobile
       - none
     description: |
-		Options allow delivery of the signed document as
-		* `email` an attachment in email or
-		* `mobile` a link in a text message or
-		* `email_mobile` both of the two above or
-		* `email_link` a link in an email or
-		* `email_link_mobile` a link in both an email and a text message or
-		* `none` no delivery at all.
+      Options allow delivery of the signed document as
+      * `email` an attachment in email or
+      * `mobile` a link in a text message or
+      * `email_mobile` both of the two above or
+      * `email_link` a link in an email or
+      * `email_link_mobile` a link in both an email and a text message or
+      * `none` no delivery at all.
   allows_highlighting:
     type: boolean
     default: false
