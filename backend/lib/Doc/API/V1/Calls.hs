@@ -33,7 +33,7 @@ import Happstack.Server.RqData
 import Happstack.Server.Types
 import Happstack.StaticRouting
 import Log
-import System.FilePath.Posix (takeBaseName)
+import System.FilePath (takeBaseName)
 import Text.JSON hiding (Ok)
 import Text.JSON.FromJSValue
 import Text.JSON.String (runGetJSON)
@@ -48,6 +48,7 @@ import qualified Data.Map as Map hiding (map)
 import qualified Data.Text as T
 import qualified Data.Traversable as T
 import qualified Data.Vector as Vec
+import qualified System.FilePath.Windows as Windows
 import qualified Text.JSON as J
 import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
@@ -154,13 +155,6 @@ documentAPIV1  = choice [
   dir "setsignatoryattachment"    $ hPost $ toK3 $ apiCallV1SetSignatoryAttachment
   ]
 
--- | Windows Explorer set the full path of a file, for example:
---
---    c:\My Documents\Things\Untitle Document.doc
---
--- We drop all up to and including last backslash here.
-dropFilePathFromWindows :: FilePath -> FilePath
-dropFilePathFromWindows = reverse . takeWhile (/='\\') . reverse
 
 {- New API calls-}
 apiCallV1CreateFromFile :: Kontrakcja m => m Response
@@ -176,7 +170,7 @@ apiCallV1CreateFromFile = api $ do
       return (Nothing,  replace "  " " " $ title ++ " " ++ formatTimeSimple (get ctxtime ctx))
     Just (Input _ Nothing _) -> throwM . SomeDBExtraException $ badInput "Missing file"
     Just (Input contentspec (Just filename') _contentType) -> do
-      let filename = dropFilePathFromWindows filename'
+      let filename = Windows.takeFileName filename'
       content1' <- case contentspec of
         Left filepath -> liftIO $ BS.readFile filepath
         Right content -> return (BS.concat $ BSL.toChunks content)
@@ -1380,7 +1374,7 @@ apiCallV1SetSignatoryAttachment did sid aname = logDocumentAndSignatory did sid 
                       then return $ BSL.toStrict content1
                       else throwM . SomeDBExtraException $ badInput ("Image can't be empty. Uploaded filename was " ++ filename)
                     else throwM . SomeDBExtraException $ badInput ("Only pdf files or images can be attached. Uploaded filename was " ++ filename)
-                (saveNewFile (dropFilePathFromWindows filename) content)
+                (saveNewFile (Windows.takeFileName filename) content)
       _ -> return Nothing
     ctx <- getContext
     case mfileid of

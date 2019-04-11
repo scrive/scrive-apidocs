@@ -11,12 +11,13 @@ import Control.Monad.IO.Class
 import Data.Unjson
 import Data.Unjson as Unjson
 import Happstack.Server
-import System.FilePath
+import System.FilePath (takeExtension)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T
+import qualified System.FilePath.Windows as Windows
 
 import API.V2
 import DB
@@ -137,8 +138,8 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFs names) = do
           Right content -> return $ BS.concat $ BSL.toChunks content
         case mfilename of
            Just filename' -> do
-             let filename = reverse . takeWhile (/='\\') . reverse $ filename' -- Drop filepath for windows
-             return $ Just (filename, content)
+             -- Drop filepath for windows
+             return $ Just (Windows.takeFileName filename', content)
            Nothing -> do
              case (B64.decode content) of
                 Right c -> return $ Just ("", c)
@@ -162,7 +163,7 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFOrImage name) = do
     Nothing -> return Nothing
     Just (Input _ Nothing _) -> apiError $ requestParameterInvalid name "file was empty"
     Just (Input contentspec (Just filename') _contentType) -> do
-      let filename = reverse . takeWhile (/='\\') . reverse $ filename' -- Drop filepath for windows
+      let filename = Windows.takeFileName filename' -- Drop filepath for windows
       content' <- case contentspec of
         Left filepath -> liftIO $ BS.readFile filepath
         Right content -> return (BS.concat $ BSL.toChunks content)
