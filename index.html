@@ -612,6 +612,10 @@ This is the only officially supported encoding for our API.
 </tr>
 </thead><tbody>
 <tr>
+<td>2019-04-09</td>
+<td>Documented link confirmation delivery.</td>
+</tr>
+<tr>
 <td>2019-04-01</td>
 <td>Reordered the changelog - new changes are now on top.</td>
 </tr>
@@ -5838,6 +5842,17 @@ interface.</p>
 
 <div class="json-schema">
 
+<p>Options allow delivery of the signed document as</p>
+<ul>
+<li><code>email</code> an attachment in email or</li>
+<li><code>mobile</code> a link in a text message or</li>
+<li><code>email_mobile</code> both of the two above or</li>
+<li><code>email_link</code> a link in an email or</li>
+<li><code>email_link_mobile</code> a link in both an email and a text message or</li>
+<li><code>none</code> no delivery at all.</li>
+</ul>
+
+
 <p>Default: <code>"email"</code></p>
 
 <p>This element must be one of the following enum values:</p>
@@ -5847,6 +5862,8 @@ interface.</p>
 <li><code>email</code></li>
 <li><code>mobile</code></li>
 <li><code>email_mobile</code></li>
+<li><code>email_link</code></li>
+<li><code>email_link_mobile</code></li>
 <li><code>none</code></li>
 
 </ul>
@@ -9029,6 +9046,17 @@ interface.</p>
 
 <div class="json-schema">
 
+<p>Options allow delivery of the signed document as</p>
+<ul>
+<li><code>email</code> an attachment in email or</li>
+<li><code>mobile</code> a link in a text message or</li>
+<li><code>email_mobile</code> both of the two above or</li>
+<li><code>email_link</code> a link in an email or</li>
+<li><code>email_link_mobile</code> a link in both an email and a text message or</li>
+<li><code>none</code> no delivery at all.</li>
+</ul>
+
+
 <p>Default: <code>"email"</code></p>
 
 <p>This element must be one of the following enum values:</p>
@@ -9038,6 +9066,8 @@ interface.</p>
 <li><code>email</code></li>
 <li><code>mobile</code></li>
 <li><code>email_mobile</code></li>
+<li><code>email_link</code></li>
+<li><code>email_link_mobile</code></li>
 <li><code>none</code></li>
 
 </ul>
@@ -12038,6 +12068,17 @@ interface.</p>
 
 <div class="json-schema">
 
+<p>Options allow delivery of the signed document as</p>
+<ul>
+<li><code>email</code> an attachment in email or</li>
+<li><code>mobile</code> a link in a text message or</li>
+<li><code>email_mobile</code> both of the two above or</li>
+<li><code>email_link</code> a link in an email or</li>
+<li><code>email_link_mobile</code> a link in both an email and a text message or</li>
+<li><code>none</code> no delivery at all.</li>
+</ul>
+
+
 <p>Default: <code>"email"</code></p>
 
 <p>This element must be one of the following enum values:</p>
@@ -12047,6 +12088,8 @@ interface.</p>
 <li><code>email</code></li>
 <li><code>mobile</code></li>
 <li><code>email_mobile</code></li>
+<li><code>email_link</code></li>
+<li><code>email_link_mobile</code></li>
 <li><code>none</code></li>
 
 </ul>
