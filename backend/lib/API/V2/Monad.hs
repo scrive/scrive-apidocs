@@ -140,7 +140,7 @@ apiLog acc = do
   where
     -- we will not read the file again from disk, it's enough to tell the
     -- developer, that this was a file
-    apiCallParam (name, Left _filename) = CallLogParam name "transfered file"
+    apiCallParam (name, Left _filename) = CallLogParam name "transferred file"
     -- to save space, we will not store more than 50kB parameter
     apiCallParam (name, Right contents) =
       case BSU.length contents > 50000 of
