@@ -448,7 +448,14 @@ var RemoveModalContent = React.createClass({
                     );
                   }
                 } else {
-                  return <div></div>;
+                  return (
+                    <div>
+                      <div
+                        className="shareable-link-icon-generate-disabled"
+                        title={localization.archive.templates.shareableLink.generateTooltip}
+                      />
+                    </div>
+                  );
                 }
               }}
             />
