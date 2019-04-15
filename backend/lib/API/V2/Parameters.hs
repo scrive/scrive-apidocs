@@ -13,6 +13,7 @@ import Data.Unjson as Unjson
 import Happstack.Server
 import System.FilePath
 import qualified Data.Aeson as Aeson
+import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T
@@ -130,13 +131,18 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFs names) = do
     mValue <- getDataFn' (lookInput $ T.unpack name)
     case mValue of
       Nothing -> return Nothing
-      Just (Input _ Nothing _) -> apiError $ requestParameterInvalid name "file was empty"
-      Just (Input contentspec (Just filename') _contentType) -> do
-        let filename = reverse . takeWhile (/='\\') . reverse $ filename' -- Drop filepath for windows
+      Just (Input contentspec mfilename _contentType) -> do
         content <- case contentspec of
           Left filepath -> liftIO $ BS.readFile filepath
           Right content -> return $ BS.concat $ BSL.toChunks content
-        return $ Just (filename, content)
+        case mfilename of
+           Just filename' -> do
+             let filename = reverse . takeWhile (/='\\') . reverse $ filename' -- Drop filepath for windows
+             return $ Just (filename, content)
+           Nothing -> do
+             case (B64.decode content) of
+                Right c -> return $ Just ("", c)
+                _ ->  apiError $ requestParameterInvalid name "file transfered without multipart should be base64 encoded"
   let contentsWithNames' = catMaybes contentsWithNames
   pdfcontents <- do
     res <- preCheckPDFs $ map snd contentsWithNames'

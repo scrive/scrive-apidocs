@@ -6,15 +6,19 @@ module Doc.API.V2.JSONTest (
 , testJSONCtx
 ) where
 
+import Control.Monad.Trans
 import Data.Aeson
 import Data.Text (unpack)
 import Happstack.Server
 import Test.Framework
-import qualified Data.ByteString.Lazy.UTF8 as BS
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.HashMap.Strict as H
 
 import Context
 import Doc.API.V2.Calls
+import Doc.API.V2.Mock.TestUtils
 import Doc.DocumentID
 import Doc.SignatoryLinkID ()
 import TestingUtil
@@ -47,6 +51,8 @@ apiV2JSONTests env = testGroup "DocAPIV2JSON"
     env testDocUpdateNewFields
   , testThat "Test API v2 'setfile'"
     env testDocSetFile
+  , testThat "Test API v2 'setfile' with base64 encoded param"
+    env testDocSetFileB64
   , testThat "Test API v2 'list' response structure"
     env testDocList
   , testThat "Test API v2 'removepages' with placements \
@@ -252,6 +258,18 @@ testDocSetFile = do
 
   return ()
 
+testDocSetFileB64 :: TestEnv ()
+testDocSetFileB64 = do
+  ctx <- testJSONCtx
+  (did,_) <- runApiJSONTest ctx POST docApiV2New [] 201 jsonFP_new_no_params
+  cont <- liftIO $ BS.readFile $ inTestDir "pdfs/simple.pdf"
+
+  let params = [ ("file", inTextBS $ BSL.fromChunks [B64.encode cont]) ]
+  mockDoc <- mockDocTestRequestHelper ctx POST params (docApiV2SetFile did) 200
+  assertBool "New document has file now" $ getMockDocHasFile mockDoc
+  return ()
+
+
 testDocList :: TestEnv ()
 testDocList = do
   ctx <- testJSONCtx
@@ -305,7 +323,7 @@ testDocRemovePages = do
   void $ runApiJSONTest ctx POST (docApiV2RemovePages did) rq_remove_pages_params 200 rq_remove_pages_res_json
   return ()
 
-testJSONWith :: FilePath -> BS.ByteString -> TestEnv ()
+testJSONWith :: FilePath -> BSL.ByteString -> TestEnv ()
 testJSONWith = testJSONWithDynamicKeys [ "id"
                                        , "access_token"
                                        , "api_delivery_url"

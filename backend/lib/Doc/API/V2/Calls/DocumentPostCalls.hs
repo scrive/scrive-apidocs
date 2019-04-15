@@ -87,12 +87,12 @@ docApiV2New = api $ do
   saved <- apiV2ParameterDefault True (ApiV2ParameterBool "saved")
   mFile <- apiV2ParameterOptional (ApiV2ParameterFilePDF "file")
   -- API call actions
-  title <- case mFile of
-    Nothing -> do
+  title <- case (fmap filename mFile) of
+    Just fn@(_:_) -> return $ dropExtension fn
+    _ -> do
       ctx <- getContext
       title <- renderTemplate_ "newDocumentTitle"
       return $ title ++ " " ++ formatTimeSimple (get ctxtime ctx)
-    Just f -> return . dropExtension . filename $ f
   (dbUpdate $ NewDocument user title Signable defaultTimeZoneName 0 actor) `withDocumentM` do
     dbUpdate $ SetDocumentUnsavedDraft (not saved)
     case mFile of
