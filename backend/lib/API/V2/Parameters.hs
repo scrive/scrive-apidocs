@@ -143,13 +143,15 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFs names) = do
            Nothing -> do
              case (B64.decode content) of
                 Right c -> return $ Just ("", c)
-                _ ->  apiError $ requestParameterInvalid name "file transfered without multipart should be base64 encoded"
+                Left  _ -> apiError $ requestParameterInvalid name
+                  "file transferred without multipart should be base64 encoded"
   let contentsWithNames' = catMaybes contentsWithNames
   pdfcontents <- do
     res <- preCheckPDFs $ map snd contentsWithNames'
     case res of
       Right r -> return $ zip (map fst contentsWithNames') r
-      Left _ -> apiError $ requestParameterParseError (T.intercalate ", " names) $ "not a valid PDF"
+      Left  _ -> apiError $
+        requestParameterParseError (T.intercalate ", " names) $ "not a valid PDF"
 
   files <- forM pdfcontents $ \(filename, pdfcontent) -> do
     fileid <- saveNewFile filename pdfcontent
