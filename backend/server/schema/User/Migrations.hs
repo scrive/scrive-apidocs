@@ -38,9 +38,9 @@ usersAddUserGroupID = Migration {
       runQuery_ . sqlAlterTable tname $
         [
           sqlAddColumn $ tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = True }
-        , sqlAddFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
+        , sqlAddValidFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
         ]
-      runQuery_ . sqlCreateIndex tname $ indexOnColumn "user_group_id"
+      runQuery_ . sqlCreateIndexSequentially tname $ indexOnColumn "user_group_id"
   }
 
 usersMakeUserGroupIDNotNull :: MonadDB m => Migration m
@@ -52,7 +52,7 @@ usersMakeUserGroupIDNotNull = Migration {
       runQuery_ . sqlAlterTable tname $
         [ sqlAlterColumn "user_group_id" "SET NOT NULL"
         , sqlDropFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
-        , sqlAddFK tname $ fkOnColumn "user_group_id" "user_groups" "id"
+        , sqlAddValidFK tname $ fkOnColumn "user_group_id" "user_groups" "id"
         ]
   }
 
@@ -174,7 +174,7 @@ usersAddHomeFolderID =
               { colName = "home_folder_id"
               , colType = BigIntT
               , colNullable = True }
-          , sqlAddFK tname (fkOnColumn "home_folder_id" "folders" "id")
+          , sqlAddValidFK tname (fkOnColumn "home_folder_id" "folders" "id")
           ]
-        runQuery_ . sqlCreateIndex tname $ indexOnColumn "home_folder_id"
+        runQuery_ . sqlCreateIndexSequentially tname $ indexOnColumn "home_folder_id"
     }

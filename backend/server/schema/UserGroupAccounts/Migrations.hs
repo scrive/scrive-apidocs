@@ -18,10 +18,10 @@ changeCompanyToUserGroupInCompanyInvites = Migration {
         sqlSetCmd "user_group_id" "company_id"
       runQuery_ $ sqlAlterTable tname [
           sqlAlterColumn "user_group_id" "SET NOT NULL"
-        , sqlAddFK tname (fkOnColumn "user_group_id" "user_groups" "id")
+        , sqlAddValidFK tname (fkOnColumn "user_group_id" "user_groups" "id")
 
         ]
-      runQuery_ $ sqlCreateIndex tname $ (indexOnColumn "user_group_id")
+      runQuery_ $ sqlCreateIndexSequentially tname $ (indexOnColumn "user_group_id")
       runQuery_ $ sqlAlterTable tname [
               sqlDropPK tname
             , sqlAddPK tname

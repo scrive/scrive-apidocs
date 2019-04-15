@@ -18,8 +18,8 @@ createIndexesForChargeableItems = Migration {
   , mgrFrom = 1
   , mgrAction = StandardMigration $ do
       let tname = tblName tableChargeableItems
-      runQuery_ . sqlCreateIndex tname $ (indexOnColumn "\"time\"")
-      runQuery_ . sqlCreateIndex tname $ (indexOnColumn "type")
+      runQuery_ . sqlCreateIndexSequentially tname $ (indexOnColumn "\"time\"")
+      runQuery_ . sqlCreateIndexSequentially tname $ (indexOnColumn "type")
   }
 
 
@@ -29,7 +29,7 @@ createJointTypeCompanyIDTimeIndexForChargeableItems = Migration {
   , mgrFrom = 2
   , mgrAction = StandardMigration $ do
       let tname = tblName tableChargeableItems
-      runQuery_ . sqlCreateIndex tname $
+      runQuery_ . sqlCreateIndexSequentially tname $
                   (indexOnColumns  ["type", "company_id", "\"time\""])
   }
 
@@ -42,9 +42,9 @@ chargeableItemsAddUserGroupID = Migration {
     runQuery_ $ sqlAlterTable tname
       [
         sqlAddColumn $ tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = True }
-      , sqlAddFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
+      , sqlAddValidFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
       ]
-    runQuery_ . sqlCreateIndex tname $ indexOnColumn "user_group_id"
+    runQuery_ . sqlCreateIndexSequentially tname $ indexOnColumn "user_group_id"
 }
 
 createJointTypeUserGroupIDTimeIndexForChargeableItems :: MonadDB m => Migration m
@@ -53,7 +53,7 @@ createJointTypeUserGroupIDTimeIndexForChargeableItems = Migration {
   , mgrFrom = 4
   , mgrAction = StandardMigration $ do
       let tname = tblName tableChargeableItems
-      runQuery_ . sqlCreateIndex tname $
+      runQuery_ . sqlCreateIndexSequentially tname $
                   (indexOnColumns  ["type", "user_group_id", "\"time\""])
   }
 
@@ -65,7 +65,7 @@ dropFKCascadeForUserGroupID = Migration {
       let tname = tblName tableChargeableItems
       runQuery_ $ sqlAlterTable tname
         [ sqlDropFK tname $ (fkOnColumn "user_group_id" "user_groups" "id") { fkOnDelete = ForeignKeySetNull }
-        , sqlAddFK tname $ fkOnColumn "user_group_id" "user_groups" "id"
+        , sqlAddValidFK tname $ fkOnColumn "user_group_id" "user_groups" "id"
         ]
   }
 
