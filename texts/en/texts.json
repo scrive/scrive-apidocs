@@ -826,7 +826,7 @@
 "_modalEditUsersChangeEmail":"Change email",
 "_modalEditUsersEditDetails":"Edit user details",
 "_modalEditUsersEmailInUse":"Email address is already in use",
-"_modalEditUsersRequestSent":"Request was sent to given email address",
+"_modalEditUsersRequestSent":"Request to change email has been sent to new email address",
 "_modalEditUsersSave":"Save",
 "_modalEditUsersSettingsSaved":"Account settings have been saved.",
 "_modalNewPasswordViewFooterSave":"Save",
