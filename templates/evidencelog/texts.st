@@ -798,7 +798,7 @@ ApprovedByApproverPartyEvidenceLog=The approver party <span class="signatory"/> 
 ###
 ForwardedSigningEvidenceLog=<span class="actor"/> forwarded the document to <span class="signatory"/>.
 ###
-ForwardedSigningEvidenceArchive=Forwarded the document to $signatory$.
+ForwardedSigningEvidenceArchive=$_ForwardedSigningEvidenceArchive()$.
 ###
 ConfirmationDeliveredByEmailLog=Scrive eSign’s external email delivery system reported that the confirmation sent via email to <span class="signatory"/> was delivered.
 ###
