@@ -550,6 +550,20 @@ instance Arbitrary SignatoryEmailField where
        , sefEditableBySignatory    = False
        , sefPlacements = p
     }
+
+instance Arbitrary SignatoryMobileField where
+  arbitrary = do
+    v <- arbString 1 100
+    p <- arbitrary
+    return $ MobileField
+      { smfID = unsafeSignatoryFieldID 0
+      , smfValue = v
+      , smfObligatory = True
+      , smfShouldBeFilledBySender = False
+      , smfEditableBySignatory    = False
+      , smfPlacements = p
+      }
+
 instance Arbitrary SignatoryCompanyField where
   arbitrary = do
     v <- arbString 1 100
@@ -561,7 +575,6 @@ instance Arbitrary SignatoryCompanyField where
        , scfShouldBeFilledBySender = False
        , scfPlacements = p
     }
-
 
 instance Arbitrary SignatoryPersonalNumberField where
   arbitrary = do

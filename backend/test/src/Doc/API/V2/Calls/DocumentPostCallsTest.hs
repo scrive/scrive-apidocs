@@ -13,16 +13,20 @@ import Doc.API.V2.Calls.CallsTestUtils
 import Doc.API.V2.Calls.DocumentGetCalls (docApiV2Get)
 import Doc.API.V2.Calls.DocumentPostCalls
 import Doc.API.V2.Calls.SignatoryCalls (docApiV2SigSign)
+import Doc.API.V2.Guards
 import Doc.API.V2.Mock.TestUtils
 import Doc.Class
 import Doc.DocumentMonad (withDocumentID)
 import Doc.Model.Query
-import Doc.Model.Update (SetDocumentSharing(..), TimeoutDocument(..))
+import Doc.Model.Update (SetDocumentSharing(..), StoreDocumentForTesting(..), TimeoutDocument(..))
 import Doc.Types.Document
 import Doc.Types.DocumentStatus (DocumentStatus(..))
 import Doc.Types.SignatoryConsentQuestion (SignatoryConsentQuestion(..))
 import Doc.Types.SignatoryLink (SignatoryLink(..))
 import EvidenceLog.Model
+import File.Model
+import Generators.DocumentGenerators
+import Generators.OccurenceControl
 import TestingUtil
 import TestKontra
 import User.Lang (defaultLang)
@@ -597,12 +601,20 @@ testDocApiV2SigChangeEmailAndMobile = do
     assertEqual "Mobile should have changed" valid_mobile (getMockDocSigLinkMobileNumber 2 mobileOnly)
 
 testDocApiV2GenerateShareableLink :: TestEnv ()
-testDocApiV2GenerateShareableLink = replicateM_ 10 $ do
+testDocApiV2GenerateShareableLink = replicateM_ 100 $ do
   user <- addNewRandomUser
   ctx  <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
-  doc  <- addRandomDocumentWithAuthorAndCondition user (const True)
 
-  if isTemplate doc && False -- FIXME: actually fix this test
+  doc <- do
+    fid  <- addNewRandomFile
+    file <- randomQuery $ GetFileByFileID fid
+    doc' <- rand 10 $ runOccurenceControl 0.5 $
+      startableDocumentOC (userid user) file
+    did  <- randomUpdate $ StoreDocumentForTesting doc'
+    randomQuery $ GetDocumentByDocumentID did
+
+  if isTemplate doc
+     && isNothing (documentCanBeStarted (doc { documenttype = Signable }))
     then do
       void $ testRequestHelper ctx POST []
         (docApiV2GenerateShareableLink (documentid doc)) 200

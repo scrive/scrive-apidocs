@@ -55,6 +55,8 @@ import FileStorage
 import FileTest
 import FlashMessages
 import Folder.FolderTest
+import Generators.DocumentGeneratorsTest
+import Generators.OccurenceControlTest
 import GTWorkflowTest
 import HtmlTest
 import InputValidationTest
@@ -147,6 +149,8 @@ allTests = [
   , userHistoryTests
   , userPasswordTests
   , userStateTests
+  , documentGeneratorsTests
+  , occurenceControlTests
   ]
 
 stagingTests :: [TestEnvSt -> Test]

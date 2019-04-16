@@ -5,6 +5,7 @@ module Doc.API.V2.Guards (
 , guardThatDocumentCanBeStarted
 , guardThatDocumentCanBeTrashedByUser
 , guardThatDocumentCanBeDeletedByUser
+, documentCanBeStarted
 , guardThatObjectVersionMatchesIfProvided
 , guardThatConsentModulesAreOnSigningParties
 , guardThatAttachmentDetailsAreConsistent
@@ -42,6 +43,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
 
 import API.V2
+import API.V2.Errors
 import API.V2.Parameters
 import DB
 import Doc.API.V2.DocumentAccess
@@ -373,31 +375,34 @@ guardThatDocumentHasntBeenForwadedTooManyTimes doc =
 
 -- Checks if document can be started. Throws matching API exception if it does not
 guardThatDocumentCanBeStarted :: Kontrakcja m => Document -> m ()
-guardThatDocumentCanBeStarted doc = do
+guardThatDocumentCanBeStarted = maybe (return ()) apiError . documentCanBeStarted
+
+documentCanBeStarted :: Document -> Maybe APIError
+documentCanBeStarted doc = either Just (const Nothing) $ do
     when (isTemplate doc) $ do
-       apiError $ (documentStateError "Document is a template, templates can not be started")
+       Left $ (documentStateError "Document is a template, templates can not be started")
     unless (all signatoryHasValidDeliverySettings $ documentsignatorylinks doc) $ do
-       apiError $ documentStateError "Some parties have an invalid email address or mobile number, their invitation 'delivery_method' requires it to be valid and not empty."
+       Left $ documentStateError "Some parties have an invalid email address or mobile number, their invitation 'delivery_method' requires it to be valid and not empty."
     unless (all signatoryHasValidConfirmationSettings $ documentsignatorylinks doc) $ do
-       apiError $ documentStateError "Some parties have an invalid email address or mobile number, their 'confirmation_delivery_method' requires it to be valid or empty."
+       Left $ documentStateError "Some parties have an invalid email address or mobile number, their 'confirmation_delivery_method' requires it to be valid or empty."
     unless (all signatoryHasValidNotificationSettings $ documentsignatorylinks doc) $ do
-       apiError $ documentStateError "Some parties have an invalid email address or mobile number, their 'notification_delivery_method' requires it to be valid or empty."
+       Left $ documentStateError "Some parties have an invalid email address or mobile number, their 'notification_delivery_method' requires it to be valid or empty."
     unless (all signatoryHasValidSSNForIdentifyToView $ documentsignatorylinks doc) $ do
-       apiError $ documentStateError "Some parties have an invalid personal numbers, their 'authentication_to_view' requires it to be valid and not empty."
+       Left $ documentStateError "Some parties have an invalid personal numbers, their 'authentication_to_view' requires it to be valid and not empty."
     unless (all signatoryHasValidAuthSettings $ documentsignatorylinks doc) $ do
-       apiError $ documentStateError "Some parties have an invalid personal/mobile numbers, their 'authentication_to_sign' requires it to be valid or empty."
+       Left $ documentStateError "Some parties have an invalid personal/mobile numbers, their 'authentication_to_sign' requires it to be valid or empty."
     unless (all signatoryHasValidMobileForIdentifyToView $ documentsignatorylinks doc) $ do
-       apiError $ documentStateError "Some parties have an invalid mobile number and it is required for identification to view document."
+       Left $ documentStateError "Some parties have an invalid mobile number and it is required for identification to view document."
     when (any (isAuthor && isApprover) $ documentsignatorylinks doc) $ do
-       apiError $ documentStateError "Author can't be an approver"
+       Left $ documentStateError "Author can't be an approver"
     unless (all signatoryThatIsApproverHasStandardAuthToSign $ documentsignatorylinks doc) $ do
-       apiError $ documentStateError "All approvers have to have standard authentication to sign"
+       Left $ documentStateError "All approvers have to have standard authentication to sign"
     unless (all signatoryThatIsApproverHasNoPlacements $ documentsignatorylinks doc) $ do
-       apiError $ documentStateError "No approver can have placed fields"
+       Left $ documentStateError "No approver can have placed fields"
     unless (any isSignatory $ documentsignatorylinks doc) $ do
-       apiError $ documentStateError "Document has to have at least one signing party"
+       Left $ documentStateError "Document has to have at least one signing party"
     when (isNothing $ documentfile doc) $ do
-       apiError $ documentStateError "Document must have a file before it can be started"
+       Left $ documentStateError "Document must have a file before it can be started"
     return ()
 
  where

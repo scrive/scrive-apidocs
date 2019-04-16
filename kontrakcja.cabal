@@ -1325,6 +1325,10 @@ Test-suite kontrakcja-test
                  UserGroup.UserGroupTest
                  UserGroup.Migrations
                  UserGroup.Tables
+                 Generators.DocumentGenerators
+                 Generators.DocumentGeneratorsTest
+                 Generators.OccurenceControl
+                 Generators.OccurenceControlTest
                  GTWorkflowTest
                  HostClock.Tables
                  HtmlTest
@@ -1413,6 +1417,7 @@ Test-suite kontrakcja-test
                , fclabels
                , fields-json
                , filepath
+               , free
                , happstack-server
                , hedis
                , hpqtypes
