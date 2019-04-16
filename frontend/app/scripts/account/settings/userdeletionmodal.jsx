@@ -4,6 +4,7 @@ import Modal from "../../common/modal";
 import classNames from "classnames";
 import HtmlTextWithSubstitution from "../../common/htmltextwithsubstitution";
 import InfoTextInput from "../../common/infotextinput";
+import Subscription from "../subscription";
 
 module.exports = React.createClass({
   propTypes: {
@@ -53,6 +54,10 @@ module.exports = React.createClass({
     }
   },
 
+  lastUser: function () {
+    return Subscription.currentSubscription().numberOfUsers() === 1;
+  },
+
   render: function () {
     var acceptClassName = classNames("user-deletion-button", {
       inactive: !this.correctTextEntered()
@@ -75,9 +80,11 @@ module.exports = React.createClass({
             <p>
               {localization.account.accountDetails.userDeletionModalMessage.line1}
             </p>
-            <p>
-              {localization.account.accountDetails.userDeletionModalMessage.line2}
-            </p>
+            {/* if */ this.lastUser() &&
+              <p>
+                {localization.account.accountDetails.userDeletionModalMessage.line2}
+              </p>
+            }
             <p>
               <strong>
                 {localization.account.accountDetails.userDeletionModalMessage.line3}
