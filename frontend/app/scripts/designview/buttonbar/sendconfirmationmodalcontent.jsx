@@ -9,8 +9,8 @@ var SendConfirmationModalSignatoriesList = React.createClass({
     signatories: React.PropTypes.array.isRequired
   },
   render: function () {
-    var signatories = _.filter(this.props.signatories, function (signatory) {
-      return signatory.signs() && !signatory.current();
+    var signatories = _.filter(this.props.signatories, function (sig) {
+      return (sig.signs() || sig.approves()) && !sig.current();
     });
 
     return (
