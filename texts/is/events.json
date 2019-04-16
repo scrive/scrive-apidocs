@@ -20,6 +20,7 @@
 "_CancelDocumenElegEvidenceText":"Scrive hafnaði tilraun $signatory$ til að skrifa undir skjalið. Ástæðan var sú að auðkennisupplýsingar $signatory$ voru ekki eins og auðkennisupplýsingar sem fengnar voru frá ytra kerfi fyrir rafræn skilríki.",
 "_CancelDocumentEvidenceTextSimpleArchive":"Boð um að skrifa undir skjalið var dregið til baka.",
 "_CloseDocumentEvidenceTextSimple":"Scrive læsti skjalinu svo að undirskriftaraðilarnir geti ekki gert frekari breytingar.",
+"_ForwardedSigningEvidenceArchive":"",
 "_InvitationDeliveredByEmailTextToApproveSimple":"",
 "_InvitationDeliveredByEmailTextToReviewSimple":"Boð um að fara yfir skjalið var afhent $signatory$ með tölvupósti.",
 "_InvitationDeliveredByEmailTextToSignSimple":"Boð um að skrifa undir skjalið var afhent $signatory$ með tölvupósti.",

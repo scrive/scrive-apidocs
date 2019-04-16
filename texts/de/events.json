@@ -20,6 +20,7 @@
 "_CancelDocumenElegEvidenceText":"Scrive hat den Versuch von $signatory$, das Dokument zu signieren, abgelehnt. Die Informationen zur Identität von $signatory$ stimmen nicht mit den Informationen überein, die vom externen eID System übermittelt wurden.",
 "_CancelDocumentEvidenceTextSimpleArchive":"Die Einladung, das Dokument zu signieren, wurde zurück gezogen.",
 "_CloseDocumentEvidenceTextSimple":"Scrive hat das Dokument für nachträgliche Veränderungen durch die signierenden Parteien gesperrt. ",
+"_ForwardedSigningEvidenceArchive":"",
 "_InvitationDeliveredByEmailTextToApproveSimple":"",
 "_InvitationDeliveredByEmailTextToReviewSimple":"Die Einladung, das Dokument zu überprüfen, wurde $signatory$ per E-Mail zugestellt.",
 "_InvitationDeliveredByEmailTextToSignSimple":"Die Einladung, das Dokument zu signieren, wurde $signatory$ per E-Mail zugestellt.",

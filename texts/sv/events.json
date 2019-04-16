@@ -20,6 +20,7 @@
 "_CancelDocumenElegEvidenceText":"Scrive nekade försöket av $signatory$ att signera dokumentet. Orsaken var att identitetsinformationen från $signatory$ inte stämde överens med identitetsinformationen från det externa e-legitimationssystemet.",
 "_CancelDocumentEvidenceTextSimpleArchive":"Inbjudan att signera dokumentet återkallades.",
 "_CloseDocumentEvidenceTextSimple":"Scrive låste dokumentet för ytterligare ändringar av de signerande parterna.",
+"_ForwardedSigningEvidenceArchive":"",
 "_InvitationDeliveredByEmailTextToApproveSimple":"Inbjudan att godkänna dokumentet levererades till $signatory$ via e-post.",
 "_InvitationDeliveredByEmailTextToReviewSimple":"Inbjudan att granska dokumentet levererades till $signatory$ via e-post.",
 "_InvitationDeliveredByEmailTextToSignSimple":"Inbjudan att signera dokumentet levererades till $signatory$ via e-post.",

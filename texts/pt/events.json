@@ -20,6 +20,7 @@
 "_CancelDocumenElegEvidenceText":"O Scrive rejeitou a tentativa de $signatory$ para assinar o documento. O motivo reside no facto de a informação da identidade de $signatory$ não coincidir com a informação da identidade recebida do sistema de eID externo.",
 "_CancelDocumentEvidenceTextSimpleArchive":"O convite para assinar o documento foi retirado.",
 "_CloseDocumentEvidenceTextSimple":"Scrive bloqueou o documento impedindo modificações adicionais pelas partes co-signatárias.",
+"_ForwardedSigningEvidenceArchive":"",
 "_InvitationDeliveredByEmailTextToApproveSimple":"",
 "_InvitationDeliveredByEmailTextToReviewSimple":"O convite para rever o documento foi entregue a $signatory$ por email.",
 "_InvitationDeliveredByEmailTextToSignSimple":"O convite para assinar o documento foi entregue a $signatory$ por email.",

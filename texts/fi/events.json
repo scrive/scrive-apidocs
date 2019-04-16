@@ -20,6 +20,7 @@
 "_CancelDocumenElegEvidenceText":"Scrive hylkäsi $signatory$:n yrityksen allekirjoittaa dokumentti. Syynä tähän oli se, että $signatory$:n antamat henkilötiedot eivät vastanneet ulkopuoliselta eID-järjestelmältä saatuja henkilötietoja.",
 "_CancelDocumentEvidenceTextSimpleArchive":"Kutsu dokumentin allekirjoittamiseen peruutettiin.",
 "_CloseDocumentEvidenceTextSimple":"Scrive lukitsi dokumentin, ja allekirjoittavat osapuolet eivät voi muokata sitä enää.",
+"_ForwardedSigningEvidenceArchive":"",
 "_InvitationDeliveredByEmailTextToApproveSimple":"Kutsu dokumentin hyväksymiseen toimitettiin sähköpostitse henkilölle $signatory$.",
 "_InvitationDeliveredByEmailTextToReviewSimple":"Kutsu dokumentin esikatseluun toimitettiin sähköpostitse henkilölle $signatory$.",
 "_InvitationDeliveredByEmailTextToSignSimple":"Kutsu dokumentin allekirjoittamiseen toimitettiin sähköpostitse henkilölle $signatory$.",

@@ -20,6 +20,7 @@
 "_CancelDocumenElegEvidenceText":"Scrive noraidīja $signatory$ mēģinājumu parakstīt dokumentu, jo  $signatory$ identifikācijas dati nesakrita ar identifikācijas datiem, ko saņēmām no ārējās eID sistēmas.",
 "_CancelDocumentEvidenceTextSimpleArchive":"Uzaicinājums parakstīt dokumentu tika atcelts.",
 "_CloseDocumentEvidenceTextSimple":"Scrive ir liedzis iespēju parakstītājām pusēm veikt izmaiņas dokumentā.",
+"_ForwardedSigningEvidenceArchive":"",
 "_InvitationDeliveredByEmailTextToApproveSimple":"$signatory$ e-pastā tika nosūtīts uzaicinājums apstiprināt dokumentu.",
 "_InvitationDeliveredByEmailTextToReviewSimple":"$signatory$ e-pastā tika nosūtīts uzaicinājums pārskatīt dokumentu.",
 "_InvitationDeliveredByEmailTextToSignSimple":"$signatory$ e-pastā tika nosūtīts uzaicinājums parakstīt dokumentu.",
