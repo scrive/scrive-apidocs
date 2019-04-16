@@ -298,7 +298,7 @@
 "_companyposition":"Stanowisko",
 "_confirmAccountMaybeCreatedUser":"Link aktywacyjny został wysłany na Twoją skrzynkę pocztową. Jeśli posiadasz konto, spróbuj zresetować hasło.",
 "_confirmationMailUndeliveredContentBody":"Niestety potwierdzenie dokumentu <strong>$documenttitle$</strong> nie zostało dostarczone do <strong>$name$ &lt;$email$&gt;</strong>. Powodem może być awaria serwera poczty elektronicznej odbiorcy lub podanie przez Ciebie nieprawidłowego adresu e-mail.",
-"_confirmationMailUndeliveredContentBodyButton":"Otwórz dokument",
+"_confirmationMailUndeliveredContentBodyButton":"",
 "_confirmationMailUndeliveredContentBodyFirst":"Aby potwierdzić adres e-mail i ponownie wysłać potwierdzenie:",
 "_confirmationMailUndeliveredContentInstructionStep1":"Kliknij \"Zmień adres e-mail\"",
 "_confirmationMailUndeliveredContentInstructionStep2":"Potwierdź adres e-mail i wyślij ponownie",

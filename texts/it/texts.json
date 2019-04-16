@@ -298,7 +298,7 @@
 "_companyposition":"Posizione",
 "_confirmAccountMaybeCreatedUser":"Controlla se hai ricevuto un link di attivazione al tuo indirizzo e-mail. Se hai un account, prova invece a reimpostare la tua password.",
 "_confirmationMailUndeliveredContentBody":"Purtroppo non è stato possibile spedire la conferma del documento <strong>$documenttitle$</strong> a <strong>$name$ &lt;$email$&gt;</strong>. Può essere che il server mail del destinatario riscontri difficoltà o che l'indirizzo email fornito sia sbagliato.",
-"_confirmationMailUndeliveredContentBodyButton":"Apri documento",
+"_confirmationMailUndeliveredContentBodyButton":"",
 "_confirmationMailUndeliveredContentBodyFirst":"Per confermare l'indirizzo email e rispedire la conferma:",
 "_confirmationMailUndeliveredContentInstructionStep1":"Fai clic su \"Cambia email\"",
 "_confirmationMailUndeliveredContentInstructionStep2":"Conferma l'indirizzo email e rispedisci",

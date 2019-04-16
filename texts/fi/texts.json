@@ -298,7 +298,7 @@
 "_companyposition":"Asema",
 "_confirmAccountMaybeCreatedUser":"Tarkista saapuneet sähköpostisi aktivointilinkkiä varten. Jos sinulla on jo käyttäjätili, ole hyvä ja koita sen sijaan nollata salasanasi.",
 "_confirmationMailUndeliveredContentBody":"Valitettavasti dokumentin <strong>$documenttitle$</strong> vahvistusta ei voitu toimittaa henkilölle <strong>$name$ &lt;$email$&gt;</strong>. Tämä voi johtua vastaanottajan sähköpostipalvelimen ongelmista tai antamasi sähköpostiosoitteen virheellisyydestä. ",
-"_confirmationMailUndeliveredContentBodyButton":"Avaa dokumentti",
+"_confirmationMailUndeliveredContentBodyButton":"",
 "_confirmationMailUndeliveredContentBodyFirst":"Vahvistaaksesi sähköpostiosoitteen ja lähettääksesi vahvistuksen uudestaan:",
 "_confirmationMailUndeliveredContentInstructionStep1":"Klikkaa \"Vaihda sähköposti\"",
 "_confirmationMailUndeliveredContentInstructionStep2":"Vahvista sähköpostiosoite ja lähetä uudestaan",

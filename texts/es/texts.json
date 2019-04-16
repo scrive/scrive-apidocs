@@ -298,7 +298,7 @@
 "_companyposition":"Posición",
 "_confirmAccountMaybeCreatedUser":"Revise su email para poder activar el enlace. Si tiene una cuenta, intente restablecer la contraseña.",
 "_confirmationMailUndeliveredContentBody":"Desafortunadamente la confirmación del documento <strong>$documenttitle$</strong> no pudo ser entregada a <strong>$name$ &lt;$email$&gt;</strong>. Esto puede ser debido a que el servidor del email del receptor está teniendo problemas, o porque la dirección de email que nos ha proporcionado es incorrecta. ",
-"_confirmationMailUndeliveredContentBodyButton":"Abrir el documento",
+"_confirmationMailUndeliveredContentBodyButton":"",
 "_confirmationMailUndeliveredContentBodyFirst":"Para confirmar la dirección de email y reenviar la confirmación:",
 "_confirmationMailUndeliveredContentInstructionStep1":"Haga clic en \"Cambiar el email\"",
 "_confirmationMailUndeliveredContentInstructionStep2":"Confirme la dirección de email y envíelo otra vez",
