@@ -584,6 +584,7 @@ asValidPhoneForSMS input =
     >>= checkLengthIsMax 20
     >>= checkLengthIsMin 6
     >>= checkOnly (isDigit : map (==) "+ -().")
+    >>= filterOutCharacters "-(). "
     >>= (\str -> if take 1 str == "+"
                  then return str
                  else Bad)
