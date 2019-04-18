@@ -1,5 +1,8 @@
-{-# LANGUAGE BangPatterns, LambdaCase, OverloadedStrings, RecordWildCards #-}
-{-# OPTIONS_GHC -Wall #-}
+{-# LANGUAGE BangPatterns      #-}
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
+{-# OPTIONS_GHC -Wall          #-}
 module Main (main) where
 
 import Control.Applicative
@@ -58,7 +61,8 @@ parseSymbols = P.choice [
               op <- P.takeWhile1 (/= ')')
               void $ P.char ')'
               return $ "(" <> op <> ")"
-          , P.takeWhile1 ((not . isSpace) <&&> (/= '(') <&&> (/= ')') <&&> (/= ','))
+          , P.takeWhile1 ((not . isSpace) <&&> (/= '(') <&&> (/= ')')
+                          <&&> (/= ','))
           ]
         P.skipSpace
         ctors <- P.option "" (parenthesize <$> parseSymbolList)
@@ -126,8 +130,9 @@ showImport :: Style -> Import -> T.Text
 showImport Style{..} Import{..} = indentifySymbols 80 $ T.concat [
     import_module
   , case aliasAlignment of
-      Just n | isJust imAlias -> T.replicate (max 0 $ n - 1 - T.length import_module) " "
-      _ -> ""
+      Just n | isJust imAlias
+               -> T.replicate (max 0 $ n - 1 - T.length import_module) " "
+      _        -> ""
   , maybe "" (" as " <>) imAlias
   , case imSymbols of
       NoSymbols   -> ""
@@ -192,8 +197,9 @@ convert style@Style{..} modules source = T.unlines . concat $ [
   , separator_if $ ((not . null $ second_import_group) && (not . null $ rest))
   , rest ]
   where
-    (header, body) = break is_import . T.lines $ source
-    (import_section, rest) = break (not . (T.null <||> is_import <||> is_indented)) body
+    (header, body)         = break is_import . T.lines $ source
+    (import_section, rest) = break (not . (T.null <||> is_import <||> is_indented))
+                             body
 
     imports = case P.parseOnly (many parseImport) (T.unlines import_section) of
       Right imps -> sortBy (compareImport alignUnqualified) imps
@@ -298,7 +304,11 @@ main = do
   if null dirs
     then do
       prog <- getProgName
-      putStrLn $ "Usage: " ++ prog ++ " [--check] [--suffix=SUFFIX] [--align-unqualified] [--alias-alignment=N] [--import-grouping=none|external-internal|internal-external] <directories>"
+      putStrLn $ "Usage: " ++ prog
+        ++ " [--check] [--suffix=SUFFIX] [--align-unqualified]\
+           \ [--alias-alignment=N]\
+           \ [--import-grouping=none|external-internal|internal-external]\
+           \ <directories>"
     else do
       let (check, style, suffix) = get_options args
       putStrLn $ "Using " ++ show style
