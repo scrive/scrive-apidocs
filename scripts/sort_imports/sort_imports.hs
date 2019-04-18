@@ -37,25 +37,25 @@ parenthesize ss = "(" <> T.intercalate ", " ss <> ")"
 
 ----------------------------------------
 
-data Symbols
-  = NoSymbols
+data ImpSpec
+  = EmptyImpSpec
   | Explicit ![T.Text]
   | Hiding ![T.Text]
   deriving (Eq, Ord, Show)
 
-parseSymbols :: P.Parser Symbols
-parseSymbols = P.choice [
-    Hiding   <$> (P.string "hiding" *> P.skipSpace *> parseSymbolList)
-  , Explicit <$> parseSymbolList
-  , return NoSymbols
+parseImpSpec :: P.Parser ImpSpec
+parseImpSpec = P.choice [
+    Hiding   <$> (P.string "hiding" *> P.skipSpace *> parseEntityList)
+  , Explicit <$> parseEntityList
+  , return EmptyImpSpec
   ]
   where
-    parseSymbolList = do
+    parseEntityList = do
       void $ P.char '('
       P.skipSpace
-      symbols <- (`P.sepBy` P.char ',') $ do
+      entities <- (`P.sepBy` P.char ',') $ do
         P.skipSpace
-        symbol <- P.choice [
+        entity <- P.choice [
             do -- operator
               void $ P.char '('
               op <- P.takeWhile1 (/= ')')
@@ -65,13 +65,13 @@ parseSymbols = P.choice [
                           <&&> (/= ','))
           ]
         P.skipSpace
-        ctors <- P.option "" (parenthesize <$> parseSymbolList)
+        ctors <- P.option "" (parenthesize <$> parseEntityList)
         P.skipSpace
-        return $ symbol <> ctors
+        return $ entity <> ctors
       P.skipSpace
       void $ P.char ')'
       P.skipSpace
-      return $ sort symbols
+      return $ sort entities
 
 data Import = Import {
     imQualified      :: !Bool
@@ -79,7 +79,7 @@ data Import = Import {
   , imCaselessModule :: !T.Text
   , imAlias          :: !(Maybe T.Text)
   , imPackage        :: !(Maybe T.Text)
-  , imSymbols        :: !Symbols
+  , imImpSpec        :: !ImpSpec
   } deriving (Eq, Show)
 
 compareImport :: Bool -> Import -> Import -> Ordering
@@ -90,7 +90,7 @@ compareImport ignore_qualified a b = mconcat [
   , imPackage a        `compare` imPackage b
   , imCaselessModule a `compare` imCaselessModule b
   , imAlias a          `compare` imAlias b
-  , imSymbols a        `compare` imSymbols b
+  , imImpSpec a        `compare` imImpSpec b
   ]
 
 parseImport :: P.Parser Import
@@ -105,14 +105,14 @@ parseImport = do
   P.skipSpace
   alias <- P.option Nothing (Just <$> parseAlias)
   P.skipSpace
-  symbols <- parseSymbols
+  impspec <- parseImpSpec
   return Import {
       imQualified      = is_qualified
     , imModule         = module_
     , imCaselessModule = T.toCaseFold module_
     , imAlias          = alias
     , imPackage        = package
-    , imSymbols        = symbols
+    , imImpSpec        = impspec
     }
   where
     parsePkgId :: P.Parser T.Text
@@ -134,10 +134,10 @@ showImport Style{..} Import{..} = indentifySymbols 80 $ T.concat [
                -> T.replicate (max 0 $ n - 1 - T.length import_module) " "
       _        -> ""
   , maybe "" (" as " <>) imAlias
-  , case imSymbols of
-      NoSymbols   -> ""
-      Explicit ss -> " " <> parenthesize ss
-      Hiding ss   -> " hiding " <> parenthesize ss
+  , case imImpSpec of
+      EmptyImpSpec -> ""
+      Explicit ss  -> " " <> parenthesize ss
+      Hiding ss    -> " hiding " <> parenthesize ss
   ]
   where
     import_module = T.concat [
@@ -156,8 +156,8 @@ showImport Style{..} Import{..} = indentifySymbols 80 $ T.concat [
 
     qualified_ = " qualified"
 
--- indents symbols explicitely imported or hidden
--- will indent 2 spaces from the next line and start with ", "
+-- Indents symbols explicitly imported or hidden.
+-- Will indent 2 spaces from the next line and start with ", ".
 indentifySymbols :: Int -> T.Text -> T.Text
 indentifySymbols maxLength text = T.intercalate "\n" . reverse . worker "" []
   . (\(t:ts) -> t : map (", " <>) ts) . T.splitOn ", " $ text
