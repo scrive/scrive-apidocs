@@ -2,8 +2,6 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 
 module User.JSON (
-    userJSON,
-    usersJSON,
     userJSONWithCompany,
     userJSONWithCallBackInfo,
     unjsonUser,
@@ -33,12 +31,6 @@ import User.CallbackScheme.Model (UserCallbackScheme(..))
 import User.Model
 import UserGroup.Types
 import Util.HasSomeUserInfo
-
-userJSON :: User -> JSValue
-userJSON user = runJSONGen $ userJSONUserDetails user
-
-usersJSON :: [User] -> JSValue
-usersJSON users = JSArray $ map (runJSONGen . userJSONUserDetails) users
 
 userJSONWithCompany :: User -> UserGroupWithParents -> JSValue
 userJSONWithCompany user ugwp = runJSONGen $ do

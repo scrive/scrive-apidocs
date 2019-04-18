@@ -1,6 +1,5 @@
 module User.Model.Update (
     AddUser(..)
-  , AddUserFromObject (..)
   , AcceptTermsOfService(..)
   , DeleteUser(..)
   , RemoveInactiveUser(..)
@@ -49,21 +48,6 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AcceptTermsOfService Bool where
       sqlSet "has_accepted_terms_of_service" time
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
-
-data AddUserFromObject = AddUserFromObject User
-instance (MonadDB m, MonadThrow m) => DBUpdate m AddUserFromObject (Maybe User) where
-  update (AddUserFromObject user) =
-    let fname = getFirstName user
-        lname = getLastName user
-        email = getEmail user
-        mpwd = userpassword user
-        ugid = usergroupid user
-        mFid = userhomefolderid user
-        admin = useriscompanyadmin user
-        l = getLang user
-        ad = userassociateddomainid user
-        sm = usersignupmethod user
-    in update (AddUser (fname, lname) email mpwd (ugid, mFid, admin) l ad sm)
 
 data AddUser = AddUser (String, String) String (Maybe Password) (UserGroupID, Maybe FolderID, Bool) Lang BrandedDomainID SignupMethod
 instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where

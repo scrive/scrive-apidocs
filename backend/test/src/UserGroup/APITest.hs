@@ -151,26 +151,6 @@ userGroupApiTests env = testGroup "UserGroupAPI"
       env testAdminUserCannotDeleteRootUserGroupSettings
   , testThat "sales user can't delete root UserGroupSettings"
       env testSalesUserCannotDeleteRootUserGroupSettings
-  -- UserGroup UI GET endpoint tests
-  , testThat "non-admin and non-sales user can't view non-existent UserGroupUI"
-      env testNonAdminUserCannotViewNonExistentUserGroupUI
-  , testThat "admin user can't view non-existent UserGroupUI"
-      env testAdminUserCannotViewNonExistentUserGroupUI
-  , testThat "sales user can't view non-existent UserGroupUI"
-      env testSalesUserCannotViewNonExistentUserGroupUI
-  , testThat "non-admin and non-sales user can view UserGroupUI with permissions"
-      env testNonAdminUserCanViewUserGroupUIWithPermissions
-  , testThat "admin user can UserGroupUI with permissions"
-      env testAdminUserCanViewUserGroupUIWithPermissions
-  , testThat "sales user can UserGroupUI with permissions"
-      env testSalesUserCanViewUserGroupUIWithPermissions
-  , testThat "admin user can UserGroupUI without permissions"
-      env testAdminUserCanViewUserGroupUIWithoutPermissions
-  , testThat "sales user can UserGroupUI without permissions"
-      env testSalesUserCanViewUserGroupUIWithoutPermissions
-  -- UserGroup UI PUT endpoint tests
-  , testThat "non-admin and non-sales can edit (PUT) UserGroupUI with permissions"
-      env testNonAdminUserCanEditUserGroupUIWithPermissions
   -- UserGroup Users GET endpoint tests
   , testThat "non-admin and non-sales can view Users in UserGroup with permissions"
       env testNonAdminUserCanViewUsersInUserGroupWithPermissions
@@ -179,34 +159,11 @@ userGroupApiTests env = testGroup "UserGroupAPI"
 -- UserGroup POST and PUT endpoint tests
 
 jsonRootUG :: String
-jsonRootUG = "{\"name\":\"Test UserGroup blah blah\",\"settings\":"
-  <> "{\"ip_address_mask_list\":[],\"data_retention_policy\":"
-  <> "{\"idle_doc_timeout_preparation\":null,\"idle_doc_timeout_closed\":null,"
-  <> "\"idle_doc_timeout_canceled\":null,\"idle_doc_timeout_timedout\":null,"
-  <> "\"idle_doc_timeout_rejected\":null,\"idle_doc_timeout_error\":null,"
-  <> "\"immediate_trash\":false},\"cgi_display_name\":null,\"cgi_service_id\""
-  <> ":null,\"sms_provider\":\"default\",\"pad_app_mode\":\"list_view\","
-  <> "\"pad_earchive_enabled\":true,\"legal_text\":false},\"invoicing\":"
-  <> "{\"invoicing\":\"invoice\",\"payment_plan\":\"free\"},\"address\":"
-  <> "{\"company_number\":\"\",\"address\":\"\",\"zip\":\"\",\"city\":\"\","
-  <> "\"country\":\"\"},\"ui\":{\"mail_theme\":null,\"signview_theme\":null,"
-  <> "\"service_theme\":null,\"browser_title\":null,\"sms_originator\":null,"
-  <> "\"favicon\":null}}"
+jsonRootUG = "{\"name\":\"Test UserGroup blah blah\"}"
 
 jsonWithParentUG :: UserGroupID -> String
 jsonWithParentUG ugid = "{\"name\":\"Test UserGroup blah blah\",\"parent_id\":"
-  <> "\"" <> (show ugid) <> "\",\"settings\":{\"ip_address_mask_list\":[],"
-  <> "\"data_retention_policy\":{\"idle_doc_timeout_preparation\":null,"
-  <> "\"idle_doc_timeout_closed\":null,\"idle_doc_timeout_canceled\":null,"
-  <> "\"idle_doc_timeout_timedout\":null,\"idle_doc_timeout_rejected\":null,"
-  <> "\"idle_doc_timeout_error\":null,\"immediate_trash\":false},"
-  <> "\"cgi_display_name\":null,\"cgi_service_id\":null,\"sms_provider\":"
-  <> "\"default\",\"pad_app_mode\":\"list_view\",\"pad_earchive_enabled\":true,"
-  <> "\"legal_text\":false},\"invoicing\":{\"invoicing\":\"invoice\","
-  <> "\"payment_plan\":\"free\"},\"address\":{\"company_number\":\"\","
-  <> "\"address\":\"\",\"zip\":\"\",\"city\":\"\",\"country\":\"\"},\"ui\":"
-  <> "{\"mail_theme\":null,\"signview_theme\":null,\"service_theme\":null,"
-  <> "\"browser_title\":null,\"sms_originator\":null,\"favicon\":null}}"
+  <> "\"" <> (show ugid) <> "\"}"
 
 testNonAdminUserCannotCreateRootUserGroup :: TestEnv ()
 testNonAdminUserCannotCreateRootUserGroup = do
@@ -318,21 +275,7 @@ testUserCanEditRootUserGroupWithPermissions = do
     where
       emailAddress = "great.green.arkleseizure@scrive.com"
       jsonExistingRootUG :: String
-      jsonExistingRootUG = "{\"name\":\"Test UserGroup blah blah\","
-        <> "\"parent_id\":null,\"settings\":{\"ip_address_mask_list\":[],"
-        <> "\"data_retention_policy\":{\"idle_doc_timeout_preparation\":null,"
-        <> "\"idle_doc_timeout_closed\":null,\"idle_doc_timeout_canceled\""
-        <> ":null,\"idle_doc_timeout_timedout\":null,"
-        <> "\"idle_doc_timeout_rejected\":null,\"idle_doc_timeout_error\":null,"
-        <> "\"immediate_trash\":false},\"cgi_display_name\":null,"
-        <> "\"cgi_service_id\":null,\"sms_provider\":\"default\","
-        <> "\"pad_app_mode\":\"list_view\",\"pad_earchive_enabled\":true,"
-        <> "\"legal_text\":false},\"invoicing\":{\"invoicing\":\"invoice\","
-        <> "\"payment_plan\":\"free\"},\"address\":{\"company_number\":\"\","
-        <> "\"address\":\"\",\"zip\":\"\",\"city\":\"\",\"country\":\"\"},"
-        <> "\"ui\":{\"mail_theme\":null,\"signview_theme\":null,"
-        <> "\"service_theme\":null,\"browser_title\":null,"
-        <> "\"sms_originator\":null,\"favicon\":null}}"
+      jsonExistingRootUG = "{\"name\":\"New usergroup name\",\"parent_id\":null}"
 
 testUserCanEditChildUserGroupWithPermissions :: TestEnv ()
 testUserCanEditChildUserGroupWithPermissions = do
@@ -349,21 +292,7 @@ testUserCanEditChildUserGroupWithPermissions = do
       emailAddress = "hotblack.desiato@scrive.com"
       jsonExistingChildUG :: UserGroupID -> String
       jsonExistingChildUG ugidParent = "{\"name\":\"Test UserGroup blah blah\""
-        <> ",\"parent_id\":\"" <> (show ugidParent)
-        <> "\",\"settings\":{\"ip_address_mask_list\":[],"
-        <> "\"data_retention_policy\":{\"idle_doc_timeout_preparation\":null,"
-        <> "\"idle_doc_timeout_closed\":null,\"idle_doc_timeout_canceled\""
-        <> ":null,\"idle_doc_timeout_timedout\":null,"
-        <> "\"idle_doc_timeout_rejected\":null,\"idle_doc_timeout_error\":null,"
-        <> "\"immediate_trash\":false},\"cgi_display_name\":null,"
-        <> "\"cgi_service_id\":null,\"sms_provider\":\"default\","
-        <> "\"pad_app_mode\":\"list_view\",\"pad_earchive_enabled\":true,"
-        <> "\"legal_text\":false},\"invoicing\":{\"invoicing\":\"invoice\","
-        <> "\"payment_plan\":\"free\"},\"address\":{\"company_number\":\"\","
-        <> "\"address\":\"\",\"zip\":\"\",\"city\":\"\",\"country\":\"\"},"
-        <> "\"ui\":{\"mail_theme\":null,\"signview_theme\":null,"
-        <> "\"service_theme\":null,\"browser_title\":null,"
-        <> "\"sms_originator\":null,\"favicon\":null}}"
+        <> ",\"parent_id\":\"" <> (show ugidParent) <> "\"}"
 
 -- UserGroup GET endpoint tests
 
@@ -691,8 +620,8 @@ testSalesUserCanEditUserGroupAddressWithPermissions = do
   assertEqual "non-admin and non-sales edit (PUT) UserGroupUI with permissions" 200 $ rsCode res
     where
       emailAddress = "great.green.arkleseizure@scrive.com"
-      addressJson = "{\"company_number\":\"0987654321\",\"address\":\"dobra\",\"zip\":"
-        <> "\"00-321\",\"city\":\"warsaw\",\"country\":\"PL\"}"
+      addressJson = "{\"address\":{\"company_number\":\"0987654321\",\"address\":"
+        <> "\"dobra\",\"zip\":\"00-321\",\"city\":\"warsaw\",\"country\":\"PL\"}}"
 
 -- UserGroup Address DELETE endpoint tests
 
@@ -1036,122 +965,6 @@ testSalesUserCannotDeleteRootUserGroupSettings = do
     where
       emailAddress = "max.quordlepleen@scrive.com"
       setUser muser = set ctxmaybeuser muser . set ctxsalesaccounts [Email emailAddress]
-
--- UserGroup UI GET endpoint tests
-
-testNonAdminUserCannotViewNonExistentUserGroupUI :: TestEnv ()
-testNonAdminUserCannotViewNonExistentUserGroupUI = do
-  muser <- addNewUser "Googleplex" "Starthinker" "googleplex.starthinker@scrive.com"
-  ctx   <- set ctxmaybeuser muser <$> mkContext defaultLang
-  req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiUIV2Get ugid)
-  assertEqual "non-admin user can't view non-existent UserGroup UI" 403 $ rsCode res
-    where
-      ugid = unsafeUserGroupID 123
-
-testAdminUserCannotViewNonExistentUserGroupUI :: TestEnv ()
-testAdminUserCannotViewNonExistentUserGroupUI = do
-  muser <- addNewUser "Grunthos" "the Flatulent" emailAddress
-  ctx   <- setUser muser <$> mkContext defaultLang
-  req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiUIV2Get ugid)
-  assertEqual "admin user can't view non-existent UserGroup UI" 403 $ rsCode res
-    where
-      ugid = unsafeUserGroupID 123
-      emailAddress = "grunthos.the.flatulent@scrive.com"
-      setUser muser = set ctxmaybeuser muser . set ctxadminaccounts [Email emailAddress]
-
-testSalesUserCannotViewNonExistentUserGroupUI :: TestEnv ()
-testSalesUserCannotViewNonExistentUserGroupUI = do
-  muser <- addNewUser "Hotblack" "Desiato" emailAddress
-  ctx   <- setUser muser <$> mkContext defaultLang
-  req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiUIV2Get ugid)
-  assertEqual "sales user can't view non-existent UserGroup UI" 403 $ rsCode res
-    where
-      ugid = unsafeUserGroupID 123
-      emailAddress = "hotblack.desiato@scrive.com"
-      setUser muser = set ctxmaybeuser muser . set ctxsalesaccounts [Email emailAddress]
-
-testNonAdminUserCanViewUserGroupUIWithPermissions :: TestEnv ()
-testNonAdminUserCanViewUserGroupUIWithPermissions = do
-  (user, ug) <- addNewAdminUserAndUserGroup "Googleplex" "Starthinker" emailAddress
-  let ugid = get ugID ug
-  void . dbUpdate $ AccessControlInsertUserGroupAdmin (userid user) ugid
-  ctx   <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
-  req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiUIV2Get ugid)
-  assertEqual "non-admin user can view UserGroup UI with permissions" 200 $ rsCode res
-    where
-      emailAddress = "googleplex.starthinker@scrive.com"
-
-testAdminUserCanViewUserGroupUIWithPermissions :: TestEnv ()
-testAdminUserCanViewUserGroupUIWithPermissions = do
-  (user, ug) <- addNewAdminUserAndUserGroup "Grunthos" "the Flatulent" emailAddress
-  let ugid = get ugID ug
-  void . dbUpdate $ AccessControlInsertUserGroupAdmin (userid user) ugid
-  ctx   <- setUser (Just user) <$> mkContext defaultLang
-  req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiUIV2Get ugid)
-  assertEqual "admin user can view UserGroup UI with permissions" 200 $ rsCode res
-    where
-      emailAddress = "grunthos.the.flatulent@scrive.com"
-      setUser muser = set ctxmaybeuser muser . set ctxadminaccounts [Email emailAddress]
-
-testSalesUserCanViewUserGroupUIWithPermissions :: TestEnv ()
-testSalesUserCanViewUserGroupUIWithPermissions = do
-  (user, ug) <- addNewAdminUserAndUserGroup "Hotblack" "Desiato" emailAddress
-  let ugid = get ugID ug
-  void . dbUpdate $ AccessControlInsertUserGroupAdmin (userid user) ugid
-  ctx   <- setUser (Just user) <$> mkContext defaultLang
-  req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiUIV2Get ugid)
-  assertEqual "sales user can view UserGroup UI with permissions" 200 $ rsCode res
-    where
-      emailAddress = "hotblack.desiato@scrive.com"
-      setUser muser = set ctxmaybeuser muser . set ctxsalesaccounts [Email emailAddress]
-
-testAdminUserCanViewUserGroupUIWithoutPermissions :: TestEnv ()
-testAdminUserCanViewUserGroupUIWithoutPermissions = do
-  muser <- addNewUser "Grunthos" "the Flatulent" emailAddress
-  ug <- addNewUserGroup
-  let ugid = get ugID ug
-  ctx   <- setUser muser <$> mkContext defaultLang
-  req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiUIV2Get ugid)
-  assertEqual "admin user can view UserGroup UI with permissions" 200 $ rsCode res
-    where
-      emailAddress = "grunthos.the.flatulent@scrive.com"
-      setUser muser = set ctxmaybeuser muser . set ctxadminaccounts [Email emailAddress]
-
-testSalesUserCanViewUserGroupUIWithoutPermissions :: TestEnv ()
-testSalesUserCanViewUserGroupUIWithoutPermissions = do
-  muser <- addNewUser "Hotblack" "Desiato" "hotblack.desiato@scrive.com"
-  ug <- addNewUserGroup
-  let ugid = get ugID ug
-  ctx   <- setUser muser <$> mkContext defaultLang
-  req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiUIV2Get ugid)
-  assertEqual "sales user can view UserGroup UI with permissions" 200 $ rsCode res
-    where
-      emailAddress = "hotblack.desiato@scrive.com"
-      setUser muser = set ctxmaybeuser muser . set ctxsalesaccounts [Email emailAddress]
-
--- UserGroup UI Update endpoint tests
-
-testNonAdminUserCanEditUserGroupUIWithPermissions :: TestEnv ()
-testNonAdminUserCanEditUserGroupUIWithPermissions = do
-  (user, ug) <- addNewAdminUserAndUserGroup "Great Green" "Arkleseizure" emailAddress
-  let ugid = get ugID ug
-  void . dbUpdate $ AccessControlInsertUserGroupAdmin (userid user) ugid
-  ctx   <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
-  req   <- mkRequest POST [ ("ui", inText uiJson) ]
-  res   <- fst <$> runTestKontra req ctx (userGroupApiUIV2Update ugid)
-  assertEqual "non-admin and non-sales edit (PUT) UserGroupUI with permissions" 200 $ rsCode res
-    where
-      emailAddress = "great.green.arkleseizure@scrive.com"
-      uiJson = "{\"mail_theme\":null,\"signview_theme\":null,\"service_theme\":null,"
-        <> "\"browser_title\":\"testing123\",\"sms_originator\":null,\"favicon\":null}"
 
 -- UserGroup Users GET endpoint tests
 

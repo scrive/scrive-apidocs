@@ -4,7 +4,10 @@ module API.V2.Utils
     , checkAdminOrSales
     , isApiAdmin
     , isApiSales
+    , userGroupOrAPIError
     ) where
+
+import Control.Monad.Catch
 
 import AccessControl.Model
 import AccessControl.Types
@@ -15,8 +18,10 @@ import DB
 import Kontra
 import OAuth.Model
 import User.Model
+import UserGroup.Model
+import UserGroup.Types
 
-apiAccessControlImpl :: (Kontrakcja m) => AccessPolicy -> m a -> m a -> m a
+apiAccessControlImpl :: Kontrakcja m => AccessPolicy -> m a -> m a -> m a
 apiAccessControlImpl acc failAction successAction = do
   apiuser <- fst <$> getAPIUser APIPersonal
   roles <- dbQuery . GetRoles $ apiuser
@@ -25,7 +30,7 @@ apiAccessControlImpl acc failAction successAction = do
     `catchDBExtraException` (\(UserGroupNonExistent _) -> apiError insufficientPrivileges)
     `catchDBExtraException` (\(FolderNonExistent _) -> apiError insufficientPrivileges)
 
-apiAccessControl :: (Kontrakcja m) => AccessPolicy -> m a -> m a
+apiAccessControl :: Kontrakcja m => AccessPolicy -> m a -> m a
 apiAccessControl acc successAction = do
   apiAccessControlImpl acc (apiError insufficientPrivileges) successAction
 
@@ -53,7 +58,7 @@ isApiSales ctx = case get ctxmaybeapiuser ctx of
                 Just user -> (useremail (userinfo user) `elem` get ctxsalesaccounts ctx)
                             && (usertotpactive user || not (get ctxproduction ctx))
 
-userGroupOrAPIError :: UserGroupID -> m UserGroup
+userGroupOrAPIError :: (MonadDB m, MonadThrow m) => UserGroupID -> m UserGroup
 userGroupOrAPIError ugid = dbQuery (UserGroupGet ugid) >>= \case
   Nothing ->
     apiError $ serverError "Impossible happened: No user group with ID, or deleted."
