@@ -18,10 +18,12 @@ import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.SQL.Builder
 import qualified Data.Set as S
 
+import DB
 import DB.RowCache (HasID(..), ID)
 import DB.TimeZoneName
 import Doc.DocumentID
 import Doc.SealStatus (HasGuardtimeSignature(..), SealStatus)
+import Doc.Tables
 import Doc.Types.AuthorAttachment
 import Doc.Types.DocumentStatus
 import Doc.Types.DocumentTag
@@ -302,8 +304,8 @@ documentsSelectors :: [SQL]
 documentsSelectors = [
     "documents.id"
   , "documents.title"
-  , "ARRAY(SELECT (" <> mintercalate ", " signatoryLinksSelectors <> ")::signatory_link FROM signatory_links WHERE documents.id = signatory_links.document_id ORDER BY signatory_links.id)"
-  , "ARRAY(SELECT (" <> mintercalate ", " mainFilesSelectors <> ")::main_file FROM main_files, files WHERE documents.id = main_files.document_id AND main_files.file_id = files.id ORDER BY main_files.id DESC)"
+  , "ARRAY(SELECT (" <> mintercalate ", " signatoryLinksSelectors <> ")::" <> raw (ctName ctSignatoryLink) <+> "FROM signatory_links WHERE documents.id = signatory_links.document_id ORDER BY signatory_links.id)"
+  , "ARRAY(SELECT (" <> mintercalate ", " mainFilesSelectors <> ")::" <> raw (ctName ctMainFile) <+> "FROM main_files, files WHERE documents.id = main_files.document_id AND main_files.file_id = files.id ORDER BY main_files.id DESC)"
   , "documents.status"
   , "documents.type"
   , "documents.ctime"
@@ -324,9 +326,9 @@ documentsSelectors = [
   , "documents.is_receipt"
   , "documents.lang"
   , "documents.sharing"
-  , "ARRAY(SELECT (" <> mintercalate ", " documentTagsSelectors <> ")::document_tag FROM document_tags WHERE documents.id = document_tags.document_id ORDER BY document_tags.name)"
+  , "ARRAY(SELECT (" <> mintercalate ", " documentTagsSelectors <> ")::" <> raw (ctName ctDocumentTag) <+> "FROM document_tags WHERE documents.id = document_tags.document_id ORDER BY document_tags.name)"
   -- needs ROW since composite type has only one field for now
-  , "ARRAY(SELECT ROW(" <> mintercalate ", " authorAttachmentsSelectors <> ")::author_attachment FROM author_attachments WHERE documents.id = author_attachments.document_id ORDER BY author_attachments.file_id)"
+  , "ARRAY(SELECT ROW(" <> mintercalate ", " authorAttachmentsSelectors <> ")::" <> raw (ctName ctAuthorAttachment) <+> "FROM author_attachments WHERE documents.id = author_attachments.document_id ORDER BY author_attachments.file_id)"
   , "documents.api_v1_callback_url"
   , "documents.api_v2_callback_url"
   , "documents.unsaved_draft"

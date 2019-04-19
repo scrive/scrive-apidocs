@@ -26,8 +26,10 @@ import Text.JSON.Gen
 import DataRetentionPolicy
 import DB
 import FeatureFlags.Model
+import FeatureFlags.Tables
 import Partner.Model
 import User.UserID
+import UserGroup.Tables
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
 
@@ -304,12 +306,12 @@ userGroupSelectors = [
   , "user_groups.parent_group_id"
   , "user_groups.name"
   , "user_groups.home_folder_id"
-  , "(SELECT (" <> mintercalate ", " ugInvoicingSelectors <> ")::user_group_invoicing FROM user_group_invoicings WHERE user_groups.id = user_group_invoicings.user_group_id)"
-  , "(SELECT (" <> mintercalate ", " ugSettingsSelectors <> ")::user_group_setting FROM user_group_settings WHERE user_groups.id = user_group_settings.user_group_id)"
-  , "(SELECT (" <> mintercalate ", " ugAddressSelectors <> ")::user_group_address FROM user_group_addresses WHERE user_groups.id = user_group_addresses.user_group_id)"
-  , "(SELECT (" <> mintercalate ", " ugUISelectors <> ")::user_group_ui FROM user_group_uis WHERE user_groups.id = user_group_uis.user_group_id)"
-  , "(SELECT (" <> mintercalate ", " selectFeatureFlagsSelectors <> ")::feature_flags_ct FROM feature_flags WHERE user_groups.id = feature_flags.user_group_id AND feature_flags.flags_for_admin)"
-  , "(SELECT (" <> mintercalate ", " selectFeatureFlagsSelectors <> ")::feature_flags_ct FROM feature_flags WHERE user_groups.id = feature_flags.user_group_id AND NOT feature_flags.flags_for_admin)"
+  , "(SELECT (" <> mintercalate ", " ugInvoicingSelectors <> ")::" <> raw (ctName ctUserGroupInvoicing) <+> "FROM user_group_invoicings WHERE user_groups.id = user_group_invoicings.user_group_id)"
+  , "(SELECT (" <> mintercalate ", " ugSettingsSelectors <> ")::" <> raw (ctName ctUserGroupSettings) <+> "FROM user_group_settings WHERE user_groups.id = user_group_settings.user_group_id)"
+  , "(SELECT (" <> mintercalate ", " ugAddressSelectors <> ")::" <> raw (ctName ctUserGroupAddress) <+> "FROM user_group_addresses WHERE user_groups.id = user_group_addresses.user_group_id)"
+  , "(SELECT (" <> mintercalate ", " ugUISelectors <> ")::" <> raw (ctName ctUserGroupUI) <+> "FROM user_group_uis WHERE user_groups.id = user_group_uis.user_group_id)"
+  , "(SELECT (" <> mintercalate ", " selectFeatureFlagsSelectors <> ")::" <> raw (ctName ctFeatureFlags) <+> "FROM feature_flags WHERE user_groups.id = feature_flags.user_group_id AND feature_flags.flags_for_admin)"
+  , "(SELECT (" <> mintercalate ", " selectFeatureFlagsSelectors <> ")::" <> raw (ctName ctFeatureFlags) <+> "FROM feature_flags WHERE user_groups.id = feature_flags.user_group_id AND NOT feature_flags.flags_for_admin)"
   ]
 
 ugSettingsSelectors :: [SQL]

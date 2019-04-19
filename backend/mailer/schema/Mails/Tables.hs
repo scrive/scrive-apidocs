@@ -6,6 +6,7 @@ module Mails.Tables (
   , tableMails
   , tableMailEvents
   , tableMailAttachments
+  , ctMailAttachment
   ) where
 
 import Data.Text (Text)

@@ -29,8 +29,9 @@ import Data.Int
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
 
-import DB.Derive
+import DB
 import Doc.SignatoryLinkID
+import Doc.Tables
 import Doc.Types.HighlightedPage
 import Doc.Types.SignatoryAttachment
 import Doc.Types.SignatoryConsentQuestion
@@ -518,12 +519,12 @@ instance HasSomeUserInfo SignatoryLink where
 signatoryLinksSelectors :: [SQL]
 signatoryLinksSelectors = [
     "signatory_links.id"
-  , "ARRAY(SELECT (" <> mintercalate ", " signatoryFieldsSelectors <> ")::signatory_field FROM signatory_link_fields WHERE signatory_links.id = signatory_link_fields.signatory_link_id ORDER BY signatory_link_fields.id)"
+  , "ARRAY(SELECT (" <> mintercalate ", " signatoryFieldsSelectors <> ")::" <> raw (ctName ctSignatoryField) <+> "FROM signatory_link_fields WHERE signatory_links.id = signatory_link_fields.signatory_link_id ORDER BY signatory_link_fields.id)"
   , "documents.author_id = signatory_links.id"
   , "signatory_links.signatory_role"
   , "signatory_links.sign_order"
   , "signatory_links.token"
-  , "ARRAY(SELECT (" <> mintercalate ", " signatoryLinkMagicHashesSelectors <> ")::signatory_link_magic_hash FROM signatory_link_magic_hashes WHERE signatory_links.id = signatory_link_magic_hashes.signatory_link_id AND signatory_link_magic_hashes.expiration_time > now())"
+  , "ARRAY(SELECT (" <> mintercalate ", " signatoryLinkMagicHashesSelectors <> ")::" <> raw (ctName ctSignatoryLinkMagicHash) <+> "FROM signatory_link_magic_hashes WHERE signatory_links.id = signatory_link_magic_hashes.signatory_link_id AND signatory_link_magic_hashes.expiration_time > now())"
   , "signatory_links.user_id"
   , "signatory_links.sign_time"
   , "signatory_links.sign_ip"
@@ -535,8 +536,8 @@ signatoryLinksSelectors = [
   , "signatory_links.deleted"
   , "signatory_links.really_deleted"
   , "signatory_links.csv_contents"
-  , "ARRAY(SELECT (" <> mintercalate ", " signatoryAttachmentsSelectors <> ")::signatory_attachment FROM signatory_attachments LEFT JOIN files ON (files.id = signatory_attachments.file_id) WHERE signatory_links.id = signatory_attachments.signatory_link_id ORDER BY signatory_attachments.file_id, signatory_attachments.name)"
-  , "ARRAY(SELECT (" <> mintercalate ", " highlightedPagesSelectors <> ")::highlighted_page FROM highlighted_pages WHERE signatory_links.id = highlighted_pages.signatory_link_id ORDER BY highlighted_pages.id)"
+  , "ARRAY(SELECT (" <> mintercalate ", " signatoryAttachmentsSelectors <> ")::" <> raw (ctName ctSignatoryAttachment) <+> "FROM signatory_attachments LEFT JOIN files ON (files.id = signatory_attachments.file_id) WHERE signatory_links.id = signatory_attachments.signatory_link_id ORDER BY signatory_attachments.file_id, signatory_attachments.name)"
+  , "ARRAY(SELECT (" <> mintercalate ", " highlightedPagesSelectors <> ")::" <> raw (ctName ctHighlightedPage) <+> "FROM highlighted_pages WHERE signatory_links.id = highlighted_pages.signatory_link_id ORDER BY highlighted_pages.id)"
   , "signatory_links.sign_redirect_url"
   , "signatory_links.reject_redirect_url"
   , "signatory_links.rejection_time"
@@ -552,7 +553,7 @@ signatoryLinksSelectors = [
   , "signatory_links.hide_pn_elog"
   , "signatory_links.can_be_forwarded"
   , "signatory_links.consent_title"
-  , "ARRAY(SELECT (" <> mintercalate ", " signatoryConsentQuestionsSelectors <> ")::signatory_consent_question FROM signatory_link_consent_questions WHERE signatory_links.id = signatory_link_consent_questions.signatory_link_id ORDER BY position ASC)"
+  , "ARRAY(SELECT (" <> mintercalate ", " signatoryConsentQuestionsSelectors <> ")::" <> raw (ctName ctSignatoryConsentQuestion) <+> "FROM signatory_link_consent_questions WHERE signatory_links.id = signatory_link_consent_questions.signatory_link_id ORDER BY position ASC)"
   , "signatory_links.mail_confirmation_delivery_status"
   ]
 

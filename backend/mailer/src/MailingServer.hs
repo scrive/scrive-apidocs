@@ -70,7 +70,7 @@ main = do
     let pgSettings = pgConnSettings $ mailerDBConfig conf
         extrasOptions = def
     withPostgreSQL (unConnectionSource . simpleSource $ pgSettings []) $ do
-      checkDatabaseAllowUnknownTables extrasOptions [] mailerTables
+      checkDatabaseAllowUnknownTables extrasOptions [] [] mailerTables
     fsConf <- do
       localCache  <- newFileMemCache $ mailerLocalFileCacheSize conf
       globalCache <- F.forM (mailerRedisCacheConfig conf) mkRedisConnection

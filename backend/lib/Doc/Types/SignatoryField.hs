@@ -35,7 +35,9 @@ import Data.String.Utils
 import Data.Unjson
 import Database.PostgreSQL.PQTypes hiding (def)
 
+import DB
 import Doc.SignatoryFieldID
+import Doc.Tables
 import File.FileID
 import Util.HasSomeUserInfo
 
@@ -359,9 +361,9 @@ signatoryFieldsSelectors = [
   , "signatory_link_fields.custom_validation_tooltip"
   ]
   where
-    placements = "SELECT (id, xrel, yrel, wrel, hrel, fsrel, page, tip, ARRAY(" <> anchors <> "))::field_placement FROM field_placements WHERE field_placements.signatory_field_id = signatory_link_fields.id ORDER BY field_placements.id"
+    placements = "SELECT (id, xrel, yrel, wrel, hrel, fsrel, page, tip, ARRAY(" <> anchors <> "))::" <> raw (ctName ctFieldPlacement) <+> "FROM field_placements WHERE field_placements.signatory_field_id = signatory_link_fields.id ORDER BY field_placements.id"
 
-    anchors = "SELECT (text, index)::placement_anchor FROM placement_anchors WHERE placement_anchors.field_placement_id = field_placements.id ORDER BY placement_anchors.id"
+    anchors = "SELECT (text, index)::" <> raw (ctName ctPlacementAnchor) <+> "FROM placement_anchors WHERE placement_anchors.field_placement_id = field_placements.id ORDER BY placement_anchors.id"
 
 
 
