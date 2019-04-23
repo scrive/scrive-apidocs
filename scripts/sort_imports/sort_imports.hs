@@ -32,15 +32,15 @@ infixr 3 <&&>
 (<||>) = liftA2 (||)
 infixr 2 <||>
 
-parenthesize :: [T.Text] -> T.Text
+parenthesize :: [Text] -> Text
 parenthesize ss = "(" <> T.intercalate ", " ss <> ")"
 
 ----------------------------------------
 
 data ImpSpec
   = EmptyImpSpec
-  | Explicit ![T.Text]
-  | Hiding ![T.Text]
+  | Explicit ![Text]
+  | Hiding ![Text]
   deriving (Eq, Ord, Show)
 
 parseImpSpec :: P.Parser ImpSpec
@@ -75,10 +75,10 @@ parseImpSpec = P.choice [
 
 data Import = Import {
     imQualified      :: !Bool
-  , imModule         :: !T.Text
-  , imCaselessModule :: !T.Text
-  , imAlias          :: !(Maybe T.Text)
-  , imPackage        :: !(Maybe T.Text)
+  , imModule         :: !Text
+  , imCaselessModule :: !Text
+  , imAlias          :: !(Maybe Text)
+  , imPackage        :: !(Maybe Text)
   , imImpSpec        :: !ImpSpec
   } deriving (Eq, Show)
 
@@ -115,10 +115,10 @@ parseImport = do
     , imImpSpec        = impspec
     }
   where
-    parsePkgId :: P.Parser T.Text
+    parsePkgId :: P.Parser Text
     parsePkgId = P.takeWhile1 $ (not . isSpace) <&&> (/= '"')
 
-    parseAlias :: P.Parser T.Text
+    parseAlias :: P.Parser Text
     parseAlias = do
       void $ P.string "as"
       P.skipSpace
@@ -273,7 +273,7 @@ sortImports style suffix dirs = do
 
 -- | Write a file, but only if it would have new content, thus
 -- preserving the modification date.
-rewriteFile :: FilePath -> T.Text -> IO ()
+rewriteFile :: FilePath -> Text -> IO ()
 rewriteFile fileName newContent = do
   fileExists <- doesFileExist fileName
   if fileExists then do
