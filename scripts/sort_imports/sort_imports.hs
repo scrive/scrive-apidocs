@@ -24,6 +24,9 @@ import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
+max_line_length :: Int
+max_line_length = 80
+
 (<&&>) :: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
 (<&&>) = liftA2 (&&)
 infixr 3 <&&>
@@ -126,19 +129,8 @@ parseImport = do
       P.skipSpace
       return alias
 
-showImport :: Style -> Import -> T.Text
-showImport Style{..} Import{..} = indentifySymbols 80 $ T.concat [
-    import_module
-  , case aliasAlignment of
-      Just n | isJust imAlias
-               -> T.replicate (max 0 $ n - 1 - T.length import_module) " "
-      _        -> ""
-  , maybe "" (" as " <>) imAlias
-  , case imImpSpec of
-      EmptyImpSpec -> ""
-      Explicit ss  -> " " <> parenthesize ss
-      Hiding ss    -> " hiding " <> parenthesize ss
-  ]
+showImport :: Style -> Import -> Text
+showImport Style{..} Import{..} = withImpSpec import_module
   where
     import_module = T.concat [
         "import"
@@ -152,25 +144,53 @@ showImport Style{..} Import{..} = indentifySymbols 80 $ T.concat [
           Nothing  -> ""
           Just pkg -> "\"" <> pkg <> "\" "
       , imModule
+      , case aliasAlignment of
+          Just n | isJust imAlias
+                   -> T.replicate (max 0 $ n - 1 - T.length import_module) " "
+          _        -> ""
+      , maybe "" (" as " <>) imAlias
       ]
 
     qualified_ = " qualified"
 
--- Indents symbols explicitly imported or hidden.
--- Will indent 2 spaces from the next line and start with ", ".
-indentifySymbols :: Int -> T.Text -> T.Text
-indentifySymbols maxLength text = T.intercalate "\n" . reverse . worker "" []
-  . (\(t:ts) -> t : map (", " <>) ts) . T.splitOn ", " $ text
-  where
-    worker _      formatted []                           = formatted
-    worker indent formatted texts@(headText : tailTexts) =
-      let textInits = map (indent <>) . map T.concat . tail . inits $ texts
-          shortEnough txt = T.length txt <= maxLength
-      in  case reverse $ takeWhile shortEnough textInits of
-            -- when a single symbol doesn't fit the maxLength, break the rule
-            []              -> worker "  " (headText : formatted) tailTexts
-            goodInits@(t:_) -> worker "  " (t : formatted)
-              (drop (length goodInits) texts)
+    withImpSpec imp =
+      if T.length oneline <= max_line_length
+      then oneline
+      else multiline
+
+      where
+        oneline = imp <> case imImpSpec of
+          EmptyImpSpec -> ""
+          Explicit es  -> " " <> parenthesize es
+          Hiding   es  -> " hiding " <> parenthesize es
+
+        multiline = imp <> case imImpSpec of
+          EmptyImpSpec -> ""
+          Explicit es  -> "\n" <> parenthesizeMultiLine es
+          Hiding   es  -> " hiding\n" <> parenthesizeMultiLine es
+
+        parenthesizeMultiLine :: [Text] -> Text
+        parenthesizeMultiLine []       = "  ()"
+        parenthesizeMultiLine entities = T.unlines $ unfoldr go entities'
+          where
+            entities' =
+              (\l -> "( " <> head l : tail l) .
+              (\l -> init l ++ [last l <> " )"]) .
+              (\l -> head l : map (", " <>) (tail l)) $ entities
+
+            buildLine []     _      = ("", [])
+            buildLine (e:es) curlen
+              | curlen < T.length e = ("", e:es)
+              | otherwise           =
+                  let (line', es') = buildLine es (curlen - T.length e)
+                  in (e <> line', es')
+
+            go []     = Nothing
+            go (e:es) =
+              -- Handle the case when 'e' is longer than max_line_length.
+              let e0          = "  " <> e
+                  (line, es') = buildLine es (max_line_length - T.length e0)
+              in Just (e0 <> line, es')
 
 ----------------------------------------
 
