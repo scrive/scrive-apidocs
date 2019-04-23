@@ -1,6 +1,7 @@
 module UserGroup.Internal (
     InvoicingType(..)
   , UserGroup(..)
+  , fetchUserGroup
   , defaultUserGroup
   , defaultChildUserGroup
   , ugInvoicingType
@@ -241,7 +242,7 @@ ugPaymentPlan ug = case _ugInvoicing ug of
 type instance CompositeRow UserGroupInvoicing = (InvoicingType, Maybe PaymentPlan)
 
 instance PQFormat UserGroupInvoicing where
-  pqFormat = "%user_group_invoicing"
+  pqFormat = "%user_group_invoicing_1"
 
 instance CompositeFromSQL UserGroupInvoicing where
   toComposite (invoicing_type, mpayplan) = case (invoicing_type, mpayplan) of
@@ -252,45 +253,40 @@ instance CompositeFromSQL UserGroupInvoicing where
 
 -- USER GROUP
 
-type instance CompositeRow UserGroup = (
-    UserGroupID
-  , Maybe UserGroupID
-  , Text
-  , Maybe FolderID
-  , Composite UserGroupInvoicing
-  , Maybe (Composite UserGroupSettings)
-  , Maybe (Composite UserGroupAddress)
-  , Composite UserGroupUI
-  , Maybe (Composite FeatureFlags)  -- for admins
-  , Maybe (Composite FeatureFlags)  -- for regular users
-  )
-
-instance PQFormat UserGroup where
-  pqFormat = "%user_group"
-
-instance CompositeFromSQL UserGroup where
-  toComposite
-    ( _ugID
-    , _ugParentGroupID
-    , _ugName
-    , _ugHomeFolderID
-    , cinvoicing
-    , cinfos
-    , caddresses
-    , cuis
-    , cAdminFeatureFlags
-    , cRegularFeatureFlags
-    ) =
-    UserGroup
-    { _ugSettings  = unComposite <$> cinfos
-    , _ugInvoicing = unComposite cinvoicing
-    , _ugAddress   = unComposite <$> caddresses
-    , _ugUI        = unComposite cuis
-    , _ugFeatures  = Features
-        <$> (unComposite <$> cAdminFeatureFlags)
-        <*> (unComposite <$> cRegularFeatureFlags)
-    , ..
-    }
+fetchUserGroup
+ :: ( UserGroupID
+    , Maybe UserGroupID
+    , Text
+    , Maybe FolderID
+    , Composite UserGroupInvoicing
+    , Maybe (Composite UserGroupSettings)
+    , Maybe (Composite UserGroupAddress)
+    , Composite UserGroupUI
+    , Maybe (Composite FeatureFlags)  -- for admins
+    , Maybe (Composite FeatureFlags)  -- for regular users
+    ) -> UserGroup
+fetchUserGroup
+  ( _ugID
+  , _ugParentGroupID
+  , _ugName
+  , _ugHomeFolderID
+  , cinvoicing
+  , cinfos
+  , caddresses
+  , cuis
+  , cAdminFeatureFlags
+  , cRegularFeatureFlags
+  ) =
+  UserGroup
+  { _ugSettings  = unComposite <$> cinfos
+  , _ugInvoicing = unComposite cinvoicing
+  , _ugAddress   = unComposite <$> caddresses
+  , _ugUI        = unComposite cuis
+  , _ugFeatures  = Features
+    <$> (unComposite <$> cAdminFeatureFlags)
+    <*> (unComposite <$> cRegularFeatureFlags)
+  , ..
+  }
 
 -- USER GROUP ROOT
 
@@ -424,7 +420,7 @@ type instance CompositeRow UserGroupSettings = (
   )
 
 instance PQFormat UserGroupSettings where
-  pqFormat = "%user_group_setting"
+  pqFormat = "%user_group_settings_ct_1"
 
 instance CompositeFromSQL UserGroupSettings where
   toComposite (
@@ -475,7 +471,7 @@ type instance CompositeRow UserGroupUI = (
   )
 
 instance PQFormat UserGroupUI where
-  pqFormat = "%user_group_ui"
+  pqFormat = "%user_group_ui_1"
 
 instance CompositeFromSQL UserGroupUI where
   toComposite (
@@ -509,7 +505,7 @@ type instance CompositeRow UserGroupAddress = (
   )
 
 instance PQFormat UserGroupAddress where
-  pqFormat = "%user_group_address"
+  pqFormat = "%user_group_address_1"
 
 instance CompositeFromSQL UserGroupAddress where
   toComposite (

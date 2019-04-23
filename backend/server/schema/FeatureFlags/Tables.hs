@@ -8,7 +8,7 @@ import DB
 tableFeatureFlags :: Table
 tableFeatureFlags = tblTable {
     tblName = "feature_flags"
-  , tblVersion = 14
+  , tblVersion = 15
   , tblColumns = [
       tblColumn { colName = "can_use_templates", colType = BoolT, colNullable = False }
     , tblColumn { colName = "can_use_branding", colType = BoolT, colNullable = False }
@@ -48,7 +48,7 @@ tableFeatureFlags = tblTable {
 
 ctFeatureFlags :: CompositeType
 ctFeatureFlags = CompositeType {
-    ctName = "feature_flags_ct"
+    ctName = "feature_flags_ct_1"
   , ctColumns =
     [ CompositeColumn { ccName = "can_use_templates", ccType = BoolT }
     , CompositeColumn { ccName = "can_use_branding", ccType = BoolT }

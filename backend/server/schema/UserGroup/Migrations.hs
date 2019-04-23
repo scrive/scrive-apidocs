@@ -5,6 +5,18 @@ import Database.PostgreSQL.PQTypes.Checks
 import DB
 import UserGroup.Tables
 
+renameUserGroupComposites :: MonadDB m => Migration m
+renameUserGroupComposites = Migration
+  { mgrTableName = "user_groups"
+  , mgrFrom = 6
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlDropComposite "user_group" -- not needed
+      runSQL_ "ALTER TYPE user_group_setting RENAME TO user_group_settings_ct_1"
+      runSQL_ "ALTER TYPE user_group_address RENAME TO user_group_address_1"
+      runSQL_ "ALTER TYPE user_group_ui RENAME TO user_group_ui_1"
+      runSQL_ "ALTER TYPE user_group_invoicing RENAME TO user_group_invoicing_1"
+  }
+
 createTableUserGroups :: MonadDB m => Migration m
 createTableUserGroups = Migration {
     mgrTableName = tblName tableUserGroups

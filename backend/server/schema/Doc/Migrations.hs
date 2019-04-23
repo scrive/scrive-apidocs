@@ -28,13 +28,34 @@ module Doc.Migrations
   , createApiCallbackResults
   , addFolderIDColumnToDocuments
   , addIndexOnShareableLinkHash
-) where
+  , renameDocumentComposites
+  ) where
 
 import Data.Int
 import Database.PostgreSQL.PQTypes.Checks
 
 import DB
 import Doc.Tables
+
+renameDocumentComposites :: MonadDB m => Migration m
+renameDocumentComposites = Migration {
+    mgrTableName = "documents"
+  , mgrFrom = 52
+  , mgrAction = StandardMigration $ do
+      runSQL_ "ALTER TYPE document RENAME TO document_1"
+      runSQL_ "ALTER TYPE main_file RENAME TO main_file_1"
+      runSQL_ "ALTER TYPE author_attachment RENAME TO author_attachment_1"
+      runSQL_ "ALTER TYPE signatory_attachment RENAME TO signatory_attachment_1"
+      runSQL_ "ALTER TYPE signatory_link RENAME TO signatory_link_1"
+      runSQL_ "ALTER TYPE signatory_link_magic_hash RENAME TO signatory_link_magic_hash_1"
+      runSQL_ "ALTER TYPE document_tag RENAME TO document_tag_1"
+      runSQL_ "ALTER TYPE field_placement RENAME TO field_placement_1"
+      runSQL_ "ALTER TYPE placement_anchor RENAME TO placement_anchor_1"
+      runSQL_ "ALTER TYPE signatory_field RENAME TO signatory_field_1"
+      runSQL_ "ALTER TYPE highlighted_page RENAME TO highlighted_page_1"
+      runSQL_ "ALTER TYPE signatory_consent_question RENAME TO signatory_consent_question_1"
+  }
+
 
 addNotificationDeliveryMethodToSignatories :: MonadDB m => Migration m
 addNotificationDeliveryMethodToSignatories =

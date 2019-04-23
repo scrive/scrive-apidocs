@@ -30,7 +30,7 @@ type instance CompositeRow SignatoryAttachment =
   (Maybe FileID, Maybe String, String, String, Bool)
 
 instance PQFormat SignatoryAttachment where
-  pqFormat = "%signatory_attachment"
+  pqFormat = "%signatory_attachment_1"
 
 instance CompositeFromSQL SignatoryAttachment where
   toComposite (mfid, mfname, name, description, required) = SignatoryAttachment {

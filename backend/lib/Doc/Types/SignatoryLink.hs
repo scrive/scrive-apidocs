@@ -397,7 +397,7 @@ data TemporaryMagicHash = TemporaryMagicHash
   } deriving (Eq, Show)
 
 instance PQFormat TemporaryMagicHash where
-  pqFormat = "%signatory_link_magic_hash"
+  pqFormat = "%signatory_link_magic_hash_1"
 
 type instance CompositeRow TemporaryMagicHash = (MagicHash, UTCTime)
 
@@ -597,7 +597,7 @@ type instance CompositeRow SignatoryLink = (
   , DeliveryStatus)
 
 instance PQFormat SignatoryLink where
-  pqFormat = "%signatory_link"
+  pqFormat = "%signatory_link_1"
 
 instance CompositeFromSQL SignatoryLink where
   toComposite ( slid

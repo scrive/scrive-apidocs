@@ -91,7 +91,7 @@ type instance CompositeRow FeatureFlags =
   )
 
 instance PQFormat FeatureFlags where
-  pqFormat = "%feature_flags_ct"
+  pqFormat = "%feature_flags_ct_1"
 
 instance CompositeFromSQL FeatureFlags where
   toComposite

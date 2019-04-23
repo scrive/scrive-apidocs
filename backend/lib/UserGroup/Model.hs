@@ -129,7 +129,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGet (Maybe UserGroup) w
     runQuery_ . sqlSelect "user_groups" $ do
       mapM_ sqlResult userGroupSelectors
       sqlWhereEq "id" ugid
-    fetchMaybe toComposite
+    fetchMaybe fetchUserGroup
 
 data UserGroupGetByUserID = UserGroupGetByUserID UserID
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetByUserID UserGroup where
@@ -138,7 +138,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetByUserID UserGroup w
       sqlJoinOn "users" "users.user_group_id = user_groups.id"
       mapM_ sqlResult userGroupSelectors
       sqlWhereEq "users.id" uid
-    fetchOne toComposite
+    fetchOne fetchUserGroup
 
 data UserGroupGetImmediateChildren = UserGroupGetImmediateChildren UserGroupID
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetImmediateChildren [UserGroup] where
@@ -147,7 +147,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetImmediateChildren [U
       mapM_ sqlResult userGroupSelectors
       sqlWhereEq "parent_group_id" ugid
       sqlWhereIsNULL "deleted"
-    fetchMany toComposite
+    fetchMany fetchUserGroup
 
 data UserGroupGetWithParents = UserGroupGetWithParents UserGroupID
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetWithParents (Maybe UserGroupWithParents) where
@@ -172,7 +172,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetWithParentsByUG User
         sqlJoinOn "parentids" "parentids.id = user_groups.id"
         mapM_ sqlResult userGroupSelectors
         sqlOrderBy "ordinality"
-      fetchMany toComposite
+      fetchMany fetchUserGroup
     let (ug_root0, ug_children_path) = case reverse parents of
           []                -> (ug, [])
           (ugr:ug_rev_path) -> (ugr, ug : reverse ug_rev_path)
@@ -189,7 +189,7 @@ instance (MonadDB m, MonadThrow m)
       sqlJoinOn "users" "users.user_group_id = user_groups.id"
       mapM_ sqlResult userGroupSelectors
       sqlWhereEq "users.id" uid
-    ug <- fetchOne toComposite
+    ug <- fetchOne fetchUserGroup
     dbQuery . UserGroupGetWithParentsByUG $ ug
 
 data UserGroupUpdate = UserGroupUpdate UserGroup
@@ -397,7 +397,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupsGetFiltered [UserGroup
          sqlLimit limit
        sqlWhereIsNULL "deleted"
        sqlOrderBy "user_groups.id"
-    fetchMany toComposite
+    fetchMany fetchUserGroup
     where
       findWordInField word fieldName = ("user_group_addresses." <+> fieldName) <+> "ILIKE" <?> sqlwordpat word
       findWordInName word = ("user_groups.name") <+> "ILIKE" <?> sqlwordpat word
@@ -428,7 +428,7 @@ instance (MonadDB m, MonadThrow m)
     runQuery_ $ sqlSelect "user_groups" $ do
       mapM_ sqlResult userGroupSelectors
       sqlWhere $ "parent_group_path @> " <?> (Array1 [ugid])
-    allChildren <- fetchMany toComposite
+    allChildren <- fetchMany fetchUserGroup
     let directChildren parentID = filter ((==Just parentID) . get ugParentGroupID) allChildren
         mkChildren parentID = mkChild <$> directChildren parentID
         mkChild ug = UserGroupWithChildren ug . mkChildren $ get ugID ug

@@ -204,7 +204,7 @@ accessControl roles accessPolicy err ma = do
 -- IO (DB, frontend) boilerplate
 
 instance PQFormat AccessRole where
-  pqFormat = "%access_role"
+  pqFormat = "%access_role_1"
 
 data AccessRoleType
   = UserART

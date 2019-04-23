@@ -41,7 +41,7 @@ defaultSignatoryConsentQuestion =
     }
 
 instance PQFormat SignatoryConsentQuestion where
-  pqFormat = "%signatory_consent_question"
+  pqFormat = "%signatory_consent_question_1"
 
 type instance CompositeRow SignatoryConsentQuestion = (SignatoryConsentQuestionID, String, String, String, Maybe Bool, Maybe String, Maybe String)
 

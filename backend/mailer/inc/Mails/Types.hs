@@ -138,7 +138,7 @@ data Attachment = Attachment {
 type instance CompositeRow Attachment = (String, Maybe B.ByteString, Maybe FileID)
 
 instance PQFormat Attachment where
-  pqFormat = "%mail_attachment"
+  pqFormat = "%mail_attachment_1"
 
 instance CompositeFromSQL Attachment where
   toComposite (name, mcontent, mfid) = Attachment {
