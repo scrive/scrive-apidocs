@@ -1801,7 +1801,8 @@ instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m)
       , documentctime = actorTime actor
       , documentmtime = actorTime actor
       , documentshareablelinkhash = Nothing
-      , documentfolderid = join $ userhomefolderid <$> mUser
+      , documentfolderid = (join $ userhomefolderid <$> mUser) `mplus`
+                           (documentfolderid doc)
       }
 
     return $ documentid <$> mDoc
