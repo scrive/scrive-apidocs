@@ -20,6 +20,7 @@
 "_CancelDocumenElegEvidenceText":"Scrive rejected the attempt by $signatory$ to sign the document. The reason was that the identity information of $signatory$ did not match the identity information received from the external eID system.",
 "_CancelDocumentEvidenceTextSimpleArchive":"The invitation to sign the document was withdrawn.",
 "_CloseDocumentEvidenceTextSimple":"Scrive locked the document from further modifications by the signing parties.",
+"_ForwardedSigningEvidenceArchive":"Forwarded the document to $signatory$.",
 "_InvitationDeliveredByEmailTextToApproveSimple":"The invitation to approve the document was delivered to $signatory$ by email.",
 "_InvitationDeliveredByEmailTextToReviewSimple":"The invitation to review the document was delivered to $signatory$ by email.",
 "_InvitationDeliveredByEmailTextToSignSimple":"The invitation to sign the document was delivered to $signatory$ by email.",

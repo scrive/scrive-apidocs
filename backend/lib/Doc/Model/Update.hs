@@ -1287,6 +1287,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
                            let newFields = for (signatoryfields sl) $ \f ->
                                              case f of
                                                SignatorySignatureField sf -> SignatorySignatureField $ sf{ssfValue = Nothing}
+                                               SignatoryRadioGroupField rgf -> SignatoryRadioGroupField $ rgf{srgfSelectedValue = Nothing}
                                                _ -> f
                            return $ defaultSignatoryLink {
                                 signatorylinkid            = (unsafeSignatoryLinkID 0)

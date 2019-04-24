@@ -298,7 +298,7 @@
 "_companyposition":"Pareigos",
 "_confirmAccountMaybeCreatedUser":"El. pašte turėtumėte rasti aktyvavimo nuorodą. Jei turite paskyrą, rekomenduojame pakeisti slaptažodį.",
 "_confirmationMailUndeliveredContentBody":"Deja, <strong>$documenttitle$</strong> dokumento nepavyko pristatyti šiuo el. pašto adresu <strong>$name$ &lt;$email$&gt;</strong>. Taip galėjo nutikti dėl gavėjo pašto serverio problemų, arba jūsų įvestas el. pašto adresas yra neteisingas.",
-"_confirmationMailUndeliveredContentBodyButton":"Atidaryti dokumentą",
+"_confirmationMailUndeliveredContentBodyButton":"",
 "_confirmationMailUndeliveredContentBodyFirst":"Norėdami patvirtinti el. pašto adresą ir iš naujo nusiųsti patvirtinimą,",
 "_confirmationMailUndeliveredContentInstructionStep1":"paspauskite „Pakeisti el. pašto adresą“",
 "_confirmationMailUndeliveredContentInstructionStep2":"Patvirtinkite el. pašto adresą ir dar kartą siųskite",

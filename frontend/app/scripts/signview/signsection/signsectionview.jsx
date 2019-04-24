@@ -136,8 +136,11 @@ var Task = require("../navigation/task");
       var model = this.props.model;
       var hadOverlay = this.shouldHaveOverlay(prevState.step);
       var shouldHaveOverlay = this.shouldHaveOverlay();
-      var disableArrow = prevState.step !== "reject" && this.state.step === "reject";
-      var enableArrow = prevState.step === "reject" && this.state.step !== "reject";
+      var prevStep = prevState.step;
+      var currStep = this.state.step;
+      var stepChanged = prevStep !== currStep;
+      var disableArrow = stepChanged && _.contains(["reject", "forward"], currStep);
+      var enableArrow = stepChanged && _.contains(["reject", "forward"], prevStep);
 
       if (disableArrow) {
         setTimeout(() => {

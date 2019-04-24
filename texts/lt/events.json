@@ -20,6 +20,7 @@
 "_CancelDocumenElegEvidenceText":"„Scrive“ atmetė $signatory$ bandymą pasirašyti dokumentą. Atmetimo priežastis buvo ta, kad $signatory$ tapatybės duomenys nesutapo su tapatybės duomenimis, gautais per išorinę eID sistemą.",
 "_CancelDocumentEvidenceTextSimpleArchive":"Siūlymas pasirašyti dokumentą buvo atšauktas.",
 "_CloseDocumentEvidenceTextSimple":"„Scrive“ užkardė dokumentą nuo tolesnių pasirašančiųjų šalių atliekamų pakeitimų.",
+"_ForwardedSigningEvidenceArchive":"",
 "_InvitationDeliveredByEmailTextToApproveSimple":"Siūlymas patvirtinti dokumentą el. paštu išsiųstas $signatory$. ",
 "_InvitationDeliveredByEmailTextToReviewSimple":"Siūlymas peržiūrėti dokumentą el. paštu išsiųstas $signatory$.",
 "_InvitationDeliveredByEmailTextToSignSimple":"Siūlymas pasirašyti dokumentą el. paštu išsiųstas $signatory$.",

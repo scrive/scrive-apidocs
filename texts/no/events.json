@@ -20,6 +20,7 @@
 "_CancelDocumenElegEvidenceText":"Scrive avviste $signatory$ sitt forsøk på å signere dokumentet. Grunnen var at identitetsinformasjonen til $signatory$ ikke samsvarte med identitetsinformasjonen mottatt fra det eksterne e-ID-systemet.",
 "_CancelDocumentEvidenceTextSimpleArchive":"Invitasjonen til å signere dokumentet ble trukket tilbake.",
 "_CloseDocumentEvidenceTextSimple":"Scrive låste dokumentet for ytterligere endringer fra de signerende partene.",
+"_ForwardedSigningEvidenceArchive":"",
 "_InvitationDeliveredByEmailTextToApproveSimple":"Invitasjonen til å godkjenne dokumentet ble sendt til $signatory$ via e-post.",
 "_InvitationDeliveredByEmailTextToReviewSimple":"Invitasjonen til å lese gjennom dokumentet ble sendt til $signatory$ via e-post.",
 "_InvitationDeliveredByEmailTextToSignSimple":"Invitasjonen til å signere dokumentet ble sendt til $signatory$ via e-post.",

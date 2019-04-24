@@ -109,7 +109,7 @@ var React = require("react");
       });
 
       _.each(this.props.lists, function (value, key) {
-        if (value.items) {
+        if (value.items && value.items.length > 0) {
           self.makeList($el.find(key), value);
         }
       });

@@ -298,7 +298,7 @@
 "_companyposition":"Position",
 "_confirmAccountMaybeCreatedUser":"Prüfen Sie Ihre E-Mails auf einen Aktivierungslink. Wenn Sie bereits ein Konto haben, versuchen Sie Ihr Kennwort zurückzusetzen.",
 "_confirmationMailUndeliveredContentBody":"",
-"_confirmationMailUndeliveredContentBodyButton":"Dokument öffnen ",
+"_confirmationMailUndeliveredContentBodyButton":"",
 "_confirmationMailUndeliveredContentBodyFirst":"Um die E-Mail-Adresse zu bestätigen und die Bestätigung erneut zu senden: ",
 "_confirmationMailUndeliveredContentInstructionStep1":"Klicken Sie auf \"E-Mail ändern\" ",
 "_confirmationMailUndeliveredContentInstructionStep2":"Bestätigen Sie die E-Mail-Adresse und senden Sie erneut ",

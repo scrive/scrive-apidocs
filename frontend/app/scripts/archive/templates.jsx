@@ -277,9 +277,6 @@ var RemoveModalContent = React.createClass({
         console.log(resp);
         var errorMessage =
           localization.archive.templates.shareableLink.generationFailed;
-        if (resp.responseJSON.error_message) {
-          errorMessage += " " + resp.responseJSON.error_message;
-        }
         new FlashMessage({
           type: "error",
           content: errorMessage
@@ -448,7 +445,14 @@ var RemoveModalContent = React.createClass({
                     );
                   }
                 } else {
-                  return <div></div>;
+                  return (
+                    <div>
+                      <div
+                        className="shareable-link-icon-generate-disabled"
+                        title={localization.archive.templates.shareableLink.generateTooltip}
+                      />
+                    </div>
+                  );
                 }
               }}
             />
