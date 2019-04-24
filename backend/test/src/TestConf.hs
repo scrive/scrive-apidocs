@@ -6,9 +6,9 @@ module TestConf (
 import Data.Unjson
 import qualified Data.Text as T
 
-import CronConf (CronMonthlyInvoiceConf(..))
 import Database.Redis.Configuration
 import FileStorage.Amazon.Config
+import MonthlyInvoice.Config (MonthlyInvoiceConf(..))
 import PdfToolsLambda.Conf
 
 -- | Main application configuration.  This includes amongst other
@@ -21,7 +21,7 @@ data TestConf = TestConf {
   , testAmazonConfig           :: Maybe AmazonConfig   -- ^ Optional configuration for S3
   , testLocalFileCacheSize     :: Maybe Int            -- ^ Optional size for the local file cache
   , testRedisCacheConfig       :: Maybe RedisConfig    -- ^ Optional configuration for the Redis file cache
-  , testCronMonthlyInvoiceConf :: Maybe CronMonthlyInvoiceConf
+  , testMonthlyInvoiceConf     :: Maybe MonthlyInvoiceConf
   } deriving (Eq, Show)
 
 unjsonTestConf :: UnjsonDef TestConf
@@ -42,7 +42,7 @@ unjsonTestConf = objectOf $ pure TestConf
       testRedisCacheConfig
       "Optional configuration for the Redis file cache"
   <*> fieldOpt "cron_monthly_invoice"
-      testCronMonthlyInvoiceConf
+      testMonthlyInvoiceConf
       "Monthly-invoice cron job configuration"
 
 instance Unjson TestConf where

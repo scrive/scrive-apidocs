@@ -8,10 +8,10 @@ import Log.Monad
 import qualified Data.Text as T
 import qualified Database.Redis as R
 
-import CronConf (CronMonthlyInvoiceConf(..))
 import DB.PostgreSQL
 import FileStorage
 import FileStorage.Amazon.Config
+import MonthlyInvoice.Config (MonthlyInvoiceConf(..))
 import PdfToolsLambda.Conf
 import Templates
 
@@ -34,7 +34,7 @@ data TestEnvSt = TestEnvSt {
   , _teFileMemCache       :: FileMemCache
   , _teRedisConn          :: Maybe R.Connection
   , _teCronDBConfig       :: !T.Text
-  , _teCronMonthlyInvoice :: Maybe CronMonthlyInvoiceConf
+  , _teCronMonthlyInvoice :: Maybe MonthlyInvoiceConf
   }
 
 data TestEnvStRW = TestEnvStRW {

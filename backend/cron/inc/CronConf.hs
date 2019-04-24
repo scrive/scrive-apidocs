@@ -1,6 +1,5 @@
 module CronConf (
         CronConf(..)
-      , CronMonthlyInvoiceConf(..)
       , unjsonCronConf
   ) where
 
@@ -14,6 +13,7 @@ import FileStorage.Amazon.Config
 import GuardTime (GuardTimeConf(..))
 import Log.Configuration
 import Monitoring
+import MonthlyInvoice.Config
 import PdfToolsLambda.Conf
 import Planhat
 import Salesforce.Conf
@@ -51,7 +51,7 @@ data CronConf = CronConf {
   , cronConsumerFilePurgingMaxJobs :: !Int
   , cronNetsSignConfig             :: Maybe NetsSignConfig
   , cronPdfToolsLambdaConf         :: PdfToolsLambdaConf
-  , cronMonthlyInvoiceConf         :: !(Maybe CronMonthlyInvoiceConf)
+  , cronMonthlyInvoiceConf         :: !(Maybe MonthlyInvoiceConf)
   , cronStatsDConf                 :: !(Maybe StatsDConf)
   } deriving (Eq, Show)
 
@@ -136,23 +136,3 @@ unjsonCronConf = objectOf $ pure CronConf
 instance Unjson CronConf where
   unjsonDef = unjsonCronConf
 
-data CronMonthlyInvoiceConf = CronMonthlyInvoiceConf {
-    scriptPath     :: !String
-  , recipientName  :: !String
-  , recipientEmail :: !String
-} deriving (Eq, Show)
-
-unjsonCronMonthlyInvoiceConf :: UnjsonDef CronMonthlyInvoiceConf
-unjsonCronMonthlyInvoiceConf = objectOf $ pure CronMonthlyInvoiceConf
-  <*> field "script_path"
-      scriptPath
-      "Path to the .sql script on the disk"
-  <*> field "recipient_name"
-      recipientName
-      "Report recipient's name"
-  <*> field "recipient_email"
-      recipientEmail
-      "Report recipient's email"
-
-instance Unjson CronMonthlyInvoiceConf where
-  unjsonDef = unjsonCronMonthlyInvoiceConf

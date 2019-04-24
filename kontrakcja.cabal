@@ -335,6 +335,8 @@ Library
                  , MinutesTime
                  , Monitor.API
                  , Monitoring
+                 , MonthlyInvoice.Config
+                 , MonthlyInvoice.Send
                  , Network.SOAP.Call
                  , Network.SOAP.Transport.Curl
                  , Network.XMLCurl

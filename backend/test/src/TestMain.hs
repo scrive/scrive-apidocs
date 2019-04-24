@@ -226,7 +226,7 @@ testMany' (allargs, ts) runLogger rng = do
       , _teFileMemCache       = memcache
       , _teRedisConn          = mRedisConn
       , _teCronDBConfig       = testDBConfig tconf
-      , _teCronMonthlyInvoice = testCronMonthlyInvoiceConf tconf
+      , _teCronMonthlyInvoice = testMonthlyInvoiceConf tconf
       }
       ts' = if get teStagingTests env
             then stagingTests ++ ts
