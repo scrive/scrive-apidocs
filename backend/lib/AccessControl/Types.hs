@@ -7,6 +7,7 @@ module AccessControl.Types
   , AccessResource(..)
   , AccessRole(..)
   , accessRoleTarget
+  , accessRoleSetTarget
   , AccessRoleTarget(..)
   , AccessRoleType(..)
   , UserGroupNonExistent(..)
@@ -47,12 +48,24 @@ data AccessRole
   | AccessRoleUserGroup AccessRoleID UserGroupID AccessRoleTarget
   | AccessRoleImplicitUser UserID AccessRoleTarget
   | AccessRoleImplicitUserGroup UserGroupID AccessRoleTarget
+  deriving (Eq, Show)
 
 accessRoleTarget :: AccessRole -> AccessRoleTarget
 accessRoleTarget (AccessRoleUser _ _ target) = target
 accessRoleTarget (AccessRoleUserGroup _ _ target) = target
 accessRoleTarget (AccessRoleImplicitUser _ target) = target
 accessRoleTarget (AccessRoleImplicitUserGroup _ target) = target
+
+
+accessRoleSetTarget :: AccessRoleTarget -> AccessRole -> AccessRole
+accessRoleSetTarget new_target (AccessRoleUser arid userid _) =
+  AccessRoleUser arid userid new_target
+accessRoleSetTarget new_target (AccessRoleUserGroup arid ugid _) =
+  AccessRoleUserGroup arid ugid new_target
+accessRoleSetTarget new_target (AccessRoleImplicitUser userid _) =
+  AccessRoleImplicitUser userid new_target
+accessRoleSetTarget new_target (AccessRoleImplicitUserGroup ugid _) =
+  AccessRoleImplicitUserGroup ugid new_target
 
 -- | The roles we use are mostly rooted in some user group; rather than have
 -- this implicit in implementation we expose it in the constructors. The meaning
