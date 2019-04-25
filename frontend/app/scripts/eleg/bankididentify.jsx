@@ -11,7 +11,7 @@ module.exports = Backbone.Model.extend({
       onSuccess: function () {},
       onFail: function () {},
       onCriticalError: function () {},
-      thisDevice: true,
+      thisDevice: false,
       pollingInterval: 3000,
       activationTime: 0,
       cancelled: false // Flag for when transaction is aborted in frontend - to stop polling

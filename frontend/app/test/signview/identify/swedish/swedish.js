@@ -45,7 +45,7 @@ var BankIDIdentify = require("../../../../scripts/eleg/bankididentify");
           siglinkid:doc.currentSignatory().signatoryid()
         });
 
-        assert.isTrue(model.thisDevice());
+        assert.isFalse(model.thisDevice());
 
         doc.currentSignatory().padDelivery.restore();
       });
@@ -57,7 +57,7 @@ var BankIDIdentify = require("../../../../scripts/eleg/bankididentify");
         var view = TestUtils.renderIntoDocument(React.createElement(SwedishIdentifyView, {
           model: model
         }));
-        assert.ok(model.thisDevice() == true,"initially this device is set to true");
+        assert.ok(model.thisDevice() == false, "initially this device is set to false");
 
         var identifyView = view.refs.identify;
         assert.ok(identifyView, "we should have identify view");
@@ -70,7 +70,7 @@ var BankIDIdentify = require("../../../../scripts/eleg/bankididentify");
 
         assert.ok(checkbox, "there should be a checkbox");
         checkbox.handleClick();
-        assert.ok(model.thisDevice() == false,"after checking checkbox this device should be set to false");
+        assert.ok(model.thisDevice() == true, "after checking checkbox this device should be set to true");
         TestUtils.Simulate.click(button.getDOMNode());
         done();
       });
