@@ -8,6 +8,7 @@ import Happstack.Server.Types
 import Happstack.StaticRouting
 
 import AccessControl.JSON
+import AccessControl.Model
 import AccessControl.Types
 import API.V2
 import API.V2.Utils
@@ -33,8 +34,12 @@ accessControlAPIV2 = choice
 accessControlAPIV2GetUserRoles :: Kontrakcja m => UserID -> m Response
 accessControlAPIV2GetUserRoles uid = api $ do
   -- Check user has permissions to view User
-  (acc, user) <- makeAPIUserAccessPolicyReq ReadA UserR uid
-  apiAccessControlOrIsAdmin [acc] $ do
+  apiAccessControlOrIsAdmin [mkAccPolicyItem (ReadA, UserR, uid)] (do
     -- Get roles for user
-    roles <- dbQuery $ GetRoles user
-    Ok <$> return (arrayOf unjsonAccessRole, roles)
+    dbQuery (GetUserByID uid) >>= \case
+      Nothing ->
+        apiError $ serverError "Impossible happened: No user with ID, or deleted."
+      Just user -> do
+        roles <- dbQuery $ GetRoles user
+        Ok <$> return (arrayOf unjsonAccessRole, roles)
+    )

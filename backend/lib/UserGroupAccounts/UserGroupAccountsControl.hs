@@ -18,6 +18,7 @@ import Text.JSON (JSValue(..))
 import Text.JSON.Gen
 import qualified Data.Text as T
 
+import AccessControl.Model
 import AccessControl.Types
 import API.V2.Utils
 import DB
