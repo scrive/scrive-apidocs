@@ -53,6 +53,7 @@ var Subscription = Backbone.Model.extend({
     if (args.current_user_is_admin != undefined) {
        this.set({"current_user_is_admin": args.current_user_is_admin});
     }
+
   },
   reload: function () {
     this.set({"ready": false}, {silent: true});
@@ -67,6 +68,9 @@ var Subscription = Backbone.Model.extend({
   paymentplan: function () {
      return this.get("payment_plan");
   },
+  effectivepaymentplan: function () {
+     return (this.paymentplan() == "inherit" ? this.inheritedplan() : this.paymentplan());
+  },
   invoicingtype: function () {
      return this.get("invoicing_type");
   },
@@ -74,19 +78,19 @@ var Subscription = Backbone.Model.extend({
      return this.get("inherited_plan");
   },
   hasFreePlan: function () {
-     return this.paymentplan() == "free";
+     return this.effectivepaymentplan() == "free";
   },
   hasOnePlan: function () {
-     return this.paymentplan() == "one";
+     return this.effectivepaymentplan() == "one";
   },
   hasTeamPlan: function () {
-     return this.paymentplan() == "team";
+     return this.effectivepaymentplan() == "team";
   },
   hasEnterprisePlan: function () {
-     return this.paymentplan() == "enterprise";
+     return this.effectivepaymentplan() == "enterprise";
   },
   hasTrialPlan: function () {
-     return this.paymentplan() == "trial";
+     return this.effectivepaymentplan() == "trial";
   },
   numberOfUsers: function () {
      return this.get("number_of_users");
@@ -226,7 +230,7 @@ var Subscription = Backbone.Model.extend({
     return {
       invoicing_type: args.invoicing_type,
       inherited_plan: args.inherited_plan,
-      payment_plan: args.payment_plan,
+      payment_plan: args.payment_plan || "inherit",
       number_of_users: args.number_of_users,
       started_last_month: args.started_last_month,
       features: features,
@@ -461,6 +465,7 @@ var FeatureFlag = exports.FeatureFlag = Backbone.Model.extend({
 
 /* Static methods */
 Subscription.initCurrentSubscription = function (subscriptionData, currentUserIsAdmin) {
+  subscriptionData.payment_plan = subscriptionData.payment_plan || "inherit";
   window.currentSubscription = new Subscription(_.extend(subscriptionData,
       {ready: true, current_user_is_admin: currentUserIsAdmin}
   ));
