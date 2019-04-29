@@ -178,7 +178,10 @@ checkSignatoryPinToSign slid (SignatoryFieldsValuesForSigning fields) pin = do
 checkSignatoryPinToView :: (Kontrakcja m, DocumentMonad m) => SMSPinType -> SignatoryLinkID -> String -> m Bool
 checkSignatoryPinToView pinType slid pin = do
   sl <- guardGetSignatoryFromIdForDocument slid
-  pin' <- dbQuery $ GetSignatoryPin pinType slid (getMobile sl)
+  mobile <- case asValidPhoneForSMS $ getMobile sl of
+    Good x -> return x
+    _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"
+  pin' <- dbQuery $ GetSignatoryPin pinType slid mobile
   when (pin /= pin') $ logInfo "Invalid pin for identify" $ object [ "supplied pin" .= pin
                                                                   , "expected pin" .= pin'
                                                                   , "slid" .= show slid
