@@ -6,8 +6,10 @@ module Doc.Types.SignatoryConsentQuestion (
 
 import Data.Data
 import Database.PostgreSQL.PQTypes
+import Database.PostgreSQL.PQTypes.Model.CompositeType
 
 import Doc.SignatoryConsentQuestionID
+import Doc.Tables
 
 data SignatoryConsentQuestion = SignatoryConsentQuestion {
     scqID             :: !SignatoryConsentQuestionID
@@ -41,7 +43,7 @@ defaultSignatoryConsentQuestion =
     }
 
 instance PQFormat SignatoryConsentQuestion where
-  pqFormat = "%signatory_consent_question_1"
+  pqFormat = compositeTypePqFormat ctSignatoryConsentQuestion
 
 type instance CompositeRow SignatoryConsentQuestion = (SignatoryConsentQuestionID, String, String, String, Maybe Bool, Maybe String, Maybe String)
 

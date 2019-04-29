@@ -56,7 +56,7 @@ tableUserGroupSettings = tblTable {
 
 ctUserGroupSettings :: CompositeType
 ctUserGroupSettings = CompositeType {
-    ctName = "user_group_settings_ct_1"
+    ctName = "user_group_settings_c1"
   , ctColumns = [
       CompositeColumn { ccName = "ip_address_mask_list", ccType = TextT }
     , CompositeColumn { ccName = "idle_doc_timeout_preparation", ccType = SmallIntT }
@@ -96,7 +96,7 @@ tableUserGroupAddresses = tblTable {
 
 ctUserGroupAddress :: CompositeType
 ctUserGroupAddress = CompositeType {
-    ctName = "user_group_address_1"
+    ctName = "user_group_address_c1"
   , ctColumns = [
       CompositeColumn { ccName = "company_number", ccType = TextT }
     , CompositeColumn { ccName = "address", ccType = TextT }
@@ -130,7 +130,7 @@ tableUserGroupUIs = tblTable {
 
 ctUserGroupUI :: CompositeType
 ctUserGroupUI = CompositeType {
-    ctName = "user_group_ui_1"
+    ctName = "user_group_ui_c1"
   , ctColumns = [
       CompositeColumn { ccName = "mail_theme", ccType = BigIntT }
     , CompositeColumn { ccName = "signview_theme", ccType = BigIntT }
@@ -167,7 +167,7 @@ tableUserGroupInvoicings = tblTable {
 
 ctUserGroupInvoicing :: CompositeType
 ctUserGroupInvoicing = CompositeType {
-    ctName = "user_group_invoicing_1"
+    ctName = "user_group_invoicing_c1"
   , ctColumns = [
       CompositeColumn { ccName = "invoicing_type", ccType = SmallIntT }
     , CompositeColumn { ccName = "payment_plan", ccType = SmallIntT }

@@ -4,8 +4,10 @@ module Doc.Types.DocumentTag (
   ) where
 
 import Data.Function
+import Database.PostgreSQL.PQTypes.Model.CompositeType
 
 import DB
+import Doc.Tables
 
 data DocumentTag = DocumentTag {
   tagname  :: !String
@@ -27,7 +29,7 @@ documentTagsSelectors = [
 type instance CompositeRow DocumentTag = (String, String)
 
 instance PQFormat DocumentTag where
-  pqFormat = "%document_tag_1"
+  pqFormat = compositeTypePqFormat ctDocumentTag
 
 instance CompositeFromSQL DocumentTag where
   toComposite (name, value) = DocumentTag {

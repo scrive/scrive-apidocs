@@ -26,4 +26,4 @@ package text-icu
 source-repository-package
   type: git
   location: https://github.com/scrive/hpqtypes-extras
-  tag: b81ddb5ba7c684e8447b35a4f6136da4b8e46764
+  tag: c175d30cd5cf1985a1ff7127e48fd3262d610124

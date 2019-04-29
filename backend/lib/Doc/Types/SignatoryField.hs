@@ -148,7 +148,7 @@ data PlacementAnchor = PlacementAnchor {
 type instance CompositeRow PlacementAnchor = (String, Int32)
 
 instance PQFormat PlacementAnchor where
-  pqFormat = "%placement_anchor_1"
+  pqFormat = compositeTypePqFormat ctPlacementAnchor
 
 instance CompositeFromSQL PlacementAnchor where
   toComposite (text, index) = PlacementAnchor {
@@ -208,7 +208,7 @@ instance Eq FieldPlacement where
 type instance CompositeRow FieldPlacement = (PlacementID, Double, Double, Double, Double, Double, Int32, Maybe TipSide, CompositeArray1 PlacementAnchor)
 
 instance PQFormat FieldPlacement where
-  pqFormat = "%field_placement_1"
+  pqFormat = compositeTypePqFormat ctFieldPlacement
 
 instance CompositeFromSQL FieldPlacement where
   toComposite (pid, xrel, yrel, wrel, hrel, fsrel, page, tip, CompositeArray1 anchors) = FieldPlacement {
@@ -370,7 +370,7 @@ signatoryFieldsSelectors = [
 type instance CompositeRow SignatoryField = (SignatoryFieldID, FieldType, Maybe NameOrder, String, Bool, Maybe String, Maybe Bool, Maybe FileID, Bool, Bool, Maybe Bool, CompositeArray1 FieldPlacement, Maybe (Array1 String), Maybe String, Maybe String, Maybe String)
 
 instance PQFormat SignatoryField where
-  pqFormat = "%signatory_field_1"
+  pqFormat = compositeTypePqFormat ctSignatoryField
 
 instance CompositeFromSQL SignatoryField where
   toComposite (sfid, ftype, mname_order, custom_name, is_author_filled, mvalue_text, mvalue_bool, mvalue_file, obligatory, should_be_filled_by_sender, meditable_by_signatory, CompositeArray1 placements, mradio_button_group_values, mcustom_validation_pattern, mcustom_validation_positive_example, mcustom_validation_tooltip) =

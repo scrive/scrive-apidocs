@@ -12,9 +12,11 @@ module FeatureFlags.Model
 
 import Control.Monad.State
 import Data.Unjson
+import Database.PostgreSQL.PQTypes.Model.CompositeType
 
 import DB
 import Doc.Types.SignatoryLink
+import FeatureFlags.Tables
 import UserGroup.Types.PaymentPlan
 
 data Features = Features
@@ -91,7 +93,7 @@ type instance CompositeRow FeatureFlags =
   )
 
 instance PQFormat FeatureFlags where
-  pqFormat = "%feature_flags_ct_1"
+  pqFormat = compositeTypePqFormat ctFeatureFlags
 
 instance CompositeFromSQL FeatureFlags where
   toComposite

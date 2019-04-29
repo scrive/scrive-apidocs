@@ -37,6 +37,7 @@ import Data.Aeson (FromJSON, ToJSON)
 import Data.Int
 import Data.Text (Text)
 import Data.Unjson
+import Database.PostgreSQL.PQTypes.Model.CompositeType
 import Happstack.Server
 import qualified Control.Exception.Lifted as E
 import qualified Data.Binary as B
@@ -51,6 +52,7 @@ import Log.Identifier
 import PadApplication.Types
 import SMS.Types
 import Theme.ThemeID
+import UserGroup.Tables
 import UserGroup.Types.PaymentPlan
 
 data UserGroup = UserGroup {
@@ -242,7 +244,7 @@ ugPaymentPlan ug = case _ugInvoicing ug of
 type instance CompositeRow UserGroupInvoicing = (InvoicingType, Maybe PaymentPlan)
 
 instance PQFormat UserGroupInvoicing where
-  pqFormat = "%user_group_invoicing_1"
+  pqFormat = compositeTypePqFormat ctUserGroupInvoicing
 
 instance CompositeFromSQL UserGroupInvoicing where
   toComposite (invoicing_type, mpayplan) = case (invoicing_type, mpayplan) of
@@ -420,7 +422,7 @@ type instance CompositeRow UserGroupSettings = (
   )
 
 instance PQFormat UserGroupSettings where
-  pqFormat = "%user_group_settings_ct_1"
+  pqFormat = compositeTypePqFormat ctUserGroupSettings
 
 instance CompositeFromSQL UserGroupSettings where
   toComposite (
@@ -471,7 +473,7 @@ type instance CompositeRow UserGroupUI = (
   )
 
 instance PQFormat UserGroupUI where
-  pqFormat = "%user_group_ui_1"
+  pqFormat = compositeTypePqFormat ctUserGroupUI
 
 instance CompositeFromSQL UserGroupUI where
   toComposite (
@@ -505,7 +507,7 @@ type instance CompositeRow UserGroupAddress = (
   )
 
 instance PQFormat UserGroupAddress where
-  pqFormat = "%user_group_address_1"
+  pqFormat = compositeTypePqFormat ctUserGroupAddress
 
 instance CompositeFromSQL UserGroupAddress where
   toComposite (

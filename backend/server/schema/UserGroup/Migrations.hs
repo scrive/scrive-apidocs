@@ -11,10 +11,10 @@ renameUserGroupComposites = Migration
   , mgrFrom = 6
   , mgrAction = StandardMigration $ do
       runQuery_ $ sqlDropComposite "user_group" -- not needed
-      runSQL_ "ALTER TYPE user_group_setting RENAME TO user_group_settings_ct_1"
-      runSQL_ "ALTER TYPE user_group_address RENAME TO user_group_address_1"
-      runSQL_ "ALTER TYPE user_group_ui RENAME TO user_group_ui_1"
-      runSQL_ "ALTER TYPE user_group_invoicing RENAME TO user_group_invoicing_1"
+      runSQL_ "ALTER TYPE user_group_setting RENAME TO user_group_settings_c1"
+      runSQL_ "ALTER TYPE user_group_address RENAME TO user_group_address_c1"
+      runSQL_ "ALTER TYPE user_group_ui RENAME TO user_group_ui_c1"
+      runSQL_ "ALTER TYPE user_group_invoicing RENAME TO user_group_invoicing_c1"
   }
 
 createTableUserGroups :: MonadDB m => Migration m

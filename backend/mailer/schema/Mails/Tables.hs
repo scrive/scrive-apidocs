@@ -132,7 +132,7 @@ tableMailAttachments = tblTable {
 
 ctMailAttachment :: CompositeType
 ctMailAttachment = CompositeType {
-  ctName = "mail_attachment_1"
+  ctName = "mail_attachment_c1"
 , ctColumns = [
     CompositeColumn { ccName = "name", ccType = TextT }
   , CompositeColumn { ccName = "content", ccType = BinaryT }

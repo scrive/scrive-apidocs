@@ -6,6 +6,7 @@ module Doc.Types.HighlightedPage (
 import Data.Int
 
 import DB
+import Doc.Tables
 import File.FileID
 
 data HighlightedPage = HighlightedPage {
@@ -24,7 +25,7 @@ highlightedPagesSelectors = [
 type instance CompositeRow HighlightedPage = (Int32, FileID)
 
 instance PQFormat HighlightedPage where
-  pqFormat = "%highlighted_page_1"
+  pqFormat = compositeTypePqFormat ctHighlightedPage
 
 instance CompositeFromSQL HighlightedPage where
   toComposite (hppage, hpfid) = HighlightedPage {

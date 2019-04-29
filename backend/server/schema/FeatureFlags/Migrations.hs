@@ -27,7 +27,7 @@ renameFeatureFlagsComposite = Migration
   { mgrTableName = "feature_flags"
   , mgrFrom = 14
   , mgrAction = StandardMigration $ do
-      runSQL_ "ALTER TYPE feature_flags_ct RENAME TO feature_flags_ct_1"
+      runSQL_ "ALTER TYPE feature_flags_ct RENAME TO feature_flags_c1"
   }
 
 createFeatureFlags :: MonadDB m => Migration m

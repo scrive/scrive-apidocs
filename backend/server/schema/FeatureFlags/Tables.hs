@@ -48,7 +48,7 @@ tableFeatureFlags = tblTable {
 
 ctFeatureFlags :: CompositeType
 ctFeatureFlags = CompositeType {
-    ctName = "feature_flags_ct_1"
+    ctName = "feature_flags_c1"
   , ctColumns =
     [ CompositeColumn { ccName = "can_use_templates", ccType = BoolT }
     , CompositeColumn { ccName = "can_use_branding", ccType = BoolT }

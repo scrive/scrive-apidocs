@@ -5,6 +5,7 @@ module Doc.Types.SignatoryAttachment (
   ) where
 
 import DB
+import Doc.Tables
 import File.FileID
 
 data SignatoryAttachment = SignatoryAttachment {
@@ -30,7 +31,7 @@ type instance CompositeRow SignatoryAttachment =
   (Maybe FileID, Maybe String, String, String, Bool)
 
 instance PQFormat SignatoryAttachment where
-  pqFormat = "%signatory_attachment_1"
+  pqFormat = compositeTypePqFormat ctSignatoryAttachment
 
 instance CompositeFromSQL SignatoryAttachment where
   toComposite (mfid, mfname, name, description, required) = SignatoryAttachment {

@@ -11,7 +11,7 @@ renameMailAttachmentComposite = Migration
   { mgrTableName = "mail_attachments"
   , mgrFrom = 2
   , mgrAction = StandardMigration $ do
-      runSQL_ "ALTER TYPE mail_attachment RENAME TO mail_attachment_1"
+      runSQL_ "ALTER TYPE mail_attachment RENAME TO mail_attachment_c1"
   }
 
 removeXSMTPAttrsFromMailEvents :: MonadDB m => Migration m
