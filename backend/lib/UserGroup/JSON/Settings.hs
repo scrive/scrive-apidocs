@@ -1,10 +1,13 @@
 module UserGroup.JSON.Settings (
     userGroupSettingsToResponse
+  , userGroupSettingsWithInheritableToResponse
   , userGroupSettingsToJSON
-  , updateUserGroupDataRetentionFromResponse
+  , userGroupSettingsWithInheritableToJSON
+  , updateUserGroupDataRetentionFromRequest
   , DataRetentionPolicyResponseJSON
   , DataRetentionPolicyRequestJSON
   , unjsonDataRetentionPolicyResponseJSON
+  , unjsonDataRetentionPolicyWithInheritableResponseJSON
 ) where
 
 import Data.Aeson
@@ -16,19 +19,39 @@ import UserGroup.Types
 userGroupSettingsToResponse
   :: Maybe UserGroupID
   -> UserGroupSettings
+  -> (UnjsonDef DataRetentionPolicyResponseJSON, DataRetentionPolicyResponseJSON)
+userGroupSettingsToResponse mInheritId settingsObj
+  = ( unjsonDataRetentionPolicyResponseJSON
+    , userGroupSettingsToJSON mInheritId settingsObj
+    )
+
+userGroupSettingsWithInheritableToResponse
+  :: Maybe UserGroupID
+  -> UserGroupSettings
   -> Maybe (UserGroupID, UserGroupSettings)
   -> (UnjsonDef DataRetentionPolicyResponseJSON, DataRetentionPolicyResponseJSON)
-userGroupSettingsToResponse mInheritId settingsObj mInheritPreview
-  = ( unjsonDataRetentionPolicyResponseJSON
-    , userGroupSettingsToJSON mInheritId settingsObj mInheritPreview
+userGroupSettingsWithInheritableToResponse mInheritId settingsObj mInheritPreview
+  = ( unjsonDataRetentionPolicyWithInheritableResponseJSON
+    , userGroupSettingsWithInheritableToJSON mInheritId settingsObj mInheritPreview
     )
 
 userGroupSettingsToJSON
   :: Maybe UserGroupID
   -> UserGroupSettings
+  -> DataRetentionPolicyResponseJSON
+userGroupSettingsToJSON mInheritId settingsObj
+  = DataRetentionPolicyResponseJSON {
+    resInheritedFrom = mInheritId
+  , resDataRetentionPolicyObject = get ugsDataRetentionPolicy settingsObj
+  , resInheritPreview = Nothing
+  }
+
+userGroupSettingsWithInheritableToJSON
+  :: Maybe UserGroupID
+  -> UserGroupSettings
   -> Maybe (UserGroupID, UserGroupSettings)
   -> DataRetentionPolicyResponseJSON
-userGroupSettingsToJSON mInheritId settingsObj mInheritPreview
+userGroupSettingsWithInheritableToJSON mInheritId settingsObj mInheritPreview
   = DataRetentionPolicyResponseJSON {
     resInheritedFrom = mInheritId
   , resDataRetentionPolicyObject = get ugsDataRetentionPolicy settingsObj
@@ -37,14 +60,14 @@ userGroupSettingsToJSON mInheritId settingsObj mInheritPreview
       Just (ugid, settings) -> Just (ugid, get ugsDataRetentionPolicy settings)
   }
 
-updateUserGroupDataRetentionFromResponse
+updateUserGroupDataRetentionFromRequest
   :: DataRetentionPolicy
   -> Value
   -> Maybe DataRetentionPolicy
-updateUserGroupDataRetentionFromResponse ugSett settingsChanges =
+updateUserGroupDataRetentionFromRequest ugSett settingsChanges =
   let ugSettReq = dataRetentionPolicyToRequest ugSett
   in case update ugSettReq unjsonDataRetentionPolicyRequestJSON settingsChanges of
-    (Result ugSettUpdated []) -> Just $ dataRetentionPolicyFromRequest ugSettUpdated
+    (Result ugSettUpdated []) -> Just $ reqDataRetentionPolicyObject ugSettUpdated
     (Result _ _) -> Nothing
 
 dataRetentionPolicyToRequest :: DataRetentionPolicy -> DataRetentionPolicyRequestJSON
@@ -52,21 +75,30 @@ dataRetentionPolicyToRequest dataRetention = DataRetentionPolicyRequestJSON {
     reqDataRetentionPolicyObject = dataRetention
   }
 
-dataRetentionPolicyFromRequest :: DataRetentionPolicyRequestJSON -> DataRetentionPolicy
-dataRetentionPolicyFromRequest = reqDataRetentionPolicyObject
-
 unjsonDataRetentionPolicyResponseJSON :: UnjsonDef DataRetentionPolicyResponseJSON
-unjsonDataRetentionPolicyResponseJSON = objectOf $ pure DataRetentionPolicyResponseJSON
+unjsonDataRetentionPolicyResponseJSON = objectOf $ pure constructor
   <*> fieldOpt "inherited_from" resInheritedFrom
     "User Group Settings Response Inherited From ID"
-  <*  fieldReadonly "can_inherit" canInherit "User Group Settings Response Can Inherit"
   <*> fieldBy "data_retention_policy" resDataRetentionPolicyObject
     "User Group Settings Data Retention Policy" unjsonDataRetentionPolicy
-  <*> fieldOptBy "inherit_preview" resInheritPreview
-    "User Group Settings Response Inherit Preview"
-    unjsonDataRetentionPolicyInheritPreviewJSON
       where
-        canInherit = isJust . resInheritedFrom || isJust . resInheritPreview
+        constructor inheritedFrom drp = DataRetentionPolicyResponseJSON {
+            resInheritedFrom = inheritedFrom
+          , resDataRetentionPolicyObject = drp
+          , resInheritPreview = Nothing
+          }
+
+unjsonDataRetentionPolicyWithInheritableResponseJSON
+  :: UnjsonDef DataRetentionPolicyResponseJSON
+unjsonDataRetentionPolicyWithInheritableResponseJSON
+  = objectOf $ pure DataRetentionPolicyResponseJSON
+    <*> fieldOpt "inherited_from" resInheritedFrom
+      "User Group Settings Response Inherited From ID"
+    <*> fieldBy "data_retention_policy" resDataRetentionPolicyObject
+      "User Group Settings Data Retention Policy" unjsonDataRetentionPolicy
+    <*> fieldOptBy "inheritable_preview" resInheritPreview
+      "User Group Settings Response Inherit Preview"
+      unjsonDataRetentionPolicyInheritPreviewJSON
 
 unjsonDataRetentionPolicyRequestJSON :: UnjsonDef DataRetentionPolicyRequestJSON
 unjsonDataRetentionPolicyRequestJSON = objectOf $ pure DataRetentionPolicyRequestJSON
@@ -87,7 +119,7 @@ data DataRetentionPolicyRequestJSON = DataRetentionPolicyRequestJSON {
   }
 
 data DataRetentionPolicyResponseJSON = DataRetentionPolicyResponseJSON {
-    resInheritedFrom         :: Maybe UserGroupID
+    resInheritedFrom             :: Maybe UserGroupID
   , resDataRetentionPolicyObject :: DataRetentionPolicy
-  , resInheritPreview        :: Maybe (UserGroupID, DataRetentionPolicy)
+  , resInheritPreview            :: Maybe (UserGroupID, DataRetentionPolicy)
   }

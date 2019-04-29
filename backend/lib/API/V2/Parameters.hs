@@ -30,6 +30,7 @@ import qualified Data.ByteString.RFC2397 as Base64Image
 import qualified InputValidation as V
 
 data ApiV2Parameter a where
+  ApiV2ParameterFlag  :: T.Text -> ApiV2Parameter Bool
   ApiV2ParameterBool  :: T.Text -> ApiV2Parameter Bool
   ApiV2ParameterInt   :: T.Text -> ApiV2Parameter Int
   ApiV2ParameterDouble   :: T.Text -> ApiV2Parameter Double
@@ -82,6 +83,13 @@ apiV2ParameterOptional (ApiV2ParameterTextWithValidation name validate) = do
   where
     failValidation = apiError $ requestParameterParseError name
       "validation failed, please check that the parameter format is correct"
+
+apiV2ParameterOptional (ApiV2ParameterFlag name) = do
+  mValue <- getField $ T.unpack name
+  case mValue of
+    Just "false" -> return $ Just False
+    Just _ -> return $ Just True
+    Nothing -> return $ Just False
 
 apiV2ParameterOptional (ApiV2ParameterBool name) = do
   mValue <- getField $ T.unpack name
@@ -208,6 +216,7 @@ apiParameterUsingMaybeRead name = do
 
 -- | Helper function to extract name from `ApiV2Parameter`
 getParameterName :: ApiV2Parameter a -> T.Text
+getParameterName (ApiV2ParameterFlag n) = n
 getParameterName (ApiV2ParameterBool n) = n
 getParameterName (ApiV2ParameterInt n) = n
 getParameterName (ApiV2ParameterDouble n) = n

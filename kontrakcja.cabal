@@ -450,7 +450,7 @@ Library
                  , UserGroup
                  , UserGroup.API
                  , UserGroup.JSON
-                 , UserGroup.JSON.Address
+                 , UserGroup.JSON.ContactDetails
                  , UserGroup.JSON.Settings
                  , UserGroup.Types
                  , UserGroup.Types.PaymentPlan

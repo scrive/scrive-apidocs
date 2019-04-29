@@ -33,9 +33,9 @@ userGroupApiTests env = testGroup "UserGroupAPI"
       env testAdminUserCanCreateChildUserGroupWithoutPermissions
   , testThat "sales users can create child UserGroup without permissions"
       env testSalesUserCanCreateChildUserGroupWithoutPermissions
-  , testThat "users can edit (PUT) root UserGroup as UG Admin"
+  , testThat "users can edit root UserGroup as UG Admin"
       env testUserCanEditRootUserGroupWithPermissions
-  , testThat "users can edit (PUT) child UserGroup as UG Admin"
+  , testThat "users can edit child UserGroup as UG Admin"
       env testUserCanEditChildUserGroupWithPermissions
   -- UserGroup GET endpoint tests
   , testThat "non-admin and non-sales user can't view non-existent UserGroup"
@@ -91,7 +91,7 @@ userGroupApiTests env = testGroup "UserGroupAPI"
   , testThat "sales user can UserGroupAddress without permissions"
       env testSalesUserCanViewUserGroupAddressWithoutPermissions
   -- UserGroup Address PUT endpoint tests
-  , testThat "non-admin and non-sales edit (PUT) UserGroupAddress with permissions"
+  , testThat "non-admin and non-sales edit UserGroupAddress with permissions"
       env testSalesUserCanEditUserGroupAddressWithPermissions
   -- UserGroup Address DELETE endpoint tests
   , testThat "non-user cannot delete non-existent UserGroupAddress"
@@ -130,7 +130,7 @@ userGroupApiTests env = testGroup "UserGroupAPI"
   , testThat "sales user can UserGroupSettings without permissions"
       env testSalesUserCanViewUserGroupSettingsWithoutPermissions
   -- UserGroup Settings PUT endpoint tests
-  , testThat "non-admin and non-sales edit (PUT) UserGroupSettings with permissions"
+  , testThat "non-admin and non-sales edit UserGroupSettings with permissions"
       env testSalesUserCanEditUserGroupSettingsWithPermissions
   -- UserGroup Settings DELETE endpoint tests
   , testThat "non-user cannot delete non-existent UserGroupSettings"
@@ -271,7 +271,7 @@ testUserCanEditRootUserGroupWithPermissions = do
   ctx   <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
   req   <- mkRequest POST [ ("usergroup", inText jsonExistingRootUG) ]
   res   <- fst <$> runTestKontra req ctx (userGroupApiV2Update ugid)
-  assertEqual "users can edit (PUT) root UserGroup as UG Admin" 200 $ rsCode res
+  assertEqual "users can edit root UserGroup as UG Admin" 200 $ rsCode res
     where
       emailAddress = "great.green.arkleseizure@scrive.com"
       jsonExistingRootUG :: String
@@ -287,7 +287,7 @@ testUserCanEditChildUserGroupWithPermissions = do
   let field = ("usergroup", inText $ jsonExistingChildUG ugidParent)
   req     <- mkRequest POST [ field ]
   res     <- fst <$> runTestKontra req ctx (userGroupApiV2Update ugidChild)
-  assertEqual "users can edit (PUT) child UserGroup as UG Admin" 200 $ rsCode res
+  assertEqual "users can edit child UserGroup as UG Admin" 200 $ rsCode res
     where
       emailAddress = "hotblack.desiato@scrive.com"
       jsonExistingChildUG :: UserGroupID -> String
@@ -514,7 +514,7 @@ testNonAdminUserCannotViewNonExistentUserGroupAddress = do
   muser <- addNewUser "Googleplex" "Starthinker" "googleplex.starthinker@scrive.com"
   ctx   <- set ctxmaybeuser muser <$> mkContext defaultLang
   req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiAddressV2Get ugid)
+  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Get ugid)
   assertEqual "non-admin user can't view non-existent UserGroup Address" 403 $ rsCode res
     where
       ugid = unsafeUserGroupID 123
@@ -524,7 +524,7 @@ testAdminUserCannotViewNonExistentUserGroupAddress = do
   muser <- addNewUser "Grunthos" "the Flatulent" emailAddress
   ctx   <- setUser muser <$> mkContext defaultLang
   req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiAddressV2Get ugid)
+  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Get ugid)
   assertEqual "admin user can't view non-existent UserGroup Address" 403 $ rsCode res
     where
       ugid = unsafeUserGroupID 123
@@ -536,7 +536,7 @@ testSalesUserCannotViewNonExistentUserGroupAddress = do
   muser <- addNewUser "Hotblack" "Desiato" emailAddress
   ctx   <- setUser muser <$> mkContext defaultLang
   req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiAddressV2Get ugid)
+  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Get ugid)
   assertEqual "sales user can't view non-existent UserGroup Address" 403 $ rsCode res
     where
       ugid = unsafeUserGroupID 123
@@ -550,7 +550,7 @@ testNonAdminUserCanViewUserGroupAddressWithPermissions = do
   void . dbUpdate $ AccessControlInsertUserGroupAdmin (userid user) ugid
   ctx   <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
   req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiAddressV2Get ugid)
+  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Get ugid)
   assertEqual "non-admin user can view UserGroup Address with permissions" 200 $ rsCode res
     where
       emailAddress = "googleplex.starthinker@scrive.com"
@@ -562,7 +562,7 @@ testAdminUserCanViewUserGroupAddressWithPermissions = do
   void . dbUpdate $ AccessControlInsertUserGroupAdmin (userid user) ugid
   ctx   <- setUser (Just user) <$> mkContext defaultLang
   req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiAddressV2Get ugid)
+  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Get ugid)
   assertEqual "admin user can view UserGroup Address with permissions" 200 $ rsCode res
     where
       emailAddress = "grunthos.the.flatulent@scrive.com"
@@ -575,7 +575,7 @@ testSalesUserCanViewUserGroupAddressWithPermissions = do
   void . dbUpdate $ AccessControlInsertUserGroupAdmin (userid user) ugid
   ctx   <- setUser (Just user) <$> mkContext defaultLang
   req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiAddressV2Get ugid)
+  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Get ugid)
   assertEqual "sales user can view UserGroup Address with permissions" 200 $ rsCode res
     where
       emailAddress = "hotblack.desiato@scrive.com"
@@ -588,7 +588,7 @@ testAdminUserCanViewUserGroupAddressWithoutPermissions = do
   let ugid = get ugID ug
   ctx   <- setUser muser <$> mkContext defaultLang
   req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiAddressV2Get ugid)
+  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Get ugid)
   assertEqual "admin user can view UserGroup Address with permissions" 200 $ rsCode res
     where
       emailAddress = "grunthos.the.flatulent@scrive.com"
@@ -601,7 +601,7 @@ testSalesUserCanViewUserGroupAddressWithoutPermissions = do
   let ugid = get ugID ug
   ctx   <- setUser muser <$> mkContext defaultLang
   req   <- mkRequest GET []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiAddressV2Get ugid)
+  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Get ugid)
   assertEqual "sales user can view UserGroup Address with permissions" 200 $ rsCode res
     where
       emailAddress = "hotblack.desiato@scrive.com"
@@ -615,9 +615,9 @@ testSalesUserCanEditUserGroupAddressWithPermissions = do
   let ugid = get ugID ug
   void . dbUpdate $ AccessControlInsertUserGroupAdmin (userid user) ugid
   ctx   <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
-  req   <- mkRequest POST [ ("address", inText addressJson) ]
-  res   <- fst <$> runTestKontra req ctx (userGroupApiAddressV2Update ugid)
-  assertEqual "non-admin and non-sales edit (PUT) UserGroupUI with permissions" 200 $ rsCode res
+  req   <- mkRequest POST [ ("contact_details", inText addressJson) ]
+  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Update ugid)
+  assertEqual "non-admin and non-sales edit UserGroup Contact Details with permissions" 200 $ rsCode res
     where
       emailAddress = "great.green.arkleseizure@scrive.com"
       addressJson = "{\"address\":{\"company_number\":\"0987654321\",\"address\":"
@@ -630,8 +630,8 @@ testUserCannotDeleteNonExistentUserGroupAddress = do
   muser <- addNewUser "Almighty" "Bob" "almighty.bob@scrive.com"
   ctx   <- set ctxmaybeuser muser <$> mkContext defaultLang
   req   <- mkRequest DELETE []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiAddressV2Delete ugid)
-  assertEqual "user cannot delete non-existent UserGroup Address" 403 $ rsCode res
+  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid)
+  assertEqual "user cannot delete non-existent UserGroup Contact Details" 403 $ rsCode res
     where
       ugid = unsafeUserGroupID 123
 
@@ -640,7 +640,7 @@ testAdminUserCannotDeleteNonExistentUserGroupAddress = do
   muser <- addNewUser "Blart" "Versenwald III" emailAddress
   ctx   <- setUser muser <$> mkContext defaultLang
   req   <- mkRequest DELETE []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiAddressV2Delete ugid)
+  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid)
   assertEqual "user cannot delete non-existent UserGroup Address" 403 $ rsCode res
     where
       ugid = unsafeUserGroupID 123
@@ -652,7 +652,7 @@ testSalesUserCannotDeleteNonExistentUserGroupAddress = do
   muser <- addNewUser "Gogrilla" "Mincefriend" emailAddress
   ctx   <- setUser muser <$> mkContext defaultLang
   req   <- mkRequest DELETE []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiAddressV2Delete ugid)
+  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid)
   assertEqual "user cannot delete non-existent UserGroup Address" 403 $ rsCode res
     where
       ugid = unsafeUserGroupID 123
@@ -667,7 +667,7 @@ testUserCanDeleteChildUserGroupAddressWithPermissions = do
   ugid2 <- get ugID <$> addNewUserGroupWithParent False (Just ugid1)
   ctx   <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
   req   <- mkRequest DELETE []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiAddressV2Delete ugid2)
+  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid2)
   assertEqual "UserGroup admin can delete child UserGroup Address" 200 $ rsCode res
     where
       emailAddress = "hig.hurtenflurst@scrive.com"
@@ -679,7 +679,7 @@ testAdminUserCanDeleteChildUserGroupAddressWithoutPermissions = do
   ugid2 <- get ugID <$> addNewUserGroupWithParent False (Just ugid1)
   ctx   <- setUser (Just user) <$> mkContext defaultLang
   req   <- mkRequest DELETE []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiAddressV2Delete ugid2)
+  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid2)
   assertEqual "admin user can delete child UserGroup Address without permissions" 200 $ rsCode res
     where
       emailAddress = "max.quordlepleen@scrive.com"
@@ -692,7 +692,7 @@ testSalesUserCanDeleteChildUserGroupAddressWithoutPermissions = do
   ugid2 <- get ugID <$> addNewUserGroupWithParent False (Just ugid1)
   ctx   <- setUser (Just user) <$> mkContext defaultLang
   req   <- mkRequest DELETE []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiAddressV2Delete ugid2)
+  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid2)
   assertEqual "sales user can delete child UserGroup Address without permissions" 200 $ rsCode res
     where
       emailAddress = "hig.hurtenflurst@scrive.com"
@@ -705,7 +705,7 @@ testUserCannotDeleteRootUserGroupAddressWithPermissions = do
   void . dbUpdate $ AccessControlInsertUserGroupAdmin (userid user) ugid
   ctx   <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
   req   <- mkRequest DELETE []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiAddressV2Delete ugid)
+  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid)
   assertEqual "UserGroup admin can delete root UserGroup Address" 400 $ rsCode res
     where
       emailAddress = "hurling.frootmig@scrive.com"
@@ -716,7 +716,7 @@ testAdminUserCannotDeleteRootUserGroupAddress = do
   let ugid = get ugID ug
   ctx   <- setUser (Just user) <$> mkContext defaultLang
   req   <- mkRequest DELETE []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiAddressV2Delete ugid)
+  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid)
   assertEqual "admin user cannot delete root UserGroup Address" 400 $ rsCode res
     where
       emailAddress = "humma.kavula@scrive.com"
@@ -728,7 +728,7 @@ testSalesUserCannotDeleteRootUserGroupAddress = do
   let ugid = get ugID ug
   ctx   <- setUser (Just user) <$> mkContext defaultLang
   req   <- mkRequest DELETE []
-  res   <- fst <$> runTestKontra req ctx (userGroupApiAddressV2Delete ugid)
+  res   <- fst <$> runTestKontra req ctx (userGroupApiContactDetailsV2Delete ugid)
   assertEqual "sales user cannot delete root UserGroup Address" 400 $ rsCode res
     where
       emailAddress = "max.quordlepleen@scrive.com"
@@ -844,7 +844,7 @@ testSalesUserCanEditUserGroupSettingsWithPermissions = do
   ctx   <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
   req   <- mkRequest POST [ ("settings", inText settingsJson) ]
   res   <- fst <$> runTestKontra req ctx (userGroupApiSettingsV2Update ugid)
-  assertEqual "non-admin and non-sales edit (PUT) UserGroupSettings with permissions" 200 $ rsCode res
+  assertEqual "non-admin and non-sales edit UserGroupSettings with permissions" 200 $ rsCode res
     where
       emailAddress = "great.green.arkleseizure@scrive.com"
       settingsJson = "{\"ip_address_mask_list\":[],\"data_retention_policy\":"

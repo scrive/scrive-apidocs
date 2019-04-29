@@ -1,28 +1,29 @@
 {-# LANGUAGE TemplateHaskell #-}
 module UserGroup.JSON (
     userGroupToResponse
-  , updateUserGroupFromResponse
+  , userGroupWithInheritableToResponse
+  , updateUserGroupFromRequest
   , UserGroupResponseJSON
-  -- exports from UserGroup.JSON.Address
-  , userGroupAddressToResponse
-  , updateUserGroupAddressFromResponse
-  -- exports from UserGroup.JSON.Settings
+  , userGroupContactDetailsToResponse
+  , userGroupContactDetailsWithInheritableToResponse
+  , updateUserGroupContactDetailsFromRequest
   , userGroupSettingsToResponse
-  , updateUserGroupDataRetentionFromResponse
+  , userGroupSettingsWithInheritableToResponse
+  , updateUserGroupDataRetentionFromRequest
 ) where
 
 import Data.Aeson
 import Data.Text hiding (map)
 import Data.Unjson
 
-import UserGroup.JSON.Address
+import UserGroup.JSON.ContactDetails
 import UserGroup.JSON.Settings
 import UserGroup.Types
 
 userGroupToResponse
   :: UserGroup
-  -> (Maybe UserGroupID, UserGroupAddress, Maybe (UserGroupID, UserGroupAddress))
-  -> (Maybe UserGroupID, UserGroupSettings, Maybe (UserGroupID, UserGroupSettings))
+  -> (Maybe UserGroupID, UserGroupAddress)
+  -> (Maybe UserGroupID, UserGroupSettings)
   -> [(UserGroupID, Text)]
   -> (UnjsonDef UserGroupResponseJSON, UserGroupResponseJSON)
 userGroupToResponse ug ugAddr ugSett children
@@ -32,17 +33,39 @@ userGroupToResponse ug ugAddr ugSett children
       , resParentID = get ugParentGroupID ug
       , resName = get ugName ug
       , resChildren = children
-      , resAddress =
-          let (mInheritId, addressObj, mInheritPreview) = ugAddr
-          in userGroupAddressToJSON mInheritId addressObj mInheritPreview
+      , resContactDetails =
+          let (mInheritId, addressObj) = ugAddr
+          in userGroupContactDetailsToJSON mInheritId addressObj
       , resSettings =
-          let (mInheritId, settingsObj, mInheritPreview) = ugSett
-          in userGroupSettingsToJSON mInheritId settingsObj mInheritPreview
+          let (mInheritId, settingsObj) = ugSett
+          in userGroupSettingsToJSON mInheritId settingsObj
       }
     )
 
-updateUserGroupFromResponse :: UserGroup -> Value -> Maybe UserGroup
-updateUserGroupFromResponse ug ugChanges =
+userGroupWithInheritableToResponse
+  :: UserGroup
+  -> (Maybe UserGroupID, UserGroupAddress, Maybe (UserGroupID, UserGroupAddress))
+  -> (Maybe UserGroupID, UserGroupSettings, Maybe (UserGroupID, UserGroupSettings))
+  -> [(UserGroupID, Text)]
+  -> (UnjsonDef UserGroupResponseJSON, UserGroupResponseJSON)
+userGroupWithInheritableToResponse ug ugAddr ugSett children
+  = ( unjsonUserGroupWithInheritableResponseJSON
+    , UserGroupResponseJSON {
+        resID = get ugID ug
+      , resParentID = get ugParentGroupID ug
+      , resName = get ugName ug
+      , resChildren = children
+      , resContactDetails =
+          let (mInheritId, addressObj, mInheritPreview) = ugAddr
+          in userGroupContactDetailsWithInheritableToJSON mInheritId addressObj mInheritPreview
+      , resSettings =
+          let (mInheritId, settingsObj, mInheritPreview) = ugSett
+          in userGroupSettingsWithInheritableToJSON mInheritId settingsObj mInheritPreview
+      }
+    )
+
+updateUserGroupFromRequest :: UserGroup -> Value -> Maybe UserGroup
+updateUserGroupFromRequest ug ugChanges =
   let ugReq = userGroupToRequest ug
   in case update ugReq unjsonUserGroupRequestJSON ugChanges of
     (Result ugUpdated []) -> Just $ userGroupFromRequest ug ugUpdated
@@ -67,10 +90,22 @@ unjsonUserGroupResponseJSON = objectOf $ pure UserGroupResponseJSON
   <*> field "name" resName "User Group Name"
   <*> fieldBy "children" resChildren "User Group Children"
     (arrayOf unjsonUserGroupChild)
-  <*> fieldBy "address" resAddress "User Group Address"
-    unjsonUserGroupAddressResponseJSON
+  <*> fieldBy "contact_details" resContactDetails "User Group Contact Details"
+    unjsonUserGroupContactDetailsResponseJSON
   <*> fieldBy "settings" resSettings "User Group Settings"
     unjsonDataRetentionPolicyResponseJSON
+
+unjsonUserGroupWithInheritableResponseJSON :: UnjsonDef UserGroupResponseJSON
+unjsonUserGroupWithInheritableResponseJSON = objectOf $ pure UserGroupResponseJSON
+  <*> field "id" resID "User Group ID"
+  <*> fieldOpt "parent_id" resParentID "User Group Parent ID"
+  <*> field "name" resName "User Group Name"
+  <*> fieldBy "children" resChildren "User Group Children"
+    (arrayOf unjsonUserGroupChild)
+  <*> fieldBy "contact_details" resContactDetails "User Group Contact Details"
+    unjsonUserGroupContactDetailsResponseWithInheritableJSON
+  <*> fieldBy "settings" resSettings "User Group Settings"
+    unjsonDataRetentionPolicyWithInheritableResponseJSON
 
 unjsonUserGroupRequestJSON :: UnjsonDef UserGroupRequestJSON
 unjsonUserGroupRequestJSON = objectOf $ pure UserGroupRequestJSON
@@ -83,12 +118,12 @@ unjsonUserGroupChild = objectOf $ pure (,)
   <*> field "name" snd "User Group Child Name"
 
 data UserGroupResponseJSON = UserGroupResponseJSON {
-    resID          :: UserGroupID
-  , resParentID    :: Maybe UserGroupID
-  , resName        :: Text
-  , resChildren    :: [(UserGroupID, Text)]
-  , resAddress     :: UserGroupAddressResponseJSON
-  , resSettings    :: DataRetentionPolicyResponseJSON
+    resID             :: UserGroupID
+  , resParentID       :: Maybe UserGroupID
+  , resName           :: Text
+  , resChildren       :: [(UserGroupID, Text)]
+  , resContactDetails :: UserGroupContactDetailsResponseJSON
+  , resSettings       :: DataRetentionPolicyResponseJSON
   }
 
 data UserGroupRequestJSON = UserGroupRequestJSON {
