@@ -6,7 +6,6 @@ var User = require("../../js/account/user.js").User;
 /* Main archive definition. Its a tab based set of different documents lists. */
 
 var FREE_DOCUMENT_LIMIT = 3;
-var TEAM_DOCUMENT_LIMIT = 100;
 
 var Subscription = Backbone.Model.extend({
   defaults: {
@@ -150,12 +149,7 @@ var Subscription = Backbone.Model.extend({
     if (numberOfDocs === undefined) {
       numberOfDocs = 1;
     }
-    if (this.hasFreePlan() && (this.startedLastMonth() + numberOfDocs) > FREE_DOCUMENT_LIMIT) {
-      return true;
-    } else if (this.hasTeamPlan() && (this.startedLastMonth() + numberOfDocs) > TEAM_DOCUMENT_LIMIT) {
-      return true;
-    }
-    return false;
+    return this.hasFreePlan() && (this.startedLastMonth() + numberOfDocs) > FREE_DOCUMENT_LIMIT;
   },
   updateSubscriptionAsAdmin: function (nsd, callback) {
     var self = this;
