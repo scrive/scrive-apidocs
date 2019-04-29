@@ -368,7 +368,11 @@ var Field = exports.Field = Backbone.Model.extend({
         validation = new PhoneValidation();
       }
       // If we have mobile delivery, we need a non-empty mobile
-      if (signatory.mobileDelivery() || signatory.emailMobileDelivery() || signatory.smsPinAuthenticationToView()) {
+      if (signatory.mobileDelivery()
+         || signatory.emailMobileDelivery()
+         || signatory.smsPinAuthenticationToView()
+         || signatory.hasNotificationEmailAndMobile()
+         || signatory.hasNotificationMobile()) {
         validation = validation.concat(new NotEmptyValidation());
       }
       // Else it can be empty
