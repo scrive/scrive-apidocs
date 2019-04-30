@@ -1,5 +1,6 @@
 module AccessControl.Model
-  ( AccessRoleGet(..)
+  ( GetRoles(..)
+  , AccessRoleGet(..)
   , AccessControlGetRolesByUser(..)
   , AccessControlGetRolesByUserGroup(..)
   , AccessControlInsertUserGroupAdmin(..)
@@ -10,7 +11,8 @@ import Control.Monad.Catch
 
 import AccessControl.Types
 import DB
-import Folder.Types
+import Folder.Model
+import User.Types.User
 import User.UserID
 import UserGroup.Model
 import UserGroup.Types
@@ -33,6 +35,34 @@ instance (MonadDB m, MonadThrow m) => DBQuery m AccessRoleGet (Maybe AccessRole)
       mapM_ sqlResult $ rolesSelector
       sqlWhereEq "id" roleId
     fetchMaybe fetchAccessRole
+
+data GetRoles = GetRoles User
+instance (MonadDB m, MonadThrow m) => DBQuery m GetRoles [AccessRole] where
+  query (GetRoles u) = do
+    let ugid = usergroupid u
+        uid = userid u
+        isAdmin = useriscompanyadmin u
+    dbRolesByUser <- do
+      query . AccessControlGetRolesByUser $ uid
+    dbRolesByUserGroup <- do
+      query . AccessControlGetRolesByUserGroup $ ugid
+    -- Every user shall have DocumentAdminAR to his home folder
+    -- Every is_company_admin shall have DocumentAdminAR to the company home folder
+    mGroupHomeFolderID <- do
+      (get folderID <$>) <$> (query . FolderGetUserGroupHome $ ugid)
+    mUserHomeFolderID <- do
+      (get folderID <$>) <$> (query . FolderGetUserHome $ uid)
+    -- get company root folder
+    let adminOrUserRoles =
+          (if isAdmin then [UserAdminAR ugid] else [UserGroupMemberAR ugid]) <>
+          maybe []
+                (\hfid -> if isAdmin then [DocumentAdminAR hfid] else [])
+                mGroupHomeFolderID <>
+          maybe []
+                (\hfid -> [DocumentAdminAR hfid])
+                mUserHomeFolderID
+        derivedRoles = AccessRoleImplicitUser uid <$> adminOrUserRoles <> [UserAR uid]
+    return $ dbRolesByUser <> dbRolesByUserGroup <> derivedRoles
 
 data AccessControlGetRolesByUser = AccessControlGetRolesByUser UserID
 instance (MonadDB m, MonadThrow m) => DBQuery m AccessControlGetRolesByUser [AccessRole] where

@@ -9,6 +9,9 @@ module AccessControl.Types
   , accessRoleTarget
   , AccessRoleTarget(..)
   , AccessRoleType(..)
+  , UserGroupNonExistent(..)
+  , UserNonExistent(..)
+  , FolderNonExistent(..)
   , NeedsPermissions(..)
   , AccessPolicyItem
   , mkAccPolicy
@@ -27,12 +30,14 @@ import Data.Typeable (Typeable, cast)
 import Data.Unjson
 import Happstack.Server
 import Log
+import Text.JSON.Gen
 import qualified Control.Exception.Lifted as E
 import qualified Data.Binary as B
 
 import DB
 import Folder.Model
 import Log.Identifier
+import User.Model.Query
 import User.UserID
 import UserGroup.Model
 import UserGroup.Types
@@ -159,10 +164,40 @@ class NeedsPermissions s where
   neededPermissions :: (MonadCatch m, MonadDB m, MonadThrow m)
                     => s -> m NeededPermissionsExpr
 
+data UserGroupNonExistent = UserGroupNonExistent UserGroupID
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue UserGroupNonExistent where
+  toJSValue (UserGroupNonExistent ugid) = runJSONGen $ do
+    value "message" ("User Group does not exist" :: String)
+    value "user_group_id" (show ugid)
+
+instance DBExtraException UserGroupNonExistent
+
+data UserNonExistent = UserNonExistent UserID
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue UserNonExistent where
+  toJSValue (UserNonExistent uid) = runJSONGen $ do
+    value "message" ("User does not exist" :: String)
+    value "user_id" (show uid)
+
+instance DBExtraException UserNonExistent
+
+data FolderNonExistent = FolderNonExistent FolderID
+  deriving (Eq, Ord, Show, Typeable)
+
+instance ToJSValue FolderNonExistent where
+  toJSValue (FolderNonExistent uid) = runJSONGen $ do
+    value "message" ("Folder does not exist" :: String)
+    value "folder_id" (show uid)
+
+instance DBExtraException FolderNonExistent
+
 instance NeedsPermissions (AccessAction, AccessResource, UserGroupID) where
   neededPermissions (action, resource, usrGrpID) = do
-    (dbQuery . UserGroupGetWithParents $ usrGrpID) >>= \case
-      Nothing -> unexpectedError $ "No user group with ID" <+> (show $ usrGrpID)
+    dbQuery (UserGroupGetWithParents usrGrpID) >>= \case
+      Nothing -> throwM . SomeDBExtraException . UserGroupNonExistent $ usrGrpID
       Just ugwp -> do
         -- By specification, it should be enough to have permission for the
         -- wanted action on _any_ parent.
@@ -172,9 +207,8 @@ instance NeedsPermissions (AccessAction, AccessResource, UserGroupID) where
 
 instance NeedsPermissions (AccessAction, AccessResource, FolderID) where
   neededPermissions (action, resource, fid) = do
-    (query . FolderGet $ fid) >>= \case
-      Nothing -> unexpectedError $ "No folder with ID" <+>
-                                   show fid
+    dbQuery (FolderGet fid) >>= \case
+      Nothing -> throwM . SomeDBExtraException . FolderNonExistent $ fid
       Just folder -> do
         folderParents <- dbQuery . FolderGetParents $ fid
         let mkExprBase g = NeededPermissionsExprBase
@@ -182,13 +216,16 @@ instance NeedsPermissions (AccessAction, AccessResource, FolderID) where
         return . NeededPermissionsExprOr . map mkExprBase $ (folder:folderParents)
 
 instance NeedsPermissions (AccessAction, AccessResource, UserID) where
-  neededPermissions (action, resource, usrID) = do
-    usrGrpID <- get ugID <$> (dbQuery . UserGroupGetByUserID $ usrID)
-    groupPermissions <- neededPermissions (action, resource, usrGrpID)
-    return $ NeededPermissionsExprOr
-      [ NeededPermissionsExprBase . Permission action resource $ usrID
-      , groupPermissions
-      ]
+  neededPermissions (action, resource, usrID) =
+    dbQuery (GetUserByID usrID) >>= \case
+      Nothing -> throwM . SomeDBExtraException . UserNonExistent $ usrID
+      Just _ -> do
+        usrGrpID <- get ugID <$> (dbQuery . UserGroupGetByUserID $ usrID)
+        groupPermissions <- neededPermissions (action, resource, usrGrpID)
+        return $ NeededPermissionsExprOr
+          [ NeededPermissionsExprBase . Permission action resource $ usrID
+          , groupPermissions
+          ]
 
 instance NeedsPermissions AccessPolicyItem where
   neededPermissions (AccessPolicyItem t) = neededPermissions t
