@@ -22,8 +22,3 @@ package kontrakcja
 package text-icu
     extra-include-dirs: /usr/local/opt/icu4c/include
     extra-lib-dirs: /usr/local/opt/icu4c/lib
-
-source-repository-package
-  type: git
-  location: https://github.com/scrive/hpqtypes-extras
-  tag: c175d30cd5cf1985a1ff7127e48fd3262d610124
