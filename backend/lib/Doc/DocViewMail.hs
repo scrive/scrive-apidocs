@@ -164,12 +164,17 @@ remindMailSigned :: ( CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m
                  -> SignatoryLink
                  -> Bool
                  -> m Mail
-remindMailSigned forMail customMessage document signlink documentAttached = do
+remindMailSigned forMail mcustomMessage document signlink documentAttached = do
   mhtime <- if not documentAttached
             then Just <$> makeTemporaryMagicHash (signatorylinkid signlink)
             else return Nothing
   documentMailWithDocLang document (templateName "remindMailSigned") $ do
-    F.value "custommessage" $ asCustomMessage <$> customMessage
+    F.value "custommessage" $ asCustomMessage $ fromMaybe "" mcustomMessage
+    F.value "hascustommessage" $ case mcustomMessage of
+                                   Nothing -> False
+                                   Just "" -> False
+                                   Just _  -> True
+    F.value "shouldhavefilelink" $ isJust mhtime -- for previews
     documentAttachableFields forMail signlink False mhtime document
 
 mailForwardSigned :: ( CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m
