@@ -8,6 +8,8 @@ export LC_ALL=en_US.UTF-8
 
 # Check that the prerequisites for running the shake script are
 # installed.
+which ghc-pkg
+ghc-pkg --version
 ghc-pkg list --user --global > ghc-pkg.list
 
 if grep shake ghc-pkg.list > /dev/null 2>&1
