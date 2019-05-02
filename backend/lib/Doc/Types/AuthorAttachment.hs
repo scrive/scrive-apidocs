@@ -4,6 +4,7 @@ module Doc.Types.AuthorAttachment (
   ) where
 
 import DB
+import Doc.Tables
 import File.FileID
 
 data AuthorAttachment = AuthorAttachment {
@@ -26,7 +27,7 @@ authorAttachmentsSelectors = [
 type instance CompositeRow AuthorAttachment = (String, Bool, Bool, FileID)
 
 instance PQFormat AuthorAttachment where
-  pqFormat = "%author_attachment"
+  pqFormat = compositeTypePqFormat ctAuthorAttachment
 
 instance CompositeFromSQL AuthorAttachment where
   toComposite (aname, areq, aatsf, afid) = AuthorAttachment {

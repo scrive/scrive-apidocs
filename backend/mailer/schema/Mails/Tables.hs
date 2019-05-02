@@ -6,6 +6,7 @@ module Mails.Tables (
   , tableMails
   , tableMailEvents
   , tableMailAttachments
+  , ctMailAttachment
   ) where
 
 import Data.Text (Text)
@@ -110,7 +111,7 @@ tableMails = tblTable {
 tableMailAttachments :: Table
 tableMailAttachments = tblTable {
     tblName = "mail_attachments"
-  , tblVersion = 2
+  , tblVersion = 3
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "mail_id", colType = BigIntT, colNullable = False }
@@ -131,7 +132,7 @@ tableMailAttachments = tblTable {
 
 ctMailAttachment :: CompositeType
 ctMailAttachment = CompositeType {
-  ctName = "mail_attachment"
+  ctName = "mail_attachment_c1"
 , ctColumns = [
     CompositeColumn { ccName = "name", ccType = TextT }
   , CompositeColumn { ccName = "content", ccType = BinaryT }

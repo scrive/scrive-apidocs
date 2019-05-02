@@ -21,7 +21,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m FolderGet (Maybe Folder) where
     runQuery_ . sqlSelect "folders" $ do
       mapM_ sqlResult folderSelectors
       sqlWhereEq "id" dgid
-    fetchMaybe toComposite
+    fetchMaybe fetchFolder
 
 data FolderGetUserGroupHome =
     FolderGetUserGroupHome UserGroupID
@@ -60,7 +60,7 @@ instance (MonadDB m, MonadThrow m)
     runQuery_ $ sqlSelect "folders" $ do
       mapM_ sqlResult folderSelectors
       sqlWhere $ "parent_path @> " <?> (Array1 [fid])
-    allChildren <- fetchMany toComposite
+    allChildren <- fetchMany fetchFolder
     let directChildren parentID = filter ((==Just parentID) . get folderParentID)
                                          allChildren
         mkChildren parentID = mkChild <$> directChildren parentID
@@ -91,7 +91,7 @@ instance (MonadDB m, MonadThrow m)
           sqlJoinOn "parentids" "parentids.id = folders.id"
           mapM_ sqlResult folderSelectors
           sqlOrderBy "ordinality"
-        fetchMany toComposite
+        fetchMany fetchFolder
 
 data FolderGetImmediateChildren = FolderGetImmediateChildren FolderID
 instance (MonadDB m, MonadThrow m) => DBQuery m FolderGetImmediateChildren [Folder] where
@@ -100,7 +100,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m FolderGetImmediateChildren [Fold
       mapM_ sqlResult folderSelectors
       sqlWhereEq "parent_id" ugid
       sqlWhereIsNULL "deleted"
-    fetchMany toComposite
+    fetchMany fetchFolder
 
 folderSelectors :: [SQL]
 folderSelectors =

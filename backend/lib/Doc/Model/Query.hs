@@ -51,6 +51,7 @@ import Doc.Model.OrderBy
 import Doc.Screenshot
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots
+import Doc.Tables
 import File.FileID
 import File.Storage
 import MagicHash
@@ -310,7 +311,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsWithSoftLimit (Int, 
         -- fetch total count of documents
         sqlResult $ "(SELECT COUNT(*) FROM selected_ids) AS total_count"
         -- and a list of them, restricted by the soft limit
-        sqlResult $ "ARRAY(SELECT (" <> mintercalate ", " documentsSelectors <> ")::document FROM relevant_ids ids JOIN documents USING (id) ORDER BY ids.position) AS documents"
+        sqlResult $ "ARRAY(SELECT (" <> mintercalate ", " documentsSelectors <> ")::" <> raw (ctName ctDocument) <+> "FROM relevant_ids ids JOIN documents USING (id) ORDER BY ids.position) AS documents"
 
 data GetDocumentsIDs = GetDocumentsIDs DocumentDomain [DocumentFilter] [AscDesc DocumentOrderBy]
 instance MonadDB m => DBQuery m GetDocumentsIDs [DocumentID] where

@@ -82,7 +82,7 @@ main = withCurlDo $ do
     checkExecutables
 
     withPostgreSQL (unConnectionSource . simpleSource $ connSettings []) $ do
-      checkDatabase extrasOptions kontraDomains kontraTables
+      checkDatabase extrasOptions kontraComposites kontraDomains kontraTables
       unless (readOnlyDatabase appConf) $ do
         dbUpdate $ SetMainDomainURL $ mainDomainUrl appConf
 

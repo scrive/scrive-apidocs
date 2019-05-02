@@ -5,6 +5,7 @@ module Doc.Types.MainFile (
 
 import DB
 import Doc.SealStatus
+import Doc.Tables
 import Doc.Types.DocumentStatus
 import File.FileID
 
@@ -31,7 +32,7 @@ mainFilesSelectors = [
 type instance CompositeRow MainFile = (FileID, DocumentStatus, SealStatus, String)
 
 instance PQFormat MainFile where
-  pqFormat = "%main_file"
+  pqFormat = compositeTypePqFormat ctMainFile
 
 instance CompositeFromSQL MainFile where
   toComposite (fid, document_status, seal_status, file_name) = MainFile {

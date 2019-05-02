@@ -26,8 +26,10 @@ import Text.JSON.Gen
 import DataRetentionPolicy
 import DB
 import FeatureFlags.Model
+import FeatureFlags.Tables
 import Partner.Model
 import User.UserID
+import UserGroup.Tables
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
 
@@ -127,7 +129,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGet (Maybe UserGroup) w
     runQuery_ . sqlSelect "user_groups" $ do
       mapM_ sqlResult userGroupSelectors
       sqlWhereEq "id" ugid
-    fetchMaybe toComposite
+    fetchMaybe fetchUserGroup
 
 data UserGroupGetByUserID = UserGroupGetByUserID UserID
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetByUserID UserGroup where
@@ -136,7 +138,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetByUserID UserGroup w
       sqlJoinOn "users" "users.user_group_id = user_groups.id"
       mapM_ sqlResult userGroupSelectors
       sqlWhereEq "users.id" uid
-    fetchOne toComposite
+    fetchOne fetchUserGroup
 
 data UserGroupGetImmediateChildren = UserGroupGetImmediateChildren UserGroupID
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetImmediateChildren [UserGroup] where
@@ -145,7 +147,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetImmediateChildren [U
       mapM_ sqlResult userGroupSelectors
       sqlWhereEq "parent_group_id" ugid
       sqlWhereIsNULL "deleted"
-    fetchMany toComposite
+    fetchMany fetchUserGroup
 
 data UserGroupGetWithParents = UserGroupGetWithParents UserGroupID
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetWithParents (Maybe UserGroupWithParents) where
@@ -170,7 +172,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetWithParentsByUG User
         sqlJoinOn "parentids" "parentids.id = user_groups.id"
         mapM_ sqlResult userGroupSelectors
         sqlOrderBy "ordinality"
-      fetchMany toComposite
+      fetchMany fetchUserGroup
     let (ug_root0, ug_children_path) = case reverse parents of
           []                -> (ug, [])
           (ugr:ug_rev_path) -> (ugr, ug : reverse ug_rev_path)
@@ -187,7 +189,7 @@ instance (MonadDB m, MonadThrow m)
       sqlJoinOn "users" "users.user_group_id = user_groups.id"
       mapM_ sqlResult userGroupSelectors
       sqlWhereEq "users.id" uid
-    ug <- fetchOne toComposite
+    ug <- fetchOne fetchUserGroup
     dbQuery . UserGroupGetWithParentsByUG $ ug
 
 data UserGroupUpdate = UserGroupUpdate UserGroup
@@ -304,12 +306,12 @@ userGroupSelectors = [
   , "user_groups.parent_group_id"
   , "user_groups.name"
   , "user_groups.home_folder_id"
-  , "(SELECT (" <> mintercalate ", " ugInvoicingSelectors <> ")::user_group_invoicing FROM user_group_invoicings WHERE user_groups.id = user_group_invoicings.user_group_id)"
-  , "(SELECT (" <> mintercalate ", " ugSettingsSelectors <> ")::user_group_setting FROM user_group_settings WHERE user_groups.id = user_group_settings.user_group_id)"
-  , "(SELECT (" <> mintercalate ", " ugAddressSelectors <> ")::user_group_address FROM user_group_addresses WHERE user_groups.id = user_group_addresses.user_group_id)"
-  , "(SELECT (" <> mintercalate ", " ugUISelectors <> ")::user_group_ui FROM user_group_uis WHERE user_groups.id = user_group_uis.user_group_id)"
-  , "(SELECT (" <> mintercalate ", " selectFeatureFlagsSelectors <> ")::feature_flags_ct FROM feature_flags WHERE user_groups.id = feature_flags.user_group_id AND feature_flags.flags_for_admin)"
-  , "(SELECT (" <> mintercalate ", " selectFeatureFlagsSelectors <> ")::feature_flags_ct FROM feature_flags WHERE user_groups.id = feature_flags.user_group_id AND NOT feature_flags.flags_for_admin)"
+  , "(SELECT (" <> mintercalate ", " ugInvoicingSelectors <> ")::" <> raw (ctName ctUserGroupInvoicing) <+> "FROM user_group_invoicings WHERE user_groups.id = user_group_invoicings.user_group_id)"
+  , "(SELECT (" <> mintercalate ", " ugSettingsSelectors <> ")::" <> raw (ctName ctUserGroupSettings) <+> "FROM user_group_settings WHERE user_groups.id = user_group_settings.user_group_id)"
+  , "(SELECT (" <> mintercalate ", " ugAddressSelectors <> ")::" <> raw (ctName ctUserGroupAddress) <+> "FROM user_group_addresses WHERE user_groups.id = user_group_addresses.user_group_id)"
+  , "(SELECT (" <> mintercalate ", " ugUISelectors <> ")::" <> raw (ctName ctUserGroupUI) <+> "FROM user_group_uis WHERE user_groups.id = user_group_uis.user_group_id)"
+  , "(SELECT (" <> mintercalate ", " selectFeatureFlagsSelectors <> ")::" <> raw (ctName ctFeatureFlags) <+> "FROM feature_flags WHERE user_groups.id = feature_flags.user_group_id AND feature_flags.flags_for_admin)"
+  , "(SELECT (" <> mintercalate ", " selectFeatureFlagsSelectors <> ")::" <> raw (ctName ctFeatureFlags) <+> "FROM feature_flags WHERE user_groups.id = feature_flags.user_group_id AND NOT feature_flags.flags_for_admin)"
   ]
 
 ugSettingsSelectors :: [SQL]
@@ -395,7 +397,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupsGetFiltered [UserGroup
          sqlLimit limit
        sqlWhereIsNULL "deleted"
        sqlOrderBy "user_groups.id"
-    fetchMany toComposite
+    fetchMany fetchUserGroup
     where
       findWordInField word fieldName = ("user_group_addresses." <+> fieldName) <+> "ILIKE" <?> sqlwordpat word
       findWordInName word = ("user_groups.name") <+> "ILIKE" <?> sqlwordpat word
@@ -426,7 +428,7 @@ instance (MonadDB m, MonadThrow m)
     runQuery_ $ sqlSelect "user_groups" $ do
       mapM_ sqlResult userGroupSelectors
       sqlWhere $ "parent_group_path @> " <?> (Array1 [ugid])
-    allChildren <- fetchMany toComposite
+    allChildren <- fetchMany fetchUserGroup
     let directChildren parentID = filter ((==Just parentID) . get ugParentGroupID) allChildren
         mkChildren parentID = mkChild <$> directChildren parentID
         mkChild ug = UserGroupWithChildren ug . mkChildren $ get ugID ug

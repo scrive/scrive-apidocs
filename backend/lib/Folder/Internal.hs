@@ -2,6 +2,7 @@ module Folder.Internal (
     Folder(..)
   , FolderID
   , FolderWithChildren(..)
+  , fetchFolder
   , defaultFolder
   , fromFolderID
   , emptyFolderID
@@ -32,23 +33,8 @@ data FolderWithChildren = FolderWithChildren
 fwcToList :: FolderWithChildren -> [Folder]
 fwcToList fwc = _fwcFolder fwc : concatMap fwcToList (_fwcChildren fwc)
 
-type instance CompositeRow Folder = (
-    FolderID
-  , Maybe FolderID
-  , Text
-  )
-
-instance PQFormat Folder where
-  pqFormat = "%folder"
-
-instance CompositeFromSQL Folder where
-  toComposite (dgid, mparentgroupid, name) =
-    Folder
-    {
-      _folderID = dgid
-    , _folderParentID = mparentgroupid
-    , _folderName = name
-    }
+fetchFolder :: (FolderID, Maybe FolderID, Text) -> Folder
+fetchFolder (_folderID, _folderParentID, _folderName) = Folder{..}
 
 defaultFolder :: Folder
 defaultFolder =

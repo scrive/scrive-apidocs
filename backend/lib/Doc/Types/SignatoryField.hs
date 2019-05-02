@@ -35,7 +35,9 @@ import Data.String.Utils
 import Data.Unjson
 import Database.PostgreSQL.PQTypes hiding (def)
 
+import DB
 import Doc.SignatoryFieldID
+import Doc.Tables
 import File.FileID
 import Util.HasSomeUserInfo
 
@@ -146,7 +148,7 @@ data PlacementAnchor = PlacementAnchor {
 type instance CompositeRow PlacementAnchor = (String, Int32)
 
 instance PQFormat PlacementAnchor where
-  pqFormat = "%placement_anchor"
+  pqFormat = compositeTypePqFormat ctPlacementAnchor
 
 instance CompositeFromSQL PlacementAnchor where
   toComposite (text, index) = PlacementAnchor {
@@ -206,7 +208,7 @@ instance Eq FieldPlacement where
 type instance CompositeRow FieldPlacement = (PlacementID, Double, Double, Double, Double, Double, Int32, Maybe TipSide, CompositeArray1 PlacementAnchor)
 
 instance PQFormat FieldPlacement where
-  pqFormat = "%field_placement"
+  pqFormat = compositeTypePqFormat ctFieldPlacement
 
 instance CompositeFromSQL FieldPlacement where
   toComposite (pid, xrel, yrel, wrel, hrel, fsrel, page, tip, CompositeArray1 anchors) = FieldPlacement {
@@ -359,16 +361,16 @@ signatoryFieldsSelectors = [
   , "signatory_link_fields.custom_validation_tooltip"
   ]
   where
-    placements = "SELECT (id, xrel, yrel, wrel, hrel, fsrel, page, tip, ARRAY(" <> anchors <> "))::field_placement FROM field_placements WHERE field_placements.signatory_field_id = signatory_link_fields.id ORDER BY field_placements.id"
+    placements = "SELECT (id, xrel, yrel, wrel, hrel, fsrel, page, tip, ARRAY(" <> anchors <> "))::" <> raw (ctName ctFieldPlacement) <+> "FROM field_placements WHERE field_placements.signatory_field_id = signatory_link_fields.id ORDER BY field_placements.id"
 
-    anchors = "SELECT (text, index)::placement_anchor FROM placement_anchors WHERE placement_anchors.field_placement_id = field_placements.id ORDER BY placement_anchors.id"
+    anchors = "SELECT (text, index)::" <> raw (ctName ctPlacementAnchor) <+> "FROM placement_anchors WHERE placement_anchors.field_placement_id = field_placements.id ORDER BY placement_anchors.id"
 
 
 
 type instance CompositeRow SignatoryField = (SignatoryFieldID, FieldType, Maybe NameOrder, String, Bool, Maybe String, Maybe Bool, Maybe FileID, Bool, Bool, Maybe Bool, CompositeArray1 FieldPlacement, Maybe (Array1 String), Maybe String, Maybe String, Maybe String)
 
 instance PQFormat SignatoryField where
-  pqFormat = "%signatory_field"
+  pqFormat = compositeTypePqFormat ctSignatoryField
 
 instance CompositeFromSQL SignatoryField where
   toComposite (sfid, ftype, mname_order, custom_name, is_author_filled, mvalue_text, mvalue_bool, mvalue_file, obligatory, should_be_filled_by_sender, meditable_by_signatory, CompositeArray1 placements, mradio_button_group_values, mcustom_validation_pattern, mcustom_validation_positive_example, mcustom_validation_tooltip) =

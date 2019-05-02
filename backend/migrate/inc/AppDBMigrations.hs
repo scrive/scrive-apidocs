@@ -191,4 +191,8 @@ kontraMigrations = [
   , addIndexOnShareableLinkHash
   , userGroupSettingsAddRequireBPIDForNewDocument
   , addCronStatsJob
+  , renameMailAttachmentComposite
+  , renameUserGroupComposites
+  , renameDocumentComposites
+  , renameFeatureFlagsComposite
   ]

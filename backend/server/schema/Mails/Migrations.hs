@@ -1,7 +1,18 @@
-module Mails.Migrations (removeXSMTPAttrsFromMailEvents) where
+module Mails.Migrations
+  ( removeXSMTPAttrsFromMailEvents
+  , renameMailAttachmentComposite
+  ) where
 
 import DB
 import Mails.Tables
+
+renameMailAttachmentComposite :: MonadDB m => Migration m
+renameMailAttachmentComposite = Migration
+  { mgrTableName = "mail_attachments"
+  , mgrFrom = 2
+  , mgrAction = StandardMigration $ do
+      runSQL_ "ALTER TYPE mail_attachment RENAME TO mail_attachment_c1"
+  }
 
 removeXSMTPAttrsFromMailEvents :: MonadDB m => Migration m
 removeXSMTPAttrsFromMailEvents = Migration {

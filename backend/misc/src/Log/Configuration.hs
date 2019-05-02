@@ -205,7 +205,7 @@ mkLogRunner component LogConfig{..} rng = do
       withSimpleStdOutLogger $ \logger ->
         withPostgreSQL pool $ run logger $ do
           let extrasOptions = def
-          migrateDatabase extrasOptions  [] [] logsTables logsMigrations
+          migrateDatabase extrasOptions [] [] [] logsTables logsMigrations
       return . Right $ WithLoggerFun {
         withLoggerFun = \act -> withPgLogger pool act
         }

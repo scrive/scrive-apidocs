@@ -188,10 +188,9 @@ testMany' (allargs, ts) runLogger rng = do
   let connSettings = pgConnSettings (testDBConfig tconf)
       extrasOptions = def
   runLogger . runDBT (unConnectionSource . simpleSource $ connSettings []) def $ do
-    migrateDatabase extrasOptions kontraExtensions
-      kontraDomains kontraTables kontraMigrations
+    migrateDatabase extrasOptions
+      kontraExtensions kontraComposites kontraDomains kontraTables kontraMigrations
     defineFunctions kontraFunctions
-    defineComposites kontraComposites
     defineTriggers kontraTriggers
     offsets <- dbQuery $ HC.GetNClockErrorEstimates 10
     unless (HC.enoughClockErrorOffsetSamples offsets) $ do

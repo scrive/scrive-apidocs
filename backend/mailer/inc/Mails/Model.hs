@@ -30,6 +30,7 @@ import Data.Time
 
 import DB
 import MagicHash
+import Mails.Tables
 import Mails.Types
 import MinutesTime
 
@@ -104,7 +105,7 @@ mailSelectors = [
   , "mails.reply_to"
   , "mails.title"
   , "mails.content"
-  , "ARRAY(SELECT (name, content, file_id)::mail_attachment FROM mail_attachments a WHERE a.mail_id = mails.id ORDER BY a.id)"
+  , "ARRAY(SELECT (name, content, file_id)::" <> raw (ctName ctMailAttachment) <+> "FROM mail_attachments a WHERE a.mail_id = mails.id ORDER BY a.id)"
   , "mails.service_test"
   , "mails.attempts"
   ]

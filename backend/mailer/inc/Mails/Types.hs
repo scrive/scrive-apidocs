@@ -21,6 +21,7 @@ import Data.Data
 import Data.Int
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
+import Database.PostgreSQL.PQTypes.Model.CompositeType
 import qualified Data.Aeson.Encoding.Internal as Aeson
 import qualified Data.ByteString as B
 import qualified Data.Text as T
@@ -30,6 +31,7 @@ import File.FileID
 import HtmlToTxt
 import Log.Identifier
 import MagicHash (MagicHash)
+import Mails.Tables
 import Utils.List
 
 data SenderType = MasterSender | SlaveSender
@@ -138,7 +140,7 @@ data Attachment = Attachment {
 type instance CompositeRow Attachment = (String, Maybe B.ByteString, Maybe FileID)
 
 instance PQFormat Attachment where
-  pqFormat = "%mail_attachment"
+  pqFormat = compositeTypePqFormat ctMailAttachment
 
 instance CompositeFromSQL Attachment where
   toComposite (name, mcontent, mfid) = Attachment {

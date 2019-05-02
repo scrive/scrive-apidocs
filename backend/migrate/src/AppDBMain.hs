@@ -48,7 +48,7 @@ main = do
                          { eoForceCommit = force
                          , eoEnforcePKs = True }
     withPostgreSQL (unConnectionSource connSource) $ do
-      migrateDatabase extrasOptions kontraExtensions kontraDomains kontraTables kontraMigrations
-      defineComposites kontraComposites
+      migrateDatabase extrasOptions
+        kontraExtensions kontraComposites kontraDomains kontraTables kontraMigrations
       defineFunctions kontraFunctions
       defineTriggers kontraTriggers

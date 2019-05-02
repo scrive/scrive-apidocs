@@ -15,6 +15,7 @@ import Control.Monad.Catch
 import Data.Aeson.Types
 import Data.Int
 import Database.PostgreSQL.PQTypes
+import Database.PostgreSQL.PQTypes.Model.CompositeType
 import Database.PostgreSQL.PQTypes.SQL.Builder
 import qualified Data.Set as S
 
@@ -22,6 +23,7 @@ import DB.RowCache (HasID(..), ID)
 import DB.TimeZoneName
 import Doc.DocumentID
 import Doc.SealStatus (HasGuardtimeSignature(..), SealStatus)
+import Doc.Tables
 import Doc.Types.AuthorAttachment
 import Doc.Types.DocumentStatus
 import Doc.Types.DocumentTag
@@ -302,8 +304,8 @@ documentsSelectors :: [SQL]
 documentsSelectors = [
     "documents.id"
   , "documents.title"
-  , "ARRAY(SELECT (" <> mintercalate ", " signatoryLinksSelectors <> ")::signatory_link FROM signatory_links WHERE documents.id = signatory_links.document_id ORDER BY signatory_links.id)"
-  , "ARRAY(SELECT (" <> mintercalate ", " mainFilesSelectors <> ")::main_file FROM main_files, files WHERE documents.id = main_files.document_id AND main_files.file_id = files.id ORDER BY main_files.id DESC)"
+  , "ARRAY(SELECT (" <> mintercalate ", " signatoryLinksSelectors <> ")::" <> raw (ctName ctSignatoryLink) <+> "FROM signatory_links WHERE documents.id = signatory_links.document_id ORDER BY signatory_links.id)"
+  , "ARRAY(SELECT (" <> mintercalate ", " mainFilesSelectors <> ")::" <> raw (ctName ctMainFile) <+> "FROM main_files, files WHERE documents.id = main_files.document_id AND main_files.file_id = files.id ORDER BY main_files.id DESC)"
   , "documents.status"
   , "documents.type"
   , "documents.ctime"
@@ -324,9 +326,9 @@ documentsSelectors = [
   , "documents.is_receipt"
   , "documents.lang"
   , "documents.sharing"
-  , "ARRAY(SELECT (" <> mintercalate ", " documentTagsSelectors <> ")::document_tag FROM document_tags WHERE documents.id = document_tags.document_id ORDER BY document_tags.name)"
+  , "ARRAY(SELECT (" <> mintercalate ", " documentTagsSelectors <> ")::" <> raw (ctName ctDocumentTag) <+> "FROM document_tags WHERE documents.id = document_tags.document_id ORDER BY document_tags.name)"
   -- needs ROW since composite type has only one field for now
-  , "ARRAY(SELECT ROW(" <> mintercalate ", " authorAttachmentsSelectors <> ")::author_attachment FROM author_attachments WHERE documents.id = author_attachments.document_id ORDER BY author_attachments.file_id)"
+  , "ARRAY(SELECT ROW(" <> mintercalate ", " authorAttachmentsSelectors <> ")::" <> raw (ctName ctAuthorAttachment) <+> "FROM author_attachments WHERE documents.id = author_attachments.document_id ORDER BY author_attachments.file_id)"
   , "documents.api_v1_callback_url"
   , "documents.api_v2_callback_url"
   , "documents.unsaved_draft"
@@ -402,7 +404,7 @@ documentStatusClassExpression = mconcat [
 type instance CompositeRow Document = (DocumentID, String, CompositeArray1 SignatoryLink, CompositeArray1 MainFile, DocumentStatus, DocumentType, UTCTime, UTCTime, Int32, Maybe Int32, Maybe UTCTime, Maybe UTCTime, Maybe UTCTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Bool, Bool, Lang, DocumentSharing, CompositeArray1 DocumentTag, CompositeArray1 AuthorAttachment, Maybe String, Maybe String, Bool, Int64, MagicHash, TimeZoneName, Maybe UserGroupID, StatusClass, Maybe MagicHash, Maybe DocumentID, Bool, Bool, Maybe FolderID)
 
 instance PQFormat Document where
-  pqFormat = "%document"
+  pqFormat = compositeTypePqFormat ctDocument
 
 instance CompositeFromSQL Document where
   toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text,  show_header, show_pdf_download, show_reject_option, allow_reject_reason, show_footer, is_receipt, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apiv1callback, apiv2callback, unsaved_draft, objectversion, token, time_zone_name, author_ugid, status_class, shareable_link_hash, template_id, from_shareable_link, show_arrow, fid) = Document {

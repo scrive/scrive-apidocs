@@ -71,7 +71,7 @@ main = do
     let connSettings = pgConnSettings $ cronDBConfig cronConf
         extrasOptions = def { eoEnforcePKs = True }
     withPostgreSQL (unConnectionSource . simpleSource $ connSettings []) $
-      checkDatabase extrasOptions kontraDomains kontraTables
+      checkDatabase extrasOptions kontraComposites kontraDomains kontraTables
 
     ConnectionSource pool <- ($ (maxConnectionTracker $ cronMaxDBConnections cronConf))
       <$> liftBase (createPoolSource (connSettings kontraComposites) (cronMaxDBConnections cronConf))

@@ -65,7 +65,7 @@ main = do
     let pgSettings = pgConnSettings (messengerDBConfig conf) []
         extrasOptions = def
     withPostgreSQL (unConnectionSource $ simpleSource pgSettings) $
-      checkDatabaseAllowUnknownTables extrasOptions [] messengerTables
+      checkDatabaseAllowUnknownTables extrasOptions [] [] messengerTables
     cs@(ConnectionSource pool) <- ($ (maxConnectionTracker $ messengerMaxDBConnections conf))
       <$> liftBase (createPoolSource pgSettings (messengerMaxDBConnections conf))
 
