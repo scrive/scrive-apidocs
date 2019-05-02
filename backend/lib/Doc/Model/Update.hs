@@ -1807,8 +1807,7 @@ instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m)
       , documentctime = actorTime actor
       , documentmtime = actorTime actor
       , documentshareablelinkhash = Nothing
-      , documentfolderid = (userhomefolderid =<< mUser) `mplus`
-                           (userhomefolderid =<< mAuthorUser) `mplus`
+      , documentfolderid = (userhomefolderid =<< mAuthorUser) `mplus`
                            (documentfolderid doc)
       }
 
