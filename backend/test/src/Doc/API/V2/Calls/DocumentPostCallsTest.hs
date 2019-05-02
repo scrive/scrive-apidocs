@@ -42,6 +42,7 @@ apiV2DocumentPostCallsTests env = testGroup "APIv2DocumentPostCalls"
   , testThat "API v2 Update"                                env testDocApiV2Update
   , testThat "API v2 Start"                                 env testDocApiV2Start
   , testThat "API v2 Prolong"                               env testDocApiV2Prolong
+  , testThat "API v2 Prolong before document timeout"       env testDocApiV2ProlongBeforeTimeout
   , testThat "API v2 Cancel"                                env testDocApiV2Cancel
   , testThat "API v2 Trash"                                 env testDocApiV2Trash
   , testThat "API v2 Delete"                                env testDocApiV2Delete
@@ -194,6 +195,20 @@ testDocApiV2Prolong = do
   -- Current limit is 365 days
   void $ jsonTestRequestHelper ctx POST [("days", inText "366")] (docApiV2Prolong did) 400
   prolonged_status <- getMockDocStatus <$> mockDocTestRequestHelper ctx POST [("days", inText "365")] (docApiV2Prolong did) 200
+  assertEqual "Document status should match" Pending prolonged_status
+
+testDocApiV2ProlongBeforeTimeout :: TestEnv()
+testDocApiV2ProlongBeforeTimeout = do
+  user    <- addNewRandomUser
+  ctx     <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
+  mockDoc <- testDocApiV2StartNew ctx
+  assertEqual "Default number of days should match" 90 $ getMockDocDaysToSign mockDoc
+  let did = getMockDocId mockDoc
+  -- Current limit is 365 days, ensure we still enforce it
+  void $ jsonTestRequestHelper ctx POST [("days", inText "366")] (docApiV2Prolong did) 400
+  -- Also for pending documents current timeout + days should not be greater then 365
+  void $ jsonTestRequestHelper ctx POST [("days", inText "300")] (docApiV2Prolong did) 400
+  prolonged_status <- getMockDocStatus <$> mockDocTestRequestHelper ctx POST [("days", inText "200")] (docApiV2Prolong did) 200
   assertEqual "Document status should match" Pending prolonged_status
 
 testDocApiV2Cancel :: TestEnv ()

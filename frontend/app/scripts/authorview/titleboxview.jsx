@@ -126,7 +126,7 @@ module.exports = React.createClass({
   },
   canBeProlonged: function () {
     return (
-      this.props.document.timedout() && (
+      (this.props.document.pending() || this.props.document.timedout()) && (
         this.props.document.currentViewerIsAuthor() ||
         this.props.document.currentViewerIsAuthorsCompanyAdmin()
       )
@@ -270,15 +270,6 @@ module.exports = React.createClass({
               onClick={this.onRestartButtonClick}
             />
           }
-          { /* if */ (this.canBeProlonged()) &&
-            <Button
-              type="action"
-              size="big"
-              className="s-prolong-button"
-              text={localization.process.prolongbuttontext}
-              onClick={this.onProlongButtonClick}
-            />
-          }
           { /* if */ (this.canBeWithdrawn()) &&
             <Button
               type="cancel"
@@ -304,6 +295,15 @@ module.exports = React.createClass({
               className="s-give-to-next-signatory-pad-button"
               text={localization.authorview.goToSignView}
               onClick={this.onGiveToNextSignatoryPadButtonClick}
+            />
+          }
+          { /* if */ (this.canBeProlonged()) &&
+            <Button
+              type="action"
+              size="big"
+              className="s-prolong-button"
+              text={localization.process.prolongbuttontext}
+              onClick={this.onProlongButtonClick}
             />
           }
           { /* if */ (document_.mainfile() !== null) &&
@@ -365,6 +365,7 @@ module.exports = React.createClass({
             active={this.state.showProlongModal}
             onAccept={this.onProlongModalAccept}
             onClose={this.onProlongModalClose}
+            prolongDaysBase={this.props.document.prolongDaysBase()}
           />
         }
       </div>

@@ -34,7 +34,7 @@ var Calendar = exports.Calendar = Backbone.Model.extend({
         activator.dateinput({
             format: 'dd-mm-yy',
             lang: LanguageService.currentLanguage(),
-            value : args.days == undefined ? undefined : new Date(new Date().getTime() + args.days * 24 * 60 * 60 * 1000),
+            value : args.days == undefined ? undefined : new Date(new Date().getTime() + (args.days) * 24 * 60 * 60 * 1000),
             change: function() {
                 if (self.get('changing')) {
                   return;
@@ -44,7 +44,7 @@ var Calendar = exports.Calendar = Backbone.Model.extend({
                   dist = undefined;
                 onchange(dist);
             },
-            min: 0,
+            min: args.daysBase || 0,
             max: this.get("maxValue"),
             onShow : function(a,b,c) {
               $("#calroot").css("top",activator.offset().top);
@@ -53,6 +53,7 @@ var Calendar = exports.Calendar = Backbone.Model.extend({
     },
     setDays : function(days) {
             this.set('changing', true);
+            days += this.get("daysBase");
             if (days != undefined && !isNaN(days)) {
               var date = new Date();
               date.setDate(date.getDate() + days);

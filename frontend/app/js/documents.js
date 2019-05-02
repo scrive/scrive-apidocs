@@ -162,6 +162,14 @@ var Document = exports.Document = Backbone.Model.extend({
     setReferenceScreenshot: function(d) {
       this.get("screenshots").referenceName = d;
     },
+    prolongDaysBase: function() {
+      if (this.timeouttime() && this.pending()) {
+        var timeout = new moment(this.timeouttime());
+        return Math.max(0,Math.round(moment.duration(timeout.diff(new moment())).asDays()));
+      } else {
+        return 0;
+      }
+    },
     restart: function() {
           return new Submit({
               url: "/api/frontend/documents/" + this.documentid() + "/restart",

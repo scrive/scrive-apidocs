@@ -9,7 +9,8 @@ var ProlongModal = React.createClass({
   propTypes: {
     active: React.PropTypes.bool.isRequired,
     onAccept: React.PropTypes.func.isRequired,
-    onClose: React.PropTypes.func.isRequired
+    onClose: React.PropTypes.func.isRequired,
+    prolongDaysBase: React.PropTypes.number
   },
   getInitialState: function () {
     return {
@@ -21,13 +22,16 @@ var ProlongModal = React.createClass({
     this.calendar = new Calendar.Calendar({
       on: $(this.refs.calendarButton.getDOMNode()),
       days: this.state.days,
-      change: this.onCalendarChange
+      change: this.onCalendarChange,
+      daysBase: this.props.prolongDaysBase
     });
   },
   componentDidUpdate: function (prevProps, prevState) {
     if (prevState.days != this.state.days) {
       this.calendar.setDays(parseInt(this.state.days));
-      this.setState({acceptVisible: (!isNaN(parseInt(this.state.days, 10)))});
+      var parsedNumber = parseInt(this.state.days, 10);
+      var base = this.props.prolongDaysBase || 0;
+      this.setState({acceptVisible: (!isNaN(parsedNumber) && parsedNumber > 0 && parsedNumber + base <= 365)});
     }
   },
   onAcceptButtonClick: function () {
@@ -42,7 +46,7 @@ var ProlongModal = React.createClass({
     this.setState(this.getInitialState());
   },
   onCalendarChange: function (value) {
-    this.setState({days: "" + value});
+    this.setState({days: "" + value - (this.props.prolongDaysBase || 0)});
   },
   onDaysInputChange: function (value) {
     this.setState({days: value});

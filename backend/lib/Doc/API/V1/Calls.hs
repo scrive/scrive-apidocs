@@ -717,7 +717,7 @@ apiCallV1Prolong did = logDocument did . api $ do
                               then throwM . SomeDBExtraException $ (badInput "Number of days to sign must be a valid number, between 1 and 365")
                               else return n
       timezone <- documenttimezonename <$> theDocument
-      dbUpdate $ ProlongDocument days timezone actor
+      dbUpdate $ ProlongTimeoutedDocument days timezone actor
       triggerAPICallbackIfThereIsOne =<< theDocument
       Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
 

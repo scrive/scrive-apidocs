@@ -111,7 +111,7 @@ handleProlong = do
   when (days < 1 || days > 365) internalError
   handleArchiveDocumentsAction' "prolong documents" prolongable $ \(_, actor) -> do
     doc <- theDocument
-    dbUpdate $ ProlongDocument days (documenttimezonename doc) actor
+    dbUpdate $ ProlongTimeoutedDocument days (documenttimezonename doc) actor
     triggerAPICallbackIfThereIsOne =<< theDocument
 
 handleReallyDelete :: Kontrakcja m => m JSValue

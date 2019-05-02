@@ -72,8 +72,10 @@ docStateTests env = testGroup "DocState"
     env testSignDocumentEvidenceLog
   , testThat "TimeoutDocument adds to the log"
     env testTimeoutDocumentEvidenceLog
-  , testThat "ProlongDocument can be executed and adds to a log"
-    env testProlongDocument
+  , testThat "ProlongTimeoutedDocument can be executed and adds to a log"
+    env testProlongTimeoutedDocument
+  , testThat "ProlongPendingDocument can be executed and adds to a log"
+    env testProlongPendingDocument
 
   , testThat "Documents are shared in company properly"
     env testGetDocumentsSharedInCompany
@@ -598,14 +600,23 @@ testTimeoutDocumentEvidenceLog = do
     assertJust $ find (\e -> evType e == Current TimeoutDocumentEvidence) lg
 
 
-
-testProlongDocument :: TestEnv ()
-testProlongDocument = do
+testProlongTimeoutedDocument :: TestEnv ()
+testProlongTimeoutedDocument = do
   author <- addNewRandomUser
   addRandomDocumentWithAuthorAndCondition author (isSignable && isPending) `withDocumentM` do
     success <- randomUpdate $ \t->TimeoutDocument (systemActor t)
     assert success
-    randomUpdate $ \t -> ProlongDocument 2 defaultTimeZoneName (systemActor t)
+    randomUpdate $ \t -> ProlongTimeoutedDocument 2 defaultTimeZoneName (systemActor t)
+    pending <- (\d ->  (Pending == documentstatus d))  <$> theDocument
+    assert pending
+    lg <- dbQuery . GetEvidenceLog =<< theDocumentID
+    assertJust $ find (\e -> evType e == Current ProlongDocumentEvidence) lg
+
+testProlongPendingDocument :: TestEnv ()
+testProlongPendingDocument = do
+  author <- addNewRandomUser
+  addRandomDocumentWithAuthorAndCondition author (isSignable && isPending) `withDocumentM` do
+    randomUpdate $ \t -> ProlongPendingDocument 2 (systemActor t)
     pending <- (\d ->  (Pending == documentstatus d))  <$> theDocument
     assert pending
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID

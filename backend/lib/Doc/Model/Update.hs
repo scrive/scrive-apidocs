@@ -25,7 +25,8 @@ module Doc.Model.Update
   , RemoveDocumentAttachments(..)
   , ResetSignatoryDetails(..)
   , RestartDocument(..)
-  , ProlongDocument(..)
+  , ProlongPendingDocument(..)
+  , ProlongTimeoutedDocument(..)
   , RestoreArchivedDocument(..)
   , ReallyDeleteDocument(..)
   , SaveDocumentForUser(..)
@@ -1850,9 +1851,9 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m Timeout
         (return ())
         actor
 
-data ProlongDocument = ProlongDocument Int32 TimeZoneName Actor
-instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m ProlongDocument () where
-  update (ProlongDocument days tzn actor) = do
+data ProlongTimeoutedDocument = ProlongTimeoutedDocument Int32 TimeZoneName Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m ProlongTimeoutedDocument () where
+  update (ProlongTimeoutedDocument days tzn actor) = do
     updateDocumentWithID $ \did -> do
       -- Whole TimeZome behaviour is a clone of what is happending with making document ready for signing.
       let time = actorTime actor
@@ -1865,6 +1866,25 @@ instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m ProlongD
          sqlWhereDocumentIDIs did
          sqlWhereDocumentTypeIs Signable
          sqlWhereDocumentStatusIs Timedout
+      runQuery_ . sqlUpdate "signatory_links" $ do
+         sqlSet "deleted" (Nothing :: Maybe UTCTime)
+         sqlSet "really_deleted" (Nothing :: Maybe UTCTime)
+         sqlWhereEq "document_id" did
+    void $ update $ InsertEvidenceEvent
+        ProlongDocumentEvidence
+        (return ())
+        actor
+
+data ProlongPendingDocument = ProlongPendingDocument Int32 Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m ProlongPendingDocument () where
+  update (ProlongPendingDocument days actor) = do
+    updateDocumentWithID $ \did -> do
+      kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
+         sqlSet "mtime" $ actorTime actor
+         sqlSetCmd "timeout_time" $ "timeout_time" <+> "+ (interval '1 day') *" <?> days
+         sqlWhereDocumentIDIs did
+         sqlWhereDocumentTypeIs Signable
+         sqlWhereDocumentStatusIs Pending
       runQuery_ . sqlUpdate "signatory_links" $ do
          sqlSet "deleted" (Nothing :: Maybe UTCTime)
          sqlSet "really_deleted" (Nothing :: Maybe UTCTime)

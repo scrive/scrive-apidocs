@@ -56,7 +56,7 @@ import Doc.API.V2.JSON.Document
 import Doc.API.V2.JSON.Misc
 import Doc.AutomaticReminder.Model (setAutomaticReminder)
 import Doc.DocAddImage (addImageToDocumentFile)
-import Doc.DocInfo (isClosed, isTimedout)
+import Doc.DocInfo (isClosed, isPending, isTimedout)
 import Doc.DocMails (sendAllReminderEmailsExceptAuthor, sendForwardEmail, sendInvitationEmail1)
 import Doc.DocStateData
 import Doc.DocumentID
@@ -200,15 +200,25 @@ docApiV2Prolong did = logDocument did . api $ do
     -- Guards
     guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
-    guardThatDocumentIs (isTimedout)
-        "The document has not timed out. Only timed out documents can be prolonged."  =<< theDocument
+    guardThatDocumentIs (\d -> (isPending d) || (isTimedout d))
+      "The document is not pending or has not timed out. Only timed out or pending documents can be prolonged." =<< theDocument
     -- Parameters
     days <- fromIntegral <$> apiV2ParameterObligatory (ApiV2ParameterInt "days")
     when (days < 1 || days > 365) $
       apiError $ requestParameterInvalid "days" "Days must be a number between 1 and 365"
+
     -- API call actions
-    timezone <- documenttimezonename <$> theDocument
-    dbUpdate $ ProlongDocument days timezone actor
+    theDocument >>= \d -> case documentstatus d of
+      Timedout -> do
+        timezone <- documenttimezonename <$> theDocument
+        dbUpdate $ ProlongTimeoutedDocument days timezone actor
+      Pending -> do
+        now <- currentTime
+        dtt <- fromMaybe now . documenttimeouttime <$> theDocument
+        when (days `daysAfter` dtt > 365 `daysAfter` now)  $
+          apiError $ requestParameterInvalid "days" "New timeout time can't be later then 365 days from now"
+        dbUpdate $ ProlongPendingDocument days actor
+      _ ->  unexpectedError "Invalid document state - this should be checked earlier"
     triggerAPICallbackIfThereIsOne =<< theDocument
     -- Result
     Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
