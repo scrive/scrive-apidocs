@@ -3,6 +3,7 @@ module AccessControl.API (
   , accessControlAPIV2GetUserRoles
 ) where
 
+import Control.Monad.Extra (concatForM)
 import Data.Unjson
 import Happstack.Server.Types
 import Happstack.StaticRouting
@@ -17,6 +18,8 @@ import Kontra
 import Routing
 import User.Model.Query
 import User.UserID
+import UserGroup.Model
+import UserGroup.Types
 
 accessControlAPI :: Route (Kontra Response)
 accessControlAPI = dir "api" $ choice
@@ -34,12 +37,19 @@ accessControlAPIV2 = choice
 accessControlAPIV2GetUserRoles :: Kontrakcja m => UserID -> m Response
 accessControlAPIV2GetUserRoles uid = api $ do
   -- Check user has permissions to view User
-  apiAccessControlOrIsAdmin [mkAccPolicyItem (ReadA, UserR, uid)] (do
+  apiAccessControlOrIsAdmin [mkAccPolicyItem (ReadA, UserR, uid)] $ do
     -- Get roles for user
     dbQuery (GetUserByID uid) >>= \case
       Nothing ->
         apiError $ serverError "Impossible happened: No user with ID, or deleted."
       Just user -> do
-        roles <- dbQuery $ GetRoles user
-        Ok <$> return (arrayOf unjsonAccessRole, roles)
-    )
+        roles0 <- dbQuery $ GetRoles user
+        roles <- concatForM roles0 $ \role -> do
+          case accessRoleTarget role of
+            UserAdminAR ugid -> do
+              ugwcs <- dbQuery $ UserGroupGetAllChildrenRecursive ugid
+              return . (role:) . for (ugwcToList ugwcs) $ \ug ->
+                accessRoleSetTarget (UserAdminAR $ get ugID ug) role
+            _ -> return [role]
+
+        Ok <$> return (arrayOf unjsonAccessRole, nub roles)

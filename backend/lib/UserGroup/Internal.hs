@@ -16,6 +16,7 @@ module UserGroup.Internal (
   , ugwpRoot
   , ugwpAddChild
   , ugrFromUG
+  , ugwcToList
   , UserGroupID(..)
   , emptyUserGroupID
   , unsafeUserGroupID
@@ -89,7 +90,7 @@ type UserGroupWithParents = (UserGroupRoot, [UserGroup])
 data UserGroupWithChildren = UserGroupWithChildren
   { _ugwcGroup :: UserGroup
   , _ugwcChildren :: [UserGroupWithChildren]
-  }
+  } deriving (Eq, Show)
 
 defaultUserGroup :: UserGroup
 defaultUserGroup = ugFromUGRoot $ UserGroupRoot {
@@ -359,6 +360,10 @@ ugwpRoot (root, _) = ugFromUGRoot root
 
 ugwpAddChild :: UserGroup -> UserGroupWithParents -> UserGroupWithParents
 ugwpAddChild ug (root, children_path) = (root, ug:children_path)
+
+ugwcToList :: [UserGroupWithChildren] -> [UserGroup]
+ugwcToList ugwcs = concat . for ugwcs $ \ugwc ->
+  _ugwcGroup ugwc : ugwcToList (_ugwcChildren ugwc)
 
 newtype UserGroupID = UserGroupID Int64
   deriving (Eq, Ord)
