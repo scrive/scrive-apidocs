@@ -926,7 +926,9 @@ Executable kontrakcja-migrate
 Executable mailing-server
 
   Hs-source-dirs: backend/mailer/inc backend/mailer/schema backend/mailer/src
-                  backend/misc/schema backend/misc/src
+                  backend/misc/schema backend/misc/src backend/migrate/inc
+                  backend/migrate/src backend/server/schema backend/cron/schema
+                  backend/messenger/schema/
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts -with-rtsopts=-T
@@ -934,35 +936,62 @@ Executable mailing-server
 
   Main-is: MailingServer.hs
   GHC-options: -main-is MailingServer
-  Other-Modules: AddressUtils
+  Other-Modules: AccessControl.Tables
+                 AddressUtils
+                 AppDBTables
                  Assembler
+                 Attachment.Tables
+                 BrandedDomain.Tables
+                 Chargeable.Tables
                  Configuration
                  Control.Monad.Trans.Control.Util
                  Control.Monad.Trans.Instances
+                 Cron.Tables
                  Crypto
                  DB
                  DB.Derive
                  DB.PostgreSQL
                  DB.Query
+                 DB.SQLFunction
+                 DB.SQLTrigger
                  DB.Utils
+                 Doc.API.Callback.Tables
+                 Doc.AutomaticReminder.Tables
+                 Doc.Extending.Tables
+                 Doc.Functions
+                 Doc.SMSPin.Tables
+                 Doc.Sealing.Tables
+                 Doc.Signing.Tables
+                 Doc.Tables
+                 Doc.Tokens.Tables
+                 Doc.Trigger
                  Data.ByteString.Utils
                  Database.Redis.Cache
                  Database.Redis.Configuration
                  Database.Redis.Helpers
+                 EID.Authentication.Tables
+                 EID.CGI.GRP.Transaction.Tables
+                 EID.Nets.Tables
+                 EID.Signature.Tables
+                 EvidenceLog.Tables
+                 FeatureFlags.Tables
                  File.Conditions
                  File.File
                  File.FileID
                  File.Model
+                 File.Tables
                  File.Storage
                  FileStorage
                  FileStorage.Amazon
                  FileStorage.Amazon.Config
                  FileStorage.Class
                  FileStorage.RedisCache
+                 Folder.Tables
                  Handlers
                  Happstack.Fields
                  Happstack.Server.Instances
                  Happstack.Server.ReqHandler
+                 HostClock.Tables
                  HtmlToTxt
                  Log.Configuration
                  Log.Identifier
@@ -974,17 +1003,34 @@ Executable mailing-server
                  MailJet
                  Mailer
                  MailingServerConf
-                 Mails.Types
+                 Mails.FromKontra.Tables
                  Mails.Model
                  Mails.Tables
+                 Mails.Types
                  MemCache
                  MinutesTime
                  Monitoring
-                 SFTPConfig
-                 SendGrid
+                 OAuth.Tables
+                 Partner.Tables
                  Sender
+                 SendGrid
+                 Session.Tables
+                 SFTPConfig
+                 SMS.FromKontra.Tables
+                 SMS.Tables
                  SocketLabs
                  Text.JSON.Convert
+                 Theme.Tables
+                 ThirdPartyStats.Tables
+                 User.APILog.Tables
+                 User.CallbackScheme.Tables
+                 User.EmailChangeRequest.Tables
+                 User.History.Tables
+                 User.PasswordReminder.Tables
+                 User.Tables
+                 User.UserAccountRequest.Tables
+                 UserGroup.Tables
+                 UserGroupAccounts.Tables
                  Utils.Exception
                  Utils.IO
                  Utils.List
@@ -1091,8 +1137,10 @@ Executable mailing-server
 Executable messenger-server
 
   Hs-source-dirs: backend/messenger/inc backend/messenger/schema
-                  backend/messenger/src
-                  backend/misc/schema backend/misc/src
+                  backend/messenger/src backend/misc/schema backend/misc/src
+                  backend/migrate/inc backend/migrate/src
+                  backend/server/schema backend/cron/schema
+                  backend/messenger/schema/ backend/mailer/schema/
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts -with-rtsopts=-T
@@ -1100,34 +1148,78 @@ Executable messenger-server
 
   Main-is: MessengerServer.hs
   GHC-options: -main-is MessengerServer
-  Other-Modules: Configuration
+  Other-Modules: AccessControl.Tables
+                 AppDBTables
+                 Attachment.Tables
+                 BrandedDomain.Tables
+                 Chargeable.Tables
+                 Configuration
                  Control.Monad.Trans.Control.Util
                  Control.Monad.Trans.Instances
+                 Cron.Tables
                  DB
                  DB.Derive
                  DB.PostgreSQL
                  DB.Query
+                 DB.SQLFunction
+                 DB.SQLTrigger
                  DB.Utils
+                 Doc.API.Callback.Tables
+                 Doc.AutomaticReminder.Tables
+                 Doc.Extending.Tables
+                 Doc.Functions
+                 Doc.SMSPin.Tables
+                 Doc.Sealing.Tables
+                 Doc.Signing.Tables
+                 Doc.Tables
+                 Doc.Tokens.Tables
+                 Doc.Trigger
+                 EID.Authentication.Tables
+                 EID.CGI.GRP.Transaction.Tables
+                 EID.Nets.Tables
+                 EID.Signature.Tables
+                 EvidenceLog.Tables
+                 FeatureFlags.Tables
+                 File.Tables
+                 Folder.Tables
                  Handlers
                  Happstack.Fields
                  Happstack.Server.Instances
                  Happstack.Server.ReqHandler
+                 HostClock.Tables
                  Log.Configuration
                  Log.Identifier
                  Log.Migrations
                  Log.Tables
                  Log.Utils
+                 Mails.FromKontra.Tables
+                 Mails.Tables
                  Mblox
                  Messenger
                  MessengerServerConf
                  MinutesTime
                  Monitoring
+                 OAuth.Tables
+                 Partner.Tables
+                 SMS.FromKontra.Tables
+                 Session.Tables
                  SFTPConfig
                  SMS.Types
                  SMS.Model
                  SMS.Tables
                  Sender
                  TeliaCallGuide
+                 Theme.Tables
+                 ThirdPartyStats.Tables
+                 User.APILog.Tables
+                 User.CallbackScheme.Tables
+                 User.EmailChangeRequest.Tables
+                 User.History.Tables
+                 User.PasswordReminder.Tables
+                 User.Tables
+                 User.UserAccountRequest.Tables
+                 UserGroup.Tables
+                 UserGroupAccounts.Tables
                  Utils.Enum
                  Utils.IO
                  Utils.List

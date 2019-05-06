@@ -14,6 +14,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Happstack.StaticRouting as R
 
+import AppDBTables
 import Configuration
 import DB
 import DB.PostgreSQL
@@ -26,7 +27,6 @@ import MinutesTime
 import Monitoring
 import Sender
 import SMS.Model
-import SMS.Tables
 import SMS.Types
 import Utils.IO
 import Utils.Network
@@ -65,7 +65,7 @@ main = do
     let pgSettings = pgConnSettings (messengerDBConfig conf) []
         extrasOptions = def
     withPostgreSQL (unConnectionSource $ simpleSource pgSettings) $
-      checkDatabaseAllowUnknownTables extrasOptions [] [] messengerTables
+      checkDatabase extrasOptions kontraComposites kontraDomains kontraTables
     cs@(ConnectionSource pool) <- ($ (maxConnectionTracker $ messengerMaxDBConnections conf))
       <$> liftBase (createPoolSource pgSettings (messengerMaxDBConnections conf))
 
