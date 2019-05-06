@@ -208,7 +208,7 @@
 "_smsDocumentErrorSignatory":"Scrive non ha potuto gestire il documento $documenttitle:noescape()$ e il processo di firma è stato annullato. Se hai domande, non esitare a contattarci all'indirizzo support@scrive.com",
 "_smsInvitationToSign":"$creatorname:noescape()$ ti ha invitato a firmare elettronicamente il documento $documenttitle:noescape()$. Apri il link per ulteriori indicazioni $link$",
 "_smsPinSendout":"Il tuo PIN per $documenttitle:noescape()$ è $pin$",
-"_smsRejectNotification":"",
+"_smsRejectNotification":"$rejectorName$ ha rifiutato di firmare il documento $documenttitle:noescape()$. Il processo di firma è stato perciò annullato.",
 "_smsReminder":"$creatorname$ vuole ricordarti di firmare il documento $documenttitle:noescape()$. Apri il link per ulteriori indicazioni $link$",
 "_smsReminderApprove":"$creatorname$ vuole ricordarti di approvare il documento $documenttitle:noescape()$. Apri il link per ulteriori indicazioni $link$",
 "_smsReminderApproveAutomatic":"Questo è un promemoria automatico per ricordarti che non hai ancora approvato il documento $documenttitle:noescape()$ da $creatorname$. Apri il link per ulteriori istruzioni $link$",

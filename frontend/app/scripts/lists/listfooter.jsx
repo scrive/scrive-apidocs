@@ -5,7 +5,7 @@ var React = require("react");
 module.exports = React.createClass({
     render: function() {
       return (
-        <div className='float-left'>
+        <div>
           { this.props.children}
         </div>
       );

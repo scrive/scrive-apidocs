@@ -388,26 +388,32 @@ remindMailSignedStandardHeader=
   $remindMailSignedContractStandardHeaderSendRequest()$
   <br/>
   <br/>
-  $if(!mainfilelink)$
-    $_remindMailSignedContractStandardHeaderSendRequest2()$
-  $else$
+  $if(mainfilelink)$
     $_mailDocumentLinked()$
+  $elseif(shouldhavefilelink)$
+    $_mailDocumentLinked()$
+  $else$
+    $_remindMailSignedContractStandardHeaderSendRequest2()$
   $endif$
 
-$if(custommessage)$
+$if(hascustommessage)$
   $_mailInvitationCustomInvitationHeader()$:
   <br/>
   <p>$custommessage:br()$</p>
   <br/>
-
 $else$
       <div class="editable" name="custommessage"></div>
 $endif$
-$if(!mainfilelink)$
-  $if(custommessage)$
+$if(mainfilelink)$
+  $if(hascustommessage)$
     <br/>
   $endif$
   $nicebutton(link=mainfilelink; text=_mailDocumentLinkedButton())$
+$elseif(shouldhavefilelink)$
+  $if(hascustommessage)$
+    <br/>
+  $endif$
+  $nicebutton(text=_mailDocumentLinkedButton())$
 $endif$
 ###
 remindMailSignedContractStandardHeaderSendRequest=

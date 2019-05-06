@@ -20,7 +20,7 @@
 "_CancelDocumenElegEvidenceText":"Scrive ha respinto il tentativo di firma del documento da parte di $signatory$. Il motivo è che le informazioni sull'identità di $signatory$ non corrispondono alle informazioni ricevute dal sistema eID esterno.",
 "_CancelDocumentEvidenceTextSimpleArchive":"L'invito a firmare il documento è stato revocato.",
 "_CloseDocumentEvidenceTextSimple":"Scrive ha protetto il documento da ulteriori modifiche da parte dei firmatari.",
-"_ForwardedSigningEvidenceArchive":"",
+"_ForwardedSigningEvidenceArchive":"Inoltrato il documento a $signatory$.",
 "_InvitationDeliveredByEmailTextToApproveSimple":"L'invito ad approvare il documento è stato spedito a $signatory$ via email.",
 "_InvitationDeliveredByEmailTextToReviewSimple":"L'invito a revisionare il documento è stato spedito a $signatory$ via email.",
 "_InvitationDeliveredByEmailTextToSignSimple":"L'invito a firmare il documento è stato spedito a $signatory$ via email.",
