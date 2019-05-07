@@ -16,6 +16,7 @@ module Cron.Migrations (
   , addTemporaryLoginTokensPurgeJob
   , addMonthlyInvoiceJob
   , addCronStatsJob
+  , removePasswordAlgorithmUpgradeJob
 ) where
 
 import Control.Monad.Catch
@@ -167,3 +168,11 @@ addCronStatsJob = Migration {
   , mgrAction = StandardMigration $
       runSQL_ "INSERT INTO cron_jobs (id, run_at) VALUES ('cron_stats', to_timestamp(0))"
   }
+
+removePasswordAlgorithmUpgradeJob :: (MonadDB m, MonadThrow m) => Migration m
+removePasswordAlgorithmUpgradeJob = Migration {
+    mgrTableName = tblName tableCronJobs
+  , mgrFrom = 21
+  , mgrAction = StandardMigration $ runSQL_ "DELETE FROM cron_jobs WHERE id = 'upgrade_password_algorithm'"
+  }
+

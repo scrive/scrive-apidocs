@@ -37,11 +37,7 @@ import Session.Model (DeleteExpiredSessions(..), PurgeExpiredTemporaryLoginToken
 import SMS.Events
 import ThirdPartyStats.Core
 import User.EmailChangeRequest (DeleteExpiredEmailChangeRequests(..))
-import User.Model.Query (GetUserWherePasswordAlgorithmIsEarlierThan(..))
-import User.Model.Update (SetUserPassword(..))
-import User.Password (PasswordAlgorithm(..), strengthenPassword)
 import User.PasswordReminder (DeleteExpiredPasswordReminders(..))
-import User.Types.User (User(..))
 import User.UserAccountRequest (expireUserAccountRequests)
 import Utils.List
 import qualified CronEnv
@@ -66,7 +62,6 @@ data JobType
   | PushPlanhatStats
   | SessionsEvaluation
   | SMSEventsProcessing
-  | StrengthenPasswords
   | UserAccountRequestEvaluation
   | AttachmentsPurge
   | TemporaryMagicHashesPurge
@@ -96,7 +91,6 @@ jobTypeMapper =
       PushPlanhatStats                     -> "push_planhat_stats"
       SessionsEvaluation                   -> "sessions_evaluation"
       SMSEventsProcessing                  -> "sms_events_processing"
-      StrengthenPasswords                  -> "upgrade_password_algorithm"
       UserAccountRequestEvaluation         -> "user_account_request_evaluation"
       DocumentSearchUpdate                 -> "document_search_update"
       DocumentsAuthorIDMigration           -> "document_author_id_job"
@@ -276,26 +270,6 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
     SessionsEvaluation -> do
       runDB . dbUpdate $ DeleteExpiredSessions
       return . RerunAfter $ ihours 1
-    StrengthenPasswords -> do
-      runDB $ do
-        muser <- dbQuery $ GetUserWherePasswordAlgorithmIsEarlierThan
-                           PasswordAlgorithmScrypt
-        case muser of
-          -- If no passwords to strengthen, we can relax for a while
-          Nothing   -> return . RerunAfter $ idays 14
-          Just user ->
-            case userpassword user of
-              Nothing -> do
-                logAttention
-                  ( "StrengthenPasswords found a user without a password"
-                    <> ", should not happen" ) $ object [
-                              "user_id" .= (show . userid $ user)
-                              ]
-                return . RerunAfter $ iseconds 1
-              Just password -> do
-                newPassword <- strengthenPassword password
-                void $ dbUpdate $ SetUserPassword (userid user) newPassword
-                return . RerunAfter $ iseconds 5
     SMSEventsProcessing -> do
       runCronEnv $ SMS.Events.processEvents
       return . RerunAfter $ iseconds 5

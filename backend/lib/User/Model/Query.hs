@@ -9,7 +9,6 @@ module User.Model.Query (
   , GetUserByIDIncludeDeleted(..)
   , GetUserByEmail(..)
   , GetUserByTempLoginToken(..)
-  , GetUserWherePasswordAlgorithmIsEarlierThan(..)
   , GetUsersWithUserGroupNames(..)
   , IsUserDeletable(..)
   , UserGroupGetAllUsersFromThisAndSubgroups(..)
@@ -33,27 +32,11 @@ import User.Email
 import User.History.Model
 import User.Model.Filter
 import User.Model.OrderBy
-import User.Password
 import User.Types.Stats
 import User.Types.User
 import User.UserID
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
-
-data GetUserWherePasswordAlgorithmIsEarlierThan =
-  GetUserWherePasswordAlgorithmIsEarlierThan PasswordAlgorithm
-
-instance (MonadDB m, MonadThrow m) =>
-  DBQuery m GetUserWherePasswordAlgorithmIsEarlierThan (Maybe User) where
-  query (GetUserWherePasswordAlgorithmIsEarlierThan strength) = do
-    runQuery_ $ selectUsersSQL
-      -- We include deleted users, we want to strengthen those too if
-      -- they have a password
-      <+> "WHERE password IS NOT NULL"
-      <+> "AND (password_algorithm IS NULL OR password_algorithm < "
-      <?> pwdAlgorithmToInt16 strength <+> ")"
-      <+> "LIMIT 1"
-    fetchMaybe fetchUser
 
 data GetUserByID = GetUserByID UserID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetUserByID (Maybe User) where

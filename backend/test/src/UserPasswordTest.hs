@@ -12,10 +12,6 @@ userPasswordTests env = testGroup "UserPassword"
     env testPasswordCreateVerify
   , testThat "Test that maybeMkPassword works and verifies"
     env testPasswordMaybeVerify
-  , testThat "Test that strengthenPassword works and verifies"
-    env testStrengthenPassword
-  , testThat "Old passwords can be verified with new implementation"
-    env testLegacyPasswordCreateVerify
   ]
 
 -- * Password Tests
@@ -44,25 +40,3 @@ testPasswordMaybeVerify = do
       mpass = maybeMkPassword triplet
   assertJust mpass
   assert $ maybeVerifyPassword mpass s
-
-testStrengthenPassword :: TestEnv ()
-testStrengthenPassword = do
-  s      <- randomPasswordString
-  wrong  <- randomPasswordString
-  legacy <- createLegacyPassword s
-  assert $ verifyPassword legacy s
-  assert $ not $ verifyPassword legacy wrong
-
-  pass <- strengthenPassword legacy
-  assert $ verifyPassword pass s
-  assert $ not $ verifyPassword pass wrong
-
-testLegacyPasswordCreateVerify :: TestEnv ()
-testLegacyPasswordCreateVerify = replicateM_ 10 $ do
-  s <- randomPasswordString
-  wrong <- randomPasswordString
-  p <- createLegacyPassword s
-  let Just pass = maybeMkPassword ( Just $ pwdHash p, Just $ pwdSalt p
-                                  , Just $ int16ToPwdAlgorithm 0)
-  assert $ verifyPassword pass s
-  assert $ not $ verifyPassword pass wrong

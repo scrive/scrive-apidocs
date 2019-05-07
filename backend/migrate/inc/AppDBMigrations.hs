@@ -195,4 +195,5 @@ kontraMigrations = [
   , renameUserGroupComposites
   , renameDocumentComposites
   , renameFeatureFlagsComposite
+  , removePasswordAlgorithmUpgradeJob
   ]

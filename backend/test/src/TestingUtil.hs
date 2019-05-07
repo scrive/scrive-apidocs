@@ -657,8 +657,7 @@ instance Arbitrary Scrypt.EncryptedPass where
     return $ Scrypt.encryptPass' salt' pass'
 
 instance Arbitrary Password where
-  arbitrary = oneof [ LegacyPassword <$> arbitrary <*> arbitrary
-                    , Password <$> arbitrary <*> arbitrary ]
+  arbitrary = oneof [ Password <$> arbitrary <*> arbitrary ]
 
 instance Arbitrary SignupMethod where
   arbitrary = elements

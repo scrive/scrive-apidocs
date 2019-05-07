@@ -15,11 +15,7 @@ data Password = Password       { pwdEncPass    :: !Scrypt.EncryptedPass
                                , pwdSHA256Salt :: !BS.ByteString }
                 -- ^ Current password scheme, SHA256 + scrypt.
 
-              | LegacyPassword { pwdHash'      :: !BS.ByteString
-                               , pwdSalt'      :: !BS.ByteString }
-                -- ^ Legacy password scheme, single round SHA256.
               deriving (Eq, Ord)
 
 instance Show Password where
   show Password       {} = "Password (SHA256 + scrypt, hash and salt hidden)"
-  show LegacyPassword {} = "Password (legacy SHA256, hash and salt hidden)"

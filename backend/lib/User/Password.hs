@@ -6,8 +6,6 @@ module User.Password ( Password
                      , pwdSalt
                      , pwdAlgorithm
                      , createPassword
-                     , createLegacyPassword
-                     , strengthenPassword
                      , mkPassword
                      , maybeMkPassword
                      , maybeVerifyPassword
@@ -25,43 +23,30 @@ import qualified Data.ByteString.UTF8 as BSU
 
 import User.Password.Internal
 
--- | Return the hash of the encrypted password. For non-legacy
--- passwords, this returns both the hash, the salt, and the scrypt
--- params in a single bytestring, separated by '|'. See
--- 'Crypto.Scrypt.EncryptedPass'. This form is useful for storing in a
+-- | Return the hash of the encrypted password. This returns both the hash
+-- , the salt, and the scrypt params in a single bytestring, separated by '|'.
+-- See 'Crypto.Scrypt.EncryptedPass'. This form is useful for storing in a
 -- database.
 pwdHash :: Password -> BS.ByteString
 pwdHash Password{pwdEncPass}     = Scrypt.getEncryptedPass pwdEncPass
-pwdHash LegacyPassword{pwdHash'} = pwdHash'
 
 -- | Return the salt used for the SHA256 hashing step.
 pwdSalt :: Password -> BS.ByteString
 pwdSalt Password{pwdSHA256Salt}  = pwdSHA256Salt
-pwdSalt LegacyPassword{pwdSalt'} = pwdSalt'
 
 -- | Version of the password hashing scheme used.
-data PasswordAlgorithm = PasswordAlgorithmLegacy
-                       | PasswordAlgorithmScrypt
-                      deriving (Eq, Show)
-
-instance Ord PasswordAlgorithm where
-  compare PasswordAlgorithmLegacy PasswordAlgorithmScrypt = LT
-  compare PasswordAlgorithmScrypt PasswordAlgorithmLegacy = GT
-  compare PasswordAlgorithmLegacy PasswordAlgorithmLegacy = EQ
-  compare PasswordAlgorithmScrypt PasswordAlgorithmScrypt = EQ
+data PasswordAlgorithm = PasswordAlgorithmScrypt
+                      deriving (Eq, Ord, Show)
 
 -- | Return the version of the password hashing scheme.
 pwdAlgorithm :: Password -> PasswordAlgorithm
 pwdAlgorithm Password{}       = PasswordAlgorithmScrypt
-pwdAlgorithm LegacyPassword{} = PasswordAlgorithmLegacy
 
 pwdAlgorithmToInt16 :: PasswordAlgorithm -> Int16
-pwdAlgorithmToInt16 PasswordAlgorithmLegacy  = 0
 pwdAlgorithmToInt16 PasswordAlgorithmScrypt = 1
 
 int16ToPwdAlgorithm :: Int16 -> PasswordAlgorithm
-int16ToPwdAlgorithm n | n <= 0    = PasswordAlgorithmLegacy
-                     | otherwise = PasswordAlgorithmScrypt
+int16ToPwdAlgorithm _ = PasswordAlgorithmScrypt
 
 -- | Scrypt parameters used for hashing. Default scrypt parameters are
 -- N = 14, r = 8, p = 1, we use slightly larger N and p. N=15 gives us
@@ -86,38 +71,23 @@ kontrakcjaScryptParams :: Scrypt.ScryptParams
 kontrakcjaScryptParams = fromJust $ -- OK to crash here
                          Scrypt.scryptParams 15 8 2
 
-
 -- | Encrypt a plain-text password.
 createPassword :: CryptoRNG m => String -> m Password
-createPassword = createLegacyPassword >=> strengthenPassword
-
--- | Encrypt a plain-text password using the legacy SHA-256 scheme.
-createLegacyPassword :: CryptoRNG m => String -> m Password
-createLegacyPassword password = do
+createPassword password = do
   saltSHA256 <- randomBytes 10
-  return LegacyPassword {
-    pwdHash' = hashPasswordSHA256 password saltSHA256,
-    pwdSalt' = saltSHA256
-    }
-
--- | Deserialise a password from a DB row record.
-mkPassword :: BS.ByteString -> BS.ByteString -> PasswordAlgorithm -> Password
-mkPassword hash salt PasswordAlgorithmLegacy  =
-  LegacyPassword hash salt
-mkPassword hash salt PasswordAlgorithmScrypt =
-  Password (Scrypt.EncryptedPass hash) salt
-
--- | Convert a legacy SHA-256 password to a SHA-256 + scrypt one.
-strengthenPassword :: CryptoRNG m => Password -> m Password
-strengthenPassword p@Password{} = return p
-strengthenPassword LegacyPassword{..} = do
+  let hash = hashPasswordSHA256 password saltSHA256
   saltScrypt <- randomBytes 32
   return Password {
     pwdEncPass    = Scrypt.encryptPass kontrakcjaScryptParams
                     (Scrypt.Salt saltScrypt)
-                    (Scrypt.Pass pwdHash'),
-    pwdSHA256Salt = pwdSalt'
+                    (Scrypt.Pass hash),
+    pwdSHA256Salt = saltSHA256
     }
+
+-- | Deserialise a password from a DB row record.
+mkPassword :: BS.ByteString -> BS.ByteString -> PasswordAlgorithm -> Password
+mkPassword hash salt PasswordAlgorithmScrypt =
+  Password (Scrypt.EncryptedPass hash) salt
 
 -- | Hash a password using the legacy scheme with the provided salt.
 hashPasswordSHA256 :: String -> BS.ByteString -> BS.ByteString
@@ -130,8 +100,6 @@ verifyPassword Password{pwdEncPass, pwdSHA256Salt} password =
   Scrypt.verifyPass'
   (Scrypt.Pass $ hashPasswordSHA256 password pwdSHA256Salt)
   pwdEncPass
-verifyPassword LegacyPassword{pwdHash', pwdSalt'} password =
-  pwdHash' == hashPasswordSHA256 password pwdSalt'
 
 -- | Like 'verifyPassword', but the argument is wrapped in Maybe.
 maybeVerifyPassword :: Maybe Password -> String -> Bool
@@ -145,7 +113,7 @@ maybeMkPassword ::
   -> Maybe Password
 maybeMkPassword (mHash, mSalt, mStrength) =
   mkPassword <$> mHash <*> mSalt
-  <*> (mStrength <|> Just PasswordAlgorithmLegacy)
+  <*> (mStrength <|> Just PasswordAlgorithmScrypt)
 
 randomPassword :: CryptoRNG m => m Password
 randomPassword = randomPasswordString >>= createPassword
