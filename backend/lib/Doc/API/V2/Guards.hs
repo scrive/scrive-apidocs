@@ -35,6 +35,7 @@ module Doc.API.V2.Guards (
 -- * Joined guard for read-only functions
 , guardDocumentReadAccess
 , guardThatDocumentIsReadableBySignatories
+, guardAccessToDocumentWithSignatory
 ) where
 
 import Control.Conditional (whenM)
@@ -59,6 +60,7 @@ import Doc.DocumentMonad (DocumentMonad, theDocument, withDocumentID)
 import Doc.DocUtils
 import Doc.Model.Query
 import Doc.SignatoryLinkID
+import Doc.Tokens.Model
 import File.FileID
 import InputValidation
 import Kontra
@@ -553,7 +555,18 @@ guardThatAllConsentQuestionsHaveResponse slid (SignatoryConsentResponsesForSigni
 
 guardDocumentReadAccess :: Kontrakcja m => Maybe SignatoryLinkID -> Document -> m DocumentAccess
 guardDocumentReadAccess mslid doc = do
-  mSessionSignatory <- maybe (return Nothing) (getDocumentSignatoryMagicHash $ documentid doc) mslid
+  mSessionSignatory <- case mslid of
+    Nothing -> return Nothing
+    Just slid -> do
+      sid <- get ctxsessionid <$> getContext
+      validSession <- dbQuery $ CheckDocumentSession sid slid
+      if validSession
+        then do
+          fmap Just . apiGuardJust (documentNotFound (documentid doc)) $
+            getSigLinkFor slid doc
+        else
+          return Nothing
+
   case mSessionSignatory of
     Just sl -> do
       unless (signatoryisauthor sl) $
@@ -562,7 +575,9 @@ guardDocumentReadAccess mslid doc = do
     Nothing -> do
       (user,_) <- getAPIUser APIDocCheck
       case getSigLinkFor user doc of
-        Just _ -> return ()
+        Just sl -> do
+          unless (signatoryisauthor sl) $
+            guardThatDocumentIsReadableBySignatories doc
         Nothing -> guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user doc
       return $ documentAccessForUser user doc
 
@@ -572,3 +587,16 @@ guardThatDocumentIsReadableBySignatories doc = do
     apiError $ documentStateErrorWithCode 410 $
       "The document has expired or has been withdrawn. (status: "
       <> T.pack (show (documentstatus doc)) <> ")"
+
+-- | Check the session for the `DocumentID` and `SignatoryLinkID`
+--
+-- If there are no matching sessions then try with `getApiUser APIPersonal`.
+guardAccessToDocumentWithSignatory
+  :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m ()
+guardAccessToDocumentWithSignatory did slid = do
+  sid <- get ctxsessionid <$> getContext
+  check <- dbQuery $ CheckDocumentSession sid slid
+  unless check $ do
+    (user, _) <- getAPIUser APIPersonal
+    check' <- checkIfUserCanAccessDocumentAsSignatory user did slid
+    unless check' $ apiError documentActionForbidden

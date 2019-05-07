@@ -106,7 +106,10 @@ staticRoutes production = choice
      , dir "pages"  $ hGet $ toK2 $ DocControl.showPage
      -- HTMP emails can have embedded preview image
      , dir "preview" $ hGet $ toK2 $ DocControl.showPreview
-     , dir "preview" $ hGet $ toK4 $ DocControl.showPreviewForSignatory
+     , dir "preview" $ hGet $ toK3 $ \did slid fid ->
+         DocControl.showPreviewForSignatory did slid Nothing fid
+     , dir "preview" $ hGet $ toK4 $ \did slid mh fid ->
+         DocControl.showPreviewForSignatory did slid (Just mh) fid
 
      , dir "filepages" $ hGet $  toK1 $ DocControl.handleFilePages
 

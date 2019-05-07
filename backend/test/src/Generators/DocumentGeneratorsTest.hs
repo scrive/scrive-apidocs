@@ -24,4 +24,4 @@ testStartableDocumentOC = do
   fid  <- addNewRandomFile
   file <- randomQuery $ GetFileByFileID fid
   let generator = startableDocumentOC (userid user) file
-  testGeneratorHelper 0.15 generator (isJust . documentCanBeStarted)
+  testGeneratorHelper 0.2 generator (isJust . documentCanBeStarted)

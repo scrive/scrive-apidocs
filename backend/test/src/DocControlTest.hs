@@ -39,6 +39,7 @@ import KontraError
 import MagicHash
 import Mails.Model
 import MinutesTime
+import Session.Model
 import TestCron
 import TestingUtil
 import TestKontra as T
@@ -159,7 +160,7 @@ testLastPersonSigningADocumentClosesIt = do
                documentsignatorylinks <$> theDocument
 
     do t <- documentctime <$> theDocument
-       randomUpdate . MarkDocumentSeen (signatorylinkid siglink) (signatorymagichash siglink)
+       randomUpdate . MarkDocumentSeen (signatorylinkid siglink)
                  =<< signatoryActor (set ctxtime t ctx) siglink
 
     assertEqual "One left to sign" 1 . length .
@@ -656,7 +657,8 @@ testGetCancelledDocument = do
   do
     req <- mkRequest GET []
     (res, _) <- runTestKontra req ctx $ do
-      randomUpdate $ AddDocumentSessionToken slid mh
+      sid <- getNonTempSessionID
+      randomUpdate $ AddDocumentSession sid slid
       handleSignShow did slid
     assertEqual "Status is 200" 200 (rsCode res)
 

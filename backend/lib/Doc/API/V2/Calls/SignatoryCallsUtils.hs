@@ -20,7 +20,7 @@ import qualified Text.StringTemplates.Fields as F
 import API.V2
 import API.V2.Parameters
 import DB
-import Doc.API.V2.Guards (guardGetSignatoryFromIdForDocument)
+import Doc.API.V2.Guards
 import Doc.API.V2.JSON.Fields
 import Doc.API.V2.JSON.Misc
 import Doc.API.V2.JSON.SignatoryConsentQuestion
@@ -35,7 +35,6 @@ import File.Model
 import File.Storage
 import InputValidation (Result(..), asValidPhoneForSMS)
 import Kontra
-import MagicHash (MagicHash)
 import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo
@@ -83,11 +82,11 @@ getScreenshots = do
 
 
 signDocument :: (Kontrakcja m, DocumentMonad m)
-             => SignatoryLinkID -> MagicHash -> SignatoryFieldsValuesForSigning
+             => SignatoryLinkID -> SignatoryFieldsValuesForSigning
              -> [FileID] -> [String] -> Maybe ESignature -> Maybe String
              -> SignatoryScreenshots -> SignatoryConsentResponsesForSigning
              -> m ()
-signDocument slid mh fields acceptedAuthorAttachments
+signDocument slid fields acceptedAuthorAttachments
   notUploadedSignatoryAttachments mesig mpin screenshots consentResponses = do
 
   switchLang =<< getLang <$> theDocument
@@ -129,7 +128,7 @@ signDocument slid mh fields acceptedAuthorAttachments
       =<< signatoryActor ctx sl
 
   guardGetSignatoryFromIdForDocument slid
-    >>= \sl -> dbUpdate . SignDocument slid mh mesig mpin screenshots
+    >>= \sl -> dbUpdate . SignDocument slid mesig mpin screenshots
     =<< signatoryActor ctx sl
 
 

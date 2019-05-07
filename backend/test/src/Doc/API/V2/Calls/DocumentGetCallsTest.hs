@@ -31,6 +31,7 @@ import Doc.Types.DocumentStatus (DocumentStatus(..))
 import Doc.Types.SignatoryAttachment (SignatoryAttachment(..), defaultSignatoryAttachment)
 import Doc.Types.SignatoryLink (AuthenticationToSignMethod(..), SignatoryLink(..))
 import File.Storage (saveNewFile)
+import Session.Model
 import TestingUtil
 import TestKontra
 import User.Lang (defaultLang)
@@ -96,7 +97,8 @@ _testDocApiV2GetFailsAfter30Days = do
   req <- mkRequest GET []
   ctx <- anonymiseContext <$> mkContext defaultLang
   (_, ctx') <- runTestKontra req ctx $ do
-    dbUpdate $ AddDocumentSessionToken (signatorylinkid sl) (signatorymagichash sl)
+    sid <- getNonTempSessionID
+    dbUpdate $ AddDocumentSession sid (signatorylinkid sl)
 
   let vars = [ ("signatory_id", inText . show . fromSignatoryLinkID . signatorylinkid $ sl)
              , ("access_token", inText . show . signatorymagichash $ sl)
@@ -440,7 +442,7 @@ testDocApiV2FilesFull = do
     fid <- saveNewFile "some_name.pdf" "Some contents"
     randomUpdate $ SaveSigAttachment (signatorylinkid sl) att fid
                                      (systemActor now)
-    randomUpdate $ SignDocument (signatorylinkid sl) (signatorymagichash sl)
+    randomUpdate $ SignDocument (signatorylinkid sl)
                                 Nothing Nothing emptySignatoryScreenshots
                                 (systemActor now)
 

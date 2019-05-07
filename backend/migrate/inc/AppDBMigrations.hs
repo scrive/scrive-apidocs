@@ -196,4 +196,5 @@ kontraMigrations = [
   , renameDocumentComposites
   , renameFeatureFlagsComposite
   , removePasswordAlgorithmUpgradeJob
+  , dropTokenFromDocumentSessionTokens
   ]

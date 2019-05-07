@@ -1,6 +1,6 @@
-module Doc.Tokens.Model (
-    GetDocumentSessionToken(..)
-  , AddDocumentSessionToken(..)
+module Doc.Tokens.Model
+  ( CheckDocumentSession(..)
+  , AddDocumentSession(..)
   ) where
 
 import Control.Monad.Catch
@@ -8,25 +8,26 @@ import Control.Monad.Time
 import Crypto.RNG
 import Happstack.Server (ServerMonad)
 
-import Context
 import DB
 import Doc.SignatoryLinkID
 import KontraMonad
-import MagicHash
-import Session.Model
+import Session.SessionID
 
-data GetDocumentSessionToken = GetDocumentSessionToken SignatoryLinkID
-instance (KontraMonad m, MonadDB m, MonadThrow m) => DBQuery m GetDocumentSessionToken (Maybe MagicHash) where
-  query (GetDocumentSessionToken slid) = do
-    sid <- get ctxsessionid <$> getContext
+data CheckDocumentSession = CheckDocumentSession SessionID SignatoryLinkID
+instance (KontraMonad m, MonadDB m, MonadThrow m) => DBQuery m CheckDocumentSession Bool where
+  query (CheckDocumentSession sid slid) = do
     runQuery_ . sqlSelect "document_session_tokens" $ do
-      sqlResult "token"
       sqlWhereEq "session_id" sid
       sqlWhereEq "signatory_link_id" slid
-    fetchMaybe runIdentity
+      sqlResult "TRUE"
+    result <- fetchMaybe runIdentity
+    return $ result == Just True
 
-data AddDocumentSessionToken = AddDocumentSessionToken SignatoryLinkID MagicHash
-instance (ServerMonad m, CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m AddDocumentSessionToken () where
-  update (AddDocumentSessionToken slid token) = do
-    sid <- getNonTempSessionID
-    runQuery_ $ rawSQL "SELECT insert_document_session_token($1, $2, $3)" (sid, slid, token)
+data AddDocumentSession = AddDocumentSession SessionID SignatoryLinkID
+instance (ServerMonad m, CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m AddDocumentSession () where
+  update (AddDocumentSession sid slid) = do
+    runQuery_ $ rawSQL
+      "INSERT INTO document_session_tokens\
+      \ (session_id, signatory_link_id) VALUES ($1, $2)\
+      \ ON CONFLICT (session_id, signatory_link_id) DO NOTHING"
+      (sid, slid)

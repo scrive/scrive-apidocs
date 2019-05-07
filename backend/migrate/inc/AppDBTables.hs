@@ -90,8 +90,7 @@ kontraExtensions = [
 
 kontraFunctions :: [SQLFunction]
 kontraFunctions = [
-    insertDocumentSessionToken
-  , archiveSearchTerms
+    archiveSearchTerms
   , postProcessSearchString
   , extractEmails
   , splitEmail

@@ -47,7 +47,6 @@ import qualified Data.Set as S
 import Doc.DocStateData
 import Doc.SignatoryLinkID
 import EID.Authentication.Model
-import MagicHash (MagicHash)
 import User.Email
 import User.Model
 import Util.HasSomeUserInfo
@@ -96,9 +95,6 @@ instance SignatoryLinkIdentity User where
 instance (SignatoryLinkIdentity a) => SignatoryLinkIdentity (Maybe a) where
   isJustSigLinkFor (Just a) sl = isSigLinkFor a sl
   isJustSigLinkFor Nothing  _  = False
-
-instance SignatoryLinkIdentity MagicHash where
-  isJustSigLinkFor mh sl = mh == signatorymagichash sl
 
 instance (SignatoryLinkIdentity a, SignatoryLinkIdentity b) => SignatoryLinkIdentity (a, b) where
   isJustSigLinkFor (a, b) sl = isJustSigLinkFor a sl && isJustSigLinkFor b sl

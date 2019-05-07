@@ -80,8 +80,8 @@ testDocumentTicketReinsertion = replicateM_ 10 $ do
     let Just asl = getAuthorSigLink doc
     rq <- mkRequest GET []
     runTestKontra rq ctx $ do
-      dbUpdate $ AddDocumentSessionToken
-        (signatorylinkid asl) (signatorymagichash asl)
+      sid <- getNonTempSessionID
+      dbUpdate $ AddDocumentSession sid (signatorylinkid asl)
   return ()
 
 testElegTransactionInsertion :: TestEnv ()
@@ -136,8 +136,8 @@ addDocumentAndInsertToken = do
     ctx <- mkContext defaultLang
     runTestKontra rq ctx $ do
       sess <- emptySession
-      dbUpdate $ AddDocumentSessionToken
-        (signatorylinkid asl) (signatorymagichash asl)
+      sid <- getNonTempSessionID
+      dbUpdate $ AddDocumentSession sid (signatorylinkid asl)
       ctx' <- getContext
       updateSession sess
         (get ctxsessionid ctx') (sesUserID sess) (sesPadUserID sess)

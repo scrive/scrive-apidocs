@@ -105,13 +105,13 @@ handleAuthRequest did slid = do
 ----------------------------------------
 
 handleSignRequest :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
-handleSignRequest did slid = do
+handleSignRequest _did slid = do
   CgiGrpConfig{..} <- do
     ctx <- getContext
     case get ctxcgigrpconfig ctx of
       Nothing -> noConfigurationError "CGI Group"
       Just cc -> return cc
-  (doc,_) <- getDocumentAndSignatoryForEIDSign did slid
+  (doc,_) <- getDocumentAndSignatoryForEIDSign slid
   mcompany_display_name <- getCompanyDisplayName doc
   mcompany_service_id   <- getCompanyServiceID doc
   tbs <- textToBeSigned doc

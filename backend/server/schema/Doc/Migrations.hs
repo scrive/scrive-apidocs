@@ -29,13 +29,15 @@ module Doc.Migrations
   , addFolderIDColumnToDocuments
   , addIndexOnShareableLinkHash
   , renameDocumentComposites
-  ) where
+  , dropTokenFromDocumentSessionTokens
+) where
 
 import Data.Int
 import Database.PostgreSQL.PQTypes.Checks
 
 import DB
 import Doc.Tables
+import Doc.Tokens.Tables
 
 renameDocumentComposites :: MonadDB m => Migration m
 renameDocumentComposites = Migration {
@@ -526,4 +528,13 @@ addIndexOnShareableLinkHash = Migration
   , mgrAction = StandardMigration $ do
       runQuery_ . sqlCreateIndexSequentially "documents" $
         indexOnColumn "shareable_link_hash"
+  }
+
+dropTokenFromDocumentSessionTokens :: MonadDB m => Migration m
+dropTokenFromDocumentSessionTokens = Migration
+  { mgrTableName = tblName tableDocumentSessionTokens
+  , mgrFrom = 1
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable "document_session_tokens"
+        [sqlDropColumn "token"]
   }

@@ -670,8 +670,8 @@ testCloseEvidenceAttachments = do
   req <- mkRequest GET []
   withDocument doc $ forM_ (documentsignatorylinks doc)
     (\sl -> when (isSignatory sl) $ do
-      randomUpdate $ \t-> MarkDocumentSeen (signatorylinkid sl) (signatorymagichash sl) (systemActor t)
-      randomUpdate $ \t-> SignDocument     (signatorylinkid sl) (signatorymagichash sl) Nothing Nothing emptySignatoryScreenshots (systemActor t)
+      randomUpdate $ \t-> MarkDocumentSeen (signatorylinkid sl) (systemActor t)
+      randomUpdate $ \t-> SignDocument     (signatorylinkid sl) Nothing Nothing emptySignatoryScreenshots (systemActor t)
     )
 
   void $ runTestKontra req ctx $ withDocument doc $ do

@@ -30,7 +30,7 @@ module Doc.DocStateQuery
     , getDocByDocIDAndAccessTokenV2
     , getDocByDocIDForAuthor
     , getDocByDocIDForAuthorOrAuthorsCompanyAdmin
-    , getMagicHashForDocumentSignatoryWithUser
+    , checkIfUserCanAccessDocumentAsSignatory
     , signatoryNeedsToIdentifyToView
     , getDocumentAndSignatoryForEIDAuth
     , getDocumentAndSignatoryForEIDSign
@@ -138,26 +138,26 @@ getDocByDocIDForAuthorOrAuthorsCompanyAdmin did = do
       (DocumentsVisibleToUser uid)
       [DocumentFilterByDocumentID did, DocumentFilterLinkIsAuthor True]
 
--- | Get a magichash for given signatory. Only possible if given user is author.
-getMagicHashForDocumentSignatoryWithUser
+-- | Check that the user has access to the document.
+checkIfUserCanAccessDocumentAsSignatory
   :: Kontrakcja m
-  => DocumentID
+  => User
+  -> DocumentID
   -> SignatoryLinkID
-  -> User
-  -> m (Maybe MagicHash)
-getMagicHashForDocumentSignatoryWithUser did sigid user = do
+  -> m Bool
+checkIfUserCanAccessDocumentAsSignatory user did sigid = do
    mdoc <- dbQuery $ GetDocuments
            (DocumentsVisibleToUser $ userid user)
            [DocumentFilterByDocumentID did]
            []
            1
-   case mdoc of
+   return $ case mdoc of
      [doc] ->  case getMaybeSignatoryLink (doc,sigid) of
-       Just sig -> if ((isAuthor (doc, user) && signatorylinkdeliverymethod sig == PadDelivery) || (isSigLinkFor user sig))
-                   then return $ Just $ signatorymagichash sig
-                   else return Nothing
-       Nothing -> return Nothing
-     _ -> return Nothing
+       Just sig ->
+         (isAuthor (doc, user) && signatorylinkdeliverymethod sig == PadDelivery)
+         || isSigLinkFor user sig
+       Nothing -> False
+     _ -> False
 
 signatoryNeedsToIdentifyToView
   :: (Kontrakcja m)
@@ -184,16 +184,23 @@ getDocumentAndSignatoryForEIDAuth
   => DocumentID
   -> SignatoryLinkID
   -> m (Document,SignatoryLink)
-getDocumentAndSignatoryForEIDAuth did slid =
-  dbQuery (GetDocumentSessionToken slid) >>= \case
-    Just mh -> do
-      logInfo_ "Document token found"
-      doc <- dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh)
-      return (doc, fromJust $ getSigLinkFor slid doc)
-    Nothing -> do
+getDocumentAndSignatoryForEIDAuth did slid = do
+  sid <- get ctxsessionid <$> getContext
+  check <- dbQuery $ CheckDocumentSession sid slid
+  if check
+    then do
+      logInfo_ "Document session found"
+      doc <- dbQuery $ GetDocumentBySignatoryLinkID slid
+      let sl = fromJust $ getSigLinkFor slid doc
+      if isForwarded sl
+        then do
+          logInfo_ "Signatory link has forwarded role"
+          respond404
+        else return (doc, sl)
+    else do
       -- Authentication to view archived in author's view case. There is no
       -- magic hash, just find the document in the archive.
-      logInfo_ "No document token, checking logged user's documents"
+      logInfo_ "No document session, checking logged user's documents"
       (getContextUser <$> getContext) >>= \case
         Just user -> do
           doc <- dbQuery $ GetDocument (DocumentsVisibleToUser $ userid user)
@@ -213,24 +220,26 @@ getDocumentAndSignatoryForEIDAuth did slid =
 -- token to be set.
 getDocumentAndSignatoryForEIDSign
   :: Kontrakcja m
-  => DocumentID
-  -> SignatoryLinkID
-  -> m (Document,SignatoryLink)
-getDocumentAndSignatoryForEIDSign did slid = dbQuery (GetDocumentSessionToken slid) >>= \case
-  Just mh -> do
-    logInfo_ "Document token found"
-    doc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
-    -- This should always succeed as we already got the document.
-    let slink = fromJust $ getSigLinkFor slid doc
-    when (isSignatoryAndHasSigned slink) $ do
-      logInfo_ "Signatory already signed the document"
+  => SignatoryLinkID
+  -> m (Document, SignatoryLink)
+getDocumentAndSignatoryForEIDSign slid = do
+  sid <- get ctxsessionid <$> getContext
+  check <- dbQuery $ CheckDocumentSession sid slid
+  if check
+    then do
+      logInfo_ "Document session found"
+      doc <- dbQuery $ GetDocumentBySignatoryLinkID slid
+      -- This should always succeed as we already got the document.
+      let slink = fromJust $ getSigLinkFor slid doc
+      when (isSignatoryAndHasSigned slink) $ do
+        logInfo_ "Signatory already signed the document"
+        respond404
+      -- Check that signatory uses EID for signing.
+      let am = signatorylinkauthenticationtosignmethod slink
+      when (am == StandardAuthenticationToSign || am == SMSPinAuthenticationToSign) $ do
+        logInfo "Signatory has incorrect authentication to sign method" $
+          object [ "method" .= show am ]
+      return (doc, slink)
+    else do
+      logInfo_ "No document token found"
       respond404
-    -- Check that signatory uses EID for signing.
-    let am = signatorylinkauthenticationtosignmethod slink
-    when (am == StandardAuthenticationToSign || am == SMSPinAuthenticationToSign) $ do
-      logInfo "Signatory has incorrect authentication to sign method" $
-        object [ "method" .= show am ]
-    return (doc, slink)
-  Nothing -> do
-    logInfo_ "No document token found"
-    respond404

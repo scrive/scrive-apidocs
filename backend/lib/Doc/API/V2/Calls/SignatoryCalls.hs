@@ -60,8 +60,8 @@ import Util.SignatoryLinkUtils
 docApiV2SigReject :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigReject did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
-  mh <- getMagicHashForSignatoryAction did slid
-  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh)
+  guardAccessToDocumentWithSignatory did slid
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid)
     `withDocumentM` do
 
     -- Guards
@@ -91,8 +91,8 @@ docApiV2SigReject did slid = logDocumentAndSignatory did slid . api $ do
 docApiV2SigForwardSigning :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigForwardSigning did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
-  mh <- getMagicHashForSignatoryAction did slid
-  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh)
+  guardAccessToDocumentWithSignatory did slid
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid)
     `withDocumentM` do
 
     -- Guards
@@ -126,8 +126,8 @@ docApiV2SigForwardSigning did slid = logDocumentAndSignatory did slid . api $ do
 docApiV2SigSigningStatusCheck :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSigningStatusCheck did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
-  mh <- getMagicHashForSignatoryAction did slid
-  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
+  guardAccessToDocumentWithSignatory did slid
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid) `withDocumentM` do
     sl <- guardGetSignatoryFromIdForDocument slid
     isDocumentSigningInProgress <- dbQuery $ IsDocumentSigningInProgress slid
     lastCheckStatus <- dbQuery $ GetDocumentSigningLastCheckStatus slid
@@ -143,8 +143,8 @@ docApiV2SigSigningStatusCheck did slid = logDocumentAndSignatory did slid . api 
 docApiV2SigSigningCancel :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSigningCancel did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
-  mh <- getMagicHashForSignatoryAction did slid
-  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
+  guardAccessToDocumentWithSignatory did slid
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid) `withDocumentM` do
     -- Guards
     guardDocumentStatus Pending =<< theDocument
     guardSignatoryHasNotSigned slid =<< theDocument
@@ -155,8 +155,8 @@ docApiV2SigSigningCancel did slid = logDocumentAndSignatory did slid . api $ do
 docApiV2SigCheck :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
-  mh <- getMagicHashForSignatoryAction did slid
-  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
+  guardAccessToDocumentWithSignatory did slid
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid) `withDocumentM` do
     -- Guards
     guardThatObjectVersionMatchesIfProvided did
     guardSignatoryNeedsToIdentifyToView slid =<< theDocument
@@ -197,9 +197,9 @@ docApiV2SigApprove :: Kontrakcja m => DocumentID -> SignatoryLinkID
                    -> m Response
 docApiV2SigApprove did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
-  mh     <- getMagicHashForSignatoryAction did slid
+  guardAccessToDocumentWithSignatory did slid
   olddoc <- dbQuery
-            (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh)
+            (GetDocumentByDocumentIDSignatoryLinkID did slid)
 
   olddoc `withDocument` do
 
@@ -215,7 +215,7 @@ docApiV2SigApprove did slid = logDocumentAndSignatory did slid . api $ do
     actor <- signatoryActor ctx sl
 
     switchLang . getLang =<< theDocument
-    dbUpdate $ ApproveDocument slid mh actor
+    dbUpdate $ ApproveDocument slid actor
     postDocumentPendingChange olddoc sl
 
     -- Result
@@ -227,10 +227,10 @@ docApiV2SigApprove did slid = logDocumentAndSignatory did slid . api $ do
 docApiV2SigSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
-  mh     <- getMagicHashForSignatoryAction did slid
+  guardAccessToDocumentWithSignatory did slid
   -- We store old document, as it is needed by postDocumentXXX calls
   olddoc <- dbQuery $
-    GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh
+    GetDocumentByDocumentIDSignatoryLinkID did slid
 
   olddoc `withDocument` do
     -- Guards
@@ -284,7 +284,7 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
 
     case mprovider of
        Nothing -> do
-        signDocument slid mh fields acceptedAttachments
+        signDocument slid fields acceptedAttachments
           notUploadedSignatoryAttachments Nothing mpin screenshots
           consentResponses
         updatedSigLink <- guardGetSignatoryFromIdForDocument slid
@@ -316,8 +316,8 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
 docApiV2SigSendSmsPinToSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSendSmsPinToSign did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
-  mh <- getMagicHashForSignatoryAction did slid
-  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
+  guardAccessToDocumentWithSignatory did slid
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid) `withDocumentM` do
     -- Guards
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument
@@ -361,8 +361,8 @@ guardAuthenticateToViewWithPin did slid = do
 docApiV2SigSendSmsPinToView :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSendSmsPinToView did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
-  mh <- getMagicHashForSignatoryAction did slid
-  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
+  guardAccessToDocumentWithSignatory did slid
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid) `withDocumentM` do
     (authKind, sl) <- guardAuthenticateToViewWithPin did slid
     mobile <- case asValidPhoneForSMS (getMobile sl) of
                 Good v -> return v
@@ -376,9 +376,9 @@ docApiV2SigSendSmsPinToView did slid = logDocumentAndSignatory did slid . api $ 
 docApiV2SigIdentifyToViewWithSmsPin :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigIdentifyToViewWithSmsPin did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
-  mh <- getMagicHashForSignatoryAction did slid
+  guardAccessToDocumentWithSignatory did slid
   ctx <- getContext
-  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid) `withDocumentM` do
     (authKind, sl) <- guardAuthenticateToViewWithPin did slid
     mobile <- case asValidPhoneForSMS (getMobile sl) of
                 Good v -> return v
@@ -402,8 +402,8 @@ docApiV2SigIdentifyToViewWithSmsPin did slid = logDocumentAndSignatory did slid 
 docApiV2SigSetAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSetAttachment did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
-  mh <- getMagicHashForSignatoryAction did slid
-  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
+  guardAccessToDocumentWithSignatory did slid
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid) `withDocumentM` do
     -- Guards
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument
@@ -433,8 +433,8 @@ docApiV2SigSetAttachment did slid = logDocumentAndSignatory did slid . api $ do
 docApiV2SetHighlightForPage :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SetHighlightForPage did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
-  mh <- getMagicHashForSignatoryAction did slid
-  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
+  guardAccessToDocumentWithSignatory did slid
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid) `withDocumentM` do
     -- Guards
     guardThatObjectVersionMatchesIfProvided did
     guardDocumentStatus Pending =<< theDocument

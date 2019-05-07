@@ -88,9 +88,9 @@ sendDocumentMails author = do
         tz <- mkTimeZoneName "Europe/Stockholm"
         randomUpdate $ PreparationToPending (systemActor now) tz
         asl2 <- head . documentsignatorylinks <$> theDocument
-        randomUpdate . MarkDocumentSeen (signatorylinkid asl2) (signatorymagichash asl2)
+        randomUpdate . MarkDocumentSeen (signatorylinkid asl2)
              =<< signatoryActor ctx asl2
-        randomUpdate $ SignDocument (signatorylinkid asl2) (signatorymagichash asl2) Nothing Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor now)
+        randomUpdate $ SignDocument (signatorylinkid asl2) Nothing Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor now)
         sls <- filter (not . isAuthor) . documentsignatorylinks <$> theDocument
         sl  <- case sls of
           [sl] -> return sl
@@ -122,7 +122,7 @@ sendDocumentMails author = do
         -- awaiting author email
         checkMail "Awaiting author" $ mailDocumentAwaitingForAuthor (defaultLang :: Lang) =<< theDocument
         -- Virtual signing
-        randomUpdate . SignDocument (signatorylinkid sl) (signatorymagichash sl) Nothing Nothing SignatoryScreenshots.emptySignatoryScreenshots
+        randomUpdate . SignDocument (signatorylinkid sl) Nothing Nothing SignatoryScreenshots.emptySignatoryScreenshots
                                    =<< (signatoryActor (set ctxtime (10 `minutesAfter` now) ctx) sl)
 
         -- Sending closed email

@@ -32,7 +32,6 @@ import Doc.SignatoryScreenshots
 import Doc.Signing.Model
 import Doc.Types.AuthorAttachment
 import Doc.Types.Document
-import Doc.Types.SignatoryLink
 import EID.CGI.GRP.Config
 import EID.CGI.GRP.Control
 import EID.CGI.GRP.Types
@@ -225,7 +224,6 @@ signFromESignature DocumentSigning{..} now = do
   esig <- fromJust <$> dbQuery (GetESignature signingSignatoryID) -- checkNetsSignStatus should return true only if there is ESignature in DB
   initialDoc <- theDocument
   let sl = fromJust (getSigLinkFor signingSignatoryID initialDoc)
-      magicHash = signatorymagichash sl
   initialActor <- recreatedSignatoryActor signingTime signingClientTime signingClientName signingClientIP4 sl
   fieldsWithFiles <- fieldsToFieldsWithFiles signingFields
 
@@ -246,7 +244,7 @@ signFromESignature DocumentSigning{..} now = do
   dbUpdate $ AddNotUploadedSignatoryAttachmentsEvents sl notUploadedSigAttachmentsWithText actorWithUpdatedName
 
   actorWithUpdatedNameAndCurrentTime <- recreatedSignatoryActor now signingClientTime signingClientName signingClientIP4 slWithUpdatedName
-  dbUpdate $ SignDocument signingSignatoryID magicHash (Just esig) Nothing signingScreenshots actorWithUpdatedNameAndCurrentTime
+  dbUpdate $ SignDocument signingSignatoryID (Just esig) Nothing signingScreenshots actorWithUpdatedNameAndCurrentTime
 
   postDocumentPendingChange initialDoc sl
   handleAfterSigning signingSignatoryID

@@ -85,7 +85,6 @@ import Doc.SignatoryScreenshots (SignatoryScreenshots, emptySignatoryScreenshots
 import Doc.SMSPin.Model
 import Doc.Texts
 import Doc.Tokens.Model
-import Doc.Types.SignatoryLink (isValidSignatoryMagicHash)
 import EID.Signature.Model
 import EvidenceLog.Model
 import EvidenceLog.View
@@ -493,8 +492,8 @@ apiCallV1Cancel did = logDocument did . api $ do
 apiCallV1Reject :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 apiCallV1Reject did slid = logDocumentAndSignatory did slid . api $ do
   checkObjectVersionIfProvided did
-  (mh,mu) <- getMagicHashAndUserForSignatoryAction did slid
-  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
+  mu <- guardSignatoryAccessFromSessionOrCredentials did slid
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid) `withDocumentM` do
     ctx  <- getContext
     msll <- getSigLinkFor slid <$> theDocument
     sll  <- case msll of
@@ -515,9 +514,9 @@ apiCallV1CheckSign :: Kontrakcja m
 apiCallV1CheckSign did slid = logDocumentAndSignatory did slid . api $ do
   checkObjectVersionIfProvided did
 
-  (mh,_) <- getMagicHashAndUserForSignatoryAction did slid
+  void $ guardSignatoryAccessFromSessionOrCredentials did slid
 
-  (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
+  (dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid) `withDocumentM` do
     whenM (not <$> isPending <$> theDocument ) $ do
       (throwM . SomeDBExtraException $ conflictError $ "Document not pending")
     whenM (isSignatoryAndHasSigned . getSigLinkFor slid <$> theDocument) $ do
@@ -557,7 +556,7 @@ apiCallV1Sign :: Kontrakcja m
 apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
   checkObjectVersionIfProvided did
   logInfo_ "Ready to sign a document for signatory"
-  (mh,mu) <- getMagicHashAndUserForSignatoryAction did slid
+  mu <- guardSignatoryAccessFromSessionOrCredentials did slid
   screenshots' <- fmap (fromMaybe emptySignatoryScreenshots) $
                (fromJSValue =<<) <$> getFieldJSON "screenshots"
   screenshots <- resolveReferenceScreenshotNames screenshots' >>= \case
@@ -565,7 +564,7 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
                    Just s -> return s
   fields <- getFieldForSigning
   acceptedAuthorAttachments <- getAcceptedAuthorAttachments
-  olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh -- We store old document, as it is needed by postDocumentXXX calls
+  olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid -- We store old document, as it is needed by postDocumentXXX calls
   olddoc `withDocument` ( do
     document <- theDocument
     let
@@ -584,7 +583,7 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
 
     case authorization of
       StandardAuthenticationToSign -> do
-        signDocument slid mh fields acceptedAuthorAttachments Nothing Nothing screenshots
+        signDocument slid fields acceptedAuthorAttachments Nothing Nothing screenshots
         postDocumentPendingChange olddoc signatoryLink
         handleAfterSigning slid
         (Right . Accepted) <$> (documentJSONV1 mu True True Nothing =<< theDocument)
@@ -593,7 +592,7 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
         validPin <- getValidPin slid fields
         if (isJust validPin)
           then do
-            signDocument slid mh fields acceptedAuthorAttachments Nothing validPin screenshots
+            signDocument slid fields acceptedAuthorAttachments Nothing validPin screenshots
             postDocumentPendingChange olddoc signatoryLink
             handleAfterSigning slid
             (Right . Accepted) <$> (documentJSONV1 mu True True Nothing =<< theDocument)
@@ -601,7 +600,7 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
 
       SEBankIDAuthenticationToSign -> dbQuery (GetESignature slid) >>= \case
         mesig@(Just _) -> do
-          signDocument slid mh fields acceptedAuthorAttachments mesig Nothing screenshots
+          signDocument slid fields acceptedAuthorAttachments mesig Nothing screenshots
           postDocumentPendingChange olddoc signatoryLink
           handleAfterSigning slid
           (Right . Accepted) <$> (documentJSONV1 mu True True Nothing =<< theDocument)
@@ -658,14 +657,13 @@ checkAuthenticationToSignMethodAndValue slid = do
 
 signDocument :: (Kontrakcja m, DocumentMonad m)
              => SignatoryLinkID
-             -> MagicHash
              -> [(FieldIdentity, FieldTmpValue)]
              -> [FileID]
              -> Maybe ESignature
              -> Maybe String
              -> SignatoryScreenshots
              -> m ()
-signDocument slid mh fields acceptedAuthorAttachments mesig mpin screenshots = do
+signDocument slid fields acceptedAuthorAttachments mesig mpin screenshots = do
   switchLang =<< getLang <$> theDocument
   ctx <- getContext
   -- Note that the second 'getSigLinkFor' call below may return a
@@ -680,7 +678,7 @@ signDocument slid mh fields acceptedAuthorAttachments mesig mpin screenshots = d
       acceptanceText <- renderTemplate "_authorAttachmentsUnderstoodContent" (F.value "attachment_name" $ authorattachmentname a)
       return (acceptanceText,a)
     dbUpdate . AddAcceptedAuthorAttachmentsEvents sl acceptedAuthorAttachments authorAttachmetsWithAcceptanceText  =<< signatoryActor ctx sl
-  getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . SignDocument slid mh mesig mpin screenshots =<< signatoryActor ctx sl
+  getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . SignDocument slid mesig mpin screenshots =<< signatoryActor ctx sl
 
 {- End of utils-}
 
@@ -993,14 +991,13 @@ apiCallV1ReallyDelete did = logDocument did . api $ do
 apiCallV1Get :: Kontrakcja m => DocumentID -> m Response
 apiCallV1Get did = logDocument did . api $ do
   (msignatorylink :: Maybe SignatoryLinkID) <- readField "signatoryid"
-  mmagichashh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msignatorylink
+  sid <- get ctxsessionid <$> getContext
+  check <- maybe (return False) (dbQuery . CheckDocumentSession sid) msignatorylink
   doc <- dbQuery $ GetDocumentByDocumentID did
-  case (msignatorylink,mmagichashh) of
-    (Just slid,Just mh) -> do
+  case (msignatorylink, check) of
+    (Just slid, True) -> do
        sl <- maybe (throwM $ SomeDBExtraException $ serverError "No document found") return  $ getSigLinkFor slid doc
        guardThatDocumentIsReadableBySignatories doc
-       unless (isValidSignatoryMagicHash mh sl) $
-         throwM . SomeDBExtraException $ serverError "No document found"
        switchLang $ getLang doc
 
        Ok <$> (documentJSONV1 Nothing False (signatoryisauthor sl) (Just sl) doc)
@@ -1163,16 +1160,17 @@ apiCallV1History did = logDocument did . api $ do
 apiCallV1DownloadMainFile :: Kontrakcja m => DocumentID -> String -> m Response
 apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
 
-  (msid :: Maybe SignatoryLinkID) <- readField "signatorylinkid"
+  (mslid :: Maybe SignatoryLinkID) <- readField "signatorylinkid"
   (maccesstoken :: Maybe MagicHash) <- readField "accesstoken"
-  mmh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msid
+  sid <- get ctxsessionid <$> getContext
+  check <- maybe (return False) (dbQuery . CheckDocumentSession sid) mslid
 
   doc <- do
-           case (msid, mmh, maccesstoken) of
-            (Just sid, Just mh, _) -> do
-              (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` theDocument >>= \doc -> do
+           case (mslid, check, maccesstoken) of
+            (Just slid, True, _) -> do
+              (dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid) `withDocumentM` theDocument >>= \doc -> do
                 sl <- apiGuardJustM  (serverError "Signatory does not exist") $
-                        pure $ getSigLinkFor sid doc
+                        pure $ getSigLinkFor slid doc
                 guardThatDocumentIsReadableBySignatories doc
                 whenM (signatoryNeedsToIdentifyToView sl doc) $ do
                   when (isClosed doc || not (isAuthor sl)) $ do
@@ -1210,15 +1208,16 @@ apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
 
 apiCallV1DownloadFile :: Kontrakcja m => DocumentID -> FileID -> String -> m Response
 apiCallV1DownloadFile did fileid nameForBrowser = logDocumentAndFile did fileid . api $ do
-  (msid :: Maybe SignatoryLinkID) <- readField "signatorylinkid"
+  (mslid :: Maybe SignatoryLinkID) <- readField "signatorylinkid"
   (maccesstoken :: Maybe MagicHash) <- readField "accesstoken"
-  mmh <- maybe (return Nothing) (dbQuery . GetDocumentSessionToken) msid
+  sid <- get ctxsessionid <$> getContext
+  check <- maybe (return False) (dbQuery . CheckDocumentSession sid) mslid
   doc <- do
-           case (msid, mmh, maccesstoken) of
-            (Just sid, Just mh, _) -> do
-              (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` theDocument >>= \doc -> do
+           case (mslid, check, maccesstoken) of
+            (Just slid, True, _) -> do
+              (dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid) `withDocumentM` theDocument >>= \doc -> do
                 sl <- apiGuardJustM  (serverError "Signatory does not exist") $
-                        pure (getSigLinkFor sid doc)
+                        pure (getSigLinkFor slid doc)
                 guardThatDocumentIsReadableBySignatories doc
                 whenM (signatoryNeedsToIdentifyToView sl doc) $ do
                   when (isClosed doc || not (isAuthor sl)) $ do
@@ -1335,8 +1334,9 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
 
 apiCallV1SendSMSPinCode :: Kontrakcja m => DocumentID -> SignatoryLinkID ->  m Response
 apiCallV1SendSMSPinCode did slid = logDocumentAndSignatory did slid . api $ do
-  mh <- apiGuardL (serverError "No document found")  $ dbQuery $ GetDocumentSessionToken slid
-  (dbQuery $ GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) `withDocumentM` do
+  sid <- get ctxsessionid <$> getContext
+  void $ apiGuardL (serverError "No document found")  $ dbQuery $ CheckDocumentSession sid slid
+  (dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid) `withDocumentM` do
     sl <- apiGuardJustM  (serverError "No document found") $ getSigLinkFor slid <$> theDocument
     whenM (not . isPending <$> theDocument) $ do
        throwM . SomeDBExtraException $ serverError "SMS pin code can't be sent to document that is not pending"
@@ -1357,10 +1357,10 @@ apiCallV1SetSignatoryAttachment did sid aname = logDocumentAndSignatory did sid 
   logInfo "Setting signatory attachments for signatory" $ object [
       "name" .= aname
     ]
-  (mh,mu) <- getMagicHashAndUserForSignatoryAction did sid
+  mu <- guardSignatoryAccessFromSessionOrCredentials did sid
   logInfo_ "We are authorized to set signatory attachment"
   -- We check permission here - because we are able to get a valid magichash here
-  dbQuery (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did sid mh) `withDocumentM` do
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkID did sid) `withDocumentM` do
     unlessM (isPending <$> theDocument) $ do
             throwM . SomeDBExtraException $ (badInput "Document is not pending")
     sl  <- apiGuard (badInput "There is no signatory by that id.") =<< getSigLinkFor sid <$> theDocument
@@ -1430,19 +1430,23 @@ guardAuthorOrAuthorsAdmin user forbidenMessage = do
   unless hasPermission $
     throwM . SomeDBExtraException $ forbidden forbidenMessage
 
-getMagicHashAndUserForSignatoryAction
-  :: (Kontrakcja m) => DocumentID -> SignatoryLinkID -> m (MagicHash, Maybe User)
-getMagicHashAndUserForSignatoryAction did sid = do
-    mh' <- dbQuery $ GetDocumentSessionToken sid
-    case mh' of
-      Just mh'' ->  return (mh'',Nothing)
-      Nothing -> do
-        (user, _ , _) <- getAPIUser APIPersonal
-        logInfo "Logging user" $ logObject_ user
-        mh'' <- getMagicHashForDocumentSignatoryWithUser  did sid user
-        case mh'' of
-          Nothing -> throwM . SomeDBExtraException $ serverError "Can't perform this action. Not authorized."
-          Just mh''' -> return (mh''',Just $ user)
+
+guardSignatoryAccessFromSessionOrCredentials
+  :: Kontrakcja m =>  DocumentID -> SignatoryLinkID -> m (Maybe User)
+guardSignatoryAccessFromSessionOrCredentials did slid = do
+  sid <- get ctxsessionid <$> getContext
+  validSession <- dbQuery $ CheckDocumentSession sid slid
+  if validSession
+    then return Nothing
+    else do
+      (user, _ , _) <- getAPIUser APIPersonal
+      logInfo "Logging user" $ logObject_ user
+      check' <- checkIfUserCanAccessDocumentAsSignatory user did slid
+      if check'
+        then return $ Just user
+        else
+          throwM . SomeDBExtraException $
+            serverError "Can't perform this action. Not authorized."
 
 -- Helper type that represents ~field value, but without file reference - and only with file content. Used only locally.
 data FieldTmpValue = StringFTV String
