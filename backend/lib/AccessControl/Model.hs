@@ -20,6 +20,7 @@ import DB
 import Folder.Model
 import User.Types.User
 import User.UserID
+import UserGroup.Model
 import UserGroup.Types
 
 rolesSelector :: [SQL]

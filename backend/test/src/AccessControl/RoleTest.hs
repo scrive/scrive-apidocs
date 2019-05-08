@@ -1,15 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 module AccessControl.RoleTest (accessControlRoleTests) where
 
---import Data.Aeson
-import Happstack.Server
 import Test.Framework
 import Test.QuickCheck
 
---import AccessControl.API
 import AccessControl.Model
 import AccessControl.Types
-import Context
 import DB
 import TestingUtil
 import TestKontra
@@ -25,20 +21,27 @@ accessControlRoleTests env = testGroup "AccessControlRoles"
 
 testRolesNotInheritedInUserGroupTree :: TestEnv ()
 testRolesNotInheritedInUserGroupTree = do
-  muser@(Just user) <- addNewUser "Lloyd" "Garmadon" "lloyd.garmadon@scrive.com"
-  _ctx   <- set ctxmaybeuser muser <$> mkContext defaultLang
-  _req   <- mkRequest GET []
---  _res   <- fst <$> runTestKontra req ctx (accessControlAPIV2GetUserRoles uid)
+  (Just user) <- addNewUser "Lloyd" "Garmadon" "lloyd.garmadon@scrive.com"
+  let uid = userid user
   root_ug <- rand 10 arbitrary
   root_ugid <- (get ugID) <$> (dbUpdate . UserGroupCreate $ root_ug)
   [_ug0, ug1] <- createChildGroups root_ugid
-  void $ dbUpdate $ SetUserGroup (userid user) (Just $ get ugID ug1)
-  userRoles0 <- dbQuery $ GetRoles user
-  let roleTrg = UserGroupAdminAR root_ugid
-  void $ dbUpdate $ AccessControlInsertRoleTrgForUserGroup root_ugid roleTrg
-  userRoles1 <- dbQuery $ GetRoles user
-  -- chk that user does _not_ have the role inherited
-  assertEqual "asdf" userRoles0 userRoles1
+  void $ dbUpdate $ SetUserGroup uid (Just $ get ugID ug1)
+  -- user's group changed, need to re-retrieve the user
+  (Just user') <- dbQuery $ GetUserByID uid
+  let role_trg = UserGroupAdminAR root_ugid
+  void $ dbUpdate $ AccessControlInsertRoleTrgForUserGroup root_ugid role_trg
+  userRoles1 <- dbQuery $ GetRoles user'
+  [grp_role] <- dbQuery $ AccessControlGetRolesByUserGroup root_ugid
+  assertBool "The role set on a parent group is not included in user's roles"
+             (not $ grp_role `elem` userRoles1)
+
+  void $ dbUpdate $ SetUserGroup (userid user) (Just $ root_ugid)
+  -- user's group changed, need to re-retrieve the user
+  (Just user'') <- dbQuery $ GetUserByID uid
+  userRoles2 <- dbQuery $ GetRoles user''
+  assertBool "The role set on the user's group is indeed included in user's roles"
+             (grp_role `elem` userRoles2)
   where
     createChildGroups :: UserGroupID -> TestEnv [UserGroup]
     createChildGroups root_ugid' = do
@@ -47,4 +50,3 @@ testRolesNotInheritedInUserGroupTree = do
       ug0 <- dbUpdate . UserGroupCreate . set ugParentGroupID (Just root_ugid') $ ugrand0
       ug1 <- dbUpdate . UserGroupCreate . set ugParentGroupID (Just (get ugID ug0)) $ ugrand1
       return $ [ug0, ug1]
-   
