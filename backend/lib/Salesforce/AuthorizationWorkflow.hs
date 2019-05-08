@@ -140,6 +140,7 @@ testSalesforce rtoken url = do
       (exitcode, stdoutWithCode, stderr) <-
         readCurl [
             "--tlsv1.2"
+          , "--location-trusted"
           , "-X", "POST"
           , "--write-out","\n%{http_code}"
           , "-L" -- make curl follow redirects
