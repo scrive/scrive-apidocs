@@ -1,11 +1,14 @@
 module UserGroup.Model (
     UserGroupCreate(..)
+  , UserGroupDelete(..)
   , UserGroupGet(..)
   , UserGroupGetByUserID(..)
   , UserGroupGetWithParents(..)
   , UserGroupGetWithParentsByUserID(..)
   , UserGroupsGetFiltered(..)
   , UserGroupUpdate(..)
+  , UserGroupUpdateSettings(..)
+  , UserGroupUpdateAddress(..)
   , UserGroupGetImmediateChildren(..)
   , UserGroupGetAllChildrenRecursive(..)
   , UserGroupsFormCycle(..)
@@ -77,6 +80,14 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UserGroupCreate UserGroup where
 
     return . set ugID ugid $ ug
 
+data UserGroupDelete = UserGroupDelete UserGroupID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m UserGroupDelete () where
+  update (UserGroupDelete ugid) = do
+    now <- currentTime
+    void . runQuery . sqlUpdate "user_groups" $ do
+      sqlSet "deleted" now
+      sqlWhereEq "id" $ Just ugid
+
 insertUserGroupSettings
   :: (MonadDB m, MonadThrow m) => UserGroupID -> UserGroupSettings -> m ()
 insertUserGroupSettings ugid ugs =
@@ -129,6 +140,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGet (Maybe UserGroup) w
     runQuery_ . sqlSelect "user_groups" $ do
       mapM_ sqlResult userGroupSelectors
       sqlWhereEq "id" ugid
+      sqlWhereIsNULL "deleted"
     fetchMaybe fetchUserGroup
 
 data UserGroupGetByUserID = UserGroupGetByUserID UserID
@@ -138,6 +150,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetByUserID UserGroup w
       sqlJoinOn "users" "users.user_group_id = user_groups.id"
       mapM_ sqlResult userGroupSelectors
       sqlWhereEq "users.id" uid
+      sqlWhereIsNULL "user_groups.deleted"
     fetchOne fetchUserGroup
 
 data UserGroupGetImmediateChildren = UserGroupGetImmediateChildren UserGroupID
@@ -171,6 +184,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetWithParentsByUG User
           sqlWhereEq "id" ugid
         sqlJoinOn "parentids" "parentids.id = user_groups.id"
         mapM_ sqlResult userGroupSelectors
+        sqlWhereIsNULL "user_groups.deleted"
         sqlOrderBy "ordinality"
       fetchMany fetchUserGroup
     let (ug_root0, ug_children_path) = case reverse parents of
@@ -189,6 +203,7 @@ instance (MonadDB m, MonadThrow m)
       sqlJoinOn "users" "users.user_group_id = user_groups.id"
       mapM_ sqlResult userGroupSelectors
       sqlWhereEq "users.id" uid
+      sqlWhereIsNULL "user_groups.deleted"
     ug <- fetchOne fetchUserGroup
     dbQuery . UserGroupGetWithParentsByUG $ ug
 
@@ -198,13 +213,9 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () 
     guardIfHasNoParentThenIsValidRoot new_ug
     let ugid = get ugID new_ug
     -- update group settings
-    runQuery_ . sqlDelete "user_group_settings" $ do
-      sqlWhereEq "user_group_id" ugid
-    whenJust (get ugSettings new_ug) $ insertUserGroupSettings ugid
+    dbUpdate . UserGroupUpdateSettings ugid $ get ugSettings new_ug
     -- update group address
-    runQuery_ . sqlDelete "user_group_addresses" $ do
-      sqlWhereEq "user_group_id" ugid
-    whenJust (get ugAddress new_ug) $ insertUserGroupAddress ugid
+    dbUpdate . UserGroupUpdateAddress ugid $ get ugAddress new_ug
     -- update invoicing
     runQuery_ . sqlUpdate "user_group_invoicings" $ do
       sqlWhereEq "user_group_id" ugid
@@ -270,6 +281,18 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdate () 
                                                                    "- " <?> length old_parentpath <+> ")]"<>
                                                "," <?> Array1 new_parentpath <+> ")"
       sqlWhere $ "parent_group_path @> " <?> (Array1 [ugid])
+
+data UserGroupUpdateSettings = UserGroupUpdateSettings UserGroupID (Maybe UserGroupSettings)
+instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdateSettings () where
+  update (UserGroupUpdateSettings ugid mugSettings) = do
+    runQuery_ . sqlDelete "user_group_settings" $ sqlWhereEq "user_group_id" ugid
+    whenJust mugSettings $ insertUserGroupSettings ugid
+
+data UserGroupUpdateAddress = UserGroupUpdateAddress UserGroupID (Maybe UserGroupAddress)
+instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m UserGroupUpdateAddress () where
+  update (UserGroupUpdateAddress ugid mugAddr) = do
+    runQuery_ . sqlDelete "user_group_addresses" $ sqlWhereEq "user_group_id" ugid
+    whenJust mugAddr $ insertUserGroupAddress ugid
 
 data UserGroupsFormCycle = UserGroupsFormCycle UserGroupID
   deriving (Eq, Ord, Show, Typeable)
@@ -395,7 +418,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupsGetFiltered [UserGroup
        whenJust moffsetlimit $ \(offset, limit) -> do
          sqlOffset offset
          sqlLimit limit
-       sqlWhereIsNULL "deleted"
+       sqlWhereIsNULL "user_groups.deleted"
        sqlOrderBy "user_groups.id"
     fetchMany fetchUserGroup
     where

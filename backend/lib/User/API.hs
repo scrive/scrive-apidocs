@@ -264,7 +264,7 @@ apiCallGetUserProfile :: Kontrakcja m => m Response
 apiCallGetUserProfile =  api $ do
   (user, _ , _) <- getAPIUserWithAnyPrivileges
   ugwp <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
-  return $ Ok $ userJSON user ugwp
+  return $ Ok $ userJSONWithCompany user ugwp
 
 apiCallGetSubscription :: Kontrakcja m => m Response
 apiCallGetSubscription =  api $ do
@@ -656,8 +656,7 @@ apiCallGetTokenForPersonalCredentials :: Kontrakcja m => UserID -> m Response
 apiCallGetTokenForPersonalCredentials uid = V2.api $ do
   -- Guards
   void $ guardThatUserExists uid
-  let acc = [ mkAccPolicyItem (UpdateA, UserR, uid) ]
-  apiAccessControl acc $ do
+  apiAccessControl [mkAccPolicyItem (UpdateA, UserR, uid)] $ do
     minutes <- apiV2ParameterDefault defaultMinutes $ ApiV2ParameterInt "minutes"
     when (minutes < 1 || minutes > maxMinutes) invalidMinsParamError
     -- Create login token

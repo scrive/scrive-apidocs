@@ -8,9 +8,13 @@ module UserGroup.Internal (
   , ugPaymentPlan
   , ugwpOnlyParents
   , ugwpPaymentPlan
+  , ugwpPaymentPlanWithID
   , ugwpSettings
+  , ugwpSettingsWithID
   , ugwpAddress
+  , ugwpAddressWithID
   , ugwpFeatures
+  , ugwpFeaturesWithID
   , ugwpToList
   , ugwpUG
   , ugwpRoot
@@ -330,22 +334,38 @@ ugwpOnlyParents :: UserGroupWithParents -> Maybe UserGroupWithParents
 ugwpOnlyParents (_,[]) = Nothing -- root is leaf, nothing would be left
 ugwpOnlyParents (root, (_:parents_tail)) = Just (root, parents_tail)
 
-ugwpInherit :: (UserGroupRoot -> a) -> (UserGroup -> Maybe a) -> UserGroupWithParents -> a
+ugwpInherit :: (UserGroupRoot -> a) -> (UserGroup -> Maybe a) -> UserGroupWithParents -> (UserGroupID, a)
 ugwpInherit ugrProperty ugProperty (ug_root, ug_children_path) =
-  fromMaybe (ugrProperty ug_root) . listToMaybe . catMaybes
-    . map ugProperty $ ug_children_path
+  fromMaybe (_ugrID ug_root, ugrProperty ug_root) . listToMaybe . catMaybes
+    . map (makeIDPropertyTuple) $ ug_children_path
+      where
+        makeIDPropertyTuple ug = case ugProperty ug of
+          Nothing -> Nothing
+          Just prop -> Just (_ugID ug, prop)
 
 ugwpPaymentPlan :: UserGroupWithParents -> PaymentPlan
-ugwpPaymentPlan = ugwpInherit _ugrPaymentPlan ugPaymentPlan
+ugwpPaymentPlan = snd . ugwpInherit _ugrPaymentPlan ugPaymentPlan
+
+ugwpPaymentPlanWithID :: UserGroupWithParents -> (UserGroupID, PaymentPlan)
+ugwpPaymentPlanWithID = ugwpInherit _ugrPaymentPlan ugPaymentPlan
 
 ugwpSettings :: UserGroupWithParents -> UserGroupSettings
-ugwpSettings = ugwpInherit _ugrSettings _ugSettings
+ugwpSettings = snd . ugwpInherit _ugrSettings _ugSettings
+
+ugwpSettingsWithID :: UserGroupWithParents -> (UserGroupID, UserGroupSettings)
+ugwpSettingsWithID = ugwpInherit _ugrSettings _ugSettings
 
 ugwpAddress :: UserGroupWithParents -> UserGroupAddress
-ugwpAddress = ugwpInherit _ugrAddress _ugAddress
+ugwpAddress = snd . ugwpInherit _ugrAddress _ugAddress
+
+ugwpAddressWithID :: UserGroupWithParents -> (UserGroupID, UserGroupAddress)
+ugwpAddressWithID = ugwpInherit _ugrAddress _ugAddress
 
 ugwpFeatures :: UserGroupWithParents -> Features
-ugwpFeatures = ugwpInherit _ugrFeatures _ugFeatures
+ugwpFeatures = snd . ugwpInherit _ugrFeatures _ugFeatures
+
+ugwpFeaturesWithID :: UserGroupWithParents -> (UserGroupID, Features)
+ugwpFeaturesWithID = ugwpInherit _ugrFeatures _ugFeatures
 
 ugwpToList :: UserGroupWithParents -> [UserGroup]
 ugwpToList (ug_root, ug_children_path) =
@@ -521,7 +541,7 @@ instance CompositeFromSQL UserGroupAddress where
     , zip_code
     , city
     , country
-    ) =  UserGroupAddress {
+    ) = UserGroupAddress {
       _ugaCompanyNumber = company_number
     , _ugaAddress       = address
     , _ugaZip           = zip_code
