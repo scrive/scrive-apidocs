@@ -50,7 +50,8 @@ handleUserGroupAccounts = withUserAndGroup $ \(user,_) -> do
   -- which he can administer.
   -- This intentionally uses UserAdminAR role instead of checking for (ReadA, UserR) permission,
   -- because we want to avoid huge list of users for "partner admins" (UserGroupAdminART).
-  roles <- dbQuery . GetRoles $ user
+  roles0 <- dbQuery . GetRoles $ user
+  roles <- addInheritedRoles roles0
   let userAdminUgId = \case
         UserAdminAR ugid -> Just ugid
         _ -> Nothing
