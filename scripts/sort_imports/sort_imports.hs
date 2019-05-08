@@ -14,6 +14,7 @@ import Data.Text (Text)
 import System.Directory
 import System.Environment
 import System.Exit
+import System.FilePath
 import System.IO (hPutStrLn, stderr)
 import qualified Data.Attoparsec.Text as P
 import qualified Data.Set as S
@@ -218,7 +219,7 @@ inspectDirectories dirs = foldM (\acc dir -> do
   foldThroughHsFiles dir (\(!modules, !files) file -> do
     let module_ = map slash_to_dot
                 . drop (length dir + 1)  -- remove base directory (+ slash)
-                . drop_extension
+                . dropExtension
                 $ file
     putStrLn $ "Found " ++ file ++ " (" ++ module_ ++ ")."
     return (maybeInsert (T.pack module_) modules, file : files)
@@ -230,8 +231,6 @@ inspectDirectories dirs = foldM (\acc dir -> do
     -- We have a custom Prelude, but it should be considered
     -- non-local.
     mdlWhitelist           = ["Prelude"]
-
-    drop_extension = reverse . drop 1 . dropWhile (/= '.') . reverse
 
     slash_to_dot '/' = '.'
     slash_to_dot c   = c

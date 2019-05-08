@@ -32,6 +32,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
 import qualified Database.Redis as R
+import qualified System.FilePath.Windows as Windows
 
 import AppConf
 import AppView as V
@@ -136,11 +137,10 @@ appHandler handleRoutes appConf appGlobals = runHandler
   realStartTime <- liftBase getCurrentTime
   temp <- liftIO getTemporaryDirectory
   let quota = 30000000
-      stripFilename = reverse . takeWhile (\c -> c /= '/' && c /= '\\') . reverse
-      -- just like defaultFileSaver, but accepts filenames containing
-      -- full paths (they are stripped though)
+      -- Just like defaultFileSaver, but accepts filenames containing
+      -- full paths (only the filename part of the path is used, though).
       fileSaver tmpDir diskQuota filename b =
-        defaultFileSaver tmpDir diskQuota (stripFilename filename) b
+        defaultFileSaver tmpDir diskQuota (Windows.takeFileName filename) b
       bodyPolicy =
         (defaultBodyPolicy temp quota quota quota) {
         inputWorker = defaultInputIter fileSaver temp 0 0 0

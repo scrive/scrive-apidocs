@@ -1767,5 +1767,6 @@ Executable sort_imports
                     attoparsec,
                     containers,
                     directory,
+                    filepath,
                     text
   Default-Language: Haskell2010
