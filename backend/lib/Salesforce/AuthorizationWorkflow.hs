@@ -67,11 +67,17 @@ getRefreshTokenFromCode code = do
           case mrt of
             Just rt -> return $ Right rt
             Nothing -> do
-              logInfo_ "Parsing Salesfoce refresh response - no token found"
+              logInfo "Parsing Salesfoce refresh response - no token found" $ object [
+                  "exitcode" .= show exitcode,
+                  "stdout" `equalsExternalBSL` stdout,
+                  "stderr" `equalsExternalBSL` stderr
+                ]
               return $ Left "Response from Salesforce was a valid JSON, but no refresh token was found"
         _ -> do
           logInfo "Parsing standard output failed" $ object [
-              "stdout" `equalsExternalBSL` stdout
+              "exitcode" .= show exitcode,
+              "stdout" `equalsExternalBSL` stdout,
+              "stderr" `equalsExternalBSL` stderr
             ]
           return $ Left "Response from salesforce was not a valid JSON"
 
