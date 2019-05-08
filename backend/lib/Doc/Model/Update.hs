@@ -1791,6 +1791,12 @@ instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m)
         , signatorymagichash = magichash
         }
 
+    let mAuthorID = maybesignatory =<< (listToMaybe . filter isAuthor $ siglinks)
+    mAuthorUser <- case mAuthorID of
+      Nothing -> return Nothing
+      Just authorID -> query . GetUserByID $ authorID
+    -- mAuthorUser and mUser may coincide at this point
+
     mDoc <- flip newFromDocumentID (documentid document) $ f . \doc -> doc
       { documentstatus = Preparation
       , documentsharing = Private
@@ -1799,7 +1805,8 @@ instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m)
       , documentctime = actorTime actor
       , documentmtime = actorTime actor
       , documentshareablelinkhash = Nothing
-      , documentfolderid = join $ userhomefolderid <$> mUser
+      , documentfolderid = (userhomefolderid =<< mAuthorUser) `mplus`
+                           (documentfolderid doc)
       }
 
     return $ documentid <$> mDoc
