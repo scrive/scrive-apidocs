@@ -12,7 +12,7 @@ var ErrorModal = require("../../errormodal");
       transaction: undefined,
       iframe: undefined,
       statusText: undefined,
-      thisDevice: true
+      thisDevice: false
     },
     initialize: function (args) {
       _.bindAll(this, "identify", "cancel", "back");

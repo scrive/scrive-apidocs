@@ -12,7 +12,7 @@ module.exports = Backbone.Model.extend({
       onFail: function () {},
       onCriticalError: function () {},
       onInitiated: function () {},
-      thisDevice: true,
+      thisDevice: false,
       activationTime: 0
     },
     triggerStatusChange: function () {
