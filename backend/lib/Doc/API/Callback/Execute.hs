@@ -276,7 +276,7 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
         case (exitcode) of
             (ExitSuccess) -> if (httpCode <300)
                                 then do
-                                  logInfo_ "Salesforce API callback failed succeeded"
+                                  logInfo_ "Salesforce API callback succeeded"
                                   return True
                                 else sendAndFail Nothing
             (ExitFailure err) -> sendAndFail $ Just $ show err
