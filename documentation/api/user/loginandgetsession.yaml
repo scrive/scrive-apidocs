@@ -18,7 +18,7 @@ post:
 
     This can be used to create a better user experience for your integration.
 
-    The call the returns a _session id_, which can be used to create a link
+    The call returns a _session id_, which can be used to create a link
     such as:
     `https://scrive.com/loginwithredirect?session_id=SESSION_ID&url=PATH_INSIDE_SCRIVE_COM`.
 
