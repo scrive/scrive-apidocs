@@ -469,10 +469,13 @@
                   <li>
                     <a href="#get-usage-stats-for-months" class="toc-h2 toc-link" data-title="get-usage-stats-for-months">Get usage stats for months</a>
                   </li>
+                  <li>
+                    <a href="#signup-request" class="toc-h2 toc-link" data-title="signup-request">Signup Request</a>
+                  </li>
               </ul>
           </li>
           <li>
-            <a href="#responses-48" class="toc-h1 toc-link" data-title="responses">Responses</a>
+            <a href="#responses-49" class="toc-h1 toc-link" data-title="responses">Responses</a>
               <ul class="toc-list-h2">
                   <li>
                     <a href="#document" class="toc-h2 toc-link" data-title="document">Document</a>
@@ -547,6 +550,9 @@
                   </li>
                   <li>
                     <a href="#logintoken" class="toc-h2 toc-link" data-title="logintoken">LoginToken</a>
+                  </li>
+                  <li>
+                    <a href="#language-code" class="toc-h2 toc-link" data-title="language-code">Language Code</a>
                   </li>
               </ul>
           </li>
@@ -1864,6 +1870,14 @@ Scrive eSign system returning errors.</p>
 <a href="#apiv2usagestatsmonths">
 <strong>
 <code class="operation-method operation-method-GET">GET  /api/v2/usagestats/months</code>
+</strong>
+</a>
+</p>
+
+<p>
+<a href="#apiv2signup">
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/signup</code>
 </strong>
 </a>
 </p>
@@ -3283,17 +3297,36 @@ the file name.</p>
 </strong>
 </p>
 
-<p>OAuth authorization. Returns session id.</p>
+<p>Login as a user by using their OAuth tokens.</p>
+
+<p>The tokens have to be acquired using <code>getpersonaltoken</code> endpoint, see
+<a href="#personal-access-credentials">Personal Access Credentials</a>.</p>
+
+<p>Using this endpoint, you can create a link which redirects the user
+directly to any page on the Scrive eSign system without going through the
+login page.</p>
+
+<p>This can be used to create a better user experience for your integration.</p>
+
+<p>The call returns a <em>session id</em>, which can be used to create a link
+such as:
+<code>https://scrive.com/loginwithredirect?session_id=SESSION_ID&amp;url=PATH_INSIDE_SCRIVE_COM</code>.</p>
+
+<p>This link will redirect the user to <code>PATH_INSIDE_SCRIVE_COM</code>.
+Remember that all URL query parameters must be URL encoded!</p>
 <h3 id='parameters-36'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>personal_token</code><br/><em>required</em></p></td><td><p>Must be of type <a href="#oauthauthorization"><code>OAuthAuthorization</code></a></p>
-</td><td><p>object<br><em>application/json</em></p></td><td>formData</td></tr>
+</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-37'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
-<tr> <td>200</td> <td><p>Returns a JSON with <code>session_id</code></p>
+<tr> <td>200</td> <td><p>JSON response, for example:
+<code>{ &quot;session_id&quot; : &quot;12345-a2510867954321d0&quot; }</code></p>
+<p>The string format may change at any time, please treat it as an opaque
+string.</p>
 </td> </tr>
 </table>
 
@@ -3506,7 +3539,56 @@ count of documents on different stages of the process</p>
 count of documents on different stages of the process</p>
 </td> </tr>
 </table>
-<h1 id='responses-48'>Responses</h1><h2 id='document'>Document</h2>
+
+<div><a id="apiv2signup"></a></div>
+<h2 id='signup-request'>Signup Request</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/signup</code>
+</strong>
+</p>
+
+<p>Create a new user signup request.
+Used to handle submission of the signup form.</p>
+
+<p>If there is no user associated with the given email address, then a new
+account will be created, and an activation email will be sent to them.</p>
+
+<p>If there already is an account, but the user has not yet accepted the
+Scrive eSign <em>Terms of Service</em>, then a new activation email will be sent
+to them.</p>
+
+<p>If a user account that has accepted the <em>Terms of Service</em> already exists,
+no signup request will be created.</p>
+<h3 id='parameters-43'>Parameters</h3>
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><p><code>email</code><br/><em>required</em></p></td><td><p>Has to be a valid email address format.</p>
+</td><td><p>email</p></td><td>formData</td></tr>
+<tr><td><p><code>firstName</code><br/><em>optional</em></p></td><td><p>Has to be a valid name string.</p>
+</td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>lastName</code><br/><em>optional</em></p></td><td><p>Has to be a valid name string.</p>
+</td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>phone</code><br/><em>optional</em></p></td><td><p>Has to be a valid phone</p>
+</td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>companyName</code><br/><em>optional</em></p></td><td><p>Has to be a valid company name</p>
+</td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>companyPosition</code><br/><em>optional</em></p></td><td><p>Has to be a valid position</p>
+</td><td><p>string</p></td><td>formData</td></tr>
+<tr><td><p><code>lang</code><br/><em>optional</em></p></td><td><p>Has to be a valid lang code <a href="#language-code"><code>LanguageCode</code></a></p>
+</td><td><p>string</p></td><td>formData</td></tr>
+</table>
+<h3 id='responses-48'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>JSON response, will be one of:</p>
+<ul>
+<li><code>{ &quot;sent&quot;: true }</code></li>
+<li><code>{ &quot;sent&quot;: false }</code></li>
+</ul>
+</td> </tr>
+</table>
+<h1 id='responses-49'>Responses</h1><h2 id='document'>Document</h2>
 <p>The document metadata as a JSON.</p>
 <h3 id='document-2'>Document</h3>
 <p><code>(object)</code></p>
@@ -15609,6 +15691,38 @@ count of documents on different stages of the process</p>
 </div>
 
 <p></div></p>
+<h2 id='language-code'>Language Code</h2>
+<p><code>(string, enum)</code></p>
+
+<div class="json-schema">
+
+<p>Currently supported language codes</p>
+
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>da</code></li>
+<li><code>de</code></li>
+<li><code>el</code></li>
+<li><code>en</code></li>
+<li><code>es</code></li>
+<li><code>et</code></li>
+<li><code>fi</code></li>
+<li><code>fr</code></li>
+<li><code>is</code></li>
+<li><code>it</code></li>
+<li><code>lt</code></li>
+<li><code>lv</code></li>
+<li><code>nl</code></li>
+<li><code>no</code></li>
+<li><code>pt</code></li>
+<li><code>sv</code></li>
+
+</ul>
+
+</div>
 
       </div>
       <div class="dark-box">
