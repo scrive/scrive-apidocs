@@ -3,6 +3,7 @@ module AccessControl.Model
   , AccessRoleGet(..)
   , AccessControlGetRolesByUser(..)
   , AccessControlGetRolesByUserGroup(..)
+  , AccessControlDeleteRolesByUserGroup(..)
   , AccessControlInsertUserGroupAdmin(..)
   , AccessControlRemoveUserGroupAdminRole(..)
   ) where
@@ -87,6 +88,16 @@ instance (MonadDB m, MonadThrow m) =>
       mapM_ sqlResult $ rolesSelector
       sqlWhereIn "src_user_group_id" ugids
     fetchMany fetchAccessRole
+
+data AccessControlDeleteRolesByUserGroup = AccessControlDeleteRolesByUserGroup UserGroupID
+instance (MonadDB m, MonadThrow m) =>
+  DBUpdate m AccessControlDeleteRolesByUserGroup () where
+  update (AccessControlDeleteRolesByUserGroup ugid) = do
+    runQuery_ . sqlDelete "access_control" $
+      sqlWhereAny [
+        sqlWhereEq "src_user_group_id" $ Just ugid
+      , sqlWhereEq "trg_user_group_id" $ Just ugid
+      ]
 
 -- @devnote maybe significant enough an event so we should always log it?
 data AccessControlInsertUserGroupAdmin = AccessControlInsertUserGroupAdmin UserID UserGroupID

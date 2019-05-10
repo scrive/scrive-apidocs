@@ -19,6 +19,7 @@ import Happstack.Server.Types
 import Happstack.StaticRouting
 import qualified Text.JSON.Gen as J
 
+import AccessControl.Model
 import AccessControl.Types
 import API.V2
 import API.V2.Errors
@@ -146,6 +147,7 @@ userGroupApiV2Delete ugid = api $
       -- Will need to be fixed if we want to allow deletion of roots.
       apiError $ requestFailed "Root usergroups cannot be deleted."
     dbUpdate $ UserGroupDelete ugid
+    dbUpdate $ AccessControlDeleteRolesByUserGroup ugid
     return . Ok . J.runJSONGen $ do
       J.value "ugid" $ show ugid
       J.value "resource" ("usergroup" :: String)
