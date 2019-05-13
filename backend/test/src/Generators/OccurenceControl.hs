@@ -21,7 +21,7 @@ module Generators.OccurenceControl
   , testGeneratorHelper
   ) where
 
-import Control.Applicative.Free
+import Control.Applicative.Free as Free
 import Test.QuickCheck hiding (sample)
 
 import TestingUtil
@@ -52,7 +52,7 @@ data OccurenceControlF a where
   ListOf :: Int -> Int -> OccurenceControl a -> OccurenceControlF [a]
   LiftGen :: Gen a -> OccurenceControlF a
 
-type OccurenceControl = Ap OccurenceControlF
+type OccurenceControl = Free.Ap OccurenceControlF
 
 getTotalWeight :: OccurenceControl a -> Double
 getTotalWeight = getSum . runAp_ counter
