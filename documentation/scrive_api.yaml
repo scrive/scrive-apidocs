@@ -1,10 +1,10 @@
 ---
-swagger: '2.0'
+swagger: "2.0"
 
 info:
   title: Scrive Document API
-# The document workflow diagram was extracted from:
-# https://docs.google.com/drawings/d/1r5BeYUtfRlhoyOmG3C8iqhraC0rFuwl1BrKLrtCxWmU/edit
+  # The document workflow diagram was extracted from:
+  # https://docs.google.com/drawings/d/1r5BeYUtfRlhoyOmG3C8iqhraC0rFuwl1BrKLrtCxWmU/edit
   description: |
     # Overview
 
@@ -809,7 +809,6 @@ tags:
   - name: Internal
 
 paths:
-
   # Monitoring
   /monitor/status:
     $ref: ./api/monitor/status.yaml
@@ -991,6 +990,10 @@ paths:
   /signup:
     $ref: ./api/user/signup.yaml
 
+  # User Group
+
+  /usergroups/{user_group_id}:
+    $ref: ./api/usergroup/getusergroup.yaml
 
 definitions:
   Document:
@@ -1037,6 +1040,12 @@ definitions:
     $ref: ./definitions/LoginToken.yaml
   LanguageCode:
     $ref: ./definitions/LanguageCode.yaml
+  UserGroup:
+    $ref: ./definitions/UserGroup.yaml
+  UserGroupSettings:
+    $ref: ./definitions/UserGroupSettings.yaml
+  UserGroupContactDetails:
+    $ref: ./definitions/UserGroupContactDetails.yaml
 
 parameters:
   $ref: ./extras/parameters.yaml
