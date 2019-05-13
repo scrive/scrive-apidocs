@@ -71,7 +71,7 @@ data SenderConfig = MbloxSender {
   mbToken          :: !String
 , mbURL            :: !String -- "https://api.mblox.com/xms/v1/{username}/batches"
 } | TeliaCallGuideSender {
-  tcgSenderUrl      :: !String -- "https://sms.ccs.teliasonera.com/smsplus/smsextended"
+  tcgSenderUrl      :: !String -- "https://sms.ace.teliacompany.com/smsplus/smsextended"
 , tcgSenderUser     :: !String
 , tcgSenderPassword :: !String
 } | LocalSender {
