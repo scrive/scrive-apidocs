@@ -19,8 +19,6 @@ module Doc.Types.SignatoryLink (
   , TemporaryMagicHash(..)
   , signatoryLinkMagicHashesSelectors
   , isValidSignatoryMagicHash
-  , isSigningRole
-  , isApprovingRole
   ) where
 
 import Control.Monad.Catch
@@ -334,23 +332,6 @@ data SignatoryRole = SignatoryRoleViewer
                    | SignatoryRoleForwardedApprover
   deriving (Eq, Ord, Show)
 
-signingRoles :: [SignatoryRole]
-signingRoles = [
-    SignatoryRoleSigningParty
-  , SignatoryRoleForwardedSigningParty
-  ]
-
-approvingRoles :: [SignatoryRole]
-approvingRoles = [
-    SignatoryRoleApprover
-  , SignatoryRoleForwardedApprover
-  ]
-
-isSigningRole :: SignatoryRole -> Bool
-isSigningRole role = elem role signingRoles
-
-isApprovingRole :: SignatoryRole -> Bool
-isApprovingRole role = elem role approvingRoles
 
 -- | True == SigningParty, False == Viewer.
 signatoryRoleFromBool :: Bool -> SignatoryRole
