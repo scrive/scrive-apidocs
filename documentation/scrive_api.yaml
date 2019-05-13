@@ -995,6 +995,9 @@ paths:
   /usergroups/{user_group_id}:
     $ref: ./api/usergroup/getusergroup.yaml
 
+  /usergroups/{user_group_id}/update:
+    $ref: ./api/usergroup/updateusergroup.yaml
+
 definitions:
   Document:
     $ref: ./definitions/Document.yaml
