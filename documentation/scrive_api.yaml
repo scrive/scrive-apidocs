@@ -1001,6 +1001,9 @@ paths:
   /usergroups/{user_group_id}/update:
     $ref: ./api/usergroup/updateusergroup.yaml
 
+  /usergroups/{user_group_id}/delete:
+    $ref: ./api/usergroup/deleteusergroup.yaml
+
 definitions:
   Document:
     $ref: ./definitions/Document.yaml
