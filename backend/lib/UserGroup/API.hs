@@ -149,7 +149,7 @@ userGroupApiV2Delete ugid = api $
     dbUpdate $ UserGroupDelete ugid
     dbUpdate $ AccessControlDeleteRolesByUserGroup ugid
     return . Ok . J.runJSONGen $ do
-      J.value "ugid" $ show ugid
+      J.value "id" $ show ugid
       J.value "resource" ("usergroup" :: String)
       J.value "action" ("deleted" :: String)
         where
