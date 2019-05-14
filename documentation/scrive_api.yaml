@@ -1004,6 +1004,24 @@ paths:
   /usergroups/{user_group_id}/delete:
     $ref: ./api/usergroup/deleteusergroup.yaml
 
+  /usergroups/{user_group_id}/contact_details:
+    $ref: ./api/usergroup/getusergroupcontactdetails.yaml
+
+  /usergroups/{user_group_id}/contact_details/update:
+    $ref: ./api/usergroup/updateusergroupcontactdetails.yaml
+
+  /usergroups/{user_group_id}/contact_details/delete:
+    $ref: ./api/usergroup/deleteusergroupcontactdetails.yaml
+
+  /usergroups/{user_group_id}/settings:
+    $ref: ./api/usergroup/getusergroupsettings.yaml
+
+  /usergroups/{user_group_id}/settings/update:
+    $ref: ./api/usergroup/updateusergroupsettings.yaml
+
+  /usergroups/{user_group_id}/settings/delete:
+    $ref: ./api/usergroup/deleteusergroupsettings.yaml
+
 definitions:
   Document:
     $ref: ./definitions/Document.yaml
@@ -1051,10 +1069,16 @@ definitions:
     $ref: ./definitions/LanguageCode.yaml
   UserGroup:
     $ref: ./definitions/UserGroup.yaml
+  UserGroupWithInheritable:
+    $ref: ./definitions/UserGroupWithInheritable.yaml
   UserGroupSettings:
     $ref: ./definitions/UserGroupSettings.yaml
+  UserGroupSettingsWithInheritable:
+    $ref: ./definitions/UserGroupSettingsWithInheritable.yaml
   UserGroupContactDetails:
     $ref: ./definitions/UserGroupContactDetails.yaml
+  UserGroupContactDetailsWithInheritable:
+    $ref: ./definitions/UserGroupContactDetailsWithInheritable.yaml
 
 parameters:
   $ref: ./extras/parameters.yaml

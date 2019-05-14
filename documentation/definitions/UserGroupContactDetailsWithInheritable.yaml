@@ -1,0 +1,61 @@
+---
+$schema: "http://json-schema.org/draft-04/schema#"
+title: UserGroupContactDetailsWithInheritable
+type: object
+example: {
+  "inherited_from": 1,
+  "address": {
+    "company_number": "5568166804",
+    "address": "Barnhusgatan 20",
+    "zip": "111 23",
+    "city": "Stockholm",
+    "country": "Sweden"
+  },
+  "inheritable_preview": {
+    "inherited_from": 1,
+    "address": {
+      "company_number": "5568166804",
+      "address": "Barnhusgatan 20",
+      "zip": "111 23",
+      "city": "Stockholm",
+      "country": "Sweden"
+    }
+  }
+}
+description: |
+  JSON representation of a User Group's Contact Details (with Inheritable
+  Preview).
+properties:
+  inherited_from:
+    type: integer
+  address:
+    type: object
+    properties:
+     company_number:
+        type: string
+     address:
+        type: string
+     zip:
+        type: string
+     city:
+        type: string
+     country:
+        type: string
+  inheritable_preview:
+    type: object
+    properties:
+      inherited_from:
+        type: integer
+      address:
+        type: object
+        properties:
+          company_number:
+              type: string
+          address:
+              type: string
+          zip:
+              type: string
+          city:
+              type: string
+          country:
+              type: string

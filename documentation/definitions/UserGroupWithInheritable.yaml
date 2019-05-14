@@ -1,11 +1,11 @@
 ---
 $schema: "http://json-schema.org/draft-04/schema#"
-title: UserGroup
+title: UserGroupWithInheritable
 type: object
 example: {
-  "id": 1,
-  "parent_id": null,
-  "name": "A Root Usergroup",
+  "id": 5,
+  "parent_id": 1,
+  "name": "A Child Usergroup",
   "children": [
     {
       "id": 2,
@@ -26,21 +26,43 @@ example: {
       "idle_doc_timeout_rejected": null,
       "idle_doc_timeout_error": null,
       "immediate_trash": false
+    },
+    "inheritable_preview": {
+      "inherited_from": 1,
+      "data_retention_policy": {
+        "idle_doc_timeout_preparation": null,
+        "idle_doc_timeout_closed": null,
+        "idle_doc_timeout_canceled": null,
+        "idle_doc_timeout_timedout": null,
+        "idle_doc_timeout_rejected": 23,
+        "idle_doc_timeout_error": null,
+        "immediate_trash": true
+      }
     }
   },
   "contact_details": {
-    "inherited_from": null,
+    "inherited_from": 1,
     "address": {
       "company_number": "5568166804",
       "address": "Barnhusgatan 20",
       "zip": "111 23",
       "city": "Stockholm",
       "country": "Sweden"
+    },
+    "inheritable_preview": {
+      "inherited_from": 1,
+      "address": {
+        "company_number": "5568166804",
+        "address": "Barnhusgatan 20",
+        "zip": "111 23",
+        "city": "Stockholm",
+        "country": "Sweden"
+      }
     }
   }
 }
 description: |
-  JSON representation of a User Group.
+  JSON representation of a User Group (with Inheritable Previews).
 properties:
   id:
     type: integer
@@ -59,6 +81,6 @@ properties:
         name:
           type: string
   settings:
-    $ref: ./UserGroupSettings.yaml
+    $ref: ./UserGroupSettingsWithInheritable.yaml
   contact_details:
-    $ref: ./UserGroupContactDetails.yaml
+    $ref: ./UserGroupContactDetailsWithInheritable.yaml

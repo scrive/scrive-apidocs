@@ -6,6 +6,112 @@ get:
     - User Group
 
   description: |
+    > Example of a User Group without inheritable previews:
+
+    ```json
+    {
+      "id": 5,
+      "parent_id": 1,
+      "name": "A Child Usergroup",
+      "children": [
+        {
+          "id": 2,
+          "name": "Some child user group"
+        },
+        {
+          "id": 3,
+          "name": "Yet another child user group"
+        }
+      ],
+      "settings": {
+        "inherited_from": null,
+        "data_retention_policy": {
+          "idle_doc_timeout_preparation": null,
+          "idle_doc_timeout_closed": null,
+          "idle_doc_timeout_canceled": 42,
+          "idle_doc_timeout_timedout": null,
+          "idle_doc_timeout_rejected": null,
+          "idle_doc_timeout_error": null,
+          "immediate_trash": false
+        }
+      },
+      "contact_details": {
+        "inherited_from": 1,
+        "address": {
+          "company_number": "5568166804",
+          "address": "Barnhusgatan 20",
+          "zip": "111 23",
+          "city": "Stockholm",
+          "country": "Sweden"
+        }
+      }
+    }
+    ```
+
+    > Example of a User Group with inheritable previews:
+
+    ```json
+    {
+      "id": 5,
+      "parent_id": 1,
+      "name": "A Child Usergroup",
+      "children": [
+        {
+          "id": 2,
+          "name": "Some child user group"
+        },
+        {
+          "id": 3,
+          "name": "Yet another child user group"
+        }
+      ],
+      "settings": {
+        "inherited_from": null,
+        "data_retention_policy": {
+          "idle_doc_timeout_preparation": null,
+          "idle_doc_timeout_closed": null,
+          "idle_doc_timeout_canceled": 42,
+          "idle_doc_timeout_timedout": null,
+          "idle_doc_timeout_rejected": null,
+          "idle_doc_timeout_error": null,
+          "immediate_trash": false
+        },
+        "inheritable_preview": {
+          "inherited_from": 1,
+          "data_retention_policy": {
+            "idle_doc_timeout_preparation": null,
+            "idle_doc_timeout_closed": null,
+            "idle_doc_timeout_canceled": null,
+            "idle_doc_timeout_timedout": null,
+            "idle_doc_timeout_rejected": 23,
+            "idle_doc_timeout_error": null,
+            "immediate_trash": true
+          }
+        }
+      },
+      "contact_details": {
+        "inherited_from": 1,
+        "address": {
+          "company_number": "5568166804",
+          "address": "Barnhusgatan 20",
+          "zip": "111 23",
+          "city": "Stockholm",
+          "country": "Sweden"
+        },
+        "inheritable_preview": {
+          "inherited_from": 1,
+          "address": {
+            "company_number": "5568166804",
+            "address": "Barnhusgatan 20",
+            "zip": "111 23",
+            "city": "Stockholm",
+            "country": "Sweden"
+          }
+        }
+      }
+    }
+    ```
+
     This endpoint is used to get an overview of a given User Group, including
     other, related and dependent, objects. At time of writing, those extra
     objects are `contact_details` and `settings`.

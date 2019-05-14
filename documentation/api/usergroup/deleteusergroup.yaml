@@ -6,6 +6,16 @@ post:
     - User Group
 
   description: |
+    > Example of JSON returned:
+
+    ```json
+    {
+      "id": "1",
+      "resource": "usergroup",
+      "action": "deleted"
+    }
+    ```
+
     This endpoint allows you to delete a User Group.
 
     It's worth noting that you may only delete child User Groups. Root User
