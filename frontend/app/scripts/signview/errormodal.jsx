@@ -46,10 +46,16 @@ var ScreenBlockingDialog = require("../../js/dialog.js").ScreenBlockingDialog;
 
   var ErrorDetailsComponent = React.createClass({
     propTypes: {
-      details: React.PropTypes.object.isRequired
+      details: React.PropTypes.object.isRequired,
+      xhr: React.PropTypes.object.isRequired
     },
     render: function () {
       var details = this.props.details || {};
+      var xhr = this.props.xhr;
+      var requestid = xhr.getResponseHeader("X-Request-ID");
+      if (requestid) {
+        details["Request ID"] = requestid;
+      }
       return (
         <div className="errordetails">
           <ul>
@@ -101,7 +107,9 @@ var ScreenBlockingDialog = require("../../js/dialog.js").ScreenBlockingDialog;
     }
 
     var detailsDiv = $("<div/>");
-    React.render(React.createElement(ErrorDetailsComponent, {details: details}), detailsDiv[0]);
+    React.render(React.createElement(ErrorDetailsComponent,
+                                     {details: details, xhr: xhr}),
+                 detailsDiv[0]);
     detailsDiv.appendTo(contentDiv);
 
     var buttonDiv = $("<div/>");

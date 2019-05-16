@@ -49,7 +49,11 @@ var classNames = require("classnames");
         onCriticalError: function (xhr) {
           if (self.isMounted()) {
             ReloadManager.stopBlocking();
-            new ErrorModal(xhr);
+            var signatory = self.props.signatory;
+            var document = signatory.document();
+            var details = {"Document ID": document.documentid(),
+                           "Signatory ID": signatory.signatoryid()};
+            new ErrorModal(xhr, details);
           }
         }
       });
