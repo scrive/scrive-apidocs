@@ -20,7 +20,7 @@
 "_CancelDocumenElegEvidenceText":"Η υπηρεσία Scrive απέρριψε την προσπάθεια του/της $signatory$ να υπογράψει το έγγραφο. Ο λόγος ήταν ότι οι πληροφορίες ταυτότητας του/της $signatory$ δεν ταίριαξαν με τις πληροφορίες ταυτότητας που ελήφθησαν από το εξωτερικό σύστημα ηλεκτρονικής ταυτότητας. ",
 "_CancelDocumentEvidenceTextSimpleArchive":"Η πρόσκληση υπογραφής του εγγράφου έχει αποσυρθεί. ",
 "_CloseDocumentEvidenceTextSimple":"Η υπηρεσία Scrive κλείδωσε το έγγραφο σε περαιτέρω τροποποιήσεις από τα υπογραφόμενα μέλη. ",
-"_ForwardedSigningEvidenceArchive":"",
+"_ForwardedSigningEvidenceArchive":"Το έγγραφο προωθήθηκε στον/στην $signatory$.",
 "_InvitationDeliveredByEmailTextToApproveSimple":"Η πρόσκληση έγκρισης του εγγράφου παραδόθηκε στον/στην $signatory$ μέσω email.",
 "_InvitationDeliveredByEmailTextToReviewSimple":"Η πρόσκληση ελέγχου του εγγράφου έχει παραδοθεί στον/στην $signatory$ μέσω email.",
 "_InvitationDeliveredByEmailTextToSignSimple":"Η πρόσκληση υπογραφής του εγγράφου έχει παραδοθεί στον/στην $signatory$ μέσω email. ",
