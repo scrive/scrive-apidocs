@@ -161,7 +161,7 @@ docApiV2AddEvidenceEvent did = logDocument did . api $ do
     document <- theDocument
     eventText <- apiV2ParameterObligatory (ApiV2ParameterText "text")
     guardThatUserIsAuthorOrCompanyAdmin user document
-    guardThatDocumentIs (not . isTemplate) "The document is not a template." document
+    guardThatDocumentIs (not . isTemplate) "Evidence cannot be added to a template." document
     guardThatDocumentIs (not . isClosed)
       "Evidence cannot be added to a closed document."
       document
