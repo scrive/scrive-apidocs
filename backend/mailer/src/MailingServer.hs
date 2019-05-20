@@ -16,7 +16,6 @@ import qualified Data.Text.IO as T
 import qualified Data.Traversable as F
 import qualified Happstack.StaticRouting as R
 
-import AppDBTables
 import Configuration
 import Database.Redis.Configuration
 import DB
@@ -71,7 +70,7 @@ main = do
     let pgSettings = pgConnSettings $ mailerDBConfig conf
         extrasOptions = def
     withPostgreSQL (unConnectionSource . simpleSource $ pgSettings []) $ do
-      checkDatabase extrasOptions kontraComposites kontraDomains kontraTables
+      checkDatabaseAllowUnknownObjects extrasOptions [] [] mailerTables
     fsConf <- do
       localCache  <- newFileMemCache $ mailerLocalFileCacheSize conf
       globalCache <- F.forM (mailerRedisCacheConfig conf) mkRedisConnection
