@@ -6,6 +6,15 @@ post:
     - Prepare
 
   description: |
+    > ### Example
+
+    ```bash
+    curl -X POST 'https://{server_address}/api/v2/documents/newfromtemplate/${document_id}' \
+      -H 'Authorization: oauth_signature_method="PLAINTEXT",oauth_consumer_key="${apitoken}",oauth_token="${accesstoken}",oauth_signature="${apisecret}&${accesssecret}"'
+    ```
+
+    > The above example uses [personal access credentials](#personal-access-credentials) (see `-H` option), but can be easily updated to use [OAuth](#oauth).
+
     Create a new document from a template, given the document ID for a document that is a template.
 
     The new document will have state `Preparation` and will not be a template, and the signing process can thus be carried out.
