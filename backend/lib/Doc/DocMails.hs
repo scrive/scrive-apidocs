@@ -37,7 +37,6 @@ import Doc.DocViewMail
 import Doc.DocViewSMS
 import Doc.Logging
 import Doc.Model
-import Doc.Types.SignatoryLink (isApprovingRole, isSigningRole)
 import EvidenceLog.Model (CurrentEvidenceEventType(..), InsertEvidenceEventWithAffectedSignatoryAndMsg(..))
 import File.File
 import File.Model
@@ -129,10 +128,10 @@ sendPartyProcessFinalizedNotification ::
   => Document -> SignatoryLink -> m ()
 sendPartyProcessFinalizedNotification document signatoryLink = do
   case signatoryrole signatoryLink of
-    role | isSigningRole role ->
-      sendPartyProcessFinalizedNotification' document signatoryLink DocumentSigned
-    role | isApprovingRole role ->
+    SignatoryRoleApprover ->
       sendPartyProcessFinalizedNotification' document signatoryLink DocumentApproved
+    SignatoryRoleSigningParty ->
+      sendPartyProcessFinalizedNotification' document signatoryLink DocumentSigned
     _ ->
       pure ()
 

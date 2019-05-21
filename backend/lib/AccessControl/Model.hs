@@ -6,9 +6,11 @@ module AccessControl.Model
   , AccessControlDeleteRolesByUserGroup(..)
   , AccessControlInsertUserGroupAdmin(..)
   , AccessControlRemoveUserGroupAdminRole(..)
+  , addInheritedRoles
   ) where
 
 import Control.Monad.Catch
+import Control.Monad.Extra (concatForM)
 
 import AccessControl.Types
 import DB
@@ -117,6 +119,15 @@ instance (MonadDB m, MonadThrow m) =>
       sqlWhereEq "role" (toAccessRoleType $ UserGroupAdminAR ugid)
       sqlWhereEq "src_user_id" uid
       sqlWhereEq "trg_user_group_id" ugid
+
+addInheritedRoles :: (MonadDB m, MonadThrow m) => [AccessRole] -> m [AccessRole]
+addInheritedRoles roles = concatForM roles $ \role ->
+  case accessRoleTarget role of
+    UserAdminAR ugid -> do
+      ugwcs <- dbQuery $ UserGroupGetAllChildrenRecursive ugid
+      return . (role:) . for (ugwcToList ugwcs) $ \ug ->
+        accessRoleSetTarget (UserAdminAR $ get ugID ug) role
+    _ -> return [role]
 
 fetchAccessRole :: ( AccessRoleID
                    , AccessRoleType

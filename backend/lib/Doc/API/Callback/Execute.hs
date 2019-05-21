@@ -245,6 +245,7 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
        Right token -> do
         (exitcode, stdout, stderr) <- readCurl [
             "--tlsv1.2"
+          , "--location-trusted"
           , "-X", "POST"
           , "--write-out","\n%{http_code}"
           , "-L" -- make curl follow redirects
@@ -263,14 +264,22 @@ executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid 
                           [(n::Int, "")] -> n
                           _ -> unexpectedError "Couldn't parse http status from curl output"
             sendAndFail mErr = do
-                logInfo "Salesforce API callback failed" $ object ["stderr" `equalsExternalBSL` stderr]
+                logInfo "Salesforce API callback failed" $ object [
+                  "salesforce_callback_url" .= url,
+                  "exitcode" .= show exitcode,
+                  "stdout" `equalsExternalBSL` stdout,
+                  "stderr" `equalsExternalBSL` stderr
+                  ]
                 emailErrorIfNeeded ("Request to callback URL failed", fromMaybe "<unknown>" mErr, BSL.unpack stdout,
                                     BSL.unpack stderr, show httpCode)
                 return False
-        case (exitcode, httpCode) of
-            (ExitSuccess, n) | n < 300 -> return True
-                             | otherwise -> sendAndFail Nothing
-            (ExitFailure err, _) -> sendAndFail $ Just $ show err
+        case (exitcode) of
+            (ExitSuccess) -> if (httpCode <300)
+                                then do
+                                  logInfo_ "Salesforce API callback succeeded"
+                                  return True
+                                else sendAndFail Nothing
+            (ExitFailure err) -> sendAndFail $ Just $ show err
 
   where emailErrorIfNeeded (msg, curl_err, stdout, stderr, http_code :: String) = do
           sc <- ask

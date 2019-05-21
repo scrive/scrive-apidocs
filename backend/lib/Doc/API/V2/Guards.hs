@@ -408,6 +408,8 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
     return ()
 
  where
+    fieldIsObligatoryFI fi sl = Just True == (fieldIsObligatory <$> (getFieldByIdentity fi $ signatoryfields sl))
+
     signatoryHasValidDeliverySettings sl = (isAuthor sl) || case (signatorylinkdeliverymethod sl) of
       EmailDelivery  -> isValidEmail $ getEmail sl
       MobileDelivery -> isValidPhoneForSMS $ getMobile sl
@@ -431,13 +433,13 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
     signatoryHasValidAuthSettings sl = authToSignIsValid sl
 
     authToSignIsValid sl = case signatorylinkauthenticationtosignmethod sl of
-      SEBankIDAuthenticationToSign -> null (getPersonalNumber sl) || (isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl)
-      NOBankIDAuthenticationToSign -> null (getPersonalNumber sl) || (isGood $ asValidNOBankIdPersonalNumber $ getPersonalNumber sl)
-      DKNemIDAuthenticationToSign  -> null (getPersonalNumber sl) || (isGood $ asValidDanishSSN $ getPersonalNumber sl)
-      SMSPinAuthenticationToSign -> isJust (getFieldByIdentity MobileFI $ signatoryfields sl) && (null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl))
+      SEBankIDAuthenticationToSign -> fieldIsObligatoryFI PersonalNumberFI sl && (null (getPersonalNumber sl) || (isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl))
+      NOBankIDAuthenticationToSign -> fieldIsObligatoryFI PersonalNumberFI sl && (null (getPersonalNumber sl) || (isGood $ asValidNOBankIdPersonalNumber $ getPersonalNumber sl))
+      DKNemIDAuthenticationToSign  -> fieldIsObligatoryFI PersonalNumberFI sl && (null (getPersonalNumber sl) || (isGood $ asValidDanishSSN $ getPersonalNumber sl))
+      SMSPinAuthenticationToSign -> fieldIsObligatoryFI MobileFI sl && (null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl))
       StandardAuthenticationToSign -> True
 
-    signatoryHasValidSSNForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of
+    signatoryHasValidSSNForIdentifyToView sl = case signatorylinkauthenticationtoviewmethod sl of
       SEBankIDAuthenticationToView -> isGood $ asValidSwedishSSN   $ getPersonalNumber sl
       NOBankIDAuthenticationToView -> isGood $ asValidNorwegianSSN $ getPersonalNumber sl
       DKNemIDAuthenticationToView  -> isGood $ asValidDanishSSN    $ getPersonalNumber sl

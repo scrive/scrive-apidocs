@@ -193,12 +193,8 @@ var Task = require("../navigation/task");
     errorModal: function (xhr) {
       var document = this.props.model.document();
       var signatory = document.currentSignatory();
-      var requestid = xhr.getResponseHeader("X-Request-ID");
       var details = {"Document ID": document.documentid(),
                      "Signatory ID": signatory.signatoryid()};
-      if (requestid) {
-        details["Request ID"] = requestid;
-      }
       new ErrorModal(xhr, details);
     },
 
