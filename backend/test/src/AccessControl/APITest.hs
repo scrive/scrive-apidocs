@@ -104,7 +104,7 @@ testUserGroupAdminCanViewRolesOfOtherUserGroupMember = do
   (user, ug) <- addNewAdminUserAndUserGroup "Captain" "Hollister" emailAddress
   let uid1 = userid user
       ugid = get ugID ug
-  void . dbUpdate $ AccessControlInsertUserGroupAdmin uid1 ugid
+  void . dbUpdate . AccessControlCreateForUser uid1 $ UserGroupAdminAR ugid
   user2 <- fromJust <$> addNewUserToUserGroup "Dwayne" "Dibley" emailAddress2 ugid
   let uid2 = userid user2
   ctx   <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
@@ -120,7 +120,7 @@ testUserGroupMemberCannotViewRolesOfOtherUserGroupMembers = do
   (user, ug) <- addNewAdminUserAndUserGroup "Captain" "Hollister" emailAddress
   let uid1 = userid user
       ugid = get ugID ug
-  void . dbUpdate $ AccessControlInsertUserGroupAdmin uid1 ugid
+  void . dbUpdate . AccessControlCreateForUser uid1 $ UserGroupAdminAR ugid
   muser2 <- addNewCompanyUser "Dwayne" "Dibley" emailAddress2 ugid
   ctx   <- set ctxmaybeuser muser2 <$> mkContext defaultLang
   req   <- mkRequest GET []
