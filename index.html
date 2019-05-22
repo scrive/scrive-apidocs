@@ -1909,6 +1909,15 @@ We may add more fields and more details in the future.</p>
 </strong>
 </p>
 
+<blockquote>
+<h3 id='example'>Example</h3></blockquote>
+<pre class="highlight shell"><code>curl -X POST <span class="s1">'https://{server_address}/api/v2/documents/new'</span> <span class="se">\</span>
+  -H <span class="s1">'Authorization: oauth_signature_method="PLAINTEXT",oauth_consumer_key="${apitoken}",oauth_token="${accesstoken}",oauth_signature="${apisecret}&amp;${accesssecret}"'</span>
+</code></pre>
+<blockquote>
+<p>The above example uses <a href="#personal-access-credentials">personal access credentials</a> (see <code>-H</code> option), but can be easily updated to use <a href="#oauth">OAuth</a>.</p>
+</blockquote>
+
 <p>Create a new document with the given PDF (if any) as the main file.
 The new document will have state <code>Preparation</code>, and will not be a template.</p>
 
@@ -1949,6 +1958,15 @@ represents visibility in the E-archive.</p>
 <code class="operation-method operation-method-POST">POST  /api/v2/documents/newfromtemplate/{document_id}</code>
 </strong>
 </p>
+
+<blockquote>
+<h3 id='example-2'>Example</h3></blockquote>
+<pre class="highlight shell"><code>curl -X POST <span class="s1">'https://{server_address}/api/v2/documents/newfromtemplate/${document_id}'</span> <span class="se">\</span>
+  -H <span class="s1">'Authorization: oauth_signature_method="PLAINTEXT",oauth_consumer_key="${apitoken}",oauth_token="${accesstoken}",oauth_signature="${apisecret}&amp;${accesssecret}"'</span>
+</code></pre>
+<blockquote>
+<p>The above example uses <a href="#personal-access-credentials">personal access credentials</a> (see <code>-H</code> option), but can be easily updated to use <a href="#oauth">OAuth</a>.</p>
+</blockquote>
 
 <p>Create a new document from a template, given the document ID for a document that is a template.</p>
 
@@ -2014,6 +2032,17 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <code class="operation-method operation-method-POST">POST  /api/v2/documents/{document_id}/update</code>
 </strong>
 </p>
+
+<blockquote>
+<h3 id='example-3'>Example</h3></blockquote>
+<pre class="highlight shell"><code>curl -X POST <span class="s1">'https://{server_address}/api/v2/documents/${document_id}/update'</span> <span class="se">\</span>
+  -H <span class="s1">'Authorization: oauth_signature_method="PLAINTEXT",oauth_consumer_key="${apitoken}",oauth_token="${accesstoken}",oauth_signature="${apisecret}&amp;${accesssecret}"'</span> <span class="se">\</span>
+  --data-urlencode <span class="s1">'document={ "id":"${document_id}", "parties": [{}] }'</span> <span class="se">\</span>
+  --data-urlencode <span class="s1">'document_id=${document_id}'</span>
+</code></pre>
+<blockquote>
+<p>The above example uses <a href="#personal-access-credentials">personal access credentials</a> (see <code>-H</code> option), but can be easily updated to use <a href="#oauth">OAuth</a>.</p>
+</blockquote>
 
 <p>Update the metadata for a document in preparation.</p>
 
@@ -2101,7 +2130,7 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 </p>
 
 <blockquote>
-<h3 id='example'>Example</h3>
+<h3 id='example-4'>Example</h3>
 <p>As this call can be a little tricky to understand, we provide a concrete
 example.</p>
 
@@ -2264,6 +2293,16 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <code class="operation-method operation-method-POST">POST  /api/v2/documents/{document_id}/start</code>
 </strong>
 </p>
+
+<blockquote>
+<h3 id='example-5'>Example</h3></blockquote>
+<pre class="highlight shell"><code>curl -X POST <span class="s1">'https://{server_address}/api/v2/documents/${document_id}/start'</span> <span class="se">\</span>
+  -H <span class="s1">'Authorization: oauth_signature_method="PLAINTEXT",oauth_consumer_key="${apitoken}",oauth_token="${accesstoken}",oauth_signature="${apisecret}&amp;${accesssecret}"'</span> <span class="se">\</span>
+  --data-urlencode <span class="s1">'document_id=${document_id}'</span>
+</code></pre>
+<blockquote>
+<p>The above example uses <a href="#personal-access-credentials">personal access credentials</a> (see <code>-H</code> option), but can be easily updated to use <a href="#oauth">OAuth</a>.</p>
+</blockquote>
 
 <p>Start the signing process for a document in preparation.</p>
 
