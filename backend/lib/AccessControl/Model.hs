@@ -1,16 +1,20 @@
 module AccessControl.Model
-  ( GetRoles(..)
+  ( AccessControlCreateForUser(..)
+  , AccessControlCreateForUserGroup(..)
   , AccessRoleGet(..)
+  , GetRoles(..)
   , AccessControlGetRolesByUser(..)
   , AccessControlGetRolesByUserGroup(..)
   , AccessControlDeleteRolesByUserGroup(..)
   , AccessControlInsertUserGroupAdmin(..)
+  , AccessControlRemoveRole(..)
   , AccessControlRemoveUserGroupAdminRole(..)
   , addInheritedRoles
   ) where
 
 import Control.Monad.Catch
 import Control.Monad.Extra (concatForM)
+import Control.Monad.State.Class (MonadState)
 
 import AccessControl.Types
 import DB
@@ -31,8 +35,41 @@ rolesSelector =
   , "trg_folder_id"
   ]
 
+data AccessControlCreateForUser
+  = AccessControlCreateForUser UserID AccessRoleTarget
+instance (MonadDB m, MonadThrow m)
+  => DBUpdate m AccessControlCreateForUser (Maybe AccessRole) where
+  update (AccessControlCreateForUser uid target) = do
+    runQuery_ . sqlInsert "access_control" $ do
+      sqlSet "role" $ toAccessRoleType target
+      sqlSet "src_user_id" uid
+      setTarget target
+      sqlResult "id"
+    fetchOne runIdentity >>= dbQuery . AccessRoleGet
+
+data AccessControlCreateForUserGroup
+  = AccessControlCreateForUserGroup UserGroupID AccessRoleTarget
+instance (MonadDB m, MonadThrow m)
+  => DBUpdate m AccessControlCreateForUserGroup (Maybe AccessRole) where
+  update (AccessControlCreateForUserGroup ugid target) = do
+    runQuery_ . sqlInsert "access_control" $ do
+      sqlSet "role" $ toAccessRoleType target
+      sqlSet "src_user_group_id" ugid
+      setTarget target
+      sqlResult "id"
+    fetchOne runIdentity >>= dbQuery . AccessRoleGet
+
+setTarget :: (MonadState v m, SqlSet v) => AccessRoleTarget -> m ()
+setTarget target = case target of
+  UserAR uid             -> sqlSet "trg_user_id" uid
+  UserGroupMemberAR ugid -> sqlSet "trg_user_group_id" ugid
+  UserAdminAR ugid       -> sqlSet "trg_user_group_id" ugid
+  UserGroupAdminAR ugid  -> sqlSet "trg_user_group_id" ugid
+  DocumentAdminAR fid    -> sqlSet "trg_folder_id" fid
+
 data AccessRoleGet = AccessRoleGet AccessRoleID
-instance (MonadDB m, MonadThrow m) => DBQuery m AccessRoleGet (Maybe AccessRole) where
+instance (MonadDB m, MonadThrow m)
+  => DBQuery m AccessRoleGet (Maybe AccessRole) where
   query (AccessRoleGet roleId) = do
     runQuery_ . sqlSelect "access_control" $ do
       mapM_ sqlResult $ rolesSelector
@@ -50,7 +87,8 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetRoles [AccessRole] where
     dbRolesByUserGroup <- do
       query . AccessControlGetRolesByUserGroup $ ugid
     -- Every user shall have DocumentAdminAR to his home folder
-    -- Every is_company_admin shall have DocumentAdminAR to the company home folder
+    -- Every is_company_admin shall have DocumentAdminAR to the company home
+    -- folder
     mGroupHomeFolderID <- do
       (get folderID <$>) <$> (query . FolderGetUserGroupHome $ ugid)
     mUserHomeFolderID <- do
@@ -68,7 +106,8 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetRoles [AccessRole] where
     return $ dbRolesByUser <> dbRolesByUserGroup <> derivedRoles
 
 data AccessControlGetRolesByUser = AccessControlGetRolesByUser UserID
-instance (MonadDB m, MonadThrow m) => DBQuery m AccessControlGetRolesByUser [AccessRole] where
+instance (MonadDB m, MonadThrow m)
+  => DBQuery m AccessControlGetRolesByUser [AccessRole] where
   query (AccessControlGetRolesByUser uid) = do
     runQuery_ . sqlSelect "access_control" $ do
       mapM_ sqlResult $ rolesSelector
@@ -91,7 +130,8 @@ instance (MonadDB m, MonadThrow m) =>
       sqlWhereIn "src_user_group_id" ugids
     fetchMany fetchAccessRole
 
-data AccessControlDeleteRolesByUserGroup = AccessControlDeleteRolesByUserGroup UserGroupID
+data AccessControlDeleteRolesByUserGroup
+  = AccessControlDeleteRolesByUserGroup UserGroupID
 instance (MonadDB m, MonadThrow m) =>
   DBUpdate m AccessControlDeleteRolesByUserGroup () where
   update (AccessControlDeleteRolesByUserGroup ugid) = do
@@ -102,13 +142,19 @@ instance (MonadDB m, MonadThrow m) =>
       ]
 
 -- @devnote maybe significant enough an event so we should always log it?
-data AccessControlInsertUserGroupAdmin = AccessControlInsertUserGroupAdmin UserID UserGroupID
-instance (MonadDB m, MonadThrow m) => DBUpdate m AccessControlInsertUserGroupAdmin Bool where
-  update (AccessControlInsertUserGroupAdmin uid ugid) = do
-    runQuery01 . sqlInsert "access_control" $ do
-      sqlSet "role" (toAccessRoleType $ UserGroupAdminAR ugid)
-      sqlSet "src_user_id" uid
-      sqlSet "trg_user_group_id" ugid
+data AccessControlInsertUserGroupAdmin
+  = AccessControlInsertUserGroupAdmin UserID UserGroupID
+instance (MonadDB m, MonadThrow m)
+  => DBUpdate m AccessControlInsertUserGroupAdmin Bool where
+  update (AccessControlInsertUserGroupAdmin uid ugid) =
+    fmap isJust . dbUpdate .
+      AccessControlCreateForUser uid $ UserGroupAdminAR ugid
+
+data AccessControlRemoveRole = AccessControlRemoveRole AccessRoleID
+instance (MonadDB m, MonadThrow m)
+  => DBUpdate m AccessControlRemoveRole Bool where
+  update (AccessControlRemoveRole roleId) =
+    runQuery01 . sqlDelete "access_control" $ sqlWhereEq "id" roleId
 
 data AccessControlRemoveUserGroupAdminRole =
     AccessControlRemoveUserGroupAdminRole UserID UserGroupID
@@ -116,7 +162,7 @@ instance (MonadDB m, MonadThrow m) =>
     DBUpdate m AccessControlRemoveUserGroupAdminRole Bool where
   update (AccessControlRemoveUserGroupAdminRole uid ugid) = do
     runQuery01 . sqlDelete "access_control" $ do
-      sqlWhereEq "role" (toAccessRoleType $ UserGroupAdminAR ugid)
+      sqlWhereEq "role" . toAccessRoleType $ UserGroupAdminAR ugid
       sqlWhereEq "src_user_id" uid
       sqlWhereEq "trg_user_group_id" ugid
 
