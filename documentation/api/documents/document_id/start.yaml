@@ -7,6 +7,16 @@ post:
     - Prepare
 
   description: |
+    > ### Example
+
+    ```bash
+    curl -X POST 'https://{server_address}/api/v2/documents/${document_id}/start' \
+      -H 'Authorization: oauth_signature_method="PLAINTEXT",oauth_consumer_key="${apitoken}",oauth_token="${accesstoken}",oauth_signature="${apisecret}&${accesssecret}"' \
+      --data-urlencode 'document_id=${document_id}'
+    ```
+
+    > The above example uses [personal access credentials](#personal-access-credentials) (see `-H` option), but can be easily updated to use [OAuth](#oauth).
+
     Start the signing process for a document in preparation.
 
     *OAuth Privileges required: `DOC_SEND`*
