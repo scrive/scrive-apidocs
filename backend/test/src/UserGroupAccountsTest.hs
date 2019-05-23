@@ -10,6 +10,7 @@ import Text.JSON.Gen
 import qualified Control.Exception.Lifted as E
 
 import AccessControl.Model
+import AccessControl.Types
 import Context
 import DB hiding (query, update)
 import Doc.DocStateData
@@ -149,7 +150,7 @@ test_addingANewCompanyAccountWithDifferentTarget = do
     (void $ runTestKontra req ctx handleAddUserGroupAccount)
 
   -- user is given permission on target user group, so addition expected
-  void $ dbUpdate $ AccessControlInsertUserGroupAdmin (userid user) trgugid
+  void . dbUpdate . AccessControlCreateForUser (userid user) $ UserGroupAdminAR trgugid
   (res, _) <- runTestKontra req ctx handleAddUserGroupAccount
   assertBool "Response is propper JSON" $ res == (runJSONGen $ value "added" True)
   Just newuser <- dbQuery $ GetUserByEmail (Email "bob@blue.com")
@@ -185,8 +186,7 @@ test_addingExistingCompanyUserAsCompanyAccountWithDifferentTarget = do
     (void $ runTestKontra req ctx handleAddUserGroupAccount)
 
   -- user is given permission on target user group; invite expected
-  void $ dbUpdate $ AccessControlInsertUserGroupAdmin (userid user) trgugid
-
+  void . dbUpdate . AccessControlCreateForUser (userid user) $ UserGroupAdminAR trgugid
   (res, _) <- runTestKontra req ctx $ handleAddUserGroupAccount
 
   assertBool "Response is propper JSON" $ res == (runJSONGen $ value "added" True)

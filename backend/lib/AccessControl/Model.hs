@@ -6,7 +6,6 @@ module AccessControl.Model
   , AccessControlGetRolesByUser(..)
   , AccessControlGetRolesByUserGroup(..)
   , AccessControlDeleteRolesByUserGroup(..)
-  , AccessControlInsertUserGroupAdmin(..)
   , AccessControlRemoveRole(..)
   , AccessControlRemoveUserGroupAdminRole(..)
   , addInheritedRoles
@@ -140,15 +139,6 @@ instance (MonadDB m, MonadThrow m) =>
         sqlWhereEq "src_user_group_id" $ Just ugid
       , sqlWhereEq "trg_user_group_id" $ Just ugid
       ]
-
--- @devnote maybe significant enough an event so we should always log it?
-data AccessControlInsertUserGroupAdmin
-  = AccessControlInsertUserGroupAdmin UserID UserGroupID
-instance (MonadDB m, MonadThrow m)
-  => DBUpdate m AccessControlInsertUserGroupAdmin Bool where
-  update (AccessControlInsertUserGroupAdmin uid ugid) =
-    fmap isJust . dbUpdate .
-      AccessControlCreateForUser uid $ UserGroupAdminAR ugid
 
 data AccessControlRemoveRole = AccessControlRemoveRole AccessRoleID
 instance (MonadDB m, MonadThrow m)
