@@ -62,8 +62,8 @@ main = do
   withLogger lr $ \runLogger -> runLogger $ do
     checkExecutables
 
-    let pgSettings = pgConnSettings (messengerDBConfig conf) []
-        extrasOptions = def
+    let pgSettings    = pgConnSettings (messengerDBConfig conf) []
+        extrasOptions = defaultExtrasOptions
     withPostgreSQL (unConnectionSource $ simpleSource pgSettings) $
       checkDatabase extrasOptions kontraComposites kontraDomains kontraTables
     cs@(ConnectionSource pool) <- ($ (maxConnectionTracker $ messengerMaxDBConnections conf))

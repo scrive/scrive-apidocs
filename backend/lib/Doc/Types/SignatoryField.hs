@@ -33,7 +33,7 @@ import Data.Functor.Invariant
 import Data.Int
 import Data.String.Utils
 import Data.Unjson
-import Database.PostgreSQL.PQTypes hiding (def)
+import Database.PostgreSQL.PQTypes
 
 import DB
 import Doc.SignatoryFieldID

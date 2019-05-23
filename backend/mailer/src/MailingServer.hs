@@ -70,7 +70,7 @@ main = do
     checkExecutables
 
     let pgSettings = pgConnSettings $ mailerDBConfig conf
-        extrasOptions = def
+        extrasOptions = defaultExtrasOptions
     withPostgreSQL (unConnectionSource . simpleSource $ pgSettings []) $ do
       checkDatabase extrasOptions kontraComposites kontraDomains kontraTables
     fsConf <- do

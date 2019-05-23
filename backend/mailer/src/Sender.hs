@@ -113,6 +113,6 @@ createNullSender = Sender { senderName = "nullSender", sendMail = const (return 
 ----------------------------------------
 
 ts :: TransactionSettings
-ts = def {
+ts = defaultTransactionSettings {
   tsPermissions = ReadOnly
 }

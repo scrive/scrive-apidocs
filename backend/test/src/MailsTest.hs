@@ -173,7 +173,7 @@ validMail name m = do
     let c    = content m
         c'   = "<html>" <> TL.pack c <> "</html>"
              -- ^ XML parser freaks out if there's content after root element.
-        exml = XML.parseText def c'
+        exml = XML.parseText XML.def c'
     unless (any isAlphaNum $ title m) $
       assertFailure ("Empty title of mail " ++ name)
     case exml of

@@ -187,9 +187,10 @@ testMany' (allargs, ts) runLogger rng = do
   tconf     <- readConfig  putStrLn "kontrakcja_test.conf"
   templates <- readGlobalTemplates
 
-  let connSettings = pgConnSettings (testDBConfig tconf)
-      extrasOptions = def
-  runLogger . runDBT (unConnectionSource . simpleSource $ connSettings []) def $ do
+  let connSettings  = pgConnSettings (testDBConfig tconf)
+      extrasOptions = defaultExtrasOptions
+  runLogger . runDBT (unConnectionSource . simpleSource $ connSettings [])
+                     defaultTransactionSettings $ do
     migrateDatabase extrasOptions
       kontraExtensions kontraComposites kontraDomains kontraTables kontraMigrations
     defineFunctions kontraFunctions
@@ -216,7 +217,7 @@ testMany' (allargs, ts) runLogger rng = do
   let env = envf $ TestEnvSt {
         _teConnSource         = cs
       , _teStaticConnSource   = staticSource
-      , _teTransSettings      = def
+      , _teTransSettings      = defaultTransactionSettings
       , _teRNGState           = rng
       , _teRunLogger          = RunLogger runLogger
       , _teGlobalTemplates    = templates
@@ -244,7 +245,8 @@ testMany' (allargs, ts) runLogger rng = do
     atomically $ do
       n <- snd <$> readTVar active_tests
       when (n /= 0) retry
-    runDBT (unConnectionSource staticSource) def { tsAutoTransaction = False } $ do
+    runDBT (unConnectionSource staticSource)
+           defaultTransactionSettings { tsAutoTransaction = False } $ do
       stats <- getConnectionStats
       liftBase . putStrLn $ "SQL: " ++ show stats
     rejs <- atomically (readTVar rejected_documents)
