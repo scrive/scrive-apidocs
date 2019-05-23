@@ -39,7 +39,7 @@ detailedConnectionTracker = ConnectionTracker $ \allocatedNow availableNow -> do
 ----------------------------------------
 
 pgConnSettings :: Text -> [CompositeType] -> ConnectionSettings
-pgConnSettings dbconf ctypes = def {
+pgConnSettings dbconf ctypes = defaultConnectionSettings {
   csConnInfo = dbconf
 , csComposites = map (unRawSQL . ctName) ctypes
 }
@@ -81,4 +81,4 @@ createPoolSource cs maxConnections = do
 
 withPostgreSQL :: (MonadBase IO m, MonadMask m)
                => ConnectionSourceM m -> DBT m a -> m a
-withPostgreSQL cs = runDBT cs def
+withPostgreSQL cs = runDBT cs defaultTransactionSettings

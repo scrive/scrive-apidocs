@@ -68,7 +68,7 @@ main = do
     checkExecutables
 
     let pgSettings = pgConnSettings $ mailerDBConfig conf
-        extrasOptions = def
+        extrasOptions = defaultExtrasOptions
     withPostgreSQL (unConnectionSource . simpleSource $ pgSettings []) $ do
       checkDatabaseAllowUnknownObjects extrasOptions [] [] mailerTables
     fsConf <- do

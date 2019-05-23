@@ -201,10 +201,11 @@ mkLogRunner component LogConfig{..} rng = do
                      withElasticSearchLogger ec randGen act
                  }
     toWithLoggerFun (PostgreSQL ci) = do
-      ConnectionSource pool <- poolSource def { csConnInfo = ci} 1 10 1
+      ConnectionSource pool <- poolSource defaultConnectionSettings
+                               { csConnInfo = ci} 1 10 1
       withSimpleStdOutLogger $ \logger ->
         withPostgreSQL pool $ run logger $ do
-          let extrasOptions = def
+          let extrasOptions = defaultExtrasOptions
           migrateDatabase extrasOptions [] [] [] logsTables logsMigrations
       return . Right $ WithLoggerFun {
         withLoggerFun = \act -> withPgLogger pool act

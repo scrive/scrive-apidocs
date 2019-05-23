@@ -245,11 +245,14 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
           ]
       return . RerunAfter $ ihours 1
     OldLogsRemoval -> do
-      let connSource ci = simpleSource def { csConnInfo = ci }
+      let connSource ci = simpleSource defaultConnectionSettings
+                          { csConnInfo = ci }
           logDBs = catMaybes . for (lcLoggers $ cronLogConfig cronConf) $ \case
             PostgreSQL ci -> Just ci
             _             -> Nothing
-      forM_ logDBs $ \ci -> runDBT (unConnectionSource $ connSource ci) def $ do
+      forM_ logDBs $ \ci ->
+        runDBT (unConnectionSource $ connSource ci)
+               defaultTransactionSettings $ do
         runSQL_ "SELECT current_database()::text"
         dbName :: T.Text <- fetchOne runIdentity
         n <- dbUpdate $ CleanLogsOlderThanDays 30

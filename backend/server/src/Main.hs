@@ -67,8 +67,8 @@ main = withCurlDo $ do
   case monitoringConfig appConf of
     Just conf -> void $ startMonitoringServer conf
     Nothing   -> return ()
-  let connSettings = pgConnSettings $ dbConfig appConf
-      extrasOptions = def { eoEnforcePKs = True }
+  let connSettings  = pgConnSettings $ dbConfig appConf
+      extrasOptions = defaultExtrasOptions { eoEnforcePKs = True }
   pool <- liftBase $ createPoolSource
           (connSettings kontraComposites) (maxDBConnections appConf)
   rng <- newCryptoRNGState

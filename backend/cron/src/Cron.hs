@@ -68,8 +68,8 @@ main = do
   runWithLogRunner logRunner $ do
     checkExecutables
 
-    let connSettings = pgConnSettings $ cronDBConfig cronConf
-        extrasOptions = def { eoEnforcePKs = True }
+    let connSettings  = pgConnSettings $ cronDBConfig cronConf
+        extrasOptions = defaultExtrasOptions { eoEnforcePKs = True }
     withPostgreSQL (unConnectionSource . simpleSource $ connSettings []) $
       checkDatabase extrasOptions kontraComposites kontraDomains kontraTables
 
