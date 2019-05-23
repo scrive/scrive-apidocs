@@ -14,6 +14,14 @@ echo "STARTING S3 SERVER"
     echo "started S3 server with pid $(cat _s3_pid)"
     sleep 1
 
+if grep --quiet ".*gateway_url.*:.*localhost.*" kontrakcja.conf; then
+    echo ""
+    echo "STARTING LOCAL LAMBDA"
+    sam local start-api &
+    echo $! > _lambda_pid
+    echo "started local lambda server with pid $(cat _lambda_pid)"
+fi
+
 echo "STARTING MAILER SERVER"
     cabal new-run mailing-server &
     echo $! > _mailer_pid
