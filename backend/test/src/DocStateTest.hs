@@ -14,7 +14,7 @@ import qualified Data.Label.Partial as FCP
 import qualified Data.Set as S
 import qualified Data.Text as T
 
-import Context (ctxpdftoolslambdaconf, ctxtime)
+import Context (ctxpdftoolslambdaenv, ctxtime)
 import DataRetentionPolicy
 import DB
 import DB.TimeZoneName (defaultTimeZoneName, mkTimeZoneName)
@@ -441,7 +441,7 @@ getScreenshots = do
 
 testSignDocumentEvidenceLog :: TestEnv ()
 testSignDocumentEvidenceLog = do
-  pdfSealLambdaConf <- asks (get tePdfToolsLambdaConf)
+  pdfSealLambdaEnv  <- asks (get tePdfToolsLambdaEnv)
   author            <- addNewRandomUser
   screenshots       <- getScreenshots
 
@@ -465,7 +465,7 @@ testSignDocumentEvidenceLog = do
       lg <- dbQuery . GetEvidenceLog =<< theDocumentID
       assertJust $ find (\e -> evType e == Current SignDocumentEvidence) lg
 
-      runPdfToolsLambdaConfT pdfSealLambdaConf $ do
+      runPdfToolsLambdaConfT pdfSealLambdaEnv $ do
         sealDocument "https://scrive.com"
 
 testSignDocumentSearchData :: TestEnv ()
@@ -1301,7 +1301,7 @@ testSealDocument = replicateM_ 1 $ do
 
     randomUpdate $ \t -> CloseDocument (systemActor t)
 
-    runPdfToolsLambdaConfT (get ctxpdftoolslambdaconf ctx) $
+    runPdfToolsLambdaConfT (get ctxpdftoolslambdaenv ctx) $
       sealDocument "https://scrive.com"
 
 testDocumentAppendSealedPendingRight :: TestEnv ()

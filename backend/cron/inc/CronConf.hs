@@ -22,7 +22,7 @@ import StatsD.Config
 
 -- | Cron configuration: things like AWS, Postgres and Redis, NTP servers, etc.
 data CronConf = CronConf {
-    cronAmazonConfig               :: !AmazonConfig
+    cronAmazonConfig               :: AmazonConfig
     -- ^ AWS configuration (bucket, access key, secret key).
   , cronDBConfig                   :: !T.Text               -- ^ Postgresql configuration.
   , cronMaxDBConnections           :: !Int                  -- ^ Limit of db connections.
@@ -49,7 +49,7 @@ data CronConf = CronConf {
   , cronConsumerExtendingMaxJobs   :: !Int
   , cronConsumerAPICallbackMaxJobs :: !Int
   , cronConsumerFilePurgingMaxJobs :: !Int
-  , cronNetsSignConfig             :: Maybe NetsSignConfig
+  , cronNetsSignConfig             :: !(Maybe NetsSignConfig)
   , cronPdfToolsLambdaConf         :: PdfToolsLambdaConf
   , cronMonthlyInvoiceConf         :: !(Maybe MonthlyInvoiceConf)
   , cronStatsDConf                 :: !(Maybe StatsDConf)

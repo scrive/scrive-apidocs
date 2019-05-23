@@ -15,7 +15,6 @@ import Doc.API.Callback.Model
 import Doc.Extending.Consumer
 import Doc.Sealing.Consumer
 import Doc.Signing.Consumer
-import FileStorage.Amazon.Config
 import Purging.Files
 import TestKontra
 import qualified CronEnv
@@ -28,8 +27,7 @@ runTestCronUntilIdle ctx = do
   -- changes of the test transaction ... unless there is a commit.
   commit
   ConnectionSource pool  <- asks (get teConnSource)
-  pdfSealLambdaConf      <- asks (get tePdfToolsLambdaConf)
-  mAmazonConfig          <- asks (get teAmazonConfig)
+  pdfSealLambdaEnv       <- asks (get tePdfToolsLambdaEnv)
   cronDBConfig           <- asks (get teCronDBConfig)
   cronMonthlyInvoiceConf <- asks (get teCronMonthlyInvoice)
 
@@ -39,8 +37,7 @@ runTestCronUntilIdle ctx = do
 
   let -- for testing, one of each is sufficient
       cronConf = CronConf {
-          cronAmazonConfig       = fromMaybe (AmazonConfig "" 0 "" "" "")
-                                   mAmazonConfig
+          cronAmazonConfig       = unexpectedError "cronAmazonConfig undefined"
         , cronDBConfig           = cronDBConfig
         , cronMaxDBConnections   = 100
         , cronRedisCacheConfig   = Nothing
@@ -63,7 +60,7 @@ runTestCronUntilIdle ctx = do
         , cronConsumerAPICallbackMaxJobs = 1
         , cronConsumerFilePurgingMaxJobs = 1
         , cronNetsSignConfig = Nothing
-        , cronPdfToolsLambdaConf = pdfSealLambdaConf
+        , cronPdfToolsLambdaConf = unexpectedError "cronPdfToolsLambdaConf undefined"
         , cronMonthlyInvoiceConf = cronMonthlyInvoiceConf
         , cronStatsDConf = Nothing
         }
@@ -74,7 +71,7 @@ runTestCronUntilIdle ctx = do
         [ ( "document sealing"
           , runConsumerWithIdleSignal . modTimeout
             $ documentSealing (cronGuardTimeConf cronConf)
-                (cronPdfToolsLambdaConf cronConf) (get ctxglobaltemplates ctx)
+                pdfSealLambdaEnv (get ctxglobaltemplates ctx)
                 pool (cronMailNoreplyAddress cronConf)
                 (cronConsumerSealingMaxJobs cronConf)
           )

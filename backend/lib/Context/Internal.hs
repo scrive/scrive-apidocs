@@ -67,7 +67,7 @@ data Context = Context
     , _ctxnetsconfig          :: Maybe NetsConfig
     , _ctxisapilogenabled     :: Bool
     , _ctxnetssignconfig      :: Maybe NetsSignConfig
-    , _ctxpdftoolslambdaconf  :: PdfToolsLambdaConf
+    , _ctxpdftoolslambdaenv   :: PdfToolsLambdaEnv
     , _ctxpasswordserviceconf :: PasswordServiceConf
     , _ctxmaybeapiuser        :: Maybe User
     -- ^ The user which was effectively used for API call (this

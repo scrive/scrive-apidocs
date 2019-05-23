@@ -24,7 +24,7 @@ import DB
 import Doc.AddImageSpec
 import Doc.SealSpec
 import FileStorage.Amazon
-import FileStorage.Amazon.Config
+import FileStorage.Amazon.S3Env
 import FileStorage.Class
 import Log.Utils
 import PdfToolsLambda.Conf
@@ -44,27 +44,27 @@ pdfToolsActionName PdfToolsActionAddImage = "addimage"
 
 callPdfToolsSealing ::
   (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadDB m, MonadLog m) =>
-  PdfToolsLambdaConf -> SealSpec -> m (Maybe BS.ByteString)
+  PdfToolsLambdaEnv -> SealSpec -> m (Maybe BS.ByteString)
 callPdfToolsSealing lc spec = do
   inputData <- sealSpecToLambdaSpec spec
   executePdfToolsLambdaActionCall lc PdfToolsActionSealing inputData
 
 callPdfToolsPresealing ::
   (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadDB m, MonadLog m) =>
-  PdfToolsLambdaConf -> PreSealSpec -> m (Maybe BS.ByteString)
+  PdfToolsLambdaEnv -> PreSealSpec -> m (Maybe BS.ByteString)
 callPdfToolsPresealing lc spec = do
   inputData <- presealSpecToLambdaSpec spec
   executePdfToolsLambdaActionCall lc PdfToolsActionSealing inputData
 
 callPdfToolsCleaning ::
   (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m) =>
-  PdfToolsLambdaConf -> BSL.ByteString -> m (Maybe BS.ByteString)
+  PdfToolsLambdaEnv -> BSL.ByteString -> m (Maybe BS.ByteString)
 callPdfToolsCleaning lc inputFileContent = do
   executePdfToolsLambdaActionCall lc PdfToolsActionCleaning inputFileContent
 
 callPdfToolsAddImage ::
   (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadDB m, MonadLog m) =>
-  PdfToolsLambdaConf -> AddImageSpec -> m (Maybe BS.ByteString)
+  PdfToolsLambdaEnv -> AddImageSpec -> m (Maybe BS.ByteString)
 callPdfToolsAddImage lc spec = do
   inputData <- addImageSpecToLambdaSpec spec
   executePdfToolsLambdaActionCall lc PdfToolsActionAddImage inputData
@@ -72,11 +72,11 @@ callPdfToolsAddImage lc spec = do
 --
 executePdfToolsLambdaActionCall
   :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
-  => PdfToolsLambdaConf -> PdfToolsAction -> BSL.ByteString -> m (Maybe BS.ByteString)
+  => PdfToolsLambdaEnv -> PdfToolsAction -> BSL.ByteString -> m (Maybe BS.ByteString)
 executePdfToolsLambdaActionCall lc action inputData = do
-  let amazonConfig = get pdfToolsLambdaS3Config lc
+  let amazonEnv = get pdfToolsLambdaS3Env lc
   logInfo_ "Uploading data to s3 for lamda"
-  uploadedDataFileName <- sendDataFileToAmazon amazonConfig inputData
+  uploadedDataFileName <- sendDataFileToAmazon amazonEnv inputData
   case uploadedDataFileName of
     Nothing -> do
       logAttention_ "Failed to upload data to s3 for lambda"
@@ -111,12 +111,12 @@ executePdfToolsLambdaActionCall lc action inputData = do
             PdfToolsActionCleaning -> parseCleaningResponse lc stdout
 
 parseSealingResponse :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
-  => PdfToolsLambdaConf -> BSL.ByteString -> m (Maybe BS.ByteString)
+  => PdfToolsLambdaEnv -> BSL.ByteString -> m (Maybe BS.ByteString)
 parseSealingResponse lc stdout = do
-  let amazonConfig = get pdfToolsLambdaS3Config lc
+  let amazonEnv = get pdfToolsLambdaS3Env lc
   case (parsePdfToolsLambdaSealingResponse stdout) of
     SealSuccess resultS3Name -> do
-      mresdata <- getDataFromAmazon amazonConfig resultS3Name
+      mresdata <- getDataFromAmazon amazonEnv resultS3Name
       case mresdata of
         Just resdata -> return $ Just $ BSL.toStrict resdata
         Nothing -> do
@@ -133,12 +133,12 @@ parseSealingResponse lc stdout = do
       return $ Nothing
 
 parseCleaningResponse :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
-  => PdfToolsLambdaConf -> BSL.ByteString -> m (Maybe BS.ByteString)
+  => PdfToolsLambdaEnv -> BSL.ByteString -> m (Maybe BS.ByteString)
 parseCleaningResponse lc stdout = do
-  let amazonConfig = get pdfToolsLambdaS3Config lc
+  let amazonEnv = get pdfToolsLambdaS3Env lc
   case (parsePdfToolsLambdaCleaningResponse stdout) of
     CleanSuccess resultS3Name -> do
-      mresdata <- getDataFromAmazon amazonConfig resultS3Name
+      mresdata <- getDataFromAmazon amazonEnv resultS3Name
       case mresdata of
         Just resdata -> return $ Just $ BSL.toStrict resdata
         Nothing -> do
@@ -155,12 +155,12 @@ parseCleaningResponse lc stdout = do
       return $ Nothing
 
 parseAddImageResponse :: (CryptoRNG m, MonadBase IO m, MonadCatch m, MonadLog m)
-  => PdfToolsLambdaConf -> BSL.ByteString -> m (Maybe BS.ByteString)
+  => PdfToolsLambdaEnv -> BSL.ByteString -> m (Maybe BS.ByteString)
 parseAddImageResponse lc stdout = do
-  let amazonConfig = get pdfToolsLambdaS3Config lc
+  let amazonEnv = get pdfToolsLambdaS3Env lc
   case (parsePdfToolsLambdaAddImageResponse stdout) of
     AddImageSuccess resultS3Name -> do
-      mresdata <- getDataFromAmazon amazonConfig resultS3Name
+      mresdata <- getDataFromAmazon amazonEnv resultS3Name
       case mresdata of
         Just resdata -> return $ Just $ BSL.toStrict resdata
         Nothing -> do
@@ -179,17 +179,17 @@ parseAddImageResponse lc stdout = do
 
 sendDataFileToAmazon :: ( CryptoRNG m, MonadBase IO m, MonadCatch m
                         , MonadLog m, MonadThrow m )
-                     => AmazonConfig -> BSL.ByteString -> m (Maybe String)
-sendDataFileToAmazon config content = do
+                     => AmazonS3Env -> BSL.ByteString -> m (Maybe String)
+sendDataFileToAmazon env content = do
   flip catch (\(_ :: FileStorageException) -> return Nothing) $ do
     randomPart <- randomString 10 ['a'..'z']
     timePart   <- filter isDigit <$> show <$> liftBase getCurrentTime
     let name = randomPart ++ timePart
-    saveContentsToAmazon config name content
+    saveContentsToAmazon env name content
     return $ Just name
 
 getDataFromAmazon :: (MonadBase IO m, MonadCatch m, MonadLog m, MonadThrow m)
-                  => AmazonConfig -> String -> m (Maybe BSL.ByteString)
-getDataFromAmazon config name =
-  (Just <$> getContentsFromAmazon config name)
+                  => AmazonS3Env -> String -> m (Maybe BSL.ByteString)
+getDataFromAmazon env name =
+  (Just <$> getContentsFromAmazon env name)
     `catch` (\(_ :: FileStorageException) -> return Nothing)

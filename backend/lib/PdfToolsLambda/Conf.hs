@@ -1,7 +1,7 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
-
 module PdfToolsLambda.Conf (
       PdfToolsLambdaConf
+    , PdfToolsLambdaEnv
+    , pdfToolsLambdaEnvFromConf
     , module PdfToolsLambda.Conf.Labels
     , PdfToolsLambdaConfMonad(..)
     , runPdfToolsLambdaConfT
@@ -12,31 +12,15 @@ import Control.Monad.Catch
 import Control.Monad.Reader (ReaderT, ask, runReaderT)
 import Control.Monad.Trans
 import Control.Monad.Trans.Control (ComposeSt, MonadBaseControl(..), MonadTransControl(..), defaultLiftBaseWith, defaultLiftWith, defaultRestoreM, defaultRestoreT)
-import Data.Unjson
 
 import PdfToolsLambda.Conf.Internal
 import PdfToolsLambda.Conf.Labels
 
-unjsonPdfToolsLambdaConf :: UnjsonDef PdfToolsLambdaConf
-unjsonPdfToolsLambdaConf = objectOf $ pure PdfToolsLambdaConf
-  <*> field "gateway_url"
-      _pdfToolsLambdaGatewayUrl
-      "Pdf Tools Lambda Gateway Url"
-  <*> field "api_key"
-      _pdfToolsLambdaApiKey
-      "Pdf Tools Lambda Api Key"
-  <*> field "amazon_s3"
-      _pdfToolsLambdaS3Config
-      "Amazon bucket configuration"
-
-instance Unjson PdfToolsLambdaConf where
-  unjsonDef = unjsonPdfToolsLambdaConf
-
 class Monad m => PdfToolsLambdaConfMonad m where
-  getPdfToolsLambdaConf :: m PdfToolsLambdaConf
+  getPdfToolsLambdaConf :: m PdfToolsLambdaEnv
 
 -- | Generic, overlapping instance.
-instance (
+instance {-# OVERLAPPABLE #-} (
     PdfToolsLambdaConfMonad m
   , Monad (t m)
   , MonadTrans t
@@ -44,7 +28,7 @@ instance (
     getPdfToolsLambdaConf = lift getPdfToolsLambdaConf
 
 newtype PdfToolsLambdaConfT m a =
-  PdfToolsLambdaConfT { unPdfToolsLambdaConfT :: ReaderT PdfToolsLambdaConf m a }
+  PdfToolsLambdaConfT { unPdfToolsLambdaConfT :: ReaderT PdfToolsLambdaEnv m a }
   deriving ( Alternative, Applicative, Functor, Monad
            , MonadPlus, MonadIO, MonadTrans, MonadBase b
            , MonadThrow, MonadCatch, MonadMask )
@@ -57,15 +41,14 @@ instance MonadBaseControl b m => MonadBaseControl b (PdfToolsLambdaConfT m) wher
   {-# INLINE restoreM #-}
 
 instance MonadTransControl PdfToolsLambdaConfT where
-  type StT PdfToolsLambdaConfT m = StT (ReaderT PdfToolsLambdaConf) m
+  type StT PdfToolsLambdaConfT m = StT (ReaderT PdfToolsLambdaEnv) m
   liftWith = defaultLiftWith PdfToolsLambdaConfT unPdfToolsLambdaConfT
   restoreT = defaultRestoreT PdfToolsLambdaConfT
   {-# INLINE liftWith #-}
   {-# INLINE restoreT #-}
 
-instance {-# OVERLAPPING #-} Monad m =>
-  PdfToolsLambdaConfMonad (PdfToolsLambdaConfT m) where
+instance Monad m => PdfToolsLambdaConfMonad (PdfToolsLambdaConfT m) where
   getPdfToolsLambdaConf = PdfToolsLambdaConfT ask
 
-runPdfToolsLambdaConfT :: PdfToolsLambdaConf -> PdfToolsLambdaConfT m a -> m a
+runPdfToolsLambdaConfT :: PdfToolsLambdaEnv -> PdfToolsLambdaConfT m a -> m a
 runPdfToolsLambdaConfT ts m = runReaderT (unPdfToolsLambdaConfT m) ts

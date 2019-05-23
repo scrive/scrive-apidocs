@@ -117,7 +117,7 @@ instance (MonadTrans fst, Monad (InnerKontra fst))
 
 instance (MonadTrans fst, Monad (InnerKontra fst))
     => PdfToolsLambdaConfMonad (KontraG fst) where
-  getPdfToolsLambdaConf = get ctxpdftoolslambdaconf <$> getContext
+  getPdfToolsLambdaConf = get ctxpdftoolslambdaenv <$> getContext
 
 instance (MonadTrans fst, Monad (InnerKontra fst))
     => MailContextMonad (KontraG fst) where

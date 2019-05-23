@@ -123,7 +123,7 @@ ununTestEnv st =
       , _terwRequestURI  = "http://testkontra.fake"
       }
   . evalTestFileStorageT
-      ((, get teRedisConn st, get teFileMemCache st) <$> get teAmazonConfig st)
+      ((, get teRedisConn st, get teFileMemCache st) <$> get teAmazonS3Env st)
   . unTestEnv
 
 instance CryptoRNG TestEnv where
@@ -344,7 +344,7 @@ mkRequestWithHeaders method vars headers = do
 -- | Constructs initial context with given templates
 mkContext :: Lang -> TestEnv Context
 mkContext lang = do
-  pdfSealLambdaConf <- asks (get tePdfToolsLambdaConf)
+  pdfSealLambdaEnv  <- asks (get tePdfToolsLambdaEnv)
   globaltemplates   <- asks (get teGlobalTemplates)
   time              <- currentTime
   bd                <- dbQuery $ GetMainBrandedDomain
@@ -384,7 +384,7 @@ mkContext lang = do
         , _ctxnetssignconfig     = Nothing
         -- We use real Lambda config here because we want our tests to check it.
         -- This Lambda and S3 bucket are dedicated for tests and development.
-        , _ctxpdftoolslambdaconf = pdfSealLambdaConf
+        , _ctxpdftoolslambdaenv  = pdfSealLambdaEnv
         , _ctxpasswordserviceconf = defaultPasswordService
         , _ctxmaybeapiuser       = Nothing
     }
