@@ -23,9 +23,11 @@ import Doc.Extending.Consumer
 import Doc.Sealing.Consumer
 import Doc.Signing.Consumer
 import FileStorage
+import FileStorage.Amazon.S3Env
 import KontraError
 import Log.Configuration
 import Monitoring
+import PdfToolsLambda.Conf
 import Purging.Files
 import Templates
 import ThirdPartyStats.Core
@@ -97,6 +99,9 @@ main = do
       Just phConf ->
         return . Just . EventProcessor $ processPlanhatEvent reqManager phConf
 
+    amazonEnv <- s3envFromConfig $ cronAmazonConfig cronConf
+    lambdaEnv <- pdfToolsLambdaEnvFromConf $ cronPdfToolsLambdaConf cronConf
+
     let runDB :: DBT CronM r -> CronM r
         runDB = withPostgreSQL pool
 
@@ -104,7 +109,7 @@ main = do
         runCronEnv = runDB . CronEnv.runCronEnv cronConf templates
 
         docSealing   = documentSealing
-          (cronGuardTimeConf cronConf) (cronPdfToolsLambdaConf cronConf) templates pool
+          (cronGuardTimeConf cronConf) lambdaEnv templates pool
           (cronMailNoreplyAddress cronConf) (cronConsumerSealingMaxJobs cronConf)
         docSigning   = documentSigning
           (cronGuardTimeConf cronConf) (cronCgiGrpConfig cronConf) (cronNetsSignConfig cronConf)
@@ -116,7 +121,7 @@ main = do
         filePurging = filePurgingConsumer pool (cronConsumerFilePurgingMaxJobs cronConf)
 
     runCryptoRNGT rng
-      . runFileStorageT (cronAmazonConfig cronConf, mrediscache, filecache)
+      . runFileStorageT (amazonEnv, mrediscache, filecache)
       . finalize (localDomain "document sealing"   $ runConsumer docSealing       pool)
       . finalize (localDomain "document signing"   $ runConsumer docSigning       pool)
       . finalize (localDomain "document extending" $ runConsumer docExtending     pool)

@@ -6,110 +6,140 @@ module FileStorage.Amazon
 
 import Control.Monad.Base
 import Control.Monad.Catch
-import Data.Time
+import Data.Aeson.Types
 import Log
-import System.FilePath ((</>))
-import qualified Crypto.Hash.MD5 as MD5
-import qualified Data.ByteString.Base64 as Base64
-import qualified Data.ByteString.Char8 as BSC
+import qualified Conduit as C
+import qualified Control.Lens as L
+import qualified Data.Binary.Builder as B
 import qualified Data.ByteString.Lazy as BSL
-import qualified Network.AWS.Authentication as AWS
-import qualified Network.AWS.AWSConnection as AWS
-import qualified Network.AWS.AWSResult as AWS
-import qualified Network.AWS.S3Object as AWS
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
+import qualified Network.AWS as AWS
+import qualified Network.AWS.Data.Body as AWS
+import qualified Network.AWS.S3 as AWS
 import qualified Network.HTTP as HTTP
 
-import FileStorage.Amazon.Config
+import FileStorage.Amazon.S3Env
 import FileStorage.Class
+import Log.Utils
 
 saveContentsToAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m)
-                     => AmazonConfig -> String -> BSL.ByteString -> m ()
-saveContentsToAmazon config url contents = do
-    let conn = s3ConnFromConfig config
-        obj  = (s3ObjectFromConfig config url) { AWS.obj_data = contents }
-
-    go True conn obj
-
+                     => AmazonS3Env -> String -> BSL.ByteString -> m ()
+saveContentsToAmazon env url contents = go True =<< awsLogger
   where
-    go retry conn obj = do
-      result <- liftBase $ sendObjectMIC conn obj
+    go retry logger = do
+      logInfo "Attempting to save file to AWS" $ object ["url" .= url]
+      (result, diff) <- timed . liftBase $ do
+        withResourceT . runAWS env logger . AWS.send $
+          AWS.putObject (as3eBucket env) (urlObjectKey url) (AWS.toBody contents)
       case result of
+        Right res -> do
+          logInfo "Filed saved to AWS" $ object
+            [ "url"    .= url
+            , "result" .= show res
+            , "time"   .= diff
+            ]
         Left err -> do
           if retry
             then do
               logInfo "Saving file to AWS failed, retrying" $ object
-                [ "url"    .= url
-                , "result" .= show err
+                [ "url"   .= url
+                , "error" .= show err
+                , "time"  .= diff
                 ]
-              go False conn obj
+              go False logger
             else do
               logAttention "Saving file to AWS failed" $ object
-                [ "url"    .= url
-                , "result" .= show err
+                [ "url"   .= url
+                , "error" .= show err
+                , "time"  .= diff
                 ]
               throwM $ FileStorageException $ show err
-        Right res -> do
-          logInfo "Filed saved on AWS" $ object
-            [ "url"    .= url
-            , "result" .= show res
-            ]
-          return ()
-
-    -- This is a fork of AWS.sendObjectMIC, that uses bytestrings for MD5
-    -- calculation, so it doesn't kill everything for 100mb objects
-    sendObjectMIC :: AWS.AWSConnection -> AWS.S3Object -> IO (AWS.AWSResult ())
-    sendObjectMIC aws obj = AWS.sendObject aws obj_w_header where
-      obj_w_header = obj { AWS.obj_headers = (AWS.obj_headers obj) ++ md5_header }
-      md5_header = [("Content-MD5", (mkMD5 (AWS.obj_data obj)))]
-      mkMD5 = BSC.unpack . Base64.encode . MD5.hashlazy
-
 
 getContentsFromAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m)
-                      => AmazonConfig -> String -> m BSL.ByteString
-getContentsFromAmazon config url = getContentsFromAmazonWithRetry True
+                      => AmazonS3Env -> String -> m BSL.ByteString
+getContentsFromAmazon env url = go True =<< awsLogger
   where
-  getContentsFromAmazonWithRetry willRetry = do
-    let action = s3ActionFromConfig config HTTP.GET url
-    logInfo "Attempting to fetch file from AWS" $ object ["url" .= url]
-
-    startTime  <- liftBase getCurrentTime
-    result     <- liftBase $ AWS.runAction action
-    finishTime <- liftBase getCurrentTime
-    let diff = realToFrac $ diffUTCTime finishTime startTime :: Double
-
-    case result of
-      Right rsp -> do
-        logInfo "Fetching file from AWS succeeded" $ object
-          [ "elapsed_time" .= diff
-          , "url"          .= url
-          ]
-        return $ HTTP.rspBody rsp
-      Left err -> do
-        logAttention "Fetching file from AWS failed" $ object
-          [ "error"        .= show err
-          , "elapsed_time" .= diff
-          , "url"          .= url
-          , "will_retry"   .= willRetry
-          ]
-        if (willRetry)
-        then getContentsFromAmazonWithRetry False
-        else throwM $ FileStorageException $ show err
+    go retry logger = do
+      logInfo "Attempting to fetch file from AWS" $ object ["url" .= url]
+      (result, diff) <- timed . liftBase $ do
+        withResourceT $ do
+          rs <- runAWS env logger . AWS.send $
+            AWS.getObject (as3eBucket env) (urlObjectKey url)
+          C.runConduit $ AWS._streamBody (L.view AWS.gorsBody rs) C..| C.sinkLazy
+      case result of
+        Right rsp -> do
+          logInfo "Fetching file from AWS succeeded" $ object
+            [ "url"  .= url
+            , "time" .= diff
+            ]
+          return rsp
+        Left err -> do
+          if retry
+            then do
+              logInfo "Fetching file from AWS failed, retrying" $ object
+                [ "url"   .= url
+                , "error" .= show err
+                , "time"  .= diff
+                ]
+              go False logger
+            else do
+              logAttention "Fetching file from AWS failed" $ object
+                [ "url"   .= url
+                , "error" .= show err
+                , "time"  .= diff
+                ]
+              throwM $ FileStorageException $ show err
 
 deleteContentsFromAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m)
-                         => AmazonConfig -> String -> m ()
-deleteContentsFromAmazon config url = do
-  let action = s3ActionFromConfig config HTTP.DELETE url
-  result <- liftBase $ AWS.runAction action
+                         => AmazonS3Env -> String -> m ()
+deleteContentsFromAmazon env url = do
+  logger <- awsLogger
+  logInfo "Attempting to delete file from AWS" $ object ["url" .= url]
+  (result, diff) <- timed . liftBase $ do
+    withResourceT . runAWS env logger . AWS.send $
+      AWS.deleteObject (as3eBucket env) (urlObjectKey url)
   case result of
     Right res -> do
       logInfo "AWS file deleted" $ object
-        [ "url"    .= (AWS.s3bucket action </> url)
+        [ "url"    .= url
         , "result" .= show res
+        , "time"   .= diff
         ]
-      return ()
     Left err -> do
       logAttention "AWS failed to delete file" $ object
-         [ "url"    .= (AWS.s3bucket action </> url)
+         [ "url"    .= url
          , "result" .= show err
+         , "time"   .= diff
          ]
       throwM $ FileStorageException $ show err
+
+----------------------------------------
+
+urlObjectKey :: String -> AWS.ObjectKey
+urlObjectKey = AWS.ObjectKey . T.pack . HTTP.urlDecode
+
+withResourceT
+  :: C.ResourceT IO r
+  -> IO (Either AWS.Error r)
+withResourceT = try . C.runResourceT
+
+runAWS :: AmazonS3Env -> AWS.Logger -> AWS.AWS a -> C.ResourceT IO a
+runAWS env lgr = AWS.runAWS (L.set AWS.envLogger lgr $ as3eEnv env)
+
+awsLogger :: MonadLog m => m AWS.Logger
+awsLogger = do
+  now <- currentTime
+  logger <- getLoggerIO
+  return $ \awsLevel builder -> do
+    let level = adjustLevel awsLevel
+    -- We are not interested in trace messages.
+    when (level /= LogTrace) $
+      logger now level (builderToText builder) emptyObject
+  where
+    adjustLevel AWS.Error = LogAttention
+    adjustLevel AWS.Info  = LogInfo
+    adjustLevel AWS.Debug = LogInfo
+    adjustLevel AWS.Trace = LogTrace
+
+    builderToText = T.decodeUtf8 . BSL.toStrict . B.toLazyByteString

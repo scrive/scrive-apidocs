@@ -21,6 +21,7 @@ import Database.Redis.Configuration
 import DB
 import DB.PostgreSQL
 import FileStorage
+import FileStorage.Amazon.S3Env
 import Handlers
 import Happstack.Server.ReqHandler
 import Log.Configuration
@@ -72,9 +73,10 @@ main = do
     withPostgreSQL (unConnectionSource . simpleSource $ pgSettings []) $ do
       checkDatabaseAllowUnknownObjects extrasOptions [] [] mailerTables
     fsConf <- do
+      env         <- s3envFromConfig $ mailerAmazonConfig conf
       localCache  <- newFileMemCache $ mailerLocalFileCacheSize conf
       globalCache <- F.forM (mailerRedisCacheConfig conf) mkRedisConnection
-      return (mailerAmazonConfig conf, globalCache, localCache)
+      return (env, globalCache, localCache)
     cs@(ConnectionSource pool) <- ($ (maxConnectionTracker $ mailerMaxDBConnections conf))
       <$> liftBase (createPoolSource (pgSettings mailerComposites)  (mailerMaxDBConnections conf))
 

@@ -287,6 +287,7 @@ Library
                  , FileStorage
                  , FileStorage.Amazon
                  , FileStorage.Amazon.Config
+                 , FileStorage.Amazon.S3Env
                  , FileStorage.Class
                  , FileStorage.RedisCache
                  , FlashMessage
@@ -508,6 +509,9 @@ Library
                , MissingH
                , QuickCheck
                , aeson
+               , amazonka
+               , amazonka-core
+               , amazonka-s3
                , attoparsec
                , base16-bytestring
                , base64-bytestring
@@ -537,7 +541,6 @@ Library
                , fields-json
                , filepath
                , free
-               , hS3
                , happstack-server
                , happstack-static-routing
                , hashable
@@ -552,6 +555,7 @@ Library
                , invariant
                , json
                , kontrakcja-templates
+               , lens
                , lifted-async
                , lifted-base
                , lifted-threads
@@ -959,6 +963,7 @@ Executable mailing-server
                  FileStorage
                  FileStorage.Amazon
                  FileStorage.Amazon.Config
+                 FileStorage.Amazon.S3Env
                  FileStorage.Class
                  FileStorage.RedisCache
                  Handlers
@@ -1001,12 +1006,16 @@ Executable mailing-server
                , HTTP
                , MissingH
                , aeson
+               , amazonka
+               , amazonka-core
+               , amazonka-s3
                , base16-bytestring
                , base64-bytestring
                , binary
                , bytestring
                , cmdargs
                , cond
+               , conduit
                , consumers
                , containers
                , crypto-api
@@ -1023,7 +1032,6 @@ Executable mailing-server
                , fclabels
                , fields-json
                , filepath
-               , hS3
                , happstack-server
                , happstack-static-routing
                , hashable
@@ -1033,6 +1041,7 @@ Executable mailing-server
                , json
                , lifted-async
                , lifted-base
+               , lens
                , log-base
                , log-elasticsearch
                , log-postgres
@@ -1405,6 +1414,7 @@ Test-suite kontrakcja-test
                , QuickCheck
                , aeson
                , aeson-diff
+               , amazonka
                , base64-bytestring
                , binary
                , blaze-markup

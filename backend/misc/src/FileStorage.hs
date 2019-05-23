@@ -32,7 +32,7 @@ import qualified Database.Redis as R
 
 import DB
 import FileStorage.Amazon
-import FileStorage.Amazon.Config
+import FileStorage.Amazon.S3Env
 import FileStorage.Class
 import qualified FileStorage.RedisCache as Redis
 import qualified MemCache
@@ -42,7 +42,7 @@ type FileMemCache = MemCache.MemCache String BSL.ByteString
 newFileMemCache :: MonadBase IO m => Int -> m FileMemCache
 newFileMemCache = MemCache.new (fromInteger . toInteger . BSL.length)
 
-type FileStorageConfig = (AmazonConfig, Maybe R.Connection, FileMemCache)
+type FileStorageConfig = (AmazonS3Env, Maybe R.Connection, FileMemCache)
 
 newtype FileStorageT m a
   = FileStorageT { unFileStorageT :: ReaderT FileStorageConfig m a }
@@ -98,10 +98,10 @@ getSavedContents_ :: forall m. ( MonadBaseControl IO m, MonadCatch m, MonadLog m
                                , MonadMask m, MonadThrow m )
                   => String -> FileStorageT m BSL.ByteString
 getSavedContents_ url = do
-    (amazonConfig, mRedisCache, memCache) <- getFileStorageConfig
+    (amazonEnv, mRedisCache, memCache) <- getFileStorageConfig
 
     MemCache.fetch_ memCache url
-      (fetchFromRedisOrAmazon mRedisCache amazonConfig) `catch` \e -> do
+      (fetchFromRedisOrAmazon mRedisCache amazonEnv) `catch` \e -> do
         case fromException e of
           -- It's coming from fetchFromRedisOrAmazon
           Just e' -> throwM (e' :: FileStorageException)
@@ -109,16 +109,16 @@ getSavedContents_ url = do
           Nothing -> do
             logInfo "Failed to fetch from memory cache" $ object
               [ "error" .= show e ]
-            fetchFromRedisOrAmazon mRedisCache amazonConfig
+            fetchFromRedisOrAmazon mRedisCache amazonEnv
 
   where
-    fetchFromRedisOrAmazon :: Maybe R.Connection -> AmazonConfig
+    fetchFromRedisOrAmazon :: Maybe R.Connection -> AmazonS3Env
                            -> FileStorageT m BSL.ByteString
-    fetchFromRedisOrAmazon mRedisCache amazonConfig =
+    fetchFromRedisOrAmazon mRedisCache amazonEnv =
       Redis.mfetch mRedisCache (Redis.redisKeyFromURL url)
-        (fetchFromRedis amazonConfig)
+        (fetchFromRedis amazonEnv)
         (\mConnKey -> do
-          contents <- fetchFromAmazon amazonConfig
+          contents <- fetchFromAmazon amazonEnv
           whenJust mConnKey $ \connKey -> do
             Redis.redisPut "contents" (BSL.toStrict contents) connKey
               `catch` \e ->
@@ -131,19 +131,19 @@ getSavedContents_ url = do
           Nothing -> do
             logInfo "Failed to fetch from Redis cache" $ object
               [ "error" .= show e ]
-            fetchFromAmazon amazonConfig
+            fetchFromAmazon amazonEnv
 
-    fetchFromRedis :: AmazonConfig -> R.Connection -> Redis.RedisKey
+    fetchFromRedis :: AmazonS3Env -> R.Connection -> Redis.RedisKey
                    -> FileStorageT m BSL.ByteString
-    fetchFromRedis amazonConfig conn key =
+    fetchFromRedis amazonEnv conn key =
       Redis.getFileFromRedis conn key `catch` \e -> do
         logInfo "Failed to fetch from Redis cache" $ object
           [ "error" .= show (e :: SomeException) ]
-        fetchFromAmazon amazonConfig
+        fetchFromAmazon amazonEnv
 
-    fetchFromAmazon :: AmazonConfig -> FileStorageT m BSL.ByteString
-    fetchFromAmazon amazonConfig = do
-      getContentsFromAmazon amazonConfig url `catch` \e -> do
+    fetchFromAmazon :: AmazonS3Env -> FileStorageT m BSL.ByteString
+    fetchFromAmazon amazonEnv = do
+      getContentsFromAmazon amazonEnv url `catch` \e -> do
         case fromException e of
           Just e' -> throwM (e' :: FileStorageException)
           Nothing -> throwM $ FileStorageException $ show e
@@ -152,9 +152,9 @@ deleteSavedContents_ :: ( MonadBaseControl IO m, MonadLog m, MonadMask m
                         , MonadThrow m )
                      => String -> FileStorageT m ()
 deleteSavedContents_ url = do
-  (amazonConfig, mRedisCache, memCache) <- getFileStorageConfig
+  (amazonEnv, mRedisCache, memCache) <- getFileStorageConfig
 
   MemCache.invalidate memCache url
   whenJust mRedisCache $ \conn ->
     Redis.deleteKey conn $ Redis.redisKeyFromURL url
-  deleteContentsFromAmazon amazonConfig url
+  deleteContentsFromAmazon amazonEnv url

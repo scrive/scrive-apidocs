@@ -10,7 +10,7 @@ import qualified Database.Redis as R
 
 import DB.PostgreSQL
 import FileStorage
-import FileStorage.Amazon.Config
+import FileStorage.Amazon.S3Env
 import MonthlyInvoice.Config (MonthlyInvoiceConf(..))
 import PdfToolsLambda.Conf
 import Templates
@@ -29,8 +29,8 @@ data TestEnvSt = TestEnvSt {
   , _teOutputDirectory    :: !(Maybe String)
     -- ^ Put the test artifact output in this directory, if given.
   , _teStagingTests       :: !Bool
-  , _tePdfToolsLambdaConf :: PdfToolsLambdaConf
-  , _teAmazonConfig       :: Maybe AmazonConfig
+  , _tePdfToolsLambdaEnv  :: PdfToolsLambdaEnv
+  , _teAmazonS3Env        :: Maybe AmazonS3Env
   , _teFileMemCache       :: FileMemCache
   , _teRedisConn          :: Maybe R.Connection
   , _teCronDBConfig       :: !T.Text

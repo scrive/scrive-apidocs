@@ -42,12 +42,14 @@ import Cookies (lookCookieValue)
 import DB hiding (ErrorCode(..))
 import DB.PostgreSQL
 import FileStorage
+import FileStorage.Amazon.S3Env
 import Happstack.Server.ReqHandler
 import IPAddress
 import Kontra
 import Log.Identifier
 import Log.Utils
 import MinutesTime
+import PdfToolsLambda.Conf
 import Session.Model
 import Session.Types
 import Templates
@@ -64,6 +66,8 @@ data AppGlobals = AppGlobals {
   , connsource         :: !(ConnectionTracker -> TrackedConnectionSource)
   , runlogger          :: !(forall m r . LogT m r -> m r)
   , hostname           :: !String
+  , amazons3env        :: !AmazonS3Env
+  , pdftoolslambdaenv  :: !PdfToolsLambdaEnv
   }
 
 -- | Determines the lang of the current user (whether they are logged
@@ -235,7 +239,7 @@ appHandler handleRoutes appConf appGlobals = runHandler
                -> HandlerM Response
     runHandler = catchEverything
       . runCryptoRNGT (cryptorng appGlobals)
-      . runFileStorageT ( amazonConfig appConf, mrediscache appGlobals
+      . runFileStorageT ( amazons3env appGlobals, mrediscache appGlobals
                         , filecache appGlobals )
 
     catchEverything :: HandlerM Response -> HandlerM Response
@@ -376,7 +380,7 @@ appHandler handleRoutes appConf appGlobals = runHandler
         , _ctxnetsconfig         = netsConfig appConf
         , _ctxisapilogenabled    = isAPILogEnabled appConf
         , _ctxnetssignconfig     = netsSignConfig appConf
-        , _ctxpdftoolslambdaconf = pdfToolsLambdaConf appConf
+        , _ctxpdftoolslambdaenv  = pdftoolslambdaenv appGlobals
         , _ctxpasswordserviceconf = passwordServiceConf appConf
         , _ctxmaybeapiuser       = Nothing
         }
