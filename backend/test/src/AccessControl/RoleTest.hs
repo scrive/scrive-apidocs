@@ -30,7 +30,7 @@ testRolesNotInheritedInUserGroupTree = do
   -- user's group changed, need to re-retrieve the user
   (Just user') <- dbQuery $ GetUserByID uid
   let role_trg = UserGroupAdminAR root_ugid
-  void $ dbUpdate $ AccessControlInsertRoleTrgForUserGroup root_ugid role_trg
+  void $ dbUpdate $ AccessControlCreateForUserGroup root_ugid role_trg
   userRoles1 <- dbQuery $ GetRoles user'
   [grp_role] <- dbQuery $ AccessControlGetRolesByUserGroup root_ugid
   assertBool "The role set on a parent group is not included in user's roles"
