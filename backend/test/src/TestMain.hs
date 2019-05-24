@@ -17,6 +17,7 @@ import qualified Data.Text.IO as T
 import qualified Data.Traversable as T
 
 import AccessControl.APITest
+import AccessControl.RoleTest
 import AccountInfoTest
 import AdministrationTest
 import AppDBMigrations
@@ -94,6 +95,7 @@ import qualified HostClock.Model as HC
 allTests :: [TestEnvSt -> Test]
 allTests = [
     accessControlApiTests
+  , accessControlRoleTests
   , accountInfoTests
   , administrationTests
   , apiV1CallsTests

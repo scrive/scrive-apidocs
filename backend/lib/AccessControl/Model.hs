@@ -118,15 +118,9 @@ data AccessControlGetRolesByUserGroup =
 instance (MonadDB m, MonadThrow m) =>
   DBQuery m AccessControlGetRolesByUserGroup [AccessRole] where
   query (AccessControlGetRolesByUserGroup ugid) = do
-    mugwp <- query . UserGroupGetWithParents $ ugid
-    let ugids =
-          case mugwp of
-            Nothing -> []
-            Just ugwp -> maybe [] (\(_, ugids') -> get ugID <$> ugids')
-                                  (ugwpOnlyParents ugwp)
     runQuery_ . sqlSelect "access_control" $ do
       mapM_ sqlResult $ rolesSelector
-      sqlWhereIn "src_user_group_id" ugids
+      sqlWhereEq "src_user_group_id" ugid
     fetchMany fetchAccessRole
 
 data AccessControlDeleteRolesByUserGroup
