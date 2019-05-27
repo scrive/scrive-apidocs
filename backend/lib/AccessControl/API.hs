@@ -71,7 +71,7 @@ accessControlAPIV2Delete roleId = api $ do
   dbQuery (AccessRoleGet roleId) >>= \case
     Nothing -> apiError insufficientPrivileges
     Just role -> do
-      apiAccessControlOrIsAdmin (roleToAccessPolicyReq role UpdateA) $ do
+      apiAccessControlOrIsAdmin (roleToAccessPolicyReq role DeleteA) $ do
         void . dbUpdate $ AccessControlRemoveRole roleId
         return . Ok . J.runJSONGen $ do
           J.value "role_id" $ show roleId
@@ -80,15 +80,15 @@ accessControlAPIV2Delete roleId = api $ do
 accessControlAPIV2Add :: Kontrakcja m => m Response
 accessControlAPIV2Add = api $ do
   role <- apiV2ParameterObligatory $ ApiV2ParameterJSON "role" unjsonAccessRole
-  apiAccessControlOrIsAdmin (roleToAccessPolicyReq role UpdateA) $ do
+  apiAccessControlOrIsAdmin (roleToAccessPolicyReq role CreateA) $ do
     mrole <- case role of
-      (AccessRoleUser _ uid target)
+      AccessRoleUser _ uid target
         -> dbUpdate $ AccessControlCreateForUser uid target
-      (AccessRoleUserGroup  _ ugid target)
+      AccessRoleUserGroup  _ ugid target
         -> dbUpdate $ AccessControlCreateForUserGroup ugid target
-      (AccessRoleImplicitUser uid target)
+      AccessRoleImplicitUser uid target
         -> dbUpdate $ AccessControlCreateForUser uid target
-      (AccessRoleImplicitUserGroup ugid target)
+      AccessRoleImplicitUserGroup ugid target
         -> dbUpdate $ AccessControlCreateForUserGroup ugid target
     case mrole of
       Nothing -> unexpectedError "Impossible happened (new role does not exist)"
@@ -97,16 +97,21 @@ accessControlAPIV2Add = api $ do
 -- This helper function constructs a set of roles that you need in order to
 -- view/alter some *other* role
 roleToAccessPolicyReq :: AccessRole -> AccessAction -> [AccessPolicyItem]
-roleToAccessPolicyReq role action =
-  let sourceRoleReq = case role of
-        AccessRoleUser _ uid _             -> mkAccPolicyItem (action, UserR, uid)
-        AccessRoleUserGroup _ ugid _       -> mkAccPolicyItem (action, UserGroupR, ugid)
-        AccessRoleImplicitUser uid _       -> mkAccPolicyItem (action, UserR, uid)
-        AccessRoleImplicitUserGroup ugid _ -> mkAccPolicyItem (action, UserGroupR, ugid)
+roleToAccessPolicyReq role act =
+  -- if the source has user policy on a user group, this requirement will be
+  -- also satisfied automatically
+  let mkAccPolicyUser uid       = mkAccPolicyItem (act, UserPolicyR, uid)
+      mkAccPolicyUserGroup ugid = mkAccPolicyItem (act, UserGroupPolicyR, ugid)
+      mkAccPolicyFolder fid     = mkAccPolicyItem (act, FolderPolicyR, fid)
+      sourceRoleReq = case role of
+        AccessRoleUser _ uid _             -> mkAccPolicyUser uid
+        AccessRoleUserGroup _ ugid _       -> mkAccPolicyUserGroup ugid
+        AccessRoleImplicitUser uid _       -> mkAccPolicyUser uid
+        AccessRoleImplicitUserGroup ugid _ -> mkAccPolicyUserGroup ugid
       targetRoleReq = case accessRoleTarget role of
-        UserAR uid             -> mkAccPolicyItem (action, UserR, uid)
-        UserGroupMemberAR ugid -> mkAccPolicyItem (action, UserGroupR, ugid)
-        UserAdminAR ugid       -> mkAccPolicyItem (action, UserGroupR, ugid)
-        UserGroupAdminAR ugid  -> mkAccPolicyItem (action, UserGroupR, ugid)
-        DocumentAdminAR fid    -> mkAccPolicyItem (action, DocumentR, fid)
+        UserAR uid             -> mkAccPolicyUser uid
+        UserGroupMemberAR ugid -> mkAccPolicyUserGroup ugid
+        UserAdminAR ugid       -> mkAccPolicyUserGroup ugid
+        UserGroupAdminAR ugid  -> mkAccPolicyUserGroup ugid
+        DocumentAdminAR fid    -> mkAccPolicyFolder fid
   in [sourceRoleReq, targetRoleReq]

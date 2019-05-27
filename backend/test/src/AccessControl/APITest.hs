@@ -250,7 +250,7 @@ testAdminUserCanDeleteRoleWithoutPermissions = do
       getRoleId (AccessRoleUser roleId _ _) = roleId
       getRoleId _ = unexpectedError "This shouldn't happen"
 
--- AccessControl delete role by ID tests
+-- AccessControl add role by ID tests
 
 roleJSON :: UserID -> UserID -> String
 roleJSON uid1 uid2 = "\
@@ -289,7 +289,7 @@ testNonAdminUserCannotAddRoleForNonExistentUser = do
 
 testAdminUserCannotAddRoleFromNonExistentUser :: TestEnv ()
 testAdminUserCannotAddRoleFromNonExistentUser = do
-  muser <- addNewUser "Dave" "Lister" "dave.lister@scrive.com"
+  muser <- addNewUser "Dave" "Lister" emailAddress
   ctx   <- setUser muser <$> mkContext defaultLang
   let jsonString = roleJSON (userid $ fromJust muser) (unsafeUserID 321)
   req   <- mkRequest POST [ ("role", inText jsonString) ]
@@ -301,7 +301,7 @@ testAdminUserCannotAddRoleFromNonExistentUser = do
 
 testAdminUserCannotAddRoleForNonExistentUser :: TestEnv ()
 testAdminUserCannotAddRoleForNonExistentUser = do
-  muser <- addNewUser "Dave" "Lister" "dave.lister@scrive.com"
+  muser <- addNewUser "Dave" "Lister" emailAddress
   ctx   <- setUser muser <$> mkContext defaultLang
   let jsonString = roleJSON (unsafeUserID 321) (userid $ fromJust muser)
   req   <- mkRequest POST [ ("role", inText jsonString) ]
