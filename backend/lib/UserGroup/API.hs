@@ -120,11 +120,13 @@ userGroupApiV2Update ugid = api $ do
         return []
     (Nothing, Just newparentugid) -> do
       -- Root usergroup is being made subordinate to another UserGroup
-      return [mkAccPolicyItem (UpdateA, UserGroupR, newparentugid)]
-    (Just oldparentugid, Nothing) -> do
+      let newAcc = mkAccPolicyItem (UpdateA, UserGroupR, newparentugid)
+          curAcc = mkAccPolicyItem (DeleteA, UserGroupR, get ugID ugOriginal)
+      return [newAcc, curAcc]
+    (Just _, Nothing) -> do
       -- Only admin or sales can promote UserGroup to root
       unlessM checkAdminOrSales $ apiError insufficientPrivileges
-      return [mkAccPolicyItem (UpdateA, UserGroupR, oldparentugid)]
+      return []
     (Nothing, Nothing) ->
       -- Root usergroup is remaining root, no special privileges needed
       return []
