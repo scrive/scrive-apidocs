@@ -21,7 +21,7 @@ def signed_doc(title, api, test):
     # sign document
     api._sign(doc, doc.author)
 
-    test.sleep(10)  # wait for sealing
+    test.sleep(20)  # wait for sealing
     return api.get_document(doc.id)  # refresh
 
 
