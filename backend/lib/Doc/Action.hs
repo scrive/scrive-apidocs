@@ -19,6 +19,7 @@ import Text.StringTemplates.Templates (TemplatesMonad)
 import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomain
+import BrandedDomain.Model
 import Chargeable.Model
 import CronEnv
 import DB
@@ -27,7 +28,7 @@ import Doc.API.Callback.Model
 import Doc.AutomaticReminder.Model
 import Doc.DigitalSignature (addDigitalSignature)
 import Doc.DocInfo
-import Doc.DocMails (sendClosedEmails, sendDocumentErrorEmail, sendForwardSigningMessages, sendInvitationEmails, sendPartyProcessFinalizedNotification, sendRejectEmails)
+import Doc.DocMails (sendClosedEmails, sendDocumentErrorEmail, sendDocumentTimeoutedEmail, sendForwardSigningMessages, sendInvitationEmails, sendPartyProcessFinalizedNotification, sendRejectEmails)
 import Doc.DocSeal (sealDocument)
 import Doc.DocStateData
 import Doc.DocumentMonad
@@ -44,6 +45,7 @@ import GuardTime (GuardTimeConfMonad)
 import Kontra
 import Log.Identifier
 import MailContext
+import MailContext.Internal
 import PdfToolsLambda.Conf
 import Templates (runTemplatesT)
 import ThirdPartyStats.Core
@@ -322,13 +324,27 @@ saveDocumentForSignatories =
 
 -- | Time out documents once per day after midnight.  Do it in chunks
 -- so that we don't choke the server in case there are many documents to time out
-findAndTimeoutDocuments :: (MonadBaseControl IO m, MonadReader CronEnv m, MonadIO m, MonadDB m, MonadCatch m, MonadLog m) => m ()
+findAndTimeoutDocuments :: (MonadBaseControl IO m, MonadReader CronEnv m, MonadIO m, MonadDB m, MonadCatch m, MonadLog m, CryptoRNG m) => m ()
 findAndTimeoutDocuments = do
   now <- currentTime
-  docs <- dbQuery $ GetTimeoutedButPendingDocumentsChunk now 100
+  noreplyAddress <- ceMailNoreplyAddress <$> ask
+  gt <- asks ceTemplates
+  docs <- dbQuery $ GetTimeoutedButPendingDocumentsChunk now 10
   forM_ docs $ flip withDocument $ do
-    gt <- asks ceTemplates
-    runTemplatesT (defaultLang, gt) $ dbUpdate $ TimeoutDocument (systemActor now)
+    lang <- documentlang <$> theDocument
+    author <- getDocAuthor =<< theDocument
+    ugwp <- guardJustM $ dbQuery $ UserGroupGetWithParents (usergroupid author)
+    bd <- dbQuery $ GetBrandedDomainByUserID (userid author)
+    let mc = MailContext {
+        _mctxlang                 = lang
+      , _mctxcurrentBrandedDomain = bd
+      , _mctxtime                 = now
+      , _mctxmailNoreplyAddress   = noreplyAddress
+    }
+    runTemplatesT (lang, gt) . runMailContextT mc $ do
+      dbUpdate $ TimeoutDocument (systemActor now)
+      when (get ugsSendTimeoutNotification (ugwpSettings ugwp)) $ do
+        sendDocumentTimeoutedEmail =<< theDocument
     triggerAPICallbackIfThereIsOne =<< theDocument
     logInfo_ "Document timed out"
   unless (null docs) $ do

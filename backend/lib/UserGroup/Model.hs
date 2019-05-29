@@ -111,6 +111,7 @@ insertUserGroupSettings ugid ugs =
     sqlSet "pad_earchive_enabled" . get ugsPadEarchiveEnabled $ ugs
     sqlSet "legal_text" . get ugsLegalText $ ugs
     sqlSet "require_bpid_for_new_document" . get ugsRequireBPIDForNewDoc $ ugs
+    sqlSet "send_timeout_notification" . get ugsSendTimeoutNotification $ ugs
 
 insertUserGroupAddress
   :: (MonadDB m, MonadThrow m) => UserGroupID -> UserGroupAddress -> m ()
@@ -354,7 +355,9 @@ ugSettingsSelectors = [
   , "pad_earchive_enabled"
   , "legal_text"
   , "require_bpid_for_new_document"
+  , "send_timeout_notification"
   ]
+
 
 ugAddressSelectors :: [SQL]
 ugAddressSelectors = [

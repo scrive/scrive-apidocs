@@ -269,3 +269,40 @@ userGroupSettingsAddRequireBPIDForNewDocument = Migration {
             }
         ]
   }
+
+userGroupSettingsAddSendTimeoutNotification :: MonadDB m => Migration m
+userGroupSettingsAddSendTimeoutNotification = Migration {
+    mgrTableName = tblName tableUserGroupSettings
+  , mgrFrom = 5
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable (tblName tableUserGroupSettings)
+        [ sqlAddColumn $ tblColumn
+            { colName     = "send_timeout_notification"
+            , colType     = BoolT
+            , colNullable = False
+            , colDefault  = Just "false"
+            }
+        ]
+      runQuery_ $ sqlDropComposite $ "user_group_settings_c1"
+      runQuery_ $ sqlCreateComposite $  CompositeType {
+          ctName = "user_group_settings_c1"
+        , ctColumns = [
+            CompositeColumn { ccName = "ip_address_mask_list", ccType = TextT }
+          , CompositeColumn { ccName = "idle_doc_timeout_preparation", ccType = SmallIntT }
+          , CompositeColumn { ccName = "idle_doc_timeout_closed", ccType = SmallIntT }
+          , CompositeColumn { ccName = "idle_doc_timeout_canceled", ccType = SmallIntT }
+          , CompositeColumn { ccName = "idle_doc_timeout_timedout", ccType = SmallIntT }
+          , CompositeColumn { ccName = "idle_doc_timeout_rejected", ccType = SmallIntT }
+          , CompositeColumn { ccName = "idle_doc_timeout_error", ccType = SmallIntT }
+          , CompositeColumn { ccName = "immediate_trash", ccType = BoolT }
+          , CompositeColumn { ccName = "cgi_display_name", ccType = TextT }
+          , CompositeColumn { ccName = "sms_provider", ccType = SmallIntT }
+          , CompositeColumn { ccName = "cgi_service_id", ccType = TextT }
+          , CompositeColumn { ccName = "pad_app_mode", ccType = SmallIntT }
+          , CompositeColumn { ccName = "pad_earchive_enabled", ccType = BoolT }
+          , CompositeColumn { ccName = "legal_text", ccType = BoolT }
+          , CompositeColumn { ccName = "require_bpid_for_new_document", ccType = BoolT }
+          , CompositeColumn { ccName = "send_timeout_notification", ccType = BoolT }
+          ]
+        }
+  }

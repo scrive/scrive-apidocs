@@ -60,6 +60,7 @@ var CompanyDetailsView = React.createClass({
         smsprovider: this.props.company.smsprovider(),
         padappmode: this.props.company.padappmode(),
         padearchiveenabled: this.props.company.padearchiveenabled(),
+        sendtimeoutnotification: this.props.company.sendtimeoutnotification(),
         addressIsInherited: this.props.company.companyaddressisinherited(),
         settingsIsInherited: this.props.company.companysettingsisinherited(),
         inheritedAddress: this.props.company.companyinheritedaddress(),
@@ -135,6 +136,9 @@ var CompanyDetailsView = React.createClass({
               padappmode={this.props.viewModel.get("padappmode")}
               padearchiveenabled={
                 this.props.viewModel.get("padearchiveenabled")
+              }
+              sendtimeoutnotification={
+                this.props.viewModel.get("sendtimeoutnotification")
               }
               addressIsInherited={this.props.viewModel.get("addressIsInherited")}
               settingsIsInherited={this.props.viewModel.get("settingsIsInherited")}

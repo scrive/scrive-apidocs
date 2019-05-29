@@ -4,6 +4,7 @@ module Doc.DocViewMail
     , mailDocumentErrorForAuthor
     , mailDocumentErrorForSignatory
     , mailDocumentRejected
+    , mailDocumentTimedout
     , mailForwardSigningForAuthor
     , mailForwardSigningForNewSignatory
     , mailDocumentRemind
@@ -212,6 +213,14 @@ mailDocumentRejected forMail customMessage forAuthor rejector document = do
                        templateName "mailAuthorRejectContractMail"
                    else
                        templateName "mailRejectContractMail"
+
+mailDocumentTimedout :: ( MonadDB m, MonadThrow m, TemplatesMonad m
+                        , MailContextMonad m )
+                     => Document
+                     -> m Mail
+mailDocumentTimedout  document = do
+  documentMailWithDocLang document (templateName "mailTimedoutMail") $ do
+    F.value "documentlink" $ show $ LinkIssueDoc $ documentid document
 
 mailForwardSigningForAuthor :: ( MonadDB m, MonadThrow m, TemplatesMonad m
                         , MailContextMonad m )

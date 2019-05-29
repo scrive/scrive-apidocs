@@ -166,6 +166,45 @@ mailForwardSigningForNewSignatoryButton=
   $nicebutton(link=concat(a1=ctxhostpart;a2=link); text=_mailForwardSigningForNewSignatoryButton())$
 </div>
 ####
+#### TIMEDOUT MAIL
+####
+####
+mailTimedoutMail=
+    $_mailTimedoutTitle()$
+    $nicemail(
+        mailheader=_mailTimedoutTitle();
+        mailp1=mailTimedoutMailMainP()
+    )$
+####
+mailTimedoutMailMainP=
+       $_mailTimedoutInstructionDescription()$
+       <div style="margin-left: 50px;">
+         <table>
+           <tr>
+             <td valign="top" style="font-family: $nicemailfont()$;">1.</td>
+             <td style="font-family: $nicemailfont()$;">
+               $_mailTimedoutInstructionStep1()$
+               <br/>
+               <div style="margin-bottom: 10px;"></div>
+               $nicebutton(link=concat(a1=ctxhostpart;a2=documentlink); text=_mailTimedoutInstructionButton())$
+               <div style="margin-top: 10px;"></div>
+             </td>
+           </tr>
+           <tr>
+             <td valign="top" style="font-family: $nicemailfont()$;">2.</td>
+             <td style="font-family: $nicemailfont()$;">$_mailTimedoutInstructionStep2()$</td>
+           </tr>
+           <tr>
+             <td valign="top" style="font-family: $nicemailfont()$;">3.</td>
+             <td style="font-family: $nicemailfont()$;">$_mailTimedoutInstructionStep3()$</td>
+           </tr>
+           <tr>
+             <td valign="top" style="font-family: $nicemailfont()$;">4.</td>
+             <td style="font-family: $nicemailfont()$;">$_mailTimedoutInstructionStep4()$</td>
+           </tr>
+         </table>
+       </div>
+####
 ####
 #### REJECTED MAIL
 ####

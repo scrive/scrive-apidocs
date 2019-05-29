@@ -143,6 +143,7 @@ data UserGroupSettings = UserGroupSettings {
   , _ugsPadEarchiveEnabled   :: Bool
   , _ugsLegalText            :: Bool
   , _ugsRequireBPIDForNewDoc :: Bool
+  , _ugsSendTimeoutNotification :: Bool
   } deriving (Show, Eq)
 
 defaultUserGroupSettings :: UserGroupSettings
@@ -156,6 +157,7 @@ defaultUserGroupSettings = UserGroupSettings {
   , _ugsPadEarchiveEnabled   = True
   , _ugsLegalText            = False
   , _ugsRequireBPIDForNewDoc = False
+  , _ugsSendTimeoutNotification = False
   }
 
 data UserGroupUI = UserGroupUI {
@@ -444,6 +446,7 @@ type instance CompositeRow UserGroupSettings = (
   , Bool
   , Bool
   , Bool
+  , Bool
   )
 
 instance PQFormat UserGroupSettings where
@@ -466,6 +469,7 @@ instance CompositeFromSQL UserGroupSettings where
     , pad_earchive_enabled
     , legal_text
     , require_bpid_for_new_document
+    , send_timeout_notification
     ) = UserGroupSettings {
       _ugsIPAddressMaskList         = maybe [] read ip_address_mask_list
     , _ugsDataRetentionPolicy = DataRetentionPolicy
@@ -484,6 +488,7 @@ instance CompositeFromSQL UserGroupSettings where
     , _ugsPadEarchiveEnabled        = pad_earchive_enabled
     , _ugsLegalText                 = legal_text
     , _ugsRequireBPIDForNewDoc      = require_bpid_for_new_document
+    , _ugsSendTimeoutNotification   = send_timeout_notification
     }
 
 -- UI

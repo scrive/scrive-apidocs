@@ -477,6 +477,7 @@ getUserGroupSettingsChange = do
     mcompanysmsprovider <- fmap maybeRead <$> getField' $ "companysmsprovider"
     mcompanypadappmode <- fmap (padAppModeFromText . T.pack) <$> getField' $ "companypadappmode"
     mcompanypadearchiveenabled <- getField "companypadearchiveenabled"
+    mcompanysendtimeoutnotification <- getField "companysendtimeoutnotification"
 
     return $
         maybe id (set ugsIPAddressMaskList) mcompanyipaddressmasklist
@@ -500,6 +501,9 @@ getUserGroupSettingsChange = do
       . maybe id (set ugsSMSProvider) mcompanysmsprovider
       . maybe id (set ugsPadAppMode) mcompanypadappmode
       . maybe id (set ugsPadEarchiveEnabled . (=="true")) mcompanypadearchiveenabled
+      . maybe id (set ugsSendTimeoutNotification . (=="true")) mcompanysendtimeoutnotification
+
+
 
   where
     getIdleDocTimeoutField :: Kontrakcja m => String -> m (Maybe (Maybe Int16))

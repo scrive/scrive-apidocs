@@ -45,6 +45,7 @@ import TestingUtil
 import TestKontra as T
 import Theme.Model
 import User.Model
+import UserGroup.Model
 import UserGroup.Types
 import Util.Actor
 import Util.HasSomeUserInfo
@@ -79,6 +80,9 @@ docControlTests env = testGroup "DocControl" [
              env testDocumentFromShareableTemplate
   , testThat "We can get a document using a temporary magic hash if it is not expired"
              env testGetDocumentWithTemporaryMagicHash
+  , testThat "Timeouting document can trigger info mail sendout to author"
+             env testSendEmailOnTimeout
+
   ]
 
 testUploadingFile :: TestEnv ()
@@ -776,3 +780,30 @@ testGetDocumentWithTemporaryMagicHash = do
                 \ WHERE signatory_link_id =" <?> slid
     c <- fetchOne runIdentity
     assertEqual "Magic hash count should be 0" (0 :: Int64) c
+
+
+testSendEmailOnTimeout :: TestEnv ()
+testSendEmailOnTimeout = do
+  ug <- addNewUserGroup
+  Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
+  True <- dbUpdate $ SetUserUserGroup (userid user) (get ugID ug)
+  let newUGS = (set ugsSendTimeoutNotification True (fromJust $ get ugSettings ug))
+  dbUpdate $ UserGroupUpdateSettings (get ugID ug) (Just newUGS)
+
+  doc <- addRandomDocumentWithAuthorAndCondition user $ \d ->
+    isPending d && isSignable d && isJust (documenttimeouttime d)
+
+  modifyTestTime (const (10 `minutesAfter` (fromJust $ documenttimeouttime doc)))
+  ctx <- mkContext defaultLang
+  runSQL_ "UPDATE cron_jobs SET run_at = to_timestamp(0)\
+            \ WHERE id = 'find_and_timeout_documents'"
+  runTestCronUntilIdle $ ctx
+  doc2 <- dbQuery $ GetDocumentByDocumentID $ documentid doc
+
+  assertEqual "Document should be timeouted" Timedout (documentstatus doc2)
+
+  runSQL_ $ ("SELECT COUNT(*) FROM mails WHERE receivers ILIKE '%bob@blue.com%'")
+  c <- fetchOne runIdentity
+  assertEqual "One mail should be sent to the author" (1 :: Int64) c
+
+

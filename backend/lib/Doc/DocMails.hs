@@ -6,6 +6,7 @@ module Doc.DocMails (
   , sendAllReminderEmailsExceptAuthor
   , sendForwardEmail
   , sendClosedEmails
+  , sendDocumentTimeoutedEmail
   , sendRejectEmails
   , sendForwardSigningMessages
   , sendDocumentErrorEmail
@@ -415,6 +416,15 @@ makeMailAttachmentsForNotClosedDocument doc withAttachments = do
   if sum (map (filesize . snd) allMailAttachments) > maxFileSize
     then return []
     else return allMailAttachments
+
+{- |
+   Send an email to the author when the document is timedout
+ -}
+sendDocumentTimeoutedEmail :: (MonadLog m, TemplatesMonad m, MonadCatch m, CryptoRNG m, DocumentMonad m, MailContextMonad m) => Document -> m ()
+sendDocumentTimeoutedEmail document = do
+  let authorsiglink = fromJust $ getAuthorSigLink document
+  mail <- mailDocumentTimedout document
+  scheduleEmailSendout $ mail { to = [getMailAddress authorsiglink] }
 
 {- |
    Send an email to the author and to all signatories who were sent an invitation  when the document is rejected

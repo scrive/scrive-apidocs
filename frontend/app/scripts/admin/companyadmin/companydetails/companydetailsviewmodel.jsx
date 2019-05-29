@@ -29,6 +29,7 @@ var CompanyDetailsViewModel = Backbone.Model.extend(
       smsprovider: "",
       padappmode: "",
       padearchiveenabled: true,
+      sendtimeoutnotification: true,
       settingsIsInherited: false,
       inheritedSettings: null
     },
@@ -56,6 +57,7 @@ var CompanyDetailsViewModel = Backbone.Model.extend(
         companysmsprovider: this.get("smsprovider"),
         companypadappmode: this.get("padappmode"),
         companypadearchiveenabled: this.get("padearchiveenabled"),
+        companysendtimeoutnotification: this.get("sendtimeoutnotification"),
         companyaddressisinherited: this.get("addressIsInherited"),
         companysettingsisinherited: this.get("settingsIsInherited")
       });

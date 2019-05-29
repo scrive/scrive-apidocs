@@ -197,4 +197,5 @@ kontraMigrations = [
   , renameFeatureFlagsComposite
   , removePasswordAlgorithmUpgradeJob
   , dropTokenFromDocumentSessionTokens
+  , userGroupSettingsAddSendTimeoutNotification
   ]

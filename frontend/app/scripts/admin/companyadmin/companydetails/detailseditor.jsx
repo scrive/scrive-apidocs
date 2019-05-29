@@ -37,7 +37,8 @@ var settingsPropTypes = React.PropTypes.shape({
   immediatetrash: React.PropTypes.bool,
   smsprovider: React.PropTypes.string.isRequired,
   padappmode: React.PropTypes.string.isRequired,
-  padearchiveenabled: React.PropTypes.bool.isRequired
+  padearchiveenabled: React.PropTypes.bool.isRequired,
+  sendtimeoutnotification: React.PropTypes.bool.isRequired
 });
 
 var DetailsEditorView = React.createClass({
@@ -69,6 +70,7 @@ var DetailsEditorView = React.createClass({
     smsprovider: React.PropTypes.string.isRequired,
     padappmode: React.PropTypes.string.isRequired,
     padearchiveenabled: React.PropTypes.bool.isRequired,
+    sendtimeoutnotification: React.PropTypes.bool.isRequired,
 
     addressIsInherited: React.PropTypes.bool.isRequired,
     inheritedAddress: addressPropTypes,
@@ -122,6 +124,10 @@ var DetailsEditorView = React.createClass({
 
   onImmediateTrashChange: function (event) {
     this.props.onFieldChange("immediatetrash", event.target.checked);
+  },
+
+  onSendtimeoutnotification: function (event) {
+    this.props.onFieldChange("sendtimeoutnotification", event.target.checked);
   },
 
   onSmsproviderChange: function (newSmsprovider) {
@@ -475,6 +481,20 @@ var DetailsEditorView = React.createClass({
               </tr>
             );
           })}
+          <tr>
+            <td><label>Send timeout notifications</label></td>
+            <td>
+              <input
+                name="companysendtimeoutnotification"
+                type="checkbox"
+                checked={ this.props.settingsIsInherited
+                      ? this.props.inheritedSettings.sendtimeoutnotification
+                      : this.props.sendtimeoutnotification}
+                disabled={this.props.settingsIsInherited}
+                onChange={this.onSendtimeoutnotification}
+              />
+            </td>
+          </tr>
         </tbody>
       </table>
     );

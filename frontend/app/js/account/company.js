@@ -26,6 +26,7 @@ var Company = exports.Company = Backbone.Model.extend({
       ready : false,
       padappmode : "list_view",
       padearchiveenabled : true,
+      sendtimeoutnotification: false,
       companyaddressisinherited: false,
       companysettingsisinherited: false,
       companyinheritedaddress: null,
@@ -115,6 +116,9 @@ var Company = exports.Company = Backbone.Model.extend({
   padearchiveenabled: function(){
      return this.get("padearchiveenabled");
   },
+  sendtimeoutnotification: function() {
+     return this.get("sendtimeoutnotification");
+  },
   companyaddressisinherited: function(){
      return this.get("companyaddressisinherited");
   },
@@ -154,6 +158,7 @@ var Company = exports.Company = Backbone.Model.extend({
       smsprovider : args.smsprovider,
       padappmode : args.padappmode,
       padearchiveenabled : args.padearchiveenabled,
+      sendtimeoutnotification: args.sendtimeoutnotification,
       // do not set inherited, when the inherited values are not provided
       companyaddressisinherited: args.companyinheritedaddress && args.companyaddressisinherited,
       companysettingsisinherited: args.companyinheritedsettings && args.companysettingsisinherited,

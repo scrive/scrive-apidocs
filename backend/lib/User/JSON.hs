@@ -168,6 +168,7 @@ companySettingsJson ugs = do
   value "idledoctimeoutrejected" $ get drpIdleDocTimeoutRejected drp
   value "idledoctimeouterror" $ get drpIdleDocTimeoutError drp
   value "immediatetrash" $ get drpImmediateTrash drp
+  value "sendtimeoutnotification" $  get ugsSendTimeoutNotification ugs
 
 userStatsToJSON :: (UTCTime -> String) -> [UserUsageStats] -> JSValue
 userStatsToJSON formatTime uuss = runJSONGen . objects "stats" . for uuss $ \uus -> do
