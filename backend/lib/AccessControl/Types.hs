@@ -93,6 +93,7 @@ data AccessResource
   | UserGroupPolicyR
   | UserPersonalTokenR
   | DocumentR
+  | FolderPolicyR
   deriving (Eq, Show, Enum, Bounded)
 
 -- | Should be self-explanatory. The 'A' stands for 'Action'.
@@ -150,25 +151,38 @@ mkPerm t res act = Permission act res t
 
 hasPermissions :: AccessRoleTarget -> [Permission]
 hasPermissions (UserAR usrID) =
-  -- user can read, update and delete himself
-  map (mkPerm usrID UserR) [ReadA, UpdateA]
-hasPermissions (UserGroupMemberAR _usrGrpID) = []  -- no special permissions for members
+  -- user can read and update himself
+  map (mkPerm usrID UserR) [ReadA, UpdateA] <>
+  -- user can grant/revoke permissions related themselves; but only if they have
+  -- permissions on both source and target, since that's how the Access Control
+  -- API works
+  map (mkPerm usrID UserPolicyR) [minBound..maxBound]
+hasPermissions (UserGroupMemberAR _usrGrpID) =
+  -- no special permissions for members
+  []
 hasPermissions (UserAdminAR usrGrpID) =
   -- can CRUD users
   map (mkPerm usrGrpID UserR)              allActions <>
   -- can read sub-groups
-  map (mkPerm usrGrpID UserGroupR)         [ReadA]  <>
-  -- can set any permission to any user
+  map (mkPerm usrGrpID UserGroupR)         [ReadA]    <>
+  -- can set/remove any role on any user
   map (mkPerm usrGrpID UserPolicyR)        allActions <>
-  -- can set any permission to any sub-group
+  -- can set/remove any role on any sub-group
   map (mkPerm usrGrpID UserGroupPolicyR)   allActions <>
   -- can CRUD tokens for all users
   map (mkPerm usrGrpID UserPersonalTokenR) allActions
     where allActions = [minBound..maxBound]
 hasPermissions (UserGroupAdminAR usrGrpID) =
-  [ mkPerm usrGrpID res act | act <- [minBound..maxBound], res <- [minBound..maxBound] ]
+  -- can perform all actions upon a user group
+  [ mkPerm usrGrpID res act
+    | act <- [minBound..maxBound]
+    , res <- [minBound..maxBound]
+  ]
 hasPermissions (DocumentAdminAR fid) =
-  map (mkPerm fid DocumentR) [minBound..maxBound]
+  -- can CRUD documents in the folder
+  map (mkPerm fid DocumentR) [minBound..maxBound] <>
+  -- can set/remove any role on any sub-folder
+  map (mkPerm fid FolderPolicyR) [minBound..maxBound]
 
 -- | Interface to get the proper combinations of 'Permission's needed to gain
 -- access permission.
