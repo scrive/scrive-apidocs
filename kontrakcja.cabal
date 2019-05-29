@@ -501,7 +501,6 @@ Library
   Build-depends: base-noprelude
                , kontrakcja-prelude
                , AES
-               , Crypto
                , DRBG
                , Decimal
                , HStringTemplate
@@ -522,9 +521,7 @@ Library
                , conduit
                , consumers >= 2.1.0.0
                , containers >= 0.5 && < 0.7
-               , crypto-api
                , crypto-rng
-               , cryptohash
                , cryptonite
                , curl
                , data-default
@@ -562,6 +559,7 @@ Library
                , log-base
                , log-elasticsearch
                , log-postgres
+               , memory
                , mixpanel
                , mmap
                , monad-control
@@ -869,7 +867,6 @@ Executable kontrakcja-migrate
                , containers
                , crypto-api
                , crypto-rng
-               , cryptohash
                , data-default
                , directory
                , exceptions
@@ -1066,7 +1063,7 @@ Executable mailing-server
                , containers
                , crypto-api
                , crypto-rng
-               , cryptohash
+               , cryptonite
                , data-default
                , hpqtypes-extras
                , deepseq
@@ -1091,6 +1088,7 @@ Executable mailing-server
                , log-base
                , log-elasticsearch
                , log-postgres
+               , memory
                , monad-control
                , monad-time
                , mtl
@@ -1250,9 +1248,7 @@ Executable messenger-server
                , cond
                , consumers
                , containers
-               , crypto-api
                , crypto-rng
-               , cryptohash
                , data-default
                , hpqtypes-extras
                , deepseq

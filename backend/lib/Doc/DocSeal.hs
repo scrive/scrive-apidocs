@@ -18,13 +18,12 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Crypto.RNG
 import Data.Char
-import Data.Digest.SHA2
 import Data.Function (on)
 import Data.Time
 import Log
 import System.FilePath ((</>), takeExtension, takeFileName)
 import Text.StringTemplates.Templates
-import qualified Data.ByteString as BB
+import qualified Crypto.Hash as H
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
@@ -696,7 +695,7 @@ addSealedEvidenceEvents actor = do
   notAddedAttachments <- filter (not . authorattachmentaddtosealedfile) <$> documentauthorattachments <$> theDocument
   forM_ notAddedAttachments $ \a -> do
     contents <- getFileIDContents $ authorattachmentfileid a
-    let hash = filter (not . isSpace) $ show $ sha256 $ BB.unpack contents
+    let hash = show $ H.hashWith H.SHA256 contents
     void $ update $ InsertEvidenceEvent
         AuthorAttachmentHashComputed
         (F.value "attachment_name" (authorattachmentname a) >> F.value "hash" hash)
