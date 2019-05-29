@@ -10,7 +10,8 @@ module File.Model (
 import Control.Monad.Catch
 import Control.Monad.Time
 import Data.Int
-import qualified Crypto.Hash.SHA1 as SHA1
+import qualified Crypto.Hash as H
+import qualified Data.ByteArray as BA
 import qualified Data.ByteString as BS
 
 import Crypto
@@ -43,7 +44,7 @@ data NewEmptyFileForAWS = NewEmptyFileForAWS String BS.ByteString
 instance (MonadDB m, MonadThrow m)
   => DBUpdate m NewEmptyFileForAWS (FileID, BS.ByteString) where
   update (NewEmptyFileForAWS fname fcontent) = do
-    let fchecksum = SHA1.hash fcontent
+    let fchecksum = BA.convert $ H.hashWith H.SHA1 fcontent
         fsize     = (fromIntegral . BS.length $ fcontent :: Int32)
     runQuery_ $ sqlInsert "files" $ do
       sqlSet "name"     fname

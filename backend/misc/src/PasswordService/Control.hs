@@ -7,9 +7,8 @@ import Control.Monad.Catch
 import Data.Char
 import Log
 import System.Exit
-import qualified Crypto.Hash.SHA1 as SHA1
+import qualified Crypto.Hash as H
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Base16 as Base16
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BSC
 
@@ -25,7 +24,7 @@ checkPassword config pwd =
     logInfo_ "Password is too short"
     return False
   else do
-    let sha1 = map toUpper $ BSC.toString $ Base16.encode $ SHA1.hash $ BSC.fromString pwd
+    let sha1 = map toUpper . show . H.hashWith H.SHA1 $ BSC.fromString pwd
         (sha1p, sha1r) = splitAt 5 sha1
         url = (passwordServiceUrl config) ++ "/range/" ++ sha1p
     (exitcode, stdout, _stderr) <-

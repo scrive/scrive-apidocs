@@ -12,7 +12,8 @@ import Crypto.RNG
 import Data.Time
 import Log
 import System.FilePath
-import qualified Crypto.Hash.SHA1 as SHA1
+import qualified Crypto.Hash as H
+import qualified Data.ByteArray as BA
 import qualified Data.ByteString.Base16 as Base16
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL
@@ -86,7 +87,7 @@ getFileContents file@File{ fileid, filestorage = FileStorageAWS url aes } =
   localData [identifier fileid] $ do
     encrypted <- FS.getSavedContents url
     let contents = aesDecrypt aes $ BSL.toStrict encrypted
-        checksum = SHA1.hash contents
+        checksum = BA.convert $ H.hashWith H.SHA1 contents
     unless (checksum == filechecksum file) $ do
       logAttention "SHA1 checksums of file don't match" $ object
         [ logPair_ file
