@@ -286,6 +286,7 @@ apiCallChangeUserPassword = api $ do
               passwordhash <- createPassword password
               void $ dbUpdate $ SetUserPassword (userid user) passwordhash
               void $ dbUpdate $ LogHistoryPasswordSetup (userid user) (get ctxipnumber ctx) (get ctxtime ctx) (Just $ userid $ user)
+              terminateAllUserSessionsExceptCurrent (userid user)
               Ok <$> (runJSONGenT $ value "changed" True)
             else do
               void $ dbUpdate $ LogHistoryPasswordSetupReq (userid user) (get ctxipnumber ctx) (get ctxtime ctx) (Just $ userid $ user)

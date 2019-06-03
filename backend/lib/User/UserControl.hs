@@ -43,6 +43,7 @@ import MagicHash (MagicHash)
 import Mails.SendMail
 import MinutesTime
 import PasswordService.Control
+import Session.Model
 import User.Action
 import User.Email
 import User.EmailChangeRequest
@@ -329,6 +330,7 @@ handlePasswordReminderPost uid token = do
           void $ dbUpdate $ SetUserPassword (userid user) passwordhash
           void $ dbUpdate $ LogHistoryPasswordSetup (userid user) ipnumber time
             (userid <$> maybeuser)
+          terminateAllUserSessionsExceptCurrent (userid user)
           logUserToContext $ Just user
           J.runJSONGenT $ do
             J.value "logged" True

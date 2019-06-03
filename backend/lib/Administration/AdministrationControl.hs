@@ -79,6 +79,7 @@ import Mails.Model
 import MinutesTime
 import PadApplication.Types (padAppModeFromText)
 import Routing
+import Session.Model
 import Theme.Control
 import User.CallbackScheme.Model
 import User.Email
@@ -342,6 +343,7 @@ handleUserPasswordChange uid = onlySalesOrAdmin $ do
       admin    = get ctxmaybeuser ctx
   void $ dbUpdate $ SetUserPassword (userid user) passwordhash
   void $ dbUpdate $ LogHistoryPasswordSetup (userid user) ipnumber time (userid <$> admin)
+  terminateAllUserSessionsExceptCurrent (userid user)
   runJSONGenT $ value "changed" True
 
 handleDeleteInvite :: Kontrakcja m => UserGroupID -> UserID -> m ()

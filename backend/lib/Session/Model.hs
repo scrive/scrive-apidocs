@@ -6,9 +6,13 @@ module Session.Model (
   , getPadUserFromSession
   , getSession
   , startNewSession
+  , terminateAllUserSessionsExceptCurrent
+  , TerminateAllButOneUserSessions(..)
   , DeleteExpiredSessions(..)
   , PurgeExpiredTemporaryLoginTokens(..)
   , NewTemporaryLoginToken(..)
+  -- Exported for tests
+  , GetSession(..)
   ) where
 
 import Control.Monad.Base
@@ -204,6 +208,14 @@ fixSessionCookiesIfBrokenOrSessionExpired = do
               => SessionID -> m Bool
     isExpiredOrDroppedSession sid = isNothing <$> dbQuery (GetSession sid)
 
+terminateAllUserSessionsExceptCurrent ::
+  ( CryptoRNG m, MonadDB m, MonadThrow m, ServerMonad m
+  , MonadLog m , FilterMonad Response m, MonadIO m)
+  => UserID -> m ()
+terminateAllUserSessionsExceptCurrent uid = do
+  cs <- getCurrentSession
+  dbUpdate $ TerminateAllButOneUserSessions uid (sesID cs)
+
 selectSessionSelectorsList :: [SQL]
 selectSessionSelectorsList = [ "id", "user_id", "pad_user_id"
                              , "expires", "token", "csrf_token", "domain" ]
@@ -215,6 +227,17 @@ instance (MonadDB m, MonadThrow m, MonadTime m) =>
     now <- currentTime
     runQuery_ . sqlDelete "sessions" $
       sqlWhere $ "expires <" <?> now
+
+data TerminateAllButOneUserSessions = TerminateAllButOneUserSessions UserID SessionID
+instance (MonadDB m, MonadThrow m, MonadTime m) =>
+  DBUpdate m TerminateAllButOneUserSessions () where
+  update (TerminateAllButOneUserSessions uid sid) = do
+    runQuery_ . sqlDelete "sessions" $ do
+      sqlWhereAny [
+          sqlWhere $ "user_id =" <?> uid
+        , sqlWhere $ "pad_user_id =" <?> uid
+        ]
+      sqlWhere $ "id <>" <?> sid
 
 data GetSession = GetSession SessionID
 instance (MonadDB m, MonadThrow m, MonadTime m) =>

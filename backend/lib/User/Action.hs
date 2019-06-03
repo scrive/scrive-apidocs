@@ -19,6 +19,7 @@ import Kontra
 import Log.Identifier
 import MinutesTime
 import PasswordService.Control
+import Session.Model
 import User.Email
 import User.History.Model
 import User.Model
@@ -70,6 +71,7 @@ handleActivate mfstname msndname (actvuser,ug) signupmethod = do
         internalError
       passwordhash <- createPassword password
       void . dbUpdate $ SetUserPassword (userid actvuser) passwordhash
+      terminateAllUserSessionsExceptCurrent (userid actvuser)
     Nothing -> return ()
 
   tosuser <- guardJustM $ dbQuery $ GetUserByID (userid actvuser)

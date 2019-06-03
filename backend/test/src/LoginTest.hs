@@ -1,6 +1,7 @@
 module LoginTest (loginTests) where
 
 import Data.Aeson
+import Data.Int
 import Data.Text
 import Data.Time.Clock.POSIX
 import Happstack.Server
@@ -57,6 +58,8 @@ loginTests env = testGroup "Login" [
         env testLoginGetUserPersonalTokenFailsWithExpiredToken
     , testThat "can use apiCallGetUserPersonalToken with a valid login_token"
         env testLoginGetUserPersonalTokenSucceedsWithValidToken
+    , testThat "user is logged out when changing password"
+        env testResetPasswordRemovesAllOtherUserSessions
     ]
 
 testSuccessfulLogin :: TestEnv ()
@@ -282,6 +285,37 @@ testLoginGetUserPersonalTokenSucceedsWithValidToken = do
     res <- fst <$> runTestKontra req ctx apiCallGetUserPersonalToken
     let expCode = 200
     assertEqual ("should return " ++ show expCode) expCode (rsCode res)
+
+testResetPasswordRemovesAllOtherUserSessions:: TestEnv ()
+testResetPasswordRemovesAllOtherUserSessions = do
+    ct <- currentTime
+    bd <- dbQuery $ GetMainBrandedDomain
+    (user,ctxwithuser) <- createUserAndResetPassword
+    let assertSessions t c = do
+          runQuery_ $ "SELECT COUNT(*) FROM sessions\
+            \ WHERE user_id =" <?> (userid user)
+          r <- fetchOne runIdentity
+          assertEqual t (c :: Int64) r
+        addSession = do
+          runQuery_ $ "INSERT INTO sessions(user_id,expires,token,csrf_token,domain)\
+            \ VALUES("  <?> (userid user) <> "," <?> ct <> ",0,0," <?> (get bdid bd) <> ")"
+    ctx <- mkContext defaultLang
+
+    addSession
+    addSession
+    assertSessions "We expect to have 2 sessions" 2
+
+    PasswordReminder{..} <- newPasswordReminder $ userid user
+    req1 <- mkRequest POST [("password", inText "password_8866")]
+    (_, _) <- runTestKontra req1 ctx $ handlePasswordReminderPost prUserID prToken
+    assertSessions "We expect not to have any sessions because we reseted password" 0
+
+    addSession
+    assertSessions "We expect to have 1 session" 1
+
+    req2 <- mkRequest POST [("oldpassword", inText "password_8866"), ("password", inText "password_8867")]
+    (_, _) <- runTestKontra req2 ctxwithuser $ apiCallChangeUserPassword
+    assertSessions "We expect not to have any sessions because we changed password again" 0
 
 -- Helper Functions
 
