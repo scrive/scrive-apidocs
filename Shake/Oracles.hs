@@ -20,9 +20,11 @@ newtype GhcVersion = GhcVersion ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 newtype TeamCity = TeamCity ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
-newtype NginxConfPath = NginxConfPath ()
+newtype NginxConfDefaultRule = NginxConfDefaultRule ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
-newtype NginxConfPathAlternative = NginxConfPathAlternative ()
+newtype NginxConfRulesPath = NginxConfRulesPath ()
+  deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
+newtype NginxConfRulesPathAlternative = NginxConfRulesPathAlternative ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 newtype BuildTarget = BuildTarget ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
@@ -51,8 +53,9 @@ newtype CreateTestDBWithConfData = CreateTestDBWithConfData ()
 
 type instance RuleResult GhcVersion                      = String
 type instance RuleResult TeamCity                        = Bool
-type instance RuleResult NginxConfPath                   = String
-type instance RuleResult NginxConfPathAlternative        = String
+type instance RuleResult NginxConfRulesPath              = String
+type instance RuleResult NginxConfDefaultRule            = String
+type instance RuleResult NginxConfRulesPathAlternative   = String
 type instance RuleResult BuildTarget                     = String
 type instance RuleResult BuildSandbox                    = String
 type instance RuleResult BuildTestConfPath               = String
@@ -90,10 +93,12 @@ addOracles = do
 
   -- This is needed by our build.
   -- FIXME should be part of SHAKE_BUILD_ env vars?
-  void $ addOracle $ \(NginxConfPath _) ->
-                     fromMaybe "" <$> getEnv "NGINX_CONF_PATH"
-  void $ addOracle $ \(NginxConfPathAlternative _) ->
-                     fromMaybe "" <$> getEnv "NGINX_CONF_PATH_ALTERNATIVE"
+  void $ addOracle $ \(NginxConfRulesPath _) ->
+                     fromMaybe "" <$> getEnv "NGINX_CONF_RULES_PATH"
+  void $ addOracle $ \(NginxConfDefaultRule _) ->
+                     fromMaybe "" <$> getEnv "NGINX_CONF_DEFAULT_RULE"
+  void $ addOracle $ \(NginxConfRulesPathAlternative _) ->
+                     fromMaybe "" <$> getEnv "NGINX_CONF_RULES_PATH_ALTERNATIVE"
   -- These are our build options
   void $ addOracle $ \(BuildTarget _)        ->
                      fromMaybe "" <$> getEnv "SHAKE_BUILD_TARGET"
@@ -187,13 +192,17 @@ oracleHelpRule = do
       ++ " Normally consists of a prefix and a build number."
     showVarVal (show tcDB)
 
-    nginxconfpath <- askOracle (NginxConfPath ())
-    explainVar "NGINX_CONF_PATH" "Used for generating NGINX urls.txt file"
-    showVarVal nginxconfpath
+    nginxconfrulespath <- askOracle (NginxConfRulesPath ())
+    explainVar "NGINX_CONF_RULES_PATH" "Used for generating NGINX urls.txt file"
+    showVarVal nginxconfrulespath
 
-    nginxconfpathalternative <- askOracle (NginxConfPathAlternative ())
-    explainVar "NGINX_CONF_PATH_ALTERNATIVE" "Used for generating NGINX urls.txt file"
-    showVarVal nginxconfpathalternative
+    nginxconfdefaultrule <- askOracle (NginxConfDefaultRule ())
+    explainVar "NGINX_CONF_DEFAULT_RULE" "Used for generating NGINX urls.txt file"
+    showVarVal nginxconfdefaultrule
+
+    nginxconfrulespathalternative <- askOracle (NginxConfRulesPathAlternative ())
+    explainVar "NGINX_CONF_RULES_PATH_ALTERNATIVE" "Used for generating NGINX urls_list.txt file"
+    showVarVal nginxconfrulespathalternative
 
     putNormal ""
 
