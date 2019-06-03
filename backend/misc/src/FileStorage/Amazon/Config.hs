@@ -3,12 +3,13 @@ module FileStorage.Amazon.Config
   , isAmazonConfigValid
   ) where
 
-import Data.Functor.Invariant
 import Data.Unjson
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.Text as T
 import qualified Network.AWS as AWS
 import qualified Network.AWS.Data.Text as AWS
+
+import Data.ByteString.Utils
 
 -- | AWS config: (host, port, bucket, access key, secret key).
 data AmazonConfig = AmazonConfig
@@ -59,9 +60,6 @@ isAmazonConfigValid AmazonConfig{..} =
   && not (BSC.null amazonConfigSecretKey)
 
 ----------------------------------------
-
-unjsonByteString :: UnjsonDef BSC.ByteString
-unjsonByteString = invmap BSC.pack BSC.unpack unjsonDef
 
 unjsonRegion :: UnjsonDef AWS.Region
 unjsonRegion =

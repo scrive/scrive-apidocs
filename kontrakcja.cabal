@@ -139,6 +139,7 @@ Library
                  , DB.Utils
                  , DB.XML
                  , Data.ByteString.RFC2397
+                 , Data.ByteString.Utils
                  , DataRetentionPolicy
                  , DataRetentionPolicy.Guards
                  , Database.Redis.Cache
@@ -951,6 +952,7 @@ Executable mailing-server
                  Control.Monad.Trans.Instances
                  Cron.Tables
                  Crypto
+                 Data.ByteString.Utils
                  DB
                  DB.Derive
                  DB.PostgreSQL
@@ -958,17 +960,6 @@ Executable mailing-server
                  DB.SQLFunction
                  DB.SQLTrigger
                  DB.Utils
-                 Doc.API.Callback.Tables
-                 Doc.AutomaticReminder.Tables
-                 Doc.Extending.Tables
-                 Doc.Functions
-                 Doc.SMSPin.Tables
-                 Doc.Sealing.Tables
-                 Doc.Signing.Tables
-                 Doc.Tables
-                 Doc.Tokens.Tables
-                 Doc.Trigger
-                 Data.ByteString.Utils
                  Database.Redis.Cache
                  Database.Redis.Configuration
                  Database.Redis.Helpers
