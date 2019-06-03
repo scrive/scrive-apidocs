@@ -1,11 +1,37 @@
 module RoutingListMain where
 
+{-------------------------------------------------------------------------------
+run this script as: cabal new-run routinglist <filepath> <default nginx rule> < input.json
+e.g. cabal new-run routinglist /tmp/urls.txt "include /etc/nginx/includes/something;" < input.json
+
+input.json should contain a dict mapping url strings to string with rules (they can contain newlines)
+e.g.:
+{"/some/url": "include /etc/nginx/includes/some_include;"}
+
+This script will go through all the registered urls in kontrakcja, sort them
+from most to least specific and output nginx config that looks like list of:
+
+location ~ ^/some/url {
+    include some_rule;
+}
+
+For from kontrakcja, this script will output a location rule for it,
+containing rules from input.json, or the default rule if missing (taken from 2nd cli param)
+
+Additionally, at the end it will list urls with rules that only exist in input.json,
+but not in kontrakcja
+-------------------------------------------------------------------------------}
+
+import Data.Aeson (decode)
 import Happstack.Server (Method, Response)
 import Happstack.StaticRouting (Route)
 import System.Environment (getArgs)
 import System.IO
 import Unsafe.Coerce (unsafeCoerce)
 import qualified Control.Monad.State as S
+import qualified Data.ByteString.Lazy as BSL
+import qualified Data.HashMap.Strict as HM
+import qualified Data.Text.Lazy as T
 
 import Kontra
 import RoutingTable (staticRoutes)
@@ -104,27 +130,22 @@ exceptions s = [s]
 
 main :: IO ()
 main = do
-  [fileName, include, includeAlternative] <- getArgs
+  [fileName, include] <- getArgs
+  input <- BSL.getContents
+  let stringifyPair (x, y) = (T.unpack x, T.unpack y)
+      Just rules = map stringifyPair <$> HM.toList <$> decode input
+      overrides = map fst rules
   withFile fileName WriteMode $ \h -> do
     let urls = getUrls $ staticRoutes True
-        urls' = ["/api/", "/adminonly"] ++ urls
         -- sort DESC to have "/a/b" coming before "/a"
-        sortedUrls = sortBy (\u1 u2 -> compare u2 u1) urls'
-        urlsWithAlternativeInclude = [
-            "/api/v2/documents/list"
-          , "/api/frontend/documents/list"
-          , "/api/v1/list"
-          ]
+        sortedUrls = sortBy (\u1 u2 -> compare u2 u1) urls
+        printInstructions is = forM_ is $ \i -> hPutStrLn h $ "    " ++ i
     forM_ sortedUrls $ \url -> do
+      let urlRules = lines $ fromMaybe include (lookup url rules)
       hPutStrLn h $ "location ~ ^" ++ url ++ " {"
-      hPutStrLn h $ "    include " ++
-        (if url `elem` urlsWithAlternativeInclude
-          then includeAlternative
-          else include)
-        ++ ";"
+      printInstructions urlRules
       hPutStrLn h "}"
-    -- verify upload cap hack
-    hPutStrLn h $ "location ~ ^/verify {"
-    hPutStrLn h $ "    client_max_body_size 30M;"
-    hPutStrLn h $ "    include " ++ include ++ ";"
-    hPutStrLn h "}"
+    forM_ (overrides \\ sortedUrls) $ \url -> do
+      hPutStrLn h $ "location ~ ^" ++ url ++ " {"
+      printInstructions $ lines $ fromJust $ lookup url rules
+      hPutStrLn h "}"
