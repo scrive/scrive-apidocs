@@ -139,6 +139,7 @@ Library
                  , DB.Utils
                  , DB.XML
                  , Data.ByteString.RFC2397
+                 , Data.ByteString.Utils
                  , DataRetentionPolicy
                  , DataRetentionPolicy.Guards
                  , Database.Redis.Cache
@@ -943,12 +944,12 @@ Executable mailing-server
                  Control.Monad.Trans.Control.Util
                  Control.Monad.Trans.Instances
                  Crypto
+                 Data.ByteString.Utils
                  DB
                  DB.Derive
                  DB.PostgreSQL
                  DB.Query
                  DB.Utils
-                 Data.ByteString.Utils
                  Database.Redis.Cache
                  Database.Redis.Configuration
                  Database.Redis.Helpers
