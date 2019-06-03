@@ -465,7 +465,7 @@ testSignDocumentEvidenceLog = do
       lg <- dbQuery . GetEvidenceLog =<< theDocumentID
       assertJust $ find (\e -> evType e == Current SignDocumentEvidence) lg
 
-      runPdfToolsLambdaConfT pdfSealLambdaEnv $ do
+      runPdfToolsLambdaT pdfSealLambdaEnv $ do
         sealDocument "https://scrive.com"
 
 testSignDocumentSearchData :: TestEnv ()
@@ -1301,7 +1301,7 @@ testSealDocument = replicateM_ 1 $ do
 
     randomUpdate $ \t -> CloseDocument (systemActor t)
 
-    runPdfToolsLambdaConfT (get ctxpdftoolslambdaenv ctx) $
+    runPdfToolsLambdaT (get ctxpdftoolslambdaenv ctx) $
       sealDocument "https://scrive.com"
 
 testDocumentAppendSealedPendingRight :: TestEnv ()
