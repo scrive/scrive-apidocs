@@ -208,7 +208,7 @@ postDocumentPendingChange olddoc signatoryLink = do
 -- | Prepare final PDF if needed, apply digital signature, and send
 -- out confirmation emails if there has been a change in the seal status.  Precondition: document must be
 -- closed or in error.
-postDocumentClosedActions :: (TemplatesMonad m, MailContextMonad m, CryptoRNG m, MonadIO m, MonadLog m, MonadFileStorage m, MonadBaseControl IO m, MonadMask m, DocumentMonad m, GuardTimeConfMonad m, PdfToolsLambdaConfMonad m)
+postDocumentClosedActions :: (TemplatesMonad m, MailContextMonad m, CryptoRNG m, MonadIO m, MonadLog m, MonadFileStorage m, MonadBaseControl IO m, MonadMask m, DocumentMonad m, GuardTimeConfMonad m, PdfToolsLambdaMonad m)
   => Bool -- ^ Commit to DB after we have sealed the document
   -> Bool -- ^ Prepare final PDF even if it has already been prepared
   -> m Bool

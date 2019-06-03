@@ -75,7 +75,7 @@ documentSealing guardTimeConf pdfToolsLambdaEnv templates pool
               }
         logInfo_ "Running postDocumentClosedActions"
         resultisok <- runGuardTimeConfT guardTimeConf
-          . runPdfToolsLambdaConfT pdfToolsLambdaEnv
+          . runPdfToolsLambdaT pdfToolsLambdaEnv
           . runTemplatesT (lang, templates)
           . runMailContextT mc
           $ postDocumentClosedActions True False
