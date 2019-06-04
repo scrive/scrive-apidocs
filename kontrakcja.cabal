@@ -1591,12 +1591,16 @@ Executable routinglist
   Main-Is: RoutingListMain.hs
   GHC-options: -main-is RoutingListMain
 
-  Build-depends: kontrakcja
+  Build-depends: aeson
+               , kontrakcja
                , base-noprelude
+               , bytestring
                , kontrakcja-prelude
                , happstack-server
                , happstack-static-routing
                , mtl
+               , text
+               , unordered-containers
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns
