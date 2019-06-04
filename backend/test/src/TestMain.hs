@@ -53,6 +53,7 @@ import EvidenceAttachmentsTest
 import EvidenceLogTest
 import FeatureFlagsTest
 import FileStorage
+import FileStorage.Amazon.S3Env
 import FileTest
 import FlashMessages
 import Folder.FolderTest
@@ -74,6 +75,7 @@ import NetsXMLTest
 import OAuth
 import PadApplication.APITest
 import Partner.APITest
+import PdfToolsLambda.Conf
 import QRCodeTest
 import ReferenceScreenshotsTest
 import SessionsTest
@@ -212,6 +214,8 @@ testMany' (allargs, ts) runLogger rng = do
   memcache           <- newFileMemCache $
                         fromMaybe 200000000 $ testLocalFileCacheSize tconf
   mRedisConn         <- T.forM (testRedisCacheConfig tconf) mkRedisConnection
+  mAmazonEnv         <- sequence (s3envFromConfig <$> testAmazonConfig tconf)
+  lambdaEnv          <- pdfToolsLambdaEnvFromConf $ testPdfToolsLambdaConf tconf
   let env = envf $ TestEnvSt {
         _teConnSource         = cs
       , _teStaticConnSource   = staticSource
@@ -223,8 +227,8 @@ testMany' (allargs, ts) runLogger rng = do
       , _teRejectedDocuments  = rejected_documents
       , _teOutputDirectory    = Nothing
       , _teStagingTests       = False
-      , _tePdfToolsLambdaConf = testPdfToolsLambdaConf tconf
-      , _teAmazonConfig       = testAmazonConfig tconf
+      , _tePdfToolsLambdaEnv  = lambdaEnv
+      , _teAmazonS3Env        = mAmazonEnv
       , _teFileMemCache       = memcache
       , _teRedisConn          = mRedisConn
       , _teCronDBConfig       = testDBConfig tconf

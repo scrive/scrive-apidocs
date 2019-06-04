@@ -116,8 +116,8 @@ instance (MonadTrans fst, Monad (InnerKontra fst))
   getGuardTimeConf = get ctxgtconf <$> getContext
 
 instance (MonadTrans fst, Monad (InnerKontra fst))
-    => PdfToolsLambdaConfMonad (KontraG fst) where
-  getPdfToolsLambdaConf = get ctxpdftoolslambdaconf <$> getContext
+    => PdfToolsLambdaMonad (KontraG fst) where
+  getPdfToolsLambdaEnv = get ctxpdftoolslambdaenv <$> getContext
 
 instance (MonadTrans fst, Monad (InnerKontra fst))
     => MailContextMonad (KontraG fst) where

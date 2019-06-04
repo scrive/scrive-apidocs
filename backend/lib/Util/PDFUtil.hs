@@ -119,7 +119,7 @@ data FileError = FileSizeError Int Int
                | FileOtherError String
                deriving (Eq, Ord, Show, Read, Typeable)
 
-preCheckPDFsHelper :: (CryptoRNG m, MonadBaseControl IO m, MonadCatch m, MonadLog m, PdfToolsLambdaConfMonad m)
+preCheckPDFsHelper :: (CryptoRNG m, MonadBaseControl IO m, MonadCatch m, MonadLog m, PdfToolsLambdaMonad m)
                    => [BS.ByteString]
                    -> String
                    -> m (Either FileError [BS.ByteString])
@@ -146,7 +146,7 @@ preCheckPDFsHelper contents tmppath =
 
     checkRemoveJavaScript = do
       forM_ (zip [1..] contents) $ \(num, content) -> do
-        lc <- lift $ getPdfToolsLambdaConf
+        lc <- lift $ getPdfToolsLambdaEnv
         nc <- lift $ callPdfToolsCleaning lc $ BSL.fromChunks [content]
         case nc of
              Just c -> liftBase $ BS.writeFile (jsremovedpath num) c
@@ -211,7 +211,7 @@ preCheckPDFsHelper contents tmppath =
 -- Return value is either a 'BS.ByteString' with normalized document
 -- content or 'FileError' enumeration stating what is going on.
 --
-preCheckPDFs :: (CryptoRNG m, MonadBaseControl IO m, MonadCatch m, MonadLog m, PdfToolsLambdaConfMonad m) => [BS.ByteString]
+preCheckPDFs :: (CryptoRNG m, MonadBaseControl IO m, MonadCatch m, MonadLog m, PdfToolsLambdaMonad m) => [BS.ByteString]
             -> m (Either FileError [BS.ByteString])
 preCheckPDFs contents =
   withSystemTempDirectory' "precheck" $ \tmppath -> do
@@ -224,7 +224,7 @@ preCheckPDFs contents =
       Right _ -> return ()
     return res
 
-preCheckPDF :: (CryptoRNG m, MonadBaseControl IO m, MonadCatch m, MonadLog m, PdfToolsLambdaConfMonad m) => BS.ByteString
+preCheckPDF :: (CryptoRNG m, MonadBaseControl IO m, MonadCatch m, MonadLog m, PdfToolsLambdaMonad m) => BS.ByteString
             -> m (Either FileError BS.ByteString)
 preCheckPDF content = do
   res <- preCheckPDFs [content]

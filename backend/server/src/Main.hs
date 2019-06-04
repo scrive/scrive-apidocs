@@ -27,10 +27,12 @@ import DB
 import DB.PostgreSQL
 import FeatureFlags.Model
 import FileStorage
+import FileStorage.Amazon.S3Env
 import Folder.Model
 import Happstack.Server.ReqHandler
 import Log.Configuration
 import Monitoring
+import PdfToolsLambda.Conf
 import RoutingTable
 import Templates
 import User.Email
@@ -92,6 +94,9 @@ main = withCurlDo $ do
       mrediscache <- F.forM (redisCacheConfig appConf) mkRedisConnection
       filecache   <- newFileMemCache $ localFileCacheSize appConf
       hostname    <- liftBase getHostName
+      amazonEnv   <- s3envFromConfig $ amazonConfig appConf
+      lambdaEnv   <- pdfToolsLambdaEnvFromConf $ pdfToolsLambdaConf appConf
+
       return AppGlobals {
           templates          = templates
         , mrediscache        = mrediscache
@@ -100,6 +105,8 @@ main = withCurlDo $ do
         , connsource         = pool
         , runlogger          = runLogger
         , hostname           = hostname
+        , amazons3env        = amazonEnv
+        , pdftoolslambdaenv  = lambdaEnv
         }
 
     startSystem appGlobals appConf

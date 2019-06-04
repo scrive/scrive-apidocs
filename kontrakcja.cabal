@@ -139,6 +139,7 @@ Library
                  , DB.Utils
                  , DB.XML
                  , Data.ByteString.RFC2397
+                 , Data.ByteString.Utils
                  , DataRetentionPolicy
                  , DataRetentionPolicy.Guards
                  , Database.Redis.Cache
@@ -287,6 +288,7 @@ Library
                  , FileStorage
                  , FileStorage.Amazon
                  , FileStorage.Amazon.Config
+                 , FileStorage.Amazon.S3Env
                  , FileStorage.Class
                  , FileStorage.RedisCache
                  , FlashMessage
@@ -500,7 +502,6 @@ Library
   Build-depends: base-noprelude
                , kontrakcja-prelude
                , AES
-               , Crypto
                , DRBG
                , Decimal
                , HStringTemplate
@@ -508,6 +509,9 @@ Library
                , MissingH
                , QuickCheck
                , aeson
+               , amazonka
+               , amazonka-core
+               , amazonka-s3
                , attoparsec
                , base16-bytestring
                , base64-bytestring
@@ -518,9 +522,7 @@ Library
                , conduit
                , consumers >= 2.1.0.0
                , containers >= 0.5 && < 0.7
-               , crypto-api
                , crypto-rng
-               , cryptohash
                , cryptonite
                , curl
                , data-default
@@ -537,7 +539,6 @@ Library
                , fields-json
                , filepath
                , free
-               , hS3
                , happstack-server
                , happstack-static-routing
                , hashable
@@ -552,12 +553,14 @@ Library
                , invariant
                , json
                , kontrakcja-templates
+               , lens
                , lifted-async
                , lifted-base
                , lifted-threads
                , log-base
                , log-elasticsearch
                , log-postgres
+               , memory
                , mixpanel
                , mmap
                , monad-control
@@ -865,7 +868,6 @@ Executable kontrakcja-migrate
                , containers
                , crypto-api
                , crypto-rng
-               , cryptohash
                , data-default
                , directory
                , exceptions
@@ -942,12 +944,12 @@ Executable mailing-server
                  Control.Monad.Trans.Control.Util
                  Control.Monad.Trans.Instances
                  Crypto
+                 Data.ByteString.Utils
                  DB
                  DB.Derive
                  DB.PostgreSQL
                  DB.Query
                  DB.Utils
-                 Data.ByteString.Utils
                  Database.Redis.Cache
                  Database.Redis.Configuration
                  Database.Redis.Helpers
@@ -959,6 +961,7 @@ Executable mailing-server
                  FileStorage
                  FileStorage.Amazon
                  FileStorage.Amazon.Config
+                 FileStorage.Amazon.S3Env
                  FileStorage.Class
                  FileStorage.RedisCache
                  Handlers
@@ -1001,17 +1004,21 @@ Executable mailing-server
                , HTTP
                , MissingH
                , aeson
+               , amazonka
+               , amazonka-core
+               , amazonka-s3
                , base16-bytestring
                , base64-bytestring
                , binary
                , bytestring
                , cmdargs
                , cond
+               , conduit
                , consumers
                , containers
                , crypto-api
                , crypto-rng
-               , cryptohash
+               , cryptonite
                , data-default
                , hpqtypes-extras
                , deepseq
@@ -1023,7 +1030,6 @@ Executable mailing-server
                , fclabels
                , fields-json
                , filepath
-               , hS3
                , happstack-server
                , happstack-static-routing
                , hashable
@@ -1033,9 +1039,11 @@ Executable mailing-server
                , json
                , lifted-async
                , lifted-base
+               , lens
                , log-base
                , log-elasticsearch
                , log-postgres
+               , memory
                , monad-control
                , monad-time
                , mtl
@@ -1149,9 +1157,7 @@ Executable messenger-server
                , cond
                , consumers
                , containers
-               , crypto-api
                , crypto-rng
-               , cryptohash
                , data-default
                , hpqtypes-extras
                , deepseq
@@ -1406,6 +1412,7 @@ Test-suite kontrakcja-test
                , QuickCheck
                , aeson
                , aeson-diff
+               , amazonka
                , base64-bytestring
                , binary
                , blaze-markup

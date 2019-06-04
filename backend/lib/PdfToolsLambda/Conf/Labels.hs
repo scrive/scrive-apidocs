@@ -6,3 +6,4 @@ import Data.Label (mkLabel)
 import PdfToolsLambda.Conf.Internal
 
 mkLabel ''PdfToolsLambdaConf
+mkLabel ''PdfToolsLambdaEnv

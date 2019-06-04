@@ -1,75 +1,66 @@
 module FileStorage.Amazon.Config
   ( AmazonConfig(..)
   , isAmazonConfigValid
-  , s3ConnFromConfig
-  , s3ActionFromConfig
-  , s3ObjectFromConfig
   ) where
 
 import Data.Unjson
-import qualified Data.ByteString.Lazy as BSL
-import qualified Network.AWS.Authentication as AWS
-import qualified Network.AWS.AWSConnection as AWS
-import qualified Network.AWS.S3Object as AWS
-import qualified Network.HTTP as HTTP
+import qualified Data.ByteString.Char8 as BSC
+import qualified Data.Text as T
+import qualified Network.AWS as AWS
+import qualified Network.AWS.Data.Text as AWS
+
+import Data.ByteString.Utils
 
 -- | AWS config: (host, port, bucket, access key, secret key).
 data AmazonConfig = AmazonConfig
-  { amazonConfigHost      :: String
+  { amazonConfigHost      :: BSC.ByteString
   , amazonConfigPort      :: Int
-  , amazonConfigBucket    :: String
-  , amazonConfigAccessKey :: String
-  , amazonConfigSecretKey :: String
+  , amazonConfigSecure    :: Bool
+  , amazonConfigRegion    :: AWS.Region
+  , amazonConfigBucket    :: T.Text
+  , amazonConfigAccessKey :: BSC.ByteString
+  , amazonConfigSecretKey :: BSC.ByteString
   } deriving (Eq, Show)
 
 instance Unjson AmazonConfig where
   unjsonDef = objectOf $ AmazonConfig
-    <$> fieldDef "host" AWS.defaultAmazonS3Host
+    <$> fieldDefBy "host" "s3.eu-west-1.amazonaws.com"
           amazonConfigHost
           "Hostname of the S3 server"
-    <*> fieldDef "port" AWS.defaultAmazonS3Port
+          unjsonByteString
+    <*> fieldDef "port" 443
           amazonConfigPort
           "Port to connect to"
+    <*> fieldDef "secure" True
+          amazonConfigSecure
+          "Whether to use HTTPS (ie. SSL)"
+    <*> fieldDefBy "region" AWS.Ireland
+          amazonConfigRegion
+          "Amazon region (eg. eu-west-1)"
+          unjsonRegion
     <*> field "bucket"
           amazonConfigBucket
           "In which bucket stored files exist"
-    <*> field "access_key"
+    <*> fieldBy "access_key"
           amazonConfigAccessKey
           "Amazon access key"
-    <*> field "secret_key"
+          unjsonByteString
+    <*> fieldBy "secret_key"
           amazonConfigSecretKey
           "Amazon secret key"
+          unjsonByteString
 
 isAmazonConfigValid :: AmazonConfig -> Bool
 isAmazonConfigValid AmazonConfig{..} =
-  not (null amazonConfigHost)
+  not (BSC.null amazonConfigHost)
   && amazonConfigPort > 0
   && amazonConfigPort < 65536
-  && not (null amazonConfigBucket)
-  && not (null amazonConfigAccessKey)
-  && not (null amazonConfigSecretKey)
+  && not (T.null amazonConfigBucket)
+  && not (BSC.null amazonConfigAccessKey)
+  && not (BSC.null amazonConfigSecretKey)
 
-s3ConnFromConfig :: AmazonConfig -> AWS.AWSConnection
-s3ConnFromConfig AmazonConfig{..} = AWS.AWSConnection
-  amazonConfigHost amazonConfigPort amazonConfigAccessKey amazonConfigSecretKey
+----------------------------------------
 
-s3ActionFromConfig :: AmazonConfig -> HTTP.RequestMethod -> String
-                   -> AWS.S3Action
-s3ActionFromConfig config method url = AWS.S3Action
-  { AWS.s3conn      = s3ConnFromConfig config
-  , AWS.s3bucket    = amazonConfigBucket config
-  , AWS.s3object    = url
-  , AWS.s3query     = ""
-  , AWS.s3metadata  = []
-  , AWS.s3body      = BSL.empty
-  , AWS.s3operation = method
-  }
-
-s3ObjectFromConfig :: AmazonConfig -> String -> AWS.S3Object
-s3ObjectFromConfig config url = AWS.S3Object
-  { AWS.obj_bucket   = amazonConfigBucket config
-  , AWS.obj_name     = HTTP.urlDecode url
-  , AWS.content_type = ""
-  , AWS.obj_headers  = []
-  , AWS.obj_data     = ""
-  }
+unjsonRegion :: UnjsonDef AWS.Region
+unjsonRegion =
+  unjsonInvmapR (either fail return . AWS.fromText) AWS.toText unjsonDef

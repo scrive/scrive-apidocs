@@ -16,8 +16,9 @@ module User.Password ( Password
 import Crypto.RNG (CryptoRNG, randomBytes)
 import Crypto.RNG.Utils
 import Data.Int
-import qualified Crypto.Hash.SHA256 as SHA256
+import qualified Crypto.Hash as H
 import qualified Crypto.Scrypt as Scrypt
+import qualified Data.ByteArray as BA
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.UTF8 as BSU
 
@@ -92,7 +93,7 @@ mkPassword hash salt PasswordAlgorithmScrypt =
 -- | Hash a password using the legacy scheme with the provided salt.
 hashPasswordSHA256 :: String -> BS.ByteString -> BS.ByteString
 hashPasswordSHA256 password salt =
-  SHA256.hash (salt `BS.append` BSU.fromString password)
+  BA.convert $ H.hashWith H.SHA256 (salt `BS.append` BSU.fromString password)
 
 -- | Verify a provided password string against an encrypted 'Password'.
 verifyPassword :: Password -> String -> Bool

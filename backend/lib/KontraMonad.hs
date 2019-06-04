@@ -18,7 +18,7 @@ import DB
 import FileStorage.Class
 import GuardTime (GuardTimeConfMonad)
 import MailContext (MailContextMonad)
-import PdfToolsLambda.Conf (PdfToolsLambdaConfMonad)
+import PdfToolsLambda.Conf (PdfToolsLambdaMonad)
 
 -- | This is for grouping things together so we won't need to
 -- write all that each time we write function type signature
@@ -26,7 +26,7 @@ type Kontrakcja m = (
     CryptoRNG m
   , FilterMonad Response m
   , GuardTimeConfMonad m
-  , PdfToolsLambdaConfMonad m
+  , PdfToolsLambdaMonad m
   , HasRqData m
   , KontraMonad m
   , MailContextMonad m

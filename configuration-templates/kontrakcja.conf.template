@@ -3,9 +3,10 @@
     "bind_port": 8000,
     "main_domain_url": "http://localhost:8000",
     "https": false,
-    "amazon" : { "host"       : "localdomain"
+    "amazon" : { "host"       : "localhost"
                , "port"       : 4568
-               , "bucket"     : "localhost"
+               , "secure"     : false
+               , "bucket"     : "dev"
                , "access_key" : "key"
                , "secret_key" : "secret" },
     "_redis_cache" : { "host"     : "foo"

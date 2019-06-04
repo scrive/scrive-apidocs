@@ -1,7 +1,8 @@
 {
-    "amazon" : { "host"       : "localdomain"
+    "amazon" : { "host"       : "localhost"
                , "port"       : 4568
-               , "bucket"     : "localhost"
+               , "secure"     : false
+               , "bucket"     : "dev"
                , "access_key" : "key"
                , "secret_key" : "secret" },
     "database": "user='kontra' password='kontra' dbname='kontrakcja'",

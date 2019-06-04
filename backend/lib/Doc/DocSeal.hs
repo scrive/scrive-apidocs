@@ -18,13 +18,12 @@ import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Crypto.RNG
 import Data.Char
-import Data.Digest.SHA2
 import Data.Function (on)
 import Data.Time
 import Log
 import System.FilePath ((</>), takeExtension, takeFileName)
 import Text.StringTemplates.Templates
-import qualified Data.ByteString as BB
+import qualified Crypto.Hash as H
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
@@ -620,7 +619,7 @@ presealSpecFromDocument checkboxMapping radiobuttonMapping
     , Seal.pssFields         = fields
     }
 
-sealDocument :: (CryptoRNG m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadMask m, MonadLog m, MonadFileStorage m, PdfToolsLambdaConfMonad m)
+sealDocument :: (CryptoRNG m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadMask m, MonadLog m, MonadFileStorage m, PdfToolsLambdaMonad m)
              => String -> m ()
 sealDocument hostpart = do
   mfile <- fileFromMainFile =<< documentfile <$> theDocument
@@ -638,7 +637,7 @@ sealDocument hostpart = do
       logInfo_ "Sealing of document failed because it has no main file attached"
       internalError
 
-sealDocumentFile :: (CryptoRNG m, MonadMask m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadLog m, MonadFileStorage m, PdfToolsLambdaConfMonad m)
+sealDocumentFile :: (CryptoRNG m, MonadMask m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadLog m, MonadFileStorage m, PdfToolsLambdaMonad m)
                  => String
                  -> File
                  -> m ()
@@ -672,7 +671,7 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
     runLambdaSealing tmppath filename spec
 
 -- | Generate file that has all placements printed on it. It will look same as final version except for footers and verification page.
-presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, MonadLog m, KontraMonad m, TemplatesMonad m, MonadIO m, MonadMask m, MonadFileStorage m, PdfToolsLambdaConfMonad m, CryptoRNG m)
+presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, MonadLog m, KontraMonad m, TemplatesMonad m, MonadIO m, MonadMask m, MonadFileStorage m, PdfToolsLambdaMonad m, CryptoRNG m)
                  => Document
                  -> File
                  -> m (Either String BS.ByteString)
@@ -696,7 +695,7 @@ addSealedEvidenceEvents actor = do
   notAddedAttachments <- filter (not . authorattachmentaddtosealedfile) <$> documentauthorattachments <$> theDocument
   forM_ notAddedAttachments $ \a -> do
     contents <- getFileIDContents $ authorattachmentfileid a
-    let hash = filter (not . isSpace) $ show $ sha256 $ BB.unpack contents
+    let hash = show $ H.hashWith H.SHA256 contents
     void $ update $ InsertEvidenceEvent
         AuthorAttachmentHashComputed
         (F.value "attachment_name" (authorattachmentname a) >> F.value "hash" hash)
@@ -710,12 +709,12 @@ addSealedEvidenceEvents actor = do
 
 runLambdaSealing :: ( CryptoRNG m, DocumentMonad m, MonadBaseControl IO m
                        , MonadDB m, MonadFileStorage m, MonadIO m, MonadLog m
-                       , MonadMask m , PdfToolsLambdaConfMonad m
+                       , MonadMask m , PdfToolsLambdaMonad m
                        , TemplatesMonad m )
                     => FilePath -> String -> Seal.SealSpec -> m ()
 runLambdaSealing _tmppath fn spec = do
   now <- currentTime
-  lambdaconf <- getPdfToolsLambdaConf
+  lambdaconf <- getPdfToolsLambdaEnv
   logInfo_ "Sealing document with lambda started"
   (msealedcontent :: Maybe BS.ByteString) <- callPdfToolsSealing lambdaconf spec
   case msealedcontent of
@@ -733,12 +732,12 @@ runLambdaSealing _tmppath fn spec = do
 
 runLambdaPresealing :: ( CryptoRNG m, MonadBaseControl IO m
                           , MonadFileStorage m, MonadDB m, MonadIO m, MonadLog m
-                          , MonadMask m, PdfToolsLambdaConfMonad m
+                          , MonadMask m, PdfToolsLambdaMonad m
                           , TemplatesMonad m )
                        => FilePath -> Seal.PreSealSpec
                        -> m (Either String BS.ByteString)
 runLambdaPresealing _tmppath spec = do
-  lambdaconf <- getPdfToolsLambdaConf
+  lambdaconf <- getPdfToolsLambdaEnv
   msealedcontent <- callPdfToolsPresealing lambdaconf spec
   case msealedcontent of
     Just sealedcontent -> do

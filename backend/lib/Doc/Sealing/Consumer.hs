@@ -39,13 +39,13 @@ documentSealing
   :: ( CryptoRNG m, MonadBaseControl IO m, MonadFileStorage m, MonadIO m
      , MonadLog m, MonadMask m )
   => GuardTimeConf
-  -> PdfToolsLambdaConf
+  -> PdfToolsLambdaEnv
   -> KontrakcjaGlobalTemplates
   -> ConnectionSourceM m
   -> String
   -> Int
   -> ConsumerConfig m DocumentID DocumentSealing
-documentSealing guardTimeConf pdfToolsLambdaConf templates pool
+documentSealing guardTimeConf pdfToolsLambdaEnv templates pool
                 mailNoreplyAddress maxRunningJobs = ConsumerConfig {
     ccJobsTable = "document_sealing_jobs"
   , ccConsumersTable = "document_sealing_consumers"
@@ -75,7 +75,7 @@ documentSealing guardTimeConf pdfToolsLambdaConf templates pool
               }
         logInfo_ "Running postDocumentClosedActions"
         resultisok <- runGuardTimeConfT guardTimeConf
-          . runPdfToolsLambdaConfT pdfToolsLambdaConf
+          . runPdfToolsLambdaT pdfToolsLambdaEnv
           . runTemplatesT (lang, templates)
           . runMailContextT mc
           $ postDocumentClosedActions True False

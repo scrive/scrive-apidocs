@@ -36,7 +36,7 @@ import Utils.Directory
 addImageToDocumentFile ::
   (MonadBaseControl IO m, MonadDB m, MonadLog m, KontraMonad m
   , TemplatesMonad m, MonadIO m, MonadMask m, MonadFileStorage m
-  , PdfToolsLambdaConfMonad m, CryptoRNG m)
+  , PdfToolsLambdaMonad m, CryptoRNG m)
   => DocumentID -> File -> File -> Int32 -> Double -> Double
   -> m (Either String BS.ByteString)
 addImageToDocumentFile documentid file@File{fileid} image pageno x y =
@@ -71,11 +71,11 @@ addImageSpecForDocument inputpath did imageFile pageno x y = do
 
 runLambdaAddImage ::
   ( CryptoRNG m, MonadBaseControl IO m, MonadFileStorage m, MonadDB m,
-  MonadIO m, MonadLog m, MonadMask m, PdfToolsLambdaConfMonad m,
+  MonadIO m, MonadLog m, MonadMask m, PdfToolsLambdaMonad m,
   TemplatesMonad m )
   => FilePath -> AddImageSpec -> m (Either String BS.ByteString)
 runLambdaAddImage _tmppath spec = do
-  lambdaconf <- getPdfToolsLambdaConf
+  lambdaconf <- getPdfToolsLambdaEnv
   mWithImageContent <- callPdfToolsAddImage lambdaconf spec
   case mWithImageContent of
     Just withImageContent -> do
