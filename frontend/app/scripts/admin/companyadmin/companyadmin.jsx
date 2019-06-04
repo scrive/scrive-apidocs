@@ -54,7 +54,6 @@ var CompanyAdminView = React.createClass({
         </TabViewer.TabViewerTab>
         <TabViewer.TabViewerTab hash="payments" title="Payments">
           <PaymentsPanel
-            forAdmin={this.props.forAdmin}
             companyid={this.props.companyId}
             loadLater={false}
           />

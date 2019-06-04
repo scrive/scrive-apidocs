@@ -13,7 +13,6 @@ module.exports = React.createClass({
     mixins: [BackboneMixin.BackboneMixin],
     propTypes: {
       loadLater: React.PropTypes.bool,
-      forAdmin: React.PropTypes.bool,
       companyid: React.PropTypes.string
     },
     getBackboneModels: function () {
@@ -170,14 +169,13 @@ module.exports = React.createClass({
     renderTRForOptionWithCheckbox: function (desc, stateProp) {
       var self = this;
       var localFeatures = undefined;
-      var checkboxIsDisabled = undefined;
+      var checkboxIsDisabled = false;
       var regularOnChange = undefined;
       var adminOnChange = undefined
       if (this.state.featuresIsInherited) {
         checkboxIsDisabled = true;
         localFeatures = this.state.inheritedFeatures;
       } else {
-        checkboxIsDisabled = !this.props.forAdmin;
         localFeatures = this.state.features;
         regularOnChange = function (v) {
           localFeatures.regularUsers[stateProp] = v;
