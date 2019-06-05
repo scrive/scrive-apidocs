@@ -134,12 +134,12 @@ module.exports = React.createClass({
           ajax: true,
           ajaxsuccess: function(resp) {
             if (resp) {
-              consumeUGIDs(resp.filter(function (value) { 
+              consumeUGIDs(_.uniq(resp.filter(function (value) {
                 // get user_admins
                 return value.role_type == "user_admin" && value.target.type == "user_group";
               }).map(function (role) {
                 return role.target.id;
-              }));
+              })));
             }
           }
         }).sendAjax();
