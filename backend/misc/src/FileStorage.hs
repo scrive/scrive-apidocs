@@ -20,6 +20,7 @@ module FileStorage
   , newFileMemCache
   ) where
 
+import Control.Concurrent.Lifted
 import Control.Monad (void)
 import Control.Monad.Base
 import Control.Monad.Catch
@@ -34,6 +35,7 @@ import DB
 import FileStorage.Amazon
 import FileStorage.Amazon.S3Env
 import FileStorage.Class
+import Log.Utils
 import qualified FileStorage.RedisCache as Redis
 import qualified MemCache
 
@@ -94,27 +96,44 @@ saveNewContents_ url contents = do
       logInfo "Failed to save to Redis cache" $ object
         [ "error" .= show (e :: SomeException) ]
 
+data FileOrigin = MemCacheOrigin | RedisOrigin | AmazonOrigin
+
 getSavedContents_ :: forall m. ( MonadBaseControl IO m, MonadCatch m, MonadLog m
                                , MonadMask m, MonadThrow m )
                   => String -> FileStorageT m BSL.ByteString
 getSavedContents_ url = do
     (amazonEnv, mRedisCache, memCache) <- getFileStorageConfig
-    MemCache.fetch_ memCache url
-      (fetchFromRedisOrAmazon mRedisCache amazonEnv)
+    mvOrigin <- newEmptyMVar
+    (contents, diff) <- timed . MemCache.fetch_ memCache url $ do
+      (origin, contents) <- fetchFromRedisOrAmazon mRedisCache amazonEnv
+      putMVar mvOrigin origin
+      return contents
+    origin <- maybe MemCacheOrigin id <$> tryTakeMVar mvOrigin
+    logInfo "File contents fetched successfully" $ object
+      [ "url"    .= url
+      , "origin" .= logOrigin origin
+      , "time"   .= diff
+      ]
+    return contents
   where
+    logOrigin :: FileOrigin -> String
+    logOrigin MemCacheOrigin = "memcache"
+    logOrigin RedisOrigin    = "redis"
+    logOrigin AmazonOrigin   = "amazon"
+
     fetchFromRedisOrAmazon :: Maybe R.Connection -> AmazonS3Env
-                           -> FileStorageT m BSL.ByteString
+                           -> FileStorageT m (FileOrigin, BSL.ByteString)
     fetchFromRedisOrAmazon mRedisCache amazonEnv =
       Redis.mfetch mRedisCache (Redis.redisKeyFromURL url)
         (fetchFromRedis amazonEnv)
         (\mConnKey -> do
-          contents <- fetchFromAmazon amazonEnv
+          (origin, contents) <- fetchFromAmazon amazonEnv
           whenJust mConnKey $ \connKey -> do
             Redis.redisPut "contents" (BSL.toStrict contents) connKey
               `catch` \e ->
                 logInfo "Failed to save to Redis cache" $ object
                   [ "error" .= show (e :: SomeException) ]
-          return contents)
+          return (origin, contents))
 
         `catch` \e -> case fromException e of
           Just e' -> throwM (e' :: FileStorageException)
@@ -124,16 +143,16 @@ getSavedContents_ url = do
             fetchFromAmazon amazonEnv
 
     fetchFromRedis :: AmazonS3Env -> R.Connection -> Redis.RedisKey
-                   -> FileStorageT m BSL.ByteString
+                   -> FileStorageT m (FileOrigin, BSL.ByteString)
     fetchFromRedis amazonEnv conn key =
-      Redis.getFileFromRedis conn key `catch` \e -> do
+      ((RedisOrigin, ) <$> Redis.getFileFromRedis conn key) `catch` \e -> do
         logInfo "Failed to fetch from Redis cache" $ object
           [ "error" .= show (e :: SomeException) ]
         fetchFromAmazon amazonEnv
 
-    fetchFromAmazon :: AmazonS3Env -> FileStorageT m BSL.ByteString
+    fetchFromAmazon :: AmazonS3Env -> FileStorageT m (FileOrigin, BSL.ByteString)
     fetchFromAmazon amazonEnv = do
-      getContentsFromAmazon amazonEnv url `catch` \e -> do
+      ((AmazonOrigin, ) <$> getContentsFromAmazon amazonEnv url) `catch` \e -> do
         case fromException e of
           Just e' -> throwM (e' :: FileStorageException)
           Nothing -> throwM $ FileStorageException $ show e
