@@ -76,13 +76,13 @@ saveNewContents_ :: ( MonadBaseControl IO m, MonadCatch m, MonadLog m
                     , MonadMask m )
                  => String -> BSL.ByteString -> FileStorageT m ()
 saveNewContents_ url contents = do
-  (amazonConfig, mRedisCache, memCache) <- getFileStorageConfig
+  (amazonEnv, mRedisCache, memCache) <- getFileStorageConfig
 
   MemCache.invalidate memCache url
   whenJust mRedisCache $ \conn -> do
     Redis.deleteKey conn $ Redis.redisKeyFromURL url
 
-  saveContentsToAmazon amazonConfig url contents
+  saveContentsToAmazon amazonEnv url contents
 
   void (MemCache.fetch memCache url (return contents)) `catch` \e ->
     logInfo "Failed to save in memory cache" $ object
