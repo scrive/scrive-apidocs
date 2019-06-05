@@ -99,18 +99,8 @@ getSavedContents_ :: forall m. ( MonadBaseControl IO m, MonadCatch m, MonadLog m
                   => String -> FileStorageT m BSL.ByteString
 getSavedContents_ url = do
     (amazonEnv, mRedisCache, memCache) <- getFileStorageConfig
-
     MemCache.fetch_ memCache url
-      (fetchFromRedisOrAmazon mRedisCache amazonEnv) `catch` \e -> do
-        case fromException e of
-          -- It's coming from fetchFromRedisOrAmazon
-          Just e' -> throwM (e' :: FileStorageException)
-          -- It's coming from MemCache.fetch_
-          Nothing -> do
-            logInfo "Failed to fetch from memory cache" $ object
-              [ "error" .= show e ]
-            fetchFromRedisOrAmazon mRedisCache amazonEnv
-
+      (fetchFromRedisOrAmazon mRedisCache amazonEnv)
   where
     fetchFromRedisOrAmazon :: Maybe R.Connection -> AmazonS3Env
                            -> FileStorageT m BSL.ByteString
