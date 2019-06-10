@@ -374,6 +374,7 @@ mkContext lang = do
         , _ctxgtconf             = testGTConf
         , _ctxsessionid          = SessionID.tempSessionID
         , _ctxtrackjstoken       = Nothing
+        , _ctxzendeskkey         = Nothing
         , _ctxmixpaneltoken      = Nothing
         , _ctxgatoken            = Nothing
         , _ctxhubspotconf        = Nothing
