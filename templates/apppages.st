@@ -12,7 +12,6 @@ wholePage=$doctype()$
          $header()$
          $flashmessages()$
          $content:noescape()$
-         $contactUs()$
          $pageFooter()$
  	</div>
       </body>
@@ -223,32 +222,6 @@ var fromTemplateHeader = {
 };
 </script>
 <script src="$cdnbaseurl$/compiled/all/header-$versioncode$.js" crossorigin="anonymous"></script>
-####
-contactUs=
-<aside class="contact">
-  <nav class="contact">
-  <ul>
-    <li class="call">
-      <a class="" href="tel:+46851977900">
-        <div class="icon"><img src="$cdnbaseurl$/img/phone.png" width="32" height="32" alt="Call"/></div>
-        <div class="hover">
-          <p>$_vivochaCallUsNow()$</p>
-          <small>+46 8 519 779 00</small>
-        </div>
-      </a>
-    </li>
-    <li class="email">
-      <a class="" href="mailto:support@scrive.com">
-        <div class="icon"><img src="$cdnbaseurl$/img/mail-us.png" width="32" height="32" alt="Email"/></div>
-        <div class="hover">
-          <p>$_vivochaSendEmail()$</p>
-          <small>support@scrive.com</small>
-        </div>
-      </a>
-    </li>
-  </ul>
-</nav>
-</aside>
 ####
 loadScript=
 <script>
