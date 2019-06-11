@@ -239,8 +239,8 @@ var Track = require("../common/track");
     askForPhone: function () {
       var signatory = this.document().currentSignatory();
       var field = signatory.mobileField();
-      return field != undefined
-        && !new PhoneValidation().validateData(field.value()) && (!field.hasPlacements()) && field.obligatory();
+      return field != undefined && (field.obligatory() || signatory.smsPinAuthenticationToSign())
+        && !new PhoneValidation().validateData(field.value()) && (!field.hasPlacements());
     },
 
     askForPhoneIfNotPin: function () {
