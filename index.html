@@ -2508,6 +2508,8 @@ browser.</p>
 <tr><td><p><code>document_id</code><br/><em>required</em></p></td><td><p>Unique identifier for a document.
 Will not change.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>filename</code><br/><em>optional</em></p></td><td><p>Optional filename parameter.</p>
+</td><td><p>string</p></td><td>path</td></tr>
 </table>
 <h3 id='responses-14'>Responses</h3>
 <table>
@@ -2786,7 +2788,7 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <h3 id='responses-22'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
-<tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
+<tr> <td>200</td> <td><p>A JSON object containing the total number of <code>trashed</code> documents, and an array of documents.</p>
 </td> </tr>
 <tr> <td>409</td> <td><p>Pending documents can not be trashed or deleted.</p>
 </td> </tr>
@@ -2849,7 +2851,7 @@ Otherwise you will get a <code>HTTP 409</code>.</p>
 <h3 id='responses-24'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
-<tr> <td>200</td> <td><p>The document metadata as a JSON.</p>
+<tr> <td>200</td> <td><p>A JSON object containing the total number of <code>deleted</code> documents, and an array of documents.</p>
 </td> </tr>
 <tr> <td>409</td> <td><p>Pending documents can not be trashed or deleted.</p>
 </td> </tr>
@@ -3249,6 +3251,8 @@ the browser.</p>
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>attachment_id</code><br/><em>required</em></p></td><td><p>Identifier for the attachment.</p>
 </td><td><p>integer<br><em>int64</em></p></td><td>path</td></tr>
+<tr><td><p><code>filename</code><br/><em>optional</em></p></td><td><p>Optional filename parameter.</p>
+</td><td><p>string</p></td><td>path</td></tr>
 </table>
 <h3 id='responses-33'>Responses</h3>
 <table>
@@ -3411,7 +3415,7 @@ else triggers QR code generation</p>
 <h3 id='responses-39'>Responses</h3>
 <table>
 <tr> <th>Code</th> <th>Description</th> </tr>
-<tr> <td>200</td> <td><p>A JSON with the <code>twofactor_active</code> flag and (if not activated yet) a <code>qr_code</code></p>
+<tr> <td>200</td> <td><p>A JSON with the <code>twofactor_active</code> flag and (if not activated yet) a <code>qr_code</code>. If present, the field <code>qr_code</code> contains a base64-encoded image of the QR code.</p>
 </td> </tr>
 </table>
 
@@ -3428,7 +3432,7 @@ else triggers QR code generation</p>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>totp</code><br/><em>required</em></p></td><td><p>2-factor code</p>
-</td><td></td><td>query</td></tr>
+</td><td><p>string</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-40'>Responses</h3>
 <table>
@@ -3484,7 +3488,7 @@ else triggers QR code generation</p>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>email</code><br/><em>required</em></p></td><td><p>User's email</p>
-</td><td></td><td>query</td></tr>
+</td><td><p>string</p></td><td>formData</td></tr>
 </table>
 <h3 id='responses-43'>Responses</h3>
 <table>
