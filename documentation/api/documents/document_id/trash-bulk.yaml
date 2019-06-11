@@ -31,7 +31,8 @@ post:
 
   responses:
     200:
-      $ref: ../../../extras/responses.yaml#/Document
+      description: |
+        A JSON object containing the total number of `trashed` documents, and an array of documents.
     409:
       description: Pending documents can not be trashed or deleted.
       # FIXME It is possible to add a schema here, although APIError is too general

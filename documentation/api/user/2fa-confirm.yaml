@@ -11,8 +11,8 @@ post:
 
   parameters:
     - name: totp
-      in: query
-      format: string
+      in: formData
+      type: string
       required: true
       description: |
         2-factor code

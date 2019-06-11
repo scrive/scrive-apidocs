@@ -21,6 +21,12 @@ get:
       required: true
       description: |
         Identifier for the attachment.
+    - name: filename
+      in: path
+      type: string
+      required: false
+      description: |
+        Optional filename parameter.
 
   responses:
     200:
