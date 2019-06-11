@@ -73,7 +73,6 @@ import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.Subscription
 import Util.HasSomeUserInfo
-import Util.MonadUtils
 import Util.QRCode (encodeQR, unQRCode)
 import Utils.Monad
 import qualified API.V2 as V2
@@ -623,8 +622,7 @@ apiCallDeleteUser = V2.api $ do
 
 apiCallGetDataRetentionPolicy :: Kontrakcja m => m Response
 apiCallGetDataRetentionPolicy = V2.api $ do
-  ctx  <- getContext
-  user <- guardJust $ getContextUser ctx
+  (user, _ , _) <- getAPIUser APIPersonal
 
   let drp = dataretentionpolicy $ usersettings user
   ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ userid user
@@ -638,8 +636,7 @@ apiCallGetDataRetentionPolicy = V2.api $ do
 
 apiCallSetDataRetentionPolicy :: Kontrakcja m => m Response
 apiCallSetDataRetentionPolicy = V2.api $ do
-  ctx  <- getContext
-  user <- guardJust $ getContextUser ctx
+  (user, _ , _) <- getAPIUser APIPersonal
 
   ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ userid user
   let ugDRP = get ugsDataRetentionPolicy $ ugwpSettings ugwp
