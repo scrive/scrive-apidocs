@@ -20,15 +20,16 @@ module FileStorage
   , newFileMemCache
   ) where
 
-import Control.Concurrent.Lifted
 import Control.Monad (void)
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Crypto.RNG
+import Data.IORef.Lifted
 import Log
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.Text as T
 import qualified Database.Redis as R
 
 import DB
@@ -103,12 +104,12 @@ getSavedContents_ :: forall m. ( MonadBaseControl IO m, MonadCatch m, MonadLog m
                   => String -> FileStorageT m BSL.ByteString
 getSavedContents_ url = do
     (amazonEnv, mRedisCache, memCache) <- getFileStorageConfig
-    mvOrigin <- newEmptyMVar
+    rOrigin <- newIORef MemCacheOrigin
     (contents, diff) <- timed . MemCache.fetch_ memCache url $ do
       (origin, contents) <- fetchFromRedisOrAmazon mRedisCache amazonEnv
-      putMVar mvOrigin origin
+      writeIORef rOrigin origin
       return contents
-    origin <- maybe MemCacheOrigin id <$> tryTakeMVar mvOrigin
+    origin <- readIORef rOrigin
     logInfo "File contents fetched successfully" $ object
       [ "url"    .= url
       , "origin" .= logOrigin origin
@@ -116,7 +117,7 @@ getSavedContents_ url = do
       ]
     return contents
   where
-    logOrigin :: FileOrigin -> String
+    logOrigin :: FileOrigin -> T.Text
     logOrigin MemCacheOrigin = "memcache"
     logOrigin RedisOrigin    = "redis"
     logOrigin AmazonOrigin   = "amazon"
