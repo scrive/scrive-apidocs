@@ -715,7 +715,9 @@ docApiV2SigChangeEmailAndMobile did slid = logDocumentAndSignatory did slid . ap
     -- so we need a new SL from DB.
     sl' <- fromJust . getSigLinkFor slid <$> theDocument
     -- We always send both email and mobile invitations, even when nothing was changed.
-    void $ sendInvitationEmail1 sl'
+    -- unless that party has not reached sign order yet
+    (\d -> when (documentcurrentsignorder d >= signatorysignorder sl') $
+            void $ sendInvitationEmail1 sl') =<< theDocument
     -- API call actions
     Ok . (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 
