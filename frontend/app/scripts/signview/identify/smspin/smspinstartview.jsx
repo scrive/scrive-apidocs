@@ -16,7 +16,11 @@ var SMSPinIdentifyModel = require("./smspinidentifymodel");
       model.doc().requestPinToView(
         model.setToFillStep,
         function (xhr) {
-          new ErrorModal(xhr);
+          var document = model.doc();
+          var signatory = document.currentSignatory();
+          var details = {"Document ID": document.documentid(),
+                         "Signatory ID": signatory.signatoryid()};
+          new ErrorModal(xhr, details);
         }
       ).send();
 
