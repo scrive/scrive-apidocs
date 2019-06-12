@@ -59,6 +59,7 @@ data Context = Context
     , _ctxusehttps            :: Bool
     , _ctxsessionid           :: SessionID
     , _ctxtrackjstoken        :: Maybe String
+    , _ctxzendeskkey          :: Maybe String
     , _ctxmixpaneltoken       :: Maybe String
     , _ctxgatoken             :: Maybe String
     , _ctxhubspotconf         :: Maybe HubSpotConf

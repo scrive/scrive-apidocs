@@ -206,6 +206,7 @@ standardPageFields ctx mugidandui ad = do
   F.value "ctxlang" $ codeFromLang $ get ctxlang ctx
   F.object "analytics" $ analyticsTemplates ad
   F.value "trackjstoken" (get ctxtrackjstoken ctx)
+  F.value "zendeskkey" (get ctxzendeskkey ctx)
   F.valueM "brandinghash" $ brandingAdler32 ctx mugidandui
   F.valueM "b64subscriptiondata" $  fmap (B64.encode . A.encode) <$> currentSubscriptionJSON
   F.value  "subscriptionuseriscompanyadmin" $

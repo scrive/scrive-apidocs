@@ -84,9 +84,9 @@ checkFieldsEqualAppConfCronConf
     _cdnBaseUrl
      guardTimeConf      _isMailBackdoorOpen  mailNoreplyAddress  cgiGrpConfig
     _admins             _sales              _initialUsers        mixpanelToken
-    _gaToken            _trackjsToken       _hubspotConf         salesforceConf
-    _netsConfig         _monitoringConfig   _isAPILogEnabled     netsSignConfig
-     pdfToolsLambdaConf _passwordServiceConf)
+    _gaToken            _trackjsToken       _zendeskKey         _hubspotConf
+    salesforceConf      _netsConfig         _monitoringConfig   _isAPILogEnabled
+    netsSignConfig      pdfToolsLambdaConf  _passwordServiceConf)
   (CronConf
      cronAmazonConfig              cronDBConfig                   _cronMaxDBConnections
      cronRedisCacheConfig         _cronLocalFileCacheSize         _cronLogConfig
@@ -120,12 +120,11 @@ checkFieldsEqualAppConfMailerConf
     _httpBindAddress    _mainDomainUrl      _useHttps           amazonConfig
      dbConfig           _maxDBConnections   _queryTimeout       redisCacheConfig
     _localFileCacheSize _logConfig          _readOnlyDatabase   _production
-    _cdnBaseUrl
-    _guardTimeConf      _isMailBackdoorOpen _mailNoreplyAddress _cgiGrpConfig
-    _admins             _sales              _initialUsers       _mixpanelToken
-    _gaToken            _trackjsToken       _hubspotConf        _salesforceConf
-    _netsConfig         _monitoringConfig   _isAPILogEnabled    _netsSignConfig
-    _pdfToolsLambdaConf _passwordServiceConf)
+    _cdnBaseUrl         _guardTimeConf      _isMailBackdoorOpen _mailNoreplyAddress
+    _cgiGrpConfig       _admins             _sales              _initialUsers
+    _mixpanelToken      _gaToken            _trackjsToken       _zendeskKey
+    _hubspotConf        _salesforceConf     _netsConfig         _monitoringConfig
+    _isAPILogEnabled    _netsSignConfig     _pdfToolsLambdaConf _passwordServiceConf)
   (MailingServerConf
     _mailerHttpBindAddress     mailerDBConfig
     _mailerMaxDBConnections    mailerRedisCacheConfig
@@ -145,15 +144,14 @@ checkFieldsEqualAppConfMessengerConf :: AppConf -> MessengerServerConf
                                      -> ConfigValidation
 checkFieldsEqualAppConfMessengerConf
   (AppConf
-    _httpBindAddress    _mainDomainUrl      _useHttps          _amazonConfig
-     dbConfig           _maxDBConnections   _queryTimeout      _redisCacheConfig
-    _localFileCacheSize _logConfig          _readOnlyDatabase  _production
-    _cdnBaseUrl
-    _guardTimeConf      _isMailBackdoorOpen _mailNoreplyAddress _cgiGrpConfig
-    _admins             _sales              _initialUsers       _mixpanelToken
-    _gaToken            _trackjsToken       _hubspotConf        _salesforceConf
-    _netsConfig         _monitoringConfig   _isAPILogEnabled    _netsSignConfig
-    _pdfToolsLambdaConf _passwordServiceConf)
+    _httpBindAddress    _mainDomainUrl      _useHttps           _amazonConfig
+     dbConfig           _maxDBConnections   _queryTimeout       _redisCacheConfig
+    _localFileCacheSize _logConfig          _readOnlyDatabase   _production
+    _cdnBaseUrl         _guardTimeConf      _isMailBackdoorOpen _mailNoreplyAddress
+    _cgiGrpConfig       _admins             _sales              _initialUsers
+    _mixpanelToken      _gaToken            _trackjsToken       _zendeskKey
+    _hubspotConf        _salesforceConf     _netsConfig         _monitoringConfig
+    _isAPILogEnabled    _netsSignConfig     _pdfToolsLambdaConf _passwordServiceConf)
   (MessengerServerConf
     _messengerHttpBindAddress   messengerDBConfig
     _messengerMaxDBConnections _messengerLogConfig
