@@ -960,6 +960,16 @@ Executable mailing-server
                  DB.SQLFunction
                  DB.SQLTrigger
                  DB.Utils
+                 Doc.API.Callback.Tables
+                 Doc.AutomaticReminder.Tables
+                 Doc.Extending.Tables
+                 Doc.Functions
+                 Doc.SMSPin.Tables
+                 Doc.Sealing.Tables
+                 Doc.Signing.Tables
+                 Doc.Tables
+                 Doc.Tokens.Tables
+                 Doc.Trigger
                  Database.Redis.Cache
                  Database.Redis.Configuration
                  Database.Redis.Helpers
