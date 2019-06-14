@@ -208,7 +208,7 @@
 "_smsDocumentErrorSignatory":"Scrive nie mógł przetworzyć dokumentu $documenttitle:noescape()$, w związku z czym procedura składania podpisu została przerwana. W razie jakichkolwiek pytań zapraszamy do kontaktu pod adresem support@scrive.com",
 "_smsInvitationToSign":"$creatorname:noescape()$ zaprosił Cię do złożenia podpisu na dokumencie $documenttitle:noescape()$. Kliknij w link, aby otrzymać dalsze instrukcje $link$",
 "_smsPinSendout":"Twój kod PIN dla $documenttitle:noescape()$ to $pin$",
-"_smsRejectNotification":"",
+"_smsRejectNotification":"$rejectorName$ odrzucił (-a) zaproszenie do podpisania dokumentu $documenttitle:noescape()$. W związku z tym proces podpisywania został anulowany.",
 "_smsReminder":"$creatorname$ przypomina o tym, że wkrótce mija termin podpisania dokumentu $documenttitle:noescape()$. Kliknij w link, aby otrzymać dalsze instrukcje $link$",
 "_smsReminderApprove":"$creatorname$ przypomina o tym, że wkrótce mija termin zatwierdzenia dokumentu $documenttitle:noescape()$. Kliknij w link, aby otrzymać dalsze instrukcje $link$",
 "_smsReminderApproveAutomatic":"Oto automatyczne przypomnienie o tym, że wciąż nie zatwierdziłeś(-aś) dokumentu $documenttitle:noescape()$ od $creatorname$. Kliknij w link, aby otrzymać dalsze instrukcje $link$",

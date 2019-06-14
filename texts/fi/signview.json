@@ -208,7 +208,7 @@
 "_smsDocumentErrorSignatory":"Scrive ei pystynyt käsittelemään dokumenttia $documenttitle:noescape()$ ja allekirjoitusprosessi on peruutettu. Jos sinulla on kysymyksiä, ole hyvä ja ota yhteyttä meihin osoitteella support@scrive.com",
 "_smsInvitationToSign":"$creatorname:noescape()$ on kutsunut sinut e-allekirjoittamaan dokumentin $documenttitle:noescape()$. Avaa linkki saadaksesi lisätietoja: $link$",
 "_smsPinSendout":"Sinun PIN-koodisi dokumentille $documenttitle:noescape()$ on $pin$",
-"_smsRejectNotification":"",
+"_smsRejectNotification":"$rejectorName$ on kieltäytynyt allekirjoittamasta dokumenttia $documenttitle:noescape()$. Allekirjoitusprosessi on tästä syystä peruutettu.",
 "_smsReminder":"$creatorname$ haluaa muistuttaa sinua allekirjoittamaan dokumentin $documenttitle:noescape()$. Avaa linkki saadaksesi lisätietoja: $link$",
 "_smsReminderApprove":"$creatorname$ haluaa muistuttaa sinua hyväksymään dokumentin $documenttitle:noescape()$. Avaa linkki saadaksesi lisätietoja: $link$",
 "_smsReminderApproveAutomatic":"Tämä on automaattinen muistutus siitä, ettet ole vielä hyväksynyt henkilöltä $creatorname$ saamaasi dokumenttia $documenttitle:noescape()$. Avaa linkki saadaksesi lisätietoja: $link$",
