@@ -20,7 +20,7 @@
 "_CancelDocumenElegEvidenceText":"Scrive odrzucił próbę złożenia podpisu przez $signatory$. Przyczyną była niezgodność danych osobowych $signatory$ z danymi otrzymanymi z zewnętrznego systemu eID.",
 "_CancelDocumentEvidenceTextSimpleArchive":"Zaproszenie do złożenia podpisu zostało wycofane.",
 "_CloseDocumentEvidenceTextSimple":"Scrive zablokował dokument, uniemożliwiając stronom podpisującym wprowadzanie kolejnych zmian.",
-"_ForwardedSigningEvidenceArchive":"",
+"_ForwardedSigningEvidenceArchive":"Przekazał/a dokument $signatory$.",
 "_InvitationDeliveredByEmailTextToApproveSimple":"Zaproszenie do zatwierdzenia dokumentu zostało dostarczone mailem do $signatory$.",
 "_InvitationDeliveredByEmailTextToReviewSimple":"Zaproszenie do przejrzenia dokumentu zostało dostarczone mailem do $signatory$.",
 "_InvitationDeliveredByEmailTextToSignSimple":"Zaproszenie do podpisania dokumentu zostało dostarczone mailem do $signatory$.",

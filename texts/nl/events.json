@@ -20,7 +20,7 @@
 "_CancelDocumenElegEvidenceText":"Scrive heeft de poging van $signatory$ om het document te ondertekenen afgekeurd. De reden hiervoor is dat de identiteitsinformatie van $signatory$ niet overeenskwam met de identiteitsinformatie uit het externe eID-systeem. ",
 "_CancelDocumentEvidenceTextSimpleArchive":"De uitnodiging om te ondertekenen is teruggetrokken.",
 "_CloseDocumentEvidenceTextSimple":"Scrive heeft het document vergrendeld tegen verdere aanpassingen door de ondertekenende partijen. ",
-"_ForwardedSigningEvidenceArchive":"",
+"_ForwardedSigningEvidenceArchive":"Het document is doorgestuurd naar $signatory$.",
 "_InvitationDeliveredByEmailTextToApproveSimple":"De uitnodiging om het document goed te keuren is bezorgd aan $signatory$ via E-mail.",
 "_InvitationDeliveredByEmailTextToReviewSimple":"De uitnodiging om het document te bekijken is geleverd aan $signatory$ via E-mail.",
 "_InvitationDeliveredByEmailTextToSignSimple":"De uitnodiging om te ondertekenen is geleverd aan $signatory$ via E-mail. ",

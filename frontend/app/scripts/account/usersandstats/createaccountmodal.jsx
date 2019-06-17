@@ -56,7 +56,7 @@ module.exports = React.createClass({
   },
   userGroupOptions: function () {
     return this.props.availableUserGroups.map(function (ug) {
-      return { name: ug.name, value: ug.ugid };
+      return { name: ug.name, value: ug.id };
     })
   },
   onUserGroupChange: function (v) {

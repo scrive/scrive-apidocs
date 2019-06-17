@@ -65,15 +65,14 @@ describe("admin/paymentspanel", function () {
   });
 
 
-  it("should render the payments panel for non-admin with disabled checkboxes", function () {
+  it("should render the payments panel even for non-admin with enabled checkboxes", function () {
     var component = renderComponent({forAdmin: false});
-    var checkboxes = $(".checkbox.disabled", component.getDOMNode());
+    var checkboxes = $(".checkbox", component.getDOMNode());
 
     component.forceUpdate();
     // We should have 2 checkboxes for each option.
     // One for regular user, one for admin users.
     assert.equal(checkboxes.size(), 50);
-
   });
 
   it("should call subscriptions updateSubscriptionAsAdmin on button clicked", function () {

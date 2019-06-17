@@ -63,6 +63,7 @@ data AppConf = AppConf {
   , gaToken            :: Maybe String         -- ^ For Google Analytics
                                                -- integration.
   , trackjsToken       :: Maybe String         -- ^ For Track.js integration.
+  , zendeskKey         :: Maybe String         -- ^ For Zendesk integration.
   , hubspotConf        :: Maybe HubSpotConf    -- ^ For Hubspot integration.
   , salesforceConf     :: Maybe SalesforceConf -- ^ Configuration of Salesforce.
   , netsConfig         :: Maybe NetsConfig
@@ -155,6 +156,9 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> fieldOpt "trackjs"
       trackjsToken
       "API Token for Track.js"
+  <*> fieldOpt "zendesk_key"
+      zendeskKey
+      "API Key for Zendesk"
   <*> fieldOpt "hubspot"
       hubspotConf
       "Configuration of HubSpot"

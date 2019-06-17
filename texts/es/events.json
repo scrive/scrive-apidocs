@@ -20,7 +20,7 @@
 "_CancelDocumenElegEvidenceText":"Scrive rechazó la tentativa de $signatory$ de firmar el documento. La razón fue que la identidad informativa de $signatory$ no encajaba con la identidad informativa recibida por el sistema externo del DNIe.",
 "_CancelDocumentEvidenceTextSimpleArchive":"La invitación a firmar el documento fue retirada. ",
 "_CloseDocumentEvidenceTextSimple":"Scrive bloqueó el documento de posibles modificaciones de las partes firmantes. ",
-"_ForwardedSigningEvidenceArchive":"",
+"_ForwardedSigningEvidenceArchive":"El documento se ha reenviado a $signatory$. ",
 "_InvitationDeliveredByEmailTextToApproveSimple":"La invitación para aprobar el documento ha sido enviada a $signatory$ por email.",
 "_InvitationDeliveredByEmailTextToReviewSimple":"La invitación a revisar el documento fue enviada a $signatory$ por email.",
 "_InvitationDeliveredByEmailTextToSignSimple":"La invitación a firmar el documento fue enviada a $signatory$ por email.",

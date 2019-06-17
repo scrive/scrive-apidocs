@@ -1034,6 +1034,15 @@ instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m Preparat
                 sqlSet "csv_contents" (Nothing :: Maybe String)
                 sqlWhereEq "document_id" docid
 
+              -- It is possible for customer to choose an invalid settings for the document, when
+              -- using Scrive-online, Salesforce or API. Documents with API or Pad delivery methods
+              -- cannot be forwarded.
+              -- Instead of reporting the error to customer we decided to just silently fix it.
+              runQuery_ . sqlUpdate "signatory_links" $ do
+                sqlSet "can_be_forwarded" False
+                sqlWhereIn "delivery_method" [PadDelivery, APIDelivery]
+                sqlWhereEq "document_id" docid
+
               runQuery_ $ "SELECT timeout_time FROM documents WHERE id =" <?> docid
               tot <- fetchOne runIdentity
               updateMTimeAndObjectVersion (actorTime actor)

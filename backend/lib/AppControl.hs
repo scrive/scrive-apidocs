@@ -372,6 +372,7 @@ appHandler handleRoutes appConf appGlobals = runHandler
         , _ctxusehttps           = useHttps appConf
         , _ctxsessionid          = sesID session
         , _ctxtrackjstoken       = trackjsToken appConf
+        , _ctxzendeskkey         = zendeskKey appConf
         , _ctxgatoken            = gaToken appConf
         , _ctxmixpaneltoken      = mixpanelToken appConf
         , _ctxhubspotconf        = hubspotConf appConf
