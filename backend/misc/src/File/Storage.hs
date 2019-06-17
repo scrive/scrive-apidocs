@@ -7,7 +7,6 @@ module File.Storage
 
 import Control.Monad.Base
 import Control.Monad.Catch
-import Control.Monad.Trans
 import Crypto.RNG
 import Data.Time
 import Log
@@ -81,7 +80,7 @@ saveNewFile fName fContent = do
 
 -- | Get file contents from the underlying storage and decrypt the contents
 -- returning them as BS.
-getFileContents :: (MonadFileStorage m, MonadIO m, MonadLog m, MonadThrow m)
+getFileContents :: (MonadFileStorage m, MonadBase IO m, MonadLog m, MonadThrow m)
                 => File -> m BS.ByteString
 getFileContents file@File{ fileid, filestorage = FileStorageAWS url aes } =
   localData [identifier fileid] $ do
@@ -96,18 +95,9 @@ getFileContents file@File{ fileid, filestorage = FileStorageAWS url aes } =
         "SHA1 checksum of file doesn't match the one in the database"
     return contents
 
-getFileIDContents :: ( MonadDB m, MonadFileStorage m, MonadIO m, MonadLog m
+getFileIDContents :: ( MonadDB m, MonadFileStorage m, MonadBase IO m, MonadLog m
                      , MonadThrow m ) => FileID -> m BS.ByteString
-getFileIDContents fid = do
-  start <- liftIO getCurrentTime
-  file <- dbQuery $ GetFileByFileID fid
-  result <- getFileContents file
-  stop <- liftIO getCurrentTime
-  logInfo "getFileIDContents timing" $ object
-    [ "duration" .= (realToFrac $ diffUTCTime stop start :: Double)
-    , identifier fid
-    ]
-  return result
+getFileIDContents fid = getFileContents =<< dbQuery (GetFileByFileID fid)
 
 -- | Build the Amazon URL for a file. We use the following format:
 --
