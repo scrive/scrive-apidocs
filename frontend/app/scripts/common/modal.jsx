@@ -120,7 +120,8 @@ var Container = exports.Container = React.createClass({
 
     return (
       <Portal>
-        <div className={overlayClassName} style={{minHeight: minHeight}}
+        <div className={overlayClassName} style={{minHeight: minHeight,
+                                                  display: this.props.active ? "block" : "none"}}
              id={this.props.id} onClick={this.onClose}>
 
           <div className="modal-container" style={containerStyle}>
