@@ -392,8 +392,17 @@ var Document = exports.Document = Backbone.Model.extend({
           Track.track("Check API call failed", {"Reason": xhr.responseText});
           return errorCallback(xhr);
         };
+        if (window.checkCallCount === undefined) {
+          window.checkCallCount = 1;
+        }
+        var url = "/api/frontend/documents/" + document.documentid() +  "/" + document.currentSignatory().signatoryid() + "/check"
+        if (window.checkCallCount++ > 1) {
+          // temporary debugging code
+          // dummy param, so the backend can see if multiple requests, really came from same tabe.
+          url += '?count=' + window.checkCallCount;
+        }
         return new Submit({
-            url : "/api/frontend/documents/" + document.documentid() +  "/" + document.currentSignatory().signatoryid() + "/check",
+            url : url,
             method: "POST",
             fields: JSON.stringify(fields),
             consent_responses: JSON.stringify(consentResponses),
