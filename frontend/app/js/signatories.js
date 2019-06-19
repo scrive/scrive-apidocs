@@ -1071,7 +1071,11 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         return (this.seBankIDAuthenticationToView()
              || this.noBankIDAuthenticationToView()
              || this.dkNemIDAuthenticationToView()
-             || this.fiTupasAuthenticationToView());
+             || this.fiTupasAuthenticationToView()
+             || (this.views() && this.seBankIDAuthenticationToViewArchived())
+             || (this.views() && this.noBankIDAuthenticationToViewArchived())
+             || (this.views() && this.dkNemIDAuthenticationToViewArchived())
+             || (this.views() && this.fiTupasAuthenticationToViewArchived()));
     },
     ensureMobile: function() {
         var signatory = this;
