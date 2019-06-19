@@ -27,7 +27,6 @@ post:
         example: ["3","4"]
         items:
           type: string
-    - $ref: ../../../extras/parameters.yaml#/ObjectVersion
 
   responses:
     200:
