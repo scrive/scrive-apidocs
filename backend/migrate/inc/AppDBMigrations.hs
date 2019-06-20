@@ -198,4 +198,5 @@ kontraMigrations = [
   , removePasswordAlgorithmUpgradeJob
   , dropTokenFromDocumentSessionTokens
   , userGroupSettingsAddSendTimeoutNotification
+  , userGroupSettingsAddFolderListCallFlag
   ]

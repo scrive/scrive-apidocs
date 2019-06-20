@@ -356,6 +356,7 @@ ugSettingsSelectors = [
   , "legal_text"
   , "require_bpid_for_new_document"
   , "send_timeout_notification"
+  , "use_folder_list_calls"
   ]
 
 
