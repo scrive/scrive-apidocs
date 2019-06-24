@@ -68,13 +68,13 @@ test_removingExistingInvite = do
   (user, _) <- addNewAdminUserAndUserGroup "a@a.com" "Anna" "Android"
 
   void $ dbUpdate $ AddUserGroupInvite $ mkInvite ug user
-  void $ dbUpdate $ RemoveUserGroupInvite (get ugID ug) (userid user)
+  void $ dbUpdate $ RemoveUserGroupInvite [get ugID ug] (userid user)
   assertCompanyInvitesAre ug []
 
 test_removingNonExistantInvite :: TestEnv ()
 test_removingNonExistantInvite = do
   ug <- addNewUserGroup
-  void $ dbUpdate $ RemoveUserGroupInvite (get ugID ug) (unsafeUserID 0)
+  void $ dbUpdate $ RemoveUserGroupInvite [get ugID ug] (unsafeUserID 0)
   assertCompanyInvitesAre ug []
 
 test_addingANewCompanyAccount :: TestEnv ()
@@ -274,9 +274,7 @@ test_removingCompanyAccountInvite = do
 
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
-  req <- mkRequest POST [ ("remove", inText "True")
-                        , ("removeid", inText $ show $ userid standarduser)
-                        ]
+  req <- mkRequest POST [("removeid", inText $ show $ userid standarduser)]
   (res, _ctx') <- runTestKontra req ctx $ handleRemoveUserGroupAccount
 
   assertBool "Response is proper JSON" $ res == (runJSONGen $ value "removed" True)
@@ -298,10 +296,7 @@ test_removingCompanyAccountWorks = do
   assertEqual "Company admin sees users docs before user delete" 1 (length companydocs1)
   assertEqual "Docid matches before user delete" docid (documentid $ head companydocs1)
 
-  req <- mkRequest POST [ ("remove", inText "True")
-                        , ("removeid", inText $ show (userid standarduser))
-                        , ("removeemail", inText $ "jony@blue.com")
-                        ]
+  req <- mkRequest POST [("removeid", inText $ show (userid standarduser))]
   (res, _) <- runTestKontra req ctx $ handleRemoveUserGroupAccount
 
   assertBool "Response is proper JSON" $ res == (runJSONGen $ value "removed" True)
@@ -314,6 +309,26 @@ test_removingCompanyAccountWorks = do
   companydocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid adminuser) [DocumentFilterUnsavedDraft False] [] maxBound
   assertEqual "Company admin sees users docs after user delete" 1 (length companydocs)
   assertEqual "Docid matches after user delete" docid (documentid $ head companydocs)
+
+  -- test removal with access control only
+  (otheruser, otherug) <- addNewAdminUserAndUserGroup "Mad Jack" "Churchill" "madjack@example.com"
+  req' <- mkRequest POST [("removeid", inText $ show (userid otheruser))]
+
+  -- shouldn't work
+  (res', _) <- runTestKontra req' ctx $ handleRemoveUserGroupAccount
+  -- the `True` value here is a bit confusing in this case
+  assertBool "Response is proper JSON" $ res' == (runJSONGen $ value "removed" True)
+  motheruserDB <- dbQuery $ GetUserByID (userid otheruser)
+  assertEqual "User has NOT been deleted" (Just otheruser) motheruserDB
+
+  -- allow adminuser control over otheruser's group
+  void $ dbUpdate $ AccessControlCreateForUserGroup (get ugID ug) (UserAdminAR $ get ugID otherug)
+
+  -- now removal should work
+  (res'', _) <- runTestKontra req' ctx $ handleRemoveUserGroupAccount
+  assertBool "Response is proper JSON" $ res'' == (runJSONGen $ value "removed" True)
+  otheruserDB' <- dbQuery $ GetUserByID (userid otheruser)
+  assertEqual "User has been deleted" Nothing otheruserDB'
 
 test_privateUserTakoverWorks :: TestEnv ()
 test_privateUserTakoverWorks = do

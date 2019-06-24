@@ -38,11 +38,11 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddUserGroupInvite UserGroupInv
       sqlSet "user_group_id" invitingusergroup
     fromJust `liftM` query (GetUserGroupInvite invitingusergroup inviteduserid)
 
-data RemoveUserGroupInvite = RemoveUserGroupInvite UserGroupID UserID
+data RemoveUserGroupInvite = RemoveUserGroupInvite [UserGroupID] UserID
 instance (MonadDB m, MonadThrow m) => DBUpdate m RemoveUserGroupInvite Bool where
-  update (RemoveUserGroupInvite ugid user_id) = do
+  update (RemoveUserGroupInvite ugids user_id) = do
     runQuery01 . sqlDelete "companyinvites" $ do
-      sqlWhereEq "user_group_id" ugid
+      sqlWhereIn "user_group_id" ugids
       sqlWhereEq "user_id" user_id
 
 data RemoveUserUserGroupInvites = RemoveUserUserGroupInvites UserID

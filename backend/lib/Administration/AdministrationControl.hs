@@ -348,7 +348,7 @@ handleUserPasswordChange uid = onlySalesOrAdmin $ do
 
 handleDeleteInvite :: Kontrakcja m => UserGroupID -> UserID -> m ()
 handleDeleteInvite ugid uid = onlySalesOrAdmin $ do
-  void $ dbUpdate $ RemoveUserGroupInvite ugid uid
+  void $ dbUpdate $ RemoveUserGroupInvite [ugid] uid
   return ()
 
 handleDeleteUser :: Kontrakcja m => UserID -> m ()
@@ -390,7 +390,7 @@ handleMergeToOtherCompany ugid_source = onlySalesOrAdmin $ do
       return ()
   invites <- dbQuery $ UserGroupGetInvites ugid_source
   forM_ invites $ \i-> do
-      void $ dbUpdate $ RemoveUserGroupInvite ugid_source (inviteduserid i)
+      void $ dbUpdate $ RemoveUserGroupInvite [ugid_source] (inviteduserid i)
       return ()
 
 {- | Handling company details change. It reads user info change -}

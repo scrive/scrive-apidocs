@@ -3,12 +3,15 @@ module User.Utils (
     , withUserTOS
     , withUser
     , withUserAndGroup
+    , withUserAndRoles
     , withCompanyAdmin
     , withCompanyAdminOrAdminOnly
 ) where
 
 import Data.Time.Clock (UTCTime)
 
+import AccessControl.Model
+import AccessControl.Types (AccessRole)
 import DB
 import InternalResponse
 import Kontra
@@ -56,7 +59,7 @@ withUserTOS action = withUser $ \user -> do
 
 {- |
     Guards that there is a user that is logged in and they
-    are in a company.  The user and company are passed as params
+    are in a user group.  The user and user group are passed as params
     to the given action, to save you having to look them up yourself.
 -}
 withUserAndGroup :: Kontrakcja m => ((User, UserGroup) -> m a) -> m a
@@ -65,6 +68,17 @@ withUserAndGroup action = do
   user      <- guardJust maybeuser
   ug        <- dbQuery . UserGroupGetByUserID . userid $ user
   action (user, ug)
+
+{- |
+    Guards that there is a user that is logged in. The user and roles are passed as params
+    to the given action, to save you having to look them up yourself.
+-}
+withUserAndRoles :: Kontrakcja m => ((User, [AccessRole]) -> m a) -> m a
+withUserAndRoles action = do
+  muser <- get ctxmaybeuser <$> getContext
+  user  <- guardJust muser
+  roles <- dbQuery $ GetRoles user
+  action (user, roles)
 
 {- |
     Guards that there is a logged in company admin.

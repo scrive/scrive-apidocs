@@ -20,7 +20,6 @@ import qualified Data.Text as T
 
 import AccessControl.Model
 import AccessControl.Types
-import API.V2.Utils
 import DB
 import Happstack.Fields
 import InputValidation
@@ -305,27 +304,39 @@ handleChangeRoleOfUserGroupAccount = withCompanyAdmin $ \(_user, ug) -> do
     if they haven't yet accepted.
 -}
 handleRemoveUserGroupAccount :: Kontrakcja m => m JSValue
-handleRemoveUserGroupAccount = withUserAndGroup $ \(user, ug) -> do
-  let acc = [mkAccPolicyItem (DeleteA, UserR, get ugID ug)]
-  apiAccessControl acc $ do
-    removeuid <- getCriticalField asValidUserID "removeid"
-    removeuser <- guardJustM $ dbQuery $ GetUserByID $ removeuid
+handleRemoveUserGroupAccount = withUserAndRoles $ \(user, roles) -> do
+  removeuid <- getCriticalField asValidUserID "removeid"
+  removeuser <- guardJustM $ dbQuery $ GetUserByID $ removeuid
+  let acc = [mkAccPolicyItem (DeleteA, UserR, usergroupid removeuser)]
+  -- Even if we don't execute the main action for whatever reason we remove all invites
+  -- that we possibly can, restricted by the caller's permissions.
+  accessControl roles acc (removeInvitesOnly roles removeuser) $ do
     isdeletable <- isUserDeletable removeuser
     ctx <- getContext
-    case (get ugID ug == usergroupid removeuser,isdeletable) of
-      (True,True) -> do
+    case isdeletable of
+      True -> do
               -- We remove user, so we also want to drop all invites - they should be invalid at this point anyway.
                void $ dbUpdate $ RemoveUserUserGroupInvites (userid removeuser)
                void $ dbUpdate $ DeleteUserCallbackScheme $ userid removeuser
                void $ dbUpdate $ DeleteUser (userid removeuser)
                void $ dbUpdate $ LogHistoryAccountDeleted (userid removeuser) (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
                runJSONGenT $ value "removed" True
-      (True,False) -> do
+      _ -> do
                runJSONGenT $ value "removed" False
-      _            -> do
-               -- We remove only this invite - user account in different company will still be valid
-               void $ dbUpdate $ RemoveUserGroupInvite (get ugID ug) (userid removeuser)
-               runJSONGenT $ value "removed" True
+  where
+    removeInvitesOnly :: Kontrakcja m => [AccessRole] -> User -> m JSValue
+    removeInvitesOnly roles removeForUser = do
+      -- get all user groups for which delete is allowed
+      allRoles <- addInheritedRoles roles
+      let allPerms = join $ map (hasPermissions . accessRoleTarget) allRoles
+          deleteUserPerms = filter (\p -> (p `hasAction` DeleteA) &&
+                                          (p `hasResource` UserR))
+                                   allPerms
+          ugids = catMaybes $ map extractResourceRef deleteUserPerms
+        -- We remove only the invites, possibly making user account in other some user
+        -- group still be valid.
+      void $ dbUpdate $ RemoveUserGroupInvite ugids (userid removeForUser)
+      runJSONGenT $ value "removed" True
 
 {- |
     This handles the company account takeover links, and replaces
@@ -350,7 +361,7 @@ handlePostBecomeUserGroupAccount ugid = withUser $ \user -> do
   newug <- guardJustM $ dbQuery $ UserGroupGet ugid
   void $ dbUpdate $ SetUserCompanyAdmin (userid user) False
   void $ dbUpdate $ SetUserUserGroup (userid user) (get ugID newug)
-  void $ dbUpdate $ RemoveUserGroupInvite ugid (userid user)
+  void $ dbUpdate $ RemoveUserGroupInvite [ugid] (userid user)
   -- if we are inviting a user with a plan to join the company, we
   -- should delete their personal plan
   flashmessage <- flashMessageUserHasBecomeCompanyAccount newug

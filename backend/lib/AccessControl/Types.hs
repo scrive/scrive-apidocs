@@ -8,6 +8,7 @@ module AccessControl.Types
   , AccessRole(..)
   , accessRoleTarget
   , accessRoleSetTarget
+  , hasPermissions
   , AccessRoleTarget(..)
   , AccessRoleType(..)
   , UserGroupNonExistent(..)
@@ -21,6 +22,9 @@ module AccessControl.Types
   , unsafeAccessRoleID
   , emptyAccessRoleID
   , fromAccessRoleID
+  , extractResourceRef
+  , hasAction
+  , hasResource
   )
   where
 
@@ -375,3 +379,14 @@ instance Unjson AccessRoleID where
     ((maybe (fail "Can't parse AccessRoleID") return) . maybeRead)
     show
     unjsonDef
+
+-- helpers
+
+extractResourceRef :: (Typeable t) => Permission -> Maybe t
+extractResourceRef (Permission _ _ x) = cast x
+
+hasAction :: Permission -> AccessAction -> Bool
+hasAction (Permission xaa _ _) aa = (xaa == aa)
+
+hasResource :: Permission -> AccessResource -> Bool
+hasResource (Permission _ xar _) ar = (xar == ar)
