@@ -30,6 +30,11 @@ var FlashMessage = require("../../../../js/flashmessages.js").FlashMessage;
         "identify_uid.expired": localization.identifyDKNemIdError.expired
       };
 
+      if (errorMsgs[errorType] === undefined) {
+        // for track.js
+        console.log(errorType);
+      }
+
       new FlashMessage({
         type: "error",
         content: errorMsgs[errorType] || errorMsgs["identify_none"]
