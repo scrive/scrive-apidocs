@@ -8,8 +8,8 @@ post:
 
   parameters:
     - name: email
-      in: query
-      format: string
+      in: formData
+      type: string
       required: true
       description: |
         User's email

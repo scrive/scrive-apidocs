@@ -27,11 +27,11 @@ post:
         example: ["3","4"]
         items:
           type: string
-    - $ref: ../../../extras/parameters.yaml#/ObjectVersion
 
   responses:
     200:
-      $ref: ../../../extras/responses.yaml#/Document
+      description: |
+        A JSON object containing the total number of `deleted` documents, and an array of documents. 
     409:
       description: Pending documents can not be trashed or deleted.
       # FIXME It is possible to add a schema here, although APIError is too general
