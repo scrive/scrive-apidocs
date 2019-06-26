@@ -1,0 +1,35 @@
+---
+$schema: "http://json-schema.org/draft-04/schema#"
+title: AccessRole
+type: object
+example:
+  {
+    "id": "8",
+    "is_generated": false,
+    "role_type": "user_group_admin",
+    "source": { "type": "user", "id": "2" },
+    "target": { "type": "user_group", "id": "11" },
+  }
+description: |
+  JSON representation of an Access Role.
+properties:
+  id:
+    type: integer
+  is_generated:
+    type: boolean
+  role_type:
+    type: string
+  source:
+    type: object
+    properties:
+      type:
+        type: string
+      id:
+        type: integer
+  target:
+    type: object
+    properties:
+      type:
+        type: string
+      id:
+        type: integer
