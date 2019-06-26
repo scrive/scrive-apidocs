@@ -1,0 +1,101 @@
+---
+$schema: "http://json-schema.org/draft-04/schema#"
+title: AccessRole
+type: object
+example:
+  {
+    "id": "8",
+    "is_generated": false,
+    "role_type": "user_group_admin",
+    "source": { "type": "user", "id": "2" },
+    "target": { "type": "user_group", "id": "11" },
+  }
+description: |
+  JSON representation of an Access Role.
+properties:
+  id:
+    type: integer
+  is_generated:
+    type: boolean
+  role_type:
+    type: string
+  source:
+    type: object
+    properties:
+      type:
+        type: string
+      id:
+        type: integer
+  target:
+    type: object
+    properties:
+      type:
+        type: string
+      id:
+        type: integer
+  allowed_actions:
+    type: object
+    properties:
+      document:
+        type: array
+        items:
+          type: string
+          enum:
+            - create
+            - delete
+            - read
+            - update
+      folder_policy:
+        type: array
+        items:
+          type: string
+          enum:
+            - create
+            - delete
+            - read
+            - update
+      user:
+        type: array
+        items:
+          type: string
+          enum:
+            - create
+            - delete
+            - read
+            - update
+      user_group:
+        type: array
+        items:
+          type: string
+          enum:
+            - create
+            - delete
+            - read
+            - update
+      user_group_policy:
+        type: array
+        items:
+          type: string
+          enum:
+            - create
+            - delete
+            - read
+            - update
+      user_personal_token:
+        type: array
+        items:
+          type: string
+          enum:
+            - create
+            - delete
+            - read
+            - update
+      user_policy:
+        type: array
+        items:
+          type: string
+          enum:
+            - create
+            - delete
+            - read
+            - update
