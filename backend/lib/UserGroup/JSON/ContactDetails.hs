@@ -11,9 +11,10 @@ module UserGroup.JSON.ContactDetails (
 ) where
 
 import Data.Aeson
-import Data.Text (Text)
+import Data.Text
 import Data.Unjson
 
+import InputValidation
 import UserGroup.Types
 
 userGroupContactDetailsToResponse
@@ -91,33 +92,32 @@ userGroupContactDetailsToJSON' contactDetailsObj = UserGroupContactDetailsJSON {
   , country = _ugaCountry contactDetailsObj
   }
 
-
 unjsonUserGroupContactDetailsResponseJSON :: UnjsonDef UserGroupContactDetailsResponseJSON
 unjsonUserGroupContactDetailsResponseJSON = objectOf $ pure constructor
   <*> fieldOpt "inherited_from" resInheritedFrom
-    "User Group ContactDetails Response Inherited From ID"
+      "User Group ContactDetails Response Inherited From ID"
   <*> fieldBy "address" resContactDetailsObject
-    "User Group address Response ContactDetails"
-    unjsonUserGroupContactDetailsJSON
-      where
-        constructor inheritedFrom cdo = UserGroupContactDetailsResponseJSON {
-            resInheritedFrom = inheritedFrom
-          , resContactDetailsObject = cdo
-          , resInheritPreview = Nothing
-          }
+      "User Group address Response ContactDetails"
+      unjsonUserGroupContactDetailsJSON
+    where
+      constructor inheritedFrom cdo = UserGroupContactDetailsResponseJSON {
+          resInheritedFrom = inheritedFrom
+        , resContactDetailsObject = cdo
+        , resInheritPreview = Nothing
+        }
 
 unjsonUserGroupContactDetailsResponseWithInheritableJSON
   :: UnjsonDef UserGroupContactDetailsResponseJSON
 unjsonUserGroupContactDetailsResponseWithInheritableJSON
   = objectOf $ pure UserGroupContactDetailsResponseJSON
     <*> fieldOpt "inherited_from" resInheritedFrom
-      "User Group ContactDetails Response Inherited From ID"
+        "User Group ContactDetails Response Inherited From ID"
     <*> fieldBy "address" resContactDetailsObject
-      "User Group address Response ContactDetails"
-      unjsonUserGroupContactDetailsJSON
+        "User Group address Response ContactDetails"
+        unjsonUserGroupContactDetailsJSON
     <*> fieldOptBy "inheritable_preview" resInheritPreview
-      "User Group ContactDetails Response Inherited Preview"
-      unjsonUserGroupContactDetailsInheritPreviewJSON
+        "User Group ContactDetails Response Inherited Preview"
+        unjsonUserGroupContactDetailsInheritPreviewJSON
 
 unjsonUserGroupContactDetailsRequestJSON :: UnjsonDef UserGroupContactDetailsRequestJSON
 unjsonUserGroupContactDetailsRequestJSON = objectOf $ pure UserGroupContactDetailsRequestJSON
@@ -127,11 +127,16 @@ unjsonUserGroupContactDetailsRequestJSON = objectOf $ pure UserGroupContactDetai
 
 unjsonUserGroupContactDetailsJSON :: UnjsonDef UserGroupContactDetailsJSON
 unjsonUserGroupContactDetailsJSON = objectOf $ pure UserGroupContactDetailsJSON
-  <*> field "company_number" companyNumber "User Group ContactDetails JSON Company Number"
-  <*> field "address" address "User Group ContactDetails JSON ContactDetails"
-  <*> field "zip" zipCode "User Group ContactDetails JSON Zip Code"
-  <*> field "city" city "User Group ContactDetails JSON City"
-  <*> field "country" country "User Group ContactDetails JSON Country"
+  <*> fieldBy "company_number" companyNumber "User Group ContactDetails JSON Company Number"
+      (unjsonWithValidationOrEmptyText asValidCompanyNumber)
+  <*> fieldBy "address" address "User Group ContactDetails JSON ContactDetails"
+      (unjsonWithValidationOrEmptyText asValidAddress)
+  <*> fieldBy "zip" zipCode "User Group ContactDetails JSON Zip Code"
+      (unjsonWithValidationOrEmptyText asValidZip)
+  <*> fieldBy "city" city "User Group ContactDetails JSON City"
+      (unjsonWithValidationOrEmptyText asValidCity)
+  <*> fieldBy "country" country "User Group ContactDetails JSON Country"
+      (unjsonWithValidationOrEmptyText asValidCountry)
 
 unjsonUserGroupContactDetailsInheritPreviewJSON :: UnjsonDef (UserGroupID, UserGroupContactDetailsJSON)
 unjsonUserGroupContactDetailsInheritPreviewJSON = objectOf $ pure (,)

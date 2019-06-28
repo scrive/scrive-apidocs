@@ -12,7 +12,7 @@ module Partner.JSON (
   , updateUserGroupWithUserGroupForUpdate
   ) where
 
-import Data.Text (Text, pack, unpack)
+import Data.Text (Text, pack)
 import Data.Unjson
 
 import InputValidation
@@ -131,21 +131,21 @@ unjsonUserGroupForUpdate :: UnjsonDef UserGroupForUpdate
 unjsonUserGroupForUpdate = objectOf $ pure defaultUserGroupForUpdate
         <*   fieldReadonly "id" uguUserGroupID "The company ID"
         <**> (fieldBy "name" uguUserGroupName "Company name"
-              (unjsonWithValidationOrEmptyText (\s -> pack <$> (asValidCompanyName . unpack $ s)))
+              (unjsonWithValidationOrEmptyText asValidCompanyName)
               <**> (pure $ \cn cfu -> cfu { uguUserGroupName = cn }))
         <**> (fieldBy "number" uguUserGroupNumber "Company number"
-              (unjsonWithValidationOrEmptyText (\s -> pack <$> (asValidCompanyNumber . unpack $ s)))
+              (unjsonWithValidationOrEmptyText asValidCompanyNumber)
               <**> (pure $ \cnum cfu -> cfu { uguUserGroupNumber = cnum }))
         <**> (fieldBy "address" uguUserGroupAddress "Company address"
-              (unjsonWithValidationOrEmptyText (\s -> pack <$> (asValidAddress . unpack $ s)))
+              (unjsonWithValidationOrEmptyText asValidAddress)
               <**> (pure $ \ca cfu -> cfu { uguUserGroupAddress = ca }))
         <**> (field "zip" uguUserGroupZip "Company zip"
               <**> (pure $ \cz cfu -> cfu { uguUserGroupZip = cz }))
         <**> (fieldBy "city" uguUserGroupCity "Company city"
-              (unjsonWithValidationOrEmptyText (\s -> pack <$> (asValidCity . unpack $ s)))
+              (unjsonWithValidationOrEmptyText asValidCity)
               <**> (pure $ \cci cfu -> cfu { uguUserGroupCity = cci }))
         <**> (fieldBy "country" uguUserGroupCountry "Company country"
-              (unjsonWithValidationOrEmptyText (\s -> pack <$> (asValidCountry . unpack $ s)))
+              (unjsonWithValidationOrEmptyText asValidCountry)
               <**> (pure $ \cco cfu -> cfu { uguUserGroupCountry = cco }))
 
 unjsonUserGroupsForUpdate :: UnjsonDef [UserGroupForUpdate]
@@ -199,18 +199,3 @@ unjsonLang = unjsonInvmapR ((maybe (fail "value is not valid language code") ret
 
 unjsonEmail :: UnjsonDef Email
 unjsonEmail = unjsonInvmapR ((maybe (fail "not valid email address") (return . Email)) . resultToMaybe . asValidEmail) unEmail unjsonDef
-
-unjsonWithValidationOrEmpty :: (String -> InputValidation.Result String) -> UnjsonDef String
-unjsonWithValidationOrEmpty validation = unjsonInvmapR (convertResult . validation) id unjsonDef
-  where
-    convertResult (InputValidation.Good s)   = return s
-    convertResult (InputValidation.Empty)    = return ""
-    convertResult (InputValidation.Bad)      = fail "not valid"
-
--- @note unify the Text vs. String approach when removing or tidying up old partners API.
-unjsonWithValidationOrEmptyText :: (Text -> InputValidation.Result Text) -> UnjsonDef Text
-unjsonWithValidationOrEmptyText validation = unjsonInvmapR (convertResult . validation) id unjsonDef
-  where
-    convertResult (InputValidation.Good s)   = return s
-    convertResult (InputValidation.Empty)    = return ""
-    convertResult (InputValidation.Bad)      = fail "not valid"

@@ -16,6 +16,7 @@ import Data.Aeson
 import Data.Text hiding (map)
 import Data.Unjson
 
+import InputValidation
 import UserGroup.JSON.ContactDetails
 import UserGroup.JSON.Settings
 import UserGroup.Types
@@ -87,13 +88,14 @@ unjsonUserGroupResponseJSON :: UnjsonDef UserGroupResponseJSON
 unjsonUserGroupResponseJSON = objectOf $ pure UserGroupResponseJSON
   <*> field "id" resID "User Group ID"
   <*> fieldOpt "parent_id" resParentID "User Group Parent ID"
-  <*> field "name" resName "User Group Name"
+  <*> fieldBy "name" resName "User Group Name"
+      (unjsonWithValidationOrEmptyText asValidCompanyName)
   <*> fieldBy "children" resChildren "User Group Children"
-    (arrayOf unjsonUserGroupChild)
+      (arrayOf unjsonUserGroupChild)
   <*> fieldBy "contact_details" resContactDetails "User Group Contact Details"
-    unjsonUserGroupContactDetailsResponseJSON
+      unjsonUserGroupContactDetailsResponseJSON
   <*> fieldBy "settings" resSettings "User Group Settings"
-    unjsonDataRetentionPolicyResponseJSON
+      unjsonDataRetentionPolicyResponseJSON
 
 unjsonUserGroupWithInheritableResponseJSON :: UnjsonDef UserGroupResponseJSON
 unjsonUserGroupWithInheritableResponseJSON = objectOf $ pure UserGroupResponseJSON
@@ -101,11 +103,11 @@ unjsonUserGroupWithInheritableResponseJSON = objectOf $ pure UserGroupResponseJS
   <*> fieldOpt "parent_id" resParentID "User Group Parent ID"
   <*> field "name" resName "User Group Name"
   <*> fieldBy "children" resChildren "User Group Children"
-    (arrayOf unjsonUserGroupChild)
+      (arrayOf unjsonUserGroupChild)
   <*> fieldBy "contact_details" resContactDetails "User Group Contact Details"
-    unjsonUserGroupContactDetailsResponseWithInheritableJSON
+      unjsonUserGroupContactDetailsResponseWithInheritableJSON
   <*> fieldBy "settings" resSettings "User Group Settings"
-    unjsonDataRetentionPolicyWithInheritableResponseJSON
+      unjsonDataRetentionPolicyWithInheritableResponseJSON
 
 unjsonUserGroupRequestJSON :: UnjsonDef UserGroupRequestJSON
 unjsonUserGroupRequestJSON = objectOf $ pure UserGroupRequestJSON

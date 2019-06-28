@@ -93,12 +93,12 @@ unjsonDataRetentionPolicyWithInheritableResponseJSON
 unjsonDataRetentionPolicyWithInheritableResponseJSON
   = objectOf $ pure DataRetentionPolicyResponseJSON
     <*> fieldOpt "inherited_from" resInheritedFrom
-      "User Group Settings Response Inherited From ID"
+        "User Group Settings Response Inherited From ID"
     <*> fieldBy "data_retention_policy" resDataRetentionPolicyObject
-      "User Group Settings Data Retention Policy" unjsonDataRetentionPolicy
+        "User Group Settings Data Retention Policy" unjsonDataRetentionPolicy
     <*> fieldOptBy "inheritable_preview" resInheritPreview
-      "User Group Settings Response Inherit Preview"
-      unjsonDataRetentionPolicyInheritPreviewJSON
+        "User Group Settings Response Inherit Preview"
+        unjsonDataRetentionPolicyInheritPreviewJSON
 
 unjsonDataRetentionPolicyRequestJSON :: UnjsonDef DataRetentionPolicyRequestJSON
 unjsonDataRetentionPolicyRequestJSON = objectOf $ pure DataRetentionPolicyRequestJSON
@@ -109,10 +109,10 @@ unjsonDataRetentionPolicyRequestJSON = objectOf $ pure DataRetentionPolicyReques
 unjsonDataRetentionPolicyInheritPreviewJSON :: UnjsonDef (UserGroupID, DataRetentionPolicy)
 unjsonDataRetentionPolicyInheritPreviewJSON = objectOf $ pure (,)
   <*> field "inherited_from" fst
-    "User Group Settings Response Inherit Preview Inherit From ID"
+      "User Group Settings Response Inherit Preview Inherit From ID"
   <*> fieldBy "data_retention_policy" snd
-    "User Group Settings Response Inherit Preview Data Retention Policy"
-    unjsonDataRetentionPolicy
+      "User Group Settings Response Inherit Preview Data Retention Policy"
+      unjsonDataRetentionPolicy
 
 data DataRetentionPolicyRequestJSON = DataRetentionPolicyRequestJSON {
     reqDataRetentionPolicyObject :: DataRetentionPolicy

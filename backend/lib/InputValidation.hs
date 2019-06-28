@@ -47,6 +47,8 @@ module InputValidation
     , asWord32
     , isValidEmail
     , isValidPhoneForSMS
+    , unjsonWithValidationOrEmpty
+    , unjsonWithValidationOrEmptyText
 ) where
 
 import Data.Char
@@ -60,6 +62,7 @@ import qualified Data.Semigroup as SG
 import qualified Data.Text as T
 import qualified Data.Text.ICU as Rx
 import qualified Data.Text.Lazy as TL
+import qualified Data.Unjson as UJ
 
 import Attachment.AttachmentID
 import Doc.DocumentID
@@ -820,3 +823,30 @@ stripWhitespace =
 -}
 stripAllWhitespace :: String -> Result String
 stripAllWhitespace = return . filter (not . isSpace)
+
+{- |
+    Helper to allow input validation via unjson
+-}
+unjsonWithValidationOrEmpty
+    :: (String -> InputValidation.Result String)
+    -> UJ.UnjsonDef String
+unjsonWithValidationOrEmpty validation =
+    UJ.unjsonInvmapR (convertResult . validation) id UJ.unjsonDef
+  where
+    convertResult (InputValidation.Good s) = return s
+    convertResult (InputValidation.Empty)  = return ""
+    convertResult (InputValidation.Bad)    = fail "not valid"
+
+{- |
+    Helper to allow input validation via unjson
+-}
+unjsonWithValidationOrEmptyText
+    :: (String -> InputValidation.Result String)
+    -> UJ.UnjsonDef T.Text
+unjsonWithValidationOrEmptyText validation =
+    UJ.unjsonInvmapR (convertResult . validation') id UJ.unjsonDef
+  where
+    convertResult (InputValidation.Good s) = return s
+    convertResult (InputValidation.Empty)  = return ""
+    convertResult (InputValidation.Bad)    = fail "not valid"
+    validation' s = T.pack <$> validation (T.unpack s)
