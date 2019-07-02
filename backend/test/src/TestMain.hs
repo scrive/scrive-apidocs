@@ -1,6 +1,7 @@
 module TestMain where
 
 import Control.Arrow
+import Control.Concurrent
 import Control.Concurrent.STM
 import Control.Monad.Base
 import Crypto.RNG
@@ -210,7 +211,8 @@ testMany' (allargs, ts) runLogger rng = do
   cs <- poolSource (connSettings kontraComposites) 1 10 50
 
   active_tests       <- atomically $ newTVar (True, 0)
-  rejected_documents <- atomically $ newTVar 0
+  rejected_documents <- newMVar 0
+  test_durations     <- newMVar []
   memcache           <- newFileMemCache $
                         fromMaybe 200000000 $ testLocalFileCacheSize tconf
   mRedisConn         <- T.forM (testRedisCacheConfig tconf) mkRedisConnection
@@ -233,6 +235,7 @@ testMany' (allargs, ts) runLogger rng = do
       , _teRedisConn          = mRedisConn
       , _teCronDBConfig       = testDBConfig tconf
       , _teCronMonthlyInvoice = testMonthlyInvoiceConf tconf
+      , _teTestDurations      = test_durations
       }
       ts' = if get teStagingTests env
             then stagingTests ++ ts
@@ -251,8 +254,13 @@ testMany' (allargs, ts) runLogger rng = do
            defaultTransactionSettings { tsAutoTransaction = False } $ do
       stats <- getConnectionStats
       liftBase . putStrLn $ "SQL: " ++ show stats
-    rejs <- atomically (readTVar rejected_documents)
+    rejs <- readMVar rejected_documents
     putStrLn $ "Documents generated but rejected: " ++ show rejs
+    let testLongDuration = 5
+    tds <- sortOn fst . filter ((> testLongDuration) . fst) <$> readMVar test_durations
+    putStrLn $ "Tests that took longer than "
+      ++ show testLongDuration ++ " seconds to run:"
+    forM_ tds $ \(diff, s) -> putStrLn $ show diff ++ ": " ++ s
 
 -- | Useful for running an individual test in ghci like so:
 --

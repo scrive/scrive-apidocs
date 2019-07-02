@@ -1,5 +1,6 @@
 module TestEnvSt.Internal where
 
+import Control.Concurrent.MVar
 import Control.Concurrent.STM.TVar
 import Crypto.RNG
 import Data.Time
@@ -24,7 +25,7 @@ data TestEnvSt = TestEnvSt {
   , _teRunLogger          :: !RunLogger
   , _teActiveTests        :: !(TVar (Bool, Int))
   , _teGlobalTemplates    :: !KontrakcjaGlobalTemplates
-  , _teRejectedDocuments  :: !(TVar Int)
+  , _teRejectedDocuments  :: !(MVar Int)
   , _teOutputDirectory    :: !(Maybe String)
     -- ^ Put the test artifact output in this directory, if given.
   , _teStagingTests       :: !Bool
@@ -34,6 +35,7 @@ data TestEnvSt = TestEnvSt {
   , _teRedisConn          :: Maybe R.Connection
   , _teCronDBConfig       :: !Text
   , _teCronMonthlyInvoice :: Maybe MonthlyInvoiceConf
+  , _teTestDurations      :: MVar [(NominalDiffTime, String)]
   }
 
 data TestEnvStRW = TestEnvStRW {

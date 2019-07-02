@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module TestingUtil where
 
-import Control.Concurrent.STM
+import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Fail
@@ -63,6 +63,7 @@ import Folder.Model
 import GuardTime
 import IPAddress
 import KontraMonad
+import Log.Utils
 import MagicHash (MagicHash, unsafeMagicHash)
 import MailContext
 import MinutesTime
@@ -799,7 +800,9 @@ signatoryLinkExample1 = defaultSignatoryLink
   }
 
 testThat :: String -> TestEnvSt -> TestEnv () -> Test
-testThat s env = testCase s . runTestEnv env
+testThat s env test = testCase s $ do
+  ((), diff) <- timed $ runTestEnv env test
+  modifyMVar_ (get teTestDurations env) $ \td -> return $ (diff, s) : td
 
 compareTime :: UTCTime -> UTCTime -> Bool
 compareTime (UTCTime da ta) (UTCTime db tb) =
@@ -1260,15 +1263,15 @@ addRandomDocumentWithFile fileid rda = do
       case checker adoc of
         Nothing -> do
           rej <- asks (get teRejectedDocuments)
-          liftIO $ (atomically . modifyTVar' rej) (+1)
-          --liftIO $ print $ "did not pass condition; doc: " <> show adoc
+          modifyMVar_ rej $ \i -> return $! i + 1
+          --liftIO $ print $ "did not pass condition; doc: " ++ show adoc
           worker now user checker file
         Just acceptedDoc -> do
           case invariantProblems now acceptedDoc of
             Nothing -> return acceptedDoc
             Just _problems -> do
               rej <- asks (get teRejectedDocuments)
-              liftIO $ (atomically . modifyTVar' rej) (+1)
+              modifyMVar_ rej $ \i -> return $! i + 1
               -- am I right that random document should not have invariantProblems?
               --uncomment this to find out why the doc was rejected
               --print adoc
