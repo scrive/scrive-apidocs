@@ -19,6 +19,7 @@ module User.UserView (
     flashMessageYourEmailHasChanged,
     flashMessageUserAccountRequestExpired,
     flashMessageUserAccountRequestExpiredCompany,
+    flashMessageTotpMustBeActivated
     ) where
 
 import Control.Monad.Catch
@@ -127,3 +128,7 @@ flashMessageUserAccountRequestExpiredCompany =
 flashMessageUserAccountRequestExpired :: TemplatesMonad m => m FlashMessage
 flashMessageUserAccountRequestExpired =
   toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageUserAccountRequestExpired"
+
+flashMessageTotpMustBeActivated :: TemplatesMonad m => m FlashMessage
+flashMessageTotpMustBeActivated =
+  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageTotpMustBeActivated"

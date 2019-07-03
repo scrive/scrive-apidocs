@@ -167,9 +167,14 @@ handleListCSV= do
 
 -- | Main view of the archive
 showArchive :: Kontrakcja m => m InternalKontraResponse
-showArchive = withUserTOS $ \(user,tostime) -> do
+showArchive = withUser . withTosCheck . with2FACheck $ \user -> do
     ugwp <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
     ctx <- getContext
+    tostime <- case userhasacceptedtermsofservice user of
+      Just tosaccepttime -> return tosaccepttime
+      Nothing -> do
+        logAttention "User has passed TOS check, but TOS was not accepted" $ object [ identifier $ userid user ]
+        internalError
     pb <-  pageArchive ctx user ugwp tostime
     internalResponse <$> renderFromBodyWithFields pb (F.value "archive" True)
 

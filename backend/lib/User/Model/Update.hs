@@ -14,6 +14,7 @@ module User.Model.Update (
   , ConfirmUserTOTPSetup(..)
   , DisableUserTOTP(..)
   , SetUserSettings(..)
+  , SetUserTotpIsMandatory(..)
   ) where
 
 import Control.Monad.Catch
@@ -301,6 +302,14 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m DisableUserTOTP Bool where
     runQuery01 . sqlUpdate "users" $ do
       sqlSetCmd "totp_key" "NULL"
       sqlSet "totp_active" False
+      sqlWhereEq "id" uid
+      sqlWhereIsNULL "deleted"
+
+data SetUserTotpIsMandatory = SetUserTotpIsMandatory UserID Bool
+instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserTotpIsMandatory Bool where
+  update (SetUserTotpIsMandatory uid totp_is_mandatory) = do
+    runQuery01 . sqlUpdate "users" $ do
+      sqlSet "totp_is_mandatory" totp_is_mandatory
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
 

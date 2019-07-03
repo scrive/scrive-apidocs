@@ -1,7 +1,11 @@
 module LoginTest (loginTests) where
 
+import Control.Monad.IO.Class
+import Crypto.Hash.Algorithms (SHA1(..))
 import Data.Aeson
 import Data.Int
+import Data.List.Split (splitOneOf)
+import Data.OTP (totp)
 import Data.Text
 import Data.Time.Clock.POSIX
 import Happstack.Server
@@ -9,8 +13,15 @@ import Log
 import Test.Framework
 import Text.JSON hiding (decode)
 import Text.JSON.Gen as J
+import qualified Codec.Binary.Base32 as B32
+import qualified Data.ByteString.Base64 as Base64
+import qualified Data.ByteString.Char8 as BSC
 import qualified Data.HashMap.Strict as H
+import qualified Data.Label.Base as FCP
+import qualified Data.Label.Partial as FCP
+import qualified Data.Text.Encoding as TE
 
+import Archive.Control (showArchive)
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Context
@@ -26,7 +37,10 @@ import User.Email
 import User.Model
 import User.PasswordReminder
 import User.UserControl
+import UserGroup.Model
 import UserGroup.Types
+import Util.MonadUtils
+import Util.QRCode
 
 loginTests :: TestEnvSt -> Test
 loginTests env = testGroup "Login" [
@@ -60,6 +74,8 @@ loginTests env = testGroup "Login" [
         env testLoginGetUserPersonalTokenSucceedsWithValidToken
     , testThat "user is logged out when changing password"
         env testResetPasswordRemovesAllOtherUserSessions
+    , testThat "user is redirected when 2FA enforced, but not enabled"
+        env testUser2FAEnforced
     ]
 
 testSuccessfulLogin :: TestEnv ()
@@ -316,6 +332,68 @@ testResetPasswordRemovesAllOtherUserSessions = do
     req2 <- mkRequest POST [("oldpassword", inText "password_8866"), ("password", inText "password_8867")]
     (_, _) <- runTestKontra req2 ctxwithuser $ apiCallChangeUserPassword
     assertSessions "We expect not to have any sessions because we changed password again" 0
+
+
+testUser2FAEnforced :: TestEnv ()
+testUser2FAEnforced = do
+  password <- rand 10 $ arbString 3 30
+  randomUser <- addNewRandomUserWithPassword password
+  ctx <- set ctxmaybeuser (Just randomUser) <$> mkContext defaultLang
+  let uid = userid randomUser
+  ug <- guardJustM . dbQuery . UserGroupGet $ usergroupid randomUser
+  now <- currentTime
+  void . dbUpdate $ AcceptTermsOfService uid now
+  void . dbUpdate $ SetUserTotpIsMandatory uid True
+  -- update changed user in Context
+  randomUser' <- guardJustM . dbQuery $ GetUserByID uid
+  ctx' <- set ctxmaybeuser (Just randomUser') <$> mkContext defaultLang
+  
+  -- going to archive with 2FA enforced for user returns a redirect
+  req1 <- mkRequest GET []
+  res1 <- fst <$> runTestKontra req1 ctx' showArchive
+  assertBool "We should get a redirect to account with flash message"
+    . (isRedirect LinkAccount && hasFlashMessage) $ res1
+  void . dbUpdate $ SetUserTotpIsMandatory uid False
+
+  -- going to archive with 2FA enforced for the usergroup returns a redirect
+  void . dbUpdate . UserGroupUpdate . fromJust $
+    FCP.set (ugsTotpIsMandatory . FCP.just . ugSettings) True ug
+  res2 <- fst <$> runTestKontra req1 ctx' showArchive
+  assertBool "We should get a redirect to account with flash message"
+    . (isRedirect LinkAccount && hasFlashMessage) $ res2
+
+  -- going to archive with 2FA enforced and 2FA enabled does not redirect
+  setup2FAHelper ctx uid
+  -- update changed user in Context
+  randomUser'' <- guardJustM . dbQuery $ GetUserByID uid
+  ctx'' <- set ctxmaybeuser (Just randomUser'') <$> mkContext defaultLang
+  res3 <- fst <$> runTestKontra req1 ctx'' showArchive
+  assertBool "We should not get a redirect to account anymore"
+    . not . isRedirect LinkAccount $ res3
+
+  where
+    setup2FAHelper ctx uid = do
+      -- Start setting up 2FA
+      req_setup2fa <- mkRequest POST []
+      _ <- runTestKontra req_setup2fa ctx setup2FA
+      (res_setup2fa,_) <- runTestKontra req_setup2fa ctx setup2FA
+      let Just (Object setupRespObj) = decode (rsBody res_setup2fa) :: Maybe Value
+          Just (String setupQRCode) = H.lookup "qr_code" setupRespObj
+      -- Get the secret from the QR code
+      now <- currentTime
+      qrText <- liftIO $ decodeQR (QRCode . Base64.decodeLenient $ TE.encodeUtf8 setupQRCode)
+      let encsecret = Prelude.head . Prelude.drop 1 . Prelude.dropWhile (/= "secret") . splitOneOf "?&=" $ qrText
+          Right secret = B32.decode $ BSC.pack encsecret
+          totpcode = Prelude.filter (/='"') . show $ totp SHA1 secret now 30 6
+
+      -- update changed user in Context
+      Just user <- dbQuery $ GetUserByID uid
+      ctx' <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
+
+      -- confirm 2FA
+      req <- mkRequest POST [ ("totp", inText totpcode) ]
+      void $ runTestKontra req ctx' confirm2FA
+
 
 -- Helper Functions
 

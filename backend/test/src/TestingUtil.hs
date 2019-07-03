@@ -226,6 +226,7 @@ instance Arbitrary UserGroupSettings where
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
+    <*> pure False -- do not enforce 2FA in tests
 
 instance Arbitrary UserGroupAddress where
   arbitrary = UserGroupAddress
@@ -679,6 +680,7 @@ instance Arbitrary User where
     -- Messes with tests if these are set
     <*> pure Nothing -- usertotp
     <*> pure False   -- usertotpactive
+    <*> pure False   -- usertotpismandatory
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary

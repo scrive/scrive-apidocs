@@ -10,7 +10,8 @@ var User = exports.User = Backbone.Model.extend({
       fstname   : "",
       sndname   : "",
       email     : "",
-      twofactoractive  : "",
+      twofactoractive  : false,
+      twofactorismandatory  : false,
       personalnumber    : "",
       phone             : "",
       companyposition   : "",
@@ -53,6 +54,9 @@ var User = exports.User = Backbone.Model.extend({
   twofactoractive : function() {
      return this.get("twofactoractive");
   },
+  twofactorismandatory : function() {
+     return this.get("twofactorismandatory");
+  },
   personalnumber : function() {
      return this.get("personalnumber");
   },
@@ -90,6 +94,7 @@ var User = exports.User = Backbone.Model.extend({
       sndname   : args.sndname,
       email     : args.email,
       twofactoractive   : args.twofactor_active,
+      twofactorismandatory : args.twofactor_is_mandatory,
       personalnumber    : args.personalnumber,
       phone             : args.phone,
       companyposition   : args.companyposition,

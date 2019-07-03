@@ -646,6 +646,7 @@
 "_flashMessageTemplateArchiveDone":"The selected templates have been deleted.",
 "_flashMessageTemplateShareDone":"The selected templates have been shared with your organisation.",
 "_flashMessageTemplateUnshareDone":"The selected templates have been unshared with your organisation.",
+"_flashMessageTotpMustBeActivated":"Please activate 2-factor authentication before you continue.",
 "_flashMessageUserAccountRequestExpired":"Your invitation link has expired. Please sign up again.",
 "_flashMessageUserAccountRequestExpiredCompany":"Your invitation link has expired. Please contact an administrator at your company to get a new account activation link.",
 "_flashMessageUserActivated":"Welcome to Scrive!",

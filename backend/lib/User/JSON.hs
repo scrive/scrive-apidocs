@@ -61,6 +61,7 @@ userJSONUserDetails user = do
     value "sndname" $ getLastName user
     value "email" $ getEmail user
     value "twofactor_active" $ usertotpactive user
+    value "twofactor_is_mandatory" $ usertotpismandatory user
     value "personalnumber" $ getPersonalNumber user
     value "phone" $ userphone $ userinfo user
     value "companyadmin" $ useriscompanyadmin user
@@ -89,6 +90,8 @@ unjsonUserPartial passwordDef = objectOf $ passwordDef (pure defaultUser
     <**> (pure $ \email user -> user { userinfo = (userinfo user) { useremail = email } }))
   <**> (fieldBy "twofactor_active" usertotpactive "User Twofactor Active" unjsonDef
     <**> (pure $ \totpactive user -> user { usertotpactive = totpactive }))
+  <**> (fieldBy "twofactor_is_mandatory" usertotpismandatory "User Twofactor Is Mandatory" unjsonDef
+    <**> (pure $ \totpismandatory user -> user { usertotpismandatory = totpismandatory }))
   <**> (fieldBy "personalnumber" getPersonalNumber "User Personal Number" unjsonDef
     <**> (pure $ \personalnumber user -> user { userinfo = (userinfo user) { userpersonalnumber = personalnumber } }))
   <**> (fieldBy "phone" getMobile "User Phone Number" unjsonDef
@@ -169,6 +172,7 @@ companySettingsJson ugs = do
   value "idledoctimeouterror" $ get drpIdleDocTimeoutError drp
   value "immediatetrash" $ get drpImmediateTrash drp
   value "sendtimeoutnotification" $  get ugsSendTimeoutNotification ugs
+  value "totpismandatory" $  get ugsTotpIsMandatory ugs
 
 userStatsToJSON :: (UTCTime -> String) -> [UserUsageStats] -> JSValue
 userStatsToJSON formatTime uuss = runJSONGen . objects "stats" . for uuss $ \uus -> do

@@ -43,6 +43,7 @@ var UserDetailsView = React.createClass({
       {
         userId: this.props.userId,
         twoFactorActive: this.props.user.twofactoractive(),
+        twoFactorIsMandatory: this.props.user.twofactorismandatory(),
         fstname: this.props.user.fstname(),
         sndname: this.props.user.sndname(),
         personalnumber: this.props.user.personalnumber(),
@@ -155,6 +156,7 @@ var UserDetailsView = React.createClass({
             <DetailsEditorView
               userId={this.props.viewModel.get("userId")}
               twoFactorActive={this.props.viewModel.get("twoFactorActive")}
+              twoFactorIsMandatory={this.props.viewModel.get("twoFactorIsMandatory")}
               fstname={this.props.viewModel.get("fstname")}
               sndname={this.props.viewModel.get("sndname")}
               personalnumber={this.props.viewModel.get("personalnumber")}

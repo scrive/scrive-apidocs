@@ -28,3 +28,5 @@ flashMessageUserAccountRequestExpired=$_flashMessageUserAccountRequestExpired()$
 ###
 flashMessageUserAccountRequestExpiredCompany=$_flashMessageUserAccountRequestExpiredCompany()$
 ###
+flashMessageTotpMustBeActivated=$_flashMessageTotpMustBeActivated()$
+###

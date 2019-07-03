@@ -112,7 +112,7 @@ import qualified Doc.EvidenceAttachments as EvidenceAttachments
 import qualified GuardTime as GuardTime
 
 handleNewDocument :: Kontrakcja m => m InternalKontraResponse
-handleNewDocument = withUser $ \user -> do
+handleNewDocument = withUser . with2FACheck $ \user -> do
   ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ userid user
   if get ugsRequireBPIDForNewDoc (ugwpSettings ugwp)
     then do
@@ -237,7 +237,7 @@ formatTimeSimpleWithTZ tz t = do
   fetchOne runIdentity
 
 showCreateFromTemplate :: Kontrakcja m => m InternalKontraResponse
-showCreateFromTemplate = withUser $ \_ -> do
+showCreateFromTemplate = withUser . with2FACheck $ \_ -> do
   internalResponse <$> (pageCreateFromTemplate =<< getContext)
 
 
@@ -385,7 +385,7 @@ handleSignShow did slid = logDocumentAndSignatory did slid $ do
 --   /ts/[documentid] (doc has to be a draft)
 {-# NOINLINE handleToStartShow #-}
 handleToStartShow :: Kontrakcja m => DocumentID -> m InternalKontraResponse
-handleToStartShow documentid = withUserTOS $ \_ -> do
+handleToStartShow documentid = withUser . withTosCheck $ \_ -> do
   ctx <- getContext
   document <- getDocByDocIDForAuthor documentid
   ad <- getAnalyticsData
@@ -458,7 +458,7 @@ handleEvidenceAttachment docid aname = logDocument docid $ localData ["attachmen
    Method: GET
  -}
 handleIssueShowGet :: Kontrakcja m => DocumentID -> m InternalKontraResponse
-handleIssueShowGet docid = withUserTOS $ \_ -> do
+handleIssueShowGet docid = withUser . withTosCheck . with2FACheck $ \_ -> do
   document <- getDocByDocID docid
   muser <- get ctxmaybeuser <$> getContext
 

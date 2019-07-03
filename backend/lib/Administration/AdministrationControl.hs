@@ -284,6 +284,11 @@ handleUserChange uid = onlySalesOrAdmin $ do
         (False, True) -> return () -- Don't update if no change
         (False, False) -> dbUpdate $ UpdateUserCallbackScheme uid (ConstantUrlSchemeV2 newUrl)
     Just _ -> return () -- Do not allow changing the callback if an existing other type is there
+      
+  -- Set whether 2FA is mandatory
+  maybeNewTotpIsMandatory <- getField "usertotpismandatory"
+  void . dbUpdate . SetUserTotpIsMandatory uid $ Just "true" == maybeNewTotpIsMandatory
+
   museraccounttype <- getField "useraccounttype"
   olduser <- guardJustM $ dbQuery $ GetUserByID uid
   user <- case (museraccounttype,useriscompanyadmin olduser) of
@@ -480,6 +485,7 @@ getUserGroupSettingsChange = do
     mcompanypadappmode <- fmap (padAppModeFromText . T.pack) <$> getField' $ "companypadappmode"
     mcompanypadearchiveenabled <- getField "companypadearchiveenabled"
     mcompanysendtimeoutnotification <- getField "companysendtimeoutnotification"
+    mcompanytotpismandatory <- getField "companytotpismandatory"
 
     return $
         maybe id (set ugsIPAddressMaskList) mcompanyipaddressmasklist
@@ -504,6 +510,7 @@ getUserGroupSettingsChange = do
       . maybe id (set ugsPadAppMode) mcompanypadappmode
       . maybe id (set ugsPadEarchiveEnabled . (=="true")) mcompanypadearchiveenabled
       . maybe id (set ugsSendTimeoutNotification . (=="true")) mcompanysendtimeoutnotification
+      . maybe id (set ugsTotpIsMandatory . (=="true")) mcompanytotpismandatory
 
 
 

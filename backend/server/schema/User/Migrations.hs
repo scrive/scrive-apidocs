@@ -178,3 +178,15 @@ usersAddHomeFolderID =
           ]
         runQuery_ . sqlCreateIndexSequentially tname $ indexOnColumn "home_folder_id"
     }
+
+
+addUserTotpIsMandatoryColumn :: MonadDB m => Migration m
+addUserTotpIsMandatoryColumn = Migration {
+    mgrTableName = tblName tableUsers
+  , mgrFrom = 28
+  , mgrAction = StandardMigration $
+      runQuery_ $ sqlAlterTable (tblName tableUsers)
+        [ sqlAddColumn $
+            tblColumn { colName = "totp_is_mandatory", colType = BoolT, colNullable = False, colDefault = Just "false" }
+        ]
+  }

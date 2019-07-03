@@ -61,7 +61,7 @@ import Util.MonadUtils
 import qualified API.V2 as V2
 
 handleAccountGet :: Kontrakcja m => m (InternalKontraResponse)
-handleAccountGet = withUserTOS $ \(user, _) -> do
+handleAccountGet = withUser . withTosCheck $ \user -> do
   ctx <- getContext
   pb <- renderTemplate "showAccount" $ do
     F.value "companyAdmin" $ useriscompanyadmin user

@@ -1,14 +1,13 @@
 module User.Utils (
       guardLoggedInOrThrowInternalError
-    , withUserTOS
+    , withTosCheck
+    , with2FACheck
     , withUser
     , withUserAndGroup
     , withUserAndRoles
     , withCompanyAdmin
     , withCompanyAdminOrAdminOnly
 ) where
-
-import Data.Time.Clock (UTCTime)
 
 import AccessControl.Model
 import AccessControl.Types (AccessRole)
@@ -51,11 +50,25 @@ guardLoggedInOrThrowInternalError action = do
    Guard against a GET with logged in users who have not signed the TOS agreement.
    If they have not, redirect to their account page.
 -}
-withUserTOS :: Kontrakcja m => ((User, UTCTime) -> m InternalKontraResponse) -> m InternalKontraResponse
-withUserTOS action = withUser $ \user -> do
+withTosCheck :: Kontrakcja m => (User -> m InternalKontraResponse) -> User -> m InternalKontraResponse
+withTosCheck action user =
   case userhasacceptedtermsofservice user of
-    Just tosaccepttime -> action (user, tosaccepttime)
+    Just _ -> action user
     Nothing -> return $ internalResponse (LinkAcceptTOS)
+
+{- |
+   Guard against a GET with logged in users who should have 2FA enabled, but they have not.
+   If they have not, redirect to their account page.
+-}
+with2FACheck :: Kontrakcja m => (User -> m InternalKontraResponse) -> User -> m InternalKontraResponse
+with2FACheck action user = do
+  ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ userid user
+  let userMustHaveTotpEnabled = get ugsTotpIsMandatory (ugwpSettings ugwp) || usertotpismandatory user
+  if userMustHaveTotpEnabled && not (usertotpactive user)
+    then do
+      flashmessage <- flashMessageTotpMustBeActivated
+      return $ internalResponseWithFlash flashmessage LinkAccount
+    else action user
 
 {- |
     Guards that there is a user that is logged in and they

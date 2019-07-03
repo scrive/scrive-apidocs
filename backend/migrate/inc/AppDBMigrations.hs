@@ -199,4 +199,6 @@ kontraMigrations = [
   , dropTokenFromDocumentSessionTokens
   , userGroupSettingsAddSendTimeoutNotification
   , userGroupSettingsAddFolderListCallFlag
+  , userGroupSettingsAddTotpIsMandatory
+  , addUserTotpIsMandatoryColumn
   ]

@@ -38,6 +38,7 @@ data User = User {
   , userpassword                  :: Maybe Password
   , usertotp                      :: Maybe ByteString
   , usertotpactive                :: Bool
+  , usertotpismandatory           :: Bool
   , useriscompanyadmin            :: Bool
   , useraccountsuspended          :: Bool
   , userhasacceptedtermsofservice :: Maybe UTCTime
@@ -87,6 +88,7 @@ defaultUser =
   , userpassword                  = Nothing
   , usertotp                      = Nothing
   , usertotpactive                = False
+  , usertotpismandatory           = False
   , useriscompanyadmin            = False
   , useraccountsuspended          = False
   , userhasacceptedtermsofservice = Nothing
@@ -152,6 +154,7 @@ selectUsersSelectorsList =
   , "totp_active"
   , "user_group_id"
   , "home_folder_id"
+  , "totp_is_mandatory"
   ]
 
 selectUsersSelectors :: SQL
@@ -190,6 +193,7 @@ selectUsersWithUserGroupNamesSQL = "SELECT"
   <> ", users.totp_active"
   <> ", users.user_group_id"
   <> ", users.home_folder_id"
+  <> ", users.totp_is_mandatory"
   <> ", ug.name"
   <> "  FROM users"
   <> "  LEFT JOIN user_groups ug ON users.user_group_id = ug.id"
@@ -200,13 +204,14 @@ composeFullName (fstname, sndname) = if null sndname
   then fstname
   else fstname ++ " " ++ sndname
 
-fetchUser :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, String, String, String, String, String, Email, Lang, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Bool, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, UserGroupID, Maybe FolderID) -> User
-fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, first_name, last_name, personal_number, company_position, phone, email, lang, idle_doc_timeout_preparation, idle_doc_timeout_closed, idle_doc_timeout_canceled, idle_doc_timeout_timedout, idle_doc_timeout_rejected, idle_doc_timeout_error, immediate_trash, associated_domain_id, password_algorithm, totp_key, totp_active, ugid, mfid) = User {
+fetchUser :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, String, String, String, String, String, Email, Lang, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Bool, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, UserGroupID, Maybe FolderID, Bool) -> User
+fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, first_name, last_name, personal_number, company_position, phone, email, lang, idle_doc_timeout_preparation, idle_doc_timeout_closed, idle_doc_timeout_canceled, idle_doc_timeout_timedout, idle_doc_timeout_rejected, idle_doc_timeout_error, immediate_trash, associated_domain_id, password_algorithm, totp_key, totp_active, ugid, mfid, totp_is_mandatory) = User {
   userid = uid
 , userpassword = maybeMkPassword ( password, salt
                                  , int16ToPwdAlgorithm <$> password_algorithm )
 , usertotp = totp_key
 , usertotpactive = totp_active
+, usertotpismandatory = totp_is_mandatory
 , useriscompanyadmin = is_company_admin
 , useraccountsuspended = account_suspended
 , userhasacceptedtermsofservice = has_accepted_terms_of_service
@@ -236,8 +241,8 @@ fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepte
 , userhomefolderid = mfid
 }
 
-fetchUserWithUserGroupName :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, String, String, String, String, String, Email, Lang, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Bool, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, UserGroupID, Maybe FolderID, T.Text) -> (User, T.Text)
-fetchUserWithUserGroupName (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, first_name, last_name, personal_number, company_position, phone, email, lang, idle_doc_timeout_preparation, idle_doc_timeout_closed, idle_doc_timeout_canceled, idle_doc_timeout_timedout, idle_doc_timeout_rejected, idle_doc_timeout_error, immediate_trash, associated_domain_id, password_algorithm, totp_key, totp_active, ugid, mfid,name) = (user, name)
+fetchUserWithUserGroupName :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, String, String, String, String, String, Email, Lang, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Bool, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, UserGroupID, Maybe FolderID, Bool, T.Text) -> (User, T.Text)
+fetchUserWithUserGroupName (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, first_name, last_name, personal_number, company_position, phone, email, lang, idle_doc_timeout_preparation, idle_doc_timeout_closed, idle_doc_timeout_canceled, idle_doc_timeout_timedout, idle_doc_timeout_rejected, idle_doc_timeout_error, immediate_trash, associated_domain_id, password_algorithm, totp_key, totp_active, ugid, mfid, totp_is_mandatory, name) = (user, name)
   where
     user = User {
       userid = uid
@@ -246,6 +251,7 @@ fetchUserWithUserGroupName (uid, password, salt, is_company_admin, account_suspe
                      , int16ToPwdAlgorithm <$> password_algorithm )
     , usertotp = totp_key
     , usertotpactive = totp_active
+    , usertotpismandatory = totp_is_mandatory
     , useriscompanyadmin = is_company_admin
     , useraccountsuspended = account_suspended
     , userhasacceptedtermsofservice = has_accepted_terms_of_service

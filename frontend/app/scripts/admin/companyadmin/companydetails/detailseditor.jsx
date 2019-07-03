@@ -38,7 +38,8 @@ var settingsPropTypes = React.PropTypes.shape({
   smsprovider: React.PropTypes.string.isRequired,
   padappmode: React.PropTypes.string.isRequired,
   padearchiveenabled: React.PropTypes.bool.isRequired,
-  sendtimeoutnotification: React.PropTypes.bool.isRequired
+  sendtimeoutnotification: React.PropTypes.bool.isRequired,
+  totpismandatory: React.PropTypes.bool.isRequired
 });
 
 var DetailsEditorView = React.createClass({
@@ -71,6 +72,7 @@ var DetailsEditorView = React.createClass({
     padappmode: React.PropTypes.string.isRequired,
     padearchiveenabled: React.PropTypes.bool.isRequired,
     sendtimeoutnotification: React.PropTypes.bool.isRequired,
+    totpismandatory: React.PropTypes.bool.isRequired,
 
     addressIsInherited: React.PropTypes.bool.isRequired,
     inheritedAddress: addressPropTypes,
@@ -128,6 +130,10 @@ var DetailsEditorView = React.createClass({
 
   onSendtimeoutnotification: function (event) {
     this.props.onFieldChange("sendtimeoutnotification", event.target.checked);
+  },
+
+  onTotpismandatory: function (event) {
+    this.props.onFieldChange("totpismandatory", event.target.checked);
   },
 
   onSmsproviderChange: function (newSmsprovider) {
@@ -494,6 +500,21 @@ var DetailsEditorView = React.createClass({
                 onChange={this.onSendtimeoutnotification}
               />
             </td>
+          </tr>
+          <tr>
+            <td><label>2FA is mandatory</label></td>
+            <td>
+              <input
+                name="companytotpismandatory"
+                type="checkbox"
+                checked={ this.props.settingsIsInherited
+                      ? this.props.inheritedSettings.totpismandatory
+                      : this.props.totpismandatory}
+                disabled={this.props.settingsIsInherited}
+                onChange={this.onTotpismandatory}
+              />
+            </td>
+            <td>If enabled, 2FA is mandatory/enforced for all users. 2FA can also be enforced for a single user.</td>
           </tr>
         </tbody>
       </table>

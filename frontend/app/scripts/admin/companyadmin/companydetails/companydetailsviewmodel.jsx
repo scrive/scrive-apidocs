@@ -30,6 +30,7 @@ var CompanyDetailsViewModel = Backbone.Model.extend(
       padappmode: "",
       padearchiveenabled: true,
       sendtimeoutnotification: true,
+      totpismandatory: false,
       settingsIsInherited: false,
       inheritedSettings: null
     },
@@ -58,6 +59,7 @@ var CompanyDetailsViewModel = Backbone.Model.extend(
         companypadappmode: this.get("padappmode"),
         companypadearchiveenabled: this.get("padearchiveenabled"),
         companysendtimeoutnotification: this.get("sendtimeoutnotification"),
+        companytotpismandatory: this.get("totpismandatory"),
         companyaddressisinherited: this.get("addressIsInherited"),
         companysettingsisinherited: this.get("settingsIsInherited")
       });

@@ -44,7 +44,8 @@ var DetailsEditorView = React.createClass({
   mixins: [React.addons.PureRenderMixin],
   propTypes: {
     userId: React.PropTypes.string.isRequired,
-    twoFactorActive: React.PropTypes.string.isRequired,
+    twoFactorActive: React.PropTypes.bool.isRequired,
+    twoFactorIsMandatory: React.PropTypes.bool.isRequired,
     fstname: React.PropTypes.string.isRequired,
     sndname: React.PropTypes.string.isRequired,
     personalnumber: React.PropTypes.string.isRequired,
@@ -55,7 +56,7 @@ var DetailsEditorView = React.createClass({
     companyname: React.PropTypes.string.isRequired,
     companyid: React.PropTypes.string.isRequired,
     accountType: React.PropTypes.string.isRequired,
-    callback_is_editable: React.PropTypes.string.isRequired,
+    callback_is_editable: React.PropTypes.bool.isRequired,
     callbackurl: React.PropTypes.string.isRequired,
     onDisableTwoFA: React.PropTypes.func.isRequired,
     onFieldChange: React.PropTypes.func.isRequired
@@ -89,6 +90,9 @@ var DetailsEditorView = React.createClass({
   },
   onCallbackUrlChange: function (event) {
     this.props.onFieldChange("callbackurl", event.target.value);
+  },
+  onTwoFactorIsMandatoryChange: function (event) {
+    this.props.onFieldChange("twoFactorIsMandatory", event.target.checked);
   },
   render: function () {
     var self = this;
@@ -125,6 +129,18 @@ var DetailsEditorView = React.createClass({
               {/* else */ !this.props.twoFactorActive &&
                 <p>Not active</p>
               }
+            </td>
+          </tr>
+          <tr>
+            <td><label>Two-factor authentication is mandatory</label></td>
+            <td>
+              <input
+                name="twoFactorIsMandatory"
+                type="checkbox"
+                checked={this.props.twoFactorIsMandatory}
+                onChange={this.onTwoFactorIsMandatoryChange}
+                />
+              <p>2FA can also be enforced for all users in the company.</p>
             </td>
           </tr>
           <tr>

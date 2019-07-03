@@ -144,6 +144,7 @@ data UserGroupSettings = UserGroupSettings {
   , _ugsLegalText            :: Bool
   , _ugsRequireBPIDForNewDoc :: Bool
   , _ugsSendTimeoutNotification :: Bool
+  , _ugsTotpIsMandatory      :: Bool
   } deriving (Show, Eq)
 
 defaultUserGroupSettings :: UserGroupSettings
@@ -158,6 +159,7 @@ defaultUserGroupSettings = UserGroupSettings {
   , _ugsLegalText            = False
   , _ugsRequireBPIDForNewDoc = False
   , _ugsSendTimeoutNotification = False
+  , _ugsTotpIsMandatory      = False
   }
 
 data UserGroupUI = UserGroupUI {
@@ -447,6 +449,8 @@ type instance CompositeRow UserGroupSettings = (
   , Bool
   , Bool
   , Bool
+  , Bool
+  , Bool
   )
 
 instance PQFormat UserGroupSettings where
@@ -455,40 +459,27 @@ instance PQFormat UserGroupSettings where
 instance CompositeFromSQL UserGroupSettings where
   toComposite (
       ip_address_mask_list
-    , idle_doc_timeout_preparation
-    , idle_doc_timeout_closed
-    , idle_doc_timeout_canceled
-    , idle_doc_timeout_timedout
-    , idle_doc_timeout_rejected
-    , idle_doc_timeout_error
-    , immediate_trash
-    , cgi_display_name
-    , sms_provider
-    , cgi_service_id
-    , pad_app_mode
-    , pad_earchive_enabled
-    , legal_text
-    , require_bpid_for_new_document
-    , send_timeout_notification
+    , _drpIdleDocTimeoutPreparation
+    , _drpIdleDocTimeoutClosed
+    , _drpIdleDocTimeoutCanceled
+    , _drpIdleDocTimeoutTimedout
+    , _drpIdleDocTimeoutRejected
+    , _drpIdleDocTimeoutError
+    , _drpImmediateTrash
+    , _ugsCGIDisplayName
+    , _ugsSMSProvider
+    , _ugsCGIServiceID
+    , _ugsPadAppMode
+    , _ugsPadEarchiveEnabled
+    , _ugsLegalText
+    , _ugsRequireBPIDForNewDoc
+    , _ugsSendTimeoutNotification
+    , _useFolderListCalls -- not yet used
+    , _ugsTotpIsMandatory
     ) = UserGroupSettings {
       _ugsIPAddressMaskList         = maybe [] read ip_address_mask_list
-    , _ugsDataRetentionPolicy = DataRetentionPolicy
-        { _drpIdleDocTimeoutPreparation = idle_doc_timeout_preparation
-        , _drpIdleDocTimeoutClosed      = idle_doc_timeout_closed
-        , _drpIdleDocTimeoutCanceled    = idle_doc_timeout_canceled
-        , _drpIdleDocTimeoutTimedout    = idle_doc_timeout_timedout
-        , _drpIdleDocTimeoutRejected    = idle_doc_timeout_rejected
-        , _drpIdleDocTimeoutError       = idle_doc_timeout_error
-        , _drpImmediateTrash            = immediate_trash
-        }
-    , _ugsCGIDisplayName            = cgi_display_name
-    , _ugsCGIServiceID              = cgi_service_id
-    , _ugsSMSProvider               = sms_provider
-    , _ugsPadAppMode                = pad_app_mode
-    , _ugsPadEarchiveEnabled        = pad_earchive_enabled
-    , _ugsLegalText                 = legal_text
-    , _ugsRequireBPIDForNewDoc      = require_bpid_for_new_document
-    , _ugsSendTimeoutNotification   = send_timeout_notification
+    , _ugsDataRetentionPolicy = DataRetentionPolicy {..}
+    , ..
     }
 
 -- UI

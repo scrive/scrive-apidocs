@@ -5,7 +5,7 @@ import DB
 tableUsers :: Table
 tableUsers = tblTable {
     tblName = "users"
-  , tblVersion = 28
+  , tblVersion = 29
   , tblColumns = [
         tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
       , tblColumn { colName = "password", colType = BinaryT }
@@ -35,6 +35,7 @@ tableUsers = tblTable {
       , tblColumn { colName = "idle_doc_timeout_error", colType = SmallIntT }
       , tblColumn { colName = "immediate_trash", colType = BoolT, colNullable = False, colDefault  = Just "false" }
       , tblColumn { colName = "home_folder_id", colType = BigIntT, colNullable = True }
+      , tblColumn { colName = "totp_is_mandatory", colType = BoolT, colNullable = False, colDefault = Just "false" }
       ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblChecks =

@@ -6,6 +6,7 @@ var UserDetailsViewModel = Backbone.Model.extend({
   defaults: {
     userId: "",
     twoFactorActive: false,
+    twoFactorIsMandatory: false,
     fstname: "",
     sndname: "",
     personalnumber: "",
@@ -31,6 +32,7 @@ var UserDetailsViewModel = Backbone.Model.extend({
       usercompanyposition: this.get("companyposition").trim(),
       userlang: this.get("lang"),
       useraccounttype: this.get("accountType"),
+      usertotpismandatory: this.get("twoFactorIsMandatory"),
       usercallbackurl: this.get("callback_is_editable")
         ? this.get("callbackurl").trim()
         : ""

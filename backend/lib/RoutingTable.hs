@@ -62,7 +62,7 @@ staticRoutes production = choice
      -- Top level handlers - buttons on top bar, when user is logged in
      , dir "fromtemplate"                 $ hGet  $ toK0 $ DocControl.showCreateFromTemplate
      , dir "newdocument" $ hGet $ toK0 $ DocControl.handleNewDocument
-     --   This is a special hack for RBS (CORE-1081)
+     -- This is a special hack for RBS (CORE-1081)
      , dir "newdocumentwithbpid" $ hPost $ toK0 $ DocControl.handleNewDocumentWithBPID
 
      -- Sign view
