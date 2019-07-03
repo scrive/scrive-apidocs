@@ -28,7 +28,11 @@ import Doc.API.Callback.Model
 import Doc.AutomaticReminder.Model
 import Doc.DigitalSignature (addDigitalSignature)
 import Doc.DocInfo
-import Doc.DocMails (sendClosedEmails, sendDocumentErrorEmail, sendDocumentTimeoutedEmail, sendForwardSigningMessages, sendInvitationEmails, sendPartyProcessFinalizedNotification, sendRejectEmails)
+import Doc.DocMails
+  ( sendClosedEmails, sendDocumentErrorEmail, sendDocumentTimeoutedEmail
+  , sendForwardSigningMessages, sendInvitationEmails
+  , sendPartyProcessFinalizedNotification, sendRejectEmails )
+
 import Doc.DocSeal (sealDocument)
 import Doc.DocStateData
 import Doc.DocumentMonad

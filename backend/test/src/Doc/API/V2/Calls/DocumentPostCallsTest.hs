@@ -18,7 +18,9 @@ import Doc.API.V2.Mock.TestUtils
 import Doc.Class
 import Doc.DocumentMonad (withDocumentID)
 import Doc.Model.Query
-import Doc.Model.Update (SetDocumentSharing(..), StoreDocumentForTesting(..), TimeoutDocument(..))
+import Doc.Model.Update
+  ( SetDocumentSharing(..), StoreDocumentForTesting(..), TimeoutDocument(..) )
+
 import Doc.Types.Document
 import Doc.Types.DocumentStatus (DocumentStatus(..))
 import Doc.Types.SignatoryConsentQuestion (SignatoryConsentQuestion(..))

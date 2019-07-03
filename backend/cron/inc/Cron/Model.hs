@@ -33,7 +33,9 @@ import MinutesTime
 import MonthlyInvoice.Send
 import Planhat
 import Purging.Files
-import Session.Model (DeleteExpiredSessions(..), PurgeExpiredTemporaryLoginTokens(..))
+import Session.Model
+  ( DeleteExpiredSessions(..), PurgeExpiredTemporaryLoginTokens(..) )
+
 import SMS.Events
 import ThirdPartyStats.Core
 import User.EmailChangeRequest (DeleteExpiredEmailChangeRequests(..))

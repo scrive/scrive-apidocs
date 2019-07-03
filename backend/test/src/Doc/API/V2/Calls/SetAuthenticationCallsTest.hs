@@ -8,7 +8,10 @@ import Doc.API.V2.AesonTestUtils
 import Doc.API.V2.Calls.CallsTestUtils
 import Doc.API.V2.Calls.DocumentPostCalls
 import Doc.API.V2.Mock.TestUtils
-import Doc.Types.SignatoryLink (AuthenticationToSignMethod(..), AuthenticationToViewMethod(..), SignatoryRole(..))
+import Doc.Types.SignatoryLink
+  ( AuthenticationToSignMethod(..), AuthenticationToViewMethod(..)
+  , SignatoryRole(..) )
+
 import TestingUtil
 import TestKontra
 import User.Lang (defaultLang)

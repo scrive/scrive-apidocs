@@ -38,7 +38,10 @@ import Doc.DocViewMail
 import Doc.DocViewSMS
 import Doc.Logging
 import Doc.Model
-import EvidenceLog.Model (CurrentEvidenceEventType(..), InsertEvidenceEventWithAffectedSignatoryAndMsg(..))
+import EvidenceLog.Model
+  ( CurrentEvidenceEventType(..)
+  , InsertEvidenceEventWithAffectedSignatoryAndMsg(..) )
+
 import File.File
 import File.Model
 import InputValidation

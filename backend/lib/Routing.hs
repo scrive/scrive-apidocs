@@ -25,7 +25,9 @@ module Routing ( hGet
                ) where
 
 import Data.List.Split
-import Happstack.Server (Method(DELETE, GET, PATCH, POST, PUT), Response, ToMessage(..))
+import Happstack.Server
+  ( Method(DELETE, GET, PATCH, POST, PUT), Response, ToMessage(..) )
+
 import Happstack.StaticRouting
 import Log
 import Text.JSON

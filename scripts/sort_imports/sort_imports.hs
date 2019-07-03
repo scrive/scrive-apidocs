@@ -1,5 +1,8 @@
-{-# LANGUAGE BangPatterns, LambdaCase, OverloadedStrings, RecordWildCards #-}
-{-# OPTIONS_GHC -Wall #-}
+{-# LANGUAGE BangPatterns      #-}
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
+{-# OPTIONS_GHC -Wall          #-}
 module Main (main) where
 
 import Control.Applicative
@@ -21,6 +24,9 @@ import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
+max_line_length :: Int
+max_line_length = 80
+
 (<&&>) :: (a -> Bool) -> (a -> Bool) -> (a -> Bool)
 (<&&>) = liftA2 (&&)
 infixr 3 <&&>
@@ -29,53 +35,54 @@ infixr 3 <&&>
 (<||>) = liftA2 (||)
 infixr 2 <||>
 
-parenthesize :: [T.Text] -> T.Text
+parenthesize :: [Text] -> Text
 parenthesize ss = "(" <> T.intercalate ", " ss <> ")"
 
 ----------------------------------------
 
-data Symbols
-  = NoSymbols
-  | Explicit ![T.Text]
-  | Hiding ![T.Text]
+data ImpSpec
+  = EmptyImpSpec
+  | Explicit ![Text]
+  | Hiding ![Text]
   deriving (Eq, Ord, Show)
 
-parseSymbols :: P.Parser Symbols
-parseSymbols = P.choice [
-    Hiding   <$> (P.string "hiding" *> P.skipSpace *> parseSymbolList)
-  , Explicit <$> parseSymbolList
-  , return NoSymbols
+parseImpSpec :: P.Parser ImpSpec
+parseImpSpec = P.choice [
+    Hiding   <$> (P.string "hiding" *> P.skipSpace *> parseEntityList)
+  , Explicit <$> parseEntityList
+  , return EmptyImpSpec
   ]
   where
-    parseSymbolList = do
+    parseEntityList = do
       void $ P.char '('
       P.skipSpace
-      symbols <- (`P.sepBy` P.char ',') $ do
+      entities <- (`P.sepBy` P.char ',') $ do
         P.skipSpace
-        symbol <- P.choice [
+        entity <- P.choice [
             do -- operator
               void $ P.char '('
               op <- P.takeWhile1 (/= ')')
               void $ P.char ')'
               return $ "(" <> op <> ")"
-          , P.takeWhile1 ((not . isSpace) <&&> (/= '(') <&&> (/= ')') <&&> (/= ','))
+          , P.takeWhile1 ((not . isSpace) <&&> (/= '(') <&&> (/= ')')
+                          <&&> (/= ','))
           ]
         P.skipSpace
-        ctors <- P.option "" (parenthesize <$> parseSymbolList)
+        ctors <- P.option "" (parenthesize <$> parseEntityList)
         P.skipSpace
-        return $ symbol <> ctors
+        return $ entity <> ctors
       P.skipSpace
       void $ P.char ')'
       P.skipSpace
-      return $ sort symbols
+      return $ sort entities
 
 data Import = Import {
     imQualified      :: !Bool
-  , imModule         :: !T.Text
-  , imCaselessModule :: !T.Text
-  , imAlias          :: !(Maybe T.Text)
-  , imPackage        :: !(Maybe T.Text)
-  , imSymbols        :: !Symbols
+  , imModule         :: !Text
+  , imCaselessModule :: !Text
+  , imAlias          :: !(Maybe Text)
+  , imPackage        :: !(Maybe Text)
+  , imImpSpec        :: !ImpSpec
   } deriving (Eq, Show)
 
 compareImport :: Bool -> Import -> Import -> Ordering
@@ -86,7 +93,7 @@ compareImport ignore_qualified a b = mconcat [
   , imPackage a        `compare` imPackage b
   , imCaselessModule a `compare` imCaselessModule b
   , imAlias a          `compare` imAlias b
-  , imSymbols a        `compare` imSymbols b
+  , imImpSpec a        `compare` imImpSpec b
   ]
 
 parseImport :: P.Parser Import
@@ -101,20 +108,20 @@ parseImport = do
   P.skipSpace
   alias <- P.option Nothing (Just <$> parseAlias)
   P.skipSpace
-  symbols <- parseSymbols
+  impspec <- parseImpSpec
   return Import {
       imQualified      = is_qualified
     , imModule         = module_
     , imCaselessModule = T.toCaseFold module_
     , imAlias          = alias
     , imPackage        = package
-    , imSymbols        = symbols
+    , imImpSpec        = impspec
     }
   where
-    parsePkgId :: P.Parser T.Text
+    parsePkgId :: P.Parser Text
     parsePkgId = P.takeWhile1 $ (not . isSpace) <&&> (/= '"')
 
-    parseAlias :: P.Parser T.Text
+    parseAlias :: P.Parser Text
     parseAlias = do
       void $ P.string "as"
       P.skipSpace
@@ -122,18 +129,8 @@ parseImport = do
       P.skipSpace
       return alias
 
-showImport :: Style -> Import -> T.Text
-showImport Style{..} Import{..} = T.concat [
-    import_module
-  , case aliasAlignment of
-      Just n | isJust imAlias -> T.replicate (max 0 $ n - 1 - T.length import_module) " "
-      _ -> ""
-  , maybe "" (" as " <>) imAlias
-  , case imSymbols of
-      NoSymbols   -> ""
-      Explicit ss -> " " <> parenthesize ss
-      Hiding ss   -> " hiding " <> parenthesize ss
-  ]
+showImport :: Style -> Import -> Text
+showImport Style{..} Import{..} = withImpSpec import_module
   where
     import_module = T.concat [
         "import"
@@ -147,9 +144,53 @@ showImport Style{..} Import{..} = T.concat [
           Nothing  -> ""
           Just pkg -> "\"" <> pkg <> "\" "
       , imModule
+      , case aliasAlignment of
+          Just n | isJust imAlias
+                   -> T.replicate (max 0 $ n - 1 - T.length import_module) " "
+          _        -> ""
+      , maybe "" (" as " <>) imAlias
       ]
 
     qualified_ = " qualified"
+
+    withImpSpec imp =
+      if T.length oneline <= max_line_length
+      then oneline
+      else multiline
+
+      where
+        oneline = imp <> case imImpSpec of
+          EmptyImpSpec -> ""
+          Explicit es  -> " " <> parenthesize es
+          Hiding   es  -> " hiding " <> parenthesize es
+
+        multiline = imp <> case imImpSpec of
+          EmptyImpSpec -> ""
+          Explicit es  -> "\n" <> parenthesizeMultiLine es
+          Hiding   es  -> " hiding\n" <> parenthesizeMultiLine es
+
+        parenthesizeMultiLine :: [Text] -> Text
+        parenthesizeMultiLine []       = "  ()"
+        parenthesizeMultiLine entities = T.unlines $ unfoldr go entities'
+          where
+            entities' =
+              (\l -> "( " <> head l : tail l) .
+              (\l -> init l ++ [last l <> " )"]) .
+              (\l -> head l : map (", " <>) (tail l)) $ entities
+
+            buildLine []     _      = ("", [])
+            buildLine (e:es) curlen
+              | curlen < T.length e = ("", e:es)
+              | otherwise           =
+                  let (line', es') = buildLine es (curlen - T.length e)
+                  in (e <> line', es')
+
+            go []     = Nothing
+            go (e:es) =
+              -- Handle the case when 'e' is longer than max_line_length.
+              let e0          = "  " <> e
+                  (line, es') = buildLine es (max_line_length - T.length e0)
+              in Just (e0 <> line, es')
 
 ----------------------------------------
 
@@ -176,8 +217,9 @@ convert style@Style{..} modules source = T.unlines . concat $ [
   , separator_if $ ((not . null $ second_import_group) && (not . null $ rest))
   , rest ]
   where
-    (header, body) = break is_import . T.lines $ source
-    (import_section, rest) = break (not . (T.null <||> is_import <||> is_indented)) body
+    (header, body)         = break is_import . T.lines $ source
+    (import_section, rest) = break (not . (T.null <||> is_import <||> is_indented))
+                             body
 
     imports = case P.parseOnly (many parseImport) (T.unlines import_section) of
       Right imps -> sortBy (compareImport alignUnqualified) imps
@@ -251,7 +293,7 @@ sortImports style suffix dirs = do
 
 -- | Write a file, but only if it would have new content, thus
 -- preserving the modification date.
-rewriteFile :: FilePath -> T.Text -> IO ()
+rewriteFile :: FilePath -> Text -> IO ()
 rewriteFile fileName newContent = do
   fileExists <- doesFileExist fileName
   if fileExists then do
@@ -282,7 +324,11 @@ main = do
   if null dirs
     then do
       prog <- getProgName
-      putStrLn $ "Usage: " ++ prog ++ " [--check] [--suffix=SUFFIX] [--align-unqualified] [--alias-alignment=N] [--import-grouping=none|external-internal|internal-external] <directories>"
+      putStrLn $ "Usage: " ++ prog
+        ++ " [--check] [--suffix=SUFFIX] [--align-unqualified]\
+           \ [--alias-alignment=N]\
+           \ [--import-grouping=none|external-internal|internal-external]\
+           \ <directories>"
     else do
       let (check, style, suffix) = get_options args
       putStrLn $ "Using " ++ show style
