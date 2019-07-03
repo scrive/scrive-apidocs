@@ -75,14 +75,19 @@ import Doc.DocSeal as DocSeal
 import Doc.DocStateData
 import Doc.DocStateQuery
 import Doc.DocumentID
-import Doc.DocumentMonad (DocumentMonad, theDocument, withDocument, withDocumentID, withDocumentM)
+import Doc.DocumentMonad
+  ( DocumentMonad, theDocument, withDocument, withDocumentID, withDocumentM )
+
 import Doc.DocUtils
 import Doc.Logging
 import Doc.Model
 import Doc.Model.OrderBy
 import Doc.SealStatus (SealStatus(..))
 import Doc.SignatoryLinkID
-import Doc.SignatoryScreenshots (SignatoryScreenshots, emptySignatoryScreenshots, resolveReferenceScreenshotNames)
+import Doc.SignatoryScreenshots
+  ( SignatoryScreenshots, emptySignatoryScreenshots
+  , resolveReferenceScreenshotNames )
+
 import Doc.SMSPin.Model
 import Doc.Texts
 import Doc.Tokens.Model

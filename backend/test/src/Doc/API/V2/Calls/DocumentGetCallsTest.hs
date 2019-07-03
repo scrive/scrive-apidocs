@@ -28,8 +28,12 @@ import Doc.SignatoryScreenshots (emptySignatoryScreenshots)
 import Doc.Tokens.Model
 import Doc.Types.Document (Document(..))
 import Doc.Types.DocumentStatus (DocumentStatus(..))
-import Doc.Types.SignatoryAttachment (SignatoryAttachment(..), defaultSignatoryAttachment)
-import Doc.Types.SignatoryLink (AuthenticationToSignMethod(..), SignatoryLink(..))
+import Doc.Types.SignatoryAttachment
+  ( SignatoryAttachment(..), defaultSignatoryAttachment )
+
+import Doc.Types.SignatoryLink
+  ( AuthenticationToSignMethod(..), SignatoryLink(..) )
+
 import File.Storage (saveNewFile)
 import Session.Model
 import TestingUtil

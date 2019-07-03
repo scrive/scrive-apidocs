@@ -28,7 +28,10 @@ import Doc.DocStateData
 import Doc.DocumentMonad
 import Doc.Model.Update
 import Doc.SignatoryLinkID
-import Doc.SignatoryScreenshots (SignatoryScreenshots, emptySignatoryScreenshots, resolveReferenceScreenshotNames)
+import Doc.SignatoryScreenshots
+  ( SignatoryScreenshots, emptySignatoryScreenshots
+  , resolveReferenceScreenshotNames )
+
 import Doc.SMSPin.Model
 import EID.Signature.Model
 import File.Model

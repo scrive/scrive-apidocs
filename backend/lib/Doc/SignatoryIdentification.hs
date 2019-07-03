@@ -12,7 +12,10 @@ import Data.Set (Set)
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 
-import Doc.DocStateData (Document, SignatoryLink, documentsignatorylinks, signatoryisauthor, signatorylinkid)
+import Doc.DocStateData
+  ( Document, SignatoryLink, documentsignatorylinks, signatoryisauthor
+  , signatorylinkid )
+
 import Doc.SignatoryLinkID (SignatoryLinkID)
 import Util.HasSomeUserInfo (getFullName)
 import Util.SignatoryLinkUtils (isApprover, isSignatory)

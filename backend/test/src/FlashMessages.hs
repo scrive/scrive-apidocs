@@ -5,7 +5,9 @@ import Control.Monad.Identity
 import Network.HTTP.Base (urlDecode)
 import Test.Framework (Test, testGroup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.QuickCheck (Arbitrary(..), Property, elements, ioProperty, mapSize, oneof)
+import Test.QuickCheck
+  ( Arbitrary(..), Property, elements, ioProperty, mapSize, oneof )
+
 import Text.JSON
 import Text.JSON.FromJSValue
 

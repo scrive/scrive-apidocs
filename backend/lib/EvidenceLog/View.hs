@@ -21,7 +21,10 @@ import qualified Text.StringTemplates.Fields as F
 import DB
 import Doc.DocStateData
 import Doc.Model (GetDocumentsBySignatoryLinkIDs(..))
-import Doc.SignatoryIdentification (SignatoryIdentifierMap, siFullName, siLink, signatoryIdentifier, signatoryIdentifierMap)
+import Doc.SignatoryIdentification
+  ( SignatoryIdentifierMap, siFullName, siLink, signatoryIdentifier
+  , signatoryIdentifierMap )
+
 import EID.Authentication.Model
 import EID.Nets.Types
 import EID.Signature.Model

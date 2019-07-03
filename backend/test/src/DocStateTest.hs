@@ -24,7 +24,10 @@ import Doc.DBActions
 import Doc.DocInfo
 import Doc.DocSeal
 import Doc.DocStateData
-import Doc.DocumentMonad (DocumentT, theDocument, theDocumentID, withDocument, withDocumentID, withDocumentM)
+import Doc.DocumentMonad
+  ( DocumentT, theDocument, theDocumentID, withDocument, withDocumentID
+  , withDocumentM )
+
 import Doc.DocUtils
 import Doc.Model
 import Doc.Model.Filter

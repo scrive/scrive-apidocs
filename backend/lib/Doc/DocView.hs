@@ -28,7 +28,10 @@ import qualified Data.ByteString.Base64.Lazy as B64
 import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
-import AppView (entryPointFields, simpleHtmlResponse, standardPageFields, userGroupUIForPage)
+import AppView
+  ( entryPointFields, simpleHtmlResponse, standardPageFields
+  , userGroupUIForPage )
+
 import BrandedDomain.BrandedDomain
 import DB
 import Doc.API.V2.DocumentAccess

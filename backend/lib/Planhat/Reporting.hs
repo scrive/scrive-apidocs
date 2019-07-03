@@ -13,7 +13,9 @@ import qualified Data.ByteString.Lazy as BSL
 import DB
 import Planhat.Communication
 import Planhat.Config
-import User.Model (GetUserGroupAccountsCountActive(..), GetUserGroupAccountsCountTotal(..))
+import User.Model
+  ( GetUserGroupAccountsCountActive(..), GetUserGroupAccountsCountTotal(..) )
+
 import UserGroup.Types
 
 doDailyPlanhatStats :: ( MonadDB m

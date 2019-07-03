@@ -38,12 +38,17 @@ import Control.Monad.Extra
 import Data.Algebra.Boolean
 import Data.Foldable (foldMap)
 import Data.Label ((:->), get, set)
-import Data.List hiding ((!!), all, and, any, head, last, maximum, minimum, or, tail)
+import Data.List hiding
+  ( (!!), all, and, any, head, last, maximum, minimum, or, tail )
+
 import Data.Maybe hiding (fromJust)
 import Data.Monoid
 import Data.Monoid.Utils
 import GHC.Stack (HasCallStack, withFrozenCallStack)
-import "base" Prelude hiding ((!!), (&&), (.), (||), all, and, any, error, head, id, last, maximum, minimum, not, or, read, tail)
+import "base" Prelude hiding
+  ( (!!), (&&), (.), (||), all, and, any, error, head, id, last, maximum
+  , minimum, not, or, read, tail )
+
 import qualified "base" Prelude as P
 
 -- | Boolean algebra of functions.

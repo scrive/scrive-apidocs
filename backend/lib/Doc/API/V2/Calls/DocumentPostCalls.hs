@@ -57,7 +57,9 @@ import Doc.API.V2.JSON.Misc
 import Doc.AutomaticReminder.Model (setAutomaticReminder)
 import Doc.DocAddImage (addImageToDocumentFile)
 import Doc.DocInfo (isClosed, isPending, isTimedout)
-import Doc.DocMails (sendAllReminderEmailsExceptAuthor, sendForwardEmail, sendInvitationEmail1)
+import Doc.DocMails
+  ( sendAllReminderEmailsExceptAuthor, sendForwardEmail, sendInvitationEmail1 )
+
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.DocumentMonad

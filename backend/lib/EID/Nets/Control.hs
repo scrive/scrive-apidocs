@@ -50,7 +50,9 @@ import Log.Identifier
 import MinutesTime
 import Network.SOAP.Call
 import Network.SOAP.Transport.Curl (curlTransport)
-import Network.XMLCurl (CurlAuth(..), SSL(..), mkCertErrorHandler, mkDebugFunction)
+import Network.XMLCurl
+  ( CurlAuth(..), SSL(..), mkCertErrorHandler, mkDebugFunction )
+
 import Routing
 import Session.Model
 import Session.Types

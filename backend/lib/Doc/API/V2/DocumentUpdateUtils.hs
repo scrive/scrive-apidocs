@@ -9,7 +9,9 @@ import Control.Monad.Base
 import Log
 import qualified Control.Exception.Lifted as E
 
-import API.V2 (apiError, documentStateError, requestParameterInvalid, serverError)
+import API.V2
+  ( apiError, documentStateError, requestParameterInvalid, serverError )
+
 import DB
 import DB.TimeZoneName
 import Doc.DocInfo (isPreparation)
