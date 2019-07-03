@@ -131,7 +131,7 @@ properties:
       - api
     description: |
       Note that `api` delivery is referred to as "Link" delivery in the Scrive Web
-      interface.
+      interface. Furthermore, `pad` delivery is referred to as "In-person".
   authentication_method_to_view:
     type: string
     default: standard
