@@ -4,6 +4,7 @@ module User.UserID (
   , unUserID
   ) where
 
+import Data.Aeson
 import Data.Binary as B
 import Data.Int
 import Data.Typeable
@@ -34,6 +35,16 @@ instance Identifier UserID where
 
 instance Unjson UserID where
   unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse UserID")  return) . maybeRead) show  unjsonDef
+
+instance ToJSON UserID where
+  toJSON (UserID n) = toJSON $ show n
+
+instance FromJSON UserID where
+  parseJSON v = do
+    uidStr <- parseJSON v
+    case maybeRead uidStr of
+      Nothing -> fail "Could not parse User ID"
+      Just uid -> return uid
 
 instance FromSQL UserID where
   type PQBase UserID = PQBase Int64

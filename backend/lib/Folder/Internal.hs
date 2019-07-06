@@ -10,6 +10,7 @@ module Folder.Internal (
   , fwcToList
   ) where
 
+import Data.Aeson
 import Data.Int
 import Data.Text (Text)
 import Data.Unjson
@@ -82,3 +83,13 @@ instance Unjson FolderID where
     ((maybe (fail "Can't parse FolderID") return) . maybeRead)
     show
     unjsonDef
+
+instance ToJSON FolderID where
+  toJSON (FolderID k) = toJSON $ show k
+
+instance FromJSON FolderID where
+  parseJSON v = do
+    fidStr <- parseJSON v
+    case maybeRead fidStr of
+      Nothing -> fail "Could not parse Folder ID"
+      Just fid -> return fid

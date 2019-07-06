@@ -14,6 +14,7 @@ module AccessControl.Types
   , UserGroupNonExistent(..)
   , UserNonExistent(..)
   , FolderNonExistent(..)
+  , Permission(..)
   , NeedsPermissions(..)
   , AccessPolicyItem
   , mkAccPolicy
@@ -29,7 +30,7 @@ module AccessControl.Types
   where
 
 import Control.Monad.Catch
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson
 import Data.Int
 import Data.Typeable (Typeable, cast)
 import Data.Unjson
@@ -98,7 +99,16 @@ data AccessResource
   | UserPersonalTokenR
   | DocumentR
   | FolderPolicyR
-  deriving (Eq, Show, Enum, Bounded)
+  deriving (Eq, Enum, Bounded)
+
+instance Show AccessResource where
+  show UserR = "user"
+  show UserGroupR = "user_group"
+  show UserPolicyR = "user_policy"
+  show UserGroupPolicyR = "user_group_policy"
+  show UserPersonalTokenR = "user_personal_token"
+  show DocumentR = "document"
+  show FolderPolicyR = "folder_policy"
 
 -- | Should be self-explanatory. The 'A' stands for 'Action'.
 data AccessAction
@@ -106,7 +116,13 @@ data AccessAction
   | ReadA
   | UpdateA
   | DeleteA
-  deriving (Eq, Show, Typeable, Bounded, Enum)
+  deriving (Eq, Typeable, Bounded, Enum)
+
+instance Show AccessAction where
+  show CreateA = "create"
+  show ReadA = "read"
+  show UpdateA = "update"
+  show DeleteA = "delete"
 
 -- | We use this to bundle different types. We only need to have an instance for
 -- 'Eq' when comparing them at the end which is why we derive Typeable.
@@ -120,10 +136,6 @@ instance Eq Permission where
     case cast y of
       Just y' -> x == y' && xaa == yaa && xat == yat
       _ -> False
-
-instance Show Permission where
-  show (Permission aa at t) =
-    "Permission " ++ show aa ++ " " ++ show at ++ " " ++ show t
 
 -- Bundling by predicate and marshalling helpers
 data AccessPolicyItem = forall t. (NeedsPermissions t) => AccessPolicyItem t
@@ -141,7 +153,7 @@ data NeededPermissionsExpr
   = NeededPermissionsExprBase Permission
   | NeededPermissionsExprOr [NeededPermissionsExpr]
   | NeededPermissionsExprAnd [NeededPermissionsExpr]
-  deriving (Eq, Show)
+  deriving Eq
 
 evalNeededPermExpr :: (Permission -> Bool) -> NeededPermissionsExpr -> Bool
 evalNeededPermExpr f (NeededPermissionsExprBase p) = f p
@@ -325,6 +337,16 @@ instance Unjson AccessRoleType where
     show
     unjsonDef
 
+instance ToJSON AccessRoleType where
+  toJSON = toJSON . show
+
+instance FromJSON AccessRoleType where
+  parseJSON v = do
+    roleTypeStr <- parseJSON v
+    case maybeRead roleTypeStr of
+      Nothing -> fail "Could not parse Access Role ID"
+      Just roleType -> return roleType
+
 toAccessRoleType :: AccessRoleTarget -> AccessRoleType
 toAccessRoleType ar =
   case ar of
@@ -340,8 +362,16 @@ newtype AccessRoleID = AccessRoleID Int64
   deriving (Eq, Ord)
 deriving newtype instance Read AccessRoleID
 deriving newtype instance Show AccessRoleID
-deriving newtype instance ToJSON AccessRoleID
-deriving newtype instance FromJSON AccessRoleID
+
+instance ToJSON AccessRoleID where
+  toJSON (AccessRoleID n) = toJSON $ show n
+
+instance FromJSON AccessRoleID where
+  parseJSON v = do
+    ridStr <- parseJSON v
+    case maybeRead ridStr of
+      Nothing -> fail "Could not parse Access Role ID"
+      Just rid -> return rid
 
 instance PQFormat AccessRoleID where
   pqFormat = pqFormat @Int64
