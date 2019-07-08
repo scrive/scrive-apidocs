@@ -74,13 +74,14 @@ instance (MonadDB m, MonadThrow m)
     (query . FolderGet $ fid) >>= \case
       Nothing -> return []
       Just _ -> do
-        -- * JOIN does not necessarily preserve order of rows, so we add
-        -- * ORDINALITY and ORDER BY it.
-        -- * WITH ORDINALITY can only appear inside FROM clause after a
-        --   function call:
-        --   - https://www.postgresql.org/docs/current/static/queries-table-expressions.html#QUERIES-TABLEFUNCTIONS
-        -- * the LATERAL is optional for function calls:
-        --   - https://www.postgresql.org/docs/current/static/queries-table-expressions.html#QUERIES-LATERAL
+        -- JOIN does not necessarily preserve order of rows, so we add
+        -- ORDINALITY and ORDER BY it.
+        --
+        -- WITH ORDINALITY can only appear inside a FROM clause after
+        -- a function call:
+        --   <https://www.postgresql.org/docs/current/static/queries-table-expressions.html#QUERIES-TABLEFUNCTIONS>
+        -- The LATERAL is optional for function calls:
+        --   <https://www.postgresql.org/docs/current/static/queries-table-expressions.html#QUERIES-LATERAL>
         let lateralJoin = "folders as fdr cross join lateral" <+>
                            "unnest(fdr.parent_path) with ordinality"
         runQuery_ . sqlSelect "folders" $ do
