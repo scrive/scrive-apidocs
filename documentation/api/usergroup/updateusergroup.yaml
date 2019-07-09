@@ -49,7 +49,7 @@ post:
 
   parameters:
     - name: user_group_id
-      in: url
+      in: path
       type: integer
       description: The ID of the User Group you wish to update
       required: true
@@ -62,11 +62,11 @@ post:
         Group.
       example: { "name": "new user group", "parent_id": 1 }
       required: true
-    - name: include_inheritable
+    - name: include-inheritable
       in: query
       type: boolean
       description: |
-        Append `?include_inheritable` to the URL to see a preview of which
+        Append `?include-inheritable` to the URL to see a preview of which
         values can be inherited from an ancestor User Group.
       required: false
 

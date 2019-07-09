@@ -47,7 +47,7 @@ post:
 
   parameters:
     - name: user_group_id
-      in: url
+      in: path
       type: integer
       description: |
         The ID of the User Group whose `contact_details` object you wish to update
@@ -61,11 +61,11 @@ post:
         subtrees (currently only `data_retention_policy` is exposed by the API).
       example: { "data_retention_policy": { "immediate_trash": false } }
       required: true
-    - name: include_inheritable
+    - name: include-inheritable
       in: query
       type: boolean
       description: |
-        Append `?include_inheritable` to the URL to see a preview of which
+        Append `?include-inheritable` to the URL to see a preview of which
         values can be inherited from an ancestor User Group.
       required: false
 
