@@ -53,6 +53,7 @@ userJSONWithCallBackInfo user ugwp callback = runJSONGen $ do
       Just (SalesforceScheme _) -> "Existing SalesforceScheme"
       Just (BasicAuthScheme _ _) -> "Existing BasicAuthScheme"
       Just (OAuth2Scheme _ _ _ _) -> "Existing OAuth2Scheme"
+      Just (Hi3GScheme _ _ _ _) -> "Existing Hi3GScheme"
 
 userJSONUserDetails :: User -> JSONGen ()
 userJSONUserDetails user = do

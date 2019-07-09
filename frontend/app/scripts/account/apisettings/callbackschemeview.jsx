@@ -54,7 +54,7 @@ module.exports = React.createClass({
               </div>
             </div>
           }
-          {/*else*/ (model.oauth2Scheme() || model.emptyScheme() ) &&
+          {/*else*/ (model.oauth2Scheme() || model.hi3gScheme() || model.emptyScheme() ) &&
             <div/>
           }
         </div>

@@ -420,6 +420,7 @@ Library
                  , User.Action
                  , User.CallbackScheme.Model
                  , User.CallbackScheme.Tables
+                 , User.CallbackScheme.Migrations
                  , User.Types.SignupMethod
                  , User.Types.Stats
                  , User.Types.User
@@ -845,6 +846,7 @@ Executable kontrakcja-migrate
                  User.APILog.Migrations
                  User.APILog.Tables
                  User.CallbackScheme.Tables
+                 User.CallbackScheme.Migrations
                  User.EmailChangeRequest.Tables
                  User.History.Migrations
                  User.History.Tables
@@ -1390,6 +1392,7 @@ Test-suite kontrakcja-test
                  User.APILog.Tables
                  User.APITest
                  User.CallbackScheme.Tables
+                 User.CallbackScheme.Migrations
                  User.EmailChangeRequest.Tables
                  User.History.Migrations
                  User.History.Tables

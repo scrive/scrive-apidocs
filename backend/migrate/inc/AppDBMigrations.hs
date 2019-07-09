@@ -30,6 +30,7 @@ import SMS.Migrations
 import Theme.Migrations
 import ThirdPartyStats.Migrations
 import User.APILog.Migrations
+import User.CallbackScheme.Migrations
 import User.History.Migrations
 import User.Migrations
 import UserGroup.Migrations
@@ -201,4 +202,5 @@ kontraMigrations = [
   , userGroupSettingsAddFolderListCallFlag
   , userGroupSettingsAddTotpIsMandatory
   , addUserTotpIsMandatoryColumn
+  , migrateOAuth2CallbackSchemeToHi3GCallbackScheme
   ]

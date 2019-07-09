@@ -23,6 +23,9 @@ var Backbone = require("backbone");
     oauth2Scheme : function() {
        return this.get("scheme") == "oauth2";
     },
+    hi3gScheme : function() {
+       return this.get("scheme") == "hi3g";
+    },
     emptyScheme : function() {
        return this.get("scheme") == "none";
     },

@@ -73,6 +73,7 @@ execute dac@DocumentAPICallback {..} = logDocument dacDocumentID $ do
                 flip runReaderT sc $ executeSalesforceCallback doc rtoken dacURL dacAttempts uid
           Just (BasicAuthScheme lg pwd)             -> executeStandardCallback (Just (lg, pwd)) doc dac
           Just (OAuth2Scheme lg pwd tokenUrl scope) -> executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc dac
+          Just (Hi3GScheme lg pwd tokenUrl scope)   -> executeHi3GCallback (lg,pwd,tokenUrl,scope) doc dac
           _                                         -> executeStandardCallback Nothing doc dac
 
 executeStandardCallback ::
@@ -146,8 +147,8 @@ executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc dac = logDocument (documentid 
    (exitcode1, stdout1 , stderr1) <- readCurl [
           "-X", "POST"
         , "-L" -- make curl follow redirects
-        , "-d", "{\"login\":{\"scope\":[\"" ++ scope ++ "\"]}}\""
-        , "-H", "Content-Type: application/json; charset=UTF-8"
+        , "-d", "grant_type="++ scope ++ ""
+        , "-H", "Content-Type: application/x-www-form-urlencoded"
         , "-H", "Authorization: Basic " ++ (BSC8.unpack $ B64.encode $ BSC8.pack $ lg ++ ":" ++  pwd)
         , tokenUrl ] BSL.empty
    case exitcode1 of
@@ -189,6 +190,7 @@ executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc dac = logDocument (documentid 
                                logInfo "API callback executeOAuth2Callback failed" $ object [
                                    logPair_ dac
                                  , "curl_exitcode" .= show exitcode2
+                                 , "http_code" .= show n
                                  , "stderr" `equalsExternalBSL` stderr2
                                  , "stdout" `equalsExternalBSL` stdout2
                                  ]
@@ -201,6 +203,83 @@ executeOAuth2Callback (lg,pwd,tokenUrl,scope) doc dac = logDocument (documentid 
               , "stdout" `equalsExternalBSL` stdout2
               ]
             return False
+  where
+    parseAccessToken :: BSLU.ByteString -> Maybe String
+    parseAccessToken str = do
+      case decode $ BSLU.toString str of
+        J.Ok js ->  join $ withJSValue js $ fromJSValueField "access_token"
+        _ -> Nothing
+
+
+executeHi3GCallback :: (MonadFileStorage m, MonadIO m, MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m) =>
+                         (String,String,String,String) -> Document -> DocumentAPICallback -> m Bool
+executeHi3GCallback (lg,pwd,tokenUrl,scope) doc dac = logDocument (documentid doc) $ do
+   (exitcode1, stdout1 , stderr1) <- readCurl [
+          "-X", "POST"
+        , "-L" -- make curl follow redirects
+        , "-d", "{\"login\":{\"scope\":[\"" ++ scope ++ "\"]}}\""
+        , "-H", "Content-Type: application/json; charset=UTF-8"
+        , "-H", "Authorization: Basic " ++ (BSC8.unpack $ B64.encode $ BSC8.pack $ lg ++ ":" ++  pwd)
+        , tokenUrl ] BSL.empty
+   case exitcode1 of
+    ExitFailure ec1 -> do
+      logInfo "API callback executeHi3GCallback failed during authorization phase" $ object [
+          logPair_ dac
+        , "curl_exitcode" .= show ec1
+        , "stderr" `equalsExternalBSL` stderr1
+        , "stdout" `equalsExternalBSL` stdout1
+        ]
+      return False
+    ExitSuccess -> case parseAccessToken stdout1 of
+      Nothing -> do
+       logInfo "API callback executeHi3GCallback failed for token parsing" $ object [
+           "stdout" .= show stdout1
+         , "stderr" .= show stderr1
+         ]
+       return False
+      Just t -> do
+        callbackParams <- callbackParamsWithDocumentJSON (dacApiVersion dac) doc
+        (exitcode2, stdout2 , stderr2) <- readCurl [
+            "-X", "POST"
+          , "--write-out","\n%{http_code}"
+          , "-L" -- make curl follow redirects
+          , "-H", "Authorization: Bearer " ++ t
+          , "--data-binary", "@-"          -- take binary data from stdin
+          , dacURL dac ] callbackParams
+        let httpCodeStr = case reverse . lines . BSL.unpack $ stdout2 of
+              [] -> ""
+              c:_ -> c
+            httpCode = case reads httpCodeStr of
+                          [(n::Int, "")] -> n
+                          _ -> unexpectedError "Couldn't parse http status from curl output"
+        case (exitcode2, httpCode) of
+          (ExitSuccess, n) | n < 300 -> do
+                               logInfo "API callback executeHi3GCallback succeeded" $ logObject_ dac
+                               return True
+                           | otherwise -> do
+                               logInfo "API callback executeHi3GCallback failed" $ object [
+                                   logPair_ dac
+                                 , "curl_exitcode" .= show exitcode2
+                                 , "http_code" .= show n
+                                 , "stderr" `equalsExternalBSL` stderr2
+                                 , "stdout" `equalsExternalBSL` stdout2
+                                 ]
+                               return False
+          (ExitFailure ec2, _) -> do
+            logInfo "API callback executeHi3GCallback failed" $ object [
+                logPair_ dac
+              , "curl_exitcode" .= show ec2
+              , "stderr" `equalsExternalBSL` stderr2
+              , "stdout" `equalsExternalBSL` stdout2
+              ]
+            return False
+  where
+    parseAccessToken :: BSLU.ByteString -> Maybe String
+    parseAccessToken str = do
+      case decode $ BSLU.toString str of
+        J.Ok js ->  join $ withJSValue js $ fromJSValueFieldCustom "auth" $ fromJSValueField "access_token"
+        _ -> Nothing
+
 
 
 callbackParamsWithDocumentJSON :: (MonadFileStorage m, MonadIO m, MonadDB m, MonadMask m, MonadLog m, MonadBaseControl IO m) =>
@@ -228,12 +307,6 @@ callbackParamsWithDocumentJSON apiVersion doc = case apiVersion of
     hasGuardtime  = case (documentsealstatus doc) of
                       Just (Guardtime _ _) -> True
                       _ -> False
-
-parseAccessToken :: BSLU.ByteString -> Maybe String
-parseAccessToken str = do
-  case decode $ BSLU.toString str of
-    J.Ok js ->  join $ withJSValue js $ fromJSValueFieldCustom "auth" $ fromJSValueField "access_token"
-    _ -> Nothing
 
 executeSalesforceCallback :: (MonadDB m, CryptoRNG m, MonadLog m, MonadThrow m, MonadBase IO m, MonadReader SalesforceConf m) => Document -> String ->  String -> Int32 -> UserID -> m Bool
 executeSalesforceCallback doc rtoken url attempts uid = logDocument (documentid doc) $ do
