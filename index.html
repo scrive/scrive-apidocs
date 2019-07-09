@@ -3898,7 +3898,7 @@ with its own <code>contact_details</code> object. Since root User Groups cannot
 inherit, there will always be an ancestor from which a child can inherit.</p>
 
 <p>If you would like to see what a User Group <em>would</em> inherit then you can
-append <code>?include_inheritable</code> to the URL when making the call. This will add
+append <code>?include-inheritable</code> to the URL when making the call. This will add
 extra <code>inheritable_preview</code> subtrees to the objects which perform the
 inheritance calculation, ignoring whether or not the User Group already
 inherits.</p>
@@ -3906,8 +3906,8 @@ inherits.</p>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group you wish to view</p>
-</td><td><p>integer</p></td><td>url</td></tr>
-<tr><td><p><code>include_inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include_inheritable</code> to the URL to see a preview of which
+</td><td><p>integer</p></td><td>path</td></tr>
+<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include-inheritable</code> to the URL to see a preview of which
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>query</td></tr>
 </table>
@@ -3962,11 +3962,11 @@ using the <code>GET</code> endpoint should produce the same output both times.</
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group you wish to update</p>
-</td><td><p>integer</p></td><td>url</td></tr>
+</td><td><p>integer</p></td><td>path</td></tr>
 <tr><td><p><code>usergroup</code><br/><em>required</em></p></td><td><p>JSON object containing the <code>name</code> and <code>parent_id</code> of the User Group to
 be created.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
-<tr><td><p><code>include_inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include_inheritable</code> to the URL to see a preview of which
+<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include-inheritable</code> to the URL to see a preview of which
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>query</td></tr>
 </table>
@@ -4035,11 +4035,11 @@ field, it must be done via <code>parent_id</code></em>.</p>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group you wish to update</p>
-</td><td><p>integer</p></td><td>url</td></tr>
+</td><td><p>integer</p></td><td>path</td></tr>
 <tr><td><p><code>usergroup</code><br/><em>required</em></p></td><td><p>JSON object containing the new <code>name</code> and/or <code>parent_id</code> for the User
 Group.</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
-<tr><td><p><code>include_inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include_inheritable</code> to the URL to see a preview of which
+<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include-inheritable</code> to the URL to see a preview of which
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>query</td></tr>
 </table>
@@ -4080,7 +4080,7 @@ by simply working up the tree, deleting the leaves.</p>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group you wish to update</p>
-</td><td><p>integer</p></td><td>url</td></tr>
+</td><td><p>integer</p></td><td>path</td></tr>
 </table>
 <h3 id='responses-52'>Responses</h3>
 <table>
@@ -4198,7 +4198,7 @@ User Group will inherit from the closest direct ancestor with its own
 always be an ancestor from which a child can inherit.</p>
 
 <p>If you would like to see what a User Group <em>would</em> inherit then you can
-append <code>?include_inheritable</code> to the URL when making the call. This will add
+append <code>?include-inheritable</code> to the URL when making the call. This will add
 extra <code>inheritable_preview</code> subtrees to the objects which perform the
 inheritance calculation, ignoring whether or not the User Group already
 inherits.</p>
@@ -4206,8 +4206,8 @@ inherits.</p>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>contact_details</code> object you wish to view</p>
-</td><td><p>integer</p></td><td>url</td></tr>
-<tr><td><p><code>include_inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include_inheritable</code> to the URL to see a preview of which
+</td><td><p>integer</p></td><td>path</td></tr>
+<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include-inheritable</code> to the URL to see a preview of which
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>query</td></tr>
 </table>
@@ -4271,11 +4271,11 @@ be unaffected by the operation.</p>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>contact_details</code> object you wish to update</p>
-</td><td><p>integer</p></td><td>url</td></tr>
+</td><td><p>integer</p></td><td>path</td></tr>
 <tr><td><p><code>contact_details</code><br/><em>required</em></p></td><td><p>JSON object containing (partial or full) updates to the contact_details
 subtrees (currently only <code>data_retention_policy</code> is exposed by the API).</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
-<tr><td><p><code>include_inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include_inheritable</code> to the URL to see a preview of which
+<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include-inheritable</code> to the URL to see a preview of which
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>query</td></tr>
 </table>
@@ -4323,7 +4323,7 @@ User Group will inherit from the closest direct ancestor with its own
 always be an ancestor from which a child can inherit.</p>
 
 <p>If you would like to see what a User Group <em>would</em> inherit then you can
-append <code>?include_inheritable</code> to the URL when making the call. This will add
+append <code>?include-inheritable</code> to the URL when making the call. This will add
 extra <code>inheritable_preview</code> subtrees to the objects which perform the
 inheritance calculation, ignoring whether or not the User Group already
 inherits.</p>
@@ -4332,8 +4332,8 @@ inherits.</p>
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>contact_details</code> object you wish to
 delete</p>
-</td><td><p>integer</p></td><td>url</td></tr>
-<tr><td><p><code>include_inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include_inheritable</code> to the URL to see a preview of which
+</td><td><p>integer</p></td><td>path</td></tr>
+<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include-inheritable</code> to the URL to see a preview of which
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>query</td></tr>
 </table>
@@ -4467,7 +4467,7 @@ Group will inherit from the closest direct ancestor with its own
 always be an ancestor from which a child can inherit.</p>
 
 <p>If you would like to see what a User Group <em>would</em> inherit then you can
-append <code>?include_inheritable</code> to the URL when making the call. This will add
+append <code>?include-inheritable</code> to the URL when making the call. This will add
 extra <code>inheritable_preview</code> subtrees to the objects which perform the
 inheritance calculation, ignoring whether or not the User Group already
 inherits.</p>
@@ -4475,8 +4475,8 @@ inherits.</p>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>settings</code> object you wish to view</p>
-</td><td><p>integer</p></td><td>url</td></tr>
-<tr><td><p><code>include_inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include_inheritable</code> to the URL to see a preview of which
+</td><td><p>integer</p></td><td>path</td></tr>
+<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include-inheritable</code> to the URL to see a preview of which
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>query</td></tr>
 </table>
@@ -4534,11 +4534,11 @@ be unaffected by the operation.</p>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>settings</code> object you wish to update</p>
-</td><td><p>integer</p></td><td>url</td></tr>
+</td><td><p>integer</p></td><td>path</td></tr>
 <tr><td><p><code>settings</code><br/><em>required</em></p></td><td><p>JSON object containing (partial or full) updates to the settings
 subtrees (currently only <code>data_retention_policy</code> is exposed by the API).</p>
 </td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
-<tr><td><p><code>include_inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include_inheritable</code> to the URL to see a preview of which
+<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include-inheritable</code> to the URL to see a preview of which
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>query</td></tr>
 </table>
@@ -4585,7 +4585,7 @@ Group will inherit from the closest direct ancestor with its own
 always be an ancestor from which a child can inherit.</p>
 
 <p>If you would like to see what a User Group <em>would</em> inherit then you can
-append <code>?include_inheritable</code> to the URL when making the call. This will add
+append <code>?include-inheritable</code> to the URL when making the call. This will add
 extra <code>inheritable_preview</code> subtrees to the objects which perform the
 inheritance calculation, ignoring whether or not the User Group already
 inherits.</p>
@@ -4593,8 +4593,8 @@ inherits.</p>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group whose <code>settings</code> object you wish to delete</p>
-</td><td><p>integer</p></td><td>url</td></tr>
-<tr><td><p><code>include_inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include_inheritable</code> to the URL to see a preview of which
+</td><td><p>integer</p></td><td>path</td></tr>
+<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include-inheritable</code> to the URL to see a preview of which
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>query</td></tr>
 </table>
