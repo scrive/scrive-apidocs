@@ -30,24 +30,24 @@ post:
     always be an ancestor from which a child can inherit.
 
     If you would like to see what a User Group _would_ inherit then you can
-    append `?include_inheritable` to the URL when making the call. This will add
+    append `?include-inheritable` to the URL when making the call. This will add
     extra `inheritable_preview` subtrees to the objects which perform the
     inheritance calculation, ignoring whether or not the User Group already
     inherits.
 
   parameters:
     - name: user_group_id
-      in: url
+      in: path
       type: integer
       description: |
         The ID of the User Group whose `contact_details` object you wish to
         delete
       required: true
-    - name: include_inheritable
+    - name: include-inheritable
       in: query
       type: boolean
       description: |
-        Append `?include_inheritable` to the URL to see a preview of which
+        Append `?include-inheritable` to the URL to see a preview of which
         values can be inherited from an ancestor User Group.
       required: false
 
