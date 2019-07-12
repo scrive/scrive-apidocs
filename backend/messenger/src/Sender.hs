@@ -153,26 +153,30 @@ sendSMSHelper TeliaCallGuideSender{..} sm@ShortMessage{..} =
 sendSMSHelper LocalSender{..} ShortMessage{..}
   = localData [identifier smID] $ do
   let clearmsisdn = clearMobileNumber smMSISDN
-  let regex       = "https?://[a-zA-Z:0-9.-]+/[a-zA-Z_:/0-9#?-]+" :: String
+      regex       = "https?://[a-zA-Z:0-9.-]+/[a-zA-Z_:/0-9#?-]+" :: String
       matchResult = match (makeRegex regex :: Regex) (smBody :: String)
                     :: MatchResult String
 
-  let withClickableLinks = mrBefore matchResult ++
-                           "<a href=\"" ++ mrMatch matchResult
-                           ++ "\">" ++
-                           mrMatch matchResult ++ "</a>" ++
-                           mrAfter matchResult
-  let content = "<html><head><title>SMS - " ++
-                show smID ++ " to " ++ clearmsisdn ++ "</title></head><body>" ++
-                "ID: " ++ show smID ++ "<br>" ++
-                "Provider: " ++ show smProvider ++ "<br>" ++
-                "<br>" ++
-                "Originator: " ++ smOriginator ++ "<br>" ++
-                "MSISDN: " ++ clearmsisdn ++ "<br>" ++
-                "<br>" ++
-                withClickableLinks ++
-                "</body></html>"
-  let filename = localDirectory ++ "/SMS-" ++ show smID ++ ".html"
+      withClickableLinks =
+        mrBefore matchResult ++
+        "<a href=\"" ++ mrMatch matchResult ++ "\">" ++
+        mrMatch matchResult ++ "</a>" ++
+        mrAfter matchResult
+
+      content =
+        "<html><head><title>SMS - " ++
+        show smID ++ " to " ++ clearmsisdn ++ "</title></head><body>" ++
+        "ID: " ++ show smID ++ "<br>" ++
+        "Provider: " ++ show smProvider ++ "<br>" ++
+        "<br>" ++
+        "Originator: " ++ smOriginator ++ "<br>" ++
+        "MSISDN: " ++ clearmsisdn ++ "<br>" ++
+        "<br>" ++
+        withClickableLinks ++
+        "</body></html>"
+
+      filename = localDirectory ++ "/SMS-" ++ show smID ++ ".html"
+
   liftBase $ BSL.writeFile filename (BSLU.fromString content)
   logInfo "SMS saved to file" $ object [
       "path" .= filename
