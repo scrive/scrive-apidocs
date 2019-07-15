@@ -801,7 +801,7 @@
 "_mailTakeoverPrivateUserInviteTitle":"Request to transfer your account",
 "_mailTimedoutInstructionButton":"Open document",
 "_mailTimedoutInstructionDescription":"The due date to sign <strong>$documenttitle$</strong> has passed. To prolong the due date, open the document in the e-archive and click \"Extend due date\".",
-"_mailTimedoutInstructionStep1":"Access the document from your e-archive or by clicking the button below ",
+"_mailTimedoutInstructionStep1":"Access the document from your e-archive or by clicking the button below",
 "_mailTimedoutInstructionStep2":"Click \"Extend due date\"",
 "_mailTimedoutInstructionStep3":"Enter desired number of days to prolong the due date and click \"Extend\"",
 "_mailTimedoutInstructionStep4":"Please note: No notification of the new due date will be sent to the signing parties. To notify a signatory use the manual reminder function.",
