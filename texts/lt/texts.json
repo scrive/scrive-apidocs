@@ -646,6 +646,7 @@
 "_flashMessageTemplateArchiveDone":"Pasirinkti šablonai ištrinti.",
 "_flashMessageTemplateShareDone":"Pasirinkti šablonai taip pat pateikti ir Jūsų organizacijai.",
 "_flashMessageTemplateUnshareDone":"Prieiga prie pasirinktų šablonų Jūsų organizacijai atšaukta.",
+"_flashMessageTotpMustBeActivated":"",
 "_flashMessageUserAccountRequestExpired":"Jūsų pakvietimo nuorodos galiojimo laikas pasibaigė. Prašome užsiregistruoti iš naujo.",
 "_flashMessageUserAccountRequestExpiredCompany":"Jūsų pakvietimo nuorodos galiojimo laikas pasibaigė. Prašome susisiekti su savo įmonės administratoriumi, kuris jums suteiks naują aktyvavimo nuorodą.",
 "_flashMessageUserActivated":"Sveiki atvykę į „Scrive“!",

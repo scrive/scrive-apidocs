@@ -646,6 +646,7 @@
 "_flashMessageTemplateArchiveDone":"Las plantillas seleccionadas han sido eliminadas.",
 "_flashMessageTemplateShareDone":"Las plantillas seleccionadas han sido compartidas con su organización.",
 "_flashMessageTemplateUnshareDone":"Las plantillas seleccionadas no han sido compartidas con su organización.",
+"_flashMessageTotpMustBeActivated":"",
 "_flashMessageUserAccountRequestExpired":"Su link de invitación ha caducado. Por favor, inscríbase otra vez.",
 "_flashMessageUserAccountRequestExpiredCompany":"Su link de invitación ha caducado. Por favor contacte con el administrador de su empresa para obtener un nuevo link de activación.",
 "_flashMessageUserActivated":"¡Bienvenido a Scrive!",

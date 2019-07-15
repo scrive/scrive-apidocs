@@ -646,6 +646,7 @@
 "_flashMessageTemplateArchiveDone":"Valda mallar har blivit raderade.",
 "_flashMessageTemplateShareDone":"Valda mallar har blivit delade inom din organisation.",
 "_flashMessageTemplateUnshareDone":"Valda mallar har slutat delas inom din organisation.",
+"_flashMessageTotpMustBeActivated":"",
 "_flashMessageUserAccountRequestExpired":"Din aktiveringslänk är inte längre giltig. Vänligen skapa ett nytt konto.",
 "_flashMessageUserAccountRequestExpiredCompany":"Din aktiveringslänk är inte längre giltig. Vänligen kontakta en administratör i din organisation för att få en ny inbjudan.",
 "_flashMessageUserActivated":"Välkommen till Scrive!",

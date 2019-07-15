@@ -646,6 +646,7 @@
 "_flashMessageTemplateArchiveDone":"Valitud mallid on kustutatud.",
 "_flashMessageTemplateShareDone":"Valitud malle jagati Teie ettevõttega.",
 "_flashMessageTemplateUnshareDone":"Valitud malle ei jagata enam Teie ettevõttega.",
+"_flashMessageTotpMustBeActivated":"",
 "_flashMessageUserAccountRequestExpired":"Teie kutse link on aegunud. Palun registreeruge uuesti.",
 "_flashMessageUserAccountRequestExpiredCompany":"Teie kutse link on aegunud. Võtke ühendust enda ettevõtte administraatoriga uue konto aktiveerimislingi saamiseks.",
 "_flashMessageUserActivated":"Tere tulemast Scrive kasutajaks!",

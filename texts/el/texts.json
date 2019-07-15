@@ -646,6 +646,7 @@
 "_flashMessageTemplateArchiveDone":"Τα επιλεγμένα πρότυπα έχουν διαγραφεί. ",
 "_flashMessageTemplateShareDone":"Τα επιλεγμένα πρότυπα έχουν κοινοποιηθεί στην οργάνωσή σας. ",
 "_flashMessageTemplateUnshareDone":"Τα επιλεγμένα πρότυπα δεν έχουν κοινοποιηθεί στον οργανισμό σας.",
+"_flashMessageTotpMustBeActivated":"",
 "_flashMessageUserAccountRequestExpired":"Ο σύνδεσμος πρόσκλησής σας έχει λήξει. Παρακαλείστε να εγγραφείτε ξανά.",
 "_flashMessageUserAccountRequestExpiredCompany":"Ο σύνδεσμος πρόσκλησής σας έχει λήξει. Παρακαλείστε να επικοινωνήσετε με έναν διαχειριστή της εταιρείας σας προκειμένου να λάβετε έναν καινούριο σύνδεσμο ενεργοποίησης του λογαριασμού.",
 "_flashMessageUserActivated":"Καλωσήρθατε στην υπηρεσία Scrive! ",

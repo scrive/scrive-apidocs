@@ -646,6 +646,7 @@
 "_flashMessageTemplateArchiveDone":"De gekozen templates zijn verwijderd.",
 "_flashMessageTemplateShareDone":"De gekozen templates zijn gedeeld met uw organisatie.",
 "_flashMessageTemplateUnshareDone":"De gekozen templates zijn niet langer gedeeld met uw organisatie.",
+"_flashMessageTotpMustBeActivated":"",
 "_flashMessageUserAccountRequestExpired":"Uw uitnodigingslink is verlopen. Meld u alstublieft opnieuw aan.",
 "_flashMessageUserAccountRequestExpiredCompany":"Uw uitnodigingslink is verlopen. Neem alstublieft contact op met een administrator bij uw bedrijf om een nieuwe account-activeringslink te krijgen.",
 "_flashMessageUserActivated":"Welkom bij Scrive! ",

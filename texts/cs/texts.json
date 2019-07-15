@@ -646,6 +646,7 @@
 "_flashMessageTemplateArchiveDone":"Zvolené šablony byly smazány.",
 "_flashMessageTemplateShareDone":"Zvolené šablony byly sdíleny s vaší organizací.",
 "_flashMessageTemplateUnshareDone":"Došlo k ukončení sdílení zvolených šablon s vaší organizací.",
+"_flashMessageTotpMustBeActivated":"",
 "_flashMessageUserAccountRequestExpired":"Odkazu s pozvánkou vypršela platnost. Začněte s registrací znovu.",
 "_flashMessageUserAccountRequestExpiredCompany":"Platnost odkazu s pozvánkou vypršela. Požádejte správce vaší společnosti o nový aktivační odkaz k účtu.",
 "_flashMessageUserActivated":"Vítejte ve službě Scrive!",
