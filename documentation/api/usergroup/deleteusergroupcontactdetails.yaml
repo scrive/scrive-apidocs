@@ -6,8 +6,8 @@ post:
     - User Group
 
   description: |
-    > For examples of the JSON output, see details of "View User Group Contact
-    > Details".
+    > For examples of the JSON output, see
+    > [View User Group Contact Details](#view-user-group-contact-details).
 
     This endpoint is used to delete a given User Group's `contact_details`
     object. This will cause the contact_details to be inherited rather than the
@@ -17,22 +17,7 @@ post:
     in no operation being performed. Also, attempting to delete the
     contact_details object of a root User Group will result in an error.
 
-    Inheritance works as follows:
-
-    Root User Groups (i.e. those who are not children of other User Groups) may
-    not inherit since there are no ancestors to inherit from.
-
-    A child User Group may inherit or have its own dedicated object. In the case
-    that a User Group chooses to inherit the `contact_details` object, then that
-    User Group will inherit from the closest direct ancestor with its own
-    `contact_details` object. Since root User Groups cannot inherit, there will
-    always be an ancestor from which a child can inherit.
-
-    If you would like to see what a User Group _would_ inherit then you can
-    append `?include-inheritable` to the URL when making the call. This will add
-    extra `inheritable_preview` subtrees to the objects which perform the
-    inheritance calculation, ignoring whether or not the User Group already
-    inherits.
+    For more details on inheritance, see [View User Group Contact Details](#view-user-group-contact-details).
 
   parameters:
     - name: user_group_id
