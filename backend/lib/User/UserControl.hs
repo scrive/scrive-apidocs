@@ -36,6 +36,7 @@ import DB hiding (query, update)
 import Happstack.Fields
 import InputValidation
 import InternalResponse
+import IPAddress
 import Kontra
 import KontraLink
 import Log.Identifier
@@ -314,8 +315,15 @@ handlePasswordReminderGet uid token = do
 handlePasswordReminderPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
 handlePasswordReminderPost uid token = do
   muser <- getPasswordReminderUser uid token
+  ipIsOK <- case muser of
+             Just u -> do
+               ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ userid u
+               let masklist = get ugsIPAddressMaskList $ ugwpSettings ugwp
+               ctx <- getContext
+               return $ null masklist || (any (ipAddressIsInNetwork $ get ctxipnumber ctx) masklist)
+             Nothing -> return True
   case muser of
-    Just user | not (useraccountsuspended user) -> do
+    Just user | not (useraccountsuspended user) && ipIsOK -> do
       switchLang (getLang user)
       ctx <- getContext
       let time      = get ctxtime ctx
@@ -339,6 +347,7 @@ handlePasswordReminderPost uid token = do
           J.runJSONGenT $ J.value "logged" False
     Just _ -> do
       {- MR: useraccountsuspended must be true here. This is a hack for Hi3G. It will be removed in future -}
+      {- BC: or IP is blacklisted. This may be a hack, not sure -}
       J.runJSONGenT $ J.value "logged" False
     Nothing -> J.runJSONGenT $ J.value "logged" False
 
