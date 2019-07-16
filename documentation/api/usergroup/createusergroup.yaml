@@ -36,11 +36,6 @@ post:
     using the `GET` endpoint should produce the same output both times.
 
   parameters:
-    - name: user_group_id
-      in: path
-      type: integer
-      description: The ID of the User Group you wish to update
-      required: true
     - name: usergroup
       in: formData
       type: string
