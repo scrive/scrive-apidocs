@@ -43,6 +43,7 @@ var CompanyDetailsView = React.createClass({
         parentid: this.props.company.parentid(),
         parentgrouppath: this.props.company.parentgrouppath(),
         companynumber: this.props.company.companynumber(),
+        entityname: this.props.company.entityname(),
         address: this.props.company.address(),
         zip: this.props.company.zip(),
         city: this.props.company.city(),
@@ -117,6 +118,7 @@ var CompanyDetailsView = React.createClass({
               companyId={this.props.viewModel.get("companyId")}
               name={this.props.viewModel.get("name")}
               companynumber={this.props.viewModel.get("companynumber")}
+              entityname={this.props.viewModel.get("entityname")}
               address={this.props.viewModel.get("address")}
               zip={this.props.viewModel.get("zip")}
               city={this.props.viewModel.get("city")}

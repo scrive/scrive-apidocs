@@ -124,14 +124,14 @@ replaceSignatoryUser :: SignatoryLink
 replaceSignatoryUser siglink user ugwp =
   (replaceSignatoryData
      siglink
-     (getFirstName      user)
-     (getLastName       user)
-     (getEmail          user)
-     (getMobile         user)
-     (getUGCompanyName ugwp)
-     (getPersonalNumber user)
-     (getUGCompanyNumber  ugwp)
+     (getFirstName       user)
+     (getLastName        user)
+     (getEmail           user)
+     (getMobile          user)
+     (getUGEntityName    ugwp)
+     (getPersonalNumber  user)
+     (getUGCompanyNumber ugwp)
   ) { maybesignatory = Just $ userid user }
     where
-      getUGCompanyName = get ugName . ugwpUG
+      getUGEntityName    = get ugaEntityName    . ugwpAddress
       getUGCompanyNumber = get ugaCompanyNumber . ugwpAddress

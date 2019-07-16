@@ -61,6 +61,7 @@ instance ToJSON UGAddrJSON where
   toJSON _ = Null -- Redundant - Only needed to avoid `deriving Generic`
   toEncoding (UGAddrJSON addr) = pairs $
        "company_number" .= get ugaCompanyNumber addr
+    <> "entity_name"    .= get ugaEntityName    addr
     <> "address"        .= get ugaAddress       addr
     <> "zip"            .= get ugaZip           addr
     <> "city"           .= get ugaCity          addr
@@ -103,6 +104,9 @@ unjsonUserGroupAddress = objectOf $ pure UserGroupAddress
   <*> fieldBy "company_number" _ugaCompanyNumber
       "User Group Address Company Number"
       (unjsonWithValidationOrEmptyText asValidCompanyNumber)
+  <*> fieldBy "entity_name" _ugaEntityName
+      "User Group Address Entity Name"
+      (unjsonWithValidationOrEmptyText asValidCompanyName)
   <*> fieldBy "address" _ugaAddress
       "User Group Address Address"
       (unjsonWithValidationOrEmptyText asValidAddress)

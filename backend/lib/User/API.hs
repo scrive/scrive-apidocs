@@ -356,6 +356,7 @@ apiCallUpdateUserProfile = api $ do
       let getAddrParameter n v prevValue =
             getParameter n v $ get prevValue . ugwpAddress $ ugwp
       number <- getAddrParameter "companynumber" asValidCompanyNumber ugaCompanyNumber
+      entityname <- getAddrParameter "companyentityname" asValidCompanyName ugaEntityName
       address <- getAddrParameter "companyaddress" asValidAddress ugaAddress
       zip' <- getAddrParameter "companyzip" asValidZip ugaZip
       city <- getAddrParameter "companycity" asValidCity ugaCity
@@ -363,6 +364,7 @@ apiCallUpdateUserProfile = api $ do
       let ug' = set ugName companyname ug
           new_address = UserGroupAddress
             { _ugaCompanyNumber = number
+            , _ugaEntityName    = entityname
             , _ugaAddress       = address
             , _ugaZip           = zip'
             , _ugaCity          = city
@@ -378,7 +380,15 @@ apiCallUpdateUserProfile = api $ do
       void $ dbUpdate $ UserGroupUpdate ug''
       Ok <$> (runJSONGenT $ value "changed" True)
     else do
-      fs <- mapM getField ["companyname", "companynumber", "companyaddress", "companyzip", "companycity", "companycountry"]
+      fs <- mapM getField [
+          "companyname"
+        , "companynumber"
+        , "companyentityname"
+        , "companyaddress"
+        , "companyzip"
+        , "companycity"
+        , "companycountry"
+        ]
       when (any isJust fs) $ V2.apiError $
         V2.APIError { errorType = V2.InsufficientPrivileges
                     , errorHttpCode = 403

@@ -8,6 +8,9 @@ module.exports = React.createClass({
   onCompanynumberChange: function (value) {
     this.props.model.setCompanynumber(value);
   },
+  onCompanyentitynameChange: function (value) {
+    this.props.model.setCompanyentityname(value);
+  },
   onCompanyaddressChange: function (value) {
     this.props.model.setCompanyaddress(value);
   },
@@ -32,7 +35,7 @@ module.exports = React.createClass({
           <table>
             <tbody>
               <tr>
-                <td><label>{localization.account.accountDetails.companyname}</label></td>
+                <td><label>{localization.account.accountDetails.userGroup}</label></td>
                 <td>
                   <InfoTextInput
                     ref="companyname"
@@ -40,6 +43,19 @@ module.exports = React.createClass({
                     className={!model.companynameValid() ? "redborder" : ""}
                     value={model.companyname()}
                     onChange={this.onCompanynameChange}
+                    readonly={readonly}
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td><label>{localization.account.accountDetails.entityname}</label></td>
+                <td>
+                  <InfoTextInput
+                    ref="companyentityname"
+                    name="companyentityname"
+                    className={!model.companyentitynameValid() ? "redborder" : ""}
+                    value={model.companyentityname()}
+                    onChange={this.onCompanyentitynameChange}
                     readonly={readonly}
                   />
                 </td>

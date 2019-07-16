@@ -6,6 +6,7 @@ var Company = exports.Company = Backbone.Model.extend({
       companyid        : "",
       companyname      : "",
       companynumber    : "",
+      entityname       : "",
       address    : "",
       zip       : "",
       city      : "",
@@ -47,6 +48,9 @@ var Company = exports.Company = Backbone.Model.extend({
   },
   companynumber : function() {
      return this.get("companynumber");
+  },
+  entityname : function() {
+     return this.get("entityname");
   },
   address : function() {
      return this.get("address");
@@ -151,6 +155,7 @@ var Company = exports.Company = Backbone.Model.extend({
       companyid        : args.companyid,
       companyname      : args.companyname,
       companynumber    : args.companynumber,
+      entityname       : args.entityname,
       address    : args.address,
       zip       : args.zip,
       city      : args.city,

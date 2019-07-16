@@ -811,7 +811,7 @@ assertGoodNewDocument mugwp doctype title (user, time, doc) = do
     assertEqual "link company number matches company's" (getMobile user) (getMobile siglink)
     assertEqual "link signatory matches author id" (Just $ userid user) (maybesignatory siglink)
       where
-        companyNameFromUserGroup = maybe "" (get ugName . ugwpUG) mugwp
+        companyNameFromUserGroup   = maybe "" (get ugaEntityName    . ugwpAddress) mugwp
         companyNumberFromUserGroup = maybe "" (get ugaCompanyNumber . ugwpAddress) mugwp
 
 testCancelDocumentCancelsDocument :: TestEnv ()
@@ -1708,7 +1708,6 @@ testCreateFromSharedTemplate = do
     then assertSuccess
     else assertFailure "Replacing signatory details based on user is loosing fields | SKRIVAPADEV-294"
 
-
 testCreateFromTemplateCompanyField :: TestEnv ()
 testCreateFromTemplateCompanyField = replicateM_ 10 $ do
   user <- addNewRandomUser
@@ -1727,7 +1726,9 @@ testCreateFromTemplateCompanyField = replicateM_ 10 $ do
   void $ withDocumentID docid' $ dbUpdate $ DocumentFromTemplate (documentid doc) (systemActor mt)
   doc' <- dbQuery $ GetDocumentByDocumentID docid'
   let [author] = filter isAuthor $ documentsignatorylinks doc'
-  assertEqual "Author signatory link user group name is not same as his user group" (get ugName ug) (getCompanyName author)
+  assertEqual "Author signatory link user group name is not same as his user group"
+    (get ugaEntityName . fromJust . get ugAddress $ ug)
+    (getCompanyName author)
 
 testAddDocumentAttachmentFailsIfNotPreparation :: TestEnv ()
 testAddDocumentAttachmentFailsIfNotPreparation = replicateM_ 10 $ do

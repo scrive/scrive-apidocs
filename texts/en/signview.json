@@ -1,4 +1,4 @@
-{ 
+{
 "_DeletePDF":"Delete",
 "_RequestedAttachments":"Requested attachments",
 "_ReviewPDF":"Show",
@@ -216,5 +216,6 @@
 "_smsReminderApproveAutomatic":"This is an automatic reminder that you haven't approved the document $documenttitle:noescape()$ from $creatorname$ yet. Follow the link for further instructions $link$",
 "_smsReminderAutomatic":"This is an automatic reminder that you haven't signed the document $documenttitle:noescape()$ from $creatorname$ yet. Follow the link for further instructions $link$",
 "_smsReminderSigned":"The signed document $documenttitle:noescape()$ has been resent to you at the request of $creatorname$. Find the document by following this link $link$",
-"_unavailableForSign":"The document is no longer available for signing"
+"_unavailableForSign":"The document is no longer available for signing",
+"_userGroup": "User Group"
 }

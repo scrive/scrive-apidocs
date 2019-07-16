@@ -18,6 +18,7 @@ var PAD_APP_MODE_OPTIONS = [
 
 var addressPropTypes = React.PropTypes.shape({
   companynumber: React.PropTypes.string.isRequired,
+  entityname: React.PropTypes.string.isRequired,
   address: React.PropTypes.string.isRequired,
   zip: React.PropTypes.string.isRequired,
   city: React.PropTypes.string.isRequired,
@@ -56,6 +57,7 @@ var DetailsEditorView = React.createClass({
           group_name: React.PropTypes.string.IsRequired
         })).isRequired,
     companynumber: React.PropTypes.string.isRequired,
+    entityname: React.PropTypes.string.isRequired,
     address: React.PropTypes.string.isRequired,
     zip: React.PropTypes.string.isRequired,
     city: React.PropTypes.string.isRequired,
@@ -88,6 +90,9 @@ var DetailsEditorView = React.createClass({
   },
   onNumberChange: function (event) {
     this.props.onFieldChange("companynumber", event.target.value);
+  },
+  onEntityNameChange: function (event) {
+    this.props.onFieldChange("entityname", event.target.value);
   },
   onAddressChange: function (event) {
     this.props.onFieldChange("address", event.target.value);
@@ -195,7 +200,7 @@ var DetailsEditorView = React.createClass({
       <table className="company-details-editor">
         <tbody>
           <tr>
-            <td><label>Company ID</label></td>
+            <td><label>User Group ID</label></td>
             <td>
               <input
                 name="companyId"
@@ -207,7 +212,7 @@ var DetailsEditorView = React.createClass({
             </td>
           </tr>
           <tr>
-            <td><label>Name</label></td>
+            <td><label>User Group Name</label></td>
             <td>
               <input
                 name="name"
@@ -272,7 +277,20 @@ var DetailsEditorView = React.createClass({
                       : this.props.companynumber }
                 disabled={this.props.addressIsInherited}
                 onChange={this.onNumberChange}
-
+              />
+            </td>
+          </tr>
+          <tr>
+            <td><label>Entity Name</label></td>
+            <td>
+              <input
+                name="entityname"
+                type="text"
+                value={ this.props.addressIsInherited
+                      ? this.props.inheritedAddress.entityname
+                      : this.props.entityname }
+                disabled={this.props.addressIsInherited}
+                onChange={this.onEntityNameChange}
               />
             </td>
           </tr>

@@ -81,6 +81,7 @@ kontraComposites = [
   , ctUserGroupSettings4
   , ctUserGroupUI
   , ctUserGroupAddress
+  , ctUserGroupAddress1
   ] ++ mailerComposites
 
 kontraDomains :: [Domain]

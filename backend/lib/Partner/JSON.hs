@@ -178,6 +178,7 @@ updateUserGroupWithUserGroupForUpdate ugwp UserGroupForUpdate{..} =
       old_address = ugwpAddress ugwp
       new_address = UserGroupAddress
         { _ugaCompanyNumber = uguUserGroupNumber
+        , _ugaEntityName    = uguUserGroupName
         , _ugaAddress       = uguUserGroupAddress
         , _ugaZip           = uguUserGroupZip
         , _ugaCity          = uguUserGroupCity
