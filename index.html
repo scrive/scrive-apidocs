@@ -481,10 +481,10 @@
             <a href="#user-group-2" class="toc-h1 toc-link" data-title="user-group">User Group</a>
               <ul class="toc-list-h2">
                   <li>
-                    <a href="#view-user-group" class="toc-h2 toc-link" data-title="view-user-group">View User Group</a>
+                    <a href="#create-user-group" class="toc-h2 toc-link" data-title="create-user-group">Create User Group</a>
                   </li>
                   <li>
-                    <a href="#create-user-group" class="toc-h2 toc-link" data-title="create-user-group">Create User Group</a>
+                    <a href="#view-user-group" class="toc-h2 toc-link" data-title="view-user-group">View User Group</a>
                   </li>
                   <li>
                     <a href="#update-user-group" class="toc-h2 toc-link" data-title="update-user-group">Update User Group</a>
@@ -1945,17 +1945,17 @@ Scrive eSign system returning errors.</p>
 </p>
 <h2 id='user-group'>User Group</h2>
 <p>
-<a href="#apiv2usergroups{user_group_id}">
+<a href="#apiv2usergroupscreate">
 <strong>
-<code class="operation-method operation-method-GET">GET  /api/v2/usergroups/{user_group_id}</code>
+<code class="operation-method operation-method-POST">POST  /api/v2/usergroups/create</code>
 </strong>
 </a>
 </p>
 
 <p>
-<a href="#apiv2usergroups{user_group_id}create">
+<a href="#apiv2usergroups{user_group_id}">
 <strong>
-<code class="operation-method operation-method-POST">POST  /api/v2/usergroups/{user_group_id}/create</code>
+<code class="operation-method operation-method-GET">GET  /api/v2/usergroups/{user_group_id}</code>
 </strong>
 </a>
 </p>
@@ -3766,6 +3766,63 @@ no signup request will be created.</p>
 </td> </tr>
 </table>
 <h1 id='user-group-2'>User Group</h1>
+<div><a id="apiv2usergroupscreate"></a></div>
+<h2 id='create-user-group'>Create User Group</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/usergroups/create</code>
+</strong>
+</p>
+
+<blockquote>
+<p>Example of JSON that could be passed in to create a User Group:</p>
+
+<p>The JSON is URL-encoded and passed in via the <code>usergroup</code> form data field.
+It is not necessary to minify the JSON, but also not prohibited.</p>
+</blockquote>
+<pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"New UG that's the child of user group 1"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+<blockquote>
+<p>For examples of the JSON output, see details of &quot;View User Group&quot;.</p>
+</blockquote>
+
+<p>This endpoint allows you to create a new User Group. When creating it, you
+have the option to set the User Group&#39;s name and to specify which other User
+Group it will be a child of.</p>
+
+<p>The JSON input must be passed, URL-encoded, via the <code>usergroup</code> form data
+field.</p>
+
+<p>You must set a <code>parent_id</code> since only internal Scrive admins are permitted
+to create root User Groups. In order to create a new child, you must have
+the requisite permissions upon the parent.</p>
+
+<p>A full User Group JSON response is returned which displays the state <em>after</em>
+the create operation has been performed. Performing <code>/update</code> and then
+using the <code>GET</code> endpoint should produce the same output both times.</p>
+<h3 id='parameters-44'>Parameters</h3>
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><p><code>usergroup</code><br/><em>required</em></p></td><td><p>JSON object containing the <code>name</code> and <code>parent_id</code> of the User Group to
+be created.</p>
+</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include-inheritable</code> to the URL to see a preview of which
+values can be inherited from an ancestor User Group.</p>
+</td><td><p>boolean</p></td><td>query</td></tr>
+</table>
+<h3 id='responses-49'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>JSON representation of a User Group.</p>
+</td> </tr>
+<tr> <td>403</td> <td><p>Insufficient Permissions error (this means that either no User Group
+exists with this ID or that you do not have permission to update it)</p>
+</td> </tr>
+</table>
+
 <div><a id="apiv2usergroups{user_group_id}"></a></div>
 <h2 id='view-user-group'>View User Group</h2>
 <p>
@@ -3778,16 +3835,16 @@ no signup request will be created.</p>
 <p>Example of a User Group without inheritable previews:</p>
 </blockquote>
 <pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
-  </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
-  </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"A Child Usergroup"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"children"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Some child user group"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Yet another child user group"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">],</span><span class="w">
@@ -3804,7 +3861,7 @@ no signup request will be created.</p>
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="s2">"contact_details"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
@@ -3819,16 +3876,16 @@ no signup request will be created.</p>
 <p>Example of a User Group with inheritable previews:</p>
 </blockquote>
 <pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
-  </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
-  </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"A Child Usergroup"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"children"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Some child user group"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Yet another child user group"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">],</span><span class="w">
@@ -3844,7 +3901,7 @@ no signup request will be created.</p>
       </span><span class="s2">"immediate_trash"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="s2">"inheritable_preview"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"data_retention_policy"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="s2">"idle_doc_timeout_preparation"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
         </span><span class="s2">"idle_doc_timeout_closed"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
@@ -3857,7 +3914,7 @@ no signup request will be created.</p>
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="s2">"contact_details"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
@@ -3866,7 +3923,7 @@ no signup request will be created.</p>
       </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sweden"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="s2">"inheritable_preview"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
         </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
@@ -3902,70 +3959,11 @@ append <code>?include-inheritable</code> to the URL when making the call. This w
 extra <code>inheritable_preview</code> subtrees to the objects which perform the
 inheritance calculation, ignoring whether or not the User Group already
 inherits.</p>
-<h3 id='parameters-44'>Parameters</h3>
+<h3 id='parameters-45'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
 <tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group you wish to view</p>
 </td><td><p>integer</p></td><td>path</td></tr>
-<tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include-inheritable</code> to the URL to see a preview of which
-values can be inherited from an ancestor User Group.</p>
-</td><td><p>boolean</p></td><td>query</td></tr>
-</table>
-<h3 id='responses-49'>Responses</h3>
-<table>
-<tr> <th>Code</th> <th>Description</th> </tr>
-<tr> <td>200</td> <td><p>JSON representation of a User Group.</p>
-</td> </tr>
-<tr> <td>403</td> <td><p>Insufficient Permissions error (this means that either no User Group
-exists with this ID or that you do not have permission to view it)</p>
-</td> </tr>
-</table>
-
-<div><a id="apiv2usergroups{user_group_id}create"></a></div>
-<h2 id='create-user-group'>Create User Group</h2>
-<p>
-<strong>
-<code class="operation-method operation-method-POST">POST  /api/v2/usergroups/{user_group_id}/create</code>
-</strong>
-</p>
-
-<blockquote>
-<p>Example of JSON that could be passed in to create a User Group:</p>
-
-<p>The JSON is URL-encoded and passed in via the <code>usergroup</code> form data field.
-It is not necessary to minify the JSON, but also not prohibited.</p>
-</blockquote>
-<pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
-  </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
-  </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"New UG that's the child of user group 1"</span><span class="w">
-</span><span class="p">}</span><span class="w">
-</span></code></pre>
-<blockquote>
-<p>For examples of the JSON output, see details of &quot;View User Group&quot;.</p>
-</blockquote>
-
-<p>This endpoint allows you to create a new User Group. When creating it, you
-have the option to set the User Group&#39;s name and to specify which other User
-Group it will be a child of.</p>
-
-<p>The JSON input must be passed, URL-encoded, via the <code>usergroup</code> form data
-field.</p>
-
-<p>You must set a <code>parent_id</code> since only internal Scrive admins are permitted
-to create root User Groups. In order to create a new child, you must have
-the requisite permissions upon the parent.</p>
-
-<p>A full User Group JSON response is returned which displays the state <em>after</em>
-the create operation has been performed. Performing <code>/update</code> and then
-using the <code>GET</code> endpoint should produce the same output both times.</p>
-<h3 id='parameters-45'>Parameters</h3>
-<table class="table-left-col-25">
-<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
-<tr><td><p><code>user_group_id</code><br/><em>required</em></p></td><td><p>The ID of the User Group you wish to update</p>
-</td><td><p>integer</p></td><td>path</td></tr>
-<tr><td><p><code>usergroup</code><br/><em>required</em></p></td><td><p>JSON object containing the <code>name</code> and <code>parent_id</code> of the User Group to
-be created.</p>
-</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
 <tr><td><p><code>include-inheritable</code><br/><em>optional</em></p></td><td><p>Append <code>?include-inheritable</code> to the URL to see a preview of which
 values can be inherited from an ancestor User Group.</p>
 </td><td><p>boolean</p></td><td>query</td></tr>
@@ -3976,7 +3974,7 @@ values can be inherited from an ancestor User Group.</p>
 <tr> <td>200</td> <td><p>JSON representation of a User Group.</p>
 </td> </tr>
 <tr> <td>403</td> <td><p>Insufficient Permissions error (this means that either no User Group
-exists with this ID or that you do not have permission to update it)</p>
+exists with this ID or that you do not have permission to view it)</p>
 </td> </tr>
 </table>
 
@@ -3995,7 +3993,7 @@ exists with this ID or that you do not have permission to update it)</p>
 It is not necessary to minify the JSON, but also not prohibited.</p>
 </blockquote>
 <pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
-  </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"UG that's now the child of user group 1"</span><span class="w">
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
@@ -4101,7 +4099,7 @@ by simply working up the tree, deleting the leaves.</p>
 <p>Example of a User Group Contact Details without inheritable previews:</p>
 </blockquote>
 <pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
-  </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
@@ -4142,7 +4140,7 @@ Details object):</p>
     </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Poland"</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="s2">"inheritable_preview"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
@@ -4159,7 +4157,7 @@ Details object):</p>
 <code>inheritable_preview</code> field is a duplicate):</p>
 </blockquote>
 <pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
-  </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
@@ -4168,7 +4166,7 @@ Details object):</p>
     </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sweden"</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="s2">"inheritable_preview"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
@@ -4249,8 +4247,8 @@ field. It is not necessary to minify the JSON, but also not prohibited.</p>
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <blockquote>
-<p>For examples of the JSON output, see details of &quot;View User Group Contact
-Details&quot;.</p>
+<p>For examples of the JSON output, see 
+<a href="#view-user-group-contact-details">View User Group Contact Details</a>.</p>
 </blockquote>
 
 <p>This endpoint allows you to update the User Group&#39;s <code>contact_details</code> object.</p>
@@ -4298,35 +4296,19 @@ exists with this ID or that you do not have permission to update it)</p>
 </p>
 
 <blockquote>
-<p>For examples of the JSON output, see details of &quot;View User Group Contact
-Details&quot;.</p>
+<p>For examples of the JSON output, see
+<a href="#view-user-group-contact-details">View User Group Contact Details</a>.</p>
 </blockquote>
 
 <p>This endpoint is used to delete a given User Group&#39;s <code>contact_details</code>
 object. This will cause the contact_details to be inherited rather than the
 User Group having its own dedicated contact_details object.</p>
 
-<p>As such, calling delete on a User Group that already inherits will be result
+<p>As such, calling delete on a User Group that already inherits will result
 in no operation being performed. Also, attempting to delete the
-contact_details object of a root User Group will result in an error for
-obvious reasons.</p>
+contact_details object of a root User Group will result in an error.</p>
 
-<p>Inheritance works as follows:</p>
-
-<p>Root User Groups (i.e. those who are not children of other User Groups) may
-not inherit since there are no ancestors to inherit from.</p>
-
-<p>A child User Group may inherit or have its own dedicated object. In the case
-that a User Group chooses to inherit the <code>contact_details</code> object, then that
-User Group will inherit from the closest direct ancestor with its own
-<code>contact_details</code> object. Since root User Groups cannot inherit, there will
-always be an ancestor from which a child can inherit.</p>
-
-<p>If you would like to see what a User Group <em>would</em> inherit then you can
-append <code>?include-inheritable</code> to the URL when making the call. This will add
-extra <code>inheritable_preview</code> subtrees to the objects which perform the
-inheritance calculation, ignoring whether or not the User Group already
-inherits.</p>
+<p>For more details on inheritance, see <a href="#view-user-group-contact-details">View User Group Contact Details</a>.</p>
 <h3 id='parameters-50'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -4359,7 +4341,7 @@ exists with this ID or that you do not have permission to view it)</p>
 <p>Example of a User Group Settings without inheritable previews:</p>
 </blockquote>
 <pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
-  </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"data_retention_policy"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="s2">"idle_doc_timeout_preparation"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
     </span><span class="s2">"idle_doc_timeout_closed"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
@@ -4405,7 +4387,7 @@ Group is a child with its own Settings object):</p>
     </span><span class="s2">"immediate_trash"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="s2">"inheritable_preview"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"data_retention_policy"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="s2">"idle_doc_timeout_preparation"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="s2">"idle_doc_timeout_closed"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
@@ -4424,7 +4406,7 @@ Group is a child which inherits, meaning that the  <code>inheritable_preview</co
 field is a duplicate):</p>
 </blockquote>
 <pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
-  </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"data_retention_policy"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="s2">"idle_doc_timeout_preparation"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
     </span><span class="s2">"idle_doc_timeout_closed"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
@@ -4435,7 +4417,7 @@ field is a duplicate):</p>
     </span><span class="s2">"immediate_trash"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="s2">"inheritable_preview"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"data_retention_policy"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="s2">"idle_doc_timeout_preparation"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
       </span><span class="s2">"idle_doc_timeout_closed"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
@@ -4513,8 +4495,8 @@ It is not necessary to minify the JSON, but also not prohibited.</p>
 </span><span class="p">}</span><span class="w">
 </span></code></pre>
 <blockquote>
-<p>For examples of the JSON output, see details of &quot;View User Group
-Settings&quot;.</p>
+<p>For examples of the JSON output, see 
+<a href="#view-user-group-settings">View User Group Settings</a>.</p>
 </blockquote>
 
 <p>This endpoint allows you to update the User Group&#39;s <code>settings</code> object.</p>
@@ -4561,34 +4543,19 @@ exists with this ID or that you do not have permission to update it)</p>
 </p>
 
 <blockquote>
-<p>For examples of the JSON output, see details of &quot;View User Group
-Settings&quot;.</p>
+<p>For examples of the JSON output, see
+<a href="#view-user-group-settings">View User Group Settings</a>.</p>
 </blockquote>
 
 <p>This endpoint is used to delete a given User Group&#39;s <code>settings</code> object. This
 will cause the settings to be inherited rather than the User Group having
 its own dedicated settings object.</p>
 
-<p>As such, calling delete on a User Group that already inherits will be result
+<p>As such, calling delete on a User Group that already inherits will result
 in no operation being performed. Also, attempting to delete the settings
-object of a root User Group will result in an error for obvious reasons.</p>
+object of a root User Group will result in an error.</p>
 
-<p>Inheritance works as follows:</p>
-
-<p>Root User Groups (i.e. those who are not children of other User Groups) may
-not inherit since there are no ancestors to inherit from.</p>
-
-<p>A child User Group may inherit or have its own dedicated object. In the case
-that a User Group chooses to inherit the <code>settings</code> object, then that User
-Group will inherit from the closest direct ancestor with its own
-<code>settings</code> object. Since root User Groups cannot inherit, there will
-always be an ancestor from which a child can inherit.</p>
-
-<p>If you would like to see what a User Group <em>would</em> inherit then you can
-append <code>?include-inheritable</code> to the URL when making the call. This will add
-extra <code>inheritable_preview</code> subtrees to the objects which perform the
-inheritance calculation, ignoring whether or not the User Group already
-inherits.</p>
+<p>For more details on inheritance, see <a href="#view-user-group-settings">View User Group Settings</a>.</p>
 <h3 id='parameters-53'>Parameters</h3>
 <table class="table-left-col-25">
 <tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
@@ -7758,16 +7725,16 @@ The list API call can filter based on document tags.</p>
 <blockquote>
 <h3 id='example-json-for-quot-usergroup-quot'>Example JSON: for &quot;UserGroup&quot;</h3></blockquote>
 <pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
-  </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
   </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"A Root Usergroup"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"children"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Some child user group"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Yet another child user group"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">],</span><span class="w">
@@ -7802,14 +7769,14 @@ The list API call can filter based on document tags.</p>
 
 <p>This object has the following properties:</p>
 
-<h4><code>id</code> (integer)</h4>
+<h4><code>id</code> (string)</h4>
 
 
 <div class="json-schema">
 
 </div>
 
-<h4><code>parent_id</code> (integer)</h4>
+<h4><code>parent_id</code> (string)</h4>
 
 <div class="json-schema">
 
@@ -7839,7 +7806,7 @@ The list API call can filter based on document tags.</p>
 
 <p>This object has the following properties:</p>
 
-<h6><code>id</code> (integer)</h6>
+<h6><code>id</code> (string)</h6>
 
 
 <div class="json-schema">
@@ -7865,7 +7832,7 @@ The list API call can filter based on document tags.</p>
 
 <p>The <code>settings</code> object has the following properties:</p>
 
-<h5><code>inherited_from</code> (integer)</h5>
+<h5><code>inherited_from</code> (string)</h5>
 
 
 <div class="json-schema">
@@ -7952,7 +7919,7 @@ The list API call can filter based on document tags.</p>
 
 <p>The <code>contact_details</code> object has the following properties:</p>
 
-<h5><code>inherited_from</code> (integer)</h5>
+<h5><code>inherited_from</code> (string)</h5>
 
 
 <div class="json-schema">
@@ -8009,16 +7976,16 @@ The list API call can filter based on document tags.</p>
 <blockquote>
 <h3 id='example-json-for-quot-usergroupwithinheritable-quot'>Example JSON: for &quot;UserGroupWithInheritable&quot;</h3></blockquote>
 <pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
-  </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
-  </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"A Child Usergroup"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"children"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Some child user group"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Yet another child user group"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">],</span><span class="w">
@@ -8034,7 +8001,7 @@ The list API call can filter based on document tags.</p>
       </span><span class="s2">"immediate_trash"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="s2">"inheritable_preview"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"data_retention_policy"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="s2">"idle_doc_timeout_preparation"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
         </span><span class="s2">"idle_doc_timeout_closed"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
@@ -8047,7 +8014,7 @@ The list API call can filter based on document tags.</p>
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="s2">"contact_details"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
@@ -8056,7 +8023,7 @@ The list API call can filter based on document tags.</p>
       </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sweden"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="s2">"inheritable_preview"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
         </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
@@ -8075,14 +8042,14 @@ The list API call can filter based on document tags.</p>
 
 <p>This object has the following properties:</p>
 
-<h4><code>id</code> (integer)</h4>
+<h4><code>id</code> (string)</h4>
 
 
 <div class="json-schema">
 
 </div>
 
-<h4><code>parent_id</code> (integer)</h4>
+<h4><code>parent_id</code> (string)</h4>
 
 <div class="json-schema">
 
@@ -8112,7 +8079,7 @@ The list API call can filter based on document tags.</p>
 
 <p>This object has the following properties:</p>
 
-<h6><code>id</code> (integer)</h6>
+<h6><code>id</code> (string)</h6>
 
 
 <div class="json-schema">
@@ -8138,7 +8105,7 @@ The list API call can filter based on document tags.</p>
 
 <p>The <code>settings</code> object has the following properties:</p>
 
-<h5><code>inherited_from</code> (integer)</h5>
+<h5><code>inherited_from</code> (string)</h5>
 
 
 <div class="json-schema">
@@ -8220,7 +8187,7 @@ The list API call can filter based on document tags.</p>
 
 <p>The <code>inheritable_preview</code> object has the following properties:</p>
 
-<h6><code>inherited_from</code> (integer)</h6>
+<h6><code>inherited_from</code> (string)</h6>
 
 
 <div class="json-schema">
@@ -8310,7 +8277,7 @@ Preview).</p>
 
 <p>The <code>contact_details</code> object has the following properties:</p>
 
-<h5><code>inherited_from</code> (integer)</h5>
+<h5><code>inherited_from</code> (string)</h5>
 
 
 <div class="json-schema">
@@ -8362,7 +8329,7 @@ Preview).</p>
 
 <p>The <code>inheritable_preview</code> object has the following properties:</p>
 
-<h6><code>inherited_from</code> (integer)</h6>
+<h6><code>inherited_from</code> (string)</h6>
 
 
 <div class="json-schema">
@@ -17431,16 +17398,16 @@ count of documents on different stages of the process</p>
 <blockquote>
 <h3 id='example-json-for-quot-usergroup-quot-2'>Example JSON: for &quot;UserGroup&quot;</h3></blockquote>
 <pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
-  </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
   </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"A Root Usergroup"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"children"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Some child user group"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Yet another child user group"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">],</span><span class="w">
@@ -17475,14 +17442,14 @@ count of documents on different stages of the process</p>
 
 <p>This object has the following properties:</p>
 
-<h3><code>id</code> (integer)</h3>
+<h3><code>id</code> (string)</h3>
 
 
 <div class="json-schema">
 
 </div>
 
-<h3><code>parent_id</code> (integer)</h3>
+<h3><code>parent_id</code> (string)</h3>
 
 <div class="json-schema">
 
@@ -17512,7 +17479,7 @@ count of documents on different stages of the process</p>
 
 <p>This object has the following properties:</p>
 
-<h5><code>id</code> (integer)</h5>
+<h5><code>id</code> (string)</h5>
 
 
 <div class="json-schema">
@@ -17538,7 +17505,7 @@ count of documents on different stages of the process</p>
 
 <p>The <code>settings</code> object has the following properties:</p>
 
-<h4><code>inherited_from</code> (integer)</h4>
+<h4><code>inherited_from</code> (string)</h4>
 
 
 <div class="json-schema">
@@ -17625,7 +17592,7 @@ count of documents on different stages of the process</p>
 
 <p>The <code>contact_details</code> object has the following properties:</p>
 
-<h4><code>inherited_from</code> (integer)</h4>
+<h4><code>inherited_from</code> (string)</h4>
 
 
 <div class="json-schema">
@@ -17680,16 +17647,16 @@ count of documents on different stages of the process</p>
 <blockquote>
 <h3 id='example-json-for-quot-usergroupwithinheritable-quot-2'>Example JSON: for &quot;UserGroupWithInheritable&quot;</h3></blockquote>
 <pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
-  </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="p">,</span><span class="w">
-  </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"parent_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"A Child Usergroup"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"children"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Some child user group"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"3"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Yet another child user group"</span><span class="w">
     </span><span class="p">}</span><span class="w">
   </span><span class="p">],</span><span class="w">
@@ -17705,7 +17672,7 @@ count of documents on different stages of the process</p>
       </span><span class="s2">"immediate_trash"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="s2">"inheritable_preview"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"data_retention_policy"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="s2">"idle_doc_timeout_preparation"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
         </span><span class="s2">"idle_doc_timeout_closed"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
@@ -17718,7 +17685,7 @@ count of documents on different stages of the process</p>
     </span><span class="p">}</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="s2">"contact_details"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
@@ -17727,7 +17694,7 @@ count of documents on different stages of the process</p>
       </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sweden"</span><span class="w">
     </span><span class="p">},</span><span class="w">
     </span><span class="s2">"inheritable_preview"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-      </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
         </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
         </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
@@ -17746,14 +17713,14 @@ count of documents on different stages of the process</p>
 
 <p>This object has the following properties:</p>
 
-<h3><code>id</code> (integer)</h3>
+<h3><code>id</code> (string)</h3>
 
 
 <div class="json-schema">
 
 </div>
 
-<h3><code>parent_id</code> (integer)</h3>
+<h3><code>parent_id</code> (string)</h3>
 
 <div class="json-schema">
 
@@ -17783,7 +17750,7 @@ count of documents on different stages of the process</p>
 
 <p>This object has the following properties:</p>
 
-<h5><code>id</code> (integer)</h5>
+<h5><code>id</code> (string)</h5>
 
 
 <div class="json-schema">
@@ -17809,7 +17776,7 @@ count of documents on different stages of the process</p>
 
 <p>The <code>settings</code> object has the following properties:</p>
 
-<h4><code>inherited_from</code> (integer)</h4>
+<h4><code>inherited_from</code> (string)</h4>
 
 
 <div class="json-schema">
@@ -17891,7 +17858,7 @@ count of documents on different stages of the process</p>
 
 <p>The <code>inheritable_preview</code> object has the following properties:</p>
 
-<h5><code>inherited_from</code> (integer)</h5>
+<h5><code>inherited_from</code> (string)</h5>
 
 
 <div class="json-schema">
@@ -17981,7 +17948,7 @@ Preview).</p>
 
 <p>The <code>contact_details</code> object has the following properties:</p>
 
-<h4><code>inherited_from</code> (integer)</h4>
+<h4><code>inherited_from</code> (string)</h4>
 
 
 <div class="json-schema">
@@ -18033,7 +18000,7 @@ Preview).</p>
 
 <p>The <code>inheritable_preview</code> object has the following properties:</p>
 
-<h5><code>inherited_from</code> (integer)</h5>
+<h5><code>inherited_from</code> (string)</h5>
 
 
 <div class="json-schema">
@@ -18109,7 +18076,7 @@ Preview).</p>
 
 <p>This object has the following properties:</p>
 
-<h3><code>inherited_from</code> (integer)</h3>
+<h3><code>inherited_from</code> (string)</h3>
 
 
 <div class="json-schema">
@@ -18223,7 +18190,7 @@ Preview).</p>
 
 <p>This object has the following properties:</p>
 
-<h3><code>inherited_from</code> (integer)</h3>
+<h3><code>inherited_from</code> (string)</h3>
 
 
 <div class="json-schema">
@@ -18305,7 +18272,7 @@ Preview).</p>
 
 <p>The <code>inheritable_preview</code> object has the following properties:</p>
 
-<h4><code>inherited_from</code> (integer)</h4>
+<h4><code>inherited_from</code> (string)</h4>
 
 
 <div class="json-schema">
@@ -18407,7 +18374,7 @@ Preview).</p>
 
 <p>This object has the following properties:</p>
 
-<h3><code>inherited_from</code> (integer)</h3>
+<h3><code>inherited_from</code> (string)</h3>
 
 
 <div class="json-schema">
@@ -18460,7 +18427,7 @@ Preview).</p>
 <blockquote>
 <h3 id='example-json-for-quot-usergroupcontactdetailswithinheritable-quot'>Example JSON: for &quot;UserGroupContactDetailsWithInheritable&quot;</h3></blockquote>
 <pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
-  </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
   </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
     </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
@@ -18469,7 +18436,7 @@ Preview).</p>
     </span><span class="s2">"country"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Sweden"</span><span class="w">
   </span><span class="p">},</span><span class="w">
   </span><span class="s2">"inheritable_preview"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
-    </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"inherited_from"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">,</span><span class="w">
     </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
       </span><span class="s2">"company_number"</span><span class="p">:</span><span class="w"> </span><span class="s2">"5568166804"</span><span class="p">,</span><span class="w">
       </span><span class="s2">"address"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Barnhusgatan 20"</span><span class="p">,</span><span class="w">
@@ -18488,7 +18455,7 @@ Preview).</p>
 
 <p>This object has the following properties:</p>
 
-<h3><code>inherited_from</code> (integer)</h3>
+<h3><code>inherited_from</code> (string)</h3>
 
 
 <div class="json-schema">
@@ -18540,7 +18507,7 @@ Preview).</p>
 
 <p>The <code>inheritable_preview</code> object has the following properties:</p>
 
-<h4><code>inherited_from</code> (integer)</h4>
+<h4><code>inherited_from</code> (string)</h4>
 
 
 <div class="json-schema">
