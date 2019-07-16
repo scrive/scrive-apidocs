@@ -13,10 +13,9 @@ post:
     object. This will cause the contact_details to be inherited rather than the
     User Group having its own dedicated contact_details object.
 
-    As such, calling delete on a User Group that already inherits will be result
+    As such, calling delete on a User Group that already inherits will result
     in no operation being performed. Also, attempting to delete the
-    contact_details object of a root User Group will result in an error for
-    obvious reasons.
+    contact_details object of a root User Group will result in an error.
 
     Inheritance works as follows:
 

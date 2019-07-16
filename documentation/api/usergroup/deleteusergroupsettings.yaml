@@ -13,9 +13,9 @@ post:
     will cause the settings to be inherited rather than the User Group having
     its own dedicated settings object.
 
-    As such, calling delete on a User Group that already inherits will be result
+    As such, calling delete on a User Group that already inherits will result
     in no operation being performed. Also, attempting to delete the settings
-    object of a root User Group will result in an error for obvious reasons.
+    object of a root User Group will result in an error.
 
     Inheritance works as follows:
 
