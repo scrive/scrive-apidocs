@@ -30,7 +30,7 @@ description: |
   JSON representation of a User Group's Settings (with Inheritable Preview).
 properties:
   inherited_from:
-    type: integer
+    type: string
   data_retention_policy:
     type: object
     properties:
@@ -64,7 +64,7 @@ properties:
     type: object
     properties:
       inherited_from:
-        type: integer
+        type: string
       data_retention_policy:
         type: object
         properties:

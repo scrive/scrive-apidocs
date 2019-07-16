@@ -3,16 +3,16 @@ $schema: "http://json-schema.org/draft-04/schema#"
 title: UserGroup
 type: object
 example: {
-  "id": 1,
+  "id": "1",
   "parent_id": null,
   "name": "A Root Usergroup",
   "children": [
     {
-      "id": 2,
+      "id": "2",
       "name": "Some child user group"
     },
     {
-      "id": 3,
+      "id": "3",
       "name": "Yet another child user group"
     }
   ],
@@ -43,9 +43,9 @@ description: |
   JSON representation of a User Group.
 properties:
   id:
-    type: integer
+    type: string
   parent_id:
-    type: integer
+    type: string
   name:
     type: string
   children:
@@ -55,7 +55,7 @@ properties:
       type: object
       properties:
         id:
-          type: integer
+          type: string
         name:
           type: string
   settings:

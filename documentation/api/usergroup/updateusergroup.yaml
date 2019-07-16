@@ -13,7 +13,7 @@ post:
 
     ```json
     {
-      "parent_id": 1,
+      "parent_id": "1",
       "name": "UG that's now the child of user group 1"
     }
     ```

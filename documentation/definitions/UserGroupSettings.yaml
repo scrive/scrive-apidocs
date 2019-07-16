@@ -18,7 +18,7 @@ description: |
   JSON representation of a User Group's Settings.
 properties:
   inherited_from:
-    type: integer
+    type: string
   data_retention_policy:
     type: object
     properties:
