@@ -992,11 +992,11 @@ paths:
 
   # User Group
 
+  /usergroups/create:
+    $ref: ./api/usergroup/createusergroup.yaml
+
   /usergroups/{user_group_id}:
     $ref: ./api/usergroup/getusergroup.yaml
-
-  /usergroups/{user_group_id}/create:
-    $ref: ./api/usergroup/createusergroup.yaml
 
   /usergroups/{user_group_id}/update:
     $ref: ./api/usergroup/updateusergroup.yaml

@@ -16,7 +16,7 @@ description: |
   JSON representation of a User Group's Contact Details.
 properties:
   inherited_from:
-    type: integer
+    type: string
   address:
     type: object
     properties:

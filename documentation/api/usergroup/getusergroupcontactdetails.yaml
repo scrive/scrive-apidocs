@@ -10,7 +10,7 @@ get:
 
     ```json
     {
-      "inherited_from": 1,
+      "inherited_from": "1",
       "address": {
         "company_number": "5568166804",
         "address": "Barnhusgatan 20",
@@ -53,7 +53,7 @@ get:
         "country": "Poland"
       },
       "inheritable_preview": {
-        "inherited_from": 1,
+        "inherited_from": "1",
         "address": {
           "company_number": "5568166804",
           "address": "Barnhusgatan 20",
@@ -71,7 +71,7 @@ get:
 
     ```json
     {
-      "inherited_from": 1,
+      "inherited_from": "1",
       "address": {
         "company_number": "5568166804",
         "address": "Barnhusgatan 20",
@@ -80,7 +80,7 @@ get:
         "country": "Sweden"
       },
       "inheritable_preview": {
-        "inherited_from": 1,
+        "inherited_from": "1",
         "address": {
           "company_number": "5568166804",
           "address": "Barnhusgatan 20",

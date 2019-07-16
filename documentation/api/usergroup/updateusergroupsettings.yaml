@@ -22,8 +22,8 @@ post:
     }
     ```
 
-    > For examples of the JSON output, see details of "View User Group
-    > Settings".
+    > For examples of the JSON output, see 
+    > [View User Group Settings](#view-user-group-settings).
 
     This endpoint allows you to update the User Group's `settings` object.
 
