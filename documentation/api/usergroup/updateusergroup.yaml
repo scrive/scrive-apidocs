@@ -66,7 +66,7 @@ post:
       in: formData
       type: boolean
       description: |
-        Append `?include-inheritable` to the URL to see a preview of which
+        Set to `true` to see a preview of which
         values can be inherited from an ancestor User Group.
       required: false
 
