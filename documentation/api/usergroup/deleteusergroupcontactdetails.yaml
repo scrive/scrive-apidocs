@@ -28,7 +28,7 @@ post:
         delete
       required: true
     - name: include-inheritable
-      in: query
+      in: formData
       type: boolean
       description: |
         Append `?include-inheritable` to the URL to see a preview of which
