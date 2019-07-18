@@ -330,7 +330,7 @@ asDirtyPassword input = checkIfEmpty input
 
 {- |
     Creates a clean and validated name (works for first or second)
-    White list: Letters, digits, spaces and hyphens
+    White list: Letters, digits, spaces, apostrophes and hyphens
     Size: Up to 100 chars
     Must match PATTERN_NAME in frontend code
 -}
@@ -338,7 +338,7 @@ asValidName :: String -> Result String
 asValidName input =
     stripWhitespace input
     >>= checkIfEmpty
-    >>= checkFormatWithSensitive False "^[- 0-9\\p{L}]{0,100}$"
+    >>= checkFormatWithSensitive False "^[- 0-9'\\p{L}]{0,100}$"
 
 {- |
     Barely validates company names.
