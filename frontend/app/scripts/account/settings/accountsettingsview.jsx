@@ -142,7 +142,7 @@ module.exports = React.createClass({
                 <td>
                   <InfoTextInput
                     ref="personalnumber"
-                    name="personalnumber"
+                    name="" // disable chrome's autofill
                     className={!model.personalnumberValid() ? "redborder" : ""}
                     value={model.personnumber()}
                     onChange={this.onPersonnumberChange}
