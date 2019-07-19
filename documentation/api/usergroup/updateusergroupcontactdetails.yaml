@@ -62,10 +62,10 @@ post:
       example: { "data_retention_policy": { "immediate_trash": false } }
       required: true
     - name: include-inheritable
-      in: query
+      in: formData
       type: boolean
       description: |
-        Append `?include-inheritable` to the URL to see a preview of which
+        Set to `true` to see a preview of which
         values can be inherited from an ancestor User Group.
       required: false
 
