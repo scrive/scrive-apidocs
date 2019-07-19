@@ -5,6 +5,7 @@ module API.V2.Utils
     , isApiAdmin
     , isApiSales
     , userGroupOrAPIError
+    , userGroupWithParentsOrAPIError
     ) where
 
 import Control.Monad.Catch
@@ -60,6 +61,16 @@ isApiSales ctx = case get ctxmaybeapiuser ctx of
 
 userGroupOrAPIError :: (MonadDB m, MonadThrow m) => UserGroupID -> m UserGroup
 userGroupOrAPIError ugid = dbQuery (UserGroupGet ugid) >>= \case
-  Nothing ->
-    apiError $ serverError "Impossible happened: No user group with ID, or deleted."
+  Nothing -> apiError $
+    serverError "Impossible happened: No user group with ID, or deleted."
   Just ug -> return ug
+
+userGroupWithParentsOrAPIError
+  :: (MonadDB m, MonadThrow m)
+  => UserGroupID
+  -> m UserGroupWithParents
+userGroupWithParentsOrAPIError ugid =
+  dbQuery (UserGroupGetWithParents ugid) >>= \case
+    Nothing -> apiError $
+      serverError "Impossible happened: No user group with ID, or deleted."
+    Just ugwp -> return ugwp

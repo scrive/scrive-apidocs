@@ -14,10 +14,11 @@ module UserGroup.API (
 ) where
 
 import Control.Monad.Extra (unlessM)
+import Data.Aeson
+import Data.Text
 import Data.Unjson
 import Happstack.Server.Types
 import Happstack.StaticRouting
-import qualified Text.JSON.Gen as J
 
 import AccessControl.Model
 import AccessControl.Types
@@ -59,15 +60,19 @@ userGroupAPIV2 = dir "usergroups" $ choice
   , param . dir "users" . hGet . toK1 $ userGroupApiUsersV2Get
   ]
 
+constructUserGroupResponse :: Kontrakcja m => Bool -> UserGroupID -> m Encoding
+constructUserGroupResponse inheritable ugid = do
+  ugwp <- userGroupWithParentsOrAPIError ugid
+  children <- dbQuery . UserGroupGetImmediateChildren . get ugID $ ugwpUG ugwp
+  return $ encodeUserGroup inheritable ugwp children
+
 userGroupApiV2Get :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiV2Get ugid = api $ do
   inheritable <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   -- Check user has permissions to view UserGroup
-  apiAccessControlOrIsAdmin [mkAccPolicyItem (ReadA, UserGroupR, ugid)] $ do
-    dbQuery (UserGroupGet ugid) >>= \case
-      Nothing ->
-        apiError $ serverError "Impossible happened: No user group with ID, or deleted."
-      Just ug -> Ok <$> constructUserGroupResponse ug inheritable
+  apiAccessControlOrIsAdmin [mkAccPolicyItem (ReadA, UserGroupR, ugid)] $
+    -- Return response
+    Ok <$> constructUserGroupResponse inheritable ugid
 
 userGroupApiV2Create :: Kontrakcja m => m Response
 userGroupApiV2Create = api $ do
@@ -89,7 +94,7 @@ userGroupApiV2Create = api $ do
       let acc = mkAccPolicyItem (CreateA, UserGroupR, parent_ugid)
       apiAccessControlOrIsAdmin [acc] . dbUpdate $ UserGroupCreate ugIn
   -- Return response
-  Ok <$> constructUserGroupResponse ugOut inheritable
+  Ok <$> constructUserGroupResponse inheritable (get ugID ugOut)
 
 userGroupApiV2Update :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiV2Update ugid = api $ do
@@ -133,47 +138,33 @@ userGroupApiV2Update ugid = api $ do
   let acc = mkAccPolicyItem (UpdateA, UserGroupR, ugid)
   apiAccessControlOrIsAdmin (acc:movementAccs) $ do
     dbUpdate $ UserGroupUpdate ugNew
-    dbQuery (UserGroupGet ugid) >>= \case
-      Nothing ->
-        apiError $ serverError "The UserGroup which was updated no longer exists."
-      Just ug' -> Ok <$> constructUserGroupResponse ug' inheritable
+    Ok <$> constructUserGroupResponse inheritable ugid
 
 userGroupApiV2Delete :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiV2Delete ugid = api $
   -- Check user has permissions to delete UserGroup
   apiAccessControlOrIsAdmin [mkAccPolicyItem (DeleteA, UserGroupR, ugid)] $ do
     ug <- userGroupOrAPIError ugid
+    let isRootUserGroup = isNothing . _ugParentGroupID
     when (isRootUserGroup ug) $
       -- Maybe Sales/Admin users should be allowed
-      -- Note: Current DB implementation causes causes DB error when deleting a root.
+      -- Note: Current DB implementation causes DB error when deleting a root.
       -- Will need to be fixed if we want to allow deletion of roots.
       apiError $ requestFailed "Root usergroups cannot be deleted."
     dbUpdate $ UserGroupDelete ugid
     dbUpdate $ AccessControlDeleteRolesByUserGroup ugid
-    return . Ok . J.runJSONGen $ do
-      J.value "id" $ show ugid
-      J.value "resource" ("usergroup" :: String)
-      J.value "action" ("deleted" :: String)
-        where
-          isRootUserGroup = isNothing . _ugParentGroupID
+    -- Return response
+    return . Ok . pairs $ "id"       .= show ugid
+                       <> "resource" .= ("usergroup" :: Text)
+                       <> "action"   .= ("deleted"   :: Text)
 
 userGroupApiContactDetailsV2Get :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiContactDetailsV2Get ugid = api $ do
   inheritable <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   -- Check user has permissions to view UserGroup
-  apiAccessControlOrIsAdmin [mkAccPolicyItem (ReadA, UserGroupR, ugid)] $ do
-    ug <- userGroupOrAPIError ugid
-    (inherited_from, ugAddr, inherit_preview) <- calculateAddressInheritance ug
-    if inheritable
-    then
-      Ok <$> return (
-        userGroupContactDetailsWithInheritableToResponse
-          inherited_from
-          ugAddr
-          inherit_preview
-        )
-    else
-      Ok <$> return (userGroupContactDetailsToResponse inherited_from ugAddr)
+  apiAccessControlOrIsAdmin [mkAccPolicyItem (ReadA, UserGroupR, ugid)] $
+    -- Return response
+    Ok . encodeUserGroupContactDetails inheritable <$> userGroupWithParentsOrAPIError ugid
 
 userGroupApiContactDetailsV2Update :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiContactDetailsV2Update ugid = api $ do
@@ -184,25 +175,13 @@ userGroupApiContactDetailsV2Update ugid = api $ do
     -- New address creation DOES NOT inherit, since people will want to start
     -- from a blank address.
     let ugAddr = fromMaybe defaultUserGroupAddress $ get ugAddress ug
-    ugAddrUpdated <- case updateUserGroupContactDetailsFromRequest ugAddr contactDetailsChanges of
-      Nothing -> apiError $ requestFailed "Error parsing address update object."
-      Just ugAddrUpdated -> return ugAddrUpdated
+    ugAddrUpdated <-
+      case updateUserGroupContactDetailsFromRequest ugAddr contactDetailsChanges of
+        Nothing -> apiError $ requestFailed "Error parsing address update object."
+        Just ugAddrUpdated -> return ugAddrUpdated
     dbUpdate . UserGroupUpdateAddress ugid $ Just ugAddrUpdated
-    dbQuery (UserGroupGet ugid) >>= \case
-      Nothing ->
-        apiError $ serverError "The UserGroup which was updated no longer exists."
-      Just ug' -> do
-        (inherited_from, ugAddr', inherit_preview) <- calculateAddressInheritance ug'
-        if inheritable
-        then
-          Ok <$> return (
-            userGroupContactDetailsWithInheritableToResponse
-              inherited_from
-              ugAddr'
-              inherit_preview
-            )
-        else
-          Ok <$> return (userGroupContactDetailsToResponse inherited_from ugAddr')
+    -- Return response
+    Ok . encodeUserGroupContactDetails inheritable <$> userGroupWithParentsOrAPIError ugid
 
 userGroupApiContactDetailsV2Delete :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiContactDetailsV2Delete ugid = api $ do
@@ -213,39 +192,15 @@ userGroupApiContactDetailsV2Delete ugid = api $ do
     when (isNothing $ _ugParentGroupID ug) $
       apiError $ requestFailed "A root usergroup must have an address object."
     dbUpdate $ UserGroupUpdateAddress ugid Nothing
-    dbQuery (UserGroupGet ugid) >>= \case
-      Nothing ->
-        apiError $ serverError "The UserGroup which was updated no longer exists."
-      Just ug' -> do
-        (inherited_from, ugAddr', inherit_preview) <- calculateAddressInheritance ug'
-        if inheritable
-        then
-          Ok <$> return (
-            userGroupContactDetailsWithInheritableToResponse
-              inherited_from
-              ugAddr'
-              inherit_preview
-            )
-        else
-          Ok <$> return (userGroupContactDetailsToResponse inherited_from ugAddr')
+    -- Return response
+    Ok . encodeUserGroupContactDetails inheritable <$> userGroupWithParentsOrAPIError ugid
 
 userGroupApiSettingsV2Get :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiSettingsV2Get ugid = api $ do
   inheritable <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"
   -- Check user has permissions to view UserGroup
-  apiAccessControlOrIsAdmin [mkAccPolicyItem (ReadA, UserGroupR, ugid)] $ do
-    ug <- userGroupOrAPIError ugid
-    (inherited_from, ugSett, inherit_preview) <- calculateSettingsInheritance ug
-    if inheritable
-    then
-      Ok <$> return (
-        userGroupSettingsWithInheritableToResponse
-          inherited_from
-          ugSett
-          inherit_preview
-        )
-    else
-      Ok <$> return (userGroupSettingsToResponse inherited_from ugSett)
+  apiAccessControlOrIsAdmin [mkAccPolicyItem (ReadA, UserGroupR, ugid)] $
+    Ok . encodeUserGroupSettings inheritable <$> userGroupWithParentsOrAPIError ugid
 
 userGroupApiSettingsV2Update :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiSettingsV2Update ugid = api $ do
@@ -272,21 +227,8 @@ userGroupApiSettingsV2Update ugid = api $ do
     dbUpdate . UserGroupUpdateSettings ugid . Just $ ugSett {
         _ugsDataRetentionPolicy = dataRetentionUpdated
       }
-    dbQuery (UserGroupGet ugid) >>= \case
-      Nothing ->
-        apiError $ serverError "The UserGroup which was updated no longer exists."
-      Just ug' -> do
-        (inherited_from, ugSett', inherit_preview) <- calculateSettingsInheritance ug'
-        if inheritable
-        then
-          Ok <$> return (
-            userGroupSettingsWithInheritableToResponse
-              inherited_from
-              ugSett'
-              inherit_preview
-            )
-        else
-          Ok <$> return (userGroupSettingsToResponse inherited_from ugSett')
+    -- Return response
+    Ok . encodeUserGroupSettings inheritable <$> userGroupWithParentsOrAPIError ugid
 
 userGroupApiSettingsV2Delete :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiSettingsV2Delete ugid = api $ do
@@ -297,81 +239,13 @@ userGroupApiSettingsV2Delete ugid = api $ do
     when (isNothing $ _ugParentGroupID ug) $
       apiError $ requestFailed "A root usergroup must have a settings object."
     dbUpdate $ UserGroupUpdateSettings ugid Nothing
-    dbQuery (UserGroupGet ugid) >>= \case
-      Nothing ->
-        apiError $ serverError "The UserGroup which was updated no longer exists."
-      Just ug' -> do
-        (inherited_from, ugSett', inherit_preview) <- calculateSettingsInheritance ug'
-        if inheritable
-        then
-          Ok <$> return (
-            userGroupSettingsWithInheritableToResponse
-              inherited_from
-              ugSett'
-              inherit_preview
-            )
-        else
-          Ok <$> return (userGroupSettingsToResponse inherited_from ugSett')
+    -- Return response
+    Ok . encodeUserGroupSettings inheritable <$> userGroupWithParentsOrAPIError ugid
 
 userGroupApiUsersV2Get :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiUsersV2Get ugid = api $ do
   -- Check user has permissions to view UserGroup
   apiAccessControlOrIsAdmin [mkAccPolicyItem (ReadA, UserGroupR, ugid)] $ do
     users <- dbQuery (UserGroupGetUsers ugid)
+    -- Return response
     Ok <$> return (arrayOf unjsonUser, users)
-
-constructUserGroupResponse
-  :: Kontrakcja m
-  => UserGroup
-  -> Bool
-  -> m (UnjsonDef UserGroupResponseJSON, UserGroupResponseJSON)
-constructUserGroupResponse ug showInheritPreview = do
-  ugAddr@(mugid_addr, addr, _) <- calculateAddressInheritance ug
-  ugSett@(mugid_sett, sett, _) <- calculateSettingsInheritance ug
-  let childMap = map (\child -> (get ugID child, get ugName child))
-  children <- fmap childMap . dbQuery . UserGroupGetImmediateChildren $ get ugID ug
-  if showInheritPreview
-  then
-    return $ userGroupWithInheritableToResponse ug ugAddr ugSett children
-  else
-    return $ userGroupToResponse ug (mugid_addr, addr) (mugid_sett, sett) children
-
-calculateAddressInheritance
-  :: Kontrakcja m
-  => UserGroup
-  -> m (Maybe UserGroupID, UserGroupAddress, Maybe (UserGroupID, UserGroupAddress))
-calculateAddressInheritance ug = do
-  m_inherit_preview <- case get ugParentGroupID ug of
-    Nothing -> return Nothing
-    Just parent_ugid -> dbQuery (UserGroupGetWithParents parent_ugid) >>= \case
-      Nothing -> return Nothing
-      Just ugwp -> return . Just $ ugwpAddressWithID ugwp
-  case (m_inherit_preview, get ugAddress ug) of
-    (Nothing, Nothing) ->
-      apiError $ requestFailed "Root User Group has no address object."
-    (inherit_preview@(Just (inherited_from, inherited_address)), Nothing) ->
-      return (Just inherited_from, inherited_address, inherit_preview)
-    (Nothing, Just ugAddr) ->
-      return (Nothing, ugAddr, Nothing)
-    (Just inherit_preview, Just ugAddr) ->
-      return (Nothing, ugAddr, Just inherit_preview)
-
-calculateSettingsInheritance
-  :: Kontrakcja m
-  => UserGroup
-  -> m (Maybe UserGroupID, UserGroupSettings, Maybe (UserGroupID, UserGroupSettings))
-calculateSettingsInheritance ug = do
-  m_inherit_preview <- case get ugParentGroupID ug of
-    Nothing -> return Nothing
-    Just parent_ugid -> dbQuery (UserGroupGetWithParents parent_ugid) >>= \case
-      Nothing -> return Nothing
-      Just ugwp -> return . Just $ ugwpSettingsWithID ugwp
-  case (m_inherit_preview, get ugSettings ug) of
-    (Nothing, Nothing) ->
-      apiError $ requestFailed "Root User Group has no settings object."
-    (inherit_preview@(Just (inherited_from, inherited_settings)), Nothing) ->
-      return (Just inherited_from, inherited_settings, inherit_preview)
-    (Nothing, Just ugSett) ->
-      return (Nothing, ugSett, Nothing)
-    (Just inherit_preview, Just ugSett) ->
-      return (Nothing, ugSett, Just inherit_preview)
