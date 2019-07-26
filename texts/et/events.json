@@ -20,7 +20,7 @@
 "_CancelDocumenElegEvidenceText":"Scrive lükkas tagasi $signatory$ katse dokumenti allkirjastada. Põhjuseks oli asjaolu, et $signatory$ isikuandmed ei vastanud välisest eID süsteemist hangitud isikuandmetele.",
 "_CancelDocumentEvidenceTextSimpleArchive":"Kutse dokumendi allkirjastamiseks võeti tagasi.",
 "_CloseDocumentEvidenceTextSimple":"Scrive lukustas dokumendi allkirjastajate poolt tehtavate muudatuste suhtes. ",
-"_ForwardedSigningEvidenceArchive":"",
+"_ForwardedSigningEvidenceArchive":"Dokument saadeti edasi kasutajale $signatory$.",
 "_InvitationDeliveredByEmailTextToApproveSimple":"Kutse dokumendi kinnitamiseks saadeti kasutajale $signatory$ e-maili teel.",
 "_InvitationDeliveredByEmailTextToReviewSimple":"Kutse dokumendi ülevaatamiseks saadeti kasutajale $signatory$ e-maili teel.",
 "_InvitationDeliveredByEmailTextToSignSimple":"Kutse dokumendi allkirjastamiseks saadeti kasutajale $signatory$ e-maili teel.",
