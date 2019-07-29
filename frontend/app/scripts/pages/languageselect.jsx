@@ -35,6 +35,7 @@ var _ = require("underscore");
         , {value : "lt", name : localization.languages.ltInLt}
         , {value : "cs", name : localization.languages.csInCs}
         , {value : "pl", name : localization.languages.plInPl}
+        , {value : "hu", name : localization.languages.huInHu}
       ],function(l) {return l.name;});
     },
     render: function() {

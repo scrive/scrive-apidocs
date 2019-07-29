@@ -321,6 +321,7 @@ javascriptLocalisation =
               , lt : "$_Lithuanian()$"
               , cs : "$_Czech()$"
               , pl : "$_Polish()$"
+              , hu : "$_Hungarian()$"
               , svInSv :"$SwedishInSwedish()$"
               , enInEn : "$EnglishInEnglish()$"
               , deInDe : "$GermanInGerman()$"
@@ -339,6 +340,7 @@ javascriptLocalisation =
               , ltInLt : "$LithuanianInLithuanian()$"
               , csInCs : "$CzechInCzech()$"
               , plInPl : "$PolishInPolish()$"
+              , huInHu : "$HungarianInHungarian()$"
             }
          , csv : {
                 title : "$_dialogCsvupload1Head()$"

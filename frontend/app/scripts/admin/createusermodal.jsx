@@ -211,6 +211,7 @@ module.exports = React.createClass({
                       <option value="lt">Lithuanian</option>
                       <option value="cs">Czech</option>
                       <option value="pl">Polish</option>
+                      <option value="hu">Hungarian</option>
                     </select>
                   </td>
                 </tr>

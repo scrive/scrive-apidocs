@@ -68,6 +68,8 @@ CzechInCzech=Čeština
 ###
 PolishInPolish=Polski
 ###
+HungarianInHungarian=Magyar
+###
 PoweredByScrive=E-signing powered by Scrive
 ###
 ### All the prices below are when paying yearly.

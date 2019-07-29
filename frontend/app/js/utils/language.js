@@ -12,7 +12,7 @@ var Language = exports.Language = {
        return localization.code;
     },
     allLanguagesCodes : function() {
-      return ["en","sv","de","fr","it","es","pt","nl","da","no","el","fi","is","et","lv","lt","cs","pl"];
+      return ["en","sv","de","fr","it","es","pt","nl","da","no","el","fi","is","et","lv","lt","cs","pl","hu"];
     },
     allLanguagesOptions : function() {
       return [
@@ -33,7 +33,8 @@ var Language = exports.Language = {
           {name: localization.languages.lvInLv, value: "lv"},
           {name: localization.languages.ltInLt, value: "lt"},
           {name: localization.languages.csInCs, value: "cs"},
-          {name: localization.languages.plInPl, value: "pl"}
+          {name: localization.languages.plInPl, value: "pl"},
+          {name: localization.languages.huInHu, value: "hu"}
         ];
     },
     changeForPageAndReload : function(code) {
