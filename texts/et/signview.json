@@ -208,7 +208,7 @@
 "_smsDocumentErrorSignatory":"Scrive ei suutnud dokumenti $documenttitle:noescape()$ hallata ja allkirjastamisprotsess tühistati. Küsimuste korral võtke meiega ühendust aadressil support@scrive.com",
 "_smsInvitationToSign":"$creatorname:noescape()$ on saatnud Teile kutse dokumendi $documenttitle:noescape()$ e-allkirjastamiseks. Klõpsake juhiste jaoks linki $link$",
 "_smsPinSendout":"Teie $documenttitle:noescape()$ PIN on $pin$",
-"_smsRejectNotification":"",
+"_smsRejectNotification":"$rejectorName$ keeldus dokumendi $documenttitle:noescape()$ allkirjastamisest. Allkirjastamisprotsess on seetõttu tühistatud.",
 "_smsReminder":"$creatorname$ on saatnud Teile meeldetuletuse dokumendi $documenttitle:noescape()$ allkirjastamiseks. Klõpsake juhiste jaoks linki $link$",
 "_smsReminderApprove":"$creatorname$ on saatnud Teile meeldetuletuse dokumendi $documenttitle:noescape()$ kinnitamiseks. Klõpsake juhiste jaoks linki $link$",
 "_smsReminderApproveAutomatic":"Tegu on automaatse meeldetuletusega, et Te pole kasutaja $creatorname$ dokumenti $documenttitle:noescape()$ veel kinnitanud. Klõpsake juhiste jaoks linki $link$",

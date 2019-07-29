@@ -646,6 +646,7 @@
 "_flashMessageTemplateArchiveDone":"Völdum sniðmátum hefur verið eytt.",
 "_flashMessageTemplateShareDone":"Völdum sniðmátum hefur verið deilt með fyrirtækinu þínu.",
 "_flashMessageTemplateUnshareDone":"Völdum sniðmátum hefur ekki verið deilt með fyrirtækinu þínu.",
+"_flashMessageTotpMustBeActivated":"",
 "_flashMessageUserAccountRequestExpired":"Boðshlekkurinn þinn er útrunninn. Vinsamlegast nýskráðu þig aftur.",
 "_flashMessageUserAccountRequestExpiredCompany":"Boðshlekkurinn þinn er útrunninn. Vinsamlegast hafðu samband við stjórnanda hjá fyrirtæki þínu til að fá nýjan virkjunartengil fyrir reikning.",
 "_flashMessageUserActivated":"Velkomin/n í Scrive!",

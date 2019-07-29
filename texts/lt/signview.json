@@ -208,7 +208,7 @@
 "_smsDocumentErrorSignatory":"„Scrive“ negalėjo apdoroti $documenttitle:noescape()$ dokumento, todėl pasirašymo eiga nutraukta. Jei kilo klausimų, susisiekite su mumis adresu support@scrive.com",
 "_smsInvitationToSign":"$creatorname:noescape()$ pasiūlė Jums el. parašu pasirašyti $documenttitle:noescape()$ dokumentą. Tolesnius nurodymus rasite šiuo saitu $link$",
 "_smsPinSendout":"Jūsų PIN $documenttitle:noescape()$ dokumentui yra $pin$",
-"_smsRejectNotification":"",
+"_smsRejectNotification":"$rejectorName$ atmetė pasiūlymą pasirašyti dokumentą $documenttitle:noescape()$. Todėl dokumento pasirašymo eiga nutraukta. ",
 "_smsReminder":"$creatorname$ primena Jums el. parašu pasirašyti $documenttitle:noescape()$ dokumentą. Tolesnius nurodymus rasite šiuo saitu $link$",
 "_smsReminderApprove":"$creatorname$ primena Jums patvirtinti $documenttitle:noescape()$ dokumentą. Tolesnius nurodymus rasite šiuo saitu $link$ ",
 "_smsReminderApproveAutomatic":"Tai automatinis priminimas, kad Jūs dar nepatvirtinote $documenttitle:noescape()$ dokumento, kurį atsiuntė $creatorname$. Tolesnius nurodymus rasite šiuo saitu $link$ ",

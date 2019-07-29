@@ -646,6 +646,7 @@
 "_flashMessageTemplateArchiveDone":"Os modelos seleccionados foram eliminados.",
 "_flashMessageTemplateShareDone":"Os modelos seleccionados foram partilhados com a sua organização.",
 "_flashMessageTemplateUnshareDone":"Os modelos seleccionados não foram partilhados com a sua organização.",
+"_flashMessageTotpMustBeActivated":"",
 "_flashMessageUserAccountRequestExpired":"A hiperligação do seu convite expirou. Inicie sessão novamente.",
 "_flashMessageUserAccountRequestExpiredCompany":"A hiperligação do seu convite expirou. Contacte um administrador da sua empresa para obter uma nova hiperligação para activação de conta.",
 "_flashMessageUserActivated":"Bem-vindo ao Scrive!",

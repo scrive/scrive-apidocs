@@ -208,7 +208,7 @@
 "_smsDocumentErrorSignatory":"Službě Scrive se nepodařilo zpracovat dokument $documenttitle:noescape()$ a postup podepisování byl zrušen. V případě jakýchkoliv dotazů nám napište na adresu support@scrive.com.",
 "_smsInvitationToSign":"Uživatel $creatorname:noescape()$ vás pozval k elektronickému podpisu dokumentu $documenttitle:noescape()$. Další pokyny naleznete na odkazu $link$",
 "_smsPinSendout":"Kód PIN pro dokument $documenttitle:noescape()$ je $pin$",
-"_smsRejectNotification":"",
+"_smsRejectNotification":"Uživatel $rejectorName$ odmítl podepsat dokument $documenttitle:noescape()$. Postup podepisování byl proto zrušen.",
 "_smsReminder":"Uživatel $creatorname$ vás chce upomenout k podpisu dokumentu $documenttitle:noescape()$. Další pokyny naleznete na odkazu $link$",
 "_smsReminderApprove":"Uživatel $creatorname$ vás chce upomenout ke schválení dokumentu $documenttitle:noescape()$. Další pokyny naleznete na odkazu $link$",
 "_smsReminderApproveAutomatic":"Toto je automatická upomínka. Připomíná, že jste ještě neschválili dokument $documenttitle:noescape()$ od uživatele $creatorname$. Další pokyny naleznete na odkazu $link$",

@@ -646,6 +646,7 @@
 "_flashMessageTemplateArchiveDone":"Die ausgewählten Vorlagen wurden gelöscht.",
 "_flashMessageTemplateShareDone":"Die ausgewählten Vorlagen wurden mit Ihrer Organisation geteilt.",
 "_flashMessageTemplateUnshareDone":"Die ausgewählten Vorlagen wurden für Ihre Organisation nicht freigegeben. ",
+"_flashMessageTotpMustBeActivated":"",
 "_flashMessageUserAccountRequestExpired":"Der Einladungslink ist abgelaufen. Bitte melden Sie sich erneut an. ",
 "_flashMessageUserAccountRequestExpiredCompany":"Der Einladungslink ist abgelaufen. Bitte kontaktieren Sie den Administrator Ihres Unternehmens, um einen neuen Konto-Aktivierungslink zu bekommen. ",
 "_flashMessageUserActivated":"Willkommen bei Scrive!",

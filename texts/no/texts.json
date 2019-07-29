@@ -646,6 +646,7 @@
 "_flashMessageTemplateArchiveDone":"De valgte malene har blitt slettet.",
 "_flashMessageTemplateShareDone":"De valgte malene har blitt delt med din organisasjon.",
 "_flashMessageTemplateUnshareDone":"De valgte malene deles ikke lenger med din organisasjon.",
+"_flashMessageTotpMustBeActivated":"",
 "_flashMessageUserAccountRequestExpired":"Invitasjonslenken din er utgått. Vennligst registrer deg på nytt.",
 "_flashMessageUserAccountRequestExpiredCompany":"Invitasjonslenken din er utgått. Vennligst ta kontakt med en administrator ved bedriften din for å få en ny aktiveringslenke.",
 "_flashMessageUserActivated":"Velkommen til Scrive!",

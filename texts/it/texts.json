@@ -646,6 +646,7 @@
 "_flashMessageTemplateArchiveDone":"I template selezionati sono stati eliminati.",
 "_flashMessageTemplateShareDone":"I modelli selezionati sono stati condivisi con la tua organizzazione.",
 "_flashMessageTemplateUnshareDone":"La condivisione dei modelli selezionati con la tua organizzazione è stata rimossa.",
+"_flashMessageTotpMustBeActivated":"",
 "_flashMessageUserAccountRequestExpired":"Il link del tuo invito è scaduto. Iscriviti di nuovo.",
 "_flashMessageUserAccountRequestExpiredCompany":"Il tuo link di invito è scaduto. Contatta un amministratore presso la tua azienda per ottenere un nuovo link di attivazione dell'account.",
 "_flashMessageUserActivated":"Benvenuto in Scrive!",

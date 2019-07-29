@@ -646,6 +646,7 @@
 "_flashMessageTemplateArchiveDone":"Wybrane szablony zostały usunięte.",
 "_flashMessageTemplateShareDone":"Wybrane szablony zostały udostępnione członkom Twojej organizacji.",
 "_flashMessageTemplateUnshareDone":"Wybrane szablony zostały wycofane z Twojej organizacji.",
+"_flashMessageTotpMustBeActivated":"",
 "_flashMessageUserAccountRequestExpired":"Link z zaproszeniem już wygasł. Zarejestruj się ponownie.",
 "_flashMessageUserAccountRequestExpiredCompany":"Link z zaproszeniem już wygasł. Skontaktuj się z administratorem w Twojej firmie, aby otrzymać nowy link do aktywacji konta.",
 "_flashMessageUserActivated":"Witaj w Scrive!",

@@ -646,6 +646,7 @@
 "_flashMessageTemplateArchiveDone":"Les modèles de documents sélectionnés ont été supprimés.",
 "_flashMessageTemplateShareDone":"Les modèles sélectionnés ont été partagés avec votre organisation.",
 "_flashMessageTemplateUnshareDone":"Les modèles sélectionnés n'ont pas été partagés avec votre organisation.",
+"_flashMessageTotpMustBeActivated":"Veuillez activer l'authentification à deux facteurs avant de continuer.",
 "_flashMessageUserAccountRequestExpired":"Votre lien d'invitation a expiré. Veuillez vous inscrire à nouveau.",
 "_flashMessageUserAccountRequestExpiredCompany":"Votre lien d'invitation a expiré. Veuillez contacter un administrateur de votre entreprise pour obtenir un nouveau lien d'activation de compte.",
 "_flashMessageUserActivated":"Bienvenue sur Scrive!",

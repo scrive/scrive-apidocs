@@ -646,6 +646,7 @@
 "_flashMessageTemplateArchiveDone":"Valitut mallit on poistettu.",
 "_flashMessageTemplateShareDone":"Valitut mallit on jaettu organisaatiollesi.",
 "_flashMessageTemplateUnshareDone":"Valitut mallit eivät ole enää saatavilla organisaatiollesi.",
+"_flashMessageTotpMustBeActivated":"",
 "_flashMessageUserAccountRequestExpired":"Kutsujesi linkki on vanhentunut. Ole hyvä ja rekisteröidy uudelleen.",
 "_flashMessageUserAccountRequestExpiredCompany":"Kutsujesi linkki on vanhentunut.  Ole hyvä ja ota yhteys yrityksesi administraattoriin saadaksesi uuden aktivointikoodin tilillesi.",
 "_flashMessageUserActivated":"Tervetuloa Scriveen!",

@@ -646,6 +646,7 @@
 "_flashMessageTemplateArchiveDone":"De valgte skabeloner er blevet slettet.",
 "_flashMessageTemplateShareDone":"De valgte skabeloner er blevet delt med din organisation.",
 "_flashMessageTemplateUnshareDone":"De valgte skabeloner deles ikke længere med din organisation.",
+"_flashMessageTotpMustBeActivated":"",
 "_flashMessageUserAccountRequestExpired":"Dit invitationslink er ikke længere gyldigt. Tilmeld dig venligst igen.",
 "_flashMessageUserAccountRequestExpiredCompany":"Din invitationslink er ikke længere gyldigt. Kontakt venligst en administrator i din virksomhed, så du kan modtage et nyt link.",
 "_flashMessageUserActivated":"Velkommen til Scrive!",

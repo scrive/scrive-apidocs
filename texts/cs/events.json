@@ -20,7 +20,7 @@
 "_CancelDocumenElegEvidenceText":"Služba Scrive zamítla pokus uživatele $signatory$ podepsat dokument. Důvodem je neshoda totožnosti uživatele $signatory$ s totožností získanou z externího systému eID.",
 "_CancelDocumentEvidenceTextSimpleArchive":"Pozvání k podpisu dokumentu bylo stornováno.",
 "_CloseDocumentEvidenceTextSimple":"Služba Scrive uzamkla dokument. Žádná z podepisujících stran už jej nemůže nijak upravovat.",
-"_ForwardedSigningEvidenceArchive":"",
+"_ForwardedSigningEvidenceArchive":"Dokument přeposlán uživateli $signatory$.",
 "_InvitationDeliveredByEmailTextToApproveSimple":"Uživateli $signatory$ byla e-mailem doručena pozvánka ke schválení dokumentu.",
 "_InvitationDeliveredByEmailTextToReviewSimple":"Uživateli $signatory$ byla e-mailem doručena pozvánka k revizi dokumentu.",
 "_InvitationDeliveredByEmailTextToSignSimple":"Uživateli $signatory$ byla e-mailem doručena pozvánka k podpisu dokumentu.",

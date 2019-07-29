@@ -646,6 +646,7 @@
 "_flashMessageTemplateArchiveDone":"Atzīmētās veidnes tika izdzēstas.",
 "_flashMessageTemplateShareDone":"Atzīmētās veidnes tika kopīgotas ar Jūsu organizāciju.",
 "_flashMessageTemplateUnshareDone":"Pārtraukta atzīmēto veidņu kopīgošana ar Jūsu organizāciju.",
+"_flashMessageTotpMustBeActivated":"",
 "_flashMessageUserAccountRequestExpired":"Uzaicinājuma saite vairs nav aktīva. Lūdzu, pierakstieties vēlreiz.",
 "_flashMessageUserAccountRequestExpiredCompany":"Uzaicinājuma saite vairs nav aktīva. Lūdzu, sazinieties ar Jūsu pārstāvētā uzņēmuma administratoru, lai saņemtu jaunu konta aktivizācijas saiti.",
 "_flashMessageUserActivated":"Sveicināti Scrive!",
