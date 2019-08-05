@@ -66,11 +66,14 @@ main = do
         extrasOptions = defaultExtrasOptions
     withPostgreSQL (unConnectionSource $ simpleSource pgSettings) $
       checkDatabaseAllowUnknownObjects extrasOptions [] [] messengerTables
-    cs@(ConnectionSource pool) <- ($ (maxConnectionTracker $ messengerMaxDBConnections conf))
-      <$> liftBase (createPoolSource pgSettings (messengerMaxDBConnections conf))
+    cs@(ConnectionSource pool) <-
+      ($ (maxConnectionTracker $ messengerMaxDBConnections conf))
+      <$> liftBase
+      (createPoolSource pgSettings (messengerMaxDBConnections conf))
 
     let cron = jobsWorker cs
-        sender = smsConsumer rng cs $ createSender $ sendersConfigFromMessengerConf conf
+        sender = smsConsumer rng cs $ createSender $
+                 sendersConfigFromMessengerConf conf
     E.bracket (startServer runLogger cs rng conf) (liftBase killThread) . const
       . finalize (localDomain "cron" $ runConsumer cron pool)
       . finalize (localDomain "sender" $ runConsumer sender pool) $ do
@@ -84,14 +87,18 @@ main = do
       -> MainM ThreadId
     startServer runLogger cs rng conf = do
       let (iface, port) = messengerHttpBindAddress conf
-          handlerConf = nullConf { port = fromIntegral port, logAccess = Nothing }
+          handlerConf = nullConf
+            { port      = fromIntegral port
+            , logAccess = Nothing }
       routes <- case R.compile handlers of
         Left e -> do
           logInfo "Error while compiling routes" $ object [
               "error" .= e
             ]
           unexpectedError "static routing"
-        Right r -> return $ r >>= maybe (notFound $ toResponse ("Not found."::String)) return
+        Right r ->
+          return $ r >>=
+          maybe (notFound $ toResponse ("Not found."::String)) return
       socket <- liftBase (listenOn (htonl iface) $ fromIntegral port)
       fork . liftBase . runReqHandlerT socket handlerConf . runLogger $
         router rng cs routes
@@ -102,20 +109,22 @@ main = do
       -> Sender
       -> ConsumerConfig MainM ShortMessageID ShortMessage
     smsConsumer rng (ConnectionSource pool) sender = ConsumerConfig {
-      ccJobsTable = "smses"
-    , ccConsumersTable = "messenger_workers"
-    , ccJobSelectors = smsSelectors
-    , ccJobFetcher = smsFetcher
-    , ccJobIndex = smID
+      ccJobsTable           = "smses"
+    , ccConsumersTable      = "messenger_workers"
+    , ccJobSelectors        = smsSelectors
+    , ccJobFetcher          = smsFetcher
+    , ccJobIndex            = smID
     , ccNotificationChannel = Just smsNotificationChannel
     , ccNotificationTimeout = 60 * 1000000 -- 1 minute
-    , ccMaxRunningJobs = 10
-    , ccProcessJob = \sms@ShortMessage{..} -> localData [identifier smID] . runCryptoRNGT rng $ do
-      logInfo_ "Sending sms"
-      withPostgreSQL pool $ sendSMS sender sms >>= \case
-        True  -> return $ Ok MarkProcessed
-        False -> Failed <$> sendoutFailed sms
-    , ccOnException = const sendoutFailed
+    , ccMaxRunningJobs      = 10
+    , ccProcessJob          =
+      \sms@ShortMessage{..} ->
+        localData [identifier smID] . runCryptoRNGT rng $ do
+        logInfo_ "Sending sms"
+        withPostgreSQL pool $ sendSMS sender sms >>= \case
+          True  -> return $ Ok MarkProcessed
+          False -> Failed <$> sendoutFailed sms
+    , ccOnException         = const sendoutFailed
     }
       where
         sendoutFailed ShortMessage{..} = do
@@ -132,22 +141,24 @@ main = do
       :: TrackedConnectionSource
       -> ConsumerConfig MainM JobType MessengerJob
     jobsWorker (ConnectionSource pool) = ConsumerConfig {
-      ccJobsTable = "messenger_jobs"
-    , ccConsumersTable = "messenger_workers"
-    , ccJobSelectors = messengerJobSelectors
-    , ccJobFetcher = messengerJobFetcher
-    , ccJobIndex = mjType
+      ccJobsTable           = "messenger_jobs"
+    , ccConsumersTable      = "messenger_workers"
+    , ccJobSelectors        = messengerJobSelectors
+    , ccJobFetcher          = messengerJobFetcher
+    , ccJobIndex            = mjType
     , ccNotificationChannel = Nothing
     , ccNotificationTimeout = 10 * 60 * 1000000 -- 10 minutes
-    , ccMaxRunningJobs = 1
-    , ccProcessJob = \MessengerJob{..} -> case mjType of
-      CleanOldSMSes -> do
-        let daylimit = 3
-        logInfo_ $ "Removing smses sent" <+> T.pack (show daylimit) <+> "days ago"
-        cleaned <- withPostgreSQL pool . dbUpdate $ CleanSMSesOlderThanDays daylimit
-        logInfo "Old smses removed" $ object [
-            "removed" .= cleaned
-          ]
-        Ok . RerunAt . nextDayMidnight <$> currentTime
-    , ccOnException = \_ _ -> return . RerunAfter $ ihours 1
+    , ccMaxRunningJobs      = 1
+    , ccProcessJob          =
+      \MessengerJob{..} ->
+       case mjType of
+        CleanOldSMSes -> do
+          let daylimit = 3
+          logInfo_ $ "Removing smses sent" <+>
+                     T.pack (show daylimit) <+> "days ago"
+          cleaned <- withPostgreSQL pool . dbUpdate $
+                     CleanSMSesOlderThanDays daylimit
+          logInfo "Old smses removed" $ object [ "removed" .= cleaned ]
+          Ok . RerunAt . nextDayMidnight <$> currentTime
+    , ccOnException         = \_ _ -> return . RerunAfter $ ihours 1
     }

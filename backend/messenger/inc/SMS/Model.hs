@@ -46,7 +46,8 @@ smsSelectors = [
   , "attempts"
   ]
 
-smsFetcher :: (ShortMessageID, SMSProvider, String, String, String, Int32) -> ShortMessage
+smsFetcher
+  :: (ShortMessageID, SMSProvider, String, String, String, Int32) -> ShortMessage
 smsFetcher (smsid, provider, originator, msisdn, body, attempts) = ShortMessage {
   smID         = smsid
 , smProvider   = provider
@@ -101,7 +102,9 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithSMSEvent Bool where
       sqlSet "event" ev
 
 data UpdateWithSMSEventForTeliaID = UpdateWithSMSEventForTeliaID String SMSEvent
-instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithSMSEventForTeliaID Bool where
+instance
+  (MonadDB m, MonadThrow m) =>
+  DBUpdate m UpdateWithSMSEventForTeliaID Bool where
   update (UpdateWithSMSEventForTeliaID tid ev) = do
     runQuery_ . sqlSelect "smses" $ do
       sqlWhereEq "telia_id" tid
@@ -112,7 +115,9 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithSMSEventForTeliaID Bo
       sqlSet "event" ev
 
 data UpdateWithSMSEventForMbloxID = UpdateWithSMSEventForMbloxID String SMSEvent
-instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithSMSEventForMbloxID Bool where
+instance
+  (MonadDB m, MonadThrow m) =>
+  DBUpdate m UpdateWithSMSEventForMbloxID Bool where
   update (UpdateWithSMSEventForMbloxID mlxid ev) = do
     runQuery_ . sqlSelect "smses" $ do
       sqlWhereEq "mblox_id" mlxid
@@ -123,7 +128,10 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithSMSEventForMbloxID Bo
       sqlSet "event" ev
 
 data GetUnreadSMSEvents = GetUnreadSMSEvents
-instance MonadDB m => DBQuery m GetUnreadSMSEvents [(SMSEventID, ShortMessageID, SMSEvent, String)] where
+instance
+  MonadDB m =>
+  DBQuery m GetUnreadSMSEvents
+  [(SMSEventID, ShortMessageID, SMSEvent, String)] where
   query GetUnreadSMSEvents = do
     runQuery_ . sqlSelect "sms_events" $ do
       sqlJoinOn "smses" "smses.id = sms_events.sms_id"
@@ -138,7 +146,9 @@ instance MonadDB m => DBQuery m GetUnreadSMSEvents [(SMSEventID, ShortMessageID,
     fetchMany id
 
 data MarkSMSEventAsRead = MarkSMSEventAsRead SMSEventID
-instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkSMSEventAsRead Bool where
+instance
+  (MonadDB m, MonadThrow m, MonadTime m) =>
+  DBUpdate m MarkSMSEventAsRead Bool where
   update (MarkSMSEventAsRead eid) = do
     now <- currentTime
     runQuery01 . sqlUpdate "sms_events" $ do

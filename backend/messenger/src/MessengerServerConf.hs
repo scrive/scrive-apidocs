@@ -69,9 +69,11 @@ instance Unjson MessengerServerConf where
 
 data SenderConfig = MbloxSender {
   mbToken          :: !String
-, mbURL            :: !String -- "https://api.mblox.com/xms/v1/{username}/batches"
+, mbURL            :: !String
+                      -- ^ "https://api.mblox.com/xms/v1/{username}/batches"
 } | TeliaCallGuideSender {
-  tcgSenderUrl      :: !String -- "https://sms.ace.teliacompany.com/smsplus/smsextended"
+  tcgSenderUrl      :: !String
+                    -- ^ "https://sms.ace.teliacompany.com/smsplus/smsextended"
 , tcgSenderUser     :: !String
 , tcgSenderPassword :: !String
 } | LocalSender {
@@ -81,7 +83,9 @@ data SenderConfig = MbloxSender {
 
 instance Unjson SenderConfig where
   unjsonDef = disjointUnionOf "type" [
-      ("mblox", $(isConstr 'MbloxSender), MbloxSender
+      ("mblox"
+      , $(isConstr 'MbloxSender)
+      , MbloxSender
         <$> field "token"
             mbToken
             "Mblox api token"
@@ -89,7 +93,9 @@ instance Unjson SenderConfig where
             mbURL
             "Mblox url, with username embedded"
       )
-    , ("telia_callguide", $(isConstr 'TeliaCallGuideSender), TeliaCallGuideSender
+    , ( "telia_callguide"
+      , $(isConstr 'TeliaCallGuideSender)
+      , TeliaCallGuideSender
         <$> field "url"
             tcgSenderUrl
             "URL for Telia CallGuide service"
@@ -100,12 +106,15 @@ instance Unjson SenderConfig where
             tcgSenderPassword
             "Password for Telia CallGuide service"
       )
-    , ("local", $(isConstr 'LocalSender), LocalSender
+    , ( "local"
+      , $(isConstr 'LocalSender)
+      , LocalSender
         <$> field "dir"
             localDirectory
             "Local directory to save 'sms' files"
         <*> fieldOpt "open"
             localOpenCommand
-            "Local open command to open 'eml' files ('/usr/bin/open', 'gnome-open', 'kde-open')"
+            "Local open command to open 'eml' files \
+            \('/usr/bin/open', 'gnome-open', 'kde-open')"
       )
     ]

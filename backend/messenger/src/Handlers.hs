@@ -29,7 +29,8 @@ router rng (ConnectionSource pool) routes = withPostgreSQL pool $ do
 handlers :: Route (Messenger Response)
 handlers = choice [
     hGet showHelloMessage
-  , dir "sms" $ dir "telia"       $ hPost $ withDecodedBody_ handleTeliaCallGuideEvents
+  , dir "sms" $ dir "telia"       $ hPost $
+                                    withDecodedBody_ handleTeliaCallGuideEvents
   , dir "sms" $ dir "mblox"       $ hPost handleMbloxEvents
   ]
   where
