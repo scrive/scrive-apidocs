@@ -213,6 +213,55 @@ ChangeAuthenticationToSignMethodSMSToStandardEvidenceLog=The user <span class="a
 ###
 ChangeAuthenticationToSignMethodSMSToSEBankIDEvidenceLog=The user <span class="actor"/> changed authentication to sign method for <span class="signatory"/> from “PIN by SMS” to “Swedish BankID”.
 ###
+ChangeAuthenticationToViewMethodVerimiToSMSPinEvidenceLog=The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Verimi” to “PIN by SMS”.
+###
+ChangeAuthenticationToViewMethodVerimiToSEBankIDEvidenceLog=The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Verimi” to “Swedish BankID”.
+###
+ChangeAuthenticationToViewMethodVerimiToNOBankIDEvidenceLog=The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Verimi” to “Norwegian BankID”.
+###
+ChangeAuthenticationToViewMethodVerimiToDKNemIDEvidenceLog=The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Verimi” to “Danish NemID”.
+###
+ChangeAuthenticationToViewMethodVerimiToFITupasEvidenceLog=The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Verimi” to “Finnish TUPAS”.
+###
+ChangeAuthenticationToViewMethodVerimiToStandardEvidenceLog=The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Verimi” to “no extra authentication”.
+###
+ChangeAuthenticationToViewMethodStandardToVerimiEvidenceLog=The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “no extra authentication” to “Verimi”.
+###
+ChangeAuthenticationToViewMethodSEBankIDToVerimiEvidenceLog=The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from Swedish BankID to “Verimi”.
+###
+ChangeAuthenticationToViewMethodNOBankIDToVerimeEvidenceLog=The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from Norwegian BankID to “Verimi”.
+###
+ChangeAuthenticationToViewMethodDKNemIDToVerimiEvidenceLog=The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Danish NemID” to “Verimi”.
+###
+ChangeAuthenticationToViewMethodFITupasToVerimiEvidenceLog=The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “Finnish TUPAS” to “Verimi”.
+###
+ChangeAuthenticationToViewMethodSMSPinToVerimiEvidenceLog=The user <span class="actor"/> changed authentication to view method for <span class="signatory"/> from “PIN by SMS” to “Verimi”.
+###
+ChangeAuthenticationToViewArchivedMethodVerimiToSMSPinEvidenceLog=The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “PIN by SMS” to “Verimi”.
+###
+ChangeAuthenticationToViewArchivedMethodVerimiToSEBankIDEvidenceLog=The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Verimi” to “Swedish BankID”.
+###
+ChangeAuthenticationToViewArchivedMethodVerimiToNOBankIDEvidenceLog=The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Verimi” to "Norwegian BankID".
+###
+ChangeAuthenticationToViewArchivedMethodVerimiToDKNemIDEvidenceLog=The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Verimi” to “Danish NemID”.
+###
+ChangeAuthenticationToViewArchivedMethodVerimiToFITupasEvidenceLog=The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Verimi” to “Finnish TUPAS”.
+###
+ChangeAuthenticationToViewArchivedMethodVerimiToStandardEvidenceLog=The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Verimi” to “no extra authentication”.
+###
+ChangeAuthenticationToViewArchivedMethodStandardToVerimiEvidenceLog=The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “no extra authentication” to “Verimi”.
+###
+ChangeAuthenticationToViewArchivedMethodSEBankIDToVerimiEvidenceLog=The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Swedish BankID” to “Verimi”.
+###
+ChangeAuthenticationToViewArchivedMethodNOBankIDToVerimeEvidenceLog=The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Norwegian BankID” to “Verimi”.
+###
+ChangeAuthenticationToViewArchivedMethodDKNemIDToVerimiEvidenceLog=The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Danish NemID” to “Verimi”.
+###
+ChangeAuthenticationToViewArchivedMethodFITupasToVerimiEvidenceLog=The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “Finnish TUPAS” to “Verimi”.
+###
+ChangeAuthenticationToViewArchivedMethodSMSPinToVerimiEvidenceLog=The user <span class="actor"/> changed authentication to view archived method for <span class="signatory"/> from “PIN by SMS” to “Verimi”.
+###
+###
 ###
 CloseDocumentEvidenceLog=Scrive eSign locked the document from further modifications by the parties.
 ###
@@ -751,6 +800,9 @@ elegVerificationAuth=
   $if(signatory_bank_name)$
   <br/>Bank: $signatory_bank_name$
   $endif$
+  $if(signatory_email)$
+  <br/>Email: $signatory_email$
+  $endif$
 </p>
 <br/>
 $if(signature)$
@@ -760,7 +812,7 @@ $if(ocsp_response)$
 <p>Online Certificate Status Protocol (OCSP) Response: <div>$ocsp_response$</div></p>
 $endif$
 ###
-provider=$if(provider_sebankid)$CGI$elseif(provider_nobankid)$Nets$elseif(provider_dknemid)$Nets$elseif(provider_fitupas)$Nets$endif$
+provider=$if(provider_sebankid)$CGI$elseif(provider_nobankid)$Nets$elseif(provider_dknemid)$Nets$elseif(provider_fitupas)$Nets$elseif(provider_verimi)$Verimi$endif$
 ###
 providerType=$if(provider_sebankid)$Swedish BankID$elseif(provider_nobankid)$Norwegian BankID$elseif(provider_dknemid)$Danish NemID$elseif(provider_fitupas)$Finnish TUPAS$endif$
 ###
@@ -775,6 +827,8 @@ $elseif(provider_fitupas)$
   $_AuthenticatedToViewEvidenceArchiveFITupas()$
 $elseif(provider_sms_pin)$
   $_AuthenticatedToViewEvidenceArchiveSMSPin()$
+$elseif(provider_verimi)$
+  $_AuthenticatedToViewEvidenceArchiveVerimi()$
 $endif$
 ###
 UpdateMobileAfterIdentificationToViewWithNetsLog=The party <span class="signatory"/> wrote the number "$oldphone$" in the field "Mobile". Scrive eSign changed it from "$oldphone$" to "$newphone$".

@@ -483,6 +483,8 @@ var EmailModal = require("../../common/email_modal");
         return localization.docview.signatory.authenticationToViewFITupas;
       } else if (signatory.smsPinAuthenticationToView()) {
         return localization.docview.signatory.authenticationToViewSMSPin;
+      } else if (signatory.verimiAuthenticationToView()) {
+        return localization.docview.signatory.authenticationToViewVerimi;
       }
     },
 
@@ -500,6 +502,8 @@ var EmailModal = require("../../common/email_modal");
         return localization.docview.signatory.authenticationToViewFITupas;
       } else if (signatory.smsPinAuthenticationToViewArchived()) {
         return localization.docview.signatory.authenticationToViewSMSPin;
+      } else if (signatory.verimiAuthenticationToViewArchived()) {
+        return localization.docview.signatory.authenticationToViewVerimi;
       }
     },
 

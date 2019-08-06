@@ -82,6 +82,7 @@ unjsonAuthenticationToViewMethod = unjsonEnumBy "AuthenticationToViewMethod" [
     , (DKNemIDAuthenticationToView,  "dk_nemid")
     , (FITupasAuthenticationToView,  "fi_tupas")
     , (SMSPinAuthenticationToView,   "sms_pin")
+    , (VerimiAuthenticationToView,   "verimi")
     ]
 
 unjsonAuthenticationToSignMethod :: UnjsonDef AuthenticationToSignMethod

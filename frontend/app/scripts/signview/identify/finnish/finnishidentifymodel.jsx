@@ -44,6 +44,9 @@ var link = link;
     isSMSPin: function () {
       return false;
     },
+    isVerimi: function () {
+      return false;
+    },
     isIdentify: function () {
       return this.get("step") === "identify";
     },

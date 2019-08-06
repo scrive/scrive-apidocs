@@ -8,6 +8,7 @@ module EID.Authentication.Model (
   , MergeNetsDKNemIDAuthentication(..)
   , MergeNetsFITupasAuthentication(..)
   , MergeSMSPinAuthentication(..)
+  , MergeEIDServiceVerimiAuthentication(..)
   , GetEAuthentication(..)
   , GetEAuthenticationWithoutSession(..)
   ) where
@@ -23,6 +24,7 @@ import DB
 import Doc.SignatoryLinkID
 import Doc.Types.SignatoryLink
 import EID.CGI.GRP.Types
+import EID.EIDService.Types
 import EID.Nets.Types
 import Session.SessionID
 
@@ -39,6 +41,7 @@ data EAuthentication
   | NetsDKNemIDAuthentication_ !NetsDKNemIDAuthentication
   | NetsFITupasAuthentication_ !NetsFITupasAuthentication
   | SMSPinAuthentication_ T.Text -- param is a phone number
+  | EIDServiceVerimiAuthentication_ !EIDServiceVerimiAuthentication
 
 ----------------------------------------
 
@@ -52,6 +55,7 @@ data AuthenticationProvider
   | NetsDKNemID
   | SMSPinAuth
   | NetsFITupas
+  | VerimiAuth
     deriving (Eq, Ord, Show)
 
 instance PQFormat AuthenticationProvider where
@@ -67,8 +71,9 @@ instance FromSQL AuthenticationProvider where
       3 -> return NetsDKNemID
       4 -> return SMSPinAuth
       5 -> return NetsFITupas
+      6 -> return VerimiAuth
       _ -> throwM RangeError {
-        reRange = [(1, 5)]
+        reRange = [(1, 6)]
       , reValue = n
       }
 
@@ -79,6 +84,7 @@ instance ToSQL AuthenticationProvider where
   toSQL NetsDKNemID  = toSQL (3::Int16)
   toSQL SMSPinAuth   = toSQL (4::Int16)
   toSQL NetsFITupas  = toSQL (5::Int16)
+  toSQL VerimiAuth   = toSQL (6::Int16)
 
 ----------------------------------------
 
@@ -157,6 +163,16 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsFITupasAuthentication (
         sqlSet "signatory_name" netsFITupasSignatoryName
         sqlSet "signatory_date_of_birth" netsFITupasDateOfBirth
 
+-- | Insert Verimi authentication for a given signatory or replace the existing one.
+data MergeEIDServiceVerimiAuthentication = MergeEIDServiceVerimiAuthentication AuthenticationKind SessionID SignatoryLinkID EIDServiceVerimiAuthentication
+instance (MonadDB m, MonadMask m) => DBUpdate m MergeEIDServiceVerimiAuthentication () where
+  update (MergeEIDServiceVerimiAuthentication authKind sid slid EIDServiceVerimiAuthentication{..}) = do
+    dbUpdate $ MergeAuthenticationInternal authKind sid slid $ do
+        sqlSet "provider" VerimiAuth
+        sqlSet "signatory_name" eidServiceVerimiName
+        sqlSet "signatory_email" eidServiceVerimiVerifiedEmail
+        sqlSet "signatory_phone_number" eidServiceVerimiVerifiedPhone
+
 -- Get authentication - internal - just to unify code
 data GetEAuthenticationInternal = GetEAuthenticationInternal AuthenticationKind SignatoryLinkID (Maybe SessionID)
 instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthenticationInternal (Maybe EAuthentication) where
@@ -171,6 +187,7 @@ instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthenticationInternal (Mayb
       sqlResult "signatory_date_of_birth"
       sqlResult "ocsp_response"
       sqlResult "signatory_ip"
+      sqlResult "signatory_email"
       sqlWhereEq "signatory_link_id" slid
       sqlWhereEq "auth_kind" authKind
       F.forM_ msid $ sqlWhereEq "session_id"
@@ -186,8 +203,8 @@ data GetEAuthentication = GetEAuthentication AuthenticationKind SessionID Signat
 instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthentication (Maybe EAuthentication) where
   query (GetEAuthentication authKind sid slid) = query (GetEAuthenticationInternal authKind slid (Just sid) )
 
-fetchEAuthentication :: (AuthenticationProvider, (Maybe Int16), Maybe ByteString, Maybe T.Text, Maybe T.Text, Maybe T.Text, Maybe T.Text, Maybe ByteString, Maybe T.Text) -> EAuthentication
-fetchEAuthentication (provider, internal_provider, msignature, msignatory_name, signatory_personal_number, signatory_phone_number, signatory_dob, ocsp_response, msignatory_ip) = case provider of
+fetchEAuthentication :: (AuthenticationProvider, (Maybe Int16), Maybe ByteString, Maybe T.Text, Maybe T.Text, Maybe T.Text, Maybe T.Text, Maybe ByteString, Maybe T.Text, Maybe T.Text) -> EAuthentication
+fetchEAuthentication (provider, internal_provider, msignature, msignatory_name, signatory_personal_number, signatory_phone_number, signatory_dob, ocsp_response, msignatory_ip, signatory_email) = case provider of
   CgiGrpBankID -> CGISEBankIDAuthentication_ CGISEBankIDAuthentication {
     cgisebidaSignatoryName = fromJust msignatory_name
   , cgisebidaSignatoryPersonalNumber = fromJust signatory_personal_number
@@ -212,4 +229,9 @@ fetchEAuthentication (provider, internal_provider, msignature, msignatory_name, 
   NetsFITupas -> NetsFITupasAuthentication_ NetsFITupasAuthentication {
     netsFITupasSignatoryName = fromJust msignatory_name
   , netsFITupasDateOfBirth   = fromJust signatory_dob
+  }
+  VerimiAuth -> EIDServiceVerimiAuthentication_ EIDServiceVerimiAuthentication {
+    eidServiceVerimiName           = fromJust msignatory_name
+  , eidServiceVerimiVerifiedEmail  = signatory_email
+  , eidServiceVerimiVerifiedPhone  = signatory_phone_number
   }

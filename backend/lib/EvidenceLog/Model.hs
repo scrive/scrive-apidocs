@@ -423,7 +423,31 @@ data CurrentEvidenceEventType =
   ForwardedSigningEvidence |
   ConfirmationDeliveredByEmail |
   ConfirmationUndeliveredByEmail |
-  CustomEventEvidence
+  CustomEventEvidence |
+  ChangeAuthenticationToViewMethodVerimiToSMSPinEvidence |
+  ChangeAuthenticationToViewMethodVerimiToSEBankIDEvidence |
+  ChangeAuthenticationToViewMethodVerimiToNOBankIDEvidence |
+  ChangeAuthenticationToViewMethodVerimiToDKNemIDEvidence |
+  ChangeAuthenticationToViewMethodVerimiToFITupasEvidence |
+  ChangeAuthenticationToViewMethodStandardToVerimiEvidence |
+  ChangeAuthenticationToViewMethodSEBankIDToVerimiEvidence |
+  ChangeAuthenticationToViewMethodNOBankIDToVerimeEvidence |
+  ChangeAuthenticationToViewMethodDKNemIDToVerimiEvidence |
+  ChangeAuthenticationToViewMethodFITupasToVerimiEvidence |
+  ChangeAuthenticationToViewMethodVerimiToStandardEvidence |
+  ChangeAuthenticationToViewMethodSMSPinToVerimiEvidence |
+  ChangeAuthenticationToViewArchivedMethodVerimiToSMSPinEvidence |
+  ChangeAuthenticationToViewArchivedMethodVerimiToSEBankIDEvidence |
+  ChangeAuthenticationToViewArchivedMethodVerimiToNOBankIDEvidence |
+  ChangeAuthenticationToViewArchivedMethodVerimiToDKNemIDEvidence |
+  ChangeAuthenticationToViewArchivedMethodVerimiToFITupasEvidence |
+  ChangeAuthenticationToViewArchivedMethodStandardToVerimiEvidence |
+  ChangeAuthenticationToViewArchivedMethodSEBankIDToVerimiEvidence |
+  ChangeAuthenticationToViewArchivedMethodNOBankIDToVerimeEvidence |
+  ChangeAuthenticationToViewArchivedMethodDKNemIDToVerimiEvidence |
+  ChangeAuthenticationToViewArchivedMethodFITupasToVerimiEvidence |
+  ChangeAuthenticationToViewArchivedMethodVerimiToStandardEvidence |
+  ChangeAuthenticationToViewArchivedMethodSMSPinToVerimiEvidence
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -695,6 +719,32 @@ instance ToSQL EvidenceEventType where
   toSQL (Current ConfirmationDeliveredByEmail                                    ) = toSQL (195::Int16)
   toSQL (Current ConfirmationUndeliveredByEmail                                  ) = toSQL (196::Int16)
   toSQL (Current CustomEventEvidence                                             ) = toSQL (197::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodVerimiToSMSPinEvidence          ) = toSQL (198::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodVerimiToSEBankIDEvidence        ) = toSQL (199::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodVerimiToNOBankIDEvidence        ) = toSQL (200::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodVerimiToDKNemIDEvidence         ) = toSQL (201::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodVerimiToFITupasEvidence         ) = toSQL (202::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodStandardToVerimiEvidence        ) = toSQL (203::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodSEBankIDToVerimiEvidence        ) = toSQL (204::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodNOBankIDToVerimeEvidence        ) = toSQL (205::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodDKNemIDToVerimiEvidence         ) = toSQL (206::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodFITupasToVerimiEvidence         ) = toSQL (207::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodVerimiToStandardEvidence        ) = toSQL (208::Int16)
+  toSQL (Current ChangeAuthenticationToViewMethodSMSPinToVerimiEvidence          ) = toSQL (209::Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedMethodVerimiToSMSPinEvidence   ) = toSQL (210::Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedMethodVerimiToSEBankIDEvidence ) = toSQL (211::Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedMethodVerimiToNOBankIDEvidence ) = toSQL (212::Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedMethodVerimiToDKNemIDEvidence  ) = toSQL (213::Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedMethodVerimiToFITupasEvidence  ) = toSQL (214::Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedMethodStandardToVerimiEvidence ) = toSQL (215::Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedMethodSEBankIDToVerimiEvidence ) = toSQL (216::Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedMethodNOBankIDToVerimeEvidence ) = toSQL (217::Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedMethodDKNemIDToVerimiEvidence  ) = toSQL (218::Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedMethodFITupasToVerimiEvidence  ) = toSQL (219::Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedMethodVerimiToStandardEvidence ) = toSQL (220::Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedMethodSMSPinToVerimiEvidence   ) = toSQL (221::Int16)
+
+
 
 instance FromSQL EvidenceEventType where
   type PQBase EvidenceEventType = PQBase Int16
@@ -898,49 +948,87 @@ instance FromSQL EvidenceEventType where
       195 -> return (Current ConfirmationDeliveredByEmail)
       196 -> return (Current ConfirmationUndeliveredByEmail)
       197 -> return (Current CustomEventEvidence                                             )
+      198 -> return (Current ChangeAuthenticationToViewMethodVerimiToSMSPinEvidence)
+      199 -> return (Current ChangeAuthenticationToViewMethodVerimiToSEBankIDEvidence)
+      200 -> return (Current ChangeAuthenticationToViewMethodVerimiToNOBankIDEvidence)
+      201 -> return (Current ChangeAuthenticationToViewMethodVerimiToDKNemIDEvidence)
+      202 -> return (Current ChangeAuthenticationToViewMethodVerimiToFITupasEvidence)
+      203 -> return (Current ChangeAuthenticationToViewMethodStandardToVerimiEvidence)
+      204 -> return (Current ChangeAuthenticationToViewMethodSEBankIDToVerimiEvidence)
+      205 -> return (Current ChangeAuthenticationToViewMethodNOBankIDToVerimeEvidence)
+      206 -> return (Current ChangeAuthenticationToViewMethodDKNemIDToVerimiEvidence)
+      207 -> return (Current ChangeAuthenticationToViewMethodFITupasToVerimiEvidence)
+      208 -> return (Current ChangeAuthenticationToViewMethodVerimiToStandardEvidence)
+      209 -> return (Current ChangeAuthenticationToViewMethodSMSPinToVerimiEvidence)
+      210 -> return (Current ChangeAuthenticationToViewArchivedMethodVerimiToSMSPinEvidence)
+      211 -> return (Current ChangeAuthenticationToViewArchivedMethodVerimiToSEBankIDEvidence)
+      212 -> return (Current ChangeAuthenticationToViewArchivedMethodVerimiToNOBankIDEvidence)
+      213 -> return (Current ChangeAuthenticationToViewArchivedMethodVerimiToDKNemIDEvidence)
+      214 -> return (Current ChangeAuthenticationToViewArchivedMethodVerimiToFITupasEvidence)
+      215 -> return (Current ChangeAuthenticationToViewArchivedMethodStandardToVerimiEvidence)
+      216 -> return (Current ChangeAuthenticationToViewArchivedMethodSEBankIDToVerimiEvidence)
+      217 -> return (Current ChangeAuthenticationToViewArchivedMethodNOBankIDToVerimeEvidence)
+      218 -> return (Current ChangeAuthenticationToViewArchivedMethodDKNemIDToVerimiEvidence)
+      219 -> return (Current ChangeAuthenticationToViewArchivedMethodFITupasToVerimiEvidence)
+      220 -> return (Current ChangeAuthenticationToViewArchivedMethodVerimiToStandardEvidence)
+      221 -> return (Current ChangeAuthenticationToViewArchivedMethodSMSPinToVerimiEvidence)
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 197)]
+        reRange = [(1, 221)]
       , reValue = n
       }
 
 
 authViewChangeToEvidence :: (AuthenticationToViewMethod, AuthenticationToViewMethod) -> Maybe CurrentEvidenceEventType
 authViewChangeToEvidence (StandardAuthenticationToView, StandardAuthenticationToView) = Nothing
-authViewChangeToEvidence (StandardAuthenticationToView, SMSPinAuthenticationToView )  = Just ChangeAuthenticationToViewMethodStandardToSMSPinEvidence
+authViewChangeToEvidence (StandardAuthenticationToView, SMSPinAuthenticationToView)   = Just ChangeAuthenticationToViewMethodStandardToSMSPinEvidence
 authViewChangeToEvidence (StandardAuthenticationToView, SEBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodStandardToSEBankIDEvidence
 authViewChangeToEvidence (StandardAuthenticationToView, NOBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodStandardToNOBankIDEvidence
-authViewChangeToEvidence (StandardAuthenticationToView, DKNemIDAuthenticationToView ) = Just ChangeAuthenticationToViewMethodStandardToDKNemIDEvidence
-authViewChangeToEvidence (StandardAuthenticationToView, FITupasAuthenticationToView ) = Just ChangeAuthenticationToViewMethodStandardToFITupasEvidence
+authViewChangeToEvidence (StandardAuthenticationToView, DKNemIDAuthenticationToView)  = Just ChangeAuthenticationToViewMethodStandardToDKNemIDEvidence
+authViewChangeToEvidence (StandardAuthenticationToView, FITupasAuthenticationToView)  = Just ChangeAuthenticationToViewMethodStandardToFITupasEvidence
+authViewChangeToEvidence (StandardAuthenticationToView, VerimiAuthenticationToView)   = Just ChangeAuthenticationToViewMethodStandardToVerimiEvidence
 authViewChangeToEvidence (SMSPinAuthenticationToView  , StandardAuthenticationToView) = Just ChangeAuthenticationToViewMethodSMSPinToStandardEvidence
 authViewChangeToEvidence (SMSPinAuthenticationToView  , SMSPinAuthenticationToView)   = Nothing
 authViewChangeToEvidence (SMSPinAuthenticationToView  , SEBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodSMSPinToSEBankIDEvidence
 authViewChangeToEvidence (SMSPinAuthenticationToView  , NOBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodSMSPinToNOBankIDEvidence
 authViewChangeToEvidence (SMSPinAuthenticationToView  , DKNemIDAuthenticationToView)  = Just ChangeAuthenticationToViewMethodSMSPinToDKNemIDEvidence
 authViewChangeToEvidence (SMSPinAuthenticationToView  , FITupasAuthenticationToView)  = Just ChangeAuthenticationToViewMethodSMSPinToFITupasEvidence
+authViewChangeToEvidence (SMSPinAuthenticationToView  , VerimiAuthenticationToView)   = Just ChangeAuthenticationToViewMethodSMSPinToVerimiEvidence
 authViewChangeToEvidence (SEBankIDAuthenticationToView, StandardAuthenticationToView) = Just ChangeAuthenticationToViewMethodSEBankIDToStandardEvidence
 authViewChangeToEvidence (SEBankIDAuthenticationToView, SMSPinAuthenticationToView)   = Just ChangeAuthenticationToViewMethodSEBankIDToSMSPinEvidence
 authViewChangeToEvidence (SEBankIDAuthenticationToView, SEBankIDAuthenticationToView) = Nothing
 authViewChangeToEvidence (SEBankIDAuthenticationToView, NOBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodSEBankIDToNOBankIDEvidence
-authViewChangeToEvidence (SEBankIDAuthenticationToView, DKNemIDAuthenticationToView ) = Just ChangeAuthenticationToViewMethodSEBankIDToDKNemIDEvidence
-authViewChangeToEvidence (SEBankIDAuthenticationToView, FITupasAuthenticationToView ) = Just ChangeAuthenticationToViewMethodSEBankIDToFITupasEvidence
+authViewChangeToEvidence (SEBankIDAuthenticationToView, DKNemIDAuthenticationToView)  = Just ChangeAuthenticationToViewMethodSEBankIDToDKNemIDEvidence
+authViewChangeToEvidence (SEBankIDAuthenticationToView, FITupasAuthenticationToView)  = Just ChangeAuthenticationToViewMethodSEBankIDToFITupasEvidence
+authViewChangeToEvidence (SEBankIDAuthenticationToView, VerimiAuthenticationToView)   = Just ChangeAuthenticationToViewMethodSEBankIDToVerimiEvidence
 authViewChangeToEvidence (NOBankIDAuthenticationToView, StandardAuthenticationToView) = Just ChangeAuthenticationToViewMethodNOBankIDToStandardEvidence
 authViewChangeToEvidence (NOBankIDAuthenticationToView, SMSPinAuthenticationToView)   = Just ChangeAuthenticationToViewMethodNOBankIDToSMSPinEvidence
 authViewChangeToEvidence (NOBankIDAuthenticationToView, SEBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodNOBankIDToSEBankIDEvidence
 authViewChangeToEvidence (NOBankIDAuthenticationToView, NOBankIDAuthenticationToView) = Nothing
-authViewChangeToEvidence (NOBankIDAuthenticationToView, DKNemIDAuthenticationToView ) = Just ChangeAuthenticationToViewMethodNOBankIDToDKNemIDEvidence
-authViewChangeToEvidence (NOBankIDAuthenticationToView, FITupasAuthenticationToView ) = Just ChangeAuthenticationToViewMethodNOBankIDToFITupasEvidence
+authViewChangeToEvidence (NOBankIDAuthenticationToView, DKNemIDAuthenticationToView)  = Just ChangeAuthenticationToViewMethodNOBankIDToDKNemIDEvidence
+authViewChangeToEvidence (NOBankIDAuthenticationToView, FITupasAuthenticationToView)  = Just ChangeAuthenticationToViewMethodNOBankIDToFITupasEvidence
+authViewChangeToEvidence (NOBankIDAuthenticationToView, VerimiAuthenticationToView)   = Just ChangeAuthenticationToViewMethodNOBankIDToVerimeEvidence
 authViewChangeToEvidence (DKNemIDAuthenticationToView , StandardAuthenticationToView) = Just ChangeAuthenticationToViewMethodDKNemIDToStandardEvidence
 authViewChangeToEvidence (DKNemIDAuthenticationToView , SMSPinAuthenticationToView)   = Just ChangeAuthenticationToViewMethodDKNemIDToSMSPinEvidence
 authViewChangeToEvidence (DKNemIDAuthenticationToView , SEBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodDKNemIDToSEBankIDEvidence
 authViewChangeToEvidence (DKNemIDAuthenticationToView , NOBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodDKNemIDToNOBankIDEvidence
-authViewChangeToEvidence (DKNemIDAuthenticationToView , DKNemIDAuthenticationToView ) = Nothing
-authViewChangeToEvidence (DKNemIDAuthenticationToView , FITupasAuthenticationToView ) = Just ChangeAuthenticationToViewMethodDKNemIDToFITupasEvidence
+authViewChangeToEvidence (DKNemIDAuthenticationToView , DKNemIDAuthenticationToView)  = Nothing
+authViewChangeToEvidence (DKNemIDAuthenticationToView , FITupasAuthenticationToView)  = Just ChangeAuthenticationToViewMethodDKNemIDToFITupasEvidence
+authViewChangeToEvidence (DKNemIDAuthenticationToView , VerimiAuthenticationToView)   = Just ChangeAuthenticationToViewMethodDKNemIDToVerimiEvidence
 authViewChangeToEvidence (FITupasAuthenticationToView , StandardAuthenticationToView) = Just ChangeAuthenticationToViewMethodFITupasToStandardEvidence
 authViewChangeToEvidence (FITupasAuthenticationToView , SMSPinAuthenticationToView)   = Just ChangeAuthenticationToViewMethodFITupasToSMSPinEvidence
 authViewChangeToEvidence (FITupasAuthenticationToView , SEBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodFITupasToSEBankIDEvidence
 authViewChangeToEvidence (FITupasAuthenticationToView , NOBankIDAuthenticationToView) = Just ChangeAuthenticationToViewMethodFITupasToNOBankIDEvidence
-authViewChangeToEvidence (FITupasAuthenticationToView , DKNemIDAuthenticationToView ) = Just ChangeAuthenticationToViewMethodFITupasToDKNemIDEvidence
-authViewChangeToEvidence (FITupasAuthenticationToView , FITupasAuthenticationToView ) = Nothing
+authViewChangeToEvidence (FITupasAuthenticationToView , DKNemIDAuthenticationToView)  = Just ChangeAuthenticationToViewMethodFITupasToDKNemIDEvidence
+authViewChangeToEvidence (FITupasAuthenticationToView , FITupasAuthenticationToView)  = Nothing
+authViewChangeToEvidence (FITupasAuthenticationToView , VerimiAuthenticationToView)   = Just ChangeAuthenticationToViewMethodFITupasToVerimiEvidence
+authViewChangeToEvidence (VerimiAuthenticationToView , StandardAuthenticationToView)  = Just ChangeAuthenticationToViewMethodVerimiToStandardEvidence
+authViewChangeToEvidence (VerimiAuthenticationToView , SMSPinAuthenticationToView)    = Just ChangeAuthenticationToViewMethodVerimiToSMSPinEvidence
+authViewChangeToEvidence (VerimiAuthenticationToView , SEBankIDAuthenticationToView)  = Just ChangeAuthenticationToViewMethodVerimiToSEBankIDEvidence
+authViewChangeToEvidence (VerimiAuthenticationToView , NOBankIDAuthenticationToView)  = Just ChangeAuthenticationToViewMethodVerimiToNOBankIDEvidence
+authViewChangeToEvidence (VerimiAuthenticationToView , DKNemIDAuthenticationToView)   = Just ChangeAuthenticationToViewMethodVerimiToDKNemIDEvidence
+authViewChangeToEvidence (VerimiAuthenticationToView , FITupasAuthenticationToView)   = Just ChangeAuthenticationToViewMethodVerimiToFITupasEvidence
+authViewChangeToEvidence (VerimiAuthenticationToView , VerimiAuthenticationToView)    = Nothing
+
 
 authViewArchivedChangeToEvidence
   :: (AuthenticationToViewMethod, AuthenticationToViewMethod)
@@ -1052,4 +1140,43 @@ authViewArchivedChangeToEvidence (FITupasAuthenticationToView,
   = Just ChangeAuthenticationToViewArchivedMethodFITupasToDKNemIDEvidence
 authViewArchivedChangeToEvidence (FITupasAuthenticationToView,
                                   FITupasAuthenticationToView)
+  = Nothing
+authViewArchivedChangeToEvidence (VerimiAuthenticationToView,
+                                  SMSPinAuthenticationToView)
+  = Just ChangeAuthenticationToViewArchivedMethodVerimiToSMSPinEvidence
+authViewArchivedChangeToEvidence (VerimiAuthenticationToView,
+                                  SEBankIDAuthenticationToView)
+  = Just ChangeAuthenticationToViewArchivedMethodVerimiToSEBankIDEvidence
+authViewArchivedChangeToEvidence (VerimiAuthenticationToView,
+                                  NOBankIDAuthenticationToView)
+  = Just ChangeAuthenticationToViewArchivedMethodVerimiToNOBankIDEvidence
+authViewArchivedChangeToEvidence (VerimiAuthenticationToView,
+                                  DKNemIDAuthenticationToView)
+  = Just ChangeAuthenticationToViewArchivedMethodVerimiToDKNemIDEvidence
+authViewArchivedChangeToEvidence (VerimiAuthenticationToView,
+                                  FITupasAuthenticationToView)
+  = Just ChangeAuthenticationToViewArchivedMethodVerimiToFITupasEvidence
+authViewArchivedChangeToEvidence (StandardAuthenticationToView,
+                                  VerimiAuthenticationToView)
+  = Just ChangeAuthenticationToViewArchivedMethodStandardToVerimiEvidence
+authViewArchivedChangeToEvidence (SEBankIDAuthenticationToView,
+                                  VerimiAuthenticationToView)
+  = Just ChangeAuthenticationToViewArchivedMethodSEBankIDToVerimiEvidence
+authViewArchivedChangeToEvidence (NOBankIDAuthenticationToView,
+                                  VerimiAuthenticationToView)
+  = Just ChangeAuthenticationToViewArchivedMethodNOBankIDToVerimeEvidence
+authViewArchivedChangeToEvidence (DKNemIDAuthenticationToView,
+                                  VerimiAuthenticationToView)
+  = Just ChangeAuthenticationToViewArchivedMethodDKNemIDToVerimiEvidence
+authViewArchivedChangeToEvidence (FITupasAuthenticationToView,
+                                  VerimiAuthenticationToView)
+  = Just ChangeAuthenticationToViewArchivedMethodFITupasToVerimiEvidence
+authViewArchivedChangeToEvidence (VerimiAuthenticationToView,
+                                  StandardAuthenticationToView)
+  = Just ChangeAuthenticationToViewArchivedMethodVerimiToStandardEvidence
+authViewArchivedChangeToEvidence (SMSPinAuthenticationToView,
+                                  VerimiAuthenticationToView)
+  = Just ChangeAuthenticationToViewArchivedMethodSMSPinToVerimiEvidence
+authViewArchivedChangeToEvidence (VerimiAuthenticationToView,
+                                  VerimiAuthenticationToView)
   = Nothing

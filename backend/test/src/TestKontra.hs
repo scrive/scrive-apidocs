@@ -388,6 +388,7 @@ mkContext lang = do
         , _ctxpdftoolslambdaenv  = pdfSealLambdaEnv
         , _ctxpasswordserviceconf = defaultPasswordService
         , _ctxmaybeapiuser       = Nothing
+        , _ctxeidserviceconf     = Nothing
     }
 
 testGTConf :: GuardTimeConf

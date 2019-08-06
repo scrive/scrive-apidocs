@@ -19,6 +19,8 @@ module.exports = React.createClass({
       return false;
     } else if (!ff.canUseSMSPinAuthenticationToView() && am == "sms_pin") {
       return false;
+    } if (!ff.canUseVerimiAuthenticationToView() && am == "verimi") {
+      return false;
     } else {
       return true;
     }
@@ -30,7 +32,7 @@ module.exports = React.createClass({
     });
 
     var superthis = this;
-    var ams = ["standard", "se_bankid", "no_bankid", "dk_nemid", "fi_tupas", "sms_pin"]
+    var ams = ["standard", "se_bankid", "no_bankid", "dk_nemid", "fi_tupas", "sms_pin", "verimi"]
               .filter(function (am) { return superthis.isAllowedAuthenticationMethod(am); });
     if (ams.length <= 1) {
       // if no auth methods are enabled, tell customer, that they can purchase them
@@ -60,6 +62,8 @@ module.exports = React.createClass({
       return "design-view-action-participant-icon-auth-to-view-icon-fi-tupas";
     } else if (sig.smsPinAuthenticationToView()) {
       return "design-view-action-participant-icon-auth-to-view-icon-sms-pin";
+    } else if (sig.verimiAuthenticationToView()) {
+      return "design-view-action-participant-icon-auth-to-view-icon-verimi";
     }
   },
   title: function () {
@@ -92,6 +96,10 @@ module.exports = React.createClass({
     } else if (authMethod == "sms_pin") {
       title.push(
         localization.designview.addParties.authenticationToViewSMSPin
+      );
+    } else if (authMethod == "verimi") {
+      title.push(
+        localization.designview.addParties.authenticationToViewVerimi
       );
     }
     return title.join(": ");

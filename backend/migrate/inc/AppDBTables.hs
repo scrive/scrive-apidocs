@@ -28,6 +28,7 @@ import Doc.Tokens.Tables
 import Doc.Trigger
 import EID.Authentication.Tables
 import EID.CGI.GRP.Transaction.Tables
+import EID.EIDService.Tables
 import EID.Nets.Tables
 import EID.Signature.Tables
 import EvidenceLog.Tables
@@ -159,6 +160,7 @@ kontraTables =
   , tableHighlightedPages
   , tableFeatureFlags
   , tableNetsSignOrders
+  , tableEIDServiceTransactions
   ] ++ cronTables
     ++ mailerTables
     ++ messengerTables

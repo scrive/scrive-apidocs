@@ -458,6 +458,7 @@ apiCallV1Ready did = logDocument did . api $ do
       FITupasAuthenticationToView  -> False -- Finnish TUPAS auth to view is not supported in API v1
       SMSPinAuthenticationToView   -> True
       StandardAuthenticationToView -> True
+      VerimiAuthenticationToView   -> False -- Verimi auth to view is not supported in API v1
 
     signatoryHasValidPhoneForIdentifyToView sl =
       let resultValidPhone = asValidPhoneForNorwegianBankID $ getMobile sl in
@@ -468,6 +469,7 @@ apiCallV1Ready did = logDocument did . api $ do
         FITupasAuthenticationToView  -> False -- Finnish TUPAS auth to view is not supported in API v1
         SMSPinAuthenticationToView   -> isGood $ asValidPhoneForSMS $ getMobile sl
         StandardAuthenticationToView -> True
+        VerimiAuthenticationToView   -> False -- Verimi auth to view is not supported in API v1
 
     checkEmailForConfirmation sl =
       null (getEmail sl) || isGood (asValidEmail $ getEmail sl)
@@ -792,6 +794,9 @@ apiCallV1ChangeAuthenticationToView did slid = logDocumentAndSignatory did slid 
       -- Finnish TUPAS is not supported in API V1
       Just FITupasAuthenticationToView  -> throwM . SomeDBExtraException $ badInput $
         "Invalid `authentication_type`. Supported values are: `standard`, `se_bankid`, `no_bankid`, `dk_nemid`."
+      -- Verimi is not supported in API V1
+      Just VerimiAuthenticationToView  -> throwM . SomeDBExtraException $ badInput $
+        "Invalid `authentication_type`. Supported values are: `standard`, `se_bankid`, `no_bankid`, `dk_nemid`."
     -- Check conditions on signatory
     guardAuthenticationMethodsCanMix authtoview $ signatorylinkauthenticationtosignmethod sl
     case mSSN of
@@ -817,6 +822,7 @@ apiCallV1ChangeAuthenticationToView did slid = logDocumentAndSignatory did slid 
     isValidSSNForAuthenticationToView DKNemIDAuthenticationToView  ssn = isGood $ asValidDanishSSN    ssn
     -- Finnish TUPAS is not supported in API V1
     isValidSSNForAuthenticationToView FITupasAuthenticationToView  _ = False
+    isValidSSNForAuthenticationToView VerimiAuthenticationToView _ = True
     isValidPhoneForAuthenticationToView :: AuthenticationToViewMethod -> String -> Bool
     isValidPhoneForAuthenticationToView StandardAuthenticationToView _ = True
     isValidPhoneForAuthenticationToView SMSPinAuthenticationToView phone = isGood (asValidPhoneForSMS phone)
@@ -826,6 +832,7 @@ apiCallV1ChangeAuthenticationToView did slid = logDocumentAndSignatory did slid 
       let phoneValidation = asValidPhoneForNorwegianBankID phone in isGood phoneValidation || isEmpty phoneValidation
     -- Finnish TUPAS is not supported in API V1
     isValidPhoneForAuthenticationToView FITupasAuthenticationToView _ = False
+    isValidPhoneForAuthenticationToView VerimiAuthenticationToView _ = True
 
 apiCallV1ChangeAuthenticationToSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 apiCallV1ChangeAuthenticationToSign did slid = logDocumentAndSignatory did slid . api $ do

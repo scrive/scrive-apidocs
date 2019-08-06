@@ -10,6 +10,7 @@ var SSNForFITupasValidation = require("../../../js/validation.js").SSNForFITupas
 var PhoneValidationNO = require("../../../js/validation.js").PhoneValidationNO;
 var PhoneValidation = require("../../../js/validation.js").PhoneValidation;
 var EmptyValidation = require("../../../js/validation.js").EmptyValidation;
+var EmailValidation = require("../../../js/validation.js").EmailValidation;
 var $ = require("jquery");
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
@@ -104,6 +105,14 @@ var Modal = require("../../common/modal");
 
     isAuthenticationSMSPin: function () {
       return this.authenticationMethod() == this.SMSPinAuthenticationValue();
+    },
+
+    VerimiAuthenticationValue: function () {
+      return "verimi";
+    },
+
+    isAuthenticationVerimi: function () {
+      return this.authenticationMethod() == this.VerimiAuthenticationValue();
     },
 
     personalNumber: function () {
@@ -215,6 +224,13 @@ var Modal = require("../../common/modal");
       var options = [];
 
       var isAvailable = function (auth) {
+
+        // Changing email is tricky - I prefer just not to allow that
+        // and block switching to Verimi if email is not valid.
+        if (auth == "verimi" && !new EmailValidation().validateData(sig.email())) {
+          return false;
+        }
+
         return sig.authenticationMethodsCanMix(auth,
                                                sig.authenticationToSign(),
                                                sig.authenticationToViewArchived());
@@ -273,6 +289,16 @@ var Modal = require("../../common/modal");
       if (ff.canUseSMSPinAuthenticationToView() && isAvailable(smsPin.value)) {
         options.push(smsPin);
       }
+
+      var verimi = {
+        name: localization.docview.signatory.authenticationToViewVerimi,
+        selected: model.isAuthenticationVerimi(),
+        value: model.VerimiAuthenticationValue()
+      };
+      if (ff.canUseVerimiAuthenticationToView() && isAvailable(verimi.value)) {
+        options.push(verimi);
+      }
+
 
       return options;
     },
@@ -333,7 +359,8 @@ var Modal = require("../../common/modal");
             width={348}
             options={this.getAuthenticationMethodOptions()}
           />
-          {/* if */ (!model.isAuthenticationStandard() && !model.isAuthenticationSMSPin()) &&
+          {/* if */ (model.isAuthenticationSEBankID() || model.isAuthenticationNOBankID() ||
+                     model.isAuthenticationDKNemID() || model.isAuthenticationFITupas()) &&
             <div>
               <label>{this.getPersonalNumberLabelText()}</label>
               <InfoTextInput

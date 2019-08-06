@@ -22,6 +22,7 @@ import DB
 import Doc.Action
 import Doc.AutomaticReminder.Model (expireDocumentAutomaticReminders)
 import Doc.Model
+import EID.EIDService.Model
 import File.Storage
 import HostClock.Collector (collectClockError)
 import Log.Configuration
@@ -69,6 +70,7 @@ data JobType
   | TemporaryMagicHashesPurge
   | TemporaryLoginTokensPurge
   | CronStats
+  | TimeoutedEIDTransactionsPurge
   deriving (Eq, Ord, Show, Enum, Bounded)
 
 jobTypeMapper :: [(JobType, T.Text)]
@@ -100,6 +102,7 @@ jobTypeMapper =
       TemporaryMagicHashesPurge            -> "temporary_magic_hashes_purge"
       TemporaryLoginTokensPurge            -> "temporary_login_tokens_purge"
       CronStats                            -> "cron_stats"
+      TimeoutedEIDTransactionsPurge        -> "timeouted_eid_transactions_purge"
 
 instance PQFormat JobType where
   pqFormat = pqFormat @T.Text
@@ -296,6 +299,12 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
         purgedCount <- dbUpdate PurgeExpiredTemporaryLoginTokens
         logInfo "Purged temporary login tokens" $ object ["purged" .= purgedCount]
       return . RerunAfter $ iminutes 60
+    TimeoutedEIDTransactionsPurge -> do
+      runDB $ do
+        purgedCount <- dbUpdate PurgeTimeoutedEIDTransactions
+        logInfo "Purged timeouted eid transactions" $ object ["purged" .= purgedCount]
+      return . RerunAfter $ iminutes 60
+
   endTime <- currentTime
   logInfo "Job processed successfully" $ object [
       "elapsed_time" .= (realToFrac (diffUTCTime endTime startTime) :: Double)

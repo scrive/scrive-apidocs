@@ -3,6 +3,7 @@ module EID.Authentication.Migrations (
   , addSMSPinAuthAdjustmentsToEIDAuthentications
   , addFIAuthChecksToEIDAuthentications
   , addAuthenticationKindToEIDAuthentications
+  , addEmailToEIDAuthentications
   ) where
 
 import DB
@@ -82,3 +83,14 @@ addAuthenticationKindToEIDAuthentications = Migration {
         , sqlAddPK tname . fromJust $ pkOnColumns ["signatory_link_id", "auth_kind"]
         ]
   }
+
+addEmailToEIDAuthentications :: MonadDB m => Migration m
+addEmailToEIDAuthentications = Migration {
+    mgrTableName = tblName tableEIDAuthentications
+  , mgrFrom = 6
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable (tblName tableEIDAuthentications)  [ sqlAddColumn $
+          tblColumn { colName = "signatory_email", colType = TextT }
+        ]
+  }
+

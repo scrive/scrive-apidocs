@@ -8,6 +8,7 @@ module Chargeable.Model (
   , ChargeUserGroupForDKNemIDAuthentication(..)
   , ChargeUserGroupForDKNemIDSignature(..)
   , ChargeUserGroupForFITupasAuthentication(..)
+  , ChargeUserGroupForVerimiAuthentication(..)
   , ChargeUserGroupForStartingDocument(..)
   , ChargeUserGroupForClosingDocument(..)
   , GetNumberOfDocumentsStartedThisMonth(..)
@@ -40,7 +41,8 @@ data ChargeableItem =
   CINOBankIDSignature      |
   CIDKNemIDSignature       |
   CIFITupasAuthentication  |
-  CIShareableLink
+  CIShareableLink          |
+  CIVerimiAuthentication
   deriving (Eq, Ord, Show, Typeable)
 
 instance PQFormat ChargeableItem where
@@ -66,8 +68,9 @@ instance FromSQL ChargeableItem where
       11 -> return CIDKNemIDSignature
       12 -> return CIFITupasAuthentication
       13 -> return CIShareableLink
+      14 -> return CIVerimiAuthentication
       _  -> throwM RangeError {
-        reRange = [(1, 13)]
+        reRange = [(1, 14)]
       , reValue = n
       }
 
@@ -86,6 +89,7 @@ instance ToSQL ChargeableItem where
   toSQL CIDKNemIDSignature       = toSQL (11::Int16)
   toSQL CIFITupasAuthentication  = toSQL (12::Int16)
   toSQL CIShareableLink          = toSQL (13::Int16)
+  toSQL CIVerimiAuthentication   = toSQL (14::Int16)
 
 ----------------------------------------
 
@@ -135,6 +139,11 @@ data ChargeUserGroupForFITupasAuthentication = ChargeUserGroupForFITupasAuthenti
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForFITupasAuthentication () where
   update (ChargeUserGroupForFITupasAuthentication document_id) = update (ChargeUserGroupFor CIFITupasAuthentication 1 document_id)
 
+-- | Charge user group of the author of the document for verimi authentication
+data ChargeUserGroupForVerimiAuthentication = ChargeUserGroupForVerimiAuthentication DocumentID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForVerimiAuthentication () where
+  update (ChargeUserGroupForVerimiAuthentication document_id) = update (ChargeUserGroupFor CIVerimiAuthentication 1 document_id)
+
 -- | Charge user group of the author of the document for creation of the document
 data ChargeUserGroupForStartingDocument = ChargeUserGroupForStartingDocument DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForStartingDocument () where
@@ -154,6 +163,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupFor
 data ChargeUserGroupForShareableLink = ChargeUserGroupForShareableLink DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForShareableLink () where
   update (ChargeUserGroupForShareableLink document_id) = update (ChargeUserGroupFor CIShareableLink 1 document_id)
+
 
 data ChargeUserGroupFor = ChargeUserGroupFor ChargeableItem Int32 DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupFor () where

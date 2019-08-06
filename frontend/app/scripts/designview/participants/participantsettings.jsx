@@ -140,13 +140,16 @@ module.exports = React.createClass({
       return localization.designview.addParties.authenticationToViewFITupas;
     } else if (t == "sms_pin") {
       return localization.designview.addParties.authenticationToViewSMSPin;
+    } else if (t == "verimi") {
+      return localization.designview.addParties.authenticationToViewVerimi;
     }
   },
   authenticationToViewOptions: function () {
     var self = this;
     var sig = this.props.model;
     var allAuthTypes = ["standard", "se_bankid", "no_bankid",
-                        "dk_nemid", "fi_tupas", "sms_pin"];
+                        "dk_nemid", "fi_tupas", "sms_pin",
+                        "verimi"];
     var authTypes = allAuthTypes.slice(0);
 
     var subscription = Subscription.currentSubscription();
@@ -169,6 +172,10 @@ module.exports = React.createClass({
     if (!ff.canUseFIAuthenticationToView() && !sig.fiTupasAuthenticationToView()) {
       authTypes = _.without(authTypes, "fi_tupas");
     }
+    if (!ff.canUseVerimiAuthenticationToView() && !sig.verimiAuthenticationToView()) {
+      authTypes = _.without(authTypes, "verimi");
+    }
+
 
     authTypes = _.filter(authTypes, function (authToView) {
       return sig.authenticationMethodsCanMix(authToView,
@@ -194,7 +201,8 @@ module.exports = React.createClass({
     var self = this;
     var sig = this.props.model;
     var allAuthTypes = ["standard", "se_bankid", "no_bankid",
-                        "dk_nemid", "fi_tupas", "sms_pin"];
+                        "dk_nemid", "fi_tupas", "sms_pin",
+                        "verimi"];
     var authTypes = allAuthTypes.slice(0);
 
     var subscription = Subscription.currentSubscription();
@@ -216,6 +224,9 @@ module.exports = React.createClass({
     }
     if (!ff.canUseFIAuthenticationToView() && !sig.fiTupasAuthenticationToViewArchived()) {
       authTypes = _.without(authTypes, "fi_tupas");
+    }
+    if (!ff.canUseVerimiAuthenticationToView() && !sig.verimiAuthenticationToViewArchived()) {
+      authTypes = _.without(authTypes, "verimi");
     }
 
     authTypes = _.filter(authTypes, function (authToViewArchived) {

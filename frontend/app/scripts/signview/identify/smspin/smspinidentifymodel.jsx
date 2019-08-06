@@ -35,6 +35,9 @@ var Backbone = require("backbone");
     isSMSPin: function () {
       return true;
     },
+    isVerimi: function () {
+      return false;
+    },
     isOnStartStep: function () {
       return this.get("step") === "start";
     },

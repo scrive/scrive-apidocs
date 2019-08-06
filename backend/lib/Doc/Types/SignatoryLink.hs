@@ -152,6 +152,7 @@ data AuthenticationToViewMethod
   | DKNemIDAuthenticationToView
   | SMSPinAuthenticationToView
   | FITupasAuthenticationToView
+  | VerimiAuthenticationToView
     deriving (Enum, Eq, Ord, Show)
 
 instance PQFormat AuthenticationToViewMethod where
@@ -168,8 +169,9 @@ instance FromSQL AuthenticationToViewMethod where
       4 -> return DKNemIDAuthenticationToView
       5 -> return SMSPinAuthenticationToView
       6 -> return FITupasAuthenticationToView
+      7 -> return VerimiAuthenticationToView
       _ -> throwM RangeError {
-        reRange = [(1, 6)]
+        reRange = [(1, 7)]
       , reValue = n
       }
 
@@ -181,6 +183,7 @@ instance ToSQL AuthenticationToViewMethod where
   toSQL DKNemIDAuthenticationToView       = toSQL (4::Int16)
   toSQL SMSPinAuthenticationToView        = toSQL (5::Int16)
   toSQL FITupasAuthenticationToView       = toSQL (6::Int16)
+  toSQL VerimiAuthenticationToView        = toSQL (7::Int16)
 
 ---------------------------------
 

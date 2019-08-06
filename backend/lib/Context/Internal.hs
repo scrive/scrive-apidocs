@@ -5,6 +5,7 @@ import qualified Database.Redis as R
 
 import BrandedDomain.BrandedDomain
 import EID.CGI.GRP.Config
+import EID.EIDService.Conf
 import EID.Nets.Config
 import FileStorage
 import GuardTime (GuardTimeConf(..))
@@ -70,6 +71,7 @@ data Context = Context
     , _ctxnetssignconfig      :: Maybe NetsSignConfig
     , _ctxpdftoolslambdaenv   :: PdfToolsLambdaEnv
     , _ctxpasswordserviceconf :: PasswordServiceConf
+    , _ctxeidserviceconf      :: Maybe EIDServiceConf
     , _ctxmaybeapiuser        :: Maybe User
     -- ^ The user which was effectively used for API call (this
     -- includes api/frontend) This might be the user from session, if

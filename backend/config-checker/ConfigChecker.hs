@@ -86,7 +86,7 @@ checkFieldsEqualAppConfCronConf
     _admins             _sales              _initialUsers        mixpanelToken
     _gaToken            _trackjsToken       _zendeskKey         _hubspotConf
     salesforceConf      _netsConfig         _monitoringConfig   _isAPILogEnabled
-    netsSignConfig      pdfToolsLambdaConf  _passwordServiceConf)
+    netsSignConfig      pdfToolsLambdaConf  _passwordServiceConf _eidServiceConf)
   (CronConf
      cronAmazonConfig              cronDBConfig                   _cronMaxDBConnections
      cronRedisCacheConfig         _cronLocalFileCacheSize         _cronLogConfig
@@ -124,7 +124,8 @@ checkFieldsEqualAppConfMailerConf
     _cgiGrpConfig       _admins             _sales              _initialUsers
     _mixpanelToken      _gaToken            _trackjsToken       _zendeskKey
     _hubspotConf        _salesforceConf     _netsConfig         _monitoringConfig
-    _isAPILogEnabled    _netsSignConfig     _pdfToolsLambdaConf _passwordServiceConf)
+    _isAPILogEnabled    _netsSignConfig     _pdfToolsLambdaConf _passwordServiceConf
+    _eidServiceConf)
   (MailingServerConf
     _mailerHttpBindAddress     mailerDBConfig
     _mailerMaxDBConnections    mailerRedisCacheConfig
@@ -151,7 +152,8 @@ checkFieldsEqualAppConfMessengerConf
     _cgiGrpConfig       _admins             _sales              _initialUsers
     _mixpanelToken      _gaToken            _trackjsToken       _zendeskKey
     _hubspotConf        _salesforceConf     _netsConfig         _monitoringConfig
-    _isAPILogEnabled    _netsSignConfig     _pdfToolsLambdaConf _passwordServiceConf)
+    _isAPILogEnabled    _netsSignConfig     _pdfToolsLambdaConf _passwordServiceConf
+    _eidServiceConf)
   (MessengerServerConf
     _messengerHttpBindAddress   messengerDBConfig
     _messengerMaxDBConnections _messengerLogConfig

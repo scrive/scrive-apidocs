@@ -248,6 +248,7 @@ data MixAuthMethod
   | MAM_DKNemID
   | MAM_SMSPin
   | MAM_FITupas
+  | MAM_Verimi
   deriving (Eq, Ord, Show)
 
 atvToMix :: AuthenticationToViewMethod -> MixAuthMethod
@@ -257,6 +258,7 @@ atvToMix NOBankIDAuthenticationToView = MAM_NOBankID
 atvToMix DKNemIDAuthenticationToView  = MAM_DKNemID
 atvToMix SMSPinAuthenticationToView   = MAM_SMSPin
 atvToMix FITupasAuthenticationToView  = MAM_FITupas
+atvToMix VerimiAuthenticationToView   = MAM_Verimi
 
 atsToMix :: AuthenticationToSignMethod -> MixAuthMethod
 atsToMix StandardAuthenticationToSign = MAM_Standard
@@ -275,7 +277,7 @@ authenticationMethodsCanMix authToView authToSign authToViewArchived =
                          , atsToMix authToSign
                          , atvToMix authToViewArchived
                          ]
-      eids  = S.fromList [MAM_SEBankID, MAM_NOBankID, MAM_DKNemID, MAM_FITupas]
+      eids  = S.fromList [MAM_SEBankID, MAM_NOBankID, MAM_DKNemID, MAM_FITupas, MAM_Verimi]
   -- We allow at most one EID authentication method within a signatory.
   in length (auths `S.intersection` eids) <= 1
 
@@ -287,6 +289,7 @@ authViewMatchesAuth SEBankIDAuthenticationToView CGISEBankIDAuthentication_{}  =
 authViewMatchesAuth DKNemIDAuthenticationToView  NetsDKNemIDAuthentication_{}  = True
 authViewMatchesAuth FITupasAuthenticationToView  NetsFITupasAuthentication_{}  = True
 authViewMatchesAuth SMSPinAuthenticationToView   SMSPinAuthentication_{}  = True
+authViewMatchesAuth VerimiAuthenticationToView   EIDServiceVerimiAuthentication_{}  = True
 authViewMatchesAuth _ _ = False
 
 -- Functions to determine if AuthenticationToViewMethod or
@@ -299,6 +302,8 @@ authToViewNeedsPersonalNumber NOBankIDAuthenticationToView = True
 authToViewNeedsPersonalNumber DKNemIDAuthenticationToView  = True
 authToViewNeedsPersonalNumber SMSPinAuthenticationToView   = False
 authToViewNeedsPersonalNumber FITupasAuthenticationToView  = True
+authToViewNeedsPersonalNumber VerimiAuthenticationToView   = False
+
 
 authToViewNeedsMobileNumber :: AuthenticationToViewMethod -> Bool
 authToViewNeedsMobileNumber StandardAuthenticationToView = False
@@ -307,6 +312,7 @@ authToViewNeedsMobileNumber NOBankIDAuthenticationToView = True
 authToViewNeedsMobileNumber DKNemIDAuthenticationToView  = False
 authToViewNeedsMobileNumber SMSPinAuthenticationToView   = True
 authToViewNeedsMobileNumber FITupasAuthenticationToView  = False
+authToViewNeedsMobileNumber VerimiAuthenticationToView   = False
 
 authToSignNeedsPersonalNumber :: AuthenticationToSignMethod -> Bool
 authToSignNeedsPersonalNumber StandardAuthenticationToSign = False

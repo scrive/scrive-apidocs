@@ -88,5 +88,9 @@
         , "access_key":""
         , "secret_key": ""
       }
+    },
+    "_eid_service" : {
+      "url": "",
+      "token": ""
     }
 }

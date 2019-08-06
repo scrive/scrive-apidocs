@@ -52,6 +52,7 @@ import Doc.SignatoryIdentification
   ( SignatoryIdentifierMap, siInitials, signatoryIdentifier )
 
 import EID.Authentication.Model
+import EID.EIDService.Types
 import EID.Nets.Types
 import EID.Signature.Model
 import EvidenceLog.Model
@@ -119,7 +120,9 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
         Just (NetsFITupasAuthentication_ authentication)  ->
           renderTemplate "_identifiedByFITupasText" $
           F.value "name" $ netsFITupasSignatoryName authentication
-
+        Just (EIDServiceVerimiAuthentication_ authentication)  ->
+          renderTemplate "_identifiedByVerimiText" $
+          F.value "email" $ eidServiceVerimiVerifiedEmail authentication
         Just (SMSPinAuthentication_ _)  -> return ""
         Nothing                         -> return ""
 

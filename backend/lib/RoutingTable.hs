@@ -34,6 +34,7 @@ import qualified Branding.Control as Branding
 import qualified Company.CompanyControl as Company
 import qualified Doc.DocControl as DocControl
 import qualified EID.CGI.GRP.Control as CGI
+import qualified EID.EIDService.Control as EIDService
 import qualified EID.Nets.Control as NETS
 import qualified ServerUtils.ServerUtils as ServerUtils
 import qualified User.UserControl as UserControl
@@ -74,6 +75,7 @@ staticRoutes production = choice
      -- E-ID stuff
      , dir "s" $ dir "eid" $ CGI.grpRoutes
      , dir "nets" $ NETS.netsRoutes
+     , dir "eid-service" $ EIDService.eidServiceRoutes
 
      , dir "sp" $ hGet $ toK2 $ DocControl.handleSignShow
      , dir "padsign" $ hPost $ toK2 $ DocControl.handleIssueGoToSignviewPad

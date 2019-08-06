@@ -17,6 +17,7 @@ import Doc.Migrations
 import Doc.Signing.Migrations
 import Doc.SMSPin.Migrations
 import EID.Authentication.Migrations
+import EID.EIDService.Migrations
 import EID.Nets.Migrations
 import EID.Signature.Migrations
 import FeatureFlags.Migrations
@@ -203,4 +204,9 @@ kontraMigrations = [
   , userGroupSettingsAddTotpIsMandatory
   , addUserTotpIsMandatoryColumn
   , migrateOAuth2CallbackSchemeToHi3GCallbackScheme
+  , featureFlagsAddVerimiAuthenticationToView1
+  , createEIDServiceTransactionsTable
+  , addEmailToEIDAuthentications
+  , featureFlagsAddVerimiAuthenticationToView2
+  , addTimeoutedEIDTransactionsPurge
   ]

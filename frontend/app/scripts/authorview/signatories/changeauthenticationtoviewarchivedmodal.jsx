@@ -9,6 +9,7 @@ var PhoneValidation = require("../../../js/validation.js").PhoneValidation;
 var SSNForSEBankIDValidation = require("../../../js/validation.js").SSNForSEBankIDValidation;
 var SSNForDKNemIDValidation = require("../../../js/validation.js").SSNForDKNemIDValidation;
 var SSNForFITupasValidation = require("../../../js/validation.js").SSNForFITupasValidation;
+var EmailValidation = require("../../../js/validation.js").EmailValidation;
 var $ = require("jquery");
 var FlashMessage = require("../../../js/flashmessages.js").FlashMessage;
 var LoadingDialog = require("../../../js/loading.js").LoadingDialog;
@@ -84,6 +85,10 @@ var Modal = require("../../common/modal");
 
     isNewAuthenticationFITupas: function () {
       return this.newAuthenticationMethod() == "fi_tupas";
+    },
+
+   isNewAuthenticationVerimi: function () {
+      return this.newAuthenticationMethod() == "verimi";
     },
 
     isAuthenticationValueInvalid: function () {
@@ -173,6 +178,8 @@ var Modal = require("../../common/modal");
         return localization.docview.signatory.authenticationToViewDKNemID;
       } else if (model.isNewAuthenticationFITupas()) {
         return localization.docview.signatory.authenticationToViewFITupas;
+      } else if (model.isNewAuthenticationVerimi()) {
+        return localization.docview.signatory.authenticationToViewVerimi;
       }
     },
 
@@ -284,6 +291,15 @@ var Modal = require("../../common/modal");
         options.push(sms);
       }
 
+      var verimi = {
+        name: localization.docview.signatory.authenticationToViewVerimi,
+        selected: model.isNewAuthenticationVerimi(),
+        value: "verimi"
+      };
+      if (ff.canUseVerimiAuthenticationToView() && isAvailable(verimi.value)) {
+        options.push(verimi);
+      }
+
       return options;
     },
 
@@ -304,8 +320,13 @@ var Modal = require("../../common/modal");
       ) {
         return false;
       // Else always show if we are setting anything other than no authentication
+      } else if (model.newAuthenticationMethod() == "standard"
+          || model.newAuthenticationMethod() == "no_bankid"
+          || model.newAuthenticationMethod() == "verimi"
+      ) {
+        return false;
       } else {
-        return (model.newAuthenticationMethod() !== "standard" && model.newAuthenticationMethod() !== "no_bankid");
+        return true;
       }
     },
 

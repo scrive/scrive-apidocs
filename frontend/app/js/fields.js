@@ -514,7 +514,8 @@ var Field = exports.Field = Backbone.Model.extend({
       if (this.signatory().views() && !this.signatory().author()) {
         return false;
       } else if (this.isEmail()) {
-        return !(this.signatory().emailDelivery() || this.signatory().emailMobileDelivery());
+        return !(this.signatory().emailDelivery() || this.signatory().emailMobileDelivery() ||
+                 this.signatory().verimiAuthenticationToView());
       } else if (this.isMobile()) {
         return !(this.signatory().mobileDelivery() || this.signatory().emailMobileDelivery() || this.signatory().smsPinAuthenticationToView());
       } else if (this.isSSN()) {

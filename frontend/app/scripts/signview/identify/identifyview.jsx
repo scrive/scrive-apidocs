@@ -10,6 +10,8 @@ var FinnishIdentifyView = require("./finnish/finnishidentifyview");
 var FinnishIdentifyModel = require("./finnish/finnishidentifymodel");
 var SMSPinIdentifyView = require("./smspin/smspinidentifyview");
 var SMSPinIdentifyModel = require("./smspin/smspinidentifymodel");
+var VerimiIdentifyView = require("./verimi/verimiidentifyview");
+var VerimiIdentifyModel = require("./verimi/verimiidentifymodel");
 var Document = require("../../../js/documents.js").Document;
 var $ = require("jquery");
 var MaskedPersonalNumber = require("./masked_personal_number");
@@ -45,6 +47,8 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
           model = new FinnishIdentifyModel(args);
         } else if (sig.smsPinAuthenticationToViewArchived()) {
           model = new SMSPinIdentifyModel(args);
+        }  else if (sig.verimiAuthenticationToViewArchived()) {
+          model = new VerimiIdentifyModel(args);
         }
       } else {
         if (sig.seBankIDAuthenticationToView()) {
@@ -57,6 +61,8 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
           model = new FinnishIdentifyModel(args);
         } else if (sig.smsPinAuthenticationToView()) {
           model = new SMSPinIdentifyModel(args);
+        } else if (sig.verimiAuthenticationToView()) {
+          model = new VerimiIdentifyModel(args);
         }
       }
       return {model: model};
@@ -97,6 +103,7 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
       var authorName = author.name();
       var personalNumber = sig.personalnumber();
       var mobileNumber = sig.mobile();
+      var email = sig.email();
 
       return (
         <div className="identify-content">
@@ -149,6 +156,12 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
                 model={model}
               />
             }
+            { /* else if */ model.isVerimi() &&
+              <VerimiIdentifyView
+                ref="identify"
+                model={model}
+              />
+            }
             <div className="identify-box-footer">
               <div className="identify-box-footer-text">
                 <div>
@@ -173,6 +186,11 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
                     {localization.yourMobileNumber} <b>{mobileNumber}</b>
                   </div>
                 }
+                { /* if */ (model.isVerimi()) &&
+                  <div>
+                    {localization.yourEmail} <b>{email}</b>
+                  </div>
+                }
               </div>
               <div className="identify-box-footer-logo">
                 { /* if */ model.isSwedish() &&
@@ -189,6 +207,9 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
                 }
                 { /* if */ model.isFinnish() &&
                   <img src={window.cdnbaseurl + "/img/tupas-fi.png"} />
+                }
+                { /* if */ model.isVerimi() &&
+                  <img src={window.cdnbaseurl + "/img/verimi.svg"} />
                 }
               </div>
             </div>

@@ -553,6 +553,9 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     smsPinAuthenticationToView: function() {
           return this.get("authentication_method_to_view") == "sms_pin";
     },
+    verimiAuthenticationToView: function() {
+          return this.get("authentication_method_to_view") == "verimi";
+    },
     standardAuthenticationToViewArchived: function() {
         return this.get("authentication_method_to_view_archived") == "standard";
     },
@@ -570,6 +573,9 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     },
     smsPinAuthenticationToViewArchived: function() {
         return this.get("authentication_method_to_view_archived") == "sms_pin";
+    },
+    verimiAuthenticationToViewArchived: function() {
+        return this.get("authentication_method_to_view_archived") == "verimi";
     },
     canHaveAuthenticationToSign: function() {
         // Not supported for Viewers or Approvers
@@ -1131,7 +1137,9 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         return this.emailDelivery()
         || this.emailMobileDelivery()
         || this.hasNotificationEmail()
-        || this.hasConfirmationEmail();
+        || this.hasConfirmationEmail()
+        || this.verimiAuthenticationToView()
+        || this.verimiAuthenticationToViewArchived();
     },
     ensureEmail: function() {
         var signatory = this;

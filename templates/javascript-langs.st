@@ -65,6 +65,9 @@ javascriptLocalisation =
                , revoked: "$_IdentifyFITupasRevoked()$"
                , expired: "$_IdentifyFITupasExpired()$"
              }
+             , identifyVerimi: {
+                authorizationDataMismatch : "$_identifyVerimiDataMismatch()$"
+             }
              , signNOBankIDError : {
                  generic   : "$_SignBankIdNOErrorGeneric()$"
                , useragent : "$_SignBankIdNOErrorUserAgent()$"
@@ -94,6 +97,7 @@ javascriptLocalisation =
              , openBankId: "$_OpenBankId()$"
              , yourIdNumber: "$_YourIdNumber()$"
              , yourMobileNumber:"$_YourMobileNumber()$"
+             , yourEmail:"$_YourEmail()$"
              , idNumber: "$_IdNumber()$"
              , verifyIdentityWithName : "$_VerifyIdentityWithName()$"
              , verifyIdentityWithoutName : "$_VerifyIdentityWithoutName()$"
@@ -443,6 +447,7 @@ javascriptLocalisation =
                , authenticationToViewDKNemID : "$_designViewAddPartiesAuthenticationtoViewDKNemID()$"
                , authenticationToViewFITupas : "$_designViewAddPartiesAuthenticationtoViewFITupas()$"
                , authenticationToViewSMSPin : "$_designViewAddPartiesAuthenticationSMSPin()$"
+               , authenticationToViewVerimi : "$verimiText()$"
                , authenticationToSign : "$_designViewAddPartiesAuthentication()$"
                , authenticationToSignStandard : "$_designViewAddPartiesAuthenticationStandard()$"
                , authenticationToSignSEBankID : "$_designViewAddPartiesAuthenticationSEBankID()$"
@@ -766,6 +771,7 @@ javascriptLocalisation =
               , authenticationToViewDKNemID: "$_docviewSignatoryAuthenticationToViewDKNemID()$"
               , authenticationToViewFITupas: "$_docviewSignatoryAuthenticationToViewFITupas()$"
               , authenticationToViewSMSPin:  "$_docviewSignatoryAuthenticationToViewSMSPin()$"
+              , authenticationToViewVerimi: "$verimiText()$"
               , authenticationToSign: "$_docviewSignatoryAuthenticationToSignMethodLabel()$"
               , authenticationToSignStandard: "$_docviewSignatoryAuthenticationToSignStandard()$"
               , authenticationToSignSMSPin: "$_docviewSignatoryAuthenticationToSignSMSPin()$"

@@ -8,7 +8,7 @@ import DB
 tableFeatureFlags :: Table
 tableFeatureFlags = tblTable {
     tblName = "feature_flags"
-  , tblVersion = 15
+  , tblVersion = 17
   , tblColumns = [
       tblColumn { colName = "can_use_templates", colType = BoolT, colNullable = False }
     , tblColumn { colName = "can_use_branding", colType = BoolT, colNullable = False }
@@ -39,6 +39,7 @@ tableFeatureFlags = tblTable {
     , tblColumn { colName = "can_use_shareable_links", colType = BoolT, colNullable = False }
     , tblColumn { colName = "can_use_forwarding", colType = BoolT, colNullable = False }
     , tblColumn { colName = "can_use_document_party_notifications", colType = BoolT, colNullable = False }
+    , tblColumn { colName = "can_use_verimi_authentication_to_view", colType = BoolT, colNullable = False }
     ]
   , tblPrimaryKey = pkOnColumns ["user_group_id", "flags_for_admin"]
   , tblForeignKeys = [
@@ -48,7 +49,7 @@ tableFeatureFlags = tblTable {
 
 ctFeatureFlags :: CompositeType
 ctFeatureFlags = CompositeType {
-    ctName = "feature_flags_c1"
+    ctName = "feature_flags_c2"
   , ctColumns =
     [ CompositeColumn { ccName = "can_use_templates", ccType = BoolT }
     , CompositeColumn { ccName = "can_use_branding", ccType = BoolT }
@@ -68,6 +69,7 @@ ctFeatureFlags = CompositeType {
     , CompositeColumn { ccName = "can_use_sms_pin_authentication_to_sign", ccType = BoolT }
     , CompositeColumn { ccName = "can_use_standard_authentication_to_view", ccType = BoolT }
     , CompositeColumn { ccName = "can_use_standard_authentication_to_sign", ccType = BoolT }
+    , CompositeColumn { ccName = "can_use_verimi_authentication_to_view", ccType = BoolT }
     , CompositeColumn { ccName = "can_use_email_invitations", ccType = BoolT }
     , CompositeColumn { ccName = "can_use_email_confirmations", ccType = BoolT }
     , CompositeColumn { ccName = "can_use_api_invitations", ccType = BoolT }

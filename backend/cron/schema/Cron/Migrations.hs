@@ -17,6 +17,8 @@ module Cron.Migrations (
   , addMonthlyInvoiceJob
   , addCronStatsJob
   , removePasswordAlgorithmUpgradeJob
+  , addTimeoutedEIDTransactionsPurge
+
 ) where
 
 import Control.Monad.Catch
@@ -175,4 +177,13 @@ removePasswordAlgorithmUpgradeJob = Migration {
   , mgrFrom = 21
   , mgrAction = StandardMigration $ runSQL_ "DELETE FROM cron_jobs WHERE id = 'upgrade_password_algorithm'"
   }
+
+addTimeoutedEIDTransactionsPurge :: (MonadDB m, MonadThrow m) => Migration m
+addTimeoutedEIDTransactionsPurge = Migration {
+    mgrTableName = tblName tableCronJobs
+  , mgrFrom = 22
+  , mgrAction = StandardMigration $
+        runSQL_ "INSERT INTO cron_jobs (id, run_at) VALUES ('timeouted_eid_transactions_purge', to_timestamp(0))"
+  }
+
 

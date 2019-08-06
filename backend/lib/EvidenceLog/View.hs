@@ -26,6 +26,7 @@ import Doc.SignatoryIdentification
   , signatoryIdentifierMap )
 
 import EID.Authentication.Model
+import EID.EIDService.Types
 import EID.Nets.Types
 import EID.Signature.Model
 import EvidenceLog.Model
@@ -286,6 +287,10 @@ simplifiedEventText mactor sim dee = do
                 SMSPinAuthentication_ mobile -> do
                   F.value "provider_sms_pin" True
                   F.value "signatory_mobile" $ mobile
+                EIDServiceVerimiAuthentication_ n  -> do
+                  F.value "provider_verimi" True
+                  F.value "signatory_email" $ eidServiceVerimiVerifiedEmail n
+                  F.value "signatory_mobile" $ eidServiceVerimiVerifiedPhone n
         F.value "text" $ String.replace "\n" " " <$> evMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page
         F.value "additional_text" $ String.replace "\n" " " <$> evAdditionalMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page
         F.value "signatory" $ (\slid -> signatoryIdentifier sim slid emptyNamePlaceholder) <$> mslinkid

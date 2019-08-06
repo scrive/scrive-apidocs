@@ -249,7 +249,8 @@ guardCanSetAuthenticationToViewForSignatoryWithValues
       isGood . asValidDanishSSN    $ ssn
     isValidSSNForAuthenticationToView FITupasAuthenticationToView     ssn =
       isGood . asValidFinnishSSN   $ ssn
-
+    isValidSSNForAuthenticationToView VerimiAuthenticationToView _        =
+      True
     isValidMobileForAuthenticationToView
       :: AuthenticationToViewMethod -> String -> Bool
     isValidMobileForAuthenticationToView StandardAuthenticationToView _      =
@@ -263,6 +264,8 @@ guardCanSetAuthenticationToViewForSignatoryWithValues
     isValidMobileForAuthenticationToView NOBankIDAuthenticationToView mobile =
       (isGood || isEmpty) $ asValidPhoneForNorwegianBankID mobile
     isValidMobileForAuthenticationToView FITupasAuthenticationToView  _      =
+      True
+    isValidMobileForAuthenticationToView VerimiAuthenticationToView  _       =
       True
 
 guardCanSetAuthenticationToSignForSignatoryWithValue :: Kontrakcja m => SignatoryLinkID -> AuthenticationToSignMethod -> Maybe String -> Maybe String -> Document -> m ()
@@ -389,8 +392,8 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
        Left $ documentStateError "Some parties have an invalid email address or mobile number, their 'confirmation_delivery_method' requires it to be valid or empty."
     unless (all signatoryHasValidNotificationSettings $ documentsignatorylinks doc) $ do
        Left $ documentStateError "Some parties have an invalid email address or mobile number, their 'notification_delivery_method' requires it to be valid or empty."
-    unless (all signatoryHasValidSSNForIdentifyToView $ documentsignatorylinks doc) $ do
-       Left $ documentStateError "Some parties have an invalid personal numbers, their 'authentication_to_view' requires it to be valid and not empty."
+    unless (all signatoryHasValidSSNOrEmailForIdentifyToView $ documentsignatorylinks doc) $ do
+       Left $ documentStateError "Some parties have an invalid personal numbers/emails, their 'authentication_to_view' requires it to be valid and not empty."
     unless (all signatoryHasValidAuthSettings $ documentsignatorylinks doc) $ do
        Left $ documentStateError "Some parties have an invalid personal/mobile numbers, their 'authentication_to_sign' requires it to be valid or empty."
     unless (all signatoryHasValidMobileForIdentifyToView $ documentsignatorylinks doc) $ do
@@ -437,13 +440,14 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
       SMSPinAuthenticationToSign -> isJust (getFieldByIdentity MobileFI $ signatoryfields sl) && (null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl))
       StandardAuthenticationToSign -> True
 
-    signatoryHasValidSSNForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of
+    signatoryHasValidSSNOrEmailForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of
       SEBankIDAuthenticationToView -> isGood $ asValidSwedishSSN   $ getPersonalNumber sl
       NOBankIDAuthenticationToView -> isGood $ asValidNorwegianSSN $ getPersonalNumber sl
       DKNemIDAuthenticationToView  -> isGood $ asValidDanishSSN    $ getPersonalNumber sl
       FITupasAuthenticationToView  -> isGood $ asValidFinnishSSN   $ getPersonalNumber sl
       SMSPinAuthenticationToView   -> True
       StandardAuthenticationToView -> True
+      VerimiAuthenticationToView   -> isValidEmail $ getEmail sl
 
     signatoryHasValidMobileForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of
       NOBankIDAuthenticationToView -> (isGood $ asValidPhoneForNorwegianBankID (getMobile sl )) || (isEmpty $ asValidPhoneForNorwegianBankID (getMobile sl))

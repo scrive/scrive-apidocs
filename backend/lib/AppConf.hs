@@ -10,6 +10,7 @@ import qualified Data.Text as T
 
 import Database.Redis.Configuration
 import EID.CGI.GRP.Config
+import EID.EIDService.Conf
 import EID.Nets.Config
 import FileStorage.Amazon.Config
 import GuardTime (GuardTimeConf(..))
@@ -78,6 +79,7 @@ data AppConf = AppConf {
   , pdfToolsLambdaConf :: PdfToolsLambdaConf
     -- ^ Configuration of PdfTools Lambda
   , passwordServiceConf :: PasswordServiceConf
+  , eidServiceConf     :: Maybe EIDServiceConf
   } deriving (Eq, Show)
 
 unjsonAppConf :: UnjsonDef AppConf
@@ -183,5 +185,9 @@ unjsonAppConf = objectOf $ pure AppConf
   <*> fieldDef "password_service" defaultPasswordService
       passwordServiceConf
       "Configuration of password service"
+  <*> fieldOpt "eid_service"
+      eidServiceConf
+      "Configuration of eid service"
+
 instance Unjson AppConf where
   unjsonDef = unjsonAppConf

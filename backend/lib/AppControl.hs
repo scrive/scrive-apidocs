@@ -383,5 +383,6 @@ appHandler handleRoutes appConf appGlobals = runHandler
         , _ctxnetssignconfig     = netsSignConfig appConf
         , _ctxpdftoolslambdaenv  = pdftoolslambdaenv appGlobals
         , _ctxpasswordserviceconf = passwordServiceConf appConf
+        , _ctxeidserviceconf     = eidServiceConf appConf
         , _ctxmaybeapiuser       = Nothing
         }
