@@ -40,6 +40,7 @@ import Doc.Model
 import Doc.SignatoryLinkID
 import KontraLink
 import Log.Identifier
+import Mails.KontraInfoForMail
 import Mails.MailsData
 import Mails.Model hiding (Mail)
 import Mails.SendMail
@@ -55,20 +56,16 @@ processEvents limit = do
   -- We limit processing to <limit> events not to have issues with large number of documents locked.
   -- kontra infos are retrieved in did ascending order to acquire locks without deadlocking
   events <- take limit <$> dbQuery GetUnreadEvents
-  infos <- dbQuery $ GetKontraInfosForMails $ map (\(_, mid, _) -> mid) events
-  let findEventInfo mid' = find (\(_, mid, _) -> mid == mid') events
-      pushToTuple3 x (a, b, c) = (a, b, c, x)
-      eventInfos = catMaybes $ map (\(mid, info) -> pushToTuple3 info <$> findEventInfo mid) infos
-      eventsWithoutInfos = filter (\(_, mid, _) -> Nothing == find ((==mid).fst) infos) events
-  forM_ eventsWithoutInfos $ \(eid, mid, eventType) -> do
-    logInfo "Proccessing event without document info" $ object [
-            identifier eid
-          , identifier mid
-          , "event_type" .= show eventType
-          ]
-    markEventAsRead eid
-  forM_ eventInfos $ \event@(eid, mid, _, _) -> do
-    localData [identifier eid, identifier mid] $ processEvent event
+  forM_ events $ \(eid, mid, eventType, mkifm) ->
+    case mkifm of
+      Nothing -> do
+        logInfo "Proccessing event without document info" $
+          object [ identifier eid
+                 , identifier mid
+                 , "event_type" .= show eventType
+                 ]
+        markEventAsRead eid
+      Just kifm -> localData [identifier eid, identifier mid] $ processEvent (eid, mid, eventType, kifm)
   return $ length events
   where
     processEvent (eid, mid, eventType, kontraInfoForMail) = do

@@ -4,7 +4,6 @@ module Mails.MailsData (
   , emptyMail
   , KontraInfoForMail(..)
   , AddKontraInfoForMail(..)
-  , GetKontraInfosForMails(..)
 ) where
 
 import Data.Aeson
