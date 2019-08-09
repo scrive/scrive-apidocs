@@ -6,7 +6,6 @@ module AccessControl.API (
   , accessControlAPIV2Add
 ) where
 
-import Data.Unjson
 import Happstack.Server.Types
 import Happstack.StaticRouting
 import qualified Text.JSON.Gen as J
@@ -16,7 +15,6 @@ import AccessControl.Model
 import AccessControl.Types
 import API.V2
 import API.V2.Errors
-import API.V2.Parameters
 import API.V2.Utils
 import DB
 import Kontra
@@ -56,7 +54,7 @@ accessControlAPIV2GetUserRoles uid = api $ do
         serverError "Impossible happened (No user with ID, or deleted)"
       Just user -> do
         roles <- addInheritedRoles =<< dbQuery (GetRoles user)
-        Ok <$> return (arrayOf unjsonAccessRole, nub roles)
+        return . Ok  . encodeAccessRoles $ nub roles
 
 accessControlAPIV2Get :: Kontrakcja m => AccessRoleID -> m Response
 accessControlAPIV2Get roleId = api $ do
@@ -64,7 +62,7 @@ accessControlAPIV2Get roleId = api $ do
     Nothing -> apiError insufficientPrivileges
     Just role -> do
       apiAccessControlOrIsAdmin (roleToAccessPolicyReq role ReadA) $
-        Ok <$> return (unjsonAccessRole, role)
+        return . Ok $ encodeAccessRole role
 
 accessControlAPIV2Delete :: Kontrakcja m => AccessRoleID -> m Response
 accessControlAPIV2Delete roleId = api $ do
@@ -79,7 +77,7 @@ accessControlAPIV2Delete roleId = api $ do
 
 accessControlAPIV2Add :: Kontrakcja m => m Response
 accessControlAPIV2Add = api $ do
-  role <- apiV2ParameterObligatory $ ApiV2ParameterJSON "role" unjsonAccessRole
+  role <- getApiRoleParameter
   apiAccessControlOrIsAdmin (roleToAccessPolicyReq role CreateA) $ do
     mrole <- case role of
       AccessRoleUser _ uid target
@@ -91,15 +89,15 @@ accessControlAPIV2Add = api $ do
       AccessRoleImplicitUserGroup ugid target
         -> dbUpdate $ AccessControlCreateForUserGroup ugid target
     case mrole of
-      Nothing -> unexpectedError "Impossible happened (new role does not exist)"
-      Just role' -> Ok <$> return (unjsonAccessRole, role')
+      Nothing -> apiError $ serverError "Impossible happened (new role does not exist)"
+      Just role' -> return . Ok $ encodeAccessRole role'
 
 -- This helper function constructs a set of roles that you need in order to
 -- view/alter some *other* role
 roleToAccessPolicyReq :: AccessRole -> AccessAction -> [AccessPolicyItem]
 roleToAccessPolicyReq role act =
   -- if the source has user policy on a user group, this requirement will be
-  -- also satisfied automatically
+  -- also be satisfied automatically
   let mkAccPolicyUser uid       = mkAccPolicyItem (act, UserPolicyR, uid)
       mkAccPolicyUserGroup ugid = mkAccPolicyItem (act, UserGroupPolicyR, ugid)
       mkAccPolicyFolder fid     = mkAccPolicyItem (act, FolderPolicyR, fid)

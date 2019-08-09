@@ -18,6 +18,7 @@ import Log
 import Text.JSON hiding (Ok)
 import Text.JSON.Gen hiding (object)
 import qualified Data.Aeson as A
+import qualified Data.Aeson.Encoding as AE
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSU
@@ -61,6 +62,12 @@ instance ToAPIResponse A.Value where
     Web.toResponse $
     A.encode aesonvalue
 
+instance ToAPIResponse A.Encoding where
+  toAPIResponse aesonencoding =
+    setHeader "Content-Type" "application/json; charset=UTF-8" $
+    Web.toResponse $
+    AE.encodingToLazyByteString aesonencoding
+
 instance ToAPIResponse (UnjsonDef a,a) where
   toAPIResponse (unjson,a) =
     setHeader "Content-Type" "application/json; charset=UTF-8" $
@@ -83,7 +90,6 @@ instance ToAPIResponse a => ToAPIResponse (APIResponse a) where
 
 instance ToAPIResponse () where
   toAPIResponse () = toResponse ""
-
 
 -- | Convert the `APIResponse` return type to the appropriate `Response`
 -- This defines the possible outputs of the API.

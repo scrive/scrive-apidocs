@@ -1,72 +1,101 @@
 {-# LANGUAGE TemplateHaskell #-}
+
 module AccessControl.JSON (
-    unjsonAccessRole
+  getApiRoleParameter
+, encodeAccessRole
+, encodeAccessRoles
 ) where
 
-import Data.Unjson
+import Data.Aeson
+import Data.Bifunctor
+import GHC.Generics
+import qualified Data.HashMap.Strict as HM
+import qualified Data.Text as T
 
 import AccessControl.Types
+import API.V2
+import API.V2.Parameters
 import Folder.Model
+import Kontra
 import User.UserID
 import UserGroup.Types
-import Utils.TH
-
-unjsonAccessRole :: UnjsonDef AccessRole
-unjsonAccessRole = unjsonInvmapR
-  ((maybe (fail errorMsg) return) . jsonToAccessRole)
-  accessRoleToJSON
-  unjsonAccessRoleJSON
-    where
-      errorMsg = "Can't parse AccessRole - Role type doesn't match target type"
-
-unjsonAccessRoleJSON :: UnjsonDef AccessRoleJSON
-unjsonAccessRoleJSON = objectOf $ pure AccessRoleJSON
-  <*> fieldOpt "id" roleID "AccessRoleJSON role ID"
-  <*> fieldOpt "is_generated" isGenerated "AccessRoleJSON is generated role?"
-  <*> field "role_type" roleType "AccessRoleJSON role type"
-  <*> fieldBy "source" source "AccessRoleJSON source" unjsonAccessRoleSourceJSON
-  <*> fieldBy "target" target "AccessRoleJSON target" unjsonAccessRoleTargetJSON
-
-unjsonAccessRoleSourceJSON :: UnjsonDef AccessRoleSourceJSON
-unjsonAccessRoleSourceJSON = disjointUnionOf "type" [
-    ("user", $(isConstr 'AccessRoleUserSourceJSON),
-      pure AccessRoleUserSourceJSON
-      <*> field "id" (\(AccessRoleUserSourceJSON uid) -> uid)
-          "AccessRoleJSON source user id")
-  , ("user_group", $(isConstr 'AccessRoleUserGroupSourceJSON),
-      pure AccessRoleUserGroupSourceJSON
-      <*> field "id" (\(AccessRoleUserGroupSourceJSON ugid) -> ugid)
-          "AccessRoleJSON source user group ID")
-  ]
-
-unjsonAccessRoleTargetJSON :: UnjsonDef AccessRoleTargetJSON
-unjsonAccessRoleTargetJSON = disjointUnionOf "type" [
-    ("user", $(isConstr 'UserTargetJSON), pure UserTargetJSON
-      <*> field "id" (\(UserTargetJSON uid) -> uid) "AccessRoleJSON user id")
-  , ("user_group", $(isConstr 'UserGroupTargetJSON), pure UserGroupTargetJSON
-      <*> field "id" (\(UserGroupTargetJSON ugid) -> ugid)
-          "AccessRoleJSON user group ID")
-  , ("folder", $(isConstr 'FolderTargetJSON), pure FolderTargetJSON
-      <*> field "id" (\(FolderTargetJSON fid) -> fid)
-          "AccessRoleJSON folder ID")
-  ]
 
 data AccessRoleJSON = AccessRoleJSON {
-    roleID :: Maybe AccessRoleID
-  , isGenerated :: Maybe Bool
-  , roleType :: AccessRoleType
-  , source :: AccessRoleSourceJSON
-  , target :: AccessRoleTargetJSON
+    roleID         :: Maybe AccessRoleID
+  , isGenerated    :: Maybe Bool
+  , roleType       :: AccessRoleType
+  , source         :: AccessRoleSourceJSON
+  , target         :: AccessRoleTargetJSON
+  , allowedActions :: AccessRoleAllowedActions
   }
+  deriving Generic
+
+instance ToJSON AccessRoleJSON where
+  toEncoding = genericToEncoding defaultOptions { fieldLabelModifier = nameMap }
+    where
+      nameMap :: String -> String
+      nameMap "roleID" = "id"
+      nameMap s = camelTo2 '_' s
+
+instance FromJSON AccessRoleJSON where
+  parseJSON = withObject "role" $ \o -> do
+    roleType <- o .: "role_type"
+    source   <- o .: "source"
+    target   <- o .: "target"
+    forbidField o "id"
+    forbidField o "is_generated"
+    forbidField o "allowed_actions"
+    let roleID         = Nothing
+    let isGenerated    = Nothing
+    let allowedActions = AccessRoleAllowedActions []
+    return AccessRoleJSON {..}
+      where
+        forbidField o name = o .:? name >>= \case
+          Just (_ :: Value) ->
+            fail $ "Cannot parse role: " ++ T.unpack name ++ " must not be set"
+          Nothing -> return ()
 
 data AccessRoleSourceJSON
   = AccessRoleUserSourceJSON UserID
   | AccessRoleUserGroupSourceJSON UserGroupID
+  deriving Generic
+
+instance ToJSON AccessRoleSourceJSON where
+  toEncoding (AccessRoleUserSourceJSON uid) =
+    pairs $ "type" .= ("user" :: T.Text)       <> "id" .= uid
+  toEncoding (AccessRoleUserGroupSourceJSON ugid) =
+    pairs $ "type" .= ("user_group" :: T.Text) <> "id" .= ugid
+
+instance FromJSON AccessRoleSourceJSON where
+  parseJSON = withObject "source" $ \o -> do
+    (sourceType :: T.Text) <- o .: "type"
+    case sourceType of
+      "user"       -> AccessRoleUserSourceJSON      <$> o .: "id"
+      "user_group" -> AccessRoleUserGroupSourceJSON <$> o .: "id"
+      _            -> fail "Cannot parse role: Invalid source type"
 
 data AccessRoleTargetJSON
   = UserTargetJSON UserID
   | UserGroupTargetJSON UserGroupID
   | FolderTargetJSON FolderID
+  deriving Generic
+
+instance ToJSON AccessRoleTargetJSON where
+  toEncoding (UserTargetJSON uid) =
+    pairs $ "type" .= ("user" :: T.Text)       <> "id" .= uid
+  toEncoding (UserGroupTargetJSON ugid) =
+    pairs $ "type" .= ("user_group" :: T.Text) <> "id" .= ugid
+  toEncoding (FolderTargetJSON fid) =
+    pairs $ "type" .= ("folder" :: T.Text)     <> "id" .= fid
+
+instance FromJSON AccessRoleTargetJSON where
+  parseJSON = withObject "target" $ \o -> do
+    (targetType :: T.Text) <- o .: "type"
+    case targetType of
+      "user"       -> UserTargetJSON      <$> o .: "id"
+      "user_group" -> UserGroupTargetJSON <$> o .: "id"
+      "folder"     -> FolderTargetJSON    <$> o .: "id"
+      _            -> fail "Cannot parse role: Invalid target type"
 
 accessRoleToJSON :: AccessRole -> AccessRoleJSON
 accessRoleToJSON (AccessRoleUser rid uid target) = AccessRoleJSON {
@@ -75,6 +104,7 @@ accessRoleToJSON (AccessRoleUser rid uid target) = AccessRoleJSON {
   , roleType = toAccessRoleType target
   , source = AccessRoleUserSourceJSON uid
   , target = accessRoleTargetToJSON target
+  , allowedActions = accessRoleTargetToAllowedActions target
   }
 accessRoleToJSON (AccessRoleUserGroup rid ugid target) = AccessRoleJSON {
     roleID = Just rid
@@ -82,6 +112,7 @@ accessRoleToJSON (AccessRoleUserGroup rid ugid target) = AccessRoleJSON {
   , roleType = toAccessRoleType target
   , source = AccessRoleUserGroupSourceJSON ugid
   , target = accessRoleTargetToJSON target
+  , allowedActions = accessRoleTargetToAllowedActions target
   }
 accessRoleToJSON (AccessRoleImplicitUser uid target) = AccessRoleJSON {
     roleID = Nothing
@@ -89,6 +120,7 @@ accessRoleToJSON (AccessRoleImplicitUser uid target) = AccessRoleJSON {
   , roleType = toAccessRoleType target
   , source = AccessRoleUserSourceJSON uid
   , target = accessRoleTargetToJSON target
+  , allowedActions = accessRoleTargetToAllowedActions target
   }
 accessRoleToJSON (AccessRoleImplicitUserGroup ugid target) = AccessRoleJSON {
     roleID = Nothing
@@ -96,34 +128,70 @@ accessRoleToJSON (AccessRoleImplicitUserGroup ugid target) = AccessRoleJSON {
   , roleType = toAccessRoleType target
   , source = AccessRoleUserGroupSourceJSON ugid
   , target = accessRoleTargetToJSON target
+  , allowedActions = accessRoleTargetToAllowedActions target
   }
 
-accessRoleTargetToJSON :: AccessRoleTarget -> AccessRoleTargetJSON
-accessRoleTargetToJSON (UserAR uid) = UserTargetJSON uid
-accessRoleTargetToJSON (UserGroupMemberAR ugid) = UserGroupTargetJSON ugid
-accessRoleTargetToJSON (UserAdminAR ugid) = UserGroupTargetJSON ugid
-accessRoleTargetToJSON (UserGroupAdminAR ugid) = UserGroupTargetJSON ugid
-accessRoleTargetToJSON (DocumentAdminAR fid) = FolderTargetJSON fid
+newtype AccessRoleAllowedActions = AccessRoleAllowedActions [(T.Text, [T.Text])]
+  deriving Generic
 
-jsonToAccessRole :: AccessRoleJSON -> Maybe AccessRole
-jsonToAccessRole roleJson = constructor <$> roleTarget
+instance ToJSON AccessRoleAllowedActions where
+  toEncoding (AccessRoleAllowedActions resources) =
+    pairs . foldr (<>) mempty $ map (uncurry (.=)) resources
+
+accessRoleTargetToAllowedActions :: AccessRoleTarget -> AccessRoleAllowedActions
+accessRoleTargetToAllowedActions target =
+  AccessRoleAllowedActions . groupActions $ hasPermissions target
+    where
+      mkPair (Permission act res _) = (T.pack $ show res, [T.pack $ show act])
+      groupActions = sortAll . HM.toList . HM.fromListWith (++) . map mkPair
+      sortAll = sort . map (second sort)
+
+accessRoleTargetToJSON :: AccessRoleTarget -> AccessRoleTargetJSON
+accessRoleTargetToJSON (UserAR uid)             = UserTargetJSON uid
+accessRoleTargetToJSON (UserGroupMemberAR ugid) = UserGroupTargetJSON ugid
+accessRoleTargetToJSON (UserAdminAR ugid)       = UserGroupTargetJSON ugid
+accessRoleTargetToJSON (UserGroupAdminAR ugid)  = UserGroupTargetJSON ugid
+accessRoleTargetToJSON (DocumentAdminAR fid)    = FolderTargetJSON fid
+
+jsonToAccessRole :: Monad m => AccessRoleJSON -> m AccessRole
+jsonToAccessRole roleJson = constructor =<< jsonToAccessRoleTarget roleJson
   where
-    constructor = case (roleID roleJson, source roleJson) of
-      (Just rid, AccessRoleUserSourceJSON uid) -> AccessRoleUser rid uid
-      (Just rid, AccessRoleUserGroupSourceJSON ugid)
-        -> AccessRoleUserGroup rid ugid
-      (Nothing, AccessRoleUserSourceJSON uid) -> AccessRoleImplicitUser uid
-      (Nothing, AccessRoleUserGroupSourceJSON ugid)
-        -> AccessRoleImplicitUserGroup ugid
-    roleTarget = case target roleJson of
-      UserTargetJSON uid -> case roleType roleJson of
-        UserART -> Just $ UserAR uid
-        _ -> Nothing
-      UserGroupTargetJSON ugid -> case roleType roleJson of
-        UserAdminART -> Just $ UserGroupMemberAR ugid
-        UserGroupAdminART -> Just $ UserAdminAR ugid
-        UserGroupMemberART -> Just $ UserGroupAdminAR ugid
-        _ -> Nothing
-      FolderTargetJSON fid -> case roleType roleJson of
-        DocumentAdminART -> Just $ DocumentAdminAR fid
-        _ -> Nothing
+    constructor target = case source roleJson of
+      AccessRoleUserSourceJSON uid
+        -> return $ AccessRoleImplicitUser uid target
+      AccessRoleUserGroupSourceJSON ugid
+        -> return $ AccessRoleImplicitUserGroup ugid target
+
+jsonToAccessRoleTarget :: Monad m => AccessRoleJSON -> m AccessRoleTarget
+jsonToAccessRoleTarget roleJson =
+  case target roleJson of
+    UserTargetJSON uid -> case roleType roleJson of
+      UserART -> return $ UserAR uid
+      _       -> fail invalidTargetErr
+    UserGroupTargetJSON ugid -> case roleType roleJson of
+      UserAdminART       -> return $ UserGroupMemberAR ugid
+      UserGroupAdminART  -> return $ UserAdminAR ugid
+      UserGroupMemberART -> return $ UserGroupAdminAR ugid
+      _                  -> fail invalidTargetErr
+    FolderTargetJSON fid -> case roleType roleJson of
+      DocumentAdminART -> return $ DocumentAdminAR fid
+      _                -> fail invalidTargetErr
+  where
+    invalidTargetErr =
+      "Can't parse AccessRole - Role type doesn't match target type"
+
+encodeAccessRole :: AccessRole -> Encoding
+encodeAccessRole = toEncoding . accessRoleToJSON
+
+encodeAccessRoles :: [AccessRole] -> Encoding
+encodeAccessRoles = toEncoding . map accessRoleToJSON
+
+getApiRoleParameter :: Kontrakcja m => m AccessRole
+getApiRoleParameter = do
+  let paramName = "role"
+  roleJson <- apiV2ParameterObligatory $ ApiV2ParameterAeson paramName
+  case jsonToAccessRole roleJson of
+    Left errMsg ->
+      let errMsg' = T.pack $ "Invalid JSON: " ++ errMsg in
+        apiError $ requestParameterParseError paramName errMsg'
+    Right role  -> return role
