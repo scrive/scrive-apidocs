@@ -26,6 +26,7 @@ import File.Model
 import File.Storage
 import Happstack.Fields
 import Kontra
+import Util.ImageUtil
 import Util.PDFUtil
 import qualified Data.ByteString.RFC2397 as Base64Image
 import qualified InputValidation as V
@@ -186,10 +187,13 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFOrImage name) = do
           res <- preCheckPDF content'
           case res of
             Right r -> return r
-            Left _ ->  apiError $ requestParameterParseError name $ "filename suggests PDF, but not a valid PDF"
-        (_, True) -> if (not $ BS.null content')
-          then return content'
-          else apiError $ requestParameterParseError name "image is empty"
+            Left _ ->  apiError $ requestParameterParseError name "filename suggests PDF, but not a valid PDF"
+        (_, True) -> do
+          when (BS.null content') $ apiError $ requestParameterParseError name "image is empty"
+          res <- preCheckImage content'
+          case res of
+            Right r -> return r
+            Left _ ->  apiError $ requestParameterParseError name "filename suggests image, but not a valid PNG/JPG"
         _ -> apiError $ requestParameterParseError name "not a PDF or image (PNG or JPG)"
       fileid <- saveNewFile filename content
       file <- dbQuery $ GetFileByFileID fileid

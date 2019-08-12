@@ -131,6 +131,7 @@ docApiV2SigSigningStatusCheck did slid = logDocumentAndSignatory did slid . api 
     sl <- guardGetSignatoryFromIdForDocument slid
     isDocumentSigningInProgress <- dbQuery $ IsDocumentSigningInProgress slid
     lastCheckStatus <- dbQuery $ GetDocumentSigningLastCheckStatus slid
+    logInfo "Last status" $ object [ "status" .= lastCheckStatus ]
     return $ Ok $ JSObject (J.toJSObject $ [
         ("in_progress", JSBool isDocumentSigningInProgress)
       , ("signed", JSBool $ isSignatoryAndHasSigned sl)

@@ -477,6 +477,7 @@ Library
                  , Util.CSVUtil
                  , Util.HasSomeUserInfo
                  , Util.MonadUtils
+                 , Util.ImageUtil
                  , Util.PDFUtil
                  , Util.QRCode
                  , Util.SignatoryLinkUtils
@@ -559,6 +560,7 @@ Library
                , iconv
                , invariant
                , json
+               , JuicyPixels
                , kontrakcja-templates
                , lens
                , lifted-async
