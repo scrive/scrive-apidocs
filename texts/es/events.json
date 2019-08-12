@@ -14,6 +14,7 @@
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Verifique su identidad con en el banco noruego para acceder al documento.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Verifique su identidad con en el banco sueco para acceder al documento.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Verifique su identidad con el PIN del SMS para acceder al documento.",
+"_AuthenticatedToViewEvidenceArchiveVerimi":"",
 "_AutomaticReminderSentTextSimpleEmail":"Un aviso automático para firmar el documento fue enviado a $signatory$ por email.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Un aviso automático para firmar el documento fue enviado a $signatory$ por email y SMS.",
 "_AutomaticReminderSentTextSimpleSMS":"Un aviso automático para firmar el documento fue enviado a $signatory$ por SMS.",

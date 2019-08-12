@@ -14,6 +14,7 @@
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Patvirtino savo tapatybę per Norvegijos „BankID“, kad gautų dokumento prieigą.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Patvirtino savo tapatybę per Švedijos „BankID“, kad gautų dokumento prieigą.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Patvirtino savo tapatybę per SMS žinutę su PIN.",
+"_AuthenticatedToViewEvidenceArchiveVerimi":"",
 "_AutomaticReminderSentTextSimpleEmail":"$signatory$ elektroniniu paštu išsiųstas automatinis priminimas pasirašyti dokumentą.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"$signatory$ elektroniniu paštu ir SMS žinute išsiųstas automatinis priminimas pasirašyti dokumentą.",
 "_AutomaticReminderSentTextSimpleSMS":"$signatory$ SMS žinute išsiųstas automatinis priminimas pasirašyti dokumentą.",

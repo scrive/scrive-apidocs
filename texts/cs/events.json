@@ -14,6 +14,7 @@
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Za účelem přístupu k dokumentu prokázal uživatel svoji totožnost pomocí norské služby BankID.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Za účelem přístupu k dokumentu prokázal uživatel svoji totožnost pomocí švédské služby BankID.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Za účelem přístupu k dokumentu prokázal uživatel svoji totožnost pomocí kódu PIN zaslaného zprávou SMS.",
+"_AuthenticatedToViewEvidenceArchiveVerimi":"",
 "_AutomaticReminderSentTextSimpleEmail":"Uživateli $signatory$ byla e-mailem odeslána automatická upomínka k podpisu dokumentu.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Uživateli $signatory$ byla e-mailem a zprávou SMS odeslána automatická upomínka k podpisu dokumentu.",
 "_AutomaticReminderSentTextSimpleSMS":"Uživateli $signatory$ byla zprávou SMS odeslána automatická upomínka k podpisu dokumentu.",

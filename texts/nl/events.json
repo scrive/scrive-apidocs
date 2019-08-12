@@ -14,6 +14,7 @@
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Heeft zijn/haar identiteit geverifiëerd met Norwegian BankID om toegang te krijgen tot het document.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Heeft zijn/haar identiteit geverifiëerd met Swedish BankID om toegang te krijgen tot het document.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Bevestigde zijn/haar identiteit met PIN via SMS om toegang tot dit document te krijgen.",
+"_AuthenticatedToViewEvidenceArchiveVerimi":"",
 "_AutomaticReminderSentTextSimpleEmail":"Een automatische herinnering om het document te ondertekenen is verstuurd naar $signatory$ via E-mail. ",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Een automatische herinnering om het document te ondertekenen is verstuurd naar $signatory$ via E-mail en SMS.",
 "_AutomaticReminderSentTextSimpleSMS":"Een automatische herinnering om het document te ondertekenen is verstuurd naar $signatory$ via SMS.",

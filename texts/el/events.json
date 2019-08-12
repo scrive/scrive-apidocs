@@ -14,6 +14,7 @@
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Πιστοποίησαν την ταυτότητά τους μέσω της εφαρμογής Norwegian BankID για πρόσβαση στο έγγραφο. ",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Πιστοποίησαν την ταυτότητά τους μέσω της εφαρμογής Swedish BankID για πρόσβαση στο έγγραφο.  ",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Πιστοποίησαν την ταυτότητά τους με PIN μέσω SMS για πρόσβαση στο έγγραφο.",
+"_AuthenticatedToViewEvidenceArchiveVerimi":"",
 "_AutomaticReminderSentTextSimpleEmail":"Μια αυτόματη υπενθύμιση υπογραφής του εγγράφου απεστάλη στον/στην $signatory$ μέσω email. ",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Μια αυτόματη υπενθύμιση υπογραφής του εγγράφου απεστάλη στον/στην $signatory$ μέσω email και SMS. ",
 "_AutomaticReminderSentTextSimpleSMS":"Μια αυτόματη υπενθύμιση υπογραφής του εγγράφου απεστάλη στον/στην $signatory$ μέσω SMS. ",
