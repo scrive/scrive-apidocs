@@ -10,7 +10,6 @@ module Doc.API.V2.Calls.DocumentGetCalls (
 , docApiV2FilesPage
 , docApiV2FilesPagesCount
 , docApiV2FilesGet
-, docApiV2Texts
 -- * Functions for tests
 , docApiV2FilesFullForTests
 ) where
@@ -49,7 +48,6 @@ import Doc.DocUtils (fileFromMainFile)
 import Doc.Logging
 import Doc.Model
 import Doc.SignatoryLinkID
-import Doc.Texts
 import EvidenceLog.Model
 import EvidenceLog.View
 import File.File
@@ -336,33 +334,3 @@ docApiV2FilesFullInternal doc = do
 
 docApiV2FilesFullForTests :: Kontrakcja m => Document -> m [(FilePath, BS.ByteString)]
 docApiV2FilesFullForTests = docApiV2FilesFullInternal
-
--------------------------------------------------------------------------------
-
-docApiV2Texts :: Kontrakcja m => DocumentID -> FileID -> m Response
-docApiV2Texts did fid = logDocumentAndFile did fid . api $ do
-  -- Permissions
-  (user,_) <- getAPIUser APIDocCreate
-  withDocumentID did $ do
-    -- Guards
-    guardThatUserIsAuthor user =<< theDocument
-    guardDocumentStatus Preparation =<< theDocument
-    -- Parameters
-    -- We have a "black-box" JSON structure here, see Doc.Texts for details
-    -- If you feel motivated you can refactor this to proper data type with
-    -- Unjson instance to make things better :)
-    jsonText <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "json")
-    (json :: JSValue) <- case J.decode jsonText of
-            J.Ok j -> return j
-            _ -> apiError $ requestParameterParseError "json" "Could not read JSON"
-    -- API call actions
-    doc <- theDocument
-    case mainfileid <$> documentfile doc of
-      Nothing -> apiError $ resourceNotFound "The document has no main file"
-      Just mainFid -> when (fid /= mainFid) (apiError $ resourceNotFound "Given 'fileid' is not the main file of the document")
-    content <- getFileIDContents fid
-    eitherResult <- runJavaTextExtract json content
-    case eitherResult of
-      Left err -> apiError $ serverError err
-      -- Return
-      Right res -> return $ Ok res

@@ -27,7 +27,6 @@ import Data.Char
 import Data.Either.Combinators (rightToMaybe)
 import Data.Int
 import Data.String.Utils (replace, strip)
-import Data.Text (unpack)
 import Data.Time
 import Happstack.Server.RqData
 import Happstack.Server.Types
@@ -89,7 +88,6 @@ import Doc.SignatoryScreenshots
   , resolveReferenceScreenshotNames )
 
 import Doc.SMSPin.Model
-import Doc.Texts
 import Doc.Tokens.Model
 import EID.Signature.Model
 import EvidenceLog.Model
@@ -152,8 +150,6 @@ documentAPIV1  = choice [
   dir "history"           $ hGetAllowHttp $ apiCallV1History,
   dir "downloadmainfile"   $ hGetAllowHttp  $ toK2 $ apiCallV1DownloadMainFile,
   dir "downloadfile"       $ hGetAllowHttp  $ toK3 $ apiCallV1DownloadFile,
-  dir "extracttexts"       $ hGetAllowHttp  $ toK2 $ apiCallV1ExtractTexts,
-
   dir "changemainfile"     $ hPost $ toK1 $ apiCallV1ChangeMainFile,
 
   dir "setsignatoryattachment"    $ hPost $ toK3 $ apiCallV1SetSignatoryAttachment
@@ -1257,33 +1253,6 @@ apiCallV1DownloadFile did fileid nameForBrowser = logDocumentAndFile did fileid 
                         else "application/octet-stream"
             res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString ct) res
         return res2
-
-apiCallV1ExtractTexts :: Kontrakcja m => DocumentID -> FileID -> m Response
-apiCallV1ExtractTexts did fileid = logDocumentAndFile did fileid . api $ do
-  (user, _actor , _) <- getAPIUser APIDocCreate
-  withDocumentID did $ do
-    unlessM (isPreparation <$> theDocument) $ do
-      throwM . SomeDBExtraException $ serverError "Can't extract texts from documents that are not in preparation"
-    auid <- apiGuardJustM (serverError "No author found") $
-            (maybesignatory <=< getAuthorSigLink) <$> theDocument
-    unless (auid == userid user) $
-      throwM . SomeDBExtraException $
-      serverError "Permission problem. Not an author."
-
-
-    jsons <- apiGuardL (badInput "The MIME part 'json' must exist and must be a JSON.") $ getDataFn' (look "json")
-    json <- apiGuard (badInput "The MIME part 'json' must be a valid JSON.") $ case decode jsons of
-                                                                                 J.Ok js -> Just js
-                                                                                 _ -> Nothing
-    doc <- theDocument
-    when (Just fileid /= (mainfileid <$> documentfile doc)) $ do
-      throwM . SomeDBExtraException $ serverError "Requested file does not belong to the document"
-
-    content <- getFileIDContents fileid
-    eitherResult <- runJavaTextExtract json content
-    case eitherResult of
-      Left err -> throwM . SomeDBExtraException $ serverError (unpack err)
-      Right res -> return $ Ok res
 
 -- this one must be standard post with post params because it needs to
 -- be posted from a browser form

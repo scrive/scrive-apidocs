@@ -52,8 +52,6 @@ documentAPIV2  = dir "documents" $ choice [
   , param $ dir "files" $ param $ dir "pagescount" $ hGet $ toK2 $ docApiV2FilesPagesCount
   , param $ dir "files" $ param $ dir "page"       $ hGet $ toK3 $ docApiV2FilesPage
 
-  , param $ dir "texts" $ hGet $ toK2 $ docApiV2Texts
-
   , param $ dir "shareablelink" $ choice
       [ dir "generate" $ hPost $ toK1 $ docApiV2GenerateShareableLink
       , dir "discard" $ hPost $ toK1 $ docApiV2DiscardShareableLink

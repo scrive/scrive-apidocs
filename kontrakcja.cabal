@@ -240,7 +240,6 @@ Library
                  , Doc.Signing.Model
                  , Doc.Signing.Tables
                  , Doc.Tables
-                 , Doc.Texts
                  , Doc.Tokens.Model
                  , Doc.Tokens.Tables
                  , Doc.Trigger

@@ -1,7 +1,6 @@
 module Doc.API.V2.Calls.DocumentGetCallsTest (apiV2DocumentGetCallsTests) where
 
 import Control.Monad.IO.Class
-import Data.Aeson (Value(String))
 import Data.Time (UTCTime(..), addUTCTime, fromGregorian)
 import Happstack.Server
 import Log
@@ -59,7 +58,6 @@ apiV2DocumentGetCallsTests env = testGroup "APIv2DocumentGetCalls" $
   , testThat "API v2 Files - Pages"         env testDocApiV2FilesPages
   , testThat "API v2 Files - Get"           env testDocApiV2FilesGet
   , testThat "API v2 Files - Full"          env testDocApiV2FilesFull
-  , testThat "API v2 Texts"                 env testDocApiV2Texts
 --  , testThat "API v2 Get - Not after 30 days for signatories" env testDocApiV2GetFailsAfter30Days
   ]
 
@@ -472,22 +470,3 @@ testDocApiV2FilesFull = do
     assertBool "Does not have merged.pdf" $ "merged.pdf" `notElem` map fst files
     assertBool "Does not have sig_att.pdf" $ "sig_att.pdf" `notElem` map fst files
     assertBool "Has not_merged.pdf" $ "not_merged.pdf" `elem` map fst files
-
-testDocApiV2Texts :: TestEnv ()
-testDocApiV2Texts = do
-  user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
-  did <- getMockDocId <$> testDocApiV2New' ctx
-
-  mockDocSetFile <- mockDocTestRequestHelper ctx POST [("file", inFile $ inTestDir "pdfs/simple.pdf")] (docApiV2SetFile did) 200
-  let fid = getMockDocFileId mockDocSetFile
-
-  rspJSON <- jsonTestRequestHelper ctx
-    GET [("json", inText "{ \"rects\":[{ \"rect\": [0,0,1,1] , \"page\": 1 }]}")]
-    (docApiV2Texts did fid) 200
-  (rect1:_) <- lookupObjectArray "rects" rspJSON
-  (line1:_) <- lookupObjectArray "lines" rect1
-  let text1 = case line1 of
-                String s -> s
-                _ -> unexpectedError "Should have been 'String' constructor"
-  assertEqual "Lines in `docApiV2Texts` should match" "This is a test contract pdf." text1
