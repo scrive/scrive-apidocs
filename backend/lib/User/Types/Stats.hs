@@ -1,7 +1,6 @@
 module User.Types.Stats
     (
       DocumentStats(..)
-    , TemplateStats(..)
     , StatsPartition(..)
     , UserUsageStats(..)
     , ShareableLinkUsageStats(..)
@@ -14,9 +13,19 @@ import qualified Data.Semigroup as SG
 data StatsPartition = PartitionByDay | PartitionByMonth
 
 data DocumentStats = DocumentStats {
-    dsDocumentsSent    :: !Int64
-  , dsDocumentsClosed  :: !Int64
-  , dsSignaturesClosed :: !Int64
+    dsDocumentsSent           :: !Int64
+  , dsDocumentsClosed         :: !Int64
+  , dsSignaturesClosed        :: !Int64
+  , dsSMSSent                 :: !Int64
+  , dsSMSSentViaTelia         :: !Int64
+  , dsSEBankIDSignatures      :: !Int64
+  , dsSEBankIDAuthentications :: !Int64
+  , dsNOBankIDAuthentications :: !Int64
+  , dsNemIDAuthentications    :: !Int64
+  , dsNOBankIDSignatures      :: !Int64
+  , dsNemIDSignatures         :: !Int64
+  , dsTupasAuthentications    :: !Int64
+  , dsShareableLinks          :: !Int64
   } deriving (Eq, Ord, Show)
 
 instance SG.Semigroup DocumentStats where
@@ -24,10 +33,20 @@ instance SG.Semigroup DocumentStats where
       dsDocumentsSent = dsDocumentsSent ds1 + dsDocumentsSent ds2
     , dsDocumentsClosed = dsDocumentsClosed ds1 + dsDocumentsClosed ds2
     , dsSignaturesClosed = dsSignaturesClosed ds1 + dsSignaturesClosed ds2
+    , dsSMSSent = dsSMSSent ds1 + dsSMSSent ds2
+    , dsSMSSentViaTelia = dsSMSSentViaTelia ds1 + dsSMSSentViaTelia ds2
+    , dsSEBankIDSignatures = dsSEBankIDSignatures ds1 + dsSEBankIDSignatures ds2
+    , dsSEBankIDAuthentications = dsSEBankIDAuthentications ds1 + dsSEBankIDAuthentications ds2
+    , dsNOBankIDAuthentications = dsNOBankIDAuthentications ds1 + dsNOBankIDAuthentications ds2
+    , dsNemIDAuthentications = dsNemIDAuthentications ds1 + dsNemIDAuthentications ds2
+    , dsNOBankIDSignatures = dsNOBankIDSignatures ds1 + dsNOBankIDSignatures ds2
+    , dsNemIDSignatures = dsNemIDSignatures ds1 + dsNemIDSignatures ds2
+    , dsTupasAuthentications = dsTupasAuthentications ds1 + dsTupasAuthentications ds2
+    , dsShareableLinks = dsShareableLinks ds1 + dsShareableLinks ds2
     }
 
 instance Monoid DocumentStats where
-  mempty = DocumentStats 0 0 0
+  mempty = DocumentStats 0 0 0 0 0 0 0 0 0 0 0 0 0
   mappend = (SG.<>)
 
 data UserUsageStats = UserUsageStats {
@@ -37,25 +56,9 @@ data UserUsageStats = UserUsageStats {
   , uusDocumentStats    :: !DocumentStats
   } deriving (Eq, Ord, Show)
 
-
-data TemplateStats = TemplateStats {
-    tsDocumentsSent    :: !Int64
-  , tsDocumentsClosed  :: !Int64
-  } deriving (Eq, Ord, Show)
-
-instance SG.Semigroup TemplateStats where
-  ts1 <> ts2 = TemplateStats {
-      tsDocumentsSent = tsDocumentsSent ts1 + tsDocumentsSent ts2
-    , tsDocumentsClosed = tsDocumentsClosed ts1 + tsDocumentsClosed ts2
-    }
-
-instance Monoid TemplateStats where
-  mempty = TemplateStats 0 0
-  mappend = (SG.<>)
-
 data ShareableLinkUsageStats = ShareableLinkUsageStats {
     slusTimeWindowStart  :: !UTCTime
   , slusTemplateId       :: !Int64
   , slusTemplateTitle    :: !String
-  , slusTemplateStats    :: !TemplateStats
+  , slusDocumentStats    :: !DocumentStats
   } deriving (Eq, Ord, Show)

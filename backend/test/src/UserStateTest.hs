@@ -202,7 +202,7 @@ test_userShareableLinkStatisticsByUser = do
   let [ShareableLinkUsageStats{..}] = res
   assertEqual "Template ID in statistics is correct" (fromDocumentID $ documentid template) slusTemplateId
   assertEqual "Template title in statistics is correct" (documenttitle template) slusTemplateTitle
-  assertEqual "Statistics are correct" 1 $ tsDocumentsClosed slusTemplateStats
+  assertEqual "Statistics are correct" 1 $ dsDocumentsClosed slusDocumentStats
 
 test_userShareableLinkStatisticsByUserOnlyCorrectUser :: TestEnv ()
 test_userShareableLinkStatisticsByUserOnlyCorrectUser = do
@@ -220,7 +220,7 @@ test_userShareableLinkStatisticsByUserOnlyCorrectUser = do
   let [ShareableLinkUsageStats{..}] = res
   assertEqual "Template ID in statistics is correct" (fromDocumentID $ documentid template) slusTemplateId
   assertEqual "Template title in statistics is correct" (documenttitle template) slusTemplateTitle
-  assertEqual "Statistics are correct" 1 $ tsDocumentsClosed slusTemplateStats
+  assertEqual "Statistics are correct" 1 $ dsDocumentsClosed slusDocumentStats
 
 test_userShareableLinkStatisticsByGroup :: TestEnv ()
 test_userShareableLinkStatisticsByGroup = do
@@ -239,7 +239,7 @@ test_userShareableLinkStatisticsByGroup = do
   let [ShareableLinkUsageStats{..}] = res
   assertEqual "Template ID in statistics is correct" (fromDocumentID $ documentid template) slusTemplateId
   assertEqual "Template title in statistics is correct" (documenttitle template) slusTemplateTitle
-  assertEqual "Statistics are correct" 2 $ tsDocumentsClosed slusTemplateStats
+  assertEqual "Statistics are correct" 2 $ dsDocumentsClosed slusDocumentStats
 
 test_setUserCompany :: TestEnv ()
 test_setUserCompany = do

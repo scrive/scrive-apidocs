@@ -177,28 +177,37 @@ companySettingsJson ugs = do
 
 userStatsToJSON :: (UTCTime -> String) -> [UserUsageStats] -> JSValue
 userStatsToJSON formatTime uuss = runJSONGen . objects "stats" . for uuss $ \uus -> do
-  let DocumentStats{..} = uusDocumentStats uus
   value "date" . formatTime $ uusTimeWindowStart uus
+  documentStatsToJSON $ uusDocumentStats uus
+
+documentStatsToJSON :: Monad m => DocumentStats -> JSONGenT m ()
+documentStatsToJSON DocumentStats{..} = do
   value "sent" dsDocumentsSent
   value "closed" dsDocumentsClosed
   value "signatures" dsSignaturesClosed
+  value "sms_sent" dsSMSSent
+  value "sms_sent_via_telia" dsSMSSentViaTelia
+  value "se_bankid_signatures" dsSEBankIDSignatures
+  value "se_bankid_authentications" dsSEBankIDAuthentications
+  value "no_bankid_signatures" dsNOBankIDSignatures
+  value "no_bankid_authentications" dsNOBankIDAuthentications
+  value "nemid_signatures" dsNemIDSignatures
+  value "nemid_authentications" dsNemIDAuthentications
+  value "tupas_authentications" dsTupasAuthentications
+  value "shareable_links" dsShareableLinks
 
 companyStatsToJSON :: (UTCTime -> String) -> String -> [UserUsageStats] -> JSValue
 companyStatsToJSON formatTime textName uuss = runJSONGen . objects "stats" . for uussGrouped $ \uusGroup -> do
   let summary = foldMap uusDocumentStats uusGroup
   value "date" . formatTime . uusTimeWindowStart $ head uusGroup
   value "name" textName
-  value "sent" $ dsDocumentsSent summary
-  value "closed" $ dsDocumentsClosed summary
-  value "signatures" $ dsSignaturesClosed summary
+  documentStatsToJSON summary
+
   objects "user_stats" . for uusGroup $ \uus -> do
-    let DocumentStats{..} = uusDocumentStats uus
     value "date" . formatTime $ uusTimeWindowStart uus
     value "email" $ uusUserEmail uus
     value "name" $ uusUserName uus
-    value "sent" dsDocumentsSent
-    value "closed" dsDocumentsClosed
-    value "signatures" dsSignaturesClosed
+    documentStatsToJSON $ uusDocumentStats uus
   where
     uussGrouped :: [[UserUsageStats]]
     uussGrouped = groupBy sameTimeWindow uuss
@@ -207,18 +216,15 @@ companyStatsToJSON formatTime textName uuss = runJSONGen . objects "stats" . for
 
 shareableLinkStatsToJSON :: (UTCTime -> String) -> String -> [ShareableLinkUsageStats] -> JSValue
 shareableLinkStatsToJSON formatTime textName sluss = runJSONGen . objects "stats" . for slussGrouped $ \slusGroup -> do
-  let summary = foldMap slusTemplateStats slusGroup
+  let summary = foldMap slusDocumentStats slusGroup
   value "date" . formatTime . slusTimeWindowStart $ head slusGroup
   value "name" textName
-  value "sent" $ tsDocumentsSent summary
-  value "closed" $ tsDocumentsClosed summary
+  documentStatsToJSON summary
   objects "template_stats" . for slusGroup $ \slus -> do
-    let TemplateStats{..} = slusTemplateStats slus
     value "date" . formatTime $ slusTimeWindowStart slus
     value "id" . show $ slusTemplateId slus
     value "title" $ slusTemplateTitle slus
-    value "sent" tsDocumentsSent
-    value "closed" tsDocumentsClosed
+    documentStatsToJSON $ slusDocumentStats slus
   where
     slussGrouped :: [[ShareableLinkUsageStats]]
     slussGrouped = groupBy sameTimeWindow sluss

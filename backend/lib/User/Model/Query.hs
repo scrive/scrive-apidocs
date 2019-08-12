@@ -228,26 +228,25 @@ instance (MonadDB m, MonadTime m) => DBQuery m GetUsageStats [UserUsageStats] wh
     -- timestamps (trimmed to the precision we want) and users to
     -- achieve desired partitioning. It is also worth noting that it
     -- doesn't return time windows where all numbers would equal 0.
-    runQuery_ . sqlSelect ("docs_sent FULL JOIN" <+>
-                           "docs_closed USING (time_window, uid) FULL JOIN" <+>
-                           "sigs_closed USING (time_window, uid) JOIN" <+>
-                           "users u ON (uid = u.id)") $ do
+    let statsRelation = case chargeableItemKeys of
+          hd:tl ->
+            foldl' (\acc (qName, _) ->
+              acc <+> "FULL JOIN" <+> qName <+> "USING (time_window, uid)"
+            ) (fst hd) tl
+          [] -> unexpectedError "Empty chargeableItemKeys"
+    runQuery_ . sqlSelect (statsRelation <+> "JOIN users u ON (uid = u.id)") $ do
       -- define the CTEs for the appropriate quantities
-      forM_ [ ("docs_sent",   CIStartingDocument)
-            , ("docs_closed", CIClosingDocument)
-            , ("sigs_closed", CIClosingSignature)] $ \(qName, chItem) -> do
-            sqlWith qName (sqlSelectChargeableItem now qName chItem)
+      forM_ chargeableItemKeys $ \(qName, chItem) -> do
+        sqlWith qName (sqlSelectChargeableItem now qName chItem)
       -- Fetch joined data and sort it appropriately.
       sqlResult "time_window"
       sqlResult "u.email"
       sqlResult "u.first_name || ' ' || u.last_name AS name"
-      sqlResult "COALESCE(docs_sent, 0) AS docs_sent"
-      sqlResult "COALESCE(docs_closed, 0) AS docs_closed"
-      sqlResult "COALESCE(sigs_closed, 0) AS sigs_closed"
+      forM_ chargeableItemKeys $ \(qName, _) ->
+        sqlResult $ "COALESCE(" <> qName <> ", 0) AS" <+> qName
       sqlOrderBy "time_window DESC"
-      sqlOrderBy "docs_sent DESC"
-      sqlOrderBy "docs_closed DESC"
-      sqlOrderBy "sigs_closed DESC"
+      forM_ chargeableItemKeys $ \(qName, _) ->
+        sqlOrderBy $ qName <+> "DESC"
       sqlOrderBy "u.email"
     fetchMany fetchUserUsageStats
 
@@ -267,20 +266,52 @@ instance (MonadDB m, MonadTime m) => DBQuery m GetUsageStats [UserUsageStats] wh
             UsageStatsForUser      uid  -> sqlWhereEq "chi.user_id" uid
             UsageStatsForUserGroup ugid -> sqlWhereEq "chi.user_group_id" ugid
 
-      fetchUserUsageStats :: (UTCTime, String, String, Int64, Int64, Int64)
-                          -> UserUsageStats
+      fetchUserUsageStats
+        :: ( UTCTime, String, String, Int64, Int64, Int64, Int64, Int64, Int64
+           , Int64, Int64, Int64, Int64, Int64, Int64, Int64 ) -> UserUsageStats
       fetchUserUsageStats ( time_window_start, user_email
-                          , user_name, docs_sent, docs_closed, sigs_closed) =
+                          , user_name, docs_sent, docs_closed, sigs_closed
+                          , sms_sent, sms_sent_via_telia, se_bankid_sigs
+                          , se_bankid_auths, no_bankid_auths, nemid_auths
+                          , no_bankid_sigs, nemid_sigs, tupas_auths
+                          , shareable_links ) =
         UserUsageStats {
           uusTimeWindowStart = time_window_start
         , uusUserEmail       = user_email
         , uusUserName        = user_name
         , uusDocumentStats   = DocumentStats {
-            dsDocumentsSent    = docs_sent
-          , dsDocumentsClosed  = docs_closed
-          , dsSignaturesClosed = sigs_closed
+            dsDocumentsSent           = docs_sent
+          , dsDocumentsClosed         = docs_closed
+          , dsSignaturesClosed        = sigs_closed
+          , dsSMSSent                 = sms_sent
+          , dsSMSSentViaTelia         = sms_sent_via_telia
+          , dsSEBankIDSignatures      = se_bankid_sigs
+          , dsSEBankIDAuthentications = se_bankid_auths
+          , dsNOBankIDSignatures      = no_bankid_sigs
+          , dsNOBankIDAuthentications = no_bankid_auths
+          , dsNemIDSignatures         = nemid_sigs
+          , dsNemIDAuthentications    = nemid_auths
+          , dsTupasAuthentications    = tupas_auths
+          , dsShareableLinks          = shareable_links
           }
         }
+
+chargeableItemKeys :: [(SQL, ChargeableItem)]
+chargeableItemKeys =
+  [ ("docs_sent", CIStartingDocument)
+  , ("docs_closed", CIClosingDocument)
+  , ("sigs_closed", CIClosingSignature)
+  , ("sms_sent", CISMS)
+  , ("sms_sent_via_telia", CISMSTelia)
+  , ("se_bankid_sigs", CISEBankIDSignature)
+  , ("se_bankid_auths", CISEBankIDAuthentication)
+  , ("no_bankid_auths", CINOBankIDAuthentication)
+  , ("nemid_auths", CIDKNemIDAuthentication)
+  , ("no_bankid_sigs", CINOBankIDSignature)
+  , ("nemid_sigs", CIDKNemIDSignature)
+  , ("tupas_auths", CIFITupasAuthentication)
+  , ("shareable_links", CIShareableLink)
+  ]
 
 data GetUsageStatsOnShareableLinks =
   GetUsageStatsOnShareableLinks UsageStatsFor StatsPartition Interval
@@ -292,22 +323,25 @@ instance (MonadDB m, MonadTime m) => DBQuery m GetUsageStatsOnShareableLinks [Sh
     -- timestamps (trimmed to the precision we want) and by template ids to
     -- achieve desired partitioning. It is also worth noting that it
     -- doesn't return time windows where all numbers would equal 0.
-    runQuery_ . sqlSelect ("docs_sent FULL JOIN" <+>
-                           "docs_closed USING (time_window, tid) JOIN" <+>
-                           "documents d ON (tid = d.id)") $ do
+    let statsRelation = case chargeableItemKeys of
+          hd:tl ->
+            foldl' (\acc (qName, _) ->
+              acc <+> "FULL JOIN" <+> qName <+> "USING (time_window, tid)"
+            ) (fst hd) tl
+          [] -> unexpectedError "Empty chargeableItemKeys"
+    runQuery_ . sqlSelect (statsRelation <+> "JOIN documents d ON (tid = d.id)") $ do
       -- define the CTEs for the appropriate quantities
-      forM_ [ ("docs_sent",   CIStartingDocument)
-            , ("docs_closed", CIClosingDocument)] $ \(qName, chItem) -> do
-            sqlWith qName (sqlSelectChargeableItem now qName chItem)
+      forM_ chargeableItemKeys $ \(qName, chItem) -> do
+        sqlWith qName (sqlSelectChargeableItem now qName chItem)
       -- Fetch joined data and sort it appropriately.
       sqlResult "time_window"
       sqlResult "tid"
       sqlResult "d.title"
-      sqlResult "COALESCE(docs_sent, 0) AS docs_sent"
-      sqlResult "COALESCE(docs_closed, 0) AS docs_closed"
+      forM_ chargeableItemKeys $ \(qName, _) ->
+        sqlResult $ "COALESCE(" <> qName <> ", 0) AS" <+> qName
       sqlOrderBy "time_window DESC"
-      sqlOrderBy "docs_sent DESC"
-      sqlOrderBy "docs_closed DESC"
+      forM_ chargeableItemKeys $ \(qName, _) ->
+        sqlOrderBy $ qName <+> "DESC"
       sqlOrderBy "tid"
     fetchMany fetchShareableLinkUsageStats
 
@@ -328,17 +362,34 @@ instance (MonadDB m, MonadTime m) => DBQuery m GetUsageStatsOnShareableLinks [Sh
             UsageStatsForUser      uid  -> sqlWhereEq "chi.user_id" uid
             UsageStatsForUserGroup ugid -> sqlWhereEq "chi.user_group_id" ugid
 
-      fetchShareableLinkUsageStats :: (UTCTime, Int64, String, Int64, Int64)
-                                   -> ShareableLinkUsageStats
+      fetchShareableLinkUsageStats
+        :: ( UTCTime, Int64, String, Int64, Int64, Int64, Int64, Int64, Int64
+           , Int64, Int64, Int64, Int64, Int64, Int64, Int64 )
+        -> ShareableLinkUsageStats
       fetchShareableLinkUsageStats ( time_window_start, template_id
-                                   , template_title, docs_sent, docs_closed) =
+                                   , template_title, docs_sent, docs_closed
+                                   , sigs_closed, sms_sent, sms_sent_via_telia
+                                   , se_bankid_sigs, se_bankid_auths, no_bankid_auths
+                                   , nemid_auths, no_bankid_sigs, nemid_sigs
+                                   , tupas_auths, shareable_links ) =
         ShareableLinkUsageStats {
           slusTimeWindowStart = time_window_start
         , slusTemplateId      = template_id
         , slusTemplateTitle   = template_title
-        , slusTemplateStats   = TemplateStats {
-            tsDocumentsSent     = docs_sent
-          , tsDocumentsClosed   = docs_closed
+        , slusDocumentStats   = DocumentStats {
+            dsDocumentsSent           = docs_sent
+          , dsDocumentsClosed         = docs_closed
+          , dsSignaturesClosed        = sigs_closed
+          , dsSMSSent                 = sms_sent
+          , dsSMSSentViaTelia         = sms_sent_via_telia
+          , dsSEBankIDSignatures      = se_bankid_sigs
+          , dsSEBankIDAuthentications = se_bankid_auths
+          , dsNOBankIDSignatures      = no_bankid_sigs
+          , dsNOBankIDAuthentications = no_bankid_auths
+          , dsNemIDSignatures         = nemid_sigs
+          , dsNemIDAuthentications    = nemid_auths
+          , dsTupasAuthentications    = tupas_auths
+          , dsShareableLinks          = shareable_links
           }
         }
 
