@@ -306,9 +306,9 @@ mailPartyProcessFinalizedNotification document signatoryLink action = do
                  DocumentSigned ->
                    templateName "mailDocumentSignedNotification"
                  DocumentApproved | hasConfirmationDelivery signatoryLink ->
-                   templateName "mailDocumentApprovedNotification"
-                 DocumentApproved ->
                    templateName "mailDocumentApprovedNotificationWithConfirmation"
+                 DocumentApproved ->
+                   templateName "mailDocumentApprovedNotification"
     mainfile = fromMaybe (unsafeFileID 0) (mainfileid <$> documentfile document)
   email <- documentMailWithDocLang document (templateName template) $ do
     fieldsInvitationTo View
