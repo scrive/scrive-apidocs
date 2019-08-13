@@ -9,6 +9,7 @@ module User.Model.Query (
   , GetUserByIDIncludeDeleted(..)
   , GetUserByEmail(..)
   , GetUserByTempLoginToken(..)
+  , GetUsers(..)
   , GetUsersWithUserGroupNames(..)
   , IsUserDeletable(..)
   , UserGroupGetAllUsersFromThisAndSubgroups(..)
@@ -419,6 +420,15 @@ instance MonadDB m => DBQuery m GetUsersWithUserGroupNames [(User, T.Text)] wher
       , " OFFSET" <?> (fromIntegral offset :: Int32) <+> "LIMIT" <?> (fromIntegral limit :: Int32)
       ]
     fetchMany fetchUserWithUserGroupName
+
+data GetUsers = GetUsers [UserFilter]
+instance MonadDB m => DBQuery m GetUsers [User] where
+  query (GetUsers filters) = do
+    runQuery_ . sqlSelect "users" $ do
+      mapM_ sqlResult selectUsersSelectorsList
+      sqlWhereIsNULL "deleted"
+      sqlWhere $ sqlConcatAND (map userFilterToSQL filters)
+    fetchMany fetchUser
 
 data UserGroupGetAllUsersFromThisAndSubgroups = UserGroupGetAllUsersFromThisAndSubgroups UserGroupID
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetAllUsersFromThisAndSubgroups [User] where

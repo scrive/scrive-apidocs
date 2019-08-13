@@ -358,6 +358,10 @@ docStateTests env = testGroup "DocState"
   , testThat "ArchiveIdleDocuments archives idle documents"
     env testArchiveIdleDocument
 
+  , testThat "ArchiveIdleDocuments archives idle documents when only the user\
+           \ Data Retention Policy is set"
+    env testArchiveIdleDocumentWhenOnlyUserHasDrpSet
+
   , testThat "GetDocumentsByAuthor doesn't return archived docs"
     env testGetDocumentsByAuthorNoArchivedDocs
   , testThat "When document is signed it's status class is signed"
@@ -1093,6 +1097,27 @@ testArchiveIdleDocument = replicateM_ 10 $ do
   let oldUGS = fromJust $ get ugSettings ug
       newUGS = set (drpIdleDocTimeout (documentstatus doc) . ugsDataRetentionPolicy) (Just 1) $ oldUGS
   void $ dbUpdate . UserGroupUpdate . set ugSettings (Just newUGS) $ ug
+
+  archived1 <- archiveIdleDocuments (documentmtime doc)
+  assertEqual "Archived zero idle documents (too early)" 0 archived1
+  archived2 <- archiveIdleDocuments (2 `daysAfter` documentmtime doc)
+  assertEqual "Archived idle documents for one signatory" 1 archived2
+
+testArchiveIdleDocumentWhenOnlyUserHasDrpSet :: TestEnv ()
+testArchiveIdleDocumentWhenOnlyUserHasDrpSet = replicateM_ 10 $ do
+  ug <- addNewUserGroup
+  author <- addNewRandomUserGroupUser (get ugID ug) False
+  author2 <- addNewRandomUser
+  doc <- addRandomDocumentWithAuthorAndCondition author $ \d ->
+            isSignable d && not (isPending d)
+  void $ addRandomDocumentWithAuthorAndCondition author (isTemplate || isPending)
+  void $ addRandomDocumentWithAuthorAndCondition author2 $ \d ->
+          documentstatus d == documentstatus doc
+
+  let oldUS = usersettings author
+      newDRP = set (drpIdleDocTimeout $ documentstatus doc) (Just 1) $ dataretentionpolicy oldUS
+      newUS = oldUS { dataretentionpolicy = newDRP }
+  void . dbUpdate . SetUserSettings (userid author) $ newUS
 
   archived1 <- archiveIdleDocuments (documentmtime doc)
   assertEqual "Archived zero idle documents (too early)" 0 archived1

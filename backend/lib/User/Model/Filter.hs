@@ -7,6 +7,7 @@ import DB
 
 data UserFilter
   = UserFilterByString String             -- ^ Contains the string in name, email or anywhere
+  | UserFilterWithAnyDocumentRetentionPolicy
 
 userFilterToSQL :: UserFilter -> SQL
 userFilterToSQL (UserFilterByString string) =
@@ -23,3 +24,12 @@ userFilterToSQL (UserFilterByString string) =
       escape '%' = "\\%"
       escape '_' = "\\_"
       escape c = [c]
+userFilterToSQL UserFilterWithAnyDocumentRetentionPolicy =
+  sqlConcatOR . map (\idle_setting -> "users." <> idle_setting <+> "IS NOT NULL") $
+    [ "idle_doc_timeout_preparation"
+    , "idle_doc_timeout_closed"
+    , "idle_doc_timeout_canceled"
+    , "idle_doc_timeout_timedout"
+    , "idle_doc_timeout_rejected"
+    , "idle_doc_timeout_error"
+    ]
