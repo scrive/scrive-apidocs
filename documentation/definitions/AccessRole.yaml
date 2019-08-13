@@ -33,3 +33,69 @@ properties:
         type: string
       id:
         type: integer
+  allowed_actions:
+    type: object
+    properties:
+      document:
+        type: array
+        items:
+          type: string
+          enum:
+            - create
+            - delete
+            - read
+            - update
+      folder_policy:
+        type: array
+        items:
+          type: string
+          enum:
+            - create
+            - delete
+            - read
+            - update
+      user:
+        type: array
+        items:
+          type: string
+          enum:
+            - create
+            - delete
+            - read
+            - update
+      user_group:
+        type: array
+        items:
+          type: string
+          enum:
+            - create
+            - delete
+            - read
+            - update
+      user_group_policy:
+        type: array
+        items:
+          type: string
+          enum:
+            - create
+            - delete
+            - read
+            - update
+      user_personal_token:
+        type: array
+        items:
+          type: string
+          enum:
+            - create
+            - delete
+            - read
+            - update
+      user_policy:
+        type: array
+        items:
+          type: string
+          enum:
+            - create
+            - delete
+            - read
+            - update

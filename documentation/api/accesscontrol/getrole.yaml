@@ -20,6 +20,50 @@ get:
       "target": {
         "type": "user_group",
         "id": "11"
+      },
+      "allowed_actions": {
+        "document": [
+          "create",
+          "delete",
+          "read",
+          "update"
+        ],
+        "folder_policy": [
+          "create",
+          "delete",
+          "read",
+          "update"
+        ],
+        "user": [
+          "create",
+          "delete",
+          "read",
+          "update"
+        ],
+        "user_group": [
+          "create",
+          "delete",
+          "read",
+          "update"
+        ],
+        "user_group_policy": [
+          "create",
+          "delete",
+          "read",
+          "update"
+        ],
+        "user_personal_token": [
+          "create",
+          "delete",
+          "read",
+          "update"
+        ],
+        "user_policy": [
+          "create",
+          "delete",
+          "read",
+          "update"
+        ]
       }
     }
     ```
