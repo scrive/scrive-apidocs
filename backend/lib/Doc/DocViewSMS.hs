@@ -16,16 +16,20 @@ import Control.Conditional ((<|), (|>))
 import Control.Monad.Catch
 import Control.Monad.Trans
 import Crypto.RNG
+import Data.Time
 import Text.StringTemplates.Templates
 import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.BrandedDomain
 import DB
+import Doc.DocInfo
 import Doc.DocStateData hiding (DocumentStatus(..))
 import Doc.Model.Update
+import Doc.Types.SignatoryAccessToken
 import Doc.Types.SignatoryLink (ProcessFinishedAction(..))
 import KontraLink
+import MagicHash
 import MailContext
 import MinutesTime
 import SMS.SMS
@@ -87,7 +91,11 @@ smsPartyProcessFinalizedNotification document signatoryLink action = do
     template = case action of
                   DocumentSigned -> templateName "_smsDocumentSignedNotification"
                   DocumentApproved -> templateName "_smsDocumentApprovedNotification"
-    fields = smsFields document >> smsLinkFields document signatoryLink
+    fields = do
+      smsFields document
+      if isClosed document
+        then smsConfirmationLinkFields document signatoryLink
+        else smsInvitationLinkFields document signatoryLink
   content <- renderLocalTemplate document (templateName template) fields
   mkSMS document signatoryLink (Just info) content
 
@@ -97,20 +105,24 @@ smsInvitation
   => SignatoryLink -> Document -> m SMS
 smsInvitation sl doc = do
   mkSMS doc sl (Just $ DocumentInvitationSMS (documentid doc) (signatorylinkid sl)) =<<
-    renderLocalTemplate doc (templateName "_smsInvitationToSign" <| isSignatory sl |> templateName "_smsInvitationToView") (smsFields doc >> smsLinkFields doc sl)
+    renderLocalTemplate doc (templateName "_smsInvitationToSign" <| isSignatory sl |> templateName "_smsInvitationToView") (smsFields doc >> smsInvitationLinkFields doc sl)
 
 smsInvitationToAuthor
   :: ( CryptoRNG m, MailContextMonad m, MonadDB m, MonadTime m, MonadThrow m
      , TemplatesMonad m )
   => Document -> SignatoryLink -> m SMS
 smsInvitationToAuthor doc sl = do
-  mkSMS doc sl (Just $ DocumentInvitationSMS (documentid doc) (signatorylinkid sl)) =<< renderLocalTemplate doc "_smsInvitationToAuthor" (smsFields doc >> smsLinkFields doc sl)
+  mkSMS doc sl (Just $ DocumentInvitationSMS (documentid doc) (signatorylinkid sl)) =<< renderLocalTemplate doc "_smsInvitationToAuthor" (smsFields doc >> smsInvitationLinkFields doc sl)
 
 smsReminder :: ( CryptoRNG m, MailContextMonad m, MonadDB m
                , MonadThrow m, MonadTime m, TemplatesMonad m )
             => Bool -> Document -> SignatoryLink -> m SMS
 smsReminder automatic doc sl = do
-  contents <- renderLocalTemplate doc template (smsFields doc >> smsLinkFields doc sl)
+  contents <- renderLocalTemplate doc template $ do
+    smsFields doc
+    if isClosed doc
+      then smsConfirmationLinkFields doc sl
+      else smsInvitationLinkFields doc sl
   mkSMS doc sl smstypesignatory contents
   where
     (smstypesignatory, template) =
@@ -132,7 +144,7 @@ smsClosedNotification
      , TemplatesMonad m )
   => Document -> SignatoryLink -> Bool -> Bool -> m SMS
 smsClosedNotification doc sl withEmail sealFixed = do
-  mkSMS doc sl (Just $ OtherDocumentSMS $ documentid doc) =<< (renderLocalTemplate doc template $ smsFields doc >> smsLinkFields doc sl)
+  mkSMS doc sl (Just $ OtherDocumentSMS $ documentid doc) =<< (renderLocalTemplate doc template $ smsFields doc >> smsConfirmationLinkFields doc sl)
     where
       template = case (sealFixed, withEmail) of
         (True, True) -> templateName "_smsCorrectedNotificationWithEmail"
@@ -163,7 +175,6 @@ smsForwardSigningForAuthor originalsl newsl doc = do
     F.value "toName" (getSmartName newsl)
   mkSMS doc alink (Just $ OtherDocumentSMS $ documentid doc) message
 
-
 smsForwardSigningForNewSignatory
   :: (CryptoRNG m, MailContextMonad m, MonadDB m, MonadTime m, MonadThrow m
   , TemplatesMonad m) => SignatoryLink -> SignatoryLink -> Document -> m SMS
@@ -175,7 +186,7 @@ smsForwardSigningForNewSignatory originalsl newsl doc = do
         = renderLocalTemplate doc (templateName "_smsForwardSigningForNewSignatoryApproving")
   message <- doRender $ do
     smsFields doc
-    smsLinkFields doc newsl
+    smsInvitationLinkFields doc newsl
     F.value "fromName" (getSmartName originalsl)
     F.value "toName" (getSmartName newsl)
   mkSMS doc newsl (Just $ DocumentInvitationSMS (documentid doc) (signatorylinkid newsl)) message
@@ -196,13 +207,39 @@ smsFields document = do
   F.value "authorlink" $ get mctxDomainUrl mctx ++
       show (LinkIssueDoc (documentid document))
 
-smsLinkFields
-  :: (CryptoRNG m, MailContextMonad m, MonadDB m, MonadTime m, TemplatesMonad m)
+smsInvitationLinkFields
+  :: ( CryptoRNG m, MailContextMonad m, MonadDB m, MonadThrow m, MonadTime m
+     , TemplatesMonad m )
   => Document -> SignatoryLink -> Fields m ()
-smsLinkFields doc sl = do
+smsInvitationLinkFields doc sl = do
   mctx <- lift $ getMailContext
-  (mh, expiration) <- lift $ makeTemporaryMagicHash (signatorylinkid sl)
+  link <- if signatoryisauthor sl
+    then return $ LinkIssueDoc (documentid doc)
+    else do
+      mh <- lift $ dbUpdate $ NewSignatoryAccessToken
+        (signatorylinkid sl) SignatoryAccessTokenForSMSBeforeClosing Nothing
+      return $ LinkSignDocMagicHash (documentid doc) (signatorylinkid sl) mh
+  F.value "link" $ get mctxDomainUrl mctx ++ show link
+
+smsConfirmationLinkFields
+  :: ( CryptoRNG m, MailContextMonad m, MonadDB m, MonadThrow m
+     , MonadTime m, TemplatesMonad m )
+  => Document -> SignatoryLink -> Fields m ()
+smsConfirmationLinkFields doc sl = do
+  mctx <- lift $ getMailContext
+  (mh, expiration) <- lift $ makeConfirmationMagicHash sl
   F.value "link" $ get mctxDomainUrl mctx ++
     show (LinkSignDocMagicHash (documentid doc) (signatorylinkid sl) mh)
   F.value "availabledate" $ formatTimeYMD expiration
 
+-- | Create a temporary hash valid for 30 days.
+makeConfirmationMagicHash
+  :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m)
+  => SignatoryLink -> m (MagicHash, UTCTime)
+makeConfirmationMagicHash sl = do
+  now <- currentTime
+  -- Make it valid until the end of the 30th day.
+  let expiration = (30 `daysAfter` now)
+  mh <- dbUpdate $ NewSignatoryAccessToken (signatorylinkid sl)
+    SignatoryAccessTokenForSMSAfterClosing (Just expiration)
+  return (mh, expiration)

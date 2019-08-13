@@ -986,7 +986,7 @@
 "_smsCorrectedNotification":"Wir stellten fest, dass wir ein Dokument ohne Signatur an Sie verschickten. Der Fehler wurde inzwischen behoben. Zum Dokument mit  korrekter digitalen Signatur gelangen Sie mit diesem Link: $link$",
 "_smsCorrectedNotificationWithEmail":"Wir haben festgestellt, dass wir ein Dokument ohne Signatur an Sie verschickten. Der Fehler wurde inzwischen behoben. Zum Dokument mit  korrekter digitalen Signatur gelangen Sie mit diesem Link: $link$ Wir haben Ihnen das korrigierte Dokument auch per E-Mail zugestellt.",
 "_smsDocumentApprovedNotification":"Sie haben das Dokument $documenttitle$ jetzt genehmigt. Um das Dokument einzusehen, folgen Sie diesem Link: $link$",
-"_smsDocumentSignedNotification":"Sie haben das Dokument $documenttitle$ jetzt unterzeichnet. Um das Dokument einzusehen, folgen Sie diesem Link: $link$",
+"_smsDocumentSignedNotification":"",
 "_smsForwardSigningForAuthor":"$fromName$ hat das Dokument $documenttitle$ zur E-Signierung an $toName$ weitergeleitet. Klicken Sie auf den Link, um das Dokument anzusehen $authorlink$",
 "_smsForwardSigningForAuthorApproving":"$fromName$ hat das Dokument $documenttitle$ zur Genehmigung an $toName$ weitergeleitet. Klicken Sie auf den Link, um das Dokument anzusehen $authorlink$",
 "_smsForwardSigningForNewSignatory":"$fromName$ hat das Dokument $documenttitle$ zur E-Signierung weitergeleitet. Klicken Sie für weitere Anweisungen auf den Link $link$",

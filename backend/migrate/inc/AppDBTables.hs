@@ -66,7 +66,7 @@ kontraComposites = [
   , ctDocumentTag
   , ctMainFile
   , ctSignatoryConsentQuestion
-  , ctSignatoryLinkMagicHash
+  , ctSignatoryAccessToken
   , ctSignatoryLink
   , ctDocument
   , ctFeatureFlags
@@ -173,9 +173,9 @@ kontraTables =
   , tableUserGroupInvoicings
   , tableUserGroupUIs
   , tableUserGroupAddresses
-  , tableSignatoryLinkMagicHashes
   , tableFilePurgeConsumers
   , tableFilePurgeJobs
   , tableTemporaryLoginTokens
   , tableApiCallbackResult
+  , tableSignatoryAccessTokens
   ]

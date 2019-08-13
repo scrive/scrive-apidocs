@@ -986,7 +986,7 @@
 "_smsCorrectedNotification":"Abbiamo notato di averti inviato in precedenza un documento errato, in quanto privo della firma digitale, ma ora abbiamo corretto l'errore. Trovi il documento con la firma digitale corretta a questo link: $ link $",
 "_smsCorrectedNotificationWithEmail":"Abbiamo notato di averti inviato in precedenza un documento errato, in quanto privo della firma digitale, ma ora abbiamo corretto l'errore. Trovi il documento con la firma digitale corretta seguendo questo link: $link$ Abbiamo inoltre inviato il documento corretto alla tua posta elettronica.",
 "_smsDocumentApprovedNotification":"Hai appena approvato il documento $documenttitle$. Per vedere il documento, segui questo link: $link$",
-"_smsDocumentSignedNotification":"Hai appena firmato il documento $documenttitle$. Per vedere il documento, segui questo link: $link$",
+"_smsDocumentSignedNotification":"",
 "_smsForwardSigningForAuthor":"$fromName$ ha inoltrato il documento $documenttitle$ a $toName$ per la firma elettronica. Segui il link per vedere il documento $authorlink$",
 "_smsForwardSigningForAuthorApproving":"$fromName$ ha inoltrato il documento $documenttitle$ a $toName$ per l'approvazione. Segui il link per vedere il documento $authorlink$",
 "_smsForwardSigningForNewSignatory":"$fromName$ ti ha inoltrato il documento $documenttitle$ per la firma elettronica. Segui il link per ulteriori istruzioni $link$",

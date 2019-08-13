@@ -19,10 +19,9 @@ import Doc.Class
 import Doc.DocumentMonad (withDocumentID)
 import Doc.Model.Query
 import Doc.Model.Update
-  ( SetDocumentSharing(..), StoreDocumentForTesting(..), TimeoutDocument(..) )
-
 import Doc.Types.Document
 import Doc.Types.DocumentStatus (DocumentStatus(..))
+import Doc.Types.SignatoryAccessToken
 import Doc.Types.SignatoryConsentQuestion (SignatoryConsentQuestion(..))
 import Doc.Types.SignatoryLink (SignatoryLink(..))
 import EvidenceLog.Model
@@ -616,6 +615,36 @@ testDocApiV2SigChangeEmailAndMobile = do
     liftIO $ print "DUPA5"
     assertEqual "Email should NOT have changed" orig_email (getMockDocSigLinkEmail 2 mobileOnly)
     assertEqual "Mobile should have changed" valid_mobile (getMockDocSigLinkMobileNumber 2 mobileOnly)
+
+  do -- If we change mobile, we only want to change access token for mobile
+    (did, _author_slid, slid) <- documentForTest
+    mhForEmail <- dbUpdate $ NewSignatoryAccessToken
+      slid SignatoryAccessTokenForMailBeforeClosing Nothing
+    mhForSMS <- dbUpdate $ NewSignatoryAccessToken
+      slid SignatoryAccessTokenForSMSBeforeClosing Nothing
+    _ <- mockDocTestRequestHelper ctx POST
+      [param_email valid_email]
+      (docApiV2SigChangeEmailAndMobile did slid) 200
+    sl <- dbQuery $ GetSignatoryLinkByID did slid
+    assert $ not $
+      any ((==mhForEmail) . signatoryAccessTokenHash) (signatoryaccesstokens sl)
+    assert $
+      any ((==mhForSMS) . signatoryAccessTokenHash) (signatoryaccesstokens sl)
+
+  do -- If we change email, we only want to change access token for email
+    (did, _author_slid, slid) <- documentForTest
+    mhForEmail <- dbUpdate $ NewSignatoryAccessToken
+      slid SignatoryAccessTokenForMailBeforeClosing Nothing
+    mhForSMS <- dbUpdate $ NewSignatoryAccessToken
+      slid SignatoryAccessTokenForSMSBeforeClosing Nothing
+    _ <- mockDocTestRequestHelper ctx POST
+      [param_mobile valid_mobile]
+      (docApiV2SigChangeEmailAndMobile did slid) 200
+    sl <- dbQuery $ GetSignatoryLinkByID did slid
+    assert $
+      any ((==mhForEmail) . signatoryAccessTokenHash) (signatoryaccesstokens sl)
+    assert $ not $
+      any ((==mhForSMS) . signatoryAccessTokenHash) (signatoryaccesstokens sl)
 
 testDocApiV2GenerateShareableLink :: TestEnv ()
 testDocApiV2GenerateShareableLink = replicateM_ 100 $ do

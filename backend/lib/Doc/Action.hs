@@ -44,6 +44,7 @@ import Doc.Sealing.Model
 import Doc.SealStatus (SealStatus(..), hasGuardtimeSignature)
 import Doc.SignatoryLinkID
 import Doc.Signing.Model ()
+import Doc.Types.SignatoryAccessToken
 import File.Storage
 import GuardTime (GuardTimeConfMonad)
 import Kontra
@@ -93,6 +94,7 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
   unlessM (isPending <$> theDocument) $
     theDocument >>= stateMismatchError "postDocumentPreparationChange" Pending
   logInfo_ "Preparation -> Pending; Sending invitation emails"
+  initialiseSignatoryAPIMagicHashes
   msaved <- saveDocumentForSignatories
   case msaved of
     Just msg -> do
@@ -120,6 +122,14 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
     userMixpanelData author time =
         [ UserIDProp (userid author)
         , someProp "Last Doc Sent" time ]
+
+initialiseSignatoryAPIMagicHashes :: (DocumentMonad m, Kontrakcja m) => m ()
+initialiseSignatoryAPIMagicHashes = do
+  sls <- documentsignatorylinks <$> theDocument
+  forM_ sls $ \sl -> when (signatorylinkdeliverymethod sl == APIDelivery) $
+    void $ dbUpdate $ NewSignatoryAccessTokenWithHash
+      (signatorylinkid sl) SignatoryAccessTokenForAPI
+      Nothing (signatorymagichash sl)
 
 postDocumentRejectedChange :: Kontrakcja m => SignatoryLinkID -> Maybe String -> Document -> m ()
 postDocumentRejectedChange siglinkid customMessage doc@Document{..} = logDocument documentid $ do
@@ -223,6 +233,8 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
   doc0 <- theDocument
 
   unlessM ((isClosed || isDocumentError) <$> theDocument) internalError
+
+  dbUpdate . ExtendSignatoryAccessTokensForAccessBeforeClosing =<< theDocumentID
 
   whenM ((\d -> forceSealDocument || isNothing (documentsealedfile d)) <$> theDocument) $ do
 

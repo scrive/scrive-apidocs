@@ -48,6 +48,7 @@ import Doc.DocUtils (fileFromMainFile)
 import Doc.Logging
 import Doc.Model
 import Doc.SignatoryLinkID
+import Doc.Types.SignatoryAccessToken
 import EvidenceLog.Model
 import EvidenceLog.View
 import File.File
@@ -114,7 +115,7 @@ docApiV2GetByShortID shortDid = api $ do
 
 -- | Produces a QR-encoded .png image that contains a URL of form
 -- 'scrive://$domain/s/$did/$signatorylinkid/$signatorymagichash'.
-docApiV2GetQRCode :: forall m . Kontrakcja m => DocumentID -> SignatoryLinkID
+docApiV2GetQRCode :: Kontrakcja m => DocumentID -> SignatoryLinkID
                   -> m Response
 docApiV2GetQRCode did slid = logDocument did . logSignatory slid . api $ do
   doc <- dbQuery $ GetDocumentByDocumentID did
@@ -123,18 +124,24 @@ docApiV2GetQRCode did slid = logDocument did . logSignatory slid . api $ do
   guardDocumentStatus Pending doc
 
   domainURL <- get ctxDomainUrl <$> getContext
-  sigLink   <- apiGuardJust (signatoryLinkForDocumentNotFound did slid) $
-               getSigLinkFor slid doc
-  qrCode    <- liftIO $ encodeQR (mkSignLink domainURL sigLink)
-
+  sigLink  <- apiGuardJust (signatoryLinkForDocumentNotFound did slid) $
+                 getSigLinkFor slid doc
+  magicHash <-
+    let msat = find ((==SignatoryAccessTokenForQRCode) . signatoryAccessTokenReason) (signatoryaccesstokens sigLink)
+    in case msat of
+      Just sat -> return $ signatoryAccessTokenHash sat
+      Nothing -> do
+        mh <- dbUpdate $ NewSignatoryAccessToken slid SignatoryAccessTokenForQRCode Nothing
+        return mh
+  qrCode <- liftIO $ encodeQR (mkSignLink domainURL magicHash)
   return $ Ok qrCode
 
     where
       -- | Create a URL to be QR-encoded.
-      mkSignLink :: String -> SignatoryLink -> String
-      mkSignLink domainURL sigLink =
-        let relativeLink = LinkSignDoc did sigLink
-        in (setProtocol domainURL) <> (show relativeLink)
+      mkSignLink :: String -> MagicHash -> String
+      mkSignLink domainURL mh =
+        let relativeLink = LinkSignDocMagicHash did slid mh
+        in setProtocol domainURL <> show relativeLink
 
       -- | Sets the protocol part of the URL to 'scrive://'.
       setProtocol :: String -> String

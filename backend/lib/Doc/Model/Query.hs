@@ -56,6 +56,7 @@ import File.FileID
 import File.Storage
 import MagicHash
 import User.Model
+import Util.SignatoryLinkUtils
 
 data GetSignatoryScreenshots = GetSignatoryScreenshots [SignatoryLinkID]
 instance (MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, MonadFileStorage m) => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, SignatoryScreenshots)] where
@@ -236,36 +237,38 @@ data GetDocumentByDocumentIDSignatoryLinkID = GetDocumentByDocumentIDSignatoryLi
 instance (MonadDB m, MonadThrow m, MonadTime m)
   => DBQuery m GetDocumentByDocumentIDSignatoryLinkID Document where
   query (GetDocumentByDocumentIDSignatoryLinkID did slid) = do
-    getDocumentByDocumentIDSignatoryLinkIDMagicHash did slid Nothing
+    doc <- kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
+      mapM_ sqlResult documentsSelectors
+      sqlWhereDocumentIDIs did
+      sqlWhereExists $ sqlSelect "signatory_links" $ do
+        sqlWhere "signatory_links.document_id = documents.id"
+        sqlWhereSignatoryLinkIDIs slid
+        sqlWhereSignatoryLinkIsNotForwaded
+      sqlWhereDocumentWasNotPurged
+    return doc
 
 data GetDocumentByDocumentIDSignatoryLinkIDMagicHash = GetDocumentByDocumentIDSignatoryLinkIDMagicHash DocumentID SignatoryLinkID MagicHash
 instance (MonadDB m, MonadThrow m, MonadTime m)
   => DBQuery m GetDocumentByDocumentIDSignatoryLinkIDMagicHash Document where
   query (GetDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mh) = do
-    getDocumentByDocumentIDSignatoryLinkIDMagicHash did slid (Just mh)
-
-getDocumentByDocumentIDSignatoryLinkIDMagicHash
-  :: (MonadDB m, MonadThrow m, MonadTime m)
-  => DocumentID -> SignatoryLinkID -> Maybe MagicHash -> m Document
-getDocumentByDocumentIDSignatoryLinkIDMagicHash did slid mmh = do
-  -- FIXME: Use domains/filters.
-  now <- currentTime
-  doc <- kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
-    mapM_ sqlResult documentsSelectors
-    sqlWhereDocumentIDIs did
-    sqlWhereExists $ sqlSelect "signatory_links" $ do
-      sqlWhere "signatory_links.document_id = documents.id"
-      -- Thought for later: Here we might actually check if
-      -- visibility rules allow a person to see this document, for
-      -- example if sign order allows to see the document. For now
-      -- we are sloppy and let a person see the document.
-      sqlWhereSignatoryLinkIDIs slid
-      case mmh of
-        Just mh -> sqlWhereMagicHashIsValidForSignatoryLink now mh
-        Nothing -> return ()
-      sqlWhereSignatoryLinkIsNotForwaded
-    sqlWhereDocumentWasNotPurged
-  return doc
+    now <- currentTime
+    doc <- kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
+      mapM_ sqlResult documentsSelectors
+      sqlWhereDocumentIDIs did
+      sqlWhereExists $ sqlSelect "signatory_links" $ do
+        sqlWhere "signatory_links.document_id = documents.id"
+        -- Thought for later: Here we might actually check if
+        -- visibility rules allow a person to see this document, for
+        -- example if sign order allows to see the document. For now
+        -- we are sloppy and let a person see the document.
+        sqlWhereSignatoryLinkIDIs slid
+        sqlWhereSomeSignatoryAccessTokenHasMagicHash mh
+        sqlWhereSignatoryLinkIsNotForwaded
+      sqlWhereDocumentWasNotPurged
+    let Just sl = getSigLinkFor slid doc
+    unless (isValidSignatoryMagicHash mh now (documentstatus doc) sl) $ do
+      throwM $ SomeDBExtraException SignatoryTokenDoesNotMatch
+    return doc
 
 data GetDocumentByDocumentIDAndShareableLinkHash = GetDocumentByDocumentIDAndShareableLinkHash DocumentID MagicHash
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentIDAndShareableLinkHash Document where

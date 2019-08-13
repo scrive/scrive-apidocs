@@ -38,6 +38,7 @@ import Doc.SignatoryScreenshots
 
 import Doc.SMSPin.Model
 import Doc.Tokens.Model
+import Doc.Types.SignatoryAccessToken
 import File.FileID
 import File.Storage
 import KontraError
@@ -84,10 +85,9 @@ docControlTests env = testGroup "DocControl" [
   , testThat "Generate document to sign from shareable template"
              env testDocumentFromShareableTemplate
   , testThat "We can get a document using a temporary magic hash if it is not expired"
-             env testGetDocumentWithTemporaryMagicHash
+             env testGetDocumentWithSignatoryAccessTokens
   , testThat "Timeouting document can trigger info mail sendout to author"
              env testSendEmailOnTimeout
-
   ]
 
 testUploadingFile :: TestEnv ()
@@ -168,6 +168,9 @@ testLastPersonSigningADocumentClosesIt = do
     siglink <- head . filter isSignatoryAndHasNotSigned .
                documentsignatorylinks <$> theDocument
 
+    mh <- dbUpdate $ NewSignatoryAccessToken
+      (signatorylinkid siglink) SignatoryAccessTokenForMailBeforeClosing Nothing
+
     do t <- documentctime <$> theDocument
        randomUpdate . MarkDocumentSeen (signatorylinkid siglink)
                  =<< signatoryActor (set ctxtime t ctx) siglink
@@ -177,7 +180,7 @@ testLastPersonSigningADocumentClosesIt = do
 
     preq <- mkRequest GET [ ]
     (_,ctx') <- updateDocumentWithID $ \did ->
-                lift . runTestKontra preq ctx $ handleSignShowSaveMagicHash did (signatorylinkid siglink) (signatorymagichash siglink)
+                lift . runTestKontra preq ctx $ handleSignShowSaveMagicHash did (signatorylinkid siglink) mh
 
     req <- mkRequest POST [ ("fields", inText "[]"), signScreenshots]
     (_link, _ctx') <- updateDocumentWithID $ \did ->
@@ -250,10 +253,12 @@ testSigningWithPin = do
     --   randomUpdate . MarkDocumentSeen (signatorylinkid siglink) (signatorymagichash siglink)
     --             =<< signatoryActor (set ctxtime t ctx) siglink
 
+    mh <- dbUpdate $ NewSignatoryAccessToken
+      (signatorylinkid siglink) SignatoryAccessTokenForMailBeforeClosing Nothing
     pin <- dbQuery $ GetSignatoryPin SMSPinToSign (signatorylinkid siglink) (getMobile siglink)
     preq <- mkRequest GET [ ]
     (_,ctx') <- updateDocumentWithID $ \did ->
-                lift . runTestKontra preq ctx $ handleSignShowSaveMagicHash did (signatorylinkid siglink) (signatorymagichash siglink)
+                lift . runTestKontra preq ctx $ handleSignShowSaveMagicHash did (signatorylinkid siglink) mh
 
 
     req1 <- mkRequest POST [ ("fields", inText "[]"), signScreenshots]
@@ -426,9 +431,11 @@ testDownloadFileWithAuthToView = do
                      _        -> False)
   let sl = head $ reverse $ documentsignatorylinks $ doc
   req1 <- mkRequest GET []
+  mh <- dbUpdate $ NewSignatoryAccessToken
+    (signatorylinkid sl) SignatoryAccessTokenForMailBeforeClosing Nothing
   (_,ctx') <- runTestKontra req1 ctx $
               handleSignShowSaveMagicHash
-              (documentid doc) (signatorylinkid sl) (signatorymagichash sl)
+              (documentid doc) (signatorylinkid sl) mh
   req2     <- mkRequest GET [( "signatorylinkid"
                              , inText $ show (signatorylinkid sl) )]
   (res2,_) <- runTestKontra req2 ctx' $
@@ -646,13 +653,14 @@ testGetCancelledDocument = do
   let did       = documentid doc
       signatory = head $ documentsignatorylinks doc
       slid      = signatorylinkid signatory
-      mh        = signatorymagichash signatory
 
   withDocument doc $ randomUpdate $ CancelDocument $ authorActor ctx user
 
-  -- It should fail if we're using the link with the magic hash.
+  -- It should fail if we're using the link with a magic hash.
   do
     req  <- mkRequest GET []
+    mh   <- dbUpdate $ NewSignatoryAccessToken
+              slid SignatoryAccessTokenForAPI Nothing
     eRes <- E.try $ runTestKontra req ctx $
       handleSignShowSaveMagicHash did slid mh
 
@@ -742,8 +750,8 @@ testDocumentFromShareableTemplate = replicateM_ 10 $ do
     assertEqual ("Should have been charged with " ++ show typ)
                 1 (c :: Int64)
 
-testGetDocumentWithTemporaryMagicHash :: TestEnv ()
-testGetDocumentWithTemporaryMagicHash = do
+testGetDocumentWithSignatoryAccessTokens:: TestEnv ()
+testGetDocumentWithSignatoryAccessTokens = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
 
   doc <- addRandomDocumentWithAuthorAndCondition user $ \d ->
@@ -753,7 +761,9 @@ testGetDocumentWithTemporaryMagicHash = do
       slid      = signatorylinkid signatory
 
   now <- currentTime
-  (mh, _) <- makeTemporaryMagicHash' slid 2
+  let expiration = 2 `daysAfter` now
+  mh <- dbUpdate $ NewSignatoryAccessToken
+    slid SignatoryAccessTokenForMailBeforeClosing(Just expiration)
 
   do
     ctx <- mkContext defaultLang
@@ -779,13 +789,12 @@ testGetDocumentWithTemporaryMagicHash = do
   do
     ctx <- mkContext defaultLang
     runSQL_ "UPDATE cron_jobs SET run_at = to_timestamp(0)\
-            \ WHERE id = 'temporary_magic_hashes_purge'"
+            \ WHERE id = 'timeouted_signatory_access_tokens_purge'"
     runTestCronUntilIdle ctx
-    runQuery_ $ "SELECT COUNT(*) FROM signatory_link_magic_hashes\
+    runQuery_ $ "SELECT COUNT(*) FROM signatory_access_tokens\
                 \ WHERE signatory_link_id =" <?> slid
     c <- fetchOne runIdentity
-    assertEqual "Magic hash count should be 0" (0 :: Int64) c
-
+    assertEqual "Signatory_access tokens count should be 0" (0 :: Int64) c
 
 testSendEmailOnTimeout :: TestEnv ()
 testSendEmailOnTimeout = do
@@ -810,5 +819,3 @@ testSendEmailOnTimeout = do
   runSQL_ $ ("SELECT COUNT(*) FROM mails WHERE receivers ILIKE '%bob@blue.com%'")
   c <- fetchOne runIdentity
   assertEqual "One mail should be sent to the author" (1 :: Int64) c
-
-

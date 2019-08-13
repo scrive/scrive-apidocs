@@ -296,7 +296,7 @@ ctSignatoryLink = CompositeType {
   , CompositeColumn { ccName = "signatory_role", ccType = SmallIntT }
   , CompositeColumn { ccName = "sign_order", ccType = IntegerT }
   , CompositeColumn { ccName = "token", ccType = BigIntT }
-  , CompositeColumn { ccName = "temporary_magic_hashes", ccType = ArrayT $ CustomT "signatory_link_magic_hash_c1" }
+  , CompositeColumn { ccName = "signatory_tokens", ccType = ArrayT $ CustomT "signatory_access_tokens_c1" }
   , CompositeColumn { ccName = "user_id", ccType = BigIntT }
   , CompositeColumn { ccName = "sign_time", ccType = TimestampWithZoneT }
   , CompositeColumn { ccName = "sign_ip", ccType = IntegerT }
@@ -332,15 +332,16 @@ ctSignatoryLink = CompositeType {
 
 ---------------------------------
 
-tableSignatoryLinkMagicHashes :: Table
-tableSignatoryLinkMagicHashes = tblTable
-  { tblName = "signatory_link_magic_hashes"
+tableSignatoryAccessTokens :: Table
+tableSignatoryAccessTokens = tblTable
+  { tblName = "signatory_access_tokens"
   , tblVersion = 2
   , tblColumns =
       [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
       , tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
       , tblColumn { colName = "hash", colType = BigIntT, colNullable = False }
-      , tblColumn { colName = "expiration_time", colType = TimestampWithZoneT, colNullable = False }
+      , tblColumn { colName = "expiration_time", colType = TimestampWithZoneT }
+      , tblColumn { colName = "reason", colType = SmallIntT, colNullable = False}
       ]
   , tblPrimaryKey = pkOnColumn "id"
   , tblForeignKeys =
@@ -348,16 +349,17 @@ tableSignatoryLinkMagicHashes = tblTable
           { fkOnDelete = ForeignKeyCascade }
       ]
   , tblIndexes =
-    [ indexOnColumn "signatory_link_id"
-    , uniqueIndexOnColumns ["hash", "signatory_link_id"]
-    ]
+      [ indexOnColumn "signatory_link_id"
+      , uniqueIndexOnColumnWithCondition "signatory_link_id" "reason = 7" -- Unique API access magic hash
+      ]
   }
 
-ctSignatoryLinkMagicHash :: CompositeType
-ctSignatoryLinkMagicHash = CompositeType
-  { ctName = "signatory_link_magic_hash_c1"
+ctSignatoryAccessToken :: CompositeType
+ctSignatoryAccessToken= CompositeType
+  { ctName = "signatory_access_tokens_c1"
   , ctColumns =
       [ CompositeColumn { ccName = "hash", ccType = BigIntT }
+      , CompositeColumn { ccName = "reason", ccType = SmallIntT }
       , CompositeColumn { ccName = "expiration_time", ccType = TimestampWithZoneT }
       ]
   }

@@ -192,6 +192,7 @@ Library
                  , Doc.Types.SignatoryField
                  , Doc.SignatoryFieldUtils
                  , Doc.Types.SignatoryLink
+                 , Doc.Types.SignatoryAccessToken
                  , Doc.DigitalSignature
                  , Doc.DocControl
                  , Doc.DocAddImage

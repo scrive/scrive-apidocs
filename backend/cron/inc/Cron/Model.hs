@@ -67,7 +67,7 @@ data JobType
   | SMSEventsProcessing
   | UserAccountRequestEvaluation
   | AttachmentsPurge
-  | TemporaryMagicHashesPurge
+  | TimeoutedSignatoryAccessTokensPurge
   | TemporaryLoginTokensPurge
   | CronStats
   | TimeoutedEIDTransactionsPurge
@@ -99,7 +99,7 @@ jobTypeMapper =
       DocumentSearchUpdate                 -> "document_search_update"
       DocumentsAuthorIDMigration           -> "document_author_id_job"
       AttachmentsPurge                     -> "attachments_purge"
-      TemporaryMagicHashesPurge            -> "temporary_magic_hashes_purge"
+      TimeoutedSignatoryAccessTokensPurge  -> "timeouted_signatory_access_tokens_purge"
       TemporaryLoginTokensPurge            -> "temporary_login_tokens_purge"
       CronStats                            -> "cron_stats"
       TimeoutedEIDTransactionsPurge        -> "timeouted_eid_transactions_purge"
@@ -289,10 +289,10 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
         purgedCount <- dbUpdate PurgeAttachments
         logInfo "Purged attachments" $ object ["purged" .= purgedCount]
       return . RerunAfter $ iminutes 10
-    TemporaryMagicHashesPurge -> do
+    TimeoutedSignatoryAccessTokensPurge -> do
       runDB $ do
-        purgedCount <- dbUpdate PurgeExpiredTemporaryMagicHashes
-        logInfo "Purged temporary magic hashes" $ object ["purged" .= purgedCount]
+        purgedCount <- dbUpdate PurgeTimeoutedSignatoryAccessTokens
+        logInfo "Purged timeouted signatory access tokens" $ object ["purged" .= purgedCount]
       return . RerunAfter $ ihours 1
     TemporaryLoginTokensPurge -> do
       runDB $ do

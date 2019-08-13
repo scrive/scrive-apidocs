@@ -986,7 +986,7 @@
 "_smsCorrectedNotification":"Všimli jsme si, že jsme vám zaslali dokument, který nebyl opatřen digitálním podpisem. Chybu jsme však napravili – dokument s řádným digitálním podpisem je k dispozici na tomto odkazu: $link$",
 "_smsCorrectedNotificationWithEmail":"Všimli jsme si, že jsme vám zaslali dokument, který nebyl opatřen digitálním podpisem. Chybu jsme však napravili – dokument s řádným digitálním podpisem je k dispozici na tomto odkazu: $link$ Dokument ve správné podobě jsme rovněž odeslali na váš e-mail.",
 "_smsDocumentApprovedNotification":"Právě jste schválili dokument $documenttitle$. Dokument si můžete zobrazit kliknutím na odkaz $link$",
-"_smsDocumentSignedNotification":"Právě jste podepsali dokument $documenttitle$. Dokument si můžete zobrazit kliknutím na odkaz $link$",
+"_smsDocumentSignedNotification":"",
 "_smsForwardSigningForAuthor":"Uživatel $fromName$ přeposlal dokument $documenttitle$ uživateli $toName$ k elektronickému podpisu. Dokument si můžete zobrazit kliknutím na odkaz $authorlink$",
 "_smsForwardSigningForAuthorApproving":"Uživatel $fromName$ přeposlal dokument $documenttitle$ uživateli $toName$ ke schválení. Dokument si můžete zobrazit kliknutím na odkaz $authorlink$",
 "_smsForwardSigningForNewSignatory":"Uživatel $fromName$ vám přeposlal dokument $documenttitle$ k elektronickému podpisu. Další pokyny naleznete po kliknutí na odkaz $link$",

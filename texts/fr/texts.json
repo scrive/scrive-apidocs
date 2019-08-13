@@ -986,7 +986,7 @@
 "_smsCorrectedNotification":"Nous avons constaté que nous vous avons précédemment envoyé un document incorrect dans ce sens qu'il ne portait pas de signature numérique, cependant nous avons corrigé cette erreur. Suivez ce lien pour accéder au document portant la signature numérique: $link$",
 "_smsCorrectedNotificationWithEmail":"Nous avons constaté que nous vous avons précédemment envoyé un document incorrect dans ce sens qu'il ne portait pas de signature numérique, cependant nous avons corrigé cette erreur. Suivez ce lien pour accéder au document portant la signature numérique: $link$ Nous avons également envoyé le document corrigé à votre boîte de réception.",
 "_smsDocumentApprovedNotification":"Vous avez maintenant approuvé le document $documenttitle$. Pour voir le document, suivez ce lien : $link$",
-"_smsDocumentSignedNotification":"Vous avez maintenant signé le document $documenttitle$. Pour voir le document, suivez ce lien : $link$",
+"_smsDocumentSignedNotification":"",
 "_smsForwardSigningForAuthor":"$fromName$ a transféré le document $documenttitle$ à e-signer à $toName$. Suivez le lien pour voir le document $authorlink$",
 "_smsForwardSigningForAuthorApproving":"$fromName$ a transféré le document $documenttitle$ à approuver à $toName$. Suivez le lien pour voir le document $authorlink$",
 "_smsForwardSigningForNewSignatory":"$fromName$ vous a transféré le document $documenttitle$ à e-signer. Suivez le lien pour plus d'instructions $link$",

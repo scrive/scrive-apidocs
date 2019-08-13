@@ -986,7 +986,7 @@
 "_smsCorrectedNotification":"Vi la merke til at vi tidligere har sendt deg et dokument som var feilaktig ved at det manglet en digital signatur, men vi har nå rettet feilen. Du finner dokumentet med riktig digital signatur ved å følge denne lenken: $link$",
 "_smsCorrectedNotificationWithEmail":"Vi la merke til at vi tidligere har sendt deg et dokument som var feilaktig ved at det manglet en digital signatur, men vi har nå rettet feilen. Du finner dokumentet med riktig digital signatur ved å følge denne lenken: $link$ Vi har også sendt det riktige dokumentet til e-postadressen din.",
 "_smsDocumentApprovedNotification":"Du har nå godkjent dokumentet $documenttitle$. For å lese dokumentet, følg denne lenken: $link$",
-"_smsDocumentSignedNotification":"Du har nå signert dokumentet $documenttitle$. For å lese dokumentet, følg denne lenken: $link$",
+"_smsDocumentSignedNotification":"",
 "_smsForwardSigningForAuthor":"$fromName$ har videresendt dokumentet $documenttitle$ til $toName$ for e-signering. Følg lenken for å lese dokumentet $authorlink$",
 "_smsForwardSigningForAuthorApproving":"$fromName$ har videresendt dokumentet $documenttitle$ til $toName$ for godkjenning. Følg lenken for å lese dokumentet $authorlink$",
 "_smsForwardSigningForNewSignatory":"$fromName$ har videresendt dokumentet $documenttitle$ til deg for e-signering. Følg lenken for instruksjoner $link$",

@@ -20,6 +20,8 @@ import Doc.API.V2.JSON.SignatoryConsentQuestion
 import Doc.API.V2.JSON.Utils
 import Doc.DocInfo
 import Doc.DocStateData
+import Doc.DocumentID
+import Doc.Types.SignatoryAccessToken
 import KontraLink
 import Util.SignatoryLinkUtils
 
@@ -198,14 +200,18 @@ unjsonSignatory da =  objectOf $
   <*>  (fieldDef "can_forward" (signatorylinkcanbeforwarded defaultSignatoryLink) signatorylinkcanbeforwarded "Signatory can forward signing process")
   <*>  (fieldDefBy "attachments"  (signatoryattachments defaultSignatoryLink) signatoryattachments "Signatory attachments" (arrayOf unjsonSignatoryAttachment))
   <*   (fieldReadonlyBy "highlighted_pages" signatoryhighlightedpages "Highlighted page during signing" (arrayOf unjsonHighlightedPage))
-  <*   (fieldReadOnlyOpt "api_delivery_url" (\sl ->
-          if (daStatus da /= Preparation && signatorylinkdeliverymethod sl == APIDelivery && canSeeSignlinks da)
-             then (Just $ show $ LinkSignDoc (daDocumentID da) sl)
-             else Nothing
-          ) "Link for signing document by API delivery"
-       )
+  <*   (fieldReadOnlyOpt "api_delivery_url" apiDeliveryURLIfThereIsOne "Link for signing document by API delivery" )
   where
     emptyIfNaughty url = if any (\s -> s `isPrefixOf` (strip url)) ["javascript:","data:"] then "" else url
+    apiDeliveryURLIfThereIsOne sl =
+      if (daStatus da /= Preparation && signatorylinkdeliverymethod sl == APIDelivery && canSeeSignlinks da)
+      then Just $ apiDeliveryURL (daDocumentID da) sl
+      else Nothing
+    apiDeliveryURL :: DocumentID -> SignatoryLink -> String
+    apiDeliveryURL did sl = show $ LinkSignDocMagicHash did (signatorylinkid sl) mh
+      where
+        msat = find ((==SignatoryAccessTokenForAPI) . signatoryAccessTokenReason) (signatoryaccesstokens sl)
+        mh = maybe (signatorymagichash sl) signatoryAccessTokenHash msat
 
 -- We can't implement lists as Unjson - since we would have to do
 -- unjsonToJSON on each document parser. And that would make us lose

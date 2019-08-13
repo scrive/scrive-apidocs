@@ -986,7 +986,7 @@
 "_smsCorrectedNotification":"Ostatnim razem przesłaliśmy Ci nieprawidłowy dokument, w którym brakowało elektronicznego podpisu. Udało nam się skorygować ten błąd. Dokument zawierający poprawny podpis elektroniczny znajduje się pod linkiem: $link$",
 "_smsCorrectedNotificationWithEmail":"Ostatnim razem przesłaliśmy Ci nieprawidłowy dokument, w którym brakowało elektronicznego podpisu. Udało nam się skorygować ten błąd. Dokument zawierający poprawny podpis elektroniczny znajduje się pod linkiem: $link$ Dokument został również wysłany na Twój adres e-mail.",
 "_smsDocumentApprovedNotification":"Zatwierdziłeś(-aś) dokument $documenttitle$. Aby przejrzeć dokument, kliknij w link: $link$",
-"_smsDocumentSignedNotification":"Podpisałeś(-aś) dokument $documenttitle$. Aby przejrzeć dokument, kliknij w link: $link$",
+"_smsDocumentSignedNotification":"",
 "_smsForwardSigningForAuthor":"$fromName$ przekazał(-a) dokument $documenttitle$ do $toName$ celem złożenia podpisu elektronicznego. Kliknij w link, aby przejrzeć dokument $authorlink$",
 "_smsForwardSigningForAuthorApproving":"$fromName$ przekazał(-a) dokument $documenttitle$ do $toName$ celem zatwierdzenia. Kliknij w link, aby przejrzeć dokument $authorlink$",
 "_smsForwardSigningForNewSignatory":"$fromName$ przekazał(-a) dokument $documenttitle$ celem złożenia przez Ciebie podpisu elektronicznego. Kliknij w link, aby otrzymać dalsze instrukcje $link$",

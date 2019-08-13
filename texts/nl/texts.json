@@ -986,7 +986,7 @@
 "_smsCorrectedNotification":"We hebben ontdekt dat we u eerder een document hebben verstuurd dat incorrect was omdat het geen digitale handtekening bevatte, maar nu hebben we deze fout hersteld. Bekijk het document met de juiste digitale handtekening door deze link te volgen: $link$",
 "_smsCorrectedNotificationWithEmail":"We hebben ontdekt dat we u eerder een document hebben verstuurd dat incorrect was omdat het geen digitale handtekening bevatte, maar nu hebben we deze fout hersteld. Bekijk het document met de juiste digitale handtekening door deze link te volgen: $link$ We hebben dit document tevens naar uw e-mail verstuurd.",
 "_smsDocumentApprovedNotification":"U hebt document $documenttitle$ nu goedgekeurd. Volg deze link om het document te bekijken: $link$",
-"_smsDocumentSignedNotification":"U hebt document $documenttitle$ nu ondertekend. Volg deze link om het document te bekijken: $link$",
+"_smsDocumentSignedNotification":"",
 "_smsForwardSigningForAuthor":"$fromName$ heeft het document $documenttitle$ ter e-ondertekening doorgestuurd aan $toName$. Volg de link om het document te bekijken $authorlink$",
 "_smsForwardSigningForAuthorApproving":"$fromName$ heeft het document $documenttitle$ ter goedkeuring doorgestuurd aan $toName$. Volg de link om het document te bekijken $authorlink$",
 "_smsForwardSigningForNewSignatory":"$fromName$ heeft het document $documenttitle$ ter e-ondertekening naar u doorgestuurd. Volg de link voor verdere instructies $link$",

@@ -6,8 +6,7 @@ module Doc.Model.Update
   , DetachFile(..)
   , AppendSealedFile(..)
   , AppendExtendedSealedFile(..)
-  , CancelDocument(..)
-  , ChangeSignatoryEmail(..)
+  , CancelDocument(..)  , ChangeSignatoryEmail(..)
   , ChangeSignatoryPhone(..)
   , ChangeAuthenticationToViewMethod(..)
   , ChangeAuthenticationToSignMethod(..)
@@ -76,13 +75,12 @@ module Doc.Model.Update
   , AddNotUploadedSignatoryAttachmentsEvents(..)
   , UpdateShareableLinkHash(..)
   , updateMTimeAndObjectVersion
-  , defaultTemporaryMagicHashValidDays
-  , makeTemporaryMagicHash
-  , makeTemporaryMagicHash'
-  , generateMagicHash
-  , PurgeExpiredTemporaryMagicHashes(..)
+  , NewSignatoryAccessToken(..)
+  , NewSignatoryAccessTokenWithHash(..)
   , SetDocumentApiCallbackResult(..)
   , AddCustomEvidenceEvent(..)
+  , PurgeTimeoutedSignatoryAccessTokens(..)
+  , ExtendSignatoryAccessTokensForAccessBeforeClosing(..)
   ) where
 
 import Control.Arrow (second)
@@ -118,6 +116,7 @@ import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots
 import Doc.Tables
+import Doc.Types.SignatoryAccessToken
 import EID.Signature.Model
 import EvidenceLog.Model
 import File.FileID
@@ -614,6 +613,8 @@ instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpd
               sqlWhereDocumentStatusIs Pending
       updateMTimeAndObjectVersion (actorTime actor)
       return oldemail
+    update $ InvalidateSignatoryAccessTokens slid SignatoryAccessTokenForMailBeforeClosing
+    update $ InvalidateSignatoryAccessTokens slid SignatoryAccessTokenForMailAfterClosing
     void $ update $ InsertEvidenceEvent
           ChangeSignatoryEmailEvidence
           (F.value "oldemail" oldemail >> F.value "newemail" email)
@@ -642,6 +643,8 @@ instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m)
               sqlWhereDocumentStatusIs Pending
       updateMTimeAndObjectVersion (actorTime actor)
       return oldphone
+    update $ InvalidateSignatoryAccessTokens slid SignatoryAccessTokenForSMSBeforeClosing
+    update $ InvalidateSignatoryAccessTokens slid SignatoryAccessTokenForSMSAfterClosing
     void $ update $ InsertEvidenceEvent
           ChangeSignatoryPhoneEvidence
           (F.value "oldphone" oldphone >> F.value "newphone" phone)
@@ -1144,13 +1147,13 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, Mo
     let authorlink0 = signLinkFromDetails' authorFields True
                       SignatoryRoleSigningParty (SignOrder 1) [] magichash
 
-    let authorlink = authorlink0 {
-                           maybesignatory = Just $ userid user }
+    let authorlink = authorlink0 { maybesignatory = Just $ userid user }
 
     othersignatories <- sequence $ replicate nrOfOtherSignatories $ do
                           mh <- random
                           return $ signLinkFromDetails' emptySignatoryFields False
                                    SignatoryRoleSigningParty (SignOrder 2) [] mh
+
     token <- random
     let doc = defaultDocument
                   { documenttitle                = title
@@ -1292,33 +1295,36 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
 
     clearSignInfofromDoc = do
       newSignLinks <- forM (documentsignatorylinks doc) $ \sl -> do
-                           magichash <- random
-                           let newFields = for (signatoryfields sl) $ \f ->
-                                             case f of
-                                               SignatorySignatureField sf -> SignatorySignatureField $ sf{ssfValue = Nothing}
-                                               SignatoryRadioGroupField rgf -> SignatoryRadioGroupField $ rgf{srgfSelectedValue = Nothing}
-                                               _ -> f
-                           return $ defaultSignatoryLink {
-                                signatorylinkid            = (unsafeSignatoryLinkID 0)
-                              , signatorymagichash = magichash
-                              , signatoryfields            = newFields
-                              , signatoryisauthor          = signatoryisauthor sl
-                              , signatoryrole              = signatoryrole sl
-                              , signatorysignorder         = signatorysignorder sl
-                              , signatorylinkcsvupload       = signatorylinkcsvupload sl
-                              , signatoryattachments         = signatoryattachments sl
-                              , signatorylinksignredirecturl = signatorylinksignredirecturl sl
-                              , signatorylinkrejectredirecturl = signatorylinkrejectredirecturl sl
-                              , signatorylinkauthenticationtoviewmethod = signatorylinkauthenticationtoviewmethod sl
-                              , signatorylinkauthenticationtosignmethod = signatorylinkauthenticationtosignmethod sl
-                              , signatorylinkdeliverymethod       = signatorylinkdeliverymethod sl
-                              , signatorylinkconfirmationdeliverymethod       = signatorylinkconfirmationdeliverymethod sl
-                              , signatorylinknotificationdeliverymethod       = signatorylinknotificationdeliverymethod sl
-                              , signatorylinkhidepn = signatorylinkhidepn sl
-                              , signatorylinkcanbeforwarded = signatorylinkcanbeforwarded sl
-                              , signatorylinkallowshighlighting = signatorylinkallowshighlighting sl
-                              , maybesignatory = if (isAuthor sl) then maybesignatory sl else Nothing
-                          }
+            magichash <- random
+            let newFields = for (signatoryfields sl) $ \f ->
+                  case f of
+                    SignatorySignatureField sf ->
+                      SignatorySignatureField $ sf { ssfValue = Nothing }
+                    SignatoryRadioGroupField rgf ->
+                      SignatoryRadioGroupField $ rgf{srgfSelectedValue = Nothing}
+
+                    _ -> f
+            return $ defaultSignatoryLink
+                 { signatorylinkid            = (unsafeSignatoryLinkID 0)
+                 , signatorymagichash = magichash
+                 , signatoryfields            = newFields
+                 , signatoryisauthor          = signatoryisauthor sl
+                 , signatoryrole              = signatoryrole sl
+                 , signatorysignorder         = signatorysignorder sl
+                 , signatorylinkcsvupload       = signatorylinkcsvupload sl
+                 , signatoryattachments         = signatoryattachments sl
+                 , signatorylinksignredirecturl = signatorylinksignredirecturl sl
+                 , signatorylinkrejectredirecturl = signatorylinkrejectredirecturl sl
+                 , signatorylinkauthenticationtoviewmethod = signatorylinkauthenticationtoviewmethod sl
+                 , signatorylinkauthenticationtosignmethod = signatorylinkauthenticationtosignmethod sl
+                 , signatorylinkdeliverymethod       = signatorylinkdeliverymethod sl
+                 , signatorylinkconfirmationdeliverymethod       = signatorylinkconfirmationdeliverymethod sl
+                 , signatorylinknotificationdeliverymethod       = signatorylinknotificationdeliverymethod sl
+                 , signatorylinkhidepn = signatorylinkhidepn sl
+                 , signatorylinkcanbeforwarded = signatorylinkcanbeforwarded sl
+                 , signatorylinkallowshighlighting = signatorylinkallowshighlighting sl
+                 , maybesignatory = if (isAuthor sl) then maybesignatory sl else Nothing
+                 }
       return doc {documentstatus = Preparation,
                   documenttimeouttime = Nothing,
                   documentsignatorylinks = newSignLinks
@@ -2640,44 +2646,66 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
     liftEqMaybe _ Nothing   Nothing   = True
     liftEqMaybe _ _         _         = False
 
-
-defaultTemporaryMagicHashValidDays :: Int
-defaultTemporaryMagicHashValidDays = 30
-
--- | Create a temporary hash valid for the default number of days
-makeTemporaryMagicHash :: (CryptoRNG m, MonadDB m, MonadTime m) =>
-  SignatoryLinkID -> m (MagicHash, UTCTime)
-makeTemporaryMagicHash signatoryLinkId =
-  makeTemporaryMagicHash' signatoryLinkId defaultTemporaryMagicHashValidDays
-
--- | Create a temporary hash valid for `validDays`
-makeTemporaryMagicHash' :: (CryptoRNG m, MonadDB m, MonadTime m) =>
-  SignatoryLinkID -> Int -> m (MagicHash, UTCTime)
-makeTemporaryMagicHash' signatoryLinkId validDays = do
-  now <- currentTime
-  -- Make it valid until the end of the 30th day.
-  let expiration = (validDays `daysAfter` now) { utctDayTime = 86399 }
-  mh <- dbUpdate $ NewTemporaryMagicHash signatoryLinkId expiration
-  return (mh, expiration)
-
-generateMagicHash :: (CryptoRNG m) => m MagicHash
-generateMagicHash = random
-
-data NewTemporaryMagicHash = NewTemporaryMagicHash SignatoryLinkID UTCTime
-instance (CryptoRNG m, MonadDB m) => DBUpdate m NewTemporaryMagicHash MagicHash where
-  update (NewTemporaryMagicHash slid expiryTime) = do
+data NewSignatoryAccessToken = NewSignatoryAccessToken
+  SignatoryLinkID SignatoryAccessTokenReason (Maybe UTCTime)
+instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m)
+  => DBUpdate m NewSignatoryAccessToken MagicHash where
+  update (NewSignatoryAccessToken slid reason mexptime) = do
     hash <- random
-    runQuery_ . sqlInsert "signatory_link_magic_hashes" $ do
+    update $ NewSignatoryAccessTokenWithHash slid reason mexptime hash
+
+data NewSignatoryAccessTokenWithHash = NewSignatoryAccessTokenWithHash
+  SignatoryLinkID SignatoryAccessTokenReason (Maybe UTCTime) MagicHash
+instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m)
+  => DBUpdate m NewSignatoryAccessTokenWithHash MagicHash where
+  update (NewSignatoryAccessTokenWithHash slid reason mexptime hash) = do
+    runQuery_ . sqlInsertSelect "signatory_access_tokens" "" $ do
       sqlSet "hash" hash
       sqlSet "signatory_link_id" slid
-      sqlSet "expiration_time" expiryTime
-    return hash
+      sqlSet "reason" reason
+      sqlSet "expiration_time" mexptime
+      sqlResult "hash"
+    fetchOne runIdentity
 
-data PurgeExpiredTemporaryMagicHashes = PurgeExpiredTemporaryMagicHashes
-instance (MonadDB m, MonadTime m) => DBUpdate m PurgeExpiredTemporaryMagicHashes () where
+data PurgeTimeoutedSignatoryAccessTokens= PurgeTimeoutedSignatoryAccessTokens
+instance (MonadDB m, MonadTime m)
+  => DBUpdate m PurgeTimeoutedSignatoryAccessTokens () where
   update _ = do
     now <- currentTime
-    runSQL_ $ "DELETE FROM signatory_link_magic_hashes WHERE expiration_time <" <?> now
+    runQuery_ . sqlDelete "signatory_access_tokens" $ do
+      sqlWith "ids_to_purge" . sqlSelect "signatory_access_tokens sat" $ do
+        sqlResult "sat.id"
+        sqlWhere $ "sat.expiration_time IS NOT NULL"
+        sqlWhere $ "sat.expiration_time <" <?> now
+      sqlWhere "id IN (SELECT id FROM ids_to_purge)"
+
+data InvalidateSignatoryAccessTokens
+  = InvalidateSignatoryAccessTokens SignatoryLinkID SignatoryAccessTokenReason
+instance (DocumentMonad m, MonadDB m)
+  => DBUpdate m InvalidateSignatoryAccessTokens () where
+  update (InvalidateSignatoryAccessTokens slid reason) = do
+    runQuery_ . sqlDelete "signatory_access_tokens" $ do
+      sqlWhereEq "reason" reason
+      sqlWhereEq "signatory_link_id" slid
+
+newtype ExtendSignatoryAccessTokensForAccessBeforeClosing
+  = ExtendSignatoryAccessTokensForAccessBeforeClosing DocumentID
+instance (MonadDB m, MonadTime m)
+  => DBUpdate m ExtendSignatoryAccessTokensForAccessBeforeClosing () where
+  update (ExtendSignatoryAccessTokensForAccessBeforeClosing did) = do
+    now <- currentTime
+
+    runQuery_ . sqlUpdate "signatory_access_tokens" $ do
+      sqlWith "signatory_link_ids" . sqlSelect "signatory_links sl" $ do
+        sqlResult "sl.id"
+        sqlWhereEq "sl.document_id" did
+
+      sqlSet "expiration_time" $ 1 `daysAfter` now
+      sqlWhereIn "reason" [
+          SignatoryAccessTokenForMailBeforeClosing
+        , SignatoryAccessTokenForSMSBeforeClosing
+        ]
+      sqlWhere "signatory_link_id IN (SELECT id FROM signatory_link_ids)"
 
 data SetDocumentApiCallbackResult = SetDocumentApiCallbackResult DocumentID (Maybe String)
 instance MonadDB m => DBUpdate m SetDocumentApiCallbackResult () where

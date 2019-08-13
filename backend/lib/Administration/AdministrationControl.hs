@@ -61,6 +61,7 @@ import Doc.Model
 import Doc.Screenshot (Screenshot(..))
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots (SignatoryScreenshots(..))
+import Doc.Types.SignatoryAccessToken
 import EvidenceLog.Model
 import File.File
 import File.Model
@@ -75,6 +76,7 @@ import IPAddress ()
 import Kontra
 import KontraLink
 import Log.Identifier
+import MagicHash
 import Mails.Model
 import MinutesTime
 import PadApplication.Types (padAppModeFromText)
@@ -168,6 +170,8 @@ adminonlyRoutes =
         , dir "triggermigratefolders" $ hGet $ toK1 handleTriggerMigrateFolders
         , dir "triggermigratedocuments" $ hGet $ toK1 handleTriggerMigrateDocuments
 
+        -- migration trigging for signatory access tokens
+        , dir "triggermigratesignatoryacceesstokens" $ hGet $ toK1 handleTriggerMigrateSignatoryAccessTokens
   ]
 
 daveRoutes :: Route (Kontra Response)
@@ -873,6 +877,58 @@ handleTriggerMigrateFolders limit = onlyAdmin $ do
   endTime <- liftIO currentTime
   return . object $
     [ "home_folders_created" .= numberDone
+    , "limit_used" .= limitWithUpperBound
+    , "elapsed_time" .= (realToFrac (diffUTCTime endTime startTime) :: Double)]
+
+handleTriggerMigrateSignatoryAccessTokens :: Kontrakcja m => Integer -> m Aeson.Value
+handleTriggerMigrateSignatoryAccessTokens limit  = onlyAdmin $ do
+  logInfo_ "Starting migration batch for signatory access tokens"
+  let limitWithUpperBound = minimum [limit, 10000]
+  startTime <- liftIO currentTime
+  -- Updating API signatories
+  (satsToUpdateWithAPI :: [(SignatoryLinkID, MagicHash)]) <- do
+    runQuery_ $ sqlSelect "signatory_links sl" $ do
+      sqlResult "sl.id"
+      sqlResult "sl.token"
+      sqlWhereEq "sl.delivery_method" APIDelivery
+      sqlWhereExists . sqlSelect "documents" $ do
+        sqlWhereIsNULL "purged_time"
+        sqlWhere "documents.id = sl.document_id"
+      sqlWhereNotExists . sqlSelect "signatory_access_tokens" $ do
+        sqlWhere "signatory_link_id = sl.id"
+        sqlWhere "hash = sl.token"
+        sqlWhereEq "reason" SignatoryAccessTokenForAPI
+      sqlLimit limitWithUpperBound
+    fetchMany id
+  forM_ satsToUpdateWithAPI $ \(slid,mh) -> do
+    void $ dbUpdate $ NewSignatoryAccessTokenWithHash
+      slid SignatoryAccessTokenForAPI
+      Nothing mh
+
+  (satsToUpdateWithLegacy :: [(SignatoryLinkID, MagicHash)]) <- do
+    runQuery_ $ sqlSelect "signatory_links sl" $ do
+      sqlResult "sl.id"
+      sqlResult "sl.token"
+      sqlWhereNotEq "sl.delivery_method" APIDelivery
+      sqlWhereExists . sqlSelect "documents" $ do
+        sqlWhereIsNULL "purged_time"
+        sqlWhere "documents.id = sl.document_id"
+      sqlWhereNotExists . sqlSelect "signatory_access_tokens" $ do
+        sqlWhere "signatory_link_id = sl.id"
+        sqlWhere "hash = sl.token"
+        sqlWhereEq "reason" SignatoryAccessTokenLegacy
+      sqlLimit $ limitWithUpperBound - (fromIntegral (length satsToUpdateWithAPI))
+    fetchMany id
+  forM_ satsToUpdateWithLegacy $ \(slid,mh) -> do
+    void $ dbUpdate $ NewSignatoryAccessTokenWithHash
+      slid SignatoryAccessTokenLegacy
+      Nothing mh
+
+  endTime <- liftIO currentTime
+  return . object $
+    [ "tokens_created" .= ((length satsToUpdateWithAPI) + (length satsToUpdateWithLegacy))
+    , "tokens_created_for_api" .= length satsToUpdateWithAPI
+    , "tokens_created_for_legacy" .= length satsToUpdateWithLegacy
     , "limit_used" .= limitWithUpperBound
     , "elapsed_time" .= (realToFrac (diffUTCTime endTime startTime) :: Double)]
 

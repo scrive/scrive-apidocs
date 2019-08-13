@@ -101,9 +101,7 @@ _testDocApiV2GetFailsAfter30Days = do
   (_, ctx') <- runTestKontra req ctx $ do
     sid <- getNonTempSessionID
     dbUpdate $ AddDocumentSession sid (signatorylinkid sl)
-
   let vars = [ ("signatory_id", inText . show . fromSignatoryLinkID . signatorylinkid $ sl)
-             , ("access_token", inText . show . signatorymagichash $ sl)
              ]
       ctxWithin30Days = set ctxtime (addUTCTime (29*24*3600) (documentmtime doc)) ctx'
       ctxAfter30Days  = set ctxtime (addUTCTime (31*24*3600) (documentmtime doc)) ctx'
@@ -444,9 +442,9 @@ testDocApiV2FilesFull = do
     fid <- saveNewFile "some_name.pdf" "Some contents"
     randomUpdate $ SaveSigAttachment (signatorylinkid sl) att fid
                                      (systemActor now)
-    randomUpdate $ SignDocument (signatorylinkid sl)
-                                Nothing Nothing emptySignatoryScreenshots
-                                (systemActor now)
+    randomUpdate $ SignDocument
+      (signatorylinkid sl) Nothing Nothing emptySignatoryScreenshots
+      (systemActor now)
 
   do
     signedDoc <- randomQuery $ GetDocumentByDocumentID did

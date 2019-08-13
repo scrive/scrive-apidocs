@@ -986,7 +986,7 @@
 "_smsCorrectedNotification":"Märkasime, et saatsime Teile eelnevalt väära dokumendi, millel puudus digitaalne allkiri, kuid oleme selle vea nüüd parandanud. Õige digitaalse allkirjaga dokumendi leiate selle lingi alt: $link$",
 "_smsCorrectedNotificationWithEmail":"Märkasime, et saatsime Teile eelnevalt väära dokumendi, millel puudus digitaalne allkiri, kuid oleme selle vea nüüd parandanud. Õige digitaalse allkirjaga dokumendi leiate selle lingi alt: $link$ Lisaks oleme saatnud parandatud dokumendi Teie e-mailile.",
 "_smsDocumentApprovedNotification":"Olete kinnitanud dokumendi $documenttitle$. Dokumendi vaatamiseks järgige seda linki: $link$",
-"_smsDocumentSignedNotification":"Olete allkirjastanud dokumendi $documenttitle$. Dokumendi vaatamiseks järgige seda linki: $link$",
+"_smsDocumentSignedNotification":"",
 "_smsForwardSigningForAuthor":"$fromName$ on saatnud dokumendi $documenttitle$ edasi saajale $toName$ allkirjastamiseks. Järgige dokumendi vaatamiseks linki $authorlink$",
 "_smsForwardSigningForAuthorApproving":"$fromName$ on saatnud dokumendi $documenttitle$ edasi saajale $toName$ kinnitamiseks. Järgige dokumendi vaatamiseks linki $authorlink$",
 "_smsForwardSigningForNewSignatory":"$fromName$ on saatnud dokumendi $documenttitle$ edasi teile e-allkirjastamiseks. Järgige dokumendi vaatamiseks linki $link$",

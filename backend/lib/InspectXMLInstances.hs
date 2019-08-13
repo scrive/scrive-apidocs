@@ -24,6 +24,7 @@ import Doc.DocumentID
 import Doc.SealStatus (SealStatus)
 import Doc.SignatoryConsentQuestionID
 import Doc.SignatoryLinkID
+import Doc.Types.SignatoryAccessToken
 import File.File
 import File.FileID
 import FlashMessage
@@ -71,7 +72,8 @@ $(deriveInspectXML ''UserHistoryEvent)
 $(deriveInspectXML ''SignatoryLink)
 $(deriveInspectXML ''PlacementAnchor)
 $(deriveInspectXML ''SignatoryConsentQuestion)
-$(deriveInspectXML ''TemporaryMagicHash)
+$(deriveInspectXML ''SignatoryAccessToken)
+$(deriveInspectXML ''SignatoryAccessTokenReason)
 
 data ExtraDocument = ExtraDocument String
   deriving Show

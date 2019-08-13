@@ -989,7 +989,7 @@
 "_smsCorrectedNotification":"We noticed that we previously sent you a document that was incorrect in that it lacked a digital signature, but we have now corrected this error. Find the document with proper digital signature by following this link: $link$",
 "_smsCorrectedNotificationWithEmail":"We noticed that we previously sent you a document that was incorrect in that it lacked a digital signature, but we have now corrected this error. Find the document with proper digital signature by following this link: $link$ We have also sent the corrected document to your email.",
 "_smsDocumentApprovedNotification":"You have now approved the document $documenttitle$. To view the document, follow this link: $link$",
-"_smsDocumentSignedNotification":"You have now signed the document $documenttitle$. To view the document, follow this link: $link$",
+"_smsDocumentSignedNotification":"You have now signed the document $documenttitle$. To view the document, follow this link: $link$ It will be available to download until $availabledate$.",
 "_smsForwardSigningForAuthor":"$fromName$ has forwarded the document $documenttitle$ to $toName$ to e-sign. Follow the link to view the document $authorlink$",
 "_smsForwardSigningForAuthorApproving":"$fromName$ has forwarded the document $documenttitle$ to $toName$ to approve. Follow the link to view the document $authorlink$",
 "_smsForwardSigningForNewSignatory":"$fromName$ has forwarded the document $documenttitle$ for you to e-sign. Follow the link for further instructions $link$",

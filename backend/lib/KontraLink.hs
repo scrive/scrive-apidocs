@@ -29,7 +29,6 @@ data KontraLink
     | LinkArchive
     | LinkAccount
     | LinkChangeUserEmail UserID MagicHash
-    | LinkSignDoc DocumentID SignatoryLink
     | LinkSignDocPad DocumentID SignatoryLinkID
     | LinkMainFile Document SignatoryLink MagicHash
     | LinkSignDocNoMagicHash DocumentID SignatoryLinkID
@@ -44,7 +43,7 @@ data KontraLink
     | LinkDaveDocument DocumentID
     | LinkDaveFile FileID String
     | LinkEnableCookies
-    | LinkDocumentPreview DocumentID (Maybe SignatoryLink) FileID Int
+    | LinkDocumentPreview DocumentID (Maybe (SignatoryLink, Maybe MagicHash)) FileID Int
     | LinkOAuthAuthorization APIToken
     | LinkOAuthCallback URI APIToken (Maybe MagicHash)
     | LinkExternal String
@@ -74,9 +73,6 @@ instance Show KontraLink where
     showsPrec _ (LinkIssueDoc documentid) =
         (++) $ "/d/" ++ show documentid
     showsPrec _ (LinkEvidenceAttachment did filename) =  (++) $ "/d/evidenceattachment/" ++ show did ++ "/" ++ filename
-    showsPrec _ (LinkSignDoc did signatorylink) =
-        (++) $ "/s/" ++ show (did) ++ "/" ++ show (signatorylinkid signatorylink) ++
-                 "/"++ show (signatorymagichash signatorylink)
     showsPrec _ (LinkSignDocPad did slid) =
         (++) $ "/sp/" ++ show did ++ "/" ++ show slid
     showsPrec _ (LinkMainFile document signatorylink mh) =
@@ -92,11 +88,17 @@ instance Show KontraLink where
     showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid ++"/")
     showsPrec _ (LinkDaveFile fileid filename) =  (++) $ "/dave/file/" ++ show fileid ++ "/" ++ filename
     showsPrec _ (LinkEnableCookies) = (++) ("/enable-cookies/enable-cookies.html")
-    showsPrec _ (LinkDocumentPreview did (Just sl) fid width) = (++) ("/preview/" ++ show did ++
-                 "/" ++ show (signatorylinkid sl) ++
-                 "/" ++ show (signatorymagichash sl) ++
-                 "/" ++ show fid ++
-                 "?pixelwidth=" ++ show width)
+    showsPrec _ (LinkDocumentPreview did (Just (sl, Just mh)) fid width) =
+      (++) ("/preview/" ++ show did
+      ++ "/" ++ show (signatorylinkid sl)
+      ++ "/" ++ show mh
+      ++ "/" ++ show fid
+      ++ "?pixelwidth=" ++ show width)
+    showsPrec _ (LinkDocumentPreview did (Just (sl, Nothing)) fid width) =
+      (++) ("/preview/" ++ show did
+      ++ "/" ++ show (signatorylinkid sl)
+      ++ "/" ++ show fid
+      ++ "?pixelwidth=" ++ show width)
     showsPrec _ (LinkDocumentPreview did Nothing fid width) = (++) ("/preview/" ++ show did ++
                  "/" ++ show fid ++
                  "?pixelwidth=" ++ show width)

@@ -107,7 +107,7 @@ pageDocumentSignView ctx document siglink ad = do
       F.value "authorFullname" $ getFullName authoruser
       F.value "authorPhone" $ getMobile authoruser
       F.value "previewLink" $  case signatorylinkauthenticationtoviewmethod siglink of
-        StandardAuthenticationToView -> show $ LinkDocumentPreview (documentid document) (Just siglink) mainfile 600
+        StandardAuthenticationToView -> show $ LinkDocumentPreview (documentid document) (Just (siglink, Nothing)) mainfile 600
         _ -> show LinkPreviewLockedImage
       F.value "b64documentdata" $ B64.encode $ docjson
       F.value "legaltext" $ get ugsLegalText . ugwpSettings $ authorugwp

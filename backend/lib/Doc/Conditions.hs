@@ -221,7 +221,7 @@ data SignatoryLinkIsForwarded = SignatoryLinkIsForwarded
 
 instance ToJSValue SignatoryLinkIsForwarded where
   toJSValue (SignatoryLinkIsForwarded) = runJSONGen $ do
-    value "message"           ("Signatory link is forwaded" :: String)
+    value "message"           ("Signatory link is forwarded" :: String)
 
 instance DBExtraException SignatoryLinkIsForwarded
 
@@ -229,13 +229,13 @@ sqlWhereSignatoryLinkIsNotForwaded :: (MonadState v m, SqlWhere v)
                                    => m ()
 sqlWhereSignatoryLinkIsNotForwaded =
   sqlWhereE (SignatoryLinkIsForwarded) ("signatory_links.signatory_role NOT IN " <+>
-    parenthesize (sqlConcatComma (map sqlParam forwadedRoles)))
-  where
-    forwadedRoles =
-      [ SignatoryRoleForwardedSigningParty
-      , SignatoryRoleForwardedApprover
-      ]
+    parenthesize (sqlConcatComma (map sqlParam forwardedRoles)))
 
+forwardedRoles :: [SignatoryRole]
+forwardedRoles =
+  [ SignatoryRoleForwardedSigningParty
+  , SignatoryRoleForwardedApprover
+  ]
 
 data SigningPartyHasNotYetSignedOrApproved = SigningPartyHasNotYetSignedOrApproved
   deriving (Eq, Ord, Show, Typeable)
@@ -380,15 +380,20 @@ instance ToJSValue SignatoryTokenDoesNotMatch where
 
 instance DBExtraException SignatoryTokenDoesNotMatch
 
-sqlWhereMagicHashIsValidForSignatoryLink :: (MonadState v m, SqlWhere v)
-                                         => UTCTime -> MagicHash -> m ()
-sqlWhereMagicHashIsValidForSignatoryLink now mh =
-  sqlWhereAnyE SignatoryTokenDoesNotMatch
-    [ sqlWhereEq "signatory_links.token" mh
-    , sqlWhereExists . sqlSelect "signatory_link_magic_hashes" $ do
-        sqlWhere "signatory_link_magic_hashes.signatory_link_id = signatory_links.id"
-        sqlWhere $ "signatory_link_magic_hashes.expiration_time >" <?> now
-        sqlWhereEq "signatory_link_magic_hashes.hash" mh
+-- | Check that the signatory link has a matching magic hash. This does NOT
+-- mean that the magic hash is valid. In order to avoid duplicating logic, a
+-- further check needs to be done with `isValidSignatoryMagicHash`.
+--
+-- This check is still useful to avoid fetching records from DB when the magic
+-- hash is obviously wrong.
+sqlWhereSomeSignatoryAccessTokenHasMagicHash
+  :: (MonadState v m, SqlWhere v) => MagicHash -> m ()
+sqlWhereSomeSignatoryAccessTokenHasMagicHash mh =
+  sqlWhereAnyE SignatoryTokenDoesNotMatch [
+      sqlWhereEq "signatory_links.token" mh -- TODO: Remove when tokens are migrated to signatory_access_tokens
+    , sqlWhereExists . sqlSelect "signatory_access_tokens" $ do
+        sqlWhere "signatory_access_tokens.signatory_link_id = signatory_links.id"
+        sqlWhereEq "signatory_access_tokens.hash" mh
     ]
 
 data DocumentObjectVersionDoesNotMatch = DocumentObjectVersionDoesNotMatch

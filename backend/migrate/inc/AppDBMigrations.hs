@@ -209,4 +209,8 @@ kontraMigrations = [
   , addEmailToEIDAuthentications
   , featureFlagsAddVerimiAuthenticationToView2
   , addTimeoutedEIDTransactionsPurge
+  , addSignatoryAccessTokensTable
+  , updateCompositeTypesForSignatoryAccessTokens
+  , dropSignatoryLinkMagicHashesTable
+  , changeTemporaryMagicHashPurgeJobToTokensPurgeJob
   ]

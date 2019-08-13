@@ -16,8 +16,6 @@ module Doc.Types.SignatoryLink (
   , SignatoryLink(..)
   , signatoryLinksSelectors
   , defaultSignatoryLink
-  , TemporaryMagicHash(..)
-  , signatoryLinkMagicHashesSelectors
   , isValidSignatoryMagicHash
   ) where
 
@@ -30,7 +28,9 @@ import Database.PostgreSQL.PQTypes
 import DB
 import Doc.SignatoryLinkID
 import Doc.Tables
+import Doc.Types.DocumentStatus
 import Doc.Types.HighlightedPage
+import Doc.Types.SignatoryAccessToken
 import Doc.Types.SignatoryAttachment
 import Doc.Types.SignatoryConsentQuestion
 import Doc.Types.SignatoryField
@@ -369,35 +369,6 @@ instance ToSQL SignatoryRole where
 
 ---------------------------------
 
-signatoryLinkMagicHashesSelectors :: [SQL]
-signatoryLinkMagicHashesSelectors =
-  [ "signatory_link_magic_hashes.hash"
-  , "signatory_link_magic_hashes.expiration_time"
-  ]
-
-data TemporaryMagicHash = TemporaryMagicHash
-  { temporaryMagicHashHash           :: MagicHash
-  , temporaryMagicHashExpirationTime :: UTCTime
-  } deriving (Eq, Show)
-
-instance PQFormat TemporaryMagicHash where
-  pqFormat = compositeTypePqFormat ctSignatoryLinkMagicHash
-
-type instance CompositeRow TemporaryMagicHash = (MagicHash, UTCTime)
-
-instance CompositeFromSQL TemporaryMagicHash where
-  toComposite (hash, time) = TemporaryMagicHash hash time
-
--- | Check if the given magic hash is the permanent hash or one of the
--- temporary hashes. It relies on the assumption that the 'SignatoryLink'
--- contains only valid hashes. (See the WHERE statement in the query.)
-isValidSignatoryMagicHash :: MagicHash -> SignatoryLink -> Bool
-isValidSignatoryMagicHash mh sl =
-  mh == signatorymagichash sl
-  || mh `elem` map temporaryMagicHashHash (signatorytemporarymagichashes sl)
-
----------------------------------
-
 data SignatoryLink = SignatoryLink {
   signatorylinkid                         :: !SignatoryLinkID
 , signatoryfields                         :: ![SignatoryField]
@@ -408,7 +379,7 @@ data SignatoryLink = SignatoryLink {
 , signatorysignorder                      :: !SignOrder
 -- | Authentication codes
 , signatorymagichash                      :: !MagicHash
-, signatorytemporarymagichashes           :: ![TemporaryMagicHash]
+, signatoryaccesstokens                   :: ![SignatoryAccessToken]
 -- | If this document has been saved to an account, that is the user id
 , maybesignatory                          :: !(Maybe UserID)
 -- | When a person has signed this document (or approved, in case when
@@ -460,7 +431,7 @@ defaultSignatoryLink =
   , signatoryrole = SignatoryRoleViewer
   , signatorysignorder = SignOrder 1
   , signatorymagichash = unsafeMagicHash 0
-  , signatorytemporarymagichashes = []
+  , signatoryaccesstokens = []
   , maybesignatory = Nothing
   , maybesigninfo = Nothing
   , maybeseeninfo = Nothing
@@ -508,7 +479,7 @@ signatoryLinksSelectors = [
   , "signatory_links.signatory_role"
   , "signatory_links.sign_order"
   , "signatory_links.token"
-  , "ARRAY(SELECT (" <> mintercalate ", " signatoryLinkMagicHashesSelectors <> ")::" <> raw (ctName ctSignatoryLinkMagicHash) <+> "FROM signatory_link_magic_hashes WHERE signatory_links.id = signatory_link_magic_hashes.signatory_link_id AND signatory_link_magic_hashes.expiration_time > now())"
+  , "ARRAY(SELECT (" <> mintercalate ", " signatoryAccessTokenSelectors <> ")::" <> raw (ctName ctSignatoryAccessToken) <+> "FROM signatory_access_tokens WHERE signatory_links.id = signatory_access_tokens.signatory_link_id)"
   , "signatory_links.user_id"
   , "signatory_links.sign_time"
   , "signatory_links.sign_ip"
@@ -541,14 +512,14 @@ signatoryLinksSelectors = [
   , "signatory_links.mail_confirmation_delivery_status"
   ]
 
-type instance CompositeRow SignatoryLink = (
-    SignatoryLinkID
+type instance CompositeRow SignatoryLink =
+  ( SignatoryLinkID
   , CompositeArray1 SignatoryField
   , Bool
   , SignatoryRole
   , SignOrder
   , MagicHash
-  , CompositeArray1 TemporaryMagicHash
+  , CompositeArray1 SignatoryAccessToken
   , Maybe UserID
   , Maybe UTCTime
   , Maybe IPAddress
@@ -578,7 +549,8 @@ type instance CompositeRow SignatoryLink = (
   , Bool
   , Maybe String
   , CompositeArray1 SignatoryConsentQuestion
-  , DeliveryStatus)
+  , DeliveryStatus
+  )
 
 instance PQFormat SignatoryLink where
   pqFormat = compositeTypePqFormat ctSignatoryLink
@@ -590,7 +562,7 @@ instance CompositeFromSQL SignatoryLink where
               , signatory_role
               , sign_order
               , magic_hash
-              , CompositeArray1 magic_hashes
+              , CompositeArray1 access_tokens
               , muser_id
               , msign_time
               , msign_ip
@@ -620,14 +592,15 @@ instance CompositeFromSQL SignatoryLink where
               , canbeforwarded
               , consent_title
               , CompositeArray1 consent_questions
-              , signatorylinkmailconfirmationdeliverystatus) = SignatoryLink {
+              , signatorylinkmailconfirmationdeliverystatus
+              ) = SignatoryLink {
     signatorylinkid = slid
   , signatoryfields = fields
   , signatoryisauthor = is_author
   , signatoryrole = signatory_role
   , signatorysignorder = sign_order
   , signatorymagichash = magic_hash
-  , signatorytemporarymagichashes = magic_hashes
+  , signatoryaccesstokens = access_tokens
   , maybesignatory = muser_id
   , maybesigninfo = SignInfo <$> msign_time <*> msign_ip
   , maybeseeninfo = SignInfo <$> mseen_time <*> mseen_ip
@@ -657,3 +630,13 @@ instance CompositeFromSQL SignatoryLink where
   , signatorylinkconsentquestions = consent_questions
   , signatorylinkmailconfirmationdeliverystatus
   }
+
+-- | Check if the given magic hash is the permanent hash or one of the
+-- (valid) temporary hashes.
+isValidSignatoryMagicHash
+  :: MagicHash -> UTCTime -> DocumentStatus -> SignatoryLink -> Bool
+isValidSignatoryMagicHash mh now status sl =
+  case find ((mh==) . signatoryAccessTokenHash)
+            (signatoryaccesstokens sl) of
+    Just sat -> isValidSignatoryAccessToken now status sat
+    Nothing -> mh == signatorymagichash sl

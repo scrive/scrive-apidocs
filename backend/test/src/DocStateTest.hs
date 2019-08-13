@@ -185,8 +185,7 @@ docStateTests env = testGroup "DocState"
     env testMarkDocumentSeenClosedOrPreparationLeft
   , testThat "MarkDocumentSeen fails when doc does not exist"
     env testMarkDocumentSeenNotLeft
-
-  , testThat "MarkDocumentSeen succeeds when siglink match"
+  , testThat "MarkDocumentSeen marks the document as seen"
     env testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight
 
   , testThat "MarkInvitationRead when has not read"
@@ -1324,8 +1323,7 @@ testSealDocument = replicateM_ 1 $ do
                SignDocument (signatorylinkid slk)
                (Just (NetsDKNemIDSignature_ esig)) Nothing screenshots sa
       when (isApprover slk) $ do
-        dbUpdate $
-          ApproveDocument (signatorylinkid slk) sa
+        dbUpdate $ ApproveDocument (signatorylinkid slk) sa
 
     randomUpdate $ \t -> CloseDocument (systemActor t)
 
@@ -1876,7 +1874,8 @@ testSignDocumentNonSignableLeft = replicateM_ 10 $ do
   addRandomDocumentWithAuthorAndCondition author (not . isSignable) `withDocumentM` do
     sl <- guardJustM $ getSigLinkFor author <$> theDocument
     assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $ do
-      randomUpdate $ \si t -> SignDocument (signatorylinkid sl) si Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
+      randomUpdate $ \si t -> SignDocument (signatorylinkid sl) si Nothing
+        SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
 
 testSignDocumentSignableNotPendingLeft :: TestEnv ()
 testSignDocumentSignableNotPendingLeft = replicateM_ 10 $ do
@@ -1903,13 +1902,10 @@ testSignDocumentSignablePendingRight = replicateM_ 10 $ do
                        documentsignatorylinks <$> theDocument
     time <- rand 10 arbitrary
 
-    randomUpdate $
-      MarkDocumentSeen (signatorylinkid sl)
-      (systemActor time)
+    randomUpdate $ MarkDocumentSeen (signatorylinkid sl) (systemActor time)
 
-    randomUpdate $ SignDocument (signatorylinkid sl)
-      Nothing Nothing SignatoryScreenshots.emptySignatoryScreenshots
-      (systemActor time)
+    randomUpdate $ SignDocument (signatorylinkid sl) Nothing Nothing
+      SignatoryScreenshots.emptySignatoryScreenshots (systemActor time)
 
 testSignDocumentSignablePendingSEBankIDRight :: TestEnv ()
 testSignDocumentSignablePendingSEBankIDRight = replicateM_ 10 $ do
@@ -1929,8 +1925,7 @@ testSignDocumentSignablePendingSEBankIDRight = replicateM_ 10 $ do
                        documentsignatorylinks <$> theDocument
     time    <- rand 10 arbitrary
 
-    randomUpdate $ MarkDocumentSeen (signatorylinkid sl)
-      (systemActor time)
+    randomUpdate $ MarkDocumentSeen (signatorylinkid sl) (systemActor time)
 
     randomUpdate $ \esig -> SignDocument (signatorylinkid sl)
       (Just (CGISEBankIDSignature_ esig)) Nothing
@@ -1955,8 +1950,8 @@ testSignDocumentSignablePendingNOBankIDRight = replicateM_ 10 $ do
 
     randomUpdate $ MarkDocumentSeen (signatorylinkid sl) (systemActor time)
     randomUpdate $ \esig -> SignDocument (signatorylinkid sl)
-      (Just (NetsNOBankIDSignature_ esig))
-      Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor time)
+      (Just (NetsNOBankIDSignature_ esig)) Nothing
+      SignatoryScreenshots.emptySignatoryScreenshots (systemActor time)
 
 testSignDocumentSignablePendingDKNemIDRight :: TestEnv ()
 testSignDocumentSignablePendingDKNemIDRight = replicateM_ 10 $ do
@@ -1974,18 +1969,15 @@ testSignDocumentSignablePendingDKNemIDRight = replicateM_ 10 $ do
                              && isSignatoryAndHasNotSigned ) .
                        documentsignatorylinks <$> theDocument
     time <- rand 10 arbitrary
-    randomUpdate $ MarkDocumentSeen (signatorylinkid sl)
-      (systemActor time)
+
+    randomUpdate $ MarkDocumentSeen (signatorylinkid sl) (systemActor time)
     randomUpdate $ \esig -> SignDocument (signatorylinkid sl)
-      (Just (NetsDKNemIDSignature_ esig))
-      Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor time)
+      (Just (NetsDKNemIDSignature_ esig)) Nothing
+      SignatoryScreenshots.emptySignatoryScreenshots (systemActor time)
 
 testSignDocumentNotLeft :: TestEnv ()
 testSignDocumentNotLeft = replicateM_ 10 $ do
-  --assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
   assertRaisesKontra (\DBBaseLineConditionIsFalse {} -> True) $ do
-    -- our machinery is broken here, baseline condition has only relations
-    -- this should be ignored and properly return info about non existing document
     d <- rand 10 arbitrary
     withDocument d $ randomUpdate $ \sl si t -> SignDocument sl si Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
 

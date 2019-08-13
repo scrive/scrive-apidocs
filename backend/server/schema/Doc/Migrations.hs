@@ -30,6 +30,9 @@ module Doc.Migrations
   , addIndexOnShareableLinkHash
   , renameDocumentComposites
   , dropTokenFromDocumentSessionTokens
+  , addSignatoryAccessTokensTable
+  , updateCompositeTypesForSignatoryAccessTokens
+  , dropSignatoryLinkMagicHashesTable
 ) where
 
 import Data.Int
@@ -79,7 +82,7 @@ addNotificationDeliveryMethodToSignatories =
 
 addIndexForEfficientJoinToSignatoryLinkMagicHashes :: MonadDB m => Migration m
 addIndexForEfficientJoinToSignatoryLinkMagicHashes = Migration {
-    mgrTableName = tblName tableSignatoryLinkMagicHashes
+    mgrTableName = "signatory_link_magic_hashes"
   , mgrFrom = 1
   , mgrAction = StandardMigration $ do
       runSQL_ $ smconcat
@@ -417,7 +420,7 @@ addCanBeForwardedToSignatories  = Migration {
 
 createSignatoryLinkMagicHashes :: MonadDB m => Migration m
 createSignatoryLinkMagicHashes = Migration
-  { mgrTableName = tblName tableSignatoryLinkMagicHashes
+  { mgrTableName = "signatory_link_magic_hashes"
   , mgrFrom = 0
   , mgrAction = StandardMigration $ createTable True tblTable
       { tblName = "signatory_link_magic_hashes"
@@ -537,4 +540,147 @@ dropTokenFromDocumentSessionTokens = Migration
   , mgrAction = StandardMigration $ do
       runQuery_ $ sqlAlterTable "document_session_tokens"
         [sqlDropColumn "token"]
+  }
+
+addSignatoryAccessTokensTable :: MonadDB m => Migration m
+addSignatoryAccessTokensTable = Migration
+  { mgrTableName = "signatory_access_tokens"
+  , mgrFrom = 0
+  , mgrAction = StandardMigration $ do
+      createTable True tblTable
+        { tblName = "signatory_access_tokens"
+        , tblVersion = 1
+        , tblColumns =
+            [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+            , tblColumn { colName = "signatory_link_id", colType = BigIntT, colNullable = False }
+            , tblColumn { colName = "hash", colType = BigIntT, colNullable = False }
+            , tblColumn { colName = "expiration_time", colType = TimestampWithZoneT }
+            , tblColumn { colName = "reason", colType = SmallIntT, colNullable = False}
+            ]
+        , tblPrimaryKey = pkOnColumn "id"
+        , tblForeignKeys =
+            [ (fkOnColumn "signatory_link_id" "signatory_links" "id")
+                { fkOnDelete = ForeignKeyCascade }
+            ]
+        , tblIndexes =
+            [ indexOnColumn "signatory_link_id"
+            , uniqueIndexOnColumnWithCondition "signatory_link_id" "reason = 7" -- Unique API access magic hash
+            ]
+        }
+      runQuery_ . sqlInsertSelect "signatory_access_tokens" "signatory_link_magic_hashes smh" $ do
+        sqlSetCmd "signatory_link_id" "smh.id"
+        sqlSetCmd "hash" "smh.hash"
+        sqlSetCmd "expiration_time" "smh.expiration_time"
+        sqlSetCmd "reason" "1" -- Legacy reason
+  }
+
+updateCompositeTypesForSignatoryAccessTokens :: MonadDB m => Migration m
+updateCompositeTypesForSignatoryAccessTokens = Migration
+  { mgrTableName = "signatory_access_tokens"
+  , mgrFrom = 1
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlDropComposite $ "document_c1"
+      runQuery_ $ sqlDropComposite $ "signatory_link_c1"
+      runQuery_ $ sqlDropComposite $ "signatory_link_magic_hash_c1"
+      runQuery_ $ sqlCreateComposite $  CompositeType {
+          ctName = "signatory_access_tokens_c1"
+        , ctColumns =
+            [ CompositeColumn { ccName = "hash", ccType = BigIntT }
+            , CompositeColumn { ccName = "reason", ccType = SmallIntT }
+            , CompositeColumn { ccName = "expiration_time", ccType = TimestampWithZoneT }
+            ]
+        }
+      runQuery_ $ sqlCreateComposite $ CompositeType {
+          ctName = "signatory_link_c1"
+        , ctColumns = [
+            CompositeColumn { ccName = "id", ccType = BigIntT }
+          , CompositeColumn { ccName = "signatory_fields", ccType = ArrayT $ CustomT "signatory_field_c1" }
+          , CompositeColumn { ccName = "is_author", ccType = BoolT }
+          , CompositeColumn { ccName = "signatory_role", ccType = SmallIntT }
+          , CompositeColumn { ccName = "sign_order", ccType = IntegerT }
+          , CompositeColumn { ccName = "token", ccType = BigIntT }
+          , CompositeColumn { ccName = "signatory_tokens", ccType = ArrayT $ CustomT "signatory_access_tokens_c1" }
+          , CompositeColumn { ccName = "user_id", ccType = BigIntT }
+          , CompositeColumn { ccName = "sign_time", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "sign_ip", ccType = IntegerT }
+          , CompositeColumn { ccName = "seen_time", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "seen_ip", ccType = IntegerT }
+          , CompositeColumn { ccName = "read_invitation", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "mail_invitation_delivery_status", ccType = SmallIntT }
+          , CompositeColumn { ccName = "sms_invitation_delivery_status", ccType = SmallIntT }
+          , CompositeColumn { ccName = "deleted", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "really_deleted", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "csv_contents", ccType = TextT }
+          , CompositeColumn { ccName = "attachments", ccType = ArrayT $ CustomT "signatory_attachment_c1" }
+          , CompositeColumn { ccName = "highlighted_pages", ccType = ArrayT $ CustomT "highlighted_page_c1" }
+          , CompositeColumn { ccName = "sign_redirect_url", ccType = TextT }
+          , CompositeColumn { ccName = "reject_redirect_url", ccType = TextT }
+          , CompositeColumn { ccName = "rejection_time", ccType = TimestampWithZoneT }
+          , CompositeColumn { ccName = "rejection_reason", ccType = TextT }
+          , CompositeColumn { ccName = "authentication_to_view_method", ccType = SmallIntT }
+          , CompositeColumn { ccName = "authentication_to_view_archived_method", ccType = SmallIntT }
+          , CompositeColumn { ccName = "authentication_to_sign_method", ccType = SmallIntT }
+          , CompositeColumn { ccName = "delivery_method", ccType = SmallIntT }
+          , CompositeColumn { ccName = "confirmation_delivery_method", ccType = SmallIntT }
+          , CompositeColumn { ccName = "notification_delivery_method", ccType = SmallIntT }
+          , CompositeColumn { ccName = "allows_highlighting", ccType = BoolT}
+          , CompositeColumn { ccName = "has_identified_to_view", ccType = BoolT }
+          , CompositeColumn { ccName = "hide_pn_elog", ccType = BoolT}
+          , CompositeColumn { ccName = "can_be_forwarded", ccType = BoolT}
+          , CompositeColumn { ccName = "consent_title", ccType = TextT }
+          , CompositeColumn { ccName = "consent_questions", ccType = ArrayT $ CustomT "signatory_consent_question_c1" }
+          , CompositeColumn { ccName = "mail_confirmation_delivery_status", ccType = SmallIntT }
+          ]
+        }
+      runQuery_ $ sqlCreateComposite $ CompositeType {
+            ctName = "document_c1"
+          , ctColumns = [
+              CompositeColumn { ccName = "id", ccType = BigIntT }
+            , CompositeColumn { ccName = "title", ccType = TextT }
+            , CompositeColumn { ccName = "signatory_links", ccType = ArrayT $ CustomT "signatory_link_c1" }
+            , CompositeColumn { ccName = "main_files", ccType = ArrayT $ CustomT "main_file_c1" }
+            , CompositeColumn { ccName = "status", ccType = SmallIntT }
+            , CompositeColumn { ccName = "type", ccType = SmallIntT }
+            , CompositeColumn { ccName = "ctime", ccType = TimestampWithZoneT }
+            , CompositeColumn { ccName = "mtime", ccType = TimestampWithZoneT }
+            , CompositeColumn { ccName = "days_to_sign", ccType = IntegerT }
+            , CompositeColumn { ccName = "days_to_remind", ccType = IntegerT }
+            , CompositeColumn { ccName = "timeout_time", ccType = TimestampWithZoneT }
+            , CompositeColumn { ccName = "expiration_date", ccType = TimestampWithZoneT }
+            , CompositeColumn { ccName = "invite_time", ccType = TimestampWithZoneT }
+            , CompositeColumn { ccName = "invite_ip", ccType = IntegerT }
+            , CompositeColumn { ccName = "invite_text", ccType = TextT }
+            , CompositeColumn { ccName = "confirm_text", ccType = TextT }
+            , CompositeColumn { ccName = "show_header", ccType = BoolT }
+            , CompositeColumn { ccName = "show_pdf_download", ccType = BoolT }
+            , CompositeColumn { ccName = "show_reject_option", ccType = BoolT }
+            , CompositeColumn { ccName = "allow_reject_reason", ccType = BoolT }
+            , CompositeColumn { ccName = "show_footer", ccType = BoolT }
+            , CompositeColumn { ccName = "is_receipt", ccType = BoolT }
+            , CompositeColumn { ccName = "lang", ccType = SmallIntT }
+            , CompositeColumn { ccName = "sharing", ccType = SmallIntT }
+            , CompositeColumn { ccName = "tags", ccType = ArrayT $ CustomT "document_tag_c1" }
+            , CompositeColumn { ccName = "author_attachments", ccType = ArrayT $ CustomT "author_attachment_c1" }
+            , CompositeColumn { ccName = "api_v1_callback_url", ccType = TextT }
+            , CompositeColumn { ccName = "api_v2_callback_url", ccType = TextT }
+            , CompositeColumn { ccName = "unsaved_draft", ccType = BoolT }
+            , CompositeColumn { ccName = "object_version", ccType = BigIntT }
+            , CompositeColumn { ccName = "token", ccType = BigIntT }
+            , CompositeColumn { ccName = "time_zone_name", ccType = TextT }
+            , CompositeColumn { ccName = "author_user_group_id", ccType = BigIntT }
+            , CompositeColumn { ccName = "status_class", ccType = SmallIntT }
+            , CompositeColumn { ccName = "shareable_link_hash", ccType = BigIntT }
+            , CompositeColumn { ccName = "template_id", ccType = BigIntT }
+            , CompositeColumn { ccName = "from_shareable_link", ccType = BoolT }
+            , CompositeColumn { ccName = "show_arrow", ccType = BoolT }
+            , CompositeColumn { ccName = "folder_id", ccType = BigIntT }
+            ]
+          }
+  }
+
+dropSignatoryLinkMagicHashesTable :: MonadDB m => Migration m
+dropSignatoryLinkMagicHashesTable = Migration
+  { mgrTableName = "signatory_link_magic_hashes"
+  , mgrFrom = 2
+  , mgrAction = DropTableMigration DropTableRestrict
   }

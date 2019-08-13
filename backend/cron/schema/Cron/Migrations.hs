@@ -18,7 +18,7 @@ module Cron.Migrations (
   , addCronStatsJob
   , removePasswordAlgorithmUpgradeJob
   , addTimeoutedEIDTransactionsPurge
-
+  , changeTemporaryMagicHashPurgeJobToTokensPurgeJob
 ) where
 
 import Control.Monad.Catch
@@ -186,4 +186,10 @@ addTimeoutedEIDTransactionsPurge = Migration {
         runSQL_ "INSERT INTO cron_jobs (id, run_at) VALUES ('timeouted_eid_transactions_purge', to_timestamp(0))"
   }
 
-
+changeTemporaryMagicHashPurgeJobToTokensPurgeJob :: (MonadDB m, MonadThrow m) => Migration m
+changeTemporaryMagicHashPurgeJobToTokensPurgeJob = Migration
+  { mgrTableName = tblName tableCronJobs
+  , mgrFrom = 23
+  , mgrAction = StandardMigration $
+      runSQL_ "UPDATE cron_jobs SET id='timeouted_signatory_access_tokens_purge' WHERE id='temporary_magic_hashes_purge'"
+  }

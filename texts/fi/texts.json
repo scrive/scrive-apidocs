@@ -986,7 +986,7 @@
 "_smsCorrectedNotification":"Huomasimme, että lähetimme sinulle aiemmin virheellisen dokumentin, josta puuttui digitaalinen allekirjoitus, mutta olemme nyt korjanneet tämän virheen. Löydät dokumentin, kunnollisella digitaalisella allekirjoituksella, seuraamalla tätä linkkiä: $link$",
 "_smsCorrectedNotificationWithEmail":"Huomasimme, että lähetimme sinulle aiemmin virheellisen dokumentin, josta puuttui digitaalinen allekirjoitus, mutta olemme nyt korjanneet tämän virheen. Löydät dokumentin, kunnollisella digitaalisella allekirjoituksella, seuraamalla tätä linkkiä: $link$ Olemme myös lähettäneet korjatun dokumentin sähköpostiosoitteeseesi.",
 "_smsDocumentApprovedNotification":"Olet nyt hyväksynyt dokumentin $documenttitle$. Jos haluat katsella dokumenttia, seuraa tätä linkkiä: $link$",
-"_smsDocumentSignedNotification":"Olet nyt allekirjoittanut dokumentin $documenttitle$. Jos haluat katsella dokumenttia, seuraa tätä linkkiä: $link$",
+"_smsDocumentSignedNotification":"",
 "_smsForwardSigningForAuthor":"$fromName$ on lähettänyt dokumentin $documenttitle$ eteenpäin henkilölle $toName$ e-allekirjoitusta varten. Avaa linkki saadaksesi lisätietoja: $authorlink$",
 "_smsForwardSigningForAuthorApproving":"$fromName$ on lähettänyt dokumentin $documenttitle$ eteenpäin henkilölle $toName$ hyväksyntää varten. Avaa linkki saadaksesi lisätietoja: $authorlink$",
 "_smsForwardSigningForNewSignatory":"$fromName$ on lähettänyt dokumentin $documenttitle$ eteenpäin sinulle e-allekirjoitusta varten. Avaa linkki saadaksesi lisätietoja: $link$",

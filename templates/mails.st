@@ -74,29 +74,20 @@ mailContractClosedMainP =
       $else$
         $_mailContractClosedContentLinkedTooBig()$
       $endif$
-      $if(!hasaccount)$
-        $_mailContractClosedContentLinkedNoAccount()$
-        $if(custommessage)$
-          <br/>
-          <br/>
-          $mailClosedCustomeMessage()$
-        $else$
-          <br/>
-        $endif$
-        <br/>
-        $nicebutton(link=doclink; text=_mailContractClosedContentLinkedButton())$
-      $else$
+      $if(hasaccount)$
         $_mailContractClosedContentLinkedAccount()$
-        $if(custommessage)$
-          <br/>
-          <br/>
-          $mailClosedCustomeMessage()$
-        $else$
-          <br/>
-        $endif$
-        <br/>
-        $nicebutton(link=doclink; text=_mailContractClosedContentLinkedButton())$
+      $else$
+        $_mailContractClosedContentLinkedNoAccount()$
       $endif$
+      $if(custommessage)$
+        <br/>
+        <br/>
+        $mailClosedCustomeMessage()$
+      $else$
+        <br/>
+      $endif$
+      <br/>
+      $nicebutton(link=doclink; text=_mailContractClosedContentLinkedButton())$
     $endif$
 ####
 mailDocumentCorrectionBodyWikiURL=

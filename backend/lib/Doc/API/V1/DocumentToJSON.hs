@@ -28,6 +28,7 @@ import DB.TimeZoneName
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocUtils
+import Doc.Types.SignatoryAccessToken
 import File.File
 import File.Model
 import File.Storage
@@ -177,7 +178,10 @@ signatoryJSON forauthor doc viewer siglink = do
     J.value "authentication" $ authenticationToSignJSON $ signatorylinkauthenticationtosignmethod siglink
     J.value "allowshighlighting" $ signatorylinkallowshighlighting siglink
     when (not (isPreparation doc) && forauthor && signatorylinkdeliverymethod siglink == APIDelivery) $ do
-        J.value "signlink" $ show $ LinkSignDoc (documentid doc)  siglink
+      let msat = find ((==SignatoryAccessTokenForAPI) . signatoryAccessTokenReason) (signatoryaccesstokens siglink)
+          mh = maybe (signatorymagichash siglink) signatoryAccessTokenHash msat
+      J.value "signlink" $ show $
+        LinkSignDocMagicHash (documentid doc) (signatorylinkid siglink) mh
 
     where
       isCurrent = (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink) || (forauthor &&  isAuthor siglink)

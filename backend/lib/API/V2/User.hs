@@ -40,8 +40,8 @@ getAPIUserWithPrivileges privs = getAPIUserWith (get ctxmaybeuser) privs
 getAPIUserWithPad :: Kontrakcja m => APIPrivilege -> m (User, Actor)
 getAPIUserWithPad priv = getAPIUserWith getContextUser [priv]
 
--- * Internal functions
 
+-- * Internal functions
 getAPIUserWith :: Kontrakcja m => (Context -> Maybe User) -> [APIPrivilege] -> m (User, Actor)
 getAPIUserWith ctxUser privs = do
   moauthuser <- getOAuthUser privs

@@ -22,7 +22,7 @@ module Doc.DocViewMail
 import Control.Conditional ((<|), (|>))
 import Control.Monad.Catch
 import Crypto.RNG
-import Data.Label.Base
+import Data.Label.Base hiding (fst)
 import Data.Time (UTCTime(..))
 import Text.StringTemplates.Templates
 import qualified Data.Label.Partial as LP
@@ -31,10 +31,11 @@ import qualified Text.StringTemplates.Fields as F
 import BrandedDomain.BrandedDomain
 import Branding.Adler32
 import DB
-import Doc.DocInfo (getLastSignedOrApprovedTime)
+import Doc.DocInfo (getLastSignedOrApprovedTime, isClosed)
 import Doc.DocStateData
 import Doc.DocUtils
 import Doc.Model.Update
+import Doc.Types.SignatoryAccessToken
 import Doc.Types.SignatoryLink (ProcessFinishedAction(..))
 import File.FileID
 import KontraLink
@@ -82,7 +83,7 @@ mailDocumentRemindContent customMessage doc sigLink documentAttached = do
       remindMailSigned    False customMessage doc sigLink documentAttached
 
 remindMailNotSigned :: ( CryptoRNG m, MonadDB m, MonadThrow m, TemplatesMonad m
-                       , MailContextMonad m )
+                       , MailContextMonad m, MonadTime m )
                     => Bool -> Bool -> Maybe String -> Document -> SignatoryLink
                     -> m Mail
 remindMailNotSigned automatic forMail customMessage document signlink = do
@@ -90,6 +91,7 @@ remindMailNotSigned automatic forMail customMessage document signlink = do
     let mainfile   = fromMaybe (unsafeFileID 0)
                      (mainfileid <$> documentfile document)
         authorname = getAuthorName document
+    mh <- makeInvitationMagicHash signlink
     documentMailWithDocLang document
       (templateName "remindMailNotSignedContract") $ do
         F.value "sign" $ isSignatory signlink
@@ -107,9 +109,9 @@ remindMailNotSigned automatic forMail customMessage document signlink = do
           not $ null $
           filter isSignatoryAndHasSigned (documentsignatorylinks document)
         F.value "timetosign" $ show <$> documenttimeouttime document
-        F.value "link" $
-          protectLink forMail mctx $
-          LinkSignDoc (documentid document) signlink
+        F.value "link" $ protectLink forMail mctx $
+          LinkSignDocMagicHash (documentid document)
+            (signatorylinkid signlink) mh
         F.value "isattachments" $
           length (documentauthorattachments document) > 0
         F.value "attachments" $
@@ -122,7 +124,7 @@ remindMailNotSigned automatic forMail customMessage document signlink = do
             StandardAuthenticationToView ->
               Just $ show $
               LinkDocumentPreview (documentid document)
-              (Just signlink <| forMail |> Nothing) (mainfile) 150
+              (Just (signlink, Just mh) <| forMail |> Nothing) (mainfile) 150
             _ -> Nothing
         F.value "hassigattachments" $
           not $ null $ concat $ signatoryattachments <$>
@@ -144,18 +146,23 @@ documentAttachableFields :: ( CryptoRNG m, MailContextMonad m, MonadDB m
                          -> Maybe (MagicHash, UTCTime)
                             -- ^ If we need a link, give a magic hash
                          -> Document -> Fields m ()
-documentAttachableFields forMail signlink forceLink mmh document = do
+documentAttachableFields forMail signlink forceLink mhtime document = do
   mctx <- getMailContext
   F.value "sign"      $ isSignatory signlink
   F.value "approve"   $ isApprover signlink
   F.value "forceLink" $ forceLink
   F.value "ispreview" $ not $ forMail
-  case mmh of
+  case mhtime of
     Nothing -> return ()
     Just (mh, expiration) -> do
       F.value "mainfilelink" $ protectLink forMail mctx $
         LinkMainFile document signlink mh
       F.value "availabledate" $ formatTimeYMD expiration
+      F.value "doclink" $ protectLink forMail mctx $
+        if isAuthor signlink
+          then LinkIssueDoc $ documentid document
+          else LinkSignDocMagicHash (documentid document)
+                 (signatorylinkid signlink) mh
 
 remindMailSigned :: ( CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m
                     , TemplatesMonad m, MailContextMonad m )
@@ -166,9 +173,9 @@ remindMailSigned :: ( CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m
                  -> Bool
                  -> m Mail
 remindMailSigned forMail mcustomMessage document signlink documentAttached = do
-  mhtime <- if not documentAttached
-            then Just <$> makeTemporaryMagicHash (signatorylinkid signlink)
-            else return Nothing
+  mhtime <- if documentAttached
+    then return Nothing
+    else Just <$> makeConfirmationMagicHash signlink
   documentMailWithDocLang document (templateName "remindMailSigned") $ do
     F.value "custommessage" $ asCustomMessage $ fromMaybe "" mcustomMessage
     F.value "hascustommessage" $ case mcustomMessage of
@@ -183,11 +190,11 @@ mailForwardSigned :: ( CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m
                   => SignatoryLink -> Bool -> Document
                   -> m Mail
 mailForwardSigned sl documentAttached document = do
-  mmh <- if not documentAttached
-         then Just <$> makeTemporaryMagicHash (signatorylinkid sl)
-         else return Nothing
+  mhtime <- if documentAttached
+    then return Nothing
+    else Just <$> makeConfirmationMagicHash sl
   documentMailWithDocLang document (templateName "mailForwardSigned") $ do
-    documentAttachableFields True sl False mmh document
+    documentAttachableFields True sl False mhtime document
 
 mailDocumentRejected :: ( MonadDB m, MonadThrow m, TemplatesMonad m
                         , MailContextMonad m )
@@ -237,17 +244,19 @@ mailForwardSigningForAuthor originalsl newsl doc = do
         F.value "signing" $ signatoryrole newsl == SignatoryRoleSigningParty
         F.value "loginlink" $ show $ LinkIssueDoc $ documentid doc
 
-mailForwardSigningForNewSignatory :: ( MonadDB m, MonadThrow m, TemplatesMonad m
-                        , MailContextMonad m )
-                     => Maybe String
-                     -> SignatoryLink
-                     -> SignatoryLink
-                     -> Document
-                     -> m Mail
+mailForwardSigningForNewSignatory
+  :: ( CryptoRNG m, MonadDB m, MonadThrow m, TemplatesMonad m
+     , MailContextMonad m, MonadTime m )
+  => Maybe String
+  -> SignatoryLink
+  -> SignatoryLink
+  -> Document
+  -> m Mail
 mailForwardSigningForNewSignatory message originalsl newsl doc = do
    mctx <- getMailContext
    fromName <- smartOrUnnamedName originalsl doc
    toName <- smartOrUnnamedName newsl doc
+   mh <- makeInvitationMagicHash newsl
    documentMailWithDocLang doc "mailForwardSigningForNewSignatory" $ do
         F.value "hasforwardmessage" $ isJust message
         F.value "forwardmessage" $ asCustomMessage <$> message
@@ -257,7 +266,8 @@ mailForwardSigningForNewSignatory message originalsl newsl doc = do
         F.value "toName" $ toName
         F.value "authorname" $ getSmartName <$> getAuthorSigLink doc
         F.value "signing" $ signatoryrole newsl == SignatoryRoleSigningParty
-        F.value "link" $ makeFullLink mctx $ show $ (LinkSignDoc (documentid doc) newsl)
+        F.value "link" $ makeFullLink mctx $ show $
+          LinkSignDocMagicHash (documentid doc) (signatorylinkid newsl) mh
 
 smartOrUnnamedName :: TemplatesMonad m => SignatoryLink -> Document -> m String
 smartOrUnnamedName sl doc
@@ -310,14 +320,21 @@ mailPartyProcessFinalizedNotification document signatoryLink action = do
                  DocumentApproved ->
                    templateName "mailDocumentApprovedNotificationWithConfirmation"
     mainfile = fromMaybe (unsafeFileID 0) (mainfileid <$> documentfile document)
+  (mh, mtime) <- if isClosed document
+    then do
+      (mh, time) <- makeConfirmationMagicHash signatoryLink
+      return (mh, Just time)
+    else (,Nothing) <$> makeInvitationMagicHash signatoryLink
   email <- documentMailWithDocLang document (templateName template) $ do
     fieldsInvitationTo View
-    F.value "link" $ makeFullLink mailCtx $ show (LinkSignDoc documentId signatoryLink)
+    F.value "link" $ makeFullLink mailCtx $ show $
+      LinkSignDocMagicHash documentId (signatorylinkid signatoryLink) mh
+    F.value "availabledate" $ fmap formatTimeYMD mtime
     F.value "previewLink" $
       show $
       LinkDocumentPreview
         (documentid document)
-        (Just signatoryLink)
+        (Just (signatoryLink, Just mh))
         mainfile
         150
   return email { to = [getMailAddress signatoryLink]
@@ -334,8 +351,8 @@ fieldsInvitationTo a = do
     F.value "view"    (a == View)
     F.value "approve" (a == Approve)
 
-mailInvitation :: ( MonadDB m, MonadThrow m, TemplatesMonad m
-                  , MailContextMonad m )
+mailInvitation :: ( CryptoRNG m, MonadDB m, MonadThrow m, TemplatesMonad m
+                  , MailContextMonad m, MonadTime m )
                => Bool -> InvitationTo -> Maybe SignatoryLink -> Document
                -> m Mail
 mailInvitation forMail
@@ -347,6 +364,11 @@ mailInvitation forMail
                    -- There always should be main file but tests fail
                    -- without it.
                    (mainfileid <$> documentfile document)
+    msiglinkmh <- case msiglink of
+      Nothing -> return Nothing
+      Just siglink -> do
+        mh <- makeInvitationMagicHash siglink
+        return $ Just (siglink, Just mh)
     documentMailWithDocLang document
       (templateName "mailInvitationToSignContract") $ do
         fieldsInvitationTo invitationto
@@ -354,10 +376,11 @@ mailInvitation forMail
         F.value "javascriptmagic" $ not forMail
         F.value "hascustommessage" $ not $ null $ documentinvitetext document
         F.value "custommessage" $ asCustomMessage $ documentinvitetext document
-        F.value "link" $ case msiglink of
-          Just siglink -> Just $ makeFullLink mctx $
-                          show (LinkSignDoc (documentid document) siglink)
-          Nothing      -> Nothing
+        F.value "link" $ case msiglinkmh of
+          Just (siglink, Just mh) -> Just $ makeFullLink mctx $ show $
+            LinkSignDocMagicHash (documentid document)
+              (signatorylinkid siglink) mh
+          _ -> Nothing
         F.value "partners" $ map getSmartName $
           filter isSignatory (documentsignatorylinks document)
         F.value "partnerswhosigned" $
@@ -380,7 +403,7 @@ mailInvitation forMail
             StandardAuthenticationToView ->
               Just $ show $
               LinkDocumentPreview (documentid document)
-              (msiglink <| forMail |> Nothing) (mainfile) 150
+              (msiglinkmh <| forMail |> Nothing) (mainfile) 150
             _ -> Nothing
         F.value "hassigattachments" $
           length (concatMap signatoryattachments $
@@ -394,8 +417,8 @@ mailInvitation forMail
             (signatoryattachmentname sa, getSmartName link)
         F.value "companyname" $ emptyToNothing $ getAuthorCompanyName document
 
-mailInvitationContent :: ( MonadDB m, MonadThrow m, TemplatesMonad m
-                         , MailContextMonad m )
+mailInvitationContent :: ( CryptoRNG m, MonadDB m, MonadThrow m, TemplatesMonad m
+                         , MailContextMonad m, MonadTime m )
                       => Bool -> InvitationTo -> Maybe SignatoryLink -> Document
                       -> m String
 mailInvitationContent forMail invitationto msiglink document = do
@@ -415,10 +438,9 @@ mailDocumentClosed :: ( CryptoRNG m, MailContextMonad m, MonadDB m, MonadThrow m
                    -> Bool -- ^ Force link usage.
                    -> Document -> m Mail
 mailDocumentClosed ispreview sl sealFixed documentAttachable forceLink document = do
-   mctx <- getMailContext
-   mmh <- if forceLink || not documentAttachable
-          then Just <$> makeTemporaryMagicHash (signatorylinkid sl)
-          else return Nothing
+   mhtime <- if documentAttachable && not ispreview && not forceLink
+    then return Nothing
+    else Just <$> makeConfirmationMagicHash sl
    partylist <- renderLocalListTemplate document $
                 map getSmartName $
                 filter isSignatory (documentsignatorylinks document)
@@ -431,17 +453,11 @@ mailDocumentClosed ispreview sl sealFixed documentAttachable forceLink document 
         F.value "signatoryname" $ getSmartName sl
         F.value "companyname" $ emptyToNothing $ getAuthorCompanyName document
         F.value "hasaccount" $ isJust $ maybesignatory sl
-        F.value "doclink" $ if
-          | ispreview -> Nothing
-          | isAuthor sl -> Just $ makeFullLink mctx $
-                           show (LinkIssueDoc $ documentid document)
-          | otherwise -> Just $ makeFullLink mctx $
-                         show (LinkSignDoc (documentid document) sl)
         F.value "previewLink" $ show $
           LinkDocumentPreview (documentid document)
-          (Nothing <| ispreview |> Just sl) (mainfile) 150
+          (Nothing <| ispreview |> Just (sl, fst <$> mhtime)) (mainfile) 150
         F.value "sealFixed" $ sealFixed
-        documentAttachableFields (not ispreview) sl forceLink mmh document
+        documentAttachableFields (not ispreview) sl forceLink mhtime document
         F.value "closingtime" $
           formatTime' "%Y-%m-%d %H:%M %Z" $
           getLastSignedOrApprovedTime document
@@ -453,9 +469,10 @@ mailDocumentClosed ispreview sl sealFixed documentAttachable forceLink document 
                  "" -> Nothing
                  s  -> Just s
 
-mailDocumentAwaitingForAuthor :: ( HasLang a, MonadDB m, MonadThrow m
-                                 , TemplatesMonad m, MailContextMonad m )
-                              => a -> Document -> m Mail
+mailDocumentAwaitingForAuthor
+  :: ( CryptoRNG m, HasLang a, MonadDB m, MonadThrow m, MonadTime m
+     , TemplatesMonad m, MailContextMonad m )
+  => a -> Document -> m Mail
 mailDocumentAwaitingForAuthor authorlang document = do
     mctx <- getMailContext
     signatories <- renderLocalListTemplate authorlang $
@@ -469,13 +486,16 @@ mailDocumentAwaitingForAuthor authorlang document = do
     -- There always should be main file but tests fail without it
     let mainfile = fromMaybe (unsafeFileID 0)
                    (mainfileid <$> documentfile document)
+        author = fromJust $ getAuthorSigLink document
+    mh <- dbUpdate $ NewSignatoryAccessToken
+      (signatorylinkid author) SignatoryAccessTokenForAPI
+      Nothing
     documentMail authorlang document
       (templateName "mailDocumentAwaitingForAuthor") $ do
-        F.value "authorname" $ getSmartName $
-          fromJust $ getAuthorSigLink document
+        F.value "authorname" $ getSmartName author
         F.value "documentlink" $ makeFullLink mctx $
-          show $ LinkSignDoc (documentid document) $
-          fromJust $ getAuthorSigLink document
+          show $ LinkSignDocNoMagicHash (documentid document)
+            (signatorylinkid author)
         F.value "partylist" signatories
         F.value "partylistSigned" signatoriesThatSigned
         F.value "someonesigned" $
@@ -484,7 +504,7 @@ mailDocumentAwaitingForAuthor authorlang document = do
         F.value "companyname" $ emptyToNothing $ getAuthorCompanyName document
         F.value "previewLink" $ show $
           LinkDocumentPreview (documentid document)
-          (getAuthorSigLink document) mainfile 150
+          (Just (author, Just mh)) mainfile 150
 
 -- Helpers.
 
@@ -553,3 +573,24 @@ brandingMailFields theme = do
 
 asCustomMessage :: String -> [String]
 asCustomMessage = lines
+
+-- | Create a temporary hash valid until the document gets closed.
+makeInvitationMagicHash
+  :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m)
+  => SignatoryLink -> m MagicHash
+makeInvitationMagicHash sl =
+  dbUpdate $ NewSignatoryAccessToken (signatorylinkid sl)
+    SignatoryAccessTokenForMailBeforeClosing Nothing
+
+-- | Create a temporary hash valid for 30 days.
+makeConfirmationMagicHash
+  :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m)
+  => SignatoryLink -> m (MagicHash, UTCTime)
+makeConfirmationMagicHash sl = do
+  --if documentAttachable && not forceLink
+  now <- currentTime
+  -- Make it valid until the end of the 30th day.
+  let expiration = (30 `daysAfter` now) { utctDayTime = 86399 }
+  mh <- dbUpdate $ NewSignatoryAccessToken (signatorylinkid sl)
+    SignatoryAccessTokenForMailAfterClosing (Just expiration)
+  return (mh, expiration)
