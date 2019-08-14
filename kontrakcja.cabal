@@ -460,8 +460,6 @@ Library
                  , UserGroup
                  , UserGroup.API
                  , UserGroup.JSON
-                 , UserGroup.JSON.ContactDetails
-                 , UserGroup.JSON.Settings
                  , UserGroup.Types
                  , UserGroup.Types.PaymentPlan
                  , UserGroup.Types.Subscription
