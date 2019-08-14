@@ -142,7 +142,9 @@ accessRoleTargetToAllowedActions :: AccessRoleTarget -> AccessRoleAllowedActions
 accessRoleTargetToAllowedActions target =
   AccessRoleAllowedActions . groupActions $ hasPermissions target
     where
-      mkPair (Permission act res _) = (T.pack $ show res, [T.pack $ show act])
+      tshow :: Show a => a -> T.Text
+      tshow = T.pack . show
+      mkPair (Permission act res _) = (tshow res, [tshow act])
       groupActions = sortAll . HM.toList . HM.fromListWith (++) . map mkPair
       sortAll = sort . map (second sort)
 
@@ -169,9 +171,9 @@ jsonToAccessRoleTarget roleJson =
       UserART -> return $ UserAR uid
       _       -> fail invalidTargetErr
     UserGroupTargetJSON ugid -> case roleType roleJson of
-      UserAdminART       -> return $ UserGroupMemberAR ugid
-      UserGroupAdminART  -> return $ UserAdminAR ugid
-      UserGroupMemberART -> return $ UserGroupAdminAR ugid
+      UserAdminART       -> return $ UserAdminAR ugid
+      UserGroupAdminART  -> return $ UserGroupAdminAR ugid
+      UserGroupMemberART -> return $ UserGroupMemberAR ugid
       _                  -> fail invalidTargetErr
     FolderTargetJSON fid -> case roleType roleJson of
       DocumentAdminART -> return $ DocumentAdminAR fid
@@ -192,6 +194,6 @@ getApiRoleParameter = do
   roleJson <- apiV2ParameterObligatory $ ApiV2ParameterAeson paramName
   case jsonToAccessRole roleJson of
     Left errMsg ->
-      let errMsg' = T.pack $ "Invalid JSON: " ++ errMsg in
+      let errMsg' = T.pack $ " - " ++ errMsg in
         apiError $ requestParameterParseError paramName errMsg'
     Right role  -> return role

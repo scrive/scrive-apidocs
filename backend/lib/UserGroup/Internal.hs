@@ -38,7 +38,7 @@ module UserGroup.Internal (
   , UserGroupWithChildren(..)
   ) where
 
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson
 import Data.Int
 import Data.Text (Text)
 import Data.Unjson
@@ -393,8 +393,16 @@ newtype UserGroupID = UserGroupID Int64
   deriving (Eq, Ord)
 deriving newtype instance Read UserGroupID
 deriving newtype instance Show UserGroupID
-deriving newtype instance ToJSON UserGroupID
-deriving newtype instance FromJSON UserGroupID
+
+instance ToJSON UserGroupID where
+  toJSON (UserGroupID n) = toJSON $ show n
+
+instance FromJSON UserGroupID where
+  parseJSON v = do
+    uidStr <- parseJSON v
+    case maybeRead uidStr of
+      Nothing -> fail "Could not parse User Group ID"
+      Just uid -> return uid
 
 instance PQFormat UserGroupID where
   pqFormat = pqFormat @Int64
