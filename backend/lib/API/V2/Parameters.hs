@@ -120,15 +120,13 @@ apiV2ParameterOptional (ApiV2ParameterTextUnjson name jsonDef) = do
         (Result _ errs) -> apiError $ requestParameterParseError name (T.pack (show errs))
     Nothing -> return Nothing
 
-
 apiV2ParameterOptional (ApiV2ParameterAeson name) = do
   mValue <- getFieldBS (T.unpack name)
   case mValue of
     Just paramValue -> case Aeson.eitherDecode paramValue of
-      Left _ -> apiError $ requestParameterParseError name "Invalid JSON"
+      Left msg -> apiError $ requestParameterParseError name $ "Invalid JSON" <> T.pack msg
       Right js -> return $ Just js
     Nothing -> return Nothing
-
 
 apiV2ParameterOptional (ApiV2ParameterFilePDF name) = do
   mFiles <- apiV2ParameterOptional (ApiV2ParameterFilePDFs [name])
