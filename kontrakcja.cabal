@@ -91,7 +91,6 @@ Library
                  , API.V2.Utils
                  , Administration.AdministrationControl
                  , Administration.AdministrationView
-                 , Administration.Invoicing
                  , Analytics.Include
                  , AppConf
                  , AppControl
@@ -380,7 +379,6 @@ Library
                  , Redirect
                  , Routing
                  , RoutingTable
-                 , SFTPConfig
                  , SMS.Types
                  , SMS.Events
                  , SMS.FromKontra.Tables
@@ -996,7 +994,6 @@ Executable mailing-server
                  MemCache
                  MinutesTime
                  Monitoring
-                 SFTPConfig
                  SendGrid
                  Sender
                  SocketLabs
@@ -1143,7 +1140,6 @@ Executable messenger-server
                  MessengerServerConf
                  MinutesTime
                  Monitoring
-                 SFTPConfig
                  SMS.Types
                  SMS.Model
                  SMS.Tables

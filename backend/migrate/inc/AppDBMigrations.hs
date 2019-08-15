@@ -213,4 +213,5 @@ kontraMigrations = [
   , updateCompositeTypesForSignatoryAccessTokens
   , dropSignatoryLinkMagicHashesTable
   , changeTemporaryMagicHashPurgeJobToTokensPurgeJob
+  , removeInvoicingUploadJob
   ]

@@ -14,7 +14,6 @@ import Log
 import Network.HTTP.Client (Manager)
 import qualified Data.Text as T
 
-import Administration.Invoicing
 import Attachment.Model
 import CronConf
 import CronStats.Control
@@ -55,7 +54,6 @@ data JobType
   | DocumentsArchiveIdle
   | EmailChangeRequestsEvaluation
   | FindAndTimeoutDocuments
-  | InvoicingUpload
   | MailEventsProcessing
   | MarkOrphanFilesForPurge
   | MonthlyInvoice
@@ -85,7 +83,6 @@ jobTypeMapper =
       DocumentsArchiveIdle                 -> "documents_archive_idle"
       EmailChangeRequestsEvaluation        -> "email_change_requests_evaluation"
       FindAndTimeoutDocuments              -> "find_and_timeout_documents"
-      InvoicingUpload                      -> "invoice_upload"
       MailEventsProcessing                 -> "mail_events_processing"
       MarkOrphanFilesForPurge              -> "mark_orphan_files_for_purge"
       MonthlyInvoice                       -> "monthly_invoice"
@@ -217,12 +214,6 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
     FindAndTimeoutDocuments -> do
       runCronEnv findAndTimeoutDocuments
       return . RerunAfter $ iminutes 10
-    InvoicingUpload -> do
-      case cronInvoicingSFTPConf cronConf of
-        Nothing -> do
-          logInfo "SFTP config missing; skipping" $ object []
-        Just sftpConfig -> runDB $ uploadInvoicing sftpConfig
-      RerunAt . nextDayAtHour 1 <$> currentTime
     MailEventsProcessing -> do
       let eventLimit = 50
       eventsDone <- runCronEnv $ Mails.Events.processEvents eventLimit

@@ -19,6 +19,7 @@ module Cron.Migrations (
   , removePasswordAlgorithmUpgradeJob
   , addTimeoutedEIDTransactionsPurge
   , changeTemporaryMagicHashPurgeJobToTokensPurgeJob
+  , removeInvoicingUploadJob
 ) where
 
 import Control.Monad.Catch
@@ -193,3 +194,11 @@ changeTemporaryMagicHashPurgeJobToTokensPurgeJob = Migration
   , mgrAction = StandardMigration $
       runSQL_ "UPDATE cron_jobs SET id='timeouted_signatory_access_tokens_purge' WHERE id='temporary_magic_hashes_purge'"
   }
+  
+removeInvoicingUploadJob :: (MonadDB m, MonadThrow m) => Migration m
+removeInvoicingUploadJob = Migration {
+    mgrTableName = tblName tableCronJobs
+  , mgrFrom = 24
+  , mgrAction = StandardMigration $ runSQL_ "DELETE FROM cron_jobs WHERE id = 'invoice_upload'"
+  }
+

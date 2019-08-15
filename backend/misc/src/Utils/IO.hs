@@ -1,6 +1,5 @@
 module Utils.IO ( checkExecutables
                 , readCurl
-                , sftpTransfer
                 , waitForTermination
                 )
 where
@@ -19,8 +18,6 @@ import qualified Data.Aeson.Types as Aeson
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL (toString)
 import qualified Data.Text as T
-
-import SFTPConfig
 
 -- | Wait for a signal (sigINT or sigTERM).
 waitForTermination :: IO ()
@@ -45,23 +42,6 @@ readCurl
 readCurl args input = liftBase $
   readProcessWithExitCode curl_exe
   (["--max-time", "60", "-s", "-S"] ++ args) input
-
-sftpTransfer
-  :: (MonadBase IO m)
-  => SFTPConfig
-  -> FilePath
-  -> m (ExitCode, BSL.ByteString, BSL.ByteString)
-sftpTransfer SFTPConfig{..} filePath = do
-  -- We want the directory specified to actually be interpreted as a
-  -- directory and not as a file.
-  let sftpRemoteDir' = sftpRemoteDir <> if (last sftpRemoteDir /= '/')
-                                        then "/" else ""
-  readCurl
-    (concat [ ["-T", filePath]
-            , ["sftp://" <> sftpUser <> ":" <> sftpPassword <> "@" <>
-                sftpHost <> sftpRemoteDir']
-            ])
-    BSL.empty
 
 checkExecutables :: forall m . (MonadLog m, MonadBase IO m, Functor m) => m ()
 checkExecutables = logInfo "Checking paths to executables:" . object

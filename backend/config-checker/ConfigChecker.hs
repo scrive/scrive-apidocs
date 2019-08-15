@@ -91,7 +91,7 @@ checkFieldsEqualAppConfCronConf
      cronAmazonConfig              cronDBConfig                   _cronMaxDBConnections
      cronRedisCacheConfig         _cronLocalFileCacheSize         _cronLogConfig
      cronGuardTimeConf             cronCgiGrpConfig                cronMixpanelToken
-    _cronNtpServers                cronSalesforceConf             _cronInvoicingSFTPConf
+    _cronNtpServers                cronSalesforceConf
     _cronPlanhatConf              _cronMonitoringConf              cronMailNoreplyAddress
     _cronConsumerCronMaxJobs      _cronConsumerSealingMaxJobs     _cronConsumerSigningMaxJobs
     _cronConsumerExtendingMaxJobs _cronConsumerAPICallbackMaxJobs _cronConsumerFilePurgingMaxJobs

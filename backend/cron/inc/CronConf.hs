@@ -17,7 +17,6 @@ import MonthlyInvoice.Config
 import PdfToolsLambda.Conf
 import Planhat
 import Salesforce.Conf
-import SFTPConfig
 import StatsD.Config
 
 -- | Cron configuration: things like AWS, Postgres and Redis, NTP servers, etc.
@@ -39,8 +38,6 @@ data CronConf = CronConf {
     -- ^ List of NTP servers to contact to get an estimate of host clock
     -- error.
   , cronSalesforceConf             :: !(Maybe SalesforceConf) -- ^ Salesforce configuration.
-  , cronInvoicingSFTPConf          :: !(Maybe SFTPConfig)
-    -- ^ SFTP server for invoicing uploads.
   , cronPlanhatConf                :: !(Maybe PlanhatConf)
     -- ^ To enable data push to Planhat
   , cronMonitoringConf             :: !(Maybe MonitoringConf)
@@ -96,9 +93,6 @@ unjsonCronConf = objectOf $ pure CronConf
   <*> fieldOpt "salesforce"
       cronSalesforceConf
       "Configuration of salesforce"
-  <*> fieldOpt "invoicing_sftp_for_salesforce"
-      cronInvoicingSFTPConf
-      "Configuration for SFTP:ing invoicing reports"
   <*> fieldOpt "planhat"
       cronPlanhatConf
       "Configuration for pushing data to Planhat"

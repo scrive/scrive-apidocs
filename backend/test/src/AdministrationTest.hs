@@ -5,13 +5,8 @@ import Test.Framework
 import Text.JSON
 
 import Administration.AdministrationControl
-import Administration.Invoicing
-import Chargeable.Model
 import Context
 import DB
-import Doc.DocInfo
-import Doc.DocStateData
-import MinutesTime
 import TestingUtil
 import TestKontra as T
 import User.Email
@@ -19,14 +14,11 @@ import User.Lang (defaultLang)
 import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
-import Util.CSVUtil (CSV(..))
 
 administrationTests :: TestEnvSt -> Test
 administrationTests env =
   testGroup "AdministrationControl"
   [ testThat "Searching for companies in adminonly works" env test_jsonCompanies
-  , testThat "InvoicingReport doesn't trigger exception in a simple case" env
-    test_invoicingReport
   ]
 
 test_jsonCompanies :: TestEnv ()
@@ -58,23 +50,3 @@ test_jsonCompanies = do
   let JSObject rspJSON2 = rsp2
       Just (JSArray companies2) = lookup "companies" $ fromJSObject rspJSON2
   assertEqual "Searching for all companies works" 2 (length companies2)
-
-test_invoicingReport:: TestEnv ()
-test_invoicingReport = do
-  (u1, ug1) <- addNewAdminUserAndUserGroup "Anna" "A1" "a1@android.com"
-  (_, ug2)  <- addNewAdminUserAndUserGroup "Anna" "A2" "a2@android.com"
-  (_, ug3)  <- addNewAdminUserAndUserGroup "Bob"  "B1" "b1@example.com"
-  void $ addNewUserToUserGroup "Bob" "B2" "b2@blue.com" (get ugID ug3)
-  void $ dbUpdate $ UserGroupUpdate $ set ugInvoicing (Invoice OnePlan)  $ ug1
-  void $ dbUpdate $ UserGroupUpdate $ set ugInvoicing (Invoice TeamPlan) $ ug2
-  void $ dbUpdate $ UserGroupUpdate $ set ugInvoicing (Invoice EnterprisePlan)
-    $ ug3
-
-  did1 <- addRandomDocumentWithAuthorAndCondition u1 (isClosed && isSignable)
-  void $ dbUpdate $ ChargeUserGroupForClosingDocument $ documentid did1
-
-  ct  <- currentTime
-  csv <- dbQuery $ InvoicingReport $ 1 `daysAfter` ct
-  assertBool
-    "There are some rows in invoicing csv if there are some companies in DB"
-    (length (csvContent csv) > 0)
