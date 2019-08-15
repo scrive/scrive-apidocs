@@ -301,6 +301,9 @@
                   <li>
                     <a href="#user-group" class="toc-h2 toc-link" data-title="user-group">User Group</a>
                   </li>
+                  <li>
+                    <a href="#access-control" class="toc-h2 toc-link" data-title="access-control">Access Control</a>
+                  </li>
               </ul>
           </li>
           <li>
@@ -513,7 +516,24 @@
               </ul>
           </li>
           <li>
-            <a href="#responses-59" class="toc-h1 toc-link" data-title="responses">Responses</a>
+            <a href="#access-control-2" class="toc-h1 toc-link" data-title="access-control">Access Control</a>
+              <ul class="toc-list-h2">
+                  <li>
+                    <a href="#view-access-roles-for-user" class="toc-h2 toc-link" data-title="view-access-roles-for-user">View Access Roles for User</a>
+                  </li>
+                  <li>
+                    <a href="#view-access-role" class="toc-h2 toc-link" data-title="view-access-role">View Access Role</a>
+                  </li>
+                  <li>
+                    <a href="#grant-access-role" class="toc-h2 toc-link" data-title="grant-access-role">Grant Access Role</a>
+                  </li>
+                  <li>
+                    <a href="#delete-access-role" class="toc-h2 toc-link" data-title="delete-access-role">Delete Access Role</a>
+                  </li>
+              </ul>
+          </li>
+          <li>
+            <a href="#responses-63" class="toc-h1 toc-link" data-title="responses">Responses</a>
               <ul class="toc-list-h2">
                   <li>
                     <a href="#document" class="toc-h2 toc-link" data-title="document">Document</a>
@@ -615,6 +635,9 @@
                   </li>
                   <li>
                     <a href="#usergroupcontactdetailswithinheritable" class="toc-h2 toc-link" data-title="usergroupcontactdetailswithinheritable">UserGroupContactDetailsWithInheritable</a>
+                  </li>
+                  <li>
+                    <a href="#accessrole" class="toc-h2 toc-link" data-title="accessrole">AccessRole</a>
                   </li>
               </ul>
           </li>
@@ -2020,6 +2043,38 @@ Scrive eSign system returning errors.</p>
 <a href="#apiv2usergroups{user_group_id}settingsdelete">
 <strong>
 <code class="operation-method operation-method-POST">POST  /api/v2/usergroups/{user_group_id}/settings/delete</code>
+</strong>
+</a>
+</p>
+<h2 id='access-control'>Access Control</h2>
+<p>
+<a href="#apiv2getuserroles{user_id}">
+<strong>
+<code class="operation-method operation-method-GET">GET  /api/v2/getuserroles/{user_id}</code>
+</strong>
+</a>
+</p>
+
+<p>
+<a href="#apiv2accesscontrolroles{role_id}">
+<strong>
+<code class="operation-method operation-method-GET">GET  /api/v2/accesscontrol/roles/{role_id}</code>
+</strong>
+</a>
+</p>
+
+<p>
+<a href="#apiv2accesscontrolroles{role_id}add">
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/accesscontrol/roles/{role_id}/add</code>
+</strong>
+</a>
+</p>
+
+<p>
+<a href="#apiv2accesscontrolroles{role_id}delete">
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/accesscontrol/roles/{role_id}/delete</code>
 </strong>
 </a>
 </p>
@@ -4085,6 +4140,9 @@ by simply working up the tree, deleting the leaves.</p>
 <tr> <th>Code</th> <th>Description</th> </tr>
 <tr> <td>200</td> <td><p>Simple JSON showing that a User Group with a given ID has been deleted.</p>
 </td> </tr>
+<tr> <td>403</td> <td><p>Insufficient Permissions error (this means that either no User Group
+exists with this ID or that you do not have permission to update it)</p>
+</td> </tr>
 </table>
 
 <div><a id="apiv2usergroups{user_group_id}contact_details"></a></div>
@@ -4574,7 +4632,310 @@ values can be inherited from an ancestor User Group.</p>
 exists with this ID or that you do not have permission to view it)</p>
 </td> </tr>
 </table>
-<h1 id='responses-59'>Responses</h1><h2 id='document'>Document</h2>
+<h1 id='access-control-2'>Access Control</h1>
+<div><a id="apiv2getuserroles{user_id}"></a></div>
+<h2 id='view-access-roles-for-user'>View Access Roles for User</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-GET">GET  /api/v2/getuserroles/{user_id}</code>
+</strong>
+</p>
+
+<blockquote>
+<p>Example of a User&#39;s Access Roles</p>
+</blockquote>
+<pre class="highlight json tab-json"><code><span class="p">[</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"8"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"is_generated"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"role_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user_group_admin"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"source"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="s2">"target"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user_group"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"11"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="s2">"allowed_actions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"document"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"delete"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"read"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"update"</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="s2">"folder_policy"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"delete"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"read"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"update"</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="s2">"user"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"delete"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"read"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"update"</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="s2">"user_group"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"delete"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"read"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"update"</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="s2">"user_group_policy"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"delete"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"read"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"update"</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="s2">"user_personal_token"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"delete"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"read"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"update"</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="s2">"user_policy"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"delete"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"read"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"update"</span><span class="w">
+      </span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"is_generated"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"role_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user_admin"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"source"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="s2">"target"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user_group"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"8"</span><span class="w">
+    </span><span class="p">},</span><span class="w">
+    </span><span class="s2">"allowed_actions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+      </span><span class="s2">"user"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"delete"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"read"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"update"</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="s2">"user_group"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+          </span><span class="s2">"read"</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="s2">"user_group_policy"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"delete"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"read"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"update"</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="s2">"user_personal_token"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"delete"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"read"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"update"</span><span class="w">
+      </span><span class="p">],</span><span class="w">
+      </span><span class="s2">"user_policy"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+        </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"delete"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"read"</span><span class="p">,</span><span class="w">
+        </span><span class="s2">"update"</span><span class="w">
+      </span><span class="p">]</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">]</span><span class="w">
+</span></code></pre>
+<p>This endpoint is used to view the roles which have been granted to a given
+user.</p>
+<h3 id='parameters-54'>Parameters</h3>
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><p><code>user_id</code><br/><em>required</em></p></td><td><p>The ID of the User whose roles you wish to view</p>
+</td><td><p>integer</p></td><td>url</td></tr>
+</table>
+<h3 id='responses-59'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>A JSON array of Access Role objects.</p>
+</td> </tr>
+<tr> <td>403</td> <td><p>Insufficient Permissions error (this means that you don't have Read
+permissions upon the User or the User does not exist).</p>
+</td> </tr>
+</table>
+
+<div><a id="apiv2accesscontrolroles{role_id}"></a></div>
+<h2 id='view-access-role'>View Access Role</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-GET">GET  /api/v2/accesscontrol/roles/{role_id}</code>
+</strong>
+</p>
+
+<blockquote>
+<p>Example of an Access Role</p>
+</blockquote>
+<pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"8"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"is_generated"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"role_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user_group_admin"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"source"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"target"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user_group"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"11"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"allowed_actions"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"document"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"delete"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"read"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"update"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="s2">"folder_policy"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"delete"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"read"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"update"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="s2">"user"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"delete"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"read"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"update"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="s2">"user_group"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"delete"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"read"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"update"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="s2">"user_group_policy"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"delete"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"read"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"update"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="s2">"user_personal_token"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"delete"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"read"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"update"</span><span class="w">
+    </span><span class="p">],</span><span class="w">
+    </span><span class="s2">"user_policy"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="w">
+      </span><span class="s2">"create"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"delete"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"read"</span><span class="p">,</span><span class="w">
+      </span><span class="s2">"update"</span><span class="w">
+    </span><span class="p">]</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+<p>This endpoint is used to get the details of a given access role. Only
+explicitly granted roles can be viewed via this endpoint, since implicit
+roles do not have an ID of their own to reference them by.</p>
+
+<p>Implicit roles are those roles which are granted automatically as a result
+of, for example, User Group membership. Implicit roles have <code>is_generated</code>
+set to <code>true</code> and <code>id</code> set to <code>null</code>.</p>
+
+<p>Explicit roles are those which have been, as the name suggests, explicitly
+granted. This was also almost done certainly via this API. Explicit roles
+have <code>is_generated</code> set to <code>false</code> and a non-<code>null</code> <code>id</code>.</p>
+<h3 id='parameters-55'>Parameters</h3>
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><p><code>role_id</code><br/><em>required</em></p></td><td><p>The ID of the Access Role you wish to view</p>
+</td><td><p>integer</p></td><td>url</td></tr>
+</table>
+<h3 id='responses-60'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>JSON representation of an Access Role.</p>
+</td> </tr>
+<tr> <td>403</td> <td><p>Insufficient Permissions error (this means that you don't have enough
+permissions to view details of the role. In practise this means that
+you lack Read permissions on either the source or the target that the
+role refers to.</p>
+</td> </tr>
+</table>
+
+<div><a id="apiv2accesscontrolroles{role_id}add"></a></div>
+<h2 id='grant-access-role'>Grant Access Role</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/accesscontrol/roles/{role_id}/add</code>
+</strong>
+</p>
+
+<blockquote>
+<p>Example of JSON that could be used to grant a new role:</p>
+</blockquote>
+<pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"role_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"source"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"target"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"4"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+<p>This endpoint allows you to grant a new Access Role.</p>
+<h3 id='parameters-56'>Parameters</h3>
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><p><code>role</code><br/><em>required</em></p></td><td><p>JSON object containing details of the role to be granted.</p>
+</td><td><p>string<br><em>application/json</em></p></td><td>formData</td></tr>
+</table>
+<h3 id='responses-61'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>JSON representation of an Access Role.</p>
+</td> </tr>
+<tr> <td>403</td> <td><p>Insufficient Permissions error (this means that you don't have enough
+permissions to grant this role. In practise this means that you lack
+Create permissions on the Policy relation for either the source or the
+target that the proposed role refers to.</p>
+</td> </tr>
+</table>
+
+<div><a id="apiv2accesscontrolroles{role_id}delete"></a></div>
+<h2 id='delete-access-role'>Delete Access Role</h2>
+<p>
+<strong>
+<code class="operation-method operation-method-POST">POST  /api/v2/accesscontrol/roles/{role_id}/delete</code>
+</strong>
+</p>
+
+<p>The endpoint allows you to delete an explicitly granted access role.</p>
+
+<p><em>Explicitly granted</em> in this case generally means &quot;role which was created
+via the Access Control API&quot; as opposed to an implicit role acquired via, for
+example, User Group membership. If it has a non-<code>null</code> <code>id</code> field then it is
+an explicit role and can be deleted.</p>
+<h3 id='parameters-57'>Parameters</h3>
+<table class="table-left-col-25">
+<tr> <th>Parameter</th> <th>Description</th> <th>Type</th> <th>In</th> </tr>
+<tr><td><p><code>role_id</code><br/><em>required</em></p></td><td><p>The ID of the Access Role you wish to view</p>
+</td><td><p>integer</p></td><td>url</td></tr>
+</table>
+<h3 id='responses-62'>Responses</h3>
+<table>
+<tr> <th>Code</th> <th>Description</th> </tr>
+<tr> <td>200</td> <td><p>JSON object showing that an Access Role with the given ID has been
+successfully deleted.</p>
+</td> </tr>
+<tr> <td>403</td> <td><p>Insufficient Permissions error (this means that you don't have Delete
+permissions upon the Policy relation of either the source or target of
+the role). Either that, or no Access Role exists with this <code>id</code>.</p>
+</td> </tr>
+</table>
+<h1 id='responses-63'>Responses</h1><h2 id='document'>Document</h2>
 <p>The document metadata as a JSON.</p>
 <h3 id='document-2'>Document</h3>
 <p><code>(object)</code></p>
@@ -18548,6 +18909,316 @@ Preview).</p>
 <h5><code>country</code> (string)</h5>
 
 <div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<p></div></p>
+
+<p></div></p>
+<h2 id='accessrole'>AccessRole</h2>
+<p><code>(object)</code></p>
+
+<blockquote>
+<h3 id='example-json-for-quot-accessrole-quot'>Example JSON: for &quot;AccessRole&quot;</h3></blockquote>
+<pre class="highlight json tab-json"><code><span class="p">{</span><span class="w">
+  </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"8"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"is_generated"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"role_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user_group_admin"</span><span class="p">,</span><span class="w">
+  </span><span class="s2">"source"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2"</span><span class="w">
+  </span><span class="p">},</span><span class="w">
+  </span><span class="s2">"target"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w">
+    </span><span class="s2">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user_group"</span><span class="p">,</span><span class="w">
+    </span><span class="s2">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"11"</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+<div class="json-schema">
+
+<p>JSON representation of an Access Role.</p>
+
+
+<p>This object has the following properties:</p>
+
+<h3><code>id</code> (string)</h3>
+
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>is_generated</code> (boolean)</h3>
+
+<div class="json-schema">
+
+</div>
+
+<h3><code>role_type</code> (string, enum)</h3>
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>user</code></li>
+<li><code>user_group_member</code></li>
+<li><code>user_admin</code></li>
+<li><code>user_group_admin</code></li>
+<li><code>document_admin</code></li>
+
+</ul>
+
+</div>
+
+<h3><code>source</code> (object)</h3>
+
+<div class="json-schema">
+
+<p>The <code>source</code> object has the following properties:</p>
+
+<h4><code>type</code> (string, enum)</h4>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>user</code></li>
+<li><code>user_group</code></li>
+
+</ul>
+
+</div>
+
+<h4><code>id</code> (string)</h4>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<h3><code>target</code> (object)</h3>
+
+<div class="json-schema">
+
+<p>The <code>target</code> object has the following properties:</p>
+
+<h4><code>type</code> (string, enum)</h4>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>user</code></li>
+<li><code>user_group</code></li>
+<li><code>folder</code></li>
+
+</ul>
+
+</div>
+
+<h4><code>id</code> (string)</h4>
+
+<div class="json-schema">
+
+</div>
+
+<p></div></p>
+
+<h3><code>allowed_actions</code> (object)</h3>
+
+<div class="json-schema">
+
+<p>The <code>allowed_actions</code> object has the following properties:</p>
+
+<h4><code>document</code> (array)</h4>
+
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h5>(string, enum)</h5>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>create</code></li>
+<li><code>delete</code></li>
+<li><code>read</code></li>
+<li><code>update</code></li>
+
+</ul>
+
+</div>
+
+<p></div></p>
+
+<h4><code>folder_policy</code> (array)</h4>
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h5>(string, enum)</h5>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>create</code></li>
+<li><code>delete</code></li>
+<li><code>read</code></li>
+<li><code>update</code></li>
+
+</ul>
+
+</div>
+
+<p></div></p>
+
+<h4><code>user</code> (array)</h4>
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h5>(string, enum)</h5>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>create</code></li>
+<li><code>delete</code></li>
+<li><code>read</code></li>
+<li><code>update</code></li>
+
+</ul>
+
+</div>
+
+<p></div></p>
+
+<h4><code>user_group</code> (array)</h4>
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h5>(string, enum)</h5>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>create</code></li>
+<li><code>delete</code></li>
+<li><code>read</code></li>
+<li><code>update</code></li>
+
+</ul>
+
+</div>
+
+<p></div></p>
+
+<h4><code>user_group_policy</code> (array)</h4>
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h5>(string, enum)</h5>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>create</code></li>
+<li><code>delete</code></li>
+<li><code>read</code></li>
+<li><code>update</code></li>
+
+</ul>
+
+</div>
+
+<p></div></p>
+
+<h4><code>user_personal_token</code> (array)</h4>
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h5>(string, enum)</h5>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>create</code></li>
+<li><code>delete</code></li>
+<li><code>read</code></li>
+<li><code>update</code></li>
+
+</ul>
+
+</div>
+
+<p></div></p>
+
+<h4><code>user_policy</code> (array)</h4>
+
+<div class="json-schema">
+
+<p>All array elements must be of type:</p>
+
+<h5>(string, enum)</h5>
+
+
+<div class="json-schema">
+
+<p>This element must be one of the following enum values:</p>
+
+<ul>
+
+<li><code>create</code></li>
+<li><code>delete</code></li>
+<li><code>read</code></li>
+<li><code>update</code></li>
+
+</ul>
 
 </div>
 
