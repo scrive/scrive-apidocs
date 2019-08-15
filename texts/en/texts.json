@@ -704,7 +704,7 @@
 "_identifiedByNOBankIDText":"Identified by Norwegian BankID as \"$name$\"",
 "_identifiedBySwedishBankIDText":"Identified by Swedish BankID as \"$name$\"",
 "_identifiedByVerimiText":"Identified by Verimi as \"$email$\"",
-"_identifyVerimiDataMismatch":"Authorization data doesn't match information provided by the author",
+"_identifyVerimiDataMismatch":"Your data doesn't match the information provided by the sender",
 "_identifyWithPinEnterPin":"Enter your SMS PIN",
 "_identifyWithPinInfotext":"Check your mobile phone",
 "_identifyWithPinInvalidPin":"Invalid PIN",
