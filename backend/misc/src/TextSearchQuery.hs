@@ -67,15 +67,15 @@ infixl 2 <@@>
 cleanUnallowedTSChars :: Text -> [Text]
 cleanUnallowedTSChars t = go notAllowed (nub . T.words $ t)
   where
-    notAllowed :: [Char]
-    notAllowed = "|&:!'<->"
+    notAllowed :: [Text]
+    notAllowed = ["|", "&", ":", "!", "<->", "<", "*"]
 
-    go :: [Char] -> [Text] -> [Text]
+    go :: [Text] -> [Text] -> [Text]
     go []     acc = Prelude.filter (/= "") acc
-    go (c:cs) acc = go cs (nub $ splitAll c acc)
+    go (sym:syms) acc = go syms (nub $ splitAll sym acc)
 
-    splitAll :: Char -> [Text] -> [Text]
-    splitAll chr ts = concatMap (T.splitOn . T.singleton $ chr) ts
+    splitAll :: Text -> [Text] -> [Text]
+    splitAll symbol texts = concatMap (T.splitOn symbol) texts
 
 addTSWildcard :: Text -> Text
 addTSWildcard t = t <> ":*"
