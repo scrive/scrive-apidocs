@@ -268,7 +268,7 @@
 "_brandingUnsavedChangesDescription":"Sie haben ungespeicherte Änderungen. Möchten Sie die Änderungen speichern? ",
 "_brandingUnsavedChangesTitle":"Änderungen speichern",
 "_brandingUseExistingOrCreateNewTheme":"Wählen Sie ein Theme oder erstellen Sie ein neues.",
-"_cannotWithdrawAlreadySignedDocument":"Das Dokument kann nicht zurückgezogen werden, da es bereits signiert wurde.",
+"_cannotWithdrawAlreadySignedDocument":"",
 "_changeEmail":"E-Mail ändern",
 "_changeEmailAndMobileModalLabel":"Ändern Sie die E-Mail-Adresse und Mobilnummer und senden Sie die Einladungen erneut. Die vorige Einladungen zu dieser Partei werden zurückgezogen und die Links zur Signierung sind dann ungültig. Neue Einladungen and Links zur Signierung werden an die E-Mail-Adresse und Mobilnummer dieser Partei gesendet, auch wenn nur eine von beiden aktualisiert wurde.  ",
 "_changeEmailAndMobileModalTitle":"E-Mail und Mobilnummer ändern",

@@ -268,7 +268,7 @@
 "_brandingUnsavedChangesDescription":"Neuložili jste změny. Chcete provedené změny uložit?",
 "_brandingUnsavedChangesTitle":"Uložit změny",
 "_brandingUseExistingOrCreateNewTheme":"Zvolte profil, nebo vytvořte nový",
-"_cannotWithdrawAlreadySignedDocument":"Dokument nelze stornovat, protože už byl podepsán.",
+"_cannotWithdrawAlreadySignedDocument":"",
 "_changeEmail":"Změnit e-mail",
 "_changeEmailAndMobileModalLabel":"Změňte e-mailovou adresu a mobilní číslo a odešlete pozvánky znovu. Předchozí pozvánky zaslané této straně se stornují a odkazy na stránku s podpisem ztratí platnost. Nové pozvánky a odkazy na stránku s podpisem se odešlou na e-mailovou adresu i na mobilní číslo této strany i v případě, že dojde k aktualizaci pouze jednoho z kontaktních údajů.",
 "_changeEmailAndMobileModalTitle":"Změnit e-mail a mobilní číslo",

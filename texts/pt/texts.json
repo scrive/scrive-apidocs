@@ -268,7 +268,7 @@
 "_brandingUnsavedChangesDescription":"Existem alterações não guardadas. Pretende guardar estas alterações?",
 "_brandingUnsavedChangesTitle":"Guardar alterações",
 "_brandingUseExistingOrCreateNewTheme":"Seleccione um tema ou crie um novo",
-"_cannotWithdrawAlreadySignedDocument":"O documento não pode ser retirado porque já está assinado.",
+"_cannotWithdrawAlreadySignedDocument":"",
 "_changeEmail":"Alterar email",
 "_changeEmailAndMobileModalLabel":"Altere o endereço de email e o número de telemóvel e envie novamente os convites. Os convites anteriores para esta parte serão retirados e as hiperligações de assinatura serão invalidadas. Serão enviados novos convites e hiperligações de assinatura para o endereço de email e para o número de telemóvel dessa parte, ainda que apenas um deles esteja actualizado.",
 "_changeEmailAndMobileModalTitle":"Alterar email e número de telemóvel",

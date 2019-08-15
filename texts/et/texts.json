@@ -268,7 +268,7 @@
 "_brandingUnsavedChangesDescription":"Teil on salvestamata muudatusi. Kas soovite need salvestada?",
 "_brandingUnsavedChangesTitle":"Salvesta muudatused",
 "_brandingUseExistingOrCreateNewTheme":"Valige teema või looge uus",
-"_cannotWithdrawAlreadySignedDocument":"Dokumenti pole võimalik tühistada, kuna see on juba allkirjastatud. ",
+"_cannotWithdrawAlreadySignedDocument":"",
 "_changeEmail":"Muuda e-maili",
 "_changeEmailAndMobileModalLabel":"Muutke e-maili aadressi ja mobiilinumbrit ning saatke kutse uuesti. Varasemad sellele kasutajale saadetud kutsed ja allkirjastamislingid tühistatakse. Uued kutsed ja lingid saadetakse kasutaja e-maili aadressile ja mobiilinumbrile, isegi siis, kui ainult üht neist on uuendatud.",
 "_changeEmailAndMobileModalTitle":"Muuda e-maili aadressi ja telefoninumbrit",

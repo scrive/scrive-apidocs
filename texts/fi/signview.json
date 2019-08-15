@@ -185,7 +185,7 @@
 "_signatoryMessageIfSignatoryRejected":"Hylätty",
 "_signatoryMessageIfSignatorySeendate":"Esikatseltu netissä",
 "_signatoryMessageIfSigned":"Allekirjoitettu",
-"_signatoryMessageWaiting":"Odottaa prioriteetti allekirjoituksia",
+"_signatoryMessageWaiting":"Odottaa allekirjoituksia",
 "_signedAndClosed":"Dokumentti on allekirjoitettu!",
 "_signedNotClosed":"Olet allekirjoittanut",
 "_signingErrorMessage1":"Meillä on ongelmia dokumenttisi käsittelyn kanssa.",

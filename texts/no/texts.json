@@ -268,7 +268,7 @@
 "_brandingUnsavedChangesDescription":"Du har ulagrede endringer. Vil du lagre disse endringene?",
 "_brandingUnsavedChangesTitle":"Lagre endringer",
 "_brandingUseExistingOrCreateNewTheme":"Velg et tema eller opprett et nytt",
-"_cannotWithdrawAlreadySignedDocument":"Dokumentet kan ikke trekkes tilbake siden det allerede er signert.",
+"_cannotWithdrawAlreadySignedDocument":"",
 "_changeEmail":"Endre e-post",
 "_changeEmailAndMobileModalLabel":"Endre e-postadresse og mobilnummer og send invitasjonene på nytt. De forrige invitasjonene til denne parten vil bli trukket tilbake og signeringslenkene vil bli ugyldige. Nye invitasjoner og signeringslenker vil bli sendt til både e-postadressen og mobiltelefonnummeret til denne parten, selv om bare en av dem er oppdatert.",
 "_changeEmailAndMobileModalTitle":"Endre e-post og mobiltelefonnummer",

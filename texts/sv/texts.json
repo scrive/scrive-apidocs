@@ -268,7 +268,7 @@
 "_brandingUnsavedChangesDescription":"Du har osparade ändringar. Vill du spara dessa ändringar?",
 "_brandingUnsavedChangesTitle":"Spara ändringar",
 "_brandingUseExistingOrCreateNewTheme":"Välj ett tema eller skapa ett nytt",
-"_cannotWithdrawAlreadySignedDocument":"Dokumentet kan inte återkallas eftersom det redan har signerats.",
+"_cannotWithdrawAlreadySignedDocument":"",
 "_changeEmail":"Ändra e-post",
 "_changeEmailAndMobileModalLabel":"Ändra e-postadressen och mobilnumret och skicka inbjudningarna igen. De tidigare inbjudningarna till den här parten kommer att återkallas och signeringslänkarna bli ogiltiga. Nya inbjudningar och signeringslänkar kommer att skickas till den här partens både e-postadress och mobilnummer, även om endast en av dem uppdateras.",
 "_changeEmailAndMobileModalTitle":"Ändra e-post och mobilnummer",

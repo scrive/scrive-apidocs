@@ -268,7 +268,7 @@
 "_brandingUnsavedChangesDescription":"Du har ændringer, der endnu ikke er blevet gemt. Vil du gemme disse?",
 "_brandingUnsavedChangesTitle":"Gem ændringer",
 "_brandingUseExistingOrCreateNewTheme":"Vælg et tema eller skab et nyt",
-"_cannotWithdrawAlreadySignedDocument":"Dokumentet kan ikke trækkes tilbage, eftersom det allerede er blevet signeret. ",
+"_cannotWithdrawAlreadySignedDocument":"",
 "_changeEmail":"Skift e-mail",
 "_changeEmailAndMobileModalLabel":"Ændr e-mailadresse og mobilnummer og send invitationerne på ny. De tidligere invitationer til denne part trækkes automatisk tilbage, samtidig med at signeringslinket bliver gjort ugyldigt. Der fremsendes nye invitationer og signeringslinks til såvel vedkommendes e-mailadresse som mobilnummer, selvom det muligvis kun er den ene del, der er blevet opdateret.",
 "_changeEmailAndMobileModalTitle":"Ændr e-mail & mobilnummer",

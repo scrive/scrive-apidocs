@@ -268,7 +268,7 @@
 "_brandingUnsavedChangesDescription":"Des modifications que vous avez effectuées ne sont pas enregistrées. Souhaitez-vous enregistrer ces modifications?",
 "_brandingUnsavedChangesTitle":"Enregistrer les modifications",
 "_brandingUseExistingOrCreateNewTheme":"Sélectionner un thème ou créer un nouveau thème",
-"_cannotWithdrawAlreadySignedDocument":"Il est impossible de retirer le document car il a déjà été signé.",
+"_cannotWithdrawAlreadySignedDocument":"",
 "_changeEmail":"Changer d'adresse mail",
 "_changeEmailAndMobileModalLabel":"Modifiez l'adresse électronique et le numéro de mobile et renvoyez les invitations. Les invitations précédentes à cette partie seront retirées et les liens de signature invalidés. De nouvelles invitations et des liens de signature seront envoyés à l'adresse électronique et au numéro de mobile de cette partie, même si l'un de ces derniers est mis à jour.",
 "_changeEmailAndMobileModalTitle":"Modifier l'adresse électronique et le numéro de mobile",

@@ -268,7 +268,7 @@
 "_brandingUnsavedChangesDescription":"Zmiany nie zostały zapisane. Czy chcesz je zapisać?",
 "_brandingUnsavedChangesTitle":"Zapisz zmiany",
 "_brandingUseExistingOrCreateNewTheme":"Wybierz wzór lub stwórz nowy",
-"_cannotWithdrawAlreadySignedDocument":"Dokument nie może zostać wycofany, ponieważ został już podpisany.",
+"_cannotWithdrawAlreadySignedDocument":"",
 "_changeEmail":"Zmień adres e-mail",
 "_changeEmailAndMobileModalLabel":"Zmień adres e-mail i numer telefonu następnie wyślij zaproszenia ponownie. Poprzednie zaproszenia zostaną wycofane, a linki do podpisu unieważnione. Nowe zaproszenia i linki do podpisu będą wysyłane na adres e-mail i numer telefonu tej strony nawet jeśli tylko jeden z nich zostanie zaktualizowany.",
 "_changeEmailAndMobileModalTitle":"Zmień e-mail & numer telefonu",

@@ -268,7 +268,7 @@
 "_brandingUnsavedChangesDescription":"Jūs įrašėte ne visus pakeitimus. Ar norite įrašyti tuos pakeitimus?",
 "_brandingUnsavedChangesTitle":"Įrašykite pakeitimus",
 "_brandingUseExistingOrCreateNewTheme":"Pasirinkite temą arba sukurkite naują.",
-"_cannotWithdrawAlreadySignedDocument":"Dokumento negalima atšaukti, nes jis jau pasirašytas.",
+"_cannotWithdrawAlreadySignedDocument":"",
 "_changeEmail":"Pakeisti el. paštą",
 "_changeEmailAndMobileModalLabel":"Pakeiskite el. pašto adresą ir mobiliojo telefono numerį, ir iš naujo išsiųskite pakvietimus. Anksčiau šiai šaliai išsiųsti pakvietimai bus atšaukti, o pasirašymo nuorodos anuliuotos. Nauji pakvietimai bei pasirašymo nuorodos bus siunčiamos tiek šios šalies el. pašto adresu, tiek mobiliojo telefono numeriu net tuo atveju, jei tiek vienas iš jų buvo atnaujintas.",
 "_changeEmailAndMobileModalTitle":"Pakeiskite el. pašto adresą ir mobiliojo telefono numerį",

@@ -268,7 +268,7 @@
 "_brandingUnsavedChangesDescription":"Non hai salvato le modifiche. Vuoi salvare queste modifiche?",
 "_brandingUnsavedChangesTitle":"Salva modifiche",
 "_brandingUseExistingOrCreateNewTheme":"Seleziona un tema o creane uno nuovo",
-"_cannotWithdrawAlreadySignedDocument":"Il documento non può essere ritirato essendo già stato firmato.",
+"_cannotWithdrawAlreadySignedDocument":"",
 "_changeEmail":"Modifica email",
 "_changeEmailAndMobileModalLabel":"Cambia l'indirizzo e-mail e il numero di cellulare e invia di nuovo gli inviti. I precedenti inviti a questa parte saranno revocati e i link per la firma sono stati invalidati. I nuovi inviti e link per la firma saranno inviati sia all'indirizzo e-mail, sia al numero di cellulare di questa parte, anche se solo uno di essi è aggiornato.",
 "_changeEmailAndMobileModalTitle":"Cambia e-mail e numero di cellulare",
