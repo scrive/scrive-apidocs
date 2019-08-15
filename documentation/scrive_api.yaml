@@ -1022,6 +1022,20 @@ paths:
   /usergroups/{user_group_id}/settings/delete:
     $ref: ./api/usergroup/deleteusergroupsettings.yaml
 
+  # Access Control
+
+  /getuserroles/{user_id}:
+    $ref: ./api/accesscontrol/getuserroles.yaml
+
+  /accesscontrol/roles/{role_id}:
+    $ref: ./api/accesscontrol/getrole.yaml
+
+  /accesscontrol/roles/{role_id}/add:
+    $ref: ./api/accesscontrol/createrole.yaml
+
+  /accesscontrol/roles/{role_id}/delete:
+    $ref: ./api/accesscontrol/deleterole.yaml
+
 definitions:
   Document:
     $ref: ./definitions/Document.yaml
@@ -1079,6 +1093,8 @@ definitions:
     $ref: ./definitions/UserGroupContactDetails.yaml
   UserGroupContactDetailsWithInheritable:
     $ref: ./definitions/UserGroupContactDetailsWithInheritable.yaml
+  AccessRole:
+    $ref: ./definitions/AccessRole.yaml
 
 parameters:
   $ref: ./extras/parameters.yaml
