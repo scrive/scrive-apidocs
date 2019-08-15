@@ -53,6 +53,7 @@
     "_mixpanel" : "token",
     "_googleanalytics" : "ga token",
     "_trackjs"  : "trackjs token",
+    "_zendesk_key" : "zendesk key",
     "_hubspot"  : { "hub_id" : "hubspot_hub_id"
                   , "forms"  : { "form" : "id" } },
     "_salesforce" : { "authentication_url" : "https://foo.bar"
