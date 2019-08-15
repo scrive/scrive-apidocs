@@ -268,7 +268,7 @@
 "_brandingUnsavedChangesDescription":"You have unsaved changes. Do you want to save these changes?",
 "_brandingUnsavedChangesTitle":"Save changes",
 "_brandingUseExistingOrCreateNewTheme":"Select a theme or create a new",
-"_cannotWithdrawAlreadySignedDocument":"The document can't be withdrawn since it is already signed.",
+"_cannotWithdrawAlreadySignedDocument":"The document can’t be withdrawn since it is no longer available for signing.",
 "_changeEmail":"Change email",
 "_changeEmailAndMobileModalLabel":"Change the email address and mobile number and send the invitations again. The previous invitations to this party will be withdrawn and the sign links invalidated. New invitations and sign links will be sent to both the email address and the mobile number of this party, even if only one of them is updated.",
 "_changeEmailAndMobileModalTitle":"Change email & mobile number",
