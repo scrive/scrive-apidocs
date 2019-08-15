@@ -824,11 +824,9 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) =>
         -> (AuthenticationToViewMethod, AuthenticationToViewMethod)
         -> m ()
       addChangeAuthenticationToViewEvidenceEvent sl (authtoviewfrom, authtoviewto) = do
-        let changeToEvidence = case authKind of
-              AuthenticationToView         -> authViewChangeToEvidence
-              AuthenticationToViewArchived -> authViewArchivedChangeToEvidence
-        mapM_ (insertEvidenceFor sl) . maybeToList $
-          changeToEvidence (authtoviewfrom, authtoviewto)
+        mapM_ (insertEvidenceFor sl) $ case authKind of
+              AuthenticationToView         -> authToViewChangeEvidence authtoviewfrom authtoviewto
+              AuthenticationToViewArchived -> authToViewArchivedChangeEvidence authtoviewfrom authtoviewto
 
 data ChangeAuthenticationToSignMethod = ChangeAuthenticationToSignMethod SignatoryLinkID AuthenticationToSignMethod (Maybe String) (Maybe String) Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m ChangeAuthenticationToSignMethod () where
@@ -974,32 +972,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
       let insertEvidence e = void $ update $
             InsertEvidenceEventWithAffectedSignatoryAndMsg e (return ()) (Just sl') Nothing actor
       -- Add event for changing AuthenticationToSignMethod
-      case (oldAuthToSign, newAuthToSign) of
-           (StandardAuthenticationToSign, SEBankIDAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodStandardToSEBankIDEvidence
-           (StandardAuthenticationToSign, SMSPinAuthenticationToSign)   -> insertEvidence ChangeAuthenticationToSignMethodStandardToSMSEvidence
-           (StandardAuthenticationToSign, StandardAuthenticationToSign) -> return ()
-           (StandardAuthenticationToSign, NOBankIDAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodStandardToNOBankIDEvidence
-           (StandardAuthenticationToSign, DKNemIDAuthenticationToSign)  -> insertEvidence ChangeAuthenticationToSignMethodStandardToDKNemIDEvidence
-           (SEBankIDAuthenticationToSign, StandardAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodSEBankIDToStandardEvidence
-           (SEBankIDAuthenticationToSign, SMSPinAuthenticationToSign)   -> insertEvidence ChangeAuthenticationToSignMethodSEBankIDToSMSEvidence
-           (SEBankIDAuthenticationToSign, SEBankIDAuthenticationToSign) -> return ()
-           (SEBankIDAuthenticationToSign, NOBankIDAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodSEBankIDToNOBankIDEvidence
-           (SEBankIDAuthenticationToSign, DKNemIDAuthenticationToSign)  -> insertEvidence ChangeAuthenticationToSignMethodSEBankIDToDKNemIDEvidence
-           (SMSPinAuthenticationToSign,   StandardAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodSMSToStandardEvidence
-           (SMSPinAuthenticationToSign,   SEBankIDAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodSMSToSEBankIDEvidence
-           (SMSPinAuthenticationToSign,   SMSPinAuthenticationToSign)   -> return ()
-           (SMSPinAuthenticationToSign,   NOBankIDAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodSMSToNOBankIDEvidence
-           (SMSPinAuthenticationToSign,   DKNemIDAuthenticationToSign)  -> insertEvidence ChangeAuthenticationToSignMethodSMSToDKNemIDEvidence
-           (NOBankIDAuthenticationToSign, StandardAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodNOBankIDToStandardEvidence
-           (NOBankIDAuthenticationToSign, SMSPinAuthenticationToSign)   -> insertEvidence ChangeAuthenticationToSignMethodNOBankIDToSMSEvidence
-           (NOBankIDAuthenticationToSign, SEBankIDAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodNOBankIDToSEBankIDEvidence
-           (NOBankIDAuthenticationToSign, NOBankIDAuthenticationToSign) -> return ()
-           (NOBankIDAuthenticationToSign, DKNemIDAuthenticationToSign)  -> insertEvidence ChangeAuthenticationToSignMethodNOBankIDToDKNemIDEvidence
-           (DKNemIDAuthenticationToSign,  StandardAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodDKNemIDToStandardEvidence
-           (DKNemIDAuthenticationToSign,  SMSPinAuthenticationToSign)   -> insertEvidence ChangeAuthenticationToSignMethodDKNemIDToSMSEvidence
-           (DKNemIDAuthenticationToSign,  SEBankIDAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodDKNemIDToSEBankIDEvidence
-           (DKNemIDAuthenticationToSign,  NOBankIDAuthenticationToSign) -> insertEvidence ChangeAuthenticationToSignMethodDKNemIDToNOBankIDEvidence
-           (DKNemIDAuthenticationToSign,  DKNemIDAuthenticationToSign)  -> return ()
+      mapM_ insertEvidence (authToSignChangeEvidence oldAuthToSign newAuthToSign)
 
 data PreparationToPending = PreparationToPending Actor TimeZoneName
 instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m PreparationToPending () where
