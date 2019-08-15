@@ -159,7 +159,7 @@
 "_remindMailNotApprovedContractBody":"<strong>$authorname$</strong> voudrait vous rappeler d'approuver le document <strong>$documenttitle$</strong>.",
 "_remindMailNotReviewedContractBody":"<strong>$authorname$</strong> voudrait vous rappeler de passer en revue le document <strong>$documenttitle$</strong>.",
 "_remindMailNotSignedContractBody":"<strong>$authorname$</strong> voudrait vous rappeler de signer le document <strong>$documenttitle$</strong>.",
-"_remindMailNotSignedContractBodyAutomatic":"Ceci est un rappel automatique que vous n'avez pas encore signé le <strong>$documenttitle$</strong> from <strong>$authorname$</strong> document.",
+"_remindMailNotSignedContractBodyAutomatic":"Ceci est un rappel automatique que vous n'avez pas encore signé <strong>$documenttitle$</strong> from <strong>$authorname$</strong> document.",
 "_remindMailNotSignedContractBodyFurther":"Cliquer sur le bouton pour recevoir d'autres instructions.",
 "_remindMailNotSignedTitleContract":"Rappel d'e-signature du document: $documenttitle$",
 "_remindMailNotSignedTitleContractApprove":"Rappel d'approuver le document : $documenttitle$",
