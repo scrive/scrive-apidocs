@@ -31,12 +31,12 @@ instance Identifier SignOrderUUID where
   idValue (SignOrderUUID k) = stringIdentifier . U.toString $ k
 
 instance PQFormat SignOrderUUID where
-  pqFormat    = pqFormat    @T.Text
-  pqFormat0   = pqFormat0   @T.Text
-  pqVariables = pqVariables @T.Text
+  pqFormat    = pqFormat    @Text
+  pqFormat0   = pqFormat0   @Text
+  pqVariables = pqVariables @Text
 
 instance FromSQL SignOrderUUID where
-  type PQBase SignOrderUUID = PQBase T.Text
+  type PQBase SignOrderUUID = PQBase Text
   fromSQL mbase = do
     t <- fromSQL mbase
     case U.fromText t of
@@ -48,7 +48,7 @@ data UUIDParseError = UUIDParseError
 instance Exception UUIDParseError
 
 instance ToSQL SignOrderUUID where
-  type PQDest SignOrderUUID = PQDest T.Text
+  type PQDest SignOrderUUID = PQDest Text
   toSQL (SignOrderUUID t) = toSQL . U.toText $ t
 
 newtype TrustSignMessageUUID = TrustSignMessageUUID UUID
@@ -76,7 +76,7 @@ nextUUIDWrapper = do
       internalError
     Just uuid -> return uuid
 
-parseSignOrderUUID :: T.Text -> SignOrderUUID
+parseSignOrderUUID :: Text -> SignOrderUUID
 parseSignOrderUUID t = SignOrderUUID $ fromMaybe
-  (unexpectedError $ "Cannot parse OrderID:" <+> T.unpack t)
+  (unexpectedError $ "Cannot parse OrderID:" <+> t)
   (U.fromString $ T.unpack t)

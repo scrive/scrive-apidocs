@@ -40,19 +40,19 @@ data Actor = Actor {
     -- | the client time the action is taken
   , actorClientTime :: Maybe UTCTime
     -- | the client name
-  , actorClientName :: Maybe String
+  , actorClientName :: Maybe Text
     -- | If the action is originated on another machine, its IP
   , actorIP        :: Maybe IPAddress
     -- | If the action is originated by a logged in user
   , actorUserID    :: Maybe UserID
     -- | If the action is originated by a person with email address
-  , actorEmail     :: Maybe String
+  , actorEmail     :: Maybe Text
     -- | If the action is originated by a signatory on the document being acted on
   , actorSigLinkID :: Maybe SignatoryLinkID
     -- | If the action is originated by an api call, a string to describe it
-  , actorAPIString :: Maybe String
+  , actorAPIString :: Maybe Text
     -- | A textual string describing this actor, used for building evidence strings
-  , actorWho       :: String
+  , actorWho       :: Text
   } deriving (Eq, Ord, Show, Typeable)
 
 contextActor :: Context -> Actor
@@ -85,7 +85,7 @@ systemActor time = Actor {
 -- author to be logged in
 authorActor :: Context -> User -> Actor
 authorActor ctx u = (userActor ctx u) {
-    actorWho = "the author "  ++ getFullName u ++ " (" ++ getEmail u ++ ")"
+    actorWho = "the author "  <> getFullName u <> " (" <> getEmail u <> ")"
 }
 
 -- | For an action requiring a signatory with siglinkid and token (such as signing)
@@ -95,7 +95,7 @@ signatoryActor ctx s = return $ toSignatoryActor s (contextActor ctx)
 -- | Used if we are performing some action in background, but we want
 -- to pretend like if it was performed by signatory.
 recreatedSignatoryActor :: DocumentMonad m
-  => UTCTime -> Maybe UTCTime ->  Maybe String -> IPAddress -> SignatoryLink
+  => UTCTime -> Maybe UTCTime ->  Maybe Text -> IPAddress -> SignatoryLink
   -> m Actor
 recreatedSignatoryActor time mctime mcname mipaddress s = return $
   toSignatoryActor s $ Actor
@@ -115,11 +115,11 @@ toSignatoryActor s a = a {
         actorUserID = maybesignatory s
       , actorEmail = Just (getEmail s)
       , actorSigLinkID = Just (signatorylinkid s)
-      , actorWho = "the signatory " ++ getFullName s ++ " (" ++ getEmail s ++ ")"
+      , actorWho = "the signatory " <> getFullName s <> " (" <> getEmail s <> ")"
       }
 
 -- | For delivery/reading notifications from the mail system
-mailSystemActor :: UTCTime -> Maybe UserID -> String -> SignatoryLinkID -> Actor
+mailSystemActor :: UTCTime -> Maybe UserID -> Text -> SignatoryLinkID -> Actor
 mailSystemActor time muid email slid = Actor {
     actorTime = time
   , actorIP = Nothing
@@ -137,18 +137,18 @@ userActor :: Context -> User -> Actor
 userActor ctx u = (contextActor ctx) {
     actorUserID = Just (userid u)
   , actorEmail = Just (getEmail u)
-  , actorWho = "the user " ++ getFullName u ++ " (" ++ getEmail u ++ ")"
+  , actorWho = "the user " <> getFullName u <> " (" <> getEmail u <> ")"
 }
 
 -- | For actions performed by an admin
 adminActor :: Context -> User -> Actor
 adminActor ctx u = (userActor ctx u) {
-    actorWho = "the admin " ++ getFullName u ++ " (" ++ getEmail u ++ ")"
+    actorWho = "the admin " <> getFullName u <> " (" <> getEmail u <> ")"
 }
 
-apiActor :: Context -> User -> String -> Actor
-apiActor ctx u apistring = a{
+apiActor :: Context -> User -> Text -> Actor
+apiActor ctx u apistring = a {
     actorAPIString = Just apistring
-  , actorWho = actorWho a ++ " (using the API)"
+  , actorWho = actorWho a <> " (using the API)"
   }
   where a = userActor ctx u

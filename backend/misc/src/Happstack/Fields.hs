@@ -3,6 +3,7 @@ module Happstack.Fields where
 import Happstack.Server
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
+import qualified Data.Text as T
 import qualified Text.JSON as J
 
 -- | Since we sometimes want to get 'Maybe' and also we wont work with
@@ -13,40 +14,40 @@ getDataFn' :: (HasRqData m, ServerMonad m)
 getDataFn' fun = either (const Nothing) Just `liftM` getDataFn fun
 
 isFieldSet :: (HasRqData m, ServerMonad m)
-           => String -> m Bool
+           => Text -> m Bool
 isFieldSet name = isJust `liftM` getField name
 
 getFields :: (HasRqData m, ServerMonad m)
-          => String -> m [String]
-getFields name = map BSLU.toString `liftM` fromMaybe [] `liftM` getDataFn' (lookInputList name)
+          => Text -> m [Text]
+getFields name = map (T.pack . BSLU.toString) `liftM` fromMaybe [] `liftM` getDataFn' (lookInputList name)
 
 getField :: (HasRqData m, ServerMonad m)
-         => String -> m (Maybe String)
+         => Text -> m (Maybe Text)
 getField name = (listToMaybe . reverse) `liftM` getFields name
 
 getFieldJSON :: (HasRqData m, ServerMonad m)
-         => String -> m (Maybe J.JSValue)
+         => Text -> m (Maybe J.JSValue)
 getFieldJSON name = do
   res <- getField name
-  case fmap J.decode res of
+  case fmap (J.decode . T.unpack) res of
      Just (J.Ok js) -> return $ Just js
      _ -> return $ Nothing
 
 getField' :: (HasRqData m, ServerMonad m)
-          => String -> m String
+          => Text -> m Text
 getField' name = fromMaybe "" `liftM` getField name
 
 readField :: (HasRqData m, Read a, ServerMonad m)
-          => String -> m (Maybe a)
+          => Text -> m (Maybe a)
 readField name = (join . liftM maybeRead) `liftM` getField name
 
 getFieldBS :: (HasRqData m, ServerMonad m)
-          => String -> m (Maybe BSLU.ByteString)
+          => Text -> m (Maybe BSLU.ByteString)
 getFieldBS name = (listToMaybe . reverse) `liftM` fromMaybe [] `liftM` getDataFn' (lookInputList name)
 
 -- | Useful inside the 'RqData' monad.  Gets the named input parameter
 -- (either from a @POST@ or a @GET@)
-lookInputList :: String -> RqData [BSL.ByteString]
+lookInputList :: Text -> RqData [BSL.ByteString]
 lookInputList name = do
-  inputs <- lookInputs name
+  inputs <- lookInputs $ T.unpack name
   return [value | Input (Right value) _ _ <- inputs]

@@ -25,6 +25,7 @@ import Log.Class
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.Text as T
 
 import DB
 import Log.Identifier
@@ -112,10 +113,10 @@ instance Identifier CallLogID where
   idValue        = int64AsStringIdentifier . fromCallLogID
 
 instance FromReqURI CallLogID where
-  fromReqURI = maybeRead
+  fromReqURI = maybeRead . T.pack
 
 instance Unjson CallLogID where
-  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse CallLogID")  return) . maybeRead) show unjsonDef
+  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse CallLogID")  return) . maybeRead . T.pack) show unjsonDef
 
 instance Binary CallLogID where
   put (CallLogID did) = put did

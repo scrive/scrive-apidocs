@@ -10,7 +10,6 @@ import Log
 import System.Console.CmdArgs hiding (def)
 import System.Environment
 import qualified Control.Exception.Lifted as E
-import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Happstack.StaticRouting as R
 
@@ -155,7 +154,7 @@ main = do
         CleanOldSMSes -> do
           let daylimit = 3
           logInfo_ $ "Removing smses sent" <+>
-                     T.pack (show daylimit) <+> "days ago"
+                     showt daylimit <+> "days ago"
           cleaned <- withPostgreSQL pool . dbUpdate $
                      CleanSMSesOlderThanDays daylimit
           logInfo "Old smses removed" $ object [ "removed" .= cleaned ]

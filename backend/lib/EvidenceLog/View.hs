@@ -9,13 +9,13 @@ module EvidenceLog.View (
 
 import Control.Monad.Catch
 import Data.Function (on)
-import Data.String.Utils as String
 import Text.JSON
 import Text.JSON.Gen as J
 import Text.StringTemplates.Templates
 import qualified Data.Foldable as F
 import qualified Data.Map as Map
 import qualified Data.Set as Set
+import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
 import DB
@@ -31,6 +31,7 @@ import EID.Nets.Types
 import EID.Signature.Model
 import EvidenceLog.Model
 import MinutesTime
+import Templates (renderTextTemplate, renderTextTemplate_)
 import User.Model
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -56,12 +57,12 @@ getSignatoryIdentifierMap includeviewers evs = do
 
 -- TODO: Consider saving actor name in event instead, this is likely
 -- to become broken
-approximateActor :: (MonadDB m, MonadThrow m, TemplatesMonad m)
+approximateActor :: forall m . (MonadDB m, MonadThrow m, TemplatesMonad m)
                  => Document -> SignatoryIdentifierMap -> DocumentEvidenceEvent
-                 -> m String
+                 -> m Text
 approximateActor doc sim dee | systemEvents $ evType dee = return "Scrive"
                              | otherwise = do
-  emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
+  emptyNamePlaceholder <- renderTextTemplate_ "_notNamedParty"
   case evSigLink dee >>= sigid emptyNamePlaceholder of
     Just i -> return i
     Nothing -> case evUserID dee of
@@ -72,23 +73,24 @@ approximateActor doc sim dee | systemEvents $ evType dee = return "Scrive"
                    muser <- dbQuery $ GetUserByID uid
                    case muser of
                      Just user -> return $ getSmartName user
-                                  ++ " (" ++ getEmail user ++ ")"
+                                  <> " (" <> getEmail user <> ")"
                      Nothing   -> return "Scrive" -- This should not happen
                Nothing  ->
                  if (authorEvents $ evType dee)
-                 then authorName emptyNamePlaceholder
+                 then authorName $ emptyNamePlaceholder
                  else return "Scrive"
   where
+    authorName :: Text -> m Text
     authorName emptyNamePlaceholder =
       case (getAuthorSigLink doc >>=
             sigid emptyNamePlaceholder . signatorylinkid) of
         Just i  -> return i
-        Nothing -> renderTemplate_ "_authorParty"
+        Nothing -> renderTextTemplate_ "_authorParty"
 
     sigid emptyNamePlaceholder s = do
       si <- Map.lookup s sim
       let name = siFullName si
-      if null name
+      if T.null name
         then signatoryIdentifier sim s emptyNamePlaceholder
         else return name
 
@@ -218,17 +220,18 @@ emptyEvent _ = False
 
 -- | Produce simplified text for an event (only for archive or
 -- verification pages).
-simplifiedEventText :: (MonadDB m, MonadThrow m, TemplatesMonad m)
-  => Maybe String -> SignatoryIdentifierMap -> DocumentEvidenceEvent -> m String
+simplifiedEventText :: forall m . (MonadDB m, MonadThrow m, TemplatesMonad m)
+  => Maybe Text -> SignatoryIdentifierMap -> DocumentEvidenceEvent -> m Text
 simplifiedEventText mactor sim dee = do
-  emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
+  emptyNamePlaceholder <- renderTextTemplate_ "_notNamedParty"
   case evType dee of
     Obsolete CancelDocumenElegEvidence -> renderEvent emptyNamePlaceholder "CancelDocumenElegEvidenceText"
     Obsolete SignatoryLinkVisited -> renderEvent emptyNamePlaceholder "SignatoryLinkVisitedArchive"
     Current et -> renderEvent emptyNamePlaceholder $ eventTextTemplateName EventForArchive et
     Obsolete _ -> return "" -- shouldn't we throw an error in this case?
     where
-      renderEvent emptyNamePlaceholder eventTemplateName = renderTemplate eventTemplateName $ do
+      renderEvent :: Text -> Text -> m Text
+      renderEvent emptyNamePlaceholder eventTemplateName = renderTextTemplate eventTemplateName $ do
         let mslinkid = evAffectedSigLink dee
         F.forM_ mslinkid  $ \slinkid -> do
           case Map.lookup slinkid sim >>= siLink of
@@ -291,8 +294,8 @@ simplifiedEventText mactor sim dee = do
                   F.value "provider_verimi" True
                   F.value "signatory_email" $ eidServiceVerimiVerifiedEmail n
                   F.value "signatory_mobile" $ eidServiceVerimiVerifiedPhone n
-        F.value "text" $ String.replace "\n" " " <$> evMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page
-        F.value "additional_text" $ String.replace "\n" " " <$> evAdditionalMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page
+        F.value "text" $ T.replace "\n" " " <$> evMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page
+        F.value "additional_text" $ T.replace "\n" " " <$> evAdditionalMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page
         F.value "signatory" $ (\slid -> signatoryIdentifier sim slid emptyNamePlaceholder) <$> mslinkid
         F.forM_ mactor $ F.value "actor"
 

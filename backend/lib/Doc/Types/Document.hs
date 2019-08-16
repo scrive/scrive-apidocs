@@ -191,7 +191,7 @@ instance Read StatusClass where
 
 data Document = Document {
   documentid                     :: !DocumentID
-, documenttitle                  :: !String
+, documenttitle                  :: !Text
 , documentsignatorylinks         :: ![SignatoryLink]
 -- | Order: most recently added files first (FIXME: encode this in the type)
 , documentmainfiles              :: ![MainFile]
@@ -204,8 +204,8 @@ data Document = Document {
 , documenttimeouttime            :: !(Maybe UTCTime)
 , documentautoremindtime         :: !(Maybe UTCTime)
 , documentinvitetime             :: !(Maybe SignInfo)
-, documentinvitetext             :: !String
-, documentconfirmtext            :: !String
+, documentinvitetext             :: !Text
+, documentconfirmtext            :: !Text
 , documentshowheader             :: !Bool
 , documentshowpdfdownload        :: !Bool
 , documentshowrejectoption       :: !Bool
@@ -217,8 +217,8 @@ data Document = Document {
 , documentauthorattachments      :: ![AuthorAttachment]
 , documentlang                   :: !Lang
 , documentstatusclass            :: !StatusClass
-, documentapiv1callbackurl       :: !(Maybe String)
-, documentapiv2callbackurl       :: !(Maybe String)
+, documentapiv1callbackurl       :: !(Maybe Text)
+, documentapiv2callbackurl       :: !(Maybe Text)
 , documentunsaveddraft           :: !Bool
 , documentobjectversion          :: !Int64
 , documentmagichash              :: !MagicHash
@@ -401,7 +401,7 @@ documentStatusClassExpression = mconcat [
       , "END :: INTEGER)"
       ]
 
-type instance CompositeRow Document = (DocumentID, String, CompositeArray1 SignatoryLink, CompositeArray1 MainFile, DocumentStatus, DocumentType, UTCTime, UTCTime, Int32, Maybe Int32, Maybe UTCTime, Maybe UTCTime, Maybe UTCTime, Maybe IPAddress, String, String, Bool, Bool, Bool, Bool, Bool, Bool, Lang, DocumentSharing, CompositeArray1 DocumentTag, CompositeArray1 AuthorAttachment, Maybe String, Maybe String, Bool, Int64, MagicHash, TimeZoneName, Maybe UserGroupID, StatusClass, Maybe MagicHash, Maybe DocumentID, Bool, Bool, Maybe FolderID)
+type instance CompositeRow Document = (DocumentID, Text, CompositeArray1 SignatoryLink, CompositeArray1 MainFile, DocumentStatus, DocumentType, UTCTime, UTCTime, Int32, Maybe Int32, Maybe UTCTime, Maybe UTCTime, Maybe UTCTime, Maybe IPAddress, Text, Text, Bool, Bool, Bool, Bool, Bool, Bool, Lang, DocumentSharing, CompositeArray1 DocumentTag, CompositeArray1 AuthorAttachment, Maybe Text, Maybe Text, Bool, Int64, MagicHash, TimeZoneName, Maybe UserGroupID, StatusClass, Maybe MagicHash, Maybe DocumentID, Bool, Bool, Maybe FolderID)
 
 instance PQFormat Document where
   pqFormat = compositeTypePqFormat ctDocument

@@ -1,4 +1,4 @@
-module OAuth.Util(
+module OAuth.Util (
     getTempCredRequest
   , getTokenRequest
   , getAuthorization
@@ -27,7 +27,7 @@ import User.Types.User
 import Util.Actor
 import Utils.Read
 
-getAuthorizationHeader :: Kontrakcja m => m (Maybe [(String, String)])
+getAuthorizationHeader :: Kontrakcja m => m (Maybe [(Text, Text)])
 getAuthorizationHeader = do
   rq <- askRq
   case Map.lookup (BS.fromString "authorization") $ rqHeaders rq of
@@ -35,9 +35,9 @@ getAuthorizationHeader = do
     Just (HeaderPair _ auths) -> do
       case BS.toString <$> listToMaybe auths of
         Nothing -> return $ Just []
-        Just auth -> return $ Just $ splitAuthorization auth
+        Just auth -> return $ Just $ splitAuthorization $ T.pack auth
 
-getTempCredRequest :: Kontrakcja m => m (Either String OAuthTempCredRequest)
+getTempCredRequest :: Kontrakcja m => m (Either Text OAuthTempCredRequest)
 getTempCredRequest = do
   eparams <- getAuthorizationHeader
   case eparams of
@@ -53,16 +53,16 @@ getTempCredRequest = do
           mapisecret        = splitSignature =<< lookupAndRead "oauth_signature" params
           mcallback         = customParseURI =<< (urlDecode <$> lookupAndRead "oauth_callback" params)
           mapitoken         = lookupAndReadString "oauth_consumer_key" params
-          mprivileges       = readPrivileges =<< mprivilegesstring
-          errors            = intercalate "; "
-                   (["oauth_signature_method must be 'PLAINTEXT'"]         <| Just "PLAINTEXT" /= msigtype   |> [] ++
-                    ["oauth_signature was missing or in bad format"]       <| isNothing mapisecret           |> [] ++
-                    ["oauth_signature api secret (first param) is missing"]    <| isNothing (fst =<< mapisecret) |> [] ++
-                    ["oauth_callback is required and must be a valid URL"] <| isNothing mcallback            |> [] ++
-                    ["oauth_consumer_key is missing or is invalid"]        <| isNothing mapitoken            |> [] ++
-                    ["'privileges' parameter must exist"]                  <| isNothing mprivilegesstring    |> [] ++
+          mprivileges       = readPrivileges =<< (T.pack <$> mprivilegesstring)
+          errors            = T.intercalate "; "
+                   (["oauth_signature_method must be 'PLAINTEXT'"]         <| Just "PLAINTEXT" /= msigtype   |> [] <>
+                    ["oauth_signature was missing or in bad format"]       <| isNothing mapisecret           |> [] <>
+                    ["oauth_signature api secret (first param) is missing"]    <| isNothing (fst =<< mapisecret) |> [] <>
+                    ["oauth_callback is required and must be a valid URL"] <| isNothing mcallback            |> [] <>
+                    ["oauth_consumer_key is missing or is invalid"]        <| isNothing mapitoken            |> [] <>
+                    ["'privileges' parameter must exist"]                  <| isNothing mprivilegesstring    |> [] <>
                     ["'privileges' parameter is invalid"]                  <| isNothing mprivileges          |> [] )
-      if not $ null errors
+      if not $ T.null errors
         then return $ Left errors
         else return $ Right $ OAuthTempCredRequest { tcCallback   = fromJust mcallback
                                                    , tcAPIToken   = fromJust mapitoken
@@ -70,7 +70,7 @@ getTempCredRequest = do
                                                    , tcPrivileges = fromJust mprivileges
                                                    }
 
-getTokenRequest :: Kontrakcja m => m (Either String OAuthTokenRequest)
+getTokenRequest :: Kontrakcja m => m (Either Text OAuthTokenRequest)
 getTokenRequest = do
   eparams <- getAuthorizationHeader
   case eparams of
@@ -81,15 +81,15 @@ getTokenRequest = do
           mapitoken         = lookupAndReadString "oauth_consumer_key" params
           mtemptoken        = lookupAndReadString "oauth_token" params
           mverifier         = lookupAndReadString "oauth_verifier" params
-          errors            = intercalate "; "
-                   (["oauth_signature_method must be 'PLAINTEXT'"]             <| Just "PLAINTEXT" /= msigtype   |> [] ++
-                    ["oauth_signature was missing or in bad format"]           <| isNothing mapisecret           |> [] ++
-                    ["oauth_signature api secret (first param) is missing"]    <| isNothing (fst =<< mapisecret) |> [] ++
-                    ["oauth_signature token secret (second param) is missing"] <| isNothing (snd =<< mapisecret) |> [] ++
-                    ["oauth_consumer_key is missing or is invalid"]            <| isNothing mapitoken            |> [] ++
-                    ["oauth_token is required"]                                <| isNothing mtemptoken           |> [] ++
+          errors            = T.intercalate "; "
+                   (["oauth_signature_method must be 'PLAINTEXT'"]             <| Just "PLAINTEXT" /= msigtype   |> [] <>
+                    ["oauth_signature was missing or in bad format"]           <| isNothing mapisecret           |> [] <>
+                    ["oauth_signature api secret (first param) is missing"]    <| isNothing (fst =<< mapisecret) |> [] <>
+                    ["oauth_signature token secret (second param) is missing"] <| isNothing (snd =<< mapisecret) |> [] <>
+                    ["oauth_consumer_key is missing or is invalid"]            <| isNothing mapitoken            |> [] <>
+                    ["oauth_token is required"]                                <| isNothing mtemptoken           |> [] <>
                     ["oauth_verifier is required"]                             <| isNothing mverifier            |> [])
-      if not $ null errors
+      if not $ T.null errors
         then return $ Left errors
         else return $ Right $ OAuthTokenRequest { trAPIToken   = fromJust mapitoken
                                                 , trAPISecret  = fromJust $ fst $ fromJust mapisecret
@@ -99,7 +99,7 @@ getTokenRequest = do
                                                 }
 
 -- Read authorization header for oauth. Returns Nothing if 'authorization' header is missing.
-getAuthorization :: Kontrakcja m => m (Maybe (Either String OAuthAuthorization))
+getAuthorization :: Kontrakcja m => m (Maybe (Either Text OAuthAuthorization))
 getAuthorization = do
   eparams <- getAuthorizationHeader
   case eparams of
@@ -109,14 +109,14 @@ getAuthorization = do
           mapisecret        = splitSignature =<< lookupAndRead "oauth_signature" params
           mapitoken         = lookupAndReadString "oauth_consumer_key" params
           macctoken         = lookupAndReadString "oauth_token" params
-          errors            = intercalate "; "
-                   (["oauth_signature_method must be 'PLAINTEXT'"]             <| Just "PLAINTEXT" /= msigtype   |> [] ++
-                    ["oauth_signature was missing or in bad format"]           <| isNothing mapisecret           |> [] ++
-                    ["oauth_signature api secret (first param) is missing"]    <| isNothing (fst =<< mapisecret) |> [] ++
-                    ["oauth_signature token secret (second param) is missing"] <| isNothing (snd =<< mapisecret) |> [] ++
-                    ["oauth_consumer_key is missing or is invalid"]            <| isNothing mapitoken            |> [] ++
+          errors            = T.intercalate "; "
+                   (["oauth_signature_method must be 'PLAINTEXT'"]             <| Just "PLAINTEXT" /= msigtype   |> [] <>
+                    ["oauth_signature was missing or in bad format"]           <| isNothing mapisecret           |> [] <>
+                    ["oauth_signature api secret (first param) is missing"]    <| isNothing (fst =<< mapisecret) |> [] <>
+                    ["oauth_signature token secret (second param) is missing"] <| isNothing (snd =<< mapisecret) |> [] <>
+                    ["oauth_consumer_key is missing or is invalid"]            <| isNothing mapitoken            |> [] <>
                     ["oauth_token is required"]                                <| isNothing macctoken            |> [])
-      if not $ null errors
+      if not $ T.null errors
         then return $ Just $ Left errors
         else return $ Just $ Right $ OAuthAuthorization { oaAPIToken     = fromJust mapitoken
                                                  , oaAPISecret    = fromJust $ fst $ fromJust mapisecret
@@ -124,15 +124,15 @@ getAuthorization = do
                                                  , oaAccessSecret = fromJust $ snd $ fromJust mapisecret
                                                  }
 
-getOAuthUser :: Kontrakcja m => [APIPrivilege] -> m (Maybe (Either T.Text (User, Actor)))
+getOAuthUser :: Kontrakcja m => [APIPrivilege] -> m (Maybe (Either Text (User, Actor)))
 getOAuthUser privs = do
   eauth <- getAuthorization
   case eauth of
     Nothing       -> return Nothing
-    Just (Left l) -> return $ Just $ Left $ "OAuth headers could not be parsed: " <> (T.pack l)
+    Just (Left l) -> return $ Just $ Left $ "OAuth headers could not be parsed: " <> l
     Just (Right auth) -> Just <$> getUserFromOAuth auth privs
 
-getUserFromOAuth :: Kontrakcja m => OAuthAuthorization -> [APIPrivilege] -> m (Either T.Text (User, Actor))
+getUserFromOAuth :: Kontrakcja m => OAuthAuthorization -> [APIPrivilege] -> m (Either Text (User, Actor))
 getUserFromOAuth OAuthAuthorization{..} privs = do
   ctx <- getContext
   uap <- dbQuery $ GetUserIDForAPIWithPrivilege oaAPIToken oaAPISecret oaAccessToken oaAccessSecret privs
@@ -140,9 +140,9 @@ getUserFromOAuth OAuthAuthorization{..} privs = do
     Nothing -> return $ Left "OAuth credentials are invalid or they may not have sufficient privileges."
     Just (userid, apistring) -> dbQuery (GetUserByID userid) >>= \case
       Nothing   -> return $ Left "OAuth credentials are valid but the user account for those credentials does not exist."
-      Just user -> return $ Right (user, apiActor ctx user apistring)
+      Just user -> return $ Right (user, apiActor ctx user (T.pack apistring))
 
-getUserFromOAuthWithAnyPrivileges :: Kontrakcja m => OAuthAuthorization -> m (Either T.Text (User, Actor))
+getUserFromOAuthWithAnyPrivileges :: Kontrakcja m => OAuthAuthorization -> m (Either Text (User, Actor))
 getUserFromOAuthWithAnyPrivileges oauth = getUserFromOAuth oauth allPrivileges
 
 getMaybeAPIUserWithAnyPrivileges :: Kontrakcja m => m (Maybe User)

@@ -4,7 +4,6 @@ import Log
 import Test.Framework
 import Text.XML hiding (Document)
 import Text.XML.Cursor
-import qualified Data.Text as T
 
 import EID.Nets.Types
 import TestingUtil
@@ -20,8 +19,8 @@ testNetsXMLParsing :: TestEnv ()
 testNetsXMLParsing = do
   file <- readTestFile "xml/nets_sdo.xml"
   let xml = parseLBS_ def file
-  --logInfo_ . ("XML: "<>) . T.pack . show $ xml
+  --logInfo_ . ("XML: "<>) . showt $ xml
   let cursor = fromDocument xml
-  --logInfo_ . ("Cursor: "<>) . T.pack . show $ cursor
+  --logInfo_ . ("Cursor: "<>) . showt $ cursor
   let result = runParser xpGetSDOAttributes cursor
-  logInfo_ . ("runParser result: "<>) . T.pack . show $ result
+  logInfo_ . ("runParser result: "<>) . showt $ result

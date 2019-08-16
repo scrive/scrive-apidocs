@@ -9,6 +9,7 @@ import Data.Int
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
+import qualified Data.Text as T
 
 import Log.Identifier
 
@@ -16,6 +17,7 @@ newtype DocumentID = DocumentID Int64
   deriving (Eq, Ord)
 deriving newtype instance Read DocumentID
 deriving newtype instance Show DocumentID
+deriving newtype instance TextShow DocumentID
 
 instance PQFormat DocumentID where
   pqFormat = pqFormat @Int64
@@ -25,10 +27,10 @@ instance Identifier DocumentID where
   idValue        = int64AsStringIdentifier . fromDocumentID
 
 instance FromReqURI DocumentID where
-  fromReqURI = maybeRead
+  fromReqURI = maybeRead . T.pack
 
 instance Unjson DocumentID where
-  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse DocumentID")  return) . maybeRead) show unjsonDef
+  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse DocumentID") return) . maybeRead . T.pack) show unjsonDef
 
 instance Binary DocumentID where
   put (DocumentID did) = put did

@@ -345,11 +345,11 @@ insertSignatoryScreenshots l = do
                                         <> f "reference" getReferenceScreenshot
       f col part = [ (slid, col, Screenshot.time s, Screenshot.image s) | (slid, Just s) <- map (second part) l ]
   (fileids :: [FileID]) <- forM (zip types ss) $ \(t,s) -> do
-    saveNewFile (t ++ "_screenshot.jpeg") s
+    saveNewFile (t <> "_screenshot.jpeg") s
   if null slids then return 0 else
     runQuery . sqlInsert "signatory_screenshots" $ do
            sqlSetList "signatory_link_id" $ slids
-           sqlSetList "type"              $ (types :: [String])
+           sqlSetList "type"              $ T.unpack <$> types
            sqlSetList "time"              $ times
            sqlSetList "file_id"           $ fileids
 
@@ -651,9 +651,13 @@ instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m)
           actor
 
 data ChangeAuthenticationToViewMethod =
-  ChangeAuthenticationToViewMethod SignatoryLinkID
-                                   AuthenticationKind AuthenticationToViewMethod
-                                   (Maybe String) (Maybe String) Actor
+  ChangeAuthenticationToViewMethod
+    SignatoryLinkID
+    AuthenticationKind
+    AuthenticationToViewMethod
+    (Maybe Text)
+    (Maybe Text)
+    Actor
 
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) =>
   DBUpdate m ChangeAuthenticationToViewMethod () where
@@ -828,7 +832,13 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) =>
               AuthenticationToView         -> authToViewChangeEvidence authtoviewfrom authtoviewto
               AuthenticationToViewArchived -> authToViewArchivedChangeEvidence authtoviewfrom authtoviewto
 
-data ChangeAuthenticationToSignMethod = ChangeAuthenticationToSignMethod SignatoryLinkID AuthenticationToSignMethod (Maybe String) (Maybe String) Actor
+data ChangeAuthenticationToSignMethod = ChangeAuthenticationToSignMethod
+  SignatoryLinkID
+  AuthenticationToSignMethod
+  (Maybe Text)
+  (Maybe Text)
+  Actor
+
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m ChangeAuthenticationToSignMethod () where
   update (ChangeAuthenticationToSignMethod slid newAuthToSign mSSN mPhone actor) = do
     updateDocumentWithID $ const $ do
@@ -990,7 +1000,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m Preparat
             --   Example: if actor time is 13:00 October 24, and days to sign is 1, then timeout is October 26 12:59:59
             --   Rationale: Signatories will have at least until the end of the intended last day to sign.
             -- We try to match expectation when one day after 24 december is understood as till last minute of 25 december.
-            let timestamp = formatTime' "%F" time ++ " " ++ TimeZoneName.toString tzn
+            let timestamp = formatTime' "%F" time <> " " <> (T.unpack $ TimeZoneName.toString tzn)
             -- Need to temporarily set session timezone to any one
             -- that recognizes daylight savings so that the day
             -- interval addition advances the time properly across DST changes
@@ -1026,7 +1036,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m Preparat
     void $ update $ InsertEvidenceEvent
                 PreparationToPendingEvidence
                 (  F.value "timezone" (TimeZoneName.toString tzn)
-                >> F.value "lang" (show lang)
+                >> F.value "lang" (showt lang)
                 >> F.value "timeouttime" (formatTimeUTC tot))
                 actor
 
@@ -1111,7 +1121,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
         actor
     return success
 
-data NewDocument = NewDocument User String DocumentType TimeZoneName Int Actor
+data NewDocument = NewDocument User Text DocumentType TimeZoneName Int Actor
 instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, MonadBase IO m) => DBUpdate m NewDocument Document where
   update (NewDocument user title documenttype timezone nrOfOtherSignatories actor) = do
     let ctime = actorTime actor
@@ -1144,7 +1154,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, Mo
     insertDocument doc
 
 
-data ForwardSigning = ForwardSigning SignatoryLink (Maybe String) [(FieldIdentity, T.Text)] Actor
+data ForwardSigning = ForwardSigning SignatoryLink (Maybe Text) [(FieldIdentity, Text)] Actor
 instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadLog m) =>
   DBUpdate m ForwardSigning SignatoryLinkID where
   update (ForwardSigning sl message fieldsWithVTexts actor) = do
@@ -1189,19 +1199,19 @@ instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadLog
 
       return newslid
     where
-      updatedFields :: [(FieldIdentity, T.Text) ] -> [SignatoryField] -> [SignatoryField]
+      updatedFields :: [(FieldIdentity, Text) ] -> [SignatoryField] -> [SignatoryField]
       updatedFields [] slfs = slfs
       updatedFields (tf:fs) slfs = updatedFields fs $ updateTextField tf slfs
 
-      updateTextField :: (FieldIdentity, T.Text) -> [SignatoryField] -> [SignatoryField]
+      updateTextField :: (FieldIdentity, Text) -> [SignatoryField] -> [SignatoryField]
       updateTextField _ [] = []
       updateTextField (fi,t) (slf:slfs) =
         let rest = (updateTextField (fi,t) slfs)
         in if (fi == fieldIdentity slf)
-          then (setTextValue (T.unpack t) slf):rest
+          then (setTextValue t slf):rest
           else slf:rest
 
-data RejectDocument = RejectDocument SignatoryLinkID Bool (Maybe String) Actor
+data RejectDocument = RejectDocument SignatoryLinkID Bool (Maybe Text) Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) =>
   DBUpdate m RejectDocument () where
   update (RejectDocument slid byApprover customtext actor) = do
@@ -1261,7 +1271,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
 
     tryToGetRestarted =
       if (documentstatus doc `notElem` [Canceled, Timedout, Rejected])
-      then return $ Left $ "Can't restart document with " ++ (show $ documentstatus doc) ++ " status"
+      then return $ Left $ "Can't restart document with " <> (showt $ documentstatus doc) <> " status"
       else do
              doc' <- clearSignInfofromDoc
              return $ Right doc'
@@ -1427,11 +1437,11 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocu
        sqlSet "invite_ip" ipaddress
        sqlWhereDocumentIDIs did
 
-data SetInviteText = SetInviteText String Actor
+data SetInviteText = SetInviteText Text Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetInviteText Bool where
   update (SetInviteText text _actor) = updateWithoutEvidence "invite_text" text
 
-data SetConfirmText = SetConfirmText String Actor
+data SetConfirmText = SetConfirmText Text Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetConfirmText Bool where
   update (SetConfirmText text _actor) = updateWithoutEvidence "confirm_text" text
 
@@ -1473,7 +1483,7 @@ data SetDaysToRemind = SetDaysToRemind (Maybe Int32) Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDaysToRemind Bool where
   update (SetDaysToRemind days _actor) = updateWithoutEvidence "days_to_remind" days
 
-data SetDocumentTitle = SetDocumentTitle String Actor
+data SetDocumentTitle = SetDocumentTitle Text Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocumentTitle Bool where
   update (SetDocumentTitle doctitle _actor) = updateWithoutEvidence "title" doctitle
 
@@ -1593,7 +1603,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocu
       sqlSet "unsaved_draft" flag
       sqlWhereDocumentIDIs did
 
-data AddAcceptedAuthorAttachmentsEvents = AddAcceptedAuthorAttachmentsEvents SignatoryLink [FileID] [(String,AuthorAttachment)] Actor
+data AddAcceptedAuthorAttachmentsEvents = AddAcceptedAuthorAttachmentsEvents SignatoryLink [FileID] [(Text,AuthorAttachment)] Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpdate m AddAcceptedAuthorAttachmentsEvents () where
   update (AddAcceptedAuthorAttachmentsEvents sl acceptedAttachments allAuthorAttachments actor) = generateEvents allAuthorAttachments
     where
@@ -1612,7 +1622,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpd
             actor
         generateEvents atts
 
-data AddNotUploadedSignatoryAttachmentsEvents = AddNotUploadedSignatoryAttachmentsEvents SignatoryLink [(String, String)] Actor
+data AddNotUploadedSignatoryAttachmentsEvents = AddNotUploadedSignatoryAttachmentsEvents SignatoryLink [(Text, Text)] Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, CryptoRNG m) => DBUpdate m AddNotUploadedSignatoryAttachmentsEvents () where
   update (AddNotUploadedSignatoryAttachmentsEvents sl notUploadedSignatoryAttachmentsWithText actor) =
     forM_ notUploadedSignatoryAttachmentsWithText $ \(saName,saNothingToUploadText) ->
@@ -1658,7 +1668,7 @@ instance ( DocumentMonad m, TemplatesMonad m
         actor
 
 
-data SignDocument = SignDocument SignatoryLinkID (Maybe ESignature) (Maybe String) SignatoryScreenshots Actor
+data SignDocument = SignDocument SignatoryLinkID (Maybe ESignature) (Maybe Text) SignatoryScreenshots Actor
 instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
          , MonadFileStorage m, MonadLog m, MonadThrow m, MonadTime m
          , TemplatesMonad m ) => DBUpdate m SignDocument () where
@@ -1724,7 +1734,7 @@ instance ( DocumentMonad m, CryptoRNG m, MonadBase IO m, MonadCatch m
             F.value "signature" $ netsdkB64SDO
             unless (T.null netsdkSignatorySSN) $
               F.value "signatory_personal_number" netsdkSignatorySSN
-            F.value "signatory_personal_number_from_signlink" . T.pack $ getPersonalNumber sl
+            F.value "signatory_personal_number_from_signlink" $ getPersonalNumber sl
             unless (T.null netsdkSignatoryIP) $
               F.value "signatory_ip" netsdkSignatoryIP
           (Nothing, Just _) -> do
@@ -1849,7 +1859,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m ProlongT
     updateDocumentWithID $ \did -> do
       -- Whole TimeZome behaviour is a clone of what is happending with making document ready for signing.
       let time = actorTime actor
-      let timestamp = formatTime' "%F" time ++ " " ++ TimeZoneName.toString tzn
+      let timestamp = formatTime' "%F" time <> " " <> (T.unpack $ TimeZoneName.toString tzn)
       withTimeZone defaultTimeZoneName $ kRun1OrThrowWhyNot $ sqlUpdate "documents" $ do
          sqlSet "status" Pending
          sqlSet "mtime" time
@@ -1886,7 +1896,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadMask m) => DBUpdate m ProlongP
         (return ())
         actor
 
-data SetDocumentAPICallbackURL = SetDocumentAPICallbackURL APIVersion (Maybe String)
+data SetDocumentAPICallbackURL = SetDocumentAPICallbackURL APIVersion (Maybe Text)
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocumentAPICallbackURL Bool where
   update (SetDocumentAPICallbackURL apiVersion mac) = updateDocumentWithID $ \did -> do
     let tableColumn = case apiVersion of
@@ -1905,7 +1915,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocu
 
 
 
-data PostReminderSend = PostReminderSend SignatoryLink (Maybe String) Bool Actor
+data PostReminderSend = PostReminderSend SignatoryLink (Maybe Text) Bool Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m PostReminderSend () where
    update (PostReminderSend sl mmsg automatic actor) = do
      updateDocument $ \doc -> do
@@ -1982,7 +1992,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateF
                 Just f -> StringFV $ fromMaybe "" $ fieldTextValue f
                 _ -> StringFV ""
               changed = oldValue /= newValue
-              emptyValue (StringFV s) = null s
+              emptyValue (StringFV s) = T.null s
               emptyValue (BoolFV False) = True
               emptyValue (BoolFV True) = False
               emptyValue (FileFV Nothing) = True
@@ -1998,7 +2008,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateF
                      FileFV Nothing -> ""
                      FileFV (Just fi) -> case (lookup fi signaturesContent) of
                                                    Nothing -> ""
-                                                   Just s -> BS.unpack $ imgEncodeRFC2397 $ s
+                                                   Just s -> imgEncodeRFC2397ToText $ s
                    F.value "previousvalue"$ case oldValue of
                      StringFV s -> s
                      BoolFV False  -> ""
@@ -2006,7 +2016,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateF
                      FileFV Nothing -> ""
                      FileFV (Just fi) -> case (lookup fi signaturesContent) of
                                                    Nothing -> ""
-                                                   Just s -> BS.unpack $ imgEncodeRFC2397 $ s
+                                                   Just s -> imgEncodeRFC2397ToText $ s
                    when (emptyValue newValue) $
                        F.value "newblank" True
                    when (emptyValue oldValue) $
@@ -2025,7 +2035,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateF
                           F.value "fieldname" $ ssfName f
                         Just (SignatoryRadioGroupField f) -> do
                           F.value "fieldname" $ srgfName f
-                          F.value "fieldvalues" $ intercalate ", " $ map (\v -> "\"" ++ v ++ "\"") $ srgfValues f
+                          F.value "fieldvalues" $ T.unpack $
+                            T.intercalate ", " $ map (\v -> "\"" <> v <> "\"") $ srgfValues f
                         _ -> return ()
                    case oldField of
                      Just f | not (null ps) -> do
@@ -2066,7 +2077,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateC
                 tplFields)
             (Just sl) Nothing actor
 
-data UpdatePhoneAfterIdentificationToView = UpdatePhoneAfterIdentificationToView SignatoryLink String String Actor
+data UpdatePhoneAfterIdentificationToView = UpdatePhoneAfterIdentificationToView SignatoryLink Text Text Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdatePhoneAfterIdentificationToView () where
   update (UpdatePhoneAfterIdentificationToView sl oldphone newphone actor) = updateDocumentWithID $ const $ do
     success <- runQuery01 . sqlUpdate "signatory_link_fields" $ do
@@ -2085,7 +2096,7 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateP
                (F.value "oldphone" oldphone >> F.value "newphone" newphone) (Just sl) Nothing actor
 
 
-data AddDocumentAttachment = AddDocumentAttachment T.Text Bool Bool FileID Actor
+data AddDocumentAttachment = AddDocumentAttachment Text Bool Bool FileID Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m AddDocumentAttachment Bool where
   update (AddDocumentAttachment aname arequired aaddedtosealedfile afid _actor) = updateDocumentWithID $ \did -> do
     runQuery01 . sqlInsertSelect "author_attachments" "" $ do
@@ -2156,7 +2167,7 @@ instance (DocumentMonad m) => DBUpdate m ClearSignatoryMobile () where
 clearSignatoryFieldText ::  (DocumentMonad m) => SignatoryLinkID -> FieldType -> m ()
 clearSignatoryFieldText slid ft = updateDocumentWithID $ const $ do
   runQuery_ $ sqlUpdate "signatory_link_fields" $ do
-    sqlSet "value_text" ("" :: T.Text)
+    sqlSet "value_text" ("" :: Text)
     sqlWhereEq "type" ft
     sqlWhereEq "signatory_link_id" slid
 
@@ -2527,38 +2538,42 @@ updateMTimeAndObjectVersion mtime = updateDocumentWithID $ \did -> do
        sqlSet "mtime" mtime
        sqlWhereEq "id" did
 
-checkEqualBy :: Show b => (b -> b -> Bool) -> String -> (a -> b) -> a -> a -> Maybe (String, String, String)
+checkEqualBy :: TextShow b => (b -> b -> Bool) -> Text -> (a -> b) -> a -> a -> Maybe (Text, Text, Text)
 checkEqualBy equals name f obj1 obj2
   | f obj1 `equals` f obj2 = Nothing
-  | otherwise              = Just (name, show (f obj1), show (f obj2))
+  | otherwise              = Just (name, showt (f obj1), showt (f obj2))
 
-checkEqualSignatoryFields  :: String ->[SignatoryField] -> [SignatoryField] -> Maybe (String, String, String)
+checkEqualSignatoryFields  :: Text ->[SignatoryField] -> [SignatoryField] -> Maybe (Text, Text, Text)
 checkEqualSignatoryFields name (f:fs) (f':fs') = if fieldsAreAlmostEqual f f'
                                                    then checkEqualSignatoryFields name fs fs'
-                                                   else Just (name, show f, show f')
-checkEqualSignatoryFields name (f:_) [] = Just (name, show f, "No field")
-checkEqualSignatoryFields name [] (f:_) = Just (name,  "No field", show f)
+                                                   else Just (name, showt f, showt f')
+checkEqualSignatoryFields name (f:_) [] = Just (name, showt f, "No field")
+checkEqualSignatoryFields name [] (f:_) = Just (name,  "No field", showt f)
 checkEqualSignatoryFields _ [] [] = Nothing
 
-checkEqualByAllowSecondNothing :: Show b => (Maybe b -> Maybe b -> Bool) -> String -> (a -> Maybe b) -> a -> a -> Maybe (String, String, String)
+checkEqualByAllowSecondNothing :: TextShow b => (Maybe b -> Maybe b -> Bool) -> Text -> (a -> Maybe b) -> a -> a -> Maybe (Text, Text, Text)
 checkEqualByAllowSecondNothing equals name f obj1 obj2
   | isNothing (f obj2)     = Nothing
   | f obj1 `equals` f obj2 = Nothing
-  | otherwise              = Just (name, show (f obj1), show (f obj2))
+  | otherwise              = Just (name, showt (f obj1), showt (f obj2))
 
 assertEqualDocuments :: (MonadThrow m, MonadLog m) => Document -> Document -> m ()
 assertEqualDocuments d1 d2 | null inequalities = return ()
                            | otherwise = do
   logInfo message $ object [
-      "inequalities" .= concatMap showInequality inequalities
+      "inequalities" .= (T.concat $ showInequality <$> inequalities)
     ]
-  unexpectedError $ T.unpack message
+  unexpectedError message
   where
     message = "Documents aren't equal"
-    showInequality (name,obj1,obj2) = name ++ ": \n" ++ obj1 ++ "\n" ++ obj2 ++ "\n"
+
+    showInequality :: (Text, Text, Text) -> Text
+    showInequality (name,obj1,obj2) = name <> ": \n" <> obj1 <> "\n" <> obj2 <> "\n"
+
     sl1 = documentsignatorylinks d1
     sl2 = documentsignatorylinks d2
 
+    checkSigLink :: SignatoryLink -> SignatoryLink -> [Maybe (Text, Text, Text)]
     checkSigLink s1 s2 = map (\f -> f s1 s2) [
         checkEqualByAllowSecondNothing (==) "maybesignatory" maybesignatory
       , checkEqualBy eqMaybeSignInfo "maybesigninfo" maybesigninfo
@@ -2579,6 +2594,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
       , checkEqualBy (==) "signatorylinkdeliverymethod" signatorylinkdeliverymethod
       ]
 
+    inequalities :: [(Text, Text, Text)]
     inequalities = catMaybes $ map (\f -> f d1 d2) [
         checkEqualBy (==) "documenttitle" documenttitle
       , checkEqualBy (==) "documentfiles" documentfile
@@ -2601,7 +2617,7 @@ assertEqualDocuments d1 d2 | null inequalities = return ()
       , checkEqualBy (==) "documentapiv2callbackurl" documentapiv2callbackurl
       , checkEqualBy (==) "documentsealstatus" documentsealstatus
       , checkEqualBy (==) "documentsignatorylinks count" (length . documentsignatorylinks)
-      ] ++ concat (zipWith checkSigLink sl1 sl2)
+      ] <> concat (zipWith checkSigLink sl1 sl2)
 
     -- getCurrentTime gives precision up to nanoseconds whereas PostgreSQL
     -- gives precision up to microseconds, so take that into account.
@@ -2680,7 +2696,7 @@ instance (MonadDB m, MonadTime m)
         ]
       sqlWhere "signatory_link_id IN (SELECT id FROM signatory_link_ids)"
 
-data SetDocumentApiCallbackResult = SetDocumentApiCallbackResult DocumentID (Maybe String)
+data SetDocumentApiCallbackResult = SetDocumentApiCallbackResult DocumentID (Maybe Text)
 instance MonadDB m => DBUpdate m SetDocumentApiCallbackResult () where
   update (SetDocumentApiCallbackResult did mtext) = do
     -- this should be written as proper upsert, but hpq does not support it yet

@@ -30,6 +30,7 @@ import Text.JSON.Gen
 import Text.JSON.String (runGetJSON)
 import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.UTF8 as BS
+import qualified Data.Text as T
 
 import Happstack.Fields
 import Utils.Prelude
@@ -43,18 +44,18 @@ data PagedList a =
             } deriving Show
 
 data ListParams = ListParams
-  { sorting :: [String]
-  , search  :: Maybe String
-  , filters :: [(String,String)]
+  { sorting :: [Text]
+  , search  :: Maybe Text
+  , filters :: [(Text, Text)]
   , offset  :: Int
   , limit   :: Int
   }
     deriving (Eq)
 
-listParamsSorting :: ListParams -> [String]
+listParamsSorting :: ListParams -> [Text]
 listParamsSorting = sorting
 
-listParamsSearching :: ListParams -> String
+listParamsSearching :: ListParams -> Text
 listParamsSearching params = fromMaybe "" (search params)
 
 listParamsOffset :: ListParams -> Int
@@ -63,16 +64,16 @@ listParamsOffset = offset
 listParamsLimit :: ListParams -> Int
 listParamsLimit = limit
 
-listParamsFilters :: ListParams -> [(String,String)]
+listParamsFilters :: ListParams -> [(Text, Text)]
 listParamsFilters = filters
 
 instance Show ListParams where
-    show params = intercalate "&" $ off ++ lim ++ srch ++ srt
+    show params = intercalate "&" $ off <> lim <> srch <> srt
         where
-        off =  ["offset=" ++ (toUrl $ show $ offset params)]
-        lim =  ["limit=" ++ (toUrl $ show $ limit params)]
-        srch = map ((++) "search=") $ maybeToList $ toUrl <$> search params
-        srt = map ((++) "sorting=") $ toUrl <$> sorting params
+        off =  ["offset=" <> (toUrl $ show $ offset params)]
+        lim =  ["limit=" <> (toUrl $ show $ limit params)]
+        srch = map ((<>) "search=") $ maybeToList $ (toUrl . T.unpack) <$> search params
+        srt = map ((<>) "sorting=") $ (toUrl . T.unpack) <$> sorting params
         toUrl = urlEncode . BS8.unpack . BS.fromString
 
 emptyListParams :: ListParams
@@ -92,18 +93,18 @@ getListParams = do
     limit'   <- readField "limit"
     search  <- getField "textfilter"
     filters  <- do
-                  eja <- liftM (runGetJSON readJSArray) $ getField' "selectfilter"
+                  eja <- liftM (runGetJSON readJSArray) $ T.unpack <$> getField' "selectfilter"
                   return $ case eja of
                     Left _ -> []
                     Right ja -> fromMaybe [] $ runIdentity $ withJSValue ja $ fromJSValueCustomMany $ do
                         n <- fromJSValueField "name"
                         v <- fromJSValueField "value"
-                        return $ liftM2 (\x y -> (x,y)) n v
+                        return $ liftM2 (\x y -> (T.pack x, T.pack y)) n v
     sorting <- getField "sort"
     sortingReversed <- maybeToBool <$> fmap (== "true") <$> getField "sortReversed"
     let sorting'  = if (sortingReversed)
                      then sorting
-                     else (++ "REV") <$> sorting
+                     else (<> "REV") <$> sorting
 
     return ListParams
            -- REVIEW: I am assuming constants below stem from emptyListParams.

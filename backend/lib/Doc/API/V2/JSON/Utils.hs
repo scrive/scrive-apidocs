@@ -12,22 +12,22 @@ import qualified Control.Applicative.Free as AltF
 import qualified Data.Aeson as Aeson
 import qualified Data.Text as T
 
-unjsonEnumBy :: forall a . (Eq a) => T.Text -> [(a, T.Text)] -> UnjsonDef a
+unjsonEnumBy :: forall a . (Eq a) => Text -> [(a, Text)] -> UnjsonDef a
 unjsonEnumBy desc enumDef =
   unjsonEnum desc parseEnum printEnum
   where
-    parseEnum  :: T.Text -> Maybe a
+    parseEnum  :: Text -> Maybe a
     parseEnum t = lookup t enumDef'
 
     enumDef'    = map swap enumDef
 
-    printEnum  :: a -> T.Text
+    printEnum  :: a -> Text
     printEnum a = fromMaybe err (lookup a enumDef)
 
     err         = unexpectedError $
-                  T.unpack ("Incomplete printEnum definition for" <+> desc)
+                    "Incomplete printEnum definition for" <+> desc
 
-unjsonEnum :: T.Text -> (T.Text -> Maybe a) -> (a -> T.Text) -> UnjsonDef a
+unjsonEnum :: Text -> (Text -> Maybe a) -> (a -> Text) -> UnjsonDef a
 unjsonEnum desc parseEnum printEnum  =
   SimpleUnjsonDef desc parseFromEnumFromAeson printEnumToAeson
   where
@@ -51,7 +51,7 @@ nothingToNullDef def = SimpleUnjsonDef "ReadOnly (Maybe a) for record like 'a'"
 
 -- | Used for optional fields that are also read-only
 fieldReadOnlyOpt :: (Unjson a, Typeable a) =>
-                    T.Text -> (s -> Maybe a) -> T.Text -> AltF.Ap (FieldDef s) ()
+                    Text -> (s -> Maybe a) -> Text -> AltF.Ap (FieldDef s) ()
 fieldReadOnlyOpt name f desc = fieldReadonlyBy name f desc unjsonDefWithNull
   where unjsonDefWithNull :: Unjson a => UnjsonDef (Maybe a)
         unjsonDefWithNull = SimpleUnjsonDef "ReadOnly"

@@ -156,7 +156,7 @@ main = do
     }
       where
         isNotSendable Mail{..} =
-          null (addrEmail mailFrom) || null mailTo || any (null . addrEmail) mailTo
+          T.null (addrEmail mailFrom) || null mailTo || any (T.null . addrEmail) mailTo
 
         sendoutFailed Mail{..} = do
           logInfo_ "Failed to send email"

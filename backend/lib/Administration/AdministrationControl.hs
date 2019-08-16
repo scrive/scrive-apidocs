@@ -8,7 +8,7 @@
 -- Handlers for all administrations tasks
 --
 -----------------------------------------------------------------------------
-module Administration.AdministrationControl(
+module Administration.AdministrationControl (
             adminonlyRoutes
           , daveRoutes
           , jsonCompanies -- for tests
@@ -18,7 +18,6 @@ module Administration.AdministrationControl(
           ) where
 
 import Control.Monad.IO.Class (liftIO)
-import Data.Char
 import Data.Functor.Invariant
 import Data.Time (diffUTCTime)
 import Data.Unjson
@@ -36,7 +35,6 @@ import qualified Data.ByteString.Char8 as BSC8
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
-import qualified Data.String.Utils as SU (strip)
 import qualified Data.Text as T
 import qualified Data.Text.ICU.Normalize as ICU
 import qualified Data.Unjson as Unjson
@@ -82,6 +80,7 @@ import MinutesTime
 import PadApplication.Types (padAppModeFromText)
 import Routing
 import Session.Model
+import Templates (renderTextTemplate)
 import Theme.Control
 import User.CallbackScheme.Model
 import User.Email
@@ -166,7 +165,7 @@ adminonlyRoutes =
         , dir "brandeddomain" $ dir "updatetheme" $ hPost $ toK2 $ handleUpdateThemeForDomain
         , dir "brandeddomain" $ dir "deletetheme" $ hPost $ toK2$ handleDeleteThemeForDomain
 
-        -- migration trigging endpoints       
+        -- migration trigging endpoints
         , dir "triggermigratefolders" $ hGet $ toK1 handleTriggerMigrateFolders
         , dir "triggermigratedocuments" $ hGet $ toK1 handleTriggerMigrateDocuments
 
@@ -211,10 +210,10 @@ handleCompanyGetProfile:: Kontrakcja m => UserGroupID -> m JSValue
 handleCompanyGetProfile ugid = onlySalesOrAdmin $
   companyJSONAdminOnly <$> (guardJustM . dbQuery . UserGroupGetWithParents $ ugid)
 
-showAdminCompany :: Kontrakcja m => UserGroupID -> m String
+showAdminCompany :: Kontrakcja m => UserGroupID -> m Text
 showAdminCompany ugid = onlySalesOrAdmin $ do
   ctx <- getContext
-  adminCompanyPage ctx ugid
+  T.pack <$> adminCompanyPage ctx ugid
 
 jsonCompanies :: Kontrakcja m => m JSValue
 jsonCompanies = onlySalesOrAdmin $ do
@@ -229,7 +228,7 @@ jsonCompanies = onlySalesOrAdmin $ do
     pplanFilter <- isFieldSet "nonFree" >>= \case
                      True ->  return [UGWithNonFreePricePlan]
                      False -> return []
-    ugs <- dbQuery $ UserGroupsGetFiltered (textFilter ++ usersFilter ++ pplanFilter) (Just (offset, limit))
+    ugs <- dbQuery $ UserGroupsGetFiltered (textFilter <> usersFilter <> pplanFilter) (Just (offset, limit))
     -- get address for those companies, which inherit it
     ugsWithAddress <- forM ugs $ \ug -> case get ugAddress ug of
       Just uga -> return (ug, uga)
@@ -252,7 +251,7 @@ jsonUsersList = onlySalesOrAdmin $ do
     offset   <- guardJustM $ readField "offset"
     textFilter <- getField "text" >>= \case
                      Nothing -> return []
-                     Just s -> return [UserFilterByString s]
+                     Just s -> return [UserFilterByString $ T.unpack s]
     sorting <- getField "tosSorting" >>= \case
                      Just "ascending"   -> return [Asc UserOrderByAccountCreationDate]
                      Just "descending" -> return [Desc UserOrderByAccountCreationDate]
@@ -262,11 +261,11 @@ jsonUsersList = onlySalesOrAdmin $ do
     runJSONGenT $ do
       valueM "users" $ forM (allUsers) $ \(user,ugname) -> runJSONGenT $ do
         value "id" $ show $ userid user
-        value "username" $ getFullName user
-        value "email"    $ getEmail user
-        value "companyposition" $ usercompanyposition $ userinfo user
+        value "username" $ T.unpack $ getFullName user
+        value "email"    $ T.unpack $ getEmail user
+        value "companyposition" $ T.unpack $ usercompanyposition $ userinfo user
         value "company"  . T.unpack $ ugname
-        value "phone"    $ userphone $ userinfo user
+        value "phone"    $ T.unpack $ userphone $ userinfo user
         value "tos"      $ formatTimeISO <$> (userhasacceptedtermsofservice user)
         value "twofactor_active" $ usertotpactive user
 
@@ -277,18 +276,20 @@ handleUserChange uid = onlySalesOrAdmin $ do
   ctx <- getContext
   callback <- dbQuery $ GetUserCallbackSchemeByUserID uid
   maybeNewUrl <- getField "usercallbackurl"
-  let newUrl = SU.strip $ fromJust maybeNewUrl
+  let newUrl = T.strip $ fromJust maybeNewUrl
   case callback of
-    Nothing -> if null newUrl
+    Nothing -> if T.null newUrl
       then return () -- Don't add a callback with an empty URL
       else dbUpdate $ UpdateUserCallbackScheme uid (ConstantUrlSchemeV2 newUrl)
     Just (ConstantUrlSchemeV2 url) -> do
-      case (null newUrl, newUrl == url) of
+      case (T.null newUrl, newUrl == url) of
         (True, _) -> dbUpdate $ DeleteUserCallbackScheme uid -- Delete callback if textbox emptied
         (False, True) -> return () -- Don't update if no change
-        (False, False) -> dbUpdate $ UpdateUserCallbackScheme uid (ConstantUrlSchemeV2 newUrl)
+        (False, False) -> dbUpdate $
+          UpdateUserCallbackScheme uid
+          (ConstantUrlSchemeV2 $ newUrl)
     Just _ -> return () -- Do not allow changing the callback if an existing other type is there
-      
+
   -- Set whether 2FA is mandatory
   maybeNewTotpIsMandatory <- getField "usertotpismandatory"
   void . dbUpdate . SetUserTotpIsMandatory uid $ Just "true" == maybeNewTotpIsMandatory
@@ -407,10 +408,10 @@ handleCompanyChange :: Kontrakcja m => UserGroupID -> m ()
 handleCompanyChange ugid = onlySalesOrAdmin $ do
   ugwp <- guardJustM $ dbQuery $ UserGroupGetWithParents ugid
   mCompanyName <- getField "companyname"
-  mUGSettingsIsInherited <- fmap (==("true"::String))
+  mUGSettingsIsInherited <- fmap (== ("true" :: Text))
     <$> getField "companysettingsisinherited"
   ugSettingsChange <- getUserGroupSettingsChange
-  mUGAddressIsInherited <- fmap (==("true"::String))
+  mUGAddressIsInherited <- fmap (== ("true" :: Text))
     <$> getField "companyaddressisinherited"
   ugAddressChange <- getUserGroupAddressChange
   mTryParentUserGroupID <- getOptionalField asValidUserGroupID "companyparentid"
@@ -426,7 +427,7 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
         else set ugAddress . Just . ugAddressChange $ ugwpAddress ugwp
       newUG =
           set ugParentGroupID mTryParentUserGroupID
-        . maybe id (set ugName . T.pack) mCompanyName
+        . maybe id (set ugName) mCompanyName
         . setSettings
         . setAddress
         $ ugwpUG ugwp
@@ -441,7 +442,7 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
 
 handleCreateUser :: Kontrakcja m => m JSValue
 handleCreateUser = onlySalesOrAdmin $ do
-    email <- filter (/=' ') <$> map toLower <$> (guardJustM $ getField "email")
+    email <- T.filter (/=' ') <$> T.toLower <$> (guardJustM $ getField "email")
     fstname <- guardJustM $ getField "fstname"
     sndname <- guardJustM $ getField "sndname"
     lang <- guardJustM $ join <$> fmap langFromCode <$> getField "lang"
@@ -486,14 +487,14 @@ getUserGroupSettingsChange = do
     mcompanyidledoctimeouterror <- getIdleDocTimeoutField "companyidledoctimeouterror"
     mcompanyimmediatetrash <- getField "companyimmediatetrash"
     mcompanysmsprovider <- fmap maybeRead <$> getField' $ "companysmsprovider"
-    mcompanypadappmode <- fmap (padAppModeFromText . T.pack) <$> getField' $ "companypadappmode"
+    mcompanypadappmode <- fmap padAppModeFromText <$> getField' $ "companypadappmode"
     mcompanypadearchiveenabled <- getField "companypadearchiveenabled"
     mcompanysendtimeoutnotification <- getField "companysendtimeoutnotification"
     mcompanytotpismandatory <- getField "companytotpismandatory"
 
     return $
         maybe id (set ugsIPAddressMaskList) mcompanyipaddressmasklist
-      . maybe id (set ugsCGIDisplayName . fmap T.pack) mcompanycgidisplayname
+      . maybe id (set ugsCGIDisplayName) mcompanycgidisplayname
       . maybe id (set (drpIdleDocTimeoutPreparation . ugsDataRetentionPolicy))
               mcompanyidledoctimeoutpreparation
       . maybe id (set (drpIdleDocTimeoutClosed . ugsDataRetentionPolicy))
@@ -509,7 +510,7 @@ getUserGroupSettingsChange = do
       . maybe id (set (drpImmediateTrash . ugsDataRetentionPolicy)
                   . (=="true"))
               mcompanyimmediatetrash
-      . maybe id (set ugsCGIServiceID . fmap T.pack) mcompanycgiserviceid
+      . maybe id (set ugsCGIServiceID) mcompanycgiserviceid
       . maybe id (set ugsSMSProvider) mcompanysmsprovider
       . maybe id (set ugsPadAppMode) mcompanypadappmode
       . maybe id (set ugsPadEarchiveEnabled . (=="true")) mcompanypadearchiveenabled
@@ -519,12 +520,12 @@ getUserGroupSettingsChange = do
 
 
   where
-    getIdleDocTimeoutField :: Kontrakcja m => String -> m (Maybe (Maybe Int16))
+    getIdleDocTimeoutField :: Kontrakcja m => Text -> m (Maybe (Maybe Int16))
     getIdleDocTimeoutField name = do
       ms <- getField name
       return $ do
         s <- ms
-        if null s
+        if T.null s
           then return Nothing
           else do
             t <- maybeRead s
@@ -541,11 +542,11 @@ getUserGroupAddressChange = do
   mcompanycity    <- getField "companycity"
   mcompanycountry <- getField "companycountry"
   return $
-      maybe id (set ugaCompanyNumber . T.pack) mcompanynumber
-    . maybe id (set ugaAddress . T.pack) mcompanyaddress
-    . maybe id (set ugaZip . T.pack) mcompanyzip
-    . maybe id (set ugaCity . T.pack) mcompanycity
-    . maybe id (set ugaCountry . T.pack) mcompanycountry
+      maybe id (set ugaCompanyNumber) mcompanynumber
+    . maybe id (set ugaAddress) mcompanyaddress
+    . maybe id (set ugaZip) mcompanyzip
+    . maybe id (set ugaCity) mcompanycity
+    . maybe id (set ugaCountry) mcompanycountry
 
 {- | Reads params and returns function for conversion of user settings.  No param leaves fields unchanged -}
 getUserSettingsChange :: Kontrakcja m => m (UserSettings -> UserSettings)
@@ -613,7 +614,7 @@ handleBackdoorQuery = onlySalesOrAdmin $ onlyBackdoorOpen $ do
   emailAddress <- guardJustM $ getField "email_address"
   emailTitle   <- guardJustM $ getField "email_title"
   startDate    <- guardJustM $
-                  (join . fmap MinutesTime.parseTimeISO <$> getField "start_date")
+                  (join . fmap (MinutesTime.parseTimeISO . T.unpack) <$> getField "start_date")
   memail       <- dbQuery $ GetEmailForRecipient emailAddress emailTitle startDate
   case memail of
     Nothing -> respond404
@@ -652,7 +653,7 @@ triggerPostPending did = onlyAdmin $ withDocumentID did $ do
 {- |
    Used by super users to inspect a particular document.
 -}
-daveDocument :: Kontrakcja m => DocumentID -> m (Either KontraLink String)
+daveDocument :: Kontrakcja m => DocumentID -> m (Either KontraLink Text)
 daveDocument documentid = onlyAdmin $ do
     -- for dave, we want a slash at the end, so redirect if there is no slash
     -- we have a relative link for signatorylinkids, so we need a slash at the end
@@ -667,7 +668,7 @@ daveDocument documentid = onlyAdmin $ do
      then do
       document <- dbQuery $ GetDocumentForDave documentid
       mCallbackResult <- dbQuery $ GetDocumentAPICallbackResult documentid
-      r <- renderTemplate "daveDocument" $ do
+      r <- renderTextTemplate "daveDocument" $ do
         let everybodySignedAndStatusIn statuses =
               (documentstatus document `elem` statuses) &&
                 all (isSignatory --> isSignatoryAndHasSigned
@@ -686,17 +687,17 @@ daveDocument documentid = onlyAdmin $ do
 {- |
    Used by super users to inspect a particular signatory link.
 -}
-daveSignatoryLink :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m  String
+daveSignatoryLink :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Text
 daveSignatoryLink documentid siglinkid = onlyAdmin $ do
     document <- dbQuery $ GetDocumentByDocumentID documentid
     siglink <- guardJust $ getSigLinkFor siglinkid document
-    renderTemplate  "daveSignatoryLink" $ do
+    renderTextTemplate "daveSignatoryLink" $ do
         F.value "daveBody" $ inspectXML siglink
 
 {- |
    Used by super users to inspect a particular user.
 -}
-daveUser :: Kontrakcja m => UserID ->  m String
+daveUser :: Kontrakcja m => UserID ->  m Text
 daveUser userid = onlyAdmin $ do
     user <- guardJustM $ dbQuery $ GetUserByID userid
     return $ inspectXML user
@@ -704,7 +705,7 @@ daveUser userid = onlyAdmin $ do
 {- |
    Used by super users to inspect a particular user's history.
 -}
-daveUserHistory :: Kontrakcja m => UserID -> m String
+daveUserHistory :: Kontrakcja m => UserID -> m Text
 daveUserHistory userid = onlyAdmin $ do
     history <- dbQuery $ GetUserHistoryByUserID userid
     return $ inspectXML history
@@ -712,12 +713,12 @@ daveUserHistory userid = onlyAdmin $ do
 {- |
     Used by super users to inspect a user group in xml.
 -}
-daveUserGroup :: Kontrakcja m => UserGroupID -> m String
+daveUserGroup :: Kontrakcja m => UserGroupID -> m Text
 daveUserGroup ugid = onlyAdmin $ do
   ug <- guardJustM . dbQuery . UserGroupGet $ ugid
   return $ inspectXML ug
 
-daveFile :: Kontrakcja m => FileID -> String -> m Response
+daveFile :: Kontrakcja m => FileID -> Text -> m Response
 daveFile fileid _title = onlyAdmin $ do
   now <- currentTime
   user <- guardJust . getContextUser =<< getContext
@@ -732,11 +733,11 @@ daveFile fileid _title = onlyAdmin $ do
     then internalError
     else do
       let -- Chrome does not like commas in this header
-          fname = filter (/=',') $ filename file
+          fname = T.filter (/=',') $ filename file
           -- http2 doesnt like non-normalized utf8
-          fname' = T.unpack $ ICU.normalize ICU.NFC $ T.pack fname
+          fname' = T.unpack $ ICU.normalize ICU.NFC fname
       return
-        $ setHeader "Content-Disposition" ("attachment;filename=" ++ fname')
+        $ setHeader "Content-Disposition" ("attachment;filename=" <> fname')
         $ Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
 
 randomScreenshotForTest :: Kontrakcja m => m Response
@@ -748,7 +749,7 @@ randomScreenshotForTest = do
   doc <- dbQuery $ GetDocumentBySignatoryLinkID slid
   elogEvents <- dbQuery $ GetEvidenceLog $ documentid doc
   let sigElogEvents = filter ((== Just slid) . evSigLink) elogEvents
-  content <- renderTemplate "screenshotReview" $ do
+  content <- renderTextTemplate "screenshotReview" $ do
     F.value "userAgent" $ evClientName <$> find (isJust . evClientName) sigElogEvents
     F.value "signatoryid" $ show slid
     case screenshots of

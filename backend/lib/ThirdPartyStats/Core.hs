@@ -24,10 +24,11 @@ import Data.Int
 import Data.String
 import Data.Time.Clock.POSIX
 import Log
-import Test.QuickCheck (Arbitrary(..), frequency, oneof, suchThat)
+import Test.QuickCheck (Arbitrary(..), Gen, frequency, oneof, suchThat)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Semigroup as SG
+import qualified Data.Text as T
 
 import DB
 import Doc.DocumentID (DocumentID, unsafeDocumentID)
@@ -41,7 +42,7 @@ import UserGroup.Types
 -- | The various types of values a property can take.
 data PropValue
   = PVNumber      Double
-  | PVString      String
+  | PVString      Text
   | PVBool        Bool
   | PVUTCTime UTCTime
     deriving (Show, Eq)
@@ -59,7 +60,7 @@ instance Binary PropValue where
       1 -> PVString      <$> B.get
       2 -> PVBool        <$> B.get
       3 -> PVUTCTime     <$> B.get
-      n -> fail $ "Couldn't parse PropValue constructor tag: " ++ show n
+      n -> fail $ "Couldn't parse PropValue constructor tag: " <> show n
 
 -- | Type class to keep the user from having to wrap stuff in annoying data
 --   constructors.
@@ -67,6 +68,9 @@ class SomeProperty a where
   someProp :: PropName -> a -> EventProperty
 
 instance SomeProperty String where
+  someProp s = SomeProp s . PVString . T.pack
+
+instance SomeProperty Text where
   someProp s = SomeProp s . PVString
 
 instance SomeProperty Double where
@@ -88,7 +92,7 @@ numProp = someProp
 -- | Create a named property with a String value.
 --   This function just fixes the property type of someProp to avoid
 --   unnecessary type annotations in the presence of overloaded strings.
-stringProp :: PropName -> String -> EventProperty
+stringProp :: PropName -> Text -> EventProperty
 stringProp = someProp
 
 -- | Distinguish between the event processor functions to use.
@@ -106,18 +110,18 @@ instance Binary EventType where
     case tag of
       0 -> return EventMixpanel
       1 -> return EventPlanhat
-      n -> fail $ "Couldn't parse EventType constructor tag: " ++ show n
+      n -> fail $ "Couldn't parse EventType constructor tag: " <> show n
 
 -- | Makes type signatures on functions involving event names look nicer.
 data EventName
   = SetUserProps
-  | NamedEvent String
+  | NamedEvent Text
   | SetCompanyProps
     deriving (Show, Eq)
-type PropName = String
+type PropName = Text
 
 instance IsString EventName where
-  fromString = NamedEvent
+  fromString = NamedEvent . T.pack
 
 instance Binary EventName where
   put SetUserProps      = putWord8 0
@@ -130,20 +134,20 @@ instance Binary EventName where
         0   -> return SetUserProps
         1   -> return SetCompanyProps
         255 -> NamedEvent <$> B.get
-        t   -> fail $ "Unable to parse EventName constructor tag: " ++ show t
+        t   -> fail $ "Unable to parse EventName constructor tag: " <> show t
 
 
 -- | Represents a property on an event.
 data EventProperty
   = MailProp      Email
   | IPProp        IPAddress
-  | NameProp      String
+  | NameProp      Text
   | UserIDProp    UserID
   | TimeProp      UTCTime
   | DocIDProp     DocumentID
   | UserGroupIDProp UserGroupID
-  | FirstNameProp String
-  | LastNameProp  String
+  | FirstNameProp Text
+  | LastNameProp  Text
   | SomeProp      PropName PropValue
     deriving (Show, Eq)
 
@@ -175,7 +179,7 @@ instance Binary EventProperty where
       7   -> FirstNameProp    <$> B.get
       8   -> LastNameProp     <$> B.get
       255 -> SomeProp         <$> B.get <*> B.get
-      n   -> fail $ "Couldn't parse EventProperty constructor tag: " ++ show n
+      n   -> fail $ "Couldn't parse EventProperty constructor tag: " <> show n
 
 
 -- | Data type representing an asynchronous event.
@@ -194,9 +198,9 @@ data NumEvents = All | NoMoreThan Integer
 data ProcRes
   = OK             -- ^ Processing succeeded, we're done with this event.
   | PutBack        -- ^ Processing failed, but may succeed if retried later.
-  | Failed String  -- ^ Processing failed permanently, discard event and
+  | Failed Text  -- ^ Processing failed permanently, discard event and
                    --   log the failure.
-  | Ignored String -- ^ Processing ignored and regarded as done after logging
+  | Ignored Text -- ^ Processing ignored and regarded as done after logging
 
 newtype EventProcessor m =
   EventProcessor
@@ -216,7 +220,7 @@ EventProcessor a @@ EventProcessor b = EventProcessor $ \evt props -> do
     OK -> do
       res' <- b evt props
       case res' of
-        PutBack -> return (Failed $ "PutBack after one or more event " ++
+        PutBack -> return (Failed $ "PutBack after one or more event " <>
                                     "processors already succeded!")
         x       -> return x
     PutBack ->
@@ -300,11 +304,14 @@ asyncLogEvent ename eprops etype = do
   where
     mkBinary = B.concat . BL.toChunks . encode
 
+arbitraryText :: Gen Text
+arbitraryText = T.pack <$> arbitrary
+
 instance Arbitrary EventName where
   arbitrary = frequency [
       (1, return SetUserProps),
       (2, return SetCompanyProps),
-      (8, NamedEvent <$> arbitrary)]
+      (8, NamedEvent <$> arbitraryText)]
 
 instance Arbitrary EventType where
   arbitrary = oneof [ return EventMixpanel, return EventPlanhat ]
@@ -313,7 +320,7 @@ instance Arbitrary EventType where
 instance Arbitrary PropValue where
   arbitrary = oneof [
       PVNumber <$> arbitrary,
-      PVString <$> arbitrary,
+      PVString <$> arbitraryText,
       PVBool <$> arbitrary,
       PVUTCTime . posixSecondsToUTCTime . fromInteger <$> arbitrary]
 
@@ -322,20 +329,20 @@ instance Arbitrary EventProperty where
   arbitrary = frequency [
       (1, MailProp <$> email),
       (1, IPProp . unsafeIPAddress <$> arbitrary),
-      (1, NameProp <$> arbitrary),
-      (1, LastNameProp <$> arbitrary),
-      (1, FirstNameProp <$> arbitrary),
+      (1, NameProp <$> arbitraryText),
+      (1, LastNameProp <$> arbitraryText),
+      (1, FirstNameProp <$> arbitraryText),
       (1, UserIDProp . unsafeUserID <$> arbitrary),
       (1, TimeProp . posixSecondsToUTCTime . fromInteger <$> arbitrary),
       (1, DocIDProp . unsafeDocumentID <$> arbitrary),
       (1, UserGroupIDProp . unsafeUserGroupID <$> arbitrary),
-      (5, SomeProp <$> arbitrary <*> arbitrary)]
+      (5, SomeProp <$> arbitraryText <*> arbitrary)]
     where
       email = do
-        acct <- arbitrary `suchThat` ((> 5) . length)
-        domain <- arbitrary `suchThat` ((> 5) . length)
+        acct <- arbitraryText `suchThat` ((> 5) . T.length)
+        domain <- arbitraryText `suchThat` ((> 5) . T.length)
         toplevel <- oneof (map return ["com", "net", "org", "nu", "se"])
-        return $! Email $! concat [acct, "@", domain, ".", toplevel]
+        return $! Email $! T.concat [acct, "@", domain, ".", toplevel]
 
 instance Arbitrary AsyncEvent where
   arbitrary = AsyncEvent <$> arbitrary <*> arbitrary <*> arbitrary

@@ -24,7 +24,7 @@ import FileStorage.Class
 import Log.Utils
 
 saveContentsToAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m)
-                     => AmazonS3Env -> String -> BSL.ByteString -> m ()
+                     => AmazonS3Env -> Text -> BSL.ByteString -> m ()
 saveContentsToAmazon env url contents = go True =<< awsLogger
   where
     go retry logger = do
@@ -54,10 +54,10 @@ saveContentsToAmazon env url contents = go True =<< awsLogger
                 , "error" .= show err
                 , "time"  .= diff
                 ]
-              throwM $ FileStorageException $ show err
+              throwM $ FileStorageException $ showt err
 
 getContentsFromAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m)
-                      => AmazonS3Env -> String -> m BSL.ByteString
+                      => AmazonS3Env -> Text -> m BSL.ByteString
 getContentsFromAmazon env url = go True =<< awsLogger
   where
     go retry logger = do
@@ -89,10 +89,10 @@ getContentsFromAmazon env url = go True =<< awsLogger
                 , "error" .= show err
                 , "time"  .= diff
                 ]
-              throwM $ FileStorageException $ show err
+              throwM $ FileStorageException $ showt err
 
 deleteContentsFromAmazon :: (MonadBase IO m, MonadLog m, MonadThrow m)
-                         => AmazonS3Env -> String -> m ()
+                         => AmazonS3Env -> Text -> m ()
 deleteContentsFromAmazon env url = do
   logger <- awsLogger
   logInfo "Attempting to delete file from AWS" $ object ["url" .= url]
@@ -112,12 +112,12 @@ deleteContentsFromAmazon env url = do
          , "result" .= show err
          , "time"   .= diff
          ]
-      throwM $ FileStorageException $ show err
+      throwM $ FileStorageException $ showt err
 
 ----------------------------------------
 
-urlObjectKey :: String -> AWS.ObjectKey
-urlObjectKey = AWS.ObjectKey . T.pack . HTTP.urlDecode
+urlObjectKey :: Text -> AWS.ObjectKey
+urlObjectKey = AWS.ObjectKey . T.pack . HTTP.urlDecode . T.unpack
 
 withResourceT
   :: C.ResourceT IO r
@@ -143,7 +143,7 @@ awsLogger = do
     adjustLevel AWS.Trace = LogTrace
 
     builderToText
-      = either (T.append "decode error: " . T.pack . show) id
+      = either (T.append "decode error: " . showt) id
       . T.decodeUtf8'
       . BSL.toStrict
       . B.toLazyByteString

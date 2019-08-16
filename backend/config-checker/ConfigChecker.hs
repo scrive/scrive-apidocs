@@ -10,6 +10,8 @@ import Data.Unjson
 import System.Environment
 import System.Exit
 import System.IO
+import qualified Data.Text as T
+import qualified Data.Text.IO as TIO
 
 import AppConf
 import Configuration
@@ -17,8 +19,8 @@ import CronConf
 import MailingServerConf
 import MessengerServerConf
 
-printHelpMessage :: String -> IO ()
-printHelpMessage prog = putStr . unlines $
+printHelpMessage :: Text -> IO ()
+printHelpMessage prog = TIO.putStrLn . T.unlines $
   [ "Usage: "
   , ""
   , prog <> " check - Check that config files are in sync."
@@ -167,8 +169,8 @@ checkFieldsEqualAppConfMessengerConf
 
 main :: IO ()
 main = do
-  prog <- getProgName
-  args <- getArgs
+  prog <- T.pack <$> getProgName
+  args <- fmap T.pack <$> getArgs
   if | args == [] || head args `elem` ["help"] -> printHelpMessage prog
      | head args `elem` ["lint", "check"]      -> lintConfigFiles
      | otherwise                               -> printHelpMessage prog

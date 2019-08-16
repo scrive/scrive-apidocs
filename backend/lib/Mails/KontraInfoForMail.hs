@@ -7,7 +7,6 @@ module Mails.KontraInfoForMail (
 import Control.Monad.Catch
 import Data.Aeson
 import Data.Int
-import qualified Data.Text as T
 
 import DB
 import Doc.DocumentID
@@ -29,17 +28,17 @@ data KontraInfoForMail
 
 instance Loggable KontraInfoForMail where
   logValue (DocumentInvitationMail did slid) = object $ [
-           "type" .= ("invitation"::T.Text)
+           "type" .= ("invitation"::Text)
           , identifier did
           , identifier slid
           ]
   logValue (DocumentConfirmationMail did slid) = object
-    [ "type" .= ("confirmation" :: T.Text)
+    [ "type" .= ("confirmation" :: Text)
     , identifier did
     , identifier slid
     ]
   logValue (OtherDocumentMail did) = object $ [
-            "type" .= ("other"::T.Text)
+            "type" .= ("other"::Text)
           , identifier did
           ]
 

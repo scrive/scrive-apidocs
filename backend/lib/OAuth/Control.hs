@@ -1,5 +1,5 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
-module OAuth.Control(oauth) where
+module OAuth.Control (oauth) where
 
 import Control.Monad.Catch
 import Data.Aeson (Value)
@@ -11,6 +11,7 @@ import Happstack.StaticRouting (Route, choice, dir)
 import Log
 import Network.HTTP.Base (urlEncodeVars)
 import Text.JSON
+import qualified Data.Text as T
 import qualified Happstack.Server.Response as Web
 import qualified Text.JSON.Gen as J
 
@@ -53,7 +54,7 @@ tempCredRequest = api $ do
 
   etcr <- getTempCredRequest
   case etcr of
-    Left errors -> (throwM . SomeDBExtraException) $ badInput errors
+    Left errors -> (throwM . SomeDBExtraException) $ badInput $ T.unpack errors
     Right tcr -> do
       logInfo "TempCredRequest got successfully" $ logObject_ tcr
       (temptoken, tempsecret) <- apiGuardL' $ dbUpdate $ RequestTempCredentials tcr time
@@ -71,7 +72,7 @@ authorization = do
       lang = get ctxlang ctx
 
   mtk   <- getDataFn' (look "oauth_token")
-  token <- guardJust $ maybeRead =<< mtk
+  token <- guardJust $ maybeRead =<< (T.pack <$> mtk)
 
   mprivs <- dbQuery $ GetRequestedPrivileges token time
 
@@ -85,7 +86,7 @@ authorizationDenied = do
   time   <- get ctxtime <$> getContext
   lang   <- get ctxlang <$> getContext
   mtk <- getDataFn' (look "oauth_token")
-  token <- guardJust $ maybeRead =<< mtk
+  token <- guardJust $ maybeRead =<< (T.pack <$> mtk)
   murl <- dbUpdate $ DenyCredentials token time
   case murl of
     Nothing -> return $ LinkHome lang
@@ -96,7 +97,7 @@ authorizationDenied = do
 authorizationGranted :: Kontrakcja m => m KontraLink
 authorizationGranted = do
   mtk <- getDataFn' (look "oauth_token")
-  token <- guardJust $ maybeRead =<< mtk
+  token <- guardJust $ maybeRead =<< (T.pack <$> mtk)
   muser <- get ctxmaybeuser <$> getContext
   time  <- get ctxtime <$> getContext
   case muser of
@@ -112,7 +113,7 @@ tokenCredRequest = api $ do
   time <- get ctxtime <$> getContext
   etr <- getTokenRequest
   case etr of
-    Left errors -> (throwM . SomeDBExtraException) $ badInput errors
+    Left errors -> (throwM . SomeDBExtraException) $ badInput $ T.unpack errors
     Right tr -> do
       (accesstoken, accesssecret) <- apiGuardL' $ dbUpdate $ RequestAccessToken tr time
       return $ setHeader "Content-Type" "application/x-www-form-urlencoded" $
@@ -172,7 +173,7 @@ deleteAPIToken = do
   muser <- get ctxmaybeuser <$> getContext
   user <- guardJust muser
   mtk <- getDataFn' (look "apitoken")
-  case maybeRead =<< mtk of
+  case maybeRead =<< (T.pack <$> mtk) of
     Nothing -> return ()
     Just token -> void $ dbUpdate $ DeleteAPIToken (userid user) token
   return success
@@ -196,11 +197,11 @@ deletePrivilege = do
   muser <- get ctxmaybeuser <$> getContext
   user <- guardJust muser
   mtk <- getDataFn' (look "tokenid")
-  case maybeRead =<< mtk of
+  case maybeRead =<< (T.pack <$> mtk) of
     Nothing -> return ()
     Just tokenid -> do
       mpr <- getDataFn' (look "privilege")
-      case maybeRead =<< mpr of
+      case maybeRead =<< (T.pack <$> mpr) of
         Nothing -> void $ dbUpdate $ DeletePrivileges (userid user) tokenid
         Just pr -> void $ dbUpdate $ DeletePrivilege  (userid user) tokenid pr
   return success

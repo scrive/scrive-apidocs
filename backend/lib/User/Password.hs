@@ -20,7 +20,8 @@ import qualified Crypto.Hash as H
 import qualified Crypto.Scrypt as Scrypt
 import qualified Data.ByteArray as BA
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BSU
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 
 import User.Password.Internal
 
@@ -73,7 +74,7 @@ kontrakcjaScryptParams = fromJust $ -- OK to crash here
                          Scrypt.scryptParams 15 8 2
 
 -- | Encrypt a plain-text password.
-createPassword :: CryptoRNG m => String -> m Password
+createPassword :: CryptoRNG m => Text -> m Password
 createPassword password = do
   saltSHA256 <- randomBytes 10
   let hash = hashPasswordSHA256 password saltSHA256
@@ -91,19 +92,19 @@ mkPassword hash salt PasswordAlgorithmScrypt =
   Password (Scrypt.EncryptedPass hash) salt
 
 -- | Hash a password using the legacy scheme with the provided salt.
-hashPasswordSHA256 :: String -> BS.ByteString -> BS.ByteString
+hashPasswordSHA256 :: Text -> BS.ByteString -> BS.ByteString
 hashPasswordSHA256 password salt =
-  BA.convert $ H.hashWith H.SHA256 (salt `BS.append` BSU.fromString password)
+  BA.convert $ H.hashWith H.SHA256 (salt `BS.append` TE.encodeUtf8 password)
 
 -- | Verify a provided password string against an encrypted 'Password'.
-verifyPassword :: Password -> String -> Bool
+verifyPassword :: Password -> Text -> Bool
 verifyPassword Password{pwdEncPass, pwdSHA256Salt} password =
   Scrypt.verifyPass'
   (Scrypt.Pass $ hashPasswordSHA256 password pwdSHA256Salt)
   pwdEncPass
 
 -- | Like 'verifyPassword', but the argument is wrapped in Maybe.
-maybeVerifyPassword :: Maybe Password -> String -> Bool
+maybeVerifyPassword :: Maybe Password -> Text -> Bool
 maybeVerifyPassword Nothing _        = False
 maybeVerifyPassword (Just hash) pass = verifyPassword hash pass
 
@@ -119,7 +120,7 @@ maybeMkPassword (mHash, mSalt, mStrength) =
 randomPassword :: CryptoRNG m => m Password
 randomPassword = randomPasswordString >>= createPassword
 
-randomPasswordString :: CryptoRNG m => m String
-randomPasswordString = randomString 32
-  (['0'..'9'] ++ ['A'..'Z'] ++ ['a'..'z'] ++
+randomPasswordString :: CryptoRNG m => m Text
+randomPasswordString = T.pack <$> randomString 32
+  (['0'..'9'] <> ['A'..'Z'] <> ['a'..'z'] <>
    ".,?!\'\":;@#$%^&*()")

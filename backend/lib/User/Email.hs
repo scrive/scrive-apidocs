@@ -10,7 +10,7 @@ import Data.Unjson
 import DB
 
 -- newtypes
-newtype Email = Email { unEmail :: String }
+newtype Email = Email { unEmail :: Text }
   deriving (Eq, Ord, Typeable)
 deriving newtype instance Read Email
 deriving newtype instance Show Email

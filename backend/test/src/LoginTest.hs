@@ -6,7 +6,6 @@ import Data.Aeson
 import Data.Int
 import Data.List.Split (splitOneOf)
 import Data.OTP (totp)
-import Data.Text
 import Data.Time.Clock.POSIX
 import Happstack.Server
 import Log
@@ -19,6 +18,7 @@ import qualified Data.ByteString.Char8 as BSC
 import qualified Data.HashMap.Strict as H
 import qualified Data.Label.Base as FCP
 import qualified Data.Label.Partial as FCP
+import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 
 import Archive.Control (showArchive)
@@ -125,8 +125,8 @@ testSuccessfulLoginSavesAStatEvent = do
 testCanLoginWithRedirect :: TestEnv ()
 testCanLoginWithRedirect = do
   -- create a user
-  password <- rand 10 $ arbString 1 64
-  logInfo_ $ "Generated password: " <> pack password
+  password <- rand 10 $ arbText 1 64
+  logInfo_ $ "Generated password: " <> password
   randomUser <- addNewRandomUserWithPassword password
   -- get access tokens using an email and password
   ctx <- mkContext defaultLang
@@ -143,7 +143,7 @@ testCanLoginWithRedirect = do
   -- get cookie and redirect
   let redirecturl1 = "/arbitrary/url/path"
   req3 <- mkRequest GET
-    [ ("session_id", inText . unpack $ sessionid)
+    [ ("session_id", inText sessionid)
     , ("url"       , inText redirecturl1)
     ]
   (res3, ctx3) <- runTestKontra req3 ctx $ handleLoginWithRedirectGet
@@ -151,7 +151,7 @@ testCanLoginWithRedirect = do
   assertBool "Redirect was set to provided url" (isRedirect (LinkExternal redirecturl1) res3)
 
     -- Test that call with fail if "url" for redirection is not provided
-  req4 <- mkRequest GET [("session_id", inText . unpack $ sessionid)]
+  req4 <- mkRequest GET [("session_id", inText sessionid)]
   assertRaisesInternalError $ do
     void $ runTestKontra req4 ctx handleLoginWithRedirectGet
     return ()
@@ -159,7 +159,7 @@ testCanLoginWithRedirect = do
   -- Test that session_id is valid for more than one redirect
   let redirecturl2 = "/otherarbitrary/url/path"
   req5 <- mkRequest GET
-    [ ("session_id", inText . unpack $ sessionid)
+    [ ("session_id", inText sessionid)
     , ("url"       , inText redirecturl2)
     ]
   (res5, ctx5) <- runTestKontra req5 ctx $ handleLoginWithRedirectGet
@@ -207,7 +207,7 @@ testLoginGetTokenForPersonalCredentialsFailsIfUserDoesntExist = do
     let uid = unsafeUserID 999
     res <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid)
     let expCode = 404
-    assertEqual ("should return " ++ show expCode) expCode (rsCode res)
+    assertEqual ("should return " <> show expCode) expCode (rsCode res)
 
 testLoginGetTokenForPersonalCredentialsFailsIfCallingUserDoesntHavePermission :: TestEnv ()
 testLoginGetTokenForPersonalCredentialsFailsIfCallingUserDoesntHavePermission = do
@@ -217,7 +217,7 @@ testLoginGetTokenForPersonalCredentialsFailsIfCallingUserDoesntHavePermission = 
     req  <- mkRequest GET []
     res  <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid2)
     let expCode = 403
-    assertEqual ("should return " ++ show expCode) expCode (rsCode res)
+    assertEqual ("should return " <> show expCode) expCode (rsCode res)
 
 testLoginGetTokenForPersonalCredentialsSucceedsForOwnUser :: TestEnv ()
 testLoginGetTokenForPersonalCredentialsSucceedsForOwnUser = do
@@ -227,7 +227,7 @@ testLoginGetTokenForPersonalCredentialsSucceedsForOwnUser = do
     let uid = userid user
     res  <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid)
     let expCode = 200
-    assertEqual ("should return " ++ show expCode) expCode (rsCode res)
+    assertEqual ("should return " <> show expCode) expCode (rsCode res)
 
 testLoginGetTokenForPersonalCredentialsSucceedsForAdminUserInUserGroup :: TestEnv ()
 testLoginGetTokenForPersonalCredentialsSucceedsForAdminUserInUserGroup = do
@@ -238,7 +238,7 @@ testLoginGetTokenForPersonalCredentialsSucceedsForAdminUserInUserGroup = do
     req  <- mkRequest GET []
     res  <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid2)
     let expCode = 200
-    assertEqual ("should return " ++ show expCode) expCode (rsCode res)
+    assertEqual ("should return " <> show expCode) expCode (rsCode res)
 
 testLoginGetTokenForPersonalCredentialsFailsForNonAdminUserInUserGroup :: TestEnv ()
 testLoginGetTokenForPersonalCredentialsFailsForNonAdminUserInUserGroup = do
@@ -252,7 +252,7 @@ testLoginGetTokenForPersonalCredentialsFailsForNonAdminUserInUserGroup = do
     req  <- mkRequest GET []
     res  <- fst <$> runTestKontra req ctx (apiCallGetTokenForPersonalCredentials uid2)
     let expCode = 403
-    assertEqual ("should return " ++ show expCode) expCode (rsCode res)
+    assertEqual ("should return " <> show expCode) expCode (rsCode res)
 
 testLoginGetUserPersonalTokenFailsWithUnkownToken :: TestEnv ()
 testLoginGetUserPersonalTokenFailsWithUnkownToken = do
@@ -260,7 +260,7 @@ testLoginGetUserPersonalTokenFailsWithUnkownToken = do
     req <- mkRequest POST [("login_token", inText "68a7ab308d713979")]
     res <- fst <$> runTestKontra req ctx apiCallGetUserPersonalToken
     let expCode = 403
-    assertEqual ("should return " ++ show expCode) expCode (rsCode res)
+    assertEqual ("should return " <> show expCode) expCode (rsCode res)
 
 testLoginGetUserPersonalTokenFailsWithLoginTokenAndEmailPassword :: TestEnv ()
 testLoginGetUserPersonalTokenFailsWithLoginTokenAndEmailPassword = do
@@ -272,7 +272,7 @@ testLoginGetUserPersonalTokenFailsWithLoginTokenAndEmailPassword = do
       ]
     res <- fst <$> runTestKontra req ctx apiCallGetUserPersonalToken
     let expCode = 403
-    assertEqual ("should return " ++ show expCode) expCode (rsCode res)
+    assertEqual ("should return " <> show expCode) expCode (rsCode res)
 
 testLoginGetUserPersonalTokenFailsWithExpiredToken :: TestEnv ()
 testLoginGetUserPersonalTokenFailsWithExpiredToken = do
@@ -283,10 +283,10 @@ testLoginGetUserPersonalTokenFailsWithExpiredToken = do
     void . dbUpdate . SetUserUserGroup uid2 $ _ugID ug
     -- Generate an expired login_token for uid2
     hash <- dbUpdate $ NewTemporaryLoginToken uid2 $ posixSecondsToUTCTime 1547768401
-    req <- mkRequest POST [("login_token", inText $ show hash)]
+    req <- mkRequest POST [("login_token", inText $ showt hash)]
     res <- fst <$> runTestKontra req ctx apiCallGetUserPersonalToken
     let expCode = 403
-    assertEqual ("should return " ++ show expCode) expCode (rsCode res)
+    assertEqual ("should return " <> show expCode) expCode (rsCode res)
 
 testLoginGetUserPersonalTokenSucceedsWithValidToken :: TestEnv ()
 testLoginGetUserPersonalTokenSucceedsWithValidToken = do
@@ -297,10 +297,10 @@ testLoginGetUserPersonalTokenSucceedsWithValidToken = do
     void . dbUpdate . SetUserUserGroup uid2 $ _ugID ug
     -- Generate a valid login_token for uid2
     hash <- dbUpdate $ NewTemporaryLoginToken uid2 $ posixSecondsToUTCTime 4547768401
-    req <- mkRequest POST [("login_token", inText $ show hash)]
+    req <- mkRequest POST [("login_token", inText $ showt hash)]
     res <- fst <$> runTestKontra req ctx apiCallGetUserPersonalToken
     let expCode = 200
-    assertEqual ("should return " ++ show expCode) expCode (rsCode res)
+    assertEqual ("should return " <> show expCode) expCode (rsCode res)
 
 testResetPasswordRemovesAllOtherUserSessions:: TestEnv ()
 testResetPasswordRemovesAllOtherUserSessions = do
@@ -336,7 +336,7 @@ testResetPasswordRemovesAllOtherUserSessions = do
 
 testUser2FAEnforced :: TestEnv ()
 testUser2FAEnforced = do
-  password <- rand 10 $ arbString 3 30
+  password <- rand 10 $ arbText 3 30
   randomUser <- addNewRandomUserWithPassword password
   ctx <- set ctxmaybeuser (Just randomUser) <$> mkContext defaultLang
   let uid = userid randomUser
@@ -347,7 +347,7 @@ testUser2FAEnforced = do
   -- update changed user in Context
   randomUser' <- guardJustM . dbQuery $ GetUserByID uid
   ctx' <- set ctxmaybeuser (Just randomUser') <$> mkContext defaultLang
-  
+
   -- going to archive with 2FA enforced for user returns a redirect
   req1 <- mkRequest GET []
   res1 <- fst <$> runTestKontra req1 ctx' showArchive
@@ -384,7 +384,7 @@ testUser2FAEnforced = do
       qrText <- liftIO $ decodeQR (QRCode . Base64.decodeLenient $ TE.encodeUtf8 setupQRCode)
       let encsecret = Prelude.head . Prelude.drop 1 . Prelude.dropWhile (/= "secret") . splitOneOf "?&=" $ qrText
           Right secret = B32.decode $ BSC.pack encsecret
-          totpcode = Prelude.filter (/='"') . show $ totp SHA1 secret now 30 6
+          totpcode = T.filter (/='"') . showt $ totp SHA1 secret now 30 6
 
       -- update changed user in Context
       Just user <- dbQuery $ GetUserByID uid
@@ -405,7 +405,7 @@ loginFailureChecks res ctx = do
 createTestUser :: TestEnv User
 createTestUser = createTestUser' "andrzej@skrivapa.se"
 
-createTestUser' :: String -> TestEnv User
+createTestUser' :: Text -> TestEnv User
 createTestUser' email = do
     bd <- dbQuery $ GetMainBrandedDomain
     pwd <- createPassword "password_8866"

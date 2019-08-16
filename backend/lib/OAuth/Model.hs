@@ -7,6 +7,7 @@ import Data.Int
 import Data.Unjson
 import Network.URI
 import qualified Control.Exception.Lifted as E
+import qualified Data.Text as T
 
 import DB
 import Log.Identifier
@@ -24,7 +25,7 @@ instance Show APIToken where
 
 instance Read APIToken where
     readsPrec p s = case break (== '_') s of
-      (ts, '_':is) -> [(APIToken { atID = i, atToken = read ts }, v)
+      (ts, '_':is) -> [(APIToken { atID = i, atToken = read $ T.pack ts }, v)
                       | (i, v) <- readsPrec p is]
       _ -> []
 
@@ -114,9 +115,9 @@ data OAuthAuthorization = OAuthAuthorization {
 
 data OAuthAuthorizationHideSecrets = OAuthAuthorizationHideSecrets {
   oahsAPIToken     :: APIToken
-, oahsAPISecret    :: String
+, oahsAPISecret    :: Text
 , oahsAccessToken  :: APIToken
-, oahsAccessSecret :: String
+, oahsAccessSecret :: Text
 , oahsHidden       :: Bool
 } deriving (Show, Eq)
 
@@ -124,9 +125,9 @@ toOAuthAuthorizationHideSecrets :: OAuthAuthorization -> OAuthAuthorizationHideS
 toOAuthAuthorizationHideSecrets oauth =
   OAuthAuthorizationHideSecrets{
       oahsAPIToken     = oaAPIToken oauth
-    , oahsAPISecret    = (showOnlyLastFourCharacters . oaAPISecret) oauth
+    , oahsAPISecret    = T.pack $ (showOnlyLastFourCharacters . oaAPISecret) oauth
     , oahsAccessToken  = oaAccessToken oauth
-    , oahsAccessSecret = (showOnlyLastFourCharacters . oaAccessSecret) oauth
+    , oahsAccessSecret = T.pack $ (showOnlyLastFourCharacters . oaAccessSecret) oauth
     , oahsHidden       = True
     }
 
@@ -301,7 +302,9 @@ instance MonadDB m => DBQuery m GetRequestedPrivileges (Maybe (String, [APIPrivi
     foldlDB f Nothing
     -- get name of company from companies table, or if that does not exist, the users.company_name
     where
-      f :: Maybe (String, [APIPrivilege]) -> (String, String, String, String, APIPrivilege) -> m (Maybe (String, [APIPrivilege]))
+      f :: Maybe (String, [APIPrivilege])
+        -> (String, String, String, String, APIPrivilege)
+        -> m (Maybe (String, [APIPrivilege]))
       f Nothing (c, fn, ln, e, pr) = return $ Just (getname c fn ln e, [pr])
       f (Just (n, acc)) (_, _, _, _, pr) = return $ Just (n, pr:acc)
       getname "" "" "" email = email

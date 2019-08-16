@@ -8,7 +8,7 @@ import Doc.Tables
 import File.FileID
 
 data AuthorAttachment = AuthorAttachment {
-  authorattachmentname :: String,
+  authorattachmentname :: Text,
   authorattachmentrequired :: Bool,
   authorattachmentaddtosealedfile :: Bool,
   authorattachmentfileid :: FileID
@@ -24,7 +24,7 @@ authorAttachmentsSelectors = [
     "author_attachments.file_id"
   ]
 
-type instance CompositeRow AuthorAttachment = (String, Bool, Bool, FileID)
+type instance CompositeRow AuthorAttachment = (Text, Bool, Bool, FileID)
 
 instance PQFormat AuthorAttachment where
   pqFormat = compositeTypePqFormat ctAuthorAttachment

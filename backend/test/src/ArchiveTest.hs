@@ -2,13 +2,13 @@ module ArchiveTest (archiveTests) where
 
 -- import Control.Monad
 
-import Data.String.Utils (replace)
 import Happstack.Server
 import Test.Framework
 import Text.JSON
 import Text.JSON.FromJSValue
 import Text.JSON.String
 import qualified Data.ByteString.Lazy.Char8 as BS
+import qualified Data.Text as T
 
 import Context
 import Doc.API.V1.Calls
@@ -46,8 +46,8 @@ testListDocs = do
                         , ("file", inFile $ inTestDir "pdfs/simple.pdf")]
   void $ runTestKontra req2 ctx2 $ apiCallV1CreateFromFile
   doc2:_ <- randomQuery $ GetDocumentsByAuthor (userid user2)
-  let cont2 = replace "example@example.com" "bob@blue.com" $ -- send to bob
-                replace "\"signorder\":2" "\"signorder\":1" cont -- reset sign order to 1
+  let cont2 = T.replace "example@example.com" "bob@blue.com" $ -- send to bob
+                T.replace "\"signorder\":2" "\"signorder\":1" cont -- reset sign order to 1
   req2' <- mkRequest POST [("json", inText cont2)]
   void $ runTestKontra req2' ctx2 $ apiCallV1Update $ documentid doc2
   req2'' <- mkRequest POST []

@@ -82,7 +82,7 @@ instance (MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, 
         mkss "first"     time i s = s{ first = Just $ Screenshot time i }
         mkss "signing"   time i s = s{ signing = Just $ Screenshot time i }
         mkss "reference" time i s = s{ reference = Just $ Right $ Screenshot time i }
-        mkss t           _    _ _ = unexpectedError $ "invalid type: " <> show t
+        mkss t           _    _ _ = unexpectedError $ "invalid type: " <> showt t
     return $ foldl' folder [] screenshotsWithBinaryData
 
 data FileInDocument = FileInDocument DocumentID FileID

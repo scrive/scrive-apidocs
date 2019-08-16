@@ -16,7 +16,6 @@ where
 import Control.Monad.Catch
 import Control.Monad.State.Class
 import Crypto.RNG
-import qualified Data.Text as T
 
 import Attachment.AttachmentID
 import DB
@@ -27,7 +26,7 @@ import Util.Actor
 
 data Attachment = Attachment
   { attachmentid      :: AttachmentID
-  , attachmenttitle   :: T.Text
+  , attachmenttitle   :: Text
   , attachmentctime   :: UTCTime
   , attachmentmtime   :: UTCTime
   , attachmentfile    :: FileID
@@ -60,7 +59,7 @@ sqlAttachmentResults = do
   sqlResult "shared"
   sqlResult "deleted"
 
-fetchAttachment :: (AttachmentID, T.Text, UTCTime, UTCTime, FileID, UserID, Bool, Bool) -> Attachment
+fetchAttachment :: (AttachmentID, Text, UTCTime, UTCTime, FileID, UserID, Bool, Bool) -> Attachment
 fetchAttachment (aid, title, ctime, mtime, file_id, user_id, shared, deleted) = Attachment {
   attachmentid      = aid
 , attachmenttitle   = title
@@ -72,7 +71,7 @@ fetchAttachment (aid, title, ctime, mtime, file_id, user_id, shared, deleted) = 
 , attachmentdeleted = deleted
 }
 
-data NewAttachment = NewAttachment UserID String FileID Actor
+data NewAttachment = NewAttachment UserID Text FileID Actor
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m NewAttachment Attachment where
   update (NewAttachment uid title fileid actor) = do
     let ctime = actorTime actor
@@ -116,7 +115,7 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeAttachments Int where
         sqlWhere "(ug.deleted IS NULL AND a.shared) OR u.deleted IS NULL"
 
 data AttachmentFilter
-  = AttachmentFilterByString T.Text           -- ^ Contains the string in title, list of people involved or anywhere
+  = AttachmentFilterByString Text           -- ^ Contains the string in title, list of people involved or anywhere
   | AttachmentFilterByID AttachmentID         -- ^ Attachments with IDs on the list
   | AttachmentFilterByFileID FileID           -- ^ Attachments with IDs on the list
   deriving Eq

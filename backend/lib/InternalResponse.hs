@@ -10,6 +10,7 @@ module InternalResponse (
 )where
 
 import Happstack.Server (Response)
+import qualified Data.Text as T
 
 import FlashMessage
 import KontraLink
@@ -49,6 +50,9 @@ instance CanBeInternalResponse KontraLink where
 
 instance CanBeInternalResponse String where
   internalResponseContent a = JustString a
+
+instance CanBeInternalResponse Text where
+  internalResponseContent a = JustString $ T.unpack a
 
 isRedirect :: KontraLink -> InternalKontraResponse -> Bool
 isRedirect l1 (InternalKontraResponseWithFlash _  (JustKontraLink l2)) = show l1 == show l2

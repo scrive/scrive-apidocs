@@ -10,6 +10,7 @@ import Data.Typeable
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
+import qualified Data.Text as T
 
 import Log.Identifier
 
@@ -17,12 +18,13 @@ newtype ThemeID = ThemeID Int64
   deriving (Eq, Ord, Typeable)
 deriving newtype instance Read ThemeID
 deriving newtype instance Show ThemeID
+deriving newtype instance TextShow ThemeID
 
 instance PQFormat ThemeID where
   pqFormat = pqFormat @Int64
 
 instance FromReqURI ThemeID where
-  fromReqURI = maybeRead
+  fromReqURI = maybeRead . T.pack
 
 instance Binary ThemeID where
   put (ThemeID cid) = put cid
@@ -44,7 +46,10 @@ fromThemeID (ThemeID tid) = tid
 
 
 unjsonThemeID :: UnjsonDef ThemeID
-unjsonThemeID = unjsonInvmapR ((maybe (fail "Can't parse ThemeID")  return) . maybeRead) (show . fromThemeID :: ThemeID -> String) unjsonDef
+unjsonThemeID = unjsonInvmapR
+  ((maybe (fail "Can't parse ThemeID")  return) . maybeRead . T.pack)
+  (show . fromThemeID :: ThemeID -> String)
+  unjsonDef
 
 instance Unjson ThemeID where
   unjsonDef = unjsonThemeID

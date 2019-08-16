@@ -24,7 +24,7 @@ import File.Storage
 import Log.Utils
 import Utils.Directory
 
-extractAttachmentsList :: (MonadLog m, MonadDB m, MonadIO m, MonadMask m, MonadBaseControl IO m, MonadFileStorage m) => Document -> m [T.Text]
+extractAttachmentsList :: (MonadLog m, MonadDB m, MonadIO m, MonadMask m, MonadBaseControl IO m, MonadFileStorage m) => Document -> m [Text]
 extractAttachmentsList doc = do
   case mainfileid <$> documentsealedfile doc of
     Nothing -> do
@@ -34,7 +34,7 @@ extractAttachmentsList doc = do
       content <- getFileIDContents fid
       extractAttachmentsListFromFileContent content
 
-extractAttachment :: (MonadLog m, MonadIO m, MonadDB m, MonadMask m, MonadBaseControl IO m, MonadFileStorage m) => Document -> T.Text -> m (Maybe BSL.ByteString)
+extractAttachment :: (MonadLog m, MonadIO m, MonadDB m, MonadMask m, MonadBaseControl IO m, MonadFileStorage m) => Document -> Text -> m (Maybe BSL.ByteString)
 extractAttachment doc aname = do
   case mainfileid <$> documentsealedfile doc of
     Nothing -> do
@@ -44,11 +44,11 @@ extractAttachment doc aname = do
       content <- getFileIDContents fid
       extractAttachmentFromFileContent aname content
 
-extractAttachmentsListFromFileContent :: (MonadLog m, MonadBaseControl IO m) => BS.ByteString -> m [T.Text]
+extractAttachmentsListFromFileContent :: (MonadLog m, MonadBaseControl IO m) => BS.ByteString -> m [Text]
 extractAttachmentsListFromFileContent content = withSystemTempDirectory' ("extract-attachments-") $ \tmppath -> do
         let tmpin = tmppath ++ "/input.pdf"
         logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length content)
-                                           , "originator" .= ("extractAttachmentsListFromFileContent" :: T.Text) ]
+                                           , "originator" .= ("extractAttachmentsListFromFileContent" :: Text) ]
         liftBase $ BS.writeFile tmpin content
         (code, stdout, stderr) <- liftBase $ do
           readProcessWithExitCode "pdfdetach" ["-list", tmpin] (BSL.empty)
@@ -64,7 +64,7 @@ extractAttachmentsListFromFileContent content = withSystemTempDirectory' ("extra
               ]
             return []
 
-extractAttachmentFromFileContent :: (MonadLog m, MonadBaseControl IO m) => T.Text -> BS.ByteString -> m (Maybe BSL.ByteString)
+extractAttachmentFromFileContent :: (MonadLog m, MonadBaseControl IO m) => Text -> BS.ByteString -> m (Maybe BSL.ByteString)
 extractAttachmentFromFileContent name content = withSystemTempDirectory' ("extract-attachment-") $ \tmppath -> do
         mIndex <- extractAttachmentIndex name content
         case (mIndex) of
@@ -75,7 +75,7 @@ extractAttachmentFromFileContent name content = withSystemTempDirectory' ("extra
             let tmpin =  tmppath ++ "/input.pdf"
             let outfile = tmppath ++ "/out"
             logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length content)
-                                               , "originator" .= ("extractAttachmentFromFileContent" :: T.Text) ]
+                                               , "originator" .= ("extractAttachmentFromFileContent" :: Text) ]
             liftBase $ BS.writeFile tmpin content
             (code, _, stderr) <- liftBase $ do
               readProcessWithExitCode "pdfdetach" ["-save", show (attachmentIndex + 1) , "-o", outfile, tmpin] (BSL.empty)
@@ -96,16 +96,17 @@ extractAttachmentFromFileContent name content = withSystemTempDirectory' ("extra
    ....
 
 -}
-decodePdfDetachList :: T.Text -> [T.Text]
+decodePdfDetachList :: Text -> [Text]
 decodePdfDetachList s = decodeLines 1 $ T.lines s
   where
-    decodeLines n (l:r) = let prefix = (T.pack $ show n) `T.append` ": "
+    decodeLines :: Integer -> [Text] -> [Text]
+    decodeLines n (l:r) = let prefix = (showt n) `T.append` ": "
                           in if (prefix `T.isPrefixOf` l)
                             then (T.drop (T.length prefix) l) : (decodeLines (n + 1) r)
                             else (decodeLines n r)
     decodeLines _ [] = []
 
-extractAttachmentIndex :: (MonadBaseControl IO m, MonadLog m) => T.Text -> BS.ByteString -> m (Maybe Int)
+extractAttachmentIndex :: (MonadBaseControl IO m, MonadLog m) => Text -> BS.ByteString -> m (Maybe Int)
 extractAttachmentIndex name content = do
   list <- extractAttachmentsListFromFileContent content
   return $ elemIndex name list

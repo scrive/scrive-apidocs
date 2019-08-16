@@ -1,30 +1,30 @@
 module Utils.String where
 
-import Data.String.Utils
+import qualified Data.Text as T
 
-escapeString :: String -> String
-escapeString =  concatMap escape
+escapeString :: Text -> Text
+escapeString =  T.concatMap escape
   where
     escape '<' = "&lt;"
     escape '>' = "&gt;"
     escape '&' = "&amp;"
     escape '"' = "\\\""
     escape '\\' = "\\\\"
-    escape c   = [c]
+    escape c   = T.singleton c
 
-escapeHTML :: String -> String
-escapeHTML =  concatMap escape
+escapeHTML :: Text -> Text
+escapeHTML =  T.concatMap escape
   where
     escape '<' = "&lt;"
     escape '>' = "&gt;"
     escape '&' = "&amp;"
-    escape c   = [c]
+    escape c   = T.singleton c
 
-unescapeHTML :: String -> String
-unescapeHTML = replace "&lt;" "<"
-             . replace "&gt;" ">"
-             . replace "&amp;" "&"
+unescapeHTML :: Text -> Text
+unescapeHTML = T.replace "&lt;" "<"
+             . T.replace "&gt;" ">"
+             . T.replace "&amp;" "&"
 
 -- | Pick first non-empty element or return empty list
-firstNonEmpty :: [String] -> String
-firstNonEmpty = fromMaybe "" . find (not . null) . map strip
+firstNonEmpty :: [Text] -> Text
+firstNonEmpty = fromMaybe "" . find (not . T.null) . map T.strip

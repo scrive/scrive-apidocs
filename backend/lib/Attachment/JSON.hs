@@ -5,7 +5,6 @@ module Attachment.JSON
   ) where
 
 import Data.Unjson
-import qualified Data.Text as T
 
 import Attachment.Model
 import DB
@@ -28,9 +27,9 @@ unjsonAttachment =  objectOf $
 unjsonAttachmentSorting :: UnjsonDef [AscDesc AttachmentOrderBy]
 unjsonAttachmentSorting = arrayOf $ objectOf $ pure (\f v -> (order f) v)
     <*> field "order" askDesc "Sorting value"
-    <*> fieldBy "sort_by" sorting "Asc/Desc" (unjsonEnumBy "Order" [ (AttachmentOrderByTitle, ("title" :: T.Text)), (AttachmentOrderByMTime, ("time" :: T.Text))])
+    <*> fieldBy "sort_by" sorting "Asc/Desc" (unjsonEnumBy "Order" [ (AttachmentOrderByTitle, ("title" :: Text)), (AttachmentOrderByMTime, ("time" :: Text))])
   where
-    order :: T.Text -> (a -> AscDesc a)
+    order :: Text -> (a -> AscDesc a)
     order "ascending" = Asc
     order "descending" = Desc
     order _ = unexpectedError "parsing order for unjsonAttachmentSorting"
@@ -44,7 +43,7 @@ unjsonAttachmentFiltering =  arrayOf $ objectOf $ pure AttachmentFilterByString
   <*  fieldBy "filter_by" (const ()) "Type of filter" (unjsonEnum "Attachment filtering" textFilterParser (const "text"))
   <*> field "text" unsafeFilterText "Text to filter on"
   where
-    unsafeFilterText :: AttachmentFilter ->  T.Text
+    unsafeFilterText :: AttachmentFilter ->  Text
     unsafeFilterText (AttachmentFilterByString text) = text
     unsafeFilterText _ = unexpectedError "unsafeDocumentAPIFilterText"
     textFilterParser "text" = Just ()

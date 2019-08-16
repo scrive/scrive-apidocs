@@ -5,6 +5,7 @@ import Data.Aeson
 import Happstack.Server
 import Test.Framework
 import qualified Data.HashMap.Strict as H
+import qualified Data.Text as T
 import qualified Data.Vector as V
 
 import AccessControl.API
@@ -274,7 +275,7 @@ testNonAdminUserCannotAddRoleFromNonExistentUser = do
   muser <- addNewUser "Dave" "Lister" "dave.lister@scrive.com"
   ctx   <- set ctxmaybeuser muser <$> mkContext defaultLang
   let jsonString = roleJSON (userid $ fromJust muser) (unsafeUserID 321)
-  req   <- mkRequest POST [ ("role", inText jsonString) ]
+  req   <- mkRequest POST [ ("role", inText $ T.pack jsonString) ]
   res   <- fst <$> runTestKontra req ctx (accessControlAPIV2Add)
   assertEqual "non-admin user can't add role for non-existent user (src)" 403 $ rsCode res
 
@@ -283,7 +284,7 @@ testNonAdminUserCannotAddRoleForNonExistentUser = do
   muser <- addNewUser "Dave" "Lister" "dave.lister@scrive.com"
   ctx   <- set ctxmaybeuser muser <$> mkContext defaultLang
   let jsonString = roleJSON (unsafeUserID 321) (userid $ fromJust muser)
-  req   <- mkRequest POST [ ("role", inText jsonString) ]
+  req   <- mkRequest POST [ ("role", inText $ T.pack jsonString) ]
   res   <- fst <$> runTestKontra req ctx (accessControlAPIV2Add)
   assertEqual "non-admin user can't add role for non-existent user (trg)" 403 $ rsCode res
 
@@ -292,7 +293,7 @@ testAdminUserCannotAddRoleFromNonExistentUser = do
   muser <- addNewUser "Dave" "Lister" emailAddress
   ctx   <- setUser muser <$> mkContext defaultLang
   let jsonString = roleJSON (userid $ fromJust muser) (unsafeUserID 321)
-  req   <- mkRequest POST [ ("role", inText jsonString) ]
+  req   <- mkRequest POST [ ("role", inText $ T.pack jsonString) ]
   res   <- fst <$> runTestKontra req ctx (accessControlAPIV2Add)
   assertEqual "admin user can't add role for non-existent user (src)" 403 $ rsCode res
     where
@@ -304,7 +305,7 @@ testAdminUserCannotAddRoleForNonExistentUser = do
   muser <- addNewUser "Dave" "Lister" emailAddress
   ctx   <- setUser muser <$> mkContext defaultLang
   let jsonString = roleJSON (unsafeUserID 321) (userid $ fromJust muser)
-  req   <- mkRequest POST [ ("role", inText jsonString) ]
+  req   <- mkRequest POST [ ("role", inText $ T.pack jsonString) ]
   res   <- fst <$> runTestKontra req ctx (accessControlAPIV2Add)
   assertEqual "admin user can't add role for non-existent user (trg)" 403 $ rsCode res
     where
@@ -317,7 +318,7 @@ testNonAdminUserCannotAddRoleWithoutPermissions = do
   uid2  <- userid . fromJust <$> addNewUser "Arnold" "Rimmer" "arnold.rimmer@scrive.com"
   ctx   <- set ctxmaybeuser muser <$> mkContext defaultLang
   let jsonString = roleJSON (userid $ fromJust muser) uid2
-  req   <- mkRequest POST [ ("role", inText jsonString) ]
+  req   <- mkRequest POST [ ("role", inText $ T.pack jsonString) ]
   res   <- fst <$> runTestKontra req ctx (accessControlAPIV2Add)
   assertEqual "non-admin user can't add role without permissions (trg)" 403 $ rsCode res
 
@@ -328,7 +329,7 @@ testNonAdminUserCanAddRoleWithPermissions = do
   ctx   <- set ctxmaybeuser muser <$> mkContext defaultLang
   void . dbUpdate . AccessControlCreateForUser (userid $ fromJust muser) $ UserAR uid2
   let jsonString = roleJSON (userid $ fromJust muser) uid2
-  req   <- mkRequest POST [ ("role", inText jsonString) ]
+  req   <- mkRequest POST [ ("role", inText $ T.pack jsonString) ]
   res   <- fst <$> runTestKontra req ctx (accessControlAPIV2Add)
   assertEqual "non-admin user can add role with permissions (trg)" 200 $ rsCode res
 
@@ -338,7 +339,7 @@ testAdminUserCanAddRoleWithoutPermissions = do
   uid2  <- userid . fromJust <$> addNewUser "Arnold" "Rimmer" "arnold.rimmer@scrive.com"
   ctx   <- setUser muser <$> mkContext defaultLang
   let jsonString = roleJSON (userid $ fromJust muser) uid2
-  req   <- mkRequest POST [ ("role", inText jsonString) ]
+  req   <- mkRequest POST [ ("role", inText $ T.pack jsonString) ]
   res   <- fst <$> runTestKontra req ctx (accessControlAPIV2Add)
   assertEqual "admin user can add role without permissions (trg)" 200 $ rsCode res
     where

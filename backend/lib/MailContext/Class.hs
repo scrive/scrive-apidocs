@@ -12,7 +12,7 @@ import BrandedDomain.BrandedDomain
 import MailContext.Internal
 import MailContext.Labels
 
-mctxDomainUrl :: MailContext :-> String
+mctxDomainUrl :: MailContext :-> Text
 mctxDomainUrl = bdUrl . mctxcurrentBrandedDomain
 
 class Monad m => MailContextMonad m where

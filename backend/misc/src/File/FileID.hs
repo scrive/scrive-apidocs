@@ -10,6 +10,7 @@ import Data.Typeable
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
+import qualified Data.Text as T
 
 import Log.Identifier
 
@@ -17,6 +18,7 @@ newtype FileID = FileID Int64
   deriving (Eq, Ord, Hashable, Typeable)
 deriving newtype instance Read FileID
 deriving newtype instance Show FileID
+deriving newtype instance TextShow FileID
 
 instance PQFormat FileID where
   pqFormat = pqFormat @Int64
@@ -26,11 +28,11 @@ instance Identifier FileID where
   idValue (FileID k) = int64AsStringIdentifier k
 
 instance FromReqURI FileID where
-  fromReqURI = maybeRead
+  fromReqURI = maybeRead . T.pack
 
 instance Unjson FileID where
   unjsonDef = unjsonInvmapR
-              ((maybe (fail "Can't parse FileID") return) . maybeRead)
+              ((maybe (fail "Can't parse FileID") return) . maybeRead . T.pack)
               show unjsonDef
 
 instance FromSQL FileID where

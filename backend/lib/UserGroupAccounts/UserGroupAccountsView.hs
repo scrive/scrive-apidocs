@@ -26,6 +26,7 @@ import FlashMessage
 import KontraLink
 import Mails.SendMail (Mail, kontramail, kontramaillocal)
 import MinutesTime
+import Templates (renderTextTemplate)
 import Theme.Model
 import User.Model
 import UserGroup.Types
@@ -62,7 +63,7 @@ basicUserGroupInviteFields invited inviter ug = do
   F.value "invitername" $ getSmartName inviter
   F.value "companyname" . get ugName $ ug
 
-basicLinkFields :: TemplatesMonad m => String -> KontraLink -> Fields m ()
+basicLinkFields :: TemplatesMonad m => Text -> KontraLink -> Fields m ()
 basicLinkFields hostpart link = do
   F.value "ctxhostpart" hostpart
   F.value "link" $ show link
@@ -70,9 +71,9 @@ basicLinkFields hostpart link = do
 
 -------------------------------------------------------------------------------
 
-pageDoYouWantToBeCompanyAccount :: (TemplatesMonad m) => Context -> UserGroup -> m String
+pageDoYouWantToBeCompanyAccount :: (TemplatesMonad m) => Context -> UserGroup -> m Text
 pageDoYouWantToBeCompanyAccount ctx ug =
-  renderTemplate "pageDoYouWantToBeCompanyAccount" $ do
+  renderTextTemplate "pageDoYouWantToBeCompanyAccount" $ do
     F.value "companyname" . get ugName $ ug
     entryPointFields ctx
 -------------------------------------------------------------------------------

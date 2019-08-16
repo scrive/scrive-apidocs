@@ -10,6 +10,7 @@ import Happstack.Server hiding (dir, host, path, simpleHTTP)
 import Log
 import Text.JSON
 import Text.StringTemplates.Templates
+import qualified Data.Text as T
 import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 
@@ -25,6 +26,7 @@ import Kontra
 import KontraLink
 import Log.Identifier
 import Redirect
+import Session.Cookies
 import ThirdPartyStats.Core
 import ThirdPartyStats.Planhat
 import User.Email
@@ -42,7 +44,7 @@ handleLoginGet = do
   case (get ctxmaybeuser ctx) of
        Nothing -> do
           dirtyReferer <- getField "referer"
-          let checkPrefixes s = s `isPrefixOf` fromMaybe "" dirtyReferer
+          let checkPrefixes s = s `T.isPrefixOf` fromMaybe "" dirtyReferer
               localReferer = any checkPrefixes ["/","%2F"]
               naughtyRef   = any checkPrefixes ["javascript:","data:"]
               referer = if localReferer then dirtyReferer else Nothing
@@ -53,7 +55,8 @@ handleLoginGet = do
             F.value "referer" $ fromMaybe "/" referer
             F.value "nolinks" $ not $ get (bdMainDomain . ctxbrandeddomain) ctx
             standardPageFields ctx Nothing ad
-          Right <$> simpleHtmlResponse content
+          response <- simpleHtmlResponse $ T.pack content
+          return $ Right response
        Just _ -> return $ Left LinkDesignView
 
 -- | Handles the submission of a login form.  On failure will redirect
@@ -188,9 +191,9 @@ handleLogoutAJAX = do
 
 handleLoginWithRedirectGet :: Kontrakcja m => m InternalKontraResponse
 handleLoginWithRedirectGet = do
-  sci <- guardJustM $ readField "session_id"
+  sci :: SessionCookieInfo <- guardJustM $ readField "session_id"
   dirtyUrl <- guardJustM $ getField "url"
-  let naughtyUrl = any (\s -> s `isPrefixOf` dirtyUrl) ["javascript:","data:"]
+  let naughtyUrl = any (\s -> s `T.isPrefixOf` dirtyUrl) ["javascript:","data:"]
       url = if naughtyUrl then "" else dirtyUrl
   when naughtyUrl $
     logAttention_ "handleLoginWithRedirectGet: someone tried to XSS url field"

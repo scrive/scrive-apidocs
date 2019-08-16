@@ -1,3 +1,4 @@
+
 module Doc.SealStatus
   ( SealStatus(..)
   , HasGuardtimeSignature(..)
@@ -7,6 +8,7 @@ import Data.Function (on)
 import Data.Int
 import Data.Typeable (Typeable)
 import Database.PostgreSQL.PQTypes
+import GHC.Generics
 import qualified Control.Exception.Lifted as E
 
 data SealStatus
@@ -21,7 +23,7 @@ data SealStatus
     extended :: Bool -- ^ The signature has been extended
   , private  :: Bool -- ^ The signature was created using Scrive's own gateway
   }
-  deriving (Eq, Show, Typeable)
+  deriving (Eq, Show, Generic, Typeable)
 
 class HasGuardtimeSignature a where
   hasGuardtimeSignature :: a -> Bool
@@ -39,7 +41,7 @@ instance Enum SealStatus where
   toEnum 3    = Guardtime{ extended = True,  private = False }
   toEnum 4    = Guardtime{ extended = False, private = True }
   toEnum 5    = Guardtime{ extended = True,  private = True }
-  toEnum i    = unexpectedError $ "invalid value:" <+> show i
+  toEnum i    = unexpectedError $ "invalid value:" <+> (showt i)
 
   fromEnum UnknownSealStatus                              = -1
   fromEnum Missing                                        = 0

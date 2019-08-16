@@ -26,7 +26,6 @@ import Data.Aeson (Value(..))
 import Data.Char
 import Data.Either.Combinators (rightToMaybe)
 import Data.Int
-import Data.String.Utils (replace, strip)
 import Data.Time
 import Happstack.Server.RqData
 import Happstack.Server.Types
@@ -36,7 +35,6 @@ import System.FilePath (takeBaseName)
 import Text.JSON hiding (Ok)
 import Text.JSON.FromJSValue
 import Text.JSON.String (runGetJSON)
-import Text.StringTemplates.Templates
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL
@@ -103,6 +101,7 @@ import MagicHash (MagicHash)
 import MinutesTime
 import OAuth.Model
 import Routing
+import Templates (renderTextTemplate, renderTextTemplate_)
 import Text.JSON.Convert
 import User.Model
 import Util.Actor
@@ -166,8 +165,12 @@ apiCallV1CreateFromFile = api $ do
   minput <- getDataFn' (lookInput "file")
   (mfile, title) <- case minput of
     Nothing -> do
-      title <- renderTemplate_ ("newDocumentTitle" <| not isTpl |> "newTemplateTitle")
-      return (Nothing,  replace "  " " " $ title ++ " " ++ formatTimeSimple (get ctxtime ctx))
+      title <- renderTextTemplate_ ("newDocumentTitle" <| not isTpl |> "newTemplateTitle")
+      return
+        ( Nothing
+        , T.replace "  " " " $
+            title <> " " <> (T.pack $ formatTimeSimple (get ctxtime ctx))
+        )
     Just (Input _ Nothing _) -> throwM . SomeDBExtraException $ badInput "Missing file"
     Just (Input contentspec (Just filename') _contentType) -> do
       let filename = Windows.takeFileName filename'
@@ -181,8 +184,8 @@ apiCallV1CreateFromFile = api $ do
       let content' = either (const content1') id (B64.decode content1')
 
       pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ preCheckPDF content'
-      fileid' <- saveNewFile filename pdfcontent
-      return (Just fileid', takeBaseName filename)
+      fileid' <- saveNewFile (T.pack filename) pdfcontent
+      return (Just fileid', T.pack $ takeBaseName filename)
   mtimezone <- getField "timezone"
   timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezone)
   (dbUpdate $ NewDocument user title doctype timezone 0 actor) `withDocumentM` do
@@ -278,10 +281,10 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
     attachmentFilesWithDetails <- precheckNewAttachments =<< getAttachments 0 =<< theDocument
     (documentauthorattachments <$> theDocument >>=) $ mapM_ $ \att -> dbUpdate $ RemoveDocumentAttachments (authorattachmentfileid att) actor
     forM_ attachmentFilesWithDetails $ \(attfile, maad) -> do
-      dbUpdate $ AddDocumentAttachment (fromMaybe (T.pack $ filename attfile) (aadName <$> maad))  (fromMaybe False (aadRequired <$> maad)) (fromMaybe True (aadAddToSealedFile <$> maad)) (fileid attfile) actor
+      dbUpdate $ AddDocumentAttachment (fromMaybe (filename attfile) (aadName <$> maad))  (fromMaybe False (aadRequired <$> maad)) (fromMaybe True (aadAddToSealedFile <$> maad)) (fileid attfile) actor
     Ok <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
      where
-          getAttachments :: Kontrakcja m => Int -> Document -> m [(Either File (String, BSL.ByteString), Maybe AuthorAttachmentDetails)]
+          getAttachments :: Kontrakcja m => Int -> Document -> m [(Either File (Text, BSL.ByteString), Maybe AuthorAttachmentDetails)]
           getAttachments i doc = do
               mf <- tryGetFile doc i
               case mf of
@@ -295,16 +298,16 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
                    Nothing -> return []
 
           tryGetAttachmentDetails ::  Kontrakcja m => Int -> m (Maybe AuthorAttachmentDetails)
-          tryGetAttachmentDetails i = getField ("attachment_details_" ++ show i) >>= \case
+          tryGetAttachmentDetails i = getField ("attachment_details_" <> (showt i)) >>= \case
             Nothing -> return Nothing
-            Just s ->  case decode s of
+            Just s ->  case decode $ T.unpack s of
               J.Ok js -> case (fromJSValue js) of
                  Just aad -> return aad
-                 _ -> throwM . SomeDBExtraException $ (badInput $ "Details for author attachment " ++ show i ++ " are invalid")
-              _ -> throwM . SomeDBExtraException $ (badInput $ "Details for author attachment " ++ show i ++ " is not a valid JSON")
+                 _ -> throwM . SomeDBExtraException $ (badInput $ "Details for author attachment " <> show i <> " are invalid")
+              _ -> throwM . SomeDBExtraException $ (badInput $ "Details for author attachment " <> show i <> " is not a valid JSON")
 
           precheckNewAttachments :: Kontrakcja m
-                                 => [(Either File (String, BSL.ByteString), Maybe AuthorAttachmentDetails)]
+                                 => [(Either File (Text, BSL.ByteString), Maybe AuthorAttachmentDetails)]
                                  -> m [(File, Maybe AuthorAttachmentDetails)]
           precheckNewAttachments xs = do
             -- We will extract all new files (name, bytestring) and preCheck them all at once, because
@@ -322,21 +325,21 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
                 putNewFiles _                            _          = unexpectedError "Wrong amount of preChecked new files"
             return $ putNewFiles xs newFiles
 
-          tryGetFile ::  Kontrakcja m => Document -> Int -> m (Maybe (Either File (String, BSL.ByteString)))
+          tryGetFile ::  Kontrakcja m => Document -> Int -> m (Maybe (Either File (Text, BSL.ByteString)))
           tryGetFile doc i = do
-              inp <- getDataFn' (lookInput $ "attachment_" ++ show i)
+              inp :: Maybe Input <- getDataFn' (lookInput $ "attachment_" <> show i)
               case inp of
                    Just (Input (Left filepath) (Just filename) _contentType) -> do
                        content <- liftIO $ BSL.readFile filepath
-                       return $ Just $ Right (filename, content)
-                   Just (Input  (Right c)  _ _)  -> do
-                        case maybeRead (BSL.toString c) of
+                       return $ Just $ Right (T.pack filename, content)
+                   Just (Input (Right c)  _ _)  -> do
+                        case maybeRead (T.pack $ BSL.toString c) of
                             Just fid -> do
                               access <- hasAccess doc fid
                               if access
                                 then Just <$> Left <$> dbQuery (GetFileByFileID fid)
-                                else throwM . SomeDBExtraException $ (forbidden $ "Access to attachment " ++ show i ++ " forbiden")
-                            Nothing -> throwM . SomeDBExtraException $ (badInput $ "Can parse attachment id for attachment " ++ show i)
+                                else throwM . SomeDBExtraException $ (forbidden $ "Access to attachment " <> show i <> " forbiden")
+                            Nothing -> throwM . SomeDBExtraException $ (badInput $ "Can parse attachment id for attachment " <> show i)
                    _ -> return Nothing
 
           hasAccess ::  Kontrakcja m => Document -> FileID -> m Bool
@@ -345,12 +348,13 @@ apiCallV1SetAuthorAttachemnts did = logDocument did . api $ do
             if (fid `elem` (authorattachmentfileid <$> documentauthorattachments doc))
              then return True
              else do
-              atts <-  dbQuery $ GetAttachments [  AttachmentsSharedInUsersUserGroup (userid user)
-                                                , AttachmentsOfAuthorDeleteValue (userid user) True
-                                                , AttachmentsOfAuthorDeleteValue (userid user) False
-                                               ]
-                                              [ AttachmentFilterByFileID fid]
-                                              []
+              atts <-  dbQuery $ GetAttachments
+                [  AttachmentsSharedInUsersUserGroup (userid user)
+                , AttachmentsOfAuthorDeleteValue (userid user) True
+                , AttachmentsOfAuthorDeleteValue (userid user) False
+                ]
+                [ AttachmentFilterByFileID fid]
+                []
               return $ not $ null atts
 
 apiCallV1Ready :: Kontrakcja m => DocumentID -> m Response
@@ -468,9 +472,9 @@ apiCallV1Ready did = logDocument did . api $ do
         VerimiAuthenticationToView   -> False -- Verimi auth to view is not supported in API v1
 
     checkEmailForConfirmation sl =
-      null (getEmail sl) || isGood (asValidEmail $ getEmail sl)
+      T.null (getEmail sl) || isGood (asValidEmail $ getEmail sl)
     checkMobileForConfirmation sl =
-      null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl)
+      T.null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl)
     checkEmailAndMobileForConfirmation sl =
       checkEmailForConfirmation sl && checkMobileForConfirmation sl
 
@@ -496,10 +500,10 @@ apiCallV1Reject did slid = logDocumentAndSignatory did slid . api $ do
     sll  <- case msll of
       Nothing  -> unexpectedError "apiCallV1Reject: Couldn't get sig link!"
       Just sll -> return sll
-    customtext <- fmap strip <$> getField "customtext"
+    customtext <- fmap T.strip <$> getField "customtext"
     switchLang . getLang =<< theDocument
     (dbUpdate . RejectDocument slid (isApprover sll) customtext =<< signatoryActor ctx sll)
-        `catchDBExtraException` (\(DocumentStatusShouldBe _ _ i) -> throwM . SomeDBExtraException $ conflictError $ "Document not pending but " ++ show i)
+        `catchDBExtraException` (\(DocumentStatusShouldBe _ _ i) -> throwM . SomeDBExtraException $ conflictError $ "Document not pending but " <> show i)
         `catchDBExtraException` (\(SignatoryHasAlreadySigned {}) -> throwM . SomeDBExtraException $ conflictError $ "Signatory has already signed")
     postDocumentRejectedChange slid customtext =<< theDocument
     Accepted <$> (documentJSONV1 mu True True Nothing =<< theDocument)
@@ -612,17 +616,17 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
         (Left . Failed) <$> (J.runJSONGenT $ J.value "dkNemidNotSupported" True)
 
    )
-    `catchDBExtraException` (\(DocumentStatusShouldBe _ _ i) -> throwM . SomeDBExtraException $ conflictError $ "Document not pending but " ++ show i)
+    `catchDBExtraException` (\(DocumentStatusShouldBe _ _ i) -> throwM . SomeDBExtraException $ conflictError $ "Document not pending but " <> show i)
     `catchDBExtraException` (\(SignatoryHasAlreadySigned {}) -> throwM . SomeDBExtraException $ conflictError $ "Signatory has already signed")
 
 {- | Utils for signing with eleg -}
 checkAuthenticationToSignMethodAndValue :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
 checkAuthenticationToSignMethodAndValue slid = do
-  mAuthType  :: Maybe String <- getField "authentication_type"
-  mAuthValue :: Maybe String <- getField "authentication_value"
+  mAuthType  :: Maybe Text <- getField "authentication_type"
+  mAuthValue :: Maybe Text <- getField "authentication_value"
   case (mAuthType, mAuthValue) of
        (Just authType, Just authValue) -> do
-           let mAuthMethod = fromJSValue $ J.toJSValue authType
+           let mAuthMethod = fromJSValue $ J.toJSValue $ T.unpack authType
            case mAuthMethod of
                 Just authMethod -> do
                     siglink <- fromJust . getSigLinkFor slid <$> theDocument
@@ -632,7 +636,7 @@ checkAuthenticationToSignMethodAndValue slid = do
                              conflictError "`authentication_type` does not match"
                          (True, StandardAuthenticationToSign) -> return ()
                          (True, SEBankIDAuthenticationToSign)   ->
-                             if (authValue == getPersonalNumber siglink || null (getPersonalNumber siglink))
+                             if (authValue == getPersonalNumber siglink || T.null (getPersonalNumber siglink))
                                 then return ()
                                 else throwM . SomeDBExtraException $
                                     conflictError "`authentication_value` for personal number does not match"
@@ -643,7 +647,7 @@ checkAuthenticationToSignMethodAndValue slid = do
                              throwM . SomeDBExtraException $
                                conflictError "Danish NemID signing not supported in API V1"
                          (True, SMSPinAuthenticationToSign) ->
-                             if (authValue == getMobile siglink || null (getMobile siglink))
+                             if (authValue == getMobile siglink || T.null (getMobile siglink))
                                 then return ()
                                 else throwM . SomeDBExtraException $
                                     conflictError "`authentication_value` for phone number does not match"
@@ -657,7 +661,7 @@ signDocument :: (Kontrakcja m, DocumentMonad m)
              -> [(FieldIdentity, FieldTmpValue)]
              -> [FileID]
              -> Maybe ESignature
-             -> Maybe String
+             -> Maybe Text
              -> SignatoryScreenshots
              -> m ()
 signDocument slid fields acceptedAuthorAttachments mesig mpin screenshots = do
@@ -672,9 +676,13 @@ signDocument slid fields acceptedAuthorAttachments mesig mpin screenshots = do
   theDocument >>= \doc -> do
     let sl = fromJust (getSigLinkFor slid doc)
     authorAttachmetsWithAcceptanceText <- forM (documentauthorattachments doc) $ \a -> do
-      acceptanceText <- renderTemplate "_authorAttachmentsUnderstoodContent" (F.value "attachment_name" $ authorattachmentname a)
+      acceptanceText <- renderTextTemplate "_authorAttachmentsUnderstoodContent" (F.value "attachment_name" $ authorattachmentname a)
       return (acceptanceText,a)
-    dbUpdate . AddAcceptedAuthorAttachmentsEvents sl acceptedAuthorAttachments authorAttachmetsWithAcceptanceText  =<< signatoryActor ctx sl
+    actor <- signatoryActor ctx sl
+    dbUpdate $ AddAcceptedAuthorAttachmentsEvents
+      sl acceptedAuthorAttachments
+      authorAttachmetsWithAcceptanceText
+      actor
   getSigLinkFor slid <$> theDocument >>= \(Just sl) -> dbUpdate . SignDocument slid mesig mpin screenshots =<< signatoryActor ctx sl
 
 {- End of utils-}
@@ -760,18 +768,18 @@ apiCallV1ChangeAuthenticationToView did slid = logDocumentAndSignatory did slid 
     unlessM (isPending <$> theDocument) $
       throwM . SomeDBExtraException $ badInput "Document status must be pending"
     sl <- getSigLinkFor slid <$> theDocument >>= \case
-      Nothing -> throwM . SomeDBExtraException $ badInput $ "Signatory link id " ++ (show slid) ++ " not valid for document id " ++ (show did)
+      Nothing -> throwM . SomeDBExtraException $ badInput $ "Signatory link id " <> (show slid) <> " not valid for document id " <> (show did)
       Just sl -> return sl
     unless (isSignatory sl) $
       throwM . SomeDBExtraException $ badInput $
-      "Signatory link id " ++ (show slid)
-      ++ " is a viewer or approver and does not sign"
+      "Signatory link id " <> (show slid)
+      <> " is a viewer or approver and does not sign"
     when (isSignatoryAndHasSigned sl) $
-      throwM . SomeDBExtraException $ badInput $ "Signatory link id " ++ (show slid) ++ " has already signed"
+      throwM . SomeDBExtraException $ badInput $ "Signatory link id " <> (show slid) <> " has already signed"
     when (isApproverAndHasApproved sl) $
-      throwM . SomeDBExtraException $ badInput $ "Signatory link id " ++ (show slid) ++ " has already approved"
+      throwM . SomeDBExtraException $ badInput $ "Signatory link id " <> (show slid) <> " has already approved"
     when (signatorylinkidentifiedtoview sl) $
-      throwM . SomeDBExtraException $ badInput $ "Signatory link id " ++ (show slid) ++ " has already identified to view"
+      throwM . SomeDBExtraException $ badInput $ "Signatory link id " <> (show slid) <> " has already identified to view"
     -- Get the POST data and check it
     authentication_type <- getField "authentication_type"
     personal_number <- getField "personal_number"
@@ -779,9 +787,9 @@ apiCallV1ChangeAuthenticationToView did slid = logDocumentAndSignatory did slid 
     when (isNothing authentication_type) $
       throwM . SomeDBExtraException $ badInput $
         "`authentication_type` must be given. Supported values are: `standard`, `se_bankid`, `no_bankid`, `dk_nemid`."
-    (authtoview, mSSN, mPhone) <- case fromJSValue $ J.toJSValue $ fromMaybe "" authentication_type of
-      Nothing -> throwM . SomeDBExtraException $ badInput $
-        "Invalid authentication method: `" ++ fromMaybe "" authentication_type ++ "` was given. Supported values are: `standard`, `se_bankid`, `no_bankid`."
+    (authtoview, mSSN, mPhone) <- case fromJSValue $ J.toJSValue $ T.unpack $ fromMaybe "" authentication_type of
+      Nothing -> throwM . SomeDBExtraException $ badInput $ T.unpack $
+        "Invalid authentication method: `" <> fromMaybe "" authentication_type <> "` was given. Supported values are: `standard`, `se_bankid`, `no_bankid`."
       Just StandardAuthenticationToView -> return (StandardAuthenticationToView, Nothing, Nothing)
       Just SMSPinAuthenticationToView   -> return (SMSPinAuthenticationToView  , Nothing, mobile_number)
       Just SEBankIDAuthenticationToView -> return (SEBankIDAuthenticationToView, personal_number, Nothing)
@@ -810,7 +818,7 @@ apiCallV1ChangeAuthenticationToView did slid = logDocumentAndSignatory did slid 
     dbUpdate $ ChangeAuthenticationToViewMethod slid AuthenticationToView authtoview mSSN mPhone actor
     Accepted <$> (documentJSONV1 (Just user) True True Nothing =<< theDocument)
   where
-    isValidSSNForAuthenticationToView :: AuthenticationToViewMethod -> String -> Bool
+    isValidSSNForAuthenticationToView :: AuthenticationToViewMethod -> Text -> Bool
     isValidSSNForAuthenticationToView StandardAuthenticationToView _ = True
     isValidSSNForAuthenticationToView SMSPinAuthenticationToView   _ = True
     isValidSSNForAuthenticationToView SEBankIDAuthenticationToView ssn = isGood $ asValidSwedishSSN   ssn
@@ -819,7 +827,8 @@ apiCallV1ChangeAuthenticationToView did slid = logDocumentAndSignatory did slid 
     -- Finnish TUPAS is not supported in API V1
     isValidSSNForAuthenticationToView FITupasAuthenticationToView  _ = False
     isValidSSNForAuthenticationToView VerimiAuthenticationToView _ = True
-    isValidPhoneForAuthenticationToView :: AuthenticationToViewMethod -> String -> Bool
+
+    isValidPhoneForAuthenticationToView :: AuthenticationToViewMethod -> Text -> Bool
     isValidPhoneForAuthenticationToView StandardAuthenticationToView _ = True
     isValidPhoneForAuthenticationToView SMSPinAuthenticationToView phone = isGood (asValidPhoneForSMS phone)
     isValidPhoneForAuthenticationToView SEBankIDAuthenticationToView _ = True
@@ -840,17 +849,17 @@ apiCallV1ChangeAuthenticationToSign did slid = logDocumentAndSignatory did slid 
           throwM . SomeDBExtraException $ badInput "Document status must be pending"
       sl <- getSigLinkFor slid <$> theDocument >>= \case
         Nothing ->
-          throwM . SomeDBExtraException $ badInput $ "Signatory link id " ++ (show slid) ++ " not valid for document id " ++ (show did)
+          throwM . SomeDBExtraException $ badInput $ "Signatory link id " <> (show slid) <> " not valid for document id " <> (show did)
         Just sl -> return sl
       when (isSignatoryAndHasSigned sl) $
-          throwM . SomeDBExtraException $ badInput $ "Signatory link id " ++ (show slid) ++ " has already signed"
+          throwM . SomeDBExtraException $ badInput $ "Signatory link id " <> (show slid) <> " has already signed"
       -- Get the POST data and check it
       authentication_type  <- getField "authentication_type"
       authentication_value <- getField "authentication_value"
       when (isNothing authentication_type) $
         throwM . SomeDBExtraException $ badInput
           "`authentication_type` must be given. Supported values are: `standard`, `eleg`, `sms_pin`."
-      (authtosignmethod, mSSN, mPhone) <- case fromJSValue $ J.toJSValue $ fromMaybe "" authentication_type of
+      (authtosignmethod, mSSN, mPhone) <- case fromJSValue $ J.toJSValue $ fromMaybe "" $ T.unpack <$> authentication_type of
         Nothing -> throwM . SomeDBExtraException $ badInput
           "`authentication_type` was not valid. Supported values are: `standard`, `eleg`, `sms_pin`."
         Just StandardAuthenticationToSign -> return (StandardAuthenticationToSign, Nothing, Nothing)
@@ -1043,46 +1052,60 @@ apiCallV1List = api $ do
                           "DocumentsForPad"   -> (DocumentsVisibleToUser uid,[DocumentFilterByAuthor uid, DocumentFilterSignNowOnPad])
                           _ -> (DocumentsVisibleToUser uid,[DocumentFilterDeleted False, DocumentFilterUnsavedDraft False])
       filters2 = concatMap fltSpec (listParamsFilters params)
-      fltSpec ("time", tostr) = case reads tostr of
+
+      fltSpec :: (Text, Text) -> [DocumentFilter]
+      fltSpec ("time", tostr) = case reads (T.unpack tostr) of
                                     (((Just from',Just to'),""):_) -> [DocumentFilterByMonthYearFrom from',DocumentFilterByMonthYearTo to']
                                     (((Nothing ,Just to'),""):_) -> [DocumentFilterByMonthYearTo to']
                                     (((Just from',Nothing),""):_)   -> [DocumentFilterByMonthYearFrom from']
                                     _ -> []
-      fltSpec ("mtime", tostr) = case parseTimeISO tostr of
+      fltSpec ("mtime", tostr) = case parseTimeISO (T.unpack tostr) of
                                     Just mtime -> [DocumentFilterByModificationTimeAfter mtime]
                                     _ -> []
-      fltSpec ("sender", tostr) = case reads tostr of
+      fltSpec ("sender", tostr) = case reads (T.unpack tostr) of
                                     ((suid,""):_) -> [DocumentFilterByAuthor suid]
                                     _ -> []
-      fltSpec ("cansign", tostr) = case reads tostr of
+      fltSpec ("cansign", tostr) = case reads (T.unpack tostr) of
                                     ((suid,""):_) -> [DocumentFilterByCanSign suid]
                                     _ -> []
-      fltSpec ("status", scstr) = case reads scstr of
+      fltSpec ("status", scstr) = case reads (T.unpack scstr) of
                                     ((statusclasss,""):_) -> [DocumentFilterByStatusClass statusclasss]
                                     _ -> []
       fltSpec _ = []
   tagsstr <- getField' "tags"
-  let tagsFilters = case runGetJSON readJSArray tagsstr of
+  let tagsFilters = case runGetJSON readJSArray (T.unpack tagsstr) of
                       Right js ->[DocumentFilterByTags $ join $ maybeToList $ (fromJSValueCustomMany fromJSValue js)]
                       _ -> []
   let sorting    = docSortingFromParams params
-      searching  = [processSearchStringToFilter . T.pack . listParamsSearching $ params]
+      searching  = [processSearchStringToFilter . listParamsSearching $ params]
       pagination = (listParamsOffset params, listParamsLimit params, docsPageSize)
-      filters = filters1 ++ filters2 ++ tagsFilters
+      filters = filters1 <> filters2 <> tagsFilters
 
   format <- getField "format"
   case format of
        Just "csv" -> do
-          allDocs <- dbQuery $ GetDocuments domain (searching ++ filters) sorting 1000
-          let allDocsCustomFields = allCustomTextOrCheckboxOrRadioGroupFields allDocs
-              docsCSVs = concatMap (docForListCSVV1 allDocsCustomFields) allDocs
-          return $ Left $ CSV { csvFilename = "documents.csv"
-                              , csvHeader = docForListCSVHeaderV1 allDocsCustomFields
-                              , csvContent = docsCSVs
-                              }
+          allDocs <- dbQuery $ GetDocuments domain (searching <> filters) sorting 1000
+          let
+            allDocsCustomFields :: [FieldIdentity] =
+              allCustomTextOrCheckboxOrRadioGroupFields allDocs
+
+            docsCSVs' :: [[Text]] =
+              concatMap (docForListCSVV1 allDocsCustomFields) allDocs
+
+            docsCSVs :: [[String]] =
+              fmap (fmap T.unpack) docsCSVs'
+
+            headerVals :: [String] =
+              T.unpack <$> docForListCSVHeaderV1 allDocsCustomFields
+
+          return $ Left $ CSV
+            { csvFilename = "documents.csv"
+            , csvHeader = headerVals
+            , csvContent = docsCSVs
+            }
        _ -> do
           startQueryTime <- liftIO getCurrentTime
-          (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit domain (searching ++ filters) sorting pagination
+          (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit domain (searching <> filters) sorting pagination
           finishQueryTime <- liftIO getCurrentTime
           logInfo "Fetching for apiCallV1List done" $ object [
               "query_time" .= (realToFrac $ diffUTCTime finishQueryTime startQueryTime :: Double)
@@ -1159,7 +1182,7 @@ apiCallV1History did = logDocument did . api $ do
 -- | This handler downloads main file of document. This means sealed file for Closed documents.
 --   or one with preprinted fields if not closed
 
-apiCallV1DownloadMainFile :: Kontrakcja m => DocumentID -> String -> m Response
+apiCallV1DownloadMainFile :: Kontrakcja m => DocumentID -> Text -> m Response
 apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
 
   (mslid :: Maybe SignatoryLinkID) <- readField "signatorylinkid"
@@ -1208,7 +1231,7 @@ apiCallV1DownloadMainFile did _nameForBrowser = logDocument did . api $ do
                   apiGuardL  (serverError "Can't get file content")  $ DocSeal.presealDocumentFile doc sourceFile
   return $ respondWithPDF False content
 
-apiCallV1DownloadFile :: Kontrakcja m => DocumentID -> FileID -> String -> m Response
+apiCallV1DownloadFile :: Kontrakcja m => DocumentID -> FileID -> Text -> m Response
 apiCallV1DownloadFile did fileid nameForBrowser = logDocumentAndFile did fileid . api $ do
   (mslid :: Maybe SignatoryLinkID) <- readField "signatorylinkid"
   (maccesstoken :: Maybe MagicHash) <- readField "accesstoken"
@@ -1236,19 +1259,19 @@ apiCallV1DownloadFile did fileid nameForBrowser = logDocumentAndFile did fileid 
                       modifyContext $ set ctxmaybeuser (get ctxmaybeuser ctx)
                       return res;
                     else getDocByDocID did
-  let allfiles = maybeToList (mainfileid <$> documentfile doc) ++ maybeToList (mainfileid <$> documentsealedfile doc) ++
-                      (authorattachmentfileid <$> documentauthorattachments doc) ++
+  let allfiles = maybeToList (mainfileid <$> documentfile doc) <> maybeToList (mainfileid <$> documentsealedfile doc) <>
+                      (authorattachmentfileid <$> documentauthorattachments doc) <>
                       (catMaybes $ map signatoryattachmentfile $ concatMap signatoryattachments $ documentsignatorylinks doc)
   if (all (/= fileid) allfiles)
      then throwM . SomeDBExtraException $ forbidden "Access to file is forbiden."
      else do
         content <- getFileIDContents fileid
         let res = Response 200 Map.empty nullRsFlags (BSL.fromChunks [content]) Nothing
-            ct = if (".pdf" `isSuffixOf` (map toLower nameForBrowser))
+            ct = if (".pdf" `T.isSuffixOf` (T.toLower nameForBrowser))
                     then  "application/pdf"
-                    else if (".png" `isSuffixOf` (map toLower nameForBrowser))
+                    else if (".png" `T.isSuffixOf` (T.toLower nameForBrowser))
                       then "image/png"
-                      else if (".jpg" `isSuffixOf` (map toLower nameForBrowser))
+                      else if (".jpg" `T.isSuffixOf` (T.toLower nameForBrowser))
                         then "image/jpeg"
                         else "application/octet-stream"
             res2 = setHeaderBS (BS.fromString "Content-Type") (BS.fromString ct) res
@@ -1277,7 +1300,7 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
       Nothing -> return Nothing
       Just (Input _ Nothing _) -> throwM . SomeDBExtraException $ badInput "Missing file"
       Just (Input contentspec (Just filename') _contentType) -> do
-        let filename = takeBaseName filename' ++ ".pdf"
+        let filename = takeBaseName filename' <> ".pdf"
         content1' <- case contentspec of
           Left filepath -> liftIO $ BS.readFile filepath
           Right content -> return (BS.concat (BSL.toChunks content))
@@ -1288,13 +1311,13 @@ apiCallV1ChangeMainFile docid = logDocument docid . api $ do
         let content' = either (const content1') id (B64.decode content1')
 
         pdfcontent <- apiGuardL (badInput "The PDF is invalid.") $ preCheckPDF content'
-        fileid' <- saveNewFile filename pdfcontent
+        fileid' <- saveNewFile (T.pack filename) pdfcontent
         return $ Just (fileid', takeBaseName filename)
 
     case mft of
       Just (fileid,filename) -> do
         dbUpdate $ AttachFile fileid actor
-        apiGuardL' $ dbUpdate $ SetDocumentTitle filename actor
+        apiGuardL' $ dbUpdate $ SetDocumentTitle (T.pack filename) actor
         case moldfileid of
           Just oldfileid -> do
             start <- liftIO getCurrentTime
@@ -1318,7 +1341,7 @@ apiCallV1SendSMSPinCode did slid = logDocumentAndSignatory did slid . api $ do
     when (SMSPinAuthenticationToSign /= signatorylinkauthenticationtosignmethod sl) $ do
        throwM . SomeDBExtraException $ serverError "SMS pin code can't be sent to this signatory"
     slidPhone <- getMobile <$> fromJust . getSigLinkFor slid <$> theDocument
-    phone <- if not $ null slidPhone
+    phone <- if not $ T.null slidPhone
                 then return slidPhone
                 else apiGuardJustM (badInput "Phone number provided is not valid.") $ getOptionalField asValidPhone "phone"
     pin <- dbQuery $ GetSignatoryPin SMSPinToSign slid phone
@@ -1326,7 +1349,7 @@ apiCallV1SendSMSPinCode did slid = logDocumentAndSignatory did slid . api $ do
     Ok <$> (J.runJSONGenT $ J.value "sent" True)
 
 -- Signatory Attachments handling
-apiCallV1SetSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID -> String -> m Response
+apiCallV1SetSignatoryAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID -> Text -> m Response
 apiCallV1SetSignatoryAttachment did sid aname = logDocumentAndSignatory did sid . api $ do
   checkObjectVersionIfProvided did
   logInfo "Setting signatory attachments for signatory" $ object [
@@ -1353,9 +1376,9 @@ apiCallV1SetSignatoryAttachment did sid aname = logDocumentAndSignatory did sid 
                           || ".jpeg" `isSuffixOf` (map toLower filename))
                     then if (not $ BSL.null content1)
                       then return $ BSL.toStrict content1
-                      else throwM . SomeDBExtraException $ badInput ("Image can't be empty. Uploaded filename was " ++ filename)
-                    else throwM . SomeDBExtraException $ badInput ("Only pdf files or images can be attached. Uploaded filename was " ++ filename)
-                (saveNewFile (Windows.takeFileName filename) content)
+                      else throwM . SomeDBExtraException $ badInput ("Image can't be empty. Uploaded filename was " <> filename)
+                    else throwM . SomeDBExtraException $ badInput ("Only pdf files or images can be attached. Uploaded filename was " <> filename)
+                (saveNewFile (T.pack $ Windows.takeFileName filename) content)
       _ -> return Nothing
     ctx <- getContext
     case mfileid of
@@ -1393,7 +1416,7 @@ checkObjectVersionIfProvidedAndThrowError did err = do
 
 -- Utils
 guardAuthorOrAuthorsAdmin
-  :: (Kontrakcja m,DocumentMonad m) => User -> String -> m ()
+  :: (Kontrakcja m,DocumentMonad m) => User -> Text -> m ()
 guardAuthorOrAuthorsAdmin user forbidenMessage = do
   docUserID <- apiGuardJustM (serverError "No author found") $
                (maybesignatory <=< getAuthorSigLink) <$> theDocument
@@ -1403,7 +1426,7 @@ guardAuthorOrAuthorsAdmin user forbidenMessage = do
                           ((usergroupid docUser == usergroupid user)
                             && (useriscompanyadmin user))
   unless hasPermission $
-    throwM . SomeDBExtraException $ forbidden forbidenMessage
+    throwM . SomeDBExtraException $ forbidden $ T.unpack forbidenMessage
 
 
 guardSignatoryAccessFromSessionOrCredentials
@@ -1424,16 +1447,17 @@ guardSignatoryAccessFromSessionOrCredentials did slid = do
             serverError "Can't perform this action. Not authorized."
 
 -- Helper type that represents ~field value, but without file reference - and only with file content. Used only locally.
-data FieldTmpValue = StringFTV String
+data FieldTmpValue
+  = StringFTV Text
   | BoolFTV Bool
   | FileFTV BS.ByteString
     deriving (Eq, Ord, Show)
 
-getValidPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldIdentity, FieldTmpValue)] -> m (Maybe String)
+getValidPin :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> [(FieldIdentity, FieldTmpValue)] -> m (Maybe Text)
 getValidPin slid fields = do
   pin <- apiGuardJustM (badInput "Pin not provided or invalid.") $ getField "pin"
   slidPhone <- getMobile <$> fromJust . getSigLinkFor slid <$> theDocument
-  phone <- case (not $ null slidPhone, lookup MobileFI fields) of
+  phone <- case (not $ T.null slidPhone, lookup MobileFI fields) of
                 (True, _) -> return slidPhone
                 (False, Just (StringFTV v)) -> return v
                 (False, _) -> throwM . SomeDBExtraException $ badInput "Phone number not provided by author, you need to provide it"
@@ -1459,7 +1483,7 @@ getFieldForSigning = do
               (Just fi@(SignatureFI _), Just val) -> case (snd <$> RFC2397.decode (BS.pack val)) of
                 Just bv -> Just (fi, FileFTV bv)
                 _ -> Nothing
-              (Just fi, Just val) -> Just (fi, StringFTV val)
+              (Just fi, Just val) -> Just (fi, StringFTV $ T.pack val)
               _ -> Nothing
       case mvalues of
         Nothing -> throwM . SomeDBExtraException $ serverError "Fields description json has invalid format"
@@ -1500,4 +1524,4 @@ guardThatDocumentIsReadableBySignatories :: Kontrakcja m => Document -> m ()
 guardThatDocumentIsReadableBySignatories doc = do
   unless (isAccessibleBySignatories doc) $ throwM $ SomeDBExtraException $
     forbidden $ "The document has expired or has been withdrawn. (status: "
-                ++ show (documentstatus doc) ++ ")"
+                <> show (documentstatus doc) <> ")"

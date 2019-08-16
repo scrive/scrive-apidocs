@@ -99,7 +99,7 @@ sendDocumentMails author = do
         let checkMail s mg = do
                               logInfo_ $ "Checking mail" <+> T.pack s
                               m <- mg
-                              validMail s m
+                              validMail (T.pack s) m
         checkMail "Invitation" $ mailInvitation True Sign (Just sl) =<< theDocument
         -- DELIVERY MAILS
         checkMail "Deferred invitation"    $  mailDeferredInvitation (get ctxmailnoreplyaddress ctx) (get ctxbrandeddomain ctx) sl =<< theDocument
@@ -153,7 +153,7 @@ testUserMails = do
     let checkMail s mg = do
                            logInfo_ $ "Checking mail" <+> T.pack s
                            m <- fst <$> (runTestKontra req ctx $ mg)
-                           validMail s m
+                           validMail (T.pack s) m
     checkMail "New account" $ do
           al <- newUserAccountRequestLink (get ctxlang ctx) (userid user) AccountRequest
           newUserMail ctx (getEmail user) al
@@ -168,17 +168,18 @@ testUserMails = do
 
 
 -- MAIL TESTING UTILS
-validMail :: MonadIO m => String -> Mail -> m ()
+validMail :: MonadIO m => Text -> Mail -> m ()
 validMail name m = do
     let c    = content m
-        c'   = "<html>" <> TL.pack c <> "</html>"
+        c'   = "<html>" <> TL.fromStrict c <> "</html>"
              -- ^ XML parser freaks out if there's content after root element.
         exml = XML.parseText XML.def c'
-    unless (any isAlphaNum $ title m) $
-      assertFailure ("Empty title of mail " ++ name)
+    unless (T.any isAlphaNum $ title m) $
+      assertFailure $ T.unpack $ "Empty title of mail " <> name
     case exml of
-      Left exc -> assertFailure $ "Invalid HTML mail " ++ name ++ " : " ++ c ++
-                                  " " ++ show exc
+      Left exc -> assertFailure $ T.unpack $
+        "Invalid HTML mail " <> name <> " : " <> c <>
+        " " <> (showt exc)
       Right _  -> assertSuccess
 
 addNewRandomUserWithLang :: Lang -> TestEnv User

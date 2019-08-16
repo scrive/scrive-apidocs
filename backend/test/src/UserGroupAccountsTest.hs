@@ -143,7 +143,7 @@ test_addingANewCompanyAccountWithDifferentTarget = do
                         , ("email", inText "bob@blue.com")
                         , ("fstname", inText "Bob")
                         , ("sndname", inText "Blue")
-                        , ("user_group_id", inText . show $ trgugid) ]
+                        , ("user_group_id", inText $ showt trgugid) ]
 
   -- user does not yet have permission to move mvuser. Failure expected.
   assertRaisesInternalError
@@ -179,7 +179,7 @@ test_addingExistingCompanyUserAsCompanyAccountWithDifferentTarget = do
                         , ("email", inText "bob@blue.com")
                         , ("fstname", inText "Bob")
                         , ("sndname", inText "Blue")
-                        , ("user_group_id", inText . show $ trgugid)
+                        , ("user_group_id", inText $ showt trgugid)
                         ]
   -- user does not yet have permission to move existinguser; failure expected.
   assertRaisesInternalError
@@ -209,7 +209,7 @@ test_resendingInviteToNewCompanyAccount = do
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
   req <- mkRequest POST [ ("resend", inText "True")
-                        , ("resendid", inText $ show (userid newuser))
+                        , ("resendid", inText $ showt (userid newuser))
                         , ("resendemail", inText "bob@blue.com")
                         , ("sndname", inText "Blue")
                         ]
@@ -231,7 +231,7 @@ test_switchingStandardToAdminUser = do
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
   req <- mkRequest POST [ ("changerole", inText "True")
-                        , ("changeid", inText $ show (userid standarduser))
+                        , ("changeid", inText $ showt (userid standarduser))
                         , ("makeadmin", inText $ "true")
                         ]
   (res, _ctx') <- runTestKontra req ctx $ handleChangeRoleOfUserGroupAccount
@@ -253,7 +253,7 @@ test_switchingAdminToStandardUser = do
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
   req <- mkRequest POST [ ("changerole", inText "True")
-                        , ("changeid", inText $ show (userid adminuser))
+                        , ("changeid", inText $ showt (userid adminuser))
                         , ("makeadmin", inText $ "false")
                         ]
   (res, _ctx') <- runTestKontra req ctx $ handleChangeRoleOfUserGroupAccount
@@ -274,7 +274,7 @@ test_removingCompanyAccountInvite = do
 
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
-  req <- mkRequest POST [("removeid", inText $ show $ userid standarduser)]
+  req <- mkRequest POST [("removeid", inText $ showt $ userid standarduser)]
   (res, _ctx') <- runTestKontra req ctx $ handleRemoveUserGroupAccount
 
   assertBool "Response is proper JSON" $ res == (runJSONGen $ value "removed" True)
@@ -296,7 +296,7 @@ test_removingCompanyAccountWorks = do
   assertEqual "Company admin sees users docs before user delete" 1 (length companydocs1)
   assertEqual "Docid matches before user delete" docid (documentid $ head companydocs1)
 
-  req <- mkRequest POST [("removeid", inText $ show (userid standarduser))]
+  req <- mkRequest POST [("removeid", inText $ showt (userid standarduser))]
   (res, _) <- runTestKontra req ctx $ handleRemoveUserGroupAccount
 
   assertBool "Response is proper JSON" $ res == (runJSONGen $ value "removed" True)
@@ -312,7 +312,7 @@ test_removingCompanyAccountWorks = do
 
   -- test removal with access control only
   (otheruser, otherug) <- addNewAdminUserAndUserGroup "Mad Jack" "Churchill" "madjack@example.com"
-  req' <- mkRequest POST [("removeid", inText $ show (userid otheruser))]
+  req' <- mkRequest POST [("removeid", inText $ showt (userid otheruser))]
 
   -- shouldn't work
   (res', _) <- runTestKontra req' ctx $ handleRemoveUserGroupAccount

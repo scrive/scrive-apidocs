@@ -28,19 +28,19 @@ import UserGroup.Types
 
 data Theme = Theme {
     themeID                       :: !ThemeID
-  , themeName                     :: !String
+  , themeName                     :: !Text
   , themeLogo                     :: !BS.ByteString
-  , themeBrandColor               :: !String
-  , themeBrandTextColor           :: !String
-  , themeActionColor              :: !String
-  , themeActionTextColor          :: !String
-  , themeActionSecondaryColor     :: !String
-  , themeActionSecondaryTextColor :: !String
-  , themePositiveColor            :: !String
-  , themePositiveTextColor        :: !String
-  , themeNegativeColor            :: !String
-  , themeNegativeTextColor        :: !String
-  , themeFont                     :: !String
+  , themeBrandColor               :: !Text
+  , themeBrandTextColor           :: !Text
+  , themeActionColor              :: !Text
+  , themeActionTextColor          :: !Text
+  , themeActionSecondaryColor     :: !Text
+  , themeActionSecondaryTextColor :: !Text
+  , themePositiveColor            :: !Text
+  , themePositiveTextColor        :: !Text
+  , themeNegativeColor            :: !Text
+  , themeNegativeTextColor        :: !Text
+  , themeFont                     :: !Text
 } deriving (Eq, Ord, Show)
 
 data GetTheme = GetTheme ThemeID
@@ -70,7 +70,7 @@ instance (MonadDB m,MonadThrow m) => DBQuery m GetThemesForUserGroup [Theme] whe
     fetchMany fetchTheme
 
 data GetThemesMD5 = GetThemesMD5 [ThemeID]
-instance (MonadDB m,MonadThrow m) => DBQuery m GetThemesMD5 [String] where
+instance (MonadDB m,MonadThrow m) => DBQuery m GetThemesMD5 [Text] where
   query (GetThemesMD5 tids) = do
     runQuery_ . sqlSelect "themes" $ do
       sqlWhereIn "id" tids
@@ -217,7 +217,7 @@ selectThemesMD5 = sqlResult $ "md5(concat(" <> (sqlConcatComma [
    , "themes.font"
    ]) <> "))"
 
-fetchTheme :: (ThemeID, String, BS.ByteString, String, String, String, String, String, String, String, String, String, String, String) -> Theme
+fetchTheme :: (ThemeID, Text, BS.ByteString, Text, Text, Text, Text, Text, Text, Text, Text, Text, Text, Text) -> Theme
 fetchTheme (tid, name, logo, brand_color, brand_text_color, action_color, action_text_color, action_secondary_color, action_secondary_text_color, positive_color, positive_text_color, negative_color, negative_text_color, font) =
   Theme {
       themeID                       = tid

@@ -15,7 +15,7 @@ import Context.Labels
 import MailContext.Internal (MailContext(..))
 import User.Types.User (User)
 
-ctxDomainUrl :: Context :-> String
+ctxDomainUrl :: Context :-> Text
 ctxDomainUrl = bdUrl . ctxbrandeddomain
 
 -- | Get a user from `Context` (user takes precedence over pad user).

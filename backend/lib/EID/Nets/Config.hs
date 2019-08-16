@@ -1,14 +1,13 @@
 module EID.Nets.Config where
 
 import Data.Unjson
-import qualified Data.Text as T
 
 data NetsConfig = NetsConfig {
-    netsMerchantIdentifier     :: T.Text
-  , netsMerchantPassword       :: T.Text
-  , netsIdentifyUrl            :: T.Text
-  , netsAssertionUrl           :: T.Text
-  , netsTrustedDomain          :: T.Text
+    netsMerchantIdentifier     :: Text
+  , netsMerchantPassword       :: Text
+  , netsIdentifyUrl            :: Text
+  , netsAssertionUrl           :: Text
+  , netsTrustedDomain          :: Text
 
 } deriving (Eq, Ord, Show)
 
@@ -34,9 +33,9 @@ instance Unjson NetsConfig where
 data NetsSignConfig = NetsSignConfig {
     netssignCertFile    :: FilePath
   , netssignPrivKeyFile :: FilePath
-  , netssignAPIUrl      :: T.Text
-  , netssignMerchantID  :: T.Text
-  , netssignSignURLBase :: T.Text
+  , netssignAPIUrl      :: Text
+  , netssignMerchantID  :: Text
+  , netssignSignURLBase :: Text
 } deriving (Eq, Ord, Show)
 
 instance Unjson NetsSignConfig where

@@ -23,7 +23,7 @@ data Session = Session {
   , sesExpires   :: UTCTime
   , sesToken     :: MagicHash
   , sesCSRFToken :: MagicHash
-  , sesDomain    :: String
+  , sesDomain    :: Text
   } deriving (Eq, Show, Typeable)
 
 emptySession :: ( CryptoRNG m, MonadDB m, MonadThrow m

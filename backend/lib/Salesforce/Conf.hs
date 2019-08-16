@@ -5,17 +5,17 @@ module Salesforce.Conf (
 import Data.Unjson
 
 data SalesforceConf = SalesforceConf {
-    salesforceAuthenticationUrl :: String
-  , salesforceTokenUrl :: String
-  , salesforceConsumerKey :: String
-  , salesforceConsumerSecret :: String
-  , salesforceRedirectUrl :: String
+    salesforceAuthenticationUrl :: Text
+  , salesforceTokenUrl :: Text
+  , salesforceConsumerKey :: Text
+  , salesforceConsumerSecret :: Text
+  , salesforceRedirectUrl :: Text
     -- oauth_access_token for user that is coresponding to SalesForce
     -- service in our system. It should be hardcoded in salesforce
     -- plugin, but due to their policy it can't.
-  , salesforceIntegrationAPIToken  :: String
-  , salesforceIntegrationAPISecret :: String
-  , salesforceErrorEmail :: Maybe String
+  , salesforceIntegrationAPIToken  :: Text
+  , salesforceIntegrationAPISecret :: Text
+  , salesforceErrorEmail :: Maybe Text
 } deriving (Show, Eq, Ord)
 
 unjsonSalesforceConf :: UnjsonDef SalesforceConf

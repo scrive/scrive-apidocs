@@ -20,7 +20,6 @@ import Data.Unjson
 import Data.Unjson as Unjson
 import Log
 import qualified Data.Aeson as Aeson
-import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
@@ -114,7 +113,7 @@ handleDeleteThemeForUserGroup ugid tid = do
   dbUpdate $ DeleteThemeOwnedByUserGroup ugid tid
 
 
-guardNotMainDomain :: Kontrakcja m => BrandedDomainID -> T.Text -> m ()
+guardNotMainDomain :: Kontrakcja m => BrandedDomainID -> Text -> m ()
 guardNotMainDomain did msg = do
   bd <- dbQuery $ GetBrandedDomainByID did
   if (get bdMainDomain bd)

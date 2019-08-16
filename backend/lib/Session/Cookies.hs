@@ -12,6 +12,8 @@ module Session.Cookies (
 import Control.Arrow
 import Control.Monad.IO.Class
 import Happstack.Server hiding (Session, addCookie)
+import TextShow (TextShow(..), fromText)
+import qualified Data.Text as T
 
 import Cookies
 import MagicHash
@@ -30,22 +32,31 @@ instance Show SessionCookieInfo where
   show SessionCookieInfo{..} =
     show cookieSessionID ++ "-" ++ show cookieSessionToken
 
+instance TextShow SessionCookieInfo where
+  showb SessionCookieInfo{..} =
+    showb cookieSessionID <> fromText "-" <> showb cookieSessionToken
+
 instance Read SessionCookieInfo where
   readsPrec _ s = do
-    let (sid, msh) = second (drop 1) $ break (== '-') s
-        (sh, rest) = splitAt 16 msh
-    case SessionCookieInfo <$> maybeRead sid <*> maybeRead sh of
+    let
+      (sid, msh) :: (String, String) =
+        second (drop 1) $ break (== '-') s
+      (sh, rest) = splitAt 16 msh
+    case SessionCookieInfo <$> maybeRead (T.pack sid) <*> maybeRead (T.pack sh) of
       Just sci -> [(sci, rest)]
       Nothing  -> []
 
 instance FromReqURI SessionCookieInfo where
-  fromReqURI = maybeRead
+  fromReqURI = maybeRead . T.pack
 
-cookieNameXToken :: String
+cookieNameXToken :: Text
 cookieNameXToken = "xtoken"
 
-cookieNameSessionID :: String
+cookieNameSessionID :: Text
 cookieNameSessionID = "sessionId"
+
+mkCookieFromText :: Text -> Text -> Cookie
+mkCookieFromText h v = mkCookie (T.unpack h) (T.unpack v)
 
 -- | Add a session cookie to browser.
 startSessionCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m)
@@ -53,9 +64,9 @@ startSessionCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m)
 startSessionCookie s = do
   ishttps  <- isHTTPS
   addHttpOnlyCookie ishttps (MaxAge (60*60*24)) $
-    mkCookie cookieNameSessionID . show $ sessionCookieInfoFromSession s
+    mkCookieFromText cookieNameSessionID . showt $ sessionCookieInfoFromSession s
   addCookie ishttps (MaxAge (60*60*24)) $
-    mkCookie cookieNameXToken $ show $ sesCSRFToken s
+    mkCookieFromText cookieNameXToken $ showt $ sesCSRFToken s
 
 -- | Remove session cookie from browser.
 stopSessionCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m)
@@ -63,9 +74,9 @@ stopSessionCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m)
 stopSessionCookie = do
   ishttps  <- isHTTPS
   addHttpOnlyCookie ishttps (MaxAge 0) $
-    mkCookie cookieNameSessionID ""
+    mkCookieFromText cookieNameSessionID ""
   addCookie ishttps (MaxAge 0) $
-    mkCookie cookieNameXToken ""
+    mkCookieFromText cookieNameXToken ""
 
 sessionCookieInfoFromSession :: Session -> SessionCookieInfo
 sessionCookieInfoFromSession s = SessionCookieInfo {

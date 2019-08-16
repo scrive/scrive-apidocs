@@ -15,7 +15,6 @@ module UserGroup.API (
 
 import Control.Monad.Extra (unlessM)
 import Data.Aeson
-import Data.Text
 import Data.Unjson
 import Happstack.Server.Types
 import Happstack.StaticRouting

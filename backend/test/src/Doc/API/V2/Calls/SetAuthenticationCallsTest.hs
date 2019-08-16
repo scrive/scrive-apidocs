@@ -2,6 +2,7 @@ module Doc.API.V2.Calls.SetAuthenticationCallsTest (apiV2SetAuthenticationTests)
 
 import Happstack.Server
 import Test.Framework
+import qualified Data.Text as T
 
 import Context
 import Doc.API.V2.AesonTestUtils
@@ -84,8 +85,8 @@ testDocApiV2SetSignatoryAuthenticationToView = do
   setInvalidAuth [param_auth se_bankid] 409
   setInvalidAuth [param_auth se_bankid, param_ssn no_ssn] 409
   setInvalidAuth [param_auth no_bankid, param_mobile "-1"] 409
-  setInvalidAuth [param_auth no_bankid, param_mobile (init no_mobile)] 409
-  setInvalidAuth [param_auth no_bankid, param_mobile (no_mobile ++ "5")] 409
+  setInvalidAuth [param_auth no_bankid, param_mobile (T.pack $ init no_mobile)] 409
+  setInvalidAuth [param_auth no_bankid, param_mobile (T.pack no_mobile <> "5")] 409
 
   let getAuthToView = getMockDocSigLinkAuthToViewMethod 1
       getPersonalNumber = getMockDocSigLinkPersonalNumber 1
@@ -101,7 +102,7 @@ testDocApiV2SetSignatoryAuthenticationToView = do
     assertEqual
       "SE-10 Personal number should be set"
       se_ssn_10
-      (getPersonalNumber mockDocSE10)
+      (T.pack $ getPersonalNumber mockDocSE10)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocStandard1 <- setAuth [param_auth standard_auth]
@@ -112,7 +113,7 @@ testDocApiV2SetSignatoryAuthenticationToView = do
     assertEqual
       "SE-10 Personal number should STILL be set"
       se_ssn_10
-      (getPersonalNumber mockDocStandard1)
+      (T.pack $ getPersonalNumber mockDocStandard1)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocSE12 <- setAuth [param_auth se_bankid, param_ssn se_ssn_12]
@@ -123,7 +124,7 @@ testDocApiV2SetSignatoryAuthenticationToView = do
     assertEqual
       "SE-12 Personal number should be set"
       se_ssn_12
-      (getPersonalNumber mockDocSE12)
+      (T.pack $ getPersonalNumber mockDocSE12)
 
   -- Valid NO BankID
   do -- Just to ensure limited scope so we don't test against the wrong thing
@@ -135,10 +136,10 @@ testDocApiV2SetSignatoryAuthenticationToView = do
     assertEqual
       "NO Personal number should be set"
       no_ssn
-      (getPersonalNumber mockDocNO)
+      (T.pack $ getPersonalNumber mockDocNO)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
-    mockDocNOMobile <- setAuth [param_auth no_bankid, param_mobile no_mobile]
+    mockDocNOMobile <- setAuth [param_auth no_bankid, param_mobile (T.pack no_mobile)]
     assertEqual
       "Authentication to view should be set"
       NOBankIDAuthenticationToView
@@ -150,7 +151,7 @@ testDocApiV2SetSignatoryAuthenticationToView = do
     assertEqual
       "NO Personal number should STILL be set"
       no_ssn
-      (getPersonalNumber mockDocNOMobile)
+      (T.pack $ getPersonalNumber mockDocNOMobile)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocNOEmptyMobile <- setAuth [param_auth no_bankid, param_mobile ""]
@@ -165,7 +166,7 @@ testDocApiV2SetSignatoryAuthenticationToView = do
     assertEqual
       "NO Personal number should STILL be set"
       no_ssn
-      (getPersonalNumber mockDocNOEmptyMobile)
+      (T.pack $ getPersonalNumber mockDocNOEmptyMobile)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocStandard2 <- setAuth [param_auth standard_auth]
@@ -176,7 +177,7 @@ testDocApiV2SetSignatoryAuthenticationToView = do
     assertEqual
       "NO Personal number should STILL be set"
       no_ssn
-      (getPersonalNumber mockDocStandard2)
+      (T.pack $ getPersonalNumber mockDocStandard2)
 
 testDocApiV2SetSignatoryAuthenticationToViewArchived :: TestEnv ()
 testDocApiV2SetSignatoryAuthenticationToViewArchived = do
@@ -220,8 +221,8 @@ testDocApiV2SetSignatoryAuthenticationToViewArchived = do
   setInvalidAuth [param_auth se_bankid] 409
   setInvalidAuth [param_auth se_bankid, param_ssn no_ssn] 409
   setInvalidAuth [param_auth no_bankid, param_mobile "-1"] 409
-  setInvalidAuth [param_auth no_bankid, param_mobile (init no_mobile)] 409
-  setInvalidAuth [param_auth no_bankid, param_mobile (no_mobile ++ "5")] 409
+  setInvalidAuth [param_auth no_bankid, param_mobile (T.pack $ init no_mobile)] 409
+  setInvalidAuth [param_auth no_bankid, param_mobile (T.pack no_mobile <> "5")] 409
 
   let getAuthToViewArchived = getMockDocSigLinkAuthToViewArchivedMethod 1
       getPersonalNumber = getMockDocSigLinkPersonalNumber 1
@@ -237,7 +238,7 @@ testDocApiV2SetSignatoryAuthenticationToViewArchived = do
     assertEqual
       "SE-10 Personal number should be set"
       se_ssn_10
-      (getPersonalNumber mockDocSE10)
+      (T.pack $ getPersonalNumber mockDocSE10)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocStandard1 <- setAuth [param_auth standard_auth]
@@ -248,7 +249,7 @@ testDocApiV2SetSignatoryAuthenticationToViewArchived = do
     assertEqual
       "SE-10 Personal number should STILL be set"
       se_ssn_10
-      (getPersonalNumber mockDocStandard1)
+      (T.pack $ getPersonalNumber mockDocStandard1)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocSE12 <- setAuth [param_auth se_bankid, param_ssn se_ssn_12]
@@ -259,7 +260,7 @@ testDocApiV2SetSignatoryAuthenticationToViewArchived = do
     assertEqual
       "SE-12 Personal number should be set"
       se_ssn_12
-      (getPersonalNumber mockDocSE12)
+      (T.pack $ getPersonalNumber mockDocSE12)
 
   -- Valid NO BankID
   do -- Just to ensure limited scope so we don't test against the wrong thing
@@ -271,10 +272,10 @@ testDocApiV2SetSignatoryAuthenticationToViewArchived = do
     assertEqual
       "NO Personal number should be set"
       no_ssn
-      (getPersonalNumber mockDocNO)
+      (T.pack $ getPersonalNumber mockDocNO)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
-    mockDocNOMobile <- setAuth [param_auth no_bankid, param_mobile no_mobile]
+    mockDocNOMobile <- setAuth [param_auth no_bankid, param_mobile (T.pack no_mobile)]
     assertEqual
       "Authentication to view should be set"
       NOBankIDAuthenticationToView
@@ -286,7 +287,7 @@ testDocApiV2SetSignatoryAuthenticationToViewArchived = do
     assertEqual
       "NO Personal number should STILL be set"
       no_ssn
-      (getPersonalNumber mockDocNOMobile)
+      (T.pack $ getPersonalNumber mockDocNOMobile)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocNOEmptyMobile <- setAuth [param_auth no_bankid, param_mobile ""]
@@ -301,7 +302,7 @@ testDocApiV2SetSignatoryAuthenticationToViewArchived = do
     assertEqual
       "NO Personal number should STILL be set"
       no_ssn
-      (getPersonalNumber mockDocNOEmptyMobile)
+      (T.pack $ getPersonalNumber mockDocNOEmptyMobile)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocStandard2 <- setAuth [param_auth standard_auth]
@@ -312,7 +313,7 @@ testDocApiV2SetSignatoryAuthenticationToViewArchived = do
     assertEqual
       "NO Personal number should STILL be set"
       no_ssn
-      (getPersonalNumber mockDocStandard2)
+      (T.pack $ getPersonalNumber mockDocStandard2)
 
 testDocApiV2SetSignatoryAuthenticationToSign :: TestEnv ()
 testDocApiV2SetSignatoryAuthenticationToSign = do
@@ -368,7 +369,7 @@ testDocApiV2SetSignatoryAuthenticationToSign = do
     assertEqual
       "Personal number should not be set"
       ""
-      (getPersonalNumber mockDocSEEmpty)
+      (T.pack $ getPersonalNumber mockDocSEEmpty)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocSE10 <- setAuth [param_auth se_bankid, param_ssn se_ssn_10]
@@ -379,7 +380,7 @@ testDocApiV2SetSignatoryAuthenticationToSign = do
     assertEqual
       "Personal number should be set (10 digit SE)"
       se_ssn_10
-      (getPersonalNumber mockDocSE10)
+      (T.pack $ getPersonalNumber mockDocSE10)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocSE12 <- setAuth [param_auth se_bankid, param_ssn se_ssn_12]
@@ -390,7 +391,7 @@ testDocApiV2SetSignatoryAuthenticationToSign = do
     assertEqual
       "Personal number should be set (12 digit SE)"
       se_ssn_12
-      (getPersonalNumber mockDocSE12)
+      (T.pack $ getPersonalNumber mockDocSE12)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocStandard1 <- mockDocTestRequestHelper ctx POST [param_auth standard_auth]
@@ -402,7 +403,7 @@ testDocApiV2SetSignatoryAuthenticationToSign = do
     assertEqual
       "Personal number should STILL be set (12 digit SE)"
       se_ssn_12
-      (getPersonalNumber mockDocStandard1)
+      (T.pack $ getPersonalNumber mockDocStandard1)
 
   -- Valid SMS PIN
   do -- Just to ensure limited scope so we don't test against the wrong thing
@@ -418,7 +419,7 @@ testDocApiV2SetSignatoryAuthenticationToSign = do
     assertEqual
       "Personal number should STILL be set (12 digit SE)"
       se_ssn_12
-      (getPersonalNumber mockDocSMSEmpty)
+      (T.pack $ getPersonalNumber mockDocSMSEmpty)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocSMS <- setAuth [param_auth sms_pin, param_mobile valid_mobile]
@@ -429,11 +430,11 @@ testDocApiV2SetSignatoryAuthenticationToSign = do
     assertEqual
       "Mobile number should be set"
       valid_mobile
-      (getMobileNumber mockDocSMS)
+      (T.pack $ getMobileNumber mockDocSMS)
     assertEqual
       "Personal number should STILL be set (12 digit SE)"
       se_ssn_12
-      (getPersonalNumber mockDocSMS)
+      (T.pack $ getPersonalNumber mockDocSMS)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocStandard2 <- setAuth [param_auth standard_auth]
@@ -444,11 +445,11 @@ testDocApiV2SetSignatoryAuthenticationToSign = do
     assertEqual
       "Mobile number should STILL be set"
       valid_mobile
-      (getMobileNumber mockDocStandard2)
+      (T.pack $ getMobileNumber mockDocStandard2)
     assertEqual
       "Personal number should STILL be set (12 digit SE)"
       se_ssn_12
-      (getPersonalNumber mockDocStandard2)
+      (T.pack $ getPersonalNumber mockDocStandard2)
 
 testDocApiV2SetViewerAuthenticationToView :: TestEnv ()
 testDocApiV2SetViewerAuthenticationToView = do
@@ -503,8 +504,8 @@ testDocApiV2SetViewerAuthenticationToView = do
   setInvalidAuth [param_auth se_bankid] 409
   setInvalidAuth [param_auth se_bankid, param_ssn no_ssn] 409
   setInvalidAuth [param_auth no_bankid, param_mobile "-1"] 409
-  setInvalidAuth [param_auth no_bankid, param_mobile (init no_mobile)] 409
-  setInvalidAuth [param_auth no_bankid, param_mobile (no_mobile ++ "5")] 409
+  setInvalidAuth [param_auth no_bankid, param_mobile (T.pack $ init no_mobile)] 409
+  setInvalidAuth [param_auth no_bankid, param_mobile (T.pack no_mobile <> "5")] 409
 
   let getAuthToView = getMockDocSigLinkAuthToViewMethod 2
       getPersonalNumber = getMockDocSigLinkPersonalNumber 2
@@ -520,7 +521,7 @@ testDocApiV2SetViewerAuthenticationToView = do
     assertEqual
       "SE-10 Personal number should be set"
       se_ssn_10
-      (getPersonalNumber mockDocSE10)
+      (T.pack $ getPersonalNumber mockDocSE10)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocStandard1 <- setAuth [param_auth standard_auth]
@@ -531,7 +532,7 @@ testDocApiV2SetViewerAuthenticationToView = do
     assertEqual
       "SE-10 Personal number should STILL be set"
       se_ssn_10
-      (getPersonalNumber mockDocStandard1)
+      (T.pack $ getPersonalNumber mockDocStandard1)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocSE12 <- setAuth [param_auth se_bankid, param_ssn se_ssn_12]
@@ -542,7 +543,7 @@ testDocApiV2SetViewerAuthenticationToView = do
     assertEqual
       "SE-12 Personal number should be set"
       se_ssn_12
-      (getPersonalNumber mockDocSE12)
+      (T.pack $ getPersonalNumber mockDocSE12)
 
   -- Valid NO BankID
   do -- Just to ensure limited scope so we don't test against the wrong thing
@@ -554,10 +555,10 @@ testDocApiV2SetViewerAuthenticationToView = do
     assertEqual
       "NO Personal number should be set"
       no_ssn
-      (getPersonalNumber mockDocNO)
+      (T.pack $ getPersonalNumber mockDocNO)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
-    mockDocNOMobile <- setAuth [param_auth no_bankid, param_mobile no_mobile]
+    mockDocNOMobile <- setAuth [param_auth no_bankid, param_mobile (T.pack no_mobile)]
     assertEqual
       "Authentication to view should be set"
       NOBankIDAuthenticationToView
@@ -569,7 +570,7 @@ testDocApiV2SetViewerAuthenticationToView = do
     assertEqual
       "NO Personal number should STILL be set"
       no_ssn
-      (getPersonalNumber mockDocNOMobile)
+      (T.pack $ getPersonalNumber mockDocNOMobile)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocNOEmptyMobile <- setAuth [param_auth no_bankid, param_mobile ""]
@@ -584,7 +585,7 @@ testDocApiV2SetViewerAuthenticationToView = do
     assertEqual
       "NO Personal number should STILL be set"
       no_ssn
-      (getPersonalNumber mockDocNOEmptyMobile)
+      (T.pack $ getPersonalNumber mockDocNOEmptyMobile)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocStandard2 <- setAuth [param_auth standard_auth]
@@ -595,7 +596,7 @@ testDocApiV2SetViewerAuthenticationToView = do
     assertEqual
       "NO Personal number should STILL be set"
       no_ssn
-      (getPersonalNumber mockDocStandard2)
+      (T.pack $ getPersonalNumber mockDocStandard2)
 
 testDocApiV2SetViewerAuthenticationToViewArchived :: TestEnv ()
 testDocApiV2SetViewerAuthenticationToViewArchived = do
@@ -649,8 +650,8 @@ testDocApiV2SetViewerAuthenticationToViewArchived = do
   setInvalidAuth [param_auth se_bankid] 409
   setInvalidAuth [param_auth se_bankid, param_ssn no_ssn] 409
   setInvalidAuth [param_auth no_bankid, param_mobile "-1"] 409
-  setInvalidAuth [param_auth no_bankid, param_mobile (init no_mobile)] 409
-  setInvalidAuth [param_auth no_bankid, param_mobile (no_mobile ++ "5")] 409
+  setInvalidAuth [param_auth no_bankid, param_mobile (T.pack $ init no_mobile)] 409
+  setInvalidAuth [param_auth no_bankid, param_mobile (T.pack no_mobile <> "5")] 409
 
   let getAuthToViewArchived = getMockDocSigLinkAuthToViewArchivedMethod 2
       getPersonalNumber = getMockDocSigLinkPersonalNumber 2
@@ -666,7 +667,7 @@ testDocApiV2SetViewerAuthenticationToViewArchived = do
     assertEqual
       "SE-10 Personal number should be set"
       se_ssn_10
-      (getPersonalNumber mockDocSE10)
+      (T.pack $ getPersonalNumber mockDocSE10)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocStandard1 <- setAuth [param_auth standard_auth]
@@ -677,7 +678,7 @@ testDocApiV2SetViewerAuthenticationToViewArchived = do
     assertEqual
       "SE-10 Personal number should STILL be set"
       se_ssn_10
-      (getPersonalNumber mockDocStandard1)
+      (T.pack $ getPersonalNumber mockDocStandard1)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocSE12 <- setAuth [param_auth se_bankid, param_ssn se_ssn_12]
@@ -688,7 +689,7 @@ testDocApiV2SetViewerAuthenticationToViewArchived = do
     assertEqual
       "SE-12 Personal number should be set"
       se_ssn_12
-      (getPersonalNumber mockDocSE12)
+      (T.pack $ getPersonalNumber mockDocSE12)
 
   -- Valid NO BankID
   do -- Just to ensure limited scope so we don't test against the wrong thing
@@ -700,10 +701,10 @@ testDocApiV2SetViewerAuthenticationToViewArchived = do
     assertEqual
       "NO Personal number should be set"
       no_ssn
-      (getPersonalNumber mockDocNO)
+      (T.pack $ getPersonalNumber mockDocNO)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
-    mockDocNOMobile <- setAuth [param_auth no_bankid, param_mobile no_mobile]
+    mockDocNOMobile <- setAuth [param_auth no_bankid, param_mobile (T.pack no_mobile)]
     assertEqual
       "Authentication to view should be set"
       NOBankIDAuthenticationToView
@@ -715,7 +716,7 @@ testDocApiV2SetViewerAuthenticationToViewArchived = do
     assertEqual
       "NO Personal number should STILL be set"
       no_ssn
-      (getPersonalNumber mockDocNOMobile)
+      (T.pack $ getPersonalNumber mockDocNOMobile)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocNOEmptyMobile <- setAuth [param_auth no_bankid, param_mobile ""]
@@ -730,7 +731,7 @@ testDocApiV2SetViewerAuthenticationToViewArchived = do
     assertEqual
       "NO Personal number should STILL be set"
       no_ssn
-      (getPersonalNumber mockDocNOEmptyMobile)
+      (T.pack $ getPersonalNumber mockDocNOEmptyMobile)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocStandard2 <- setAuth [param_auth standard_auth]
@@ -741,7 +742,7 @@ testDocApiV2SetViewerAuthenticationToViewArchived = do
     assertEqual
       "NO Personal number should STILL be set"
       no_ssn
-      (getPersonalNumber mockDocStandard2)
+      (T.pack $ getPersonalNumber mockDocStandard2)
 
 testDocApiV2SetViewerAuthenticationToSign :: TestEnv ()
 testDocApiV2SetViewerAuthenticationToSign = do
@@ -835,8 +836,8 @@ testDocApiV2SetApproverAuthenticationToView = do
   setInvalidAuth [param_auth se_bankid] 409
   setInvalidAuth [param_auth se_bankid, param_ssn no_ssn] 409
   setInvalidAuth [param_auth no_bankid, param_mobile "-1"] 409
-  setInvalidAuth [param_auth no_bankid, param_mobile (init no_mobile)] 409
-  setInvalidAuth [param_auth no_bankid, param_mobile (no_mobile ++ "5")] 409
+  setInvalidAuth [param_auth no_bankid, param_mobile (T.pack $ init no_mobile)] 409
+  setInvalidAuth [param_auth no_bankid, param_mobile (T.pack $ no_mobile <> "5")] 409
 
   let getAuthToView = getMockDocSigLinkAuthToViewMethod 2
       getPersonalNumber = getMockDocSigLinkPersonalNumber 2
@@ -852,7 +853,7 @@ testDocApiV2SetApproverAuthenticationToView = do
     assertEqual
       "SE-10 Personal number should be set"
       se_ssn_10
-      (getPersonalNumber mockDocSE10)
+      (T.pack $ getPersonalNumber mockDocSE10)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocStandard1 <- setAuth [param_auth standard_auth]
@@ -863,7 +864,7 @@ testDocApiV2SetApproverAuthenticationToView = do
     assertEqual
       "SE-10 Personal number should STILL be set"
       se_ssn_10
-      (getPersonalNumber mockDocStandard1)
+      (T.pack $ getPersonalNumber mockDocStandard1)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocSE12 <- setAuth [param_auth se_bankid, param_ssn se_ssn_12]
@@ -874,7 +875,7 @@ testDocApiV2SetApproverAuthenticationToView = do
     assertEqual
       "SE-12 Personal number should be set"
       se_ssn_12
-      (getPersonalNumber mockDocSE12)
+      (T.pack $ getPersonalNumber mockDocSE12)
 
   -- Valid NO BankID
   do -- Just to ensure limited scope so we don't test against the wrong thing
@@ -886,10 +887,10 @@ testDocApiV2SetApproverAuthenticationToView = do
     assertEqual
       "NO Personal number should be set"
       no_ssn
-      (getPersonalNumber mockDocNO)
+      (T.pack $ getPersonalNumber mockDocNO)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
-    mockDocNOMobile <- setAuth [param_auth no_bankid, param_mobile no_mobile]
+    mockDocNOMobile <- setAuth [param_auth no_bankid, param_mobile (T.pack $ no_mobile)]
     assertEqual
       "Authentication to view should be set"
       NOBankIDAuthenticationToView
@@ -901,7 +902,7 @@ testDocApiV2SetApproverAuthenticationToView = do
     assertEqual
       "NO Personal number should STILL be set"
       no_ssn
-      (getPersonalNumber mockDocNOMobile)
+      (T.pack $ getPersonalNumber mockDocNOMobile)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocNOEmptyMobile <- setAuth [param_auth no_bankid, param_mobile ""]
@@ -916,7 +917,7 @@ testDocApiV2SetApproverAuthenticationToView = do
     assertEqual
       "NO Personal number should STILL be set"
       no_ssn
-      (getPersonalNumber mockDocNOEmptyMobile)
+      (T.pack $ getPersonalNumber mockDocNOEmptyMobile)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocStandard2 <- setAuth [param_auth standard_auth]
@@ -927,7 +928,7 @@ testDocApiV2SetApproverAuthenticationToView = do
     assertEqual
       "NO Personal number should STILL be set"
       no_ssn
-      (getPersonalNumber mockDocStandard2)
+      (T.pack $ getPersonalNumber mockDocStandard2)
 
 testDocApiV2SetApproverAuthenticationToViewArchived :: TestEnv ()
 testDocApiV2SetApproverAuthenticationToViewArchived = do
@@ -981,8 +982,8 @@ testDocApiV2SetApproverAuthenticationToViewArchived = do
   setInvalidAuth [param_auth se_bankid] 409
   setInvalidAuth [param_auth se_bankid, param_ssn no_ssn] 409
   setInvalidAuth [param_auth no_bankid, param_mobile "-1"] 409
-  setInvalidAuth [param_auth no_bankid, param_mobile (init no_mobile)] 409
-  setInvalidAuth [param_auth no_bankid, param_mobile (no_mobile ++ "5")] 409
+  setInvalidAuth [param_auth no_bankid, param_mobile (T.pack $ init no_mobile)] 409
+  setInvalidAuth [param_auth no_bankid, param_mobile (T.pack $ no_mobile <> "5")] 409
 
   let getAuthToViewArchived = getMockDocSigLinkAuthToViewArchivedMethod 2
       getPersonalNumber = getMockDocSigLinkPersonalNumber 2
@@ -998,7 +999,7 @@ testDocApiV2SetApproverAuthenticationToViewArchived = do
     assertEqual
       "SE-10 Personal number should be set"
       se_ssn_10
-      (getPersonalNumber mockDocSE10)
+      (T.pack $ getPersonalNumber mockDocSE10)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocStandard1 <- setAuth [param_auth standard_auth]
@@ -1009,7 +1010,7 @@ testDocApiV2SetApproverAuthenticationToViewArchived = do
     assertEqual
       "SE-10 Personal number should STILL be set"
       se_ssn_10
-      (getPersonalNumber mockDocStandard1)
+      (T.pack $ getPersonalNumber mockDocStandard1)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocSE12 <- setAuth [param_auth se_bankid, param_ssn se_ssn_12]
@@ -1020,7 +1021,7 @@ testDocApiV2SetApproverAuthenticationToViewArchived = do
     assertEqual
       "SE-12 Personal number should be set"
       se_ssn_12
-      (getPersonalNumber mockDocSE12)
+      (T.pack $ getPersonalNumber mockDocSE12)
 
   -- Valid NO BankID
   do -- Just to ensure limited scope so we don't test against the wrong thing
@@ -1032,10 +1033,10 @@ testDocApiV2SetApproverAuthenticationToViewArchived = do
     assertEqual
       "NO Personal number should be set"
       no_ssn
-      (getPersonalNumber mockDocNO)
+      (T.pack $ getPersonalNumber mockDocNO)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
-    mockDocNOMobile <- setAuth [param_auth no_bankid, param_mobile no_mobile]
+    mockDocNOMobile <- setAuth [param_auth no_bankid, param_mobile (T.pack no_mobile)]
     assertEqual
       "Authentication to view should be set"
       NOBankIDAuthenticationToView
@@ -1047,7 +1048,7 @@ testDocApiV2SetApproverAuthenticationToViewArchived = do
     assertEqual
       "NO Personal number should STILL be set"
       no_ssn
-      (getPersonalNumber mockDocNOMobile)
+      (T.pack $ getPersonalNumber mockDocNOMobile)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocNOEmptyMobile <- setAuth [param_auth no_bankid, param_mobile ""]
@@ -1062,7 +1063,7 @@ testDocApiV2SetApproverAuthenticationToViewArchived = do
     assertEqual
       "NO Personal number should STILL be set"
       no_ssn
-      (getPersonalNumber mockDocNOEmptyMobile)
+      (T.pack $ getPersonalNumber mockDocNOEmptyMobile)
 
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mockDocStandard2 <- setAuth [param_auth standard_auth]
@@ -1073,7 +1074,7 @@ testDocApiV2SetApproverAuthenticationToViewArchived = do
     assertEqual
       "NO Personal number should STILL be set"
       no_ssn
-      (getPersonalNumber mockDocStandard2)
+      (T.pack $ getPersonalNumber mockDocStandard2)
 
 testDocApiV2SetApproverAuthenticationToSign :: TestEnv ()
 testDocApiV2SetApproverAuthenticationToSign = do

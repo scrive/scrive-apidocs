@@ -1,7 +1,5 @@
 module Doc.DocStateCommon where
 
-import qualified Data.Text as T
-
 import Doc.DocStateData
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
@@ -11,7 +9,7 @@ import UserGroup.Types
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
-trueOrMessage :: Bool -> String -> Maybe String
+trueOrMessage :: Bool -> Text -> Maybe Text
 trueOrMessage False s = Just s
 trueOrMessage True  _ = Nothing
 
@@ -81,11 +79,15 @@ emptySignatoryFields = [
     }
   ]
 
-checkResetSignatoryData :: Document -> [SignatoryLink] -> [String]
+checkResetSignatoryData :: Document -> [SignatoryLink] -> [Text]
 checkResetSignatoryData doc sigs =
   catMaybes $
-      [ trueOrMessage (documentstatus doc == Preparation) $ "Document is not in preparation, is in " ++ show (documentstatus doc)
-      , trueOrMessage (1 == (length $ filter isAuthor sigs)) $ "Should have exactly one author, had " ++ show (length $ filter isAuthor sigs)
+      [ trueOrMessage (documentstatus doc == Preparation) $
+          "Document is not in preparation, is in " <>
+          (showt (documentstatus doc))
+      , trueOrMessage (1 == (length $ filter isAuthor sigs)) $
+          "Should have exactly one author, had " <>
+          (showt (length $ filter isAuthor sigs))
       ]
 
 {- |
@@ -93,13 +95,13 @@ checkResetSignatoryData doc sigs =
     FIXME: used only in replaceSignatoryUser
 -}
 replaceSignatoryData :: SignatoryLink
-                        -> String
-                        -> String
-                        -> String
-                        -> String
-                        -> String
-                        -> String
-                        -> String
+                        -> Text
+                        -> Text
+                        -> Text
+                        -> Text
+                        -> Text
+                        -> Text
+                        -> Text
                         -> SignatoryLink
 replaceSignatoryData siglink fstname sndname email mobile company personalnumber companynumber =
   siglink { signatoryfields = map fillData (signatoryfields siglink) }
@@ -134,5 +136,5 @@ replaceSignatoryUser siglink user ugwp =
      (getUGCompanyNumber  ugwp)
   ) { maybesignatory = Just $ userid user }
     where
-      getUGCompanyName = T.unpack . get ugName . ugwpUG
-      getUGCompanyNumber = T.unpack . get ugaCompanyNumber . ugwpAddress
+      getUGCompanyName = get ugName . ugwpUG
+      getUGCompanyNumber = get ugaCompanyNumber . ugwpAddress

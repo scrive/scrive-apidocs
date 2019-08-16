@@ -25,7 +25,7 @@ data Context = Context
       -- ^ The logged in user. Is Nothing when there is no one logged in.
     , _ctxtime                :: UTCTime
       -- ^ The time of the request.
-    , _ctxclientname          :: Maybe String
+    , _ctxclientname          :: Maybe Text
       -- ^ Client identification from header Client-Name or if that's
       -- missing: User-Agent.
     , _ctxclienttime          :: Maybe UTCTime
@@ -35,7 +35,7 @@ data Context = Context
       -- ^ The IP number of the client.
     , _ctxproduction          :: Bool
       -- ^ Is this server the production server?
-    , _ctxcdnbaseurl          :: Maybe String
+    , _ctxcdnbaseurl          :: Maybe Text
       -- ^ CDN base URL if one shouild be used.
     , _ctxtemplates           :: KontrakcjaTemplates
       -- ^ The set of templates to render text for the context's language.
@@ -44,7 +44,7 @@ data Context = Context
     , _ctxlang                :: Lang
       -- ^ The current context's language.
     , _ctxismailbackdooropen  :: Bool
-    , _ctxmailnoreplyaddress  :: String
+    , _ctxmailnoreplyaddress  :: Text
       -- ^ The "noreply" address used when sending email.
     , _ctxcgigrpconfig        :: Maybe CgiGrpConfig
     , _ctxgtconf              :: GuardTimeConf
@@ -59,10 +59,10 @@ data Context = Context
       -- ^ If we are logged in to the pad view.
     , _ctxusehttps            :: Bool
     , _ctxsessionid           :: SessionID
-    , _ctxtrackjstoken        :: Maybe String
-    , _ctxzendeskkey          :: Maybe String
-    , _ctxmixpaneltoken       :: Maybe String
-    , _ctxgatoken             :: Maybe String
+    , _ctxtrackjstoken        :: Maybe Text
+    , _ctxzendeskkey          :: Maybe Text
+    , _ctxmixpaneltoken       :: Maybe Text
+    , _ctxgatoken             :: Maybe Text
     , _ctxhubspotconf         :: Maybe HubSpotConf
     , _ctxbrandeddomain       :: BrandedDomain
     , _ctxsalesforceconf      :: Maybe SalesforceConf

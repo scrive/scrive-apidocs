@@ -16,7 +16,8 @@ import qualified Data.ByteArray as BA
 import qualified Data.ByteString.Base16 as Base16
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.UTF8 as BSUTF
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import qualified Network.HTTP as HTTP
 
 import Crypto
@@ -39,7 +40,7 @@ import qualified FileStorage.Class as FS
 saveNewFile
   :: ( MonadBase IO m, MonadCatch m, MonadLog m, MonadDB m
      , MonadThrow m, CryptoRNG m, MonadFileStorage m )
-  => String -> BS.ByteString -> m FileID
+  => Text -> BS.ByteString -> m FileID
 saveNewFile fName fContent = do
   startTime <- liftBase getCurrentTime
   (fid, checksum) <- dbUpdate $ NewEmptyFileForAWS fName fContent
@@ -52,7 +53,7 @@ saveNewFile fName fContent = do
           [ identifier fid
           , "error" .= err
           ]
-      unexpectedError err
+      unexpectedError $ T.pack err
     Right aes -> localData [identifier fid] $ do
       let encryptedContent = aesEncrypt aes fContent
       eRes <- try $ FS.saveNewContents awsUrl $ BSL.fromStrict encryptedContent
@@ -110,11 +111,11 @@ getFileIDContents fid = getFileContents =<< dbQuery (GetFileByFileID fid)
 -- Note: Someday we might decide to publish temporarily externally
 -- available links to files on Amazon. File names are already in
 -- place, but Content-type is not, this will need to be fixed.
-urlFromFile :: FileID -> String -> BS.ByteString -> String
+urlFromFile :: FileID -> Text -> BS.ByteString -> Text
 urlFromFile fid name checksum =
   -- here we use BSC.unpack, as HTTP.urlEncode
   -- does only %-escaping for 8bit values
-  "file"
+  T.pack $ "file"
     </> show fid
     </> (BS.unpack . Base16.encode $ checksum)
-    </> (HTTP.urlEncode . BS.unpack . BSUTF.fromString $ name)
+    </> (HTTP.urlEncode . BS.unpack . TE.encodeUtf8 $ name)

@@ -28,6 +28,7 @@ import Data.Int
 import Data.Time.Clock
 import Text.JSON
 import Text.JSON.Gen
+import qualified Data.Text as T
 
 import DB
 import IPAddress
@@ -41,7 +42,7 @@ data UserHistory = UserHistory {
   , uhevent            :: UserHistoryEvent
   , uhip               :: IPAddress
   , uhtime             :: UTCTime
-  , uhsystemversion    :: String
+  , uhsystemversion    :: Text
   , uhperforminguserid :: Maybe UserID -- Nothing means no user changed it (like the system)
   }
   deriving (Eq, Show)
@@ -262,7 +263,13 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryTOSAccept Bool where
     time
     mpuser
 
-data LogHistoryDetailsChanged = LogHistoryDetailsChanged UserID IPAddress UTCTime [(String, String, String)] (Maybe UserID)
+data LogHistoryDetailsChanged = LogHistoryDetailsChanged
+  UserID
+  IPAddress
+  UTCTime
+  [(Text, Text, Text)]
+  (Maybe UserID)
+
 instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryDetailsChanged Bool where
   update (LogHistoryDetailsChanged userid ip time details mpuser) = addUserHistory
     userid
@@ -297,7 +304,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryAccountDeleted Bool w
     time
     (Just deletinguserid)
 
-diffUserInfos :: UserInfo -> UserInfo -> [(String, String, String)]
+diffUserInfos :: UserInfo -> UserInfo -> [(Text, Text, Text)]
 diffUserInfos old new = fstNameDiff
   ++ sndNameDiff
   ++ personalNumberDiff
@@ -346,12 +353,21 @@ selectUserHistorySQL = "SELECT"
   <> ", performing_user_id"
   <> "  FROM users_history"
 
-fetchUserHistory :: (UserID, UserHistoryEventType, Maybe String, IPAddress, UTCTime, String, Maybe UserID) -> UserHistory
+fetchUserHistory ::
+  ( UserID
+  , UserHistoryEventType
+  , Maybe Text
+  , IPAddress
+  , UTCTime
+  , Text
+  , Maybe UserID
+  )
+  -> UserHistory
 fetchUserHistory (userid, eventtype, meventdata, ip, time, sysver, mpuser) = UserHistory {
   uhuserid = userid
 , uhevent = UserHistoryEvent {
     uheventtype = eventtype
-  , uheventdata = maybe Nothing (\d -> case decode d of
+  , uheventdata = maybe Nothing (\d -> case decode $ T.unpack d of
     Ok a -> Just a
     _    -> Nothing) meventdata
   }

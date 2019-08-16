@@ -15,9 +15,9 @@ import qualified Database.Redis as R
 import Database.Redis.Helpers
 
 data RedisConfig = RedisConfig {
-    rcHost     :: !T.Text
+    rcHost     :: !Text
   , rcPort     :: !Word16
-  , rcAuth     :: !(Maybe T.Text)
+  , rcAuth     :: !(Maybe Text)
   , rcDatabase :: !Integer
   } deriving (Eq, Ord, Show)
 

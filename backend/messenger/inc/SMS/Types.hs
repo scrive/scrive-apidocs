@@ -16,7 +16,6 @@ import Data.Aeson
 import Data.Data
 import Data.Int
 import Database.PostgreSQL.PQTypes
-import qualified Data.Text as T
 
 import DB.Derive
 import Log.Identifier
@@ -27,16 +26,16 @@ data JobType
   = CleanOldSMSes
   deriving (Eq, Ord, Show)
 
-jobTypeMapper :: [(JobType, T.Text)]
+jobTypeMapper :: [(JobType, Text)]
 jobTypeMapper = [
     (CleanOldSMSes, "clean_old_smses")
   ]
 
 instance PQFormat JobType where
-  pqFormat = pqFormat @T.Text
+  pqFormat = pqFormat @Text
 
 instance FromSQL JobType where
-  type PQBase JobType = PQBase T.Text
+  type PQBase JobType = PQBase Text
   fromSQL mbase = do
     v <- fromSQL mbase
     case v `rlookup` jobTypeMapper of
@@ -47,7 +46,7 @@ instance FromSQL JobType where
       }
 
 instance ToSQL JobType where
-  type PQDest JobType = PQBase T.Text
+  type PQDest JobType = PQBase Text
   toSQL tt = toSQL . fromJust $ tt `lookup` jobTypeMapper
 
 data MessengerJob = MessengerJob {
@@ -81,11 +80,11 @@ instance ToSQL SMSProvider where
   toSQL SMSDefault        = toSQL (1::Int16)
   toSQL SMSTeliaCallGuide = toSQL (2::Int16)
 
-codeFromSMSProvider :: SMSProvider -> String
+codeFromSMSProvider :: SMSProvider -> Text
 codeFromSMSProvider SMSDefault = "default"
 codeFromSMSProvider SMSTeliaCallGuide = "telia_call_guide"
 
-smsProviderFromCode :: String -> Maybe SMSProvider
+smsProviderFromCode :: Text -> Maybe SMSProvider
 smsProviderFromCode s = find ((== s) . codeFromSMSProvider) allValues
 
 ----------------------------------------
@@ -113,9 +112,9 @@ instance ToSQL ShortMessageID where
 data ShortMessage = ShortMessage {
   smID         :: !ShortMessageID
 , smProvider   :: !SMSProvider
-, smOriginator :: !String
-, smMSISDN     :: !String
-, smBody       :: !String
+, smOriginator :: !Text
+, smMSISDN     :: !Text
+, smBody       :: !Text
 , smAttempts   :: !Int32
 } deriving (Eq, Ord, Show)
 
@@ -154,10 +153,10 @@ instance ToSQL SMSEventID where
 
 data SMSEventType
   = SMSDelivered
-  | SMSUndelivered !String -- ^ reason
+  | SMSUndelivered !Text -- ^ reason
     deriving (Eq, Ord, Show, Data, Typeable)
 
-data SMSEvent = SMSEvent !String !SMSEventType -- ^ phone number, event
+data SMSEvent = SMSEvent !Text !SMSEventType -- ^ phone number, event
   deriving (Eq, Ord, Show, Data, Typeable)
 
 instance PQFormat SMSEvent where

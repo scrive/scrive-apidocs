@@ -8,6 +8,7 @@ import Happstack.Server
 import Test.Framework
 import qualified Data.ByteString.Lazy.UTF8 as BS
 import qualified Data.HashMap.Strict as H
+import qualified Data.Text as T
 import qualified Data.Vector as V
 
 import Context
@@ -323,7 +324,7 @@ testList = do
         case (H.lookup "fields" m') of
           Just (Object m'') ->
             case (H.lookup "file" m'') of
-              Just (String s) -> assertBool "file field from list call parses as Int" $ isJust (maybeRead (unpack s) :: Maybe Int)
+              Just (String s) -> assertBool "file field from list call parses as Int" $ isJust (maybeRead s :: Maybe Int)
               _ -> assertFailure "Can't find file field"
           _ -> assertFailure "Can't find field fields"
       _ -> assertFailure "Can't find element on list"
@@ -380,7 +381,7 @@ getSignatoryLinksID jsonBS = do
 
 getID :: Value -> TestEnv Int64
 getID (Object m) = case (H.lookup "id" m) of
-    Just (String s) -> case (maybeRead $ unpack s) of
+    Just (String s) -> case (maybeRead s) of
                          Just i -> return i
                          _ -> unexpectedError "error while parsing id (not a string representing number)"
     _ -> unexpectedError "error while parsing id (not a string)"
@@ -391,7 +392,7 @@ getField key jsonBS = do
     let (Just (Object m)) = decode jsonBS
     case (H.lookup key m) of
       Just (String s) -> return s
-      _ -> unexpectedError $ "error while looking for a field " ++ unpack key ++ " (not a string)"
+      _ -> unexpectedError $ T.pack $ "error while looking for a field " ++ unpack key ++ " (not a string)"
 
 -- Deap replacement. There are some integrations that work with replacemente of #EMAIL etc. This operation
 setDocValuesBySimpleReplacement :: Text -> Text -> Value -> Value

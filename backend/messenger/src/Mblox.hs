@@ -1,4 +1,5 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
+
 module Mblox (
     handleMbloxEvents
   ) where

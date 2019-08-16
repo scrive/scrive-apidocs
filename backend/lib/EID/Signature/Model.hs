@@ -19,7 +19,6 @@ import Data.ByteString (ByteString)
 import Data.Int
 import Data.Text.Encoding
 import Data.Time
-import qualified Data.Text as T
 
 import DB
 import Doc.SignatoryLinkID
@@ -212,7 +211,7 @@ instance (MonadThrow m, MonadDB m) => DBQuery m GetESignature (Maybe ESignature)
     fetchMaybe fetchESignature
 
 -- | Fetch e-signature.
-fetchESignature :: (SignatureProvider, T.Text, ByteString, Maybe ByteString, Maybe T.Text, Maybe T.Text, Maybe ByteString, Maybe T.Text) -> ESignature
+fetchESignature :: (SignatureProvider, Text, ByteString, Maybe ByteString, Maybe Text, Maybe Text, Maybe ByteString, Maybe Text) -> ESignature
 fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msignatory_personal_number, mocsp_response, msignatory_ip) = case provider of
   LegacyBankID -> LegacyBankIDSignature_ LegacyBankIDSignature {
     lbidsSignedText = sdata

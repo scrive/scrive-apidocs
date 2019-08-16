@@ -81,30 +81,56 @@ test_settingUIWithHandleChangeCompanyBranding = do
   let browserTitle = "Super"
   let smsOriginator = "Super SMS"
   let favicon  = "-almoust-binary-data-aaa-000000000-"
-  let faviconBase64 = BS.toString $ BS.append (BS.fromString "data:image/png;base64,") $ B64.encode $ BS.fromString $ favicon
-  req1 <- mkRequest POST [ ("companyui", inText $ "{\"companyid\":\""++show (get ugID ug) ++"\",\"mailTheme\":\""++show (themeID mailTheme) ++"\",\"signviewTheme\":\""++show (themeID signviewTheme)++"\",\"serviceTheme\":\""++show (themeID serviceTheme)++"\",\"browserTitle\":\""++browserTitle++"\",\"smsOriginator\":\""++smsOriginator++"\",\"favicon\":\""++faviconBase64++"\"}")]
+  let faviconBase64 =
+        T.pack $ BS.toString $
+        BS.append (BS.fromString "data:image/png;base64,") $
+        B64.encode $ BS.fromString $ favicon
+  req1 <- mkRequest POST [
+    ( "companyui"
+    , inText $ "{\"companyid\":\"" <> showt (get ugID ug) <>
+        "\",\"mailTheme\":\"" <> showt (themeID mailTheme) <>
+        "\",\"signviewTheme\":\"" <> showt (themeID signviewTheme) <>
+        "\",\"serviceTheme\":\"" <> showt (themeID serviceTheme) <>
+        "\",\"browserTitle\":\"" <> browserTitle <>
+        "\",\"smsOriginator\":\"" <> smsOriginator <>
+        "\",\"favicon\":\"" <> faviconBase64 <> "\"}"
+    )]
   (_, _) <- runTestKontra req1 ctx $ handleChangeCompanyBranding Nothing
   req2 <- mkRequest GET []
   (avalue, _) <- runTestKontra req2 ctx $ handleGetCompanyBranding Nothing
   (jsv :: JSValue) <- case decode (BSL.toString $ A.encode avalue) of
                Ok js -> return $ js
                _ -> unexpectedError "Response from handleGetCompanyBranding is not a valid JSON"
-  (jsonMailTheme :: Maybe String) <- withJSValue jsv $ fromJSValueField "mailTheme"
-  (jsonSignviewTheme :: Maybe String) <- withJSValue jsv $ fromJSValueField "signviewTheme"
-  (jsonServiceTheme :: Maybe String) <- withJSValue jsv $ fromJSValueField "serviceTheme"
-  (jsonBrowserTitle :: Maybe String) <- withJSValue jsv $ fromJSValueField "browserTitle"
-  (jsonSmsOriginator :: Maybe String) <- withJSValue jsv $ fromJSValueField "smsOriginator"
-  (jsonFavicon :: Maybe String) <-  withJSValue jsv $ fromJSValueField "favicon"
+  (jsonMailTheme :: Maybe Text) <- withJSValue jsv $ fromJSValueField "mailTheme"
+  (jsonSignviewTheme :: Maybe Text) <- withJSValue jsv $ fromJSValueField "signviewTheme"
+  (jsonServiceTheme :: Maybe Text) <- withJSValue jsv $ fromJSValueField "serviceTheme"
+  (jsonBrowserTitle :: Maybe Text) <- withJSValue jsv $ fromJSValueField "browserTitle"
+  (jsonSmsOriginator :: Maybe Text) <- withJSValue jsv $ fromJSValueField "smsOriginator"
+  (jsonFavicon :: Maybe Text) <-  withJSValue jsv $ fromJSValueField "favicon"
 
-  assertEqual "JSON companyMailTheme matches companyMailTheme after update"  (Just $ show $ themeID mailTheme) (jsonMailTheme)
-  assertEqual "JSON companySignviewTheme matches companySignviewTheme after update"  (Just $ show $ themeID signviewTheme) (jsonSignviewTheme)
-  assertEqual "JSON companyServiceTheme matches companyServiceTheme after update"  (Just $ show $ themeID serviceTheme) (jsonServiceTheme)
-  assertEqual "JSON browserTitle matches browserTitle after update"  (Just browserTitle) (jsonBrowserTitle)
-  assertEqual "JSON smsOriginator matches SmsOriginator after update"  (Just smsOriginator) (jsonSmsOriginator)
-  assertEqual "JSON favicon matches favicon after update"  (Just favicon) (BS.toString <$> B64.decodeLenient <$> BS.fromString <$> drop 1 <$> dropWhile ((/=) ',')  <$> jsonFavicon)
+  assertEqual "JSON companyMailTheme matches companyMailTheme after update"
+    (Just $ showt $ themeID mailTheme) (jsonMailTheme)
+  assertEqual "JSON companySignviewTheme matches companySignviewTheme after update"
+    (Just $ showt $ themeID signviewTheme) (jsonSignviewTheme)
+  assertEqual "JSON companyServiceTheme matches companyServiceTheme after update"
+    (Just $ showt $ themeID serviceTheme) (jsonServiceTheme)
+  assertEqual "JSON browserTitle matches browserTitle after update"
+    (Just browserTitle) (jsonBrowserTitle)
+  assertEqual "JSON smsOriginator matches SmsOriginator after update"
+    (Just smsOriginator) (jsonSmsOriginator)
+  assertEqual "JSON favicon matches favicon after update"
+    (Just favicon)
+    (BS.toString <$> B64.decodeLenient <$> BS.fromString <$>
+      drop 1 <$> dropWhile ((/=) ',') <$>
+      T.unpack <$> jsonFavicon
+    )
 
   --Test removing all compoany ui settings
-  req3 <- mkRequest POST [ ("companyui", inText $ "{\"companyid\":\""++show (get ugID ug) ++"\",\"mailTheme\":null,\"signviewTheme\":null,\"serviceTheme\":null,\"browserTitle\": null ,\"smsOriginator\": null,\"favicon\":null}")]
+  req3 <- mkRequest POST [
+    ( "companyui"
+    , inText $ "{\"companyid\":\"" <> showt (get ugID ug) <>
+        "\",\"mailTheme\":null,\"signviewTheme\":null,\"serviceTheme\":null,\"browserTitle\": null ,\"smsOriginator\": null,\"favicon\":null}"
+    )]
   (_, _) <- runTestKontra req3 ctx $ handleChangeCompanyBranding Nothing
   let ugui = get ugUI ug
   assertEqual "CompanyMailTheme  is empty"  (get uguiMailTheme ugui) (Nothing)
@@ -121,9 +147,13 @@ test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
   ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext defaultLang
 
-
   --Test we can't set mailTheme to domain theme
-  req1 <- mkRequest POST [ ("companyui", inText $ "{\"companyid\":\""++show (get ugID ug) ++"\",\"mailTheme\":\""++show (get (bdMailTheme . ctxbrandeddomain) ctx)++"\",\"signviewTheme\":null,\"serviceTheme\":null,\"browserTitle\": null ,\"smsOriginator\": null,\"favicon\":null}")]
+  req1 <- mkRequest POST [
+    ( "companyui"
+    , inText $ "{\"companyid\":\"" <> showt (get ugID ug) <>
+        "\",\"mailTheme\":\""<> showt (get (bdMailTheme . ctxbrandeddomain) ctx) <>
+        "\",\"signviewTheme\":null,\"serviceTheme\":null,\"browserTitle\": null ,\"smsOriginator\": null,\"favicon\":null}"
+    )]
   (_, _) <- runTestKontra req1 ctx $ handleChangeCompanyBranding Nothing
 
   ug' <- (dbQuery $ UserGroupGet (get ugID ug))
@@ -135,7 +165,7 @@ test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
   otherUgTheme <- dbUpdate $ InsertNewThemeForUserGroup (get ugID otherUg) someTheme
 
   --Test we can't set mailTheme to other company theme
-  req2 <- mkRequest POST [ ("companyui", inText $ "{\"companyid\":\""++show (get ugID ug) ++"\",\"mailTheme\":\""++show (themeID otherUgTheme)++"\",\"signviewTheme\":null,\"serviceTheme\":null,\"browserTitle\": null ,\"smsOriginator\": null,\"favicon\":null}")]
+  req2 <- mkRequest POST [ ("companyui", inText $ T.pack $ "{\"companyid\":\""<>show (get ugID ug) <>"\",\"mailTheme\":\""<>show (themeID otherUgTheme)<>"\",\"signviewTheme\":null,\"serviceTheme\":null,\"browserTitle\": null ,\"smsOriginator\": null,\"favicon\":null}")]
   (_, _) <- runTestKontra req2 ctx $ handleChangeCompanyBranding Nothing
   ugui2 <- (get ugUI <$>) <$> (dbQuery $ UserGroupGet (get ugID ug))
   assertEqual "Can't set other company theme as company theme"  (get uguiMailTheme <$> ugui2) (Just Nothing)

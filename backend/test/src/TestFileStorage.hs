@@ -51,7 +51,7 @@ getTestFSEnv :: Monad m
              => TestFileStorageT m (Either (TVar FakeFS) FileStorageConfig)
 getTestFSEnv = TestFileStorageT ask
 
-type FakeFS = HM.HashMap String BSL.ByteString
+type FakeFS = HM.HashMap Text BSL.ByteString
 
 instance ( MonadBaseControl IO m, MonadCatch m, MonadLog m, MonadMask m
          , MonadThrow m )
@@ -67,7 +67,7 @@ instance ( MonadBaseControl IO m, MonadCatch m, MonadLog m, MonadMask m
       case HM.lookup url fs of
         Just contents -> return contents
         Nothing ->
-          throwM $ FileStorageException $ "object " ++ url ++ " not found"
+          throwM $ FileStorageException $ "object " <> url <> " not found"
     Right conf -> runFileStorageT conf $ getSavedContents url
 
   deleteSavedContents url = TestFileStorageT $ ReaderT $ \case

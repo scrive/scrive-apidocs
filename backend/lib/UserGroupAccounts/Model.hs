@@ -67,7 +67,7 @@ instance MonadDB m => DBQuery m UserGroupGetInvites [UserGroupInvite] where
     fetchMany fetchUserGroupInvite
 
 data UserGroupGetInvitesWithUsersData = UserGroupGetInvitesWithUsersData UserGroupID
-instance MonadDB m => DBQuery m UserGroupGetInvitesWithUsersData [(UserGroupInvite,String,String,String)] where
+instance MonadDB m => DBQuery m UserGroupGetInvitesWithUsersData [(UserGroupInvite,Text,Text,Text)] where
   query (UserGroupGetInvitesWithUsersData ugid) = do
     runQuery_ . sqlSelect "companyinvites as i, users as u" $ do
       sqlWhere "i.user_id = u.id"

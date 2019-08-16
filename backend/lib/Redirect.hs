@@ -5,8 +5,10 @@ module Redirect
 
 import Happstack.Server hiding (finishWith)
 import Network.HTTP.Base (urlEncode)
-import qualified Data.ByteString.Lazy.UTF8 as BSL (fromString)
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 
 import Happstack.Fields
 import Kontra
@@ -15,9 +17,13 @@ import User.Lang
 import Utils.HTTP
 import Utils.String
 
-seeOtherXML :: String -> Response
+seeOtherXML :: Text -> Response
 seeOtherXML url = toResponseBS (BS.fromString "text/html;charset=utf-8") $
-                    BSL.fromString $ "<a href='"++ (escapeString url) ++"' alt='303 see other'>"++ (escapeString url) ++ "</a>"
+                    BSL.fromStrict $ TE.encodeUtf8 $
+                      "<a href='"<> (escapeString url) <>"' alt='303 see other'>"<> (escapeString url) <> "</a>"
+
+urlEncodeText :: Text -> Text
+urlEncodeText = T.pack . urlEncode . T.unpack
 
 {-|
    Redirects to the url relevant to the KontraLink.
@@ -27,13 +33,14 @@ sendRedirect LoopBack = do
   referer <- fmap BS.toString <$> getHeaderM "referer"
   mainlink <- getHomeOrDesignViewLink
   let link = fromMaybe (show mainlink) referer
-  seeOther link =<< setRsCode 303 (seeOtherXML link)
+  seeOther link =<< setRsCode 303 (seeOtherXML $ T.pack link)
 
 sendRedirect (LinkLogin lang) = do
-  curr <- rqUri <$> askRq
-  qr <- rqQuery <$> askRq
+  curr <- T.pack <$> rqUri <$> askRq
+  qr <- T.pack <$> rqQuery <$> askRq
   referer <- getField "referer"
-  let link' = "/" ++ (codeFromLang lang) ++  "/enter?referer=" ++ (urlEncode $ fromMaybe (curr++qr) referer)
+  let link' = "/" <> (codeFromLang lang) <> "/enter?referer=" <>
+                (urlEncodeText $ fromMaybe (curr <> qr) referer)
   -- NOTE We could add  "#log-in" at the end. But it would overwrite hash that can be there, and hash is not send to server.
   -- So we let frontend take care of that on it's own. And frontend will fetch hash for referer
   seeOther link' =<< setRsCode 303 (seeOtherXML link')
@@ -42,19 +49,21 @@ sendRedirect (LinkLogin lang) = do
 sendRedirect (LinkLoginDirect lang) = do
   referer <- getField "referer"
   let link' = case referer of
-       Just r -> "/" ++ (codeFromLang lang) ++  "/enter?referer=" ++ (urlEncode r)
-       Nothing ->  "/" ++ (codeFromLang lang) ++  "/enter"
+       Just r ->
+         "/" <> (codeFromLang lang) <> "/enter?referer=" <> (urlEncodeText r)
+       Nothing ->
+         "/" <> (codeFromLang lang) <>  "/enter"
   seeOther link' =<< setRsCode 303 (seeOtherXML link')
 
 sendRedirect link@(LinkPermanentRedirect _) = do
-  seeOther (show link) =<< setRsCode 301 (seeOtherXML $ show link)
+  seeOther (show link) =<< setRsCode 301 (seeOtherXML $ showt link)
 
 sendRedirect link = do
-  seeOther (show link) =<< setRsCode 303 (seeOtherXML $ show link)
+  seeOther (show link) =<< setRsCode 303 (seeOtherXML $ showt link)
 
 sendSecureLoopBack :: Kontrakcja m => m Response
 sendSecureLoopBack = do
   link <- getSecureLink
   seeOther link =<< setRsCode 303 (seeOtherXML link)
   where
-    getSecureLink = (++) "https://" <$> currentLinkBody
+    getSecureLink = (<>) "https://" <$> currentLinkBody

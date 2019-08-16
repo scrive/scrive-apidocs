@@ -24,6 +24,7 @@ import Crypto.RNG
 import Log
 import Text.StringTemplates.Templates (TemplatesMonad, TemplatesT)
 import qualified Data.ByteString as BS
+import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.Model
@@ -236,7 +237,7 @@ sendInvitationEmail1 authorsiglink = do
 -- | Send a reminder email (and update the modification time on the document).
 sendReminderEmail :: ( MonadLog m, MonadCatch m, TemplatesMonad m, CryptoRNG m
                      , DocumentMonad m, MailContextMonad m)
-                  => Maybe String -> Actor -> Bool -> SignatoryLink
+                  => Maybe Text -> Actor -> Bool -> SignatoryLink
                   -> m SignatoryLink
 sendReminderEmail custommessage actor automatic siglink =
   logSignatory (signatorylinkid siglink) $ do
@@ -255,7 +256,7 @@ sendReminderEmail custommessage actor automatic siglink =
                                      (documentid doc) (signatorylinkid siglink)
                                 else Just $ OtherDocumentMail $ documentid doc
           -- We only add attachment after document is signed
-          , attachments       = attachments mail ++
+          , attachments       = attachments mail <>
                                 (if documentstatus doc == DS.Closed
                                  then mailattachments
                                  else [])
@@ -342,7 +343,7 @@ sendClosedEmails sealFixed document = do
             scheduleEmailFunc $ mail
               { to = [getMailAddress sl]
               , attachments =
-                  attachments mail ++ if forceLink then [] else mailattachments
+                  attachments mail <> if forceLink then [] else mailattachments
               , kontraInfoForMail =
                   Just $ DocumentConfirmationMail (documentid document)
                     (signatorylinkid sl)
@@ -373,39 +374,39 @@ sendClosedEmails sealFixed document = do
 
 -- | Construct the list of attachments. Return nothing if the attachments would
 -- be above the maximum size.
-makeMailAttachments :: (MonadDB m, MonadThrow m) => Document -> Bool -> m [(String, Either BS.ByteString FileID)]
+makeMailAttachments :: (MonadDB m, MonadThrow m) => Document -> Bool -> m [(Text, Either BS.ByteString FileID)]
 makeMailAttachments doc withAttachments = map (\(n,f) -> (n, Right $ fileid f)) <$> if (isClosed doc)
   then makeMailAttachmentsForClosedDocument doc withAttachments
   else makeMailAttachmentsForNotClosedDocument doc withAttachments
 
 
-makeMailAttachmentsForClosedDocument :: (MonadDB m, MonadThrow m) => Document -> Bool -> m [(String, File)]
+makeMailAttachmentsForClosedDocument :: (MonadDB m, MonadThrow m) => Document -> Bool -> m [(Text, File)]
 makeMailAttachmentsForClosedDocument doc withAttachments = do
   mainfile <- do
     file <- dbQuery $ GetFileByFileID $ mainfileid $ fromJust $ (documentsealedfile doc) `mplus` (documentfile doc)
-    return [(documenttitle doc ++ ".pdf", file)]
+    return [(documenttitle doc <> ".pdf", file)]
   aattachments <- case withAttachments of
     False -> return []
     True -> forM (filter (not . authorattachmentaddtosealedfile) $ documentauthorattachments doc) $ \aatt -> do
       file <- dbQuery $ GetFileByFileID $ authorattachmentfileid aatt
-      return [(authorattachmentname aatt ++ ".pdf", file)]
+      return [(authorattachmentname aatt <> ".pdf", file)]
   let
-    allMailAttachments = mainfile ++ (concat aattachments)
+    allMailAttachments = mainfile <> (concat aattachments)
     maxFileSize = 10 * 1024 * 1024
   if sum (map (filesize . snd) allMailAttachments) > maxFileSize
     then return []
     else return allMailAttachments
 
-makeMailAttachmentsForNotClosedDocument :: (MonadDB m, MonadThrow m) => Document -> Bool -> m [(String, File)]
+makeMailAttachmentsForNotClosedDocument :: (MonadDB m, MonadThrow m) => Document -> Bool -> m [(Text, File)]
 makeMailAttachmentsForNotClosedDocument doc withAttachments = do
   mainfile <- do
     file <- dbQuery $ GetFileByFileID $ mainfileid $ fromJust (documentfile doc)
-    return [(documenttitle doc ++ ".pdf", file)]
+    return [(documenttitle doc <> ".pdf", file)]
   aattachments <- case withAttachments of
     False -> return []
     True -> forM (documentauthorattachments doc) $ \aatt -> do
       file <- dbQuery $ GetFileByFileID $ authorattachmentfileid aatt
-      return [(authorattachmentname aatt ++ ".pdf", file)]
+      return [(authorattachmentname aatt <> ".pdf", file)]
   sattachments <- case withAttachments of
     False -> return []
     True -> forM (concatMap signatoryattachments $ documentsignatorylinks doc) $ \satt -> case signatoryattachmentfile satt of
@@ -414,7 +415,7 @@ makeMailAttachmentsForNotClosedDocument doc withAttachments = do
         file <- dbQuery $ GetFileByFileID sattfid
         return [(filename file, file)]
   let
-    allMailAttachments = mainfile ++ (concat aattachments) ++ (concat sattachments)
+    allMailAttachments = mainfile <> (concat aattachments) <> (concat sattachments)
     maxFileSize = 10 * 1024 * 1024
   if sum (map (filesize . snd) allMailAttachments) > maxFileSize
     then return []
@@ -432,7 +433,7 @@ sendDocumentTimeoutedEmail document = do
 {- |
    Send an email to the author and to all signatories who were sent an invitation  when the document is rejected
  -}
-sendRejectEmails :: Kontrakcja m => Maybe String -> SignatoryLink -> Document -> m ()
+sendRejectEmails :: Kontrakcja m => Maybe Text -> SignatoryLink -> Document -> m ()
 sendRejectEmails customMessage signalink document = do
   let activatedSignatories = [sl | sl <- documentsignatorylinks document
                                  , isActivatedSignatory (documentcurrentsignorder document) sl || isAuthor sl
@@ -446,14 +447,14 @@ sendRejectEmails customMessage signalink document = do
       )
       (scheduleSMS document =<< smsRejectNotification document sl signalink)
 
-sendForwardSigningMessages:: Kontrakcja m => Maybe String -> SignatoryLink -> SignatoryLink -> Document -> m ()
+sendForwardSigningMessages:: Kontrakcja m => Maybe Text -> SignatoryLink -> SignatoryLink -> Document -> m ()
 sendForwardSigningMessages customMessage originalSignatory newSignatory doc = do
   sendForwardSigningMessagesForNewSignatory customMessage originalSignatory newSignatory doc
   unless (isAuthor originalSignatory) $ do
     sendForwardSigningMessagesToAuthor originalSignatory newSignatory doc
   return ()
 
-sendForwardSigningMessagesForNewSignatory:: Kontrakcja m => Maybe String -> SignatoryLink -> SignatoryLink -> Document -> m ()
+sendForwardSigningMessagesForNewSignatory:: Kontrakcja m => Maybe Text -> SignatoryLink -> SignatoryLink -> Document -> m ()
 sendForwardSigningMessagesForNewSignatory customMessage originalsiglink newsiglink doc = do
     let sendMail = do
           mail <- mailForwardSigningForNewSignatory customMessage originalsiglink newsiglink doc
@@ -535,18 +536,16 @@ sendAllReminderEmailsWithFilter f actor automatic = do
       doc <- theDocument
       let unsignedsiglinks = filter (isEligibleForReminder doc) $ documentsignatorylinks doc
           text = documentinvitetext doc
-          mCustomMessage = if null text then Nothing else Just text
+          mCustomMessage = if T.null text then Nothing else Just text
       mapM (sendReminderEmail mCustomMessage actor automatic) $ filter f unsignedsiglinks)
     {-else-} $ do
       return []
-
-
 
 {- |
     Send a forward email
 -}
 sendForwardEmail :: (MonadLog m, TemplatesMonad m, MonadThrow m, CryptoRNG m, DocumentMonad m, MailContextMonad m) =>
-                          String -> Bool -> Bool -> SignatoryLink -> m ()
+                          Text -> Bool -> Bool -> SignatoryLink -> m ()
 sendForwardEmail email noContent noAttachments asiglink = do
   doc <- theDocument
   mailattachments <- makeMailAttachments doc (not noAttachments)
@@ -557,7 +556,7 @@ sendForwardEmail email noContent noAttachments asiglink = do
                              , content =  if (noContent)
                                              then ""
                                              else content mail
-                             , attachments = attachments mail ++ mailattachments
+                             , attachments = attachments mail <> mailattachments
                              , kontraInfoForMail = Just $ OtherDocumentMail $ documentid doc
                              }
   return ()
@@ -565,7 +564,7 @@ sendForwardEmail email noContent noAttachments asiglink = do
 
 
 sendPinCode:: (MonadLog m, TemplatesMonad m, MonadThrow m, DocumentMonad m, CryptoRNG m, MailContextMonad m, KontraMonad m) =>
-                          SignatoryLink -> String -> String -> m ()
+                          SignatoryLink -> Text -> Text -> m ()
 sendPinCode sl phone pin = do
   ctx <- getContext
   doc <- theDocument
@@ -604,7 +603,7 @@ type MailT m = MailContextT (TemplatesT m)
 
 -- | Set up mail and template context, with language and branding
 -- based on document data, and the rest from CronEnv
-runMailT :: (MonadThrow m, MonadDB m, MonadIO m, MonadLog m) => KontrakcjaGlobalTemplates -> String -> Document -> MailT m a -> m a
+runMailT :: (MonadThrow m, MonadDB m, MonadIO m, MonadLog m) => KontrakcjaGlobalTemplates -> Text -> Document -> MailT m a -> m a
 runMailT templates mailNoreplyAddress doc m = do
   now <- currentTime
   mauthor <- maybe (return Nothing) (dbQuery . GetUserByID) $ join $ maybesignatory <$> getAuthorSigLink doc

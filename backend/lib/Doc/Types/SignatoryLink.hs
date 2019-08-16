@@ -46,6 +46,7 @@ newtype SignOrder = SignOrder { unSignOrder :: Int32 }
   deriving (Eq, Ord)
 deriving newtype instance Read SignOrder
 deriving newtype instance Show SignOrder
+deriving newtype instance TextShow SignOrder
 
 instance PQFormat SignOrder where
   pqFormat = pqFormat @Int32

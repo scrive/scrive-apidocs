@@ -9,7 +9,6 @@ module UserGroup.JSON (
 
 import Data.Aeson
 import Data.Aeson.Encoding
-import Data.Text hiding (map)
 import Data.Unjson
 import qualified Data.HashMap.Strict as HM
 import qualified Data.List.NonEmpty as L

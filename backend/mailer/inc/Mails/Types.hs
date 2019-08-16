@@ -45,7 +45,7 @@ data JobType
   | CollectServiceTestResult
   deriving (Eq, Ord, Show)
 
-jobTypeMapper :: [(JobType, T.Text)]
+jobTypeMapper :: [(JobType, Text)]
 jobTypeMapper = [
     (CleanOldEmails, "clean_old_emails")
   , (PerformServiceTest, "perform_service_test")
@@ -53,10 +53,10 @@ jobTypeMapper = [
   ]
 
 instance PQFormat JobType where
-  pqFormat = pqFormat @T.Text
+  pqFormat = pqFormat @Text
 
 instance FromSQL JobType where
-  type PQBase JobType = PQBase T.Text
+  type PQBase JobType = PQBase Text
   fromSQL mbase = do
     v <- fromSQL mbase
     case v `rlookup` jobTypeMapper of
@@ -67,7 +67,7 @@ instance FromSQL JobType where
       }
 
 instance ToSQL JobType where
-  type PQDest JobType = PQBase T.Text
+  type PQDest JobType = PQBase Text
   toSQL tt = toSQL . fromJust $ tt `lookup` jobTypeMapper
 
 data MailerJob = MailerJob {
@@ -97,8 +97,8 @@ instance ToSQL MailID where
   toSQL (MailID n) = toSQL n
 
 data Address = Address {
-  addrName  :: !String
-, addrEmail :: !String
+  addrName  :: !Text
+, addrEmail :: !Text
 } deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 instance Unjson Address where
@@ -133,11 +133,11 @@ instance ToSQL [Address] where
   toSQL = jsonToSQL
 
 data Attachment = Attachment {
-  attName    :: !String
+  attName    :: !Text
 , attContent :: !(Either B.ByteString FileID)
 } deriving (Eq, Ord, Show)
 
-type instance CompositeRow Attachment = (String, Maybe B.ByteString, Maybe FileID)
+type instance CompositeRow Attachment = (Text, Maybe B.ByteString, Maybe FileID)
 
 instance PQFormat Attachment where
   pqFormat = compositeTypePqFormat ctMailAttachment
@@ -171,8 +171,8 @@ data Mail = Mail {
 , mailFrom        :: !Address
 , mailTo          :: ![Address]
 , mailReplyTo     :: !(Maybe Address)
-, mailTitle       :: !String
-, mailContent     :: !String
+, mailTitle       :: !Text
+, mailContent     :: !Text
 , mailAttachments :: ![Attachment]
 , mailServiceTest :: !Bool
 , mailAttempts    :: !Int32
@@ -184,7 +184,7 @@ instance Loggable Mail where
     , "attachments" .= map logValue mailAttachments
     , "attachment_count" .= length mailAttachments
     , "attempt_count" .= mailAttempts
-    , "content" .= htmlToTxt mailContent
+    , "content" .= (htmlToTxt $ T.unpack mailContent)
     , "from" .= mailFrom
     , "reply_to" .= fromMaybe Null (toJSON <$> mailReplyTo)
     , "service_test" .= mailServiceTest
@@ -217,10 +217,10 @@ instance ToSQL EventID where
 data SendGridEvent
   = SG_Processed
   | SG_Opened
-  | SG_Dropped String              -- ^ drop reason
-  | SG_Deferred String Int32       -- ^ response, delivery attempt
-  | SG_Delivered String            -- ^ response from mta
-  | SG_Bounce String String String -- ^ status, reason, type
+  | SG_Dropped Text              -- ^ drop reason
+  | SG_Deferred Text Int32       -- ^ response, delivery attempt
+  | SG_Delivered Text            -- ^ response from mta
+  | SG_Bounce Text Text Text -- ^ status, reason, type
   | SG_SpamReport
   | SG_Unsubscribe
     deriving (Eq, Ord, Show, Data, Typeable)
@@ -228,11 +228,11 @@ data SendGridEvent
 data MailGunEvent
   = MG_Opened
   | MG_Delivered
-  | MG_Clicked !String                  -- ^ url
-  | MG_Unsubscribed !String             -- ^ domain
-  | MG_Complained !String               -- ^ domain
-  | MG_Bounced String !String !String   -- ^ domain, code, error
-  | MG_Dropped !String                  -- ^ drop reason
+  | MG_Clicked !Text                  -- ^ url
+  | MG_Unsubscribed !Text             -- ^ domain
+  | MG_Complained !Text               -- ^ domain
+  | MG_Bounced Text !Text !Text   -- ^ domain, code, error
+  | MG_Dropped !Text                  -- ^ drop reason
     deriving (Eq, Ord, Show, Data, Typeable)
 
 data SocketLabsEvent
@@ -256,10 +256,10 @@ data MailJetEvent
     deriving (Eq, Ord, Show, Data, Typeable)
 
 data Event
-  = SendGridEvent !String !SendGridEvent !String   -- ^ email, event, category
-  | MailGunEvent !String !MailGunEvent             -- ^ email, event
-  | SocketLabsEvent !String !SocketLabsEvent       -- ^ email, event
-  | MailJetEvent !String !MailJetEvent             -- ^ email, event
+  = SendGridEvent !Text !SendGridEvent !Text   -- ^ email, event, category
+  | MailGunEvent !Text !MailGunEvent             -- ^ email, event
+  | SocketLabsEvent !Text !SocketLabsEvent       -- ^ email, event
+  | MailJetEvent !Text !MailJetEvent             -- ^ email, event
   deriving (Eq, Ord, Show, Data, Typeable)
 
 instance PQFormat Event where

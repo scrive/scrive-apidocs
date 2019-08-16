@@ -37,8 +37,8 @@ data MailingServerConf = MailingServerConf {
 -- Right now it's used only for SocketLabs
 
 data CallbackValidationKeys = CallbackValidationKeys {
-  callbackValidationSecretKey :: !String
-, callbackValidationValidationKey :: !String
+  callbackValidationSecretKey :: !Text
+, callbackValidationValidationKey :: !Text
 } deriving (Eq, Ord, Show)
 
 unjsonCallbackValidationKeys :: UnjsonDef CallbackValidationKeys
@@ -52,8 +52,8 @@ unjsonCallbackValidationKeys = objectOf $ CallbackValidationKeys
 
 
 data SMTPUser = SMTPUser {
-  smtpAccount  :: !String
-, smtpPassword :: !String
+  smtpAccount  :: !Text
+, smtpPassword :: !Text
 , callbackValidationKeys :: !(Maybe CallbackValidationKeys)
 } deriving (Eq, Ord, Show)
 
@@ -73,7 +73,7 @@ unjsonSMTPUser = objectOf $ SMTPUser
 -- | SMTP user that is dedicated only to email
 -- where from address matched given address.
 data SMTPDedicatedUser = SMTPDedicatedUser {
-  smtpFromDedicatedAddress :: !String
+  smtpFromDedicatedAddress :: !Text
 , smtpDedicatedUser        :: !SMTPUser
 } deriving (Eq, Ord, Show)
 
@@ -132,13 +132,13 @@ instance Unjson MailingServerConf where
   unjsonDef = unjsonMailingServerConf
 
 data SenderConfig = SMTPSender {
-  serviceName        :: !String
-, smtpAddr           :: !String
+  serviceName        :: !Text
+, smtpAddr           :: !Text
 , smtpUser           :: !SMTPUser
 , smtpDedicatedUsers :: ![SMTPDedicatedUser]
 } | LocalSender {
   localDirectory     :: !FilePath
-, localOpenCommand   :: !(Maybe String)
+, localOpenCommand   :: !(Maybe Text)
 } | NullSender
   deriving (Eq, Ord, Show)
 

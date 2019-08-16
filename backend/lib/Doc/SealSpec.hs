@@ -4,25 +4,25 @@ import Data.Int
 import qualified Data.ByteString.Char8 as BS
 
 data Person =
-    Person { fullname            :: String
-           , company             :: String
-           , personalnumber      :: String
-           , companynumber       :: String
-           , email               :: String
-           , phone               :: String
+    Person { fullname            :: Text
+           , company             :: Text
+           , personalnumber      :: Text
+           , companynumber       :: Text
+           , email               :: Text
+           , phone               :: Text
            , fullnameverified    :: Bool
            , companyverified     :: Bool
            , numberverified      :: Bool
            , emailverified       :: Bool
            , phoneverified       :: Bool
            , fields              :: [Field]
-           , signtime            :: String
-           , signedAtText        :: String
-           , personalNumberText  :: String
-           , companyNumberText   :: String
+           , signtime            :: Text
+           , signedAtText        :: Text
+           , personalNumberText  :: Text
+           , companyNumberText   :: Text
            , highlightedImages   :: [HighlightedImage]
-           , identifiedNameText  :: String
-           , nameFromText        :: String
+           , identifiedNameText  :: Text
+           , nameFromText        :: Text
            }
     deriving (Eq,Ord,Show,Read)
 
@@ -38,7 +38,7 @@ data Person =
 -- PDF's way of baseline calculation for font used.
 data Field
   = Field
-    { value            :: String -- ^ text to put into a field
+    { value            :: Text -- ^ text to put into a field
     , x                :: Double -- ^ left coordinate of field in (0,0)-(1,1)
     , y                :: Double -- ^ upper coordinate of field in (0,0)-(1,1)
     , page             :: Int32  -- ^ on which page should the field be placed
@@ -71,21 +71,21 @@ data HighlightedImage = HighlightedImage {
 -- order.  File name should be without any directory parts. File
 -- content as base64 encoded string.
 data SealAttachment = SealAttachment
-  { fileName     :: String        -- ^ how should attached file be named
-  , mimeType     :: Maybe String  -- ^ optional "subtype" specification, like "text/plain"
+  { fileName     :: Text        -- ^ how should attached file be named
+  , mimeType     :: Maybe Text  -- ^ optional "subtype" specification, like "text/plain"
   , fileContent  :: BS.ByteString -- ^ binary content of the file
   }
     deriving (Eq,Ord,Show,Read)
 
 data SealSpec = SealSpec
-    { input          :: String
-    , output         :: String
-    , documentNumberText :: String
+    { input          :: Text
+    , output         :: Text
+    , documentNumberText :: Text
     , persons        :: [Person]
     , secretaries    :: [Person]
     , initiator      :: Maybe Person
-    , initialsText   :: String
-    , hostpart       :: String
+    , initialsText   :: Text
+    , hostpart       :: Text
     , staticTexts    :: SealingTexts
     , attachments    :: [SealAttachment]
     , filesList      :: [FileDesc]
@@ -94,19 +94,19 @@ data SealSpec = SealSpec
     deriving (Eq,Ord,Show,Read)
 
 data FileDesc = FileDesc
-    { fileTitle      :: String
-    , fileRole       :: String
-    , filePagesText  :: String
-    , fileAttachedBy :: String
-    , fileSealedOn   :: Maybe String
-    , fileAttachedToSealedFileText :: Maybe String
-    , fileInput      :: Maybe String
+    { fileTitle      :: Text
+    , fileRole       :: Text
+    , filePagesText  :: Text
+    , fileAttachedBy :: Text
+    , fileSealedOn   :: Maybe Text
+    , fileAttachedToSealedFileText :: Maybe Text
+    , fileInput      :: Maybe Text
     }
     deriving (Eq,Ord,Show,Read)
 
 data PreSealSpec = PreSealSpec
-    { pssInput  :: String
-    , pssOutput :: String
+    { pssInput  :: Text
+    , pssOutput :: Text
     , pssFields :: [Field]
     }
     deriving (Eq,Ord,Show,Read)
@@ -116,12 +116,12 @@ data PreSealSpec = PreSealSpec
       If You change this structure sealing WILL fail, unless changes are made to docseal.st
 -}
 data SealingTexts = SealingTexts
-  { verificationTitle  :: String -- Big title at last page
-  , partnerText        :: String -- Header for partner list
-  , initiatorText      :: String -- Header for initiator
-  , documentText       :: String -- Header for documents list
-  , verificationPageDescription :: String -- Long summary near the end of verification page
-  , hiddenAttachmentText :: String -- "Concealed Attachment"
-  , onePageText        :: String -- "1 page"
+  { verificationTitle  :: Text -- Big title at last page
+  , partnerText        :: Text -- Header for partner list
+  , initiatorText      :: Text -- Header for initiator
+  , documentText       :: Text -- Header for documents list
+  , verificationPageDescription :: Text -- Long summary near the end of verification page
+  , hiddenAttachmentText :: Text -- "Concealed Attachment"
+  , onePageText        :: Text -- "1 page"
   }
   deriving (Eq,Ord,Show,Read)

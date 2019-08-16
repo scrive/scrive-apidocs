@@ -26,12 +26,12 @@ import Data.Data
 import DB
 import User.Model
 
-data UserCallbackScheme = ConstantUrlScheme String
-                        | SalesforceScheme String
-                        | ConstantUrlSchemeV2 String
-                        | BasicAuthScheme String String -- Sample of DB value: {"BasicAuthScheme" : ["a","b"]}
-                        | OAuth2Scheme String String String String -- Sample of DB value: {"OAuth2Scheme" : ["name","secret","url","scope"]}
-                        | Hi3GScheme String String String String -- Hi3G's homegrown OAuth2. Sample of DB value: {"Hi3GScheme" : ["name","secret","url","scope"]}
+data UserCallbackScheme = ConstantUrlScheme Text
+                        | SalesforceScheme Text
+                        | ConstantUrlSchemeV2 Text
+                        | BasicAuthScheme Text Text -- Sample of DB value: {"BasicAuthScheme" : ["a","b"]}
+                        | OAuth2Scheme Text Text Text Text -- Sample of DB value: {"OAuth2Scheme" : ["name","secret","url","scope"]}
+                        | Hi3GScheme Text Text Text Text -- Hi3G's homegrown OAuth2. Sample of DB value: {"Hi3GScheme" : ["name","secret","url","scope"]}
 
   deriving (Eq, Show, Data, Typeable)
 

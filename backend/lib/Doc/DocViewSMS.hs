@@ -18,7 +18,6 @@ import Control.Monad.Trans
 import Crypto.RNG
 import Data.Time
 import Text.StringTemplates.Templates
-import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.BrandedDomain
@@ -42,7 +41,7 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 import Utils.Monoid
 
-mkSMS :: (MonadDB m, MonadThrow m, MonadTime m, MailContextMonad m) => Document -> SignatoryLink -> Maybe KontraInfoForSMS -> String -> (m SMS)
+mkSMS :: (MonadDB m, MonadThrow m, MonadTime m, MailContextMonad m) => Document -> SignatoryLink -> Maybe KontraInfoForSMS -> Text -> (m SMS)
 mkSMS doc sl mkontraInfoForSMS msgBody = do
   mctx <- getMailContext
   (moriginator, provider) <- case maybesignatory =<< getAuthorSigLink doc of
@@ -54,7 +53,7 @@ mkSMS doc sl mkontraInfoForSMS msgBody = do
         Just user -> do
           ugwp <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
           return
-            ( fmap T.unpack . get (uguiSmsOriginator . ugUI) . ugwpUG $ ugwp
+            ( get (uguiSmsOriginator . ugUI) . ugwpUG $ ugwp
             , get ugsSMSProvider . ugwpSettings $ ugwp)
   let originator = fromMaybe
         (get (bdSmsOriginator . mctxcurrentBrandedDomain) mctx)
@@ -194,7 +193,7 @@ smsForwardSigningForNewSignatory originalsl newsl doc = do
 smsPinCodeSendout
   :: ( CryptoRNG m, MailContextMonad m, MonadDB m, MonadTime m, MonadThrow m
      , TemplatesMonad m )
-  => Document -> SignatoryLink -> String -> String -> m SMS
+  => Document -> SignatoryLink -> Text -> Text -> m SMS
 smsPinCodeSendout doc sl phone pin = do
   sms <- mkSMS doc sl (Just $ DocumentPinSendoutSMS (documentid doc) (signatorylinkid sl)) =<< renderLocalTemplate doc "_smsPinSendout" (smsFields doc >> F.value "pin" pin)
   return sms {smsMSISDN = phone}
@@ -204,8 +203,8 @@ smsFields document = do
   mctx <- lift $ getMailContext
   F.value "creatorname" $ getSmartName <$> getAuthorSigLink document
   F.value "documenttitle" $ documenttitle document
-  F.value "authorlink" $ get mctxDomainUrl mctx ++
-      show (LinkIssueDoc (documentid document))
+  F.value "authorlink" $
+    get mctxDomainUrl mctx <> (showt (LinkIssueDoc (documentid document)))
 
 smsInvitationLinkFields
   :: ( CryptoRNG m, MailContextMonad m, MonadDB m, MonadThrow m, MonadTime m
@@ -219,7 +218,7 @@ smsInvitationLinkFields doc sl = do
       mh <- lift $ dbUpdate $ NewSignatoryAccessToken
         (signatorylinkid sl) SignatoryAccessTokenForSMSBeforeClosing Nothing
       return $ LinkSignDocMagicHash (documentid doc) (signatorylinkid sl) mh
-  F.value "link" $ get mctxDomainUrl mctx ++ show link
+  F.value "link" $ get mctxDomainUrl mctx <> showt link
 
 smsConfirmationLinkFields
   :: ( CryptoRNG m, MailContextMonad m, MonadDB m, MonadThrow m
@@ -228,8 +227,8 @@ smsConfirmationLinkFields
 smsConfirmationLinkFields doc sl = do
   mctx <- lift $ getMailContext
   (mh, expiration) <- lift $ makeConfirmationMagicHash sl
-  F.value "link" $ get mctxDomainUrl mctx ++
-    show (LinkSignDocMagicHash (documentid doc) (signatorylinkid sl) mh)
+  F.value "link" $ get mctxDomainUrl mctx <>
+    showt (LinkSignDocMagicHash (documentid doc) (signatorylinkid sl) mh)
   F.value "availabledate" $ formatTimeYMD expiration
 
 -- | Create a temporary hash valid for 30 days.

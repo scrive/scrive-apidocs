@@ -24,7 +24,7 @@ import Doc.Types.SignatoryField
 import File.FileID
 
 data FieldValue
-  = StringFV String
+  = StringFV Text
   | BoolFV Bool
   | FileFV (Maybe FileID)
     deriving (Eq, Ord, Show)
@@ -125,7 +125,7 @@ fieldID (SignatoryCheckboxField f)       = schfID f
 fieldID (SignatorySignatureField f)      = ssfID f
 fieldID (SignatoryRadioGroupField f)     = srgfID f
 
-fieldRadioGroupValues :: SignatoryField -> Maybe [String]
+fieldRadioGroupValues :: SignatoryField -> Maybe [Text]
 fieldRadioGroupValues (SignatoryNameField _)           = Nothing
 fieldRadioGroupValues (SignatoryCompanyField _)        = Nothing
 fieldRadioGroupValues (SignatoryPersonalNumberField _) = Nothing

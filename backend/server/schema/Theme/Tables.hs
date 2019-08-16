@@ -78,7 +78,7 @@ domainFont = Domain {
         }]
   } where sql = rawSQL (T.intercalate " OR " $ map value fonts) ()
           value font = T.concat ["VALUE = '", font, "'::text"]
-          fonts :: [T.Text] = ["\"arial black\",sans-serif"
+          fonts :: [Text] = ["\"arial black\",sans-serif"
             , "\"arial narrow\",sans-serif"
             , "\"comic sans ms\",sans-serif"
             , "\"courier new\",monospace"

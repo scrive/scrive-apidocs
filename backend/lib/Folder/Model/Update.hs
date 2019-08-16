@@ -98,7 +98,7 @@ instance (MonadDB m, MonadThrow m) =>
       where
         noUserGroupErr =
             unexpectedError $
-              "No user group corresponding to id" <+> (show ugid)
+              "No user group corresponding to id" <+> showt ugid
 
         linkNewFolder ugid' fdr' = do
           fdr <- update . FolderCreate $ fdr'
@@ -121,7 +121,7 @@ instance (MonadDB m, MonadThrow m) =>
         Nothing -> do
           let fdr' = set folderParentID mfdrparentid defaultFolder
           fdr <- update . FolderCreate $ fdr'
-       
+
           runQuery_ . sqlUpdate "users" $ do
             sqlSet "home_folder_id" (get folderID fdr)
             sqlWhereEq "id" uid

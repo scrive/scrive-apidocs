@@ -16,7 +16,6 @@ module User.Types.User
 import Data.Aeson
 import Data.ByteString (ByteString)
 import Data.Int (Int16)
-import Data.String.Utils (strip)
 import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomainID
@@ -51,7 +50,7 @@ data User = User {
   } deriving (Eq, Ord, Show)
 
 instance HasSomeUserInfo User where
-  getEmail          = strip . unEmail . useremail . userinfo
+  getEmail          = T.strip . unEmail . useremail . userinfo
   getFirstName      = userfstname         . userinfo
   getLastName       = usersndname         . userinfo
   getPersonalNumber = userpersonalnumber  . userinfo
@@ -66,16 +65,16 @@ instance Loggable User where
   logDefaultLabel _ = "user"
 
 data UserInfo = UserInfo {
-    userfstname         :: String
-  , usersndname         :: String
-  , userpersonalnumber  :: String
-  , usercompanyposition :: String
-  , userphone           :: String
+    userfstname         :: Text
+  , usersndname         :: Text
+  , userpersonalnumber  :: Text
+  , usercompanyposition :: Text
+  , userphone           :: Text
   , useremail           :: Email
   } deriving (Eq, Ord, Show)
 
 instance HasSomeUserInfo UserInfo where
-  getEmail          = strip . unEmail . useremail
+  getEmail          = T.strip . unEmail . useremail
   getFirstName      = userfstname
   getLastName       = usersndname
   getPersonalNumber = userpersonalnumber
@@ -199,12 +198,12 @@ selectUsersWithUserGroupNamesSQL = "SELECT"
   <> "  LEFT JOIN user_groups ug ON users.user_group_id = ug.id"
   <> "  WHERE users.deleted IS NULL"
 
-composeFullName :: (String, String) -> String
-composeFullName (fstname, sndname) = if null sndname
+composeFullName :: (Text, Text) -> Text
+composeFullName (fstname, sndname) = if T.null sndname
   then fstname
-  else fstname ++ " " ++ sndname
+  else fstname <> " " <> sndname
 
-fetchUser :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, String, String, String, String, String, Email, Lang, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Bool, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, UserGroupID, Maybe FolderID, Bool) -> User
+fetchUser :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, Text, Text, Text, Text, Text, Email, Lang, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Bool, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, UserGroupID, Maybe FolderID, Bool) -> User
 fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, first_name, last_name, personal_number, company_position, phone, email, lang, idle_doc_timeout_preparation, idle_doc_timeout_closed, idle_doc_timeout_canceled, idle_doc_timeout_timedout, idle_doc_timeout_rejected, idle_doc_timeout_error, immediate_trash, associated_domain_id, password_algorithm, totp_key, totp_active, ugid, mfid, totp_is_mandatory) = User {
   userid = uid
 , userpassword = maybeMkPassword ( password, salt
@@ -241,7 +240,7 @@ fetchUser (uid, password, salt, is_company_admin, account_suspended, has_accepte
 , userhomefolderid = mfid
 }
 
-fetchUserWithUserGroupName :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, String, String, String, String, String, Email, Lang, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Bool, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, UserGroupID, Maybe FolderID, Bool, T.Text) -> (User, T.Text)
+fetchUserWithUserGroupName :: (UserID, Maybe ByteString, Maybe ByteString, Bool, Bool, Maybe UTCTime, SignupMethod, Text, Text, Text, Text, Text, Email, Lang, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Maybe Int16, Bool, BrandedDomainID, Maybe Int16, Maybe ByteString, Bool, UserGroupID, Maybe FolderID, Bool, Text) -> (User, Text)
 fetchUserWithUserGroupName (uid, password, salt, is_company_admin, account_suspended, has_accepted_terms_of_service, signup_method, first_name, last_name, personal_number, company_position, phone, email, lang, idle_doc_timeout_preparation, idle_doc_timeout_closed, idle_doc_timeout_canceled, idle_doc_timeout_timedout, idle_doc_timeout_rejected, idle_doc_timeout_error, immediate_trash, associated_domain_id, password_algorithm, totp_key, totp_active, ugid, mfid, totp_is_mandatory, name) = (user, name)
   where
     user = User {

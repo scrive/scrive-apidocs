@@ -2,7 +2,7 @@
 
 -- | DocControl represents the controler (in MVC) of the document.
 
-module Doc.DocControl(
+module Doc.DocControl (
     -- Exported utils or test functions
       sendReminderEmail
     -- Top level handlers
@@ -37,7 +37,6 @@ import Control.Conditional (unlessM, whenM)
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Reader
-import Data.String.Utils (replace, strip)
 import Happstack.Server hiding (lookCookieValue, simpleHTTP, timeout)
 import Log
 import System.Directory
@@ -97,6 +96,7 @@ import Log.Identifier
 import MagicHash
 import Redirect
 import Session.Model
+import Templates (renderTextTemplate, renderTextTemplate_)
 import Text.JSON.Convert
 import User.Email
 import User.Model
@@ -117,13 +117,13 @@ handleNewDocument = withUser . with2FACheck $ \user -> do
   if get ugsRequireBPIDForNewDoc (ugwpSettings ugwp)
     then do
       -- This is a special feature for RBS (CORE-1081)
-      -- RBS needs to "force" their employees to enter their internal document 
+      -- RBS needs to "force" their employees to enter their internal document
       -- number. To avoid adding this to designview, this extra step is added before
       -- creating a new document.
       -- When Scrive.Flow is functional, this should be removed and implemented using
       -- Scrive.Flow.
       ctx <- getContext
-      pb <- renderTemplate "showNewDocumentWithBPID" $ do
+      pb <- renderTextTemplate "showNewDocumentWithBPID" $ do
         entryPointFields ctx
       internalResponse <$> renderFromBodyWithFields pb (return ())
     else do
@@ -133,7 +133,7 @@ handleNewDocument = withUser . with2FACheck $ \user -> do
 handleNewDocument' :: Kontrakcja m => User -> UserGroupWithParents -> m DocumentID
 handleNewDocument' user ugwp = do
   ctx <- getContext
-  title <- renderTemplate_ "newDocumentTitle"
+  title <- renderTextTemplate_ "newDocumentTitle"
   actor <- guardJustM $ mkAuthorActor <$> getContext
   mtimezonename <- (lookCookieValue "timezone" . rqHeaders) <$> askRq
   case mtimezonename of
@@ -143,7 +143,7 @@ handleNewDocument' user ugwp = do
     T.sequence (mkTimeZoneName <$> mtimezonename)
   timestamp <- formatTimeSimpleWithTZ timezone (get ctxtime ctx)
   doc <- dbUpdate $
-         NewDocument user (replace "  " " " $ title ++ " " ++ timestamp)
+         NewDocument user (T.replace "  " " " $ title <> " " <> timestamp)
                      Signable timezone 1 actor
   -- Default document on the frontend has different requirements,
   -- this sets up the signatories to match those requirements.
@@ -230,7 +230,7 @@ handleNewDocument' user ugwp = do
 --
 
 formatTimeSimpleWithTZ
-  :: (MonadDB m, MonadThrow m) => TimeZoneName -> UTCTime -> m String
+  :: (MonadDB m, MonadThrow m) => TimeZoneName -> UTCTime -> m Text
 formatTimeSimpleWithTZ tz t = do
   runQuery_ $
     rawSQL "SELECT to_char($1 AT TIME ZONE $2, 'YYYY-MM-DD HH24:MI')" (t, tz)
@@ -238,8 +238,9 @@ formatTimeSimpleWithTZ tz t = do
 
 showCreateFromTemplate :: Kontrakcja m => m InternalKontraResponse
 showCreateFromTemplate = withUser . with2FACheck $ \_ -> do
-  internalResponse <$> (pageCreateFromTemplate =<< getContext)
-
+  ctx <- getContext
+  page <- pageCreateFromTemplate ctx
+  return $ internalResponse page
 
 -- | Call after signing in order to save the document for any user,
 -- and put up the appropriate modal.
@@ -407,7 +408,8 @@ handleCookieFail slid did = logDocumentAndSignatory did slid $ do
       logInfo "Signview load after session timedout" $ object ["cookies" .= show cookies]
       ctx <- getContext
       ad <- getAnalyticsData
-      simpleHtmlResponse =<< renderTemplate "sessionTimeOut" (standardPageFields ctx Nothing ad)
+      content <- renderTextTemplate "sessionTimeOut" (standardPageFields ctx Nothing ad)
+      simpleHtmlResponse content
 
 {- |
    Redirect author of document to go to signview
@@ -446,7 +448,7 @@ handleIssueGoToSignviewPad docid slid= do
 
 handleEvidenceAttachment
   :: Kontrakcja m
-  => DocumentID -> T.Text -> m InternalKontraResponse
+  => DocumentID -> Text -> m InternalKontraResponse
 handleEvidenceAttachment docid aname = logDocument docid $ localData ["attachment_name" .= aname] $ withUser $ \_ -> do
   doc <- getDocByDocID docid
   es <- guardJustM $ EvidenceAttachments.extractAttachment doc aname
@@ -569,7 +571,7 @@ previewResponse fid pixelwidth = do
      internalError
 
 handleDownloadClosedFile
-  :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> String
+  :: Kontrakcja m => DocumentID -> SignatoryLinkID -> MagicHash -> Text
   -> m Response
 handleDownloadClosedFile did sid mh _nameForBrowser = do
   doc <- dbQuery $
@@ -585,7 +587,7 @@ handleResend :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m ()
 handleResend docid signlinkid = guardLoggedInOrThrowInternalError $ do
   getDocByDocIDForAuthorOrAuthorsCompanyAdmin docid `withDocumentM` do
     signlink <- guardJust . getSigLinkFor signlinkid =<< theDocument
-    customMessage <- fmap strip <$> getField "customtext"
+    customMessage <- fmap T.strip <$> getField "customtext"
     actor <- guardJustM $ fmap mkAuthorActor getContext
     void $ sendReminderEmail customMessage actor False signlink
     return ()
@@ -700,7 +702,7 @@ prepareEmailPreview docid slid = do
              doc <- getDocByDocID docid
              mailClosedContent True doc
          _ -> fail "prepareEmailPreview"
-    J.runJSONGenT $ J.value "content" content
+    J.runJSONGenT $ J.value "content" $ T.unpack content
 
 handleShowAfterForward :: Kontrakcja m =>  DocumentID -> m Response
 handleShowAfterForward did =

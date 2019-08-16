@@ -16,33 +16,34 @@ module Util.HasSomeUserInfo (
   HasSomeUserInfo(..)
   ) where
 
-import Data.String.Utils
 import Text.StringTemplates.Templates
+import qualified Data.Text as T
 
 import Mails.MailsData
+import Templates (renderTextTemplate_)
 import Utils.String
 
 -- | Anything that might have a first name and last name, or personalnumber
 class HasSomeUserInfo a where
-  getEmail          :: a -> String
-  getFirstName      :: a -> String
-  getLastName       :: a -> String
-  getPersonalNumber :: a -> String
-  getMobile         :: a -> String
+  getEmail          :: a -> Text
+  getFirstName      :: a -> Text
+  getLastName       :: a -> Text
+  getPersonalNumber :: a -> Text
+  getMobile         :: a -> Text
 
 -- | Get the full name (first last)
-getFullName :: (HasSomeUserInfo a) => a -> String
-getFullName a = strip $ (strip $ getFirstName a) ++ " " ++ (strip $ getLastName  a)
+getFullName :: (HasSomeUserInfo a) => a -> Text
+getFullName a = T.strip $ (T.strip $ getFirstName a) <> " " <> (T.strip $ getLastName  a)
 
 -- | Return the first non-empty of full name, email or mobile number,
 -- for use in frontend.  Not guaranteed to be unique.
-getSmartName :: (HasSomeUserInfo a) => a -> String
+getSmartName :: (HasSomeUserInfo a) => a -> Text
 getSmartName a = firstNonEmpty $ [getFullName a, getEmail a, getMobile a]
 
 -- | Uses '_notNamedParty' localized source text with `getSmartNameFromMaybe`.
-getSmartNameOrPlaceholder :: (HasSomeUserInfo a, TemplatesMonad m) => a -> m String
+getSmartNameOrPlaceholder :: (HasSomeUserInfo a, TemplatesMonad m) => a -> m Text
 getSmartNameOrPlaceholder a = do
-    notNamed <- renderTemplate_ "_notNamedParty"
+    notNamed <- renderTextTemplate_ "_notNamedParty"
     return $ firstNonEmpty [getSmartName a, notNamed]
 
 -- | Get a MailAddress

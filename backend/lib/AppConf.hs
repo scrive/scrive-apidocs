@@ -6,7 +6,6 @@ module AppConf (
 
 import Data.Unjson
 import Data.Word
-import qualified Data.Text as T
 
 import Database.Redis.Configuration
 import EID.CGI.GRP.Config
@@ -30,12 +29,12 @@ data AppConf = AppConf {
     httpBindAddress    :: (Word32, Word16)
     -- ^ TCP address to bind to and port to listen on (0x7f000001,
     -- 8000) localhost:8000 (default) (0, 80) all interfaces port 80.
-  , mainDomainUrl      :: String               -- ^ base url of the main domain
+  , mainDomainUrl      :: Text               -- ^ base url of the main domain
   , useHttps           :: Bool                 -- ^ should we redirect to https?
   , amazonConfig       :: AmazonConfig
   -- ^ AWS configuration (host, port, bucket, access key, secret key).
   -- The host and port default to S3.
-  , dbConfig           :: T.Text               -- ^ postgresql configuration
+  , dbConfig           :: Text               -- ^ postgresql configuration
   , maxDBConnections   :: Int                  -- ^ limit of db connections
   , queryTimeout       :: Maybe Int            -- ^ timeout for DB queries
   , redisCacheConfig   :: Maybe RedisConfig    -- ^ redis configuration
@@ -46,25 +45,25 @@ data AppConf = AppConf {
   , production         :: Bool
     -- ^ production flag, enables some production stuff, disables some
     -- development stuff
-  , cdnBaseUrl         :: Maybe String         -- ^ for CDN content in prod mode
+  , cdnBaseUrl         :: Maybe Text         -- ^ for CDN content in prod mode
   , guardTimeConf      :: GuardTimeConf
   , isMailBackdoorOpen :: Bool
     -- ^ If true allows admins to access last mail send. Used by
     -- selenium.
-  , mailNoreplyAddress   :: String             -- ^ Noreply address used when
+  , mailNoreplyAddress   :: Text             -- ^ Noreply address used when
                                                -- sending email.
   , cgiGrpConfig       :: Maybe CgiGrpConfig   -- ^ CGI GRP (E-ID) configuration
   , admins             :: [Email]
     -- ^ E-mail addresses of people regarded as admins.
   , sales              :: [Email]
     -- ^ E-mail addresses of people regarded as sales admins.
-  , initialUsers       :: [(Email,String)]
+  , initialUsers       :: [(Email,Text)]
     -- ^ E-mail and passwords for initial users.
-  , mixpanelToken      :: Maybe String         -- ^ For mixpanel integration.
-  , gaToken            :: Maybe String         -- ^ For Google Analytics
+  , mixpanelToken      :: Maybe Text         -- ^ For mixpanel integration.
+  , gaToken            :: Maybe Text         -- ^ For Google Analytics
                                                -- integration.
-  , trackjsToken       :: Maybe String         -- ^ For Track.js integration.
-  , zendeskKey         :: Maybe String         -- ^ For Zendesk integration.
+  , trackjsToken       :: Maybe Text         -- ^ For Track.js integration.
+  , zendeskKey         :: Maybe Text         -- ^ For Zendesk integration.
   , hubspotConf        :: Maybe HubSpotConf    -- ^ For Hubspot integration.
   , salesforceConf     :: Maybe SalesforceConf -- ^ Configuration of Salesforce.
   , netsConfig         :: Maybe NetsConfig

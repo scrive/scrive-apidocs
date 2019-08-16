@@ -20,9 +20,8 @@ import qualified Codec.Text.IConv as IConv
 import qualified Data.ByteString.Lazy as BS
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.Char8 as BSC
-import qualified Data.ByteString.Lazy.UTF8 as BSLU
-import qualified Data.ByteString.Lazy.UTF8 as BSU
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 
 import DB
 import Log.Identifier
@@ -45,8 +44,8 @@ createSender (SendersConfig getConf) = Sender {
       \sms@ShortMessage{smProvider} -> sendSMSHelper (getConf smProvider) sms
 }
 
-clearMobileNumber :: String -> String
-clearMobileNumber = filter (\c -> not (c `elem` (" -()."::String)))
+clearMobileNumber :: Text -> Text
+clearMobileNumber = T.filter (\c -> not (c `elem` (" -()."::String)))
 
 sendSMSHelper
   :: ( MonadDB m, MonadThrow m, CryptoRNG m
@@ -55,7 +54,7 @@ sendSMSHelper
 sendSMSHelper MbloxSender{..} sm@ShortMessage{..} =
   localData [identifier smID] $ do
   let clearmsisdn = clearMobileNumber smMSISDN
-      northAmericanNumber = "+1" `isPrefixOf` clearmsisdn
+      northAmericanNumber = "+1" `T.isPrefixOf` clearmsisdn
       -- Sending SMS to the USA cannot be done with AlphaNumeric sender
       -- instead you need to use a registered short-code.
       -- This is the short-code assigned to us via Mblox for the USA
@@ -64,21 +63,22 @@ sendSMSHelper MbloxSender{..} sm@ShortMessage{..} =
       -- See https://scrive.fogbugz.com/f/cases/2488/ for more information!
       originator = if northAmericanNumber then "18556644314" else smOriginator
   logInfoSendSMS "Mblox" (sm{smOriginator = originator})
-  let smsDataJSON = encode $ runJSONGen $ do
+  let smsDataJSON =  encode $ runJSONGen $ do
         value "from" originator
         value "to" $ [clearmsisdn]
         value "body" smBody
         value "delivery_report" ("per_recipient" :: String)
   (success, resp) <- curlSMSSender [
       "-X" , "POST"
-    , "-H" , "Authorization: Bearer " ++ mbToken
+    , "-H" , "Authorization: Bearer " <> (T.pack mbToken)
     , "-H" , "Content-Type: application/json"
-    , "-d" , smsDataJSON
-    , mbURL
+    , "-d" , T.pack smsDataJSON
+    , T.pack mbURL
     ] clearmsisdn
-  case (success, decode resp) of
+  case (success, decode $ T.unpack resp) of
        (True, Ok jresp) -> case (runIdentity $
-                                 withJSValue jresp $ fromJSValueField "id") of
+                                 withJSValue jresp $
+                                 fromJSValueField "id") of
          Just mbloxID -> do
            res <- dbUpdate $ UpdateSMSWithMbloxID smID mbloxID
            return res
@@ -100,30 +100,31 @@ sendSMSHelper MbloxSender{..} sm@ShortMessage{..} =
 sendSMSHelper TeliaCallGuideSender{..} sm@ShortMessage{..} =
   localData [identifier smID] $ do
   -- Telia CallGuide doesn't want leading +
-  let msisdn      = filter (/='+') smMSISDN
+  let msisdn      = T.filter (/='+') smMSISDN
       clearmsisdn = clearMobileNumber msisdn
   logInfoSendSMS "TeliaCallGuide" sm
-  let userpass          = tcgSenderUser ++ ":" ++ tcgSenderPassword
+  let userpass          = T.pack $ tcgSenderUser <> ":" <> tcgSenderPassword
       url               = tcgSenderUrl
       urlEnc param      = ["--data-urlencode", param]
-      userData          = urlEnc $ "userData=" ++ toLatin smBody
-      dstAddr           = urlEnc $ "destinationAddress=" ++ toLatin clearmsisdn
+      userData          = urlEnc $ "userData=" <> toLatin smBody
+      dstAddr           = urlEnc $ "destinationAddress=" <> toLatin clearmsisdn
       originator        = urlEnc $ "originatingAddress="
                           -- Telia Callguide has 11 alphanum char limit on this
-                          ++ (take 11 $ toLatin smOriginator)
+                          <> (T.unpack $ T.take 11 $ toLatin smOriginator)
       correlationId     = urlEnc $ "correlationId="
                           -- Telia Callguide has a 100 char limit on this
-                          ++ (take 100 $ show smID)
+                          <> (take 100 $ show smID)
       statusReportFlags = urlEnc "statusReportFlags=1"
-      args              = concat [ ["--user", userpass]
-                                 , [url]
+      args :: [Text]  = concat [ ["--user", userpass]
+                                 , [T.pack url]
                                  , userData
                                  , dstAddr
-                                 , originator
-                                 , correlationId
+                                 , T.pack <$> originator
+                                 , T.pack <$> correlationId
                                  , statusReportFlags
                                  ]
   (success, resp) <- curlSMSSender args clearmsisdn
+
   -- Example response from Telia CallGuide:
   -- (see Telia CallGuide SMS Interface Extended Interface Specification)
   -- (should be here:
@@ -150,34 +151,34 @@ sendSMSHelper TeliaCallGuideSender{..} sm@ShortMessage{..} =
   res <- dbUpdate $ UpdateSMSWithTeliaID smID teliaid
   return (success && res)
 
-sendSMSHelper LocalSender{..} ShortMessage{..}
-  = localData [identifier smID] $ do
-  let clearmsisdn = clearMobileNumber smMSISDN
-      regex       = "https?://[a-zA-Z:0-9.-]+/[a-zA-Z_:/0-9#?-]+" :: String
-      matchResult = match (makeRegex regex :: Regex) (smBody :: String)
-                    :: MatchResult String
+sendSMSHelper LocalSender{..} ShortMessage{..} = localData [identifier smID] $ do
+  let clearmsisdn :: Text = clearMobileNumber smMSISDN
 
-      withClickableLinks =
-        mrBefore matchResult ++
-        "<a href=\"" ++ mrMatch matchResult ++ "\">" ++
-        mrMatch matchResult ++ "</a>" ++
+      regex :: String       = "https?://[a-zA-Z:0-9.-]+/[a-zA-Z_:/0-9#?-]+"
+      matchResult :: MatchResult String =
+        match (makeRegex regex :: Regex) (T.unpack smBody)
+
+      withClickableLinks :: Text = T.pack $
+        mrBefore matchResult <>
+        "<a href=\"" <> mrMatch matchResult <> "\">" <>
+        mrMatch matchResult <> "</a>" <>
         mrAfter matchResult
 
-      content =
-        "<html><head><title>SMS - " ++
-        show smID ++ " to " ++ clearmsisdn ++ "</title></head><body>" ++
-        "ID: " ++ show smID ++ "<br>" ++
-        "Provider: " ++ show smProvider ++ "<br>" ++
-        "<br>" ++
-        "Originator: " ++ smOriginator ++ "<br>" ++
-        "MSISDN: " ++ clearmsisdn ++ "<br>" ++
-        "<br>" ++
-        withClickableLinks ++
+      content :: Text =
+        "<html><head><title>SMS - " <> (showt smID) <>
+        " to " <> clearmsisdn <> "</title></head><body>" <>
+        "ID: " <> (showt smID) <> "<br>" <>
+        "Provider: " <> (showt smProvider) <> "<br>" <>
+        "<br>" <>
+        "Originator: " <> smOriginator <> "<br>" <>
+        "MSISDN: " <> clearmsisdn <> "<br>" <>
+        "<br>" <>
+        withClickableLinks <>
         "</body></html>"
 
-      filename = localDirectory ++ "/SMS-" ++ show smID ++ ".html"
+      filename = localDirectory <> "/SMS-" <> show smID <> ".html"
 
-  liftBase $ BSL.writeFile filename (BSLU.fromString content)
+  liftBase $ BSL.writeFile filename (BS.fromStrict $ TE.encodeUtf8 content)
   logInfo "SMS saved to file" $ object [
       "path" .= filename
     ]
@@ -193,16 +194,16 @@ sendSMSHelper LocalSender{..} ShortMessage{..}
   return True
 
 curlSMSSender :: (CryptoRNG m, MonadBase IO m, MonadIO m, MonadLog m)
-              => [String] -> String -> m (Bool, String)
+              => [Text] -> Text -> m (Bool, Text)
 curlSMSSender params msisdn = do
-  logInfo_ $ T.pack $ show params
+  logInfo_ $ showt params
   (code, stdout, stderr) <-
-    readCurl (params ++ ["--write-out","\n%{http_code}"]) BS.empty
+    readCurl ((T.unpack <$> params) <> ["--write-out","\n%{http_code}"]) BS.empty
   let (stdout_without_code,http_code) =
         case reverse . lines . BSC.unpack $ stdout of
         [] -> ("", Nothing)
         (lastline:otherlinesreversed) ->
-          (unlines $ reverse $ otherlinesreversed, maybeRead lastline)
+          (unlines $ reverse $ otherlinesreversed, maybeRead $ T.pack lastline)
   case (code, http_code) of
     (ExitSuccess, Just (httpcode :: Int))
       | httpcode >= 200 && httpcode<300 -> do
@@ -213,7 +214,7 @@ curlSMSSender params msisdn = do
         , "stderr" `equalsExternalBSL` stderr
         , "number" .= msisdn
         ]
-      return (True, stdout_without_code)
+      return (True, T.pack stdout_without_code)
     _ -> do
       logInfo "curlSMSSender failed" $ object [
           "code" .= show code
@@ -222,9 +223,9 @@ curlSMSSender params msisdn = do
         , "stderr" `equalsExternalBSL` stderr
         , "number" .= msisdn
         ]
-      return (False, stdout_without_code)
+      return (False, T.pack stdout_without_code)
 
-toLatin :: String -> String
+toLatin :: Text -> Text
 toLatin x = case toLatinTransliterate x of
               "" -> toLatinDiscard x
               z -> z
@@ -233,16 +234,18 @@ toLatin x = case toLatinTransliterate x of
     -- loves to produce empty strings for unknown reason. Using discard mode
     -- removes everything but ANSI, so it is not good either, but good enough
     -- for signing links to get through.
-    toLatinTransliterate :: String -> String
+    toLatinTransliterate :: Text -> Text
     toLatinTransliterate =
-      BSC.unpack .
-      IConv.convertFuzzy IConv.Transliterate "utf8" "latin1" . BSU.fromString
-    toLatinDiscard :: String -> String
+      TE.decodeUtf8 . BS.toStrict .
+      IConv.convertFuzzy IConv.Transliterate "utf8" "latin1" .
+      BS.fromStrict . TE.encodeUtf8
+    toLatinDiscard :: Text -> Text
     toLatinDiscard =
-      BSC.unpack .
-      IConv.convertFuzzy IConv.Discard "utf8" "latin1" . BSU.fromString
+      TE.decodeUtf8 . BS.toStrict .
+      IConv.convertFuzzy IConv.Discard "utf8" "latin1" .
+      BS.fromStrict . TE.encodeUtf8
 
-logInfoSendSMS :: MonadLog m => String -> ShortMessage -> m ()
+logInfoSendSMS :: MonadLog m => Text -> ShortMessage -> m ()
 logInfoSendSMS sender sm = logInfo "Sending SMS" $ object [
       "sender"     .= sender
     , logPair_ sm

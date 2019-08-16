@@ -55,8 +55,8 @@ data InsertEvidenceEventWithAffectedSignatoryAndMsgs = InsertEvidenceEventWithAf
                            CurrentEvidenceEventType -- A code for the event
                            (F.Fields Identity ()) -- Text for evidence
                            (Maybe SignatoryLink)  -- Affected signatory
-                           (Maybe String)         -- Message text
-                           (Maybe String)         -- Additional message text
+                           (Maybe Text)         -- Message text
+                           (Maybe Text)         -- Additional message text
                            Actor                  -- Actor
     deriving (Typeable)
 
@@ -64,7 +64,7 @@ data InsertEvidenceEventWithAffectedSignatoryAndMsg = InsertEvidenceEventWithAff
                            CurrentEvidenceEventType -- A code for the event
                            (F.Fields Identity ()) -- Text for evidence
                            (Maybe SignatoryLink)  -- Affected signatory
-                           (Maybe String)         -- Message text
+                           (Maybe Text)         -- Message text
                            Actor                  -- Actor
     deriving (Typeable)
 
@@ -81,8 +81,8 @@ data EventRenderTarget =
   deriving (Enum, Eq, Ord, Bounded, Show)
 
 eventTextTemplateName :: EventRenderTarget -> CurrentEvidenceEventType
-                      -> String
-eventTextTemplateName t e =  show e ++ suffix t
+                      -> Text
+eventTextTemplateName t e =  (showt e) <> suffix t
   where suffix EventForEvidenceLog       = "Log"
         suffix EventForArchive           = "Archive"
 
@@ -102,8 +102,18 @@ signatoryLinkTemplateFields sl = do
   F.value "approving"   $ isApprover sl || signatoryrole sl == SignatoryRoleForwardedApprover
 
 -- | Create evidence text that goes into evidence log
-evidenceLogText :: (DocumentMonad m, TemplatesMonad m, MonadDB m, MonadThrow m)
-                => CurrentEvidenceEventType -> F.Fields Identity () -> Maybe SignatoryLink -> Maybe String -> Maybe String -> m XMLContent
+evidenceLogText
+  :: ( DocumentMonad m
+     , TemplatesMonad m
+     , MonadDB m
+     , MonadThrow m
+     )
+  => CurrentEvidenceEventType
+  -> F.Fields Identity ()
+  -> Maybe SignatoryLink
+  -> Maybe Text
+  -> Maybe Text
+  -> m XMLContent
 evidenceLogText event textFields masl mmsg masg = do
    let fields = do
          F.value "full" True
@@ -118,17 +128,21 @@ evidenceLogText event textFields masl mmsg masg = do
              F.value "signatory_email" $ getEmail sl
              signatoryLinkTemplateFields sl
          textFields
-   ts <- getTextTemplatesByLanguage $ codeFromLang LANG_EN
+   ts <- getTextTemplatesByLanguage $ T.unpack $ codeFromLang LANG_EN
    let n = eventTextTemplateName EventForEvidenceLog event
        -- Interim substitutions that can be eliminated if we switch from hstringtemplates to XML holes for representing holes in all event texts.
        fixIdentityVariables = replace "$actor$" "<span class='actor'/>"
                             . replace "$signatory$" "<span class='signatory'/>"
-   parseEventTextTemplate n $ fixIdentityVariables $ runIdentity $ renderHelper ts n fields
+   parseEventTextTemplate n $ T.pack $ fixIdentityVariables $ runIdentity $ renderHelper ts (T.unpack n) fields
 
-parseEventTextTemplate :: MonadThrow m => String -> String -> m XMLContent
+parseEventTextTemplate :: MonadThrow m => Text -> Text -> m XMLContent
 parseEventTextTemplate name s =
-  either (unexpectedError . (("Cannot parse event template " ++ name ++ " with content " ++ s ++ ": ") ++) . show) (return . CleanXMLContent) $
-    parseXMLContent $ T.pack s
+  either
+    ( unexpectedError
+      . (("Cannot parse event template " <> name <> " with content " <> s <> ": ") <>)
+      . showt
+    ) (return . CleanXMLContent) $
+    parseXMLContent $ s
 
 instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsgs Bool where
   update (InsertEvidenceEventWithAffectedSignatoryAndMsgs event textFields masl mmsg mamsg actor) = do
@@ -165,23 +179,23 @@ data DocumentEvidenceEvent = DocumentEvidenceEvent {
     evDocumentID :: DocumentID
   , evTime       :: UTCTime                    -- from actor
   , evClientTime :: Maybe UTCTime              -- from actor
-  , evClientName :: Maybe String               -- from actor
+  , evClientName :: Maybe Text               -- from actor
   , evClockErrorEstimate :: Maybe HC.ClockErrorEstimate
   , evText       :: XMLContent                 -- to go into evidence log
   , evType       :: EvidenceEventType
-  , evVersionID  :: String
-  , evEmail      :: Maybe String               -- from actor; use: "signatory_email" attribute if affected signatory not set
+  , evVersionID  :: Text
+  , evEmail      :: Maybe Text               -- from actor; use: "signatory_email" attribute if affected signatory not set
   , evUserID     :: Maybe UserID               -- from actor; use: to fetch subject name through author siglink or through account info in approximateActor; filter events
   , evIP4        :: Maybe IPAddress
   , evSigLink    :: Maybe SignatoryLinkID      -- from actor; use: to fetch subject name; viewer; filter events
-  , evAPI        :: Maybe String               -- from actor; not used
+  , evAPI        :: Maybe Text               -- from actor; not used
   , evAffectedSigLink :: Maybe SignatoryLinkID -- Some events affect only one signatory, but actor is our system or author. We express it here, since we can't with evType.
                                                -- use: to fetch object name; viewer; to set signatoryLinkTemplateFields and "signatory" attribute; get bankID signatory name
 
-  , evActor      :: String                     -- actorWho, used for actor identification if evSigLink is missing
-  , evMessageText :: Maybe String              -- Some events have message connected to them (like reminders). We don't store such events in documents, but they should not get lost.
+  , evActor      :: Text                     -- actorWho, used for actor identification if evSigLink is missing
+  , evMessageText :: Maybe Text              -- Some events have message connected to them (like reminders). We don't store such events in documents, but they should not get lost.
                                                -- use: "text" attribute
-  , evAdditionalMessageText :: Maybe String    -- Some events have even more messages connected to them
+  , evAdditionalMessageText :: Maybe Text    -- Some events have even more messages connected to them
 
   }
   deriving (Eq, Ord, Show, Typeable)

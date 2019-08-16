@@ -34,19 +34,19 @@ import Text.XML.Parser
 
 -- | Final BankID signature.
 data CGISEBankIDSignature = CGISEBankIDSignature {
-  cgisebidsSignatoryName           :: !T.Text
-, cgisebidsSignatoryPersonalNumber :: !T.Text
-, cgisebidsSignatoryIP             :: !T.Text
-, cgisebidsSignedText              :: !T.Text
+  cgisebidsSignatoryName           :: !Text
+, cgisebidsSignatoryPersonalNumber :: !Text
+, cgisebidsSignatoryIP             :: !Text
+, cgisebidsSignedText              :: !Text
 , cgisebidsSignature               :: !ByteString
 , cgisebidsOcspResponse            :: !ByteString
 } deriving (Eq, Ord, Show)
 
 -- | Final BankID signature.
 data CGISEBankIDAuthentication = CGISEBankIDAuthentication {
-  cgisebidaSignatoryName           :: !T.Text
-, cgisebidaSignatoryPersonalNumber :: !T.Text
-, cgisebidaSignatoryIP             :: !T.Text
+  cgisebidaSignatoryName           :: !Text
+, cgisebidaSignatoryPersonalNumber :: !Text
+, cgisebidaSignatoryIP             :: !Text
 , cgisebidaSignature               :: !ByteString
 , cgisebidaOcspResponse            :: !ByteString
 } deriving (Eq, Ord, Show)
@@ -68,7 +68,7 @@ data GrpFault
   | StartFailed
   deriving (Eq, Ord, Show)
 
-grpFaultText :: GrpFault -> T.Text
+grpFaultText :: GrpFault -> Text
 grpFaultText InvalidParameters  = "invalid_parameters"
 grpFaultText AlreadyInProgress  = "already_in_progress"
 grpFaultText AccessDeniedRp     = "access_denied_rp"
@@ -115,16 +115,16 @@ xpGrpFault = XMLParser $ \c -> listToMaybe $ c
     "CERTIFICATE_ERR"     -> CertificateError
     "CANCELLED"           -> Cancelled
     "START_FAILED"        -> StartFailed
-    gf                    -> unexpectedError $ "unknown faultStatus:" <+> T.unpack gf
+    gf                    -> unexpectedError $ "unknown faultStatus:" <+> gf
 
 ----------------------------------------
 
 -- | Auth action request.
 data AuthRequest = AuthRequest {
-  arqPolicy          :: !T.Text
-, arqDisplayName     :: !T.Text
-, arqPersonalNumber  :: !T.Text
-, arqProvider        :: !T.Text
+  arqPolicy          :: !Text
+, arqDisplayName     :: !Text
+, arqPersonalNumber  :: !Text
+, arqProvider        :: !Text
 } deriving (Eq, Ord, Show)
 
 -- | Construct SOAP request from the 'AuthRequest'.
@@ -138,18 +138,18 @@ instance ToXML AuthRequest where
       element "requirementAlternatives" $ do
         element "requirement" $ do
           element "condition" $ do
-            element "key" ("AllowFingerprint" :: T.Text)
-            element "value" ("yes" :: T.Text)
+            element "key" ("AllowFingerprint" :: Text)
+            element "value" ("yes" :: Text)
 
 ----------------------------------------
 
 -- | Sign action request.
 data SignRequest = SignRequest {
-  srqPolicy          :: !T.Text
-, srqDisplayName     :: !T.Text
-, srqPersonalNumber  :: !T.Text
-, srqUserVisibleData :: !T.Text
-, srqProvider        :: !T.Text
+  srqPolicy          :: !Text
+, srqDisplayName     :: !Text
+, srqPersonalNumber  :: !Text
+, srqUserVisibleData :: !Text
+, srqProvider        :: !Text
 } deriving (Eq, Ord, Show)
 
 -- | Construct SOAP request from the 'SignRequest'.
@@ -164,15 +164,15 @@ instance ToXML SignRequest where
       element "requirementAlternatives" $ do
         element "requirement" $ do
           element "condition" $ do
-            element "key" ("AllowFingerprint" :: T.Text)
-            element "value" ("yes" :: T.Text)
+            element "key" ("AllowFingerprint" :: Text)
+            element "value" ("yes" :: Text)
 
 ----------------------------------------
 
-newtype AutoStartToken = AutoStartToken T.Text
+newtype AutoStartToken = AutoStartToken Text
   deriving (Eq, Ord, Show)
 
-unAutoStartToken :: AutoStartToken -> T.Text
+unAutoStartToken :: AutoStartToken -> Text
 unAutoStartToken (AutoStartToken t) = t
 
 
@@ -185,14 +185,18 @@ instance {-# OVERLAPPING #-} Unjson (AutoStartToken,SessionCookieInfo) where
     <*> fieldBy "session_id"
         snd
         "Token for starting the application"
-        (unjsonInvmapR ((maybe (fail "SessionCookieInfo")  return) . maybeRead) (show :: SessionCookieInfo -> String) unjsonDef)
+        (unjsonInvmapR
+          ((maybe (fail "SessionCookieInfo") return) . maybeRead)
+          (showt :: SessionCookieInfo -> Text)
+          unjsonDef
+        )
 
 ----------------------------------------
 
 -- | Auth action response.
 data AuthResponse = AuthResponse {
-  arsTransactionID  :: !T.Text
-, arsOrderRef       :: !T.Text
+  arsTransactionID  :: !Text
+, arsOrderRef       :: !Text
 , arsAutoStartToken :: !AutoStartToken
 } deriving (Eq, Ord, Show)
 
@@ -226,8 +230,8 @@ xpAuthResponse = XMLParser $ \c -> listToMaybe $ c
 
 -- | Sign action response.
 data SignResponse = SignResponse {
-  srsTransactionID  :: !T.Text
-, srsOrderRef       :: !T.Text
+  srsTransactionID  :: !Text
+, srsOrderRef       :: !Text
 , srsAutoStartToken :: !AutoStartToken
 } deriving (Eq, Ord, Show)
 
@@ -252,10 +256,10 @@ xpSignResponse = XMLParser $ \c -> listToMaybe $ c
 
 -- | Collect action request.
 data CollectRequest = CollectRequest {
-  crqPolicy        :: !T.Text
-, crqTransactionID :: !T.Text
-, crqOrderRef      :: !T.Text
-, crqDisplayName   :: !T.Text
+  crqPolicy        :: !Text
+, crqTransactionID :: !Text
+, crqOrderRef      :: !Text
+, crqDisplayName   :: !Text
 } deriving (Eq, Ord, Show)
 
 -- | Construct SOAP request from the 'CollectRequest'.
@@ -280,7 +284,7 @@ data ProgressStatus
 
 
 
-progressStatusText :: ProgressStatus -> T.Text
+progressStatusText :: ProgressStatus -> Text
 progressStatusText OutstandingTransaction = "outstanding_transaction"
 progressStatusText UserSign               = "user_sign"
 progressStatusText NoClient               = "no_client"
@@ -304,8 +308,8 @@ instance Unjson ProgressStatus where
 -- | Collect action response.
 data CollectResponse = CollectResponse {
   crsProgressStatus :: !ProgressStatus
-, crsSignature      :: !(Maybe T.Text)
-, crsAttributes     :: ![(T.Text, T.Text)]
+, crsSignature      :: !(Maybe Text)
+, crsAttributes     :: ![(Text, Text)]
 } deriving (Eq, Ord, Show)
 
 -- | Retrieve 'CollectResponse' from SOAP response.
@@ -324,4 +328,4 @@ xpCollectResponse = XMLParser $ \c -> listToMaybe $ c
      "NO_CLIENT"               -> NoClient
      "STARTED"                 -> Started
      "COMPLETE"                -> Complete
-     status                    -> unexpectedError $ "xpCollectResponse: unknown progressStatus:" <+> T.unpack status
+     status                    -> unexpectedError $ "xpCollectResponse: unknown progressStatus:" <+> status

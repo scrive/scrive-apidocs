@@ -1,4 +1,4 @@
-module KontraLink(
+module KontraLink (
     KontraLink(..)
   , getHomeOrDesignViewLink
   ) where
@@ -6,6 +6,7 @@ module KontraLink(
 import Data.List.Split
 import Network.HTTP
 import Network.URI
+import qualified Data.Text as T
 
 import Context
 import Doc.DocStateData
@@ -34,92 +35,96 @@ data KontraLink
     | LinkSignDocNoMagicHash DocumentID SignatoryLinkID
     | LinkSignDocMagicHash DocumentID SignatoryLinkID MagicHash
     | LinkIssueDoc DocumentID
-    | LinkEvidenceAttachment DocumentID String
+    | LinkEvidenceAttachment DocumentID Text
     | LinkCompanyTakeover UserGroupID
     | LinkAcceptTOS
     | LinkPasswordReminder UserID MagicHash
     | LinkAccountCreated Lang UserID MagicHash SignupMethod -- email
     | LoopBack
     | LinkDaveDocument DocumentID
-    | LinkDaveFile FileID String
+    | LinkDaveFile FileID Text
     | LinkEnableCookies
     | LinkDocumentPreview DocumentID (Maybe (SignatoryLink, Maybe MagicHash)) FileID Int
     | LinkOAuthAuthorization APIToken
     | LinkOAuthCallback URI APIToken (Maybe MagicHash)
-    | LinkExternal String
+    | LinkExternal Text
     | LinkDesignView
     | LinkPadList
     | LinkPreviewLockedImage
-    | LinkPermanentRedirect String
+    | LinkPermanentRedirect Text
     | LinkTemplateShareableLink DocumentID MagicHash
 
-langFolder :: Lang -> String
-langFolder lang = "/" ++ (codeFromLang lang)
+langFolder :: Lang -> Text
+langFolder lang = "/" <> (codeFromLang lang)
 
 {- |
    Shows each link as a relative url
 -}
 instance Show KontraLink where
-    showsPrec _ (LinkHome lang) = (++) $ langFolder lang ++ "/"
-    showsPrec _ (LinkLogin lang) = (++) $ langFolder lang ++ "/enter#log-in" -- THIS ONE IS NOT USED. CHECK sendRedirect
-    showsPrec _ (LinkLoginDirect lang) = (++) $ langFolder lang ++ "/enter#log-in"  -- THIS ONE IS NOT USED. CHECK sendRedirect
-    showsPrec _ (LinkSignup lang) = (++) $ langFolder lang ++ "/enter#sign-up"
-    showsPrec _ (LinkArchive) = (++) $ "/d"
-    showsPrec _ LinkAcceptTOS = (++) "/accepttos"
-    showsPrec _ (LinkAccount) = (++) "/account"
+    showsPrec _ (LinkHome lang) = (<>) $ (T.unpack $ langFolder lang) <> "/"
+    showsPrec _ (LinkLogin lang) = (<>) $ (T.unpack $ langFolder lang) <> "/enter#log-in" -- THIS ONE IS NOT USED. CHECK sendRedirect
+    showsPrec _ (LinkLoginDirect lang) = (<>) $ (T.unpack $ langFolder lang) <> "/enter#log-in"  -- THIS ONE IS NOT USED. CHECK sendRedirect
+    showsPrec _ (LinkSignup lang) = (<>) $ (T.unpack $ langFolder lang) <> "/enter#sign-up"
+    showsPrec _ (LinkArchive) = (<>) $ "/d"
+    showsPrec _ LinkAcceptTOS = (<>) "/accepttos"
+    showsPrec _ (LinkAccount) = (<>) "/account"
     showsPrec _ (LinkChangeUserEmail actionid magichash) =
-        (++) $ "/account/" ++ show actionid ++  "/" ++ show magichash
-    showsPrec _ (LinkCompanyTakeover ugid) = (++) $ "/companyaccounts/join/" ++ show ugid
+        (<>) $ "/account/" <> show actionid <>  "/" <> show magichash
+    showsPrec _ (LinkCompanyTakeover ugid) = (<>) $ "/companyaccounts/join/" <> show ugid
     showsPrec _ (LinkIssueDoc documentid) =
-        (++) $ "/d/" ++ show documentid
-    showsPrec _ (LinkEvidenceAttachment did filename) =  (++) $ "/d/evidenceattachment/" ++ show did ++ "/" ++ filename
+        (<>) $ "/d/" <> show documentid
+    showsPrec _ (LinkEvidenceAttachment did filename) =  (<>) $ "/d/evidenceattachment/" <> show did <> "/" <> (T.unpack filename)
     showsPrec _ (LinkSignDocPad did slid) =
-        (++) $ "/sp/" ++ show did ++ "/" ++ show slid
+        (<>) $ "/sp/" <> show did <> "/" <> show slid
     showsPrec _ (LinkMainFile document signatorylink mh) =
-        (++) $ "/download/" ++ show (documentid document) ++ "/" ++ show (signatorylinkid signatorylink) ++
-                 "/"++ show mh ++ "/"++ urlEncode (documenttitle document) ++ ".pdf"
+        (<>) $ "/download/" <> show (documentid document) <> "/" <> show (signatorylinkid signatorylink) <>
+                 "/"<> show mh <> "/"<> urlEncode (T.unpack $ documenttitle document) <> ".pdf"
     showsPrec _ (LinkSignDocNoMagicHash documentid signatorylinkid) =
-        (++) $ "/s/" ++ show documentid ++ "/" ++ show signatorylinkid
+        (<>) $ "/s/" <> show documentid <> "/" <> show signatorylinkid
     showsPrec _ (LinkSignDocMagicHash documentid signatorylinkid mh) =
-        (++) $ "/s/" ++ show documentid ++ "/" ++ show signatorylinkid ++ "/" ++ show mh
-    showsPrec _ (LinkPasswordReminder aid hash) = (++) $ "/amnesia/" ++ show aid ++ "/" ++ show hash
-    showsPrec _ (LinkAccountCreated lang uid hash sm) = (++) $ langFolder lang  ++ "/accountsetup/" ++ show uid ++ "/" ++ show hash ++ "/" ++ show sm
-    showsPrec _ LoopBack = (++) $ "/" -- this should never be used
-    showsPrec _ (LinkDaveDocument docid) = (++) ("/dave/document/" ++ show docid ++"/")
-    showsPrec _ (LinkDaveFile fileid filename) =  (++) $ "/dave/file/" ++ show fileid ++ "/" ++ filename
-    showsPrec _ (LinkEnableCookies) = (++) ("/enable-cookies/enable-cookies.html")
+        (<>) $ "/s/" <> show documentid <> "/" <> show signatorylinkid <> "/" <> show mh
+    showsPrec _ (LinkPasswordReminder aid hash) = (<>) $ "/amnesia/" <> show aid <> "/" <> show hash
+    showsPrec _ (LinkAccountCreated lang uid hash sm) = (<>) $ (T.unpack $ langFolder lang) <> "/accountsetup/" <> show uid <> "/" <> show hash <> "/" <> show sm
+    showsPrec _ LoopBack = (<>) $ "/" -- this should never be used
+    showsPrec _ (LinkDaveDocument docid) = (<>) ("/dave/document/" <> show docid <>"/")
+    showsPrec _ (LinkDaveFile fileid filename) =  (<>) $ "/dave/file/" <> show fileid <> "/" <> (T.unpack filename)
+    showsPrec _ (LinkEnableCookies) = (<>) ("/enable-cookies/enable-cookies.html")
     showsPrec _ (LinkDocumentPreview did (Just (sl, Just mh)) fid width) =
-      (++) ("/preview/" ++ show did
-      ++ "/" ++ show (signatorylinkid sl)
-      ++ "/" ++ show mh
-      ++ "/" ++ show fid
-      ++ "?pixelwidth=" ++ show width)
+      (<>) ("/preview/" <> show did
+      <> "/" <> show (signatorylinkid sl)
+      <> "/" <> show mh
+      <> "/" <> show fid
+      <> "?pixelwidth=" <> show width)
     showsPrec _ (LinkDocumentPreview did (Just (sl, Nothing)) fid width) =
-      (++) ("/preview/" ++ show did
-      ++ "/" ++ show (signatorylinkid sl)
-      ++ "/" ++ show fid
-      ++ "?pixelwidth=" ++ show width)
-    showsPrec _ (LinkDocumentPreview did Nothing fid width) = (++) ("/preview/" ++ show did ++
-                 "/" ++ show fid ++
-                 "?pixelwidth=" ++ show width)
-    showsPrec _ (LinkOAuthAuthorization token) = (++) ("/oauth/authorization?oauth_token=" ++ show token)
+      (<>) ("/preview/" <> show did
+      <> "/" <> show (signatorylinkid sl)
+      <> "/" <> show fid
+      <> "?pixelwidth=" <> show width)
+    showsPrec _ (LinkDocumentPreview did Nothing fid width) = (<>) ("/preview/" <> show did <>
+                 "/" <> show fid <>
+                 "?pixelwidth=" <> show width)
+    showsPrec _ (LinkOAuthAuthorization token) = (<>) ("/oauth/authorization?oauth_token=" <> show token)
     showsPrec _ (LinkOAuthCallback url token (Just verifier)) =
-      (++) (show $ setParams url [("oauth_token", show token), ("oauth_verifier", show verifier)])
+      (<>) (show $ setParams url
+           [("oauth_token", showt token), ("oauth_verifier", showt verifier)])
     showsPrec _ (LinkOAuthCallback url token Nothing) =
-      (++) (show $ setParams url [("oauth_token", show token), ("denied", "true")])
-    showsPrec _ (LinkDesignView) = (++) "/newdocument"
-    showsPrec _ (LinkPadList) = (++) "/to-sign"
-    showsPrec _ (LinkExternal s) = (++) s
-    showsPrec _ (LinkPreviewLockedImage) = (++) "/img/preview_locked.png"
-    showsPrec _ (LinkPermanentRedirect s) = (++) s
+      (<>) (show $ setParams url [("oauth_token", showt token), ("denied", "true")])
+    showsPrec _ (LinkDesignView) = (<>) "/newdocument"
+    showsPrec _ (LinkPadList) = (<>) "/to-sign"
+    showsPrec _ (LinkExternal s) = (<>) (T.unpack s)
+    showsPrec _ (LinkPreviewLockedImage) = (<>) "/img/preview_locked.png"
+    showsPrec _ (LinkPermanentRedirect s) = (<>) (T.unpack s)
     showsPrec _ (LinkTemplateShareableLink did mh) =
-      (++) ("/t/" ++ show did ++ "/" ++ show mh)
+      (<>) ("/t/" <> show did <> "/" <> show mh)
 
-setParams :: URI -> [(String, String)] -> URI
-setParams uri params = uri { uriQuery = "?" ++ vars }
+setParams :: URI -> [(Text, Text)] -> URI
+setParams uri params = uri { uriQuery = "?" <> vars }
   where
+    params' :: [(String, String)]
+    params' = fmap (\(t1, t2) -> (T.unpack t1, T.unpack t2)) params
+
     mvars = urlDecodeVars $ uriQuery uri
-    vars = urlEncodeVars $ maybe params (++ params) mvars
+    vars = urlEncodeVars $ maybe params' (<> params') mvars
     urlDecodeVars :: String -> Maybe [(String, String)]
     urlDecodeVars ('?':s) = urlDecodeVars s
     urlDecodeVars s = makeKV (splitOn "&" s) []

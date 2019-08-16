@@ -25,6 +25,7 @@ import Data.Int
 import Data.Typeable
 import Log
 import Text.JSON.Gen
+import qualified Data.Text as T
 
 import DataRetentionPolicy
 import DB
@@ -391,7 +392,7 @@ unsafeUserGroupIDToPartnerID :: UserGroupID -> PartnerID
 unsafeUserGroupIDToPartnerID = unsafePartnerID . fromUserGroupID
 
 data UserGroupFilter
-  = UGFilterByString String    -- ^ Contains the string anywhere
+  = UGFilterByString Text    -- ^ Contains the string anywhere
   | UGManyUsers                -- ^ Has non-trivial amount of users (includes invited users)
   | UGWithNonFreePricePlan     -- ^ Has a non-free price plan attached
   | UGWithAnyIdleDocTimeoutSet -- ^ Has any ugIdleDocTimeout{STATUS} set
@@ -404,7 +405,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupsGetFiltered [UserGroup
        forM_ filters $ \case
          UGFilterByString text -> do
            sqlJoinOn "user_group_addresses" "user_group_addresses.user_group_id = user_groups.id"
-           mapM_ (sqlWhere . parenthesize . findWord) (words text)
+           mapM_ (sqlWhere . parenthesize . findWord) (words $ T.unpack text)
          UGManyUsers -> sqlWhereAny
            [ sqlWhere $ "((SELECT count(*) FROM users WHERE users.user_group_id = user_groups.id AND users.deleted IS NULL) > 1)"
            , sqlWhere $ "((SELECT count(*) FROM companyinvites WHERE companyinvites.user_group_id = user_groups.id) > 0)"

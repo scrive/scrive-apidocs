@@ -8,7 +8,6 @@ import Control.Monad.Catch
 import Crypto.RNG
 import Log
 import Text.StringTemplates.Templates
-import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomain
 import DB
@@ -28,7 +27,13 @@ import UserGroup.Types
 import Util.HasSomeUserInfo
 import Util.MonadUtils
 
-handleActivate :: Kontrakcja m => Maybe String -> Maybe String -> (User,UserGroup) -> SignupMethod -> m User
+handleActivate
+  :: (Kontrakcja m)
+  => Maybe Text
+  -> Maybe Text
+  -> (User,UserGroup)
+  -> SignupMethod
+  -> m User
 handleActivate mfstname msndname (actvuser,ug) signupmethod = do
   logInfo "Attempting to activate account for user" $ logObject_ actvuser
   -- Don't remove - else people will be able to hijack accounts
@@ -42,7 +47,7 @@ handleActivate mfstname msndname (actvuser,ug) signupmethod = do
   switchLang (getLang actvuser)
   ctx <- getContext
   phone <-  fromMaybe (getMobile actvuser) <$> getField "phone"
-  ugname <- (fromMaybe (get ugName ug) . fmap T.pack) <$> getField "company"
+  ugname <- (fromMaybe (get ugName ug)) <$> getField "company"
   position <- fromMaybe "" <$> getField "position"
 
   void $ dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser) {
@@ -83,7 +88,7 @@ handleActivate mfstname msndname (actvuser,ug) signupmethod = do
 
   return tosuser
 
-createUser :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => Email -> (String, String) -> (UserGroupID,Bool) -> Lang -> SignupMethod -> m (Maybe User)
+createUser :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => Email -> (Text, Text) -> (UserGroupID,Bool) -> Lang -> SignupMethod -> m (Maybe User)
 createUser email names (ugid, iscompanyadmin) lang sm = do
   ctx <- getContext
   passwd <- randomPassword

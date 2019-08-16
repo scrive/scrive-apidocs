@@ -8,7 +8,6 @@ import Control.Monad.Catch
 import Data.Int
 import Database.PostgreSQL.Consumers.Config
 import Log
-import qualified Data.Text as T
 
 import DB
 import DB.PostgreSQL
@@ -34,7 +33,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
       , "  FROM information_schema.key_column_usage"
       , " WHERE constraint_name IN (SELECT name FROM file_constraints)"
       ]
-    refs :: [(T.Text, T.Text)] <- fetchMany id
+    refs :: [(Text, Text)] <- fetchMany id
     let expected_refs =
            [ ("attachments",           "file_id")
            , ("author_attachments",    "file_id")
@@ -48,7 +47,9 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
            ]
 
     when (sort expected_refs /= sort refs) $ do
-      unexpectedError $ "PurgeFile: database layout has changed, update PurgeFile.expected_refs and check the code: " ++ show refs
+      unexpectedError $
+        "PurgeFile: database layout has changed, update PurgeFile.expected_refs and check the code: " <>
+          showt refs
 
     runSQL_ $ smconcat [
         "WITH files_to_purge AS ("

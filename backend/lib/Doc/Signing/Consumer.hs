@@ -12,8 +12,6 @@ import Data.Int
 import Database.PostgreSQL.Consumers.Config
 import Log.Class
 import Text.StringTemplates.Templates (TemplatesMonad)
-import Text.StringTemplates.Templates (renderTemplate, renderTemplate_)
-import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
 import BrandedDomain.Model
@@ -59,15 +57,15 @@ data DocumentSigning = DocumentSigning {
   , signingTime                 :: !UTCTime
   , signingClientIP4            :: !IPAddress
   , signingClientTime           :: !(Maybe UTCTime)
-  , signingClientName           :: !(Maybe String)
+  , signingClientName           :: !(Maybe Text)
   , signingLang                 :: !Lang
   , signingFields               :: !SignatoryFieldsValuesForSigning
   , signingAcceptedAttachments  :: ![FileID]
   , signingScreenshots          :: !SignatoryScreenshots
-  , signingLastCheckStatus      :: !(Maybe String)
+  , signingLastCheckStatus      :: !(Maybe Text)
   , signingCancelled            :: !Bool
   , signingAttempts             :: !Int32
-  , signingNotUploadedSigAttachments :: ![String]
+  , signingNotUploadedSigAttachments :: ![Text]
   , signingSignatureProvider    :: !SignatureProvider
   , signingConsentResponses     :: !SignatoryConsentResponsesForSigning
   }
@@ -80,7 +78,7 @@ documentSigning
   -> Maybe NetsSignConfig
   -> KontrakcjaGlobalTemplates
   -> ConnectionSourceM m
-  -> String
+  -> Text
   -> Int
   -> ConsumerConfig m SignatoryLinkID DocumentSigning
 documentSigning guardTimeConf cgiGrpConf netsSignConf templates pool
@@ -167,7 +165,7 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf templates pool
     legacyProviderFail signingSignatoryID provider = do
       logAttention "Legacy provider used in signing consumer" $ object [
           identifier signingSignatoryID
-        , "provider" .= (T.pack . show $ provider)
+        , "provider" .= showt provider
         ]
       return $ Failed Remove
 
@@ -235,11 +233,11 @@ signFromESignature DocumentSigning{..} now = do
   dbUpdate $ UpdateConsentResponsesForSigning sl signingConsentResponses actorWithUpdatedName
 
   authorAttachmetsWithAcceptanceText <- forM (documentauthorattachments initialDoc) $ \a -> do
-    acceptanceText <- renderTemplate "_authorAttachmentsUnderstoodContent" (F.value "attachment_name" $ authorattachmentname a)
+    acceptanceText <- renderTextTemplate "_authorAttachmentsUnderstoodContent" (F.value "attachment_name" $ authorattachmentname a)
     return (acceptanceText,a)
   dbUpdate $ AddAcceptedAuthorAttachmentsEvents slWithUpdatedName signingAcceptedAttachments authorAttachmetsWithAcceptanceText actorWithUpdatedName
 
-  notUploadedSigAttachmentsText <- renderTemplate_ "_pageDocumentForAuthorHelpersLocalDialogsAttachmentmarkasnotuploaded"
+  notUploadedSigAttachmentsText <- renderTextTemplate_ "_pageDocumentForAuthorHelpersLocalDialogsAttachmentmarkasnotuploaded"
   let notUploadedSigAttachmentsWithText = zip signingNotUploadedSigAttachments (repeat notUploadedSigAttachmentsText)
   dbUpdate $ AddNotUploadedSignatoryAttachmentsEvents sl notUploadedSigAttachmentsWithText actorWithUpdatedName
 

@@ -3,6 +3,8 @@ module Doc.TestInvariants (
   , documentInvariants
   ) where
 
+import qualified Data.Text as T
+
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.SignatoryLinkID
@@ -169,7 +171,7 @@ maxLengthOnFields _ document =
   let maxlength = 512 :: Int
       lengths :: [Int]
       -- signature field can be longer than max
-      lengths = [length (fromMaybe "" $ fieldTextValue f) | s <- documentsignatorylinks document
+      lengths = [T.length (fromMaybe "" $ fieldTextValue f) | s <- documentsignatorylinks document
                                     , f <- signatoryfields $ s
                                     , isJust $ fieldTextValue f
                                     , case fieldType f of
@@ -226,7 +228,7 @@ _hasFirstName :: UTCTime -> Document -> Maybe String
 _hasFirstName _ document =
   assertInvariant "has a signatory with no first name" $
     all (\sl -> (isPending document || isClosed document) -->
-                (not $ null $ getFirstName sl))
+                (not $ T.null $ getFirstName sl))
         (documentsignatorylinks document)
 
 -- | Last Name not null
@@ -234,13 +236,16 @@ _hasLastName :: UTCTime -> Document -> Maybe String
 _hasLastName _ document =
   assertInvariant "has a signatory with no last name" $
     all (\sl -> (isPending document || isClosed document) -->
-                (not $ null $ getLastName sl))
+                (not $ T.null $ getLastName sl))
         (documentsignatorylinks document)
 
 -- | Email looks like email
 hasValidEmail :: UTCTime -> Document -> Maybe String
 hasValidEmail _ document =
-  assertInvariant ("has a signatory with invalid email: " ++ intercalate ", " (map getEmail (documentsignatorylinks document))) $
+  assertInvariant
+    (T.unpack $
+      "has a signatory with invalid email: " <>
+      T.intercalate ", " (map getEmail (documentsignatorylinks document))) $
     all (\sl -> (isPending document || isClosed document) -->
                 (isGood $ asValidEmail $ getEmail sl))
         (documentsignatorylinks document)

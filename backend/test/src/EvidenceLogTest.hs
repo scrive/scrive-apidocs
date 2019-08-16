@@ -6,6 +6,7 @@ import Test.Framework
 import Text.StringTemplate (checkTemplateDeep, getStringTemplate)
 import Text.StringTemplates.Templates
 import qualified Data.Set as Set
+import qualified Data.Text as T
 
 import DB
 import EvidenceLog.Model
@@ -133,9 +134,9 @@ evidenceLogTemplatesWellDefined = do
     case ty of
       Obsolete _ -> return []
       Current ct -> do
-        ts <- getTextTemplatesByLanguage $ codeFromLang l
+        ts <- getTextTemplatesByLanguage $ T.unpack $ codeFromLang l
         let tn = eventTextTemplateName ta ct
-        case getStringTemplate tn ts of
+        case getStringTemplate (T.unpack tn) ts of
           Nothing -> do
             assertFailure $ "Cannot find template name " ++ show tn
             return []
@@ -145,7 +146,7 @@ evidenceLogTemplatesWellDefined = do
             -- reported by MR.
             let (pe,freevars,te') = checkTemplateDeep st
             let te = filter (/="noescape") te'
-            let errcontext = " in template " ++ tn
+            let errcontext = " in template " ++ (T.unpack tn)
                   ++ " for language " ++ show l ++ ": "
             unless (null pe) $ do
               assertFailure $ "Parse error" ++ errcontext ++ show pe

@@ -34,6 +34,7 @@ import System.Timeout.Lifted
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
+import qualified Data.Text as T
 
 import Log.Utils
 import PdfToolsLambda.Conf
@@ -47,15 +48,15 @@ renderPage :: forall m. (MonadBaseControl IO m, MonadLog m)
   -> m (Maybe BS.ByteString)
 renderPage fileContent pageNo widthInPixels = do
   restrictTime $ withSystemTempDirectory' "mudraw" $ \tmpPath -> do
-    let sourcePath = tmpPath ++ "/source.pdf"
+    let sourcePath = tmpPath <> "/source.pdf"
     logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length fileContent)
                                        , "originator" .= ("renderPage" :: Text) ]
     liftBase $ BS.writeFile sourcePath fileContent
-    let pagePath = tmpPath ++ "/output-" ++ show pageNo ++ ".png"
-        pageQuantPath = tmpPath ++ "/output-quant-" ++ show pageNo ++ ".png"
+    let pagePath = tmpPath <> "/output-" <> show pageNo <> ".png"
+        pageQuantPath = tmpPath <> "/output-quant-" <> show pageNo <> ".png"
     (mudrawcode,mudrawout,mudrawerr) <- liftBase $ readProcessWithExitCode "mutool" (concat [
             ["draw"]
-          , ["-o", tmpPath ++ "/output-%d.png"]
+          , ["-o", tmpPath <> "/output-%d.png"]
           , ["-w", show widthInPixels]
           , ["-A", "8"]
           , ["-st"]
@@ -116,12 +117,12 @@ data FileError = FileSizeError Int Int
                | FileRemoveJavaScriptError
                | FileFlatteningError BSL.ByteString
                | FileSealingError BSL.ByteString
-               | FileOtherError String
+               | FileOtherError Text
                deriving (Eq, Ord, Show, Read, Typeable)
 
 preCheckPDFsHelper :: (CryptoRNG m, MonadBaseControl IO m, MonadCatch m, MonadLog m, PdfToolsLambdaMonad m)
                    => [BS.ByteString]
-                   -> String
+                   -> Text
                    -> m (Either FileError [BS.ByteString])
 preCheckPDFsHelper contents tmppath =
     runExceptT $ do
@@ -131,12 +132,14 @@ preCheckPDFsHelper contents tmppath =
       mapM_ checkNormalize $ zip [1..] contents
       mapM readOutput [1..length contents]
   where
+    tmppath' = T.unpack tmppath
+
     flattenedpath :: Int -> String
-    flattenedpath    num = tmppath ++ "/flattened"  ++ show num ++ ".pdf"
+    flattenedpath    num = tmppath' <> "/flattened"  <> show num <> ".pdf"
     jsremovedpath :: Int -> String
-    jsremovedpath    num = tmppath ++ "/jsremoved"  ++ show num ++ ".pdf"
+    jsremovedpath    num = tmppath' <> "/jsremoved"  <> show num <> ".pdf"
     normalizedpath :: Int -> String
-    normalizedpath   num = tmppath ++ "/normalized" ++ show num ++ ".pdf"
+    normalizedpath   num = tmppath' <> "/normalized" <> show num <> ".pdf"
 
     sizeLimit = 10 * 1000 * 1000
 
@@ -211,12 +214,19 @@ preCheckPDFsHelper contents tmppath =
 -- Return value is either a 'BS.ByteString' with normalized document
 -- content or 'FileError' enumeration stating what is going on.
 --
-preCheckPDFs :: (CryptoRNG m, MonadBaseControl IO m, MonadCatch m, MonadLog m, PdfToolsLambdaMonad m) => [BS.ByteString]
-            -> m (Either FileError [BS.ByteString])
+preCheckPDFs
+  :: ( CryptoRNG m
+     , MonadBaseControl IO m
+     , MonadCatch m
+     , MonadLog m
+     , PdfToolsLambdaMonad m
+     )
+  => [BS.ByteString]
+  -> m (Either FileError [BS.ByteString])
 preCheckPDFs contents =
   withSystemTempDirectory' "precheck" $ \tmppath -> do
-    res <- preCheckPDFsHelper contents tmppath
-      `E.catch` \(e::IOError) -> return (Left (FileOtherError (show e)))
+    res <- preCheckPDFsHelper contents (T.pack tmppath)
+      `E.catch` \(e::IOError) -> return (Left (FileOtherError (showt e)))
     case res of
       Left x -> logInfo "preCheckPDF failed" $ object [
           "error" .= show x
@@ -234,7 +244,7 @@ preCheckPDF content = do
     _ -> unexpectedError "preCheckPDFs returned wrong amount of contents"
 
 
-getNumberOfPDFPages :: BS.ByteString -> IO (Either String Int)
+getNumberOfPDFPages :: BS.ByteString -> IO (Either Text Int)
 getNumberOfPDFPages content = do
   systmp <- getTemporaryDirectory
   (path, h) <- openTempFile systmp "mutool-input.pdf"
@@ -248,17 +258,19 @@ getNumberOfPDFPages content = do
                                   [(x, "")] -> Right x
                                   _ -> Left $ "Unparsable mutool info output about number of pages"
                     Nothing -> Left $ "Couldn't find number of pdf pages in mutool output"
-    ExitFailure code -> Left $ "mutool info failed with return code " ++ show code ++ ", and stderr: " ++ BSL.unpack stderr'
+    ExitFailure code -> Left $
+      "mutool info failed with return code " <> showt code <> ", and stderr: " <>
+      (T.pack $ BSL.unpack stderr')
 
 pickPages :: (MonadLog m, MonadBaseControl IO m) => [Int] -> BS.ByteString -> m (Maybe BS.ByteString)
 pickPages pages content = do
   withSystemTempDirectory' "remove-pages" $ \tmppath -> do
-    let inputpath = tmppath ++ "/input.pdf"
-    let outputpath = tmppath ++ "/output.pdf"
+    let inputpath = tmppath <> "/input.pdf"
+    let outputpath = tmppath <> "/output.pdf"
     logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length content)
                                        , "originator" .= ("pickPages" :: Text) ]
     liftBase $ BS.writeFile inputpath content
-    (exitCode, mutoolout, mutoolerr)  <- liftBase $ readProcessWithExitCode "mutool" (["clean", "-g", inputpath, outputpath] ++ (map show pages)) (BSL.empty)
+    (exitCode, mutoolout, mutoolerr)  <- liftBase $ readProcessWithExitCode "mutool" (["clean", "-g", inputpath, outputpath] <> (map show pages)) (BSL.empty)
     case exitCode of
       ExitSuccess -> Just <$> (liftBase $ BS.readFile outputpath)
       ExitFailure ec -> do
@@ -275,10 +287,10 @@ clipHighlightImageFromPage pdfFileContent highlightFileContent pageNo = do
   logInfo_ "clipHighlightImageFromPage: starting..."
   withSystemTempDirectory' "highlight-mask" $ \tmpPath -> do
     -- Set all the filepaths that we will use within tmpPath
-    let pdfRenderedPagePath       = tmpPath ++ "/pdf.png"
-        highlightImagePath        = tmpPath ++ "/highlight.png"
-        thresholdOutputPath       = tmpPath ++ "/threshold.png"
-        maskedHighlightOutputPath = tmpPath ++ "/masked_highlight.png"
+    let pdfRenderedPagePath       = tmpPath <> "/pdf.png"
+        highlightImagePath        = tmpPath <> "/highlight.png"
+        thresholdOutputPath       = tmpPath <> "/threshold.png"
+        maskedHighlightOutputPath = tmpPath <> "/masked_highlight.png"
     -- Write the highlight image and find its dimensions using 'identify'
     logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length highlightFileContent)
                                        , "originator" .= ("clipHighlightImageFromPage" :: Text) ]
@@ -294,7 +306,7 @@ clipHighlightImageFromPage pdfFileContent highlightFileContent pageNo = do
                  ]
         return Nothing
       ExitSuccess -> do
-        case maybeRead (BSL.unpack identifyStdout) :: Maybe (Int, Int) of
+        case maybeRead (T.pack $ BSL.unpack identifyStdout) :: Maybe (Int, Int) of
           Nothing -> do
             logAttention_ "clipHighlightImageFromPage: could not read dimensions from identify output"
             return Nothing
@@ -313,7 +325,7 @@ clipHighlightImageFromPage pdfFileContent highlightFileContent pageNo = do
                       -- First force resize the rendered page to match the highlight image
                       -- then threshold at 50% (arbitrary, seemed to work well) to use as mask
                       (thresholdCode, thresholdStdout, thresholdStderr) <- liftBase $
-                        readProcessWithExitCode "convert" [pdfRenderedPagePath, "-resize", show highlightWidth ++ "x" ++ show highlightHeight ++ "!", "-threshold", "50%", thresholdOutputPath] ""
+                        readProcessWithExitCode "convert" [pdfRenderedPagePath, "-resize", show highlightWidth <> "x" <> show highlightHeight <> "!", "-threshold", "50%", thresholdOutputPath] ""
                       case thresholdCode of
                         ExitFailure code -> do
                           logAttention "clipHighlightImageFromPage: convert failed to threshold" $
@@ -331,7 +343,7 @@ clipHighlightImageFromPage pdfFileContent highlightFileContent pageNo = do
                               "-composite",
                                 "-transparent","white", "-fuzz", "10%", thresholdOutputPath,
                                 highlightImagePath,
-                                "PNG32:" ++ maskedHighlightOutputPath
+                                "PNG32:" <> maskedHighlightOutputPath
                               ] ""
                           case clipCode of
                             ExitFailure code -> do

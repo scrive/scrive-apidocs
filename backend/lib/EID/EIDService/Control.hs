@@ -7,8 +7,6 @@ import Data.Aeson ((.=), Value, object)
 import Happstack.Server hiding (Expired, dir)
 import Happstack.StaticRouting
 import Log
-import Text.StringTemplates.Templates
-import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
 import Analytics.Include
@@ -33,6 +31,7 @@ import Kontra hiding (InternalError)
 import MinutesTime
 import Routing
 import Session.Model
+import Templates (renderTextTemplate)
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.MonadUtils
@@ -78,7 +77,7 @@ updateVerimiTransactionAfterCheck slid est ts mctd = do
          (EIDServiceTransactionStatusCompleteAndSuccess, Just cd) -> do
             doc <- dbQuery $ GetDocumentBySignatoryLinkID slid
             let sl = fromJust $ getSigLinkFor slid doc
-            if (eidtdVerifiedEmail cd == T.pack (getEmail sl))
+            if (eidtdVerifiedEmail cd == getEmail sl)
             then do
               mergeEIDServiceTransactionWithStatus EIDServiceTransactionStatusCompleteAndSuccess
               let auth = EIDServiceVerimiAuthentication {
@@ -136,7 +135,7 @@ redirectEndpointFromVerimiEIDServiceTransaction did slid = do
       nts <- updateVerimiTransactionAfterCheck slid est ts mctd
       return $ Just nts
     _ -> return Nothing
-  redirectPage <- renderTemplate "postVerimiRedirect" $ do
+  redirectPage <- renderTextTemplate "postVerimiRedirect" $ do
     F.value "redirect" rd
     F.value "incorrect_data" (mts == Just EIDServiceTransactionStatusCompleteAndFailed)
     standardPageFields ctx Nothing ad

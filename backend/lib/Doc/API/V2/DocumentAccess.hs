@@ -87,7 +87,9 @@ documentAccessModeForUser user document =
                  then CompanyAdminDocumentAccess $ Nothing
                  else if (documentauthorugid document == Just (usergroupid user) && isDocumentShared document)
                   then CompanySharedDocumentAccess
-                  else unexpectedError $ "User " ++ show (userid user) ++ " accessing document " ++ show (documentid document) ++ " without any permission. This should be cought earlier."
+                  else unexpectedError $
+                    "User " <> showt (userid user) <> " accessing document " <> showt (documentid document)
+                    <> " without any permission. This should be cought earlier."
 
 documentAccessForSlid :: SignatoryLinkID -> Document -> DocumentAccess
 documentAccessForSlid slid document = DocumentAccess {
@@ -102,6 +104,6 @@ documentAccessModeForSlid slid document =
     Just sl -> if (isAuthor sl)
                   then AuthorDocumentAccess
                   else SignatoryDocumentAccess $ signatorylinkid sl
-    Nothing -> unexpectedError $ "SignatoryLinkID " ++ show slid
-                ++ " accessing document " ++ show (documentid document)
-                ++ " without any permission. This should be caught earlier."
+    Nothing -> unexpectedError $ "SignatoryLinkID " <> showt slid
+                  <> " accessing document " <> showt (documentid document)
+                  <> " without any permission. This should be caught earlier."

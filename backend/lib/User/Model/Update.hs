@@ -20,8 +20,8 @@ module User.Model.Update (
 import Control.Monad.Catch
 import Control.Monad.Time
 import Data.ByteString (ByteString)
-import Data.Char
 import Log
+import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomainID
 import DataRetentionPolicy
@@ -50,7 +50,15 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AcceptTermsOfService Bool where
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
 
-data AddUser = AddUser (String, String) String (Maybe Password) (UserGroupID, Maybe FolderID, Bool) Lang BrandedDomainID SignupMethod
+data AddUser = AddUser
+  (Text, Text)
+  Text
+  (Maybe Password)
+  (UserGroupID, Maybe FolderID, Bool)
+  Lang
+  BrandedDomainID
+  SignupMethod
+
 instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
   update (AddUser (fname, lname) email mpwd (ugid, mFid, admin) l ad sm) = do
     mu <- query $ GetUserByEmail $ Email email
@@ -71,7 +79,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
             sqlSet "personal_number" ("" :: String)
             sqlSet "company_position" ("" :: String)
             sqlSet "phone" ("" :: String)
-            sqlSet "email" $ map toLower email
+            sqlSet "email" $ T.toLower email
             sqlSet "lang" l
             sqlSet "deleted" (Nothing :: Maybe UTCTime)
             sqlSet "associated_domain_id" ad
@@ -91,7 +99,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) =>
     now   <- currentTime
     muser <- query $ GetUserByID uid
     user  <- case muser of
-      Nothing   -> unexpectedError $ "Couldn't find user " <> show uid
+      Nothing   -> unexpectedError $ "Couldn't find user " <> showt uid
       Just user -> return user
 
     runQuery_ $ sqlDelete "email_change_requests" $ sqlWhereEq "user_id" uid
@@ -250,7 +258,7 @@ data SetUserEmail = SetUserEmail UserID Email
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserEmail Bool where
   update (SetUserEmail uid email) = do
     res <- runQuery01 . sqlUpdate "users" $ do
-      sqlSet "email" $ map toLower $ unEmail email
+      sqlSet "email" $ T.toLower $ unEmail email
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
     void $ update $ UpdateDraftsAndTemplatesWithUserData uid
@@ -265,7 +273,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserInfo Bool where
       sqlSet "personal_number" $ userpersonalnumber info
       sqlSet "company_position" $ usercompanyposition info
       sqlSet "phone" $ userphone info
-      sqlSet "email" $ map toLower $ unEmail $ useremail info
+      sqlSet "email" $ T.toLower $ unEmail $ useremail info
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
     void $ update $ UpdateDraftsAndTemplatesWithUserData uid

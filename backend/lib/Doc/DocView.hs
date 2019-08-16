@@ -45,23 +45,26 @@ import EID.Nets.Config
 import File.FileID
 import Kontra
 import KontraLink
+import Templates (renderTextTemplate)
 import User.Model
 import UserGroup.Model
 import UserGroup.Types
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
-pageCreateFromTemplate :: TemplatesMonad m => Context -> m String
-pageCreateFromTemplate ctx = renderTemplate "createFromTemplatePage" $ entryPointFields ctx
+pageCreateFromTemplate :: TemplatesMonad m => Context -> m Text
+pageCreateFromTemplate ctx =
+  renderTextTemplate "createFromTemplatePage" $
+    entryPointFields ctx
 
 pageDocumentDesign :: Kontrakcja m
                    => Context
                    -> Document
                    -> AnalyticsData
-                   -> m String
+                   -> m Text
 pageDocumentDesign ctx document ad = do
      mugui <- userGroupUIForPage
-     renderTemplate "pageDocumentDesign" $ do
+     renderTextTemplate "pageDocumentDesign" $ do
          F.value "documentid" $ show $ documentid document
          standardPageFields ctx mugui ad
 
@@ -70,9 +73,9 @@ pageDocumentView :: TemplatesMonad m
                     -> Document
                     -> Maybe SignatoryLink
                     -> Bool
-                    -> m String
+                    -> m Text
 pageDocumentView ctx document msiglink authorcompanyadmin =
-  renderTemplate "pageDocumentView" $ do
+  renderTextTemplate "pageDocumentView" $ do
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ fmap (show . signatorylinkid) msiglink
       F.value "authorcompanyadmin" $ authorcompanyadmin
@@ -83,7 +86,7 @@ pageDocumentSignView :: Kontrakcja m
                     -> Document
                     -> SignatoryLink
                     -> AnalyticsData
-                    -> m String
+                    -> m Text
 pageDocumentSignView ctx document siglink ad = do
 
   -- Sign view needs some author details and information if company allows saving a safety copy.
@@ -98,7 +101,7 @@ pageDocumentSignView ctx document siglink ad = do
   let loggedAsAuthor = (Just authorid == (userid <$> getContextUser ctx));
   let docjson = unjsonToByteStringLazy' (Options { pretty = False, indent = 0, nulls = True }) (unjsonDocument (documentAccessForSlid (signatorylinkid siglink) document)) document
       mainfile = fromMaybe (unsafeFileID 0) (mainfileid <$> documentfile document)
-  renderTemplate "pageDocumentSignView" $ do
+  renderTextTemplate "pageDocumentSignView" $ do
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ show $ signatorylinkid siglink
       F.value "documenttitle" $ documenttitle document
@@ -118,13 +121,13 @@ pageDocumentIdentifyView :: Kontrakcja m
                     -> Document
                     -> SignatoryLink
                     -> AnalyticsData
-                    -> m String
+                    -> m Text
 pageDocumentIdentifyView ctx document siglink ad = do
   let authorid = fromJust $ getAuthorSigLink document >>= maybesignatory
   auser <- fmap fromJust $ dbQuery $ GetUserByIDIncludeDeleted authorid
   authorug <- dbQuery . UserGroupGetByUserID . userid $ auser
 
-  renderTemplate "pageDocumentIdentifyView" $ do
+  renderTextTemplate "pageDocumentIdentifyView" $ do
       F.value "documentid" $ show $ documentid document
       F.value "siglinkid" $ show $ signatorylinkid siglink
       F.value "documenttitle" $ documenttitle document
@@ -137,18 +140,18 @@ pageDocumentIdentifyView ctx document siglink ad = do
 pageDocumentPadList:: Kontrakcja m
                     => Context
                     -> AnalyticsData
-                    -> m String
+                    -> m Text
 pageDocumentPadList ctx ad = do
   mugui <- userGroupUIForPage
-  renderTemplate "pagePadListView" $ do
+  renderTextTemplate "pagePadListView" $ do
       standardPageFields ctx mugui ad
 
 pageDocumentPadListLogin:: Kontrakcja m
                     => Context
                     -> AnalyticsData
-                    -> m String
+                    -> m Text
 pageDocumentPadListLogin ctx ad = do
-  renderTemplate "padLogin" $ do
+  renderTextTemplate "padLogin" $ do
       standardPageFields ctx Nothing ad
 
 {- To start, list + login + show view -}
@@ -156,28 +159,28 @@ pageDocumentPadListLogin ctx ad = do
 pageDocumentToStartList :: Kontrakcja m
                            => Context
                            -> AnalyticsData
-                           -> m String
+                           -> m Text
 pageDocumentToStartList ctx ad = do
   mugui <- userGroupUIForPage
-  renderTemplate "pageToStartListView" $ do
+  renderTextTemplate "pageToStartListView" $ do
     standardPageFields ctx mugui ad
 
 pageDocumentToStartLogin:: Kontrakcja m
                     => Context
                     -> AnalyticsData
-                    -> m String
+                    -> m Text
 pageDocumentToStartLogin ctx ad = do
-  renderTemplate "toStartLogin" $ do
+  renderTextTemplate "toStartLogin" $ do
     standardPageFields ctx Nothing ad
 
 pageDocumentToStartView :: Kontrakcja m
                     => Context
                     -> Document
                     -> AnalyticsData
-                    -> m String
+                    -> m Text
 pageDocumentToStartView ctx document ad = do
   mugui <- userGroupUIForPage
-  renderTemplate "pageToStartDocumentView" $ do
+  renderTextTemplate "pageToStartDocumentView" $ do
     F.value "documentid" $ show $ documentid document
     F.value "documenttitle" $ documenttitle document
     standardPageFields ctx mugui ad
@@ -216,16 +219,15 @@ gtVerificationPage =  do
   ad <- getAnalyticsData
   if (get (bdMainDomain . ctxbrandeddomain) ctx)
   then do
-    content <- renderTemplate "gtVerificationPage" $ do
+    content <- renderTextTemplate "gtVerificationPage" $ do
       standardPageFields ctx Nothing ad
     simpleHtmlResponse content
   else respond404
 
-afterForwardPage :: Kontrakcja m => DocumentID -> m String
+afterForwardPage :: Kontrakcja m => DocumentID -> m Text
 afterForwardPage did = do
   ctx <- getContext
   ad <- getAnalyticsData
-  renderTemplate "afterForwardPage" $ do
+  renderTextTemplate "afterForwardPage" $ do
       F.value "documentid" $ show $ did
       standardPageFields ctx Nothing ad
-

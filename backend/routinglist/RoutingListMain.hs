@@ -31,7 +31,7 @@ import Unsafe.Coerce (unsafeCoerce)
 import qualified Control.Monad.State as S
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.HashMap.Strict as HM
-import qualified Data.Text.Lazy as T
+import qualified Data.Text as T
 
 import Kontra
 import RoutingTable (staticRoutes)
@@ -121,11 +121,11 @@ getUrls route = nub $ concatMap exceptions $ filter (not . isRoot) $ map makeAbs
 -- /verify gets its own special rule at the end
 exceptions :: String -> [String]
 exceptions "/no" = []
-exceptions ('/':c1:c2:[]) | [c1, c2] `elem` map codeFromLang allLangs = [['/', c1, c2, '$']]
+exceptions ('/':c1:c2:[]) | [c1, c2] `elem` (map (T.unpack . codeFromLang) allLangs) = [['/', c1, c2, '$']]
 exceptions ('/':c:[]) | c `elem` ("asd"::String) = [['/', c, '/'], ['/', c, '$']]
 exceptions "/pricing" = []
 exceptions "/verify" = []
-exceptions ('/':c1:c2:"/pricing") | [c1, c2] `elem` map codeFromLang allLangs = []
+exceptions ('/':c1:c2:"/pricing") | [c1, c2] `elem` map (T.unpack . codeFromLang) allLangs = []
 exceptions s = [s]
 
 main :: IO ()

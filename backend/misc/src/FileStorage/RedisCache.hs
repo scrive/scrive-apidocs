@@ -14,6 +14,7 @@ import System.Timeout.Lifted
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.Text as T
 import qualified Database.Redis as R
 
 import Database.Redis.Cache
@@ -48,5 +49,5 @@ getFileFromRedis conn rkey = do
         void $ tryPutMVar semaphore ()
         return mempty
 
-redisKeyFromURL :: String -> RedisKey
-redisKeyFromURL url = mkRedisKey ["files", BSC.pack url]
+redisKeyFromURL :: Text -> RedisKey
+redisKeyFromURL url = mkRedisKey ["files", BSC.pack $ T.unpack url]

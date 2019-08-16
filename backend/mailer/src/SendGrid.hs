@@ -81,17 +81,22 @@ sendgridEventFromJSValueM = do
     case event of
       (Just "processed")   -> return $ Just SG_Processed
       (Just "open")        -> return $ Just SG_Opened
-      (Just "dropped")     -> fromJSValueField "reason" >>= return . fmap SG_Dropped
-      (Just "delivered")   -> fromJSValueField "response" >>= return . fmap SG_Delivered
+      (Just "dropped")     -> do
+        reason <- fromJSValueField "reason"
+        return $ SG_Dropped <$> reason
+      (Just "delivered")   -> do
+        response <- fromJSValueField "response"
+        return $ SG_Delivered <$> response
       (Just "bounce")      -> do
-                              status <- fromJSValueField "status"
-                              reason <- fromJSValueField "reason"
-                              btype  <- fromJSValueField "type"
-                              return (SG_Bounce <$> status <*> reason <*> btype)
+        status <- fromJSValueField "status"
+        reason <- fromJSValueField "reason"
+        btype  <- fromJSValueField "type"
+        return (SG_Bounce <$> status <*> reason <*> btype)
       (Just "deferred")    -> do
-                              response <- fromJSValueField "response"
-                              attempt <- join <$> fmap maybeRead <$> fromJSValueField "attempt"  -- SG returns ints as strings for this field
-                              return (SG_Deferred <$> response <*> (fromIntegral <$> attempt))
+        response <- fromJSValueField "response"
+        attempt <- join <$> fmap maybeRead <$>
+          fromJSValueField "attempt"  -- SG returns ints as strings for this field
+        return (SG_Deferred <$> response <*> (fromIntegral <$> attempt))
       (Just "spamreport")  -> return $ Just SG_SpamReport
       (Just "unsubscribe") -> return $ Just SG_Unsubscribe
       _ -> return Nothing

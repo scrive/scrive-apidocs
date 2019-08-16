@@ -22,14 +22,18 @@ import TestingUtil (assertEqual, assertFailure)
 import TestKontra
 
 -- | Used to succinctly construct a API requests and test response code
-testRequestHelper :: Context -> Method -> [(String, Input)] -> KontraTest Response -> Int -> TestEnv BSL.ByteString
+testRequestHelper :: Context -> Method -> [(Text, Input)] -> KontraTest Response -> Int -> TestEnv BSL.ByteString
 testRequestHelper ctx httpMethod params func expectedRsCode = do
   req <- mkRequest httpMethod params
   (rsp,_) <- runTestKontra req ctx func
-  let showTestDetails = "Method: " ++ show httpMethod ++ "\n"
-                     ++ "Params: " ++ concatMap (\(s,i) -> "\n\t" ++ s ++ ": " ++ show i) params ++ "\n"
-                     ++ "Response:\n" ++ show (rsBody rsp)
-  assertEqual ("Response code should match for:\n" ++ showTestDetails) expectedRsCode (rsCode rsp)
+  let showTestDetails :: Text =
+        "Method: " <> (showt httpMethod) <> "\n" <> "Params: " <>
+        (T.concat $ fmap
+          (\(s,i) -> "\n\t" <> s <> ": " <> (showt i))
+          params
+        ) <> "\n" <>
+        "Response:\n" <> (showt (rsBody rsp))
+  assertEqual ("Response code should match for:\n" <> T.unpack showTestDetails) expectedRsCode (rsCode rsp)
   return (rsBody rsp)
 
 -- | Used to succinctly construct an API request without assertions
@@ -39,13 +43,13 @@ testRequestHelperNoAssert_ :: Context
                            -> KontraTest Response
                            -> TestEnv ()
 testRequestHelperNoAssert_ ctx httpMethod params func = do
-  req <- mkRequest httpMethod params
+  req <- mkRequest httpMethod $ fmap (\(t1, t2) -> (T.pack t1, t2)) params
   (rsp,_) <- runTestKontra req ctx func
-  let showRequestDetails = "Request details:\n" ++
-                           "Method: " ++ show httpMethod ++ "\n"
-                        ++ "Params: " ++ showParams params ++ "\n"
-                        ++ "Response:\n" ++ show (rsBody rsp)
-      showParams = concatMap (\(s,i) -> "\n\t" ++ s ++ ": " ++ show i)
+  let showRequestDetails = "Request details:\n" <>
+                           "Method: " <> show httpMethod <> "\n"
+                        <> "Params: " <> showParams params <> "\n"
+                        <> "Response:\n" <> show (rsBody rsp)
+      showParams = concatMap (\(s,i) -> "\n\t" <> s <> ": " <> show i)
   liftIO $ putStrLn showRequestDetails
   return ()
 
@@ -58,15 +62,19 @@ testRequestHelperNoAssert_ ctx httpMethod params func = do
 --   docJSON <- jsonTestRequestHelper ctx GET [] (docApiV2Get did) 200
 --   testSomething docJSON
 -- @
-jsonTestRequestHelper :: Context -> Method -> [(String, Input)] -> KontraTest Response -> Int
+jsonTestRequestHelper :: Context -> Method -> [(Text, Input)] -> KontraTest Response -> Int
        -> TestEnv Value
 jsonTestRequestHelper ctx httpMethod params func expectedRsCode = do
   rsp <- testRequestHelper ctx httpMethod params func expectedRsCode
-  let showTestDetails = "Method: " ++ show httpMethod ++ "\n"
-                     ++ "Params: " ++ concatMap (\(s,i) -> "\n\t" ++ s ++ ": " ++ show i) params ++ "\n"
-                     ++ "Response:\n" ++ show rsp
+  let showTestDetails =
+        "Method: " <> showt httpMethod <> "\n" <> "Params: " <>
+        (T.concat $ fmap
+          (\(s,i) -> "\n\t" <> s <> ": " <> showt i)
+          params) <>
+        "\n" <> "Response:\n" <> showt rsp
   let mRspJS = decode rsp
-  when (isNothing mRspJS) $ assertFailure $ "Could not parse JSON from ByteString response:\n" ++ showTestDetails
+  when (isNothing mRspJS) $ assertFailure $
+    "Could not parse JSON from ByteString response:\n" <> T.unpack showTestDetails
   return $ fromJust mRspJS
 
 -- | Given a `Value` that should be an `Object`, lookup a key which should be
@@ -106,5 +114,5 @@ lookupObjectInt k v = do
 lookupObject :: String -> Value -> TestEnv Value
 lookupObject k (Object o) = case (H.lookup (T.pack k) o) of
                               Just v -> return v
-                              Nothing -> unexpectedError $ "Could not look up key: '" ++ k ++ "'"
+                              Nothing -> unexpectedError $ T.pack $ "Could not look up key: '" <> k <> "'"
 lookupObject _ _ = unexpectedError "Value was not an Object"

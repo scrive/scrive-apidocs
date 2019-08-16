@@ -2,8 +2,6 @@ module DataRetentionPolicy.Guards
   ( guardThatDataRetentionPolicyIsValid
   ) where
 
-import qualified Data.Text as T
-
 import API.V2
 import DataRetentionPolicy
 import Doc.Types.DocumentStatus
@@ -28,7 +26,7 @@ guardThatDataRetentionPolicyIsValid drp mParentDRP = do
     case get (drpIdleDocTimeout status) drp of
       Just value | value <= 0 || value > limit -> apiError $
         requestParameterInvalid param $
-          "must be between 1 and" <+> T.pack (show limit)
+          "must be between 1 and" <+> showt limit
       _ -> return ()
 
   when (fmap (get drpImmediateTrash) mParentDRP == Just True

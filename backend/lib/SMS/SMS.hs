@@ -11,6 +11,7 @@ import Data.Char
 import Data.Set (Set, fromList, member)
 import Data.String.Utils
 import Log
+import qualified Data.Text as T
 
 import Chargeable.Model
 import DB
@@ -21,10 +22,10 @@ import SMS.Model
 import SMS.Types (SMSProvider(..))
 
 data SMS = SMS {
-    smsMSISDN     :: String -- ^ Number of recipient in international form (+NNXXYYYYYYY)
+    smsMSISDN     :: Text -- ^ Number of recipient in international form (+NNXXYYYYYYY)
   , kontraInfoForSMS :: Maybe KontraInfoForSMS -- ^ Connection between this message and and some entity in kontrakcja
-  , smsBody       :: String -- ^ Message body
-  , smsOriginator :: String -- ^ SMS originator/sender name
+  , smsBody       :: Text -- ^ Message body
+  , smsOriginator :: Text -- ^ SMS originator/sender name
   , smsProvider   :: SMSProvider -- ^ SMS provider type
   } deriving (Eq, Ord, Show)
 
@@ -33,9 +34,9 @@ data SMS = SMS {
 -- also need to distinguish between these formats for billing reasons.
 scheduleSMS :: (MonadLog m, MonadDB m, MonadThrow m) => Document -> SMS -> m ()
 scheduleSMS doc SMS{..} = do
-  when (null smsMSISDN) $ do
+  when (T.null smsMSISDN) $ do
     unexpectedError "no mobile phone number defined"
-  sid <- dbUpdate $ CreateSMS smsProvider (fixOriginator smsOriginator) smsMSISDN smsBody
+  sid <- dbUpdate $ CreateSMS smsProvider (T.pack $ fixOriginator $ T.unpack smsOriginator) smsMSISDN smsBody
   -- charge company of the author of the document for the smses
   dbUpdate $ ChargeUserGroupForSMS (documentid doc) smsProvider smsCount
   case kontraInfoForSMS of
@@ -66,7 +67,7 @@ scheduleSMS doc SMS{..} = do
     -- Sources:
     -- - https://en.wikipedia.org/wiki/Concatenated_SMS
     -- - https://en.wikipedia.org/wiki/Universal_Coded_Character_Set
-    smsBodyLength = fromIntegral . length $ smsBody
+    smsBodyLength = fromIntegral . T.length $ smsBody
     smsCount =
       if smsProvider == SMSTeliaCallGuide || isGSM7PermissibleString smsBody
       then countSMSes 160 153
@@ -78,9 +79,9 @@ scheduleSMS doc SMS{..} = do
             (count, _) -> count + 1
       | otherwise = 1
 
-isGSM7PermissibleString :: String -> Bool
+isGSM7PermissibleString :: Text -> Bool
 isGSM7PermissibleString s =
-  all (`member` gsm7PermissibleChars) s
+  T.all (`member` gsm7PermissibleChars) s
   where
     gsm7PermissibleChars :: Set Char
     gsm7PermissibleChars =

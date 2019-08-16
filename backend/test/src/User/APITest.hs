@@ -18,6 +18,7 @@ import qualified Data.ByteString.Char8 as BSC
 import qualified Data.HashMap.Strict as H
 import qualified Data.Label.Base as FCP
 import qualified Data.Label.Partial as FCP
+import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 
 import Attachment.Model
@@ -138,8 +139,8 @@ testUserTooManyGetTokens = do
 
 testUser2FAWorkflow :: TestEnv ()
 testUser2FAWorkflow = do
-  password <- rand 10 $ arbString 3 30
-  randomUser <- addNewRandomUserWithPassword password
+  password <- rand 10 $ arbText 3 30
+  randomUser <- addNewRandomUserWithPassword $ password
   ctx' <- set ctxmaybeuser (Just randomUser) <$> mkContext defaultLang
 
   -- Start setting up 2FA
@@ -156,7 +157,7 @@ testUser2FAWorkflow = do
   qrText <- liftIO $ decodeQR (QRCode . Base64.decodeLenient $ TE.encodeUtf8 setupQRCode)
   let encsecret = head . drop 1 . dropWhile (/= "secret") . splitOneOf "?&=" $ qrText
       Right secret = B32.decode $ BSC.pack encsecret
-      totpcode = filter (/='"') . show $ totp SHA1 secret now 30 6
+      totpcode = T.pack $ filter (/='"') . show $ totp SHA1 secret now 30 6
 
   -- For some reason we need to get updated User and add to Context
   -- otherwise tests fail because TOTP changes are not "seen"

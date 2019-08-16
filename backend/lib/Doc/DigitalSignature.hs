@@ -122,7 +122,7 @@ extendDigitalSignature = do
 digitallyExtendFile :: (MonadFileStorage m, TemplatesMonad m, MonadBase IO m,
                         MonadThrow m, CryptoRNG m, MonadLog m, MonadIO m,
                         MonadMask m, DocumentMonad m, GuardTimeConfMonad m)
-                    => UTCTime -> FilePath -> String -> m Bool
+                    => UTCTime -> FilePath -> Text -> m Bool
 digitallyExtendFile ctxtime pdfpath pdfname = do
   gtconf <- getGuardTimeConf
   (code, stdout, stderr) <- GT.digitallyExtend gtconf pdfpath

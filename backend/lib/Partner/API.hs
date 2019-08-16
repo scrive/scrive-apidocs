@@ -19,7 +19,6 @@ import Data.Unjson as Unjson
 import Happstack.Server.Types
 import Happstack.StaticRouting
 import Log
-import qualified Data.Text as T
 
 import AccessControl.Types
 import API.V2
@@ -83,7 +82,7 @@ partnerApiCallV1CompanyCreate ptOrUgID = do
       (eUserGroup :: Either SomeException UserGroup) <- try . dbUpdate . UserGroupCreate $ ug
       case eUserGroup of
         Left exc -> do
-            srvLogErr $ "The user group could not be created; " <> (T.pack . show $ exc)
+            srvLogErr $ "The user group could not be created; " <> showt exc
         Right ug' -> do
             ugwp <- apiGuardJustM (serverError "Was not able to retrieve newly created company")
               . dbQuery . UserGroupGetWithParents . get ugID $ ug'
@@ -112,7 +111,7 @@ partnerApiCallV1CompanyUpdate ptOrUgID ugid = do
               (Unjson.Result value []) ->
                 return value
               (Unjson.Result _ errs) ->
-                rqPrmErr $ "Errors while parsing user group data:" <+> (T.pack . show $ errs)
+                rqPrmErr $ "Errors while parsing user group data:" <+> showt errs
           let ug' = updateUserGroupWithUserGroupForUpdate ugwp ugu
           (eDidUpdate :: Either SomeException ()) <- try . dbUpdate $ UserGroupUpdate ug'
           when (isLeft eDidUpdate) $
@@ -236,7 +235,7 @@ partnerApiCallV1UserUpdate ptOrUgID uid = do
       ufuJSON <- apiV2ParameterObligatory $ ApiV2ParameterAeson "json"
       ufu <- case (Unjson.update (userToUserForUpdate user) unjsonUserForUpdate ufuJSON) of
           (Result value []) -> return value
-          (Result _ errs) -> rqPrmErr ("Errors while parsing user data:" <+> T.pack (show errs))
+          (Result _ errs) -> rqPrmErr ("Errors while parsing user data:" <+> showt errs)
       let userInfo = userInfoFromUserForUpdate ufu
 
       guardValidEmailAndNoExistingUser (useremail userInfo) (Just uid)
@@ -292,7 +291,7 @@ tosNotAcceptedErr = do
                ("The user must accept the Scrive Terms of Service" <+>
                 "to create an account")
 
-srvLogErr :: (Kontrakcja m) => T.Text -> m a
+srvLogErr :: (Kontrakcja m) => Text -> m a
 srvLogErr t = do
   logInfo "Partner API" $ object [ "error_message" .= t]
   apiError $ serverError t
@@ -306,7 +305,7 @@ noUsrGrpErrPartner =
   srvLogErr $
   "The user group could not be retrieved for the given partner identifier."
 
-rqPrmErr :: (Kontrakcja m) => T.Text -> m a
+rqPrmErr :: (Kontrakcja m) => Text -> m a
 rqPrmErr t = do
   logInfo "Partner API" $ object [ "error_message" .= t]
   apiError . requestParameterParseError "json" $ t
@@ -338,7 +337,7 @@ resolveUserGroupID k = do
       -- Should it happen anyway it's actually OK, but let's log it.
       logInfo "Partner API" $ object
         [ "message" .= ("Identifier corresponds to a partner ID"
-                        <+> "as well as a user group ID" :: T.Text)
+                        <+> "as well as a user group ID" :: Text)
         , "identifier" .= k ]
       let mpID = ptUserGroupID partner
       unless (isJust mpID && (Just $ get ugID ug) == mpID) $ do

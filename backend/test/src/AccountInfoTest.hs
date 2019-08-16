@@ -4,6 +4,7 @@ import Happstack.Server
 import Network.URI
 import Test.Framework
 import Test.QuickCheck
+import qualified Data.Text as T
 
 import Context
 import DB hiding (query, update)
@@ -102,7 +103,7 @@ testEmailChangeFailsIfActionIDIsWrong = do
 
   req <- mkRequest POST [("password", inText "abc123")]
   EmailChangeRequest{..} <- newEmailChangeRequest (userid user) (Email "jim@bob.com")
-  (res, _ctx') <- runTestKontra req ctx $ handlePostChangeEmail (unsafeUserID 0) ecrToken 
+  (res, _ctx') <- runTestKontra req ctx $ handlePostChangeEmail (unsafeUserID 0) ecrToken
   assertBool "Response code is a redirect" (isRedirect LinkAccount res)
   assertBool "Response has a flash message" (hasFlashMessage res)
 
@@ -121,7 +122,7 @@ testEmailChangeFailsIfMagicHashIsWrong = do
   let wrongtoken = if ecrToken == unsafeMagicHash 123
                      then unsafeMagicHash 12345
                      else unsafeMagicHash 123
-  (res, _ctx') <- runTestKontra req ctx $ handlePostChangeEmail ecrUserID wrongtoken 
+  (res, _ctx') <- runTestKontra req ctx $ handlePostChangeEmail ecrUserID wrongtoken
   assertBool "Response code is a redirect" (isRedirect LinkAccount res)
   assertBool "Response has a flash message" (hasFlashMessage res)
 
@@ -171,10 +172,10 @@ testEmailChangeFailsIfPasswordWrong = do
   EmailChangeRequest{..} <- newEmailChangeRequest (userid user) (Email "jim@bob.com")
 
   Just _ <- addNewUser "Jim" "Bob" "jim@bob.com"
-  (res, _ctx') <- runTestKontra req ctx $ handlePostChangeEmail ecrUserID ecrToken 
+  (res, _ctx') <- runTestKontra req ctx $ handlePostChangeEmail ecrUserID ecrToken
   assertBool "Response code is a redirect" (isRedirect LinkAccount res)
   assertBool "Response has a flash message" (hasFlashMessage res)
-  
+
 testEmailChangeFailsIfNoPassword :: TestEnv ()
 testEmailChangeFailsIfNoPassword = do
   Just user' <- addNewUser "Bob" "Blue" "bob@blue.com"
@@ -188,7 +189,7 @@ testEmailChangeFailsIfNoPassword = do
   EmailChangeRequest{..} <- newEmailChangeRequest (userid user) (Email "jim@bob.com")
 
   Just _ <- addNewUser "Jim" "Bob" "jim@bob.com"
-  (res, _ctx') <- runTestKontra req ctx $ handlePostChangeEmail ecrUserID ecrToken 
+  (res, _ctx') <- runTestKontra req ctx $ handlePostChangeEmail ecrUserID ecrToken
   assertBool "Response code is a redirect" (isRedirect LinkAccount res)
 
 testGetUserInfoWithOAuthTokens :: TestEnv ()
@@ -224,7 +225,7 @@ testGetUserInfoWithOAuthTokens = do
              ++ ",oauth_signature=\"" ++ show apisecret ++ "&" ++ show s ++ "\""
 
   reqUserInfo <- mkRequestWithHeaders GET []
-                                      [("authorization", [authStr])]
+                                      [("authorization", [T.pack authStr])]
   (resUserInfo, _) <- runTestKontra reqUserInfo ctx $ apiCallGetUserProfile
   assertEqual "We should get a 200 response" 200 (rsCode resUserInfo)
 
@@ -244,6 +245,6 @@ testLoginUsingAPI = do
              ++ ",oauth_signature=\"" ++ show oaAPISecret ++ "&" ++ show oaAccessSecret ++ "\""
 
   reqLogin <- mkRequestWithHeaders POST [("redirect", inText "/newdocument")]
-                                      [("authorization", [authStr])]
+                                      [("authorization", [T.pack authStr])]
   (resLogin, _) <- runTestKontra reqLogin ctx $ apiCallLoginUser
   assertEqual "We should get a 303 response" 303 (rsCode resLogin)

@@ -1,6 +1,7 @@
 module UserStateTest (userStateTests) where
 
 import Test.Framework
+import qualified Data.Text as T
 
 import Chargeable.Model
 import DB
@@ -163,7 +164,7 @@ test_userUsageStatisticsByUser = do
          PartitionByMonth (iyears 2000)
   assertEqual "Document present in stats" 1 (length res)
   let [UserUsageStats{..}] = res
-  assertEqual "Email in statistics is correct" email uusUserEmail
+  assertEqual "Email in statistics is correct" email (T.pack uusUserEmail)
   assertEqual "Name in statistics is correct" "Emily Green" uusUserName
   assertEqual "Statistics are correct" 1 $ dsDocumentsClosed uusDocumentStats
 
@@ -182,8 +183,8 @@ test_userUsageStatisticsByCompany = do
          GetUsageStats (UsageStatsForUserGroup ugid)
          PartitionByDay (iyears 2000)
   assertEqual "Documents present in stats" 2 $ length res
-  let Just uus1 = find ((email1 ==) . uusUserEmail) res
-      Just uus2 = find ((email2 ==) . uusUserEmail) res
+  let Just uus1 = find ((email1 ==) . (T.pack . uusUserEmail)) res
+      Just uus2 = find ((email2 ==) . (T.pack . uusUserEmail)) res
   assertEqual "Statistics for Emily are correct"
     1 (dsDocumentsClosed . uusDocumentStats $ uus1)
   assertEqual "Statistics for Bob are correct"
@@ -201,7 +202,7 @@ test_userShareableLinkStatisticsByUser = do
   assertEqual "Document present in stats" 1 (length res)
   let [ShareableLinkUsageStats{..}] = res
   assertEqual "Template ID in statistics is correct" (fromDocumentID $ documentid template) slusTemplateId
-  assertEqual "Template title in statistics is correct" (documenttitle template) slusTemplateTitle
+  assertEqual "Template title in statistics is correct" (documenttitle template) (T.pack slusTemplateTitle)
   assertEqual "Statistics are correct" 1 $ dsDocumentsClosed slusDocumentStats
 
 test_userShareableLinkStatisticsByUserOnlyCorrectUser :: TestEnv ()
@@ -219,7 +220,7 @@ test_userShareableLinkStatisticsByUserOnlyCorrectUser = do
   assertEqual "Document present in stats" 1 (length res)
   let [ShareableLinkUsageStats{..}] = res
   assertEqual "Template ID in statistics is correct" (fromDocumentID $ documentid template) slusTemplateId
-  assertEqual "Template title in statistics is correct" (documenttitle template) slusTemplateTitle
+  assertEqual "Template title in statistics is correct" (documenttitle template) (T.pack slusTemplateTitle)
   assertEqual "Statistics are correct" 1 $ dsDocumentsClosed slusDocumentStats
 
 test_userShareableLinkStatisticsByGroup :: TestEnv ()
@@ -238,7 +239,7 @@ test_userShareableLinkStatisticsByGroup = do
   assertEqual "Document present in stats" 1 (length res)
   let [ShareableLinkUsageStats{..}] = res
   assertEqual "Template ID in statistics is correct" (fromDocumentID $ documentid template) slusTemplateId
-  assertEqual "Template title in statistics is correct" (documenttitle template) slusTemplateTitle
+  assertEqual "Template title in statistics is correct" (documenttitle template) (T.pack slusTemplateTitle)
   assertEqual "Statistics are correct" 2 $ dsDocumentsClosed slusDocumentStats
 
 test_setUserCompany :: TestEnv ()

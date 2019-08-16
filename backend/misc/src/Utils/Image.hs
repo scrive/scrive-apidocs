@@ -1,9 +1,11 @@
 module Utils.Image (
     imgEncodeRFC2397
+  , imgEncodeRFC2397ToText
   , imgMimeType
   ) where
 
 import qualified Data.ByteString as B
+import qualified Data.Text.Encoding as TE
 
 import qualified Data.ByteString.RFC2397 as RFC2397
 
@@ -11,6 +13,10 @@ import qualified Data.ByteString.RFC2397 as RFC2397
 -- with 'imgMimeType' and if 'Nothing' is returned, we simply don't include it.
 imgEncodeRFC2397 :: B.ByteString -> B.ByteString
 imgEncodeRFC2397 img = RFC2397.encode (fromMaybe B.empty $ imgMimeType img) img
+
+-- Encode image data to RFC2397 data URI text
+imgEncodeRFC2397ToText :: B.ByteString -> Text
+imgEncodeRFC2397ToText = TE.decodeLatin1 . imgEncodeRFC2397
 
 -- | Identify content type of supplied image data.
 imgMimeType :: B.ByteString -> Maybe B.ByteString

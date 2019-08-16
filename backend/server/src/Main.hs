@@ -13,6 +13,7 @@ import Network.HostName
 import System.Console.CmdArgs hiding (def)
 import System.Environment
 import qualified Control.Exception.Lifted as E
+import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Data.Traversable as F
 
@@ -86,7 +87,7 @@ main = withCurlDo $ do
     withPostgreSQL (unConnectionSource . simpleSource $ connSettings []) $ do
       checkDatabase extrasOptions kontraComposites kontraDomains kontraTables
       unless (readOnlyDatabase appConf) $ do
-        dbUpdate $ SetMainDomainURL $ mainDomainUrl appConf
+        dbUpdate $ SetMainDomainURL $ T.unpack $ mainDomainUrl appConf
 
     appGlobals <- do
       templates <- liftBase $
@@ -104,7 +105,7 @@ main = withCurlDo $ do
         , cryptorng          = rng
         , connsource         = pool
         , runlogger          = runLogger
-        , hostname           = hostname
+        , hostname           = T.pack hostname
         , amazons3env        = amazonEnv
         , pdftoolslambdaenv  = lambdaEnv
         }

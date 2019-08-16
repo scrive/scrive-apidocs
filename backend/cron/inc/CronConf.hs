@@ -4,7 +4,6 @@ module CronConf (
   ) where
 
 import Data.Unjson
-import qualified Data.Text as T
 
 import Database.Redis.Configuration
 import EID.CGI.GRP.Config
@@ -26,22 +25,22 @@ data CronConf = CronConf {
                                                    -- secret key) (lazy as the
                                                    -- field is undefined in
                                                    -- tests)
-  , cronDBConfig                   :: !T.Text               -- ^ Postgresql configuration.
+  , cronDBConfig                   :: !Text               -- ^ Postgresql configuration.
   , cronMaxDBConnections           :: !Int                  -- ^ Limit of db connections.
   , cronRedisCacheConfig           :: !(Maybe RedisConfig)  -- ^ Redis configuration.
   , cronLocalFileCacheSize         :: !Int                  -- ^ Size of local cache for files.
   , cronLogConfig                  :: !LogConfig            -- ^ Logging configuration.
   , cronGuardTimeConf              :: !GuardTimeConf        -- ^ GuardTime configuration.
   , cronCgiGrpConfig               :: !(Maybe CgiGrpConfig) -- ^ CGI GRP (E-ID) configuration.
-  , cronMixpanelToken              :: !(Maybe String)       -- ^ For Mixpanel integration.
-  , cronNtpServers                 :: ![String]
+  , cronMixpanelToken              :: !(Maybe Text)       -- ^ For Mixpanel integration.
+  , cronNtpServers                 :: ![Text]
     -- ^ List of NTP servers to contact to get an estimate of host clock
     -- error.
   , cronSalesforceConf             :: !(Maybe SalesforceConf) -- ^ Salesforce configuration.
   , cronPlanhatConf                :: !(Maybe PlanhatConf)
     -- ^ To enable data push to Planhat
   , cronMonitoringConf             :: !(Maybe MonitoringConf)
-  , cronMailNoreplyAddress         :: String               -- ^ Noreply address used when sending email
+  , cronMailNoreplyAddress         :: Text               -- ^ Noreply address used when sending email
     -- ^ Configure number of running jobs for individual Consumers
   , cronConsumerCronMaxJobs        :: !Int
   , cronConsumerSealingMaxJobs     :: !Int
@@ -135,4 +134,3 @@ unjsonCronConf = objectOf $ pure CronConf
 
 instance Unjson CronConf where
   unjsonDef = unjsonCronConf
-

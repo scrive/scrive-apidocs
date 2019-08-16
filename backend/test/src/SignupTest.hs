@@ -57,7 +57,7 @@ testLoginEventRecordedWhenLoggedInAfterActivation = do
   (res, ctx3) <- activateAccount ctx1 uarUserID uarToken True "Andrzej" "Rybczak" "password_8866" "password_8866" Nothing
   assertAccountActivatedFor uarUserID "Andrzej" "Rybczak" res ctx3
 
-signupForAccount :: Context -> String -> TestEnv Context
+signupForAccount :: Context -> Text -> TestEnv Context
 signupForAccount ctx email = do
   req <- mkRequest POST [("email", inText email)]
   snd <$> (runTestKontra req ctx $ apiCallSignup)
@@ -78,7 +78,7 @@ assertActivationPageOK :: Context -> TestEnv ()
 assertActivationPageOK ctx = do
   assertEqual "User is not logged in" Nothing (get ctxmaybeuser ctx)
 
-activateAccount :: Context -> UserID -> MagicHash -> Bool -> String -> String -> String -> String -> Maybe String -> TestEnv (JSValue, Context)
+activateAccount :: Context -> UserID -> MagicHash -> Bool -> Text -> Text -> Text -> Text -> Maybe Text -> TestEnv (JSValue, Context)
 activateAccount ctx uid token tos fstname sndname password password2 phone = do
   let tosValue = if tos
                    then "on"
@@ -93,12 +93,12 @@ activateAccount ctx uid token tos fstname sndname password password2 phone = do
   (res, ctx') <- runTestKontra req ctx $ handleAccountSetupPost uid token AccountRequest
   return (res, ctx')
 
-assertAccountActivatedFor :: UserID -> String -> String -> JSValue -> Context -> TestEnv ()
+assertAccountActivatedFor :: UserID -> Text -> Text -> JSValue -> Context -> TestEnv ()
 assertAccountActivatedFor uid fstname sndname res ctx = do
   assertEqual "User is logged in" (Just uid) (fmap userid $ get ctxmaybeuser ctx)
   assertAccountActivated fstname sndname res ctx
 
-assertAccountActivated :: String -> String -> JSValue -> Context -> TestEnv ()
+assertAccountActivated :: Text -> Text -> JSValue -> Context -> TestEnv ()
 assertAccountActivated fstname sndname res ctx = do
   ((Just resultOk) :: Maybe Bool) <- withJSValue res $ fromJSValueField "ok"
   assertEqual "Account activation succeeded" True resultOk

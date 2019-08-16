@@ -6,7 +6,7 @@ import Data.Typeable
 import qualified Data.ByteString.Lazy as BSL
 
 data FileStorageException
-  = FileStorageException String
+  = FileStorageException Text
   deriving (Eq, Ord, Show, Typeable)
 
 instance Exception FileStorageException
@@ -21,14 +21,14 @@ instance Exception FileStorageException
 -- For tests, we can fake this storage and store files in memory.
 -- See FakeFileStorage.
 class Monad m => MonadFileStorage m where
-  saveNewContents :: String         -- ^ Object key (URL-encoded)
+  saveNewContents :: Text         -- ^ Object key (URL-encoded)
                   -> BSL.ByteString -- ^ Contents (needs to be encrypted first)
                   -> m ()
 
-  getSavedContents :: String           -- ^ Object key (URL-encoded)
+  getSavedContents :: Text           -- ^ Object key (URL-encoded)
                    -> m BSL.ByteString -- ^ File contents
 
-  deleteSavedContents :: String -- ^ Object key (URL-encoded)
+  deleteSavedContents :: Text -- ^ Object key (URL-encoded)
                       -> m ()
 
 instance {-# OVERLAPS #-} (MonadFileStorage m, MonadTrans t, Monad (t m))

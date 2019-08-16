@@ -37,7 +37,7 @@ data PdfToolsAction =
   | PdfToolsActionCleaning
   | PdfToolsActionAddImage
 
-pdfToolsActionName :: PdfToolsAction -> T.Text
+pdfToolsActionName :: PdfToolsAction -> Text
 pdfToolsActionName PdfToolsActionSealing = "seal"
 pdfToolsActionName PdfToolsActionCleaning = "clean"
 pdfToolsActionName PdfToolsActionAddImage = "addimage"
@@ -93,7 +93,7 @@ executePdfToolsLambdaActionCall lc action inputData = do
           ]
           (BSL.fromString $ JSON.encode $ JSON.runJSONGen $ do
             JSON.value "action" $ T.unpack $ pdfToolsActionName action
-            JSON.value "s3FileName" s3FileName
+            JSON.value "s3FileName" $ T.unpack s3FileName
           )
       case exitcode of
         ExitFailure msg -> do
@@ -179,17 +179,17 @@ parseAddImageResponse lc stdout = do
 
 sendDataFileToAmazon :: ( CryptoRNG m, MonadBase IO m, MonadCatch m
                         , MonadLog m, MonadThrow m )
-                     => AmazonS3Env -> BSL.ByteString -> m (Maybe String)
+                     => AmazonS3Env -> BSL.ByteString -> m (Maybe Text)
 sendDataFileToAmazon env content = do
   flip catch (\(_ :: FileStorageException) -> return Nothing) $ do
     randomPart <- randomString 10 ['a'..'z']
     timePart   <- filter isDigit <$> show <$> liftBase getCurrentTime
-    let name = randomPart ++ timePart
+    let name = T.pack $ randomPart <> timePart
     saveContentsToAmazon env name content
     return $ Just name
 
 getDataFromAmazon :: (MonadBase IO m, MonadCatch m, MonadLog m, MonadThrow m)
-                  => AmazonS3Env -> String -> m (Maybe BSL.ByteString)
+                  => AmazonS3Env -> Text -> m (Maybe BSL.ByteString)
 getDataFromAmazon env name =
   (Just <$> getContentsFromAmazon env name)
     `catch` (\(_ :: FileStorageException) -> return Nothing)

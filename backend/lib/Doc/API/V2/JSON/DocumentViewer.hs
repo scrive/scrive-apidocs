@@ -5,7 +5,6 @@ module Doc.API.V2.JSON.DocumentViewer (
 ) where
 
 import Data.Unjson
-import qualified Data.Text as T
 
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.JSON.Misc ()
@@ -37,7 +36,7 @@ dvSignatoryLinkID (SignatoryDocumentViewer sid) = Just sid
 dvSignatoryLinkID (CompanyAdminDocumentViewer msid) = msid
 dvSignatoryLinkID _ = Nothing
 
-dvRole ::DocumentViewer -> T.Text
+dvRole ::DocumentViewer -> Text
 dvRole (SignatoryDocumentViewer _) = "signatory"
 dvRole (CompanyAdminDocumentViewer _) = "company_admin"
 dvRole (CompanySharedDocumentViewer) = "company_shared"

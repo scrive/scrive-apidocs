@@ -5,8 +5,6 @@ module ServerUtils.ServerUtils (
   ) where
 
 import Control.Monad.Trans
-import Data.Char (toLower)
-import Data.List.Split (splitOn)
 import Happstack.Server hiding (dir, simpleHTTP)
 import Log as Log
 import System.Directory (getCurrentDirectory)
@@ -20,6 +18,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.UTF8 as BS (fromString)
+import qualified Data.Text as T
 import qualified Happstack.Server.Response as Web
 import qualified Text.JSON.Gen as J
 
@@ -52,12 +51,12 @@ handleSerializeImage :: Kontrakcja m => m Response
 handleSerializeImage = do
   fileinput <- getDataFn' (lookInput "logo")
   acceptedExtensionsString <- guardJustM $ getField "extensions"
-  let acceptedExtensions = splitOn "," acceptedExtensionsString
+  let acceptedExtensions = T.splitOn "," acceptedExtensionsString
   case fileinput of
     Nothing -> badRequest' "Missing file"
     Just (Input _ Nothing _) -> badRequest' "Missing file"
     Just (Input contentspec (Just filename) _contentType) -> do
-      let hasExtension ext = ("." ++ ext) `isSuffixOf` map toLower filename
+      let hasExtension ext = ("." <> ext) `T.isSuffixOf` T.toLower (T.pack filename)
       if any hasExtension acceptedExtensions then do
         content <- case contentspec of
           Left filepath -> liftIO $ BS.readFile filepath
@@ -73,22 +72,23 @@ handleSerializeImage = do
 -- Filename is the basename of the file, brandedImage will find it in frontend/app/img/
 brandedImage :: Kontrakcja m =>  m Response
 brandedImage = do
-    color <- fmap (take 12) $ guardJustM $ getField "color"
-    file <- fmap (take 50) $ guardJustM $ getField "file"
+    color <- fmap (T.take 12) $ guardJustM $ getField "color"
+    file <- fmap (T.take 50) $ guardJustM $ getField "file"
     img <- brandImage file color
     ok
       . setHeaderBS "Cache-Control" "max-age=604800"
       $ toResponseBS "image/png" img
 
-brandImage :: Kontrakcja m => String -> String -> m BSL.ByteString
+brandImage :: Kontrakcja m => Text -> Text -> m BSL.ByteString
 brandImage file color = do
     cwd <- liftIO getCurrentDirectory
     let imgDir = cwd </> "frontend/app/img"
-    fpath <- guardJust $ secureAbsNormPath imgDir file
+    fpath <- guardJust $ secureAbsNormPath imgDir $ T.unpack file
     (procResult, out, _) <- liftIO $ readProcessWithExitCode "convert" [fpath
                                                   , "-colorspace", "Gray"
                                                   , "-channel", "RGB"
-                                                  , "+level-colors", color ++ ",white"
+                                                  , "+level-colors"
+                                                  , (T.unpack color) <> ",white"
                                                   , "-"] ""
     case procResult of
       ExitFailure msg -> do

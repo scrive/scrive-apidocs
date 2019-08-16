@@ -16,6 +16,7 @@ import Data.Word
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 import Numeric
+import qualified Data.Text as T
 
 import Utils.Read
 
@@ -44,10 +45,10 @@ instance Read MagicHash where
   readsPrec _ s = first MagicHash <$> readHex s
 
 instance FromReqURI MagicHash where
-  fromReqURI = maybeRead
+  fromReqURI = maybeRead . T.pack
 
 instance Unjson MagicHash where
-  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse access token")  return) . maybeRead) show  unjsonDef
+  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse access token")  return) . maybeRead . T.pack) show unjsonDef
 
 instance FromSQL MagicHash where
   type PQBase MagicHash = PQBase Int64

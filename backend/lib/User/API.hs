@@ -217,7 +217,7 @@ setup2FA = V2.api $ do
          then do
            let email = useremail . userinfo $ user
            url      <- get ctxDomainUrl <$> getContext
-           qrCode   <- liftIO $ makeQRFromURLEmailAndKey url email key
+           qrCode   <- liftIO $ makeQRFromURLEmailAndKey (T.unpack url) email key
            return . V2.Ok <$> runJSONGen $ do
              value "twofactor_active" False
              value "qr_code" (BS.unpack . Base64.encode . unQRCode $ qrCode)
@@ -305,18 +305,29 @@ apiCallLoginUser = api $ do
   logUserToContext $ Just user
   sendRedirect $ LinkExternal redirectUrl
 
-apiCallUpdateUserProfile :: Kontrakcja m => m Response
+apiCallUpdateUserProfile :: forall m . Kontrakcja m => m Response
 apiCallUpdateUserProfile = api $ do
   (user, _ , _) <- getAPIUser APIPersonal
   ctx <- getContext
 
   -- allow empty strings through validation
-  let getParameter name validation prevValue = do
-        mx <- apiV2ParameterOptional $ ApiV2ParameterTextWithValidation name $ emptyOK validation
-        return $ fromMaybe prevValue mx
+  let
+    getParameter
+      :: Text
+      -> (Text -> InputValidation.Result Text)
+      -> Text
+      -> m Text
+    getParameter name validation prevValue = do
+      mx <- apiV2ParameterOptional $ ApiV2ParameterTextWithValidation name $ emptyOK validation
+      return $ fromMaybe prevValue mx
 
-      getUserParameter n v prevValue =
-        T.unpack <$> (getParameter n v $ T.pack $ prevValue $ userinfo user)
+    getUserParameter
+      :: Text
+      -> (Text -> InputValidation.Result Text)
+      -> (UserInfo -> Text)
+      -> m Text
+    getUserParameter n v getPrevValue =
+      getParameter n v $ getPrevValue $ userinfo user
 
   companyposition <- getUserParameter "companyposition" asValidPosition usercompanyposition
   phone <- getUserParameter "phone" asValidPhone userphone
@@ -415,7 +426,7 @@ apiCallSignup = api $ do
   firstname       <- fromMaybe "" <$> getOptionalField asValidName "firstName"
   lastname        <- fromMaybe "" <$> getOptionalField asValidName "lastName"
   phone           <- fromMaybe "" <$> getOptionalField asValidPhone "phone"
-  companyName     <- T.pack <$> fromMaybe "" <$> getOptionalField asValidCompanyName "companyName"
+  companyName     <- fromMaybe "" <$> getOptionalField asValidCompanyName "companyName"
   companyPosition <- fromMaybe "" <$> getOptionalField asValidPosition "companyPosition"
   lang <- fromMaybe (get ctxlang ctx) <$> langFromCode <$> getField' "lang"
   switchLang lang
@@ -448,7 +459,7 @@ apiCallSignup = api $ do
           asyncLogEvent SetUserProps
                         [ UserIDProp $ userid user
                         , someProp "Account confirmation email" $ get ctxtime ctx
-                        , NameProp (firstname ++ " " ++ lastname)
+                        , NameProp (firstname <> " " <> lastname)
                         , FirstNameProp firstname
                         , LastNameProp lastname
                         , someProp "Confirmation link" $ show l ]
@@ -555,9 +566,9 @@ apiCallSetSalesforceCallbacks = do
       Nothing -> V2.apiError $ V2.serverError $ "No configuration for Salesforce integration"
       Just sc -> do
         code <- V2.apiV2ParameterObligatory (V2.ApiV2ParameterText "code")
-        mtoken <- flip runReaderT sc (getRefreshTokenFromCode $ T.unpack code)
+        mtoken <- flip runReaderT sc (getRefreshTokenFromCode code)
         case mtoken of
-          Left emsg -> V2.apiError $ V2.requestFailed $ T.pack emsg
+          Left emsg -> V2.apiError $ V2.requestFailed emsg
           Right token -> do
             dbUpdate $ UpdateUserCallbackScheme (userid user)
               (SalesforceScheme token)
@@ -605,7 +616,7 @@ apiCallDeleteUser = V2.api $ do
   ctx <- getContext
 
   email <- V2.apiV2ParameterObligatory $ V2.ApiV2ParameterText "email"
-  unless (unEmail (useremail (userinfo user)) == T.unpack email) $
+  unless (unEmail (useremail (userinfo user)) == email) $
     V2.apiError $ V2.requestParameterParseError "email"
       "the email provided does not match that of the user account"
 
@@ -677,7 +688,7 @@ apiCallGetTokenForPersonalCredentials uid = V2.api $ do
           maxMinutes = 30
           invalidMinsParamError = V2.apiError . V2.requestParameterInvalid "minutes"
             $ "The value given is larger than the allowed maximum of "
-            <> (T.pack $ show maxMinutes) <> " or below 1."
+            <> (showt maxMinutes) <> " or below 1."
 
 apiCallCheckPassword :: Kontrakcja m => m Response
 apiCallCheckPassword = api $ do
@@ -691,7 +702,7 @@ guardCanChangeUser adminuser otheruser = do
   unless (useriscompanyadmin adminuser && (usergroupid adminuser == usergroupid otheruser)) $ do
     throwM . SomeDBExtraException $ forbidden "Can't change this user details"
 
-apiCallUpdateOtherUserProfile  :: Kontrakcja m => UserID -> m Response
+apiCallUpdateOtherUserProfile  :: forall m . Kontrakcja m => UserID -> m Response
 apiCallUpdateOtherUserProfile affectedUserID = V2.api $ do
   ctx <- getContext
   (authorizingUser, _) <- V2.getAPIUserWithPrivileges [APIPersonal]
@@ -700,9 +711,15 @@ apiCallUpdateOtherUserProfile affectedUserID = V2.api $ do
     Nothing -> throwM . SomeDBExtraException $ forbidden "User doesn't exist"
     Just affectedUser -> do
       guardCanChangeUser authorizingUser affectedUser
-      let getUserParameter n v prevValue = do
-            mx <- apiV2ParameterOptional $ ApiV2ParameterTextWithValidation n $ emptyOK v
-            return $ maybe (prevValue $ userinfo affectedUser) T.unpack mx
+      let
+        getUserParameter
+          :: Text
+          -> (Text -> InputValidation.Result Text)
+          -> (UserInfo -> Text)
+          -> m Text
+        getUserParameter n v getPrevValue = do
+          mx <- apiV2ParameterOptional $ ApiV2ParameterTextWithValidation n $ emptyOK v
+          return $ fromMaybe (getPrevValue $ userinfo affectedUser) mx
 
       companyposition <- getUserParameter "companyposition" asValidPosition usercompanyposition
       phone <- getUserParameter "phone" asValidPhone userphone
@@ -737,7 +754,11 @@ apiCallChangeOtherUserEmail affectedUserID = V2.api $ do
     Nothing -> throwM . SomeDBExtraException $ forbidden "User doesn't exist"
     Just affectedUser -> do
       guardCanChangeUser authorizingUser affectedUser
-      newemail <- Email . T.unpack <$> (apiV2ParameterObligatory $ ApiV2ParameterTextWithValidation  "newemail" asValidEmail)
+      newemail <- Email <$>
+        (apiV2ParameterObligatory $
+          ApiV2ParameterTextWithValidation "newemail" $
+          asValidEmail
+        )
       mexistinguser <- dbQuery $ GetUserByEmail newemail
       case mexistinguser of
         Just _existinguser -> do

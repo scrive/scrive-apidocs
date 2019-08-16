@@ -11,6 +11,7 @@ import System.FilePath ((</>))
 import Test.Framework (Test)
 import Text.StringTemplates.Templates (TemplatesMonad, renderTemplate)
 import qualified Data.Set as Set
+import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 
 import DB (MonadDB)
@@ -46,7 +47,7 @@ dumpAllEvidenceTexts env = testThat "Generating all evidence texts" env $ do
     t <- runTemplatesT (lang, gts) $ theDocument >>= dumpEvidenceTexts now lang
     case (get teOutputDirectory env) of
       Just d  -> liftIO $ writeFile
-                 (d </> "evidence-texts-" ++ codeFromLang lang ++ ".html") t
+                 (d </> "evidence-texts-" <> (T.unpack $ codeFromLang lang) <> ".html") t
       Nothing -> liftIO $ evaluate t >> return ()
 
 dumpEvidenceTexts :: ( MonadDB m, MonadLog m, MonadThrow m, TemplatesMonad m)
@@ -71,8 +72,8 @@ dumpEvidenceTexts now lang doc' = do
                     , actorEmail = Just "author@example.com"
                     , actorSigLinkID = Just (signatorylinkid author_sl)
                     , actorAPIString = Nothing
-                    , actorWho = "the author (" ++
-                                 fromJust (actorEmail actor) ++ ")"
+                    , actorWho = "the author (" <>
+                                 fromJust (actorEmail actor) <> ")"
                     }
   let evidencetypes = ([minBound .. maxBound] :: [CurrentEvidenceEventType])
   let asl = defaultSignatoryLink
@@ -121,7 +122,7 @@ dumpEvidenceTexts now lang doc' = do
           , evClockErrorEstimate    = Nothing
           , evText                  = text
           , evType                  = Current evt
-          , evVersionID             = versionID
+          , evVersionID             = T.pack versionID
           , evEmail                 = actorEmail actor
           , evUserID                = actorUserID actor
           , evIP4                   = actorIP actor

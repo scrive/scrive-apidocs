@@ -16,8 +16,8 @@ import Log.Identifier
 import Mails.KontraInfoForMail
 
 data MailAddress = MailAddress {
-    fullname    :: String
-  , email       :: String
+    fullname    :: Text
+  , email       :: Text
   } deriving (Eq, Ord, Show)
 
 instance ToJSON MailAddress where
@@ -34,14 +34,14 @@ instance ToJSON MailAddress where
 -- as Scrive admin (fromMails Config).
 data Mail = Mail {
     to                :: [MailAddress]
-  , originator        :: String
+  , originator        :: Text
     -- ^ Name of service sending email. Default is Scrive.
-  , originatorEmail   :: String
+  , originatorEmail   :: Text
     -- ^ Adress of no reply email
   , replyTo           :: Maybe MailAddress
-  , title             :: String
-  , content           :: String
-  , attachments       :: [( String
+  , title             :: Text
+  , content           :: Text
+  , attachments       :: [( Text
                           , Either BS.ByteString FileID )]
     -- ^ List of attachments (name,content).
   , kontraInfoForMail :: Maybe KontraInfoForMail
@@ -49,7 +49,7 @@ data Mail = Mail {
   } deriving (Eq, Ord, Show)
 
 
-attachmentToJson :: (String, Either BS.ByteString FileID) -> Value
+attachmentToJson :: (Text, Either BS.ByteString FileID) -> Value
 attachmentToJson (name, acontent) = object [
     "name" .= name
   , "storage_type" .= case acontent of
@@ -78,8 +78,8 @@ emptyMail = Mail {
   , originator        = "Scrive"
   , originatorEmail   = "noreply@scrive.com"
   , replyTo           = Nothing
-  , title             = []
-  , content           = []
+  , title             = ""
+  , content           = ""
   , attachments       = []
   , kontraInfoForMail = Nothing
 }

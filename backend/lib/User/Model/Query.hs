@@ -20,7 +20,6 @@ module User.Model.Query (
 
 import Control.Monad.Catch
 import Control.Monad.State (MonadState)
-import Data.Char
 import Data.Int
 import qualified Data.Text as T
 
@@ -54,7 +53,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetUserByIDIncludeDeleted (Maybe
 data GetUserByEmail = GetUserByEmail Email
 instance (MonadDB m, MonadThrow m) => DBQuery m GetUserByEmail (Maybe User) where
   query (GetUserByEmail email) = do
-    runQuery_ $ selectUsersSQL <+> "WHERE deleted IS NULL AND email =" <?> map toLower (unEmail email)
+    runQuery_ $ selectUsersSQL <+> "WHERE deleted IS NULL AND email =" <?> T.toLower (unEmail email)
     fetchMaybe fetchUser
 
 data GetUserByTempLoginToken = GetUserByTempLoginToken UTCTime MagicHash
@@ -407,7 +406,7 @@ dateTrunc time statsPartition = "date_trunc('" <> granularity <> "', " <> time <
       PartitionByMonth -> "month"
 
 data GetUsersWithUserGroupNames = GetUsersWithUserGroupNames [UserFilter] [AscDesc UserOrderBy] (Int, Int)
-instance MonadDB m => DBQuery m GetUsersWithUserGroupNames [(User, T.Text)] where
+instance MonadDB m => DBQuery m GetUsersWithUserGroupNames [(User, Text)] where
   query (GetUsersWithUserGroupNames filters sorting (offset, limit)) = do
     runQuery_ $ smconcat [
         selectUsersWithUserGroupNamesSQL

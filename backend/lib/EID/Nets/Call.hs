@@ -59,17 +59,17 @@ netsCall NetsSignConfig{..} request response_parser tmpdirsuffix = do
   logInfo ("Succesfully parsed Nets" <> rqname <> " response") $ logObject_ rs
   return rs
 
-rqName :: X.XML -> T.Text
+rqName :: X.XML -> Text
 rqName xml = case X.render xml of
   [NodeElement el] -> nameLocalName . elementName $ el
   _ -> "SomeXMLElementName" -- fallback for unexpected XML, which does not have element as top node
 
-data NetsSignParsingError = NetsSignParsingError T.Text deriving (Show, Typeable)
+data NetsSignParsingError = NetsSignParsingError Text deriving (Show, Typeable)
 instance Exception NetsSignParsingError
 
 wrapTrustSignMessage
   :: TrustSignMessageUUID
-  -> T.Text
+  -> Text
   -> UTCTime
   -> X.XML
   -> X.XML
@@ -81,5 +81,5 @@ wrapTrustSignMessage tsmID merchantID now xml = do
     ] $ do
       X.element "MerchantID" merchantID
       X.element "Time" . T.pack . formatTimeISO $ now
-      X.element "MessageID" . T.pack . show $ tsmID
+      X.element "MessageID" . showt $ tsmID
       xml

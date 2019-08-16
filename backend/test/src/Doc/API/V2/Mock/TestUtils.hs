@@ -66,6 +66,7 @@ module Doc.API.V2.Mock.TestUtils (
 import Data.Aeson
 import Data.Unjson
 import Happstack.Server
+import qualified Data.Text as T
 
 import Context
 import Doc.API.V2.AesonTestUtils
@@ -87,14 +88,14 @@ import TestKontra
 
 -- | For conveniently doing a test API call that returns Document JSON.
 -- Uses `jsonTestRequestHelper` but parses the result using `mockDocFromValue`
-mockDocTestRequestHelper :: Context -> Method -> [(String, Input)]
+mockDocTestRequestHelper :: Context -> Method -> [(Text, Input)]
                          -> KontraTest Response -> Int -> TestEnv MockDoc
 mockDocTestRequestHelper c m p f i =
   mockDocFromValue <$> jsonTestRequestHelper c m p f i
 
 -- | For conveniently doing a test API call that returns a list of Document JSON.
 -- Uses `jsonTestRequestHelper` but parses the result using `mockDocFromValue`
-mockDocTestRequestHelperMultiple :: Context -> Method -> [(String, Input)]
+mockDocTestRequestHelperMultiple :: Context -> Method -> [(Text, Input)]
                          -> KontraTest Response -> Int -> TestEnv [MockDoc]
 mockDocTestRequestHelperMultiple c m p f i = do
   listJSON <- jsonTestRequestHelper c m p f i
@@ -105,7 +106,7 @@ mockDocFromValue :: Value -> MockDoc
 mockDocFromValue v = case parse mockDocUnjson v of
   (Result md []) -> md
   (Result _ e) -> unexpectedError $
-    "Could not parse MockDoc from JSON: " ++ (concat $ map show e)
+    "Could not parse MockDoc from JSON: " <> showt e
 
 mockDocToInput :: MockDoc -> Input
 mockDocToInput md = inTextBS $ unjsonToByteStringLazy mockDocUnjson md
@@ -135,10 +136,10 @@ cleanMockDocForComparison md =
 ----------------------------------------
 
 getMockDocId :: MockDoc -> DocumentID
-getMockDocId md = case (maybeRead $ mockDocId md) of
+getMockDocId md = case (maybeRead $ T.pack $ mockDocId md) of
   Just did -> did
   Nothing -> unexpectedError $
-    "Could not read DocumentID from MockDoc:\n" ++ show md
+    "Could not read DocumentID from MockDoc:\n" <> showt md
 
 getMockDocTitle :: MockDoc -> String
 getMockDocTitle = mockDocTitle
@@ -152,9 +153,9 @@ getMockDocStatus md = case mockDocStatus md of
   "timedout"       -> Timedout
   "rejected"       -> Rejected
   "document_error" -> DocumentError
-  _ -> unexpectedError $
+  _ -> unexpectedError $ T.pack $
        "Could not parse MockDoc status to DocumentStatus: "
-       ++ mockDocStatus md
+       <> mockDocStatus md
 
 getMockDocDaysToSign :: MockDoc -> Int
 getMockDocDaysToSign = mockDocDaysToSign
@@ -165,17 +166,17 @@ getMockDocHasFile = isJust . mockDocFile
 getMockDocFileName :: MockDoc -> String
 getMockDocFileName md = case (mockMainFileName <$> (mockDocFile md)) of
   Just n  -> n
-  Nothing -> unexpectedError $ "No mockDocFile for MockDoc:\n" ++ show md
+  Nothing -> unexpectedError $ "No mockDocFile for MockDoc:\n" <> showt md
 
 getMockDocFileId :: MockDoc -> FileID
-getMockDocFileId md = case maybeRead (mockMainFileId mockFile) of
+getMockDocFileId md = case maybeRead $ T.pack $ mockMainFileId mockFile of
   Just fid -> fid
   Nothing  -> unexpectedError $
     "getMockDocFileId could not read FileID using maybeRead, MockDoc was:\n"
-    ++ show md
+    <> showt md
   where mockFile = case mockDocFile md of
           Just f  -> f
-          Nothing -> unexpectedError $ "No mockDocFile for MockDoc:\n" ++ show md
+          Nothing -> unexpectedError $ "No mockDocFile for MockDoc:\n" <> showt md
 
 getMockDocAuthorAttachmentLength :: MockDoc -> Int
 getMockDocAuthorAttachmentLength md = length . mockDocAuthorAttachments $ md
@@ -198,12 +199,12 @@ getMockDocAuthorAttachmentHasFile i md =
 
 getMockDocAuthorAttachmentFileId :: Int -> MockDoc -> FileID
 getMockDocAuthorAttachmentFileId i md =
-  case maybeRead (mockAuthorAttachmentFileId maa) of
+  case maybeRead $ T.pack $ (mockAuthorAttachmentFileId maa) of
     Just fid -> fid
     Nothing  -> unexpectedError $
       "fileIDFromMockAuthorAttachment could not read FileID using maybeRead, "
-      ++ "MockAuthorAttachment was:\n"
-      ++ show maa
+      <> "MockAuthorAttachment was:\n"
+      <> showt maa
   where maa = mockDocAuthorAttachmentNumber i md
 
 getMockDocHasAutoRemindTime :: MockDoc -> Bool
@@ -213,7 +214,7 @@ getMockDocAccessToken :: MockDoc -> String
 getMockDocAccessToken md = case mockDocAccessToken md of
   Just t  -> t
   Nothing -> unexpectedError $
-    "No access token for MockDoc: " ++ show md
+    "No access token for MockDoc: " <> showt md
 
 getMockDocIsTemplate :: MockDoc -> Bool
 getMockDocIsTemplate = mockDocIsTemplate
@@ -232,19 +233,19 @@ getMockDocViewerRole = mockViewerRole . mockDocViewer
 
 getMockDocSigLinkId :: Int -> MockDoc -> SignatoryLinkID
 getMockDocSigLinkId i md =
-  case (maybeRead $ mockSigLinkId $ getMockSigLinkNumber i md) of
+  case (maybeRead $ T.pack $ mockSigLinkId $ getMockSigLinkNumber i md) of
   Just slid -> slid
   Nothing   -> unexpectedError $
-    "Could not read SignatoryLinkID for signatory " ++ show i
-    ++ "using `maybeRead` from MockDoc:\n" ++ show md
+    "Could not read SignatoryLinkID for signatory " <> showt i
+    <> "using `maybeRead` from MockDoc:\n" <> showt md
 
 getMockDocUserSigLinkId :: Int -> MockDoc -> SignatoryLinkID
 getMockDocUserSigLinkId userId md =
-  case (maybeRead $ mockSigLinkId $ getMockSigLinkFromUserId userId md) of
+  case (maybeRead $ T.pack $ mockSigLinkId $ getMockSigLinkFromUserId userId md) of
     Just slid -> slid
     Nothing   -> unexpectedError $
-      "Could not read SignatoryLinkID for user " ++ show userId
-      ++ "using `maybeRead` from MockDoc:\n" ++ show md
+      "Could not read SignatoryLinkID for user " <> showt userId
+      <> "using `maybeRead` from MockDoc:\n" <> showt md
 
 
 getMockDocSigLinkHasSigned :: Int -> MockDoc -> Bool
@@ -267,7 +268,7 @@ getMockDocSigLinkAuthToViewMethod i md =
     Nothing ->
       unexpectedError $
          "Could not parse AuthenticationToViewMethod from MockDoc:\n"
-         ++ show md
+         <> showt md
 
 getMockDocSigLinkAuthToViewArchivedMethod :: Int -> MockDoc -> AuthenticationToViewMethod
 getMockDocSigLinkAuthToViewArchivedMethod i md =
@@ -280,7 +281,7 @@ getMockDocSigLinkAuthToViewArchivedMethod i md =
     Nothing ->
       unexpectedError $
          "Could not parse AuthenticationToViewArchivedMethod from MockDoc:\n"
-         ++ show md
+         <> showt md
 
 authenticationToViewMethodFromString ::
   String -> Maybe AuthenticationToViewMethod
@@ -309,7 +310,7 @@ getMockDocSigLinkAuthToSignMethod i md =
     "sms_pin"   -> SMSPinAuthenticationToSign
     _ -> unexpectedError $
          "Could not parse AuthenticationToSignMethod from MockDoc:\n"
-         ++ show md
+         <> showt md
 
 setMockDocSigLinkAuthToSignMethod :: Int -> AuthenticationToSignMethod -> MockDoc
                                   -> MockDoc
@@ -341,7 +342,7 @@ getMockDocSigLinkAttachmentHasFile :: Int -> Int -> MockDoc -> Bool
 getMockDocSigLinkAttachmentHasFile si ai md
   | ai > length atts = unexpectedError $
                        "getMockDocSigLinkAttachmentHasFile could not get index "
-                       ++ show ai ++ " from MockDoc:\n" ++ show md
+                       <> showt ai <> " from MockDoc:\n" <> showt md
   | otherwise = isJust . mockSigAttachmentFileId $ atts !! (ai-1)
   where atts = mockSigLinkAttachments . getMockSigLinkNumber si $ md
 
@@ -388,7 +389,7 @@ addStandardSigLinksToMockDoc i md =
 
 addSigLinksToMockDoc :: [MockSigLink] -> MockDoc -> MockDoc
 addSigLinksToMockDoc newParties md =
-  md { mockDocParties = mockDocParties md ++ newParties }
+  md { mockDocParties = mockDocParties md <> newParties }
 
 -- * Internal use only!
 -----------------------
@@ -398,15 +399,15 @@ mockDocAuthorAttachmentNumber :: Int -> MockDoc -> MockAuthorAttachment
 mockDocAuthorAttachmentNumber num mockdoc
   | num > length (mockDocAuthorAttachments mockdoc) = unexpectedError $
     "mockDocAuthorAttachment could not get index "
-    ++ show num ++ " from MockDoc:\n" ++ show mockdoc
+    <> showt num <> " from MockDoc:\n" <> showt mockdoc
   | otherwise = (mockDocAuthorAttachments mockdoc) !! (num-1)
 
 -- | Internal use only
 getMockSigLinkNumber :: Int -> MockDoc -> MockSigLink
 getMockSigLinkNumber num mockdoc
   | num > length (mockDocParties  mockdoc) = unexpectedError $
-      "getMockSigLinkNumber could not get index " ++ show num
-      ++ " from MockDoc:\n" ++ show mockdoc
+      "getMockSigLinkNumber could not get index " <> showt num
+      <> " from MockDoc:\n" <> showt mockdoc
   | otherwise = (mockDocParties mockdoc) !! (num-1)
 
 -- | Internal use only
@@ -415,8 +416,8 @@ getMockSigLinkFromUserId userId mockDoc =
   case find (\link -> elem (show userId) (mockSigLinkUserId link)) (mockDocParties mockDoc) of
     Just link -> link
     Nothing -> unexpectedError $
-      "getMockSigLinkFromUserId could not find a link for user " ++ show userId
-      ++ " from MockDoc:\n" ++ show mockDoc
+      "getMockSigLinkFromUserId could not find a link for user " <> showt userId
+      <> " from MockDoc:\n" <> showt mockDoc
 
 -- | Internal use only
 getFieldValueOfTypeForSigNumberFromMockDoc :: Int -> String -> MockDoc -> String
@@ -424,8 +425,8 @@ getFieldValueOfTypeForSigNumberFromMockDoc i ft md =
   case getMockFieldsOfType ft . getMockSigLinkNumber i $ md of
     f:_ -> fromMaybe "" $ mockSigFieldValue f
     [] -> unexpectedError $
-      "Could not get field of type " ++ ft ++ " for signatory " ++ show i
-      ++ " from MockDoc:\n" ++ show md
+      "Could not get field of type " <> T.pack ft <> " for signatory " <> showt i
+      <> " from MockDoc:\n" <> showt md
 
 -- | Internal use only
 getMockFieldsOfType :: String -> MockSigLink -> [MockSigField]

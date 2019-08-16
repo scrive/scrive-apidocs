@@ -7,6 +7,7 @@ import Data.Int
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
+import qualified Data.Text as T
 
 newtype AttachmentID = AttachmentID Int64
   deriving (Eq, Ord)
@@ -17,11 +18,11 @@ instance PQFormat AttachmentID where
   pqFormat = pqFormat @Int64
 
 instance FromReqURI AttachmentID where
-  fromReqURI = maybeRead
+  fromReqURI = maybeRead . T.pack
 
 instance Unjson AttachmentID where
   unjsonDef = unjsonInvmapR
-              ((maybe (fail "Can't parse AttachmentID")  return) . maybeRead)
+              ((maybe (fail "Can't parse AttachmentID")  return) . maybeRead . T.pack)
               show  unjsonDef
 
 instance FromSQL AttachmentID where

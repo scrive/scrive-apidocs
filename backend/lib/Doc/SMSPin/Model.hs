@@ -10,6 +10,7 @@ import Crypto.RNG
 import Data.Int
 import Data.Time
 import Log
+import qualified Data.Text as T
 
 import DB
 import Doc.SignatoryLinkID
@@ -47,9 +48,9 @@ instance ToSQL SMSPinType where
   toSQL SMSPinToView         = toSQL (2::Int32)
   toSQL SMSPinToViewArchived = toSQL (3::Int32)
 
-data GetSignatoryPin = GetSignatoryPin SMSPinType SignatoryLinkID String
+data GetSignatoryPin = GetSignatoryPin SMSPinType SignatoryLinkID Text
 
-instance (MonadLog m, MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => DBQuery m GetSignatoryPin String where
+instance (MonadLog m, MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => DBQuery m GetSignatoryPin Text where
   query (GetSignatoryPin pintype slid phone) = do
     runQuery_ . sqlSelect "signatory_sms_pins" $ do
       sqlResult "pin"
@@ -75,7 +76,7 @@ instance (MonadLog m, MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => DBQu
             sqlWhereEq "signatory_link_id" slid
             sqlWhereEq "phone_number" phone
             sqlWhereEq "pin_type" pintype
-          return newPin
+          return $ T.pack newPin
       Nothing -> do
             newPin <- show <$> randomR (1000, 9999)
             logInfo "Generating new pin" $
@@ -88,7 +89,7 @@ instance (MonadLog m, MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => DBQu
               sqlSet "signatory_link_id" slid
               sqlSet "phone_number" phone
               sqlSet "pin_type" pintype
-            return newPin
+            return $ T.pack newPin
     where
       -- PIN is valid for 60 minutes from its generation.
       validityWindow :: NominalDiffTime

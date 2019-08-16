@@ -2,7 +2,7 @@
 {- |
    Defines the App level views.
 -}
-module AppView(
+module AppView (
                 renderFromBody
               , renderFromBodyWithFields
               , notFoundPage
@@ -35,6 +35,7 @@ import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import qualified Text.JSON as JSON
 import qualified Text.StringTemplates.Fields as F
 
@@ -43,6 +44,7 @@ import BrandedDomain.BrandedDomain
 import Branding.Adler32
 import DB
 import Kontra
+import Templates (renderTextTemplate)
 import ThirdPartyStats.Core
 import User.Lang
 import User.Model
@@ -59,7 +61,7 @@ import VersionTH
    Renders some page body xml into a complete reponse
 -}
 renderFromBody :: Kontrakcja m
-               => String
+               => Text
                -> m Response
 renderFromBody content = renderFromBodyWithFields content (return ())
 
@@ -68,7 +70,7 @@ renderFromBody content = renderFromBodyWithFields content (return ())
    Renders some page body xml into a complete reponse. It can take aditional fields to be passed to a template
 -}
 renderFromBodyWithFields :: Kontrakcja m
-               => String
+               => Text
                -> Fields m ()
                -> m Response
 renderFromBodyWithFields content fields = do
@@ -84,12 +86,12 @@ renderFromBodyWithFields content fields = do
 pageFromBody :: Kontrakcja m
              => Context
              -> AnalyticsData
-             -> String
+             -> Text
              -> Fields m ()
-             -> m String
+             -> m Text
 pageFromBody ctx ad bodytext fields = do
   mugidandui <- userGroupUIForPage
-  renderTemplate "wholePage" $ do
+  renderTextTemplate "wholePage" $ do
     F.value "content" bodytext
     standardPageFields ctx mugidandui ad
     F.valueM "httplink" $ getHttpHostpart
@@ -122,30 +124,35 @@ notFoundPage :: Kontrakcja m => m Response
 notFoundPage = pageWhereLanguageCanBeInUrl $ do
   ctx <- getContext
   ad  <- getAnalyticsData
-  simpleHtmlResponse =<< renderTemplate "notFound" (standardPageFields ctx Nothing ad)
+  content <- renderTextTemplate "notFound" (standardPageFields ctx Nothing ad)
+  simpleHtmlResponse content
 
 linkInvalidPage :: Kontrakcja m => m Response
 linkInvalidPage = pageWhereLanguageCanBeInUrl $ do
   ctx <- getContext
   ad  <- getAnalyticsData
-  simpleHtmlResponse =<< renderTemplate "linkInvalid" (standardPageFields ctx Nothing ad)
+  content <- renderTextTemplate "linkInvalid" (standardPageFields ctx Nothing ad)
+  simpleHtmlResponse content
 
 internalServerErrorPage :: Kontrakcja m => m Response
 internalServerErrorPage =  pageWhereLanguageCanBeInUrl $ do
   ctx <- getContext
   ad  <- getAnalyticsData
-  simpleHtmlResponse =<< renderTemplate "internalServerError" (standardPageFields ctx Nothing ad)
+  content <- renderTextTemplate "internalServerError" (standardPageFields ctx Nothing ad)
+  simpleHtmlResponse content
 
 pageWhereLanguageCanBeInUrl :: Kontrakcja m => m Response -> m Response
 pageWhereLanguageCanBeInUrl handler = do
-  language <- fmap langFromCode <$> rqPaths <$> askRq
-  case (language) of
+  request :: Request <- askRq
+  let requestPaths :: [Text] = T.pack <$> rqPaths request
+      languages :: [Maybe Lang] = langFromCode <$> requestPaths
+  case (languages) of
        (Just lang:_) -> switchLang lang >> handler
        _ -> handler
 
 unsupportedBrowserPage :: Kontrakcja m => m Response
 unsupportedBrowserPage = do
-  res <- renderTemplate "unsupportedBrowser" $ return ()
+  res <- renderTextTemplate "unsupportedBrowser" $ return ()
   simpleHtmlResponse res
 
 enableCookiesPage :: Kontrakcja m => m Response
@@ -153,16 +160,18 @@ enableCookiesPage = do
   rq <- askRq
   let cookies = rqCookies rq
       headers = rqHeaders rq
-      hostname = fst $ rqPeer rq
+      hostname = T.pack $ fst $ rqPeer rq
       ua = case Map.lookup "user-agent" headers of
-             Just (HeaderPair _ (x:_)) -> BS.toString x
+             Just (HeaderPair _ (x:_)) -> TE.decodeUtf8 x
              _ -> "<unknown>"
-  let cookieNames = show $ map fst cookies
-      mixpanel event = asyncLogEvent (NamedEvent event) [ SomeProp "cookies" $ PVString cookieNames
-                                                        , SomeProp "browser" $ PVString ua
-                                                        , SomeProp "host" $ PVString hostname
-                                                        ]
-                                     EventMixpanel
+  let cookieNames = showt $ map fst cookies
+      mixpanel event = asyncLogEvent
+        (NamedEvent event)
+        [ SomeProp "cookies" $ PVString cookieNames
+        , SomeProp "browser" $ PVString ua
+        , SomeProp "host" $ PVString hostname
+        ]
+        EventMixpanel
   logInfo "Current cookies" $ object [
       "cookies" .= map (second cookieToJson) cookies
     ]
@@ -172,7 +181,7 @@ enableCookiesPage = do
     [] -> do
       -- there are still no cookies, client probably disabled them
       mixpanel "Enable cookies page load"
-      content <- renderTemplate "enableCookies" $ do
+      content <- renderTextTemplate "enableCookies" $ do
         standardPageFields ctx Nothing ad
       simpleHtmlResponse content
     _ -> do
@@ -181,7 +190,10 @@ enableCookiesPage = do
       -- internalServerError is a happstack function, it's not our internalError
       -- this will not rollback the transaction
       let fields = standardPageFields ctx Nothing ad
-      internalServerError =<< pageWhereLanguageCanBeInUrl (simpleHtmlResponse =<< renderTemplate "sessionTimeOut" fields)
+      content <- renderTextTemplate "sessionTimeOut" fields
+      internalServerError =<<
+        pageWhereLanguageCanBeInUrl
+        (simpleHtmlResponse content)
   where
     cookieToJson Cookie{..} = object [
         "version"   .= cookieVersion
@@ -215,9 +227,9 @@ standardPageFields ctx mugidandui ad = do
       Just True -> "true"
       Just False -> "false"
   F.value "title" $ case emptyToNothing . strip . T.unpack =<< get uguiBrowserTitle . snd =<< mugidandui of
-                      Just ctitle -> ctitle ++ " - " ++
-                                     (get (bdBrowserTitle . ctxbrandeddomain) ctx)
-                      Nothing -> (get (bdBrowserTitle . ctxbrandeddomain) ctx)
+                      Just ctitle -> ctitle <> " - " <>
+                                     (T.unpack (get (bdBrowserTitle . ctxbrandeddomain) ctx))
+                      Nothing -> T.unpack (get (bdBrowserTitle . ctxbrandeddomain) ctx)
   entryPointFields ctx
 
 jsonContentType :: BS.ByteString
@@ -235,9 +247,9 @@ simpleUnjsonResponse unjson a = ok $ toResponseBS jsonContentType $ unjsonToByte
 {- |
    Changing our pages into reponses
 -}
-simpleHtmlResponse :: FilterMonad Response m => String -> m Response
+simpleHtmlResponse :: FilterMonad Response m => Text -> m Response
 simpleHtmlResponse s = ok $
-  toResponseBS (BS.fromString "text/html;charset=utf-8") $ BSL.fromString s
+  toResponseBS (BS.fromString "text/html;charset=utf-8") $ BSL.fromStrict $ TE.encodeUtf8 s
 
 respondWithPDF :: Bool -> BS.ByteString -> Response
 respondWithPDF = respondWithDownloadContents "application/pdf"
