@@ -12,7 +12,6 @@ import Database.PostgreSQL.Consumers
 import Database.PostgreSQL.PQTypes
 import Log
 import Network.HTTP.Client (Manager)
-import qualified Data.Text as T
 
 import Attachment.Model
 import CronConf
@@ -71,7 +70,7 @@ data JobType
   | TimeoutedEIDTransactionsPurge
   deriving (Eq, Ord, Show, Enum, Bounded)
 
-jobTypeMapper :: [(JobType, T.Text)]
+jobTypeMapper :: [(JobType, Text)]
 jobTypeMapper =
   map (id &&& jobTypeToText) [minBound..maxBound]
   where
@@ -102,10 +101,10 @@ jobTypeMapper =
       TimeoutedEIDTransactionsPurge        -> "timeouted_eid_transactions_purge"
 
 instance PQFormat JobType where
-  pqFormat = pqFormat @T.Text
+  pqFormat = pqFormat @Text
 
 instance FromSQL JobType where
-  type PQBase JobType = PQBase T.Text
+  type PQBase JobType = PQBase Text
   fromSQL mbase = do
     v <- fromSQL mbase
     case v `rlookup` jobTypeMapper of
@@ -116,7 +115,7 @@ instance FromSQL JobType where
       }
 
 instance ToSQL JobType where
-  type PQDest JobType = PQBase T.Text
+  type PQDest JobType = PQBase Text
   toSQL tt = toSQL . fromJust $ tt `lookup` jobTypeMapper
 
 ----------------------------------------
@@ -250,7 +249,7 @@ cronConsumer cronConf mgr mmixpanel mplanhat runCronEnv runDB maxRunningJobs = C
         runDBT (unConnectionSource $ connSource ci)
                defaultTransactionSettings $ do
         runSQL_ "SELECT current_database()::text"
-        dbName :: T.Text <- fetchOne runIdentity
+        dbName :: Text <- fetchOne runIdentity
         n <- dbUpdate $ CleanLogsOlderThanDays 30
         logInfo "Old logs removed" $ object [
             "database" .= dbName

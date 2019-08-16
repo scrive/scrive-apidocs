@@ -3,6 +3,7 @@ module User.Types.SignupMethod where
 import Data.Int (Int16)
 import Happstack.Server (FromReqURI(..))
 import qualified Control.Exception.Lifted as E
+import qualified Data.Text as T
 
 import DB
 
@@ -40,4 +41,4 @@ instance ToSQL SignupMethod where
   toSQL PartnerInvitation = toSQL (6::Int16)
 
 instance FromReqURI SignupMethod where
-  fromReqURI = maybeRead
+  fromReqURI = maybeRead . T.pack

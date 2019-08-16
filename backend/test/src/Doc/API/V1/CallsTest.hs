@@ -10,6 +10,7 @@ import Text.JSON.FromJSValue
 import Text.JSON.Gen
 import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Lazy.UTF8 as BS
+import qualified Data.Text as T
 
 import Context
 import DB
@@ -36,8 +37,8 @@ import Util.SignatoryLinkUtils
 
 apiV1CallsTests :: TestEnvSt -> Test
 apiV1CallsTests env = testGroup "CallsAPIV1" $
-  map (\d -> testThat (d ++ " updates correctly") env (void $ testUpdateDoc d)) jsonDocs
-  ++ [
+  map (\d -> testThat (d <> " updates correctly") env (void $ testUpdateDoc d)) jsonDocs
+  <> [
     testThat "settings auto reminder works" env testSetAutoReminder
   , testThat "change main file works" env testChangeMainFile
   , testThat "change main file moves placements" env testChangeMainFileMovePlacements
@@ -76,20 +77,20 @@ testUpdateDoc updateJsonPath = do
   let doc = head docs
 
   do
-     req <- mkRequest POST [("json_is_missing", inText cont)]
+     req <- mkRequest POST [("json_is_missing", inText $ T.pack cont)]
      (rsp,_) <- runTestKontra req ctx $ apiCallV1Update $ documentid doc
      assertEqual "Status code when json field is missing" 400 (rsCode rsp)
      return ()
 
   do
-     req <- mkRequest POST [ ("json", inText cont)
+     req <- mkRequest POST [ ("json", inText $ T.pack cont)
                            , ("objectversion", inText "3412342341")]
      (rsp,_) <- runTestKontra req ctx $ apiCallV1Update $ documentid doc
      assertEqual "Status code for invalid objectversion is 409" 409 (rsCode rsp)
      return ()
 
   do
-     req <- mkRequest POST [("json", inText cont)]
+     req <- mkRequest POST [("json", inText $ T.pack cont)]
      void $ runTestKontra req ctx $ apiCallV1Update $ documentid doc
      return ()
 
@@ -132,13 +133,13 @@ testOAuthCreateDoc = do
       }
     ) time
   let authStr = "oauth_signature_method=\"PLAINTEXT\""
-             ++ ",oauth_consumer_key=\"" ++ show apitoken ++ "\""
-             ++ ",oauth_token=\"" ++ show t ++"\""
-             ++ ",oauth_signature=\"" ++ show apisecret ++ "&" ++ show s ++ "\""
+             <> ",oauth_consumer_key=\"" <> show apitoken <> "\""
+             <> ",oauth_token=\"" <> show t <>"\""
+             <> ",oauth_signature=\"" <> show apisecret <> "&" <> show s <> "\""
   reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
                                       , ("file", inFile $ inTestDir "pdfs/simple.pdf")
                                       ]
-                                      [("authorization", [authStr])]
+                                      [("authorization", [T.pack authStr])]
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
   let rds = BS.toString $ rsBody resDoc
@@ -165,13 +166,13 @@ testPersonalAccessCredentialsCreateDoc = do
   Just (OAuthAuthorization{..}) <- dbQuery $ GetPersonalToken uid
 
   let authStr = "oauth_signature_method=\"PLAINTEXT\""
-             ++ ",oauth_consumer_key=\"" ++ show oaAPIToken ++ "\""
-             ++ ",oauth_token=\"" ++ show oaAccessToken ++"\""
-             ++ ",oauth_signature=\"" ++ show oaAPISecret ++ "&" ++ show oaAccessSecret ++ "\""
+             <> ",oauth_consumer_key=\"" <> show oaAPIToken <> "\""
+             <> ",oauth_token=\"" <> show oaAccessToken <>"\""
+             <> ",oauth_signature=\"" <> show oaAPISecret <> "&" <> show oaAccessSecret <> "\""
   reqDoc <- mkRequestWithHeaders POST [ ("expectedType", inText "text")
                                       , ("file", inFile $ inTestDir "pdfs/simple.pdf")
                                       ]
-                                      [("authorization", [authStr])]
+                                      [("authorization", [T.pack authStr])]
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
   assertEqual "We should get a 201 response" 201 (rsCode resDoc)
   let rds = BS.toString $ rsBody resDoc
@@ -205,9 +206,9 @@ testUpdateDocToSaved useOAuth = do
     Just (OAuthAuthorization{..}) <- dbQuery $ GetPersonalToken (userid user)
 
     return $ Just $ "oauth_signature_method=\"PLAINTEXT\""
-               ++ ",oauth_consumer_key=\"" ++ show oaAPIToken ++ "\""
-               ++ ",oauth_token=\"" ++ show oaAccessToken ++"\""
-               ++ ",oauth_signature=\"" ++ show oaAPISecret ++ "&" ++ show oaAccessSecret ++ "\""
+               <> ",oauth_consumer_key=\"" <> show oaAPIToken <> "\""
+               <> ",oauth_token=\"" <> show oaAccessToken <>"\""
+               <> ",oauth_signature=\"" <> show oaAPISecret <> "&" <> show oaAccessSecret <> "\""
   else return Nothing
 
   reqDocJSON <- mkRequest GET []
@@ -217,7 +218,7 @@ testUpdateDocToSaved useOAuth = do
     then mkRequestWithHeaders POST [ ("expectedType", inText "text")
                                    , ("file", inFile $ inTestDir "pdfs/simple.pdf")
                                    ]
-                                   [("authorization", [fromJust authStr])]
+                                   [("authorization", [T.pack $ fromJust authStr])]
     else mkRequest POST [ ("expectedType", inText "text")
                         , ("file", inFile $ inTestDir "pdfs/simple.pdf")]
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
@@ -237,7 +238,7 @@ testUpdateDocToSaved useOAuth = do
 
   -- Make document saved using update API call and check if it works
   (resDocSavedJSON, _) <- mkDocJSON doc{documentunsaveddraft = False}
-  reqDocSaved <- mkRequest POST [("json", inText $ encode resDocSavedJSON)]
+  reqDocSaved <- mkRequest POST [("json", inText $ T.pack $ encode resDocSavedJSON)]
   (resDocSaved, _) <- runTestKontra reqDocSaved ctx $ apiCallV1Update did
   assertEqual "Updating document did not return HTTP 200" 200 (rsCode resDocSaved)
   let rdss = BS.toString $ rsBody resDocSaved
@@ -250,7 +251,7 @@ testUpdateDocToSaved useOAuth = do
   -- Try to make document not saved using update API call and make sure it
   -- cannot happen
   (resUnsaveJSON, _) <- mkDocJSON docSaved{documentunsaveddraft = True}
-  reqUnsave <- mkRequest POST [("json", inText $ encode resUnsaveJSON)]
+  reqUnsave <- mkRequest POST [("json", inText $ T.pack $ encode resUnsaveJSON)]
   (resUnsave, _) <- runTestKontra reqUnsave ctx $ apiCallV1Update did
   assertEqual "Updating document did not return HTTP 200" 200 (rsCode resUnsave)
   let rus = BS.toString $ rsBody resUnsave
@@ -478,7 +479,7 @@ testChangeMainFileMovePlacementsWithNegativeIndex = do
       mapFirstInArray _func x = x
       addAnchoredField :: JSValue -> JSValue
       addAnchoredField (JSArray arr) =
-        JSArray (arr ++ [runJSONGen $ do
+        JSArray (arr <> [runJSONGen $ do
                             value "name" ("anchored-field" :: String)
                             value "type" ("custom" :: String)
                             value "value" ("value!!" :: String)
@@ -513,7 +514,7 @@ testChangeMainFileMovePlacementsWithNegativeIndex = do
 
   do
     liftIO $ putStrLn "POST update"
-    req' <- mkRequest POST [("json", inText (encode updatejs))]
+    req' <- mkRequest POST [("json", inText (T.pack $ encode updatejs))]
     (rsp,_) <- runTestKontra req' ctx $ apiCallV1Update $ docid
     assertEqual "update call suceeded" 200 (rsCode rsp)
     poss <- getPositionsFromResponse rsp
@@ -561,7 +562,7 @@ testChangeMainFileMovePlacements = do
       mapFirstInArray _func x = x
       addAnchoredField :: JSValue -> JSValue
       addAnchoredField (JSArray arr) =
-        JSArray (arr ++ [runJSONGen $ do
+        JSArray (arr <> [runJSONGen $ do
                             value "name" ("anchored-field" :: String)
                             value "type" ("custom" :: String)
                             value "value" ("value!!" :: String)
@@ -601,7 +602,7 @@ testChangeMainFileMovePlacements = do
 
   do
     liftIO $ putStrLn "POST update"
-    req' <- mkRequest POST [("json", inText (encode updatejs))]
+    req' <- mkRequest POST [("json", inText (T.pack $ encode updatejs))]
     (rsp,_) <- runTestKontra req' ctx $ apiCallV1Update $ docid
     assertEqual "update call suceeded" 200 (rsCode rsp)
     poss <- getPositionsFromResponse rsp

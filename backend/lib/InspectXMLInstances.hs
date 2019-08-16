@@ -16,6 +16,7 @@ import Text.JSON
 import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.UTF8 as BU
 import qualified Data.Set as S
+import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomainID
 import DB.TimeZoneName
@@ -42,7 +43,7 @@ import Utils.String
 
 instance (InspectXML a, Show a) => InspectXML [a] where
     inspectXML l =
-      "<ul>" ++ (concatMap (\s -> "<li>" ++ (inspectXML s) ++ "</li>") l) ++
+      "<ul>" <> (T.concat $ fmap (\s -> "<li>" <> (inspectXML s) <> "</li>") l) <>
       "</ul>"
 
 instance (InspectXML a, Show a) => InspectXML (Maybe a) where
@@ -50,13 +51,13 @@ instance (InspectXML a, Show a) => InspectXML (Maybe a) where
     inspectXML (Just x) = inspectXML x
 
 instance (InspectXML a, InspectXML b, Show a, Show b) => InspectXML (a, b) where
-    inspectXML (a, b) = "(" ++ inspectXML a ++ "," ++ inspectXML b ++ ")"
+    inspectXML (a, b) = "(" <> inspectXML a <> "," <> inspectXML b <> ")"
 
 instance ( InspectXML a, InspectXML b, InspectXML c
          , Show a, Show b, Show c ) =>
          InspectXML (a, b, c) where
   inspectXML (a, b, c) =
-    "(" ++ inspectXML a ++ "," ++ inspectXML b ++ "," ++ inspectXML c ++ ")"
+    "(" <> inspectXML a <> "," <> inspectXML b <> "," <> inspectXML c <> ")"
 
 $(deriveInspectXML ''MainFile)
 $(deriveInspectXML ''Document)
@@ -75,17 +76,17 @@ $(deriveInspectXML ''SignatoryConsentQuestion)
 $(deriveInspectXML ''SignatoryAccessToken)
 $(deriveInspectXML ''SignatoryAccessTokenReason)
 
-data ExtraDocument = ExtraDocument String
+newtype ExtraDocument = ExtraDocument String
   deriving Show
 
 instance InspectXML SignatoryField where
   inspectXML field =
-    show (fieldIdentity field) ++ " " ++ value ++ ", " ++
-    (if fieldIsObligatory field then "obligatory, " else "optional, ") ++
-    (if fieldShouldBeFilledBySender field then "filled by sender, " else "") ++
+    showt (fieldIdentity field) <> " " <> value <> ", " <>
+    (if fieldIsObligatory field then "obligatory, " else "optional, ") <>
+    (if fieldShouldBeFilledBySender field then "filled by sender, " else "") <>
     (if (fieldEditableBySignatory field == Just True)
-     then "editable by signatory, " else "") ++
-    "<br/>placements: " ++ inspectXML (fieldPlacements field)
+     then "editable by signatory, " else "") <>
+    "<br/>placements: " <> inspectXML (fieldPlacements field)
     where
       value = case (fieldType field) of
         SignatureFT -> inspectXML (fieldFileValue field)
@@ -98,33 +99,35 @@ instance InspectXML SignatoryField where
         _ -> inspectXML (fromJust (fieldTextValue field))
 
 instance InspectXML SignatoryConsentQuestionID where
-  inspectXML = show
+  inspectXML = showt
 
 -- this must be manually updated to match Document instance
 instance InspectXML ExtraDocument
-  where inspectXML (ExtraDocument callbackResult) =
-          table "DocumentExtra" $ concat [table "API Callback result" $ inspectXML callbackResult]
+ where
+  inspectXML (ExtraDocument callbackResult) =
+    table "DocumentExtra" $
+      T.concat [table "API Callback result" $ inspectXML callbackResult]
 
 --Link creating types
 instance InspectXML DocumentID where
     inspectXML x =
-      "<a href='/dave/document/" ++ show x ++ "/'>"  ++ show x ++ "</a>"
+      "<a href='/dave/document/" <> showt x <> "/'>"  <> showt x <> "</a>"
 instance InspectXML SignatoryLinkID where
-    inspectXML x =  "<a href='" ++ show x ++ "'>" ++ show x ++"</a>"
+    inspectXML x =  "<a href='" <> showt x <> "'>" <> showt x <>"</a>"
 instance InspectXML UserID where
-    inspectXML x =  "<a href='/dave/user/" ++ show x ++ "'>"  ++ show x ++"</a>"
+    inspectXML x =  "<a href='/dave/user/" <> showt x <> "'>"  <> showt x <>"</a>"
 instance InspectXML File where
     inspectXML file =
-      "<a href='" ++
-      (inspectXML $ LinkDaveFile (fileid file) (filename file)) ++
-      "'>" ++ show (fileid file) ++ "/" ++ inspectXML (filename file) ++
-      "</a> " ++ fileAccessLogged
+      "<a href='" <>
+      (inspectXML $ LinkDaveFile (fileid file) (filename file)) <>
+      "'>" <> showt (fileid file) <> "/" <> inspectXML (filename file) <>
+      "</a> " <> fileAccessLogged
 instance InspectXML FileID where
     inspectXML fileid =
-      "<a href='" ++ (inspectXML $ LinkDaveFile fileid (show fileid)) ++
-      "'>" ++ show fileid ++ "</a> " ++ fileAccessLogged
+      "<a href='" <> (inspectXML $ LinkDaveFile fileid (showt fileid)) <>
+      "'>" <> showt fileid <> "</a> " <> fileAccessLogged
 
-fileAccessLogged :: String
+fileAccessLogged :: Text
 fileAccessLogged =
   "(<strong style='color: red'>ACCESS TO THIS FILE IS LOGGED</strong>)"
 
@@ -133,18 +136,19 @@ instance InspectXML (S.Set DocumentTag) where
 
 instance InspectXML BrandedDomainID where
     inspectXML x =
-      "<a href='/adminonly/brandeddomain/" ++ show x ++ "'>"  ++ show x ++
+      "<a href='/adminonly/brandeddomain/" <> showt x <> "'>"  <> showt x <>
       "</a>"
 
 instance {-# OVERLAPPING #-} InspectXML String where
-  inspectXML str = "\"" ++ escapeString str ++ "\""
+  inspectXML str = "\"" <> escapeString (showt str) <> "\""
 
 instance InspectXML B.ByteString where
   inspectXML = inspectXML . BU.toString
 
---Standard classes - we will just call show with some escaping
+--Standard classes - we will just call showt with some escaping
 instance InspectXML Bool where
 instance InspectXML Char where
+instance InspectXML Text where
 instance InspectXML Int where
 instance InspectXML Int16 where
 instance InspectXML Int32 where

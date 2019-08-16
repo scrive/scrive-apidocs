@@ -36,13 +36,14 @@ import FlashMessage
 import Kontra
 import KontraLink
 import Mails.SendMail (Mail, kontramail, kontramaillocal)
+import Templates (renderTextTemplate)
 import Theme.Model
 import User.Email
 import User.Model
 import Util.HasSomeUserInfo
 
-pageAcceptTOS :: TemplatesMonad m => Context -> m String
-pageAcceptTOS ctx = renderTemplate "pageAcceptTOS" $ entryPointFields ctx
+pageAcceptTOS :: TemplatesMonad m => Context -> m Text
+pageAcceptTOS ctx = renderTextTemplate "pageAcceptTOS" $ entryPointFields ctx
 
 resetPasswordMail :: (TemplatesMonad m,MonadDB m,MonadThrow m) => Context -> User -> KontraLink -> m Mail
 resetPasswordMail ctx user setpasslink = do
@@ -54,7 +55,7 @@ resetPasswordMail ctx user setpasslink = do
     F.value "ctxhostpart"  $ get ctxDomainUrl ctx
     brandingMailFields theme
 
-newUserMail :: (TemplatesMonad m,MonadDB m,MonadThrow m) => Context -> String -> KontraLink -> m Mail
+newUserMail :: (TemplatesMonad m,MonadDB m,MonadThrow m) => Context -> Text -> KontraLink -> m Mail
 newUserMail ctx emailaddress activatelink = do
   theme <- dbQuery $ GetTheme $ get (bdMailTheme . ctxbrandeddomain) ctx
   kontramail (get ctxmailnoreplyaddress ctx)
@@ -65,7 +66,7 @@ newUserMail ctx emailaddress activatelink = do
     brandingMailFields theme
 
 
-mailNewAccountCreatedByAdmin :: (HasLang a,MonadDB m,MonadThrow m, TemplatesMonad m) => Context -> a -> String -> KontraLink -> m Mail
+mailNewAccountCreatedByAdmin :: (HasLang a,MonadDB m,MonadThrow m, TemplatesMonad m) => Context -> a -> Text -> KontraLink -> m Mail
 mailNewAccountCreatedByAdmin ctx lang email setpasslink = do
   theme <- dbQuery $ GetTheme $ get (bdMailTheme . ctxbrandeddomain) ctx
   kontramaillocal (get ctxmailnoreplyaddress ctx) (get ctxbrandeddomain ctx)
@@ -91,9 +92,9 @@ mailEmailChangeRequest ctx requestingUser changedUser newemail link = do
 
 -------------------------------------------------------------------------------
 
-pageDoYouWantToChangeEmail :: TemplatesMonad m => Context -> Email -> m String
+pageDoYouWantToChangeEmail :: TemplatesMonad m => Context -> Email -> m Text
 pageDoYouWantToChangeEmail ctx newemail =
-  renderTemplate "pageDoYouWantToChangeEmail" $ do
+  renderTextTemplate "pageDoYouWantToChangeEmail" $ do
     F.value "newemail" $ unEmail newemail
     entryPointFields ctx
 

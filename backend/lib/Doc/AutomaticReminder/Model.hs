@@ -10,6 +10,7 @@ import Data.Int
 import Data.Typeable
 import Log
 import qualified Control.Exception.Lifted as E
+import qualified Data.Text as T
 
 import CronEnv
 import DB
@@ -84,7 +85,7 @@ data CreateAutomaticReminder = CreateAutomaticReminder DocumentID Int32 TimeZone
 instance (MonadDB m, MonadThrow m, MonadTime m, MonadMask m) => DBUpdate m CreateAutomaticReminder DocumentAutomaticReminder where
   update (CreateAutomaticReminder did days tzn) = withTimeZone defaultTimeZoneName $ do
     time <- currentTime
-    let timestamp = formatTime' "%F" time ++ " " ++ TimeZoneName.toString tzn
+    let timestamp = formatTime' "%F" time <> " " <> (T.unpack $ TimeZoneName.toString tzn)
     runQuery_ . sqlInsert "document_automatic_reminders" $ do
       -- send the reminder at 10:15 in the time zone of the document
       sqlSetCmd "expires" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"

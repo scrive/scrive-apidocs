@@ -1,4 +1,4 @@
-module User.UserControl(
+module User.UserControl (
     handleAccountGet
   , sendChangeToExistingEmailInternalWarningMail
   , handleGetChangeEmail
@@ -25,7 +25,7 @@ import Data.Time.Clock
 import Happstack.Server
 import Log
 import Text.JSON (JSValue(..))
-import Text.StringTemplates.Templates
+import qualified Data.Text as T
 import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 
@@ -45,6 +45,7 @@ import Mails.SendMail
 import MinutesTime
 import PasswordService.Control
 import Session.Model
+import Templates (renderTextTemplate, renderTextTemplate_)
 import User.Action
 import User.Email
 import User.EmailChangeRequest
@@ -64,7 +65,7 @@ import qualified API.V2 as V2
 handleAccountGet :: Kontrakcja m => m (InternalKontraResponse)
 handleAccountGet = withUser . withTosCheck $ \user -> do
   ctx <- getContext
-  pb <- renderTemplate "showAccount" $ do
+  pb <- renderTextTemplate "showAccount" $ do
     F.value "companyAdmin" $ useriscompanyadmin user
     F.value "apiLogEnabled" $ get ctxisapilogenabled ctx
     entryPointFields ctx
@@ -73,13 +74,13 @@ handleAccountGet = withUser . withTosCheck $ \user -> do
 sendChangeToExistingEmailInternalWarningMail :: Kontrakcja m => User -> Email -> m ()
 sendChangeToExistingEmailInternalWarningMail user newemail = do
   let securitymsg =
-        "User " ++ getEmail user ++ " (" ++ show (userid user) ++ ")"
-        ++ " has requested that their email be changed to " ++ unEmail newemail
-        ++ " but this email is already used by another account."
+        "User " <> getEmail user <> " (" <> (showt (userid user)) <> ")"
+        <> " has requested that their email be changed to " <> unEmail newemail
+        <> " but this email is already used by another account."
       content =
         securitymsg
-        ++ "Maybe they're trying to attempt to merge accounts and need help, "
-        ++ "or maybe they're a hacker trying to figure out who is and isn't a user."
+        <> "Maybe they're trying to attempt to merge accounts and need help, "
+        <> "or maybe they're a hacker trying to figure out who is and isn't a user."
   logInfo "User has requested that their email be changed, but new proposed email is already used by another account" $ object [
       logPair_ user
     , "new_email" .= unEmail newemail
@@ -96,7 +97,7 @@ handleGetChangeEmail uid hash = withUser $ \_ -> do
   mnewemail <- getEmailChangeRequestNewEmail uid hash
   case mnewemail of
     Just newemail ->
-      internalResponse <$> pageDoYouWantToChangeEmail ctx newemail
+      internalResponse <$> T.unpack <$> pageDoYouWantToChangeEmail ctx newemail
     Nothing -> do
       flashmessage <- flashMessageProblemWithEmailChange
       return $ internalResponseWithFlash flashmessage LinkAccount
@@ -170,7 +171,7 @@ getUsageStats statsPartition forWhom =
       UsageStatsForUser _uid ->
         return $ userStatsToJSON (timeFormat statsPartition) stats
       UsageStatsForUserGroup _ugid -> do
-        totalS <- renderTemplate_ "statsOrgTotal"
+        totalS <- renderTextTemplate_ "statsOrgTotal"
         return $ companyStatsToJSON (timeFormat statsPartition) totalS stats
 
 getShareableLinksStats :: Kontrakcja m
@@ -180,17 +181,16 @@ getShareableLinksStats statsPartition forWhom =
     stats <- dbQuery $ GetUsageStatsOnShareableLinks forWhom statsPartition interval
     case forWhom of
       UsageStatsForUser _uid -> do
-        allLinksS <- renderTemplate_ "statsShareableLinksTotal"
+        allLinksS <- renderTextTemplate_ "statsShareableLinksTotal"
         return $ shareableLinkStatsToJSON (timeFormat statsPartition) allLinksS stats
       UsageStatsForUserGroup _ugid -> do
-        totalS <- renderTemplate_ "statsOrgTotal"
+        totalS <- renderTextTemplate_ "statsOrgTotal"
         return $ shareableLinkStatsToJSON (timeFormat statsPartition) totalS stats
 
-
-timeFormat :: StatsPartition -> UTCTime -> String
+timeFormat :: StatsPartition -> UTCTime -> Text
 timeFormat statsPartition = case statsPartition of
-  PartitionByDay   -> formatTimeYMD
-  PartitionByMonth -> formatTime' "%Y-%m"
+  PartitionByDay   -> T.pack . formatTimeYMD
+  PartitionByMonth -> T.pack . (formatTime' "%Y-%m")
 {- |
     Checks for live documents owned by the user.
 -}
@@ -208,7 +208,7 @@ sendNewUserMail user = do
   scheduleEmailSendout $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
   return ()
 
-createNewUserByAdmin :: Kontrakcja m => String -> (String, String) -> (UserGroupID, Bool) -> Lang -> m (Maybe User)
+createNewUserByAdmin :: Kontrakcja m => Text -> (Text, Text) -> (UserGroupID, Bool) -> Lang -> m (Maybe User)
 createNewUserByAdmin email names usergroupandrole lg = do
     ctx <- getContext
     muser <- createUser (Email email) names usergroupandrole lg ByAdmin
@@ -222,7 +222,7 @@ createNewUserByAdmin email names usergroupandrole lg = do
          Nothing -> return muser
 
 handleAcceptTOSGet :: Kontrakcja m => m InternalKontraResponse
-handleAcceptTOSGet = withUser $ \_ -> internalResponse <$> (pageAcceptTOS =<< getContext)
+handleAcceptTOSGet = withUser $ \_ -> internalResponse <$> T.unpack <$> (pageAcceptTOS =<< getContext)
 
 handleAcceptTOSPost :: Kontrakcja m => m ()
 handleAcceptTOSPost = do
@@ -247,7 +247,7 @@ handleAccountSetupGet uid token sm = do
     (Just user, Nothing) -> do
       ug <-  dbQuery . UserGroupGetByUserID . userid $ user
       ad <- getAnalyticsData
-      content <- renderTemplate "accountSetupPage" $ do
+      content <- renderTextTemplate "accountSetupPage" $ do
         standardPageFields ctx (Just (get ugID ug, get ugUI ug)) ad
         F.value "fstname" $ getFirstName user
         F.value "sndname" $ getLastName user
@@ -302,7 +302,7 @@ handlePasswordReminderGet uid token = do
       switchLang (getLang user)
       ctx <- getContext
       ad <- getAnalyticsData
-      content <- renderTemplate "changePasswordPageWithBranding" $ do
+      content <- renderTextTemplate "changePasswordPageWithBranding" $ do
         F.value "linkchangepassword" $ show $ LinkPasswordReminder uid token
         standardPageFields ctx Nothing ad
       internalResponse <$> (simpleHtmlResponse content)
@@ -361,24 +361,24 @@ handleContactSales = do
   message <- getField' "message"
   plan    <- getField' "plan"
 
-  let uid = maybe "user not logged in" ((++) "user with id " . show . userid)
+  let uid = maybe "user not logged in" ((<>) "user with id " . showt . userid)
             (get ctxmaybeuser ctx)
-      domainInfo = " (from domain " ++ (get (bdUrl . ctxbrandeddomain) ctx) ++ " )"
-      content = "<p>Hi there!</p>" ++
-                "<p>Someone requested information from the payments form" ++
-                domainInfo ++
-                ".</p>" ++
-                "<p>Name: " ++ fname ++ " " ++ lname ++ "</p>" ++
-                "<p>Email: " ++ email ++ "</p>" ++
-                "<p>Message: \n" ++ message ++ "</p>" ++
-                "<p>Looking at plan: " ++ plan ++ "</p>" ++
-                "<p>" ++ uid ++ "</p>" ++
+      domainInfo = " (from domain " <> (get (bdUrl . ctxbrandeddomain) ctx) <> " )"
+      content = "<p>Hi there!</p>" <>
+                "<p>Someone requested information from the payments form" <>
+                domainInfo <>
+                ".</p>" <>
+                "<p>Name: " <> fname <> " " <> lname <> "</p>" <>
+                "<p>Email: " <> email <> "</p>" <>
+                "<p>Message: \n" <> message <> "</p>" <>
+                "<p>Looking at plan: " <> plan <> "</p>" <>
+                "<p>" <> uid <> "</p>" <>
                 "<p>Have a good one!</p>"
       contactEmail = "info@scrive.com"
       salesEmail = "leads@scrive.com"
       sendEmailTo emailAddress = scheduleEmailSendout $ emptyMail {
                                    to = [MailAddress { fullname = emailAddress, email = emailAddress }]
-                                 , title = "Contact request (" ++ plan ++ ")"
+                                 , title = "Contact request (" <> plan <> ")"
                                  , content = content
                                  }
   sendEmailTo contactEmail

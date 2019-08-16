@@ -21,7 +21,33 @@ import DB
 import Theme.Model
 import User.UserID
 
-fetchBrandedDomain :: (BrandedDomainID,Bool, String, String, String, ThemeID,ThemeID,ThemeID,ThemeID, String, BS.ByteString,String, String, String, String, String, String, String, String, String, String, String, String, String, String) -> BrandedDomain
+fetchBrandedDomain
+  :: ( BrandedDomainID,Bool
+     , Text
+     , Text
+     , Text
+     , ThemeID
+     , ThemeID
+     , ThemeID
+     , ThemeID
+     , Text
+     , BS.ByteString
+     , Text
+     , Text
+     , Text
+     , Text
+     , Text
+     , Text
+     , Text
+     , Text
+     , Text
+     , Text
+     , Text
+     , Text
+     , Text
+     , Text
+     )
+  -> BrandedDomain
 fetchBrandedDomain (xid, maindomain, url, smsoriginator, emailoriginator, mail_theme, signview_theme,service_theme,login_theme, browser_title,
                     favicon, participant_color_1, participant_color_2, participant_color_3, participant_color_4, participant_color_5, participant_color_6, draft_color, cancelled_color,
                     initiated_color, sent_color, delivered_color, opened_color, reviewed_color, signed_color)
@@ -101,7 +127,7 @@ instance (MonadDB m,  MonadThrow m, MonadLog m) => DBQuery m GetMainBrandedDomai
     fetchOne fetchBrandedDomain
 
 
-data GetBrandedDomainByURL = GetBrandedDomainByURL String
+data GetBrandedDomainByURL = GetBrandedDomainByURL Text
 instance (MonadDB m, MonadThrow m, MonadLog m) => DBQuery m GetBrandedDomainByURL BrandedDomain where
   query (GetBrandedDomainByURL url) = do
     runQuery_ . sqlSelect "branded_domains" $ do

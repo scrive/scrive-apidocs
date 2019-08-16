@@ -6,23 +6,22 @@ module Doc.API.V2.JSON.AttachmentDetails (
 
 import Data.Functor.Invariant
 import Data.Unjson
-import qualified Data.Text as T
 
 import File.FileID (FileID)
 import Utils.TH
 
 data AttachmentDetails = AttachmentDetails {
-    aadName :: T.Text,
+    aadName :: Text,
     aadRequired :: Bool,
     aadAddToSealedFile :: Bool,
-    aadFileOrFileParam :: Either FileID T.Text
+    aadFileOrFileParam :: Either FileID Text
   }
 
 data AttachmentDetailsWithFileIDOrFileParam =
-    AttachmentDetailsWithFileID T.Text Bool Bool FileID
-  | AttachmentDetailsWithFileParam T.Text Bool Bool T.Text
+    AttachmentDetailsWithFileID Text Bool Bool FileID
+  | AttachmentDetailsWithFileParam Text Bool Bool Text
 
-nameFromAttachmentDetailsWithFileIDOrFileParam :: AttachmentDetailsWithFileIDOrFileParam -> T.Text
+nameFromAttachmentDetailsWithFileIDOrFileParam :: AttachmentDetailsWithFileIDOrFileParam -> Text
 nameFromAttachmentDetailsWithFileIDOrFileParam (AttachmentDetailsWithFileID n _ _ _) = n
 nameFromAttachmentDetailsWithFileIDOrFileParam (AttachmentDetailsWithFileParam n _ _ _) = n
 
@@ -38,7 +37,7 @@ fileIDFromAttachmentDetailsWithFileIDOrFileParam :: AttachmentDetailsWithFileIDO
 fileIDFromAttachmentDetailsWithFileIDOrFileParam (AttachmentDetailsWithFileID _ _ _ fid) = fid
 fileIDFromAttachmentDetailsWithFileIDOrFileParam _ = unexpectedError "Trying to fetch file id from file param"
 
-fileParamAttachmentDetailsWithFileIDOrFileParam :: AttachmentDetailsWithFileIDOrFileParam -> T.Text
+fileParamAttachmentDetailsWithFileIDOrFileParam :: AttachmentDetailsWithFileIDOrFileParam -> Text
 fileParamAttachmentDetailsWithFileIDOrFileParam (AttachmentDetailsWithFileParam _ _ _ fp) = fp
 fileParamAttachmentDetailsWithFileIDOrFileParam _ = unexpectedError "Trying to fetch file param from file id"
 

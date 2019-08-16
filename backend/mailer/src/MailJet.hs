@@ -5,12 +5,12 @@ module MailJet (
 import Control.Concurrent.MVar
 import Control.Monad.Trans
 import Control.Monad.Trans.Reader
-import Data.String.Utils hiding (join, maybeRead)
 import Happstack.Server
 import Log
 import Text.JSON
 import Text.JSON.FromJSValue
 import qualified Data.ByteString.Lazy.UTF8 as BS
+import qualified Data.Text as T
 
 import DB
 import Log.Identifier
@@ -40,7 +40,7 @@ processMailJetEvent :: JSValue -> Mailer ()
 processMailJetEvent js = do
   withJSValue js $ do
     cid <- fromJSValueField "CustomID"
-    case (split "-" <$> cid) of
+    case (T.split (== '-') <$> cid) of
       Just [messageIdMID,messageIdToken] -> case (maybeRead messageIdMID, maybeRead messageIdToken) of
         (Just mid, Just token) -> localData [identifier mid] $ do
           mmail <- dbQuery $ GetEmail mid token

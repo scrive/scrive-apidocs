@@ -168,7 +168,7 @@ sessionExpirationDelay :: NominalDiffTime
 sessionExpirationDelay = 2 * (nominalDay / 24) -- 2 hours
 
 getSession :: (MonadDB m, MonadThrow m, MonadTime m)
-           => SessionID -> MagicHash -> String -> m (Maybe Session)
+           => SessionID -> MagicHash -> Text -> m (Maybe Session)
 getSession sid token domain = runMaybeT $ do
   Just ses@Session{..} <- dbQuery $ GetSession sid
   guard $ sesToken == token
@@ -277,7 +277,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateSession Bool where
 
 fetchSession
   :: ( SessionID, Maybe UserID, Maybe UserID
-     , UTCTime, MagicHash, MagicHash, String )
+     , UTCTime, MagicHash, MagicHash, Text )
   -> Session
 fetchSession ( sesID, sesUserID, sesPadUserID
              , sesExpires, sesToken, sesCSRFToken, sesDomain ) =

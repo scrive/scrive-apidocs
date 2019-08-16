@@ -10,6 +10,7 @@ import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
+import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
 import DB
@@ -20,7 +21,7 @@ sealSpecToLambdaSpec ::
   (MonadDB m, MonadLog m, MonadBase IO m) =>
   SealSpec -> m BSL.ByteString
 sealSpecToLambdaSpec spec = do
-  mfc <- liftBase $  BS.readFile $ input spec
+  mfc <- liftBase $  BS.readFile $ T.unpack $ input spec
   persons_ <- mapM sealSpecForPerson (persons spec)
   secretaries_ <- mapM sealSpecForPerson (secretaries spec)
   initiator_ <- mapM sealSpecForPerson (maybeToList $ initiator spec)
@@ -47,7 +48,7 @@ presealSpecToLambdaSpec ::
   (MonadDB m, MonadLog m, MonadBase IO m) =>
   PreSealSpec -> m BSL.ByteString
 presealSpecToLambdaSpec spec = do
-  mfc <- liftBase $  BS.readFile $ pssInput spec
+  mfc <- liftBase $ BS.readFile $ T.unpack $ pssInput spec
   fields_ <- mapM sealSpecForField (pssFields spec)
   return $ Aeson.encode $ Aeson.object $ [
       "preseal" .= True
@@ -134,7 +135,7 @@ sealSpecForFile:: (MonadDB m, MonadLog m, MonadBase IO m) =>
                   FileDesc -> m Aeson.Value
 sealSpecForFile fd = do
   mfc <- case (fileInput fd) of
-           Just fn -> Just <$> liftBase (BS.readFile fn)
+           Just fn -> Just <$> liftBase (BS.readFile $ T.unpack fn)
            Nothing -> return Nothing
   return  $ Aeson.object $ [
       "title" .= fileTitle fd

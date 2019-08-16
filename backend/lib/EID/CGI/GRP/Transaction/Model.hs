@@ -15,7 +15,6 @@ import Control.Monad.State
 import Crypto.RNG
 import Data.Data
 import Data.Int
-import qualified Data.Text as T
 
 import DB
 import Doc.SignatoryLinkID
@@ -45,8 +44,8 @@ instance ToSQL CgiGrpTransactionType where
   toSQL CgiGrpSign = toSQL (2::Int16)
 
 data CgiGrpTransaction =
-    CgiGrpAuthTransaction !SignatoryLinkID  !T.Text !T.Text !SessionID
-  | CgiGrpSignTransaction !SignatoryLinkID  !T.Text !T.Text !T.Text !SessionID
+    CgiGrpAuthTransaction !SignatoryLinkID  !Text !Text !SessionID
+  | CgiGrpSignTransaction !SignatoryLinkID  !Text !Text !Text !SessionID
   deriving (Eq, Ord, Show)
 
 
@@ -58,15 +57,15 @@ cgiSignatoryLinkID :: CgiGrpTransaction -> SignatoryLinkID
 cgiSignatoryLinkID (CgiGrpAuthTransaction slid _ _ _) = slid
 cgiSignatoryLinkID (CgiGrpSignTransaction slid _ _ _ _) = slid
 
-cgiTextToBeSigned :: CgiGrpTransaction -> Maybe T.Text
+cgiTextToBeSigned :: CgiGrpTransaction -> Maybe Text
 cgiTextToBeSigned (CgiGrpAuthTransaction _ _ _ _) = Nothing
 cgiTextToBeSigned (CgiGrpSignTransaction _ tbs _ _ _) = Just tbs
 
-cgiTransactionID  :: CgiGrpTransaction -> T.Text
+cgiTransactionID  :: CgiGrpTransaction -> Text
 cgiTransactionID  (CgiGrpAuthTransaction _ tid _ _) = tid
 cgiTransactionID  (CgiGrpSignTransaction _ _ tid _ _) = tid
 
-cgiOrderRef :: CgiGrpTransaction -> T.Text
+cgiOrderRef :: CgiGrpTransaction -> Text
 cgiOrderRef (CgiGrpAuthTransaction _ _ orf _) = orf
 cgiOrderRef (CgiGrpSignTransaction _ _ _ orf _) = orf
 
@@ -124,7 +123,7 @@ instance (MonadDB m, MonadThrow m)
 
 ----------------------------------------
 
-fetchCgiGrpTransaction :: (CgiGrpTransactionType,SignatoryLinkID, Maybe T.Text, T.Text, T.Text, SessionID) -> CgiGrpTransaction
+fetchCgiGrpTransaction :: (CgiGrpTransactionType,SignatoryLinkID, Maybe Text, Text, Text, SessionID) -> CgiGrpTransaction
 fetchCgiGrpTransaction (cgitt, slid, mttbs, transaction_id, order_ref, session_id) =
     case cgitt of
       CgiGrpAuth -> CgiGrpAuthTransaction  slid transaction_id order_ref session_id

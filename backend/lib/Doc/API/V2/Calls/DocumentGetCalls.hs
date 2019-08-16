@@ -17,7 +17,6 @@ module Doc.API.V2.Calls.DocumentGetCalls (
 import Codec.Archive.Zip
 import Control.Monad.Base
 import Control.Monad.IO.Class (liftIO)
-import Data.Char
 import Data.Time
 import Data.Unjson
 import Happstack.Server.Types
@@ -133,23 +132,23 @@ docApiV2GetQRCode did slid = logDocument did . logSignatory slid . api $ do
       Nothing -> do
         mh <- dbUpdate $ NewSignatoryAccessToken slid SignatoryAccessTokenForQRCode Nothing
         return mh
-  qrCode <- liftIO $ encodeQR (mkSignLink domainURL magicHash)
+  qrCode <- liftIO $ encodeQR $ T.unpack (mkSignLink domainURL magicHash)
   return $ Ok qrCode
 
     where
       -- | Create a URL to be QR-encoded.
-      mkSignLink :: String -> MagicHash -> String
+      mkSignLink :: Text -> MagicHash -> Text
       mkSignLink domainURL mh =
         let relativeLink = LinkSignDocMagicHash did slid mh
-        in setProtocol domainURL <> show relativeLink
+        in T.pack $ setProtocol (T.unpack domainURL) <> show relativeLink
 
       -- | Sets the protocol part of the URL to 'scrive://'.
       setProtocol :: String -> String
       setProtocol url = case break (== ':') url of
         (_protocol, srv@(':':'/':'/':_)) ->
-          "scrive" ++ srv                -- http://scrive.com
+          "scrive" <> srv                -- http://scrive.com
         (_srv,      _null_or_port      ) ->
-          "scrive://" ++ url             -- scrive.com or localhost:8000
+          "scrive://" <> url             -- scrive.com or localhost:8000
 
 docApiV2History :: Kontrakcja m => DocumentID -> m Response
 docApiV2History did = logDocument did . api $ do
@@ -159,7 +158,7 @@ docApiV2History did = logDocument did . api $ do
   guardThatUserIsAuthorOrCompanyAdminOrDocumentIsShared user doc
   -- Parameters
   mLangCode <- apiV2ParameterOptional (ApiV2ParameterText "lang")
-  mLang <- case fmap (langFromCode . T.unpack) mLangCode of
+  mLang <- case fmap langFromCode mLangCode of
     Nothing -> return Nothing
     Just Nothing -> do
       apiError $ requestParameterInvalid "lang" "Not a valid or supported language code"
@@ -180,7 +179,7 @@ docApiV2EvidenceAttachments did = logDocument did . api $ withDocumentID did $ d
   let headers = mkHeaders [("Content-Type","application/json; charset=UTF-8")]
   return $ Ok $ Response 200 headers nullRsFlags (evidenceAttachmentsToJSONBS (documentid doc) eas) Nothing
 
-docApiV2FilesMain :: Kontrakcja m => DocumentID -> m Response
+docApiV2FilesMain :: forall m . Kontrakcja m => DocumentID -> m Response
 docApiV2FilesMain did = logDocument did . api . withDocAccess did $ \doc -> do
   download     <- apiV2ParameterDefault False (ApiV2ParameterBool "as_download")
   case documentstatus doc of
@@ -198,7 +197,9 @@ docApiV2FilesMain did = logDocument did . api . withDocAccess did $ \doc -> do
   where
     errorNonexistingSealedMainFile = apiError $ documentStateErrorWithCode 503 "The sealed PDF for the document is not ready yet, please wait and try again."
     errorNonexistingMainFile = apiError $ resourceNotFound "The document has no main file"
-    errorPresealDocumentFile err = apiError . serverError . T.pack $ err
+
+    errorPresealDocumentFile :: forall a . Text -> m a
+    errorPresealDocumentFile = apiError . serverError
 
 getDocBySignatoryLinkIdOrAccessToken :: Kontrakcja m =>
   DocumentID -> Maybe SignatoryLinkID -> Maybe MagicHash -> m Document
@@ -229,18 +230,18 @@ withDocFileAccess did fid action = withDocAccess did $ \_doc -> do
     then apiError $ resourceNotFound "No file with given fileid associated with document"
     else action
 
-docApiV2FilesGet :: Kontrakcja m => DocumentID -> FileID -> Maybe String -> m Response
+docApiV2FilesGet :: Kontrakcja m => DocumentID -> FileID -> Maybe Text -> m Response
 docApiV2FilesGet did fid mFilename = logDocumentAndFile did fid . api . withDocFileAccess did fid $ do
   download     <- apiV2ParameterDefault False (ApiV2ParameterBool "as_download")
   file         <- dbQuery $ GetFileByFileID fid
   fileContents <- getFileContents file
-  let filename' = map toLower $ fromMaybe (filename file) mFilename
-      contentType | isSuffixOf ".pdf" filename' = "application/pdf"
-                  | isSuffixOf ".png" filename' = "image/png"
-                  | isSuffixOf ".jpg" filename' = "image/jpeg"
+  let filename' = T.toLower $ fromMaybe (filename file) mFilename
+      contentType | T.isSuffixOf ".pdf" filename' = "application/pdf"
+                  | T.isSuffixOf ".png" filename' = "image/png"
+                  | T.isSuffixOf ".jpg" filename' = "image/jpeg"
                   | otherwise = "application/octet-stream"
       additionalDownloadHeader = if (download) then [("Content-Disposition", "attachment")] else []
-      headers = mkHeaders $ [("Content-Type", contentType)] ++ additionalDownloadHeader
+      headers = mkHeaders $ [("Content-Type", contentType)] <> additionalDownloadHeader
   return $ Ok $ Response 200 headers nullRsFlags (BSL.fromStrict fileContents) Nothing
 
 -- We return 503 if sealed file is still pending, else we return JSON with number of pages
@@ -295,7 +296,7 @@ docApiV2FilesFullInternal doc = do
           Nothing -> apiError $ documentStateErrorWithCode 503
             "The sealed PDF for the document is not ready yet, please wait and\
             \ try again"
-          Just file -> (mkFileName (documenttitle doc),) <$> getFileContents file
+          Just file -> (mkFileName (T.unpack $ documenttitle doc),) <$> getFileContents file
 
       _ -> do
         mFile <- fileFromMainFile (documentfile doc)
@@ -304,8 +305,8 @@ docApiV2FilesFullInternal doc = do
           Just file -> do
             presealFile <- presealDocumentFile doc file
             case presealFile of
-              Left err -> apiError $ serverError (T.pack err)
-              Right contents -> return (filename file, contents)
+              Left err -> apiError $ serverError err
+              Right contents -> return (T.unpack $ filename file, contents)
 
     let separateAuthorAttachments =
           filter (if isClosed doc
@@ -321,7 +322,7 @@ docApiV2FilesFullInternal doc = do
     authorAttachmentFiles <- forM separateAuthorAttachments $ \att -> do
       file     <- dbQuery $ GetFileByFileID $ authorattachmentfileid att
       contents <- getFileContents file
-      return (mkFileName (authorattachmentname att), contents)
+      return (mkFileName (T.unpack $ authorattachmentname att), contents)
 
     signatoryAttachmentFiles <-
       fmap catMaybes . forM separateSignatoryAttachments $ \att -> do
@@ -330,9 +331,9 @@ docApiV2FilesFullInternal doc = do
           Just fid -> do
             file     <- dbQuery $ GetFileByFileID fid
             contents <- getFileContents file
-            return $ Just (mkFileName (signatoryattachmentname att), contents)
+            return $ Just (mkFileName (T.unpack $ signatoryattachmentname att), contents)
 
-    return $ mainFile : authorAttachmentFiles ++ signatoryAttachmentFiles
+    return $ mainFile : authorAttachmentFiles <> signatoryAttachmentFiles
 
   where
     mkFileName name

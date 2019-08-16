@@ -141,7 +141,7 @@ handleDeliveredInvitation signlinkid = logSignatory signlinkid $ do
       return ()
     Nothing -> return ()
 
-handleUndeliveredSMSInvitation :: (CryptoRNG m, MonadCatch m, MonadLog m, DocumentMonad m, TemplatesMonad m, MonadBase IO m) => String -> BrandedDomain -> String -> SignatoryLinkID -> m ()
+handleUndeliveredSMSInvitation :: (CryptoRNG m, MonadCatch m, MonadLog m, DocumentMonad m, TemplatesMonad m, MonadBase IO m) => Text -> BrandedDomain -> Text -> SignatoryLinkID -> m ()
 handleUndeliveredSMSInvitation mailNoreplyAddress bd hostpart signlinkid = logSignatory signlinkid $ do
   logInfo_ "handleUndeliveredSMSInvitation: logging info"
   getSigLinkFor signlinkid <$> theDocument >>= \case
@@ -156,7 +156,7 @@ handleUndeliveredSMSInvitation mailNoreplyAddress bd hostpart signlinkid = logSi
       triggerAPICallbackIfThereIsOne =<< theDocument
     Nothing -> return ()
 
-smsUndeliveredInvitation :: (TemplatesMonad m,MonadDB m,MonadThrow m) => String -> BrandedDomain -> String -> Document -> SignatoryLink -> m Mail
+smsUndeliveredInvitation :: (TemplatesMonad m,MonadDB m,MonadThrow m) => Text -> BrandedDomain -> Text -> Document -> SignatoryLink -> m Mail
 smsUndeliveredInvitation mailNoreplyAddress bd hostpart doc signlink = do
   theme <- dbQuery $ GetTheme $ get bdMailTheme bd
   kontramail mailNoreplyAddress bd theme "invitationSMSUndelivered" $ do

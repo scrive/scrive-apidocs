@@ -10,6 +10,7 @@ import Data.Int
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
+import qualified Data.Text as T
 
 import Log.Identifier
 
@@ -22,7 +23,7 @@ instance PQFormat SignatoryConsentQuestionID where
   pqFormat = pqFormat @Int64
 
 instance FromReqURI SignatoryConsentQuestionID where
-  fromReqURI = maybeRead
+  fromReqURI = maybeRead . T.pack
 
 deriving newtype instance Binary SignatoryConsentQuestionID
 deriving newtype instance FromSQL SignatoryConsentQuestionID

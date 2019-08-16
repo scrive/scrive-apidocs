@@ -42,7 +42,7 @@ documentSealing
   -> PdfToolsLambdaEnv
   -> KontrakcjaGlobalTemplates
   -> ConnectionSourceM m
-  -> String
+  -> Text
   -> Int
   -> ConsumerConfig m DocumentID DocumentSealing
 documentSealing guardTimeConf pdfToolsLambdaEnv templates pool

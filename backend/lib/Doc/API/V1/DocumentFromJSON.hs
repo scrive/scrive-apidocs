@@ -231,7 +231,7 @@ instance FromJSValueWithUpdate SignatoryPersonalNumberField where
           (Just v) -> do
               return $ Just $ PersonalNumberField {
                   spnfID = (maybe (unsafeSignatoryFieldID 0) spnfID msf)
-                , spnfValue = strip v
+                , spnfValue = T.strip v
                 , spnfObligatory = obligatory
                 , spnfShouldBeFilledBySender = filledbysender
                 , spnfPlacements = placements
@@ -271,7 +271,7 @@ instance FromJSValueWithUpdate SignatoryEmailField where
           (Just v) -> do
               return $ Just $ EmailField {
                   sefID = (maybe (unsafeSignatoryFieldID 0) sefID msf)
-                , sefValue = strip v
+                , sefValue = T.strip v
                 , sefObligatory = obligatory
                 , sefShouldBeFilledBySender = filledbysender
                 , sefEditableBySignatory = False
@@ -316,7 +316,7 @@ instance FromJSValueWithUpdate SignatoryTextField where
                   stfID = (maybe (unsafeSignatoryFieldID 0) stfID msf)
                 , stfName = n
                 , stfFilledByAuthor = not $ null $ v
-                , stfValue = v
+                , stfValue = T.pack v
                 , stfObligatory = obligatory
                 , stfShouldBeFilledBySender = filledbysender
                 , stfPlacements = placements
@@ -435,9 +435,9 @@ instance FromJSValue Lang where
 
 instance FromJSValueWithUpdate Document where
     fromJSValueWithUpdate mdoc = do
-        title <- fromJSValueField "title"
-        (invitationmessage :: Maybe (Maybe String)) <-  fromJSValueField "invitationmessage"
-        (confirmationmessage :: Maybe (Maybe String)) <-  fromJSValueField "confirmationmessage"
+        (title :: Maybe Text) <- fromJSValueField "title"
+        (invitationmessage :: Maybe (Maybe Text)) <-  fromJSValueField "invitationmessage"
+        (confirmationmessage :: Maybe (Maybe Text)) <-  fromJSValueField "confirmationmessage"
         daystosign <- fromJSValueField "daystosign"
         daystoremind <- fromJSValueField "daystoremind"
         showheader <- fromJSValueField "showheader"
@@ -453,9 +453,11 @@ instance FromJSValueWithUpdate Document where
         mtimezone <- fromJSValueField "timezone"
         doctype <- fmap (\t -> if t then Template else Signable) <$> fromJSValueField "template"
         tags <- fromJSValueFieldCustom "tags" $ fromJSValueCustomMany  fromJSValue
-        (apicallbackurl :: Maybe (Maybe String)) <- fromJSValueField "apicallbackurl"
+        (apicallbackurl :: Maybe (Maybe Text)) <- fromJSValueField "apicallbackurl"
         saved <- fromJSValueField "saved"
-        authorattachments <- fromJSValueFieldCustom "authorattachments" $ fromJSValueCustomMany $ fmap (join . (fmap maybeRead)) $ (fromJSValueField "id")
+        authorattachments <- fromJSValueFieldCustom "authorattachments" $ fromJSValueCustomMany $
+          fmap (join . (fmap maybeRead)) $
+          (fromJSValueField "id")
         let daystosign'  = min 365 $ max 1 $ updateWithDefaultAndField 14 documentdaystosign daystosign
         let daystoremind' = min daystosign' <$> max 1 <$> updateWithDefaultAndField Nothing documentdaystoremind daystoremind
 
@@ -483,7 +485,7 @@ instance FromJSValueWithUpdate Document where
             documentauthorattachments = updateWithDefaultAndField [] documentauthorattachments (fmap (\fid -> AuthorAttachment "-" False True fid) <$> authorattachments),
             documenttags = updateWithDefaultAndField Set.empty documenttags (Set.fromList <$> tags),
             documenttype = updateWithDefaultAndField Signable documenttype doctype,
-            documentapiv1callbackurl = updateWithDefaultAndField Nothing documentapiv1callbackurl apicallbackurl,
+            documentapiv1callbackurl = updateWithDefaultAndField Nothing documentapiv1callbackurl (apicallbackurl),
             documentunsaveddraft = updateWithDefaultAndField False documentunsaveddraft (fmap not saved),
             documenttimezonename = updateWithDefaultAndField defaultTimeZoneName documenttimezonename (unsafeTimeZoneName <$> mtimezone)
           }
@@ -500,7 +502,7 @@ instance FromJSValueWithUpdate Document where
 
 -- Author attachment utils. Used only for set author attachment call.
 data AuthorAttachmentDetails = AuthorAttachmentDetails {
-    aadName :: T.Text,
+    aadName :: Text,
     aadRequired :: Bool,
     aadAddToSealedFile :: Bool
   } deriving (Eq,Show)

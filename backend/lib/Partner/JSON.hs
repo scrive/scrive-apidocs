@@ -12,7 +12,6 @@ module Partner.JSON (
   , updateUserGroupWithUserGroupForUpdate
   ) where
 
-import Data.Text (Text, pack)
 import Data.Unjson
 
 import InputValidation
@@ -21,13 +20,13 @@ import User.Model
 import UserGroup.Types
 
 data UserForUpdate = UserForUpdate {
-      ufuId :: String
+      ufuId :: Text
     , ufuEmail :: Email
-    , ufuFirstName :: String
-    , ufuLastName :: String
-    , ufuPersonalNumber :: String
-    , ufuPhone :: String
-    , ufuCompanyPosition :: String
+    , ufuFirstName :: Text
+    , ufuLastName :: Text
+    , ufuPersonalNumber :: Text
+    , ufuPhone :: Text
+    , ufuCompanyPosition :: Text
     , ufuLang :: Lang
     , ufuHasAcceptedTOS :: Bool
     }
@@ -86,7 +85,7 @@ unjsonUserForUpdate = objectOf $ pure defaultUserForUpdate
 userToUserForUpdate :: User -> UserForUpdate
 userToUserForUpdate user =
   UserForUpdate {
-    ufuId = show $ userid user
+    ufuId = showt $ userid user
   , ufuEmail = useremail . userinfo $ user
   , ufuFirstName = userfstname . userinfo $ user
   , ufuLastName = usersndname . userinfo $ user
@@ -162,7 +161,7 @@ userGroupToUserGroupForUpdate ugwp =
   let ug = ugwpUG ugwp
       ug_address = ugwpAddress ugwp
   in  UserGroupForUpdate
-        { uguUserGroupID      = pack . show $ get ugID ug
+        { uguUserGroupID      = showt $ get ugID ug
         , uguUserGroupName    = get ugName ug
         , uguUserGroupNumber  = get ugaCompanyNumber ug_address
         , uguUserGroupAddress = get ugaAddress ug_address
@@ -198,4 +197,7 @@ unjsonLang :: UnjsonDef Lang
 unjsonLang = unjsonInvmapR ((maybe (fail "value is not valid language code") return) . langFromCode) codeFromLang unjsonDef
 
 unjsonEmail :: UnjsonDef Email
-unjsonEmail = unjsonInvmapR ((maybe (fail "not valid email address") (return . Email)) . resultToMaybe . asValidEmail) unEmail unjsonDef
+unjsonEmail = unjsonInvmapR
+  ((maybe (fail "not valid email address") (return . Email)) .
+      resultToMaybe . asValidEmail)
+  unEmail unjsonDef

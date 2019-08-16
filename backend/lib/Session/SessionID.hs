@@ -12,6 +12,7 @@ newtype SessionID = SessionID Int64
   deriving (Eq, Ord)
 deriving newtype instance Read SessionID
 deriving newtype instance Show SessionID
+deriving newtype instance TextShow SessionID
 
 instance PQFormat SessionID where
   pqFormat = pqFormat @Int64

@@ -12,7 +12,8 @@ import Log as Log
 import System.Exit
 import System.Process.ByteString.Lazy (readProcessWithExitCode)
 import qualified Data.ByteString.Lazy as BSL
-import qualified Data.ByteString.Lazy.UTF8 as BSL
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 
 import BrandedDomain.BrandedDomain
 import Log.Utils
@@ -25,7 +26,7 @@ signviewBrandingCSS :: (MonadLog m,MonadIO m) => Theme -> m BSL.ByteString
 signviewBrandingCSS theme = do
     (code,stdout,stderr) <- liftIO $ do
       readProcessWithExitCode "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
-        (BSL.fromString $ signviewBrandingLess theme)
+        (BSL.fromStrict $ TE.encodeUtf8 $ signviewBrandingLess theme)
     case code of
       ExitSuccess -> do
           return $ stdout
@@ -35,17 +36,17 @@ signviewBrandingCSS theme = do
             ]
           return BSL.empty
 
-signviewBrandingLess :: Theme -> String
-signviewBrandingLess theme = unlines $
+signviewBrandingLess :: Theme -> Text
+signviewBrandingLess theme = T.unlines $
    [
     "@import 'branding/variables';", -- This is imported so we can use color variables from there
     "@import 'branding/elements';", -- This is imported so we can use some transform functions
     "@import 'runtime/signviewbranding/signviewbrandingdefaultvariables';" -- This will set default signview branding
       --Following settings will overwrite default values
    ]
-     ++
+     <>
    lessVariablesFromTheme theme
-     ++
+     <>
    [ -- Only last part will generate some css. Previews ones are just definitions
     "@import 'runtime/signviewbranding/signviewbranding';"
    ]
@@ -55,7 +56,7 @@ serviceBrandingCSS :: (MonadLog m,MonadIO m) => Theme -> m BSL.ByteString
 serviceBrandingCSS theme = do
     (code,stdout,stderr) <- liftIO $ do
       readProcessWithExitCode "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
-        (BSL.fromString $ serviceBrandingLess theme)
+        (BSL.fromStrict $ TE.encodeUtf8 $ serviceBrandingLess theme)
     case code of
       ExitSuccess -> do
           return $ stdout
@@ -65,17 +66,17 @@ serviceBrandingCSS theme = do
             ]
           return BSL.empty
 
-serviceBrandingLess :: Theme -> String
-serviceBrandingLess theme = unlines $
+serviceBrandingLess :: Theme -> Text
+serviceBrandingLess theme = T.unlines $
    [
     "@import 'branding/variables';", -- This is imported so we can use color variables from there
     "@import 'branding/elements';", -- This is imported so we can use some transform functions
     "@import 'runtime/servicebranding/servicebrandingdefaultvariables';" -- This will set default signview branding
       --Following settings will overwrite default values
    ]
-     ++
+     <>
    lessVariablesFromTheme theme
-     ++
+     <>
    [ -- Only last part will generate some css. Previews ones are just definitions
     "@import 'runtime/servicebranding/servicebranding';"
    ]
@@ -87,7 +88,7 @@ loginBrandingCSS :: (MonadLog m,MonadIO m) => Theme -> m BSL.ByteString
 loginBrandingCSS theme = do
     (code,stdout,stderr) <- liftIO $ do
       readProcessWithExitCode "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
-        (BSL.fromString $ loginBrandingLess theme)
+        (BSL.fromStrict $ TE.encodeUtf8 $ loginBrandingLess theme)
     case code of
       ExitSuccess -> do
           return $ stdout
@@ -97,8 +98,8 @@ loginBrandingCSS theme = do
             ]
           return BSL.empty
 
-loginBrandingLess :: Theme -> String
-loginBrandingLess theme = unlines $
+loginBrandingLess :: Theme -> Text
+loginBrandingLess theme = T.unlines $
    [
     "@import 'branding/variables';", -- This is imported so we can use color variables from there
     "@import 'branding/elements';", -- This is imported so we can use some transform functions
@@ -106,9 +107,9 @@ loginBrandingLess theme = unlines $
     "@import 'runtime/loginbranding/loginbrandingdefaultvariables';" -- This will set default signview branding
     --Following settings will overwrite default values
    ]
-     ++
+     <>
    lessVariablesFromTheme theme
-     ++
+     <>
    [ -- Only last part will generate some css. Previews ones are just definitions
     "@import 'runtime/loginbranding/loginbranding';"
    ]
@@ -119,7 +120,7 @@ scriveBrandingCSS :: (MonadLog m,MonadIO m) => m BSL.ByteString
 scriveBrandingCSS = do
     (code,stdout,stderr) <- liftIO $ do
       readProcessWithExitCode "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
-        (BSL.fromString scriveBrandingLess)
+        (BSL.fromStrict $ TE.encodeUtf8 scriveBrandingLess)
     case code of
       ExitSuccess -> do
           return $ stdout
@@ -129,8 +130,8 @@ scriveBrandingCSS = do
             ]
           return BSL.empty
 
-scriveBrandingLess :: String
-scriveBrandingLess = unlines $
+scriveBrandingLess :: Text
+scriveBrandingLess = T.unlines $
    [
     "@import 'branding/variables';", -- This is imported so we can use color variables from there
     "@import 'branding/elements';", -- This is imported so we can use some transform functions
@@ -138,7 +139,7 @@ scriveBrandingLess = unlines $
     "@import 'runtime/scrivebranding/scrivebranding';"
    ]
 
-lessVariablesFromTheme :: Theme -> [String]
+lessVariablesFromTheme :: Theme -> [Text]
 lessVariablesFromTheme theme = [
     bcolor "brandcolor" $ themeBrandColor theme,
     bcolor "brandtextcolor" $ themeBrandTextColor theme,
@@ -157,7 +158,7 @@ domainBrandingCSS :: (MonadLog m,MonadIO m) => BrandedDomain -> m BSL.ByteString
 domainBrandingCSS bd = do
     (code,stdout,stderr) <- liftIO $ do
       readProcessWithExitCode "lessc" ["--include-path=frontend/app/less" , "-" {-use stdin-} ]
-        (BSL.fromString $ domainBrandingLess bd)
+        (BSL.fromStrict $ TE.encodeUtf8 $ domainBrandingLess bd)
     case code of
       ExitSuccess -> do
           return $ stdout
@@ -167,8 +168,8 @@ domainBrandingCSS bd = do
             ]
           return BSL.empty
 
-domainBrandingLess :: BrandedDomain -> String
-domainBrandingLess bd = unlines $
+domainBrandingLess :: BrandedDomain -> Text
+domainBrandingLess bd = T.unlines $
    [
     "@import 'branding/variables';", -- This is imported so we can use color variables from there
     "@import 'branding/elements';", -- This is imported so we can use some transform functions
@@ -176,14 +177,14 @@ domainBrandingLess bd = unlines $
     "@import 'runtime/domainbranding/domainbrandingdefaultvariables';" -- This will set default signview branding
     --Following settings will overwrite default values
    ]
-     ++
+     <>
    lessVariablesFromDomain bd
-     ++
+     <>
    [ -- Only last part will generate some css. Previews ones are just definitions
     "@import 'runtime/domainbranding/domainbranding';"
    ]
 
-lessVariablesFromDomain :: BrandedDomain -> [String]
+lessVariablesFromDomain :: BrandedDomain -> [Text]
 lessVariablesFromDomain bd = [
     bcolor "participantcolor1" $ get  bdParticipantColor1  bd,
     bcolor "participantcolor2" $ get  bdParticipantColor2  bd,
@@ -202,12 +203,12 @@ lessVariablesFromDomain bd = [
   ]
 
 -- Some sanity checks on data. Note that this are provided by users
-bcolor :: String -> String -> String
-bcolor n c = if (isValidColor c)
-                          then "@" ++ n ++ ": " ++ c ++ ";"
+bcolor :: Text -> Text -> Text
+bcolor n c = if (isValidColor $ T.unpack c)
+                          then "@" <> n <> ": " <> c <> ";"
                           else ""
 
-bfont :: String -> String -> String
-bfont n c = if (isValidFont c)
-                          then "@" ++ n ++ ": " ++ c ++ ";"
+bfont :: Text -> Text -> Text
+bfont n c = if (isValidFont $ T.unpack c)
+                          then "@" <> n <> ": " <> c <> ";"
                           else ""

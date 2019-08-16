@@ -119,7 +119,7 @@ instance (MonadDB m, MonadCatch m) => DBQuery m CheckQueuedCallbacksFor Bool whe
     runSQL01_ $ "SELECT EXISTS (SELECT TRUE FROM document_api_callbacks WHERE document_id =" <?> did <+> "AND reserved_by IS NULL)"
     fetchOne runIdentity
 
-data MergeAPICallback = MergeAPICallback DocumentID String APIVersion
+data MergeAPICallback = MergeAPICallback DocumentID Text APIVersion
 instance (MonadDB m, MonadCatch m, MonadLog m) => DBUpdate m MergeAPICallback () where
   update (MergeAPICallback did url apiVersion) = logDocument did $ do
     -- If callbacks are queued, but not being processed, replace them.

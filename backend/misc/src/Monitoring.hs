@@ -2,7 +2,6 @@ module Monitoring ( MonitoringConf(..)
                   , startMonitoringServer
                   ) where
 
-import Data.Text
 import Data.Unjson
 import qualified System.Metrics as EKG
 import qualified System.Remote.Monitoring.Statsd as EKG

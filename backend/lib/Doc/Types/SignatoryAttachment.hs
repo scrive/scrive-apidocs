@@ -10,9 +10,9 @@ import File.FileID
 
 data SignatoryAttachment = SignatoryAttachment {
   signatoryattachmentfile     :: !(Maybe FileID)
-, signatoryattachmentfilename :: !(Maybe String)
-, signatoryattachmentname :: !String
-, signatoryattachmentdescription :: !String
+, signatoryattachmentfilename :: !(Maybe Text)
+, signatoryattachmentname :: !Text
+, signatoryattachmentdescription :: !Text
 , signatoryattachmentrequired :: !Bool
 } deriving (Eq, Ord, Show)
 
@@ -28,7 +28,7 @@ signatoryAttachmentsSelectors = [
   ]
 
 type instance CompositeRow SignatoryAttachment =
-  (Maybe FileID, Maybe String, String, String, Bool)
+  (Maybe FileID, Maybe Text, Text, Text, Bool)
 
 instance PQFormat SignatoryAttachment where
   pqFormat = compositeTypePqFormat ctSignatoryAttachment

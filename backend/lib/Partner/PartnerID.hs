@@ -11,6 +11,7 @@ import Data.Typeable
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
+import qualified Data.Text as T
 
 import Log.Identifier
 
@@ -26,7 +27,7 @@ defaultPartnerID :: PartnerID
 defaultPartnerID = unsafePartnerID 0
 
 instance FromReqURI PartnerID where
-  fromReqURI = maybeRead
+  fromReqURI = maybeRead . T.pack
 
 instance Binary PartnerID where
   put (PartnerID uid) = put uid
@@ -47,7 +48,10 @@ unPartnerID :: PartnerID -> Int64
 unPartnerID (PartnerID i) = i
 
 unjsonPartnerID :: UnjsonDef PartnerID
-unjsonPartnerID = unjsonInvmapR ((maybe (fail "Can't parse PartnerID")  return) . maybeRead) (show . unPartnerID :: PartnerID -> String) unjsonDef
+unjsonPartnerID = unjsonInvmapR
+  ((maybe (fail "Can't parse PartnerID")  return) . maybeRead . T.pack)
+  (show . unPartnerID :: PartnerID -> String)
+  unjsonDef
 
 instance Unjson PartnerID where
   unjsonDef = unjsonPartnerID

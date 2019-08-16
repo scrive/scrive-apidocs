@@ -7,7 +7,6 @@ import Control.Monad.Catch
 import Control.Monad.State.Class
 import Crypto.RNG (CryptoRNG)
 import Data.Time
-import qualified Data.Text as T
 
 import DB
 import Doc.SignatoryLinkID
@@ -60,7 +59,7 @@ instance (MonadDB m, MonadThrow m)
         sqlWhereEq "signatory_link_id" slid
       fetchMaybe fetchNetsSignOrder
 
-fetchNetsSignOrder :: (SignatoryLinkID, SessionID, NetsSignProvider, T.Text, SignOrderUUID, UTCTime, Bool, Maybe T.Text) -> NetsSignOrder
+fetchNetsSignOrder :: (SignatoryLinkID, SessionID, NetsSignProvider, Text, SignOrderUUID, UTCTime, Bool, Maybe Text) -> NetsSignOrder
 fetchNetsSignOrder (slid, session_id, provider, ttbs, oid, deadline, is_canceled, mSSN) =
   NetsSignOrder
     { nsoSignOrderID = oid

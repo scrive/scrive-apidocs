@@ -15,6 +15,7 @@ import Data.Int
 import Data.Text (Text)
 import Data.Unjson
 import Happstack.Server
+import qualified Data.Text as T
 
 import DB
 import Log.Identifier
@@ -63,7 +64,7 @@ instance ToSQL FolderID where
   toSQL (FolderID n) = toSQL n
 
 instance FromReqURI FolderID where
-  fromReqURI = maybeRead
+  fromReqURI = maybeRead . T.pack
 
 unsafeFolderID :: Int64 -> FolderID
 unsafeFolderID = FolderID
@@ -80,7 +81,7 @@ instance Identifier FolderID where
 
 instance Unjson FolderID where
   unjsonDef = unjsonInvmapR
-    ((maybe (fail "Can't parse FolderID") return) . maybeRead)
+    ((maybe (fail "Can't parse FolderID") return) . maybeRead . T.pack)
     show
     unjsonDef
 

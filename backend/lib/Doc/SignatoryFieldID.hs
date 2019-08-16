@@ -9,6 +9,7 @@ import Data.Data
 import Data.Int
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
+import qualified Data.Text as T
 
 newtype SignatoryFieldID = SignatoryFieldID Int64
   deriving (Eq, Ord, Typeable, Data)
@@ -19,7 +20,7 @@ instance PQFormat SignatoryFieldID where
   pqFormat = pqFormat @Int64
 
 instance FromReqURI SignatoryFieldID where
-  fromReqURI = maybeRead
+  fromReqURI = maybeRead . T.pack
 
 instance Binary SignatoryFieldID where
   put (SignatoryFieldID did) = put did

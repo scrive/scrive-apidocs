@@ -89,13 +89,13 @@ docApiV2New = api $ do
   saved <- apiV2ParameterDefault True (ApiV2ParameterBool "saved")
   mFile <- apiV2ParameterOptional (ApiV2ParameterFilePDF "file")
   -- API call actions
-  title <- case (fmap filename mFile) of
+  title <- case (fmap (T.unpack . filename) mFile) of
     Just fn@(_:_) -> return $ dropExtension fn
     _ -> do
       ctx <- getContext
       title <- renderTemplate_ "newDocumentTitle"
-      return $ title ++ " " ++ formatTimeSimple (get ctxtime ctx)
-  (dbUpdate $ NewDocument user title Signable defaultTimeZoneName 0 actor) `withDocumentM` do
+      return $ title <> " " <> formatTimeSimple (get ctxtime ctx)
+  (dbUpdate $ NewDocument user (T.pack title) Signable defaultTimeZoneName 0 actor) `withDocumentM` do
     dbUpdate $ SetDocumentUnsavedDraft (not saved)
     case mFile of
       Nothing -> return ()
@@ -148,7 +148,9 @@ docApiV2Update did = logDocument did . api $ do
         guardThatConsentModulesAreOnSigningParties draftData
         return draftData
       (Result _ errs) ->
-        apiError $ requestParameterParseError "document" $ "Errors while parsing document data:" <+> T.pack (show errs)
+        apiError $ requestParameterParseError "document" $
+          "Errors while parsing document data:" <+>
+          showt errs
     -- API call actions
     applyDraftDataToDocument draftData actor
     guardThatAuthorIsNotApprover =<< theDocument
@@ -254,7 +256,7 @@ docApiV2TrashDeleteCommon
   :: (Kontrakcja m, DBUpdate (DocumentT m) t Bool)
   => (User -> DocumentID -> m ())
   -> (UserID -> Actor -> t)
-  -> T.Text
+  -> Text
   -> DocumentID
   -> m Response
 docApiV2TrashDeleteCommon guardAction dbAction errorMsg did = logDocument did . api $ do
@@ -282,7 +284,7 @@ docApiV2TrashDeleteMultipleCommon
   :: (Kontrakcja m, DBUpdate (DocumentT m) t Bool)
   => (User -> DocumentID -> m ())
   -> (UserID -> Actor -> t)
-  -> T.Text
+  -> Text
   -> m Response
 docApiV2TrashDeleteMultipleCommon guardAction dbAction errorMsg = api $ do
   -- Permissions
@@ -304,7 +306,7 @@ docApiV2TrashDeleteMultipleCommon guardAction dbAction errorMsg = api $ do
   -- API call actions
   forM_ dids $ \did -> withDocumentID did $ do
     success <- dbUpdate $ dbAction (userid user) actor
-    unless success $ apiError . documentStateError $ T.concat [errorMsg, "(", T.pack (show did), ")"]
+    unless success $ apiError . documentStateError $ T.concat [errorMsg, "(", showt did, ")"]
 
   -- Result
   let docDomain = DocumentsVisibleToUser $ userid user
@@ -345,7 +347,7 @@ docApiV2Forward did = logDocument did . api $ do
     -- when it is closed, otherwise the link may be abused
     guardDocumentStatus Closed =<< theDocument
     -- Parameters
-    validEmail <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterTextWithValidation "email" asValidEmail)
+    validEmail <- apiV2ParameterObligatory (ApiV2ParameterTextWithValidation "email" asValidEmail)
     noContent <- apiV2ParameterDefault True (ApiV2ParameterBool "no_content")
     noAttachments <- apiV2ParameterDefault False (ApiV2ParameterBool "no_attachments")
     -- API call actions
@@ -451,14 +453,14 @@ docApiV2SetAttachments did = logDocument did . api $ do
 
     let names = map aadName attachmentDetails
     (documentauthorattachments <$> theDocument >>=) $ mapM_ $ \att ->
-      unless (incremental && T.pack (authorattachmentname att) `notElem` names) $
+      unless (incremental && (authorattachmentname att) `notElem` names) $
         void $ dbUpdate $ RemoveDocumentAttachments (authorattachmentfileid att) actor
 
     newFileContentsWithDetails' <- forM attachmentDetails $ \ad ->  case (aadFileOrFileParam ad) of
       Left fid -> do
         attachmentFromAttachmentArchive <- (not null) <$> dbQuery (attachmentsQueryFor user fid)
         unless (fileWasAlreadyAnAttachment fid || attachmentFromAttachmentArchive) $
-            apiError $ resourceNotFound $ "File id" <+> (T.pack . show $ fid)
+            apiError $ resourceNotFound $ "File id" <+> showt fid
               <+> "can't be used. It may not exist or you don't have permission to use it."
         void $ dbUpdate $ AddDocumentAttachment (aadName ad) (aadRequired ad) (aadAddToSealedFile ad) fid actor
         return Nothing
@@ -617,10 +619,8 @@ docApiV2SigSetAuthToView authKind did slid =
     authType <- apiV2ParameterObligatory
       (ApiV2ParameterTextUnjson "authentication_type"
        unjsonAuthenticationToViewMethod)
-    mSSN_    <- (fmap T.unpack) <$>
-                apiV2ParameterOptional (ApiV2ParameterText "personal_number")
-    mMobile_ <- (fmap T.unpack) <$>
-                apiV2ParameterOptional (ApiV2ParameterText "mobile_number")
+    mSSN_    <- apiV2ParameterOptional (ApiV2ParameterText "personal_number")
+    mMobile_ <- apiV2ParameterOptional (ApiV2ParameterText "mobile_number")
     (mSSN, mMobile) <- case authType of
       StandardAuthenticationToView -> return (Nothing, Nothing)
       SMSPinAuthenticationToView   -> return (Nothing, mMobile_)
@@ -656,8 +656,8 @@ docApiV2SigSetAuthenticationToSign did slid = logDocumentAndSignatory did slid .
     guardSignatoryHasNotSigned slid =<< theDocument
     -- Parameters
     authentication_type <- apiV2ParameterObligatory (ApiV2ParameterTextUnjson "authentication_type" unjsonAuthenticationToSignMethod)
-    mSSN_ <- (fmap T.unpack) <$> apiV2ParameterOptional (ApiV2ParameterText "personal_number")
-    mMobile_ <- (fmap T.unpack) <$> apiV2ParameterOptional (ApiV2ParameterText "mobile_number")
+    mSSN_ <- apiV2ParameterOptional (ApiV2ParameterText "personal_number")
+    mMobile_ <- apiV2ParameterOptional (ApiV2ParameterText "mobile_number")
     (mSSN, mMobile) <- case authentication_type of
       StandardAuthenticationToSign -> return (Nothing, Nothing)
       SEBankIDAuthenticationToSign -> return (mSSN_, Nothing)
@@ -699,16 +699,16 @@ docApiV2SigChangeEmailAndMobile did slid = logDocumentAndSignatory did slid . ap
       (apiError $ signatoryStateError "Signatory has no email field, cannot set email")
     -- API call actions
     -- update mobile and email as per parameters
-    case fmap T.unpack validMobile of
+    case validMobile of
       Nothing -> return ()
       Just mobile ->
-        when (getMobile sl /= mobile) (dbUpdate $ ChangeSignatoryPhone slid mobile actor)
-    case fmap T.unpack validEmail of
+        when (getMobile sl /= mobile) (dbUpdate $ ChangeSignatoryPhone slid (T.unpack mobile) actor)
+    case validEmail of
       Nothing -> return ()
       Just email ->
         when (getEmail sl /= email) $ do
           emailUser <- dbQuery $ GetUserByEmail (Email email)
-          dbUpdate $ ChangeSignatoryEmail slid emailUser email actor
+          dbUpdate $ ChangeSignatoryEmail slid emailUser (T.unpack email) actor
     -- Once we've updated everything, the starting conditions should still be
     -- valid!
     -- This checks that email and mobile are valid for: invitation delivery,

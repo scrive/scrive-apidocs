@@ -1,7 +1,6 @@
 module EID.CGI.GRP.Config where
 
 import Data.Unjson
-import qualified Data.Text as T
 
 data CgiGrpConfig = CgiGrpConfig {
 -- | CGI url to GRP API
@@ -9,9 +8,9 @@ data CgiGrpConfig = CgiGrpConfig {
 -- | Path to the certificate file
 , cgCertFile    :: FilePath
 -- | Service ID registered with CGI
-, cgServiceID   :: T.Text
+, cgServiceID   :: Text
 -- | Display name registered with CGI
-, cgDisplayName :: T.Text
+, cgDisplayName :: Text
 } deriving (Eq, Ord, Show)
 
 instance Unjson CgiGrpConfig where

@@ -32,6 +32,7 @@ import Happstack.StaticRouting
 import Log
 import Text.JSON
 import qualified Data.Aeson as A
+import qualified Data.Text as T
 
 import AppView as V
 import FlashMessage (addFlashCookie, toCookieValue)
@@ -59,6 +60,9 @@ instance ToResp KontraLink where
 
 instance ToResp String where
     toResp = page . return
+
+instance ToResp Text where
+    toResp = page . return . T.unpack
 
 instance ToResp JSValue where
     toResp = simpleJsonResponse
@@ -106,7 +110,7 @@ hPatchWrap = path PATCH
 page :: Kontra String -> Kontra Response
 page pageBody = do
     pb <- pageBody
-    renderFromBody pb
+    renderFromBody $ T.pack pb
 
 hPost :: Path Kontra Kontra a Response => a -> Route (Kontra Response)
 hPost = hPostWrap (https . guardXToken)
@@ -176,10 +180,10 @@ guardXToken :: Kontra Response -> Kontra Response
 guardXToken action = do
   ctx <- getContext
   let unQuote = filter (not . (== '"'))
-      tokensFromString = catMaybes . map (maybeRead . unQuote) . splitOn ";"
+      tokensFromString = catMaybes . map (maybeRead . T.pack . unQuote) . splitOn ";"
   mxtokenString <- getField cookieNameXToken
   case mxtokenString of
-    Just xtokenString | get ctxxtoken ctx `elem` tokensFromString xtokenString -> action
+    Just xtokenString | get ctxxtoken ctx `elem` tokensFromString (T.unpack xtokenString) -> action
     _ -> do -- Requests authorized by something else then xtoken, can't access session data or change context stuff.
       logInfo "Invalid xtoken value, anonymousing context" $ object ["xtoken" .= mxtokenString]
       withAnonymousContext action

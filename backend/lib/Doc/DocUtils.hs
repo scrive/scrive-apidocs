@@ -9,7 +9,7 @@
 -- datatypes in Doc.DocStateData
 -----------------------------------------------------------------------------
 
-module Doc.DocUtils(
+module Doc.DocUtils (
     renderLocalListTemplate
   , mkAuthKind
   , documentcurrentsignorder
@@ -47,13 +47,13 @@ import UserGroup.Types
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
-renderLocalListTemplate :: (HasLang a, TemplatesMonad m) => a -> [String] -> m String
-renderLocalListTemplate = renderListTemplateHelper .renderLocalTemplate
+renderLocalListTemplate :: (HasLang a, TemplatesMonad m) => a -> [Text] -> m Text
+renderLocalListTemplate = renderListTemplateHelper . renderLocalTemplate
 
 renderListTemplateHelper :: TemplatesMonad m
-                         => (String -> Fields m () -> m String)
-                         -> [String]
-                         -> m String
+                         => (Text -> Fields m () -> m Text)
+                         -> [Text]
+                         -> m Text
 renderListTemplateHelper renderFunc list =
   if length list > 1
      then renderFunc "morethenonelist" $ do
@@ -69,7 +69,7 @@ mkAuthKind :: Document -> AuthenticationKind
 mkAuthKind doc = case documentstatus doc of
   Pending -> AuthenticationToView
   Closed  -> AuthenticationToViewArchived
-  status  -> unexpectedError $ "invalid status: " ++ show status
+  status  -> unexpectedError $ "invalid status: " <> (showt status)
 
 -- | The document's current sign order is either the sign order of the
 -- next partner(s) that should sign; or in case all partners have
@@ -139,13 +139,13 @@ signatoryFieldsFromUser user = do
           }
          , SignatoryCompanyField $ CompanyField {
               scfID                     = (unsafeSignatoryFieldID 0)
-            , scfValue                  = T.unpack . get ugName $ ug
+            , scfValue                  = get ugName $ ug
             , scfObligatory             = False
             , scfShouldBeFilledBySender = False
             , scfPlacements             = []
           }
         ] ++
-        (if (not $ null $ getPersonalNumber user)
+        (if (not $ T.null $ getPersonalNumber user)
             then [
               SignatoryPersonalNumberField $ PersonalNumberField {
                   spnfID                     = (unsafeSignatoryFieldID 0)
@@ -157,7 +157,7 @@ signatoryFieldsFromUser user = do
              ]
             else [])
           ++
-        (if (not $ null $ getMobile user)
+        (if (not $ T.null $ getMobile user)
             then [
               SignatoryMobileField $ MobileField {
                   smfID                     = (unsafeSignatoryFieldID 0)
@@ -171,7 +171,7 @@ signatoryFieldsFromUser user = do
             else []
         )
           ++
-        (if (not . null . getUGCompanyNumber $ ugwp)
+        (if (not . T.null . getUGCompanyNumber $ ugwp)
            then [
               SignatoryCompanyNumberField $ CompanyNumberField {
                   scnfID                     = (unsafeSignatoryFieldID 0)
@@ -184,7 +184,7 @@ signatoryFieldsFromUser user = do
            else []
         )
           where
-            getUGCompanyNumber = T.unpack . get ugaCompanyNumber . ugwpAddress
+            getUGCompanyNumber = get ugaCompanyNumber . ugwpAddress
 
 {- |
     Checks whether a signatory link is eligible for sending a reminder.
@@ -217,7 +217,7 @@ canAuthorSignNow doc =
   where
     author = case getAuthorSigLink doc of
       Just a -> a
-      _ -> unexpectedError $ "document " ++ show (documentid doc) ++ " does not have author"
+      _ -> unexpectedError $ "document " <> showt (documentid doc) <> " does not have author"
 
 
 -- Checks if signatory can sign now
@@ -234,7 +234,7 @@ isActivatedSignatory :: SignOrder -> SignatoryLink -> Bool
 isActivatedSignatory signorder siglink =
   signorder >= signatorysignorder siglink
 
-getSignatoryAttachment :: SignatoryLinkID -> String -> Document -> Maybe SignatoryAttachment
+getSignatoryAttachment :: SignatoryLinkID -> Text -> Document -> Maybe SignatoryAttachment
 getSignatoryAttachment slid name doc = join $ find (\a -> name == signatoryattachmentname a)
                                        <$> signatoryattachments
                                        <$> getSigLinkFor slid doc

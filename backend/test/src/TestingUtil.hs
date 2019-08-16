@@ -21,6 +21,7 @@ import Test.Framework
 import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck
 import Test.QuickCheck.Gen
+import Test.QuickCheck.Instances.Text ()
 import Test.QuickCheck.Unicode as QCU
 import Type.Reflection
 import qualified Crypto.Scrypt as Scrypt
@@ -94,7 +95,7 @@ instance Show XMLChar where
 
 instance Arbitrary XMLChar where
   arbitrary = elements
-              (map XMLChar ("\n\r\t" ++ [' '..'~'] ++ ['\160'..'\255']))
+              (map XMLChar ("\n\r\t" <> [' '..'~'] <> ['\160'..'\255']))
 
 instance Arbitrary C.XMLContent where
   arbitrary = C.cdata . pack . map unXMLChar <$> arbitrary
@@ -114,7 +115,7 @@ instance Bounded NotNullWord8 where
   minBound = 1
   maxBound = NotNullWord8 maxBound
 
-newtype StringNoNUL = StringNoNUL { fromSNN :: String }
+newtype StringNoNUL = StringNoNUL { fromSNN :: Text }
 
 instance Arbitrary NotNullWord8 where
   arbitrary = arbitrarySizedBoundedIntegral
@@ -136,12 +137,12 @@ instance Arbitrary DocumentTag where
 
 instance Arbitrary Folder where
   arbitrary = (\name -> Folder emptyFolderID Nothing name)
-    <$> arbitrary
+    <$> arbitraryName
 
 instance Arbitrary UserID where
   arbitrary = unsafeUserID . abs <$> arbitrary
 
-arbitraryName :: Gen T.Text
+arbitraryName :: Gen Text
 arbitraryName = (return . pack . concat) =<< replicateM 3 arbitrarySyllable
 
 arbitrarySyllable :: Gen String
@@ -150,8 +151,21 @@ arbitrarySyllable = do
   vovel <- elements "aeiyou"
   return [consonant,vovel]
 
-instance Arbitrary T.Text where
-  arbitrary = arbitraryName
+arbitraryUnicodeText :: Gen Text
+arbitraryUnicodeText = pack <$> (listOf (arbitraryUnicodeChar `suchThat` (/= '\0')))
+
+arbitraryText :: Gen Text
+arbitraryText = T.pack <$> arbitrary
+
+arbitraryMaybe :: forall a . Gen a -> Gen (Maybe a)
+arbitraryMaybe = liftArbitrary
+
+newtype ArbitraryUnicode = ArbitraryUnicode {
+  withArbitraryUnicode :: Text
+} deriving (Show, Eq, Ord)
+
+instance Arbitrary ArbitraryUnicode where
+  arbitrary = ArbitraryUnicode <$> arbitraryUnicodeText
 
 instance Arbitrary PartnerID where
   arbitrary = unsafePartnerID . abs <$> arbitrary
@@ -186,7 +200,7 @@ genMaybeUnicodeString = oneof [ pure Nothing, Just <$> genUnicodeString ]
 
 instance Arbitrary UserGroup where
   arbitrary = (UserGroup emptyUserGroupID Nothing)
-    <$> arbitrary
+    <$> arbitraryName
     <*> pure Nothing
     <*> arbitrary
     <*> arbitrary
@@ -196,7 +210,7 @@ instance Arbitrary UserGroup where
 
 instance Arbitrary UserGroupRoot where
   arbitrary = UserGroupRoot emptyUserGroupID
-    <$> arbitrary
+    <$> arbitraryUnicodeText
     <*> pure Nothing
     <*> arbitrary
     <*> arbitrary
@@ -218,8 +232,8 @@ instance Arbitrary UserGroupSettings where
   arbitrary = UserGroupSettings
     <$> arbitrary
     <*> arbitrary
-    <*> arbitrary
-    <*> arbitrary
+    <*> arbitraryMaybe arbitraryUnicodeText
+    <*> arbitraryMaybe arbitraryUnicodeText
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
@@ -230,16 +244,16 @@ instance Arbitrary UserGroupSettings where
 
 instance Arbitrary UserGroupAddress where
   arbitrary = UserGroupAddress
-    <$> arbitrary
-    <*> arbitrary
-    <*> arbitrary
-    <*> arbitrary
-    <*> arbitrary
+    <$> arbitraryUnicodeText
+    <*> arbitraryUnicodeText
+    <*> arbitraryUnicodeText
+    <*> arbitraryUnicodeText
+    <*> arbitraryUnicodeText
 
 instance Arbitrary UserGroupUI where
   arbitrary = (UserGroupUI Nothing Nothing Nothing)
-    <$> arbitrary
-    <*> arbitrary
+    <$> arbitraryMaybe arbitraryUnicodeText
+    <*> arbitraryMaybe arbitraryUnicodeText
     <*> arbitrary
 
 instance Arbitrary UserGroupInvoicing where
@@ -473,8 +487,8 @@ filterSingleFieldIdentity (f:fs) =
 
 instance {-# OVERLAPPING #-} Arbitrary [SignatoryField] where
   arbitrary = do
-    fn <- arbString 1 20
-    ln <- arbString 1 20
+    fn <- arbText 1 20
+    ln <- arbText 1 20
     em <- arbEmail
     (f1,f2,f3,f4,f5) <-  arbitrary
     return $
@@ -483,7 +497,7 @@ instance {-# OVERLAPPING #-} Arbitrary [SignatoryField] where
              [(NameFI (NameOrder 1)), (NameFI (NameOrder 2)), EmailFI])
       (filterSingleFieldIdentity [f1,f2,f3,f4,f5])
 
-      ++ [ fieldForTests (NameFI $ NameOrder 1) fn
+      <> [ fieldForTests (NameFI $ NameOrder 1) fn
          , fieldForTests (NameFI $ NameOrder 2) ln
          , fieldForTests EmailFI em
          ]
@@ -527,11 +541,10 @@ instance Arbitrary SignatoryField where
        CompanyNumberFT  -> SignatoryCompanyNumberField  <$> arbitrary
        _                -> SignatoryTextField           <$> arbitrary
 
-
 instance Arbitrary SignatoryNameField where
   arbitrary = do
     no <- elements [NameOrder 1, NameOrder 2]
-    v <- arbString 1 100
+    v <- arbText 1 100
     p <- arbitrary
     return $ NameField {
          snfID = unsafeSignatoryFieldID 0
@@ -544,7 +557,7 @@ instance Arbitrary SignatoryNameField where
 
 instance Arbitrary SignatoryEmailField where
   arbitrary = do
-    v <- arbString 1 100
+    v <- arbText 1 100
     p <- arbitrary
     return $ EmailField {
          sefID = unsafeSignatoryFieldID 0
@@ -557,7 +570,7 @@ instance Arbitrary SignatoryEmailField where
 
 instance Arbitrary SignatoryMobileField where
   arbitrary = do
-    v <- arbString 1 100
+    v <- arbText 1 100
     p <- arbitrary
     return $ MobileField
       { smfID = unsafeSignatoryFieldID 0
@@ -570,7 +583,7 @@ instance Arbitrary SignatoryMobileField where
 
 instance Arbitrary SignatoryCompanyField where
   arbitrary = do
-    v <- arbString 1 100
+    v <- arbText 1 100
     p <- arbitrary
     return $ CompanyField {
          scfID = unsafeSignatoryFieldID 0
@@ -582,7 +595,7 @@ instance Arbitrary SignatoryCompanyField where
 
 instance Arbitrary SignatoryPersonalNumberField where
   arbitrary = do
-    v <- arbString 1 100
+    v <- arbText 1 100
     p <- arbitrary
     return $ PersonalNumberField {
          spnfID = unsafeSignatoryFieldID 0
@@ -594,7 +607,7 @@ instance Arbitrary SignatoryPersonalNumberField where
 
 instance Arbitrary SignatoryCompanyNumberField where
   arbitrary = do
-    v <- arbString 1 100
+    v <- arbText 1 100
     p <- arbitrary
     return $ CompanyNumberField {
          scnfID = unsafeSignatoryFieldID 0
@@ -606,14 +619,14 @@ instance Arbitrary SignatoryCompanyNumberField where
 
 instance Arbitrary SignatoryTextField where
   arbitrary = do
-    l <- arbString 1 20
-    v <- arbString 1 100
+    l <- arbText 1 20
+    v <- arbText 1 100
     filled <- arbitrary
     p <- arbitrary
     usecustomvalidation <- arbitrary
-    valpattern <- arbString 1 20
-    valexample <- arbString 1 20
-    valtooltip <- arbString 1 200
+    valpattern <- arbText 1 20
+    valexample <- arbText 1 20
+    valtooltip <- arbText 1 200
     return $ TextField {
          stfID = unsafeSignatoryFieldID 0
        , stfName = l
@@ -638,16 +651,16 @@ instance Arbitrary DeliveryMethod where
 
 instance Arbitrary UserInfo where
   arbitrary = do
-    fn <- arbitrary
-    ln <- arbitrary
-    pn <- arbitrary
+    fn <- arbitraryUnicodeText
+    ln <- arbitraryUnicodeText
+    pn <- arbitraryUnicodeText
     em <- arbEmail
 
     return $ UserInfo { userfstname     = fn
                       , usersndname     = ln
                       , userpersonalnumber  = pn
-                      , usercompanyposition = []
-                      , userphone           = []
+                      , usercompanyposition = ""
+                      , userphone           = ""
                       , useremail           = Email em
                       }
 
@@ -695,9 +708,9 @@ instance Arbitrary User where
 instance Arbitrary CgiGrpTransaction where
   arbitrary = CgiGrpSignTransaction
     <$> arbitrary
-    <*> (T.pack . fromSNN <$> arbitrary)
-    <*> (T.pack . fromSNN <$> arbitrary)
-    <*> (T.pack . fromSNN <$> arbitrary)
+    <*> (fromSNN <$> arbitrary)
+    <*> (fromSNN <$> arbitrary)
+    <*> (fromSNN <$> arbitrary)
     <*> (pure tempSessionID)
 
 instance Arbitrary CGISEBankIDSignature where
@@ -711,18 +724,18 @@ instance Arbitrary CGISEBankIDSignature where
 
 instance Arbitrary NetsNOBankIDSignature where
   arbitrary = NetsNOBankIDSignature
-    <$> (T.pack <$> arbString 20 30)
-    <*> (T.pack <$> arbString 200 300)
-    <*> (T.pack <$> arbString 10 20)
-    <*> (T.pack <$> arbString 11 11)
+    <$> (arbText 20 30)
+    <*> (arbText 200 300)
+    <*> (arbText 10 20)
+    <*> (arbText 11 11)
 
 instance Arbitrary NetsDKNemIDSignature where
   arbitrary = NetsDKNemIDSignature
-    <$> (T.pack <$> arbString 20 30)
-    <*> (T.pack <$> arbString 200 300)
-    <*> (T.pack <$> arbString 10 20)
-    <*> (T.pack <$> arbString 10 10)
-    <*> (T.pack <$> arbString 10 10)
+    <$> (arbText 20 30)
+    <*> (arbText 200 300)
+    <*> (arbText 10 20)
+    <*> (arbText 10 10)
+    <*> (arbText 10 10)
 
 instance Arbitrary ESignature where
   arbitrary = oneof [
@@ -738,19 +751,22 @@ instance Arbitrary BS.ByteString where
   arbitrary = BS.pack . map fromNNW8 <$> arbitrary
 
 instance Arbitrary StringNoNUL where
-  arbitrary = StringNoNUL . map (chr . fromIntegral . fromNNW8) <$> arbitrary
+  arbitrary = StringNoNUL . T.pack . map (chr . fromIntegral . fromNNW8) <$> arbitrary
 
 arbString :: Int -> Int -> Gen String
 arbString minl maxl = do
   l <- choose (minl, maxl)
   vectorOf l $ elements ['a'..'z']
 
-arbEmail :: Gen String
+arbText :: Int -> Int -> Gen Text
+arbText = fmap (fmap T.pack) . arbString
+
+arbEmail :: Gen Text
 arbEmail = do
-  n <- arbString 1 34
-  d <- arbString 3 7
-  t <- arbString 2 4
-  return $ n ++ "@" ++ d ++ "." ++ t
+  n <- arbText 1 34
+  d <- arbText 3 7
+  t <- arbText 2 4
+  return $ n <> "@" <> d <> "." <> t
 
 signatoryLinkExample1 :: SignatoryLink
 signatoryLinkExample1 = defaultSignatoryLink
@@ -805,12 +821,12 @@ addNewUserGroupWithParent createFolder mparent = do
       False -> return Nothing
       True ->
         fmap (Just . get folderID) . dbUpdate $ FolderCreate defaultFolder
-    ugname <- rand 10 (T.pack <$> arbString 3 30)
-    ugacompanynumber <- rand 10 (T.pack <$> arbString 3 30)
-    ugaaddress <- rand 10 (T.pack <$> arbString 3 30)
-    ugazip <- rand 10 (T.pack <$> arbString 3 30)
-    ugacity <- rand 10 (T.pack <$> arbString 3 30)
-    ugacountry <- rand 10 (T.pack <$> arbString 3 30)
+    ugname <- rand 10 (arbText 3 30)
+    ugacompanynumber <- rand 10 (arbText 3 30)
+    ugaaddress <- rand 10 (arbText 3 30)
+    ugazip <- rand 10 (arbText 3 30)
+    ugacity <- rand 10 (arbText 3 30)
+    ugacountry <- rand 10 (arbText 3 30)
     let ug = set ugName ugname
           . set ugAddress uga
           . set ugHomeFolderID mUgFolderID
@@ -841,17 +857,17 @@ addNewRandomFile = do
     , inTestDir "pdfs/visa-application.pdf"
     ]
   cnt <- liftBase $ BS.readFile fn
-  saveNewFile fn cnt
+  saveNewFile (T.pack fn) cnt
 
 addNewUser :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
-           => String -> String -> String -> m (Maybe User)
+           => Text -> Text -> Text -> m (Maybe User)
 addNewUser firstname secondname email = do
   fmap fst <$> addNewUserWithCompany firstname secondname email True
 
 addNewUserWithCompany :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
-                      => String
-                      -> String
-                      -> String
+                      => Text
+                      -> Text
+                      -> Text
                       -> Bool
                       -> m (Maybe (User, UserGroupID))
 addNewUserWithCompany firstname secondname email createFolders = do
@@ -870,7 +886,7 @@ addNewCompany createFolders = do
 
 createNewUser
  :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
- => (String, String) -> String -> Maybe Password -> (UserGroupID, Bool) -> Lang -> BrandedDomainID -> SignupMethod -> m (Maybe User)
+ => (Text, Text) -> Text -> Maybe Password -> (UserGroupID, Bool) -> Lang -> BrandedDomainID -> SignupMethod -> m (Maybe User)
 createNewUser names email mPasswd (ugid, isCompanyAdmin) lang bdID sm = do
   -- create User home Folder, if the UserGroup has one
   mUserFolder <- dbQuery (FolderGetUserGroupHome ugid) >>= \case
@@ -884,13 +900,13 @@ createNewUser names email mPasswd (ugid, isCompanyAdmin) lang bdID sm = do
 -- | Create a new user and add it to a company as a non-admin.
 addNewCompanyUser
   :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
-  => String -> String -> String -> UserGroupID -> m (Maybe User)
+  => Text -> Text -> Text -> UserGroupID -> m (Maybe User)
 addNewCompanyUser = addNewCompanyUser' DontMakeAdmin
 
 -- | Create a new user and add it to a company as an admin.
 addNewCompanyAdminUser
   :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
-  => String -> String -> String -> UserGroupID -> m (Maybe User)
+  => Text -> Text -> Text -> UserGroupID -> m (Maybe User)
 addNewCompanyAdminUser = addNewCompanyUser' MakeAdmin
 
 data MakeAdmin = DontMakeAdmin | MakeAdmin
@@ -900,7 +916,7 @@ data MakeAdmin = DontMakeAdmin | MakeAdmin
 -- non-admin.
 addNewCompanyUser'
   :: (MonadDB m, MonadThrow m, MonadLog m, MonadMask m)
-  => MakeAdmin -> String -> String -> String -> UserGroupID -> m (Maybe User)
+  => MakeAdmin -> Text -> Text -> Text -> UserGroupID -> m (Maybe User)
 addNewCompanyUser' makeAdmin firstname secondname email ugid = do
   bd <- dbQuery $ GetMainBrandedDomain
   dbQuery (UserGroupGet ugid) >>= \case
@@ -911,7 +927,7 @@ addNewCompanyUser' makeAdmin firstname secondname email ugid = do
                          (get bdid bd) CompanyInvitation
 
 -- | Create user and add it to a new user group as admin.
-addNewAdminUserAndUserGroup :: String -> String -> String
+addNewAdminUserAndUserGroup :: Text -> Text -> Text
                             -> TestEnv (User, UserGroup)
 addNewAdminUserAndUserGroup firstname secondname email = do
   ug <- addNewUserGroup' True
@@ -926,7 +942,7 @@ addNewAdminUserAndUserGroup firstname secondname email = do
     CompanyInvitation
   return (user, ug)
 
-addNewUserToUserGroup :: String -> String -> String -> UserGroupID
+addNewUserToUserGroup :: Text -> Text -> Text -> UserGroupID
                       -> TestEnv (Maybe User)
 addNewUserToUserGroup firstname secondname email ugid = do
   bd <- dbQuery $ GetMainBrandedDomain
@@ -950,18 +966,18 @@ addNewUserFromInfo userInfo@(UserInfo { userfstname = firstName
   void $ dbUpdate $ SetUserInfo (userid user) userInfo
   return user
 
-randomPersonalNumber :: CryptoRNG m => m String
-randomPersonalNumber = rand 10 $ arbString 3 30
+randomPersonalNumber :: CryptoRNG m => m Text
+randomPersonalNumber = rand 10 $ arbText 3 30
 
 randomUserInfo :: CryptoRNG m => m UserInfo
 randomUserInfo = do
-  fn <- rand 10 $ arbString 3 30
-  ln <- rand 10 $ arbString 3 30
+  fn <- rand 10 $ arbText 3 30
+  ln <- rand 10 $ arbText 3 30
   em <- rand 10 arbEmail
   -- change the user to have some distinct personal information
   personal_number <- randomPersonalNumber
-  company_position <- rand 10 $ arbString 3 30
-  phone <- rand 10 $ arbString 3 30
+  company_position <- rand 10 $ arbText 3 30
+  phone <- rand 10 $ arbText 3 30
   return UserInfo { userfstname         = fn
                   , usersndname         = ln
                   , userpersonalnumber  = personal_number
@@ -987,14 +1003,14 @@ addNewRandomUserWithCompany' :: ( CryptoRNG m, MonadDB m, MonadFail m, MonadThro
                                , MonadLog m, MonadMask m )
                             => Bool -> m (User, UserGroupID)
 addNewRandomUserWithCompany' createFolders = do
-  fn <- rand 10 $ arbString 3 30
-  ln <- rand 10 $ arbString 3 30
+  fn <- rand 10 $ arbText 3 30
+  ln <- rand 10 $ arbText 3 30
   em <- rand 10 arbEmail
   Just (user, ugid) <- addNewUserWithCompany fn ln em createFolders
   -- change the user to have some distinct personal information
-  personal_number        <- rand 10 $ arbString 3 30
-  company_position       <- rand 10 $ arbString 3 30
-  phone <- rand 10 $ arbString 3 30
+  personal_number        <- rand 10 $ arbText 3 30
+  company_position       <- rand 10 $ arbText 3 30
+  phone <- rand 10 $ arbText 3 30
   let userinfo = UserInfo
                  { userfstname         = fn
                  , usersndname         = ln
@@ -1008,7 +1024,7 @@ addNewRandomUserWithCompany' createFolders = do
 
 addNewRandomUserWithPassword :: ( CryptoRNG m, MonadDB m, MonadFail m, MonadThrow m
                                 , MonadLog m, MonadMask m )
-                             => String -> m User
+                             => Text -> m User
 addNewRandomUserWithPassword password = do
   -- create random user
   randomUser <- addNewRandomUser
@@ -1207,7 +1223,7 @@ addRandomDocumentWithFile fileid rda = do
                       && Private `elem` randomDocumentAllowedSharings rda
         then return Private
         else rand 10 (elements $ randomDocumentAllowedSharings rda)
-      title <- rand 1 $ arbString 10 25
+      title <- rand 1 $ arbText 10 25
       siglinks <- rand 10 (listOf $ randomSigLinkByStatus status)
 
       let doc = doc' { documenttype = xtype
@@ -1233,21 +1249,21 @@ addRandomDocumentWithFile fileid rda = do
 
       let closedfile =
             if documentstatus doc == Closed
-            then [MainFile fileid Closed Missing (filename file)]
+            then [MainFile fileid Closed Missing (T.unpack $ filename file)]
             else []
       let adoc = doc
             { documentsignatorylinks = alllinks
             , documentlang = getLang user
             , documentmainfiles =
-                closedfile ++
-                [MainFile fileid Preparation Missing (filename file)]
+                closedfile <>
+                [MainFile fileid Preparation Missing (T.unpack $ filename file)]
             }
 
       case checker adoc of
         Nothing -> do
           rej <- asks (get teRejectedDocuments)
           liftIO $ (atomically . modifyTVar' rej) (+1)
-          --liftIO $ print $ "did not pass condition; doc: " ++ show adoc
+          --liftIO $ print $ "did not pass condition; doc: " <> show adoc
           worker now user checker file
         Just acceptedDoc -> do
           case invariantProblems now acceptedDoc of
@@ -1258,7 +1274,7 @@ addRandomDocumentWithFile fileid rda = do
               -- am I right that random document should not have invariantProblems?
               --uncomment this to find out why the doc was rejected
               --print adoc
-              --liftIO $ print $ "rejecting doc: " ++ _problems
+              --liftIO $ print $ "rejecting doc: " <> _problems
               worker now user checker file
 
 onCondition :: (a -> Bool) -> a -> Maybe a
@@ -1391,7 +1407,7 @@ assertJust Nothing = assertFailure
 assertRight :: (Show a, MonadIO m) => Either a b -> m ()
 assertRight (Right _) = assertSuccess
 assertRight (Left a)  = assertFailure $
-                        "Should have return Right but returned Left " ++ show a
+                        "Should have return Right but returned Left " <> show a
 
 assertLeft :: MonadIO m => Either a b -> m ()
 assertLeft (Left _) = assertSuccess
@@ -1408,8 +1424,8 @@ assertNotEqual msg expected got = unless (expected /= got) $ do
   assertFailure . unlines $
     [ msg
     , ""
-    , "Expected: " ++ show expected
-    , "Got: " ++ show got
+    , "Expected: " <> show expected
+    , "Got: " <> show got
     ]
 
 assertEqualJson :: MonadIO m => String -> A.Value -> A.Value -> m ()
@@ -1417,15 +1433,15 @@ assertEqualJson msg expected got = unless (expected == got) $ do
   assertFailure . unlines $
     [ msg
     , ""
-    , "Expected: " ++ show expected
-    , "Got: " ++ show got
+    , "Expected: " <> show expected
+    , "Got: " <> show got
     , ""
     , "Steps to go from the expected value to the one we got:"
-    ] ++ map ((" * " ++) . show) (A.patchOperations $ A.diff expected got)
-      ++
+    ] <> map ((" * " <>) . show) (A.patchOperations $ A.diff expected got)
+      <>
     [ ""
     , "Steps to go from the value we got to the expected one:"
-    ] ++ map ((" * " ++) . show) (A.patchOperations $ A.diff got expected)
+    ] <> map ((" * " <>) . show) (A.patchOperations $ A.diff got expected)
 
 assertRaisesInternalError :: (Show v, MonadIO m, MonadMask m) =>  m v -> m ()
 assertRaisesInternalError a = catchJust
@@ -1433,12 +1449,12 @@ assertRaisesInternalError a = catchJust
       KE.Respond404      -> Nothing
       KE.InternalError _ -> Just ()
       KE.LinkInvalid     -> Nothing)
-  (a >>= assertFailure . ("Expecting InternalError but got " ++) . show)
+  (a >>= assertFailure . ("Expecting InternalError but got " <>) . show)
   return
 
 assertRaisesDBException :: (Show v, MonadIO m, MonadMask m) =>  m v -> m ()
 assertRaisesDBException a =
-  (a >>= (\v -> assertFailure $ "Expecting db exception but got " ++
+  (a >>= (\v -> assertFailure $ "Expecting db exception but got " <>
                 show v))
   `catches` [ Handler $ \_e@DBException{..} -> return ()
             ]
@@ -1448,8 +1464,8 @@ assertRaisesKontra :: forall e v m. ( DBExtraException e, Show v
                                     , MonadIO m, MonadMask m )
                    => (e -> Bool) -> m v -> m ()
 assertRaisesKontra correctException action =
-  (action >>= \r -> assertString $ "Expected DBExtraException " ++
-                    typeOfE ++ ", instead returned result " ++ show r)
+  (action >>= \r -> assertString $ "Expected DBExtraException " <>
+                    typeOfE <> ", instead returned result " <> show r)
   `catches`
   [ Handler helper
     -- Also support DBExtraException nested within DBException
@@ -1462,13 +1478,13 @@ assertRaisesKontra correctException action =
     helper (SomeDBExtraException e) = case cast e of
       Just e' -> if correctException e'
         then return ()
-        else assertString $ "DBExtraException " ++
-             typeOfE ++ " is not correct " ++ show e'
+        else assertString $ "DBExtraException " <>
+             typeOfE <> " is not correct " <> show e'
       Nothing -> invExc e
 
     invExc :: (Show a, Typeable a) => a -> m ()
-    invExc e = assertString $ "Expected DBExtraException " ++
-               typeOfE ++ ", instead got exception " ++ show e
+    invExc e = assertString $ "Expected DBExtraException " <>
+               typeOfE <> ", instead got exception " <> show e
 
     typeOfE = show $ typeRep @e
 
@@ -1491,7 +1507,7 @@ instance Arbitrary Lang where
 
 -- A simple way of creating signatory fields. Since the data type is
 -- big, we want to skip many details in many tests.
-fieldForTests :: FieldIdentity -> String -> SignatoryField
+fieldForTests :: FieldIdentity -> Text -> SignatoryField
 fieldForTests (NameFI no) v = SignatoryNameField $ NameField {
       snfID                     = (unsafeSignatoryFieldID 0)
     , snfNameOrder              = no

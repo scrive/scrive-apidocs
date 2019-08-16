@@ -6,28 +6,27 @@ module EID.Signature.Legacy (
   ) where
 
 import Data.ByteString (ByteString)
-import qualified Data.Text as T
 
 data LegacyBankIDSignature = LegacyBankIDSignature {
-  lbidsSignedText  :: !T.Text
+  lbidsSignedText  :: !Text
 , lbidsSignature   :: !ByteString
 , lbidsCertificate :: !ByteString
 } deriving (Eq, Ord, Show)
 
 data LegacyTeliaSignature = LegacyTeliaSignature {
-  ltsSignedText  :: !T.Text
+  ltsSignedText  :: !Text
 , ltsSignature   :: !ByteString
 , ltsCertificate :: !ByteString
 } deriving (Eq, Ord, Show)
 
 data LegacyNordeaSignature = LegacyNordeaSignature {
-  lnsSignedText  :: !T.Text
+  lnsSignedText  :: !Text
 , lnsSignature   :: !ByteString
 , lnsCertificate :: !ByteString
 } deriving (Eq, Ord, Show)
 
 data LegacyMobileBankIDSignature = LegacyMobileBankIDSignature {
-  lmbidsSignedText   :: !T.Text
+  lmbidsSignedText   :: !Text
 , lmbidsSignature    :: !ByteString
 , lmbidsOcspResponse :: !ByteString
 } deriving (Eq, Ord, Show)

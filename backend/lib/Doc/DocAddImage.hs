@@ -19,7 +19,6 @@ import Data.Int
 import Log
 import Text.StringTemplates.Templates
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.Text as T
 
 import DB
 import Doc.AddImageSpec
@@ -47,7 +46,7 @@ addImageToDocumentFile documentid file@File{fileid} image pageno x y =
     liftIO $ BS.writeFile tmpin content
     logInfo "Temp file write" $ object [
         "bytes_written" .= (BS.length content)
-      , "originator" .= ("stampDocumentFileWithImage" :: T.Text)
+      , "originator" .= ("stampDocumentFileWithImage" :: Text)
       ]
     spec <- addImageSpecForDocument tmpin documentid image pageno x y
     runLambdaAddImage tmppath spec

@@ -12,6 +12,7 @@ import Data.Int
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
+import qualified Data.Text as T
 
 import Log.Identifier
 
@@ -21,12 +22,13 @@ newtype SignatoryLinkID = SignatoryLinkID Int64
   deriving (Eq, Ord)
 deriving newtype instance Read SignatoryLinkID
 deriving newtype instance Show SignatoryLinkID
+deriving newtype instance TextShow SignatoryLinkID
 
 instance PQFormat SignatoryLinkID where
   pqFormat = pqFormat @Int64
 
 instance FromReqURI SignatoryLinkID where
-  fromReqURI = maybeRead
+  fromReqURI = maybeRead . T.pack
 
 instance Identifier SignatoryLinkID where
   idDefaultLabel              = "signatory_link_id"
@@ -34,7 +36,7 @@ instance Identifier SignatoryLinkID where
 
 instance Unjson SignatoryLinkID where
   unjsonDef = unjsonInvmapR
-              ((maybe (fail "Can't parse SignatoryLinkID")  return) . maybeRead)
+              ((maybe (fail "Can't parse SignatoryLinkID")  return) . maybeRead . T.pack)
               show unjsonDef
 
 instance FromSQL SignatoryLinkID where

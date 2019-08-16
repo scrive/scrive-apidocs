@@ -67,7 +67,7 @@ import Text.XML.Writer as XML hiding (content, many, node)
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
+import qualified Data.Text.Encoding as TE
 
 import DB hiding (Cursor)
 import Doc.DocumentID
@@ -144,43 +144,43 @@ instance ToSQL NetsDKNemIDInternalProvider where
 
 data NetsNOBankIDAuthentication = NetsNOBankIDAuthentication {
     netsNOBankIDInternalProvider     :: !NetsNOBankIDInternalProvider
-  , netsNOBankIDSignatoryName        :: !T.Text
-  , netsNOBankIDPhoneNumber          :: !(Maybe T.Text)
-  , netsNOBankIDDateOfBirth          :: !T.Text
+  , netsNOBankIDSignatoryName        :: !Text
+  , netsNOBankIDPhoneNumber          :: !(Maybe Text)
+  , netsNOBankIDDateOfBirth          :: !Text
   , netsNOBankIDCertificate          :: !ByteString
 } deriving (Eq, Ord, Show)
 
 data NetsDKNemIDAuthentication = NetsDKNemIDAuthentication {
     netsDKNemIDInternalProvider     :: !NetsDKNemIDInternalProvider
-  , netsDKNemIDSignatoryName        :: !T.Text
-  , netsDKNemIDDateOfBirth          :: !T.Text
+  , netsDKNemIDSignatoryName        :: !Text
+  , netsDKNemIDDateOfBirth          :: !Text
   , netsDKNemIDCertificate          :: !ByteString
 } deriving (Eq, Ord, Show)
 
 data NetsFITupasAuthentication = NetsFITupasAuthentication {
-    netsFITupasSignatoryName        :: !T.Text
-  , netsFITupasDateOfBirth          :: !T.Text
+    netsFITupasSignatoryName        :: !Text
+  , netsFITupasDateOfBirth          :: !Text
 } deriving (Eq, Ord, Show)
 
 -- | Information for transaction. It is encoded in frontend as (,,,) + Base64 when starting nets iframe.
 --   Backend decodes that within resolve handler.
 data NetsTarget = NetsTarget {
-    netsTransactionDomain    :: String -- Domain where session cookie is set
+    netsTransactionDomain    :: Text -- Domain where session cookie is set
   , netsDocumentID           :: !DocumentID
   , netsSignatoryID          :: !SignatoryLinkID
-  , netsReturnURL            :: !String
+  , netsReturnURL            :: !Text
 } deriving (Eq, Ord, Show)
 
-decodeNetsTarget :: String -> Maybe NetsTarget
-decodeNetsTarget t = case (B64.decode $ BS.pack $ t) of
-                       Right t' -> case (maybeRead $ BS.unpack t') of
+decodeNetsTarget :: Text -> Maybe NetsTarget
+decodeNetsTarget t = case (B64.decode $ TE.encodeUtf8 t) of
+                       Right t' -> case (maybeRead $ T.pack $ BS.unpack t') of
                          Just (dmn,did,sid,rurl) -> Just $ NetsTarget dmn did sid rurl
                          _ -> Nothing
                        _ -> Nothing
 
 -- | GetAssertionRequest request
 data GetAssertionRequest = GetAssertionRequest {
-  assertionArtifact :: !T.Text
+  assertionArtifact :: !Text
 } deriving (Eq, Ord, Show)
 
 -- | Construct SOAP request from the 'GetAssertionRequest'.
@@ -191,8 +191,8 @@ instance ToXML GetAssertionRequest where
 
 -- | Collect action response.
 data GetAssertionResponse = GetAssertionResponse {
-  assertionStatusCode :: !T.Text,
-  assertionAttributes :: ![(T.Text,T.Text)]
+  assertionStatusCode :: !Text,
+  assertionAttributes :: ![(Text,Text)]
 } deriving (Eq, Ord, Show)
 
 -- | Retrieve 'GetAssertionResponse' from SOAP response.
@@ -209,18 +209,18 @@ xpGetAssertionResponse = XMLParser $ \c -> listToMaybe $ c
 -- data NetsEidType = NetsEidNOBankID
 --
 data NetsNOBankIDSignature = NetsNOBankIDSignature {
-  netsnoSignedText    :: !T.Text
-, netsnoB64SDO        :: !T.Text -- base64 SDO from Nets ESigning
-, netsnoSignatoryName :: !T.Text
-, netsnoSignatoryPID  :: !T.Text
+  netsnoSignedText    :: !Text
+, netsnoB64SDO        :: !Text -- base64 SDO from Nets ESigning
+, netsnoSignatoryName :: !Text
+, netsnoSignatoryPID  :: !Text
 } deriving (Eq, Ord, Show)
 
 data NetsDKNemIDSignature = NetsDKNemIDSignature {
-  netsdkSignedText    :: !T.Text
-, netsdkB64SDO        :: !T.Text -- base64 SDO from Nets ESigning
-, netsdkSignatoryName :: !T.Text
-, netsdkSignatorySSN  :: !T.Text
-, netsdkSignatoryIP   :: !T.Text
+  netsdkSignedText    :: !Text
+, netsdkB64SDO        :: !Text -- base64 SDO from Nets ESigning
+, netsdkSignatoryName :: !Text
+, netsdkSignatorySSN  :: !Text
+, netsdkSignatoryIP   :: !Text
 } deriving (Eq, Ord, Show)
 
 data NetsSignStatus
@@ -238,7 +238,7 @@ data NetsFault
   | NetsFaultRejectedBySigner
   deriving (Eq, Ord, Show)
 
-netsFaultText :: NetsFault -> T.Text
+netsFaultText :: NetsFault -> Text
 netsFaultText NetsFaultExpiredTransaction  = "nets_error_expired_transaction"
 netsFaultText NetsFaultAPIError            = "nets_error_api"
 netsFaultText NetsFaultCancelledByMerchant = "nets_error_canceled_by_merchant"
@@ -271,7 +271,7 @@ instance ToSQL NetsSignProvider where
   toSQL NetsSignNO = toSQL (1::Int16)
   toSQL NetsSignDK = toSQL (2::Int16)
 
-netsSignProviderText :: NetsSignProvider -> T.Text
+netsSignProviderText :: NetsSignProvider -> Text
 netsSignProviderText NetsSignNO = "no_bankid"
 netsSignProviderText NetsSignDK = "dk_nemid"
 
@@ -287,11 +287,11 @@ data NetsSignOrder = NetsSignOrder
   { nsoSignOrderID :: !SignOrderUUID
   , nsoSignatoryLinkID :: !SignatoryLinkID
   , nsoProvider :: !NetsSignProvider
-  , nsoTextToBeSigned :: !T.Text
+  , nsoTextToBeSigned :: !Text
   , nsoSessionID :: !SessionID
   , nsoDeadline :: !UTCTime
   , nsoIsCanceled :: !Bool
-  , nsoSSN :: !(Maybe T.Text)
+  , nsoSSN :: !(Maybe Text)
   } deriving (Show)
 
 instance Loggable NetsSignOrder where
@@ -306,57 +306,57 @@ instance Loggable NetsSignOrder where
 
 -- NETS SIGNING - Insert Order Request
 
-data InsertOrderRequest = InsertOrderRequest NetsSignOrder NetsSignProviderMethod NetsSignConfig T.Text
+data InsertOrderRequest = InsertOrderRequest NetsSignOrder NetsSignProviderMethod NetsSignConfig Text
 
 instance ToXML InsertOrderRequest where
   toXML (InsertOrderRequest NetsSignOrder{..} method NetsSignConfig{..} host_part) =
     element "InsertOrder" $ do
-      element "OrderID" . T.pack . show $ nsoSignOrderID
+      element "OrderID" . showt $ nsoSignOrderID
       element "Documents" $ do
         element "Document" $ do
-          element "LocalDocumentReference" ("doc_1" :: T.Text)
+          element "LocalDocumentReference" ("doc_1" :: Text)
           element "Presentation" $ do
-            element "Title" ("Scrive document" :: T.Text)
-            element "Description" ("Scrive document to be signed" :: T.Text)
+            element "Title" ("Scrive document" :: Text)
+            element "Description" ("Scrive document to be signed" :: Text)
           element "DocType" $ do
             element "TEXT" $ do
-              element "B64DocumentBytes" . T.pack . BS.unpack . B64.encode . T.encodeUtf8 $ nsoTextToBeSigned
+              element "B64DocumentBytes" . T.pack . BS.unpack . B64.encode . TE.encodeUtf8 $ nsoTextToBeSigned
       element "Signers" $ do
         element "Signer" $ do
           element "EndUserSigner" $ do
-            element "LocalSignerReference" ("signer_1" :: T.Text)
+            element "LocalSignerReference" ("signer_1" :: Text)
             element "AcceptedPKIs" $ case method of
               NetsSignNOMobile -> do
                 element "BankIDNOMobile" $ do
-                  element "CertificatePolicy" ("Personal" :: T.Text)
+                  element "CertificatePolicy" ("Personal" :: Text)
               NetsSignNOClassic -> do
                 element "BankID" $ do
-                  element "CertificatePolicy" ("Personal" :: T.Text)
+                  element "CertificatePolicy" ("Personal" :: Text)
               -- Nets does not support, that the Signer chooses one of
               -- Employee keycard or Personal keycard. We have to know before
               -- starting the InsertOrder.
               -- We use the same approach in NOBankID for consistency.
               NetsSignDKEmployeeKeycard -> do
                 element "NemID" $ do
-                  element "CertificatePolicy" ("Employee" :: T.Text)
+                  element "CertificatePolicy" ("Employee" :: Text)
                   element "SignerID" $ do
-                    element "IDType" ("SSN" :: T.Text)
+                    element "IDType" ("SSN" :: Text)
                     element "IDValue" nsoSSN
               NetsSignDKEmployeeKeyfile -> do
                 element "NemID-OpenSign" $ do
-                  element "CertificatePolicy" ("Employee" :: T.Text)
+                  element "CertificatePolicy" ("Employee" :: Text)
                   element "SignerID" $ do
-                    element "IDType" ("SSN" :: T.Text)
+                    element "IDType" ("SSN" :: Text)
                     element "IDValue" nsoSSN
               NetsSignDKPersonalKeycard -> do
                 element "NemID" $ do
-                  element "CertificatePolicy" ("Personal" :: T.Text)
+                  element "CertificatePolicy" ("Personal" :: Text)
                   element "SignerID" $ do
-                    element "IDType" ("SSN" :: T.Text)
+                    element "IDType" ("SSN" :: Text)
                     element "IDValue" nsoSSN
       element "WebContexts" $ do
         element "WebContext" $ do
-          element "LocalWebContextRef" ("web_1" :: T.Text)
+          element "LocalWebContextRef" ("web_1" :: Text)
           element "SignURLBase" (netssignSignURLBase <> "index.html?ref=")
           element "ErrorURLBase" (host_part <> "/nets/sign_error?err=")
           case nsoProvider of
@@ -370,15 +370,15 @@ instance ToXML InsertOrderRequest where
           element "Step" $ do
             element "StepNumber" (1 :: Int)
             element "SigningProcess" $ do
-              element "LocalWebContextRef" ("web_1" :: T.Text)
-              element "LocalDocumentReference" ("doc_1" :: T.Text)
-              element "LocalSignerReference" ("signer_1" :: T.Text)
+              element "LocalWebContextRef" ("web_1" :: Text)
+              element "LocalDocumentReference" ("doc_1" :: Text)
+              element "LocalSignerReference" ("signer_1" :: Text)
 
 -- NETS SIGNING - Insert Order Response
 
 data InsertOrderResponse = InsertOrderResponse
   { iorsSignOrderUUID :: !SignOrderUUID
-  , iorsTransactionRef :: !T.Text
+  , iorsTransactionRef :: !Text
   } deriving (Show)
 
 instance Loggable InsertOrderResponse where
@@ -402,15 +402,15 @@ newtype GetSigningProcessesRequest = GetSigningProcessesRequest { unGetSigningPr
 instance ToXML GetSigningProcessesRequest where
   toXML (GetSigningProcessesRequest NetsSignOrder{..}) =
     element "GetSigningProcesses" $ do
-      element "OrderID" . T.pack . show $ nsoSignOrderID
-      element "LocalSignerReference" ("signer_1" :: T.Text)
+      element "OrderID" . showt $ nsoSignOrderID
+      element "LocalSignerReference" ("signer_1" :: Text)
 
 -- NETS Signing - Get Signing Processes Response
 
 data GetSigningProcessesResponse = GetSigningProcessesResponse
-  { gsprsTransactionRef :: !T.Text
+  { gsprsTransactionRef :: !Text
   , gsprsSignOrderUUID    :: !SignOrderUUID
-  , gsprsSignURL        :: !T.Text
+  , gsprsSignURL        :: !Text
   }
 
 xpGetSigningProcessesResponse :: XMLParser GetSigningProcessesResponse
@@ -436,7 +436,7 @@ newtype GetOrderStatusRequest = GetOrderStatusRequest { unGetOrderStatusRequest 
 instance ToXML GetOrderStatusRequest where
   toXML (GetOrderStatusRequest NetsSignOrder{..}) =
     element "GetOrderStatus" $ do
-      element "OrderID" . T.pack . show $ nsoSignOrderID
+      element "OrderID" . showt $ nsoSignOrderID
 
 --NETS Signing - Get Order Status Response
 
@@ -451,7 +451,7 @@ data OrderStatus
 
 data GetOrderStatusResponse = GetOrderStatusResponse
   { gosrsSignOrderUUID :: !SignOrderUUID
-  , gosrsTransactionRef :: !T.Text
+  , gosrsTransactionRef :: !Text
   , gosrsOrderStatus :: !OrderStatus
   }
 
@@ -459,7 +459,7 @@ instance Loggable GetOrderStatusResponse where
   logValue GetOrderStatusResponse{..} = object [
       identifier gosrsSignOrderUUID
     , "transaction_ref" .= gosrsTransactionRef
-    , "order_status" .= (T.pack . show $ gosrsOrderStatus)
+    , "order_status" .= (showt $ gosrsOrderStatus)
     ]
   logDefaultLabel _ = "nets_get_order_status_response"
 
@@ -471,10 +471,10 @@ xpGetOrderStatusResponse = XMLParser $ \cursor -> listToMaybe $ cursor
     , gosrsOrderStatus    = parseOrderStatus $ readT "OrderStatus" rs
     }
 
-parseOrderStatus :: T.Text -> OrderStatus
+parseOrderStatus :: Text -> OrderStatus
 parseOrderStatus t = fromMaybe
-  (unexpectedError $ "Cannot parse OrderStatus in GetOrderStatusResponse:" <+> T.unpack t)
-  (maybeRead $ T.unpack t)
+  (unexpectedError $ "Cannot parse OrderStatus in GetOrderStatusResponse:" <+> t)
+  (maybeRead $ t)
 
 -- NETS Signing - Get SDO Request
 
@@ -483,14 +483,14 @@ newtype GetSDORequest = GetSDORequest { unGetSDORequest :: NetsSignOrder }
 instance ToXML GetSDORequest where
   toXML (GetSDORequest NetsSignOrder{..}) =
     element "GetSDO" $ do
-      element "OrderID" . T.pack . show $ nsoSignOrderID
+      element "OrderID" . showt $ nsoSignOrderID
 
 --NETS Signing - Get SDO Response
 
 data GetSDOResponse = GetSDOResponse
   { gsdorsSignOrderUUID    :: !SignOrderUUID
-  , gsdorsTransactionRef :: !T.Text
-  , gsdorsB64SDOBytes    :: !T.Text
+  , gsdorsTransactionRef :: !Text
+  , gsdorsB64SDOBytes    :: !Text
   }
 
 instance Loggable GetSDOResponse where
@@ -512,21 +512,21 @@ xpGetSDOResponse = XMLParser $ \cursor -> listToMaybe $ cursor
 
 -- NETS Signing - Get SDO Details Request
 
-data GetSDODetailsRequest = GetSDODetailsRequest !T.Text
+data GetSDODetailsRequest = GetSDODetailsRequest !Text
 
 instance ToXML GetSDODetailsRequest where
   toXML (GetSDODetailsRequest b64SDO) =
     element "GetSDODetails" $ do
       element "B64SDOBytes" b64SDO
-      element "VerifySDO" ("true" :: T.Text)
+      element "VerifySDO" ("true" :: Text)
 
 --NETS Signing - Get SDO Response - NO BankID
 
 data GetSDODetailsResponseNO = GetSDODetailsResponseNO
-  { gsdodrsnoTransactionRef :: !T.Text
-  , gsdodrsnoSignedText     :: !T.Text
-  , gsdodrsnoSignerCN       :: !T.Text
-  , gsdodrsnoSignerPID      :: !T.Text
+  { gsdodrsnoTransactionRef :: !Text
+  , gsdodrsnoSignedText     :: !Text
+  , gsdodrsnoSignerCN       :: !Text
+  , gsdodrsnoSignerPID      :: !Text
   }
 
 instance Loggable GetSDODetailsResponseNO where
@@ -550,9 +550,9 @@ xpGetSDODetailsResponseNO = XMLParser $ \cursor -> listToMaybe $ cursor
 --NETS Signing - Get SDO Response - NemID
 
 data GetSDODetailsResponseDK = GetSDODetailsResponseDK
-  { gsdodrsdkTransactionRef :: !T.Text
-  , gsdodrsdkSignedText     :: !T.Text
-  , gsdodrsdkSignerCN       :: !T.Text
+  { gsdodrsdkTransactionRef :: !Text
+  , gsdodrsdkSignedText     :: !Text
+  , gsdodrsdkSignerCN       :: !Text
   }
 
 instance Loggable GetSDODetailsResponseDK where
@@ -571,7 +571,7 @@ xpGetSDODetailsResponseDK = XMLParser $ \cursor -> listToMaybe $ cursor
     , gsdodrsdkSignerCN       = readTs ["SDOList", "SDO", "SDOSignatures", "SDOSignature", "SignerCertificateInfo", "CN"] rs
     }
 
-xpGetSDOAttributes :: XMLParser [(T.Text, T.Text)]
+xpGetSDOAttributes :: XMLParser [(Text, Text)]
 xpGetSDOAttributes = XMLParser $ \cursor -> listToMaybe $ cursor
     $/ laxElement "SDO"
     &/ laxElement "SDODataPart"
@@ -592,12 +592,12 @@ data CancelOrderRequest = CancelOrderRequest !SignOrderUUID
 instance ToXML CancelOrderRequest where
   toXML (CancelOrderRequest soid) =
     element "CancelOrder" $ do
-      element "OrderID" . T.pack . show $ soid
+      element "OrderID" . showt $ soid
 
 --NETS Signing - Cancel Order Response
 
 data CancelOrderResponse = CancelOrderResponse
-  { corsTransactionRef :: !T.Text
+  { corsTransactionRef :: !Text
   }
 
 instance Loggable CancelOrderResponse where
@@ -612,7 +612,7 @@ xpCancelOrderResponse = XMLParser $ \cursor -> listToMaybe $ cursor
       corsTransactionRef = readT "TransRef" rs
     }
 
-readTs :: [T.Text] -> XML.Cursor -> T.Text
+readTs :: [Text] -> XML.Cursor -> Text
 readTs names cursor = T.concat $ cursor $/ laxElements names content
   where
     laxElements = foldr (.) id . fmap (&/) . fmap laxElement

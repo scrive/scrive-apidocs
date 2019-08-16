@@ -7,13 +7,14 @@ import Data.Aeson
 import Data.Int (Int32)
 import Data.Typeable
 import qualified Data.ByteString as BS
+import qualified Data.Text as T
 
 import Crypto
 import File.FileID
 import Log.Identifier
 
 data FileStorage
-  = FileStorageAWS String AESConf -- ^ url inside bucket, aes key/iv
+  = FileStorageAWS Text AESConf -- ^ url inside bucket, aes key/iv
   deriving (Eq, Ord, Show, Typeable)
 
 instance Loggable FileStorage where
@@ -25,7 +26,7 @@ instance Loggable FileStorage where
 
 data File = File {
     fileid       :: FileID
-  , filename     :: String
+  , filename     :: Text
   -- if there is conversion error from sql, detect it immediately
   , filestorage  :: !FileStorage
   , filechecksum :: BS.ByteString
@@ -41,7 +42,7 @@ instance Ord File where
                                     (fileid b, filename b)
 
 instance Show File where
-  show = filename
+  show = T.unpack . filename
 
 instance Loggable File where
   logValue File{..} = object [

@@ -6,7 +6,6 @@ module Doc.API.V2.JSON.List (
 
 import Data.Unjson
 import qualified Control.Applicative.Free as AltF
-import qualified Data.Text as T
 
 import DB
 import Doc.API.V2.JSON.Misc
@@ -65,7 +64,7 @@ toDocumentSorting (DocumentAPISort DocumentAPISortAuthor DocumentAPISortDesc) = 
 
 data DocumentAPIFilter = DocumentAPIFilterStatuses [DocumentStatus]
                     | DocumentAPIFilterTime (Maybe UTCTime) (Maybe UTCTime)
-                    | DocumentAPIFilterTag T.Text T.Text
+                    | DocumentAPIFilterTag Text Text
                     | DocumentAPIFilterIsAuthor
                     | DocumentAPIFilterIsAuthoredBy UserID
                     | DocumentAPIFilterIsSignableOnPad
@@ -73,11 +72,11 @@ data DocumentAPIFilter = DocumentAPIFilterStatuses [DocumentStatus]
                     | DocumentAPIFilterIsNotTemplate
                     | DocumentAPIFilterIsInTrash
                     | DocumentAPIFilterIsNotInTrash
-                    | DocumentAPIFilterByText T.Text
+                    | DocumentAPIFilterByText Text
                     | DocumentAPIFilterCanBeSignedBy UserID
 
 
-filterType :: DocumentAPIFilter -> T.Text
+filterType :: DocumentAPIFilter -> Text
 filterType (DocumentAPIFilterStatuses _) = "status"
 filterType (DocumentAPIFilterTime _ _) = "mtime"
 filterType (DocumentAPIFilterTag _ _) = "tag"
@@ -107,7 +106,7 @@ instance Unjson DocumentAPIFilter where
       , (DocumentAPIFilterCanBeSignedBy (unsafeUserID 0), unjsonDocumentAPIFilterCanBeSignedBy)
     ]
     where
-      filterMatch :: (DocumentAPIFilter,AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter) -> (T.Text, DocumentAPIFilter -> Bool, AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter)
+      filterMatch :: (DocumentAPIFilter,AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter) -> (Text, DocumentAPIFilter -> Bool, AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter)
       filterMatch (df,a) = (filterType df, \f -> filterType df == filterType f, a)
 
 unjsonDocumentAPIFilterStatuses:: AltF.Ap (FieldDef DocumentAPIFilter) DocumentAPIFilter
@@ -138,10 +137,10 @@ unjsonDocumentAPIFilterTag = pure DocumentAPIFilterTag
   <*> field "name" unsafeDocumentAPIFilterTagName "Name of tag to filter on"
   <*> field "value" unsafeDocumentAPIFilterTagValue "Value of such tag"
   where
-    unsafeDocumentAPIFilterTagName:: DocumentAPIFilter ->  T.Text
+    unsafeDocumentAPIFilterTagName:: DocumentAPIFilter ->  Text
     unsafeDocumentAPIFilterTagName (DocumentAPIFilterTag n _) = n
     unsafeDocumentAPIFilterTagName _ = unexpectedError "unsafeDocumentAPIFilterTagName"
-    unsafeDocumentAPIFilterTagValue:: DocumentAPIFilter ->  T.Text
+    unsafeDocumentAPIFilterTagValue:: DocumentAPIFilter ->  Text
     unsafeDocumentAPIFilterTagValue (DocumentAPIFilterTag _ v) = v
     unsafeDocumentAPIFilterTagValue _ = unexpectedError "unsafeDocumentAPIFilterTagValue"
 
@@ -184,7 +183,7 @@ unjsonDocumentAPIFilterByText = pure DocumentAPIFilterByText
   <*  fieldReadonly "filter_by" filterType "Type of filter"
   <*> field "text" unsafeDocumentAPIFilterText "Text to filter on"
   where
-    unsafeDocumentAPIFilterText :: DocumentAPIFilter ->  T.Text
+    unsafeDocumentAPIFilterText :: DocumentAPIFilter ->  Text
     unsafeDocumentAPIFilterText (DocumentAPIFilterByText text) = text
     unsafeDocumentAPIFilterText _ = unexpectedError "unsafeDocumentAPIFilterText"
 
@@ -204,7 +203,7 @@ toDocumentFilter _ (DocumentAPIFilterTime (Just start) (Just end)) = [DF.Documen
 toDocumentFilter _ (DocumentAPIFilterTime Nothing (Just end)) = [DF.DocumentFilterByTimeBefore end]
 toDocumentFilter _ (DocumentAPIFilterTime (Just start) Nothing) = [DF.DocumentFilterByTimeAfter start]
 toDocumentFilter _ (DocumentAPIFilterTime Nothing Nothing) = []
-toDocumentFilter _ (DocumentAPIFilterTag name value) = [DF.DocumentFilterByTags [DocumentTag (T.unpack name) (T.unpack value)]]
+toDocumentFilter _ (DocumentAPIFilterTag name value) = [DF.DocumentFilterByTags [DocumentTag name value]]
 toDocumentFilter uid (DocumentAPIFilterIsAuthor) = [DF.DocumentFilterByAuthor uid]
 toDocumentFilter _ (DocumentAPIFilterIsAuthoredBy uid) = [DF.DocumentFilterByAuthor uid]
 toDocumentFilter uid (DocumentAPIFilterIsSignableOnPad) = [DF.DocumentFilterByAuthor uid,DF.DocumentFilterSignNowOnPad]

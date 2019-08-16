@@ -39,6 +39,7 @@ import Log
 import Text.JSON.Gen
 import qualified Control.Exception.Lifted as E
 import qualified Data.Binary as B
+import qualified Data.Text as T
 
 import DB
 import Folder.Model
@@ -333,7 +334,7 @@ instance Read AccessRoleType where
 
 instance Unjson AccessRoleType where
   unjsonDef = unjsonInvmapR
-    ((maybe (fail "Can't parse AccessRoleType") return) . maybeRead)
+    ((maybe (fail "Can't parse AccessRoleType") return) . maybeRead . T.pack)
     show
     unjsonDef
 
@@ -385,7 +386,7 @@ instance ToSQL AccessRoleID where
   toSQL (AccessRoleID n) = toSQL n
 
 instance FromReqURI AccessRoleID where
-  fromReqURI = maybeRead
+  fromReqURI = maybeRead . T.pack
 
 unsafeAccessRoleID :: Int64 -> AccessRoleID
 unsafeAccessRoleID = AccessRoleID
@@ -406,7 +407,7 @@ instance B.Binary AccessRoleID where
 
 instance Unjson AccessRoleID where
   unjsonDef = unjsonInvmapR
-    ((maybe (fail "Can't parse AccessRoleID") return) . maybeRead)
+    ((maybe (fail "Can't parse AccessRoleID") return) . maybeRead . T.pack)
     show
     unjsonDef
 

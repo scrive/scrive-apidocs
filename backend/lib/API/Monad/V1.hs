@@ -42,6 +42,7 @@ import Log as Log
 import Text.JSON hiding (Ok)
 import Text.JSON.Gen hiding (object)
 import qualified Data.Aeson as A
+import qualified Data.Text as T
 import qualified Happstack.Server.Response as Web
 
 import API.APIVersion
@@ -242,7 +243,6 @@ apiGuard e a = guardEither a >>= either (const $ (throwM . SomeDBExtraException)
 apiGuardJustM :: (MonadThrow m) => APIError -> m (Maybe a) -> m a
 apiGuardJustM e a = a >>= maybe ((throwM . SomeDBExtraException) e) return
 
-
 -- | Unify the different types of guards with this class
 class MonadThrow m => APIGuard m a b | a -> b where
   guardEither :: a -> m (Either APIError b)
@@ -253,6 +253,10 @@ instance MonadThrow m => APIGuard m (Maybe b) b where
 
 instance MonadThrow m => APIGuard m (Either String b) b where
   guardEither (Left s) = return $ Left $ serverError s
+  guardEither (Right v) = return $ Right v
+
+instance MonadThrow m => APIGuard m (Either Text b) b where
+  guardEither (Left s) = return $ Left $ serverError $ T.unpack s
   guardEither (Right v) = return $ Right v
 
 instance (MonadThrow m) => APIGuard m (Either FileError b) b where

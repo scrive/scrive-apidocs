@@ -16,10 +16,9 @@ import qualified Data.ByteString.Base16 as B16
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
-import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 
-equalsExternalBS :: T.Text -> BS.ByteString -> Pair
+equalsExternalBS :: Text -> BS.ByteString -> Pair
 equalsExternalBS name value
   -- If any char is lower than 32 and not \t, \n or \r
   -- then we treat is like binary and encode as base64.
@@ -34,10 +33,10 @@ equalsExternalBS name value
   where
     resultBase64 = (name <> "_base64") .= T.decodeLatin1 (B64.encode value)
 
-equalsExternalBSL :: T.Text -> BSL.ByteString -> Pair
+equalsExternalBSL :: Text -> BSL.ByteString -> Pair
 equalsExternalBSL name = equalsExternalBS name . BSL.toStrict
 
-localRandomID :: (MonadLog m, CryptoRNG m) => T.Text -> m a -> m a
+localRandomID :: (MonadLog m, CryptoRNG m) => Text -> m a -> m a
 localRandomID name action = do
   uuid <- randomBytes 8
   let b64uuid = T.decodeUtf8 $ B16.encode uuid

@@ -101,7 +101,7 @@ _testDocApiV2GetFailsAfter30Days = do
   (_, ctx') <- runTestKontra req ctx $ do
     sid <- getNonTempSessionID
     dbUpdate $ AddDocumentSession sid (signatorylinkid sl)
-  let vars = [ ("signatory_id", inText . show . fromSignatoryLinkID . signatorylinkid $ sl)
+  let vars = [ ("signatory_id", inText . showt . fromSignatoryLinkID . signatorylinkid $ sl)
              ]
       ctxWithin30Days = set ctxtime (addUTCTime (29*24*3600) (documentmtime doc)) ctx'
       ctxAfter30Days  = set ctxtime (addUTCTime (31*24*3600) (documentmtime doc)) ctx'
@@ -111,7 +111,7 @@ _testDocApiV2GetFailsAfter30Days = do
   return ()
 
 mockDocToShortID :: MockDoc -> DocumentID
-mockDocToShortID md = read $ reverse $ take 6 $ reverse $ show (getMockDocId md)
+mockDocToShortID md = read $ T.pack $ reverse $ take 6 $ reverse $ show (getMockDocId md)
 
 testDocApiV2GetShortCode :: TestEnv ()
 testDocApiV2GetShortCode = do
@@ -183,7 +183,7 @@ testDocApiV2GetQRCode = do
         (docID,     rest'')  = span (/= '/') $ drop 3 rest'
         (sigID,     rest''') = span (/= '/') $ tail rest''
         _token               = tail rest'''
-        domain'              = stripUrlScheme domain
+        domain'              = stripUrlScheme $ T.unpack domain
         stripUrlScheme   url = case break (== ':') url of
           (_protocol, ':':'/':'/':srv) -> srv
           _                            -> url
@@ -191,10 +191,10 @@ testDocApiV2GetQRCode = do
     assertEqual "URL scheme must be `scrive://`" "scrive://"  urlScheme
     assertEqual ("Server name must be `" <> domain' <> "`") domain' server
     assertEqual "Doc ID from `getqrcode` should match the one from `new`"
-      (getMockDocId newMockDoc) (read docID)
+      (getMockDocId newMockDoc) (read $ T.pack docID)
 
     assertEqual "Signatory link ID should match the one from `new`"
-      slid (read sigID)
+      slid (read $ T.pack sigID)
 
 
   -- Next, test some failure cases...
@@ -325,7 +325,7 @@ testDocApiV2FilesMain = do
   -- GET request via access token
   let ctx' = set ctxmaybeuser Nothing ctx
       vars = [ ("access_token"
-               , inText . getMockDocAccessToken $ doc) ]
+               , inText . T.pack . getMockDocAccessToken $ doc) ]
   getReq ctx' did []   "(no access token - expected failure)" 401
   getReq ctx' did vars "(access token)" 200
 
@@ -376,7 +376,7 @@ testDocApiV2FilesGet = do
   -- GET request via access token
   let ctx' = set ctxmaybeuser Nothing ctx
       vars = [ ("access_token"
-               , inText . getMockDocAccessToken $ doc) ]
+               , inText . T.pack . getMockDocAccessToken $ doc) ]
   getReq ctx' did fid []   "(no access token - expected failure)" 401
   getReq ctx' did fid vars "(access token)" 200
 

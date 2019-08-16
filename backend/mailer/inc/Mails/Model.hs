@@ -25,8 +25,8 @@ module Mails.Model (
 
 import Control.Monad.Catch
 import Data.Int
-import Data.String.Utils (strip)
 import Data.Time
+import qualified Data.Text as T
 
 import DB
 import MagicHash
@@ -64,7 +64,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SwitchToSlaveSenderImmediately 
       sqlSet "finished_at" (Nothing :: Maybe UTCTime)
       sqlWhereEq "id" job
     unless success $
-      unexpectedError $ show job <+> "doesn't exist"
+      unexpectedError $ (showt job) <+> "doesn't exist"
     where
       job = CollectServiceTestResult
 
@@ -76,7 +76,7 @@ instance (MonadDB m, MonadTime m, MonadThrow m) => DBUpdate m CollectServiceTest
       sqlSetCmd "run_at" $ sqlParam now <+> "+" <?> int
       sqlWhereEq "id" job
     unless success $
-      unexpectedError $ show job <+> "doesn't exist"
+      unexpectedError $ (showt job) <+> "doesn't exist"
     where
       job = CollectServiceTestResult
 
@@ -87,7 +87,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m ScheduleServiceTest () where
       sqlSet "run_at" unixEpoch
       sqlWhereEq "id" job
     unless success $
-      unexpectedError $ show job <+> "doesn't exist"
+      unexpectedError $ (showt job) <+> "doesn't exist"
     where
       job = PerformServiceTest
 
@@ -110,7 +110,7 @@ mailSelectors = [
   , "mails.attempts"
   ]
 
-mailFetcher :: (MailID, MagicHash, Address, [Address], Maybe Address, String, String, CompositeArray1 Attachment, Bool, Int32) -> Mail
+mailFetcher :: (MailID, MagicHash, Address, [Address], Maybe Address, Text, Text, CompositeArray1 Attachment, Bool, Int32) -> Mail
 mailFetcher (mid, token, from, to, reply_to, title, content, CompositeArray1 attachments, service_test, attempts) = Mail {
   mailID = mid
 , mailToken = token
@@ -126,7 +126,7 @@ mailFetcher (mid, token, from, to, reply_to, title, content, CompositeArray1 att
 
 ----------------------------------------
 
-type EmailData = (MagicHash, Address, [Address], Maybe Address, String, String, [Attachment])
+type EmailData = (MagicHash, Address, [Address], Maybe Address, Text, Text, [Attachment])
 
 data CreateEmail = CreateEmail EmailData
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreateEmail MailID where
@@ -159,16 +159,16 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetEmailSendoutTime (Maybe UTCTi
       Just (Just res) -> return res
       _ -> return Nothing
 
-data GetEmailForRecipient = GetEmailForRecipient String String UTCTime
+data GetEmailForRecipient = GetEmailForRecipient Text Text UTCTime
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetEmailForRecipient (Maybe Mail) where
   query (GetEmailForRecipient recipient title startDate) = do
     runQuery01_ . sqlSelect "mails" $ do
       mapM_ sqlResult mailSelectors
-      sqlWhereILike "title" ("%" ++ title ++ "%")
+      sqlWhereILike "title" ("%" <> title <> "%")
       sqlWhere $ "finished_at >=" <?> startDate
       -- receivers is yet another crappy json field in database
       -- change it into proper SQL column some later time
-      sqlWhereILike "receivers" ("%\"" ++ recipient ++ "\"%")
+      sqlWhereILike "receivers" ("%\"" <> recipient <> "\"%")
     fetchMaybe mailFetcher
 
 data GetEmailsForTest = GetEmailsForTest
@@ -229,7 +229,7 @@ insertEmail service_test (token, sender, to, reply_to, title, content, attachmen
     sqlSet "sender" sender
     sqlSet "receivers" to
     sqlSet "reply_to" reply_to
-    sqlSet "title" $ strip title
+    sqlSet "title" $ T.strip title
     sqlSet "content" content
     sqlSet "run_at" unixEpoch
     sqlSet "service_test" service_test

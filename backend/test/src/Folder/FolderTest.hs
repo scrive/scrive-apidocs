@@ -8,7 +8,6 @@ import Happstack.Server
 import Test.Framework
 import Test.QuickCheck
 import qualified Data.HashMap.Strict as H
-import qualified Data.Text as T
 
 import Administration.AdministrationControl
 import Context
@@ -83,7 +82,7 @@ testPartnerUsersWithFolders = do
   assertBool "User has home Folder" . isJust $ userhomefolderid user
   userFolder <- guardJustM . dbQuery . FolderGet . fromJust $ userhomefolderid user
   assertEqual "User home folder is child of UserGroup home folder"
-    (get ugHomeFolderID ug) (get folderParentID userFolder) 
+    (get ugHomeFolderID ug) (get folderParentID userFolder)
 
 testPartnerUsersWithoutFolders :: TestEnv ()
 testPartnerUsersWithoutFolders = do
@@ -114,7 +113,7 @@ partnerCompanyCreate partnerAdminUser partnerAdminUserGroup = do
               rq_newCompany_params 201 rq_newCompany_resp_fp
   let Object respObject = snd respValue
       Just (String cidStr) = H.lookup "id" respObject
-      cid = read $ T.unpack cidStr
+      cid = read cidStr
   return (ctx, cid)
 
 partnerUserCreate :: Context -> UserGroupID -> UserGroupID -> TestEnv ()
@@ -148,12 +147,12 @@ testNewCompanyAccount = do
 
   userFolder <- guardJustM . dbQuery . FolderGet . fromJust $ userhomefolderid userBob
   assertEqual "User home folder is child of UserGroup home folder"
-    (get ugHomeFolderID ug) (get folderParentID userFolder) 
+    (get ugHomeFolderID ug) (get folderParentID userFolder)
 
   -- unlink UserGroup from Folder
   dbUpdate . UserGroupUpdate . set ugHomeFolderID Nothing $ ug
 
-  -- create another user 
+  -- create another user
   cliffReq <- mkRequest POST
     [ ("add", inText "True")
     , ("email", inText "cliff@cranberry.com")
@@ -169,9 +168,9 @@ assertCountAllFolders msg expectedCount =
   assertSQLCount msg expectedCount "SELECT COUNT(*) FROM folders"
 
 createFolderTree :: Int -> TestEnv (FolderID, [FolderID])
-createFolderTree folderDepth = do 
+createFolderTree folderDepth = do
   -- create a tree of depth 5 with each parent having 2 subgroups
-  let createFolder parentID = 
+  let createFolder parentID =
         fmap (get folderID) . dbUpdate . FolderCreate
           . set folderParentID (Just parentID)
           $ defaultFolder
@@ -275,4 +274,3 @@ testMigrationTriggersWork = do
 
   assertSQLCount "Documents without folders" 0
     "SELECT COUNT(*) FROM documents where folder_id IS NULL"
-

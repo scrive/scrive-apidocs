@@ -47,7 +47,7 @@ smsSelectors = [
   ]
 
 smsFetcher
-  :: (ShortMessageID, SMSProvider, String, String, String, Int32) -> ShortMessage
+  :: (ShortMessageID, SMSProvider, Text, Text, Text, Int32) -> ShortMessage
 smsFetcher (smsid, provider, originator, msisdn, body, attempts) = ShortMessage {
   smID         = smsid
 , smProvider   = provider
@@ -59,7 +59,7 @@ smsFetcher (smsid, provider, originator, msisdn, body, attempts) = ShortMessage 
 
 ----------------------------------------
 
-data CreateSMS = CreateSMS SMSProvider String String String
+data CreateSMS = CreateSMS SMSProvider Text Text Text
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreateSMS ShortMessageID where
   update (CreateSMS provider originator msisdn body) = do
     runQuery_ . sqlInsert "smses" $ do
@@ -80,14 +80,14 @@ instance (MonadDB m, MonadTime m) => DBUpdate m CleanSMSesOlderThanDays Int wher
     runQuery . sqlDelete "smses" $ do
       sqlWhere $ "finished_at <=" <?> past
 
-data UpdateSMSWithTeliaID = UpdateSMSWithTeliaID ShortMessageID String
+data UpdateSMSWithTeliaID = UpdateSMSWithTeliaID ShortMessageID Text
 instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateSMSWithTeliaID Bool where
   update (UpdateSMSWithTeliaID mid tid) = do
     runQuery01 . sqlUpdate "smses" $ do
       sqlSet "telia_id" tid
       sqlWhereEq "id" mid
 
-data UpdateSMSWithMbloxID = UpdateSMSWithMbloxID ShortMessageID String
+data UpdateSMSWithMbloxID = UpdateSMSWithMbloxID ShortMessageID Text
 instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateSMSWithMbloxID Bool where
   update (UpdateSMSWithMbloxID mid mlxid) = do
     runQuery01 . sqlUpdate "smses" $ do
@@ -101,7 +101,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithSMSEvent Bool where
       sqlSet "sms_id" mid
       sqlSet "event" ev
 
-data UpdateWithSMSEventForTeliaID = UpdateWithSMSEventForTeliaID String SMSEvent
+data UpdateWithSMSEventForTeliaID = UpdateWithSMSEventForTeliaID Text SMSEvent
 instance
   (MonadDB m, MonadThrow m) =>
   DBUpdate m UpdateWithSMSEventForTeliaID Bool where
@@ -114,7 +114,7 @@ instance
       sqlSet "sms_id" mid
       sqlSet "event" ev
 
-data UpdateWithSMSEventForMbloxID = UpdateWithSMSEventForMbloxID String SMSEvent
+data UpdateWithSMSEventForMbloxID = UpdateWithSMSEventForMbloxID Text SMSEvent
 instance
   (MonadDB m, MonadThrow m) =>
   DBUpdate m UpdateWithSMSEventForMbloxID Bool where
@@ -131,7 +131,7 @@ data GetUnreadSMSEvents = GetUnreadSMSEvents
 instance
   MonadDB m =>
   DBQuery m GetUnreadSMSEvents
-  [(SMSEventID, ShortMessageID, SMSEvent, String)] where
+  [(SMSEventID, ShortMessageID, SMSEvent, Text)] where
   query GetUnreadSMSEvents = do
     runQuery_ . sqlSelect "sms_events" $ do
       sqlJoinOn "smses" "smses.id = sms_events.sms_id"

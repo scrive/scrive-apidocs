@@ -31,7 +31,8 @@ handleMailGunEvents = localDomain "handleMailGunEvents" $ do
             "token" .= show token
           ]
         Just Mail{..} -> localData [identifier mailID] $ do
-          mevent <- readEventType =<< getField "event"
+          eventField <- getField "event"
+          mevent <- readEventType eventField
           case mevent of
             Nothing -> logInfo_ "No event object received"
             Just event -> do
@@ -54,7 +55,7 @@ handleMailGunEvents = localDomain "handleMailGunEvents" $ do
       ]
   ok $ toResponse "Thanks"
 
-readEventType :: Maybe String -> Mailer (Maybe MailGunEvent)
+readEventType :: Maybe Text -> Mailer (Maybe MailGunEvent)
 readEventType (Just "opened") = return $ Just MG_Opened
 readEventType (Just "delivered") = return $ Just MG_Delivered
 readEventType (Just "clicked") = getField "url" >>= return . fmap MG_Clicked

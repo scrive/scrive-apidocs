@@ -82,7 +82,7 @@ handleUserGroupAccountsInternal ugids = do
   let
     companyaccounts =
       map mkAccountFromUser usersWithUgs
-      ++ map mkAccountFromInvite (filter (not . isUser) invitesWithUgs)
+      <> map mkAccountFromInvite (filter (not . isUser) invitesWithUgs)
     mkAccountFromUser (u,ug) = CompanyAccount {
         camaybeuserid = userid u
       , cafullname = getFullName u
@@ -100,11 +100,11 @@ handleUserGroupAccountsInternal ugids = do
       , catos = userhasacceptedtermsofservice u
       , catotpactive = usertotpactive u
       , calang = Just $ lang $ usersettings u
-      , caugname = T.unpack $ get ugName ug
+      , caugname = get ugName ug
       }
     mkAccountFromInvite ((i,fn,ln,em), ug) = CompanyAccount {
         camaybeuserid = inviteduserid i
-      , cafullname = fn ++ " " ++ ln
+      , cafullname = fn <> " " <> ln
       , cafstname  = fn
       , casndname  = ln
       , caemail = em
@@ -117,7 +117,7 @@ handleUserGroupAccountsInternal ugids = do
       , catos = Nothing
       , catotpactive = False
       , calang = Nothing
-      , caugname = T.unpack $ get ugName ug
+      , caugname = get ugName ug
       }
 
   textFilter <- getField "text" >>= \case
@@ -157,20 +157,20 @@ handleUserGroupAccountsInternal ugids = do
 -}
 data CompanyAccount = CompanyAccount
   { camaybeuserid :: UserID       -- ^ the account's or invites userid
-  , cafullname    :: String       -- ^ the account's or invites fullname
-  , cafstname     :: String       -- ^ the account's or invites fstname
-  , casndname     :: String       -- ^ the account's or invites sndname
-  , caemail       :: String       -- ^ the account's or invites email
-  , caphone       :: String       -- ^ the account's or invites phone (user account only)
-  , cassn         :: String       -- ^ the account's or invites ssn (user account only)
-  , caposition    :: String       -- ^ the account's or invites company position (user account only)
+  , cafullname    :: Text       -- ^ the account's or invites fullname
+  , cafstname     :: Text       -- ^ the account's or invites fstname
+  , casndname     :: Text       -- ^ the account's or invites sndname
+  , caemail       :: Text       -- ^ the account's or invites email
+  , caphone       :: Text       -- ^ the account's or invites phone (user account only)
+  , cassn         :: Text       -- ^ the account's or invites ssn (user account only)
+  , caposition    :: Text       -- ^ the account's or invites company position (user account only)
   , carole        :: Role         -- ^ the account's role (always Standard for invites)
   , cadeletable   :: Bool         -- ^ can the account be deleted, or do they have pending documents (always True for invites)?
   , caactivated   :: Bool         -- ^ is the account a full company user with accepted tos? (always False for invites)
   , catos         :: Maybe UTCTime -- ^ TOS time if any (always Nothing for invites)
   , catotpactive  :: Bool         -- ^ Whether TOTP two-factor authentication is active
   , calang        :: Maybe Lang         -- ^ the account's language
-  , caugname      :: String       -- ^ name of user's userGroup
+  , caugname      :: Text       -- ^ name of user's userGroup
   }
 
 data Role = RoleAdmin    -- ^ an admin user
@@ -179,11 +179,11 @@ data Role = RoleAdmin    -- ^ an admin user
   deriving (Eq, Ord, Show)
 
 
-companyAccountsTextSearch :: String -> CompanyAccount -> Bool
+companyAccountsTextSearch :: Text -> CompanyAccount -> Bool
 companyAccountsTextSearch s ca = match (cafullname ca) || match (caemail ca)
-  where match m = map toUpper s `isInfixOf` map toUpper m
+  where match m = T.toUpper s `T.isInfixOf` T.toUpper m
 
-companyAccountsSorting :: String -> CompanyAccount -> CompanyAccount -> Ordering
+companyAccountsSorting :: Text -> CompanyAccount -> CompanyAccount -> Ordering
 companyAccountsSorting "fullname" = companyAccountsSortingBy cafullname
 companyAccountsSorting "email" = companyAccountsSortingBy caemail
 companyAccountsSorting "role" = companyAccountsSortingBy carole
@@ -353,7 +353,7 @@ handleGetBecomeUserGroupAccount ugid = withUser $ \user -> do
     _ -> do
       ug  <- guardJustM $ dbQuery $ UserGroupGet ugid
       ctx <- getContext
-      internalResponse <$> (pageDoYouWantToBeCompanyAccount ctx ug)
+      internalResponse <$> T.unpack <$> (pageDoYouWantToBeCompanyAccount ctx ug)
 
 handlePostBecomeUserGroupAccount :: Kontrakcja m => UserGroupID -> m InternalKontraResponse
 handlePostBecomeUserGroupAccount ugid = withUser $ \user -> do

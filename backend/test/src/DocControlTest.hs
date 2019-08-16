@@ -13,6 +13,7 @@ import qualified Data.ByteString.Char8 as BS8
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.Map as M
+import qualified Data.Text as T
 import qualified Text.JSON
 
 import Archive.Control
@@ -27,12 +28,14 @@ import Doc.API.V1.Calls
 import Doc.DocControl
 import Doc.DocInfo
 import Doc.DocStateData
+import Doc.DocumentID (DocumentID)
 import Doc.DocumentMonad
   ( theDocument, updateDocumentWithID, withDocument, withDocumentID
   , withDocumentM )
 
 import Doc.Model
 import Doc.Screenshot (Screenshot(..))
+import Doc.SignatoryLinkID (SignatoryLinkID)
 import Doc.SignatoryScreenshots
   ( SignatoryScreenshots(signing), emptySignatoryScreenshots )
 
@@ -118,8 +121,8 @@ uploadDocAsNewUser = do
   return (user, rsp)
 
 
-signScreenshots :: (String, Input)
-signScreenshots = ("screenshots", inText $ Text.JSON.encode $ toJSValue $
+signScreenshots :: (Text, Input)
+signScreenshots = ("screenshots", inText $ T.pack $ Text.JSON.encode $ toJSValue $
                    emptySignatoryScreenshots { signing = s })
   where s = Just $ Screenshot unixEpoch $ "\255\216\255\224\NUL\DLEJFIF\NUL\SOH\SOH\SOH\NULH\NULH\NUL\NUL\255\219\NULC\NUL\ETX\STX\STX\STX\STX\STX\ETX\STX\STX\STX\ETX\ETX\ETX\ETX\EOT\ACK\EOT\EOT\EOT\EOT\EOT\b\ACK\ACK\ENQ\ACK\t\b\n\n\t\b\t\t\n\f\SI\f\n\v\SO\v\t\t\r\DC1\r\SO\SI\DLE\DLE\DC1\DLE\n\f\DC2\DC3\DC2\DLE\DC3\SI\DLE\DLE\DLE\255\201\NUL\v\b\NUL\SOH\NUL\SOH\SOH\SOH\DC1\NUL\255\204\NUL\ACK\NUL\DLE\DLE\ENQ\255\218\NUL\b\SOH\SOH\NUL\NUL?\NUL\210\207 \255\217"
 
@@ -130,7 +133,7 @@ testLastPersonSigningADocumentClosesIt = do
 
   let filename = inTestDir "pdfs/simple.pdf"
   filecontent <- liftIO $ BS.readFile filename
-  file <- saveNewFile filename filecontent
+  file <- saveNewFile (T.pack filename) filecontent
 
   addRandomDocumentWithAuthorAndConditionAndFile
             user
@@ -206,7 +209,7 @@ testSigningWithPin = do
 
   let filename = inTestDir "pdfs/simple.pdf"
   filecontent <- liftIO $ BS.readFile filename
-  file <- saveNewFile filename filecontent
+  file <- saveNewFile (T.pack filename) filecontent
 
   addRandomDocumentWithAuthorAndConditionAndFile
             user1
@@ -267,7 +270,7 @@ testSigningWithPin = do
 
     assertEqual "Document is not closed if no pin is provided" Pending .documentstatus =<< theDocument
 
-    req2 <- mkRequest POST [ ("fields", inText "[]"),("pin",inText $ pin ++ "4"), signScreenshots]
+    req2 <- mkRequest POST [ ("fields", inText "[]"),("pin",inText $ pin <> "4"), signScreenshots]
     (_link, _ctx') <- updateDocumentWithID $ \did ->
                       lift . runTestKontra req2 ctx' $ apiCallV1Sign did (signatorylinkid siglink)
 
@@ -389,18 +392,18 @@ testDownloadFile = do
        , (False, ctxuseronpad,   [], "user on pad is author when document in Preparation")
        , (False, ctxadmin,       [], "user logged in is admin of author when document in Preparation")
        , (False, ctxother,       [], "user logged in is unrelated to document")
-       , (True,  ctxnotloggedin, [("accesstoken",inText (show (documentmagichash doc)))],
+       , (True,  ctxnotloggedin, [("accesstoken", inText (showt (documentmagichash doc)))],
                                      "using accesstoken, nobody logged in")
        ]
 
   let sortOutResult apicall shouldallow res comment =
           case (shouldallow,res) of
             (True, Left (e :: E.SomeException)) -> do
-              assertFailure $ "Should be able to download " ++ apicall ++ " when " ++ comment ++ ": " ++ show e
+              assertFailure $ "Should be able to download " <> apicall <> " when " <> comment <> ": " <> show e
             (True, Right (resp1,_ctx1)) | rsCode resp1 < 200 || rsCode resp1 >= 399 -> do
-              assertFailure $ "Should be able to download " ++ apicall ++ " when " ++ comment ++ ":\n" ++ show resp1
+              assertFailure $ "Should be able to download " <> apicall <> " when " <> comment <> ":\n" <> show resp1
             (False, Right (resp1,_ctx1)) | rsCode resp1 >= 200 && rsCode resp1 <= 399 -> do
-              assertFailure $ "Should not be able to download " ++ apicall ++ " when " ++ comment
+              assertFailure $ "Should not be able to download " <> apicall <> " when " <> comment
             _ -> return ()
 
   forM_ cases $ \(shouldallow, ctx, params, comment) -> do
@@ -413,7 +416,6 @@ testDownloadFile = do
                   apiCallV1DownloadMainFile (documentid doc) "anything.pdf"
 
     sortOutResult "apiCallV1DownloadMainFile" shouldallow result2 comment
-
 
 testDownloadFileWithAuthToView :: TestEnv ()
 testDownloadFileWithAuthToView = do
@@ -437,7 +439,7 @@ testDownloadFileWithAuthToView = do
               handleSignShowSaveMagicHash
               (documentid doc) (signatorylinkid sl) mh
   req2     <- mkRequest GET [( "signatorylinkid"
-                             , inText $ show (signatorylinkid sl) )]
+                             , inText $ showt (signatorylinkid sl) )]
   (res2,_) <- runTestKontra req2 ctx' $
               apiCallV1DownloadMainFile (documentid doc) "anything.pdf"
   assertEqual "Response should be 403" 403 (rsCode res2)
@@ -505,7 +507,7 @@ testDocumentDeleteInBulk = do
     docs <- replicateM 100 (addRandomDocumentWithAuthorAndCondition author (isSignable))
 
     ctx <- (set ctxmaybeuser (Just author)) <$> mkContext defaultLang
-    req <- mkRequest POST [("documentids",  inText $ (show $ documentid <$> docs))]
+    req <- mkRequest POST [("documentids",  inText $ (showt $ documentid <$> docs))]
 
     void $ runTestKontra req ctx $ handleDelete
     docs2 <- dbQuery $ GetDocumentsByAuthor (userid author)
@@ -580,9 +582,9 @@ testSignviewBrandingBlocksNastyInput = do
   nastyCSS <-  signviewBrandingCSS nastyTheme
   assertBool "CSS generated for nasty company branding is not empty" (not $ BSL.null $ nastyCSS)
   assertBool "CSS generated for nasty company branding does not contain nasty strings" $
-       (not $ nasty1 `isInfixOf ` (BSL.toString $ nastyCSS))
-    && (not $ nasty2 `isInfixOf ` (BSL.toString $ nastyCSS))
-    && (not $ nasty3 `isInfixOf ` (BSL.toString $ nastyCSS))
+       (not $ (T.unpack nasty1) `isInfixOf ` (BSL.toString $ nastyCSS))
+    && (not $ (T.unpack nasty2) `isInfixOf ` (BSL.toString $ nastyCSS))
+    && (not $ (T.unpack nasty3) `isInfixOf ` (BSL.toString $ nastyCSS))
 
 testDownloadSignviewBrandingAccess :: TestEnv ()
 testDownloadSignviewBrandingAccess = do
@@ -590,7 +592,7 @@ testDownloadSignviewBrandingAccess = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   let filename = inTestDir "pdfs/simple.pdf"
   filecontent <- liftIO $ BS.readFile filename
-  file <- saveNewFile filename filecontent
+  file <- saveNewFile (T.pack filename) filecontent
 
   doc <- addRandomDocumentWithAuthorAndConditionAndFile
             user
@@ -666,7 +668,7 @@ testGetCancelledDocument = do
 
     case eRes of
       Right (res, _) ->
-        assertFailure $ "Should have failed, returned code " ++ show (rsCode res)
+        assertFailure $ "Should have failed, returned code " <> show (rsCode res)
       Left err ->
         assertEqual "Should throw LinkInvalid" LinkInvalid err
 
@@ -718,11 +720,15 @@ testDocumentFromShareableTemplate = replicateM_ 10 $ do
 
   assertEqual "Status is 303" 303 (rsCode res)
   let Just HeaderPair{ hValue = [loc] } = M.lookup "location" $ rsHeaders res
-      (did, slid) = bimap read (read . drop 1)
-        . break (=='/')
-        . drop (length ("/s/" :: String))
-        . BS8.unpack
-        $ loc
+
+      (did, slid) :: (DocumentID, SignatoryLinkID)
+         = bimap read (read . T.drop 1)
+          . T.break (=='/')
+          . T.drop (T.length "/s/")
+          . T.pack
+          . BS8.unpack
+          $ loc
+
   doc <- randomQuery $ GetDocumentByDocumentID did
   assertNotEqual "Should be a different document"
                  (documentid doc) (documentid tpl)
@@ -747,7 +753,7 @@ testDocumentFromShareableTemplate = replicateM_ 10 $ do
       "SELECT COUNT(*) FROM chargeable_items WHERE type =" <?> typ
       <+> "AND document_id =" <?> did
     c <- fetchOne runIdentity
-    assertEqual ("Should have been charged with " ++ show typ)
+    assertEqual ("Should have been charged with " <> show typ)
                 1 (c :: Int64)
 
 testGetDocumentWithSignatoryAccessTokens:: TestEnv ()
@@ -782,7 +788,7 @@ testGetDocumentWithSignatoryAccessTokens = do
 
     case eRes of
       Right (res, _) ->
-        assertFailure $ "Should have failed, returned code " ++ show (rsCode res)
+        assertFailure $ "Should have failed, returned code " <> show (rsCode res)
       Left err ->
         assertEqual "Should throw LinkInvalid" LinkInvalid err
 

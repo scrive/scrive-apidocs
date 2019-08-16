@@ -12,7 +12,6 @@ import Control.Monad.Catch
 import Control.Monad.Time
 import Crypto.RNG
 import Log
-import Text.StringTemplates.Templates
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
@@ -38,6 +37,7 @@ import File.Model
 import File.Storage
 import InputValidation (Result(..), asValidPhoneForSMS)
 import Kontra
+import Templates (renderTextTemplate, renderTextTemplate_)
 import User.Model
 import Util.Actor
 import Util.HasSomeUserInfo
@@ -61,15 +61,15 @@ checkAuthenticationToSignMethodAndValue slid = do
         SMSPinAuthenticationToSign   -> checkParamMobileMatchesSigLink siglink
   where
     checkParamMobileMatchesSigLink siglink = do
-      authValue <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
+      authValue <- apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
       let mobileEditableBySignatory = Just True == join (fieldEditableBySignatory <$> getFieldByIdentity MobileFI (signatoryfields siglink))
-      if (authValue == getMobile siglink || null (getMobile siglink) || mobileEditableBySignatory)
+      if (authValue == getMobile siglink || T.null (getMobile siglink) || mobileEditableBySignatory)
         then return ()
         else apiError $
           requestParameterInvalid "authentication_value" "value for mobile number does not match"
     checkParamSSNMatchesSigLink siglink = do
-      authValue <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
-      if (authValue == getPersonalNumber siglink || null (getPersonalNumber siglink))
+      authValue <- apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
+      if (authValue == getPersonalNumber siglink || T.null (getPersonalNumber siglink))
         then return ()
         else apiError $
           requestParameterInvalid "authentication_value" "value for personal number does not match"
@@ -82,11 +82,9 @@ getScreenshots = do
     Nothing -> apiError $ requestParameterInvalid "screenshots" "Could not resolve reference screenshot"
     Just res -> return res
 
-
-
 signDocument :: (Kontrakcja m, DocumentMonad m)
              => SignatoryLinkID -> SignatoryFieldsValuesForSigning
-             -> [FileID] -> [String] -> Maybe ESignature -> Maybe String
+             -> [FileID] -> [Text] -> Maybe ESignature -> Maybe Text
              -> SignatoryScreenshots -> SignatoryConsentResponsesForSigning
              -> m ()
 signDocument slid fields acceptedAuthorAttachments
@@ -114,11 +112,11 @@ signDocument slid fields acceptedAuthorAttachments
     sl <- guardGetSignatoryFromIdForDocument slid
     authorAttachmentsWithAcceptanceText <-
       forM (documentauthorattachments doc) $ \a -> do
-        acceptanceText <- renderTemplate "_authorAttachmentsUnderstoodContent"
+        acceptanceText <- renderTextTemplate "_authorAttachmentsUnderstoodContent"
                           (F.value "attachment_name" $ authorattachmentname a)
-        return (acceptanceText,a)
+        return (acceptanceText, a)
     notUploadedSignatoryAttachmentsText <-
-      renderTemplate_
+      renderTextTemplate_
       "_pageDocumentForAuthorHelpersLocalDialogsAttachmentmarkasnotuploaded"
     let notUploadedSignatoryAttachmentsWithText =
           zip notUploadedSignatoryAttachments
@@ -139,8 +137,8 @@ fieldsToFieldsWithFiles :: ( CryptoRNG m, MonadBase IO m, MonadCatch m
                            , MonadFileStorage m , MonadLog m , MonadDB m
                            , MonadThrow m, MonadTime m)
                         => SignatoryFieldsValuesForSigning
-                        -> m ( [(FieldIdentity,FieldValue)]
-                             , [(FileID,BS.ByteString)] )
+                        -> m ( [(FieldIdentity, FieldValue)]
+                             , [(FileID, BS.ByteString)] )
 fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning []) = return ([],[])
 fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning (f:fs)) = do
   (changeFields,files') <- fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning fs)
@@ -154,12 +152,12 @@ fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning (f:fs)) = do
         return $ ((fi,FileFV (Just fileid)):changeFields,(fileid,bs):files')
 
 
-checkSignatoryPinToSign :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> SignatoryFieldsValuesForSigning -> String -> m Bool
+checkSignatoryPinToSign :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> SignatoryFieldsValuesForSigning -> Text -> m Bool
 checkSignatoryPinToSign slid (SignatoryFieldsValuesForSigning fields) pin = do
   sl <- guardGetSignatoryFromIdForDocument slid
   let mobileEditableBySignatory = Just True == join (fieldEditableBySignatory <$> getFieldByIdentity MobileFI (signatoryfields sl))
   let slidMobile = getMobile sl
-  mobile <- case (not (null slidMobile) && not mobileEditableBySignatory , lookup MobileFI fields) of
+  mobile <- case (not (T.null slidMobile) && not mobileEditableBySignatory , lookup MobileFI fields) of
     (True, _) -> case asValidPhoneForSMS slidMobile of
                   Good v -> return v
                   _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"
@@ -177,7 +175,7 @@ checkSignatoryPinToSign slid (SignatoryFieldsValuesForSigning fields) pin = do
   return $ pin == pin'
 
 
-checkSignatoryPinToView :: (Kontrakcja m, DocumentMonad m) => SMSPinType -> SignatoryLinkID -> String -> m Bool
+checkSignatoryPinToView :: (Kontrakcja m, DocumentMonad m) => SMSPinType -> SignatoryLinkID -> Text -> m Bool
 checkSignatoryPinToView pinType slid pin = do
   sl <- guardGetSignatoryFromIdForDocument slid
   mobile <- case asValidPhoneForSMS $ getMobile sl of

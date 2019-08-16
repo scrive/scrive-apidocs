@@ -3,9 +3,9 @@ module MonthlyInvoice.Config where
 import Data.Unjson
 
 data MonthlyInvoiceConf = MonthlyInvoiceConf {
-    scriptPath     :: !String
-  , recipientName  :: !String
-  , recipientEmail :: !String
+    scriptPath     :: !Text
+  , recipientName  :: !Text
+  , recipientEmail :: !Text
 } deriving (Eq, Show)
 
 unjsonMonthlyInvoiceConf :: UnjsonDef MonthlyInvoiceConf

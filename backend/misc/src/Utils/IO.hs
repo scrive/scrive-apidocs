@@ -49,13 +49,13 @@ checkExecutables = logInfo "Checking paths to executables:" . object
                    =<< checkMissing
                    =<< mapM findExe importantExecutables
   where
-    findExe :: (T.Text, [String]) -> m (Either T.Text (T.Text, [String], FilePath))
+    findExe :: (Text, [String]) -> m (Either Text (Text, [String], FilePath))
     findExe (name, options) =
       maybe (Left name) (Right . (name, options,)) <$>
       (liftBase . findExecutable . T.unpack $ name)
 
-    checkMissing :: [Either T.Text (T.Text, [String], FilePath)]
-                 -> m [(T.Text, [String], FilePath)]
+    checkMissing :: [Either Text (Text, [String], FilePath)]
+                 -> m [(Text, [String], FilePath)]
     checkMissing eithers = do
       let (missing, present) = partitionEithers eithers
       if null missing
@@ -66,7 +66,7 @@ checkExecutables = logInfo "Checking paths to executables:" . object
           ]
         liftBase exitFailure
 
-    logFullPathAndVersion :: (T.Text, [String], FilePath) -> m Aeson.Pair
+    logFullPathAndVersion :: (Text, [String], FilePath) -> m Aeson.Pair
     logFullPathAndVersion (name, options, fullpath) | null options
       = return $ name .= fullpath
     logFullPathAndVersion (name, options, fullpath) | otherwise
@@ -79,7 +79,7 @@ checkExecutables = logInfo "Checking paths to executables:" . object
         readProcessWithExitCode path options (BSL.empty)
       return $ BSL.toString stdout' ++ BSL.toString stderr'
 
-    importantExecutables :: [(T.Text, [String])]
+    importantExecutables :: [(Text, [String])]
     importantExecutables =
       [ ("java",      ["-version"])
       , ("curl",      ["-V"])

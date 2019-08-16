@@ -13,7 +13,6 @@ module Doc.API.V1.DocumentToJSON (
 import Control.Monad.Catch
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
-import Data.String.Utils (strip)
 import Log
 import Text.JSON
 import Text.JSON.Gen hiding (value)
@@ -41,7 +40,9 @@ import Utils.Image
 import Utils.String
 import qualified Doc.EvidenceAttachments as EvidenceAttachments
 
-evidenceAttachmentsJSONV1 :: (MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, MonadFileStorage m) => Document -> m JSValue
+evidenceAttachmentsJSONV1
+  :: (MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, MonadFileStorage m)
+  => Document -> m JSValue
 evidenceAttachmentsJSONV1 doc = do
     evidenceattachments <- EvidenceAttachments.extractAttachmentsList doc
     let evidenceattachments' = sortBy eaSorter evidenceattachments
@@ -49,8 +50,8 @@ evidenceAttachmentsJSONV1 doc = do
       J.objects "evidenceattachments" $ for evidenceattachments' $ \name -> do
         J.value "name"     $ (T.unpack name)
         J.value "mimetype" $ (Nothing :: Maybe String)
-        J.value "downloadLink" $ show $ LinkEvidenceAttachment (documentid doc) (T.unpack name)
-  where eaSorter :: T.Text -> T.Text -> Ordering
+        J.value "downloadLink" $ show $ LinkEvidenceAttachment (documentid doc) name
+  where eaSorter :: Text -> Text -> Ordering
         eaSorter a b | a == firstAttachmentName = LT
                      | b == firstAttachmentName = GT
                      | otherwise = compare a b
@@ -59,7 +60,7 @@ evidenceAttachmentsJSONV1 doc = do
 documentJSONV1 :: (MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, MonadFileStorage m) => (Maybe User) -> Bool -> Bool ->  Maybe SignatoryLink -> Document -> m JSValue
 documentJSONV1 muser forapi forauthor msl doc = do
     runJSONGenT $ do
-      J.value "id" $ show $ documentid doc
+      J.value "id" $ showt $ documentid doc
       J.value "title" $ documenttitle doc
       J.value "file" $ fmap mainfileJSON (documentfile doc)
       J.value "sealedfile" $ fmap mainfileJSON (documentsealedfile doc)
@@ -96,19 +97,22 @@ documentJSONV1 muser forapi forauthor msl doc = do
       J.value "allowrejectreason" $ documentallowrejectreason doc
       J.value "showfooter" $ documentshowfooter doc
       J.value "isreceipt" $ documentisreceipt doc
-      J.value "invitationmessage" $ if (null $ documentinvitetext doc) --V1 requires HTML for custom message unless message is empty
+      J.value "invitationmessage" $ T.unpack $
+                                       if (T.null $ documentinvitetext doc) --V1 requires HTML for custom message unless message is empty
                                        then ""
-                                       else "<p>" ++ escapeHTML (documentinvitetext doc) ++ "</p>"
-      J.value "confirmationmessage" $ if (null $ documentconfirmtext doc) --V1 requires HTML for custom message unless message is empty
+                                       else "<p>" <> escapeHTML (documentinvitetext doc) <> "</p>"
+      J.value "confirmationmessage" $ T.unpack $
+                                       if (T.null $ documentconfirmtext doc) --V1 requires HTML for custom message unless message is empty
                                        then ""
-                                       else  "<p>" ++ escapeHTML (documentconfirmtext doc) ++ "</p>"
-      J.value "lang" $  case (getLang doc) of -- We keep some old lang codes for old integrations. We should drop it on new API release
-                             LANG_EN -> "gb"
-                             LANG_SV -> "sv"
-                             l -> codeFromLang l
-      J.objects "tags" $ for (Set.toList $ documenttags doc) $ \(DocumentTag n v) -> do
-                                    J.value "name"  n
-                                    J.value "value" v
+                                       else  "<p>" <> escapeHTML (documentconfirmtext doc) <> "</p>"
+      J.value "lang" $ case (getLang doc) of -- We keep some old lang codes for old integrations. We should drop it on new API release
+                            LANG_EN -> "gb"
+                            LANG_SV -> "sv"
+                            l -> codeFromLang l
+      J.objects "tags" $ for (Set.toList $ documenttags doc) $
+        \(DocumentTag n v) -> do
+          J.value "name" n
+          J.value "value" v
       J.value "apicallbackurl" $ documentapiv1callbackurl doc
       J.value "saved" $ not (documentunsaveddraft doc)
       J.value "deleted" $ fromMaybe False $ documentDeletedForUser doc <$> userid <$> muser
@@ -116,7 +120,7 @@ documentJSONV1 muser forapi forauthor msl doc = do
       when (isJust muser) $
         J.value "canperformsigning" $ userCanPerformSigningAction (userid $ fromJust muser) doc
       J.value "objectversion" $ documentobjectversion doc
-      J.value "process" $ ("Contract"::String)
+      J.value "process" ("Contract" :: Text)
       J.value "isviewedbyauthor" $ isSigLinkFor muser (getAuthorSigLink doc)
       unless forapi $ do
         J.value "canberestarted" $ isAuthor msl && ((documentstatus doc) `elem` [Canceled, Timedout, Rejected])
@@ -125,7 +129,7 @@ documentJSONV1 muser forapi forauthor msl doc = do
         J.value "canseeallattachments" $ isAuthor msl || fromMaybe False (useriscompanyadmin <$> muser)
       J.value "accesstoken" $
         if (isNothing msl || isAuthor msl)
-        then show (documentmagichash doc)
+        then showt (documentmagichash doc)
         else ""
       J.value "timezone" $ toString $ documenttimezonename doc
 
@@ -196,37 +200,47 @@ signatoryAttachmentJSON sa = do
   J.value "description" $ signatoryattachmentdescription sa
   J.value "file" $ fileJSON <$> mfile
 
-signatoryFieldsJSON :: (MonadDB m, MonadIO m, MonadMask m, MonadFileStorage m, MonadLog m, MonadBaseControl IO m) => Document -> SignatoryLink -> m JSValue
+signatoryFieldsJSON
+  :: ( MonadDB m
+     , MonadIO m
+     , MonadMask m
+     , MonadFileStorage m
+     , MonadLog m
+     , MonadBaseControl IO m
+     )
+  => Document
+  -> SignatoryLink
+  -> m JSValue
 signatoryFieldsJSON doc sl = fmap (JSArray . catMaybes) $ forM orderedFields $ \sf -> do
     case sf of
       SignatoryNameField nf@(NameField {snfNameOrder = NameOrder 1}) ->
         return $ Just $ fieldJSON "standard" "fstname" (Left (snfValue nf))
-          ((not $ null $ snfValue nf)  && (not $ isPreparation doc))
+          ((not $ T.null $ snfValue nf)  && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryNameField nf@(NameField {snfNameOrder = NameOrder 2}) ->
         return $ Just $ fieldJSON "standard" "sndname" (Left (snfValue nf))
-          ((not $ null $ snfValue nf)  && (not $ isPreparation doc))
+          ((not $ T.null $ snfValue nf)  && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryNameField _ -> unexpectedError "Name field with order different then 1 or 2"
       SignatoryCompanyField cf ->
         return $ Just $ fieldJSON "standard" "sigco"  (Left (scfValue cf))
-          ((not $ null $ scfValue $ cf)  && (not $ isPreparation doc))
+          ((not $ T.null $ scfValue $ cf)  && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryPersonalNumberField pnf ->
         return $ Just $ fieldJSON "standard" "sigpersnr"  (Left (spnfValue pnf))
-          ((not $ null $ spnfValue $ pnf)  && (not $ isPreparation doc))
+          ((not $ T.null $ spnfValue $ pnf)  && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryCompanyNumberField cnf ->
         return $ Just $ fieldJSON "standard" "sigcompnr"  (Left (scnfValue cnf))
-          ((not $ null $ scnfValue $ cnf)  && (not $ isPreparation doc))
+          ((not $ T.null $ scnfValue $ cnf)  && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryEmailField ef ->
         return $ Just $ fieldJSON "standard" "email"  (Left (sefValue ef))
-          ((not $ null $ sefValue $ ef)  && (not $ isPreparation doc))
+          ((not $ T.null $ sefValue $ ef)  && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryMobileField mf ->
         return $ Just $ fieldJSON "standard" "mobile"  (Left (smfValue mf))
-          ((not $ null $ smfValue $ mf)  && (not $ isPreparation doc))
+          ((not $ T.null $ smfValue $ mf)  && (not $ isPreparation doc))
           (fieldIsObligatory sf) (fieldShouldBeFilledBySender sf) (fieldPlacements sf)
       SignatoryTextField tf ->
         return $ Just $ fieldJSON "custom" (stfName tf)  (Left (stfValue tf))
@@ -262,12 +276,20 @@ signatoryFieldsJSON doc sl = fmap (JSArray . catMaybes) $ forM orderedFields $ \
     ftOrder _ CompanyNumberFI = LT
     ftOrder _ _ = EQ
 
-fieldJSON :: String -> String -> Either String BSC.ByteString -> Bool -> Bool -> Bool -> [FieldPlacement] -> JSValue
+fieldJSON
+  :: Text
+  -> Text
+  -> Either Text BSC.ByteString
+  -> Bool
+  -> Bool
+  -> Bool
+  -> [FieldPlacement]
+  -> JSValue
 fieldJSON tp name v closed obligatory filledbysender placements = runJSONGen $ do
-    J.value "type" tp
-    J.value "name" name
+    J.value "type" $ T.unpack tp
+    J.value "name" $ T.unpack name
     J.value "value" $ case v of
-      Left s -> s
+      Left s -> T.unpack s
       Right s -> if (BSC.null s)
                     then ""
                     else BSC.unpack $ imgEncodeRFC2397 $ s
@@ -294,7 +316,7 @@ placementJSON placement = runJSONGen $ do
 
 instance ToJSValue PlacementAnchor where
   toJSValue anchor = runJSONGen $ do
-    J.value "text" (placementanchortext anchor)
+    J.value "text" $ T.unpack $ placementanchortext anchor
     when (placementanchorindex anchor /=1 ) $ do
       J.value "index" (placementanchorindex anchor)
 
@@ -319,7 +341,7 @@ jsonDate mdate = toJSValue $ formatTimeISO <$> mdate
 fileJSON :: File -> JSValue
 fileJSON file = runJSONGen $ do
     J.value "id" $ show $ fileid file
-    J.value "name" $ filename file
+    J.value "name" $ T.unpack $ filename file
 
 mainfileJSON :: MainFile -> JSValue
 mainfileJSON file = runJSONGen $ do
@@ -329,7 +351,7 @@ mainfileJSON file = runJSONGen $ do
 authorAttachmentJSON :: AuthorAttachment -> JSValue
 authorAttachmentJSON att = runJSONGen $ do
     J.value "id" $ show $ authorattachmentfileid att
-    J.value "name" $ authorattachmentname att
+    J.value "name" $ T.unpack $ authorattachmentname att
     J.value "required" $ authorattachmentrequired att
     J.value "add_to_sealed_file" $ authorattachmentaddtosealedfile att
 
@@ -348,14 +370,18 @@ docForListJSONV1 user doc = do
 docFieldsListForJSON :: TemplatesMonad m => UserID -> Document -> JSONGenT m ()
 docFieldsListForJSON userid doc = do
     J.value "id" $ show $ documentid doc
-    J.value "title" $ documenttitle doc
+    J.value "title" $ T.unpack $ documenttitle doc
     J.value "status" $ show $ documentstatusclass doc
     J.value "state"  $ show $ documentstatus doc
     signingParties <- lift $ mapM getSmartNameOrPlaceholder $ filter isSignatory (documentsignatorylinks doc)
-    J.value "party" $ intercalate ", " signingParties
-    J.value "partner" $ intercalate ", " $ map getSmartName $ filter (\sl -> isSignatory sl && not (isAuthor sl)) (documentsignatorylinks doc)
-    J.value "partnercomp" $ intercalate ", " $ map getCompanyName $ filter (\sl -> isSignatory sl && not (isAuthor sl)) (documentsignatorylinks doc)
-    J.value "author" $ intercalate ", " $ map getSmartName $ filter isAuthor $ (documentsignatorylinks doc)
+    J.value "party" $ T.unpack $ T.intercalate ", " $ signingParties
+    J.value "partner" $ T.unpack $ T.intercalate ", " $
+      map getSmartName $ filter
+        (\sl -> isSignatory sl && not (isAuthor sl))
+        (documentsignatorylinks doc)
+    J.value "partnercomp" $ T.unpack $ T.intercalate ", " $
+      map getCompanyName $ filter (\sl -> isSignatory sl && not (isAuthor sl)) (documentsignatorylinks doc)
+    J.value "author" $ T.unpack $ T.intercalate ", " $ map getSmartName $ filter isAuthor $ (documentsignatorylinks doc)
     J.value "time" $ formatTimeISO (documentmtime doc)
     J.value "ctime" $ formatTimeISO (documentctime doc)
     J.value "timeouttime" $ formatTimeISO <$> documenttimeouttime doc
@@ -398,9 +424,9 @@ signatoryFieldsListForJSON :: TemplatesMonad m => Document -> SignatoryLink -> J
 signatoryFieldsListForJSON doc sl = do
     J.value "id" $ show $ signatorylinkid sl
     J.value "status" $ show $ signatoryStatusClass doc sl
-    J.value "name" $ case strip (getCompanyName sl) of
+    J.value "name" $ T.unpack $ case T.strip (getCompanyName sl) of
                        "" -> getSmartName sl
-                       _  -> getSmartName sl ++ " (" ++ getCompanyName sl ++ ")"
+                       _  -> getSmartName sl <> " (" <> getCompanyName sl <> ")"
     J.value "time" $ fromMaybe "" $ formatTimeISO <$> (sign `mplus` reject `mplus` seen `mplus` open)
     J.value "invitationundelivered" $ Pending == documentstatus doc && (Undelivered == mailinvitationdeliverystatus sl || Undelivered == smsinvitationdeliverystatus sl)
     J.value "inpadqueue" $  False
@@ -461,21 +487,21 @@ allCustomTextOrCheckboxOrRadioGroupFields = sortBy fieldNameSort
                                   RadioGroupFT -> True
                                   _ -> False
 
-docForListCSVV1 :: [FieldIdentity] -> Document -> [[String]]
+docForListCSVV1 :: [FieldIdentity] -> Document -> [[Text]]
 docForListCSVV1 customFields doc = map (signatoryForListCSV customFields doc) $ documentsignatorylinks doc
 
-signatoryForListCSV :: [FieldIdentity] -> Document -> SignatoryLink -> [String]
+signatoryForListCSV :: [FieldIdentity] -> Document -> SignatoryLink -> [Text]
 signatoryForListCSV customFields doc sl = [
-              ("'" ++ show (documentid doc) ++ "'") -- Excel trick
+              ("'" <> (showt (documentid doc)) <> "'") -- Excel trick
             , documenttitle doc
-            , show $ documentstatusclass doc
+            , showt $ documentstatusclass doc
             , getAuthorName $ doc
-            , formatTimeSimple $ (documentctime doc)
-            , maybe "" formatTimeSimple $ signtime <$> documentinvitetime doc
-            , maybe "" formatTimeSimple $ documenttimeouttime doc
-            , maybe "" formatTimeSimple $ maybereadinvite sl
-            , maybe "" formatTimeSimple $ signtime <$> maybeseeninfo sl
-            , maybe "" formatTimeSimple $ signtime <$> maybesigninfo sl
+            , T.pack $ formatTimeSimple $ (documentctime doc)
+            , T.pack $ maybe "" formatTimeSimple $ signtime <$> documentinvitetime doc
+            , T.pack $ maybe "" formatTimeSimple $ documenttimeouttime doc
+            , T.pack $ maybe "" formatTimeSimple $ maybereadinvite sl
+            , T.pack $ maybe "" formatTimeSimple $ signtime <$> maybeseeninfo sl
+            , T.pack $ maybe "" formatTimeSimple $ signtime <$> maybesigninfo sl
             , case signatoryrole sl of
                 SignatoryRoleSigningParty -> "Signing party"
                 SignatoryRoleViewer       -> "Viewer"
@@ -488,17 +514,17 @@ signatoryForListCSV customFields doc sl = [
             , getCompanyName sl
             , getCompanyNumber sl
             , getMobile sl
-            ] ++ map (\fi -> maybe "" fieldValue $ getFieldByIdentity fi $ signatoryfields sl) customFields
+            ] <> map (\fi -> maybe "" fieldValue $ getFieldByIdentity fi $ signatoryfields sl) customFields
     where
         fieldValue sf = case sf of
                           SignatoryTextField tf -> stfValue tf
                           SignatoryCheckboxField chf ->  if (schfValue chf)
-                                                             then schfName chf ++ " : checked"
-                                                             else schfName chf ++ " : not checked"
+                                                             then schfName chf <> " : checked"
+                                                             else schfName chf <> " : not checked"
                           SignatoryRadioGroupField rgf ->  fromMaybe "" (srgfSelectedValue rgf)
                           _ -> ""
 
-docForListCSVHeaderV1 :: [FieldIdentity] -> [String]
+docForListCSVHeaderV1 :: [FieldIdentity] -> [Text]
 docForListCSVHeaderV1 customFields = [ "Id"
                                      , "Title"
                                      , "Status"
@@ -516,7 +542,7 @@ docForListCSVHeaderV1 customFields = [ "Id"
                                      , "Party company name"
                                      , "Party company number"
                                      , "Party mobile number"
-                                     ] ++ map fieldName customFields
+                                     ] <> map fieldName customFields
   where fieldName (NameFI _) = ""
         fieldName CompanyFI = ""
         fieldName PersonalNumberFI = ""

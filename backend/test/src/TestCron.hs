@@ -46,8 +46,8 @@ runTestCronUntilIdle ctx = do
         , cronGuardTimeConf      = testGTConf
         , cronCgiGrpConfig       = Nothing
         , cronMixpanelToken      = Nothing
-        , cronNtpServers         = [ show n ++ ".ubuntu.pool.ntp.org"
-                                   | n <- [0..3] ]
+        , cronNtpServers         = [ (showt n) <> ".ubuntu.pool.ntp.org"
+                                   | n :: Int <- [0..3] ]
         , cronSalesforceConf     = Nothing
         , cronPlanhatConf        = Nothing
         , cronMonitoringConf     = Nothing
@@ -124,7 +124,7 @@ runTestCronUntilIdle ctx = do
 allSignalsTrue :: (MonadIO m) => [TMVar Bool] -> TVar [Bool] -> m Bool
 allSignalsTrue idleSignals idleStatuses = liftIO . atomically $ do
   (idx, isIdle) <- takeAnyMVar idleSignals
-  modifyTVar idleStatuses (\ss -> take idx ss ++ [isIdle] ++ drop (idx+1) ss)
+  modifyTVar idleStatuses (\ss -> take idx ss <> [isIdle] <> drop (idx+1) ss)
   all id <$> readTVar idleStatuses
 
 takeAnyMVar :: [TMVar a] -> STM (Int, a)

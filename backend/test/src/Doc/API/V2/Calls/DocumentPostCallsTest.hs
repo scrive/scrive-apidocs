@@ -5,6 +5,7 @@ import Happstack.Server
 import Test.Framework
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.Text as T
 
 import Context
 import DB.Query (dbQuery, dbUpdate)
@@ -132,7 +133,7 @@ testDocApiV2NewFromTemplateShared = do
   do -- Just to ensure limited scope so we don't test against the wrong thing
     mDoc <-  mockDocTestRequestHelper ctx POST [] (docApiV2NewFromTemplate did) 201
     assertEqual "New document should NOT be template" False (getMockDocIsTemplate mDoc)
-    
+
     doc <- dbQuery . GetDocumentByDocumentID $ getMockDocId mDoc
     assertEqual "New document is in user's folder" (documentfolderid doc) (userhomefolderid user)
 
@@ -144,8 +145,8 @@ testDocApiV2Update = do
 
   let new_title = "testTitle blah 42$#$%^"
   updated_title <- getMockDocTitle <$> mockDocTestRequestHelper ctx
-    POST [("document", inText $ "{\"title\":\"" ++ new_title ++ "\"}")] (docApiV2Update did) 200
-  assertEqual "Title should be updated" new_title updated_title
+    POST [("document", inText $ "{\"title\":\"" <> new_title <> "\"}")] (docApiV2Update did) 200
+  assertEqual "Title should be updated" new_title (T.pack updated_title)
 
 testDocApiV2SigUpdateFailsIfConsentModuleOnNonSigningParty :: TestEnv ()
 testDocApiV2SigUpdateFailsIfConsentModuleOnNonSigningParty = do
@@ -156,7 +157,7 @@ testDocApiV2SigUpdateFailsIfConsentModuleOnNonSigningParty = do
   contents <- liftIO $ readFile $
     inTestDir "json/api_v2/test-DocUpdateConsentModuleOnNonSigningParty.json"
   response <- testRequestHelper ctx
-    POST [("document", inText contents)] (docApiV2Update did) 400
+    POST [("document", inText $ T.pack contents)] (docApiV2Update did) 400
 
   assertBool "The error is about the consent module"
              ("onsent module" `BS.isInfixOf` BSL.toStrict response)
@@ -170,7 +171,7 @@ testDocApiV2SigUpdateNoConsentResponses = do
   contents <- liftIO $ readFile $
     inTestDir "json/api_v2/test-DocUpdateNoConsentResponses.json"
   void $ testRequestHelper ctx
-    POST [("document", inText contents)] (docApiV2Update did) 200
+    POST [("document", inText $ T.pack contents)] (docApiV2Update did) 200
 
   withDocumentID did $ do
     sls <- documentsignatorylinks <$> theDocument
@@ -249,7 +250,7 @@ testDocApiV2TrashMultiple = do
   did1 <- getMockDocId <$> testDocApiV2New' ctx
   did2 <- getMockDocId <$> testDocApiV2New' ctx
   did3 <- getMockDocId <$> testDocApiV2New' ctx
-  let input = [("document_ids", inText . show $ map show [did1, did2, did3])]
+  let input = [("document_ids", inText . showt $ map show [did1, did2, did3])]
   mockDocs <- mockDocTestRequestHelperMultiple ctx POST input docApiV2TrashMultiple 200
   forM_ mockDocs $ \mockDoc -> do
     assertEqual "Document should be trashed after call" True $ getMockDocIsTrashed mockDoc
@@ -260,7 +261,7 @@ testDocApiV2TrashMultipleLimit :: TestEnv ()
 testDocApiV2TrashMultipleLimit = do
   user <- addNewRandomUser
   ctx  <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
-  let input = [("document_ids", inText . show $ map show [1..101])]
+  let input = [("document_ids", inText . showt $ map show [1..101])]
   response <- testRequestHelper ctx POST input docApiV2TrashMultiple 400
   assertBool "DocApiV2TrashMultiple should error if given more than 100 document_ids"
     ("document_ids parameter can't have more than 100 positions"
@@ -273,7 +274,7 @@ testDocApiV2DeleteMultiple = do
   did1 <- getMockDocId <$> testDocApiV2New' ctx
   did2 <- getMockDocId <$> testDocApiV2New' ctx
   did3 <- getMockDocId <$> testDocApiV2New' ctx
-  let input = [("document_ids", inText . show $ map show [did1, did2, did3])]
+  let input = [("document_ids", inText . showt $ map show [did1, did2, did3])]
   void $ mockDocTestRequestHelperMultiple ctx POST input docApiV2TrashMultiple 200
   mockDocs <- mockDocTestRequestHelperMultiple ctx POST input docApiV2DeleteMultiple 200
   forM_ mockDocs $ \mockDoc -> do
@@ -286,7 +287,7 @@ testDocApiV2DeleteMultipleLimit :: TestEnv ()
 testDocApiV2DeleteMultipleLimit = do
   user <- addNewRandomUser
   ctx  <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
-  let input = [("document_ids", inText . show $ map show [1..101])]
+  let input = [("document_ids", inText . showt $ map show [1..101])]
   response <- testRequestHelper ctx POST input docApiV2DeleteMultiple 400
   assertBool "docApiV2DeleteMultiple should error if given more than 100 document_ids"
     ("document_ids parameter can't have more than 100 positions"
@@ -522,7 +523,7 @@ testDocApiV2SetSharing = do
 
   forM_ [(True, "true"), (False, "false")] $ \(value, param) -> do
     void $ testRequestHelper ctx POST
-      [ ("document_ids", inText ("[" ++ show (show did) ++ "]"))
+      [ ("document_ids", inText $ T.pack ("[" <> show (show did) <> "]"))
       , ("shared", inText param) ]
       docApiV2SetSharing 202
     isShared <- mockDocIsShared <$> mockDocTestRequestHelper ctx
@@ -536,7 +537,7 @@ testDocApiV2SetSharingLimit = do
   user <- addNewRandomUser
   ctx  <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
   let idList = show $ map show [1..101]
-      input = [("document_ids", inText idList), ("shared", inText "true")]
+      input = [("document_ids", inText $ T.pack idList), ("shared", inText "true")]
   response <- testRequestHelper ctx POST input docApiV2SetSharing 400
   assertBool "docApiV2SetSharing should error if given more than 100 document_ids"
     ("document_ids parameter can't have more than 100 positions"
@@ -593,8 +594,8 @@ testDocApiV2SigChangeEmailAndMobile = do
     -- Then test valid case
     emailAndPhone <- mockDocTestRequestHelper ctx POST [param_email valid_email, param_mobile valid_mobile]
       (docApiV2SigChangeEmailAndMobile did slid) 200
-    assertEqual "Email should have changed" valid_email (getMockDocSigLinkEmail 2 emailAndPhone)
-    assertEqual "Mobile should have changed" valid_mobile (getMockDocSigLinkMobileNumber 2 emailAndPhone)
+    assertEqual "Email should have changed" valid_email (T.pack $ getMockDocSigLinkEmail 2 emailAndPhone)
+    assertEqual "Mobile should have changed" valid_mobile (T.pack $ getMockDocSigLinkMobileNumber 2 emailAndPhone)
   liftIO $ print "DUPA2"
   do
     (did, _author_slid, slid) <- documentForTest
@@ -602,7 +603,7 @@ testDocApiV2SigChangeEmailAndMobile = do
       (docApiV2SigChangeEmailAndMobile did slid) 400
     emailOnly <- mockDocTestRequestHelper ctx POST [param_email valid_email]
       (docApiV2SigChangeEmailAndMobile did slid) 200
-    assertEqual "Email should have changed" valid_email (getMockDocSigLinkEmail 2 emailOnly)
+    assertEqual "Email should have changed" valid_email (T.pack $ getMockDocSigLinkEmail 2 emailOnly)
     assertEqual "Mobile should NOT have changed" orig_mobile (getMockDocSigLinkMobileNumber 2 emailOnly)
   liftIO $ print "DUPA3"
   do
@@ -614,7 +615,7 @@ testDocApiV2SigChangeEmailAndMobile = do
       (docApiV2SigChangeEmailAndMobile did slid) 200
     liftIO $ print "DUPA5"
     assertEqual "Email should NOT have changed" orig_email (getMockDocSigLinkEmail 2 mobileOnly)
-    assertEqual "Mobile should have changed" valid_mobile (getMockDocSigLinkMobileNumber 2 mobileOnly)
+    assertEqual "Mobile should have changed" valid_mobile (T.pack $ getMockDocSigLinkMobileNumber 2 mobileOnly)
 
   do -- If we change mobile, we only want to change access token for mobile
     (did, _author_slid, slid) <- documentForTest

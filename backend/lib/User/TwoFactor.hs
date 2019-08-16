@@ -12,6 +12,7 @@ import Data.Word (Word32)
 import qualified Codec.Binary.Base32 as B32
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BC
+import qualified Data.Text.Encoding as TE
 
 import User.Email (Email(..))
 import Util.QRCode (QRCode, encodeQR)
@@ -53,7 +54,7 @@ makeURIFromKey url email key =
   "otpauth://totp/Scrive%20(" `BS.append` url `BS.append` "):"
   -- Note: We add server to avoid conflicts, see
   -- https://github.com/google/google-authenticator/wiki/Conflicting-Accounts
-  `BS.append` (BC.pack $ unEmail email)
+  `BS.append` (TE.encodeUtf8 $ unEmail email)
   `BS.append` "?secret=" `BS.append` base32Key
   `BS.append` "&issuer=Scrive&algorithm=SHA1&digits=6&period=30"
   where base32Key = B32.encode key

@@ -1,12 +1,13 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
+
 module SocketLabs (
     handleSocketLabsEvents
   ) where
 
-import Data.String.Utils hiding (maybeRead)
 import Happstack.Server
 import Log
 import qualified Control.Exception.Lifted as E
+import qualified Data.Text as T
 
 import DB
 import Happstack.Fields
@@ -20,7 +21,7 @@ handleSocketLabsEvents conf = localDomain "handleSocketLabsEvents" $ do
   logInfo_ "Processing SocketLabs event"
   withCallbackValidation (callbackValidationsFromConfig conf) $ do
     messageId <- getField "MessageId"
-    case (split "-" <$> messageId) of
+    case (T.split (== '-') <$> messageId) of
       Just [messageIdMID,messageIdToken] -> case (maybeRead messageIdMID, maybeRead messageIdToken) of
         (Just mid, Just token) -> localData [identifier mid] $ do
           mmail <- dbQuery $ GetEmail mid token
@@ -29,7 +30,8 @@ handleSocketLabsEvents conf = localDomain "handleSocketLabsEvents" $ do
                 "token" .= show token
               ]
             Just Mail{..} -> localData [identifier mailID] $ do
-              mevent <- readEventType =<< getField "Type"
+              typeField <- getField "Type"
+              mevent <- readEventType $ typeField
               case mevent of
                 Nothing -> logInfo_ "No event object received"
                 Just event -> do
@@ -55,7 +57,7 @@ handleSocketLabsEvents conf = localDomain "handleSocketLabsEvents" $ do
           Just "Validation" -> logInfo_ "Validation request received"
           _ -> logInfo "Invalid MessageId received" $ object ["message_id" .= fmap show messageId ]
 
-readEventType :: Maybe String -> Mailer (Maybe SocketLabsEvent)
+readEventType :: Maybe Text -> Mailer (Maybe SocketLabsEvent)
 readEventType (Just "Delivered") = return $ Just SL_Delivered
 readEventType (Just "Failed") = do
   ft <- readField "FailureType"
@@ -94,13 +96,13 @@ withCallbackValidation cvks handler = do
 -- We need to get all possible validation keys, and then find a one that matches secret key of current request
 callbackValidationsFromConfig :: MailingServerConf -> [CallbackValidationKeys]
 callbackValidationsFromConfig conf =
-  (cvFromSender (mailerMasterSender conf)) ++ (concat $ maybeToList (cvFromSender <$> mailerSlaveSender conf))
+  (cvFromSender (mailerMasterSender conf)) <> (concat $ maybeToList (cvFromSender <$> mailerSlaveSender conf))
   where
     cvFromSender (SMTPSender{smtpUser,smtpDedicatedUsers}) =
       catMaybes ((callbackValidationKeys smtpUser) :  (callbackValidationKeys <$> smtpDedicatedUser <$> smtpDedicatedUsers))
     cvFromSender _ = []
 
-findValidationKey :: [CallbackValidationKeys] -> String -> Maybe String
+findValidationKey :: [CallbackValidationKeys] -> Text -> Maybe Text
 findValidationKey (cvk:cvks) sc = if (callbackValidationSecretKey cvk == sc)
                                      then Just $ callbackValidationValidationKey cvk
                                      else findValidationKey cvks sc

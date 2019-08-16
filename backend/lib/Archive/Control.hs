@@ -55,7 +55,7 @@ import Util.MonadUtils
 import Util.SignatoryLinkUtils
 import Util.ZipUtil
 
-handleArchiveDocumentsAction :: forall m a. Kontrakcja m => String -> (User -> Document -> Bool) -> ((User, Actor) -> DocumentT m a) -> m [a]
+handleArchiveDocumentsAction :: forall m a. Kontrakcja m => Text -> (User -> Document -> Bool) -> ((User, Actor) -> DocumentT m a) -> m [a]
 handleArchiveDocumentsAction actionStr docPermission m = do
   ctx  <- getContext
   user <- guardJust $ getContextUser ctx
@@ -73,7 +73,7 @@ handleArchiveDocumentsAction actionStr docPermission m = do
   else do
     failWithMsg user ids "User didn't have permission to do an action"
   where
-    failWithMsg :: forall r. User -> [DocumentID] -> T.Text -> m r
+    failWithMsg :: forall r. User -> [DocumentID] -> Text -> m r
     failWithMsg user ids msg = do
       logInfo msg $ object [
           "action" .= actionStr
@@ -82,7 +82,7 @@ handleArchiveDocumentsAction actionStr docPermission m = do
         ]
       internalError
 
-handleArchiveDocumentsAction' :: Kontrakcja m => String -> (User -> Document -> Bool) -> ((User, Actor) -> DocumentT m a) -> m JSValue
+handleArchiveDocumentsAction' :: Kontrakcja m => Text -> (User -> Document -> Bool) -> ((User, Actor) -> DocumentT m a) -> m JSValue
 handleArchiveDocumentsAction' actionStr docPermission m = do
   void $ handleArchiveDocumentsAction actionStr docPermission m
   J.runJSONGenT (return ())
@@ -158,10 +158,21 @@ handleListCSV= do
   let documentFilters = (DocumentFilterUnsavedDraft False):(join $ toDocumentFilter (userid user) <$> filters)
       documentSorting = (toDocumentSorting <$> sorting)
   allDocs <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid user) documentFilters documentSorting 10000
-  let allDocsCustomFields = allCustomTextOrCheckboxOrRadioGroupFields allDocs
-      docsCSVs = concatMap (docForListCSVV1 allDocsCustomFields) allDocs
+  let
+    allDocsCustomFields :: [FieldIdentity] =
+      allCustomTextOrCheckboxOrRadioGroupFields allDocs
+
+    docsCSVs' :: [[Text]] =
+      concatMap (docForListCSVV1 allDocsCustomFields) allDocs
+
+    docsCSVs :: [[String]] =
+      fmap (fmap T.unpack) docsCSVs'
+
+    headerVals :: [String] =
+      T.unpack <$> docForListCSVHeaderV1 allDocsCustomFields
+
   return $ CSV { csvFilename = "documents.csv"
-               , csvHeader = docForListCSVHeaderV1 allDocsCustomFields
+               , csvHeader = headerVals
                , csvContent = docsCSVs
                }
 
@@ -176,14 +187,15 @@ showArchive = withUser . withTosCheck . with2FACheck $ \user -> do
         logAttention "User has passed TOS check, but TOS was not accepted" $ object [ identifier $ userid user ]
         internalError
     pb <-  pageArchive ctx user ugwp tostime
-    internalResponse <$> renderFromBodyWithFields pb (F.value "archive" True)
+    internalResponse <$> renderFromBodyWithFields (T.pack pb) (F.value "archive" True)
 
 -- Zip utils
 docToEntry ::  Kontrakcja m => Document -> m (Maybe Entry)
 docToEntry doc = do
-      let name = filter ((/= ' ')) $ filter (isAscii) $ (documenttitle doc) ++ "_" ++ (show $ documentid doc) ++".pdf"
+      let name = T.filter ((/= ' ')) $ T.filter (isAscii) $
+            (documenttitle doc) <> "_" <> (showt $ documentid doc) <>".pdf"
       case mainfileid <$> documentsealedfile doc `mplus` documentfile doc of
         Just fid -> do
             content <- getFileIDContents fid
-            return $ Just $ toEntry name 0 $ BSL.pack $ BSS.unpack content
+            return $ Just $ toEntry (T.unpack name) 0 $ BSL.pack $ BSS.unpack content
         Nothing -> return Nothing

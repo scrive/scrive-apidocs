@@ -13,7 +13,7 @@ import Text.JSON.FromJSValue
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 
-data PdfToolsLambdaSealingResponse = SealSuccess String | SealFail String
+data PdfToolsLambdaSealingResponse = SealSuccess Text | SealFail Text
 
 parsePdfToolsLambdaSealingResponse :: BSL.ByteString -> PdfToolsLambdaSealingResponse
 parsePdfToolsLambdaSealingResponse bsj = case (decode $ BSL.toString bsj) of
@@ -27,21 +27,21 @@ parsePdfToolsLambdaSealingResponse bsj = case (decode $ BSL.toString bsj) of
   _ -> SealFail "Response is not a valid json"
 
 
-data PdfToolsLambdaCleaningResponse = CleanSuccess String | CleanFail String
+data PdfToolsLambdaCleaningResponse = CleanSuccess Text | CleanFail Text
 
 parsePdfToolsLambdaCleaningResponse :: BSL.ByteString -> PdfToolsLambdaCleaningResponse
 parsePdfToolsLambdaCleaningResponse bsj = case (decode $ BSL.toString bsj) of
   Ok jsvalue -> runIdentity $ withJSValue jsvalue $ do
     ms3FileName <- fromJSValueField "resultS3FileName"
     case ms3FileName of
-      Just s3FileName -> return $ CleanSuccess s3FileName
+      Just s3FileName -> return $ CleanSuccess $ s3FileName
       _ -> do
         merror <- fromJSValueField "error"
         return $ CleanFail $ fromMaybe "No error message provided" merror
   _ -> CleanFail "Response is not a valid json"
 
 
-data PdfToolsLambdaAddImageResponse = AddImageSuccess String | AddImageFail String
+data PdfToolsLambdaAddImageResponse = AddImageSuccess Text | AddImageFail Text
 
 parsePdfToolsLambdaAddImageResponse :: BSL.ByteString -> PdfToolsLambdaAddImageResponse
 parsePdfToolsLambdaAddImageResponse bsj = case (decode $ BSL.toString bsj) of
@@ -51,7 +51,5 @@ parsePdfToolsLambdaAddImageResponse bsj = case (decode $ BSL.toString bsj) of
       Just s3FileName -> return $ AddImageSuccess s3FileName
       _ -> do
         merror <- fromJSValueField "error"
-        return $ AddImageFail $ fromMaybe "No error message provided" merror
+        return $ AddImageFail $ fromMaybe "No error message provided" $ merror
   _ -> AddImageFail "Response is not a valid json"
-
-

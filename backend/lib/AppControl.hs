@@ -31,6 +31,8 @@ import qualified Control.Exception.Lifted as E
 import qualified Data.ByteString.Lazy.UTF8 as BSL
 import qualified Data.ByteString.UTF8 as BS
 import qualified Data.Map as Map
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import qualified Database.Redis as R
 import qualified System.FilePath.Windows as Windows
 
@@ -65,7 +67,7 @@ data AppGlobals = AppGlobals {
   , cryptorng          :: !CryptoRNGState
   , connsource         :: !(ConnectionTracker -> TrackedConnectionSource)
   , runlogger          :: !(forall m r . LogT m r -> m r)
-  , hostname           :: !String
+  , hostname           :: !Text
   , amazons3env        :: !AmazonS3Env
   , pdftoolslambdaenv  :: !PdfToolsLambdaEnv
   }
@@ -81,9 +83,9 @@ getStandardLang muser = do
   let mlangcookie = lookCookieValue "lang" $ rqHeaders rq
       mcookielang = join $ langFromCode <$> mlangcookie
       browserlang = langFromHTTPHeader
-                    (fromMaybe "" $ BS.toString <$> getHeader "Accept-Language" rq)
+                    (fromMaybe "" $ TE.decodeUtf8 <$> getHeader "Accept-Language" rq)
       newlang = fromMaybe browserlang $ msum [(getLang <$> muser), mcookielang]
-      newlangcookie = mkCookie "lang" (codeFromLang newlang)
+      newlangcookie = mkCookie "lang" (T.unpack $ codeFromLang newlang)
   addCookie (MaxAge (60*60*24*366)) newlangcookie
   return newlang
 
@@ -334,10 +336,10 @@ appHandler handleRoutes appConf appGlobals = runHandler
 
       currhostpart <- getHostpart
       minutestime <- currentTime
-      let clientName = BS.toString <$> getHeader "client-name" rq
+      let clientName = TE.decodeUtf8 <$> getHeader "client-name" rq
           clientTime = parseTimeISO =<<
             (BS.toString <$> getHeader "client-time" rq)
-          userAgent  = BS.toString <$> getHeader "user-agent" rq
+          userAgent  = TE.decodeUtf8 <$> getHeader "user-agent" rq
       muser <- getUserFromSession session
       mpaduser <- getPadUserFromSession session
       brandeddomain <- dbQuery $ GetBrandedDomainByURL currhostpart

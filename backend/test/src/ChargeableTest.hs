@@ -5,6 +5,7 @@ import Data.Int
 import Happstack.Server
 import Test.Framework
 import qualified Data.ByteString as BS
+import qualified Data.Text as T
 
 import Context
 import DB hiding (query, update)
@@ -55,7 +56,7 @@ test_smsCounting_default = do
 
   runSQL_ clearChargeable
 
-  scheduleSMS doc sms { smsBody = intercalate ", " $ replicate 25 "Test sms" }
+  scheduleSMS doc sms { smsBody = T.intercalate ", " $ replicate 25 "Test sms" }
   runSQL_ selectQuantity
   fetchOne runIdentity >>= assertEqual "Two SMSes were counted" (2::Int32)
   where
@@ -82,7 +83,7 @@ test_smsCounting_telia = do
 
   runSQL_ clearChargeable
 
-  scheduleSMS doc sms { smsBody = intercalate ", " $ replicate 25 "Test sms" }
+  scheduleSMS doc sms { smsBody = T.intercalate ", " $ replicate 25 "Test sms" }
   runSQL_ selectQuantity
   fetchOne runIdentity >>= assertEqual "Two SMSes were counted" (2::Int32)
   where
@@ -112,7 +113,7 @@ test_startDocumentCharging = do
     newDocumentReadyToStart user = do
       let filename = inTestDir "pdfs/simple.pdf"
       filecontent <- liftIO $ BS.readFile filename
-      file <- saveNewFile filename filecontent
+      file <- saveNewFile (T.pack filename) filecontent
       doc <- addRandomDocumentWithAuthorAndConditionAndFile
             user
             (\d -> documentstatus d == Preparation

@@ -7,7 +7,6 @@ module PadApplication.Types (
 import Control.Monad.Catch
 import Data.Int (Int16)
 import Database.PostgreSQL.PQTypes
-import qualified Data.Text as T
 
 -- PadAppMode describes, how a pad application is going to behave.
 data PadAppMode =
@@ -47,10 +46,10 @@ instance ToSQL PadAppMode where
   toSQL PinCode   = toSQL (2::Int16)
   toSQL QRCode    = toSQL (3::Int16)
 
-padAppModeText :: PadAppMode -> T.Text
+padAppModeText :: PadAppMode -> Text
 padAppModeText ListView       = "list_view"
 padAppModeText PinCode        = "pin_code"
 padAppModeText QRCode         = "qr_code"
 
-padAppModeFromText :: T.Text -> Maybe PadAppMode
+padAppModeFromText :: Text -> Maybe PadAppMode
 padAppModeFromText s = find (\p -> s == padAppModeText p) [ListView, PinCode, QRCode]

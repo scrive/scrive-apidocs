@@ -42,7 +42,7 @@ import qualified Doc.Screenshot as Screenshot
 import qualified Doc.SignatoryScreenshots as SignatoryScreenshots
 
 -- | Convert UTCTime to ISO8601 time format with two decimal places that we use
-utcTimeToAPIFormat :: UTCTime -> T.Text
+utcTimeToAPIFormat :: UTCTime -> Text
 utcTimeToAPIFormat time = T.pack (formatTime defaultTimeLocale (iso8601DateFormat (Just "%H:%M:%S%5Q")) time) <> "Z"
 
 -- Unjson for few simple enum types used
@@ -123,7 +123,7 @@ unjsonNotificationDeliveryMethod = unjsonEnumBy "NotificationDeliveryMethod" [
 
 
 unjsonLang :: UnjsonDef Lang
-unjsonLang = unjsonEnum "Lang" (langFromCode . T.unpack) (T.pack . codeFromLang)
+unjsonLang = unjsonEnum "Lang" langFromCode codeFromLang
 
 -- Unjson for simple structures used in document and signatories json
 
@@ -182,20 +182,22 @@ unjsonSignatoryScreenshots = objectOf $ pure combineSignatoryScreenshots
       combineSignatoryScreenshots f s _ (Just rs) = SignatoryScreenshots.SignatoryScreenshots f s (Just $ Right rs)
       combineSignatoryScreenshots f s _ _ = SignatoryScreenshots.SignatoryScreenshots f s Nothing
 
-evidenceAttachmentsToJSONBS :: DocumentID -> [T.Text] -> BSC.ByteString
+evidenceAttachmentsToJSONBS :: DocumentID -> [Text] -> BSC.ByteString
 evidenceAttachmentsToJSONBS did eas = toLazyByteString $ "{ \"attachments\": ["  <> (eaList (sortBy eaSorter eas)) <> "]}"
   where
-    eaList :: [T.Text] -> Builder
+    eaList :: [Text] -> Builder
     eaList [] = ""
     eaList [l] = (eaJSON l)
     eaList (l:ls) = (eaJSON l) <> "," <> eaList ls
 
-    eaJSON :: T.Text -> Builder
+    eaJSON :: Text -> Builder
     eaJSON name = "{\"name\":\"" <> (lazyByteString $ BSC.fromString $ T.unpack $ name) <> "\"" <>
-                  ",\"download_url\":\"" <> (lazyByteString $ BSC.fromString $ show $ LinkEvidenceAttachment did (T.unpack name))<>  "\"" <>
+                  ",\"download_url\":\"" <>
+                  (lazyByteString $ BSC.fromString $ show $ LinkEvidenceAttachment did name) <>
+                  "\"" <>
                   "}"
 
-    eaSorter :: T.Text -> T.Text -> Ordering
+    eaSorter :: Text -> Text -> Ordering
     eaSorter a b | a == firstAttachmentName = LT
                  | b == firstAttachmentName = GT
                  | otherwise = compare a b

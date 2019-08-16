@@ -8,7 +8,6 @@ module Doc.API.V2.JSONTest (
 
 import Control.Monad.Trans
 import Data.Aeson
-import Data.Text (unpack)
 import Happstack.Server
 import Test.Framework
 import qualified Data.ByteString as BS
@@ -68,25 +67,27 @@ testJSONCtx = do
 runApiJSONTest :: Context             -- ^ Context to run the test in
                -> Method              -- ^ HTTP Method to use for API Call
                -> KontraTest Response -- ^ The API call to use
-               -> [(String,Input)]    -- ^ List of API call parameters
+               -> [(Text,Input)]    -- ^ List of API call parameters
                -> Int                 -- ^ Expected response code
                -> FilePath            -- ^ FilePath to JSON file to match against
                -> TestEnv (DocumentID, Value)
 runApiJSONTest ctx httpMethod apiCall httpHeaders expectedRsCode jsonFile = do
-  req <- mkRequestWithHeaders httpMethod httpHeaders []
+  req <- mkRequestWithHeaders httpMethod
+    httpHeaders
+    []
   (res,_) <- runTestKontra req ctx $ apiCall
   assertEqual ("We should get a " ++ show expectedRsCode ++ " response") expectedRsCode (rsCode res)
   testJSONWith jsonFile (rsBody res)
   let Just docJSON = decode (rsBody res) :: Maybe Value
       Object docObj = docJSON
       Just (String didS) = H.lookup "id" docObj
-      Just did = maybeRead $ unpack didS
+      Just did = maybeRead didS
   return (did, docJSON)
 
 runApiTest :: Context             -- ^ Context to run the test in
            -> Method              -- ^ HTTP Method to use for API Call
            -> KontraTest Response -- ^ The API call to use
-           -> [(String,Input)]    -- ^ List of API call parameters
+           -> [(Text,Input)]    -- ^ List of API call parameters
            -> Int                 -- ^ Expected response code
            -> TestEnv ()
 runApiTest ctx httpMethod apiCall httpHeaders expectedRsCode = do

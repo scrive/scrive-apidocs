@@ -7,7 +7,6 @@ import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Control
 import Data.Aeson ((.=), object)
-import Data.String.Utils (replace)
 import Happstack.Server hiding (Expired, dir)
 import Happstack.StaticRouting
 import Log
@@ -82,23 +81,23 @@ netsRoutes = choice [
 
 ----------------------------------------
 
-formatDOB :: T.Text -> T.Text
+formatDOB :: Text -> Text
 formatDOB s = case T.splitOn "." s of
                [day, month, year] -> day <> month <> (T.drop 2 year)
                _ -> unexpectedError "Nets returned date of birth in invalid format"
 
-dobFromDKPersonalNumber :: String -> T.Text
-dobFromDKPersonalNumber personalnumber = case T.chunksOf 2 (T.pack $ take 6 $ personalnumber) of
+dobFromDKPersonalNumber :: Text -> Text
+dobFromDKPersonalNumber personalnumber = case T.chunksOf 2 (T.take 6 $ personalnumber) of
   [day, month, year] -> day <> "." <> month <> "." <> year
   _ -> unexpectedError $ "This personal number cannot be formatted to date: " <> personalnumber
 
 -- In FI we can extract century from the "separator" character of SSN
-dobFromFIPersonalNumber :: String -> T.Text
-dobFromFIPersonalNumber personalnumber = case T.chunksOf 2 (T.pack $ take 6 $ personalnumber) of
+dobFromFIPersonalNumber :: Text -> Text
+dobFromFIPersonalNumber personalnumber = case T.chunksOf 2 (T.take 6 $ personalnumber) of
   [day, month, year] -> day <> "." <> month <> "." <> century <> year
   _ -> formatError
   where
-    century = case (head . drop 6 $ personalnumber) of
+    century = case (T.head . T.drop 6 $ personalnumber) of
         '-' -> "19"
         '+' -> "18"
         'A' -> "20"
@@ -106,29 +105,29 @@ dobFromFIPersonalNumber personalnumber = case T.chunksOf 2 (T.pack $ take 6 $ pe
         _   -> formatError
     formatError = unexpectedError $ "This personal number cannot be formatted to date: " <> personalnumber
 
-cnFromDN ::T.Text -> T.Text
+cnFromDN ::Text -> Text
 cnFromDN dn =
   fromMaybe parseError $ lookup "CN" $ fmap parsePair $ concatMap (T.splitOn " + ") $ T.splitOn ", " $ dn
     where
       parsePair s = case T.splitOn "=" s of
         (name:values) -> (name, T.intercalate "=" values)
-        _ -> unexpectedError $ "Cannot parse DN value: " <> show dn
-      parseError = unexpectedError $ "Cannot parse DN value: " <> show dn
+        _ -> unexpectedError $ "Cannot parse DN value: " <> dn
+      parseError = unexpectedError $ "Cannot parse DN value: " <> dn
 
-decodeCertificate :: T.Text -> B.ByteString
+decodeCertificate :: Text -> B.ByteString
 decodeCertificate = either (unexpectedError $ "invalid base64 of nets certificate") id . B64.decode . T.encodeUtf8
 
-attributeFromAssertion :: T.Text -> [(T.Text,T.Text)] -> T.Text
-attributeFromAssertion name = fromMaybe (unexpectedError $ "missing field in assertion" <+> T.unpack name) . lookup name
+attributeFromAssertion :: Text -> [(Text,Text)] -> Text
+attributeFromAssertion name = fromMaybe (unexpectedError $ "missing field in assertion" <+> name) . lookup name
 
-decodeProvider :: T.Text -> EID.AuthenticationProvider
+decodeProvider :: Text -> EID.AuthenticationProvider
 decodeProvider s = case s of
        "no_bankid"         -> EID.NetsNOBankID
        "no_bidmob"         -> EID.NetsNOBankID
        "dk_nemid_js"       -> EID.NetsDKNemID
        "dk_nemid-opensign" -> EID.NetsDKNemID
        "fi_tupas"          -> EID.NetsFITupas
-       _ -> unexpectedError $ "provider not supported"  <+> T.unpack s
+       _ -> unexpectedError $ "provider not supported" <+> s
 
 flashMessageUserHasIdentifiedWithDifferentSSN :: TemplatesMonad m => m FlashMessage
 flashMessageUserHasIdentifiedWithDifferentSSN =
@@ -150,7 +149,7 @@ handleResolve = do
         (Just nt, _) | domainUrl /= netsTransactionDomain nt -> do
           -- Nets can redirect us from branded domain to main domain. We need to jump back to branded domain for cookies
           link <- currentLink
-          return $ internalResponse $ LinkExternal $ replace domainUrl (netsTransactionDomain nt) link
+          return $ internalResponse $ LinkExternal $ T.replace domainUrl (netsTransactionDomain nt) link
         (Just nt, Just art) -> do
           let mUserId = userid <$> getContextUser ctx
           logInfo "Information about requested nets authorization before assertion request" $ object [
@@ -163,7 +162,7 @@ handleResolve = do
           debugFunction <- mkDebugFunction
           let netsAuth =  CurlAuthBasic (netsMerchantIdentifier netsconf) (netsMerchantPassword netsconf)
               transport = curlTransport SecureSSL netsAuth (T.unpack $ netsAssertionUrl netsconf) certErrorHandler debugFunction
-          res <- soapCall transport "" () (GetAssertionRequest {  assertionArtifact = T.pack art }) xpGetAssertionResponse
+          res <- soapCall transport "" () (GetAssertionRequest {  assertionArtifact = art }) xpGetAssertionResponse
           if ("Success" `T.isInfixOf` assertionStatusCode res)
              then do
                let provider = decodeProvider $ attributeFromAssertion "IDPROVIDER" $ assertionAttributes res
@@ -211,11 +210,11 @@ handleResolveNetsNOBankID res doc nt sl ctx = do
   let decodeInternalProvider s = case s of
          "no_bankid"         -> NetsNOBankIDStandard
          "no_bidmob"         -> NetsNOBankIDMobile
-         _ -> unexpectedError $ "internal provider not supported"  <+> T.unpack s
+         _ -> unexpectedError $ "internal provider not supported" <+>  s
   let internal_provider = decodeInternalProvider $ attributeFromAssertion "IDPROVIDER" $ assertionAttributes res
   let signatoryName = attributeFromAssertion "CN" $ assertionAttributes res
   let dob = attributeFromAssertion "DOB" $ assertionAttributes res
-  let dobSSN = T.pack $ take 6 $ getPersonalNumber sl
+  let dobSSN = T.take 6 $ getPersonalNumber sl
   let dobNETS = formatDOB dob
   let certificate = decodeCertificate $ attributeFromAssertion "CERTIFICATE" $ assertionAttributes res
   let mphone = lookup "NO_CEL8" $ assertionAttributes res
@@ -227,7 +226,7 @@ handleResolveNetsNOBankID res doc nt sl ctx = do
       logAttention "Date of birth from NETS does not match date of birth from SSN. Signatory redirected back and should see identify view." $ object [
           "dob_nets" .= dobNETS
         , "dob_ssn" .= dobSSN
-        , "provider" .= ("no_bankid" :: T.Text)
+        , "provider" .= ("no_bankid" :: Text)
         ]
       return False
     else do
@@ -254,15 +253,16 @@ handleResolveNetsNOBankID res doc nt sl ctx = do
 
         -- Updating phone number - mobile workflow only and only if not provided
         when (isJust mphone) $ do
-          let phone = T.unpack (fromJust mphone)
-          let formattedPhoneFromNets = "+47" ++ phone
+          let phone = fromJust mphone
+          let formattedPhoneFromNets = "+47" <> phone
           let signatoryHasFilledInPhone = getMobile sl == ""
-          let formattedPhoneFromSignatory = filter (\c -> not (c `elem` (" -"::String))) $ getMobile sl
+          let formattedPhoneFromSignatory = T.filter (\c -> not (c `elem` (" -"::String))) $ getMobile sl
           when (not signatoryHasFilledInPhone && formattedPhoneFromSignatory /= formattedPhoneFromNets) $ do
             logAttention_ "Not matching phone for NO BankID - Nets should have blocked that"
             internalError
           when (signatoryHasFilledInPhone && Pending == documentstatus doc) $ do
-            dbUpdate . UpdatePhoneAfterIdentificationToView sl phone formattedPhoneFromNets =<< signatoryActor ctx sl
+            actor <- signatoryActor ctx sl
+            dbUpdate $ UpdatePhoneAfterIdentificationToView sl phone formattedPhoneFromNets actor
 
       dbUpdate $ ChargeUserGroupForNOBankIDAuthentication (documentid doc)
       return True
@@ -274,10 +274,10 @@ handleResolveNetsDKNemID res doc nt sl ctx = do
   let decodeInternalProvider s = case s of
          "dk_nemid_js"       -> NetsDKNemIDKeyCard
          "dk_nemid-opensign" -> NetsDKNemIDKeyFile
-         _ -> unexpectedError $ "internal provider not supported"  <+> T.unpack s
+         _ -> unexpectedError $ "internal provider not supported" <+> s
       internal_provider = decodeInternalProvider $ attributeFromAssertion "IDPROVIDER" $ assertionAttributes res
       signatoryName = cnFromDN $ attributeFromAssertion "DN" $ assertionAttributes res
-      ssn_sl = T.pack $ getPersonalNumber sl
+      ssn_sl = getPersonalNumber sl
       ssn_nets = attributeFromAssertion "DK_SSN" $ assertionAttributes res
       dob = dobFromDKPersonalNumber $ getPersonalNumber sl
       mpid = lookup "DK_DAN_PID" $ assertionAttributes res
@@ -288,7 +288,7 @@ handleResolveNetsDKNemID res doc nt sl ctx = do
       logAttention "SSN from NETS does not match SSN from SignatoryLink." $ object [
           "ssn_sl"   .= ssn_sl
         , "ssn_nets" .= ssn_nets
-        , "provider" .= ("dk_nemid" :: T.Text)
+        , "provider" .= ("dk_nemid" :: Text)
         ]
       return False
     else do
@@ -329,14 +329,14 @@ handleResolveNetsFITupas res doc nt sl ctx = do
       bankStr = attributeFromAssertion "FI_TUPAS_BANK" $ assertionAttributes res
       bankName = if (bankStr `elem` allowed_banks)
         then bankStr
-        else unexpectedError $ "invalid field in FI_TUPAS_BANK: " <+> T.unpack bankStr
+        else unexpectedError $ "invalid field in FI_TUPAS_BANK:" <+> bankStr
 
   if (dob_nets /= dob_sl)
     then do
       logAttention "DOB from NETS does not match DOB from SSN in SignatoryLink." $ object [
           "dob_sl"   .= dob_sl
         , "dob_nets" .= dob_nets
-        , "provider" .= ("fi_tupas" :: T.Text)
+        , "provider" .= ("fi_tupas" :: Text)
         ]
       return False
     else do
@@ -364,7 +364,9 @@ handleResolveNetsFITupas res doc nt sl ctx = do
 ------------------------------------------
 
 handleNetsError  :: Kontrakcja m => m Response
-handleNetsError = simpleHtmlResponse =<< renderTemplate_ "netsError"
+handleNetsError = do
+  out <- renderTextTemplate_ "netsError"
+  simpleHtmlResponse out
 
 -- NETS ESigning
 
@@ -425,15 +427,15 @@ handleSignRequest did slid = do
             logAttention_ "Missing or invalid eid_method for DK"
             respond404
         guardThatPersonalNumberMatches slid pn =<< theDocument
-        return (NetsSignDK, eidmethod', Just . T.pack . filter ('-' /=) $ pn, [])
+        return (NetsSignDK, eidmethod', Just . T.filter ('-' /=) $ pn, [])
       _ -> do
         logAttention "NetsSign: unsupported auth to sign method" $ object [
             identifier did
           , identifier slid
           ]
         internalError
-    let nso = NetsSignOrder nsoID slid provider (T.pack tbs) (sesID sess) (5 `minutesAfter` now) False mSSN
-    host_part <- T.pack <$> getHttpsHostpart
+    let nso = NetsSignOrder nsoID slid provider tbs (sesID sess) (5 `minutesAfter` now) False mSSN
+    host_part <- getHttpsHostpart
     insOrdRs <- netsCall conf (InsertOrderRequest nso eidmethod conf host_part) xpInsertOrderResponse (show did)
     getSignProcRs <- netsCall conf (GetSigningProcessesRequest nso) xpGetSigningProcessesResponse (show did)
     dbUpdate $ MergeNetsSignOrder nso
@@ -446,42 +448,42 @@ handleSignRequest did slid = do
     return $ object
       [ "nets_sign_url" .= nets_sign_url ]
   where
-    getNOPersonalNumber :: Document -> Maybe T.Text
+    getNOPersonalNumber :: Document -> Maybe Text
     getNOPersonalNumber doc = do
       sl <- getSigLinkFor slid doc
-      T.pack <$> (resultToMaybe . asValidNorwegianSSN . getPersonalNumber $ sl)
+      resultToMaybe . asValidNorwegianSSN . getPersonalNumber $ sl
 
     -- return Norwegian mobile number, if it exists. Removes initial "+47".
-    getNOMobile :: Document -> Maybe T.Text
+    getNOMobile :: Document -> Maybe Text
     getNOMobile doc = do
       sl <- getSigLinkFor slid doc
-      T.pack <$> (fmap (drop 3) . resultToMaybe . asValidPhoneForNorwegianBankID . getMobile $ sl)
+      fmap (T.drop 3) . resultToMaybe . asValidPhoneForNorwegianBankID . getMobile $ sl
 
-    textBase64Encode :: T.Text -> T.Text
+    textBase64Encode :: Text -> Text
     textBase64Encode = T.decodeUtf8 . B64.encode . T.encodeUtf8
 
-    encodeNetsUrlParams :: [(T.Text, T.Text)] -> T.Text
+    encodeNetsUrlParams :: [(Text, Text)] -> Text
     encodeNetsUrlParams =
       T.concat . map (\(k, v) -> "&" <> k <> "=" <> textBase64Encode v)
 
 -- | Generate text to be signed that represents contents of the document.
-textToBeSigned :: TemplatesMonad m => Document -> m String
+textToBeSigned :: TemplatesMonad m => Document -> m Text
 textToBeSigned doc@Document{..} = do
     let noBankIDMobileCharLimit = 116
     text1 <- render documenttitle
-    case length text1 > noBankIDMobileCharLimit of
+    case T.length text1 > noBankIDMobileCharLimit of
       False -> return text1
-      True -> render $ shortenText (length text1 - noBankIDMobileCharLimit) documenttitle
+      True -> render $ shortenText (T.length text1 - noBankIDMobileCharLimit) documenttitle
   where
     render title = renderLocalTemplate doc "tbs" $ do
       F.value "document_title" $ title
       F.value "document_id"   $ show documentid
     -- we will be cutting from the middle and putting a " ... " string in the middle
-    shortenText charsToCut text = beginning ++ "..." ++ ending
+    shortenText charsToCut text = beginning <> "..." <> ending
       where
-        preservedLength = (length text - charsToCut - 3) `div` 2
-        beginning = take preservedLength text
-        ending = reverse . take preservedLength . reverse $ text
+        preservedLength = (T.length text - charsToCut - 3) `div` 2
+        beginning = T.take preservedLength text
+        ending = T.reverse . T.take preservedLength . T.reverse $ text
 
 checkNetsSignStatus
   :: (MonadMask m, MonadBaseControl IO m, MonadIO m, DocumentMonad m, MonadLog m)
@@ -565,10 +567,16 @@ checkNetsSignStatus nets_conf did slid = do
           return (lookup "cpr" attrs, lookup "useripaddress" attrs)
 
 handleSignError  :: Kontrakcja m => m Response
-handleSignError = simpleHtmlResponse =<< renderTemplate_ "netsSignError"
+handleSignError = do
+  out <- renderTextTemplate_ "netsSignError"
+  simpleHtmlResponse out
 
 handleSignExit  :: Kontrakcja m => m Response
-handleSignExit = simpleHtmlResponse =<< renderTemplate_ "netsSignExit"
+handleSignExit = do
+  out <- renderTextTemplate_ "netsSignExit"
+  simpleHtmlResponse out
 
 handleSignAbort  :: Kontrakcja m => m Response
-handleSignAbort = simpleHtmlResponse =<< renderTemplate_ "netsSignAbort"
+handleSignAbort = do
+  out <- renderTextTemplate_ "netsSignAbort"
+  simpleHtmlResponse out

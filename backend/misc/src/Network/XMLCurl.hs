@@ -37,7 +37,7 @@ noopErrorHandler _ = curlError
 
 -- | Throw an exception informing about curl error.
 curlError :: MonadThrow m => CurlCode -> m a
-curlError code = unexpectedError $ "Curl response code was" <+> show code
+curlError code = unexpectedError $ "Curl response code was" <+> (showt code)
 
 -- | In case of certificate error, reconnect with
 -- disabled peer verification and log the issue.
@@ -72,7 +72,7 @@ mkDebugFunction = liftBaseWith $ \run -> do
   where
     curlDomain = localDomain "curl"
 
-    maybeShowInfo :: DebugInfo -> Maybe T.Text
+    maybeShowInfo :: DebugInfo -> Maybe Text
     maybeShowInfo InfoText       = Nothing -- irrelevant
     maybeShowInfo InfoHeaderIn   = Just "Incoming header"
     maybeShowInfo InfoHeaderOut  = Just "Outgoing header"
@@ -87,7 +87,7 @@ mkDebugFunction = liftBaseWith $ \run -> do
 data CurlAuth
   = CurlAuthCert FilePath
   | CurlAuthCertKey FilePath FilePath -- user certificate and user private key for authentication to the server
-  | CurlAuthBasic T.Text T.Text
+  | CurlAuthBasic Text Text
   | CurlAuthNone
 
 curlTransport

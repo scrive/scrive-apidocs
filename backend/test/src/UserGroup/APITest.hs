@@ -3,6 +3,7 @@ module UserGroup.APITest (userGroupApiTests) where
 
 import Happstack.Server
 import Test.Framework
+import qualified Data.Text as T
 
 import AccessControl.Model
 import AccessControl.Types
@@ -170,7 +171,7 @@ testNonAdminUserCannotCreateRootUserGroup :: TestEnv ()
 testNonAdminUserCannotCreateRootUserGroup = do
   muser <- addNewUser "Arthur" "Dent" "arthur.dent@scrive.com"
   ctx   <- set ctxmaybeuser muser <$> mkContext defaultLang
-  req   <- mkRequest POST [ ("usergroup", inText jsonRootUG) ]
+  req   <- mkRequest POST [ ("usergroup", inText $ T.pack jsonRootUG) ]
   res   <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "non-admin/sales user can't create root UserGroup" 403 $ rsCode res
 
@@ -178,7 +179,7 @@ testAdminUserCanCreateRootUserGroup :: TestEnv ()
 testAdminUserCanCreateRootUserGroup = do
   muser <- addNewUser "Tricia" "McMillan" emailAddress
   ctx   <- setUser muser <$> mkContext defaultLang
-  req   <- mkRequest POST [ ("usergroup", inText jsonRootUG) ]
+  req   <- mkRequest POST [ ("usergroup", inText $ T.pack jsonRootUG) ]
   res   <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "admin user can create root UserGroup" 200 $ rsCode res
     where
@@ -189,7 +190,7 @@ testSalesUserCanCreateRootUserGroup :: TestEnv ()
 testSalesUserCanCreateRootUserGroup = do
   muser <- addNewUser "Deep" "Thought" emailAddress
   ctx   <- setUser muser <$> mkContext defaultLang
-  req   <- mkRequest POST [ ("usergroup", inText jsonRootUG) ]
+  req   <- mkRequest POST [ ("usergroup", inText $ T.pack jsonRootUG) ]
   res   <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "sales user can create root UserGroup" 200 $ rsCode res
     where
@@ -200,7 +201,7 @@ testNonAdminUserCannotCreateChildUserGroupForNonExistentUserGroup :: TestEnv ()
 testNonAdminUserCannotCreateChildUserGroupForNonExistentUserGroup = do
   muser <- addNewUser "Gag" "Halfrunt" "gag.halfrunt@scrive.com"
   ctx   <- set ctxmaybeuser muser <$> mkContext defaultLang
-  req   <- mkRequest POST [ ("usergroup", inText jsonNonExistentParentUG) ]
+  req   <- mkRequest POST [ ("usergroup", inText $ T.pack jsonNonExistentParentUG) ]
   res   <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "user can't create child UserGroup for non-existent UserGroup" 403 $ rsCode res
     where
@@ -223,7 +224,7 @@ testNonAdminUserCannotCreateChildUserGroupWithoutUGAdminPermissions :: TestEnv (
 testNonAdminUserCannotCreateChildUserGroupWithoutUGAdminPermissions = do
   (user, ug) <- addNewAdminUserAndUserGroup "Prostetnic Vogon" "Jeltz" emailAddress
   ctx   <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
-  req   <- mkRequest POST [ ("usergroup", inText . jsonWithParentUG $ get ugID ug) ]
+  req   <- mkRequest POST [ ("usergroup", inText $ T.pack $ jsonWithParentUG $ get ugID ug) ]
   res   <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "UserGroup admin can create child UserGroup" 403 $ rsCode res
     where
@@ -236,7 +237,7 @@ testUserCanCreateChildUserGroupWithPermissions = do
       ugid = get ugID ug
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx   <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
-  req   <- mkRequest POST [ ("usergroup", inText . jsonWithParentUG $ get ugID ug) ]
+  req   <- mkRequest POST [ ("usergroup", inText $ T.pack $ jsonWithParentUG $ get ugID ug) ]
   res   <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "UserGroup admin can create child UserGroup" 200 $ rsCode res
     where
@@ -247,7 +248,7 @@ testAdminUserCanCreateChildUserGroupWithoutPermissions = do
   muser <- addNewUser "Oolon" "Colluphid" emailAddress
   ctx   <- setUser muser <$> mkContext defaultLang
   ug    <- addNewUserGroup
-  req   <- mkRequest POST [ ("usergroup", inText . jsonWithParentUG $ get ugID ug) ]
+  req   <- mkRequest POST [ ("usergroup", inText $ T.pack $ jsonWithParentUG $ get ugID ug) ]
   res   <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "admin user can create root UserGroup" 200 $ rsCode res
     where
@@ -259,7 +260,7 @@ testSalesUserCanCreateChildUserGroupWithoutPermissions = do
   muser <- addNewUser "Marvin" "the Paranoid Android" emailAddress
   ctx   <- setUser muser <$> mkContext defaultLang
   ug    <- addNewUserGroup
-  req   <- mkRequest POST [ ("usergroup", inText . jsonWithParentUG $ get ugID ug) ]
+  req   <- mkRequest POST [ ("usergroup", inText $ T.pack $ jsonWithParentUG $ get ugID ug) ]
   res   <- fst <$> runTestKontra req ctx userGroupApiV2Create
   assertEqual "sales user can create root UserGroup" 200 $ rsCode res
     where
@@ -273,7 +274,7 @@ testUserCanEditRootUserGroupWithPermissions = do
       ugid = get ugID ug
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
   ctx   <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
-  req   <- mkRequest POST [ ("usergroup", inText jsonExistingRootUG) ]
+  req   <- mkRequest POST [ ("usergroup", inText $ T.pack jsonExistingRootUG) ]
   res   <- fst <$> runTestKontra req ctx (userGroupApiV2Update ugid)
   assertEqual "users can edit root UserGroup as UG Admin" 200 $ rsCode res
     where
@@ -289,7 +290,7 @@ testUserCanEditChildUserGroupWithPermissions = do
   void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugidParent
   ugidChild <- get ugID <$> addNewUserGroupWithParent False (Just ugidParent)
   ctx     <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
-  let field = ("usergroup", inText $ jsonExistingChildUG ugidParent)
+  let field = ("usergroup", inText $ T.pack $ jsonExistingChildUG ugidParent)
   req     <- mkRequest POST [ field ]
   res     <- fst <$> runTestKontra req ctx (userGroupApiV2Update ugidChild)
   assertEqual "users can edit child UserGroup as UG Admin" 200 $ rsCode res

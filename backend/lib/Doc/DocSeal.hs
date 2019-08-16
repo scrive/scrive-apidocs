@@ -17,7 +17,6 @@ import Control.Monad.Catch hiding (handle)
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
 import Crypto.RNG
-import Data.Char
 import Data.Function (on)
 import Data.Time
 import Log
@@ -28,6 +27,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.UTF8 as BS hiding (length)
 import qualified Data.Map as Map
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import qualified Data.Text.ICU.Normalize as ICU
 import qualified Text.StringTemplates.Fields as F
 
@@ -78,7 +78,7 @@ import qualified Doc.SealSpec as Seal
 import qualified HostClock.Model as HC
 
 personFromSignatory :: forall m . (MonadDB m, MonadIO m, MonadMask m, TemplatesMonad m, MonadFileStorage m, MonadLog m, MonadBaseControl IO m)
-                    => String
+                    => Text
                     -> TimeZoneName
                     -> SignatoryIdentifierMap
                     -> CheckboxImagesMapping
@@ -86,58 +86,67 @@ personFromSignatory :: forall m . (MonadDB m, MonadIO m, MonadMask m, TemplatesM
                     -> SignatoryLink
                     -> m Seal.Person
 personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signatory = do
-    emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
+    emptyNamePlaceholder <- renderTextTemplate_ "_notNamedParty"
     stime <- case  maybesigninfo signatory of
                   Nothing -> return ""
                   Just si -> formatUTCTimeForVerificationPage tz $ signtime si
-    signedAtText <- if (null stime)
+    signedAtText <- if (T.null stime)
                        then return ""
-                    else renderTemplate "_contractsealingtextssignedAtText" $ F.value "time" stime
+                    else renderTextTemplate "_contractsealingtextssignedAtText" $ F.value "time" stime
     let personalnumber = if signatorylinkhidepn signatory
                            then ""
                            else getPersonalNumber signatory
         companynumber = getCompanyNumber signatory
-    companyNumberText <- if null companynumber
+    companyNumberText <- if T.null companynumber
                             then return ""
-                            else renderTemplate "_contractsealingtextsorgNumberText" $ F.value "companynumber" companynumber
-    personalNumberText <- if null personalnumber
+                            else renderTextTemplate "_contractsealingtextsorgNumberText" $ F.value "companynumber" companynumber
+    personalNumberText <- if T.null personalnumber
                            then return ""
-                           else renderTemplate "_contractsealingtextspersonalNumberText" $ F.value "idnumber" personalnumber
+                           else renderTextTemplate "_contractsealingtextspersonalNumberText" $ F.value "idnumber" personalnumber
 
     eauthentication <- dbQuery $
       GetEAuthenticationWithoutSession AuthenticationToView $ signatorylinkid signatory
     identifiedNameText <- case eauthentication of
 
         Just (CGISEBankIDAuthentication_ authentication)  ->
-          renderTemplate "_identifiedBySwedishBankIDText" $
+          renderTextTemplate "_identifiedBySwedishBankIDText" $
           F.value "name" $ cgisebidaSignatoryName authentication
         Just (NetsNOBankIDAuthentication_ authentication) ->
-          renderTemplate "_identifiedByNOBankIDText" $
+          renderTextTemplate "_identifiedByNOBankIDText" $
           F.value "name" $ netsNOBankIDSignatoryName authentication
         Just (NetsDKNemIDAuthentication_ authentication)  ->
-          renderTemplate "_identifiedByDKNemIDText" $
+          renderTextTemplate "_identifiedByDKNemIDText" $
           F.value "name" $ netsDKNemIDSignatoryName authentication
         Just (NetsFITupasAuthentication_ authentication)  ->
-          renderTemplate "_identifiedByFITupasText" $
+          renderTextTemplate "_identifiedByFITupasText" $
           F.value "name" $ netsFITupasSignatoryName authentication
         Just (EIDServiceVerimiAuthentication_ authentication)  ->
-          renderTemplate "_identifiedByVerimiText" $
+          renderTextTemplate "_identifiedByVerimiText" $
           F.value "email" $ eidServiceVerimiVerifiedEmail authentication
         Just (SMSPinAuthentication_ _)  -> return ""
         Nothing                         -> return ""
 
     esignature <- dbQuery $ GetESignature $ signatorylinkid signatory
     nameFromText <- case esignature of
-        Just (CGISEBankIDSignature_ signature) -> renderTemplate "_nameFromSwedishBankIDText" $ F.value "name" $ cgisebidsSignatoryName signature
-        Just (NetsNOBankIDSignature_ signature) -> renderTemplate "_nameFromNOBankIDText" $ F.value "name" $ netsnoSignatoryName signature
-        Just (NetsDKNemIDSignature_ signature) -> renderTemplate "_nameFromDKNemIDText" $ F.value "name" $ netsdkSignatoryName signature
+        Just (CGISEBankIDSignature_ sig) ->
+          renderTextTemplate "_nameFromSwedishBankIDText" $
+            F.value "name" $ cgisebidsSignatoryName sig
+        Just (NetsNOBankIDSignature_ sig) ->
+          renderTextTemplate "_nameFromNOBankIDText" $
+            F.value "name" $ netsnoSignatoryName sig
+        Just (NetsDKNemIDSignature_ sig) ->
+          renderTextTemplate "_nameFromDKNemIDText" $
+            F.value "name" $ netsdkSignatoryName sig
         _ -> return ""
-
 
     fields  <- maybeAddBankIDLogo =<<
                fieldsFromSignatory checkboxMapping radiobuttonMapping signatory
     highlightedImages <- mapM (highlightedImageFromHighlightedPage inputpath) (signatoryhighlightedpages signatory)
-    return $ Seal.Person { Seal.fullname           = fromMaybe "" $ signatoryIdentifier sim (signatorylinkid signatory) emptyNamePlaceholder
+    return $ Seal.Person { Seal.fullname           =
+                            fromMaybe "" $
+                            signatoryIdentifier sim
+                              (signatorylinkid signatory)
+                              emptyNamePlaceholder
                          , Seal.company            = getCompanyName signatory
                          , Seal.email              = getEmail signatory
                          , Seal.phone              = getMobile signatory
@@ -186,7 +195,7 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
 
 
 personExFromSignatoryLink :: (MonadDB m, MonadIO m, MonadMask m, TemplatesMonad m, MonadFileStorage m, MonadLog m, MonadBaseControl IO m)
-                          => String
+                          => Text
                           -> TimeZoneName
                           -> SignatoryIdentifierMap
                           -> CheckboxImagesMapping
@@ -288,9 +297,9 @@ fieldsFromSignatory checkboxMapping radiobuttonMapping SignatoryLink{signatoryfi
                  , Seal.keyColor         = Just (255,255,255) -- white is transparent
                  }
 
-highlightedImageFromHighlightedPage :: forall m. (MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, MonadFileStorage m) => String -> HighlightedPage -> m Seal.HighlightedImage
+highlightedImageFromHighlightedPage :: forall m. (MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, MonadFileStorage m) => Text -> HighlightedPage -> m Seal.HighlightedImage
 highlightedImageFromHighlightedPage inputpath HighlightedPage{..} = do
-  pdfContent <- liftBase $ BS.readFile inputpath
+  pdfContent <- liftBase $ BS.readFile $ T.unpack inputpath
   content <- getFileIDContents highlightedPageFileID
   mMaskedContent <- clipHighlightImageFromPage pdfContent content (fromIntegral highlightedPagePage)
   case mMaskedContent of
@@ -308,12 +317,12 @@ listAttachmentsFromDocument document =
 
 
 findOutAttachmentDesc :: (MonadIO m, MonadDB m, MonadMask m, MonadLog m, TemplatesMonad m, MonadFileStorage m, MonadBaseControl IO m)
-                      => SignatoryIdentifierMap -> String -> Document -> m [Seal.FileDesc]
+                      => SignatoryIdentifierMap -> Text -> Document -> m [Seal.FileDesc]
 
 findOutAttachmentDesc sim tmppath document = logDocument (documentid document) $ do
   a <- mapM findAttachmentsForAuthorAttachment authorAttsNumbered
   b <- mapM findAttachmentsForSignatoryAttachment attAndSigsNumbered
-  return (a ++ catMaybes b)
+  return (a <> catMaybes b)
   where
       attAndSigs = listAttachmentsFromDocument document
       authorAtts = documentauthorattachments document
@@ -348,7 +357,8 @@ findOutAttachmentDesc sim tmppath document = logDocument (documentid document) $
               Right x -> return x
             return (contents, numberOfPages, filename file)
         numberOfPagesText <-
-          if (".png" `isSuffixOf` (map toLower name) || ".jpg" `isSuffixOf` (map toLower name) )
+          if ( ".png" `T.isSuffixOf` (T.toLower name) ||
+               ".jpg" `T.isSuffixOf` (T.toLower name) )
            then return ""
            else if numberOfPages==1
                   then renderLocalTemplate document "_numberOfPagesIs1" $ return ()
@@ -356,15 +366,18 @@ findOutAttachmentDesc sim tmppath document = logDocument (documentid document) $
                     F.value "pages" numberOfPages
 
         attachedByText <- do
-          emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
+          emptyNamePlaceholder <- renderTextTemplate_ "_notNamedParty"
           renderLocalTemplate document "_documentAttachedBy" $ do
             F.value "identifier" $ signatoryIdentifier sim (signatorylinkid sl) emptyNamePlaceholder
 
         attachmentNumText <- renderLocalTemplate document "_attachedDocument" $ do
                                      F.value "number" num
-        let attachmentPath = tmppath </> attachmentNumText ++ takeExtension name
+        let attachmentPath =
+              (T.unpack tmppath) </>
+              ((T.unpack attachmentNumText) <>
+                takeExtension (T.unpack name))
         logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length contents)
-                                           , "originator" .= ("findOutAttachmentDesc" :: T.Text) ]
+                                           , "originator" .= ("findOutAttachmentDesc" :: Text) ]
         liftIO $ BS.writeFile attachmentPath contents
 
         attachedToSealedFileText <- if addContent
@@ -378,7 +391,7 @@ findOutAttachmentDesc sim tmppath document = logDocument (documentid document) $
                  , fileAttachedBy = attachedByText
                  , fileSealedOn   = Nothing
                  , fileAttachedToSealedFileText = Just attachedToSealedFileText
-                 , fileInput      = if addContent then (Just attachmentPath) else Nothing
+                 , fileInput      = if addContent then (Just $ T.pack attachmentPath) else Nothing
                  }
 
 
@@ -392,13 +405,13 @@ evidenceOfIntentAttachment sim doc = do
   html <- evidenceOfIntentHTML sim title $ sortBySignTime [ (sl, s) | (i, s) <- ss, sl <- filter ((==i) . signatorylinkid) sls ]
   return $ Seal.SealAttachment { Seal.fileName = "Appendix 5 Evidence of Intent.html"
                                , Seal.mimeType = Nothing
-                               , Seal.fileContent = BS.fromString html
+                               , Seal.fileContent = TE.encodeUtf8 html
                                }
 
 {-
  We need to handle all timezones that postgres handles, so date formatting must be done through the db.
 -}
-formatUTCTimeForVerificationPage :: (MonadDB m, MonadMask m) => TimeZoneName -> UTCTime -> m String
+formatUTCTimeForVerificationPage :: (MonadDB m, MonadMask m) => TimeZoneName -> UTCTime -> m Text
 formatUTCTimeForVerificationPage tz mt = withTimeZone tz $ do
   -- We can't retrieve ZonedTime, because libpq always applies local machine's time zone (by design)
   -- so let's format everything on the db
@@ -411,17 +424,17 @@ formatUTCTimeForVerificationPage tz mt = withTimeZone tz $ do
   -- but postgres < 9.4 does not support timezone offset specifier, so we have to do it by hand
   -- ($1) is timestamp input, ($2) is timezone input
   let intervalFromUTC = "AGE(($1 AT TIME ZONE 'UTC')::TIMESTAMP, ($1 AT TIME ZONE $2)::TIMESTAMP)"
-      offsetHours = "-EXTRACT(HOURS FROM " ++ intervalFromUTC ++ ")"
-      niceOffsetHours' = "TO_CHAR(" ++ offsetHours ++ ", 'S00')" -- e.g. 2 -> +02
-      niceOffsetHours = "CONCAT(" ++ niceOffsetHours' ++ ", '00')" -- append two trailing zeros
+      offsetHours = "-EXTRACT(HOURS FROM " <> intervalFromUTC <> ")"
+      niceOffsetHours' = "TO_CHAR(" <> offsetHours <> ", 'S00')" -- e.g. 2 -> +02
+      niceOffsetHours = "CONCAT(" <> niceOffsetHours' <> ", '00')" -- append two trailing zeros
 
       datetimeWithoutOffset = "TO_CHAR(($1 AT TIME ZONE $2)::TIMESTAMPTZ, 'YYYY-MM-DD HH24:MI:SS TZ')"
 
-      sqlConcat ss = "CONCAT(" ++ intercalate ", " ss ++ ")"
-  runQuery_ $ rawSQL (T.pack $ "SELECT " ++ sqlConcat [datetimeWithoutOffset, "' ('", niceOffsetHours, "')'"]) (mt, toString tz)
+      sqlConcat ss = "CONCAT(" <> intercalate ", " ss <> ")"
+  runQuery_ $ rawSQL (T.pack $ "SELECT " <> sqlConcat [datetimeWithoutOffset, "' ('", niceOffsetHours, "')'"]) (mt, toString tz)
   fetchOne runIdentity
 
-createSealingTextsForDocument :: (TemplatesMonad m) => Document -> String -> m Seal.SealingTexts
+createSealingTextsForDocument :: (TemplatesMonad m) => Document -> Text -> m Seal.SealingTexts
 createSealingTextsForDocument document hostpart = do
 
   let render templ = renderLocalTemplate document templ $ do
@@ -454,15 +467,15 @@ sealSpecFromDocument :: ( MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m
                         , MonadBaseControl IO m )
                      => CheckboxImagesMapping
                      -> RadiobuttonImagesMapping
-                     -> String
+                     -> Text
                      -> Document
                      -> [DocumentEvidenceEvent]
                      -> [HC.ClockErrorEstimate]
                      -> EvidenceOfTime
                      -> BS.ByteString
-                     -> String
-                     -> String
-                     -> String
+                     -> Text
+                     -> Text
+                     -> Text
                      -> m Seal.SealSpec
 sealSpecFromDocument checkboxMapping
                      radiobuttonMapping hostpart
@@ -504,7 +517,7 @@ sealSpecFromDocument checkboxMapping
                    (documenttimezonename document) sim
                    checkboxMapping radiobuttonMapping authorsiglink)
 
-  let initials = intercalate ", " $ catMaybes
+  let initials = T.intercalate ", " $ catMaybes
                    [ siInitials <$> Map.lookup (signatorylinkid s) sim
                    | s <- documentsignatorylinks document
                    , isSignatory s
@@ -521,7 +534,7 @@ sealSpecFromDocument checkboxMapping
         { Seal.fileName = "Appendix 3 Evidence Log.html"
         , Seal.mimeType = Nothing
         , Seal.fileContent = BS.fromString htmllogs }
-  htmlEvidenceOfTime <- evidenceOfTimeHTML (documenttitle document)
+  htmlEvidenceOfTime <- evidenceOfTimeHTML (T.unpack $ documenttitle document)
                         offsets eotData
   let evidenceOfTime =
         Seal.SealAttachment
@@ -533,7 +546,7 @@ sealSpecFromDocument checkboxMapping
   -- documentation files
   let docAttachments =
         [ Seal.SealAttachment
-          { Seal.fileName = name
+          { Seal.fileName = T.pack name
           , Seal.mimeType = Nothing
           , Seal.fileContent = doc }
         | (name, doc) <- docs ]
@@ -556,7 +569,7 @@ sealSpecFromDocument checkboxMapping
          F.value "pages" numberOfPages
 
   attachedByText <- do
-    emptyNamePlaceholder <- renderTemplate_ "_notNamedParty"
+    emptyNamePlaceholder <- renderTextTemplate_ "_notNamedParty"
     renderLocalTemplate document "_documentSentOnBy" $ do
       F.value "identifier" $
         signatoryIdentifier sim (
@@ -581,7 +594,7 @@ sealSpecFromDocument checkboxMapping
     renderLocalTemplate document "_contractsealingtextsInitialsText" $ do
     F.value "initials" $ initials
 
-  let title = T.unpack $ ICU.normalize ICU.NFC $ T.pack $ documenttitle document
+  let title = ICU.normalize ICU.NFC $ documenttitle document
 
   return $ Seal.SealSpec
         { Seal.input          = inputpath
@@ -593,7 +606,7 @@ sealSpecFromDocument checkboxMapping
         , Seal.initialsText   = initialsText
         , Seal.hostpart       = hostpart
         , Seal.staticTexts    = staticTexts
-        , Seal.attachments    = docAttachments ++
+        , Seal.attachments    = docAttachments <>
                                 [ evidenceattachment
                                 , evidenceOfTime
                                 , evidenceOfIntent ]
@@ -606,7 +619,7 @@ sealSpecFromDocument checkboxMapping
                           , fileSealedOn = Just sealedOn
                           , fileAttachedToSealedFileText = Nothing
                           , fileInput = Nothing
-                          } ] ++ additionalAttachments
+                          } ] <> additionalAttachments
         }
 
 presealSpecFromDocument :: ( MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m
@@ -615,8 +628,8 @@ presealSpecFromDocument :: ( MonadIO m, TemplatesMonad m, MonadDB m, MonadMask m
                         => CheckboxImagesMapping
                         -> RadiobuttonImagesMapping
                         -> Document
-                        -> String
-                        -> String
+                        -> Text
+                        -> Text
                         -> m Seal.PreSealSpec
 presealSpecFromDocument checkboxMapping radiobuttonMapping
                         document inputpath outputpath = do
@@ -630,7 +643,7 @@ presealSpecFromDocument checkboxMapping radiobuttonMapping
     }
 
 sealDocument :: (CryptoRNG m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadMask m, MonadLog m, MonadFileStorage m, PdfToolsLambdaMonad m)
-             => String -> m ()
+             => Text -> m ()
 sealDocument hostpart = do
   mfile <- fileFromMainFile =<< documentfile <$> theDocument
   case mfile of
@@ -648,21 +661,21 @@ sealDocument hostpart = do
       internalError
 
 sealDocumentFile :: (CryptoRNG m, MonadMask m, MonadBaseControl IO m, DocumentMonad m, TemplatesMonad m, MonadIO m, MonadLog m, MonadFileStorage m, PdfToolsLambdaMonad m)
-                 => String
+                 => Text
                  -> File
                  -> m ()
 sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \documentid ->
-  withSystemTempDirectory' ("seal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
+  withSystemTempDirectory' ("seal-" <> show documentid <> "-" <> show fileid <> "-") $ \tmppath -> do
     now <- currentTime
     -- We add events before we attempt the sealing process so
     -- that the event gets included in the evidence package
     addSealedEvidenceEvents (systemActor now)
-    let tmpin = tmppath ++ "/input.pdf"
-    let tmpout = tmppath ++ "/output.pdf"
+    let tmpin = tmppath <> "/input.pdf"
+    let tmpout = tmppath <> "/output.pdf"
     content <- getFileContents file
     liftIO $ BS.writeFile tmpin content
     logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length content)
-                                        , "originator" .= ("sealDocumentFile" :: T.Text) ]
+                                        , "originator" .= ("sealDocumentFile" :: Text) ]
 
     checkboxMapping <- liftIO $ readCheckboxImagesMapping
     radiobuttonMapping <- liftIO $ readRadiobuttonImagesMapping
@@ -674,9 +687,12 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
       void $ dbUpdate $ ErrorDocument ErrorSealingDocumentEvidence
         (return ())
         (systemActor now)
-    eotData <- liftBase $ generateEvidenceOfTimeData 100 (tmppath ++ "/eot_samples.txt") (tmppath ++ "/eot_graph.svg") (map HC.offset offsets)
+    eotData <- liftBase $ generateEvidenceOfTimeData 100 (tmppath <> "/eot_samples.txt") (tmppath <> "/eot_graph.svg") (map HC.offset offsets)
     spec <- theDocument >>= \d -> do
-      sealSpecFromDocument checkboxMapping radiobuttonMapping hostpart d elog offsets eotData content tmppath tmpin tmpout
+      sealSpecFromDocument
+        checkboxMapping radiobuttonMapping hostpart d elog
+        offsets eotData content (T.pack tmppath)
+        (T.pack tmpin) (T.pack tmpout)
     logInfo_ "Seal specification generated"
     runLambdaSealing tmppath filename spec
 
@@ -684,19 +700,21 @@ sealDocumentFile hostpart file@File{fileid, filename} = theDocumentID >>= \docum
 presealDocumentFile :: (MonadBaseControl IO m, MonadDB m, MonadLog m, KontraMonad m, TemplatesMonad m, MonadIO m, MonadMask m, MonadFileStorage m, PdfToolsLambdaMonad m, CryptoRNG m)
                  => Document
                  -> File
-                 -> m (Either String BS.ByteString)
+                 -> m (Either Text BS.ByteString)
 presealDocumentFile document@Document{documentid} file@File{fileid} =
-  withSystemTempDirectory' ("preseal-" ++ show documentid ++ "-" ++ show fileid ++ "-") $ \tmppath -> do
+  withSystemTempDirectory' ("preseal-" <> show documentid <> "-" <> show fileid <> "-") $ \tmppath -> do
     logInfo "Presealing file" $ logObject_ file
-    let tmpin = tmppath ++ "/input.pdf"
-    let tmpout = tmppath ++ "/output.pdf"
+    let tmpin = tmppath <> "/input.pdf"
+    let tmpout = tmppath <> "/output.pdf"
     content <- getFileContents file
     liftIO $ BS.writeFile tmpin content
     logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length content)
-                                       , "originator" .= ("presealDocumentFile" :: T.Text) ]
+                                       , "originator" .= ("presealDocumentFile" :: Text) ]
     checkboxMapping <- liftIO $ readCheckboxImagesMapping
     radiobuttonMapping <- liftIO $ readRadiobuttonImagesMapping
-    spec <- presealSpecFromDocument checkboxMapping radiobuttonMapping document tmpin tmpout
+    spec <- presealSpecFromDocument
+      checkboxMapping radiobuttonMapping document
+      (T.pack tmpin) (T.pack tmpout)
     runLambdaPresealing tmppath spec
 
 addSealedEvidenceEvents ::  (MonadBaseControl IO m, MonadDB m, MonadLog m, TemplatesMonad m, MonadIO m, DocumentMonad m, MonadFileStorage m, MonadMask m)
@@ -721,7 +739,7 @@ runLambdaSealing :: ( CryptoRNG m, DocumentMonad m, MonadBaseControl IO m
                        , MonadDB m, MonadFileStorage m, MonadIO m, MonadLog m
                        , MonadMask m , PdfToolsLambdaMonad m
                        , TemplatesMonad m )
-                    => FilePath -> String -> Seal.SealSpec -> m ()
+                    => FilePath -> Text -> Seal.SealSpec -> m ()
 runLambdaSealing _tmppath fn spec = do
   now <- currentTime
   lambdaconf <- getPdfToolsLambdaEnv
@@ -745,7 +763,7 @@ runLambdaPresealing :: ( CryptoRNG m, MonadBaseControl IO m
                           , MonadMask m, PdfToolsLambdaMonad m
                           , TemplatesMonad m )
                        => FilePath -> Seal.PreSealSpec
-                       -> m (Either String BS.ByteString)
+                       -> m (Either Text BS.ByteString)
 runLambdaPresealing _tmppath spec = do
   lambdaconf <- getPdfToolsLambdaEnv
   msealedcontent <- callPdfToolsPresealing lambdaconf spec
@@ -756,4 +774,3 @@ runLambdaPresealing _tmppath spec = do
         logAttention_ "Presealing in lambda failed"
         -- show JSON'd config as that's what the java app is fed.
         return $ Left "Error when preprinting fields on PDF"
-

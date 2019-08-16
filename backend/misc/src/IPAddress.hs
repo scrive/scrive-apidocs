@@ -73,7 +73,6 @@ formatIP ip = "(IP: " ++ show ip ++ ")"
 data IPAddressWithMask = IPAddressWithMask IPAddress Word8
   deriving (Eq, Ord)
 
-
 instance Show IPAddressWithMask where
   show (IPAddressWithMask addr 32) = show addr
   show (IPAddressWithMask addr mask) = show addr ++ "/" ++ show mask

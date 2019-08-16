@@ -24,17 +24,17 @@ import Log.Identifier
 import Log.Utils
 import Utils.IO
 
-createVerimiTransactionWithEIDService :: Kontrakcja m => EIDServiceConf -> DocumentID -> SignatoryLinkID -> String -> m (EIDServiceTransactionID)
+createVerimiTransactionWithEIDService :: Kontrakcja m => EIDServiceConf -> DocumentID -> SignatoryLinkID -> Text -> m (EIDServiceTransactionID)
 createVerimiTransactionWithEIDService conf did slid redirect = do
       ctx <- getContext
-      let redirectUrl = (get ctxDomainUrl ctx) ++ "/eid-service/redirect-endpoint/verimi/" ++ show did ++ "/" ++ show slid ++ "?redirect=" ++ redirect
+      let redirectUrl = (get ctxDomainUrl ctx) <> "/eid-service/redirect-endpoint/verimi/" <> showt did <> "/" <> showt slid <> "?redirect=" <> redirect
       (exitcode, stdout, stderr) <-
         readCurl [
             "-X", "POST"
-          , "-H",  "Authorization: Bearer " ++ T.unpack (eidServiceToken conf)
+          , "-H",  "Authorization: Bearer " <> T.unpack (eidServiceToken conf)
           , "-H", "Content-Type: application/json"
           , "--data", "@-"
-          ,  T.unpack (eidServiceUrl conf) ++ "/api/v1/transaction/new"
+          ,  T.unpack (eidServiceUrl conf) <> "/api/v1/transaction/new"
           ]
           (A.encode . A.toJSON $ object [
               "method" .= ("auth" :: String)
@@ -72,7 +72,7 @@ startVerimiTransactionWithEIDService conf tid = localData [identifier tid] $ do
       (exitcode, stdout, stderr) <-
         readCurl [
             "-X", "POST"
-          , "-H",  "Authorization: Bearer " ++ T.unpack (eidServiceToken conf)
+          , "-H",  "Authorization: Bearer " <> T.unpack (eidServiceToken conf)
           , "-H", "Content-Type: application/json"
           , "--data", "@-"
           ,  T.unpack $ (eidServiceUrl conf) <> "/api/v1/transaction/" <> (fromEIDServiceTransactionID tid) <> "/start"
@@ -117,7 +117,7 @@ checkVerimiTransactionWithEIDService conf tid = localData [identifier tid] $ do
       (exitcode, stdout, stderr) <-
         readCurl [
             "-X", "GET"
-          , "-H",  "Authorization: Bearer " ++ T.unpack (eidServiceToken conf)
+          , "-H",  "Authorization: Bearer " <> T.unpack (eidServiceToken conf)
           , "-H", "Content-Type: application/json"
           ,  T.unpack $ (eidServiceUrl conf) <> "/api/v1/transaction/" <> (fromEIDServiceTransactionID tid)
           ]

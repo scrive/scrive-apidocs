@@ -70,7 +70,7 @@ docApiV2SigReject did slid = logDocumentAndSignatory did slid . api $ do
     guardSigningPartyHasNeitherSignedNorApproved slid =<< theDocument
 
     -- Parameters
-    rejectReason <- (fmap $ T.unpack . T.strip)
+    rejectReason <- (fmap T.strip)
                     <$> apiV2ParameterOptional (ApiV2ParameterText "reason")
 
     -- API call actions
@@ -102,8 +102,9 @@ docApiV2SigForwardSigning did slid = logDocumentAndSignatory did slid . api $ do
     guardThatDocumentHasntBeenForwadedTooManyTimes =<< theDocument
 
     -- Parameters
-    forwardMessage <- (fmap $ T.unpack . T.strip)
-      <$> apiV2ParameterOptional (ApiV2ParameterText "message")
+    messageParam :: Maybe Text <- apiV2ParameterOptional (ApiV2ParameterText "message")
+    let forwardMessage = T.strip <$> messageParam
+
     (SignatoryTextFieldIDsWithNewTexts textFieldIDsWithNewText) <- apiV2ParameterObligatory
       (ApiV2ParameterJSON "fields" unjsonSignatoryTextFieldIDsWithNewTexts)
 
@@ -121,7 +122,6 @@ docApiV2SigForwardSigning did slid = logDocumentAndSignatory did slid . api $ do
     doc <- theDocument
     return $ Ok $
       (\d -> (unjsonDocument (documentAccessForSlid slid doc),d)) doc
-
 
 docApiV2SigSigningStatusCheck :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSigningStatusCheck did slid = logDocumentAndSignatory did slid . api $ do
@@ -183,7 +183,7 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
     case signatorylinkauthenticationtosignmethod sl of
       StandardAuthenticationToSign -> return ()
       SMSPinAuthenticationToSign -> do
-        pin <- fmap T.unpack $ apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
+        pin <- apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
         validPin <- checkSignatoryPinToSign slid fields pin
         if not validPin
            then apiError $ requestParameterInvalid "sms_pin" "invalid SMS PIN"
@@ -273,8 +273,7 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
     (mprovider, mpin) <- case signatorylinkauthenticationtosignmethod sl of
       StandardAuthenticationToSign -> return (Nothing, Nothing)
       SMSPinAuthenticationToSign   -> do
-        pin <- fmap T.unpack $
-               apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
+        pin <- apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
         validPin <- checkSignatoryPinToSign slid fields pin
         if not validPin
           then apiError documentActionForbidden
@@ -329,11 +328,11 @@ docApiV2SigSendSmsPinToSign did slid = logDocumentAndSignatory did slid . api $ 
     -- Parameters
     let mobileEditableBySignatory = Just True == join (fieldEditableBySignatory <$> getFieldByIdentity MobileFI (signatoryfields sl))
     let slidMobile = getMobile sl
-    mobile <- if (not (null slidMobile) && not mobileEditableBySignatory)
+    mobile <- if (not (T.null slidMobile) && not mobileEditableBySignatory)
                 then case asValidPhoneForSMS slidMobile of
                           Good v -> return v
                           _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"
-                else T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterTextWithValidation "mobile" asValidPhoneForSMS)
+                else apiV2ParameterObligatory (ApiV2ParameterTextWithValidation "mobile" asValidPhoneForSMS)
     -- API call actions
     pin <- dbQuery $ GetSignatoryPin SMSPinToSign slid mobile
     sendPinCode sl mobile pin
@@ -384,12 +383,12 @@ docApiV2SigIdentifyToViewWithSmsPin did slid = logDocumentAndSignatory did slid 
     mobile <- case asValidPhoneForSMS (getMobile sl) of
                 Good v -> return v
                 _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"
-    pin <- fmap T.unpack $ apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
+    pin <- apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
     validPin <- checkSignatoryPinToView (authKindToPinType authKind) slid pin
     unless validPin $ do
       apiError $ requestParameterInvalid "sms_pin" "invalid SMS PIN"
     sess <- getCurrentSession
-    dbUpdate $ MergeSMSPinAuthentication authKind (sesID sess) slid (T.pack mobile)
+    dbUpdate $ MergeSMSPinAuthentication authKind (sesID sess) slid mobile
     let eventFields = do
           F.value "signatory_mobile" mobile
           F.value "provider_sms_pin" True
@@ -410,7 +409,7 @@ docApiV2SigSetAttachment did slid = logDocumentAndSignatory did slid . api $ do
     guardDocumentStatus Pending =<< theDocument
     guardSignatoryHasNotSigned slid =<< theDocument
     -- Parameters
-    name <- T.unpack <$> apiV2ParameterObligatory (ApiV2ParameterText "name")
+    name <- apiV2ParameterObligatory (ApiV2ParameterText "name")
     mAttachment <- apiV2ParameterOptional (ApiV2ParameterFilePDFOrImage "attachment")
     doc <- theDocument
     let mSigAttachment = getSignatoryAttachment slid name doc

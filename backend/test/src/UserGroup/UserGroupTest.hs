@@ -211,7 +211,7 @@ testChangeUserGroupParent = do
   Just user <- addNewUserToUserGroup "Froggie" "Freddie" usrEmail usrGrpID
   ctx <- (set ctxmaybeuser $ Just user) <$> mkContext defaultLang
 
-  let params1 = [("companyparentid", inText . show $ parentUsrGrpID)]
+  let params1 = [("companyparentid", inText $ showt parentUsrGrpID)]
   req1 <- mkRequest POST params1
 
   -- user has no admin rights so we should get a `Respond404`
@@ -229,7 +229,7 @@ testChangeUserGroupParent = do
 
   grandParentUsrGrp <- addNewUserGroup
   let grandParentUsrGrpID = get ugID grandParentUsrGrp
-      params2 = [("companyparentid", inText . show $ grandParentUsrGrpID)]
+      params2 = [("companyparentid", inText $ showt grandParentUsrGrpID)]
   req2 <- mkRequest POST params2
   void $ runTestKontra req2 ctx' $ handleCompanyChange parentUsrGrpID
   mUsrGrpGrandParentAfter <- join <$> (get ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ parentUsrGrpID)
@@ -239,7 +239,7 @@ testChangeUserGroupParent = do
   -- usrGrp since it now has one.
   usrGrp' <- addNewUserGroup
   let usrGrpID' = get ugID usrGrp'
-      params3 = [("companyparentid", inText . show $ usrGrpID)]
+      params3 = [("companyparentid", inText $ showt usrGrpID)]
   req3 <- mkRequest POST params3
   void $ runTestKontra req3 ctx' $ handleCompanyChange usrGrpID'
   mUsrGrpParentAfter' <- join <$> (get ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID')

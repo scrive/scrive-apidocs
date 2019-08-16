@@ -22,7 +22,6 @@ import Text.JSON.Gen
 import Text.StringTemplate.GenericStandard ()
 import Text.StringTemplate.GenericStandard ()
 import qualified Control.Applicative.Free as CAF (Ap)
-import qualified Data.Text as T
 
 import DataRetentionPolicy
 import MinutesTime
@@ -47,8 +46,8 @@ userJSONWithCallBackInfo user ugwp callback = runJSONGen $ do
       Just (ConstantUrlSchemeV2 _) -> True
       Just _ -> False
     value "callbackurl" $ case callback of
-      Nothing -> ("" :: String)
-      Just (ConstantUrlSchemeV2 url) -> (url :: String)
+      Nothing -> ""
+      Just (ConstantUrlSchemeV2 url) -> url
       Just (ConstantUrlScheme _) -> "Existing ConstantUrlScheme"
       Just (SalesforceScheme _) -> "Existing SalesforceScheme"
       Just (BasicAuthScheme _ _) -> "Existing BasicAuthScheme"
@@ -57,7 +56,7 @@ userJSONWithCallBackInfo user ugwp callback = runJSONGen $ do
 
 userJSONUserDetails :: User -> JSONGen ()
 userJSONUserDetails user = do
-    value "id" $ show $ userid user
+    value "id" $ showt $ userid user
     value "fstname" $ getFirstName user
     value "sndname" $ getLastName user
     value "email" $ getEmail user
@@ -67,12 +66,12 @@ userJSONUserDetails user = do
     value "phone" $ userphone $ userinfo user
     value "companyadmin" $ useriscompanyadmin user
     value "companyposition" $ usercompanyposition $ userinfo user
-    value "lang"   $ codeFromLang $ getLang user
+    value "lang" $ codeFromLang $ getLang user
 
 unjsonUser :: UnjsonDef User
 unjsonUser = unjsonUserPartial id
 
-unjsonUserWithPassword :: String -> UnjsonDef User
+unjsonUserWithPassword :: Text -> UnjsonDef User
 unjsonUserWithPassword password = unjsonUserPartial
   (<* (fieldReadonly "password" (const password) "User password"))
 
@@ -114,7 +113,7 @@ companyJSON :: UserGroupWithParents -> JSValue
 companyJSON ugwp = do
   runJSONGen $ do
     value "companyid" . show . get ugID $ ugwpUG ugwp
-    value "companyname" . T.unpack $ get ugName $ ugwpUG ugwp
+    value "companyname" . get ugName $ ugwpUG ugwp
     companyAddressJson $ ugwpAddress ugwp
     companySettingsJson $ ugwpSettings ugwp
 
@@ -131,7 +130,7 @@ companyJSONAdminOnly ugwp = do
   runJSONGen $ do
     value "companyid" $ show $ get ugID ug
     companyAddressJson activeAddress
-    value "companyname" $ T.unpack $ get ugName ug
+    value "companyname" $ get ugName ug
     companySettingsJson $ activeSettings
 
     whenJust (mInheritedAddress) $
@@ -145,25 +144,25 @@ companyJSONAdminOnly ugwp = do
     value "parentid" . fmap show $ get ugParentGroupID ug
     objects "parentgrouppath" . for ugParentPath $ \parent -> do
       value "group_id" . show . get ugID $ parent
-      value "group_name" . T.unpack . get ugName $ parent
+      value "group_name" . get ugName $ parent
 
 companyAddressJson :: UserGroupAddress -> JSONGenT Identity ()
 companyAddressJson uga = do
-  value "address"       . T.unpack $ get ugaAddress       uga
-  value "city"          . T.unpack $ get ugaCity          uga
-  value "country"       . T.unpack $ get ugaCountry       uga
-  value "zip"           . T.unpack $ get ugaZip           uga
-  value "companynumber" . T.unpack $ get ugaCompanyNumber uga
+  value "address"       $ get ugaAddress       uga
+  value "city"          $ get ugaCity          uga
+  value "country"       $ get ugaCountry       uga
+  value "zip"           $ get ugaZip           uga
+  value "companynumber" $ get ugaCompanyNumber uga
 
 companySettingsJson :: UserGroupSettings -> JSONGenT Identity ()
 companySettingsJson ugs = do
   let drp = get ugsDataRetentionPolicy ugs
   value "ipaddressmasklist" . intercalate "," . fmap show
     $ get ugsIPAddressMaskList ugs
-  value "cgidisplayname" . fmap T.unpack $ get ugsCGIDisplayName ugs
-  value "cgiserviceid" . fmap T.unpack $ get ugsCGIServiceID ugs
+  value "cgidisplayname" $ get ugsCGIDisplayName ugs
+  value "cgiserviceid" $ get ugsCGIServiceID ugs
   value "smsprovider" . show $ get ugsSMSProvider ugs
-  value "padappmode" . T.unpack . padAppModeText $ get ugsPadAppMode ugs
+  value "padappmode" . padAppModeText $ get ugsPadAppMode ugs
   value "padearchiveenabled" $ get ugsPadEarchiveEnabled ugs
   value "idledoctimeoutpreparation" $ get drpIdleDocTimeoutPreparation drp
   value "idledoctimeoutclosed" $ get drpIdleDocTimeoutClosed drp
@@ -175,7 +174,7 @@ companySettingsJson ugs = do
   value "sendtimeoutnotification" $  get ugsSendTimeoutNotification ugs
   value "totpismandatory" $  get ugsTotpIsMandatory ugs
 
-userStatsToJSON :: (UTCTime -> String) -> [UserUsageStats] -> JSValue
+userStatsToJSON :: (UTCTime -> Text) -> [UserUsageStats] -> JSValue
 userStatsToJSON formatTime uuss = runJSONGen . objects "stats" . for uuss $ \uus -> do
   value "date" . formatTime $ uusTimeWindowStart uus
   documentStatsToJSON $ uusDocumentStats uus
@@ -196,7 +195,7 @@ documentStatsToJSON DocumentStats{..} = do
   value "tupas_authentications" dsTupasAuthentications
   value "shareable_links" dsShareableLinks
 
-companyStatsToJSON :: (UTCTime -> String) -> String -> [UserUsageStats] -> JSValue
+companyStatsToJSON :: (UTCTime -> Text) -> Text -> [UserUsageStats] -> JSValue
 companyStatsToJSON formatTime textName uuss = runJSONGen . objects "stats" . for uussGrouped $ \uusGroup -> do
   let summary = foldMap uusDocumentStats uusGroup
   value "date" . formatTime . uusTimeWindowStart $ head uusGroup
@@ -214,7 +213,7 @@ companyStatsToJSON formatTime textName uuss = runJSONGen . objects "stats" . for
       where
         sameTimeWindow u1 u2 = uusTimeWindowStart u1 == uusTimeWindowStart u2
 
-shareableLinkStatsToJSON :: (UTCTime -> String) -> String -> [ShareableLinkUsageStats] -> JSValue
+shareableLinkStatsToJSON :: (UTCTime -> Text) -> Text -> [ShareableLinkUsageStats] -> JSValue
 shareableLinkStatsToJSON formatTime textName sluss = runJSONGen . objects "stats" . for slussGrouped $ \slusGroup -> do
   let summary = foldMap slusDocumentStats slusGroup
   value "date" . formatTime . slusTimeWindowStart $ head slusGroup
@@ -222,7 +221,7 @@ shareableLinkStatsToJSON formatTime textName sluss = runJSONGen . objects "stats
   documentStatsToJSON summary
   objects "template_stats" . for slusGroup $ \slus -> do
     value "date" . formatTime $ slusTimeWindowStart slus
-    value "id" . show $ slusTemplateId slus
+    value "id" . showt $ slusTemplateId slus
     value "title" $ slusTemplateTitle slus
     documentStatsToJSON $ slusDocumentStats slus
   where

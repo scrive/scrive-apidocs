@@ -14,6 +14,7 @@ import AppView
 import Kontra
 import MagicHash
 import OAuth.Model
+import Templates (renderTextTemplate)
 
 pagePrivilegesConfirm :: Kontrakcja m
                       => Context
@@ -23,14 +24,14 @@ pagePrivilegesConfirm :: Kontrakcja m
                       -> m Response
 pagePrivilegesConfirm ctx privileges companyname token = do
      ad <- getAnalyticsData
-     rsp <- renderTemplate "pagePrivilegesConfirm" $ do
+     response <- renderTextTemplate "pagePrivilegesConfirm" $ do
          F.value "isDocumentCreate" $ APIDocCreate `elem` privileges
          F.value "isDocumentSend" $ APIDocSend `elem` privileges
          F.value "isDocumentCheck" $ APIDocCheck `elem` privileges
          F.value "companyname" companyname
          F.value "token" $ show token
          standardPageFields ctx Nothing ad
-     simpleHtmlResponse rsp
+     simpleHtmlResponse response
 
 privilegeDescription :: TemplatesMonad m => APIPrivilege -> m String
 privilegeDescription APIDocCreate = renderTemplate_ "_apiConfiramtionCreatePersmission"
@@ -45,7 +46,8 @@ jsonFromAPIToken (apitoken, apisecret) =
     J.value "apisecret" $ show apisecret
 
 jsonFromGrantedPrivilege :: (Int64, String, [APIPrivilege]) -> [(APIPrivilege, String)] -> [JSValue]
-jsonFromGrantedPrivilege (tokenid, name, ps) ds =for ps $ \p -> do
+jsonFromGrantedPrivilege (tokenid, name, ps) ds =
+    for ps $ \p -> do
       runJSONGen $ do
         J.value "tokenid" $ show tokenid
         J.value "name" name

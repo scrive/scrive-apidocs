@@ -34,7 +34,7 @@ data DocumentAPICallback = DocumentAPICallback {
   dacID         :: !CallbackID
 , dacDocumentID :: !DocumentID
 , dacApiVersion :: !APIVersion
-, dacURL        :: !String
+, dacURL        :: !Text
 , dacAttempts   :: !Int32
 } deriving (Eq, Ord, Show)
 

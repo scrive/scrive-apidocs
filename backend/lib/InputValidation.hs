@@ -53,7 +53,6 @@ module InputValidation
 
 import Data.Char
 import Data.Int
-import Data.String.Utils hiding (maybeRead)
 import Data.Word (Word32)
 import Log
 import Numeric
@@ -77,7 +76,7 @@ import Utils.String
 {- |
     The input data.
 -}
-type Input = Maybe String
+type Input = Maybe Text
 
 {- |
     If it goes wrong we get something that we can use to display a flash message.
@@ -127,7 +126,7 @@ isEmpty :: Result a -> Bool
 isEmpty Empty = True
 isEmpty _ = False
 
-emptyOK :: Monoid a => (String -> Result a) -> (String -> Result a)
+emptyOK :: Monoid a => (Text -> Result a) -> (Text -> Result a)
 emptyOK _ ""  = Good mempty
 emptyOK val s = val s
 
@@ -136,7 +135,7 @@ emptyOK val s = val s
     is empty the user won't get told about it, you have to just act sensibly
     given a Nothing.
 -}
-getOptionalField :: Kontrakcja m => (String -> Result a) -> String -> m (Maybe a)
+getOptionalField :: Kontrakcja m => (Text -> Result a) -> Text -> m (Maybe a)
 getOptionalField validate =
     getValidateAndHandle validate optionalFieldHandler
 
@@ -148,7 +147,7 @@ optionalFieldHandler result =
 {- |
     Use this to get a field that has a default value when Empty.
 -}
-getDefaultedField :: Kontrakcja m => a -> (String -> Result a) -> String -> m (Maybe a)
+getDefaultedField :: Kontrakcja m => a -> (Text -> Result a) -> Text -> m (Maybe a)
 getDefaultedField d validate =
     getValidateAndHandle validate (defaultedFieldHandler d)
 
@@ -163,7 +162,7 @@ defaultedFieldHandler d result =
     because it is hidden. If this field is missing that means something
     bad has happened.
 -}
-getCriticalField :: Kontrakcja m => (String -> Result a) -> String -> m a
+getCriticalField :: Kontrakcja m => (Text -> Result a) -> Text -> m a
 getCriticalField validate =
     getValidateAndHandle validate criticalFieldHandler
 
@@ -176,7 +175,7 @@ criticalFieldHandler result =
 {- |
     Gets a named field, validates it, and then handles the result.
 -}
-getValidateAndHandle :: Kontrakcja m => (String -> Result a) -> ((Input, Result a) -> m b) -> String -> m b
+getValidateAndHandle :: Kontrakcja m => (Text -> Result a) -> ((Input, Result a) -> m b) -> Text -> m b
 getValidateAndHandle validate handle fieldname = do
   result <- getAndValidate validate fieldname
   handle result
@@ -185,7 +184,7 @@ getValidateAndHandle validate handle fieldname = do
     Gets a named field and validates it.  It will return a pair of the input,
     and output.
 -}
-getAndValidate :: Kontrakcja m => (String -> Result a) -> String -> m (Input, Result a)
+getAndValidate :: Kontrakcja m => (Text -> Result a) -> Text -> m (Input, Result a)
 getAndValidate validate fieldname = do
   mrawvalue <- getField fieldname
   case mrawvalue of
@@ -253,13 +252,13 @@ withFailure :: Kontrakcja m => (Input, Result a) -> m a
 withFailure (_,Good x) = return x
 withFailure _        = internalError
 
-checkFormatWithSensitive :: Bool -> T.Text -> String -> Result String
+checkFormatWithSensitive :: Bool -> Text -> Text -> Result Text
 checkFormatWithSensitive caseSensitive format input | isValidFormat input = return input
                                                     | otherwise = Bad
-  where isValidFormat = isJust . Rx.find (Rx.regex opts format) . T.pack
+  where isValidFormat = isJust . Rx.find (Rx.regex opts format)
         opts = if caseSensitive then [] else [Rx.CaseInsensitive]
 
-checkFormat :: T.Text -> String -> Result String
+checkFormat :: Text -> Text -> Result Text
 checkFormat = checkFormatWithSensitive True
 
 -- | Creates a clean and validated email.
@@ -296,7 +295,7 @@ checkFormat = checkFormatWithSensitive True
 --
 -- Also emails are lowercased.
 --
-asValidEmail :: String -> Result String
+asValidEmail :: Text -> Result Text
 asValidEmail input =
     stripWhitespace input
     >>= checkIfEmpty
@@ -313,19 +312,18 @@ asValidEmail input =
     like checking a login.  Because it's dirty make sure you through it away,
     and don't store it.
 -}
-asDirtyEmail :: String -> Result String
+asDirtyEmail :: Text -> Result Text
 asDirtyEmail input =
     stripWhitespace input
     >>= checkIfEmpty
     >>= mkLowerCase
-
 
 {- |
     Creates a dirty password.  This is useful when validating
     logins for example.  Because it's dirty you should make sure to throw it away,
     and not store it.
 -}
-asDirtyPassword :: String -> Result String
+asDirtyPassword :: Text -> Result Text
 asDirtyPassword input = checkIfEmpty input
 
 {- |
@@ -334,7 +332,7 @@ asDirtyPassword input = checkIfEmpty input
     Size: Up to 100 chars
     Must match PATTERN_NAME in frontend code
 -}
-asValidName :: String -> Result String
+asValidName :: Text -> Result Text
 asValidName input =
     stripWhitespace input
     >>= checkIfEmpty
@@ -345,7 +343,7 @@ asValidName input =
     Size: Up to 100 chars
     Must match CompanyNameValidation in frontend code
 -}
-asValidCompanyName :: String -> Result String
+asValidCompanyName :: Text -> Result Text
 asValidCompanyName input =
     stripWhitespace input
     >>= checkIfEmpty
@@ -357,7 +355,7 @@ asValidCompanyName input =
     Size: From 4 to 50 chars
     Regex must match PATTERN_COMPANY_NUMBER in frontend code
 -}
-asValidCompanyNumber :: String -> Result String
+asValidCompanyNumber :: Text -> Result Text
 asValidCompanyNumber input =
     stripWhitespace input
     >>= checkIfEmpty
@@ -368,7 +366,7 @@ asValidCompanyNumber input =
     Size: 1..20 chars
     Must match CompanyZipValidation in frontend code
 -}
-asValidZip :: String -> Result String
+asValidZip :: Text -> Result Text
 asValidZip input =
     stripWhitespace input
     >>= checkIfEmpty
@@ -379,7 +377,7 @@ asValidZip input =
     Size: 1..60 chars
     Must match CompanyCityValidation in frontend code
 -}
-asValidCity :: String -> Result String
+asValidCity :: Text -> Result Text
 asValidCity input =
     stripWhitespace input
     >>= checkIfEmpty
@@ -390,7 +388,7 @@ asValidCity input =
     Size: 1..60 chars
     Must match CompanyCountryValidation in frontend code
 -}
-asValidCountry :: String -> Result String
+asValidCountry :: Text -> Result Text
 asValidCountry input =
     stripWhitespace input
     >>= checkIfEmpty
@@ -401,7 +399,7 @@ asValidCountry input =
     White list: Digits only
     Size: From 10 or 12 chars
 -}
-asValidSwedishSSN :: String -> Result String
+asValidSwedishSSN :: Text -> Result Text
 asValidSwedishSSN input =
     filterOutCharacters [' ', '-', '+'] input
     >>= checkIfEmpty
@@ -413,7 +411,7 @@ asValidSwedishSSN input =
     White list: Digits only
     Size: 11 chars
 -}
-asValidNorwegianSSN :: String -> Result String
+asValidNorwegianSSN :: Text -> Result Text
 asValidNorwegianSSN input =
     filterOutCharacters [' ', '-'] input
     >>= checkIfEmpty
@@ -425,7 +423,7 @@ asValidNorwegianSSN input =
     White list: Digits only
     Size: 10
 -}
-asValidDanishSSN :: String -> Result String
+asValidDanishSSN :: Text -> Result Text
 asValidDanishSSN input =
     filterOutCharacters [' ', '-'] input
     >>= checkIfEmpty
@@ -440,17 +438,18 @@ asValidDanishSSN input =
     Source: https://en.wikipedia.org/wiki/National_identification_number#Finland
     Size: 10
 -}
-asValidFinnishSSN :: String -> Result String
+asValidFinnishSSN :: Text -> Result Text
 asValidFinnishSSN input =
     filterOutCharacters [' '] input
     >>= checkIfEmpty
     >>= checkLengthIs [11]
+    >>= return . T.unpack
     >>= \case
       [d1,d2,m1,m2,y1,y2,sep,x1,x2,x3,checksum] ->
         fromMaybe Bad $ do
-          (day :: Int64)  <- maybeRead [d1,d2]
-          month <- maybeRead [m1,m2]
-          combined_digits <- maybeRead [d1,d2,m1,m2,y1,y2,x1,x2,x3]
+          (day :: Int64)  <- maybeRead $ T.pack [d1,d2]
+          month <- maybeRead $ T.pack [m1,m2]
+          combined_digits <- maybeRead $ T.pack [d1,d2,m1,m2,y1,y2,x1,x2,x3]
           let -- some alphabetic chars are missing to prevent confusion with digits
               checksum_chars = "0123456789ABCDEFHJKLMNPRSTUVWXY"
               computed_checksum = checksum_chars !! (combined_digits `mod` length checksum_chars)
@@ -459,7 +458,7 @@ asValidFinnishSSN input =
              && computed_checksum == toUpper checksum
              && (toUpper sep `elem` ['-', '+', 'A'])
              )
-            then return . return $ [d1,d2,m1,m2,y1,y2,toUpper sep,x1,x2,x3,toUpper checksum]
+            then return . return $ T.pack $ [d1,d2,m1,m2,y1,y2,toUpper sep,x1,x2,x3,toUpper checksum]
             else return Bad
       _ -> Bad
 
@@ -468,13 +467,13 @@ asValidFinnishSSN input =
     White list: Digits, hyphens (to be stripped)
     Size: 10 or 12
 -}
-asValidSEBankIdPersonalNumber :: String -> Result String
+asValidSEBankIdPersonalNumber :: Text -> Result Text
 asValidSEBankIdPersonalNumber input =
     stripAllWhitespace input
     >>= filterOutCharacters "-+"
     >>= checkOnly [isDigit]
     >>= (\xs -> if
-             | length xs `elem` [10, 12] -> return xs
+             | T.length xs `elem` [10, 12] -> return xs
              | otherwise -> Bad)
 
 {- |
@@ -482,13 +481,13 @@ asValidSEBankIdPersonalNumber input =
     White list: Digits, hyphens (to be stripped)
     Size: 11
 -}
-asValidNOBankIdPersonalNumber :: String -> Result String
+asValidNOBankIdPersonalNumber :: Text -> Result Text
 asValidNOBankIdPersonalNumber input =
     stripAllWhitespace input
     >>= filterOutCharacters "-+"
     >>= checkOnly [isDigit]
     >>= (\xs -> if
-             | length xs == 11 -> return xs
+             | T.length xs == 11 -> return xs
              | otherwise -> Bad)
 
 {- |
@@ -497,13 +496,13 @@ asValidNOBankIdPersonalNumber input =
     Size: 10-12
     Must match PersonalNumberValidation in frontend code
 -}
-asValidPersonalNumber :: String -> Result String
+asValidPersonalNumber :: Text -> Result Text
 asValidPersonalNumber input =
     stripAllWhitespace input
     >>= filterOutCharacters "-+"
     >>= checkOnly [isDigit]
     >>= (\xs -> if
-             | length xs `elem` [10..12] -> return xs
+             | T.length xs `elem` [10..12] -> return xs
              | otherwise -> Bad)
 
 {- |
@@ -512,22 +511,22 @@ asValidPersonalNumber input =
     Size: Up to 100 chars
     Regex must match PATTERN_ADDRESS in frontend code
 -}
-asValidAddress :: String -> Result String
+asValidAddress :: Text -> Result Text
 asValidAddress input =
     stripWhitespace input
     >>= checkIfEmpty
     >>= checkFormatWithSensitive False "^[- '():,/.#0-9\\p{L}]{0,100}$"
 
-asValidUserGroupID :: String -> Result UserGroupID
+asValidUserGroupID :: Text -> Result UserGroupID
 asValidUserGroupID input = checkIfEmpty input
-  >>= \xs -> case reads xs of
+  >>= \xs -> case reads (T.unpack xs) of
     [(val,[])] -> return val
     _ -> Bad
 
-asValidIPAddressWithMaskList :: String -> Result [IPAddressWithMask]
+asValidIPAddressWithMaskList :: Text -> Result [IPAddressWithMask]
 asValidIPAddressWithMaskList input =
     stripWhitespace input
-    >>= readAll2
+    >>= readAll2 . T.unpack
     where readAll src = do
             (value,rest) <- reads src
             case dropWhile isSpace rest of
@@ -540,16 +539,13 @@ asValidIPAddressWithMaskList input =
                            [] | all isSpace src -> return []
                            _ -> Bad
 
-
-
-
 {- |
     Creates a clean and validated company position.
     White list: Space, Ampersand &, Apostrophe ', Open and close brackets (), Colon :, Comma , Hyphen -, Alphabetic characters, Numeric characters
     Size: Up to 100 chars
     Regex must match PATTERN_POSITION in frontend code
 -}
-asValidPosition :: String -> Result String
+asValidPosition :: Text -> Result Text
 asValidPosition input =
     stripWhitespace input
     >>= checkIfEmpty
@@ -558,7 +554,7 @@ asValidPosition input =
 {- |
     Creates a Bool result for a check box, depending on whether it was set to "on" or "off".
 -}
-asValidCheckBox :: String -> Result Bool
+asValidCheckBox :: Text -> Result Bool
 asValidCheckBox input =
     checkIfEmpty input
     >>= mkLowerCase
@@ -574,13 +570,13 @@ asValidCheckBox input =
     Must start with a + and be followed by at least 9 digits
     Must match PhoneValidation in frontend code
 -}
-asValidPhone :: String -> Result String
+asValidPhone :: Text -> Result Text
 asValidPhone input =
     stripAllWhitespace input
     >>= filterOutCharacters "-()"
     >>= checkFormat "^\\+[0-9]{9,}$"
 
-asValidPhoneForSMS :: String -> Result String
+asValidPhoneForSMS :: Text -> Result Text
 asValidPhoneForSMS input =
     stripWhitespace input
     >>= checkIfEmpty
@@ -588,15 +584,15 @@ asValidPhoneForSMS input =
     >>= checkLengthIsMin 6
     >>= checkOnly (isDigit : map (==) "+ -().")
     >>= filterOutCharacters "-(). "
-    >>= (\str -> if take 1 str == "+"
+    >>= (\str -> if T.take 1 str == "+"
                  then return str
                  else Bad)
 
-asValidPhoneForNorwegianBankID :: String -> Result String
+asValidPhoneForNorwegianBankID :: Text -> Result Text
 asValidPhoneForNorwegianBankID input =
     asValidPhoneForSMS input
     >>= checkLengthIs [11]
-    >>= (\str -> if take 3 str == "+47"
+    >>= (\str -> if T.take 3 str == "+47"
                     then return str
                     else Bad)
 
@@ -605,29 +601,29 @@ asValidPhoneForNorwegianBankID input =
     you're not getting fed complete garbage from hidden fields,
     this makes sure the result parses as a Int64.
 -}
-asValidDocID :: String -> Result DocumentID
+asValidDocID :: Text -> Result DocumentID
 asValidDocID input =
     checkIfEmpty input
-    >>= parseAsDocID
+    >>= parseAsDocID . T.unpack
     where
           parseAsDocID xs =
             case reads xs of
               (val,[]):[] -> return val
               _ -> Bad
 
-asWord32 :: String -> Result Word32
+asWord32 :: Text -> Result Word32
 asWord32 input =
   checkIfEmpty input
-  >>= parseAsWord32
+  >>= parseAsWord32 . T.unpack
   where parseAsWord32 xs =
           case reads xs of
             (val,[]):[] -> return val
             _ -> Bad
 
-asValidDocIDList :: String -> Result [DocumentID]
+asValidDocIDList :: Text -> Result [DocumentID]
 asValidDocIDList input =
     checkIfEmpty input
-    >>= parseList
+    >>= parseList . T.unpack
     where
           parseList xs =
             case reads xs of
@@ -638,20 +634,20 @@ asValidDocIDList input =
     you're not getting fed complete garbage from hidden fields,
     this makes sure the result parses as a Int64.
 -}
-asValidAttachmentID :: String -> Result AttachmentID
+asValidAttachmentID :: Text -> Result AttachmentID
 asValidAttachmentID input =
     checkIfEmpty input
-    >>= parseAsAttachmentID
+    >>= parseAsAttachmentID . T.unpack
     where
           parseAsAttachmentID xs =
             case reads xs of
               (val,[]):[] -> return val
               _ -> Bad
 
-asValidAttachmentIDList :: String -> Result [AttachmentID]
+asValidAttachmentIDList :: Text -> Result [AttachmentID]
 asValidAttachmentIDList input =
     checkIfEmpty input
-    >>= parseList
+    >>= parseList . T.unpack
     where
           parseList xs =
             case reads xs of
@@ -663,9 +659,9 @@ asValidAttachmentIDList input =
     you're not getting fed complete garbage from hidden fields,
     this makes sure the result parses as a Int64.
 -}
-asValidUserID :: String -> Result UserID
+asValidUserID :: Text -> Result UserID
 asValidUserID input = checkIfEmpty input
-  >>= \xs -> case reads xs of
+  >>= \xs -> case reads (T.unpack xs) of
     [(val,[])] -> return val
     _ -> Bad
 
@@ -674,7 +670,7 @@ asValidUserID input = checkIfEmpty input
     as an int.  This is handy if you want to check that you're not
     getting fed rubbish in hidden fields.
 -}
-asValidID :: String -> Result String
+asValidID :: Text -> Result Text
 asValidID input =
   asValidNumber input
     >>= useInput input
@@ -684,7 +680,7 @@ asValidID input =
 {- |
     Parses as a number.
 -}
-asValidNumber :: (Num a, Read a, Real a) => String -> Result a
+asValidNumber :: (Num a, Read a, Real a) => Text -> Result a
 asValidNumber input =
     checkIfEmpty input
     >>= parseAsNum
@@ -694,7 +690,7 @@ asValidNumber input =
     White list: Alphabetic characters, Numeric characters, Punctuation characters & Symbol chars, and spaces.
     Size: Up to 200 chars
 -}
-asValidFieldValue :: String -> Result String
+asValidFieldValue :: Text -> Result Text
 asValidFieldValue input =
     stripWhitespace input
     >>= checkIfEmpty
@@ -704,25 +700,25 @@ asValidFieldValue input =
 -- | Cleans all HTML from message, and unescapes it. Api V1 accepting
 -- HTML, but internally DB holds only pure text. Size: up to 800
 -- chars.
-asValidInviteText :: String -> Result String
+asValidInviteText :: Text -> Result Text
 asValidInviteText input =
     checkIfEmpty input
     >>= parseAndFixAsXml
-    >>= return . strip . replace "\160" " "
+    >>= return . T.strip . T.replace "\160" " "
   where
-    parseAndFixAsXml :: String -> Result String
+    parseAndFixAsXml :: Text -> Result Text
     parseAndFixAsXml xs = case parseText def xs' of
       (Right (Document { documentRoot = spanElt }))
          | (T.toLower . nameLocalName . elementName $ spanElt) == "span"
-        -> Good . T.unpack . fixElems . elementNodes $ spanElt
-      _ -> let xsWithFixedBRs = replace "<BR>" "<BR/>" $ replace "<br>" "<br/>" xs
+        -> Good . fixElems . elementNodes $ spanElt
+      _ -> let xsWithFixedBRs = T.replace "<BR>" "<BR/>" $ T.replace "<br>" "<br/>" xs
            in if xsWithFixedBRs /= xs
               then parseAndFixAsXml xsWithFixedBRs
-              else Good $ unescapeHTML $ justText xs
+              else Good $ unescapeHTML $ T.pack $ justText $ T.unpack xs
       where
-        xs' = "<span>" <> TL.pack xs <> "</span>"
+        xs' = "<span>" <> (TL.fromStrict xs) <> "</span>"
 
-    fixElem :: Node -> T.Text
+    fixElem :: Node -> Text
     fixElem (NodeElement (Element "div" _attrs cs)) = addNewline . fixElems $ cs
     fixElem (NodeElement (Element "p"   _attrs cs)) = addNewline . fixElems $ cs
     fixElem (NodeElement (Element "br"  _attrs cs)) = addNewline . fixElems $ cs
@@ -738,24 +734,24 @@ asValidInviteText input =
     justText (c:cs)   = c : justText cs
     justText []       = []
 
-isValidEmail :: String -> Bool
+isValidEmail :: Text -> Bool
 isValidEmail = isGood . asValidEmail
 
-isValidPhoneForSMS :: String -> Bool
+isValidPhoneForSMS :: Text -> Bool
 isValidPhoneForSMS = isGood . asValidPhoneForSMS
 
 {- |
     Lower cases everything
 -}
-mkLowerCase :: String -> Result String
-mkLowerCase = return . map toLower
+mkLowerCase :: Text -> Result Text
+mkLowerCase = return . T.toLower
 
 {- |
     Parses a string as a Num
 -}
-parseAsNum :: (Num a, Read a, Real a) => String -> Result a
+parseAsNum :: (Num a, Read a, Real a) => Text -> Result a
 parseAsNum  xs =
-    case readSigned readDec xs of
+    case readSigned readDec (T.unpack xs) of
         (val,[]):[] -> return val
         _ -> Bad
 
@@ -763,73 +759,73 @@ parseAsNum  xs =
     Checks that a string only contains the indicated types of characters.
     When there are invalid chars the flash message depends on what those chars were.
 -}
-checkOnly :: [Char -> Bool] -> String -> Result String
+checkOnly :: [Char -> Bool] -> Text -> Result Text
 checkOnly ps str =
     case invalidChars of
-        [] | null invalidChars -> return str
-        _ | ' ' `elem` invalidChars -> Bad
-        _ | null invalidPrintableChars -> Bad
+        "" | T.null invalidChars -> return str
+        _ | T.any (== ' ')  invalidChars -> Bad
+        _ | T.null invalidPrintableChars -> Bad
         _ -> Bad
-    where invalidChars = filter isInvalidChar str
+    where invalidChars = T.filter isInvalidChar str
           isInvalidChar c = all (\p -> not $ p c) ps
-          invalidPrintableChars = filter (\c -> isAlphaNum c || isPunctuation c || isSymbol c) invalidChars
+          invalidPrintableChars = T.filter (\c -> isAlphaNum c || isPunctuation c || isSymbol c) invalidChars
 {- |
     Checks that a string meets the min length restriction.
 -}
-checkLengthIsMin :: Int -> String ->  Result String
+checkLengthIsMin :: Int -> Text ->  Result Text
 checkLengthIsMin minlength xs
-    | length xs < minlength =  Bad
+    | T.length xs < minlength =  Bad
     | otherwise = return xs
 
 {- |
     Checks that a string doesn't exceed the max length restriction.
 -}
-checkLengthIsMax :: Int -> String -> Result String
+checkLengthIsMax :: Int -> Text -> Result Text
 checkLengthIsMax maxlength xs
-    | length xs > maxlength =  Bad
+    | T.length xs > maxlength =  Bad
     | otherwise = return xs
 
 {- |
     Checks that a string has lenght from list.
 -}
-checkLengthIs :: [Int] -> String -> Result String
+checkLengthIs :: [Int] -> Text -> Result Text
 checkLengthIs lengths xs
-    | length xs `elem` lengths =  Good xs
+    | (T.length xs) `elem` lengths =  Good xs
     | otherwise = Bad
 
 {- |
     Checks if the input is empty, assigning it value Empty.
 -}
-checkIfEmpty :: String -> Result String
-checkIfEmpty [] = Empty
+checkIfEmpty :: Text -> Result Text
+checkIfEmpty "" = Empty
 checkIfEmpty xs = Good xs
 
 
-filterOutCharacters :: String -> String -> Result String
+filterOutCharacters :: [Char] -> Text -> Result Text
 filterOutCharacters pattern =
-    return . filter (\x -> not $ elem x pattern)
+    return . T.filter (\x -> not $ elem x pattern)
 
 {- |
     Strips leading and trailing whitespace
 -}
-stripWhitespace :: String -> Result String
+stripWhitespace :: Text -> Result Text
 stripWhitespace =
     return . stripLeadingWhitespace . stripTrailingWhitespace
-    where stripLeadingWhitespace = dropWhile isSpace
-          stripTrailingWhitespace = reverse . stripLeadingWhitespace . reverse
+    where stripLeadingWhitespace = T.dropWhile isSpace
+          stripTrailingWhitespace = T.reverse . stripLeadingWhitespace . T.reverse
 
 {- |
     Strips all (even from the middle) whitespace
 -}
-stripAllWhitespace :: String -> Result String
-stripAllWhitespace = return . filter (not . isSpace)
+stripAllWhitespace :: Text -> Result Text
+stripAllWhitespace = return . T.filter (not . isSpace)
 
 {- |
     Helper to allow input validation via unjson
 -}
 unjsonWithValidationOrEmpty
-    :: (String -> InputValidation.Result String)
-    -> UJ.UnjsonDef String
+    :: ( Text -> InputValidation.Result  Text)
+    -> UJ.UnjsonDef Text
 unjsonWithValidationOrEmpty validation =
     UJ.unjsonInvmapR (convertResult . validation) id UJ.unjsonDef
   where
@@ -841,12 +837,12 @@ unjsonWithValidationOrEmpty validation =
     Helper to allow input validation via unjson
 -}
 unjsonWithValidationOrEmptyText
-    :: (String -> InputValidation.Result String)
-    -> UJ.UnjsonDef T.Text
+    :: ( Text -> InputValidation.Result  Text)
+    -> UJ.UnjsonDef Text
 unjsonWithValidationOrEmptyText validation =
     UJ.unjsonInvmapR (convertResult . validation') id UJ.unjsonDef
   where
     convertResult (InputValidation.Good s) = return s
     convertResult (InputValidation.Empty)  = return ""
     convertResult (InputValidation.Bad)    = fail "not valid"
-    validation' s = T.pack <$> validation (T.unpack s)
+    validation' s = validation s

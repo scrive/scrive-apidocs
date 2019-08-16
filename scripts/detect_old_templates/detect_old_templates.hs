@@ -239,6 +239,8 @@ expTemplateName (App _ (Var _ (UnQual _ (Ident _ funName)))
                  (Lit _ (String _ template _)))
     | funName `elem` [ "renderTemplate"
                      , "renderTemplate_"
+                     , "renderTextTemplate"
+                     , "renderTextTemplate_"
                      , "renderTemplateI"
                      , "flashMessage"
                      , "flashMessageWithFieldName"

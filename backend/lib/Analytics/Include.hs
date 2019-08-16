@@ -1,4 +1,4 @@
-module Analytics.Include(
+module Analytics.Include (
     AnalyticsData
   , getAnalyticsData
   , analyticsTemplates
@@ -9,7 +9,6 @@ where
 import Text.JSON
 import Text.JSON.Gen
 import Text.StringTemplates.Templates
-import qualified Data.Text as T
 import qualified Text.JSON.Gen as J
 import qualified Text.StringTemplates.Fields as F
 
@@ -26,9 +25,9 @@ import Utils.String
 
 data AnalyticsData = AnalyticsData { aUser           :: Maybe User
                                    , aUserGroup      :: Maybe UserGroup
-                                   , aToken          :: Maybe String
+                                   , aToken          :: Maybe Text
                                    , aHubSpotConf    :: Maybe HubSpotConf
-                                   , aGACode         :: Maybe String
+                                   , aGACode         :: Maybe Text
                                    , aLanguage       :: Lang
                                    }
 
@@ -71,7 +70,7 @@ instance ToJSValue AnalyticsData where
     mnop (J.value "userid") $ show <$> userid <$> aUser
 
     mnop (J.value "TOS Date" . formatTimeISO) $ join $ userhasacceptedtermsofservice <$> aUser
-    mnop (J.value "Full Name") $ emptyToNothing $ escapeString <$> getFullName <$> aUser
+    mnop (J.value "Full Name") $  emptyToNothing $ escapeString <$> getFullName <$> aUser
     mnop (J.value "Smart Name") $ emptyToNothing $ escapeString <$> getSmartName <$> aUser
     mnop (J.value "$first_name") $ emptyToNothing $ escapeString <$> getFirstName <$> aUser
     mnop (J.value "$last_name") $ emptyToNothing $ escapeString <$> getLastName <$> aUser
@@ -80,9 +79,9 @@ instance ToJSValue AnalyticsData where
     mnop (J.value "Position") $ emptyToNothing $ escapeString <$> usercompanyposition <$> userinfo  <$> aUser
 
     mnop (J.value "Company Status") $ escapeString <$> (\u -> if (useriscompanyadmin u) then "admin" else "sub") <$> aUser
-    mnop (J.value "Company Name") $ emptyToNothing $ escapeString <$> (T.unpack . get ugName) <$> aUserGroup
+    mnop (J.value "Company Name") $ emptyToNothing $ escapeString <$> get ugName <$> aUserGroup
 
-    mnop (J.value "Signup Method") $ emptyToNothing $ escapeString <$> show <$> usersignupmethod <$> aUser
+    mnop (J.value "Signup Method") $ emptyToNothing $ escapeString <$> showt <$> usersignupmethod <$> aUser
 
     J.value "Language" $ codeFromLang aLanguage
 

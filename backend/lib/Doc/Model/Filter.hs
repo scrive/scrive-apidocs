@@ -159,7 +159,7 @@ documentFilterToSQL (DocumentFilterDeleted flag1) = do
      then sqlWhere "signatory_links.deleted IS NOT NULL"
      else sqlWhere "signatory_links.deleted IS NULL"
 
-data FilterString = Quoted T.Text | Unquoted T.Text
+data FilterString = Quoted Text | Unquoted Text
   deriving (Show, Eq)
 
 -- | Converts a search string into a `DocumentFilterByTSQuery [FilterString]`
@@ -175,7 +175,7 @@ data FilterString = Quoted T.Text | Unquoted T.Text
 -- >>> processSearchStringToFilter "my search \"for life\""
 -- DocumentFilterByTSQuery [Unquoted "my", Unquoted "search", Quoted "for life"]
 --
-processSearchStringToFilter :: T.Text -> DocumentFilter
+processSearchStringToFilter :: Text -> DocumentFilter
 processSearchStringToFilter str = DocumentFilterByTSQuery . take 5 . convert $ str
   where
     convert s = mergeAroundQuotes [] Nothing (T.words $ spaceAroundQuotes s)
@@ -184,7 +184,7 @@ processSearchStringToFilter str = DocumentFilterByTSQuery . take 5 . convert $ s
     -- Expects a list of words, where quotation marks (") are their own word
     -- Collapses words within quotation marks into a single space-delimited word
     -- Ignores unmatched quotes
-    mergeAroundQuotes :: [FilterString] -> Maybe [T.Text] -> [T.Text] -> [FilterString]
+    mergeAroundQuotes :: [FilterString] -> Maybe [Text] -> [Text] -> [FilterString]
     mergeAroundQuotes acc Nothing  []           = acc
     mergeAroundQuotes acc (Just q) []           = acc ++ (map Unquoted q)
     mergeAroundQuotes acc Nothing  ("\"" : ws)  = mergeAroundQuotes acc (Just []) ws

@@ -40,7 +40,7 @@ import Doc.SignatoryLinkID
 data APIError = APIError {
       errorType     :: APIErrorType
     , errorHttpCode :: Int
-    , errorMessage  :: T.Text
+    , errorMessage  :: Text
   }
   deriving (Show, Eq, Typeable)
 
@@ -69,7 +69,7 @@ data APIErrorType = ServerError
                   | ConflictError
   deriving (Show, Eq, Typeable)
 
-errorIDFromAPIErrorType :: APIErrorType -> T.Text
+errorIDFromAPIErrorType :: APIErrorType -> Text
 errorIDFromAPIErrorType = \case
   ServerError                   -> "server_error"
   RequestFailed                 -> "request_failed"
@@ -97,7 +97,7 @@ httpCodeFromSomeDBExtraException (SomeDBExtraException ex) =
     Nothing                     -> 500
 
 -- General errors that have to be handled, but are generally not expected
-serverError :: T.Text -> APIError
+serverError :: Text -> APIError
 serverError reason =
   APIError { errorType = ServerError
            , errorHttpCode = 500
@@ -108,7 +108,7 @@ serverError reason =
               <+> "Error details:" <+> reason
 
 -- General errors that have to be handled and are expected
-requestFailed :: T.Text -> APIError
+requestFailed :: Text -> APIError
 requestFailed reason =
   APIError { errorType = RequestFailed
            , errorHttpCode = 400
@@ -116,7 +116,7 @@ requestFailed reason =
   where msg = "Request failed. Additional information:" <+> reason
 
 -- | Used internally by API.V2 for reporting bad API endpoints
-endpointNotFound :: T.Text -> APIError
+endpointNotFound :: Text -> APIError
 endpointNotFound ep =
   APIError { errorType = EndpointNotFound
            , errorHttpCode = 404
@@ -134,7 +134,7 @@ invalidAuthorization =
               \Please refer to our API documentation"
 
 -- | Used interally by this module and API.V2.User
-invalidAuthorizationWithMsg :: T.Text -> APIError
+invalidAuthorizationWithMsg :: Text -> APIError
 invalidAuthorizationWithMsg problem = invalidAuthorization { errorMessage = msg}
   where msg = errorMessage invalidAuthorization <+>
               "The problem was:" <+> problem
@@ -149,7 +149,7 @@ insufficientPrivileges =
               \sufficient privileges for this request"
 
 -- Request specific errors
-requestParameterMissing :: T.Text -> APIError
+requestParameterMissing :: Text -> APIError
 requestParameterMissing param =
   APIError { errorType = RequestParametersMissing
            , errorHttpCode = 400
@@ -157,7 +157,7 @@ requestParameterMissing param =
   where msg = "The parameter '"<> param <>
               "' was missing. Please refer to our API documentation"
 
-requestParameterParseError :: T.Text -> T.Text -> APIError
+requestParameterParseError :: Text -> Text -> APIError
 requestParameterParseError param err =
   APIError { errorType = RequestParametersParseError
            , errorHttpCode = 400
@@ -166,7 +166,7 @@ requestParameterParseError param err =
             <+> "Please refer to our API documentation. Error details:"
             <+> err
 
-requestParameterInvalid :: T.Text -> T.Text -> APIError
+requestParameterInvalid :: Text -> Text -> APIError
 requestParameterInvalid param reason =
   APIError { errorType = RequestParametersInvalid
            , errorHttpCode = 400
@@ -183,21 +183,21 @@ documentObjectVersionMismatch (DocumentObjectVersionDoesNotMatch {..}) =
            , errorMessage = msg }
   where msg = "The document has a different object_version to the one provided \
               \and so the request was not processed."
-              <+> "You gave" <+> (T.pack $ show documentObjectVersionShouldBe)
+              <+> "You gave" <+> (showt documentObjectVersionShouldBe)
               <+> "but the document had" <+>
-              (T.pack $ show documentObjectVersionIs)
+              (showt documentObjectVersionIs)
 
-documentStateError :: T.Text -> APIError
+documentStateError :: Text -> APIError
 documentStateError msg =
   APIError { errorType = DocumentStateError
            , errorHttpCode = 409
            , errorMessage = msg }
 
-documentStateErrorWithCode :: Int -> T.Text -> APIError
+documentStateErrorWithCode :: Int -> Text -> APIError
 documentStateErrorWithCode code msg =
   (documentStateError msg) {errorHttpCode = code}
 
-signatoryStateError :: T.Text -> APIError
+signatoryStateError :: Text -> APIError
 signatoryStateError msg =
   APIError { errorType = SignatoryStateError
            , errorHttpCode = 409
@@ -207,8 +207,8 @@ signatoryLinkForDocumentNotFound :: DocumentID -> SignatoryLinkID -> APIError
 signatoryLinkForDocumentNotFound did slid =
     resourceNotFound $ "A signatory with id" <+> slidText <+>
     "was not found for document id" <+> didText
-  where didText  = T.pack (show did)
-        slidText = T.pack (show slid)
+  where didText  = showt did
+        slidText = showt slid
 
 documentActionForbidden :: APIError
 documentActionForbidden =
@@ -221,22 +221,22 @@ documentNotFound :: DocumentID -> APIError
 documentNotFound did =
   resourceNotFound $ "A document with id" <+> didText <+>
                      "was not found"
-  where didText = T.pack (show did)
+  where didText = showt did
 
 documentShortIDNotFound :: DocumentID -> APIError
 documentShortIDNotFound sdid =
   resourceNotFound $ "A document matching short id" <+> sdidText <+>
                      "was not found"
-  where sdidText = T.pack (show sdid)
+  where sdidText = showt sdid
 
-resourceNotFound :: T.Text -> APIError
+resourceNotFound :: Text -> APIError
 resourceNotFound info =
   APIError { errorType = ResourceNotFound
            , errorHttpCode = 404
            , errorMessage = msg }
   where msg = "The resource was not found." <+>  info
 
-conflictError :: T.Text -> APIError
+conflictError :: Text -> APIError
 conflictError msg = APIError
   { errorType     = ConflictError
   , errorHttpCode = 409
@@ -327,7 +327,7 @@ convertSignatoryLinkDoesNotExist (SomeDBExtraException ex) =
   case cast ex of
     Just (SignatoryLinkDoesNotExist sig)
       -> SomeDBExtraException . signatoryStateError $
-         "Signatory"  <+> T.pack (show sig) <+> "does not exists"
+         "Signatory"  <+> showt sig <+> "does not exists"
     Nothing
       -> SomeDBExtraException ex
 

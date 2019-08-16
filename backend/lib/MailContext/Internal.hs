@@ -9,5 +9,5 @@ data MailContext = MailContext {
   _mctxlang                 :: !Lang
 , _mctxcurrentBrandedDomain :: !BrandedDomain
 , _mctxtime                 :: !UTCTime
-, _mctxmailNoreplyAddress   :: !String
+, _mctxmailNoreplyAddress   :: !Text
 } deriving Show

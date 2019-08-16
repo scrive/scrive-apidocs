@@ -13,6 +13,7 @@ import Data.Int
 import qualified Crypto.Hash as H
 import qualified Data.ByteArray as BA
 import qualified Data.ByteString as BS
+import qualified Data.Text as T
 
 import Crypto
 import DB
@@ -40,7 +41,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetMaybeFileByFileID (Maybe File
 -- | Insert a new 'File' in the DB without any URL nor AES configuration.
 -- At the moment, it is only by 'saveNewFile' which immediately adds the missing
 -- information or purges the file.
-data NewEmptyFileForAWS = NewEmptyFileForAWS String BS.ByteString
+data NewEmptyFileForAWS = NewEmptyFileForAWS Text BS.ByteString
 instance (MonadDB m, MonadThrow m)
   => DBUpdate m NewEmptyFileForAWS (FileID, BS.ByteString) where
   update (NewEmptyFileForAWS fname fcontent) = do
@@ -54,7 +55,7 @@ instance (MonadDB m, MonadThrow m)
     fid <- fetchOne runIdentity
     return (fid, fchecksum)
 
-data FileMovedToAWS = FileMovedToAWS FileID String AESConf
+data FileMovedToAWS = FileMovedToAWS FileID Text AESConf
 instance (MonadDB m, MonadThrow m) => DBUpdate m FileMovedToAWS File where
   update (FileMovedToAWS fid url aes) = do
     runQuery_ $ sqlUpdate "files" $ do
@@ -87,7 +88,7 @@ filesSelectors = [
   , "size"
   ]
 
-fetchFile :: (FileID, String, Maybe String, BS.ByteString, Maybe BS.ByteString, Maybe BS.ByteString, Int32) -> File
+fetchFile :: (FileID, Text, Maybe Text, BS.ByteString, Maybe BS.ByteString, Maybe BS.ByteString, Int32) -> File
 fetchFile (fid, fname, mamazon_url, checksum, maes_key, maes_iv, size) = File {
         fileid = fid
       , filename = fname
@@ -99,15 +100,18 @@ fetchFile (fid, fname, mamazon_url, checksum, maes_key, maes_iv, size) = File {
         --  * invalid AES key: error out at this place
         case (mamazon_url, eaes) of
           (Just url, Just (Right aes)) -> FileStorageAWS url aes
-          (Just _,   Just (Left msg))  -> err msg
+          (Just _,   Just (Left msg))  -> err $ T.pack msg
           d -> unexpectedError $ "invalid AWS data for file with id ="
-            <+> show fid <> ":" <+> show d
+            <+> showt fid <> ":" <+> (showt d)
       , filechecksum = checksum
       , filesize = size
     }
       where
-        err :: String -> FileStorage
-        err msg = unexpectedError $ "file with id =" <+> show fid <+> "has invalid aes/iv pair:" <+> msg
+        err :: Text -> FileStorage
+        err msg = unexpectedError $
+          "file with id =" <+> showt fid <+>
+          "has invalid aes/iv pair:" <+> msg
+
         eaes = case (maes_key, maes_iv) of
                  (Just aes_key, Just aes_iv) -> Just $ mkAESConf aes_key aes_iv
                  _ -> Nothing

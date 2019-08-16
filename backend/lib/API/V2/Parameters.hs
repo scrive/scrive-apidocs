@@ -32,22 +32,22 @@ import qualified Data.ByteString.RFC2397 as Base64Image
 import qualified InputValidation as V
 
 data ApiV2Parameter a where
-  ApiV2ParameterFlag  :: T.Text -> ApiV2Parameter Bool
-  ApiV2ParameterBool  :: T.Text -> ApiV2Parameter Bool
-  ApiV2ParameterInt   :: T.Text -> ApiV2Parameter Int
-  ApiV2ParameterDouble   :: T.Text -> ApiV2Parameter Double
-  ApiV2ParameterText  :: T.Text -> ApiV2Parameter T.Text
+  ApiV2ParameterFlag  :: Text -> ApiV2Parameter Bool
+  ApiV2ParameterBool  :: Text -> ApiV2Parameter Bool
+  ApiV2ParameterInt   :: Text -> ApiV2Parameter Int
+  ApiV2ParameterDouble   :: Text -> ApiV2Parameter Double
+  ApiV2ParameterText  :: Text -> ApiV2Parameter Text
   ApiV2ParameterTextWithValidation
-      :: T.Text -> (String -> V.Result String) -> ApiV2Parameter T.Text
-  ApiV2ParameterRead  :: Read a => T.Text -> ApiV2Parameter a
-  ApiV2ParameterJSON  :: T.Text -> UnjsonDef a -> ApiV2Parameter a
+      :: Text -> (Text -> V.Result Text) -> ApiV2Parameter Text
+  ApiV2ParameterRead  :: Read a => Text -> ApiV2Parameter a
+  ApiV2ParameterJSON  :: Text -> UnjsonDef a -> ApiV2Parameter a
   -- Param that is text, but we want to reuse definition from Unjson instance
-  ApiV2ParameterTextUnjson :: T.Text -> UnjsonDef a -> ApiV2Parameter a
-  ApiV2ParameterAeson :: Aeson.FromJSON a => T.Text -> ApiV2Parameter a
-  ApiV2ParameterFilePDF        :: T.Text -> ApiV2Parameter File
-  ApiV2ParameterFilePDFs       :: [T.Text] -> ApiV2Parameter [File]
-  ApiV2ParameterFilePDFOrImage :: T.Text -> ApiV2Parameter File
-  ApiV2ParameterBase64PNGImage :: T.Text -> ApiV2Parameter File
+  ApiV2ParameterTextUnjson :: Text -> UnjsonDef a -> ApiV2Parameter a
+  ApiV2ParameterAeson :: Aeson.FromJSON a => Text -> ApiV2Parameter a
+  ApiV2ParameterFilePDF        :: Text -> ApiV2Parameter File
+  ApiV2ParameterFilePDFs       :: [Text] -> ApiV2Parameter [File]
+  ApiV2ParameterFilePDFOrImage :: Text -> ApiV2Parameter File
+  ApiV2ParameterBase64PNGImage :: Text -> ApiV2Parameter File
 
 -- | Get an obligatory parameter
 --
@@ -72,14 +72,14 @@ apiV2ParameterOptional :: Kontrakcja m => ApiV2Parameter a -> m (Maybe a)
 
 apiV2ParameterOptional (ApiV2ParameterInt name) = apiParameterUsingMaybeRead name
 apiV2ParameterOptional (ApiV2ParameterDouble name) = apiParameterUsingMaybeRead name
-apiV2ParameterOptional (ApiV2ParameterText name) = fmap T.pack <$> getField (T.unpack name)
+apiV2ParameterOptional (ApiV2ParameterText name) = getField name
 apiV2ParameterOptional (ApiV2ParameterRead name) = apiParameterUsingMaybeRead name
 
 apiV2ParameterOptional (ApiV2ParameterTextWithValidation name validate) = do
-  mValue <- getField $ T.unpack name
+  mValue <- getField name
   case fmap validate mValue of
     Nothing -> return Nothing
-    Just (V.Good v) -> return $ Just (T.pack v)
+    Just (V.Good v) -> return $ Just v
     Just V.Bad   -> failValidation
     Just V.Empty -> failValidation
   where
@@ -87,14 +87,14 @@ apiV2ParameterOptional (ApiV2ParameterTextWithValidation name validate) = do
       "validation failed, please check that the parameter format is correct"
 
 apiV2ParameterOptional (ApiV2ParameterFlag name) = do
-  mValue <- getField $ T.unpack name
+  mValue <- getField name
   case mValue of
     Just "false" -> return $ Just False
     Just _ -> return $ Just True
     Nothing -> return $ Just False
 
 apiV2ParameterOptional (ApiV2ParameterBool name) = do
-  mValue <- getField $ T.unpack name
+  mValue <- getField name
   case mValue of
     Just "true"  -> return $ Just True
     Just "false" -> return $ Just False
@@ -103,25 +103,25 @@ apiV2ParameterOptional (ApiV2ParameterBool name) = do
 
 
 apiV2ParameterOptional (ApiV2ParameterJSON name jsonDef) = do
-  mValue <- getFieldBS (T.unpack name)
+  mValue <- getFieldBS name
   case mValue of
     Just paramValue -> case Aeson.eitherDecode paramValue of
       Left _ -> apiError $ requestParameterParseError name "Invalid JSON"
       Right paramAeson -> case (Unjson.parse jsonDef paramAeson) of
         (Result res []) -> return $ Just res
-        (Result _ errs) -> apiError $ requestParameterParseError name (T.pack (show errs))
+        (Result _ errs) -> apiError $ requestParameterParseError name (showt errs)
     Nothing -> return Nothing
 
 apiV2ParameterOptional (ApiV2ParameterTextUnjson name jsonDef) = do
-  mValue <- getField (T.unpack name)
+  mValue <- getField name
   case mValue of
-    Just paramValue -> case (Unjson.parse jsonDef (Aeson.String $ T.pack paramValue)) of
+    Just paramValue -> case (Unjson.parse jsonDef (Aeson.String paramValue)) of
         (Result res []) -> return $ Just res
-        (Result _ errs) -> apiError $ requestParameterParseError name (T.pack (show errs))
+        (Result _ errs) -> apiError $ requestParameterParseError name (showt errs)
     Nothing -> return Nothing
 
 apiV2ParameterOptional (ApiV2ParameterAeson name) = do
-  mValue <- getFieldBS (T.unpack name)
+  mValue <- getFieldBS name
   case mValue of
     Just paramValue -> case Aeson.eitherDecode paramValue of
       Left msg -> apiError $ requestParameterParseError name $ "Invalid JSON" <> T.pack msg
@@ -161,7 +161,7 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFs names) = do
         requestParameterParseError (T.intercalate ", " names) $ "not a valid PDF"
 
   files <- forM pdfcontents $ \(filename, pdfcontent) -> do
-    fileid <- saveNewFile filename pdfcontent
+    fileid <- saveNewFile (T.pack filename) pdfcontent
     file <- dbQuery $ GetFileByFileID fileid
     return file
   return $ Just files
@@ -193,12 +193,12 @@ apiV2ParameterOptional (ApiV2ParameterFilePDFOrImage name) = do
             Right r -> return r
             Left _ ->  apiError $ requestParameterParseError name "filename suggests image, but not a valid PNG/JPG"
         _ -> apiError $ requestParameterParseError name "not a PDF or image (PNG or JPG)"
-      fileid <- saveNewFile filename content
+      fileid <- saveNewFile (T.pack filename) content
       file <- dbQuery $ GetFileByFileID fileid
       return $ Just file
 
 apiV2ParameterOptional (ApiV2ParameterBase64PNGImage name) = do
-  mValue <- getFieldBS (T.unpack name)
+  mValue <- getFieldBS name
   case (Base64Image.decode . BS.concat . BSL.toChunks) <$> mValue of
     Nothing -> return Nothing
     (Just Nothing) -> apiError $ requestParameterParseError name "expected RFC2397 encoded png"
@@ -211,16 +211,16 @@ apiV2ParameterOptional (ApiV2ParameterBase64PNGImage name) = do
 -- * Internal
 
 -- | Helper function for all parameters that can just be parsed using `maybeRead`
-apiParameterUsingMaybeRead :: (HasRqData m,ServerMonad m, MonadThrow m, Read a) => T.Text -> m (Maybe a)
+apiParameterUsingMaybeRead :: (HasRqData m,ServerMonad m, MonadThrow m, Read a) => Text -> m (Maybe a)
 apiParameterUsingMaybeRead name = do
-  mValue <- getField $ T.unpack name
+  mValue <- getField name
   case fmap maybeRead mValue of
     Just (Just v) -> return $ Just v
     Just Nothing  -> apiError $ requestParameterParseError name "could not read parameter"
     Nothing -> return Nothing
 
 -- | Helper function to extract name from `ApiV2Parameter`
-getParameterName :: ApiV2Parameter a -> T.Text
+getParameterName :: ApiV2Parameter a -> Text
 getParameterName (ApiV2ParameterFlag n) = n
 getParameterName (ApiV2ParameterBool n) = n
 getParameterName (ApiV2ParameterInt n) = n

@@ -31,9 +31,9 @@ import Control.Monad.Catch
 import Data.Data
 import Data.Functor.Invariant
 import Data.Int
-import Data.String.Utils
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
+import qualified Data.Text as T
 
 import DB
 import Doc.SignatoryFieldID
@@ -63,7 +63,7 @@ instance ToSQL NameOrder where
   type PQDest NameOrder = PQDest Int16
   toSQL (NameOrder 1) = toSQL (1 :: Int16)
   toSQL (NameOrder 2) = toSQL (2 :: Int16)
-  toSQL (NameOrder v) = unexpectedError $ "Name order " ++ show v ++ " is not supported"
+  toSQL (NameOrder v) = unexpectedError $ "Name order " <> (showt v) <> " is not supported"
 
 instance PQFormat NameOrder where
   pqFormat = pqFormat @Int16
@@ -141,11 +141,11 @@ tempPlacementID = PlacementID 0
 ---------------------------------
 
 data PlacementAnchor = PlacementAnchor {
-  placementanchortext  :: !String
+  placementanchortext  :: !Text
 , placementanchorindex :: !Int32
 } deriving (Eq, Ord, Show)
 
-type instance CompositeRow PlacementAnchor = (String, Int32)
+type instance CompositeRow PlacementAnchor = (Text, Int32)
 
 instance PQFormat PlacementAnchor where
   pqFormat = compositeTypePqFormat ctPlacementAnchor
@@ -240,7 +240,7 @@ data SignatoryField = SignatoryNameField SignatoryNameField
 data SignatoryNameField = NameField {
     snfID                     :: !SignatoryFieldID
   , snfNameOrder              :: !NameOrder
-  , snfValue                  :: !String
+  , snfValue                  :: !Text
   , snfObligatory             :: !Bool
   , snfShouldBeFilledBySender :: !Bool
   , snfPlacements             :: ![FieldPlacement]
@@ -248,7 +248,7 @@ data SignatoryNameField = NameField {
 
 data SignatoryCompanyField = CompanyField {
     scfID                     :: !SignatoryFieldID
-  , scfValue                  :: !String
+  , scfValue                  :: !Text
   , scfObligatory             :: !Bool
   , scfShouldBeFilledBySender :: !Bool
   , scfPlacements             :: ![FieldPlacement]
@@ -256,7 +256,7 @@ data SignatoryCompanyField = CompanyField {
 
 data SignatoryPersonalNumberField = PersonalNumberField {
     spnfID                     :: !SignatoryFieldID
-  , spnfValue                  :: !String
+  , spnfValue                  :: !Text
   , spnfObligatory             :: !Bool
   , spnfShouldBeFilledBySender :: !Bool
   , spnfPlacements             :: ![FieldPlacement]
@@ -264,7 +264,7 @@ data SignatoryPersonalNumberField = PersonalNumberField {
 
 data SignatoryCompanyNumberField = CompanyNumberField {
     scnfID                     :: !SignatoryFieldID
-  , scnfValue                  :: !String
+  , scnfValue                  :: !Text
   , scnfObligatory             :: !Bool
   , scnfShouldBeFilledBySender :: !Bool
   , scnfPlacements             :: ![FieldPlacement]
@@ -272,7 +272,7 @@ data SignatoryCompanyNumberField = CompanyNumberField {
 
 data SignatoryEmailField = EmailField {
     sefID                     :: !SignatoryFieldID
-  , sefValue                  :: !String
+  , sefValue                  :: !Text
   , sefObligatory             :: !Bool
   , sefShouldBeFilledBySender :: !Bool
   , sefEditableBySignatory    :: !Bool
@@ -281,7 +281,7 @@ data SignatoryEmailField = EmailField {
 
 data SignatoryMobileField = MobileField {
     smfID                     :: !SignatoryFieldID
-  , smfValue                  :: !String
+  , smfValue                  :: !Text
   , smfObligatory             :: !Bool
   , smfShouldBeFilledBySender :: !Bool
   , smfEditableBySignatory    :: !Bool
@@ -290,9 +290,9 @@ data SignatoryMobileField = MobileField {
 
 data SignatoryTextField = TextField {
     stfID                     :: !SignatoryFieldID
-  , stfName                   :: !String
+  , stfName                   :: !Text
   , stfFilledByAuthor         :: !Bool
-  , stfValue                  :: !String
+  , stfValue                  :: !Text
   , stfObligatory             :: !Bool
   , stfShouldBeFilledBySender :: !Bool
   , stfPlacements             :: ![FieldPlacement]
@@ -300,14 +300,14 @@ data SignatoryTextField = TextField {
 } deriving (Show, Typeable)
 
 data TextCustomValidation = TextCustomValidation {
-    tcvPattern         :: !String
-  , tcvPositiveExample :: !String
-  , tcvTooltip         :: !String
+    tcvPattern         :: !Text
+  , tcvPositiveExample :: !Text
+  , tcvTooltip         :: !Text
   } deriving (Show, Typeable)
 
 data SignatoryCheckboxField = CheckboxField {
     schfID                     :: !SignatoryFieldID
-  , schfName                   :: !String
+  , schfName                   :: !Text
   , schfValue                  :: !Bool
   , schfObligatory             :: !Bool
   , schfShouldBeFilledBySender :: !Bool
@@ -316,7 +316,7 @@ data SignatoryCheckboxField = CheckboxField {
 
 data SignatorySignatureField = SignatureField {
     ssfID                     :: !SignatoryFieldID
-  , ssfName                   :: !String
+  , ssfName                   :: !Text
   , ssfValue                  :: !(Maybe FileID)
   , ssfObligatory             :: !Bool
   , ssfShouldBeFilledBySender :: !Bool
@@ -326,14 +326,14 @@ data SignatorySignatureField = SignatureField {
 
 data SignatoryRadioGroupField = RadioGroupField {
     srgfID                     :: !SignatoryFieldID
-  , srgfName                   :: !String
-  , srgfSelectedValue          :: !(Maybe String)
+  , srgfName                   :: !Text
+  , srgfSelectedValue          :: !(Maybe Text)
   , srgfPlacements             :: ![FieldPlacement]
-  , srgfValues                 :: ![String]
+  , srgfValues                 :: ![Text]
 } deriving (Show, Typeable)
 
 instance HasSomeUserInfo [SignatoryField] where
-  getEmail          = strip . getTextValueOfField EmailFI
+  getEmail          = T.strip . getTextValueOfField EmailFI
   getFirstName      = getTextValueOfField $ NameFI (NameOrder 1)
   getLastName       = getTextValueOfField $ NameFI (NameOrder 2)
   getPersonalNumber = getTextValueOfField PersonalNumberFI
@@ -367,7 +367,22 @@ signatoryFieldsSelectors = [
 
 
 
-type instance CompositeRow SignatoryField = (SignatoryFieldID, FieldType, Maybe NameOrder, String, Bool, Maybe String, Maybe Bool, Maybe FileID, Bool, Bool, Maybe Bool, CompositeArray1 FieldPlacement, Maybe (Array1 String), Maybe String, Maybe String, Maybe String)
+type instance CompositeRow SignatoryField =
+  ( SignatoryFieldID
+  , FieldType
+  , Maybe NameOrder
+  , Text
+  , Bool
+  , Maybe Text
+  , Maybe Bool
+  , Maybe FileID
+  , Bool, Bool
+  , Maybe Bool
+  , CompositeArray1 FieldPlacement
+  , Maybe (Array1 Text)
+  , Maybe Text
+  , Maybe Text
+  , Maybe Text)
 
 instance PQFormat SignatoryField where
   pqFormat = compositeTypePqFormat ctSignatoryField
@@ -461,10 +476,10 @@ data FieldIdentity
   | CompanyNumberFI
   | EmailFI
   | MobileFI
-  | TextFI String
-  | SignatureFI String
-  | CheckboxFI String
-  | RadioGroupFI String
+  | TextFI Text
+  | SignatureFI Text
+  | CheckboxFI Text
+  | RadioGroupFI Text
     deriving (Eq, Ord, Show)
 
 fieldIdentity :: SignatoryField -> FieldIdentity
@@ -482,7 +497,7 @@ fieldIdentity (SignatoryRadioGroupField f)       = RadioGroupFI (srgfName f)
 getFieldByIdentity :: FieldIdentity -> [SignatoryField] -> Maybe SignatoryField
 getFieldByIdentity fi sfs = find (\sf -> fieldIdentity sf == fi) sfs
 
-fieldTextValue :: SignatoryField -> Maybe String
+fieldTextValue :: SignatoryField -> Maybe Text
 fieldTextValue (SignatoryNameField f)             = Just $ snfValue f
 fieldTextValue (SignatoryCompanyField f)          = Just $ scfValue f
 fieldTextValue (SignatoryPersonalNumberField f)   = Just $ spnfValue f
@@ -494,13 +509,13 @@ fieldTextValue (SignatoryCheckboxField _)         = Nothing
 fieldTextValue (SignatorySignatureField _)        = Nothing
 fieldTextValue (SignatoryRadioGroupField f)       = srgfSelectedValue f
 
-getTextValueOfField ::  FieldIdentity -> [SignatoryField] -> String
+getTextValueOfField ::  FieldIdentity -> [SignatoryField] -> Text
 getTextValueOfField fi sfs =
   case (getFieldByIdentity fi sfs) of
     Just f  -> fromMaybe "" (fieldTextValue f)
     Nothing -> ""
 
-setTextValue :: String -> SignatoryField -> SignatoryField
+setTextValue :: Text -> SignatoryField -> SignatoryField
 setTextValue t (SignatoryNameField f)             = SignatoryNameField $ f {snfValue = t}
 setTextValue t (SignatoryCompanyField f)          = SignatoryCompanyField $ f {scfValue = t}
 setTextValue t (SignatoryPersonalNumberField f)   = SignatoryPersonalNumberField $ f {spnfValue = t}

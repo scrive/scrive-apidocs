@@ -16,7 +16,6 @@ import Control.Monad.Trans.Control (MonadBaseControl)
 import Crypto.RNG
 import Log
 import Text.StringTemplates.Templates (TemplatesMonad)
-import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
@@ -72,20 +71,20 @@ logDocEvent name user extraProps doc = do
   let uid = userid user
       email = Email $ getEmail user
       fullname = getFullName user
-      deliverymethod = fromMaybe "undefined" $ show . signatorylinkdeliverymethod <$> getSigLinkFor uid doc
+      deliverymethod = fromMaybe "undefined" $ showt . signatorylinkdeliverymethod <$> getSigLinkFor uid doc
   asyncLogEvent name (extraProps ++ [
     UserIDProp uid,
     DocIDProp  (documentid doc),
     TimeProp   now,
     MailProp   email,
     NameProp   fullname,
-    stringProp "Company Name" . T.unpack . get ugName $ ug,
+    stringProp "Company Name" . get ugName $ ug,
     stringProp "Delivery Method" deliverymethod,
-    stringProp "Type" (show $ documenttype doc),
-    stringProp "Language" (show $ documentlang doc),
+    stringProp "Type" (showt $ documenttype doc),
+    stringProp "Language" (showt $ documentlang doc),
     numProp "Days to sign" (fromIntegral $ documentdaystosign doc),
     numProp "Signatories" (fromIntegral $ length $ documentsignatorylinks doc),
-    stringProp "Signup Method" (show $ usersignupmethod user)])
+    stringProp "Signup Method" (showt $ usersignupmethod user)])
     EventMixpanel
 
 postDocumentPreparationChange :: (Kontrakcja m, DocumentMonad m) => Bool -> TimeZoneName -> m ()
@@ -131,7 +130,7 @@ initialiseSignatoryAPIMagicHashes = do
       (signatorylinkid sl) SignatoryAccessTokenForAPI
       Nothing (signatorymagichash sl)
 
-postDocumentRejectedChange :: Kontrakcja m => SignatoryLinkID -> Maybe String -> Document -> m ()
+postDocumentRejectedChange :: Kontrakcja m => SignatoryLinkID -> Maybe Text -> Document -> m ()
 postDocumentRejectedChange siglinkid customMessage doc@Document{..} = logDocument documentid $ do
   triggerAPICallbackIfThereIsOne doc
   unless (isRejected doc) $
@@ -146,7 +145,7 @@ postDocumentRejectedChange siglinkid customMessage doc@Document{..} = logDocumen
   sendRejectEmails customMessage (fromJust $ getSigLinkFor siglinkid doc) doc
   return ()
 
-postDocumentForwardChange :: Kontrakcja m => Maybe String ->  SignatoryLink -> SignatoryLinkID -> Document -> m ()
+postDocumentForwardChange :: Kontrakcja m => Maybe Text ->  SignatoryLink -> SignatoryLinkID -> Document -> m ()
 postDocumentForwardChange customMessage originalSignatory newslid doc = logDocument (documentid doc)$ do
   let newsl = fromJust (getSigLinkFor newslid doc)
   triggerAPICallbackIfThereIsOne doc
@@ -292,7 +291,7 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
   -- so that the action can be re-scheduled
   return resultisok
 
-stateMismatchError :: (MonadBase IO m, MonadLog m) => String -> DocumentStatus -> Document -> m a
+stateMismatchError :: (MonadBase IO m, MonadLog m) => Text -> DocumentStatus -> Document -> m a
 stateMismatchError funame expected doc = do
   logInfo "State mismatch error" $ object [
       "function" .= funame
@@ -310,14 +309,14 @@ getDocAuthor doc = do
     Goes through each signatory, and if a user exists this saves it for that user
     by linking the signatory to the user's account.
 -}
-saveDocumentForSignatories :: (Kontrakcja m, DocumentMonad m) => m (Maybe String)
+saveDocumentForSignatories :: (Kontrakcja m, DocumentMonad m) => m (Maybe Text)
 saveDocumentForSignatories =
   documentsignatorylinks <$> theDocument >>= foldM foldSaveForSig Nothing . filter (not . isAuthor)
   where
     {- |
         Wraps up the saveDocumentForSignatory so we can use it in a fold
     -}
-    foldSaveForSig :: (Kontrakcja m, DocumentMonad m) => Maybe String -> SignatoryLink -> m (Maybe String)
+    foldSaveForSig :: (Kontrakcja m, DocumentMonad m) => Maybe Text -> SignatoryLink -> m (Maybe Text)
     foldSaveForSig (Just msg) _ = return $ Just msg
     foldSaveForSig Nothing siglink = saveDocumentForSignatory siglink
     {- |
@@ -325,7 +324,7 @@ saveDocumentForSignatories =
         if there is a user with a matching email, and if there is it hooks up the signatory
         link to that user.
     -}
-    saveDocumentForSignatory :: (Kontrakcja m, DocumentMonad m) => SignatoryLink -> m (Maybe String)
+    saveDocumentForSignatory :: (Kontrakcja m, DocumentMonad m) => SignatoryLink -> m (Maybe Text)
     saveDocumentForSignatory sl = do
       let sigemail = getEmail sl
       muser <- case (sigemail) of

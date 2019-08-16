@@ -23,7 +23,7 @@ htmlTests _ = testGroup "HTML"
         ]
     ]
 
-excludedTemplates :: [String]
+excludedTemplates :: [Text]
 excludedTemplates = [ "paymentsadminpagesuperuser"
                     , "javascriptLocalisation"
                     , "htmlopentag"
@@ -33,7 +33,7 @@ excludedTemplates = [ "paymentsadminpagesuperuser"
                     , "analyticsLoaderBase"
                     ]
 
-isIncluded :: (String, String) -> Bool
+isIncluded :: (Text, Text) -> Bool
 isIncluded (name, _) = not $ name `elem` excludedTemplates
 
 testValidXml :: Assertion
@@ -42,10 +42,10 @@ testValidXml = do
   mapM_ assertTemplateIsValidXML . filter isIncluded $ ts
   assertSuccess
 
-assertTemplateIsValidXML :: (String, String) -> Assertion
+assertTemplateIsValidXML :: (Text, Text) -> Assertion
 assertTemplateIsValidXML t =
   case parseTemplateAsXML t of
-    Left  msg -> assertFailure msg
+    Left  msg -> assertFailure $ T.unpack msg
     Right   _ -> assertSuccess
 
 testNoUnnecessaryDoubleDivs :: Assertion
@@ -63,20 +63,21 @@ testNoNestedP = do
     assertNoNestedP alltemplatenames templates
   assertSuccess
 
-assertNoNestedP :: [String] -> KontrakcjaTemplates -> Assertion
+assertNoNestedP :: [Text] -> KontrakcjaTemplates -> Assertion
 assertNoNestedP tnames templates = do
   forM_ (filter (not . (flip elem) excludedTemplates) tnames) $ \n -> do
-    let t = renderTemplateMain templates n ([]::[(String, String)]) id
-    case parseStringAsXML (n, removeScripts $ removeDocTypeDeclaration t) of
-      Left  msg -> assertFailure msg
+    let t = renderTemplateMain templates (T.unpack n) ([] :: [(String, String)]) id
+    case parseStringAsXML (n, removeScripts $ removeDocTypeDeclaration $ T.pack t) of
+      Left  msg -> assertFailure $ T.unpack msg
       Right doc -> checkXMLForNestedP n (NodeElement $ documentRoot doc)
   assertSuccess
 
-checkXMLForNestedP :: String -> Node -> Assertion
+checkXMLForNestedP :: Text -> Node -> Assertion
 checkXMLForNestedP templatename elt =
   if isPAndHasP elt
-  then assertFailure $ "nested <p> tags in template " ++ templatename ++ ":\n" ++
-                       (renderMarkup . toMarkup $ elt)
+  then assertFailure $ T.unpack $
+    "nested <p> tags in template " <> templatename <> ":\n" <>
+    (T.pack . renderMarkup . toMarkup $ elt)
   else assertSuccess
 
 isPOrHasP :: Node -> Bool
@@ -93,14 +94,14 @@ isPAndHasP (NodeElement (Element tag _attrs children)) =
   else any isPAndHasP children
 isPAndHasP _ = False
 
-assertNoUnnecessaryDoubleDivs :: (String, String) -> Assertion
+assertNoUnnecessaryDoubleDivs :: (Text, Text) -> Assertion
 assertNoUnnecessaryDoubleDivs t@(name,_) =
   case parseTemplateAsXML t of
-    Left msg  -> assertFailure msg
+    Left msg  -> assertFailure $ T.unpack msg
     Right doc -> checkXMLForUnnecessaryDoubleDivs name
                  (NodeElement $ documentRoot doc)
 
-checkXMLForUnnecessaryDoubleDivs :: String -> Node -> Assertion
+checkXMLForUnnecessaryDoubleDivs :: Text -> Node -> Assertion
 checkXMLForUnnecessaryDoubleDivs templatename
                                  e@(NodeElement (Element _ _ children)) =
   let isDiv            = isDivElem e
@@ -108,9 +109,10 @@ checkXMLForUnnecessaryDoubleDivs templatename
       isSingleChildDiv = isSingleChild && isDivElem (head children)
       isUnnecessaryDiv = isDiv && isSingleChildDiv in
   if isUnnecessaryDiv
-    then assertFailure $ "unnecessary double divs in template " ++
-                         templatename ++ ":\n" ++
-                         (renderMarkup . toMarkup $ e)
+    then assertFailure $ T.unpack $
+          "unnecessary double divs in template " <>
+          templatename <> ":\n" <>
+          (T.pack $ renderMarkup . toMarkup $ e)
     else do
       mapM_ (checkXMLForUnnecessaryDoubleDivs templatename) children
       assertSuccess
@@ -120,44 +122,47 @@ checkXMLForUnnecessaryDoubleDivs templatename
         isDivElem _                             = False
 checkXMLForUnnecessaryDoubleDivs _ _ = assertSuccess
 
-parseStringAsXML :: (String, String) -> Either String Document
+parseStringAsXML :: (Text, Text) -> Either Text Document
 parseStringAsXML (name, rawtxt) =
-  let preparedtxt    = "<template>\n" ++ rawtxt ++ "\n</template>"
-      prettyprinttxt = unlines . zipWith mklinewithno ([1..]::[Int])
-                       $ lines preparedtxt
+  let preparedtxt    = "<template>\n" <> rawtxt <> "\n</template>"
+      prettyprinttxt = T.unlines . zipWith mklinewithno ([1..]::[Int])
+                       $ T.lines preparedtxt
       mklinewithno no line -- okay, i did indenting in a horrible way,
                            -- it's just a test!
-        | no<10     = (show no) ++ ".    |" ++ line
-        | no<100    = (show no) ++  ".   |" ++ line
-        | no<1000   = (show no) ++   ".  |" ++ line
-        | otherwise = (show no) ++    ". |" ++ line
-  in case parseText def (TL.pack preparedtxt) of
-    Left  exc -> Left $ name ++ ":" ++ show exc ++ "\n" ++ prettyprinttxt
+        | no<10     = (showt no) <> ".    |" <> line
+        | no<100    = (showt no) <>  ".   |" <> line
+        | no<1000   = (showt no) <>   ".  |" <> line
+        | otherwise = (showt no) <>    ". |" <> line
+  in case parseText def (TL.fromStrict preparedtxt) of
+    Left  exc -> Left $ name <> ":" <> (showt exc) <> "\n" <> prettyprinttxt
     Right doc -> Right doc
 
-parseTemplateAsXML :: (String, String) -> Either String Document
+parseTemplateAsXML :: (Text, Text) -> Either Text Document
 parseTemplateAsXML (name, rawtxt) =
   parseStringAsXML (name, clearTemplating rawtxt)
 
-clearTemplating :: String -> String
-clearTemplating = clearTemplating' NotTag NotTemplateCode . removeScripts . removeDocTypeDeclaration
+clearTemplating :: Text -> Text
+clearTemplating = T.pack .
+  clearTemplating' NotTag NotTemplateCode .
+  T.unpack .
+  removeScripts . removeDocTypeDeclaration
 
-removeDocTypeDeclaration :: String -> String
+removeDocTypeDeclaration :: Text -> Text
 removeDocTypeDeclaration s =
-  if "<!DOCTYPE" `isPrefixOf` s
-    then tail $ dropWhile (/= '>') s
+  if "<!DOCTYPE" `T.isPrefixOf` s
+    then T.tail $ T.dropWhile (/= '>') s
     else s
 
-removeScripts :: String -> String
-removeScripts = removeScripts' NotScript
+removeScripts :: Text -> Text
+removeScripts = T.pack . removeScripts' NotScript . T.unpack
 
 data ScriptState = NotScript | ScriptStartTag | InScript
 
 removeScripts' :: ScriptState -> String -> String
 removeScripts' _ [] = []
-removeScripts' NotScript ('<':'s':'c':'r':'i':'p':'t':xs) = "<script" ++ removeScripts' ScriptStartTag xs
+removeScripts' NotScript ('<':'s':'c':'r':'i':'p':'t':xs) = "<script" <> removeScripts' ScriptStartTag xs
 removeScripts' ScriptStartTag ('>':xs) = '>' : removeScripts' InScript xs
-removeScripts' InScript ('<':'/':'s':'c':'r':'i':'p':'t':'>':xs) = "</script>" ++ removeScripts' NotScript xs
+removeScripts' InScript ('<':'/':'s':'c':'r':'i':'p':'t':'>':xs) = "</script>" <> removeScripts' NotScript xs
 removeScripts' InScript (_:xs) = removeScripts' InScript xs
 removeScripts' s (x:xs) = x : removeScripts' s xs
 
@@ -172,13 +177,13 @@ clearTemplating'  :: TagState -> TemplateCodeState -> String -> String
 clearTemplating' _ _ [] = []
 clearTemplating' ts tcs ('\\':'$':xs) = '$' : clearTemplating' ts tcs xs
 clearTemplating' NotTag NotTemplateCode ('<':xs) = '<' : clearTemplating' Tag NotTemplateCode xs
-clearTemplating' NotTag NotTemplateCode ('$':'i':'f':xs) = "<template-if>" ++ (clearTemplating' NotTag TemplateCode xs)
-clearTemplating' NotTag NotTemplateCode ('$':'e':'l':'s':'e':xs) = "</template-if><template-if>" ++ clearTemplating' NotTag TemplateCode xs
-clearTemplating' NotTag NotTemplateCode ('$':'e':'n':'d':'i':'f':'$':xs) = "</template-if>" ++ clearTemplating' NotTag NotTemplateCode xs
-clearTemplating' NotTag TemplateCode ('|':xs) = "<template-loop>" ++ clearTemplating' NotTag NotTemplateCode xs
-clearTemplating' NotTag NotTemplateCode ('}':';':xs) = "</template-loop>" ++ clearTemplating' NotTag TemplateCode xs
-clearTemplating' NotTag NotTemplateCode ('}':':':xs) = "</template-loop>" ++ clearTemplating' NotTag TemplateCode xs
-clearTemplating' NotTag NotTemplateCode ('}':'$':xs) = "</template-loop>" ++ clearTemplating' NotTag NotTemplateCode xs
+clearTemplating' NotTag NotTemplateCode ('$':'i':'f':xs) = "<template-if>" <> (clearTemplating' NotTag TemplateCode xs)
+clearTemplating' NotTag NotTemplateCode ('$':'e':'l':'s':'e':xs) = "</template-if><template-if>" <> clearTemplating' NotTag TemplateCode xs
+clearTemplating' NotTag NotTemplateCode ('$':'e':'n':'d':'i':'f':'$':xs) = "</template-if>" <> clearTemplating' NotTag NotTemplateCode xs
+clearTemplating' NotTag TemplateCode ('|':xs) = "<template-loop>" <> clearTemplating' NotTag NotTemplateCode xs
+clearTemplating' NotTag NotTemplateCode ('}':';':xs) = "</template-loop>" <> clearTemplating' NotTag TemplateCode xs
+clearTemplating' NotTag NotTemplateCode ('}':':':xs) = "</template-loop>" <> clearTemplating' NotTag TemplateCode xs
+clearTemplating' NotTag NotTemplateCode ('}':'$':xs) = "</template-loop>" <> clearTemplating' NotTag NotTemplateCode xs
 clearTemplating' Tag NotTemplateCode ('>':xs) = '>' : clearTemplating' NotTag NotTemplateCode xs
 clearTemplating' ts NotTemplateCode ('$':xs) = clearTemplating' ts TemplateCode xs
 clearTemplating' ts NotTemplateCode ('}':';':xs) = clearTemplating' ts TemplateCode xs

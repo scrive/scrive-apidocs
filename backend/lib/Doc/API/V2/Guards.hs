@@ -73,14 +73,14 @@ import Util.SignatoryLinkUtils
 -- `documentStateError` when this does not match.
 --
 -- Prefer to use a more specific guard if this satisfies your need.
-guardThatDocumentIs :: Kontrakcja m => (Document -> Bool) -> T.Text -> Document -> m ()
+guardThatDocumentIs :: Kontrakcja m => (Document -> Bool) -> Text -> Document -> m ()
 guardThatDocumentIs f text doc = unless (f doc) $ apiError $ documentStateError text
 
 -- | Guard that the document status matches, otherwise throw a `documentStateError`
 guardDocumentStatus :: Kontrakcja m => DocumentStatus -> Document -> m ()
 guardDocumentStatus s doc = unless (documentstatus doc == s) $
                             (apiError . documentStateError $ errorMsg)
-  where errorMsg = "The document status should be '" <> (T.pack $ show s) <> "'."
+  where errorMsg = "The document status should be '" <> (showt s) <> "'."
 
 
 guardThatDocumentCanBeTrashedByUser :: Kontrakcja m => User -> DocumentID -> m ()
@@ -91,7 +91,7 @@ guardThatDocumentCanBeDeletedByUser :: Kontrakcja m => User -> DocumentID -> m (
 guardThatDocumentCanBeDeletedByUser =
   guardThatDocumentCanBeTrashedOrDeletedByUserWithCond (not . isJust . signatorylinkreallydeleted) "Document was purged"
 
-guardThatDocumentCanBeTrashedOrDeletedByUserWithCond :: Kontrakcja m => (SignatoryLink -> Bool) -> T.Text -> User -> DocumentID -> m ()
+guardThatDocumentCanBeTrashedOrDeletedByUserWithCond :: Kontrakcja m => (SignatoryLink -> Bool) -> Text -> User -> DocumentID -> m ()
 guardThatDocumentCanBeTrashedOrDeletedByUserWithCond cond errorMsg user did = withDocumentID did $ do
   let condAPIError = apiError . documentStateError $ errorMsg
   msl <- getSigLinkFor user <$> theDocument
@@ -195,7 +195,7 @@ guardCanSetAuthenticationToViewForSignatoryWithValues
   :: Kontrakcja m
   => SignatoryLinkID
   -> AuthenticationKind -> AuthenticationToViewMethod
-  -> Maybe String -> Maybe String -> Document
+  -> Maybe Text -> Maybe Text -> Document
   -> m ()
 guardCanSetAuthenticationToViewForSignatoryWithValues
   slid authKind authType mSSN mMobile doc = do
@@ -236,7 +236,7 @@ guardCanSetAuthenticationToViewForSignatoryWithValues
     authToSign         = signatorylinkauthenticationtosignmethod sl
 
     isValidSSNForAuthenticationToView
-      :: AuthenticationToViewMethod -> String -> Bool
+      :: AuthenticationToViewMethod -> Text -> Bool
     isValidSSNForAuthenticationToView StandardAuthenticationToView _      =
       True
     isValidSSNForAuthenticationToView SMSPinAuthenticationToView   _      =
@@ -252,7 +252,7 @@ guardCanSetAuthenticationToViewForSignatoryWithValues
     isValidSSNForAuthenticationToView VerimiAuthenticationToView _        =
       True
     isValidMobileForAuthenticationToView
-      :: AuthenticationToViewMethod -> String -> Bool
+      :: AuthenticationToViewMethod -> Text -> Bool
     isValidMobileForAuthenticationToView StandardAuthenticationToView _      =
       True
     isValidMobileForAuthenticationToView SMSPinAuthenticationToView mobile   =
@@ -268,7 +268,9 @@ guardCanSetAuthenticationToViewForSignatoryWithValues
     isValidMobileForAuthenticationToView VerimiAuthenticationToView  _       =
       True
 
-guardCanSetAuthenticationToSignForSignatoryWithValue :: Kontrakcja m => SignatoryLinkID -> AuthenticationToSignMethod -> Maybe String -> Maybe String -> Document -> m ()
+guardCanSetAuthenticationToSignForSignatoryWithValue
+  :: Kontrakcja m
+  => SignatoryLinkID -> AuthenticationToSignMethod -> Maybe Text -> Maybe Text -> Document -> m ()
 guardCanSetAuthenticationToSignForSignatoryWithValue slid authToSign mSSN mMobile doc = do
   let sl = fromJust $ getSigLinkFor slid doc
       authToView = signatorylinkauthenticationtoviewmethod sl
@@ -329,11 +331,11 @@ guardAuthenticationMethodsCanMix authToView authToSign authToViewArchived = do
   unless (authenticationMethodsCanMix authToView authToSign authToViewArchived)
     (apiError $ signatoryStateError $ mconcat
       [ "Can't mix "
-      , T.pack $ show authToView
+      , showt authToView
       , ", "
-      , T.pack $ show authToSign
+      , showt authToSign
       , " and "
-      , T.pack $ show authToViewArchived
+      , showt authToViewArchived
       , " (archived)."
       ])
 
@@ -434,10 +436,10 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
     signatoryHasValidAuthSettings sl = authToSignIsValid sl
 
     authToSignIsValid sl = case signatorylinkauthenticationtosignmethod sl of
-      SEBankIDAuthenticationToSign -> null (getPersonalNumber sl) || (isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl)
-      NOBankIDAuthenticationToSign -> null (getPersonalNumber sl) || (isGood $ asValidNOBankIdPersonalNumber $ getPersonalNumber sl)
-      DKNemIDAuthenticationToSign  -> null (getPersonalNumber sl) || (isGood $ asValidDanishSSN $ getPersonalNumber sl)
-      SMSPinAuthenticationToSign -> isJust (getFieldByIdentity MobileFI $ signatoryfields sl) && (null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl))
+      SEBankIDAuthenticationToSign -> T.null (getPersonalNumber sl) || (isGood $ asValidSEBankIdPersonalNumber $ getPersonalNumber sl)
+      NOBankIDAuthenticationToSign -> T.null (getPersonalNumber sl) || (isGood $ asValidNOBankIdPersonalNumber $ getPersonalNumber sl)
+      DKNemIDAuthenticationToSign  -> T.null (getPersonalNumber sl) || (isGood $ asValidDanishSSN $ getPersonalNumber sl)
+      SMSPinAuthenticationToSign -> isJust (getFieldByIdentity MobileFI $ signatoryfields sl) && (T.null (getMobile sl) || isGood (asValidPhoneForSMS $ getMobile sl))
       StandardAuthenticationToSign -> True
 
     signatoryHasValidSSNOrEmailForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of
@@ -461,9 +463,9 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
       || (null $ concat $ fieldPlacements <$> signatoryfields sl)
 
     isEmailValidOrEmpty sl =
-      null (getEmail sl) || isValidEmail (getEmail sl)
+      T.null (getEmail sl) || isValidEmail (getEmail sl)
     isMobileValidOrEmpty sl =
-      null (getMobile sl) || isValidPhoneForSMS (getMobile sl)
+      T.null (getMobile sl) || isValidPhoneForSMS (getMobile sl)
     isEmailAndMobileValidOrEmpty sl =
       isEmailValidOrEmpty sl && isMobileValidOrEmpty sl
 
@@ -493,7 +495,7 @@ guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAttachments doc = do
     unless (isAuthor $ fromJust $ getSigLinkFor slid doc) $ -- Author does not need to accept attachments
       apiError $ (signatoryStateError "Some mandatory author attachments aren't accepted")
 
-guardThatAllSignatoryAttachmentsAreUploadedOrMarked :: Kontrakcja m => SignatoryLinkID -> [String] -> Document -> m ()
+guardThatAllSignatoryAttachmentsAreUploadedOrMarked :: Kontrakcja m => SignatoryLinkID -> [Text] -> Document -> m ()
 guardThatAllSignatoryAttachmentsAreUploadedOrMarked slid notUploadedSignatoryAttachments doc = do
   let sigAttachments = signatoryattachments $ fromJust $ getSigLinkFor slid doc
       requiredSigAttachments = filter signatoryattachmentrequired sigAttachments
@@ -590,7 +592,7 @@ guardThatDocumentIsReadableBySignatories doc = do
   unless (isAccessibleBySignatories doc) $
     apiError $ documentStateErrorWithCode 410 $
       "The document has expired or has been withdrawn. (status: "
-      <> T.pack (show (documentstatus doc)) <> ")"
+      <> showt (documentstatus doc) <> ")"
 
 -- | Check the session for the `DocumentID` and `SignatoryLinkID`
 --

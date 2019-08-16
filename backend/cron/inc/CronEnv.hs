@@ -23,7 +23,7 @@ import Templates (KontrakcjaGlobalTemplates)
 data CronEnv = CronEnv {
     ceSalesforceConf     :: Maybe SalesforceConf
   , ceTemplates          :: KontrakcjaGlobalTemplates
-  , ceMailNoreplyAddress :: String
+  , ceMailNoreplyAddress :: Text
   }
 
 runCronEnv :: MonadBase IO m

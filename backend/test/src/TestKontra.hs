@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module TestKontra (
       KontraTest
     , inTestDir
@@ -51,6 +52,8 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.ByteString.Lazy.UTF8 as BSLU
 import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Map as M
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as TE
 import qualified Text.StringTemplates.TemplatesLoader as TL
 
 import BrandedDomain.Model
@@ -81,9 +84,8 @@ readTestFile = liftIO . BSL.readFile . inTestDir
 readTestFileAsBS :: MonadIO m => FilePath -> m BS.ByteString
 readTestFileAsBS = liftIO . BS.readFile . inTestDir
 
-readTestFileAsStr :: MonadIO m => FilePath -> m String
-readTestFileAsStr = liftIO . readFile . inTestDir
-
+readTestFileAsStr :: MonadIO m => FilePath -> m Text
+readTestFileAsStr = fmap T.pack . liftIO . readFile . inTestDir
 
 type KontraTest = KontraG TestFileStorageT
 
@@ -170,7 +172,7 @@ instance MonadTime TestEnv where
         return $ addUTCTime delay now
 
 instance TemplatesMonad TestEnv where
-  getTemplates = getTextTemplatesByLanguage $ codeFromLang defaultLang
+  getTemplates = getTextTemplatesByLanguage $ T.unpack $ codeFromLang defaultLang
   getTextTemplatesByLanguage langStr = do
     globaltemplates <- asks (get teGlobalTemplates)
     return $ TL.localizedVersion langStr globaltemplates
@@ -242,15 +244,15 @@ setTestTime :: (MonadState TestEnvStRW m) => UTCTime -> m ()
 setTestTime currtime = State.modify $ set terwCurrentTime (Just currtime)
 
 -- | Sets current uri of all test requests
-setRequestURI :: (MonadState TestEnvStRW m) => String -> m ()
-setRequestURI uri = State.modify $ set terwRequestURI uri
+setRequestURI :: (MonadState TestEnvStRW m) => Text -> m ()
+setRequestURI uri = State.modify $ set terwRequestURI $ T.unpack uri
 
 -- Various helpers for constructing appropriate Context/Request.
 
 -- | Creates GET/POST input text variable
-inText :: String -> Input
+inText :: Text -> Input
 inText val = Input {
-      inputValue = Right $ BSLU.fromString val
+      inputValue = Right $ BSL.fromStrict $ TE.encodeUtf8 val
     , inputFilename = Nothing
     , inputContentType = ContentType {
           ctType = "text"
@@ -284,62 +286,67 @@ inFile path = Input {
     }
 
 -- | Constructs headers from list of string pairs
-mkHeaders :: [(String, [String])] -> Headers
+mkHeaders :: [(Text, [Text])] -> Headers
 mkHeaders = M.fromList . map (f . g)
-    where
-        g = BSU.fromString *** map BSU.fromString
-        f (name, values) = (name, HeaderPair {
-              hName = name
-            , hValue = values
-        })
+  where
+    g :: (Text, [Text]) -> (BSU.ByteString, [BSU.ByteString])
+    g = TE.encodeUtf8 *** map TE.encodeUtf8
+
+    f :: (BSU.ByteString, [BSU.ByteString]) -> (BSU.ByteString, HeaderPair)
+    f (name, values) = (name, HeaderPair {
+          hName = name
+        , hValue = values
+    })
 
 -- | Constructs cookies from list of string pairs
-mkCookies :: [(String, String)] -> [(String, Cookie)]
-mkCookies = map (\(n, v) -> (n, mkCookie n v))
+mkCookies :: [(Text, Text)] -> [(Text, Cookie)]
+mkCookies = map $ \(n, v) ->
+  (n, mkCookie (T.unpack n) (T.unpack v))
 
 -- | Retrieves specific header value
-getHeader :: String -> Headers -> Maybe String
-getHeader name hdrs = BSU.toString <$> join
-    (listToMaybe . hValue <$> M.lookup (BSU.fromString name) hdrs)
+getHeader :: Text -> Headers -> Maybe Text
+getHeader name hdrs = TE.decodeUtf8 <$> join
+    (listToMaybe . hValue <$> M.lookup (TE.encodeUtf8 name) hdrs)
 
 -- | Retrieves specific cookie value
-getCookie :: String -> [(String, Cookie)] -> Maybe String
-getCookie name cookies = cookieValue <$> lookup name cookies
+getCookie :: Text -> [(Text, Cookie)] -> Maybe Text
+getCookie name cookies = (T.pack . cookieValue) <$> lookup name cookies
 
 -- | Constructs initial request with given data (POST or GET)
 mkRequest :: (MonadState TestEnvStRW m, MonadIO m)
-          => Method -> [(String, Input)]
+          => Method -> [(Text, Input)]
           -> m Request
 mkRequest method vars = mkRequestWithHeaders method vars
   [("host", ["testkontra.fake"])]
 
 mkRequestWithHeaders :: (MonadState TestEnvStRW m, MonadIO m)
-                     => Method -> [(String, Input)] -> [(String, [String])]
+                     => Method -> [(Text, Input)] -> [(Text, [Text])]
                      -> m Request
 mkRequestWithHeaders method vars headers = do
-    uri <- gets (get terwRequestURI)
-    liftIO $ do
-      rqbody <- newEmptyMVar
-      ib <- newMVar vars
-      let iq = if isReqPost
-                  then []
-                  else vars
-      return Request {
-            rqSecure = False
-          , rqMethod = POST
-          , rqPaths = []
-          , rqUri = uri
-          , rqQuery = ""
-          , rqInputsQuery = iq
-          , rqInputsBody = ib
-          , rqCookies = []
-          , rqVersion = HttpVersion 1 1
-          , rqHeaders = mkHeaders $ headers
-          , rqBody = rqbody
-          , rqPeer = ("", 0)
-      }
-    where
-        isReqPost = method == POST || method == PUT
+  let vars' :: [(String, Input)] = fmap (\(t1, t2) -> (T.unpack t1, t2)) vars
+  uri <- gets (get terwRequestURI)
+  liftIO $ do
+    rqbody <- newEmptyMVar
+    ib :: MVar [(String, Input)] <- newMVar vars'
+    let iq = if isReqPost
+                then []
+                else vars'
+    return Request {
+        rqSecure = False
+      , rqMethod = POST
+      , rqPaths = []
+      , rqUri = uri
+      , rqQuery = ""
+      , rqInputsQuery = iq
+      , rqInputsBody = ib
+      , rqCookies = []
+      , rqVersion = HttpVersion 1 1
+      , rqHeaders = mkHeaders $ headers
+      , rqBody = rqbody
+      , rqPeer = ("", 0)
+    }
+  where
+      isReqPost = method == POST || method == PUT
 
 -- | Constructs initial context with given templates
 mkContext :: Lang -> TestEnv Context

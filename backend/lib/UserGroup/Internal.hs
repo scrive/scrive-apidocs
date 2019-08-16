@@ -47,6 +47,7 @@ import Happstack.Server
 import qualified Control.Exception.Lifted as E
 import qualified Data.Binary as B
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.Text as T
 
 import DataRetentionPolicy
 import DB
@@ -235,7 +236,7 @@ instance ToSQL InvoicingType where
 
 instance Unjson InvoicingType where
   unjsonDef = unjsonInvmapR
-                ((maybe (fail "Can't parse InvoicingType") return) . maybeRead)
+                ((maybe (fail "Can't parse InvoicingType") return) . maybeRead . T.pack)
                 show unjsonDef
 
 ugInvoicingType :: UserGroup -> InvoicingType
@@ -393,6 +394,7 @@ newtype UserGroupID = UserGroupID Int64
   deriving (Eq, Ord)
 deriving newtype instance Read UserGroupID
 deriving newtype instance Show UserGroupID
+deriving newtype instance TextShow UserGroupID
 
 instance ToJSON UserGroupID where
   toJSON (UserGroupID n) = toJSON $ show n
@@ -416,7 +418,7 @@ instance ToSQL UserGroupID where
   toSQL (UserGroupID n) = toSQL n
 
 instance FromReqURI UserGroupID where
-  fromReqURI = maybeRead
+  fromReqURI = maybeRead . T.pack
 
 unsafeUserGroupID :: Int64 -> UserGroupID
 unsafeUserGroupID = UserGroupID
@@ -436,12 +438,12 @@ instance B.Binary UserGroupID where
   get = fmap UserGroupID B.get
 
 instance Unjson UserGroupID where
-  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse UserGroupID")  return) . maybeRead) show unjsonDef
+  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse UserGroupID")  return) . maybeRead) showt unjsonDef
 
 -- USER GROUP INFO
 
 type instance CompositeRow UserGroupSettings = (
-    Maybe String
+    Maybe Text
   , Maybe Int16
   , Maybe Int16
   , Maybe Int16

@@ -6,6 +6,7 @@ module Generators.DocumentGenerators
   ) where
 
 import Test.QuickCheck
+import qualified Data.Text as T
 
 import Doc.SealStatus
 import Doc.Types.Document
@@ -89,7 +90,7 @@ mainfileOC status file = do
     decide (arbitrary `suchThat` (/= status)) (pure status)
   mainfilesealstatus <- liftGen sealStatusGen
   pure $
-    let mainfilename = filename file
+    let mainfilename = T.unpack $ filename file
         mainfileid = fileid file
     in MainFile{..}
 
@@ -210,16 +211,16 @@ emailFieldOC = do
      <$> listOf1 (elements "abcdefghijklmnopqrstuvwxyz0123456789")
      <*> listOf1 (elements "abcdefghijklmnopqrstuvwxyz0123456789")
      <*> elements ["com", "sv", "newgtld"])
-  pure $ SignatoryEmailField $ f { sefValue = email }
+  pure $ SignatoryEmailField $ f { sefValue = T.pack email }
 
 mobileFieldOC :: OccurenceControl SignatoryField
 mobileFieldOC = do
   f <- liftGen arbitrary
   mobile <- decide arbitrary (('+':) <$> listOf (elements "0123456789"))
-  pure $ SignatoryMobileField $ f { smfValue = mobile }
+  pure $ SignatoryMobileField $ f { smfValue = T.pack mobile }
 
 personalNumberFieldOC :: OccurenceControl SignatoryField
 personalNumberFieldOC = do
   f <- liftGen arbitrary
   pn <- liftGen $ vectorOf 11 $ elements "0123456789"
-  pure $ SignatoryPersonalNumberField $ f { spnfValue = pn }
+  pure $ SignatoryPersonalNumberField $ f { spnfValue = T.pack pn }

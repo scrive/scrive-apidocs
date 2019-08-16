@@ -541,7 +541,7 @@ testPartnerUserUpdateEmailToExisting = do
     rq_newUserGood2_params 201 rq_newUserGood2_resp_fp
   let Object respObject = respValue
       Just (String uidstr) = H.lookup "id" respObject
-      uid = unsafeUserID $ read $ T.unpack uidstr
+      uid = unsafeUserID $ read uidstr
 
   -- When user with email already exists, we must not modify email
   updateToExistingEmailJSON <-
@@ -717,7 +717,7 @@ testPartnersUserGetTokens = do
              ++ ",oauth_token=\"" ++ T.unpack accesstoken ++"\""
              ++ ",oauth_signature=\"" ++ T.unpack apisecret ++ "&"
              ++ T.unpack accesssecret ++ "\""
-  docNewReq <- mkRequestWithHeaders POST [] [ ( "authorization", [authStr] ) ]
+  docNewReq <- mkRequestWithHeaders POST [] [ ( "authorization", [T.pack authStr] ) ]
   (newDocResp,_) <- runTestKontra docNewReq ctx' $ docApiV2New
   assertEqual "We should get a 201 response" 201 (rsCode newDocResp)
 
@@ -782,7 +782,7 @@ testHelperPartnerCompanyCreate = do
                rq_newCompany_params 201 rq_newCompany_resp_fp
   let Object respObject = respValue
       Just (String cid) = H.lookup "id" respObject
-  return (ctx, partnerUgID, read $ T.unpack cid)
+  return (ctx, partnerUgID, read cid)
 
 testHelperPartnerUserCreate :: TestEnv (Context, UserGroupID, UserID)
 testHelperPartnerUserCreate = do
@@ -804,7 +804,7 @@ testHelperPartnerCompanyUserCreate ctx pid company_ugid = do
     rq_newUserGood_params 201 rq_newUserGood_resp_fp
   let Object respObject = respValue
       Just (String uid) = H.lookup "id" respObject
-  return $ unsafeUserID $ read $ T.unpack uid
+  return $ unsafeUserID $ read uid
 
 -- we produce the UserGroupID as an Int64 since that is now what the partners
 -- API expect for its handlers.
@@ -818,12 +818,14 @@ runApiJSONTest
   :: Context             -- ^ Context to run the test in
   -> Method              -- ^ HTTP Method to use for API Call
   -> KontraTest Response -- ^ The API call to use
-  -> [(String,Input)]    -- ^ List of API call parameters
+  -> [(Text,Input)]    -- ^ List of API call parameters
   -> Int                 -- ^ Expected response code
   -> FilePath            -- ^ FilePath to JSON file to match against
   -> TestEnv Value
 runApiJSONTest ctx httpMethod apiCall httpHeaders expectedRsCode jsonFile = do
-  req     <- mkRequestWithHeaders httpMethod httpHeaders []
+  req     <- mkRequestWithHeaders httpMethod
+    httpHeaders
+    []
   (res,_) <- runTestKontra req ctx $ apiCall
   assertEqual ("We should get a " ++ show expectedRsCode ++ " response")
     expectedRsCode (rsCode res)
@@ -835,11 +837,13 @@ runApiJSONTestNoResChk
   :: Context             -- ^ Context to run the test in
   -> Method              -- ^ HTTP Method to use for API Call
   -> KontraTest Response -- ^ The API call to use
-  -> [(String,Input)]    -- ^ List of API call parameters
+  -> [(Text,Input)]    -- ^ List of API call parameters
   -> Int                 -- ^ Expected response code
   -> TestEnv ()
 runApiJSONTestNoResChk ctx httpMethod apiCall httpHeaders expectedRsCode = do
-  req     <- mkRequestWithHeaders httpMethod httpHeaders []
+  req     <- mkRequestWithHeaders httpMethod
+    httpHeaders
+    []
   (res,_) <- runTestKontra req ctx $ apiCall
   assertEqual ("We should get a " ++ show expectedRsCode ++ " response")
     expectedRsCode (rsCode res)

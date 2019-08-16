@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+
 module Mails.SendMail
     ( Mail(..)
     , emptyMail
@@ -13,9 +14,8 @@ module Mails.SendMail
 import Control.Monad.Catch
 import Crypto.RNG
 import Data.Char
-import Data.String.Utils hiding (join)
 import Log
-import qualified Data.String.Utils as Str
+import qualified Data.Text as T
 import qualified Text.StringTemplates.Fields as F
 import qualified Text.StringTemplates.Templates as T
 
@@ -60,7 +60,7 @@ scheduleEmailSendoutWithAuthorSender did m = do
       (an) -> return an
   scheduleEmailSendoutHelper name m
 
-scheduleEmailSendoutHelper :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => String -> Mail ->  m ()
+scheduleEmailSendoutHelper :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m) => Text -> Mail ->  m ()
 scheduleEmailSendoutHelper authorname mail@Mail{..} = do
   logInfo "Sending mail" $ object [
       "originator" .= originator
@@ -92,8 +92,8 @@ scheduleEmailSendoutHelper authorname mail@Mail{..} = do
           Good _ -> True
           _ -> False
 
-wrapHTML :: String -> String
-wrapHTML body = concat [
+wrapHTML :: Text -> Text
+wrapHTML body = T.concat [
     "<!DOCTYPE html PUBLIC \"-//W4C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">"
   , "<html>"
   , "<head>"
@@ -105,24 +105,28 @@ wrapHTML body = concat [
   , "</html>"
   ]
 
-kontramaillocal :: (HasLang a, T.TemplatesMonad m) => String -> BrandedDomain -> Theme -> a -> String -> F.Fields m () -> m Mail
+kontramaillocal :: (HasLang a, T.TemplatesMonad m) => Text -> BrandedDomain -> Theme -> a -> Text -> F.Fields m () -> m Mail
 kontramaillocal noreplyAddress bd theme = kontramailHelper noreplyAddress bd theme . renderLocalTemplate
 
-kontramail :: T.TemplatesMonad m  => String -> BrandedDomain -> Theme -> String -> F.Fields m () -> m Mail
-kontramail noreplyAddress bd theme = kontramailHelper noreplyAddress bd theme T.renderTemplate
+kontramail :: T.TemplatesMonad m  => Text -> BrandedDomain -> Theme -> Text -> F.Fields m () -> m Mail
+kontramail noreplyAddress bd theme = kontramailHelper noreplyAddress bd theme renderTextTemplate
 
-kontramailHelper :: T.TemplatesMonad m => String -> BrandedDomain -> Theme ->  (String -> F.Fields m () -> m String) -> String -> F.Fields m () -> m Mail
+kontramailHelper :: T.TemplatesMonad m => Text -> BrandedDomain -> Theme ->  (Text -> F.Fields m () -> m Text) -> Text -> F.Fields m () -> m Mail
 kontramailHelper noreplyAddress bd theme renderFunc tname fields = do
-
     wholemail <- renderFunc tname fields
-    let (title, content) = case split "\r\n" $ dropWhile (isControl || isSpace) wholemail of
-                             [] -> unexpectedError "Couldnt separate email content from title"
-                             (title':contentChunks) ->
-                               (unescapeHTML title', Str.join "\r\n" contentChunks)
+    let
+      (title, content) =
+        case T.splitOn "\r\n" $ T.dropWhile (isControl || isSpace) wholemail of
+          [] -> unexpectedError "Couldnt separate email content from title"
+          (title':contentChunks) ->
+            (unescapeHTML $ title', T.intercalate "\r\n" contentChunks)
     return $ emptyMail {
                          originator      = get bdEmailOriginator bd
                        , originatorEmail = noreplyAddress
                        , title           = title
                        , content         = content
-                       , attachments = [("logo-"++ (imageAdler32 $ themeLogo  theme) ++ ".png", Left $ themeLogo theme)]
+                       , attachments =
+                          [ ("logo-" <> (imageAdler32 $ themeLogo theme) <> ".png"
+                          , Left $ themeLogo theme)
+                          ]
                        }

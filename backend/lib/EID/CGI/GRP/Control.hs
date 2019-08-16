@@ -16,7 +16,7 @@ import qualified Data.Aeson as A
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.UTF8 as BSU
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
+import qualified Data.Text.Encoding as TE
 import qualified Text.StringTemplates.Fields as F
 
 import Chargeable.Model
@@ -88,7 +88,7 @@ handleAuthRequest did slid = do
       req = AuthRequest {
         arqPolicy = fromMaybe cgServiceID mcompany_service_id
       , arqDisplayName = fromMaybe cgDisplayName mcompany_display_name
-      , arqPersonalNumber = T.pack pn
+      , arqPersonalNumber = pn
       , arqProvider = "bankid"
       }
       parser = Right <$> xpAuthResponse <|> Left <$> xpGrpFault
@@ -129,8 +129,8 @@ handleSignRequest _did slid = do
       req = SignRequest {
         srqPolicy = fromMaybe cgServiceID mcompany_service_id
       , srqDisplayName = fromMaybe cgDisplayName mcompany_display_name
-      , srqPersonalNumber = T.pack pn
-      , srqUserVisibleData = T.decodeUtf8 . B64.encode . BSU.fromString $ tbs
+      , srqPersonalNumber = pn
+      , srqUserVisibleData = TE.decodeUtf8 . B64.encode . BSU.fromString . T.unpack $ tbs
       , srqProvider = "bankid"
       }
       parser = Right <$> xpSignResponse <|> Left <$> xpGrpFault
@@ -144,7 +144,7 @@ handleSignRequest _did slid = do
     Right sr@SignResponse{..} -> do
       logInfo "SOAP response returned" $ logObject_ sr
       sess <- getCurrentSession
-      dbUpdate $ MergeCgiGrpTransaction $ CgiGrpSignTransaction slid (T.pack tbs) srsTransactionID srsOrderRef (sesID sess)
+      dbUpdate $ MergeCgiGrpTransaction $ CgiGrpSignTransaction slid tbs srsTransactionID srsOrderRef (sesID sess)
       return $ unjsonToJSON unjsonDef (srsAutoStartToken,sessionCookieInfoFromSession sess)
 
 handleCheckCGIAuthStatus :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m A.Value
@@ -234,11 +234,11 @@ checkCGISignStatus CgiGrpConfig{..}  did slid = do
                         (CgiGrpAuthTransaction _ _ _ _) -> unexpectedError "Fetched CgiGrpAuthTransaction while expecting CgiGrpSignTransaction"
                     _ -> return $  CGISignStatusInProgress crsProgressStatus
   where
-    missing name = unexpectedError $ "missing" <+> T.unpack name
+    missing name = unexpectedError $ "missing" <+> name
     just_lookup name = fromMaybe (missing name) . lookup name
 
-    invalid_b64 txt = unexpectedError $ "invalid base64:" <+> T.unpack txt
-    mk_binary txt = either (invalid_b64 txt) id . B64.decode . T.encodeUtf8 $ txt
+    invalid_b64 txt = unexpectedError $ "invalid base64:" <+> txt
+    mk_binary txt = either (invalid_b64 txt) id . B64.decode . TE.encodeUtf8 $ txt
 
 checkCGIAuthStatus :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m (Either GrpFault ProgressStatus)
 checkCGIAuthStatus did slid = do
@@ -322,33 +322,33 @@ checkCGIAuthStatus did slid = do
           else return $ Right crsProgressStatus
 
   where
-    missing name = unexpectedError $ "missing" <+> T.unpack name
+    missing name = unexpectedError $ "missing" <+> name
     just_lookup name = fromMaybe (missing name) . lookup name
 
-    invalid_b64 txt = unexpectedError $ "invalid base64:" <+> T.unpack txt
-    mk_binary txt = either (invalid_b64 txt) id . B64.decode . T.encodeUtf8 $ txt
+    invalid_b64 txt = unexpectedError $ "invalid base64:" <+> txt
+    mk_binary txt = either (invalid_b64 txt) id . B64.decode . TE.encodeUtf8 $ txt
 
 ----------------------------------------
 
-getCompanyDisplayName :: (MonadDB m, MonadThrow m) => Document -> m (Maybe T.Text)
+getCompanyDisplayName :: (MonadDB m, MonadThrow m) => Document -> m (Maybe Text)
 getCompanyDisplayName doc = (get ugsCGIDisplayName . ugwpSettings)
   <$> dbQuery (UserGroupGetWithParentsByUserID $ fromJust $ maybesignatory author)
   where
     author = fromJust $ getSigLinkFor signatoryisauthor doc
 
-getCompanyServiceID :: (MonadDB m, MonadThrow m) => Document -> m (Maybe T.Text)
+getCompanyServiceID :: (MonadDB m, MonadThrow m) => Document -> m (Maybe Text)
 getCompanyServiceID doc = (get ugsCGIServiceID . ugwpSettings)
   <$> dbQuery (UserGroupGetWithParentsByUserID $ fromJust $ maybesignatory author)
   where
     author = fromJust $ getSigLinkFor signatoryisauthor doc
 
 -- | Generate text to be signed that represents contents of the document.
-textToBeSigned :: TemplatesMonad m => Document -> m String
+textToBeSigned :: TemplatesMonad m => Document -> m Text
 textToBeSigned doc@Document{..} = renderLocalTemplate doc "tbs" $ do
   F.value "document_title" $ documenttitle
   F.value "document_id"   $ show documentid
 
-guardThatPersonalNumberMatches :: Kontrakcja m => SignatoryLinkID -> String -> Document -> m ()
+guardThatPersonalNumberMatches :: Kontrakcja m => SignatoryLinkID -> Text -> Document -> m ()
 guardThatPersonalNumberMatches slid pn doc = case getSigLinkFor slid doc of
     Nothing -> do
       logInfo "Can't find signatory for eleg operation" $ object [
@@ -357,11 +357,11 @@ guardThatPersonalNumberMatches slid pn doc = case getSigLinkFor slid doc of
         ]
       respond404
     Just sl -> do
-      let withoutDashes = filter (not . (`elem` ['-', '+']))
+      let withoutDashes = T.filter (not . (`elem` ['-', '+']))
           slPersonalNumber = withoutDashes $ getPersonalNumber sl
           pn' = withoutDashes pn
-      if (slPersonalNumber /= "" && slPersonalNumber /= pn' && "19" ++ slPersonalNumber /= pn'  && slPersonalNumber /= "19" ++ pn'
-                               && slPersonalNumber /= "20" ++ pn' && "20" ++ slPersonalNumber /= pn')
+      if (slPersonalNumber /= "" && slPersonalNumber /= pn' && "19" <> slPersonalNumber /= pn'  && slPersonalNumber /= "19" <> pn'
+                               && slPersonalNumber /= "20" <> pn' && "20" <> slPersonalNumber /= pn')
         then do
           logInfo "Personal number for eleg operation does not match and signatory personal number can't be changed" $ object [
               identifier $ documentid doc

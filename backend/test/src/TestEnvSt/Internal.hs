@@ -5,7 +5,6 @@ import Crypto.RNG
 import Data.Time
 import Database.PostgreSQL.PQTypes.Transaction.Settings
 import Log.Monad
-import qualified Data.Text as T
 import qualified Database.Redis as R
 
 import DB.PostgreSQL
@@ -33,7 +32,7 @@ data TestEnvSt = TestEnvSt {
   , _teAmazonS3Env        :: Maybe AmazonS3Env
   , _teFileMemCache       :: FileMemCache
   , _teRedisConn          :: Maybe R.Connection
-  , _teCronDBConfig       :: !T.Text
+  , _teCronDBConfig       :: !Text
   , _teCronMonthlyInvoice :: Maybe MonthlyInvoiceConf
   }
 

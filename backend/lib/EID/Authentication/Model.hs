@@ -18,7 +18,6 @@ import Control.Monad.State
 import Data.ByteString (ByteString)
 import Data.Foldable as F
 import Data.Int
-import qualified Data.Text as T
 
 import DB
 import Doc.SignatoryLinkID
@@ -40,7 +39,7 @@ data EAuthentication
   | NetsNOBankIDAuthentication_ !NetsNOBankIDAuthentication
   | NetsDKNemIDAuthentication_ !NetsDKNemIDAuthentication
   | NetsFITupasAuthentication_ !NetsFITupasAuthentication
-  | SMSPinAuthentication_ T.Text -- param is a phone number
+  | SMSPinAuthentication_ Text -- param is a phone number
   | EIDServiceVerimiAuthentication_ !EIDServiceVerimiAuthentication
 
 ----------------------------------------
@@ -147,7 +146,7 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsDKNemIDAuthentication (
         sqlSet "signatory_name" netsDKNemIDSignatoryName
         sqlSet "signatory_date_of_birth" netsDKNemIDDateOfBirth
 
-data MergeSMSPinAuthentication = MergeSMSPinAuthentication AuthenticationKind SessionID SignatoryLinkID T.Text
+data MergeSMSPinAuthentication = MergeSMSPinAuthentication AuthenticationKind SessionID SignatoryLinkID Text
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeSMSPinAuthentication () where
   update (MergeSMSPinAuthentication authKind sid slid mobile) = do
     dbUpdate $ MergeAuthenticationInternal authKind sid slid $ do
@@ -203,7 +202,7 @@ data GetEAuthentication = GetEAuthentication AuthenticationKind SessionID Signat
 instance (MonadThrow m, MonadDB m) => DBQuery m GetEAuthentication (Maybe EAuthentication) where
   query (GetEAuthentication authKind sid slid) = query (GetEAuthenticationInternal authKind slid (Just sid) )
 
-fetchEAuthentication :: (AuthenticationProvider, (Maybe Int16), Maybe ByteString, Maybe T.Text, Maybe T.Text, Maybe T.Text, Maybe T.Text, Maybe ByteString, Maybe T.Text, Maybe T.Text) -> EAuthentication
+fetchEAuthentication :: (AuthenticationProvider, (Maybe Int16), Maybe ByteString, Maybe Text, Maybe Text, Maybe Text, Maybe Text, Maybe ByteString, Maybe Text, Maybe Text) -> EAuthentication
 fetchEAuthentication (provider, internal_provider, msignature, msignatory_name, signatory_personal_number, signatory_phone_number, signatory_dob, ocsp_response, msignatory_ip, signatory_email) = case provider of
   CgiGrpBankID -> CGISEBankIDAuthentication_ CGISEBankIDAuthentication {
     cgisebidaSignatoryName = fromJust msignatory_name

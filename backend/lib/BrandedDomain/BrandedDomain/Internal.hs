@@ -8,27 +8,27 @@ import Theme.ThemeID
 data BrandedDomain = BrandedDomain {
                           _bdid :: !BrandedDomainID
                         , _bdMainDomain :: !Bool
-                        , _bdUrl :: !String
-                        , _bdSmsOriginator :: !String
-                        , _bdEmailOriginator :: !String
+                        , _bdUrl :: !Text
+                        , _bdSmsOriginator :: !Text
+                        , _bdEmailOriginator :: !Text
                         , _bdMailTheme     :: !ThemeID
                         , _bdSignviewTheme :: !ThemeID
                         , _bdServiceTheme  :: !ThemeID
                         , _bdLoginTheme    :: !ThemeID
-                        , _bdBrowserTitle  :: !String
+                        , _bdBrowserTitle  :: !Text
                         , _bdFavicon       :: !BS.ByteString
-                        , _bdParticipantColor1 :: !String
-                        , _bdParticipantColor2 :: !String
-                        , _bdParticipantColor3 :: !String
-                        , _bdParticipantColor4 :: !String
-                        , _bdParticipantColor5 :: !String
-                        , _bdParticipantColor6 :: !String
-                        , _bdDraftColor        :: !String
-                        , _bdCancelledColor    :: !String
-                        , _bdInitatedColor     :: !String
-                        , _bdSentColor         :: !String
-                        , _bdDeliveredColor    :: !String
-                        , _bdOpenedColor       :: !String
-                        , _bdReviewedColor     :: !String
-                        , _bdSignedColor       :: !String
+                        , _bdParticipantColor1 :: !Text
+                        , _bdParticipantColor2 :: !Text
+                        , _bdParticipantColor3 :: !Text
+                        , _bdParticipantColor4 :: !Text
+                        , _bdParticipantColor5 :: !Text
+                        , _bdParticipantColor6 :: !Text
+                        , _bdDraftColor        :: !Text
+                        , _bdCancelledColor    :: !Text
+                        , _bdInitatedColor     :: !Text
+                        , _bdSentColor         :: !Text
+                        , _bdDeliveredColor    :: !Text
+                        , _bdOpenedColor       :: !Text
+                        , _bdReviewedColor     :: !Text
+                        , _bdSignedColor       :: !Text
 } deriving (Eq, Ord, Show)

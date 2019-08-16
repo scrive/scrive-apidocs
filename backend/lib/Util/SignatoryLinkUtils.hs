@@ -63,7 +63,7 @@ import Util.HasSomeUserInfo
 class SignatoryLinkIdentity a where
   isJustSigLinkFor :: a -> SignatoryLink -> Bool
 
-instance SignatoryLinkIdentity String where
+instance SignatoryLinkIdentity Text where
   isJustSigLinkFor email sl = email == getEmail sl
 
 instance SignatoryLinkIdentity Email where
@@ -127,19 +127,19 @@ getAuthorSigLink doc = getSigLinkFor signatoryisauthor doc
 -- | Given a Document, return the best guess at the author's name:
 --     * First Name + Last Name
 --     * email address if no name info
-getAuthorName :: Document -> String
+getAuthorName :: Document -> Text
 getAuthorName doc = maybe "" getSmartName $ getAuthorSigLink doc
 
-getCompanyName :: SignatoryLink -> String
+getCompanyName :: SignatoryLink -> Text
 getCompanyName = getTextValueOfField CompanyFI . signatoryfields
 
-getCompanyNumber :: SignatoryLink -> String
+getCompanyNumber :: SignatoryLink -> Text
 getCompanyNumber = getTextValueOfField CompanyNumberFI . signatoryfields
 
-getAuthorCompanyName :: Document -> String
+getAuthorCompanyName :: Document -> Text
 getAuthorCompanyName doc = maybe "" getCompanyName $ getAuthorSigLink doc
 
-getAuthorCompanyNumber :: Document -> String
+getAuthorCompanyNumber :: Document -> Text
 getAuthorCompanyNumber doc = maybe "" getCompanyNumber $ getAuthorSigLink doc
 
 hasSignInfoAndRoleIs :: (MaybeSignatoryLink msl)

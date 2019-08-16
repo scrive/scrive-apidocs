@@ -5,6 +5,7 @@ module Attachment.APITest
 import Happstack.Server
 import Test.Framework
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.Text as T
 
 import Attachment.API
 import Attachment.Model
@@ -90,7 +91,7 @@ testAttachmentSetSharing = do
   do
     req <- mkRequest POST
       [ ("shared",         inText "true")
-      , ("attachment_ids", inText idsStr)
+      , ("attachment_ids", inText $ T.pack idsStr)
       ]
     (res, _) <- runTestKontra req ctx attachmentsApiV2SetSharing
     assertEqual "should return 200" (rsCode res) 200
@@ -103,7 +104,7 @@ testAttachmentSetSharing = do
   do
     req <- mkRequest POST
       [ ("shared",         inText "false")
-      , ("attachment_ids", inText idsStr)
+      , ("attachment_ids", inText $ T.pack idsStr)
       ]
     (res, _) <- runTestKontra req ctx attachmentsApiV2SetSharing
     assertEqual "should return 200" (rsCode res) 200
@@ -126,7 +127,7 @@ testAttachmentDelete = do
   -- IDs are supposed to be sent as strings, e.g. ["3", "4"]
   let idsStr = show $ map (show . attachmentid) [attA, attB]
 
-  req <- mkRequest POST [("attachment_ids", inText idsStr)]
+  req <- mkRequest POST [("attachment_ids", inText $ T.pack idsStr)]
   (res, _) <- runTestKontra req ctx attachmentsApiV2Delete
   assertEqual "should return 202" (rsCode res) 202
 

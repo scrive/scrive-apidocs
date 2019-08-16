@@ -29,7 +29,6 @@ import Crypto.RNG
 import Data.IORef.Lifted
 import Log
 import qualified Data.ByteString.Lazy as BSL
-import qualified Data.Text as T
 import qualified Database.Redis as R
 
 import DB
@@ -40,7 +39,7 @@ import Log.Utils
 import qualified FileStorage.RedisCache as Redis
 import qualified MemCache
 
-type FileMemCache = MemCache.MemCache String BSL.ByteString
+type FileMemCache = MemCache.MemCache Text BSL.ByteString
 
 newFileMemCache :: MonadBase IO m => Int -> m FileMemCache
 newFileMemCache = MemCache.new (fromInteger . toInteger . BSL.length)
@@ -77,7 +76,7 @@ instance (MonadBaseControl IO m, MonadCatch m, MonadLog m, MonadMask m)
 
 saveNewContents_ :: ( MonadBaseControl IO m, MonadCatch m, MonadLog m
                     , MonadMask m )
-                 => String -> BSL.ByteString -> FileStorageT m ()
+                 => Text -> BSL.ByteString -> FileStorageT m ()
 saveNewContents_ url contents = do
   (amazonEnv, mRedisCache, memCache) <- getFileStorageConfig
 
@@ -101,7 +100,7 @@ data FileOrigin = MemCacheOrigin | RedisOrigin | AmazonOrigin
 
 getSavedContents_ :: forall m. ( MonadBaseControl IO m, MonadCatch m, MonadLog m
                                , MonadMask m, MonadThrow m )
-                  => String -> FileStorageT m BSL.ByteString
+                  => Text -> FileStorageT m BSL.ByteString
 getSavedContents_ url = do
     (amazonEnv, mRedisCache, memCache) <- getFileStorageConfig
     rOrigin <- newIORef MemCacheOrigin
@@ -117,7 +116,7 @@ getSavedContents_ url = do
       ]
     return contents
   where
-    logOrigin :: FileOrigin -> T.Text
+    logOrigin :: FileOrigin -> Text
     logOrigin MemCacheOrigin = "memcache"
     logOrigin RedisOrigin    = "redis"
     logOrigin AmazonOrigin   = "amazon"
@@ -156,11 +155,11 @@ getSavedContents_ url = do
       ((AmazonOrigin, ) <$> getContentsFromAmazon amazonEnv url) `catch` \e -> do
         case fromException e of
           Just e' -> throwM (e' :: FileStorageException)
-          Nothing -> throwM $ FileStorageException $ show e
+          Nothing -> throwM $ FileStorageException $ showt e
 
 deleteSavedContents_ :: ( MonadBaseControl IO m, MonadLog m, MonadMask m
                         , MonadThrow m )
-                     => String -> FileStorageT m ()
+                     => Text -> FileStorageT m ()
 deleteSavedContents_ url = do
   (amazonEnv, mRedisCache, memCache) <- getFileStorageConfig
 

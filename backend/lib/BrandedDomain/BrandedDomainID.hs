@@ -10,6 +10,7 @@ import Data.Typeable
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
+import qualified Data.Text as T
 
 newtype BrandedDomainID = BrandedDomainID Int64
   deriving (Eq, Ord, Typeable)
@@ -20,7 +21,7 @@ instance PQFormat BrandedDomainID where
   pqFormat = pqFormat @Int64
 
 instance FromReqURI BrandedDomainID where
-  fromReqURI = maybeRead
+  fromReqURI = maybeRead . T.pack
 
 instance Binary BrandedDomainID where
   put (BrandedDomainID uid) = put uid
@@ -41,7 +42,7 @@ unBrandedDomainID :: BrandedDomainID -> Int64
 unBrandedDomainID (BrandedDomainID i) = i
 
 unjsonBrandedDomainID :: UnjsonDef BrandedDomainID
-unjsonBrandedDomainID = unjsonInvmapR ((maybe (fail "Can't parse DomainID")  return) . maybeRead) (show . unBrandedDomainID :: BrandedDomainID -> String) unjsonDef
+unjsonBrandedDomainID = unjsonInvmapR ((maybe (fail "Can't parse DomainID")  return) . maybeRead . T.pack) (show . unBrandedDomainID :: BrandedDomainID -> String) unjsonDef
 
 instance Unjson BrandedDomainID where
   unjsonDef = unjsonBrandedDomainID

@@ -17,7 +17,7 @@ data AmazonConfig = AmazonConfig
   , amazonConfigPort      :: Int
   , amazonConfigSecure    :: Bool
   , amazonConfigRegion    :: AWS.Region
-  , amazonConfigBucket    :: T.Text
+  , amazonConfigBucket    :: Text
   , amazonConfigAccessKey :: BSC.ByteString
   , amazonConfigSecretKey :: BSC.ByteString
   } deriving (Eq, Show)

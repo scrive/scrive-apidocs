@@ -1,3 +1,4 @@
+
 module User.Lang (
     Lang(..)
   , HasLang(..)
@@ -9,10 +10,10 @@ module User.Lang (
   ) where
 
 import Data.Int
-import Data.List.Split
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
 import qualified Control.Exception.Lifted as E
+import qualified Data.Text as T
 
 import Utils.Enum
 
@@ -41,7 +42,7 @@ defaultLang :: Lang
 defaultLang = LANG_SV
 
 instance FromReqURI Lang where
-  fromReqURI = maybeRead
+  fromReqURI = maybeRead . T.pack
 
 instance PQFormat Lang where
   pqFormat = pqFormat @Int16
@@ -98,7 +99,7 @@ instance ToSQL Lang where
   toSQL LANG_HU = toSQL (19::Int16)
 
 
-codeFromLang :: Lang -> String
+codeFromLang :: Lang -> Text
 codeFromLang LANG_SV = "sv"
 codeFromLang LANG_EN = "en"
 codeFromLang LANG_DE = "de"
@@ -119,13 +120,13 @@ codeFromLang LANG_CS = "cs"
 codeFromLang LANG_PL = "pl"
 codeFromLang LANG_HU = "hu"
 
-langFromCode :: String -> Maybe Lang
+langFromCode :: Text -> Maybe Lang
 langFromCode s = find ((== s) . codeFromLang) allValues
 
-langFromHTTPHeader :: String -> Lang
-langFromHTTPHeader s = fromMaybe LANG_EN $ msum $ map findLang (splitOn "," s)
+langFromHTTPHeader :: Text -> Lang
+langFromHTTPHeader s = fromMaybe LANG_EN $ msum $ map findLang (T.splitOn "," s)
   where
-    findLang str = find ((`isInfixOf` str) . codeFromLang) allValues
+    findLang str = find ((`T.isInfixOf` str) . codeFromLang) allValues
 
 allLangs :: [Lang]
 allLangs = allValues

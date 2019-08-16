@@ -15,7 +15,6 @@ import Database.PostgreSQL.PQTypes
 import Log.Class
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.Text as T
 
 import BrandedDomain.Model
 import DB
@@ -64,7 +63,7 @@ instance ToSQL SignatoryScreenshots where
   type PQDest SignatoryScreenshots = PQDest (JSON BS.ByteString)
   toSQL s = toSQL (unjsonToByteStringLazy' (Options { pretty = False, indent = 0, nulls = True }) unjsonSignatoryScreenshots s)
 
-data ScheduleDocumentSigning = ScheduleDocumentSigning SignatoryLinkID BrandedDomainID UTCTime IPAddress (Maybe UTCTime) (Maybe String) Lang SignatoryFieldsValuesForSigning [FileID] SignatoryScreenshots [String] SignatureProvider SignatoryConsentResponsesForSigning
+data ScheduleDocumentSigning = ScheduleDocumentSigning SignatoryLinkID BrandedDomainID UTCTime IPAddress (Maybe UTCTime) (Maybe Text) Lang SignatoryFieldsValuesForSigning [FileID] SignatoryScreenshots [Text] SignatureProvider SignatoryConsentResponsesForSigning
 instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m, MonadTime m) => DBUpdate m ScheduleDocumentSigning () where
   update (ScheduleDocumentSigning slid bdid st cip mct mcn sl sf saas ss nusa sp crs) = do
     now <- currentTime
@@ -96,7 +95,7 @@ instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m) => DBQuery m IsDo
     return $ result == Just True
 
 data GetDocumentSigningLastCheckStatus = GetDocumentSigningLastCheckStatus SignatoryLinkID
-instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m) => DBQuery m GetDocumentSigningLastCheckStatus (Maybe T.Text) where
+instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m) => DBQuery m GetDocumentSigningLastCheckStatus (Maybe Text) where
   query (GetDocumentSigningLastCheckStatus slid) = do
     runQuery_ . sqlSelect "document_signing_jobs" $ do
       sqlWhereEq "id" slid
@@ -104,7 +103,7 @@ instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m) => DBQuery m GetD
     result <- fetchMaybe runIdentity
     return $ join $ result
 
-data UpdateDocumentSigning = UpdateDocumentSigning SignatoryLinkID Bool T.Text
+data UpdateDocumentSigning = UpdateDocumentSigning SignatoryLinkID Bool Text
 instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m) => DBUpdate m UpdateDocumentSigning () where
   update (UpdateDocumentSigning slid cancelled text) = do
     runQuery_ . sqlUpdate  "document_signing_jobs" $ do

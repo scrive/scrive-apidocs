@@ -90,7 +90,7 @@ markEventAsRead eid = do
   unless success $
     logAttention_ "Couldn't mark event as read"
 
-logEmails :: MonadLog m => String -> String -> m ()
+logEmails :: MonadLog m => Text -> Text -> m ()
 logEmails signemail email = logInfo "Comparing emails" $ object
   [ "signatory_email" .= signemail
   , "event_email" .= email
@@ -98,7 +98,7 @@ logEmails signemail email = logInfo "Comparing emails" $ object
 
 handleEventInvitation
   :: (DocumentMonad m, MonadLog m, CryptoRNG m, MonadCatch m, MonadDB m)
-  => SignatoryLinkID -> Maybe Int -> GlobalTemplates -> Event -> String -> m ()
+  => SignatoryLinkID -> Maybe Int -> GlobalTemplates -> Event -> Text -> m ()
 handleEventInvitation slid timeDiff templates eventType mailNoreplyAddress =
   logSignatory slid $ do
     logInfo_ "Processing invitation event"
@@ -126,7 +126,7 @@ handleEventConfirmation
   :: ( CryptoRNG m, DocumentMonad m, MonadCatch m, MonadLog m, MonadThrow m
      , MonadDB m )
   => SignatoryLinkID -> Maybe Int -> GlobalTemplates -> Event
-  -> String -> m ()
+  -> Text -> m ()
 handleEventConfirmation slid timeDiff templates eventType
                         mailNoreplyAddress =
   logSignatory slid $ do
@@ -156,7 +156,7 @@ handleEventOtherMail timeDiff eventType = do
 
 handleEventLoggingDeliveryTime
   :: (DocumentMonad m, MonadLog m, MonadThrow m)
-  => String -> Maybe Int -> Event -> m ()
+  => Text -> Maybe Int -> Event -> m ()
 handleEventLoggingDeliveryTime signemail timeDiff eventType = do
   case snd $ normaliseEvent signemail eventType of
     DeliveryEvent Delivered -> logDeliveryTime timeDiff
@@ -170,7 +170,7 @@ logDeliveryTime timeDiff = theDocument >>= \d -> do
     ]
 
 handleDeliveredInvitation :: (CryptoRNG m, MonadThrow m, MonadLog m, DocumentMonad m, TemplatesMonad m)
-                          => String -> BrandedDomain -> SignatoryLinkID -> Maybe Int -> m ()
+                          => Text -> BrandedDomain -> SignatoryLinkID -> Maybe Int -> m ()
 handleDeliveredInvitation mailNoreplyAddress bd slid timeDiff = do
   getSigLinkFor slid <$> theDocument >>= \case
     Just signlink -> do
@@ -187,14 +187,14 @@ handleDeliveredInvitation mailNoreplyAddress bd slid timeDiff = do
       return ()
     Nothing -> return ()
 
-handleOpenedInvitation :: (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => SignatoryLinkID -> String -> Maybe UserID -> m ()
+handleOpenedInvitation :: (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => SignatoryLinkID -> Text -> Maybe UserID -> m ()
 handleOpenedInvitation slid email muid = do
   now  <- currentTime
   void $ dbUpdate $ MarkInvitationRead slid
           (mailSystemActor now muid email slid)
   return ()
 
-handleDeferredInvitation :: (CryptoRNG m, MonadLog m, MonadThrow m, DocumentMonad m, TemplatesMonad m) => String -> BrandedDomain -> SignatoryLinkID -> String -> m ()
+handleDeferredInvitation :: (CryptoRNG m, MonadLog m, MonadThrow m, DocumentMonad m, TemplatesMonad m) => Text -> BrandedDomain -> SignatoryLinkID -> Text -> m ()
 handleDeferredInvitation mailNoreplyAddress bd slid email = do
   time <- currentTime
   getSigLinkFor slid <$> theDocument >>= \case
@@ -208,7 +208,7 @@ handleDeferredInvitation mailNoreplyAddress bd slid email = do
         }
     Nothing -> return ()
 
-handleUndeliveredInvitation :: (CryptoRNG m, MonadCatch m, MonadLog m, DocumentMonad m, TemplatesMonad m) => String -> BrandedDomain -> SignatoryLinkID -> m ()
+handleUndeliveredInvitation :: (CryptoRNG m, MonadCatch m, MonadLog m, DocumentMonad m, TemplatesMonad m) => Text -> BrandedDomain -> SignatoryLinkID -> m ()
 handleUndeliveredInvitation mailNoreplyAddress bd slid = do
   getSigLinkFor slid <$> theDocument >>= \case
     Just signlink | mailinvitationdeliverystatus signlink == Delivered -> do
@@ -248,7 +248,7 @@ handleDeliveredConfirmation slid timeDiff = do
 handleUndeliveredConfirmation
   :: ( CryptoRNG m, DocumentMonad m, MonadCatch m, MonadLog m, MonadThrow m
      , TemplatesMonad m )
-  => String -> BrandedDomain -> SignatoryLinkID -> m ()
+  => Text -> BrandedDomain -> SignatoryLinkID -> m ()
 handleUndeliveredConfirmation mailNoreplyAddress bd slid = do
   mSL <- getSigLinkFor slid <$> theDocument
   case mSL of
@@ -279,7 +279,7 @@ handleDeferredConfirmation slid = do
       void $ dbUpdate $ SetEmailConfirmationDeliveryStatus slid Deferred actor
       triggerAPICallbackIfThereIsOne =<< theDocument
 
-mailDeliveredInvitation :: (TemplatesMonad m, MonadDB m, MonadThrow m) => String -> BrandedDomain -> SignatoryLink -> Document -> m Mail
+mailDeliveredInvitation :: (TemplatesMonad m, MonadDB m, MonadThrow m) => Text -> BrandedDomain -> SignatoryLink -> Document -> m Mail
 mailDeliveredInvitation mailNoreplyAddress bd signlink doc =do
   theme <- dbQuery $ GetTheme $ get bdMailTheme bd
   kontramail mailNoreplyAddress bd theme "invitationMailDeliveredAfterDeferred" $ do
@@ -289,7 +289,7 @@ mailDeliveredInvitation mailNoreplyAddress bd signlink doc =do
     F.value "ctxhostpart" $ get bdUrl bd
     brandingMailFields theme
 
-mailDeferredInvitation ::(TemplatesMonad m, MonadDB m, MonadThrow m) => String -> BrandedDomain -> SignatoryLink -> Document -> m Mail
+mailDeferredInvitation ::(TemplatesMonad m, MonadDB m, MonadThrow m) => Text -> BrandedDomain -> SignatoryLink -> Document -> m Mail
 mailDeferredInvitation mailNoreplyAddress bd sl doc = do
   theme <- dbQuery $ GetTheme $ get bdMailTheme bd
   kontramail mailNoreplyAddress bd theme"invitationMailDeferred" $ do
@@ -300,7 +300,7 @@ mailDeferredInvitation mailNoreplyAddress bd sl doc = do
     F.value "ctxhostpart" $ get bdUrl bd
     brandingMailFields theme
 
-mailUndeliveredInvitation :: (TemplatesMonad m, MonadDB m, MonadThrow m) => String -> BrandedDomain -> SignatoryLink -> Document -> m Mail
+mailUndeliveredInvitation :: (TemplatesMonad m, MonadDB m, MonadThrow m) => Text -> BrandedDomain -> SignatoryLink -> Document -> m Mail
 mailUndeliveredInvitation mailNoreplyAddress bd signlink doc =do
   theme <- dbQuery $ GetTheme $ get bdMailTheme bd
   kontramail mailNoreplyAddress bd theme "invitationMailUndelivered" $ do
@@ -317,7 +317,7 @@ mailUndeliveredInvitation mailNoreplyAddress bd signlink doc =do
 
 mailUndeliveredConfirmation
   :: (MonadDB m, MonadThrow m, TemplatesMonad m)
-  => String -> BrandedDomain -> SignatoryLink -> Document -> m Mail
+  => Text -> BrandedDomain -> SignatoryLink -> Document -> m Mail
 mailUndeliveredConfirmation mailNoreplyAddress bd sl doc = do
   theme <- dbQuery $ GetTheme $ get bdMailTheme bd
   kontramail mailNoreplyAddress bd theme "confirmationMailUndelivered" $ do
@@ -342,7 +342,7 @@ data NormalisedEvent
 -- We send notification that email is reported deferred after
 -- fifth attempt has failed - this happens after ~10 minutes
 -- from sendout.
-normaliseEvent :: String -> Event -> (String, NormalisedEvent)
+normaliseEvent :: Text -> Event -> (Text, NormalisedEvent)
 normaliseEvent currentEmail = \case
   SendGridEvent email ev _ -> (email, normaliseSendGridEvent email ev)
   MailGunEvent email ev -> (email, normaliseMailGunEvent email ev)
@@ -350,7 +350,7 @@ normaliseEvent currentEmail = \case
   MailJetEvent email ev -> (email, normaliseMailJetEvent ev)
 
   where
-    normaliseSendGridEvent :: String -> SendGridEvent -> NormalisedEvent
+    normaliseSendGridEvent :: Text -> SendGridEvent -> NormalisedEvent
     normaliseSendGridEvent email = \case
       SG_Opened -> EmailOpenedEvent
       SG_Dropped _ | currentEmail == email -> DeliveryEvent Undelivered
@@ -359,7 +359,7 @@ normaliseEvent currentEmail = \case
       SG_Delivered _ -> DeliveryEvent Delivered
       _ -> OtherEvent
 
-    normaliseMailGunEvent :: String -> MailGunEvent -> NormalisedEvent
+    normaliseMailGunEvent :: Text -> MailGunEvent -> NormalisedEvent
     normaliseMailGunEvent email = \case
       MG_Opened -> EmailOpenedEvent
       MG_Delivered -> DeliveryEvent Delivered
@@ -367,7 +367,7 @@ normaliseEvent currentEmail = \case
       MG_Dropped _ | currentEmail == email -> DeliveryEvent Undelivered
       _ -> OtherEvent
 
-    normaliseSocketLabsEvent :: String -> SocketLabsEvent -> NormalisedEvent
+    normaliseSocketLabsEvent :: Text -> SocketLabsEvent -> NormalisedEvent
     normaliseSocketLabsEvent email = \case
       SL_Opened -> EmailOpenedEvent
       SL_Delivered -> DeliveryEvent Delivered

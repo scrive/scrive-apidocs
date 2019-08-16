@@ -5,7 +5,6 @@ module ThirdPartyStats.Planhat
 
 import Control.Monad.IO.Class
 import Data.Aeson ((.=))
-import Data.Char (toLower)
 import Data.Time.Clock (UTCTime)
 import Network.HTTP.Client (httpLbs)
 import Network.HTTP.Conduit (Manager)
@@ -13,6 +12,7 @@ import Network.HTTP.Simple (getResponseBody)
 import qualified Data.Aeson as JSON
 import qualified Data.Aeson.Types as JSON
 import qualified Data.ByteString.Lazy as BSL
+import qualified Data.Text as T
 
 import Planhat
 import ThirdPartyStats.Core
@@ -58,7 +58,7 @@ processPlanhatEvent _reqManager _phConf (NamedEvent _) _props = do
   return . Ignored $ "no handler registered"
 
 -- | Send in a user action to Planhat.
-simplePlanhatAction :: String -> User -> UTCTime -> [EventProperty]
+simplePlanhatAction :: Text -> User -> UTCTime -> [EventProperty]
 simplePlanhatAction actionTag author time =
     [ MailProp . Email $ getEmail author
     , stringProp "action" actionTag
@@ -77,7 +77,7 @@ toPlanhatProperty (SomeProp "value" (PVNumber k)) =
 toPlanhatProperty (SomeProp "companyExternalId" (PVString compId)) =
     Just $ "companyExternalId" .= compId
 toPlanhatProperty (SomeProp "dimensionId" (PVString dimId)) =
-    Just $ "dimensionId" .= (intercalate "_" . words $ map toLower dimId)
+    Just $ "dimensionId" .= ((T.intercalate "_") . T.words $ T.toLower dimId)
 toPlanhatProperty (UserIDProp userId) =
     Just $ "externalId" .= (show . unUserID $ userId)
 toPlanhatProperty _ =
@@ -87,4 +87,4 @@ handlePlanhatResponse :: (MonadIO m) => BSL.ByteString -> m ProcRes
 handlePlanhatResponse resBody =
   case maybeErrors resBody of
     Nothing -> return OK
-    Just errObject -> return . Failed . show $ errObject
+    Just errObject -> return . Failed . showt $ errObject

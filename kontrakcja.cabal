@@ -56,8 +56,11 @@ Library kontrakcja-prelude
   Exposed-Modules:    Prelude
   Build-Depends:      base, cond, exceptions, extra
                     , fclabels, hpqtypes
+                    , text, text-show
+                    , fields-json
   Default-Language:   Haskell2010
   Default-Extensions: FlexibleInstances, RecordWildCards, TypeOperators
+                    , OverloadedStrings
 
 Library
 
@@ -578,6 +581,7 @@ Library
                , process
                , process-extras
                , psqueues
+               , quickcheck-instances
                , random
                , regex-tdfa
                , resource-pool
@@ -595,6 +599,7 @@ Library
                , temporary
                , text
                , text-icu
+               , text-show
                , threads
                , time
                , transformers
@@ -1456,6 +1461,7 @@ Test-suite kontrakcja-test
                , network-uri
                , one-time-password
                , quickcheck-unicode
+               , quickcheck-instances
                , regex-tdfa
                , sandi
                , scientific
@@ -1517,8 +1523,13 @@ Executable config-checker
   Other-modules: CronConf
                  MailingServerConf
                  MessengerServerConf
-  Build-Depends: base-noprelude, kontrakcja-prelude, data-default, either
-               , lifted-base, kontrakcja, text
+  Build-Depends: base-noprelude
+               , data-default
+               , either
+               , kontrakcja
+               , kontrakcja-prelude
+               , lifted-base
+               , text
                , unjson
   Default-Language: Haskell2010
   Default-Extensions: OverloadedStrings

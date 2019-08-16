@@ -10,8 +10,8 @@ import DB
 import Doc.Tables
 
 data DocumentTag = DocumentTag {
-  tagname  :: !String
-, tagvalue :: !String
+  tagname  :: !Text
+, tagvalue :: !Text
 } deriving (Eq, Show)
 
 -- | For 'Set' storage.
@@ -26,7 +26,7 @@ documentTagsSelectors = [
   , "document_tags.value"
   ]
 
-type instance CompositeRow DocumentTag = (String, String)
+type instance CompositeRow DocumentTag = (Text, Text)
 
 instance PQFormat DocumentTag where
   pqFormat = compositeTypePqFormat ctDocumentTag

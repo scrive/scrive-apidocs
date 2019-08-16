@@ -9,16 +9,17 @@
 -----------------------------------------------------------------------------
 module InspectXML where
 
+import qualified Data.Text as T
 import qualified Language.Haskell.TH as TH
 
 import Utils.String
 
 class InspectXML a where
-    inspectXML ::(Show a) =>  a -> String
-    inspectXML = escapeString . show
+  inspectXML :: (TextShow a) => a -> Text
+  inspectXML = escapeString . showt
 
-table :: [Char] -> [Char] -> [Char]
-table a b = "<table><tbody><tr><td valign='top' style='padding-right:5px'> "++ a ++" </td><td> </td><td> "++ b ++" </td></tr></tbody></table>"
+table :: Text -> Text -> Text
+table a b = "<table><tbody><tr><td valign='top' style='padding-right:5px'> "<> a <>" </td><td> </td><td> "<> b <>" </td></tr></tbody></table>"
 
 deriveInspectXML :: TH.Name -> TH.Q [TH.Dec]
 deriveInspectXML name = do
@@ -30,7 +31,7 @@ deriveInspectXML name = do
         n <- mapM (\f -> TH.newName f) fields
         let s = TH.nameBase fname
         TH.match (TH.conP fname (map TH.varP n))
-                   (TH.normalB [|  table s (concat (zipWith table fields $(TH.listE (map (\x -> TH.varE 'inspectXML `TH.appE` TH.varE x) n))))
+                   (TH.normalB [|  table s (T.concat (zipWith table fields $(TH.listE (map (\x -> TH.varE 'inspectXML `TH.appE` TH.varE x) n))))
 
                                |]) []
   let pcon (TH.NormalC fname fields) = do
@@ -47,4 +48,4 @@ deriveInspectXML name = do
   case info of
     TH.TyConI (TH.DataD _ _ _ _ cons _fields) -> d name cons
     TH.TyConI (TH.NewtypeD _ _ _ _ con _fields) -> d name [con]
-    _ -> unexpectedError $ "deriveInspectXML cannot handle: " ++ show info
+    _ -> unexpectedError $ "deriveInspectXML cannot handle: " <> (showt info)

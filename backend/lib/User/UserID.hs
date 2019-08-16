@@ -11,6 +11,7 @@ import Data.Typeable
 import Data.Unjson
 import Database.PostgreSQL.PQTypes
 import Happstack.Server
+import qualified Data.Text as T
 
 import Log.Identifier
 
@@ -18,12 +19,13 @@ newtype UserID = UserID Int64
   deriving (Eq, Ord, Typeable)
 deriving newtype instance Read UserID
 deriving newtype instance Show UserID
+deriving newtype instance TextShow UserID
 
 instance PQFormat UserID where
   pqFormat = pqFormat @Int64
 
 instance FromReqURI UserID where
-  fromReqURI = maybeRead
+  fromReqURI = maybeRead . T.pack
 
 instance Binary UserID where
   put (UserID uid) = put uid
@@ -34,7 +36,7 @@ instance Identifier UserID where
   idValue        = int64AsStringIdentifier . unUserID
 
 instance Unjson UserID where
-  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse UserID")  return) . maybeRead) show  unjsonDef
+  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse UserID")  return) . maybeRead) showt unjsonDef
 
 instance ToJSON UserID where
   toJSON (UserID n) = toJSON $ show n

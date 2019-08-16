@@ -79,10 +79,13 @@ attachmentsApiV2Create = api $ do
   mTitle <- apiV2ParameterOptional $ ApiV2ParameterText "title"
   file <- apiV2ParameterObligatory $ ApiV2ParameterFilePDF "file"
 
-  let title = fromMaybe (takeBaseName (filename file)) (T.unpack <$> mTitle)
+  let title = fromMaybe (takeTextBaseName $ filename file) mTitle
   void $ dbUpdate $ NewAttachment (userid user) title (fileid file) actor
 
   return $ Created ()
+ where
+  takeTextBaseName :: Text -> Text
+  takeTextBaseName = T.pack . takeBaseName . T.unpack
 
 attachmentsApiV2Download :: Kontrakcja m => AttachmentID -> m Response
 attachmentsApiV2Download attid = api $ do

@@ -6,6 +6,7 @@ import Control.Monad.Reader
 import Happstack.Server (Method(..))
 import Test.Framework
 import qualified Data.ByteString as BS
+import qualified Data.Text as T
 
 import Context
 import DB
@@ -39,9 +40,9 @@ testExtendDigitalSignatures = do
   author <- addNewRandomUser
   let filename = inTestDir "pdfs/extensible.pdf"
   filecontent <- liftIO $ BS.readFile filename
-  file <- saveNewFile filename filecontent
-  file1 <- saveNewFile filename filecontent
-  file2 <- saveNewFile filename filecontent
+  file <- saveNewFile (T.pack filename) filecontent
+  file1 <- saveNewFile (T.pack filename) filecontent
+  file2 <- saveNewFile (T.pack filename) filecontent
   did <- documentid <$> addRandomDocumentWithAuthorAndConditionAndFile author (isSignable && isClosed) file
   withDocumentID did $ do
     now <- currentTime
