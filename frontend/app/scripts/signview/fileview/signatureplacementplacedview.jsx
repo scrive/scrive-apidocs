@@ -22,6 +22,7 @@ var SIGNATURE_PLACEMENT_WIDTH_BASE = 284;
 
     contextTypes: {
       taskList: React.PropTypes.instanceOf(TaskList),
+      highlightingEnabled: React.PropTypes.func,
       hideArrow: React.PropTypes.func,
       showArrow: React.PropTypes.func
     },
@@ -96,6 +97,7 @@ var SIGNATURE_PLACEMENT_WIDTH_BASE = 284;
           height: this.height(),
           hideArrow: this.context.hideArrow,
           showArrow: this.context.showArrow,
+          highlightingEnabled: this.context.highlightingEnabled,
           signview: this.props.signview,
           onClose: function () {
             self._openModal = false;

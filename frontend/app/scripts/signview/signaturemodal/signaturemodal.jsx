@@ -104,6 +104,7 @@ module.exports = function (args) {
   var onClose = args.onClose;
   var hideArrow = args.hideArrow;
   var showArrow = args.showArrow;
+  var highlightingEnabled = args.highlightingEnabled;
 
   var model = new SignatureDrawingModel({
     field: args.field,
@@ -120,11 +121,12 @@ module.exports = function (args) {
       if (onClose) {
         onClose();
       }
-
-      showArrow();
-      setTimeout(function () {
-        scrollToElement(_.first(args.signview.tasks().active()).el());
-      }, 5);
+      if (!highlightingEnabled()) {
+        showArrow();
+        setTimeout(function () {
+          scrollToElement(_.first(args.signview.tasks().active()).el());
+        }, 5);
+      }
 
       modal.removeClass("active");
 
