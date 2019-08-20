@@ -96,7 +96,7 @@ var CSVSignatoryDesignModal = React.createClass({
     var csvSignatory = this.csvSignatory();
     if (csvSignatory) {
       for (var i = 0; i < fields.length; i++) {
-        if (!csvSignatory.hasField(fields[i].type, fields[i].order, undefined)) {
+        if (!csvSignatory.hasField(fields[i].type, fields[i].order, fields[i].name)) {
           csvSignatory.addField(
             new Field(_.extendOwn(fields[i], {signatory: csvSignatory}))
           );
