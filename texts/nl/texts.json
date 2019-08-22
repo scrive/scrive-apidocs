@@ -178,7 +178,7 @@
 "_authorAttachmentOptional":"Naar keuze",
 "_authorAttachmentRequired":"Verplicht",
 "_authorAttachmentType":"Herzien verplicht?",
-"_authorAttachmentsUnderstoodContent":"I heb de inhoud van de bijlage $attachmentNameOrPlaceholder()$ gelezen en geaccepteerd.",
+"_authorAttachmentsUnderstoodContent":"Ik heb de inhoud van de bijlage $attachmentNameOrPlaceholder()$ gelezen en geaccepteerd.",
 "_authorAttachmentsUploadingCounter":"<span class='filename'></span>aan het uploaden, bijvoegsel <span class='count'></span> van totaal <span class='total'></span>.",
 "_authorParty":"Auteur",
 "_authorviewCanceled":"Dit document is teruggetrokken",
