@@ -34,8 +34,6 @@ inputValidationTests _ = testGroup "InputValidation"
         [ testProperty "strips surrounding whitespace" propValidNameStripsWhitespace
         , testCase "null is counted as empty" testValidNameNullIsEmpty
         , testProperty "whitespace only is counted as empty" propValidNameWhitespaceIsEmpty
-        , testProperty "can only contain alpha, space and hyphen"
-                       propValidNameRestrictsChars
         , testProperty "good examples pass" propValidNameGoodExamples ]
     , testGroup "asValidCompanyName"
         [ testProperty "strips surrounding whitespace" propValidCompanyNameStripsWhitespace
@@ -174,10 +172,6 @@ testValidNameNullIsEmpty = testNullIsEmpty asValidName
 
 propValidNameWhitespaceIsEmpty :: [WhitespaceChar] -> Property
 propValidNameWhitespaceIsEmpty = propWhitespaceIsEmpty asValidName
-
-propValidNameRestrictsChars :: String -> Property
-propValidNameRestrictsChars =
-   propJustAllowed asValidName [isAlphaNum, isNumber, isSpace, (=='-')]
 
 propValidNameGoodExamples :: [NameChar] -> Property
 propValidNameGoodExamples ns =
