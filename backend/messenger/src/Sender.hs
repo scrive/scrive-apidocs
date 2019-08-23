@@ -63,7 +63,8 @@ sendSMSHelper MbloxSender{..} sm@ShortMessage{..} =
       -- duct-taped it for now...
       -- See https://scrive.fogbugz.com/f/cases/2488/ for more information!
       originator = if northAmericanNumber then "18556644314" else smOriginator
-  logInfoSendSMS "Mblox" (sm{smOriginator = originator})
+      sm' = sm{smOriginator = originator}
+  logInfoSendSMS "Mblox" sm'
   let smsDataJSON = encode $ runJSONGen $ do
         value "from" originator
         value "to" $ [clearmsisdn]
@@ -80,6 +81,9 @@ sendSMSHelper MbloxSender{..} sm@ShortMessage{..} =
        (True, Ok jresp) -> case (runIdentity $
                                  withJSValue jresp $ fromJSValueField "id") of
          Just mbloxID -> do
+           logInfo "SMS sent through MBlox" $ object [ logPair_ sm'
+                                                     , "mbloxid" .= show mbloxID
+                                                     ]
            res <- dbUpdate $ UpdateSMSWithMbloxID smID mbloxID
            return res
          Nothing -> do
