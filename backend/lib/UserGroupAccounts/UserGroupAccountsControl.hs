@@ -369,7 +369,7 @@ handlePostBecomeUserGroupAccount ugid = withUser $ \user -> do
       let newhomefdr = set folderParentID (Just newugfdrid) defaultFolder
       newhomefdrid <- (get folderID) <$> (dbUpdate $ FolderCreate newhomefdr)
       void $ dbUpdate . SetUserHomeFolder uid $ newhomefdrid
-      void $ dbUpdate $ RemoveUserGroupInvite ugid (userid user)
+      void $ dbUpdate $ RemoveUserGroupInvite [ugid] (userid user)
       -- if we are inviting a user with a plan to join the company, we
       -- should delete their personal plan
       flashmessage <- flashMessageUserHasBecomeCompanyAccount newug
