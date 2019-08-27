@@ -317,9 +317,9 @@ mailPartyProcessFinalizedNotification document signatoryLink action = do
                  DocumentSigned ->
                    templateName "mailDocumentSignedNotification"
                  DocumentApproved | hasConfirmationDelivery signatoryLink ->
-                   templateName "mailDocumentApprovedNotification"
-                 DocumentApproved ->
                    templateName "mailDocumentApprovedNotificationWithConfirmation"
+                 DocumentApproved ->
+                   templateName "mailDocumentApprovedNotification"
     mainfile = fromMaybe (unsafeFileID 0) (mainfileid <$> documentfile document)
   (mh, mtime) <- if isClosed document
     then do

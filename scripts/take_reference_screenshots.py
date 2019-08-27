@@ -15,11 +15,11 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support import ui as support_ui, expected_conditions
 
 
-URL = 'https://staging.scrive.com'
-CLIENT_CREDENTIALS_IDENTIFIER = 'c7a9abd2cecf59fc_97'
-CLIENT_CREDENTIALS_SECRET = '7188b4ea3a9aadad'
-TOKEN_CREDENTIALS_IDENTIFIER = 'f6ddd810b10429da_87'
-TOKEN_CREDENTIALS_SECRET = 'eae6749927811803'
+URL = 'http://127.0.0.1:8000'
+CLIENT_CREDENTIALS_IDENTIFIER = '771684b7826df232_3'
+CLIENT_CREDENTIALS_SECRET = '64cd4e82f4d47653'
+TOKEN_CREDENTIALS_IDENTIFIER = 'ef9b893b2e5c7163_3'
+TOKEN_CREDENTIALS_SECRET = '38cdbe82dfbe7e8f'
 
 
 class ScriveAPI(object):
@@ -197,9 +197,9 @@ if __name__ == '__main__':
     with quitting(make_driver()) as driver:
         driver.get(URL + '/d/' + doc_data['id'])
         wait_for_element(driver, 'input[name=email]').send_keys(
-            'bartek+reference-screenshot@scrive.com')
+            'test-1@skrivapa.se')
         wait_for_element(driver, 'input[name=password]').send_keys(
-            'dupadupa12')
+            'test-01-password')
         wait_for_element(driver, '.button.main').click()
         wait_for_element(driver, '.sendButton').click()
         time.sleep(1)  # wait for signinginprogress modal to be shown
@@ -257,8 +257,8 @@ if __name__ == '__main__':
     with quitting(make_driver()) as driver:
         driver.get(URL + '/d/' + doc_data['id'])
         wait_for_element(driver, 'input[name=email]').send_keys(
-            'bartek+reference-screenshot@scrive.com')
-        wait_for_element(driver, 'input[name=password]').send_keys('dupadupa12')
+            'test-1@skrivapa.se')
+        wait_for_element(driver, 'input[name=password]').send_keys('test-01-password')
         wait_for_element(driver, '.button.main').click()
         wait_for_element(driver, '.sendButton').click()
         time.sleep(1)  # wait for signinginprogress modal to be shown

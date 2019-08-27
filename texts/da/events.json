@@ -14,6 +14,7 @@
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Verificerede deres identitet med Norwegian BankID for at få adgang til dokumentet.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Verificerede deres identitet med Swedish BankID for at få adgang til dokumentet.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Verificerede deres identitet med PIN-kode via SMS for at få adgang til dokumentet.",
+"_AuthenticatedToViewEvidenceArchiveVerimi":"",
 "_AutomaticReminderSentTextSimpleEmail":"En automatisk påmindelse om at signere dokumentet blev sendt til $signatory$ via e-mail.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"En automatisk påmindelse om at signere dokumentet blev sendt til $signatory$ via e-mail og SMS.",
 "_AutomaticReminderSentTextSimpleSMS":"En automatisk påmindelse om at signere dokumentet blev sendt til $signatory$ via SMS.",

@@ -59,6 +59,7 @@ var _ = require("underscore");
       showArrow: React.PropTypes.func.isRequired,
       blinkArrow: React.PropTypes.func.isRequired,
       zoomToPoint: React.PropTypes.func.isRequired,
+      highlightingEnabled: React.PropTypes.func.isRequired,
       goToCurrentTask: React.PropTypes.func.isRequired
     },
 
@@ -86,6 +87,10 @@ var _ = require("underscore");
               item.blink();
             }
           });
+        },
+
+        highlightingEnabled: function () {
+          return self.state.highlighting;
         },
 
         zoomToPoint: function (zoomPoint, zoom) {

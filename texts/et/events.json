@@ -14,6 +14,7 @@
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Kasutaja tuvastas dokumendile ligipääsemiseks enda isiku Norra BankID abil.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Tuvastas dokumendile ligipääsemiseks enda isiku Rootsi BankID abil.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Kasutaja tuvastas dokumendile ligipääsemiseks enda isiku SMSi teel saadetud PIN koodi abil",
+"_AuthenticatedToViewEvidenceArchiveVerimi":"",
 "_AutomaticReminderSentTextSimpleEmail":"Automaatne meeldetuletus dokumendi allkirjastamiseks saati e-maili teel isikule $signatory$.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Automaatne meedetuletus dokumendi allkirjastamiseks saadeti e-maili ja SMSi teel isikule $signatory$.",
 "_AutomaticReminderSentTextSimpleSMS":"Automaatne meeldetuletus dokumendi allkirjastamiseks saadeti SMSi teel kasutajale $signatory$.",
