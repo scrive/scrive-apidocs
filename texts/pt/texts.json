@@ -989,7 +989,7 @@
 "_smsCorrectedNotification":"Foi-lhe enviado previamente um documento incorrecto, dado que lhe faltava uma assinatura digital; este erro foi agora corrigido. O documento com a assinatura digital correcta está disponível através desta hiperligação: $link$",
 "_smsCorrectedNotificationWithEmail":"Foi-lhe enviado previamente um documento incorrecto, visto que lhe faltava uma assinatura digital; este erro foi agora corrigido. O documento com a assinatura digital correcta está disponível através desta hiperligação: $link$ O documento corrigido foi também enviado para o seu correio electrónico.",
 "_smsDocumentApprovedNotification":"Já aprovou o documento $documenttitle$. Para visualizar o documento, siga esta hiperligação: $link$",
-"_smsDocumentSignedNotification":"Já assinou o documento $documenttitle$. Para visualizar o documento, siga esta hiperligação: $link$",
+"_smsDocumentSignedNotification":"",
 "_smsForwardSigningForAuthor":"$fromName$ reencaminhou o documento $documenttitle$ para $toName$ para assinar electronicamente. Siga a hiperligação para visualizar o documento: $authorlink$",
 "_smsForwardSigningForAuthorApproving":"$fromName$ reencaminhou o documento $documenttitle$ para $toName$ para aprovação. Siga a hiperligação para visualizar o documento: $authorlink$",
 "_smsForwardSigningForNewSignatory":"$fromName$ reencaminhou o documento $documenttitle$ para si, para assinar electronicamente. Siga a hiperligação para obter instruções adicionais: $link$",

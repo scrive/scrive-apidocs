@@ -14,7 +14,7 @@
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Vahvisti henkilöllisyytensä norjalaisen BankID:n kanssa päästäkseen käsiksi dokumenttiin.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Vahvisti henkilöllisyytensä ruotsalaisen BankID:n kanssa päästäkseen käsiksi dokumenttiin.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Vahvisti henkilöllisyytensä tekstiviestitse lähetetyn PIN-numeron kanssa päästäkseen käsiksi dokumenttiin.",
-"_AuthenticatedToViewEvidenceArchiveVerimi":"",
+"_AuthenticatedToViewEvidenceArchiveVerimi":"Vahvisti(vat) henkilöllisyytensä Verimin kanssa päästäkseen käsiksi dokumenttiin.",
 "_AutomaticReminderSentTextSimpleEmail":"Automaattinen muistutus dokumentin allekirjoittamisesta lähetettiin sähköpostitse, vastaanottaja $signatory$.",
 "_AutomaticReminderSentTextSimpleEmailSMS":"Automaattinen muistutus dokumentin allekirjoittamisesta lähetettiin sähköpostitse ja tekstiviestillä, vastaanottaja $signatory$.",
 "_AutomaticReminderSentTextSimpleSMS":"Automaattinen muistutus dokumentin allekirjoittamisesta lähetettiin tekstiviestillä, vastaanottaja $signatory$.",

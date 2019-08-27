@@ -989,7 +989,7 @@
 "_smsCorrectedNotification":"Við sjáum að við höfum sent þér skjal en það var ekki rétt því þar var engin stafræn undirskrift. Við höfum núna leiðrétt þau mistök. Þú getur nálgast skjalið með viðeigandi stafrænni undirskrift með því að smella á þennan hlekk: $link$",
 "_smsCorrectedNotificationWithEmail":"Við sjáum að við höfum sent þér skjal en það var ekki rétt því þar var engin stafræn undirskrift. Við höfum núna leiðrétt þau mistök. Þú getur nálgast skjalið með viðeigandi stafrænni undirskrift með því að smella á þennan hlekk: $link$ Við höfum einnig sent þér leiðrétt skjal á netfangið þitt.",
 "_smsDocumentApprovedNotification":"Þú hefur nú samþykkt skjalið $documenttitle$. Smelltu á þennan hlekk til að skoða skjalið: $link$",
-"_smsDocumentSignedNotification":"Þú hefur nú skrifað undir skjalið $documenttitle$. Smelltu á þennan hlekk til að skoða skjalið: $link$",
+"_smsDocumentSignedNotification":"",
 "_smsForwardSigningForAuthor":"$fromName$ hefur framsent skjalið $documenttitle$ til $toName$ til rafrænnar undirskriftar. Smelltu á hlekkinn til að skoða skjalið $authorlink$",
 "_smsForwardSigningForAuthorApproving":"$fromName$ hefur framsent skjalið $documenttitle$ til $toName$ til samþykktar. Smelltu á hlekkinn til að skoða skjalið $authorlink$",
 "_smsForwardSigningForNewSignatory":"$fromName$ hefur framsent skjalið $documenttitle$ til rafrænnar undirskriftar. Smelltu á hlekkinn til að fá frekari upplýsingar $link$",
