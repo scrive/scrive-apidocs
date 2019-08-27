@@ -345,7 +345,7 @@ instance FromJSON AccessRoleType where
   parseJSON v = do
     roleTypeStr <- parseJSON v
     case maybeRead roleTypeStr of
-      Nothing -> fail "Could not parse Access Role ID"
+      Nothing -> fail "Could not parse Access Role Type"
       Just roleType -> return roleType
 
 toAccessRoleType :: AccessRoleTarget -> AccessRoleType
