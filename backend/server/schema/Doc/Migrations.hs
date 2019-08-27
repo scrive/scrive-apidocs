@@ -568,7 +568,7 @@ addSignatoryAccessTokensTable = Migration
             ]
         }
       runQuery_ . sqlInsertSelect "signatory_access_tokens" "signatory_link_magic_hashes smh" $ do
-        sqlSetCmd "signatory_link_id" "smh.id"
+        sqlSetCmd "signatory_link_id" "smh.signatory_link_id"
         sqlSetCmd "hash" "smh.hash"
         sqlSetCmd "expiration_time" "smh.expiration_time"
         sqlSetCmd "reason" "1" -- Legacy reason
