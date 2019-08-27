@@ -415,9 +415,8 @@ handleMergeToOtherCompany ugid_source = onlySalesOrAdmin $ do
             newhomefdrid <- (get folderID) <$> (dbUpdate $ FolderCreate newhomefdr)
             void $ dbUpdate . SetUserHomeFolder (userid u) $ newhomefdrid
         invites <- dbQuery $ UserGroupGetInvites ugid_source
-        forM_ invites $ \i-> do
-            void $ dbUpdate $ RemoveUserGroupInvite [ugid_source] (inviteduserid i)
-            return ()
+        forM_ invites $ \i ->
+            void . dbUpdate $ RemoveUserGroupInvite [ugid_source] (inviteduserid i)
 
 {- | Handling company details change. It reads user info change -}
 handleCompanyChange :: Kontrakcja m => UserGroupID -> m ()
