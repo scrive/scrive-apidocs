@@ -47,7 +47,7 @@ module.exports = React.createClass({
         return !s.author() && (s.emailDelivery() || s.emailMobileDelivery());
       });
       var emailConfirmationMessageEditable = _.any(doc.signatories(), function(s) {
-        return !s.author() && (s.emailConfirmationDelivery() || s.emailMobileConfirmationDelivery());
+        return !s.author() && (s.anyEmailConfirmationDelivery() || s.anyEmailMobileConfirmationDelivery());
       });
 
       if (!doc.ready()) {
