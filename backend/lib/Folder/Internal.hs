@@ -12,7 +12,7 @@ module Folder.Internal (
 
 import Data.Aeson
 import Data.Int
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import Data.Unjson
 import Happstack.Server
 import qualified Data.Text as T
@@ -86,7 +86,7 @@ instance Unjson FolderID where
     unjsonDef
 
 instance ToJSON FolderID where
-  toJSON (FolderID k) = toJSON $ show k
+  toJSON (FolderID k) = toJSON . pack $ show k
 
 instance FromJSON FolderID where
   parseJSON v = do

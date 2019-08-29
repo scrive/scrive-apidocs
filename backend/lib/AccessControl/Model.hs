@@ -5,14 +5,17 @@ module AccessControl.Model
   , GetRoles(..)
   , AccessControlGetRolesByUser(..)
   , AccessControlGetRolesByUserGroup(..)
+  , AccessControlDeleteRolesByFolder(..)
   , AccessControlDeleteRolesByUserGroup(..)
   , AccessControlRemoveRole(..)
+  , AccessControlInsertRoleForUser(..)
   , AccessControlRemoveUserGroupAdminRole(..)
   , addInheritedRoles
   ) where
 
 import Control.Monad.Catch
 import Control.Monad.Extra (concatForM)
+import Control.Monad.State (State)
 import Control.Monad.State.Class (MonadState)
 
 import AccessControl.Types
@@ -65,6 +68,8 @@ setTarget target = case target of
   UserAdminAR ugid       -> sqlSet "trg_user_group_id" ugid
   UserGroupAdminAR ugid  -> sqlSet "trg_user_group_id" ugid
   DocumentAdminAR fid    -> sqlSet "trg_folder_id" fid
+  FolderAdminAR fid      -> sqlSet "trg_folder_id" fid
+  FolderUserAR fid       -> sqlSet "trg_folder_id" fid
 
 data AccessRoleGet = AccessRoleGet AccessRoleID
 instance (MonadDB m, MonadThrow m)
@@ -96,10 +101,10 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetRoles [AccessRole] where
     let adminOrUserRoles =
           (if isAdmin then [UserAdminAR ugid] else [UserGroupMemberAR ugid]) <>
           maybe []
-                (\hfid -> if isAdmin then [DocumentAdminAR hfid] else [])
+                (\hfid -> if isAdmin then [DocumentAdminAR hfid, FolderAdminAR hfid] else [])
                 mGroupHomeFolderID <>
           maybe []
-                (\hfid -> [DocumentAdminAR hfid])
+                (\hfid -> [DocumentAdminAR hfid, FolderUserAR hfid])
                 mUserHomeFolderID
         derivedRoles = AccessRoleImplicitUser uid <$> adminOrUserRoles <> [UserAR uid]
     return $ dbRolesByUser <> dbRolesByUserGroup <> derivedRoles
@@ -134,11 +139,39 @@ instance (MonadDB m, MonadThrow m) =>
       , sqlWhereEq "trg_user_group_id" $ Just ugid
       ]
 
+data AccessControlDeleteRolesByFolder
+  = AccessControlDeleteRolesByFolder FolderID
+instance (MonadDB m, MonadThrow m) =>
+  DBUpdate m AccessControlDeleteRolesByFolder () where
+  update (AccessControlDeleteRolesByFolder fdrid) = do
+    runQuery_ . sqlDelete "access_control" $
+      sqlWhereEq "trg_folder_id" $ Just fdrid
+
 data AccessControlRemoveRole = AccessControlRemoveRole AccessRoleID
 instance (MonadDB m, MonadThrow m)
   => DBUpdate m AccessControlRemoveRole Bool where
   update (AccessControlRemoveRole roleId) =
     runQuery01 . sqlDelete "access_control" $ sqlWhereEq "id" roleId
+
+data AccessControlInsertRoleForUser =
+    AccessControlInsertRoleForUser UserID AccessRoleTarget
+instance (MonadDB m, MonadThrow m) => DBUpdate m AccessControlInsertRoleForUser Bool where
+  update (AccessControlInsertRoleForUser uid trg) = do
+    runQuery01 . sqlInsert "access_control" $ do
+      sqlSet "role" (toAccessRoleType trg)
+      sqlSet "src_user_id" uid
+      setAccessRoleTarget trg
+    where
+      setAccessRoleTarget :: AccessRoleTarget -> State SqlInsert ()
+      setAccessRoleTarget trg' =
+        case trg' of
+          UserAR            k -> sqlSet "trg_user_id"       (unUserID k)
+          UserGroupMemberAR k -> sqlSet "trg_user_group_id" (fromUserGroupID k)
+          UserAdminAR       k -> sqlSet "trg_user_group_id" (fromUserGroupID k)
+          UserGroupAdminAR  k -> sqlSet "trg_user_group_id" (fromUserGroupID k)
+          DocumentAdminAR   k -> sqlSet "trg_folder_id"     (fromFolderID k)
+          FolderAdminAR     k -> sqlSet "trg_folder_id"     (fromFolderID k)
+          FolderUserAR      k -> sqlSet "trg_folder_id"     (fromFolderID k)
 
 data AccessControlRemoveUserGroupAdminRole =
     AccessControlRemoveUserGroupAdminRole UserID UserGroupID
@@ -198,5 +231,9 @@ fetchAccessRoleTarget (UserGroupAdminART , Nothing   , Just usrGrpID, Nothing)
   = UserGroupAdminAR usrGrpID
 fetchAccessRoleTarget (DocumentAdminART  , Nothing   , Nothing      , Just fid)
   = DocumentAdminAR  fid
+fetchAccessRoleTarget (FolderAdminART    , Nothing   , Nothing      , Just fid)
+  = FolderAdminAR fid
+fetchAccessRoleTarget (FolderUserART     , Nothing   , Nothing      , Just fid)
+  = FolderUserAR fid
 fetchAccessRoleTarget _
   = unexpectedError "invalid access_control row in database"

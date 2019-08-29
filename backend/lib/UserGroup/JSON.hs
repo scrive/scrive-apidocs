@@ -17,11 +17,7 @@ import DataRetentionPolicy
 import InputValidation
 import UserGroup.Types
 
-encodeUserGroup
-  :: Bool
-  -> UserGroupWithParents
-  -> [UserGroup]
-  -> Encoding
+encodeUserGroup :: Bool -> UserGroupWithParents -> [UserGroup] -> Encoding
 encodeUserGroup inheritable ugwp children = pairs $
      "id"        .= get ugID ug
   <> "parent_id" .= get ugParentGroupID ug
@@ -70,10 +66,7 @@ instance ToJSON UGAddrJSON where
     <> "city"           .= get ugaCity          addr
     <> "country"        .= get ugaCountry       addr
 
-encodeUserGroupContactDetails
-  :: Bool
-  -> UserGroupWithParents
-  -> Encoding
+encodeUserGroupContactDetails :: Bool -> UserGroupWithParents -> Encoding
 encodeUserGroupContactDetails inheritable ugwp =
   pairs $ makeAddressJson inheritedFrom address <> inheritPreview
     where
@@ -136,10 +129,7 @@ instance ToJSON UGDRPJSON where
     <> "idle_doc_timeout_error"       .= get drpIdleDocTimeoutError       drp
     <> "immediate_trash"              .= get drpImmediateTrash            drp
 
-encodeUserGroupSettings
-  :: Bool
-  -> UserGroupWithParents
-  -> Encoding
+encodeUserGroupSettings :: Bool -> UserGroupWithParents -> Encoding
 encodeUserGroupSettings inheritable ugwp =
   pairs $ makeDRPJson inheritedFrom msettings <> inheritPreview
     where

@@ -1,6 +1,7 @@
 module Folder.Model.Query
   (
-    FolderGet(..)
+    FolderDelete(..)
+  , FolderGet(..)
   , FolderGetUserGroupHome(..)
   , FolderGetUserHome(..)
   , FolderGetParents(..)
@@ -9,6 +10,7 @@ module Folder.Model.Query
   ) where
 
 import Control.Monad.Catch
+import Control.Monad.Time
 
 import DB
 import Folder.Types
@@ -102,6 +104,14 @@ instance (MonadDB m, MonadThrow m) => DBQuery m FolderGetImmediateChildren [Fold
       sqlWhereEq "parent_id" ugid
       sqlWhereIsNULL "deleted"
     fetchMany fetchFolder
+
+data FolderDelete = FolderDelete FolderID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m FolderDelete () where
+  update (FolderDelete fdrid) = do
+    now <- currentTime
+    void . runQuery . sqlUpdate "folders" $ do
+      sqlSet "deleted" now
+      sqlWhereEq "id" $ Just fdrid
 
 folderSelectors :: [SQL]
 folderSelectors =

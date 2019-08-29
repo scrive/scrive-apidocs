@@ -2,18 +2,29 @@ module Folder.FolderTest (folderTests) where
 
 import Control.Monad.Extra (concatForM)
 import Data.Aeson
+import Data.Aeson.Types
 import Data.Foldable (foldlM)
 import Data.Int
+import Data.Unjson (field, fieldBy, fieldOptBy, objectOf)
 import Happstack.Server
 import Test.Framework
 import Test.QuickCheck
+import qualified Data.Aeson as Aeson
+import qualified Data.Aeson.Encoding as AE
 import qualified Data.HashMap.Strict as H
+import qualified Data.Unjson as Unjson
 
+import AccessControl.Model
+import AccessControl.Types
 import Administration.AdministrationControl
 import Context
 import DB
+import Doc.API.V2.AesonTestUtils
+import Doc.API.V2.Calls.CallsTestUtils
 import Doc.API.V2.JSONTest
 import Doc.SignatoryLinkID ()
+import Folder.API
+import Folder.JSON
 import Folder.Model
 import Partner.API
 import TestingUtil
@@ -37,6 +48,11 @@ folderTests env  = testGroup "Folder"
   , testThat "Moving a folder cannot form cycle" env testMoveFolderCycleError
   , testThat "Cannot delete a Folder with subfolders" env testCannotDeleteFolderWithSubfolders
   , testThat "Migration triggers work" env testMigrationTriggersWork
+  , testThat "Test creating groups works in API " env testFolderAPICreate
+  , testThat "Test updating groups works in API" env testFolderAPIUpdate
+  , testThat "Test reading groups works in API" env testFolderAPIGet
+  , testThat "Test folder deletion endpoint works in API" env testFolderAPIDelete
+  , testThat "Test listing documents in a folder works in API" env testFolderAPIListDocs
   ]
 
 testCreateFolders :: TestEnv ()
@@ -274,3 +290,246 @@ testMigrationTriggersWork = do
 
   assertSQLCount "Documents without folders" 0
     "SELECT COUNT(*) FROM documents where folder_id IS NULL"
+
+-- API tests
+testFolderAPICreate :: TestEnv ()
+testFolderAPICreate = do
+  user <- addNewRandomUser
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  -- make root of folder struct
+  fdrRootID <- get folderID <$> do
+    dbUpdate . FolderCreate $ defaultFolder
+
+  folderNameTest <- rand 10 arbitrary
+  let fdrTest = set folderName folderNameTest .
+                set folderParentID (Just fdrRootID) $
+                   defaultFolder
+      newFolderJSONBS = AE.encodingToLazyByteString $ encodeFolder fdrTest
+      reqNewFolderPrms = [("folder", inTextBS newFolderJSONBS)]
+  -- should not be able to create a child since the user is not an admin of the
+  -- above folder root
+  void $ jsonTestRequestHelper ctx POST reqNewFolderPrms folderAPICreate 403
+
+  -- make admin of folder
+  let folderAdminR = FolderAdminAR fdrRootID
+  void . dbUpdate $ AccessControlInsertRoleForUser (userid user) folderAdminR
+  -- should now be able to create a child
+  newFdrFromAPI <- jsonToFolder <$>
+    jsonTestRequestHelper ctx POST reqNewFolderPrms folderAPICreate 200
+
+  -- check that API returns what it's supposed to
+  Just newFdrFromDB <- dbQuery . FolderGet . get folderID $ newFdrFromAPI
+  assertEqual ("New folder from API equals the one we sent in")
+              newFdrFromAPI
+              (set folderID (get folderID newFdrFromAPI) fdrTest)
+              -- since id is 0 for default
+
+  assertEqual ("New folder from API equals corresponding one in DB")
+              newFdrFromAPI
+              newFdrFromDB
+
+testFolderAPIUpdate :: TestEnv ()
+testFolderAPIUpdate = do
+  grpAdmin <- addNewRandomUser
+  user <- addNewRandomUser
+  ctxAdmin <- (set ctxmaybeuser (Just grpAdmin)) <$> mkContext defaultLang
+  ctxUser <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  fdrRoot <- dbUpdate $ FolderCreate (set folderName "Folder root" defaultFolder)
+  let folderAdminRoot = FolderAdminAR (get folderID fdrRoot)
+      admid = userid grpAdmin
+  void . dbUpdate $ AccessControlInsertRoleForUser admid folderAdminRoot
+  subs@[fdr1, fdr2] <- createChildrenForParentByAPI ctxAdmin fdrRoot
+  [childrenFdr1, _childrenFdr2] <- forM subs $ createChildrenForParentByAPI ctxAdmin
+
+  let folderAdminUserFdr1 = FolderAdminAR (get folderID fdr1)
+  void . dbUpdate $ AccessControlInsertRoleForUser (userid user) folderAdminUserFdr1
+
+  -- `user` should be able to update fdr1-rooted tree
+  forM_ childrenFdr1 (updateTestHelper ctxUser)
+
+  fdr <- dbUpdate $ FolderCreate $ (set folderParentID (Just $ get folderID fdr1) .
+                                    set folderName "Folder for move test")
+                                    defaultFolder
+  allChildrenFdr1 <-
+    concatMap fwcToList <$> (dbQuery $ FolderGetAllChildrenRecursive $ get folderID fdr1)
+  assertEqual "Children of folder are the same"
+              (sortByFolderID allChildrenFdr1)
+              (sortByFolderID $ [fdr] <> childrenFdr1)
+
+  let fdrTryMoving = set folderParentID (Just $ get folderID fdr2) fdr
+  -- `user` should _not_ be able to change parent of fdrTryMoving to fdr2 before being
+  -- an admin of both parents
+  void $ fdrAPIUpdate ctxUser fdrTryMoving 403
+
+  -- make `user` admin of `fdr2`
+  void . dbUpdate $ AccessControlInsertRoleForUser
+                      (userid user)
+                      (FolderAdminAR (get folderID fdr2))
+
+  -- move should now be successful
+  movedFdr1' <- jsonToFolder <$> fdrAPIUpdate ctxUser fdrTryMoving 200
+
+  Just moveddbFdr1' <- dbQuery . FolderGet . get folderID $ fdrTryMoving
+  assertEqual "Moved folder from API should equal the corresponding one in DB"
+              moveddbFdr1'
+              movedFdr1'
+  assertEqual "Moved folder from API should equal the one specified"
+              moveddbFdr1'
+              fdrTryMoving
+
+  fromDBchildrenFdr1' <- do
+    dbQuery . FolderGetImmediateChildren . get folderID $ fdr1
+  assertEqual "Children of folder are the same"
+              (sortByFolderID fromDBchildrenFdr1')
+              (sortByFolderID childrenFdr1)
+
+  parentsOfFdr <- dbQuery . FolderGetParents $ get folderID fdr
+  assertEqual "Parent path of moved folder is correct"
+              parentsOfFdr
+              [fdr2, fdrRoot]
+  where
+    sortByFolderID :: [Folder] -> [Folder]
+    sortByFolderID = sortBy (\f1 f2 -> compare (get folderID f1) (get folderID f2))
+
+    fdrUpdateParams :: Folder -> [(Text, Input)]
+    fdrUpdateParams fdr =
+      let fdrJSON = AE.encodingToLazyByteString $ encodeFolder fdr
+      in [("folder", inTextBS fdrJSON)]
+
+    fdrAPIUpdate :: Context -> Folder -> Int -> TestEnv Aeson.Value
+    fdrAPIUpdate ctx fdr code = do
+      let apiCall = folderAPIUpdate $ get folderID fdr
+      jsonTestRequestHelper ctx POST (fdrUpdateParams fdr) apiCall code
+
+    updateTestHelper :: Context -> Folder -> TestEnv ()
+    updateTestHelper ctx fdr = do
+      name <- rand 10 arbitrary
+      let fdr' = (set folderName name fdr)
+      updatedFdr <- jsonToFolder <$> fdrAPIUpdate ctx fdr' 200
+      assertEqual ("New folder from API should equal the one specified")
+                  fdr'
+                  updatedFdr
+      Just dbFdr <- dbQuery . FolderGet . get folderID $ fdr
+      assertEqual ("New folder from API should equal the corresponding one in DB")
+                  dbFdr
+                  updatedFdr
+      -- reset for easier testing in calling body
+      void $ jsonToFolder <$> fdrAPIUpdate ctx fdr 200
+
+testFolderAPIGet :: TestEnv ()
+testFolderAPIGet = do
+  grpAdmin <- addNewRandomUser
+  ctxAdmin <- (set ctxmaybeuser (Just grpAdmin)) <$> mkContext defaultLang
+  fdrRoot <- dbUpdate $ FolderCreate (set folderName "Folder root" defaultFolder)
+  let folderAdminR = FolderAdminAR (get folderID fdrRoot)
+      admid = userid grpAdmin
+  void . dbUpdate $ AccessControlInsertRoleForUser admid folderAdminR
+  subs@[_fdr1, _fdr2] <- createChildrenForParentByAPI ctxAdmin fdrRoot
+  [_childrenOfFDR1, _childrenOfFDR2] <- do
+    forM subs $ createChildrenForParentByAPI ctxAdmin
+  fdrwcfuFromAPI <- fdrAPIGet ctxAdmin fdrRoot 200
+  fdrChildren <- dbQuery $ FolderGetImmediateChildren (get folderID fdrRoot)
+  let fdrwc = FolderWithChildren fdrRoot $ map (\c -> FolderWithChildren c []) fdrChildren
+      fdrwcbs = fromJust . Aeson.decode . AE.encodingToLazyByteString $ encodeFolderWithChildren fdrwc
+  assertEqual "Folder data output corresponds to what was sent in"
+              fdrwcfuFromAPI
+              fdrwcbs
+  where
+    fdrAPIGet :: Context -> Folder -> Int -> TestEnv Aeson.Value
+    fdrAPIGet ctx fdr code = do
+      let apiCall = folderAPIGet . get folderID $ fdr
+      jsonTestRequestHelper ctx GET [] apiCall code
+
+testFolderAPIDelete :: TestEnv ()
+testFolderAPIDelete = do
+  user <- addNewRandomUser
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  userFolder <- fromJust <$> (dbQuery . FolderGet . fromJust . userhomefolderid $ user)
+  -- I don't want to test deletion of the user home folder, so let's create a subfolder.
+  let fdrTestDeleteChild = set folderParentID (Just $ get folderID userFolder) $
+                               defaultFolder
+      newFolderJSONBS = AE.encodingToLazyByteString $ encodeFolder fdrTestDeleteChild
+      reqNewFolderPrms = [("folder", inTextBS newFolderJSONBS)]
+  newFdrFromAPI <- jsonToFolder <$>
+    jsonTestRequestHelper ctx POST reqNewFolderPrms folderAPICreate 200
+  void $ jsonTestRequestHelper ctx POST reqNewFolderPrms (folderAPIDelete $ get folderID newFdrFromAPI) 200
+
+testFolderAPIListDocs :: TestEnv ()
+testFolderAPIListDocs = do
+  user <- addNewRandomUser
+  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  userFolder <- fromJust <$> (dbQuery . FolderGet . fromJust . userhomefolderid $ user)
+  let numDocsToStart = 5
+      fdrid = get folderID userFolder
+  mapM_ testDocApiV2New' $ take numDocsToStart . repeat $ ctx
+  -- add a subfolder to org folder tree and start documents there to ensure that we do not
+  -- list documents contained in children of a specified folder
+  let newFolderBase = set folderParentID
+                          (Just . get folderID $ userFolder)
+                          defaultFolder
+      newFolderBaseJSONBS = AE.encodingToLazyByteString $ encodeFolder newFolderBase
+      reqNewFolderPrms = [("folder", inTextBS newFolderBaseJSONBS)]
+  newFdr <- jsonToFolder <$>
+    (jsonTestRequestHelper ctx POST reqNewFolderPrms folderAPICreate 200)
+  -- HACK to enable user to start documents in another folder
+  dbUpdate $ FolderSetUserHomeFolder (userid user) (get folderID newFdr)
+  user' <- fromJust <$> (dbQuery $ GetUserByID (userid user))
+  let ctx' = set ctxmaybeuser (Just user') ctx
+      numDocsToStart' = 3
+  mapM_ testDocApiV2New' $ take numDocsToStart' . repeat $ ctx'
+  -- switch back to original home folder for user
+  dbUpdate $ FolderSetUserHomeFolder (userid user) fdrid
+  docsVal <- jsonTestRequestHelper ctx GET [] (folderAPIListDocs fdrid) 200
+  assertEqual "Listing by folder id does not retrieve documents in child folders"
+              numDocsToStart
+              (getTotalReturned docsVal)
+  -- list child folder
+  docsVal' <- jsonTestRequestHelper ctx GET [] (folderAPIListDocs (get folderID newFdr))
+                                     200
+  assertEqual "Listing works for child of user home folder"
+              numDocsToStart'
+              (getTotalReturned docsVal')
+  where
+    getTotalReturned val =
+      fromJust $ parseMaybe (withObject "List call output" (.: "total_matching")) val
+
+
+--  dbUpdate $ FolderSetUserHome (userid user) (fdrid)
+
+--
+-- local helpers
+--
+
+jsonToFolder :: Aeson.Value -> Folder
+jsonToFolder val =
+  let Unjson.Result fdr _ = Unjson.parse unjsonFolderReadAll val
+  in fdr
+
+-- jsonToFolderWithChildrenForUpdate :: Aeson.Value -> FolderWithChildrenForUpdate
+-- jsonToFolderWithChildrenForUpdate val =
+--   let Unjson.Result fdrwcfu _ =
+--         Unjson.parse unjsonFolderWithChildrenForUpdate val
+--   in fdrwcfu
+
+createChildrenForParentByAPI :: Context
+                             -> Folder
+                             -> TestEnv [Folder]
+createChildrenForParentByAPI ctx fdrParent = do
+  forM [fdrParent, fdrParent] $ \fdrp -> do
+    let newFolder = set folderParentID
+                        (Just . get folderID $ fdrp)
+                        defaultFolder
+        newFolderJSONBS = AE.encodingToLazyByteString $ encodeFolder newFolder
+        reqNewFolderPrms = [("folder", inTextBS newFolderJSONBS)]
+    jsonToFolder <$>
+      jsonTestRequestHelper ctx POST reqNewFolderPrms folderAPICreate 200
+
+-- read _all_ fields of the presumed JSON serialisation of a folder
+unjsonFolderReadAll :: Unjson.UnjsonDef Folder
+unjsonFolderReadAll =
+  objectOf $ pure Folder
+    <*> (fieldBy "id" _folderID "The folder ID"
+                 Unjson.unjsonDef)
+    <*> (fieldOptBy "parent_id" _folderParentID "Parent folder ID"
+                  Unjson.unjsonDef)
+    <*> (field "name" _folderName "The folder name")

@@ -112,4 +112,6 @@ roleToAccessPolicyReq role act =
         UserAdminAR ugid       -> mkAccPolicyUserGroup ugid
         UserGroupAdminAR ugid  -> mkAccPolicyUserGroup ugid
         DocumentAdminAR fid    -> mkAccPolicyFolder fid
+        FolderAdminAR fid      -> mkAccPolicyFolder fid
+        FolderUserAR fid       -> mkAccPolicyFolder fid
   in [sourceRoleReq, targetRoleReq]

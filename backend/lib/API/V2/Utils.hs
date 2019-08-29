@@ -2,6 +2,7 @@ module API.V2.Utils
     ( apiAccessControl
     , apiAccessControlOrIsAdmin
     , checkAdminOrSales
+    , folderOrAPIError
     , isApiAdmin
     , isApiSales
     , userGroupOrAPIError
@@ -16,6 +17,7 @@ import API.V2
 import API.V2.Errors
 import Context
 import DB
+import Folder.Model
 import Kontra
 import OAuth.Model
 import User.Model
@@ -74,3 +76,8 @@ userGroupWithParentsOrAPIError ugid =
     Nothing -> apiError $
       serverError "Impossible happened: No user group with ID, or deleted."
     Just ugwp -> return ugwp
+
+folderOrAPIError :: (MonadDB m, MonadThrow m) => FolderID -> m Folder
+folderOrAPIError fdrid = dbQuery (FolderGet fdrid) >>= \case
+  Nothing -> apiError $ serverError "Impossible happened: No folder with ID, or deleted."
+  Just fdr -> return fdr

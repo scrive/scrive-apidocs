@@ -215,4 +215,5 @@ kontraMigrations = [
   , changeTemporaryMagicHashPurgeJobToTokensPurgeJob
   , removeInvoicingUploadJob
   , userGroupSettingsAddSessionTimeout
+  , addFolderAdminRoleChecks
   ]
