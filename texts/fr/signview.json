@@ -19,7 +19,7 @@
 "_contractrejectbuttontext":"Refuser et répondre",
 "_contractrejectbuttontextwithoutreason":"Rejeter",
 "_contractsignatorycancelmodalplaceholder":"Saisissez votre message ici",
-"_contractsignatorycancelmodaltext":"Si vous rejeter le document, il ne pourra plus être signé. Veuillez donner les raisons pour lesquelles vous souhaitez rejeter le document.",
+"_contractsignatorycancelmodaltext":"Si vous rejetez le document, il ne pourra plus être signé. Veuillez donner les raisons pour lesquelles vous souhaitez rejeter le document.",
 "_contractsignatorycancelmodaltextwithoutreason":"Si vous rejetez le document, il ne pourra plus être signé.",
 "_contractsignatorycancelmodaltitle":"Confirmer le rejet",
 "_contractsignatoryname":"Partie",
