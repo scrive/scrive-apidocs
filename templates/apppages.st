@@ -146,9 +146,6 @@ analyticsLoaderKontrakcja=
 $if(!signview)$
   $loadScript(src="//js.hubspot.com/forms/current.js")$
   $loadScript(src="//js.hs-analytics.net/analytics/431732.js")$
-  $if(zendeskkey)$
-    <script id="ze-snippet" src="https://static.zdassets.com/ekr/snippet.js?key=$zendeskkey$"></script>
-  $endif$
 $endif$
 
 <script>
