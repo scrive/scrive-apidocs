@@ -361,7 +361,7 @@ handlePostBecomeUserGroupAccount ugid = withUser $ \user -> do
   void $ guardJustM $ dbQuery $ GetUserGroupInvite ugid (userid user)
   newug <- guardJustM $ dbQuery $ UserGroupGet ugid
   (get folderID <$>) <$> (dbQuery $ FolderGetUserGroupHome ugid) >>= \case
-    Nothing -> unexpectedError "no grp XXXFREDRIK change me"
+    Nothing -> internalError
     Just newugfdrid -> do
       let uid = userid user
       void $ dbUpdate $ SetUserCompanyAdmin (userid user) False

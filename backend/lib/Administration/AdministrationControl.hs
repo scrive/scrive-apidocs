@@ -388,7 +388,7 @@ handleMoveUserToDifferentCompany :: Kontrakcja m => UserID -> m ()
 handleMoveUserToDifferentCompany uid = onlySalesOrAdmin $ do
   newugid <- guardJustM $ readField "companyid"
   (get folderID <$>) <$> (dbQuery $ FolderGetUserGroupHome newugid) >>= \case
-    Nothing -> unexpectedError "no grp XXXFREDRIK change me"
+    Nothing -> internalError
     Just newugfdrid -> do
       void $ dbUpdate $ SetUserUserGroup uid newugid
       void $ dbUpdate $ SetUserCompanyAdmin uid False
@@ -406,7 +406,7 @@ handleMergeToOtherCompany ugid_source = onlySalesOrAdmin $ do
   else do
     ugid_target <- guardJustM $ readField "companyid"
     (get folderID <$>) <$> (dbQuery $ FolderGetUserGroupHome ugid_target) >>= \case
-      Nothing -> unexpectedError "no grp XXXFREDRIK change me"
+      Nothing -> internalError
       Just targetfdrid -> do
         users <- dbQuery $ UserGroupGetUsers ugid_source
         forM_ users $ \u -> do
