@@ -68,7 +68,7 @@ cleanUnallowedTSChars :: Text -> [Text]
 cleanUnallowedTSChars t = go notAllowed (nub . T.words $ t)
   where
     notAllowed :: [Text]
-    notAllowed = ["|", "&", ":", "!", "<->", "<", "*"]
+    notAllowed = ["|", "&", ":", "!", "<->", "<", "*", "'"]
 
     go :: [Text] -> [Text] -> [Text]
     go []     acc = Prelude.filter (/= "") acc
