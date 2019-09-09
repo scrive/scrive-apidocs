@@ -495,8 +495,8 @@ mailDocumentAwaitingForAuthor authorlang document = do
       (templateName "mailDocumentAwaitingForAuthor") $ do
         F.value "authorname" $ getSmartName author
         F.value "documentlink" $ makeFullLink mctx $
-          showt $ LinkSignDocNoMagicHash (documentid document)
-            (signatorylinkid author)
+          showt $ LinkSignDocMagicHash (documentid document)
+            (signatorylinkid author) mh
         F.value "partylist" signatories
         F.value "partylistSigned" signatoriesThatSigned
         F.value "someonesigned" $
