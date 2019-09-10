@@ -17,6 +17,7 @@ import qualified Data.Text as T
 
 import Cookies
 import MagicHash
+import Session.Constant
 import Session.Types
 import Utils.HTTP
 
@@ -63,9 +64,9 @@ startSessionCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m)
                    => Session -> m ()
 startSessionCookie s = do
   ishttps  <- isHTTPS
-  addHttpOnlyCookie ishttps (MaxAge (60*60*24)) $
+  addHttpOnlyCookie ishttps (MaxAge maxSessionTimeoutSecs) $
     mkCookieFromText cookieNameSessionID . showt $ sessionCookieInfoFromSession s
-  addCookie ishttps (MaxAge (60*60*24)) $
+  addCookie ishttps (MaxAge maxSessionTimeoutSecs) $
     mkCookieFromText cookieNameXToken $ showt $ sesCSRFToken s
 
 -- | Remove session cookie from browser.

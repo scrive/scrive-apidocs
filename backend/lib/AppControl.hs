@@ -193,7 +193,7 @@ appHandler handleRoutes appConf appGlobals = runHandler
         let usehttps = useHttps appConf
         when (issecure || not usehttps) $ do
           logInfo_ "Updating session"
-          updateSession session (get ctxsessionid ctx')
+          void $ updateSession session (get ctxsessionid ctx')
             (userid <$> get ctxmaybeuser ctx')
             (userid <$> get ctxmaybepaduser ctx')
 

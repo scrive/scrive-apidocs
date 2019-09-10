@@ -200,7 +200,6 @@ testCannotDeleteUserGroupWithSubgroups = do
   -- deleting group B works
   runSQL_ $ "DELETE from user_groups where id = " <?> get ugID ugB
 
-
 testChangeUserGroupParent :: TestEnv ()
 testChangeUserGroupParent = do
   usrGrp <- addNewUserGroup

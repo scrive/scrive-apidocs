@@ -241,6 +241,7 @@ instance Arbitrary UserGroupSettings where
     <*> arbitrary
     <*> arbitrary
     <*> pure False -- do not enforce 2FA in tests
+    <*> pure Nothing -- do not set custom session expiry
 
 instance Arbitrary UserGroupAddress where
   arbitrary = UserGroupAddress
@@ -1385,6 +1386,11 @@ assertBool msg = liftIO . T.assertBool msg
 assertEqual :: (Eq a, Show a, MonadIO m) => String -> a -> a -> m ()
 assertEqual msg a = liftIO . T.assertEqual msg a
 
+assertApproxEqual :: (Num a, Ord a, MonadIO m) => String -> a -> a -> a -> m ()
+assertApproxEqual message expected epsilon actual = assertBool message $
+  (actual <= expected + epsilon) &&
+  (actual > expected - epsilon)
+
 assertFailure :: MonadIO m => String -> m ()
 assertFailure = liftIO . T.assertFailure
 
@@ -1402,6 +1408,13 @@ assertSuccess = assertBool "not success?!" True
 assertJust :: MonadIO m => Maybe a -> m ()
 assertJust (Just _) = assertSuccess
 assertJust Nothing = assertFailure
+  "Should have returned Just but returned Nothing"
+
+assertJustAndExtract :: MonadIO m => Maybe a -> m a
+assertJustAndExtract (Just x) = do
+  assertSuccess
+  return x
+assertJustAndExtract Nothing = liftIO $ T.assertFailure
   "Should have returned Just but returned Nothing"
 
 assertRight :: (Show a, MonadIO m) => Either a b -> m ()

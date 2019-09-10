@@ -173,6 +173,7 @@ companySettingsJson ugs = do
   value "immediatetrash" $ get drpImmediateTrash drp
   value "sendtimeoutnotification" $  get ugsSendTimeoutNotification ugs
   value "totpismandatory" $  get ugsTotpIsMandatory ugs
+  value "sessiontimeout" $  get ugsSessionTimeoutSecs ugs
 
 userStatsToJSON :: (UTCTime -> Text) -> [UserUsageStats] -> JSValue
 userStatsToJSON formatTime uuss = runJSONGen . objects "stats" . for uuss $ \uus -> do

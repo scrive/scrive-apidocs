@@ -394,6 +394,7 @@ Library
                  , Salesforce.Control
                  , ServerUtils.ServerUtils
                  , Session.Cookies
+                 , Session.Constant
                  , Session.Types
                  , Session.Model
                  , Session.SessionID

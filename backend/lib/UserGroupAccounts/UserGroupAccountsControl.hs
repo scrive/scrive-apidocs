@@ -284,8 +284,6 @@ sendTakeoverSingleUserMail inviter ug user = do
   mail <- mailTakeoverSingleUserInvite ctx user inviter ug (LinkCompanyTakeover . get ugID $ ug)
   scheduleEmailSendout $ mail { to = [getMailAddress user] }
 
-
-
 {- |
     Handles a role change by switching a user from
     admin or to company.

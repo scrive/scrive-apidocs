@@ -19,9 +19,9 @@ module Administration.AdministrationControl (
 
 import Control.Monad.IO.Class (liftIO)
 import Data.Functor.Invariant
+import Data.Int (Int16, Int32)
 import Data.Time (diffUTCTime)
 import Data.Unjson
-import GHC.Int (Int16)
 import Happstack.Server hiding (dir, https, path, simpleHTTP)
 import Happstack.StaticRouting (Route, choice, dir)
 import Log
@@ -79,6 +79,7 @@ import Mails.Model
 import MinutesTime
 import PadApplication.Types (padAppModeFromText)
 import Routing
+import Session.Constant
 import Session.Model
 import Templates (renderTextTemplate)
 import Theme.Control
@@ -474,7 +475,9 @@ handlePostAdminCompanyUsers ugid = onlySalesOrAdmin $ do
       value "error_message" (Nothing :: Maybe String)
 
 {- | Reads params and returns function for conversion of user group info.  With no param leaves fields unchanged -}
-getUserGroupSettingsChange :: Kontrakcja m => m (UserGroupSettings -> UserGroupSettings)
+getUserGroupSettingsChange
+  :: forall m . Kontrakcja m
+  => m (UserGroupSettings -> UserGroupSettings)
 getUserGroupSettingsChange = do
     mcompanyipaddressmasklist <- getOptionalField asValidIPAddressWithMaskList "companyipaddressmasklist"
     mcompanycgidisplayname <- fmap emptyToNothing <$> getField "companycgidisplayname"
@@ -491,6 +494,7 @@ getUserGroupSettingsChange = do
     mcompanypadearchiveenabled <- getField "companypadearchiveenabled"
     mcompanysendtimeoutnotification <- getField "companysendtimeoutnotification"
     mcompanytotpismandatory <- getField "companytotpismandatory"
+    mcompanysessiontimeout <- getSessionTimeoutField "companysessiontimeout"
 
     return $
         maybe id (set ugsIPAddressMaskList) mcompanyipaddressmasklist
@@ -516,8 +520,7 @@ getUserGroupSettingsChange = do
       . maybe id (set ugsPadEarchiveEnabled . (=="true")) mcompanypadearchiveenabled
       . maybe id (set ugsSendTimeoutNotification . (=="true")) mcompanysendtimeoutnotification
       . maybe id (set ugsTotpIsMandatory . (=="true")) mcompanytotpismandatory
-
-
+      . maybe id (set ugsSessionTimeoutSecs) mcompanysessiontimeout
 
   where
     getIdleDocTimeoutField :: Kontrakcja m => Text -> m (Maybe (Maybe Int16))
@@ -532,6 +535,28 @@ getUserGroupSettingsChange = do
             guard $ t >= minUserGroupIdleDocTimeout
             guard $ t <= maxUserGroupIdleDocTimeout
             return $ Just t
+
+    getSessionTimeoutField :: Text -> m (Maybe (Maybe Int32))
+    getSessionTimeoutField fieldName = do
+      mField :: Maybe Text <- getField fieldName
+      case mField of
+        Just timeoutStr -> return $ parseTimeout timeoutStr
+        Nothing -> return Nothing
+     where
+      parseTimeout :: Text -> Maybe (Maybe Int32)
+      -- Use empty string to reset
+      parseTimeout str | str == "" = Just Nothing
+      parseTimeout str =
+        let mTimeout :: Maybe Int32 = maybeRead str
+        in case mTimeout of
+          -- At least 5 minutes for minimal usability
+          -- At most 30 days to prevent any potential security vulnerability
+          Just timeout |
+            timeout >= minSessionTimeoutSecs && timeout <= maxSessionTimeoutSecs
+            -> Just (Just timeout)
+
+          Just _ -> Nothing
+          Nothing -> Nothing
 
 {- | Reads params and returns function for conversion of user group address.  With no param leaves fields unchanged -}
 getUserGroupAddressChange :: Kontrakcja m => m (UserGroupAddress -> UserGroupAddress)

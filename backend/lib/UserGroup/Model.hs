@@ -114,6 +114,7 @@ insertUserGroupSettings ugid ugs =
     sqlSet "require_bpid_for_new_document" . get ugsRequireBPIDForNewDoc $ ugs
     sqlSet "send_timeout_notification" . get ugsSendTimeoutNotification $ ugs
     sqlSet "totp_is_mandatory" . get ugsTotpIsMandatory $ ugs
+    sqlSet "session_timeout" $ get ugsSessionTimeoutSecs $ ugs
 
 insertUserGroupAddress
   :: (MonadDB m, MonadThrow m) => UserGroupID -> UserGroupAddress -> m ()
@@ -360,6 +361,7 @@ ugSettingsSelectors = [
   , "send_timeout_notification"
   , "use_folder_list_calls"
   , "totp_is_mandatory"
+  , "session_timeout"
   ]
 
 

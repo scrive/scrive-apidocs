@@ -57,7 +57,6 @@ import Routing
 import Salesforce.AuthorizationWorkflow
 import Session.Cookies
 import Session.Model
-import Session.Types
 import ThirdPartyStats.Core
 import User.Action
 import User.CallbackScheme.Model
@@ -592,10 +591,9 @@ apiCallLoginUserAndGetSession = V2.api $ do
                     [ UserIDProp userid
                     , someProp "Last login" $ get ctxtime ctx ]
                     EventMixpanel
-      emptysession <- emptySession
-      ses <- startNewSession emptysession (Just userid) Nothing
+      session <- startNewSessionWithUser userid
       return $ V2.Ok $ runJSONGen $ do
-        value "session_id" (show $ sessionCookieInfoFromSession ses)
+        value "session_id" (showt $ sessionCookieInfoFromSession session)
 
 apiCallIsUserDeletable :: Kontrakcja m => m Response
 apiCallIsUserDeletable = V2.api $ do

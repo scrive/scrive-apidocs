@@ -62,6 +62,7 @@ var CompanyDetailsView = React.createClass({
         padearchiveenabled: this.props.company.padearchiveenabled(),
         sendtimeoutnotification: this.props.company.sendtimeoutnotification(),
         totpismandatory: this.props.company.totpismandatory(),
+        sessiontimeout: this.props.company.sessiontimeout(),
         addressIsInherited: this.props.company.companyaddressisinherited(),
         settingsIsInherited: this.props.company.companysettingsisinherited(),
         inheritedAddress: this.props.company.companyinheritedaddress(),
@@ -143,6 +144,9 @@ var CompanyDetailsView = React.createClass({
               }
               totpismandatory={
                 this.props.viewModel.get("totpismandatory")
+              }
+              sessiontimeout={
+                this.props.viewModel.get("sessiontimeout")
               }
               addressIsInherited={this.props.viewModel.get("addressIsInherited")}
               settingsIsInherited={this.props.viewModel.get("settingsIsInherited")}

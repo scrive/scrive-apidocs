@@ -194,6 +194,7 @@ userGroupApiContactDetailsV2Delete ugid = api $ do
     -- Return response
     Ok . encodeUserGroupContactDetails inheritable <$> userGroupWithParentsOrAPIError ugid
 
+
 userGroupApiSettingsV2Get :: Kontrakcja m => UserGroupID -> m Response
 userGroupApiSettingsV2Get ugid = api $ do
   inheritable <- apiV2ParameterDefault False $ ApiV2ParameterFlag "include-inheritable"

@@ -39,7 +39,8 @@ var settingsPropTypes = React.PropTypes.shape({
   padappmode: React.PropTypes.string.isRequired,
   padearchiveenabled: React.PropTypes.bool.isRequired,
   sendtimeoutnotification: React.PropTypes.bool.isRequired,
-  totpismandatory: React.PropTypes.bool.isRequired
+  totpismandatory: React.PropTypes.bool.isRequired,
+  sessiontimeout: React.PropTypes.number
 });
 
 var DetailsEditorView = React.createClass({
@@ -73,6 +74,7 @@ var DetailsEditorView = React.createClass({
     padearchiveenabled: React.PropTypes.bool.isRequired,
     sendtimeoutnotification: React.PropTypes.bool.isRequired,
     totpismandatory: React.PropTypes.bool.isRequired,
+    sessiontimeout: React.PropTypes.number,
 
     addressIsInherited: React.PropTypes.bool.isRequired,
     inheritedAddress: addressPropTypes,
@@ -134,6 +136,10 @@ var DetailsEditorView = React.createClass({
 
   onTotpismandatory: function (event) {
     this.props.onFieldChange("totpismandatory", event.target.checked);
+  },
+
+  onSessiontimeout: function (event) {
+    this.props.onFieldChange("sessiontimeout", event.target.value);
   },
 
   onSmsproviderChange: function (newSmsprovider) {
@@ -515,6 +521,25 @@ var DetailsEditorView = React.createClass({
               />
             </td>
             <td>If enabled, 2FA is mandatory/enforced for all users. 2FA can also be enforced for a single user.</td>
+          </tr>
+          <tr>
+            <td><label>Session Timeout</label></td>
+            <td>
+              <input
+                name="sessiontimeout"
+                type="text"
+                value={ this.props.settingsIsInherited
+                      ? this.props.inheritedSettings.sessiontimeout
+                      : this.props.sessiontimeout}
+                disabled={this.props.settingsIsInherited}
+                onChange={this.onSessiontimeout}
+              />
+            </td>
+            <td>
+              If set, users cookie session expiry is set based on the provided seconds.
+              Valid values are between 5 minutes to 30 days.
+              Leave field empty to use the default session timeout.
+            </td>
           </tr>
         </tbody>
       </table>

@@ -564,7 +564,6 @@ asValidCheckBox input =
                            | val == "off" = return False
                            | otherwise = Bad
 
-
 {- |
     Strip all whitespace, braces and hyphens
     Must start with a + and be followed by at least 9 digits
@@ -842,6 +841,7 @@ unjsonWithValidationOrEmptyText
 unjsonWithValidationOrEmptyText validation =
     UJ.unjsonInvmapR (convertResult . validation') id UJ.unjsonDef
   where
+    convertResult :: Result T.Text -> UJ.Result T.Text
     convertResult (InputValidation.Good s) = return s
     convertResult (InputValidation.Empty)  = return ""
     convertResult (InputValidation.Bad)    = fail "not valid"

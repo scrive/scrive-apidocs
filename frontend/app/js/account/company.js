@@ -31,7 +31,8 @@ var Company = exports.Company = Backbone.Model.extend({
       companyaddressisinherited: false,
       companysettingsisinherited: false,
       companyinheritedaddress: null,
-      companyinheritedsettings: null
+      companyinheritedsettings: null,
+      companysessiontimeout: null
   },
   initialize : function(args) {
     if (args.forAdmin && args.companyid != undefined)
@@ -123,6 +124,9 @@ var Company = exports.Company = Backbone.Model.extend({
   totpismandatory: function() {
      return this.get("totpismandatory");
   },
+  sessiontimeout: function() {
+     return this.get("sessiontimeout");
+  },
   companyaddressisinherited: function(){
      return this.get("companyaddressisinherited");
   },
@@ -164,6 +168,7 @@ var Company = exports.Company = Backbone.Model.extend({
       padearchiveenabled : args.padearchiveenabled,
       sendtimeoutnotification: args.sendtimeoutnotification,
       totpismandatory: args.totpismandatory,
+      sessiontimeout: args.sessiontimeout,
       // do not set inherited, when the inherited values are not provided
       companyaddressisinherited: args.companyinheritedaddress && args.companyaddressisinherited,
       companysettingsisinherited: args.companyinheritedsettings && args.companysettingsisinherited,
