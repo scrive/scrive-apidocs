@@ -489,7 +489,7 @@ mailDocumentAwaitingForAuthor authorlang document = do
                    (mainfileid <$> documentfile document)
         author = fromJust $ getAuthorSigLink document
     mh <- dbUpdate $ NewSignatoryAccessToken
-      (signatorylinkid author) SignatoryAccessTokenForAPI
+      (signatorylinkid author) SignatoryAccessTokenForMailBeforeClosing
       Nothing
     documentMail authorlang document
       (templateName "mailDocumentAwaitingForAuthor") $ do
