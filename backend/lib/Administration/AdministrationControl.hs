@@ -41,6 +41,7 @@ import qualified Data.Unjson as Unjson
 import qualified Text.StringTemplates.Fields as F
 
 import Administration.AdministrationView
+import API.V2.Errors
 import API.V2.Parameters
 import AppView (renderFromBody, simpleHtmlResponse)
 import BrandedDomain.BrandedDomain
@@ -386,23 +387,37 @@ handleDisable2FAForUser uid = onlySalesOrAdmin $ do
 
 handleMoveUserToDifferentCompany :: Kontrakcja m => UserID -> m ()
 handleMoveUserToDifferentCompany uid = onlySalesOrAdmin $ do
-  ugid <- guardJustM $ readField "companyid"
-  void $ dbUpdate $ SetUserUserGroup uid ugid
-  void $ dbUpdate $ SetUserCompanyAdmin uid False
-  return ()
-
+  newugid <- guardJustM $ readField "companyid"
+  (get folderID <$>) <$> (dbQuery $ FolderGetUserGroupHome newugid) >>= \case
+    Nothing -> internalError
+    Just newugfdrid -> do
+      void $ dbUpdate $ SetUserUserGroup uid newugid
+      void $ dbUpdate $ SetUserCompanyAdmin uid False
+      let newhomefdr = set folderParentID (Just newugfdrid) defaultFolder
+      newhomefdrid <- (get folderID) <$> (dbUpdate $ FolderCreate newhomefdr)
+      void $ dbUpdate . SetUserHomeFolder uid $ newhomefdrid
 
 handleMergeToOtherCompany :: Kontrakcja m => UserGroupID -> m ()
 handleMergeToOtherCompany ugid_source = onlySalesOrAdmin $ do
-  ugid_target <- guardJustM $ readField "companyid"
-  users <- dbQuery $ UserGroupGetUsers ugid_source
-  forM_ users $ \u -> do
-      void $ dbUpdate $ SetUserUserGroup (userid u) ugid_target
-      return ()
-  invites <- dbQuery $ UserGroupGetInvites ugid_source
-  forM_ invites $ \i-> do
-      void $ dbUpdate $ RemoveUserGroupInvite [ugid_source] (inviteduserid i)
-      return ()
+  hasChildren <- not . null <$> (dbQuery . UserGroupGetImmediateChildren $ ugid_source)
+  if hasChildren
+  then do V2.apiError. conflictError $ "The user group has children;" <+>
+                                       "merge aborted. Remove or merge these" <+>
+                                       "and retry."
+  else do
+    ugid_target <- guardJustM $ readField "companyid"
+    (get folderID <$>) <$> (dbQuery $ FolderGetUserGroupHome ugid_target) >>= \case
+      Nothing -> internalError
+      Just targetfdrid -> do
+        users <- dbQuery $ UserGroupGetUsers ugid_source
+        forM_ users $ \u -> do
+            void $ dbUpdate $ SetUserUserGroup (userid u) ugid_target
+            let newhomefdr = set folderParentID (Just targetfdrid) defaultFolder
+            newhomefdrid <- (get folderID) <$> (dbUpdate $ FolderCreate newhomefdr)
+            void $ dbUpdate . SetUserHomeFolder (userid u) $ newhomefdrid
+        invites <- dbQuery $ UserGroupGetInvites ugid_source
+        forM_ invites $ \i ->
+            void . dbUpdate $ RemoveUserGroupInvite [ugid_source] (inviteduserid i)
 
 {- | Handling company details change. It reads user info change -}
 handleCompanyChange :: Kontrakcja m => UserGroupID -> m ()

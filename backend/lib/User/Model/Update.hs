@@ -6,6 +6,7 @@ module User.Model.Update (
   , SetSignupMethod(..)
   , SetUserUserGroup(..)
   , SetUserGroup(..)
+  , SetUserHomeFolder(..)
   , SetUserEmail(..)
   , SetUserCompanyAdmin(..)
   , SetUserInfo(..)
@@ -368,3 +369,11 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateDraftsAndTemplatesWithUse
         sqlWhere "signatory_links.id = signatory_link_fields.signatory_link_id"
         sqlWhereEq "documents.status" Preparation
         sqlWhereEq "signatory_links.user_id" userid
+
+data SetUserHomeFolder = SetUserHomeFolder UserID FolderID
+instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserHomeFolder Bool where
+ update (SetUserHomeFolder userid fdrid) = do
+  runQuery01 . sqlUpdate "users" $ do
+    sqlSet "home_folder_id" fdrid
+    sqlWhereEq "id" userid
+    sqlWhereIsNULL "deleted"
