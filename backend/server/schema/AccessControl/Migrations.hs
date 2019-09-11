@@ -142,3 +142,16 @@ addFolderRolesChecks =
          }
         ]
   }
+
+addFolderAdminRoleChecks :: MonadDB m => Migration m
+addFolderAdminRoleChecks =
+  Migration
+  {
+    mgrTableName = tblName tableAccessControl
+  , mgrFrom = 6
+  , mgrAction = StandardMigration $ do
+      runQuery_ . sqlAlterTable "access_control" $
+        [sqlAddValidCheck $ tblCheck -- FolderAdminAR has FolderID trg
+         { chkName = "check_access_control_valid_folder_admin_ar"
+         , chkCondition = "role = 5 AND trg_folder_id IS NOT NULL OR role <> 5" }]
+  }

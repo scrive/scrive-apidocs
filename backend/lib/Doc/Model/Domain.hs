@@ -10,6 +10,7 @@ import DB
 import Doc.Conditions
 import Doc.DocInfo
 import Doc.DocStateData
+import Folder.Types
 import MagicHash
 import User.UserID
 import UserGroup.Types
@@ -32,6 +33,7 @@ data DocumentDomain
   | DocumentsVisibleViaAccessToken MagicHash     -- ^ Documents accessed using 'accesstoken' field from json
   | DocumentsOfUserGroup UserGroupID             -- ^ Documents created by a particular user group.
   | DocumentsVisibleToUser UserID                -- ^ Documents that a user has possible access to
+  | DocumentsByFolderOnly FolderID               -- ^ List documents in folder for which user has read access
  deriving (Eq, Ord, Typeable, Show)
 --
 -- Document visibility rules:
@@ -128,3 +130,9 @@ documentDomainToSQL (DocumentsVisibleToUser uid) = do
       sqlWhere $ "(SELECT u.is_company_admin FROM users u WHERE u.id =" <?> uid <> ")"
       sqlWhere "documents.author_id = signatory_links.id"
       sqlWhereNotEq "documents.status" Preparation
+
+documentDomainToSQL (DocumentsByFolderOnly fdrid) = do
+  sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
+  sqlWhereEq "folder_id" fdrid
+  sqlWhereDocumentWasNotPurged
+  sqlWhereDocumentIsNotReallyDeleted

@@ -88,6 +88,10 @@ data AccessRoleTarget
   -- ^ A user group admin; may do most things like adding and moving user groups
   | DocumentAdminAR FolderID
   -- ^ Document admin can do anything with documents in a Folder
+  | FolderAdminAR FolderID
+  -- ^ A @devnote
+  | FolderUserAR FolderID
+  -- @devnote - should we introduce `DocumentUserAR FolderID` ??? Look at spec
   deriving (Eq, Show)
 
 -- | We need to discern between permissions and actions that affect users, user
@@ -100,6 +104,7 @@ data AccessResource
   | UserPersonalTokenR
   | DocumentR
   | FolderPolicyR
+  | FolderR
   deriving (Eq, Enum, Bounded)
 
 instance Show AccessResource where
@@ -110,6 +115,7 @@ instance Show AccessResource where
   show UserPersonalTokenR = "user_personal_token"
   show DocumentR = "document"
   show FolderPolicyR = "folder_policy"
+  show FolderR = "folder"
 
 -- | Should be self-explanatory. The 'A' stands for 'Action'.
 data AccessAction
@@ -200,6 +206,14 @@ hasPermissions (DocumentAdminAR fid) =
   map (mkPerm fid DocumentR) [minBound..maxBound] <>
   -- can set/remove any role on any sub-folder
   map (mkPerm fid FolderPolicyR) [minBound..maxBound]
+hasPermissions (FolderAdminAR fid) =
+  -- can perform all actions upon folder
+  map (mkPerm fid FolderR) [minBound..maxBound] <>
+  -- can set/remove any role on the folder
+  map (mkPerm fid FolderPolicyR) [minBound..maxBound]
+hasPermissions (FolderUserAR fid) =
+  -- can read the folder
+  map (mkPerm fid FolderR) [ReadA]
 
 -- | Interface to get the proper combinations of 'Permission's needed to gain
 -- access permission.
@@ -289,6 +303,8 @@ data AccessRoleType
   | UserAdminART
   | UserGroupAdminART
   | DocumentAdminART
+  | FolderAdminART
+  | FolderUserART
   deriving (Eq)
 
 instance PQFormat AccessRoleType where
@@ -304,8 +320,10 @@ instance FromSQL AccessRoleType where
       2 -> return UserAdminART
       3 -> return UserGroupAdminART
       4 -> return DocumentAdminART
-      _ -> E.throwIO $ RangeError {
-        reRange = [(0, 4)]
+      5 -> return FolderAdminART
+      6 -> return FolderUserART
+      _  -> E.throwIO $ RangeError {
+        reRange = [(0, 6)]
       , reValue = n
       }
 
@@ -316,6 +334,8 @@ instance ToSQL AccessRoleType where
   toSQL UserAdminART       = toSQL (2 :: Int16)
   toSQL UserGroupAdminART  = toSQL (3 :: Int16)
   toSQL DocumentAdminART   = toSQL (4 :: Int16)
+  toSQL FolderAdminART     = toSQL (5 :: Int16)
+  toSQL FolderUserART      = toSQL (6 :: Int16)
 
 instance Show AccessRoleType where
   show UserART            = "user"
@@ -323,6 +343,8 @@ instance Show AccessRoleType where
   show UserAdminART       = "user_admin"
   show UserGroupAdminART  = "user_group_admin"
   show DocumentAdminART   = "document_admin"
+  show FolderAdminART     = "folder_admin"
+  show FolderUserART      = "folder_user"
 
 instance Read AccessRoleType where
   readsPrec _ "user"              = [(UserART, "")]
@@ -330,6 +352,8 @@ instance Read AccessRoleType where
   readsPrec _ "user_group_admin"  = [(UserGroupAdminART, "")]
   readsPrec _ "user_group_member" = [(UserGroupMemberART, "")]
   readsPrec _ "document_admin"    = [(DocumentAdminART, "")]
+  readsPrec _ "folder_admin"      = [(FolderAdminART, "")]
+  readsPrec _ "folder_user"       = [(FolderUserART, "")]
   readsPrec _ _  = []
 
 instance Unjson AccessRoleType where
@@ -356,6 +380,8 @@ toAccessRoleType ar =
     UserAdminAR       _ -> UserAdminART
     UserGroupAdminAR  _ -> UserGroupAdminART
     DocumentAdminAR   _ -> DocumentAdminART
+    FolderAdminAR     _ -> FolderAdminART
+    FolderUserAR      _ -> FolderUserART
 
 -- AccessRoleID
 

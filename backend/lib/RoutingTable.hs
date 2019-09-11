@@ -13,6 +13,7 @@ import API.V2 (noAPIV2CallFoundHandler)
 import AppView
 import Attachment.API
 import Doc.API
+import Folder.API
 import Happstack.Server.ReqHandler
 import Kontra
 import KontraLink
@@ -167,6 +168,7 @@ staticRoutes production = choice
      , partnerAPI
      , userAPI
      , userGroupAPI
+     , folderAPIRoutes
      , padApplicationAPI
      , oauth
      , apiLogAPI

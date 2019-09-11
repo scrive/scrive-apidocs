@@ -5,7 +5,7 @@ import DB
 tableAccessControl :: Table
 tableAccessControl = tblTable
   { tblName = "access_control"
-  , tblVersion = 6
+  , tblVersion = 7
   , tblColumns =
     [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "role", colType = SmallIntT, colNullable = False }
@@ -63,6 +63,10 @@ tableAccessControl = tblTable
     , tblCheck -- DocumentAdminAR has FolderID trg
       { chkName = "check_access_control_valid_doc_admin_ar"
       , chkCondition = "role = 4 AND trg_folder_id IS NOT NULL OR role <> 4"
+      }
+    , tblCheck -- FolderAdminAR has FolderID trg
+      { chkName = "check_access_control_valid_folder_admin_ar"
+      , chkCondition = "role = 5 AND trg_folder_id IS NOT NULL OR role <> 5"
       }
     ]
   }

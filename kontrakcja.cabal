@@ -246,6 +246,8 @@ Library
                  , Doc.Tokens.Model
                  , Doc.Tokens.Tables
                  , Doc.Trigger
+                 , Folder.API
+                 , Folder.JSON
                  , Folder.Types
                  , Folder.Internal
                  , Folder.Labels
