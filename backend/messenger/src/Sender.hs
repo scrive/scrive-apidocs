@@ -240,7 +240,7 @@ toLatin x = case toLatinTransliterate x of
     -- for signing links to get through.
     toLatinTransliterate :: Text -> Text
     toLatinTransliterate =
-      TE.decodeUtf8 . BS.toStrict .
+      T.pack . BSC.unpack .
       IConv.convertFuzzy IConv.Transliterate "utf8" "latin1" .
       BS.fromStrict . TE.encodeUtf8
     toLatinDiscard :: Text -> Text
