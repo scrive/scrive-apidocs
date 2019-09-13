@@ -1,7 +1,7 @@
 module SMS.KontraInfoForSMS (
     KontraInfoForSMS(..)
   , AddKontraInfoForSMS(..)
-  , GetKontraInfoForSMS(..)
+  , getUnreadSMSEvents
   ) where
 
 import Control.Monad.Catch
@@ -98,30 +98,38 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddKontraInfoForSMS Bool where
            sqlSet "sms_type" OtherDocumentSMST
            sqlSet "document_id" did
 
-data GetKontraInfoForSMS = GetKontraInfoForSMS ShortMessageID
-instance (MonadDB m, MonadThrow m) => DBQuery m GetKontraInfoForSMS (Maybe KontraInfoForSMS) where
-  query (GetKontraInfoForSMS smsid) = do
-    runQuery_ . sqlSelect "kontra_info_for_smses" $ do
-                sqlWhereEq "sms_id" smsid
-                sqlResult "sms_type"
-                sqlResult "document_id"
-                sqlResult "signatory_link_id"
-    fetchMaybe fetchKontraInfoForSMS
+fetchKontraInfoForSMS :: (Maybe KontraInfoForSMSType, Maybe DocumentID, Maybe SignatoryLinkID) -> Maybe KontraInfoForSMS
+fetchKontraInfoForSMS (Nothing, _, _) = Nothing
+fetchKontraInfoForSMS (Just DocumentInvitationSMST, Just did, Just sig) = Just $ DocumentInvitationSMS did sig
+fetchKontraInfoForSMS (Just DocumentInvitationSMST, _, _) = unexpectedError "Failed to fetch KontraInfoForSMS (DocumentInvitationSMST)"
+fetchKontraInfoForSMS (Just DocumentPinSendoutSMST, Just did, Just sig) = Just $ DocumentPinSendoutSMS did sig
+fetchKontraInfoForSMS (Just DocumentPinSendoutSMST, _, _) = unexpectedError "Failed to fetch KontraInfoForSMS (DocumentPinSendoutSMST)"
+fetchKontraInfoForSMS (Just DocumentPartyNotificationSMST, Just did, Just sig) = Just $ DocumentPartyNotificationSMS did sig
+fetchKontraInfoForSMS (Just DocumentPartyNotificationSMST, _, _) = unexpectedError "Failed to fetch KontraInfoForSMS (DocumentPartyNotificationSMST)"
+fetchKontraInfoForSMS (Just OtherDocumentSMST, Just did, Nothing) = Just $ OtherDocumentSMS did
+fetchKontraInfoForSMS (Just OtherDocumentSMST, _, _) = unexpectedError "Failed to fetch KontraInfoForSMS (OtherDocumentSMST)"
 
-fetchKontraInfoForSMS :: (KontraInfoForSMSType, Maybe DocumentID, Maybe SignatoryLinkID) -> KontraInfoForSMS
-fetchKontraInfoForSMS (DocumentInvitationSMST, Just did, Just sig)  =
-  DocumentInvitationSMS did sig
-fetchKontraInfoForSMS (DocumentInvitationSMST, _, _)  =
-  unexpectedError "Failed to fetch KontraInfoForSMS (DocumentInvitationSMST)"
-fetchKontraInfoForSMS (DocumentPinSendoutSMST, Just did, Just sig)  =
-  DocumentPinSendoutSMS did sig
-fetchKontraInfoForSMS (DocumentPinSendoutSMST, _, _)  =
-  unexpectedError "Failed to fetch KontraInfoForSMS (DocumentPinSendoutSMST)"
-fetchKontraInfoForSMS (DocumentPartyNotificationSMST, Just did, Just sig) =
-  DocumentPartyNotificationSMS did sig
-fetchKontraInfoForSMS (DocumentPartyNotificationSMST, _, _) =
-  unexpectedError "Failed to fetch KontraInfoForSMS (DocumentPartyNotificationSMST)"
-fetchKontraInfoForSMS (OtherDocumentSMST, Just did, Nothing)  =
-  OtherDocumentSMS did
-fetchKontraInfoForSMS (OtherDocumentSMST, _, _)  =
-  unexpectedError "Failed to fetch KontraInfoForSMS (OtherDocumentSMST)"
+fetchEvent :: ( SMSEventID, ShortMessageID, SMSEvent, Text, Maybe KontraInfoForSMSType
+             , Maybe DocumentID, Maybe SignatoryLinkID)
+           -> (SMSEventID, ShortMessageID, SMSEvent, Text, Maybe KontraInfoForSMS)
+fetchEvent (eid, smsid, e, msisdn, mkifsmst, mkifsmsdid, mkifsmsslid) =
+    (eid, smsid, e, msisdn, mkifsms)
+  where mkifsms = fetchKontraInfoForSMS (mkifsmst, mkifsmsdid, mkifsmsslid)
+
+getUnreadSMSEvents :: MonadDB m => m [(SMSEventID, ShortMessageID, SMSEvent, Text, Maybe KontraInfoForSMS)]
+getUnreadSMSEvents = do
+  runQuery_ . sqlSelect "sms_events" $ do
+    sqlJoinOn "smses" "smses.id = sms_events.sms_id"
+    sqlLeftJoinOn "kontra_info_for_smses kifsms" "sms_events.sms_id = kifsms.sms_id"
+    sqlResult "sms_events.id"
+    sqlResult "sms_events.sms_id"
+    sqlResult "sms_events.event"
+    sqlResult "smses.msisdn"
+    sqlResult "kifsms.sms_type"
+    sqlResult "kifsms.document_id"
+    sqlResult "kifsms.signatory_link_id"
+    sqlWhere "sms_events.event_read IS NULL"
+    sqlOrderBy "kifsms.document_id"
+    sqlOrderBy "smses.id"
+    sqlOrderBy "sms_events.id"
+  fetchMany fetchEvent

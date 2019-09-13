@@ -944,7 +944,7 @@ Executable kontrakcja-migrate
 Executable mailing-server
 
   Hs-source-dirs: backend/mailer/inc backend/mailer/schema backend/mailer/src
-                  backend/misc/schema backend/misc/src
+                  backend/misc/schema backend/misc/src backend/lib
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
   GHC-Options: -threaded -rtsopts -with-rtsopts=-T
@@ -967,6 +967,8 @@ Executable mailing-server
                  Database.Redis.Cache
                  Database.Redis.Configuration
                  Database.Redis.Helpers
+                 Doc.DocumentID
+                 Doc.SignatoryLinkID
                  File.Conditions
                  File.File
                  File.FileID
@@ -993,6 +995,7 @@ Executable mailing-server
                  MailJet
                  Mailer
                  MailingServerConf
+                 Mails.KontraInfoForMail
                  Mails.Types
                  Mails.Model
                  Mails.Tables

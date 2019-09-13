@@ -18,8 +18,6 @@ module Mails.Model (
   , ResendEmailsSentAfterServiceTest(..)
   , CleanEmailsOlderThanDays(..)
   , UpdateWithEvent(..)
-  , GetUnreadEvents(..)
-  , GetServiceTestEvents(..)
   , MarkEventAsRead(..)
   ) where
 
@@ -205,14 +203,6 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithEvent Bool where
       sqlSet "mail_id" mid
       sqlSet "event" ev
 
-data GetUnreadEvents = GetUnreadEvents
-instance MonadDB m => DBQuery m GetUnreadEvents [(EventID, MailID, Event)] where
-  query GetUnreadEvents = getUnreadEvents False
-
-data GetServiceTestEvents = GetServiceTestEvents
-instance MonadDB m => DBQuery m GetServiceTestEvents [(EventID, MailID, Event)] where
-  query GetServiceTestEvents = getUnreadEvents True
-
 data MarkEventAsRead = MarkEventAsRead EventID UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m MarkEventAsRead Bool where
   update (MarkEventAsRead eid time) =
@@ -246,16 +236,3 @@ insertEmail service_test (token, sender, to, reply_to, title, content, attachmen
   where
     names = map attName attachments
     contents = map attContent attachments
-
-getUnreadEvents :: MonadDB m => Bool -> m [(EventID, MailID, Event)]
-getUnreadEvents service_test = do
-  runQuery_ . sqlSelect "mails m" $ do
-    sqlResult "e.id"
-    sqlResult "e.mail_id"
-    sqlResult "e.event"
-    sqlJoinOn "mail_events e" "m.id = e.mail_id"
-    sqlWhereEq "m.service_test" service_test
-    sqlWhere "e.event_read IS NULL"
-    sqlOrderBy "m.id"
-    sqlOrderBy "e.id"
-  fetchMany id
