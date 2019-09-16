@@ -28,6 +28,7 @@ import Log.Configuration
 import Log.Identifier
 import Log.Utils
 import MailingServerConf
+import Mails.KontraInfoForMail
 import Mails.Model
 import Mails.Tables
 import MinutesTime
@@ -233,9 +234,9 @@ main = do
       where
         logHandlerInfo jobType action = localRandomID "job_id" $ localData ["job_type" .= show jobType] action
 
-        isDelivered (_, _, SendGridEvent _ SG_Delivered{} _) = True
-        isDelivered (_, _, MailGunEvent _ MG_Delivered) = True
-        isDelivered (_, _, SocketLabsEvent _ SL_Delivered) = True
+        isDelivered (_, _, SendGridEvent _ SG_Delivered{} _, _) = True
+        isDelivered (_, _, MailGunEvent _ MG_Delivered, _) = True
+        isDelivered (_, _, SocketLabsEvent _ SL_Delivered, _) = True
         isDelivered _ = False
 
         testSender = Address {

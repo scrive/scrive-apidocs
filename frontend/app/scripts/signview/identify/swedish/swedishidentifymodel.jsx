@@ -100,7 +100,9 @@ var ErrorModal = require("../../errormodal");
         onCriticalError: function (xhr) {
           self.setStatusText(bankID.statusMessage());
           self.setProblem();
-          new ErrorModal(xhr);
+          var details = {"Document ID": self.doc().documentid(),
+                         "Signatory ID": self.doc().currentSignatory().signatoryid()};
+          new ErrorModal(xhr, details);
         },
         thisDevice: self.thisDevice()
       });

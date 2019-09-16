@@ -1,7 +1,8 @@
 module Mails.KontraInfoForMail (
     KontraInfoForMail(..)
   , AddKontraInfoForMail(..)
-  , GetKontraInfoForMail(..)
+  , GetUnreadEvents(..)
+  , GetServiceTestEvents(..)
 ) where
 
 import Control.Monad.Catch
@@ -85,20 +86,44 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddKontraInfoForMail Bool where
            sqlSet "mail_type" OtherDocumentMailT
            sqlSet "document_id" did
 
-data GetKontraInfoForMail = GetKontraInfoForMail MailID
-instance (MonadDB m, MonadThrow m) => DBQuery m GetKontraInfoForMail (Maybe KontraInfoForMail) where
-  query (GetKontraInfoForMail mailid) = do
-    runQuery_ . sqlSelect "kontra_info_for_mails" $ do
-      sqlWhereEq "mail_id" mailid
-      sqlResult "mail_type"
-      sqlResult "document_id"
-      sqlResult "signatory_link_id"
-    fetchMaybe fetchKontraInfoForMail
+fetchKontraInfoForMail :: (Maybe KontraInfoForMailType, Maybe DocumentID, Maybe SignatoryLinkID) -> Maybe KontraInfoForMail
+fetchKontraInfoForMail (Nothing, _, _)  = Nothing
+fetchKontraInfoForMail (Just DocumentInvitationMailT, Just did, Just sig) = Just $ DocumentInvitationMail did sig
+fetchKontraInfoForMail (Just DocumentInvitationMailT, _, _)  = unexpectedError "Failed to fetch KontraInfoForMail (DocumentInvitationMailT)"
+fetchKontraInfoForMail (Just DocumentConfirmationMailT, Just did, Just sig) = Just $ DocumentConfirmationMail did sig
+fetchKontraInfoForMail (Just DocumentConfirmationMailT, _, _)  = unexpectedError "Failed to fetch KontraInfoForMail (DocumentConfirmationMailT)"
+fetchKontraInfoForMail (Just OtherDocumentMailT, Just did, Nothing)  = Just $ OtherDocumentMail did
+fetchKontraInfoForMail (Just OtherDocumentMailT, _, _)  = unexpectedError "Failed to fetch KontraInfoForMail (OtherDocumentMailT)"
 
-fetchKontraInfoForMail :: (KontraInfoForMailType, Maybe DocumentID, Maybe SignatoryLinkID) -> KontraInfoForMail
-fetchKontraInfoForMail (DocumentInvitationMailT, Just did, Just sig)  = DocumentInvitationMail did sig
-fetchKontraInfoForMail (DocumentInvitationMailT, _, _)  = (unexpectedError "Failed to fetch KontraInfoForMail (DocumentInvitationMailT)")
-fetchKontraInfoForMail (DocumentConfirmationMailT, Just did, Just sig)  = DocumentConfirmationMail did sig
-fetchKontraInfoForMail (DocumentConfirmationMailT, _, _)  = (unexpectedError "Failed to fetch KontraInfoForMail (DocumentConfirmationMailT)")
-fetchKontraInfoForMail (OtherDocumentMailT, Just did, Nothing)  = OtherDocumentMail did
-fetchKontraInfoForMail (OtherDocumentMailT, _, _)  = (unexpectedError "Failed to fetch KontraInfoForMail (OtherDocumentMailT)")
+
+fetchEvent :: (EventID, MailID, Event, Maybe KontraInfoForMailType, Maybe DocumentID, Maybe SignatoryLinkID)
+           -> (EventID, MailID, Event, Maybe KontraInfoForMail)
+fetchEvent (eid, mid, e, mkifmt, mkifmdid, mkifmslid) = (eid, mid, e, mkifm)
+  where mkifm = fetchKontraInfoForMail (mkifmt, mkifmdid, mkifmslid)
+
+
+getUnreadEvents :: MonadDB m => Bool -> m [(EventID, MailID, Event, Maybe KontraInfoForMail)]
+getUnreadEvents service_test = do
+  runQuery_ . sqlSelect "mails m" $ do
+    sqlResult "e.id"
+    sqlResult "e.mail_id"
+    sqlResult "e.event"
+    sqlResult "kifm.mail_type"
+    sqlResult "kifm.document_id"
+    sqlResult "kifm.signatory_link_id"
+    sqlJoinOn "mail_events e" "m.id = e.mail_id"
+    sqlLeftJoinOn "kontra_info_for_mails kifm" "e.mail_id = kifm.mail_id"
+    sqlWhereEq "m.service_test" service_test
+    sqlWhere "e.event_read IS NULL"
+    sqlOrderBy "document_id"
+    sqlOrderBy "m.id"
+    sqlOrderBy "e.id"
+  fetchMany fetchEvent
+
+data GetUnreadEvents = GetUnreadEvents
+instance MonadDB m => DBQuery m GetUnreadEvents [(EventID, MailID, Event, Maybe KontraInfoForMail)] where
+  query GetUnreadEvents = getUnreadEvents False
+
+data GetServiceTestEvents = GetServiceTestEvents
+instance MonadDB m => DBQuery m GetServiceTestEvents [(EventID, MailID, Event, Maybe KontraInfoForMail)] where
+  query GetServiceTestEvents = getUnreadEvents True
