@@ -404,7 +404,7 @@ testFolderAPIUpdate = do
 
     updateTestHelper :: Context -> Folder -> TestEnv ()
     updateTestHelper ctx fdr = do
-      name <- rand 10 $ oneof $ map (return . Text.singleton) "aAż29 &\'@():,!.-?"
+      name <- rand 10 $ oneof $ map (return . Text.singleton) "aAż29&\'@():,!.-?"
       let fdr' = (set folderName name fdr)
       updatedFdr <- jsonToFolder <$> fdrAPIUpdate ctx fdr' 200
       assertEqual ("New folder from API should equal the one specified")
