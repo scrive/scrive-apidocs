@@ -29,8 +29,16 @@ module.exports = React.createClass({
           }}
           idFetcher={function(d) {return d.field("id");}}
           loadLater={self.props.loadLater}
+          paramsFunction = {function(text,_selectfiltering,sorting,offset) {
+            var params  = {};
+            if (text) {
+              params.text = text;
+            }
+            return params;
+            }}
           ref='list'
         >
+          <List.TextFiltering text={"URL"} />
           <List.ListAction
             name="Create branded domain"
             onSelect={function() {

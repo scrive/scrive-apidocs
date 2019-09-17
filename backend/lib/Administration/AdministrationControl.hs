@@ -975,7 +975,8 @@ handleTriggerMigrateSignatoryAccessTokens limit  = onlyAdmin $ do
 
 jsonBrandedDomainsList ::Kontrakcja m => m Aeson.Value
 jsonBrandedDomainsList = onlySalesOrAdmin $ do
-    allBrandedDomains <- dbQuery $ GetBrandedDomains
+    murlpart <- getField "text"
+    allBrandedDomains <- dbQuery $ GetBrandedDomains murlpart
     return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonBrandedDomainsList allBrandedDomains
 
 jsonBrandedDomain :: Kontrakcja m => BrandedDomainID -> m Aeson.Value
