@@ -107,7 +107,6 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
     eauthentication <- dbQuery $
       GetEAuthenticationWithoutSession AuthenticationToView $ signatorylinkid signatory
     identifiedNameText <- case eauthentication of
-
         Just (CGISEBankIDAuthentication_ authentication)  ->
           renderTextTemplate "_identifiedBySwedishBankIDText" $
           F.value "name" $ cgisebidaSignatoryName authentication
@@ -123,6 +122,9 @@ personFromSignatory inputpath tz sim checkboxMapping radiobuttonMapping signator
         Just (EIDServiceVerimiAuthentication_ authentication)  ->
           renderTextTemplate "_identifiedByVerimiText" $
           F.value "email" $ eidServiceVerimiVerifiedEmail authentication
+        Just (EIDServiceIDINAuthentication_ authentication)  ->
+          renderTextTemplate "_identifiedByIDINText" $
+          F.value "email" $ eidServiceIDINVerifiedEmail authentication
         Just (SMSPinAuthentication_ _)  -> return ""
         Nothing                         -> return ""
 

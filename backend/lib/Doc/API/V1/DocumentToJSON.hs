@@ -141,6 +141,7 @@ authenticationToViewJSON DKNemIDAuthenticationToView  = toJSValue ("dk_nemid"::S
 authenticationToViewJSON SMSPinAuthenticationToView   = toJSValue ("sms_pin"::String)
 authenticationToViewJSON FITupasAuthenticationToView  = toJSValue ("fi_tupas"::String)
 authenticationToViewJSON VerimiAuthenticationToView   = toJSValue ("verimi"::String)
+authenticationToViewJSON IDINAuthenticationToView     = toJSValue ("nl_idin"::String)
 
 authenticationToSignJSON :: AuthenticationToSignMethod -> JSValue
 authenticationToSignJSON StandardAuthenticationToSign = toJSValue ("standard"::String)

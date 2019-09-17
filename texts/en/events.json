@@ -1,4 +1,4 @@
-{ 
+{
 "_ApproveReminderSendEmailLog":"Scrive eSign sent a reminder to approve via email to $signatory$ at the request of the user $actor$.",
 "_ApproveReminderSendEmailLogWithText":"Scrive eSign sent a reminder to approve via email to $signatory$ at the request of the user $actor$. The reminder message from the user $actor$ was: <BR/> <i>$text$</i>.",
 "_ApproveReminderSendEmailSMSLog":"Scrive eSign sent a reminder to approve via email and SMS to $signatory$ at the request of the user $actor$.",
@@ -11,6 +11,7 @@
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive prepared the final PDF.",
 "_AuthenticatedToViewEvidenceArchiveDKNemID":"Verified their identity with Danish NemID to access the document.",
 "_AuthenticatedToViewEvidenceArchiveFITupas":"Verified their identity with Finnish TUPAS to access the document.",
+"_AuthenticatedToViewEvidenceArchiveIDIN":"Verified their identity with iDIN to access the document.",
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Verified their identity with Norwegian BankID to access the document.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Verified their identity with Swedish BankID to access the document.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Verified their identity with PIN by SMS to access the document.",

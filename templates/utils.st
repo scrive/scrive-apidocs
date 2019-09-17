@@ -124,3 +124,9 @@ attachmentNameOrPlaceholder=$if(attachment_name)$$attachment_name$$else$<span cl
 ###
 verimiText=Verimi
 ###
+identifyWithVerimi=Identify with Verimi
+###
+idinText=Dutch iDIN
+###
+identifyWithIdin=Identify with iDIN
+###

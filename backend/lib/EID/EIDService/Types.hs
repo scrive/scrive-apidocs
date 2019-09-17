@@ -4,11 +4,11 @@ module EID.EIDService.Types (
     , fromEIDServiceTransactionID
 
     , EIDServiceTransactionProvider(..)
-    , eidServiceTransactionProviderText
     , EIDServiceTransactionStatus(..)
     , EIDServiceTransaction(..)
 
     , EIDServiceVerimiAuthentication(..)
+    , EIDServiceIDINAuthentication(..)
   ) where
 
 import Control.Monad.Catch
@@ -41,7 +41,6 @@ instance ToSQL EIDServiceTransactionID where
   type PQDest EIDServiceTransactionID = PQDest T.Text
   toSQL (EIDServiceTransactionID tid) = toSQL tid
 
-
 unsafeEIDServiceTransactionID :: T.Text -> EIDServiceTransactionID
 unsafeEIDServiceTransactionID = EIDServiceTransactionID
 
@@ -49,7 +48,8 @@ fromEIDServiceTransactionID :: EIDServiceTransactionID -> T.Text
 fromEIDServiceTransactionID (EIDServiceTransactionID tid) = tid
 
 data EIDServiceTransactionProvider =
-  EIDServiceTransactionProviderVerimi
+    EIDServiceTransactionProviderVerimi
+  | EIDServiceTransactionProviderIDIN
   deriving (Eq, Ord, Show)
 
 instance PQFormat EIDServiceTransactionProvider where
@@ -61,18 +61,16 @@ instance FromSQL EIDServiceTransactionProvider where
     n <- fromSQL mbase
     case n :: Int16 of
       1 -> return EIDServiceTransactionProviderVerimi
+      2 -> return EIDServiceTransactionProviderIDIN
       _ -> throwM RangeError {
-        reRange = [(1, 1)]
+        reRange = [(1, 2)]
       , reValue = n
       }
 
 instance ToSQL EIDServiceTransactionProvider where
   type PQDest EIDServiceTransactionProvider = PQDest Int16
   toSQL EIDServiceTransactionProviderVerimi = toSQL (1::Int16)
-
-eidServiceTransactionProviderText :: EIDServiceTransactionProvider -> T.Text
-eidServiceTransactionProviderText EIDServiceTransactionProviderVerimi = "verimi"
-
+  toSQL EIDServiceTransactionProviderIDIN   = toSQL (2::Int16)
 
 -- In statuses we separate complete into two statuses, since
 -- we can't force email/phone number validation on eid service side
@@ -113,7 +111,6 @@ instance ToSQL EIDServiceTransactionStatus where
   toSQL EIDServiceTransactionStatusCompleteAndSuccess = toSQL (4::Int16)
   toSQL EIDServiceTransactionStatusCompleteAndFailed = toSQL (5::Int16)
 
-
 data EIDServiceTransaction = EIDServiceTransaction
   { estID :: !EIDServiceTransactionID
   , estStatus :: !EIDServiceTransactionStatus
@@ -124,10 +121,16 @@ data EIDServiceTransaction = EIDServiceTransaction
   , estDeadline :: !UTCTime
   } deriving (Show)
 
-
-
 data EIDServiceVerimiAuthentication = EIDServiceVerimiAuthentication {
     eidServiceVerimiName            :: !(T.Text)
   , eidServiceVerimiVerifiedEmail   :: !(Maybe T.Text)
   , eidServiceVerimiVerifiedPhone   :: !(Maybe T.Text)
+} deriving (Eq, Ord, Show)
+
+data EIDServiceIDINAuthentication = EIDServiceIDINAuthentication {
+    eidServiceIDINName            :: !(T.Text)
+  , eidServiceIDINVerifiedEmail   :: !(Maybe T.Text)
+  , eidServiceIDINVerifiedPhone   :: !(Maybe T.Text)
+  , eidServiceIDINBirthDate       :: !(Maybe T.Text)
+  , eidServiceIDINCustomerID      :: !(Maybe T.Text)
 } deriving (Eq, Ord, Show)

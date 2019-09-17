@@ -1,4 +1,4 @@
-{ 
+{
 "_Accept":"Accept",
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
@@ -701,6 +701,7 @@
 "_historyTime":"Time",
 "_identifiedByDKNemIDText":"Identified by Danish NemID as \"$name$\"",
 "_identifiedByFITupasText":"Identified by Finnish TUPAS as \"$name$\"",
+"_identifiedByIDINText":"Identified by iDIN as \"$email$\"",
 "_identifiedByNOBankIDText":"Identified by Norwegian BankID as \"$name$\"",
 "_identifiedBySwedishBankIDText":"Identified by Swedish BankID as \"$name$\"",
 "_identifiedByVerimiText":"Identified by Verimi as \"$email$\"",

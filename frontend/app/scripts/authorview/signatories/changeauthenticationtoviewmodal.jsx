@@ -115,6 +115,14 @@ var Modal = require("../../common/modal");
       return this.authenticationMethod() == this.VerimiAuthenticationValue();
     },
 
+    idinAuthenticationValue: function () {
+      return "nl_idin";
+    },
+
+    isAuthenticationIDIN: function () {
+      return this.authenticationMethod() == this.idinAuthenticationValue();
+    },
+
     personalNumber: function () {
       return this.get("personalNumber");
     },
@@ -226,8 +234,9 @@ var Modal = require("../../common/modal");
       var isAvailable = function (auth) {
 
         // Changing email is tricky - I prefer just not to allow that
-        // and block switching to Verimi if email is not valid.
-        if (auth == "verimi" && !new EmailValidation().validateData(sig.email())) {
+        // and block switching to Verimi/iDIN if email is not valid.
+        if ((auth == "verimi" || auth == "nl_idin")
+          && !new EmailValidation().validateData(sig.email())) {
           return false;
         }
 
@@ -299,6 +308,14 @@ var Modal = require("../../common/modal");
         options.push(verimi);
       }
 
+      var idin = {
+        name: localization.docview.signatory.authenticationToViewIDIN,
+        selected: model.isAuthenticationIDIN(),
+        value: model.idinAuthenticationValue()
+      };
+      if (ff.canUseIDINAuthenticationToView() && isAvailable(idin.value)) {
+        options.push(idin);
+      }
 
       return options;
     },

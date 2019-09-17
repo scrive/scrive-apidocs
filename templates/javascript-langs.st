@@ -65,8 +65,10 @@ javascriptLocalisation =
                , revoked: "$_IdentifyFITupasRevoked()$"
                , expired: "$_IdentifyFITupasExpired()$"
              }
-             , identifyVerimi: {
-                authorizationDataMismatch : "$_identifyVerimiDataMismatch()$"
+             , identify: {
+                 authorizationDataMismatch : "$_identifyVerimiDataMismatch()$"
+               , identifyWithVerimi: "$identifyWithVerimi()$"
+               , identifyWithIdin: "$identifyWithIdin()$"
              }
              , signNOBankIDError : {
                  generic   : "$_SignBankIdNOErrorGeneric()$"
@@ -448,6 +450,7 @@ javascriptLocalisation =
                , authenticationToViewFITupas : "$_designViewAddPartiesAuthenticationtoViewFITupas()$"
                , authenticationToViewSMSPin : "$_designViewAddPartiesAuthenticationSMSPin()$"
                , authenticationToViewVerimi : "$verimiText()$"
+               , authenticationToViewIDIN : "$idinText()$"
                , authenticationToSign : "$_designViewAddPartiesAuthentication()$"
                , authenticationToSignStandard : "$_designViewAddPartiesAuthenticationStandard()$"
                , authenticationToSignSEBankID : "$_designViewAddPartiesAuthenticationSEBankID()$"
@@ -772,6 +775,7 @@ javascriptLocalisation =
               , authenticationToViewFITupas: "$_docviewSignatoryAuthenticationToViewFITupas()$"
               , authenticationToViewSMSPin:  "$_docviewSignatoryAuthenticationToViewSMSPin()$"
               , authenticationToViewVerimi: "$verimiText()$"
+              , authenticationToViewIDIN: "$idinText()$"
               , authenticationToSign: "$_docviewSignatoryAuthenticationToSignMethodLabel()$"
               , authenticationToSignStandard: "$_docviewSignatoryAuthenticationToSignStandard()$"
               , authenticationToSignSMSPin: "$_docviewSignatoryAuthenticationToSignSMSPin()$"

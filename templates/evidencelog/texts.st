@@ -100,6 +100,8 @@ ChangeAuthenticationToViewFromFITupasLog=$ChangeAuthenticationToViewFrom(auth='�
 ###
 ChangeAuthenticationToViewFromVerimiLog=$ChangeAuthenticationToViewFrom(auth='“Verimi”')$
 ###
+ChangeAuthenticationToViewFromIDINLog=$ChangeAuthenticationToViewFrom(auth='iDIN')$
+###
 ChangeAuthenticationToViewToStandardLog=$ChangeAuthenticationToViewTo(auth='“no extra authentication”')$
 ###
 ChangeAuthenticationToViewToSMSPinLog=$ChangeAuthenticationToViewTo(auth='“PIN by SMS”')$
@@ -113,6 +115,8 @@ ChangeAuthenticationToViewToDKNemIDLog=$ChangeAuthenticationToViewTo(auth='“Da
 ChangeAuthenticationToViewToFITupasLog=$ChangeAuthenticationToViewTo(auth='“Finnish TUPAS”')$
 ###
 ChangeAuthenticationToViewToVerimiLog=$ChangeAuthenticationToViewTo(auth='“Verimi”')$
+###
+ChangeAuthenticationToViewToIDINLog=$ChangeAuthenticationToViewTo(auth='iDIN')$
 ###
 ChangeAuthenticationToViewArchivedFromStandardLog=$ChangeAuthenticationToViewArchivedFrom(auth='“no extra authentication”')$
 ###
@@ -128,6 +132,8 @@ ChangeAuthenticationToViewArchivedFromFITupasLog=$ChangeAuthenticationToViewArch
 ###
 ChangeAuthenticationToViewArchivedFromVerimiLog=$ChangeAuthenticationToViewArchivedFrom(auth='“Verimi”')$
 ###
+ChangeAuthenticationToViewArchivedFromIDINLog=$ChangeAuthenticationToViewArchivedFrom(auth='iDIN')$
+###
 ChangeAuthenticationToViewArchivedToStandardLog=$ChangeAuthenticationToViewArchivedTo(auth='“no extra authentication”')$
 ###
 ChangeAuthenticationToViewArchivedToSMSPinLog=$ChangeAuthenticationToViewArchivedTo(auth='“PIN by SMS”')$
@@ -141,6 +147,8 @@ ChangeAuthenticationToViewArchivedToDKNemIDLog=$ChangeAuthenticationToViewArchiv
 ChangeAuthenticationToViewArchivedToFITupasLog=$ChangeAuthenticationToViewArchivedTo(auth='“Finnish TUPAS”')$
 ###
 ChangeAuthenticationToViewArchivedToVerimiLog=$ChangeAuthenticationToViewArchivedTo(auth='“Verimi”')$
+###
+ChangeAuthenticationToViewArchivedToIDINLog=$ChangeAuthenticationToViewArchivedTo(auth='iDIN')$
 ###
 ###
 ###
@@ -684,6 +692,9 @@ elegVerificationAuth=
   $if(signatory_email)$
   <br/>Email: $signatory_email$
   $endif$
+  $if(provider_customer_id)$
+  <br/>EID Provider Customer ID: $provider_customer_id$
+  $endif$
 </p>
 <br/>
 $if(signature)$
@@ -693,7 +704,7 @@ $if(ocsp_response)$
 <p>Online Certificate Status Protocol (OCSP) Response: <div>$ocsp_response$</div></p>
 $endif$
 ###
-provider=$if(provider_sebankid)$CGI$elseif(provider_nobankid)$Nets$elseif(provider_dknemid)$Nets$elseif(provider_fitupas)$Nets$elseif(provider_verimi)$Verimi$endif$
+provider=$if(provider_sebankid)$CGI$elseif(provider_nobankid)$Nets$elseif(provider_dknemid)$Nets$elseif(provider_fitupas)$Nets$elseif(provider_verimi)$Verimi$elseif(provider_idin)$iDIN$endif$
 ###
 providerType=$if(provider_sebankid)$Swedish BankID$elseif(provider_nobankid)$Norwegian BankID$elseif(provider_dknemid)$Danish NemID$elseif(provider_fitupas)$Finnish TUPAS$endif$
 ###
@@ -710,6 +721,8 @@ $elseif(provider_sms_pin)$
   $_AuthenticatedToViewEvidenceArchiveSMSPin()$
 $elseif(provider_verimi)$
   $_AuthenticatedToViewEvidenceArchiveVerimi()$
+$elseif(provider_idin)$
+  $_AuthenticatedToViewEvidenceArchiveIDIN()$
 $endif$
 ###
 UpdateMobileAfterIdentificationToViewWithNetsLog=The party <span class="signatory"/> wrote the number "$oldphone$" in the field "Mobile". Scrive eSign changed it from "$oldphone$" to "$newphone$".

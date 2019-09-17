@@ -249,6 +249,7 @@ data MixAuthMethod
   | MAM_SMSPin
   | MAM_FITupas
   | MAM_Verimi
+  | MAM_NLIDIN
   deriving (Eq, Ord, Show)
 
 atvToMix :: AuthenticationToViewMethod -> MixAuthMethod
@@ -259,6 +260,7 @@ atvToMix DKNemIDAuthenticationToView  = MAM_DKNemID
 atvToMix SMSPinAuthenticationToView   = MAM_SMSPin
 atvToMix FITupasAuthenticationToView  = MAM_FITupas
 atvToMix VerimiAuthenticationToView   = MAM_Verimi
+atvToMix IDINAuthenticationToView     = MAM_NLIDIN
 
 atsToMix :: AuthenticationToSignMethod -> MixAuthMethod
 atsToMix StandardAuthenticationToSign = MAM_Standard
@@ -278,18 +280,26 @@ authenticationMethodsCanMix authToView authToSign authToViewArchived =
                          , atsToMix authToSign
                          , atvToMix authToViewArchived
                          ]
-      eids  = S.fromList [MAM_SEBankID, MAM_NOBankID, MAM_DKNemID, MAM_FITupas, MAM_Verimi]
+      eids  = S.fromList [
+          MAM_SEBankID
+        , MAM_NOBankID
+        , MAM_DKNemID
+        , MAM_FITupas
+        , MAM_Verimi
+        , MAM_NLIDIN
+        ]
   in length (auths `S.intersection` eids) <= 1
 
 ----------------------------------------
 
 authViewMatchesAuth :: AuthenticationToViewMethod -> EAuthentication -> Bool
-authViewMatchesAuth NOBankIDAuthenticationToView NetsNOBankIDAuthentication_{} = True
-authViewMatchesAuth SEBankIDAuthenticationToView CGISEBankIDAuthentication_{}  = True
-authViewMatchesAuth DKNemIDAuthenticationToView  NetsDKNemIDAuthentication_{}  = True
-authViewMatchesAuth FITupasAuthenticationToView  NetsFITupasAuthentication_{}  = True
-authViewMatchesAuth SMSPinAuthenticationToView   SMSPinAuthentication_{}  = True
-authViewMatchesAuth VerimiAuthenticationToView   EIDServiceVerimiAuthentication_{}  = True
+authViewMatchesAuth NOBankIDAuthenticationToView NetsNOBankIDAuthentication_{}     = True
+authViewMatchesAuth SEBankIDAuthenticationToView CGISEBankIDAuthentication_{}      = True
+authViewMatchesAuth DKNemIDAuthenticationToView  NetsDKNemIDAuthentication_{}      = True
+authViewMatchesAuth FITupasAuthenticationToView  NetsFITupasAuthentication_{}      = True
+authViewMatchesAuth SMSPinAuthenticationToView   SMSPinAuthentication_{}           = True
+authViewMatchesAuth VerimiAuthenticationToView   EIDServiceVerimiAuthentication_{} = True
+authViewMatchesAuth IDINAuthenticationToView     EIDServiceIDINAuthentication_{}   = True
 authViewMatchesAuth _ _ = False
 
 -- Functions to determine if AuthenticationToViewMethod or
@@ -303,7 +313,7 @@ authToViewNeedsPersonalNumber DKNemIDAuthenticationToView  = True
 authToViewNeedsPersonalNumber SMSPinAuthenticationToView   = False
 authToViewNeedsPersonalNumber FITupasAuthenticationToView  = True
 authToViewNeedsPersonalNumber VerimiAuthenticationToView   = False
-
+authToViewNeedsPersonalNumber IDINAuthenticationToView     = False
 
 authToViewNeedsMobileNumber :: AuthenticationToViewMethod -> Bool
 authToViewNeedsMobileNumber StandardAuthenticationToView = False
@@ -313,6 +323,7 @@ authToViewNeedsMobileNumber DKNemIDAuthenticationToView  = False
 authToViewNeedsMobileNumber SMSPinAuthenticationToView   = True
 authToViewNeedsMobileNumber FITupasAuthenticationToView  = False
 authToViewNeedsMobileNumber VerimiAuthenticationToView   = False
+authToViewNeedsMobileNumber IDINAuthenticationToView     = False
 
 authToSignNeedsPersonalNumber :: AuthenticationToSignMethod -> Bool
 authToSignNeedsPersonalNumber StandardAuthenticationToSign = False
