@@ -378,8 +378,6 @@ data SignatoryLink = SignatoryLink {
 -- | Signatory role: viewer, signing party, approver
 , signatoryrole                           :: !SignatoryRole
 , signatorysignorder                      :: !SignOrder
--- | Authentication codes
-, signatorymagichash                      :: !MagicHash
 , signatoryaccesstokens                   :: ![SignatoryAccessToken]
 -- | If this document has been saved to an account, that is the user id
 , maybesignatory                          :: !(Maybe UserID)
@@ -431,7 +429,6 @@ defaultSignatoryLink =
   , signatoryisauthor = False
   , signatoryrole = SignatoryRoleViewer
   , signatorysignorder = SignOrder 1
-  , signatorymagichash = unsafeMagicHash 0
   , signatoryaccesstokens = []
   , maybesignatory = Nothing
   , maybesigninfo = Nothing
@@ -479,7 +476,6 @@ signatoryLinksSelectors = [
   , "documents.author_id = signatory_links.id"
   , "signatory_links.signatory_role"
   , "signatory_links.sign_order"
-  , "signatory_links.token"
   , "ARRAY(SELECT (" <> mintercalate ", " signatoryAccessTokenSelectors <> ")::" <> raw (ctName ctSignatoryAccessToken) <+> "FROM signatory_access_tokens WHERE signatory_links.id = signatory_access_tokens.signatory_link_id)"
   , "signatory_links.user_id"
   , "signatory_links.sign_time"
@@ -519,7 +515,6 @@ type instance CompositeRow SignatoryLink =
   , Bool
   , SignatoryRole
   , SignOrder
-  , MagicHash
   , CompositeArray1 SignatoryAccessToken
   , Maybe UserID
   , Maybe UTCTime
@@ -562,7 +557,6 @@ instance CompositeFromSQL SignatoryLink where
               , is_author
               , signatory_role
               , sign_order
-              , magic_hash
               , CompositeArray1 access_tokens
               , muser_id
               , msign_time
@@ -600,7 +594,6 @@ instance CompositeFromSQL SignatoryLink where
   , signatoryisauthor = is_author
   , signatoryrole = signatory_role
   , signatorysignorder = sign_order
-  , signatorymagichash = magic_hash
   , signatoryaccesstokens = access_tokens
   , maybesignatory = muser_id
   , maybesigninfo = SignInfo <$> msign_time <*> msign_ip
@@ -640,4 +633,4 @@ isValidSignatoryMagicHash mh now status sl =
   case find ((mh==) . signatoryAccessTokenHash)
             (signatoryaccesstokens sl) of
     Just sat -> isValidSignatoryAccessToken now status sat
-    Nothing -> mh == signatorymagichash sl
+    Nothing -> False

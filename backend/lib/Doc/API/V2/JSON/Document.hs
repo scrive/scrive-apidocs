@@ -208,10 +208,11 @@ unjsonSignatory da =  objectOf $
       then Just $ apiDeliveryURL (daDocumentID da) sl
       else Nothing
     apiDeliveryURL :: DocumentID -> SignatoryLink -> String
-    apiDeliveryURL did sl = show $ LinkSignDocMagicHash did (signatorylinkid sl) mh
+    apiDeliveryURL did sl = case signatoryAccessTokenHash <$> msat of
+        Just mh -> show $ LinkSignDocMagicHash did (signatorylinkid sl) mh
+        Nothing -> "API delivery link not available. Please contact us for more details."
       where
         msat = find ((==SignatoryAccessTokenForAPI) . signatoryAccessTokenReason) (signatoryaccesstokens sl)
-        mh = maybe (signatorymagichash sl) signatoryAccessTokenHash msat
 
 -- We can't implement lists as Unjson - since we would have to do
 -- unjsonToJSON on each document parser. And that would make us lose

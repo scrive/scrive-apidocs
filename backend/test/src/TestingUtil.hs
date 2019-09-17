@@ -348,7 +348,6 @@ instance Arbitrary SignatoryLinkID where
 
 instance Arbitrary SignatoryLink where
   arbitrary = do
-    mh <- arbitrary
     fields <- arbitrary
     seeninfo <- arbitrary
     signinfo <- if isJust seeninfo
@@ -370,7 +369,6 @@ instance Arbitrary SignatoryLink where
       , signatoryisauthor                       = False
       , signatoryrole                           = role
       , signatorysignorder                      = SignOrder 1
-      , signatorymagichash                      = mh
       , maybesigninfo                           = signinfo
       , maybeseeninfo                           = seeninfo
       , signatorylinkdeliverymethod             = delivery
@@ -772,7 +770,6 @@ arbEmail = do
 signatoryLinkExample1 :: SignatoryLink
 signatoryLinkExample1 = defaultSignatoryLink
   { signatorylinkid                         = unsafeSignatoryLinkID 0
-  , signatorymagichash                      = unsafeMagicHash 0
   , maybesignatory                          = Nothing
   , maybesigninfo                           = Just $ SignInfo unixEpoch noIP
   , maybeseeninfo                           = Just $ SignInfo unixEpoch noIP

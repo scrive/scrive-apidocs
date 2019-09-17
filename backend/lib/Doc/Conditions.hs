@@ -389,12 +389,10 @@ instance DBExtraException SignatoryTokenDoesNotMatch
 sqlWhereSomeSignatoryAccessTokenHasMagicHash
   :: (MonadState v m, SqlWhere v) => MagicHash -> m ()
 sqlWhereSomeSignatoryAccessTokenHasMagicHash mh =
-  sqlWhereAnyE SignatoryTokenDoesNotMatch [
-      sqlWhereEq "signatory_links.token" mh -- TODO: Remove when tokens are migrated to signatory_access_tokens
-    , sqlWhereExists . sqlSelect "signatory_access_tokens" $ do
-        sqlWhere "signatory_access_tokens.signatory_link_id = signatory_links.id"
-        sqlWhereEq "signatory_access_tokens.hash" mh
-    ]
+  sqlWhereExists . sqlSelect "signatory_access_tokens" $ do
+    sqlWhere "signatory_access_tokens.signatory_link_id = signatory_links.id"
+    sqlWhereEq "signatory_access_tokens.hash" mh
+
 
 data DocumentObjectVersionDoesNotMatch = DocumentObjectVersionDoesNotMatch
     { documentOdocumentObjectVersionDocumentID :: DocumentID

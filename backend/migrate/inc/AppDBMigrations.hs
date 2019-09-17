@@ -216,4 +216,5 @@ kontraMigrations = [
   , removeInvoicingUploadJob
   , userGroupSettingsAddSessionTimeout
   , addFolderAdminRoleChecks
+  , dropMagicHashFromSignatories
   ]

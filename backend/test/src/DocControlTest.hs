@@ -252,10 +252,6 @@ testSigningWithPin = do
     siglink <- head . filter isSignatoryAndHasNotSigned .
                documentsignatorylinks <$> theDocument
 
-    --do t <- documentctime <$> theDocument
-    --   randomUpdate . MarkDocumentSeen (signatorylinkid siglink) (signatorymagichash siglink)
-    --             =<< signatoryActor (set ctxtime t ctx) siglink
-
     mh <- dbUpdate $ NewSignatoryAccessToken
       (signatorylinkid siglink) SignatoryAccessTokenForMailBeforeClosing Nothing
     pin <- dbQuery $ GetSignatoryPin SMSPinToSign (signatorylinkid siglink) (getMobile siglink)

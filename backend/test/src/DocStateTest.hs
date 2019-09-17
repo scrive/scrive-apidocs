@@ -2524,7 +2524,6 @@ signatoryLinksAreAlmostEqualForTests a b = and [
     , signatoryisauthor a == signatoryisauthor b
     , signatoryrole a == signatoryrole b
     , signatorysignorder a == signatorysignorder b
-    , signatorymagichash a == signatorymagichash b
     , maybesignatory a == maybesignatory b
     , maybesigninfo a == maybesigninfo b
     , maybeseeninfo a == maybeseeninfo b
