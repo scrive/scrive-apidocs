@@ -38,6 +38,9 @@ var Backbone = require("backbone");
     isVerimi: function () {
       return false;
     },
+    isIDIN: function () {
+      return false;
+    },
     isOnStartStep: function () {
       return this.get("step") === "start";
     },

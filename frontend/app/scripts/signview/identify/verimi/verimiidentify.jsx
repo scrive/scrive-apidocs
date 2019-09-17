@@ -24,7 +24,7 @@ var VerimiModel = require("./verimiidentifymodel");
                 ref="identify-box-identify-button"
                 size="big"
                 type="action"
-                text={"Identify with Verimi"}
+                text={localization.identify.identifyWithVerimi}
                 onClick={this.handleIdentify}
               />
             </div>

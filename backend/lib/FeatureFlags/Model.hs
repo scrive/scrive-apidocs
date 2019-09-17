@@ -49,6 +49,7 @@ data FeatureFlags = FeatureFlags
   , ffCanUseStandardAuthenticationToView :: Bool
   , ffCanUseStandardAuthenticationToSign :: Bool
   , ffCanUseVerimiAuthenticationToView :: Bool
+  , ffCanUseIDINAuthenticationToView :: Bool
   , ffCanUseEmailInvitations :: Bool
   , ffCanUseEmailConfirmations :: Bool
   , ffCanUseAPIInvitations :: Bool
@@ -79,6 +80,7 @@ instance Unjson FeatureFlags where
     <*> field "can_use_standard_authentication_to_view" ffCanUseStandardAuthenticationToView "TODO desc"
     <*> field "can_use_standard_authentication_to_sign" ffCanUseStandardAuthenticationToSign "TODO desc"
     <*> field "can_use_verimi_authentication_to_view" ffCanUseVerimiAuthenticationToView "TODO desc"
+    <*> field "can_use_idin_authentication_to_view" ffCanUseIDINAuthenticationToView "TODO desc"
     <*> field "can_use_email_invitations" ffCanUseEmailInvitations "TODO desc"
     <*> field "can_use_email_confirmations" ffCanUseEmailConfirmations "TODO desc"
     <*> fieldDef "can_use_api_invitations" True ffCanUseAPIInvitations "TODO desc"
@@ -91,7 +93,7 @@ instance Unjson FeatureFlags where
 type instance CompositeRow FeatureFlags =
   ( Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool
   , Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool
-  , Bool, Bool, Bool, Bool, Bool, Bool
+  , Bool, Bool, Bool, Bool, Bool, Bool, Bool
   )
 
 instance PQFormat FeatureFlags where
@@ -118,6 +120,7 @@ instance CompositeFromSQL FeatureFlags where
     , ffCanUseStandardAuthenticationToView
     , ffCanUseStandardAuthenticationToSign
     , ffCanUseVerimiAuthenticationToView
+    , ffCanUseIDINAuthenticationToView
     , ffCanUseEmailInvitations
     , ffCanUseEmailConfirmations
     , ffCanUseAPIInvitations
@@ -137,6 +140,7 @@ firstAllowedAuthenticationToView ff
   | ffCanUseFIAuthenticationToView ff       = FITupasAuthenticationToView
   | ffCanUseSMSPinAuthenticationToView ff   = SMSPinAuthenticationToView
   | ffCanUseVerimiAuthenticationToView ff   = VerimiAuthenticationToView
+  | ffCanUseIDINAuthenticationToView ff     = IDINAuthenticationToView
   -- Someone can turn off all FFs, not recommended
   | otherwise = StandardAuthenticationToView
 
@@ -188,6 +192,7 @@ defaultFeatures paymentPlan = Features ff ff
       , ffCanUseStandardAuthenticationToView = True
       , ffCanUseStandardAuthenticationToSign = True
       , ffCanUseVerimiAuthenticationToView = True
+      , ffCanUseIDINAuthenticationToView = True
       , ffCanUseEmailInvitations = True
       , ffCanUseEmailConfirmations = True
       , ffCanUseAPIInvitations = True
@@ -198,13 +203,15 @@ defaultFeatures paymentPlan = Features ff ff
       }
     ff = case paymentPlan of
       FreePlan -> ffAllTrue
-        { ffCanUseDKAuthenticationToView = False
-        , ffCanUseDKAuthenticationToSign = False
-        , ffCanUseFIAuthenticationToView = False
-        , ffCanUseNOAuthenticationToView = False
-        , ffCanUseNOAuthenticationToSign = False
-        , ffCanUseSEAuthenticationToView = False
-        , ffCanUseSEAuthenticationToSign = False
+        { ffCanUseDKAuthenticationToView     = False
+        , ffCanUseDKAuthenticationToSign     = False
+        , ffCanUseFIAuthenticationToView     = False
+        , ffCanUseNOAuthenticationToView     = False
+        , ffCanUseNOAuthenticationToSign     = False
+        , ffCanUseSEAuthenticationToView     = False
+        , ffCanUseSEAuthenticationToSign     = False
+        , ffCanUseVerimiAuthenticationToView = False
+        , ffCanUseIDINAuthenticationToView   = False
         }
       _ -> ffAllTrue
 
@@ -229,6 +236,7 @@ setFeatureFlagsSql ff = do
   sqlSet "can_use_standard_authentication_to_view" $ ffCanUseStandardAuthenticationToView ff
   sqlSet "can_use_standard_authentication_to_sign" $ ffCanUseStandardAuthenticationToSign ff
   sqlSet "can_use_verimi_authentication_to_view" $ ffCanUseVerimiAuthenticationToView ff
+  sqlSet "can_use_idin_authentication_to_view" $ ffCanUseIDINAuthenticationToView ff
   sqlSet "can_use_email_invitations" $ ffCanUseEmailInvitations ff
   sqlSet "can_use_email_confirmations" $ ffCanUseEmailConfirmations ff
   sqlSet "can_use_api_invitations" $ ffCanUseAPIInvitations ff
@@ -258,6 +266,7 @@ selectFeatureFlagsSelectors =
   , "feature_flags.can_use_standard_authentication_to_view"
   , "feature_flags.can_use_standard_authentication_to_sign"
   , "feature_flags.can_use_verimi_authentication_to_view"
+  , "feature_flags.can_use_idin_authentication_to_view"
   , "feature_flags.can_use_email_invitations"
   , "feature_flags.can_use_email_confirmations"
   , "feature_flags.can_use_api_invitations"

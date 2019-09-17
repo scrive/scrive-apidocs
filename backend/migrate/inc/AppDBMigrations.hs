@@ -218,4 +218,7 @@ kontraMigrations = [
   , addFolderAdminRoleChecks
   , dropMagicHashFromSignatories
   , userGroupSettingsAddPortalUrl
+  , featureFlagsAddIDINAuthenticationToView1
+  , featureFlagsAddIDINAuthenticationToView2
+  , addProviderCustomerIDToEIDAuthentications
   ]

@@ -12,6 +12,8 @@ var SMSPinIdentifyView = require("./smspin/smspinidentifyview");
 var SMSPinIdentifyModel = require("./smspin/smspinidentifymodel");
 var VerimiIdentifyView = require("./verimi/verimiidentifyview");
 var VerimiIdentifyModel = require("./verimi/verimiidentifymodel");
+var IDINIdentifyView = require("./idin/idinidentifyview");
+var IDINIdentifyModel = require("./idin/idinidentifymodel");
 var Document = require("../../../js/documents.js").Document;
 var $ = require("jquery");
 var MaskedPersonalNumber = require("./masked_personal_number");
@@ -47,8 +49,10 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
           model = new FinnishIdentifyModel(args);
         } else if (sig.smsPinAuthenticationToViewArchived()) {
           model = new SMSPinIdentifyModel(args);
-        }  else if (sig.verimiAuthenticationToViewArchived()) {
+        } else if (sig.verimiAuthenticationToViewArchived()) {
           model = new VerimiIdentifyModel(args);
+        } else if (sig.idinAuthenticationToViewArchived()) {
+          model = new IDINIdentifyModel(args);
         }
       } else {
         if (sig.seBankIDAuthenticationToView()) {
@@ -63,6 +67,8 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
           model = new SMSPinIdentifyModel(args);
         } else if (sig.verimiAuthenticationToView()) {
           model = new VerimiIdentifyModel(args);
+        } else if (sig.idinAuthenticationToView()) {
+          model = new IDINIdentifyModel(args);
         }
       }
       return {model: model};
@@ -162,6 +168,12 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
                 model={model}
               />
             }
+            { /* else if */ model.isIDIN() &&
+              <IDINIdentifyView
+                ref="identify"
+                model={model}
+              />
+            }
             <div className="identify-box-footer">
               <div className="identify-box-footer-text">
                 <div>
@@ -191,6 +203,11 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
                     {localization.yourEmail} <b>{email}</b>
                   </div>
                 }
+                { /* if */ (model.isIDIN()) &&
+                  <div>
+                    {localization.yourEmail} <b>{email}</b>
+                  </div>
+                }
               </div>
               <div className="identify-box-footer-logo">
                 { /* if */ model.isSwedish() &&
@@ -210,6 +227,9 @@ var HtmlTextWithSubstitution = require("../../common/htmltextwithsubstitution");
                 }
                 { /* if */ model.isVerimi() &&
                   <img src={window.cdnbaseurl + "/img/verimi.svg"} />
+                }
+                { /* if */ model.isIDIN() &&
+                  <img src={window.cdnbaseurl + "/img/iDIN.png"} />
                 }
               </div>
             </div>

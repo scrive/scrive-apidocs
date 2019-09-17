@@ -556,6 +556,9 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     verimiAuthenticationToView: function() {
           return this.get("authentication_method_to_view") == "verimi";
     },
+    idinAuthenticationToView: function() {
+          return this.get("authentication_method_to_view") == "nl_idin";
+    },
     standardAuthenticationToViewArchived: function() {
         return this.get("authentication_method_to_view_archived") == "standard";
     },
@@ -576,6 +579,9 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     },
     verimiAuthenticationToViewArchived: function() {
         return this.get("authentication_method_to_view_archived") == "verimi";
+    },
+    idinAuthenticationToViewArchived: function() {
+        return this.get("authentication_method_to_view_archived") == "nl_idin";
     },
     canHaveAuthenticationToSign: function() {
         // Not supported for Viewers or Approvers
@@ -1109,7 +1115,6 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
             }
         }
     },
-
     needsMobile: function() {
       return this.mobileDelivery()
         || this.emailMobileDelivery()
@@ -1121,7 +1126,6 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         || this.smsPinAuthenticationToViewArchived()
         || this.smsPinAuthenticationToSign();
     },
-
     mobileIsObligatory: function() {
       // Mobile number is needed for NO BankID, but is not obligatory
       return this.mobileDelivery()
@@ -1132,14 +1136,15 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
         || this.smsPinAuthenticationToViewArchived()
         || this.smsPinAuthenticationToSign();
     },
-
     needsEmail: function() {
         return this.emailDelivery()
         || this.emailMobileDelivery()
         || this.hasNotificationEmail()
         || this.hasConfirmationEmail()
         || this.verimiAuthenticationToView()
-        || this.verimiAuthenticationToViewArchived();
+        || this.verimiAuthenticationToViewArchived()
+        || this.idinAuthenticationToView()
+        || this.idinAuthenticationToViewArchived();
     },
     ensureEmail: function() {
         var signatory = this;

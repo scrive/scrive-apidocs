@@ -21,6 +21,8 @@ module.exports = React.createClass({
       return false;
     } else if (!ff.canUseVerimiAuthenticationToView() && am == "verimi") {
       return false;
+    } else if (!ff.canUseIDINAuthenticationToView() && am == "nl_idin") {
+      return false;
     } else {
       return true;
     }
@@ -31,7 +33,7 @@ module.exports = React.createClass({
       Where: "icon"
     });
     var superthis = this;
-    var ams = ["standard", "se_bankid", "no_bankid", "dk_nemid", "fi_tupas", "sms_pin", "verimi"]
+    var ams = ["standard", "se_bankid", "no_bankid", "dk_nemid", "fi_tupas", "sms_pin", "verimi", "nl_idin"]
               .filter(function (am) { return superthis.isAllowedAuthenticationMethod(am); });
     if (ams.length <= 1) {
       // if no auth methods are enabled, tell customer, that they can purchase them
@@ -63,6 +65,8 @@ module.exports = React.createClass({
       return "design-view-action-participant-icon-auth-to-view-icon-sms-pin";
     } else if (sig.verimiAuthenticationToViewArchived()) {
       return "design-view-action-participant-icon-auth-to-view-icon-verimi";
+    } else if (sig.idinAuthenticationToViewArchived()) {
+      return "design-view-action-participant-icon-auth-to-view-icon-idin";
     }
   },
   title: function () {
@@ -99,6 +103,10 @@ module.exports = React.createClass({
     } else if (authMethod == "verimi") {
       title.push(
         localization.designview.addParties.authenticationToViewVerimi
+      );
+    } else if (authMethod == "nl_idin") {
+      title.push(
+        localization.designview.addParties.authenticationToViewIDIN
       );
     }
     return title.join(": ");

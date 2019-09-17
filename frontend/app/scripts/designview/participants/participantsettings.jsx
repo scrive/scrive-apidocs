@@ -142,6 +142,8 @@ module.exports = React.createClass({
       return localization.designview.addParties.authenticationToViewSMSPin;
     } else if (t == "verimi") {
       return localization.designview.addParties.authenticationToViewVerimi;
+    } else if (t == "nl_idin") {
+      return localization.designview.addParties.authenticationToViewIDIN;
     }
   },
   authenticationToViewOptions: function () {
@@ -149,7 +151,7 @@ module.exports = React.createClass({
     var sig = this.props.model;
     var allAuthTypes = ["standard", "se_bankid", "no_bankid",
                         "dk_nemid", "fi_tupas", "sms_pin",
-                        "verimi"];
+                        "verimi", "nl_idin"];
     var authTypes = allAuthTypes.slice(0);
 
     var subscription = Subscription.currentSubscription();
@@ -174,6 +176,9 @@ module.exports = React.createClass({
     }
     if (!ff.canUseVerimiAuthenticationToView() && !sig.verimiAuthenticationToView()) {
       authTypes = _.without(authTypes, "verimi");
+    }
+    if (!ff.canUseIDINAuthenticationToView() && !sig.idinAuthenticationToView()) {
+      authTypes = _.without(authTypes, "nl_idin");
     }
 
 
@@ -202,7 +207,7 @@ module.exports = React.createClass({
     var sig = this.props.model;
     var allAuthTypes = ["standard", "se_bankid", "no_bankid",
                         "dk_nemid", "fi_tupas", "sms_pin",
-                        "verimi"];
+                        "verimi", "nl_idin"];
     var authTypes = allAuthTypes.slice(0);
 
     var subscription = Subscription.currentSubscription();
@@ -227,6 +232,9 @@ module.exports = React.createClass({
     }
     if (!ff.canUseVerimiAuthenticationToView() && !sig.verimiAuthenticationToViewArchived()) {
       authTypes = _.without(authTypes, "verimi");
+    }
+    if (!ff.canUseIDINAuthenticationToView() && !sig.idinAuthenticationToViewArchived()) {
+      authTypes = _.without(authTypes, "nl_idin");
     }
 
     authTypes = _.filter(authTypes, function (authToViewArchived) {
