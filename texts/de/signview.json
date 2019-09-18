@@ -123,7 +123,7 @@
 "_mailInvitationToApproveGoToActionDescription":"Dokument in Scrive genehmigen",
 "_mailInvitationToApproveGoToActionName":"Dokument genehmigen",
 "_mailInvitationToApproveTitleContract":"Zu genehmigendes Dokument: $documenttitle$",
-"_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong> bittet Sie, das Dokument <strong>$documenttitle$</strong> elekronisch zu signieren.",
+"_mailInvitationToSignContractDefaultHeader":"<strong>$creatorname$</strong> bittet Sie, das Dokument <strong>$documenttitle$</strong> elektronisch zu signieren.",
 "_mailInvitationToSignFollowInstructions":"Klicken Sie die Schaltfläche für weitere Instruktionen.",
 "_mailInvitationToSignGoToActionDescription":"Dokument in Scrive prüfen und signieren",
 "_mailInvitationToSignGoToActionName":"Dokument prüfen und signieren",

@@ -109,11 +109,13 @@ brandedDomainSelector = [
   ]
 
 
-data GetBrandedDomains = GetBrandedDomains
+data GetBrandedDomains = GetBrandedDomains (Maybe Text)
 instance (MonadDB m, MonadLog m) => DBQuery m GetBrandedDomains [BrandedDomain] where
-  query (GetBrandedDomains) = do
+  query (GetBrandedDomains murlpart) = do
     runQuery_ . sqlSelect "branded_domains" $ do
       mapM_ sqlResult $ brandedDomainSelector
+      when (isJust murlpart) $ do
+        sqlWhereILike "url" ("%" <> fromMaybe "" murlpart <> "%")
       sqlOrderBy "id"
     fetchMany fetchBrandedDomain
 

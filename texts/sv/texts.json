@@ -989,7 +989,7 @@
 "_smsCorrectedNotification":"Vi har noterat att ett dokument vi tidigare skickade till dig var felaktigt och saknade digital signatur, men vi har nu åtgärdat felet. Hitta dokumentet med korrekt digital signatur genom att följa denna länk: $link$",
 "_smsCorrectedNotificationWithEmail":"Vi har noterat att ett dokument vi tidigare skickade till dig var felaktigt och saknade digital signatur, men vi har nu åtgärdat felet. Hitta dokumentet med korrekt digital signatur genom att följa denna länk: $link$ Vi har också skickat det korrigerade dokumentet till din e-post.",
 "_smsDocumentApprovedNotification":"Du har nu godkänt dokumentet $documenttitle$. Följ den här länken för att se dokumentet: $link$",
-"_smsDocumentSignedNotification":"",
+"_smsDocumentSignedNotification":"Du har nu signerat dokumentet $documenttitle$. Följ den här länken för att se dokumentet: $link$ Det kommer att vara tillgängligt för nedladdning till och med $availabledate$.",
 "_smsForwardSigningForAuthor":"$fromName$ har vidarebefordrat $documenttitle$ till $toName$ för signering. Följ länken för att se dokumentet $authorlink$",
 "_smsForwardSigningForAuthorApproving":"$fromName$ har vidarebefordrat $documenttitle$ till $toName$ för godkännande. Följ länken för att se dokumentet $authorlink$",
 "_smsForwardSigningForNewSignatory":"$fromName$ har vidarebefordrat dokumentet $documenttitle$ till dig för signering. Följ länken för vidare instruktioner $link$",
