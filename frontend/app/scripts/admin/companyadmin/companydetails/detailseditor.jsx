@@ -40,7 +40,8 @@ var settingsPropTypes = React.PropTypes.shape({
   padearchiveenabled: React.PropTypes.bool.isRequired,
   sendtimeoutnotification: React.PropTypes.bool.isRequired,
   totpismandatory: React.PropTypes.bool.isRequired,
-  sessiontimeout: React.PropTypes.number
+  sessiontimeout: React.PropTypes.number,
+  portalurl: React.PropTypes.text
 });
 
 var DetailsEditorView = React.createClass({
@@ -75,7 +76,7 @@ var DetailsEditorView = React.createClass({
     sendtimeoutnotification: React.PropTypes.bool.isRequired,
     totpismandatory: React.PropTypes.bool.isRequired,
     sessiontimeout: React.PropTypes.number,
-
+    portalurl: React.PropTypes.text,
     addressIsInherited: React.PropTypes.bool.isRequired,
     inheritedAddress: addressPropTypes,
     settingsIsInherited: React.PropTypes.bool.isRequired,
@@ -136,6 +137,9 @@ var DetailsEditorView = React.createClass({
 
   onTotpismandatory: function (event) {
     this.props.onFieldChange("totpismandatory", event.target.checked);
+  },
+  onPortalUrlChange: function (event) {
+    this.props.onFieldChange("portalurl", event.target.value);
   },
 
   onSessiontimeout: function (event) {
@@ -540,6 +544,22 @@ var DetailsEditorView = React.createClass({
               Valid values are between 5 minutes to 30 days.
               Leave field empty to use the default session timeout.
             </td>
+          </tr>
+          <tr>
+            <td><label>Portal URL</label></td>
+            <td>
+              <input
+                name="companyportalurl"
+                maxLength={100}
+                type="text"
+                value={ this.props.settingsIsInherited
+                      ? this.props.inheritedSettings.portalurl
+                      : this.props.portalurl}
+                disabled={this.props.settingsIsInherited}
+                onChange={this.onPortalUrlChange}
+              />
+            </td>
+            <td></td>
           </tr>
         </tbody>
       </table>

@@ -32,6 +32,7 @@ var CompanyDetailsViewModel = Backbone.Model.extend(
       sendtimeoutnotification: true,
       totpismandatory: false,
       sessiontimeout: null,
+      portalurl: null,
       settingsIsInherited: false,
       inheritedSettings: null
     },
@@ -62,6 +63,7 @@ var CompanyDetailsViewModel = Backbone.Model.extend(
         companysendtimeoutnotification: this.get("sendtimeoutnotification"),
         companytotpismandatory: this.get("totpismandatory"),
         companysessiontimeout: this.get("sessiontimeout"),
+        companyportalurl: this.get("portalurl"),
         companyaddressisinherited: this.get("addressIsInherited"),
         companysettingsisinherited: this.get("settingsIsInherited")
       });

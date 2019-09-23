@@ -217,4 +217,5 @@ kontraMigrations = [
   , userGroupSettingsAddSessionTimeout
   , addFolderAdminRoleChecks
   , dropMagicHashFromSignatories
+  , userGroupSettingsAddPortalUrl
   ]

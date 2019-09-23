@@ -174,6 +174,7 @@ companySettingsJson ugs = do
   value "sendtimeoutnotification" $  get ugsSendTimeoutNotification ugs
   value "totpismandatory" $  get ugsTotpIsMandatory ugs
   value "sessiontimeout" $  get ugsSessionTimeoutSecs ugs
+  value "portalurl" $ get ugsPortalUrl ugs
 
 userStatsToJSON :: (UTCTime -> Text) -> [UserUsageStats] -> JSValue
 userStatsToJSON formatTime uuss = runJSONGen . objects "stats" . for uuss $ \uus -> do

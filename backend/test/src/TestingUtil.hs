@@ -242,6 +242,7 @@ instance Arbitrary UserGroupSettings where
     <*> arbitrary
     <*> pure False -- do not enforce 2FA in tests
     <*> pure Nothing -- do not set custom session expiry
+    <*> pure Nothing -- no portal url
 
 instance Arbitrary UserGroupAddress where
   arbitrary = UserGroupAddress

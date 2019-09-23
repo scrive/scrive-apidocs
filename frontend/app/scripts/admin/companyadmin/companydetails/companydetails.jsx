@@ -63,6 +63,7 @@ var CompanyDetailsView = React.createClass({
         sendtimeoutnotification: this.props.company.sendtimeoutnotification(),
         totpismandatory: this.props.company.totpismandatory(),
         sessiontimeout: this.props.company.sessiontimeout(),
+        portalurl: this.props.company.portalurl(),
         addressIsInherited: this.props.company.companyaddressisinherited(),
         settingsIsInherited: this.props.company.companysettingsisinherited(),
         inheritedAddress: this.props.company.companyinheritedaddress(),
@@ -147,6 +148,9 @@ var CompanyDetailsView = React.createClass({
               }
               sessiontimeout={
                 this.props.viewModel.get("sessiontimeout")
+              }
+              portalurl={
+                this.props.viewModel.get("portalurl")
               }
               addressIsInherited={this.props.viewModel.get("addressIsInherited")}
               settingsIsInherited={this.props.viewModel.get("settingsIsInherited")}

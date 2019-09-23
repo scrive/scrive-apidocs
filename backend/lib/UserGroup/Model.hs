@@ -115,6 +115,7 @@ insertUserGroupSettings ugid ugs =
     sqlSet "send_timeout_notification" . get ugsSendTimeoutNotification $ ugs
     sqlSet "totp_is_mandatory" . get ugsTotpIsMandatory $ ugs
     sqlSet "session_timeout" $ get ugsSessionTimeoutSecs $ ugs
+    sqlSet "portal_url" . get ugsPortalUrl $ ugs
 
 insertUserGroupAddress
   :: (MonadDB m, MonadThrow m) => UserGroupID -> UserGroupAddress -> m ()
@@ -362,6 +363,7 @@ ugSettingsSelectors = [
   , "use_folder_list_calls"
   , "totp_is_mandatory"
   , "session_timeout"
+  , "portal_url"
   ]
 
 

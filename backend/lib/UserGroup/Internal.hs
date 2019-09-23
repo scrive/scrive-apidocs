@@ -147,6 +147,7 @@ data UserGroupSettings = UserGroupSettings {
   , _ugsSendTimeoutNotification   :: Bool
   , _ugsTotpIsMandatory           :: Bool
   , _ugsSessionTimeoutSecs        :: Maybe Int32
+  , _ugsPortalUrl                 :: Maybe Text
   } deriving (Show, Eq)
 
 defaultUserGroupSettings :: UserGroupSettings
@@ -162,7 +163,9 @@ defaultUserGroupSettings = UserGroupSettings {
   , _ugsRequireBPIDForNewDoc = False
   , _ugsSendTimeoutNotification = False
   , _ugsTotpIsMandatory      = False
-  , _ugsSessionTimeoutSecs       = Nothing
+  , _ugsSessionTimeoutSecs   = Nothing
+  , _ugsPortalUrl            = Nothing
+
   }
 
 data UserGroupUI = UserGroupUI {
@@ -464,6 +467,7 @@ type instance CompositeRow UserGroupSettings = (
   , Bool
   , Bool
   , Maybe Int32
+  , Maybe Text
   )
 
 instance PQFormat UserGroupSettings where
@@ -490,6 +494,7 @@ instance CompositeFromSQL UserGroupSettings where
     , _useFolderListCalls -- not yet used
     , _ugsTotpIsMandatory
     , _ugsSessionTimeoutSecs
+    , _ugsPortalUrl
     ) = UserGroupSettings {
       _ugsIPAddressMaskList         = maybe [] read ip_address_mask_list
     , _ugsDataRetentionPolicy = DataRetentionPolicy {..}

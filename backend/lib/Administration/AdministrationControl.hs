@@ -506,6 +506,7 @@ getUserGroupSettingsChange = do
     mcompanysendtimeoutnotification <- getField "companysendtimeoutnotification"
     mcompanytotpismandatory <- getField "companytotpismandatory"
     mcompanysessiontimeout <- getSessionTimeoutField "companysessiontimeout"
+    mcompanyportalurl <- fmap emptyToNothing <$> getField "companyportalurl"
 
     return $
         maybe id (set ugsIPAddressMaskList) mcompanyipaddressmasklist
@@ -532,6 +533,7 @@ getUserGroupSettingsChange = do
       . maybe id (set ugsSendTimeoutNotification . (=="true")) mcompanysendtimeoutnotification
       . maybe id (set ugsTotpIsMandatory . (=="true")) mcompanytotpismandatory
       . maybe id (set ugsSessionTimeoutSecs) mcompanysessiontimeout
+      . maybe id (set ugsPortalUrl) mcompanyportalurl
 
   where
     getIdleDocTimeoutField :: Kontrakcja m => Text -> m (Maybe (Maybe Int16))

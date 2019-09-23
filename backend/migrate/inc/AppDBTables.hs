@@ -77,6 +77,7 @@ kontraComposites = [
   , ctUserGroupSettings1
   , ctUserGroupSettings2
   , ctUserGroupSettings3
+  , ctUserGroupSettings4
   , ctUserGroupUI
   , ctUserGroupAddress
   ] ++ mailerComposites
