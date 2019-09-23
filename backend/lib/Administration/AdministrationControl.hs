@@ -884,7 +884,7 @@ handleTriggerMigrateFolders limit = onlyAdmin $ do
 handleTriggerMigrateSignatoryAccessTokens :: Kontrakcja m => Integer -> m Aeson.Value
 handleTriggerMigrateSignatoryAccessTokens limit  = onlyAdmin $ do
   logInfo_ "Starting migration batch for signatory access tokens"
-  let limitWithUpperBound = minimum [limit, 10000]
+  let limitWithUpperBound = minimum [limit, 200000]
   startTime <- liftIO currentTime
   -- Updating API signatories
   (satsToUpdateWithAPI :: [(SignatoryLinkID, MagicHash)]) <- do
