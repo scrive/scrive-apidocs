@@ -16,7 +16,7 @@ import Doc.Types.SignatoryField
 import Doc.Types.SignatoryLink
 import File.File
 import Generators.OccurenceControl
-import TestingUtil ()
+import TestingUtil
 import User.UserID
 
 ---- | Generate random documents that can be started with a probability of >80%.
@@ -206,18 +206,18 @@ emailFieldOC :: OccurenceControl SignatoryField
 emailFieldOC = do
   f <- liftGen arbitrary
   email <- decide
-    arbitrary
-    ((\x y z -> x <> "@" <> y <> "." <> z)
+    arbitraryUnicodeText
+    ((\x y z -> T.pack $ x <> "@" <> y <> "." <> z)
      <$> listOf1 (elements "abcdefghijklmnopqrstuvwxyz0123456789")
      <*> listOf1 (elements "abcdefghijklmnopqrstuvwxyz0123456789")
      <*> elements ["com", "sv", "newgtld"])
-  pure $ SignatoryEmailField $ f { sefValue = T.pack email }
+  pure $ SignatoryEmailField $ f { sefValue = email }
 
 mobileFieldOC :: OccurenceControl SignatoryField
 mobileFieldOC = do
   f <- liftGen arbitrary
-  mobile <- decide arbitrary (('+':) <$> listOf (elements "0123456789"))
-  pure $ SignatoryMobileField $ f { smfValue = T.pack mobile }
+  mobile <- decide arbitraryUnicodeText (T.pack <$> ('+':) <$> listOf (elements "0123456789"))
+  pure $ SignatoryMobileField $ f { smfValue = mobile }
 
 personalNumberFieldOC :: OccurenceControl SignatoryField
 personalNumberFieldOC = do

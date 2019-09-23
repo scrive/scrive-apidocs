@@ -3,7 +3,6 @@ module Doc.DocStateCommon where
 import Doc.DocStateData
 import Doc.SignatoryFieldID
 import Doc.SignatoryLinkID
-import MagicHash (MagicHash)
 import User.Model
 import UserGroup.Types
 import Util.HasSomeUserInfo
@@ -19,9 +18,8 @@ signLinkFromDetails' :: [SignatoryField]
                      -> SignatoryRole
                      -> SignOrder
                      -> [SignatoryAttachment]
-                     -> MagicHash
                      -> SignatoryLink
-signLinkFromDetails' fields author role sorder attachments magichash =
+signLinkFromDetails' fields author role sorder attachments =
   defaultSignatoryLink {
         signatorylinkid                         = unsafeSignatoryLinkID 0
       , signatoryfields                         = map signatoryLinkClearField
@@ -29,7 +27,6 @@ signLinkFromDetails' fields author role sorder attachments magichash =
       , signatoryisauthor                       = author
       , signatoryrole                           = role
       , signatorysignorder                      = sorder
-      , signatorymagichash                      = magichash
       , maybesignatory                          = Nothing
       , maybesigninfo                           = Nothing
       , maybeseeninfo                           = Nothing

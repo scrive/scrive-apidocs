@@ -183,10 +183,9 @@ signatoryJSON forauthor doc viewer siglink = do
     J.value "allowshighlighting" $ signatorylinkallowshighlighting siglink
     when (not (isPreparation doc) && forauthor && signatorylinkdeliverymethod siglink == APIDelivery) $ do
       let msat = find ((==SignatoryAccessTokenForAPI) . signatoryAccessTokenReason) (signatoryaccesstokens siglink)
-          mh = maybe (signatorymagichash siglink) signatoryAccessTokenHash msat
-      J.value "signlink" $ show $
-        LinkSignDocMagicHash (documentid doc) (signatorylinkid siglink) mh
-
+      J.value "signlink" $ case signatoryAccessTokenHash <$> msat of
+        Just mh -> show $ LinkSignDocMagicHash (documentid doc) (signatorylinkid siglink) mh
+        Nothing -> "API delivery link not available. Please contact us for more details."
     where
       isCurrent = (signatorylinkid <$> viewer) == (Just $ signatorylinkid siglink) || (forauthor &&  isAuthor siglink)
       rejectedDate = signatorylinkrejectiontime siglink

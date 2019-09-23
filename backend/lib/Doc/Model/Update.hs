@@ -187,7 +187,6 @@ insertSignatoryLinksOnly did links = do
     sqlSetListWithDefaults "id" $ map (\sl -> if (unsafeSignatoryLinkID 0 == signatorylinkid sl) then Nothing else (Just $ signatorylinkid sl)) links
     sqlSetList "user_id" $ maybesignatory <$> links
     sqlSetList "signatory_role" $ signatoryrole <$> links
-    sqlSetList "token" $ signatorymagichash <$> links
     sqlSetList "sign_order"$ signatorysignorder <$> links
     sqlSetList "sign_time" $ fmap signtime <$> maybesigninfo <$> links
     sqlSetList "sign_ip" $ fmap signipnumber <$> maybesigninfo <$> links
@@ -594,7 +593,6 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m CancelD
 data ChangeSignatoryEmail = ChangeSignatoryEmail SignatoryLinkID (Maybe User) String Actor
 instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ChangeSignatoryEmail () where
   update (ChangeSignatoryEmail slid muser email actor) = do
-    magichash :: MagicHash <- random
     oldemail <- updateDocumentWithID $ const $ do
       oldemail :: String <- kRunAndFetch1OrThrowWhyNot runIdentity $ sqlUpdate "signatory_link_fields" $ do
              sqlFrom "signatory_link_fields AS signatory_link_fields_old"
@@ -604,7 +602,6 @@ instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpd
              sqlWhereEq "signatory_link_fields.signatory_link_id" slid
              sqlWhereEq "signatory_link_fields.type" EmailFT
       kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
-          sqlSet "token" magichash
           sqlSet "mail_invitation_delivery_status" Unknown
           sqlSet "user_id" $ fmap userid muser
           sqlWhereEq "signatory_links.id" slid
@@ -624,7 +621,6 @@ data ChangeSignatoryPhone = ChangeSignatoryPhone SignatoryLinkID String Actor
 instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m)
   => DBUpdate m ChangeSignatoryPhone () where
   update (ChangeSignatoryPhone slid phone actor) = do
-    magichash :: MagicHash <- random
     oldphone <- updateDocumentWithID $ const $ do
       oldphone :: String <- kRunAndFetch1OrThrowWhyNot runIdentity $ sqlUpdate "signatory_link_fields" $ do
              sqlFrom "signatory_link_fields AS signatory_link_fields_old"
@@ -634,7 +630,6 @@ instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m)
              sqlWhereEq "signatory_link_fields.signatory_link_id" slid
              sqlWhereEq "signatory_link_fields.type" MobileFT
       kRun1OrThrowWhyNot $ sqlUpdate "signatory_links" $ do
-          sqlSet "token" magichash
           sqlSet "sms_invitation_delivery_status" Unknown
           sqlSet "user_id" (Nothing :: Maybe UserID)
           sqlWhereEq "signatory_links.id" slid
@@ -1125,17 +1120,15 @@ data NewDocument = NewDocument User Text DocumentType TimeZoneName Int Actor
 instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, MonadBase IO m) => DBUpdate m NewDocument Document where
   update (NewDocument user title documenttype timezone nrOfOtherSignatories actor) = do
     let ctime = actorTime actor
-    magichash <- random
     authorFields <- signatoryFieldsFromUser user
     let authorlink0 = signLinkFromDetails' authorFields True
-                      SignatoryRoleSigningParty (SignOrder 1) [] magichash
+                      SignatoryRoleSigningParty (SignOrder 1) []
 
     let authorlink = authorlink0 { maybesignatory = Just $ userid user }
 
     othersignatories <- sequence $ replicate nrOfOtherSignatories $ do
-                          mh <- random
                           return $ signLinkFromDetails' emptySignatoryFields False
-                                   SignatoryRoleSigningParty (SignOrder 2) [] mh
+                                   SignatoryRoleSigningParty (SignOrder 2) []
 
     token <- random
     let doc = defaultDocument
@@ -1160,12 +1153,10 @@ instance (CryptoRNG m, DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadLog
   update (ForwardSigning sl message fieldsWithVTexts actor) = do
     updateDocumentWithID $ \docid -> do
       let originalsl = signatorylinkid sl
-      magichash :: MagicHash <- random
       newslid <- insertAsAdditionalSignatoryLink docid $ sl {
             signatorylinkid = unsafeSignatoryLinkID 0
           , signatoryisauthor = False
           , maybesignatory = Nothing
-          , signatorymagichash = magichash
           , maybesigninfo = Nothing
           , maybeseeninfo = Nothing
           , mailinvitationdeliverystatus = Unknown
@@ -1278,7 +1269,6 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
 
     clearSignInfofromDoc = do
       newSignLinks <- forM (documentsignatorylinks doc) $ \sl -> do
-            magichash <- random
             let newFields = for (signatoryfields sl) $ \f ->
                   case f of
                     SignatorySignatureField sf ->
@@ -1289,7 +1279,6 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m) =>
                     _ -> f
             return $ defaultSignatoryLink
                  { signatorylinkid            = (unsafeSignatoryLinkID 0)
-                 , signatorymagichash = magichash
                  , signatoryfields            = newFields
                  , signatoryisauthor          = signatoryisauthor sl
                  , signatoryrole              = signatoryrole sl
@@ -1758,9 +1747,7 @@ instance (CryptoRNG m, MonadLog m, MonadThrow m, DocumentMonad m, TemplatesMonad
           [] -> do
             runQuery_ $ "DELETE FROM signatory_links WHERE document_id =" <?> documentid
             siglinks <- forM signatories $ \sl -> do
-                     magichash <- random
-                     return $ sl {  signatorymagichash = magichash,
-                                    maybesignatory = if (isAuthor sl) then (maybesignatory sl) else Nothing
+                     return $ sl {  maybesignatory = if (isAuthor sl) then (maybesignatory sl) else Nothing
                                  }
             insertSignatoryLinks documentid siglinks
             return True
@@ -1778,7 +1765,6 @@ instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m)
   => DBUpdate m CloneDocumentWithUpdatedAuthor (Maybe DocumentID) where
   update (CloneDocumentWithUpdatedAuthor mUser document actor f) = do
     siglinks <- forM (documentsignatorylinks document) $ \sl -> do
-      magichash <- random
       sl' <-  case mUser of
         Just user | isAuthor sl -> do
           ugwp <- query . UserGroupGetWithParentsByUserID . userid $ user
@@ -1786,7 +1772,6 @@ instance (MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, CryptoRNG m)
         _ -> return sl
       return sl'
         { signatorylinkid = unsafeSignatoryLinkID 0
-        , signatorymagichash = magichash
         }
 
     let mAuthorID = maybesignatory =<< (listToMaybe . filter isAuthor $ siglinks)

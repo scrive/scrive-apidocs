@@ -125,10 +125,11 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
 initialiseSignatoryAPIMagicHashes :: (DocumentMonad m, Kontrakcja m) => m ()
 initialiseSignatoryAPIMagicHashes = do
   sls <- documentsignatorylinks <$> theDocument
-  forM_ sls $ \sl -> when (signatorylinkdeliverymethod sl == APIDelivery) $
+  forM_ sls $ \sl -> when (signatorylinkdeliverymethod sl == APIDelivery) $ do
+    mh <- random
     void $ dbUpdate $ NewSignatoryAccessTokenWithHash
       (signatorylinkid sl) SignatoryAccessTokenForAPI
-      Nothing (signatorymagichash sl)
+      Nothing mh
 
 postDocumentRejectedChange :: Kontrakcja m => SignatoryLinkID -> Maybe Text -> Document -> m ()
 postDocumentRejectedChange siglinkid customMessage doc@Document{..} = logDocument documentid $ do

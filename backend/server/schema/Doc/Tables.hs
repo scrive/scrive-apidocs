@@ -238,13 +238,12 @@ ctSignatoryAttachment = CompositeType {
 tableSignatoryLinks :: Table
 tableSignatoryLinks = tblTable {
     tblName = "signatory_links"
-  , tblVersion = 38
+  , tblVersion = 39
   , tblColumns = [
       tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "user_id", colType = BigIntT }
     , tblColumn { colName = "sign_order", colType = IntegerT, colNullable = False, colDefault = Just "1" }
-    , tblColumn { colName = "token", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "sign_time", colType = TimestampWithZoneT }
     , tblColumn { colName = "sign_ip", colType = IntegerT }
     , tblColumn { colName = "seen_time", colType = TimestampWithZoneT }
@@ -295,7 +294,6 @@ ctSignatoryLink = CompositeType {
   , CompositeColumn { ccName = "is_author", ccType = BoolT }
   , CompositeColumn { ccName = "signatory_role", ccType = SmallIntT }
   , CompositeColumn { ccName = "sign_order", ccType = IntegerT }
-  , CompositeColumn { ccName = "token", ccType = BigIntT }
   , CompositeColumn { ccName = "signatory_tokens", ccType = ArrayT $ CustomT "signatory_access_tokens_c1" }
   , CompositeColumn { ccName = "user_id", ccType = BigIntT }
   , CompositeColumn { ccName = "sign_time", ccType = TimestampWithZoneT }
