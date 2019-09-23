@@ -444,6 +444,8 @@ handleSignRequest did slid = do
         "nets_sign_url" .= nets_sign_url
       , logPair_ insOrdRs
       , logPair_ getSignProcRs
+      , "nets_provider" .= showt provider
+      , "nets_eid_method" .= showt eidmethod
       ]
     return $ object
       [ "nets_sign_url" .= nets_sign_url ]
