@@ -1086,7 +1086,7 @@ Executable mailing-server
                , unordered-containers
                , utf8-string
                , vector
-               , yaml
+               , yaml >= 0.10.0 && <= 0.11.0.0
 
   Default-Language: Haskell2010
   Default-Extensions: BangPatterns

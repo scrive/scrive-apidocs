@@ -387,8 +387,8 @@ fetchSession ( sesID, sesUserID, sesPadUserID
 
 data PurgeExpiredTemporaryLoginTokens = PurgeExpiredTemporaryLoginTokens
 instance (MonadDB m, MonadTime m) => DBUpdate m PurgeExpiredTemporaryLoginTokens () where
+  -- Expired tokens should remain in the DB for 12h to provide better error messages
   update _ = do
-    -- Expired tokens should remain in the DB for 12h to provide better error messages
     purgeTime <- ((12 * 60) `minutesBefore`) <$> currentTime
     runSQL_ $ "DELETE FROM temporary_login_tokens WHERE expiration_time <=" <?> purgeTime
 

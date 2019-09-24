@@ -20,26 +20,25 @@ module Shake.Cabal ( CabalFile(packageId, allExtensions)
                    , allFLibHsSourceDirs
                    ) where
 
-import qualified Data.Map.Strict                               as M
-import           Data.Maybe
-import           Distribution.Backpack.ComponentsGraph
-import           Distribution.Compat.Graph                     as Graph
-import           Distribution.Compat.Lens                      as Lens
-import           Distribution.PackageDescription               hiding
-                                                               (allExtensions)
-import qualified Distribution.PackageDescription               as PkgDesc
-import           Distribution.PackageDescription.Configuration
-import           Distribution.PackageDescription.Parsec
-import           Distribution.Types.BuildInfo.Lens             as Lens
-import           Distribution.Types.Component
-import           Distribution.Types.ComponentName
-import           Distribution.Types.ComponentRequestedSpec
-import           Distribution.Types.ForeignLib
-import           Distribution.Types.UnqualComponentName
-import           Distribution.Text                             (display)
-import           Distribution.Verbosity
-import           Language.Haskell.Extension
-import qualified Text.PrettyPrint                              as PP
+import Data.Maybe
+import Distribution.Backpack.ComponentsGraph
+import Distribution.Compat.Graph as Graph
+import Distribution.Compat.Lens as Lens
+import Distribution.PackageDescription hiding (allExtensions)
+import Distribution.PackageDescription.Configuration
+import Distribution.PackageDescription.Parsec
+import Distribution.Text (display)
+import Distribution.Types.BuildInfo.Lens as Lens
+import Distribution.Types.Component
+import Distribution.Types.ComponentName
+import Distribution.Types.ComponentRequestedSpec
+import Distribution.Types.ForeignLib
+import Distribution.Types.UnqualComponentName
+import Distribution.Verbosity
+import Language.Haskell.Extension
+import qualified Data.Map.Strict as M
+import qualified Distribution.PackageDescription as PkgDesc
+import qualified Text.PrettyPrint as PP
 
 import Shake.Utils
 

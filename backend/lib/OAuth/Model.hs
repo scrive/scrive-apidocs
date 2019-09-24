@@ -299,8 +299,8 @@ instance MonadDB m => DBQuery m GetRequestedPrivileges (Maybe (String, [APIPrivi
               <> "JOIN user_groups ug           ON u.user_group_id =  ug.id "
               <> "WHERE c.temp_token = $1 AND c.id = $2 AND expires > $3 AND c.user_id IS NULL")
               (atToken token, atID token, time)
-    foldlDB f Nothing
     -- get name of company from companies table, or if that does not exist, the users.company_name
+    foldlDB f Nothing
     where
       f :: Maybe (String, [APIPrivilege])
         -> (String, String, String, String, APIPrivilege)

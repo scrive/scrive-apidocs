@@ -272,13 +272,13 @@ authenticationMethodsCanMix
   -> AuthenticationToSignMethod
   -> AuthenticationToViewMethod
   -> Bool
+-- We allow at most one EID authentication method within a signatory.
 authenticationMethodsCanMix authToView authToSign authToViewArchived =
   let auths = S.fromList [ atvToMix authToView
                          , atsToMix authToSign
                          , atvToMix authToViewArchived
                          ]
       eids  = S.fromList [MAM_SEBankID, MAM_NOBankID, MAM_DKNemID, MAM_FITupas, MAM_Verimi]
-  -- We allow at most one EID authentication method within a signatory.
   in length (auths `S.intersection` eids) <= 1
 
 ----------------------------------------

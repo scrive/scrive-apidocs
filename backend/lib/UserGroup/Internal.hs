@@ -532,8 +532,8 @@ instance CompositeFromSQL UserGroupUI where
     , _uguiFavicon       = faviconFromBinary favicon
     }
     where
-    -- We should interpret empty logos as no logos.
     faviconFromBinary (Just f) = if (BS.null f) then Nothing else Just f
+    -- We should interpret empty logos as no logos.
     faviconFromBinary Nothing = Nothing
 
 -- ADDRESS

@@ -202,11 +202,11 @@ instance (MonadDB m, MonadThrow m, MonadTime m) =>
 -- | Removes user who didn't accept TOS from the database
 data RemoveInactiveUser = RemoveInactiveUser UserID
 instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m RemoveInactiveUser Bool where
+  -- There is a chance that a signatory_links gets connected to an
+  -- yet not active account the true fix is to not have inactive
+  -- accounts, but we are not close to that point yet. Here is a
+  -- kludge to get around our own bug.
   update (RemoveInactiveUser uid) = do
-    -- There is a chance that a signatory_links gets connected to an
-    -- yet not active account the true fix is to not have inactive
-    -- accounts, but we are not close to that point yet. Here is a
-    -- kludge to get around our own bug.
     runQuery_ $ "SELECT TRUE FROM companyinvites where user_id = " <?> uid
     ci :: Maybe Bool <- fetchMaybe runIdentity
     if isJust ci then
@@ -225,8 +225,8 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetSignupMethod Bool where
 
 data SetUserUserGroup = SetUserUserGroup UserID UserGroupID
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserUserGroup Bool where
+  -- also set the new user_group company
   update (SetUserUserGroup uid ugid) =
-    -- also set the new user_group company
     dbQuery (UserGroupGet ugid) >>= \case
       Nothing -> return False
       Just ug ->

@@ -21,6 +21,7 @@ class InspectXML a where
 table :: Text -> Text -> Text
 table a b = "<table><tbody><tr><td valign='top' style='padding-right:5px'> "<> a <>" </td><td> </td><td> "<> b <>" </td></tr></tbody></table>"
 
+-- brittany-disable-next-binding
 deriveInspectXML :: TH.Name -> TH.Q [TH.Dec]
 deriveInspectXML name = do
   info <- TH.reify name

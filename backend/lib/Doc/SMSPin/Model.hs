@@ -91,6 +91,6 @@ instance (MonadLog m, MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => DBQu
               sqlSet "pin_type" pintype
             return $ T.pack newPin
     where
-      -- PIN is valid for 60 minutes from its generation.
       validityWindow :: NominalDiffTime
+      -- PIN is valid for 60 minutes from its generation.
       validityWindow = 60 * 60

@@ -434,8 +434,7 @@ instance Arbitrary DocumentSharing where
 
 instance Arbitrary Document where
   arbitrary = do
-    -- we can have any document type here
-    dtype <- arbitrary
+    dtype <- arbitrary  -- we can have any document type here
     -- sharing has meaning only for templates
     dsharing <- if dtype == Template
                 then arbitrary
@@ -504,8 +503,9 @@ instance {-# OVERLAPPING #-} Arbitrary [SignatoryField] where
 
 
 instance Arbitrary FieldPlacement where
-  arbitrary = do  -- We lose precision with conversion, so please
-                  -- watch out for this
+  -- We lose precision with conversion, so please
+  -- watch out for this
+  arbitrary = do
     (a :: Int) <- choose (1,1000)
     (b :: Int) <- choose (1,1000)
     (c :: Int) <- choose (1,1000)
@@ -690,8 +690,7 @@ instance Arbitrary UserSettings where
 instance Arbitrary User where
   arbitrary = User
     <$> arbitrary
-    <*> arbitrary
-    -- Messes with tests if these are set
+    <*> arbitrary    -- Messes with tests if these are set:
     <*> pure Nothing -- usertotp
     <*> pure False   -- usertotpactive
     <*> pure False   -- usertotpismandatory

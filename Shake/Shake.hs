@@ -1,19 +1,19 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-import Control.Exception  (IOException, SomeException, catch, evaluate)
+import Control.Exception (IOException, SomeException, catch, evaluate)
 import Control.Monad
 import Control.Monad.Writer (execWriter, tell)
 import Data.Char
-import Data.List.Extra    (intersperse, trim)
+import Data.List.Extra (intersperse, trim)
 import Data.Maybe
-import Data.Version.Extra (makeVersion, showVersion, readVersion)
+import Data.Version.Extra (makeVersion, readVersion, showVersion)
 import Development.Shake
 import Development.Shake.FilePath
-import Distribution.Text  (display)
-import System.Directory   (createDirectoryIfMissing)
-import System.Exit        (exitFailure)
-import System.IO          (hPutStrLn, stderr)
-import System.Process     (callProcess, readProcess)
+import Distribution.Text (display)
+import System.Directory (createDirectoryIfMissing)
+import System.Exit (ExitCode(..), exitFailure)
+import System.IO (hPutStrLn, stderr)
+import System.Process (callProcess, readProcess)
 
 import Shake.Cabal
 import Shake.DBSchema (buildDBDocs)
@@ -84,7 +84,9 @@ usageMsg = unlines
   , "   hlint                     : Run hlint, printing output to stdout"
   , "   hlint-report              : Run hlint, generating an HTML report"
   , "   hlint-refactor            : Run hlint, applying all hints automatically"
+  , "   test-formatting           : Test whether code base has run through fix-formatting"
   , "   test-hs-import-order      : Run Haskell Import Order checking script"
+  , "   fix-formatting            : Format code base using brittany and sort_import"
   , "   fix-hs-import-order       : Sort Haskell imports"
   , "   test-hs-outdated-deps     : Check for outdated Haskell dependencies"
   , ""
@@ -132,6 +134,11 @@ checkPrerequisites = do
   requireVersion "happy" ["--version"] (makeVersion [1,18,0])
     (takeWhile dotOrNum . drop 14)
 
+  -- Temporarily make brittany requirement optional to make CI pass,
+  -- since brittany is not installed on CI.
+  -- requireVersion "brittany" ["--version"] (makeVersion [0,12,0,0])
+  --   (takeWhile dotOrNum . drop 17)
+
     where
       dotOrNum c = c == '.' || isNumber c
 
@@ -163,7 +170,7 @@ main = do
   checkPrerequisites
 
   -- Used to check if Shake.hs rules changed, triggering a full rebuild.
-  hsDeps       <- getHsDeps "Shake/Shake.hs"
+  hsDeps       <- getHsDeps "Shake" "Shake.hs"
   ver          <- getHashedShakeVersion $ ["shake.sh"] ++ hsDeps
   -- Dependency information needed by our rules.
   cabalFile    <- parseCabalFile "kontrakcja.cabal"
@@ -482,6 +489,12 @@ serverFormatLintRules newBuild opt cabalFile flags = do
     need [componentTargetPath newBuild opt (mkExeName "sort_imports")]
     hsImportOrderAction True srcSubdirs
 
+  "fix-formatting" ~> do
+    need ["fix-hs-import-order", "brittany"]
+
+  "test-formatting" ~> do
+    need ["test-hs-import-order", "brittany-check"]
+
   "fix-hs-import-order" ~> do
     need [componentTargetPath newBuild opt (mkExeName "sort_imports")]
     hsImportOrderAction False srcSubdirs
@@ -516,18 +529,58 @@ serverFormatLintRules newBuild opt cabalFile flags = do
       onEachHsFile subdir (["hlint"] ++ commonHLintOpts
                             ++ [ "--refactor", "--refactor-options=-i"])
 
+  "brittany" ~> do
+    forM_ srcSubdirs $ \subdir -> do
+      files <- getDirectoryFiles subdir ["//*.hs"]
+      forM_ files $ \file -> do
+        unit $ command [] "brittany"
+          $ [ "--config-file"
+            , "brittany.yaml"
+            , "--write-mode"
+            , "inplace"
+            , subdir </> file
+            ]
+
+  "brittany-check" ~> do
+    unformattedFiles <- fmap join $
+      forM srcSubdirs $ \subdir -> do
+        files <- getDirectoryFiles subdir ["//*.hs"]
+        fmap join $ forM files $ \file -> do
+          let srcPath = subdir </> file
+          formatted <- checkFormatted $ subdir </> file
+          if formatted
+          then return []
+          else do
+            putNormal $ "file is not formatted: " <> srcPath
+            return [srcPath]
+    case unformattedFiles of
+      [] -> return ()
+      _ -> fail $
+        "formatting check failed. the following files are unformatted:\n" <>
+        (concat $ intersperse "\n" unformattedFiles)
+
     where
       commonHLintOpts = ["-XNoPatternSynonyms" , "--no-exit-code", "--cross"]
       onEachHsFile subdir act = unit $
         cmd "find" $ [subdir, "-type", "f", "-name", "*.hs", "-exec"]
                      ++ act ++ ["{}", ";"]
 
+      checkFormatted srcPath = do
+        Exit code <- command [] "brittany"
+          $ [ "--config-file"
+            , "brittany.yaml"
+            , "--check-mode"
+            , srcPath
+            ]
+        case code of
+          ExitSuccess -> return True
+          ExitFailure _ -> return False
+
       hsImportOrderAction checkOnly dirs = do
         let sortImportsFlags = if checkOnly then ("--check":dirs) else dirs
         command ([Shell] ++ langEnv)
           (componentTargetPath newBuild opt . mkExeName $ "sort_imports")
           sortImportsFlags
-
 
 -- * Frontend
 

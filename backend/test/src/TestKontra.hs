@@ -139,12 +139,13 @@ instance MonadDB TestEnv where
   clearQueryResult = TestEnv clearQueryResult
   getTransactionSettings = TestEnv getTransactionSettings
   setTransactionSettings = TestEnv . setTransactionSettings
+
+  -- We run 'TestEnv' with a static connection source that uses the
+  -- same connection over and over again. However, when
+  -- 'withNewConnection' is called, we actually want to spawn a
+  -- different one, thus we can't use current (static) connection
+  -- source, so we need one that actually creates new connections.
   withNewConnection (TestEnv m) = do
-    -- We run 'TestEnv' with a static connection source that uses the
-    -- same connection over and over again. However, when
-    -- 'withNewConnection' is called, we actually want to spawn a
-    -- different one, thus we can't use current (static) connection
-    -- source, so we need one that actually creates new connections.
     ConnectionSource pool <- asks (get teConnSource)
     runLogger <- asks (unRunLogger . get teRunLogger)
     TestEnv . liftTestFileStorageT $

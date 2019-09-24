@@ -53,11 +53,11 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetCurrentSenderType SenderType 
 
 data SwitchToSlaveSenderImmediately = SwitchToSlaveSenderImmediately
 instance (MonadDB m, MonadThrow m) => DBUpdate m SwitchToSlaveSenderImmediately () where
+  -- Column 'finished_at' of the job is updated in a separate
+  -- transaction after the job was processed and all the emails
+  -- were rescheduled, so we need to update it earlier ourselves
+  -- for the correct sender to be used for rescheduled emails.
   update SwitchToSlaveSenderImmediately = do
-    -- Column 'finished_at' of the job is updated in a separate
-    -- transaction after the job was processed and all the emails
-    -- were rescheduled, so we need to update it earlier ourselves
-    -- for the correct sender to be used for rescheduled emails.
     success <- runQuery01 . sqlUpdate "mailer_jobs" $ do
       sqlSet "finished_at" (Nothing :: Maybe UTCTime)
       sqlWhereEq "id" job

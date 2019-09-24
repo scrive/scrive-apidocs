@@ -517,19 +517,19 @@ apiCallV1CheckSign did slid = logDocumentAndSignatory did slid . api $ do
 
   void $ guardSignatoryAccessFromSessionOrCredentials did slid
 
-  (dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid) `withDocumentM` do
+  withDocumentM (dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid) $ do
     whenM (not <$> isPending <$> theDocument ) $ do
-      (throwM . SomeDBExtraException $ conflictError $ "Document not pending")
+      throwM . SomeDBExtraException $ conflictError $ "Document not pending"
     whenM (isSignatoryAndHasSigned . getSigLinkFor slid <$> theDocument) $ do
-      (throwM . SomeDBExtraException $ conflictError $ "Document already signed")
+      throwM . SomeDBExtraException $ conflictError $ "Document already signed"
     whenM (theDocument >>= \doc -> signatoryNeedsToIdentifyToView (fromJust $ getSigLinkFor slid doc) doc) $ do
-      (throwM . SomeDBExtraException $ forbidden "Authorization to view is needed")
+      throwM . SomeDBExtraException $ forbidden "Authorization to view is needed"
     checkAuthenticationToSignMethodAndValue slid
     authorization <- signatorylinkauthenticationtosignmethod <$> fromJust . getSigLinkFor slid <$> theDocument
     fields <- getFieldForSigning
     unlessM (allRequiredAuthorAttachmentsAreAccepted =<< getAcceptedAuthorAttachments) $ do
       unlessM (isAuthor <$> fromJust . getSigLinkFor slid <$> theDocument) $ do -- Author does not need to accept attachments
-        (throwM . SomeDBExtraException $ badInput $ "Some required attachments where not accepted")
+        throwM . SomeDBExtraException $ badInput $ "Some required attachments where not accepted"
 
     case authorization of
        StandardAuthenticationToSign -> return $ Right $ Ok () -- If we have a document with standard auth, it can be always signed if its not closed and signed
@@ -571,14 +571,14 @@ apiCallV1Sign did slid = logDocumentAndSignatory did slid . api $ do
     let
       signatoryLink = fromJust $ getSigLinkFor slid document
     whenM (not . isPending <$> theDocument ) $ do
-      (throwM . SomeDBExtraException $ conflictError $ "Document not pending")
+      throwM . SomeDBExtraException $ conflictError $ "Document not pending"
     whenM (isSignatoryAndHasSigned . getSigLinkFor slid <$> theDocument) $ do
-      (throwM . SomeDBExtraException $ conflictError $ "Document already signed")
+      throwM . SomeDBExtraException $ conflictError $ "Document already signed"
     whenM (theDocument >>= \doc -> signatoryNeedsToIdentifyToView (fromJust $ getSigLinkFor slid doc) doc) $ do
-      (throwM . SomeDBExtraException $ forbidden "Authorization to view is needed")
+      throwM . SomeDBExtraException $ forbidden "Authorization to view is needed"
     unlessM (allRequiredAuthorAttachmentsAreAccepted acceptedAuthorAttachments) $ do
       unlessM (isAuthor <$> fromJust . getSigLinkFor slid <$> theDocument) $ do -- Author does not need to accept attachments
-        (throwM . SomeDBExtraException $ badInput $ "Some required attachments where not accepted")
+        throwM . SomeDBExtraException $ badInput $ "Some required attachments where not accepted"
     checkAuthenticationToSignMethodAndValue slid
     authorization <- signatorylinkauthenticationtosignmethod <$> fromJust . getSigLinkFor slid <$> theDocument
 

@@ -559,11 +559,12 @@ getUserGroupSettingsChange = do
       parseTimeout :: Text -> Maybe (Maybe Int32)
       -- Use empty string to reset
       parseTimeout str | str == "" = Just Nothing
+
+      -- At least 5 minutes for minimal usability
+      -- At most 30 days to prevent any potential security vulnerability
       parseTimeout str =
         let mTimeout :: Maybe Int32 = maybeRead str
         in case mTimeout of
-          -- At least 5 minutes for minimal usability
-          -- At most 30 days to prevent any potential security vulnerability
           Just timeout |
             timeout >= minSessionTimeoutSecs && timeout <= maxSessionTimeoutSecs
             -> Just (Just timeout)

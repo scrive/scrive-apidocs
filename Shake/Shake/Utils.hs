@@ -6,8 +6,8 @@ module Shake.Utils ((%>>>)
 
 import Control.Monad
 import Data.Maybe
-import qualified Data.Set as Set
 import Development.Shake
+import qualified Data.Set as Set
 
 -- * Utilities
 

@@ -17,9 +17,9 @@ import Data.Version
 import Data.Version.Extra (readVersion)
 import Development.Shake
 import Development.Shake.FilePath
+import Distribution.System
 import Distribution.Text
 import Distribution.Types.ComponentName
-import Distribution.System
 import System.Process (readProcess)
 import qualified Data.Map as M
 

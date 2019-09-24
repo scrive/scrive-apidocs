@@ -159,18 +159,17 @@ instance ToAPIResponse Response where
   toAPIResponse = id
 
 instance ToAPIResponse JSValue where
+  -- It used to have to be text/plain because an ancient version of IE that
+  -- we don't support any more complained about it, now we leave it as text/plain because V1 is ossified
   toAPIResponse jv =
-    -- must be text/plain because some browsers complain about JSON type
     setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ encode jv
 
 instance ToAPIResponse A.Value where
   toAPIResponse jv =
-    -- must be text/plain because some browsers complain about JSON type
     setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ A.encode jv
 
 instance ToAPIResponse (UnjsonDef a,a) where
   toAPIResponse (unjson,a) =
-    -- must be text/plain because some browsers complain about JSON type
     setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjson a
 
 instance ToAPIResponse CSV where
@@ -184,7 +183,6 @@ instance ToAPIResponse ZipArchive where
 instance ToAPIResponse APIError where
   toAPIResponse e =
     let resp = Web.toResponse $ encode $ toJSValue e
-    -- must be text/plain because some browsers complain about JSON type
     in  setHeader "Content-Type" "text/plain; charset=UTF-8" $ resp { rsCode = httpCodeFromAPIError e }
 
 instance (ToAPIResponse a, ToAPIResponse b) => ToAPIResponse (Either a b) where
