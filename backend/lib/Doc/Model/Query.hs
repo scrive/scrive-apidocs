@@ -176,8 +176,8 @@ selectDocuments domain filters orders limit extend = sqlSelect "documents" $ do
 
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentID Document where
+  -- FIXME: Use domains/filters.
   query (GetDocumentByDocumentID did) = do
-    -- FIXME: Use domains/filters.
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereDocumentIDIs did
@@ -195,8 +195,8 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetDocumentByShortD
 -- only to be used for Dave
 data GetDocumentForDave = GetDocumentForDave DocumentID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentForDave Document where
+  -- FIXME: Use domains/filters.
   query (GetDocumentForDave did) = do
-    -- FIXME: Use domains/filters.
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereDocumentIDIs did
@@ -212,8 +212,8 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentAPICallbackResult (Ma
 
 data GetDocumentBySignatoryLinkID = GetDocumentBySignatoryLinkID SignatoryLinkID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentBySignatoryLinkID Document where
+  -- FIXME: Use domains/filters.
   query (GetDocumentBySignatoryLinkID slid) = do
-    -- FIXME: Use domains/filters.
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereEqSql "documents.id" . parenthesize . toSQLCommand . sqlSelect "signatory_links" $ do
@@ -223,8 +223,8 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentBySignatoryLinkID Doc
 
 data GetDocumentsBySignatoryLinkIDs = GetDocumentsBySignatoryLinkIDs [SignatoryLinkID]
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsBySignatoryLinkIDs [Document] where
+  -- FIXME: Use domains/filters.
   query (GetDocumentsBySignatoryLinkIDs slids) = do
-    -- FIXME: Use domains/filters.
     runQuery_ . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
       sqlWhereExists $ sqlSelect "signatory_links" $ do
@@ -307,10 +307,10 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocument Document where
 
 data GetDocumentsWithSoftLimit = GetDocumentsWithSoftLimit DocumentDomain [DocumentFilter] [AscDesc DocumentOrderBy] (Int, Int, Int)
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsWithSoftLimit (Int, [Document]) where
+  --analysis <- explainAnalyze $ toSQLCommand sql
+  --trace ("ANALYSIS:" <+> analysis) $ return ()
+  --trace (show $ toSQLCommand sql) $ return ()
   query (GetDocumentsWithSoftLimit domain filters orders (offset, limit, soft_limit)) = do
-    --analysis <- explainAnalyze $ toSQLCommand sql
-    --trace ("ANALYSIS:" <+> analysis) $ return ()
-    --trace (show $ toSQLCommand sql) $ return ()
     runQuery_ sql
     (count :: Int64, CompositeArray1 documents) <- fetchOne id
     return (fromIntegral count, documents)

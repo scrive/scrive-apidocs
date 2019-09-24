@@ -121,28 +121,28 @@ instance (MonadDB m, MonadCatch m) => DBQuery m CheckQueuedCallbacksFor Bool whe
 
 data MergeAPICallback = MergeAPICallback DocumentID Text APIVersion
 instance (MonadDB m, MonadCatch m, MonadLog m) => DBUpdate m MergeAPICallback () where
+  -- If callbacks are queued, but not being processed, replace them.
+  -- There will be only 1 queued callback majority of times, but it
+  -- doesn't have to be the case. Consider the following:
+  --  * Callback #1 is scheduled and run.
+  --  * Callback #2 is scheduled and no callback is queued (#1 runs),
+  --    so it's also scheduled and run.
+  --  * Both #1 and #2 fail to execute and each of them checks for
+  --    other queued callbacks before the other one is released, so
+  --    they don't see each other and both end up being postponed.
+  --  * Callback #3 is scheduled and below query updates both #1 and #2.
+  --
+  -- Replacing one callback using SELECT ... LIMIT 1 FOR UPDATE doesn't
+  -- work reliably here either. Consider the following:
+  --  * Callbacks #1 and #2 are queued, we attempt to schedule callback #3.
+  --  * We try to select id of #1 for update, but it was just selected for
+  --    update by the job queue, so our select waits.
+  --  * Job queue sets the flag reserved_by and releases the lock on the row.
+  --  * The select proceeeds, but the row now doesn't satisfy WHERE clause,
+  --    so the select returns no rows.
+  --  * We end up inserting #3 as a separate callback, even though we could
+  --    replace #2 instead.
   update (MergeAPICallback did url apiVersion) = logDocument did $ do
-    -- If callbacks are queued, but not being processed, replace them.
-    -- There will be only 1 queued callback majority of times, but it
-    -- doesn't have to be the case. Consider the following:
-    --  * Callback #1 is scheduled and run.
-    --  * Callback #2 is scheduled and no callback is queued (#1 runs),
-    --    so it's also scheduled and run.
-    --  * Both #1 and #2 fail to execute and each of them checks for
-    --    other queued callbacks before the other one is released, so
-    --    they don't see each other and both end up being postponed.
-    --  * Callback #3 is scheduled and below query updates both #1 and #2.
-    --
-    -- Replacing one callback using SELECT ... LIMIT 1 FOR UPDATE doesn't
-    -- work reliably here either. Consider the following:
-    --  * Callbacks #1 and #2 are queued, we attempt to schedule callback #3.
-    --  * We try to select id of #1 for update, but it was just selected for
-    --    update by the job queue, so our select waits.
-    --  * Job queue sets the flag reserved_by and releases the lock on the row.
-    --  * The select proceeeds, but the row now doesn't satisfy WHERE clause,
-    --    so the select returns no rows.
-    --  * We end up inserting #3 as a separate callback, even though we could
-    --    replace #2 instead.
     updated <- runQuery . sqlUpdate "document_api_callbacks" $ do
       setFields
       sqlWhereEq "document_id" did

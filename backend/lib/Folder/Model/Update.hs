@@ -115,8 +115,8 @@ instance (MonadDB m, MonadThrow m) =>
 data FolderCreateForUser = FolderCreateForUser UserID (Maybe FolderID)
 instance (MonadDB m, MonadThrow m) =>
   DBUpdate m FolderCreateForUser (Maybe Folder)where
+    -- make sure there isn't one already set for this user
     update (FolderCreateForUser uid mfdrparentid) = do
-      -- make sure there isn't one already set for this user
       (get folderID <$>) <$> (query . FolderGetUserHome $ uid) >>= \case
         (Just _) -> return Nothing
         Nothing -> do

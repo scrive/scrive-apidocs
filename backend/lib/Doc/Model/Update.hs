@@ -1396,8 +1396,8 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m ClearHi
 
 data SetFieldPlacements = SetFieldPlacements SignatoryFieldID [FieldPlacement]
 instance (DocumentMonad m, TemplatesMonad m) => DBUpdate m SetFieldPlacements () where
+  -- Delete existing fields and reinsert them
   update (SetFieldPlacements fieldid placements) = updateDocumentWithID $ const $ do
-    -- Delete existing fields and reinsert them
     runQuery_ . sqlDelete "field_placements" $ do
       sqlWhereEq "signatory_field_id" fieldid
     insertFieldPlacements [(fieldid, pl) | pl <- placements]
@@ -1927,9 +1927,9 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m PostRem
 
 data UpdateFieldsForSigning = UpdateFieldsForSigning SignatoryLink [(FieldIdentity, FieldValue)] [(FileID, BS.ByteString)] Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateFieldsForSigning () where
+  -- Document has to be in Pending state
+  -- signatory could not have signed already
   update (UpdateFieldsForSigning sl fields signaturesContent actor) = updateDocumentWithID $ const $ do
-    -- Document has to be in Pending state
-    -- signatory could not have signed already
     let slid = signatorylinkid sl
     let updateValue :: (FieldIdentity, FieldValue) -> m ()
         updateValue (fieldIdent, newValue) = do
@@ -2183,6 +2183,9 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateD
 -- than at a given time with supplied email address to a user.
 data ConnectSignatoriesToUser = ConnectSignatoriesToUser Email UserID UTCTime
 instance MonadDB m => DBUpdate m ConnectSignatoriesToUser () where
+  -- Connect only signatory links that belong to a document that is
+  -- not a template nor draft and are not already connected to an
+  -- existing user.
   update (ConnectSignatoriesToUser email uid time) = runSQL_ $ smconcat [
       "WITH ids AS ("
     , "SELECT d.id AS doc_id, sl.id AS sl_id"
@@ -2191,9 +2194,6 @@ instance MonadDB m => DBUpdate m ConnectSignatoriesToUser () where
     , "    ON d.id = sl.document_id"
     , "  JOIN signatory_link_fields slf"
     , "    ON sl.id = slf.signatory_link_id"
-    -- Connect only signatory links that belong to a document that is
-    -- not a template nor draft and are not already connected to an
-    -- existing user.
     , " WHERE d.type =" <?> Signable
     , "   AND d.status <>" <?> Preparation
     , "   AND sl.user_id IS NULL"
@@ -2683,9 +2683,9 @@ instance (MonadDB m, MonadTime m)
 
 data SetDocumentApiCallbackResult = SetDocumentApiCallbackResult DocumentID (Maybe Text)
 instance MonadDB m => DBUpdate m SetDocumentApiCallbackResult () where
+  -- this should be written as proper upsert, but hpq does not support it yet
+  -- not a problem, we don't care about any races for this
   update (SetDocumentApiCallbackResult did mtext) = do
-    -- this should be written as proper upsert, but hpq does not support it yet
-    -- not a problem, we don't care about any races for this
     runQuery_ . sqlUpdate "api_callback_result" $ do
       sqlSet "callback_result" mtext
       sqlWhereEq "document_id" did

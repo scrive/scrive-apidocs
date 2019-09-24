@@ -45,10 +45,10 @@ instance MonadDB m => DBQuery m GetDocumentIdsWithNullSearchField [DocumentID] w
 
 data SetDocumentSearchField = SetDocumentSearchField DocumentID
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetDocumentSearchField Bool where
+  -- We do a raw query here, since we rely on a stored procedure in the DB:
+  -- `archive_search_terms_func(bigint)`, defined by means of
+  -- `Doc.Trigger.archiveSearchTerms`.
   update (SetDocumentSearchField docID) = do
-    -- We do a raw query here, since we rely on a stored procedure in the DB:
-    -- `archive_search_terms_func(bigint)`, defined by means of
-    -- `Doc.Trigger.archiveSearchTerms`.
     runQuery01 $ rawSQL
                    (
                      "WITH new_archive_search_terms(txt) AS" <+>

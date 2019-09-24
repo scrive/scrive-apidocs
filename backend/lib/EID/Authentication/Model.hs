@@ -90,10 +90,10 @@ instance ToSQL AuthenticationProvider where
 -- | General version of inserting some authentication for a given signatory or replacing existing one.
 data MergeAuthenticationInternal = MergeAuthenticationInternal AuthenticationKind SessionID SignatoryLinkID (forall v n. (MonadState v n, SqlSet v) => n ())
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeAuthenticationInternal () where
+  -- Note: after document is signed, existing eid_authentication record will
+  -- keep being overwritten every time authenticate to view archived routine
+  -- is completed.
   update (MergeAuthenticationInternal authKind sid slid setDedicatedAuthFields) = do
-    -- Note: after document is signed, existing eid_authentication record will
-    -- keep being overwritten every time authenticate to view archived routine
-    -- is completed.
     loopOnUniqueViolation . withSavepoint "merge_authentication_internal" $ do
       success <- runQuery01 . sqlUpdate "eid_authentications" $ do
         setFields

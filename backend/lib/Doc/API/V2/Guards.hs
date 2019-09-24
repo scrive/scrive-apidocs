@@ -182,7 +182,7 @@ guardSignatoryNeedsToIdentifyToView slid doc = do
   -- not yet closed (i.e. we're not dealing with authenticate to view archived).
   unless (isAuthor msl && not (isClosed doc)) $ do
     whenM (signatoryNeedsToIdentifyToView (fromJust msl) doc) $ do
-      (apiError $ signatoryStateError "Authorization to view needed before signing")
+      apiError $ signatoryStateError "Authorization to view needed before signing"
 
 guardSignatoryHasNotIdentifiedToView :: Kontrakcja m
                                      => SignatoryLinkID -> Document

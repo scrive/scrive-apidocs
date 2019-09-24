@@ -145,8 +145,8 @@ parseEventTextTemplate name s =
     parseXMLContent $ s
 
 instance (DocumentMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => DBUpdate m InsertEvidenceEventWithAffectedSignatoryAndMsgs Bool where
+  -- FIXME: change to mmsg :: Maybe XMLContent
   update (InsertEvidenceEventWithAffectedSignatoryAndMsgs event textFields masl mmsg mamsg actor) = do
-   -- FIXME: change to mmsg :: Maybe XMLContent
    text <- evidenceLogText event textFields masl mmsg mamsg
    did <- theDocumentID
    actorSLID <- theDocument >>= \doc -> return $
