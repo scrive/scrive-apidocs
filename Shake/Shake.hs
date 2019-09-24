@@ -542,10 +542,30 @@ serverFormatLintRules newBuild opt cabalFile flags = do
             ]
 
   "brittany-check" ~> do
-    forM_ srcSubdirs $ \subdir -> do
-      files <- getDirectoryFiles subdir ["//*.hs"]
-      forM_ files $ \file -> do
-        let srcPath = subdir </> file
+    unformattedFiles <- fmap join $
+      forM srcSubdirs $ \subdir -> do
+        files <- getDirectoryFiles subdir ["//*.hs"]
+        fmap join $ forM files $ \file -> do
+          let srcPath = subdir </> file
+          formatted <- checkFormatted $ subdir </> file
+          if formatted
+          then return []
+          else do
+            putNormal $ "file is not formatted: " <> srcPath
+            return [srcPath]
+    case unformattedFiles of
+      [] -> return ()
+      _ -> fail $
+        "formatting check failed. the following files are unformatted:\n" <>
+        (concat $ intersperse "\n" unformattedFiles)
+
+    where
+      commonHLintOpts = ["-XNoPatternSynonyms" , "--no-exit-code", "--cross"]
+      onEachHsFile subdir act = unit $
+        cmd "find" $ [subdir, "-type", "f", "-name", "*.hs", "-exec"]
+                     ++ act ++ ["{}", ";"]
+
+      checkFormatted srcPath = do
         Exit code <- command [] "brittany"
           $ [ "--config-file"
             , "brittany.yaml"
@@ -553,14 +573,8 @@ serverFormatLintRules newBuild opt cabalFile flags = do
             , srcPath
             ]
         case code of
-          ExitSuccess -> return ()
-          ExitFailure _ -> fail $ "file is not formatted: " <> srcPath
-
-    where
-      commonHLintOpts = ["-XNoPatternSynonyms" , "--no-exit-code", "--cross"]
-      onEachHsFile subdir act = unit $
-        cmd "find" $ [subdir, "-type", "f", "-name", "*.hs", "-exec"]
-                     ++ act ++ ["{}", ";"]
+          ExitSuccess -> return True
+          ExitFailure _ -> return False
 
       hsImportOrderAction checkOnly dirs = do
         let sortImportsFlags = if checkOnly then ("--check":dirs) else dirs
