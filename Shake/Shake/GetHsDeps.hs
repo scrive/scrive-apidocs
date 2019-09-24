@@ -3,18 +3,19 @@ module Shake.GetHsDeps (getHsDeps)
 
 import Data.List
 import Development.Shake.Util (parseMakefile)
-import System.IO.Extra        (readFile', withTempDir)
-import System.FilePath        ((</>))
-import System.Process         (callProcess)
+import System.FilePath ((</>))
+import System.IO.Extra (readFile', withTempDir)
+import System.Process (callProcess)
 
 -- | Given a Haskell source file name, return a list of all local
 -- Haskell source files it depends on, as given by 'ghc -M'.
-getHsDeps :: FilePath -> IO [FilePath]
-getHsDeps mainIs = do
+getHsDeps :: FilePath -> FilePath -> IO [FilePath]
+getHsDeps rootPath mainIs = do
   withTempDir $ \dir -> do
     let tmpFile = dir </> ".depend"
     callProcess "ghc"
-      [ "-hide-all-packages"
+      [ "-i" <> rootPath
+      , "-hide-all-packages"
 
         -- We use 'getHsDeps' only on 'Shake/Shake.hs', so this is
         -- fine. Otherwise GHC would get confused by the package
@@ -39,7 +40,8 @@ getHsDeps mainIs = do
       , "-package", "time"
       , "-package", "unordered-containers"
 
-      , "-dep-suffix", "", "-M", mainIs
+      , "-dep-suffix", ""
+      , "-M", rootPath </> mainIs
       , "-dep-makefile", tmpFile ]
     deps <- nub . filter (".hs" `isSuffixOf`)
       . concatMap snd . parseMakefile <$> readFile' tmpFile

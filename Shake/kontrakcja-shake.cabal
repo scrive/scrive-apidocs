@@ -1,0 +1,45 @@
+Name:          kontrakcja-shake
+Version:       1.0
+Author:        Scrive AB
+Maintainer:    Scrive AB
+Copyright:     2010-2019
+Stability:     Experimental
+Category:      Web
+Synopsis:      Shake build tools for kontrakcja
+Description:   Sign documents online with the ultimate signing solution
+Cabal-Version: >= 2.0
+License:       OtherLicense
+Build-type:    Simple
+
+Executable kontrakcja-shake
+  Hs-source-dirs:   .
+
+  Main-is:          Shake.hs
+  GHC-Options:      -Wall -Werror -rtsopts -with-rtsopts=-I0
+
+  Build-Depends:    base
+                  , Cabal >= 2 && < 3
+                  , aeson
+                  , attoparsec
+                  , bytestring
+                  , containers
+                  , directory
+                  , extra
+                  , filepath
+                  , mtl
+                  , pretty
+                  , process
+                  , shake
+                  , text
+                  , time
+                  , unordered-containers
+
+  Default-Language: Haskell2010
+  other-modules:    Shake.Cabal
+                    Shake.DBSchema
+                    Shake.Flags
+                    Shake.GetHsDeps
+                    Shake.NewBuild
+                    Shake.Oracles
+                    Shake.TeamCity
+                    Shake.Utils

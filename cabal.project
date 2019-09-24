@@ -5,7 +5,7 @@
 --
 -- packages: . ../path/to/log
 
-packages: .
+packages: . Shake
 write-ghc-environment-files: always
 
 repository hackage.scrive.com
