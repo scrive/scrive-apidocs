@@ -186,7 +186,11 @@ showArchive = withUser . withTosCheck . with2FACheck $ \user -> do
       Nothing -> do
         logAttention "User has passed TOS check, but TOS was not accepted" $ object [ identifier $ userid user ]
         internalError
-    pb <-  pageArchive ctx user ugwp tostime
+    startDate <- if useriscompanyadmin user then
+                  dbQuery $ GetUserGroupFirstTOSDate $ usergroupid user
+                else
+                  return tostime
+    pb <-  pageArchive ctx user ugwp startDate
     internalResponse <$> renderFromBodyWithFields (T.pack pb) (F.value "archive" True)
 
 -- Zip utils
