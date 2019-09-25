@@ -80,6 +80,7 @@ checkFieldEq (conf0, conf1) fieldName a b =
   else Failure [ "Field '" <> fieldName <> "' in '" <> conf0 <> "' and '" <>
                  conf1 <> "' is not in sync." ]
 
+-- brittany-disable-next-binding
 checkFieldsEqualAppConfCronConf :: AppConf -> CronConf
                                 -> ConfigValidation
 checkFieldsEqualAppConfCronConf
@@ -121,6 +122,7 @@ checkFieldsEqualAppConfCronConf
     checkEq :: forall a . Eq a => String -> a -> a -> ConfigValidation
     checkEq = checkFieldEq (configFile @AppConf, configFile @CronConf)
 
+-- brittany-disable-next-binding
 checkFieldsEqualAppConfMailerConf :: AppConf -> MailingServerConf
                                   -> ConfigValidation
 checkFieldsEqualAppConfMailerConf
@@ -149,6 +151,7 @@ checkFieldsEqualAppConfMailerConf
     checkEq :: forall a . Eq a => String -> a -> a -> ConfigValidation
     checkEq = checkFieldEq (configFile @AppConf, configFile @MailingServerConf)
 
+-- brittany-disable-next-binding
 checkFieldsEqualAppConfMessengerConf :: AppConf -> MessengerServerConf
                                      -> ConfigValidation
 checkFieldsEqualAppConfMessengerConf
