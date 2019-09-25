@@ -105,14 +105,17 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
 
   -- Stat logging
   now <- currentTime
-  author <- getDocAuthor =<< theDocument
-  asyncLogEvent SetUserProps
-                (simplePlanhatAction "Document started" author now)
-                EventPlanhat
-  asyncLogEvent SetUserProps
-                (userMixpanelData author now)
-                EventMixpanel
-  theDocument >>= logDocEvent "Doc Sent" author []
+  mauthor <- getDocAuthor =<< theDocument
+  case mauthor of
+    Nothing -> return ()
+    Just author -> do
+      asyncLogEvent SetUserProps
+                    (simplePlanhatAction "Document started" author now)
+                    EventPlanhat
+      asyncLogEvent SetUserProps
+                    (userMixpanelData author now)
+                    EventMixpanel
+      theDocument >>= logDocEvent "Doc Sent" author []
 
   sendInvitationEmails authorsignsimmediately
   theDocument >>= \d -> setAutomaticReminder (documentid d) (documentdaystoremind d) tzn
@@ -163,8 +166,10 @@ postDocumentCanceledChange doc@Document{..} = logDocument documentid $ do
   unless (isCanceled doc) $
     stateMismatchError "postDocumentCanceledChange" Canceled doc
   logInfo_ "Pending -> Canceled"
-  author <- getDocAuthor doc
-  logDocEvent "Doc Canceled" author [] doc
+  mauthor <- getDocAuthor doc
+  case mauthor of
+    Nothing -> return ()
+    Just author -> logDocEvent "Doc Canceled" author [] doc
 
 
 -- | After a party has signed or approved - check if we need to close
@@ -189,16 +194,19 @@ postDocumentPendingChange olddoc signatoryLink = do
       dbUpdate $ ChargeUserGroupForClosingDocument $ documentid olddoc
       when (documentfromshareablelink olddoc) $ do
         dbUpdate $ ChargeUserGroupForShareableLink $ documentid olddoc
-      author <- getDocAuthor document
-      logDocEvent "Doc Closed" author [] document
-      -- report
-      now <- currentTime
-      asyncLogEvent SetUserProps
-                    (simplePlanhatAction "Document closed" author now)
-                    EventPlanhat
-      asyncLogEvent SetUserProps
-                    (userMixpanelData author now)
-                    EventMixpanel
+      mauthor <- getDocAuthor document
+      case mauthor of
+        Nothing -> return ()
+        Just author -> do
+          logDocEvent "Doc Closed" author [] document
+          -- report
+          now <- currentTime
+          asyncLogEvent SetUserProps
+                        (simplePlanhatAction "Document closed" author now)
+                        EventPlanhat
+          asyncLogEvent SetUserProps
+                        (userMixpanelData author now)
+                        EventMixpanel
       dbUpdate . ScheduleDocumentSealing . get (bdid . mctxcurrentBrandedDomain)
         =<< getMailContext
       if signatorylinkconfirmationdeliverymethod signatoryLink == NoConfirmationDelivery
@@ -254,9 +262,12 @@ postDocumentClosedActions commitAfterSealing forceSealDocument = do
     when commitAfterSealing commit -- so that post-sign view can render pages as soon as possible
 
   whenM ((\d -> isDocumentError d && not (isDocumentError doc0)) <$> theDocument) $ do
-
-    logInfo "Sending seal error emails" $ logObject_ doc0
-    theDocument >>= \d -> flip sendDocumentErrorEmail d =<< getDocAuthor d
+    mauthor <- getDocAuthor =<< theDocument
+    case mauthor of
+      Nothing -> return ()
+      Just author -> do
+        logInfo "Sending seal error emails" $ logObject_ doc0
+        sendDocumentErrorEmail author =<< theDocument
     theDocument >>= triggerAPICallbackIfThereIsOne
 
   unlessM (isDocumentError <$> theDocument) $ do
@@ -301,10 +312,10 @@ stateMismatchError funame expected doc = do
     ]
   internalError
 
-getDocAuthor :: (MonadDB m, MonadThrow m, MonadBase IO m) => Document -> m User
+getDocAuthor :: (MonadDB m, MonadThrow m, MonadBase IO m) => Document -> m (Maybe User)
 getDocAuthor doc = do
   authorid <- guardJust $ getAuthorSigLink doc >>= maybesignatory
-  guardJustM $ dbQuery $ GetUserByID authorid
+  dbQuery $ GetUserByID authorid
 
 {- |
     Goes through each signatory, and if a user exists this saves it for that user
@@ -348,19 +359,23 @@ findAndTimeoutDocuments = do
   docs <- dbQuery $ GetTimeoutedButPendingDocumentsChunk now 10
   forM_ docs $ flip withDocument $ do
     lang <- documentlang <$> theDocument
-    author <- getDocAuthor =<< theDocument
-    ugwp <- guardJustM $ dbQuery $ UserGroupGetWithParents (usergroupid author)
-    bd <- dbQuery $ GetBrandedDomainByUserID (userid author)
-    let mc = MailContext {
-        _mctxlang                 = lang
-      , _mctxcurrentBrandedDomain = bd
-      , _mctxtime                 = now
-      , _mctxmailNoreplyAddress   = noreplyAddress
-    }
-    runTemplatesT (lang, gt) . runMailContextT mc $ do
+    mauthor <- getDocAuthor =<< theDocument
+    runTemplatesT (lang, gt) $
       dbUpdate $ TimeoutDocument (systemActor now)
-      when (get ugsSendTimeoutNotification (ugwpSettings ugwp)) $ do
-        sendDocumentTimeoutedEmail =<< theDocument
+    case mauthor of
+      Nothing -> return ()
+      Just author -> do
+        ugwp <- guardJustM $ dbQuery $ UserGroupGetWithParents (usergroupid author)
+        bd <- dbQuery $ GetBrandedDomainByUserID (userid author)
+        let mc = MailContext {
+            _mctxlang                 = lang
+          , _mctxcurrentBrandedDomain = bd
+          , _mctxtime                 = now
+          , _mctxmailNoreplyAddress   = noreplyAddress
+        }
+        runTemplatesT (lang, gt) . runMailContextT mc $ do
+          when (get ugsSendTimeoutNotification (ugwpSettings ugwp)) $ do
+            sendDocumentTimeoutedEmail =<< theDocument
     triggerAPICallbackIfThereIsOne =<< theDocument
     logInfo_ "Document timed out"
   unless (null docs) $ do
