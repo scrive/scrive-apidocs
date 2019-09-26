@@ -169,7 +169,7 @@ conf_layout:
   lconfig_alignmentBreakOnMultiline: true
 
   # column width
-  lconfig_cols: 80
+  lconfig_cols: 90
 
   # IndentPolicyLeft
   #   never create a new indentation at more than old indentation + amount
