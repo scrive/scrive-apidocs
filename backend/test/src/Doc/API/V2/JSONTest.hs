@@ -16,6 +16,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.HashMap.Strict as H
 
 import Context
+import DB
 import Doc.API.V2.Calls
 import Doc.API.V2.Mock.TestUtils
 import Doc.DocumentID
@@ -24,6 +25,9 @@ import TestingUtil
 import TestingUtil.JSON
 import TestKontra as T
 import User.Lang (defaultLang)
+import User.Types.User
+import UserGroup.Model
+import UserGroup.Types
 
 apiV2JSONTests :: TestEnvSt -> Test
 apiV2JSONTests env = testGroup "DocAPIV2JSON"
@@ -52,8 +56,10 @@ apiV2JSONTests env = testGroup "DocAPIV2JSON"
     env testDocSetFile
   , testThat "Test API v2 'setfile' with base64 encoded param"
     env testDocSetFileB64
-  , testThat "Test API v2 'list' response structure"
-    env testDocList
+  , testThat "Test API v2 'list' response structure using old style list calls"
+    env (testDocList False)
+  , testThat "Test API v2 'list' response structure using new style list calls"
+    env (testDocList True)
   , testThat "Test API v2 'removepages' with placements \
              \on many diffferent pages"
     env testDocRemovePages
@@ -271,9 +277,17 @@ testDocSetFileB64 = do
   return ()
 
 
-testDocList :: TestEnv ()
-testDocList = do
+testDocList :: Bool -> TestEnv ()
+testDocList useFolderListCalls = do
   ctx <- testJSONCtx
+
+  -- test with new list feature as well as old
+  let (Just user) = get ctxmaybeuser ctx
+      ugid = usergroupid user
+  (Just ug) <- dbQuery . UserGroupGet $ ugid
+  let new_ugsettings = set ugsUseFolderListCalls useFolderListCalls (fromJust $ get ugSettings ug)
+
+  void $ dbUpdate . UserGroupUpdate $ set ugSettings (Just new_ugsettings) ug
 
   reqEmpty <- mkRequestWithHeaders GET [("offset", inText "0")] []
   (resEmpty,_) <- runTestKontra reqEmpty ctx $ docApiV2List
@@ -286,14 +300,17 @@ testDocList = do
   reqOne <- mkRequestWithHeaders GET [("offset", inText "0")] []
   (resOne,_) <- runTestKontra reqOne ctx $ docApiV2List
   assertEqual ("We should get a " ++ show 200 ++ " response") 200 (rsCode resOne)
-  testJSONWith (inTestDir "json/api_v2/test-DocListOne.json") (rsBody resOne)
+  let expectedJson = if useFolderListCalls
+                     then "test-DocListOne-By-Folder.json"
+                     else "test-DocListOne.json"
+  testJSONWith (inTestDir ("json/api_v2/" <> expectedJson)) (rsBody resOne)
 
   reqFilterPrep <- mkRequestWithHeaders GET [("offset", inText "0")
                                             ,("filter", inText "[{\"filter_by\":\"status\",\"statuses\": [\"preparation\"]}]")
                                             ] []
   (resFilterPrep,_) <- runTestKontra reqFilterPrep ctx $ docApiV2List
   assertEqual ("We should get a " ++ show 200 ++ " response") 200 (rsCode resFilterPrep)
-  testJSONWith (inTestDir "json/api_v2/test-DocListOne.json") (rsBody resFilterPrep)
+  testJSONWith (inTestDir ("json/api_v2/" <> expectedJson)) (rsBody resFilterPrep)
 
   reqFilterPending <- mkRequestWithHeaders GET [("offset", inText "0")
                                                ,("filter", inText "[{\"filter_by\":\"status\",\"statuses\": [\"pending\"]}]")

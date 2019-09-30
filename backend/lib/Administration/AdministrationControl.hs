@@ -169,6 +169,8 @@ adminonlyRoutes =
         , dir "triggermigratefolders" $ hGet $ toK1 handleTriggerMigrateFolders
         , dir "triggermigratedocuments" $ hGet $ toK1 handleTriggerMigrateDocuments
 
+        -- migration for connecting the folder into a hierarchy reflecting the user group structure
+        , dir "triggermigratefolderhierarchy" $ hGet $ toK1 handleMigrateFolderHierarchy
   ]
 
 daveRoutes :: Route (Kontra Response)
@@ -419,6 +421,8 @@ handleMergeToOtherCompany ugid_source = onlySalesOrAdmin $ do
 handleCompanyChange :: Kontrakcja m => UserGroupID -> m ()
 handleCompanyChange ugid = onlySalesOrAdmin $ do
   ugwp <- guardJustM $ dbQuery $ UserGroupGetWithParents ugid
+  logInfo "ugwp" $ object [
+    "ugwp" .= (showt ugwp) ]
   mCompanyName <- getField "companyname"
   mUGSettingsIsInherited <- fmap (== ("true" :: Text))
     <$> getField "companysettingsisinherited"
@@ -447,6 +451,8 @@ handleCompanyChange ugid = onlySalesOrAdmin $ do
   newSettings <- guardJust . listToMaybe . catMaybes $
     [ get ugSettings newUG
     , ugwpSettings <$> ugwpOnlyParents ugwp ]
+  logInfo "newsettings" $ object [
+    "newsettings" .= (showt newSettings) ]
   guardThatDataRetentionPolicyIsValid
     (get ugsDataRetentionPolicy newSettings) Nothing
   dbUpdate $ UserGroupUpdate newUG
@@ -916,6 +922,21 @@ handleTriggerMigrateFolders limit = onlyAdmin $ do
     [ "home_folders_created" .= numberDone
     , "limit_used" .= limitWithUpperBound
     , "elapsed_time" .= (realToFrac (diffUTCTime endTime startTime) :: Double)]
+
+handleMigrateFolderHierarchy :: Kontrakcja m => UserGroupID -> m Aeson.Value
+handleMigrateFolderHierarchy ugid = do
+  (fdrAndNewParent :: [(FolderID, FolderID)]) <- do
+    runQuery_ . sqlSelect "user_groups ug" $ do
+      sqlResult "ug.home_folder_id"
+      sqlResult "(select home_folder_id from user_groups where id=ug.parent_group_id)"
+      sqlWhere $ "parent_group_path @> " <?> Array1 [ugid]
+    fetchMany id
+
+  forM_ fdrAndNewParent $ \(fdrid, parent_fdrid) -> do
+    fdr <- guardJustM $ dbQuery $ FolderGet fdrid
+    dbUpdate $ FolderUpdate (set folderParentID (Just parent_fdrid) fdr)
+
+  return . object $ [ "fdrids" .= fdrAndNewParent ]
 
 jsonBrandedDomainsList ::Kontrakcja m => m Aeson.Value
 jsonBrandedDomainsList = onlySalesOrAdmin $ do

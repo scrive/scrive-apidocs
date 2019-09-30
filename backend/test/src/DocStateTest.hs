@@ -498,8 +498,10 @@ testSignDocumentSearchData = do
       docID <- theDocumentID
       mSearchDataByFunction <- dbQuery $ GetDocumentSearchDataByFunction docID
       mSearchDataByField    <- dbQuery $ GetDocumentSearchDataByField docID
+      -- order not guaranteed and anyway doesn't matter so we sort before comparing
       assertEqual "Search string is updated by triggers upon document creation"
-                  mSearchDataByFunction mSearchDataByField
+                  ((concat . sort . words) <$> mSearchDataByFunction)
+                  ((concat . sort . words) <$> mSearchDataByField)
       -- check that change title works with search triggers
       title' <- rand 1 $ arbString 10 25
       void . randomUpdate $ \t -> SetDocumentTitle (T.pack title') (systemActor t)
@@ -508,7 +510,8 @@ testSignDocumentSearchData = do
       if (mSearchDataByField' == mSearchDataByField)
       then assertFailure "Search field was not updated"
       else assertEqual "Search string is updated by triggers after document title update"
-                       mSearchDataByFunction' mSearchDataByField'
+                       ((concat . sort . words) <$> mSearchDataByFunction')
+                       ((concat . sort . words) <$> mSearchDataByField')
       -- check that change slf.value_text works with search triggers. Involved.
       let sfs :: [SignatoryField]
           sfs = join $ map signatoryfields $ [asl, sl]
@@ -546,7 +549,8 @@ testSignDocumentSearchData = do
       if (mSearchDataByField'' == mSearchDataByField')
       then assertFailure "Search field was not updated"
       else assertEqual "Search string is updated by triggers after signatory_link_fields.value_text update"
-                       mSearchDataByFunction'' mSearchDataByField''
+                       ((concat . sort . words) <$> mSearchDataByFunction'')
+                       ((concat . sort . words) <$> mSearchDataByField'')
 
 testDocumentAuthorUserID :: TestEnv ()
 testDocumentAuthorUserID = do

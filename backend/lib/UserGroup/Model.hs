@@ -114,6 +114,7 @@ insertUserGroupSettings ugid ugs =
     sqlSet "legal_text" . get ugsLegalText $ ugs
     sqlSet "require_bpid_for_new_document" . get ugsRequireBPIDForNewDoc $ ugs
     sqlSet "send_timeout_notification" . get ugsSendTimeoutNotification $ ugs
+    sqlSet "use_folder_list_calls" . get ugsUseFolderListCalls $ ugs
     sqlSet "totp_is_mandatory" . get ugsTotpIsMandatory $ ugs
     sqlSet "session_timeout" $ get ugsSessionTimeoutSecs $ ugs
 

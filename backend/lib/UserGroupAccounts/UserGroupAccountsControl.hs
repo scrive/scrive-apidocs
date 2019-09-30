@@ -50,8 +50,7 @@ handleUserGroupAccounts = withUserAndGroup $ \(user,_) -> do
   -- which he can administer.
   -- This intentionally uses UserAdminAR role instead of checking for (ReadA, UserR) permission,
   -- because we want to avoid huge list of users for "partner admins" (UserGroupAdminART).
-  roles0 <- dbQuery . GetRoles $ user
-  roles <- addInheritedRoles roles0
+  roles <- addInheritedRoles =<< (dbQuery . GetRoles $ user)
   let userAdminUgId = \case
         UserAdminAR ugid -> Just ugid
         _ -> Nothing
@@ -325,10 +324,9 @@ handleRemoveUserGroupAccount = withUserAndRoles $ \(user, roles) -> do
   where
     removeInvitesOnly :: Kontrakcja m => [AccessRole] -> User -> m JSValue
     removeInvitesOnly roles removeForUser = do
-      -- get all user groups for which delete is allowed
-      allRoles <- addInheritedRoles roles
-      let allPerms = join $ map (hasPermissions . accessRoleTarget) allRoles
-          deleteUserPerms = filter (\p -> (p `hasAction` DeleteA) &&
+      allPerms <- (concatMap (hasPermissions . accessRoleTarget)) <$>
+                    (addInheritedRoles roles)
+      let deleteUserPerms = filter (\p -> (p `hasAction` DeleteA) &&
                                           (p `hasResource` UserR))
                                    allPerms
           ugids = catMaybes $ map extractResourceRef deleteUserPerms
