@@ -18,7 +18,6 @@ import System.Process (callProcess, readProcess)
 import Shake.Cabal
 import Shake.DBSchema (buildDBDocs)
 import Shake.Flags
-import Shake.GetHsDeps
 import Shake.NewBuild
 import Shake.Oracles
 import Shake.TeamCity
@@ -170,7 +169,7 @@ main = do
   checkPrerequisites
 
   -- Used to check if Shake.hs rules changed, triggering a full rebuild.
-  hsDeps       <- getHsDeps "Shake" "Shake.hs"
+  hsDeps       <- getHsDeps "Shake"
   ver          <- getHashedShakeVersion $ ["shake.sh"] ++ hsDeps
   -- Dependency information needed by our rules.
   cabalFile    <- parseCabalFile "kontrakcja.cabal"

@@ -38,7 +38,6 @@ Executable kontrakcja-shake
   other-modules:    Shake.Cabal
                     Shake.DBSchema
                     Shake.Flags
-                    Shake.GetHsDeps
                     Shake.NewBuild
                     Shake.Oracles
                     Shake.TeamCity
