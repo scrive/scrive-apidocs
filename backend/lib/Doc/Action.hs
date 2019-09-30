@@ -93,7 +93,7 @@ postDocumentPreparationChange authorsignsimmediately tzn = do
   unlessM (isPending <$> theDocument) $
     theDocument >>= stateMismatchError "postDocumentPreparationChange" Pending
   logInfo_ "Preparation -> Pending; Sending invitation emails"
-  initialiseSignatoryAPIMagicHashes
+  updateDocument $ \_ -> initialiseSignatoryAPIMagicHashes
   msaved <- saveDocumentForSignatories
   case msaved of
     Just msg -> do
