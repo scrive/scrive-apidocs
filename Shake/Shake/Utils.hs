@@ -1,4 +1,5 @@
 module Shake.Utils ((%>>>)
+                   ,getHsDeps
                    ,langEnv
                    ,findWithDefault
                    ,needPatternsInDirectories
@@ -7,9 +8,17 @@ module Shake.Utils ((%>>>)
 import Control.Monad
 import Data.Maybe
 import Development.Shake
+import System.FilePath ((</>))
 import qualified Data.Set as Set
 
 -- * Utilities
+
+-- List all Haskell source files within a directory,
+-- identified by the ".hs" extension.
+getHsDeps :: FilePath -> IO [FilePath]
+getHsDeps rootPath = do
+  files <- getDirectoryFilesIO rootPath ["//*.hs"]
+  return $ fmap ((</>) rootPath) files
 
 -- | Perform a `need` on all files matching the given [FilePattern] in
 -- the given [FilePath] For each directory we get all the files using

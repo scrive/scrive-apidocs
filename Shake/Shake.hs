@@ -18,7 +18,6 @@ import System.Process (callProcess, readProcess)
 import Shake.Cabal
 import Shake.DBSchema (buildDBDocs)
 import Shake.Flags
-import Shake.GetHsDeps
 import Shake.NewBuild
 import Shake.Oracles
 import Shake.TeamCity
