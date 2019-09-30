@@ -170,7 +170,7 @@ main = do
   checkPrerequisites
 
   -- Used to check if Shake.hs rules changed, triggering a full rebuild.
-  hsDeps       <- getHsDeps "Shake" "Shake.hs"
+  hsDeps       <- getHsDeps "Shake"
   ver          <- getHashedShakeVersion $ ["shake.sh"] ++ hsDeps
   -- Dependency information needed by our rules.
   cabalFile    <- parseCabalFile "kontrakcja.cabal"
