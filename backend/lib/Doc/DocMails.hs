@@ -180,13 +180,13 @@ sendInvitationEmail1 :: (CryptoRNG m, MonadThrow m, MonadLog m, TemplatesMonad m
 sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
   did <- theDocumentID
   mctx <- getMailContext
+  let invitationTo = if | isSignatory signatorylink -> Sign
+                        | isApprover  signatorylink -> Approve
+                        | otherwise                 -> View
   -- send invitation to sign to invited person
   sent <- sendNotifications signatorylink False
 
     (do
-      let invitationTo = if | isSignatory signatorylink -> Sign
-                            | isApprover  signatorylink -> Approve
-                            | otherwise                 -> View
       mail <- theDocument >>= mailInvitation True invitationTo (Just signatorylink)
       -- ?? Do we need to read in the contents? -EN
       -- _attachmentcontent <- liftIO $ documentFileID document >>= getFileContents ctx
@@ -198,7 +198,7 @@ sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
           })
     )
     (do
-      sms <- smsInvitation signatorylink =<< theDocument
+      sms <- smsInvitation invitationTo signatorylink =<< theDocument
       theDocument >>= \doc -> scheduleSMS doc $ sms { SMS.kontraInfoForSMS = Just $ SMS.DocumentInvitationSMS (documentid doc) (signatorylinkid signatorylink)}
     )
 

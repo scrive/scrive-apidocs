@@ -12,7 +12,6 @@ module Doc.DocViewSMS (
     , smsPinCodeSendout
     ) where
 
-import Control.Conditional ((<|), (|>))
 import Control.Monad.Catch
 import Control.Monad.Trans
 import Crypto.RNG
@@ -24,6 +23,7 @@ import BrandedDomain.BrandedDomain
 import DB
 import Doc.DocInfo
 import Doc.DocStateData hiding (DocumentStatus(..))
+import Doc.DocViewMail (InvitationTo(..))
 import Doc.Model.Update
 import Doc.Types.SignatoryAccessToken
 import Doc.Types.SignatoryLink (ProcessFinishedAction(..))
@@ -101,10 +101,14 @@ smsPartyProcessFinalizedNotification document signatoryLink action = do
 smsInvitation
   :: ( CryptoRNG m, MailContextMonad m, MonadDB m, MonadThrow m, MonadTime m
      , TemplatesMonad m )
-  => SignatoryLink -> Document -> m SMS
-smsInvitation sl doc = do
+  => InvitationTo -> SignatoryLink -> Document -> m SMS
+smsInvitation invitationTo sl doc = do
   mkSMS doc sl (Just $ DocumentInvitationSMS (documentid doc) (signatorylinkid sl)) =<<
-    renderLocalTemplate doc (templateName "_smsInvitationToSign" <| isSignatory sl |> templateName "_smsInvitationToView") (smsFields doc >> smsInvitationLinkFields doc sl)
+    renderLocalTemplate doc template (smsFields doc >> smsInvitationLinkFields doc sl)
+  where template = templateName $ case invitationTo of
+                                    Sign    -> "_smsInvitationToSign"
+                                    Approve -> "_smsInvitationToApprove"
+                                    View    -> "_smsInvitationToView"
 
 smsInvitationToAuthor
   :: ( CryptoRNG m, MailContextMonad m, MonadDB m, MonadTime m, MonadThrow m
