@@ -25,7 +25,7 @@ import Doc.Model.Update
 import Doc.SignatoryLinkID
 import Doc.SignatoryScreenshots (emptySignatoryScreenshots)
 import Doc.Tokens.Model
-import Doc.Types.Document (Document(..))
+import Doc.Types.Document
 import Doc.Types.DocumentStatus (DocumentStatus(..))
 import Doc.Types.SignatoryAttachment
   ( SignatoryAttachment(..), defaultSignatoryAttachment )
@@ -41,7 +41,6 @@ import User.Lang (defaultLang)
 import UserGroup.Types
 import Util.Actor
 import Util.QRCode
-import Util.SignatoryLinkUtils
 
 apiV2DocumentGetCallsTests :: TestEnvSt -> Test
 apiV2DocumentGetCallsTests env = testGroup "APIv2DocumentGetCalls" $
@@ -395,12 +394,20 @@ testDocApiV2FilesFull = do
   ctx  <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
   req  <- mkRequest GET []
 
-  initDoc <- addRandomDocumentWithAuthorAndCondition user $ \d ->
-    isPreparation d && isSignable d
-    && map isSignatory (documentsignatorylinks d) == [False, True]
-    && signatorylinkauthenticationtosignmethod (documentsignatorylinks d !! 1)
-       == StandardAuthenticationToSign
-    && all (null . signatoryattachments) (documentsignatorylinks d)
+  initDoc <- addRandomDocument (randomDocumentAllowsDefault user)
+    { randomDocumentTypes = Or [Signable]
+    , randomDocumentStatuses = Or [Preparation]
+    , randomDocumentSignatories =
+        let author = Or
+              [ And [RSC_IsViewer]
+              ]
+            signatory = Or
+              [ And [ RSC_IsSignatoryThatHasntSigned
+                    , RSC_AuthToSignIs StandardAuthenticationToSign
+                    ]
+              ]
+        in Or [[author, signatory]]
+    }
   let did = documentid initDoc
       att  = defaultSignatoryAttachment { signatoryattachmentname = "sig_att" }
 

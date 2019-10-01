@@ -17,7 +17,6 @@ import DB
 import Doc.Action
 import Doc.API.V1.Calls
 import Doc.API.V1.DocumentToJSON
-import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentMonad
 import Doc.DocUtils
@@ -662,11 +661,17 @@ testCloseEvidenceAttachments:: TestEnv ()
 testCloseEvidenceAttachments = do
   author <- addNewRandomUser
   ctx <- (set ctxmaybeuser (Just author)) <$> mkContext defaultLang
-  doc <- addRandomDocumentWithAuthorAndCondition author
-    (isSignable && isPending
-     && (all ((==) StandardAuthenticationToSign . signatorylinkauthenticationtosignmethod) . documentsignatorylinks)
-     && ((==) 1 . (length . documentsignatorylinks))
-    )
+  doc <- addRandomDocument (randomDocumentAllowsDefault author)
+    { randomDocumentTypes = Or [Signable]
+    , randomDocumentStatuses = Or [Pending]
+    , randomDocumentSignatories =
+        let signatory = Or
+              [ And [ RSC_IsSignatoryThatHasntSigned
+                    , RSC_AuthToSignIs StandardAuthenticationToSign
+                    ]
+              ]
+        in Or [[signatory]]
+    }
 
   req <- mkRequest GET []
   withDocument doc $ forM_ (documentsignatorylinks doc)

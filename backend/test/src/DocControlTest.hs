@@ -500,7 +500,8 @@ testDocumentDeleteInBulk = do
     (Just author) <- addNewUserToUserGroup "aaa" "bbb" "xxx@xxx.pl" ugid
     -- isSignable condition below is wrong. Tests somehow generate template documents
     -- that are pending and that breaks everything.
-    docs <- replicateM 100 (addRandomDocumentWithAuthorAndCondition author (isSignable))
+    docs <- replicateM 100 (addRandomDocument (randomDocumentAllowsDefault author)
+                             { randomDocumentTypes = Or [Signable] })
 
     ctx <- (set ctxmaybeuser (Just author)) <$> mkContext defaultLang
     req <- mkRequest POST [("documentids",  inText $ (showt $ documentid <$> docs))]
@@ -756,8 +757,10 @@ testGetDocumentWithSignatoryAccessTokens:: TestEnv ()
 testGetDocumentWithSignatoryAccessTokens = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
 
-  doc <- addRandomDocumentWithAuthorAndCondition user $ \d ->
-    isPending d && isSignable d
+  doc <- addRandomDocument (randomDocumentAllowsDefault user)
+    { randomDocumentTypes = Or [Signable]
+    , randomDocumentStatuses = Or [Pending]
+    }
   let did       = documentid doc
       signatory = head $ documentsignatorylinks doc
       slid      = signatorylinkid signatory
