@@ -216,12 +216,9 @@ smsInvitationLinkFields
   => Document -> SignatoryLink -> Fields m ()
 smsInvitationLinkFields doc sl = do
   mctx <- lift $ getMailContext
-  link <- if signatoryisauthor sl
-    then return $ LinkIssueDoc (documentid doc)
-    else do
-      mh <- lift $ dbUpdate $ NewSignatoryAccessToken
-        (signatorylinkid sl) SignatoryAccessTokenForSMSBeforeClosing Nothing
-      return $ LinkSignDocMagicHash (documentid doc) (signatorylinkid sl) mh
+  mh <- lift $ dbUpdate $ NewSignatoryAccessToken
+         (signatorylinkid sl) SignatoryAccessTokenForSMSBeforeClosing Nothing
+  let link = LinkSignDocMagicHash (documentid doc) (signatorylinkid sl) mh
   F.value "link" $ get mctxDomainUrl mctx <> showt link
 
 smsConfirmationLinkFields
