@@ -35,6 +35,11 @@ module.exports = React.createClass({
           <table>
             <tbody>
               <tr>
+                <td colSpan="2">
+                <i>{localization.account.accountDetails.userGroupExtraInfo}</i>
+                </td>
+              </tr>
+              <tr>
                 <td><label>{localization.account.accountDetails.userGroup}</label></td>
                 <td>
                   <InfoTextInput
@@ -48,7 +53,12 @@ module.exports = React.createClass({
                 </td>
               </tr>
               <tr>
-                <td><label>{localization.account.accountDetails.entityname}</label></td>
+                <td colSpan="2">
+                  <i>{localization.account.accountDetails.entitynameExtraInfo}</i>
+                </td>
+              </tr>
+              <tr>
+                <td><label>{localization.account.accountDetails.entityname}:</label></td>
                 <td>
                   <InfoTextInput
                     ref="companyentityname"

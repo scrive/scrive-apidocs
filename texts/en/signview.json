@@ -217,5 +217,6 @@
 "_smsReminderAutomatic":"This is an automatic reminder that you haven't signed the document $documenttitle:noescape()$ from $creatorname$ yet. Follow the link for further instructions $link$",
 "_smsReminderSigned":"The signed document $documenttitle:noescape()$ has been resent to you at the request of $creatorname$. Find the document by following this link $link$",
 "_unavailableForSign":"The document is no longer available for signing",
-"_userGroup": "User Group"
+"_userGroup": "User Group",
+"_userGroupExtraInfo": "Internal-use User Group name (e.g. HR):"
 }

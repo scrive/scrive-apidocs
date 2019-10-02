@@ -1,4 +1,4 @@
-{ 
+{
 "_Accept":"Accept",
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
@@ -609,6 +609,7 @@
 "_editInvitationMessagePlaceholder":"Message only available for invitation via email, to a party that is not you.",
 "_emptyOrNotValidEmail":"You have not entered an email address or the email address is incorrect. Please try again.",
 "_entityname":"Entity Name",
+"_entitynameExtraInfo":"Shown as Company field in documents:",
 "_evidenceAttachmentBoxHeader":"Evidence attachments",
 "_february":"February",
 "_fieldWithSameNameExists":"You already have a field with this name. Each field must have a unique name.",

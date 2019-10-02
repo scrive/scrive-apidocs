@@ -1177,6 +1177,7 @@ javascriptLocalisation =
               , companycity :    "$_city()$"
               , companycountry : "$_country()$"
               , entityname     : "$_entityname()$"
+              , entitynameExtraInfo: "$_entitynameExtraInfo()$"
               , newEmail       : "$_newemail()$"
               , newEmailAgain  : "$_newemailagain()$"
               , changeEmailCurrentEmail : "$_currentemailaddress()$"
@@ -1206,6 +1207,7 @@ javascriptLocalisation =
               , deleteUser : "$_delete()$"
               , userDeleted : "$_userDeleted()$"
               , userGroup : "$_userGroup()$"
+              , userGroupExtraInfo : "$_userGroupExtraInfo()$"
             }
           , apiSettings : {
                 name : "$_apiSettings()$"

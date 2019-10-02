@@ -221,6 +221,7 @@ var DetailsEditorView = React.createClass({
                 onChange={this.onNameChange}
               />
             </td>
+            <td>This is the internal-use User Group name (for example "HR")</td>
           </tr>
           <tr>
             <td><label>Parent User Group ID</label></td>
@@ -293,6 +294,7 @@ var DetailsEditorView = React.createClass({
                 onChange={this.onEntityNameChange}
               />
             </td>
+            <td>"Company" field in documents</td>
           </tr>
           <tr>
             <td><label>Address</label></td>
