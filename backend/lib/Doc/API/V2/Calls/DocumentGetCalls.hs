@@ -105,13 +105,9 @@ docApiV2List = api $ do
         full_read_fids = extractValidRefs readDocPerms
         shared_fids    = extractValidRefs readSharedTemplatePerms
         started_fids   = extractValidRefs readStartedDocPerms
-    endRoleQueryTime <- liftBase getCurrentTime
-    logInfo "Calculating roles done" $ object [
-        "query_time" .= (realToFrac $ diffUTCTime endRoleQueryTime startQueryTime :: Double)
-      ]
     (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit (DocumentsVisibleToSigningPartyOrByFolders (userid user) shared_fids started_fids full_read_fids) documentFilters documentSorting (offset, 1000, maxcount)
     finishQueryTime <- liftBase getCurrentTime
-    logInfo "Folder list call for docApiV2List done" $ object [
+    logInfo "Fetching for docApiV2List done using folders" $ object [
         "query_time" .= (realToFrac $ diffUTCTime finishQueryTime startQueryTime :: Double)
       , "folder_ids_shared" .= (map show shared_fids)
       , "folder_ids_started" .= (map show started_fids)
