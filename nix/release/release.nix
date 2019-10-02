@@ -9,6 +9,8 @@ let
     inherit nixpkgs inHaskellPackages;
   };
 
+  kontrakcja-src = import ../derivation/kontrakcja-src.nix;
+
   kontrakcja-base = import ../derivation/kontrakcja-base.nix {
     inherit nixpkgs haskellPackages;
   };
@@ -35,17 +37,32 @@ let
   };
 
   production-release = import ../derivation/kontrakcja-production-release.nix {
-    inherit nixpkgs haskellPackages workspaceRoot;
+    inherit nixpkgs haskellPackages;
+  };
+
+  dev-deps = nixpkgs.stdenv.mkDerivation {
+    name = "kontrakcja-dev-deps";
+    src=kontrakcja-src;
+    propagatedBuildInputs = dev-shell.buildInputs;
+    configurePhase = "echo configure phase..; env";
+
+    buildPhase = ''
+      mkdir -p $out
+    '';
+    testPhase = "";
+    installPhase = "echo install phase";
   };
 in
 {
   inherit
     haskellPackages
     kontrakcja-base
+    kontrakcja-src
     manual-shell
     cabal-shell
     dev-shell
     dev-release
+    dev-deps
     production-shell
     production-release;
 }

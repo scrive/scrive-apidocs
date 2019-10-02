@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+    scrivepdftools
+
+    SAM for scrivepdftools
+
+Globals:
+    Function:
+         Timeout: 60
+         MemorySize: 1024
+
+Resources:
+    SealingLambda:
+        Type: AWS::Serverless::Function
+        Properties:
+            Handler: com.scrive.pdftools.LambdaInterface::handleRequest
+            CodeUri: $scrivepdftools/scrivepdftools.jar
+            Runtime: java8
+
+            Environment:
+                Variables:
+                    bucket: lambda
+                    access_key: k
+                    secret_key: s
+                    fakes3_host: 127.0.0.1
+                    fakes3_port: 4568
+            Events:
+                Seal:
+                    Type: Api
+                    Properties:
+                        Path: /seal
+                        Method: post

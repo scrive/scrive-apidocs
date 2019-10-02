@@ -14,11 +14,11 @@ let
       jq
       curl
       zbar
-      zulu8
       mupdf
       lessc
       xmlsec
       gnuplot
+      openjdk
       pngquant
       qrencode
       postgresql

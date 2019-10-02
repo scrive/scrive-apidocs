@@ -27,7 +27,6 @@ haskellPackages.shellFor {
   LANG = "en_US.UTF-8";
 
   inherit scrivepdftools;
-  PHANTOMJS_BIN = "${pkgs.phantomjs2}/bin/phantomjs";
 
   KONTRAKCJA_ROOT = sourceRoot;
   KONTRAKCJA_WORKSPACE = workspaceRoot;

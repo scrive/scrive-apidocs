@@ -4,16 +4,23 @@ let
 
     "dist"
     "dist-newstyle"
+    "node_modules"
 
     "nix"
     "shell.nix"
     "release.nix"
+
+    "workspace"
     "cabal.project.freeze"
+    "package-lock.json"
 
     "_local"
-    "workspace"
-    "_nix_local"
+    "_shake"
+    "_build"
     "test_data"
+
+    "_nix_local"
+    "s3files"
     "test_s3files"
   ];
 
@@ -24,12 +31,6 @@ let
         # Don't copy .ghc.environemnt.* files
         && isNull (builtins.match "^\\.ghc\\.environment.+"
                     (baseNameOf path))
-
-        # Don't copy frontend/ except for frontend/app/less which
-        # is needed by the test suite.
-        && (isNull (builtins.match ".+/frontend/.+" path)
-            || ! isNull (builtins.match ".+/frontend/app" path)
-            || ! isNull (builtins.match ".+/frontend/app/less.*" path))
     )
     ../..
   ;

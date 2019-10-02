@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -eax
+
 KONTRAKCJA_WORKSPACE=${KONTRAKCJA_WORKSPACE:-"."}
 db_path="$KONTRAKCJA_WORKSPACE/_local/data"
 

@@ -28,7 +28,7 @@ let
       ;
 
   logSrc = builtins.fetchGit {
-    url = "git@github.com:scrive/log.git";
+    url = "ssh://git@github.com/scrive/log.git";
     rev = "c30a152ac80357abeff538e61554465601fc2f13";
   };
 
@@ -46,7 +46,7 @@ let
           (
             callGitPackage super
             "hpqtypes"
-            "git@github.com:scrive/hpqtypes.git"
+            "ssh://git@github.com/scrive/hpqtypes.git"
             "24e7c6067d0b1bfe12e1efab0800990093cd3f0d"
           )
         ;
@@ -55,7 +55,7 @@ let
           (haskellLib.dontHaddock
             (callGitPackage super
               "hpqtypes-extras"
-              "git@github.com:scrive/hpqtypes-extras.git"
+              "ssh://git@github.com/scrive/hpqtypes-extras.git"
               "8323faa8267f0756f29269d63e95fd1a636e97f3"
             ))
         ;
@@ -63,7 +63,7 @@ let
         consumers = haskellLib.dontCheck
           (callGitPackage super
             "consumers"
-            "git@github.com:scrive/consumers.git"
+            "ssh://git@github.com/scrive/consumers.git"
             "98df52670ce51a213ac4d9fe1bef3b08976cbe18"
           )
         ;
@@ -103,14 +103,17 @@ let
           (
             callGitPackage super
             "mixpanel"
-            "git@github.com:scrive/mixpanel.git"
+            "ssh://git@github.com/scrive/mixpanel.git"
             "d6c378d738f936d7f7950ee278d955726c255535"
           )
           ../patches/mixpanel.patch
         ;
 
-        happstack-server = super.callHackage "happstack-server" "7.5.2" {};
-        happstack-static-routing = super.callHackage "happstack-static-routing" "0.6.0.0" {};
+        brittany = callGitPackage super
+          "brittany"
+          "ssh://git@github.com/lspitzner/brittany.git"
+          "38f77f6c5e04883dcbda60286ce88e83275009ab"
+        ;
 
         # bloodhound has not updated their dependencies on http-client
         # and containers major version for ages. Remove this when
@@ -119,7 +122,7 @@ let
           (haskellLib.appendPatch
             (callGitPackage super
               "bloodhound"
-              "git@github.com:bitemyapp/bloodhound.git"
+              "ssh://git@github.com/bitemyapp/bloodhound.git"
               "4c743e1082b8b5eec53a7155733999441be0efce"
             )
             ../patches/bloodhound.cabal.patch

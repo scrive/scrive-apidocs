@@ -4,6 +4,9 @@
 }:
 let
   inherit (nixpkgs) pkgs;
+
+  kontrakcja-src = import ./kontrakcja-src.nix;
+
   kontrakcja-1 = import ./kontrakcja-base.nix {
     inherit nixpkgs haskellPackages;
   };
@@ -23,7 +26,7 @@ let
     });
 
   kontrakcja-frontend = import ./kontrakcja-frontend.nix {
-    inherit nixpkgs kontrakcja;
+    inherit nixpkgs kontrakcja kontrakcja-src;
   };
 in
 {
