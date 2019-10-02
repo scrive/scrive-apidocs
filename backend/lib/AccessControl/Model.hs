@@ -3,9 +3,9 @@ module AccessControl.Model
   , AccessControlCreateForUserGroup(..)
   , AccessRoleGet(..)
   , GetRoles(..)
-  , GetRolesIncludingInherited(..)
+  , AccessControlGetRolesByUser(..)
+  , AccessControlGetRolesByUserGroup(..)
   , AccessControlDeleteRolesByFolder(..)
-  , AccessControlGetExplicitRoles(..)
   , AccessControlDeleteRolesByUserGroup(..)
   , AccessControlRemoveRole(..)
   , AccessControlInsertRoleForUser(..)
@@ -63,15 +63,13 @@ instance (MonadDB m, MonadThrow m)
 
 setTarget :: (MonadState v m, SqlSet v) => AccessRoleTarget -> m ()
 setTarget target = case target of
-  UserAR uid                          -> sqlSet "trg_user_id" uid
-  UserGroupMemberAR ugid              -> sqlSet "trg_user_group_id" ugid
-  UserAdminAR ugid                    -> sqlSet "trg_user_group_id" ugid
-  UserGroupAdminAR ugid               -> sqlSet "trg_user_group_id" ugid
-  DocumentAdminAR fid                 -> sqlSet "trg_folder_id" fid
-  FolderAdminAR fid                   -> sqlSet "trg_folder_id" fid
-  FolderUserAR fid                    -> sqlSet "trg_folder_id" fid
-  SharedTemplateUserAR fid            -> sqlSet "trg_folder_id" fid
-  DocumentAfterPreparationAdminAR fid -> sqlSet "trg_folder_id" fid
+  UserAR uid             -> sqlSet "trg_user_id" uid
+  UserGroupMemberAR ugid -> sqlSet "trg_user_group_id" ugid
+  UserAdminAR ugid       -> sqlSet "trg_user_group_id" ugid
+  UserGroupAdminAR ugid  -> sqlSet "trg_user_group_id" ugid
+  DocumentAdminAR fid    -> sqlSet "trg_folder_id" fid
+  FolderAdminAR fid      -> sqlSet "trg_folder_id" fid
+  FolderUserAR fid       -> sqlSet "trg_folder_id" fid
 
 data AccessRoleGet = AccessRoleGet AccessRoleID
 instance (MonadDB m, MonadThrow m)
@@ -87,93 +85,47 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetRoles [AccessRole] where
   query (GetRoles u) = do
     let ugid = usergroupid u
         uid = userid u
-    dbRoles <- query $ AccessControlGetExplicitRoles uid ugid
-    ug <- dbQuery $ UserGroupGetByUserID uid
-    return $ dbRoles <> derivedRoles u ug
+        isAdmin = useriscompanyadmin u
+    dbRolesByUser <- do
+      query . AccessControlGetRolesByUser $ uid
+    dbRolesByUserGroup <- do
+      query . AccessControlGetRolesByUserGroup $ ugid
+    -- Every user shall have DocumentAdminAR to his home folder
+    -- Every is_company_admin shall have DocumentAdminAR to the company home
+    -- folder
+    mGroupHomeFolderID <- do
+      (get folderID <$>) <$> (query . FolderGetUserGroupHome $ ugid)
+    mUserHomeFolderID <- do
+      (get folderID <$>) <$> (query . FolderGetUserHome $ uid)
+    -- get company root folder
+    let adminOrUserRoles =
+          (if isAdmin then [UserAdminAR ugid] else [UserGroupMemberAR ugid]) <>
+          maybe []
+                (\hfid -> if isAdmin then [DocumentAdminAR hfid, FolderAdminAR hfid] else [])
+                mGroupHomeFolderID <>
+          maybe []
+                (\hfid -> [DocumentAdminAR hfid, FolderUserAR hfid])
+                mUserHomeFolderID
+        derivedRoles = AccessRoleImplicitUser uid <$> adminOrUserRoles <> [UserAR uid]
+    return $ dbRolesByUser <> dbRolesByUserGroup <> derivedRoles
 
--- Every user shall have DocumentAdminAR to his home folder
--- Every is_company_admin shall have DocumentAfterPreparationAdminAR to the company home
--- folder
--- Every user shall have SharedTemplateUserAR to the company home folder
-derivedRoles :: User -> UserGroup -> [AccessRole]
-derivedRoles user ug =
-  let isAdmin = useriscompanyadmin user
-      ugid = usergroupid user
-      uid = userid user
-      mGroupHomeFolderID = get ugHomeFolderID ug
-      adminOrUserRoles =
-        (if isAdmin then [UserAdminAR ugid] else [UserGroupMemberAR ugid]) <>
-        maybe []
-              (\hfid -> if isAdmin then [DocumentAfterPreparationAdminAR hfid, FolderAdminAR hfid] else [])
-              mGroupHomeFolderID
-      userRoles =
-        maybe []
-              (\hfid -> [SharedTemplateUserAR hfid])
-              mGroupHomeFolderID <>
-        maybe []
-              (\hfid -> [DocumentAdminAR hfid, FolderUserAR hfid])
-              (userhomefolderid user) <>
-        [UserAR uid]
-  in  AccessRoleImplicitUser uid <$> adminOrUserRoles <> userRoles
-
-data GetRolesIncludingInherited = GetRolesIncludingInherited User UserGroup
-instance (MonadDB m, MonadThrow m) => DBQuery m GetRolesIncludingInherited [AccessRole] where
-  query (GetRolesIncludingInherited u ug) = do
-    let uid = userid u
-        ugid = get ugID ug
-        roles = derivedRoles u ug
-    runQuery_ . sqlSelect "access_control_union acu" $ do
-      sqlWith "access_control_union" . sqlSelect "" $ do
-        sqlWith "access_control_from_db" . sqlSelect "access_control" $ do
-          sqlResult "id"
-          sqlResult "role"
-          sqlResult "src_user_id"
-          sqlResult "src_user_group_id"
-          sqlResult "trg_user_id"
-          sqlResult "trg_user_group_id"
-          sqlResult "trg_folder_id"
-          sqlWhereAny [
-              sqlWhereEq "src_user_id" uid
-            , sqlWhereEq "src_user_group_id" ugid
-            ]
-        let derivedRolesVALUES = 
-              (parenthesize $
-                "VALUES" <+>
-                (sqlConcatComma . for roles $ \role ->
-                  parenthesize . sqlConcatComma $ [
-                      "NULL::bigint"
-                    , "" <?> (toAccessRoleType $ accessRoleTarget role) <+> "::smallint"
-                    , "" <?> (accessRoleGetSourceUserID role) <+> "::bigint"
-                    , "" <?> (accessRoleGetSourceUserGroupID role) <+> "::bigint"
-                    , "" <?> (accessRoleGetTargetUserID role) <+> "::bigint"
-                    , "" <?> (accessRoleGetTargetUserGroupID role) <+> "::bigint"
-                    , "" <?> (accessRoleGetTargetFolderID role) <+> "::bigint"
-                    ]
-                )) <+>
-              "AS t (id, role, src_user_id, src_user_group_id, trg_user_id, trg_user_group_id, trg_folder_id)"
-        sqlWith "access_control_derived" . sqlSelect derivedRolesVALUES $ do
-          sqlResult "*"
-        sqlResult "* FROM access_control_from_db UNION SELECT * FROM access_control_derived"
-      sqlLeftJoinOn "folders f" "f.id=acu.trg_folder_id or (f.parent_path @> array[acu.trg_folder_id])"
-      sqlLeftJoinOn "user_groups ug" "ug.id=acu.trg_user_group_id or (ug.parent_group_path @> array[acu.trg_user_group_id])"
-      sqlResult "acu.id as id"
-      sqlResult "acu.role as role"
-      sqlResult "acu.src_user_id as src_user_id"
-      sqlResult "acu.src_user_group_id as src_user_group_id"
-      sqlResult "acu.trg_user_id"
-      sqlResult "ug.id as trg_user_group_id"
-      sqlResult "f.id as trg_folder_id"
+data AccessControlGetRolesByUser = AccessControlGetRolesByUser UserID
+instance (MonadDB m, MonadThrow m)
+  => DBQuery m AccessControlGetRolesByUser [AccessRole] where
+  query (AccessControlGetRolesByUser uid) = do
+    runQuery_ . sqlSelect "access_control" $ do
+      mapM_ sqlResult $ rolesSelector
+      sqlWhereEq "src_user_id" uid
     fetchMany fetchAccessRole
 
-data AccessControlGetExplicitRoles = AccessControlGetExplicitRoles UserID UserGroupID
-instance (MonadDB m, MonadThrow m)
-  => DBQuery m AccessControlGetExplicitRoles [AccessRole] where
-  query (AccessControlGetExplicitRoles uid ugid) = do
+data AccessControlGetRolesByUserGroup =
+    AccessControlGetRolesByUserGroup UserGroupID
+instance (MonadDB m, MonadThrow m) =>
+  DBQuery m AccessControlGetRolesByUserGroup [AccessRole] where
+  query (AccessControlGetRolesByUserGroup ugid) = do
     runQuery_ . sqlSelect "access_control" $ do
-      sqlWhereAny
-        [ sqlWhereEq "src_user_id" uid
-        , sqlWhereEq "src_user_group_id" ugid ]
       mapM_ sqlResult $ rolesSelector
+      sqlWhereEq "src_user_group_id" ugid
     fetchMany fetchAccessRole
 
 data AccessControlDeleteRolesByUserGroup
@@ -210,20 +162,16 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AccessControlInsertRoleForUser 
       sqlSet "src_user_id" uid
       setAccessRoleTarget trg
     where
-      (uTrg, ugTrg, fdrTrg) = ("trg_user_id", "trg_user_group_id", "trg_folder_id")
-
       setAccessRoleTarget :: AccessRoleTarget -> State SqlInsert ()
       setAccessRoleTarget trg' =
         case trg' of
-          UserAR                          k -> sqlSet uTrg   (unUserID k)
-          UserGroupMemberAR               k -> sqlSet ugTrg  (fromUserGroupID k)
-          UserAdminAR                     k -> sqlSet ugTrg  (fromUserGroupID k)
-          UserGroupAdminAR                k -> sqlSet ugTrg  (fromUserGroupID k)
-          DocumentAdminAR                 k -> sqlSet ugTrg  (fromFolderID k)
-          FolderAdminAR                   k -> sqlSet fdrTrg (fromFolderID k)
-          FolderUserAR                    k -> sqlSet fdrTrg (fromFolderID k)
-          SharedTemplateUserAR            k -> sqlSet fdrTrg (fromFolderID k)
-          DocumentAfterPreparationAdminAR k -> sqlSet fdrTrg (fromFolderID k)
+          UserAR            k -> sqlSet "trg_user_id"       (unUserID k)
+          UserGroupMemberAR k -> sqlSet "trg_user_group_id" (fromUserGroupID k)
+          UserAdminAR       k -> sqlSet "trg_user_group_id" (fromUserGroupID k)
+          UserGroupAdminAR  k -> sqlSet "trg_user_group_id" (fromUserGroupID k)
+          DocumentAdminAR   k -> sqlSet "trg_folder_id"     (fromFolderID k)
+          FolderAdminAR     k -> sqlSet "trg_folder_id"     (fromFolderID k)
+          FolderUserAR      k -> sqlSet "trg_folder_id"     (fromFolderID k)
 
 data AccessControlRemoveUserGroupAdminRole =
     AccessControlRemoveUserGroupAdminRole UserID UserGroupID
@@ -236,32 +184,15 @@ instance (MonadDB m, MonadThrow m) =>
       sqlWhereEq "trg_user_group_id" ugid
 
 addInheritedRoles :: (MonadDB m, MonadThrow m) => [AccessRole] -> m [AccessRole]
-addInheritedRoles roles = concatForM roles $ \baseRole ->
-  case accessRoleTarget baseRole of
-    UserAdminAR ugid ->
-      mkRolesForUGChildren ugid UserAdminAR baseRole
-    UserGroupAdminAR ugid ->
-      mkRolesForUGChildren ugid UserGroupAdminAR baseRole
-    DocumentAdminAR fid ->
-      mkRolesForFdrChildren fid DocumentAdminAR baseRole
-    DocumentAfterPreparationAdminAR fid ->
-      mkRolesForFdrChildren fid DocumentAfterPreparationAdminAR baseRole
-    SharedTemplateUserAR fid ->
-      mkRolesForFdrChildren fid SharedTemplateUserAR baseRole
-    _ -> return [baseRole]
-  where
-    mkRolesForUGChildren ugid roleCons role = do
+addInheritedRoles roles = concatForM roles $ \role ->
+  case accessRoleTarget role of
+    UserAdminAR ugid -> do
       ugwcs <- dbQuery $ UserGroupGetAllChildrenRecursive ugid
       return . (role:) . for (ugwcToList ugwcs) $ \ug ->
-        accessRoleSetTarget (roleCons $ get ugID ug) role
+        accessRoleSetTarget (UserAdminAR $ get ugID ug) role
+    _ -> return [role]
 
-    mkRolesForFdrChildren fid roleCons role = do
-      fwcs <- dbQuery $ FolderGetAllChildrenRecursive fid
-      return . (role:) . for (join $ map fwcToList fwcs) $ \fdr ->
-        accessRoleSetTarget (roleCons $ get folderID fdr) role
-
-
-fetchAccessRole :: ( Maybe AccessRoleID
+fetchAccessRole :: ( AccessRoleID
                    , AccessRoleType
                    , Maybe UserID
                    , Maybe UserGroupID
@@ -269,77 +200,40 @@ fetchAccessRole :: ( Maybe AccessRoleID
                    , Maybe UserGroupID
                    , Maybe FolderID
                    ) -> AccessRole
-fetchAccessRole (Just rid, rtype, Just uid, Nothing, trg_uid, trg_ugid, trg_foler)
+fetchAccessRole (rid, rtype, Just uid, Nothing, trg_uid, trg_ugid, trg_foler)
   = AccessRoleUser rid uid $ fetchAccessRoleTarget
     ( rtype
     , trg_uid
     , trg_ugid
     , trg_foler
     )
-fetchAccessRole (Just rid, rtype, Nothing, Just ugid, trg_uid, trg_ugid, trg_foler)
+fetchAccessRole (rid, rtype, Nothing, Just ugid, trg_uid, trg_ugid, trg_foler)
   = AccessRoleUserGroup rid ugid $ fetchAccessRoleTarget
     ( rtype
     , trg_uid
     , trg_ugid
     , trg_foler
     )
-fetchAccessRole (Nothing, rtype, Just uid, Nothing, trg_uid, trg_ugid, trg_foler)
-  = AccessRoleImplicitUser uid $ fetchAccessRoleTarget
-    ( rtype
-    , trg_uid
-    , trg_ugid
-    , trg_foler
-    )
-fetchAccessRole (Nothing, rtype, Nothing, Just ugid, trg_uid, trg_ugid, trg_foler)
-  = AccessRoleImplicitUserGroup ugid $ fetchAccessRoleTarget
-    ( rtype
-    , trg_uid
-    , trg_ugid
-    , trg_foler
-    )
-fetchAccessRole row = unexpectedError $ "invalid access_control row in database" <> showt row
-
-
+fetchAccessRole _ = unexpectedError "invalid access_control row in database"
 
 fetchAccessRoleTarget :: ( AccessRoleType
                          , Maybe UserID
                          , Maybe UserGroupID
                          , Maybe FolderID
                          ) -> AccessRoleTarget
-fetchAccessRoleTarget ( UserART
-                      , Just usrID
-                      , Nothing
-                      , Nothing) = UserAR usrID
-fetchAccessRoleTarget ( UserGroupMemberART
-                      , Nothing
-                      , Just usrGrpID
-                      , Nothing) = UserGroupMemberAR usrGrpID
-fetchAccessRoleTarget ( UserAdminART
-                      , Nothing
-                      , Just usrGrpID
-                      , Nothing) = UserAdminAR usrGrpID
-fetchAccessRoleTarget ( UserGroupAdminART
-                      , Nothing
-                      , Just usrGrpID
-                      , Nothing) = UserGroupAdminAR usrGrpID
-fetchAccessRoleTarget ( DocumentAdminART
-                      , Nothing
-                      , Nothing
-                      , Just fid) = DocumentAdminAR fid
-fetchAccessRoleTarget ( FolderAdminART
-                      , Nothing
-                      , Nothing
-                      , Just fid) = FolderAdminAR fid
-fetchAccessRoleTarget ( FolderUserART
-                      , Nothing
-                      , Nothing
-                      , Just fid) = FolderUserAR fid
-fetchAccessRoleTarget ( SharedTemplateUserART
-                      , Nothing
-                      , Nothing
-                      , Just fid) = SharedTemplateUserAR fid
-fetchAccessRoleTarget ( DocumentAfterPreparationAdminART
-                      , Nothing
-                      , Nothing
-                      , Just fid) = DocumentAfterPreparationAdminAR  fid
-fetchAccessRoleTarget row = unexpectedError $ "invalid access_control row in database" <> showt row
+fetchAccessRoleTarget (UserART           , Just usrID, Nothing      , Nothing)
+  = UserAR usrID
+fetchAccessRoleTarget (UserGroupMemberART, Nothing   , Just usrGrpID, Nothing)
+  = UserGroupMemberAR usrGrpID
+fetchAccessRoleTarget (UserAdminART      , Nothing   , Just usrGrpID, Nothing)
+  = UserAdminAR usrGrpID
+fetchAccessRoleTarget (UserGroupAdminART , Nothing   , Just usrGrpID, Nothing)
+  = UserGroupAdminAR usrGrpID
+fetchAccessRoleTarget (DocumentAdminART  , Nothing   , Nothing      , Just fid)
+  = DocumentAdminAR  fid
+fetchAccessRoleTarget (FolderAdminART    , Nothing   , Nothing      , Just fid)
+  = FolderAdminAR fid
+fetchAccessRoleTarget (FolderUserART     , Nothing   , Nothing      , Just fid)
+  = FolderUserAR fid
+fetchAccessRoleTarget _
+  = unexpectedError "invalid access_control row in database"

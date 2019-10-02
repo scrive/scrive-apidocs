@@ -156,8 +156,6 @@ accessRoleTargetToJSON (UserGroupAdminAR ugid)  = UserGroupTargetJSON ugid
 accessRoleTargetToJSON (DocumentAdminAR fid)    = FolderTargetJSON fid
 accessRoleTargetToJSON (FolderAdminAR fid)      = FolderTargetJSON fid
 accessRoleTargetToJSON (FolderUserAR fid)       = FolderTargetJSON fid
-accessRoleTargetToJSON (SharedTemplateUserAR fid) = FolderTargetJSON fid
-accessRoleTargetToJSON (DocumentAfterPreparationAdminAR fid) = FolderTargetJSON fid
 
 jsonToAccessRole :: Monad m => AccessRoleJSON -> m AccessRole
 jsonToAccessRole roleJson = constructor =<< jsonToAccessRoleTarget roleJson

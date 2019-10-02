@@ -1,23 +1,13 @@
 {-# LANGUAGE ExistentialQuantification #-}
 module AccessControl.Types
   ( accessControl
-  , accessControlPure
-  , extractResourceRef
   , toAccessRoleType
-  , hasAction
-  , hasResource
-  , rolesToPermissions
   , AccessAction(..)
   , AccessPolicy
   , AccessResource(..)
   , AccessRole(..)
   , accessRoleTarget
   , accessRoleSetTarget
-  , accessRoleGetSourceUserID
-  , accessRoleGetSourceUserGroupID
-  , accessRoleGetTargetFolderID
-  , accessRoleGetTargetUserID
-  , accessRoleGetTargetUserGroupID
   , hasPermissions
   , AccessRoleTarget(..)
   , AccessRoleType(..)
@@ -33,6 +23,9 @@ module AccessControl.Types
   , unsafeAccessRoleID
   , emptyAccessRoleID
   , fromAccessRoleID
+  , extractResourceRef
+  , hasAction
+  , hasResource
   )
   where
 
@@ -79,57 +72,6 @@ accessRoleSetTarget new_target (AccessRoleImplicitUser userid _) =
 accessRoleSetTarget new_target (AccessRoleImplicitUserGroup ugid _) =
   AccessRoleImplicitUserGroup ugid new_target
 
-accessRoleGetTargetUserGroupID :: AccessRole -> Maybe UserGroupID
-accessRoleGetTargetUserGroupID role = case accessRoleTarget role of
-  UserAR                             _ -> Nothing
-  UserGroupMemberAR               ugid -> Just ugid
-  UserAdminAR                     ugid -> Just ugid
-  UserGroupAdminAR                ugid -> Just ugid
-  DocumentAdminAR                    _ -> Nothing
-  FolderAdminAR                      _ -> Nothing
-  FolderUserAR                       _ -> Nothing
-  SharedTemplateUserAR               _ -> Nothing
-  DocumentAfterPreparationAdminAR    _ -> Nothing
-
-accessRoleGetTargetFolderID :: AccessRole -> Maybe FolderID
-accessRoleGetTargetFolderID role = case accessRoleTarget role of
-  UserAR                            _ -> Nothing
-  UserGroupMemberAR                 _ -> Nothing
-  UserAdminAR                       _ -> Nothing
-  UserGroupAdminAR                  _ -> Nothing
-  DocumentAdminAR                 fid -> Just fid
-  FolderAdminAR                   fid -> Just fid
-  FolderUserAR                    fid -> Just fid
-  SharedTemplateUserAR            fid -> Just fid
-  DocumentAfterPreparationAdminAR fid -> Just fid
-
-accessRoleGetTargetUserID :: AccessRole -> Maybe UserID
-accessRoleGetTargetUserID role = case accessRoleTarget role of
-  UserAR                          uid -> Just uid
-  UserGroupMemberAR                 _ -> Nothing
-  UserAdminAR                       _ -> Nothing
-  UserGroupAdminAR                  _ -> Nothing
-  DocumentAdminAR                   _ -> Nothing
-  FolderAdminAR                     _ -> Nothing
-  FolderUserAR                      _ -> Nothing
-  SharedTemplateUserAR              _ -> Nothing
-  DocumentAfterPreparationAdminAR   _ -> Nothing
-
-accessRoleGetSourceUserID :: AccessRole -> Maybe UserID
-accessRoleGetSourceUserID role = case role of
-  AccessRoleUser _ uid _          -> Just uid
-  AccessRoleUserGroup _ _ _       -> Nothing
-  AccessRoleImplicitUser uid _    -> Just uid
-  AccessRoleImplicitUserGroup _ _ -> Nothing
-
-accessRoleGetSourceUserGroupID :: AccessRole -> Maybe UserGroupID
-accessRoleGetSourceUserGroupID role = case role of
-  AccessRoleUser _ _ _               -> Nothing
-  AccessRoleUserGroup _ ugid _       -> Just ugid
-  AccessRoleImplicitUser _ _         -> Nothing
-  AccessRoleImplicitUserGroup ugid _ -> Just ugid
-
-
 -- | The roles we use are mostly rooted in some user group; rather than have
 -- this implicit in implementation we expose it in the constructors. The meaning
 -- is that for the supplied UserGroupID, say, the user has the role thus defined
@@ -150,10 +92,6 @@ data AccessRoleTarget
   -- ^ A @devnote
   | FolderUserAR FolderID
   -- @devnote - should we introduce `DocumentUserAR FolderID` ??? Look at spec
-  | SharedTemplateUserAR FolderID
-  -- ^ Document admin can do anything with documents in a Folder
-  | DocumentAfterPreparationAdminAR FolderID
-  -- ^ Document admin can do anything with document after Preparation phase
   deriving (Eq, Show)
 
 -- | We need to discern between permissions and actions that affect users, user
@@ -167,8 +105,6 @@ data AccessResource
   | DocumentR
   | FolderPolicyR
   | FolderR
-  | SharedTemplateR
-  | DocumentAfterPreparationR
   deriving (Eq, Enum, Bounded)
 
 instance Show AccessResource where
@@ -180,8 +116,6 @@ instance Show AccessResource where
   show DocumentR = "document"
   show FolderPolicyR = "folder_policy"
   show FolderR = "folder"
-  show SharedTemplateR = "shared_template"
-  show DocumentAfterPreparationR = "document_after_preparation"
 
 -- | Should be self-explanatory. The 'A' stands for 'Action'.
 data AccessAction
@@ -280,17 +214,12 @@ hasPermissions (FolderAdminAR fid) =
 hasPermissions (FolderUserAR fid) =
   -- can read the folder
   map (mkPerm fid FolderR) [ReadA]
-hasPermissions (SharedTemplateUserAR fid) =
-  [mkPerm fid SharedTemplateR ReadA]
-hasPermissions (DocumentAfterPreparationAdminAR fid) =
-  map (mkPerm fid DocumentAfterPreparationR) [minBound..maxBound]
 
 -- | Interface to get the proper combinations of 'Permission's needed to gain
 -- access permission.
 class NeedsPermissions s where
   neededPermissions :: (MonadCatch m, MonadDB m, MonadThrow m)
                     => s -> m NeededPermissionsExpr
-  neededPermissionsPure :: s -> NeededPermissionsExpr
 
 data UserGroupNonExistent = UserGroupNonExistent UserGroupID
   deriving (Eq, Ord, Show, Typeable)
@@ -332,8 +261,6 @@ instance NeedsPermissions (AccessAction, AccessResource, UserGroupID) where
         let mkExprBase g = NeededPermissionsExprBase
                              (Permission action resource $ get ugID g)
         return . NeededPermissionsExprOr . map mkExprBase $ ugwpToList ugwp
-  neededPermissionsPure (action, resource, usrGrpID) =
-    NeededPermissionsExprBase $ Permission action resource usrGrpID
 
 instance NeedsPermissions (AccessAction, AccessResource, FolderID) where
   neededPermissions (action, resource, fid) = do
@@ -344,8 +271,6 @@ instance NeedsPermissions (AccessAction, AccessResource, FolderID) where
         let mkExprBase g = NeededPermissionsExprBase
                              (Permission action resource $ get folderID g)
         return . NeededPermissionsExprOr . map mkExprBase $ (folder:folderParents)
-  neededPermissionsPure (action, resource, fid) =
-    NeededPermissionsExprBase $ Permission action resource fid
 
 instance NeedsPermissions (AccessAction, AccessResource, UserID) where
   neededPermissions (action, resource, usrID) =
@@ -358,27 +283,17 @@ instance NeedsPermissions (AccessAction, AccessResource, UserID) where
           [ NeededPermissionsExprBase . Permission action resource $ usrID
           , groupPermissions
           ]
-  neededPermissionsPure (action, resource, usrID) =
-    NeededPermissionsExprBase $ Permission action resource usrID
 
 instance NeedsPermissions AccessPolicyItem where
   neededPermissions (AccessPolicyItem t) = neededPermissions t
-  neededPermissionsPure (AccessPolicyItem t) = neededPermissionsPure t
 
 accessControl :: (MonadCatch m, MonadDB m, MonadThrow m, MonadLog m)
               => [AccessRole] -> AccessPolicy -> m a -> m a -> m a
 accessControl roles accessPolicy err ma = do
-  accNeeded <- NeededPermissionsExprAnd <$> mapM neededPermissions accessPolicy
-  if accessControlCheck roles accNeeded then ma else err
-
-accessControlCheck :: [AccessRole] -> NeededPermissionsExpr -> Bool
-accessControlCheck roles accNeeded =
   let accHad = nub . join $ map (hasPermissions . accessRoleTarget) roles
-  in  evalNeededPermExpr (`elem` accHad) accNeeded
-
-accessControlPure :: [AccessRole] -> AccessPolicy -> Bool
-accessControlPure roles accessPolicy =
-  accessControlCheck roles . NeededPermissionsExprAnd $ map neededPermissionsPure accessPolicy
+  accNeeded <- NeededPermissionsExprAnd <$> mapM neededPermissions accessPolicy
+  let cond = evalNeededPermExpr (`elem` accHad) accNeeded
+  if cond then ma else err
 
 -- IO (DB, frontend) boilerplate
 
@@ -390,8 +305,6 @@ data AccessRoleType
   | DocumentAdminART
   | FolderAdminART
   | FolderUserART
-  | SharedTemplateUserART
-  | DocumentAfterPreparationAdminART
   deriving (Eq)
 
 instance PQFormat AccessRoleType where
@@ -409,10 +322,8 @@ instance FromSQL AccessRoleType where
       4 -> return DocumentAdminART
       5 -> return FolderAdminART
       6 -> return FolderUserART
-      7 -> return SharedTemplateUserART
-      8 -> return DocumentAfterPreparationAdminART
-      _ -> E.throwIO $ RangeError {
-        reRange = [(0, 8)]
+      _  -> E.throwIO $ RangeError {
+        reRange = [(0, 6)]
       , reValue = n
       }
 
@@ -425,8 +336,6 @@ instance ToSQL AccessRoleType where
   toSQL DocumentAdminART   = toSQL (4 :: Int16)
   toSQL FolderAdminART     = toSQL (5 :: Int16)
   toSQL FolderUserART      = toSQL (6 :: Int16)
-  toSQL SharedTemplateUserART = toSQL (7 :: Int16)
-  toSQL DocumentAfterPreparationAdminART = toSQL (8 :: Int16)
 
 instance Show AccessRoleType where
   show UserART            = "user"
@@ -436,8 +345,6 @@ instance Show AccessRoleType where
   show DocumentAdminART   = "document_admin"
   show FolderAdminART     = "folder_admin"
   show FolderUserART      = "folder_user"
-  show SharedTemplateUserART = "shared_template_user"
-  show DocumentAfterPreparationAdminART = "document_after_preparation_admin"
 
 instance Read AccessRoleType where
   readsPrec _ "user"              = [(UserART, "")]
@@ -447,8 +354,6 @@ instance Read AccessRoleType where
   readsPrec _ "document_admin"    = [(DocumentAdminART, "")]
   readsPrec _ "folder_admin"      = [(FolderAdminART, "")]
   readsPrec _ "folder_user"       = [(FolderUserART, "")]
-  readsPrec _ "shared_template_user" = [(SharedTemplateUserART, "")]
-  readsPrec _ "document_after_preparation_admin" = [(DocumentAfterPreparationAdminART, "")]
   readsPrec _ _  = []
 
 instance Unjson AccessRoleType where
@@ -477,8 +382,6 @@ toAccessRoleType ar =
     DocumentAdminAR   _ -> DocumentAdminART
     FolderAdminAR     _ -> FolderAdminART
     FolderUserAR      _ -> FolderUserART
-    SharedTemplateUserAR _ -> SharedTemplateUserART
-    DocumentAfterPreparationAdminAR _ -> DocumentAfterPreparationAdminART
 
 -- AccessRoleID
 
@@ -544,6 +447,3 @@ hasAction (Permission xaa _ _) aa = (xaa == aa)
 
 hasResource :: Permission -> AccessResource -> Bool
 hasResource (Permission _ xar _) ar = (xar == ar)
-
-rolesToPermissions :: [AccessRole] -> [Permission]
-rolesToPermissions rs = join $ map (hasPermissions . accessRoleTarget) rs

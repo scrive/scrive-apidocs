@@ -114,6 +114,4 @@ roleToAccessPolicyReq role act =
         DocumentAdminAR fid    -> mkAccPolicyFolder fid
         FolderAdminAR fid      -> mkAccPolicyFolder fid
         FolderUserAR fid       -> mkAccPolicyFolder fid
-        SharedTemplateUserAR fid -> mkAccPolicyFolder fid
-        DocumentAfterPreparationAdminAR fid -> mkAccPolicyFolder fid
   in [sourceRoleReq, targetRoleReq]

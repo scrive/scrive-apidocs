@@ -9,7 +9,7 @@ import qualified Data.Text as T
 
 import BrandedDomain.BrandedDomain
 import Context
-import DB.Query (dbQuery, dbUpdate)
+import DB.Query (dbUpdate)
 import DB.TimeZoneName (mkTimeZoneName)
 import Doc.API.V2.AesonTestUtils
 import Doc.API.V2.Calls.CallsTestUtils
@@ -34,13 +34,10 @@ import Doc.Types.SignatoryLink
   ( AuthenticationToSignMethod(..), SignatoryLink(..) )
 
 import File.Storage (saveNewFile)
-import Folder.Model
 import Session.Model
 import TestingUtil
 import TestKontra
 import User.Lang (defaultLang)
-import User.Types.User
-import UserGroup.Model
 import UserGroup.Types
 import Util.Actor
 import Util.QRCode
@@ -48,8 +45,7 @@ import Util.SignatoryLinkUtils
 
 apiV2DocumentGetCallsTests :: TestEnvSt -> Test
 apiV2DocumentGetCallsTests env = testGroup "APIv2DocumentGetCalls" $
-  [ testThat "API v2 List: old style"       env (testDocApiV2List False)
-  , testThat "API v2 List: new style"       env (testDocApiV2List True)
+  [ testThat "API v2 List"                  env testDocApiV2List
   , testThat "API v2 Get"                   env testDocApiV2Get
   , testThat "API v2 Get by shortcode"      env testDocApiV2GetShortCode
   , testThat "API v2 Get QR code"           env testDocApiV2GetQRCode
@@ -62,21 +58,13 @@ apiV2DocumentGetCallsTests env = testGroup "APIv2DocumentGetCalls" $
   , testThat "API v2 Files - Pages"         env testDocApiV2FilesPages
   , testThat "API v2 Files - Get"           env testDocApiV2FilesGet
   , testThat "API v2 Files - Full"          env testDocApiV2FilesFull
-  , testThat "API v2 Folder listing works with subfolders" env testDocApiV2FolderList
 --  , testThat "API v2 Get - Not after 30 days for signatories" env testDocApiV2GetFailsAfter30Days
   ]
 
-testDocApiV2List :: Bool -> TestEnv ()
-testDocApiV2List useFolderListCalls = do
+testDocApiV2List :: TestEnv ()
+testDocApiV2List = do
   user <- addNewRandomUser
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
-
-  -- test with new list feature as well as old
-  let ugid = usergroupid user
-  (Just ug) <- dbQuery . UserGroupGet $ ugid
-  let new_ugsettings = set ugsUseFolderListCalls useFolderListCalls
-                           (fromJust $ get ugSettings ug)
-  void $ dbUpdate . UserGroupUpdate $ set ugSettings (Just new_ugsettings) ug
 
   void $ testDocApiV2New' ctx
   void $ testDocApiV2New' ctx
@@ -480,47 +468,3 @@ testDocApiV2FilesFull = do
     assertBool "Does not have merged.pdf" $ "merged.pdf" `notElem` map fst files
     assertBool "Does not have sig_att.pdf" $ "sig_att.pdf" `notElem` map fst files
     assertBool "Has not_merged.pdf" $ "not_merged.pdf" `elem` map fst files
-
-testDocApiV2FolderList :: TestEnv ()
-testDocApiV2FolderList = do
-  adminA <- addNewRandomUser
-  adminB <- addNewRandomUser
-  let setUseFolderListCall ug =
-        set ugSettings
-            (set ugsUseFolderListCalls True <$> (get ugSettings ug))
-            ug
-  ugA <- setUseFolderListCall <$> dbQuery (UserGroupGetByUserID (userid adminA))
-  void $ dbUpdate $ UserGroupUpdate ugA
-
-  ugB <- (setUseFolderListCall . set ugParentGroupID (Just $ get ugID ugA)) <$>
-             (dbQuery $ UserGroupGetByUserID (userid adminB))
-  void . dbUpdate $ UserGroupUpdate ugB
-  userB <- addNewRandomCompanyUser (get ugID ugB) False
-
-  (Just folderB) <- dbQuery $ FolderGet (fromJust $ get ugHomeFolderID ugB)
-  (Just folderUserB) <- dbQuery $ FolderGetUserHome (userid userB)
-  void . dbUpdate $ FolderUpdate (set folderParentID (get ugHomeFolderID ugA) folderB)
-  void . dbUpdate $ FolderUpdate (set folderParentID (get ugHomeFolderID ugB) folderUserB)
-  ctxAdminA <- (set ctxmaybeuser $ Just adminA) <$> mkContext defaultLang
-  ctxAdminB <- (set ctxmaybeuser $ Just adminB) <$> mkContext defaultLang
-  ctxUserB <- (set ctxmaybeuser $ Just userB) <$> mkContext defaultLang
-
-  void $ testDocApiV2New' ctxUserB
-  void $ testDocApiV2New' ctxUserB
-  void $ testDocApiV2StartNew ctxUserB
-
-  -- only one is not in preparation stage so only one should be seen by the admins
-  listJSONA <- jsonTestRequestHelper ctxAdminA GET [] docApiV2List 200
-  listArrayA <- lookupObjectArray "documents" listJSONA
-  assertEqual "`docApiV2List` should return same number of docs using folder list calls (1)" 1
-              (length listArrayA)
-
-  listJSONB <- jsonTestRequestHelper ctxAdminB GET [] docApiV2List 200
-  listArrayB <- lookupObjectArray "documents" listJSONB
-  assertEqual "`docApiV2List` should return same number of docs using folder list calls (2)" 1
-              (length listArrayB)
-
-  listJSONUserB <- jsonTestRequestHelper ctxUserB GET [] docApiV2List 200
-  listArrayUserB <- lookupObjectArray "documents" listJSONUserB
-  assertEqual "`docApiV2List` should return same number of docs using folder list calls (3)" 3
-              (length listArrayUserB)

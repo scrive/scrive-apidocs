@@ -159,9 +159,7 @@ testNewCompanyAccount = do
     , ("sndname", inText "Blue")
     ]
   void . runTestKontra bobReq ctx $ handleAddUserGroupAccount
-  return ()
   Just userBob <- dbQuery $ GetUserByEmail (Email "bob@blue.com")
-
   assertBool "User has home Folder" . isJust $ userhomefolderid userBob
 
   userFolder <- guardJustM . dbQuery . FolderGet . fromJust $ userhomefolderid userBob

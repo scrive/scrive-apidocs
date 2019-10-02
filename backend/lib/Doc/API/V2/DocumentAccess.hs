@@ -7,10 +7,8 @@ module Doc.API.V2.DocumentAccess (
 , documentAccessForSlid
 , documentAccessForAuthor
 , documentAccessForAdminonly
-, documentAccessByFolder
 ) where
 
-import AccessControl.Types
 import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentID
@@ -26,29 +24,20 @@ data DocumentAccess = DocumentAccess {
 
 data DocumentAccessMode =
     SignatoryDocumentAccess SignatoryLinkID
-    -- ^ Old list calls: Person looking at the document is this signatory.
-    --   New list calls: Person looking at the document is signatory, but cannot access
-    --                   the document by other means (Folders).
+    -- ^ Person looking at the document is this signatory.
   | AuthorDocumentAccess
-    -- ^ Old list calls: Person looking at the document is an author.
+    -- ^ Person looking at the document is an author.
   | CompanyAdminDocumentAccess (Maybe SignatoryLinkID)
-    -- ^ Old list calls: Person looking at the document is an admin of author.
+    -- ^ Person looking at the document is an admin of author.
   | CompanySharedDocumentAccess
-    -- ^ Old list calls: Person looking at the document is in the author's company and the
-    --                   document is shared.
-    --   New list calls: Same
+    -- ^ Person looking at the document is in the author's company and the
+    -- document is shared.
   | SystemAdminDocumentAccess
-    -- ^ Old list calls: Person looking at the document has adminonly access.
-  | FolderDocumentAccess (Maybe SignatoryLinkID)
-    -- ^ New list calls: Person looking at the document has (Folder-based) admin access to the document.
-    -- If we ever want to drop DocumentAccessMode and use Roles, Permissions and Resources:
-    --   - signatory should have ReadA access to DocumentR
-    --   - admin/folder user should have ReadA access to DocumentR and DocumentSecretsR
+    -- ^ Person looking at the document is an admin of author.
 
 canSeeSignlinks :: DocumentAccess -> Bool
 canSeeSignlinks (DocumentAccess { daAccessMode = AuthorDocumentAccess}) = True
 canSeeSignlinks (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess _})  = True
-canSeeSignlinks (DocumentAccess { daAccessMode = FolderDocumentAccess _})  = True
 canSeeSignlinks _ = False
 
 propertyForCurrentSignatory :: DocumentAccess -> (SignatoryLink -> a) -> Document -> a
@@ -62,22 +51,13 @@ propertyForCurrentSignatory da f doc =
     slForAccess (DocumentAccess { daAccessMode = AuthorDocumentAccess})        = getAuthorSigLink
     slForAccess (DocumentAccess { daAccessMode = CompanySharedDocumentAccess}) = getAuthorSigLink
     slForAccess (DocumentAccess { daAccessMode = SystemAdminDocumentAccess})   = getAuthorSigLink
-    slForAccess (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess (Just sid)}) = getSigLinkFor sid
-    slForAccess (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess Nothing}) = getAuthorSigLink
-    slForAccess (DocumentAccess { daAccessMode = FolderDocumentAccess (Just sid)}) = getSigLinkFor sid
-    slForAccess (DocumentAccess { daAccessMode = FolderDocumentAccess Nothing}) = getAuthorSigLink
+    slForAccess (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess (Just sid)})  = getSigLinkFor sid
+    slForAccess (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess Nothing})  = getAuthorSigLink
 
 documentAccessForUser :: User -> Document -> DocumentAccess
 documentAccessForUser user document = DocumentAccess {
       daDocumentID = documentid document
     , daAccessMode = documentAccessModeForUser user document
-    , daStatus = documentstatus document
-  }
-
-documentAccessByFolder :: User -> Document -> [AccessRole] -> DocumentAccess
-documentAccessByFolder user document roles = DocumentAccess {
-      daDocumentID = documentid document
-    , daAccessMode = documentAccessModeByFolder user document roles
     , daStatus = documentstatus document
   }
 
@@ -110,24 +90,6 @@ documentAccessModeForUser user document =
                   else unexpectedError $
                     "User " <> showt (userid user) <> " accessing document " <> showt (documentid document)
                     <> " without any permission. This should be cought earlier."
-
-documentAccessModeByFolder :: User -> Document -> [AccessRole] -> DocumentAccessMode
-documentAccessModeByFolder user document roles =
-  case (getSigLinkFor user document, hasReadAccessForDocByFolder) of
-    (Just sl, True ) -> FolderDocumentAccess . Just $ signatorylinkid sl
-    (Nothing, True ) -> FolderDocumentAccess Nothing
-    (Just sl, False) -> SignatoryDocumentAccess $ signatorylinkid sl
-    (Nothing, False) -> if (documentauthorugid document == Just (usergroupid user) && isDocumentShared document)
-      then CompanySharedDocumentAccess
-      else unexpectedError $
-        "User" <+> showt (userid user) <+>
-        "accessing document" <+> showt (documentid document) <+>
-        "by folder without any permission. This should be caught earlier."
-  where hasReadAccessForDocByFolder =
-          maybe False hasReadAccessForFolder (documentfolderid document)
-        hasReadAccessForFolder fid = 
-          (accessControlPure roles [mkAccPolicyItem (ReadA, DocumentR, fid)]) ||
-          (accessControlPure roles [mkAccPolicyItem (ReadA, DocumentAfterPreparationR, fid)])
 
 documentAccessForSlid :: SignatoryLinkID -> Document -> DocumentAccess
 documentAccessForSlid slid document = DocumentAccess {

@@ -239,7 +239,6 @@ instance Arbitrary UserGroupSettings where
     <*> arbitrary
     <*> arbitrary
     <*> arbitrary
-    <*> pure False -- we must explicitly use folder list calls
     <*> arbitrary
     <*> pure False -- do not enforce 2FA in tests
     <*> pure Nothing -- do not set custom session expiry

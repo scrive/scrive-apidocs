@@ -20,35 +20,26 @@ data DocumentViewer =
     SignatoryDocumentViewer SignatoryLinkID
   | CompanyAdminDocumentViewer (Maybe SignatoryLinkID)
   | CompanySharedDocumentViewer
-  | FolderDocumentViewer SignatoryLinkID
 
 viewerForDocument :: DocumentAccess -> Document -> DocumentViewer
 viewerForDocument (DocumentAccess { daAccessMode = SignatoryDocumentAccess sid}) _ = SignatoryDocumentViewer sid
 viewerForDocument (DocumentAccess { daAccessMode = CompanySharedDocumentAccess}) _ = CompanySharedDocumentViewer
 viewerForDocument (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess msid}) _ = CompanyAdminDocumentViewer msid
-viewerForDocument (DocumentAccess { daAccessMode = AuthorDocumentAccess}) doc = SignatoryDocumentViewer $ dvGetAuthorSigLink doc
-viewerForDocument (DocumentAccess { daAccessMode = SystemAdminDocumentAccess}) _ = CompanyAdminDocumentViewer Nothing
-viewerForDocument (DocumentAccess { daAccessMode = FolderDocumentAccess msid}) doc =
-  FolderDocumentViewer . fromMaybe (dvGetAuthorSigLink doc) $ msid
-
-dvGetAuthorSigLink :: Document -> SignatoryLinkID
-dvGetAuthorSigLink doc =
+viewerForDocument (DocumentAccess { daAccessMode = AuthorDocumentAccess}) doc =
   case (getAuthorSigLink doc) of
-    Just sig -> signatorylinkid sig
+    Just sig -> SignatoryDocumentViewer $ signatorylinkid sig
     Nothing  -> unexpectedError "Could not find author for document for DocumentViewer"
+viewerForDocument (DocumentAccess { daAccessMode = SystemAdminDocumentAccess}) _ = CompanyAdminDocumentViewer Nothing
 
 dvSignatoryLinkID :: DocumentViewer -> Maybe SignatoryLinkID
 dvSignatoryLinkID (SignatoryDocumentViewer sid) = Just sid
 dvSignatoryLinkID (CompanyAdminDocumentViewer msid) = msid
-dvSignatoryLinkID (FolderDocumentViewer sid) = Just sid
 dvSignatoryLinkID _ = Nothing
 
 dvRole ::DocumentViewer -> Text
 dvRole (SignatoryDocumentViewer _) = "signatory"
 dvRole (CompanyAdminDocumentViewer _) = "company_admin"
 dvRole (CompanySharedDocumentViewer) = "company_shared"
--- This is done to stay somewhat backwards compatible
-dvRole (FolderDocumentViewer _) = "company_admin"
 
 -- We should not introduce instance for DocumentViewer since this can't be really parsed. And instance for Maybe DocumentViewer would be missleading
 unjsonDocumentViewer :: UnjsonDef (Maybe DocumentViewer)

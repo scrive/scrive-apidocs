@@ -145,7 +145,6 @@ data UserGroupSettings = UserGroupSettings {
   , _ugsLegalText                 :: Bool
   , _ugsRequireBPIDForNewDoc      :: Bool
   , _ugsSendTimeoutNotification   :: Bool
-  , _ugsUseFolderListCalls        :: Bool
   , _ugsTotpIsMandatory           :: Bool
   , _ugsSessionTimeoutSecs        :: Maybe Int32
   } deriving (Show, Eq)
@@ -162,7 +161,6 @@ defaultUserGroupSettings = UserGroupSettings {
   , _ugsLegalText            = False
   , _ugsRequireBPIDForNewDoc = False
   , _ugsSendTimeoutNotification = False
-  , _ugsUseFolderListCalls      = False
   , _ugsTotpIsMandatory      = False
   , _ugsSessionTimeoutSecs       = Nothing
   }
@@ -489,7 +487,7 @@ instance CompositeFromSQL UserGroupSettings where
     , _ugsLegalText
     , _ugsRequireBPIDForNewDoc
     , _ugsSendTimeoutNotification
-    , _ugsUseFolderListCalls
+    , _useFolderListCalls -- not yet used
     , _ugsTotpIsMandatory
     , _ugsSessionTimeoutSecs
     ) = UserGroupSettings {

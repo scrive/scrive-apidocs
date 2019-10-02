@@ -81,7 +81,6 @@ fieldAccessToken (DocumentAccess { daAccessMode }) =
        CompanySharedDocumentAccess  -> pure ()
        SignatoryDocumentAccess _    -> pure ()
        SystemAdminDocumentAccess    -> pure ()
-       FolderDocumentAccess _       -> accessTokenField
   where
     accessTokenField = fieldReadonly "access_token"
                        documentmagichash "Document access token"
@@ -94,7 +93,6 @@ fieldShareableLink DocumentAccess{ daAccessMode } =
        CompanySharedDocumentAccess  -> hashField
        SignatoryDocumentAccess _    -> pure ()
        SystemAdminDocumentAccess    -> pure ()
-       FolderDocumentAccess _       -> hashField
    where
      hashField :: AltF.Ap (FieldDef Document) ()
      hashField =
