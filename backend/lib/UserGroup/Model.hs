@@ -1,5 +1,6 @@
 module UserGroup.Model (
-    UserGroupCreate(..)
+    GetUserGroupFirstTOSDate(..)
+  , UserGroupCreate(..)
   , UserGroupDelete(..)
   , UserGroupGet(..)
   , UserGroupGetByUserID(..)
@@ -157,6 +158,14 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetByUserID UserGroup w
       sqlWhereEq "users.id" uid
       sqlWhereIsNULL "user_groups.deleted"
     fetchOne fetchUserGroup
+
+data GetUserGroupFirstTOSDate = GetUserGroupFirstTOSDate UserGroupID
+instance (MonadDB m, MonadThrow m) => DBQuery m GetUserGroupFirstTOSDate UTCTime where
+  query (GetUserGroupFirstTOSDate ugid) = do
+    runQuery_ $ sqlSelect "users" $ do
+      sqlWhereEq "user_group_id" ugid
+      sqlResult "min(has_accepted_terms_of_service)"
+    fetchOne runIdentity
 
 data UserGroupGetImmediateChildren = UserGroupGetImmediateChildren UserGroupID
 instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupGetImmediateChildren [UserGroup] where
