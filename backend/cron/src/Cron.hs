@@ -8,10 +8,12 @@ import Log
 import Network.HTTP.Client.TLS (newTlsManager)
 import System.Console.CmdArgs hiding (def)
 import System.Environment
+import System.FilePath ((</>), FilePath)
 import qualified Data.Text.IO as T
 import qualified Data.Traversable as F
 
 import AppDBTables
+import AppDir (AppPaths(..), setupAppPaths)
 import Configuration
 import Cron.Model
 import CronConf
@@ -40,14 +42,14 @@ data CmdConf = CmdConf {
   config :: String
 } deriving (Data, Typeable)
 
-cmdConf :: String -> CmdConf
-cmdConf progName = CmdConf {
+cmdConf :: FilePath -> String -> CmdConf
+cmdConf workspaceRoot progName = CmdConf {
   config = configFile
         &= help ("Configuration file (default: " ++ configFile ++ ")")
         &= typ "FILE"
 } &= program progName
   where
-    configFile = "cron.conf"
+    configFile = workspaceRoot </> "cron.conf"
 
 ----------------------------------------
 
@@ -55,7 +57,8 @@ type CronM = FileStorageT (CryptoRNGT (LogT IO))
 
 main :: IO ()
 main = do
-  CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
+  (AppPaths _ workspaceRoot) <- setupAppPaths
+  CmdConf{..} <- cmdArgs . cmdConf workspaceRoot =<< getProgName
   cronConf <- readConfig putStrLn config
   case cronMonitoringConf cronConf of
     Just conf -> void $ startMonitoringServer conf

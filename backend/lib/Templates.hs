@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Templates ( getAllTemplates
                  , readGlobalTemplates
+                 , readGlobalTemplatesFrom
                  , localizedVersion
                  , KontrakcjaGlobalTemplates
                  , KontrakcjaTemplates
@@ -10,6 +11,8 @@ module Templates ( getAllTemplates
                  , renderLocalTemplate
                  , runTemplatesT
                  , templateName
+                 , templateFilesDir
+                 , textsDirectory
                  ) where
 
 import Control.Monad.Reader
@@ -48,15 +51,26 @@ type KontrakcjaGlobalTemplates = TL.GlobalTemplates
 type KontrakcjaTemplates = TL.Templates
 
 readGlobalTemplates :: MonadIO m => m KontrakcjaGlobalTemplates
-readGlobalTemplates =
-  TL.readGlobalTemplates textsDirectory templateFilesDir
-  (T.unpack $ codeFromLang LANG_EN)
+readGlobalTemplates = do
+  readGlobalTemplatesFrom
+    textsDirectory
+    templateFilesDir
+
+readGlobalTemplatesFrom :: MonadIO m => FilePath -> FilePath -> m KontrakcjaGlobalTemplates
+readGlobalTemplatesFrom textsDirectory' templateFilesDir' =
+  TL.readGlobalTemplates
+    textsDirectory'
+    templateFilesDir'
+    (T.unpack $ codeFromLang LANG_EN)
 
 localizedVersion :: Lang -> KontrakcjaGlobalTemplates -> KontrakcjaTemplates
 localizedVersion lang = TL.localizedVersion $ T.unpack $ codeFromLang lang
 
 getTemplatesModTime :: IO UTCTime
-getTemplatesModTime = TL.getTemplatesModTime textsDirectory templateFilesDir
+getTemplatesModTime = do
+  TL.getTemplatesModTime
+    textsDirectory
+    templateFilesDir
 
 renderTextTemplate :: (Monad m, ST.TemplatesMonad m) => Text -> ST.Fields m () -> m Text
 renderTextTemplate x m = fmap T.pack $ ST.renderTemplate (T.unpack x) m

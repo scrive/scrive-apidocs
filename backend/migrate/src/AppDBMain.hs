@@ -4,11 +4,13 @@ import Crypto.RNG
 import Database.PostgreSQL.PQTypes.Checks
 import System.Console.CmdArgs hiding (def)
 import System.Environment
+import System.FilePath ((</>), FilePath)
 import qualified Data.Text.IO as T
 
 import AppDBConfig
 import AppDBMigrations
 import AppDBTables
+import AppDir (AppPaths(..), setupAppPaths)
 import Configuration
 import DB
 import DB.PostgreSQL
@@ -21,21 +23,23 @@ data CmdConf = CmdConf {
   force :: Bool
 } deriving (Data, Typeable)
 
-cmdConf :: String -> CmdConf
-cmdConf progName = CmdConf {
+cmdConf :: FilePath -> String -> CmdConf
+cmdConf workspaceRoot progName = CmdConf {
   config = configFile
         &= help ("Configuration file (default: " ++ configFile ++ ")")
         &= typ "FILE",
   force =  False &= help ("Force commit after each migration - DB will be permanently changed even if migrations will fail")
 } &= program progName
   where
-    configFile = "kontrakcja.conf"
+    configFile = workspaceRoot </> "kontrakcja.conf"
 
 ----------------------------------------
 
 main :: IO ()
 main = do
-  CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
+  (AppPaths _ workspaceRoot) <- setupAppPaths
+
+  CmdConf{..} <- cmdArgs . cmdConf workspaceRoot =<< getProgName
   AppDBConf{..} <- readConfig putStrLn config
   rng <- newCryptoRNGState
   (errs, logRunner) <- mkLogRunner "kontrakcja-migrate" logConfig rng

@@ -1,0 +1,12 @@
+{
+  "gateway_url": "http://localhost:9876/seal",
+  "api_key": "abc",
+  "amazon_s3": {
+    "host": "localhost",
+    "port": 4568,
+    "bucket": "lambda",
+    "access_key": "k",
+    "secret_key": "s",
+    "secure": false
+  }
+}

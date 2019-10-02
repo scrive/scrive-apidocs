@@ -9,10 +9,12 @@ import Happstack.Server hiding (waitForTermination)
 import Log
 import System.Console.CmdArgs hiding (def)
 import System.Environment
+import System.FilePath ((</>), FilePath)
 import qualified Control.Exception.Lifted as E
 import qualified Data.Text.IO as T
 import qualified Happstack.StaticRouting as R
 
+import AppDir (AppPaths(..), setupAppPaths)
 import Configuration
 import DB
 import DB.PostgreSQL
@@ -34,14 +36,14 @@ data CmdConf = CmdConf {
   config :: String
 } deriving (Data, Typeable)
 
-cmdConf :: String -> CmdConf
-cmdConf progName = CmdConf {
+cmdConf :: FilePath -> String -> CmdConf
+cmdConf workspaceRoot progName = CmdConf {
   config = configFile
         &= help ("Configuration file (default: " ++ configFile ++ ")")
         &= typ "FILE"
 } &= program progName
   where
-    configFile = "messenger_server.conf"
+    configFile = workspaceRoot </> "messenger_server.conf"
 
 ----------------------------------------
 
@@ -49,7 +51,8 @@ type MainM = LogT IO
 
 main :: IO ()
 main = do
-  CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
+  (AppPaths _ workspaceRoot) <- setupAppPaths
+  CmdConf{..} <- cmdArgs . cmdConf workspaceRoot =<< getProgName
   conf <- readConfig putStrLn config
   case messengerMonitoringConfig conf of --
     Just mconf -> void $ startMonitoringServer mconf

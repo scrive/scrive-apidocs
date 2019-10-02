@@ -12,6 +12,9 @@ var merge = require("webpack-merge");
 langFromTexts = _.without(langFromTexts, "no");
 langFromTexts.push("nn");
 
+const sourceDir = process.env.KONTRAKCJA_ROOT || "../";
+const workspaceDir = process.env.KONTRAKCJA_WORKSPACE || "../";
+
 module.exports = function (grunt) {
   require("load-grunt-tasks")(grunt);
   require("time-grunt")(grunt);
@@ -22,7 +25,8 @@ module.exports = function (grunt) {
   var yeomanConfig = {
     app: require("./bower.json").appPath || "app",
     dist: "dist",
-    kontrakcja: "../"
+    kontrakcjaRoot: sourceDir,
+    kontrakcjaWorkspace: workspaceDir
   };
 
   // Pick correct defaults when we're using Haskell's 'cabal new-build'.
@@ -31,7 +35,7 @@ module.exports = function (grunt) {
       newBuild = false;
   } else {
       newBuild = grunt.option("new-build")
-          || fs.existsSync(yeomanConfig.kontrakcja + "dist-newstyle");
+          || fs.existsSync(yeomanConfig.kontrakcjaWorkspace + "dist-newstyle");
   }
 
   grunt.initConfig({
@@ -44,8 +48,8 @@ module.exports = function (grunt) {
       },
       localization: {
         files: [
-          "<%= yeoman.kontrakcja %>/texts/**/*.json",
-          "<%= yeoman.kontrakcja %>/templates/javascript-langs.st"
+          "<%= yeoman.kontrakcjaRoot %>/texts/**/*.json",
+          "<%= yeoman.kontrakcjaRoot %>/templates/javascript-langs.st"
         ],
         tasks: ["updateLocalization"]
       },
@@ -176,7 +180,7 @@ module.exports = function (grunt) {
         command: (newBuild ? "cabal new-build" : "cabal build") + " localization",
         options: {
           execOptions: {
-            cwd: "<%= yeoman.kontrakcja %>"
+            cwd: "<%= yeoman.kontrakcjaWorkspace %>"
           }
         }
       },
@@ -185,7 +189,7 @@ module.exports = function (grunt) {
                   (newBuild ? "cabal new-run localization" : "./dist/build/localization/localization")),
         options: {
           execOptions: {
-            cwd: "<%= yeoman.kontrakcja %>"
+            cwd: "<%= yeoman.kontrakcjaWorkspace %>"
           }
         }
       }

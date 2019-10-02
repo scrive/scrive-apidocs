@@ -1,0 +1,9 @@
+dist/
+dist-newstyle/
+_lambda_pid
+_local/
+.ghc.environment.*
+*.local/
+result
+result-*
+pdftools-lambda.local.json

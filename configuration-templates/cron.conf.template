@@ -86,7 +86,7 @@
         , "secret_key": ""
       }
     },
-    "_monthly_invoice": {
+    "monthly_invoice": {
         "script_path": "pure_sql/invoice_stats.sql",
         "recipient_name": "Invoicing Stats",
         "recipient_email": "invoicing-stats@scrive.com"
