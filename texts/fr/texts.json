@@ -995,7 +995,6 @@
 "_smsForwardSigningForNewSignatory":"$fromName$ vous a transféré le document $documenttitle$ à e-signer. Suivez le lien pour plus d'instructions $link$",
 "_smsForwardSigningForNewSignatoryApproving":"$fromName$ vous a transféré le document $documenttitle$ à approuver. Suivez le lien pour plus d'instructions $link$",
 "_smsInvitationToAuthor":"C'est votre tour de signer le document $documenttitle$. Suivez le lien pour obtenir plus d'instructions $link$",
-"_smsInvitationToView":"$creatorname:noescape()$ vous a invité à consulter le document $documenttitle$. Suivez le lien pour obtenir plus d'instructions $link$",
 "_standard":"Standard",
 "_statsOrgTotal":"Total organisation",
 "_statsSender":"Expéditeur",

@@ -995,7 +995,6 @@
 "_smsForwardSigningForNewSignatory":"$fromName$ hefur framsent skjalið $documenttitle$ til rafrænnar undirskriftar. Smelltu á hlekkinn til að fá frekari upplýsingar $link$",
 "_smsForwardSigningForNewSignatoryApproving":"$fromName$ hefur framsent skjalið $documenttitle$ til samþykktar fyrir þig. Smelltu á hlekkinn til að fá frekari upplýsingar $link$",
 "_smsInvitationToAuthor":"Komið er að þér að skrifa undir skjalið $documenttitle$. Smelltu á hlekkinn til að fá frekari upplýsingar $link$",
-"_smsInvitationToView":"$creatorname:noescape()$ hefur boðið þér að fara yfir skjalið $documenttitle$. Smelltu á hlekkinn til að fá frekari upplýsingar $link$",
 "_standard":"Hefðbundið",
 "_statsOrgTotal":"Fyrirtæki",
 "_statsSender":"Sendandi",

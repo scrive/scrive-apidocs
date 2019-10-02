@@ -995,7 +995,6 @@
 "_smsForwardSigningForNewSignatory":"$fromName$ ir pārsūtījis dokumentu $documenttitle$, lai jūs to elektroniski parakstītu. Noklikšķiniet uz saites, lai apskatītu dokumentu: $link$",
 "_smsForwardSigningForNewSignatoryApproving":"$fromName$ ir pārsūtījis dokumentu $documenttitle$, lai jūs to apstiprinātu. Noklikšķiniet uz saites, lai apskatītu dokumentu: $link$",
 "_smsInvitationToAuthor":"Tagad ir Jūsu kārta parakstīt dokumentu $documenttitle$. Lai uzzinātu, kā rīkoties tālāk, noklikšķiniet uz saites: $link$",
-"_smsInvitationToView":"$creatorname:noescape()$ uzaicināja Jūs pārskatīt dokumentu $documenttitle$. Lai uzzinātu, kā rīkoties tālāk, noklikšķiniet uz saites: $link$",
 "_standard":"Standarta",
 "_statsOrgTotal":"Organizācija kopā",
 "_statsSender":"Nosūtītājs",
