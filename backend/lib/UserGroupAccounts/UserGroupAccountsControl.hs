@@ -20,6 +20,7 @@ import qualified Data.Text as T
 
 import AccessControl.Model
 import AccessControl.Types
+import API.V2.Utils (apiAccessControl)
 import DB
 import Folder.Model
 import Happstack.Fields
@@ -290,13 +291,12 @@ sendTakeoverSingleUserMail inviter ug user = do
     admin or to company.
 -}
 handleChangeRoleOfUserGroupAccount :: Kontrakcja m => m JSValue
-handleChangeRoleOfUserGroupAccount = withCompanyAdmin $ \(_user, ug) -> do
+handleChangeRoleOfUserGroupAccount = do
   changeid <- getCriticalField asValidUserID "changeid"
   makeadmin <- getField "makeadmin"
-  changeuser <- guardJustM $ dbQuery $ GetUserByID changeid
-  unless (usergroupid changeuser == get ugID ug) internalError --make sure user is in same company
-  void $ dbUpdate $ SetUserCompanyAdmin changeid (makeadmin == Just "true")
-  runJSONGenT $ value "changed" True
+  apiAccessControl [mkAccPolicyItem (UpdateA, UserR, changeid)] $ do
+    void $ dbUpdate $ SetUserCompanyAdmin changeid (makeadmin == Just "true")
+    runJSONGenT $ value "changed" True
 
 {- |
     Handles deletion of a company user or the deletion of the company invite
