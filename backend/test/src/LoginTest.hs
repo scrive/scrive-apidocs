@@ -2,7 +2,7 @@ module LoginTest (loginTests) where
 
 import Control.Monad.IO.Class
 import Crypto.Hash.Algorithms (SHA1(..))
-import Data.Aeson
+import Data.Aeson hiding ((<?>))
 import Data.Int
 import Data.List.Split (splitOneOf)
 import Data.OTP (totp)

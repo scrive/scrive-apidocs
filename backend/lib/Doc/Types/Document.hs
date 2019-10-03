@@ -12,7 +12,7 @@ module Doc.Types.Document (
   ) where
 
 import Control.Monad.Catch
-import Data.Aeson.Types
+import Data.Aeson.Types hiding ((<?>))
 import Data.Int
 import Database.PostgreSQL.PQTypes
 import Database.PostgreSQL.PQTypes.Model.CompositeType

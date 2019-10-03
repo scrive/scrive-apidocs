@@ -519,7 +519,7 @@ Library
                , HTTP
                , MissingH
                , QuickCheck
-               , aeson
+               , aeson >= 1.4.4.0
                , amazonka
                , amazonka-core
                , amazonka-s3

@@ -1,8 +1,8 @@
 module Folder.FolderTest (folderTests) where
 
 import Control.Monad.Extra (concatForM)
-import Data.Aeson
-import Data.Aeson.Types
+import Data.Aeson hiding ((<?>))
+import Data.Aeson.Types hiding ((<?>))
 import Data.Foldable (foldlM)
 import Data.Int
 import Data.Unjson (field, fieldBy, fieldOptBy, objectOf)

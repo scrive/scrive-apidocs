@@ -2,7 +2,7 @@ module OAuth.Model where
 
 import Control.Monad.Catch
 import Crypto.RNG
-import Data.Aeson
+import Data.Aeson hiding ((<?>))
 import Data.Int
 import Data.Unjson
 import Network.URI
