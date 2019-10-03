@@ -995,7 +995,6 @@
 "_smsForwardSigningForNewSignatory":"$fromName$ on saatnud dokumendi $documenttitle$ edasi teile e-allkirjastamiseks. Järgige dokumendi vaatamiseks linki $link$",
 "_smsForwardSigningForNewSignatoryApproving":"$fromName$ on saatnud dokumendi $documenttitle$ edasi teile kinnitamiseks. Järgige dokumendi vaatamiseks linki $link$",
 "_smsInvitationToAuthor":"Käes on Teie kord dokumendi $documenttitle$ allkirjastamiseks. Klõpsake juhiste jaoks linki: $link$",
-"_smsInvitationToView":"$creatorname:noescape()$ on saatnud Teile kutse dokumendi $documenttitle$ ülevaatamiseks. Klõpsake juhiste jaoks linki $link$",
 "_standard":"Standard",
 "_statsOrgTotal":"Ettevõtte kohta kokku",
 "_statsSender":"Saatja",

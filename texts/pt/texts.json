@@ -995,7 +995,6 @@
 "_smsForwardSigningForNewSignatory":"$fromName$ reencaminhou o documento $documenttitle$ para si, para assinar electronicamente. Siga a hiperligação para obter instruções adicionais: $link$",
 "_smsForwardSigningForNewSignatoryApproving":"$fromName$ reencaminhou o documento $documenttitle$ para si, para aprovação. Siga a hiperligação para obter instruções adicionais: $link$",
 "_smsInvitationToAuthor":"É a sua vez de assinar o documento $documenttitle$. Siga a hiperligação para obter mais informações $link$",
-"_smsInvitationToView":"$creatorname:noescape()$ convidou-o para rever o documento $documenttitle$. Siga a hiperligação para obter mais informações $link$",
 "_standard":"Padrão",
 "_statsOrgTotal":"Total da organização",
 "_statsSender":"Remetente",

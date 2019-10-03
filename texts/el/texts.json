@@ -995,7 +995,6 @@
 "_smsForwardSigningForNewSignatory":"Ο/Η $fromName$ έχει προωθήσει το έγγραφο $documenttitle$ σε εσάς για ηλεκτρονική υπογραφή. Ακολουθήστε τον σύνδεσμο για περαιτέρω οδηγίες $link$",
 "_smsForwardSigningForNewSignatoryApproving":"Ο/Η $fromName$ έχει προωθήσει το έγγραφο $documenttitle$ σε εσάς για έγκριση. Ακολουθήστε τον σύνδεσμο για περαιτέρω οδηγίες $link$",
 "_smsInvitationToAuthor":"Είναι η σειρά σας να υπογράψετε το έγγραφο $documenttitle$. Ακολουθήστε τον σύνδεσμο για περαιτέρω οδηγίες $link$",
-"_smsInvitationToView":"Ο/Η $creatorname:noescape()$ σας έχει προσκαλέσει για να ελέγξετε το έγγραφο $documenttitle$. Ακολουθήστε τον σύνδεσμο για περαιτέρω οδηγίες $link$",
 "_standard":"Δεδομένο ",
 "_statsOrgTotal":"Συνολική οργάνωση ",
 "_statsSender":"Αποστολέας ",

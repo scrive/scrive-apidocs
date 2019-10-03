@@ -995,7 +995,6 @@
 "_smsForwardSigningForNewSignatory":"$fromName$ przekazał(-a) dokument $documenttitle$ celem złożenia przez Ciebie podpisu elektronicznego. Kliknij w link, aby otrzymać dalsze instrukcje $link$",
 "_smsForwardSigningForNewSignatoryApproving":"$fromName$ przekazał(-a) dokument $documenttitle$ do Twojej akceptacji. Kliknij w link, aby otrzymać dalsze instrukcje $link$",
 "_smsInvitationToAuthor":"Przyszła Twoja kolej na podpisanie dokumentu $documenttitle$. Kliknij w link, aby otrzymać dalsze instrukcje $link$",
-"_smsInvitationToView":"$creatorname:noescape()$ udostępnił Ci podgląd dokumentu $documenttitle$. Kliknij w link, aby otrzymać dalsze instrukcje $link$",
 "_standard":"Standardowy",
 "_statsOrgTotal":"Cała organizacja",
 "_statsSender":"Nadawca",

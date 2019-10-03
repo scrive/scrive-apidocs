@@ -995,7 +995,6 @@
 "_smsForwardSigningForNewSignatory":"Uživatel $fromName$ vám přeposlal dokument $documenttitle$ k elektronickému podpisu. Další pokyny naleznete po kliknutí na odkaz $link$",
 "_smsForwardSigningForNewSignatoryApproving":"Uživatel $fromName$ vám přeposlal dokument $documenttitle$ ke schválení. Další pokyny naleznete po kliknutí na odkaz $link$",
 "_smsInvitationToAuthor":"Dostali jste se na řadu při podepisování dokumentu $documenttitle$. Na odkazu $link$ jsou k dispozici další pokyny",
-"_smsInvitationToView":"Uživatel $creatorname:noescape()$ vás pozval k revizi dokumentu $documenttitle$. Na odkazu $link$ jsou k dispozici další pokyny",
 "_standard":"Běžný uživatel",
 "_statsOrgTotal":"Celkem za organizaci",
 "_statsSender":"Odesílatel",

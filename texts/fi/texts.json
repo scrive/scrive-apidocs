@@ -995,7 +995,6 @@
 "_smsForwardSigningForNewSignatory":"$fromName$ on lähettänyt dokumentin $documenttitle$ eteenpäin sinulle e-allekirjoitusta varten. Avaa linkki saadaksesi lisätietoja: $link$",
 "_smsForwardSigningForNewSignatoryApproving":"$fromName$ on lähettänyt dokumentin $documenttitle$ eteenpäin sinulle hyväksyntää varten. Avaa linkki saadaksesi lisätietoja: $link$",
 "_smsInvitationToAuthor":"On sinun vuorosi allekirjoittaa dokumentti $documenttitle$. Avaa linkki saadaksesi lisätietoja: $link$",
-"_smsInvitationToView":"$creatorname:noescape()$ on kutsunut sinut esikatselemaan dokumenttia $documenttitle$. Avaa linkki saadaksesi lisätietoja: $link$",
 "_standard":"Standardi",
 "_statsOrgTotal":"Organisaation kokonaismäärä",
 "_statsSender":"Lähettäjä",

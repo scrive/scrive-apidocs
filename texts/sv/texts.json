@@ -995,7 +995,6 @@
 "_smsForwardSigningForNewSignatory":"$fromName$ har vidarebefordrat dokumentet $documenttitle$ till dig för signering. Följ länken för vidare instruktioner $link$",
 "_smsForwardSigningForNewSignatoryApproving":"$fromName$ har vidarebefordrat dokumentet $documenttitle$ till dig för godkännande. Följ länken för vidare instruktioner $link$",
 "_smsInvitationToAuthor":"Det är din tur att signera dokumentet $documenttitle$. Följ länken vidare instruktioner $link$",
-"_smsInvitationToView":"$creatorname:noescape()$ har bjudit in dig att granska $documenttitle$. Följ länken för vidare instruktioner $link$",
 "_standard":"Standard",
 "_statsOrgTotal":"Totalt för organisationen",
 "_statsSender":"Avsändare",

@@ -995,7 +995,6 @@
 "_smsForwardSigningForNewSignatory":"$fromName$ heeft het document $documenttitle$ ter e-ondertekening naar u doorgestuurd. Volg de link voor verdere instructies $link$",
 "_smsForwardSigningForNewSignatoryApproving":"$fromName$ heeft het document $documenttitle$ ter goedkeuring naar u doorgestuurd. Volg de link voor verdere instructies $link$",
 "_smsInvitationToAuthor":"Het is uw beurt om het document $documenttitle$ te ondertekenen. Volg deze link voor verdere instructies $link$",
-"_smsInvitationToView":"$creatorname:noescape()$ heeft u uitgenodigd om het document $documenttitle$ te bekijken. Volg deze link voor verdere instructies $link$",
 "_standard":"Standaard",
 "_statsOrgTotal":"Organisatietotaal",
 "_statsSender":"Afzender",

@@ -995,7 +995,6 @@
 "_smsForwardSigningForNewSignatory":"$fromName$ jums persiuntė dokumentą $documenttitle$, kad pasirašytumėte el. būdu. Norėdami gauti tolesnes instrukcijas, paspauskite nuorodą $link$",
 "_smsForwardSigningForNewSignatoryApproving":"$fromName$ jums persiuntė dokumentą $documenttitle$, kad patvirtintumėte. Norėdami gauti tolesnes instrukcijas, paspauskite nuorodą $link$",
 "_smsInvitationToAuthor":"Dabar Jūs turite pasirašyti $documenttitle$ dokumentą. Tolesnius nurodymus rasite šiuo saitu $link$",
-"_smsInvitationToView":"$creatorname:noescape()$ pasiūlė Jums peržiūrėti $documenttitle$ dokumentą. Tolesnius nurodymus rasite šiuo saitu $link$",
 "_standard":"Standartas",
 "_statsOrgTotal":"Iš viso organizacijos",
 "_statsSender":"Siuntėjas",
