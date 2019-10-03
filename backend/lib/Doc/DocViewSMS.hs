@@ -105,10 +105,10 @@ smsInvitation
 smsInvitation invitationTo sl doc = do
   mkSMS doc sl (Just $ DocumentInvitationSMS (documentid doc) (signatorylinkid sl)) =<<
     renderLocalTemplate doc template (smsFields doc >> smsInvitationLinkFields doc sl)
-  where template = templateName $ case invitationTo of
-                                    Sign    -> "_smsInvitationToSign"
-                                    Approve -> "_smsInvitationToApprove"
-                                    View    -> "_smsInvitationToView"
+  where template = case invitationTo of
+                     Sign    -> templateName "_smsInvitationToSign"
+                     Approve -> templateName "_smsInvitationToApprove"
+                     View    -> templateName "_smsInvitationToView"
 
 smsInvitationToAuthor
   :: ( CryptoRNG m, MailContextMonad m, MonadDB m, MonadTime m, MonadThrow m
