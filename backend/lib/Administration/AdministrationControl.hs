@@ -69,7 +69,6 @@ import Happstack.Fields
 import InputValidation
 import InspectXML
 import InspectXMLInstances
-import InternalResponse
 import IPAddress ()
 import Kontra
 import KontraLink
@@ -87,7 +86,6 @@ import User.Email
 import User.History.Model
 import User.JSON
 import User.UserControl
-import User.UserView
 import UserGroup.Model
 import UserGroup.Types
 import UserGroup.Types.Subscription
@@ -659,13 +657,11 @@ handleBackdoorQuery = onlySalesOrAdmin $ onlyBackdoorOpen $ do
     Nothing -> respond404
     Just email -> renderFromBody $ mailContent email
 
-sendInviteAgain :: Kontrakcja m => m InternalKontraResponse
+sendInviteAgain :: Kontrakcja m => m ()
 sendInviteAgain = onlySalesOrAdmin $ do
   uid <- guardJustM $ readField "userid"
   user <- guardJustM $ dbQuery $ GetUserByID uid
   sendNewUserMail user
-  flashmessage <- flashMessageNewActivationLinkSend
-  return $ internalResponseWithFlash flashmessage LoopBack
 
 -- This method can be used to reseal a document
 resealFile :: Kontrakcja m => DocumentID -> m KontraLink

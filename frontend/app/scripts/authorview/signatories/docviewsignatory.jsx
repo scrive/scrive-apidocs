@@ -137,7 +137,11 @@ var EmailModal = require("../../common/email_modal");
         && signatory.document().pending()
         && !signatory.hasSigned()
         && !signatory.author()
-        && signatory.emailDelivery();
+        && (signatory.emailDelivery()
+          || signatory.emailMobileDelivery()
+          || (signatory.isLastViewer() && (
+                   signatory.anyEmailConfirmationDelivery()
+                || signatory.anyEmailMobileConfirmationDelivery())));
     },
 
     hasChangeMobileOption: function () {
@@ -146,7 +150,11 @@ var EmailModal = require("../../common/email_modal");
         && signatory.document().pending()
         && !signatory.hasSigned()
         && !signatory.author()
-        && signatory.mobileDelivery();
+        && (signatory.mobileDelivery()
+          || signatory.emailMobileDelivery()
+          || (signatory.isLastViewer() && (
+                   signatory.mobileConfirmationDelivery()
+                || signatory.anyEmailMobileConfirmationDelivery())));
     },
 
     hasExtraSignatoryDetails: function () {
