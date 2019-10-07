@@ -384,7 +384,7 @@
 "_designViewAddMultisend":"Add multi send",
 "_designViewAddPartiesAllowForward":"Allow forwarding",
 "_designViewAddPartiesAllowForwardTooltip":"Allow forwarding",
-"_designViewAddPartiesAllowHighlighting":"Allow highlighting",
+"_designViewAddPartiesAllowHighlighting":"Enable marker",
 "_designViewAddPartiesAllowHighlightingTooltip":"Allow signing party to highlight sections of the document during signing",
 "_designViewAddPartiesAuthentication":"Authentication to sign",
 "_designViewAddPartiesAuthenticationDKNemID":"Danish NemID",
