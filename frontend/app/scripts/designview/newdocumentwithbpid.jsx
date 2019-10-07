@@ -22,11 +22,14 @@ var NewDocumentWithBPID = React.createClass({
     this.setState({ newDocumentBPID: value });
   },
   onNewDocument: function () {
-    new Submit({
-      method: "POST",
-      url: "/newdocumentwithbpid",
-      bpid: this.state.newDocumentBPID
-    }).send();
+    const newDocumentBPID = this.state.newDocumentBPID;
+    if (newDocumentBPID.length > 0 && /^[a-z0-9]+$/i.test(newDocumentBPID)) {
+      new Submit({
+        method: "POST",
+        url: "/newdocumentwithbpid",
+        bpid: newDocumentBPID
+      }).send();
+    }
   },
   render: function () {
     var self = this;
