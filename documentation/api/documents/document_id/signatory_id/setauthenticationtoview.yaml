@@ -30,6 +30,7 @@ post:
         - no_bankid
         - dk_nemid
         - fi_tupas
+        - verimi
       required: true
       description: |
         The type of authentication-to-view method to set for the signatory.
