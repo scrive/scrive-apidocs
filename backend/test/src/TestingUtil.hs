@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module TestingUtil where
 
-import Control.Concurrent.STM
+import Control.Concurrent.Lifted
 import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.Fail
@@ -9,6 +9,7 @@ import Control.Monad.Reader.Class
 import Control.Monad.Trans
 import Crypto.RNG
 import Data.Char
+import Data.Foldable (foldrM)
 import Data.Int
 import Data.Text (pack)
 import Data.Time.Clock
@@ -63,6 +64,7 @@ import Folder.Model
 import GuardTime
 import IPAddress
 import KontraMonad
+import Log.Utils
 import MagicHash (MagicHash, unsafeMagicHash)
 import MailContext
 import MinutesTime
@@ -351,12 +353,12 @@ instance Arbitrary SignatoryLink where
   arbitrary = do
     fields <- arbitrary
     seeninfo <- arbitrary
-    signinfo <- if isJust seeninfo
+    role <- arbitrary
+    signinfo <- if isJust seeninfo && role `elem` [SignatoryRoleApprover, SignatoryRoleSigningParty]
                 then arbitrary
                 else return Nothing
 
     delivery <- arbitrary
-    role <- arbitrary
     authenticationToSign <- arbitrary
     authenticationToView <- arbitrary
     (cmTitle, cmQuestions) <- oneof
@@ -799,7 +801,9 @@ signatoryLinkExample1 = defaultSignatoryLink
   }
 
 testThat :: String -> TestEnvSt -> TestEnv () -> Test
-testThat s env = testCase s . runTestEnv env
+testThat s env test = testCase s $ do
+  ((), diff) <- timed $ runTestEnv env test
+  modifyMVar_ (get teTestDurations env) $ \td -> return $ (diff, s) : td
 
 compareTime :: UTCTime -> UTCTime -> Bool
 compareTime (UTCTime da ta) (UTCTime db tb) =
@@ -1083,40 +1087,75 @@ addNewRandomPartnerUser = do
       void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
       return (partnerAdminUser, partnerAdminUserGroup)
 
+-- TODO: to be renamed, CORE 1486
+newtype Or a = Or { unOr :: [a] }
+newtype And a = And { unAnd :: [a] }
+
+data RandomSignatoryCondition
+  = RSC_IsSignatory
+  | RSC_IsSignatoryThatHasSigned
+  | RSC_IsSignatoryThatHasntSigned
+  | RSC_IsApprover
+  | RSC_IsApproverThatHasApproved
+  | RSC_IsApproverThatHasntApproved
+  | RSC_IsViewer
+  | RSC_AuthToSignIs AuthenticationToSignMethod
+  | RSC_AuthToViewIs AuthenticationToViewMethod
+  | RSC_DeliveryMethodIs DeliveryMethod
+
 data RandomDocumentAllows = RandomDocumentAllows
-  { randomDocumentAllowedTypes    :: [DocumentType]
-  , randomDocumentAllowedStatuses :: [DocumentStatus]
-  , randomDocumentAllowedSharings :: [DocumentSharing]
-  , randomDocumentAuthor          :: User
-  , randomDocumentChecker         :: Document -> Maybe Document
+  { randomDocumentTypes       :: Or DocumentType
+  , randomDocumentStatuses    :: Or DocumentStatus
+  , randomDocumentSharings    :: Or DocumentSharing
+  -- Outer OR determines the number of signatories, inner OR/AND determines
+  -- options for the list of conditions a signatory needs to fulfil.
+  , randomDocumentSignatories :: Or [Or (And RandomSignatoryCondition)]
+  , randomDocumentAuthor      :: User
+  , randomDocumentChecker     :: Document -> Maybe Document
   -- ^ Return Nothing to reject the document or Just with a potentially
   -- modified document to accept it.
-  , randomDocumentSharedLink      :: Bool
-  , randomDocumentTemplateId      :: Maybe DocumentID
+  , randomDocumentSharedLink  :: Bool
+  , randomDocumentTemplateId  :: Maybe DocumentID
   }
 
 randomDocumentAllowsDefault :: User -> RandomDocumentAllows
 randomDocumentAllowsDefault user = RandomDocumentAllows
-  { randomDocumentAllowedTypes    = documentAllTypes
-  , randomDocumentAllowedStatuses = [ Preparation
-                                    , Pending
-                                    , Closed
-                                    , Canceled
-                                    , Timedout
-                                    , Rejected
-                                    , DocumentError
-                                    ]
-  , randomDocumentAllowedSharings = documentAllSharings
-  , randomDocumentAuthor          = user
-  , randomDocumentChecker         = Just
-  , randomDocumentSharedLink      = False
-  , randomDocumentTemplateId      = Nothing
+  { randomDocumentTypes       = Or documentAllTypes
+  , randomDocumentStatuses    = Or [ Preparation
+                                   , Pending
+                                   , Closed
+                                   , Canceled
+                                   , Timedout
+                                   , Rejected
+                                   , DocumentError
+                                   ]
+  , randomDocumentSharings    = Or documentAllSharings
+  , randomDocumentSignatories = Or $ map (`replicate` freeSignatory) [1..10]
+  , randomDocumentAuthor      = user
+  , randomDocumentChecker     = Just
+  , randomDocumentSharedLink  = False
+  , randomDocumentTemplateId  = Nothing
   }
+  where
+    freeSignatory :: Or (And RandomSignatoryCondition)
+    freeSignatory = Or [And []]
 
 randomSigLinkByStatus :: DocumentStatus -> Gen SignatoryLink
 randomSigLinkByStatus Closed = do
-  (sl, sign, seen) <- arbitrary
-  return $ sl{maybesigninfo = Just sign, maybeseeninfo = Just seen}
+  sl <- arbitrary
+  if signatoryrole sl `elem` [SignatoryRoleApprover, SignatoryRoleSigningParty]
+    then do
+      (sign, seen) <- arbitrary
+      return sl
+        { maybesigninfo = Just sign
+        , maybeseeninfo = Just seen
+        }
+    else do
+      seen <- arbitrary
+      return sl { maybesigninfo = Nothing
+                , maybeseeninfo = Just seen
+                }
+
 randomSigLinkByStatus Preparation = do
   (sl) <- arbitrary
   return $ sl{maybesigninfo = Nothing, maybeseeninfo = Nothing}
@@ -1127,14 +1166,24 @@ randomSigLinkByStatus _ = arbitrary
 
 randomAuthorLinkByStatus :: DocumentStatus -> Gen SignatoryLink
 randomAuthorLinkByStatus Closed = do
+  sl <- arbitrary
   rl <- elements [SignatoryRoleViewer, SignatoryRoleSigningParty]
-  (sl, sign, seen) <- arbitrary
-  return $ sl
-    { maybesigninfo     = Just sign
-    , maybeseeninfo     = Just seen
-    , signatoryisauthor = True
-    , signatoryrole     = rl
-    }
+  if rl == SignatoryRoleSigningParty
+    then do
+      (sign, seen) <- arbitrary
+      return sl
+        { maybesigninfo = Just sign
+        , maybeseeninfo = Just seen
+        , signatoryisauthor = True
+        , signatoryrole     = rl
+        }
+    else do
+      seen <- arbitrary
+      return sl { maybesigninfo = Nothing
+                , maybeseeninfo = Just seen
+                , signatoryisauthor = True
+                , signatoryrole     = rl
+                }
 randomAuthorLinkByStatus Preparation = do
   rl <- elements [SignatoryRoleViewer, SignatoryRoleSigningParty]
   sl <- arbitrary
@@ -1156,7 +1205,14 @@ randomAuthorLinkByStatus Pending = do
 randomAuthorLinkByStatus _ = do
   rl <- elements [SignatoryRoleViewer, SignatoryRoleSigningParty]
   sl <- arbitrary
-  return $ sl { signatoryrole = rl }
+  return $ if rl == SignatoryRoleSigningParty
+           then sl { signatoryisauthor = True
+                   , signatoryrole = rl
+                   }
+           else sl { maybesigninfo = Nothing
+                   , signatoryisauthor = True
+                   , signatoryrole = rl
+                   }
 
 addRandomDocumentWithAuthor :: User -> TestEnv DocumentID
 addRandomDocumentWithAuthor user =
@@ -1212,17 +1268,57 @@ addRandomDocumentWithFile fileid rda = do
   where
     worker now user checker file = do
       doc' <- rand 10 arbitrary
-      xtype <- rand 10 (elements $ randomDocumentAllowedTypes rda)
-      status <- if xtype /= Signable
-                     && Preparation `elem` randomDocumentAllowedStatuses rda
+      xtype <- rand 10 (elements . unOr $ randomDocumentTypes rda)
+      status <- if xtype == Template
         then return Preparation
-        else rand 10 (elements $ randomDocumentAllowedStatuses rda)
-      sharing <- if xtype /= Template
-                      && Private `elem` randomDocumentAllowedSharings rda
-        then return Private
-        else rand 10 (elements $ randomDocumentAllowedSharings rda)
+        else rand 10 (elements . unOr $ randomDocumentStatuses rda)
+      sharing <- if xtype == Template
+        then rand 10 (elements . unOr $ randomDocumentSharings rda)
+        else return Private
       title <- rand 1 $ arbText 10 25
-      siglinks <- rand 10 (listOf $ randomSigLinkByStatus status)
+
+      sigcondss <- rand 10 (elements . unOr $ randomDocumentSignatories rda)
+      -- First signatory link is the author
+      let genFuns = randomAuthorLinkByStatus : repeat randomSigLinkByStatus
+      asl' : siglinks <- forM (zip sigcondss genFuns) $ \(Or sigconds, genSigLink) -> do
+        sigcond <- rand 10 $ elements sigconds
+        siglink <- rand 10 $ genSigLink status
+        let updateSeenSignInfos Nothing role sig =
+              return sig { signatoryrole = role }
+            updateSeenSignInfos (Just hasSignInfo) role sig =
+              if hasSignInfo
+                then do
+                  signinfo <- rand 10 arbitrary
+                  seeninfo <- maybe (rand 10 arbitrary) return (maybeseeninfo sig)
+                  return sig { signatoryrole = role
+                             , maybesigninfo = Just signinfo
+                             , maybeseeninfo = Just seeninfo
+                             }
+                else return sig { signatoryrole = role
+                                , maybesigninfo = Nothing
+                                }
+            applyCond = \case
+              RSC_IsSignatory -> \sig ->
+                updateSeenSignInfos Nothing SignatoryRoleSigningParty sig
+              RSC_IsSignatoryThatHasSigned -> \sig ->
+                updateSeenSignInfos (Just True) SignatoryRoleSigningParty sig
+              RSC_IsSignatoryThatHasntSigned -> \sig ->
+                updateSeenSignInfos (Just False) SignatoryRoleSigningParty sig
+              RSC_IsApprover -> \sig ->
+                updateSeenSignInfos Nothing SignatoryRoleApprover sig
+              RSC_IsApproverThatHasApproved -> \sig ->
+                updateSeenSignInfos (Just True) SignatoryRoleApprover sig
+              RSC_IsApproverThatHasntApproved -> \sig ->
+                updateSeenSignInfos (Just False) SignatoryRoleApprover sig
+              RSC_IsViewer -> \sig ->
+                updateSeenSignInfos Nothing SignatoryRoleViewer sig
+              RSC_AuthToSignIs authToSign -> \sig -> do
+                return $ sig { signatorylinkauthenticationtosignmethod = authToSign }
+              RSC_AuthToViewIs authToView -> \sig -> do
+                return $ sig { signatorylinkauthenticationtoviewmethod = authToView }
+              RSC_DeliveryMethodIs deliveryMethod -> \sig -> do
+                return $ sig { signatorylinkdeliverymethod = deliveryMethod }
+        foldrM applyCond siglink (unAnd sigcond)
 
       let doc = doc' { documenttype = xtype
                      , documentstatus = status
@@ -1233,13 +1329,10 @@ addRandomDocumentWithFile fileid rda = do
                      , documentfolderid = userhomefolderid user
                      }
 
-      role <- rand 10 arbitrary
-      asl' <- rand 10 $ randomAuthorLinkByStatus status
       userDetails <- signatoryFieldsFromUser user
       let asl = asl'
             { maybesignatory  = Just (userid user)
             , signatoryfields = userDetails
-            , signatoryrole   = role
             }
 
       let alllinks = asl : siglinks
@@ -1260,18 +1353,18 @@ addRandomDocumentWithFile fileid rda = do
       case checker adoc of
         Nothing -> do
           rej <- asks (get teRejectedDocuments)
-          liftIO $ (atomically . modifyTVar' rej) (+1)
-          --liftIO $ print $ "did not pass condition; doc: " <> show adoc
+          modifyMVar_ rej $ \i -> return $! i + 1
+          --liftIO $ print $ "did not pass condition; doc: " ++ show adoc
           worker now user checker file
         Just acceptedDoc -> do
           case invariantProblems now acceptedDoc of
             Nothing -> return acceptedDoc
             Just _problems -> do
               rej <- asks (get teRejectedDocuments)
-              liftIO $ (atomically . modifyTVar' rej) (+1)
+              modifyMVar_ rej $ \i -> return $! i + 1
               -- am I right that random document should not have invariantProblems?
               --uncomment this to find out why the doc was rejected
-              --print adoc
+              --liftIO $ print adoc
               --liftIO $ print $ "rejecting doc: " <> _problems
               worker now user checker file
 
