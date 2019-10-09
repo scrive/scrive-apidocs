@@ -73,7 +73,7 @@ folderAPICreate = api $ do
 folderAPIGet :: Kontrakcja m => FolderID -> m Response
 folderAPIGet fid = api $ do
   let acc = mkAccPolicy [(ReadA, FolderR, fid)]
-  apiAccessControl acc $ do
+  apiAccessControlOrIsAdmin acc $ do
     fdr <- dbQuery (FolderGet fid) >>= \case
       Nothing  -> srvLogErr "The folder could not be retrieved."
       Just fdr -> return fdr
@@ -142,7 +142,7 @@ folderAPIListDocs :: Kontrakcja m => FolderID -> m Response
 folderAPIListDocs fid = api $ do
   (user, _) <- getAPIUserWithPad APIDocCheck
   let acc = mkAccPolicy $ [(ReadA, FolderR, fid)]
-  apiAccessControl acc $ do
+  apiAccessControlOrIsAdmin acc $ do
     offset   <- apiV2ParameterDefault 0   (ApiV2ParameterInt  "offset")
     maxcount <- apiV2ParameterDefault 100 (ApiV2ParameterInt  "max")
     sorting  <- apiV2ParameterDefault defaultDocumentAPISort (ApiV2ParameterJSON "sorting" unjsonDef)
