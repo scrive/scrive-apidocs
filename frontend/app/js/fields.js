@@ -632,13 +632,16 @@ var Field = exports.Field = Backbone.Model.extend({
           && !this.isChecked();
       return textNeedsValue || checkboxNeedsToBeCheckedByAuthor || !this.isValid();
     },
-    isValid: function() {
-        var self = this;
-        if (!this.isCsvField())
-          return this.validation().validateData(this.value());
-        else {
-            return _.all(this.csvFieldValues(),function(v) {return self.validation().validateData(v); });
-        }
+    isValid: function (value) {
+      if (value === undefined) {
+        value = this.value();
+      }
+      var self = this;
+      if (!this.isCsvField()) {
+        return this.validation().validateData(value);
+      } else {
+        return _.all(this.csvFieldValues(), function (v) {return self.validation().validateData(v); });
+      }
     },
     requiredForParticipation: function() {
         var field = this;

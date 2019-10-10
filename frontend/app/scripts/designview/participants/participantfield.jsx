@@ -24,7 +24,7 @@ module.exports = React.createClass({
           ref="input"
           className={"design-view-action-participant-details-information-field s-input-" + name + " " +
                      (csvfield || field.isAuthorUnchangeableField() ? " transparent " : "")
-                     + (!field.isValid(true) ? "redborder" : "")
+                     + (!field.isValid() ? "redborder" : "")
           }
           infotext={csvfield ? csvname : self.placeholderText()}
           readonly={csvfield || field.isAuthorUnchangeableField()}
