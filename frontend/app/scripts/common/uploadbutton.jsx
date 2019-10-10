@@ -14,6 +14,7 @@ var BrowserInfo = require("../../js/utils/browserinfo.js").BrowserInfo;
       className   : additional css classes
       style       : style object (react format)
       onUploadComplete : function(input, title)
+      fileChecker : function(file), check every file and return bool if is ok
 
  *
  * Example usage:
@@ -79,9 +80,21 @@ var BrowserInfo = require("../../js/utils/browserinfo.js").BrowserInfo;
           if (self.props.onUploadComplete != undefined) {
             // IE8 requires delay before inputs are available.
             setTimeout(function () {
-              fileinput.detach();
-              self.props.onUploadComplete(fileinput, self.fileName(fileinput));
-              self.createFileInput();
+              var filesOK = _.every(fileinput[0].files, function (file) {
+                if (self.props.fileChecker !== undefined) {
+                  return self.props.fileChecker(file);
+                } else {
+                  return true;
+                }
+              });
+              if (filesOK) {
+                fileinput.detach();
+                self.props.onUploadComplete(fileinput, self.fileName(fileinput));
+                self.createFileInput();
+              } else {
+                fileinput.remove();
+                self.createFileInput();
+              }
             }, 100);
           } else {
             fileinput.remove();
