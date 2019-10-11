@@ -170,7 +170,7 @@ handleCheckCGIAuthStatusWithRedirect did slid = do
       return $ LinkExternal l
 
 
-data CGISignStatus = CGISignStatusSuccess | CGISignStatusInProgress ProgressStatus | CGISignStatusFailed GrpFault | CGISignStatusAlreadySigned
+data CGISignStatus = CGISignStatusSuccess | CGISignStatusInProgress ProgressStatus | CGISignStatusFailed GrpFault | CGISignStatusAlreadySigned deriving Show
 
 checkCGISignStatus :: (MonadDB m, MonadThrow m, MonadMask m, MonadLog m, MonadBaseControl IO m) => CgiGrpConfig -> DocumentID -> SignatoryLinkID -> m CGISignStatus
 checkCGISignStatus CgiGrpConfig{..}  did slid = do

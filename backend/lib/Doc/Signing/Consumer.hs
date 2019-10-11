@@ -178,6 +178,7 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf templates pool
         Just cc -> do
           signingDocumentID <- documentid <$> theDocument
           collectResult <- checkCGISignStatus cc signingDocumentID signingSignatoryID
+          logInfo "CGI collect result" $ object [ "result" .= show collectResult ]
           case collectResult of
             CGISignStatusAlreadySigned -> return $ Ok Remove
             CGISignStatusFailed grpFault -> do
