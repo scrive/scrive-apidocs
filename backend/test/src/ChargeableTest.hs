@@ -114,14 +114,14 @@ test_startDocumentCharging = do
       let filename = inTestDir "pdfs/simple.pdf"
       filecontent <- liftIO $ BS.readFile filename
       file <- saveNewFile (T.pack filename) filecontent
-      doc <- addRandomDocumentWithAuthorAndConditionAndFile
-            user
-            (\d -> documentstatus d == Preparation
-                     && (case documenttype d of
-                          Signable -> True
-                          _ -> False)
-                     && all ((==) EmailDelivery . signatorylinkdeliverymethod) (documentsignatorylinks d))
-            file
+      doc <- addRandomDocumentWithFile file (randomDocumentAllowsDefault user)
+        { randomDocumentTypes = Or [Signable]
+        , randomDocumentStatuses = Or [Preparation]
+        , randomDocumentSignatories =
+          let signatory = Or [ And [ RSC_DeliveryMethodIs EmailDelivery ]
+                             ]
+          in Or $ map (`replicate` signatory) [1..10]
+        }
 
       True <- withDocument doc $ do
         randomUpdate $ ResetSignatoryDetails ([

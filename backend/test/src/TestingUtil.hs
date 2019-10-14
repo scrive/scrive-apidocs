@@ -352,6 +352,10 @@ arbitrarySignatoryActor = do
 instance Arbitrary SignatoryLinkID where
   arbitrary = unsafeSignatoryLinkID . abs <$> arbitrary
 
+arbitraryConsentModule :: Gen (Maybe String, [SignatoryConsentQuestion])
+arbitraryConsentModule =
+  (\t qs -> (Just t, qs)) <$> arbString 1 100 <*> listOf1 arbitrary
+
 instance Arbitrary SignatoryLink where
   arbitrary = do
     fields <- arbitrary
@@ -364,10 +368,7 @@ instance Arbitrary SignatoryLink where
     delivery <- arbitrary
     authenticationToSign <- arbitrary
     authenticationToView <- arbitrary
-    (cmTitle, cmQuestions) <- oneof
-      [ (\t qs -> (Just t, qs)) <$> arbString 1 100 <*> listOf1 arbitrary
-      , return (Nothing, [])
-      ]
+    (cmTitle, cmQuestions) <- oneof [arbitraryConsentModule, return (Nothing, [])]
     hidePN <- arbitrary
     return $ defaultSignatoryLink
       { signatorylinkid                         = unsafeSignatoryLinkID 0
@@ -1094,7 +1095,23 @@ addNewRandomPartnerUser = do
 
 -- TODO: to be renamed, CORE 1486
 newtype Or a = Or { unOr :: [a] }
+  deriving (Eq, Show)
 newtype And a = And { unAnd :: [a] }
+  deriving (Eq, Show)
+
+-- | Generate list of alternatives for signatories where one of them has a
+-- bounded spec and the rest are free.
+anyRandomSignatoryCondition
+  :: Int
+  -> Int
+  -> Or (And RandomSignatoryCondition)
+  -> Or [Or (And RandomSignatoryCondition)]
+anyRandomSignatoryCondition a b cond =
+  let freeSig = Or [And []]
+  in Or $ do
+    n <- [a..b]
+    k <- [1..n]
+    return $ replicate (k-1) freeSig ++ [cond] ++ replicate (n-k) freeSig
 
 data RandomSignatoryCondition
   = RSC_IsSignatory
@@ -1107,6 +1124,9 @@ data RandomSignatoryCondition
   | RSC_AuthToSignIs AuthenticationToSignMethod
   | RSC_AuthToViewIs AuthenticationToViewMethod
   | RSC_DeliveryMethodIs DeliveryMethod
+  | RSC_HasConsentModule Bool
+  | RSC_HasReadInvite Bool
+  deriving (Eq, Show)
 
 data RandomDocumentAllows = RandomDocumentAllows
   { randomDocumentTypes       :: Or DocumentType
@@ -1116,10 +1136,8 @@ data RandomDocumentAllows = RandomDocumentAllows
   -- options for the list of conditions a signatory needs to fulfil.
   , randomDocumentSignatories :: Or [Or (And RandomSignatoryCondition)]
   , randomDocumentAuthor      :: User
-  , randomDocumentChecker     :: Document -> Maybe Document
-  -- ^ Return Nothing to reject the document or Just with a potentially
-  -- modified document to accept it.
   , randomDocumentSharedLink  :: Bool
+  , randomDocumentTimeoutTime :: Bool
   , randomDocumentTemplateId  :: Maybe DocumentID
   }
 
@@ -1137,8 +1155,8 @@ randomDocumentAllowsDefault user = RandomDocumentAllows
   , randomDocumentSharings    = Or documentAllSharings
   , randomDocumentSignatories = Or $ map (`replicate` freeSignatory) [1..10]
   , randomDocumentAuthor      = user
-  , randomDocumentChecker     = Just
   , randomDocumentSharedLink  = False
+  , randomDocumentTimeoutTime = True
   , randomDocumentTemplateId  = Nothing
   }
   where
@@ -1227,25 +1245,6 @@ addRandomDocumentWithAuthor' :: User -> TestEnv Document
 addRandomDocumentWithAuthor' user =
   addRandomDocument (randomDocumentAllowsDefault user)
 
-addRandomDocumentWithAuthorAndCondition
-  :: User -> (Document -> Bool)
-  -> TestEnv Document
-addRandomDocumentWithAuthorAndCondition user p =
-  addRandomDocumentWithAuthorAndCondition' user $ onCondition p
-
-addRandomDocumentWithAuthorAndCondition'
-  :: User -> (Document -> Maybe Document)
-  -> TestEnv Document
-addRandomDocumentWithAuthorAndCondition' user checker =
-  addRandomDocument $
-  (randomDocumentAllowsDefault user) { randomDocumentChecker = checker }
-
-addRandomDocumentWithAuthorAndConditionAndFile ::
-  User -> (Document -> Bool) -> FileID -> TestEnv Document
-addRandomDocumentWithAuthorAndConditionAndFile user p file =
-  addRandomDocumentWithFile file $
-  (randomDocumentAllowsDefault user) { randomDocumentChecker = onCondition p }
-
 addRandomDocumentFromShareableLinkWithTemplateId
   :: User -> DocumentID -> TestEnv Document
 addRandomDocumentFromShareableLinkWithTemplateId user templateId =
@@ -1264,14 +1263,13 @@ addRandomDocumentWithFile :: FileID -> RandomDocumentAllows -> TestEnv Document
 addRandomDocumentWithFile fileid rda = do
   now <- currentTime
   let user = randomDocumentAuthor rda
-      checker = randomDocumentChecker rda
   file <- dbQuery $ GetFileByFileID fileid
   --liftIO $ print $ "about to generate document"
-  document <- worker now user checker file
+  document <- worker now user file
   docid <- dbUpdate $ StoreDocumentForTesting document
   dbQuery $ GetDocumentByDocumentID docid
   where
-    worker now user checker file = do
+    worker now user file = do
       doc' <- rand 10 arbitrary
       xtype <- rand 10 (elements . unOr $ randomDocumentTypes rda)
       status <- if xtype == Template
@@ -1281,7 +1279,6 @@ addRandomDocumentWithFile fileid rda = do
         then rand 10 (elements . unOr $ randomDocumentSharings rda)
         else return Private
       title <- rand 1 $ arbText 10 25
-
       sigcondss <- rand 10 (elements . unOr $ randomDocumentSignatories rda)
       -- First signatory link is the author
       let genFuns = randomAuthorLinkByStatus : repeat randomSigLinkByStatus
@@ -1323,6 +1320,25 @@ addRandomDocumentWithFile fileid rda = do
                 return $ sig { signatorylinkauthenticationtoviewmethod = authToView }
               RSC_DeliveryMethodIs deliveryMethod -> \sig -> do
                 return $ sig { signatorylinkdeliverymethod = deliveryMethod }
+              RSC_HasConsentModule hasModule -> \sig ->
+                if hasModule
+                then do
+                  (cmTitle, cmQuestions) <- rand 10 arbitraryConsentModule
+                  return sig
+                    { signatorylinkconsenttitle = cmTitle
+                    , signatorylinkconsentquestions = cmQuestions
+                    }
+                else return sig
+                     { signatorylinkconsenttitle = Nothing
+                     , signatorylinkconsentquestions = []
+                     }
+              RSC_HasReadInvite readInvite -> \sig ->
+                if readInvite
+                then do
+                  timeReadInvite <- rand 10 arbitrary
+                  return sig { maybereadinvite = Just timeReadInvite }
+                else return sig { maybereadinvite = Nothing }
+
         foldrM applyCond siglink (unAnd sigcond)
 
       let doc = doc' { documenttype = xtype
@@ -1332,8 +1348,10 @@ addRandomDocumentWithFile fileid rda = do
                      , documentfromshareablelink = randomDocumentSharedLink rda
                      , documenttemplateid = randomDocumentTemplateId rda
                      , documentfolderid = userhomefolderid user
+                     , documenttimeouttime = if randomDocumentTimeoutTime rda
+                                             then documenttimeouttime doc'
+                                             else Nothing
                      }
-
       userDetails <- signatoryFieldsFromUser user
       let asl = asl'
             { maybesignatory  = Just (userid user)
@@ -1355,28 +1373,17 @@ addRandomDocumentWithFile fileid rda = do
                 [MainFile fileid Preparation Missing (T.unpack $ filename file)]
             }
 
-      case checker adoc of
-        Nothing -> do
+      case invariantProblems now adoc of
+        Nothing -> return adoc
+        Just _problems -> do
           rej <- asks (get teRejectedDocuments)
           modifyMVar_ rej $ \i -> return $! i + 1
-          --liftIO $ print $ "did not pass condition; doc: " ++ show adoc
-          worker now user checker file
-        Just acceptedDoc -> do
-          case invariantProblems now acceptedDoc of
-            Nothing -> return acceptedDoc
-            Just _problems -> do
-              rej <- asks (get teRejectedDocuments)
-              modifyMVar_ rej $ \i -> return $! i + 1
-              -- am I right that random document should not have invariantProblems?
-              --uncomment this to find out why the doc was rejected
-              --liftIO $ print adoc
-              --liftIO $ print $ "rejecting doc: " <> _problems
-              worker now user checker file
-
-onCondition :: (a -> Bool) -> a -> Maybe a
-onCondition p x
-  | p x = Just x
-  | otherwise = Nothing
+          -- Invariant problems might happen e.g. when all signatories are
+          -- picked to have signed, but the document was earlier picked to be in
+          -- Pending state. It's quite rare, but does happen.
+          --liftIO $ print adoc
+          --liftIO $ print $ "rejecting doc: " <> _problems
+          worker now user file
 
 -- | Synchronously seal a document.
 sealTestDocument :: Context -> DocumentID -> TestEnv ()

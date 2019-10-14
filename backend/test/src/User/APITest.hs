@@ -25,7 +25,6 @@ import Attachment.Model
 import Context
 import DataRetentionPolicy
 import DB
-import Doc.DocInfo
 import Doc.DocumentMonad
 import Doc.Model.Query
 import Doc.Model.Update
@@ -233,8 +232,10 @@ testUserNoDeletionIfPendingDocuments = do
 
   ctx <- set ctxmaybeuser (Just bob) <$> mkContext defaultLang
 
-  doc <- addRandomDocumentWithAuthorAndCondition bob $ \doc ->
-    documentstatus doc == Pending && documenttype doc == Signable
+  doc <- addRandomDocument (randomDocumentAllowsDefault bob)
+    { randomDocumentTypes = Or [Signable]
+    , randomDocumentStatuses = Or [Pending]
+    }
 
   do
     req <- mkRequest POST [("email", inText "bob@blue.com")]
@@ -268,10 +269,14 @@ testUserDeletionOwnershipTransfer = do
   void $ dbUpdate $ AcceptTermsOfService (userid bob)  now
   void $ dbUpdate $ SetUserCompanyAdmin  (userid bob)  True
 
-  sharedTemplate <- addRandomDocumentWithAuthorAndCondition anna $ \doc ->
-    isDocumentShared doc
-  unsharedTemplate <- addRandomDocumentWithAuthorAndCondition anna $ \doc ->
-    isTemplate doc && not (isDocumentShared doc)
+  sharedTemplate <- addRandomDocument (randomDocumentAllowsDefault anna)
+    { randomDocumentTypes = Or [Template]
+    , randomDocumentSharings = Or [Shared]
+    }
+  unsharedTemplate <- addRandomDocument (randomDocumentAllowsDefault anna)
+    { randomDocumentTypes = Or [Template]
+    , randomDocumentSharings = Or [Private]
+    }
 
   ctx <- set ctxmaybeuser (Just anna) <$> mkContext defaultLang
   let actor = userActor ctx anna

@@ -17,7 +17,6 @@ import Doc.API.V2.Calls.DocumentGetCalls
 import Doc.API.V2.Calls.DocumentPostCalls
 import Doc.API.V2.Calls.SignatoryCalls (docApiV2SigSign)
 import Doc.API.V2.Mock.TestUtils
-import Doc.DocInfo
 import Doc.DocumentID (DocumentID, unsafeDocumentID)
 import Doc.DocumentMonad (withDocument, withDocumentID)
 import Doc.Model.Query (GetDocumentByDocumentID(..))
@@ -90,10 +89,17 @@ testDocApiV2Get = do
 _testDocApiV2GetFailsAfter30Days :: TestEnv ()
 _testDocApiV2GetFailsAfter30Days = do
   user <- addNewRandomUser
+
+  doc <- addRandomDocument (randomDocumentAllowsDefault user)
+    { randomDocumentTypes = Or [Signable]
+    , randomDocumentStatuses = Or [Closed]
+    , randomDocumentSignatories =
+      let signatory = Or [And []]
+      in Or $ map (`replicate` signatory) [2..10]
+    }
+
   let check s = isNothing (maybesignatory s) && not (signatoryisauthor s)
-  doc <- addRandomDocumentWithAuthorAndCondition user $ \doc ->
-    isClosed doc && any check (documentsignatorylinks doc)
-  let Just sl = find check (documentsignatorylinks doc)
+      Just sl = find check (documentsignatorylinks doc)
 
   req <- mkRequest GET []
   ctx <- anonymiseContext <$> mkContext defaultLang

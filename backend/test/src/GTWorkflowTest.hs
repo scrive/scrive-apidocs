@@ -14,7 +14,6 @@ import Doc.API.V2.Calls.CallsTestUtils
 import Doc.API.V2.Calls.SignatoryCalls (docApiV2SigSign)
 import Doc.API.V2.Mock.TestUtils
 import Doc.DigitalSignature (extendDigitalSignature)
-import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentMonad (theDocument, withDocumentID)
 import Doc.Model
@@ -43,7 +42,11 @@ testExtendDigitalSignatures = do
   file <- saveNewFile (T.pack filename) filecontent
   file1 <- saveNewFile (T.pack filename) filecontent
   file2 <- saveNewFile (T.pack filename) filecontent
-  did <- documentid <$> addRandomDocumentWithAuthorAndConditionAndFile author (isSignable && isClosed) file
+  did <- documentid <$> addRandomDocumentWithFile file (randomDocumentAllowsDefault author)
+    { randomDocumentTypes = Or [Signable]
+    , randomDocumentStatuses = Or [Closed]
+    }
+
   withDocumentID did $ do
     now <- currentTime
     let actor = systemActor (2 `monthsBefore` now)

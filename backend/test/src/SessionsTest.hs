@@ -10,7 +10,6 @@ import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Context
 import DB hiding (query, update)
-import Doc.DocInfo
 import Doc.DocStateData
 import Doc.Tokens.Model
 import EID.CGI.GRP.Transaction.Model
@@ -352,8 +351,10 @@ insertNewSession uid = do
 addDocumentAndInsertToken :: TestEnv (User, Document, Context)
 addDocumentAndInsertToken = do
   author <- addNewRandomUser
-  doc    <- addRandomDocumentWithAuthorAndCondition author
-            (isSignable && isPending)
+  doc    <- addRandomDocument (randomDocumentAllowsDefault author)
+    { randomDocumentTypes = Or [Signable]
+    , randomDocumentStatuses = Or [Pending]
+    }
   (_, ctx) <- do
     let Just asl = getAuthorSigLink doc
     rq  <- mkRequest GET []
