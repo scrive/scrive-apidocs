@@ -135,8 +135,13 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetUserRecentAuthFa
       sqlWhereEq "user_id" uid
       sqlWhereIn "event_type" [UserLoginFailure, UserLoginTOTPFailure, UserPadLoginFailure, UserAPIGetPersonalTokenFailure]
       sqlWhere $ "time >= (" <?> now <+> "- interval '10 minutes')"
+      sqlWhere $ "time >= (" <> toSQLCommand passResetTimeQuery <> ")"
       sqlResult "COUNT(*)"
     fetchOne runIdentity
+   where passResetTimeQuery = sqlSelect "users_history" $ do
+                                sqlWhereEq "user_id" uid
+                                sqlWhereEq "event_type" UserPasswordSetup
+                                sqlResult "coalesce(max(time), to_timestamp(0))"
 
 data LogHistoryLoginFailure = LogHistoryLoginFailure UserID IPAddress UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m LogHistoryLoginFailure Bool where

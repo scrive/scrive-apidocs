@@ -355,3 +355,19 @@
 .forwarded-view .pageheader {
   background-color: @brandcolor;
 }
+
+.forward-textarea {
+  .obligatory-forward-input {
+    border-color: @actioncolor; /* Fallback IE */
+    border-color: fade(@actioncolor,60%);
+    .background_with_ie_support(fade(@actioncolor, 5%));
+
+    &:hover, &.active {
+      border-color: @actioncolor;
+    }
+
+    &.valid {
+      border-color: #ddd;
+    }
+  }
+}

@@ -16,8 +16,17 @@ var InfoTextInput = require("../../common/infotextinput");
       return {messageText: "", newValues: {}};
     },
 
+    allFieldsValid: function () {
+      var self = this;
+      var sig = this.props.model.document().currentSignatory();
+      var textFields = sig.fields().filter((f) => f.isText());
+      return _.every(textFields, (tf) => tf.isValid(self.getNewValue(tf) || ""));
+    },
+
     handleForward: function () {
-      this.props.onForward(this.state.messageText, this.newFieldsWithValuesForUpdate());
+      if (this.allFieldsValid()) {
+        this.props.onForward(this.state.messageText, this.newFieldsWithValuesForUpdate());
+      }
     },
 
     newFieldsWithValuesForUpdate: function () {
@@ -49,6 +58,10 @@ var InfoTextInput = require("../../common/infotextinput");
       this.setState({newValues: clone});
     },
 
+    obligatoryField: function (f) {
+      return f.requiredForParticipation();
+    },
+
     render: function () {
       var self = this;
       var sig = this.props.model.document().currentSignatory();
@@ -75,7 +88,9 @@ var InfoTextInput = require("../../common/infotextinput");
                         <InfoTextInput
                           style={{"width": "250px"}}
                           infotext={tf.nicename()}
-                          value={self.getNewValue(tf) !== undefined ? self.getNewValue(tf) : tf.value()}
+                          className={(self.obligatoryField(tf) ? "obligatory-forward-input" : "") +
+                                     (tf.isValid(self.getNewValue(tf) || "") ? " valid" : "")}
+                          value={self.getNewValue(tf)}
                           onChange={function (v) { self.setNewValue(tf, v); }}
                         />
                       </div>
@@ -104,7 +119,7 @@ var InfoTextInput = require("../../common/infotextinput");
             <div className="col-sm-12 right">
               <div className="button-group">
                 <Button
-                  className="button-forward"
+                  className={"button-forward" + (self.allFieldsValid() ? " action" : "")}
                   text={localization.forward.send}
                   onClick={this.handleForward}
                 />

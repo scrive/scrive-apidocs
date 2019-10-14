@@ -293,8 +293,11 @@ sendTakeoverSingleUserMail inviter ug user = do
 handleChangeRoleOfUserGroupAccount :: Kontrakcja m => m JSValue
 handleChangeRoleOfUserGroupAccount = do
   changeid <- getCriticalField asValidUserID "changeid"
+  ugid <- usergroupid <$> (guardJustM $ dbQuery . GetUserByID $ changeid)
   makeadmin <- getField "makeadmin"
-  apiAccessControl [mkAccPolicyItem (UpdateA, UserR, changeid)] $ do
+  -- cf. `roleToAccessPolicyReq`
+  apiAccessControl [ mkAccPolicyItem (CreateA, UserPolicyR, changeid)
+                   , mkAccPolicyItem (CreateA, UserGroupPolicyR, ugid) ] $ do
     void $ dbUpdate $ SetUserCompanyAdmin changeid (makeadmin == Just "true")
     runJSONGenT $ value "changed" True
 

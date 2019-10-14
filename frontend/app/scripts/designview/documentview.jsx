@@ -151,6 +151,18 @@ var Modal = require("../common/modal");
       }
     },
 
+    uploadFileChecker: function (file) {
+      if ((file.size / 1024 / 1024) > 10) {
+        var document = this.props.document;
+        new FlashMessage({content: localization.fileTooLarge, type: "error"});
+        document.markAsNotReady();
+        Track.track("Error", {Message: "main file too large"});
+        document.recall();
+        return false;
+      }
+      return true;
+    },
+
     onUpload: function (input, title, multifile) {
       var self = this;
       var document = this.props.document;
@@ -170,18 +182,12 @@ var Modal = require("../common/modal");
           });
         },
         ajaxerror: function (d, a) {
-          if (d.status === 413) { // file too large
-            new FlashMessage({content: localization.fileTooLarge, type: "error"});
-            document.markAsNotReady();
-            Track.track("Error", {Message: "main file too large"});
-          } else {
-            var filepath = "" || $(input).val();
-            var fileext = filepath.substring(filepath.length - 3).toLowerCase();
-            var text = fileext === "pdf" ? localization.couldNotUpload : localization.couldNotUploadOnlyPDF;
-            new FlashMessage({content: text, type: "error"});
-            document.markAsNotReady();
-            Track.track("Error", {Message: "could not upload main file"});
-          }
+          var filepath = "" || $(input).val();
+          var fileext = filepath.substring(filepath.length - 3).toLowerCase();
+          var text = fileext === "pdf" ? localization.couldNotUpload : localization.couldNotUploadOnlyPDF;
+          new FlashMessage({content: text, type: "error"});
+          document.markAsNotReady();
+          Track.track("Error", {Message: "could not upload main file"});
           document.recall();
         }
       });
@@ -265,6 +271,7 @@ var Modal = require("../common/modal");
                               name="file"
                               maxlength={2}
                               onUploadComplete={self.onUpload}
+                              fileChecker={self.uploadFileChecker}
                             />
 
                             {/* if */this.props.dragAndDropEnabled &&
