@@ -19,6 +19,7 @@ stdenv.mkDerivation {
   name = "kontrakcja-frontend";
   buildInputs = [
     nodejs
+    pkgs.phantomjs
     pkgs.glibcLocales
     pkgs.nodePackages.less
     pkgs.nodePackages.grunt-cli
@@ -26,7 +27,7 @@ stdenv.mkDerivation {
 
   src = kontrakcja-src;
 
-  inherit nodeDependencies kontrakcja;
+  inherit nodeDependencies;
 
   configurePhase = ''
     export LOCALIZATION_BIN="${kontrakcja}/bin/localization"
