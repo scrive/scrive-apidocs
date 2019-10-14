@@ -554,10 +554,22 @@ showPreviewForSignatory
   :: Kontrakcja m => DocumentID -> SignatoryLinkID -> Maybe MagicHash -> FileID
   -> m Response
 showPreviewForSignatory did slid mmh fid = logDocumentAndFile did fid $ do
-  checkFileAccessWith fid (Just slid) mmh (Just did) Nothing
-  pixelwidth <- fromMaybe 150 <$> readField "pixelwidth"
-  let clampedPixelWidth = min 2000 (max 100 pixelwidth)
-  previewResponse fid clampedPixelWidth
+  case mmh of
+    Nothing -> showActualPreviewForSignatoryWithFileAccessCheck
+    Just mh -> do
+      hasAccess <- dbQuery $ CheckIfMagicHashIsValid did slid mh
+      if hasAccess
+        then showActualPreviewForSignatoryWithFileAccessCheck
+        else showFallbackImage
+  where
+   showActualPreviewForSignatoryWithFileAccessCheck = do
+     checkFileAccessWith fid (Just slid) mmh (Just did) Nothing
+     pixelwidth <- fromMaybe 150 <$> readField "pixelwidth"
+     let clampedPixelWidth = min 2000 (max 100 pixelwidth)
+     previewResponse fid clampedPixelWidth
+   showFallbackImage = do
+    imgData <- liftIO . BS.readFile $ "files/images/no_preview.png"
+    return $ toResponseBS "image/png" $ BSL.fromStrict imgData
 
 previewResponse :: Kontrakcja m => FileID -> Int -> m Response
 previewResponse fid pixelwidth = do

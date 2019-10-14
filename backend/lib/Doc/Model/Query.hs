@@ -18,6 +18,7 @@ module Doc.Model.Query
   , GetDocumentByDocumentIDSignatoryLinkID(..)
   , GetDocumentByDocumentIDSignatoryLinkIDMagicHash(..)
   , GetDocumentByDocumentIDAndShareableLinkHash(..)
+  , CheckIfMagicHashIsValid(..)
   , GetDocumentsByAuthor(..)
   , GetSignatoryScreenshots(..)
   , GetSignatoryLinkByID(..)
@@ -269,6 +270,27 @@ instance (MonadDB m, MonadThrow m, MonadTime m)
     unless (isValidSignatoryMagicHash mh now (documentstatus doc) sl) $ do
       throwM $ SomeDBExtraException SignatoryTokenDoesNotMatch
     return doc
+
+-- CheckIfMagicHashIsValid will NOT throw exception and can be used to handle failures nicely
+data CheckIfMagicHashIsValid = CheckIfMagicHashIsValid DocumentID SignatoryLinkID MagicHash
+instance (MonadDB m, MonadThrow m, MonadTime m)
+  => DBQuery m CheckIfMagicHashIsValid Bool where
+  query (CheckIfMagicHashIsValid did slid mh) = do
+    runQuery_ $ sqlSelect "documents" $ do
+      mapM_ sqlResult documentsSelectors
+      sqlWhereDocumentIDIs did
+      sqlWhereExists $ sqlSelect "signatory_links" $ do
+        sqlWhere "signatory_links.document_id = documents.id"
+        sqlWhereSignatoryLinkIDIs slid
+        sqlWhereSomeSignatoryAccessTokenHasMagicHash mh
+        sqlWhereSignatoryLinkIsNotForwaded
+      sqlWhereDocumentWasNotPurged
+    mdoc <- fetchMaybe toComposite
+    case (mdoc, join $ getSigLinkFor slid <$> mdoc) of
+      (Just doc, Just sl) -> do
+        now <- currentTime
+        return $ isValidSignatoryMagicHash mh now (documentstatus doc) sl
+      _ -> return False
 
 data GetDocumentByDocumentIDAndShareableLinkHash = GetDocumentByDocumentIDAndShareableLinkHash DocumentID MagicHash
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentIDAndShareableLinkHash Document where
