@@ -384,7 +384,7 @@
 "_designViewAddMultisend":"Voeg multi-send toe",
 "_designViewAddPartiesAllowForward":"Sta doorsturen toe",
 "_designViewAddPartiesAllowForwardTooltip":"Sta doorsturen toe",
-"_designViewAddPartiesAllowHighlighting":"Sta markeren toe",
+"_designViewAddPartiesAllowHighlighting":"",
 "_designViewAddPartiesAllowHighlightingTooltip":"Sta de ondertekenende partij toe om gedeeltes van het document tijdens het ondertekenen te markeren",
 "_designViewAddPartiesAuthentication":"Authenticatie om te ondertekenen",
 "_designViewAddPartiesAuthenticationDKNemID":"Danish NemID",

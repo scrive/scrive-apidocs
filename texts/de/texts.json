@@ -384,7 +384,7 @@
 "_designViewAddMultisend":"Mehrfach versenden hinzufügen",
 "_designViewAddPartiesAllowForward":"Weiterleitung zulassen",
 "_designViewAddPartiesAllowForwardTooltip":"Weiterleitung zulassen",
-"_designViewAddPartiesAllowHighlighting":"Markierung zulassen",
+"_designViewAddPartiesAllowHighlighting":"",
 "_designViewAddPartiesAllowHighlightingTooltip":"Erlauben Sie der signierenden Partei bei der Unterzeichnung, Abschnitte im Dokument hervorzuheben. ",
 "_designViewAddPartiesAuthentication":"Authentifizierung zum Signieren",
 "_designViewAddPartiesAuthenticationDKNemID":"Dänische NemID ",

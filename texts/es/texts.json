@@ -384,7 +384,7 @@
 "_designViewAddMultisend":"Añadir envío múltiple",
 "_designViewAddPartiesAllowForward":"Permitir el envío",
 "_designViewAddPartiesAllowForwardTooltip":"Permitir el envío",
-"_designViewAddPartiesAllowHighlighting":"Permitir el resaltado",
+"_designViewAddPartiesAllowHighlighting":"",
 "_designViewAddPartiesAllowHighlightingTooltip":"Permitir a la parte firmante resaltar secciones del documento durante la firma",
 "_designViewAddPartiesAuthentication":"Autentificación para firmar",
 "_designViewAddPartiesAuthenticationDKNemID":"NemID danés",

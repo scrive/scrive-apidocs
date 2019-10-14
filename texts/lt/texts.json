@@ -384,7 +384,7 @@
 "_designViewAddMultisend":"Pridėti daugybinį siuntimą",
 "_designViewAddPartiesAllowForward":"Leisti persiųsti",
 "_designViewAddPartiesAllowForwardTooltip":"Leisti persiųsti",
-"_designViewAddPartiesAllowHighlighting":"Leisti pažymėti",
+"_designViewAddPartiesAllowHighlighting":"",
 "_designViewAddPartiesAllowHighlightingTooltip":"Leisti pasirašančiai šaliai pažymėti dokumento vietas pasirašymo metu",
 "_designViewAddPartiesAuthentication":"Autentifikavimas pasirašyti",
 "_designViewAddPartiesAuthenticationDKNemID":"Danijos „DemID“",

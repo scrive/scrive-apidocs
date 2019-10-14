@@ -384,7 +384,7 @@
 "_designViewAddMultisend":"Wyślij do kilku odbiorców",
 "_designViewAddPartiesAllowForward":"Zezwól na dalsze przekazywanie",
 "_designViewAddPartiesAllowForwardTooltip":"Zezwól na dalsze przekazywanie",
-"_designViewAddPartiesAllowHighlighting":"Zezwól na wprowadzanie zaznaczeń",
+"_designViewAddPartiesAllowHighlighting":"",
 "_designViewAddPartiesAllowHighlightingTooltip":"Zezwól stronie podpisującej na zaznaczanie sekcji dokumentu podczas składania podpisu",
 "_designViewAddPartiesAuthentication":"Uwierzytelnianie przed złożeniem podpisu",
 "_designViewAddPartiesAuthenticationDKNemID":"Duński NemID",

@@ -384,7 +384,7 @@
 "_designViewAddMultisend":"Bæta við fjölsendingu",
 "_designViewAddPartiesAllowForward":"Heimila framsendingu",
 "_designViewAddPartiesAllowForwardTooltip":"Heimila framsendingu",
-"_designViewAddPartiesAllowHighlighting":"Heimila auðkenningu",
+"_designViewAddPartiesAllowHighlighting":"",
 "_designViewAddPartiesAllowHighlightingTooltip":"Heimila undirskriftaraðila að auðkenna hluta skjalsins við undirritun",
 "_designViewAddPartiesAuthentication":"Sannvottun til undirskriftar",
 "_designViewAddPartiesAuthenticationDKNemID":"Danskt NemID",

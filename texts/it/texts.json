@@ -384,7 +384,7 @@
 "_designViewAddMultisend":"Aggiungi invio multiplo",
 "_designViewAddPartiesAllowForward":"Consenti inoltro",
 "_designViewAddPartiesAllowForwardTooltip":"Consenti inoltro",
-"_designViewAddPartiesAllowHighlighting":"Consenti evidenziazione",
+"_designViewAddPartiesAllowHighlighting":"",
 "_designViewAddPartiesAllowHighlightingTooltip":"Consenti alla parte firmataria di evidenziare sezioni del documento durante la firma",
 "_designViewAddPartiesAuthentication":"Autenticazione per firmare",
 "_designViewAddPartiesAuthenticationDKNemID":"NemID danese",

@@ -384,7 +384,7 @@
 "_designViewAddMultisend":"Odeslat na více adres",
 "_designViewAddPartiesAllowForward":"Umožnit přeposlání",
 "_designViewAddPartiesAllowForwardTooltip":"Umožnit přeposlání",
-"_designViewAddPartiesAllowHighlighting":"Umožnit zvýrazňování",
+"_designViewAddPartiesAllowHighlighting":"",
 "_designViewAddPartiesAllowHighlightingTooltip":"Umožnit podepisující straně zvýrazňovat během podepisování části dokumentu",
 "_designViewAddPartiesAuthentication":"Autentizace k podpisu",
 "_designViewAddPartiesAuthenticationDKNemID":"Dánská služba NemID",

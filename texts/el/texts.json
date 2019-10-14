@@ -384,7 +384,7 @@
 "_designViewAddMultisend":"Προσθήκη πολλαπλής αποστολής ",
 "_designViewAddPartiesAllowForward":"Να επιτρέπεται η προώθηση",
 "_designViewAddPartiesAllowForwardTooltip":"Να επιτρέπεται η προώθηση",
-"_designViewAddPartiesAllowHighlighting":"Να επιτρέπεται η επισήμανση",
+"_designViewAddPartiesAllowHighlighting":"",
 "_designViewAddPartiesAllowHighlightingTooltip":"Να επιτρέπεται στο υπογράφον συμβαλλόμενο μέρος να επισημαίνει ενότητες του εγγράφου κατά την υπογραφή ",
 "_designViewAddPartiesAuthentication":"Πιστοποίηση για υπογραφή ",
 "_designViewAddPartiesAuthenticationDKNemID":"εφαρμογή Danish NemID",

@@ -384,7 +384,7 @@
 "_designViewAddMultisend":"Lisää monilähetys",
 "_designViewAddPartiesAllowForward":"Hyväksy edelleenlähetys",
 "_designViewAddPartiesAllowForwardTooltip":"Hyväksy edelleenlähetys",
-"_designViewAddPartiesAllowHighlighting":"Hyväksy korostus",
+"_designViewAddPartiesAllowHighlighting":"",
 "_designViewAddPartiesAllowHighlightingTooltip":"Anna allekirjoittavan osapuolen korostaa dokumentin osia allekirjoitusprosessin aikana",
 "_designViewAddPartiesAuthentication":"Allekirjoituksen todentaminen",
 "_designViewAddPartiesAuthenticationDKNemID":"Tanskalainen NemID",

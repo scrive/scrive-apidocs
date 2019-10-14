@@ -384,7 +384,7 @@
 "_designViewAddMultisend":"Saada mitmele",
 "_designViewAddPartiesAllowForward":"Luba edasisaatmine",
 "_designViewAddPartiesAllowForwardTooltip":"Luba edasisaatmine",
-"_designViewAddPartiesAllowHighlighting":"Luba esile tõstmine",
+"_designViewAddPartiesAllowHighlighting":"",
 "_designViewAddPartiesAllowHighlightingTooltip":"Luba allkirjastajal dokumendi allkirjastamise ajal selle osasid esile tõsta.",
 "_designViewAddPartiesAuthentication":"Autentimine allkirjastamiseks",
 "_designViewAddPartiesAuthenticationDKNemID":"Taani NemID",

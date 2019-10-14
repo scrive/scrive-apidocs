@@ -384,7 +384,7 @@
 "_designViewAddMultisend":"Adicionar multi-envio",
 "_designViewAddPartiesAllowForward":"Permitir reencaminhamento",
 "_designViewAddPartiesAllowForwardTooltip":"Permitir reencaminhamento",
-"_designViewAddPartiesAllowHighlighting":"Permitir destaques",
+"_designViewAddPartiesAllowHighlighting":"",
 "_designViewAddPartiesAllowHighlightingTooltip":"Permitir que a parte signatária destaque secções do documento durante o processo de assinatura",
 "_designViewAddPartiesAuthentication":"Autenticação para assinar",
 "_designViewAddPartiesAuthenticationDKNemID":"NemID dinamarquês",

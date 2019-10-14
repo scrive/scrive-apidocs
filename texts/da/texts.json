@@ -384,7 +384,7 @@
 "_designViewAddMultisend":"Tilføj multisend",
 "_designViewAddPartiesAllowForward":"Tillad videresendelse",
 "_designViewAddPartiesAllowForwardTooltip":"Tillad videresendelse",
-"_designViewAddPartiesAllowHighlighting":"Tillad fremhævning",
+"_designViewAddPartiesAllowHighlighting":"",
 "_designViewAddPartiesAllowHighlightingTooltip":"Tillad signerende part at fremhæve sektioner i dokumentet i forbindelse med signering",
 "_designViewAddPartiesAuthentication":"Godkendelse til at signere",
 "_designViewAddPartiesAuthenticationDKNemID":"NemID",

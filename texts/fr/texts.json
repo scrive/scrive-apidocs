@@ -384,7 +384,7 @@
 "_designViewAddMultisend":"Ajouter des multi-destinataires",
 "_designViewAddPartiesAllowForward":"Permettre le transfert",
 "_designViewAddPartiesAllowForwardTooltip":"Permettre le transfert",
-"_designViewAddPartiesAllowHighlighting":"Permettre le surlignement",
+"_designViewAddPartiesAllowHighlighting":"",
 "_designViewAddPartiesAllowHighlightingTooltip":"Autoriser la partie signataire à surligner des sections du document lors de la signature",
 "_designViewAddPartiesAuthentication":"Authentification pour signature",
 "_designViewAddPartiesAuthenticationDKNemID":"NemID danois",

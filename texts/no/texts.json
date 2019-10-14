@@ -384,7 +384,7 @@
 "_designViewAddMultisend":"Legg til multisend",
 "_designViewAddPartiesAllowForward":"Tillat videresending",
 "_designViewAddPartiesAllowForwardTooltip":"Tillat videresending",
-"_designViewAddPartiesAllowHighlighting":"Tillat markering",
+"_designViewAddPartiesAllowHighlighting":"",
 "_designViewAddPartiesAllowHighlightingTooltip":"La signerende part markere deler av dokumentet mens de signerer",
 "_designViewAddPartiesAuthentication":"Autentisering til å signere",
 "_designViewAddPartiesAuthenticationDKNemID":"Dansk NemID",
