@@ -109,7 +109,7 @@ var FieldPlacementGlobal = require("../../../js/fieldplacementglobal.js").FieldP
       var hasEditor =  self.hasTypeSetter() && self.editorIsAvailable();
       return (
         <div
-          className={"placedfield " + ("js-" + field.type()) + (field.isValid(true) ? "" : " invalid") }
+          className={"placedfield " + ("js-" + field.type()) + (field.isValid() ? "" : " invalid") }
           style={{
             left: Math.floor(placement.xrel() * this.props.pageWidth + 1.5) - FieldPlacementGlobal.textPlacementXOffset,
             top: Math.floor(placement.yrel() * this.props.pageHeight + 1.5) - FieldPlacementGlobal.textPlacementYOffset,
