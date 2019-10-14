@@ -37,6 +37,7 @@ haskellPackages.shellFor {
     run-deps ++
     kontrakcja-frontend.buildInputs ++
     [
+      scrivepdftools
       haskellPackages.alex
       haskellPackages.happy
       haskellPackages.brittany
