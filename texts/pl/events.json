@@ -11,6 +11,7 @@
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive przygotował finalną wersję pliku PDF.",
 "_AuthenticatedToViewEvidenceArchiveDKNemID":"Zweryfikował (-a) swoją tożsamość przy użyciu duńskiego NemID celem uzyskania dostępu do dokumentu.",
 "_AuthenticatedToViewEvidenceArchiveFITupas":"Zweryfikował (-a) swoją tożsamość przy użyciu fińskiego TUPAS celem uzyskania dostępu do dokumentu.",
+"_AuthenticatedToViewEvidenceArchiveIDIN":"",
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Zweryfikował (-a) swoją tożsamość przy użyciu norweskiego BankID celem uzyskania dostępu do dokumentu.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Zweryfikował (-a) swoją tożsamość przy użyciu szwedzkiego BankID celem uzyskania dostępu do dokumentu.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Zweryfikował (-a) swoją tożsamość przy użyciu kodu PIN przesłanego SMS-em celem uzyskania dostępu do dokumentu.",

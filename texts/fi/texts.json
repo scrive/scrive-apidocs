@@ -701,6 +701,7 @@
 "_historyTime":"Aika",
 "_identifiedByDKNemIDText":"Tanskalainen NemID-tunnistautuminen henkilöksi \"$name$\"",
 "_identifiedByFITupasText":"Suomalainen TUPAS-tunnistautuminen henkilöksi \"$name$\"",
+"_identifiedByIDINText":"",
 "_identifiedByNOBankIDText":"Norjalainen BankID-tunnistautuminen henkilöksi \"$name$\"",
 "_identifiedBySwedishBankIDText":"Ruotsalainen BankID-tunnistautuminen henkilöksi \"$name$\"",
 "_identifiedByVerimiText":"Verimi-tunnistautuminen sähköpostiosoitteeksi \"$email$\"",

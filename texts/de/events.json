@@ -11,6 +11,7 @@
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive hat die endgültige PDF-Datei fertig gestellt.",
 "_AuthenticatedToViewEvidenceArchiveDKNemID":"Ihre Identität wurde mit dänischer NemID bestätigt, um auf das Dokument zuzugreifen.",
 "_AuthenticatedToViewEvidenceArchiveFITupas":"Bestätigung Ihrer Identität mit finnischer TUPAS für den Zugriff auf das Dokument. ",
+"_AuthenticatedToViewEvidenceArchiveIDIN":"",
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Ihre Identität wurde mit norwegischer BankID bestätigt, um auf das Dokument zuzugreifen.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Ihre Identität wurde mit schwedischer BankID bestätigt, um auf das Dokument zuzugreifen",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Bestätigung Ihrer Identität mit PIN-Code per SMS für den Zugriff auf das Dokument.",

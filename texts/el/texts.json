@@ -701,6 +701,7 @@
 "_historyTime":"Ώρα",
 "_identifiedByDKNemIDText":"Πραγματοποιήθηκε ταυτοποίηση μέσω της εφαρμογής Danish NemID ως \"$name$\"",
 "_identifiedByFITupasText":"Πραγματοποιήθηκε ταυτοποίηση μέσω της εφαρμογής Finnish TUPAS ως \"$name$\"",
+"_identifiedByIDINText":"",
 "_identifiedByNOBankIDText":"Πραγματοποιήθηκε ταυτοποίηση μέσω της εφαρμογής Norwegian BankID ως \"$name$\"",
 "_identifiedBySwedishBankIDText":"Πραγματοποιήθηκε ταυτοποίηση μέσω της εφαρμογής Swedish BankID ως \"$name$\"",
 "_identifiedByVerimiText":"",

@@ -701,6 +701,7 @@
 "_historyTime":"Tími",
 "_identifiedByDKNemIDText":"Auðkenndur af dönsku NemID sem \"$name$\"",
 "_identifiedByFITupasText":"Auðkenndur af finnsku TUPAS sem \"$name$\"",
+"_identifiedByIDINText":"",
 "_identifiedByNOBankIDText":"Auðkenndur af norsku BankID sem \"$name$\"",
 "_identifiedBySwedishBankIDText":"Auðkenndur af sænsku BankID sem \"$name$\"",
 "_identifiedByVerimiText":"",

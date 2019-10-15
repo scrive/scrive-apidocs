@@ -11,6 +11,7 @@
 "_AttachSealedFileEvidenceTextSimpleArchive":"Scrive sagatavoja PDF galaversiju.",
 "_AuthenticatedToViewEvidenceArchiveDKNemID":"Lai nodrošinātu piekļuvi dokumentam, pārbaudīja identitāti, uzrādot Dānijas NemID.",
 "_AuthenticatedToViewEvidenceArchiveFITupas":"Lai nodrošinātu piekļuvi dokumentam, pārbaudīja identitāti, uzrādot Somijas TUPAS.",
+"_AuthenticatedToViewEvidenceArchiveIDIN":"",
 "_AuthenticatedToViewEvidenceArchiveNOBankID":"Pārbaudīja personas identitāti ar Norvēģijas BankID, lai nodrošinātu piekļuvi dokumentam.",
 "_AuthenticatedToViewEvidenceArchiveSEBankID":"Pārbaudīja personas identitāti ar Zviedrijas BankID, lai nodrošinātu piekļuvi dokumentam.",
 "_AuthenticatedToViewEvidenceArchiveSMSPin":"Lai nodrošinātu piekļuvi dokumentam, pārbaudīja personas identitāti, ievadot īsziņā nosūtīto PIN kodu. ",

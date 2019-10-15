@@ -701,6 +701,7 @@
 "_historyTime":"Laikas",
 "_identifiedByDKNemIDText":"Danijos „NemID“ identifikuota kaip „$name$“",
 "_identifiedByFITupasText":"Suomijos „TUPAS“ identifikuota kaip „$name$“ ",
+"_identifiedByIDINText":"",
 "_identifiedByNOBankIDText":"Norvegijos „BankID“ identifikuota kaip „$name$“ ",
 "_identifiedBySwedishBankIDText":"Švedijos „BankID“ identifikuota kaip „$name$“ ",
 "_identifiedByVerimiText":"",

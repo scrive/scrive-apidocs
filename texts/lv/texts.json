@@ -701,6 +701,7 @@
 "_historyTime":"Laiks",
 "_identifiedByDKNemIDText":"Ar Dānijas NemID identificēts kā \"$name$\"",
 "_identifiedByFITupasText":"Ar Somijas TUPAS identificēts kā \"$name$\"",
+"_identifiedByIDINText":"",
 "_identifiedByNOBankIDText":"Ar Norvēģijas BankID identificēts kā \"$name$\"",
 "_identifiedBySwedishBankIDText":"Ar Zviedrijas BankID identificēts kā \"$name$\"",
 "_identifiedByVerimiText":"",

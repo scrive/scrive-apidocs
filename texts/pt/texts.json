@@ -701,6 +701,7 @@
 "_historyTime":"Hora",
 "_identifiedByDKNemIDText":"Identificado pelo NemID dinamarquês como \"$name$\"",
 "_identifiedByFITupasText":"Identificado pelo TUPAS finlandês como \"$name$\"",
+"_identifiedByIDINText":"",
 "_identifiedByNOBankIDText":"Identificado pelo BankID norueguês como \"$name$\"",
 "_identifiedBySwedishBankIDText":"Identificado pelo BankID sueco como \"$name$\"",
 "_identifiedByVerimiText":"",
