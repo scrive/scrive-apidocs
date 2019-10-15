@@ -44,6 +44,9 @@ var ErrorModal = require("../../errormodal");
     isVerimi: function () {
       return false;
     },
+    isIDIN: function () {
+      return false;
+    },
     isIdentify: function () {
       return this.get("step") === "identify";
     },

@@ -629,6 +629,7 @@ docApiV2SigSetAuthToView authKind did slid =
       DKNemIDAuthenticationToView  -> return (mSSN_, Nothing)
       FITupasAuthenticationToView  -> return (mSSN_, Nothing)
       VerimiAuthenticationToView   -> return (Nothing, Nothing)
+      IDINAuthenticationToView     -> return (Nothing, Nothing)
     -- Check conditions on parameters and signatory
     guardCanSetAuthenticationToViewForSignatoryWithValues
       slid authKind authType mSSN mMobile

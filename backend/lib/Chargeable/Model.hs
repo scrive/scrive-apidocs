@@ -9,6 +9,7 @@ module Chargeable.Model (
   , ChargeUserGroupForDKNemIDSignature(..)
   , ChargeUserGroupForFITupasAuthentication(..)
   , ChargeUserGroupForVerimiAuthentication(..)
+  , ChargeUserGroupForIDINAuthentication(..)
   , ChargeUserGroupForStartingDocument(..)
   , ChargeUserGroupForClosingDocument(..)
   , GetNumberOfDocumentsStartedThisMonth(..)
@@ -42,7 +43,8 @@ data ChargeableItem =
   CIDKNemIDSignature       |
   CIFITupasAuthentication  |
   CIShareableLink          |
-  CIVerimiAuthentication
+  CIVerimiAuthentication   |
+  CIIDINAuthentication
   deriving (Eq, Ord, Show, Typeable)
 
 instance PQFormat ChargeableItem where
@@ -69,8 +71,9 @@ instance FromSQL ChargeableItem where
       12 -> return CIFITupasAuthentication
       13 -> return CIShareableLink
       14 -> return CIVerimiAuthentication
+      15 -> return CIIDINAuthentication
       _  -> throwM RangeError {
-        reRange = [(1, 14)]
+        reRange = [(1, 15)]
       , reValue = n
       }
 
@@ -90,8 +93,7 @@ instance ToSQL ChargeableItem where
   toSQL CIFITupasAuthentication  = toSQL (12::Int16)
   toSQL CIShareableLink          = toSQL (13::Int16)
   toSQL CIVerimiAuthentication   = toSQL (14::Int16)
-
-----------------------------------------
+  toSQL CIIDINAuthentication     = toSQL (15::Int16)
 
 -- Note: We charge the user group of the author of the document
 -- at a time of the event, therefore the user_group_id never
@@ -144,6 +146,11 @@ data ChargeUserGroupForVerimiAuthentication = ChargeUserGroupForVerimiAuthentica
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForVerimiAuthentication () where
   update (ChargeUserGroupForVerimiAuthentication document_id) = update (ChargeUserGroupFor CIVerimiAuthentication 1 document_id)
 
+-- | Charge user group of the author of the document for iDIN authentication
+data ChargeUserGroupForIDINAuthentication = ChargeUserGroupForIDINAuthentication DocumentID
+instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForIDINAuthentication () where
+  update (ChargeUserGroupForIDINAuthentication document_id) = update (ChargeUserGroupFor CIIDINAuthentication 1 document_id)
+
 -- | Charge user group of the author of the document for creation of the document
 data ChargeUserGroupForStartingDocument = ChargeUserGroupForStartingDocument DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForStartingDocument () where
@@ -164,7 +171,6 @@ data ChargeUserGroupForShareableLink = ChargeUserGroupForShareableLink DocumentI
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupForShareableLink () where
   update (ChargeUserGroupForShareableLink document_id) = update (ChargeUserGroupFor CIShareableLink 1 document_id)
 
-
 data ChargeUserGroupFor = ChargeUserGroupFor ChargeableItem Int32 DocumentID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupFor () where
   update (ChargeUserGroupFor item quantity document_id) = do
@@ -177,7 +183,6 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m ChargeUserGroupFor
       sqlSet "document_id" document_id
       sqlSet "quantity" quantity
       sqlSet "user_group_id" ugid
-----------------------------------------
 
 data GetTotalOfChargeableItemFromThisMonth = GetTotalOfChargeableItemFromThisMonth ChargeableItem UserGroupID
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetTotalOfChargeableItemFromThisMonth Int64 where

@@ -40,6 +40,9 @@ var link = link;
     isVerimi: function () {
       return true;
     },
+    isIDIN: function () {
+      return false;
+    },
     isIdentify: function () {
       return this.get("step") === "identify";
     },

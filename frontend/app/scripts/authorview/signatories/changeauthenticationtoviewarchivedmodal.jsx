@@ -87,8 +87,12 @@ var Modal = require("../../common/modal");
       return this.newAuthenticationMethod() == "fi_tupas";
     },
 
-   isNewAuthenticationVerimi: function () {
+    isNewAuthenticationVerimi: function () {
       return this.newAuthenticationMethod() == "verimi";
+    },
+
+    isNewAuthenticationIDIN: function () {
+      return this.newAuthenticationMethod() == "nl_idin";
     },
 
     isAuthenticationValueInvalid: function () {
@@ -180,6 +184,8 @@ var Modal = require("../../common/modal");
         return localization.docview.signatory.authenticationToViewFITupas;
       } else if (model.isNewAuthenticationVerimi()) {
         return localization.docview.signatory.authenticationToViewVerimi;
+      } else if (model.isNewAuthenticationIDIN()) {
+        return localization.docview.signatory.authenticationToViewIDIN;
       }
     },
 
@@ -300,6 +306,15 @@ var Modal = require("../../common/modal");
         options.push(verimi);
       }
 
+      var idin = {
+        name: localization.docview.signatory.authenticationToViewIDIN,
+        selected: model.isNewAuthenticationIDIN(),
+        value: "nl_idin"
+      };
+      if (ff.canUseIDINAuthenticationToView() && isAvailable(idin.value)) {
+        options.push(idin);
+      }
+
       return options;
     },
 
@@ -323,6 +338,7 @@ var Modal = require("../../common/modal");
       } else if (model.newAuthenticationMethod() == "standard"
           || model.newAuthenticationMethod() == "no_bankid"
           || model.newAuthenticationMethod() == "verimi"
+          || model.newAuthenticationMethod() == "nl_idin"
       ) {
         return false;
       } else {

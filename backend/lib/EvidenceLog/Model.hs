@@ -376,6 +376,7 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewFromDKNemID  |
   ChangeAuthenticationToViewFromFITupas  |
   ChangeAuthenticationToViewFromVerimi   |
+  ChangeAuthenticationToViewFromIDIN     |
   ChangeAuthenticationToViewToStandard   |
   ChangeAuthenticationToViewToSMSPin     |
   ChangeAuthenticationToViewToSEBankID   |
@@ -383,6 +384,7 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewToDKNemID    |
   ChangeAuthenticationToViewToFITupas    |
   ChangeAuthenticationToViewToVerimi     |
+  ChangeAuthenticationToViewToIDIN       |
   ChangeAuthenticationToViewArchivedFromStandard |
   ChangeAuthenticationToViewArchivedFromSMSPin    |
   ChangeAuthenticationToViewArchivedFromSEBankID  |
@@ -390,13 +392,15 @@ data CurrentEvidenceEventType =
   ChangeAuthenticationToViewArchivedFromDKNemID   |
   ChangeAuthenticationToViewArchivedFromFITupas   |
   ChangeAuthenticationToViewArchivedFromVerimi    |
+  ChangeAuthenticationToViewArchivedFromIDIN      |
   ChangeAuthenticationToViewArchivedToStandard    |
   ChangeAuthenticationToViewArchivedToSMSPin      |
   ChangeAuthenticationToViewArchivedToSEBankID    |
   ChangeAuthenticationToViewArchivedToNOBankID    |
   ChangeAuthenticationToViewArchivedToDKNemID     |
   ChangeAuthenticationToViewArchivedToFITupas     |
-  ChangeAuthenticationToViewArchivedToVerimi
+  ChangeAuthenticationToViewArchivedToVerimi      |
+  ChangeAuthenticationToViewArchivedToIDIN
   deriving (Eq, Show, Read, Ord, Enum, Bounded)
 
 -- Evidence types that are not generated anymore by the system.  Not
@@ -834,6 +838,10 @@ instance ToSQL EvidenceEventType where
   toSQL (Current ChangeAuthenticationToViewArchivedToDKNemID                        ) = toSQL (257::Int16)
   toSQL (Current ChangeAuthenticationToViewArchivedToFITupas                        ) = toSQL (258::Int16)
   toSQL (Current ChangeAuthenticationToViewArchivedToVerimi                         ) = toSQL (259::Int16)
+  toSQL (Current ChangeAuthenticationToViewFromIDIN                                 ) = toSQL (260::Int16)
+  toSQL (Current ChangeAuthenticationToViewToIDIN                                   ) = toSQL (261::Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedFromIDIN                         ) = toSQL (262::Int16)
+  toSQL (Current ChangeAuthenticationToViewArchivedToIDIN                           ) = toSQL (263::Int16)
 
 
 instance FromSQL EvidenceEventType where
@@ -1100,9 +1108,12 @@ instance FromSQL EvidenceEventType where
       257 -> return (Current ChangeAuthenticationToViewArchivedToDKNemID)
       258 -> return (Current ChangeAuthenticationToViewArchivedToFITupas)
       259 -> return (Current ChangeAuthenticationToViewArchivedToVerimi)
-
+      260 -> return (Current ChangeAuthenticationToViewFromIDIN)
+      261 -> return (Current ChangeAuthenticationToViewToIDIN)
+      262 -> return (Current ChangeAuthenticationToViewArchivedFromIDIN)
+      263 -> return (Current ChangeAuthenticationToViewArchivedToIDIN)
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 221)]
+        reRange = [(1, 263)]
       , reValue = n
       }
 
@@ -1121,7 +1132,7 @@ authToViewChangeFrom a = case a of
   SMSPinAuthenticationToView   -> ChangeAuthenticationToViewFromSMSPin
   FITupasAuthenticationToView  -> ChangeAuthenticationToViewFromFITupas
   VerimiAuthenticationToView   -> ChangeAuthenticationToViewFromVerimi
-
+  IDINAuthenticationToView     -> ChangeAuthenticationToViewFromIDIN
 
 authToViewChangeTo :: AuthenticationToViewMethod -> CurrentEvidenceEventType
 authToViewChangeTo a = case a of
@@ -1132,6 +1143,7 @@ authToViewChangeTo a = case a of
   SMSPinAuthenticationToView   -> ChangeAuthenticationToViewToSMSPin
   FITupasAuthenticationToView  -> ChangeAuthenticationToViewToFITupas
   VerimiAuthenticationToView   -> ChangeAuthenticationToViewToVerimi
+  IDINAuthenticationToView     -> ChangeAuthenticationToViewToIDIN
 
 authToViewArchivedChangeEvidence :: AuthenticationToViewMethod -> AuthenticationToViewMethod -> [CurrentEvidenceEventType]
 authToViewArchivedChangeEvidence aFrom aTo = if (aFrom == aTo)
@@ -1147,7 +1159,7 @@ authToViewArchivedChangeFrom a = case a of
   SMSPinAuthenticationToView   -> ChangeAuthenticationToViewArchivedFromSMSPin
   FITupasAuthenticationToView  -> ChangeAuthenticationToViewArchivedFromFITupas
   VerimiAuthenticationToView   -> ChangeAuthenticationToViewArchivedFromVerimi
-
+  IDINAuthenticationToView     -> ChangeAuthenticationToViewArchivedFromIDIN
 
 authToViewArchivedChangeTo :: AuthenticationToViewMethod -> CurrentEvidenceEventType
 authToViewArchivedChangeTo a = case a of
@@ -1158,6 +1170,7 @@ authToViewArchivedChangeTo a = case a of
   SMSPinAuthenticationToView   -> ChangeAuthenticationToViewArchivedToSMSPin
   FITupasAuthenticationToView  -> ChangeAuthenticationToViewArchivedToFITupas
   VerimiAuthenticationToView   -> ChangeAuthenticationToViewArchivedToVerimi
+  IDINAuthenticationToView     -> ChangeAuthenticationToViewArchivedFromIDIN
 
 authToSignChangeEvidence :: AuthenticationToSignMethod -> AuthenticationToSignMethod-> [CurrentEvidenceEventType]
 authToSignChangeEvidence aFrom aTo = if (aFrom == aTo)

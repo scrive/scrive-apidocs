@@ -251,6 +251,8 @@ guardCanSetAuthenticationToViewForSignatoryWithValues
       isGood . asValidFinnishSSN   $ ssn
     isValidSSNForAuthenticationToView VerimiAuthenticationToView _        =
       True
+    isValidSSNForAuthenticationToView IDINAuthenticationToView _        =
+      True
     isValidMobileForAuthenticationToView
       :: AuthenticationToViewMethod -> Text -> Bool
     isValidMobileForAuthenticationToView StandardAuthenticationToView _      =
@@ -266,6 +268,8 @@ guardCanSetAuthenticationToViewForSignatoryWithValues
     isValidMobileForAuthenticationToView FITupasAuthenticationToView  _      =
       True
     isValidMobileForAuthenticationToView VerimiAuthenticationToView  _       =
+      True
+    isValidMobileForAuthenticationToView IDINAuthenticationToView  _       =
       True
 
 guardCanSetAuthenticationToSignForSignatoryWithValue
@@ -450,6 +454,7 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
       SMSPinAuthenticationToView   -> True
       StandardAuthenticationToView -> True
       VerimiAuthenticationToView   -> isValidEmail $ getEmail sl
+      IDINAuthenticationToView     -> isValidEmail $ getEmail sl
 
     signatoryHasValidMobileForIdentifyToView sl = case (signatorylinkauthenticationtoviewmethod sl) of
       NOBankIDAuthenticationToView -> (isGood $ asValidPhoneForNorwegianBankID (getMobile sl )) || (isEmpty $ asValidPhoneForNorwegianBankID (getMobile sl))
