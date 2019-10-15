@@ -204,6 +204,10 @@ oracleHelpRule = do
     explainVar "NGINX_CONF_RULES_PATH_ALTERNATIVE" "Used for generating NGINX urls_list.txt file"
     showVarVal nginxconfrulespathalternative
 
+    tcmi <- askOracle (TeamCityBuildCronMonthlyInvoice ())
+    explainVar "TEST_CRON_MONTHLY_INVOICE" "Used for configuration of testing of monthly invoices"
+    showVarVal tcmi
+
     putNormal ""
 
     ghc <- askOracleWith (GhcVersion ()) ""
