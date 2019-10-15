@@ -137,11 +137,25 @@ var Submit = exports.Submit = Backbone.Model.extend({
                                 }
                               }
 
-                              self.get('ajaxsuccess')(p1,p2,p3,p4);
+                              try {
+                                self.get('ajaxsuccess')(p1,p2,p3,p4);
+                              } catch (e) {
+                                if (window.trackJs !== undefined && trackJs) {
+                                  trackJs.track(e);
+                                }
+                                throw e;
+                              }
                               form.remove();
                            },
                            error: function(p1,p2,p3,p4) {
-                             self.get('ajaxerror')(p1,p2,p3,p4);
+                             try {
+                               self.get('ajaxerror')(p1,p2,p3,p4);
+                             } catch (e) {
+                               if (window.trackJs !== undefined && trackJs) {
+                                 trackJs.track(e);
+                               }
+                               throw e;
+                             }
                              form.remove();
                            },
                            dataType: this.get('expectedType'),
