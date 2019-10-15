@@ -351,9 +351,9 @@ insertNewSession uid = do
 addDocumentAndInsertToken :: TestEnv (User, Document, Context)
 addDocumentAndInsertToken = do
   author <- addNewRandomUser
-  doc    <- addRandomDocument (randomDocumentAllowsDefault author)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Pending]
+  doc    <- addRandomDocument (rdaDefault author)
+    { rdaTypes = Or [Signable]
+    , rdaStatuses = Or [Pending]
     }
   (_, ctx) <- do
     let Just asl = getAuthorSigLink doc

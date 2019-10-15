@@ -134,10 +134,10 @@ testLastPersonSigningADocumentClosesIt = do
   filecontent <- liftIO $ BS.readFile filename
   file <- saveNewFile (T.pack filename) filecontent
 
-  addRandomDocumentWithFile file (randomDocumentAllowsDefault user)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Preparation]
-    , randomDocumentSignatories =
+  addRandomDocumentWithFile file (rdaDefault user)
+    { rdaTypes = Or [Signable]
+    , rdaStatuses = Or [Preparation]
+    , rdaSignatories =
       let signatory = Or
             [ And [ RSC_DeliveryMethodIs EmailDelivery ]
             ]
@@ -211,10 +211,10 @@ testSigningWithPin = do
   filecontent <- liftIO $ BS.readFile filename
   file <- saveNewFile (T.pack filename) filecontent
 
-  addRandomDocumentWithFile file (randomDocumentAllowsDefault user1)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Preparation]
-    , randomDocumentSignatories =
+  addRandomDocumentWithFile file (rdaDefault user1)
+    { rdaTypes = Or [Signable]
+    , rdaStatuses = Or [Preparation]
+    , rdaSignatories =
       let signatory = Or
             [ And [ RSC_DeliveryMethodIs EmailDelivery ]
             ]
@@ -292,10 +292,10 @@ testSendReminderEmailUpdatesLastModifiedDate = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
-  doc <- addRandomDocument (randomDocumentAllowsDefault user)
-    { randomDocumentStatuses = Or [Pending]
-    , randomDocumentTypes = Or [Signable]
-    , randomDocumentSignatories =
+  doc <- addRandomDocument (rdaDefault user)
+    { rdaStatuses = Or [Pending]
+    , rdaTypes = Or [Signable]
+    , rdaSignatories =
       let signatory = Or
             [ And [ RSC_DeliveryMethodIs EmailDelivery ]
             ]
@@ -325,10 +325,10 @@ testSendReminderEmailByCompanyAdmin = do
   ctxadmin <- (set ctxmaybeuser (Just adminuser)) <$> mkContext defaultLang
   ctxother <- (set ctxmaybeuser (Just otheruser)) <$> mkContext defaultLang
 
-  doc <- addRandomDocument (randomDocumentAllowsDefault user)
-    { randomDocumentStatuses = Or [Pending]
-    , randomDocumentTypes = Or [Signable]
-    , randomDocumentSignatories =
+  doc <- addRandomDocument (rdaDefault user)
+    { rdaStatuses = Or [Pending]
+    , rdaTypes = Or [Signable]
+    , rdaSignatories =
       let signatory = Or
             [ And [ RSC_DeliveryMethodIs EmailDelivery ]
             ]
@@ -422,10 +422,10 @@ testDownloadFileWithAuthToView :: TestEnv ()
 testDownloadFileWithAuthToView = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- mkContext defaultLang
-  doc <- addRandomDocument (randomDocumentAllowsDefault user)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Pending]
-    , randomDocumentSignatories =
+  doc <- addRandomDocument (rdaDefault user)
+    { rdaTypes = Or [Signable]
+    , rdaStatuses = Or [Pending]
+    , rdaSignatories =
       let author = Or [And []]
           signatory =
             let authsToView = [toEnum 0 ..] \\ [StandardAuthenticationToView]
@@ -453,9 +453,9 @@ testSendingReminderClearsDeliveryInformation = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext defaultLang
-  addRandomDocument (randomDocumentAllowsDefault user)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Pending]
+  addRandomDocument (rdaDefault user)
+    { rdaTypes = Or [Signable]
+    , rdaStatuses = Or [Pending]
     } `withDocumentM` do
     sl <- head . reverse . documentsignatorylinks <$> theDocument
     let actor  =  systemActor $ get ctxtime ctx
@@ -471,8 +471,8 @@ testSendingReminderClearsDeliveryInformation = do
 testDocumentFromTemplate :: TestEnv ()
 testDocumentFromTemplate = do
     (Just user) <- addNewUser "aaa" "bbb" "xxx@xxx.pl"
-    doc <- addRandomDocument (randomDocumentAllowsDefault user)
-      { randomDocumentTypes = Or [Template]
+    doc <- addRandomDocument (rdaDefault user)
+      { rdaTypes = Or [Template]
       }
     docs1 <- randomQuery $ GetDocumentsByAuthor (userid user)
     ctx <- (set ctxmaybeuser (Just user))
@@ -486,8 +486,8 @@ testDocumentFromTemplateShared :: TestEnv ()
 testDocumentFromTemplateShared = do
     ugid <- (get ugID) <$> addNewUserGroup
     (Just author) <- addNewUserToUserGroup "aaa" "bbb" "xxx@xxx.pl" ugid
-    doc <- addRandomDocument (randomDocumentAllowsDefault author)
-      { randomDocumentTypes = Or [Template]
+    doc <- addRandomDocument (rdaDefault author)
+      { rdaTypes = Or [Template]
       }
     void $ randomUpdate $ SetDocumentSharing [documentid doc] True
     (Just user) <- addNewUserToUserGroup "ccc" "ddd" "zzz@zzz.pl" ugid
@@ -505,8 +505,8 @@ testDocumentDeleteInBulk = do
     (Just author) <- addNewUserToUserGroup "aaa" "bbb" "xxx@xxx.pl" ugid
     -- isSignable condition below is wrong. Tests somehow generate template documents
     -- that are pending and that breaks everything.
-    docs <- replicateM 100 (addRandomDocument (randomDocumentAllowsDefault author)
-                             { randomDocumentTypes = Or [Signable] })
+    docs <- replicateM 100 (addRandomDocument (rdaDefault author)
+                             { rdaTypes = Or [Signable] })
 
     ctx <- (set ctxmaybeuser (Just author)) <$> mkContext defaultLang
     req <- mkRequest POST [("documentids",  inText $ (showt $ documentid <$> docs))]
@@ -596,10 +596,10 @@ testDownloadSignviewBrandingAccess = do
   filecontent <- liftIO $ BS.readFile filename
   file <- saveNewFile (T.pack filename) filecontent
 
-  doc <- addRandomDocumentWithFile file (randomDocumentAllowsDefault user)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Preparation]
-    , randomDocumentSignatories =
+  doc <- addRandomDocumentWithFile file (rdaDefault user)
+    { rdaTypes = Or [Signable]
+    , rdaStatuses = Or [Preparation]
+    , rdaSignatories =
       let signatory = Or
             [ And [ RSC_DeliveryMethodIs EmailDelivery ]
             ]
@@ -653,9 +653,9 @@ testGetCancelledDocument :: TestEnv ()
 testGetCancelledDocument = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- mkContext defaultLang
-  doc <- addRandomDocument (randomDocumentAllowsDefault user)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Pending]
+  doc <- addRandomDocument (rdaDefault user)
+    { rdaTypes = Or [Signable]
+    , rdaStatuses = Or [Pending]
     }
   let did       = documentid doc
       signatory = head $ documentsignatorylinks doc
@@ -689,9 +689,9 @@ testGetCancelledDocument = do
 testDocumentFromShareableTemplate :: TestEnv ()
 testDocumentFromShareableTemplate = replicateM_ 10 $ do
   user <- addNewRandomUser
-  tpl <- addRandomDocument (randomDocumentAllowsDefault user)
-    { randomDocumentTypes = Or [Template]
-    , randomDocumentSignatories =
+  tpl <- addRandomDocument (rdaDefault user)
+    { rdaTypes = Or [Template]
+    , rdaSignatories =
       let author = Or [ And [ RSC_IsViewer
                             , RSC_AuthToViewIs StandardAuthenticationToView
                             , RSC_AuthToSignIs StandardAuthenticationToSign
@@ -756,9 +756,9 @@ testGetDocumentWithSignatoryAccessTokens:: TestEnv ()
 testGetDocumentWithSignatoryAccessTokens = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
 
-  doc <- addRandomDocument (randomDocumentAllowsDefault user)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Pending]
+  doc <- addRandomDocument (rdaDefault user)
+    { rdaTypes = Or [Signable]
+    , rdaStatuses = Or [Pending]
     }
   let did       = documentid doc
       signatory = head $ documentsignatorylinks doc
@@ -808,10 +808,10 @@ testSendEmailOnTimeout = do
   let newUGS = (set ugsSendTimeoutNotification True (fromJust $ get ugSettings ug))
   dbUpdate $ UserGroupUpdateSettings (get ugID ug) (Just newUGS)
 
-  doc <- addRandomDocument (randomDocumentAllowsDefault user)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Pending]
-    , randomDocumentTimeoutTime = True
+  doc <- addRandomDocument (rdaDefault user)
+    { rdaTypes = Or [Signable]
+    , rdaStatuses = Or [Pending]
+    , rdaTimeoutTime = True
     }
 
   modifyTestTime (const (10 `minutesAfter` (fromJust $ documenttimeouttime doc)))

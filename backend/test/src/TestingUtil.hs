@@ -1129,35 +1129,35 @@ data RandomSignatoryCondition
   deriving (Eq, Show)
 
 data RandomDocumentAllows = RandomDocumentAllows
-  { randomDocumentTypes       :: Or DocumentType
-  , randomDocumentStatuses    :: Or DocumentStatus
-  , randomDocumentSharings    :: Or DocumentSharing
+  { rdaTypes       :: Or DocumentType
+  , rdaStatuses    :: Or DocumentStatus
+  , rdaSharings    :: Or DocumentSharing
   -- Outer OR determines the number of signatories, inner OR/AND determines
   -- options for the list of conditions a signatory needs to fulfil.
-  , randomDocumentSignatories :: Or [Or (And RandomSignatoryCondition)]
-  , randomDocumentAuthor      :: User
-  , randomDocumentSharedLink  :: Bool
-  , randomDocumentTimeoutTime :: Bool
-  , randomDocumentTemplateId  :: Maybe DocumentID
+  , rdaSignatories :: Or [Or (And RandomSignatoryCondition)]
+  , rdaAuthor      :: User
+  , rdaSharedLink  :: Bool
+  , rdaTimeoutTime :: Bool
+  , rdaTemplateId  :: Maybe DocumentID
   }
 
-randomDocumentAllowsDefault :: User -> RandomDocumentAllows
-randomDocumentAllowsDefault user = RandomDocumentAllows
-  { randomDocumentTypes       = Or documentAllTypes
-  , randomDocumentStatuses    = Or [ Preparation
-                                   , Pending
-                                   , Closed
-                                   , Canceled
-                                   , Timedout
-                                   , Rejected
-                                   , DocumentError
-                                   ]
-  , randomDocumentSharings    = Or documentAllSharings
-  , randomDocumentSignatories = Or $ map (`replicate` freeSignatory) [1..10]
-  , randomDocumentAuthor      = user
-  , randomDocumentSharedLink  = False
-  , randomDocumentTimeoutTime = True
-  , randomDocumentTemplateId  = Nothing
+rdaDefault :: User -> RandomDocumentAllows
+rdaDefault user = RandomDocumentAllows
+  { rdaTypes       = Or documentAllTypes
+  , rdaStatuses    = Or [ Preparation
+                        , Pending
+                        , Closed
+                        , Canceled
+                        , Timedout
+                        , Rejected
+                        , DocumentError
+                        ]
+  , rdaSharings    = Or documentAllSharings
+  , rdaSignatories = Or $ map (`replicate` freeSignatory) [1..10]
+  , rdaAuthor      = user
+  , rdaSharedLink  = False
+  , rdaTimeoutTime = True
+  , rdaTemplateId  = Nothing
   }
   where
     freeSignatory :: Or (And RandomSignatoryCondition)
@@ -1243,15 +1243,15 @@ addRandomDocumentWithAuthor user =
 
 addRandomDocumentWithAuthor' :: User -> TestEnv Document
 addRandomDocumentWithAuthor' user =
-  addRandomDocument (randomDocumentAllowsDefault user)
+  addRandomDocument (rdaDefault user)
 
 addRandomDocumentFromShareableLinkWithTemplateId
   :: User -> DocumentID -> TestEnv Document
 addRandomDocumentFromShareableLinkWithTemplateId user templateId =
   addRandomDocument $
-  (randomDocumentAllowsDefault user) {
-      randomDocumentSharedLink = True
-    , randomDocumentTemplateId = Just templateId
+  (rdaDefault user) {
+      rdaSharedLink = True
+    , rdaTemplateId = Just templateId
   }
 
 addRandomDocument :: RandomDocumentAllows -> TestEnv Document
@@ -1262,7 +1262,7 @@ addRandomDocument rda = do
 addRandomDocumentWithFile :: FileID -> RandomDocumentAllows -> TestEnv Document
 addRandomDocumentWithFile fileid rda = do
   now <- currentTime
-  let user = randomDocumentAuthor rda
+  let user = rdaAuthor rda
   file <- dbQuery $ GetFileByFileID fileid
   --liftIO $ print $ "about to generate document"
   document <- worker now user file
@@ -1271,15 +1271,15 @@ addRandomDocumentWithFile fileid rda = do
   where
     worker now user file = do
       doc' <- rand 10 arbitrary
-      xtype <- rand 10 (elements . unOr $ randomDocumentTypes rda)
+      xtype <- rand 10 (elements . unOr $ rdaTypes rda)
       status <- if xtype == Template
         then return Preparation
-        else rand 10 (elements . unOr $ randomDocumentStatuses rda)
+        else rand 10 (elements . unOr $ rdaStatuses rda)
       sharing <- if xtype == Template
-        then rand 10 (elements . unOr $ randomDocumentSharings rda)
+        then rand 10 (elements . unOr $ rdaSharings rda)
         else return Private
       title <- rand 1 $ arbText 10 25
-      sigcondss <- rand 10 (elements . unOr $ randomDocumentSignatories rda)
+      sigcondss <- rand 10 (elements . unOr $ rdaSignatories rda)
       -- First signatory link is the author
       let genFuns = randomAuthorLinkByStatus : repeat randomSigLinkByStatus
       asl' : siglinks <- forM (zip sigcondss genFuns) $ \(Or sigconds, genSigLink) -> do
@@ -1345,10 +1345,10 @@ addRandomDocumentWithFile fileid rda = do
                      , documentstatus = status
                      , documentsharing = sharing
                      , documenttitle = title
-                     , documentfromshareablelink = randomDocumentSharedLink rda
-                     , documenttemplateid = randomDocumentTemplateId rda
+                     , documentfromshareablelink = rdaSharedLink rda
+                     , documenttemplateid = rdaTemplateId rda
                      , documentfolderid = userhomefolderid user
-                     , documenttimeouttime = if randomDocumentTimeoutTime rda
+                     , documenttimeouttime = if rdaTimeoutTime rda
                                              then documenttimeouttime doc'
                                              else Nothing
                      }

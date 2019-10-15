@@ -680,8 +680,8 @@ testDocApiV2DiscardShareableLink :: TestEnv ()
 testDocApiV2DiscardShareableLink = replicateM_ 10 $ do
   user <- addNewRandomUser
   ctx  <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
-  doc <- addRandomDocument (randomDocumentAllowsDefault user)
-    { randomDocumentTypes = Or [Template]
+  doc <- addRandomDocument (rdaDefault user)
+    { rdaTypes = Or [Template]
     }
 
   void $ testRequestHelper ctx POST []

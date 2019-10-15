@@ -232,9 +232,9 @@ testUserNoDeletionIfPendingDocuments = do
 
   ctx <- set ctxmaybeuser (Just bob) <$> mkContext defaultLang
 
-  doc <- addRandomDocument (randomDocumentAllowsDefault bob)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Pending]
+  doc <- addRandomDocument (rdaDefault bob)
+    { rdaTypes = Or [Signable]
+    , rdaStatuses = Or [Pending]
     }
 
   do
@@ -269,13 +269,13 @@ testUserDeletionOwnershipTransfer = do
   void $ dbUpdate $ AcceptTermsOfService (userid bob)  now
   void $ dbUpdate $ SetUserCompanyAdmin  (userid bob)  True
 
-  sharedTemplate <- addRandomDocument (randomDocumentAllowsDefault anna)
-    { randomDocumentTypes = Or [Template]
-    , randomDocumentSharings = Or [Shared]
+  sharedTemplate <- addRandomDocument (rdaDefault anna)
+    { rdaTypes = Or [Template]
+    , rdaSharings = Or [Shared]
     }
-  unsharedTemplate <- addRandomDocument (randomDocumentAllowsDefault anna)
-    { randomDocumentTypes = Or [Template]
-    , randomDocumentSharings = Or [Private]
+  unsharedTemplate <- addRandomDocument (rdaDefault anna)
+    { rdaTypes = Or [Template]
+    , rdaSharings = Or [Private]
     }
 
   ctx <- set ctxmaybeuser (Just anna) <$> mkContext defaultLang

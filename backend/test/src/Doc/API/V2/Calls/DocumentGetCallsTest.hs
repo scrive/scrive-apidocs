@@ -90,10 +90,10 @@ _testDocApiV2GetFailsAfter30Days :: TestEnv ()
 _testDocApiV2GetFailsAfter30Days = do
   user <- addNewRandomUser
 
-  doc <- addRandomDocument (randomDocumentAllowsDefault user)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Closed]
-    , randomDocumentSignatories =
+  doc <- addRandomDocument (rdaDefault user)
+    { rdaTypes = Or [Signable]
+    , rdaStatuses = Or [Closed]
+    , rdaSignatories =
       let signatory = Or [And []]
       in Or $ map (`replicate` signatory) [2..10]
     }
@@ -400,10 +400,10 @@ testDocApiV2FilesFull = do
   ctx  <- set ctxmaybeuser (Just user) <$> mkContext defaultLang
   req  <- mkRequest GET []
 
-  initDoc <- addRandomDocument (randomDocumentAllowsDefault user)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Preparation]
-    , randomDocumentSignatories =
+  initDoc <- addRandomDocument (rdaDefault user)
+    { rdaTypes = Or [Signable]
+    , rdaStatuses = Or [Preparation]
+    , rdaSignatories =
         let author = Or
               [ And [RSC_IsViewer]
               ]

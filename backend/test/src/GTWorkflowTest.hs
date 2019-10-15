@@ -42,9 +42,9 @@ testExtendDigitalSignatures = do
   file <- saveNewFile (T.pack filename) filecontent
   file1 <- saveNewFile (T.pack filename) filecontent
   file2 <- saveNewFile (T.pack filename) filecontent
-  did <- documentid <$> addRandomDocumentWithFile file (randomDocumentAllowsDefault author)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Closed]
+  did <- documentid <$> addRandomDocumentWithFile file (rdaDefault author)
+    { rdaTypes = Or [Signable]
+    , rdaStatuses = Or [Closed]
     }
 
   withDocumentID did $ do

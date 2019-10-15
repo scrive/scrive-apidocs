@@ -661,10 +661,10 @@ testCloseEvidenceAttachments:: TestEnv ()
 testCloseEvidenceAttachments = do
   author <- addNewRandomUser
   ctx <- (set ctxmaybeuser (Just author)) <$> mkContext defaultLang
-  doc <- addRandomDocument (randomDocumentAllowsDefault author)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Pending]
-    , randomDocumentSignatories =
+  doc <- addRandomDocument (rdaDefault author)
+    { rdaTypes = Or [Signable]
+    , rdaStatuses = Or [Pending]
+    , rdaSignatories =
         let signatory = Or
               [ And [ RSC_IsSignatoryThatHasntSigned
                     , RSC_AuthToSignIs StandardAuthenticationToSign

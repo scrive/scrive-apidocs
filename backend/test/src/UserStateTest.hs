@@ -157,9 +157,9 @@ test_userUsageStatisticsByUser :: TestEnv ()
 test_userUsageStatisticsByUser = do
   let email = "emily@green.com"
   Just user <- addNewUser "Emily" "Green" email
-  doc <- addRandomDocument (randomDocumentAllowsDefault user)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Closed]
+  doc <- addRandomDocument (rdaDefault user)
+    { rdaTypes = Or [Signable]
+    , rdaStatuses = Or [Closed]
     }
   void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc)
   res <- dbQuery $
@@ -178,13 +178,13 @@ test_userUsageStatisticsByCompany = do
   ugid <- (get ugID) <$> (dbUpdate $ UserGroupCreate defaultUserGroup)
   Just user1 <- addNewUserToUserGroup "Emily" "Green" email1 ugid
   Just user2 <- addNewUserToUserGroup "Bob" "Blue" email2 ugid
-  doc0 <- addRandomDocument (randomDocumentAllowsDefault user1)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Closed]
+  doc0 <- addRandomDocument (rdaDefault user1)
+    { rdaTypes = Or [Signable]
+    , rdaStatuses = Or [Closed]
     }
-  doc1 <- addRandomDocument (randomDocumentAllowsDefault user2)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Closed]
+  doc1 <- addRandomDocument (rdaDefault user2)
+    { rdaTypes = Or [Signable]
+    , rdaStatuses = Or [Closed]
     }
   void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc0)
   void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc1)

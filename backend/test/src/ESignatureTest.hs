@@ -18,9 +18,9 @@ eSignatureTests env = testGroup "E-signature" [
 testCGISEBankIDSignatures :: TestEnv ()
 testCGISEBankIDSignatures = do
   author <- addNewRandomUser
-  doc <- addRandomDocument (randomDocumentAllowsDefault author)
-    { randomDocumentStatuses = Or [Pending]
-    , randomDocumentTypes = Or [Signable]
+  doc <- addRandomDocument (rdaDefault author)
+    { rdaStatuses = Or [Pending]
+    , rdaTypes = Or [Signable]
     }
   let Just SignatoryLink{signatorylinkid = slid} = getAuthorSigLink doc
   bids :: CGISEBankIDSignature <- rand 20 arbitrary

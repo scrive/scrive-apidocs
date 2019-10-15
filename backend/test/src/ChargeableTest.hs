@@ -41,7 +41,7 @@ test_smsCounting_default = do
   ugid <- (get ugID) <$> addNewUserGroup
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   True <- dbUpdate $ SetUserUserGroup (userid user) ugid
-  doc <- addRandomDocument (randomDocumentAllowsDefault user)
+  doc <- addRandomDocument (rdaDefault user)
   let sms = SMS {
         smsMSISDN = "+48666666666"
       , kontraInfoForSMS = Nothing
@@ -68,7 +68,7 @@ test_smsCounting_telia = do
   ugid <- (get ugID) <$> addNewUserGroup
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   True <- dbUpdate $ SetUserUserGroup (userid user) ugid
-  doc <- addRandomDocument (randomDocumentAllowsDefault user)
+  doc <- addRandomDocument (rdaDefault user)
   let sms = SMS {
         smsMSISDN = "+48666666666"
       , kontraInfoForSMS = Nothing
@@ -114,10 +114,10 @@ test_startDocumentCharging = do
       let filename = inTestDir "pdfs/simple.pdf"
       filecontent <- liftIO $ BS.readFile filename
       file <- saveNewFile (T.pack filename) filecontent
-      doc <- addRandomDocumentWithFile file (randomDocumentAllowsDefault user)
-        { randomDocumentTypes = Or [Signable]
-        , randomDocumentStatuses = Or [Preparation]
-        , randomDocumentSignatories =
+      doc <- addRandomDocumentWithFile file (rdaDefault user)
+        { rdaTypes = Or [Signable]
+        , rdaStatuses = Or [Preparation]
+        , rdaSignatories =
           let signatory = Or [ And [ RSC_DeliveryMethodIs EmailDelivery ]
                              ]
           in Or $ map (`replicate` signatory) [1..10]
