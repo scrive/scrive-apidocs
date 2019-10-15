@@ -330,7 +330,8 @@ checkIDINTransactionWithEIDService conf tid = localData [identifier tid] $ do
                               msurname    <- fromJSValueField "legalLastName"
                               minitials   <- fromJSValueField "initials"
                               memail      <- fromJSValueField "email"
-                              mdob        <- fromJSValueField "birthDate"
+                              -- mdob        <- fromJSValueField "birthDate"
+                              let mdob = Just "N/A" -- TODO: THIS IS A TEMP FIX, REMOVE
                               mcustomerId <- fromJSValueField "customerId"
                               case (msurname, minitials, memail, mdob, mcustomerId) of
                                 (Just surname, Just initials , Just email, Just dob, Just customerId) ->
