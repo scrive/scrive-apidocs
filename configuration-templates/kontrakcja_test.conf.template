@@ -6,6 +6,7 @@
     "amazon_s3": {
         "_host": "example.com"
       , "_port": 1234
+      , "timeout": 5
       , "bucket" : ""
       , "access_key":""
       , "secret_key": ""

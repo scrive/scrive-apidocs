@@ -16,6 +16,7 @@ data AmazonConfig = AmazonConfig
   { amazonConfigHost      :: BSC.ByteString
   , amazonConfigPort      :: Int
   , amazonConfigSecure    :: Bool
+  , amazonConfigTimeout   :: Int
   , amazonConfigRegion    :: AWS.Region
   , amazonConfigBucket    :: Text
   , amazonConfigAccessKey :: BSC.ByteString
@@ -34,6 +35,9 @@ instance Unjson AmazonConfig where
     <*> fieldDef "secure" True
           amazonConfigSecure
           "Whether to use HTTPS (ie. SSL)"
+    <*> fieldDef "timeout" 60
+          amazonConfigTimeout
+          "Request timeout (seconds)"
     <*> fieldDefBy "region" AWS.Ireland
           amazonConfigRegion
           "Amazon region (eg. eu-west-1)"
