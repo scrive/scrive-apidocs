@@ -115,12 +115,13 @@ test_startDocumentCharging = do
       filecontent <- liftIO $ BS.readFile filename
       file <- saveNewFile (T.pack filename) filecontent
       doc <- addRandomDocumentWithFile file (rdaDefault user)
-        { rdaTypes = Or [Signable]
-        , rdaStatuses = Or [Preparation]
+        { rdaTypes = OneOf [Signable]
+        , rdaStatuses = OneOf [Preparation]
         , rdaSignatories =
-          let signatory = Or [ And [ RSC_DeliveryMethodIs EmailDelivery ]
-                             ]
-          in Or $ map (`replicate` signatory) [1..10]
+          let signatory = OneOf
+                [ AllOf [ RSC_DeliveryMethodIs EmailDelivery ]
+                ]
+          in OneOf $ map (`replicate` signatory) [1..10]
         }
 
       True <- withDocument doc $ do

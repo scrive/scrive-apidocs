@@ -1093,22 +1093,25 @@ addNewRandomPartnerUser = do
       void . dbUpdate . AccessControlCreateForUser uid $ UserGroupAdminAR ugid
       return (partnerAdminUser, partnerAdminUserGroup)
 
--- TODO: to be renamed, CORE 1486
-newtype Or a = Or { unOr :: [a] }
+newtype OneOf a = OneOf { fromOneOf :: [a] }
   deriving (Eq, Show)
-newtype And a = And { unAnd :: [a] }
+
+newtype AllOf a = AllOf { fromAllOf :: [a] }
   deriving (Eq, Show)
+
+-- | Choose one of sets of signatory conditions at random.
+type RandomSignatorySpec = OneOf (AllOf RandomSignatoryCondition)
 
 -- | Generate list of alternatives for signatories where one of them has a
 -- bounded spec and the rest are free.
 anyRandomSignatoryCondition
   :: Int
   -> Int
-  -> Or (And RandomSignatoryCondition)
-  -> Or [Or (And RandomSignatoryCondition)]
+  -> RandomSignatorySpec
+  -> OneOf [RandomSignatorySpec]
 anyRandomSignatoryCondition a b cond =
-  let freeSig = Or [And []]
-  in Or $ do
+  let freeSig = OneOf [AllOf []]
+  in OneOf $ do
     n <- [a..b]
     k <- [1..n]
     return $ replicate (k-1) freeSig ++ [cond] ++ replicate (n-k) freeSig
@@ -1129,12 +1132,10 @@ data RandomSignatoryCondition
   deriving (Eq, Show)
 
 data RandomDocumentAllows = RandomDocumentAllows
-  { rdaTypes       :: Or DocumentType
-  , rdaStatuses    :: Or DocumentStatus
-  , rdaSharings    :: Or DocumentSharing
-  -- Outer OR determines the number of signatories, inner OR/AND determines
-  -- options for the list of conditions a signatory needs to fulfil.
-  , rdaSignatories :: Or [Or (And RandomSignatoryCondition)]
+  { rdaTypes       :: OneOf DocumentType
+  , rdaStatuses    :: OneOf DocumentStatus
+  , rdaSharings    :: OneOf DocumentSharing
+  , rdaSignatories :: OneOf [RandomSignatorySpec]
   , rdaAuthor      :: User
   , rdaSharedLink  :: Bool
   , rdaTimeoutTime :: Bool
@@ -1143,25 +1144,25 @@ data RandomDocumentAllows = RandomDocumentAllows
 
 rdaDefault :: User -> RandomDocumentAllows
 rdaDefault user = RandomDocumentAllows
-  { rdaTypes       = Or documentAllTypes
-  , rdaStatuses    = Or [ Preparation
-                        , Pending
-                        , Closed
-                        , Canceled
-                        , Timedout
-                        , Rejected
-                        , DocumentError
-                        ]
-  , rdaSharings    = Or documentAllSharings
-  , rdaSignatories = Or $ map (`replicate` freeSignatory) [1..10]
+  { rdaTypes       = OneOf documentAllTypes
+  , rdaStatuses    = OneOf [ Preparation
+                           , Pending
+                           , Closed
+                           , Canceled
+                           , Timedout
+                           , Rejected
+                           , DocumentError
+                           ]
+  , rdaSharings    = OneOf documentAllSharings
+  , rdaSignatories = OneOf $ map (`replicate` freeSignatory) [1..10]
   , rdaAuthor      = user
   , rdaSharedLink  = False
   , rdaTimeoutTime = True
   , rdaTemplateId  = Nothing
   }
   where
-    freeSignatory :: Or (And RandomSignatoryCondition)
-    freeSignatory = Or [And []]
+    freeSignatory :: OneOf (AllOf RandomSignatoryCondition)
+    freeSignatory = OneOf [AllOf []]
 
 randomSigLinkByStatus :: DocumentStatus -> Gen SignatoryLink
 randomSigLinkByStatus Closed = do
@@ -1271,18 +1272,18 @@ addRandomDocumentWithFile fileid rda = do
   where
     worker now user file = do
       doc' <- rand 10 arbitrary
-      xtype <- rand 10 (elements . unOr $ rdaTypes rda)
+      xtype <- rand 10 (elements . fromOneOf $ rdaTypes rda)
       status <- if xtype == Template
         then return Preparation
-        else rand 10 (elements . unOr $ rdaStatuses rda)
+        else rand 10 (elements . fromOneOf $ rdaStatuses rda)
       sharing <- if xtype == Template
-        then rand 10 (elements . unOr $ rdaSharings rda)
+        then rand 10 (elements . fromOneOf $ rdaSharings rda)
         else return Private
       title <- rand 1 $ arbText 10 25
-      sigcondss <- rand 10 (elements . unOr $ rdaSignatories rda)
+      sigspecs <- rand 10 (elements . fromOneOf $ rdaSignatories rda)
       -- First signatory link is the author
       let genFuns = randomAuthorLinkByStatus : repeat randomSigLinkByStatus
-      asl' : siglinks <- forM (zip sigcondss genFuns) $ \(Or sigconds, genSigLink) -> do
+      asl' : siglinks <- forM (zip sigspecs genFuns) $ \(OneOf sigconds, genSigLink) -> do
         sigcond <- rand 10 $ elements sigconds
         siglink <- rand 10 $ genSigLink status
         let updateSeenSignInfos Nothing role sig =
@@ -1339,7 +1340,7 @@ addRandomDocumentWithFile fileid rda = do
                   return sig { maybereadinvite = Just timeReadInvite }
                 else return sig { maybereadinvite = Nothing }
 
-        foldrM applyCond siglink (unAnd sigcond)
+        foldrM applyCond siglink (fromAllOf sigcond)
 
       let doc = doc' { documenttype = xtype
                      , documentstatus = status

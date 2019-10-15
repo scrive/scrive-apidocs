@@ -135,13 +135,13 @@ testLastPersonSigningADocumentClosesIt = do
   file <- saveNewFile (T.pack filename) filecontent
 
   addRandomDocumentWithFile file (rdaDefault user)
-    { rdaTypes = Or [Signable]
-    , rdaStatuses = Or [Preparation]
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Preparation]
     , rdaSignatories =
-      let signatory = Or
-            [ And [ RSC_DeliveryMethodIs EmailDelivery ]
+      let signatory = OneOf
+            [ AllOf [ RSC_DeliveryMethodIs EmailDelivery ]
             ]
-      in Or $ map (`replicate` signatory) [1..10]
+      in OneOf $ map (`replicate` signatory) [1..10]
     } `withDocumentM` do
 
     success <- do
@@ -212,13 +212,13 @@ testSigningWithPin = do
   file <- saveNewFile (T.pack filename) filecontent
 
   addRandomDocumentWithFile file (rdaDefault user1)
-    { rdaTypes = Or [Signable]
-    , rdaStatuses = Or [Preparation]
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Preparation]
     , rdaSignatories =
-      let signatory = Or
-            [ And [ RSC_DeliveryMethodIs EmailDelivery ]
+      let signatory = OneOf
+            [ AllOf [ RSC_DeliveryMethodIs EmailDelivery ]
             ]
-      in Or $ map (`replicate` signatory) [1..10]
+      in OneOf $ map (`replicate` signatory) [1..10]
     } `withDocumentM` do
     d <- theDocument
     success <- randomUpdate $ ResetSignatoryDetails ([
@@ -293,13 +293,13 @@ testSendReminderEmailUpdatesLastModifiedDate = do
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
   doc <- addRandomDocument (rdaDefault user)
-    { rdaStatuses = Or [Pending]
-    , rdaTypes = Or [Signable]
+    { rdaStatuses = OneOf [Pending]
+    , rdaTypes = OneOf [Signable]
     , rdaSignatories =
-      let signatory = Or
-            [ And [ RSC_DeliveryMethodIs EmailDelivery ]
+      let signatory = OneOf
+            [ AllOf [ RSC_DeliveryMethodIs EmailDelivery ]
             ]
-      in Or $ map (`replicate` signatory) [2..10]
+      in OneOf $ map (`replicate` signatory) [2..10]
     }
 
   assertBool "Precondition" $ (get ctxtime ctx) /= documentmtime doc
@@ -326,13 +326,13 @@ testSendReminderEmailByCompanyAdmin = do
   ctxother <- (set ctxmaybeuser (Just otheruser)) <$> mkContext defaultLang
 
   doc <- addRandomDocument (rdaDefault user)
-    { rdaStatuses = Or [Pending]
-    , rdaTypes = Or [Signable]
+    { rdaStatuses = OneOf [Pending]
+    , rdaTypes = OneOf [Signable]
     , rdaSignatories =
-      let signatory = Or
-            [ And [ RSC_DeliveryMethodIs EmailDelivery ]
+      let signatory = OneOf
+            [ AllOf [ RSC_DeliveryMethodIs EmailDelivery ]
             ]
-      in Or $ map (`replicate` signatory) [2..10]
+      in OneOf $ map (`replicate` signatory) [2..10]
     }
 
   assertBool "Precondition" $ (get ctxtime ctx) /= documentmtime doc
@@ -423,17 +423,17 @@ testDownloadFileWithAuthToView = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- mkContext defaultLang
   doc <- addRandomDocument (rdaDefault user)
-    { rdaTypes = Or [Signable]
-    , rdaStatuses = Or [Pending]
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
     , rdaSignatories =
-      let author = Or [And []]
+      let author = OneOf [AllOf []]
           signatory =
             let authsToView = [toEnum 0 ..] \\ [StandardAuthenticationToView]
-            in Or $ (`map` authsToView) $ \auth ->
-              And [ RSC_IsSignatoryThatHasntSigned
-                  , RSC_AuthToViewIs auth
-                  ]
-      in Or [[author, signatory]]
+            in OneOf $ (`map` authsToView) $ \auth ->
+              AllOf [ RSC_IsSignatoryThatHasntSigned
+                    , RSC_AuthToViewIs auth
+                    ]
+      in OneOf [[author, signatory]]
     }
   let sl = head $ reverse $ documentsignatorylinks $ doc
   req1 <- mkRequest GET []
@@ -454,8 +454,8 @@ testSendingReminderClearsDeliveryInformation = do
   ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext defaultLang
   addRandomDocument (rdaDefault user)
-    { rdaTypes = Or [Signable]
-    , rdaStatuses = Or [Pending]
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
     } `withDocumentM` do
     sl <- head . reverse . documentsignatorylinks <$> theDocument
     let actor  =  systemActor $ get ctxtime ctx
@@ -472,7 +472,7 @@ testDocumentFromTemplate :: TestEnv ()
 testDocumentFromTemplate = do
     (Just user) <- addNewUser "aaa" "bbb" "xxx@xxx.pl"
     doc <- addRandomDocument (rdaDefault user)
-      { rdaTypes = Or [Template]
+      { rdaTypes = OneOf [Template]
       }
     docs1 <- randomQuery $ GetDocumentsByAuthor (userid user)
     ctx <- (set ctxmaybeuser (Just user))
@@ -487,7 +487,7 @@ testDocumentFromTemplateShared = do
     ugid <- (get ugID) <$> addNewUserGroup
     (Just author) <- addNewUserToUserGroup "aaa" "bbb" "xxx@xxx.pl" ugid
     doc <- addRandomDocument (rdaDefault author)
-      { rdaTypes = Or [Template]
+      { rdaTypes = OneOf [Template]
       }
     void $ randomUpdate $ SetDocumentSharing [documentid doc] True
     (Just user) <- addNewUserToUserGroup "ccc" "ddd" "zzz@zzz.pl" ugid
@@ -506,7 +506,7 @@ testDocumentDeleteInBulk = do
     -- isSignable condition below is wrong. Tests somehow generate template documents
     -- that are pending and that breaks everything.
     docs <- replicateM 100 (addRandomDocument (rdaDefault author)
-                             { rdaTypes = Or [Signable] })
+                             { rdaTypes = OneOf [Signable] })
 
     ctx <- (set ctxmaybeuser (Just author)) <$> mkContext defaultLang
     req <- mkRequest POST [("documentids",  inText $ (showt $ documentid <$> docs))]
@@ -568,7 +568,7 @@ testGetEvidenceAttachmentsNotLoggedIn = do
 
 testSignviewBrandingBlocksNastyInput:: TestEnv ()
 testSignviewBrandingBlocksNastyInput = do
-  bd <- get ctxbrandeddomain <$> mkContext defaultLang -- We need to get default branded domain. And it can be fetched from default ctx
+  bd <- get ctxbrandeddomain <$> mkContext defaultLang -- We need to get default branded domain. AllOf it can be fetched from default ctx
   theme <- dbQuery $ GetTheme $ (get bdSignviewTheme $ bd)
   emptyBrandingCSS <- signviewBrandingCSS theme
   assertBool "CSS generated for empty branding is not empty" (not $ BSL.null $ emptyBrandingCSS)
@@ -597,13 +597,13 @@ testDownloadSignviewBrandingAccess = do
   file <- saveNewFile (T.pack filename) filecontent
 
   doc <- addRandomDocumentWithFile file (rdaDefault user)
-    { rdaTypes = Or [Signable]
-    , rdaStatuses = Or [Preparation]
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Preparation]
     , rdaSignatories =
-      let signatory = Or
-            [ And [ RSC_DeliveryMethodIs EmailDelivery ]
+      let signatory = OneOf
+            [ AllOf [ RSC_DeliveryMethodIs EmailDelivery ]
             ]
-      in Or $ map (`replicate` signatory) [1..10]
+      in OneOf $ map (`replicate` signatory) [1..10]
     }
 
   withDocumentID (documentid doc) $ do
@@ -654,8 +654,8 @@ testGetCancelledDocument = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- mkContext defaultLang
   doc <- addRandomDocument (rdaDefault user)
-    { rdaTypes = Or [Signable]
-    , rdaStatuses = Or [Pending]
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
     }
   let did       = documentid doc
       signatory = head $ documentsignatorylinks doc
@@ -690,20 +690,22 @@ testDocumentFromShareableTemplate :: TestEnv ()
 testDocumentFromShareableTemplate = replicateM_ 10 $ do
   user <- addNewRandomUser
   tpl <- addRandomDocument (rdaDefault user)
-    { rdaTypes = Or [Template]
+    { rdaTypes = OneOf [Template]
     , rdaSignatories =
-      let author = Or [ And [ RSC_IsViewer
-                            , RSC_AuthToViewIs StandardAuthenticationToView
-                            , RSC_AuthToSignIs StandardAuthenticationToSign
-                            ]
-                      ]
-          signatory = Or [ And [ RSC_IsSignatoryThatHasntSigned
-                               , RSC_AuthToViewIs StandardAuthenticationToView
-                               , RSC_AuthToSignIs StandardAuthenticationToSign
-                               , RSC_DeliveryMethodIs APIDelivery
-                               ]
-                         ]
-      in Or [[author, signatory]]
+      let author = OneOf
+            [ AllOf [ RSC_IsViewer
+                    , RSC_AuthToViewIs StandardAuthenticationToView
+                    , RSC_AuthToSignIs StandardAuthenticationToSign
+                    ]
+            ]
+          signatory = OneOf
+            [ AllOf [ RSC_IsSignatoryThatHasntSigned
+                    , RSC_AuthToViewIs StandardAuthenticationToView
+                    , RSC_AuthToSignIs StandardAuthenticationToSign
+                    , RSC_DeliveryMethodIs APIDelivery
+                    ]
+            ]
+      in OneOf [[author, signatory]]
     }
 
   mh <- random
@@ -757,8 +759,8 @@ testGetDocumentWithSignatoryAccessTokens = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
 
   doc <- addRandomDocument (rdaDefault user)
-    { rdaTypes = Or [Signable]
-    , rdaStatuses = Or [Pending]
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
     }
   let did       = documentid doc
       signatory = head $ documentsignatorylinks doc
@@ -809,8 +811,8 @@ testSendEmailOnTimeout = do
   dbUpdate $ UserGroupUpdateSettings (get ugID ug) (Just newUGS)
 
   doc <- addRandomDocument (rdaDefault user)
-    { rdaTypes = Or [Signable]
-    , rdaStatuses = Or [Pending]
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
     , rdaTimeoutTime = True
     }
 

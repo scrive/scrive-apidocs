@@ -91,11 +91,11 @@ _testDocApiV2GetFailsAfter30Days = do
   user <- addNewRandomUser
 
   doc <- addRandomDocument (rdaDefault user)
-    { rdaTypes = Or [Signable]
-    , rdaStatuses = Or [Closed]
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Closed]
     , rdaSignatories =
-      let signatory = Or [And []]
-      in Or $ map (`replicate` signatory) [2..10]
+      let signatory = OneOf [AllOf []]
+      in OneOf $ map (`replicate` signatory) [2..10]
     }
 
   let check s = isNothing (maybesignatory s) && not (signatoryisauthor s)
@@ -401,18 +401,18 @@ testDocApiV2FilesFull = do
   req  <- mkRequest GET []
 
   initDoc <- addRandomDocument (rdaDefault user)
-    { rdaTypes = Or [Signable]
-    , rdaStatuses = Or [Preparation]
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Preparation]
     , rdaSignatories =
-        let author = Or
-              [ And [RSC_IsViewer]
+        let author = OneOf
+              [ AllOf [RSC_IsViewer]
               ]
-            signatory = Or
-              [ And [ RSC_IsSignatoryThatHasntSigned
-                    , RSC_AuthToSignIs StandardAuthenticationToSign
-                    ]
+            signatory = OneOf
+              [ AllOf [ RSC_IsSignatoryThatHasntSigned
+                      , RSC_AuthToSignIs StandardAuthenticationToSign
+                      ]
               ]
-        in Or [[author, signatory]]
+        in OneOf [[author, signatory]]
     }
   let did = documentid initDoc
       att  = defaultSignatoryAttachment { signatoryattachmentname = "sig_att" }

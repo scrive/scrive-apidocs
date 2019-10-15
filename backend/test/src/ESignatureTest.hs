@@ -19,8 +19,8 @@ testCGISEBankIDSignatures :: TestEnv ()
 testCGISEBankIDSignatures = do
   author <- addNewRandomUser
   doc <- addRandomDocument (rdaDefault author)
-    { rdaStatuses = Or [Pending]
-    , rdaTypes = Or [Signable]
+    { rdaStatuses = OneOf [Pending]
+    , rdaTypes = OneOf [Signable]
     }
   let Just SignatoryLink{signatorylinkid = slid} = getAuthorSigLink doc
   bids :: CGISEBankIDSignature <- rand 20 arbitrary

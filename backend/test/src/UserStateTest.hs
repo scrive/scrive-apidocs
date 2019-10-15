@@ -158,8 +158,8 @@ test_userUsageStatisticsByUser = do
   let email = "emily@green.com"
   Just user <- addNewUser "Emily" "Green" email
   doc <- addRandomDocument (rdaDefault user)
-    { rdaTypes = Or [Signable]
-    , rdaStatuses = Or [Closed]
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Closed]
     }
   void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc)
   res <- dbQuery $
@@ -179,12 +179,12 @@ test_userUsageStatisticsByCompany = do
   Just user1 <- addNewUserToUserGroup "Emily" "Green" email1 ugid
   Just user2 <- addNewUserToUserGroup "Bob" "Blue" email2 ugid
   doc0 <- addRandomDocument (rdaDefault user1)
-    { rdaTypes = Or [Signable]
-    , rdaStatuses = Or [Closed]
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Closed]
     }
   doc1 <- addRandomDocument (rdaDefault user2)
-    { rdaTypes = Or [Signable]
-    , rdaStatuses = Or [Closed]
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Closed]
     }
   void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc0)
   void $ dbUpdate (ChargeUserGroupForClosingDocument $ documentid doc1)

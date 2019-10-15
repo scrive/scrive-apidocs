@@ -352,8 +352,8 @@ addDocumentAndInsertToken :: TestEnv (User, Document, Context)
 addDocumentAndInsertToken = do
   author <- addNewRandomUser
   doc    <- addRandomDocument (rdaDefault author)
-    { rdaTypes = Or [Signable]
-    , rdaStatuses = Or [Pending]
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
     }
   (_, ctx) <- do
     let Just asl = getAuthorSigLink doc
