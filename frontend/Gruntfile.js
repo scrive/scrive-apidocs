@@ -60,10 +60,11 @@ module.exports = function (grunt) {
       signview: merge(
         webpackConfig[1],
         {
-          devtool: false,
+          devtool: "source-map",
           plugins: [
             new webpack.optimize.UglifyJsPlugin({
               minimize: true,
+              sourceMap: true,
               compress: {warnings: false}
             }),
             new webpack.DefinePlugin({
