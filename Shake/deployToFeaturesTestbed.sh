@@ -32,7 +32,7 @@ mv kontrakcja kontrakcja_old
 
 mv kontrakcja_new kontrakcja
 
-cp kontrakcja_old/*.conf kontrakcja/
+cp conf/*.conf kontrakcja/
 
 cd kontrakcja
 
