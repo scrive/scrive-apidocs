@@ -1,6 +1,7 @@
 {
   nixpkgs
 , haskellPackages
+, localeLang ? "C.UTF-8"
 , workspaceRoot ? builtins.toPath(../..)
 }:
 let
@@ -23,9 +24,13 @@ in
 pkgs.stdenv.mkDerivation {
   name = "kontrakcja-production-shell";
 
-  LANG = "en_US.UTF-8";
   KONTRAKCJA_ROOT = sourceRoot;
   KONTRAKCJA_WORKSPACE = workspaceRoot;
 
   buildInputs = packages;
+
+  shellHook = ''
+    export LANG=${localeLang}
+    export LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive
+  '';
 }

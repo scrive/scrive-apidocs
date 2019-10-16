@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
 set -eux
-source ./env.sh
+source $(dirname "$0")/env.sh
 
-workspace/scripts/run-dev.sh
+workspace/scripts/run-dev.sh "$@"

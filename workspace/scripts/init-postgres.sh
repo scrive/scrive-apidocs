@@ -7,7 +7,8 @@ script_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"
 KONTRAKCJA_WORKSPACE=${KONTRAKCJA_WORKSPACE:-"."}
 db_path="$KONTRAKCJA_WORKSPACE/_local/data"
 
-PG_LOCALE="en_US.utf8"
+LANG=${LANG:-"C.UTF-8"}
+PG_LOCALE=${PG_LOCALE:-"$LANG"}
 
 if [[ ! -e "$db_path" ]]; then
   mkdir -p "$db_path"

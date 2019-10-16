@@ -2,4 +2,4 @@
 
 source $(dirname "$0")/env.sh
 
-../../devRunner.sh $@
+../scripts/run-dev.sh "$@"

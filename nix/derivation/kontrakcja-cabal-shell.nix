@@ -1,6 +1,7 @@
 {
   nixpkgs
 , haskellPackages
+, localeLang ? "C.UTF-8"
 , workspaceRoot ? builtins.toPath(../..)
 }:
 let
@@ -19,8 +20,6 @@ in
 haskellPackages.shellFor {
   name = "kontrakcja-shell";
 
-  LANG = "en_US.UTF-8";
-
   KONTRAKCJA_ROOT = sourceRoot;
   KONTRAKCJA_WORKSPACE = workspaceRoot;
   packages = ps: [ kontrakcja kontrakcja-shake ];
@@ -35,4 +34,9 @@ haskellPackages.shellFor {
     haskellPackages.brittany
     haskellPackages.cabal-install
   ];
+
+  shellHook = ''
+    export LANG=${localeLang}
+    export LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive
+  '';
 }

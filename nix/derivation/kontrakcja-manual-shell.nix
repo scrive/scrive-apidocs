@@ -1,6 +1,7 @@
 {
   nixpkgs
 , haskellPackages
+, localeLang ? "C.UTF-8"
 , workspaceRoot ? builtins.toPath(../..)
 }:
 let
@@ -14,7 +15,6 @@ in
 pkgs.mkShell {
   name = "kontrakcja-manual-shell";
 
-  LANG = "en_US.UTF-8";
   LD_LIBRARY_PATH = "${pkgs.zlib}/lib:${pkgs.icu}/lib:${pkgs.curl.out}/lib";
 
   KONTRAKCJA_ROOT = sourceRoot;
@@ -35,4 +35,9 @@ pkgs.mkShell {
     pkgs.postgresql
     pkgs.glibcLocales
   ];
+
+  shellHook = ''
+    export LANG=${localeLang}
+    export LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive
+  '';
 }

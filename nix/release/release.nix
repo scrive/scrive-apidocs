@@ -3,6 +3,7 @@
 , ghcVersion
 , inHaskellPackages ? nixpkgs.pkgs.haskell.packages.${ghcVersion}
 , workspaceRoot ? builtins.toPath(../..)
+, localeLang ? "C.UTF-8"
 }:
 let
   haskellPackages = import ../derivation/kontrakcja-build-deps.nix {
@@ -16,16 +17,16 @@ let
   };
 
   manual-shell = import ../derivation/kontrakcja-manual-shell.nix {
-    inherit nixpkgs workspaceRoot;
+    inherit nixpkgs workspaceRoot localeLang;
     haskellPackages = inHaskellPackages;
   };
 
   cabal-shell = import ../derivation/kontrakcja-cabal-shell.nix {
-    inherit nixpkgs haskellPackages workspaceRoot;
+    inherit nixpkgs haskellPackages workspaceRoot localeLang;
   };
 
   dev-shell = import ../derivation/kontrakcja-dev-shell.nix {
-    inherit nixpkgs haskellPackages workspaceRoot;
+    inherit nixpkgs haskellPackages workspaceRoot localeLang;
   };
 
   dev-release = import ../derivation/kontrakcja-dev-release.nix {
@@ -33,7 +34,7 @@ let
   };
 
   production-shell = import ../derivation/kontrakcja-production-shell.nix {
-    inherit nixpkgs haskellPackages workspaceRoot;
+    inherit nixpkgs haskellPackages workspaceRoot localeLang;
   };
 
   production-release = import ../derivation/kontrakcja-production-release.nix {

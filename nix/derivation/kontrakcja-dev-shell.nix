@@ -1,6 +1,7 @@
 {
   nixpkgs
 , haskellPackages
+, localeLang ? "C.UTF-8"
 , workspaceRoot ? builtins.toPath(../..)
 }:
 let
@@ -24,8 +25,6 @@ in
 haskellPackages.shellFor {
   name = "kontrakcja-dev-shell";
 
-  LANG = "en_US.UTF-8";
-
   inherit scrivepdftools;
 
   KONTRAKCJA_ROOT = sourceRoot;
@@ -45,4 +44,9 @@ haskellPackages.shellFor {
       pkgs.nodePackages.less
       pkgs.nodePackages.grunt-cli
     ];
+
+  shellHook = ''
+    export LANG=${localeLang}
+    export LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive
+  '';
 }

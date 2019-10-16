@@ -31,7 +31,7 @@ stdenv.mkDerivation {
 
   configurePhase = ''
     export LOCALIZATION_BIN="${kontrakcja}/bin/localization"
-    export LANG=en_US.UTF-8
+    export LANG=C.UTF-8
 
     export NODE_PATH=${nodeDependencies}/lib/node_modules
     export PATH="${nodeDependencies}/bin:$PATH"

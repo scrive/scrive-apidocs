@@ -1,6 +1,7 @@
 {
   nixpkgs ? import ./nixpkgs.nix {}
 , workspaceRoot ? builtins.toPath(../..)
+, localeLang ? "C.UTF-8"
 }:
 let
   ghcVersion = "ghc844";
@@ -24,6 +25,7 @@ let
     });
 in
 import ./release.nix {
-  inherit nixpkgs ghcVersion workspaceRoot;
+  inherit nixpkgs ghcVersion
+    workspaceRoot localeLang;
   inHaskellPackages = haskellPackages-2;
 }
