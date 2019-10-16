@@ -12,7 +12,6 @@ import Test.QuickCheck
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Encoding as AE
 import qualified Data.HashMap.Strict as H
-import qualified Data.Text as Text
 import qualified Data.Unjson as Unjson
 
 import AccessControl.Model
@@ -301,7 +300,7 @@ testFolderAPICreate = do
   fdrRootID <- get folderID <$> do
     dbUpdate . FolderCreate $ defaultFolder
 
-  folderNameTest <- rand 10 arbitrary
+  folderNameTest <- rand 10 arbitraryName
   let fdrTest = set folderName folderNameTest .
                 set folderParentID (Just fdrRootID) $
                    defaultFolder
@@ -404,7 +403,7 @@ testFolderAPIUpdate = do
 
     updateTestHelper :: Context -> Folder -> TestEnv ()
     updateTestHelper ctx fdr = do
-      name <- rand 10 $ oneof $ map (return . Text.singleton) "aAż29&\'@():,!.-?"
+      name <- rand 10 arbitraryName
       let fdr' = (set folderName name fdr)
       updatedFdr <- jsonToFolder <$> fdrAPIUpdate ctx fdr' 200
       assertEqual ("New folder from API should equal the one specified")
