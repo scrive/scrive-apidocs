@@ -1,7 +1,4 @@
-{ localeLang ? "C.UTF-8" }:
 let
-  release = import ./release.nix {
-    inherit localeLang;
-  };
+  release = import ./release.nix;
 in
 release.dev-shell

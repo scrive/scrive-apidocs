@@ -31,6 +31,5 @@ pkgs.stdenv.mkDerivation {
 
   shellHook = ''
     export LANG=${localeLang}
-    export LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive
   '';
 }
