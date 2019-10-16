@@ -9,7 +9,7 @@ import DB
 
 {-# DEPRECATED BySigning "BySigning is not used anymore" #-}
 {- BySigning is not used anymore. We can't drop it right away, but it doesn't need to be supported -}
-data SignupMethod = AccountRequest | ViralInvitation | BySigning | ByAdmin | CompanyInvitation | PartnerInvitation
+data SignupMethod = AccountRequest | ViralInvitation | BySigning | ByAdmin | CompanyInvitation | PartnerInvitation | PortalInvite
   deriving (Eq, Ord, Show, Read)
 
 instance PQFormat SignupMethod where
@@ -26,8 +26,9 @@ instance FromSQL SignupMethod where
       4 -> return ByAdmin
       5 -> return CompanyInvitation
       6 -> return PartnerInvitation
+      7 -> return PortalInvite
       _ -> E.throwIO $ RangeError {
-        reRange = [(1, 6)]
+        reRange = [(1, 7)]
       , reValue = n
       }
 
@@ -39,6 +40,7 @@ instance ToSQL SignupMethod where
   toSQL ByAdmin           = toSQL (4::Int16)
   toSQL CompanyInvitation = toSQL (5::Int16)
   toSQL PartnerInvitation = toSQL (6::Int16)
+  toSQL PortalInvite = toSQL (7::Int16)
 
 instance FromReqURI SignupMethod where
   fromReqURI = maybeRead . T.pack

@@ -408,6 +408,7 @@ apiCallV1Ready did = logDocument did . api $ do
       EmailDelivery  ->  isGood $ asValidEmail $ getEmail sl
       MobileDelivery ->  isGood $ asValidPhoneForSMS $ getMobile sl
       EmailAndMobileDelivery -> (isGood $ asValidPhoneForSMS $ getMobile sl) && (isGood $ asValidEmail $ getEmail sl)
+      PortalDelivery  ->  isGood $ asValidEmail $ getEmail sl
       _ -> True
 
     signatoryHasValidConfirmationSettings sl = case signatorylinkconfirmationdeliverymethod sl of

@@ -157,6 +157,38 @@ mailForwardSigningForNewSignatoryButton=
   $nicebutton(link=concat(a1=ctxhostpart;a2=link); text=_mailForwardSigningForNewSignatoryButton())$
 </div>
 ####
+####
+#### PORTAL MAILS
+####
+mailPortalInviteWithUser=$mailPortalInvite()$
+####
+mailPortalInviteWithoutUser=$mailPortalInvite()$
+####
+mailPortalInvite=
+$_mailPortalInviteTitle()$
+$nicemail(
+    mailp1 = _mailPortalClickToSign();
+    mailspacing1 = "<br/><br/>";
+    mailp2 = nicebutton(link=link; text=_mailPortalSignDocumentsButton());
+    mailspacing2 = "<br/><br/>";
+    mailp3 = _mailPortalIfNoAccout();
+    mailspacing3 = "<br/><br/>";
+    mailp4 = _mailPortalIfDontWantToSign()
+)$
+####
+mailPortalRemindWithUser=$mailPortalRemind()$
+####
+mailPortalRemindWithoutUser=$mailPortalRemind()$
+###
+mailPortalRemind=
+$_mailPortalRemindTitle()$
+$nicemail(
+    mailp1 = _mailPortalRemindContent();
+    mailspacing1 = "<br/><br/>";
+    mailp2 = nicebutton(link=link; text=_mailPortalSignDocumentsButton())
+)$
+####
+####
 #### TIMEDOUT MAIL
 ####
 ####

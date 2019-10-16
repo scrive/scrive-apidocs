@@ -221,4 +221,5 @@ kontraMigrations = [
   , featureFlagsAddIDINAuthenticationToView1
   , featureFlagsAddIDINAuthenticationToView2
   , addProviderCustomerIDToEIDAuthentications
+  , featureFlagsAddPortalFlag
   ]

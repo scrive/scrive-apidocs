@@ -15,7 +15,9 @@ import Doc.SignatoryLinkID
 import File.FileID
 import KontraMonad
 import MagicHash
+import MinutesTime
 import OAuth.Model
+import User.Email
 import User.Model
 import UserGroup.Types
 
@@ -53,6 +55,8 @@ data KontraLink
     | LinkPreviewLockedImage
     | LinkPermanentRedirect Text
     | LinkTemplateShareableLink DocumentID MagicHash
+    | LinkPortalInviteWithAccount Text Email
+    | LinkPortalInviteWithoutAccount Text Email MagicHash UTCTime
 
 langFolder :: Lang -> Text
 langFolder lang = "/" <> (codeFromLang lang)
@@ -116,6 +120,10 @@ instance Show KontraLink where
     showsPrec _ (LinkPermanentRedirect s) = (<>) (T.unpack s)
     showsPrec _ (LinkTemplateShareableLink did mh) =
       (<>) ("/t/" <> show did <> "/" <> show mh)
+    showsPrec _ (LinkPortalInviteWithAccount portalUrl email) =
+      (<>) (T.unpack portalUrl <> "/portal_invite/exists?email=" <> urlEncode (T.unpack $ unEmail email))
+    showsPrec _ (LinkPortalInviteWithoutAccount portalUrl email token utctime) =
+      (<>) (T.unpack portalUrl <> "/portal_invite/new?email=" <> urlEncode (T.unpack $ unEmail email) <> "?token=" <> show token <> "&expires=" <> urlEncode (formatTimeISO utctime))
 
 setParams :: URI -> [(Text, Text)] -> URI
 setParams uri params = uri { uriQuery = "?" <> vars }

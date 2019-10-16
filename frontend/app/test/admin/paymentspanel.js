@@ -54,7 +54,7 @@ describe("admin/paymentspanel", function () {
     var checkboxes = $(".checkbox", component.getDOMNode());
     // We should have 2 checkboxes for each option.
     // One for regular user, one for admin users.
-    assert.equal(checkboxes.size(), 54);
+    assert.equal(checkboxes.size(), 56);
     // We should have one select (for price plan)
     var selects = $(".select", component.getDOMNode());
     assert.equal(selects.size(), 2);
@@ -71,7 +71,7 @@ describe("admin/paymentspanel", function () {
     component.forceUpdate();
     // We should have 2 checkboxes for each option.
     // One for regular user, one for admin users.
-    assert.equal(checkboxes.size(), 54);
+    assert.equal(checkboxes.size(), 56);
   });
 
   it("should call subscriptions updateSubscriptionAsAdmin on button clicked", function () {
@@ -116,7 +116,8 @@ describe("admin/paymentspanel", function () {
           canUseEmailConfirmations: true,
           canUseAPIInvitations: true,
           canUsePadInvitations: true,
-          canUseForwarding: true
+          canUseForwarding: true,
+          canUsePortal: true
         },
         regularUsers: {
           canUseTemplates: true,
@@ -144,17 +145,18 @@ describe("admin/paymentspanel", function () {
           canUseEmailConfirmations: true,
           canUseAPIInvitations: true,
           canUsePadInvitations: true,
-          canUseForwarding: true
+          canUseForwarding: true,
+          canUsePortal: true
         }
       }
     });
     component.forceUpdate();
     var checkedCheckboxes = $(".checkbox.checked", component.getDOMNode());
-    assert.equal(checkedCheckboxes.size(), 48); // 4 options were set to false
+    assert.equal(checkedCheckboxes.size(), 50); // 4 options were set to false
 
     TestUtils.Simulate.click(checkedCheckboxes[0]); // Lets pick one to uncheck
     component.forceUpdate();
     var changedCheckedCheckboxes = $(".checkbox.checked", component.getDOMNode());
-    assert.equal(changedCheckedCheckboxes.size(), 47);
+    assert.equal(changedCheckedCheckboxes.size(), 49);
   });
 });

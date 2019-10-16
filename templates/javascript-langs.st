@@ -437,6 +437,7 @@ javascriptLocalisation =
                , invitationSMS : "$_designViewAddPartiesInvitationSMS()$"
                , invitationEmailSMS : "$_designViewAddPartiesInvitationEmailSMS()$"
                , invitationLink : "$_designViewAddPartiesInvitationLink()$"
+               , invitationPortal: "Portal"
                , role : "$_designViewAddPartiesRole()$"
                , roleSignatory : "$_designViewAddPartiesRoleSignatory()$"
                , roleViewer : "$_designViewAddPartiesRoleViewer()$"
@@ -762,6 +763,7 @@ javascriptLocalisation =
               , invitationEmailSMS: "$_docviewSignatoryInvitationEmailSMS()$"
               , invitationLink: "$_docviewSignatoryInvitationLink()$"
               , invitationNone: "$_docviewSignatoryInvitationNone()$"
+              , invitationPortal: "Portal"
               , role: "$_docviewSignatoryRoleLabel()$"
               , roleApprover: "$_docviewSignatoryRoleApprover()$"
               , roleSignatory: "$_docviewSignatoryRoleSignatory()$"
@@ -1386,6 +1388,7 @@ javascriptLocalisation =
              , mobile       : "$_deliveryMobile()$"
              , email_mobile : "$_deliveryEmailMobile()$"
              , link         : "$_deliveryLink()$"
+             , portal       : "Portal"
       }
       , signinginprogressmodal : {
                action1 : "$_signinginprogressmodalAction1()$"

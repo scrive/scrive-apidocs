@@ -59,3 +59,4 @@ testNewCompanyFeatureFlagDefaults  = do
           assertEqual "New company can use Pad invitation" True (ffCanUsePadInvitations ff)
           assertEqual "New company can't use Shareable Links" False (ffCanUseShareableLinks ff)
           assertEqual "New company can use Forwarding" True (ffCanUseForwarding ff)
+          assertEqual "New company can't use Portal" False (ffCanUsePortal ff)

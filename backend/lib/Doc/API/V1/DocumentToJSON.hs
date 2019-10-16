@@ -87,6 +87,7 @@ documentJSONV1 muser forapi forauthor msl doc = do
           [APIDelivery]     -> "api"
           [MobileDelivery]  -> "mobile"
           [EmailAndMobileDelivery] -> "email_mobile"
+          [PortalDelivery]  -> "portal"
           _                 -> "mixed"
       J.value "template" $ isTemplate doc
       J.value "daystosign" $ documentdaystosign doc
@@ -334,6 +335,7 @@ instance ToJSValue DeliveryMethod where
   toJSValue APIDelivery    = toJSValue ("api"::String)
   toJSValue MobileDelivery = toJSValue ("mobile"::String)
   toJSValue EmailAndMobileDelivery = toJSValue ("email_mobile"::String)
+  toJSValue PortalDelivery = toJSValue ("portal"::String)
 
 jsonDate :: Maybe UTCTime -> JSValue
 jsonDate mdate = toJSValue $ formatTimeISO <$> mdate

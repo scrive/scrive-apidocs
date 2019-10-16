@@ -3,6 +3,7 @@ module Doc.API.V2.Calls.DocumentPostCalls (
 , docApiV2NewFromTemplate
 , docApiV2Update
 , docApiV2Start
+, docApiV2StartWithPortal
 , docApiV2Prolong
 , docApiV2Cancel
 , docApiV2Trash
@@ -10,6 +11,7 @@ module Doc.API.V2.Calls.DocumentPostCalls (
 , docApiV2TrashMultiple
 , docApiV2DeleteMultiple
 , docApiV2Remind
+, docApiV2RemindWithPortal
 , docApiV2Forward
 , docApiV2SetFile
 , docApiV2SetAttachments
@@ -40,6 +42,7 @@ import Text.StringTemplates.Templates
 import qualified Data.Text as T
 
 import API.V2
+import API.V2.Errors
 import API.V2.Parameters
 import Attachment.Model
 import Chargeable.Model
@@ -57,6 +60,7 @@ import Doc.API.V2.JSON.Misc
 import Doc.AutomaticReminder.Model (setAutomaticReminder)
 import Doc.DocAddImage (addImageToDocumentFile)
 import Doc.DocInfo (isClosed, isPending, isTimedout)
+import Doc.DocMails
 import Doc.DocMails
   ( sendAllReminderEmailsExceptAuthor, sendForwardEmail, sendInvitationEmail1 )
 
@@ -76,6 +80,8 @@ import MinutesTime
 import OAuth.Model
 import User.Email (Email(..))
 import User.Model
+import UserGroup.Model
+import UserGroup.Types
 import Util.Actor (Actor)
 import Util.HasSomeUserInfo (getEmail, getMobile)
 import Util.PDFUtil
@@ -195,6 +201,54 @@ docApiV2Start did = logDocument did . api $ do
     -- Result
     Ok <$> (\d -> (unjsonDocument $ documentAccessForUser user d,d)) <$> theDocument
 
+
+docApiV2StartWithPortal :: Kontrakcja m => m Response
+docApiV2StartWithPortal = api $ do
+  -- Permissions
+  time <- get ctxtime <$> getContext
+  (user, actor) <- getAPIUser APIDocSend
+  dids <- apiV2ParameterObligatory $ ApiV2ParameterJSON "document_ids"
+            $ arrayOf unjsonDef
+  when (length dids > 20)
+    . apiError $ requestParameterInvalid "document_ids"
+      "document_ids parameter can't have more the 20 ids"
+
+  logInfo "Running start with portal with ids" $ object [
+        "doc_ids" .= show dids
+      ]
+  docs <- forM dids $ \did ->
+    logDocument did . withDocumentID did $ do
+      logInfo_ "Starting one of documents with portal"
+      -- Guards
+      guardThatUserIsAuthor user =<< theDocument
+      guardThatObjectVersionMatchesIfProvided did
+      guardDocumentStatus Preparation =<< theDocument
+      guardThatDocumentCanBeStarted =<< theDocument
+      -- Parameters
+
+      timezone <- documenttimezonename <$> theDocument
+      clearDocFields actor
+      dbUpdate $ PreparationToPending actor timezone
+      dbUpdate $ SetDocumentInviteTime time actor
+      postDocumentPreparationChange False timezone
+      dbUpdate $ ChargeUserGroupForStartingDocument did
+      return =<< theDocument -- return changed
+
+  ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ userid user
+  case get ugsPortalUrl (ugwpSettings ugwp) of
+    Just portalUrl -> do
+      sendPortalInvites user portalUrl docs
+    Nothing ->  apiError $ requestFailed "User group doesn't have portal url set"
+
+  -- Result
+  let docAccess = \d -> (documentAccessForUser user d, d)
+      headers   = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
+      jsonBS = listToJSONBS (length docs, docAccess <$> docs)
+  return . Ok $ Response 200 headers nullRsFlags jsonBS Nothing
+  where
+    sendPortalInvites authorUser portalUrl docs = do
+      forM_ (detailsOfGroupedPortalSignatoriesThatCanSignNow docs) $ \(email,name) ->
+        sendPortalInvite authorUser portalUrl email name
 
 docApiV2Prolong :: Kontrakcja m => DocumentID -> m Response
 docApiV2Prolong did = logDocument did . api $ do
@@ -333,6 +387,41 @@ docApiV2Remind did = logDocument did . api $ do
     void $ sendAllReminderEmailsExceptAuthor actor False
     -- Result
     return $ Accepted ()
+
+docApiV2RemindWithPortal :: Kontrakcja m => m Response
+docApiV2RemindWithPortal = api $ do
+  -- Permissions
+  (user, _) <- getAPIUser APIDocSend
+  dids <- apiV2ParameterObligatory $ ApiV2ParameterJSON "document_ids"
+            $ arrayOf unjsonDef
+  when (length dids > 20)
+    . apiError $ requestParameterInvalid "document_ids"
+      "document_ids parameter can't have more the 20 ids"
+
+  logInfo "Running remind with portal with ids" $ object [
+        "doc_ids" .= show dids
+      ]
+  docs <- forM dids $ \did ->
+    logDocument did . withDocumentID did $ do
+      -- Guards
+      guardThatUserIsAuthorOrCompanyAdmin user =<< theDocument
+      guardThatObjectVersionMatchesIfProvided did
+      guardDocumentStatus Pending =<< theDocument
+      -- Parameters
+      return =<< theDocument -- return changed
+
+  ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ userid user
+  case get ugsPortalUrl (ugwpSettings ugwp) of
+    Just portalUrl -> do
+      forM_ (detailsOfGroupedPortalSignatoriesThatCanSignNow docs) $ \(email,name) ->
+        sendPortalReminder user portalUrl email name
+    Nothing ->  apiError $ requestFailed "User group doesn't have portal url set"
+
+  -- Result
+  let docAccess = \d -> (documentAccessForUser user d, d)
+      headers   = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
+      jsonBS = listToJSONBS (length docs, docAccess <$> docs)
+  return . Ok $ Response 200 headers nullRsFlags jsonBS Nothing
 
 
 docApiV2Forward :: Kontrakcja m => DocumentID -> m Response

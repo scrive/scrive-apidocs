@@ -26,6 +26,7 @@ module Doc.DocUtils (
   , userCanPerformSigningAction
   , fileFromMainFile
   , allRequiredAttachmentsAreOnList
+  , detailsOfGroupedPortalSignatoriesThatCanSignNow
 ) where
 
 import Control.Monad.Catch
@@ -41,6 +42,7 @@ import Doc.SignatoryLinkID
 import File.File
 import File.Model
 import Templates
+import User.Email
 import User.Model
 import UserGroup.Model
 import UserGroup.Types
@@ -265,3 +267,14 @@ allRequiredAttachmentsAreOnList acceptedAttachments doc =
 
 requiredAuthorAttachments :: Document -> [AuthorAttachment]
 requiredAuthorAttachments doc = filter authorattachmentrequired $ documentauthorattachments doc
+
+detailsOfGroupedPortalSignatoriesThatCanSignNow :: [Document] -> [(Email, Text)]
+detailsOfGroupedPortalSignatoriesThatCanSignNow docs = nubBy (\(e1,_) (e2,_) -> e1 == e2) $
+      (concatMap detailsOfPortalSignatoriesThatCanSignNow docs)
+
+detailsOfPortalSignatoriesThatCanSignNow :: Document -> [(Email, Text)]
+detailsOfPortalSignatoriesThatCanSignNow doc = map slToData $ portalSigs
+  where
+    portalSig sl = signatorylinkdeliverymethod sl == PortalDelivery && canSignatorySignNow doc sl
+    portalSigs = filter portalSig $ documentsignatorylinks doc
+    slToData sl = (Email $ getEmail sl, getFullName sl)

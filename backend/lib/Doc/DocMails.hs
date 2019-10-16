@@ -12,6 +12,8 @@ module Doc.DocMails (
   , sendDocumentErrorEmail
   , sendPartyProcessFinalizedNotification
   , sendPinCode
+  , sendPortalInvite
+  , sendPortalReminder
   , makeMailAttachments
   , runMailT
   , MailT
@@ -45,6 +47,7 @@ import EvidenceLog.Model
 
 import File.File
 import File.Model
+import Folder.Model
 import InputValidation
 import Kontra
 import Log.Identifier
@@ -54,7 +57,12 @@ import Mails.MailsData
 import Mails.SendMail
 import SMS.SMS (scheduleSMS)
 import Templates (KontrakcjaGlobalTemplates, runTemplatesT)
+import User.Action
+import User.Email
 import User.Model
+import User.UserAccountRequest
+import UserGroup.Model
+import UserGroup.Types
 import Util.Actor
 import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
@@ -477,6 +485,7 @@ sendForwardSigningMessagesForNewSignatory customMessage originalsiglink newsigli
       EmailAndMobileDelivery -> do
         when useMail $ sendMail
         when useSMS  $ sendSMS
+      PortalDelivery -> return ()
 
 sendForwardSigningMessagesToAuthor:: Kontrakcja m => SignatoryLink -> SignatoryLink -> Document -> m ()
 sendForwardSigningMessagesToAuthor originalsiglink newsiglink doc = do
@@ -578,6 +587,69 @@ sendPinCode sl phone pin = do
               =<< (signatoryActor ctx sl)
   scheduleSMS doc =<< smsPinCodeSendout doc sl phone pin
 
+sendPortalInvite :: (MonadLog m, TemplatesMonad m, MonadThrow m, CryptoRNG m, MailContextMonad m, KontraMonad m, MonadDB m) =>
+                          User -> Text -> Email -> Text -> m ()
+sendPortalInvite authorUser portalUrl email name = do
+  muser <- dbQuery $ GetUserByEmail email
+  case (muser, join $ userhasacceptedtermsofservice <$> muser) of
+    (Just _, Just _) -> sendPortalInviteWithActivatedUser
+    (Just user, Nothing) -> sendPortalInviteWithNotActivatedUser user
+    (Nothing, _) -> sendPortalInviteWithNotActivatedUser =<< createUserForPortal
+  where
+    sendPortalInviteWithActivatedUser = do
+      mail <- mailPortalInviteWithUser authorUser portalUrl email name
+      scheduleEmailSendout $ mail {
+                               to = [MailAddress name (unEmail email)]
+                             , kontraInfoForMail = Nothing
+      }
+
+    sendPortalInviteWithNotActivatedUser user = do
+      uar <- newUserAccountRequest $ userid user
+      mail <- mailPortalInviteWithoutUser authorUser portalUrl email name uar
+      scheduleEmailSendout $ mail {
+                              to = [MailAddress name (unEmail email)]
+                            , kontraInfoForMail = Nothing
+      }
+    createUserForPortal =  do
+      ugFolder <- dbUpdate . FolderCreate $ defaultFolder
+      let ug0 = set ugHomeFolderID (Just $ get folderID ugFolder) $ defaultUserGroup
+      ug <- dbUpdate $ UserGroupCreate ug0
+      mnuser <- createUser email ("","") (get ugID ug, True) (getLang authorUser) PortalInvite
+      case mnuser of
+        Nothing -> unexpectedError "User was not created"
+        Just nuser -> return nuser
+
+sendPortalReminder:: (MonadLog m, TemplatesMonad m, MonadThrow m, CryptoRNG m, MailContextMonad m, KontraMonad m, MonadDB m) =>
+                          User -> Text -> Email -> Text -> m ()
+sendPortalReminder authorUser portalUrl email name = do
+  muser <- dbQuery $ GetUserByEmail email
+  case (muser, join $ userhasacceptedtermsofservice <$> muser) of
+    (Just _, Just _) -> sendPortalReminderWithActivatedUser
+    (Just user, Nothing) -> sendPortalReminderWithNotActivatedUser user
+    (Nothing, _) -> sendPortalReminderWithNotActivatedUser =<< createUserForPortal
+  where
+    sendPortalReminderWithActivatedUser = do
+      mail <- mailPortalRemindWithUser authorUser portalUrl email name
+      scheduleEmailSendout $ mail {
+                               to = [MailAddress name (unEmail email)]
+                             , kontraInfoForMail = Nothing
+      }
+
+    sendPortalReminderWithNotActivatedUser user = do
+      uar <- newUserAccountRequest $ userid user
+      mail <- mailPortalRemindWithoutUser authorUser portalUrl email name uar
+      scheduleEmailSendout $ mail {
+                              to = [MailAddress name (unEmail email)]
+                            , kontraInfoForMail = Nothing
+      }
+    createUserForPortal =  do
+      ugFolder <- dbUpdate . FolderCreate $ defaultFolder
+      let ug0 = set ugHomeFolderID (Just $ get folderID ugFolder) $ defaultUserGroup
+      ug <- dbUpdate $ UserGroupCreate ug0
+      mnuser <- createUser email ("","") (get ugID ug, True) (getLang authorUser) PortalInvite
+      case mnuser of
+        Nothing -> unexpectedError "User was not created"
+        Just nuser -> return nuser
 
 -- Notification sendout
 

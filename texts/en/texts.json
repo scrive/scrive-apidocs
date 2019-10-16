@@ -1,4 +1,4 @@
-{
+{ 
 "_Accept":"Accept",
 "_CompanyAccounts":"Users",
 "_CompanySettings":"Branding",
@@ -793,6 +793,13 @@
 "_mailNewCompanyUserInviteContentButton":"Activate account",
 "_mailNewCompanyUserInviteContentClickLink":"Please click the button below to activate your account. This invitation is valid until $expiredate$.",
 "_mailNewCompanyUserInvitePrivacyInfo":"This account is intended to be used only in relation to <strong>$companyname$</strong> and all saved documents will belong to <strong>$companyname$</strong>. This account is not for private use.",
+"_mailPortalClickToSign":"Please click on the button to sign your documents.",
+"_mailPortalIfDontWantToSign":"If you do not want to sign up, please contact $authorname$.",
+"_mailPortalIfNoAccout":"If you do not have an account, you will need to sign up and log in in order to sign.",
+"_mailPortalInviteTitle":"Invitation",
+"_mailPortalRemindContent":"You have not signed all your documents yet. Please click on the button to sign your documents.",
+"_mailPortalRemindTitle":"You have not signed all your documents yet",
+"_mailPortalSignDocumentsButton":"Sign documents",
 "_mailPreviewImageAltText":"Document preview",
 "_mailRequestChangeEmailButton":"Change username and email",
 "_mailRequestChangeEmailByAdminExplanation":"<strong>$requestedby$</strong> has requested your Scrive username and email to be changed to <strong>$newemail$</strong>. To complete this change, click the button below.",

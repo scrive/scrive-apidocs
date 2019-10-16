@@ -97,6 +97,7 @@ signatoryLinkTemplateFields sl = do
   F.value "email"       $ signatorylinkdeliverymethod sl == EmailDelivery
   F.value "mobile"      $ signatorylinkdeliverymethod sl == MobileDelivery
   F.value "emailmobile" $ signatorylinkdeliverymethod sl == EmailAndMobileDelivery
+  F.value "portal"      $ signatorylinkdeliverymethod sl == PortalDelivery
   F.value "viewing"     $ isViewer sl
   F.value "signing"     $ isSignatory sl || signatoryrole sl == SignatoryRoleForwardedSigningParty
   F.value "approving"   $ isApprover sl || signatoryrole sl == SignatoryRoleForwardedApprover

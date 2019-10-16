@@ -102,6 +102,7 @@ unjsonDeliveryMethod = unjsonEnumBy "DeliveryMethod" [
     , (APIDelivery,            "api")
     , (MobileDelivery,         "mobile")
     , (EmailAndMobileDelivery, "email_mobile")
+    , (PortalDelivery,         "portal")
     ]
 
 unjsonConfirmationDeliveryMethod :: UnjsonDef ConfirmationDeliveryMethod

@@ -11,6 +11,10 @@ module Doc.DocViewMail
     , mailDocumentRemindContent
     , mailPartyProcessFinalizedNotification
     , mailForwardSigned
+    , mailPortalInviteWithUser
+    , mailPortalInviteWithoutUser
+    , mailPortalRemindWithUser
+    , mailPortalRemindWithoutUser
     , InvitationTo(..)
     , mailInvitation
     , mailInvitationContent
@@ -47,7 +51,9 @@ import Mails.SendMail
 import MinutesTime
 import Templates
 import Theme.Model
+import User.Email
 import User.Model
+import User.UserAccountRequest
 import UserGroup.Model
 import UserGroup.Types
 import Util.HasSomeUserInfo
@@ -284,6 +290,58 @@ smartOrUnnamedName sl doc
                  (\s -> signatorylinkid s == signatorylinkid sl) signatories
             of Just i  -> i + 1
                Nothing -> 0
+
+mailPortalInviteWithUser
+  :: ( CryptoRNG m, MonadDB m, MonadThrow m, TemplatesMonad m
+     , MailContextMonad m, MonadTime m )
+  => User
+  -> Text
+  -> Email
+  -> Text
+  -> m Mail
+mailPortalInviteWithUser authorUser portalUrl email _name = do
+   otherMail (Just authorUser) (templateName "mailPortalInviteWithUser") $ do
+        F.value "link" $ show (LinkPortalInviteWithAccount portalUrl email)
+        F.value "authorname" $ getSmartName authorUser
+
+mailPortalInviteWithoutUser
+  :: ( CryptoRNG m, MonadDB m, MonadThrow m, TemplatesMonad m
+     , MailContextMonad m, MonadTime m )
+  => User
+  -> Text
+  -> Email
+  -> Text
+  -> UserAccountRequest
+  -> m Mail
+mailPortalInviteWithoutUser authorUser portalUrl email _name uar = do
+   otherMail (Just authorUser) (templateName "mailPortalInviteWithoutUser") $ do
+        F.value "link" $ show (LinkPortalInviteWithoutAccount portalUrl email (uarToken uar) (uarExpires uar))
+        F.value "authorname" $ getSmartName authorUser
+
+mailPortalRemindWithUser  :: ( CryptoRNG m, MonadDB m, MonadThrow m, TemplatesMonad m
+     , MailContextMonad m, MonadTime m )
+  => User
+  -> Text
+  -> Email
+  -> Text
+  -> m Mail
+mailPortalRemindWithUser authorUser portalUrl email _name = do
+   otherMail (Just authorUser) (templateName "mailPortalRemindWithUser") $ do
+        F.value "link" $ show (LinkPortalInviteWithAccount portalUrl email)
+        F.value "authorname" $ getSmartName authorUser
+
+mailPortalRemindWithoutUser  :: ( CryptoRNG m, MonadDB m, MonadThrow m, TemplatesMonad m
+     , MailContextMonad m, MonadTime m )
+  => User
+  -> Text
+  -> Email
+  -> Text
+  -> UserAccountRequest
+  -> m Mail
+mailPortalRemindWithoutUser authorUser portalUrl email _name uar = do
+   otherMail (Just authorUser) (templateName "mailPortalRemindWithoutUser") $ do
+        F.value "link" $ show (LinkPortalInviteWithoutAccount portalUrl email  (uarToken uar) (uarExpires uar))
+        F.value "authorname" $ getSmartName authorUser
 
 mailDocumentErrorForAuthor :: ( HasLang a, MonadDB m, MonadThrow m
                               , TemplatesMonad m, MailContextMonad m)
@@ -545,6 +603,26 @@ documentMailFields doc mctx = do
         (show <$> (join $ maybesignatory <$> getAuthorSigLink doc))
       brandingMailFields theme
 
+otherMailFields :: (MonadDB m, MonadThrow m, Monad m')
+                   => Maybe User -> MailContext -> m (Fields m' ())
+otherMailFields muser mctx = do
+    mug <- case (userid <$> muser) of
+          Just uid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ uid
+          Nothing   -> return Nothing
+    let themeid = fromMaybe (get (bdMailTheme . mctxcurrentBrandedDomain) mctx)
+                  . LP.get (just . uguiMailTheme . ugUI . just) $ mug
+    theme <- dbQuery $ GetTheme themeid
+    return $ do
+      F.value "ctxhostpart" $ get mctxDomainUrl mctx
+      F.value "ctxlang" (codeFromLang $ get mctxlang mctx)
+      -- brandingdomainid and brandinguserid are needed only for
+      -- preview/email logo
+      F.value "brandingdomainid"
+        (show $ get (bdid . mctxcurrentBrandedDomain) mctx)
+      F.value "brandinguserid"
+        (show <$> userid <$> muser)
+      brandingMailFields theme
+
 documentMail :: ( HasLang a, MailContextMonad m, MonadDB m
                 , MonadThrow m, TemplatesMonad m )
              => a -> Document -> Text -> Fields m () -> m Mail
@@ -559,6 +637,23 @@ documentMail haslang doc mailname otherfields = do
   allfields <- documentMailFields doc mctx
   kontramaillocal (get mctxmailNoreplyAddress mctx)
     (get mctxcurrentBrandedDomain mctx) theme haslang mailname $ allfields
+    >> otherfields
+
+otherMail :: ( MailContextMonad m, MonadDB m
+                , MonadThrow m, TemplatesMonad m )
+             => Maybe User -> Text -> Fields m () -> m Mail
+otherMail muser mailname otherfields = do
+  let lang  = fromMaybe defaultLang $ getLang <$> muser
+  mctx <- getMailContext
+  mug <- case (userid <$> muser) of
+           Just uid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ uid
+           Nothing   -> return Nothing
+  let themeid = fromMaybe (get (bdMailTheme . mctxcurrentBrandedDomain) mctx)
+                . LP.get (just . uguiMailTheme . ugUI . just) $ mug
+  theme <- dbQuery $ GetTheme themeid
+  allfields <-otherMailFields muser mctx
+  kontramaillocal (get mctxmailNoreplyAddress mctx)
+    (get mctxcurrentBrandedDomain mctx) theme lang  mailname $ allfields
     >> otherfields
 
 brandingMailFields :: Monad m => Theme -> Fields m ()

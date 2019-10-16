@@ -15,6 +15,8 @@ module.exports = {
         return capitaliseFirstLetter(localization.delivery.email_mobile);
       } else if (dm == "api") {
         return capitaliseFirstLetter(localization.delivery.link);
+      } else if (dm == "portal") {
+        return capitaliseFirstLetter(localization.delivery.portal);
       } else {
         return "";
       }
@@ -24,7 +26,8 @@ module.exports = {
       pad: 'design-view-action-participant-icon-device-icon-pad',
       api: 'design-view-action-participant-icon-device-icon-pad',
       mobile: 'design-view-action-participant-icon-device-icon-phone',
-      email_mobile : 'design-view-action-participant-icon-device-icon-email-mobile'
+      email_mobile : 'design-view-action-participant-icon-device-icon-email-mobile',
+      portal : 'design-view-action-participant-icon-device-icon-portal'
   },
   showToolTip : function(deliverymethod,e) {
      $('.tooltip-container').remove();

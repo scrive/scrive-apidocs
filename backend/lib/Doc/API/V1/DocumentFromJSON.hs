@@ -47,6 +47,7 @@ instance FromJSValue DeliveryMethod where
       Just "api"   -> Just APIDelivery
       Just "mobile"-> Just MobileDelivery
       Just "email_mobile"-> Just EmailAndMobileDelivery
+      Just "portal"-> Just PortalDelivery
       _            -> Nothing
 
 instance FromJSValue ConfirmationDeliveryMethod where

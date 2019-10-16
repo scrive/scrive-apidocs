@@ -25,6 +25,7 @@ documentAPIV2  = dir "documents" $ choice [
   , param $ dir "setfile"         $ hPost $ toK1 $ docApiV2SetFile
   , param $ dir "removepages"     $ hPost $ toK1 $ docApiV2RemovePages
   , param $ dir "start"           $ hPost $ toK1 $ docApiV2Start
+  , dir "startwithportal"         $ hPost $ toK0 $ docApiV2StartWithPortal
   , param $ dir "prolong"         $ hPost $ toK1 $ docApiV2Prolong
   , param $ dir "cancel"          $ hPost $ toK1 $ docApiV2Cancel
   , param $ dir "trash"           $ hPost $ toK1 $ docApiV2Trash
@@ -32,6 +33,8 @@ documentAPIV2  = dir "documents" $ choice [
   , param $ dir "delete"          $ hPost $ toK1 $ docApiV2Delete
   , dir "delete"                  $ hPost $ toK0 $ docApiV2DeleteMultiple
   , param $ dir "remind"          $ hPost $ toK1 $ docApiV2Remind
+  , dir "remindwithportal"        $ hPost $ toK0 $ docApiV2RemindWithPortal
+
   , param $ dir "forward"         $ hPost $ toK1 $ docApiV2Forward
   , param $ dir "setattachments"  $ hPost $ toK1 $ docApiV2SetAttachments
   , param $ dir "setautoreminder" $ hPost $ toK1 $ docApiV2SetAutoReminder

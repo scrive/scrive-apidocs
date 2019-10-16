@@ -623,6 +623,9 @@ var Signatory = exports.Signatory = Backbone.Model.extend({
     apiDelivery : function() {
           return this.get("delivery_method") == "api";
     },
+    portalDelivery : function() {
+          return this.get("delivery_method") == "portal";
+    },
     noneDelivery : function() {
           return this.isLastViewer();
     },

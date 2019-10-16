@@ -34,12 +34,14 @@ module.exports = React.createClass({
       return localization.designview.addParties.invitationEmailSMS;
     } else if (t == "api") {
       return localization.designview.addParties.invitationLink;
+    } else if (t == "portal") {
+      return localization.designview.addParties.invitationPortal;
     }
   },
   deliveryOptions: function () {
     var self = this;
     var sig = this.props.model;
-    var deliveryTypes = sig.isLastViewer() ? ["none"] : ["email", "pad", "mobile", "email_mobile", "api"];
+    var deliveryTypes = sig.isLastViewer() ? ["none"] : ["email", "pad", "mobile", "email_mobile", "api", "portal"];
     var ff = Subscription.currentSubscription().currentUserFeatures();
 
     if (!ff.canUseSMSInvitations()) {
@@ -75,6 +77,13 @@ module.exports = React.createClass({
         deliveryTypes = _.without(deliveryTypes, "pad");
       }
     }
+
+    if (!ff.canUsePortal()) {
+      if (sig.delivery() != "portal") {
+        deliveryTypes = _.without(deliveryTypes, "portal");
+      }
+    }
+
 
     return _.map(deliveryTypes, function (t) {
       return {name: self.deliveryText(t), value: t};
@@ -409,7 +418,8 @@ module.exports = React.createClass({
   hasForwardCheckbox: function () {
     var sig = this.props.model;
     var ff = Subscription.currentSubscription().currentUserFeatures();
-    var signatoryCanForward = !sig.author() && !sig.views() && !sig.padDelivery() && !sig.apiDelivery();
+    var signatoryCanForward = !sig.author() && !sig.views() && !sig.padDelivery() &&
+                              !sig.apiDelivery() && !sig.portalDelivery();
     return signatoryCanForward && (sig.canForward() || ff.canUseForwarding());
   },
 

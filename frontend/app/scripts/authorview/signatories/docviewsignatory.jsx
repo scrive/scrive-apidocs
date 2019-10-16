@@ -450,6 +450,8 @@ var EmailModal = require("../../common/email_modal");
         return localization.docview.signatory.invitationLink;
       } else if (signatory.noneDelivery()) {
         return localization.docview.signatory.invitationNone;
+      } else if (signatory.portalDelivery()) {
+        return localization.docview.signatory.invitationPortal;
       }
     },
 

@@ -61,6 +61,7 @@ module.exports = React.createClass({
         canUsePadInvitations: features.canUsePadInvitations(),
         canUseForwarding: features.canUseForwarding(),
         canUseDocumentPartyNotifications: features.canUseDocumentPartyNotifications(),
+        canUsePortal: features.canUsePortal(),
       };
     },
     initStateFromSubscription : function() {
@@ -121,6 +122,7 @@ module.exports = React.createClass({
           regularUserFeatures.canUseSEAuthenticationToSign = false;
           regularUserFeatures.canUseVerimiAuthenticationToView = false;
           regularUserFeatures.canUseIDINAuthenticationToView = false;
+          regularUserFeatures.canUsePortal = false;
       } else {
           adminUserFeatures.canUseDKAuthenticationToView = true;
           adminUserFeatures.canUseDKAuthenticationToSign = true;
@@ -359,6 +361,7 @@ module.exports = React.createClass({
               {this.renderTROptionSeparator("(disable to force use of eID/SMS)")}
               {this.renderTRForOptionWithCheckbox("Can use Standard authorization to view","canUseStandardAuthenticationToView")}
               {this.renderTRForOptionWithCheckbox("Can use Standard authorization to sign","canUseStandardAuthenticationToSign")}
+              {this.renderTRForOptionWithCheckbox("Can use portal","canUsePortal")}
               <tr>
                 <td>
                   <Button

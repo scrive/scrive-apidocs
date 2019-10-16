@@ -57,6 +57,7 @@ data FeatureFlags = FeatureFlags
   , ffCanUseShareableLinks :: Bool
   , ffCanUseForwarding :: Bool
   , ffCanUseDocumentPartyNotifications :: Bool
+  , ffCanUsePortal :: Bool
   } deriving (Eq, Ord, Show)
 
 instance Unjson FeatureFlags where
@@ -88,12 +89,14 @@ instance Unjson FeatureFlags where
     <*> field "can_use_shareable_links" ffCanUseShareableLinks "TODO desc"
     <*> field "can_use_forwarding" ffCanUseForwarding "TODO desc"
     <*> field "can_use_document_party_notifications" ffCanUseDocumentPartyNotifications "Can use document notifications"
+    <*> field "can_use_portal" ffCanUsePortal"TODO desc"
+
 
 
 type instance CompositeRow FeatureFlags =
   ( Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool
   , Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool
-  , Bool, Bool, Bool, Bool, Bool, Bool, Bool
+  , Bool, Bool, Bool, Bool, Bool, Bool, Bool, Bool
   )
 
 instance PQFormat FeatureFlags where
@@ -128,6 +131,7 @@ instance CompositeFromSQL FeatureFlags where
     , ffCanUseShareableLinks
     , ffCanUseForwarding
     , ffCanUseDocumentPartyNotifications
+    , ffCanUsePortal
     ) =
     FeatureFlags{..}
 
@@ -172,7 +176,7 @@ firstAllowedConfirmationDelivery ff
 defaultFeatures :: PaymentPlan -> Features
 defaultFeatures paymentPlan = Features ff ff
   where
-    ffAllTrue = FeatureFlags
+    defaultFF = FeatureFlags
       { ffCanUseTemplates = True
       , ffCanUseBranding = True
       , ffCanUseAuthorAttachments = True
@@ -200,9 +204,10 @@ defaultFeatures paymentPlan = Features ff ff
       , ffCanUseShareableLinks = False
       , ffCanUseForwarding = True
       , ffCanUseDocumentPartyNotifications = False
+      , ffCanUsePortal = False
       }
     ff = case paymentPlan of
-      FreePlan -> ffAllTrue
+      FreePlan -> defaultFF
         { ffCanUseDKAuthenticationToView     = False
         , ffCanUseDKAuthenticationToSign     = False
         , ffCanUseFIAuthenticationToView     = False
@@ -213,7 +218,7 @@ defaultFeatures paymentPlan = Features ff ff
         , ffCanUseVerimiAuthenticationToView = False
         , ffCanUseIDINAuthenticationToView   = False
         }
-      _ -> ffAllTrue
+      _ -> defaultFF
 
 setFeatureFlagsSql :: (SqlSet command) => FeatureFlags -> State command ()
 setFeatureFlagsSql ff = do
@@ -244,6 +249,7 @@ setFeatureFlagsSql ff = do
   sqlSet "can_use_shareable_links" $ ffCanUseShareableLinks ff
   sqlSet "can_use_forwarding" $ ffCanUseForwarding ff
   sqlSet "can_use_document_party_notifications" $ ffCanUseDocumentPartyNotifications ff
+  sqlSet "can_use_portal" $ ffCanUsePortal ff
 
 selectFeatureFlagsSelectors :: [SQL]
 selectFeatureFlagsSelectors =
@@ -274,4 +280,5 @@ selectFeatureFlagsSelectors =
   , "feature_flags.can_use_shareable_links"
   , "feature_flags.can_use_forwarding"
   , "feature_flags.can_use_document_party_notifications"
+  , "feature_flags.can_use_portal"
   ]

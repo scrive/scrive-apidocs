@@ -131,6 +131,7 @@ userAPIV2 = choice [
   dir "usagestats" $ dir "shareablelink" $ dir "months" $ hGet $ toK0
     $ User.UserControl.handleUsageStatsJSONForShareableLinks PartitionByMonth,
   dir "checkpassword" $ hPost $ toK0 $ apiCallCheckPassword,
+  dir "activateuser" $ hPost $ toK0 $ apiCallActivateAccount,
   userAPIV1
   ]
 
@@ -769,3 +770,36 @@ apiCallChangeOtherUserEmail affectedUserID = V2.api $ do
                                     fullname = getFullName affectedUser
                                   , email = unEmail newemail }]})
             return $ V2.Ok $ (runJSONGen $ value "sent" True)
+
+
+
+apiCallActivateAccount :: Kontrakcja m => m Response
+apiCallActivateAccount = V2.api $ do
+  ctx <- getContext
+  tosAccepted <-   apiV2ParameterObligatory (ApiV2ParameterBool "accepted_terms_of_service")
+  unless (tosAccepted) $ do
+    V2.apiError $ V2.requestParameterInvalid "accepted_terms_of_service" "Terms of service have to be accepted"
+  email <- apiV2ParameterObligatory $
+    ApiV2ParameterTextWithValidation "email" asValidEmail
+  muser <- dbQuery $ GetUserByEmail $ Email $ email
+  let errMsgToPreventAddressHarvesting = "Token is not valid"
+  case (muser, join $ userhasacceptedtermsofservice <$> muser) of
+    (Nothing, _) ->  V2.apiError $ V2.requestFailed errMsgToPreventAddressHarvesting
+    (_, Just _) ->  V2.apiError $ V2.requestFailed errMsgToPreventAddressHarvesting
+    (Just user, Nothing) -> do
+      token <-   apiV2ParameterObligatory (ApiV2ParameterRead "token")
+      validRequest <- isJust <$> getUserAccountRequestUser (userid user) token
+      unless (validRequest) $ do
+        V2.apiError $ V2.requestFailed errMsgToPreventAddressHarvesting
+      void $ dbUpdate $ DeleteUserAccountRequest (userid user)
+      void $ dbUpdate $ AcceptTermsOfService (userid user) (get ctxtime ctx)
+      void $ dbUpdate $ LogHistoryTOSAccept (userid user) (get ctxipnumber ctx) (get ctxtime ctx) Nothing
+      password <- apiV2ParameterObligatory (ApiV2ParameterText"password")
+      validPassword <- checkPassword (get ctxpasswordserviceconf ctx) password
+      unless (validPassword) $ do
+        V2.apiError $ V2.requestParameterInvalid "password" "Password is weak"
+      passwordhash <- createPassword password
+      void . dbUpdate $ SetUserPassword (userid user) passwordhash
+      void $ dbUpdate $ LogHistoryPasswordSetup (userid user) (get ctxipnumber ctx) (get ctxtime ctx) Nothing
+      return $ V2.Ok $ runJSONGen $ do
+        value "activated" True

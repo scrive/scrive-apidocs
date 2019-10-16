@@ -233,6 +233,7 @@ data DeliveryMethod
   | APIDelivery
   | MobileDelivery
   | EmailAndMobileDelivery
+  | PortalDelivery
     deriving (Eq, Ord, Show)
 
 instance PQFormat DeliveryMethod where
@@ -248,8 +249,9 @@ instance FromSQL DeliveryMethod where
       3 -> return APIDelivery
       4 -> return MobileDelivery
       5 -> return EmailAndMobileDelivery
+      6 -> return PortalDelivery
       _ -> throwM RangeError {
-        reRange = [(1, 5)]
+        reRange = [(1, 6)]
       , reValue = n
       }
 
@@ -260,6 +262,7 @@ instance ToSQL DeliveryMethod where
   toSQL APIDelivery            = toSQL (3::Int16)
   toSQL MobileDelivery         = toSQL (4::Int16)
   toSQL EmailAndMobileDelivery = toSQL (5::Int16)
+  toSQL PortalDelivery         = toSQL (6::Int16)
 
 ---------------------------------
 

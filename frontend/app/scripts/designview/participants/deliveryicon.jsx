@@ -16,6 +16,8 @@ module.exports = React.createClass({
       return ff.canUseAPIInvitations();
     } else if (dm == "pad") {
       return ff.canUsePadInvitations();
+    } else if (dm == "portal") {
+      return ff.canUsePortal();
     } else {
       // Should not happen, we covered all methods
       return true;
@@ -29,7 +31,7 @@ module.exports = React.createClass({
     if (sig.isLastViewer()) {
       new FlashMessage({type: "error", content: localization.designview.lastViewerOnlyGetsConfirmation});
     } else {
-      var dms = ["email", "pad", "mobile", "email_mobile", "api"];
+      var dms = ["email", "pad", "mobile", "email_mobile", "api", "portal"];
       var i = (_.indexOf(dms, sig.delivery()) + 1) || 0;
       while (!this.isAllowedDeliveryMethod(dms[i % dms.length])) {
         i++;
@@ -54,6 +56,8 @@ module.exports = React.createClass({
       sig.setConfirmationDeliverySynchedWithDelivery("email");
     } else if (sig.apiDelivery()) {
       sig.setConfirmationDeliverySynchedWithDelivery("email");
+    } else if (sig.portalDelivery()) {
+      sig.setConfirmationDeliverySynchedWithDelivery("email");
     }
   },
   icon: function () {
@@ -70,6 +74,8 @@ module.exports = React.createClass({
       return "design-view-action-participant-icon-device-icon-phone";
     } else if (sig.delivery() == "email_mobile") {
       return "design-view-action-participant-icon-device-icon-email-mobile";
+    } else if (sig.delivery() == "portal") {
+      return "design-view-action-participant-icon-device-icon-portal";
     }
   },
   title: function () {
@@ -91,6 +97,8 @@ module.exports = React.createClass({
       title.push(localization.designview.addParties.invitationEmailSMS);
     } else if (deliveryMethod == "api") {
       title.push(localization.designview.addParties.invitationLink);
+    } else if (deliveryMethod == "portal") {
+      title.push(localization.designview.addParties.invitationPortal);
     }
 
     return title.join(": ");

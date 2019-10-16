@@ -421,6 +421,7 @@ documentCanBeStarted doc = either Just (const Nothing) $ do
       EmailDelivery  -> isValidEmail $ getEmail sl
       MobileDelivery -> isValidPhoneForSMS $ getMobile sl
       EmailAndMobileDelivery -> (isValidPhoneForSMS $ getMobile sl) && (isValidEmail $ getEmail sl)
+      PortalDelivery  -> isValidEmail $ getEmail sl
       _ -> True
 
     signatoryHasValidConfirmationSettings sl = isAuthor sl || case signatorylinkconfirmationdeliverymethod sl of
