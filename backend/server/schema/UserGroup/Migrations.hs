@@ -484,4 +484,9 @@ userGroupAddressAddEntityNameField = Migration {
           , CompositeColumn { ccName = "country", ccType = TextT }
           ]
         }
+      -- Populate Entity Name from the User Group name
+      runQuery_ $ sqlUpdate "user_group_addresses" $ do
+        sqlSetCmd "entity_name" "user_groups.name"
+        sqlFrom "user_groups"
+        sqlWhere "user_group_addresses.user_group_id = user_groups.id"
   }
