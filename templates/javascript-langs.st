@@ -1170,13 +1170,14 @@ javascriptLocalisation =
               , personnumber : "$_personnumber()$"
               , email : "$_email()$"
               , phone : "$_phone()$"
-              , companyname : "$_company()$"
               , companynumber : "$_orgnumber()$"
               , companyposition : "$_companyposition()$"
               , companyaddress : "$_address()$"
               , companyzip :     "$_zip()$"
               , companycity :    "$_city()$"
               , companycountry : "$_country()$"
+              , entityname     : "$_entityname()$"
+              , entitynameExtraInfo: "$_entitynameExtraInfo()$"
               , newEmail       : "$_newemail()$"
               , newEmailAgain  : "$_newemailagain()$"
               , changeEmailCurrentEmail : "$_currentemailaddress()$"
@@ -1205,6 +1206,8 @@ javascriptLocalisation =
                   }
               , deleteUser : "$_delete()$"
               , userDeleted : "$_userDeleted()$"
+              , userGroup : "$_userGroup()$"
+              , userGroupExtraInfo : "$_userGroupExtraInfo()$"
             }
           , apiSettings : {
                 name : "$_apiSettings()$"

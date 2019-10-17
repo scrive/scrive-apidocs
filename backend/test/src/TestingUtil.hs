@@ -253,6 +253,7 @@ instance Arbitrary UserGroupAddress where
     <*> arbitraryUnicodeText
     <*> arbitraryUnicodeText
     <*> arbitraryUnicodeText
+    <*> arbitraryUnicodeText
 
 instance Arbitrary UserGroupUI where
   arbitrary = (UserGroupUI Nothing Nothing Nothing)
@@ -827,6 +828,7 @@ addNewUserGroupWithParent createFolder mparent = do
         fmap (Just . get folderID) . dbUpdate $ FolderCreate defaultFolder
     ugname <- rand 10 (arbText 3 30)
     ugacompanynumber <- rand 10 (arbText 3 30)
+    ugaentityname <- rand 10 (arbText 3 30)
     ugaaddress <- rand 10 (arbText 3 30)
     ugazip <- rand 10 (arbText 3 30)
     ugacity <- rand 10 (arbText 3 30)
@@ -837,6 +839,7 @@ addNewUserGroupWithParent createFolder mparent = do
           $ defaultUserGroup { _ugParentGroupID  = mparent }
         uga = Just $ UserGroupAddress
           { _ugaCompanyNumber = ugacompanynumber
+          , _ugaEntityName    = ugaentityname
           , _ugaAddress       = ugaaddress
           , _ugaZip           = ugazip
           , _ugaCity          = ugacity

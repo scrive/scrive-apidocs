@@ -153,6 +153,7 @@ companyAddressJson uga = do
   value "country"       $ get ugaCountry       uga
   value "zip"           $ get ugaZip           uga
   value "companynumber" $ get ugaCompanyNumber uga
+  value "entityname"    $ get ugaEntityName    uga
 
 companySettingsJson :: UserGroupSettings -> JSONGenT Identity ()
 companySettingsJson ugs = do

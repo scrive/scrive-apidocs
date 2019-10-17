@@ -124,6 +124,7 @@ insertUserGroupAddress ugid uga =
   runQuery_ . sqlInsert "user_group_addresses" $ do
     sqlSet "user_group_id" ugid
     sqlSet "company_number" . get ugaCompanyNumber $ uga
+    sqlSet "entity_name" . get ugaEntityName $ uga
     sqlSet "address" . get ugaAddress $ uga
     sqlSet "zip" . get ugaZip $ uga
     sqlSet "city" . get ugaCity $ uga
@@ -379,6 +380,7 @@ ugSettingsSelectors = [
 ugAddressSelectors :: [SQL]
 ugAddressSelectors = [
     "company_number"
+  , "entity_name"
   , "address"
   , "zip"
   , "city"
@@ -444,7 +446,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m UserGroupsGetFiltered [UserGroup
     where
       findWordInField word fieldName = ("user_group_addresses." <+> fieldName) <+> "ILIKE" <?> sqlwordpat word
       findWordInName word = ("user_groups.name") <+> "ILIKE" <?> sqlwordpat word
-      findWordList word = map (findWordInField word) ["company_number", "address", "zip", "city", "country"]
+      findWordList word = map (findWordInField word) ["company_number", "entity_name", "address", "zip", "city", "country"]
       findWord word = sqlConcatOR $ findWordInName word : findWordList word
       sqlwordpat word = "%" ++ concatMap escape word ++ "%"
       escape '\\' = "\\\\"

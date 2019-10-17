@@ -189,6 +189,7 @@ defaultUserGroupUI = UserGroupUI {
 
 data UserGroupAddress = UserGroupAddress {
     _ugaCompanyNumber :: Text
+  , _ugaEntityName    :: Text
   , _ugaAddress       :: Text
   , _ugaZip           :: Text
   , _ugaCity          :: Text
@@ -198,6 +199,7 @@ data UserGroupAddress = UserGroupAddress {
 defaultUserGroupAddress :: UserGroupAddress
 defaultUserGroupAddress = UserGroupAddress {
     _ugaCompanyNumber = ""
+  , _ugaEntityName    = ""
   , _ugaAddress       = ""
   , _ugaZip           = ""
   , _ugaCity          = ""
@@ -544,6 +546,7 @@ type instance CompositeRow UserGroupAddress = (
   , Text
   , Text
   , Text
+  , Text
   )
 
 instance PQFormat UserGroupAddress where
@@ -552,12 +555,14 @@ instance PQFormat UserGroupAddress where
 instance CompositeFromSQL UserGroupAddress where
   toComposite (
       company_number
+    , entity_name
     , address
     , zip_code
     , city
     , country
     ) = UserGroupAddress {
       _ugaCompanyNumber = company_number
+    , _ugaEntityName    = entity_name
     , _ugaAddress       = address
     , _ugaZip           = zip_code
     , _ugaCity          = city

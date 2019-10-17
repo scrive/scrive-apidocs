@@ -21,6 +21,7 @@ module.exports = Backbone.Model.extend({
     this._positionValidation = validate(V.PositionValidation);
     this._companyNameValidation = validate(V.CompanyNameValidation);
     this._companyNumberValidation = validate(V.CompanyNumberValidation);
+    this._companyEntityNameValidation = validate(V.CompanyNameValidation);
     this._companyAddressValidation = validate(V.CompanyAddressValidation);
     this._companyZipValidation = validate(V.CompanyZipValidation);
     this._companyCityValidation = validate(V.CompanyCityValidation);
@@ -109,6 +110,9 @@ module.exports = Backbone.Model.extend({
   companynumberValid: function (v) {
     return this._companyNumberValidation.validateData(this.companynumber());
   },
+  companyentitynameValid: function (v) {
+    return this._companyEntityNameValidation.validateData(this.companyentityname());
+  },
   companyaddressValid: function (v) {
     return this._companyAddressValidation.validateData(this.companyaddress());
   },
@@ -135,6 +139,12 @@ module.exports = Backbone.Model.extend({
   },
   setCompanynumber: function (v) {
      this.set({"companynumber": v});
+  },
+  companyentityname: function () {
+     return this.get("companyentityname");
+  },
+  setCompanyentityname: function (v) {
+     this.set({"companyentityname": v});
   },
   companyposition: function () {
      return this.get("companyposition");
@@ -188,6 +198,7 @@ module.exports = Backbone.Model.extend({
         lang: this.user().lang() ||  "en",
         companyname: this.company().companyname(),
         companynumber: this.company().companynumber(),
+        companyentityname: this.company().entityname(),
         companyposition: this.user().companyposition(),
         companyaddress: this.company().address(),
         companyzip: this.company().zip(),
@@ -235,6 +246,7 @@ module.exports = Backbone.Model.extend({
     if (this.user().companyadmin()) {
       data["companyname"] = this.companyname();
       data["companynumber"] = this.companynumber();
+      data["companyentityname"] = this.companyentityname();
       data["companyaddress"] = this.companyaddress();
       data["companyzip"] = this.companyzip();
       data["companycity"] = this.companycity();
@@ -282,6 +294,8 @@ module.exports = Backbone.Model.extend({
       return this._companyNameValidation.message();
     } else if (!this.companynumberValid()) {
       return this._companyNumberValidation.message();
+    } else if (!this.companyentitynameValid()) {
+      return this._companyEntityNameValidation.message();
     } else if (!this.companyaddressValid()) {
       return this._companyAddressValidation.message();
     } else if (!this.companyzipValid()) {

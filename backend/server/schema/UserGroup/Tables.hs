@@ -186,7 +186,7 @@ ctUserGroupSettings1 = CompositeType {
 tableUserGroupAddresses :: Table
 tableUserGroupAddresses = tblTable {
     tblName = "user_group_addresses"
-  , tblVersion = 1
+  , tblVersion = 2
   , tblColumns = [
       tblColumn { colName = "user_group_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "company_number", colType = TextT, colNullable = False, colDefault = Just "''::text" }
@@ -194,6 +194,7 @@ tableUserGroupAddresses = tblTable {
     , tblColumn { colName = "zip", colType = TextT, colNullable = False, colDefault = Just "''::text" }
     , tblColumn { colName = "city", colType = TextT, colNullable = False, colDefault = Just "''::text" }
     , tblColumn { colName = "country", colType = TextT, colNullable = False, colDefault = Just "''::text" }
+    , tblColumn { colName = "entity_name", colType = TextT, colNullable = False, colDefault = Just "''::text" }
     ]
   , tblPrimaryKey = pkOnColumn "user_group_id"
   , tblForeignKeys = [
@@ -203,6 +204,19 @@ tableUserGroupAddresses = tblTable {
 
 ctUserGroupAddress :: CompositeType
 ctUserGroupAddress = CompositeType {
+    ctName = "user_group_address_c2"
+  , ctColumns = [
+      CompositeColumn { ccName = "company_number", ccType = TextT }
+    , CompositeColumn { ccName = "entity_name", ccType = TextT }
+    , CompositeColumn { ccName = "address", ccType = TextT }
+    , CompositeColumn { ccName = "zip", ccType = TextT }
+    , CompositeColumn { ccName = "city", ccType = TextT }
+    , CompositeColumn { ccName = "country", ccType = TextT }
+    ]
+  }
+
+ctUserGroupAddress1 :: CompositeType
+ctUserGroupAddress1 = CompositeType {
     ctName = "user_group_address_c1"
   , ctColumns = [
       CompositeColumn { ccName = "company_number", ccType = TextT }

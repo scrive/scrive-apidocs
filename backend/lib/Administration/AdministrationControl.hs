@@ -233,13 +233,14 @@ jsonCompanies = onlySalesOrAdmin $ do
     runJSONGenT $ do
       valueM "companies" $ forM ugsWithAddress $ \(ug, uga) ->
         runJSONGenT $ do
-          value "id"             . show . get ugID $ ug
-          value "companyname"    . T.unpack . get ugName $ ug
-          value "companynumber"  . T.unpack . get ugaCompanyNumber $ uga
-          value "companyaddress" . T.unpack . get ugaAddress       $ uga
-          value "companyzip"     . T.unpack . get ugaZip           $ uga
-          value "companycity"    . T.unpack . get ugaCity          $ uga
-          value "companycountry" . T.unpack . get ugaCountry       $ uga
+          value "id"                . show     . get ugID             $ ug
+          value "companyname"       . T.unpack . get ugName           $ ug
+          value "companynumber"     . T.unpack . get ugaCompanyNumber $ uga
+          value "companyentityname" . T.unpack . get ugaEntityName    $ uga
+          value "companyaddress"    . T.unpack . get ugaAddress       $ uga
+          value "companyzip"        . T.unpack . get ugaZip           $ uga
+          value "companycity"       . T.unpack . get ugaCity          $ uga
+          value "companycountry"    . T.unpack . get ugaCountry       $ uga
 
 jsonUsersList ::Kontrakcja m => m JSValue
 jsonUsersList = onlySalesOrAdmin $ do
@@ -574,12 +575,14 @@ getUserGroupSettingsChange = do
 getUserGroupAddressChange :: Kontrakcja m => m (UserGroupAddress -> UserGroupAddress)
 getUserGroupAddressChange = do
   mcompanynumber  <- getField "companynumber"
+  mentityname     <- getField "entityname"
   mcompanyaddress <- getField "companyaddress"
   mcompanyzip     <- getField "companyzip"
   mcompanycity    <- getField "companycity"
   mcompanycountry <- getField "companycountry"
   return $
       maybe id (set ugaCompanyNumber) mcompanynumber
+    . maybe id (set ugaEntityName) mentityname
     . maybe id (set ugaAddress) mcompanyaddress
     . maybe id (set ugaZip) mcompanyzip
     . maybe id (set ugaCity) mcompanycity

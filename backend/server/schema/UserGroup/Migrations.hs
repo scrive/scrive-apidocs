@@ -460,3 +460,33 @@ userGroupSettingsAddPortalUrl = Migration {
         }
   }
 
+userGroupAddressAddEntityNameField :: MonadDB m => Migration m
+userGroupAddressAddEntityNameField = Migration {
+    mgrTableName = tblName tableUserGroupAddresses
+  , mgrFrom = 1
+  , mgrAction = StandardMigration $ do
+      runQuery_ $ sqlAlterTable (tblName tableUserGroupAddresses)
+        [ sqlAddColumn $ tblColumn
+            { colName     = "entity_name"
+            , colType     = TextT
+            , colNullable = False
+            , colDefault  = Just "''::text"
+            }
+        ]
+      runQuery_ $ sqlCreateComposite $  CompositeType {
+          ctName = "user_group_address_c2"
+        , ctColumns = [
+            CompositeColumn { ccName = "company_number", ccType = TextT }
+          , CompositeColumn { ccName = "entity_name", ccType = TextT }
+          , CompositeColumn { ccName = "address", ccType = TextT }
+          , CompositeColumn { ccName = "zip", ccType = TextT }
+          , CompositeColumn { ccName = "city", ccType = TextT }
+          , CompositeColumn { ccName = "country", ccType = TextT }
+          ]
+        }
+      -- Populate Entity Name from the User Group name
+      runQuery_ $ sqlUpdate "user_group_addresses" $ do
+        sqlSetCmd "entity_name" "user_groups.name"
+        sqlFrom "user_groups"
+        sqlWhere "user_group_addresses.user_group_id = user_groups.id"
+  }
