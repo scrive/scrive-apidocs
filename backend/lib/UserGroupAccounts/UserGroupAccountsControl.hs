@@ -20,7 +20,7 @@ import qualified Data.Text as T
 
 import AccessControl.Model
 import AccessControl.Types
-import API.V2.Utils (apiAccessControl)
+import API.V2.Utils (accessControlLoggedIn)
 import DB
 import Folder.Model
 import Happstack.Fields
@@ -296,8 +296,9 @@ handleChangeRoleOfUserGroupAccount = do
   ugid <- usergroupid <$> (guardJustM $ dbQuery . GetUserByID $ changeid)
   makeadmin <- getField "makeadmin"
   -- cf. `roleToAccessPolicyReq`
-  apiAccessControl [ mkAccPolicyItem (CreateA, UserPolicyR, changeid)
-                   , mkAccPolicyItem (CreateA, UserGroupPolicyR, ugid) ] $ do
+  let acc = [ mkAccPolicyItem (CreateA, UserPolicyR, changeid)
+            , mkAccPolicyItem (CreateA, UserGroupPolicyR, ugid) ]
+  accessControlLoggedIn acc $ do
     void $ dbUpdate $ SetUserCompanyAdmin changeid (makeadmin == Just "true")
     runJSONGenT $ value "changed" True
 
