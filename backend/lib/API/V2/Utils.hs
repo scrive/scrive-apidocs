@@ -1,5 +1,6 @@
 module API.V2.Utils
     ( apiAccessControl
+    , accessControlLoggedIn
     , apiAccessControlOrIsAdmin
     , checkAdminOrSales
     , folderOrAPIError
@@ -23,6 +24,7 @@ import OAuth.Model
 import User.Model
 import UserGroup.Model
 import UserGroup.Types
+import Util.MonadUtils
 
 apiAccessControlImpl :: Kontrakcja m => AccessPolicy -> m a -> m a -> m a
 apiAccessControlImpl acc failAction successAction = do
@@ -43,6 +45,12 @@ apiAccessControlOrIsAdmin acc successAction = do
   -- If scrive admin or sales, should perform action anyway (unless non-existance error)
   let failAction = if isAdminOrSales then successAction else apiError insufficientPrivileges
   apiAccessControlImpl acc failAction successAction
+
+accessControlLoggedIn :: Kontrakcja m => AccessPolicy -> m a -> m a
+accessControlLoggedIn acc successAction = do
+  user <- guardJustM $ ((get ctxmaybeuser) <$> getContext)
+  roles <- dbQuery . GetRoles $ user
+  accessControl roles acc internalError successAction
 
 checkAdminOrSales :: Kontrakcja m => m Bool
 checkAdminOrSales = (isApiAdmin || isApiSales) <$> getContext
