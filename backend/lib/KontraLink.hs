@@ -123,7 +123,7 @@ instance Show KontraLink where
     showsPrec _ (LinkPortalInviteWithAccount portalUrl email) =
       (<>) (T.unpack portalUrl <> "/portal_invite/exists?email=" <> urlEncode (T.unpack $ unEmail email))
     showsPrec _ (LinkPortalInviteWithoutAccount portalUrl email token utctime) =
-      (<>) (T.unpack portalUrl <> "/portal_invite/new?email=" <> urlEncode (T.unpack $ unEmail email) <> "?token=" <> show token <> "&expires=" <> urlEncode (formatTimeISO utctime))
+      (<>) (T.unpack portalUrl <> "/portal_invite/new?email=" <> urlEncode (T.unpack $ unEmail email) <> "&token=" <> show token <> "&expires=" <> urlEncode (formatTimeISO utctime))
 
 setParams :: URI -> [(Text, Text)] -> URI
 setParams uri params = uri { uriQuery = "?" <> vars }
