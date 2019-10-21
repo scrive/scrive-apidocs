@@ -1,6 +1,7 @@
 {-# LANGUAGE ExistentialQuantification #-}
 module AccessControl.Types
   ( accessControl
+  , accessControlPure
   , toAccessRoleType
   , AccessAction(..)
   , AccessPolicy
@@ -220,6 +221,7 @@ hasPermissions (FolderUserAR fid) =
 class NeedsPermissions s where
   neededPermissions :: (MonadCatch m, MonadDB m, MonadThrow m)
                     => s -> m NeededPermissionsExpr
+  neededPermissionsPure :: s -> NeededPermissionsExpr
 
 data UserGroupNonExistent = UserGroupNonExistent UserGroupID
   deriving (Eq, Ord, Show, Typeable)
@@ -261,6 +263,8 @@ instance NeedsPermissions (AccessAction, AccessResource, UserGroupID) where
         let mkExprBase g = NeededPermissionsExprBase
                              (Permission action resource $ get ugID g)
         return . NeededPermissionsExprOr . map mkExprBase $ ugwpToList ugwp
+  neededPermissionsPure (action, resource, usrGrpID) =
+    NeededPermissionsExprBase $ Permission action resource usrGrpID
 
 instance NeedsPermissions (AccessAction, AccessResource, FolderID) where
   neededPermissions (action, resource, fid) = do
@@ -271,6 +275,8 @@ instance NeedsPermissions (AccessAction, AccessResource, FolderID) where
         let mkExprBase g = NeededPermissionsExprBase
                              (Permission action resource $ get folderID g)
         return . NeededPermissionsExprOr . map mkExprBase $ (folder:folderParents)
+  neededPermissionsPure (action, resource, fid) =
+    NeededPermissionsExprBase $ Permission action resource fid
 
 instance NeedsPermissions (AccessAction, AccessResource, UserID) where
   neededPermissions (action, resource, usrID) =
@@ -283,17 +289,27 @@ instance NeedsPermissions (AccessAction, AccessResource, UserID) where
           [ NeededPermissionsExprBase . Permission action resource $ usrID
           , groupPermissions
           ]
+  neededPermissionsPure (action, resource, usrID) =
+    NeededPermissionsExprBase $ Permission action resource usrID
 
 instance NeedsPermissions AccessPolicyItem where
   neededPermissions (AccessPolicyItem t) = neededPermissions t
+  neededPermissionsPure (AccessPolicyItem t) = neededPermissionsPure t
 
 accessControl :: (MonadCatch m, MonadDB m, MonadThrow m, MonadLog m)
               => [AccessRole] -> AccessPolicy -> m a -> m a -> m a
 accessControl roles accessPolicy err ma = do
-  let accHad = nub . join $ map (hasPermissions . accessRoleTarget) roles
   accNeeded <- NeededPermissionsExprAnd <$> mapM neededPermissions accessPolicy
-  let cond = evalNeededPermExpr (`elem` accHad) accNeeded
-  if cond then ma else err
+  if accessControlCheck roles accNeeded then ma else err
+
+accessControlCheck :: [AccessRole] -> NeededPermissionsExpr -> Bool
+accessControlCheck roles accNeeded =
+  let accHad = nub . join $ map (hasPermissions . accessRoleTarget) roles
+  in  evalNeededPermExpr (`elem` accHad) accNeeded
+
+accessControlPure :: [AccessRole] -> AccessPolicy -> Bool
+accessControlPure roles accessPolicy =
+  accessControlCheck roles . NeededPermissionsExprAnd $ map neededPermissionsPure accessPolicy
 
 -- IO (DB, frontend) boilerplate
 
