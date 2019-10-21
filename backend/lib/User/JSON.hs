@@ -60,6 +60,7 @@ userJSONUserDetails user = do
     value "fstname" $ getFirstName user
     value "sndname" $ getLastName user
     value "email" $ getEmail user
+    value "home_folder_id" $ userhomefolderid user
     value "twofactor_active" $ usertotpactive user
     value "twofactor_is_mandatory" $ usertotpismandatory user
     value "personalnumber" $ getPersonalNumber user
@@ -114,6 +115,7 @@ companyJSON ugwp = do
   runJSONGen $ do
     value "companyid" . show . get ugID $ ugwpUG ugwp
     value "companyname" . get ugName $ ugwpUG ugwp
+    value "companyhomefolderid" . get ugHomeFolderID $ ugwpUG ugwp
     companyAddressJson $ ugwpAddress ugwp
     companySettingsJson $ ugwpSettings ugwp
 

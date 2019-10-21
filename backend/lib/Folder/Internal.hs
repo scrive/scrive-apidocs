@@ -15,6 +15,7 @@ import Data.Int
 import Data.Text (Text, pack)
 import Data.Unjson
 import Happstack.Server
+import Text.JSON.ToJSValue
 import qualified Data.Text as T
 
 import DB
@@ -84,6 +85,9 @@ instance Unjson FolderID where
     ((maybe (fail "Can't parse FolderID") return) . maybeRead . T.pack)
     show
     unjsonDef
+
+instance ToJSValue FolderID where
+  toJSValue (FolderID k) = toJSValue $ show k
 
 instance ToJSON FolderID where
   toJSON (FolderID k) = toJSON . pack $ show k
