@@ -203,31 +203,26 @@ updateIDINTransactionAfterCheck slid est ts mctd = do
          (EIDServiceTransactionStatusCompleteAndSuccess, Just cd) -> do
             doc <- dbQuery $ GetDocumentBySignatoryLinkID slid
             let sl = fromJust $ getSigLinkFor slid doc
-            if (eiditdVerifiedEmail cd == getEmail sl)
-            then do
-              mergeEIDServiceTransactionWithStatus EIDServiceTransactionStatusCompleteAndSuccess
-              let auth = EIDServiceIDINAuthentication {
-                     eidServiceIDINName = eiditdName cd
-                   , eidServiceIDINVerifiedEmail = Just $ eiditdVerifiedEmail cd
-                   , eidServiceIDINVerifiedPhone = Nothing
-                   , eidServiceIDINBirthDate = Just $ eiditdBirthDate cd
-                   , eidServiceIDINCustomerID = Just $ eiditCumstomerID cd
-                   }
-              sessionID <- getNonTempSessionID
-              dbUpdate $ MergeEIDServiceIDINAuthentication (mkAuthKind doc) sessionID slid auth
-              ctx <- getContext
-              let eventFields = do
-                    F.value "signatory_name" $ eiditdName cd
-                    F.value "provider_idin" True
-              withDocument doc $ do
-                void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg
-                  AuthenticatedToViewEvidence (eventFields) (Just sl) Nothing
-                    =<< signatoryActor ctx sl
-                dbUpdate $ ChargeUserGroupForIDINAuthentication (documentid doc)
-              return EIDServiceTransactionStatusCompleteAndSuccess
-            else do
-              mergeEIDServiceTransactionWithStatus EIDServiceTransactionStatusCompleteAndFailed
-              return EIDServiceTransactionStatusCompleteAndFailed
+            mergeEIDServiceTransactionWithStatus EIDServiceTransactionStatusCompleteAndSuccess
+            let auth = EIDServiceIDINAuthentication {
+                    eidServiceIDINName = eiditdName cd
+                  , eidServiceIDINVerifiedEmail = Just $ eiditdVerifiedEmail cd
+                  , eidServiceIDINVerifiedPhone = Nothing
+                  , eidServiceIDINBirthDate = Just $ eiditdBirthDate cd
+                  , eidServiceIDINCustomerID = Just $ eiditCumstomerID cd
+                  }
+            sessionID <- getNonTempSessionID
+            dbUpdate $ MergeEIDServiceIDINAuthentication (mkAuthKind doc) sessionID slid auth
+            ctx <- getContext
+            let eventFields = do
+                  F.value "signatory_name" $ eiditdName cd
+                  F.value "provider_idin" True
+            withDocument doc $ do
+              void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg
+                AuthenticatedToViewEvidence (eventFields) (Just sl) Nothing
+                  =<< signatoryActor ctx sl
+              dbUpdate $ ChargeUserGroupForIDINAuthentication (documentid doc)
+            return EIDServiceTransactionStatusCompleteAndSuccess
          (EIDServiceTransactionStatusCompleteAndSuccess, Nothing) -> do
            mergeEIDServiceTransactionWithStatus EIDServiceTransactionStatusCompleteAndFailed
            return EIDServiceTransactionStatusCompleteAndFailed
