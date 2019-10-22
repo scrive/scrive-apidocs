@@ -117,9 +117,19 @@ smsInvitationToAuthor
 smsInvitationToAuthor doc sl = do
   mkSMS doc sl (Just $ DocumentInvitationSMS (documentid doc) (signatorylinkid sl)) =<< renderLocalTemplate doc "_smsInvitationToAuthor" (smsFields doc >> smsInvitationLinkFields doc sl)
 
-smsReminder :: ( CryptoRNG m, MailContextMonad m, MonadDB m
-               , MonadThrow m, MonadTime m, TemplatesMonad m )
-            => Bool -> Document -> SignatoryLink -> m SMS
+-- brittany-disable-next-binding
+smsReminder
+  :: ( CryptoRNG m
+     , MailContextMonad m
+     , MonadDB m
+     , MonadThrow m
+     , MonadTime m
+     , TemplatesMonad m
+     )
+  => Bool
+  -> Document
+  -> SignatoryLink
+  -> m SMS
 smsReminder automatic doc sl = do
   contents <- renderLocalTemplate doc template $ do
     smsFields doc
@@ -127,20 +137,20 @@ smsReminder automatic doc sl = do
       then smsConfirmationLinkFields doc sl
       else smsInvitationLinkFields doc sl
   mkSMS doc sl smstypesignatory contents
-  where
-    (smstypesignatory, template) =
-      if | isSignatoryAndHasSigned sl || isApproverAndHasApproved sl
-                         -> ( Just $ (OtherDocumentSMS $ documentid doc)
-                            , templateName "_smsReminderSigned" )
-         | automatic && isApprover sl
-                         -> ( invitation
-                            , templateName "_smsReminderApproveAutomatic" )
-         | automatic     -> ( invitation, templateName "_smsReminderAutomatic" )
-         | isApprover sl -> ( invitation, templateName "_smsReminderApprove" )
-         | otherwise     -> ( invitation, templateName "_smsReminder" )
+ where
+  (smstypesignatory, template) = if
+    | isSignatoryAndHasSigned sl || isApproverAndHasApproved sl
+      -> (Just $ (OtherDocumentSMS $ documentid doc), templateName "_smsReminderSigned")
+    | automatic && isApprover sl
+      -> (invitation, templateName "_smsReminderApproveAutomatic")
+    | automatic
+      -> (invitation, templateName "_smsReminderAutomatic")
+    | isApprover sl
+      -> (invitation, templateName "_smsReminderApprove")
+    | otherwise
+      -> (invitation, templateName "_smsReminder")
 
-    invitation = Just $ DocumentInvitationSMS
-                        (documentid doc) (signatorylinkid sl)
+  invitation = Just $ DocumentInvitationSMS (documentid doc) (signatorylinkid sl)
 
 smsClosedNotification
   :: ( CryptoRNG m, MailContextMonad m, MonadDB m, MonadTime m, MonadThrow m
