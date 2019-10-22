@@ -4,7 +4,7 @@ set -eax
 
 script_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"
 
-KONTRAKCJA_WORKSPACE=${KONTRAKCJA_WORKSPACE:-"."}
+KONTRAKCJA_WORKSPACE=${KONTRAKCJA_WORKSPACE:-`pwd -P`}
 db_path="$KONTRAKCJA_WORKSPACE/_local/data"
 
 LANG=${LANG:-"C.UTF-8"}

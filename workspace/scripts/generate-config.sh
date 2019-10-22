@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 script_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"
-KONTRAKCJA_ROOT=${KONTRAKCJA_ROOT:-"."}
+KONTRAKCJA_ROOT=${KONTRAKCJA_ROOT:-`pwd -P`}
 KONTRAKCJA_WORKSPACE=${KONTRAKCJA_WORKSPACE:-"$KONTRAKCJA_ROOT"}
 
 echo "Generating config files at $KONTRAKCJA_WORKSPACE"

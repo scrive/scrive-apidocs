@@ -2,7 +2,7 @@
 
 trap 'kill 0' EXIT
 
-export KONTRAKCJA_ROOT=${KONTRAKCJA_ROOT:-"."}
+export KONTRAKCJA_ROOT=${KONTRAKCJA_ROOT:-`pwd -P`}
 export KONTRAKCJA_WORKSPACE=${KONTRAKCJA_WORKSPACE:-"$KONTRAKCJA_ROOT"}
 
 echo "Running Kontrakcja services"

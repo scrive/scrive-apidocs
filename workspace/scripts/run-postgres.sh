@@ -2,7 +2,7 @@
 
 set -eax
 
-KONTRAKCJA_WORKSPACE=${KONTRAKCJA_WORKSPACE:-"."}
+KONTRAKCJA_WORKSPACE=${KONTRAKCJA_WORKSPACE:-`pwd -P`}
 db_path="$KONTRAKCJA_WORKSPACE/_local/data"
 
 if [[ ! -e "$db_path/postmaster.pid" ]]; then
