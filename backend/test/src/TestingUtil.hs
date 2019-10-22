@@ -1145,14 +1145,7 @@ data RandomDocumentAllows = RandomDocumentAllows
 rdaDefault :: User -> RandomDocumentAllows
 rdaDefault user = RandomDocumentAllows
   { rdaTypes       = OneOf documentAllTypes
-  , rdaStatuses    = OneOf [ Preparation
-                           , Pending
-                           , Closed
-                           , Canceled
-                           , Timedout
-                           , Rejected
-                           , DocumentError
-                           ]
+  , rdaStatuses    = OneOf documentAllStatuses
   , rdaSharings    = OneOf documentAllSharings
   , rdaSignatories = OneOf $ map (`replicate` freeSignatory) [1..10]
   , rdaAuthor      = user
@@ -1174,11 +1167,7 @@ randomSigLinkByStatus Closed = do
         { maybesigninfo = Just sign
         , maybeseeninfo = Just seen
         }
-    else do
-      seen <- arbitrary
-      return sl { maybesigninfo = Nothing
-                , maybeseeninfo = Just seen
-                }
+    else return sl { maybesigninfo = Nothing }
 
 randomSigLinkByStatus Preparation = do
   (sl) <- arbitrary

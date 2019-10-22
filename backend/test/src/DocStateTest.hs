@@ -576,7 +576,7 @@ testDocumentAuthorUserID = do
     , rdaStatuses = OneOf [Pending]
     , rdaSignatories =
         let signatory = OneOf
-              [ AllOf [ RSC_IsSignatoryThatHasntSigned
+              [ AllOf [ RSC_IsSignatory
                       , RSC_AuthToSignIs StandardAuthenticationToSign
                       ]
               ]
@@ -1506,8 +1506,7 @@ testGetTimedOutButPendingDocuments = replicateM_ 1 $ do
     , rdaTimeoutTime = True
     }
   _doc2 <- addRandomDocument (rdaDefault author)
-    { rdaTypes = OneOf [Signable]
-    , rdaStatuses = OneOf $ documentAllStatuses \\ [Pending]
+    { rdaStatuses = OneOf $ documentAllStatuses \\ [Pending]
     }
 
   let t = fromJust $ documenttimeouttime doc
