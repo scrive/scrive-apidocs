@@ -15,8 +15,15 @@ new APICallV2({
     'v1': 'Create from template'
   },
   params: [
-          window.APIV2CallParamDocumentID,
-          window.APIV2CallParamObjectVersion
+          window.APIV2CallParamDocumentID
+          , window.APIV2CallParamObjectVersion
+          , new APICallParam({
+              type: "text",
+              argName: "folder_id",
+              sendAsParam: true,
+              optional: true,
+              description: "ID of the folder to save the document to"
+          })
         ]
 });
 

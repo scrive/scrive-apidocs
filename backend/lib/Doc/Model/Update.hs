@@ -36,6 +36,7 @@ module Doc.Model.Update
   , SetDaysToSign(..)
   , SetDocumentInviteTime(..)
   , SetDocumentLang(..)
+  , SetDocumentFolderID(..)
   , SetDocumentSharing(..)
   , SetDocumentUnsavedDraft(..)
   , SetDocumentTags(..)
@@ -121,6 +122,7 @@ import EID.Signature.Model
 import EvidenceLog.Model
 import File.FileID
 import File.Storage
+import Folder.Types
 import IPAddress
 import Log.Identifier
 import MagicHash
@@ -1116,9 +1118,9 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpd
         actor
     return success
 
-data NewDocument = NewDocument User Text DocumentType TimeZoneName Int Actor
+data NewDocument = NewDocument User Text DocumentType TimeZoneName Int Actor (Maybe FolderID)
 instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, MonadBase IO m) => DBUpdate m NewDocument Document where
-  update (NewDocument user title documenttype timezone nrOfOtherSignatories actor) = do
+  update (NewDocument user title documenttype timezone nrOfOtherSignatories actor desiredFolderId) = do
     let ctime = actorTime actor
     authorFields <- signatoryFieldsFromUser user
     let authorlink0 = signLinkFromDetails' authorFields True
@@ -1141,7 +1143,7 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m, MonadLog m, TemplatesMonad m, Mo
                   , documentauthorattachments    = []
                   , documentmagichash            = token
                   , documenttimezonename         = timezone
-                  , documentfolderid             = userhomefolderid user
+                  , documentfolderid             = desiredFolderId <|> userhomefolderid user
                   }
 
     insertDocument doc
@@ -1479,6 +1481,10 @@ instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocu
 data SetDocumentLang = SetDocumentLang Lang Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocumentLang Bool where
   update (SetDocumentLang lang _actor) = updateWithoutEvidence "lang" lang
+
+data SetDocumentFolderID = SetDocumentFolderID FolderID Actor
+instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m SetDocumentFolderID Bool where
+  update (SetDocumentFolderID folderId _actor) = updateWithoutEvidence "folder_id" folderId
 
 data SetEmailInvitationDeliveryStatus = SetEmailInvitationDeliveryStatus SignatoryLinkID DeliveryStatus Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m, MonadTime m) => DBUpdate m SetEmailInvitationDeliveryStatus Bool where
@@ -2160,6 +2166,9 @@ data UpdateDraft = UpdateDraft Document Actor
 instance (DocumentMonad m, TemplatesMonad m, MonadThrow m) => DBUpdate m UpdateDraft Bool where
   update (UpdateDraft document actor) = updateDocument $ const $ and <$> sequence [
       update $ SetDocumentTitle (documenttitle document) actor
+    , update $ maybe (unexpectedError "folder_id should have a value") 
+                       (\fid -> SetDocumentFolderID fid actor)
+                       (documentfolderid document)
     , update $ SetDaysToSign (documentdaystosign document) actor
     , update $ SetDaysToRemind (documentdaystoremind document) actor
     , update $ SetDocumentLang (getLang document) actor

@@ -144,7 +144,7 @@ handleNewDocument' user ugwp = do
   timestamp <- formatTimeSimpleWithTZ timezone (get ctxtime ctx)
   doc <- dbUpdate $
          NewDocument user (T.replace "  " " " $ title <> " " <> timestamp)
-                     Signable timezone 1 actor
+                     Signable timezone 1 actor Nothing
   -- Default document on the frontend has different requirements,
   -- this sets up the signatories to match those requirements.
   (authToView, authToSign, invitationDelivery, confirmationDelivery) <- do

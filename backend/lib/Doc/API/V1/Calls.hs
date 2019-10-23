@@ -188,7 +188,7 @@ apiCallV1CreateFromFile = api $ do
       return (Just fileid', T.pack $ takeBaseName filename)
   mtimezone <- getField "timezone"
   timezone <- fromMaybe defaultTimeZoneName <$> T.sequence (mkTimeZoneName <$> mtimezone)
-  (dbUpdate $ NewDocument user title doctype timezone 0 actor) `withDocumentM` do
+  (dbUpdate $ NewDocument user title doctype timezone 0 actor Nothing) `withDocumentM` do
     when_ (not $ external) $ dbUpdate $ SetDocumentUnsavedDraft True
     case mfile of
       Nothing -> return ()

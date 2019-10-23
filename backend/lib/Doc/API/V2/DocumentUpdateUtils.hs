@@ -55,6 +55,7 @@ applyDraftDataToDocument draft actor = do
                                 , documentapiv2callbackurl = documentapiv2callbackurl draft
                                 , documenttimezonename = documenttimezonename draft
                                 , documentshowarrow = documentshowarrow draft
+                                , documentfolderid = documentfolderid draft
                                 } actor
     -- Only allow transition from 'unsaveddraft: true' to 'unsaveddraft: false'
     whenM ((\doc -> (documentunsaveddraft doc) && not (documentunsaveddraft draft)) <$> theDocument) $ do

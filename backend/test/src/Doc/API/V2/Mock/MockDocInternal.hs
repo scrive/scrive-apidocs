@@ -4,6 +4,7 @@ import Data.Unjson
 
 import Doc.API.V2.JSON.Misc (unjsonSignatoryRole)
 import Doc.Types.SignatoryLink (SignatoryRole(..))
+import Folder.Types
 
 data MockDoc = MockDoc {
     mockDocId                 :: !String
@@ -28,6 +29,7 @@ data MockDoc = MockDoc {
   , mockDocAccessToken        :: !(Maybe String)
   , mockDocTimezone           :: !String
   , mockDocTags               :: ![(String, String)]
+  , mockDocFolderId           :: !(Maybe FolderID)
   , mockDocIsTemplate         :: !Bool
   , mockDocIsSaved            :: !Bool
   , mockDocIsShared           :: !Bool
@@ -82,6 +84,8 @@ mockDocUnjson = objectOf $ pure MockDoc
       "MockDoc Timezone"
   <*> field    "tags"                 mockDocTags
       "MockDoc Tags"
+  <*> fieldOpt "folder_id"            mockDocFolderId
+      "MockDoc FolderID"
   <*> field    "is_template"          mockDocIsTemplate
       "MockDoc IsTemplate"
   <*> field    "is_saved"             mockDocIsSaved

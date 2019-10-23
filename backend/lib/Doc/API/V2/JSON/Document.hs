@@ -65,6 +65,7 @@ unjsonDocument da = objectOf $
         <**> (pure (\t d -> d { documenttype = if t then Template else Signable } )))
   <**> (field "is_saved" (not . documentunsaveddraft) "Whether document is saved"
         <**> (pure (\t d -> d { documentunsaveddraft = not t } )))
+  <**> (fieldOpt "folder_id" documentfolderid "ID of folder where document is stored" <**> (pure $ \mFid d -> d { documentfolderid = mFid }))
   <*   (fieldReadonly "is_shared" isDocumentShared "Document is a template and is shared within company")
   <*   (fieldReadonly "is_trashed" (propertyForCurrentSignatory da (isJust . signatorylinkdeleted)) "Whether document is in Trash")
   <*   (fieldReadonly "is_deleted" (propertyForCurrentSignatory da (isJust . signatorylinkreallydeleted)) "Whether document has been deleted")

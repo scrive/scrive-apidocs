@@ -9,6 +9,8 @@ module Doc.API.V2.Guards (
 , guardThatObjectVersionMatchesIfProvided
 , guardThatConsentModulesAreOnSigningParties
 , guardThatAttachmentDetailsAreConsistent
+, guardDocumentMoveIsAllowed
+, guardDocumentCreateInFolderIsAllowed
 -- * User guards
 , guardThatUserExists
 , guardThatUserIsAuthor
@@ -43,9 +45,11 @@ import Data.Either (rights)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.Text as T
 
+import AccessControl.Types
 import API.V2
 import API.V2.Errors
 import API.V2.Parameters
+import API.V2.Utils
 import DB
 import Doc.API.V2.DocumentAccess
 import Doc.API.V2.JSON.AttachmentDetails
@@ -62,6 +66,7 @@ import Doc.Model.Query
 import Doc.SignatoryLinkID
 import Doc.Tokens.Model
 import File.FileID
+import Folder.Types
 import InputValidation
 import Kontra
 import OAuth.Model (APIPrivilege(..))
@@ -169,6 +174,21 @@ guardThatAttachmentDetailsAreConsistent ads = do
     hasDuplicates :: Eq a => [a] -> Bool
     hasDuplicates [] = False
     hasDuplicates (x:xs) = x `elem` xs || hasDuplicates xs
+
+guardFolderActionIsAllowed :: Kontrakcja m => [(AccessAction, FolderID)] -> m ()
+guardFolderActionIsAllowed acts_fids = 
+  apiAccessControlWithAnyPrivileges [mkAccPolicyItem (act, DocumentR, fid) | (act,fid) <- acts_fids ] $
+    return ()
+
+guardDocumentCreateInFolderIsAllowed :: Kontrakcja m => FolderID -> m ()
+guardDocumentCreateInFolderIsAllowed location = guardFolderActionIsAllowed [(CreateA,location)]
+
+guardDocumentMoveIsAllowed :: Kontrakcja m => Maybe FolderID -> Maybe FolderID -> m ()
+guardDocumentMoveIsAllowed mOldLocation mNewLocation = do
+  when (mOldLocation /= mNewLocation) $ do
+    case mNewLocation of
+      Nothing -> apiError $ requestParameterInvalid "document" "folder_id has to be set to some value"
+      _ -> guardFolderActionIsAllowed . catMaybes $ [(CreateA,) <$> mNewLocation, (DeleteA,) <$> mOldLocation] 
 
 guardGetSignatoryFromIdForDocument :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m SignatoryLink
 guardGetSignatoryFromIdForDocument slid = do

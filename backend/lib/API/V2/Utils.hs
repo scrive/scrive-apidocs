@@ -2,6 +2,7 @@ module API.V2.Utils
     ( apiAccessControl
     , accessControlLoggedIn
     , apiAccessControlOrIsAdmin
+    , apiAccessControlWithAnyPrivileges
     , checkAdminOrSales
     , folderOrAPIError
     , isApiAdmin
@@ -26,25 +27,31 @@ import UserGroup.Model
 import UserGroup.Types
 import Util.MonadUtils
 
-apiAccessControlImpl :: Kontrakcja m => AccessPolicy -> m a -> m a -> m a
-apiAccessControlImpl acc failAction successAction = do
-  apiuser <- fst <$> getAPIUser APIPersonal
+userAccessControlImpl :: Kontrakcja m => User -> AccessPolicy -> m a -> m a -> m a
+userAccessControlImpl apiuser acc failAction successAction = do
   roles <- dbQuery . GetRoles $ apiuser
   accessControl roles acc failAction successAction
     `catchDBExtraException` (\(UserNonExistent _) -> apiError insufficientPrivileges)
     `catchDBExtraException` (\(UserGroupNonExistent _) -> apiError insufficientPrivileges)
     `catchDBExtraException` (\(FolderNonExistent _) -> apiError insufficientPrivileges)
 
+apiAccessControlWithAnyPrivileges :: Kontrakcja m => AccessPolicy -> m a -> m a
+apiAccessControlWithAnyPrivileges acc successAction = do
+  user <- fst <$> getAPIUserWithAnyPrivileges
+  userAccessControlImpl user acc (apiError insufficientPrivileges) successAction
+
 apiAccessControl :: Kontrakcja m => AccessPolicy -> m a -> m a
 apiAccessControl acc successAction = do
-  apiAccessControlImpl acc (apiError insufficientPrivileges) successAction
+  apiuser <- fst <$> getAPIUserWithPrivileges [APIPersonal]
+  userAccessControlImpl apiuser acc (apiError insufficientPrivileges) successAction
 
 apiAccessControlOrIsAdmin :: Kontrakcja m => AccessPolicy -> m a -> m a
 apiAccessControlOrIsAdmin acc successAction = do
   isAdminOrSales <- checkAdminOrSales
   -- If scrive admin or sales, should perform action anyway (unless non-existance error)
   let failAction = if isAdminOrSales then successAction else apiError insufficientPrivileges
-  apiAccessControlImpl acc failAction successAction
+  apiuser <- fst <$> getAPIUserWithPrivileges [APIPersonal]
+  userAccessControlImpl apiuser acc failAction successAction
 
 accessControlLoggedIn :: Kontrakcja m => AccessPolicy -> m a -> m a
 accessControlLoggedIn acc successAction = do

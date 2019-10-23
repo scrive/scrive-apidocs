@@ -59,7 +59,7 @@ sendDocumentMails author = do
       void $ dbUpdate $ SetUserSettings (userid author) $ (usersettings author) { lang = l }
       let aa = authorActor ctx author
       req <- mkRequest POST []
-      runTestKontra req ctx $ (randomUpdate (NewDocument author "Document title" Signable defaultTimeZoneName 0 aa)) `withDocumentM` do
+      runTestKontra req ctx $ (randomUpdate (NewDocument author "Document title" Signable defaultTimeZoneName 0 aa Nothing)) `withDocumentM` do
         res <- dbUpdate $ SetDocumentLang l (systemActor $ get ctxtime ctx)
         unless res $
           unexpectedError "Expected True"

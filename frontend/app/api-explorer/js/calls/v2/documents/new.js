@@ -43,6 +43,13 @@ new APICallV2({
                           and thus appear in the E-archive.",
             defaultValue: true
           })
+        , new APICallParam({
+            type: "text",
+            argName: "folder_id",
+            sendAsParam: true,
+            optional: true,
+            description: "ID of the folder to save the document to"
+        })
         ]
 });
 

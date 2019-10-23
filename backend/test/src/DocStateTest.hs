@@ -827,7 +827,7 @@ performNewDocumentWithRandomUser mug doctype title = do
   user <- maybe addNewRandomUser (\ug -> addNewRandomUserGroupUser (get ugID ug) False) mug
   ctx <- mkContext defaultLang
   let aa = authorActor ctx user
-  doc <- randomUpdate $ NewDocument user (T.pack title) doctype defaultTimeZoneName 0 aa
+  doc <- randomUpdate $ NewDocument user (T.pack title) doctype defaultTimeZoneName 0 aa Nothing
   return (user, get ctxtime ctx, doc)
 
 assertGoodNewDocument :: Maybe UserGroupWithParents -> DocumentType -> String -> (User, UTCTime, Document) -> TestEnv ()
@@ -1324,7 +1324,7 @@ testNewDocumentDependencies = replicateM_ 10 $ do
   -- execute
   ctx <- mkContext defaultLang
   let aa = authorActor ctx author
-  doc <- randomUpdate $ (\title doctype -> NewDocument author (fromSNN title) doctype defaultTimeZoneName 0 aa)
+  doc <- randomUpdate $ (\title doctype -> NewDocument author (fromSNN title) doctype defaultTimeZoneName 0 aa Nothing)
   -- assert
   assertInvariants doc
 
@@ -1334,7 +1334,7 @@ testDocumentCanBeCreatedAndFetchedByID = replicateM_ 10 $ do
   author <- addNewRandomUser
   ctx <- mkContext defaultLang
   let aa = authorActor ctx author
-  doc <- randomUpdate $ (\title doctype -> NewDocument author (fromSNN title) doctype defaultTimeZoneName 0 aa)
+  doc <- randomUpdate $ (\title doctype -> NewDocument author (fromSNN title) doctype defaultTimeZoneName 0 aa Nothing)
   -- execute
   ndoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   -- assert

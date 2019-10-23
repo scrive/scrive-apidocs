@@ -25,6 +25,7 @@ module Doc.API.V2.Mock.TestUtils (
 , getMockDocTitle
 , getMockDocStatus
 , getMockDocDaysToSign
+, getMockDocFolderId
 , getMockDocHasFile
 , getMockDocFileId
 , getMockDocFileName
@@ -81,6 +82,7 @@ import Doc.Types.SignatoryLink
   , SignatoryRole(..) )
 
 import File.FileID
+import Folder.Types
 import TestKontra
 
 -- * MockDoc Helper Functions
@@ -156,6 +158,9 @@ getMockDocStatus md = case mockDocStatus md of
   _ -> unexpectedError $ T.pack $
        "Could not parse MockDoc status to DocumentStatus: "
        <> mockDocStatus md
+
+getMockDocFolderId :: MockDoc -> Maybe FolderID
+getMockDocFolderId = mockDocFolderId
 
 getMockDocDaysToSign :: MockDoc -> Int
 getMockDocDaysToSign = mockDocDaysToSign

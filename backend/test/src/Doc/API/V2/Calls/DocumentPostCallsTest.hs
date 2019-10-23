@@ -18,8 +18,7 @@ import Doc.API.V2.Guards
 import Doc.API.V2.Mock.TestUtils
 import Doc.Class
 import Doc.DocumentMonad (withDocumentID)
-import Doc.Model.Query
-import Doc.Model.Update
+import Doc.Model
 import Doc.Types.Document
 import Doc.Types.DocumentStatus (DocumentStatus(..))
 import Doc.Types.SignatoryAccessToken
@@ -27,6 +26,7 @@ import Doc.Types.SignatoryConsentQuestion (SignatoryConsentQuestion(..))
 import Doc.Types.SignatoryLink (SignatoryLink(..))
 import EvidenceLog.Model
 import File.Model
+import Folder.Model
 import Generators.DocumentGenerators
 import Generators.OccurenceControl
 import TestingUtil
@@ -68,6 +68,8 @@ apiV2DocumentPostCallsTests env = testGroup "APIv2DocumentPostCalls"
 
   , testThat "API v2 Update fails when a consent module is defined for a non-signing party"
              env testDocApiV2SigUpdateFailsIfConsentModuleOnNonSigningParty
+  , testThat "Test API v2 'update' changing folder_id for document"
+             env testDocInFolder
   , testThat "API v2 Update sets responses to null in the consent module"
              env testDocApiV2SigUpdateNoConsentResponses
 
@@ -708,6 +710,63 @@ testDocApiV2AddImage = do
       (docApiV2AddImage did) 200
     assertBool "After adding image file name is not changed" (getMockDocFileName mockDocFileWithImage == getMockDocFileName mocDocFile)
     assertBool "After adding image file changes" (getMockDocFileId mockDocFileWithImage /= getMockDocFileId mocDocFile)
+
+testDocInFolder :: TestEnv ()
+testDocInFolder = do
+  admin <- addNewRandomUser
+  adminCtx <- (set ctxmaybeuser (Just admin)) <$> mkContext defaultLang
+  nonAdmin <- addNewRandomCompanyUser (usergroupid admin) False
+  nonAdminCtx <- return $ set ctxmaybeuser (Just nonAdmin) adminCtx
+
+  -- user tries to create document in admins home folder - should fail
+  let createInNonOwnedFolder = [ ("file", inFile $ inTestDir "pdfs/simple.pdf")
+                        , ("saved", inText "false")
+                        , ("folder_id", inText . showt . fromJust $ userhomefolderid admin)
+                        ]
+  _ <- mockDocTestRequestHelper nonAdminCtx POST createInNonOwnedFolder docApiV2New 403
+ 
+  -- create subfolder
+  adminSubfolder <- dbUpdate . FolderCreate $
+    set folderParentID (userhomefolderid admin) defaultFolder
+  let subfolderID = get folderID adminSubfolder
+  -- create document in subfolder
+  let createInSubfolder = [ ("file", inFile $ inTestDir "pdfs/simple.pdf")
+                        , ("saved", inText "false")
+                        , ("folder_id", inText . showt $ subfolderID)
+                        ]
+  doc2 <- mockDocTestRequestHelper adminCtx POST createInSubfolder docApiV2New 201
+  let did_2 = getMockDocId doc2
+  void $ mockDocTestRequestHelper adminCtx POST [] (docApiV2Get did_2) 200
+  assertEqual "Returned document has provided folder_id" (Just subfolderID) (getMockDocFolderId doc2)
+
+  -- verify that document has subfolderID
+  docFromDB <- dbQuery $ GetDocumentByDocumentID did_2
+  assertEqual "Created document has the provided folder_id"
+    (Just $ get folderID adminSubfolder) (documentfolderid docFromDB)
+
+  -- create document from template in subfolder
+  _ <- mockDocTestRequestHelper adminCtx POST [("document", inText "{\"is_template\": true}")] (docApiV2Update did_2) 200
+  let createFromTemplateinSubfolder = [ ("folder_id", inText . showt $ subfolderID) ]
+  doc3 <- mockDocTestRequestHelper adminCtx POST createFromTemplateinSubfolder (docApiV2NewFromTemplate did_2) 201
+  assertEqual "Returned document has provided folder id" (Just subfolderID) (getMockDocFolderId doc3)
+
+  -- update document and move it to user home folder
+  let docMove = inText $ T.pack "{\"folder_id\": \"" <> (showt $ fromJust $ userhomefolderid admin) <> "\"}"
+      rq_update_params = [ ("document", docMove) ]
+      rq_update_code = 200
+
+  -- moving the document as regular user should not work
+  _ <- mockDocTestRequestHelper nonAdminCtx POST rq_update_params (docApiV2Update did_2) 403
+
+  -- moving the document to empty folder should not work
+  let docMoveToNothing = inText $ T.pack "{\"folder_id\": null}"
+  _ <- mockDocTestRequestHelper adminCtx POST [ ("document", docMoveToNothing) ] (docApiV2Update did_2) 400 
+
+  -- moving the document as admin to home folder should succeed
+  doc4 <- mockDocTestRequestHelper adminCtx POST rq_update_params (docApiV2Update did_2) rq_update_code
+  
+  -- verify that document has home folderID now
+  assertEqual "Moved document has user home folderID returned" (userhomefolderid admin) (getMockDocFolderId doc4)
 
 testDocApiV2AddEvidenceLogEvent :: TestEnv ()
 testDocApiV2AddEvidenceLogEvent = do

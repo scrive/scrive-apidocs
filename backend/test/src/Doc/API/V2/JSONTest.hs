@@ -336,4 +336,5 @@ testJSONWith = testJSONWithDynamicKeys [ "id"
                                        , "title"
                                        , "user_id"
                                        , "template_id"
+                                       , "folder_id"
                                        ]

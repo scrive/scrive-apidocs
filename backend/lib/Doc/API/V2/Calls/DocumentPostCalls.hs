@@ -94,6 +94,7 @@ docApiV2New = api $ do
   -- Parameters
   saved <- apiV2ParameterDefault True (ApiV2ParameterBool "saved")
   mFile <- apiV2ParameterOptional (ApiV2ParameterFilePDF "file")
+  mFolderId <- apiV2ParameterOptional (ApiV2ParameterRead "folder_id")
   -- API call actions
   title <- case (fmap (T.unpack . filename) mFile) of
     Just fn@(_:_) -> return $ dropExtension fn
@@ -101,7 +102,8 @@ docApiV2New = api $ do
       ctx <- getContext
       title <- renderTemplate_ "newDocumentTitle"
       return $ title <> " " <> formatTimeSimple (get ctxtime ctx)
-  (dbUpdate $ NewDocument user (T.pack title) Signable defaultTimeZoneName 0 actor) `withDocumentM` do
+  whenJust mFolderId guardDocumentCreateInFolderIsAllowed
+  (dbUpdate $ NewDocument user (T.pack title) Signable defaultTimeZoneName 0 actor mFolderId) `withDocumentM` do
     dbUpdate $ SetDocumentUnsavedDraft (not saved)
     case mFile of
       Nothing -> return ()
@@ -116,17 +118,21 @@ docApiV2NewFromTemplate :: Kontrakcja m => DocumentID -> m Response
 docApiV2NewFromTemplate did = logDocument did . api $ do
   -- Permissions
   (user, actor) <- getAPIUser APIDocCreate
+  -- Parameters
+  mFolderId <- apiV2ParameterOptional (ApiV2ParameterRead "folder_id")
   -- Guards
   withDocumentID did $ do
     guardThatUserIsAuthorOrDocumentIsShared user =<< theDocument
     guardThatObjectVersionMatchesIfProvided did
     guardThatDocumentIs (isTemplate) "The document is not a template." =<< theDocument
     guardThatDocumentIs (not $ flip documentDeletedForUser $ userid user) "The template is in Trash" =<< theDocument
+  whenJust mFolderId guardDocumentCreateInFolderIsAllowed
   -- API call actions
   template <- dbQuery $ GetDocumentByDocumentID $ did
   (apiGuardJustM (serverError "Can't clone given document") (dbUpdate $ CloneDocumentWithUpdatedAuthor (Just user) template actor id) >>=) $ flip withDocumentID $ do
     dbUpdate $ DocumentFromTemplate (documentid template) actor
     dbUpdate $ SetDocumentUnsavedDraft False
+    whenJust mFolderId $ \fid -> void $ dbUpdate $ SetDocumentFolderID fid actor 
   -- Result
     newDoc <- theDocument
     logInfo "New document created from template" $ object [
@@ -157,6 +163,7 @@ docApiV2Update did = logDocument did . api $ do
         apiError $ requestParameterParseError "document" $
           "Errors while parsing document data:" <+>
           showt errs
+    guardDocumentMoveIsAllowed (documentfolderid doc) (documentfolderid draftData)
     -- API call actions
     applyDraftDataToDocument draftData actor
     guardThatAuthorIsNotApprover =<< theDocument
