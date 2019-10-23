@@ -68,57 +68,50 @@ listParamsFilters :: ListParams -> [(Text, Text)]
 listParamsFilters = filters
 
 instance Show ListParams where
-    show params = intercalate "&" $ off <> lim <> srch <> srt
-        where
-        off =  ["offset=" <> (toUrl $ show $ offset params)]
-        lim =  ["limit=" <> (toUrl $ show $ limit params)]
-        srch = map ((<>) "search=") $ maybeToList $ (toUrl . T.unpack) <$> search params
-        srt = map ((<>) "sorting=") $ (toUrl . T.unpack) <$> sorting params
-        toUrl = urlEncode . BS8.unpack . BS.fromString
+  show params = intercalate "&" $ off <> lim <> srch <> srt
+    where
+      off   = ["offset=" <> (toUrl $ show $ offset params)]
+      lim   = ["limit=" <> (toUrl $ show $ limit params)]
+      srch  = map ((<>) "search=") $ maybeToList $ (toUrl . T.unpack) <$> search params
+      srt   = map ((<>) "sorting=") $ (toUrl . T.unpack) <$> sorting params
+      toUrl = urlEncode . BS8.unpack . BS.fromString
 
 emptyListParams :: ListParams
 emptyListParams =
-  ListParams
-  { sorting = []
-  , search = Nothing
-  , filters = []
-  , offset = 0
-  , limit = 1000
-  }
+  ListParams { sorting = [], search = Nothing, filters = [], offset = 0, limit = 1000 }
 
 {- New version working with JSON interface-}
-getListParams :: (ServerMonad m,Functor m,HasRqData m,MonadIO m) => m ListParams
+getListParams :: (ServerMonad m, Functor m, HasRqData m, MonadIO m) => m ListParams
 getListParams = do
-    offset'  <- readField "offset"
-    limit'   <- readField "limit"
-    search  <- getField "textfilter"
-    filters  <- do
-                  eja <- liftM (runGetJSON readJSArray) $ T.unpack <$> getField' "selectfilter"
-                  return $ case eja of
-                    Left _ -> []
-                    Right ja -> fromMaybe [] $ runIdentity $ withJSValue ja $ fromJSValueCustomMany $ do
-                        n <- fromJSValueField "name"
-                        v <- fromJSValueField "value"
-                        return $ liftM2 (\x y -> (T.pack x, T.pack y)) n v
-    sorting <- getField "sort"
-    sortingReversed <- maybeToBool <$> fmap (== "true") <$> getField "sortReversed"
-    let sorting'  = if (sortingReversed)
-                     then sorting
-                     else (<> "REV") <$> sorting
+  offset' <- readField "offset"
+  limit'  <- readField "limit"
+  search  <- getField "textfilter"
+  filters <- do
+    eja <- liftM (runGetJSON readJSArray) $ T.unpack <$> getField' "selectfilter"
+    return $ case eja of
+      Left _ -> []
+      Right ja ->
+        fromMaybe [] $ runIdentity $ withJSValue ja $ fromJSValueCustomMany $ do
+          n <- fromJSValueField "name"
+          v <- fromJSValueField "value"
+          return $ liftM2 (\x y -> (T.pack x, T.pack y)) n v
+  sorting         <- getField "sort"
+  sortingReversed <- maybeToBool <$> fmap (== "true") <$> getField "sortReversed"
+  let sorting' = if (sortingReversed) then sorting else (<> "REV") <$> sorting
 
-    return ListParams
-           -- REVIEW: I am assuming constants below stem from emptyListParams.
-             { offset  = fromMaybe (offset emptyListParams) offset'
-             , limit   = fromMaybe (limit emptyListParams) limit'
-             , search  = search
-             , filters = filters
-             , sorting = maybeToList sorting'
-             }
+  return ListParams
+         -- REVIEW: I am assuming constants below stem from emptyListParams.
+                    { offset = fromMaybe (offset emptyListParams) offset'
+                    , limit = fromMaybe (limit emptyListParams) limit'
+                    , search = search
+                    , filters = filters
+                    , sorting = maybeToList sorting'
+                    }
 
 pagingParamsJSON :: PagedList a -> JSValue
-pagingParamsJSON (PagedList{pageSize,params,listLength}) = runJSONGen $ do
-    value "pageCurrent" $ offset params `div` pageSize
-    value "itemMin" $ offset params
-    value "itemMax" $ listLength - 1
-    value "maxNextPages" $ (limit params) `div` pageSize
-    value "pageSize" $ pageSize
+pagingParamsJSON (PagedList { pageSize, params, listLength }) = runJSONGen $ do
+  value "pageCurrent" $ offset params `div` pageSize
+  value "itemMin" $ offset params
+  value "itemMax" $ listLength - 1
+  value "maxNextPages" $ (limit params) `div` pageSize
+  value "pageSize" $ pageSize

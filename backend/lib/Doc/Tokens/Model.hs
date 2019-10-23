@@ -17,7 +17,7 @@ data CheckDocumentSession = CheckDocumentSession SessionID SignatoryLinkID
 instance (KontraMonad m, MonadDB m, MonadThrow m) => DBQuery m CheckDocumentSession Bool where
   query (CheckDocumentSession sid slid) = do
     runQuery_ . sqlSelect "document_session_tokens" $ do
-      sqlWhereEq "session_id" sid
+      sqlWhereEq "session_id"        sid
       sqlWhereEq "signatory_link_id" slid
       sqlResult "TRUE"
     result <- fetchMaybe runIdentity

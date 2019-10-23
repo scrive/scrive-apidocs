@@ -43,7 +43,7 @@ getTextTemplates :: FilePath -> IO [(Text, Text)]
 getTextTemplates templatesFile = do
   templates <- TF.getTemplates templatesFile
   return $ fmap packTuple templates
-   where
+  where
     packTuple :: (String, String) -> (Text, Text)
     packTuple (t1, t2) = (T.pack t1, T.pack t2)
 
@@ -52,25 +52,21 @@ type KontrakcjaTemplates = TL.Templates
 
 readGlobalTemplates :: MonadIO m => m KontrakcjaGlobalTemplates
 readGlobalTemplates = do
-  readGlobalTemplatesFrom
-    textsDirectory
-    templateFilesDir
+  readGlobalTemplatesFrom textsDirectory templateFilesDir
 
-readGlobalTemplatesFrom :: MonadIO m => FilePath -> FilePath -> m KontrakcjaGlobalTemplates
-readGlobalTemplatesFrom textsDirectory' templateFilesDir' =
-  TL.readGlobalTemplates
-    textsDirectory'
-    templateFilesDir'
-    (T.unpack $ codeFromLang LANG_EN)
+readGlobalTemplatesFrom
+  :: MonadIO m => FilePath -> FilePath -> m KontrakcjaGlobalTemplates
+readGlobalTemplatesFrom textsDirectory' templateFilesDir' = TL.readGlobalTemplates
+  textsDirectory'
+  templateFilesDir'
+  (T.unpack $ codeFromLang LANG_EN)
 
 localizedVersion :: Lang -> KontrakcjaGlobalTemplates -> KontrakcjaTemplates
 localizedVersion lang = TL.localizedVersion $ T.unpack $ codeFromLang lang
 
 getTemplatesModTime :: IO UTCTime
 getTemplatesModTime = do
-  TL.getTemplatesModTime
-    textsDirectory
-    templateFilesDir
+  TL.getTemplatesModTime textsDirectory templateFilesDir
 
 renderTextTemplate :: (Monad m, ST.TemplatesMonad m) => Text -> ST.Fields m () -> m Text
 renderTextTemplate x m = fmap T.pack $ ST.renderTemplate (T.unpack x) m
@@ -78,14 +74,14 @@ renderTextTemplate x m = fmap T.pack $ ST.renderTemplate (T.unpack x) m
 renderTextTemplate_ :: (Monad m, ST.TemplatesMonad m) => Text -> m Text
 renderTextTemplate_ x = fmap T.pack $ ST.renderTemplate_ (T.unpack x)
 
-renderLocalTemplate :: (HasLang a, ST.TemplatesMonad m)
-                    => a -> Text -> F.Fields m () -> m Text
+renderLocalTemplate
+  :: (HasLang a, ST.TemplatesMonad m) => a -> Text -> F.Fields m () -> m Text
 renderLocalTemplate haslang name fields = do
   ts <- ST.getTextTemplatesByLanguage $ T.unpack $ codeFromLang $ getLang haslang
   fmap T.pack $ ST.renderHelper ts (T.unpack name) fields
 
-runTemplatesT :: (Functor m, Monad m)
-              => (Lang, TL.GlobalTemplates) -> ST.TemplatesT m a -> m a
+runTemplatesT
+  :: (Functor m, Monad m) => (Lang, TL.GlobalTemplates) -> ST.TemplatesT m a -> m a
 runTemplatesT (lang, ts) action =
   runReaderT (ST.unTT action) (T.unpack $ codeFromLang lang, ts)
 

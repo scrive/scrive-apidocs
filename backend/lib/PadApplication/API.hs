@@ -37,43 +37,43 @@ padApplicationAPI = dir "api" $ choice
 
 padApplicationAPIV1 :: Route (Kontra Response)
 padApplicationAPIV1 = choice
-  [ dir "checkclient"     $ hPostNoXTokenHttp $ toK0 $ apiCallCheckClient
-  , dir "padclienttheme"  $ hGet $ toK0 $ apiCallGetPadClientTheme
+  [ dir "checkclient" $ hPostNoXTokenHttp $ toK0 $ apiCallCheckClient
+  , dir "padclienttheme" $ hGet $ toK0 $ apiCallGetPadClientTheme
   ]
 
-padApplicationAPIV2 ::Route (Kontra Response)
-padApplicationAPIV2 = choice [
-    dir "pad" $ dir "info" $ hGet $ toK0 $ apiCallGetPadInfo
-  , padApplicationAPIV1
-  ]
+padApplicationAPIV2 :: Route (Kontra Response)
+padApplicationAPIV2 =
+  choice [dir "pad" $ dir "info" $ hGet $ toK0 $ apiCallGetPadInfo, padApplicationAPIV1]
 
 apiCallCheckClient :: Kontrakcja m => m Response
 apiCallCheckClient = api $ do
-    mclient  <- getField "client"
-    when (isNothing mclient) $ do
-      throwM . SomeDBExtraException $ serverError "No client description"
-    runJSONGenT $ do
-      value "valid" True
-      value "upgrade_warning" False
-      value "valid_until" JSNull
-      value "upgrade_url" JSNull
-      value "message" JSNull
+  mclient <- getField "client"
+  when (isNothing mclient) $ do
+    throwM . SomeDBExtraException $ serverError "No client description"
+  runJSONGenT $ do
+    value "valid"           True
+    value "upgrade_warning" False
+    value "valid_until"     JSNull
+    value "upgrade_url"     JSNull
+    value "message"         JSNull
 
 apiCallGetPadClientTheme :: Kontrakcja m => m Response
 apiCallGetPadClientTheme = api $ do
-  ctx <- getContext
-  (user, _ , _) <- getAPIUserWithAnyPrivileges
-  ug <- dbQuery . UserGroupGetByUserID . userid $ user
-  theme <- dbQuery $ GetTheme $ fromMaybe
-    (get (bdSignviewTheme . ctxbrandeddomain) ctx)
-    (get (uguiSignviewTheme . ugUI) ug)
-  simpleAesonResponse $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme theme
+  ctx          <- getContext
+  (user, _, _) <- getAPIUserWithAnyPrivileges
+  ug           <- dbQuery . UserGroupGetByUserID . userid $ user
+  theme <- dbQuery $ GetTheme $ fromMaybe (get (bdSignviewTheme . ctxbrandeddomain) ctx)
+                                          (get (uguiSignviewTheme . ugUI) ug)
+  simpleAesonResponse $ Unjson.unjsonToJSON'
+    (Options { pretty = True, indent = 2, nulls = True })
+    unjsonTheme
+    theme
 
 apiCallGetPadInfo :: Kontrakcja m => m Response
 apiCallGetPadInfo = V2.api $ do
-  (user, _ , _) <- getAPIUserWithAnyPrivileges
-  ugwp <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
-  return $ V2.Ok $ object [
-      "app_mode" .= (padAppModeText . get ugsPadAppMode . ugwpSettings $ ugwp)
+  (user, _, _) <- getAPIUserWithAnyPrivileges
+  ugwp         <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
+  return $ V2.Ok $ object
+    [ "app_mode" .= (padAppModeText . get ugsPadAppMode . ugwpSettings $ ugwp)
     , "e_archive_enabled" .= (get ugsPadEarchiveEnabled . ugwpSettings $ ugwp)
     ]

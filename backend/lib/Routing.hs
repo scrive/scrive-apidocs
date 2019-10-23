@@ -50,31 +50,31 @@ class ToResp a where
     toResp :: a -> Kontra Response
 
 instance ToResp Response where
-    toResp = return
+  toResp = return
 
 instance ToResp (Kontra Response) where
-    toResp = id
+  toResp = id
 
 instance ToResp KontraLink where
-    toResp = sendRedirect
+  toResp = sendRedirect
 
 instance ToResp String where
-    toResp = page . return
+  toResp = page . return
 
 instance ToResp Text where
-    toResp = page . return . T.unpack
+  toResp = page . return . T.unpack
 
 instance ToResp JSValue where
-    toResp = simpleJsonResponse
+  toResp = simpleJsonResponse
 
 instance ToResp A.Value where
-    toResp = simpleAesonResponse
+  toResp = simpleAesonResponse
 
 instance ToResp () where
-    toResp _ = simpleHtmlResponse ""
+  toResp _ = simpleHtmlResponse ""
 
 instance (ToResp a , ToResp b) => ToResp (Either a b) where
-    toResp = either toResp toResp
+  toResp = either toResp toResp
 
 instance ToResp InternalKontraResponse where
   toResp ikr = do
@@ -86,31 +86,51 @@ instance ToResp InternalKontraResponse where
     toResp (eitherify ikr)
 
 instance ToResp CSV where
-    toResp = return . toResponse
+  toResp = return . toResponse
 
 instance ToResp ZipArchive where
-    toResp = return . toResponse
+  toResp = return . toResponse
 
-hPostWrap :: Path Kontra Kontra a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
+hPostWrap
+  :: Path Kontra Kontra a Response
+  => (Kontra Response -> Kontra Response)
+  -> a
+  -> Route (Kontra Response)
 hPostWrap = path POST
 
-hGetWrap :: Path Kontra Kontra a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
+hGetWrap
+  :: Path Kontra Kontra a Response
+  => (Kontra Response -> Kontra Response)
+  -> a
+  -> Route (Kontra Response)
 hGetWrap = path GET
 
-hDeleteWrap :: Path Kontra Kontra a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
+hDeleteWrap
+  :: Path Kontra Kontra a Response
+  => (Kontra Response -> Kontra Response)
+  -> a
+  -> Route (Kontra Response)
 hDeleteWrap = path DELETE
 
-hPutWrap :: Path Kontra Kontra a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
+hPutWrap
+  :: Path Kontra Kontra a Response
+  => (Kontra Response -> Kontra Response)
+  -> a
+  -> Route (Kontra Response)
 hPutWrap = path PUT
 
-hPatchWrap :: Path Kontra Kontra a Response => (Kontra Response -> Kontra Response) -> a -> Route (Kontra Response)
+hPatchWrap
+  :: Path Kontra Kontra a Response
+  => (Kontra Response -> Kontra Response)
+  -> a
+  -> Route (Kontra Response)
 hPatchWrap = path PATCH
 
 {- To change standard string to page -}
 page :: Kontra String -> Kontra Response
 page pageBody = do
-    pb <- pageBody
-    renderFromBody $ T.pack pb
+  pb <- pageBody
+  renderFromBody $ T.pack pb
 
 hPost :: Path Kontra Kontra a Response => a -> Route (Kontra Response)
 hPost = hPostWrap (https . guardXToken)
@@ -142,15 +162,13 @@ hPostNoXToken = hPostWrap https
 hPostNoXTokenHttp :: Path Kontra Kontra a Response => a -> Route (Kontra Response)
 hPostNoXTokenHttp = hPostWrap allowHttp
 
-https:: Kontra Response -> Kontra Response
+https :: Kontra Response -> Kontra Response
 https action = do
-    secure <- isSecure
-    useHttps <- get ctxusehttps <$> getContext
-    if secure || not useHttps
-       then action
-       else sendSecureLoopBack
+  secure   <- isSecure
+  useHttps <- get ctxusehttps <$> getContext
+  if secure || not useHttps then action else sendSecureLoopBack
 
-allowHttp:: Kontrakcja m => m Response -> m Response
+allowHttp :: Kontrakcja m => m Response -> m Response
 allowHttp action = action
 
 -- | Use to enforce a specific arity of a handler to make it explicit
@@ -167,23 +185,32 @@ toK2 m a b = m a b >>= toResp
 toK3 :: ToResp r => (a -> b -> c -> Kontra r) -> (a -> b -> c -> Kontra Response)
 toK3 m a b c = m a b c >>= toResp
 
-toK4 :: ToResp r => (a -> b -> c -> d -> Kontra r) -> (a -> b -> c -> d -> Kontra Response)
+toK4
+  :: ToResp r => (a -> b -> c -> d -> Kontra r) -> (a -> b -> c -> d -> Kontra Response)
 toK4 m a b c d = m a b c d >>= toResp
 
-toK5 :: ToResp r => (a -> b -> c -> d -> e -> Kontra r) -> (a -> b -> c -> d -> e -> Kontra Response)
+toK5
+  :: ToResp r
+  => (a -> b -> c -> d -> e -> Kontra r)
+  -> (a -> b -> c -> d -> e -> Kontra Response)
 toK5 m a b c d e = m a b c d e >>= toResp
 
-toK6 :: ToResp r => (a -> b -> c -> d -> e -> f -> Kontra r) -> (a -> b -> c -> d -> e -> f -> Kontra Response)
+toK6
+  :: ToResp r
+  => (a -> b -> c -> d -> e -> f -> Kontra r)
+  -> (a -> b -> c -> d -> e -> f -> Kontra Response)
 toK6 m a b c d e f = m a b c d e f >>= toResp
 
 guardXToken :: Kontra Response -> Kontra Response
 guardXToken action = do
   ctx <- getContext
-  let unQuote = filter (not . (== '"'))
+  let unQuote          = filter (not . (== '"'))
       tokensFromString = catMaybes . map (maybeRead . T.pack . unQuote) . splitOn ";"
   mxtokenString <- getField cookieNameXToken
   case mxtokenString of
-    Just xtokenString | get ctxxtoken ctx `elem` tokensFromString (T.unpack xtokenString) -> action
+    Just xtokenString
+      | get ctxxtoken ctx `elem` tokensFromString (T.unpack xtokenString) -> action
     _ -> do -- Requests authorized by something else then xtoken, can't access session data or change context stuff.
-      logInfo "Invalid xtoken value, anonymousing context" $ object ["xtoken" .= mxtokenString]
+      logInfo "Invalid xtoken value, anonymousing context"
+        $ object ["xtoken" .= mxtokenString]
       withAnonymousContext action

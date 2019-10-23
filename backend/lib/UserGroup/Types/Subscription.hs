@@ -27,30 +27,41 @@ data Subscription = Subscription {
 } deriving (Eq, Ord, Show)
 
 instance Unjson Subscription where
-  unjsonDef = objectOf $ Subscription
-    <$> field "invoicing_type" ugSubInvoicingType "Invoicing type"
-    <*> fieldOpt "payment_plan" ugSubPaymentPlan "Payment plan"
-    <*> fieldOpt "inherited_plan" ugSubInheritedPaymentPlan "Inherited payment plan"
-    <*> fieldOpt "number_of_users" ugSubCountUsers "Number of active users"
-    <*> fieldOpt "started_last_month" ugSubCountDocsMTD "Number of documents started month to date"
-    <*> fieldOpt "features" ugSubFeatures "Features enabled"
-    <*> fieldOpt "inherited_features" ugSubInheritedFeatures "Inherited Features enabled"
-    <*> field "features_is_inherited" ugSubFeaturesIsInherited "When enabled, features are inherited"
+  unjsonDef =
+    objectOf
+      $   Subscription
+      <$> field "invoicing_type" ugSubInvoicingType "Invoicing type"
+      <*> fieldOpt "payment_plan"    ugSubPaymentPlan          "Payment plan"
+      <*> fieldOpt "inherited_plan"  ugSubInheritedPaymentPlan "Inherited payment plan"
+      <*> fieldOpt "number_of_users" ugSubCountUsers           "Number of active users"
+      <*> fieldOpt "started_last_month"
+                   ugSubCountDocsMTD
+                   "Number of documents started month to date"
+      <*> fieldOpt "features" ugSubFeatures "Features enabled"
+      <*> fieldOpt "inherited_features"
+                   ugSubInheritedFeatures
+                   "Inherited Features enabled"
+      <*> field "features_is_inherited"
+                ugSubFeaturesIsInherited
+                "When enabled, features are inherited"
 
-getSubscription :: (MonadDB m, MonadBase IO m, MonadThrow m, MonadTime m) => UserGroupWithParents -> m Subscription
+getSubscription
+  :: (MonadDB m, MonadBase IO m, MonadThrow m, MonadTime m)
+  => UserGroupWithParents
+  -> m Subscription
 getSubscription ugwp = do
-  let ug = ugwpUG ugwp
+  let ug   = ugwpUG ugwp
       ugid = get ugID ug
-  users <- dbQuery $ UserGroupGetUsers ugid
-  docsMTD  <- fromIntegral <$> dbQuery (GetNumberOfDocumentsStartedThisMonth ugid)
+  users   <- dbQuery $ UserGroupGetUsers ugid
+  docsMTD <- fromIntegral <$> dbQuery (GetNumberOfDocumentsStartedThisMonth ugid)
   let mInheritedFeatures = ugwpFeatures <$> ugwpOnlyParents ugwp
   return Subscription
-    { ugSubInvoicingType = ugInvoicingType ug
-    , ugSubPaymentPlan = ugPaymentPlan ug
+    { ugSubInvoicingType        = ugInvoicingType ug
+    , ugSubPaymentPlan          = ugPaymentPlan ug
     , ugSubInheritedPaymentPlan = ugwpPaymentPlan <$> ugwpOnlyParents ugwp
-    , ugSubCountUsers = Just $ length users
-    , ugSubCountDocsMTD = Just docsMTD
-    , ugSubFeatures = get ugFeatures ug
-    , ugSubInheritedFeatures = mInheritedFeatures
-    , ugSubFeaturesIsInherited = isNothing $ get ugFeatures ug
+    , ugSubCountUsers           = Just $ length users
+    , ugSubCountDocsMTD         = Just docsMTD
+    , ugSubFeatures             = get ugFeatures ug
+    , ugSubInheritedFeatures    = mInheritedFeatures
+    , ugSubFeaturesIsInherited  = isNothing $ get ugFeatures ug
     }

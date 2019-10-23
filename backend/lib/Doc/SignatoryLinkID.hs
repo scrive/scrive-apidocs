@@ -31,13 +31,14 @@ instance FromReqURI SignatoryLinkID where
   fromReqURI = maybeRead . T.pack
 
 instance Identifier SignatoryLinkID where
-  idDefaultLabel              = "signatory_link_id"
+  idDefaultLabel = "signatory_link_id"
   idValue (SignatoryLinkID k) = int64AsStringIdentifier k
 
 instance Unjson SignatoryLinkID where
   unjsonDef = unjsonInvmapR
-              ((maybe (fail "Can't parse SignatoryLinkID")  return) . maybeRead . T.pack)
-              show unjsonDef
+    ((maybe (fail "Can't parse SignatoryLinkID") return) . maybeRead . T.pack)
+    show
+    unjsonDef
 
 instance FromSQL SignatoryLinkID where
   type PQBase SignatoryLinkID = PQBase Int64

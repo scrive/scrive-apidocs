@@ -89,17 +89,14 @@ instance FromSQL DeliveryStatus where
       2 -> return Undelivered
       3 -> return Unknown
       4 -> return Deferred
-      _ -> throwM RangeError {
-        reRange = [(1, 4)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(1, 4)], reValue = n }
 
 instance ToSQL DeliveryStatus where
   type PQDest DeliveryStatus = PQDest Int16
-  toSQL Delivered   = toSQL (1::Int16)
-  toSQL Undelivered = toSQL (2::Int16)
-  toSQL Unknown     = toSQL (3::Int16)
-  toSQL Deferred    = toSQL (4::Int16)
+  toSQL Delivered   = toSQL (1 :: Int16)
+  toSQL Undelivered = toSQL (2 :: Int16)
+  toSQL Unknown     = toSQL (3 :: Int16)
+  toSQL Deferred    = toSQL (4 :: Int16)
 
 ---------------------------------
 
@@ -134,15 +131,12 @@ instance FromSQL AuthenticationKind where
     case n :: Int16 of
       1 -> return AuthenticationToView
       2 -> return AuthenticationToViewArchived
-      _ -> throwM RangeError {
-        reRange = [(1, 2)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(1, 2)], reValue = n }
 
 instance ToSQL AuthenticationKind where
   type PQDest AuthenticationKind = PQDest Int16
-  toSQL AuthenticationToView         = toSQL (1::Int16)
-  toSQL AuthenticationToViewArchived = toSQL (2::Int16)
+  toSQL AuthenticationToView         = toSQL (1 :: Int16)
+  toSQL AuthenticationToViewArchived = toSQL (2 :: Int16)
 
 ---------------------------------
 
@@ -173,21 +167,18 @@ instance FromSQL AuthenticationToViewMethod where
       6 -> return FITupasAuthenticationToView
       7 -> return VerimiAuthenticationToView
       8 -> return IDINAuthenticationToView
-      _ -> throwM RangeError {
-        reRange = [(1, 8)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(1, 8)], reValue = n }
 
 instance ToSQL AuthenticationToViewMethod where
   type PQDest AuthenticationToViewMethod = PQDest Int16
-  toSQL StandardAuthenticationToView      = toSQL (1::Int16)
-  toSQL SEBankIDAuthenticationToView      = toSQL (2::Int16)
-  toSQL NOBankIDAuthenticationToView      = toSQL (3::Int16)
-  toSQL DKNemIDAuthenticationToView       = toSQL (4::Int16)
-  toSQL SMSPinAuthenticationToView        = toSQL (5::Int16)
-  toSQL FITupasAuthenticationToView       = toSQL (6::Int16)
-  toSQL VerimiAuthenticationToView        = toSQL (7::Int16)
-  toSQL IDINAuthenticationToView          = toSQL (8::Int16)
+  toSQL StandardAuthenticationToView = toSQL (1 :: Int16)
+  toSQL SEBankIDAuthenticationToView = toSQL (2 :: Int16)
+  toSQL NOBankIDAuthenticationToView = toSQL (3 :: Int16)
+  toSQL DKNemIDAuthenticationToView  = toSQL (4 :: Int16)
+  toSQL SMSPinAuthenticationToView   = toSQL (5 :: Int16)
+  toSQL FITupasAuthenticationToView  = toSQL (6 :: Int16)
+  toSQL VerimiAuthenticationToView   = toSQL (7 :: Int16)
+  toSQL IDINAuthenticationToView     = toSQL (8 :: Int16)
 
 ---------------------------------
 
@@ -212,18 +203,15 @@ instance FromSQL AuthenticationToSignMethod where
       3 -> return SMSPinAuthenticationToSign
       4 -> return NOBankIDAuthenticationToSign
       5 -> return DKNemIDAuthenticationToSign
-      _ -> throwM RangeError {
-        reRange = [(1, 5)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(1, 5)], reValue = n }
 
 instance ToSQL AuthenticationToSignMethod where
   type PQDest AuthenticationToSignMethod = PQDest Int16
-  toSQL StandardAuthenticationToSign      = toSQL (1::Int16)
-  toSQL SEBankIDAuthenticationToSign      = toSQL (2::Int16)
-  toSQL SMSPinAuthenticationToSign        = toSQL (3::Int16)
-  toSQL NOBankIDAuthenticationToSign      = toSQL (4::Int16)
-  toSQL DKNemIDAuthenticationToSign       = toSQL (5::Int16)
+  toSQL StandardAuthenticationToSign = toSQL (1 :: Int16)
+  toSQL SEBankIDAuthenticationToSign = toSQL (2 :: Int16)
+  toSQL SMSPinAuthenticationToSign   = toSQL (3 :: Int16)
+  toSQL NOBankIDAuthenticationToSign = toSQL (4 :: Int16)
+  toSQL DKNemIDAuthenticationToSign  = toSQL (5 :: Int16)
 
 ---------------------------------
 
@@ -250,19 +238,16 @@ instance FromSQL DeliveryMethod where
       4 -> return MobileDelivery
       5 -> return EmailAndMobileDelivery
       6 -> return PortalDelivery
-      _ -> throwM RangeError {
-        reRange = [(1, 6)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(1, 6)], reValue = n }
 
 instance ToSQL DeliveryMethod where
   type PQDest DeliveryMethod = PQDest Int16
-  toSQL EmailDelivery          = toSQL (1::Int16)
-  toSQL PadDelivery            = toSQL (2::Int16)
-  toSQL APIDelivery            = toSQL (3::Int16)
-  toSQL MobileDelivery         = toSQL (4::Int16)
-  toSQL EmailAndMobileDelivery = toSQL (5::Int16)
-  toSQL PortalDelivery         = toSQL (6::Int16)
+  toSQL EmailDelivery          = toSQL (1 :: Int16)
+  toSQL PadDelivery            = toSQL (2 :: Int16)
+  toSQL APIDelivery            = toSQL (3 :: Int16)
+  toSQL MobileDelivery         = toSQL (4 :: Int16)
+  toSQL EmailAndMobileDelivery = toSQL (5 :: Int16)
+  toSQL PortalDelivery         = toSQL (6 :: Int16)
 
 ---------------------------------
 
@@ -289,19 +274,16 @@ instance FromSQL ConfirmationDeliveryMethod where
       4 -> return NoConfirmationDelivery
       5 -> return EmailLinkConfirmationDelivery
       6 -> return EmailLinkAndMobileConfirmationDelivery
-      _ -> throwM RangeError {
-        reRange = [(1, 6)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(1, 6)], reValue = n }
 
 instance ToSQL ConfirmationDeliveryMethod where
   type PQDest ConfirmationDeliveryMethod = PQDest Int16
-  toSQL EmailConfirmationDelivery              = toSQL (1::Int16)
-  toSQL MobileConfirmationDelivery             = toSQL (2::Int16)
-  toSQL EmailAndMobileConfirmationDelivery     = toSQL (3::Int16)
-  toSQL NoConfirmationDelivery                 = toSQL (4::Int16)
-  toSQL EmailLinkConfirmationDelivery          = toSQL (5::Int16)
-  toSQL EmailLinkAndMobileConfirmationDelivery = toSQL (6::Int16)
+  toSQL EmailConfirmationDelivery              = toSQL (1 :: Int16)
+  toSQL MobileConfirmationDelivery             = toSQL (2 :: Int16)
+  toSQL EmailAndMobileConfirmationDelivery     = toSQL (3 :: Int16)
+  toSQL NoConfirmationDelivery                 = toSQL (4 :: Int16)
+  toSQL EmailLinkConfirmationDelivery          = toSQL (5 :: Int16)
+  toSQL EmailLinkAndMobileConfirmationDelivery = toSQL (6 :: Int16)
 
 data NotificationDeliveryMethod
   = EmailNotificationDelivery
@@ -315,10 +297,10 @@ instance PQFormat NotificationDeliveryMethod where
 
 instance ToSQL NotificationDeliveryMethod where
   type PQDest NotificationDeliveryMethod = PQDest Int16
-  toSQL NoNotificationDelivery                 = toSQL (0::Int16)
-  toSQL EmailNotificationDelivery              = toSQL (1::Int16)
-  toSQL MobileNotificationDelivery             = toSQL (2::Int16)
-  toSQL EmailAndMobileNotificationDelivery     = toSQL (3::Int16)
+  toSQL NoNotificationDelivery             = toSQL (0 :: Int16)
+  toSQL EmailNotificationDelivery          = toSQL (1 :: Int16)
+  toSQL MobileNotificationDelivery         = toSQL (2 :: Int16)
+  toSQL EmailAndMobileNotificationDelivery = toSQL (3 :: Int16)
 
 instance FromSQL NotificationDeliveryMethod where
   type PQBase NotificationDeliveryMethod = PQBase Int16
@@ -329,10 +311,7 @@ instance FromSQL NotificationDeliveryMethod where
       1 -> return EmailNotificationDelivery
       2 -> return MobileNotificationDelivery
       3 -> return EmailAndMobileNotificationDelivery
-      _ -> throwM RangeError {
-        reRange = [(0, 3)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(0, 3)], reValue = n }
 
 -- | Role through which the document is accessed.
 data SignatoryRole = SignatoryRoleViewer
@@ -345,8 +324,8 @@ data SignatoryRole = SignatoryRoleViewer
 
 -- | True == SigningParty, False == Viewer.
 signatoryRoleFromBool :: Bool -> SignatoryRole
-signatoryRoleFromBool signs = if signs then SignatoryRoleSigningParty
-                              else SignatoryRoleViewer
+signatoryRoleFromBool signs =
+  if signs then SignatoryRoleSigningParty else SignatoryRoleViewer
 
 instance PQFormat SignatoryRole where
   pqFormat = pqFormat @Int16
@@ -361,18 +340,15 @@ instance FromSQL SignatoryRole where
       3 -> return SignatoryRoleApprover
       4 -> return SignatoryRoleForwardedSigningParty
       5 -> return SignatoryRoleForwardedApprover
-      _ -> throwM RangeError {
-        reRange = [(1,5)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(1, 5)], reValue = n }
 
 instance ToSQL SignatoryRole where
-  type PQDest SignatoryRole         = PQDest Int16
-  toSQL SignatoryRoleViewer         = toSQL (1::Int16)
-  toSQL SignatoryRoleSigningParty   = toSQL (2::Int16)
-  toSQL SignatoryRoleApprover       = toSQL (3::Int16)
-  toSQL SignatoryRoleForwardedSigningParty = toSQL (4::Int16)
-  toSQL SignatoryRoleForwardedApprover     = toSQL (5::Int16)
+  type PQDest SignatoryRole = PQDest Int16
+  toSQL SignatoryRoleViewer                = toSQL (1 :: Int16)
+  toSQL SignatoryRoleSigningParty          = toSQL (2 :: Int16)
+  toSQL SignatoryRoleApprover              = toSQL (3 :: Int16)
+  toSQL SignatoryRoleForwardedSigningParty = toSQL (4 :: Int16)
+  toSQL SignatoryRoleForwardedApprover     = toSQL (5 :: Int16)
 
 ---------------------------------
 
@@ -428,41 +404,40 @@ data SignatoryLink = SignatoryLink {
 } deriving (Show)
 
 defaultSignatoryLink :: SignatoryLink
-defaultSignatoryLink =
-  SignatoryLink {
-    signatorylinkid = unsafeSignatoryLinkID 0
-  , signatoryfields = []
-  , signatoryisauthor = False
-  , signatoryrole = SignatoryRoleViewer
-  , signatorysignorder = SignOrder 1
-  , signatoryaccesstokens = []
-  , maybesignatory = Nothing
-  , maybesigninfo = Nothing
-  , maybeseeninfo = Nothing
-  , maybereadinvite = Nothing
-  , mailinvitationdeliverystatus = Unknown
-  , smsinvitationdeliverystatus = Unknown
-  , signatorylinkdeleted = Nothing
-  , signatorylinkreallydeleted = Nothing
-  , signatorylinkcsvupload = Nothing
-  , signatoryattachments = []
-  , signatoryhighlightedpages = []
-  , signatorylinksignredirecturl = Nothing
-  , signatorylinkrejectredirecturl = Nothing
-  , signatorylinkrejectiontime = Nothing
-  , signatorylinkrejectionreason = Nothing
+defaultSignatoryLink = SignatoryLink
+  { signatorylinkid                 = unsafeSignatoryLinkID 0
+  , signatoryfields                 = []
+  , signatoryisauthor               = False
+  , signatoryrole                   = SignatoryRoleViewer
+  , signatorysignorder              = SignOrder 1
+  , signatoryaccesstokens           = []
+  , maybesignatory                  = Nothing
+  , maybesigninfo                   = Nothing
+  , maybeseeninfo                   = Nothing
+  , maybereadinvite                 = Nothing
+  , mailinvitationdeliverystatus    = Unknown
+  , smsinvitationdeliverystatus     = Unknown
+  , signatorylinkdeleted            = Nothing
+  , signatorylinkreallydeleted      = Nothing
+  , signatorylinkcsvupload          = Nothing
+  , signatoryattachments            = []
+  , signatoryhighlightedpages       = []
+  , signatorylinksignredirecturl    = Nothing
+  , signatorylinkrejectredirecturl  = Nothing
+  , signatorylinkrejectiontime      = Nothing
+  , signatorylinkrejectionreason    = Nothing
   , signatorylinkauthenticationtoviewmethod = StandardAuthenticationToView
   , signatorylinkauthenticationtoviewarchivedmethod = StandardAuthenticationToView
   , signatorylinkauthenticationtosignmethod = StandardAuthenticationToSign
-  , signatorylinkdeliverymethod = EmailDelivery
+  , signatorylinkdeliverymethod     = EmailDelivery
   , signatorylinkconfirmationdeliverymethod = EmailConfirmationDelivery
   , signatorylinknotificationdeliverymethod = NoNotificationDelivery
   , signatorylinkallowshighlighting = False
-  , signatorylinkidentifiedtoview = False
-  , signatorylinkhidepn = False
-  , signatorylinkcanbeforwarded = False
-  , signatorylinkconsenttitle = Nothing
-  , signatorylinkconsentquestions = []
+  , signatorylinkidentifiedtoview   = False
+  , signatorylinkhidepn             = False
+  , signatorylinkcanbeforwarded     = False
+  , signatorylinkconsenttitle       = Nothing
+  , signatorylinkconsentquestions   = []
   , signatorylinkmailconfirmationdeliverystatus = Unknown
   }
 
@@ -476,13 +451,21 @@ instance HasSomeUserInfo SignatoryLink where
 ---------------------------------
 
 signatoryLinksSelectors :: [SQL]
-signatoryLinksSelectors = [
-    "signatory_links.id"
-  , "ARRAY(SELECT (" <> mintercalate ", " signatoryFieldsSelectors <> ")::" <> raw (ctName ctSignatoryField) <+> "FROM signatory_link_fields WHERE signatory_links.id = signatory_link_fields.signatory_link_id ORDER BY signatory_link_fields.id)"
+signatoryLinksSelectors =
+  [ "signatory_links.id"
+  , "ARRAY(SELECT ("
+    <>  mintercalate ", " signatoryFieldsSelectors
+    <>  ")::"
+    <>  raw (ctName ctSignatoryField)
+    <+> "FROM signatory_link_fields WHERE signatory_links.id = signatory_link_fields.signatory_link_id ORDER BY signatory_link_fields.id)"
   , "documents.author_id = signatory_links.id"
   , "signatory_links.signatory_role"
   , "signatory_links.sign_order"
-  , "ARRAY(SELECT (" <> mintercalate ", " signatoryAccessTokenSelectors <> ")::" <> raw (ctName ctSignatoryAccessToken) <+> "FROM signatory_access_tokens WHERE signatory_links.id = signatory_access_tokens.signatory_link_id)"
+  , "ARRAY(SELECT ("
+    <>  mintercalate ", " signatoryAccessTokenSelectors
+    <>  ")::"
+    <>  raw (ctName ctSignatoryAccessToken)
+    <+> "FROM signatory_access_tokens WHERE signatory_links.id = signatory_access_tokens.signatory_link_id)"
   , "signatory_links.user_id"
   , "signatory_links.sign_time"
   , "signatory_links.sign_ip"
@@ -494,8 +477,16 @@ signatoryLinksSelectors = [
   , "signatory_links.deleted"
   , "signatory_links.really_deleted"
   , "signatory_links.csv_contents"
-  , "ARRAY(SELECT (" <> mintercalate ", " signatoryAttachmentsSelectors <> ")::" <> raw (ctName ctSignatoryAttachment) <+> "FROM signatory_attachments LEFT JOIN files ON (files.id = signatory_attachments.file_id) WHERE signatory_links.id = signatory_attachments.signatory_link_id ORDER BY signatory_attachments.file_id, signatory_attachments.name)"
-  , "ARRAY(SELECT (" <> mintercalate ", " highlightedPagesSelectors <> ")::" <> raw (ctName ctHighlightedPage) <+> "FROM highlighted_pages WHERE signatory_links.id = highlighted_pages.signatory_link_id ORDER BY highlighted_pages.id)"
+  , "ARRAY(SELECT ("
+    <>  mintercalate ", " signatoryAttachmentsSelectors
+    <>  ")::"
+    <>  raw (ctName ctSignatoryAttachment)
+    <+> "FROM signatory_attachments LEFT JOIN files ON (files.id = signatory_attachments.file_id) WHERE signatory_links.id = signatory_attachments.signatory_link_id ORDER BY signatory_attachments.file_id, signatory_attachments.name)"
+  , "ARRAY(SELECT ("
+    <>  mintercalate ", " highlightedPagesSelectors
+    <>  ")::"
+    <>  raw (ctName ctHighlightedPage)
+    <+> "FROM highlighted_pages WHERE signatory_links.id = highlighted_pages.signatory_link_id ORDER BY highlighted_pages.id)"
   , "signatory_links.sign_redirect_url"
   , "signatory_links.reject_redirect_url"
   , "signatory_links.rejection_time"
@@ -511,132 +502,101 @@ signatoryLinksSelectors = [
   , "signatory_links.hide_pn_elog"
   , "signatory_links.can_be_forwarded"
   , "signatory_links.consent_title"
-  , "ARRAY(SELECT (" <> mintercalate ", " signatoryConsentQuestionsSelectors <> ")::" <> raw (ctName ctSignatoryConsentQuestion) <+> "FROM signatory_link_consent_questions WHERE signatory_links.id = signatory_link_consent_questions.signatory_link_id ORDER BY position ASC)"
+  , "ARRAY(SELECT ("
+    <>  mintercalate ", " signatoryConsentQuestionsSelectors
+    <>  ")::"
+    <>  raw (ctName ctSignatoryConsentQuestion)
+    <+> "FROM signatory_link_consent_questions WHERE signatory_links.id = signatory_link_consent_questions.signatory_link_id ORDER BY position ASC)"
   , "signatory_links.mail_confirmation_delivery_status"
   ]
 
-type instance CompositeRow SignatoryLink =
-  ( SignatoryLinkID
-  , CompositeArray1 SignatoryField
-  , Bool
-  , SignatoryRole
-  , SignOrder
-  , CompositeArray1 SignatoryAccessToken
-  , Maybe UserID
-  , Maybe UTCTime
-  , Maybe IPAddress
-  , Maybe UTCTime
-  , Maybe IPAddress
-  , Maybe UTCTime
-  , DeliveryStatus
-  , DeliveryStatus
-  , Maybe UTCTime
-  , Maybe UTCTime
-  , Maybe [[String]]
-  , CompositeArray1 SignatoryAttachment
-  , CompositeArray1 HighlightedPage
-  , Maybe String
-  , Maybe String
-  , Maybe UTCTime
-  , Maybe String
-  , AuthenticationToViewMethod
-  , AuthenticationToViewMethod
-  , AuthenticationToSignMethod
-  , DeliveryMethod
-  , ConfirmationDeliveryMethod
-  , NotificationDeliveryMethod
-  , Bool
-  , Bool
-  , Bool
-  , Bool
-  , Maybe String
-  , CompositeArray1 SignatoryConsentQuestion
-  , DeliveryStatus
-  )
+type instance CompositeRow SignatoryLink
+  = ( SignatoryLinkID
+    , CompositeArray1 SignatoryField
+    , Bool
+    , SignatoryRole
+    , SignOrder
+    , CompositeArray1 SignatoryAccessToken
+    , Maybe UserID
+    , Maybe UTCTime
+    , Maybe IPAddress
+    , Maybe UTCTime
+    , Maybe IPAddress
+    , Maybe UTCTime
+    , DeliveryStatus
+    , DeliveryStatus
+    , Maybe UTCTime
+    , Maybe UTCTime
+    , Maybe [[String]]
+    , CompositeArray1 SignatoryAttachment
+    , CompositeArray1 HighlightedPage
+    , Maybe String
+    , Maybe String
+    , Maybe UTCTime
+    , Maybe String
+    , AuthenticationToViewMethod
+    , AuthenticationToViewMethod
+    , AuthenticationToSignMethod
+    , DeliveryMethod
+    , ConfirmationDeliveryMethod
+    , NotificationDeliveryMethod
+    , Bool
+    , Bool
+    , Bool
+    , Bool
+    , Maybe String
+    , CompositeArray1 SignatoryConsentQuestion
+    , DeliveryStatus
+    )
 
 instance PQFormat SignatoryLink where
   pqFormat = compositeTypePqFormat ctSignatoryLink
 
 instance CompositeFromSQL SignatoryLink where
-  toComposite ( slid
-              , CompositeArray1 fields
-              , is_author
-              , signatory_role
-              , sign_order
-              , CompositeArray1 access_tokens
-              , muser_id
-              , msign_time
-              , msign_ip
-              , mseen_time
-              , mseen_ip
-              , mread_invite
-              , mail_invitation_delivery_status
-              , sms_invitation_delivery_status
-              , mdeleted
-              , mreally_deleted
-              , mcsv_contents
-              , CompositeArray1 attachments
-              , CompositeArray1 highlighted_pages
-              , msign_redirect_url
-              , mreject_redirect_url
-              , mrejection_time
-              , mrejection_reason
-              , authentication_to_view_method
-              , authentication_to_view_archived_method
-              , authentication_to_sign_method
-              , delivery_method
-              , confirmation_delivery_method
-              , notification_delivery_method
-              , allows_highlighting
-              , has_identified
-              , hide_pn
-              , canbeforwarded
-              , consent_title
-              , CompositeArray1 consent_questions
-              , signatorylinkmailconfirmationdeliverystatus
-              ) = SignatoryLink {
-    signatorylinkid = slid
-  , signatoryfields = fields
-  , signatoryisauthor = is_author
-  , signatoryrole = signatory_role
-  , signatorysignorder = sign_order
-  , signatoryaccesstokens = access_tokens
-  , maybesignatory = muser_id
-  , maybesigninfo = SignInfo <$> msign_time <*> msign_ip
-  , maybeseeninfo = SignInfo <$> mseen_time <*> mseen_ip
-  , maybereadinvite = mread_invite
-  , mailinvitationdeliverystatus = mail_invitation_delivery_status
-  , smsinvitationdeliverystatus = sms_invitation_delivery_status
-  , signatorylinkdeleted = mdeleted
-  , signatorylinkreallydeleted = mreally_deleted
-  , signatorylinkcsvupload = CSVUpload <$> mcsv_contents
-  , signatoryattachments = attachments
-  , signatoryhighlightedpages = highlighted_pages
-  , signatorylinksignredirecturl = msign_redirect_url
-  , signatorylinkrejectredirecturl = mreject_redirect_url
-  , signatorylinkrejectiontime = mrejection_time
-  , signatorylinkrejectionreason = mrejection_reason
-  , signatorylinkauthenticationtoviewmethod = authentication_to_view_method
-  , signatorylinkauthenticationtoviewarchivedmethod = authentication_to_view_archived_method
-  , signatorylinkauthenticationtosignmethod = authentication_to_sign_method
-  , signatorylinkdeliverymethod = delivery_method
-  , signatorylinkconfirmationdeliverymethod = confirmation_delivery_method
-  , signatorylinknotificationdeliverymethod = notification_delivery_method
-  , signatorylinkallowshighlighting = allows_highlighting
-  , signatorylinkidentifiedtoview = has_identified
-  , signatorylinkhidepn = hide_pn
-  , signatorylinkcanbeforwarded = canbeforwarded
-  , signatorylinkconsenttitle = consent_title
-  , signatorylinkconsentquestions = consent_questions
-  , signatorylinkmailconfirmationdeliverystatus
-  }
+  toComposite (slid, CompositeArray1 fields, is_author, signatory_role, sign_order, CompositeArray1 access_tokens, muser_id, msign_time, msign_ip, mseen_time, mseen_ip, mread_invite, mail_invitation_delivery_status, sms_invitation_delivery_status, mdeleted, mreally_deleted, mcsv_contents, CompositeArray1 attachments, CompositeArray1 highlighted_pages, msign_redirect_url, mreject_redirect_url, mrejection_time, mrejection_reason, authentication_to_view_method, authentication_to_view_archived_method, authentication_to_sign_method, delivery_method, confirmation_delivery_method, notification_delivery_method, allows_highlighting, has_identified, hide_pn, canbeforwarded, consent_title, CompositeArray1 consent_questions, signatorylinkmailconfirmationdeliverystatus)
+    = SignatoryLink
+      { signatorylinkid                 = slid
+      , signatoryfields                 = fields
+      , signatoryisauthor               = is_author
+      , signatoryrole                   = signatory_role
+      , signatorysignorder              = sign_order
+      , signatoryaccesstokens           = access_tokens
+      , maybesignatory                  = muser_id
+      , maybesigninfo                   = SignInfo <$> msign_time <*> msign_ip
+      , maybeseeninfo                   = SignInfo <$> mseen_time <*> mseen_ip
+      , maybereadinvite                 = mread_invite
+      , mailinvitationdeliverystatus    = mail_invitation_delivery_status
+      , smsinvitationdeliverystatus     = sms_invitation_delivery_status
+      , signatorylinkdeleted            = mdeleted
+      , signatorylinkreallydeleted      = mreally_deleted
+      , signatorylinkcsvupload          = CSVUpload <$> mcsv_contents
+      , signatoryattachments            = attachments
+      , signatoryhighlightedpages       = highlighted_pages
+      , signatorylinksignredirecturl    = msign_redirect_url
+      , signatorylinkrejectredirecturl  = mreject_redirect_url
+      , signatorylinkrejectiontime      = mrejection_time
+      , signatorylinkrejectionreason    = mrejection_reason
+      , signatorylinkauthenticationtoviewmethod = authentication_to_view_method
+      , signatorylinkauthenticationtoviewarchivedmethod =
+        authentication_to_view_archived_method
+      , signatorylinkauthenticationtosignmethod = authentication_to_sign_method
+      , signatorylinkdeliverymethod     = delivery_method
+      , signatorylinkconfirmationdeliverymethod = confirmation_delivery_method
+      , signatorylinknotificationdeliverymethod = notification_delivery_method
+      , signatorylinkallowshighlighting = allows_highlighting
+      , signatorylinkidentifiedtoview   = has_identified
+      , signatorylinkhidepn             = hide_pn
+      , signatorylinkcanbeforwarded     = canbeforwarded
+      , signatorylinkconsenttitle       = consent_title
+      , signatorylinkconsentquestions   = consent_questions
+      , signatorylinkmailconfirmationdeliverystatus
+      }
 
 -- | Check if the given magic hash is the permanent hash or one of the
 -- (valid) temporary hashes.
 isValidSignatoryMagicHash
   :: MagicHash -> UTCTime -> DocumentStatus -> SignatoryLink -> Bool
 isValidSignatoryMagicHash mh now status sl =
-  case find ((mh==) . signatoryAccessTokenHash)
-            (signatoryaccesstokens sl) of
+  case find ((mh ==) . signatoryAccessTokenHash) (signatoryaccesstokens sl) of
     Just sat -> isValidSignatoryAccessToken now status sat
-    Nothing -> False
+    Nothing  -> False

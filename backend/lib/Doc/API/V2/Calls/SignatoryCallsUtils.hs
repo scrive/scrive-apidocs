@@ -43,16 +43,18 @@ import Util.Actor
 import Util.HasSomeUserInfo
 
 -- | Check if provided authorization values for sign call patch
-checkAuthenticationToSignMethodAndValue :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
+checkAuthenticationToSignMethodAndValue
+  :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> m ()
 checkAuthenticationToSignMethodAndValue slid = do
-  mAuthType <- apiV2ParameterOptional (ApiV2ParameterTextUnjson "authentication_type" unjsonAuthenticationToSignMethod)
+  mAuthType <- apiV2ParameterOptional
+    (ApiV2ParameterTextUnjson "authentication_type" unjsonAuthenticationToSignMethod)
   case mAuthType of
-    Nothing -> return ()
+    Nothing         -> return ()
     Just authMethod -> do
       siglink <- guardGetSignatoryFromIdForDocument slid
       let authOK = authMethod == signatorylinkauthenticationtosignmethod siglink
-      unless authOK $
-        apiError $ requestParameterInvalid "authentication_type" "does not match with document"
+      unless authOK $ apiError $ requestParameterInvalid "authentication_type"
+                                                         "does not match with document"
       case authMethod of
         StandardAuthenticationToSign -> return ()
         SEBankIDAuthenticationToSign -> checkParamSSNMatchesSigLink siglink
@@ -62,128 +64,166 @@ checkAuthenticationToSignMethodAndValue slid = do
   where
     checkParamMobileMatchesSigLink siglink = do
       authValue <- apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
-      let mobileEditableBySignatory = Just True == join (fieldEditableBySignatory <$> getFieldByIdentity MobileFI (signatoryfields siglink))
-      if (authValue == getMobile siglink || T.null (getMobile siglink) || mobileEditableBySignatory)
+      let
+        mobileEditableBySignatory =
+          Just True
+            == join
+                 (   fieldEditableBySignatory
+                 <$> getFieldByIdentity MobileFI (signatoryfields siglink)
+                 )
+      if (  authValue
+         == getMobile siglink
+         || T.null (getMobile siglink)
+         || mobileEditableBySignatory
+         )
         then return ()
-        else apiError $
-          requestParameterInvalid "authentication_value" "value for mobile number does not match"
+        else apiError $ requestParameterInvalid "authentication_value"
+                                                "value for mobile number does not match"
     checkParamSSNMatchesSigLink siglink = do
       authValue <- apiV2ParameterObligatory (ApiV2ParameterText "authentication_value")
       if (authValue == getPersonalNumber siglink || T.null (getPersonalNumber siglink))
         then return ()
-        else apiError $
-          requestParameterInvalid "authentication_value" "value for personal number does not match"
+        else apiError $ requestParameterInvalid
+          "authentication_value"
+          "value for personal number does not match"
 
 getScreenshots :: (Kontrakcja m) => m SignatoryScreenshots
 getScreenshots = do
-  screenshots <- apiV2ParameterDefault emptySignatoryScreenshots (ApiV2ParameterJSON "screenshots" unjsonSignatoryScreenshots)
+  screenshots <- apiV2ParameterDefault
+    emptySignatoryScreenshots
+    (ApiV2ParameterJSON "screenshots" unjsonSignatoryScreenshots)
   resolvedScreenshots <- resolveReferenceScreenshotNames screenshots
   case resolvedScreenshots of
-    Nothing -> apiError $ requestParameterInvalid "screenshots" "Could not resolve reference screenshot"
+    Nothing -> apiError
+      $ requestParameterInvalid "screenshots" "Could not resolve reference screenshot"
     Just res -> return res
 
-signDocument :: (Kontrakcja m, DocumentMonad m)
-             => SignatoryLinkID -> SignatoryFieldsValuesForSigning
-             -> [FileID] -> [Text] -> Maybe ESignature -> Maybe Text
-             -> SignatoryScreenshots -> SignatoryConsentResponsesForSigning
-             -> m ()
-signDocument slid fields acceptedAuthorAttachments
-  notUploadedSignatoryAttachments mesig mpin screenshots consentResponses = do
+signDocument
+  :: (Kontrakcja m, DocumentMonad m)
+  => SignatoryLinkID
+  -> SignatoryFieldsValuesForSigning
+  -> [FileID]
+  -> [Text]
+  -> Maybe ESignature
+  -> Maybe Text
+  -> SignatoryScreenshots
+  -> SignatoryConsentResponsesForSigning
+  -> m ()
+signDocument slid fields acceptedAuthorAttachments notUploadedSignatoryAttachments mesig mpin screenshots consentResponses
+  = do
 
-  switchLang =<< getLang <$> theDocument
+    switchLang =<< getLang <$> theDocument
 
-  ctx             <- getContext
-  fieldsWithFiles <- fieldsToFieldsWithFiles fields
+    ctx             <- getContext
+    fieldsWithFiles <- fieldsToFieldsWithFiles fields
 
-  -- Note that the second 'guardGetSignatoryFromIdForDocument' call
-  -- below may return a different result than the first one due to the
-  -- field update, so don't attempt to replace the calls with a single
-  -- call, or the actor identities may get wrong in the evidence log.
-  guardGetSignatoryFromIdForDocument slid >>=
-    \sl -> dbUpdate . UpdateFieldsForSigning sl
-           (fst fieldsWithFiles) (snd fieldsWithFiles)
-    =<< signatoryActor ctx sl
+    -- Note that the second 'guardGetSignatoryFromIdForDocument' call
+    -- below may return a different result than the first one due to the
+    -- field update, so don't attempt to replace the calls with a single
+    -- call, or the actor identities may get wrong in the evidence log.
+    guardGetSignatoryFromIdForDocument slid >>= \sl ->
+      dbUpdate
+        .   UpdateFieldsForSigning sl (fst fieldsWithFiles) (snd fieldsWithFiles)
+        =<< signatoryActor ctx sl
 
-  guardGetSignatoryFromIdForDocument slid >>=
-    \sl -> dbUpdate . UpdateConsentResponsesForSigning sl consentResponses
-    =<< signatoryActor ctx sl
+    guardGetSignatoryFromIdForDocument slid >>= \sl ->
+      dbUpdate
+        .   UpdateConsentResponsesForSigning sl consentResponses
+        =<< signatoryActor ctx sl
 
-  theDocument >>= \doc -> do
-    sl <- guardGetSignatoryFromIdForDocument slid
-    authorAttachmentsWithAcceptanceText <-
-      forM (documentauthorattachments doc) $ \a -> do
-        acceptanceText <- renderTextTemplate "_authorAttachmentsUnderstoodContent"
-                          (F.value "attachment_name" $ authorattachmentname a)
-        return (acceptanceText, a)
-    notUploadedSignatoryAttachmentsText <-
-      renderTextTemplate_
-      "_pageDocumentForAuthorHelpersLocalDialogsAttachmentmarkasnotuploaded"
-    let notUploadedSignatoryAttachmentsWithText =
-          zip notUploadedSignatoryAttachments
-          (repeat notUploadedSignatoryAttachmentsText)
-    dbUpdate . AddAcceptedAuthorAttachmentsEvents sl
-      acceptedAuthorAttachments authorAttachmentsWithAcceptanceText
-      =<< signatoryActor ctx sl
-    dbUpdate . AddNotUploadedSignatoryAttachmentsEvents sl
-      notUploadedSignatoryAttachmentsWithText
-      =<< signatoryActor ctx sl
+    theDocument >>= \doc -> do
+      sl <- guardGetSignatoryFromIdForDocument slid
+      authorAttachmentsWithAcceptanceText <- forM (documentauthorattachments doc) $ \a ->
+        do
+          acceptanceText <- renderTextTemplate
+            "_authorAttachmentsUnderstoodContent"
+            (F.value "attachment_name" $ authorattachmentname a)
+          return (acceptanceText, a)
+      notUploadedSignatoryAttachmentsText <- renderTextTemplate_
+        "_pageDocumentForAuthorHelpersLocalDialogsAttachmentmarkasnotuploaded"
+      let notUploadedSignatoryAttachmentsWithText = zip
+            notUploadedSignatoryAttachments
+            (repeat notUploadedSignatoryAttachmentsText)
+      dbUpdate
+        .   AddAcceptedAuthorAttachmentsEvents sl
+                                               acceptedAuthorAttachments
+                                               authorAttachmentsWithAcceptanceText
+        =<< signatoryActor ctx sl
+      dbUpdate
+        .   AddNotUploadedSignatoryAttachmentsEvents
+              sl
+              notUploadedSignatoryAttachmentsWithText
+        =<< signatoryActor ctx sl
 
-  guardGetSignatoryFromIdForDocument slid
-    >>= \sl -> dbUpdate . SignDocument slid mesig mpin screenshots
-    =<< signatoryActor ctx sl
+    guardGetSignatoryFromIdForDocument slid >>= \sl ->
+      dbUpdate . SignDocument slid mesig mpin screenshots =<< signatoryActor ctx sl
 
 
-fieldsToFieldsWithFiles :: ( CryptoRNG m, MonadBase IO m, MonadCatch m
-                           , MonadFileStorage m , MonadLog m , MonadDB m
-                           , MonadThrow m, MonadTime m)
-                        => SignatoryFieldsValuesForSigning
-                        -> m ( [(FieldIdentity, FieldValue)]
-                             , [(FileID, BS.ByteString)] )
-fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning []) = return ([],[])
-fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning (f:fs)) = do
-  (changeFields,files') <- fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning fs)
+fieldsToFieldsWithFiles
+  :: ( CryptoRNG m
+     , MonadBase IO m
+     , MonadCatch m
+     , MonadFileStorage m
+     , MonadLog m
+     , MonadDB m
+     , MonadThrow m
+     , MonadTime m
+     )
+  => SignatoryFieldsValuesForSigning
+  -> m ([(FieldIdentity, FieldValue)], [(FileID, BS.ByteString)])
+fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning []      ) = return ([], [])
+fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning (f : fs)) = do
+  (changeFields, files') <- fieldsToFieldsWithFiles (SignatoryFieldsValuesForSigning fs)
   case f of
-    (fi,StringFTV s) -> return ((fi,StringFV s):changeFields,files')
-    (fi,BoolFTV b)   -> return ((fi,BoolFV b):changeFields,files')
-    (fi,FileFTV bs)  -> if (BS.null bs)
-      then return $ ((fi,FileFV Nothing):changeFields,files')
+    (fi, StringFTV s) -> return ((fi, StringFV s) : changeFields, files')
+    (fi, BoolFTV b  ) -> return ((fi, BoolFV b) : changeFields, files')
+    (fi, FileFTV bs ) -> if (BS.null bs)
+      then return $ ((fi, FileFV Nothing) : changeFields, files')
       else do
         fileid <- saveNewFile "signature.png" bs
-        return $ ((fi,FileFV (Just fileid)):changeFields,(fileid,bs):files')
+        return $ ((fi, FileFV (Just fileid)) : changeFields, (fileid, bs) : files')
 
 
-checkSignatoryPinToSign :: (Kontrakcja m, DocumentMonad m) => SignatoryLinkID -> SignatoryFieldsValuesForSigning -> Text -> m Bool
+checkSignatoryPinToSign
+  :: (Kontrakcja m, DocumentMonad m)
+  => SignatoryLinkID
+  -> SignatoryFieldsValuesForSigning
+  -> Text
+  -> m Bool
 checkSignatoryPinToSign slid (SignatoryFieldsValuesForSigning fields) pin = do
   sl <- guardGetSignatoryFromIdForDocument slid
-  let mobileEditableBySignatory = Just True == join (fieldEditableBySignatory <$> getFieldByIdentity MobileFI (signatoryfields sl))
+  let mobileEditableBySignatory = Just True == join
+        (fieldEditableBySignatory <$> getFieldByIdentity MobileFI (signatoryfields sl))
   let slidMobile = getMobile sl
-  mobile <- case (not (T.null slidMobile) && not mobileEditableBySignatory , lookup MobileFI fields) of
-    (True, _) -> case asValidPhoneForSMS slidMobile of
-                  Good v -> return v
-                  _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"
-    (False, Just (StringFTV v)) -> case asValidPhoneForSMS v of
-                                    Good x -> return x
-                                    _ -> apiError $ requestParameterInvalid "fields"
-                                           "Does contain invalid mobile number field"
-    (False, _) -> apiError $ requestParameterInvalid "fields"
-                    "Does not contain a mobile number field, author has not set one for the signatory"
+  mobile <-
+    case
+      (not (T.null slidMobile) && not mobileEditableBySignatory, lookup MobileFI fields)
+    of
+      (True, _) -> case asValidPhoneForSMS slidMobile of
+        Good v -> return v
+        _ ->
+          apiError $ serverError "Mobile number for signatory set by author is not valid"
+      (False, Just (StringFTV v)) -> case asValidPhoneForSMS v of
+        Good x -> return x
+        _      -> apiError
+          $ requestParameterInvalid "fields" "Does contain invalid mobile number field"
+      (False, _) -> apiError $ requestParameterInvalid
+        "fields"
+        "Does not contain a mobile number field, author has not set one for the signatory"
   pin' <- dbQuery $ GetSignatoryPin SMSPinToSign slid mobile
-  when (pin /= pin') $ logInfo "Invalid pin for signing" $ object [ "supplied pin" .= pin
-                                                                 , "expected pin" .= pin'
-                                                                 , "slid" .= show slid
-                                                                 ]
+  when (pin /= pin') $ logInfo "Invalid pin for signing" $ object
+    ["supplied pin" .= pin, "expected pin" .= pin', "slid" .= show slid]
   return $ pin == pin'
 
 
-checkSignatoryPinToView :: (Kontrakcja m, DocumentMonad m) => SMSPinType -> SignatoryLinkID -> Text -> m Bool
+checkSignatoryPinToView
+  :: (Kontrakcja m, DocumentMonad m) => SMSPinType -> SignatoryLinkID -> Text -> m Bool
 checkSignatoryPinToView pinType slid pin = do
-  sl <- guardGetSignatoryFromIdForDocument slid
+  sl     <- guardGetSignatoryFromIdForDocument slid
   mobile <- case asValidPhoneForSMS $ getMobile sl of
     Good x -> return x
     _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"
   pin' <- dbQuery $ GetSignatoryPin pinType slid mobile
-  when (pin /= pin') $ logInfo "Invalid pin for identify" $ object [ "supplied pin" .= pin
-                                                                  , "expected pin" .= pin'
-                                                                  , "slid" .= show slid
-                                                                  ]
+  when (pin /= pin') $ logInfo "Invalid pin for identify" $ object
+    ["supplied pin" .= pin, "expected pin" .= pin', "slid" .= show slid]
   return $ pin == pin'

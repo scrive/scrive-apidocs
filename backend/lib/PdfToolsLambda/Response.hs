@@ -21,7 +21,7 @@ parsePdfToolsLambdaSealingResponse bsj = case (decode $ BSL.toString bsj) of
     ms3FileName <- fromJSValueField "resultS3FileName"
     case ms3FileName of
       Just s3FileName -> return $ SealSuccess s3FileName
-      _ -> do
+      _               -> do
         merror <- fromJSValueField "error"
         return $ SealFail $ fromMaybe "No error message provided" merror
   _ -> SealFail "Response is not a valid json"
@@ -35,7 +35,7 @@ parsePdfToolsLambdaCleaningResponse bsj = case (decode $ BSL.toString bsj) of
     ms3FileName <- fromJSValueField "resultS3FileName"
     case ms3FileName of
       Just s3FileName -> return $ CleanSuccess $ s3FileName
-      _ -> do
+      _               -> do
         merror <- fromJSValueField "error"
         return $ CleanFail $ fromMaybe "No error message provided" merror
   _ -> CleanFail "Response is not a valid json"
@@ -49,7 +49,7 @@ parsePdfToolsLambdaAddImageResponse bsj = case (decode $ BSL.toString bsj) of
     ms3FileName <- fromJSValueField "resultS3FileName"
     case ms3FileName of
       Just s3FileName -> return $ AddImageSuccess s3FileName
-      _ -> do
+      _               -> do
         merror <- fromJSValueField "error"
         return $ AddImageFail $ fromMaybe "No error message provided" $ merror
   _ -> AddImageFail "Response is not a valid json"

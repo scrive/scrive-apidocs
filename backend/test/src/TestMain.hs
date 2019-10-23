@@ -98,8 +98,8 @@ import UserStateTest
 import qualified HostClock.Model as HC
 
 allTests :: [TestEnvSt -> Test]
-allTests = [
-    accessControlApiTests
+allTests =
+  [ accessControlApiTests
   , accessControlRoleTests
   , accountInfoTests
   , administrationTests
@@ -161,31 +161,31 @@ allTests = [
   ]
 
 stagingTests :: [TestEnvSt -> Test]
-stagingTests = [
-    screenshotTests,
-    gtWorkflowTests
-  ]
+stagingTests = [screenshotTests, gtWorkflowTests]
 
 modifyTestEnv :: [String] -> ([String], TestEnvSt -> TestEnvSt)
 modifyTestEnv [] = ([], id)
-modifyTestEnv ("--staging-tests":r) =
+modifyTestEnv ("--staging-tests" : r) =
   second (. set teStagingTests True) $ modifyTestEnv r
-modifyTestEnv ("--output-dir":d:r) =
+modifyTestEnv ("--output-dir" : d : r) =
   second (. set teOutputDirectory (Just d)) $ modifyTestEnv r
-modifyTestEnv (d:r) = first (d:) $ modifyTestEnv r
+modifyTestEnv (d : r) = first (d :) $ modifyTestEnv r
 
 
 testMany :: FilePath -> ([String], [(TestEnvSt -> Test)]) -> IO ()
 testMany workspaceRoot (allargs, ts) = do
-  rng <- unsafeCryptoRNGState (BS.pack (replicate 128 0))
-  (errs, lr)  <- mkLogRunner "test" testLogConfig rng
+  rng        <- unsafeCryptoRNGState (BS.pack (replicate 128 0))
+  (errs, lr) <- mkLogRunner "test" testLogConfig rng
   mapM_ T.putStrLn errs
 
   withLogger lr $ \runLogger -> testMany' workspaceRoot (allargs, ts) runLogger rng
 
-testMany' :: FilePath
-          -> ([String], [(TestEnvSt -> Test)])
-          -> (forall m r . LogT m r -> m r) -> CryptoRNGState -> IO ()
+testMany'
+  :: FilePath
+  -> ([String], [(TestEnvSt -> Test)])
+  -> (forall m r . LogT m r -> m r)
+  -> CryptoRNGState
+  -> IO ()
 testMany' workspaceRoot (allargs, ts) runLogger rng = do
   let (args, envf) = modifyTestEnv allargs
   hSetEncoding stdout utf8
@@ -195,54 +195,56 @@ testMany' workspaceRoot (allargs, ts) runLogger rng = do
 
   let connSettings  = pgConnSettings (testDBConfig tconf)
       extrasOptions = defaultExtrasOptions
-  runLogger . runDBT (unConnectionSource . simpleSource $ connSettings [])
-                     defaultTransactionSettings $ do
-    migrateDatabase extrasOptions
-      kontraExtensions kontraComposites kontraDomains kontraTables kontraMigrations
-    defineFunctions kontraFunctions
-    defineTriggers kontraTriggers
-    offsets <- dbQuery $ HC.GetNClockErrorEstimates 10
-    unless (HC.enoughClockErrorOffsetSamples offsets) $ do
-      void $ dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.001) 0.5
-      void $ dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.0015) 0.5
-      return ()
-    commit
+  runLogger
+    . runDBT (unConnectionSource . simpleSource $ connSettings [])
+             defaultTransactionSettings
+    $ do
+        migrateDatabase extrasOptions
+                        kontraExtensions
+                        kontraComposites
+                        kontraDomains
+                        kontraTables
+                        kontraMigrations
+        defineFunctions kontraFunctions
+        defineTriggers kontraTriggers
+        offsets <- dbQuery $ HC.GetNClockErrorEstimates 10
+        unless (HC.enoughClockErrorOffsetSamples offsets) $ do
+          void $ dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.001) 0.5
+          void $ dbUpdate $ HC.InsertClockOffsetFrequency (Just 0.0015) 0.5
+          return ()
+        commit
 
   staticSource <-
     (\conn -> ConnectionSource $ ConnectionSourceM { withConnection = ($ conn) })
-    <$> connect (connSettings kontraComposites)
-  cs <- poolSource (connSettings kontraComposites) 1 10 50
+      <$> connect (connSettings kontraComposites)
+  cs                 <- poolSource (connSettings kontraComposites) 1 10 50
 
   active_tests       <- atomically $ newTVar (True, 0)
   rejected_documents <- newMVar 0
   test_durations     <- newMVar []
-  memcache           <- newFileMemCache $
-                        fromMaybe 200000000 $ testLocalFileCacheSize tconf
+  memcache <- newFileMemCache $ fromMaybe 200000000 $ testLocalFileCacheSize tconf
   mRedisConn         <- T.forM (testRedisCacheConfig tconf) mkRedisConnection
   mAmazonEnv         <- sequence (s3envFromConfig <$> testAmazonConfig tconf)
   lambdaEnv          <- pdfToolsLambdaEnvFromConf $ testPdfToolsLambdaConf tconf
-  let env = envf $ TestEnvSt {
-        _teConnSource         = cs
-      , _teStaticConnSource   = staticSource
-      , _teTransSettings      = defaultTransactionSettings
-      , _teRNGState           = rng
-      , _teRunLogger          = RunLogger runLogger
-      , _teGlobalTemplates    = templates
-      , _teActiveTests        = active_tests
-      , _teRejectedDocuments  = rejected_documents
-      , _teOutputDirectory    = Nothing
-      , _teStagingTests       = False
-      , _tePdfToolsLambdaEnv  = lambdaEnv
-      , _teAmazonS3Env        = mAmazonEnv
-      , _teFileMemCache       = memcache
-      , _teRedisConn          = mRedisConn
-      , _teCronDBConfig       = testDBConfig tconf
-      , _teCronMonthlyInvoice = testMonthlyInvoiceConf tconf
-      , _teTestDurations      = test_durations
-      }
-      ts' = if get teStagingTests env
-            then stagingTests ++ ts
-            else ts
+  let env = envf $ TestEnvSt { _teConnSource         = cs
+                             , _teStaticConnSource   = staticSource
+                             , _teTransSettings      = defaultTransactionSettings
+                             , _teRNGState           = rng
+                             , _teRunLogger          = RunLogger runLogger
+                             , _teGlobalTemplates    = templates
+                             , _teActiveTests        = active_tests
+                             , _teRejectedDocuments  = rejected_documents
+                             , _teOutputDirectory    = Nothing
+                             , _teStagingTests       = False
+                             , _tePdfToolsLambdaEnv  = lambdaEnv
+                             , _teAmazonS3Env        = mAmazonEnv
+                             , _teFileMemCache       = memcache
+                             , _teRedisConn          = mRedisConn
+                             , _teCronDBConfig       = testDBConfig tconf
+                             , _teCronMonthlyInvoice = testMonthlyInvoiceConf tconf
+                             , _teTestDurations      = test_durations
+                             }
+      ts' = if get teStagingTests env then stagingTests ++ ts else ts
   case (get teOutputDirectory env) of
     Nothing -> return ()
     Just d  -> createDirectoryIfMissing True d
@@ -254,15 +256,18 @@ testMany' workspaceRoot (allargs, ts) runLogger rng = do
       n <- snd <$> readTVar active_tests
       when (n /= 0) retry
     runDBT (unConnectionSource staticSource)
-           defaultTransactionSettings { tsAutoTransaction = False } $ do
-      stats <- getConnectionStats
-      liftBase . putStrLn $ "SQL: " ++ show stats
+           defaultTransactionSettings { tsAutoTransaction = False }
+      $ do
+          stats <- getConnectionStats
+          liftBase . putStrLn $ "SQL: " ++ show stats
     rejs <- readMVar rejected_documents
     putStrLn $ "Documents generated but rejected: " ++ show rejs
     let testLongDuration = 5
     tds <- sortOn fst . filter ((> testLongDuration) . fst) <$> readMVar test_durations
-    putStrLn $ "Tests that took longer than "
-      ++ show testLongDuration ++ " seconds to run:"
+    putStrLn
+      $  "Tests that took longer than "
+      ++ show testLongDuration
+      ++ " seconds to run:"
     forM_ tds $ \(diff, s) -> putStrLn $ show diff ++ ": " ++ s
 
 -- | Useful for running an individual test in ghci like so:

@@ -15,38 +15,42 @@ import Theme.Model
 import User.Lang (defaultLang)
 
 cssGenerationTests :: TestEnvSt -> Test
-cssGenerationTests env = testGroup "CSSGeneration" [
-    testThat "Signview branding generation" env testSignviewBrandingGeneration
+cssGenerationTests env = testGroup
+  "CSSGeneration"
+  [ testThat "Signview branding generation" env testSignviewBrandingGeneration
   , testThat "Service  branding generation" env testServiceBrandingGeneration
   , testThat "Login  branding generation"   env testLoginBrandingGeneration
   , testThat "Domain  branding generation"  env testDomainBrandingGeneration
-
   ]
 
-testSignviewBrandingGeneration:: TestEnv ()
+testSignviewBrandingGeneration :: TestEnv ()
 testSignviewBrandingGeneration = do
-  bd <- get ctxbrandeddomain <$> mkContext defaultLang
-  theme <- dbQuery $ GetTheme $ (get bdSignviewTheme $ bd)
+  bd               <- get ctxbrandeddomain <$> mkContext defaultLang
+  theme            <- dbQuery $ GetTheme $ (get bdSignviewTheme $ bd)
   emptyBrandingCSS <- signviewBrandingCSS theme
-  assertBool "CSS generated for signview branding is not empty" (not $ BSL.null $ emptyBrandingCSS)
+  assertBool "CSS generated for signview branding is not empty"
+             (not $ BSL.null $ emptyBrandingCSS)
 
-testServiceBrandingGeneration:: TestEnv ()
+testServiceBrandingGeneration :: TestEnv ()
 testServiceBrandingGeneration = do
-  bd <- get ctxbrandeddomain <$> mkContext defaultLang
-  theme <- dbQuery $ GetTheme $ (get bdServiceTheme $ bd)
+  bd               <- get ctxbrandeddomain <$> mkContext defaultLang
+  theme            <- dbQuery $ GetTheme $ (get bdServiceTheme $ bd)
   emptyBrandingCSS <- serviceBrandingCSS theme
-  assertBool "CSS generated for service branding is not empty" (not $ BSL.null $ emptyBrandingCSS)
+  assertBool "CSS generated for service branding is not empty"
+             (not $ BSL.null $ emptyBrandingCSS)
 
-testLoginBrandingGeneration:: TestEnv ()
+testLoginBrandingGeneration :: TestEnv ()
 testLoginBrandingGeneration = do
-  bd <- get ctxbrandeddomain <$> mkContext defaultLang
-  theme <- dbQuery $ GetTheme $ (get bdLoginTheme $ bd)
+  bd               <- get ctxbrandeddomain <$> mkContext defaultLang
+  theme            <- dbQuery $ GetTheme $ (get bdLoginTheme $ bd)
   emptyBrandingCSS <- loginBrandingCSS theme
-  assertBool "CSS generated for login branding is not empty" (not $ BSL.null $ emptyBrandingCSS)
+  assertBool "CSS generated for login branding is not empty"
+             (not $ BSL.null $ emptyBrandingCSS)
 
-testDomainBrandingGeneration:: TestEnv ()
+testDomainBrandingGeneration :: TestEnv ()
 testDomainBrandingGeneration = do
-  bd <- get ctxbrandeddomain <$> mkContext defaultLang
+  bd               <- get ctxbrandeddomain <$> mkContext defaultLang
   emptyBrandingCSS <- domainBrandingCSS bd
-  assertBool "CSS generated for domain branding is not empty" (not $ BSL.null $ emptyBrandingCSS)
+  assertBool "CSS generated for domain branding is not empty"
+             (not $ BSL.null $ emptyBrandingCSS)
 

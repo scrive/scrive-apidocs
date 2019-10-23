@@ -23,8 +23,8 @@ getContextUser :: Context -> Maybe User
 getContextUser ctx = get ctxmaybeuser ctx `mplus` get ctxmaybepaduser ctx
 
 contextToMailContext :: Context -> MailContext
-contextToMailContext ctx = MailContext {
-    _mctxlang                 = get ctxlang ctx
+contextToMailContext ctx = MailContext
+  { _mctxlang                 = get ctxlang ctx
   , _mctxcurrentBrandedDomain = get ctxbrandeddomain ctx
   , _mctxtime                 = get ctxtime ctx
   , _mctxmailNoreplyAddress   = get ctxmailnoreplyaddress ctx

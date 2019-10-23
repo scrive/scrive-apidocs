@@ -18,4 +18,4 @@ data Password = Password       { pwdEncPass    :: !Scrypt.EncryptedPass
               deriving (Eq, Ord)
 
 instance Show Password where
-  show Password       {} = "Password (SHA256 + scrypt, hash and salt hidden)"
+  show Password{} = "Password (SHA256 + scrypt, hash and salt hidden)"

@@ -26,20 +26,18 @@ data Session = Session {
   , sesDomain    :: Text
   } deriving (Eq, Show, Typeable)
 
-emptySession :: ( CryptoRNG m, MonadDB m, MonadThrow m
-                , MonadTime m, ServerMonad m )
-             => m Session
+emptySession
+  :: (CryptoRNG m, MonadDB m, MonadThrow m, MonadTime m, ServerMonad m) => m Session
 emptySession = do
   now        <- currentTime
   token      <- random
   csrf_token <- random
   domain     <- currentDomain
-  return Session {
-    sesID        = SessionID.tempSessionID
-  , sesUserID    = Nothing
-  , sesPadUserID = Nothing
-  , sesExpires   = now
-  , sesToken     = token
-  , sesCSRFToken = csrf_token
-  , sesDomain    = domain
-}
+  return Session { sesID        = SessionID.tempSessionID
+                 , sesUserID    = Nothing
+                 , sesPadUserID = Nothing
+                 , sesExpires   = now
+                 , sesToken     = token
+                 , sesCSRFToken = csrf_token
+                 , sesDomain    = domain
+                 }

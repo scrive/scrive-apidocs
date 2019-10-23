@@ -13,9 +13,11 @@ import TestKontra
 import User.Types.User
 
 documentGeneratorsTests :: TestEnvSt -> Test
-documentGeneratorsTests env = testGroup "Document generators"
+documentGeneratorsTests env = testGroup
+  "Document generators"
   [ testThat "startableDocumentOC generates startable documents"
-             env testStartableDocumentOC
+             env
+             testStartableDocumentOC
   ]
 
 testStartableDocumentOC :: TestEnv ()

@@ -26,7 +26,7 @@ newtype Messenger a = Messenger { unMessenger :: InnerMessenger a }
 instance MonadBaseControl IO Messenger where
   type StM Messenger a = StM InnerMessenger a
   liftBaseWith f = Messenger $ liftBaseWith $ \run -> f $ run . unMessenger
-  restoreM       = Messenger . restoreM
+  restoreM = Messenger . restoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 

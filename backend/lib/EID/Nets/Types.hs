@@ -93,13 +93,15 @@ unsafeNetsNOBankIDInternalProviderFromInt16 :: Int16 -> NetsNOBankIDInternalProv
 unsafeNetsNOBankIDInternalProviderFromInt16 v = case v of
   1 -> NetsNOBankIDStandard
   2 -> NetsNOBankIDMobile
-  _ -> unexpectedError "Range error while fetching NetsNOBankIDInternalProvider from Int16"
+  _ ->
+    unexpectedError "Range error while fetching NetsNOBankIDInternalProvider from Int16"
 
 unsafeNetsDKNemIDInternalProviderFromInt16 :: Int16 -> NetsDKNemIDInternalProvider
 unsafeNetsDKNemIDInternalProviderFromInt16 v = case v of
   1 -> NetsDKNemIDKeyCard
   2 -> NetsDKNemIDKeyFile
-  _ -> unexpectedError "Range error while fetching NetsDKNemIDInternalProvider from Int16"
+  _ ->
+    unexpectedError "Range error while fetching NetsDKNemIDInternalProvider from Int16"
 
 instance PQFormat NetsNOBankIDInternalProvider where
   pqFormat = pqFormat @Int16
@@ -111,15 +113,12 @@ instance FromSQL NetsNOBankIDInternalProvider where
     case n :: Int16 of
       1 -> return NetsNOBankIDStandard
       2 -> return NetsNOBankIDMobile
-      _ -> throwM RangeError {
-        reRange = [(1, 2)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(1, 2)], reValue = n }
 
 instance ToSQL NetsNOBankIDInternalProvider where
   type PQDest NetsNOBankIDInternalProvider = PQDest Int16
-  toSQL NetsNOBankIDStandard = toSQL (1::Int16)
-  toSQL NetsNOBankIDMobile   = toSQL (2::Int16)
+  toSQL NetsNOBankIDStandard = toSQL (1 :: Int16)
+  toSQL NetsNOBankIDMobile   = toSQL (2 :: Int16)
 
 instance PQFormat NetsDKNemIDInternalProvider where
   pqFormat = pqFormat @Int16
@@ -131,15 +130,12 @@ instance FromSQL NetsDKNemIDInternalProvider where
     case n :: Int16 of
       1 -> return NetsDKNemIDKeyCard
       2 -> return NetsDKNemIDKeyFile
-      _ -> throwM RangeError {
-        reRange = [(1, 2)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(1, 2)], reValue = n }
 
 instance ToSQL NetsDKNemIDInternalProvider where
   type PQDest NetsDKNemIDInternalProvider = PQDest Int16
-  toSQL NetsDKNemIDKeyCard = toSQL (1::Int16)
-  toSQL NetsDKNemIDKeyFile = toSQL (2::Int16)
+  toSQL NetsDKNemIDKeyCard = toSQL (1 :: Int16)
+  toSQL NetsDKNemIDKeyFile = toSQL (2 :: Int16)
 ----------------------------------------
 
 data NetsNOBankIDAuthentication = NetsNOBankIDAuthentication {
@@ -173,10 +169,10 @@ data NetsTarget = NetsTarget {
 
 decodeNetsTarget :: Text -> Maybe NetsTarget
 decodeNetsTarget t = case (B64.decode $ TE.encodeUtf8 t) of
-                       Right t' -> case (maybeRead $ T.pack $ BS.unpack t') of
-                         Just (dmn,did,sid,rurl) -> Just $ NetsTarget dmn did sid rurl
-                         _ -> Nothing
-                       _ -> Nothing
+  Right t' -> case (maybeRead $ T.pack $ BS.unpack t') of
+    Just (dmn, did, sid, rurl) -> Just $ NetsTarget dmn did sid rurl
+    _ -> Nothing
+  _ -> Nothing
 
 -- | GetAssertionRequest request
 data GetAssertionRequest = GetAssertionRequest {
@@ -185,9 +181,15 @@ data GetAssertionRequest = GetAssertionRequest {
 
 -- | Construct SOAP request from the 'GetAssertionRequest'.
 instance ToXML GetAssertionRequest where
-  toXML GetAssertionRequest{..} = do
-      elementA "Request" [("xmlns","urn:oasis:names:tc:SAML:1.0:protocol"),("MajorVersion","1"),("MinorVersion","1")] $ do
-         element "AssertionArtifact" assertionArtifact
+  toXML GetAssertionRequest {..} = do
+    elementA
+        "Request"
+        [ ("xmlns", "urn:oasis:names:tc:SAML:1.0:protocol")
+        , ("MajorVersion", "1")
+        , ("MinorVersion", "1")
+        ]
+      $ do
+          element "AssertionArtifact" assertionArtifact
 
 -- | Collect action response.
 data GetAssertionResponse = GetAssertionResponse {
@@ -197,14 +199,26 @@ data GetAssertionResponse = GetAssertionResponse {
 
 -- | Retrieve 'GetAssertionResponse' from SOAP response.
 xpGetAssertionResponse :: XMLParser GetAssertionResponse
-xpGetAssertionResponse = XMLParser $ \c -> listToMaybe $ c
-  $/ laxElement "Response" &| (\sr -> GetAssertionResponse {
-      assertionStatusCode = T.concat $ sr $/ laxElement "Status" &/ laxAttribute "Value"
-    , assertionAttributes = concatMap (uncurry zip) $
-        sr $/ laxElement "Assertion" &/ laxElement "AttributeStatement" &|
-          \a -> (a $/ laxAttribute "AttributeName" , a $/ laxElement "Attribute" &/ laxElement "AttributeValue"  &/ content)
-
-    })
+xpGetAssertionResponse = XMLParser $ \c ->
+  listToMaybe
+    $  c
+    $/ laxElement "Response"
+    &| (\sr -> GetAssertionResponse
+         { assertionStatusCode = T.concat $ sr $/ laxElement "Status" &/ laxAttribute
+                                   "Value"
+         , assertionAttributes = concatMap (uncurry zip)
+                                 $  sr
+                                 $/ laxElement "Assertion"
+                                 &/ laxElement "AttributeStatement"
+                                 &| \a ->
+                                      ( a $/ laxAttribute "AttributeName"
+                                      , a
+                                        $/ laxElement "Attribute"
+                                        &/ laxElement "AttributeValue"
+                                        &/ content
+                                      )
+         }
+       )
 
 -- data NetsEidType = NetsEidNOBankID
 --
@@ -261,15 +275,12 @@ instance FromSQL NetsSignProvider where
     case n :: Int16 of
       1 -> return NetsSignNO
       2 -> return NetsSignDK
-      _ -> throwM RangeError {
-        reRange = [(1, 2)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(1, 2)], reValue = n }
 
 instance ToSQL NetsSignProvider where
   type PQDest NetsSignProvider = PQDest Int16
-  toSQL NetsSignNO = toSQL (1::Int16)
-  toSQL NetsSignDK = toSQL (2::Int16)
+  toSQL NetsSignNO = toSQL (1 :: Int16)
+  toSQL NetsSignDK = toSQL (2 :: Int16)
 
 netsSignProviderText :: NetsSignProvider -> Text
 netsSignProviderText NetsSignNO = "no_bankid"
@@ -295,8 +306,8 @@ data NetsSignOrder = NetsSignOrder
   } deriving (Show)
 
 instance Loggable NetsSignOrder where
-  logValue NetsSignOrder{..} = object [
-      identifier nsoSignOrderID
+  logValue NetsSignOrder {..} = object
+    [ identifier nsoSignOrderID
     , identifier nsoSessionID
     , identifier nsoSignatoryLinkID
     , "is_canceled" .= nsoIsCanceled
@@ -309,18 +320,23 @@ instance Loggable NetsSignOrder where
 data InsertOrderRequest = InsertOrderRequest NetsSignOrder NetsSignProviderMethod NetsSignConfig Text
 
 instance ToXML InsertOrderRequest where
-  toXML (InsertOrderRequest NetsSignOrder{..} method NetsSignConfig{..} host_part) =
+  toXML (InsertOrderRequest NetsSignOrder {..} method NetsSignConfig {..} host_part) =
     element "InsertOrder" $ do
       element "OrderID" . showt $ nsoSignOrderID
       element "Documents" $ do
         element "Document" $ do
           element "LocalDocumentReference" ("doc_1" :: Text)
           element "Presentation" $ do
-            element "Title" ("Scrive document" :: Text)
+            element "Title"       ("Scrive document" :: Text)
             element "Description" ("Scrive document to be signed" :: Text)
           element "DocType" $ do
             element "TEXT" $ do
-              element "B64DocumentBytes" . T.pack . BS.unpack . B64.encode . TE.encodeUtf8 $ nsoTextToBeSigned
+              element "B64DocumentBytes"
+                . T.pack
+                . BS.unpack
+                . B64.encode
+                . TE.encodeUtf8
+                $ nsoTextToBeSigned
       element "Signers" $ do
         element "Signer" $ do
           element "EndUserSigner" $ do
@@ -340,29 +356,31 @@ instance ToXML InsertOrderRequest where
                 element "NemID" $ do
                   element "CertificatePolicy" ("Employee" :: Text)
                   element "SignerID" $ do
-                    element "IDType" ("SSN" :: Text)
+                    element "IDType"  ("SSN" :: Text)
                     element "IDValue" nsoSSN
               NetsSignDKEmployeeKeyfile -> do
                 element "NemID-OpenSign" $ do
                   element "CertificatePolicy" ("Employee" :: Text)
                   element "SignerID" $ do
-                    element "IDType" ("SSN" :: Text)
+                    element "IDType"  ("SSN" :: Text)
                     element "IDValue" nsoSSN
               NetsSignDKPersonalKeycard -> do
                 element "NemID" $ do
                   element "CertificatePolicy" ("Personal" :: Text)
                   element "SignerID" $ do
-                    element "IDType" ("SSN" :: Text)
+                    element "IDType"  ("SSN" :: Text)
                     element "IDValue" nsoSSN
       element "WebContexts" $ do
         element "WebContext" $ do
           element "LocalWebContextRef" ("web_1" :: Text)
-          element "SignURLBase" (netssignSignURLBase <> "index.html?ref=")
-          element "ErrorURLBase" (host_part <> "/nets/sign_error?err=")
+          element "SignURLBase"        (netssignSignURLBase <> "index.html?ref=")
+          element "ErrorURLBase"       (host_part <> "/nets/sign_error?err=")
           case nsoProvider of
-            NetsSignNO -> element "StyleURL" (host_part <> "/css/assets/nets_sign_no.css")
-            NetsSignDK -> element "StyleURL" (host_part <> "/css/assets/nets_sign_dk.css")
-          element "ExitURL" (host_part <> "/nets/sign_exit")
+            NetsSignNO ->
+              element "StyleURL" (host_part <> "/css/assets/nets_sign_no.css")
+            NetsSignDK ->
+              element "StyleURL" (host_part <> "/css/assets/nets_sign_dk.css")
+          element "ExitURL"  (host_part <> "/nets/sign_exit")
           element "AbortURL" (host_part <> "/nets/sign_abort")
       element "ExecutionDetails" $ do
         element "OrderDeadline" . T.pack . formatTimeISO $ nsoDeadline
@@ -370,9 +388,9 @@ instance ToXML InsertOrderRequest where
           element "Step" $ do
             element "StepNumber" (1 :: Int)
             element "SigningProcess" $ do
-              element "LocalWebContextRef" ("web_1" :: Text)
+              element "LocalWebContextRef"     ("web_1" :: Text)
               element "LocalDocumentReference" ("doc_1" :: Text)
-              element "LocalSignerReference" ("signer_1" :: Text)
+              element "LocalSignerReference"   ("signer_1" :: Text)
 
 -- NETS SIGNING - Insert Order Response
 
@@ -382,16 +400,14 @@ data InsertOrderResponse = InsertOrderResponse
   } deriving (Show)
 
 instance Loggable InsertOrderResponse where
-  logValue InsertOrderResponse{..} = object [
-      identifier iorsSignOrderUUID
-    , "transaction_ref" .= iorsTransactionRef
-    ]
+  logValue InsertOrderResponse {..} =
+    object [identifier iorsSignOrderUUID, "transaction_ref" .= iorsTransactionRef]
   logDefaultLabel _ = "nets_insert_order_response"
 
 xpInsertOrderResponse :: XMLParser InsertOrderResponse
-xpInsertOrderResponse = XMLParser $ \cursor -> listToMaybe $ cursor
-  $/ laxElement "InsertOrderResponse" &| \rs -> InsertOrderResponse {
-      iorsSignOrderUUID    = parseSignOrderUUID $ readT "OrderID" rs
+xpInsertOrderResponse = XMLParser $ \cursor ->
+  listToMaybe $ cursor $/ laxElement "InsertOrderResponse" &| \rs -> InsertOrderResponse
+    { iorsSignOrderUUID  = parseSignOrderUUID $ readT "OrderID" rs
     , iorsTransactionRef = readT "TransRef" rs
     }
 
@@ -400,7 +416,7 @@ xpInsertOrderResponse = XMLParser $ \cursor -> listToMaybe $ cursor
 newtype GetSigningProcessesRequest = GetSigningProcessesRequest { unGetSigningProcessesRequest :: NetsSignOrder }
 
 instance ToXML GetSigningProcessesRequest where
-  toXML (GetSigningProcessesRequest NetsSignOrder{..}) =
+  toXML (GetSigningProcessesRequest NetsSignOrder {..}) =
     element "GetSigningProcesses" $ do
       element "OrderID" . showt $ nsoSignOrderID
       element "LocalSignerReference" ("signer_1" :: Text)
@@ -414,16 +430,19 @@ data GetSigningProcessesResponse = GetSigningProcessesResponse
   }
 
 xpGetSigningProcessesResponse :: XMLParser GetSigningProcessesResponse
-xpGetSigningProcessesResponse = XMLParser $ \cursor -> listToMaybe $ cursor
-  $/ laxElement "GetSigningProcessesResponse" &| \rs -> GetSigningProcessesResponse {
-      gsprsSignOrderUUID    = parseSignOrderUUID $ readT "OrderID" rs
-    , gsprsTransactionRef = readT "TransRef" rs
-    , gsprsSignURL        = readTs ["SigningProcessResults", "SigningProcessResult", "SignURL"] rs
-    }
+xpGetSigningProcessesResponse = XMLParser $ \cursor ->
+  listToMaybe $ cursor $/ laxElement "GetSigningProcessesResponse" &| \rs ->
+    GetSigningProcessesResponse
+      { gsprsSignOrderUUID  = parseSignOrderUUID $ readT "OrderID" rs
+      , gsprsTransactionRef = readT "TransRef" rs
+      , gsprsSignURL        = readTs
+                                ["SigningProcessResults", "SigningProcessResult", "SignURL"]
+                                rs
+      }
 
 instance Loggable GetSigningProcessesResponse where
-  logValue GetSigningProcessesResponse{..} = object [
-      identifier gsprsSignOrderUUID
+  logValue GetSigningProcessesResponse {..} = object
+    [ identifier gsprsSignOrderUUID
     , "transaction_ref" .= gsprsTransactionRef
     , "nets_sign_url" .= gsprsSignURL
     ]
@@ -434,9 +453,8 @@ instance Loggable GetSigningProcessesResponse where
 newtype GetOrderStatusRequest = GetOrderStatusRequest { unGetOrderStatusRequest :: NetsSignOrder }
 
 instance ToXML GetOrderStatusRequest where
-  toXML (GetOrderStatusRequest NetsSignOrder{..}) =
-    element "GetOrderStatus" $ do
-      element "OrderID" . showt $ nsoSignOrderID
+  toXML (GetOrderStatusRequest NetsSignOrder {..}) = element "GetOrderStatus" $ do
+    element "OrderID" . showt $ nsoSignOrderID
 
 --NETS Signing - Get Order Status Response
 
@@ -456,20 +474,20 @@ data GetOrderStatusResponse = GetOrderStatusResponse
   }
 
 instance Loggable GetOrderStatusResponse where
-  logValue GetOrderStatusResponse{..} = object [
-      identifier gosrsSignOrderUUID
+  logValue GetOrderStatusResponse {..} = object
+    [ identifier gosrsSignOrderUUID
     , "transaction_ref" .= gosrsTransactionRef
     , "order_status" .= (showt $ gosrsOrderStatus)
     ]
   logDefaultLabel _ = "nets_get_order_status_response"
 
 xpGetOrderStatusResponse :: XMLParser GetOrderStatusResponse
-xpGetOrderStatusResponse = XMLParser $ \cursor -> listToMaybe $ cursor
-  $/ laxElement "GetOrderStatusResponse" &| \rs -> GetOrderStatusResponse {
-      gosrsSignOrderUUID    = parseSignOrderUUID $ readT "OrderID" rs
-    , gosrsTransactionRef = readT "TransRef" rs
-    , gosrsOrderStatus    = parseOrderStatus $ readT "OrderStatus" rs
-    }
+xpGetOrderStatusResponse = XMLParser $ \cursor ->
+  listToMaybe $ cursor $/ laxElement "GetOrderStatusResponse" &| \rs ->
+    GetOrderStatusResponse { gosrsSignOrderUUID = parseSignOrderUUID $ readT "OrderID" rs
+                           , gosrsTransactionRef = readT "TransRef" rs
+                           , gosrsOrderStatus = parseOrderStatus $ readT "OrderStatus" rs
+                           }
 
 parseOrderStatus :: Text -> OrderStatus
 parseOrderStatus t = fromMaybe
@@ -481,9 +499,8 @@ parseOrderStatus t = fromMaybe
 newtype GetSDORequest = GetSDORequest { unGetSDORequest :: NetsSignOrder }
 
 instance ToXML GetSDORequest where
-  toXML (GetSDORequest NetsSignOrder{..}) =
-    element "GetSDO" $ do
-      element "OrderID" . showt $ nsoSignOrderID
+  toXML (GetSDORequest NetsSignOrder {..}) = element "GetSDO" $ do
+    element "OrderID" . showt $ nsoSignOrderID
 
 --NETS Signing - Get SDO Response
 
@@ -494,17 +511,17 @@ data GetSDOResponse = GetSDOResponse
   }
 
 instance Loggable GetSDOResponse where
-  logValue GetSDOResponse{..} = object [
-      identifier gsdorsSignOrderUUID
+  logValue GetSDOResponse {..} = object
+    [ identifier gsdorsSignOrderUUID
     , "transaction_ref" .= gsdorsTransactionRef
     , "b64_sdo_bytes_length" .= T.length gsdorsB64SDOBytes
     ]
   logDefaultLabel _ = "nets_get_sdo_response"
 
 xpGetSDOResponse :: XMLParser GetSDOResponse
-xpGetSDOResponse = XMLParser $ \cursor -> listToMaybe $ cursor
-  $/ laxElement "GetSDOResponse" &| \rs -> GetSDOResponse {
-      gsdorsSignOrderUUID    = parseSignOrderUUID $ readT "OrderID" rs
+xpGetSDOResponse = XMLParser $ \cursor ->
+  listToMaybe $ cursor $/ laxElement "GetSDOResponse" &| \rs -> GetSDOResponse
+    { gsdorsSignOrderUUID  = parseSignOrderUUID $ readT "OrderID" rs
     , gsdorsTransactionRef = readT "TransRef" rs
     , gsdorsB64SDOBytes    = readT "B64SDOBytes" rs
     }
@@ -515,10 +532,9 @@ xpGetSDOResponse = XMLParser $ \cursor -> listToMaybe $ cursor
 data GetSDODetailsRequest = GetSDODetailsRequest !Text
 
 instance ToXML GetSDODetailsRequest where
-  toXML (GetSDODetailsRequest b64SDO) =
-    element "GetSDODetails" $ do
-      element "B64SDOBytes" b64SDO
-      element "VerifySDO" ("true" :: Text)
+  toXML (GetSDODetailsRequest b64SDO) = element "GetSDODetails" $ do
+    element "B64SDOBytes" b64SDO
+    element "VerifySDO"   ("true" :: Text)
 
 --NETS Signing - Get SDO Response - NO BankID
 
@@ -530,21 +546,38 @@ data GetSDODetailsResponseNO = GetSDODetailsResponseNO
   }
 
 instance Loggable GetSDODetailsResponseNO where
-  logValue GetSDODetailsResponseNO{..} = object [
-      "transaction_ref" .= gsdodrsnoTransactionRef
+  logValue GetSDODetailsResponseNO {..} = object
+    [ "transaction_ref" .= gsdodrsnoTransactionRef
     , "signed_text" .= gsdodrsnoSignedText
     , "signer_cn" .= gsdodrsnoSignerCN
     ]
   logDefaultLabel _ = "nets_get_sdo_details_response_no"
 
 xpGetSDODetailsResponseNO :: XMLParser GetSDODetailsResponseNO
-xpGetSDODetailsResponseNO = XMLParser $ \cursor -> listToMaybe $ cursor
-  $/ laxElement "GetSDODetailsResponse" &| \rs -> GetSDODetailsResponseNO {
-      gsdodrsnoTransactionRef = readT "TransRef" rs
-    , gsdodrsnoSignedText     = readTs ["SDOList", "SDO", "SignedData"] rs
-    , gsdodrsnoSignerCN       = readTs ["SDOList", "SDO", "SDOSignatures", "SDOSignature", "SignerCertificateInfo", "CN"] rs
-    , gsdodrsnoSignerPID      = readTs ["SDOList", "SDO", "SDOSignatures", "SDOSignature", "SignerCertificateInfo", "UniqueID"] rs
-    }
+xpGetSDODetailsResponseNO = XMLParser $ \cursor ->
+  listToMaybe $ cursor $/ laxElement "GetSDODetailsResponse" &| \rs ->
+    GetSDODetailsResponseNO
+      { gsdodrsnoTransactionRef = readT "TransRef" rs
+      , gsdodrsnoSignedText     = readTs ["SDOList", "SDO", "SignedData"] rs
+      , gsdodrsnoSignerCN       = readTs
+                                    [ "SDOList"
+                                    , "SDO"
+                                    , "SDOSignatures"
+                                    , "SDOSignature"
+                                    , "SignerCertificateInfo"
+                                    , "CN"
+                                    ]
+                                    rs
+      , gsdodrsnoSignerPID      = readTs
+                                    [ "SDOList"
+                                    , "SDO"
+                                    , "SDOSignatures"
+                                    , "SDOSignature"
+                                    , "SignerCertificateInfo"
+                                    , "UniqueID"
+                                    ]
+                                    rs
+      }
 
 
 --NETS Signing - Get SDO Response - NemID
@@ -556,23 +589,34 @@ data GetSDODetailsResponseDK = GetSDODetailsResponseDK
   }
 
 instance Loggable GetSDODetailsResponseDK where
-  logValue GetSDODetailsResponseDK{..} = object [
-      "transaction_ref" .= gsdodrsdkTransactionRef
+  logValue GetSDODetailsResponseDK {..} = object
+    [ "transaction_ref" .= gsdodrsdkTransactionRef
     , "signed_text" .= gsdodrsdkSignedText
     , "signer_cn" .= gsdodrsdkSignerCN
     ]
   logDefaultLabel _ = "nets_get_sdo_details_response_dk"
 
 xpGetSDODetailsResponseDK :: XMLParser GetSDODetailsResponseDK
-xpGetSDODetailsResponseDK = XMLParser $ \cursor -> listToMaybe $ cursor
-  $/ laxElement "GetSDODetailsResponse" &| \rs -> GetSDODetailsResponseDK {
-      gsdodrsdkTransactionRef = readT "TransRef" rs
-    , gsdodrsdkSignedText     = readTs ["SDOList", "SDO", "SignedData"] rs
-    , gsdodrsdkSignerCN       = readTs ["SDOList", "SDO", "SDOSignatures", "SDOSignature", "SignerCertificateInfo", "CN"] rs
-    }
+xpGetSDODetailsResponseDK = XMLParser $ \cursor ->
+  listToMaybe $ cursor $/ laxElement "GetSDODetailsResponse" &| \rs ->
+    GetSDODetailsResponseDK
+      { gsdodrsdkTransactionRef = readT "TransRef" rs
+      , gsdodrsdkSignedText     = readTs ["SDOList", "SDO", "SignedData"] rs
+      , gsdodrsdkSignerCN       = readTs
+                                    [ "SDOList"
+                                    , "SDO"
+                                    , "SDOSignatures"
+                                    , "SDOSignature"
+                                    , "SignerCertificateInfo"
+                                    , "CN"
+                                    ]
+                                    rs
+      }
 
 xpGetSDOAttributes :: XMLParser [(Text, Text)]
-xpGetSDOAttributes = XMLParser $ \cursor -> listToMaybe $ cursor
+xpGetSDOAttributes = XMLParser $ \cursor ->
+  listToMaybe
+    $  cursor
     $/ laxElement "SDO"
     &/ laxElement "SDODataPart"
     &/ laxElement "SignatureElement"
@@ -581,18 +625,16 @@ xpGetSDOAttributes = XMLParser $ \cursor -> listToMaybe $ cursor
     &/ laxElement "Signature"
     &/ laxElement "Object"
     &/ laxElement "SignatureProperties"
-    &| \sps -> sps
-      $/ laxElement "SignatureProperty"
-      &| \sp -> (readT "Name" sp, readT "Value" sp)
+    &| \sps -> sps $/ laxElement "SignatureProperty" &| \sp ->
+         (readT "Name" sp, readT "Value" sp)
 
 -- NETS Signing - Cancel Order Request
 
 data CancelOrderRequest = CancelOrderRequest !SignOrderUUID
 
 instance ToXML CancelOrderRequest where
-  toXML (CancelOrderRequest soid) =
-    element "CancelOrder" $ do
-      element "OrderID" . showt $ soid
+  toXML (CancelOrderRequest soid) = element "CancelOrder" $ do
+    element "OrderID" . showt $ soid
 
 --NETS Signing - Cancel Order Response
 
@@ -601,18 +643,14 @@ data CancelOrderResponse = CancelOrderResponse
   }
 
 instance Loggable CancelOrderResponse where
-  logValue CancelOrderResponse{..} = object [
-      "transaction_ref" .= corsTransactionRef
-    ]
+  logValue CancelOrderResponse {..} = object ["transaction_ref" .= corsTransactionRef]
   logDefaultLabel _ = "nets_cancel_order_response"
 
 xpCancelOrderResponse :: XMLParser CancelOrderResponse
-xpCancelOrderResponse = XMLParser $ \cursor -> listToMaybe $ cursor
-  $/ laxElement "CancelOrderResponse" &| \rs -> CancelOrderResponse {
-      corsTransactionRef = readT "TransRef" rs
-    }
+xpCancelOrderResponse = XMLParser $ \cursor ->
+  listToMaybe $ cursor $/ laxElement "CancelOrderResponse" &| \rs ->
+    CancelOrderResponse { corsTransactionRef = readT "TransRef" rs }
 
 readTs :: [Text] -> XML.Cursor -> Text
 readTs names cursor = T.concat $ cursor $/ laxElements names content
-  where
-    laxElements = foldr (.) id . fmap (&/) . fmap laxElement
+  where laxElements = foldr (.) id . fmap (&/) . fmap laxElement

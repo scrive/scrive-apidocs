@@ -21,10 +21,7 @@ instance Ord DocumentTag where
 ---------------------------------
 
 documentTagsSelectors :: [SQL]
-documentTagsSelectors = [
-    "document_tags.name"
-  , "document_tags.value"
-  ]
+documentTagsSelectors = ["document_tags.name", "document_tags.value"]
 
 type instance CompositeRow DocumentTag = (Text, Text)
 
@@ -32,7 +29,4 @@ instance PQFormat DocumentTag where
   pqFormat = compositeTypePqFormat ctDocumentTag
 
 instance CompositeFromSQL DocumentTag where
-  toComposite (name, value) = DocumentTag {
-    tagname = name
-  , tagvalue = value
-  }
+  toComposite (name, value) = DocumentTag { tagname = name, tagvalue = value }

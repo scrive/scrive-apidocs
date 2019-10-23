@@ -60,19 +60,14 @@ import VersionTH
 {- |
    Renders some page body xml into a complete reponse
 -}
-renderFromBody :: Kontrakcja m
-               => Text
-               -> m Response
+renderFromBody :: Kontrakcja m => Text -> m Response
 renderFromBody content = renderFromBodyWithFields content (return ())
 
 
 {- |
    Renders some page body xml into a complete reponse. It can take aditional fields to be passed to a template
 -}
-renderFromBodyWithFields :: Kontrakcja m
-               => Text
-               -> Fields m ()
-               -> m Response
+renderFromBodyWithFields :: Kontrakcja m => Text -> Fields m () -> m Response
 renderFromBodyWithFields content fields = do
   ctx <- getContext
   ad  <- getAnalyticsData
@@ -83,12 +78,7 @@ renderFromBodyWithFields content fields = do
 {- |
    Renders some page body xml into a complete page of xml
 -}
-pageFromBody :: Kontrakcja m
-             => Context
-             -> AnalyticsData
-             -> Text
-             -> Fields m ()
-             -> m Text
+pageFromBody :: Kontrakcja m => Context -> AnalyticsData -> Text -> Fields m () -> m Text
 pageFromBody ctx ad bodytext fields = do
   mugidandui <- userGroupUIForPage
   renderTextTemplate "wholePage" $ do
@@ -97,58 +87,58 @@ pageFromBody ctx ad bodytext fields = do
     F.valueM "httplink" $ getHttpHostpart
     fields
 
-userGroupWithParentsForPage  :: Kontrakcja m => m (Maybe UserGroupWithParents)
+userGroupWithParentsForPage :: Kontrakcja m => m (Maybe UserGroupWithParents)
 userGroupWithParentsForPage = do
   ctx <- getContext
   case (get ctxmaybeuser ctx) of
-    Nothing -> return Nothing
+    Nothing   -> return Nothing
     Just user -> fmap Just $ dbQuery $ UserGroupGetWithParentsByUserID (userid user)
 
-userGroupUIForPage  :: Kontrakcja m => m (Maybe (UserGroupID, UserGroupUI))
+userGroupUIForPage :: Kontrakcja m => m (Maybe (UserGroupID, UserGroupUI))
 userGroupUIForPage = do
   ctx <- getContext
   case (get ctxmaybeuser ctx) of
-       Just user -> do
-         ug <- dbQuery . UserGroupGetByUserID . userid $ user
-         return . Just $ (get ugID ug, get ugUI ug)
-       _ -> return Nothing
+    Just user -> do
+      ug <- dbQuery . UserGroupGetByUserID . userid $ user
+      return . Just $ (get ugID ug, get ugUI ug)
+    _ -> return Nothing
 
 currentSubscriptionJSON :: Kontrakcja m => m (Maybe A.Value)
 currentSubscriptionJSON = do
   mugwp <- userGroupWithParentsForPage
   case mugwp of
     Just ugwp -> Just . unjsonToJSON unjsonDef <$> getSubscription ugwp
-    Nothing -> return Nothing
+    Nothing   -> return Nothing
 
 notFoundPage :: Kontrakcja m => m Response
 notFoundPage = pageWhereLanguageCanBeInUrl $ do
-  ctx <- getContext
-  ad  <- getAnalyticsData
+  ctx     <- getContext
+  ad      <- getAnalyticsData
   content <- renderTextTemplate "notFound" (standardPageFields ctx Nothing ad)
   simpleHtmlResponse content
 
 linkInvalidPage :: Kontrakcja m => m Response
 linkInvalidPage = pageWhereLanguageCanBeInUrl $ do
-  ctx <- getContext
-  ad  <- getAnalyticsData
+  ctx     <- getContext
+  ad      <- getAnalyticsData
   content <- renderTextTemplate "linkInvalid" (standardPageFields ctx Nothing ad)
   simpleHtmlResponse content
 
 internalServerErrorPage :: Kontrakcja m => m Response
-internalServerErrorPage =  pageWhereLanguageCanBeInUrl $ do
-  ctx <- getContext
-  ad  <- getAnalyticsData
+internalServerErrorPage = pageWhereLanguageCanBeInUrl $ do
+  ctx     <- getContext
+  ad      <- getAnalyticsData
   content <- renderTextTemplate "internalServerError" (standardPageFields ctx Nothing ad)
   simpleHtmlResponse content
 
 pageWhereLanguageCanBeInUrl :: Kontrakcja m => m Response -> m Response
 pageWhereLanguageCanBeInUrl handler = do
   request :: Request <- askRq
-  let requestPaths :: [Text] = T.pack <$> rqPaths request
+  let requestPaths :: [Text]    = T.pack <$> rqPaths request
       languages :: [Maybe Lang] = langFromCode <$> requestPaths
   case (languages) of
-       (Just lang:_) -> switchLang lang >> handler
-       _ -> handler
+    (Just lang : _) -> switchLang lang >> handler
+    _               -> handler
 
 unsupportedBrowserPage :: Kontrakcja m => m Response
 unsupportedBrowserPage = do
@@ -158,12 +148,12 @@ unsupportedBrowserPage = do
 enableCookiesPage :: Kontrakcja m => m Response
 enableCookiesPage = do
   rq <- askRq
-  let cookies = rqCookies rq
-      headers = rqHeaders rq
+  let cookies  = rqCookies rq
+      headers  = rqHeaders rq
       hostname = T.pack $ fst $ rqPeer rq
-      ua = case Map.lookup "user-agent" headers of
-             Just (HeaderPair _ (x:_)) -> TE.decodeUtf8 x
-             _ -> "<unknown>"
+      ua       = case Map.lookup "user-agent" headers of
+        Just (HeaderPair _ (x : _)) -> TE.decodeUtf8 x
+        _ -> "<unknown>"
   let cookieNames = showt $ map fst cookies
       mixpanel event = asyncLogEvent
         (NamedEvent event)
@@ -172,9 +162,7 @@ enableCookiesPage = do
         , SomeProp "host" $ PVString hostname
         ]
         EventMixpanel
-  logInfo "Current cookies" $ object [
-      "cookies" .= map (second cookieToJson) cookies
-    ]
+  logInfo "Current cookies" $ object ["cookies" .= map (second cookieToJson) cookies]
   ctx <- getContext
   ad  <- getAnalyticsData
   case cookies of
@@ -191,45 +179,53 @@ enableCookiesPage = do
       -- this will not rollback the transaction
       let fields = standardPageFields ctx Nothing ad
       content <- renderTextTemplate "sessionTimeOut" fields
-      internalServerError =<<
-        pageWhereLanguageCanBeInUrl
-        (simpleHtmlResponse content)
+      internalServerError =<< pageWhereLanguageCanBeInUrl (simpleHtmlResponse content)
   where
-    cookieToJson Cookie{..} = object [
-        "version"   .= cookieVersion
-      , "path"      .= cookiePath
-      , "domain"    .= cookieDomain
-      , "name"      .= cookieName
-      , "value"     .= cookieValue
-      , "secure"    .= secure
+    cookieToJson Cookie {..} = object
+      [ "version" .= cookieVersion
+      , "path" .= cookiePath
+      , "domain" .= cookieDomain
+      , "name" .= cookieName
+      , "value" .= cookieValue
+      , "secure" .= secure
       , "http_only" .= httpOnly
       ]
 
-standardPageFields :: (Kontrakcja m) => Context -> Maybe (UserGroupID, UserGroupUI) -> AnalyticsData -> Fields m ()
+standardPageFields
+  :: (Kontrakcja m)
+  => Context
+  -> Maybe (UserGroupID, UserGroupUI)
+  -> AnalyticsData
+  -> Fields m ()
 standardPageFields ctx mugidandui ad = do
-  F.value "langcode"  $ codeFromLang $ get ctxlang ctx
-  F.value "logged"    $ isJust (get ctxmaybeuser ctx)
+  F.value "langcode" $ codeFromLang $ get ctxlang ctx
+  F.value "logged" $ isJust (get ctxmaybeuser ctx)
   F.value "padlogged" $ isJust (get ctxmaybepaduser ctx)
-  F.value "hostpart"  $ get ctxDomainUrl ctx
+  F.value "hostpart" $ get ctxDomainUrl ctx
   F.value "production" (get ctxproduction ctx)
   F.value "brandingdomainid" (show $ get (bdid . ctxbrandeddomain) ctx)
-  F.value "brandinguserid" (fmap (show . userid)
-                            (get ctxmaybeuser ctx `mplus` get ctxmaybepaduser ctx))
+  F.value "brandinguserid"
+          (fmap (show . userid) (get ctxmaybeuser ctx `mplus` get ctxmaybepaduser ctx))
   F.value "ctxlang" $ codeFromLang $ get ctxlang ctx
   F.object "analytics" $ analyticsTemplates ad
   F.value "trackjstoken" (get ctxtrackjstoken ctx)
   F.value "zendeskkey" (get ctxzendeskkey ctx)
   F.valueM "brandinghash" $ brandingAdler32 ctx mugidandui
-  F.valueM "b64subscriptiondata" $  fmap (B64.encode . A.encode) <$> currentSubscriptionJSON
-  F.value  "subscriptionuseriscompanyadmin" $
-    case fmap useriscompanyadmin (get ctxmaybeuser ctx) of
-      Nothing -> "undefined"
-      Just True -> "true"
-      Just False -> "false"
-  F.value "title" $ case emptyToNothing . strip . T.unpack =<< get uguiBrowserTitle . snd =<< mugidandui of
-                      Just ctitle -> ctitle <> " - " <>
-                                     (T.unpack (get (bdBrowserTitle . ctxbrandeddomain) ctx))
-                      Nothing -> T.unpack (get (bdBrowserTitle . ctxbrandeddomain) ctx)
+  F.valueM "b64subscriptiondata"
+    $   fmap (B64.encode . A.encode)
+    <$> currentSubscriptionJSON
+  F.value "subscriptionuseriscompanyadmin"
+    $ case fmap useriscompanyadmin (get ctxmaybeuser ctx) of
+        Nothing    -> "undefined"
+        Just True  -> "true"
+        Just False -> "false"
+  F.value "title"
+    $ case
+        emptyToNothing . strip . T.unpack =<< get uguiBrowserTitle . snd =<< mugidandui
+      of
+        Just ctitle ->
+          ctitle <> " - " <> (T.unpack (get (bdBrowserTitle . ctxbrandeddomain) ctx))
+        Nothing -> T.unpack (get (bdBrowserTitle . ctxbrandeddomain) ctx)
   entryPointFields ctx
 
 jsonContentType :: BS.ByteString
@@ -242,14 +238,21 @@ simpleAesonResponse :: (A.ToJSON a, FilterMonad Response m) => a -> m Response
 simpleAesonResponse = ok . toResponseBS jsonContentType . A.encode . A.toJSON
 
 simpleUnjsonResponse :: (FilterMonad Response m) => UnjsonDef a -> a -> m Response
-simpleUnjsonResponse unjson a = ok $ toResponseBS jsonContentType $ unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjson a
+simpleUnjsonResponse unjson a =
+  ok $ toResponseBS jsonContentType $ unjsonToByteStringLazy'
+    (Options { pretty = True, indent = 2, nulls = True })
+    unjson
+    a
 
 {- |
    Changing our pages into reponses
 -}
 simpleHtmlResponse :: FilterMonad Response m => Text -> m Response
-simpleHtmlResponse s = ok $
-  toResponseBS (BS.fromString "text/html;charset=utf-8") $ BSL.fromStrict $ TE.encodeUtf8 s
+simpleHtmlResponse s =
+  ok
+    $ toResponseBS (BS.fromString "text/html;charset=utf-8")
+    $ BSL.fromStrict
+    $ TE.encodeUtf8 s
 
 respondWithPDF :: Bool -> BS.ByteString -> Response
 respondWithPDF = respondWithDownloadContents "application/pdf"
@@ -259,15 +262,15 @@ respondWithZipFile = respondWithDownloadContents "application/zip"
 
 respondWithDownloadContents :: BS.ByteString -> Bool -> BS.ByteString -> Response
 respondWithDownloadContents mimeType forceDownload contents =
-  setHeaderBS "Content-Type" mimeType $
-  (if forceDownload then setHeaderBS "Content-Disposition" "attachment" else id) $
-  Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
+  setHeaderBS "Content-Type" mimeType
+    $ (if forceDownload then setHeaderBS "Content-Disposition" "attachment" else id)
+    $ Response 200 Map.empty nullRsFlags (BSL.fromChunks [contents]) Nothing
 
 {- |
    JavaScript entry points require version and cdnbaseurl to work.
    This variables are also required by standardHeaderContents template.
 -}
 entryPointFields :: TemplatesMonad m => Context -> Fields m ()
-entryPointFields ctx =  do
+entryPointFields ctx = do
   F.value "cdnbaseurl" (get ctxcdnbaseurl ctx)
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID

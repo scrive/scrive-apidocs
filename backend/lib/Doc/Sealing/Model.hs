@@ -29,7 +29,7 @@ instance (MonadDB m, DocumentMonad m, MonadLog m, MonadMask m, MonadTime m) => D
       runQuery_ . sqlInsert "document_sealing_jobs" $ do
         sqlSet "id" did
         sqlSetCmd "run_at" $ sqlParam now
-        sqlSet "attempts" (0::Int32)
+        sqlSet "attempts"          (0 :: Int32)
         sqlSet "branded_domain_id" bdid
       notify documentSealingNotificationChannel ""
       logInfo_ "Document sealing scheduled"

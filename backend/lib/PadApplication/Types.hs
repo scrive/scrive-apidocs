@@ -35,21 +35,18 @@ instance FromSQL PadAppMode where
       1 -> return ListView
       2 -> return PinCode
       3 -> return QRCode
-      _ -> throwM RangeError {
-        reRange = [(1,3)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(1, 3)], reValue = n }
 
 instance ToSQL PadAppMode where
   type PQDest PadAppMode = PQDest Int16
-  toSQL ListView  = toSQL (1::Int16)
-  toSQL PinCode   = toSQL (2::Int16)
-  toSQL QRCode    = toSQL (3::Int16)
+  toSQL ListView = toSQL (1 :: Int16)
+  toSQL PinCode  = toSQL (2 :: Int16)
+  toSQL QRCode   = toSQL (3 :: Int16)
 
 padAppModeText :: PadAppMode -> Text
-padAppModeText ListView       = "list_view"
-padAppModeText PinCode        = "pin_code"
-padAppModeText QRCode         = "qr_code"
+padAppModeText ListView = "list_view"
+padAppModeText PinCode  = "pin_code"
+padAppModeText QRCode   = "qr_code"
 
 padAppModeFromText :: Text -> Maybe PadAppMode
 padAppModeFromText s = find (\p -> s == padAppModeText p) [ListView, PinCode, QRCode]

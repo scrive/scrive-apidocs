@@ -29,24 +29,26 @@ data DocumentStats = DocumentStats {
   } deriving (Eq, Ord, Show)
 
 instance SG.Semigroup DocumentStats where
-  ds1 <> ds2 = DocumentStats {
-      dsDocumentsSent = dsDocumentsSent ds1 + dsDocumentsSent ds2
-    , dsDocumentsClosed = dsDocumentsClosed ds1 + dsDocumentsClosed ds2
-    , dsSignaturesClosed = dsSignaturesClosed ds1 + dsSignaturesClosed ds2
-    , dsSMSSent = dsSMSSent ds1 + dsSMSSent ds2
-    , dsSMSSentViaTelia = dsSMSSentViaTelia ds1 + dsSMSSentViaTelia ds2
-    , dsSEBankIDSignatures = dsSEBankIDSignatures ds1 + dsSEBankIDSignatures ds2
-    , dsSEBankIDAuthentications = dsSEBankIDAuthentications ds1 + dsSEBankIDAuthentications ds2
-    , dsNOBankIDAuthentications = dsNOBankIDAuthentications ds1 + dsNOBankIDAuthentications ds2
-    , dsNemIDAuthentications = dsNemIDAuthentications ds1 + dsNemIDAuthentications ds2
-    , dsNOBankIDSignatures = dsNOBankIDSignatures ds1 + dsNOBankIDSignatures ds2
-    , dsNemIDSignatures = dsNemIDSignatures ds1 + dsNemIDSignatures ds2
-    , dsTupasAuthentications = dsTupasAuthentications ds1 + dsTupasAuthentications ds2
-    , dsShareableLinks = dsShareableLinks ds1 + dsShareableLinks ds2
+  ds1 <> ds2 = DocumentStats
+    { dsDocumentsSent           = dsDocumentsSent ds1 + dsDocumentsSent ds2
+    , dsDocumentsClosed         = dsDocumentsClosed ds1 + dsDocumentsClosed ds2
+    , dsSignaturesClosed        = dsSignaturesClosed ds1 + dsSignaturesClosed ds2
+    , dsSMSSent                 = dsSMSSent ds1 + dsSMSSent ds2
+    , dsSMSSentViaTelia         = dsSMSSentViaTelia ds1 + dsSMSSentViaTelia ds2
+    , dsSEBankIDSignatures      = dsSEBankIDSignatures ds1 + dsSEBankIDSignatures ds2
+    , dsSEBankIDAuthentications = dsSEBankIDAuthentications ds1
+                                    + dsSEBankIDAuthentications ds2
+    , dsNOBankIDAuthentications = dsNOBankIDAuthentications ds1
+                                    + dsNOBankIDAuthentications ds2
+    , dsNemIDAuthentications    = dsNemIDAuthentications ds1 + dsNemIDAuthentications ds2
+    , dsNOBankIDSignatures      = dsNOBankIDSignatures ds1 + dsNOBankIDSignatures ds2
+    , dsNemIDSignatures         = dsNemIDSignatures ds1 + dsNemIDSignatures ds2
+    , dsTupasAuthentications    = dsTupasAuthentications ds1 + dsTupasAuthentications ds2
+    , dsShareableLinks          = dsShareableLinks ds1 + dsShareableLinks ds2
     }
 
 instance Monoid DocumentStats where
-  mempty = DocumentStats 0 0 0 0 0 0 0 0 0 0 0 0 0
+  mempty  = DocumentStats 0 0 0 0 0 0 0 0 0 0 0 0 0
   mappend = (SG.<>)
 
 data UserUsageStats = UserUsageStats {

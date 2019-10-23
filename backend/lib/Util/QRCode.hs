@@ -22,26 +22,30 @@ newtype QRCode = QRCode { unQRCode :: BS.ByteString }
 
 instance ToAPIResponse QRCode where
   toAPIResponse (QRCode bsdata) =
-    Web.setHeader "Content-Type" "image/png" $
-    Web.toResponse bsdata
+    Web.setHeader "Content-Type" "image/png" $ Web.toResponse bsdata
 
 encodeQR :: String -> IO QRCode
 encodeQR msg = withSystemTempFile "qr.png" $ \path handle -> do
   hClose handle
-  callProcess "qrencode" [ msg, "-o", path
-                         , "--size", "20"
+  callProcess
+    "qrencode"
+    [ msg
+    , "-o"
+    , path
+    , "--size"
+    , "20"
                          -- Makes a 580x580px ~0.5 KiB image.
-                         ]
+    ]
   QRCode <$> BS.readFile path
 
 decodeQR :: QRCode -> IO String
-decodeQR (QRCode bsdata) =  withSystemTempFile "qr.png" $ \path handle -> do
+decodeQR (QRCode bsdata) = withSystemTempFile "qr.png" $ \path handle -> do
   BS.hPut handle bsdata
   hClose handle
   zbarout <- readProcess "zbarimg" ["-q", path] ""
   case break (== ':') zbarout of
-    ("QR-Code", ':':code) -> return $ rstrip code
-    _                     -> unexpectedError "QR code couldn't be decoded."
+    ("QR-Code", ':' : code) -> return $ rstrip code
+    _ -> unexpectedError "QR code couldn't be decoded."
 
 decodeQRBSL :: BSL.ByteString -> IO String
 decodeQRBSL = decodeQR . QRCode . BSL.toStrict

@@ -42,20 +42,16 @@ curlError code = unexpectedError $ "Curl response code was" <+> (showt code)
 -- | In case of certificate error, reconnect with
 -- disabled peer verification and log the issue.
 mkCertErrorHandler :: (MonadBaseControl IO m, MonadLog m) => m CurlErrorHandler
-mkCertErrorHandler = liftBaseWith $ \runInBase ->
-  return $ \curl code ->
-    case code of
-      CurlSSLCACert -> do
-        void . runInBase $ logAttention_ "CERTIFICATE VERIFICATION ERROR, falling back to insecure connection"
-        (final_body, fetch_body) <- newIncoming
-        setopts curl
-          [ CurlWriteFunction $ gatherOutput_ fetch_body
-          , CurlSSLVerifyPeer False
-          ]
-        perform curl >>= \case
-          CurlOK -> final_body
-          code'  -> curlError code'
-      code' -> curlError code'
+mkCertErrorHandler = liftBaseWith $ \runInBase -> return $ \curl code -> case code of
+  CurlSSLCACert -> do
+    void . runInBase $ logAttention_
+      "CERTIFICATE VERIFICATION ERROR, falling back to insecure connection"
+    (final_body, fetch_body) <- newIncoming
+    setopts curl [CurlWriteFunction $ gatherOutput_ fetch_body, CurlSSLVerifyPeer False]
+    perform curl >>= \case
+      CurlOK -> final_body
+      code'  -> curlError code'
+  code' -> curlError code'
 
 mkDebugFunction :: (MonadBaseControl IO m, MonadLog m) => m DebugFunction
 mkDebugFunction = liftBaseWith $ \run -> do
@@ -66,9 +62,7 @@ mkDebugFunction = liftBaseWith $ \run -> do
       void . run . curlDomain $ forM_ (lines strMsg) $ logInfo_ . T.pack
     _ -> F.forM_ (maybeShowInfo debugInfo) $ \strMsg -> do
       data_ <- BS.packCStringLen (msg, fromIntegral msgSize)
-      void . run . curlDomain . logInfo strMsg $ object [
-          "data" `equalsExternalBS` data_
-        ]
+      void . run . curlDomain . logInfo strMsg $ object ["data" `equalsExternalBS` data_]
   where
     curlDomain = localDomain "curl"
 
@@ -99,33 +93,40 @@ curlTransport
   -> String
   -> [String]
   -> IO ByteString
-curlTransport ssl curlAuth url on_failure debug_fun xml_request_bin additionalHeaders = do
-  curl <- initialize
-  (final_body, fetch_body) <- newIncoming
-  case curlAuth of
-    CurlAuthCert fp              -> void . setopt curl $ CurlCAInfo fp
-    CurlAuthCertKey fpcert fpkey -> void . setopts curl $ [ CurlSSLCert fpcert, CurlSSLKey fpkey ]
-    _ -> return ()
-  let authHeaders = case curlAuth of
-        CurlAuthBasic un pwd -> ["Authorization: Basic" <+> (BSC8.unpack $ B64.encode $ T.encodeUtf8 $ un <> ":" <>  pwd)]
-        _ -> []
-  setopts curl [
-      CurlWriteFunction $ gatherOutput_ fetch_body
-    , CurlNoSignal True
-    , CurlTimeout 2
-    , CurlURL url
-    , CurlSSLVerifyPeer $ case ssl of
+curlTransport ssl curlAuth url on_failure debug_fun xml_request_bin additionalHeaders =
+  do
+    curl                     <- initialize
+    (final_body, fetch_body) <- newIncoming
+    case curlAuth of
+      CurlAuthCert fp -> void . setopt curl $ CurlCAInfo fp
+      CurlAuthCertKey fpcert fpkey ->
+        void . setopts curl $ [CurlSSLCert fpcert, CurlSSLKey fpkey]
+      _ -> return ()
+    let authHeaders = case curlAuth of
+          CurlAuthBasic un pwd ->
+            [ "Authorization: Basic"
+                <+> (BSC8.unpack $ B64.encode $ T.encodeUtf8 $ un <> ":" <> pwd)
+            ]
+          _ -> []
+    setopts
+      curl
+      [ CurlWriteFunction $ gatherOutput_ fetch_body
+      , CurlNoSignal True
+      , CurlTimeout 2
+      , CurlURL url
+      , CurlSSLVerifyPeer $ case ssl of
         SecureSSL   -> True
         InsecureSSL -> False
-    , CurlHttpHeaders authHeaders
-    , CurlHttpHeaders $ [
-        "Content-Type: text/xml; charset=utf-8"
-      ] ++ authHeaders ++ additionalHeaders
-    , CurlPost True
-    , CurlPostFields [xml_request_bin]
-    , CurlVerbose True
-    , CurlDebugFunction debug_fun
-    ]
-  perform curl >>= \case
-    CurlOK -> final_body
-    code   -> on_failure curl code
+      , CurlHttpHeaders authHeaders
+      , CurlHttpHeaders
+      $  ["Content-Type: text/xml; charset=utf-8"]
+      ++ authHeaders
+      ++ additionalHeaders
+      , CurlPost True
+      , CurlPostFields [xml_request_bin]
+      , CurlVerbose True
+      , CurlDebugFunction debug_fun
+      ]
+    perform curl >>= \case
+      CurlOK -> final_body
+      code   -> on_failure curl code

@@ -46,9 +46,9 @@ data JobType
   deriving (Eq, Ord, Show)
 
 jobTypeMapper :: [(JobType, Text)]
-jobTypeMapper = [
-    (CleanOldEmails, "clean_old_emails")
-  , (PerformServiceTest, "perform_service_test")
+jobTypeMapper =
+  [ (CleanOldEmails          , "clean_old_emails")
+  , (PerformServiceTest      , "perform_service_test")
   , (CollectServiceTestResult, "collect_service_test_result")
   ]
 
@@ -61,10 +61,8 @@ instance FromSQL JobType where
     v <- fromSQL mbase
     case v `rlookup` jobTypeMapper of
       Just tt -> return tt
-      Nothing -> throwM InvalidValue {
-        ivValue = v
-      , ivValidValues = Just $ map snd jobTypeMapper
-      }
+      Nothing ->
+        throwM InvalidValue { ivValue = v, ivValidValues = Just $ map snd jobTypeMapper }
 
 instance ToSQL JobType where
   type PQDest JobType = PQBase Text
@@ -86,7 +84,7 @@ instance PQFormat MailID where
   pqFormat = pqFormat @Int64
 
 instance Identifier MailID where
-  idDefaultLabel     = "mail_id"
+  idDefaultLabel = "mail_id"
   idValue (MailID k) = int64AsStringIdentifier k
 
 instance FromSQL MailID where
@@ -102,16 +100,14 @@ data Address = Address {
 } deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 instance Unjson Address where
-  unjsonDef = objectOf $ pure Address
-    <*> field "name"
-       addrName
-       "Name in email address"
-    <*> field "email"
-       addrEmail
-       "Email address"
+  unjsonDef =
+    objectOf $ pure Address <*> field "name" addrName "Name in email address" <*> field
+      "email"
+      addrEmail
+      "Email address"
 
 instance ToJSON Address where
-  toJSON = unjsonToJSON unjsonDef
+  toJSON     = unjsonToJSON unjsonDef
   toEncoding = Aeson.unsafeToEncoding . unjsonToByteStringBuilder unjsonDef
 
 instance PQFormat Address where
@@ -143,26 +139,18 @@ instance PQFormat Attachment where
   pqFormat = compositeTypePqFormat ctMailAttachment
 
 instance CompositeFromSQL Attachment where
-  toComposite (name, mcontent, mfid) = Attachment {
-    attName = name
-  , attContent = case (mcontent, mfid) of
-    (Just content, Nothing) -> Left content
-    (Nothing, Just fid) -> Right fid
-    _ -> unexpectedError "impossible due to the check constraint"
-  }
+  toComposite (name, mcontent, mfid) = Attachment
+    { attName    = name
+    , attContent = case (mcontent, mfid) of
+                     (Just content, Nothing) -> Left content
+                     (Nothing, Just fid) -> Right fid
+                     _ -> unexpectedError "impossible due to the check constraint"
+    }
 
 instance Loggable Attachment where
-  logValue Attachment{..} = object $
-    ["name" .= attName] ++
-    case attContent of
-      Left bs -> [
-          "type" .= ("string" :: String)
-        , "bytesize" .= (B.length bs)
-        ]
-      Right fid -> [
-          "type" .= ("file_id" :: String)
-        , identifier fid
-        ]
+  logValue Attachment {..} = object $ ["name" .= attName] ++ case attContent of
+    Left  bs  -> ["type" .= ("string" :: String), "bytesize" .= (B.length bs)]
+    Right fid -> ["type" .= ("file_id" :: String), identifier fid]
   logDefaultLabel _ = "attachment"
 
 data Mail = Mail {
@@ -179,8 +167,8 @@ data Mail = Mail {
 } deriving (Eq, Ord, Show)
 
 instance Loggable Mail where
-  logValue Mail{..} = object [
-      identifier mailID
+  logValue Mail {..} = object
+    [ identifier mailID
     , "attachments" .= map logValue mailAttachments
     , "attachment_count" .= length mailAttachments
     , "attempt_count" .= mailAttempts
@@ -204,7 +192,7 @@ instance PQFormat EventID where
   pqFormat = pqFormat @Int64
 
 instance Identifier EventID where
-  idDefaultLabel      = "mail_event_id"
+  idDefaultLabel = "mail_event_id"
   idValue (EventID k) = int64AsStringIdentifier k
 
 instance FromSQL EventID where

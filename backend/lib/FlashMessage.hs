@@ -63,8 +63,11 @@ flashTypeToStr :: FlashType -> String
 flashTypeToStr OperationDone   = "success"
 flashTypeToStr OperationFailed = "error"
 
-addFlashCookie :: (FilterMonad Response m, ServerMonad m, MonadIO m, Functor m) => String -> m ()
+addFlashCookie
+  :: (FilterMonad Response m, ServerMonad m, MonadIO m, Functor m) => String -> m ()
 addFlashCookie flashesdata = do
-    ishttps <- isHTTPS
-    Cookies.addCookie ishttps (MaxAge $ 60*60*24) $ mkCookie "flashmessage" $ stringB64Encode flashesdata
+  ishttps <- isHTTPS
+  Cookies.addCookie ishttps (MaxAge $ 60 * 60 * 24)
+    $ mkCookie "flashmessage"
+    $ stringB64Encode flashesdata
   where stringB64Encode = BS.toString . B64.encode . BS.fromString

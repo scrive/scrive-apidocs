@@ -30,56 +30,74 @@ import Text.XML.XMLDSig
 import qualified Text.XML.Writer.Extended as X
 
 netsCall
-  :: ( X.ToXML rq, Loggable rs
-     , MonadTime m, MonadIO m, MonadLog m, MonadBase IO m, MonadBaseControl IO m
-     , MonadMask m)
+  :: ( X.ToXML rq
+     , Loggable rs
+     , MonadTime m
+     , MonadIO m
+     , MonadLog m
+     , MonadBase IO m
+     , MonadBaseControl IO m
+     , MonadMask m
+     )
   => NetsSignConfig
   -> rq                    -- request
   -> XMLParser rs
   -> String                -- tmp dir suffix
   -> m rs
-netsCall NetsSignConfig{..} request response_parser tmpdirsuffix = do
+netsCall NetsSignConfig {..} request response_parser tmpdirsuffix = do
   tsmID <- newTrustSignMessageUUID
-  now <- currentTime
+  now   <- currentTime
   let xmlrequest = X.toXML request
-      rqname = rqName xmlrequest
+      rqname     = rqName xmlrequest
   certErrorHandler <- mkCertErrorHandler
-  debugFunction <- mkDebugFunction
-  mSignedRq <- signXMLDSig netssignPrivKeyFile netssignCertFile tmpdirsuffix . wrapTrustSignMessage tsmID netssignMerchantID now . X.toXML $ request
+  debugFunction    <- mkDebugFunction
+  mSignedRq        <-
+    signXMLDSig netssignPrivKeyFile netssignCertFile tmpdirsuffix
+    . wrapTrustSignMessage tsmID netssignMerchantID now
+    . X.toXML
+    $ request
   signedRq <- maybe internalError return mSignedRq
-  let runCurl = liftIO $ curlTransport SecureSSL (CurlAuthCertKey netssignCertFile netssignPrivKeyFile) (T.unpack $ netssignAPIUrl) certErrorHandler debugFunction (BC8.unpack signedRq) []
+  let runCurl = liftIO $ curlTransport
+        SecureSSL
+        (CurlAuthCertKey netssignCertFile netssignPrivKeyFile)
+        (T.unpack $ netssignAPIUrl)
+        certErrorHandler
+        debugFunction
+        (BC8.unpack signedRq)
+        []
   rsXML <- parseLBS_ def <$> runCurl
-  logInfo ("Succesfully received Nets XML for " <> rqname <> " response") $ object [
-      "xml" .= (renderText def $ rsXML)
-    ]
+  logInfo ("Succesfully received Nets XML for " <> rqname <> " response")
+    $ object ["xml" .= (renderText def $ rsXML)]
   let rsCursor = fromDocument rsXML
   rs <- case runParser response_parser rsCursor of
     Just response -> return response
-    Nothing -> throwM $ NetsSignParsingError $ "UnsuccessfulNetsSignXMLParse(" <> rqname <> " response):" <> T.pack (ppCursor rsCursor)
+    Nothing ->
+      throwM
+        $  NetsSignParsingError
+        $  "UnsuccessfulNetsSignXMLParse("
+        <> rqname
+        <> " response):"
+        <> T.pack (ppCursor rsCursor)
   logInfo ("Succesfully parsed Nets" <> rqname <> " response") $ logObject_ rs
   return rs
 
 rqName :: X.XML -> Text
 rqName xml = case X.render xml of
   [NodeElement el] -> nameLocalName . elementName $ el
-  _ -> "SomeXMLElementName" -- fallback for unexpected XML, which does not have element as top node
+  _                -> "SomeXMLElementName" -- fallback for unexpected XML, which does not have element as top node
 
 data NetsSignParsingError = NetsSignParsingError Text deriving (Show, Typeable)
 instance Exception NetsSignParsingError
 
-wrapTrustSignMessage
-  :: TrustSignMessageUUID
-  -> Text
-  -> UTCTime
-  -> X.XML
-  -> X.XML
+wrapTrustSignMessage :: TrustSignMessageUUID -> Text -> UTCTime -> X.XML -> X.XML
 wrapTrustSignMessage tsmID merchantID now xml = do
   X.elementA
-    "TrustSignMessage"
-    [ ("xmlns","http://www.bbs.no/tt/trustsign/2017/06/tsm#")
-    , ("xmlns:xs","http://www.w3.org/2001/XMLSchema-instance")
-    ] $ do
-      X.element "MerchantID" merchantID
-      X.element "Time" . T.pack . formatTimeISO $ now
-      X.element "MessageID" . showt $ tsmID
-      xml
+      "TrustSignMessage"
+      [ ("xmlns"   , "http://www.bbs.no/tt/trustsign/2017/06/tsm#")
+      , ("xmlns:xs", "http://www.w3.org/2001/XMLSchema-instance")
+      ]
+    $ do
+        X.element "MerchantID" merchantID
+        X.element "Time" . T.pack . formatTimeISO $ now
+        X.element "MessageID" . showt $ tsmID
+        xml

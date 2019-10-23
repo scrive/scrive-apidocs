@@ -37,19 +37,19 @@ instance Enum SealStatus where
   toEnum (-1) = UnknownSealStatus
   toEnum 0    = Missing
   toEnum 1    = TrustWeaver
-  toEnum 2    = Guardtime{ extended = False, private = False }
-  toEnum 3    = Guardtime{ extended = True,  private = False }
-  toEnum 4    = Guardtime{ extended = False, private = True }
-  toEnum 5    = Guardtime{ extended = True,  private = True }
+  toEnum 2    = Guardtime { extended = False, private = False }
+  toEnum 3    = Guardtime { extended = True, private = False }
+  toEnum 4    = Guardtime { extended = False, private = True }
+  toEnum 5    = Guardtime { extended = True, private = True }
   toEnum i    = unexpectedError $ "invalid value:" <+> (showt i)
 
-  fromEnum UnknownSealStatus                              = -1
-  fromEnum Missing                                        = 0
-  fromEnum TrustWeaver                                    = 1
-  fromEnum Guardtime{ extended = False, private = False } = 2
-  fromEnum Guardtime{ extended = True,  private = False } = 3
-  fromEnum Guardtime{ extended = False, private = True }  = 4
-  fromEnum Guardtime{ extended = True,  private = True }  = 5
+  fromEnum UnknownSealStatus = -1
+  fromEnum Missing           = 0
+  fromEnum TrustWeaver       = 1
+  fromEnum Guardtime { extended = False, private = False } = 2
+  fromEnum Guardtime { extended = True, private = False } = 3
+  fromEnum Guardtime { extended = False, private = True } = 4
+  fromEnum Guardtime { extended = True, private = True } = 5
 
 instance Ord SealStatus where
   compare = compare `on` fromEnum
@@ -62,10 +62,7 @@ instance FromSQL SealStatus where
   fromSQL mbase = do
     n :: Int16 <- fromSQL mbase
     if n < -1 || n > 5
-      then E.throwIO $ RangeError {
-          reRange = [(-1, 5)]
-        , reValue = n
-      }
+      then E.throwIO $ RangeError { reRange = [(-1, 5)], reValue = n }
       else return . toEnum . fromIntegral $ n
 
 instance ToSQL SealStatus where

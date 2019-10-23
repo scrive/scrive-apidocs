@@ -29,9 +29,15 @@ import User.Model
 import Util.Actor
 
 gtWorkflowTests :: TestEnvSt -> Test
-gtWorkflowTests env = testGroup "GTWorkflowTest" [
-    testThat "Document with extensible digital signature can be extended" env testExtendDigitalSignatures
-  , testThat "When document is purged before extending, the extending job is not rescheduled." env testExtendingIsNotRescheduledForPurgedDocs
+gtWorkflowTests env = testGroup
+  "GTWorkflowTest"
+  [ testThat "Document with extensible digital signature can be extended"
+             env
+             testExtendDigitalSignatures
+  , testThat
+    "When document is purged before extending, the extending job is not rescheduled."
+    env
+    testExtendingIsNotRescheduledForPurgedDocs
   ]
 
 testExtendDigitalSignatures :: TestEnv ()
@@ -39,20 +45,22 @@ testExtendDigitalSignatures = do
   author <- addNewRandomUser
   let filename = inTestDir "pdfs/extensible.pdf"
   filecontent <- liftIO $ BS.readFile filename
-  file <- saveNewFile (T.pack filename) filecontent
-  file1 <- saveNewFile (T.pack filename) filecontent
-  file2 <- saveNewFile (T.pack filename) filecontent
-  did <- documentid <$> addRandomDocumentWithFile file (rdaDefault author)
-    { rdaTypes = OneOf [Signable]
-    , rdaStatuses = OneOf [Closed]
-    }
+  file        <- saveNewFile (T.pack filename) filecontent
+  file1       <- saveNewFile (T.pack filename) filecontent
+  file2       <- saveNewFile (T.pack filename) filecontent
+  did         <- documentid <$> addRandomDocumentWithFile
+    file
+    (rdaDefault author) { rdaTypes = OneOf [Signable], rdaStatuses = OneOf [Closed] }
 
   withDocumentID did $ do
     now <- currentTime
     let actor = systemActor (2 `monthsBefore` now)
     -- Append a file to tweak the modification time
-    dbUpdate $ AppendSealedFile file1 Guardtime{ extended = False, private = False } actor
-    dbUpdate $ AppendExtendedSealedFile file2 Guardtime{ extended = False, private = False } actor
+    dbUpdate
+      $ AppendSealedFile file1 Guardtime { extended = False, private = False } actor
+    dbUpdate $ AppendExtendedSealedFile file2
+                                        Guardtime { extended = False, private = False }
+                                        actor
 
     -- Run extending
     templates <- liftBase readGlobalTemplates
@@ -63,29 +71,32 @@ testExtendDigitalSignatures = do
 
   withDocumentID did $ do
     documentsealstatus <$> theDocument >>= \case
-      Just (Guardtime{ extended = True }) -> assertSuccess
+      Just (Guardtime { extended = True }) -> assertSuccess
       s -> assertFailure $ "Unexpected extension status: " ++ show s
 
 testExtendingIsNotRescheduledForPurgedDocs :: TestEnv ()
 testExtendingIsNotRescheduledForPurgedDocs = do
   setTestTime unixEpoch
-  user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  user    <- addNewRandomUser
+  ctx     <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
   -- Create a document
   mockDoc <- testDocApiV2StartNew ctx
-  let did = getMockDocId mockDoc
+  let did  = getMockDocId mockDoc
   let slid = getMockDocSigLinkId 1 mockDoc
 
   -- Sign document
-  void $ mockDocTestRequestHelper ctx
+  void $ mockDocTestRequestHelper
+    ctx
     POST
-      [ ("fields", inText "[]")
-      , ("accepted_author_attachments", inText "[]")
-      ]
-    (docApiV2SigSign did slid) 200
+    [("fields", inText "[]"), ("accepted_author_attachments", inText "[]")]
+    (docApiV2SigSign did slid)
+    200
 
   -- There is a document sealing job scheduled
-  runSQL01_ $ "SELECT EXISTS (SELECT id FROM document_sealing_jobs WHERE id =" <?> did <> ")"
+  runSQL01_
+    $   "SELECT EXISTS (SELECT id FROM document_sealing_jobs WHERE id ="
+    <?> did
+    <>  ")"
   fetchOne runIdentity >>= assertEqual "Document is scheduled for sealing" True
 
   -- Commit is not completely necessary here, because there is a commit in the middle
@@ -96,11 +107,15 @@ testExtendingIsNotRescheduledForPurgedDocs = do
   runTestCronUntilIdle ctx
 
   -- There is a document extending job scheduled
-  runSQL01_ $ "SELECT EXISTS (SELECT id FROM document_extending_jobs WHERE id =" <?> did <> ")"
+  runSQL01_
+    $   "SELECT EXISTS (SELECT id FROM document_extending_jobs WHERE id ="
+    <?> did
+    <>  ")"
   fetchOne runIdentity >>= assertEqual "Document is scheduled for extending" True
 
   -- Purge document
-  withDocumentID did $ void $ randomUpdate $ \t -> ArchiveDocument (userid user) (systemActor t)
+  withDocumentID did $ void $ randomUpdate $ \t ->
+    ArchiveDocument (userid user) (systemActor t)
   modifyTestTime (31 `daysAfter`)
   purgedcount <- dbUpdate $ PurgeDocuments 0
   assertEqual "Purged single document" 1 purgedcount
@@ -114,5 +129,8 @@ testExtendingIsNotRescheduledForPurgedDocs = do
   runTestCronUntilIdle ctx
 
   -- There is no extending job scheduled for this document
-  runSQL01_ $ "SELECT EXISTS (SELECT id FROM document_extending_jobs WHERE id =" <?> did <> ")"
+  runSQL01_
+    $   "SELECT EXISTS (SELECT id FROM document_extending_jobs WHERE id ="
+    <?> did
+    <>  ")"
   fetchOne runIdentity >>= assertEqual "Document is not scheduled for extending" False

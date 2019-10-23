@@ -61,135 +61,207 @@ import Util.MonadUtils
 import Util.SignatoryLinkUtils
 
 docControlTests :: TestEnvSt -> Test
-docControlTests env = testGroup "DocControl" [
-    testThat "Sending a reminder updates last modified date on doc" env testSendReminderEmailUpdatesLastModifiedDate
-  , testThat "Create document from template" env testDocumentFromTemplate
-  , testThat "Uploading file as contract makes doc" env testUploadingFile
+docControlTests env = testGroup
+  "DocControl"
+  [ testThat "Sending a reminder updates last modified date on doc"
+             env
+             testSendReminderEmailUpdatesLastModifiedDate
+  , testThat "Create document from template"          env testDocumentFromTemplate
+  , testThat "Uploading file as contract makes doc"   env testUploadingFile
   , testThat "Create document from template | Shared" env testDocumentFromTemplateShared
-  , testThat "Uploading file creates unsaved draft" env testNewDocumentUnsavedDraft
-  , testThat "Last person signing a doc closes it" env testLastPersonSigningADocumentClosesIt
+  , testThat "Uploading file creates unsaved draft"   env testNewDocumentUnsavedDraft
+  , testThat "Last person signing a doc closes it"
+             env
+             testLastPersonSigningADocumentClosesIt
   , testThat "Signing with pin" env testSigningWithPin
-  , testThat "Sending an reminder clears delivery information" env testSendingReminderClearsDeliveryInformation
-  , testThat "Sending reminder email works for company admin" env testSendReminderEmailByCompanyAdmin
+  , testThat "Sending an reminder clears delivery information"
+             env
+             testSendingReminderClearsDeliveryInformation
+  , testThat "Sending reminder email works for company admin"
+             env
+             testSendReminderEmailByCompanyAdmin
   , testThat "We can get json for document" env testGetLoggedIn
-  , testThat "We can't get json for document if we are not logged in" env testGetNotLoggedIn
-  , testThat "We can't get json for document is we are logged in but we provided authorization header" env testGetBadHeader
-  , testThat "We can get json for evidence attachments" env testGetEvidenceAttachmentsLoggedIn
-  , testThat "We can't get json for evidence attachments if we are not logged in" env testGetEvidenceAttachmentsNotLoggedIn
+  , testThat "We can't get json for document if we are not logged in"
+             env
+             testGetNotLoggedIn
+  , testThat
+    "We can't get json for document is we are logged in but we provided authorization header"
+    env
+    testGetBadHeader
+  , testThat "We can get json for evidence attachments"
+             env
+             testGetEvidenceAttachmentsLoggedIn
+  , testThat "We can't get json for evidence attachments if we are not logged in"
+             env
+             testGetEvidenceAttachmentsNotLoggedIn
   , testThat "Document bulk delete works fast" env testDocumentDeleteInBulk
-  , testThat "Download file and download main file obey access rights" env testDownloadFile
-  , testThat "Download file and download main file blocked if authorization to view is needed" env testDownloadFileWithAuthToView
-
-  , testThat "Signview branding generation block nasty input " env testSignviewBrandingBlocksNastyInput
-  , testThat "We can download signview branding if we have access to document" env testDownloadSignviewBrandingAccess
-
-  , testThat "We can't get a document as a signatory if it has been cancelled" env testGetCancelledDocument
+  , testThat "Download file and download main file obey access rights"
+             env
+             testDownloadFile
+  , testThat
+    "Download file and download main file blocked if authorization to view is needed"
+    env
+    testDownloadFileWithAuthToView
+  , testThat "Signview branding generation block nasty input "
+             env
+             testSignviewBrandingBlocksNastyInput
+  , testThat "We can download signview branding if we have access to document"
+             env
+             testDownloadSignviewBrandingAccess
+  , testThat "We can't get a document as a signatory if it has been cancelled"
+             env
+             testGetCancelledDocument
   , testThat "Generate document to sign from shareable template"
-             env testDocumentFromShareableTemplate
+             env
+             testDocumentFromShareableTemplate
   , testThat "We can get a document using a temporary magic hash if it is not expired"
-             env testGetDocumentWithSignatoryAccessTokens
+             env
+             testGetDocumentWithSignatoryAccessTokens
   , testThat "Timeouting document can trigger info mail sendout to author"
-             env testSendEmailOnTimeout
+             env
+             testSendEmailOnTimeout
   ]
 
 testUploadingFile :: TestEnv ()
 testUploadingFile = do
   (user, rsp) <- uploadDocAsNewUser
-  docs <- randomQuery $ GetDocumentsByAuthor (userid user)
+  docs        <- randomQuery $ GetDocumentsByAuthor (userid user)
   assertEqual "New doc" 1 (length docs)
   let newdoc = head docs
-  assertBool "Document id in result json" ((show $ documentid newdoc) `isInfixOf` (show rsp))
+  assertBool "Document id in result json"
+             ((show $ documentid newdoc) `isInfixOf` (show rsp))
 
 testNewDocumentUnsavedDraft :: TestEnv ()
 testNewDocumentUnsavedDraft = do
   (user, _rsp) <- uploadDocAsNewUser
-  docs <- randomQuery $ GetDocuments (DocumentsVisibleToUser $ userid user) [DocumentFilterDeleted False] [] maxBound
+  docs         <- randomQuery $ GetDocuments (DocumentsVisibleToUser $ userid user)
+                                             [DocumentFilterDeleted False]
+                                             []
+                                             maxBound
   assertEqual "Draft is there" 1 (length docs)
-  docs' <- randomQuery $ GetDocuments (DocumentsVisibleToUser $ userid user) [DocumentFilterUnsavedDraft False, DocumentFilterDeleted False] [] maxBound
+  docs' <- randomQuery $ GetDocuments
+    (DocumentsVisibleToUser $ userid user)
+    [DocumentFilterUnsavedDraft False, DocumentFilterDeleted False]
+    []
+    maxBound
   assertEqual "Draft is not visible in archive" 0 (length docs')
 
 
 
 uploadDocAsNewUser :: TestEnv (User, Response)
 uploadDocAsNewUser = do
-  (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  (Just user)  <- addNewUser "Bob" "Blue" "bob@blue.com"
+  ctx          <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
-  req <- mkRequest POST [ ("file", inFile $ inTestDir "pdfs/simple.pdf") ]
+  req          <- mkRequest POST [("file", inFile $ inTestDir "pdfs/simple.pdf")]
   (rsp, _ctx') <- runTestKontra req ctx $ apiCallV1CreateFromFile
   return (user, rsp)
 
 
 signScreenshots :: (Text, Input)
-signScreenshots = ("screenshots", inText $ T.pack $ Text.JSON.encode $ toJSValue $
-                   emptySignatoryScreenshots { signing = s })
-  where s = Just $ Screenshot unixEpoch $ "\255\216\255\224\NUL\DLEJFIF\NUL\SOH\SOH\SOH\NULH\NULH\NUL\NUL\255\219\NULC\NUL\ETX\STX\STX\STX\STX\STX\ETX\STX\STX\STX\ETX\ETX\ETX\ETX\EOT\ACK\EOT\EOT\EOT\EOT\EOT\b\ACK\ACK\ENQ\ACK\t\b\n\n\t\b\t\t\n\f\SI\f\n\v\SO\v\t\t\r\DC1\r\SO\SI\DLE\DLE\DC1\DLE\n\f\DC2\DC3\DC2\DLE\DC3\SI\DLE\DLE\DLE\255\201\NUL\v\b\NUL\SOH\NUL\SOH\SOH\SOH\DC1\NUL\255\204\NUL\ACK\NUL\DLE\DLE\ENQ\255\218\NUL\b\SOH\SOH\NUL\NUL?\NUL\210\207 \255\217"
+signScreenshots =
+  ( "screenshots"
+  , inText $ T.pack $ Text.JSON.encode $ toJSValue $ emptySignatoryScreenshots
+    { signing = s
+    }
+  )
+  where
+    s =
+      Just
+        $ Screenshot unixEpoch
+        $ "\255\216\255\224\NUL\DLEJFIF\NUL\SOH\SOH\SOH\NULH\NULH\NUL\NUL\255\219\NULC\NUL\ETX\STX\STX\STX\STX\STX\ETX\STX\STX\STX\ETX\ETX\ETX\ETX\EOT\ACK\EOT\EOT\EOT\EOT\EOT\b\ACK\ACK\ENQ\ACK\t\b\n\n\t\b\t\t\n\f\SI\f\n\v\SO\v\t\t\r\DC1\r\SO\SI\DLE\DLE\DC1\DLE\n\f\DC2\DC3\DC2\DLE\DC3\SI\DLE\DLE\DLE\255\201\NUL\v\b\NUL\SOH\NUL\SOH\SOH\SOH\DC1\NUL\255\204\NUL\ACK\NUL\DLE\DLE\ENQ\255\218\NUL\b\SOH\SOH\NUL\NUL?\NUL\210\207 \255\217"
 
 testLastPersonSigningADocumentClosesIt :: TestEnv ()
 testLastPersonSigningADocumentClosesIt = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
   let filename = inTestDir "pdfs/simple.pdf"
   filecontent <- liftIO $ BS.readFile filename
-  file <- saveNewFile (T.pack filename) filecontent
+  file        <- saveNewFile (T.pack filename) filecontent
 
-  addRandomDocumentWithFile file (rdaDefault user)
-    { rdaTypes = OneOf [Signable]
-    , rdaStatuses = OneOf [Preparation]
-    , rdaSignatories =
-      let signatory = OneOf
-            [ AllOf [ RSC_DeliveryMethodIs EmailDelivery ]
-            ]
-      in OneOf $ map (`replicate` signatory) [1..10]
-    } `withDocumentM` do
+  addRandomDocumentWithFile
+      file
+      (rdaDefault user)
+        { rdaTypes       = OneOf [Signable]
+        , rdaStatuses    = OneOf [Preparation]
+        , rdaSignatories = let signatory =
+                                 OneOf [AllOf [RSC_DeliveryMethodIs EmailDelivery]]
+                           in  OneOf $ map (`replicate` signatory) [1 .. 10]
+        }
+    `withDocumentM` do
 
-    success <- do
-               d <- theDocument
-               randomUpdate $ ResetSignatoryDetails ([
-                      (defaultSignatoryLink {
-                                        signatoryfields = (signatoryfields $ fromJust $ getAuthorSigLink d)
-                                      , signatoryisauthor = True
-                                      , signatoryrole     = SignatoryRoleViewer
-                                      , maybesignatory = Just $ userid user })
-                    , (defaultSignatoryLink {
-                                        signatorysignorder = SignOrder 1
-                                      , signatoryisauthor = False
-                                      , signatoryrole     = SignatoryRoleSigningParty
-                                      , signatoryfields = [
-                                          fieldForTests (NameFI (NameOrder 1)) "Fred"
-                                        , fieldForTests (NameFI (NameOrder 2)) "Frog"
-                                        , fieldForTests EmailFI "fred@frog.com"
-                                        ]})
-                 ]) (systemActor $ documentctime d)
-    unless success $
-      unexpectedError "Expected True"
+                      success <- do
+                        d <- theDocument
+                        randomUpdate $ ResetSignatoryDetails
+                          ([ (defaultSignatoryLink
+                               { signatoryfields   =
+                                 (signatoryfields $ fromJust $ getAuthorSigLink d)
+                               , signatoryisauthor = True
+                               , signatoryrole     = SignatoryRoleViewer
+                               , maybesignatory    = Just $ userid user
+                               }
+                             )
+                           , (defaultSignatoryLink
+                               { signatorysignorder = SignOrder 1
+                               , signatoryisauthor  = False
+                               , signatoryrole      = SignatoryRoleSigningParty
+                               , signatoryfields    =
+                                 [ fieldForTests (NameFI (NameOrder 1)) "Fred"
+                                 , fieldForTests (NameFI (NameOrder 2)) "Frog"
+                                 , fieldForTests EmailFI                "fred@frog.com"
+                                 ]
+                               }
+                             )
+                           ]
+                          )
+                          (systemActor $ documentctime d)
+                      unless success $ unexpectedError "Expected True"
 
-    do t <- documentctime <$> theDocument
-       tz <- mkTimeZoneName "Europe/Stockholm"
-       randomUpdate $ PreparationToPending (systemActor t) tz
-    siglink <- head . filter isSignatoryAndHasNotSigned .
-               documentsignatorylinks <$> theDocument
+                      do
+                        t  <- documentctime <$> theDocument
+                        tz <- mkTimeZoneName "Europe/Stockholm"
+                        randomUpdate $ PreparationToPending (systemActor t) tz
+                      siglink <-
+                        head
+                        .   filter isSignatoryAndHasNotSigned
+                        .   documentsignatorylinks
+                        <$> theDocument
 
-    mh <- dbUpdate $ NewSignatoryAccessToken
-      (signatorylinkid siglink) SignatoryAccessTokenForMailBeforeClosing Nothing
+                      mh <- dbUpdate $ NewSignatoryAccessToken
+                        (signatorylinkid siglink)
+                        SignatoryAccessTokenForMailBeforeClosing
+                        Nothing
 
-    do t <- documentctime <$> theDocument
-       randomUpdate . MarkDocumentSeen (signatorylinkid siglink)
-                 =<< signatoryActor (set ctxtime t ctx) siglink
+                      do
+                        t <- documentctime <$> theDocument
+                        randomUpdate
+                          .   MarkDocumentSeen (signatorylinkid siglink)
+                          =<< signatoryActor (set ctxtime t ctx) siglink
 
-    assertEqual "One left to sign" 1 . length .
-      filter isSignatoryAndHasNotSigned . documentsignatorylinks =<< theDocument
+                      assertEqual "One left to sign" 1
+                        .   length
+                        .   filter isSignatoryAndHasNotSigned
+                        .   documentsignatorylinks
+                        =<< theDocument
 
-    preq <- mkRequest GET [ ]
-    (_,ctx') <- updateDocumentWithID $ \did ->
-                lift . runTestKontra preq ctx $ handleSignShowSaveMagicHash did (signatorylinkid siglink) mh
+                      preq      <- mkRequest GET []
+                      (_, ctx') <- updateDocumentWithID $ \did ->
+                        lift . runTestKontra preq ctx $ handleSignShowSaveMagicHash
+                          did
+                          (signatorylinkid siglink)
+                          mh
 
-    req <- mkRequest POST [ ("fields", inText "[]"), signScreenshots]
-    (_link, _ctx') <- updateDocumentWithID $ \did ->
-                      lift . runTestKontra req ctx' $ apiCallV1Sign did (signatorylinkid siglink)
+                      req <- mkRequest POST [("fields", inText "[]"), signScreenshots]
+                      (_link, _ctx') <-
+                        updateDocumentWithID
+                          $ \did -> lift . runTestKontra req ctx' $ apiCallV1Sign
+                              did
+                              (signatorylinkid siglink)
 
-    assertEqual "In closed state" Closed .documentstatus =<< theDocument
+                      assertEqual "In closed state" Closed
+                        .   documentstatus
+                        =<< theDocument
     -- TODO: this should be commented out really, I guess it's a bug
     -- assertEqual "None left to sign" 0 (length $ filter
     -- isSignatoryAndHasNotSigned (documentsignatorylinks doc)) emails
@@ -199,140 +271,193 @@ testLastPersonSigningADocumentClosesIt = do
 
 testSigningWithPin :: TestEnv ()
 testSigningWithPin = do
-  ugid1 <- (get ugID) <$> addNewUserGroup
-  ugid2 <- (get ugID) <$> addNewUserGroup
+  ugid1      <- (get ugID) <$> addNewUserGroup
+  ugid2      <- (get ugID) <$> addNewUserGroup
   Just user1 <- addNewUser "Bob" "Blue" "bob@blue.com"
   Just user2 <- addNewUser "Gary" "Green" "gary@green.com"
-  True <- dbUpdate $ SetUserUserGroup (userid user1) ugid1
-  True <- dbUpdate $ SetUserUserGroup (userid user2) ugid2
-  ctx <- (set ctxmaybeuser (Just user1)) <$> mkContext defaultLang
+  True       <- dbUpdate $ SetUserUserGroup (userid user1) ugid1
+  True       <- dbUpdate $ SetUserUserGroup (userid user2) ugid2
+  ctx        <- (set ctxmaybeuser (Just user1)) <$> mkContext defaultLang
 
   let filename = inTestDir "pdfs/simple.pdf"
   filecontent <- liftIO $ BS.readFile filename
-  file <- saveNewFile (T.pack filename) filecontent
+  file        <- saveNewFile (T.pack filename) filecontent
 
-  addRandomDocumentWithFile file (rdaDefault user1)
-    { rdaTypes = OneOf [Signable]
-    , rdaStatuses = OneOf [Preparation]
-    , rdaSignatories =
-      let signatory = OneOf
-            [ AllOf [ RSC_DeliveryMethodIs EmailDelivery ]
-            ]
-      in OneOf $ map (`replicate` signatory) [1..10]
-    } `withDocumentM` do
-    d <- theDocument
-    success <- randomUpdate $ ResetSignatoryDetails ([
-        (defaultSignatoryLink {
-            signatoryfields = signatoryfields $ fromJust $ getAuthorSigLink d
-          , signatoryisauthor = True
-          , signatoryrole     = SignatoryRoleViewer
-          , maybesignatory = Just $ userid user1 })
-          , (defaultSignatoryLink {
-              signatorysignorder = SignOrder 1
-            , signatoryisauthor = False
-            , signatoryrole     = SignatoryRoleSigningParty
-            , signatorylinkauthenticationtosignmethod = SMSPinAuthenticationToSign
-            , signatorylinkdeliverymethod = MobileDelivery
-            , signatoryfields = [
-                fieldForTests (NameFI (NameOrder 1)) "Fred"
-              , fieldForTests (NameFI (NameOrder 2)) "Frog"
-              , fieldForTests EmailFI "fred@frog.com"
-              , fieldForTests MobileFI "+47 666 111 777"
-            ]
-          })
-      ]) (systemActor $ documentctime d)
-    unless success $
-      unexpectedError "Expected True"
+  addRandomDocumentWithFile
+      file
+      (rdaDefault user1)
+        { rdaTypes       = OneOf [Signable]
+        , rdaStatuses    = OneOf [Preparation]
+        , rdaSignatories = let signatory =
+                                 OneOf [AllOf [RSC_DeliveryMethodIs EmailDelivery]]
+                           in  OneOf $ map (`replicate` signatory) [1 .. 10]
+        }
+    `withDocumentM` do
+                      d       <- theDocument
+                      success <- randomUpdate $ ResetSignatoryDetails
+                        ([ (defaultSignatoryLink
+                             { signatoryfields   =
+                               signatoryfields $ fromJust $ getAuthorSigLink d
+                             , signatoryisauthor = True
+                             , signatoryrole     = SignatoryRoleViewer
+                             , maybesignatory    = Just $ userid user1
+                             }
+                           )
+                         , (defaultSignatoryLink
+                             { signatorysignorder          = SignOrder 1
+                             , signatoryisauthor           = False
+                             , signatoryrole               = SignatoryRoleSigningParty
+                             , signatorylinkauthenticationtosignmethod =
+                               SMSPinAuthenticationToSign
+                             , signatorylinkdeliverymethod = MobileDelivery
+                             , signatoryfields             =
+                               [ fieldForTests (NameFI (NameOrder 1)) "Fred"
+                               , fieldForTests (NameFI (NameOrder 2)) "Frog"
+                               , fieldForTests EmailFI                "fred@frog.com"
+                               , fieldForTests MobileFI               "+47 666 111 777"
+                               ]
+                             }
+                           )
+                         ]
+                        )
+                        (systemActor $ documentctime d)
+                      unless success $ unexpectedError "Expected True"
 
-    req <- mkRequest POST []
-    (rdyrsp, _) <- lift . runTestKontra req ctx $ apiCallV1Ready $ documentid d
-    lift $ do
-      assertEqual "Ready call was successful" 202 (rsCode rdyrsp)
-      runSQL ("SELECT * FROM chargeable_items WHERE type = 1 AND user_id =" <?> userid user1 <+> "AND user_group_id =" <?> ugid1 <+> "AND document_id =" <?> documentid d)
-        >>= assertBool "Author and the company get charged for the delivery" . (> 0)
-    siglink <- head . filter isSignatoryAndHasNotSigned .
-               documentsignatorylinks <$> theDocument
+                      req         <- mkRequest POST []
+                      (rdyrsp, _) <-
+                        lift . runTestKontra req ctx $ apiCallV1Ready $ documentid d
+                      lift $ do
+                        assertEqual "Ready call was successful" 202 (rsCode rdyrsp)
+                        runSQL
+                            ("SELECT * FROM chargeable_items WHERE type = 1 AND user_id ="
+                            <?> userid user1
+                            <+> "AND user_group_id ="
+                            <?> ugid1
+                            <+> "AND document_id ="
+                            <?> documentid d
+                            )
+                          >>= assertBool
+                                "Author and the company get charged for the delivery"
+                          .   (> 0)
+                      siglink <-
+                        head
+                        .   filter isSignatoryAndHasNotSigned
+                        .   documentsignatorylinks
+                        <$> theDocument
 
-    mh <- dbUpdate $ NewSignatoryAccessToken
-      (signatorylinkid siglink) SignatoryAccessTokenForMailBeforeClosing Nothing
-    pin <- dbQuery $ GetSignatoryPin SMSPinToSign (signatorylinkid siglink) (getMobile siglink)
-    preq <- mkRequest GET [ ]
-    (_,ctx') <- updateDocumentWithID $ \did ->
-                lift . runTestKontra preq ctx $ handleSignShowSaveMagicHash did (signatorylinkid siglink) mh
+                      mh <- dbUpdate $ NewSignatoryAccessToken
+                        (signatorylinkid siglink)
+                        SignatoryAccessTokenForMailBeforeClosing
+                        Nothing
+                      pin <- dbQuery $ GetSignatoryPin SMSPinToSign
+                                                       (signatorylinkid siglink)
+                                                       (getMobile siglink)
+                      preq      <- mkRequest GET []
+                      (_, ctx') <- updateDocumentWithID $ \did ->
+                        lift . runTestKontra preq ctx $ handleSignShowSaveMagicHash
+                          did
+                          (signatorylinkid siglink)
+                          mh
 
 
-    req1 <- mkRequest POST [ ("fields", inText "[]"), signScreenshots]
-    (_link, _ctx') <- updateDocumentWithID $ \did ->
-                      lift . runTestKontra req1 ctx' $ apiCallV1Sign did (signatorylinkid siglink)
+                      req1 <- mkRequest POST [("fields", inText "[]"), signScreenshots]
+                      (_link, _ctx') <-
+                        updateDocumentWithID
+                          $ \did -> lift . runTestKontra req1 ctx' $ apiCallV1Sign
+                              did
+                              (signatorylinkid siglink)
 
-    assertEqual "Document is not closed if no pin is provided" Pending .documentstatus =<< theDocument
+                      assertEqual "Document is not closed if no pin is provided" Pending
+                        .   documentstatus
+                        =<< theDocument
 
-    req2 <- mkRequest POST [ ("fields", inText "[]"),("pin",inText $ pin <> "4"), signScreenshots]
-    (_link, _ctx') <- updateDocumentWithID $ \did ->
-                      lift . runTestKontra req2 ctx' $ apiCallV1Sign did (signatorylinkid siglink)
+                      req2 <- mkRequest
+                        POST
+                        [ ("fields", inText "[]")
+                        , ("pin"   , inText $ pin <> "4")
+                        , signScreenshots
+                        ]
+                      (_link, _ctx') <-
+                        updateDocumentWithID
+                          $ \did -> lift . runTestKontra req2 ctx' $ apiCallV1Sign
+                              did
+                              (signatorylinkid siglink)
 
-    assertEqual "Document is not closed if pin is not valid" Pending .documentstatus =<< theDocument
+                      assertEqual "Document is not closed if pin is not valid" Pending
+                        .   documentstatus
+                        =<< theDocument
 
-    req3 <- mkRequest POST [ ("fields", inText "[]"),("pin",inText pin), signScreenshots]
-    (_link, _ctx') <- updateDocumentWithID $ \did ->
-                      lift . runTestKontra req3 ctx' $ apiCallV1Sign did (signatorylinkid siglink)
+                      req3 <- mkRequest
+                        POST
+                        [("fields", inText "[]"), ("pin", inText pin), signScreenshots]
+                      (_link, _ctx') <-
+                        updateDocumentWithID
+                          $ \did -> lift . runTestKontra req3 ctx' $ apiCallV1Sign
+                              did
+                              (signatorylinkid siglink)
 
-    assertEqual "Document is closed if pin is valid" Closed .documentstatus =<< theDocument
+                      assertEqual "Document is closed if pin is valid" Closed
+                        .   documentstatus
+                        =<< theDocument
 
-    -- make sure that smses are counted only for the designated company
-    runSQL ("SELECT * FROM chargeable_items WHERE type = 1 AND user_id <>" <?> userid user1)
-      >>= assertEqual "Users other than author don't get charged" 0
+                      -- make sure that smses are counted only for the designated company
+                      runSQL
+                          ("SELECT * FROM chargeable_items WHERE type = 1 AND user_id <>"
+                          <?> userid user1
+                          )
+                        >>= assertEqual "Users other than author don't get charged" 0
 
-    runSQL ("SELECT * FROM chargeable_items WHERE type = 1 AND user_group_id <>" <?> ugid1)
-      >>= assertEqual "Companies other than author's one don't get charged" 0
+                      runSQL
+                          ("SELECT * FROM chargeable_items WHERE type = 1 AND user_group_id <>"
+                          <?> ugid1
+                          )
+                        >>= assertEqual
+                              "Companies other than author's one don't get charged"
+                              0
 
 
 testSendReminderEmailUpdatesLastModifiedDate :: TestEnv ()
 testSendReminderEmailUpdatesLastModifiedDate = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
-  doc <- addRandomDocument (rdaDefault user)
-    { rdaStatuses = OneOf [Pending]
-    , rdaTypes = OneOf [Signable]
-    , rdaSignatories =
-      let signatory = OneOf
-            [ AllOf [ RSC_DeliveryMethodIs EmailDelivery ]
-            ]
-      in OneOf $ map (`replicate` signatory) [2..10]
+  doc         <- addRandomDocument (rdaDefault user)
+    { rdaStatuses    = OneOf [Pending]
+    , rdaTypes       = OneOf [Signable]
+    , rdaSignatories = let signatory = OneOf [AllOf [RSC_DeliveryMethodIs EmailDelivery]]
+                       in  OneOf $ map (`replicate` signatory) [2 .. 10]
     }
 
   assertBool "Precondition" $ (get ctxtime ctx) /= documentmtime doc
 
   -- who cares which one, just pick the last one
   let sl = head . reverse $ documentsignatorylinks doc
-  req <- mkRequest POST []
-  (_link, _ctx') <- runTestKontra req ctx $ handleResend (documentid doc) (signatorylinkid sl)
+  req            <- mkRequest POST []
+  (_link, _ctx') <- runTestKontra req ctx
+    $ handleResend (documentid doc) (signatorylinkid sl)
 
   updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
-  assertBool "Modified date is updated" $ compareTime (get ctxtime ctx) (documentmtime updateddoc)
+  assertBool "Modified date is updated"
+    $ compareTime (get ctxtime ctx) (documentmtime updateddoc)
   emails <- dbQuery GetEmailsForTest
   assertEqual "Email was sent" 1 (length emails)
 
 testSendReminderEmailByCompanyAdmin :: TestEnv ()
 testSendReminderEmailByCompanyAdmin = do
-  ugid <- (get ugID) <$> addNewUserGroup
+  ugid      <- (get ugID) <$> addNewUserGroup
   user      <- addNewRandomCompanyUser ugid False
   otheruser <- addNewRandomCompanyUser ugid False
   adminuser <- addNewRandomCompanyUser ugid True
 
-  ctx      <- (set ctxmaybeuser (Just user))      <$> mkContext defaultLang
-  ctxadmin <- (set ctxmaybeuser (Just adminuser)) <$> mkContext defaultLang
-  ctxother <- (set ctxmaybeuser (Just otheruser)) <$> mkContext defaultLang
+  ctx       <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctxadmin  <- (set ctxmaybeuser (Just adminuser)) <$> mkContext defaultLang
+  ctxother  <- (set ctxmaybeuser (Just otheruser)) <$> mkContext defaultLang
 
-  doc <- addRandomDocument (rdaDefault user)
-    { rdaStatuses = OneOf [Pending]
-    , rdaTypes = OneOf [Signable]
-    , rdaSignatories =
-      let signatory = OneOf
-            [ AllOf [ RSC_DeliveryMethodIs EmailDelivery ]
-            ]
-      in OneOf $ map (`replicate` signatory) [2..10]
+  doc       <- addRandomDocument (rdaDefault user)
+    { rdaStatuses    = OneOf [Pending]
+    , rdaTypes       = OneOf [Signable]
+    , rdaSignatories = let signatory = OneOf [AllOf [RSC_DeliveryMethodIs EmailDelivery]]
+                       in  OneOf $ map (`replicate` signatory) [2 .. 10]
     }
 
   assertBool "Precondition" $ (get ctxtime ctx) /= documentmtime doc
@@ -341,207 +466,238 @@ testSendReminderEmailByCompanyAdmin = do
   let sl = head . reverse $ documentsignatorylinks doc
 
   -- fail if have no right to send reminder
-  req1 <- mkRequest POST []
-  result' <- E.try $ runTestKontra req1 ctxother $ handleResend (documentid doc) (signatorylinkid sl)
+  req1    <- mkRequest POST []
+  result' <- E.try $ runTestKontra req1 ctxother $ handleResend (documentid doc)
+                                                                (signatorylinkid sl)
 
   case result' of
-    Right _ -> assertFailure "Should not be able to resend when having no rights to do it"
+    Right _ ->
+      assertFailure "Should not be able to resend when having no rights to do it"
     Left (_ :: E.SomeException) -> return ()
 
 
   updateddoc1 <- dbQuery $ GetDocumentByDocumentID (documentid doc)
-  assertBool "Modified date is not updated" $ compareTime (documentmtime doc) (documentmtime updateddoc1)
+  assertBool "Modified date is not updated"
+    $ compareTime (documentmtime doc) (documentmtime updateddoc1)
   emails1 <- dbQuery GetEmailsForTest
   assertEqual "No emails were sent" 0 (length emails1)
 
   -- succeed to send a reminder as company admin
-  req2 <- mkRequest POST []
-  (_link, _ctx') <- runTestKontra req2 ctxadmin $ handleResend (documentid doc) (signatorylinkid sl)
+  req2           <- mkRequest POST []
+  (_link, _ctx') <- runTestKontra req2 ctxadmin
+    $ handleResend (documentid doc) (signatorylinkid sl)
 
   updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
-  assertBool "Modified date is updated" $ compareTime (get ctxtime ctxadmin) (documentmtime updateddoc)
+  assertBool "Modified date is updated"
+    $ compareTime (get ctxtime ctxadmin) (documentmtime updateddoc)
   emails <- dbQuery GetEmailsForTest
   assertEqual "Email was sent" 1 (length emails)
 
 testDownloadFile :: TestEnv ()
 testDownloadFile = do
-  ugid <- (get ugID) <$> addNewUserGroup
-  user <- addNewRandomCompanyUser ugid False
-  otheruser <- addNewRandomCompanyUser ugid False
-  adminuser <- addNewRandomCompanyUser ugid True
+  ugid           <- (get ugID) <$> addNewUserGroup
+  user           <- addNewRandomCompanyUser ugid False
+  otheruser      <- addNewRandomCompanyUser ugid False
+  adminuser      <- addNewRandomCompanyUser ugid True
 
   ctxnotloggedin <- mkContext defaultLang
 
-  ctxuser      <- (set ctxmaybeuser    (Just user))      <$> mkContext defaultLang
-  ctxuseronpad <- (set ctxmaybepaduser (Just user))      <$> mkContext defaultLang
-  ctxadmin     <- (set ctxmaybeuser    (Just adminuser)) <$> mkContext defaultLang
-  ctxother     <- (set ctxmaybeuser    (Just otheruser)) <$> mkContext defaultLang
+  ctxuser        <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  ctxuseronpad   <- (set ctxmaybepaduser (Just user)) <$> mkContext defaultLang
+  ctxadmin       <- (set ctxmaybeuser (Just adminuser)) <$> mkContext defaultLang
+  ctxother       <- (set ctxmaybeuser (Just otheruser)) <$> mkContext defaultLang
 
-  reqfile <- mkRequest POST [ ("file", inFile $ inTestDir "pdfs/simple.pdf") ]
-  (_rsp, _ctx') <- runTestKontra reqfile ctxuser $ apiCallV1CreateFromFile
-  [doc] <- randomQuery $ GetDocumentsByAuthor (userid user)
+  reqfile        <- mkRequest POST [("file", inFile $ inTestDir "pdfs/simple.pdf")]
+  (_rsp, _ctx')  <- runTestKontra reqfile ctxuser $ apiCallV1CreateFromFile
+  [doc]          <- randomQuery $ GetDocumentsByAuthor (userid user)
 
-  assertBool "Document access token should not be zero" (documentmagichash doc /= unsafeMagicHash 0)
+  assertBool "Document access token should not be zero"
+             (documentmagichash doc /= unsafeMagicHash 0)
 
   -- who cares which one, just pick the last one
   --let sl = head . reverse $ documentsignatorylinks doc
   let Just (fid :: FileID) = (mainfileid <$> documentfile doc)
 
   let cases =
-       [ (False, ctxnotloggedin, [], "nobody is not logged in")
-       , (True,  ctxuser,        [], "user logged in is author")
-       , (False, ctxuseronpad,   [], "user on pad is author when document in Preparation")
-       , (False, ctxadmin,       [], "user logged in is admin of author when document in Preparation")
-       , (False, ctxother,       [], "user logged in is unrelated to document")
-       , (True,  ctxnotloggedin, [("accesstoken", inText (showt (documentmagichash doc)))],
-                                     "using accesstoken, nobody logged in")
-       ]
+        [ (False, ctxnotloggedin, [], "nobody is not logged in")
+        , (True , ctxuser       , [], "user logged in is author")
+        , (False, ctxuseronpad, [], "user on pad is author when document in Preparation")
+        , ( False
+          , ctxadmin
+          , []
+          , "user logged in is admin of author when document in Preparation"
+          )
+        , (False, ctxother, [], "user logged in is unrelated to document")
+        , ( True
+          , ctxnotloggedin
+          , [("accesstoken", inText (showt (documentmagichash doc)))]
+          , "using accesstoken, nobody logged in"
+          )
+        ]
 
-  let sortOutResult apicall shouldallow res comment =
-          case (shouldallow,res) of
-            (True, Left (e :: E.SomeException)) -> do
-              assertFailure $ "Should be able to download " <> apicall <> " when " <> comment <> ": " <> show e
-            (True, Right (resp1,_ctx1)) | rsCode resp1 < 200 || rsCode resp1 >= 399 -> do
-              assertFailure $ "Should be able to download " <> apicall <> " when " <> comment <> ":\n" <> show resp1
-            (False, Right (resp1,_ctx1)) | rsCode resp1 >= 200 && rsCode resp1 <= 399 -> do
-              assertFailure $ "Should not be able to download " <> apicall <> " when " <> comment
-            _ -> return ()
+  let sortOutResult apicall shouldallow res comment = case (shouldallow, res) of
+        (True, Left (e :: E.SomeException)) -> do
+          assertFailure
+            $  "Should be able to download "
+            <> apicall
+            <> " when "
+            <> comment
+            <> ": "
+            <> show e
+        (True, Right (resp1, _ctx1)) | rsCode resp1 < 200 || rsCode resp1 >= 399 -> do
+          assertFailure
+            $  "Should be able to download "
+            <> apicall
+            <> " when "
+            <> comment
+            <> ":\n"
+            <> show resp1
+        (False, Right (resp1, _ctx1)) | rsCode resp1 >= 200 && rsCode resp1 <= 399 -> do
+          assertFailure
+            $  "Should not be able to download "
+            <> apicall
+            <> " when "
+            <> comment
+        _ -> return ()
 
   forM_ cases $ \(shouldallow, ctx, params, comment) -> do
-    req1 <- mkRequest GET params
-    result1 <- E.try $ runTestKontra req1 ctx $
-                  apiCallV1DownloadFile (documentid doc) fid "anything.pdf"
+    req1    <- mkRequest GET params
+    result1 <- E.try $ runTestKontra req1 ctx $ apiCallV1DownloadFile (documentid doc)
+                                                                      fid
+                                                                      "anything.pdf"
     sortOutResult "apiCallV1DownloadFile" shouldallow result1 comment
 
-    result2 <- E.try $ runTestKontra req1 ctx $
-                  apiCallV1DownloadMainFile (documentid doc) "anything.pdf"
+    result2 <- E.try $ runTestKontra req1 ctx $ apiCallV1DownloadMainFile
+      (documentid doc)
+      "anything.pdf"
 
     sortOutResult "apiCallV1DownloadMainFile" shouldallow result2 comment
 
 testDownloadFileWithAuthToView :: TestEnv ()
 testDownloadFileWithAuthToView = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx <- mkContext defaultLang
-  doc <- addRandomDocument (rdaDefault user)
-    { rdaTypes = OneOf [Signable]
-    , rdaStatuses = OneOf [Pending]
+  ctx         <- mkContext defaultLang
+  doc         <- addRandomDocument (rdaDefault user)
+    { rdaTypes       = OneOf [Signable]
+    , rdaStatuses    = OneOf [Pending]
     , rdaSignatories =
       let author = OneOf [AllOf []]
           signatory =
             let authsToView = [toEnum 0 ..] \\ [StandardAuthenticationToView]
-            in OneOf $ (`map` authsToView) $ \auth ->
-              AllOf [ RSC_IsSignatoryThatHasntSigned
-                    , RSC_AuthToViewIs auth
-                    ]
-      in OneOf [[author, signatory]]
+            in  OneOf $ (`map` authsToView) $ \auth ->
+                  AllOf [RSC_IsSignatoryThatHasntSigned, RSC_AuthToViewIs auth]
+      in  OneOf [[author, signatory]]
     }
   let sl = head $ reverse $ documentsignatorylinks $ doc
   req1 <- mkRequest GET []
-  mh <- dbUpdate $ NewSignatoryAccessToken
-    (signatorylinkid sl) SignatoryAccessTokenForMailBeforeClosing Nothing
-  (_,ctx') <- runTestKontra req1 ctx $
-              handleSignShowSaveMagicHash
-              (documentid doc) (signatorylinkid sl) mh
-  req2     <- mkRequest GET [( "signatorylinkid"
-                             , inText $ showt (signatorylinkid sl) )]
-  (res2,_) <- runTestKontra req2 ctx' $
-              apiCallV1DownloadMainFile (documentid doc) "anything.pdf"
+  mh   <- dbUpdate $ NewSignatoryAccessToken (signatorylinkid sl)
+                                             SignatoryAccessTokenForMailBeforeClosing
+                                             Nothing
+  (_, ctx') <- runTestKontra req1 ctx
+    $ handleSignShowSaveMagicHash (documentid doc) (signatorylinkid sl) mh
+  req2      <- mkRequest GET [("signatorylinkid", inText $ showt (signatorylinkid sl))]
+  (res2, _) <- runTestKontra req2 ctx'
+    $ apiCallV1DownloadMainFile (documentid doc) "anything.pdf"
   assertEqual "Response should be 403" 403 (rsCode res2)
 
 testSendingReminderClearsDeliveryInformation :: TestEnv ()
 testSendingReminderClearsDeliveryInformation = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx <- (set ctxmaybeuser (Just user))
-    <$> mkContext defaultLang
-  addRandomDocument (rdaDefault user)
-    { rdaTypes = OneOf [Signable]
-    , rdaStatuses = OneOf [Pending]
-    } `withDocumentM` do
-    sl <- head . reverse . documentsignatorylinks <$> theDocument
-    let actor  =  systemActor $ get ctxtime ctx
-    void $ dbUpdate $ MarkInvitationRead (signatorylinkid sl) actor
-    -- who cares which one, just pick the last one
-    req <- mkRequest POST []
-    (_link, _ctx') <- do
-      updateDocumentWithID $ \did -> lift . runTestKontra req ctx $ withDocumentID did $ sendReminderEmail Nothing actor False sl
-    sl' <- guardJustM $ find (\t -> signatorylinkid t == signatorylinkid sl) . documentsignatorylinks <$> theDocument
-    assertEqual "Invitation is not delivered" (Unknown) (mailinvitationdeliverystatus sl')
+  ctx         <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  addRandomDocument (rdaDefault user) { rdaTypes    = OneOf [Signable]
+                                      , rdaStatuses = OneOf [Pending]
+                                      }
+    `withDocumentM` do
+                      sl <- head . reverse . documentsignatorylinks <$> theDocument
+                      let actor = systemActor $ get ctxtime ctx
+                      void $ dbUpdate $ MarkInvitationRead (signatorylinkid sl) actor
+                      -- who cares which one, just pick the last one
+                      req            <- mkRequest POST []
+                      (_link, _ctx') <- do
+                        updateDocumentWithID $ \did ->
+                          lift
+                            . runTestKontra req ctx
+                            $ withDocumentID did
+                            $ sendReminderEmail Nothing actor False sl
+                      sl' <-
+                        guardJustM
+                        $   find (\t -> signatorylinkid t == signatorylinkid sl)
+                        .   documentsignatorylinks
+                        <$> theDocument
+                      assertEqual "Invitation is not delivered"
+                                  (Unknown)
+                                  (mailinvitationdeliverystatus sl')
 
 
 testDocumentFromTemplate :: TestEnv ()
 testDocumentFromTemplate = do
-    (Just user) <- addNewUser "aaa" "bbb" "xxx@xxx.pl"
-    doc <- addRandomDocument (rdaDefault user)
-      { rdaTypes = OneOf [Template]
-      }
-    docs1 <- randomQuery $ GetDocumentsByAuthor (userid user)
-    ctx <- (set ctxmaybeuser (Just user))
-      <$> mkContext defaultLang
-    req <- mkRequest POST []
-    void $ runTestKontra req ctx $ apiCallV1CreateFromTemplate (documentid doc)
-    docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
-    assertBool "No new document" (length docs2 == 1+ length docs1)
+  (Just user) <- addNewUser "aaa" "bbb" "xxx@xxx.pl"
+  doc         <- addRandomDocument (rdaDefault user) { rdaTypes = OneOf [Template] }
+  docs1       <- randomQuery $ GetDocumentsByAuthor (userid user)
+  ctx         <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  req         <- mkRequest POST []
+  void $ runTestKontra req ctx $ apiCallV1CreateFromTemplate (documentid doc)
+  docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
+  assertBool "No new document" (length docs2 == 1 + length docs1)
 
 testDocumentFromTemplateShared :: TestEnv ()
 testDocumentFromTemplateShared = do
-    ugid <- (get ugID) <$> addNewUserGroup
-    (Just author) <- addNewUserToUserGroup "aaa" "bbb" "xxx@xxx.pl" ugid
-    doc <- addRandomDocument (rdaDefault author)
-      { rdaTypes = OneOf [Template]
-      }
-    void $ randomUpdate $ SetDocumentSharing [documentid doc] True
-    (Just user) <- addNewUserToUserGroup "ccc" "ddd" "zzz@zzz.pl" ugid
-    docs1 <- randomQuery $ GetDocumentsByAuthor (userid user)
-    ctx <- (set ctxmaybeuser (Just user))
-      <$> mkContext defaultLang
-    req <- mkRequest POST []
-    void $ runTestKontra req ctx $ apiCallV1CreateFromTemplate (documentid doc)
-    docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
-    assertEqual "New document should have been created" (1+length docs1) (length docs2)
+  ugid          <- (get ugID) <$> addNewUserGroup
+  (Just author) <- addNewUserToUserGroup "aaa" "bbb" "xxx@xxx.pl" ugid
+  doc           <- addRandomDocument (rdaDefault author) { rdaTypes = OneOf [Template] }
+  void $ randomUpdate $ SetDocumentSharing [documentid doc] True
+  (Just user) <- addNewUserToUserGroup "ccc" "ddd" "zzz@zzz.pl" ugid
+  docs1       <- randomQuery $ GetDocumentsByAuthor (userid user)
+  ctx         <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  req         <- mkRequest POST []
+  void $ runTestKontra req ctx $ apiCallV1CreateFromTemplate (documentid doc)
+  docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
+  assertEqual "New document should have been created" (1 + length docs1) (length docs2)
 
 testDocumentDeleteInBulk :: TestEnv ()
 testDocumentDeleteInBulk = do
-    ugid <- (get ugID) <$> addNewUserGroup
-    (Just author) <- addNewUserToUserGroup "aaa" "bbb" "xxx@xxx.pl" ugid
-    -- isSignable condition below is wrong. Tests somehow generate template documents
-    -- that are pending and that breaks everything.
-    docs <- replicateM 100 (addRandomDocument (rdaDefault author)
-                             { rdaTypes = OneOf [Signable] })
+  ugid          <- (get ugID) <$> addNewUserGroup
+  (Just author) <- addNewUserToUserGroup "aaa" "bbb" "xxx@xxx.pl" ugid
+  -- isSignable condition below is wrong. Tests somehow generate template documents
+  -- that are pending and that breaks everything.
+  docs          <- replicateM
+    100
+    (addRandomDocument (rdaDefault author) { rdaTypes = OneOf [Signable] })
 
-    ctx <- (set ctxmaybeuser (Just author)) <$> mkContext defaultLang
-    req <- mkRequest POST [("documentids",  inText $ (showt $ documentid <$> docs))]
+  ctx <- (set ctxmaybeuser (Just author)) <$> mkContext defaultLang
+  req <- mkRequest POST [("documentids", inText $ (showt $ documentid <$> docs))]
 
-    void $ runTestKontra req ctx $ handleDelete
-    docs2 <- dbQuery $ GetDocumentsByAuthor (userid author)
-    assertEqual "Documents are deleted" 0 (length docs2)
+  void $ runTestKontra req ctx $ handleDelete
+  docs2 <- dbQuery $ GetDocumentsByAuthor (userid author)
+  assertEqual "Documents are deleted" 0 (length docs2)
 
 testGetLoggedIn :: TestEnv ()
 testGetLoggedIn = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  doc <- addRandomDocumentWithAuthor user
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
-  req <- mkRequest GET []
-  (res,_) <- runTestKontra req ctx $ apiCallV1Get doc
+  doc         <- addRandomDocumentWithAuthor user
+  ctx         <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  req         <- mkRequest GET []
+  (res, _)    <- runTestKontra req ctx $ apiCallV1Get doc
   assertEqual "Response code is 200" 200 (rsCode res)
 
 
 testGetNotLoggedIn :: TestEnv ()
 testGetNotLoggedIn = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  doc <- addRandomDocumentWithAuthor user
-  ctx <- mkContext defaultLang
-  req <- mkRequest GET []
-  (res,_) <- runTestKontra req ctx $ apiCallV1Get doc
+  doc         <- addRandomDocumentWithAuthor user
+  ctx         <- mkContext defaultLang
+  req         <- mkRequest GET []
+  (res, _)    <- runTestKontra req ctx $ apiCallV1Get doc
   assertEqual "Response code is 403" 403 (rsCode res)
 
 
 testGetBadHeader :: TestEnv ()
 testGetBadHeader = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  doc <- addRandomDocumentWithAuthor user
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
-  req <- mkRequestWithHeaders GET [] [("authorization", ["ABC"])]
-  (res,_) <- runTestKontra req ctx $ apiCallV1Get doc
+  doc         <- addRandomDocumentWithAuthor user
+  ctx         <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  req         <- mkRequestWithHeaders GET [] [("authorization", ["ABC"])]
+  (res, _)    <- runTestKontra req ctx $ apiCallV1Get doc
   assertEqual "Response code is 403" 403 (rsCode res)
 
 
@@ -549,44 +705,43 @@ testGetBadHeader = do
 testGetEvidenceAttachmentsLoggedIn :: TestEnv ()
 testGetEvidenceAttachmentsLoggedIn = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  doc <- addRandomDocumentWithAuthor user
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
-  req <- mkRequest GET []
-  (res,_) <- runTestKontra req ctx $ apiCallV1GetEvidenceAttachments doc
+  doc         <- addRandomDocumentWithAuthor user
+  ctx         <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  req         <- mkRequest GET []
+  (res, _)    <- runTestKontra req ctx $ apiCallV1GetEvidenceAttachments doc
   assertEqual "Response code is 200" 200 (rsCode res)
 
 testGetEvidenceAttachmentsNotLoggedIn :: TestEnv ()
 testGetEvidenceAttachmentsNotLoggedIn = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  doc <- addRandomDocumentWithAuthor user
-  ctx <- mkContext defaultLang
-  req <- mkRequest GET []
-  (res,_) <- runTestKontra req ctx $ apiCallV1GetEvidenceAttachments doc
+  doc         <- addRandomDocumentWithAuthor user
+  ctx         <- mkContext defaultLang
+  req         <- mkRequest GET []
+  (res, _)    <- runTestKontra req ctx $ apiCallV1GetEvidenceAttachments doc
   assertEqual "Response code is 403" 403 (rsCode res)
 
 -- Some test for signview branding generation
 
-testSignviewBrandingBlocksNastyInput:: TestEnv ()
+testSignviewBrandingBlocksNastyInput :: TestEnv ()
 testSignviewBrandingBlocksNastyInput = do
-  bd <- get ctxbrandeddomain <$> mkContext defaultLang -- We need to get default branded domain. AllOf it can be fetched from default ctx
-  theme <- dbQuery $ GetTheme $ (get bdSignviewTheme $ bd)
+  bd               <- get ctxbrandeddomain <$> mkContext defaultLang -- We need to get default branded domain. AllOf it can be fetched from default ctx
+  theme            <- dbQuery $ GetTheme $ (get bdSignviewTheme $ bd)
   emptyBrandingCSS <- signviewBrandingCSS theme
-  assertBool "CSS generated for empty branding is not empty" (not $ BSL.null $ emptyBrandingCSS)
+  assertBool "CSS generated for empty branding is not empty"
+             (not $ BSL.null $ emptyBrandingCSS)
   let
-    nasty1 = "nastyColor \n \n";
-    nasty2 =  "alert('Nasty color')"
+    nasty1 = "nastyColor \n \n"
+    nasty2 = "alert('Nasty color')"
     nasty3 = "& very nasty font {}"
-    nastyTheme = theme  {
-        themeBrandColor  = nasty1
-      , themeBrandTextColor = nasty2
-      , themeFont = nasty3
-      }
-  nastyCSS <-  signviewBrandingCSS nastyTheme
-  assertBool "CSS generated for nasty company branding is not empty" (not $ BSL.null $ nastyCSS)
-  assertBool "CSS generated for nasty company branding does not contain nasty strings" $
-       (not $ (T.unpack nasty1) `isInfixOf ` (BSL.toString $ nastyCSS))
-    && (not $ (T.unpack nasty2) `isInfixOf ` (BSL.toString $ nastyCSS))
-    && (not $ (T.unpack nasty3) `isInfixOf ` (BSL.toString $ nastyCSS))
+    nastyTheme =
+      theme { themeBrandColor = nasty1, themeBrandTextColor = nasty2, themeFont = nasty3 }
+  nastyCSS <- signviewBrandingCSS nastyTheme
+  assertBool "CSS generated for nasty company branding is not empty"
+             (not $ BSL.null $ nastyCSS)
+  assertBool "CSS generated for nasty company branding does not contain nasty strings"
+    $  (not $ (T.unpack nasty1) `isInfixOf` (BSL.toString $ nastyCSS))
+    && (not $ (T.unpack nasty2) `isInfixOf` (BSL.toString $ nastyCSS))
+    && (not $ (T.unpack nasty3) `isInfixOf` (BSL.toString $ nastyCSS))
 
 testDownloadSignviewBrandingAccess :: TestEnv ()
 testDownloadSignviewBrandingAccess = do
@@ -594,37 +749,42 @@ testDownloadSignviewBrandingAccess = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   let filename = inTestDir "pdfs/simple.pdf"
   filecontent <- liftIO $ BS.readFile filename
-  file <- saveNewFile (T.pack filename) filecontent
+  file        <- saveNewFile (T.pack filename) filecontent
 
-  doc <- addRandomDocumentWithFile file (rdaDefault user)
-    { rdaTypes = OneOf [Signable]
-    , rdaStatuses = OneOf [Preparation]
-    , rdaSignatories =
-      let signatory = OneOf
-            [ AllOf [ RSC_DeliveryMethodIs EmailDelivery ]
-            ]
-      in OneOf $ map (`replicate` signatory) [1..10]
-    }
+  doc         <- addRandomDocumentWithFile
+    file
+    (rdaDefault user)
+      { rdaTypes       = OneOf [Signable]
+      , rdaStatuses    = OneOf [Preparation]
+      , rdaSignatories = let signatory =
+                               OneOf [AllOf [RSC_DeliveryMethodIs EmailDelivery]]
+                         in  OneOf $ map (`replicate` signatory) [1 .. 10]
+      }
 
   withDocumentID (documentid doc) $ do
     d <- theDocument
-    void $ randomUpdate $ ResetSignatoryDetails ([
-                      (defaultSignatoryLink {
-                                        signatoryfields = (signatoryfields $ fromJust $ getAuthorSigLink d)
-                                      , signatoryisauthor = True
-                                      , signatoryrole     = SignatoryRoleViewer
-                                      , maybesignatory = Just $ userid user })
-                    , (defaultSignatoryLink {
-                                        signatorysignorder = SignOrder 1
-                                      , signatoryisauthor = False
-                                      , signatoryrole     = SignatoryRoleSigningParty
-                                      , signatoryfields = [
-                                          fieldForTests (NameFI (NameOrder 1)) "Fred"
-                                        , fieldForTests (NameFI (NameOrder 2)) "Frog"
-                                        , fieldForTests EmailFI "fred@frog.com"
-                                        ]})
-                 ]) (systemActor $ documentctime d)
-    t <- documentctime <$> theDocument
+    void $ randomUpdate $ ResetSignatoryDetails
+      ([ (defaultSignatoryLink
+           { signatoryfields   = (signatoryfields $ fromJust $ getAuthorSigLink d)
+           , signatoryisauthor = True
+           , signatoryrole     = SignatoryRoleViewer
+           , maybesignatory    = Just $ userid user
+           }
+         )
+       , (defaultSignatoryLink
+           { signatorysignorder = SignOrder 1
+           , signatoryisauthor  = False
+           , signatoryrole      = SignatoryRoleSigningParty
+           , signatoryfields    = [ fieldForTests (NameFI (NameOrder 1)) "Fred"
+                                  , fieldForTests (NameFI (NameOrder 2)) "Frog"
+                                  , fieldForTests EmailFI                "fred@frog.com"
+                                  ]
+           }
+         )
+       ]
+      )
+      (systemActor $ documentctime d)
+    t  <- documentctime <$> theDocument
     tz <- mkTimeZoneName "Europe/Stockholm"
     randomUpdate $ PreparationToPending (systemActor t) tz
 
@@ -634,29 +794,35 @@ testDownloadSignviewBrandingAccess = do
   -- 1) Check access to main signview branding
   emptyContext <- mkContext defaultLang
   let bid = get (bdid . ctxbrandeddomain) emptyContext
-  svbr1 <- mkRequest GET [ ]
-  resp1 <- E.try $  runTestKontra svbr1 emptyContext $ handleSignviewBranding bid (documentid doc) "branding-hash-12xdaad32-some_name.css"
+  svbr1 <- mkRequest GET []
+  resp1 <- E.try $ runTestKontra svbr1 emptyContext $ handleSignviewBranding
+    bid
+    (documentid doc)
+    "branding-hash-12xdaad32-some_name.css"
   case resp1 of
-    Right (cssResp1, _)->  assertBool "CSS should be returned" (rsCode cssResp1 == 200)
+    Right (cssResp1, _) -> assertBool "CSS should be returned" (rsCode cssResp1 == 200)
     Left (_ :: E.SomeException) -> assertFailure "CSS should be avaialbe for CDN"
 
 
   -- 2) Check access to main signview branding for author. Used when logged in a to-sign view.
 
-  svbr2 <- mkRequest GET [ ]
-  resp2 <- E.try $ runTestKontra svbr2 emptyContext $ handleSignviewBrandingWithoutDocument bid (userid user) "branding-hash-7cdsgSAq1-some_name.css"
+  svbr2 <- mkRequest GET []
+  resp2 <-
+    E.try $ runTestKontra svbr2 emptyContext $ handleSignviewBrandingWithoutDocument
+      bid
+      (userid user)
+      "branding-hash-7cdsgSAq1-some_name.css"
   case resp2 of
-    Right (cssResp2, _)->  assertBool "CSS should be returned" (rsCode cssResp2 == 200)
+    Right (cssResp2, _) -> assertBool "CSS should be returned" (rsCode cssResp2 == 200)
     Left (_ :: E.SomeException) -> assertFailure "CSS should be avaialbe for CDN"
 
 testGetCancelledDocument :: TestEnv ()
 testGetCancelledDocument = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx <- mkContext defaultLang
-  doc <- addRandomDocument (rdaDefault user)
-    { rdaTypes = OneOf [Signable]
-    , rdaStatuses = OneOf [Pending]
-    }
+  ctx       <- mkContext defaultLang
+  doc       <- addRandomDocument (rdaDefault user) { rdaTypes    = OneOf [Signable]
+                                                   , rdaStatuses = OneOf [Pending]
+                                                   }
   let did       = documentid doc
       signatory = head $ documentsignatorylinks doc
       slid      = signatorylinkid signatory
@@ -666,20 +832,17 @@ testGetCancelledDocument = do
   -- It should fail if we're using the link with a magic hash.
   do
     req  <- mkRequest GET []
-    mh   <- dbUpdate $ NewSignatoryAccessToken
-              slid SignatoryAccessTokenForAPI Nothing
-    eRes <- E.try $ runTestKontra req ctx $
-      handleSignShowSaveMagicHash did slid mh
+    mh   <- dbUpdate $ NewSignatoryAccessToken slid SignatoryAccessTokenForAPI Nothing
+    eRes <- E.try $ runTestKontra req ctx $ handleSignShowSaveMagicHash did slid mh
 
     case eRes of
       Right (res, _) ->
         assertFailure $ "Should have failed, returned code " <> show (rsCode res)
-      Left err ->
-        assertEqual "Should throw LinkInvalid" LinkInvalid err
+      Left err -> assertEqual "Should throw LinkInvalid" LinkInvalid err
 
   -- It shouldn't fail if we had already clicked on the link.
   do
-    req <- mkRequest GET []
+    req      <- mkRequest GET []
     (res, _) <- runTestKontra req ctx $ do
       sid <- getNonTempSessionID
       randomUpdate $ AddDocumentSession sid slid
@@ -689,136 +852,138 @@ testGetCancelledDocument = do
 testDocumentFromShareableTemplate :: TestEnv ()
 testDocumentFromShareableTemplate = replicateM_ 10 $ do
   user <- addNewRandomUser
-  tpl <- addRandomDocument (rdaDefault user)
-    { rdaTypes = OneOf [Template]
-    , rdaSignatories =
-      let author = OneOf
-            [ AllOf [ RSC_IsViewer
-                    , RSC_AuthToViewIs StandardAuthenticationToView
-                    , RSC_AuthToSignIs StandardAuthenticationToSign
-                    ]
-            ]
-          signatory = OneOf
-            [ AllOf [ RSC_IsSignatoryThatHasntSigned
-                    , RSC_AuthToViewIs StandardAuthenticationToView
-                    , RSC_AuthToSignIs StandardAuthenticationToSign
-                    , RSC_DeliveryMethodIs APIDelivery
-                    ]
-            ]
-      in OneOf [[author, signatory]]
+  tpl  <- addRandomDocument (rdaDefault user)
+    { rdaTypes       = OneOf [Template]
+    , rdaSignatories = let author = OneOf
+                             [ AllOf
+                                 [ RSC_IsViewer
+                                 , RSC_AuthToViewIs StandardAuthenticationToView
+                                 , RSC_AuthToSignIs StandardAuthenticationToSign
+                                 ]
+                             ]
+                           signatory = OneOf
+                             [ AllOf
+                                 [ RSC_IsSignatoryThatHasntSigned
+                                 , RSC_AuthToViewIs StandardAuthenticationToView
+                                 , RSC_AuthToSignIs StandardAuthenticationToSign
+                                 , RSC_DeliveryMethodIs APIDelivery
+                                 ]
+                             ]
+                       in  OneOf [[author, signatory]]
     }
 
   mh <- random
   withDocument tpl $ randomUpdate $ UpdateShareableLinkHash $ Just mh
 
-  ctx <- mkContext defaultLang
-  req <- mkRequest GET []
-  (res, ctx') <- runTestKontra req ctx $
-    handleSignFromTemplate (documentid tpl) mh
+  ctx         <- mkContext defaultLang
+  req         <- mkRequest GET []
+  (res, ctx') <- runTestKontra req ctx $ handleSignFromTemplate (documentid tpl) mh
 
   assertEqual "Status is 303" 303 (rsCode res)
-  let Just HeaderPair{ hValue = [loc] } = M.lookup "location" $ rsHeaders res
+  let Just HeaderPair { hValue = [loc] } = M.lookup "location" $ rsHeaders res
 
-      (did, slid) :: (DocumentID, SignatoryLinkID)
-         = bimap read (read . T.drop 1)
-          . T.break (=='/')
+      (did, slid) :: (DocumentID, SignatoryLinkID) =
+        bimap read (read . T.drop 1)
+          . T.break (== '/')
           . T.drop (T.length "/s/")
           . T.pack
           . BS8.unpack
           $ loc
 
   doc <- randomQuery $ GetDocumentByDocumentID did
-  assertNotEqual "Should be a different document"
-                 (documentid doc) (documentid tpl)
-  assertEqual "Should have the same title"
-              (documenttitle doc) (documenttitle tpl)
+  assertNotEqual "Should be a different document" (documentid doc) (documentid tpl)
+  assertEqual "Should have the same title" (documenttitle doc) (documenttitle tpl)
   assertEqual "Shouldn't have a shareable link hash"
-              Nothing (documentshareablelinkhash doc)
+              Nothing
+              (documentshareablelinkhash doc)
   assertEqual "Should have a reference to the template"
-              (Just (documentid tpl)) (documenttemplateid doc)
+              (Just (documentid tpl))
+              (documenttemplateid doc)
   assertEqual "Should be marked as created by a shareable link"
-              True (documentfromshareablelink doc)
+              True
+              (documentfromshareablelink doc)
 
   (res', ctx'') <- runTestKontra req ctx' $ handleSignShow did slid
   assertEqual "Status is 200" 200 (rsCode res')
 
-  req' <- mkRequest POST [("fields", inText "[]")]
+  req'       <- mkRequest POST [("fields", inText "[]")]
   (res'', _) <- runTestKontra req' ctx'' $ apiCallV1Sign did slid
   assertEqual "Status is 202" 202 (rsCode res'')
 
   forM_ [CIStartingDocument, CIShareableLink, CIClosingDocument] $ \typ -> do
-    runQuery_ $
-      "SELECT COUNT(*) FROM chargeable_items WHERE type =" <?> typ
-      <+> "AND document_id =" <?> did
+    runQuery_
+      $   "SELECT COUNT(*) FROM chargeable_items WHERE type ="
+      <?> typ
+      <+> "AND document_id ="
+      <?> did
     c <- fetchOne runIdentity
-    assertEqual ("Should have been charged with " <> show typ)
-                1 (c :: Int64)
+    assertEqual ("Should have been charged with " <> show typ) 1 (c :: Int64)
 
-testGetDocumentWithSignatoryAccessTokens:: TestEnv ()
+testGetDocumentWithSignatoryAccessTokens :: TestEnv ()
 testGetDocumentWithSignatoryAccessTokens = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
 
-  doc <- addRandomDocument (rdaDefault user)
-    { rdaTypes = OneOf [Signable]
-    , rdaStatuses = OneOf [Pending]
-    }
+  doc       <- addRandomDocument (rdaDefault user) { rdaTypes    = OneOf [Signable]
+                                                   , rdaStatuses = OneOf [Pending]
+                                                   }
   let did       = documentid doc
       signatory = head $ documentsignatorylinks doc
       slid      = signatorylinkid signatory
 
   now <- currentTime
   let expiration = 2 `daysAfter` now
-  mh <- dbUpdate $ NewSignatoryAccessToken
-    slid SignatoryAccessTokenForMailBeforeClosing(Just expiration)
+  mh <- dbUpdate $ NewSignatoryAccessToken slid
+                                           SignatoryAccessTokenForMailBeforeClosing
+                                           (Just expiration)
 
   do
-    ctx <- mkContext defaultLang
-    req <- mkRequest GET []
-    (res, _) <- runTestKontra req ctx $
-      handleSignShowSaveMagicHash did slid mh
+    ctx      <- mkContext defaultLang
+    req      <- mkRequest GET []
+    (res, _) <- runTestKontra req ctx $ handleSignShowSaveMagicHash did slid mh
     assertEqual "Status is 303" 303 (rsCode res)
 
   setTestTime $ 3 `daysAfter` now
 
   do
-    ctx <- mkContext defaultLang
-    req <- mkRequest GET []
-    eRes <- E.try $ runTestKontra req ctx $
-      handleSignShowSaveMagicHash did slid mh
+    ctx  <- mkContext defaultLang
+    req  <- mkRequest GET []
+    eRes <- E.try $ runTestKontra req ctx $ handleSignShowSaveMagicHash did slid mh
 
     case eRes of
       Right (res, _) ->
         assertFailure $ "Should have failed, returned code " <> show (rsCode res)
-      Left err ->
-        assertEqual "Should throw LinkInvalid" LinkInvalid err
+      Left err -> assertEqual "Should throw LinkInvalid" LinkInvalid err
 
   do
     ctx <- mkContext defaultLang
-    runSQL_ "UPDATE cron_jobs SET run_at = to_timestamp(0)\
+    runSQL_
+      "UPDATE cron_jobs SET run_at = to_timestamp(0)\
             \ WHERE id = 'timeouted_signatory_access_tokens_purge'"
     runTestCronUntilIdle ctx
-    runQuery_ $ "SELECT COUNT(*) FROM signatory_access_tokens\
-                \ WHERE signatory_link_id =" <?> slid
+    runQuery_
+      $ "SELECT COUNT(*) FROM signatory_access_tokens\
+                \ WHERE signatory_link_id ="
+      <?> slid
     c <- fetchOne runIdentity
     assertEqual "Signatory_access tokens count should be 0" (0 :: Int64) c
 
 testSendEmailOnTimeout :: TestEnv ()
 testSendEmailOnTimeout = do
-  ug <- addNewUserGroup
+  ug        <- addNewUserGroup
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
-  True <- dbUpdate $ SetUserUserGroup (userid user) (get ugID ug)
+  True      <- dbUpdate $ SetUserUserGroup (userid user) (get ugID ug)
   let newUGS = (set ugsSendTimeoutNotification True (fromJust $ get ugSettings ug))
   dbUpdate $ UserGroupUpdateSettings (get ugID ug) (Just newUGS)
 
-  doc <- addRandomDocument (rdaDefault user)
-    { rdaTypes = OneOf [Signable]
-    , rdaStatuses = OneOf [Pending]
-    , rdaTimeoutTime = True
-    }
+  doc <- addRandomDocument (rdaDefault user) { rdaTypes       = OneOf [Signable]
+                                             , rdaStatuses    = OneOf [Pending]
+                                             , rdaTimeoutTime = True
+                                             }
 
   modifyTestTime (const (10 `minutesAfter` (fromJust $ documenttimeouttime doc)))
   ctx <- mkContext defaultLang
-  runSQL_ "UPDATE cron_jobs SET run_at = to_timestamp(0)\
+  runSQL_
+    "UPDATE cron_jobs SET run_at = to_timestamp(0)\
             \ WHERE id = 'find_and_timeout_documents'"
   runTestCronUntilIdle $ ctx
   doc2 <- dbQuery $ GetDocumentByDocumentID $ documentid doc

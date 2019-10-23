@@ -15,12 +15,11 @@ data AESConf = AESConf ByteString ByteString -- key, iv
   deriving (Eq, Ord, Show)
 
 mkAESConf :: ByteString -> ByteString -> Either String AESConf
-mkAESConf key iv =
-  if key_len == 32
-    then if BS.length iv == 16
-           then Right $ AESConf key iv
-           else Left $ "Invalid AES IV length: " ++ show iv_len ++ ", should be 16"
-    else Left $ "Invalid AES key length: " ++ show key_len ++ ", should be 32"
+mkAESConf key iv = if key_len == 32
+  then if BS.length iv == 16
+    then Right $ AESConf key iv
+    else Left $ "Invalid AES IV length: " ++ show iv_len ++ ", should be 16"
+  else Left $ "Invalid AES key length: " ++ show key_len ++ ", should be 32"
   where
     key_len = BS.length key
     iv_len  = BS.length iv

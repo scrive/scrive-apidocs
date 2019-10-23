@@ -17,11 +17,11 @@ data AuthorAttachment = AuthorAttachment {
 ---------------------------------
 
 authorAttachmentsSelectors :: [SQL]
-authorAttachmentsSelectors = [
-    "author_attachments.name",
-    "author_attachments.required",
-    "author_attachments.add_to_sealed_file",
-    "author_attachments.file_id"
+authorAttachmentsSelectors =
+  [ "author_attachments.name"
+  , "author_attachments.required"
+  , "author_attachments.add_to_sealed_file"
+  , "author_attachments.file_id"
   ]
 
 type instance CompositeRow AuthorAttachment = (Text, Bool, Bool, FileID)
@@ -30,9 +30,9 @@ instance PQFormat AuthorAttachment where
   pqFormat = compositeTypePqFormat ctAuthorAttachment
 
 instance CompositeFromSQL AuthorAttachment where
-  toComposite (aname, areq, aatsf, afid) = AuthorAttachment {
-    authorattachmentname = aname,
-    authorattachmentrequired = areq,
-    authorattachmentaddtosealedfile = aatsf,
-    authorattachmentfileid = afid
-  }
+  toComposite (aname, areq, aatsf, afid) = AuthorAttachment
+    { authorattachmentname            = aname
+    , authorattachmentrequired        = areq
+    , authorattachmentaddtosealedfile = aatsf
+    , authorattachmentfileid          = afid
+    }

@@ -38,13 +38,11 @@ data LogConfig = LogConfig {
 } deriving (Eq, Show)
 
 instance Unjson LogConfig where
-  unjsonDef = objectOf $ LogConfig
-    <$> field "suffix"
-        lcSuffix
-        "Suffix of a component"
-    <*> field "loggers"
-        lcLoggers
-        "List of loggers"
+  unjsonDef =
+    objectOf $ LogConfig <$> field "suffix" lcSuffix "Suffix of a component" <*> field
+      "loggers"
+      lcLoggers
+      "List of loggers"
 
 data LoggerDef
   = StandardOutput
@@ -53,19 +51,25 @@ data LoggerDef
   deriving (Eq, Show)
 
 instance Unjson LoggerDef where
-  unjsonDef = disjointUnionOf "logger" [
-      ("stdout", (== StandardOutput), pure StandardOutput)
-    , ("elasticsearch", $(isConstr 'ElasticSearch), ElasticSearch
-        <$> fieldDefBy "configuration" defaultElasticSearchConfig
-            (\(ElasticSearch es) -> es)
-            ("ElasticSearch configuration, " <>
-             "defaults to http://localhost:9200/logs/log")
-            esUnjsonConfig
+  unjsonDef = disjointUnionOf
+    "logger"
+    [ ("stdout", (== StandardOutput), pure StandardOutput)
+    , ( "elasticsearch"
+      , $(isConstr 'ElasticSearch)
+      , ElasticSearch
+        <$> fieldDefBy
+              "configuration"
+              defaultElasticSearchConfig
+              (\(ElasticSearch es) -> es)
+              (  "ElasticSearch configuration, "
+              <> "defaults to http://localhost:9200/logs/log"
+              )
+              esUnjsonConfig
       )
-    , ("postgresql", $(isConstr 'PostgreSQL), PostgreSQL
-        <$> field "database"
-            (\(PostgreSQL ci) -> ci)
-            "Database connection string"
+    , ( "postgresql"
+      , $(isConstr 'PostgreSQL)
+      , PostgreSQL
+        <$> field "database" (\(PostgreSQL ci) -> ci) "Database connection string"
       )
     ]
     where
@@ -74,57 +78,55 @@ instance Unjson LoggerDef where
       esDefCfg = defaultElasticSearchConfig
 
       -- allows keys in any order; all have defaults
-      esUnjsonConfig = objectOf $ pure esDefCfg
-        <**> (fieldDefBy "server"
-                         (esServer esDefCfg)
-                         esServer
-                         "Server (host:port)"
-                         unjsonDef
-             <**> (pure $ \s esCfg -> esCfg { esServer = s } ))
-        <**> (fieldDefBy "index"
-                         (esIndex esDefCfg)
-                         esIndex
-                         "Index"
-                         unjsonDef
-             <**> (pure $ \i esCfg -> esCfg { esIndex = i } ))
-        <**> (fieldDefBy "shards"
-                         (esShardCount esDefCfg)
-                         esShardCount
-                         "Shard count"
-                         unjsonDef
-             <**> (pure $ \s esCfg -> esCfg { esShardCount = s } ))
-        <**> (fieldDefBy "replicas"
-                         (esReplicaCount esDefCfg)
-                         esReplicaCount
-                         "Replica count"
-                         unjsonDef
-             <**> (pure $ \r esCfg -> esCfg { esReplicaCount = r } ))
-        <**> (fieldDefBy "mapping"
-                         (esMapping esDefCfg)
-                         esMapping
-                         "Mapping"
-                         unjsonDef
-             <**> (pure $ \m esCfg -> esCfg { esMapping = m } ))
-        <**> (fieldOptBy "login"
-                         esLogin
-                         "Login info, optional, default: empty"
-                         unjsonESLogin
-             <**> (pure $ \ml esCfg -> esCfg { esLogin = ml } ))
-        <**> (fieldDefBy "loginInsecure"
-                         (esLoginInsecure esDefCfg)
-                         esLoginInsecure
-                         "Allow basic authentication over non-TLS connections."
-                         unjsonDef
-             <**> (pure $ \l esCfg -> esCfg { esLoginInsecure = l } ))
+      esUnjsonConfig =
+        objectOf
+          $    pure esDefCfg
+          <**> (    fieldDefBy "server"
+                               (esServer esDefCfg)
+                               esServer
+                               "Server (host:port)"
+                               unjsonDef
+               <**> (pure $ \s esCfg -> esCfg { esServer = s })
+               )
+          <**> (    fieldDefBy "index" (esIndex esDefCfg) esIndex "Index" unjsonDef
+               <**> (pure $ \i esCfg -> esCfg { esIndex = i })
+               )
+          <**> (    fieldDefBy "shards"
+                               (esShardCount esDefCfg)
+                               esShardCount
+                               "Shard count"
+                               unjsonDef
+               <**> (pure $ \s esCfg -> esCfg { esShardCount = s })
+               )
+          <**> (    fieldDefBy "replicas"
+                               (esReplicaCount esDefCfg)
+                               esReplicaCount
+                               "Replica count"
+                               unjsonDef
+               <**> (pure $ \r esCfg -> esCfg { esReplicaCount = r })
+               )
+          <**> (fieldDefBy "mapping" (esMapping esDefCfg) esMapping "Mapping" unjsonDef
+               <**> (pure $ \m esCfg -> esCfg { esMapping = m })
+               )
+          <**> (    fieldOptBy "login"
+                               esLogin
+                               "Login info, optional, default: empty"
+                               unjsonESLogin
+               <**> (pure $ \ml esCfg -> esCfg { esLogin = ml })
+               )
+          <**> (    fieldDefBy "loginInsecure"
+                               (esLoginInsecure esDefCfg)
+                               esLoginInsecure
+                               "Allow basic authentication over non-TLS connections."
+                               unjsonDef
+               <**> (pure $ \l esCfg -> esCfg { esLoginInsecure = l })
+               )
 
       unjsonESLogin :: UnjsonDef (EsUsername, EsPassword)
-      unjsonESLogin = objectOf $ pure (,)
-                  <*> field "username"
-                            fst
-                            "User name"
-                  <*> field "password"
-                            snd
-                            "Password"
+      unjsonESLogin = objectOf $ pure (,) <*> field "username" fst "User name" <*> field
+        "password"
+        snd
+        "Password"
 
 instance Unjson EsUsername where
   unjsonDef = invmap EsUsername esUsername unjsonAeson
@@ -152,64 +154,58 @@ newtype LogRunner = LogRunner {
 -- | 'withLogger' and 'runLogger' rolled into one. Useful when you
 -- only have a single top-level 'runLogger' call.
 runWithLogRunner :: LogRunner -> LogT IO r -> IO r
-runWithLogRunner LogRunner{..} act =
-  withLogger $ \runLogger -> runLogger act
+runWithLogRunner LogRunner {..} act = withLogger $ \runLogger -> runLogger act
 
 newtype WithLoggerFun = WithLoggerFun {
   withLoggerFun :: forall r . (Logger -> IO r) -> IO r
 }
 
 instance Semigroup WithLoggerFun where
-   (WithLoggerFun with0) <> (WithLoggerFun with1) = WithLoggerFun $
-    \f -> with0 (\logger0 -> with1 (\logger1 -> f $ logger0 <> logger1))
+  (WithLoggerFun with0) <> (WithLoggerFun with1) =
+    WithLoggerFun $ \f -> with0 (\logger0 -> with1 (\logger1 -> f $ logger0 <> logger1))
 
 mkLogRunner :: Text -> LogConfig -> CryptoRNGState -> IO ([Text], LogRunner)
-mkLogRunner component LogConfig{..} rng = do
+mkLogRunner component LogConfig {..} rng = do
   eWithLoggerFuns <- mapM toWithLoggerFun lcLoggers
   let withLoggerFuns = rights eWithLoggerFuns
-      errorReports = lefts eWithLoggerFuns
+      errorReports   = lefts eWithLoggerFuns
   if null withLoggerFuns
-     then unexpectedError "List of loggers is empty; aborting."
-     else return ()
+    then unexpectedError "List of loggers is empty; aborting."
+    else return ()
   let loggerFun = sconcat . fromList $ withLoggerFuns
-  return (errorReports,
-          LogRunner
-          {
-            withLogger = \act -> withLoggerFun loggerFun $
-              (\logger -> act (run logger))
-          })
+  return
+    ( errorReports
+    , LogRunner
+      { withLogger = \act -> withLoggerFun loggerFun $ (\logger -> act (run logger))
+      }
+    )
   where
     toWithLoggerFun :: LoggerDef -> IO (Either Text WithLoggerFun)
-    toWithLoggerFun StandardOutput =
-      return . Right $ WithLoggerFun {
-        withLoggerFun = \act -> withSimpleStdOutLogger act
+    toWithLoggerFun StandardOutput = return . Right $ WithLoggerFun
+      { withLoggerFun = \act -> withSimpleStdOutLogger act
+      }
+    toWithLoggerFun (ElasticSearch ec) = checkElasticSearchConnection ec >>= \case
+      Left _ ->
+        return
+          .  Left
+          $  "ElasticSearch: unexpected error; "
+          <> "is ElasticSearch server running?\n"
+           -- @review-note:include the below? A bit noisy
+           -- (pack . show) ex
+      Right () -> return . Right $ WithLoggerFun
+        { withLoggerFun = \act -> do
+                            let randGen = runCryptoRNGT rng boundedIntegralRandom
+                            withElasticSearchLogger ec randGen act
         }
-    toWithLoggerFun (ElasticSearch ec) =
-
-      checkElasticSearchConnection ec >>= \case
-        Left _ ->
-          return . Left $ "ElasticSearch: unexpected error; " <>
-                          "is ElasticSearch server running?\n"
-             -- @review-note:include the below? A bit noisy
-             -- (pack . show) ex
-        Right () ->
-          return . Right $
-                 WithLoggerFun
-                 {
-                   withLoggerFun = \act -> do
-                     let randGen = runCryptoRNGT rng boundedIntegralRandom
-                     withElasticSearchLogger ec randGen act
-                 }
     toWithLoggerFun (PostgreSQL ci) = do
-      ConnectionSource pool <- poolSource defaultConnectionSettings
-                               { csConnInfo = ci} 1 10 1
-      withSimpleStdOutLogger $ \logger ->
-        withPostgreSQL pool $ run logger $ do
-          let extrasOptions = defaultExtrasOptions
-          migrateDatabase extrasOptions [] [] [] logsTables logsMigrations
-      return . Right $ WithLoggerFun {
-        withLoggerFun = \act -> withPgLogger pool act
-        }
+      ConnectionSource pool <- poolSource defaultConnectionSettings { csConnInfo = ci }
+                                          1
+                                          10
+                                          1
+      withSimpleStdOutLogger $ \logger -> withPostgreSQL pool $ run logger $ do
+        let extrasOptions = defaultExtrasOptions
+        migrateDatabase extrasOptions [] [] [] logsTables logsMigrations
+      return . Right $ WithLoggerFun { withLoggerFun = \act -> withPgLogger pool act }
 
     run :: Logger -> LogT m a -> m a
     run = runLogT (component <> "-" <> lcSuffix)

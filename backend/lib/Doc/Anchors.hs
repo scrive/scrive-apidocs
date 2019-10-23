@@ -31,72 +31,101 @@ import KontraMonad
 import Log.Utils
 import Utils.Directory
 
-getAnchorPositions :: (Monad m, MonadBaseControl IO m, MonadLog m, MonadIO m) => BS.ByteString -> [PlacementAnchor] -> m (Map.Map PlacementAnchor (Int32, Double, Double))
-getAnchorPositions _pdfcontent [] = return Map.empty
-getAnchorPositions pdfcontent anchors = do
+getAnchorPositions
+  :: (Monad m, MonadBaseControl IO m, MonadLog m, MonadIO m)
+  => BS.ByteString
+  -> [PlacementAnchor]
+  -> m (Map.Map PlacementAnchor (Int32, Double, Double))
+getAnchorPositions _pdfcontent []      = return Map.empty
+getAnchorPositions pdfcontent  anchors = do
   withSystemTempDirectory' ("find-text-") $ \tmppath -> do
     let inputpath = tmppath ++ "/input.pdf"
-        config = runJSONGen $ do
+        config    = runJSONGen $ do
           value "input" inputpath
           objects "matches" (map anchorToJS anchors)
         anchorToJS anc = do
-          value "text" (placementanchortext anc)
+          value "text"  (placementanchortext anc)
           value "index" (placementanchorindex anc)
-        configpath = tmppath ++ "/find-texts.json"
+        configpath    = tmppath ++ "/find-texts.json"
         configContent = BSL.fromString $ show $ J.pp_value (toJSValue config)
-    logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length pdfcontent)
-                                       , "originator" .= ("getAnchorPositions" :: Text) ]
+    logInfo "Temp file write" $ object
+      [ "bytes_written" .= (BS.length pdfcontent)
+      , "originator" .= ("getAnchorPositions" :: Text)
+      ]
     liftIO $ BS.writeFile inputpath pdfcontent
-    logInfo "Temp file write" $ object [ "bytes_written" .= (BSL.length configContent)
-                                       , "originator" .= ("getAnchorPositions" :: Text) ]
+    logInfo "Temp file write" $ object
+      [ "bytes_written" .= (BSL.length configContent)
+      , "originator" .= ("getAnchorPositions" :: Text)
+      ]
     liftIO $ BSL.writeFile configpath configContent
 
-    (code,stdout,stderr) <- liftIO $ do
-      readProcessWithExitCode "java" ["-jar", "scrivepdftools/scrivepdftools.jar", "find-texts", configpath] (BSL.empty)
+    (code, stdout, stderr) <- liftIO $ do
+      readProcessWithExitCode
+        "java"
+        ["-jar", "scrivepdftools/scrivepdftools.jar", "find-texts", configpath]
+        (BSL.empty)
 
     case code of
       ExitSuccess -> do
-        stdoutjs <- either (\e -> do
-          logAttention "scrivepdftools/scrivepdftools.jar find-texts did not produce valid json" $ object [
-              "message" .= e
-            , "stdout" `equalsExternalBSL` stdout
-            ]
-          fail "scrivepdftools/scrivepdftools.jar find-texts did not produce valid json"
-          ) return $ J.runGetJSON J.readJSValue (BSL.toString stdout)
+        stdoutjs <-
+          either
+              (\e -> do
+                logAttention
+                    "scrivepdftools/scrivepdftools.jar find-texts did not produce valid json"
+                  $ object ["message" .= e, "stdout" `equalsExternalBSL` stdout]
+                fail
+                  "scrivepdftools/scrivepdftools.jar find-texts did not produce valid json"
+              )
+              return
+            $ J.runGetJSON J.readJSValue (BSL.toString stdout)
 
         let matches :: Maybe (Maybe [Maybe (PlacementAnchor, (Int32, Double, Double))])
-            matches = withJSValue stdoutjs $ fromJSValueFieldCustom "matches" $ fromJSValueCustomMany $ ((do
-              text                 <- fromJSValueField "text"
-              index                <- fromMaybe (Just 1) <$> fromJSValueField "index"
-              page                 <- fromJSValueField "page"
-              coords               <- fromJSValueField "coords"
-              let coordx = fst <$> coords
-              let coordy = snd <$> coords
-              return (Just ((,) <$> (PlacementAnchor <$> text <*> index)
-                      <*> ((,,) <$> page <*> coordx <*> coordy)))))
+            matches =
+              withJSValue stdoutjs
+                $ fromJSValueFieldCustom "matches"
+                $ fromJSValueCustomMany
+                $ ((do
+                     text   <- fromJSValueField "text"
+                     index  <- fromMaybe (Just 1) <$> fromJSValueField "index"
+                     page   <- fromJSValueField "page"
+                     coords <- fromJSValueField "coords"
+                     let coordx = fst <$> coords
+                     let coordy = snd <$> coords
+                     return
+                       (Just
+                         (   (,)
+                         <$> (PlacementAnchor <$> text <*> index)
+                         <*> ((,,) <$> page <*> coordx <*> coordy)
+                         )
+                       )
+                   )
+                  )
         case matches of
           Just (Just realMatches) -> do
             return (Map.fromList (catMaybes realMatches))
           _ -> do
             return Map.empty
       ExitFailure _ -> do
-        logAttention "Error while running scrivepdftools" $ object [
-            "stderr" `equalsExternalBSL` stderr
-          ]
+        logAttention "Error while running scrivepdftools"
+          $ object ["stderr" `equalsExternalBSL` stderr]
         return Map.empty
 
-anchorSorter :: Maybe (Int32, Double, Double) -> Maybe (Int32, Double, Double) -> Ord.Ordering
-anchorSorter (Just (a1page, _, _))  (Just (a2page, _, _)) | a1page < a2page = Ord.LT
-anchorSorter (Just (a1page, _, _))  (Just (a2page, _, _)) | a1page > a2page = Ord.GT
-anchorSorter (Just (a1page, a1yrel, _))  (Just (a2page, a2yrel, _)) | a1page == a2page && a1yrel <= a2yrel = Ord.LT
-anchorSorter (Just (a1page, a1yrel, _))  (Just (a2page, a2yrel, _)) | a1page == a2page && a1yrel > a2yrel = Ord.GT
-anchorSorter (Just _) _ = Ord.GT
-anchorSorter _ (Just _) = Ord.LT
-anchorSorter Nothing Nothing = Ord.EQ
+anchorSorter
+  :: Maybe (Int32, Double, Double) -> Maybe (Int32, Double, Double) -> Ord.Ordering
+anchorSorter (Just (a1page, _, _)) (Just (a2page, _, _)) | a1page < a2page = Ord.LT
+anchorSorter (Just (a1page, _, _)) (Just (a2page, _, _)) | a1page > a2page = Ord.GT
+anchorSorter (Just (a1page, a1yrel, _)) (Just (a2page, a2yrel, _))
+  | a1page == a2page && a1yrel <= a2yrel = Ord.LT
+anchorSorter (Just (a1page, a1yrel, _)) (Just (a2page, a2yrel, _))
+  | a1page == a2page && a1yrel > a2yrel = Ord.GT
+anchorSorter (Just _) _        = Ord.GT
+anchorSorter _        (Just _) = Ord.LT
+anchorSorter Nothing  Nothing  = Ord.EQ
 
-recalculateAnchoredFieldPlacements :: (Kontrakcja m,DocumentMonad m) => FileID -> FileID -> m ()
+recalculateAnchoredFieldPlacements
+  :: (Kontrakcja m, DocumentMonad m) => FileID -> FileID -> m ()
 recalculateAnchoredFieldPlacements oldfileid newfileid | oldfileid == newfileid = do
-    return ()
+  return ()
 recalculateAnchoredFieldPlacements oldfileid newfileid = do
   doc <- theDocument
   -- Algo:
@@ -106,14 +135,17 @@ recalculateAnchoredFieldPlacements oldfileid newfileid = do
   -- 4. Update.
   -- Note: Check if there are any anchors, if none skip all of this.
 
-  let anchors = [ anc | sig <- documentsignatorylinks doc,
-                        fld <- signatoryfields sig,
-                        plc <- fieldPlacements fld,
-                        anc <- placementanchors plc ]
+  let anchors =
+        [ anc
+        | sig <- documentsignatorylinks doc
+        , fld <- signatoryfields sig
+        , plc <- fieldPlacements fld
+        , anc <- placementanchors plc
+        ]
 
   unless (null anchors) $ do
-    oldfilecontents <- getFileIDContents oldfileid
-    newfilecontents <- getFileIDContents newfileid
+    oldfilecontents    <- getFileIDContents oldfileid
+    newfilecontents    <- getFileIDContents newfileid
     oldAnchorPositions <- getAnchorPositions oldfilecontents anchors
     newAnchorPositions <- getAnchorPositions newfilecontents anchors
 
@@ -123,25 +155,30 @@ recalculateAnchoredFieldPlacements oldfileid newfileid = do
     -- move a field and that should be good enough as debugging
     -- information.
 
-    let maybeMoveFieldPlacement :: FieldPlacement -> Maybe FieldPlacement
-        maybeMoveFieldPlacement plc = do
-          -- find first anchor that was found
-          (_oldAnchorPosPage,oldAnchorPosX,oldAnchorPosY) <-
-            msum (map (\anchor -> Map.lookup anchor oldAnchorPositions) (placementanchors plc))
-          (newAnchorPosPage,newAnchorPosX,newAnchorPosY) <-
-            maximumBy anchorSorter (map (\anchor -> Map.lookup anchor newAnchorPositions) (placementanchors plc))
+    let
+      maybeMoveFieldPlacement :: FieldPlacement -> Maybe FieldPlacement
+      maybeMoveFieldPlacement plc = do
+        -- find first anchor that was found
+        (_oldAnchorPosPage, oldAnchorPosX, oldAnchorPosY) <- msum
+          (map (\anchor -> Map.lookup anchor oldAnchorPositions) (placementanchors plc))
+        (newAnchorPosPage, newAnchorPosX, newAnchorPosY) <- maximumBy
+          anchorSorter
+          (map (\anchor -> Map.lookup anchor newAnchorPositions) (placementanchors plc))
 
-          return (plc { placementxrel = placementxrel plc - oldAnchorPosX + newAnchorPosX,
-                        placementyrel = placementyrel plc - oldAnchorPosY + newAnchorPosY,
-                        placementpage = newAnchorPosPage })
-    forM_ [fld | sig <- documentsignatorylinks doc,
-                 fld <- signatoryfields sig ] $ \fld -> do
-      let plcpairs :: [(FieldPlacement, Maybe FieldPlacement)]
-          plcpairs = map (\p -> (p,maybeMoveFieldPlacement p)) (fieldPlacements fld)
+        return
+          (plc { placementxrel = placementxrel plc - oldAnchorPosX + newAnchorPosX
+               , placementyrel = placementyrel plc - oldAnchorPosY + newAnchorPosY
+               , placementpage = newAnchorPosPage
+               }
+          )
+    forM_ [ fld | sig <- documentsignatorylinks doc, fld <- signatoryfields sig ]
+      $ \fld -> do
+          let plcpairs :: [(FieldPlacement, Maybe FieldPlacement)]
+              plcpairs = map (\p -> (p, maybeMoveFieldPlacement p)) (fieldPlacements fld)
 
-      when (any (isJust . snd) plcpairs) $ do
-        let newplc = map (\(k,v) -> fromMaybe k v) plcpairs
-        dbUpdate $ SetFieldPlacements (fieldID fld) newplc
-        return ()
+          when (any (isJust . snd) plcpairs) $ do
+            let newplc = map (\(k, v) -> fromMaybe k v) plcpairs
+            dbUpdate $ SetFieldPlacements (fieldID fld) newplc
+            return ()
 
   return ()

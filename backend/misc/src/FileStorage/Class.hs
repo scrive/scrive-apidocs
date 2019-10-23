@@ -34,5 +34,5 @@ class Monad m => MonadFileStorage m where
 instance {-# OVERLAPS #-} (MonadFileStorage m, MonadTrans t, Monad (t m))
     => MonadFileStorage (t m) where
   saveNewContents url contents = lift $ saveNewContents url contents
-  getSavedContents             = lift . getSavedContents
-  deleteSavedContents          = lift . deleteSavedContents
+  getSavedContents    = lift . getSavedContents
+  deleteSavedContents = lift . deleteSavedContents

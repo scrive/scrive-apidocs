@@ -22,20 +22,20 @@ instance ToJSValue FileDoesNotExist where
 instance DBExtraException FileDoesNotExist
 
 sqlWhereFileIDIs :: (MonadState v m, SqlWhere v) => FileID -> m ()
-sqlWhereFileIDIs fid =
-  sqlWhereE (FileDoesNotExist fid) ("files.id =" <?> fid)
+sqlWhereFileIDIs fid = sqlWhereE (FileDoesNotExist fid) ("files.id =" <?> fid)
 
 data FileWasPurged = FileWasPurged FileID UTCTime
   deriving (Eq, Ord, Show, Typeable)
 
 instance ToJSValue FileWasPurged where
   toJSValue (FileWasPurged fid time) = runJSONGen $ do
-    value "message" ("File was purged from the system and is no longer available" :: String)
-    value "file_id" (show fid)
+    value "message"
+          ("File was purged from the system and is no longer available" :: String)
+    value "file_id"     (show fid)
     value "purged_time" (show time)
 
 instance DBExtraException FileWasPurged
 
 sqlWhereFileWasNotPurged :: (MonadState v m, SqlWhere v) => m ()
-sqlWhereFileWasNotPurged =
-  sqlWhereEVV (FileWasPurged,"files.id","files.purged_time") ("files.purged_time IS NULL")
+sqlWhereFileWasNotPurged = sqlWhereEVV (FileWasPurged, "files.id", "files.purged_time")
+                                       ("files.purged_time IS NULL")

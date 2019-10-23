@@ -28,7 +28,7 @@ instance {-# OVERLAPPABLE #-} (
   , Monad (t m)
   , MonadTrans t
   ) => PdfToolsLambdaMonad (t m) where
-    getPdfToolsLambdaEnv = lift getPdfToolsLambdaEnv
+  getPdfToolsLambdaEnv = lift getPdfToolsLambdaEnv
 
 newtype PdfToolsLambdaT m a =
   PdfToolsLambdaT { unPdfToolsLambdaT :: ReaderT PdfToolsLambdaEnv m a }

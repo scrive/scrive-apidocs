@@ -29,17 +29,15 @@ import Routing
 import User.Model
 
 attachmentAPI :: Route (Kontra Response)
-attachmentAPI = dir "api" $ choice
-  [ dir "frontend" attachmentAPIV2
-  , dir "v2" attachmentAPIV2
-  ]
+attachmentAPI =
+  dir "api" $ choice [dir "frontend" attachmentAPIV2, dir "v2" attachmentAPIV2]
 
 attachmentAPIV2 :: Route (Kontra Response)
 attachmentAPIV2 = dir "attachments" $ choice
   [ dir "list" $ hGet $ toK0 attachmentsApiV2List
   , dir "new" $ hPost $ toK0 attachmentsApiV2Create
-  , param $ dir "download" $ hGet $
-      toK2 $ \attID (_ :: String) -> attachmentsApiV2Download attID
+  , param $ dir "download" $ hGet $ toK2 $ \attID (_ :: String) ->
+    attachmentsApiV2Download attID
   , param $ dir "download" $ hGet $ toK1 attachmentsApiV2Download
   -- bulk operations
   , dir "setsharing" $ hPost $ toK0 attachmentsApiV2SetSharing
@@ -49,24 +47,28 @@ attachmentAPIV2 = dir "attachments" $ choice
 attachmentsApiV2List :: Kontrakcja m => m Response
 attachmentsApiV2List = api $ do
   attachments <- attachmentsApiV2List_
-  let headers = mkHeaders [("Content-Type","application/json; charset=UTF-8")]
-  return $ Ok $ Response 200 headers nullRsFlags
-    (unjsonToByteStringLazy unjsonAttachments attachments)
-    Nothing
+  let headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
+  return $ Ok $ Response 200
+                         headers
+                         nullRsFlags
+                         (unjsonToByteStringLazy unjsonAttachments attachments)
+                         Nothing
 
 attachmentsApiV2List_ :: Kontrakcja m => m [Attachment]
 attachmentsApiV2List_ = do
   (user, _) <- getAPIUser APIPersonal
 
   domainStr <- apiV2ParameterOptional $ ApiV2ParameterText "domain"
-  mFilters <- apiV2ParameterOptional $
-    ApiV2ParameterJSON "filter" unjsonAttachmentFiltering
-  mSorting <- apiV2ParameterOptional $
-    ApiV2ParameterJSON "sorting" unjsonAttachmentSorting
+  mFilters  <- apiV2ParameterOptional
+    $ ApiV2ParameterJSON "filter" unjsonAttachmentFiltering
+  mSorting <- apiV2ParameterOptional
+    $ ApiV2ParameterJSON "sorting" unjsonAttachmentSorting
 
   let domain = case domainStr of
-        Just "All" -> [ AttachmentsOfAuthorDeleteValue (userid user) False
-                      , AttachmentsSharedInUsersUserGroup (userid user) ]
+        Just "All" ->
+          [ AttachmentsOfAuthorDeleteValue (userid user) False
+          , AttachmentsSharedInUsersUserGroup (userid user)
+          ]
         _ -> [AttachmentsOfAuthorDeleteValue (userid user) False]
       filters = fromMaybe [] mFilters
       sorting = fromMaybe [] mSorting
@@ -76,25 +78,27 @@ attachmentsApiV2List_ = do
 attachmentsApiV2Create :: Kontrakcja m => m Response
 attachmentsApiV2Create = api $ do
   (user, actor) <- getAPIUser APIPersonal
-  mTitle <- apiV2ParameterOptional $ ApiV2ParameterText "title"
-  file <- apiV2ParameterObligatory $ ApiV2ParameterFilePDF "file"
+  mTitle        <- apiV2ParameterOptional $ ApiV2ParameterText "title"
+  file          <- apiV2ParameterObligatory $ ApiV2ParameterFilePDF "file"
 
   let title = fromMaybe (takeTextBaseName $ filename file) mTitle
   void $ dbUpdate $ NewAttachment (userid user) title (fileid file) actor
 
   return $ Created ()
- where
-  takeTextBaseName :: Text -> Text
-  takeTextBaseName = T.pack . takeBaseName . T.unpack
+  where
+    takeTextBaseName :: Text -> Text
+    takeTextBaseName = T.pack . takeBaseName . T.unpack
 
 attachmentsApiV2Download :: Kontrakcja m => AttachmentID -> m Response
 attachmentsApiV2Download attid = api $ do
   (user, _) <- getAPIUser APIPersonal
-  atts <- dbQuery $ GetAttachments
+  atts      <- dbQuery $ GetAttachments
     [ AttachmentsSharedInUsersUserGroup (userid user)
     , AttachmentsOfAuthorDeleteValue (userid user) True
     , AttachmentsOfAuthorDeleteValue (userid user) False
-    ] [AttachmentFilterByID attid] []
+    ]
+    [AttachmentFilterByID attid]
+    []
   case atts of
     [att] -> do
       contents <- getFileIDContents (attachmentfile att)
@@ -104,8 +108,8 @@ attachmentsApiV2Download attid = api $ do
 attachmentsApiV2SetSharing :: Kontrakcja m => m Response
 attachmentsApiV2SetSharing = api $ do
   (user, _) <- getAPIUser APIPersonal
-  ids <- apiV2ParameterObligatory $
-    ApiV2ParameterJSON "attachment_ids" $ arrayOf unjsonDef
+  ids       <- apiV2ParameterObligatory $ ApiV2ParameterJSON "attachment_ids" $ arrayOf
+    unjsonDef
   shared <- apiV2ParameterObligatory $ ApiV2ParameterBool "shared"
   dbUpdate $ SetAttachmentsSharing (userid user) ids shared
   return $ Ok ()
@@ -113,7 +117,7 @@ attachmentsApiV2SetSharing = api $ do
 attachmentsApiV2Delete :: Kontrakcja m => m Response
 attachmentsApiV2Delete = api $ do
   (user, actor) <- getAPIUser APIPersonal
-  ids <- apiV2ParameterObligatory $
-    ApiV2ParameterJSON "attachment_ids" $ arrayOf unjsonDef
+  ids <- apiV2ParameterObligatory $ ApiV2ParameterJSON "attachment_ids" $ arrayOf
+    unjsonDef
   dbUpdate $ DeleteAttachments (userid user) ids actor
   return $ Accepted ()

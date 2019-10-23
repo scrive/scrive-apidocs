@@ -30,82 +30,89 @@ import User.CallbackScheme.Model
 import Util.SignatoryLinkUtils
 
 documentAPICallback
-  :: ( MonadIO m, MonadBase IO m, MonadLog m, MonadMask m
-     , MonadFileStorage cronenv, CryptoRNG cronenv, MonadBaseControl IO cronenv
-     , MonadDB cronenv, MonadIO cronenv, MonadLog cronenv
-     , MonadReader CronEnv cronenv, MonadMask cronenv )
-  => (forall r. cronenv r -> m r)
+  :: ( MonadIO m
+     , MonadBase IO m
+     , MonadLog m
+     , MonadMask m
+     , MonadFileStorage cronenv
+     , CryptoRNG cronenv
+     , MonadBaseControl IO cronenv
+     , MonadDB cronenv
+     , MonadIO cronenv
+     , MonadLog cronenv
+     , MonadReader CronEnv cronenv
+     , MonadMask cronenv
+     )
+  => (forall r . cronenv r -> m r)
   -> Int
   -> ConsumerConfig m CallbackID DocumentAPICallback
-documentAPICallback runExecute maxRunningJobs =
-  ConsumerConfig {
-      ccJobsTable = "document_api_callbacks"
-    , ccConsumersTable = "document_api_callback_consumers"
-    , ccJobSelectors = ["id", "document_id", "api_version", "url", "attempts"]
-    , ccJobFetcher = \ (cid, did, apiVersion, url, attempts) ->
-        DocumentAPICallback {
-            dacID = cid
-          , dacDocumentID = did
-          , dacApiVersion = apiVersion
-          , dacURL = url
-          , dacAttempts = attempts
-          }
-    , ccJobIndex = dacID
-    , ccNotificationChannel = Just apiCallbackNotificationChannel
-    , ccNotificationTimeout = 60 * 1000000 -- 1 minute
-    , ccMaxRunningJobs = maxRunningJobs
-    , ccProcessJob = \ dac@DocumentAPICallback {..} -> logDocument dacDocumentID . runExecute $ do
-        execute dac >>= \ case
-          True  -> return $ Ok Remove
-          False -> dbQuery (CheckQueuedCallbacksFor dacDocumentID) >>= \ case
-            True  -> do
-              logInfo_ "Callback for document failed and there are more queued, discarding"
-              return $ Failed Remove
-            False -> Failed <$> onFailure dac
-    , ccOnException = const onFailure
-    }
-      where
-        onFailure DocumentAPICallback {..} = logDocument dacDocumentID $
-          case dacAttempts of
-            1 -> return . RerunAfter $ iminutes 5
-            2 -> return . RerunAfter $ iminutes 10
-            3 -> return . RerunAfter $ iminutes 30
-            4 -> return . RerunAfter $ ihours 1
-            5 -> return . RerunAfter $ ihours 2
-            6 -> return . RerunAfter $ ihours 4
-            7 -> return . RerunAfter $ ihours 4
-            8 -> return . RerunAfter $ ihours 4
-            9 -> return . RerunAfter $ ihours 8
-            _ -> do
-              logInfo_ "10th call attempt failed, discarding"
-              return Remove
+documentAPICallback runExecute maxRunningJobs = ConsumerConfig
+  { ccJobsTable           = "document_api_callbacks"
+  , ccConsumersTable      = "document_api_callback_consumers"
+  , ccJobSelectors        = ["id", "document_id", "api_version", "url", "attempts"]
+  , ccJobFetcher          = \(cid, did, apiVersion, url, attempts) -> DocumentAPICallback
+                              { dacID         = cid
+                              , dacDocumentID = did
+                              , dacApiVersion = apiVersion
+                              , dacURL        = url
+                              , dacAttempts   = attempts
+                              }
+  , ccJobIndex            = dacID
+  , ccNotificationChannel = Just apiCallbackNotificationChannel
+  , ccNotificationTimeout = 60 * 1000000 -- 1 minute
+  , ccMaxRunningJobs      = maxRunningJobs
+  , ccProcessJob          =
+    \dac@DocumentAPICallback {..} -> logDocument dacDocumentID . runExecute $ do
+      execute dac >>= \case
+        True  -> return $ Ok Remove
+        False -> dbQuery (CheckQueuedCallbacksFor dacDocumentID) >>= \case
+          True -> do
+            logInfo_ "Callback for document failed and there are more queued, discarding"
+            return $ Failed Remove
+          False -> Failed <$> onFailure dac
+  , ccOnException         = const onFailure
+  }
+  where
+    onFailure DocumentAPICallback {..} = logDocument dacDocumentID $ case dacAttempts of
+      1 -> return . RerunAfter $ iminutes 5
+      2 -> return . RerunAfter $ iminutes 10
+      3 -> return . RerunAfter $ iminutes 30
+      4 -> return . RerunAfter $ ihours 1
+      5 -> return . RerunAfter $ ihours 2
+      6 -> return . RerunAfter $ ihours 4
+      7 -> return . RerunAfter $ ihours 4
+      8 -> return . RerunAfter $ ihours 4
+      9 -> return . RerunAfter $ ihours 8
+      _ -> do
+        logInfo_ "10th call attempt failed, discarding"
+        return Remove
 
-triggerAPICallbackIfThereIsOne :: (MonadDB m, MonadCatch m, MonadLog m)
-  => Document -> m ()
-triggerAPICallbackIfThereIsOne doc@Document{..} = logDocument documentid $ case documentstatus of
-  Preparation -> return () -- We don't trigger callbacks for Drafts
-  -- NOTE: v2 has priority over v1 callbacks, because v2 calls don't expose v1 callbacks
-  _ -> case (documentapiv2callbackurl, documentapiv1callbackurl) of
-    (Just url,_) -> addAPICallback url V2
-    (_,Just url) -> addAPICallback url V1
-    _ -> case (maybesignatory =<< getAuthorSigLink doc) of
-      -- FIXME: this should be modified so it's not Maybe
-      Just userid -> do
-        mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID userid
-        case mcallbackschema of
-          Just (ConstantUrlScheme url) -> addAPICallback url V1
-          Just (ConstantUrlSchemeV2 url) -> addAPICallback url V2
-          _ -> return () -- No callback defined for document nor user.
-      Nothing -> do
-        logAttention "Cant trigger user API callback for doc wihout author" $ object [
-            identifier documentid
-          ]
-        return () -- skipping
+triggerAPICallbackIfThereIsOne
+  :: (MonadDB m, MonadCatch m, MonadLog m) => Document -> m ()
+triggerAPICallbackIfThereIsOne doc@Document {..} =
+  logDocument documentid $ case documentstatus of
+    Preparation -> return () -- We don't trigger callbacks for Drafts
+    -- NOTE: v2 has priority over v1 callbacks, because v2 calls don't expose v1 callbacks
+    _           -> case (documentapiv2callbackurl, documentapiv1callbackurl) of
+      (Just url, _       ) -> addAPICallback url V2
+      (_       , Just url) -> addAPICallback url V1
+      _                    -> case (maybesignatory =<< getAuthorSigLink doc) of
+        -- FIXME: this should be modified so it's not Maybe
+        Just userid -> do
+          mcallbackschema <- dbQuery $ GetUserCallbackSchemeByUserID userid
+          case mcallbackschema of
+            Just (ConstantUrlScheme url) -> addAPICallback url V1
+            Just (ConstantUrlSchemeV2 url) -> addAPICallback url V2
+            _ -> return () -- No callback defined for document nor user.
+        Nothing -> do
+          logAttention "Cant trigger user API callback for doc wihout author"
+            $ object [identifier documentid]
+          return () -- skipping
 
   where
     addAPICallback url apiVersion = do
-      logInfo "Triggering API callback for document with api version" $
-        object [ identifier apiVersion]
+      logInfo "Triggering API callback for document with api version"
+        $ object [identifier apiVersion]
       dbUpdate $ MergeAPICallback documentid url apiVersion
 
 ----------------------------------------
@@ -116,7 +123,10 @@ apiCallbackNotificationChannel = "api_callback"
 data CheckQueuedCallbacksFor = CheckQueuedCallbacksFor DocumentID
 instance (MonadDB m, MonadCatch m) => DBQuery m CheckQueuedCallbacksFor Bool where
   query (CheckQueuedCallbacksFor did) = do
-    runSQL01_ $ "SELECT EXISTS (SELECT TRUE FROM document_api_callbacks WHERE document_id =" <?> did <+> "AND reserved_by IS NULL)"
+    runSQL01_
+      $   "SELECT EXISTS (SELECT TRUE FROM document_api_callbacks WHERE document_id ="
+      <?> did
+      <+> "AND reserved_by IS NULL)"
     fetchOne runIdentity
 
 data MergeAPICallback = MergeAPICallback DocumentID Text APIVersion
@@ -158,6 +168,6 @@ instance (MonadDB m, MonadCatch m, MonadLog m) => DBUpdate m MergeAPICallback ()
       setFields = do
         sqlSet "document_id" did
         sqlSet "api_version" apiVersion
-        sqlSet "run_at" unixEpoch
-        sqlSet "url" url
-        sqlSet "attempts" (0::Int32)
+        sqlSet "run_at"      unixEpoch
+        sqlSet "url"         url
+        sqlSet "attempts"    (0 :: Int32)

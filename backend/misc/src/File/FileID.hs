@@ -24,7 +24,7 @@ instance PQFormat FileID where
   pqFormat = pqFormat @Int64
 
 instance Identifier FileID where
-  idDefaultLabel     = "file_id"
+  idDefaultLabel = "file_id"
   idValue (FileID k) = int64AsStringIdentifier k
 
 instance FromReqURI FileID where
@@ -32,8 +32,9 @@ instance FromReqURI FileID where
 
 instance Unjson FileID where
   unjsonDef = unjsonInvmapR
-              ((maybe (fail "Can't parse FileID") return) . maybeRead . T.pack)
-              show unjsonDef
+    ((maybe (fail "Can't parse FileID") return) . maybeRead . T.pack)
+    show
+    unjsonDef
 
 instance FromSQL FileID where
   type PQBase FileID = PQBase Int64

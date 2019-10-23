@@ -17,20 +17,21 @@ import User.Model
 import qualified API.V2 as V2
 
 apiLogAPI :: Route (Kontra Response)
-apiLogAPI = dir "api" $ dir "frontend" $ dir "apilog" $ choice [
-    dir "list" $ hGet $ toK0 $ apiLogGetList
+apiLogAPI = dir "api" $ dir "frontend" $ dir "apilog" $ choice
+  [ dir "list" $ hGet $ toK0 $ apiLogGetList
   , param $ dir "get" $ hGet $ toK1 $ apiLogGetItem
   ]
 
 apiLogGetList :: Kontrakcja m => m Response
 apiLogGetList = V2.api $ do
   (user, _) <- getAPIUserWithAnyPrivileges
-  clis <- dbQuery . GetCallLogList $ userid user
+  clis      <- dbQuery . GetCallLogList $ userid user
   return $ V2.Ok (unjsonCallLogListForAPI, clis)
 
 apiLogGetItem :: Kontrakcja m => CallLogID -> m Response
 apiLogGetItem clid = V2.api $ do
   (user, _) <- getAPIUserWithAnyPrivileges
-  cli <- dbQuery $ GetCallLogItem clid
-  when (cliUserID cli /= userid user) $ throwM $ SomeDBExtraException $ V2.serverError "Cannot access this call log"
+  cli       <- dbQuery $ GetCallLogItem clid
+  when (cliUserID cli /= userid user) $ throwM $ SomeDBExtraException $ V2.serverError
+    "Cannot access this call log"
   return $ V2.Ok (unjsonCallLogItem, cli)

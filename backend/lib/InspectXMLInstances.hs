@@ -42,16 +42,15 @@ import UserGroup.Types
 import Utils.String
 
 instance (InspectXML a, Show a) => InspectXML [a] where
-    inspectXML l =
-      "<ul>" <> (T.concat $ fmap (\s -> "<li>" <> (inspectXML s) <> "</li>") l) <>
-      "</ul>"
+  inspectXML l =
+    "<ul>" <> (T.concat $ fmap (\s -> "<li>" <> (inspectXML s) <> "</li>") l) <> "</ul>"
 
 instance (InspectXML a, Show a) => InspectXML (Maybe a) where
-    inspectXML Nothing = "Nothing"
-    inspectXML (Just x) = inspectXML x
+  inspectXML Nothing  = "Nothing"
+  inspectXML (Just x) = inspectXML x
 
 instance (InspectXML a, InspectXML b, Show a, Show b) => InspectXML (a, b) where
-    inspectXML (a, b) = "(" <> inspectXML a <> "," <> inspectXML b <> ")"
+  inspectXML (a, b) = "(" <> inspectXML a <> "," <> inspectXML b <> ")"
 
 instance ( InspectXML a, InspectXML b, InspectXML c
          , Show a, Show b, Show c ) =>
@@ -81,21 +80,26 @@ newtype ExtraDocument = ExtraDocument String
 
 instance InspectXML SignatoryField where
   inspectXML field =
-    showt (fieldIdentity field) <> " " <> value <> ", " <>
-    (if fieldIsObligatory field then "obligatory, " else "optional, ") <>
-    (if fieldShouldBeFilledBySender field then "filled by sender, " else "") <>
-    (if (fieldEditableBySignatory field == Just True)
-     then "editable by signatory, " else "") <>
-    "<br/>placements: " <> inspectXML (fieldPlacements field)
+    showt (fieldIdentity field)
+      <> " "
+      <> value
+      <> ", "
+      <> (if fieldIsObligatory field then "obligatory, " else "optional, ")
+      <> (if fieldShouldBeFilledBySender field then "filled by sender, " else "")
+      <> (if (fieldEditableBySignatory field == Just True)
+           then "editable by signatory, "
+           else ""
+         )
+      <> "<br/>placements: "
+      <> inspectXML (fieldPlacements field)
     where
       value = case (fieldType field) of
         SignatureFT -> inspectXML (fieldFileValue field)
-        CheckboxFT -> if (fromJust (fieldBoolValue field))
-                         then "checked"
-                         else "not checked"
+        CheckboxFT ->
+          if (fromJust (fieldBoolValue field)) then "checked" else "not checked"
         RadioGroupFT -> inspectXML $ case fieldTextValue field of
-                         Nothing -> "<not picked>"
-                         Just s -> s
+          Nothing -> "<not picked>"
+          Just s  -> s
         _ -> inspectXML (fromJust (fieldTextValue field))
 
 instance InspectXML SignatoryConsentQuestionID where
@@ -104,40 +108,44 @@ instance InspectXML SignatoryConsentQuestionID where
 -- this must be manually updated to match Document instance
 instance InspectXML ExtraDocument
  where
-  inspectXML (ExtraDocument callbackResult) =
-    table "DocumentExtra" $
-      T.concat [table "API Callback result" $ inspectXML callbackResult]
+  inspectXML (ExtraDocument callbackResult) = table "DocumentExtra"
+    $ T.concat [table "API Callback result" $ inspectXML callbackResult]
 
 --Link creating types
 instance InspectXML DocumentID where
-    inspectXML x =
-      "<a href='/dave/document/" <> showt x <> "/'>"  <> showt x <> "</a>"
+  inspectXML x = "<a href='/dave/document/" <> showt x <> "/'>" <> showt x <> "</a>"
 instance InspectXML SignatoryLinkID where
-    inspectXML x =  "<a href='" <> showt x <> "'>" <> showt x <>"</a>"
+  inspectXML x = "<a href='" <> showt x <> "'>" <> showt x <> "</a>"
 instance InspectXML UserID where
-    inspectXML x =  "<a href='/dave/user/" <> showt x <> "'>"  <> showt x <>"</a>"
+  inspectXML x = "<a href='/dave/user/" <> showt x <> "'>" <> showt x <> "</a>"
 instance InspectXML File where
-    inspectXML file =
-      "<a href='" <>
-      (inspectXML $ LinkDaveFile (fileid file) (filename file)) <>
-      "'>" <> showt (fileid file) <> "/" <> inspectXML (filename file) <>
-      "</a> " <> fileAccessLogged
+  inspectXML file =
+    "<a href='"
+      <> (inspectXML $ LinkDaveFile (fileid file) (filename file))
+      <> "'>"
+      <> showt (fileid file)
+      <> "/"
+      <> inspectXML (filename file)
+      <> "</a> "
+      <> fileAccessLogged
 instance InspectXML FileID where
-    inspectXML fileid =
-      "<a href='" <> (inspectXML $ LinkDaveFile fileid (showt fileid)) <>
-      "'>" <> showt fileid <> "</a> " <> fileAccessLogged
+  inspectXML fileid =
+    "<a href='"
+      <> (inspectXML $ LinkDaveFile fileid (showt fileid))
+      <> "'>"
+      <> showt fileid
+      <> "</a> "
+      <> fileAccessLogged
 
 fileAccessLogged :: Text
-fileAccessLogged =
-  "(<strong style='color: red'>ACCESS TO THIS FILE IS LOGGED</strong>)"
+fileAccessLogged = "(<strong style='color: red'>ACCESS TO THIS FILE IS LOGGED</strong>)"
 
 instance InspectXML (S.Set DocumentTag) where
   inspectXML = inspectXML . S.toList
 
 instance InspectXML BrandedDomainID where
-    inspectXML x =
-      "<a href='/adminonly/brandeddomain/" <> showt x <> "'>"  <> showt x <>
-      "</a>"
+  inspectXML x =
+    "<a href='/adminonly/brandeddomain/" <> showt x <> "'>" <> showt x <> "</a>"
 
 instance {-# OVERLAPPING #-} InspectXML String where
   inspectXML str = "\"" <> escapeString (showt str) <> "\""

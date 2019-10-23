@@ -64,29 +64,28 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddUser (Maybe User) where
   update (AddUser (fname, lname) email mpwd (ugid, mFid, admin) l ad sm) = do
     mu <- query $ GetUserByEmail $ Email email
     case mu of
-      Just _ -> return Nothing -- user with the same email address exists
+      Just _  -> return Nothing -- user with the same email address exists
       Nothing -> do
         runQuery_ $ sqlInsert "users" $ do
-            sqlSet "password" $ pwdHash <$> mpwd
-            sqlSet "salt" $ pwdSalt <$> mpwd
-            sqlSet "password_algorithm" $
-              pwdAlgorithmToInt16 . pwdAlgorithm <$> mpwd
-            sqlSet "is_company_admin" admin
-            sqlSet "account_suspended" False
-            sqlSet "has_accepted_terms_of_service" (Nothing :: Maybe UTCTime)
-            sqlSet "signup_method" sm
-            sqlSet "first_name" fname
-            sqlSet "last_name" lname
-            sqlSet "personal_number" ("" :: String)
-            sqlSet "company_position" ("" :: String)
-            sqlSet "phone" ("" :: String)
-            sqlSet "email" $ T.toLower email
-            sqlSet "lang" l
-            sqlSet "deleted" (Nothing :: Maybe UTCTime)
-            sqlSet "associated_domain_id" ad
-            sqlSet "user_group_id" ugid
-            sqlSet "home_folder_id" mFid
-            mapM_ sqlResult selectUsersSelectorsList
+          sqlSet "password" $ pwdHash <$> mpwd
+          sqlSet "salt" $ pwdSalt <$> mpwd
+          sqlSet "password_algorithm" $ pwdAlgorithmToInt16 . pwdAlgorithm <$> mpwd
+          sqlSet "is_company_admin"  admin
+          sqlSet "account_suspended" False
+          sqlSet "has_accepted_terms_of_service" (Nothing :: Maybe UTCTime)
+          sqlSet "signup_method"     sm
+          sqlSet "first_name"        fname
+          sqlSet "last_name"         lname
+          sqlSet "personal_number"   ("" :: String)
+          sqlSet "company_position"  ("" :: String)
+          sqlSet "phone"             ("" :: String)
+          sqlSet "email" $ T.toLower email
+          sqlSet "lang"                 l
+          sqlSet "deleted"              (Nothing :: Maybe UTCTime)
+          sqlSet "associated_domain_id" ad
+          sqlSet "user_group_id"        ugid
+          sqlSet "home_folder_id"       mFid
+          mapM_ sqlResult selectUsersSelectorsList
         fetchMaybe fetchUser
 
 -- | Mark a user as deleted so that queries won't return it anymore and delete
@@ -104,13 +103,13 @@ instance (MonadDB m, MonadThrow m, MonadTime m) =>
       Just user -> return user
 
     runQuery_ $ sqlDelete "email_change_requests" $ sqlWhereEq "user_id" uid
-    runQuery_ $ sqlDelete "oauth_access_token"    $ sqlWhereEq "user_id" uid
-    runQuery_ $ sqlDelete "oauth_api_token"       $ sqlWhereEq "user_id" uid
+    runQuery_ $ sqlDelete "oauth_access_token" $ sqlWhereEq "user_id" uid
+    runQuery_ $ sqlDelete "oauth_api_token" $ sqlWhereEq "user_id" uid
     runQuery_ $ sqlDelete "oauth_temp_credential" $ sqlWhereEq "user_id" uid
-    runQuery_ $ sqlDelete "sessions"              $ sqlWhereEq "user_id" uid
-    runQuery_ $ sqlDelete "sessions"              $ sqlWhereEq "pad_user_id" uid
+    runQuery_ $ sqlDelete "sessions" $ sqlWhereEq "user_id" uid
+    runQuery_ $ sqlDelete "sessions" $ sqlWhereEq "pad_user_id" uid
     runQuery_ $ sqlDelete "user_account_requests" $ sqlWhereEq "user_id" uid
-    runQuery_ $ sqlDelete "user_callback_scheme"  $ sqlWhereEq "user_id" uid
+    runQuery_ $ sqlDelete "user_callback_scheme" $ sqlWhereEq "user_id" uid
 
     -- Give the shared attachments and templates to the oldest admin or user if
     -- there are no admins left.
@@ -129,30 +128,32 @@ instance (MonadDB m, MonadThrow m, MonadTime m) =>
       -- Nothing in case it is the last user. In this particular case, we don't
       -- care about document ownership and we leave the documents and
       -- attachments untouched.
-      Nothing -> return ()
+      Nothing       -> return ()
       Just newOwner -> do
         runQuery_ $ sqlUpdate "signatory_links" $ do
           sqlWith "signatory_link_ids_to_change" . sqlUpdate "documents" $ do
             sqlSet "author_user_id" $ userid newOwner
-            sqlWhereEq "sharing" Shared
-            sqlWhereEq "status" Preparation
-            sqlWhereEq "type" Template
+            sqlWhereEq "sharing"        Shared
+            sqlWhereEq "status"         Preparation
+            sqlWhereEq "type"           Template
             sqlWhereEq "author_user_id" uid
             sqlResult "author_id AS id"
 
-          let sqlFieldToChange =
-                sqlWhere "signatory_link_id IN\
+          let
+            sqlFieldToChange =
+              sqlWhere
+                "signatory_link_id IN\
                          \ (SELECT id FROM signatory_link_ids_to_change)"
 
           sqlWith "_updated_firstnames" . sqlUpdate "signatory_link_fields" $ do
             sqlSet "value_text" $ getFirstName newOwner
-            sqlWhereEq "type" NameFT
+            sqlWhereEq "type"       NameFT
             sqlWhereEq "name_order" (1 :: Int)
             sqlFieldToChange
 
           sqlWith "_updated_lastnames" . sqlUpdate "signatory_link_fields" $ do
             sqlSet "value_text" $ getLastName newOwner
-            sqlWhereEq "type" NameFT
+            sqlWhereEq "type"       NameFT
             sqlWhereEq "name_order" (2 :: Int)
             sqlFieldToChange
 
@@ -166,8 +167,7 @@ instance (MonadDB m, MonadThrow m, MonadTime m) =>
             sqlWhereEq "type" MobileFT
             sqlFieldToChange
 
-          sqlWith "_updated_personal_numbers"
-              . sqlUpdate "signatory_link_fields" $ do
+          sqlWith "_updated_personal_numbers" . sqlUpdate "signatory_link_fields" $ do
             sqlSet "value_text" $ getPersonalNumber newOwner
             sqlWhereEq "type" PersonalNumberFT
             sqlFieldToChange
@@ -182,11 +182,11 @@ instance (MonadDB m, MonadThrow m, MonadTime m) =>
 
     runQuery_ $ sqlUpdate "users_history" $ do
       sqlSet "event_data" (Nothing :: Maybe String)
-      sqlSet "ip" noIP
+      sqlSet "ip"         noIP
       sqlWhereEq "user_id" uid
 
     runQuery01 $ sqlUpdate "users" $ do
-      sqlSet "deleted" now
+      sqlSet "deleted"          now
       sqlSet "password"         (Nothing :: Maybe ByteString)
       sqlSet "salt"             (Nothing :: Maybe ByteString)
       sqlSet "first_name"       ("" :: String)
@@ -209,11 +209,19 @@ instance (MonadDB m, MonadThrow m, MonadLog m) => DBUpdate m RemoveInactiveUser 
   update (RemoveInactiveUser uid) = do
     runQuery_ $ "SELECT TRUE FROM companyinvites where user_id = " <?> uid
     ci :: Maybe Bool <- fetchMaybe runIdentity
-    if isJust ci then
-      return False
-    else do
-      runQuery_ $ "UPDATE signatory_links SET user_id = NULL WHERE user_id = " <?> uid <+> "AND EXISTS (SELECT TRUE FROM users WHERE users.id = " <?> uid <+> " AND users.has_accepted_terms_of_service IS NULL)"
-      runQuery01 $ "DELETE FROM users WHERE id = " <?> uid <+> "AND has_accepted_terms_of_service IS NULL"
+    if isJust ci
+      then return False
+      else do
+        runQuery_
+          $   "UPDATE signatory_links SET user_id = NULL WHERE user_id = "
+          <?> uid
+          <+> "AND EXISTS (SELECT TRUE FROM users WHERE users.id = "
+          <?> uid
+          <+> " AND users.has_accepted_terms_of_service IS NULL)"
+        runQuery01
+          $   "DELETE FROM users WHERE id = "
+          <?> uid
+          <+> "AND has_accepted_terms_of_service IS NULL"
 
 data SetSignupMethod = SetSignupMethod UserID SignupMethod
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetSignupMethod Bool where
@@ -226,31 +234,31 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetSignupMethod Bool where
 data SetUserUserGroup = SetUserUserGroup UserID UserGroupID
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserUserGroup Bool where
   -- also set the new user_group company
-  update (SetUserUserGroup uid ugid) =
-    dbQuery (UserGroupGet ugid) >>= \case
-      Nothing -> return False
-      Just ug ->
-        runQuery01 $ sqlUpdate "users" $ do
-          sqlSet "user_group_id" . get ugID $ ug
-          sqlWhereEq "id" uid
-          sqlWhereIsNULL "deleted"
+  update (SetUserUserGroup uid ugid) = dbQuery (UserGroupGet ugid) >>= \case
+    Nothing -> return False
+    Just ug -> runQuery01 $ sqlUpdate "users" $ do
+      sqlSet "user_group_id" . get ugID $ ug
+      sqlWhereEq "id" uid
+      sqlWhereIsNULL "deleted"
 
 data SetUserGroup = SetUserGroup UserID (Maybe UserGroupID)
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserGroup Bool where
-  update (SetUserGroup uid mugid) =
-    runQuery01 $ sqlUpdate "users" $ do
-      sqlSet "user_group_id" mugid
-      sqlWhereEq "id" uid
-      sqlWhereIsNULL "deleted"
+  update (SetUserGroup uid mugid) = runQuery01 $ sqlUpdate "users" $ do
+    sqlSet "user_group_id" mugid
+    sqlWhereEq "id" uid
+    sqlWhereIsNULL "deleted"
 
 data SetUserCompanyAdmin = SetUserCompanyAdmin UserID Bool
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserCompanyAdmin Bool where
   update (SetUserCompanyAdmin uid iscompanyadmin) = do
-    runQuery_ $ "SELECT user_group_id FROM users WHERE id =" <?> uid <+> "AND deleted IS NULL FOR UPDATE"
+    runQuery_
+      $   "SELECT user_group_id FROM users WHERE id ="
+      <?> uid
+      <+> "AND deleted IS NULL FOR UPDATE"
     mugid <- fetchMaybe runIdentity
     case mugid :: Maybe UserGroupID of
       Nothing -> return False
-      Just _ -> runQuery01 . sqlUpdate "users" $ do
+      Just _  -> runQuery01 . sqlUpdate "users" $ do
         sqlSet "is_company_admin" iscompanyadmin
         sqlWhereEq "id" uid
         sqlWhereIsNULL "deleted"
@@ -329,51 +337,50 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserSettings Bool where
       let drp = dataretentionpolicy us
       sqlSet "lang" $ getLang us
       sqlSet "idle_doc_timeout_preparation" $ get drpIdleDocTimeoutPreparation drp
-      sqlSet "idle_doc_timeout_closed"      $ get drpIdleDocTimeoutClosed      drp
-      sqlSet "idle_doc_timeout_canceled"    $ get drpIdleDocTimeoutCanceled    drp
-      sqlSet "idle_doc_timeout_timedout"    $ get drpIdleDocTimeoutTimedout    drp
-      sqlSet "idle_doc_timeout_rejected"    $ get drpIdleDocTimeoutRejected    drp
-      sqlSet "idle_doc_timeout_error"       $ get drpIdleDocTimeoutError       drp
-      sqlSet "immediate_trash"              $ get drpImmediateTrash            drp
+      sqlSet "idle_doc_timeout_closed" $ get drpIdleDocTimeoutClosed drp
+      sqlSet "idle_doc_timeout_canceled" $ get drpIdleDocTimeoutCanceled drp
+      sqlSet "idle_doc_timeout_timedout" $ get drpIdleDocTimeoutTimedout drp
+      sqlSet "idle_doc_timeout_rejected" $ get drpIdleDocTimeoutRejected drp
+      sqlSet "idle_doc_timeout_error" $ get drpIdleDocTimeoutError drp
+      sqlSet "immediate_trash" $ get drpImmediateTrash drp
       sqlWhereEq "id" uid
       sqlWhereIsNULL "deleted"
 
 data UpdateDraftsAndTemplatesWithUserData = UpdateDraftsAndTemplatesWithUserData UserID
 instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateDraftsAndTemplatesWithUserData () where
- update (UpdateDraftsAndTemplatesWithUserData userid) = do
-   muser <- query $ GetUserByID userid
-   case muser of
-     Nothing -> return ()
-     Just user -> do
-       -- Update first name
-       runQuery_ $ sqlUpdate "signatory_link_fields" $ do
-         sqlSet "value_text" (userfstname $ userinfo user)
-         sqlWhereEq "type" NameFT
-         sqlWhereEq "name_order" (NameOrder 1)
-         whereSignatoryLinkCanBeChanged
+  update (UpdateDraftsAndTemplatesWithUserData userid) = do
+    muser <- query $ GetUserByID userid
+    case muser of
+      Nothing   -> return ()
+      Just user -> do
+        -- Update first name
+        runQuery_ $ sqlUpdate "signatory_link_fields" $ do
+          sqlSet "value_text" (userfstname $ userinfo user)
+          sqlWhereEq "type"       NameFT
+          sqlWhereEq "name_order" (NameOrder 1)
+          whereSignatoryLinkCanBeChanged
 
-       runQuery_ $ sqlUpdate "signatory_link_fields" $ do
-         sqlSet "value_text" (usersndname $ userinfo user)
-         sqlWhereEq "type" NameFT
-         sqlWhereEq "name_order" (NameOrder 2)
-         whereSignatoryLinkCanBeChanged
+        runQuery_ $ sqlUpdate "signatory_link_fields" $ do
+          sqlSet "value_text" (usersndname $ userinfo user)
+          sqlWhereEq "type"       NameFT
+          sqlWhereEq "name_order" (NameOrder 2)
+          whereSignatoryLinkCanBeChanged
 
-       runQuery_ $ sqlUpdate "signatory_link_fields" $ do
-         sqlSet "value_text" (useremail $ userinfo user)
-         sqlWhereEq "type" EmailFT
-         whereSignatoryLinkCanBeChanged
-  where
-    whereSignatoryLinkCanBeChanged =
-      sqlWhereExists $ sqlSelect "documents" $ do
+        runQuery_ $ sqlUpdate "signatory_link_fields" $ do
+          sqlSet "value_text" (useremail $ userinfo user)
+          sqlWhereEq "type" EmailFT
+          whereSignatoryLinkCanBeChanged
+    where
+      whereSignatoryLinkCanBeChanged = sqlWhereExists $ sqlSelect "documents" $ do
         sqlJoinOn "signatory_links" "documents.author_id = signatory_links.id"
         sqlWhere "signatory_links.id = signatory_link_fields.signatory_link_id"
-        sqlWhereEq "documents.status" Preparation
+        sqlWhereEq "documents.status"        Preparation
         sqlWhereEq "signatory_links.user_id" userid
 
 data SetUserHomeFolder = SetUserHomeFolder UserID FolderID
 instance (MonadDB m, MonadThrow m) => DBUpdate m SetUserHomeFolder Bool where
- update (SetUserHomeFolder userid fdrid) = do
-  runQuery01 . sqlUpdate "users" $ do
-    sqlSet "home_folder_id" fdrid
-    sqlWhereEq "id" userid
-    sqlWhereIsNULL "deleted"
+  update (SetUserHomeFolder userid fdrid) = do
+    runQuery01 . sqlUpdate "users" $ do
+      sqlSet "home_folder_id" fdrid
+      sqlWhereEq "id" userid
+      sqlWhereIsNULL "deleted"

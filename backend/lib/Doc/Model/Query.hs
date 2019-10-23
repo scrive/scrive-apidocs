@@ -63,60 +63,81 @@ data GetSignatoryScreenshots = GetSignatoryScreenshots [SignatoryLinkID]
 instance (MonadDB m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m, MonadFileStorage m) => DBQuery m GetSignatoryScreenshots [(SignatoryLinkID, SignatoryScreenshots)] where
   query (GetSignatoryScreenshots l) = do
     runQuery_ . sqlSelect "signatory_screenshots" $ do
-                sqlWhereIn "signatory_link_id" l
-                sqlOrderBy "signatory_link_id"
+      sqlWhereIn "signatory_link_id" l
+      sqlOrderBy "signatory_link_id"
 
-                sqlResult "signatory_link_id"
-                sqlResult "type"
-                sqlResult "time"
-                sqlResult "file_id"
+      sqlResult "signatory_link_id"
+      sqlResult "type"
+      sqlResult "time"
+      sqlResult "file_id"
     screenshotsWithoutBinaryData <- fetchMany id
     let getBinaries (slid, ty, time, fid) = do
-           bin <- getFileIDContents fid
-           return (slid, ty, time, bin)
+          bin <- getFileIDContents fid
+          return (slid, ty, time, bin)
     screenshotsWithBinaryData <- mapM getBinaries screenshotsWithoutBinaryData
 
-    let folder ((slid', s):a) (slid, ty, time, i) | slid' == slid = (slid, mkss ty time i s):a
-        folder a (slid, ty, time, i) = (slid, mkss ty time i emptySignatoryScreenshots) : a
+    let
+      folder ((slid', s) : a) (slid, ty, time, i) | slid' == slid =
+        (slid, mkss ty time i s) : a
+      folder a (slid, ty, time, i) = (slid, mkss ty time i emptySignatoryScreenshots) : a
 
-        mkss :: String -> UTCTime -> BS.ByteString -> SignatoryScreenshots -> SignatoryScreenshots
-        mkss "first"     time i s = s{ first = Just $ Screenshot time i }
-        mkss "signing"   time i s = s{ signing = Just $ Screenshot time i }
-        mkss "reference" time i s = s{ reference = Just $ Right $ Screenshot time i }
-        mkss t           _    _ _ = unexpectedError $ "invalid type: " <> showt t
+      mkss
+        :: String
+        -> UTCTime
+        -> BS.ByteString
+        -> SignatoryScreenshots
+        -> SignatoryScreenshots
+      mkss "first"     time i s = s { first = Just $ Screenshot time i }
+      mkss "signing"   time i s = s { signing = Just $ Screenshot time i }
+      mkss "reference" time i s = s { reference = Just $ Right $ Screenshot time i }
+      mkss t           _    _ _ = unexpectedError $ "invalid type: " <> showt t
     return $ foldl' folder [] screenshotsWithBinaryData
 
 data FileInDocument = FileInDocument DocumentID FileID
 instance (MonadDB m, MonadThrow m) => DBQuery m FileInDocument Bool where
   query (FileInDocument did fid) = do
     let s1 = sqlSelect "main_files" $ do
-                   sqlWhereEq "file_id" fid
-                   sqlWhereEq "document_id" did
-                   sqlResult "TRUE"
+          sqlWhereEq "file_id"     fid
+          sqlWhereEq "document_id" did
+          sqlResult "TRUE"
     let s2 = sqlSelect "author_attachments" $ do
-                   sqlWhereEq "file_id" fid
-                   sqlWhereEq "document_id" did
-                   sqlResult "TRUE"
+          sqlWhereEq "file_id"     fid
+          sqlWhereEq "document_id" did
+          sqlResult "TRUE"
     let s3 = sqlSelect "signatory_attachments" $ do
-                   sqlJoinOn "signatory_links" "signatory_attachments.signatory_link_id = signatory_links.id"
-                   sqlWhereEq "file_id" fid
-                   sqlWhereEq "document_id" did
-                   sqlResult "TRUE"
+          sqlJoinOn "signatory_links"
+                    "signatory_attachments.signatory_link_id = signatory_links.id"
+          sqlWhereEq "file_id"     fid
+          sqlWhereEq "document_id" did
+          sqlResult "TRUE"
     let s4 = sqlSelect "signatory_link_fields" $ do
-                   sqlJoinOn "signatory_links" "signatory_link_fields.signatory_link_id = signatory_links.id"
-                   sqlWhereEq "value_file_id" fid
-                   sqlWhereEq "document_id" did
-                   sqlResult "TRUE"
+          sqlJoinOn "signatory_links"
+                    "signatory_link_fields.signatory_link_id = signatory_links.id"
+          sqlWhereEq "value_file_id" fid
+          sqlWhereEq "document_id"   did
+          sqlResult "TRUE"
     let s5 = sqlSelect "highlighted_pages" $ do
-                   sqlJoinOn "signatory_links" "highlighted_pages.signatory_link_id = signatory_links.id"
-                   sqlWhereEq "file_id" fid
-                   sqlWhereEq "document_id" did
-                   sqlResult "TRUE"
-    runQuery_ $ "SELECT EXISTS (" <> toSQLCommand s1 <> ") OR " <>
-                       "EXISTS (" <> toSQLCommand s2 <> ") OR " <>
-                       "EXISTS (" <> toSQLCommand s3 <> ") OR " <>
-                       "EXISTS (" <> toSQLCommand s4 <> ") OR " <>
-                       "EXISTS (" <> toSQLCommand s5 <> ")"
+          sqlJoinOn "signatory_links"
+                    "highlighted_pages.signatory_link_id = signatory_links.id"
+          sqlWhereEq "file_id"     fid
+          sqlWhereEq "document_id" did
+          sqlResult "TRUE"
+    runQuery_
+      $  "SELECT EXISTS ("
+      <> toSQLCommand s1
+      <> ") OR "
+      <> "EXISTS ("
+      <> toSQLCommand s2
+      <> ") OR "
+      <> "EXISTS ("
+      <> toSQLCommand s3
+      <> ") OR "
+      <> "EXISTS ("
+      <> toSQLCommand s4
+      <> ") OR "
+      <> "EXISTS ("
+      <> toSQLCommand s5
+      <> ")"
     fetchOne runIdentity
 
 data GetDocumentTags = GetDocumentTags DocumentID
@@ -139,12 +160,13 @@ instance (MonadDB m, MonadThrow m) =>
       sqlWhereDocumentIDForSignatoryIs did
       sqlWhereSignatoryLinkIDIs slid
 
-selectDocuments :: DocumentDomain
-                -> [DocumentFilter]
-                -> [AscDesc DocumentOrderBy]
-                -> Int
-                -> State SqlSelect ()
-                -> SqlSelect
+selectDocuments
+  :: DocumentDomain
+  -> [DocumentFilter]
+  -> [AscDesc DocumentOrderBy]
+  -> Int
+  -> State SqlSelect ()
+  -> SqlSelect
 selectDocuments domain filters orders limit extend = sqlSelect "documents" $ do
   -- We want to inject filters, offset and limit into domain as soon
   -- as possible to avoid fetching unnecessary rows.
@@ -155,7 +177,8 @@ selectDocuments domain filters orders limit extend = sqlSelect "documents" $ do
       -- default sort order), which results in poor performance.
       when (domain /= DocumentsOfWholeUniverse) $ do
         sqlDistinct
-      mapM_ sqlResult $ "documents.id"
+      mapM_ sqlResult
+        $ "documents.id"
         -- Include sort expressions as DISTINCT demands it.
         : map (\dobr -> dobrExpr dobr <+> "AS" <+> dobrName dobr) orderList
       documentDomainToSQL domain
@@ -173,7 +196,7 @@ selectDocuments domain filters orders limit extend = sqlSelect "documents" $ do
   extend
   where
     orderSpecified = not $ null orders
-    orderList = map documentOrderByAscDescToSQL orders
+    orderList      = map documentOrderByAscDescToSQL orders
 
 data GetDocumentByDocumentID = GetDocumentByDocumentID DocumentID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentByDocumentID Document where
@@ -217,9 +240,13 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentBySignatoryLinkID Doc
   query (GetDocumentBySignatoryLinkID slid) = do
     kRunAndFetch1OrThrowWhyNot toComposite . sqlSelect "documents" $ do
       mapM_ sqlResult documentsSelectors
-      sqlWhereEqSql "documents.id" . parenthesize . toSQLCommand . sqlSelect "signatory_links" $ do
-        sqlResult "signatory_links.document_id"
-        sqlWhereEq "signatory_links.id" slid
+      sqlWhereEqSql "documents.id"
+        . parenthesize
+        . toSQLCommand
+        . sqlSelect "signatory_links"
+        $ do
+            sqlResult "signatory_links.document_id"
+            sqlWhereEq "signatory_links.id" slid
       sqlWhereDocumentWasNotPurged
 
 data GetDocumentsBySignatoryLinkIDs = GetDocumentsBySignatoryLinkIDs [SignatoryLinkID]
@@ -332,15 +359,18 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsWithSoftLimit (Int, 
   --analysis <- explainAnalyze $ toSQLCommand sql
   --trace ("ANALYSIS:" <+> analysis) $ return ()
   --trace (show $ toSQLCommand sql) $ return ()
-  query (GetDocumentsWithSoftLimit domain filters orders (offset, limit, soft_limit)) = do
-    runQuery_ sql
-    (count :: Int64, CompositeArray1 documents) <- fetchOne id
-    return (fromIntegral count, documents)
+  query (GetDocumentsWithSoftLimit domain filters orders (offset, limit, soft_limit)) =
+    do
+      runQuery_ sql
+      (count :: Int64, CompositeArray1 documents) <- fetchOne id
+      return (fromIntegral count, documents)
     where
       sql = sqlSelect "" $ do
         -- get ids of documents for total count
-        sqlWith "selected_ids" . selectDocuments domain filters orders (offset + limit) $ do
-          sqlResult "documents.id AS id"
+        sqlWith "selected_ids"
+          . selectDocuments domain filters orders (offset + limit)
+          $ do
+              sqlResult "documents.id AS id"
         -- restrict them with the soft limit
         sqlWith "relevant_ids" . sqlSelect "selected_ids" $ do
           sqlResult "ROW_NUMBER() OVER() AS position"
@@ -350,7 +380,12 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentsWithSoftLimit (Int, 
         -- fetch total count of documents
         sqlResult $ "(SELECT COUNT(*) FROM selected_ids) AS total_count"
         -- and a list of them, restricted by the soft limit
-        sqlResult $ "ARRAY(SELECT (" <> mintercalate ", " documentsSelectors <> ")::" <> raw (ctName ctDocument) <+> "FROM relevant_ids ids JOIN documents USING (id) ORDER BY ids.position) AS documents"
+        sqlResult
+          $   "ARRAY(SELECT ("
+          <>  mintercalate ", " documentsSelectors
+          <>  ")::"
+          <>  raw (ctName ctDocument)
+          <+> "FROM relevant_ids ids JOIN documents USING (id) ORDER BY ids.position) AS documents"
 
 data GetDocumentsIDs = GetDocumentsIDs DocumentDomain [DocumentFilter] [AscDesc DocumentOrderBy]
 instance MonadDB m => DBQuery m GetDocumentsIDs [DocumentID] where
@@ -400,9 +435,9 @@ data CheckDocumentObjectVersionIs = CheckDocumentObjectVersionIs DocumentID Int6
 instance (MonadDB m, MonadThrow m) => DBQuery m CheckDocumentObjectVersionIs () where
   query (CheckDocumentObjectVersionIs did ov) = do
     _ :: Bool <- kRunAndFetch1OrThrowWhyNot runIdentity $ sqlSelect "documents" $ do
-       sqlResult "TRUE"
-       sqlWhereDocumentIDIs did
-       sqlWhereDocumentObjectVersionIs ov
+      sqlResult "TRUE"
+      sqlWhereDocumentIDIs did
+      sqlWhereDocumentObjectVersionIs ov
     return ()
 
 data DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor = DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor DocumentID
@@ -425,11 +460,11 @@ instance (MonadDB m, MonadThrow m) => GetRow Document m where
 data GetRandomSignatoryLinkIDThatSignedRecently = GetRandomSignatoryLinkIDThatSignedRecently UTCTime
 instance (MonadDB m, MonadThrow m) => DBQuery m GetRandomSignatoryLinkIDThatSignedRecently (Maybe SignatoryLinkID) where
   query (GetRandomSignatoryLinkIDThatSignedRecently time) = do
-      runQuery_ . sqlSelect "signatory_links" $ do
-        sqlJoinOn "documents" "signatory_links.document_id = documents.id"
-        sqlResult "signatory_links.id"
-        sqlWhere $ "signatory_links.sign_time >" <?> time
-        sqlWhereDocumentWasNotPurged
-        sqlOrderBy "random()"
-        sqlLimit 1
-      fetchMaybe runIdentity
+    runQuery_ . sqlSelect "signatory_links" $ do
+      sqlJoinOn "documents" "signatory_links.document_id = documents.id"
+      sqlResult "signatory_links.id"
+      sqlWhere $ "signatory_links.sign_time >" <?> time
+      sqlWhereDocumentWasNotPurged
+      sqlOrderBy "random()"
+      sqlLimit 1
+    fetchMaybe runIdentity

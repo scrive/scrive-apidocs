@@ -23,23 +23,18 @@ import User.Model.Query
 import User.UserID
 
 accessControlAPI :: Route (Kontra Response)
-accessControlAPI = dir "api" $ choice
-  [
-    dir "frontend" $ accessControlAPIV2
-  , dir "v2" $ accessControlAPIV2
-  ]
+accessControlAPI =
+  dir "api" $ choice [dir "frontend" $ accessControlAPIV2, dir "v2" $ accessControlAPIV2]
 
 accessControlAPIV2 :: Route (Kontra Response)
 accessControlAPIV2 = choice
-  [
-    dir "getuserroles" . hGet . toK1 $ accessControlAPIV2GetUserRoles
+  [ dir "getuserroles" . hGet . toK1 $ accessControlAPIV2GetUserRoles
   , accessControlRolesAPIV2
   ]
 
 accessControlRolesAPIV2 :: Route (Kontra Response)
 accessControlRolesAPIV2 = dir "accesscontrol" . dir "roles" $ choice
-  [
-    hGet . toK1 $ accessControlAPIV2Get
+  [ hGet . toK1 $ accessControlAPIV2Get
   , param . dir "delete" . hPost . toK1 $ accessControlAPIV2Delete
   , dir "add" . hPost . toK0 $ accessControlAPIV2Add
   ]
@@ -50,24 +45,26 @@ accessControlAPIV2GetUserRoles uid = api $ do
   apiAccessControlOrIsAdmin [mkAccPolicyItem (ReadA, UserR, uid)] $ do
     -- Get roles for user
     dbQuery (GetUserByID uid) >>= \case
-      Nothing -> apiError $
-        serverError "Impossible happened (No user with ID, or deleted)"
+      Nothing ->
+        apiError $ serverError "Impossible happened (No user with ID, or deleted)"
       Just user -> do
         roles <- addInheritedRoles =<< dbQuery (GetRoles user)
-        return . Ok  . encodeAccessRoles $ nub roles
+        return . Ok . encodeAccessRoles $ nub roles
 
 accessControlAPIV2Get :: Kontrakcja m => AccessRoleID -> m Response
 accessControlAPIV2Get roleId = api $ do
   dbQuery (AccessRoleGet roleId) >>= \case
-    Nothing -> apiError insufficientPrivileges
+    Nothing   -> apiError insufficientPrivileges
     Just role -> do
-      apiAccessControlOrIsAdmin (roleToAccessPolicyReq role ReadA) $
-        return . Ok $ encodeAccessRole role
+      apiAccessControlOrIsAdmin (roleToAccessPolicyReq role ReadA)
+        $ return
+        . Ok
+        $ encodeAccessRole role
 
 accessControlAPIV2Delete :: Kontrakcja m => AccessRoleID -> m Response
 accessControlAPIV2Delete roleId = api $ do
   dbQuery (AccessRoleGet roleId) >>= \case
-    Nothing -> apiError insufficientPrivileges
+    Nothing   -> apiError insufficientPrivileges
     Just role -> do
       apiAccessControlOrIsAdmin (roleToAccessPolicyReq role DeleteA) $ do
         void . dbUpdate $ AccessControlRemoveRole roleId
@@ -80,16 +77,15 @@ accessControlAPIV2Add = api $ do
   role <- getApiRoleParameter
   apiAccessControlOrIsAdmin (roleToAccessPolicyReq role CreateA) $ do
     mrole <- case role of
-      AccessRoleUser _ uid target
-        -> dbUpdate $ AccessControlCreateForUser uid target
-      AccessRoleUserGroup  _ ugid target
-        -> dbUpdate $ AccessControlCreateForUserGroup ugid target
-      AccessRoleImplicitUser uid target
-        -> dbUpdate $ AccessControlCreateForUser uid target
-      AccessRoleImplicitUserGroup ugid target
-        -> dbUpdate $ AccessControlCreateForUserGroup ugid target
+      AccessRoleUser _ uid target -> dbUpdate $ AccessControlCreateForUser uid target
+      AccessRoleUserGroup _ ugid target ->
+        dbUpdate $ AccessControlCreateForUserGroup ugid target
+      AccessRoleImplicitUser uid target ->
+        dbUpdate $ AccessControlCreateForUser uid target
+      AccessRoleImplicitUserGroup ugid target ->
+        dbUpdate $ AccessControlCreateForUserGroup ugid target
     case mrole of
-      Nothing -> apiError $ serverError "Impossible happened (new role does not exist)"
+      Nothing    -> apiError $ serverError "Impossible happened (new role does not exist)"
       Just role' -> return . Ok $ encodeAccessRole role'
 
 -- This helper function constructs a set of roles that you need in order to
@@ -98,20 +94,20 @@ roleToAccessPolicyReq :: AccessRole -> AccessAction -> [AccessPolicyItem]
 roleToAccessPolicyReq role act =
   -- if the source has user policy on a user group, this requirement will be
   -- also be satisfied automatically
-  let mkAccPolicyUser uid       = mkAccPolicyItem (act, UserPolicyR, uid)
+  let mkAccPolicyUser uid = mkAccPolicyItem (act, UserPolicyR, uid)
       mkAccPolicyUserGroup ugid = mkAccPolicyItem (act, UserGroupPolicyR, ugid)
-      mkAccPolicyFolder fid     = mkAccPolicyItem (act, FolderPolicyR, fid)
+      mkAccPolicyFolder fid = mkAccPolicyItem (act, FolderPolicyR, fid)
       sourceRoleReq = case role of
-        AccessRoleUser _ uid _             -> mkAccPolicyUser uid
+        AccessRoleUser      _ uid  _       -> mkAccPolicyUser uid
         AccessRoleUserGroup _ ugid _       -> mkAccPolicyUserGroup ugid
-        AccessRoleImplicitUser uid _       -> mkAccPolicyUser uid
+        AccessRoleImplicitUser      uid  _ -> mkAccPolicyUser uid
         AccessRoleImplicitUserGroup ugid _ -> mkAccPolicyUserGroup ugid
       targetRoleReq = case accessRoleTarget role of
-        UserAR uid             -> mkAccPolicyUser uid
+        UserAR            uid  -> mkAccPolicyUser uid
         UserGroupMemberAR ugid -> mkAccPolicyUserGroup ugid
-        UserAdminAR ugid       -> mkAccPolicyUserGroup ugid
-        UserGroupAdminAR ugid  -> mkAccPolicyUserGroup ugid
-        DocumentAdminAR fid    -> mkAccPolicyFolder fid
-        FolderAdminAR fid      -> mkAccPolicyFolder fid
-        FolderUserAR fid       -> mkAccPolicyFolder fid
-  in [sourceRoleReq, targetRoleReq]
+        UserAdminAR       ugid -> mkAccPolicyUserGroup ugid
+        UserGroupAdminAR  ugid -> mkAccPolicyUserGroup ugid
+        DocumentAdminAR   fid  -> mkAccPolicyFolder fid
+        FolderAdminAR     fid  -> mkAccPolicyFolder fid
+        FolderUserAR      fid  -> mkAccPolicyFolder fid
+  in  [sourceRoleReq, targetRoleReq]

@@ -22,8 +22,9 @@ instance FromReqURI AttachmentID where
 
 instance Unjson AttachmentID where
   unjsonDef = unjsonInvmapR
-              ((maybe (fail "Can't parse AttachmentID")  return) . maybeRead . T.pack)
-              show  unjsonDef
+    ((maybe (fail "Can't parse AttachmentID") return) . maybeRead . T.pack)
+    show
+    unjsonDef
 
 instance FromSQL AttachmentID where
   type PQBase AttachmentID = PQBase Int64

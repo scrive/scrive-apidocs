@@ -26,31 +26,26 @@ import Util.HasSomeUserInfo (getEmail)
 --
 -- Caveat: Uses @httpLbs@ which actually reads the response into memory
 -- strictly, but is chunked for memory efficiency.
-processPlanhatEvent :: (MonadIO m)
-                    => Manager
-                    -> PlanhatConf
-                    -> EventName
-                    -> [EventProperty]
-                    -> m ProcRes
+processPlanhatEvent
+  :: (MonadIO m) => Manager -> PlanhatConf -> EventName -> [EventProperty] -> m ProcRes
 processPlanhatEvent reqManager phConf SetUserProps props
-    | not . hasMailProp $ props = do
-        return . Failed $ "no mail property present"
-    | otherwise = do
-        let reqJSON = JSON.object . catMaybes $ map toPlanhatProperty props
-            req = mkPlanhatRequest phConf phActionURL reqJSON
-        res <- liftIO $ httpLbs req reqManager
-        handlePlanhatResponse . getResponseBody $ res
+  | not . hasMailProp $ props = do
+    return . Failed $ "no mail property present"
+  | otherwise = do
+    let reqJSON = JSON.object . catMaybes $ map toPlanhatProperty props
+        req     = mkPlanhatRequest phConf phActionURL reqJSON
+    res <- liftIO $ httpLbs req reqManager
+    handlePlanhatResponse . getResponseBody $ res
   where
     hasMailProp :: [EventProperty] -> Bool
     hasMailProp [] = False
-    hasMailProp ((MailProp email):_)
-            | (unEmail email == "") = False
-            | otherwise = True
-    hasMailProp (_:props') = hasMailProp props'
+    hasMailProp ((MailProp email) : _) | (unEmail email == "") = False
+                                       | otherwise             = True
+    hasMailProp (_ : props') = hasMailProp props'
 
 processPlanhatEvent reqManager phConf SetCompanyProps props = do
   let reqJSON = JSON.object . catMaybes $ map toPlanhatProperty props
-      req = mkPlanhatRequest phConf phMetricsURL reqJSON
+      req     = mkPlanhatRequest phConf phMetricsURL reqJSON
   res <- liftIO $ httpLbs req reqManager
   handlePlanhatResponse . getResponseBody $ res
 
@@ -60,31 +55,26 @@ processPlanhatEvent _reqManager _phConf (NamedEvent _) _props = do
 -- | Send in a user action to Planhat.
 simplePlanhatAction :: Text -> User -> UTCTime -> [EventProperty]
 simplePlanhatAction actionTag author time =
-    [ MailProp . Email $ getEmail author
-    , stringProp "action" actionTag
-    , UserIDProp $ userid author
-    , TimeProp time ]
+  [ MailProp . Email $ getEmail author
+  , stringProp "action" actionTag
+  , UserIDProp $ userid author
+  , TimeProp time
+  ]
 
 -- Helpers
 
 toPlanhatProperty :: EventProperty -> Maybe JSON.Pair
-toPlanhatProperty (MailProp (Email mail)) =
-    Just $ "email" .= mail
-toPlanhatProperty (SomeProp "action" (PVString s)) =
-    Just $ "action" .= s
-toPlanhatProperty (SomeProp "value" (PVNumber k)) =
-    Just $ "value" .= k
+toPlanhatProperty (MailProp (Email mail)         ) = Just $ "email" .= mail
+toPlanhatProperty (SomeProp "action" (PVString s)) = Just $ "action" .= s
+toPlanhatProperty (SomeProp "value"  (PVNumber k)) = Just $ "value" .= k
 toPlanhatProperty (SomeProp "companyExternalId" (PVString compId)) =
-    Just $ "companyExternalId" .= compId
+  Just $ "companyExternalId" .= compId
 toPlanhatProperty (SomeProp "dimensionId" (PVString dimId)) =
-    Just $ "dimensionId" .= ((T.intercalate "_") . T.words $ T.toLower dimId)
-toPlanhatProperty (UserIDProp userId) =
-    Just $ "externalId" .= (show . unUserID $ userId)
-toPlanhatProperty _ =
-    Nothing
+  Just $ "dimensionId" .= ((T.intercalate "_") . T.words $ T.toLower dimId)
+toPlanhatProperty (UserIDProp userId) = Just $ "externalId" .= (show . unUserID $ userId)
+toPlanhatProperty _                   = Nothing
 
 handlePlanhatResponse :: (MonadIO m) => BSL.ByteString -> m ProcRes
-handlePlanhatResponse resBody =
-  case maybeErrors resBody of
-    Nothing -> return OK
-    Just errObject -> return . Failed . showt $ errObject
+handlePlanhatResponse resBody = case maybeErrors resBody of
+  Nothing        -> return OK
+  Just errObject -> return . Failed . showt $ errObject

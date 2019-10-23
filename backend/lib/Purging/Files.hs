@@ -23,8 +23,8 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
     now <- currentTime
     -- Check if the database still looks similar to what the code below
     -- was written for.
-    runSQL_ $ smconcat [
-        "WITH file_constraints AS ("
+    runSQL_ $ smconcat
+      [ "WITH file_constraints AS ("
       , "SELECT constraint_name AS name"
       , "  FROM information_schema.referential_constraints"
       , " WHERE unique_constraint_name = 'pk__files'"
@@ -35,24 +35,24 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
       ]
     refs :: [(Text, Text)] <- fetchMany id
     let expected_refs =
-           [ ("attachments",           "file_id")
-           , ("author_attachments",    "file_id")
-           , ("main_files",            "file_id")
-           , ("mail_attachments",      "file_id")
-           , ("signatory_attachments", "file_id")
-           , ("signatory_screenshots", "file_id")
-           , ("signatory_link_fields", "value_file_id")
-           , ("highlighted_pages",     "file_id")
-           , ("file_purge_jobs",       "id")
-           ]
+          [ ("attachments"          , "file_id")
+          , ("author_attachments"   , "file_id")
+          , ("main_files"           , "file_id")
+          , ("mail_attachments"     , "file_id")
+          , ("signatory_attachments", "file_id")
+          , ("signatory_screenshots", "file_id")
+          , ("signatory_link_fields", "value_file_id")
+          , ("highlighted_pages"    , "file_id")
+          , ("file_purge_jobs"      , "id")
+          ]
 
     when (sort expected_refs /= sort refs) $ do
-      unexpectedError $
-        "PurgeFile: database layout has changed, update PurgeFile.expected_refs and check the code: " <>
-          showt refs
+      unexpectedError
+        $ "PurgeFile: database layout has changed, update PurgeFile.expected_refs and check the code: "
+        <> showt refs
 
-    runSQL_ $ smconcat [
-        "WITH files_to_purge AS ("
+    runSQL_ $ smconcat
+      [ "WITH files_to_purge AS ("
       , "SELECT id FROM files"
       , " WHERE purged_time IS NULL"
       -- File is connected as a main file to a document that is
@@ -119,38 +119,45 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m MarkOrphanFilesFor
 
 purgeFile
   :: (MonadCatch m, MonadDB m, MonadFileStorage m, MonadLog m, MonadThrow m)
-  => FileID -> m Result
+  => FileID
+  -> m Result
 purgeFile fid = do
-  File{ filestorage = FileStorageAWS url _ } <- dbQuery $ GetFileByFileID fid
+  File { filestorage = FileStorageAWS url _ } <- dbQuery $ GetFileByFileID fid
   deleteSavedContents url
   void $ dbUpdate $ PurgeFile fid
   return $ Ok Remove
 
 onFailure :: MonadLog m => SomeException -> (FileID, Int32) -> m Action
 onFailure exc (fid, attempts) = do
-  logAttention "Purging file failed, it couldn't be removed from Amazon" . object $
-    [ identifier fid
-    , "error" .= show exc
-    ]
+  logAttention "Purging file failed, it couldn't be removed from Amazon"
+    . object
+    $ [identifier fid, "error" .= show exc]
   let delay = min attempts 7
   return . RerunAfter $ idays delay
 
 filePurgingConsumer
-  :: ( MonadBase IO m, MonadCatch m, MonadFileStorage m, MonadLog m, MonadMask m
-     , MonadThrow m )
-  => ConnectionSourceM m -> Int -> ConsumerConfig m FileID (FileID, Int32)
+  :: ( MonadBase IO m
+     , MonadCatch m
+     , MonadFileStorage m
+     , MonadLog m
+     , MonadMask m
+     , MonadThrow m
+     )
+  => ConnectionSourceM m
+  -> Int
+  -> ConsumerConfig m FileID (FileID, Int32)
 filePurgingConsumer pool maxJobs = ConsumerConfig
-  { ccJobsTable = tblName tableFilePurgeJobs
-  , ccConsumersTable = tblName tableFilePurgeConsumers
-  , ccJobSelectors = ["id", "attempts"]
-  , ccJobFetcher = id
-  , ccJobIndex = fst
+  { ccJobsTable           = tblName tableFilePurgeJobs
+  , ccConsumersTable      = tblName tableFilePurgeConsumers
+  , ccJobSelectors        = ["id", "attempts"]
+  , ccJobFetcher          = id
+  , ccJobIndex            = fst
   , ccNotificationChannel = Nothing
   -- The amount of queued jobs in the table can have large spikes that sit there
   -- for a week, so don't try to check for available jobs too often as that
   -- requires full table scan.
   , ccNotificationTimeout = 60 * 60 * 1000000 -- 1 hour
-  , ccMaxRunningJobs = maxJobs
-  , ccProcessJob = withPostgreSQL pool . withTransaction . purgeFile . fst
-  , ccOnException = onFailure
+  , ccMaxRunningJobs      = maxJobs
+  , ccProcessJob          = withPostgreSQL pool . withTransaction . purgeFile . fst
+  , ccOnException         = onFailure
   }

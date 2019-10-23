@@ -30,13 +30,15 @@ data DocumentAutomaticReminder = DocumentAutomaticReminder {
   } deriving (Show,Typeable)
 
 instance Loggable DocumentAutomaticReminder where
-  logValue dar = object [
-      identifier $ darDocumentID dar
-    , "sent_time" .= darExpires dar
-    ]
+  logValue dar = object [identifier $ darDocumentID dar, "sent_time" .= darExpires dar]
   logDefaultLabel _ = "document_automatic_reminder"
 
-setAutomaticReminder :: (MonadDB m, MonadTime m, MonadMask m) => DocumentID -> Maybe Int32 -> TimeZoneName -> m ()
+setAutomaticReminder
+  :: (MonadDB m, MonadTime m, MonadMask m)
+  => DocumentID
+  -> Maybe Int32
+  -> TimeZoneName
+  -> m ()
 setAutomaticReminder did mdays tzn = do
   void $ dbUpdate $ DeleteAutomaticReminder did
   case mdays of
@@ -47,29 +49,41 @@ selectAutomaticReminderSelectorsList :: [SQL]
 selectAutomaticReminderSelectorsList = ["document_id", "expires"]
 
 expireDocumentAutomaticReminders
-  :: (MonadDB m, MonadTime m, MonadThrow m, MonadReader CronEnv m, MonadCatch m, MonadLog m, MonadIO m, CryptoRNG m)
+  :: ( MonadDB m
+     , MonadTime m
+     , MonadThrow m
+     , MonadReader CronEnv m
+     , MonadCatch m
+     , MonadLog m
+     , MonadIO m
+     , CryptoRNG m
+     )
   => m ()
 expireDocumentAutomaticReminders = do
-  templates <- asks ceTemplates
+  templates          <- asks ceTemplates
   mailNoreplyAddress <- asks ceMailNoreplyAddress
-  dars <- dbQuery $ GetExpiredAutomaticReminders
-  forM_ dars $ \dar@DocumentAutomaticReminder{..} -> do
+  dars               <- dbQuery $ GetExpiredAutomaticReminders
+  forM_ dars $ \dar@DocumentAutomaticReminder {..} -> do
     res <- try . localData [identifier darDocumentID] $ do
-      now <- currentTime
-      exists <- dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor $ darDocumentID
+      now    <- currentTime
+      exists <-
+        dbQuery $ DocumentExistsAndIsNotPurgedOrReallyDeletedForAuthor $ darDocumentID
       if exists
         then do
-          void $ dbQuery (GetDocumentByDocumentID darDocumentID) >>= \doc -> runMailT templates mailNoreplyAddress doc $
-            withDocument doc $ sendAllReminderEmails (systemActor now) True
+          void $ dbQuery (GetDocumentByDocumentID darDocumentID) >>= \doc ->
+            runMailT templates mailNoreplyAddress doc
+              $ withDocument doc
+              $ sendAllReminderEmails (systemActor now) True
         else do
-          logInfo "Auto reminder dropped since document does not exists or is purged/reallydeleted" $ logObject_ dar
+          logInfo
+              "Auto reminder dropped since document does not exists or is purged/reallydeleted"
+            $ logObject_ dar
       void . dbUpdate $ DeleteAutomaticReminder darDocumentID
     case res of
-      Right () -> commit
-      Left (e::E.SomeException) -> do
-        logAttention "DocumentAutomaticReminder sending failed" $ object [
-            "exception" .= show e
-          ]
+      Right ()                     -> commit
+      Left  (e :: E.SomeException) -> do
+        logAttention "DocumentAutomaticReminder sending failed"
+          $ object ["exception" .= show e]
         rollback
 
 data GetExpiredAutomaticReminders = GetExpiredAutomaticReminders
@@ -85,11 +99,17 @@ data CreateAutomaticReminder = CreateAutomaticReminder DocumentID Int32 TimeZone
 instance (MonadDB m, MonadThrow m, MonadTime m, MonadMask m) => DBUpdate m CreateAutomaticReminder DocumentAutomaticReminder where
   update (CreateAutomaticReminder did days tzn) = withTimeZone defaultTimeZoneName $ do
     time <- currentTime
-    let timestamp = formatTime' "%F" time <> " " <> (T.unpack $ TimeZoneName.toString tzn)
+    let timestamp =
+          formatTime' "%F" time <> " " <> (T.unpack $ TimeZoneName.toString tzn)
     runQuery_ . sqlInsert "document_automatic_reminders" $ do
       -- send the reminder at 10:15 in the time zone of the document
-      sqlSetCmd "expires" $ "cast (" <?> timestamp <+> "as timestamp with time zone)"
-                            <+> "+ ((interval '1 day') *" <?> days <+> ") + (interval '10 hours 15 minutes')"
+      sqlSetCmd "expires"
+        $   "cast ("
+        <?> timestamp
+        <+> "as timestamp with time zone)"
+        <+> "+ ((interval '1 day') *"
+        <?> days
+        <+> ") + (interval '10 hours 15 minutes')"
       sqlSet "document_id" did
       mapM_ sqlResult selectAutomaticReminderSelectorsList
     fetchOne fetchAutomaticReminder
@@ -102,7 +122,4 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m DeleteAutomaticReminder Bool wh
 
 fetchAutomaticReminder :: (DocumentID, UTCTime) -> DocumentAutomaticReminder
 fetchAutomaticReminder (did, expires) =
-  DocumentAutomaticReminder
-    { darDocumentID = did
-    , darExpires = expires
-    }
+  DocumentAutomaticReminder { darDocumentID = did, darExpires = expires }

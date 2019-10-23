@@ -88,10 +88,8 @@ formatTimeISO = formatTime' "%Y-%m-%dT%H:%M:%SZ"
 
 -- | Parse time as %Y-%m-%dT%H:%M:%S%QZ or %Y-%m-%dT%H:%M:%S%Q%z.
 parseTimeISO :: String -> Maybe UTCTime
-parseTimeISO s = msum [
-    parseTime' "%Y-%m-%dT%H:%M:%S%QZ" s
-  , parseTime' "%Y-%m-%dT%H:%M:%S%Q%z" s
-  ]
+parseTimeISO s =
+  msum [parseTime' "%Y-%m-%dT%H:%M:%S%QZ" s, parseTime' "%Y-%m-%dT%H:%M:%S%Q%z" s]
 
 -- | Formating time for mail header. RFC2822
 formatTimeForMail :: UTCTime -> String
@@ -118,28 +116,24 @@ daysBefore = daysAfter . negate
 
 monthsBefore :: (Integral a) => a -> UTCTime -> UTCTime
 monthsBefore i = localTimeToUTC utc . f . utcToLocalTime utc
-  where
-    f t = t { localDay = addGregorianMonthsClip (fromIntegral $ -i) $ localDay t }
+  where f t = t { localDay = addGregorianMonthsClip (fromIntegral $ -i) $ localDay t }
 
 -- | Transform the time to the beginning of the current month.
 beginingOfMonth :: UTCTime -> UTCTime
 beginingOfMonth = localTimeToUTC utc . f . utcToLocalTime utc
   where
-    f LocalTime{..} = LocalTime {
-        localDay = fromGregorian year month 1
-      , localTimeOfDay = midnight
-      }
-      where
-        (year, month, _) = toGregorian localDay
+    f LocalTime {..} = LocalTime { localDay       = fromGregorian year month 1
+                                 , localTimeOfDay = midnight
+                                 }
+      where (year, month, _) = toGregorian localDay
 
 -- | Transform the time to the beginning of the current month with respect to
 -- UTC only.
 beginingOfMonthUTC :: UTCTime -> UTCTime
 beginingOfMonthUTC t =
   let (year, month, _date) = toGregorian $ utctDay t
-      monthFirstDay = fromGregorian year month 1
-  in UTCTime { utctDay = monthFirstDay
-             , utctDayTime = 0 }
+      monthFirstDay        = fromGregorian year month 1
+  in  UTCTime { utctDay = monthFirstDay, utctDayTime = 0 }
 
 beginningOfDay :: UTCTime -> UTCTime
 beginningOfDay t = t { utctDayTime = 0 }
@@ -148,21 +142,20 @@ nextDayMidnight :: UTCTime -> UTCTime
 nextDayMidnight = nextDayAtHour 0
 
 nextDayAt :: Int -> Int -> UTCTime -> UTCTime
-nextDayAt hours minutes time = UTCTime {
-  utctDay = 1 `addDays` utctDay time
-, utctDayTime = secondsToDiffTime . toInteger $ (3600 * hours) + (60 * minutes)
-}
+nextDayAt hours minutes time = UTCTime
+  { utctDay     = 1 `addDays` utctDay time
+  , utctDayTime = secondsToDiffTime . toInteger $ (3600 * hours) + (60 * minutes)
+  }
 
 nextDayAtHour :: Int -> UTCTime -> UTCTime
 nextDayAtHour hours = nextDayAt hours 0
 
 todayAtHour :: Int -> UTCTime -> UTCTime
-todayAtHour hours time = time {
-  utctDayTime = secondsToDiffTime . toInteger $ 3600 * hours
-}
+todayAtHour hours time =
+  time { utctDayTime = secondsToDiffTime . toInteger $ 3600 * hours }
 
 beginningOfNextMonthAtHour :: Int -> UTCTime -> UTCTime
-beginningOfNextMonthAtHour hours time = UTCTime {
-  utctDay = 1 `addGregorianMonthsClip` utctDay (beginingOfMonthUTC time)
-, utctDayTime = secondsToDiffTime . toInteger $ 3600 * hours
-}
+beginningOfNextMonthAtHour hours time = UTCTime
+  { utctDay     = 1 `addGregorianMonthsClip` utctDay (beginingOfMonthUTC time)
+  , utctDayTime = secondsToDiffTime . toInteger $ 3600 * hours
+  }

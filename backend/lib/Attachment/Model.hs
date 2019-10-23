@@ -36,17 +36,15 @@ data Attachment = Attachment
   } deriving (Eq, Show)
 
 defaultAttachment :: Attachment
-defaultAttachment =
-  Attachment {
-    attachmentid = unsafeAttachmentID 0
-  , attachmenttitle = ""
-  , attachmentctime = unixEpoch
-  , attachmentmtime = unixEpoch
-  , attachmentfile = unsafeFileID 0
-  , attachmentuser = unsafeUserID 0
-  , attachmentshared = False
-  , attachmentdeleted = False
-  }
+defaultAttachment = Attachment { attachmentid      = unsafeAttachmentID 0
+                               , attachmenttitle   = ""
+                               , attachmentctime   = unixEpoch
+                               , attachmentmtime   = unixEpoch
+                               , attachmentfile    = unsafeFileID 0
+                               , attachmentuser    = unsafeUserID 0
+                               , attachmentshared  = False
+                               , attachmentdeleted = False
+                               }
 
 sqlAttachmentResults :: (MonadState v m, SqlResult v) => m ()
 sqlAttachmentResults = do
@@ -59,17 +57,18 @@ sqlAttachmentResults = do
   sqlResult "shared"
   sqlResult "deleted"
 
-fetchAttachment :: (AttachmentID, Text, UTCTime, UTCTime, FileID, UserID, Bool, Bool) -> Attachment
-fetchAttachment (aid, title, ctime, mtime, file_id, user_id, shared, deleted) = Attachment {
-  attachmentid      = aid
-, attachmenttitle   = title
-, attachmentctime   = ctime
-, attachmentmtime   = mtime
-, attachmentfile    = file_id
-, attachmentuser    = user_id
-, attachmentshared  = shared
-, attachmentdeleted = deleted
-}
+fetchAttachment
+  :: (AttachmentID, Text, UTCTime, UTCTime, FileID, UserID, Bool, Bool) -> Attachment
+fetchAttachment (aid, title, ctime, mtime, file_id, user_id, shared, deleted) =
+  Attachment { attachmentid      = aid
+             , attachmenttitle   = title
+             , attachmentctime   = ctime
+             , attachmentmtime   = mtime
+             , attachmentfile    = file_id
+             , attachmentuser    = user_id
+             , attachmentshared  = shared
+             , attachmentdeleted = deleted
+             }
 
 data NewAttachment = NewAttachment UserID Text FileID Actor
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m NewAttachment Attachment where
@@ -77,10 +76,10 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m NewAttachment Atta
     let ctime = actorTime actor
     runQuery_ . sqlInsert "attachments" $ do
       sqlSet "user_id" uid
-      sqlSet "title" title
-      sqlSet "ctime" ctime
-      sqlSet "mtime" ctime
-      sqlSet "shared" False
+      sqlSet "title"   title
+      sqlSet "ctime"   ctime
+      sqlSet "mtime"   ctime
+      sqlSet "shared"  False
       sqlSet "deleted" False
       sqlSet "file_id" fileid
       sqlAttachmentResults
@@ -91,7 +90,7 @@ instance (CryptoRNG m, MonadDB m) => DBUpdate m DeleteAttachments () where
   update (DeleteAttachments uid attids actor) = do
     let atime = actorTime actor
     runQuery_ . sqlUpdate "attachments" $ do
-      sqlSet "mtime" atime
+      sqlSet "mtime"   atime
       sqlSet "deleted" True
       sqlWhereIn "id" attids
       sqlWhereEq "user_id" uid
@@ -102,7 +101,7 @@ instance (MonadDB m, MonadTime m) => DBUpdate m PurgeAttachments Int where
   update PurgeAttachments = do
     now <- currentTime
     runQuery $ sqlUpdate "attachments a" $ do
-      sqlSet "mtime" now
+      sqlSet "mtime"   now
       sqlSet "deleted" True
       sqlWhereEq "a.deleted" False
 
@@ -120,12 +119,10 @@ data AttachmentFilter
   | AttachmentFilterByFileID FileID           -- ^ Attachments with IDs on the list
   deriving Eq
 
-sqlWhereAttachmentFilter :: (MonadState v m, SqlWhere v) =>
-                            AttachmentFilter -> m ()
+sqlWhereAttachmentFilter :: (MonadState v m, SqlWhere v) => AttachmentFilter -> m ()
 sqlWhereAttachmentFilter (AttachmentFilterByString string) =
   sqlWhereILike "attachments.title" ("%" <> string <> "%")
-sqlWhereAttachmentFilter (AttachmentFilterByID aid) =
-  sqlWhereEq "attachments.id" aid
+sqlWhereAttachmentFilter (AttachmentFilterByID aid) = sqlWhereEq "attachments.id" aid
 sqlWhereAttachmentFilter (AttachmentFilterByFileID fileid) =
   sqlWhereEq "attachments.file_id" fileid
 
@@ -155,20 +152,22 @@ instance MonadDB m => DBQuery m GetAttachments [Attachment] where
     runQuery_ . sqlSelect "attachments" $ do
       sqlAttachmentResults
       sqlWhereAny (map (sqlWhere . domainToSQLCommand) domains)
-      mapM_ sqlWhereAttachmentFilter filters
+      mapM_ sqlWhereAttachmentFilter         filters
       mapM_ (sqlOrderBy . orderToSQLCommand) orderbys
     fetchMany fetchAttachment
-   where
-    domainToSQLCommand (AttachmentsOfAuthorDeleteValue uid del) =
-      "attachments.user_id =" <?> uid <+> "AND attachments.deleted =" <?> del
-    domainToSQLCommand (AttachmentsSharedInUsersUserGroup uid) =
-      "attachments.deleted = FALSE AND attachments.shared AND EXISTS (SELECT 1 FROM users, users AS users_2"
-                                          <+> "WHERE attachments.user_id = users.id"
-                                            <+> "AND users.user_group_id = users_2.user_group_id AND users_2.id =" <?> uid <+>")"
-    orderToSQLCommand (Asc AttachmentOrderByTitle)  = "attachments.title ASC"
-    orderToSQLCommand (Desc AttachmentOrderByTitle) = "attachments.title DESC"
-    orderToSQLCommand (Asc AttachmentOrderByMTime)  = "attachments.mtime ASC"
-    orderToSQLCommand (Desc AttachmentOrderByMTime) = "attachments.mtime DESC"
+    where
+      domainToSQLCommand (AttachmentsOfAuthorDeleteValue uid del) =
+        "attachments.user_id =" <?> uid <+> "AND attachments.deleted =" <?> del
+      domainToSQLCommand (AttachmentsSharedInUsersUserGroup uid) =
+        "attachments.deleted = FALSE AND attachments.shared AND EXISTS (SELECT 1 FROM users, users AS users_2"
+          <+> "WHERE attachments.user_id = users.id"
+          <+> "AND users.user_group_id = users_2.user_group_id AND users_2.id ="
+          <?> uid
+          <+> ")"
+      orderToSQLCommand (Asc  AttachmentOrderByTitle) = "attachments.title ASC"
+      orderToSQLCommand (Desc AttachmentOrderByTitle) = "attachments.title DESC"
+      orderToSQLCommand (Asc  AttachmentOrderByMTime) = "attachments.mtime ASC"
+      orderToSQLCommand (Desc AttachmentOrderByMTime) = "attachments.mtime DESC"
 
 
 data SetAttachmentsSharing = SetAttachmentsSharing UserID [AttachmentID] Bool

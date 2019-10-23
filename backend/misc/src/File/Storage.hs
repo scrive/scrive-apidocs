@@ -38,66 +38,68 @@ import qualified FileStorage.Class as FS
 -- If the upload fails then the new NewEmptyFileForAWS is purged, and an
 -- exception is thrown.
 saveNewFile
-  :: ( MonadBase IO m, MonadCatch m, MonadLog m, MonadDB m
-     , MonadThrow m, CryptoRNG m, MonadFileStorage m )
-  => Text -> BS.ByteString -> m FileID
+  :: ( MonadBase IO m
+     , MonadCatch m
+     , MonadLog m
+     , MonadDB m
+     , MonadThrow m
+     , CryptoRNG m
+     , MonadFileStorage m
+     )
+  => Text
+  -> BS.ByteString
+  -> m FileID
 saveNewFile fName fContent = do
-  startTime <- liftBase getCurrentTime
+  startTime       <- liftBase getCurrentTime
   (fid, checksum) <- dbUpdate $ NewEmptyFileForAWS fName fContent
   let awsUrl = urlFromFile fid fName checksum
   eaes <- mkAESConf <$> randomBytes 32 <*> randomBytes 16
   case eaes of
     Left err -> do
-      logAttention "saveNewFile: failed to create AES config, purging file" $
-        object
-          [ identifier fid
-          , "error" .= err
-          ]
+      logAttention "saveNewFile: failed to create AES config, purging file"
+        $ object [identifier fid, "error" .= err]
       unexpectedError $ T.pack err
     Right aes -> localData [identifier fid] $ do
       let encryptedContent = aesEncrypt aes fContent
       eRes <- try $ FS.saveNewContents awsUrl $ BSL.fromStrict encryptedContent
       case eRes of
         Right () -> do
-          file <- dbUpdate $ FileMovedToAWS fid awsUrl aes
+          file       <- dbUpdate $ FileMovedToAWS fid awsUrl aes
           finishTime <- liftBase getCurrentTime
-          logInfo "newFile: new file successfully created with content in S3" $
-            object [
-                logPair_ file
-              , "elapsed_time" .= (realToFrac $
-                                   diffUTCTime finishTime startTime :: Double)
-              ]
+          logInfo "newFile: new file successfully created with content in S3" $ object
+            [ logPair_ file
+            , "elapsed_time" .= (realToFrac $ diffUTCTime finishTime startTime :: Double)
+            ]
           return fid
         Left err@(FS.FileStorageException msg) -> do
           let attnMsg = "newFile: failed to upload to AWS, purging file"
-          logAttention attnMsg $
-            object
-              [ identifier fid
-              , "error" .= msg
-              ]
+          logAttention attnMsg $ object [identifier fid, "error" .= msg]
           dbUpdate $ PurgeFile fid
           logAttention "newFileInAmazon: purged file" $ object [identifier fid]
           throwM err
 
 -- | Get file contents from the underlying storage and decrypt the contents
 -- returning them as BS.
-getFileContents :: (MonadFileStorage m, MonadBase IO m, MonadLog m, MonadThrow m)
-                => File -> m BS.ByteString
-getFileContents file@File{ fileid, filestorage = FileStorageAWS url aes } =
+getFileContents
+  :: (MonadFileStorage m, MonadBase IO m, MonadLog m, MonadThrow m)
+  => File
+  -> m BS.ByteString
+getFileContents file@File { fileid, filestorage = FileStorageAWS url aes } =
   localData [identifier fileid] $ do
     encrypted <- FS.getSavedContents url
     let contents = aesDecrypt aes $ BSL.toStrict encrypted
         checksum = BA.convert $ H.hashWith H.SHA1 contents
     unless (checksum == filechecksum file) $ do
-      logAttention "SHA1 checksums of file don't match" $ object
-        [ logPair_ file
-        ]
-      throwM $ FS.FileStorageException $
-        "SHA1 checksum of file doesn't match the one in the database"
+      logAttention "SHA1 checksums of file don't match" $ object [logPair_ file]
+      throwM
+        $ FS.FileStorageException
+        $ "SHA1 checksum of file doesn't match the one in the database"
     return contents
 
-getFileIDContents :: ( MonadDB m, MonadFileStorage m, MonadBase IO m, MonadLog m
-                     , MonadThrow m ) => FileID -> m BS.ByteString
+getFileIDContents
+  :: (MonadDB m, MonadFileStorage m, MonadBase IO m, MonadLog m, MonadThrow m)
+  => FileID
+  -> m BS.ByteString
 getFileIDContents fid = getFileContents =<< dbQuery (GetFileByFileID fid)
 
 -- | Build the Amazon URL for a file. We use the following format:
@@ -115,7 +117,8 @@ urlFromFile :: FileID -> Text -> BS.ByteString -> Text
 urlFromFile fid name checksum =
   -- here we use BSC.unpack, as HTTP.urlEncode
   -- does only %-escaping for 8bit values
-  T.pack $ "file"
+  T.pack
+    $   "file"
     </> show fid
     </> (BS.unpack . Base16.encode $ checksum)
     </> (HTTP.urlEncode . BS.unpack . TE.encodeUtf8 $ name)

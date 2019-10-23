@@ -89,8 +89,7 @@ instance SignatoryLinkIdentity SignatoryLinkID where
    Identify a User based on UserID or Email (if UserID fails).
  -}
 instance SignatoryLinkIdentity User where
-  isJustSigLinkFor u sl =
-    isSigLinkFor (userid u) sl || isSigLinkFor (getEmail u) sl
+  isJustSigLinkFor u sl = isSigLinkFor (userid u) sl || isSigLinkFor (getEmail u) sl
 
 instance (SignatoryLinkIdentity a) => SignatoryLinkIdentity (Maybe a) where
   isJustSigLinkFor (Just a) sl = isSigLinkFor a sl
@@ -142,15 +141,15 @@ getAuthorCompanyName doc = maybe "" getCompanyName $ getAuthorSigLink doc
 getAuthorCompanyNumber :: Document -> Text
 getAuthorCompanyNumber doc = maybe "" getCompanyNumber $ getAuthorSigLink doc
 
-hasSignInfoAndRoleIs :: (MaybeSignatoryLink msl)
-                     => SignatoryRole -> msl -> Bool
-hasSignInfoAndRoleIs role msl = maybe False
+hasSignInfoAndRoleIs :: (MaybeSignatoryLink msl) => SignatoryRole -> msl -> Bool
+hasSignInfoAndRoleIs role msl = maybe
+  False
   (\sl -> (isJust . maybesigninfo $ sl) && (signatoryrole sl == role))
   (getMaybeSignatoryLink msl)
 
-hasNoSignInfoAndRoleIs :: (MaybeSignatoryLink msl)
-                       => SignatoryRole -> msl -> Bool
-hasNoSignInfoAndRoleIs role msl = maybe False
+hasNoSignInfoAndRoleIs :: (MaybeSignatoryLink msl) => SignatoryRole -> msl -> Bool
+hasNoSignInfoAndRoleIs role msl = maybe
+  False
   (\sl -> (isNothing . maybesigninfo $ sl) && (signatoryrole sl == role))
   (getMaybeSignatoryLink msl)
 
@@ -196,8 +195,8 @@ isAuthor = isSigLinkFor signatoryisauthor
 
 isAuthorOrAuthorsAdmin :: User -> Document -> Bool
 isAuthorOrAuthorsAdmin user doc =
-  isAuthor (doc, user) ||
-  (useriscompanyadmin user && documentauthorugid doc == Just (usergroupid user))
+  isAuthor (doc, user)
+    || (useriscompanyadmin user && documentauthorugid doc == Just (usergroupid user))
 
 isDocumentVisibleToUser :: User -> Document -> Bool
 isDocumentVisibleToUser user doc =
@@ -211,31 +210,26 @@ isSignatory = isSigLinkFor ((==) SignatoryRoleSigningParty . signatoryrole)
 -- | Is the given SignatoryLink marked as an approver (someone who
 -- must approve the document)?
 isApprover :: (MaybeSignatoryLink msl) => msl -> Bool
-isApprover  = isSigLinkFor ((==) SignatoryRoleApprover     . signatoryrole)
+isApprover = isSigLinkFor ((==) SignatoryRoleApprover . signatoryrole)
 
 -- | Is the given SignatoryLink marked as a viewer (someone who can
 -- review the document)?
 isViewer :: (MaybeSignatoryLink msl) => msl -> Bool
-isViewer    = isSigLinkFor ((==) SignatoryRoleViewer       . signatoryrole)
+isViewer = isSigLinkFor ((==) SignatoryRoleViewer . signatoryrole)
 
 -- | Is the given SignatoryLink marked as a forwarder
 isForwarded :: (MaybeSignatoryLink msl) => msl -> Bool
 isForwarded = isSigLinkFor ((`elem` forwardedRoles) . signatoryrole)
   where
-    forwardedRoles =
-      [ SignatoryRoleForwardedSigningParty
-      , SignatoryRoleForwardedApprover
-      ]
+    forwardedRoles = [SignatoryRoleForwardedSigningParty, SignatoryRoleForwardedApprover]
 
 -- | Does i identify sl?
-isSigLinkFor :: (MaybeSignatoryLink sl, SignatoryLinkIdentity i)
-             => i -> sl -> Bool
+isSigLinkFor :: (MaybeSignatoryLink sl, SignatoryLinkIdentity i) => i -> sl -> Bool
 isSigLinkFor i sl = maybe False (isJustSigLinkFor i) (getMaybeSignatoryLink sl)
 
 
 -- | Get the SignatoryLink from a document given a matching value.
-getSigLinkFor :: (SignatoryLinkIdentity a)
-              => a -> Document -> Maybe SignatoryLink
+getSigLinkFor :: (SignatoryLinkIdentity a) => a -> Document -> Maybe SignatoryLink
 getSigLinkFor a d = find (isSigLinkFor a) (documentsignatorylinks d)
 
 ----------------------------------------
@@ -276,30 +270,22 @@ authenticationMethodsCanMix
   -> Bool
 -- We allow at most one EID authentication method within a signatory.
 authenticationMethodsCanMix authToView authToSign authToViewArchived =
-  let auths = S.fromList [ atvToMix authToView
-                         , atsToMix authToSign
-                         , atvToMix authToViewArchived
-                         ]
-      eids  = S.fromList [
-          MAM_SEBankID
-        , MAM_NOBankID
-        , MAM_DKNemID
-        , MAM_FITupas
-        , MAM_Verimi
-        , MAM_NLIDIN
-        ]
-  in length (auths `S.intersection` eids) <= 1
+  let auths = S.fromList
+        [atvToMix authToView, atsToMix authToSign, atvToMix authToViewArchived]
+      eids = S.fromList
+        [MAM_SEBankID, MAM_NOBankID, MAM_DKNemID, MAM_FITupas, MAM_Verimi, MAM_NLIDIN]
+  in  length (auths `S.intersection` eids) <= 1
 
 ----------------------------------------
 
 authViewMatchesAuth :: AuthenticationToViewMethod -> EAuthentication -> Bool
-authViewMatchesAuth NOBankIDAuthenticationToView NetsNOBankIDAuthentication_{}     = True
-authViewMatchesAuth SEBankIDAuthenticationToView CGISEBankIDAuthentication_{}      = True
-authViewMatchesAuth DKNemIDAuthenticationToView  NetsDKNemIDAuthentication_{}      = True
-authViewMatchesAuth FITupasAuthenticationToView  NetsFITupasAuthentication_{}      = True
-authViewMatchesAuth SMSPinAuthenticationToView   SMSPinAuthentication_{}           = True
-authViewMatchesAuth VerimiAuthenticationToView   EIDServiceVerimiAuthentication_{} = True
-authViewMatchesAuth IDINAuthenticationToView     EIDServiceIDINAuthentication_{}   = True
+authViewMatchesAuth NOBankIDAuthenticationToView NetsNOBankIDAuthentication_{} = True
+authViewMatchesAuth SEBankIDAuthenticationToView CGISEBankIDAuthentication_{} = True
+authViewMatchesAuth DKNemIDAuthenticationToView NetsDKNemIDAuthentication_{} = True
+authViewMatchesAuth FITupasAuthenticationToView NetsFITupasAuthentication_{} = True
+authViewMatchesAuth SMSPinAuthenticationToView SMSPinAuthentication_{} = True
+authViewMatchesAuth VerimiAuthenticationToView EIDServiceVerimiAuthentication_{} = True
+authViewMatchesAuth IDINAuthenticationToView EIDServiceIDINAuthentication_{} = True
 authViewMatchesAuth _ _ = False
 
 -- Functions to determine if AuthenticationToViewMethod or

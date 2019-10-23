@@ -38,16 +38,16 @@ instance ToSQL ThemeID where
   type PQDest ThemeID = PQDest Int64
   toSQL (ThemeID n) = toSQL n
 
-unsafeThemeID:: Int64 -> ThemeID
+unsafeThemeID :: Int64 -> ThemeID
 unsafeThemeID = ThemeID
 
-fromThemeID:: ThemeID -> Int64
+fromThemeID :: ThemeID -> Int64
 fromThemeID (ThemeID tid) = tid
 
 
 unjsonThemeID :: UnjsonDef ThemeID
 unjsonThemeID = unjsonInvmapR
-  ((maybe (fail "Can't parse ThemeID")  return) . maybeRead . T.pack)
+  ((maybe (fail "Can't parse ThemeID") return) . maybeRead . T.pack)
   (show . fromThemeID :: ThemeID -> String)
   unjsonDef
 
@@ -55,5 +55,5 @@ instance Unjson ThemeID where
   unjsonDef = unjsonThemeID
 
 instance Identifier ThemeID where
-  idDefaultLabel      = "theme_id"
+  idDefaultLabel = "theme_id"
   idValue (ThemeID k) = int64AsStringIdentifier k

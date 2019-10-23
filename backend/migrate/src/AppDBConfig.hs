@@ -11,10 +11,8 @@ data AppDBConf = AppDBConf {
   } deriving (Eq, Show)
 
 instance Unjson AppDBConf where
-  unjsonDef = objectOf $ AppDBConf
-    <$> field "database"
-        dbConfig
-        "Database connection string"
-    <*> field "logging"
-        logConfig
-        "Logging configuration"
+  unjsonDef =
+    objectOf
+      $   AppDBConf
+      <$> field "database" dbConfig  "Database connection string"
+      <*> field "logging"  logConfig "Logging configuration"

@@ -89,8 +89,8 @@ readTestFileAsStr = fmap T.pack . liftIO . readFile . inTestDir
 
 type KontraTest = KontraG TestFileStorageT
 
-type InnerTestEnv =
-  TestFileStorageT (StateT TestEnvStRW (ReaderT TestEnvSt (LogT (DBT IO))))
+type InnerTestEnv
+  = TestFileStorageT (StateT TestEnvStRW (ReaderT TestEnvSt (LogT (DBT IO))))
 
 newtype TestEnv a = TestEnv { unTestEnv :: InnerTestEnv a }
   deriving
@@ -108,35 +108,36 @@ runTestEnv st m = do
   when can_be_run $ do
     atomically . modifyTVar' (get teActiveTests st) $ second (succ $!)
     E.finally
-      (runDBT
-        (unConnectionSource . get teStaticConnSource $ st)
-        (get teTransSettings st)
-        (ununTestEnv st $ withTestDB m))
+      (runDBT (unConnectionSource . get teStaticConnSource $ st)
+              (get teTransSettings st)
+              (ununTestEnv st $ withTestDB m)
+      )
       (atomically . modifyTVar' (get teActiveTests st) $ second (pred $!))
 
 ununTestEnv :: TestEnvSt -> TestEnv a -> DBT IO a
 ununTestEnv st =
   (unRunLogger . get teRunLogger $ st)
-  . flip runReaderT st
+    . flip runReaderT st
   -- for each test start with no time delay
-  . flip evalStateT TestEnvStRW
-      { _terwTimeDelay   = 0
-      , _terwCurrentTime = Nothing
-      , _terwRequestURI  = "http://testkontra.fake"
-      }
-  . evalTestFileStorageT
-      ((, get teRedisConn st, get teFileMemCache st) <$> get teAmazonS3Env st)
-  . unTestEnv
+    . flip
+        evalStateT
+        TestEnvStRW { _terwTimeDelay   = 0
+                    , _terwCurrentTime = Nothing
+                    , _terwRequestURI  = "http://testkontra.fake"
+                    }
+    . evalTestFileStorageT
+        ((, get teRedisConn st, get teFileMemCache st) <$> get teAmazonS3Env st)
+    . unTestEnv
 
 instance CryptoRNG TestEnv where
   randomBytes n = asks (get teRNGState) >>= liftIO . randomBytesIO n
 
 instance MonadDB TestEnv where
-  runQuery = TestEnv . runQuery
-  getLastQuery = TestEnv getLastQuery
-  getConnectionStats = TestEnv getConnectionStats
-  getQueryResult = TestEnv getQueryResult
-  clearQueryResult = TestEnv clearQueryResult
+  runQuery               = TestEnv . runQuery
+  getLastQuery           = TestEnv getLastQuery
+  getConnectionStats     = TestEnv getConnectionStats
+  getQueryResult         = TestEnv getQueryResult
+  clearQueryResult       = TestEnv clearQueryResult
   getTransactionSettings = TestEnv getTransactionSettings
   setTransactionSettings = TestEnv . setTransactionSettings
 
@@ -147,16 +148,12 @@ instance MonadDB TestEnv where
   -- source, so we need one that actually creates new connections.
   withNewConnection (TestEnv m) = do
     ConnectionSource pool <- asks (get teConnSource)
-    runLogger <- asks (unRunLogger . get teRunLogger)
-    TestEnv . liftTestFileStorageT $
-      \fsVar -> StateT $
-      \terw -> ReaderT $
-      \te -> LogT . ReaderT $
-      \_ -> DBT . StateT $
-      \st -> do
-        res <- runDBT pool (dbTransactionSettings st) .
-               runLogger $
-               runReaderT (runStateT (runTestFileStorageT m fsVar) terw) te
+    runLogger             <- asks (unRunLogger . get teRunLogger)
+    TestEnv . liftTestFileStorageT $ \fsVar ->
+      StateT $ \terw -> ReaderT $ \te -> LogT . ReaderT $ \_ -> DBT . StateT $ \st -> do
+        res <- runDBT pool (dbTransactionSettings st) . runLogger $ runReaderT
+          (runStateT (runTestFileStorageT m fsVar) terw)
+          te
         return (res, st)
   getNotification = TestEnv . getNotification
 
@@ -167,7 +164,7 @@ instance MonadTime TestEnv where
       -- we use static time
       Just testtime -> return testtime
       -- we use IO time, but with a configurable delay
-      Nothing -> do
+      Nothing       -> do
         delay <- gets (get terwTimeDelay)
         now   <- liftIO getCurrentTime
         return $ addUTCTime delay now
@@ -181,18 +178,21 @@ instance TemplatesMonad TestEnv where
 instance MonadBaseControl IO TestEnv where
   type StM TestEnv a = StM InnerTestEnv a
   liftBaseWith f = TestEnv $ liftBaseWith $ \run -> f $ run . unTestEnv
-  restoreM       = TestEnv . restoreM
+  restoreM = TestEnv . restoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
 instance MonadFileStorage TestEnv where
   saveNewContents url contents = TestEnv $ saveNewContents url contents
-  getSavedContents             = TestEnv . getSavedContents
-  deleteSavedContents          = TestEnv . deleteSavedContents
+  getSavedContents    = TestEnv . getSavedContents
+  deleteSavedContents = TestEnv . deleteSavedContents
 
-runTestKontraHelper :: BasicConnectionSource -> Request -> Context
-                    -> KontraG TestFileStorageT a
-                    -> TestEnv (a, Context, Response -> Response)
+runTestKontraHelper
+  :: BasicConnectionSource
+  -> Request
+  -> Context
+  -> KontraG TestFileStorageT a
+  -> TestEnv (a, Context, Response -> Response)
 runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
   now       <- currentTime
   rng       <- asks (get teRNGState)
@@ -201,14 +201,19 @@ runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
   -- commit previous changes and do not begin new transaction as runDBT
   -- does it and we don't want these pesky warnings about transaction
   -- being already in progress
-  fsEnv <- TestEnv getTestFSEnv
+  fsEnv     <- TestEnv getTestFSEnv
   commit' ts { tsAutoTransaction = False }
   ((res, ctx'), st) <- E.finally
-    (liftBase $ runStateT (unReqHandlerT . runLogger . runCryptoRNGT rng
-                                         . flip runTestFileStorageT fsEnv
-                                         . runDBT pool ts
-                                         $ runStateT (unKontra tk) ctx)
-                          (ReqHandlerSt rq id now))
+    (liftBase $ runStateT
+      ( unReqHandlerT
+      . runLogger
+      . runCryptoRNGT rng
+      . flip runTestFileStorageT fsEnv
+      . runDBT pool ts
+      $ runStateT (unKontra tk) ctx
+      )
+      (ReqHandlerSt rq id now)
+    )
     -- runDBT commits and doesn't run another transaction, so begin new one
     begin
   return (res, ctx', hsFilter st)
@@ -220,13 +225,13 @@ class RunnableTestKontra a where
 
 instance RunnableTestKontra a where
   runTestKontra rq ctx tk = do
-    cs <- asks (get teConnSource)
+    cs             <- asks (get teConnSource)
     (res, ctx', _) <- runTestKontraHelper cs rq ctx tk
     return (res, ctx')
 
 instance {-# OVERLAPPING #-} RunnableTestKontra Response where
   runTestKontra rq ctx tk = do
-    cs <- asks (get teConnSource)
+    cs             <- asks (get teConnSource)
     (res, ctx', f) <- runTestKontraHelper cs rq ctx tk
     return (f res, ctx')
 
@@ -235,9 +240,8 @@ modifyTestTime :: (MonadState TestEnvStRW m) => (UTCTime -> UTCTime) -> m ()
 modifyTestTime modtime = do
   mtesttime <- gets (get terwCurrentTime)
   case mtesttime of
-    Just testtime ->
-      State.modify $ set terwCurrentTime (Just $ modtime testtime)
-    Nothing       ->
+    Just testtime -> State.modify $ set terwCurrentTime (Just $ modtime testtime)
+    Nothing ->
       State.modify $ set terwTimeDelay (diffUTCTime (modtime unixEpoch) unixEpoch)
 
 -- | Sets time and also stops time flow
@@ -252,39 +256,36 @@ setRequestURI uri = State.modify $ set terwRequestURI $ T.unpack uri
 
 -- | Creates GET/POST input text variable
 inText :: Text -> Input
-inText val = Input {
-      inputValue = Right $ BSL.fromStrict $ TE.encodeUtf8 val
-    , inputFilename = Nothing
-    , inputContentType = ContentType {
-          ctType = "text"
-        , ctSubtype = "plain"
-        , ctParameters = []
-        }
-    }
+inText val = Input
+  { inputValue       = Right $ BSL.fromStrict $ TE.encodeUtf8 val
+  , inputFilename    = Nothing
+  , inputContentType = ContentType { ctType       = "text"
+                                   , ctSubtype    = "plain"
+                                   , ctParameters = []
+                                   }
+  }
 
 -- | Creates GET/POST input text variable
 inTextBS :: BSLU.ByteString -> Input
-inTextBS val = Input {
-      inputValue = Right $ val
-    , inputFilename = Nothing
-    , inputContentType = ContentType {
-          ctType = "text"
-        , ctSubtype = "plain"
-        , ctParameters = []
-        }
-    }
+inTextBS val = Input
+  { inputValue       = Right $ val
+  , inputFilename    = Nothing
+  , inputContentType = ContentType { ctType       = "text"
+                                   , ctSubtype    = "plain"
+                                   , ctParameters = []
+                                   }
+  }
 
 -- | Creates GET/POST input file variable
 inFile :: FilePath -> Input
-inFile path = Input {
-      inputValue = Left path
-    , inputFilename = Just $ takeFileName path
-    , inputContentType = ContentType {
-          ctType = "application"
-        , ctSubtype = "octet-stream"
-        , ctParameters = []
-        }
-    }
+inFile path = Input
+  { inputValue       = Left path
+  , inputFilename    = Just $ takeFileName path
+  , inputContentType = ContentType { ctType       = "application"
+                                   , ctSubtype    = "octet-stream"
+                                   , ctParameters = []
+                                   }
+  }
 
 -- | Constructs headers from list of string pairs
 mkHeaders :: [(Text, [Text])] -> Headers
@@ -294,132 +295,120 @@ mkHeaders = M.fromList . map (f . g)
     g = TE.encodeUtf8 *** map TE.encodeUtf8
 
     f :: (BSU.ByteString, [BSU.ByteString]) -> (BSU.ByteString, HeaderPair)
-    f (name, values) = (name, HeaderPair {
-          hName = name
-        , hValue = values
-    })
+    f (name, values) = (name, HeaderPair { hName = name, hValue = values })
 
 -- | Constructs cookies from list of string pairs
 mkCookies :: [(Text, Text)] -> [(Text, Cookie)]
-mkCookies = map $ \(n, v) ->
-  (n, mkCookie (T.unpack n) (T.unpack v))
+mkCookies = map $ \(n, v) -> (n, mkCookie (T.unpack n) (T.unpack v))
 
 -- | Retrieves specific header value
 getHeader :: Text -> Headers -> Maybe Text
-getHeader name hdrs = TE.decodeUtf8 <$> join
-    (listToMaybe . hValue <$> M.lookup (TE.encodeUtf8 name) hdrs)
+getHeader name hdrs =
+  TE.decodeUtf8 <$> join (listToMaybe . hValue <$> M.lookup (TE.encodeUtf8 name) hdrs)
 
 -- | Retrieves specific cookie value
 getCookie :: Text -> [(Text, Cookie)] -> Maybe Text
 getCookie name cookies = (T.pack . cookieValue) <$> lookup name cookies
 
 -- | Constructs initial request with given data (POST or GET)
-mkRequest :: (MonadState TestEnvStRW m, MonadIO m)
-          => Method -> [(Text, Input)]
-          -> m Request
-mkRequest method vars = mkRequestWithHeaders method vars
-  [("host", ["testkontra.fake"])]
+mkRequest
+  :: (MonadState TestEnvStRW m, MonadIO m) => Method -> [(Text, Input)] -> m Request
+mkRequest method vars = mkRequestWithHeaders method vars [("host", ["testkontra.fake"])]
 
-mkRequestWithHeaders :: (MonadState TestEnvStRW m, MonadIO m)
-                     => Method -> [(Text, Input)] -> [(Text, [Text])]
-                     -> m Request
+mkRequestWithHeaders
+  :: (MonadState TestEnvStRW m, MonadIO m)
+  => Method
+  -> [(Text, Input)]
+  -> [(Text, [Text])]
+  -> m Request
 mkRequestWithHeaders method vars headers = do
   let vars' :: [(String, Input)] = fmap (\(t1, t2) -> (T.unpack t1, t2)) vars
   uri <- gets (get terwRequestURI)
   liftIO $ do
     rqbody <- newEmptyMVar
     ib :: MVar [(String, Input)] <- newMVar vars'
-    let iq = if isReqPost
-                then []
-                else vars'
-    return Request {
-        rqSecure = False
-      , rqMethod = POST
-      , rqPaths = []
-      , rqUri = uri
-      , rqQuery = ""
-      , rqInputsQuery = iq
-      , rqInputsBody = ib
-      , rqCookies = []
-      , rqVersion = HttpVersion 1 1
-      , rqHeaders = mkHeaders $ headers
-      , rqBody = rqbody
-      , rqPeer = ("", 0)
-    }
-  where
-      isReqPost = method == POST || method == PUT
+    let iq = if isReqPost then [] else vars'
+    return Request { rqSecure      = False
+                   , rqMethod      = POST
+                   , rqPaths       = []
+                   , rqUri         = uri
+                   , rqQuery       = ""
+                   , rqInputsQuery = iq
+                   , rqInputsBody  = ib
+                   , rqCookies     = []
+                   , rqVersion     = HttpVersion 1 1
+                   , rqHeaders     = mkHeaders $ headers
+                   , rqBody        = rqbody
+                   , rqPeer        = ("", 0)
+                   }
+  where isReqPost = method == POST || method == PUT
 
 -- | Constructs initial context with given templates
 mkContext :: Lang -> TestEnv Context
 mkContext lang = do
-  pdfSealLambdaEnv  <- asks (get tePdfToolsLambdaEnv)
-  globaltemplates   <- asks (get teGlobalTemplates)
-  time              <- currentTime
-  bd                <- dbQuery $ GetMainBrandedDomain
+  pdfSealLambdaEnv <- asks (get tePdfToolsLambdaEnv)
+  globaltemplates  <- asks (get teGlobalTemplates)
+  time             <- currentTime
+  bd               <- dbQuery $ GetMainBrandedDomain
   liftIO $ do
     filecache <- newFileMemCache 52428800
-    return Context {
-          _ctxmaybeuser          = Nothing
-        , _ctxtime               = time
-        , _ctxclientname         = Nothing
-        , _ctxclienttime         = Nothing
-        , _ctxipnumber           = noIP
-        , _ctxproduction         = False
-        , _ctxcdnbaseurl         = Nothing
-        , _ctxtemplates          = localizedVersion lang globaltemplates
-        , _ctxglobaltemplates    = globaltemplates
-        , _ctxlang               = lang
-        , _ctxismailbackdooropen = False
-        , _ctxmailnoreplyaddress = "noreply@scrive.com"
-        , _ctxcgigrpconfig       = Nothing
-        , _ctxmrediscache        = Nothing
-        , _ctxfilecache          = filecache
-        , _ctxxtoken             = unexpectedError "xtoken is not defined"
-        , _ctxadminaccounts      = []
-        , _ctxsalesaccounts      = []
-        , _ctxmaybepaduser       = Nothing
-        , _ctxusehttps           = False
-        , _ctxgtconf             = testGTConf
-        , _ctxsessionid          = SessionID.tempSessionID
-        , _ctxtrackjstoken       = Nothing
-        , _ctxzendeskkey         = Nothing
-        , _ctxmixpaneltoken      = Nothing
-        , _ctxgatoken            = Nothing
-        , _ctxhubspotconf        = Nothing
-        , _ctxbrandeddomain      = bd
-        , _ctxsalesforceconf     = Nothing
-        , _ctxnetsconfig         = Nothing
-        , _ctxisapilogenabled    = True
-        , _ctxnetssignconfig     = Nothing
+    return Context { _ctxmaybeuser           = Nothing
+                   , _ctxtime                = time
+                   , _ctxclientname          = Nothing
+                   , _ctxclienttime          = Nothing
+                   , _ctxipnumber            = noIP
+                   , _ctxproduction          = False
+                   , _ctxcdnbaseurl          = Nothing
+                   , _ctxtemplates           = localizedVersion lang globaltemplates
+                   , _ctxglobaltemplates     = globaltemplates
+                   , _ctxlang                = lang
+                   , _ctxismailbackdooropen  = False
+                   , _ctxmailnoreplyaddress  = "noreply@scrive.com"
+                   , _ctxcgigrpconfig        = Nothing
+                   , _ctxmrediscache         = Nothing
+                   , _ctxfilecache           = filecache
+                   , _ctxxtoken              = unexpectedError "xtoken is not defined"
+                   , _ctxadminaccounts       = []
+                   , _ctxsalesaccounts       = []
+                   , _ctxmaybepaduser        = Nothing
+                   , _ctxusehttps            = False
+                   , _ctxgtconf              = testGTConf
+                   , _ctxsessionid           = SessionID.tempSessionID
+                   , _ctxtrackjstoken        = Nothing
+                   , _ctxzendeskkey          = Nothing
+                   , _ctxmixpaneltoken       = Nothing
+                   , _ctxgatoken             = Nothing
+                   , _ctxhubspotconf         = Nothing
+                   , _ctxbrandeddomain       = bd
+                   , _ctxsalesforceconf      = Nothing
+                   , _ctxnetsconfig          = Nothing
+                   , _ctxisapilogenabled     = True
+                   , _ctxnetssignconfig      = Nothing
         -- We use real Lambda config here because we want our tests to check it.
         -- This Lambda and S3 bucket are dedicated for tests and development.
-        , _ctxpdftoolslambdaenv  = pdfSealLambdaEnv
-        , _ctxpasswordserviceconf = defaultPasswordService
-        , _ctxmaybeapiuser       = Nothing
-        , _ctxeidserviceconf     = Nothing
-    }
+                   , _ctxpdftoolslambdaenv   = pdfSealLambdaEnv
+                   , _ctxpasswordserviceconf = defaultPasswordService
+                   , _ctxmaybeapiuser        = Nothing
+                   , _ctxeidserviceconf      = Nothing
+                   }
 
 testGTConf :: GuardTimeConf
 testGTConf = GuardTimeConf
   { guardTimeSigningServiceURL      =
-      "http://internal-gt-signer-848430379.eu-west-1.elb.amazonaws.com:8080" <>
-      "/gt-signingservice"
+    "http://internal-gt-signer-848430379.eu-west-1.elb.amazonaws.com:8080"
+      <> "/gt-signingservice"
   , guardTimeExtendingServiceURL    =
-      "http://internal-gt-extender-2081608339.eu-west-1.elb.amazonaws.com:8081" <>
-      "/gt-extendingservice"
-  , guardTimeControlPublicationsURL =
-      "http://verify.guardtime.com/ksi-publications.bin"
-  , guardTimeSigningLoginUser ="anon"
-  , guardTimeSigningLoginKey = "anon"
-  , guardTimeExtendingLoginUser ="anon"
-  , guardTimeExtendingLoginKey = "1234"
+    "http://internal-gt-extender-2081608339.eu-west-1.elb.amazonaws.com:8081"
+      <> "/gt-extendingservice"
+  , guardTimeControlPublicationsURL = "http://verify.guardtime.com/ksi-publications.bin"
+  , guardTimeSigningLoginUser       = "anon"
+  , guardTimeSigningLoginKey        = "anon"
+  , guardTimeExtendingLoginUser     = "anon"
+  , guardTimeExtendingLoginKey      = "1234"
   }
 
 testLogConfig :: LogConfig
-testLogConfig = LogConfig {
-    lcSuffix  = "dev"
-  , lcLoggers = [StandardOutput]
-  }
+testLogConfig = LogConfig { lcSuffix = "dev", lcLoggers = [StandardOutput] }
 
 -- pgsql database --
 

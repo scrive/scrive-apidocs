@@ -22,19 +22,13 @@ data RedisConfig = RedisConfig {
   } deriving (Eq, Ord, Show)
 
 instance Unjson RedisConfig where
-  unjsonDef = objectOf $ RedisConfig
-    <$> field "host"
-        rcHost
-        "Host"
-    <*> field "port"
-        rcPort
-        "Port"
-    <*> fieldOpt "password"
-        rcAuth
-        "Password"
-    <*> field "database"
-        rcDatabase
-        "Database number"
+  unjsonDef =
+    objectOf
+      $   RedisConfig
+      <$> field "host" rcHost "Host"
+      <*> field "port" rcPort "Port"
+      <*> fieldOpt "password" rcAuth "Password"
+      <*> field "database" rcDatabase "Database number"
 
 mkRedisConnection :: MonadBaseControl IO m => RedisConfig -> m R.Connection
 mkRedisConnection rc = do
@@ -42,8 +36,8 @@ mkRedisConnection rc = do
   checkRedisConnection cache
   return cache
   where
-    configToConnectInfo RedisConfig{..} = R.defaultConnectInfo {
-        R.connectHost           = T.unpack rcHost
+    configToConnectInfo RedisConfig {..} = R.defaultConnectInfo
+      { R.connectHost           = T.unpack rcHost
       , R.connectPort           = R.PortNumber $ fromIntegral rcPort
       , R.connectAuth           = T.encodeUtf8 <$> rcAuth
       , R.connectDatabase       = rcDatabase

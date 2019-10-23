@@ -83,8 +83,9 @@ grpFaultText StartFailed        = "start_failed"
 
 -- | Convert 'GrpFault' to JSON to show it to the client.
 instance Unjson GrpFault where
-  unjsonDef = disjointUnionOf "grp_fault" $ map grpFaultWithText [
-      InvalidParameters
+  unjsonDef = disjointUnionOf "grp_fault" $ map
+    grpFaultWithText
+    [ InvalidParameters
     , AlreadyInProgress
     , AccessDeniedRp
     , Retry
@@ -96,26 +97,29 @@ instance Unjson GrpFault where
     , Cancelled
     , StartFailed
     ]
-    where
-      grpFaultWithText con = (grpFaultText con, (== con), pure con)
+    where grpFaultWithText con = (grpFaultText con, (== con), pure con)
 
 -- | Retrieve 'GrpFault' from SOAP response.
 xpGrpFault :: XMLParser GrpFault
-xpGrpFault = XMLParser $ \c -> listToMaybe $ c
-  $/ laxElement "Fault" &/ laxElement "detail" &/ laxElement "GrpFault" &| \fault ->
-  case readT "faultStatus" fault of
-    "INVALID_PARAMETERS"  -> InvalidParameters
-    "ALREADY_IN_PROGRESS" -> AlreadyInProgress
-    "ACCESS_DENIED_RP"    -> AccessDeniedRp
-    "RETRY"               -> Retry
-    "INTERNAL_ERROR"      -> InternalError
-    "EXPIRED_TRANSACTION" -> ExpiredTransaction
-    "USER_CANCEL"         -> UserCancel
-    "CLIENT_ERR"          -> ClientError
-    "CERTIFICATE_ERR"     -> CertificateError
-    "CANCELLED"           -> Cancelled
-    "START_FAILED"        -> StartFailed
-    gf                    -> unexpectedError $ "unknown faultStatus:" <+> gf
+xpGrpFault = XMLParser $ \c ->
+  listToMaybe
+    $  c
+    $/ laxElement "Fault"
+    &/ laxElement "detail"
+    &/ laxElement "GrpFault"
+    &| \fault -> case readT "faultStatus" fault of
+         "INVALID_PARAMETERS"  -> InvalidParameters
+         "ALREADY_IN_PROGRESS" -> AlreadyInProgress
+         "ACCESS_DENIED_RP"    -> AccessDeniedRp
+         "RETRY"               -> Retry
+         "INTERNAL_ERROR"      -> InternalError
+         "EXPIRED_TRANSACTION" -> ExpiredTransaction
+         "USER_CANCEL"         -> UserCancel
+         "CLIENT_ERR"          -> ClientError
+         "CERTIFICATE_ERR"     -> CertificateError
+         "CANCELLED"           -> Cancelled
+         "START_FAILED"        -> StartFailed
+         gf                    -> unexpectedError $ "unknown faultStatus:" <+> gf
 
 ----------------------------------------
 
@@ -129,16 +133,16 @@ data AuthRequest = AuthRequest {
 
 -- | Construct SOAP request from the 'AuthRequest'.
 instance ToXML AuthRequest where
-  toXML AuthRequest{..} =
+  toXML AuthRequest {..} =
     element "{http://funktionstjanster.se/grp/service/v1.0.0/}AuthenticateRequest" $ do
-      element "policy" arqPolicy
-      element "displayName" arqDisplayName
+      element "policy"         arqPolicy
+      element "displayName"    arqDisplayName
       element "personalNumber" arqPersonalNumber
-      element "provider" arqProvider
+      element "provider"       arqProvider
       element "requirementAlternatives" $ do
         element "requirement" $ do
           element "condition" $ do
-            element "key" ("AllowFingerprint" :: Text)
+            element "key"   ("AllowFingerprint" :: Text)
             element "value" ("yes" :: Text)
 
 ----------------------------------------
@@ -154,17 +158,17 @@ data SignRequest = SignRequest {
 
 -- | Construct SOAP request from the 'SignRequest'.
 instance ToXML SignRequest where
-  toXML SignRequest{..} =
+  toXML SignRequest {..} =
     element "{http://funktionstjanster.se/grp/service/v1.0.0/}SignRequest" $ do
-      element "policy" srqPolicy
-      element "displayName" srqDisplayName
-      element "personalNumber" srqPersonalNumber
+      element "policy"          srqPolicy
+      element "displayName"     srqDisplayName
+      element "personalNumber"  srqPersonalNumber
       element "userVisibleData" srqUserVisibleData
-      element "provider" srqProvider
+      element "provider"        srqProvider
       element "requirementAlternatives" $ do
         element "requirement" $ do
           element "condition" $ do
-            element "key" ("AllowFingerprint" :: Text)
+            element "key"   ("AllowFingerprint" :: Text)
             element "value" ("yes" :: Text)
 
 ----------------------------------------
@@ -178,18 +182,20 @@ unAutoStartToken (AutoStartToken t) = t
 
 -- With autostart token we always return session id - so bankid app can bag user back to service
 instance {-# OVERLAPPING #-} Unjson (AutoStartToken,SessionCookieInfo) where
-  unjsonDef = objectOf $ (pure $ \at si -> (AutoStartToken at, si))
-    <*> field "auto_start_token"
-        (unAutoStartToken . fst)
-        "Token for starting the application"
-    <*> fieldBy "session_id"
-        snd
-        "Token for starting the application"
-        (unjsonInvmapR
-          ((maybe (fail "SessionCookieInfo") return) . maybeRead)
-          (showt :: SessionCookieInfo -> Text)
-          unjsonDef
-        )
+  unjsonDef =
+    objectOf
+      $   (pure $ \at si -> (AutoStartToken at, si))
+      <*> field "auto_start_token"
+                (unAutoStartToken . fst)
+                "Token for starting the application"
+      <*> fieldBy
+            "session_id"
+            snd
+            "Token for starting the application"
+            (unjsonInvmapR ((maybe (fail "SessionCookieInfo") return) . maybeRead)
+                           (showt :: SessionCookieInfo -> Text)
+                           unjsonDef
+            )
 
 ----------------------------------------
 
@@ -205,23 +211,23 @@ instance Loggable AuthResponse where
   logDefaultLabel _ = "auth_response"
 
 instance ToJSON AuthResponse where
-  toJSON AuthResponse{..} = object [
-      "transaction_id" .= T.unpack arsTransactionID
+  toJSON AuthResponse {..} = object
+    [ "transaction_id" .= T.unpack arsTransactionID
     , "order_ref" .= T.unpack arsOrderRef
     , "auto_start_token" .= show arsAutoStartToken
     ]
-  toEncoding AuthResponse{..} = pairs $ Monoid.mconcat [
-      "transaction_id" .= T.unpack arsTransactionID
+  toEncoding AuthResponse {..} = pairs $ Monoid.mconcat
+    [ "transaction_id" .= T.unpack arsTransactionID
     , "order_ref" .= T.unpack arsOrderRef
     , "auto_start_token" .= show arsAutoStartToken
     ]
 
 -- | Retrieve 'SignResponse' from SOAP response.
 xpAuthResponse :: XMLParser AuthResponse
-xpAuthResponse = XMLParser $ \c -> listToMaybe $ c
-  $/ laxElement "AuthenticateResponse" &| \sr -> AuthResponse {
-      arsTransactionID  = readT "transactionId"  sr
-    , arsOrderRef       = readT "orderRef"       sr
+xpAuthResponse = XMLParser $ \c ->
+  listToMaybe $ c $/ laxElement "AuthenticateResponse" &| \sr -> AuthResponse
+    { arsTransactionID  = readT "transactionId" sr
+    , arsOrderRef       = readT "orderRef" sr
     , arsAutoStartToken = AutoStartToken $ readT "AutoStartToken" sr
     }
 
@@ -236,8 +242,8 @@ data SignResponse = SignResponse {
 } deriving (Eq, Ord, Show)
 
 instance Loggable SignResponse where
-  logValue SignResponse{..} = object [
-      "transaction_id" .= srsTransactionID
+  logValue SignResponse {..} = object
+    [ "transaction_id" .= srsTransactionID
     , "order_ref" .= srsOrderRef
     , "auto_start_token" .= unAutoStartToken srsAutoStartToken
     ]
@@ -245,10 +251,10 @@ instance Loggable SignResponse where
 
 -- | Retrieve 'SignResponse' from SOAP response.
 xpSignResponse :: XMLParser SignResponse
-xpSignResponse = XMLParser $ \c -> listToMaybe $ c
-  $/ laxElement "SignResponse" &| \sr -> SignResponse {
-      srsTransactionID  = readT "transactionId"  sr
-    , srsOrderRef       = readT "orderRef"       sr
+xpSignResponse = XMLParser $ \c ->
+  listToMaybe $ c $/ laxElement "SignResponse" &| \sr -> SignResponse
+    { srsTransactionID  = readT "transactionId" sr
+    , srsOrderRef       = readT "orderRef" sr
     , srsAutoStartToken = AutoStartToken $ readT "AutoStartToken" sr
     }
 
@@ -264,12 +270,12 @@ data CollectRequest = CollectRequest {
 
 -- | Construct SOAP request from the 'CollectRequest'.
 instance ToXML CollectRequest where
-  toXML CollectRequest{..} =
+  toXML CollectRequest {..} =
     element "{http://funktionstjanster.se/grp/service/v1.0.0/}CollectRequest" $ do
-      element "policy" crqPolicy
+      element "policy"        crqPolicy
       element "transactionId" crqTransactionID
-      element "orderRef" crqOrderRef
-      element "displayName" crqDisplayName
+      element "orderRef"      crqOrderRef
+      element "displayName"   crqDisplayName
 
 ----------------------------------------
 
@@ -293,15 +299,9 @@ progressStatusText Complete               = "complete"
 
 -- | Convert 'ProgressStatus' to JSON and show it to the client.
 instance Unjson ProgressStatus where
-  unjsonDef = disjointUnionOf "progress_status" $ map statusWithText [
-      OutstandingTransaction
-    , UserSign
-    , NoClient
-    , Started
-    , Complete
-    ]
-    where
-      statusWithText con = (progressStatusText con, (== con), pure con)
+  unjsonDef = disjointUnionOf "progress_status"
+    $ map statusWithText [OutstandingTransaction, UserSign, NoClient, Started, Complete]
+    where statusWithText con = (progressStatusText con, (== con), pure con)
 
 ----------------------------------------
 
@@ -314,18 +314,18 @@ data CollectResponse = CollectResponse {
 
 -- | Retrieve 'CollectResponse' from SOAP response.
 xpCollectResponse :: XMLParser CollectResponse
-xpCollectResponse = XMLParser $ \c -> listToMaybe $ c
-  $/ laxElement "CollectResponse" &| \cr -> CollectResponse {
-      crsProgressStatus = readProgressStatus cr
+xpCollectResponse = XMLParser $ \c ->
+  listToMaybe $ c $/ laxElement "CollectResponse" &| \cr -> CollectResponse
+    { crsProgressStatus = readProgressStatus cr
     , crsSignature      = listToMaybe $ cr $/ laxElement "signature" &/ content
     , crsAttributes     = cr $/ laxElement "attributes" &| readAttribute
     }
- where
-   readAttribute attr = (readT "name" attr, readT "value" attr)
-   readProgressStatus cr = case readT "progressStatus" cr of
-     "OUTSTANDING_TRANSACTION" -> OutstandingTransaction
-     "USER_SIGN"               -> UserSign
-     "NO_CLIENT"               -> NoClient
-     "STARTED"                 -> Started
-     "COMPLETE"                -> Complete
-     status                    -> unexpectedError $ "xpCollectResponse: unknown progressStatus:" <+> status
+  where
+    readAttribute attr = (readT "name" attr, readT "value" attr)
+    readProgressStatus cr = case readT "progressStatus" cr of
+      "OUTSTANDING_TRANSACTION" -> OutstandingTransaction
+      "USER_SIGN"               -> UserSign
+      "NO_CLIENT"               -> NoClient
+      "STARTED"                 -> Started
+      "COMPLETE"                -> Complete
+      status -> unexpectedError $ "xpCollectResponse: unknown progressStatus:" <+> status

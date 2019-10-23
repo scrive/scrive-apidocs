@@ -36,8 +36,13 @@ data DocumentSealing = DocumentSealing {
   }
 
 documentSealing
-  :: ( CryptoRNG m, MonadBaseControl IO m, MonadFileStorage m, MonadIO m
-     , MonadLog m, MonadMask m )
+  :: ( CryptoRNG m
+     , MonadBaseControl IO m
+     , MonadFileStorage m
+     , MonadIO m
+     , MonadLog m
+     , MonadMask m
+     )
   => GuardTimeConf
   -> PdfToolsLambdaEnv
   -> KontrakcjaGlobalTemplates
@@ -45,62 +50,68 @@ documentSealing
   -> Text
   -> Int
   -> ConsumerConfig m DocumentID DocumentSealing
-documentSealing guardTimeConf pdfToolsLambdaEnv templates pool
-                mailNoreplyAddress maxRunningJobs = ConsumerConfig {
-    ccJobsTable = "document_sealing_jobs"
-  , ccConsumersTable = "document_sealing_consumers"
-  , ccJobSelectors = ["id", "branded_domain_id", "attempts"]
-  , ccJobFetcher = \(did, bdid, attempts) -> DocumentSealing {
-      dsDocumentID      = did
-    , dsBrandedDomainID = bdid
-    , dsAttempts        = attempts
-    }
-  , ccJobIndex = dsDocumentID
-  , ccNotificationChannel = Just documentSealingNotificationChannel
-  , ccNotificationTimeout = 60 * 1000000 -- 1 minute
-  , ccMaxRunningJobs = maxRunningJobs
-  , ccProcessJob = \docsealing@DocumentSealing{..} -> do
-      logInfo "Document sealing started" $ object [identifier dsDocumentID]
-      mres <- timeout fiveMins . withPostgreSQL pool . withDocumentID dsDocumentID $ do
-        logInfo_ "Document lock acquired"
-        now0 <- currentTime
-        bd <- dbQuery $ GetBrandedDomainByID dsBrandedDomainID
-        doc <- theDocument
-        let lang = getLang doc
-            mc = MailContext {
-                _mctxlang                 = lang
-              , _mctxcurrentBrandedDomain = bd
-              , _mctxtime                 = now0
-              , _mctxmailNoreplyAddress   = mailNoreplyAddress
-              }
-        logInfo_ "Running postDocumentClosedActions"
-        resultisok <- runGuardTimeConfT guardTimeConf
-          . runPdfToolsLambdaT pdfToolsLambdaEnv
-          . runTemplatesT (lang, templates)
-          . runMailContextT mc
-          $ postDocumentClosedActions True False
+documentSealing guardTimeConf pdfToolsLambdaEnv templates pool mailNoreplyAddress maxRunningJobs
+  = ConsumerConfig
+    { ccJobsTable           = "document_sealing_jobs"
+    , ccConsumersTable      = "document_sealing_consumers"
+    , ccJobSelectors        = ["id", "branded_domain_id", "attempts"]
+    , ccJobFetcher = \(did, bdid, attempts) -> DocumentSealing { dsDocumentID = did
+                                                               , dsBrandedDomainID = bdid
+                                                               , dsAttempts = attempts
+                                                               }
+    , ccJobIndex            = dsDocumentID
+    , ccNotificationChannel = Just documentSealingNotificationChannel
+    , ccNotificationTimeout = 60 * 1000000 -- 1 minute
+    , ccMaxRunningJobs      = maxRunningJobs
+    , ccProcessJob          = \docsealing@DocumentSealing {..} -> do
+                                logInfo "Document sealing started"
+                                  $ object [identifier dsDocumentID]
+                                mres <-
+                                  timeout fiveMins
+                                  . withPostgreSQL pool
+                                  . withDocumentID dsDocumentID
+                                  $ do
+                                      logInfo_ "Document lock acquired"
+                                      now0 <- currentTime
+                                      bd <- dbQuery $ GetBrandedDomainByID dsBrandedDomainID
+                                      doc <- theDocument
+                                      let lang = getLang doc
+                                          mc   = MailContext
+                                            { _mctxlang                 = lang
+                                            , _mctxcurrentBrandedDomain = bd
+                                            , _mctxtime                 = now0
+                                            , _mctxmailNoreplyAddress = mailNoreplyAddress
+                                            }
+                                      logInfo_ "Running postDocumentClosedActions"
+                                      resultisok <-
+                                        runGuardTimeConfT guardTimeConf
+                                        . runPdfToolsLambdaT pdfToolsLambdaEnv
+                                        . runTemplatesT (lang, templates)
+                                        . runMailContextT mc
+                                        $ postDocumentClosedActions True False
 
-        case resultisok of
-          True  -> return $ Ok Remove
-          False -> Failed <$> onFailure Nothing docsealing
-      case mres of
-        Nothing  -> fail "Document sealing timed out"
-        Just res -> do
-          logInfo_ "Document sealing finished"
-          return res
-  , ccOnException = \ex -> onFailure (Just ex)
-  }
+                                      case resultisok of
+                                        True  -> return $ Ok Remove
+                                        False -> Failed <$> onFailure Nothing docsealing
+                                case mres of
+                                  Nothing  -> fail "Document sealing timed out"
+                                  Just res -> do
+                                    logInfo_ "Document sealing finished"
+                                    return res
+    , ccOnException         = \ex -> onFailure (Just ex)
+    }
   where
     fiveMins :: Int
     fiveMins = 5 * 60 * 1000000
 
-    onFailure (mex :: Maybe SomeException) DocumentSealing{..} = do
+    onFailure (mex :: Maybe SomeException) DocumentSealing {..} = do
       when (dsAttempts > 1) $ do
-        logAttention "Document sealing failed more than 1 time" $ object [
-            identifier dsDocumentID
-          , "attempt_count" .= dsAttempts
-          , "exception" .= show mex
-          ]
+        logAttention "Document sealing failed more than 1 time"
+          $ object
+              [ identifier dsDocumentID
+              , "attempt_count" .= dsAttempts
+              , "exception" .= show mex
+              ]
       return . RerunAfter . attemptToDelay $ dsAttempts
 
     attemptToDelay 1 = iminutes 5

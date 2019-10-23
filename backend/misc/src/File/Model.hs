@@ -73,45 +73,53 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m PurgeFile () where
     now <- currentTime
     kRun1OrThrowWhyNot $ sqlUpdate "files" $ do
       sqlSet "purged_time" now
-      sqlSet "name" ("" :: String)
-      sqlSet "amazon_url" (Nothing :: Maybe String)
+      sqlSet "name"        ("" :: String)
+      sqlSet "amazon_url"  (Nothing :: Maybe String)
       sqlWhereFileIDIs fid
 
 filesSelectors :: [SQL]
-filesSelectors = [
-    "id"
-  , "name"
-  , "amazon_url"
-  , "checksum"
-  , "aes_key"
-  , "aes_iv"
-  , "size"
-  ]
+filesSelectors = ["id", "name", "amazon_url", "checksum", "aes_key", "aes_iv", "size"]
 
-fetchFile :: (FileID, Text, Maybe Text, BS.ByteString, Maybe BS.ByteString, Maybe BS.ByteString, Int32) -> File
-fetchFile (fid, fname, mamazon_url, checksum, maes_key, maes_iv, size) = File {
-        fileid = fid
-      , filename = fname
-      , filestorage =
+fetchFile
+  :: ( FileID
+     , Text
+     , Maybe Text
+     , BS.ByteString
+     , Maybe BS.ByteString
+     , Maybe BS.ByteString
+     , Int32
+     )
+  -> File
+fetchFile (fid, fname, mamazon_url, checksum, maes_key, maes_iv, size) = File
+  { fileid       = fid
+  , filename     = fname
+  , filestorage  =
         -- Here we need to support the following cases:
         --
         --  * encrypted data in Amazon S3: return (url, aes)
         --  * missing URL: error (see NewEmptyFileForAWS)
         --  * invalid AES key: error out at this place
-        case (mamazon_url, eaes) of
-          (Just url, Just (Right aes)) -> FileStorageAWS url aes
-          (Just _,   Just (Left msg))  -> err $ T.pack msg
-          d -> unexpectedError $ "invalid AWS data for file with id ="
-            <+> showt fid <> ":" <+> (showt d)
-      , filechecksum = checksum
-      , filesize = size
-    }
-      where
-        err :: Text -> FileStorage
-        err msg = unexpectedError $
-          "file with id =" <+> showt fid <+>
-          "has invalid aes/iv pair:" <+> msg
+    case (mamazon_url, eaes) of
+      (Just url, Just (Right aes)) -> FileStorageAWS url aes
+      (Just _  , Just (Left msg) ) -> err $ T.pack msg
+      d ->
+        unexpectedError
+          $   "invalid AWS data for file with id ="
+          <+> showt fid
+          <>  ":"
+          <+> (showt d)
+  , filechecksum = checksum
+  , filesize     = size
+  }
+  where
+    err :: Text -> FileStorage
+    err msg =
+      unexpectedError
+        $   "file with id ="
+        <+> showt fid
+        <+> "has invalid aes/iv pair:"
+        <+> msg
 
-        eaes = case (maes_key, maes_iv) of
-                 (Just aes_key, Just aes_iv) -> Just $ mkAESConf aes_key aes_iv
-                 _ -> Nothing
+    eaes = case (maes_key, maes_iv) of
+      (Just aes_key, Just aes_iv) -> Just $ mkAESConf aes_key aes_iv
+      _ -> Nothing

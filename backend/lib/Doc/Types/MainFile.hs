@@ -22,8 +22,8 @@ data MainFile = MainFile {
 ---------------------------------
 
 mainFilesSelectors :: [SQL]
-mainFilesSelectors = [
-    "main_files.file_id"
+mainFilesSelectors =
+  [ "main_files.file_id"
   , "main_files.document_status"
   , "main_files.seal_status"
   , "files.name"
@@ -35,9 +35,9 @@ instance PQFormat MainFile where
   pqFormat = compositeTypePqFormat ctMainFile
 
 instance CompositeFromSQL MainFile where
-  toComposite (fid, document_status, seal_status, file_name) = MainFile {
-    mainfileid = fid
-  , mainfiledocumentstatus = document_status
-  , mainfilesealstatus = seal_status
-  , mainfilename = file_name
-  }
+  toComposite (fid, document_status, seal_status, file_name) = MainFile
+    { mainfileid             = fid
+    , mainfiledocumentstatus = document_status
+    , mainfilesealstatus     = seal_status
+    , mainfilename           = file_name
+    }

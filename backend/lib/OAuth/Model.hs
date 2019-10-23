@@ -21,19 +21,21 @@ data APIToken = APIToken { atID    :: Int64     -- autoincrement for uniqueness
     deriving (Eq, Ord)
 
 instance Show APIToken where
-    showsPrec _ token = (++) $ show (atToken token) ++ "_" ++ show (atID token)
+  showsPrec _ token = (++) $ show (atToken token) ++ "_" ++ show (atID token)
 
 instance Read APIToken where
-    readsPrec p s = case break (== '_') s of
-      (ts, '_':is) -> [(APIToken { atID = i, atToken = read $ T.pack ts }, v)
-                      | (i, v) <- readsPrec p is]
-      _ -> []
+  readsPrec p s = case break (== '_') s of
+    (ts, '_' : is) ->
+      [ (APIToken { atID = i, atToken = read $ T.pack ts }, v)
+      | (i, v) <- readsPrec p is
+      ]
+    _ -> []
 
 unjsonAPIToken :: UnjsonDef APIToken
 unjsonAPIToken = unjsonInvmapR
   (\s -> case reads s of
-    [(apitoken,[])] -> pure apitoken
-    _               -> fail "cannot parse APIToken"
+    [(apitoken, [])] -> pure apitoken
+    _                -> fail "cannot parse APIToken"
   )
   show
   unjsonDef
@@ -51,7 +53,7 @@ instance Read APIPrivilege where
   readsPrec _ "DOC_CREATE" = [(APIDocCreate, "")]
   readsPrec _ "DOC_CHECK"  = [(APIDocCheck, "")]
   readsPrec _ "DOC_SEND"   = [(APIDocSend, "")]
-  readsPrec _ _ = [] -- we should never read APIPersonal
+  readsPrec _ _            = [] -- we should never read APIPersonal
 
 instance Show APIPrivilege where
   showsPrec _ APIDocCreate = (++) "DOC_CREATE"
@@ -71,17 +73,14 @@ instance FromSQL APIPrivilege where
       1 -> return APIDocCreate
       2 -> return APIDocCheck
       3 -> return APIDocSend
-      _ -> E.throwIO $ RangeError {
-        reRange = [(0, 3)]
-      , reValue = n
-      }
+      _ -> E.throwIO $ RangeError { reRange = [(0, 3)], reValue = n }
 
 instance ToSQL APIPrivilege where
   type PQDest APIPrivilege = PQDest Int16
-  toSQL APIPersonal  = toSQL (0::Int16)
-  toSQL APIDocCreate = toSQL (1::Int16)
-  toSQL APIDocCheck  = toSQL (2::Int16)
-  toSQL APIDocSend   = toSQL (3::Int16)
+  toSQL APIPersonal  = toSQL (0 :: Int16)
+  toSQL APIDocCreate = toSQL (1 :: Int16)
+  toSQL APIDocCheck  = toSQL (2 :: Int16)
+  toSQL APIDocSend   = toSQL (3 :: Int16)
 
 data OAuthTempCredRequest = OAuthTempCredRequest {
   tcCallback   :: URI
@@ -91,8 +90,8 @@ data OAuthTempCredRequest = OAuthTempCredRequest {
 } deriving Show
 
 instance Loggable OAuthTempCredRequest where
-  logValue OAuthTempCredRequest{..} = object [
-      "callback" .= show tcCallback
+  logValue OAuthTempCredRequest {..} = object
+    [ "callback" .= show tcCallback
     , "api_token" .= show tcAPIToken
     , "privileges" .= map show tcPrivileges
     ]
@@ -122,51 +121,32 @@ data OAuthAuthorizationHideSecrets = OAuthAuthorizationHideSecrets {
 } deriving (Show, Eq)
 
 toOAuthAuthorizationHideSecrets :: OAuthAuthorization -> OAuthAuthorizationHideSecrets
-toOAuthAuthorizationHideSecrets oauth =
-  OAuthAuthorizationHideSecrets{
-      oahsAPIToken     = oaAPIToken oauth
-    , oahsAPISecret    = T.pack $ (showOnlyLastFourCharacters . oaAPISecret) oauth
-    , oahsAccessToken  = oaAccessToken oauth
-    , oahsAccessSecret = T.pack $ (showOnlyLastFourCharacters . oaAccessSecret) oauth
-    , oahsHidden       = True
-    }
+toOAuthAuthorizationHideSecrets oauth = OAuthAuthorizationHideSecrets
+  { oahsAPIToken     = oaAPIToken oauth
+  , oahsAPISecret    = T.pack $ (showOnlyLastFourCharacters . oaAPISecret) oauth
+  , oahsAccessToken  = oaAccessToken oauth
+  , oahsAccessSecret = T.pack $ (showOnlyLastFourCharacters . oaAccessSecret) oauth
+  , oahsHidden       = True
+  }
 
 unjsonOAuthAuthorization :: UnjsonDef OAuthAuthorization
-unjsonOAuthAuthorization = objectOf $ pure OAuthAuthorization
-  <*> fieldBy "apitoken"
-      oaAPIToken
-      "OAuth API token"
-      unjsonAPIToken
-  <*> field "apisecret"
-      oaAPISecret
-      "OAuth API secret"
-  <*> fieldBy "accesstoken"
-      oaAccessToken
-      "OAuth access token"
-      unjsonAPIToken
-  <*> field "accesssecret"
-      oaAccessSecret
-      "OAuth access secret"
+unjsonOAuthAuthorization =
+  objectOf
+    $   pure OAuthAuthorization
+    <*> fieldBy "apitoken" oaAPIToken "OAuth API token" unjsonAPIToken
+    <*> field "apisecret" oaAPISecret "OAuth API secret"
+    <*> fieldBy "accesstoken" oaAccessToken "OAuth access token" unjsonAPIToken
+    <*> field "accesssecret" oaAccessSecret "OAuth access secret"
 
 unjsonOAuthAuthorizationHideSecrets :: UnjsonDef OAuthAuthorizationHideSecrets
-unjsonOAuthAuthorizationHideSecrets = objectOf $ pure OAuthAuthorizationHideSecrets
-  <*> fieldBy "apitoken"
-      oahsAPIToken
-      "OAuth API token"
-      unjsonAPIToken
-  <*> field "apisecret"
-      oahsAPISecret
-      "OAuth API secret"
-  <*> fieldBy "accesstoken"
-      oahsAccessToken
-      "OAuth access token"
-      unjsonAPIToken
-  <*> field "accesssecret"
-      oahsAccessSecret
-      "OAuth access secret"
-  <*> field "hidden"
-      oahsHidden
-      "OAuth api and access secrets are hidden"
+unjsonOAuthAuthorizationHideSecrets =
+  objectOf
+    $   pure OAuthAuthorizationHideSecrets
+    <*> fieldBy "apitoken" oahsAPIToken "OAuth API token" unjsonAPIToken
+    <*> field "apisecret" oahsAPISecret "OAuth API secret"
+    <*> fieldBy "accesstoken" oahsAccessToken "OAuth access token" unjsonAPIToken
+    <*> field "accesssecret" oahsAccessSecret "OAuth access secret"
+    <*> field "hidden"       oahsHidden       "OAuth api and access secrets are hidden"
 
 -- APIToken Management
 
@@ -176,16 +156,15 @@ unjsonOAuthAuthorizationHideSecrets = objectOf $ pure OAuthAuthorizationHideSecr
 data CreateAPIToken = CreateAPIToken UserID
 instance (MonadDB m, MonadThrow m, CryptoRNG m) => DBUpdate m CreateAPIToken Bool where
   update (CreateAPIToken userid) = do
-    token  :: MagicHash <- random
+    token :: MagicHash  <- random
     secret :: MagicHash <- random
-    runQuery01 $ rawSQL ("INSERT INTO oauth_api_token "
-             <> "(api_token, api_secret, user_id) "
-             <> "SELECT $1, $2, $3 "
-             <> "WHERE $4 in (SELECT id from users)") -- UserID must point to real user
-             (token,
-              secret,
-              userid,
-              userid)
+    runQuery01 $ rawSQL
+      (  "INSERT INTO oauth_api_token "
+      <> "(api_token, api_secret, user_id) "
+      <> "SELECT $1, $2, $3 "
+      <> "WHERE $4 in (SELECT id from users)"
+      ) -- UserID must point to real user
+      (token, secret, userid, userid)
 
 {- |
    Delete an API Token. We check the UserID for security purposes. A User may
@@ -194,11 +173,11 @@ instance (MonadDB m, MonadThrow m, CryptoRNG m) => DBUpdate m CreateAPIToken Boo
 data DeleteAPIToken = DeleteAPIToken UserID APIToken
 instance (MonadDB m, MonadThrow m) => DBUpdate m DeleteAPIToken Bool where
   update (DeleteAPIToken userid (APIToken i t)) = do
-    runQuery01 $ rawSQL ("DELETE FROM oauth_api_token "
-             <> "WHERE user_id = $1 AND id = $2 AND api_token = $3 ")
-                  (userid,
-                   i,
-                   t)
+    runQuery01 $ rawSQL
+      (  "DELETE FROM oauth_api_token "
+      <> "WHERE user_id = $1 AND id = $2 AND api_token = $3 "
+      )
+      (userid, i, t)
 
 {- |
    Get the API Tokens for a particular user, along with their API Secrets.
@@ -206,15 +185,17 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m DeleteAPIToken Bool where
 data GetAPITokensForUser = GetAPITokensForUser UserID
 instance MonadDB m => DBQuery m GetAPITokensForUser [(APIToken, MagicHash)] where
   query (GetAPITokensForUser uid) = do
-    runQuery_ $ rawSQL ("SELECT id, api_token, api_secret "
-             <> "FROM oauth_api_token "
-             <> "WHERE user_id = $1 AND "
+    runQuery_ $ rawSQL
+      (  "SELECT id, api_token, api_secret "
+      <> "FROM oauth_api_token "
+      <> "WHERE user_id = $1 AND "
              -- exclude personal tokens
-             <> "      id NOT IN (SELECT api_token_id FROM oauth_access_token "
-             <> "                 JOIN oauth_privilege on oauth_privilege.access_token_id = oauth_access_token.id "
-             <> "                 WHERE oauth_privilege.privilege = $2) "
-             <> "ORDER BY id")
-            (uid, APIPersonal)
+      <> "      id NOT IN (SELECT api_token_id FROM oauth_access_token "
+      <> "                 JOIN oauth_privilege on oauth_privilege.access_token_id = oauth_access_token.id "
+      <> "                 WHERE oauth_privilege.privilege = $2) "
+      <> "ORDER BY id"
+      )
+      (uid, APIPersonal)
     fetchMany $ \(i, t, s) -> (APIToken i t, s)
 
 
@@ -227,41 +208,47 @@ instance MonadDB m => DBQuery m GetAPITokensForUser [(APIToken, MagicHash)] wher
  -}
 data RequestTempCredentials = RequestTempCredentials OAuthTempCredRequest UTCTime
 instance (CryptoRNG m, MonadDB m, MonadThrow m) => DBUpdate m RequestTempCredentials (Maybe (APIToken, MagicHash)) where
-  update (RequestTempCredentials (OAuthTempCredRequest {tcPrivileges = []}) _) = return Nothing
-  update (RequestTempCredentials (OAuthTempCredRequest {tcPrivileges}) _) | APIPersonal `elem` tcPrivileges = return Nothing
+  update (RequestTempCredentials (OAuthTempCredRequest { tcPrivileges = [] }) _) =
+    return Nothing
+  update (RequestTempCredentials (OAuthTempCredRequest { tcPrivileges }) _)
+    | APIPersonal `elem` tcPrivileges = return Nothing
   update (RequestTempCredentials (OAuthTempCredRequest {..}) time) = do
-    temptoken  :: MagicHash <- random
+    temptoken :: MagicHash  <- random
     tempsecret :: MagicHash <- random
-    verifier   :: MagicHash <- random
-    runQuery_ $ rawSQL ("INSERT INTO oauth_temp_credential ("
-                           <> "  temp_token"
-                           <> ", temp_secret"
-                           <> ", api_token_id"
-                           <> ", verifier"
-                           <> ", expires"
-                           <> ", callback"
-                           <> ") (SELECT $1, $2, $3, $4, $5, $6 WHERE EXISTS (SELECT 1 FROM oauth_api_token WHERE id = $7 AND api_token = $8 AND api_secret = $9))"
-                           <> " RETURNING id")
-                           ( temptoken
-                           , tempsecret
-                           , atID tcAPIToken
-                           , verifier
-                           , 60 `minutesAfter` time
-                           , show tcCallback
-                           , atID tcAPIToken
-                           , atToken tcAPIToken
-                           , tcAPISecret
-                           )
+    verifier :: MagicHash   <- random
+    runQuery_ $ rawSQL
+      (  "INSERT INTO oauth_temp_credential ("
+      <> "  temp_token"
+      <> ", temp_secret"
+      <> ", api_token_id"
+      <> ", verifier"
+      <> ", expires"
+      <> ", callback"
+      <> ") (SELECT $1, $2, $3, $4, $5, $6 WHERE EXISTS (SELECT 1 FROM oauth_api_token WHERE id = $7 AND api_token = $8 AND api_secret = $9))"
+      <> " RETURNING id"
+      )
+      ( temptoken
+      , tempsecret
+      , atID tcAPIToken
+      , verifier
+      , 60 `minutesAfter` time
+      , show tcCallback
+      , atID tcAPIToken
+      , atToken tcAPIToken
+      , tcAPISecret
+      )
     mid :: Maybe Int64 <- fetchMaybe runIdentity
     case mid of
       Nothing          -> return Nothing
       Just temptokenid -> do
-        runQuery_ $ "INSERT INTO oauth_temp_privileges ( "
-                  <> " temp_token_id "
-                  <> ",privilege "
-                  <> ") VALUES "
-                  <> sqlConcatComma (map (\p -> "(" <?> temptokenid <+> "," <?> p <+> ")") tcPrivileges)
-        return $ Just (APIToken { atID = temptokenid, atToken = temptoken}, tempsecret)
+        runQuery_
+          $  "INSERT INTO oauth_temp_privileges ( "
+          <> " temp_token_id "
+          <> ",privilege "
+          <> ") VALUES "
+          <> sqlConcatComma
+               (map (\p -> "(" <?> temptokenid <+> "," <?> p <+> ")") tcPrivileges)
+        return $ Just (APIToken { atID = temptokenid, atToken = temptoken }, tempsecret)
 
 -- second part of flow (user granting privileges)
 
@@ -271,8 +258,10 @@ instance (CryptoRNG m, MonadDB m, MonadThrow m) => DBUpdate m RequestTempCredent
 data VerifyCredentials = VerifyCredentials APIToken UserID UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m VerifyCredentials (Maybe (URI, MagicHash)) where
   update (VerifyCredentials token uid time) = do
-    runQuery_ $ rawSQL ("UPDATE oauth_temp_credential SET user_id = $1 WHERE user_id IS NULL AND EXISTS (SELECT 1 FROM users WHERE id = $2) AND id = $3 AND temp_token = $4 AND expires > $5 RETURNING callback, verifier")
-            (uid, uid, atID token, atToken token, time)
+    runQuery_ $ rawSQL
+      ("UPDATE oauth_temp_credential SET user_id = $1 WHERE user_id IS NULL AND EXISTS (SELECT 1 FROM users WHERE id = $2) AND id = $3 AND temp_token = $4 AND expires > $5 RETURNING callback, verifier"
+      )
+      (uid, uid, atID token, atToken token, time)
     join <$> (fetchMaybe $ \(cb, vr) -> (, vr) <$> parseURI cb)
 
 {- |
@@ -281,8 +270,9 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m VerifyCredentials (Maybe (URI, 
 data DenyCredentials = DenyCredentials APIToken UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m DenyCredentials (Maybe URI) where
   update (DenyCredentials token _time) = do
-    runQuery_ $ rawSQL "DELETE FROM oauth_temp_credential WHERE (id = $1 AND temp_token = $2) RETURNING callback"
-                    (atID token, atToken token)
+    runQuery_ $ rawSQL
+      "DELETE FROM oauth_temp_credential WHERE (id = $1 AND temp_token = $2) RETURNING callback"
+      (atID token, atToken token)
     join <$> (fetchMaybe $ parseURI . runIdentity)
 
 {- |
@@ -291,25 +281,28 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m DenyCredentials (Maybe URI) whe
 data GetRequestedPrivileges = GetRequestedPrivileges APIToken UTCTime
 instance MonadDB m => DBQuery m GetRequestedPrivileges (Maybe (String, [APIPrivilege])) where
   query (GetRequestedPrivileges token time) = do
-    runQuery_ $ rawSQL ("SELECT ug.name, u.first_name, u.last_name, u.email, p.privilege "
-              <> "FROM oauth_temp_privileges p "
-              <> "JOIN oauth_temp_credential c  ON p.temp_token_id =   c.id "
-              <> "JOIN oauth_api_token t        ON c.api_token_id  =   t.id "
-              <> "JOIN users u                  ON t.user_id       =   u.id "
-              <> "JOIN user_groups ug           ON u.user_group_id =  ug.id "
-              <> "WHERE c.temp_token = $1 AND c.id = $2 AND expires > $3 AND c.user_id IS NULL")
-              (atToken token, atID token, time)
+    runQuery_ $ rawSQL
+      (  "SELECT ug.name, u.first_name, u.last_name, u.email, p.privilege "
+      <> "FROM oauth_temp_privileges p "
+      <> "JOIN oauth_temp_credential c  ON p.temp_token_id =   c.id "
+      <> "JOIN oauth_api_token t        ON c.api_token_id  =   t.id "
+      <> "JOIN users u                  ON t.user_id       =   u.id "
+      <> "JOIN user_groups ug           ON u.user_group_id =  ug.id "
+      <> "WHERE c.temp_token = $1 AND c.id = $2 AND expires > $3 AND c.user_id IS NULL"
+      )
+      (atToken token, atID token, time)
     -- get name of company from companies table, or if that does not exist, the users.company_name
     foldlDB f Nothing
     where
-      f :: Maybe (String, [APIPrivilege])
+      f
+        :: Maybe (String, [APIPrivilege])
         -> (String, String, String, String, APIPrivilege)
         -> m (Maybe (String, [APIPrivilege]))
-      f Nothing (c, fn, ln, e, pr) = return $ Just (getname c fn ln e, [pr])
-      f (Just (n, acc)) (_, _, _, _, pr) = return $ Just (n, pr:acc)
-      getname "" "" "" email = email
-      getname "" fn ln _     = fn ++ " " ++ ln
-      getname cname _ _ _   = cname
+      f Nothing         (c, fn, ln, e, pr) = return $ Just (getname c fn ln e, [pr])
+      f (Just (n, acc)) (_, _ , _ , _, pr) = return $ Just (n, pr : acc)
+      getname ""    "" "" email = email
+      getname ""    fn ln _     = fn ++ " " ++ ln
+      getname cname _  _  _     = cname
 
 -- third part of flow
 
@@ -319,60 +312,65 @@ instance MonadDB m => DBQuery m GetRequestedPrivileges (Maybe (String, [APIPrivi
 data RequestAccessToken = RequestAccessToken OAuthTokenRequest UTCTime
 instance (CryptoRNG m, MonadDB m, MonadThrow m) => DBUpdate m RequestAccessToken (Maybe (APIToken, MagicHash)) where
   update (RequestAccessToken (OAuthTokenRequest {..}) time) = do
-    accesstoken  :: MagicHash <- random
+    accesstoken :: MagicHash  <- random
     accesssecret :: MagicHash <- random
-    runQuery_ $ rawSQL ("INSERT INTO oauth_access_token (access_token, access_secret, api_token_id, user_id, created) "
-              <> "SELECT $1, $2, c.api_token_id, c.user_id, $3 "
-              <> "FROM oauth_temp_credential c "
-              <> "JOIN oauth_api_token a ON c.api_token_id = a.id "
-              <> "WHERE a.id          = $4 AND a.api_token = $5 "
-              <> "AND   a.api_secret  = $6 "
-              <> "AND   c.temp_secret = $7 "
-              <> "AND   c.id          = $8 AND c.temp_token = $9 "
-              <> "AND   c.verifier    = $10 "
-              <> "AND   c.expires     > $11 "
-              <> "RETURNING id, access_token, access_secret")
-                  ( accesstoken
-                  , accesssecret
-                  , time
-                  , atID trAPIToken
-                  , atToken trAPIToken
-                  , trAPISecret
-                  , trTempSecret
-                  , atID trTempToken
-                  , atToken trTempToken
-                  , trVerifier
-                  , time
-                  )
+    runQuery_ $ rawSQL
+      ("INSERT INTO oauth_access_token (access_token, access_secret, api_token_id, user_id, created) "
+      <> "SELECT $1, $2, c.api_token_id, c.user_id, $3 "
+      <> "FROM oauth_temp_credential c "
+      <> "JOIN oauth_api_token a ON c.api_token_id = a.id "
+      <> "WHERE a.id          = $4 AND a.api_token = $5 "
+      <> "AND   a.api_secret  = $6 "
+      <> "AND   c.temp_secret = $7 "
+      <> "AND   c.id          = $8 AND c.temp_token = $9 "
+      <> "AND   c.verifier    = $10 "
+      <> "AND   c.expires     > $11 "
+      <> "RETURNING id, access_token, access_secret"
+      )
+      ( accesstoken
+      , accesssecret
+      , time
+      , atID trAPIToken
+      , atToken trAPIToken
+      , trAPISecret
+      , trTempSecret
+      , atID trTempToken
+      , atToken trTempToken
+      , trVerifier
+      , time
+      )
     mr <- fetchMaybe $ \(i, t, s) -> (APIToken { atID = i, atToken = t }, s)
     case mr of
       Just (tk, _) -> do
-        runQuery_ $ rawSQL ("INSERT INTO oauth_privilege (access_token_id, privilege) "
-                         <> "SELECT $1, privilege "
-                         <> "FROM oauth_temp_privileges p "
-                         <> "JOIN oauth_temp_credential c ON p.temp_token_id = c.id "
-                         <> "JOIN oauth_api_token a       ON c.api_token_id  = a.id "
-                         <> "WHERE a.id          = $2 AND a.api_token = $3 "
-                         <> "AND   a.api_secret  = $4 "
-                         <> "AND   c.temp_secret = $5 "
-                         <> "AND   c.id          = $6 AND c.temp_token = $7 "
-                         <> "AND   c.verifier    = $8 "
-                         <> "AND   c.expires     > $9 ")
-                         ( atID tk
-                         , atID trAPIToken
-                         , atToken trAPIToken
-                         , trAPISecret
-                         , trTempSecret
-                         , atID trTempToken
-                         , atToken trTempToken
-                         , trVerifier
-                         , time
-                         )
+        runQuery_ $ rawSQL
+          (  "INSERT INTO oauth_privilege (access_token_id, privilege) "
+          <> "SELECT $1, privilege "
+          <> "FROM oauth_temp_privileges p "
+          <> "JOIN oauth_temp_credential c ON p.temp_token_id = c.id "
+          <> "JOIN oauth_api_token a       ON c.api_token_id  = a.id "
+          <> "WHERE a.id          = $2 AND a.api_token = $3 "
+          <> "AND   a.api_secret  = $4 "
+          <> "AND   c.temp_secret = $5 "
+          <> "AND   c.id          = $6 AND c.temp_token = $7 "
+          <> "AND   c.verifier    = $8 "
+          <> "AND   c.expires     > $9 "
+          )
+          ( atID tk
+          , atID trAPIToken
+          , atToken trAPIToken
+          , trAPISecret
+          , trTempSecret
+          , atID trTempToken
+          , atToken trTempToken
+          , trVerifier
+          , time
+          )
         return ()
       _ -> return ()
     -- delete the old stuff and the one we just requested; it's one-time-use
-    runQuery_ $ rawSQL "DELETE FROM oauth_temp_credential WHERE (id = $1 AND temp_token = $2) OR expires <= $3"
-                    (atID trTempToken, atToken trTempToken, time)
+    runQuery_ $ rawSQL
+      "DELETE FROM oauth_temp_credential WHERE (id = $1 AND temp_token = $2) OR expires <= $3"
+      (atID trTempToken, atToken trTempToken, time)
     return mr
 
 -- used for authorization
@@ -389,25 +387,29 @@ data GetUserIDForAPIWithPrivilege = GetUserIDForAPIWithPrivilege
                                     [APIPrivilege]
 instance (MonadDB m, MonadThrow m) => DBQuery m GetUserIDForAPIWithPrivilege (Maybe (UserID, String)) where
   query (GetUserIDForAPIWithPrivilege token secret atoken asecret priv) = do
-    runQuery_ $ rawSQL ("SELECT a.user_id, u.email, u.first_name, u.last_name,ug.name "
-             <> "FROM oauth_access_token a "
-             <> "JOIN oauth_privilege p      ON p.access_token_id = a.id "
-             <> "JOIN oauth_api_token t      ON a.api_token_id    = t.id "
-             <> "JOIN users u                ON t.user_id         = u.id "
-             <> "JOIN user_groups ug         ON u.user_group_id   = ug.id "
-             <> "WHERE t.id = $1 AND t.api_token = $2 AND t.api_secret = $3 AND a.id = $4 AND a.access_token = $5 AND a.access_secret = $6 AND (p.privilege = ANY($7) OR p.privilege = $8) LIMIT 1")
-                  ( atID token
-                  , atToken token
-                  , secret
-                  , atID atoken
-                  , atToken atoken
-                  , asecret
-                  , Array1 priv
-                  , APIPersonal)
+    runQuery_ $ rawSQL
+      (  "SELECT a.user_id, u.email, u.first_name, u.last_name,ug.name "
+      <> "FROM oauth_access_token a "
+      <> "JOIN oauth_privilege p      ON p.access_token_id = a.id "
+      <> "JOIN oauth_api_token t      ON a.api_token_id    = t.id "
+      <> "JOIN users u                ON t.user_id         = u.id "
+      <> "JOIN user_groups ug         ON u.user_group_id   = ug.id "
+      <> "WHERE t.id = $1 AND t.api_token = $2 AND t.api_secret = $3 AND a.id = $4 AND a.access_token = $5 AND a.access_secret = $6 AND (p.privilege = ANY($7) OR p.privilege = $8) LIMIT 1"
+      )
+      ( atID token
+      , atToken token
+      , secret
+      , atID atoken
+      , atToken atoken
+      , asecret
+      , Array1 priv
+      , APIPersonal
+      )
     fetchMaybe f
-   where    f (uid, e, "", "", "" ) = (uid, e)               -- just email
-            f (uid, _, fn, ln, "" ) = (uid, fn ++ " " ++ ln) -- user's first + last
-            f (uid, _, _,  _,  ugn) = (uid, ugn)             -- user's user_group name
+    where
+      f (uid, e, "", "", "" ) = (uid, e)               -- just email
+      f (uid, _, fn, ln, "" ) = (uid, fn ++ " " ++ ln) -- user's first + last
+      f (uid, _, _ , _ , ugn) = (uid, ugn)             -- user's user_group name
 
 -- stuff for the dashboard
 
@@ -419,25 +421,28 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetUserIDForAPIWithPrivilege (Ma
 data GetGrantedPrivileges = GetGrantedPrivileges UserID
 instance MonadDB m => DBQuery m GetGrantedPrivileges [(Int64, String, [APIPrivilege])] where
   query (GetGrantedPrivileges userid) = do
-    runQuery_ $ rawSQL ("SELECT a.id, u.email, u.first_name, u.last_name, ug.name, p.privilege "
-             <> "FROM oauth_access_token a "
-             <> "JOIN oauth_api_token t on a.api_token_id = t.id "
-             <> "JOIN users u on u.id = t.user_id "
-             <> "JOIN oauth_privilege p on p.access_token_id = a.id "
-             <> "JOIN user_groups ug ON u.user_group_id = ug.id "
-             <> "WHERE a.user_id = $1 AND "
+    runQuery_ $ rawSQL
+      (  "SELECT a.id, u.email, u.first_name, u.last_name, ug.name, p.privilege "
+      <> "FROM oauth_access_token a "
+      <> "JOIN oauth_api_token t on a.api_token_id = t.id "
+      <> "JOIN users u on u.id = t.user_id "
+      <> "JOIN oauth_privilege p on p.access_token_id = a.id "
+      <> "JOIN user_groups ug ON u.user_group_id = ug.id "
+      <> "WHERE a.user_id = $1 AND "
              -- exclude personal tokens
-             <> "      t.id NOT IN (SELECT api_token_id FROM oauth_access_token "
-             <> "                   JOIN oauth_privilege on oauth_privilege.access_token_id = oauth_access_token.id "
-             <> "                   WHERE oauth_privilege.privilege = $2) "
-             <> "ORDER BY a.id ")
-            (userid, APIPersonal)
+      <> "      t.id NOT IN (SELECT api_token_id FROM oauth_access_token "
+      <> "                   JOIN oauth_privilege on oauth_privilege.access_token_id = oauth_access_token.id "
+      <> "                   WHERE oauth_privilege.privilege = $2) "
+      <> "ORDER BY a.id "
+      )
+      (userid, APIPersonal)
     foldlDB f []
     where
-      f ((tid, n, ps):as) (tid', _, _, _, _, p) | tid == tid' = return $ (tid, n, p:ps) : as -- already have the id
+      f ((tid, n, ps) : as) (tid', _, _, _, _, p) | tid == tid' =
+        return $ (tid, n, p : ps) : as -- already have the id
       f acc (tid, e, "", "", "", p) = return $ (tid, e, [p]) : acc                     -- just email
       f acc (tid, _, fn, ln, "", p) = return $ (tid, fn ++ " " ++ ln, [p]) : acc        -- user's first + last
-      f acc (tid, _, _,  _,  cn, p) = return $ (tid, cn, [p]) : acc                     -- user's company name company name
+      f acc (tid, _, _ , _ , cn, p) = return $ (tid, cn, [p]) : acc                     -- user's company name company name
 {- |
    Delete all privileges for a given token id.
    The user does not have to know the whole token.
@@ -445,9 +450,9 @@ instance MonadDB m => DBQuery m GetGrantedPrivileges [(Int64, String, [APIPrivil
 data DeletePrivileges = DeletePrivileges UserID Int64
 instance MonadDB m => DBUpdate m DeletePrivileges Bool where
   update (DeletePrivileges userid tokenid) = do
-    r <- runQuery $ rawSQL (  "DELETE FROM oauth_access_token "
-             <> "WHERE user_id = $1 AND id = $2 ")
-         (userid, tokenid)
+    r <- runQuery $ rawSQL
+      ("DELETE FROM oauth_access_token " <> "WHERE user_id = $1 AND id = $2 ")
+      (userid, tokenid)
     return $ r > 0
 
 {- |
@@ -457,16 +462,20 @@ instance MonadDB m => DBUpdate m DeletePrivileges Bool where
 data DeletePrivilege = DeletePrivilege UserID Int64 APIPrivilege
 instance MonadDB m => DBUpdate m DeletePrivilege Bool where
   update (DeletePrivilege userid tokenid privilege) = do
-    r <- runQuery $ rawSQL (  "DELETE FROM oauth_privilege "
-             <> "WHERE EXISTS (SELECT 1 FROM oauth_access_token "
-             <> "                       WHERE $1 = oauth_access_token.id "
-             <> "                         AND oauth_access_token.user_id = $2)"
-             <> "  AND privilege = $3 AND access_token_id = $4")
-         (tokenid, userid, privilege, tokenid)
+    r <- runQuery $ rawSQL
+      (  "DELETE FROM oauth_privilege "
+      <> "WHERE EXISTS (SELECT 1 FROM oauth_access_token "
+      <> "                       WHERE $1 = oauth_access_token.id "
+      <> "                         AND oauth_access_token.user_id = $2)"
+      <> "  AND privilege = $3 AND access_token_id = $4"
+      )
+      (tokenid, userid, privilege, tokenid)
     -- get rid of oauth_access_tokens with not privileges
-    runQuery_ $ rawSQL ("DELETE FROM oauth_access_token "
-             <> "WHERE user_id = $1 AND id = $2 AND id NOT IN (SELECT access_token_id FROM oauth_privilege)")
-            (userid, tokenid)
+    runQuery_ $ rawSQL
+      ("DELETE FROM oauth_access_token "
+      <> "WHERE user_id = $1 AND id = $2 AND id NOT IN (SELECT access_token_id FROM oauth_privilege)"
+      )
+      (userid, tokenid)
     return $ r == 0
 
 -- Personal Tokens
@@ -477,18 +486,19 @@ instance MonadDB m => DBUpdate m DeletePrivilege Bool where
 data GetPersonalToken = GetPersonalToken UserID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetPersonalToken (Maybe OAuthAuthorization) where
   query (GetPersonalToken userid) = do
-    runQuery_ $ rawSQL ("SELECT t.id, t.api_token, t.api_secret, a.id, a.access_token, a.access_secret "
-             <> "FROM oauth_access_token a "
-             <> "JOIN oauth_api_token t on a.api_token_id = t.id "
-             <> "WHERE a.user_id = $1 AND t.user_id = $2 AND a.id IN (SELECT access_token_id FROM oauth_privilege WHERE access_token_id = a.id AND privilege = $3)")
-            (userid, userid, APIPersonal)
-    fetchMaybe $ \(ti, tt, ts, i, t, s) ->
-      OAuthAuthorization
-        { oaAPIToken     = APIToken ti tt
-        , oaAPISecret    = ts
-        , oaAccessToken  = APIToken i t
-        , oaAccessSecret = s
-        }
+    runQuery_ $ rawSQL
+      (  "SELECT t.id, t.api_token, t.api_secret, a.id, a.access_token, a.access_secret "
+      <> "FROM oauth_access_token a "
+      <> "JOIN oauth_api_token t on a.api_token_id = t.id "
+      <> "WHERE a.user_id = $1 AND t.user_id = $2 AND a.id IN (SELECT access_token_id FROM oauth_privilege WHERE access_token_id = a.id AND privilege = $3)"
+      )
+      (userid, userid, APIPersonal)
+    fetchMaybe $ \(ti, tt, ts, i, t, s) -> OAuthAuthorization
+      { oaAPIToken     = APIToken ti tt
+      , oaAPISecret    = ts
+      , oaAccessToken  = APIToken i t
+      , oaAccessSecret = s
+      }
 
 {- |
    Get personal token if it was newly created
@@ -497,20 +507,21 @@ data GetRecentPersonalToken = GetRecentPersonalToken UserID Int
 instance (MonadDB m, MonadTime m, MonadThrow m) => DBQuery m GetRecentPersonalToken (Maybe OAuthAuthorization) where
   query (GetRecentPersonalToken userid recencyMinutes) = do
     now <- currentTime
-    runQuery_ $ rawSQL ("SELECT t.id, t.api_token, t.api_secret, a.id, a.access_token, a.access_secret "
-             <> "FROM oauth_access_token a "
-             <> "JOIN oauth_api_token t on a.api_token_id = t.id "
-             <> "WHERE a.user_id = $1 AND t.user_id = $2 "
-             <> "AND a.id IN (SELECT access_token_id FROM oauth_privilege WHERE access_token_id = a.id AND privilege = $3) "
-             <> "AND a.created > $4 - INTERVAL '$5 minute'")
-            (userid, userid, APIPersonal, now, recencyMinutes)
-    fetchMaybe $ \(ti, tt, ts, i, t, s) ->
-      OAuthAuthorization
-        { oaAPIToken     = APIToken ti tt
-        , oaAPISecret    = ts
-        , oaAccessToken  = APIToken i t
-        , oaAccessSecret = s
-        }
+    runQuery_ $ rawSQL
+      (  "SELECT t.id, t.api_token, t.api_secret, a.id, a.access_token, a.access_secret "
+      <> "FROM oauth_access_token a "
+      <> "JOIN oauth_api_token t on a.api_token_id = t.id "
+      <> "WHERE a.user_id = $1 AND t.user_id = $2 "
+      <> "AND a.id IN (SELECT access_token_id FROM oauth_privilege WHERE access_token_id = a.id AND privilege = $3) "
+      <> "AND a.created > $4 - INTERVAL '$5 minute'"
+      )
+      (userid, userid, APIPersonal, now, recencyMinutes)
+    fetchMaybe $ \(ti, tt, ts, i, t, s) -> OAuthAuthorization
+      { oaAPIToken     = APIToken ti tt
+      , oaAPISecret    = ts
+      , oaAccessToken  = APIToken i t
+      , oaAccessSecret = s
+      }
 
 {- |
    Create a personal token. Each User can have only one, so we should fail
@@ -523,37 +534,36 @@ instance (MonadDB m, MonadTime m, MonadThrow m, CryptoRNG m) => DBUpdate m Creat
     if isJust m
       then return False
       else do
-        token  :: MagicHash <- random
+        token :: MagicHash  <- random
         secret :: MagicHash <- random
-        runQuery_ $ rawSQL (  "INSERT INTO oauth_api_token "
-                 <> "(api_token, api_secret, user_id) "
-                 <> "SELECT $1, $2, $3 "
-                 <> "WHERE $4 in (SELECT id from users) "
-                 <> "RETURNING id")
-                      (token,
-                       secret,
-                       userid,
-                       userid)
-        apiid :: Int64 <- fetchOne runIdentity
+        runQuery_ $ rawSQL
+          (  "INSERT INTO oauth_api_token "
+          <> "(api_token, api_secret, user_id) "
+          <> "SELECT $1, $2, $3 "
+          <> "WHERE $4 in (SELECT id from users) "
+          <> "RETURNING id"
+          )
+          (token, secret, userid, userid)
+        apiid :: Int64       <- fetchOne runIdentity
         -- now create the access token
-        atoken  :: MagicHash <- random
+        atoken :: MagicHash  <- random
         asecret :: MagicHash <- random
-        now <- currentTime
-        runQuery_ $ rawSQL("INSERT INTO oauth_access_token "
-                 <> "(access_token, access_secret, api_token_id, user_id, created) "
-                 <> "VALUES ($1, $2, $3, $4, $5) "
-                 <> "RETURNING id")
-                      (atoken,
-                       asecret,
-                       apiid,
-                       userid,
-                       now)
+        now                  <- currentTime
+        runQuery_ $ rawSQL
+          (  "INSERT INTO oauth_access_token "
+          <> "(access_token, access_secret, api_token_id, user_id, created) "
+          <> "VALUES ($1, $2, $3, $4, $5) "
+          <> "RETURNING id"
+          )
+          (atoken, asecret, apiid, userid, now)
         accessid :: Int64 <- fetchOne runIdentity
         -- need to add all privileges here
-        r <- runQuery $ rawSQL (  "INSERT INTO oauth_privilege "
-                 <> "(access_token_id, privilege) "
-                 <> "VALUES ($1, $2) ")
-                (accessid, APIPersonal)
+        r                 <- runQuery $ rawSQL
+          (  "INSERT INTO oauth_privilege "
+          <> "(access_token_id, privilege) "
+          <> "VALUES ($1, $2) "
+          )
+          (accessid, APIPersonal)
         return $ r > 0
 
 {- |
@@ -562,10 +572,12 @@ instance (MonadDB m, MonadTime m, MonadThrow m, CryptoRNG m) => DBUpdate m Creat
 data DeletePersonalToken = DeletePersonalToken UserID
 instance MonadDB m => DBUpdate m DeletePersonalToken Bool where
   update (DeletePersonalToken userid) = do
-    r <- runQuery $ rawSQL (  "DELETE FROM oauth_api_token "
-             <> "WHERE user_id = $1 AND id IN "
-             <> "(SELECT api_token_id FROM oauth_access_token "
-             <> " JOIN oauth_privilege on oauth_privilege.access_token_id = oauth_access_token.id "
-             <> " WHERE oauth_privilege.privilege = $2)")
-         (userid, APIPersonal)
+    r <- runQuery $ rawSQL
+      (  "DELETE FROM oauth_api_token "
+      <> "WHERE user_id = $1 AND id IN "
+      <> "(SELECT api_token_id FROM oauth_access_token "
+      <> " JOIN oauth_privilege on oauth_privilege.access_token_id = oauth_access_token.id "
+      <> " WHERE oauth_privilege.privilege = $2)"
+      )
+      (userid, APIPersonal)
     return $ r > 0

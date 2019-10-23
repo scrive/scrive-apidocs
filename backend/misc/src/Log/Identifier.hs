@@ -30,11 +30,11 @@ data IdentifierValue = IdentifierInt    !Int
                        -- 'Identifier' instances.
 
 instance ToJSON IdentifierValue where
-  toJSON (IdentifierInt      i) = toJSON i
+  toJSON (IdentifierInt    i  ) = toJSON i
   toJSON (IdentifierString str) = toJSON str
   toJSON (IdentifierJSON   val) = val
 
-  toEncoding (IdentifierInt      i) = toEncoding i
+  toEncoding (IdentifierInt    i  ) = toEncoding i
   toEncoding (IdentifierString str) = toEncoding str
   toEncoding (IdentifierJSON   val) = toEncoding val
 
@@ -68,21 +68,20 @@ jsonIdentifier = IdentifierJSON . toJSON
 
 instance Identifier t => Identifier [t] where
   idDefaultLabel = idDefaultLabel @t <> "s"
-  idValue ns     = IdentifierJSON $ Array $ fromList $ fmap (toJSON . idValue) ns
+  idValue ns = IdentifierJSON $ Array $ fromList $ fmap (toJSON . idValue) ns
 
 instance Identifier t => Identifier (Maybe t)  where
-  idDefaultLabel   = idDefaultLabel @t
+  idDefaultLabel = idDefaultLabel @t
   idValue Nothing  = jsonIdentifier Null
   idValue (Just n) = idValue n
 
 -- Helpers for client code.
 
-identifier :: forall t kv . (Identifier t, Aeson.KeyValue kv)
-           => t -> kv
+identifier :: forall  t kv . (Identifier t, Aeson.KeyValue kv) => t -> kv
 identifier n = (idDefaultLabel @t) .= (toJSON . idValue $ n)
 
-identifierMapLabel :: forall t kv . (Identifier t, Aeson.KeyValue kv)
-                   => (Text -> Text) -> t -> kv
+identifierMapLabel
+  :: forall  t kv . (Identifier t, Aeson.KeyValue kv) => (Text -> Text) -> t -> kv
 identifierMapLabel f n = (f $ idDefaultLabel @t) .= (toJSON . idValue $ n)
 
 class Loggable a where
@@ -98,7 +97,7 @@ class Loggable a where
 
 -- | Log datatype as a top level log structure
 logObject :: (Loggable a) => (Text -> Text) -> a -> Value
-logObject f a = object [ logPair f a ]
+logObject f a = object [logPair f a]
 
 logObject_ :: (Loggable a) => a -> Value
 logObject_ = logObject id

@@ -30,11 +30,11 @@ import User.Password.Internal
 -- See 'Crypto.Scrypt.EncryptedPass'. This form is useful for storing in a
 -- database.
 pwdHash :: Password -> BS.ByteString
-pwdHash Password{pwdEncPass}     = Scrypt.getEncryptedPass pwdEncPass
+pwdHash Password { pwdEncPass } = Scrypt.getEncryptedPass pwdEncPass
 
 -- | Return the salt used for the SHA256 hashing step.
 pwdSalt :: Password -> BS.ByteString
-pwdSalt Password{pwdSHA256Salt}  = pwdSHA256Salt
+pwdSalt Password { pwdSHA256Salt } = pwdSHA256Salt
 
 -- | Version of the password hashing scheme used.
 data PasswordAlgorithm = PasswordAlgorithmScrypt
@@ -42,7 +42,7 @@ data PasswordAlgorithm = PasswordAlgorithmScrypt
 
 -- | Return the version of the password hashing scheme.
 pwdAlgorithm :: Password -> PasswordAlgorithm
-pwdAlgorithm Password{}       = PasswordAlgorithmScrypt
+pwdAlgorithm Password{} = PasswordAlgorithmScrypt
 
 pwdAlgorithmToInt16 :: PasswordAlgorithm -> Int16
 pwdAlgorithmToInt16 PasswordAlgorithmScrypt = 1
@@ -70,8 +70,9 @@ int16ToPwdAlgorithm _ = PasswordAlgorithmScrypt
 -- and <https://blog.filippo.io/the-scrypt-parameters/> for more
 -- details.
 kontrakcjaScryptParams :: Scrypt.ScryptParams
-kontrakcjaScryptParams = fromJust $ -- OK to crash here
-                         Scrypt.scryptParams 15 8 2
+kontrakcjaScryptParams =
+  fromJust $ -- OK to crash here
+             Scrypt.scryptParams 15 8 2
 
 -- | Encrypt a plain-text password.
 createPassword :: CryptoRNG m => Text -> m Password
@@ -79,17 +80,16 @@ createPassword password = do
   saltSHA256 <- randomBytes 10
   let hash = hashPasswordSHA256 password saltSHA256
   saltScrypt <- randomBytes 32
-  return Password {
-    pwdEncPass    = Scrypt.encryptPass kontrakcjaScryptParams
-                    (Scrypt.Salt saltScrypt)
-                    (Scrypt.Pass hash),
-    pwdSHA256Salt = saltSHA256
+  return Password
+    { pwdEncPass    = Scrypt.encryptPass kontrakcjaScryptParams
+                                         (Scrypt.Salt saltScrypt)
+                                         (Scrypt.Pass hash)
+    , pwdSHA256Salt = saltSHA256
     }
 
 -- | Deserialise a password from a DB row record.
 mkPassword :: BS.ByteString -> BS.ByteString -> PasswordAlgorithm -> Password
-mkPassword hash salt PasswordAlgorithmScrypt =
-  Password (Scrypt.EncryptedPass hash) salt
+mkPassword hash salt PasswordAlgorithmScrypt = Password (Scrypt.EncryptedPass hash) salt
 
 -- | Hash a password using the legacy scheme with the provided salt.
 hashPasswordSHA256 :: Text -> BS.ByteString -> BS.ByteString
@@ -98,29 +98,25 @@ hashPasswordSHA256 password salt =
 
 -- | Verify a provided password string against an encrypted 'Password'.
 verifyPassword :: Password -> Text -> Bool
-verifyPassword Password{pwdEncPass, pwdSHA256Salt} password =
-  Scrypt.verifyPass'
-  (Scrypt.Pass $ hashPasswordSHA256 password pwdSHA256Salt)
-  pwdEncPass
+verifyPassword Password { pwdEncPass, pwdSHA256Salt } password =
+  Scrypt.verifyPass' (Scrypt.Pass $ hashPasswordSHA256 password pwdSHA256Salt) pwdEncPass
 
 -- | Like 'verifyPassword', but the argument is wrapped in Maybe.
 maybeVerifyPassword :: Maybe Password -> Text -> Bool
-maybeVerifyPassword Nothing _        = False
+maybeVerifyPassword Nothing     _    = False
 maybeVerifyPassword (Just hash) pass = verifyPassword hash pass
 
 -- | Like 'mkPassword', but everything is wrapped in Maybe. If the
 -- password strength parameter is Nothing, it defaults to legacy.
-maybeMkPassword ::
-  (Maybe BS.ByteString, Maybe BS.ByteString, Maybe PasswordAlgorithm)
-  -> Maybe Password
+maybeMkPassword
+  :: (Maybe BS.ByteString, Maybe BS.ByteString, Maybe PasswordAlgorithm) -> Maybe Password
 maybeMkPassword (mHash, mSalt, mStrength) =
-  mkPassword <$> mHash <*> mSalt
-  <*> (mStrength <|> Just PasswordAlgorithmScrypt)
+  mkPassword <$> mHash <*> mSalt <*> (mStrength <|> Just PasswordAlgorithmScrypt)
 
 randomPassword :: CryptoRNG m => m Password
 randomPassword = randomPasswordString >>= createPassword
 
 randomPasswordString :: CryptoRNG m => m Text
-randomPasswordString = T.pack <$> randomString 32
-  (['0'..'9'] <> ['A'..'Z'] <> ['a'..'z'] <>
-   ".,?!\'\":;@#$%^&*()")
+randomPasswordString = T.pack <$> randomString
+  32
+  (['0' .. '9'] <> ['A' .. 'Z'] <> ['a' .. 'z'] <> ".,?!\'\":;@#$%^&*()")

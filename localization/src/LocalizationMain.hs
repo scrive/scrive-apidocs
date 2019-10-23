@@ -17,22 +17,20 @@ import Version
 
 main :: IO ()
 main = do
-    putStrLn "Generating static localization templates..."
-    (AppPaths sourceRoot _) <- setupAppPaths
+  putStrLn "Generating static localization templates..."
+  (AppPaths sourceRoot _) <- setupAppPaths
 
-    templates <- readGlobalTemplatesFrom
-                  (sourceRoot </> textsDirectory)
-                  (sourceRoot </> templateFilesDir)
+  templates               <- readGlobalTemplatesFrom (sourceRoot </> textsDirectory)
+                                                     (sourceRoot </> templateFilesDir)
 
-    versionID <- genVersionID
-    let versionIDHex = TE.decodeUtf8 . B16.encode . BS.fromString $ versionID
-    jsFileNameAndLocalizations <- forM allLangs $
-      \lang -> runTemplatesT (lang, templates) $ do
-        jsLocalized <- renderTemplate "javascriptLocalisation" $
-                       F.value "code" $ codeFromLang lang
-        return (versionIDHex <> "." <> codeFromLang lang <> ".js"
-               ,T.pack jsLocalized)
-    createDirectoryIfMissing False (sourceRoot </> "frontend/app/localization")
-    forM_ jsFileNameAndLocalizations $
-      \(fn, text) -> T.writeFile (sourceRoot </> "frontend/app/localization" </> (T.unpack fn)) text
-    putStrLn "DONE"
+  versionID <- genVersionID
+  let versionIDHex = TE.decodeUtf8 . B16.encode . BS.fromString $ versionID
+  jsFileNameAndLocalizations <- forM allLangs $ \lang ->
+    runTemplatesT (lang, templates) $ do
+      jsLocalized <-
+        renderTemplate "javascriptLocalisation" $ F.value "code" $ codeFromLang lang
+      return (versionIDHex <> "." <> codeFromLang lang <> ".js", T.pack jsLocalized)
+  createDirectoryIfMissing False (sourceRoot </> "frontend/app/localization")
+  forM_ jsFileNameAndLocalizations $ \(fn, text) ->
+    T.writeFile (sourceRoot </> "frontend/app/localization" </> (T.unpack fn)) text
+  putStrLn "DONE"

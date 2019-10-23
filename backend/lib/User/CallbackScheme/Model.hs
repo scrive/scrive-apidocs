@@ -63,5 +63,5 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateUserCallbackScheme () whe
     runSQL_ "LOCK TABLE user_callback_scheme IN ACCESS EXCLUSIVE MODE"
     runQuery01_ $ "DELETE FROM user_callback_scheme WHERE user_id =" <?> uid
     runQuery01_ . sqlInsert "user_callback_scheme" $ do
-      sqlSet "user_id" uid
+      sqlSet "user_id"         uid
       sqlSet "callback_scheme" callback

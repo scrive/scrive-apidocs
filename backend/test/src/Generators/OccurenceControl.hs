@@ -48,9 +48,9 @@ import TestKontra
 -- of errors such that errors in these substructures won't be overrepresented.
 
 data OccurenceControlF a where
-  Decision :: Int -> Gen a -> Gen a -> OccurenceControlF a
-  ListOf :: Int -> Int -> OccurenceControl a -> OccurenceControlF [a]
-  LiftGen :: Gen a -> OccurenceControlF a
+  Decision ::Int -> Gen a -> Gen a -> OccurenceControlF a
+  ListOf ::Int -> Int -> OccurenceControl a -> OccurenceControlF [a]
+  LiftGen ::Gen a -> OccurenceControlF a
 
 type OccurenceControl = Free.Ap OccurenceControlF
 
@@ -59,22 +59,24 @@ getTotalWeight = getSum . runAp_ counter
   where
     counter :: OccurenceControlF a -> Sum Double
     counter = \case
-      Decision w _ _ -> Sum $ fromIntegral w
-      ListOf _ _ sub -> runAp_ counter sub
-      LiftGen _ -> Sum 0
+      Decision w _ _   -> Sum $ fromIntegral w
+      ListOf   _ _ sub -> runAp_ counter sub
+      LiftGen _        -> Sum 0
 
 getGenerator :: Double -> Double -> OccurenceControl a -> Gen a
 getGenerator probtot wtot = runAp (interpret 1)
   where
-    interpret :: Double -- ^ Normalising constant for lists.
-              -> OccurenceControlF a -> Gen a
+    interpret
+      :: Double -- ^ Normalising constant for lists.
+      -> OccurenceControlF a
+      -> Gen a
     interpret norm = \case
       Decision w t f -> do
         -- QuickCheck takes weights instead of probabilities so we multiply
         -- by a constant and round.
         let prob = probtot ** (norm * fromIntegral w / wtot)
-            wf = round @Double @Int $ 1000000 * prob
-            wt = 1000000 - wf
+            wf   = round @Double @Int $ 1000000 * prob
+            wt   = 1000000 - wf
         decision <- frequency [(wt, pure True), (wf, pure False)]
         if decision then t else f
 
@@ -118,7 +120,8 @@ decideWeighted' w f = decideWeighted w (f True) (f False)
 listOC
   :: Int -- ^ Lower limit.
   -> Int -- ^ Upper limit.
-  -> OccurenceControl a -> OccurenceControl [a]
+  -> OccurenceControl a
+  -> OccurenceControl [a]
 listOC l u f = liftAp $ ListOf l u f
 
 liftGen :: Gen a -> OccurenceControl a
@@ -137,30 +140,37 @@ testGeneratorHelper
   -> (a -> Bool) -- ^ Did the event occur?
   -> TestEnv ()
 testGeneratorHelper deltaPercentage generator checkOcc = do
-  let h = 100
-      n = 2 * h
+  let h               = 100
+      n               = 2 * h
       acceptableDelta = round @Double @Int $ fromIntegral n * deltaPercentage
 
-      leftOccurenceCases = foldl'
-        (\acc k -> acc + choose' n k)
-        0 [0..(h-acceptableDelta-1)]
+      leftOccurenceCases =
+        foldl' (\acc k -> acc + choose' n k) 0 [0 .. (h - acceptableDelta - 1)]
       occurenceCases = 2 * leftOccurenceCases
-      totalCases = 2 ^ n
-      prob = occurenceCases / totalCases
+      totalCases     = 2 ^ n
+      prob           = occurenceCases / totalCases
 
   sample <- rand 10 $ replicateM n $ runOccurenceControl 0.5 generator
   let noOccurenceCount = length $ filter (not . checkOcc) sample
-      lowerCount = min noOccurenceCount (n - noOccurenceCount)
-      delta = h - lowerCount
+      lowerCount       = min noOccurenceCount (n - noOccurenceCount)
+      delta            = h - lowerCount
 
   assertBool
-    ("Acceptable delta (" ++ show delta ++ " <= " ++ show acceptableDelta
-     ++ ", no occurence count: " ++ show noOccurenceCount ++ " out of " ++ show n
-     ++ ", prob of failure: " ++ show prob ++ ")")
+    (  "Acceptable delta ("
+    ++ show delta
+    ++ " <= "
+    ++ show acceptableDelta
+    ++ ", no occurence count: "
+    ++ show noOccurenceCount
+    ++ " out of "
+    ++ show n
+    ++ ", prob of failure: "
+    ++ show prob
+    ++ ")"
+    )
     (delta <= acceptableDelta)
 
   where
     choose' :: Int -> Int -> Double
-    choose' n k =
-      foldl' (\acc i -> acc * fromIntegral (n - i)) 1 [0..(k-1)]
-      / foldl' (\acc i -> acc * fromIntegral i) 1 [1..k]
+    choose' n k = foldl' (\acc i -> acc * fromIntegral (n - i)) 1 [0 .. (k - 1)]
+      / foldl' (\acc i -> acc * fromIntegral i) 1 [1 .. k]

@@ -37,16 +37,13 @@ instance FromSQL SMSPinType where
       1 -> return SMSPinToSign
       2 -> return SMSPinToView
       3 -> return SMSPinToViewArchived
-      _ -> throwM RangeError {
-        reRange = [(1, 2)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(1, 2)], reValue = n }
 
 instance ToSQL SMSPinType where
-  type PQDest SMSPinType     = PQDest Int32
-  toSQL SMSPinToSign         = toSQL (1::Int32)
-  toSQL SMSPinToView         = toSQL (2::Int32)
-  toSQL SMSPinToViewArchived = toSQL (3::Int32)
+  type PQDest SMSPinType = PQDest Int32
+  toSQL SMSPinToSign         = toSQL (1 :: Int32)
+  toSQL SMSPinToView         = toSQL (2 :: Int32)
+  toSQL SMSPinToViewArchived = toSQL (3 :: Int32)
 
 data GetSignatoryPin = GetSignatoryPin SMSPinType SignatoryLinkID Text
 
@@ -56,40 +53,35 @@ instance (MonadLog m, MonadDB m, MonadThrow m, MonadTime m, CryptoRNG m) => DBQu
       sqlResult "pin"
       sqlResult "generated_at"
       sqlWhereEq "signatory_link_id" slid
-      sqlWhereEq "phone_number" phone
-      sqlWhereEq "pin_type" pintype
+      sqlWhereEq "phone_number"      phone
+      sqlWhereEq "pin_type"          pintype
     mpin <- fetchMaybe id
-    now <- currentTime
+    now  <- currentTime
     case mpin of
-      Just (pin, generated_at) ->
-        if now `diffUTCTime` generated_at <= validityWindow
+      Just (pin, generated_at) -> if now `diffUTCTime` generated_at <= validityWindow
         then return pin
         else do
           newPin <- show <$> randomR (1000, 9999)
-          logInfo "Generating new pin" $
-            object [ "new pin" .= newPin
-                   , "reason" .= ("previous one was too old" :: String)
-                   ]
+          logInfo "Generating new pin" $ object
+            ["new pin" .= newPin, "reason" .= ("previous one was too old" :: String)]
           runQuery_ $ sqlUpdate "signatory_sms_pins" $ do
-            sqlSet "pin" newPin
+            sqlSet "pin"          newPin
             sqlSet "generated_at" now
             sqlWhereEq "signatory_link_id" slid
-            sqlWhereEq "phone_number" phone
-            sqlWhereEq "pin_type" pintype
+            sqlWhereEq "phone_number"      phone
+            sqlWhereEq "pin_type"          pintype
           return $ T.pack newPin
       Nothing -> do
-            newPin <- show <$> randomR (1000, 9999)
-            logInfo "Generating new pin" $
-              object [ "new pin" .= newPin
-                     , "reason" .= ("no previous pin" :: String)
-                     ]
-            runQuery_ $ sqlInsert "signatory_sms_pins" $ do
-              sqlSet "pin" newPin
-              sqlSet "generated_at" now
-              sqlSet "signatory_link_id" slid
-              sqlSet "phone_number" phone
-              sqlSet "pin_type" pintype
-            return $ T.pack newPin
+        newPin <- show <$> randomR (1000, 9999)
+        logInfo "Generating new pin"
+          $ object ["new pin" .= newPin, "reason" .= ("no previous pin" :: String)]
+        runQuery_ $ sqlInsert "signatory_sms_pins" $ do
+          sqlSet "pin"               newPin
+          sqlSet "generated_at"      now
+          sqlSet "signatory_link_id" slid
+          sqlSet "phone_number"      phone
+          sqlSet "pin_type"          pintype
+        return $ T.pack newPin
     where
       validityWindow :: NominalDiffTime
       -- PIN is valid for 60 minutes from its generation.

@@ -20,7 +20,7 @@ instance PQFormat CallbackID where
   pqFormat = pqFormat @Int64
 
 instance Identifier CallbackID where
-  idDefaultLabel         = "callback_id"
+  idDefaultLabel = "callback_id"
   idValue (CallbackID k) = int64AsStringIdentifier k
 
 instance FromSQL CallbackID where
@@ -39,8 +39,8 @@ data DocumentAPICallback = DocumentAPICallback {
 } deriving (Eq, Ord, Show)
 
 instance Loggable DocumentAPICallback where
-  logValue DocumentAPICallback{..} = object [
-      identifier dacID
+  logValue DocumentAPICallback {..} = object
+    [ identifier dacID
     , identifier dacApiVersion
     , "url" .= dacURL
     , "attempt_count" .= dacAttempts

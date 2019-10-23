@@ -65,7 +65,7 @@ import qualified API.V2 as V2
 handleAccountGet :: Kontrakcja m => m (InternalKontraResponse)
 handleAccountGet = withUser . withTosCheck $ \user -> do
   ctx <- getContext
-  pb <- renderTextTemplate "showAccount" $ do
+  pb  <- renderTextTemplate "showAccount" $ do
     F.value "companyAdmin" $ useriscompanyadmin user
     F.value "apiLogEnabled" $ get ctxisapilogenabled ctx
     entryPointFields ctx
@@ -74,26 +74,30 @@ handleAccountGet = withUser . withTosCheck $ \user -> do
 sendChangeToExistingEmailInternalWarningMail :: Kontrakcja m => User -> Email -> m ()
 sendChangeToExistingEmailInternalWarningMail user newemail = do
   let securitymsg =
-        "User " <> getEmail user <> " (" <> (showt (userid user)) <> ")"
-        <> " has requested that their email be changed to " <> unEmail newemail
-        <> " but this email is already used by another account."
+        "User "
+          <> getEmail user
+          <> " ("
+          <> (showt (userid user))
+          <> ")"
+          <> " has requested that their email be changed to "
+          <> unEmail newemail
+          <> " but this email is already used by another account."
       content =
         securitymsg
-        <> "Maybe they're trying to attempt to merge accounts and need help, "
-        <> "or maybe they're a hacker trying to figure out who is and isn't a user."
-  logInfo "User has requested that their email be changed, but new proposed email is already used by another account" $ object [
-      logPair_ user
-    , "new_email" .= unEmail newemail
-    ]
-  scheduleEmailSendout $ emptyMail {
-      to = [MailAddress { fullname = "info@scrive.com", email = "info@scrive.com" }]
-    , title = "Request to Change Email to Existing Account"
+          <> "Maybe they're trying to attempt to merge accounts and need help, "
+          <> "or maybe they're a hacker trying to figure out who is and isn't a user."
+  logInfo
+      "User has requested that their email be changed, but new proposed email is already used by another account"
+    $ object [logPair_ user, "new_email" .= unEmail newemail]
+  scheduleEmailSendout $ emptyMail
+    { to      = [MailAddress { fullname = "info@scrive.com", email = "info@scrive.com" }]
+    , title   = "Request to Change Email to Existing Account"
     , content = content
     }
 
 handleGetChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m InternalKontraResponse
 handleGetChangeEmail uid hash = withUser $ \_ -> do
-  ctx <- getContext
+  ctx       <- getContext
   mnewemail <- getEmailChangeRequestNewEmail uid hash
   case mnewemail of
     Just newemail ->
@@ -103,59 +107,56 @@ handleGetChangeEmail uid hash = withUser $ \_ -> do
       return $ internalResponseWithFlash flashmessage LinkAccount
 
 handlePostChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m InternalKontraResponse
-handlePostChangeEmail uid hash =  withUser $ \user -> do
+handlePostChangeEmail uid hash = withUser $ \user -> do
   mnewemail <- getEmailChangeRequestNewEmail uid hash
-  ctx <- getContext
+  ctx       <- getContext
   let (ipnumber, time) = (get ctxipnumber ctx, get ctxtime ctx)
   mpassword <- getOptionalField asDirtyPassword "password"
   case mpassword of
     Nothing -> return $ internalResponse $ LinkAccount
     -- No need to check TOTP here, withUser gives us logged in user
     Just password | maybeVerifyPassword (userpassword user) password -> do
-      changed <- maybe (return False)
-                      (dbUpdate . SetUserEmail (userid user))
-                      mnewemail
+      changed <- maybe (return False) (dbUpdate . SetUserEmail (userid user)) mnewemail
       flashmessage <- if changed
         then do
-            void $ dbUpdate $ LogHistoryDetailsChanged (userid user) ipnumber time
-                                                     [("email", unEmail $ useremail $ userinfo user, unEmail $ fromJust mnewemail)]
-                                                     (Just $ userid user)
-            flashMessageYourEmailHasChanged
-        else
-            flashMessageProblemWithEmailChange
+          void $ dbUpdate $ LogHistoryDetailsChanged
+            (userid user)
+            ipnumber
+            time
+            [("email", unEmail $ useremail $ userinfo user, unEmail $ fromJust mnewemail)]
+            (Just $ userid user)
+          flashMessageYourEmailHasChanged
+        else flashMessageProblemWithEmailChange
       void $ dbUpdate $ DeleteEmailChangeRequest uid
       return $ internalResponseWithFlash flashmessage $ LinkAccount
     Just _password -> do
-      flashmessage <-  flashMessageProblemWithPassword
+      flashmessage <- flashMessageProblemWithPassword
       return $ internalResponseWithFlash flashmessage $ LinkAccount
 
 handleUsageStatsJSONForUserDays :: Kontrakcja m => m Response
 handleUsageStatsJSONForUserDays = V2.api $ do
   (user, _) <- V2.getAPIUserWithAnyPrivileges
   withCompany <- isFieldSet "withCompany"
-  stats <- getUsageStats PartitionByDay $
-    if (useriscompanyadmin user && withCompany)
-      then UsageStatsForUserGroup $ usergroupid user
-      else UsageStatsForUser $ userid user
+  stats <- getUsageStats PartitionByDay $ if (useriscompanyadmin user && withCompany)
+    then UsageStatsForUserGroup $ usergroupid user
+    else UsageStatsForUser $ userid user
   return $ V2.Ok stats
 
 handleUsageStatsJSONForUserMonths :: Kontrakcja m => m Response
 handleUsageStatsJSONForUserMonths = V2.api $ do
   (user, _) <- V2.getAPIUserWithAnyPrivileges
   withCompany <- isFieldSet "withCompany"
-  stats <- getUsageStats PartitionByMonth $
-    if (useriscompanyadmin user && withCompany)
-      then UsageStatsForUserGroup $ usergroupid user
-      else UsageStatsForUser $ userid user
+  stats <- getUsageStats PartitionByMonth $ if (useriscompanyadmin user && withCompany)
+    then UsageStatsForUserGroup $ usergroupid user
+    else UsageStatsForUser $ userid user
   return $ V2.Ok stats
 
 handleUsageStatsJSONForShareableLinks :: Kontrakcja m => StatsPartition -> m JSValue
 handleUsageStatsJSONForShareableLinks statsPartition = do
   user <- guardJustM $ get ctxmaybeuser <$> getContext
-  getShareableLinksStats statsPartition $
-    if useriscompanyadmin user
-      then UsageStatsForUserGroup $ usergroupid user
-      else UsageStatsForUser $ userid user
+  getShareableLinksStats statsPartition $ if useriscompanyadmin user
+    then UsageStatsForUserGroup $ usergroupid user
+    else UsageStatsForUser $ userid user
 
 
 getStatsInterval :: StatsPartition -> Interval
@@ -165,27 +166,28 @@ getStatsInterval statsPartition = case statsPartition of
 
 getUsageStats :: Kontrakcja m => StatsPartition -> UsageStatsFor -> m JSValue
 getUsageStats statsPartition forWhom =
-  let interval = getStatsInterval statsPartition in do
-    stats <- dbQuery $ GetUsageStats forWhom statsPartition interval
-    case forWhom of
-      UsageStatsForUser _uid ->
-        return $ userStatsToJSON (timeFormat statsPartition) stats
-      UsageStatsForUserGroup _ugid -> do
-        totalS <- renderTextTemplate_ "statsOrgTotal"
-        return $ companyStatsToJSON (timeFormat statsPartition) totalS stats
+  let interval = getStatsInterval statsPartition
+  in  do
+        stats <- dbQuery $ GetUsageStats forWhom statsPartition interval
+        case forWhom of
+          UsageStatsForUser _uid ->
+            return $ userStatsToJSON (timeFormat statsPartition) stats
+          UsageStatsForUserGroup _ugid -> do
+            totalS <- renderTextTemplate_ "statsOrgTotal"
+            return $ companyStatsToJSON (timeFormat statsPartition) totalS stats
 
-getShareableLinksStats :: Kontrakcja m
-                       => StatsPartition -> UsageStatsFor -> m JSValue
+getShareableLinksStats :: Kontrakcja m => StatsPartition -> UsageStatsFor -> m JSValue
 getShareableLinksStats statsPartition forWhom =
-  let interval = getStatsInterval statsPartition in do
-    stats <- dbQuery $ GetUsageStatsOnShareableLinks forWhom statsPartition interval
-    case forWhom of
-      UsageStatsForUser _uid -> do
-        allLinksS <- renderTextTemplate_ "statsShareableLinksTotal"
-        return $ shareableLinkStatsToJSON (timeFormat statsPartition) allLinksS stats
-      UsageStatsForUserGroup _ugid -> do
-        totalS <- renderTextTemplate_ "statsOrgTotal"
-        return $ shareableLinkStatsToJSON (timeFormat statsPartition) totalS stats
+  let interval = getStatsInterval statsPartition
+  in  do
+        stats <- dbQuery $ GetUsageStatsOnShareableLinks forWhom statsPartition interval
+        case forWhom of
+          UsageStatsForUser _uid -> do
+            allLinksS <- renderTextTemplate_ "statsShareableLinksTotal"
+            return $ shareableLinkStatsToJSON (timeFormat statsPartition) allLinksS stats
+          UsageStatsForUserGroup _ugid -> do
+            totalS <- renderTextTemplate_ "statsOrgTotal"
+            return $ shareableLinkStatsToJSON (timeFormat statsPartition) totalS stats
 
 timeFormat :: StatsPartition -> UTCTime -> Text
 timeFormat statsPartition = case statsPartition of
@@ -205,72 +207,79 @@ sendNewUserMail user = do
   ctx <- getContext
   al <- newUserAccountRequestLink (lang $ usersettings user) (userid user) AccountRequest
   mail <- newUserMail ctx (getEmail user) al
-  scheduleEmailSendout $ mail { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]}
+  scheduleEmailSendout $ mail
+    { to = [MailAddress { fullname = getSmartName user, email = getEmail user }]
+    }
   return ()
 
-createNewUserByAdmin :: Kontrakcja m => Text -> (Text, Text) -> (UserGroupID, Bool) -> Lang -> m (Maybe User)
+createNewUserByAdmin
+  :: Kontrakcja m => Text -> (Text, Text) -> (UserGroupID, Bool) -> Lang -> m (Maybe User)
 createNewUserByAdmin email names usergroupandrole lg = do
-    ctx <- getContext
-    muser <- createUser (Email email) names usergroupandrole lg ByAdmin
-    case muser of
-         Just user -> do
-             let fullname = composeFullName names
-             chpwdlink <- newUserAccountRequestLink (lang $ usersettings user) (userid user) ByAdmin
-             mail <- mailNewAccountCreatedByAdmin ctx (getLang user) email chpwdlink
-             scheduleEmailSendout $ mail { to = [MailAddress { fullname = fullname, email = email }]}
-             return muser
-         Nothing -> return muser
+  ctx   <- getContext
+  muser <- createUser (Email email) names usergroupandrole lg ByAdmin
+  case muser of
+    Just user -> do
+      let fullname = composeFullName names
+      chpwdlink <- newUserAccountRequestLink (lang $ usersettings user)
+                                             (userid user)
+                                             ByAdmin
+      mail <- mailNewAccountCreatedByAdmin ctx (getLang user) email chpwdlink
+      scheduleEmailSendout
+        $ mail { to = [MailAddress { fullname = fullname, email = email }] }
+      return muser
+    Nothing -> return muser
 
 handleAcceptTOSGet :: Kontrakcja m => m InternalKontraResponse
-handleAcceptTOSGet = withUser $ \_ -> internalResponse <$> T.unpack <$> (pageAcceptTOS =<< getContext)
+handleAcceptTOSGet =
+  withUser $ \_ -> internalResponse <$> T.unpack <$> (pageAcceptTOS =<< getContext)
 
 handleAcceptTOSPost :: Kontrakcja m => m ()
 handleAcceptTOSPost = do
   ctx <- getContext
-  let (maybeuser, time, ipnumber) = ( get ctxmaybeuser ctx, get ctxtime ctx
-                                    , get ctxipnumber ctx )
+  let (maybeuser, time, ipnumber) =
+        (get ctxmaybeuser ctx, get ctxtime ctx, get ctxipnumber ctx)
   userid <- guardJustM $ return $ userid <$> maybeuser
-  tos <- getDefaultedField False asValidCheckBox "tos"
+  tos    <- getDefaultedField False asValidCheckBox "tos"
   case tos of
     Just True -> do
       void $ dbUpdate $ AcceptTermsOfService userid time
-      void $ dbUpdate $ LogHistoryTOSAccept  userid ipnumber time (Just userid)
+      void $ dbUpdate $ LogHistoryTOSAccept userid ipnumber time (Just userid)
       return ()
     _ -> internalError
 
 
-handleAccountSetupGet :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m InternalKontraResponse
+handleAccountSetupGet
+  :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m InternalKontraResponse
 handleAccountSetupGet uid token sm = do
   ctx   <- getContext
   muser <- getUserAccountRequestUser uid token
   case (muser, userhasacceptedtermsofservice =<< muser) of
     (Just user, Nothing) -> do
-      ug <-  dbQuery . UserGroupGetByUserID . userid $ user
-      ad <- getAnalyticsData
+      ug      <- dbQuery . UserGroupGetByUserID . userid $ user
+      ad      <- getAnalyticsData
       content <- renderTextTemplate "accountSetupPage" $ do
         standardPageFields ctx (Just (get ugID ug, get ugUI ug)) ad
         F.value "fstname" $ getFirstName user
         F.value "sndname" $ getLastName user
-        F.value "email"   $ getEmail user
-        F.value "userid"  $ show uid
+        F.value "email" $ getEmail user
+        F.value "userid" $ show uid
         F.value "company" . get ugName $ ug
         F.value "companyAdmin" $ useriscompanyadmin user
         F.value "companyPosition" $ usercompanyposition $ userinfo user
         F.value "mobile" $ getMobile user
         F.value "signupmethod" $ show sm
       internalResponse <$> (simpleHtmlResponse content)
-    (Just _user, Just _)  -> return $ internalResponse $ LinkDesignView
-    _ -> do
+    (Just _user, Just _) -> return $ internalResponse $ LinkDesignView
+    _                    -> do
       flashmessage <- case sm of
         CompanyInvitation -> flashMessageUserAccountRequestExpiredCompany
         _                 -> flashMessageUserAccountRequestExpired
-      return . internalResponseWithFlash flashmessage . LinkLogin $
-        get ctxlang ctx
+      return . internalResponseWithFlash flashmessage . LinkLogin $ get ctxlang ctx
 
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m JSValue
 handleAccountSetupPost uid token sm = do
   user <- guardJustM $ getUserAccountRequestUser uid token
-  ug <-  dbQuery . UserGroupGetByUserID . userid $ user
+  ug   <- dbQuery . UserGroupGetByUserID . userid $ user
   if isJust $ userhasacceptedtermsofservice user
     then do
       J.runJSONGenT $ do
@@ -279,10 +288,12 @@ handleAccountSetupPost uid token sm = do
     else do
       mfstname <- getOptionalField asValidName "fstname"
       msndname <- getOptionalField asValidName "sndname"
-      void $ handleActivate mfstname msndname (user,ug) sm
+      void $ handleActivate mfstname msndname (user, ug) sm
       void $ dbUpdate $ DeleteUserAccountRequest uid
       ctx <- getContext
-      void $ dbUpdate $ SetUserSettings (userid user) $ (usersettings user) { lang = get ctxlang ctx }
+      void $ dbUpdate $ SetUserSettings (userid user) $ (usersettings user)
+        { lang = get ctxlang ctx
+        }
       link <- getHomeOrDesignViewLink
       J.runJSONGenT $ do
         J.value "ok" True
@@ -294,34 +305,37 @@ handleAccountSetupPost uid token sm = do
     email.  This'll show them the usual landing page, but with option to changing their password.
 -}
 
-handlePasswordReminderGet :: Kontrakcja m => UserID -> MagicHash -> m InternalKontraResponse
+handlePasswordReminderGet
+  :: Kontrakcja m => UserID -> MagicHash -> m InternalKontraResponse
 handlePasswordReminderGet uid token = do
   muser <- getPasswordReminderUser uid token
   case muser of
     Just user -> do
       switchLang (getLang user)
-      ctx <- getContext
-      ad <- getAnalyticsData
+      ctx     <- getContext
+      ad      <- getAnalyticsData
       content <- renderTextTemplate "changePasswordPageWithBranding" $ do
         F.value "linkchangepassword" $ show $ LinkPasswordReminder uid token
         standardPageFields ctx Nothing ad
       internalResponse <$> (simpleHtmlResponse content)
     Nothing -> do
-      ctx <- getContext
+      ctx          <- getContext
       flashmessage <- flashMessagePasswordChangeLinkNotValid
       return $ internalResponseWithFlash flashmessage $ LinkLoginDirect (get ctxlang ctx)
 
 
 handlePasswordReminderPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
 handlePasswordReminderPost uid token = do
-  muser <- getPasswordReminderUser uid token
+  muser  <- getPasswordReminderUser uid token
   ipIsOK <- case muser of
-             Just u -> do
-               ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ userid u
-               let masklist = get ugsIPAddressMaskList $ ugwpSettings ugwp
-               ctx <- getContext
-               return $ null masklist || (any (ipAddressIsInNetwork $ get ctxipnumber ctx) masklist)
-             Nothing -> return True
+    Just u -> do
+      ugwp <- dbQuery $ UserGroupGetWithParentsByUserID $ userid u
+      let masklist = get ugsIPAddressMaskList $ ugwpSettings ugwp
+      ctx <- getContext
+      return
+        $  null masklist
+        || (any (ipAddressIsInNetwork $ get ctxipnumber ctx) masklist)
+    Nothing -> return True
   case muser of
     Just user | not (useraccountsuspended user) && ipIsOK -> do
       switchLang (getLang user)
@@ -329,15 +343,17 @@ handlePasswordReminderPost uid token = do
       let time      = get ctxtime ctx
           ipnumber  = get ctxipnumber ctx
           maybeuser = get ctxmaybeuser ctx
-      password <- guardJustM $ getField "password"
+      password     <- guardJustM $ getField "password"
       goodPassword <- checkPassword (get ctxpasswordserviceconf ctx) password
       if (goodPassword)
         then do
           void $ dbUpdate $ DeletePasswordReminder uid
           passwordhash <- createPassword password
           void $ dbUpdate $ SetUserPassword (userid user) passwordhash
-          void $ dbUpdate $ LogHistoryPasswordSetup (userid user) ipnumber time
-            (userid <$> maybeuser)
+          void $ dbUpdate $ LogHistoryPasswordSetup (userid user)
+                                                    ipnumber
+                                                    time
+                                                    (userid <$> maybeuser)
           terminateAllUserSessionsExceptCurrent (userid user)
           logUserToContext $ Just user
           J.runJSONGenT $ do
@@ -354,33 +370,47 @@ handlePasswordReminderPost uid token = do
 -- please treat this function like a public query form, it's not secure
 handleContactSales :: Kontrakcja m => m ()
 handleContactSales = do
-  ctx <- getContext
+  ctx     <- getContext
   fname   <- getField' "fstname"
   lname   <- getField' "sndname"
   email   <- getField' "email"
   message <- getField' "message"
   plan    <- getField' "plan"
 
-  let uid = maybe "user not logged in" ((<>) "user with id " . showt . userid)
-            (get ctxmaybeuser ctx)
+  let uid = maybe "user not logged in"
+                  ((<>) "user with id " . showt . userid)
+                  (get ctxmaybeuser ctx)
       domainInfo = " (from domain " <> (get (bdUrl . ctxbrandeddomain) ctx) <> " )"
-      content = "<p>Hi there!</p>" <>
-                "<p>Someone requested information from the payments form" <>
-                domainInfo <>
-                ".</p>" <>
-                "<p>Name: " <> fname <> " " <> lname <> "</p>" <>
-                "<p>Email: " <> email <> "</p>" <>
-                "<p>Message: \n" <> message <> "</p>" <>
-                "<p>Looking at plan: " <> plan <> "</p>" <>
-                "<p>" <> uid <> "</p>" <>
-                "<p>Have a good one!</p>"
+      content =
+        "<p>Hi there!</p>"
+          <> "<p>Someone requested information from the payments form"
+          <> domainInfo
+          <> ".</p>"
+          <> "<p>Name: "
+          <> fname
+          <> " "
+          <> lname
+          <> "</p>"
+          <> "<p>Email: "
+          <> email
+          <> "</p>"
+          <> "<p>Message: \n"
+          <> message
+          <> "</p>"
+          <> "<p>Looking at plan: "
+          <> plan
+          <> "</p>"
+          <> "<p>"
+          <> uid
+          <> "</p>"
+          <> "<p>Have a good one!</p>"
       contactEmail = "info@scrive.com"
-      salesEmail = "leads@scrive.com"
-      sendEmailTo emailAddress = scheduleEmailSendout $ emptyMail {
-                                   to = [MailAddress { fullname = emailAddress, email = emailAddress }]
-                                 , title = "Contact request (" <> plan <> ")"
-                                 , content = content
-                                 }
+      salesEmail   = "leads@scrive.com"
+      sendEmailTo emailAddress = scheduleEmailSendout $ emptyMail
+        { to      = [MailAddress { fullname = emailAddress, email = emailAddress }]
+        , title   = "Contact request (" <> plan <> ")"
+        , content = content
+        }
   sendEmailTo contactEmail
   sendEmailTo salesEmail
   return ()

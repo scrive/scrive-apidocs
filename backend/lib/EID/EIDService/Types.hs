@@ -35,7 +35,7 @@ instance PQFormat EIDServiceTransactionID where
 
 instance FromSQL EIDServiceTransactionID where
   type PQBase EIDServiceTransactionID = PQBase T.Text
-  fromSQL mbase =  EIDServiceTransactionID <$> fromSQL mbase
+  fromSQL mbase = EIDServiceTransactionID <$> fromSQL mbase
 
 instance ToSQL EIDServiceTransactionID where
   type PQDest EIDServiceTransactionID = PQDest T.Text
@@ -62,15 +62,12 @@ instance FromSQL EIDServiceTransactionProvider where
     case n :: Int16 of
       1 -> return EIDServiceTransactionProviderVerimi
       2 -> return EIDServiceTransactionProviderIDIN
-      _ -> throwM RangeError {
-        reRange = [(1, 2)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(1, 2)], reValue = n }
 
 instance ToSQL EIDServiceTransactionProvider where
   type PQDest EIDServiceTransactionProvider = PQDest Int16
-  toSQL EIDServiceTransactionProviderVerimi = toSQL (1::Int16)
-  toSQL EIDServiceTransactionProviderIDIN   = toSQL (2::Int16)
+  toSQL EIDServiceTransactionProviderVerimi = toSQL (1 :: Int16)
+  toSQL EIDServiceTransactionProviderIDIN   = toSQL (2 :: Int16)
 
 -- In statuses we separate complete into two statuses, since
 -- we can't force email/phone number validation on eid service side
@@ -98,18 +95,15 @@ instance FromSQL EIDServiceTransactionStatus where
       3 -> return EIDServiceTransactionStatusFailed
       4 -> return EIDServiceTransactionStatusCompleteAndSuccess
       5 -> return EIDServiceTransactionStatusCompleteAndFailed
-      _ -> throwM RangeError {
-        reRange = [(1, 5)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(1, 5)], reValue = n }
 
 instance ToSQL EIDServiceTransactionStatus where
   type PQDest EIDServiceTransactionStatus = PQDest Int16
-  toSQL EIDServiceTransactionStatusNew = toSQL (1::Int16)
-  toSQL EIDServiceTransactionStatusStarted = toSQL (2::Int16)
-  toSQL EIDServiceTransactionStatusFailed = toSQL (3::Int16)
-  toSQL EIDServiceTransactionStatusCompleteAndSuccess = toSQL (4::Int16)
-  toSQL EIDServiceTransactionStatusCompleteAndFailed = toSQL (5::Int16)
+  toSQL EIDServiceTransactionStatusNew                = toSQL (1 :: Int16)
+  toSQL EIDServiceTransactionStatusStarted            = toSQL (2 :: Int16)
+  toSQL EIDServiceTransactionStatusFailed             = toSQL (3 :: Int16)
+  toSQL EIDServiceTransactionStatusCompleteAndSuccess = toSQL (4 :: Int16)
+  toSQL EIDServiceTransactionStatusCompleteAndFailed  = toSQL (5 :: Int16)
 
 data EIDServiceTransaction = EIDServiceTransaction
   { estID :: !EIDServiceTransactionID

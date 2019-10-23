@@ -26,10 +26,8 @@ messengerJobSelectors :: [SQL]
 messengerJobSelectors = ["id", "attempts"]
 
 messengerJobFetcher :: (JobType, Int32) -> MessengerJob
-messengerJobFetcher (jtype, attempts) = MessengerJob {
-  mjType = jtype
-, mjAttempts = attempts
-}
+messengerJobFetcher (jtype, attempts) =
+  MessengerJob { mjType = jtype, mjAttempts = attempts }
 
 ----------------------------------------
 
@@ -37,25 +35,17 @@ smsNotificationChannel :: Channel
 smsNotificationChannel = "sms"
 
 smsSelectors :: [SQL]
-smsSelectors = [
-    "id"
-  , "provider"
-  , "originator"
-  , "msisdn"
-  , "body"
-  , "attempts"
-  ]
+smsSelectors = ["id", "provider", "originator", "msisdn", "body", "attempts"]
 
-smsFetcher
-  :: (ShortMessageID, SMSProvider, Text, Text, Text, Int32) -> ShortMessage
-smsFetcher (smsid, provider, originator, msisdn, body, attempts) = ShortMessage {
-  smID         = smsid
-, smProvider   = provider
-, smOriginator = originator
-, smMSISDN     = msisdn
-, smBody       = body
-, smAttempts   = attempts
-}
+smsFetcher :: (ShortMessageID, SMSProvider, Text, Text, Text, Int32) -> ShortMessage
+smsFetcher (smsid, provider, originator, msisdn, body, attempts) = ShortMessage
+  { smID         = smsid
+  , smProvider   = provider
+  , smOriginator = originator
+  , smMSISDN     = msisdn
+  , smBody       = body
+  , smAttempts   = attempts
+  }
 
 ----------------------------------------
 
@@ -63,11 +53,11 @@ data CreateSMS = CreateSMS SMSProvider Text Text Text
 instance (MonadDB m, MonadThrow m) => DBUpdate m CreateSMS ShortMessageID where
   update (CreateSMS provider originator msisdn body) = do
     runQuery_ . sqlInsert "smses" $ do
-      sqlSet "provider" provider
+      sqlSet "provider"   provider
       sqlSet "originator" originator
-      sqlSet "msisdn" msisdn
-      sqlSet "body" body
-      sqlSet "run_at" unixEpoch
+      sqlSet "msisdn"     msisdn
+      sqlSet "body"       body
+      sqlSet "run_at"     unixEpoch
       sqlResult "id"
     mid <- fetchOne runIdentity
     notify smsNotificationChannel ""
@@ -99,7 +89,7 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithSMSEvent Bool where
   update (UpdateWithSMSEvent mid ev) = do
     runQuery01 . sqlInsert "sms_events" $ do
       sqlSet "sms_id" mid
-      sqlSet "event" ev
+      sqlSet "event"  ev
 
 data UpdateWithSMSEventForTeliaID = UpdateWithSMSEventForTeliaID Text SMSEvent
 instance
@@ -112,7 +102,7 @@ instance
     (mid :: ShortMessageID) <- fetchOne runIdentity
     runQuery01 . sqlInsert "sms_events" $ do
       sqlSet "sms_id" mid
-      sqlSet "event" ev
+      sqlSet "event"  ev
 
 data UpdateWithSMSEventForMbloxID = UpdateWithSMSEventForMbloxID Text SMSEvent
 instance
@@ -125,7 +115,7 @@ instance
     (mid :: ShortMessageID) <- fetchOne runIdentity
     runQuery01 . sqlInsert "sms_events" $ do
       sqlSet "sms_id" mid
-      sqlSet "event" ev
+      sqlSet "event"  ev
 
 data GetUnreadSMSEvents = GetUnreadSMSEvents
 instance

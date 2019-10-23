@@ -22,25 +22,25 @@ import PdfToolsLambda.Conf (PdfToolsLambdaMonad)
 
 -- | This is for grouping things together so we won't need to
 -- write all that each time we write function type signature
-type Kontrakcja m = (
-    CryptoRNG m
-  , FilterMonad Response m
-  , GuardTimeConfMonad m
-  , PdfToolsLambdaMonad m
-  , HasRqData m
-  , KontraMonad m
-  , MailContextMonad m
-  , MonadLog m
-  , MonadDB m
-  , MonadMask m
-  , MonadBase IO m
-  , MonadBaseControl IO m
-  , MonadIO m
-  , MonadTime m
-  , ServerMonad m
-  , TemplatesMonad m
-  , MonadFileStorage m
-  )
+type Kontrakcja m
+  = ( CryptoRNG m
+    , FilterMonad Response m
+    , GuardTimeConfMonad m
+    , PdfToolsLambdaMonad m
+    , HasRqData m
+    , KontraMonad m
+    , MailContextMonad m
+    , MonadLog m
+    , MonadDB m
+    , MonadMask m
+    , MonadBase IO m
+    , MonadBaseControl IO m
+    , MonadIO m
+    , MonadTime m
+    , ServerMonad m
+    , TemplatesMonad m
+    , MonadFileStorage m
+    )
 
 class Monad m => KontraMonad m where
   getContext    :: m Context
@@ -52,8 +52,8 @@ instance (
   , Monad (t m)
   , MonadTrans t
   ) => KontraMonad (t m) where
-    getContext = lift getContext
-    modifyContext = lift . modifyContext
+  getContext    = lift getContext
+  modifyContext = lift . modifyContext
 
 withAnonymousContext :: KontraMonad m => m a -> m a
 withAnonymousContext action = do

@@ -32,17 +32,20 @@ data SMS = SMS {
 -- need to use UCS2 or GSM7 and the details of conversion, but unfortunately we
 -- also need to distinguish between these formats for billing reasons.
 scheduleSMS :: (MonadLog m, MonadDB m, MonadThrow m) => Document -> SMS -> m ()
-scheduleSMS doc SMS{..} = do
+scheduleSMS doc SMS {..} = do
   when (T.null smsMSISDN) $ do
     unexpectedError "no mobile phone number defined"
-  sid <- dbUpdate $ CreateSMS smsProvider (T.pack $ fixOriginator $ T.unpack smsOriginator) smsMSISDN smsBody
+  sid <- dbUpdate $ CreateSMS smsProvider
+                              (T.pack $ fixOriginator $ T.unpack smsOriginator)
+                              smsMSISDN
+                              smsBody
   -- charge company of the author of the document for the smses
   dbUpdate $ ChargeUserGroupForSMS (documentid doc) smsProvider smsCount
   case kontraInfoForSMS of
-    Nothing -> return ()
+    Nothing   -> return ()
     Just kifs -> void $ dbUpdate $ AddKontraInfoForSMS sid kifs
-  logInfo "SMS scheduled for sendout" $ object [
-      identifier $ documentid doc
+  logInfo "SMS scheduled for sendout" $ object
+    [ identifier $ documentid doc
     , identifier sid
     , "sms_msisdn" .= smsMSISDN
     , "sms_info" .= (logObject_ <$> kontraInfoForSMS)
@@ -67,33 +70,29 @@ scheduleSMS doc SMS{..} = do
     -- - https://en.wikipedia.org/wiki/Concatenated_SMS
     -- - https://en.wikipedia.org/wiki/Universal_Coded_Character_Set
     smsBodyLength = fromIntegral . T.length $ smsBody
-    smsCount =
-      if smsProvider == SMSTeliaCallGuide || isGSM7PermissibleString smsBody
+    smsCount      = if smsProvider == SMSTeliaCallGuide || isGSM7PermissibleString smsBody
       then countSMSes 160 153
       else countSMSes 70 67
     countSMSes maxForOne maxForMultiple
-      | smsBodyLength > maxForOne =
-          case smsBodyLength `divMod` maxForMultiple of
-            (count, 0) -> count
-            (count, _) -> count + 1
+      | smsBodyLength > maxForOne = case smsBodyLength `divMod` maxForMultiple of
+        (count, 0) -> count
+        (count, _) -> count + 1
       | otherwise = 1
 
 isGSM7PermissibleString :: Text -> Bool
-isGSM7PermissibleString s =
-  T.all (`member` gsm7PermissibleChars) s
+isGSM7PermissibleString s = T.all (`member` gsm7PermissibleChars) s
   where
     gsm7PermissibleChars :: Set Char
-    gsm7PermissibleChars =
-      fromList ("@Δ0¡P¿p£_!1AQaq$Φ\"2BRbr¥Γ#3CScsèΛ¤4DTdtéΩ%5EUeuùΠ" <>
-                "&6FVfvìΨ'7GWgwòΣ(8HXhxÇΘ)9IYiyΞ*:JZjzØ+;KÄkäøÆ,<LÖ" <>
-                "löæ-=MÑmñÅß.>NÜnüåÉ/?O§oà \r\n\x1B")
+    gsm7PermissibleChars = fromList
+      (  "@Δ0¡P¿p£_!1AQaq$Φ\"2BRbr¥Γ#3CScsèΛ¤4DTdtéΩ%5EUeuùΠ"
+      <> "&6FVfvìΨ'7GWgwòΣ(8HXhxÇΘ)9IYiyΞ*:JZjzØ+;KÄkäøÆ,<LÖ"
+      <> "löæ-=MÑmñÅß.>NÜnüåÉ/?O§oà \r\n\x1B"
+      )
 
 fixOriginator :: String -> String
 fixOriginator s = notEmpty $ map fixChars $ take 11 s
   where
-   fixChars c = if (isAlphaNum c ||isSpace c)
-                 then c
-                 else ' '
-   notEmpty s' = case (strip s') of
-                   "" -> "Scrive"
-                   v  -> v
+    fixChars c = if (isAlphaNum c || isSpace c) then c else ' '
+    notEmpty s' = case (strip s') of
+      "" -> "Scrive"
+      v  -> v

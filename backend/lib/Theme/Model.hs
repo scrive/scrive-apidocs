@@ -108,19 +108,19 @@ instance (MonadDB m,MonadThrow m) => DBUpdate m UpdateThemeForDomain Bool where
 
 setThemeData :: (SqlSet a) => Theme -> State a ()
 setThemeData t = do
-      sqlSet "name" $ themeName t
-      sqlSet "logo" $ themeLogo t
-      sqlSet "brand_color" $ themeBrandColor t
-      sqlSet "brand_text_color" $ themeBrandTextColor t
-      sqlSet "action_color" $ themeActionColor t
-      sqlSet "action_text_color" $ themeActionTextColor t
-      sqlSet "action_secondary_color" $ themeActionSecondaryColor t
-      sqlSet "action_secondary_text_color" $ themeActionSecondaryTextColor t
-      sqlSet "positive_color" $ themePositiveColor t
-      sqlSet "positive_text_color" $ themePositiveTextColor t
-      sqlSet "negative_color" $ themeNegativeColor t
-      sqlSet "negative_text_color" $ themeNegativeTextColor t
-      sqlSet "font" $ themeFont t
+  sqlSet "name" $ themeName t
+  sqlSet "logo" $ themeLogo t
+  sqlSet "brand_color" $ themeBrandColor t
+  sqlSet "brand_text_color" $ themeBrandTextColor t
+  sqlSet "action_color" $ themeActionColor t
+  sqlSet "action_text_color" $ themeActionTextColor t
+  sqlSet "action_secondary_color" $ themeActionSecondaryColor t
+  sqlSet "action_secondary_text_color" $ themeActionSecondaryTextColor t
+  sqlSet "positive_color" $ themePositiveColor t
+  sqlSet "positive_text_color" $ themePositiveTextColor t
+  sqlSet "negative_color" $ themeNegativeColor t
+  sqlSet "negative_text_color" $ themeNegativeTextColor t
+  sqlSet "font" $ themeFont t
 
 data InsertNewThemeForUserGroup = InsertNewThemeForUserGroup UserGroupID Theme
 instance (MonadDB m,MonadThrow m, MonadLog m) => DBUpdate m InsertNewThemeForUserGroup Theme where
@@ -140,14 +140,14 @@ data MakeThemeOwnedByUserGroup = MakeThemeOwnedByUserGroup UserGroupID ThemeID
 instance (MonadDB m,MonadThrow m, MonadLog m) => DBUpdate m MakeThemeOwnedByUserGroup () where
   update (MakeThemeOwnedByUserGroup ugid tid) = do
     runQuery_ . sqlInsert "theme_owners" $ do
-      sqlSet "theme_id"   $ tid
+      sqlSet "theme_id" $ tid
       sqlSet "user_group_id" $ ugid
 
 data MakeThemeOwnedByDomain = MakeThemeOwnedByDomain BrandedDomainID ThemeID
 instance (MonadDB m,MonadThrow m) => DBUpdate m MakeThemeOwnedByDomain () where
   update (MakeThemeOwnedByDomain did tid) = do
     runQuery_ . sqlInsert "theme_owners" $ do
-      sqlSet "theme_id"  $ tid
+      sqlSet "theme_id" $ tid
       sqlSet "domain_id" $ did
 
 data DeleteThemeOwnedByDomain = DeleteThemeOwnedByDomain BrandedDomainID ThemeID
@@ -201,37 +201,57 @@ selectThemesSelectors = do
   sqlResult "themes.font"
 
 selectThemesMD5 :: (SqlResult command) => State command ()
-selectThemesMD5 = sqlResult $ "md5(concat(" <> (sqlConcatComma [
-     "themes.name"
-   , "themes.logo"
-   , "themes.brand_color"
-   , "themes.brand_text_color"
-   , "themes.action_color"
-   , "themes.action_text_color"
-   , "themes.action_secondary_color"
-   , "themes.action_secondary_text_color"
-   , "themes.positive_color"
-   , "themes.positive_text_color"
-   , "themes.negative_color"
-   , "themes.negative_text_color"
-   , "themes.font"
-   ]) <> "))"
+selectThemesMD5 =
+  sqlResult
+    $  "md5(concat("
+    <> (sqlConcatComma
+         [ "themes.name"
+         , "themes.logo"
+         , "themes.brand_color"
+         , "themes.brand_text_color"
+         , "themes.action_color"
+         , "themes.action_text_color"
+         , "themes.action_secondary_color"
+         , "themes.action_secondary_text_color"
+         , "themes.positive_color"
+         , "themes.positive_text_color"
+         , "themes.negative_color"
+         , "themes.negative_text_color"
+         , "themes.font"
+         ]
+       )
+    <> "))"
 
-fetchTheme :: (ThemeID, Text, BS.ByteString, Text, Text, Text, Text, Text, Text, Text, Text, Text, Text, Text) -> Theme
-fetchTheme (tid, name, logo, brand_color, brand_text_color, action_color, action_text_color, action_secondary_color, action_secondary_text_color, positive_color, positive_text_color, negative_color, negative_text_color, font) =
-  Theme {
-      themeID                       = tid
-    , themeName                     = name
-    , themeLogo                     = logo
-    , themeBrandColor               = brand_color
-    , themeBrandTextColor           = brand_text_color
-    , themeActionColor              = action_color
-    , themeActionTextColor           = action_text_color
-    , themeActionSecondaryColor     = action_secondary_color
-    , themeActionSecondaryTextColor = action_secondary_text_color
-    , themePositiveColor            = positive_color
-    , themePositiveTextColor        = positive_text_color
-    , themeNegativeColor            = negative_color
-    , themeNegativeTextColor        = negative_text_color
-    , themeFont                     = font
-}
+fetchTheme
+  :: ( ThemeID
+     , Text
+     , BS.ByteString
+     , Text
+     , Text
+     , Text
+     , Text
+     , Text
+     , Text
+     , Text
+     , Text
+     , Text
+     , Text
+     , Text
+     )
+  -> Theme
+fetchTheme (tid, name, logo, brand_color, brand_text_color, action_color, action_text_color, action_secondary_color, action_secondary_text_color, positive_color, positive_text_color, negative_color, negative_text_color, font)
+  = Theme { themeID                   = tid
+          , themeName                 = name
+          , themeLogo                 = logo
+          , themeBrandColor           = brand_color
+          , themeBrandTextColor       = brand_text_color
+          , themeActionColor          = action_color
+          , themeActionTextColor      = action_text_color
+          , themeActionSecondaryColor = action_secondary_color
+          , themeActionSecondaryTextColor = action_secondary_text_color
+          , themePositiveColor        = positive_color
+          , themePositiveTextColor    = positive_text_color
+          , themeNegativeColor        = negative_color
+          , themeNegativeTextColor    = negative_text_color
+          , themeFont                 = font
+          }

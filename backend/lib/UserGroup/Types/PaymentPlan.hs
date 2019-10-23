@@ -32,28 +32,25 @@ instance FromSQL PaymentPlan where
       2 -> return TeamPlan
       3 -> return EnterprisePlan
       4 -> return TrialPlan
-      _ -> throwM RangeError {
-        reRange = [(0, 4)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(0, 4)], reValue = n }
 
 instance ToSQL PaymentPlan where
   type PQDest PaymentPlan = PQDest Int16
-  toSQL FreePlan        = toSQL (0::Int16)
-  toSQL OnePlan         = toSQL (1::Int16)
-  toSQL TeamPlan        = toSQL (2::Int16)
-  toSQL EnterprisePlan  = toSQL (3::Int16)
-  toSQL TrialPlan       = toSQL (4::Int16)
+  toSQL FreePlan       = toSQL (0 :: Int16)
+  toSQL OnePlan        = toSQL (1 :: Int16)
+  toSQL TeamPlan       = toSQL (2 :: Int16)
+  toSQL EnterprisePlan = toSQL (3 :: Int16)
+  toSQL TrialPlan      = toSQL (4 :: Int16)
 
 instance Unjson PaymentPlan where
   unjsonDef = SimpleUnjsonDef "Payment plan" consume produce
     where
       consume :: A.Value -> Result PaymentPlan
-      consume (A.String "free")       = return FreePlan
-      consume (A.String "one")        = return OnePlan
-      consume (A.String "team")       = return TeamPlan
+      consume (A.String "free") = return FreePlan
+      consume (A.String "one") = return OnePlan
+      consume (A.String "team") = return TeamPlan
       consume (A.String "enterprise") = return EnterprisePlan
-      consume (A.String "trial")      = return TrialPlan
+      consume (A.String "trial") = return TrialPlan
       consume _ = fail "Invalid payment plan"
 
       produce :: PaymentPlan -> A.Value
@@ -64,7 +61,10 @@ instance Unjson PaymentPlan where
       produce TrialPlan      = "trial"
 
 instance Unjson (Maybe PaymentPlan) where
-  unjsonDef = SimpleUnjsonDef "Maybe payment plan"
-    (parse unjsonDef) (\mv -> case mv of
-                                Nothing -> A.Null
-                                Just v  -> unjsonToJSON unjsonDef v)
+  unjsonDef = SimpleUnjsonDef
+    "Maybe payment plan"
+    (parse unjsonDef)
+    (\mv -> case mv of
+      Nothing -> A.Null
+      Just v  -> unjsonToJSON unjsonDef v
+    )

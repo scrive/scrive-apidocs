@@ -20,12 +20,11 @@ imgEncodeRFC2397ToText = TE.decodeLatin1 . imgEncodeRFC2397
 
 -- | Identify content type of supplied image data.
 imgMimeType :: B.ByteString -> Maybe B.ByteString
-imgMimeType bs
-  | is_jpeg   = Just "image/jpeg"
-  | is_png    = Just "image/png"
-  | otherwise = Nothing
+imgMimeType bs | is_jpeg   = Just "image/jpeg"
+               | is_png    = Just "image/png"
+               | otherwise = Nothing
   where
     -- source: https://en.wikipedia.org/wiki/Magic_number_%28programming%29
-    is_jpeg = B.pack [0xFF, 0xD8] `B.isPrefixOf` bs
-           && B.pack [0xFF, 0xD9] `B.isSuffixOf` bs
-    is_png  = B.pack [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A] `B.isPrefixOf` bs
+    is_jpeg =
+      B.pack [0xFF, 0xD8] `B.isPrefixOf` bs && B.pack [0xFF, 0xD9] `B.isSuffixOf` bs
+    is_png = B.pack [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A] `B.isPrefixOf` bs

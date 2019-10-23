@@ -30,7 +30,10 @@ instance FromReqURI DocumentID where
   fromReqURI = maybeRead . T.pack
 
 instance Unjson DocumentID where
-  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse DocumentID") return) . maybeRead . T.pack) show unjsonDef
+  unjsonDef = unjsonInvmapR
+    ((maybe (fail "Can't parse DocumentID") return) . maybeRead . T.pack)
+    show
+    unjsonDef
 
 instance Binary DocumentID where
   put (DocumentID did) = put did

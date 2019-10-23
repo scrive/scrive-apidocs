@@ -34,20 +34,20 @@ import Happstack.Server.Instances ()
 ----------------------------------------
 
 -- | Sane variant of 'decodeBody' that doesn't require 'WebMonad'.
-withDecodedBody :: (FilterMonad Response m, ServerMonad m, MonadIO m)
-                => BodyPolicy
-                -> m Response
-                -> m Response
+withDecodedBody
+  :: (FilterMonad Response m, ServerMonad m, MonadIO m)
+  => BodyPolicy
+  -> m Response
+  -> m Response
 withDecodedBody bp action = do
-  rq <- askRq
+  rq      <- askRq
   (_, me) <- bodyInput bp rq
   case me of
     Just e  -> requestEntityTooLarge (toResponse e)
     Nothing -> action
 
 -- | Sane variant of 'withDataFn' that doesn't require 'MonadPlus'.
-withRqData :: (HasRqData m, MonadThrow m, ServerMonad m)
-           => RqData a -> (a -> m r) -> m r
+withRqData :: (HasRqData m, MonadThrow m, ServerMonad m) => RqData a -> (a -> m r) -> m r
 withRqData fn action = either (rqDataError . Errors) action =<< getDataFn fn
 
 ----------------------------------------
@@ -73,11 +73,12 @@ newtype ReqHandlerT m a = ReqHandlerT { unReqHandlerT :: InnerReqHandlerT m a }
 
 runReqHandlerT :: Socket -> Conf -> ReqHandlerT IO Response -> IO ()
 runReqHandlerT sock conf (ReqHandlerT action) = L.listen' sock conf $ \req -> do
-  now <- getCurrentTime
+  now       <- getCurrentTime
   (res, st) <- runStateT action $ ReqHandlerSt req id now
   runValidator (fromMaybe return $ validator conf) $ hsFilter st res
 
-mapReqHandlerT :: (m (a, ReqHandlerSt) -> n (b, ReqHandlerSt)) -> ReqHandlerT m a -> ReqHandlerT n b
+mapReqHandlerT
+  :: (m (a, ReqHandlerSt) -> n (b, ReqHandlerSt)) -> ReqHandlerT m a -> ReqHandlerT n b
 mapReqHandlerT f = ReqHandlerT . mapStateT f . unReqHandlerT
 
 instance MonadTransControl ReqHandlerT where
@@ -98,20 +99,20 @@ instance {-# OVERLAPPING #-} Monad m => MonadTime (ReqHandlerT m) where
   currentTime = ReqHandlerT $ gets hsTime
 
 instance {-# OVERLAPPING #-} Monad m => FilterMonad Response (ReqHandlerT m) where
-  setFilter f     = ReqHandlerT . modify $ \st -> st { hsFilter = f }
+  setFilter f = ReqHandlerT . modify $ \st -> st { hsFilter = f }
   composeFilter f = ReqHandlerT . modify $ \st -> st { hsFilter = f . hsFilter st }
-  getFilter m     = ReqHandlerT . StateT $ \st -> do
+  getFilter m = ReqHandlerT . StateT $ \st -> do
     (res, st') <- runStateT (unReqHandlerT m) st
     -- Make Response filters local to the passed computation.
     return ((res, hsFilter st'), st' { hsFilter = hsFilter st })
 
 instance {-# OVERLAPPING #-} (MonadIO m, MonadThrow m) => HasRqData (ReqHandlerT m) where
-  askRqEnv = smAskRqEnv
+  askRqEnv    = smAskRqEnv
   rqDataError = throwM . RqDataError
-  localRqEnv = smLocalRqEnv
+  localRqEnv  = smLocalRqEnv
 
 instance {-# OVERLAPPING #-} Monad m => ServerMonad (ReqHandlerT m) where
-  askRq       = ReqHandlerT $ gets hsRequest
+  askRq = ReqHandlerT $ gets hsRequest
   localRq f m = ReqHandlerT . StateT $ \st -> do
     let req = hsRequest st
     (res, st') <- runStateT (unReqHandlerT m) $ st { hsRequest = f req }
@@ -132,7 +133,7 @@ deriving instance {-# OVERLAPPING #-} FilterMonad r m =>
 runPlusSandboxT :: PlusSandboxT m a -> m (Maybe a)
 runPlusSandboxT = runMaybeT . unPlusSandboxT
 
-mapPlusSandboxT :: (m (Maybe a) -> n (Maybe b))-> PlusSandboxT m a -> PlusSandboxT n b
+mapPlusSandboxT :: (m (Maybe a) -> n (Maybe b)) -> PlusSandboxT m a -> PlusSandboxT n b
 mapPlusSandboxT f = PlusSandboxT . mapMaybeT f . unPlusSandboxT
 
 instance (Functor m, Monad m) => Alternative (PlusSandboxT m) where
@@ -161,7 +162,10 @@ deriving instance {-# OVERLAPPING #-} FilterMonad r m =>
 runWebSandboxT :: WebSandboxT m a -> m (Either Response a)
 runWebSandboxT = runExceptT . unWebSandboxT
 
-mapWebSandboxT :: (m (Either Response a) -> n (Either Response b)) -> WebSandboxT m a -> WebSandboxT n b
+mapWebSandboxT
+  :: (m (Either Response a) -> n (Either Response b))
+  -> WebSandboxT m a
+  -> WebSandboxT n b
 mapWebSandboxT f = WebSandboxT . mapExceptT f . unWebSandboxT
 
 instance {-# OVERLAPPING #-} Monad m => WebMonad Response (WebSandboxT m) where

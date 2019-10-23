@@ -85,4 +85,5 @@ anonymiseContext :: Context -> Context
 anonymiseContext ctx = ctx { _ctxmaybeuser    = Nothing
                            , _ctxmaybepaduser = Nothing
                            , _ctxmaybeapiuser = Nothing
-                           , _ctxsessionid    = SessionID.tempSessionID }
+                           , _ctxsessionid    = SessionID.tempSessionID
+                           }

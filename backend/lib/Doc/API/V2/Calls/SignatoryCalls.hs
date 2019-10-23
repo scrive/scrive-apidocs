@@ -61,17 +61,16 @@ docApiV2SigReject :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigReject did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
   guardAccessToDocumentWithSignatory did slid
-  dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid)
-    `withDocumentM` do
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid) `withDocumentM` do
 
     -- Guards
     guardThatObjectVersionMatchesIfProvided did
-    guardDocumentStatus      Pending                  =<< theDocument
+    guardDocumentStatus Pending =<< theDocument
     guardSigningPartyHasNeitherSignedNorApproved slid =<< theDocument
 
     -- Parameters
     rejectReason <- (fmap T.strip)
-                    <$> apiV2ParameterOptional (ApiV2ParameterText "reason")
+      <$> apiV2ParameterOptional (ApiV2ParameterText "reason")
 
     -- API call actions
     sl    <- guardGetSignatoryFromIdForDocument slid
@@ -79,25 +78,23 @@ docApiV2SigReject did slid = logDocumentAndSignatory did slid . api $ do
     actor <- signatoryActor ctx sl
 
     switchLang . getLang =<< theDocument
-    dbUpdate $ RejectDocument  slid (isApprover sl) rejectReason actor
+    dbUpdate $ RejectDocument slid (isApprover sl) rejectReason actor
     postDocumentRejectedChange slid rejectReason =<< theDocument
 
     -- Result
     doc <- theDocument
-    return $ Ok $
-      (\d -> (unjsonDocument (documentAccessForSlid slid doc),d)) doc
+    return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc), d)) doc
 
 
 docApiV2SigForwardSigning :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigForwardSigning did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
   guardAccessToDocumentWithSignatory did slid
-  dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid)
-    `withDocumentM` do
+  dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid) `withDocumentM` do
 
     -- Guards
     guardThatObjectVersionMatchesIfProvided did
-    guardDocumentStatus      Pending                  =<< theDocument
+    guardDocumentStatus Pending =<< theDocument
     guardSigningPartyHasNeitherSignedNorApproved slid =<< theDocument
     guardThatDocumentHasntBeenForwadedTooManyTimes =<< theDocument
 
@@ -105,44 +102,50 @@ docApiV2SigForwardSigning did slid = logDocumentAndSignatory did slid . api $ do
     messageParam :: Maybe Text <- apiV2ParameterOptional (ApiV2ParameterText "message")
     let forwardMessage = T.strip <$> messageParam
 
-    (SignatoryTextFieldIDsWithNewTexts textFieldIDsWithNewText) <- apiV2ParameterObligatory
-      (ApiV2ParameterJSON "fields" unjsonSignatoryTextFieldIDsWithNewTexts)
+    (SignatoryTextFieldIDsWithNewTexts textFieldIDsWithNewText) <-
+      apiV2ParameterObligatory
+        (ApiV2ParameterJSON "fields" unjsonSignatoryTextFieldIDsWithNewTexts)
 
     -- API call actions
     originalSignatory <- guardGetSignatoryFromIdForDocument slid
-    ctx   <- getContext
-    actor <- signatoryActor ctx originalSignatory
+    ctx               <- getContext
+    actor             <- signatoryActor ctx originalSignatory
 
     switchLang . getLang =<< theDocument
-    newslid <- dbUpdate $ ForwardSigning originalSignatory forwardMessage textFieldIDsWithNewText actor
+    newslid <- dbUpdate
+      $ ForwardSigning originalSignatory forwardMessage textFieldIDsWithNewText actor
 
     postDocumentForwardChange forwardMessage originalSignatory newslid =<< theDocument
 
     -- Result
     doc <- theDocument
-    return $ Ok $
-      (\d -> (unjsonDocument (documentAccessForSlid slid doc),d)) doc
+    return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc), d)) doc
 
-docApiV2SigSigningStatusCheck :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
+docApiV2SigSigningStatusCheck
+  :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSigningStatusCheck did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
   guardAccessToDocumentWithSignatory did slid
   dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid) `withDocumentM` do
-    sl <- guardGetSignatoryFromIdForDocument slid
+    sl              <- guardGetSignatoryFromIdForDocument slid
     isDocumentSigningInProgress <- dbQuery $ IsDocumentSigningInProgress slid
     lastCheckStatus <- dbQuery $ GetDocumentSigningLastCheckStatus slid
-    logInfo "Status Check" $ object [ "in_progress" .= isDocumentSigningInProgress
-                                    , "signed" .= isSignatoryAndHasSigned sl
-                                    , "status" .= lastCheckStatus
-                                    ]
-    return $ Ok $ JSObject (J.toJSObject $ [
-        ("in_progress", JSBool isDocumentSigningInProgress)
-      , ("signed", JSBool $ isSignatoryAndHasSigned sl)
-      , ("last_check_status", case lastCheckStatus of
-          Nothing -> JSNull
-          Just t -> JSString $ J.toJSString $ T.unpack t
-        )
-      ])
+    logInfo "Status Check" $ object
+      [ "in_progress" .= isDocumentSigningInProgress
+      , "signed" .= isSignatoryAndHasSigned sl
+      , "status" .= lastCheckStatus
+      ]
+    return $ Ok $ JSObject
+      ( J.toJSObject
+      $ [ ("in_progress", JSBool isDocumentSigningInProgress)
+        , ("signed"     , JSBool $ isSignatoryAndHasSigned sl)
+        , ( "last_check_status"
+          , case lastCheckStatus of
+            Nothing -> JSNull
+            Just t  -> JSString $ J.toJSString $ T.unpack t
+          )
+        ]
+      )
 
 docApiV2SigSigningCancel :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSigningCancel did slid = logDocumentAndSignatory did slid . api $ do
@@ -167,14 +170,22 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
     guardSignatoryHasNotSigned slid =<< theDocument
     guardDocumentStatus Pending =<< theDocument
     -- Parameters
-    acceptedAuthorAttachments <- apiV2ParameterObligatory $ ApiV2ParameterJSON "accepted_author_attachments" unjsonDef
-    notUploadedSignatoryAttachments <- apiV2ParameterDefault [] (ApiV2ParameterJSON "not_uploaded_signatory_attachments" unjsonDef)
-    guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAuthorAttachments =<< theDocument
-    guardThatAllSignatoryAttachmentsAreUploadedOrMarked slid notUploadedSignatoryAttachments =<< theDocument
+    acceptedAuthorAttachments <- apiV2ParameterObligatory
+      $ ApiV2ParameterJSON "accepted_author_attachments" unjsonDef
+    notUploadedSignatoryAttachments <- apiV2ParameterDefault
+      []
+      (ApiV2ParameterJSON "not_uploaded_signatory_attachments" unjsonDef)
+    guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAuthorAttachments
+      =<< theDocument
+    guardThatAllSignatoryAttachmentsAreUploadedOrMarked slid
+                                                        notUploadedSignatoryAttachments
+      =<< theDocument
     checkAuthenticationToSignMethodAndValue slid
-    fields <- apiV2ParameterObligatory (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValuesForSigning)
+    fields <- apiV2ParameterObligatory
+      (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValuesForSigning)
     let SignatoryFieldsValuesForSigning tmpFields = fields
-        fieldsShortLog = map (\(fi, sftv) -> (fi, signatoryFieldTMPValueShortLog sftv)) tmpFields
+        fieldsShortLog =
+          map (\(fi, sftv) -> (fi, signatoryFieldTMPValueShortLog sftv)) tmpFields
     logInfo "Fields provided for signing" $ object ["fields" .= show fieldsShortLog]
     guardThatRadioButtonValuesAreValid slid fields =<< theDocument
     consentResponses <- apiV2ParameterDefault
@@ -185,33 +196,31 @@ docApiV2SigCheck did slid = logDocumentAndSignatory did slid . api $ do
     sl <- guardGetSignatoryFromIdForDocument slid
     case signatorylinkauthenticationtosignmethod sl of
       StandardAuthenticationToSign -> return ()
-      SMSPinAuthenticationToSign -> do
-        pin <- apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
+      SMSPinAuthenticationToSign   -> do
+        pin      <- apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
         validPin <- checkSignatoryPinToSign slid fields pin
         if not validPin
-           then apiError $ requestParameterInvalid "sms_pin" "invalid SMS PIN"
-           else return ()
+          then apiError $ requestParameterInvalid "sms_pin" "invalid SMS PIN"
+          else return ()
       SEBankIDAuthenticationToSign -> return ()
       NOBankIDAuthenticationToSign -> return ()
       DKNemIDAuthenticationToSign  -> return ()
     -- Return
     return $ Ok ()
 
-docApiV2SigApprove :: Kontrakcja m => DocumentID -> SignatoryLinkID
-                   -> m Response
+docApiV2SigApprove :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigApprove did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
   guardAccessToDocumentWithSignatory did slid
-  olddoc <- dbQuery
-            (GetDocumentByDocumentIDSignatoryLinkID did slid)
+  olddoc <- dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid)
 
   olddoc `withDocument` do
 
     -- Guards
-    guardThatObjectVersionMatchesIfProvided    did
-    guardSignatoryNeedsToIdentifyToView        slid =<< theDocument
+    guardThatObjectVersionMatchesIfProvided did
+    guardSignatoryNeedsToIdentifyToView slid =<< theDocument
     guardSignatoryRoleIs SignatoryRoleApprover slid =<< theDocument
-    guardApproverHasNotApproved                slid =<< theDocument
+    guardApproverHasNotApproved slid =<< theDocument
 
     -- API call actions
     sl    <- guardGetSignatoryFromIdForDocument slid
@@ -224,8 +233,7 @@ docApiV2SigApprove did slid = logDocumentAndSignatory did slid . api $ do
 
     -- Result
     doc <- theDocument
-    return $ Ok $
-      (\d -> (unjsonDocument (documentAccessForSlid slid doc),d)) doc
+    return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc), d)) doc
 
 
 docApiV2SigSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
@@ -233,42 +241,40 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
   -- Permissions
   guardAccessToDocumentWithSignatory did slid
   -- We store old document, as it is needed by postDocumentXXX calls
-  olddoc <- dbQuery $
-    GetDocumentByDocumentIDSignatoryLinkID did slid
+  olddoc <- dbQuery $ GetDocumentByDocumentIDSignatoryLinkID did slid
 
   olddoc `withDocument` do
     -- Guards
     guardThatObjectVersionMatchesIfProvided did
     guardSignatoryNeedsToIdentifyToView slid =<< theDocument
-    guardSignatoryHasNotSigned slid          =<< theDocument
-    guardDocumentStatus Pending              =<< theDocument
+    guardSignatoryHasNotSigned slid =<< theDocument
+    guardDocumentStatus Pending =<< theDocument
 
     -- Parameters
     checkAuthenticationToSignMethodAndValue slid
-    screenshots                     <- getScreenshots
-    acceptedAttachments             <- apiV2ParameterObligatory
+    screenshots         <- getScreenshots
+    acceptedAttachments <- apiV2ParameterObligatory
       (ApiV2ParameterJSON "accepted_author_attachments" unjsonDef)
-    notUploadedSignatoryAttachments <- apiV2ParameterDefault []
+    notUploadedSignatoryAttachments <- apiV2ParameterDefault
+      []
       (ApiV2ParameterJSON "not_uploaded_signatory_attachments" unjsonDef)
-    fields                          <- apiV2ParameterObligatory
+    fields <- apiV2ParameterObligatory
       (ApiV2ParameterJSON "fields" unjsonSignatoryFieldsValuesForSigning)
     let SignatoryFieldsValuesForSigning tmpFields = fields
-        fieldsShortLog = map (\(fi, sftv) -> (fi, signatoryFieldTMPValueShortLog sftv)) tmpFields
+        fieldsShortLog =
+          map (\(fi, sftv) -> (fi, signatoryFieldTMPValueShortLog sftv)) tmpFields
     logInfo "Fields provided for signing" $ object ["fields" .= show fieldsShortLog]
     guardThatRadioButtonValuesAreValid slid fields =<< theDocument
     guardThatSignaturesAreFilled slid fields =<< theDocument
-    consentResponses                <- apiV2ParameterDefault
+    consentResponses <- apiV2ParameterDefault
       (SignatoryConsentResponsesForSigning [])
-      (ApiV2ParameterJSON "consent_responses"
-       unjsonSignatoryConsentResponsesForSigning)
+      (ApiV2ParameterJSON "consent_responses" unjsonSignatoryConsentResponsesForSigning)
 
     -- Additional guards
-    guardThatAllConsentQuestionsHaveResponse slid consentResponses
-      =<< theDocument
-    guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAttachments
-      =<< theDocument
+    guardThatAllConsentQuestionsHaveResponse slid consentResponses =<< theDocument
+    guardThatAllAttachmentsAreAcceptedOrIsAuthor slid acceptedAttachments =<< theDocument
     guardThatAllSignatoryAttachmentsAreUploadedOrMarked slid
-      notUploadedSignatoryAttachments
+                                                        notUploadedSignatoryAttachments
       =<< theDocument
 
     -- API call actions + extra conditional parameter
@@ -276,45 +282,48 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
     (mprovider, mpin) <- case signatorylinkauthenticationtosignmethod sl of
       StandardAuthenticationToSign -> return (Nothing, Nothing)
       SMSPinAuthenticationToSign   -> do
-        pin <- apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
+        pin      <- apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
         validPin <- checkSignatoryPinToSign slid fields pin
         if not validPin
           then apiError documentActionForbidden
           else return (Nothing, Just pin)
       SEBankIDAuthenticationToSign -> return (Just CgiGrpBankID, Nothing)
       NOBankIDAuthenticationToSign -> return (Just NetsNOBankID, Nothing)
-      DKNemIDAuthenticationToSign  -> return (Just NetsDKNemID,  Nothing)
+      DKNemIDAuthenticationToSign  -> return (Just NetsDKNemID, Nothing)
 
     case mprovider of
-       Nothing -> do
-        signDocument slid fields acceptedAttachments
-          notUploadedSignatoryAttachments Nothing mpin screenshots
-          consentResponses
+      Nothing -> do
+        signDocument slid
+                     fields
+                     acceptedAttachments
+                     notUploadedSignatoryAttachments
+                     Nothing
+                     mpin
+                     screenshots
+                     consentResponses
         updatedSigLink <- guardGetSignatoryFromIdForDocument slid
         postDocumentPendingChange olddoc updatedSigLink
         handleAfterSigning slid
-        -- Return
-       Just provider -> do
+       -- Return
+      Just provider -> do
         ctx     <- getContext
         doclang <- getLang <$> theDocument
         dbUpdate $ CleanAllScheduledDocumentSigning slid
-        dbUpdate $ ScheduleDocumentSigning
-          slid
-          (get (bdid . ctxbrandeddomain) ctx)
-          (get ctxtime ctx)
-          (get ctxipnumber ctx)
-          (get ctxclienttime ctx)
-          (get ctxclientname ctx)
-          doclang
-          fields
-          acceptedAttachments
-          screenshots
-          notUploadedSignatoryAttachments
-          provider
-          consentResponses
+        dbUpdate $ ScheduleDocumentSigning slid
+                                           (get (bdid . ctxbrandeddomain) ctx)
+                                           (get ctxtime ctx)
+                                           (get ctxipnumber ctx)
+                                           (get ctxclienttime ctx)
+                                           (get ctxclientname ctx)
+                                           doclang
+                                           fields
+                                           acceptedAttachments
+                                           screenshots
+                                           notUploadedSignatoryAttachments
+                                           provider
+                                           consentResponses
     doc <- theDocument
-    return $ Ok $
-      (\d -> (unjsonDocument (documentAccessForSlid slid doc),d)) doc
+    return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc), d)) doc
 
 docApiV2SigSendSmsPinToSign :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSendSmsPinToSign did slid = logDocumentAndSignatory did slid . api $ do
@@ -327,15 +336,20 @@ docApiV2SigSendSmsPinToSign did slid = logDocumentAndSignatory did slid . api $ 
     guardSignatoryHasNotSigned slid =<< theDocument
     sl <- guardGetSignatoryFromIdForDocument slid
     when (signatorylinkauthenticationtosignmethod sl /= SMSPinAuthenticationToSign) $ do
-      apiError $ signatoryStateError "Signatory authentication method to sign is not SMS PIN"
+      apiError
+        $ signatoryStateError "Signatory authentication method to sign is not SMS PIN"
     -- Parameters
-    let mobileEditableBySignatory = Just True == join (fieldEditableBySignatory <$> getFieldByIdentity MobileFI (signatoryfields sl))
+    let
+      mobileEditableBySignatory = Just True == join
+        (fieldEditableBySignatory <$> getFieldByIdentity MobileFI (signatoryfields sl))
     let slidMobile = getMobile sl
     mobile <- if (not (T.null slidMobile) && not mobileEditableBySignatory)
-                then case asValidPhoneForSMS slidMobile of
-                          Good v -> return v
-                          _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"
-                else apiV2ParameterObligatory (ApiV2ParameterTextWithValidation "mobile" asValidPhoneForSMS)
+      then case asValidPhoneForSMS slidMobile of
+        Good v -> return v
+        _ ->
+          apiError $ serverError "Mobile number for signatory set by author is not valid"
+      else apiV2ParameterObligatory
+        (ApiV2ParameterTextWithValidation "mobile" asValidPhoneForSMS)
     -- API call actions
     pin <- dbQuery $ GetSignatoryPin SMSPinToSign slid mobile
     sendPinCode sl mobile pin
@@ -353,12 +367,12 @@ guardAuthenticateToViewWithPin did slid = do
     Pending -> do
       guardSignatoryHasNotSigned slid doc
       return signatorylinkauthenticationtoviewmethod
-    Closed  -> return signatorylinkauthenticationtoviewarchivedmethod
-    _       -> apiError $ documentStateError
-                            "The document status should be Pending or Closed"
+    Closed -> return signatorylinkauthenticationtoviewarchivedmethod
+    _ -> apiError $ documentStateError "The document status should be Pending or Closed"
   sl <- guardGetSignatoryFromIdForDocument slid
   when (signatoryAuthMethod sl /= SMSPinAuthenticationToView) $ do
-    apiError $ signatoryStateError "Signatory authentication method to view is not SMS PIN"
+    apiError
+      $ signatoryStateError "Signatory authentication method to view is not SMS PIN"
   (, sl) . mkAuthKind <$> theDocument
 
 docApiV2SigSendSmsPinToView :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
@@ -367,40 +381,49 @@ docApiV2SigSendSmsPinToView did slid = logDocumentAndSignatory did slid . api $ 
   guardAccessToDocumentWithSignatory did slid
   dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid) `withDocumentM` do
     (authKind, sl) <- guardAuthenticateToViewWithPin did slid
-    mobile <- case asValidPhoneForSMS (getMobile sl) of
-                Good v -> return v
-                _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"
+    mobile         <- case asValidPhoneForSMS (getMobile sl) of
+      Good v -> return v
+      _ ->
+        apiError $ serverError "Mobile number for signatory set by author is not valid"
     -- API call actions
     pin <- dbQuery $ GetSignatoryPin (authKindToPinType authKind) slid mobile
     sendPinCode sl mobile pin
     -- Return
     return $ Accepted ()
 
-docApiV2SigIdentifyToViewWithSmsPin :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
-docApiV2SigIdentifyToViewWithSmsPin did slid = logDocumentAndSignatory did slid . api $ do
+docApiV2SigIdentifyToViewWithSmsPin
+  :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
+docApiV2SigIdentifyToViewWithSmsPin did slid =
+  logDocumentAndSignatory did slid . api $ do
   -- Permissions
-  guardAccessToDocumentWithSignatory did slid
-  ctx <- getContext
-  dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid) `withDocumentM` do
-    (authKind, sl) <- guardAuthenticateToViewWithPin did slid
-    mobile <- case asValidPhoneForSMS (getMobile sl) of
-                Good v -> return v
-                _ -> apiError $ serverError "Mobile number for signatory set by author is not valid"
-    pin <- apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
-    validPin <- checkSignatoryPinToView (authKindToPinType authKind) slid pin
-    unless validPin $ do
-      apiError $ requestParameterInvalid "sms_pin" "invalid SMS PIN"
-    sess <- getCurrentSession
-    dbUpdate $ MergeSMSPinAuthentication authKind (sesID sess) slid mobile
-    let eventFields = do
-          F.value "signatory_mobile" mobile
-          F.value "provider_sms_pin" True
-    sActor <- signatoryActor ctx sl
-    -- Record evidence only for auth-to-view (i.e. if the document is not
-    -- closed).
-    whenM ((== AuthenticationToView) . mkAuthKind <$> theDocument) $ do
-      void $ dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg AuthenticatedToViewEvidence (eventFields) (Just sl) Nothing sActor
-    return $ Accepted ()
+    guardAccessToDocumentWithSignatory did slid
+    ctx <- getContext
+    dbQuery (GetDocumentByDocumentIDSignatoryLinkID did slid) `withDocumentM` do
+      (authKind, sl) <- guardAuthenticateToViewWithPin did slid
+      mobile         <- case asValidPhoneForSMS (getMobile sl) of
+        Good v -> return v
+        _ ->
+          apiError $ serverError "Mobile number for signatory set by author is not valid"
+      pin      <- apiV2ParameterObligatory (ApiV2ParameterText "sms_pin")
+      validPin <- checkSignatoryPinToView (authKindToPinType authKind) slid pin
+      unless validPin $ do
+        apiError $ requestParameterInvalid "sms_pin" "invalid SMS PIN"
+      sess <- getCurrentSession
+      dbUpdate $ MergeSMSPinAuthentication authKind (sesID sess) slid mobile
+      let eventFields = do
+            F.value "signatory_mobile" mobile
+            F.value "provider_sms_pin" True
+      sActor <- signatoryActor ctx sl
+      -- Record evidence only for auth-to-view (i.e. if the document is not
+      -- closed).
+      whenM ((== AuthenticationToView) . mkAuthKind <$> theDocument) $ do
+        void $ dbUpdate $ InsertEvidenceEventWithAffectedSignatoryAndMsg
+          AuthenticatedToViewEvidence
+          (eventFields)
+          (Just sl)
+          Nothing
+          sActor
+      return $ Accepted ()
 
 docApiV2SigSetAttachment :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SigSetAttachment did slid = logDocumentAndSignatory did slid . api $ do
@@ -412,26 +435,35 @@ docApiV2SigSetAttachment did slid = logDocumentAndSignatory did slid . api $ do
     guardDocumentStatus Pending =<< theDocument
     guardSignatoryHasNotSigned slid =<< theDocument
     -- Parameters
-    name <- apiV2ParameterObligatory (ApiV2ParameterText "name")
+    name        <- apiV2ParameterObligatory (ApiV2ParameterText "name")
     mAttachment <- apiV2ParameterOptional (ApiV2ParameterFilePDFOrImage "attachment")
-    doc <- theDocument
+    doc         <- theDocument
     let mSigAttachment = getSignatoryAttachment slid name doc
     sigAttachment <- case mSigAttachment of
-      Nothing -> apiError $ requestParameterInvalid "name" "There is no attachment with that name for the signatory"
+      Nothing -> apiError $ requestParameterInvalid
+        "name"
+        "There is no attachment with that name for the signatory"
       Just sa -> return sa
     -- API call actions
-    sl <- guardGetSignatoryFromIdForDocument slid
+    sl  <- guardGetSignatoryFromIdForDocument slid
     ctx <- getContext
     case mAttachment of
-      Nothing -> dbUpdate . DeleteSigAttachment slid sigAttachment =<< signatoryActor ctx sl
+      Nothing ->
+        dbUpdate . DeleteSigAttachment slid sigAttachment =<< signatoryActor ctx sl
       Just file ->
-        (dbUpdate . SaveSigAttachment slid sigAttachment (fileid file) =<< signatoryActor ctx sl)
-        `catchDBExtraException`
-        (\(DBBaseLineConditionIsFalse _) -> apiError $ signatoryStateError
-          "An attachment of this name for this signatory and document is already set, remove it first.")
+        (   dbUpdate
+          .   SaveSigAttachment slid sigAttachment (fileid file)
+          =<< signatoryActor ctx sl
+          )
+          `catchDBExtraException` (\(DBBaseLineConditionIsFalse _) ->
+                                    apiError
+                                      $ signatoryStateError
+                                          "An attachment of this name for this signatory and document is already set, remove it first."
+                                  )
     -- Return
     updatedDoc <- theDocument
-    return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid updatedDoc),d)) updatedDoc
+    return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid updatedDoc), d))
+      updatedDoc
 
 docApiV2SetHighlightForPage :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 docApiV2SetHighlightForPage did slid = logDocumentAndSignatory did slid . api $ do
@@ -443,15 +475,17 @@ docApiV2SetHighlightForPage did slid = logDocumentAndSignatory did slid . api $ 
     guardDocumentStatus Pending =<< theDocument
     guardSignatoryHasNotSigned slid =<< theDocument
     -- Parameters
-    page <- apiV2ParameterObligatory (ApiV2ParameterInt "page")
+    page   <- apiV2ParameterObligatory (ApiV2ParameterInt "page")
     mimage <- apiV2ParameterOptional (ApiV2ParameterBase64PNGImage "image")
     -- API call actions
-    ctx <- getContext
-    sl <- guardGetSignatoryFromIdForDocument slid
-    actor <- signatoryActor ctx sl
+    ctx    <- getContext
+    sl     <- guardGetSignatoryFromIdForDocument slid
+    actor  <- signatoryActor ctx sl
     case mimage of
-       Just image -> dbUpdate $ SetHighlightingForPageAndSignatory sl (fromIntegral page) (fileid image) actor
-       Nothing    -> dbUpdate $ ClearHighlightingForPageAndSignatory sl (fromIntegral page) actor
+      Just image -> dbUpdate
+        $ SetHighlightingForPageAndSignatory sl (fromIntegral page) (fileid image) actor
+      Nothing ->
+        dbUpdate $ ClearHighlightingForPageAndSignatory sl (fromIntegral page) actor
     -- Result
     doc <- theDocument
-    return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc),d)) doc
+    return $ Ok $ (\d -> (unjsonDocument (documentAccessForSlid slid doc), d)) doc

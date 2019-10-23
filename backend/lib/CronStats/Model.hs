@@ -23,17 +23,18 @@ data CronStats = CronStats {
 data GetCronStats = GetCronStats
 instance (MonadDB m, MonadThrow m) => DBQuery m GetCronStats CronStats where
   query GetCronStats = do
-    sealingJobsCount <- fetchCount "document_sealing_jobs"
-    signingJobsCount <- fetchCount "document_signing_jobs"
-    extendingJobsCount <- fetchCount "document_extending_jobs"
+    sealingJobsCount          <- fetchCount "document_sealing_jobs"
+    signingJobsCount          <- fetchCount "document_signing_jobs"
+    extendingJobsCount        <- fetchCount "document_extending_jobs"
     overdueExtendingJobsCount <- fetchCountWhere "document_extending_jobs" $ do
       sqlWhere "run_at < now()"
-    mailSendoutsCount <- fetchCountWhere "mails" $ sqlWhereIsNULL "finished_at"
-    smsSendoutsCount <- fetchCountWhere "smses" $ sqlWhereIsNULL "finished_at"
-    filePurgingJobsCount <- fetchCount "file_purge_jobs"
-    apiCallbacksCount <- fetchCount "document_api_callbacks"
-    retriedCallbacksCount <- fetchCountWhere "document_api_callbacks" $ sqlWhere "attempts > 1"
-    return $ CronStats {..}
+    mailSendoutsCount     <- fetchCountWhere "mails" $ sqlWhereIsNULL "finished_at"
+    smsSendoutsCount      <- fetchCountWhere "smses" $ sqlWhereIsNULL "finished_at"
+    filePurgingJobsCount  <- fetchCount "file_purge_jobs"
+    apiCallbacksCount     <- fetchCount "document_api_callbacks"
+    retriedCallbacksCount <- fetchCountWhere "document_api_callbacks"
+      $ sqlWhere "attempts > 1"
+    return $ CronStats { .. }
 
 
     where
@@ -42,8 +43,8 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetCronStats CronStats where
       fetchCountWhereM table msqlwhere = do
         runQuery_ . sqlSelect table $ do
           case msqlwhere of
-            Just sqlwhere  -> sqlwhere
-            Nothing -> return ()
+            Just sqlwhere -> sqlwhere
+            Nothing       -> return ()
           sqlResult "count(*)"
         countR :: Int64 <- fetchOne runIdentity
         return countR

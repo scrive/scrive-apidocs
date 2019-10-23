@@ -24,47 +24,38 @@ data AmazonConfig = AmazonConfig
   } deriving (Eq, Show)
 
 instance Unjson AmazonConfig where
-  unjsonDef = objectOf $ AmazonConfig
-    <$> fieldDefBy "host" "s3.eu-west-1.amazonaws.com"
-          amazonConfigHost
-          "Hostname of the S3 server"
-          unjsonByteString
-    <*> fieldDef "port" 443
-          amazonConfigPort
-          "Port to connect to"
-    <*> fieldDef "secure" True
-          amazonConfigSecure
-          "Whether to use HTTPS (ie. SSL)"
-    <*> fieldDef "timeout" 60
-          amazonConfigTimeout
-          "Request timeout (seconds)"
-    <*> fieldDefBy "region" AWS.Ireland
-          amazonConfigRegion
-          "Amazon region (eg. eu-west-1)"
-          unjsonRegion
-    <*> field "bucket"
-          amazonConfigBucket
-          "In which bucket stored files exist"
-    <*> fieldBy "access_key"
-          amazonConfigAccessKey
-          "Amazon access key"
-          unjsonByteString
-    <*> fieldBy "secret_key"
-          amazonConfigSecretKey
-          "Amazon secret key"
-          unjsonByteString
+  unjsonDef =
+    objectOf
+      $   AmazonConfig
+      <$> fieldDefBy "host"
+                     "s3.eu-west-1.amazonaws.com"
+                     amazonConfigHost
+                     "Hostname of the S3 server"
+                     unjsonByteString
+      <*> fieldDef "port"    443  amazonConfigPort    "Port to connect to"
+      <*> fieldDef "secure"  True amazonConfigSecure  "Whether to use HTTPS (ie. SSL)"
+      <*> fieldDef "timeout" 60   amazonConfigTimeout "Request timeout (seconds)"
+      <*> fieldDefBy "region"
+                     AWS.Ireland
+                     amazonConfigRegion
+                     "Amazon region (eg. eu-west-1)"
+                     unjsonRegion
+      <*> field "bucket" amazonConfigBucket "In which bucket stored files exist"
+      <*> fieldBy "access_key" amazonConfigAccessKey "Amazon access key" unjsonByteString
+      <*> fieldBy "secret_key" amazonConfigSecretKey "Amazon secret key" unjsonByteString
 
 isAmazonConfigValid :: AmazonConfig -> Bool
-isAmazonConfigValid AmazonConfig{..} =
+isAmazonConfigValid AmazonConfig {..} =
   not (BSC.null amazonConfigHost)
-  && amazonConfigPort > 0
-  && amazonConfigPort < 65536
-  && not (T.null amazonConfigBucket)
-  && not (BSC.null amazonConfigAccessKey)
-  && not (BSC.null amazonConfigSecretKey)
+    && amazonConfigPort
+    >  0
+    && amazonConfigPort
+    <  65536
+    && not (T.null amazonConfigBucket)
+    && not (BSC.null amazonConfigAccessKey)
+    && not (BSC.null amazonConfigSecretKey)
 
 ----------------------------------------
 
 unjsonRegion :: UnjsonDef AWS.Region
-unjsonRegion =
-  unjsonInvmapR (either fail return . AWS.fromText) AWS.toText unjsonDef
+unjsonRegion = unjsonInvmapR (either fail return . AWS.fromText) AWS.toText unjsonDef

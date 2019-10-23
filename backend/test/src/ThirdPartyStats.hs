@@ -9,7 +9,8 @@ import Text.JSON.Orphans ()
 import ThirdPartyStats.Core (AsyncEvent())
 
 thirdPartyStatsTests :: TestEnvSt -> Test
-thirdPartyStatsTests _ = testGroup "Third party stats tests" [
-    testProperty "Serialization is the inverse of deserialization"
-      (\evt -> evt == decode (encode (evt :: AsyncEvent)))
+thirdPartyStatsTests _ = testGroup
+  "Third party stats tests"
+  [ testProperty "Serialization is the inverse of deserialization"
+                 (\evt -> evt == decode (encode (evt :: AsyncEvent)))
   ]

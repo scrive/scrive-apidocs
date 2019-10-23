@@ -19,16 +19,19 @@ import TestingUtil
 import TestKontra
 
 testDocApiV2New' :: Context -> TestEnv MockDoc
-testDocApiV2New' ctx =
-  mockDocTestRequestHelper ctx POST
+testDocApiV2New' ctx = mockDocTestRequestHelper
+  ctx
+  POST
   [("file", inFile $ inTestDir "pdfs/simple.pdf")]
-  docApiV2New 201
+  docApiV2New
+  201
 
 testDocApiV2Start' :: Context -> DocumentID -> TestEnv MockDoc
 testDocApiV2Start' ctx documentId = do
   mockDoc <- mockDocTestRequestHelper ctx POST [] (docApiV2Start documentId) 200
   assertEqual "Document status should match after 'start' call"
-    Pending (getMockDocStatus mockDoc)
+              Pending
+              (getMockDocStatus mockDoc)
   return mockDoc
 
 testDocApiV2StartNew :: Context -> TestEnv MockDoc
@@ -41,18 +44,15 @@ testDocApiV2Get' ctx documentId =
   mockDocTestRequestHelper ctx GET [] (docApiV2Get documentId) 200
 
 testDocApiV2Update' :: Context -> MockDoc -> TestEnv MockDoc
-testDocApiV2Update' ctx mockDoc =
-  mockDocTestRequestHelper
-    ctx
-    POST
-    [("document", mockDocToInput mockDoc)]
-    (docApiV2Update $ getMockDocId mockDoc)
-    200
+testDocApiV2Update' ctx mockDoc = mockDocTestRequestHelper
+  ctx
+  POST
+  [("document", mockDocToInput mockDoc)]
+  (docApiV2Update $ getMockDocId mockDoc)
+  200
 
-testDocApiV2AddParties ::
-  Context -> [MockSigLink] -> DocumentID -> TestEnv MockDoc
+testDocApiV2AddParties :: Context -> [MockSigLink] -> DocumentID -> TestEnv MockDoc
 testDocApiV2AddParties ctx sigLinks documentId = do
   mockDoc <- testDocApiV2Get' ctx documentId
-  let
-    updatedMockDoc = addSigLinksToMockDoc sigLinks mockDoc
+  let updatedMockDoc = addSigLinksToMockDoc sigLinks mockDoc
   testDocApiV2Update' ctx updatedMockDoc

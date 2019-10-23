@@ -28,7 +28,8 @@ data XMLContent =
 
 -- | Parses text as XML; removing processing instructions and comments; cleaning up HTML entities
 parseXMLContent :: Text -> XMLContent
-parseXMLContent s = either (const (DirtyXMLContent s)) CleanXMLContent (C.parseXMLContent s)
+parseXMLContent s =
+  either (const (DirtyXMLContent s)) CleanXMLContent (C.parseXMLContent s)
 
 renderXMLContent :: XMLContent -> Text
 renderXMLContent (CleanXMLContent c) = C.renderXMLContent c
@@ -43,9 +44,10 @@ removeTags :: XMLContent -> XMLContent
 removeTags (CleanXMLContent c) = CleanXMLContent (C.removeTags c)
 removeTags (DirtyXMLContent t) = DirtyXMLContent (T.pack (filterTags (T.unpack t)))
   where
-    filterTags ('<':rest) = ' ' : (filterTags (drop 1 $ dropWhile (\c -> c /= '>') rest))
-    filterTags (a:rest) = a : filterTags rest
-    filterTags [] = []
+    filterTags ('<' : rest) =
+      ' ' : (filterTags (drop 1 $ dropWhile (\c -> c /= '>') rest))
+    filterTags (a : rest) = a : filterTags rest
+    filterTags []         = []
 
 -- | Form XMLContent from string literals
 instance IsString XMLContent where

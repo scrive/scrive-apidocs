@@ -37,7 +37,7 @@ instance (MonadDB m, MonadThrow m)
         sqlWhereEq "id" ugid
       fetchMaybe runIdentity
     case mfolderId of
-      Nothing -> return Nothing
+      Nothing       -> return Nothing
       Just folderId -> query . FolderGet $ folderId
 
 data FolderGetUserHome = FolderGetUserHome UserID
@@ -51,7 +51,7 @@ instance (MonadDB m, MonadThrow m)
         sqlWhereEq "id" uid
       fetchMaybe runIdentity
     case mfolderId of
-      Nothing -> return Nothing
+      Nothing       -> return Nothing
       Just folderId -> query . FolderGet $ folderId
 
 -- Get all children recursively
@@ -63,8 +63,8 @@ instance (MonadDB m, MonadThrow m)
       mapM_ sqlResult folderSelectors
       sqlWhere $ "parent_path @> " <?> (Array1 [fid])
     allChildren <- fetchMany fetchFolder
-    let directChildren parentID = filter ((==Just parentID) . get folderParentID)
-                                         allChildren
+    let directChildren parentID =
+          filter ((== Just parentID) . get folderParentID) allChildren
         mkChildren parentID = mkChild <$> directChildren parentID
         mkChild folder = FolderWithChildren folder . mkChildren $ get folderID folder
     return $ mkChildren fid
@@ -75,7 +75,7 @@ instance (MonadDB m, MonadThrow m)
   query (FolderGetParents fid) = do
     (query . FolderGet $ fid) >>= \case
       Nothing -> return []
-      Just _ -> do
+      Just _  -> do
         -- JOIN does not necessarily preserve order of rows, so we add
         -- ORDINALITY and ORDER BY it.
         --
@@ -84,8 +84,9 @@ instance (MonadDB m, MonadThrow m)
         --   <https://www.postgresql.org/docs/current/static/queries-table-expressions.html#QUERIES-TABLEFUNCTIONS>
         -- The LATERAL is optional for function calls:
         --   <https://www.postgresql.org/docs/current/static/queries-table-expressions.html#QUERIES-LATERAL>
-        let lateralJoin = "folders as fdr cross join lateral" <+>
-                           "unnest(fdr.parent_path) with ordinality"
+        let lateralJoin =
+              "folders as fdr cross join lateral"
+                <+> "unnest(fdr.parent_path) with ordinality"
         runQuery_ . sqlSelect "folders" $ do
           sqlWith "parentids" . sqlSelect lateralJoin $ do
             sqlResult "unnest as id" -- `unnest` is default column name
@@ -114,10 +115,4 @@ instance (MonadDB m, MonadThrow m, MonadTime m) => DBUpdate m FolderDelete () wh
       sqlWhereEq "id" $ Just fdrid
 
 folderSelectors :: [SQL]
-folderSelectors =
-    ("folders." <>) <$>
-      [
-        "id"
-      , "parent_id"
-      , "name"
-      ]
+folderSelectors = ("folders." <>) <$> ["id", "parent_id", "name"]

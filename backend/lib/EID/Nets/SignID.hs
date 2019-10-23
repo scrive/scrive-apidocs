@@ -27,12 +27,12 @@ instance Show SignOrderUUID where
   show (SignOrderUUID uuid) = U.toString uuid
 
 instance Identifier SignOrderUUID where
-  idDefaultLabel            = "nets_sign_order_id"
+  idDefaultLabel = "nets_sign_order_id"
   idValue (SignOrderUUID k) = stringIdentifier . U.toString $ k
 
 instance PQFormat SignOrderUUID where
-  pqFormat    = pqFormat    @Text
-  pqFormat0   = pqFormat0   @Text
+  pqFormat    = pqFormat @Text
+  pqFormat0   = pqFormat0 @Text
   pqVariables = pqVariables @Text
 
 instance FromSQL SignOrderUUID where
@@ -41,7 +41,7 @@ instance FromSQL SignOrderUUID where
     t <- fromSQL mbase
     case U.fromText t of
       Nothing -> throwIO UUIDParseError
-      Just u -> return . SignOrderUUID $ u
+      Just u  -> return . SignOrderUUID $ u
 
 data UUIDParseError = UUIDParseError
   deriving (Show, Typeable)
@@ -58,13 +58,14 @@ instance Show TrustSignMessageUUID where
   show (TrustSignMessageUUID uuid) = U.toString uuid
 
 instance Identifier TrustSignMessageUUID where
-  idDefaultLabel                   = "nets_sign_message_id"
+  idDefaultLabel = "nets_sign_message_id"
   idValue (TrustSignMessageUUID t) = stringIdentifier . U.toString $ t
 
 newSignOrderUUID :: (MonadBase IO m, MonadIO m, MonadLog m) => m SignOrderUUID
 newSignOrderUUID = SignOrderUUID <$> nextUUIDWrapper
 
-newTrustSignMessageUUID :: (MonadBase IO m, MonadIO m, MonadLog m) => m TrustSignMessageUUID
+newTrustSignMessageUUID
+  :: (MonadBase IO m, MonadIO m, MonadLog m) => m TrustSignMessageUUID
 newTrustSignMessageUUID = TrustSignMessageUUID <$> nextUUIDWrapper
 
 nextUUIDWrapper :: (MonadBase IO m, MonadIO m, MonadLog m) => m UUID

@@ -69,11 +69,11 @@ type InnerRowCacheT r m = StateT (RowState r) (ReaderT (ID r) m)
 -- | Retrieve a row from the cache, or from the storage if the cache is invalid
 rowCache :: GetRow r m => RowCacheT r m r
 rowCache = RowCacheT S.get >>= \case
-                        Row r -> return r
-                        Invalid -> do
-                          r <- rowCacheID >>= lift . getRow
-                          RowCacheT $ put (Row r)
-                          return r
+  Row r   -> return r
+  Invalid -> do
+    r <- rowCacheID >>= lift . getRow
+    RowCacheT $ put (Row r)
+    return r
 
 -- | Return the row's ID
 rowCacheID :: Monad m => RowCacheT r m (ID r)

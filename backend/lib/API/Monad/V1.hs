@@ -82,31 +82,30 @@ data APIError = BadInput           String
 instance DBExtraException APIError
 
 instance ToJSValue APIError where
-  toJSValue (BadInput msg) = jsonError $ value "message" msg
-  toJSValue (Forbidden msg) = jsonError $ value "message" msg
+  toJSValue (BadInput    msg) = jsonError $ value "message" msg
+  toJSValue (Forbidden   msg) = jsonError $ value "message" msg
   toJSValue (NotLoggedIn msg) = jsonError $ do
-                                  value "message" msg
-                                  value "url" ("https://scrive.com/login"::String)
-  toJSValue (ServerError msg) = jsonError $ value "message" msg
+    value "message" msg
+    value "url"     ("https://scrive.com/login" :: String)
+  toJSValue (ServerError        msg) = jsonError $ value "message" msg
   toJSValue (ActionNotAvailable msg) = jsonError $ value "message" msg
-  toJSValue (NoAvailableYet msg) = jsonError $ value "message" msg
-  toJSValue (ConflictError msg) = jsonError $ value "message" msg
+  toJSValue (NoAvailableYet     msg) = jsonError $ value "message" msg
+  toJSValue (ConflictError      msg) = jsonError $ value "message" msg
 
 
 httpCodeFromAPIError :: APIError -> Int
-httpCodeFromAPIError (BadInput {}) = 400
-httpCodeFromAPIError (Forbidden {}) = 403
-httpCodeFromAPIError (NotLoggedIn {}) = 403
-httpCodeFromAPIError (ServerError {}) = 500
-httpCodeFromAPIError (ActionNotAvailable {}) = 500
-httpCodeFromAPIError (NoAvailableYet {}) = 420
-httpCodeFromAPIError (ConflictError {}) = 409
+httpCodeFromAPIError (BadInput{}          ) = 400
+httpCodeFromAPIError (Forbidden{}         ) = 403
+httpCodeFromAPIError (NotLoggedIn{}       ) = 403
+httpCodeFromAPIError (ServerError{}       ) = 500
+httpCodeFromAPIError (ActionNotAvailable{}) = 500
+httpCodeFromAPIError (NoAvailableYet{}    ) = 420
+httpCodeFromAPIError (ConflictError{}     ) = 409
 
 httpCodeFromSomeDBExtraException :: SomeDBExtraException -> Int
-httpCodeFromSomeDBExtraException (SomeDBExtraException ex) =
-  case cast ex of
-    Just (apierror :: APIError) -> httpCodeFromAPIError apierror
-    Nothing -> 400
+httpCodeFromSomeDBExtraException (SomeDBExtraException ex) = case cast ex of
+  Just (apierror :: APIError) -> httpCodeFromAPIError apierror
+  Nothing                     -> 400
 
 badInput :: String -> APIError
 badInput = BadInput
@@ -124,32 +123,37 @@ forbidden :: String -> APIError
 forbidden = Forbidden
 
 forbidden' :: APIError
-forbidden' = forbidden "The resource you are trying to access does not exist or you do not have permission to access it."
+forbidden' =
+  forbidden
+    "The resource you are trying to access does not exist or you do not have permission to access it."
 
 actionNotAvailable :: String -> APIError
 actionNotAvailable = ActionNotAvailable
 
 actionNotAvailable' :: APIError
-actionNotAvailable' = actionNotAvailable "The action you requested is not available on this resource."
+actionNotAvailable' =
+  actionNotAvailable "The action you requested is not available on this resource."
 
 serverError :: String -> APIError
 serverError = ServerError
 
 serverError' :: APIError
-serverError' = serverError "An internal server error occurred which could not be resolved."
+serverError' =
+  serverError "An internal server error occurred which could not be resolved."
 
 
-noAvailableYet:: String -> APIError
+noAvailableYet :: String -> APIError
 noAvailableYet = NoAvailableYet
 
-noAvailableYet':: APIError
+noAvailableYet' :: APIError
 noAvailableYet' = noAvailableYet "Resource is not yet available"
 
 conflictError :: String -> APIError
 conflictError = ConflictError
 
 conflictError' :: APIError
-conflictError' = conflictError "An internal server error occurred which could not be resolved."
+conflictError' =
+  conflictError "An internal server error occurred which could not be resolved."
 
 -- Define what we can respond from an API call
 class ToAPIResponse a where
@@ -169,21 +173,26 @@ instance ToAPIResponse A.Value where
     setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ A.encode jv
 
 instance ToAPIResponse (UnjsonDef a,a) where
-  toAPIResponse (unjson,a) =
-    setHeader "Content-Type" "text/plain; charset=UTF-8" $ Web.toResponse $ unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True }) unjson a
+  toAPIResponse (unjson, a) =
+    setHeader "Content-Type" "text/plain; charset=UTF-8"
+      $ Web.toResponse
+      $ unjsonToByteStringLazy' (Options { pretty = True, indent = 2, nulls = True })
+                                unjson
+                                a
 
 instance ToAPIResponse CSV where
-  toAPIResponse v = let r1 = Web.toResponse $ v in
-    setHeader "Content-Type" "text/csv; charset=UTF-16" r1
+  toAPIResponse v =
+    let r1 = Web.toResponse $ v in setHeader "Content-Type" "text/csv; charset=UTF-16" r1
 
 instance ToAPIResponse ZipArchive where
-  toAPIResponse v = let r1 = Web.toResponse $ v in
-    setHeader "Content-Type" "text/zip" r1
+  toAPIResponse v =
+    let r1 = Web.toResponse $ v in setHeader "Content-Type" "text/zip" r1
 
 instance ToAPIResponse APIError where
   toAPIResponse e =
     let resp = Web.toResponse $ encode $ toJSValue e
-    in  setHeader "Content-Type" "text/plain; charset=UTF-8" $ resp { rsCode = httpCodeFromAPIError e }
+    in  setHeader "Content-Type" "text/plain; charset=UTF-8"
+          $ resp { rsCode = httpCodeFromAPIError e }
 
 instance (ToAPIResponse a, ToAPIResponse b) => ToAPIResponse (Either a b) where
   toAPIResponse = either toAPIResponse toAPIResponse
@@ -205,25 +214,24 @@ instance ToAPIResponse () where
 
 jsonError :: JSONGen () -> JSValue
 jsonError rest = runJSONGen $ do
-  value "status" ("error"::String)
+  value "status" ("error" :: String)
   rest
 
 -- | convert the return type to the appropriate response
 -- This defines the possible outputs of the api.
 api :: (Kontrakcja m, ToAPIResponse v) => m v -> m Response
-api acc = (toAPIResponse <$> runAcc) `catches` [
-    Handler $ \ex@(SomeDBExtraException e) -> do
+api acc =
+  (toAPIResponse <$> runAcc)
+    `catches` [ Handler $ \ex@(SomeDBExtraException e) -> do
       -- API handler always returns a valid response. Due to that appHandler will not rollback - and we need to do it here
-      rollback
-      logInfo "API error" $ object [
-          "extra_exception" .= jsonToAeson (toJSValue e)
-        ]
-      return $ (toAPIResponse $ toJSValue e) {
-        rsCode = httpCodeFromSomeDBExtraException ex
-      }
-  ]
-  where
-    runAcc = addAPIUserToContext >> logUserCompanyIPAndApiVersion V1 acc
+                  rollback
+                  logInfo "API error"
+                    $ object ["extra_exception" .= jsonToAeson (toJSValue e)]
+                  return $ (toAPIResponse $ toJSValue e)
+                    { rsCode = httpCodeFromSomeDBExtraException ex
+                    }
+              ]
+  where runAcc = addAPIUserToContext >> logUserCompanyIPAndApiVersion V1 acc
 
 
 apiGuardL' :: (Kontrakcja m, APIGuard m a b) => m a -> m b
@@ -236,7 +244,8 @@ apiGuard' :: (MonadThrow m, APIGuard m a b) => a -> m b
 apiGuard' a = guardEither a >>= either (throwM . SomeDBExtraException) return
 
 apiGuard :: (MonadThrow m, APIGuard m a b) => APIError -> a -> m b
-apiGuard e a = guardEither a >>= either (const $ (throwM . SomeDBExtraException) e) return
+apiGuard e a =
+  guardEither a >>= either (const $ (throwM . SomeDBExtraException) e) return
 
 apiGuardJustM :: (MonadThrow m) => APIError -> m (Maybe a) -> m a
 apiGuardJustM e a = a >>= maybe ((throwM . SomeDBExtraException) e) return
@@ -246,19 +255,23 @@ class MonadThrow m => APIGuard m a b | a -> b where
   guardEither :: a -> m (Either APIError b)
 
 instance MonadThrow m => APIGuard m (Maybe b) b where
-  guardEither Nothing = return $ Left $ forbidden "The resource you are trying to access does not exist or you do not have permission to access it."
+  guardEither Nothing =
+    return
+      $ Left
+      $ forbidden
+          "The resource you are trying to access does not exist or you do not have permission to access it."
   guardEither (Just v) = return $ Right v
 
 instance MonadThrow m => APIGuard m (Either String b) b where
-  guardEither (Left s) = return $ Left $ serverError s
+  guardEither (Left  s) = return $ Left $ serverError s
   guardEither (Right v) = return $ Right v
 
 instance MonadThrow m => APIGuard m (Either Text b) b where
-  guardEither (Left s) = return $ Left $ serverError $ T.unpack s
+  guardEither (Left  s) = return $ Left $ serverError $ T.unpack s
   guardEither (Right v) = return $ Right v
 
 instance (MonadThrow m) => APIGuard m (Either FileError b) b where
-  guardEither (Left _) = return $ Left $ serverError'
+  guardEither (Left  _) = return $ Left $ serverError'
   guardEither (Right v) = return $ Right v
 
 instance MonadThrow m => APIGuard m Bool () where
@@ -297,7 +310,7 @@ getAPIUserWithPrivileges privs = do
       msessionuser <- getSessionUser
       case msessionuser of
         Just (user, actor) -> return (user, actor, False)
-        Nothing -> (throwM . SomeDBExtraException) notLoggedIn'
+        Nothing            -> (throwM . SomeDBExtraException) notLoggedIn'
 
 getAPIUserWithPad :: Kontrakcja m => APIPrivilege -> m (User, Actor, Bool)
 getAPIUserWithPad priv = do
@@ -309,19 +322,19 @@ getAPIUserWithPad priv = do
       msessionuser <- getSessionUserWithPad
       case msessionuser of
         Just (user, actor) -> return (user, actor, False)
-        Nothing -> (throwM . SomeDBExtraException) notLoggedIn'
+        Nothing            -> (throwM . SomeDBExtraException) notLoggedIn'
 
 
 getSessionUser :: Kontrakcja m => m (Maybe (User, Actor))
 getSessionUser = do
   ctx <- getContext
   case get ctxmaybeuser ctx of
-    Nothing -> return Nothing
+    Nothing   -> return Nothing
     Just user -> return $ Just (user, authorActor ctx user)
 
 getSessionUserWithPad :: Kontrakcja m => m (Maybe (User, Actor))
 getSessionUserWithPad = do
   ctx <- getContext
   case getContextUser ctx of
-    Nothing -> return Nothing
+    Nothing   -> return Nothing
     Just user -> return $ Just (user, authorActor ctx user)

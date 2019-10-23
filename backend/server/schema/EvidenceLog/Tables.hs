@@ -12,11 +12,11 @@ lack of foreign keys.
 Also, it is insert only. No updates, no deletes.
 -}
 tableEvidenceLog :: Table
-tableEvidenceLog = tblTable {
-  tblName = "evidence_log"
-  , tblVersion = 7
-  , tblColumns = [
-      tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+tableEvidenceLog = tblTable
+  { tblName       = "evidence_log"
+  , tblVersion    = 7
+  , tblColumns    =
+    [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "document_id", colType = BigIntT }
     , tblColumn { colName = "user_id", colType = BigIntT }
     , tblColumn { colName = "email", colType = TextT }
@@ -35,11 +35,10 @@ tableEvidenceLog = tblTable {
     , tblColumn { colName = "additional_message_text", colType = TextT }
     ]
   , tblPrimaryKey = pkOnColumn "id"
-  , tblIndexes = [
-      indexOnColumn "user_id"
-    , indexOnColumn "document_id"
-    , indexOnColumn "email"
-    , indexOnColumn "signatory_link_id"
-    , indexOnColumn "affected_signatory_link_id"
-    ]
+  , tblIndexes    = [ indexOnColumn "user_id"
+                    , indexOnColumn "document_id"
+                    , indexOnColumn "email"
+                    , indexOnColumn "signatory_link_id"
+                    , indexOnColumn "affected_signatory_link_id"
+                    ]
   }

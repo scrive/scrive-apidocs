@@ -71,32 +71,29 @@ instance FromSQL Lang where
       17 -> return LANG_CS
       18 -> return LANG_PL
       19 -> return LANG_HU
-      _  -> E.throwIO $ RangeError {
-        reRange = [(1, 19)]
-      , reValue = n
-      }
+      _  -> E.throwIO $ RangeError { reRange = [(1, 19)], reValue = n }
 
 instance ToSQL Lang where
   type PQDest Lang = PQDest Int16
-  toSQL LANG_SV = toSQL (1::Int16)
-  toSQL LANG_EN = toSQL (2::Int16)
-  toSQL LANG_DE = toSQL (3::Int16)
-  toSQL LANG_FR = toSQL (4::Int16)
-  toSQL LANG_IT = toSQL (5::Int16)
-  toSQL LANG_ES = toSQL (6::Int16)
-  toSQL LANG_PT = toSQL (7::Int16)
-  toSQL LANG_NL = toSQL (8::Int16)
-  toSQL LANG_DA = toSQL (9::Int16)
-  toSQL LANG_NO = toSQL (10::Int16)
-  toSQL LANG_GR = toSQL (11::Int16)
-  toSQL LANG_FI = toSQL (12::Int16)
-  toSQL LANG_IS = toSQL (13::Int16)
-  toSQL LANG_ET = toSQL (14::Int16)
-  toSQL LANG_LV = toSQL (15::Int16)
-  toSQL LANG_LT = toSQL (16::Int16)
-  toSQL LANG_CS = toSQL (17::Int16)
-  toSQL LANG_PL = toSQL (18::Int16)
-  toSQL LANG_HU = toSQL (19::Int16)
+  toSQL LANG_SV = toSQL (1 :: Int16)
+  toSQL LANG_EN = toSQL (2 :: Int16)
+  toSQL LANG_DE = toSQL (3 :: Int16)
+  toSQL LANG_FR = toSQL (4 :: Int16)
+  toSQL LANG_IT = toSQL (5 :: Int16)
+  toSQL LANG_ES = toSQL (6 :: Int16)
+  toSQL LANG_PT = toSQL (7 :: Int16)
+  toSQL LANG_NL = toSQL (8 :: Int16)
+  toSQL LANG_DA = toSQL (9 :: Int16)
+  toSQL LANG_NO = toSQL (10 :: Int16)
+  toSQL LANG_GR = toSQL (11 :: Int16)
+  toSQL LANG_FI = toSQL (12 :: Int16)
+  toSQL LANG_IS = toSQL (13 :: Int16)
+  toSQL LANG_ET = toSQL (14 :: Int16)
+  toSQL LANG_LV = toSQL (15 :: Int16)
+  toSQL LANG_LT = toSQL (16 :: Int16)
+  toSQL LANG_CS = toSQL (17 :: Int16)
+  toSQL LANG_PL = toSQL (18 :: Int16)
+  toSQL LANG_HU = toSQL (19 :: Int16)
 
 
 codeFromLang :: Lang -> Text
@@ -125,8 +122,7 @@ langFromCode s = find ((== s) . codeFromLang) allValues
 
 langFromHTTPHeader :: Text -> Lang
 langFromHTTPHeader s = fromMaybe LANG_EN $ msum $ map findLang (T.splitOn "," s)
-  where
-    findLang str = find ((`T.isInfixOf` str) . codeFromLang) allValues
+  where findLang str = find ((`T.isInfixOf` str) . codeFromLang) allValues
 
 allLangs :: [Lang]
 allLangs = allValues

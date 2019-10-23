@@ -37,13 +37,19 @@ import Util.MonadUtils
 import Util.SignatoryLinkUtils
 
 eidServiceRoutes :: Route (Kontra Response)
-eidServiceRoutes = choice [
-    dir "start" $ dir "verimi" . hPost . toK2 $ startVerimiEIDServiceTransaction
-  , dir "redirect-endpoint" $ dir "verimi" . hGet . toK2 $
-      redirectEndpointFromVerimiEIDServiceTransaction
+eidServiceRoutes = choice
+  [ dir "start" $ dir "verimi" . hPost . toK2 $ startVerimiEIDServiceTransaction
+  , dir "redirect-endpoint"
+  $ dir "verimi"
+  . hGet
+  . toK2
+  $ redirectEndpointFromVerimiEIDServiceTransaction
   , dir "start" $ dir "idin" . hPost . toK2 $ startIDINEIDServiceTransaction
-  , dir "redirect-endpoint" $ dir "idin" . hGet . toK2 $
-      redirectEndpointFromIDINEIDServiceTransaction
+  , dir "redirect-endpoint"
+  $ dir "idin"
+  . hGet
+  . toK2
+  $ redirectEndpointFromIDINEIDServiceTransaction
   ]
 
 eidServiceConf :: Kontrakcja m => m EIDServiceConf
@@ -53,7 +59,8 @@ eidServiceConf = do
     Nothing   -> noConfigurationError "No eid service provided"
     Just conf -> return conf
 
-startVerimiEIDServiceTransaction :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Value
+startVerimiEIDServiceTransaction
+  :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Value
 startVerimiEIDServiceTransaction did slid = do
   logInfo_ "EID Service transaction start"
   doc  <- fst <$> getDocumentAndSignatoryForEIDAuth did slid -- also access guard
@@ -63,74 +70,87 @@ startVerimiEIDServiceTransaction did slid = do
   turl <- startVerimiTransactionWithEIDService conf tid
   sid  <- getNonTempSessionID
   now  <- currentTime
-  let newTransaction = EIDServiceTransaction {
-      estID = tid
-    , estStatus = EIDServiceTransactionStatusStarted
-    , estSignatoryLinkID = slid
-    , estAuthKind = mkAuthKind doc
-    , estProvider = EIDServiceTransactionProviderVerimi
-    , estSessionID = sid
-    , estDeadline = 60 `minutesAfter` now
-    }
+  let newTransaction = EIDServiceTransaction
+        { estID              = tid
+        , estStatus          = EIDServiceTransactionStatusStarted
+        , estSignatoryLinkID = slid
+        , estAuthKind        = mkAuthKind doc
+        , estProvider        = EIDServiceTransactionProviderVerimi
+        , estSessionID       = sid
+        , estDeadline        = 60 `minutesAfter` now
+        }
   dbUpdate $ MergeEIDServiceTransaction newTransaction
-  return $ object [
-      "accessUrl" .= turl
-    ]
+  return $ object ["accessUrl" .= turl]
 
 updateVerimiTransactionAfterCheck
   :: Kontrakcja m
   => SignatoryLinkID
   -> EIDServiceTransaction
   -> EIDServiceTransactionStatus
-  -> Maybe CompleteVerimiEIDServiceTransactionData -> m EIDServiceTransactionStatus
+  -> Maybe CompleteVerimiEIDServiceTransactionData
+  -> m EIDServiceTransactionStatus
 updateVerimiTransactionAfterCheck slid est ts mctd = do
   if (estStatus est == ts)
-     then return $ estStatus est
-     else do
-       case (ts, mctd) of
-         (EIDServiceTransactionStatusCompleteAndSuccess, Just cd) -> do
-            doc <- dbQuery $ GetDocumentBySignatoryLinkID slid
-            let sl = fromJust $ getSigLinkFor slid doc
-            if (eidvtdVerifiedEmail cd == getEmail sl)
+    then return $ estStatus est
+    else do
+      case (ts, mctd) of
+        (EIDServiceTransactionStatusCompleteAndSuccess, Just cd) -> do
+          doc <- dbQuery $ GetDocumentBySignatoryLinkID slid
+          let sl = fromJust $ getSigLinkFor slid doc
+          if (eidvtdVerifiedEmail cd == getEmail sl)
             then do
-              mergeEIDServiceTransactionWithStatus EIDServiceTransactionStatusCompleteAndSuccess
-              let auth = EIDServiceVerimiAuthentication {
-                     eidServiceVerimiName = eidvtdName cd
-                   , eidServiceVerimiVerifiedEmail = Just $ eidvtdVerifiedEmail cd
-                   , eidServiceVerimiVerifiedPhone = Nothing
-                   }
+              mergeEIDServiceTransactionWithStatus
+                EIDServiceTransactionStatusCompleteAndSuccess
+              let auth = EIDServiceVerimiAuthentication
+                    { eidServiceVerimiName          = eidvtdName cd
+                    , eidServiceVerimiVerifiedEmail = Just $ eidvtdVerifiedEmail cd
+                    , eidServiceVerimiVerifiedPhone = Nothing
+                    }
               sessionID <- getNonTempSessionID
-              dbUpdate $ MergeEIDServiceVerimiAuthentication (mkAuthKind doc) sessionID slid auth
+              dbUpdate $ MergeEIDServiceVerimiAuthentication (mkAuthKind doc)
+                                                             sessionID
+                                                             slid
+                                                             auth
               ctx <- getContext
               let eventFields = do
                     F.value "signatory_name" $ eidvtdName cd
                     F.value "provider_verimi" True
               withDocument doc $ do
-                void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg
-                  AuthenticatedToViewEvidence (eventFields) (Just sl) Nothing
-                    =<< signatoryActor ctx sl
+                void
+                  $   dbUpdate
+                  .   InsertEvidenceEventWithAffectedSignatoryAndMsg
+                        AuthenticatedToViewEvidence
+                        (eventFields)
+                        (Just sl)
+                        Nothing
+                  =<< signatoryActor ctx sl
                 dbUpdate $ ChargeUserGroupForVerimiAuthentication (documentid doc)
               return EIDServiceTransactionStatusCompleteAndSuccess
             else do
-              mergeEIDServiceTransactionWithStatus EIDServiceTransactionStatusCompleteAndFailed
+              mergeEIDServiceTransactionWithStatus
+                EIDServiceTransactionStatusCompleteAndFailed
               return EIDServiceTransactionStatusCompleteAndFailed
-         (EIDServiceTransactionStatusCompleteAndSuccess, Nothing) -> do
-           mergeEIDServiceTransactionWithStatus EIDServiceTransactionStatusCompleteAndFailed
-           return EIDServiceTransactionStatusCompleteAndFailed
-         _ -> do
-           mergeEIDServiceTransactionWithStatus ts
-           return ts
+        (EIDServiceTransactionStatusCompleteAndSuccess, Nothing) -> do
+          mergeEIDServiceTransactionWithStatus
+            EIDServiceTransactionStatusCompleteAndFailed
+          return EIDServiceTransactionStatusCompleteAndFailed
+        _ -> do
+          mergeEIDServiceTransactionWithStatus ts
+          return ts
   where
     mergeEIDServiceTransactionWithStatus newstatus =
-      dbUpdate $ MergeEIDServiceTransaction $ est {estStatus = newstatus}
+      dbUpdate $ MergeEIDServiceTransaction $ est { estStatus = newstatus }
 
 checkVerimiEIDServiceTransactionForSignatory
   :: Kontrakcja m
-  => SignatoryLinkID -> m (Maybe
-    ( EIDServiceTransaction
-    , EIDServiceTransactionStatus
-    , Maybe CompleteVerimiEIDServiceTransactionData
-    ))
+  => SignatoryLinkID
+  -> m
+       ( Maybe
+           ( EIDServiceTransaction
+           , EIDServiceTransactionStatus
+           , Maybe CompleteVerimiEIDServiceTransactionData
+           )
+       )
 checkVerimiEIDServiceTransactionForSignatory slid = do
   conf      <- eidServiceConf
   sessionID <- getNonTempSessionID
@@ -139,14 +159,11 @@ checkVerimiEIDServiceTransactionForSignatory slid = do
   case mest of
     Nothing  -> return Nothing
     Just est -> checkVerimiTransactionWithEIDService conf (estID est) >>= \case
-      (Nothing, _)    -> return Nothing
+      (Nothing, _   ) -> return Nothing
       (Just ts, mctd) -> return $ Just (est, ts, mctd)
 
 redirectEndpointFromVerimiEIDServiceTransaction
-  :: Kontrakcja m
-  => DocumentID
-  -> SignatoryLinkID
-  -> m Response
+  :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 redirectEndpointFromVerimiEIDServiceTransaction did slid = do
   logInfo_ "EID Service transaction check"
   void $ getDocumentAndSignatoryForEIDAuth did slid -- access guard
@@ -175,71 +192,81 @@ startIDINEIDServiceTransaction did slid = do
   turl <- startIDINTransactionWithEIDService conf tid
   sid  <- getNonTempSessionID
   now  <- currentTime
-  let newTransaction = EIDServiceTransaction {
-      estID = tid
-    , estStatus = EIDServiceTransactionStatusStarted
-    , estSignatoryLinkID = slid
-    , estAuthKind = mkAuthKind doc
-    , estProvider = EIDServiceTransactionProviderIDIN
-    , estSessionID = sid
-    , estDeadline = 60 `minutesAfter` now
-    }
+  let newTransaction = EIDServiceTransaction
+        { estID              = tid
+        , estStatus          = EIDServiceTransactionStatusStarted
+        , estSignatoryLinkID = slid
+        , estAuthKind        = mkAuthKind doc
+        , estProvider        = EIDServiceTransactionProviderIDIN
+        , estSessionID       = sid
+        , estDeadline        = 60 `minutesAfter` now
+        }
   dbUpdate $ MergeEIDServiceTransaction newTransaction
-  return $ object [
-      "accessUrl" .= turl
-    ]
+  return $ object ["accessUrl" .= turl]
 
 updateIDINTransactionAfterCheck
   :: Kontrakcja m
   => SignatoryLinkID
   -> EIDServiceTransaction
   -> EIDServiceTransactionStatus
-  -> Maybe CompleteIDINEIDServiceTransactionData -> m EIDServiceTransactionStatus
+  -> Maybe CompleteIDINEIDServiceTransactionData
+  -> m EIDServiceTransactionStatus
 updateIDINTransactionAfterCheck slid est ts mctd = do
   if (estStatus est == ts)
-     then return $ estStatus est
-     else do
-       case (ts, mctd) of
-         (EIDServiceTransactionStatusCompleteAndSuccess, Just cd) -> do
-            doc <- dbQuery $ GetDocumentBySignatoryLinkID slid
-            let sl = fromJust $ getSigLinkFor slid doc
-            mergeEIDServiceTransactionWithStatus EIDServiceTransactionStatusCompleteAndSuccess
-            let auth = EIDServiceIDINAuthentication {
-                    eidServiceIDINName = eiditdName cd
-                  , eidServiceIDINVerifiedEmail = Just $ eiditdVerifiedEmail cd
-                  , eidServiceIDINVerifiedPhone = Nothing
-                  , eidServiceIDINBirthDate = Just $ eiditdBirthDate cd
-                  , eidServiceIDINCustomerID = Just $ eiditCumstomerID cd
-                  }
-            sessionID <- getNonTempSessionID
-            dbUpdate $ MergeEIDServiceIDINAuthentication (mkAuthKind doc) sessionID slid auth
-            ctx <- getContext
-            let eventFields = do
-                  F.value "signatory_name" $ eiditdName cd
-                  F.value "provider_idin" True
-            withDocument doc $ do
-              void $ dbUpdate . InsertEvidenceEventWithAffectedSignatoryAndMsg
-                AuthenticatedToViewEvidence (eventFields) (Just sl) Nothing
-                  =<< signatoryActor ctx sl
-              dbUpdate $ ChargeUserGroupForIDINAuthentication (documentid doc)
-            return EIDServiceTransactionStatusCompleteAndSuccess
-         (EIDServiceTransactionStatusCompleteAndSuccess, Nothing) -> do
-           mergeEIDServiceTransactionWithStatus EIDServiceTransactionStatusCompleteAndFailed
-           return EIDServiceTransactionStatusCompleteAndFailed
-         _ -> do
-           mergeEIDServiceTransactionWithStatus ts
-           return ts
+    then return $ estStatus est
+    else do
+      case (ts, mctd) of
+        (EIDServiceTransactionStatusCompleteAndSuccess, Just cd) -> do
+          doc <- dbQuery $ GetDocumentBySignatoryLinkID slid
+          let sl = fromJust $ getSigLinkFor slid doc
+          mergeEIDServiceTransactionWithStatus
+            EIDServiceTransactionStatusCompleteAndSuccess
+          let auth = EIDServiceIDINAuthentication
+                { eidServiceIDINName          = eiditdName cd
+                , eidServiceIDINVerifiedEmail = Just $ eiditdVerifiedEmail cd
+                , eidServiceIDINVerifiedPhone = Nothing
+                , eidServiceIDINBirthDate     = Just $ eiditdBirthDate cd
+                , eidServiceIDINCustomerID    = Just $ eiditCumstomerID cd
+                }
+          sessionID <- getNonTempSessionID
+          dbUpdate
+            $ MergeEIDServiceIDINAuthentication (mkAuthKind doc) sessionID slid auth
+          ctx <- getContext
+          let eventFields = do
+                F.value "signatory_name" $ eiditdName cd
+                F.value "provider_idin" True
+          withDocument doc $ do
+            void
+              $   dbUpdate
+              .   InsertEvidenceEventWithAffectedSignatoryAndMsg
+                    AuthenticatedToViewEvidence
+                    (eventFields)
+                    (Just sl)
+                    Nothing
+              =<< signatoryActor ctx sl
+            dbUpdate $ ChargeUserGroupForIDINAuthentication (documentid doc)
+          return EIDServiceTransactionStatusCompleteAndSuccess
+        (EIDServiceTransactionStatusCompleteAndSuccess, Nothing) -> do
+          mergeEIDServiceTransactionWithStatus
+            EIDServiceTransactionStatusCompleteAndFailed
+          return EIDServiceTransactionStatusCompleteAndFailed
+        _ -> do
+          mergeEIDServiceTransactionWithStatus ts
+          return ts
   where
     mergeEIDServiceTransactionWithStatus newstatus =
-      dbUpdate $ MergeEIDServiceTransaction $ est {estStatus = newstatus}
+      dbUpdate $ MergeEIDServiceTransaction $ est { estStatus = newstatus }
 
 checkIDINEIDServiceTransactionForSignatory
   :: Kontrakcja m
-  => SignatoryLinkID -> m (Maybe
-    ( EIDServiceTransaction
-    , EIDServiceTransactionStatus
-    , Maybe CompleteIDINEIDServiceTransactionData
-    ))
+  => SignatoryLinkID
+  -> m
+       ( Maybe
+           ( EIDServiceTransaction
+           , EIDServiceTransactionStatus
+           , Maybe CompleteIDINEIDServiceTransactionData
+           )
+       )
 checkIDINEIDServiceTransactionForSignatory slid = do
   conf      <- eidServiceConf
   sessionID <- getNonTempSessionID
@@ -248,14 +275,11 @@ checkIDINEIDServiceTransactionForSignatory slid = do
   case mest of
     Nothing  -> return Nothing
     Just est -> checkIDINTransactionWithEIDService conf (estID est) >>= \case
-      (Nothing, _)    -> return Nothing
+      (Nothing, _   ) -> return Nothing
       (Just ts, mctd) -> return $ Just (est, ts, mctd)
 
 redirectEndpointFromIDINEIDServiceTransaction
-  :: Kontrakcja m
-  => DocumentID
-  -> SignatoryLinkID
-  -> m Response
+  :: Kontrakcja m => DocumentID -> SignatoryLinkID -> m Response
 redirectEndpointFromIDINEIDServiceTransaction did slid = do
   logInfo_ "EID Service transaction check"
   void $ getDocumentAndSignatoryForEIDAuth did slid -- access guard

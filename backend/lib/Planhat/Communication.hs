@@ -18,23 +18,20 @@ import User.Model
 import UserGroup.Types
 
 phActionURL :: PlanhatConf -> String
-phActionURL PlanhatConf{..} =
-    planhatBaseURL </> "analytics" </> planhatTenantID
+phActionURL PlanhatConf {..} = planhatBaseURL </> "analytics" </> planhatTenantID
 
 phMetricsURL :: PlanhatConf -> String
-phMetricsURL  PlanhatConf{..} =
-    planhatBaseURL </> planhatTenantID </> "dimensiondata"
+phMetricsURL PlanhatConf {..} = planhatBaseURL </> planhatTenantID </> "dimensiondata"
 
-mkPlanhatRequest :: PlanhatConf
-                 -> (PlanhatConf -> String)
-                 -> JSON.Value
-                 -> Request
-mkPlanhatRequest phConf@PlanhatConf{..} phURL reqJSON =
-  let timeout = responseTimeoutMicro $ 10 {- secs -} * 1000000
-      req = (setRequestBodyJSON reqJSON) . (setRequestMethod "POST") $
-              parseRequest_ (phURL phConf)
+mkPlanhatRequest :: PlanhatConf -> (PlanhatConf -> String) -> JSON.Value -> Request
+mkPlanhatRequest phConf@PlanhatConf {..} phURL reqJSON =
+  let timeout =
+          responseTimeoutMicro
+            $ 10 {- secs -}*  1000000
+      req = (setRequestBodyJSON reqJSON) . (setRequestMethod "POST") $ parseRequest_
+        (phURL phConf)
       req' = req { responseTimeout = timeout }
-  in req'
+  in  req'
 
 -- | Planhat says '200' about most things, but often (but not always) supplies a
 -- JSON object that we can check for a key "errors". If this has non-zero length
@@ -47,33 +44,38 @@ maybeErrors :: BSL.ByteString -> Maybe JSON.Value
 maybeErrors resBody = do
   resJSON <- JSON.decode' resBody
   (flip JSON.parseMaybe) resJSON $ \val -> do
-    (JSON.withObject "Planhat query result" (\obj -> do
-      k <- length <$> (obj .: "errors" :: JSON.Parser JSON.Array)
-      if k > 0 then return resJSON else fail ""
-      )) val
+    (JSON.withObject
+        "Planhat query result"
+        (\obj -> do
+          k <- length <$> (obj .: "errors" :: JSON.Parser JSON.Array)
+          if k > 0 then return resJSON else fail ""
+        )
+      )
+      val
 
 -- JSON build helpers
 
 planhatActionJSON :: String -> String -> UserID -> UTCTime -> JSON.Value
-planhatActionJSON actionTag email userId time =
-    JSON.object [ "email"      .= email
-                , "action"     .= actionTag
-                , "externalId" .= (show . unUserID $ userId)
-                , "date"       .= time ]
+planhatActionJSON actionTag email userId time = JSON.object
+  [ "email" .= email
+  , "action" .= actionTag
+  , "externalId" .= (show . unUserID $ userId)
+  , "date" .= time
+  ]
 
 planhatMetricJSON
-    :: String      -- ^ The name of the dimension used.
-    -> Int64       -- ^ Value (usually a counter).
-    -> UserGroupID -- ^ @rootugid@: the @UserGroupID@ of the invoicing
+  :: String      -- ^ The name of the dimension used.
+  -> Int64       -- ^ Value (usually a counter).
+  -> UserGroupID -- ^ @rootugid@: the @UserGroupID@ of the invoicing
                    -- parent user group.
-    -> UserGroupID -- ^ @sugid@: the @UserGroupID@ of the subgroup to
+  -> UserGroupID -- ^ @sugid@: the @UserGroupID@ of the subgroup to
                    -- which a dimension belongs.
-    -> UTCTime     -- ^ Timestamp.
-    -> JSON.Value
-planhatMetricJSON dimensionId value invoiceUgid sugid time =
-    JSON.object
-      [ "companyExternalId" .= (Text.pack $ show invoiceUgid)
-      , "dimensionId"       .= dimensionId
-      , "value"             .= value
-      , "date"              .= time
-      , "assetExtId"        .= (Text.pack $ show sugid)]
+  -> UTCTime     -- ^ Timestamp.
+  -> JSON.Value
+planhatMetricJSON dimensionId value invoiceUgid sugid time = JSON.object
+  [ "companyExternalId" .= (Text.pack $ show invoiceUgid)
+  , "dimensionId" .= dimensionId
+  , "value" .= value
+  , "date" .= time
+  , "assetExtId" .= (Text.pack $ show sugid)
+  ]
