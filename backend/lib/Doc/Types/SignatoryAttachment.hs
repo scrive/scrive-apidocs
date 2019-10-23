@@ -8,13 +8,13 @@ import DB
 import Doc.Tables
 import File.FileID
 
-data SignatoryAttachment = SignatoryAttachment {
-  signatoryattachmentfile     :: !(Maybe FileID)
-, signatoryattachmentfilename :: !(Maybe Text)
-, signatoryattachmentname :: !Text
-, signatoryattachmentdescription :: !Text
-, signatoryattachmentrequired :: !Bool
-} deriving (Eq, Ord, Show)
+data SignatoryAttachment = SignatoryAttachment
+  { signatoryattachmentfile     :: !(Maybe FileID)
+  , signatoryattachmentfilename :: !(Maybe Text)
+  , signatoryattachmentname :: !Text
+  , signatoryattachmentdescription :: !Text
+  , signatoryattachmentrequired :: !Bool
+  } deriving (Eq, Ord, Show)
 
 ---------------------------------
 

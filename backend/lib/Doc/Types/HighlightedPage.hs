@@ -9,8 +9,8 @@ import DB
 import Doc.Tables
 import File.FileID
 
-data HighlightedPage = HighlightedPage {
-    highlightedPagePage :: Int32
+data HighlightedPage = HighlightedPage
+  { highlightedPagePage :: Int32
   , highlightedPageFileID :: FileID
   } deriving (Eq, Ord, Show)
 

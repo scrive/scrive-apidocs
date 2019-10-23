@@ -24,8 +24,8 @@ import MagicHash
 import MinutesTime
 import User.Model
 
-data UserAccountRequest = UserAccountRequest {
-    uarUserID :: UserID
+data UserAccountRequest = UserAccountRequest
+  { uarUserID :: UserID
   , uarExpires :: UTCTime
   , uarToken :: MagicHash
   } deriving (Show, Typeable)

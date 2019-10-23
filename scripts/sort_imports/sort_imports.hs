@@ -77,8 +77,8 @@ parseImpSpec = P.choice
       P.skipSpace
       return $ sort entities
 
-data Import = Import {
-    imQualified      :: !Bool
+data Import = Import
+  { imQualified      :: !Bool
   , imModule         :: !Text
   , imCaselessModule :: !Text
   , imAlias          :: !(Maybe Text)
@@ -191,8 +191,8 @@ showImport Style {..} Import {..} = withImpSpec import_module
 data ImportGrouping = NoGrouping | ExternalInternal | InternalExternal
   deriving Show
 
-data Style = Style {
-    alignUnqualified :: !Bool
+data Style = Style
+  { alignUnqualified :: !Bool
   , aliasAlignment   :: !(Maybe Int)
   , importGrouping   :: !ImportGrouping
   } deriving Show

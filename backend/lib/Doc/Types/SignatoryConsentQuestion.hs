@@ -11,8 +11,8 @@ import Database.PostgreSQL.PQTypes.Model.CompositeType
 import Doc.SignatoryConsentQuestionID
 import Doc.Tables
 
-data SignatoryConsentQuestion = SignatoryConsentQuestion {
-    scqID             :: !SignatoryConsentQuestionID
+data SignatoryConsentQuestion = SignatoryConsentQuestion
+  { scqID             :: !SignatoryConsentQuestionID
   , scqTitle          :: !String
   , scqPositiveOption :: !String
   , scqNegativeOption :: !String

@@ -21,8 +21,8 @@ import MagicHash
 import MinutesTime
 import User.Model
 
-data PasswordReminder = PasswordReminder {
-    prUserID :: UserID
+data PasswordReminder = PasswordReminder
+  { prUserID :: UserID
   , prExpires :: UTCTime
   , prRemainedEmails :: Int32
   , prToken :: MagicHash

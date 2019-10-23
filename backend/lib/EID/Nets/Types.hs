@@ -138,34 +138,34 @@ instance ToSQL NetsDKNemIDInternalProvider where
   toSQL NetsDKNemIDKeyFile = toSQL (2 :: Int16)
 ----------------------------------------
 
-data NetsNOBankIDAuthentication = NetsNOBankIDAuthentication {
-    netsNOBankIDInternalProvider     :: !NetsNOBankIDInternalProvider
+data NetsNOBankIDAuthentication = NetsNOBankIDAuthentication
+  { netsNOBankIDInternalProvider     :: !NetsNOBankIDInternalProvider
   , netsNOBankIDSignatoryName        :: !Text
   , netsNOBankIDPhoneNumber          :: !(Maybe Text)
   , netsNOBankIDDateOfBirth          :: !Text
   , netsNOBankIDCertificate          :: !ByteString
-} deriving (Eq, Ord, Show)
+  } deriving (Eq, Ord, Show)
 
-data NetsDKNemIDAuthentication = NetsDKNemIDAuthentication {
-    netsDKNemIDInternalProvider     :: !NetsDKNemIDInternalProvider
+data NetsDKNemIDAuthentication = NetsDKNemIDAuthentication
+  { netsDKNemIDInternalProvider     :: !NetsDKNemIDInternalProvider
   , netsDKNemIDSignatoryName        :: !Text
   , netsDKNemIDDateOfBirth          :: !Text
   , netsDKNemIDCertificate          :: !ByteString
-} deriving (Eq, Ord, Show)
+  } deriving (Eq, Ord, Show)
 
-data NetsFITupasAuthentication = NetsFITupasAuthentication {
-    netsFITupasSignatoryName        :: !Text
+data NetsFITupasAuthentication = NetsFITupasAuthentication
+  { netsFITupasSignatoryName        :: !Text
   , netsFITupasDateOfBirth          :: !Text
-} deriving (Eq, Ord, Show)
+  } deriving (Eq, Ord, Show)
 
 -- | Information for transaction. It is encoded in frontend as (,,,) + Base64 when starting nets iframe.
 --   Backend decodes that within resolve handler.
-data NetsTarget = NetsTarget {
-    netsTransactionDomain    :: Text -- Domain where session cookie is set
+data NetsTarget = NetsTarget
+  { netsTransactionDomain    :: Text -- Domain where session cookie is set
   , netsDocumentID           :: !DocumentID
   , netsSignatoryID          :: !SignatoryLinkID
   , netsReturnURL            :: !Text
-} deriving (Eq, Ord, Show)
+  } deriving (Eq, Ord, Show)
 
 decodeNetsTarget :: Text -> Maybe NetsTarget
 decodeNetsTarget t = case (B64.decode $ TE.encodeUtf8 t) of
@@ -175,9 +175,9 @@ decodeNetsTarget t = case (B64.decode $ TE.encodeUtf8 t) of
   _ -> Nothing
 
 -- | GetAssertionRequest request
-data GetAssertionRequest = GetAssertionRequest {
-  assertionArtifact :: !Text
-} deriving (Eq, Ord, Show)
+data GetAssertionRequest = GetAssertionRequest
+  { assertionArtifact :: !Text
+  } deriving (Eq, Ord, Show)
 
 -- | Construct SOAP request from the 'GetAssertionRequest'.
 instance ToXML GetAssertionRequest where
@@ -192,10 +192,10 @@ instance ToXML GetAssertionRequest where
           element "AssertionArtifact" assertionArtifact
 
 -- | Collect action response.
-data GetAssertionResponse = GetAssertionResponse {
-  assertionStatusCode :: !Text,
-  assertionAttributes :: ![(Text,Text)]
-} deriving (Eq, Ord, Show)
+data GetAssertionResponse = GetAssertionResponse
+  { assertionStatusCode :: !Text
+  , assertionAttributes :: ![(Text,Text)]
+  } deriving (Eq, Ord, Show)
 
 -- | Retrieve 'GetAssertionResponse' from SOAP response.
 xpGetAssertionResponse :: XMLParser GetAssertionResponse
@@ -222,20 +222,20 @@ xpGetAssertionResponse = XMLParser $ \c ->
 
 -- data NetsEidType = NetsEidNOBankID
 --
-data NetsNOBankIDSignature = NetsNOBankIDSignature {
-  netsnoSignedText    :: !Text
-, netsnoB64SDO        :: !Text -- base64 SDO from Nets ESigning
-, netsnoSignatoryName :: !Text
-, netsnoSignatoryPID  :: !Text
-} deriving (Eq, Ord, Show)
+data NetsNOBankIDSignature = NetsNOBankIDSignature
+  { netsnoSignedText    :: !Text
+  , netsnoB64SDO        :: !Text -- base64 SDO from Nets ESigning
+  , netsnoSignatoryName :: !Text
+  , netsnoSignatoryPID  :: !Text
+  } deriving (Eq, Ord, Show)
 
-data NetsDKNemIDSignature = NetsDKNemIDSignature {
-  netsdkSignedText    :: !Text
-, netsdkB64SDO        :: !Text -- base64 SDO from Nets ESigning
-, netsdkSignatoryName :: !Text
-, netsdkSignatorySSN  :: !Text
-, netsdkSignatoryIP   :: !Text
-} deriving (Eq, Ord, Show)
+data NetsDKNemIDSignature = NetsDKNemIDSignature
+  { netsdkSignedText    :: !Text
+  , netsdkB64SDO        :: !Text -- base64 SDO from Nets ESigning
+  , netsdkSignatoryName :: !Text
+  , netsdkSignatorySSN  :: !Text
+  , netsdkSignatoryIP   :: !Text
+  } deriving (Eq, Ord, Show)
 
 data NetsSignStatus
   = NetsSignStatusSuccess

@@ -18,10 +18,10 @@ import DB.SQLFunction
 import DB.SQLTrigger
 import Log.Configuration
 
-data CmdConf = CmdConf {
-  config :: String,
-  force :: Bool
-} deriving (Data, Typeable)
+data CmdConf = CmdConf
+  { config :: String
+  , force :: Bool
+  } deriving (Data, Typeable)
 
 cmdConf :: FilePath -> String -> CmdConf
 cmdConf workspaceRoot progName =

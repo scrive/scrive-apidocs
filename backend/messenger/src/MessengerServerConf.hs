@@ -16,8 +16,8 @@ import Monitoring
 import SMS.Types
 import Utils.TH
 
-data MessengerServerConf = MessengerServerConf {
-    messengerHttpBindAddress  :: !(Word32, Word16)
+data MessengerServerConf = MessengerServerConf
+  { messengerHttpBindAddress  :: !(Word32, Word16)
   , messengerDBConfig         :: !Text
   , messengerMaxDBConnections :: !Int
   , messengerLogConfig        :: !LogConfig
@@ -58,19 +58,19 @@ unjsonMessengerServerConf =
 instance Unjson MessengerServerConf where
   unjsonDef = unjsonMessengerServerConf
 
-data SenderConfig = MbloxSender {
-  mbToken          :: !String
-, mbURL            :: !String
-                      -- ^ "https://api.mblox.com/xms/v1/{username}/batches"
-} | TeliaCallGuideSender {
-  tcgSenderUrl      :: !String
-                    -- ^ "https://sms.ace.teliacompany.com/smsplus/smsextended"
-, tcgSenderUser     :: !String
-, tcgSenderPassword :: !String
-} | LocalSender {
-  localDirectory   :: !FilePath
-, localOpenCommand :: !(Maybe String)
-} deriving (Eq, Ord, Show)
+data SenderConfig = MbloxSender
+  { mbToken          :: !String
+  , mbURL            :: !String
+  -- ^ "https://api.mblox.com/xms/v1/{username}/batches"
+  } | TeliaCallGuideSender
+  { tcgSenderUrl      :: !String
+  -- ^ "https://sms.ace.teliacompany.com/smsplus/smsextended"
+  , tcgSenderUser     :: !String
+  , tcgSenderPassword :: !String
+  } | LocalSender
+  { localDirectory   :: !FilePath
+  , localOpenCommand :: !(Maybe String)
+  } deriving (Eq, Ord, Show)
 
 instance Unjson SenderConfig where
   unjsonDef = disjointUnionOf

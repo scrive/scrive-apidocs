@@ -25,8 +25,8 @@ import User.Email
 -- things the http port number, AWS, GuardTime, E-ID and email
 -- configuraton, as well as a handy boolean indicating whether this is
 -- a production or development instance.
-data AppConf = AppConf {
-    httpBindAddress    :: (Word32, Word16)
+data AppConf = AppConf
+  { httpBindAddress    :: (Word32, Word16)
     -- ^ TCP address to bind to and port to listen on (0x7f000001,
     -- 8000) localhost:8000 (default) (0, 80) all interfaces port 80.
   , mainDomainUrl      :: Text               -- ^ base url of the main domain

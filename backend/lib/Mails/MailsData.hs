@@ -14,8 +14,8 @@ import File.FileID
 import Log.Identifier
 import Mails.KontraInfoForMail
 
-data MailAddress = MailAddress {
-    fullname    :: Text
+data MailAddress = MailAddress
+  { fullname    :: Text
   , email       :: Text
   } deriving (Eq, Ord, Show)
 
@@ -26,8 +26,8 @@ instance ToJSON MailAddress where
 
 -- | Structure for holding mails. If from is not set mail will be send
 -- as Scrive admin (fromMails Config).
-data Mail = Mail {
-    to                :: [MailAddress]
+data Mail = Mail
+  { to                :: [MailAddress]
   , originator        :: Text
     -- ^ Name of service sending email. Default is Scrive.
   , originatorEmail   :: Text

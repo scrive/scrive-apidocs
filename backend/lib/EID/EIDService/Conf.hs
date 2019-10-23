@@ -4,10 +4,10 @@ import Data.Unjson
 import qualified Data.Text as T
 
 -- | A datatype for EIDService configuration data.
-data EIDServiceConf = EIDServiceConf {
-      eidServiceUrl :: T.Text
-    , eidServiceToken :: T.Text
-} deriving (Show, Eq, Ord)
+data EIDServiceConf = EIDServiceConf
+  { eidServiceUrl :: T.Text
+  , eidServiceToken :: T.Text
+  } deriving (Show, Eq, Ord)
 
 unjsonEIDServiceConf :: UnjsonDef EIDServiceConf
 unjsonEIDServiceConf =

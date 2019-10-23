@@ -26,8 +26,8 @@ import DB
 import Theme.ThemeID
 import UserGroup.Types
 
-data Theme = Theme {
-    themeID                       :: !ThemeID
+data Theme = Theme
+  { themeID                       :: !ThemeID
   , themeName                     :: !Text
   , themeLogo                     :: !BS.ByteString
   , themeBrandColor               :: !Text
@@ -41,7 +41,7 @@ data Theme = Theme {
   , themeNegativeColor            :: !Text
   , themeNegativeTextColor        :: !Text
   , themeFont                     :: !Text
-} deriving (Eq, Ord, Show)
+  } deriving (Eq, Ord, Show)
 
 data GetTheme = GetTheme ThemeID
 instance (MonadDB m,MonadThrow m) => DBQuery m GetTheme Theme where

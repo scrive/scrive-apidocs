@@ -183,51 +183,50 @@ instance Read StatusClass where
 
 ---------------------------------
 
-data Document = Document {
-  documentid                     :: !DocumentID
-, documenttitle                  :: !Text
-, documentsignatorylinks         :: ![SignatoryLink]
--- | Order: most recently added files first (FIXME: encode this in the type)
-, documentmainfiles              :: ![MainFile]
-, documentstatus                 :: !DocumentStatus
-, documenttype                   :: !DocumentType
-, documentctime                  :: !UTCTime
-, documentmtime                  :: !UTCTime
-, documentdaystosign             :: !Int32
-, documentdaystoremind           :: !(Maybe Int32)
-, documenttimeouttime            :: !(Maybe UTCTime)
-, documentautoremindtime         :: !(Maybe UTCTime)
-, documentinvitetime             :: !(Maybe SignInfo)
-, documentinvitetext             :: !Text
-, documentconfirmtext            :: !Text
-, documentshowheader             :: !Bool
-, documentshowpdfdownload        :: !Bool
-, documentshowrejectoption       :: !Bool
-, documentallowrejectreason      :: !Bool
-, documentshowfooter             :: !Bool
-, documentisreceipt              :: !Bool
-, documentsharing                :: !DocumentSharing
-, documenttags                   :: !(S.Set DocumentTag)
-, documentauthorattachments      :: ![AuthorAttachment]
-, documentlang                   :: !Lang
-, documentstatusclass            :: !StatusClass
-, documentapiv1callbackurl       :: !(Maybe Text)
-, documentapiv2callbackurl       :: !(Maybe Text)
-, documentunsaveddraft           :: !Bool
-, documentobjectversion          :: !Int64
-, documentmagichash              :: !MagicHash
-, documentauthorugid             :: !(Maybe UserGroupID)
-, documenttimezonename           :: !TimeZoneName
-, documentshareablelinkhash      :: !(Maybe MagicHash)
-, documenttemplateid             :: !(Maybe DocumentID)
-, documentfromshareablelink      :: !Bool
-, documentshowarrow              :: !Bool
--- | Folder, where the document belongs. The folder facilitates access
--- to the document.
--- Initially Maybe because of initial migration
--- After initial migration, Maybe will be removed
-, documentfolderid               :: !(Maybe FolderID)
-} deriving (Show)
+data Document = Document
+  { documentid                     :: !DocumentID
+  , documenttitle                  :: !Text
+  , documentsignatorylinks         :: ![SignatoryLink]
+  -- | Order: most recently added files first (FIXME: encode this in the type)
+  , documentmainfiles              :: ![MainFile]
+  , documentstatus                 :: !DocumentStatus
+  , documenttype                   :: !DocumentType
+  , documentctime                  :: !UTCTime
+  , documentmtime                  :: !UTCTime
+  , documentdaystosign             :: !Int32
+  , documentdaystoremind           :: !(Maybe Int32)
+  , documenttimeouttime            :: !(Maybe UTCTime)
+  , documentautoremindtime         :: !(Maybe UTCTime)
+  , documentinvitetime             :: !(Maybe SignInfo)
+  , documentinvitetext             :: !Text
+  , documentconfirmtext            :: !Text
+  , documentshowheader             :: !Bool
+  , documentshowpdfdownload        :: !Bool
+  , documentshowrejectoption       :: !Bool
+  , documentallowrejectreason      :: !Bool
+  , documentshowfooter             :: !Bool
+  , documentisreceipt              :: !Bool
+  , documentsharing                :: !DocumentSharing
+  , documenttags                   :: !(S.Set DocumentTag)
+  , documentauthorattachments      :: ![AuthorAttachment]
+  , documentlang                   :: !Lang
+  , documentstatusclass            :: !StatusClass
+  , documentapiv1callbackurl       :: !(Maybe Text)
+  , documentapiv2callbackurl       :: !(Maybe Text)
+  , documentunsaveddraft           :: !Bool
+  , documentobjectversion          :: !Int64
+  , documentmagichash              :: !MagicHash
+  , documentauthorugid             :: !(Maybe UserGroupID)
+  , documenttimezonename           :: !TimeZoneName
+  , documentshareablelinkhash      :: !(Maybe MagicHash)
+  , documenttemplateid             :: !(Maybe DocumentID)
+  , documentfromshareablelink      :: !Bool
+  , documentshowarrow              :: !Bool
+  -- | Folder, where the document belongs. The folder facilitates access to the
+  -- document.  Initially Maybe because of initial migration After initial
+  -- migration, Maybe will be removed
+  , documentfolderid               :: !(Maybe FolderID)
+  } deriving (Show)
 
 type instance ID Document = DocumentID
 

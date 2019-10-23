@@ -21,8 +21,8 @@ import qualified Data.Text as T
 import DB
 import Log.Identifier
 
-data Folder = Folder {
-    _folderID       :: !FolderID
+data Folder = Folder
+  { _folderID       :: !FolderID
   , _folderParentID :: !(Maybe FolderID)
   , _folderName     :: !Text
   } deriving (Show, Eq)

@@ -2,8 +2,8 @@ module StatsD.Config where
 
 import Data.Unjson
 
-data StatsDConf = StatsDConf {
-    statsdHost    :: String
+data StatsDConf = StatsDConf
+  { statsdHost    :: String
   , statsdPort    :: Int
   , statsdPrefix  :: String
   } deriving (Eq, Show, Ord)

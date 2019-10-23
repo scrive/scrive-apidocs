@@ -21,8 +21,8 @@ import UserGroup.Types
     of an invitation made by a usergroup
     to takeover an existing user.
 -}
-data UserGroupInvite = UserGroupInvite {
-    inviteduserid   :: UserID
+data UserGroupInvite = UserGroupInvite
+  { inviteduserid   :: UserID
   , invitingusergroup :: UserGroupID --the usergroup they are invited to
   } deriving (Eq, Ord, Show)
 

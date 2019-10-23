@@ -68,10 +68,10 @@ instance ToSQL JobType where
   type PQDest JobType = PQBase Text
   toSQL tt = toSQL . fromJust $ tt `lookup` jobTypeMapper
 
-data MailerJob = MailerJob {
-  mjType      :: !JobType
-, mjAttempts  :: !Int32
-} deriving (Eq, Ord, Show)
+data MailerJob = MailerJob
+  { mjType      :: !JobType
+  , mjAttempts  :: !Int32
+  } deriving (Eq, Ord, Show)
 
 ----------------------------------------
 
@@ -94,10 +94,10 @@ instance ToSQL MailID where
   type PQDest MailID = PQDest Int64
   toSQL (MailID n) = toSQL n
 
-data Address = Address {
-  addrName  :: !Text
-, addrEmail :: !Text
-} deriving (Eq, Ord, Read, Show, Data, Typeable)
+data Address = Address
+  { addrName  :: !Text
+  , addrEmail :: !Text
+  } deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 instance Unjson Address where
   unjsonDef =
@@ -128,10 +128,10 @@ instance ToSQL [Address] where
   type PQDest [Address] = PQDest String
   toSQL = jsonToSQL
 
-data Attachment = Attachment {
-  attName    :: !Text
-, attContent :: !(Either B.ByteString FileID)
-} deriving (Eq, Ord, Show)
+data Attachment = Attachment
+  { attName    :: !Text
+  , attContent :: !(Either B.ByteString FileID)
+  } deriving (Eq, Ord, Show)
 
 type instance CompositeRow Attachment = (Text, Maybe B.ByteString, Maybe FileID)
 
@@ -153,18 +153,18 @@ instance Loggable Attachment where
     Right fid -> ["type" .= ("file_id" :: String), identifier fid]
   logDefaultLabel _ = "attachment"
 
-data Mail = Mail {
-  mailID          :: !MailID
-, mailToken       :: !MagicHash
-, mailFrom        :: !Address
-, mailTo          :: ![Address]
-, mailReplyTo     :: !(Maybe Address)
-, mailTitle       :: !Text
-, mailContent     :: !Text
-, mailAttachments :: ![Attachment]
-, mailServiceTest :: !Bool
-, mailAttempts    :: !Int32
-} deriving (Eq, Ord, Show)
+data Mail = Mail
+  { mailID          :: !MailID
+  , mailToken       :: !MagicHash
+  , mailFrom        :: !Address
+  , mailTo          :: ![Address]
+  , mailReplyTo     :: !(Maybe Address)
+  , mailTitle       :: !Text
+  , mailContent     :: !Text
+  , mailAttachments :: ![Attachment]
+  , mailServiceTest :: !Bool
+  , mailAttempts    :: !Int32
+  } deriving (Eq, Ord, Show)
 
 instance Loggable Mail where
   logValue Mail {..} = object

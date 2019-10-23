@@ -82,12 +82,12 @@ instance ToSQL APIPrivilege where
   toSQL APIDocCheck  = toSQL (2 :: Int16)
   toSQL APIDocSend   = toSQL (3 :: Int16)
 
-data OAuthTempCredRequest = OAuthTempCredRequest {
-  tcCallback   :: URI
-, tcAPIToken   :: APIToken
-, tcAPISecret  :: MagicHash
-, tcPrivileges :: [APIPrivilege]
-} deriving Show
+data OAuthTempCredRequest = OAuthTempCredRequest
+  { tcCallback   :: URI
+  , tcAPIToken   :: APIToken
+  , tcAPISecret  :: MagicHash
+  , tcPrivileges :: [APIPrivilege]
+  } deriving Show
 
 instance Loggable OAuthTempCredRequest where
   logValue OAuthTempCredRequest {..} = object
@@ -97,28 +97,28 @@ instance Loggable OAuthTempCredRequest where
     ]
   logDefaultLabel _ = "temp_cred_request"
 
-data OAuthTokenRequest = OAuthTokenRequest {
-  trAPIToken   :: APIToken
-, trAPISecret  :: MagicHash
-, trTempToken  :: APIToken
-, trTempSecret :: MagicHash
-, trVerifier   :: MagicHash
-} deriving Show
+data OAuthTokenRequest = OAuthTokenRequest
+  { trAPIToken   :: APIToken
+  , trAPISecret  :: MagicHash
+  , trTempToken  :: APIToken
+  , trTempSecret :: MagicHash
+  , trVerifier   :: MagicHash
+  } deriving Show
 
-data OAuthAuthorization = OAuthAuthorization {
-  oaAPIToken     :: APIToken
-, oaAPISecret    :: MagicHash
-, oaAccessToken  :: APIToken
-, oaAccessSecret :: MagicHash
-} deriving (Show, Eq)
+data OAuthAuthorization = OAuthAuthorization
+  { oaAPIToken     :: APIToken
+  , oaAPISecret    :: MagicHash
+  , oaAccessToken  :: APIToken
+  , oaAccessSecret :: MagicHash
+  } deriving (Show, Eq)
 
-data OAuthAuthorizationHideSecrets = OAuthAuthorizationHideSecrets {
-  oahsAPIToken     :: APIToken
-, oahsAPISecret    :: Text
-, oahsAccessToken  :: APIToken
-, oahsAccessSecret :: Text
-, oahsHidden       :: Bool
-} deriving (Show, Eq)
+data OAuthAuthorizationHideSecrets = OAuthAuthorizationHideSecrets
+  { oahsAPIToken     :: APIToken
+  , oahsAPISecret    :: Text
+  , oahsAccessToken  :: APIToken
+  , oahsAccessSecret :: Text
+  , oahsHidden       :: Bool
+  } deriving (Show, Eq)
 
 toOAuthAuthorizationHideSecrets :: OAuthAuthorization -> OAuthAuthorizationHideSecrets
 toOAuthAuthorizationHideSecrets oauth = OAuthAuthorizationHideSecrets

@@ -24,8 +24,8 @@ import MinutesTime
 import Util.Actor
 import qualified DB.TimeZoneName as TimeZoneName
 
-data DocumentAutomaticReminder = DocumentAutomaticReminder {
-    darDocumentID :: DocumentID
+data DocumentAutomaticReminder = DocumentAutomaticReminder
+  { darDocumentID :: DocumentID
   , darExpires :: UTCTime
   } deriving (Show,Typeable)
 

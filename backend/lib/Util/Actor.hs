@@ -34,8 +34,8 @@ mkAdminActor ctx = case get ctxmaybeuser ctx of
   Nothing   -> Nothing
 
 -- | Actor describes who is performing an action and when
-data Actor = Actor {
-    -- | the time the action is taken
+data Actor = Actor
+  { -- | the time the action is taken
     actorTime      :: UTCTime
     -- | the client time the action is taken
   , actorClientTime :: Maybe UTCTime

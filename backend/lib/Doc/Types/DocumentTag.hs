@@ -9,10 +9,10 @@ import Database.PostgreSQL.PQTypes.Model.CompositeType
 import DB
 import Doc.Tables
 
-data DocumentTag = DocumentTag {
-  tagname  :: !Text
-, tagvalue :: !Text
-} deriving (Eq, Show)
+data DocumentTag = DocumentTag
+  { tagname  :: !Text
+  , tagvalue :: !Text
+  } deriving (Eq, Show)
 
 -- | For 'Set' storage.
 instance Ord DocumentTag where

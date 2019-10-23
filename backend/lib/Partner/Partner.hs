@@ -8,9 +8,9 @@ module Partner.Partner
 import Partner.PartnerID
 import UserGroup.Types
 
-data Partner = Partner {
-      ptID :: !PartnerID
-    , ptName :: !String
-    , ptDefaultPartner :: !Bool
-    , ptUserGroupID :: Maybe UserGroupID
-    } deriving (Eq, Ord, Show)
+data Partner = Partner
+  { ptID :: !PartnerID
+  , ptName :: !String
+  , ptDefaultPartner :: !Bool
+  , ptUserGroupID :: Maybe UserGroupID
+  } deriving (Eq, Ord, Show)

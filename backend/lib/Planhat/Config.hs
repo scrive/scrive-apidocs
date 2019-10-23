@@ -4,12 +4,10 @@ import Data.Unjson
 
 type PlanhatTenantID = String
 
-data PlanhatConf =
-    PlanhatConf
-    {
-      planhatBaseURL     :: String
-    , planhatTenantID    :: PlanhatTenantID
-    } deriving (Eq, Show, Ord)
+data PlanhatConf = PlanhatConf
+  { planhatBaseURL     :: String
+  , planhatTenantID    :: PlanhatTenantID
+  } deriving (Eq, Show, Ord)
 
 unjsonPlanhatConf :: UnjsonDef PlanhatConf
 unjsonPlanhatConf =

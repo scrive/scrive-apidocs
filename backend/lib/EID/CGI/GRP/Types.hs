@@ -33,23 +33,23 @@ import Session.Cookies
 import Text.XML.Parser
 
 -- | Final BankID signature.
-data CGISEBankIDSignature = CGISEBankIDSignature {
-  cgisebidsSignatoryName           :: !Text
-, cgisebidsSignatoryPersonalNumber :: !Text
-, cgisebidsSignatoryIP             :: !Text
-, cgisebidsSignedText              :: !Text
-, cgisebidsSignature               :: !ByteString
-, cgisebidsOcspResponse            :: !ByteString
-} deriving (Eq, Ord, Show)
+data CGISEBankIDSignature = CGISEBankIDSignature
+  { cgisebidsSignatoryName           :: !Text
+  , cgisebidsSignatoryPersonalNumber :: !Text
+  , cgisebidsSignatoryIP             :: !Text
+  , cgisebidsSignedText              :: !Text
+  , cgisebidsSignature               :: !ByteString
+  , cgisebidsOcspResponse            :: !ByteString
+  } deriving (Eq, Ord, Show)
 
 -- | Final BankID signature.
-data CGISEBankIDAuthentication = CGISEBankIDAuthentication {
-  cgisebidaSignatoryName           :: !Text
-, cgisebidaSignatoryPersonalNumber :: !Text
-, cgisebidaSignatoryIP             :: !Text
-, cgisebidaSignature               :: !ByteString
-, cgisebidaOcspResponse            :: !ByteString
-} deriving (Eq, Ord, Show)
+data CGISEBankIDAuthentication = CGISEBankIDAuthentication
+  { cgisebidaSignatoryName           :: !Text
+  , cgisebidaSignatoryPersonalNumber :: !Text
+  , cgisebidaSignatoryIP             :: !Text
+  , cgisebidaSignature               :: !ByteString
+  , cgisebidaOcspResponse            :: !ByteString
+  } deriving (Eq, Ord, Show)
 
 ----------------------------------------
 
@@ -124,12 +124,12 @@ xpGrpFault = XMLParser $ \c ->
 ----------------------------------------
 
 -- | Auth action request.
-data AuthRequest = AuthRequest {
-  arqPolicy          :: !Text
-, arqDisplayName     :: !Text
-, arqPersonalNumber  :: !Text
-, arqProvider        :: !Text
-} deriving (Eq, Ord, Show)
+data AuthRequest = AuthRequest
+  { arqPolicy          :: !Text
+  , arqDisplayName     :: !Text
+  , arqPersonalNumber  :: !Text
+  , arqProvider        :: !Text
+  } deriving (Eq, Ord, Show)
 
 -- | Construct SOAP request from the 'AuthRequest'.
 instance ToXML AuthRequest where
@@ -148,13 +148,13 @@ instance ToXML AuthRequest where
 ----------------------------------------
 
 -- | Sign action request.
-data SignRequest = SignRequest {
-  srqPolicy          :: !Text
-, srqDisplayName     :: !Text
-, srqPersonalNumber  :: !Text
-, srqUserVisibleData :: !Text
-, srqProvider        :: !Text
-} deriving (Eq, Ord, Show)
+data SignRequest = SignRequest
+  { srqPolicy          :: !Text
+  , srqDisplayName     :: !Text
+  , srqPersonalNumber  :: !Text
+  , srqUserVisibleData :: !Text
+  , srqProvider        :: !Text
+  } deriving (Eq, Ord, Show)
 
 -- | Construct SOAP request from the 'SignRequest'.
 instance ToXML SignRequest where
@@ -200,11 +200,11 @@ instance {-# OVERLAPPING #-} Unjson (AutoStartToken,SessionCookieInfo) where
 ----------------------------------------
 
 -- | Auth action response.
-data AuthResponse = AuthResponse {
-  arsTransactionID  :: !Text
-, arsOrderRef       :: !Text
-, arsAutoStartToken :: !AutoStartToken
-} deriving (Eq, Ord, Show)
+data AuthResponse = AuthResponse
+  { arsTransactionID  :: !Text
+  , arsOrderRef       :: !Text
+  , arsAutoStartToken :: !AutoStartToken
+  } deriving (Eq, Ord, Show)
 
 instance Loggable AuthResponse where
   logValue = toJSON
@@ -235,11 +235,11 @@ xpAuthResponse = XMLParser $ \c ->
 
 
 -- | Sign action response.
-data SignResponse = SignResponse {
-  srsTransactionID  :: !Text
-, srsOrderRef       :: !Text
-, srsAutoStartToken :: !AutoStartToken
-} deriving (Eq, Ord, Show)
+data SignResponse = SignResponse
+  { srsTransactionID  :: !Text
+  , srsOrderRef       :: !Text
+  , srsAutoStartToken :: !AutoStartToken
+  } deriving (Eq, Ord, Show)
 
 instance Loggable SignResponse where
   logValue SignResponse {..} = object
@@ -261,12 +261,12 @@ xpSignResponse = XMLParser $ \c ->
 ----------------------------------------
 
 -- | Collect action request.
-data CollectRequest = CollectRequest {
-  crqPolicy        :: !Text
-, crqTransactionID :: !Text
-, crqOrderRef      :: !Text
-, crqDisplayName   :: !Text
-} deriving (Eq, Ord, Show)
+data CollectRequest = CollectRequest
+  { crqPolicy        :: !Text
+  , crqTransactionID :: !Text
+  , crqOrderRef      :: !Text
+  , crqDisplayName   :: !Text
+  } deriving (Eq, Ord, Show)
 
 -- | Construct SOAP request from the 'CollectRequest'.
 instance ToXML CollectRequest where
@@ -306,11 +306,11 @@ instance Unjson ProgressStatus where
 ----------------------------------------
 
 -- | Collect action response.
-data CollectResponse = CollectResponse {
-  crsProgressStatus :: !ProgressStatus
-, crsSignature      :: !(Maybe Text)
-, crsAttributes     :: ![(Text, Text)]
-} deriving (Eq, Ord, Show)
+data CollectResponse = CollectResponse
+  { crsProgressStatus :: !ProgressStatus
+  , crsSignature      :: !(Maybe Text)
+  , crsAttributes     :: ![(Text, Text)]
+  } deriving (Eq, Ord, Show)
 
 -- | Retrieve 'CollectResponse' from SOAP response.
 xpCollectResponse :: XMLParser CollectResponse

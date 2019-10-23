@@ -36,12 +36,12 @@ import Happstack.Fields
 import Utils.Prelude
 
 -- This part is responsible for sorting,searching and paging documents lists
-data PagedList a =
-  PagedList { list       :: [a]
-            , pageSize   :: Int
-            , params     :: ListParams
-            , listLength :: Int
-            } deriving Show
+data PagedList a = PagedList
+  { list       :: [a]
+  , pageSize   :: Int
+  , params     :: ListParams
+  , listLength :: Int
+  } deriving Show
 
 data ListParams = ListParams
   { sorting :: [Text]

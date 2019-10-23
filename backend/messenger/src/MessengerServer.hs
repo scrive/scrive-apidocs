@@ -32,9 +32,9 @@ import SMS.Types
 import Utils.IO
 import Utils.Network
 
-data CmdConf = CmdConf {
-  config :: String
-} deriving (Data, Typeable)
+data CmdConf = CmdConf
+  { config :: String
+  } deriving (Data, Typeable)
 
 cmdConf :: FilePath -> String -> CmdConf
 cmdConf workspaceRoot progName =

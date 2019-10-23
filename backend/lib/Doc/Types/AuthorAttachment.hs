@@ -7,12 +7,12 @@ import DB
 import Doc.Tables
 import File.FileID
 
-data AuthorAttachment = AuthorAttachment {
-  authorattachmentname :: Text,
-  authorattachmentrequired :: Bool,
-  authorattachmentaddtosealedfile :: Bool,
-  authorattachmentfileid :: FileID
-} deriving (Eq, Ord, Show)
+data AuthorAttachment = AuthorAttachment
+  { authorattachmentname :: Text
+  , authorattachmentrequired :: Bool
+  , authorattachmentaddtosealedfile :: Bool
+  , authorattachmentfileid :: FileID
+  } deriving (Eq, Ord, Show)
 
 ---------------------------------
 

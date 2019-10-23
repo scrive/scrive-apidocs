@@ -5,10 +5,10 @@ import qualified Data.Map as Map
 import qualified Text.JSON.Gen as J
 
 -- | A datatype for HubSpot configuration data.
-data HubSpotConf = HubSpotConf {
-      hubspotHubId :: String
-    , hubspotFormIds  :: Map.Map String String
-} deriving (Show, Eq, Ord)
+data HubSpotConf = HubSpotConf
+  { hubspotHubId :: String
+  , hubspotFormIds  :: Map.Map String String
+  } deriving (Show, Eq, Ord)
 
 unjsonHubSpotConf :: UnjsonDef HubSpotConf
 unjsonHubSpotConf =

@@ -6,11 +6,11 @@ import Data.Unjson
 import FileStorage.Amazon.Config
 import FileStorage.Amazon.S3Env
 
-data PdfToolsLambdaConf = PdfToolsLambdaConf {
-    _pdfToolsLambdaConfGatewayUrl :: String
+data PdfToolsLambdaConf = PdfToolsLambdaConf
+  { _pdfToolsLambdaConfGatewayUrl :: String
   , _pdfToolsLambdaConfApiKey :: String
   , _pdfToolsLambdaConfConfig :: AmazonConfig
-} deriving (Show, Eq)
+  } deriving (Show, Eq)
 
 instance Unjson PdfToolsLambdaConf where
   unjsonDef =
@@ -22,8 +22,8 @@ instance Unjson PdfToolsLambdaConf where
 
 ----------------------------------------
 
-data PdfToolsLambdaEnv = PdfToolsLambdaEnv {
-    _pdfToolsLambdaGatewayUrl :: String
+data PdfToolsLambdaEnv = PdfToolsLambdaEnv
+  { _pdfToolsLambdaGatewayUrl :: String
   , _pdfToolsLambdaApiKey :: String
   , _pdfToolsLambdaS3Env :: AmazonS3Env
   }

@@ -30,13 +30,13 @@ instance ToSQL CallbackID where
   type PQDest CallbackID = PQDest Int64
   toSQL (CallbackID n) = toSQL n
 
-data DocumentAPICallback = DocumentAPICallback {
-  dacID         :: !CallbackID
-, dacDocumentID :: !DocumentID
-, dacApiVersion :: !APIVersion
-, dacURL        :: !Text
-, dacAttempts   :: !Int32
-} deriving (Eq, Ord, Show)
+data DocumentAPICallback = DocumentAPICallback
+  { dacID         :: !CallbackID
+  , dacDocumentID :: !DocumentID
+  , dacApiVersion :: !APIVersion
+  , dacURL        :: !Text
+  , dacAttempts   :: !Int32
+  } deriving (Eq, Ord, Show)
 
 instance Loggable DocumentAPICallback where
   logValue DocumentAPICallback {..} = object

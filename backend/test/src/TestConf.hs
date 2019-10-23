@@ -14,8 +14,8 @@ import PdfToolsLambda.Conf
 -- things the http port number, AWS, GuardTime, E-ID and email
 -- configuraton, as well as a handy boolean indicating whether this is
 -- a production or development instance.
-data TestConf = TestConf {
-    testDBConfig               :: Text               -- ^ test postgresql configuration
+data TestConf = TestConf
+  { testDBConfig               :: Text               -- ^ test postgresql configuration
   , testPdfToolsLambdaConf     :: PdfToolsLambdaConf   -- ^ pdf tools lambda configuration for tests
   , testAmazonConfig           :: Maybe AmazonConfig   -- ^ Optional configuration for S3
   , testLocalFileCacheSize     :: Maybe Int            -- ^ Optional size for the local file cache

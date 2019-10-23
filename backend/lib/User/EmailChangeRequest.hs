@@ -25,8 +25,8 @@ import MinutesTime
 import User.Email
 import User.Model
 
-data EmailChangeRequest = EmailChangeRequest {
-    ecrUserID :: UserID
+data EmailChangeRequest = EmailChangeRequest
+  { ecrUserID :: UserID
   , ecrExpires :: UTCTime
   , ecrNewEmail :: Email
   , ecrToken :: MagicHash

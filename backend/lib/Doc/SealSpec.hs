@@ -62,8 +62,8 @@ data Field
 -- | Image is a transparent layer that was put on pdf page during signing to
 --   highlight important information to signatory. It should cover whole page
 
-data HighlightedImage = HighlightedImage {
-    hiPage             :: Int32  -- ^ on which page should the image be placed
+data HighlightedImage = HighlightedImage
+  { hiPage             :: Int32  -- ^ on which page should the image be placed
   , hiImage            :: BS.ByteString -- ^ binary content of image
   } deriving (Eq, Ord, Show, Read)
 

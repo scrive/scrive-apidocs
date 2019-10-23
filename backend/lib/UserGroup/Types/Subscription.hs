@@ -15,8 +15,8 @@ import User.Model.Query (UserGroupGetUsers(..))
 import UserGroup.Types
 import UserGroup.Types.PaymentPlan
 
-data Subscription = Subscription {
-    ugSubInvoicingType        :: InvoicingType
+data Subscription = Subscription
+  { ugSubInvoicingType        :: InvoicingType
   , ugSubPaymentPlan          :: Maybe PaymentPlan
   , ugSubInheritedPaymentPlan :: Maybe PaymentPlan
   , ugSubCountUsers           :: Maybe Int
@@ -24,7 +24,7 @@ data Subscription = Subscription {
   , ugSubFeatures             :: Maybe Features
   , ugSubInheritedFeatures    :: Maybe Features
   , ugSubFeaturesIsInherited  :: Bool
-} deriving (Eq, Ord, Show)
+  } deriving (Eq, Ord, Show)
 
 instance Unjson Subscription where
   unjsonDef =

@@ -115,16 +115,16 @@ data EIDServiceTransaction = EIDServiceTransaction
   , estDeadline :: !UTCTime
   } deriving (Show)
 
-data EIDServiceVerimiAuthentication = EIDServiceVerimiAuthentication {
-    eidServiceVerimiName            :: !(T.Text)
+data EIDServiceVerimiAuthentication = EIDServiceVerimiAuthentication
+  { eidServiceVerimiName            :: !(T.Text)
   , eidServiceVerimiVerifiedEmail   :: !(Maybe T.Text)
   , eidServiceVerimiVerifiedPhone   :: !(Maybe T.Text)
-} deriving (Eq, Ord, Show)
+  } deriving (Eq, Ord, Show)
 
-data EIDServiceIDINAuthentication = EIDServiceIDINAuthentication {
-    eidServiceIDINName            :: !(T.Text)
+data EIDServiceIDINAuthentication = EIDServiceIDINAuthentication
+  { eidServiceIDINName            :: !(T.Text)
   , eidServiceIDINVerifiedEmail   :: !(Maybe T.Text)
   , eidServiceIDINVerifiedPhone   :: !(Maybe T.Text)
   , eidServiceIDINBirthDate       :: !(Maybe T.Text)
   , eidServiceIDINCustomerID      :: !(Maybe T.Text)
-} deriving (Eq, Ord, Show)
+  } deriving (Eq, Ord, Show)

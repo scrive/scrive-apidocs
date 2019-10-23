@@ -48,9 +48,9 @@ import Utils.Network
 import qualified HostClock.Model as HC
 import qualified VersionTH
 
-data CmdConf = CmdConf {
-  config :: String
-} deriving (Data, Typeable)
+data CmdConf = CmdConf
+  { config :: String
+  } deriving (Data, Typeable)
 
 cmdConf :: FilePath -> String -> CmdConf
 cmdConf workspaceRoot progName =

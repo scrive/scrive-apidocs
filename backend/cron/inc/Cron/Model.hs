@@ -117,10 +117,10 @@ instance ToSQL JobType where
 
 ----------------------------------------
 
-data CronJob = CronJob {
-  cjType      :: !JobType
-, cjAttempts  :: !Int32
-} deriving (Eq, Ord, Show)
+data CronJob = CronJob
+  { cjType      :: !JobType
+  , cjAttempts  :: !Int32
+  } deriving (Eq, Ord, Show)
 
 cronJobSelectors :: [SQL]
 cronJobSelectors = ["id", "attempts"]

@@ -630,10 +630,10 @@ instance FromJSValueWithUpdate Document where
 
 
 -- Author attachment utils. Used only for set author attachment call.
-data AuthorAttachmentDetails = AuthorAttachmentDetails {
-    aadName :: Text,
-    aadRequired :: Bool,
-    aadAddToSealedFile :: Bool
+data AuthorAttachmentDetails = AuthorAttachmentDetails
+  { aadName :: Text
+  , aadRequired :: Bool
+  , aadAddToSealedFile :: Bool
   } deriving (Eq,Show)
 
 instance FromJSValue AuthorAttachmentDetails where

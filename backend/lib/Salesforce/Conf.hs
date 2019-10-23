@@ -4,8 +4,8 @@ module Salesforce.Conf (
 
 import Data.Unjson
 
-data SalesforceConf = SalesforceConf {
-    salesforceAuthenticationUrl :: Text
+data SalesforceConf = SalesforceConf
+  { salesforceAuthenticationUrl :: Text
   , salesforceTokenUrl :: Text
   , salesforceConsumerKey :: Text
   , salesforceConsumerSecret :: Text
@@ -16,7 +16,7 @@ data SalesforceConf = SalesforceConf {
   , salesforceIntegrationAPIToken  :: Text
   , salesforceIntegrationAPISecret :: Text
   , salesforceErrorEmail :: Maybe Text
-} deriving (Show, Eq, Ord)
+  } deriving (Show, Eq, Ord)
 
 unjsonSalesforceConf :: UnjsonDef SalesforceConf
 unjsonSalesforceConf =

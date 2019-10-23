@@ -22,8 +22,8 @@ instance Loggable FileStorage where
     object ["type" .= ("aws_bucket" :: String), "url" .= url]
   logDefaultLabel _ = "file_storage"
 
-data File = File {
-    fileid       :: FileID
+data File = File
+  { fileid       :: FileID
   , filename     :: Text
   -- if there is conversion error from sql, detect it immediately
   , filestorage  :: !FileStorage

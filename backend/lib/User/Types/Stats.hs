@@ -12,8 +12,8 @@ import qualified Data.Semigroup as SG
 
 data StatsPartition = PartitionByDay | PartitionByMonth
 
-data DocumentStats = DocumentStats {
-    dsDocumentsSent           :: !Int64
+data DocumentStats = DocumentStats
+  { dsDocumentsSent           :: !Int64
   , dsDocumentsClosed         :: !Int64
   , dsSignaturesClosed        :: !Int64
   , dsSMSSent                 :: !Int64
@@ -51,15 +51,15 @@ instance Monoid DocumentStats where
   mempty  = DocumentStats 0 0 0 0 0 0 0 0 0 0 0 0 0
   mappend = (SG.<>)
 
-data UserUsageStats = UserUsageStats {
-    uusTimeWindowStart  :: !UTCTime
+data UserUsageStats = UserUsageStats
+  { uusTimeWindowStart  :: !UTCTime
   , uusUserEmail        :: !String
   , uusUserName         :: !String
   , uusDocumentStats    :: !DocumentStats
   } deriving (Eq, Ord, Show)
 
-data ShareableLinkUsageStats = ShareableLinkUsageStats {
-    slusTimeWindowStart  :: !UTCTime
+data ShareableLinkUsageStats = ShareableLinkUsageStats
+  { slusTimeWindowStart  :: !UTCTime
   , slusTemplateId       :: !Int64
   , slusTemplateTitle    :: !String
   , slusDocumentStats    :: !DocumentStats

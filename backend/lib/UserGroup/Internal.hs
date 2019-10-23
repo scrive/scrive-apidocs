@@ -132,8 +132,8 @@ data InvoicingType =
   | InvoicingTypeInvoice
   deriving (Eq, Ord)
 
-data UserGroupSettings = UserGroupSettings {
-    _ugsIPAddressMaskList         :: [IPAddressWithMask]
+data UserGroupSettings = UserGroupSettings
+  { _ugsIPAddressMaskList         :: [IPAddressWithMask]
   , _ugsDataRetentionPolicy       :: DataRetentionPolicy
   , _ugsCGIDisplayName            :: Maybe Text
   , _ugsCGIServiceID              :: Maybe Text
@@ -165,14 +165,14 @@ defaultUserGroupSettings = UserGroupSettings
   , _ugsPortalUrl               = Nothing
   }
 
-data UserGroupUI = UserGroupUI {
-    _uguiMailTheme     :: !(Maybe ThemeID)
+data UserGroupUI = UserGroupUI
+  { _uguiMailTheme     :: !(Maybe ThemeID)
   , _uguiSignviewTheme :: !(Maybe ThemeID)
   , _uguiServiceTheme  :: !(Maybe ThemeID)
   , _uguiBrowserTitle  :: !(Maybe Text)
   , _uguiSmsOriginator :: !(Maybe Text)
   , _uguiFavicon       :: !(Maybe BS.ByteString)
-} deriving (Eq, Ord, Show)
+  } deriving (Eq, Ord, Show)
 
 defaultUserGroupUI :: UserGroupUI
 defaultUserGroupUI = UserGroupUI { _uguiMailTheme     = Nothing
@@ -183,8 +183,8 @@ defaultUserGroupUI = UserGroupUI { _uguiMailTheme     = Nothing
                                  , _uguiFavicon       = Nothing
                                  }
 
-data UserGroupAddress = UserGroupAddress {
-    _ugaCompanyNumber :: Text
+data UserGroupAddress = UserGroupAddress
+  { _ugaCompanyNumber :: Text
   , _ugaEntityName    :: Text
   , _ugaAddress       :: Text
   , _ugaZip           :: Text

@@ -32,8 +32,8 @@ import User.UserID
 import UserGroup.Types
 import Util.HasSomeUserInfo
 
-data User = User {
-    userid                        :: UserID
+data User = User
+  { userid                        :: UserID
   , userpassword                  :: Maybe Password
   , usertotp                      :: Maybe ByteString
   , usertotpactive                :: Bool
@@ -64,8 +64,8 @@ instance Loggable User where
     ]
   logDefaultLabel _ = "user"
 
-data UserInfo = UserInfo {
-    userfstname         :: Text
+data UserInfo = UserInfo
+  { userfstname         :: Text
   , usersndname         :: Text
   , userpersonalnumber  :: Text
   , usercompanyposition :: Text

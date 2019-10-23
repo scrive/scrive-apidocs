@@ -160,9 +160,9 @@ arbitraryText = T.pack <$> arbitrary
 arbitraryMaybe :: forall a . Gen a -> Gen (Maybe a)
 arbitraryMaybe = liftArbitrary
 
-newtype ArbitraryUnicode = ArbitraryUnicode {
-  withArbitraryUnicode :: Text
-} deriving (Show, Eq, Ord)
+newtype ArbitraryUnicode = ArbitraryUnicode
+  { withArbitraryUnicode :: Text
+  } deriving (Show, Eq, Ord)
 
 instance Arbitrary ArbitraryUnicode where
   arbitrary = ArbitraryUnicode <$> arbitraryUnicodeText

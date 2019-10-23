@@ -19,8 +19,8 @@ import Salesforce.Conf
 import StatsD.Config
 
 -- | Cron configuration: things like AWS, Postgres and Redis, NTP servers, etc.
-data CronConf = CronConf {
-    cronAmazonConfig               :: AmazonConfig -- ^ AWS configuration
+data CronConf = CronConf
+  { cronAmazonConfig               :: AmazonConfig -- ^ AWS configuration
                                                    -- (bucket, access key,
                                                    -- secret key) (lazy as the
                                                    -- field is undefined in

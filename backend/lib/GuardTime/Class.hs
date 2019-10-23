@@ -3,15 +3,15 @@ module GuardTime.Class where
 import Control.Monad.Trans
 import Data.Unjson
 
-data GuardTimeConf = GuardTimeConf {
-  guardTimeSigningServiceURL ::  String
-, guardTimeExtendingServiceURL :: String
-, guardTimeControlPublicationsURL :: String
-, guardTimeSigningLoginUser :: String
-, guardTimeSigningLoginKey :: String
-, guardTimeExtendingLoginUser :: String
-, guardTimeExtendingLoginKey :: String
-} deriving (Eq, Ord, Show)
+data GuardTimeConf = GuardTimeConf
+  { guardTimeSigningServiceURL ::  String
+  , guardTimeExtendingServiceURL :: String
+  , guardTimeControlPublicationsURL :: String
+  , guardTimeSigningLoginUser :: String
+  , guardTimeSigningLoginKey :: String
+  , guardTimeExtendingLoginUser :: String
+  , guardTimeExtendingLoginKey :: String
+  } deriving (Eq, Ord, Show)
 
 instance Unjson GuardTimeConf where
   unjsonDef =

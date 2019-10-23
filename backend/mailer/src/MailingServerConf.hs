@@ -19,8 +19,8 @@ import Mails.Types
 import Monitoring
 import Utils.TH
 
-data MailingServerConf = MailingServerConf {
-    mailerHttpBindAddress    :: !(Word32, Word16)
+data MailingServerConf = MailingServerConf
+  { mailerHttpBindAddress    :: !(Word32, Word16)
   , mailerDBConfig           :: !Text
   , mailerMaxDBConnections   :: !Int
   , mailerRedisCacheConfig   :: !(Maybe RedisConfig)
@@ -36,10 +36,10 @@ data MailingServerConf = MailingServerConf {
 -- | SMTP callback key authentication will be used to receive callbacks
 -- Right now it's used only for SocketLabs
 
-data CallbackValidationKeys = CallbackValidationKeys {
-  callbackValidationSecretKey :: !Text
-, callbackValidationValidationKey :: !Text
-} deriving (Eq, Ord, Show)
+data CallbackValidationKeys = CallbackValidationKeys
+  { callbackValidationSecretKey :: !Text
+  , callbackValidationValidationKey :: !Text
+  } deriving (Eq, Ord, Show)
 
 unjsonCallbackValidationKeys :: UnjsonDef CallbackValidationKeys
 unjsonCallbackValidationKeys =
@@ -53,11 +53,11 @@ unjsonCallbackValidationKeys =
               "Validation key for callback validation"
 
 
-data SMTPUser = SMTPUser {
-  smtpAccount  :: !Text
-, smtpPassword :: !Text
-, callbackValidationKeys :: !(Maybe CallbackValidationKeys)
-} deriving (Eq, Ord, Show)
+data SMTPUser = SMTPUser
+  { smtpAccount  :: !Text
+  , smtpPassword :: !Text
+  , callbackValidationKeys :: !(Maybe CallbackValidationKeys)
+  } deriving (Eq, Ord, Show)
 
 unjsonSMTPUser :: UnjsonDef SMTPUser
 unjsonSMTPUser =
@@ -72,10 +72,10 @@ unjsonSMTPUser =
 
 -- | SMTP user that is dedicated only to email
 -- where from address matched given address.
-data SMTPDedicatedUser = SMTPDedicatedUser {
-  smtpFromDedicatedAddress :: !Text
-, smtpDedicatedUser        :: !SMTPUser
-} deriving (Eq, Ord, Show)
+data SMTPDedicatedUser = SMTPDedicatedUser
+  { smtpFromDedicatedAddress :: !Text
+  , smtpDedicatedUser        :: !SMTPUser
+  } deriving (Eq, Ord, Show)
 
 unjsonSMTPDedicatedUser :: UnjsonDef SMTPDedicatedUser
 unjsonSMTPDedicatedUser =

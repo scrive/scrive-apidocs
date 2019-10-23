@@ -5,9 +5,9 @@ module PasswordService.Conf (
 
 import Data.Unjson
 
-data PasswordServiceConf = PasswordServiceConf {
-    passwordServiceUrl :: String
-} deriving (Show, Eq, Ord)
+data PasswordServiceConf = PasswordServiceConf
+  { passwordServiceUrl :: String
+  } deriving (Show, Eq, Ord)
 
 unjsonPasswordServiceConf :: UnjsonDef PasswordServiceConf
 unjsonPasswordServiceConf = objectOf $ pure PasswordServiceConf <*> field

@@ -116,15 +116,14 @@ unjsonUsersForUpdate =
   objectOf $ fieldBy "users" id "List of users" (arrayOf unjsonUserForUpdate)
 
 data UserGroupForUpdate = UserGroupForUpdate
-    {
-      uguUserGroupID      :: Text
-    , uguUserGroupName    :: Text
-    , uguUserGroupNumber  :: Text
-    , uguUserGroupAddress :: Text
-    , uguUserGroupZip     :: Text
-    , uguUserGroupCity    :: Text
-    , uguUserGroupCountry :: Text
-    } deriving (Show)
+  { uguUserGroupID      :: Text
+  , uguUserGroupName    :: Text
+  , uguUserGroupNumber  :: Text
+  , uguUserGroupAddress :: Text
+  , uguUserGroupZip     :: Text
+  , uguUserGroupCity    :: Text
+  , uguUserGroupCountry :: Text
+  } deriving (Show)
 
 defaultUserGroupForUpdate :: UserGroupForUpdate
 defaultUserGroupForUpdate = UserGroupForUpdate { uguUserGroupID      = ""
