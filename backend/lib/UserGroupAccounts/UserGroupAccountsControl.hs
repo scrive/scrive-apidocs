@@ -14,8 +14,9 @@ module UserGroupAccounts.UserGroupAccountsControl (
 
 import Control.Monad.Extra (concatForM)
 import Data.Char
+import Log
 import Text.JSON (JSValue(..))
-import Text.JSON.Gen
+import Text.JSON.Gen hiding (object)
 import qualified Data.Text as T
 
 import AccessControl.Model
@@ -299,6 +300,9 @@ handleChangeRoleOfUserGroupAccount = do
   apiAccessControl [ mkAccPolicyItem (CreateA, UserPolicyR, changeid)
                    , mkAccPolicyItem (CreateA, UserGroupPolicyR, ugid) ] $ do
     void $ dbUpdate $ SetUserCompanyAdmin changeid (makeadmin == Just "true")
+    logInfo "Changing user group role" $ object [ "to admin" .= makeadmin
+                                                , "target user" .= changeid
+                                                ]
     runJSONGenT $ value "changed" True
 
 {- |
