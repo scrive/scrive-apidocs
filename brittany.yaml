@@ -180,7 +180,7 @@ conf_layout:
   lconfig_indentPolicy: IndentPolicyFree
 
   # indent where only 1 sometimes
-  lconfig_indentWhereSpecial: true
+  lconfig_indentWhereSpecial: false
 
   # ColumnAlignModeDisabled
   #   Make no column alignments whatsoever
