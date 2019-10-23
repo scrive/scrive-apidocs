@@ -26,7 +26,6 @@ import DB
 import DB.TimeZoneName (mkTimeZoneName)
 import Doc.API.V1.Calls
 import Doc.DocControl
-import Doc.DocInfo
 import Doc.DocStateData
 import Doc.DocumentID (DocumentID)
 import Doc.DocumentMonad
@@ -135,14 +134,15 @@ testLastPersonSigningADocumentClosesIt = do
   filecontent <- liftIO $ BS.readFile filename
   file <- saveNewFile (T.pack filename) filecontent
 
-  addRandomDocumentWithAuthorAndConditionAndFile
-            user
-            (\d -> documentstatus d == Preparation
-                     && (case documenttype d of
-                          Signable -> True
-                          _ -> False)
-                     && all ((==) EmailDelivery . signatorylinkdeliverymethod) (documentsignatorylinks d))
-            file `withDocumentM` do
+  addRandomDocumentWithFile file (rdaDefault user)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Preparation]
+    , rdaSignatories =
+      let signatory = OneOf
+            [ AllOf [ RSC_DeliveryMethodIs EmailDelivery ]
+            ]
+      in OneOf $ map (`replicate` signatory) [1..10]
+    } `withDocumentM` do
 
     success <- do
                d <- theDocument
@@ -211,14 +211,15 @@ testSigningWithPin = do
   filecontent <- liftIO $ BS.readFile filename
   file <- saveNewFile (T.pack filename) filecontent
 
-  addRandomDocumentWithAuthorAndConditionAndFile
-            user1
-            (\d -> documentstatus d == Preparation
-                     && (case documenttype d of
-                          Signable -> True
-                          _ -> False)
-                     && all ((==) EmailDelivery . signatorylinkdeliverymethod) (documentsignatorylinks d))
-            file `withDocumentM` do
+  addRandomDocumentWithFile file (rdaDefault user1)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Preparation]
+    , rdaSignatories =
+      let signatory = OneOf
+            [ AllOf [ RSC_DeliveryMethodIs EmailDelivery ]
+            ]
+      in OneOf $ map (`replicate` signatory) [1..10]
+    } `withDocumentM` do
     d <- theDocument
     success <- randomUpdate $ ResetSignatoryDetails ([
         (defaultSignatoryLink {
@@ -291,13 +292,15 @@ testSendReminderEmailUpdatesLastModifiedDate = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
 
-  doc <- addRandomDocumentWithAuthorAndCondition
-            user
-            (\d -> documentstatus d == Pending
-                     && (case documenttype d of
-                          Signable -> True
-                          _ -> False)
-                     && all ((==) EmailDelivery . signatorylinkdeliverymethod) (documentsignatorylinks d))
+  doc <- addRandomDocument (rdaDefault user)
+    { rdaStatuses = OneOf [Pending]
+    , rdaTypes = OneOf [Signable]
+    , rdaSignatories =
+      let signatory = OneOf
+            [ AllOf [ RSC_DeliveryMethodIs EmailDelivery ]
+            ]
+      in OneOf $ map (`replicate` signatory) [2..10]
+    }
 
   assertBool "Precondition" $ (get ctxtime ctx) /= documentmtime doc
 
@@ -322,13 +325,15 @@ testSendReminderEmailByCompanyAdmin = do
   ctxadmin <- (set ctxmaybeuser (Just adminuser)) <$> mkContext defaultLang
   ctxother <- (set ctxmaybeuser (Just otheruser)) <$> mkContext defaultLang
 
-  doc <- addRandomDocumentWithAuthorAndCondition
-            user
-            (\d -> documentstatus d == Pending
-                     && case documenttype d of
-                         Signable -> True
-                         _ -> False
-                     && (all (== EmailDelivery) $ signatorylinkdeliverymethod <$> documentsignatorylinks d)   )
+  doc <- addRandomDocument (rdaDefault user)
+    { rdaStatuses = OneOf [Pending]
+    , rdaTypes = OneOf [Signable]
+    , rdaSignatories =
+      let signatory = OneOf
+            [ AllOf [ RSC_DeliveryMethodIs EmailDelivery ]
+            ]
+      in OneOf $ map (`replicate` signatory) [2..10]
+    }
 
   assertBool "Precondition" $ (get ctxtime ctx) /= documentmtime doc
 
@@ -417,16 +422,19 @@ testDownloadFileWithAuthToView :: TestEnv ()
 testDownloadFileWithAuthToView = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- mkContext defaultLang
-  doc <- addRandomDocumentWithAuthorAndCondition user
-         (\d ->    documentstatus d == Pending
-                && length (documentsignatorylinks d) == 2
-                && (signatorylinkauthenticationtoviewmethod
-                    (documentsignatorylinks d !! 1)
-                    /= StandardAuthenticationToView)
-                && (isSignatoryAndHasNotSigned (documentsignatorylinks d !! 1))
-                && case documenttype d of
-                     Signable -> True
-                     _        -> False)
+  doc <- addRandomDocument (rdaDefault user)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    , rdaSignatories =
+      let author = OneOf [AllOf []]
+          signatory =
+            let authsToView = [toEnum 0 ..] \\ [StandardAuthenticationToView]
+            in OneOf $ (`map` authsToView) $ \auth ->
+              AllOf [ RSC_IsSignatoryThatHasntSigned
+                    , RSC_AuthToViewIs auth
+                    ]
+      in OneOf [[author, signatory]]
+    }
   let sl = head $ reverse $ documentsignatorylinks $ doc
   req1 <- mkRequest GET []
   mh <- dbUpdate $ NewSignatoryAccessToken
@@ -445,13 +453,10 @@ testSendingReminderClearsDeliveryInformation = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- (set ctxmaybeuser (Just user))
     <$> mkContext defaultLang
-
-  addRandomDocumentWithAuthorAndCondition
-            user
-            (\d -> documentstatus d == Pending
-                     && case documenttype d of
-                         Signable -> True
-                         _ -> False) `withDocumentM` do
+  addRandomDocument (rdaDefault user)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    } `withDocumentM` do
     sl <- head . reverse . documentsignatorylinks <$> theDocument
     let actor  =  systemActor $ get ctxtime ctx
     void $ dbUpdate $ MarkInvitationRead (signatorylinkid sl) actor
@@ -466,9 +471,9 @@ testSendingReminderClearsDeliveryInformation = do
 testDocumentFromTemplate :: TestEnv ()
 testDocumentFromTemplate = do
     (Just user) <- addNewUser "aaa" "bbb" "xxx@xxx.pl"
-    doc <- addRandomDocumentWithAuthorAndCondition user (\d -> case documenttype d of
-                                                            Template -> True
-                                                            _ -> False)
+    doc <- addRandomDocument (rdaDefault user)
+      { rdaTypes = OneOf [Template]
+      }
     docs1 <- randomQuery $ GetDocumentsByAuthor (userid user)
     ctx <- (set ctxmaybeuser (Just user))
       <$> mkContext defaultLang
@@ -481,9 +486,9 @@ testDocumentFromTemplateShared :: TestEnv ()
 testDocumentFromTemplateShared = do
     ugid <- (get ugID) <$> addNewUserGroup
     (Just author) <- addNewUserToUserGroup "aaa" "bbb" "xxx@xxx.pl" ugid
-    doc <- addRandomDocumentWithAuthorAndCondition author (\d -> case documenttype d of
-                                                            Template -> True
-                                                            _ -> False)
+    doc <- addRandomDocument (rdaDefault author)
+      { rdaTypes = OneOf [Template]
+      }
     void $ randomUpdate $ SetDocumentSharing [documentid doc] True
     (Just user) <- addNewUserToUserGroup "ccc" "ddd" "zzz@zzz.pl" ugid
     docs1 <- randomQuery $ GetDocumentsByAuthor (userid user)
@@ -500,8 +505,8 @@ testDocumentDeleteInBulk = do
     (Just author) <- addNewUserToUserGroup "aaa" "bbb" "xxx@xxx.pl" ugid
     -- isSignable condition below is wrong. Tests somehow generate template documents
     -- that are pending and that breaks everything.
-    docs <- replicateM 100 (addRandomDocument (randomDocumentAllowsDefault author)
-                             { randomDocumentTypes = Or [Signable] })
+    docs <- replicateM 100 (addRandomDocument (rdaDefault author)
+                             { rdaTypes = OneOf [Signable] })
 
     ctx <- (set ctxmaybeuser (Just author)) <$> mkContext defaultLang
     req <- mkRequest POST [("documentids",  inText $ (showt $ documentid <$> docs))]
@@ -563,7 +568,7 @@ testGetEvidenceAttachmentsNotLoggedIn = do
 
 testSignviewBrandingBlocksNastyInput:: TestEnv ()
 testSignviewBrandingBlocksNastyInput = do
-  bd <- get ctxbrandeddomain <$> mkContext defaultLang -- We need to get default branded domain. And it can be fetched from default ctx
+  bd <- get ctxbrandeddomain <$> mkContext defaultLang -- We need to get default branded domain. AllOf it can be fetched from default ctx
   theme <- dbQuery $ GetTheme $ (get bdSignviewTheme $ bd)
   emptyBrandingCSS <- signviewBrandingCSS theme
   assertBool "CSS generated for empty branding is not empty" (not $ BSL.null $ emptyBrandingCSS)
@@ -591,14 +596,16 @@ testDownloadSignviewBrandingAccess = do
   filecontent <- liftIO $ BS.readFile filename
   file <- saveNewFile (T.pack filename) filecontent
 
-  doc <- addRandomDocumentWithAuthorAndConditionAndFile
-            user
-            (\d -> documentstatus d == Preparation
-                     && (case documenttype d of
-                          Signable -> True
-                          _ -> False)
-                     && all ((==) EmailDelivery . signatorylinkdeliverymethod) (documentsignatorylinks d))
-            file
+  doc <- addRandomDocumentWithFile file (rdaDefault user)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Preparation]
+    , rdaSignatories =
+      let signatory = OneOf
+            [ AllOf [ RSC_DeliveryMethodIs EmailDelivery ]
+            ]
+      in OneOf $ map (`replicate` signatory) [1..10]
+    }
+
   withDocumentID (documentid doc) $ do
     d <- theDocument
     void $ randomUpdate $ ResetSignatoryDetails ([
@@ -646,9 +653,10 @@ testGetCancelledDocument :: TestEnv ()
 testGetCancelledDocument = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
   ctx <- mkContext defaultLang
-
-  doc <- addRandomDocumentWithAuthorAndCondition user $ \d ->
-    isPending d && isSignable d
+  doc <- addRandomDocument (rdaDefault user)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    }
   let did       = documentid doc
       signatory = head $ documentsignatorylinks doc
       slid      = signatorylinkid signatory
@@ -681,31 +689,24 @@ testGetCancelledDocument = do
 testDocumentFromShareableTemplate :: TestEnv ()
 testDocumentFromShareableTemplate = replicateM_ 10 $ do
   user <- addNewRandomUser
-  tpl <- addRandomDocumentWithAuthorAndCondition' user $ \d -> do
-    (sl1, sl2) <- case documentsignatorylinks d of
-      x:y:_ -> return (x,y)
-      _ -> Nothing
-
-    let sl1' = sl1
-          { signatoryrole = SignatoryRoleViewer
-          , signatorylinkauthenticationtoviewmethod =
-              StandardAuthenticationToView
-          , signatorylinkauthenticationtosignmethod =
-              StandardAuthenticationToSign
-          }
-        sl2' = sl2
-          { signatoryrole = SignatoryRoleSigningParty
-          , signatorylinkauthenticationtoviewmethod =
-              StandardAuthenticationToView
-          , signatorylinkauthenticationtosignmethod =
-              StandardAuthenticationToSign
-          , signatorylinkdeliverymethod = APIDelivery
-          }
-
-    return d
-      { documenttype = Template
-      , documentsignatorylinks = [sl1', sl2']
-      }
+  tpl <- addRandomDocument (rdaDefault user)
+    { rdaTypes = OneOf [Template]
+    , rdaSignatories =
+      let author = OneOf
+            [ AllOf [ RSC_IsViewer
+                    , RSC_AuthToViewIs StandardAuthenticationToView
+                    , RSC_AuthToSignIs StandardAuthenticationToSign
+                    ]
+            ]
+          signatory = OneOf
+            [ AllOf [ RSC_IsSignatoryThatHasntSigned
+                    , RSC_AuthToViewIs StandardAuthenticationToView
+                    , RSC_AuthToSignIs StandardAuthenticationToSign
+                    , RSC_DeliveryMethodIs APIDelivery
+                    ]
+            ]
+      in OneOf [[author, signatory]]
+    }
 
   mh <- random
   withDocument tpl $ randomUpdate $ UpdateShareableLinkHash $ Just mh
@@ -757,9 +758,9 @@ testGetDocumentWithSignatoryAccessTokens:: TestEnv ()
 testGetDocumentWithSignatoryAccessTokens = do
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
 
-  doc <- addRandomDocument (randomDocumentAllowsDefault user)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Pending]
+  doc <- addRandomDocument (rdaDefault user)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
     }
   let did       = documentid doc
       signatory = head $ documentsignatorylinks doc
@@ -809,8 +810,11 @@ testSendEmailOnTimeout = do
   let newUGS = (set ugsSendTimeoutNotification True (fromJust $ get ugSettings ug))
   dbUpdate $ UserGroupUpdateSettings (get ugID ug) (Just newUGS)
 
-  doc <- addRandomDocumentWithAuthorAndCondition user $ \d ->
-    isPending d && isSignable d && isJust (documenttimeouttime d)
+  doc <- addRandomDocument (rdaDefault user)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    , rdaTimeoutTime = True
+    }
 
   modifyTestTime (const (10 `minutesAfter` (fromJust $ documenttimeouttime doc)))
   ctx <- mkContext defaultLang

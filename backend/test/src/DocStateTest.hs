@@ -386,12 +386,17 @@ testNewDocumentForACompanyUser = replicateM_ 10 $ do
 testRejectDocumentEvidenceLog :: TestEnv ()
 testRejectDocumentEvidenceLog = replicateM_ 10 $ do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author
-    (   isSignable
-     && isPending
-     && ((<=) 2 . length . documentsignatorylinks)
-     && (all (isSignatoryAndHasNotSigned || isApproverAndHasNotApproved) .
-         filter (not . isAuthor) . documentsignatorylinks)) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    , rdaSignatories =
+      let authorLink = OneOf [AllOf []]
+          signatory = OneOf
+            [ AllOf [ RSC_IsSignatoryThatHasntSigned ]
+            , AllOf [ RSC_IsApproverThatHasntApproved ]
+            ]
+      in OneOf $ map (\n -> authorLink : replicate n signatory) [1..9]
+    } `withDocumentM` do
     sl <- guardJustM $getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$>
           theDocument
     randomUpdate $ \t -> RejectDocument (signatorylinkid sl) (isApprover sl)
@@ -407,7 +412,10 @@ testRejectDocumentEvidenceLog = replicateM_ 10 $ do
 testRestartDocumentEvidenceLog :: TestEnv ()
 testRestartDocumentEvidenceLog = do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable && isPending)
+  doc <- addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    }
   withDocument doc $ randomUpdate $ \t->CancelDocument (systemActor t)
   cdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   mdoc <- randomUpdate $ \t->RestartDocument cdoc (systemActor t)
@@ -421,7 +429,10 @@ testRestartDocumentEvidenceLog = do
 testRestartDocumentKeepsHidePN :: TestEnv ()
 testRestartDocumentKeepsHidePN = do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable && isPending)
+  doc <- addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    }
   withDocument doc $ randomUpdate $ \t->CancelDocument (systemActor t)
   cdoc <- dbQuery $ GetDocumentByDocumentID $ documentid doc
   mdoc <- randomUpdate $ \t->RestartDocument cdoc (systemActor t)
@@ -449,16 +460,16 @@ testSignDocumentEvidenceLog = do
   pdfSealLambdaEnv  <- asks (get tePdfToolsLambdaEnv)
   author            <- addNewRandomUser
   screenshots       <- getScreenshots
-  addRandomDocument (randomDocumentAllowsDefault author)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Pending]
-    , randomDocumentSignatories =
-        let signatory = Or
-              [ And [ RSC_AuthToSignIs StandardAuthenticationToSign
-                    , RSC_IsSignatory
-                    ]
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    , rdaSignatories =
+        let signatory = OneOf
+              [ AllOf [ RSC_AuthToSignIs StandardAuthenticationToSign
+                      , RSC_IsSignatory
+                      ]
               ]
-        in Or [[signatory, signatory]]
+        in OneOf [[signatory, signatory]]
     } `withDocumentM` do
       asl <- guardJustM $ getSigLinkFor (isAuthor::SignatoryLink->Bool) <$> theDocument
       randomUpdate $ \t -> MarkDocumentSeen (signatorylinkid asl) (systemActor t)
@@ -481,16 +492,16 @@ testSignDocumentSearchData = do
   author <- addNewRandomUser
 
   screenshots <- getScreenshots
-  addRandomDocument (randomDocumentAllowsDefault author)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Pending]
-    , randomDocumentSignatories =
-        let signatory = Or
-              [ And [ RSC_AuthToSignIs StandardAuthenticationToSign
-                    , RSC_IsSignatory
-                    ]
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    , rdaSignatories =
+        let signatory = OneOf
+              [ AllOf [ RSC_AuthToSignIs StandardAuthenticationToSign
+                      , RSC_IsSignatory
+                      ]
               ]
-        in Or [[signatory, signatory]]
+        in OneOf [[signatory, signatory]]
     } `withDocumentM` do
 
       asl <- guardJustM $ getSigLinkFor (isAuthor::SignatoryLink->Bool) <$> theDocument
@@ -560,16 +571,16 @@ testDocumentAuthorUserID = do
   author <- addNewRandomUser
 
   screenshots <- getScreenshots
-  addRandomDocument (randomDocumentAllowsDefault author)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Pending]
-    , randomDocumentSignatories =
-        let signatory = Or
-              [ And [ RSC_IsSignatoryThatHasntSigned
-                    , RSC_AuthToSignIs StandardAuthenticationToSign
-                    ]
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    , rdaSignatories =
+        let signatory = OneOf
+              [ AllOf [ RSC_IsSignatory
+                      , RSC_AuthToSignIs StandardAuthenticationToSign
+                      ]
               ]
-        in Or [[signatory, signatory]]
+        in OneOf [[signatory, signatory]]
     }`withDocumentM` do
       docID <- theDocumentID
       -- `documents.author_user_id` should be set by now
@@ -608,7 +619,10 @@ testDocumentAuthorUserID = do
 testTimeoutDocumentEvidenceLog :: TestEnv ()
 testTimeoutDocumentEvidenceLog = do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (isSignable && isPending) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    } `withDocumentM` do
     success <- randomUpdate $ \t->TimeoutDocument (systemActor t)
     assert success
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
@@ -618,7 +632,10 @@ testTimeoutDocumentEvidenceLog = do
 testProlongTimeoutedDocument :: TestEnv ()
 testProlongTimeoutedDocument = do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (isSignable && isPending) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    } `withDocumentM` do
     success <- randomUpdate $ \t->TimeoutDocument (systemActor t)
     assert success
     randomUpdate $ \t -> ProlongTimeoutedDocument 2 defaultTimeZoneName (systemActor t)
@@ -630,7 +647,10 @@ testProlongTimeoutedDocument = do
 testProlongPendingDocument :: TestEnv ()
 testProlongPendingDocument = do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (isSignable && isPending) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    } `withDocumentM` do
     randomUpdate $ \t -> ProlongPendingDocument 2 (systemActor t)
     pending <- (\d ->  (Pending == documentstatus d))  <$> theDocument
     assert pending
@@ -640,7 +660,10 @@ testProlongPendingDocument = do
 testPreparationToPendingEvidenceLog :: TestEnv ()
 testPreparationToPendingEvidenceLog = do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (isSignable && isPreparation && ((<=) 2 . length . documentsignatorylinks)) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Preparation]
+    } `withDocumentM` do
     tz <- mkTimeZoneName "Europe/Stockholm"
     randomUpdate $ \t->PreparationToPending (systemActor t) tz
 
@@ -650,7 +673,10 @@ testPreparationToPendingEvidenceLog = do
 testMarkInvitationReadEvidenceLog :: TestEnv ()
 testMarkInvitationReadEvidenceLog = do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (isSignable && isPending) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    } `withDocumentM` do
     sl      <- guardJustM $ getAuthorSigLink <$> theDocument
     now     <- currentTime
     success <- randomUpdate $ MarkInvitationRead (signatorylinkid sl) (mailSystemActor now Nothing (getEmail sl) (signatorylinkid sl))
@@ -668,7 +694,10 @@ testMarkInvitationReadEvidenceLog = do
 testSaveSigAttachmentEvidenceLog :: TestEnv ()
 testSaveSigAttachmentEvidenceLog = do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (isPreparation && isSignable) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Preparation]
+    } `withDocumentM` do
     file <- addNewRandomFile
     let sa = defaultSignatoryAttachment
     theDocument >>= \d -> randomUpdate $ \t->SetSigAttachments (signatorylinkid $ (documentsignatorylinks d) !! 0)
@@ -684,16 +713,16 @@ testSaveSigAttachmentEvidenceLog = do
 testDeleteSigAttachmentAlreadySigned :: TestEnv ()
 testDeleteSigAttachmentAlreadySigned = do
   author <- addNewRandomUser
-  addRandomDocument (randomDocumentAllowsDefault author)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Preparation]
-    , randomDocumentSignatories =
-        let signatory = Or
-              [ And [ RSC_AuthToSignIs StandardAuthenticationToSign
-                    , RSC_IsSignatoryThatHasntSigned
-                    ]
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Preparation]
+    , rdaSignatories =
+        let signatory = OneOf
+              [ AllOf [ RSC_AuthToSignIs StandardAuthenticationToSign
+                      , RSC_IsSignatoryThatHasntSigned
+                      ]
               ]
-        in Or [[signatory, signatory]]
+        in OneOf [[signatory, signatory]]
     }`withDocumentM` do
     file <- addNewRandomFile
     sl <- (\d -> (documentsignatorylinks d) !! 1) <$> theDocument
@@ -714,7 +743,9 @@ testDeleteSigAttachmentAlreadySigned = do
 testDeleteSigAttachmentEvidenceLog :: TestEnv ()
 testDeleteSigAttachmentEvidenceLog = do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author isPreparation `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation]
+    }  `withDocumentM` do
     file <- addNewRandomFile
     let sa = defaultSignatoryAttachment
           { signatoryattachmentfile        = Just file
@@ -729,7 +760,10 @@ testDeleteSigAttachmentEvidenceLog = do
 testAppendFirstSealedFileEvidenceLog :: TestEnv ()
 testAppendFirstSealedFileEvidenceLog = do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author isClosed `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Closed]
+    } `withDocumentM` do
     file <- addNewRandomFile
     randomUpdate $ \t -> AppendSealedFile file
                            Guardtime{ extended = False, private = False } (systemActor t)
@@ -740,7 +774,10 @@ testAppendFirstSealedFileEvidenceLog = do
 testCancelDocumentEvidenceLog :: TestEnv ()
 testCancelDocumentEvidenceLog = do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (isSignable && isPending) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    } `withDocumentM` do
     randomUpdate $ \t-> CancelDocument (systemActor t)
     lg <- dbQuery . GetEvidenceLog =<< theDocumentID
     assertJust $ find (\e -> evType e == Current CancelDocumentEvidence) lg
@@ -748,7 +785,13 @@ testCancelDocumentEvidenceLog = do
 testChangeSignatoryEmailEvidenceLog :: TestEnv ()
 testChangeSignatoryEmailEvidenceLog = do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (isPending && ((<=) 2 . length . documentsignatorylinks)) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    , rdaSignatories =
+      let signatory = OneOf [AllOf []]
+      in OneOf $ map (`replicate` signatory) [2..10]
+    } `withDocumentM` do
     sl <- guardJustM $ getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$> theDocument
     success <- randomUpdate $ \t-> ChangeSignatoryEmail (signatorylinkid sl) Nothing "email@email.com" (systemActor t)
     assert success
@@ -758,14 +801,14 @@ testChangeSignatoryEmailEvidenceLog = do
 testCloseDocumentEvidenceLog :: TestEnv ()
 testCloseDocumentEvidenceLog = do
   author <- addNewRandomUser
-  addRandomDocument (randomDocumentAllowsDefault author)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Pending]
-    , randomDocumentSignatories =
-        let signatory = Or
-              [ And [RSC_AuthToSignIs StandardAuthenticationToSign]
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    , rdaSignatories =
+        let signatory = OneOf
+              [ AllOf [RSC_AuthToSignIs StandardAuthenticationToSign]
               ]
-        in Or $ map (`replicate` signatory) [1..10]
+        in OneOf $ map (`replicate` signatory) [1..10]
     } `withDocumentM` do
     documentsignatorylinks <$> theDocument >>= \sls -> forM_  sls $ \sl -> do
       when (isSignatory sl) $ do
@@ -818,7 +861,10 @@ testCancelDocumentCancelsDocument :: TestEnv ()
 testCancelDocumentCancelsDocument = replicateM_ 10 $ do
   user <- addNewRandomUser
   ctx <- mkContext defaultLang
-  addRandomDocumentWithAuthorAndCondition user (isSignable && isPending) `withDocumentM` do
+  addRandomDocument (rdaDefault user)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    } `withDocumentM` do
     doc <- theDocument
     randomUpdate $ CancelDocument (authorActor ctx user)
 
@@ -832,7 +878,10 @@ testCancelDocumentCancelsDocument = replicateM_ 10 $ do
 testCancelDocumentReturnsLeftIfDocInWrongState :: TestEnv ()
 testCancelDocumentReturnsLeftIfDocInWrongState = replicateM_ 10 $ do
   user <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition user (isSignable && not . isPending)
+  doc <- addRandomDocument (rdaDefault user)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf $ documentAllStatuses \\ [Pending]
+    }
   ctx <- mkContext defaultLang
   assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $
                withDocument doc $ randomUpdate $ CancelDocument (authorActor ctx user)
@@ -853,7 +902,10 @@ assertNoArchivedSigLink doc =
 testArchiveDocumentPendingLeft :: TestEnv ()
 testArchiveDocumentPendingLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author isPending
+  doc <- addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    }
   withDocument doc $ do
     res <- randomUpdate $ \t->ArchiveDocument (userid author) (systemActor t)
     assertEqual "Document that is pending can't be archived" False res
@@ -861,7 +913,9 @@ testArchiveDocumentPendingLeft = replicateM_ 10 $ do
 testArchiveDocumentAuthorRight :: TestEnv ()
 testArchiveDocumentAuthorRight = replicateM_ 10 $ do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation, Closed]
+    } `withDocumentM` do
     void $ randomUpdate $ \t->ArchiveDocument (userid author) (systemActor t)
     assertOneArchivedSigLink =<< theDocument
 
@@ -870,14 +924,18 @@ testArchiveDocumentCompanyAdminRight = replicateM_ 10 $ do
   ug <- addNewUserGroup
   author <- addNewRandomCompanyUser (get ugID ug) False
   adminuser <- addNewRandomCompanyUser (get ugID ug) True
-  addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation, Closed]
+    } `withDocumentM` do
     void $ randomUpdate $ \t->ArchiveDocument (userid adminuser) (systemActor t)
     assertOneArchivedSigLink =<< theDocument
 
 testRestoreArchivedDocumentAuthorRight :: TestEnv ()
 testRestoreArchivedDocumentAuthorRight = replicateM_ 10 $ do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation, Closed]
+    } `withDocumentM` do
     void $ randomUpdate $ \t->ArchiveDocument (userid author) (systemActor t)
     randomUpdate $ \t->RestoreArchivedDocument author (systemActor t)
     assertNoArchivedSigLink =<< theDocument
@@ -887,7 +945,9 @@ testRestoreArchiveDocumentCompanyAdminRight = replicateM_ 10 $ do
   ug <- addNewUserGroup
   author <- addNewRandomCompanyUser (get ugID ug) False
   adminuser <- addNewRandomCompanyUser (get ugID ug) True
-  addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation, Closed]
+    } `withDocumentM` do
     void $ randomUpdate $ \t->ArchiveDocument (userid author) (systemActor t)
     randomUpdate $ \t->RestoreArchivedDocument adminuser (systemActor t)
 
@@ -896,16 +956,16 @@ testRestoreArchiveDocumentCompanyAdminRight = replicateM_ 10 $ do
 testChangeAuthenticationToSignMethod :: TestEnv ()
 testChangeAuthenticationToSignMethod = replicateM_ 10 $ do
   author <- addNewRandomUser
-  addRandomDocument (randomDocumentAllowsDefault author)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Pending]
-    , randomDocumentSignatories =
-        let signatory = Or
-              [ And [ RSC_AuthToSignIs StandardAuthenticationToSign
-                    , RSC_IsSignatory
-                    ]
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    , rdaSignatories =
+        let signatory = OneOf
+              [ AllOf [ RSC_AuthToSignIs StandardAuthenticationToSign
+                      , RSC_IsSignatory
+                      ]
               ]
-        in Or $ map (`replicate` signatory) [2..10]
+        in OneOf $ map (`replicate` signatory) [2..10]
     } `withDocumentM` do
       sl <- guardJustM $ getSigLinkFor (not . (isAuthor::SignatoryLink->Bool)) <$> theDocument
 
@@ -927,7 +987,9 @@ testChangeAuthenticationToSignMethod = replicateM_ 10 $ do
 testReallyDeleteDocument :: TestEnv ()
 testReallyDeleteDocument = replicateM_ 10 $ do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (not . isPending)
+  doc <- addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf $ documentAllStatuses \\ [Pending]
+    }
 
   withDocument doc $ do
     res <- randomUpdate $ \t->ReallyDeleteDocument (userid author) (systemActor t)
@@ -948,7 +1010,9 @@ testReallyDeleteDocumentCompanyAdmin = replicateM_ 10 $ do
   ug <- addNewUserGroup
   author <- addNewRandomCompanyUser (get ugID ug) False
   adminuser <- addNewRandomCompanyUser (get ugID ug) True
-  addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation, Closed]
+    } `withDocumentM` do
     res <-randomUpdate $ \t->ReallyDeleteDocument (userid adminuser) (systemActor t)
     assertEqual "Document that is not deleted can't be really deleted" False res
     void $ randomUpdate $ \t->ArchiveDocument (userid adminuser) (systemActor t)
@@ -964,7 +1028,9 @@ testReallyDeleteDocumentSomebodyElse = replicateM_ 10 $ do
   ug <- addNewUserGroup
   author <- addNewRandomCompanyUser (get ugID ug) False
   other <- addNewRandomCompanyUser (get ugID ug) False
-  addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation, Closed]
+    } `withDocumentM` do
     res1 <- randomUpdate $ \t->ArchiveDocument (userid other) (systemActor t)
     assertEqual "ReallyDeleteDocument can be done by other user" False res1
     res2 <- randomUpdate $ \t->ReallyDeleteDocument (userid other) (systemActor t)
@@ -980,7 +1046,10 @@ testPurgeDocument :: TestEnv ()
 testPurgeDocument = replicateM_ 10 $ do
   ug <- addNewUserGroup
   author <- addNewRandomCompanyUser (get ugID ug) False
-  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isClosed d || isCanceled d || isRejected d)
+  doc <- addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Closed, Canceled, Rejected]
+    }
   now <- currentTime
   archived1 <- dbUpdate $ PurgeDocuments 0
   assertEqual "Purged zero documents when not deleted" 0 archived1
@@ -996,7 +1065,10 @@ testPurgeDocumentUserSaved :: TestEnv ()
 testPurgeDocumentUserSaved = replicateM_ 10 $ do
   ug <- addNewUserGroup
   author <- addNewRandomCompanyUser (get ugID ug) False
-  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isClosed d || isCanceled d || isRejected d)
+  doc <- addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Closed, Canceled, Rejected]
+    }
   archived1 <- dbUpdate $ PurgeDocuments 1
   now <- currentTime
   withDocument doc $ void $ randomUpdate $ \t->ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
@@ -1008,7 +1080,9 @@ testPurgeDocumentRemovesSensitiveData :: TestEnv ()
 testPurgeDocumentRemovesSensitiveData = replicateM_ 10 $ do
   ug <- addNewUserGroup
   author <- addNewRandomCompanyUser (get ugID ug) False
-  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
+  doc <- addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation, Closed]
+    }
   now <- currentTime
   withDocument doc $ void $ randomUpdate $ \t -> ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
   void $ dbUpdate $ PurgeDocuments 0
@@ -1069,7 +1143,10 @@ testPurgeDocumentSharedTemplates = do
   bob <- addNewRandomCompanyUser (get ugID ug) True
   alice <- addNewRandomCompanyUser (get ugID ug) False
 
-  doc <- addRandomDocumentWithAuthorAndCondition bob (\d -> isPreparation d || isDocumentShared d)
+  doc <- addRandomDocument (rdaDefault bob)
+    { rdaTypes = OneOf [Template]
+    , rdaSharings = OneOf [Shared]
+    }
   void $ dbUpdate $ DeleteUser $ userid alice
   void $ dbUpdate $ PurgeDocuments 0
 
@@ -1087,7 +1164,9 @@ testPurgeDocumentImmediateTrash :: TestEnv ()
 testPurgeDocumentImmediateTrash = replicateM_ 10 $ do
   ug <- addNewUserGroup
   author <- addNewRandomCompanyUser (get ugID ug) False
-  doc <- addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d)
+  doc <- addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation, Closed]
+    }
   now <- currentTime
   withDocument doc $ void $ randomUpdate $ \t -> ArchiveDocument (userid author) ((systemActor t) { actorTime = now })
 
@@ -1117,11 +1196,17 @@ testArchiveIdleDocument = replicateM_ 10 $ do
   ug <- addNewUserGroup
   author <- addNewRandomUserGroupUser (get ugID ug) False
   author2 <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author $ \d ->
-           isSignable d && not (isPending d)
-  void $ addRandomDocumentWithAuthorAndCondition author (isTemplate || isPending)
-  void $ addRandomDocumentWithAuthorAndCondition author2 $ \d ->
-         documentstatus d == documentstatus doc
+  doc <- addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf $ documentAllStatuses \\ [Pending]
+    }
+  void $ addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Pending]
+    }
+  void $ addRandomDocument (rdaDefault author2)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [documentstatus doc]
+    }
 
   let oldUGS = fromJust $ get ugSettings ug
       newUGS = set (drpIdleDocTimeout (documentstatus doc) . ugsDataRetentionPolicy) (Just 1) $ oldUGS
@@ -1137,11 +1222,17 @@ testArchiveIdleDocumentWhenOnlyUserHasDrpSet = replicateM_ 10 $ do
   ug <- addNewUserGroup
   author <- addNewRandomUserGroupUser (get ugID ug) False
   author2 <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author $ \d ->
-            isSignable d && not (isPending d)
-  void $ addRandomDocumentWithAuthorAndCondition author (isTemplate || isPending)
-  void $ addRandomDocumentWithAuthorAndCondition author2 $ \d ->
-          documentstatus d == documentstatus doc
+  doc <- addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf $ documentAllStatuses \\ [Pending]
+    }
+  void $ addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Pending]
+    }
+  void $ addRandomDocument (rdaDefault author2)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [documentstatus doc]
+    }
 
   let oldUS = usersettings author
       newDRP = set (drpIdleDocTimeout $ documentstatus doc) (Just 1) $ dataretentionpolicy oldUS
@@ -1158,7 +1249,9 @@ testArchiveDocumentUnrelatedUserLeft :: TestEnv ()
 testArchiveDocumentUnrelatedUserLeft = replicateM_ 10 $ do
   author        <- addNewRandomUser
   unrelateduser <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation, Closed]
+    } `withDocumentM` do
     res <- randomUpdate $ \t -> ArchiveDocument (userid unrelateduser) (systemActor t)
     assertEqual "ArchiveDocument can be done by unrelated user" False res
 
@@ -1167,7 +1260,9 @@ testArchiveDocumentCompanyStandardLeft = replicateM_ 10 $ do
   ug <- addNewUserGroup
   author <- addNewRandomCompanyUser (get ugID ug) False
   standarduser <- addNewRandomCompanyUser (get ugID ug) False
-  addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation, Closed]
+    } `withDocumentM` do
     res <- randomUpdate $ \t->ArchiveDocument (userid standarduser) (systemActor t)
     assertEqual "ArchiveDocument can be done by user that is not company admin" False res
 
@@ -1175,7 +1270,9 @@ testRestoreArchivedDocumentUnrelatedUserLeft :: TestEnv ()
 testRestoreArchivedDocumentUnrelatedUserLeft = replicateM_ 10 $ do
   author        <- addNewRandomUser
   unrelateduser <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation, Closed]
+    } `withDocumentM` do
     void $ randomUpdate $ \t -> ArchiveDocument (userid author) (systemActor t)
     assertRaisesKontra (\UserShouldBeDirectlyOrIndirectlyRelatedToDocument {} -> True)$ do
       randomUpdate $ \t->RestoreArchivedDocument unrelateduser (systemActor t)
@@ -1185,7 +1282,9 @@ testRestoreArchiveDocumentCompanyStandardLeft = replicateM_ 10 $ do
   ug <- addNewUserGroup
   author <- addNewRandomCompanyUser (get ugID ug) False
   standarduser <- addNewRandomCompanyUser (get ugID ug) False
-  addRandomDocumentWithAuthorAndCondition author (\d -> isPreparation d || isClosed d) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation, Closed]
+    } `withDocumentM` do
     void $ randomUpdate $ \t->ArchiveDocument (userid author) (systemActor t)
     assertRaisesKontra (\UserShouldBeSelfOrCompanyAdmin {} -> True) $ do
       randomUpdate $ \t->RestoreArchivedDocument standarduser (systemActor t)
@@ -1198,7 +1297,10 @@ checkQueryDoesntContainArchivedDocs :: DBQuery (DocumentT TestEnv) q [Document] 
 checkQueryDoesntContainArchivedDocs qry = replicateM_ 10 $ do
   ug <- addNewUserGroup
   author <- addNewRandomCompanyUser (get ugID ug) True
-  addRandomDocumentWithAuthorAndCondition author (\d -> (isPreparation d || isClosed d) && (isSignable d)) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Preparation, Closed]
+    } `withDocumentM` do
     did <- theDocumentID
     docsbeforearchive <- dbQuery (qry author)
     assertEqual "Expecting one doc before archive" [did] (map documentid docsbeforearchive)
@@ -1244,7 +1346,10 @@ testDocumentAttachNotPreparationLeft :: TestEnv ()
 testDocumentAttachNotPreparationLeft = replicateM_ 10 $ do
   -- setup
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (not . isPreparation)
+  doc <- addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf $ documentAllStatuses \\ [Preparation]
+    }
   file <- addNewRandomFile
   --execute
   assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $ do
@@ -1254,7 +1359,9 @@ testDocumentAttachPreparationRight :: TestEnv ()
 testDocumentAttachPreparationRight = replicateM_ 10 $ do
   -- setup
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author isPreparation `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation]
+    } `withDocumentM` do
     file <- addNewRandomFile
     --execute
     randomUpdate $ \t -> AttachFile file (systemActor t)
@@ -1267,7 +1374,10 @@ testNoDocumentAttachAlwaysLeft :: TestEnv ()
 testNoDocumentAttachAlwaysLeft = replicateM_ 10 $ do
   -- setup
   author <- addNewRandomUser
-  _doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
+
+  _doc <- addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation]
+    }
   file <- addNewRandomFile
   --execute
   -- non-existent docid
@@ -1280,7 +1390,9 @@ testDocumentAttachHasAttachment :: TestEnv ()
 testDocumentAttachHasAttachment = replicateM_ 10 $ do
   -- setup
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author isPreparation `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation]
+    } `withDocumentM` do
     file <- addNewRandomFile
     --execute
 
@@ -1293,7 +1405,9 @@ testNoDocumentAppendSealedAlwaysLeft :: TestEnv ()
 testNoDocumentAppendSealedAlwaysLeft = replicateM_ 10 $ do
   -- setup
   author <- addNewRandomUser
-  _doc <- addRandomDocumentWithAuthorAndCondition author isPreparation
+  _doc <- addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation]
+    }
   file <- addNewRandomFile
   --execute
   -- non-existent docid
@@ -1310,9 +1424,9 @@ testSealDocument = replicateM_ 1 $ do
   ctx         <- mkContext defaultLang
   screenshots <- getScreenshots
   addRandomDocument
-    ((randomDocumentAllowsDefault author)
-      { randomDocumentStatuses = Or [Pending]
-      , randomDocumentTypes    = Or [Signable]
+    ((rdaDefault author)
+      { rdaStatuses = OneOf [Pending]
+      , rdaTypes    = OneOf [Signable]
       }) `withDocumentM` do
     void $ addNewRandomFile
     atts  <- replicateM 2 $ do
@@ -1364,9 +1478,9 @@ testDocumentAppendSealedPendingRight :: TestEnv ()
 testDocumentAppendSealedPendingRight = replicateM_ 10 $ do
   -- setup
   author <- addNewRandomUser
-  addRandomDocument (randomDocumentAllowsDefault author)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Closed]
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Closed]
     } `withDocumentM` do
     file <- addNewRandomFile
 
@@ -1386,8 +1500,14 @@ testGetTimedOutButPendingDocuments :: TestEnv ()
 testGetTimedOutButPendingDocuments = replicateM_ 1 $ do
   -- setup
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isPending && (isJust . documenttimeouttime))
-  _doc2 <- addRandomDocumentWithAuthorAndCondition author (not . isPending)
+  doc <- addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    , rdaTimeoutTime = True
+    }
+  _doc2 <- addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf $ documentAllStatuses \\ [Pending]
+    }
 
   let t = fromJust $ documenttimeouttime doc
   --execute
@@ -1402,7 +1522,10 @@ testNotPreparationResetSignatoryDetailsAlwaysLeft :: TestEnv ()
 testNotPreparationResetSignatoryDetailsAlwaysLeft = replicateM_ 10 $ do
   -- setup
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (not . isPreparation) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf $ documentAllStatuses \\ [Preparation]
+    } `withDocumentM` do
     mt <- rand 10 arbitrary
     sf <- signatoryFieldsFromUser author
     --execute
@@ -1416,7 +1539,9 @@ testPreparationResetSignatoryDetailsAlwaysRight :: TestEnv ()
 testPreparationResetSignatoryDetailsAlwaysRight = replicateM_ 10 $ do
   -- setup
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author isPreparation `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation]
+    } `withDocumentM` do
     mt <- rand 10 arbitrary
     --execute
     success <- dbUpdate $ ResetSignatoryDetails
@@ -1433,7 +1558,9 @@ testPreparationResetSignatoryDetails2Works :: TestEnv ()
 testPreparationResetSignatoryDetails2Works = replicateM_ 10 $ do
   -- setup
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author isPreparation `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation]
+    } `withDocumentM` do
     mt <- rand 10 arbitrary
     --execute
     let newData1 = defaultSignatoryLink {
@@ -1451,8 +1578,7 @@ testPreparationResetSignatoryDetails2Works = replicateM_ 10 $ do
               signatoryisauthor = True
             , maybesignatory = Just $ userid author
             , signatorylinkdeliverymethod = PadDelivery
-            , signatorylinkauthenticationtosignmethod =
-                SEBankIDAuthenticationToSign
+            , signatorylinkauthenticationtosignmethod = SEBankIDAuthenticationToSign
             }
     success2 <- dbUpdate $ ResetSignatoryDetails [newData2] (systemActor mt)
     assert success2
@@ -1504,12 +1630,24 @@ testGetDocumentsSharedInCompany = replicateM_ 10 $ do
   void $ dbUpdate $ SetUserCompanyAdmin (userid user5) False
   void $ dbUpdate $ SetUserCompanyAdmin (userid user6) False
 
-  doc1 <- addRandomDocumentWithAuthorAndCondition user1 (isTemplate)
-  doc2 <- addRandomDocumentWithAuthorAndCondition user2 (isTemplate)
-  doc3 <- addRandomDocumentWithAuthorAndCondition user3 (isTemplate)
-  doc4 <- addRandomDocumentWithAuthorAndCondition user4 (isTemplate)
-  doc5 <- addRandomDocumentWithAuthorAndCondition user5 (isTemplate)
-  doc6 <- addRandomDocumentWithAuthorAndCondition user6 (isTemplate)
+  doc1 <- addRandomDocument (rdaDefault user1)
+    { rdaTypes = OneOf [Template]
+    }
+  doc2 <- addRandomDocument (rdaDefault user2)
+    { rdaTypes = OneOf [Template]
+    }
+  doc3 <- addRandomDocument (rdaDefault user3)
+    { rdaTypes = OneOf [Template]
+    }
+  doc4 <- addRandomDocument (rdaDefault user4)
+    { rdaTypes = OneOf [Template]
+    }
+  doc5 <- addRandomDocument (rdaDefault user5)
+    { rdaTypes = OneOf [Template]
+    }
+  doc6 <- addRandomDocument (rdaDefault user6)
+    { rdaTypes = OneOf [Template]
+    }
 
   let [docid1, docid2, docid3, docid4, docid5, docid6] =
          documentid <$> [doc1, doc2, doc3, doc4, doc5, doc6]
@@ -1609,10 +1747,22 @@ testGetDocumentsSQLTextFiltered = replicateM_ 1 $ do
   -- setup
   Just author1 <- addNewUser "Bob" "Blue" "bill@zonk.com"
   Just author2 <- addNewUser "Anna" "Max" "herm@qqq.com"
-  doc1 <- addRandomDocumentWithAuthorAndCondition author1 (isSignable && isPreparation)
-  _doc2 <- addRandomDocumentWithAuthorAndCondition author1 (isSignable && isPreparation)
-  _doc3 <- addRandomDocumentWithAuthorAndCondition author1 (isSignable && isPreparation)
-  _doc4 <- addRandomDocumentWithAuthorAndCondition author2 (isSignable && isPreparation)
+  doc1 <- addRandomDocument (rdaDefault author1)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Preparation]
+    }
+  _doc2 <- addRandomDocument (rdaDefault author1)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Preparation]
+    }
+  _doc3 <- addRandomDocument (rdaDefault author1)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Preparation]
+    }
+  _doc4 <- addRandomDocument (rdaDefault author2)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Preparation]
+    }
 
   let domain = DocumentsVisibleToUser $ userid author1
       doc1Title = "Magic Unique Title 42"
@@ -1670,7 +1820,7 @@ testGetDocumentsSQLSorted :: TestEnv ()
 testGetDocumentsSQLSorted = replicateM_ 1 $ do
   -- setup
   author <- addNewRandomUser
-  _doc <- addRandomDocumentWithAuthorAndCondition author (const True)
+  _doc <- addRandomDocument (rdaDefault author)
 
   let domain = DocumentsVisibleToUser $ userid author
       filters = []
@@ -1687,7 +1837,9 @@ testGetDocumentsSQLSorted = replicateM_ 1 $ do
 testCreateFromSharedTemplate :: TestEnv ()
 testCreateFromSharedTemplate = do
   user <- addNewRandomUser
-  docid <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user (\doc -> isPreparation doc)
+  docid <- documentid <$> addRandomDocument (rdaDefault user)
+    { rdaStatuses = OneOf [Preparation]
+    }
   tmpdoc <- dbQuery $ GetDocumentByDocumentID docid
   mt <- rand 10 arbitrary
   doc <- if (isTemplate tmpdoc)
@@ -1713,7 +1865,9 @@ testCreateFromTemplateCompanyField = replicateM_ 10 $ do
   user <- addNewRandomUser
   ug <- addNewUserGroup
   void $ dbUpdate $ SetUserUserGroup (userid user) (get ugID ug)
-  docid <- fmap documentid $ addRandomDocumentWithAuthorAndCondition user (\doc -> isPreparation doc)
+  docid <- documentid <$> addRandomDocument (rdaDefault user)
+    { rdaStatuses = OneOf [Preparation]
+    }
   tmpdoc <- dbQuery $ GetDocumentByDocumentID docid
   mt <- rand 10 arbitrary
   doc <- if (isTemplate tmpdoc)
@@ -1733,7 +1887,10 @@ testCreateFromTemplateCompanyField = replicateM_ 10 $ do
 testAddDocumentAttachmentFailsIfNotPreparation :: TestEnv ()
 testAddDocumentAttachmentFailsIfNotPreparation = replicateM_ 10 $ do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (not . isPreparation) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf $ documentAllStatuses \\ [Preparation]
+    } `withDocumentM` do
     file <- addNewRandomFile
     --execute
     success <- randomUpdate $ \t->AddDocumentAttachment "file.pdf" False True file (systemActor t)
@@ -1743,7 +1900,9 @@ testAddDocumentAttachmentFailsIfNotPreparation = replicateM_ 10 $ do
 testAddDocumentAttachmentOk :: TestEnv ()
 testAddDocumentAttachmentOk = replicateM_ 10 $ do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author isPreparation `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation]
+    } `withDocumentM` do
     file <- addNewRandomFile
     --execute
 
@@ -1757,7 +1916,10 @@ testAddDocumentAttachmentOk = replicateM_ 10 $ do
 testRemoveDocumentAttachmentsFailsIfNotPreparation :: TestEnv ()
 testRemoveDocumentAttachmentsFailsIfNotPreparation = replicateM_ 10 $ do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (not . isPreparation) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf $ documentAllStatuses \\ [Preparation]
+    } `withDocumentM` do
     --execute
     success <- randomUpdate $ \t -> RemoveDocumentAttachments (unsafeFileID 0) (systemActor t)
     --assert
@@ -1766,7 +1928,9 @@ testRemoveDocumentAttachmentsFailsIfNotPreparation = replicateM_ 10 $ do
 testRemoveDocumentAttachmentsOk :: TestEnv ()
 testRemoveDocumentAttachmentsOk = replicateM_ 10 $ do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author isPreparation `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation]
+    } `withDocumentM` do
     --execute
     success <- randomUpdate $ \t -> RemoveDocumentAttachments (unsafeFileID 0) (systemActor t)
     --assert
@@ -1778,7 +1942,9 @@ testUpdateSigAttachmentsAttachmentsOk :: TestEnv ()
 testUpdateSigAttachmentsAttachmentsOk = replicateM_ 10 $ do
   author <- addNewRandomUser
   ctx <- mkContext defaultLang
-  addRandomDocumentWithAuthorAndCondition author isPreparation `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation]
+    } `withDocumentM` do
     file1 <- addNewRandomFile
     file2 <- addNewRandomFile
     --execute
@@ -1819,7 +1985,9 @@ testTimeoutDocumentNonSignableLeft :: TestEnv ()
 testTimeoutDocumentNonSignableLeft = replicateM_ 10 $ do
   mt <- rand 10 arbitrary
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (not . isSignable)
+  doc <- addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf $ documentAllTypes \\ [Signable]
+    }
   -- execute
   assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $ do
     withDocument doc $ dbUpdate $ TimeoutDocument (systemActor mt)
@@ -1827,14 +1995,20 @@ testTimeoutDocumentNonSignableLeft = replicateM_ 10 $ do
 testTimeoutDocumentSignableNotPendingLeft :: TestEnv ()
 testTimeoutDocumentSignableNotPendingLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
-  doc <- addRandomDocumentWithAuthorAndCondition author (isSignable && (not . isPending))
+  doc <- addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf $ documentAllStatuses \\ [Pending]
+    }
   assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $ do
     withDocument doc $ randomUpdate $ \t->TimeoutDocument (systemActor t)
 
 testTimeoutDocumentSignablePendingRight :: TestEnv ()
 testTimeoutDocumentSignablePendingRight = replicateM_ 10 $ do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (isSignable && isPending) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    } `withDocumentM` do
     --execute
     randomUpdate $ \t->TimeoutDocument (systemActor t)
     assertInvariants =<< theDocument
@@ -1846,17 +2020,19 @@ testTimeoutDocumentSignableNotLeft = replicateM_ 10 $ do
     d <- rand 10 arbitrary
     withDocument d $ randomUpdate $ TimeoutDocument actor
 
-hasConsentModule :: SignatoryLinkIdentity a => a -> Document -> Bool
-hasConsentModule i doc = case getSigLinkFor i doc of
-  Nothing -> False
-  Just sl -> not $ null $ signatorylinkconsentquestions sl
-
 testUpdateConsentResponsesForSigningSuccess :: TestEnv ()
 testUpdateConsentResponsesForSigningSuccess = do
   author <- addNewRandomUser
-  doc    <- addRandomDocumentWithAuthorAndCondition author
-              (isSignable && isPending && hasConsentModule author)
-
+  doc    <- addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    , rdaSignatories =
+      let authorLink = OneOf
+            [ AllOf [ RSC_HasConsentModule True ]
+            ]
+          signatory = OneOf [AllOf []]
+      in OneOf $ map (\n -> authorLink : replicate n signatory) [1..9]
+    }
   withDocument doc $ do
     sl <- guardJustM $ getSigLinkFor author <$> theDocument
     let questions = signatorylinkconsentquestions sl
@@ -1883,9 +2059,16 @@ testUpdateConsentResponsesForSigningSuccess = do
 testUpdateConsentResponsesForSigningWrongQuestionID :: TestEnv ()
 testUpdateConsentResponsesForSigningWrongQuestionID = do
   author <- addNewRandomUser
-  doc    <- addRandomDocumentWithAuthorAndCondition author
-              (isSignable && isPending && hasConsentModule author)
-
+  doc    <- addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    , rdaSignatories =
+      let authorLink = OneOf
+            [ AllOf [ RSC_HasConsentModule True ]
+            ]
+          signatory = OneOf [AllOf []]
+      in OneOf $ map (\n -> authorLink : replicate n signatory) [1..9]
+    }
   withDocument doc $ do
     sl <- guardJustM $ getSigLinkFor author <$> theDocument
     let questions = signatorylinkconsentquestions sl
@@ -1903,7 +2086,9 @@ testUpdateConsentResponsesForSigningWrongQuestionID = do
 testSignDocumentNonSignableLeft :: TestEnv ()
 testSignDocumentNonSignableLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (not . isSignable) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf $ documentAllTypes \\ [Signable]
+    } `withDocumentM` do
     sl <- guardJustM $ getSigLinkFor author <$> theDocument
     assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $ do
       randomUpdate $ \si t -> SignDocument (signatorylinkid sl) si Nothing
@@ -1912,7 +2097,10 @@ testSignDocumentNonSignableLeft = replicateM_ 10 $ do
 testSignDocumentSignableNotPendingLeft :: TestEnv ()
 testSignDocumentSignableNotPendingLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (isSignable && (not . isPending)) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf $ documentAllStatuses \\ [Pending]
+    } `withDocumentM` do
     sl <- guardJustM $ getSigLinkFor author <$> theDocument
     assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $ do
       randomUpdate $ \si t -> SignDocument (signatorylinkid sl) si Nothing SignatoryScreenshots.emptySignatoryScreenshots (systemActor t)
@@ -1920,14 +2108,17 @@ testSignDocumentSignableNotPendingLeft = replicateM_ 10 $ do
 testSignDocumentSignablePendingRight :: TestEnv ()
 testSignDocumentSignablePendingRight = replicateM_ 10 $ do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author
-    (   isSignable
-     && isPending
-     && any ((== StandardAuthenticationToSign) .
-             signatorylinkauthenticationtosignmethod
-             && isSignatoryAndHasNotSigned) .
-      documentsignatorylinks
-    ) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    , rdaSignatories =
+      let signatory = OneOf
+            [ AllOf [ RSC_IsSignatoryThatHasntSigned
+                    , RSC_AuthToSignIs StandardAuthenticationToSign
+                    ]
+            ]
+      in anyRandomSignatoryCondition 1 10 signatory
+    } `withDocumentM` do
     sl <- guardJustM $ find (   (== StandardAuthenticationToSign) .
                                     signatorylinkauthenticationtosignmethod
                              && isSignatoryAndHasNotSigned ) .
@@ -1942,14 +2133,17 @@ testSignDocumentSignablePendingRight = replicateM_ 10 $ do
 testSignDocumentSignablePendingSEBankIDRight :: TestEnv ()
 testSignDocumentSignablePendingSEBankIDRight = replicateM_ 10 $ do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author
-    (   isSignable
-     && isPending
-     && any (   (== SEBankIDAuthenticationToSign) .
-                signatorylinkauthenticationtosignmethod
-             && isSignatoryAndHasNotSigned ) .
-      documentsignatorylinks
-    ) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    , rdaSignatories =
+      let signatory = OneOf
+            [ AllOf [ RSC_IsSignatoryThatHasntSigned
+                    , RSC_AuthToSignIs SEBankIDAuthenticationToSign
+                    ]
+            ]
+      in anyRandomSignatoryCondition 1 10 signatory
+    } `withDocumentM` do
 
     sl <- guardJustM $ find (   (== SEBankIDAuthenticationToSign) .
                                     signatorylinkauthenticationtosignmethod
@@ -1966,14 +2160,17 @@ testSignDocumentSignablePendingSEBankIDRight = replicateM_ 10 $ do
 testSignDocumentSignablePendingNOBankIDRight :: TestEnv ()
 testSignDocumentSignablePendingNOBankIDRight = replicateM_ 10 $ do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author
-    (    isSignable
-      && isPending
-      && any (   (== NOBankIDAuthenticationToSign) .
-                 signatorylinkauthenticationtosignmethod
-              && isSignatoryAndHasNotSigned ) .
-      documentsignatorylinks
-    ) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    , rdaSignatories =
+      let signatory = OneOf
+            [ AllOf [ RSC_IsSignatoryThatHasntSigned
+                    , RSC_AuthToSignIs NOBankIDAuthenticationToSign
+                    ]
+            ]
+      in anyRandomSignatoryCondition 1 10 signatory
+    } `withDocumentM` do
     sl <- guardJustM $ find (   (== NOBankIDAuthenticationToSign) .
                                      signatorylinkauthenticationtosignmethod
                              && isSignatoryAndHasNotSigned ) .
@@ -1988,14 +2185,17 @@ testSignDocumentSignablePendingNOBankIDRight = replicateM_ 10 $ do
 testSignDocumentSignablePendingDKNemIDRight :: TestEnv ()
 testSignDocumentSignablePendingDKNemIDRight = replicateM_ 10 $ do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author
-    (    isSignable
-      && isPending
-      && any (   (== DKNemIDAuthenticationToSign) .
-                 signatorylinkauthenticationtosignmethod
-              && isSignatoryAndHasNotSigned ) .
-      documentsignatorylinks
-    ) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    , rdaSignatories =
+      let signatory = OneOf
+            [ AllOf [ RSC_IsSignatoryThatHasntSigned
+                    , RSC_AuthToSignIs DKNemIDAuthenticationToSign
+                    ]
+            ]
+      in anyRandomSignatoryCondition 1 10 signatory
+    } `withDocumentM` do
     sl <- guardJustM $ find (   (== DKNemIDAuthenticationToSign) .
                                     signatorylinkauthenticationtosignmethod
                              && isSignatoryAndHasNotSigned ) .
@@ -2016,9 +2216,9 @@ testSignDocumentNotLeft = replicateM_ 10 $ do
 testPreparationToPendingNotSignableLeft :: TestEnv ()
 testPreparationToPendingNotSignableLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
-  addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentTypes = Or (documentAllTypes \\ documentSignableTypes)
-         } `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf $ documentAllTypes \\ [Signable]
+    } `withDocumentM` do
     time <- rand 10 arbitrary
     assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $ do
       tz <- mkTimeZoneName "Europe/Stockholm"
@@ -2027,10 +2227,10 @@ testPreparationToPendingNotSignableLeft = replicateM_ 10 $ do
 testPreparationToPendingSignableNotPreparationLeft :: TestEnv ()
 testPreparationToPendingSignableNotPreparationLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
-  addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentTypes    = Or documentSignableTypes
-         , randomDocumentStatuses = Or (documentAllStatuses \\ [Preparation])
-         } `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes    = OneOf [Signable]
+    , rdaStatuses = OneOf $ documentAllStatuses \\ [Preparation]
+    } `withDocumentM` do
     time <- rand 10 arbitrary
     assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $ do
       tz <- mkTimeZoneName "Europe/Stockholm"
@@ -2046,13 +2246,15 @@ testPreparationToPendingNotLeft = replicateM_ 100 $ do
 testPreparationToPendingSignablePreparationRight :: TestEnv ()
 testPreparationToPendingSignablePreparationRight = replicateM_ 10 $ do
   author <- addNewRandomUser
-  addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentTypes = Or documentSignableTypes
-         , randomDocumentStatuses = Or [Preparation]
-         , randomDocumentChecker = onCondition $ (any isSignatory . documentsignatorylinks) &&
-          (isJust . documentfile) &&
-          ((==) 1 . length . filter isAuthor . documentsignatorylinks)
-         } `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf documentSignableTypes
+    , rdaStatuses = OneOf [Preparation]
+    , rdaSignatories =
+      let signatory = OneOf
+            [ AllOf [ RSC_IsSignatory ]
+            ]
+      in anyRandomSignatoryCondition 1 10 signatory
+    } `withDocumentM` do
     time <- rand 10 arbitrary
     tz <- mkTimeZoneName "Europe/Stockholm"
     randomUpdate $ PreparationToPending (systemActor time) tz
@@ -2062,7 +2264,10 @@ testRejectDocumentNotSignableLeft :: TestEnv ()
 testRejectDocumentNotSignableLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
   ctx <- mkContext defaultLang
-  addRandomDocumentWithAuthorAndCondition author (not . isSignable) `withDocumentM` do
+
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf $ documentAllTypes \\ [Signable]
+    } `withDocumentM` do
     sl   <- guardJustM $ getSigLinkFor author <$> theDocument
     time <- rand 10 arbitrary
     assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $ do
@@ -2073,7 +2278,10 @@ testRejectDocumentSignableNotPendingLeft :: TestEnv ()
 testRejectDocumentSignableNotPendingLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
   ctx <- mkContext defaultLang
-  addRandomDocumentWithAuthorAndCondition author (isSignable && not . isPending) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf $ documentAllStatuses \\ [Pending]
+    } `withDocumentM` do
     sl   <- guardJustM $ getSigLinkFor author <$> theDocument
     time <- rand 10 arbitrary
     assertRaisesKontra (\DocumentStatusShouldBe {} -> True) $ do
@@ -2082,7 +2290,7 @@ testRejectDocumentSignableNotPendingLeft = replicateM_ 10 $ do
 
 testRejectDocumentNotLeft :: TestEnv ()
 testRejectDocumentNotLeft = replicateM_ 10 $ do
-  void $ addRandomDocument . randomDocumentAllowsDefault =<< addNewRandomUser
+  void $ addRandomDocument . rdaDefault =<< addNewRandomUser
   ctx <- mkContext defaultLang
   (did, time, sl) <- rand 10 arbitrary
   let sa = signatoryActor (set ctxtime time ctx) sl
@@ -2094,7 +2302,10 @@ testRejectDocumentSignablePendingRight :: TestEnv ()
 testRejectDocumentSignablePendingRight = replicateM_ 10 $ do
   author <- addNewRandomUser
   ctx <- mkContext defaultLang
-  addRandomDocumentWithAuthorAndCondition author (isSignable && isPending) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    } `withDocumentM` do
     slid <- rand 10 . elements . map signatorylinkid . filter isSignatory . documentsignatorylinks =<< theDocument
     sl   <- guardJustM $ getSigLinkFor slid <$> theDocument
     time <- rand 10 arbitrary
@@ -2104,10 +2315,15 @@ testRejectDocumentSignablePendingRight = replicateM_ 10 $ do
     assertInvariants =<< theDocument
 
   -- Also test that an approver can reject the document.
-  addRandomDocumentWithAuthorAndCondition author
-    (isSignable && isPending
-     && any isApprover . documentsignatorylinks)
-    `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    , rdaSignatories =
+      let approver = OneOf
+            [ AllOf [ RSC_IsApproverThatHasntApproved ]
+            ]
+      in anyRandomSignatoryCondition 2 10 approver
+    } `withDocumentM` do
     slid <- rand 10 . elements . map signatorylinkid . filter isApprover . documentsignatorylinks =<< theDocument
     sl   <- guardJustM $ getSigLinkFor slid <$> theDocument
     time <- rand 10 arbitrary
@@ -2120,10 +2336,15 @@ testApproveDocumentSignablePendingRight :: TestEnv ()
 testApproveDocumentSignablePendingRight = replicateM_ 10 $ do
   author <- addNewRandomUser
   ctx    <- mkContext defaultLang
-  addRandomDocumentWithAuthorAndCondition author
-    (isSignable && isPending
-    && any isApprover . documentsignatorylinks)
-    `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    , rdaSignatories =
+      let approver = OneOf
+            [ AllOf [ RSC_IsApproverThatHasntApproved ]
+            ]
+      in anyRandomSignatoryCondition 2 10 approver
+    } `withDocumentM` do
     slid <- rand 10 . elements . map signatorylinkid .
             filter isApprover . documentsignatorylinks =<< theDocument
     sl   <- guardJustM $ getSigLinkFor slid <$> theDocument
@@ -2137,9 +2358,15 @@ testMarkInvitationRead :: TestEnv ()
 testMarkInvitationRead = replicateM_ 10 $ do
   author <- addNewRandomUser
   ctx <- mkContext defaultLang
-  addRandomDocumentWithAuthorAndCondition author
-         (isPending && (all (isNothing . maybereadinvite) . documentsignatorylinks)) `withDocumentM` do
-
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    , rdaSignatories =
+      let signatory = OneOf
+            [ AllOf [ RSC_HasReadInvite False ]
+            ]
+      in OneOf $ map (`replicate` signatory) [2..10]
+    } `withDocumentM` do
     sl' <- rand 10 . elements . documentsignatorylinks =<< theDocument
     let slid = signatorylinkid sl'
     time <- currentTime
@@ -2164,10 +2391,9 @@ testMarkDocumentSeenNotSignableLeft :: TestEnv ()
 testMarkDocumentSeenNotSignableLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
   ctx <- mkContext defaultLang
-  addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentTypes = Or (documentAllTypes \\ documentSignableTypes)
-         } `withDocumentM` do
-
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf $ documentAllTypes \\ [Signable]
+    } `withDocumentM` do
     (theDocument >>=) $ forEachSignatoryLink $ \sl ->
       when (isNothing $ maybeseeninfo sl) $ do
         time <- rand 10 arbitrary
@@ -2179,10 +2405,10 @@ testMarkDocumentSeenClosedOrPreparationLeft :: TestEnv ()
 testMarkDocumentSeenClosedOrPreparationLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
   ctx <- mkContext defaultLang
-  addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentTypes    = Or documentSignableTypes
-         , randomDocumentStatuses = Or [Closed, Preparation]
-         } `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes    = OneOf [Signable]
+    , rdaStatuses = OneOf [Closed, Preparation]
+    } `withDocumentM` do
     (theDocument >>=) $ forEachSignatoryLink $ \sl ->
       when (isNothing $ maybeseeninfo sl) $ do
         time <- rand 10 arbitrary
@@ -2193,7 +2419,7 @@ testMarkDocumentSeenClosedOrPreparationLeft = replicateM_ 10 $ do
 testMarkDocumentSeenNotLeft :: TestEnv ()
 testMarkDocumentSeenNotLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
-  _doc <- addRandomDocument (randomDocumentAllowsDefault author)
+  _doc <- addRandomDocument (rdaDefault author)
   (d, s) <- rand 10 arbitrary
   a <- arbitrarySignatoryActor
   assertRaisesKontra (\DocumentDoesNotExist {} -> True) $ do
@@ -2211,7 +2437,10 @@ testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight :: Tes
 testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight = replicateM_ 10 $ do
   author <- addNewRandomUser
   ctx <- mkContext defaultLang
-  addRandomDocumentWithAuthorAndCondition author (isSignable && (not . (isClosed || isPreparation))) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf $ documentAllStatuses \\ [Closed, Preparation]
+    } `withDocumentM` do
     (theDocument >>=) $ forEachSignatoryLink $ \sl ->
                 unless (hasSeen sl) $ do
                   time <- rand 10 arbitrary
@@ -2224,7 +2453,9 @@ testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight = repl
 testSetInvitationDeliveryStatusNotSignableLeft :: TestEnv ()
 testSetInvitationDeliveryStatusNotSignableLeft = replicateM_ 10 $ do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author (not . isSignable) `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf $ documentAllTypes \\ [Signable]
+    } `withDocumentM` do
     actor <- arbitrarySystemActor
     sl    <- guardJustM $ getAuthorSigLink <$> theDocument
     assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $ do
@@ -2244,7 +2475,9 @@ testSetInvitationDeliveryStatusNotLeft = replicateM_ 10 $ do
 testSetInvitationDeliveryStatusSignableRight :: TestEnv ()
 testSetInvitationDeliveryStatusSignableRight = replicateM_ 10 $ do
   author <- addNewRandomUser
-  addRandomDocumentWithAuthorAndCondition author isSignable `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    } `withDocumentM` do
     slid <- rand 10 . elements . map signatorylinkid . documentsignatorylinks =<< theDocument
     st <- rand 10 arbitrary
     actor <- arbitrarySystemActor
@@ -2266,14 +2499,16 @@ testSetDocumentTagsRight = replicateM_ 10 $ do
 testCloseDocumentSignableButNotEverybodyHasSigned :: TestEnv ()
 testCloseDocumentSignableButNotEverybodyHasSigned = replicateM_ 10 $ do
   author <- addNewRandomUser
-  addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentTypes = Or documentSignableTypes
-         , randomDocumentStatuses = Or [Pending]
-         , randomDocumentChecker = onCondition $
-           (\doc -> length (documentsignatorylinks doc) > 1) &&
-           (not . all (isSignatory --> isSignatoryAndHasSigned) .
-            documentsignatorylinks)
-         } `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Pending]
+    , rdaSignatories =
+      let signatory = OneOf
+            [ AllOf [ RSC_IsSignatoryThatHasntSigned ]
+            , AllOf [ RSC_IsApproverThatHasntApproved ]
+            ]
+      in anyRandomSignatoryCondition 2 10 signatory
+    } `withDocumentM` do
     sa <- arbitrarySystemActor
     assertRaisesKontra (\(SigningPartyHasNotYetSignedOrApproved {}) -> True) $ do
       randomUpdate $ CloseDocument sa
@@ -2281,12 +2516,15 @@ testCloseDocumentSignableButNotEverybodyHasSigned = replicateM_ 10 $ do
 testCloseDocumentNotSignableNothing :: TestEnv ()
 testCloseDocumentNotSignableNothing = replicateM_ 10 $ do
   author <- addNewRandomUser
-  addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentTypes = Or (documentAllTypes \\ documentSignableTypes)
-         , randomDocumentChecker = onCondition $
-             not . all (isSignatory --> isSignatoryAndHasSigned) .
-             documentsignatorylinks
-         } `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf $ documentAllTypes \\ [Signable]
+    , rdaSignatories =
+      let signatory = OneOf
+            [ AllOf [ RSC_IsSignatoryThatHasntSigned ]
+            , AllOf [ RSC_IsApproverThatHasntApproved ]
+            ]
+      in anyRandomSignatoryCondition 2 10 signatory
+    } `withDocumentM` do
     sa <- arbitrarySystemActor
     assertRaisesKontra (\(DocumentTypeShouldBe {}) -> True) $ do
       randomUpdate $ CloseDocument sa
@@ -2303,12 +2541,15 @@ testCancelDocumentNotSignableNothing = replicateM_ 10 $ do
   author <- addNewRandomUser
   ctx <- mkContext defaultLang
   time <- rand 10 arbitrary
-  addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentTypes = Or (documentAllTypes \\ documentSignableTypes)
-         , randomDocumentChecker = onCondition $
-             not . all (isSignatory --> isSignatoryAndHasSigned) .
-             documentsignatorylinks
-         } `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf $ documentAllTypes \\ [Signable]
+    , rdaSignatories =
+      let signatory = OneOf
+            [ AllOf [ RSC_IsSignatoryThatHasntSigned ]
+            , AllOf [ RSC_IsApproverThatHasntApproved ]
+            ]
+      in anyRandomSignatoryCondition 2 10 signatory
+    } `withDocumentM` do
 
     assertRaisesKontra (\DocumentTypeShouldBe {} -> True) $
                  randomUpdate $ CancelDocument
@@ -2332,9 +2573,9 @@ testSetDocumentTitleRight :: TestEnv ()
 testSetDocumentTitleRight = replicateM_ 10 $ do
   author <- addNewRandomUser
   actor <- arbitraryAuthorActor
-  addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentChecker = onCondition (not . isClosed)
-         } `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf $ documentAllStatuses \\ [Closed]
+    } `withDocumentM` do
     let title = "my new cool title"
     success <- randomUpdate $ SetDocumentTitle title actor
 
@@ -2352,9 +2593,9 @@ testSetDocumentDaysToSignRight :: TestEnv ()
 testSetDocumentDaysToSignRight = replicateM_ 10 $ do
   author <- addNewRandomUser
   actor <- arbitraryAuthorActor
-  addRandomDocument (randomDocumentAllowsDefault author)
-         { randomDocumentChecker = onCondition $ not . isClosed
-         } `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf $ documentAllStatuses \\ [Closed]
+    } `withDocumentM` do
     let daystosign = 15
     success1 <- randomUpdate $ SetDaysToSign daystosign actor
 
@@ -2366,7 +2607,9 @@ testSetShowHeader = replicateM_ 10 $ do
   author <- addNewRandomUser
   actor <- arbitraryAuthorActor
   targetValue <- rand 10 arbitrary
-  addRandomDocument (randomDocumentAllowsDefault author)  { randomDocumentChecker = onCondition isPreparation } `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation]
+    } `withDocumentM` do
     success <- randomUpdate $ SetShowHeader targetValue actor
     newValue <- documentshowheader <$> theDocument
     assertEqual "SetShowHeader changes value to target value" targetValue newValue
@@ -2377,7 +2620,9 @@ testSetShowPDFDownload = replicateM_ 10 $ do
   author <- addNewRandomUser
   actor <- arbitraryAuthorActor
   targetValue <- rand 10 arbitrary
-  addRandomDocument (randomDocumentAllowsDefault author)  { randomDocumentChecker = onCondition isPreparation } `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation]
+    } `withDocumentM` do
     success <- randomUpdate $ SetShowPDFDownload targetValue actor
     newValue <- documentshowpdfdownload <$> theDocument
     assertEqual "SetShowPDFDownload changes value to target value" targetValue newValue
@@ -2388,7 +2633,9 @@ testSetShowRejectOption = replicateM_ 10 $ do
   author <- addNewRandomUser
   actor <- arbitraryAuthorActor
   targetValue <- rand 10 arbitrary
-  addRandomDocument (randomDocumentAllowsDefault author)  { randomDocumentChecker = onCondition isPreparation } `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation]
+    } `withDocumentM` do
     success <- randomUpdate $ SetShowRejectOption targetValue actor
     newValue <- documentshowrejectoption <$> theDocument
     assertEqual "SetShowRejectOption changes value to target value" targetValue newValue
@@ -2399,7 +2646,9 @@ testSetAllowRejectReason = replicateM_ 10 $ do
   author <- addNewRandomUser
   actor <- arbitraryAuthorActor
   targetValue <- rand 10 arbitrary
-  addRandomDocument (randomDocumentAllowsDefault author)  { randomDocumentChecker = onCondition isPreparation } `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation]
+    } `withDocumentM` do
     success <- randomUpdate $ SetAllowRejectReason targetValue actor
     newValue <- documentallowrejectreason <$> theDocument
     assertEqual "SetAllowRejectReason changes value to target value" targetValue newValue
@@ -2410,7 +2659,9 @@ testSetShowFooter = replicateM_ 10 $ do
   author <- addNewRandomUser
   actor <- arbitraryAuthorActor
   targetValue <- rand 10 arbitrary
-  addRandomDocument (randomDocumentAllowsDefault author)  { randomDocumentChecker = onCondition isPreparation } `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation]
+    } `withDocumentM` do
     success <- randomUpdate $ SetShowFooter targetValue actor
     newValue <- documentshowfooter <$> theDocument
     assertEqual "SetShowFooter changes value to target value" targetValue newValue
@@ -2421,7 +2672,9 @@ testSetShowArrow = replicateM_ 10 $ do
   author <- addNewRandomUser
   actor <- arbitraryAuthorActor
   targetValue <- rand 10 arbitrary
-  addRandomDocument (randomDocumentAllowsDefault author)  { randomDocumentChecker = onCondition isPreparation } `withDocumentM` do
+  addRandomDocument (rdaDefault author)
+    { rdaStatuses = OneOf [Preparation]
+    } `withDocumentM` do
     success <- randomUpdate $ SetShowArrow targetValue actor
     newValue <- documentshowarrow <$> theDocument
     assertEqual "SetShowArrow changes value to target value" targetValue newValue
@@ -2541,14 +2794,14 @@ testGetDocumentsByCompanyWithFilteringFindsMultiple = replicateM_ 10 $ do
 testStatusClassSignedWhenAllSigned :: TestEnv ()
 testStatusClassSignedWhenAllSigned = replicateM_ 10 $ do
   author <- addNewRandomUser
-  doc <- addRandomDocument (randomDocumentAllowsDefault author)
-    { randomDocumentTypes = Or [Signable]
-    , randomDocumentStatuses = Or [Closed]
-    , randomDocumentSignatories =
-        let signatory = Or
-              [ And [RSC_IsSignatoryThatHasSigned]
+  doc <- addRandomDocument (rdaDefault author)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Closed]
+    , rdaSignatories =
+        let signatory = OneOf
+              [ AllOf [RSC_IsSignatoryThatHasSigned]
               ]
-        in Or $ map (`replicate` signatory) [2..10]
+        in OneOf $ map (`replicate` signatory) [2..10]
     }
   doc' <- dbQuery $ GetDocumentByDocumentID (documentid doc)
 

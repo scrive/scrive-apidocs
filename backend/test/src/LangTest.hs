@@ -77,8 +77,9 @@ testDocumentLangSwitchToSwedish = do
 
 createTestDoc :: User -> UTCTime -> TestEnv Document
 createTestDoc user _ctxtime = do
-  doc <- addRandomDocumentWithAuthorAndCondition user
-           (\d -> documentstatus d == Preparation)
+  doc <- addRandomDocument (rdaDefault user)
+    { rdaStatuses = OneOf [Preparation]
+    }
   dbQuery $ GetDocumentByDocumentID $ documentid doc
 
 createTestUser :: Lang -> TestEnv User

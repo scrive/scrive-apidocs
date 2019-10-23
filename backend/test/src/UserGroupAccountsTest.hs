@@ -285,7 +285,10 @@ test_removingCompanyAccountWorks :: TestEnv ()
 test_removingCompanyAccountWorks = do
   (adminuser, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
   Just standarduser <- addNewUserToUserGroup "Bob" "Blue" "jony@blue.com" (get ugID ug)
-  doc <- addRandomDocumentWithAuthorAndCondition standarduser (\d -> documentstatus d `elem` [Closed])
+  doc <- addRandomDocument (rdaDefault standarduser)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf [Closed]
+    }
   let docid = documentid doc
 
   void $ dbUpdate $ AddUserGroupInvite $ mkInvite ug standarduser
@@ -334,9 +337,10 @@ test_privateUserTakoverWorks :: TestEnv ()
 test_privateUserTakoverWorks = do
   (adminuser, ug) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
   Just user <- addNewUser "Bob" "Blue" "bob@blue.com"
-  docid <- documentid <$> addRandomDocumentWithAuthorAndCondition user (\d -> not $ (documentstatus d) `elem` [Preparation])
-
-
+  docid <- documentid <$> addRandomDocument (rdaDefault user)
+    { rdaTypes = OneOf [Signable]
+    , rdaStatuses = OneOf $ documentAllStatuses \\ [Preparation]
+    }
   void $ dbUpdate $ AddUserGroupInvite $ mkInvite ug user
 
   ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
