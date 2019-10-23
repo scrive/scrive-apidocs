@@ -28,21 +28,21 @@ if grep --quiet ".*gateway_url.*:.*localhost.*" kontrakcja.conf; then
 fi
 
 echo "STARTING MAILER SERVER"
-    cabal new-run mailing-server &
+    cabal v2-run mailing-server &
     echo $! > _mailer_pid
     echo "started mailer with pid $(cat _mailer_pid)"
     sleep 1
 
 echo ""
 echo "STARTING SMS SERVER"
-    cabal new-run messenger-server &
+    cabal v2-run messenger-server &
     echo $! > _mailer_pid
     echo "started sms sender with pid $(cat _mailer_pid)"
     sleep 1
 
 echo ""
 echo "STARTING CRON SERVER"
-    cabal new-run cron &
+    cabal v2-run cron &
     echo $! > _cron_pid
     echo "started mailer with pid $(cat _cron_pid)"
     sleep 1
@@ -57,7 +57,7 @@ if [ -z "$1" ]; then
         GRUNT_TASK="server"
     fi
     cd frontend/
-    grunt --new-build "${GRUNT_TASK}" &
+    grunt "${GRUNT_TASK}" &
     echo $! > _grunt_pid
     echo "started server with pid $(cat _grunt_pid)"
     cd ../
@@ -67,7 +67,7 @@ fi
 
 echo ""
 echo "STARTING MAIN SERVER"
-    cabal new-run kontrakcja-server "$@" &
+    cabal v2-run kontrakcja-server "$@" &
     echo $! > _server_pid
     echo "started server with pid $(cat _server_pid)"
 
