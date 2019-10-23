@@ -21,8 +21,8 @@ data SignatoryConsentQuestion = SignatoryConsentQuestion {
   } deriving (Show, Typeable)
 
 signatoryConsentQuestionsSelectors :: [SQL]
-signatoryConsentQuestionsSelectors = [
-    "signatory_link_consent_questions.id"
+signatoryConsentQuestionsSelectors =
+  [ "signatory_link_consent_questions.id"
   , "signatory_link_consent_questions.title"
   , "signatory_link_consent_questions.positive_option"
   , "signatory_link_consent_questions.negative_option"
@@ -32,27 +32,35 @@ signatoryConsentQuestionsSelectors = [
   ]
 
 defaultSignatoryConsentQuestion :: SignatoryConsentQuestion
-defaultSignatoryConsentQuestion =
-  SignatoryConsentQuestion {
-      scqID             = unsafeSignatoryConsentQuestionID 0
-    , scqTitle          = ""
-    , scqPositiveOption = ""
-    , scqNegativeOption = ""
-    , scqResponse       = Nothing
-    , scqDescription    = Nothing
-    }
+defaultSignatoryConsentQuestion = SignatoryConsentQuestion
+  { scqID             = unsafeSignatoryConsentQuestionID 0
+  , scqTitle          = ""
+  , scqPositiveOption = ""
+  , scqNegativeOption = ""
+  , scqResponse       = Nothing
+  , scqDescription    = Nothing
+  }
 
 instance PQFormat SignatoryConsentQuestion where
   pqFormat = compositeTypePqFormat ctSignatoryConsentQuestion
 
-type instance CompositeRow SignatoryConsentQuestion = (SignatoryConsentQuestionID, String, String, String, Maybe Bool, Maybe String, Maybe String)
+type instance CompositeRow SignatoryConsentQuestion
+  = ( SignatoryConsentQuestionID
+    , String
+    , String
+    , String
+    , Maybe Bool
+    , Maybe String
+    , Maybe String
+    )
 
 instance CompositeFromSQL SignatoryConsentQuestion where
-  toComposite (scqid, title, positive_option, negative_option, response, description_title, description_text) = SignatoryConsentQuestion {
-    scqID             = scqid
-  , scqTitle          = title
-  , scqPositiveOption = positive_option
-  , scqNegativeOption = negative_option
-  , scqResponse       = response
-  , scqDescription    = (,) <$> description_title <*> description_text
-  }
+  toComposite (scqid, title, positive_option, negative_option, response, description_title, description_text)
+    = SignatoryConsentQuestion
+      { scqID             = scqid
+      , scqTitle          = title
+      , scqPositiveOption = positive_option
+      , scqNegativeOption = negative_option
+      , scqResponse       = response
+      , scqDescription    = (,) <$> description_title <*> description_text
+      }

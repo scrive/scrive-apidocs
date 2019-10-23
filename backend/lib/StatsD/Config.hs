@@ -9,16 +9,12 @@ data StatsDConf = StatsDConf {
   } deriving (Eq, Show, Ord)
 
 unjsonStatsDConf :: UnjsonDef StatsDConf
-unjsonStatsDConf = objectOf $ pure StatsDConf
-  <*> field "host"
-      statsdHost
-      "StatsD host"
-  <*> field "port"
-      statsdPort
-      "StatsD server port"
-  <*> field "prefix"
-      statsdPrefix
-      "StatsD tenant ID"
+unjsonStatsDConf =
+  objectOf
+    $   pure StatsDConf
+    <*> field "host"   statsdHost   "StatsD host"
+    <*> field "port"   statsdPort   "StatsD server port"
+    <*> field "prefix" statsdPrefix "StatsD tenant ID"
 
 instance Unjson StatsDConf where
   unjsonDef = unjsonStatsDConf

@@ -24,14 +24,18 @@ data CmdConf = CmdConf {
 } deriving (Data, Typeable)
 
 cmdConf :: FilePath -> String -> CmdConf
-cmdConf workspaceRoot progName = CmdConf {
-  config = configFile
-        &= help ("Configuration file (default: " ++ configFile ++ ")")
-        &= typ "FILE",
-  force =  False &= help ("Force commit after each migration - DB will be permanently changed even if migrations will fail")
-} &= program progName
-  where
-    configFile = workspaceRoot </> "kontrakcja.conf"
+cmdConf workspaceRoot progName =
+  CmdConf
+      { config =
+        configFile &= help ("Configuration file (default: " ++ configFile ++ ")") &= typ
+          "FILE"
+      , force  =
+        False &= help
+          ("Force commit after each migration - DB will be permanently changed even if migrations will fail"
+          )
+      }
+    &= program progName
+  where configFile = workspaceRoot </> "kontrakcja.conf"
 
 ----------------------------------------
 
@@ -39,20 +43,22 @@ main :: IO ()
 main = do
   (AppPaths _ workspaceRoot) <- setupAppPaths
 
-  CmdConf{..} <- cmdArgs . cmdConf workspaceRoot =<< getProgName
-  AppDBConf{..} <- readConfig putStrLn config
-  rng <- newCryptoRNGState
-  (errs, logRunner) <- mkLogRunner "kontrakcja-migrate" logConfig rng
+  CmdConf {..}               <- cmdArgs . cmdConf workspaceRoot =<< getProgName
+  AppDBConf {..}             <- readConfig putStrLn config
+  rng                        <- newCryptoRNGState
+  (errs, logRunner)          <- mkLogRunner "kontrakcja-migrate" logConfig rng
   mapM_ T.putStrLn errs
 
   runWithLogRunner logRunner $ do
     -- composite types are not available in migrations
-    let connSource = simpleSource $ pgConnSettings dbConfig []
-        extrasOptions =  ExtrasOptions
-                         { eoForceCommit = force
-                         , eoEnforcePKs = True }
+    let connSource    = simpleSource $ pgConnSettings dbConfig []
+        extrasOptions = ExtrasOptions { eoForceCommit = force, eoEnforcePKs = True }
     withPostgreSQL (unConnectionSource connSource) $ do
       migrateDatabase extrasOptions
-        kontraExtensions kontraComposites kontraDomains kontraTables kontraMigrations
+                      kontraExtensions
+                      kontraComposites
+                      kontraDomains
+                      kontraTables
+                      kontraMigrations
       defineFunctions kontraFunctions
       defineTriggers kontraTriggers

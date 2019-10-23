@@ -12,13 +12,11 @@ data PlanhatConf =
     } deriving (Eq, Show, Ord)
 
 unjsonPlanhatConf :: UnjsonDef PlanhatConf
-unjsonPlanhatConf = objectOf $ pure PlanhatConf
-  <*> field "base_url"
-      planhatBaseURL
-      "Planhat API endpoint"
-  <*> field "tenant_id"
-      planhatTenantID
-      "Planhat tenant ID"
+unjsonPlanhatConf =
+  objectOf
+    $   pure PlanhatConf
+    <*> field "base_url"  planhatBaseURL  "Planhat API endpoint"
+    <*> field "tenant_id" planhatTenantID "Planhat tenant ID"
 
 instance Unjson PlanhatConf where
   unjsonDef = unjsonPlanhatConf

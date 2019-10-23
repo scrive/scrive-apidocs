@@ -21,8 +21,8 @@ import Database.Redis.Cache
 import Database.Redis.Helpers
 
 -- | Fetch the contents of a file from Redis retrying every second.
-getFileFromRedis :: (MonadBaseControl IO m, MonadLog m)
-                 => R.Connection -> RedisKey -> m BSL.ByteString
+getFileFromRedis
+  :: (MonadBaseControl IO m, MonadLog m) => R.Connection -> RedisKey -> m BSL.ByteString
 getFileFromRedis conn rkey = do
   -- This is used to make Redis race with a timeout.
   semaphore <- newEmptyMVar

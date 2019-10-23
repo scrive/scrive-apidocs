@@ -31,10 +31,10 @@ handleActivate
   :: (Kontrakcja m)
   => Maybe Text
   -> Maybe Text
-  -> (User,UserGroup)
+  -> (User, UserGroup)
   -> SignupMethod
   -> m User
-handleActivate mfstname msndname (actvuser,ug) signupmethod = do
+handleActivate mfstname msndname (actvuser, ug) signupmethod = do
   logInfo "Attempting to activate account for user" $ logObject_ actvuser
   -- Don't remove - else people will be able to hijack accounts
   when (isJust $ userhasacceptedtermsofservice actvuser) $ do
@@ -45,28 +45,42 @@ handleActivate mfstname msndname (actvuser,ug) signupmethod = do
     internalError
 
   switchLang (getLang actvuser)
-  ctx <- getContext
-  phone <-  fromMaybe (getMobile actvuser) <$> getField "phone"
-  ugname <- (fromMaybe (get ugName ug)) <$> getField "company"
+  ctx      <- getContext
+  phone    <- fromMaybe (getMobile actvuser) <$> getField "phone"
+  ugname   <- (fromMaybe (get ugName ug)) <$> getField "company"
   position <- fromMaybe "" <$> getField "position"
 
-  void $ dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser) {
-      userfstname = fromMaybe "" mfstname
-    , usersndname = fromMaybe "" msndname
-    , userphone = phone
+  void $ dbUpdate $ SetUserInfo (userid actvuser) $ (userinfo actvuser)
+    { userfstname         = fromMaybe "" mfstname
+    , usersndname         = fromMaybe "" msndname
+    , userphone           = phone
     , usercompanyposition = position
-  }
+    }
   void $ dbUpdate . UserGroupUpdate . set ugName ugname $ ug
-  void $ dbUpdate $ LogHistoryUserInfoChanged (userid actvuser)
-    (get ctxipnumber ctx) (get ctxtime ctx) (userinfo actvuser)
-    ((userinfo actvuser) { userfstname = fromMaybe "" mfstname , usersndname =  fromMaybe "" msndname })
+  void $ dbUpdate $ LogHistoryUserInfoChanged
+    (userid actvuser)
+    (get ctxipnumber ctx)
+    (get ctxtime ctx)
+    (userinfo actvuser)
+    ((userinfo actvuser) { userfstname = fromMaybe "" mfstname
+                         , usersndname = fromMaybe "" msndname
+                         }
+    )
     (userid <$> get ctxmaybeuser ctx)
-  void $ dbUpdate $ LogHistoryPasswordSetup (userid actvuser) (get ctxipnumber ctx) (get ctxtime ctx) (userid <$> get ctxmaybeuser ctx)
+  void $ dbUpdate $ LogHistoryPasswordSetup (userid actvuser)
+                                            (get ctxipnumber ctx)
+                                            (get ctxtime ctx)
+                                            (userid <$> get ctxmaybeuser ctx)
   void $ dbUpdate $ AcceptTermsOfService (userid actvuser) (get ctxtime ctx)
-  void $ dbUpdate $ LogHistoryTOSAccept (userid actvuser) (get ctxipnumber ctx) (get ctxtime ctx) (userid <$> get ctxmaybeuser ctx)
+  void $ dbUpdate $ LogHistoryTOSAccept (userid actvuser)
+                                        (get ctxipnumber ctx)
+                                        (get ctxtime ctx)
+                                        (userid <$> get ctxmaybeuser ctx)
   void $ dbUpdate $ SetSignupMethod (userid actvuser) signupmethod
 
-  dbUpdate $ ConnectSignatoriesToUser (Email $ getEmail actvuser) (userid actvuser) (14 `daysBefore` get ctxtime ctx)
+  dbUpdate $ ConnectSignatoriesToUser (Email $ getEmail actvuser)
+                                      (userid actvuser)
+                                      (14 `daysBefore` get ctxtime ctx)
 
   mpassword <- getField "password"
   case (mpassword) of
@@ -88,9 +102,16 @@ handleActivate mfstname msndname (actvuser,ug) signupmethod = do
 
   return tosuser
 
-createUser :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, TemplatesMonad m) => Email -> (Text, Text) -> (UserGroupID,Bool) -> Lang -> SignupMethod -> m (Maybe User)
+createUser
+  :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, TemplatesMonad m)
+  => Email
+  -> (Text, Text)
+  -> (UserGroupID, Bool)
+  -> Lang
+  -> SignupMethod
+  -> m (Maybe User)
 createUser email names (ugid, iscompanyadmin) lang sm = do
-  ctx <- getContext
+  ctx    <- getContext
   passwd <- randomPassword
   dbQuery (UserGroupGet ugid) >>= \case
     Nothing -> return Nothing
@@ -99,9 +120,22 @@ createUser email names (ugid, iscompanyadmin) lang sm = do
       mUserFolder <- case get ugHomeFolderID ug of
         Nothing -> return Nothing
         Just ugFid ->
-          fmap Just . dbUpdate . FolderCreate
-            . set folderParentID (Just ugFid) $ defaultFolder
-      muser <- dbUpdate $ AddUser names (unEmail email) (Just passwd) (ugid, get folderID <$> mUserFolder, iscompanyadmin) lang (get (bdid . ctxbrandeddomain) ctx) sm
-      whenJust muser $ \user ->
-        void . dbUpdate $ LogHistoryAccountCreated (userid user) (get ctxipnumber ctx) (get ctxtime ctx) email (userid <$> getContextUser ctx)
+          fmap Just
+            . dbUpdate
+            . FolderCreate
+            . set folderParentID (Just ugFid)
+            $ defaultFolder
+      muser <- dbUpdate $ AddUser names
+                                  (unEmail email)
+                                  (Just passwd)
+                                  (ugid, get folderID <$> mUserFolder, iscompanyadmin)
+                                  lang
+                                  (get (bdid . ctxbrandeddomain) ctx)
+                                  sm
+      whenJust muser $ \user -> void . dbUpdate $ LogHistoryAccountCreated
+        (userid user)
+        (get ctxipnumber ctx)
+        (get ctxtime ctx)
+        email
+        (userid <$> getContextUser ctx)
       return muser

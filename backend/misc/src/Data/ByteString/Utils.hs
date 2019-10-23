@@ -14,6 +14,5 @@ splitEvery :: Int -> BS.ByteString -> [BS.ByteString]
 splitEvery n = go
   where
     go bs = case BS.splitAt n bs of
-      (chunk, rest)
-        | BS.null rest -> [chunk]
-        | otherwise    -> chunk : go rest
+      (chunk, rest) | BS.null rest -> [chunk]
+                    | otherwise    -> chunk : go rest

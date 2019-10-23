@@ -58,79 +58,55 @@ data CronConf = CronConf {
   } deriving (Eq, Show)
 
 unjsonCronConf :: UnjsonDef CronConf
-unjsonCronConf = objectOf $ pure CronConf
-  <*> field "amazon"
-      cronAmazonConfig
-      "Amazon configuration"
-  <*> field "database"
-      cronDBConfig
-      "Database connection string"
-  <*> field "max_db_connections"
-      cronMaxDBConnections
-      "Database connections limit"
-  <*> fieldOpt "redis_cache"
-      cronRedisCacheConfig
-      "Redis cache configuration"
-  <*> field "local_file_cache_size"
-      cronLocalFileCacheSize
-      "Local file cache size in bytes"
-  <*> field "logging"
-      cronLogConfig
-      "Logging configuration"
-  <*> field "guardtime"
-      cronGuardTimeConf
-      "GuardTime configuration"
-  <*> fieldOpt "cgi_grp"
-      cronCgiGrpConfig
-      "CGI GRP (E-ID) configuration"
-  <*> fieldOpt "mixpanel"
-      cronMixpanelToken
-      "Token for Mixpanel"
-  <*> field "ntp_servers"
-      cronNtpServers
-      "List of NTP servers to contact to get estimate of host clock error"
-  <*> fieldOpt "salesforce"
-      cronSalesforceConf
-      "Configuration of salesforce"
-  <*> fieldOpt "planhat"
-      cronPlanhatConf
-      "Configuration for pushing data to Planhat"
-  <*> fieldOpt "monitoring"
-      cronMonitoringConf
-      "Configuration of the ekg-statsd-based monitoring."
-  <*> field "mail_noreply_address"
-      cronMailNoreplyAddress
-      "Noreply address used when sending email"
-  <*> field "consumer_cron_max_jobs"
-      cronConsumerCronMaxJobs
-      "Maximum number of jobs running cron itself"
-  <*> field "consumer_sealing_max_jobs"
-      cronConsumerSealingMaxJobs
-      "Maximum number of jobs running the Document Sealing Consumer"
-  <*> field "consumer_signing_max_jobs"
-      cronConsumerSigningMaxJobs
-      "Maximum number of jobs running the Document Signing Consumer"
-  <*> field "consumer_extending_max_jobs"
-      cronConsumerExtendingMaxJobs
-      "Maximum number of jobs running the Document Extending Consumer"
-  <*> field "consumer_api_callback_max_jobs"
-      cronConsumerAPICallbackMaxJobs
-      "Maximum number of jobs running the Document API Callback Consumer"
-  <*> field "consumer_file_purging_max_jobs"
-      cronConsumerFilePurgingMaxJobs
-      "Maximum number of jobs running the File Purging Consumer"
-  <*> fieldOpt "nets_sign"
-      cronNetsSignConfig
-      "Configuration of Nets for ESigning"
-  <*> field "pdftools_lambda"
-      cronPdfToolsLambdaConf
-      "Configuration of PdfTools Lambda"
-  <*> fieldOpt "monthly_invoice"
-      cronMonthlyInvoiceConf
-      "Monthly-invoice job configuration"
-  <*> fieldOpt "statsd"
-      cronStatsDConf
-      "StatsD configuration"
+unjsonCronConf =
+  objectOf
+    $   pure CronConf
+    <*> field "amazon"             cronAmazonConfig     "Amazon configuration"
+    <*> field "database"           cronDBConfig         "Database connection string"
+    <*> field "max_db_connections" cronMaxDBConnections "Database connections limit"
+    <*> fieldOpt "redis_cache" cronRedisCacheConfig "Redis cache configuration"
+    <*> field "local_file_cache_size"
+              cronLocalFileCacheSize
+              "Local file cache size in bytes"
+    <*> field "logging"   cronLogConfig     "Logging configuration"
+    <*> field "guardtime" cronGuardTimeConf "GuardTime configuration"
+    <*> fieldOpt "cgi_grp"  cronCgiGrpConfig  "CGI GRP (E-ID) configuration"
+    <*> fieldOpt "mixpanel" cronMixpanelToken "Token for Mixpanel"
+    <*> field "ntp_servers"
+              cronNtpServers
+              "List of NTP servers to contact to get estimate of host clock error"
+    <*> fieldOpt "salesforce" cronSalesforceConf "Configuration of salesforce"
+    <*> fieldOpt "planhat" cronPlanhatConf "Configuration for pushing data to Planhat"
+    <*> fieldOpt "monitoring"
+                 cronMonitoringConf
+                 "Configuration of the ekg-statsd-based monitoring."
+    <*> field "mail_noreply_address"
+              cronMailNoreplyAddress
+              "Noreply address used when sending email"
+    <*> field "consumer_cron_max_jobs"
+              cronConsumerCronMaxJobs
+              "Maximum number of jobs running cron itself"
+    <*> field "consumer_sealing_max_jobs"
+              cronConsumerSealingMaxJobs
+              "Maximum number of jobs running the Document Sealing Consumer"
+    <*> field "consumer_signing_max_jobs"
+              cronConsumerSigningMaxJobs
+              "Maximum number of jobs running the Document Signing Consumer"
+    <*> field "consumer_extending_max_jobs"
+              cronConsumerExtendingMaxJobs
+              "Maximum number of jobs running the Document Extending Consumer"
+    <*> field "consumer_api_callback_max_jobs"
+              cronConsumerAPICallbackMaxJobs
+              "Maximum number of jobs running the Document API Callback Consumer"
+    <*> field "consumer_file_purging_max_jobs"
+              cronConsumerFilePurgingMaxJobs
+              "Maximum number of jobs running the File Purging Consumer"
+    <*> fieldOpt "nets_sign" cronNetsSignConfig "Configuration of Nets for ESigning"
+    <*> field "pdftools_lambda" cronPdfToolsLambdaConf "Configuration of PdfTools Lambda"
+    <*> fieldOpt "monthly_invoice"
+                 cronMonthlyInvoiceConf
+                 "Monthly-invoice job configuration"
+    <*> fieldOpt "statsd" cronStatsDConf "StatsD configuration"
 
 instance Unjson CronConf where
   unjsonDef = unjsonCronConf

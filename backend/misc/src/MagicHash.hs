@@ -48,7 +48,10 @@ instance FromReqURI MagicHash where
   fromReqURI = maybeRead . T.pack
 
 instance Unjson MagicHash where
-  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse access token")  return) . maybeRead . T.pack) show unjsonDef
+  unjsonDef = unjsonInvmapR
+    ((maybe (fail "Can't parse access token") return) . maybeRead . T.pack)
+    show
+    unjsonDef
 
 instance FromSQL MagicHash where
   type PQBase MagicHash = PQBase Int64
@@ -72,5 +75,5 @@ unMagicHash (MagicHash mh) = mh
 showOnlyLastFourCharacters :: MagicHash -> String
 showOnlyLastFourCharacters mh =
   let asString = show mh
-      len = length asString
-    in map (\(i, c) -> if i <= 4 then c else '*') $ zip [len, (len - 1) .. 1 ] asString
+      len      = length asString
+  in  map (\(i, c) -> if i <= 4 then c else '*') $ zip [len, (len - 1) .. 1] asString

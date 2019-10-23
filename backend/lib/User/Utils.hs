@@ -27,13 +27,12 @@ import Util.MonadUtils
 -}
 withUser :: Kontrakcja m => (User -> m InternalKontraResponse) -> m InternalKontraResponse
 withUser action = do
-    ctx <- getContext
-    case get ctxmaybeuser ctx of
-      Just user -> action user
-      Nothing   -> do
-       flashmessage <- flashMessageLoginRedirect
-       return $ internalResponseWithFlash flashmessage
-         (LinkLogin (get ctxlang ctx))
+  ctx <- getContext
+  case get ctxmaybeuser ctx of
+    Just user -> action user
+    Nothing   -> do
+      flashmessage <- flashMessageLoginRedirect
+      return $ internalResponseWithFlash flashmessage (LinkLogin (get ctxlang ctx))
 
 {- |
   Guard against a GET/POST with no logged in user.
@@ -41,29 +40,37 @@ withUser action = do
 -}
 guardLoggedInOrThrowInternalError :: Kontrakcja m => m a -> m a
 guardLoggedInOrThrowInternalError action = do
-   ctx <- getContext
-   case get ctxmaybeuser ctx of
-     Just _user -> action
-     Nothing    -> internalError
+  ctx <- getContext
+  case get ctxmaybeuser ctx of
+    Just _user -> action
+    Nothing    -> internalError
 
 {- |
    Guard against a GET with logged in users who have not signed the TOS agreement.
    If they have not, redirect to their account page.
 -}
-withTosCheck :: Kontrakcja m => (User -> m InternalKontraResponse) -> User -> m InternalKontraResponse
-withTosCheck action user =
-  case userhasacceptedtermsofservice user of
-    Just _ -> action user
-    Nothing -> return $ internalResponse (LinkAcceptTOS)
+withTosCheck
+  :: Kontrakcja m
+  => (User -> m InternalKontraResponse)
+  -> User
+  -> m InternalKontraResponse
+withTosCheck action user = case userhasacceptedtermsofservice user of
+  Just _  -> action user
+  Nothing -> return $ internalResponse (LinkAcceptTOS)
 
 {- |
    Guard against a GET with logged in users who should have 2FA enabled, but they have not.
    If they have not, redirect to their account page.
 -}
-with2FACheck :: Kontrakcja m => (User -> m InternalKontraResponse) -> User -> m InternalKontraResponse
+with2FACheck
+  :: Kontrakcja m
+  => (User -> m InternalKontraResponse)
+  -> User
+  -> m InternalKontraResponse
 with2FACheck action user = do
   ugwp <- dbQuery . UserGroupGetWithParentsByUserID $ userid user
-  let userMustHaveTotpEnabled = get ugsTotpIsMandatory (ugwpSettings ugwp) || usertotpismandatory user
+  let userMustHaveTotpEnabled =
+        get ugsTotpIsMandatory (ugwpSettings ugwp) || usertotpismandatory user
   if userMustHaveTotpEnabled && not (usertotpactive user)
     then do
       flashmessage <- flashMessageTotpMustBeActivated
@@ -97,10 +104,11 @@ withUserAndRoles action = do
     Guards that there is a logged in company admin.
 -}
 withCompanyAdmin :: Kontrakcja m => ((User, UserGroup) -> m a) -> m a
-withCompanyAdmin action = withUserAndGroup $ \(user, ug) ->
-  if useriscompanyadmin user then action (user, ug) else internalError
+withCompanyAdmin action = withUserAndGroup
+  $ \(user, ug) -> if useriscompanyadmin user then action (user, ug) else internalError
 
-withCompanyAdminOrAdminOnly :: Kontrakcja m => Maybe UserGroupID -> (UserGroup -> m a) -> m a
+withCompanyAdminOrAdminOnly
+  :: Kontrakcja m => Maybe UserGroupID -> (UserGroup -> m a) -> m a
 withCompanyAdminOrAdminOnly Nothing action = withCompanyAdmin (action . snd)
-withCompanyAdminOrAdminOnly (Just ugid) action = onlySalesOrAdmin $
-  guardJustM (dbQuery (UserGroupGet ugid)) >>= action
+withCompanyAdminOrAdminOnly (Just ugid) action =
+  onlySalesOrAdmin $ guardJustM (dbQuery (UserGroupGet ugid)) >>= action

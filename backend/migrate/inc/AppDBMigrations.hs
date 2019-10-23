@@ -40,8 +40,8 @@ import UserGroupAccounts.Migrations
 -- Note: ALWAYS append new migrations TO THE END of this list.
 -- Current version has migrations created after VII.2016.
 kontraMigrations :: (MonadDB m, MonadThrow m, MonadLog m) => [Migration m]
-kontraMigrations = [
-    documentSigningJobsUseJson
+kontraMigrations =
+  [ documentSigningJobsUseJson
   , addIsReceiptToDocument
   , createTablePartners
   , createTablePartnerAdmins

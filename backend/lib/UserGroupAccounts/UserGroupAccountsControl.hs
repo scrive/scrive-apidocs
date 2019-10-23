@@ -46,16 +46,16 @@ import Util.MonadUtils
 
 -- | Get the ajax data for the company accounts list.
 handleUserGroupAccounts :: Kontrakcja m => m JSValue
-handleUserGroupAccounts = withUserAndGroup $ \(user,_) -> do
+handleUserGroupAccounts = withUserAndGroup $ \(user, _) -> do
   -- When a user has additional UserAdminAR role stored in database, return all the users,
   -- which he can administer.
   -- This intentionally uses UserAdminAR role instead of checking for (ReadA, UserR) permission,
   -- because we want to avoid huge list of users for "partner admins" (UserGroupAdminART).
   roles0 <- dbQuery . GetRoles $ user
-  roles <- addInheritedRoles roles0
+  roles  <- addInheritedRoles roles0
   let userAdminUgId = \case
         UserAdminAR ugid -> Just ugid
-        _ -> Nothing
+        _                -> Nothing
   handleUserGroupAccountsInternal . mapMaybe userAdminUgId . fmap accessRoleTarget $ roles
 
 -- | Get the ajax data for the company accounts list.
@@ -68,90 +68,89 @@ handleUserGroupAccountsForAdminOnly ugid = onlySalesOrAdmin $ do
 handleUserGroupAccountsInternal :: Kontrakcja m => [UserGroupID] -> m JSValue
 handleUserGroupAccountsInternal ugids = do
   muser <- get ctxmaybeuser <$> getContext
-  user <- case muser of
-    Nothing   -> unexpectedError
-                 "handleUserGroupAccountsInternal: No user in Context!"
+  user  <- case muser of
+    Nothing   -> unexpectedError "handleUserGroupAccountsInternal: No user in Context!"
     Just user -> return user
-  ugs <- forM ugids $ guardJustM . dbQuery . UserGroupGet
+  ugs          <- forM ugids $ guardJustM . dbQuery . UserGroupGet
   usersWithUgs <- concatForM ugs $ \ug -> do
     users <- dbQuery . UserGroupGetUsers $ get ugID ug
     return . zip users $ repeat ug
   deletableuserids <- map userid <$> filterM isUserDeletable (map fst usersWithUgs)
-  invitesWithUgs <- concatForM ugs $ \ug -> do
+  invitesWithUgs   <- concatForM ugs $ \ug -> do
     invites <- dbQuery . UserGroupGetInvitesWithUsersData $ get ugID ug
     return . zip invites $ repeat ug
-  let isUser ((invite,_,_,_),_) = (inviteduserid invite) `elem` map (userid . fst) usersWithUgs
-  let
-    companyaccounts =
-      map mkAccountFromUser usersWithUgs
-      <> map mkAccountFromInvite (filter (not . isUser) invitesWithUgs)
-    mkAccountFromUser (u,ug) = CompanyAccount {
-        camaybeuserid = userid u
-      , cafullname = getFullName u
-      , cafstname = userfstname $ userinfo u
-      , casndname = usersndname $ userinfo u
-      , caemail = getEmail u
-      , caphone = userphone $ userinfo u
-      , cassn = userpersonalnumber $ userinfo u
-      , caposition = usercompanyposition $ userinfo u
-      , carole = if (useriscompanyadmin u)
-                  then RoleAdmin
-                  else RoleStandard
-      , cadeletable = userid u `elem` deletableuserids
-      , caactivated = isJust $ userhasacceptedtermsofservice u
-      , catos = userhasacceptedtermsofservice u
-      , catotpactive = usertotpactive u
-      , calang = Just $ lang $ usersettings u
-      , caugname = get ugName ug
-      }
-    mkAccountFromInvite ((i,fn,ln,em), ug) = CompanyAccount {
-        camaybeuserid = inviteduserid i
-      , cafullname = fn <> " " <> ln
-      , cafstname  = fn
-      , casndname  = ln
-      , caemail = em
-      , caphone = ""
-      , cassn =  ""
-      , caposition = ""
-      , carole = RoleInvite
-      , cadeletable = True
-      , caactivated = False
-      , catos = Nothing
-      , catotpactive = False
-      , calang = Nothing
-      , caugname = get ugName ug
-      }
+  let isUser ((invite, _, _, _), _) =
+        (inviteduserid invite) `elem` map (userid . fst) usersWithUgs
+  let companyaccounts = map mkAccountFromUser usersWithUgs
+        <> map mkAccountFromInvite (filter (not . isUser) invitesWithUgs)
+      mkAccountFromUser (u, ug) = CompanyAccount
+        { camaybeuserid = userid u
+        , cafullname    = getFullName u
+        , cafstname     = userfstname $ userinfo u
+        , casndname     = usersndname $ userinfo u
+        , caemail       = getEmail u
+        , caphone       = userphone $ userinfo u
+        , cassn         = userpersonalnumber $ userinfo u
+        , caposition    = usercompanyposition $ userinfo u
+        , carole        = if (useriscompanyadmin u) then RoleAdmin else RoleStandard
+        , cadeletable   = userid u `elem` deletableuserids
+        , caactivated   = isJust $ userhasacceptedtermsofservice u
+        , catos         = userhasacceptedtermsofservice u
+        , catotpactive  = usertotpactive u
+        , calang        = Just $ lang $ usersettings u
+        , caugname      = get ugName ug
+        }
+      mkAccountFromInvite ((i, fn, ln, em), ug) = CompanyAccount
+        { camaybeuserid = inviteduserid i
+        , cafullname    = fn <> " " <> ln
+        , cafstname     = fn
+        , casndname     = ln
+        , caemail       = em
+        , caphone       = ""
+        , cassn         = ""
+        , caposition    = ""
+        , carole        = RoleInvite
+        , cadeletable   = True
+        , caactivated   = False
+        , catos         = Nothing
+        , catotpactive  = False
+        , calang        = Nothing
+        , caugname      = get ugName ug
+        }
 
   textFilter <- getField "text" >>= \case
     Nothing -> return $ const True
-    Just s -> return  $ companyAccountsTextSearch s
+    Just s  -> return $ companyAccountsTextSearch s
 
-  (sorting :: CompanyAccount -> CompanyAccount -> Ordering) <- getField "sorting" >>= \case
-    Nothing  -> return $ \_ _ -> EQ
-    Just s   -> return $ companyAccountsSorting s
+  (sorting :: CompanyAccount -> CompanyAccount -> Ordering) <-
+    getField "sorting" >>= \case
+      Nothing -> return $ \_ _ -> EQ
+      Just s  -> return $ companyAccountsSorting s
 
   sortingWithOrder <- getField "order" >>= \case
-    Just "ascending"   -> return sorting
-    _ -> return $ flip sorting
+    Just "ascending" -> return sorting
+    _                -> return $ flip sorting
 
   runJSONGenT $ do
-    objects "accounts" $ for (sortBy sortingWithOrder $ filter textFilter companyaccounts) $ \f -> do
-      value "id" $ show $ camaybeuserid f
-      value "fullname" $ cafullname f
-      value "fstname" $ cafstname f
-      value "sndname" $ casndname f
-      value "email" $ caemail f
-      value "personalnumber" $ cassn f
-      value "phone" $ caphone f
-      value "companyposition" $ caposition f
-      value "role" $ show $ carole f
-      value "deletable" $ cadeletable f
-      value "activated" $ caactivated f
-      value "isctxuser" $ userid user == camaybeuserid f
-      value "tos"       $ formatTimeISO <$> (catos f)
-      value "twofactor_active" $ catotpactive f
-      value "lang" $ codeFromLang <$> calang f
-      value "company_name" $ caugname f
+    objects "accounts"
+      $ for (sortBy sortingWithOrder $ filter textFilter companyaccounts)
+      $ \f -> do
+          value "id" $ show $ camaybeuserid f
+          value "fullname" $ cafullname f
+          value "fstname" $ cafstname f
+          value "sndname" $ casndname f
+          value "email" $ caemail f
+          value "personalnumber" $ cassn f
+          value "phone" $ caphone f
+          value "companyposition" $ caposition f
+          value "role" $ show $ carole f
+          value "deletable" $ cadeletable f
+          value "activated" $ caactivated f
+          value "isctxuser" $ userid user == camaybeuserid f
+          value "tos" $ formatTimeISO <$> (catos f)
+          value "twofactor_active" $ catotpactive f
+          value "lang" $ codeFromLang <$> calang f
+          value "company_name" $ caugname f
 
 {- |
     A special data type used for just displaying stuff in the list
@@ -186,18 +185,20 @@ companyAccountsTextSearch s ca = match (cafullname ca) || match (caemail ca)
   where match m = T.toUpper s `T.isInfixOf` T.toUpper m
 
 companyAccountsSorting :: Text -> CompanyAccount -> CompanyAccount -> Ordering
-companyAccountsSorting "fullname" = companyAccountsSortingBy cafullname
-companyAccountsSorting "email" = companyAccountsSortingBy caemail
-companyAccountsSorting "role" = companyAccountsSortingBy carole
-companyAccountsSorting "deletable" = companyAccountsSortingBy cadeletable
-companyAccountsSorting "activated" = companyAccountsSortingBy caactivated
-companyAccountsSorting "id" = companyAccountsSortingBy camaybeuserid
+companyAccountsSorting "fullname"         = companyAccountsSortingBy cafullname
+companyAccountsSorting "email"            = companyAccountsSortingBy caemail
+companyAccountsSorting "role"             = companyAccountsSortingBy carole
+companyAccountsSorting "deletable"        = companyAccountsSortingBy cadeletable
+companyAccountsSorting "activated"        = companyAccountsSortingBy caactivated
+companyAccountsSorting "id"               = companyAccountsSortingBy camaybeuserid
 companyAccountsSorting "twofactor_active" = companyAccountsSortingBy catotpactive
-companyAccountsSorting "company_name" = companyAccountsSortingBy caugname
-companyAccountsSorting _ = const $ const EQ
+companyAccountsSorting "company_name"     = companyAccountsSortingBy caugname
+companyAccountsSorting _                  = const $ const EQ
 
-companyAccountsSortingBy :: Show a => (CompanyAccount -> a) -> CompanyAccount -> CompanyAccount -> Ordering
-companyAccountsSortingBy f ca1 ca2 = compare (map toUpper $ show $ f ca1) (map toUpper $ show $ f ca2)
+companyAccountsSortingBy
+  :: Show a => (CompanyAccount -> a) -> CompanyAccount -> CompanyAccount -> Ordering
+companyAccountsSortingBy f ca1 ca2 =
+  compare (map toUpper $ show $ f ca1) (map toUpper $ show $ f ca2)
 
 {- |
     Handles adding a company user either by creating them or
@@ -205,18 +206,18 @@ companyAccountsSortingBy f ca1 ca2 = compare (map toUpper $ show $ f ca1) (map t
 -}
 handleAddUserGroupAccount :: Kontrakcja m => m JSValue
 handleAddUserGroupAccount = withUserAndGroup $ \(user, ug) -> do
-  ctx <- getContext
-  email <-  guardJustM $ getOptionalField asValidEmail "email"
+  ctx     <- getContext
+  email   <- guardJustM $ getOptionalField asValidEmail "email"
   fstname <- fromMaybe "" <$> getOptionalField asValidName "fstname"
   sndname <- fromMaybe "" <$> getOptionalField asValidName "sndname"
 
-  mtrgug <- getOptionalField asValidUserGroupID "user_group_id" >>= \case
-    Nothing -> return Nothing -- non-existing parameter is OK
+  mtrgug  <- getOptionalField asValidUserGroupID "user_group_id" >>= \case
+    Nothing      -> return Nothing -- non-existing parameter is OK
     Just trgugid -> dbQuery (UserGroupGet trgugid) >>= \case
-      Nothing -> internalError -- non-existing UserGroup is not OK
+      Nothing    -> internalError -- non-existing UserGroup is not OK
       Just trgug -> return $ Just trgug
   let trgugid = get ugID $ fromMaybe ug mtrgug
-      acc = mkAccPolicy [ (CreateA, UserR, trgugid) ]
+      acc     = mkAccPolicy [(CreateA, UserR, trgugid)]
   roles <- dbQuery . GetRoles $ user
   -- use internalError here, because that's what withCompanyAdmin uses
   accessControl roles acc internalError $ dbQuery (GetUserByEmail $ Email email) >>= \case
@@ -227,30 +228,31 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, ug) -> do
                                           (trgugid, False)
                                           (get ctxlang ctx)
                                           CompanyInvitation
-      void $ dbUpdate $
-            LogHistoryUserInfoChanged (userid newuser') (get ctxipnumber ctx) (get ctxtime ctx)
-                                      (userinfo newuser')
-                                      ((userinfo newuser') { userfstname = fstname , usersndname = sndname })
-                                      (userid <$> get ctxmaybeuser ctx)
+      void $ dbUpdate $ LogHistoryUserInfoChanged
+        (userid newuser')
+        (get ctxipnumber ctx)
+        (get ctxtime ctx)
+        (userinfo newuser')
+        ((userinfo newuser') { userfstname = fstname, usersndname = sndname })
+        (userid <$> get ctxmaybeuser ctx)
       newuser <- guardJustM $ dbQuery $ GetUserByID (userid newuser')
       void $ sendNewUserGroupUserMail user ug newuser
       runJSONGenT $ value "added" True
-    Just existinguser ->
-      if (usergroupid existinguser == trgugid)
-        then
-          runJSONGenT $ do
-              value "added" False
-              value "samecompany" True
+    Just existinguser -> if (usergroupid existinguser == trgugid)
+      then runJSONGenT $ do
+        value "added"       False
+        value "samecompany" True
+      else do
+                             -- If user exists we allow takeover only if he is the only user in his company
+        users <- dbQuery . UserGroupGetUsers . usergroupid $ existinguser
+        if (length users == 1)
+          then do
+            void $ sendTakeoverSingleUserMail user ug existinguser
+            void $ dbUpdate $ AddUserGroupInvite $ UserGroupInvite (userid existinguser)
+                                                                   trgugid
+            runJSONGenT $ value "added" True
           else do
-          -- If user exists we allow takeover only if he is the only user in his company
-          users <- dbQuery . UserGroupGetUsers . usergroupid $ existinguser
-          if (length users == 1)
-            then do
-              void $ sendTakeoverSingleUserMail user ug existinguser
-              void $ dbUpdate $ AddUserGroupInvite $ UserGroupInvite (userid existinguser) trgugid
-              runJSONGenT $ value "added" True
-            else do
-              runJSONGenT $ value "added" False
+            runJSONGenT $ value "added" False
 
 {- |
     Handles a resend by checking for the user and invite
@@ -259,31 +261,39 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, ug) -> do
 handleResendToUserGroupAccount :: Kontrakcja m => m JSValue
 handleResendToUserGroupAccount = withCompanyAdmin $ \(user, ug) -> do
   resendid <- getCriticalField asValidUserID "resendid"
-  newuser <- guardJustM $ dbQuery $ GetUserByID resendid
+  newuser  <- guardJustM $ dbQuery $ GetUserByID resendid
   let ugid = get ugID ug
   if (usergroupid newuser /= ugid)
-     then  do
+    then do
        -- We need to check if there is a company invitation, and if it is, we send takeover email again
-       void $ guardJustM $ dbQuery $ GetUserGroupInvite ugid resendid
-       sendTakeoverSingleUserMail user ug newuser
-     else  do
+      void $ guardJustM $ dbQuery $ GetUserGroupInvite ugid resendid
+      sendTakeoverSingleUserMail user ug newuser
+    else do
        -- Else we just send an email
-       sendNewUserGroupUserMail user ug newuser
+      sendNewUserGroupUserMail user ug newuser
   runJSONGenT $ value "resent" True
 
 sendNewUserGroupUserMail :: Kontrakcja m => User -> UserGroup -> User -> m ()
 sendNewUserGroupUserMail inviter ug user = do
   ctx <- getContext
   uar <- newUserAccountRequest $ userid user
-  let al = LinkAccountCreated (lang $ usersettings user) (uarUserID uar) (uarToken uar) CompanyInvitation
+  let al = LinkAccountCreated (lang $ usersettings user)
+                              (uarUserID uar)
+                              (uarToken uar)
+                              CompanyInvitation
   mail <- mailNewUserGroupUserInvite ctx user inviter ug al (uarExpires uar)
-  scheduleEmailSendout $ mail { to = [MailAddress { fullname = getFullName user, email = getEmail user }]}
+  scheduleEmailSendout
+    $ mail { to = [MailAddress { fullname = getFullName user, email = getEmail user }] }
   return ()
 
 sendTakeoverSingleUserMail :: Kontrakcja m => User -> UserGroup -> User -> m ()
 sendTakeoverSingleUserMail inviter ug user = do
-  ctx <- getContext
-  mail <- mailTakeoverSingleUserInvite ctx user inviter ug (LinkCompanyTakeover . get ugID $ ug)
+  ctx  <- getContext
+  mail <- mailTakeoverSingleUserInvite ctx
+                                       user
+                                       inviter
+                                       ug
+                                       (LinkCompanyTakeover . get ugID $ ug)
   scheduleEmailSendout $ mail { to = [getMailAddress user] }
 
 {- |
@@ -292,12 +302,14 @@ sendTakeoverSingleUserMail inviter ug user = do
 -}
 handleChangeRoleOfUserGroupAccount :: Kontrakcja m => m JSValue
 handleChangeRoleOfUserGroupAccount = do
-  changeid <- getCriticalField asValidUserID "changeid"
-  ugid <- usergroupid <$> (guardJustM $ dbQuery . GetUserByID $ changeid)
+  changeid  <- getCriticalField asValidUserID "changeid"
+  ugid      <- usergroupid <$> (guardJustM $ dbQuery . GetUserByID $ changeid)
   makeadmin <- getField "makeadmin"
   -- cf. `roleToAccessPolicyReq`
-  let acc = [ mkAccPolicyItem (CreateA, UserPolicyR, changeid)
-            , mkAccPolicyItem (CreateA, UserGroupPolicyR, ugid) ]
+  let acc =
+        [ mkAccPolicyItem (CreateA, UserPolicyR, changeid)
+        , mkAccPolicyItem (CreateA, UserGroupPolicyR, ugid)
+        ]
   accessControlLoggedIn acc $ do
     void $ dbUpdate $ SetUserCompanyAdmin changeid (makeadmin == Just "true")
     runJSONGenT $ value "changed" True
@@ -308,33 +320,35 @@ handleChangeRoleOfUserGroupAccount = do
 -}
 handleRemoveUserGroupAccount :: Kontrakcja m => m JSValue
 handleRemoveUserGroupAccount = withUserAndRoles $ \(user, roles) -> do
-  removeuid <- getCriticalField asValidUserID "removeid"
+  removeuid  <- getCriticalField asValidUserID "removeid"
   removeuser <- guardJustM $ dbQuery $ GetUserByID $ removeuid
   let acc = [mkAccPolicyItem (DeleteA, UserR, usergroupid removeuser)]
   -- Even if we don't execute the main action for whatever reason we remove all invites
   -- that we possibly can, restricted by the caller's permissions.
   accessControl roles acc (removeInvitesOnly roles removeuser) $ do
     isdeletable <- isUserDeletable removeuser
-    ctx <- getContext
+    ctx         <- getContext
     case isdeletable of
       True -> do
               -- We remove user, so we also want to drop all invites - they should be invalid at this point anyway.
-               void $ dbUpdate $ RemoveUserUserGroupInvites (userid removeuser)
-               void $ dbUpdate $ DeleteUserCallbackScheme $ userid removeuser
-               void $ dbUpdate $ DeleteUser (userid removeuser)
-               void $ dbUpdate $ LogHistoryAccountDeleted (userid removeuser) (userid user) (get ctxipnumber ctx) (get ctxtime ctx)
-               runJSONGenT $ value "removed" True
+        void $ dbUpdate $ RemoveUserUserGroupInvites (userid removeuser)
+        void $ dbUpdate $ DeleteUserCallbackScheme $ userid removeuser
+        void $ dbUpdate $ DeleteUser (userid removeuser)
+        void $ dbUpdate $ LogHistoryAccountDeleted (userid removeuser)
+                                                   (userid user)
+                                                   (get ctxipnumber ctx)
+                                                   (get ctxtime ctx)
+        runJSONGenT $ value "removed" True
       _ -> do
-               runJSONGenT $ value "removed" False
+        runJSONGenT $ value "removed" False
   where
     removeInvitesOnly :: Kontrakcja m => [AccessRole] -> User -> m JSValue
     removeInvitesOnly roles removeForUser = do
       -- get all user groups for which delete is allowed
       allRoles <- addInheritedRoles roles
       let allPerms = join $ map (hasPermissions . accessRoleTarget) allRoles
-          deleteUserPerms = filter (\p -> (p `hasAction` DeleteA) &&
-                                          (p `hasResource` UserR))
-                                   allPerms
+          deleteUserPerms =
+            filter (\p -> (p `hasAction` DeleteA) && (p `hasResource` UserR)) allPerms
           ugids = catMaybes $ map extractResourceRef deleteUserPerms
         -- We remove only the invites, possibly making user account in other some user
         -- group still be valid.
@@ -358,12 +372,13 @@ handleGetBecomeUserGroupAccount ugid = withUser $ \user -> do
       ctx <- getContext
       internalResponse <$> T.unpack <$> (pageDoYouWantToBeCompanyAccount ctx ug)
 
-handlePostBecomeUserGroupAccount :: Kontrakcja m => UserGroupID -> m InternalKontraResponse
+handlePostBecomeUserGroupAccount
+  :: Kontrakcja m => UserGroupID -> m InternalKontraResponse
 handlePostBecomeUserGroupAccount ugid = withUser $ \user -> do
   void $ guardJustM $ dbQuery $ GetUserGroupInvite ugid (userid user)
   newug <- guardJustM $ dbQuery $ UserGroupGet ugid
   (get folderID <$>) <$> (dbQuery $ FolderGetUserGroupHome ugid) >>= \case
-    Nothing -> internalError
+    Nothing         -> internalError
     Just newugfdrid -> do
       let uid = userid user
       void $ dbUpdate $ SetUserCompanyAdmin (userid user) False

@@ -48,18 +48,18 @@ data PropValue
     deriving (Show, Eq)
 
 instance Binary PropValue where
-  put (PVNumber d)      = putWord8 0 >> put d
-  put (PVString s)      = putWord8 1 >> put s
-  put (PVBool b)        = putWord8 2 >> put b
+  put (PVNumber  d) = putWord8 0 >> put d
+  put (PVString  s) = putWord8 1 >> put s
+  put (PVBool    b) = putWord8 2 >> put b
   put (PVUTCTime t) = putWord8 3 >> put t
 
   get = do
     tag <- getWord8
     case tag of
-      0 -> PVNumber      <$> B.get
-      1 -> PVString      <$> B.get
-      2 -> PVBool        <$> B.get
-      3 -> PVUTCTime     <$> B.get
+      0 -> PVNumber <$> B.get
+      1 -> PVString <$> B.get
+      2 -> PVBool <$> B.get
+      3 -> PVUTCTime <$> B.get
       n -> fail $ "Couldn't parse PropValue constructor tag: " <> show n
 
 -- | Type class to keep the user from having to wrap stuff in annoying data
@@ -129,12 +129,12 @@ instance Binary EventName where
   put (NamedEvent name) = putWord8 255 >> put name
 
   get = do
-      tag <- getWord8
-      case tag of
-        0   -> return SetUserProps
-        1   -> return SetCompanyProps
-        255 -> NamedEvent <$> B.get
-        t   -> fail $ "Unable to parse EventName constructor tag: " <> show t
+    tag <- getWord8
+    case tag of
+      0   -> return SetUserProps
+      1   -> return SetCompanyProps
+      255 -> NamedEvent <$> B.get
+      t   -> fail $ "Unable to parse EventName constructor tag: " <> show t
 
 
 -- | Represents a property on an event.
@@ -155,30 +155,30 @@ data EventProperty
 -- | The scheme here is to have generic properties at ID 255 and give any
 --   special properties IDs starting at 0. Obviously.
 instance Binary EventProperty where
-  put (MailProp mail)       = putWord8 0   >> put (unEmail mail)
-  put (IPProp ip)           = putWord8 1   >> put ip
-  put (NameProp name)       = putWord8 2   >> put name
-  put (UserIDProp uid)      = putWord8 3   >> put uid
-  put (TimeProp t)          = putWord8 4   >> put t
-  put (DocIDProp did)       = putWord8 5   >> put did
-  put (UserGroupIDProp cid) = putWord8 6   >> put cid
-  put (FirstNameProp n)     = putWord8 7   >> put n
-  put (LastNameProp n)      = putWord8 8   >> put n
-  put (SomeProp name val)   = putWord8 255 >> put name >> put val
+  put (MailProp        mail) = putWord8 0 >> put (unEmail mail)
+  put (IPProp          ip  ) = putWord8 1 >> put ip
+  put (NameProp        name) = putWord8 2 >> put name
+  put (UserIDProp      uid ) = putWord8 3 >> put uid
+  put (TimeProp        t   ) = putWord8 4 >> put t
+  put (DocIDProp       did ) = putWord8 5 >> put did
+  put (UserGroupIDProp cid ) = putWord8 6 >> put cid
+  put (FirstNameProp   n   ) = putWord8 7 >> put n
+  put (LastNameProp    n   ) = putWord8 8 >> put n
+  put (SomeProp name val   ) = putWord8 255 >> put name >> put val
 
   get = do
     tag <- getWord8
     case tag of
       0   -> MailProp . Email <$> B.get
-      1   -> IPProp           <$> B.get
-      2   -> NameProp         <$> B.get
-      3   -> UserIDProp       <$> B.get
-      4   -> TimeProp         <$> B.get
-      5   -> DocIDProp        <$> B.get
-      6   -> UserGroupIDProp  <$> B.get
-      7   -> FirstNameProp    <$> B.get
-      8   -> LastNameProp     <$> B.get
-      255 -> SomeProp         <$> B.get <*> B.get
+      1   -> IPProp <$> B.get
+      2   -> NameProp <$> B.get
+      3   -> UserIDProp <$> B.get
+      4   -> TimeProp <$> B.get
+      5   -> DocIDProp <$> B.get
+      6   -> UserGroupIDProp <$> B.get
+      7   -> FirstNameProp <$> B.get
+      8   -> LastNameProp <$> B.get
+      255 -> SomeProp <$> B.get <*> B.get
       n   -> fail $ "Couldn't parse EventProperty constructor tag: " <> show n
 
 
@@ -220,13 +220,13 @@ EventProcessor a @@ EventProcessor b = EventProcessor $ \evt props -> do
     OK -> do
       res' <- b evt props
       case res' of
-        PutBack -> return (Failed $ "PutBack after one or more event " <>
-                                    "processors already succeded!")
-        x       -> return x
-    PutBack ->
-      return PutBack
-    x ->
-      return x
+        PutBack ->
+          return
+            (Failed $ "PutBack after one or more event " <> "processors already succeded!"
+            )
+        x -> return x
+    PutBack -> return PutBack
+    x       -> return x
 
 -- | Concatenate a list of event processors.
 catEventProcs :: Monad m => [EventProcessor m] -> EventProcessor m
@@ -241,52 +241,49 @@ instance Monad m => Monoid (EventProcessor m) where
   mconcat = catEventProcs
 
 -- | Remove a number of events from the queue and process them.
-asyncProcessEvents :: (MonadIO m, MonadLog m, MonadDB m)
-                   => (EventType -> Maybe (EventProcessor m))
+asyncProcessEvents
+  :: (MonadIO m, MonadLog m, MonadDB m)
+  => (EventType -> Maybe (EventProcessor m))
                       -- ^ Event processing function mapper.
-                   -> NumEvents
+  -> NumEvents
                       -- ^ Max events to process.
-                   -> m ()
+  -> m ()
 asyncProcessEvents getEventProcessor numEvts = do
-    (evts, lastEvt) <- fetchEvents
-    mapM_ processEvent evts
-    deleteEvents lastEvt
+  (evts, lastEvt) <- fetchEvents
+  mapM_ processEvent evts
+  deleteEvents lastEvt
   where
     processEvent (AsyncEvent ename eprops etype) = do
-        result <- case (getEventProcessor etype) of
-          Nothing -> return . Ignored $ "No event processor defined"
-          Just process -> (unEventProcessor process) ename eprops
-        case result of
-          PutBack     -> asyncLogEvent ename eprops etype
-          Failed msg  -> logInfo "Event processing failed" $
-                           object [ "event_name" .= show ename
-                                  , "event_type" .= show etype
-                                  , "reason"     .= msg ]
-          Ignored msg -> logInfo "Event processing ignored " $
-                           object [ "event_name" .= show ename
-                                  , "event_type" .= show etype
-                                  , "reason"     .= msg ]
-          _           -> return ()
+      result <- case (getEventProcessor etype) of
+        Nothing      -> return . Ignored $ "No event processor defined"
+        Just process -> (unEventProcessor process) ename eprops
+      case result of
+        PutBack    -> asyncLogEvent ename eprops etype
+        Failed msg -> logInfo "Event processing failed" $ object
+          ["event_name" .= show ename, "event_type" .= show etype, "reason" .= msg]
+        Ignored msg -> logInfo "Event processing ignored " $ object
+          ["event_name" .= show ename, "event_type" .= show etype, "reason" .= msg]
+        _ -> return ()
 
-    decoder (evts, max_seq) (seqnum, evt) = return
-        (decode (BL.fromChunks [evt]) : evts, max seqnum max_seq)
+    decoder (evts, max_seq) (seqnum, evt) =
+      return (decode (BL.fromChunks [evt]) : evts, max seqnum max_seq)
 
     -- Delete all events with a sequence number less than or equal to lastEvt.
     deleteEvents lastEvt = do
-          runQuery_ . sqlDelete "async_event_queue" $ do
-                      sqlWhere $ "sequence_number <=" <?> lastEvt
+      runQuery_ . sqlDelete "async_event_queue" $ do
+        sqlWhere $ "sequence_number <=" <?> lastEvt
 
     -- Fetch events from database and turn them into a pair of
     -- (events, highest sequence number in fetched list).
     fetchEvents = do
-            runQuery_ . sqlSelect "async_event_queue" $ do
-                sqlResult "sequence_number"
-                sqlResult "event::bytea"
-                sqlOrderBy "sequence_number ASC"
-                case numEvts of
-                  NoMoreThan n -> sqlLimit n
-                  _            -> return ()
-            foldlDB decoder ([], 0 :: Int64)
+      runQuery_ . sqlSelect "async_event_queue" $ do
+        sqlResult "sequence_number"
+        sqlResult "event::bytea"
+        sqlOrderBy "sequence_number ASC"
+        case numEvts of
+          NoMoreThan n -> sqlLimit n
+          _            -> return ()
+      foldlDB decoder ([], 0 :: Int64)
 
 
 -- | Send a message off to the async queue for later processing.
@@ -301,46 +298,48 @@ asyncLogEvent :: (MonadDB m) => EventName -> [EventProperty] -> EventType -> m (
 asyncLogEvent ename eprops etype = do
   runQuery_ $ sqlInsert "async_event_queue" $ do
     sqlSet "event" $ mkBinary $ AsyncEvent ename eprops etype
-  where
-    mkBinary = B.concat . BL.toChunks . encode
+  where mkBinary = B.concat . BL.toChunks . encode
 
 arbitraryText :: Gen Text
 arbitraryText = T.pack <$> arbitrary
 
 instance Arbitrary EventName where
-  arbitrary = frequency [
-      (1, return SetUserProps),
-      (2, return SetCompanyProps),
-      (8, NamedEvent <$> arbitraryText)]
+  arbitrary = frequency
+    [ (1, return SetUserProps)
+    , (2, return SetCompanyProps)
+    , (8, NamedEvent <$> arbitraryText)
+    ]
 
 instance Arbitrary EventType where
-  arbitrary = oneof [ return EventMixpanel, return EventPlanhat ]
+  arbitrary = oneof [return EventMixpanel, return EventPlanhat]
 
 
 instance Arbitrary PropValue where
-  arbitrary = oneof [
-      PVNumber <$> arbitrary,
-      PVString <$> arbitraryText,
-      PVBool <$> arbitrary,
-      PVUTCTime . posixSecondsToUTCTime . fromInteger <$> arbitrary]
+  arbitrary = oneof
+    [ PVNumber <$> arbitrary
+    , PVString <$> arbitraryText
+    , PVBool <$> arbitrary
+    , PVUTCTime . posixSecondsToUTCTime . fromInteger <$> arbitrary
+    ]
 
 -- Note that IP addresses are completely arbitrary 32 bit words here!
 instance Arbitrary EventProperty where
-  arbitrary = frequency [
-      (1, MailProp <$> email),
-      (1, IPProp . unsafeIPAddress <$> arbitrary),
-      (1, NameProp <$> arbitraryText),
-      (1, LastNameProp <$> arbitraryText),
-      (1, FirstNameProp <$> arbitraryText),
-      (1, UserIDProp . unsafeUserID <$> arbitrary),
-      (1, TimeProp . posixSecondsToUTCTime . fromInteger <$> arbitrary),
-      (1, DocIDProp . unsafeDocumentID <$> arbitrary),
-      (1, UserGroupIDProp . unsafeUserGroupID <$> arbitrary),
-      (5, SomeProp <$> arbitraryText <*> arbitrary)]
+  arbitrary = frequency
+    [ (1, MailProp <$> email)
+    , (1, IPProp . unsafeIPAddress <$> arbitrary)
+    , (1, NameProp <$> arbitraryText)
+    , (1, LastNameProp <$> arbitraryText)
+    , (1, FirstNameProp <$> arbitraryText)
+    , (1, UserIDProp . unsafeUserID <$> arbitrary)
+    , (1, TimeProp . posixSecondsToUTCTime . fromInteger <$> arbitrary)
+    , (1, DocIDProp . unsafeDocumentID <$> arbitrary)
+    , (1, UserGroupIDProp . unsafeUserGroupID <$> arbitrary)
+    , (5, SomeProp <$> arbitraryText <*> arbitrary)
+    ]
     where
       email = do
-        acct <- arbitraryText `suchThat` ((> 5) . T.length)
-        domain <- arbitraryText `suchThat` ((> 5) . T.length)
+        acct     <- arbitraryText `suchThat` ((> 5) . T.length)
+        domain   <- arbitraryText `suchThat` ((> 5) . T.length)
         toplevel <- oneof (map return ["com", "net", "org", "nu", "se"])
         return $! Email $! T.concat [acct, "@", domain, ".", toplevel]
 

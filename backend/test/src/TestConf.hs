@@ -24,25 +24,21 @@ data TestConf = TestConf {
   } deriving (Eq, Show)
 
 unjsonTestConf :: UnjsonDef TestConf
-unjsonTestConf = objectOf $ pure TestConf
-  <*> field "database"
-      testDBConfig
-      "Database connection string"
-  <*> field "pdftools_lambda"
-      testPdfToolsLambdaConf
-      "Configuration of PdfTools Lambda"
-  <*> fieldOpt "amazon"
-      testAmazonConfig
-      "Optional configuration for S3"
-  <*> fieldOpt "local_file_cache_size"
-      testLocalFileCacheSize
-      "Optional size for the local file cache"
-  <*> fieldOpt "redis_cache"
-      testRedisCacheConfig
-      "Optional configuration for the Redis file cache"
-  <*> fieldOpt "cron_monthly_invoice"
-      testMonthlyInvoiceConf
-      "Monthly-invoice cron job configuration"
+unjsonTestConf =
+  objectOf
+    $   pure TestConf
+    <*> field "database"        testDBConfig           "Database connection string"
+    <*> field "pdftools_lambda" testPdfToolsLambdaConf "Configuration of PdfTools Lambda"
+    <*> fieldOpt "amazon" testAmazonConfig "Optional configuration for S3"
+    <*> fieldOpt "local_file_cache_size"
+                 testLocalFileCacheSize
+                 "Optional size for the local file cache"
+    <*> fieldOpt "redis_cache"
+                 testRedisCacheConfig
+                 "Optional configuration for the Redis file cache"
+    <*> fieldOpt "cron_monthly_invoice"
+                 testMonthlyInvoiceConf
+                 "Monthly-invoice cron job configuration"
 
 instance Unjson TestConf where
   unjsonDef = unjsonTestConf

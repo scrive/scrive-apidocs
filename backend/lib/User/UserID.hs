@@ -36,7 +36,8 @@ instance Identifier UserID where
   idValue        = int64AsStringIdentifier . unUserID
 
 instance Unjson UserID where
-  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse UserID")  return) . maybeRead) showt unjsonDef
+  unjsonDef =
+    unjsonInvmapR ((maybe (fail "Can't parse UserID") return) . maybeRead) showt unjsonDef
 
 instance ToJSON UserID where
   toJSON (UserID n) = toJSON $ show n
@@ -45,7 +46,7 @@ instance FromJSON UserID where
   parseJSON v = do
     uidStr <- parseJSON v
     case maybeRead uidStr of
-      Nothing -> fail "Could not parse User ID"
+      Nothing  -> fail "Could not parse User ID"
       Just uid -> return uid
 
 instance FromSQL UserID where

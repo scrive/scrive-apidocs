@@ -28,20 +28,12 @@ data KontraInfoForMail
   deriving (Eq, Ord, Show)
 
 instance Loggable KontraInfoForMail where
-  logValue (DocumentInvitationMail did slid) = object $ [
-           "type" .= ("invitation"::Text)
-          , identifier did
-          , identifier slid
-          ]
-  logValue (DocumentConfirmationMail did slid) = object
-    [ "type" .= ("confirmation" :: Text)
-    , identifier did
-    , identifier slid
-    ]
-  logValue (OtherDocumentMail did) = object $ [
-            "type" .= ("other"::Text)
-          , identifier did
-          ]
+  logValue (DocumentInvitationMail did slid) =
+    object $ ["type" .= ("invitation" :: Text), identifier did, identifier slid]
+  logValue (DocumentConfirmationMail did slid) =
+    object ["type" .= ("confirmation" :: Text), identifier did, identifier slid]
+  logValue (OtherDocumentMail did) =
+    object $ ["type" .= ("other" :: Text), identifier did]
 
   logDefaultLabel _ = "mail_info"
 
@@ -57,16 +49,13 @@ instance FromSQL KontraInfoForMailType where
       1 -> return DocumentInvitationMailT
       2 -> return OtherDocumentMailT
       3 -> return DocumentConfirmationMailT
-      _ -> throwM RangeError {
-        reRange = [(1, 3)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(1, 3)], reValue = n }
 
 instance ToSQL KontraInfoForMailType where
   type PQDest KontraInfoForMailType = PQDest Int16
-  toSQL DocumentInvitationMailT     = toSQL (1::Int16)
-  toSQL OtherDocumentMailT          = toSQL (2::Int16)
-  toSQL DocumentConfirmationMailT   = toSQL (3::Int16)
+  toSQL DocumentInvitationMailT   = toSQL (1 :: Int16)
+  toSQL OtherDocumentMailT        = toSQL (2 :: Int16)
+  toSQL DocumentConfirmationMailT = toSQL (3 :: Int16)
 
 data AddKontraInfoForMail = AddKontraInfoForMail MailID KontraInfoForMail
 instance (MonadDB m, MonadThrow m) => DBUpdate m AddKontraInfoForMail Bool where
@@ -75,34 +64,50 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddKontraInfoForMail Bool where
       sqlSet "mail_id" mailid
       case mfdi of
         (DocumentInvitationMail did slid) -> do
-           sqlSet "mail_type" DocumentInvitationMailT
-           sqlSet "document_id" did
-           sqlSet "signatory_link_id" slid
+          sqlSet "mail_type"         DocumentInvitationMailT
+          sqlSet "document_id"       did
+          sqlSet "signatory_link_id" slid
         (DocumentConfirmationMail did slid) -> do
-           sqlSet "mail_type" DocumentConfirmationMailT
-           sqlSet "document_id" did
-           sqlSet "signatory_link_id" slid
+          sqlSet "mail_type"         DocumentConfirmationMailT
+          sqlSet "document_id"       did
+          sqlSet "signatory_link_id" slid
         (OtherDocumentMail did) -> do
-           sqlSet "mail_type" OtherDocumentMailT
-           sqlSet "document_id" did
+          sqlSet "mail_type"   OtherDocumentMailT
+          sqlSet "document_id" did
 
-fetchKontraInfoForMail :: (Maybe KontraInfoForMailType, Maybe DocumentID, Maybe SignatoryLinkID) -> Maybe KontraInfoForMail
-fetchKontraInfoForMail (Nothing, _, _)  = Nothing
-fetchKontraInfoForMail (Just DocumentInvitationMailT, Just did, Just sig) = Just $ DocumentInvitationMail did sig
-fetchKontraInfoForMail (Just DocumentInvitationMailT, _, _)  = unexpectedError "Failed to fetch KontraInfoForMail (DocumentInvitationMailT)"
-fetchKontraInfoForMail (Just DocumentConfirmationMailT, Just did, Just sig) = Just $ DocumentConfirmationMail did sig
-fetchKontraInfoForMail (Just DocumentConfirmationMailT, _, _)  = unexpectedError "Failed to fetch KontraInfoForMail (DocumentConfirmationMailT)"
-fetchKontraInfoForMail (Just OtherDocumentMailT, Just did, Nothing)  = Just $ OtherDocumentMail did
-fetchKontraInfoForMail (Just OtherDocumentMailT, _, _)  = unexpectedError "Failed to fetch KontraInfoForMail (OtherDocumentMailT)"
+fetchKontraInfoForMail
+  :: (Maybe KontraInfoForMailType, Maybe DocumentID, Maybe SignatoryLinkID)
+  -> Maybe KontraInfoForMail
+fetchKontraInfoForMail (Nothing, _, _) = Nothing
+fetchKontraInfoForMail (Just DocumentInvitationMailT, Just did, Just sig) =
+  Just $ DocumentInvitationMail did sig
+fetchKontraInfoForMail (Just DocumentInvitationMailT, _, _) =
+  unexpectedError "Failed to fetch KontraInfoForMail (DocumentInvitationMailT)"
+fetchKontraInfoForMail (Just DocumentConfirmationMailT, Just did, Just sig) =
+  Just $ DocumentConfirmationMail did sig
+fetchKontraInfoForMail (Just DocumentConfirmationMailT, _, _) =
+  unexpectedError "Failed to fetch KontraInfoForMail (DocumentConfirmationMailT)"
+fetchKontraInfoForMail (Just OtherDocumentMailT, Just did, Nothing) =
+  Just $ OtherDocumentMail did
+fetchKontraInfoForMail (Just OtherDocumentMailT, _, _) =
+  unexpectedError "Failed to fetch KontraInfoForMail (OtherDocumentMailT)"
 
 
-fetchEvent :: (EventID, MailID, Event, Maybe KontraInfoForMailType, Maybe DocumentID, Maybe SignatoryLinkID)
-           -> (EventID, MailID, Event, Maybe KontraInfoForMail)
+fetchEvent
+  :: ( EventID
+     , MailID
+     , Event
+     , Maybe KontraInfoForMailType
+     , Maybe DocumentID
+     , Maybe SignatoryLinkID
+     )
+  -> (EventID, MailID, Event, Maybe KontraInfoForMail)
 fetchEvent (eid, mid, e, mkifmt, mkifmdid, mkifmslid) = (eid, mid, e, mkifm)
   where mkifm = fetchKontraInfoForMail (mkifmt, mkifmdid, mkifmslid)
 
 
-getUnreadEvents :: MonadDB m => Bool -> m [(EventID, MailID, Event, Maybe KontraInfoForMail)]
+getUnreadEvents
+  :: MonadDB m => Bool -> m [(EventID, MailID, Event, Maybe KontraInfoForMail)]
 getUnreadEvents service_test = do
   runQuery_ . sqlSelect "mails m" $ do
     sqlResult "e.id"

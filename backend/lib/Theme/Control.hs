@@ -31,84 +31,93 @@ import Theme.View
 import UserGroup.Types
 import Util.MonadUtils
 
-handleGetTheme:: Kontrakcja m => ThemeID -> m Aeson.Value
-handleGetTheme tid =  do
+handleGetTheme :: Kontrakcja m => ThemeID -> m Aeson.Value
+handleGetTheme tid = do
   theme <- dbQuery $ GetTheme tid
-  return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme theme
+  return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True })
+                                unjsonTheme
+                                theme
 
-handleGetThemesForUserGroup:: Kontrakcja m => UserGroupID -> m Aeson.Value
-handleGetThemesForUserGroup ugid =  do
+handleGetThemesForUserGroup :: Kontrakcja m => UserGroupID -> m Aeson.Value
+handleGetThemesForUserGroup ugid = do
   themes <- dbQuery $ GetThemesForUserGroup ugid
-  return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonThemesList themes
+  return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True })
+                                unjsonThemesList
+                                themes
 
-handleGetThemesForDomain:: Kontrakcja m => BrandedDomainID -> m Aeson.Value
-handleGetThemesForDomain did =  do
+handleGetThemesForDomain :: Kontrakcja m => BrandedDomainID -> m Aeson.Value
+handleGetThemesForDomain did = do
   themes <- dbQuery $ GetThemesForDomain did
-  return $ Unjson.unjsonToJSON'(Options { pretty = True, indent = 2, nulls = True }) unjsonThemesList themes
+  return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True })
+                                unjsonThemesList
+                                themes
 
 -- Generate list of themes used by given domain. Note that order is important here - but we don't need to introduce any middle structure.
-handleGetThemesUsedByDomain:: Kontrakcja m => BrandedDomain -> m Aeson.Value
-handleGetThemesUsedByDomain domain =  do
-  mailTheme     <- dbQuery $ GetTheme $ get bdMailTheme     domain
+handleGetThemesUsedByDomain :: Kontrakcja m => BrandedDomain -> m Aeson.Value
+handleGetThemesUsedByDomain domain = do
+  mailTheme     <- dbQuery $ GetTheme $ get bdMailTheme domain
   signviewTheme <- dbQuery $ GetTheme $ get bdSignviewTheme domain
-  serviceTheme  <- dbQuery $ GetTheme $ get bdServiceTheme  domain
-  return $ Unjson.unjsonToJSON'  (Options { pretty = True, indent = 2, nulls = True }) unjsonThemesList [mailTheme,signviewTheme,serviceTheme]
+  serviceTheme  <- dbQuery $ GetTheme $ get bdServiceTheme domain
+  return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True })
+                                unjsonThemesList
+                                [mailTheme, signviewTheme, serviceTheme]
 
-handleUpdateThemeForDomain:: Kontrakcja m => BrandedDomainID -> ThemeID -> m ()
-handleUpdateThemeForDomain did tid =  do
+handleUpdateThemeForDomain :: Kontrakcja m => BrandedDomainID -> ThemeID -> m ()
+handleUpdateThemeForDomain did tid = do
   guardNotMainDomain did "Main domain themes can't be changed"
-  theme <- dbQuery $ GetTheme tid
+  theme     <- dbQuery $ GetTheme tid
   themeJSON <- guardJustM $ getFieldBS "theme"
   case Aeson.eitherDecode themeJSON of
     Left err -> do
-      logInfo "Error while parsing theme for domain" $ object [
-          "error" .= err
-        ]
+      logInfo "Error while parsing theme for domain" $ object ["error" .= err]
       internalError
     Right js -> case (Unjson.parse unjsonTheme js) of
       (Result newTheme []) -> do
-        void $ dbUpdate $ UpdateThemeForDomain did newTheme {themeID = themeID theme}
+        void $ dbUpdate $ UpdateThemeForDomain did newTheme { themeID = themeID theme }
         return ()
       _ -> internalError
 
-handleUpdateThemeForUserGroup:: Kontrakcja m => UserGroupID -> ThemeID -> m ()
-handleUpdateThemeForUserGroup ugid tid =  do
-  theme <- dbQuery $ GetTheme tid
+handleUpdateThemeForUserGroup :: Kontrakcja m => UserGroupID -> ThemeID -> m ()
+handleUpdateThemeForUserGroup ugid tid = do
+  theme     <- dbQuery $ GetTheme tid
   themeJSON <- guardJustM $ getFieldBS "theme"
   case Aeson.eitherDecode themeJSON of
-   Left err -> do
-    logInfo "Error while parsing theme for user group" $ object [
-        "error" .= err
-      ]
-    internalError
-   Right js -> case (Unjson.parse unjsonTheme js) of
-        (Result newTheme []) -> do
-          void $ dbUpdate $ UpdateThemeForUserGroup ugid newTheme {themeID = themeID theme}
-          return ()
-        _ -> internalError
+    Left err -> do
+      logInfo "Error while parsing theme for user group" $ object ["error" .= err]
+      internalError
+    Right js -> case (Unjson.parse unjsonTheme js) of
+      (Result newTheme []) -> do
+        void $ dbUpdate $ UpdateThemeForUserGroup ugid
+                                                  newTheme { themeID = themeID theme }
+        return ()
+      _ -> internalError
 
 
-handleNewThemeForDomain:: Kontrakcja m => BrandedDomainID -> ThemeID -> m Aeson.Value
+handleNewThemeForDomain :: Kontrakcja m => BrandedDomainID -> ThemeID -> m Aeson.Value
 handleNewThemeForDomain did tid = do
   guardNotMainDomain did "Can't create new themes for main domain"
-  theme <- dbQuery $ GetTheme tid
-  name <- guardJustM $ getField "name"
-  newTheme <- dbUpdate $ InsertNewThemeForDomain did $ theme {themeName = name}
-  return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme newTheme
+  theme    <- dbQuery $ GetTheme tid
+  name     <- guardJustM $ getField "name"
+  newTheme <- dbUpdate $ InsertNewThemeForDomain did $ theme { themeName = name }
+  return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True })
+                                unjsonTheme
+                                newTheme
 
 handleNewThemeForUserGroup :: Kontrakcja m => UserGroupID -> ThemeID -> m Aeson.Value
 handleNewThemeForUserGroup ugid tid = do
-  theme <- dbQuery $ GetTheme tid
-  name <- guardJustM $ getField "name"
-  newTheme <- dbUpdate $ InsertNewThemeForUserGroup ugid $ theme {themeName = name}
-  return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True }) unjsonTheme newTheme
+  theme    <- dbQuery $ GetTheme tid
+  name     <- guardJustM $ getField "name"
+  newTheme <- dbUpdate $ InsertNewThemeForUserGroup ugid $ theme { themeName = name }
+  return $ Unjson.unjsonToJSON' (Options { pretty = True, indent = 2, nulls = True })
+                                unjsonTheme
+                                newTheme
 
-handleDeleteThemeForDomain:: Kontrakcja m => BrandedDomainID -> ThemeID -> m ()
+handleDeleteThemeForDomain :: Kontrakcja m => BrandedDomainID -> ThemeID -> m ()
 handleDeleteThemeForDomain did tid = do
-  guardNotMainDomain did  "Main domain themes can't be deleted"
+  guardNotMainDomain did "Main domain themes can't be deleted"
   dbUpdate $ DeleteThemeOwnedByDomain did tid
 
-handleDeleteThemeForUserGroup:: Kontrakcja m => UserGroupID -> ThemeID -> m ()
+handleDeleteThemeForUserGroup :: Kontrakcja m => UserGroupID -> ThemeID -> m ()
 handleDeleteThemeForUserGroup ugid tid = do
   dbUpdate $ DeleteThemeOwnedByUserGroup ugid tid
 
@@ -117,7 +126,7 @@ guardNotMainDomain :: Kontrakcja m => BrandedDomainID -> Text -> m ()
 guardNotMainDomain did msg = do
   bd <- dbQuery $ GetBrandedDomainByID did
   if (get bdMainDomain bd)
-   then do
-    logInfo_ msg
-    internalError
-   else return ()
+    then do
+      logInfo_ msg
+      internalError
+    else return ()

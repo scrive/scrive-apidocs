@@ -82,111 +82,62 @@ data AppConf = AppConf {
   } deriving (Eq, Show)
 
 unjsonAppConf :: UnjsonDef AppConf
-unjsonAppConf = objectOf $ pure AppConf
-  <*> (pure (,)
-         <*> fieldDefBy "bind_ip" 0
-            (fst . httpBindAddress)
-            "IP to listen on, defaults to 0.0.0.0"
-            unjsonIPv4AsWord32
-         <*> field "bind_port"
-            (snd . httpBindAddress)
-            "Port to listen on")
-  <*> field "main_domain_url"
-      mainDomainUrl
-      "Base URL of the main domain"
-  <*> fieldDef "https" True
-      useHttps
-      "Should use https"
-  <*> field "amazon"
-      amazonConfig
-      "Amazon configuration"
-  <*> field "database"
-      dbConfig
-      "Database connection string"
-  <*> field "max_db_connections"
-      maxDBConnections
-      "Database connections limit"
-  <*> fieldOpt "query_timeout"
-      queryTimeout
-      "Query timeout in miliseconds"
-  <*> fieldOpt "redis_cache"
-      redisCacheConfig
-      "Redis cache configuration"
-  <*> field "local_file_cache_size"
-      localFileCacheSize
-      "Local file cache size in bytes"
-  <*> field "logging"
-      logConfig
-      "Logging configuration"
-  <*> fieldDef "read_only_database" False
-      readOnlyDatabase
-      "Is database read-only?"
-  <*> fieldDef "production" False
-      production
-      "Is this production server"
-  <*> fieldOpt "cdn_base_url"
-      cdnBaseUrl
-      "CDN base URL"
-  <*> field "guardtime"
-      guardTimeConf
-      "GuardTime configuration"
-  <*> fieldDef "mail_backdoor_open" False
-      isMailBackdoorOpen
-      "Enabling mails backdoor for test"
-  <*> field "mail_noreply_address"
-      mailNoreplyAddress
-      "Noreply address used when sending email"
-  <*> fieldOpt "cgi_grp"
-      cgiGrpConfig
-      "CGI GRP (E-ID) configuration"
-  <*> field "admins"
-      admins
-      "email addresses of people regarded as admins"
-  <*> field "sales"
-      sales
-      "email addresses of people regarded as sales admins"
-  <*> field "initial_users"
-      initialUsers
-      "email and passwords for initial users"
-  <*> fieldOpt "mixpanel"
-      mixpanelToken
-      "Token for Mixpanel"
-  <*> fieldOpt "googleanalytics"
-      gaToken
-      "Token for Google Analytics"
-  <*> fieldOpt "trackjs"
-      trackjsToken
-      "API Token for Track.js"
-  <*> fieldOpt "zendesk_key"
-      zendeskKey
-      "API Key for Zendesk"
-  <*> fieldOpt "hubspot"
-      hubspotConf
-      "Configuration of HubSpot"
-  <*> fieldOpt "salesforce"
-      salesforceConf
-      "Configuration of salesforce"
-  <*> fieldOpt "nets"
-      netsConfig
-      "Configuration of Nets - NO BankID, DN NemID provider"
-  <*> fieldOpt "monitoring"
-      monitoringConfig
-      "Configuration of the ekg-statsd-based monitoring."
-  <*> fieldDef "api_call_log_enabled" False
-      isAPILogEnabled
-      "Enable API Call logging in DB."
-  <*> fieldOpt "nets_sign"
-      netsSignConfig
-      "Configuration of Nets for ESigning"
-  <*> field "pdftools_lambda"
-      pdfToolsLambdaConf
-      "Configuration of PdfTools Lambda"
-  <*> fieldDef "password_service" defaultPasswordService
-      passwordServiceConf
-      "Configuration of password service"
-  <*> fieldOpt "eid_service"
-      eidServiceConf
-      "Configuration of eid service"
+unjsonAppConf =
+  objectOf
+    $   pure AppConf
+    <*> (   pure (,)
+        <*> fieldDefBy "bind_ip"
+                       0
+                       (fst . httpBindAddress)
+                       "IP to listen on, defaults to 0.0.0.0"
+                       unjsonIPv4AsWord32
+        <*> field "bind_port" (snd . httpBindAddress) "Port to listen on"
+        )
+    <*> field "main_domain_url" mainDomainUrl "Base URL of the main domain"
+    <*> fieldDef "https" True useHttps "Should use https"
+    <*> field "amazon"             amazonConfig     "Amazon configuration"
+    <*> field "database"           dbConfig         "Database connection string"
+    <*> field "max_db_connections" maxDBConnections "Database connections limit"
+    <*> fieldOpt "query_timeout" queryTimeout     "Query timeout in miliseconds"
+    <*> fieldOpt "redis_cache"   redisCacheConfig "Redis cache configuration"
+    <*> field "local_file_cache_size" localFileCacheSize "Local file cache size in bytes"
+    <*> field "logging"               logConfig          "Logging configuration"
+    <*> fieldDef "read_only_database" False readOnlyDatabase "Is database read-only?"
+    <*> fieldDef "production"         False production       "Is this production server"
+    <*> fieldOpt "cdn_base_url" cdnBaseUrl "CDN base URL"
+    <*> field "guardtime" guardTimeConf "GuardTime configuration"
+    <*> fieldDef "mail_backdoor_open"
+                 False
+                 isMailBackdoorOpen
+                 "Enabling mails backdoor for test"
+    <*> field "mail_noreply_address"
+              mailNoreplyAddress
+              "Noreply address used when sending email"
+    <*> fieldOpt "cgi_grp" cgiGrpConfig "CGI GRP (E-ID) configuration"
+    <*> field "admins" admins "email addresses of people regarded as admins"
+    <*> field "sales" sales "email addresses of people regarded as sales admins"
+    <*> field "initial_users" initialUsers "email and passwords for initial users"
+    <*> fieldOpt "mixpanel"        mixpanelToken  "Token for Mixpanel"
+    <*> fieldOpt "googleanalytics" gaToken        "Token for Google Analytics"
+    <*> fieldOpt "trackjs"         trackjsToken   "API Token for Track.js"
+    <*> fieldOpt "zendesk_key"     zendeskKey     "API Key for Zendesk"
+    <*> fieldOpt "hubspot"         hubspotConf    "Configuration of HubSpot"
+    <*> fieldOpt "salesforce"      salesforceConf "Configuration of salesforce"
+    <*> fieldOpt "nets" netsConfig "Configuration of Nets - NO BankID, DN NemID provider"
+    <*> fieldOpt "monitoring"
+                 monitoringConfig
+                 "Configuration of the ekg-statsd-based monitoring."
+    <*> fieldDef "api_call_log_enabled"
+                 False
+                 isAPILogEnabled
+                 "Enable API Call logging in DB."
+    <*> fieldOpt "nets_sign" netsSignConfig "Configuration of Nets for ESigning"
+    <*> field "pdftools_lambda" pdfToolsLambdaConf "Configuration of PdfTools Lambda"
+    <*> fieldDef "password_service"
+                 defaultPasswordService
+                 passwordServiceConf
+                 "Configuration of password service"
+    <*> fieldOpt "eid_service" eidServiceConf "Configuration of eid service"
 
 instance Unjson AppConf where
   unjsonDef = unjsonAppConf

@@ -38,7 +38,7 @@ instance (
   , MonadTrans t
   , MonadTransControl t
   ) => DocumentMonad (t m) where
-    theDocument = lift theDocument
-    theDocumentID = lift theDocumentID
-    updateDocument m = controlT $ \run -> updateDocument (run . m)
-    updateDocumentWithID m = controlT $ \run -> updateDocumentWithID (run . m)
+  theDocument   = lift theDocument
+  theDocumentID = lift theDocumentID
+  updateDocument m = controlT $ \run -> updateDocument (run . m)
+  updateDocumentWithID m = controlT $ \run -> updateDocumentWithID (run . m)

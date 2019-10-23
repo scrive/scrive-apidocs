@@ -37,155 +37,169 @@ import Util.HasSomeUserInfo
 import Util.SignatoryLinkUtils
 
 -- | Evidence log for web page - short and simplified texts
-eventsJSListFromEvidenceLog :: (MonadDB m, MonadThrow m, TemplatesMonad m)
-                            => Document -> [DocumentEvidenceEvent]
-                            -> m [JSValue]
+eventsJSListFromEvidenceLog
+  :: (MonadDB m, MonadThrow m, TemplatesMonad m)
+  => Document
+  -> [DocumentEvidenceEvent]
+  -> m [JSValue]
 eventsJSListFromEvidenceLog doc dees = do
-  let evs = filter ((historyEventType . evType) && (not . emptyEvent)) $ cleanUnimportantAfterSigning $ dees
+  let evs =
+        filter ((historyEventType . evType) && (not . emptyEvent))
+          $ cleanUnimportantAfterSigning
+          $ dees
   sim <- getSignatoryIdentifierMap True evs
   mapM (J.runJSONGenT . eventJSValue doc sim) evs
 
 -- | Get signatory identifier map from event list
-getSignatoryIdentifierMap :: (MonadDB m, MonadThrow m)
-                          => Bool -> [DocumentEvidenceEvent]
-                          -> m SignatoryIdentifierMap
+getSignatoryIdentifierMap
+  :: (MonadDB m, MonadThrow m)
+  => Bool
+  -> [DocumentEvidenceEvent]
+  -> m SignatoryIdentifierMap
 getSignatoryIdentifierMap includeviewers evs = do
-  let sigs = Set.fromList $ catMaybes $
-             concat [ [evSigLink ev, evAffectedSigLink ev] | ev <- evs ]
+  let sigs = Set.fromList $ catMaybes $ concat
+        [ [evSigLink ev, evAffectedSigLink ev] | ev <- evs ]
   docs <- dbQuery $ GetDocumentsBySignatoryLinkIDs $ Set.toList sigs
-  return $ signatoryIdentifierMap includeviewers (sortBy (compare `on` documentid) docs) sigs
+  return
+    $ signatoryIdentifierMap includeviewers (sortBy (compare `on` documentid) docs) sigs
 
 -- TODO: Consider saving actor name in event instead, this is likely
 -- to become broken
-approximateActor :: forall m . (MonadDB m, MonadThrow m, TemplatesMonad m)
-                 => Document -> SignatoryIdentifierMap -> DocumentEvidenceEvent
-                 -> m Text
-approximateActor doc sim dee | systemEvents $ evType dee = return "Scrive"
-                             | otherwise = do
-  emptyNamePlaceholder <- renderTextTemplate_ "_notNamedParty"
-  case evSigLink dee >>= sigid emptyNamePlaceholder of
-    Just i -> return i
-    Nothing -> case evUserID dee of
-               Just uid ->
-                 if (isAuthor (doc,uid))
-                 then authorName emptyNamePlaceholder
-                 else do
-                   muser <- dbQuery $ GetUserByID uid
-                   case muser of
-                     Just user -> return $ getSmartName user
-                                  <> " (" <> getEmail user <> ")"
-                     Nothing   -> return "Scrive" -- This should not happen
-               Nothing  ->
-                 if (authorEvents $ evType dee)
-                 then authorName $ emptyNamePlaceholder
-                 else return "Scrive"
+approximateActor
+  :: forall m
+   . (MonadDB m, MonadThrow m, TemplatesMonad m)
+  => Document
+  -> SignatoryIdentifierMap
+  -> DocumentEvidenceEvent
+  -> m Text
+approximateActor doc sim dee
+  | systemEvents $ evType dee = return "Scrive"
+  | otherwise = do
+    emptyNamePlaceholder <- renderTextTemplate_ "_notNamedParty"
+    case evSigLink dee >>= sigid emptyNamePlaceholder of
+      Just i  -> return i
+      Nothing -> case evUserID dee of
+        Just uid -> if (isAuthor (doc, uid))
+          then authorName emptyNamePlaceholder
+          else do
+            muser <- dbQuery $ GetUserByID uid
+            case muser of
+              Just user -> return $ getSmartName user <> " (" <> getEmail user <> ")"
+              Nothing   -> return "Scrive" -- This should not happen
+        Nothing -> if (authorEvents $ evType dee)
+          then authorName $ emptyNamePlaceholder
+          else return "Scrive"
   where
     authorName :: Text -> m Text
     authorName emptyNamePlaceholder =
-      case (getAuthorSigLink doc >>=
-            sigid emptyNamePlaceholder . signatorylinkid) of
+      case (getAuthorSigLink doc >>= sigid emptyNamePlaceholder . signatorylinkid) of
         Just i  -> return i
         Nothing -> renderTextTemplate_ "_authorParty"
 
     sigid emptyNamePlaceholder s = do
       si <- Map.lookup s sim
       let name = siFullName si
-      if T.null name
-        then signatoryIdentifier sim s emptyNamePlaceholder
-        else return name
+      if T.null name then signatoryIdentifier sim s emptyNamePlaceholder else return name
 
-eventJSValue :: (MonadDB m, MonadThrow m, TemplatesMonad m)
-             => Document -> SignatoryIdentifierMap -> DocumentEvidenceEvent
-             -> JSONGenT m ()
+eventJSValue
+  :: (MonadDB m, MonadThrow m, TemplatesMonad m)
+  => Document
+  -> SignatoryIdentifierMap
+  -> DocumentEvidenceEvent
+  -> JSONGenT m ()
 eventJSValue doc sim dee = do
-    J.value "status" $ show $ getEvidenceEventStatusClass (evType dee)
-    J.value "time"   $ formatTimeISO (evTime dee)
-    J.valueM "party" $ approximateActor doc sim dee
-    J.valueM "text"  $ simplifiedEventText Nothing sim dee
+  J.value "status" $ show $ getEvidenceEventStatusClass (evType dee)
+  J.value "time" $ formatTimeISO (evTime dee)
+  J.valueM "party" $ approximateActor doc sim dee
+  J.valueM "text" $ simplifiedEventText Nothing sim dee
 
 
 -- | Events to be included in archive history. They have translations.
 historyEventType :: EvidenceEventType -> Bool
-historyEventType (Current AttachExtendedSealedFileEvidence)     = True
-historyEventType (Current AttachGuardtimeSealedFileEvidence)    = True
-historyEventType (Obsolete CancelDocumenElegEvidence)           = True
-historyEventType (Current CancelDocumentEvidence)               = True
-historyEventType (Current InvitationDeliveredByEmail)           = True
-historyEventType (Current InvitationDeliveredBySMS)             = True
-historyEventType (Current InvitationEvidence)                   = True
-historyEventType (Current InvitationUndeliveredByEmail)         = True
-historyEventType (Current InvitationUndeliveredBySMS)           = True
-historyEventType (Current MarkInvitationReadEvidence)           = True
-historyEventType (Current PreparationToPendingEvidence)         = True
-historyEventType (Current ProlongDocumentEvidence)              = True
-historyEventType (Current RejectDocumentEvidence)               = True
-historyEventType (Current RejectDocumentByApproverEvidence)     = True
-historyEventType (Current ReminderSend)                         = True
-historyEventType (Current AutomaticReminderSent)                = True
-historyEventType (Current RestartDocumentEvidence)              = True
-historyEventType (Current SignDocumentEvidence)                 = True
-historyEventType (Obsolete SignatoryLinkVisited)                = True
-historyEventType (Current TimeoutDocumentEvidence)              = True
-historyEventType (Current SMSPinSendEvidence)                   = True
-historyEventType (Current SMSPinDeliveredEvidence)              = True
+historyEventType (Current AttachExtendedSealedFileEvidence) = True
+historyEventType (Current AttachGuardtimeSealedFileEvidence) = True
+historyEventType (Obsolete CancelDocumenElegEvidence) = True
+historyEventType (Current CancelDocumentEvidence) = True
+historyEventType (Current InvitationDeliveredByEmail) = True
+historyEventType (Current InvitationDeliveredBySMS) = True
+historyEventType (Current InvitationEvidence) = True
+historyEventType (Current InvitationUndeliveredByEmail) = True
+historyEventType (Current InvitationUndeliveredBySMS) = True
+historyEventType (Current MarkInvitationReadEvidence) = True
+historyEventType (Current PreparationToPendingEvidence) = True
+historyEventType (Current ProlongDocumentEvidence) = True
+historyEventType (Current RejectDocumentEvidence) = True
+historyEventType (Current RejectDocumentByApproverEvidence) = True
+historyEventType (Current ReminderSend) = True
+historyEventType (Current AutomaticReminderSent) = True
+historyEventType (Current RestartDocumentEvidence) = True
+historyEventType (Current SignDocumentEvidence) = True
+historyEventType (Obsolete SignatoryLinkVisited) = True
+historyEventType (Current TimeoutDocumentEvidence) = True
+historyEventType (Current SMSPinSendEvidence) = True
+historyEventType (Current SMSPinDeliveredEvidence) = True
 historyEventType (Current VisitedViewForAuthenticationEvidence) = True
-historyEventType (Current VisitedViewForSigningEvidence)        = True
-historyEventType (Current AuthenticatedToViewEvidence)          = True
-historyEventType (Current ApprovedByApproverPartyEvidence)      = True
-historyEventType (Current ForwardedSigningEvidence)             = True
-historyEventType _                                              = False
+historyEventType (Current VisitedViewForSigningEvidence) = True
+historyEventType (Current AuthenticatedToViewEvidence) = True
+historyEventType (Current ApprovedByApproverPartyEvidence) = True
+historyEventType (Current ForwardedSigningEvidence) = True
+historyEventType _ = False
 
 
 getEvidenceEventStatusClass :: EvidenceEventType -> StatusClass
-getEvidenceEventStatusClass (Current CloseDocumentEvidence)                = SCSigned
-getEvidenceEventStatusClass (Current CancelDocumentEvidence)               = SCCancelled
-getEvidenceEventStatusClass (Current RejectDocumentEvidence)               = SCRejected
-getEvidenceEventStatusClass (Current RejectDocumentByApproverEvidence)     = SCRejected
-getEvidenceEventStatusClass (Current TimeoutDocumentEvidence)              = SCTimedout
-getEvidenceEventStatusClass (Current PreparationToPendingEvidence)         = SCInitiated
-getEvidenceEventStatusClass (Current MarkInvitationReadEvidence)           = SCRead
-getEvidenceEventStatusClass (Obsolete SignatoryLinkVisited)                = SCOpened
-getEvidenceEventStatusClass (Current RestartDocumentEvidence)              = SCDraft
-getEvidenceEventStatusClass (Current SignDocumentEvidence)                 = SCSigned
-getEvidenceEventStatusClass (Current InvitationEvidence)                   = SCSent
-getEvidenceEventStatusClass (Current InvitationDeliveredByEmail)           = SCDelivered
-getEvidenceEventStatusClass (Current InvitationUndeliveredByEmail)         = SCDeliveryProblem
-getEvidenceEventStatusClass (Current InvitationDeliveredBySMS)             = SCDelivered
-getEvidenceEventStatusClass (Current InvitationUndeliveredBySMS)           = SCDeliveryProblem
-getEvidenceEventStatusClass (Current ReminderSend)                         = SCSent
-getEvidenceEventStatusClass (Current AutomaticReminderSent)                = SCSent
-getEvidenceEventStatusClass (Current ResealedPDF)                          = SCSigned
-getEvidenceEventStatusClass (Obsolete CancelDocumenElegEvidence)           = SCCancelled
-getEvidenceEventStatusClass (Current ProlongDocumentEvidence)              = SCProlonged
-getEvidenceEventStatusClass (Current AttachSealedFileEvidence)             = SCSigned
-getEvidenceEventStatusClass (Current AttachGuardtimeSealedFileEvidence)    = SCSealed
-getEvidenceEventStatusClass (Current AttachExtendedSealedFileEvidence)     = SCExtended
-getEvidenceEventStatusClass (Current SMSPinSendEvidence)                   = SCSent
-getEvidenceEventStatusClass (Current SMSPinDeliveredEvidence)              = SCDelivered
-getEvidenceEventStatusClass (Current VisitedViewForAuthenticationEvidence) = SCOpenedAuthToView
-getEvidenceEventStatusClass (Current VisitedViewForSigningEvidence)        = SCOpened
-getEvidenceEventStatusClass (Current AuthenticatedToViewEvidence)          = SCAuthenticatedToView
-getEvidenceEventStatusClass (Current ApprovedByApproverPartyEvidence)      = SCApproved
-getEvidenceEventStatusClass (Current ConfirmationDeliveredByEmail)         = SCDelivered
-getEvidenceEventStatusClass (Current ConfirmationUndeliveredByEmail)       = SCDeliveryProblem
-getEvidenceEventStatusClass (Current ForwardedSigningEvidence)             = SCSent
-getEvidenceEventStatusClass _                                              = SCError
+getEvidenceEventStatusClass (Current  CloseDocumentEvidence       ) = SCSigned
+getEvidenceEventStatusClass (Current  CancelDocumentEvidence      ) = SCCancelled
+getEvidenceEventStatusClass (Current  RejectDocumentEvidence      ) = SCRejected
+getEvidenceEventStatusClass (Current RejectDocumentByApproverEvidence) = SCRejected
+getEvidenceEventStatusClass (Current  TimeoutDocumentEvidence     ) = SCTimedout
+getEvidenceEventStatusClass (Current  PreparationToPendingEvidence) = SCInitiated
+getEvidenceEventStatusClass (Current  MarkInvitationReadEvidence  ) = SCRead
+getEvidenceEventStatusClass (Obsolete SignatoryLinkVisited        ) = SCOpened
+getEvidenceEventStatusClass (Current  RestartDocumentEvidence     ) = SCDraft
+getEvidenceEventStatusClass (Current  SignDocumentEvidence        ) = SCSigned
+getEvidenceEventStatusClass (Current  InvitationEvidence          ) = SCSent
+getEvidenceEventStatusClass (Current  InvitationDeliveredByEmail  ) = SCDelivered
+getEvidenceEventStatusClass (Current  InvitationUndeliveredByEmail) = SCDeliveryProblem
+getEvidenceEventStatusClass (Current  InvitationDeliveredBySMS    ) = SCDelivered
+getEvidenceEventStatusClass (Current  InvitationUndeliveredBySMS  ) = SCDeliveryProblem
+getEvidenceEventStatusClass (Current  ReminderSend                ) = SCSent
+getEvidenceEventStatusClass (Current  AutomaticReminderSent       ) = SCSent
+getEvidenceEventStatusClass (Current  ResealedPDF                 ) = SCSigned
+getEvidenceEventStatusClass (Obsolete CancelDocumenElegEvidence   ) = SCCancelled
+getEvidenceEventStatusClass (Current  ProlongDocumentEvidence     ) = SCProlonged
+getEvidenceEventStatusClass (Current  AttachSealedFileEvidence    ) = SCSigned
+getEvidenceEventStatusClass (Current AttachGuardtimeSealedFileEvidence) = SCSealed
+getEvidenceEventStatusClass (Current AttachExtendedSealedFileEvidence) = SCExtended
+getEvidenceEventStatusClass (Current  SMSPinSendEvidence          ) = SCSent
+getEvidenceEventStatusClass (Current  SMSPinDeliveredEvidence     ) = SCDelivered
+getEvidenceEventStatusClass (Current VisitedViewForAuthenticationEvidence) =
+  SCOpenedAuthToView
+getEvidenceEventStatusClass (Current VisitedViewForSigningEvidence) = SCOpened
+getEvidenceEventStatusClass (Current AuthenticatedToViewEvidence) = SCAuthenticatedToView
+getEvidenceEventStatusClass (Current ApprovedByApproverPartyEvidence) = SCApproved
+getEvidenceEventStatusClass (Current ConfirmationDeliveredByEmail) = SCDelivered
+getEvidenceEventStatusClass (Current ConfirmationUndeliveredByEmail) = SCDeliveryProblem
+getEvidenceEventStatusClass (Current ForwardedSigningEvidence) = SCSent
+getEvidenceEventStatusClass _ = SCError
 
 -- Remove signatory events that happen after signing (link visited,
 -- invitation read).
-cleanUnimportantAfterSigning :: [DocumentEvidenceEvent]
-                             -> [DocumentEvidenceEvent]
+cleanUnimportantAfterSigning :: [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
 cleanUnimportantAfterSigning = go Set.empty
   where
     go _ [] = []
-    go m (e:es)
-      | evType e `elem` [ Obsolete SignatoryLinkVisited
-                        , Current MarkInvitationReadEvidence ]
-        && ids e `Set.member` m
-      = go m es -- The only place for skipping events, but these
+    go m (e : es)
+      | evType e
+        `elem`       [Obsolete SignatoryLinkVisited, Current MarkInvitationReadEvidence]
+        &&           ids e
+        `Set.member` m
+      = go m es
+      | -- The only place for skipping events, but these
                 -- events always have evSigLink == Just ...
-      | evType e == Current SignDocumentEvidence ||
-        evType e == Current ApprovedByApproverPartyEvidence
+        evType e
+        == Current SignDocumentEvidence
+        || evType e
+        == Current ApprovedByApproverPartyEvidence
       = e : go (Set.insert (ids e) m) es
       | evType e == Current PreparationToPendingEvidence
       = e : go Set.empty es
@@ -196,44 +210,55 @@ cleanUnimportantAfterSigning = go Set.empty
 
 -- Events that should be considered as performed as author even is
 -- actor states different.
-authorEvents  :: EvidenceEventType -> Bool
+authorEvents :: EvidenceEventType -> Bool
 authorEvents (Current PreparationToPendingEvidence) = True
-authorEvents _                                      = False
+authorEvents _ = False
 
 -- Events that should be considered as performed by the system even if
 -- actor states different.
-systemEvents  :: EvidenceEventType -> Bool
-systemEvents (Current InvitationDeliveredByEmail)     = True
-systemEvents (Current InvitationUndeliveredByEmail)   = True
-systemEvents (Current InvitationDeliveredBySMS)       = True
-systemEvents (Current InvitationUndeliveredBySMS)     = True
-systemEvents (Current ConfirmationDeliveredByEmail)   = True
+systemEvents :: EvidenceEventType -> Bool
+systemEvents (Current InvitationDeliveredByEmail) = True
+systemEvents (Current InvitationUndeliveredByEmail) = True
+systemEvents (Current InvitationDeliveredBySMS) = True
+systemEvents (Current InvitationUndeliveredBySMS) = True
+systemEvents (Current ConfirmationDeliveredByEmail) = True
 systemEvents (Current ConfirmationUndeliveredByEmail) = True
-systemEvents _                                        = False
+systemEvents _ = False
 
 -- Empty events - they should be skipped, as they don't provide enough
 -- information to show to user.
 emptyEvent :: DocumentEvidenceEvent -> Bool
-emptyEvent (DocumentEvidenceEvent {evType = Current InvitationEvidence, evAffectedSigLink = Nothing }) = True
-emptyEvent (DocumentEvidenceEvent {evType = Current ReminderSend,       evAffectedSigLink = Nothing }) = True
+emptyEvent (DocumentEvidenceEvent { evType = Current InvitationEvidence, evAffectedSigLink = Nothing })
+  = True
+emptyEvent (DocumentEvidenceEvent { evType = Current ReminderSend, evAffectedSigLink = Nothing })
+  = True
 emptyEvent _ = False
 
 -- | Produce simplified text for an event (only for archive or
 -- verification pages).
-simplifiedEventText :: forall m . (MonadDB m, MonadThrow m, TemplatesMonad m)
-  => Maybe Text -> SignatoryIdentifierMap -> DocumentEvidenceEvent -> m Text
+simplifiedEventText
+  :: forall m
+   . (MonadDB m, MonadThrow m, TemplatesMonad m)
+  => Maybe Text
+  -> SignatoryIdentifierMap
+  -> DocumentEvidenceEvent
+  -> m Text
 simplifiedEventText mactor sim dee = do
   emptyNamePlaceholder <- renderTextTemplate_ "_notNamedParty"
   case evType dee of
-    Obsolete CancelDocumenElegEvidence -> renderEvent emptyNamePlaceholder "CancelDocumenElegEvidenceText"
-    Obsolete SignatoryLinkVisited -> renderEvent emptyNamePlaceholder "SignatoryLinkVisitedArchive"
-    Current et -> renderEvent emptyNamePlaceholder $ eventTextTemplateName EventForArchive et
+    Obsolete CancelDocumenElegEvidence ->
+      renderEvent emptyNamePlaceholder "CancelDocumenElegEvidenceText"
+    Obsolete SignatoryLinkVisited ->
+      renderEvent emptyNamePlaceholder "SignatoryLinkVisitedArchive"
+    Current et ->
+      renderEvent emptyNamePlaceholder $ eventTextTemplateName EventForArchive et
     Obsolete _ -> return "" -- shouldn't we throw an error in this case?
-    where
-      renderEvent :: Text -> Text -> m Text
-      renderEvent emptyNamePlaceholder eventTemplateName = renderTextTemplate eventTemplateName $ do
+  where
+    renderEvent :: Text -> Text -> m Text
+    renderEvent emptyNamePlaceholder eventTemplateName =
+      renderTextTemplate eventTemplateName $ do
         let mslinkid = evAffectedSigLink dee
-        F.forM_ mslinkid  $ \slinkid -> do
+        F.forM_ mslinkid $ \slinkid -> do
           case Map.lookup slinkid sim >>= siLink of
             Just slink -> do
               signatoryLinkTemplateFields slink
@@ -253,55 +278,58 @@ simplifiedEventText mactor sim dee = do
           -- be somehow painlessly done, I guess.
           when (evType dee == Current SignDocumentEvidence) $ do
             dbQuery (GetESignature slinkid) >>= \case
-              Nothing -> return ()
+              Nothing   -> return ()
               Just esig -> case esig of
-                LegacyBankIDSignature_{} -> return ()
-                LegacyTeliaSignature_{} -> return ()
-                LegacyNordeaSignature_{} -> return ()
-                LegacyMobileBankIDSignature_{} -> return ()
-                CGISEBankIDSignature_ CGISEBankIDSignature{..} -> do
+                LegacyBankIDSignature_{}                        -> return ()
+                LegacyTeliaSignature_{}                         -> return ()
+                LegacyNordeaSignature_{}                        -> return ()
+                LegacyMobileBankIDSignature_{}                  -> return ()
+                CGISEBankIDSignature_ CGISEBankIDSignature {..} -> do
                   F.value "eid_signatory_name" $ Just cgisebidsSignatoryName
                   F.value "provider_sebankid" True
-                NetsNOBankIDSignature_ NetsNOBankIDSignature{..} -> do
+                NetsNOBankIDSignature_ NetsNOBankIDSignature {..} -> do
                   F.value "eid_signatory_name" $ Just netsnoSignatoryName
                   F.value "provider_nobankid" True
-                NetsDKNemIDSignature_ NetsDKNemIDSignature{..} -> do
+                NetsDKNemIDSignature_ NetsDKNemIDSignature {..} -> do
                   F.value "eid_signatory_name" $ Just netsdkSignatoryName
                   F.value "provider_dknemid" True
           when (evType dee == Current AuthenticatedToViewEvidence) $ do
-            dbQuery (GetEAuthenticationWithoutSession AuthenticationToView slinkid) >>= \case
-              Nothing -> return ()
-              Just esig -> case esig of
-                CGISEBankIDAuthentication_ n -> do
-                  F.value "provider_sebankid" True
-                  F.value "signatory_name" $ cgisebidaSignatoryName n
-                NetsNOBankIDAuthentication_ n -> do
-                  F.value "provider_nobankid" True
-                  F.value "signatory_name" $ netsNOBankIDSignatoryName n
-                  F.value "signatory_dob" $ netsNOBankIDDateOfBirth n
-                NetsDKNemIDAuthentication_ n -> do
-                  F.value "provider_dknemid" True
-                  F.value "signatory_name" $ netsDKNemIDSignatoryName n
-                  F.value "signatory_dob" $ netsDKNemIDDateOfBirth n
-                NetsFITupasAuthentication_ n -> do
-                  F.value "provider_fitupas" True
-                  F.value "signatory_name" $ netsFITupasSignatoryName n
-                  F.value "signatory_dob" $ netsFITupasDateOfBirth n
-                SMSPinAuthentication_ mobile -> do
-                  F.value "provider_sms_pin" True
-                  F.value "signatory_mobile" $ mobile
-                EIDServiceVerimiAuthentication_ n  -> do
-                  F.value "provider_verimi" True
-                  F.value "signatory_email" $ eidServiceVerimiVerifiedEmail n
-                  F.value "signatory_mobile" $ eidServiceVerimiVerifiedPhone n
-                EIDServiceIDINAuthentication_ n  -> do
-                  F.value "provider_idin" True
-                  F.value "signatory_email" $ eidServiceIDINVerifiedEmail n
-                  F.value "signatory_mobile" $ eidServiceIDINVerifiedPhone n
-                  F.value "provider_customer_id" $ eidServiceIDINCustomerID n
+            dbQuery (GetEAuthenticationWithoutSession AuthenticationToView slinkid)
+              >>= \case
+                    Nothing   -> return ()
+                    Just esig -> case esig of
+                      CGISEBankIDAuthentication_ n -> do
+                        F.value "provider_sebankid" True
+                        F.value "signatory_name" $ cgisebidaSignatoryName n
+                      NetsNOBankIDAuthentication_ n -> do
+                        F.value "provider_nobankid" True
+                        F.value "signatory_name" $ netsNOBankIDSignatoryName n
+                        F.value "signatory_dob" $ netsNOBankIDDateOfBirth n
+                      NetsDKNemIDAuthentication_ n -> do
+                        F.value "provider_dknemid" True
+                        F.value "signatory_name" $ netsDKNemIDSignatoryName n
+                        F.value "signatory_dob" $ netsDKNemIDDateOfBirth n
+                      NetsFITupasAuthentication_ n -> do
+                        F.value "provider_fitupas" True
+                        F.value "signatory_name" $ netsFITupasSignatoryName n
+                        F.value "signatory_dob" $ netsFITupasDateOfBirth n
+                      SMSPinAuthentication_ mobile -> do
+                        F.value "provider_sms_pin" True
+                        F.value "signatory_mobile" $ mobile
+                      EIDServiceVerimiAuthentication_ n -> do
+                        F.value "provider_verimi" True
+                        F.value "signatory_email" $ eidServiceVerimiVerifiedEmail n
+                        F.value "signatory_mobile" $ eidServiceVerimiVerifiedPhone n
+                      EIDServiceIDINAuthentication_ n -> do
+                        F.value "provider_idin" True
+                        F.value "signatory_email" $ eidServiceIDINVerifiedEmail n
+                        F.value "signatory_mobile" $ eidServiceIDINVerifiedPhone n
+                        F.value "provider_customer_id" $ eidServiceIDINCustomerID n
         F.value "text" $ T.replace "\n" " " <$> evMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page
         F.value "additional_text" $ T.replace "\n" " " <$> evAdditionalMessageText dee -- Escape EOL. They are ignored by html and we don't want them on verification page
-        F.value "signatory" $ (\slid -> signatoryIdentifier sim slid emptyNamePlaceholder) <$> mslinkid
+        F.value "signatory"
+          $   (\slid -> signatoryIdentifier sim slid emptyNamePlaceholder)
+          <$> mslinkid
         F.forM_ mactor $ F.value "actor"
 
 -- | Suppress repeated events stemming from mail delivery systems
@@ -309,10 +337,12 @@ simplifiedEventText mactor sim dee = do
 -- such event for five minutes after its last occurrence with the same
 -- text.
 suppressRepeatedEvents :: [DocumentEvidenceEvent] -> [DocumentEvidenceEvent]
-suppressRepeatedEvents = go Map.empty where
-  go _ [] = []
-  go levs (ev:evs) | evType ev == Current MarkInvitationReadEvidence =
-                       if Just (evTime ev) < ((5 `minutesAfter`) <$> Map.lookup (evText ev) levs)
-                       then go levs evs
-                       else ev : go (Map.insert (evText ev) (evTime ev) levs) evs
-                  | otherwise = ev : go levs evs
+suppressRepeatedEvents = go Map.empty  where
+    go _ [] = []
+    go levs (ev : evs)
+      | evType ev == Current MarkInvitationReadEvidence
+      = if Just (evTime ev) < ((5 `minutesAfter`) <$> Map.lookup (evText ev) levs)
+        then go levs evs
+        else ev : go (Map.insert (evText ev) (evTime ev) levs) evs
+      | otherwise
+      = ev : go levs evs

@@ -29,23 +29,23 @@ testCookieDomain :: Text
 testCookieDomain = "some.domain.com"
 
 sessionsTests :: TestEnvSt -> Test
-sessionsTests env = testGroup "Sessions" [
-    testThat "can create new session"       env testNewSessionInsertion
+sessionsTests env = testGroup
+  "Sessions"
+  [ testThat "can create new session"       env testNewSessionInsertion
   , testThat "can update existing session"  env testSessionUpdate
   , testThat "can insert document ticket"   env testDocumentTicketInsertion
   , testThat "can reinsert document ticket" env testDocumentTicketReinsertion
   , testThat "can add eleg transaction"     env testElegTransactionInsertion
   , testThat "can update eleg transaction"  env testElegTransactionUpdate
-  , testThat "test default session timeout"
-      env testDefaultSessionTimeout
+  , testThat "test default session timeout" env testDefaultSessionTimeout
   , testThat "can set custom session timeout in group settings"
-      env testCustomSessionTimeout
-  , testThat "test default session timeout delay"
-      env testDefaultSessionTimeoutDelay
-  , testThat "test custom session timeout delay"
-      env testCustomSessionTimeoutDelay
+             env
+             testCustomSessionTimeout
+  , testThat "test default session timeout delay" env testDefaultSessionTimeoutDelay
+  , testThat "test custom session timeout delay"  env testCustomSessionTimeoutDelay
   , testThat "test custom session timeout inheritance"
-      env testCustomSessionTimeoutInheritance
+             env
+             testCustomSessionTimeoutInheritance
   ]
 
 testNewSessionInsertion :: TestEnv ()
@@ -59,40 +59,37 @@ testNewSessionInsertion = do
 
 testSessionUpdate :: TestEnv ()
 testSessionUpdate = do
-  uid              <- createTestUserAndGetId
+  uid         <- createTestUserAndGetId
   (sess, ctx) <- insertNewSession uid
   void $ do
     rq <- mkRequest GET []
-    runTestKontra rq ctx $
-      updateSession sess (sesID sess) (sesUserID sess) (Just uid)
+    runTestKontra rq ctx $ updateSession sess (sesID sess) (sesUserID sess) (Just uid)
 
   msess' <- getSession (sesID sess) (sesToken sess) testCookieDomain
-  assertBool "modified session successfully taken from the database"
-    (isJust msess')
+  assertBool "modified session successfully taken from the database" (isJust msess')
 
   let sess' = fromJust msess'
-  assertEqual "session successfully modified"
-    (sesPadUserID sess') (Just uid)
+  assertEqual "session successfully modified" (sesPadUserID sess') (Just uid)
 
   msess'' <- getSession (sesID sess) (sesToken sess) "other.domain.com"
   assertBool "we should only be able to fetch session where domain does match"
-    (isNothing msess'')
+             (isNothing msess'')
 
 testDefaultSessionTimeout :: TestEnv ()
 testDefaultSessionTimeout = do
   time1 <- currentTime
   setTestTime time1
 
-  userId <- createTestUserAndGetId
+  userId        <- createTestUserAndGetId
   (session1, _) <- insertNewSession userId
 
-  let time2 = sesExpires session1
+  let time2    = sesExpires session1
       diffTime = diffUTCTime time2 time1
 
   assertApproxEqual "difftime is around default timeout +/- 10 seconds"
-    (fromIntegral defaultSessionTimeoutSecs)
-    10
-    diffTime
+                    (fromIntegral defaultSessionTimeoutSecs)
+                    10
+                    diffTime
 
   -- Test that session is still valid 3 hours before expiry.
   -- Don't test closer than 2 hours as it will extend the expiry and
@@ -112,12 +109,13 @@ testCustomSessionTimeout = do
 
   (user, userGroup) <- createTestUser
 
-  let userId = userid user
+  let userId      = userid user
       userGroupId = get ugID userGroup
   groupSettings1 <- assertJustAndExtract $ get ugSettings userGroup
 
   assertEqual "initial group session timeout should be nothing"
-    (get ugsSessionTimeoutSecs groupSettings1) Nothing
+              (get ugsSessionTimeoutSecs groupSettings1)
+              Nothing
 
   do
     -- Test that group settings can be updated with
@@ -131,13 +129,13 @@ testCustomSessionTimeout = do
 
     (session1, _) <- insertNewSession userId
 
-    let time2 = sesExpires session1
+    let time2    = sesExpires session1
         diffTime = diffUTCTime time2 time1
 
     assertApproxEqual "difftime is around custom timeout (7 days) +/- 10 seconds"
-      (fromIntegral sessionTimeout)
-      10
-      diffTime
+                      (fromIntegral sessionTimeout)
+                      10
+                      diffTime
 
     modifyTestTime $ daysAfter 6
     mSession3 <- getSession (sesID session1) (sesToken session1) testCookieDomain
@@ -158,13 +156,13 @@ testCustomSessionTimeout = do
 
     (session2, _) <- insertNewSession userId
 
-    let time2 = sesExpires session2
+    let time2    = sesExpires session2
         diffTime = diffUTCTime time2 time1
 
     assertApproxEqual "difftime is around default timeout +/- 10 seconds"
-      (fromIntegral defaultSessionTimeoutSecs)
-      10
-      diffTime
+                      (fromIntegral defaultSessionTimeoutSecs)
+                      10
+                      diffTime
 
 
     modifyTestTime $ secondsAfter (defaultSessionTimeoutSecs - 2 * 60 * 60)
@@ -178,8 +176,8 @@ testCustomSessionTimeout = do
 testDefaultSessionTimeoutDelay :: TestEnv ()
 testDefaultSessionTimeoutDelay = do
   setTestTime =<< currentTime  -- freeze time
-  userId          <- createTestUserAndGetId
-  (session, _)   <- insertNewSession userId
+  userId       <- createTestUserAndGetId
+  (session, _) <- insertNewSession userId
 
   do
     -- Fast forward to 1 hour before session expires
@@ -204,16 +202,16 @@ testCustomSessionTimeoutDelay = do
   setTestTime =<< currentTime  -- freeze time
   (user, userGroup) <- createTestUser
 
-  let userId = userid user
-      userGroupId = get ugID userGroup
+  let userId                = userid user
+      userGroupId           = get ugID userGroup
       (Just groupSettings1) = get ugSettings userGroup
-      sessionTimeout = 15 * 60  -- test 15 mins session timout
+      sessionTimeout        = 15 * 60  -- test 15 mins session timout
 
   do
     let groupSettings2 = set ugsSessionTimeoutSecs (Just sessionTimeout) groupSettings1
     dbUpdate $ UserGroupUpdateSettings userGroupId (Just groupSettings2)
 
-  (session, _)   <- insertNewSession userId
+  (session, _) <- insertNewSession userId
 
   do
     modifyTestTime (secondsAfter $ 10 * 60)
@@ -235,49 +233,48 @@ testCustomSessionTimeoutInheritance = do
   userGroup11 :: UserGroupRoot <- rand 10 arbitrary
   let groupSettings11 = _ugrSettings userGroup11
 
-      sessionTimeout = 7 * 24 * 60 * 60
+      sessionTimeout  = 7 * 24 * 60 * 60
       groupSettings12 = set ugsSessionTimeoutSecs (Just sessionTimeout) groupSettings11
-      userGroup12 = set ugSettings (Just groupSettings12) $
-        ugFromUGRoot userGroup11
+      userGroup12     = set ugSettings (Just groupSettings12) $ ugFromUGRoot userGroup11
 
-  userGroup13 <- dbUpdate $ UserGroupCreate userGroup12
+  userGroup13              <- dbUpdate $ UserGroupCreate userGroup12
 
   userGroup21 :: UserGroup <- rand 10 arbitrary
   let userGroup22 =
-        set ugParentGroupID (Just $ get ugID userGroup13) $
-        set ugSettings Nothing $
-        userGroup21
+        set ugParentGroupID (Just $ get ugID userGroup13)
+          $ set ugSettings Nothing
+          $ userGroup21
   userGroup23 <- dbUpdate $ UserGroupCreate userGroup22
 
-  userGroup24 :: Maybe UserGroupWithParents <-
-    dbQuery $ UserGroupGetWithParents $ get ugID userGroup23
+  userGroup24 :: Maybe UserGroupWithParents <- dbQuery $ UserGroupGetWithParents $ get
+    ugID
+    userGroup23
 
-  let groupSettings2 = ugwpSettings <$> userGroup24
+  let groupSettings2            = ugwpSettings <$> userGroup24
 
   let timeoutVal :: Maybe Int32 = join $ get ugsSessionTimeoutSecs <$> groupSettings2
 
-  assertEqual
-    "session timeout value should be inherited from parent user group"
-    (Just sessionTimeout)
-    timeoutVal
+  assertEqual "session timeout value should be inherited from parent user group"
+              (Just sessionTimeout)
+              timeoutVal
 
   do
     time1 <- currentTime
     setTestTime time1
 
-    (Just user) <- addNewCompanyUser "John" "Smith" "smith@example.com" $
-      get ugID userGroup23
+    (Just user) <- addNewCompanyUser "John" "Smith" "smith@example.com"
+      $ get ugID userGroup23
 
     let userId = userid user
     (session1, _) <- insertNewSession userId
 
-    let time2 = sesExpires session1
+    let time2    = sesExpires session1
         diffTime = diffUTCTime time2 time1
 
     assertApproxEqual "difftime is around custom timeout (7 days) +/- 10 seconds"
-      (fromIntegral sessionTimeout)
-      10
-      diffTime
+                      (fromIntegral sessionTimeout)
+                      10
+                      diffTime
 
     modifyTestTime $ daysAfter 6
     mSession3 <- getSession (sesID session1) (sesToken session1) testCookieDomain
@@ -290,8 +287,8 @@ testCustomSessionTimeoutInheritance = do
 testDocumentTicketInsertion :: TestEnv ()
 testDocumentTicketInsertion = replicateM_ 10 $ do
   (_, _, ctx) <- addDocumentAndInsertToken
-  runSQL_ $
-    "SELECT COUNT(*) FROM document_session_tokens WHERE session_id ="
+  runSQL_
+    $   "SELECT COUNT(*) FROM document_session_tokens WHERE session_id ="
     <?> get ctxsessionid ctx
   tokens :: Int64 <- fetchOne runIdentity
   assertEqual "token successfully inserted into the database" 1 tokens
@@ -310,39 +307,37 @@ testDocumentTicketReinsertion = replicateM_ 10 $ do
 testElegTransactionInsertion :: TestEnv ()
 testElegTransactionInsertion = replicateM_ 10 $ do
   (mtrans, _) <- addCgiGrpTransaction
-  assertBool "cgi grp transaction successfully inserted into the database"
-    (isJust mtrans)
+  assertBool "cgi grp transaction successfully inserted into the database" (isJust mtrans)
 
 testElegTransactionUpdate :: TestEnv ()
 testElegTransactionUpdate = replicateM_ 10 $ do
   (Just trans, ctx) <- addCgiGrpTransaction
   let newtrans = case trans of
-        (CgiGrpAuthTransaction slid tid orf sid)   ->
+        (CgiGrpAuthTransaction slid tid orf sid) ->
           (CgiGrpAuthTransaction slid tid orf sid)
         (CgiGrpSignTransaction slid _ tid orf sid) ->
-          (CgiGrpSignTransaction slid "new order ref"  tid orf sid)
+          (CgiGrpSignTransaction slid "new order ref" tid orf sid)
   (mtrans', _) <- do
     rq <- mkRequest GET []
     runTestKontra rq ctx $ do
       dbUpdate $ MergeCgiGrpTransaction newtrans
-      dbQuery  $ GetCgiGrpTransaction
-        (cgiTransactionType newtrans) (cgiSignatoryLinkID trans)
+      dbQuery
+        $ GetCgiGrpTransaction (cgiTransactionType newtrans) (cgiSignatoryLinkID trans)
   assertBool "cgi grp transaction present is the database" $ isJust mtrans'
   let Just trans' = mtrans'
   assertBool "cgi grp transaction properly modified" $ newtrans == trans'
 
 insertNewSession :: UserID -> TestEnv (Session, Context)
 insertNewSession uid = do
-  rq <- mkRequestWithHeaders GET [] [("host",[testCookieDomain])]
+  rq  <- mkRequestWithHeaders GET [] [("host", [testCookieDomain])]
   ctx <- mkContext defaultLang
   runTestKontra rq ctx $ do
-    session1 <- emptySession
-    mSession2 <- updateSession session1
-      (sesID session1) (Just uid) Nothing
+    session1  <- emptySession
+    mSession2 <- updateSession session1 (sesID session1) (Just uid) Nothing
 
-    session2 <- assertJustAndExtract mSession2
+    session2  <- assertJustAndExtract mSession2
 
-    let sessionId = sesID session2
+    let sessionId    = sesID session2
         sessionToken = sesToken session2
 
     mSession3 <- getSession sessionId sessionToken testCookieDomain
@@ -351,21 +346,19 @@ insertNewSession uid = do
 addDocumentAndInsertToken :: TestEnv (User, Document, Context)
 addDocumentAndInsertToken = do
   author <- addNewRandomUser
-  doc    <- addRandomDocument (rdaDefault author)
-    { rdaTypes = OneOf [Signable]
-    , rdaStatuses = OneOf [Pending]
-    }
+  doc    <- addRandomDocument (rdaDefault author) { rdaTypes    = OneOf [Signable]
+                                                  , rdaStatuses = OneOf [Pending]
+                                                  }
   (_, ctx) <- do
     let Just asl = getAuthorSigLink doc
     rq  <- mkRequest GET []
     ctx <- mkContext defaultLang
     runTestKontra rq ctx $ do
       sess <- emptySession
-      sid <- getNonTempSessionID
+      sid  <- getNonTempSessionID
       dbUpdate $ AddDocumentSession sid (signatorylinkid asl)
       ctx' <- getContext
-      updateSession sess
-        (get ctxsessionid ctx') (sesUserID sess) (sesPadUserID sess)
+      updateSession sess (get ctxsessionid ctx') (sesUserID sess) (sesPadUserID sess)
   return (author, doc, ctx)
 
 addCgiGrpTransaction :: TestEnv (Maybe CgiGrpTransaction, Context)
@@ -374,17 +367,14 @@ addCgiGrpTransaction = do
   let Just asl = getAuthorSigLink doc
   trans_ <- rand 20 arbitrary
   let trans = case trans_ of
-        (CgiGrpAuthTransaction _  tid orf _)     ->
-          CgiGrpAuthTransaction (signatorylinkid asl) tid orf $
-          get ctxsessionid ctx
-        (CgiGrpSignTransaction _  tbs tid orf _) ->
-          CgiGrpSignTransaction (signatorylinkid asl) tbs tid orf $
-          get ctxsessionid ctx
+        (CgiGrpAuthTransaction _ tid orf _) ->
+          CgiGrpAuthTransaction (signatorylinkid asl) tid orf $ get ctxsessionid ctx
+        (CgiGrpSignTransaction _ tbs tid orf _) ->
+          CgiGrpSignTransaction (signatorylinkid asl) tbs tid orf $ get ctxsessionid ctx
   rq <- mkRequest GET []
   runTestKontra rq ctx $ do
     dbUpdate $ MergeCgiGrpTransaction trans
-    dbQuery  $ GetCgiGrpTransaction
-      (cgiTransactionType trans) (signatorylinkid asl)
+    dbQuery $ GetCgiGrpTransaction (cgiTransactionType trans) (signatorylinkid asl)
 
 createTestUserAndGetId :: TestEnv UserID
 createTestUserAndGetId = (userid . fst) <$> createTestUser
@@ -394,12 +384,11 @@ createTestUser = do
   bd        <- dbQuery $ GetMainBrandedDomain
   pwd       <- createPassword "password_8866"
   ug        <- addNewUserGroup
-  Just user <- createNewUser
-    ("Andrzej", "Rybczak")
-    "andrzej@scrive.com"
-    (Just pwd)
-    (get ugID ug, True)
-    defaultLang
-    (get bdid bd)
-    AccountRequest
+  Just user <- createNewUser ("Andrzej", "Rybczak")
+                             "andrzej@scrive.com"
+                             (Just pwd)
+                             (get ugID ug, True)
+                             defaultLang
+                             (get bdid bd)
+                             AccountRequest
   return $ (user, ug)

@@ -18,10 +18,8 @@ data FileStorage
   deriving (Eq, Ord, Show, Typeable)
 
 instance Loggable FileStorage where
-  logValue (FileStorageAWS url _) = object [
-      "type" .= ("aws_bucket" :: String)
-    , "url"  .= url
-    ]
+  logValue (FileStorageAWS url _) =
+    object ["type" .= ("aws_bucket" :: String), "url" .= url]
   logDefaultLabel _ = "file_storage"
 
 data File = File {
@@ -38,17 +36,12 @@ instance Eq File where
 
 instance Ord File where
   compare a b | fileid a == fileid b = EQ
-              | otherwise = compare (fileid a, filename a)
-                                    (fileid b, filename b)
+              | otherwise = compare (fileid a, filename a) (fileid b, filename b)
 
 instance Show File where
   show = T.unpack . filename
 
 instance Loggable File where
-  logValue File{..} = object [
-      identifier fileid
-    , "name" .= filename
-    , "size" .= filesize
-    , logPair_ filestorage
-    ]
+  logValue File {..} = object
+    [identifier fileid, "name" .= filename, "size" .= filesize, logPair_ filestorage]
   logDefaultLabel _ = "file"

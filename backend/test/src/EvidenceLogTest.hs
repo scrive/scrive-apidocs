@@ -16,21 +16,20 @@ import TestKontra
 import User.Lang (allLangs, codeFromLang)
 
 evidenceLogTests :: TestEnvSt -> Test
-evidenceLogTests env = testGroup "Evidence Log"
-  [ testThat
-    "Testing EvidenceEventType conversions equal"
-    env conversionEq
+evidenceLogTests env = testGroup
+  "Evidence Log"
+  [ testThat "Testing EvidenceEventType conversions equal" env conversionEq
   , testThat
-    ("Testing EvidenceEventType templates are well defined and " <>
-     "their variable set is known")
-    env evidenceLogTemplatesWellDefined
+    (  "Testing EvidenceEventType templates are well defined and "
+    <> "their variable set is known"
+    )
+    env
+    evidenceLogTemplatesWellDefined
   ]
 
 evidenceEventTypes :: [(Int16, EvidenceEventType)]
-evidenceEventTypes = zip [1..] $ concat [
-    map Current [minBound..maxBound]
-  , map Obsolete [minBound..maxBound]
-  ]
+evidenceEventTypes = zip [1 ..]
+  $ concat [map Current [minBound .. maxBound], map Obsolete [minBound .. maxBound]]
 
 conversionEq :: TestEnv ()
 conversionEq = do
@@ -122,44 +121,47 @@ evidenceLogTemplateVariables = Set.fromList
 
 evidenceLogTemplatesWellDefined :: TestEnv ()
 evidenceLogTemplatesWellDefined = do
-  vars <- fmap (Set.fromList . concat) $
-    forM [ (ty,l,ta)
-         | (_,ty) <- evidenceEventTypes
-         , l      <- allLangs
-         , ta     <- [minBound..maxBound]
-         , (ta == EventForEvidenceLog)
-           || (ta == EventForArchive
-               && historyEventType ty)
-         ] $ \(ty,l,ta) -> do
-    case ty of
-      Obsolete _ -> return []
-      Current ct -> do
-        ts <- getTextTemplatesByLanguage $ T.unpack $ codeFromLang l
-        let tn = eventTextTemplateName ta ct
-        case getStringTemplate (T.unpack tn) ts of
-          Nothing -> do
-            assertFailure $ "Cannot find template name " ++ show tn
-            return []
-          Just st -> do
-            -- NOTE: checkTemplateDeep in HStringTemplates 8.3 is not
-            -- reliable. It can miss fields when ($if$) is used. Bug
-            -- reported by MR.
-            let (pe,freevars,te') = checkTemplateDeep st
-            let te = filter (/="noescape") te'
-            let errcontext = " in template " ++ (T.unpack tn)
-                  ++ " for language " ++ show l ++ ": "
-            unless (null pe) $ do
-              assertFailure $ "Parse error" ++ errcontext ++ show pe
-            unless (null te) $ do
-              assertFailure $ "Unknown template function"
-                ++ errcontext ++ show te
-            return freevars
+  vars <-
+    fmap (Set.fromList . concat)
+    $ forM
+        [ (ty, l, ta)
+        | (_, ty) <- evidenceEventTypes
+        , l       <- allLangs
+        , ta      <- [minBound .. maxBound]
+        , (ta == EventForEvidenceLog) || (ta == EventForArchive && historyEventType ty)
+        ]
+    $ \(ty, l, ta) -> do
+        case ty of
+          Obsolete _  -> return []
+          Current  ct -> do
+            ts <- getTextTemplatesByLanguage $ T.unpack $ codeFromLang l
+            let tn = eventTextTemplateName ta ct
+            case getStringTemplate (T.unpack tn) ts of
+              Nothing -> do
+                assertFailure $ "Cannot find template name " ++ show tn
+                return []
+              Just st -> do
+                -- NOTE: checkTemplateDeep in HStringTemplates 8.3 is not
+                -- reliable. It can miss fields when ($if$) is used. Bug
+                -- reported by MR.
+                let (pe, freevars, te') = checkTemplateDeep st
+                let te                  = filter (/= "noescape") te'
+                let
+                  errcontext =
+                    " in template " ++ (T.unpack tn) ++ " for language " ++ show l ++ ": "
+                unless (null pe) $ do
+                  assertFailure $ "Parse error" ++ errcontext ++ show pe
+                unless (null te) $ do
+                  assertFailure $ "Unknown template function" ++ errcontext ++ show te
+                return freevars
   -- If this test fails please first check note above
   assertEqual
-    ("Evidence log templates has variables not defined in " <>
-     "evidenceLogTemplateVariables")
-    Set.empty (vars Set.\\ evidenceLogTemplateVariables)
+    (  "Evidence log templates has variables not defined in "
+    <> "evidenceLogTemplateVariables"
+    )
+    Set.empty
+    (vars Set.\\ evidenceLogTemplateVariables)
   assertEqual
-    ("evidenceLogTemplateVariables has elements not used in " <>
-     "evidence log templates")
-    Set.empty (evidenceLogTemplateVariables Set.\\ vars)
+    ("evidenceLogTemplateVariables has elements not used in " <> "evidence log templates")
+    Set.empty
+    (evidenceLogTemplateVariables Set.\\ vars)

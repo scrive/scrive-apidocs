@@ -64,42 +64,66 @@ instance {-# OVERLAPPING #-} Monad m => GuardTimeConfMonad (GuardTimeConfT m) wh
 runGuardTimeConfT :: GuardTimeConf -> GuardTimeConfT m a -> m a
 runGuardTimeConfT ts m = runReaderT (unGuardTimeConfT m) ts
 
-invokeGuardtimeTool :: (MonadIO m, MonadMask m) => GuardTimeConf -> GuardTimeCredentialsType -> String -> [String] -> m (ExitCode, BSL.ByteString, BSL.ByteString)
+invokeGuardtimeTool
+  :: (MonadIO m, MonadMask m)
+  => GuardTimeConf
+  -> GuardTimeCredentialsType
+  -> String
+  -> [String]
+  -> m (ExitCode, BSL.ByteString, BSL.ByteString)
 invokeGuardtimeTool conf credentials tool args = do
   withGuardtimeConf conf credentials $ \confPath -> do
-    let a = ([ "-jar", "GuardTime/" ++ tool ++ ".jar"
-             , "-c", confPath
-             ] ++ args)
+    let a = (["-jar", "GuardTime/" ++ tool ++ ".jar", "-c", confPath] ++ args)
     liftIO $ readProcessWithExitCode "java" a BSL.empty
 
-withGuardtimeConf :: (MonadIO m, MonadMask m) => GuardTimeConf -> GuardTimeCredentialsType -> (FilePath -> m (ExitCode, BSL.ByteString, BSL.ByteString)) -> m (ExitCode, BSL.ByteString, BSL.ByteString)
-withGuardtimeConf GuardTimeConf{..} credentials action = do
-  let (login,key) = case credentials of
-        GTSigningCredentials   -> (guardTimeSigningLoginUser, guardTimeSigningLoginKey)
-        GTExtendingCredentials -> (guardTimeExtendingLoginUser, guardTimeExtendingLoginKey)
+withGuardtimeConf
+  :: (MonadIO m, MonadMask m)
+  => GuardTimeConf
+  -> GuardTimeCredentialsType
+  -> (FilePath -> m (ExitCode, BSL.ByteString, BSL.ByteString))
+  -> m (ExitCode, BSL.ByteString, BSL.ByteString)
+withGuardtimeConf GuardTimeConf {..} credentials action = do
+  let (login, key) = case credentials of
+        GTSigningCredentials -> (guardTimeSigningLoginUser, guardTimeSigningLoginKey)
+        GTExtendingCredentials ->
+          (guardTimeExtendingLoginUser, guardTimeExtendingLoginKey)
   withSystemTempFile "guartime.conf" $ \confpath confhandle -> do
-    let confstr =    "signer.url=" ++ guardTimeSigningServiceURL ++ "\n"
-                  ++ "extender.url=" ++ guardTimeExtendingServiceURL ++ "\n"
-                  ++ "publicationsfile.url=" ++ guardTimeControlPublicationsURL ++ "\n"
-                  ++ "publicationsfile.constraint=E=publications@guardtime.com\n"
-                  ++ "login.user=" ++ login ++ "\n"
-                  ++ "login.key=" ++ key
+    let confstr =
+          "signer.url="
+            ++ guardTimeSigningServiceURL
+            ++ "\n"
+            ++ "extender.url="
+            ++ guardTimeExtendingServiceURL
+            ++ "\n"
+            ++ "publicationsfile.url="
+            ++ guardTimeControlPublicationsURL
+            ++ "\n"
+            ++ "publicationsfile.constraint=E=publications@guardtime.com\n"
+            ++ "login.user="
+            ++ login
+            ++ "\n"
+            ++ "login.key="
+            ++ key
     liftIO $ hPutStr confhandle confstr
     liftIO $ hClose confhandle
     result <- action confpath
     liftIO $ removeFile confpath
     return result
 
-digitallySign :: (MonadLog m, MonadIO m, MonadMask m) => GuardTimeConf -> String -> m (ExitCode, BSL.ByteString, BSL.ByteString)
+digitallySign
+  :: (MonadLog m, MonadIO m, MonadMask m)
+  => GuardTimeConf
+  -> String
+  -> m (ExitCode, BSL.ByteString, BSL.ByteString)
 digitallySign conf inputFileName = do
-  (code,stdout,stderr) <- invokeGuardtimeTool conf GTSigningCredentials "pdf-signer"
-             [ "-n", "Scrive"
-             , "-f", inputFileName
-             ]
+  (code, stdout, stderr) <- invokeGuardtimeTool conf
+                                                GTSigningCredentials
+                                                "pdf-signer"
+                                                ["-n", "Scrive", "-f", inputFileName]
   -- The ExitFailure is here "just in case". The new KSI GT Pdftoolkit binary is always returning ExitSuccess.
   when (code /= ExitSuccess) $ do
-    logAttention "GuardTime signing failed" $ object [
-        "exit_code" .= show code
+    logAttention "GuardTime signing failed" $ object
+      [ "exit_code" .= show code
       , "stdout" `equalsExternalBSL` stdout
       , "stderr" `equalsExternalBSL` stderr
       ]
@@ -107,25 +131,29 @@ digitallySign conf inputFileName = do
 
 -- Extending
 
-digitallyExtend :: (MonadLog m, MonadIO m, MonadMask m) => GuardTimeConf -> String -> m (ExitCode, BSL.ByteString, BSL.ByteString)
+digitallyExtend
+  :: (MonadLog m, MonadIO m, MonadMask m)
+  => GuardTimeConf
+  -> String
+  -> m (ExitCode, BSL.ByteString, BSL.ByteString)
 digitallyExtend conf inputFileName = do
-  startTime <- currentTime
-  (code,stdout,stderr) <- invokeGuardtimeTool conf GTExtendingCredentials "pdf-extender"
-             [ "-f", inputFileName
-             ]
+  startTime              <- currentTime
+  (code, stdout, stderr) <- invokeGuardtimeTool conf
+                                                GTExtendingCredentials
+                                                "pdf-extender"
+                                                ["-f", inputFileName]
   finishTime <- currentTime
   let elapsedTime = realToFrac $ diffUTCTime finishTime startTime :: Double
   case code of
     -- The ExitFailure is here "just in case". The new KSI GT Pdftoolkit binary is always returning ExitSuccess.
-    ExitFailure _ -> logAttention "GuardTime extending failed" $ object [
-        "exit_code" .= show code
+    ExitFailure _ -> logAttention "GuardTime extending failed" $ object
+      [ "exit_code" .= show code
       , "stdout" `equalsExternalBSL` stdout
       , "stderr" `equalsExternalBSL` stderr
       , "elapsed_time" .= elapsedTime
       ]
-    ExitSuccess -> logInfo "GuardTime digitallyExtend completed successfully" $ object [
-        "elapsed_time" .= elapsedTime
-      ]
+    ExitSuccess -> logInfo "GuardTime digitallyExtend completed successfully"
+      $ object ["elapsed_time" .= elapsedTime]
 
   return (code, stdout, stderr)
 
@@ -150,54 +178,60 @@ data GuardtimeSignature =
 
 -- | Signature indicates that a gateway exclusive to Scrive was used when signing
 privateGateway :: GuardtimeSignature -> Bool
-privateGateway _  = True -- Scrive always uses an internal gateway
+privateGateway _ = True -- Scrive always uses an internal gateway
 
 instance FromJSValue VerifyResult where
-    fromJSValue = do
-        mvalid   <- fromJSValueFieldCustom "valid" $ do
-                      time <- fromJSValueField "time"
-                      extended <- fromJSValueField "extended"
-                      extensible <- fromJSValueField "extensible"
-                      lastRev <- fromJSValueField "last_revision"
-                      return $ case lastRev of
-                        Just ("true" :: String) -> Valid <$> (GuardtimeSignature <$> time <*> extended <*> extensible)
-                        _ -> Just $ Invalid "not last revision"
-        minvalid <- fromJSValueFieldCustom "invalid" $ do
-                      liftM (fmap (Invalid . (show :: JSValue -> String))) $ fromJSValueField "reason"
-        mproblem <- fromJSValueFieldCustom "error" $ do
-                      liftM (fmap $ Problem BSL.empty BSL.empty) $ fromJSValueField "reason"
-        return $ mvalid `mplus` minvalid `mplus` mproblem
+  fromJSValue = do
+    mvalid <- fromJSValueFieldCustom "valid" $ do
+      time       <- fromJSValueField "time"
+      extended   <- fromJSValueField "extended"
+      extensible <- fromJSValueField "extensible"
+      lastRev    <- fromJSValueField "last_revision"
+      return $ case lastRev of
+        Just ("true" :: String) ->
+          Valid <$> (GuardtimeSignature <$> time <*> extended <*> extensible)
+        _ -> Just $ Invalid "not last revision"
+    minvalid <- fromJSValueFieldCustom "invalid" $ do
+      liftM (fmap (Invalid . (show :: JSValue -> String))) $ fromJSValueField "reason"
+    mproblem <- fromJSValueFieldCustom "error" $ do
+      liftM (fmap $ Problem BSL.empty BSL.empty) $ fromJSValueField "reason"
+    return $ mvalid `mplus` minvalid `mplus` mproblem
 
 
 instance ToJSValue VerifyResult where
-    toJSValue (Valid gtsig) =  runJSONGen $ do
-      value "success" True
-      value "time" (time gtsig)
-      value "extended" (extended gtsig)
-    toJSValue (Invalid msg) =  runJSONGen $ do
-      value "success" False
-      value "error"   False
-      value "message" msg
-    toJSValue (Problem stdout stderr msg) = runJSONGen $ do
-      value "success" False
-      value "error"   True
-      value "message" $ msg
-        ++ if BSL.null stdout && BSL.null stderr
-          then []
-          else " (stdout: " ++ BSL.toString stdout ++ ", stderr: " ++ BSL.toString stderr ++ ")"
+  toJSValue (Valid gtsig) = runJSONGen $ do
+    value "success"  True
+    value "time"     (time gtsig)
+    value "extended" (extended gtsig)
+  toJSValue (Invalid msg) = runJSONGen $ do
+    value "success" False
+    value "error"   False
+    value "message" msg
+  toJSValue (Problem stdout stderr msg) = runJSONGen $ do
+    value "success" False
+    value "error"   True
+    value "message" $ msg ++ if BSL.null stdout && BSL.null stderr
+      then []
+      else
+        " (stdout: " ++ BSL.toString stdout ++ ", stderr: " ++ BSL.toString stderr ++ ")"
 
 
 verify :: (MonadIO m, MonadMask m) => GuardTimeConf -> String -> m VerifyResult
 verify conf inputFileName = do
-  (code,stdout,stderr) <- invokeGuardtimeTool conf GTExtendingCredentials "pdf-verifier"
-             [ "-j"
-             , "-f", inputFileName
-             ]
+  (code, stdout, stderr) <- invokeGuardtimeTool conf
+                                                GTExtendingCredentials
+                                                "pdf-verifier"
+                                                ["-j", "-f", inputFileName]
   case code of
     ExitSuccess -> do
       case (runGetJSON readJSObject $ BSL.toString stdout) of
-        Left s -> return . Problem stdout stderr $ "GuardTime verification result bad format: " ++ s
+        Left s ->
+          return
+            .  Problem stdout stderr
+            $  "GuardTime verification result bad format: "
+            ++ s
         Right json -> case fromJSValue json of
-          Nothing -> return $ Problem stdout stderr "GuardTime verification result parsing error"
+          Nothing ->
+            return $ Problem stdout stderr "GuardTime verification result parsing error"
           Just res -> return res
     _ -> return $ Problem stdout stderr "GuardTime verification failed"

@@ -21,7 +21,8 @@ addCookie :: (MonadIO m, FilterMonad Response m) => Bool -> CookieLife -> Cookie
 addCookie issecure life cookie =
   HS.addCookie life $ cookie { secure = issecure, httpOnly = False }
 
-addHttpOnlyCookie :: (MonadIO m, FilterMonad Response m) => Bool -> CookieLife -> Cookie -> m ()
+addHttpOnlyCookie
+  :: (MonadIO m, FilterMonad Response m) => Bool -> CookieLife -> Cookie -> m ()
 addHttpOnlyCookie issecure life cookie = do
   HS.addCookie life $ cookie { secure = issecure, httpOnly = True }
 
@@ -37,51 +38,53 @@ parseCookieHeader :: Text -> [(Text, Text)]
 parseCookieHeader = catMaybes . map cookieFromPair . cookiePairs
   where -- split cookie-string on semicolons to get a list of cookie-pairs
         -- e.g. "key1=val1; key2=val2" -> ["key1=val1", "key2=val2"]
-        cookiePairs :: Text -> [Text]
-        cookiePairs = map T.strip . T.splitOn ";"
+    cookiePairs :: Text -> [Text]
+    cookiePairs = map T.strip . T.splitOn ";"
 
-        -- parse cookie-pair string to a cookie key/value pair
-        -- e.g. "key=val" -> Just ("key", "val")
-        cookieFromPair :: Text -> Maybe (Text, Text)
-        cookieFromPair cookiePair = case T.splitOn "=" cookiePair of
-                                      [] -> Nothing -- no '=' - no cookie
-                                      (cookieName:cookieValueElems) -> do
-                                        -- cookie value can contain '=' so rejoin it
-                                        let cookieValueString = T.intercalate "=" cookieValueElems
-                                        cookieValue <- parseCookieValue cookieValueString
-                                        return (T.toLower $ cookieName, cookieValue)
+    -- parse cookie-pair string to a cookie key/value pair
+    -- e.g. "key=val" -> Just ("key", "val")
+    cookieFromPair :: Text -> Maybe (Text, Text)
+    cookieFromPair cookiePair = case T.splitOn "=" cookiePair of
+      [] -> Nothing -- no '=' - no cookie
+      (cookieName : cookieValueElems) -> do
+        -- cookie value can contain '=' so rejoin it
+        let cookieValueString = T.intercalate "=" cookieValueElems
+        cookieValue <- parseCookieValue cookieValueString
+        return (T.toLower $ cookieName, cookieValue)
 
-        -- parse `cookie-value` (from RFC 6265)
-        -- not as strict - there's no need to
-        parseCookieValue :: Text -> Maybe Text
-        parseCookieValue (T.unpack -> '"': rest)
-          | "\"" `isSuffixOf` rest =
-            Just $ T.pack $ unquote $ rStripFrom "\"" rest
-          | otherwise = Nothing
-        parseCookieValue s = Just s
+    -- parse `cookie-value` (from RFC 6265)
+    -- not as strict - there's no need to
+    parseCookieValue :: Text -> Maybe Text
+    parseCookieValue (T.unpack -> '"': rest)
+      | "\"" `isSuffixOf` rest = Just $ T.pack $ unquote $ rStripFrom "\"" rest
+      | otherwise              = Nothing
+    parseCookieValue s = Just s
 
-        -- unquote characters, just like quotedPair in Happstack.Server.Internal.cookiesParser[quotedPair]
-        unquote :: String -> String
-        unquote ""   = ""
-        unquote "\\" = ""
-        unquote ('\\':c:rest) = c : unquote rest
-        unquote (c:rest) = c : unquote rest
+    -- unquote characters, just like quotedPair in Happstack.Server.Internal.cookiesParser[quotedPair]
+    unquote :: String -> String
+    unquote ""                = ""
+    unquote "\\"              = ""
+    unquote ('\\' : c : rest) = c : unquote rest
+    unquote (c        : rest) = c : unquote rest
 
 -- To protect against overload attack, we limit number of session cookies supported to 10.
 lookCookieValues :: Text -> Headers -> [Text]
 lookCookieValues name headers =
-  let mCookieHeader = M.lookup "cookie" headers
-      cookieHeaderValues = map TE.decodeUtf8 $ maybe [] hValue mCookieHeader
-      cookiesWithNames = concatMap parseCookieHeader cookieHeaderValues
-      cookies = take 10 $ map snd $ filter (\c -> (fst c) == (T.toLower name)) cookiesWithNames
-  in  cookies
+  let
+    mCookieHeader      = M.lookup "cookie" headers
+    cookieHeaderValues = map TE.decodeUtf8 $ maybe [] hValue mCookieHeader
+    cookiesWithNames   = concatMap parseCookieHeader cookieHeaderValues
+    cookies =
+      take 10 $ map snd $ filter (\c -> (fst c) == (T.toLower name)) cookiesWithNames
+  in
+    cookies
 
 lookCookieNames :: Headers -> [Text]
 lookCookieNames headers =
-  let mCookieHeader = M.lookup "cookie" headers
+  let mCookieHeader      = M.lookup "cookie" headers
       cookieHeaderValues = map TE.decodeUtf8 $ maybe [] hValue mCookieHeader
-      cookiesWithNames = concatMap parseCookieHeader cookieHeaderValues
-  in map fst cookiesWithNames
+      cookiesWithNames   = concatMap parseCookieHeader cookieHeaderValues
+  in  map fst cookiesWithNames
 
 lookCookieValue :: Text -> Headers -> Maybe Text
 lookCookieValue name = listToMaybe . lookCookieValues name

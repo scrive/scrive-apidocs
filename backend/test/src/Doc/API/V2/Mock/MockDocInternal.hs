@@ -39,65 +39,38 @@ data MockDoc = MockDoc {
 } deriving (Show, Eq)
 
 mockDocUnjson :: UnjsonDef MockDoc
-mockDocUnjson = objectOf $ pure MockDoc
-  <*> field    "id"                   mockDocId
-      "MockDoc ID"
-  <*> field    "title"                mockDocTitle
-      "MockDoc Title"
-  <*> field    "parties"              mockDocParties
-      "MockDoc Signatory Links"
-  <*> fieldOpt "file"                 mockDocFile
-      "MockDoc File"
-  <*> fieldOpt "sealed_file"          mockDocSealedFile
-      "MockDoc Sealed File"
-  <*> field    "author_attachments"   mockDocAuthorAttachments
-      "MockDoc AuthorAttachments"
-  <*> field    "ctime"                mockDocCTime
-      "MockDoc CTime"
-  <*> field    "mtime"                mockDocMTime
-      "MockDoc MTime"
-  <*> fieldOpt "timeout_time"         mockDocTimeoutTime
-      "MockDoc TimeoutTime"
-  <*> fieldOpt "auto_remind_time"     mockDocAutoRemindTime
-      "MockDoc AutoRemindTime"
-  <*> field    "status"               mockDocStatus
-      "MockDoc Status"
-  <*> field    "days_to_sign"         mockDocDaysToSign
-      "MockDoc DaysToSign"
-  <*> fieldOpt "days_to_remind"       mockDocDaysToRemind
-      "MockDoc DaysToRemind"
-  <*> field    "display_options"      mockDocDisplayOptions
-      "MockDoc DisplayOptions"
-  <*> field    "invitation_message"   mockDocInvitationMsg
-      "MockDoc InvitationMsg"
-  <*> field    "confirmation_message" mockDocConfirmationMsg
-      "MockDoc ConfirmationMsg"
-  <*> field    "lang"                 mockDocLang
-      "MockDoc Lang"
-  <*> fieldOpt "api_callback_url"     mockDocAPICallbackURL
-      "MockDoc APICallbackURL"
-  <*> field    "object_version"       mockDocObjectVersion
-      "MockDoc ObjectVersion"
-  <*> fieldOpt "access_token"         mockDocAccessToken
-      "MockDoc AccessToken"
-  <*> field    "timezone"             mockDocTimezone
-      "MockDoc Timezone"
-  <*> field    "tags"                 mockDocTags
-      "MockDoc Tags"
-  <*> fieldOpt "folder_id"            mockDocFolderId
-      "MockDoc FolderID"
-  <*> field    "is_template"          mockDocIsTemplate
-      "MockDoc IsTemplate"
-  <*> field    "is_saved"             mockDocIsSaved
-      "MockDoc IsSaved"
-  <*> field    "is_shared"            mockDocIsShared
-      "MockDoc IsShared"
-  <*> field    "is_trashed"           mockDocIsTrashed
-      "MockDoc IsTrashed"
-  <*> field    "is_deleted"           mockDocIsDeleted
-      "MockDoc IsDeleted"
-  <*> field    "viewer"               mockDocViewer
-      "MockDoc Viewer"
+mockDocUnjson =
+  objectOf
+    $   pure MockDoc
+    <*> field "id"      mockDocId      "MockDoc ID"
+    <*> field "title"   mockDocTitle   "MockDoc Title"
+    <*> field "parties" mockDocParties "MockDoc Signatory Links"
+    <*> fieldOpt "file"        mockDocFile       "MockDoc File"
+    <*> fieldOpt "sealed_file" mockDocSealedFile "MockDoc Sealed File"
+    <*> field "author_attachments" mockDocAuthorAttachments "MockDoc AuthorAttachments"
+    <*> field "ctime"              mockDocCTime             "MockDoc CTime"
+    <*> field "mtime"              mockDocMTime             "MockDoc MTime"
+    <*> fieldOpt "timeout_time"     mockDocTimeoutTime    "MockDoc TimeoutTime"
+    <*> fieldOpt "auto_remind_time" mockDocAutoRemindTime "MockDoc AutoRemindTime"
+    <*> field "status"       mockDocStatus     "MockDoc Status"
+    <*> field "days_to_sign" mockDocDaysToSign "MockDoc DaysToSign"
+    <*> fieldOpt "days_to_remind" mockDocDaysToRemind "MockDoc DaysToRemind"
+    <*> field "display_options"      mockDocDisplayOptions  "MockDoc DisplayOptions"
+    <*> field "invitation_message"   mockDocInvitationMsg   "MockDoc InvitationMsg"
+    <*> field "confirmation_message" mockDocConfirmationMsg "MockDoc ConfirmationMsg"
+    <*> field "lang"                 mockDocLang            "MockDoc Lang"
+    <*> fieldOpt "api_callback_url" mockDocAPICallbackURL "MockDoc APICallbackURL"
+    <*> field "object_version" mockDocObjectVersion "MockDoc ObjectVersion"
+    <*> fieldOpt "access_token" mockDocAccessToken "MockDoc AccessToken"
+    <*> field "timezone" mockDocTimezone "MockDoc Timezone"
+    <*> field "tags"     mockDocTags     "MockDoc Tags"
+    <*> fieldOpt "folder_id" mockDocFolderId "MockDoc FolderID"
+    <*> field "is_template" mockDocIsTemplate "MockDoc IsTemplate"
+    <*> field "is_saved"    mockDocIsSaved    "MockDoc IsSaved"
+    <*> field "is_shared"   mockDocIsShared   "MockDoc IsShared"
+    <*> field "is_trashed"  mockDocIsTrashed  "MockDoc IsTrashed"
+    <*> field "is_deleted"  mockDocIsDeleted  "MockDoc IsDeleted"
+    <*> field "viewer"      mockDocViewer     "MockDoc Viewer"
 
 data MockMainFile = MockMainFile {
     mockMainFileId   :: !String
@@ -105,9 +78,11 @@ data MockMainFile = MockMainFile {
 } deriving (Show, Eq)
 
 instance Unjson MockMainFile where
-  unjsonDef = objectOf $ pure MockMainFile
-    <*> field "id"    mockMainFileId    "MockMainFile ID"
-    <*> field "name"  mockMainFileName  "MockMainFile Name"
+  unjsonDef =
+    objectOf $ pure MockMainFile <*> field "id" mockMainFileId "MockMainFile ID" <*> field
+      "name"
+      mockMainFileName
+      "MockMainFile Name"
 
 data MockAuthorAttachment = MockAuthorAttachment {
     mockAuthorAttachmentName              :: !String
@@ -117,15 +92,15 @@ data MockAuthorAttachment = MockAuthorAttachment {
 } deriving (Show, Eq)
 
 instance Unjson MockAuthorAttachment where
-  unjsonDef = objectOf $ pure MockAuthorAttachment
-    <*> field "name"               mockAuthorAttachmentName
-        "MockAuthorAttachment Name"
-    <*> field "required"           mockAuthorAttachmentRequired
-        "MockAuthorAttachment Required"
-    <*> field "add_to_sealed_file" mockAuthorAttachmentAddedToSealedFile
-        "MockAuthorAttachment AddedToSealedFile"
-    <*> field "file_id"            mockAuthorAttachmentFileId
-        "MockAuthorAttachment FileID"
+  unjsonDef =
+    objectOf
+      $   pure MockAuthorAttachment
+      <*> field "name"     mockAuthorAttachmentName     "MockAuthorAttachment Name"
+      <*> field "required" mockAuthorAttachmentRequired "MockAuthorAttachment Required"
+      <*> field "add_to_sealed_file"
+                mockAuthorAttachmentAddedToSealedFile
+                "MockAuthorAttachment AddedToSealedFile"
+      <*> field "file_id" mockAuthorAttachmentFileId "MockAuthorAttachment FileID"
 
 data MockDocDisplayOptions = MockDocDisplayOptions {
     mockDocDisplayOptionsShowHeader        :: !Bool
@@ -136,17 +111,24 @@ data MockDocDisplayOptions = MockDocDisplayOptions {
 } deriving (Show, Eq)
 
 instance Unjson MockDocDisplayOptions where
-  unjsonDef = objectOf $ pure MockDocDisplayOptions
-    <*> field "show_header"         mockDocDisplayOptionsShowHeader
-        "MockDocDisplayOptions ShowHeader"
-    <*> field "show_pdf_download"   mockDocDisplayOptionsShowPDFDownload
-        "MockDocDisplayOptions ShowPDFDownload"
-    <*> field "show_reject_option"  mockDocDisplayOptionsShowRejectButton
-        "MockDocDisplayOptions ShowRejectButton"
-    <*> field "allow_reject_reason" mockDocDisplayOptionsAllowRejectReason
-        "MockDocDisplayOptions AllowRejectReason"
-    <*> field "show_footer"         mockDocDisplayOptionsShowFooter
-        "MockDocDisplayOptions ShowFooter"
+  unjsonDef =
+    objectOf
+      $   pure MockDocDisplayOptions
+      <*> field "show_header"
+                mockDocDisplayOptionsShowHeader
+                "MockDocDisplayOptions ShowHeader"
+      <*> field "show_pdf_download"
+                mockDocDisplayOptionsShowPDFDownload
+                "MockDocDisplayOptions ShowPDFDownload"
+      <*> field "show_reject_option"
+                mockDocDisplayOptionsShowRejectButton
+                "MockDocDisplayOptions ShowRejectButton"
+      <*> field "allow_reject_reason"
+                mockDocDisplayOptionsAllowRejectReason
+                "MockDocDisplayOptions AllowRejectReason"
+      <*> field "show_footer"
+                mockDocDisplayOptionsShowFooter
+                "MockDocDisplayOptions ShowFooter"
 
 data MockViewer = MockViewer {
     mockViewerRole   :: !String
@@ -154,9 +136,11 @@ data MockViewer = MockViewer {
 } deriving (Show, Eq)
 
 instance Unjson MockViewer where
-  unjsonDef = objectOf $ pure MockViewer
-    <*> field     "role"          mockViewerRole   "MockViewer Role"
-    <*> fieldOpt  "signatory_id"  mockViewerSigId  "MockViewer SigId"
+  unjsonDef =
+    objectOf
+      $   pure MockViewer
+      <*> field "role" mockViewerRole "MockViewer Role"
+      <*> fieldOpt "signatory_id" mockViewerSigId "MockViewer SigId"
 
 data MockSigLink = MockSigLink {
     mockSigLinkId                       :: !String
@@ -189,61 +173,62 @@ instance Ord MockSigLink where
   msl1 `compare` msl2 = mockSigLinkId msl1 `compare` mockSigLinkId msl2
 
 instance Unjson MockSigLink where
-  unjsonDef = objectOf $ pure MockSigLink
-    <*> field    "id"                                     mockSigLinkId                       ""
-    <*> fieldOpt "user_id"                                mockSigLinkUserId                   ""
-    <*> field    "is_author"                              mockSigLinkIsAuthor                 ""
-    <*> fieldBy  "signatory_role"                         mockSigLinkSignatoryRole            ""
-        unjsonSignatoryRole
-    <*> field    "fields"                                 mockSigLinkFields                   ""
-    <*> field    "sign_order"                             mockSigLinkSignOrder                ""
-    <*> fieldOpt "sign_time"                              mockSigLinkSignTime                 ""
-    <*> fieldOpt "seen_time"                              mockSigLinkSeenTime                 ""
-    <*> fieldOpt "read_invitation_time"                   mockSigLinkReadInvitationTime       ""
-    <*> fieldOpt "rejected_time"                          mockSigLinkRejectedTime             ""
-    <*> fieldOpt "sign_success_redirect_url"              mockSigLinkSignRedirectURL          ""
-    <*> fieldOpt "reject_redirect_url"                    mockSigLinkRejectRedirectURL        ""
-    <*> field    "email_delivery_status"                  mockSigLinkEmailDeliveryStatus      ""
-    <*> field    "mobile_delivery_status"                 mockSigLinkMobileDeliveryStatus     ""
-    <*> fieldOpt "csv"                                    mockSigLinkCSV                      ""
-    <*> field    "delivery_method"                        mockSigLinkDeliveryMethod           ""
-    <*> field    "authentication_method_to_view"          mockSigLinkAuthMethodToView         ""
-    <*> field    "authentication_method_to_view_archived" mockSigLinkAuthMethodToViewArchived ""
-    <*> field    "authentication_method_to_sign"          mockSigLinkAuthMethodToSign         ""
-    <*> field    "confirmation_delivery_method"           mockSigLinkConfirmationDelivery     ""
-    <*> field    "allows_highlighting"                    mockSigLinkAllowsHighlighting       ""
-    <*> field    "highlighted_pages"                      mockSigLinkHighlightedPages         ""
-    <*> field    "attachments"                            mockSigLinkAttachments              ""
-    <*> fieldOpt "api_delivery_url"                       mockSigLinkAPIDeliveryURL           ""
+  unjsonDef =
+    objectOf
+      $   pure MockSigLink
+      <*> field "id" mockSigLinkId ""
+      <*> fieldOpt "user_id" mockSigLinkUserId ""
+      <*> field "is_author" mockSigLinkIsAuthor ""
+      <*> fieldBy "signatory_role" mockSigLinkSignatoryRole "" unjsonSignatoryRole
+      <*> field "fields"     mockSigLinkFields    ""
+      <*> field "sign_order" mockSigLinkSignOrder ""
+      <*> fieldOpt "sign_time"                 mockSigLinkSignTime           ""
+      <*> fieldOpt "seen_time"                 mockSigLinkSeenTime           ""
+      <*> fieldOpt "read_invitation_time"      mockSigLinkReadInvitationTime ""
+      <*> fieldOpt "rejected_time"             mockSigLinkRejectedTime       ""
+      <*> fieldOpt "sign_success_redirect_url" mockSigLinkSignRedirectURL    ""
+      <*> fieldOpt "reject_redirect_url"       mockSigLinkRejectRedirectURL  ""
+      <*> field "email_delivery_status"  mockSigLinkEmailDeliveryStatus  ""
+      <*> field "mobile_delivery_status" mockSigLinkMobileDeliveryStatus ""
+      <*> fieldOpt "csv" mockSigLinkCSV ""
+      <*> field "delivery_method"               mockSigLinkDeliveryMethod   ""
+      <*> field "authentication_method_to_view" mockSigLinkAuthMethodToView ""
+      <*> field "authentication_method_to_view_archived"
+                mockSigLinkAuthMethodToViewArchived
+                ""
+      <*> field "authentication_method_to_sign" mockSigLinkAuthMethodToSign     ""
+      <*> field "confirmation_delivery_method"  mockSigLinkConfirmationDelivery ""
+      <*> field "allows_highlighting"           mockSigLinkAllowsHighlighting   ""
+      <*> field "highlighted_pages"             mockSigLinkHighlightedPages     ""
+      <*> field "attachments"                   mockSigLinkAttachments          ""
+      <*> fieldOpt "api_delivery_url" mockSigLinkAPIDeliveryURL ""
 
 defaultMockSigLink :: MockSigLink
-defaultMockSigLink =
-  MockSigLink
-    { mockSigLinkId                       = "does not get used"
-    , mockSigLinkUserId                   = Nothing
-    , mockSigLinkIsAuthor                 = False
-    , mockSigLinkSignatoryRole            = SignatoryRoleSigningParty
-    , mockSigLinkFields                   = []
-    , mockSigLinkSignOrder                = 1
-    , mockSigLinkSignTime                 = Nothing
-    , mockSigLinkSeenTime                 = Nothing
-    , mockSigLinkReadInvitationTime       = Nothing
-    , mockSigLinkRejectedTime             = Nothing
-    , mockSigLinkSignRedirectURL          = Nothing
-    , mockSigLinkRejectRedirectURL        = Nothing
-    , mockSigLinkEmailDeliveryStatus      = "does not get used"
-    , mockSigLinkMobileDeliveryStatus     = "does not get used"
-    , mockSigLinkCSV                      = Nothing
-    , mockSigLinkDeliveryMethod           = "email_mobile"
-    , mockSigLinkAuthMethodToView         = "standard"
-    , mockSigLinkAuthMethodToViewArchived = "standard"
-    , mockSigLinkAuthMethodToSign         = "standard"
-    , mockSigLinkConfirmationDelivery     = "email_mobile"
-    , mockSigLinkAllowsHighlighting       = False
-    , mockSigLinkHighlightedPages         = []
-    , mockSigLinkAttachments              = []
-    , mockSigLinkAPIDeliveryURL           = Nothing
-    }
+defaultMockSigLink = MockSigLink { mockSigLinkId                   = "does not get used"
+                                 , mockSigLinkUserId               = Nothing
+                                 , mockSigLinkIsAuthor             = False
+                                 , mockSigLinkSignatoryRole = SignatoryRoleSigningParty
+                                 , mockSigLinkFields               = []
+                                 , mockSigLinkSignOrder            = 1
+                                 , mockSigLinkSignTime             = Nothing
+                                 , mockSigLinkSeenTime             = Nothing
+                                 , mockSigLinkReadInvitationTime   = Nothing
+                                 , mockSigLinkRejectedTime         = Nothing
+                                 , mockSigLinkSignRedirectURL      = Nothing
+                                 , mockSigLinkRejectRedirectURL    = Nothing
+                                 , mockSigLinkEmailDeliveryStatus  = "does not get used"
+                                 , mockSigLinkMobileDeliveryStatus = "does not get used"
+                                 , mockSigLinkCSV                  = Nothing
+                                 , mockSigLinkDeliveryMethod       = "email_mobile"
+                                 , mockSigLinkAuthMethodToView     = "standard"
+                                 , mockSigLinkAuthMethodToViewArchived = "standard"
+                                 , mockSigLinkAuthMethodToSign     = "standard"
+                                 , mockSigLinkConfirmationDelivery = "email_mobile"
+                                 , mockSigLinkAllowsHighlighting   = False
+                                 , mockSigLinkHighlightedPages     = []
+                                 , mockSigLinkAttachments          = []
+                                 , mockSigLinkAPIDeliveryURL       = Nothing
+                                 }
 
 data MockSigField = MockSigField {
     mockSigFieldType                   :: !String
@@ -258,30 +243,30 @@ data MockSigField = MockSigField {
 } deriving (Show, Eq)
 
 instance Unjson MockSigField where
-  unjsonDef = objectOf $ pure MockSigField
-    <*> field    "type"                       mockSigFieldType                   ""
-    <*> field    "is_obligatory"              mockSigFieldIsObligatory           ""
-    <*> field    "should_be_filled_by_sender" mockSigFieldShouldBeFilledBySender ""
-    <*> field    "placements"                 mockSigFieldPlacements             ""
-    <*> fieldOpt "value"                      mockSigFieldValue                  ""
-    <*> fieldOpt "is_checked"                 mockSigFieldIsChecked              ""
-    <*> fieldOpt "order"                      mockSigFieldOrder                  ""
-    <*> fieldOpt "name"                       mockSigFieldName                   ""
-    <*> fieldOpt "signature"                  mockSigFieldSignature              ""
+  unjsonDef =
+    objectOf
+      $   pure MockSigField
+      <*> field "type"          mockSigFieldType                   ""
+      <*> field "is_obligatory" mockSigFieldIsObligatory           ""
+      <*> field "should_be_filled_by_sender" mockSigFieldShouldBeFilledBySender ""
+      <*> field "placements"    mockSigFieldPlacements             ""
+      <*> fieldOpt "value"      mockSigFieldValue     ""
+      <*> fieldOpt "is_checked" mockSigFieldIsChecked ""
+      <*> fieldOpt "order"      mockSigFieldOrder     ""
+      <*> fieldOpt "name"       mockSigFieldName      ""
+      <*> fieldOpt "signature"  mockSigFieldSignature ""
 
 defaultMockSigField :: MockSigField
-defaultMockSigField =
-  MockSigField
-    { mockSigFieldType                   = "email"
-    , mockSigFieldIsObligatory           = True
-    , mockSigFieldShouldBeFilledBySender = True
-    , mockSigFieldPlacements             = []
-    , mockSigFieldValue                  = Nothing
-    , mockSigFieldIsChecked              = Nothing
-    , mockSigFieldOrder                  = Nothing
-    , mockSigFieldName                   = Nothing
-    , mockSigFieldSignature              = Nothing
-    }
+defaultMockSigField = MockSigField { mockSigFieldType                   = "email"
+                                   , mockSigFieldIsObligatory           = True
+                                   , mockSigFieldShouldBeFilledBySender = True
+                                   , mockSigFieldPlacements             = []
+                                   , mockSigFieldValue                  = Nothing
+                                   , mockSigFieldIsChecked              = Nothing
+                                   , mockSigFieldOrder                  = Nothing
+                                   , mockSigFieldName                   = Nothing
+                                   , mockSigFieldSignature              = Nothing
+                                   }
 
 data MockFieldPlacement = MockFieldPlacement {
     mockFieldPlacementXrel     :: !Double
@@ -295,15 +280,17 @@ data MockFieldPlacement = MockFieldPlacement {
 } deriving (Show, Eq)
 
 instance Unjson MockFieldPlacement where
-  unjsonDef = objectOf $ pure MockFieldPlacement
-    <*> field    "xrel"    mockFieldPlacementXrel    "MockFieldPlacement Xrel"
-    <*> field    "yrel"    mockFieldPlacementYrel    "MockFieldPlacement Yrel"
-    <*> field    "wrel"    mockFieldPlacementWrel    "MockFieldPlacement Wrel"
-    <*> field    "hrel"    mockFieldPlacementHrel    "MockFieldPlacement Hrel"
-    <*> field    "fsrel"   mockFieldPlacementFSrel   "MockFieldPlacement FSrel"
-    <*> field    "page"    mockFieldPlacementPage    "MockFieldPlacement Page"
-    <*> fieldOpt "tip"     mockFieldPlacementTip     "MockFieldPlacement Tip"
-    <*> field    "anchors" mockFieldPlacementAnchors "MockFieldPlacement Anchors"
+  unjsonDef =
+    objectOf
+      $   pure MockFieldPlacement
+      <*> field "xrel"  mockFieldPlacementXrel  "MockFieldPlacement Xrel"
+      <*> field "yrel"  mockFieldPlacementYrel  "MockFieldPlacement Yrel"
+      <*> field "wrel"  mockFieldPlacementWrel  "MockFieldPlacement Wrel"
+      <*> field "hrel"  mockFieldPlacementHrel  "MockFieldPlacement Hrel"
+      <*> field "fsrel" mockFieldPlacementFSrel "MockFieldPlacement FSrel"
+      <*> field "page"  mockFieldPlacementPage  "MockFieldPlacement Page"
+      <*> fieldOpt "tip" mockFieldPlacementTip "MockFieldPlacement Tip"
+      <*> field "anchors" mockFieldPlacementAnchors "MockFieldPlacement Anchors"
 
 data MockAnchor = MockAnchor {
     mockAnchorText    :: !String
@@ -311,9 +298,11 @@ data MockAnchor = MockAnchor {
 } deriving (Show, Eq)
 
 instance Unjson MockAnchor where
-  unjsonDef = objectOf $ pure MockAnchor
-    <*> field "text"  mockAnchorText  "MockAnchor Text"
-    <*> field "index" mockAnchorIndex "MockAnchor Index"
+  unjsonDef =
+    objectOf $ pure MockAnchor <*> field "text" mockAnchorText "MockAnchor Text" <*> field
+      "index"
+      mockAnchorIndex
+      "MockAnchor Index"
 
 data MockSigAttachment = MockSigAttachment {
     mockSigAttachmentName         :: !String
@@ -322,15 +311,13 @@ data MockSigAttachment = MockSigAttachment {
   , mockSigAttachmentFileName     :: !(Maybe String)
 } deriving (Show, Eq)
 instance Unjson MockSigAttachment where
-  unjsonDef = objectOf $ pure MockSigAttachment
-    <*> field    "name"        mockSigAttachmentName
-        "MockSigAttachment Name"
-    <*> field    "description" mockSigAttachmentDescription
-        "MockSigAttachment Description"
-    <*> fieldOpt "file_id"     mockSigAttachmentFileId
-        "MockSigAttachment File ID"
-    <*> fieldOpt "file_name"   mockSigAttachmentFileName
-        "MockSigAttachment File Name"
+  unjsonDef =
+    objectOf
+      $   pure MockSigAttachment
+      <*> field "name"        mockSigAttachmentName        "MockSigAttachment Name"
+      <*> field "description" mockSigAttachmentDescription "MockSigAttachment Description"
+      <*> fieldOpt "file_id"   mockSigAttachmentFileId   "MockSigAttachment File ID"
+      <*> fieldOpt "file_name" mockSigAttachmentFileName "MockSigAttachment File Name"
 
 data MockSigHighlightedPage = MockSigHighlightedPage {
     mockSigHighlightedPagePage    :: !Int
@@ -339,6 +326,8 @@ data MockSigHighlightedPage = MockSigHighlightedPage {
 } deriving (Show, Eq)
 
 instance Unjson MockSigHighlightedPage where
-  unjsonDef = objectOf $ pure MockSigHighlightedPage
-    <*> field "page"    mockSigHighlightedPagePage   "MockSigAttachment Page"
-    <*> field "file_id" mockSigHighlightedPageFileID "MockSigAttachment FileID"
+  unjsonDef =
+    objectOf
+      $   pure MockSigHighlightedPage
+      <*> field "page"    mockSigHighlightedPagePage   "MockSigAttachment Page"
+      <*> field "file_id" mockSigHighlightedPageFileID "MockSigAttachment FileID"

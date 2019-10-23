@@ -31,7 +31,7 @@ deriving newtype instance ToSQL SignatoryConsentQuestionID
 deriving newtype instance Unjson SignatoryConsentQuestionID
 
 instance Identifier SignatoryConsentQuestionID where
-  idDefaultLabel                         = "signatory_consent_question_id"
+  idDefaultLabel = "signatory_consent_question_id"
   idValue (SignatoryConsentQuestionID k) = int64AsStringIdentifier k
 
 unsafeSignatoryConsentQuestionID :: Int64 -> SignatoryConsentQuestionID

@@ -32,7 +32,7 @@ data Sender = Sender {
 }
 
 instance Show Sender where
-  show Sender{senderName} = T.unpack senderName
+  show Sender { senderName } = T.unpack senderName
 
 instance Eq Sender where
   Sender name _ == Sender name' _ = name == name'
@@ -45,70 +45,85 @@ createSender cs mc = case mc of
 
 ----------------------------------------
 
-createExternalSender :: TrackedConnectionSource -> Text -> Text -> (Mail -> [Text]) -> Sender
-createExternalSender (ConnectionSource pool) name program createArgs = Sender {
-  senderName = name
-, sendMail = \mail@Mail{..} -> localData [identifier mailID] $ do
-  content <- runDBT pool ts $ assembleContent mail
-  (code, _, bsstderr) <- liftBase $ readProcessWithExitCode (T.unpack program) (T.unpack <$> createArgs mail) content
-  case code of
-    ExitFailure retcode -> do
-      logInfo "Error while sending email, execution of external program failed" $ object [
-          "program" .= program
-        , "code" .= retcode
-        , "stderr" `equalsExternalBSL` bsstderr
-        ]
-      return False
-    ExitSuccess -> do
-      logInfo "Email sent correctly" $ logObject_ mail
-      return True
-}
+createExternalSender
+  :: TrackedConnectionSource -> Text -> Text -> (Mail -> [Text]) -> Sender
+createExternalSender (ConnectionSource pool) name program createArgs = Sender
+  { senderName = name
+  , sendMail   =
+    \mail@Mail {..} -> localData [identifier mailID] $ do
+      content             <- runDBT pool ts $ assembleContent mail
+      (code, _, bsstderr) <- liftBase $ readProcessWithExitCode
+        (T.unpack program)
+        (T.unpack <$> createArgs mail)
+        content
+      case code of
+        ExitFailure retcode -> do
+          logInfo "Error while sending email, execution of external program failed"
+            $ object
+                [ "program" .= program
+                , "code" .= retcode
+                , "stderr" `equalsExternalBSL` bsstderr
+                ]
+          return False
+        ExitSuccess -> do
+          logInfo "Email sent correctly" $ logObject_ mail
+          return True
+  }
 
 createSMTPSender :: TrackedConnectionSource -> SenderConfig -> Sender
-createSMTPSender cs config =
-  createExternalSender cs (serviceName config) "curl" createArgs
+createSMTPSender cs config = createExternalSender cs
+                                                  (serviceName config)
+                                                  "curl"
+                                                  createArgs
   where
-    mailRcpt addr = [
-        "--mail-rcpt"
-      , "<" <> punyEncode (addrEmail addr) <> ">"
-      ]
+    mailRcpt addr = ["--mail-rcpt", "<" <> punyEncode (addrEmail addr) <> ">"]
 
-    createArgs Mail{mailFrom, mailTo} =
-      let smtpUserForThisMail = fromMaybe (smtpUser config) $
-                                  fmap smtpDedicatedUser $
-                                    find (\du -> smtpFromDedicatedAddress du == addrEmail mailFrom) (smtpDedicatedUsers config)
+    createArgs Mail { mailFrom, mailTo } =
+      let smtpUserForThisMail =
+              fromMaybe (smtpUser config) $ fmap smtpDedicatedUser $ find
+                (\du -> smtpFromDedicatedAddress du == addrEmail mailFrom)
+                (smtpDedicatedUsers config)
       in
-      [ "-s", "-S"                   -- show no progress information but show error messages
-      , "-k", "--ssl"                -- use SSL but do not fret over self-signed or outdated certifcate
-      , "-T", "-"                    -- input from stdin. Else curl goes into interactive mode, tries to do VRFY, etc.
-      ] <> (if T.null (smtpAccount smtpUserForThisMail) && T.null (smtpPassword smtpUserForThisMail)
-           then [] else
-           [ "--user"
-           , smtpAccount smtpUserForThisMail <> ":" <> smtpPassword smtpUserForThisMail
-           ]) <>
-      [ smtpAddr config
-      , "--mail-from", "<" <> addrEmail mailFrom <> ">"
-      ] <> concatMap mailRcpt mailTo
+        [ "-s"
+        , "-S"                   -- show no progress information but show error messages
+        , "-k"
+        , "--ssl"                -- use SSL but do not fret over self-signed or outdated certifcate
+        , "-T"
+        , "-"                    -- input from stdin. Else curl goes into interactive mode, tries to do VRFY, etc.
+        ]
+        <> (if T.null (smtpAccount smtpUserForThisMail)
+               && T.null (smtpPassword smtpUserForThisMail)
+            then
+              []
+            else
+              [ "--user"
+              , smtpAccount smtpUserForThisMail <> ":" <> smtpPassword smtpUserForThisMail
+              ]
+           )
+        <> [smtpAddr config, "--mail-from", "<" <> addrEmail mailFrom <> ">"]
+        <> concatMap mailRcpt mailTo
 
 createLocalSender :: TrackedConnectionSource -> SenderConfig -> Sender
-createLocalSender (ConnectionSource pool) config = Sender {
-  senderName = "localSender"
-, sendMail = \mail@Mail{..} -> localData [identifier mailID] $ do
-  content <- runDBT pool ts $ assembleContent mail
-  let filename :: FilePath = localDirectory config <>
-        "/Email-" <> (T.unpack $ addrEmail (head mailTo)) <>
-        "-" <> show mailID <> ".eml"
-  liftBase $ BSL.writeFile filename content
-  logInfo "Email saved to file" $ object [
-      "file" .= filename
-    ]
-  liftBase $ F.forM_ (localOpenCommand config) $ \cmd -> createProcess (proc (T.unpack cmd) [filename]) {
-    std_in  = Inherit
-  , std_out = Inherit
-  , std_err = Inherit
+createLocalSender (ConnectionSource pool) config = Sender
+  { senderName = "localSender"
+  , sendMail   = \mail@Mail {..} -> localData [identifier mailID] $ do
+                   content <- runDBT pool ts $ assembleContent mail
+                   let filename :: FilePath =
+                         localDirectory config
+                           <> "/Email-"
+                           <> (T.unpack $ addrEmail (head mailTo))
+                           <> "-"
+                           <> show mailID
+                           <> ".eml"
+                   liftBase $ BSL.writeFile filename content
+                   logInfo "Email saved to file" $ object ["file" .= filename]
+                   liftBase $ F.forM_ (localOpenCommand config) $ \cmd -> createProcess
+                     (proc (T.unpack cmd) [filename]) { std_in  = Inherit
+                                                      , std_out = Inherit
+                                                      , std_err = Inherit
+                                                      }
+                   return True
   }
-  return True
-}
 
 createNullSender :: Sender
 createNullSender = Sender { senderName = "nullSender", sendMail = const (return True) }
@@ -116,6 +131,4 @@ createNullSender = Sender { senderName = "nullSender", sendMail = const (return 
 ----------------------------------------
 
 ts :: TransactionSettings
-ts = defaultTransactionSettings {
-  tsPermissions = ReadOnly
-}
+ts = defaultTransactionSettings { tsPermissions = ReadOnly }

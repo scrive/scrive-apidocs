@@ -29,40 +29,31 @@ data MessengerServerConf = MessengerServerConf {
 newtype SendersConfig = SendersConfig (SMSProvider -> SenderConfig)
 
 sendersConfigFromMessengerConf :: MessengerServerConf -> SendersConfig
-sendersConfigFromMessengerConf MessengerServerConf{..} = SendersConfig
+sendersConfigFromMessengerConf MessengerServerConf {..} = SendersConfig
   (\p -> case p of
-    SMSDefault -> messengerSenderDefault
+    SMSDefault        -> messengerSenderDefault
     SMSTeliaCallGuide -> messengerSenderTelia
   )
 
 unjsonMessengerServerConf :: UnjsonDef MessengerServerConf
-unjsonMessengerServerConf = objectOf $ MessengerServerConf
-  <$> ((,)
-    <$> fieldBy "bind_ip"
-        (fst . messengerHttpBindAddress)
-        "IP to listen on, defaults to 0.0.0.0"
-        unjsonIPv4AsWord32
-    <*> field "bind_port"
-        (snd . messengerHttpBindAddress)
-        "Port to listen on")
-  <*> field "database"
-      messengerDBConfig
-      "Database connection string"
-  <*> field "max_db_connections"
-      messengerMaxDBConnections
-      "Database connections limit"
-  <*> field "logging"
-      messengerLogConfig
-      "Logging configuration"
-  <*> field "sender_default"
-      messengerSenderDefault
-      "Default Sender configuration"
-  <*> field "sender_telia"
-      messengerSenderTelia
-      "Telia Sender configuration"
-  <*> fieldOpt "monitoring"
-      messengerMonitoringConfig
-      "Configuration of the ekg-statsd-based monitoring."
+unjsonMessengerServerConf =
+  objectOf
+    $   MessengerServerConf
+    <$> (   (,)
+        <$> fieldBy "bind_ip"
+                    (fst . messengerHttpBindAddress)
+                    "IP to listen on, defaults to 0.0.0.0"
+                    unjsonIPv4AsWord32
+        <*> field "bind_port" (snd . messengerHttpBindAddress) "Port to listen on"
+        )
+    <*> field "database"           messengerDBConfig         "Database connection string"
+    <*> field "max_db_connections" messengerMaxDBConnections "Database connections limit"
+    <*> field "logging"            messengerLogConfig        "Logging configuration"
+    <*> field "sender_default" messengerSenderDefault "Default Sender configuration"
+    <*> field "sender_telia"       messengerSenderTelia      "Telia Sender configuration"
+    <*> fieldOpt "monitoring"
+                 messengerMonitoringConfig
+                 "Configuration of the ekg-statsd-based monitoring."
 
 instance Unjson MessengerServerConf where
   unjsonDef = unjsonMessengerServerConf
@@ -82,37 +73,28 @@ data SenderConfig = MbloxSender {
 } deriving (Eq, Ord, Show)
 
 instance Unjson SenderConfig where
-  unjsonDef = disjointUnionOf "type" [
-      ("mblox"
+  unjsonDef = disjointUnionOf
+    "type"
+    [ ( "mblox"
       , $(isConstr 'MbloxSender)
-      , MbloxSender
-        <$> field "token"
-            mbToken
-            "Mblox api token"
-        <*> field "url"
-            mbURL
-            "Mblox url, with username embedded"
+      , MbloxSender <$> field "token" mbToken "Mblox api token" <*> field
+        "url"
+        mbURL
+        "Mblox url, with username embedded"
       )
     , ( "telia_callguide"
       , $(isConstr 'TeliaCallGuideSender)
       , TeliaCallGuideSender
-        <$> field "url"
-            tcgSenderUrl
-            "URL for Telia CallGuide service"
-        <*> field "username"
-            tcgSenderUser
-            "Username for Telia CallGuide service"
-        <*> field "password"
-            tcgSenderPassword
-            "Password for Telia CallGuide service"
+      <$> field "url"      tcgSenderUrl      "URL for Telia CallGuide service"
+      <*> field "username" tcgSenderUser     "Username for Telia CallGuide service"
+      <*> field "password" tcgSenderPassword "Password for Telia CallGuide service"
       )
     , ( "local"
       , $(isConstr 'LocalSender)
       , LocalSender
-        <$> field "dir"
-            localDirectory
-            "Local directory to save 'sms' files"
-        <*> fieldOpt "open"
+      <$> field "dir" localDirectory "Local directory to save 'sms' files"
+      <*> fieldOpt
+            "open"
             localOpenCommand
             "Local open command to open 'eml' files \
             \('/usr/bin/open', 'gnome-open', 'kde-open')"

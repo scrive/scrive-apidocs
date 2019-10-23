@@ -58,9 +58,9 @@ data AccessRole
   deriving (Eq, Show)
 
 accessRoleTarget :: AccessRole -> AccessRoleTarget
-accessRoleTarget (AccessRoleUser _ _ target) = target
-accessRoleTarget (AccessRoleUserGroup _ _ target) = target
-accessRoleTarget (AccessRoleImplicitUser _ target) = target
+accessRoleTarget (AccessRoleUser      _ _ target      ) = target
+accessRoleTarget (AccessRoleUserGroup _ _ target      ) = target
+accessRoleTarget (AccessRoleImplicitUser      _ target) = target
 accessRoleTarget (AccessRoleImplicitUserGroup _ target) = target
 
 accessRoleSetTarget :: AccessRoleTarget -> AccessRole -> AccessRole
@@ -109,14 +109,14 @@ data AccessResource
   deriving (Eq, Enum, Bounded)
 
 instance Show AccessResource where
-  show UserR = "user"
-  show UserGroupR = "user_group"
-  show UserPolicyR = "user_policy"
-  show UserGroupPolicyR = "user_group_policy"
+  show UserR              = "user"
+  show UserGroupR         = "user_group"
+  show UserPolicyR        = "user_policy"
+  show UserGroupPolicyR   = "user_group_policy"
   show UserPersonalTokenR = "user_personal_token"
-  show DocumentR = "document"
-  show FolderPolicyR = "folder_policy"
-  show FolderR = "folder"
+  show DocumentR          = "document"
+  show FolderPolicyR      = "folder_policy"
+  show FolderR            = "folder"
 
 -- | Should be self-explanatory. The 'A' stands for 'Action'.
 data AccessAction
@@ -128,7 +128,7 @@ data AccessAction
 
 instance Show AccessAction where
   show CreateA = "create"
-  show ReadA = "read"
+  show ReadA   = "read"
   show UpdateA = "update"
   show DeleteA = "delete"
 
@@ -140,10 +140,9 @@ data Permission =
   deriving (Typeable)
 
 instance Eq Permission where
-  Permission xaa xat x == Permission yaa yat y =
-    case cast y of
-      Just y' -> x == y' && xaa == yaa && xat == yat
-      _ -> False
+  Permission xaa xat x == Permission yaa yat y = case cast y of
+    Just y' -> x == y' && xaa == yaa && xat == yat
+    _       -> False
 
 -- Bundling by predicate and marshalling helpers
 data AccessPolicyItem = forall t. (NeedsPermissions t) => AccessPolicyItem t
@@ -165,53 +164,67 @@ data NeededPermissionsExpr
 
 evalNeededPermExpr :: (Permission -> Bool) -> NeededPermissionsExpr -> Bool
 evalNeededPermExpr f (NeededPermissionsExprBase p) = f p
-evalNeededPermExpr f (NeededPermissionsExprOr aces) = or $ fmap (evalNeededPermExpr f) aces
-evalNeededPermExpr f (NeededPermissionsExprAnd aces) = and $ fmap (evalNeededPermExpr f) aces
+evalNeededPermExpr f (NeededPermissionsExprOr aces) =
+  or $ fmap (evalNeededPermExpr f) aces
+evalNeededPermExpr f (NeededPermissionsExprAnd aces) =
+  and $ fmap (evalNeededPermExpr f) aces
 
 -- local helper for mapping in `hasPermissions`
-mkPerm :: forall t. (Eq t, Typeable t, Show t) =>
-       t -> AccessResource -> AccessAction -> Permission
+mkPerm
+  :: forall t
+   . (Eq t, Typeable t, Show t)
+  => t
+  -> AccessResource
+  -> AccessAction
+  -> Permission
 mkPerm t res act = Permission act res t
 
 hasPermissions :: AccessRoleTarget -> [Permission]
 hasPermissions (UserAR usrID) =
   -- user can read and update himself
-  map (mkPerm usrID UserR) [ReadA, UpdateA] <>
+                                map (mkPerm usrID UserR) [ReadA, UpdateA]
+  <>
   -- user can grant/revoke permissions related themselves; but only if they have
   -- permissions on both source and target, since that's how the Access Control
   -- API works
-  map (mkPerm usrID UserPolicyR) [minBound..maxBound]
+     map (mkPerm usrID UserPolicyR) [minBound .. maxBound]
 hasPermissions (UserGroupMemberAR _usrGrpID) =
   -- no special permissions for members
   []
 hasPermissions (UserAdminAR usrGrpID) =
   -- can CRUD users
-  map (mkPerm usrGrpID UserR)              allActions <>
+  map (mkPerm usrGrpID UserR) allActions
+    <>
   -- can read sub-groups
-  map (mkPerm usrGrpID UserGroupR)         [ReadA]    <>
+       map (mkPerm usrGrpID UserGroupR)         [ReadA]
+    <>
   -- can set/remove any role on any user
-  map (mkPerm usrGrpID UserPolicyR)        allActions <>
+       map (mkPerm usrGrpID UserPolicyR)        allActions
+    <>
   -- can set/remove any role on any sub-group
-  map (mkPerm usrGrpID UserGroupPolicyR)   allActions <>
+       map (mkPerm usrGrpID UserGroupPolicyR)   allActions
+    <>
   -- can CRUD tokens for all users
-  map (mkPerm usrGrpID UserPersonalTokenR) allActions
-    where allActions = [minBound..maxBound]
+       map (mkPerm usrGrpID UserPersonalTokenR) allActions
+  where allActions = [minBound .. maxBound]
 hasPermissions (UserGroupAdminAR usrGrpID) =
   -- can perform all actions upon a user group
   [ mkPerm usrGrpID res act
-    | act <- [minBound..maxBound]
-    , res <- [minBound..maxBound]
+  | act <- [minBound .. maxBound]
+  , res <- [minBound .. maxBound]
   ]
 hasPermissions (DocumentAdminAR fid) =
   -- can CRUD documents in the folder
-  map (mkPerm fid DocumentR) [minBound..maxBound] <>
+  map (mkPerm fid DocumentR) [minBound .. maxBound]
+    <>
   -- can set/remove any role on any sub-folder
-  map (mkPerm fid FolderPolicyR) [minBound..maxBound]
+       map (mkPerm fid FolderPolicyR) [minBound .. maxBound]
 hasPermissions (FolderAdminAR fid) =
   -- can perform all actions upon folder
-  map (mkPerm fid FolderR) [minBound..maxBound] <>
+  map (mkPerm fid FolderR) [minBound .. maxBound]
+    <>
   -- can set/remove any role on the folder
-  map (mkPerm fid FolderPolicyR) [minBound..maxBound]
+       map (mkPerm fid FolderPolicyR) [minBound .. maxBound]
 hasPermissions (FolderUserAR fid) =
   -- can read the folder
   map (mkPerm fid FolderR) [ReadA]
@@ -228,7 +241,7 @@ data UserGroupNonExistent = UserGroupNonExistent UserGroupID
 
 instance ToJSValue UserGroupNonExistent where
   toJSValue (UserGroupNonExistent ugid) = runJSONGen $ do
-    value "message" ("User Group does not exist" :: String)
+    value "message"       ("User Group does not exist" :: String)
     value "user_group_id" (show ugid)
 
 instance DBExtraException UserGroupNonExistent
@@ -248,7 +261,7 @@ data FolderNonExistent = FolderNonExistent FolderID
 
 instance ToJSValue FolderNonExistent where
   toJSValue (FolderNonExistent uid) = runJSONGen $ do
-    value "message" ("Folder does not exist" :: String)
+    value "message"   ("Folder does not exist" :: String)
     value "folder_id" (show uid)
 
 instance DBExtraException FolderNonExistent
@@ -256,12 +269,12 @@ instance DBExtraException FolderNonExistent
 instance NeedsPermissions (AccessAction, AccessResource, UserGroupID) where
   neededPermissions (action, resource, usrGrpID) = do
     dbQuery (UserGroupGetWithParents usrGrpID) >>= \case
-      Nothing -> throwM . SomeDBExtraException . UserGroupNonExistent $ usrGrpID
+      Nothing   -> throwM . SomeDBExtraException . UserGroupNonExistent $ usrGrpID
       Just ugwp -> do
         -- By specification, it should be enough to have permission for the
         -- wanted action on _any_ parent.
-        let mkExprBase g = NeededPermissionsExprBase
-                             (Permission action resource $ get ugID g)
+        let mkExprBase g =
+              NeededPermissionsExprBase (Permission action resource $ get ugID g)
         return . NeededPermissionsExprOr . map mkExprBase $ ugwpToList ugwp
   neededPermissionsPure (action, resource, usrGrpID) =
     NeededPermissionsExprBase $ Permission action resource usrGrpID
@@ -269,26 +282,23 @@ instance NeedsPermissions (AccessAction, AccessResource, UserGroupID) where
 instance NeedsPermissions (AccessAction, AccessResource, FolderID) where
   neededPermissions (action, resource, fid) = do
     dbQuery (FolderGet fid) >>= \case
-      Nothing -> throwM . SomeDBExtraException . FolderNonExistent $ fid
+      Nothing     -> throwM . SomeDBExtraException . FolderNonExistent $ fid
       Just folder -> do
         folderParents <- dbQuery . FolderGetParents $ fid
-        let mkExprBase g = NeededPermissionsExprBase
-                             (Permission action resource $ get folderID g)
-        return . NeededPermissionsExprOr . map mkExprBase $ (folder:folderParents)
+        let mkExprBase g =
+              NeededPermissionsExprBase (Permission action resource $ get folderID g)
+        return . NeededPermissionsExprOr . map mkExprBase $ (folder : folderParents)
   neededPermissionsPure (action, resource, fid) =
     NeededPermissionsExprBase $ Permission action resource fid
 
 instance NeedsPermissions (AccessAction, AccessResource, UserID) where
-  neededPermissions (action, resource, usrID) =
-    dbQuery (GetUserByID usrID) >>= \case
-      Nothing -> throwM . SomeDBExtraException . UserNonExistent $ usrID
-      Just _ -> do
-        usrGrpID <- get ugID <$> (dbQuery . UserGroupGetByUserID $ usrID)
-        groupPermissions <- neededPermissions (action, resource, usrGrpID)
-        return $ NeededPermissionsExprOr
-          [ NeededPermissionsExprBase . Permission action resource $ usrID
-          , groupPermissions
-          ]
+  neededPermissions (action, resource, usrID) = dbQuery (GetUserByID usrID) >>= \case
+    Nothing -> throwM . SomeDBExtraException . UserNonExistent $ usrID
+    Just _  -> do
+      usrGrpID         <- get ugID <$> (dbQuery . UserGroupGetByUserID $ usrID)
+      groupPermissions <- neededPermissions (action, resource, usrGrpID)
+      return $ NeededPermissionsExprOr
+        [NeededPermissionsExprBase . Permission action resource $ usrID, groupPermissions]
   neededPermissionsPure (action, resource, usrID) =
     NeededPermissionsExprBase $ Permission action resource usrID
 
@@ -296,8 +306,13 @@ instance NeedsPermissions AccessPolicyItem where
   neededPermissions (AccessPolicyItem t) = neededPermissions t
   neededPermissionsPure (AccessPolicyItem t) = neededPermissionsPure t
 
-accessControl :: (MonadCatch m, MonadDB m, MonadThrow m, MonadLog m)
-              => [AccessRole] -> AccessPolicy -> m a -> m a -> m a
+accessControl
+  :: (MonadCatch m, MonadDB m, MonadThrow m, MonadLog m)
+  => [AccessRole]
+  -> AccessPolicy
+  -> m a
+  -> m a
+  -> m a
 accessControl roles accessPolicy err ma = do
   accNeeded <- NeededPermissionsExprAnd <$> mapM neededPermissions accessPolicy
   if accessControlCheck roles accNeeded then ma else err
@@ -309,7 +324,8 @@ accessControlCheck roles accNeeded =
 
 accessControlPure :: [AccessRole] -> AccessPolicy -> Bool
 accessControlPure roles accessPolicy =
-  accessControlCheck roles . NeededPermissionsExprAnd $ map neededPermissionsPure accessPolicy
+  accessControlCheck roles . NeededPermissionsExprAnd $ map neededPermissionsPure
+                                                            accessPolicy
 
 -- IO (DB, frontend) boilerplate
 
@@ -338,10 +354,7 @@ instance FromSQL AccessRoleType where
       4 -> return DocumentAdminART
       5 -> return FolderAdminART
       6 -> return FolderUserART
-      _  -> E.throwIO $ RangeError {
-        reRange = [(0, 6)]
-      , reValue = n
-      }
+      _ -> E.throwIO $ RangeError { reRange = [(0, 6)], reValue = n }
 
 instance ToSQL AccessRoleType where
   type PQDest AccessRoleType = PQDest Int16
@@ -370,7 +383,7 @@ instance Read AccessRoleType where
   readsPrec _ "document_admin"    = [(DocumentAdminART, "")]
   readsPrec _ "folder_admin"      = [(FolderAdminART, "")]
   readsPrec _ "folder_user"       = [(FolderUserART, "")]
-  readsPrec _ _  = []
+  readsPrec _ _                   = []
 
 instance Unjson AccessRoleType where
   unjsonDef = unjsonInvmapR
@@ -385,19 +398,18 @@ instance FromJSON AccessRoleType where
   parseJSON v = do
     roleTypeStr <- parseJSON v
     case maybeRead roleTypeStr of
-      Nothing -> fail "Could not parse Access Role Type"
+      Nothing       -> fail "Could not parse Access Role Type"
       Just roleType -> return roleType
 
 toAccessRoleType :: AccessRoleTarget -> AccessRoleType
-toAccessRoleType ar =
-  case ar of
-    UserAR            _ -> UserART
-    UserGroupMemberAR _ -> UserGroupMemberART
-    UserAdminAR       _ -> UserAdminART
-    UserGroupAdminAR  _ -> UserGroupAdminART
-    DocumentAdminAR   _ -> DocumentAdminART
-    FolderAdminAR     _ -> FolderAdminART
-    FolderUserAR      _ -> FolderUserART
+toAccessRoleType ar = case ar of
+  UserAR            _ -> UserART
+  UserGroupMemberAR _ -> UserGroupMemberART
+  UserAdminAR       _ -> UserAdminART
+  UserGroupAdminAR  _ -> UserGroupAdminART
+  DocumentAdminAR   _ -> DocumentAdminART
+  FolderAdminAR     _ -> FolderAdminART
+  FolderUserAR      _ -> FolderUserART
 
 -- AccessRoleID
 
@@ -413,7 +425,7 @@ instance FromJSON AccessRoleID where
   parseJSON v = do
     ridStr <- parseJSON v
     case maybeRead ridStr of
-      Nothing -> fail "Could not parse Access Role ID"
+      Nothing  -> fail "Could not parse Access Role ID"
       Just rid -> return rid
 
 instance PQFormat AccessRoleID where
@@ -440,7 +452,7 @@ fromAccessRoleID :: AccessRoleID -> Int64
 fromAccessRoleID (AccessRoleID ugid) = ugid
 
 instance Identifier AccessRoleID where
-  idDefaultLabel           = "access_role_id"
+  idDefaultLabel = "access_role_id"
   idValue (AccessRoleID k) = int64AsStringIdentifier k
 
 instance B.Binary AccessRoleID where

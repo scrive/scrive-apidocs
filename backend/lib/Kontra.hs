@@ -80,8 +80,7 @@ deriving instance MonadFileStorage (InnerKontra fst)
 
 type Kontra = KontraG FileStorageT
 
-runKontraG :: Monad (InnerKontra fst) => Context -> KontraG fst a
-           -> InnerKontra fst a
+runKontraG :: Monad (InnerKontra fst) => Context -> KontraG fst a -> InnerKontra fst a
 runKontraG ctx f = S.evalStateT (unKontra f) ctx
 
 runKontra :: Context -> Kontra a -> InnerKontra FileStorageT a
@@ -91,7 +90,7 @@ instance MonadBaseControl IO (InnerKontra fst)
     => MonadBaseControl IO (KontraG fst) where
   type StM (KontraG fst) a = StM (S.StateT Context (InnerKontra fst)) a
   liftBaseWith f = Kontra $ liftBaseWith $ \run -> f $ run . unKontra
-  restoreM       = Kontra . restoreM
+  restoreM = Kontra . restoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}
 
@@ -108,8 +107,8 @@ instance (MonadTrans fst, Monad (InnerKontra fst))
     => TemplatesMonad (KontraG fst) where
   getTemplates = get ctxtemplates <$> getContext
   getTextTemplatesByLanguage langStr = do
-     globaltemplates <- get ctxglobaltemplates <$> getContext
-     return $ TL.localizedVersion langStr globaltemplates
+    globaltemplates <- get ctxglobaltemplates <$> getContext
+    return $ TL.localizedVersion langStr globaltemplates
 
 instance (MonadTrans fst, Monad (InnerKontra fst))
     => GuardTimeConfMonad (KontraG fst) where
@@ -125,79 +124,71 @@ instance (MonadTrans fst, Monad (InnerKontra fst))
 
 -- | Logged in user is admin with 2FA (2FA only enforced for production = true)
 isAdmin :: Context -> Bool
-isAdmin ctx =
-  case get ctxmaybeuser ctx of
-    Nothing -> False
-    Just user -> (useremail (userinfo user) `elem` get ctxadminaccounts ctx)
-                 && (usertotpactive user || not (get ctxproduction ctx))
+isAdmin ctx = case get ctxmaybeuser ctx of
+  Nothing -> False
+  Just user ->
+    (useremail (userinfo user) `elem` get ctxadminaccounts ctx)
+      && (usertotpactive user || not (get ctxproduction ctx))
 
 
 -- | Logged in user is sales with 2FA (2FA only enforced for production = true)
 isSales :: Context -> Bool
-isSales ctx =
-  case get ctxmaybeuser ctx of
-    Nothing -> False
-    Just user -> (useremail (userinfo user) `elem` get ctxsalesaccounts ctx)
-                 && (usertotpactive user || not (get ctxproduction ctx))
+isSales ctx = case get ctxmaybeuser ctx of
+  Nothing -> False
+  Just user ->
+    (useremail (userinfo user) `elem` get ctxsalesaccounts ctx)
+      && (usertotpactive user || not (get ctxproduction ctx))
 
 -- | Will 404 if not logged in as an admin.
 onlyAdmin :: Kontrakcja m => m a -> m a
 onlyAdmin m = do
   admin <- isAdmin <$> getContext
-  if admin
-    then m
-    else respond404
+  if admin then m else respond404
 
 -- | Will 404 if not logged in as a sales admin.
 onlySalesOrAdmin :: Kontrakcja m => m a -> m a
 onlySalesOrAdmin m = do
   admin <- (isAdmin || isSales) <$> getContext
-  if admin
-    then m
-    else respond404
+  if admin then m else respond404
 
 -- | Will 404 if the testing backdoor isn't open.
 onlyBackdoorOpen :: Kontrakcja m => m a -> m a
 onlyBackdoorOpen a = do
   backdoorOpen <- get ctxismailbackdooropen <$> getContext
-  if backdoorOpen
-    then a
-    else respond404
+  if backdoorOpen then a else respond404
 
 -- | Sticks the logged in user onto the context.
 logUserToContext :: Kontrakcja m => Maybe User -> m ()
-logUserToContext user =
-    modifyContext $ set ctxmaybeuser user
+logUserToContext user = modifyContext $ set ctxmaybeuser user
 
 logPadUserToContext :: Kontrakcja m => Maybe User -> m ()
-logPadUserToContext user =
-    modifyContext $ set ctxmaybepaduser user
+logPadUserToContext user = modifyContext $ set ctxmaybepaduser user
 
 unsafeSessionTakeover :: Kontrakcja m => SessionCookieInfo -> m (Maybe Session)
-unsafeSessionTakeover SessionCookieInfo{..} = do
+unsafeSessionTakeover SessionCookieInfo {..} = do
   domain   <- currentDomain
   msession <- getSession cookieSessionID cookieSessionToken domain
   case msession of
-   Nothing -> return Nothing
-   Just s -> do
-    mUser <- maybe (return Nothing) (dbQuery . GetUserByID) $ sesUserID s
-    mPadUser <- maybe (return Nothing) (dbQuery . GetUserByID) $ sesPadUserID s
-    modifyContext $ (\ctx -> set ctxsessionid (sesID s) $
-                             set ctxmaybeuser mUser $
-                             set ctxmaybepaduser mPadUser $ ctx)
-    return $ Just s
+    Nothing -> return Nothing
+    Just s  -> do
+      mUser    <- maybe (return Nothing) (dbQuery . GetUserByID) $ sesUserID s
+      mPadUser <- maybe (return Nothing) (dbQuery . GetUserByID) $ sesPadUserID s
+      modifyContext
+        $ (\ctx ->
+            set ctxsessionid (sesID s)
+              $ set ctxmaybeuser    mUser
+              $ set ctxmaybepaduser mPadUser
+              $ ctx
+          )
+      return $ Just s
 
 switchLang :: Kontrakcja m => Lang -> m ()
-switchLang lang =
-     modifyContext $
-     \ctx -> set ctxlang lang $
-             set ctxtemplates
-             (localizedVersion lang (get ctxglobaltemplates ctx))
-             $ ctx
+switchLang lang = modifyContext $ \ctx ->
+  set ctxlang lang
+    $ set ctxtemplates (localizedVersion lang (get ctxglobaltemplates ctx))
+    $ ctx
 
 -- | Extract data from GET or POST request. Fail with 'internalError'
 -- if param variable not present or when it cannot be read.
-getDataFnM
-  :: (HasRqData m, MonadBase IO m, MonadIO m, ServerMonad m)
-  => RqData a -> m a
+getDataFnM :: (HasRqData m, MonadBase IO m, MonadIO m, ServerMonad m) => RqData a -> m a
 getDataFnM fun = either (const internalError) return =<< getDataFn fun

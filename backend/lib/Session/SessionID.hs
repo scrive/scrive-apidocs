@@ -18,7 +18,7 @@ instance PQFormat SessionID where
   pqFormat = pqFormat @Int64
 
 instance Identifier SessionID where
-  idDefaultLabel        = "session_id"
+  idDefaultLabel = "session_id"
   idValue (SessionID k) = int64AsStringIdentifier k
 
 instance FromSQL SessionID where

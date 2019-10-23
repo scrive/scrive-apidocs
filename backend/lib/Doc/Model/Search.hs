@@ -12,25 +12,22 @@ import Doc.DocumentID
 import Doc.DocumentMonad (theDocumentID, withDocumentID)
 import Doc.Model.Query ()
 
-updateHistoricalSearchData :: ( MonadDB m
-                              , MonadThrow m
-                              , MonadCatch m
-                              , MonadTime m
-                              , MonadLog m)
-                           => m Int
+updateHistoricalSearchData
+  :: (MonadDB m, MonadThrow m, MonadCatch m, MonadTime m, MonadLog m) => m Int
 updateHistoricalSearchData = do
   docIDs <- dbQuery $ GetDocumentIdsWithNullSearchField 1000
-  t0 <- currentTime
-  ress <- forM docIDs $ flip withDocumentID $ do
-             docID <- theDocumentID
-             dbUpdate $ SetDocumentSearchField docID
+  t0     <- currentTime
+  ress   <- forM docIDs $ flip withDocumentID $ do
+    docID <- theDocumentID
+    dbUpdate $ SetDocumentSearchField docID
   unless (null docIDs) commit
   t1 <- currentTime
   let numberOfItemsUpdated = length . filter id $ ress
   logInfo "Document search data updated" $ object
-          [ "items_updated" .= numberOfItemsUpdated
-          , "items_failed" .= (length . filter not $ ress)
-          , "elapsed_time" .= (realToFrac (diffUTCTime t1 t0) :: Double) ]
+    [ "items_updated" .= numberOfItemsUpdated
+    , "items_failed" .= (length . filter not $ ress)
+    , "elapsed_time" .= (realToFrac (diffUTCTime t1 t0) :: Double)
+    ]
   return numberOfItemsUpdated
 
 
@@ -50,12 +47,11 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SetDocumentSearchField Bool whe
   -- `Doc.Trigger.archiveSearchTerms`.
   update (SetDocumentSearchField docID) = do
     runQuery01 $ rawSQL
-                   (
-                     "WITH new_archive_search_terms(txt) AS" <+>
-                     "( SELECT coalesce(archive_search_terms_func($1), '') )" <+>
-                     "UPDATE documents" <+>
-                     "SET    archive_search_terms = (SELECT txt FROM new_archive_search_terms)," <+>
-                     "       archive_search_fts = post_process_search_string((SELECT txt FROM new_archive_search_terms))" <+>
-                     "WHERE  id = $1"
-                   )
-                   (Identity docID)
+      (   "WITH new_archive_search_terms(txt) AS"
+      <+> "( SELECT coalesce(archive_search_terms_func($1), '') )"
+      <+> "UPDATE documents"
+      <+> "SET    archive_search_terms = (SELECT txt FROM new_archive_search_terms),"
+      <+> "       archive_search_fts = post_process_search_string((SELECT txt FROM new_archive_search_terms))"
+      <+> "WHERE  id = $1"
+      )
+      (Identity docID)

@@ -49,8 +49,8 @@ checkRedisConnection conn = do
   case ereply :: Either SomeException R.Status of
     Right R.Pong -> return ()
     Right status -> unexpectedError $ "expected Pong, got" <+> (showt status)
-    Left err     -> unexpectedError $ T.concat [
-        "couldn't execute command 'ping':"
+    Left  err    -> unexpectedError $ T.concat
+      [ "couldn't execute command 'ping':"
       , showt err
       , "(make sure configuration is correct and Redis server is running)"
       ]
@@ -59,8 +59,8 @@ checkRedisConnection conn = do
 
 -- | Put value into a specific hash field of a key and publish an empty message
 -- under channel named as the key signifying that the key was updated.
-redisPut :: MonadBase IO m => BS.ByteString -> BS.ByteString
-         -> (R.Connection, RedisKey) -> m ()
+redisPut
+  :: MonadBase IO m => BS.ByteString -> BS.ByteString -> (R.Connection, RedisKey) -> m ()
 redisPut field value (cache, rkey) = runRedis' cache $ do
   let key = fromRedisKey rkey
   void $ R.hset key field value

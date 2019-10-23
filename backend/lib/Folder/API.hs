@@ -38,15 +38,11 @@ import Routing
 import User.Model
 
 folderAPIRoutes :: Route (Kontra Response)
-folderAPIRoutes = dir "api" $ choice
-  [ dir "frontend" $ folderAPI
-  , dir "v2" $ folderAPI
-  ]
+folderAPIRoutes = dir "api" $ choice [dir "frontend" $ folderAPI, dir "v2" $ folderAPI]
 
 folderAPI :: Route (Kontra Response)
 folderAPI = dir "folders" $ choice
-  [
-    hGet $ toK1 $ folderAPIGet
+  [ hGet $ toK1 $ folderAPIGet
   , dir "create" . hPost . toK0 $ folderAPICreate
   , param . dir "update" . hPost . toK1 $ folderAPIUpdate
   , param . dir "delete" . hPost . toK1 $ folderAPIDelete
@@ -55,9 +51,9 @@ folderAPI = dir "folders" $ choice
 
 folderAPICreate :: Kontrakcja m => m Response
 folderAPICreate = api $ do
-  fdru <- apiV2ParameterObligatory $ ApiV2ParameterAeson "folder"
+  fdru  <- apiV2ParameterObligatory $ ApiV2ParameterAeson "folder"
   fdrIn <- case updateFolderWithFolderFromRequest defaultFolder fdru of
-    Nothing -> apiError $ requestFailed "Error parsing folder create object."
+    Nothing            -> apiError $ requestFailed "Error parsing folder create object."
     Just folderUpdated -> return folderUpdated
   fdrOut <- case get folderParentID fdrIn of
     Nothing -> do
@@ -91,37 +87,32 @@ folderAPIUpdate :: Kontrakcja m => FolderID -> m Response
 folderAPIUpdate fid = api $ do
   (dbQuery (FolderGet fid)) >>= \case
     -- must do manual existence checking since we haven't done access control checks yet
-    Nothing -> apiError insufficientPrivileges
+    Nothing    -> apiError insufficientPrivileges
     Just fdrDB -> do
       fdrfuin <- apiV2ParameterObligatory $ ApiV2ParameterAeson "folder"
-      fdrNew <- case updateFolderWithFolderFromRequest fdrDB fdrfuin of
+      fdrNew  <- case updateFolderWithFolderFromRequest fdrDB fdrfuin of
         Nothing -> apiError $ requestFailed "Error parsing folder update object."
         Just folderUpdated -> return folderUpdated
-      let mtoParentID = get folderParentID fdrNew
+      let mtoParentID   = get folderParentID fdrNew
           mfromParentID = get folderParentID fdrDB
-          accParents =
-            if (mfromParentID == mtoParentID)
-            -- child is remaining in same place. no special privileges needed
+          accParents    = if (mfromParentID == mtoParentID)
+                          -- child is remaining in same place. no special privileges needed
             then []
             else case (mfromParentID, mtoParentID) of
-              -- change parent
+                            -- change parent
               (Just fromParentID, Just toParentID) ->
-                [ (UpdateA, FolderR, toParentID)
-                , (UpdateA, FolderR, fromParentID) ]
+                [(UpdateA, FolderR, toParentID), (UpdateA, FolderR, fromParentID)]
               -- change from being child to root
-              (Just fromParentID, Nothing) ->
-                [ (UpdateA, FolderR, fromParentID) ]
+              (Just fromParentID, Nothing) -> [(UpdateA, FolderR, fromParentID)]
               -- change from being root to child
-              (Nothing, Just toParentID) ->
-                [ (UpdateA, FolderR, toParentID) ]
+              (Nothing, Just toParentID) -> [(UpdateA, FolderR, toParentID)]
               -- root is remaining root. no special privileges needed
               _ -> []
       let acc = mkAccPolicy $ [(UpdateA, FolderR, fid)] <> accParents-- <> @devnote chkme
       apiAccessControlOrIsAdmin acc $ do
         void . dbUpdate . FolderUpdate $ fdrNew
-        fdrDB' <- apiGuardJustM
-          (serverError "Was not able to retrieve updated folder")
-          (dbQuery . FolderGet $ fid)
+        fdrDB' <- apiGuardJustM (serverError "Was not able to retrieve updated folder")
+                                (dbQuery . FolderGet $ fid)
         return . Ok $ encodeFolder fdrDB'
 
 folderAPIDelete :: Kontrakcja m => FolderID -> m Response
@@ -129,40 +120,51 @@ folderAPIDelete fid = api $ do
   apiAccessControlOrIsAdmin [mkAccPolicyItem (DeleteA, FolderR, fid)] $ do
     fdr <- folderOrAPIError fid
     let isRootFolder = isNothing . _folderParentID $ fdr
-    when isRootFolder $
+    when isRootFolder
+      $
       -- cf. `userGroupApiV2Delete`
-      apiError $ requestFailed "Root folders cannot be deleted."
+        apiError
+      $ requestFailed "Root folders cannot be deleted."
     dbUpdate $ FolderDelete fid
     dbUpdate $ AccessControlDeleteRolesByFolder fid
-    return . Ok . pairs $ "id"       .= show fid
-                       <> "resource" .= ("folder"  :: T.Text)
-                       <> "action"   .= ("deleted" :: T.Text)
+    return
+      .  Ok
+      .  pairs
+      $  "id"
+      .= show fid
+      <> "resource"
+      .= ("folder" :: T.Text)
+      <> "action"
+      .= ("deleted" :: T.Text)
 
 folderAPIListDocs :: Kontrakcja m => FolderID -> m Response
 folderAPIListDocs fid = api $ do
   (user, _) <- getAPIUserWithPad APIDocCheck
   let acc = mkAccPolicy $ [(ReadA, FolderR, fid)]
   apiAccessControlOrIsAdmin acc $ do
-    offset   <- apiV2ParameterDefault 0   (ApiV2ParameterInt  "offset")
-    maxcount <- apiV2ParameterDefault 100 (ApiV2ParameterInt  "max")
-    sorting  <- apiV2ParameterDefault defaultDocumentAPISort (ApiV2ParameterJSON "sorting" unjsonDef)
+    offset   <- apiV2ParameterDefault 0 (ApiV2ParameterInt "offset")
+    maxcount <- apiV2ParameterDefault 100 (ApiV2ParameterInt "max")
+    sorting  <- apiV2ParameterDefault defaultDocumentAPISort
+                                      (ApiV2ParameterJSON "sorting" unjsonDef)
     let documentSorting = (toDocumentSorting <$> sorting)
-    logInfo "Fetching list of documents in the folder" $ object [
-        identifier $ userid user
-      , "offset"    .= offset
+    logInfo "Fetching list of documents in the folder" $ object
+      [ identifier $ userid user
+      , "offset" .= offset
       , "max_count" .= maxcount
-      , "sorting"   .= map show documentSorting
+      , "sorting" .= map show documentSorting
       ]
-    startQueryTime <- liftBase getCurrentTime
-    (allDocsCount, allDocs) <-
-      dbQuery $ GetDocumentsWithSoftLimit (DocumentsByFolderOnly fid)
-                                          []
-                                          documentSorting
-                                          (offset, 1000, maxcount)
+    startQueryTime          <- liftBase getCurrentTime
+    (allDocsCount, allDocs) <- dbQuery $ GetDocumentsWithSoftLimit
+      (DocumentsByFolderOnly fid)
+      []
+      documentSorting
+      (offset, 1000, maxcount)
     finishQueryTime <- liftBase getCurrentTime
-    logInfo "Fetching for folderAPIListDocs done" $ object [
-        "query_time" .= (realToFrac $ diffUTCTime finishQueryTime startQueryTime :: Double)
+    logInfo "Fetching for folderAPIListDocs done" $ object
+      [ "query_time"
+          .= (realToFrac $ diffUTCTime finishQueryTime startQueryTime :: Double)
       ]
-    let headers = mkHeaders [("Content-Type","application/json; charset=UTF-8")]
-        jsonbs  = listToJSONBS (allDocsCount, (\d -> (documentAccessForUser user d, d)) <$> allDocs)
+    let headers = mkHeaders [("Content-Type", "application/json; charset=UTF-8")]
+        jsonbs  = listToJSONBS
+          (allDocsCount, (\d -> (documentAccessForUser user d, d)) <$> allDocs)
     return . Ok $ Response 200 headers nullRsFlags jsonbs Nothing

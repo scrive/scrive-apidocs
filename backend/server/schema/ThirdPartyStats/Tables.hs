@@ -11,12 +11,14 @@ import DB
 --   makes the omission of any keys seem the more performant choice - however,
 --   we need a primary key to enable no downtime updates.
 tableAsyncEventQueue :: Table
-tableAsyncEventQueue = tblTable {
-  tblName = "async_event_queue"
-  , tblVersion = 3
-  , tblColumns = [
-      tblColumn { colName = "sequence_number", colType = BigSerialT, colNullable = False }
-    , tblColumn { colName = "event", colType = TextT, colNullable = False }
-    ]
+tableAsyncEventQueue = tblTable
+  { tblName       = "async_event_queue"
+  , tblVersion    = 3
+  , tblColumns = [ tblColumn { colName     = "sequence_number"
+                             , colType     = BigSerialT
+                             , colNullable = False
+                             }
+                 , tblColumn { colName = "event", colType = TextT, colNullable = False }
+                 ]
   , tblPrimaryKey = pkOnColumn "sequence_number"
   }

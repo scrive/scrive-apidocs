@@ -12,7 +12,7 @@ getOffset ntpservers = do
   a <- readProcess "ntpdate" (words "-q -p 1" <> (T.unpack <$> ntpservers)) ""
   case take 3 $ reverse $ words $ last $ lines a of
     ["sec", offset, "offset"] -> return (read $ T.pack offset)
-    _                         -> fail $ "HostClock.System.getOffset:  cannot parse " <> show a
+    _ -> fail $ "HostClock.System.getOffset:  cannot parse " <> show a
 
 -- | Get the frequency from the kernel phase-lock loop governing the clock.
 getFrequency :: IO Double
@@ -20,7 +20,7 @@ getFrequency = do
   a <- readProcess "ntpdc" ["-c", "loopinfo oneline"] ""
   let err = fail $ "HostClock.System.getFrequency: cannot parse " ++ show a
   case drop 2 $ words a of
-    "frequency":fs:_ -> case reads fs of
-                          [(frequency,",")] -> return $ frequency / 1e6
-                          _ -> err
+    "frequency" : fs : _ -> case reads fs of
+      [(frequency, ",")] -> return $ frequency / 1e6
+      _                  -> err
     _ -> err

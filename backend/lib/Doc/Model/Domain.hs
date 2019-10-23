@@ -67,9 +67,7 @@ data DocumentDomain
 -- To do anything with document a user has at least see it. Usually
 -- more strict rules apply.
 
-documentDomainToSQL :: (MonadState v m, SqlFrom v, SqlWhere v)
-                     => DocumentDomain
-                     -> m ()
+documentDomainToSQL :: (MonadState v m, SqlFrom v, SqlWhere v) => DocumentDomain -> m ()
 documentDomainToSQL DocumentsOfWholeUniverse = do
   sqlWhereDocumentWasNotPurged
 
@@ -79,19 +77,22 @@ documentDomainToSQL (DocumentsVisibleViaAccessToken token) = do
 
 documentDomainToSQL (DocumentsOfUserGroup ugid) = do
   sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
-  sqlJoinOn "users" "signatory_links.user_id = users.id"
+  sqlJoinOn "users"           "signatory_links.user_id = users.id"
   sqlWhereDocumentWasNotPurged
   sqlWhere "documents.author_id = signatory_links.id"
   sqlWhereEq "users.user_group_id" ugid
 
 documentDomainToSQL (DocumentsVisibleToUser uid) = do
   sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
-  sqlJoinOn "users" "signatory_links.user_id = users.id"
+  sqlJoinOn "users"           "signatory_links.user_id = users.id"
   sqlWhereDocumentWasNotPurged
   sqlWhereDocumentIsNotReallyDeleted
-  sqlWhere $ "users.user_group_id = (SELECT u.user_group_id FROM users u WHERE u.id =" <?> uid <> ")"
-  sqlWhereAny [
-      userIsAuthor
+  sqlWhere
+    $   "users.user_group_id = (SELECT u.user_group_id FROM users u WHERE u.id ="
+    <?> uid
+    <>  ")"
+  sqlWhereAny
+    [ userIsAuthor
     , userIsSignatoryOrApproverAndHasAppropriateSignOrder
     , userIsViewer
     , isCompanySharedTemplate
@@ -103,27 +104,30 @@ documentDomainToSQL (DocumentsVisibleToUser uid) = do
       sqlWhere "documents.author_id = signatory_links.id"
 
     userIsSignatoryOrApproverAndHasAppropriateSignOrder = do
-      sqlWhereEq "users.id" uid
+      sqlWhereEq "users.id"       uid
       sqlWhereEq "documents.type" Signable
       sqlWhereIn "documents.status" documentStatusesAccessibleBySignatories
       sqlWhereSignatoryRoleIsSigningPartyOrApprover
       sqlWhereNotExists . sqlSelect "signatory_links AS osl" $ do
         sqlWhere "signatory_links.document_id = osl.document_id"
         sqlWhere "osl.sign_time IS NULL"
-        sqlWhere . parenthesize $
-          "osl.signatory_role ="    <?> SignatoryRoleSigningParty <+>
-          "OR osl.signatory_role =" <?> SignatoryRoleApprover
+        sqlWhere
+          .   parenthesize
+          $   "osl.signatory_role ="
+          <?> SignatoryRoleSigningParty
+          <+> "OR osl.signatory_role ="
+          <?> SignatoryRoleApprover
         sqlWhere "osl.sign_order < signatory_links.sign_order"
 
     userIsViewer = do
-      sqlWhereEq "users.id" uid
+      sqlWhereEq "users.id"       uid
       sqlWhereEq "documents.type" Signable
       sqlWhereNotEq "documents.status" Preparation
       sqlWhereSignatoryRoleIsViewer
 
     isCompanySharedTemplate = do
       sqlWhere "documents.author_id = signatory_links.id"
-      sqlWhereEq "documents.type" Template
+      sqlWhereEq "documents.type"    Template
       sqlWhereEq "documents.sharing" Shared
 
     isCompanyDocumentIfAdmin = do

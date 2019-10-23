@@ -7,11 +7,10 @@ import TestKontra as T
 import User.Password
 
 userPasswordTests :: TestEnvSt -> Test
-userPasswordTests env = testGroup "UserPassword"
-  [ testThat "Test that Password verifies correctly"
-    env testPasswordCreateVerify
-  , testThat "Test that maybeMkPassword works and verifies"
-    env testPasswordMaybeVerify
+userPasswordTests env = testGroup
+  "UserPassword"
+  [ testThat "Test that Password verifies correctly"        env testPasswordCreateVerify
+  , testThat "Test that maybeMkPassword works and verifies" env testPasswordMaybeVerify
   ]
 
 -- * Password Tests
@@ -37,6 +36,6 @@ testPasswordMaybeVerify = do
   assert $ not $ maybeVerifyPassword Nothing s
   p <- createPassword s
   let triplet = (Just $ pwdHash p, Just $ pwdSalt p, Just $ pwdAlgorithm p)
-      mpass = maybeMkPassword triplet
+      mpass   = maybeMkPassword triplet
   assertJust mpass
   assert $ maybeVerifyPassword mpass s

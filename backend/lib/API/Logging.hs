@@ -15,17 +15,11 @@ import User.Types.User
 logUserCompanyIPAndApiVersion :: Kontrakcja m => APIVersion -> m a -> m a
 logUserCompanyIPAndApiVersion apiversion acc = do
   userandcompanyids <- (get ctxmaybeapiuser <$> getContext) >>= \case
-    Nothing -> return []
+    Nothing   -> return []
     Just user -> do
-      return
-        [ identifier $ userid user
-        , identifier $ usergroupid user
-        ]
+      return [identifier $ userid user, identifier $ usergroupid user]
   ctx <- getContext
-  let apiversionandip =
-        [ identifier apiversion
-        , "ip" .= show (get ctxipnumber ctx)
-        ]
+  let apiversionandip = [identifier apiversion, "ip" .= show (get ctxipnumber ctx)]
   localData (userandcompanyids ++ apiversionandip) $ do
     logInfo_ "API call"
     acc
@@ -33,5 +27,4 @@ logUserCompanyIPAndApiVersion apiversion acc = do
 -- | Stick the user that accesses API into the context.
 addAPIUserToContext :: Kontrakcja m => m ()
 addAPIUserToContext =
-  getMaybeAPIUserWithAnyPrivileges >>=
-  modifyContext . set ctxmaybeapiuser
+  getMaybeAPIUserWithAnyPrivileges >>= modifyContext . set ctxmaybeapiuser

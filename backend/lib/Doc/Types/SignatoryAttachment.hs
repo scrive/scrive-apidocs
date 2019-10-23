@@ -19,28 +19,28 @@ data SignatoryAttachment = SignatoryAttachment {
 ---------------------------------
 
 signatoryAttachmentsSelectors :: [SQL]
-signatoryAttachmentsSelectors = [
-    "signatory_attachments.file_id"
+signatoryAttachmentsSelectors =
+  [ "signatory_attachments.file_id"
   , "files.name"
   , "signatory_attachments.name"
   , "signatory_attachments.description"
   , "signatory_attachments.required"
   ]
 
-type instance CompositeRow SignatoryAttachment =
-  (Maybe FileID, Maybe Text, Text, Text, Bool)
+type instance CompositeRow SignatoryAttachment
+  = (Maybe FileID, Maybe Text, Text, Text, Bool)
 
 instance PQFormat SignatoryAttachment where
   pqFormat = compositeTypePqFormat ctSignatoryAttachment
 
 instance CompositeFromSQL SignatoryAttachment where
-  toComposite (mfid, mfname, name, description, required) = SignatoryAttachment {
-    signatoryattachmentfile = mfid
-  , signatoryattachmentfilename = mfname
-  , signatoryattachmentname = name
-  , signatoryattachmentdescription = description
-  , signatoryattachmentrequired = required
-  }
+  toComposite (mfid, mfname, name, description, required) = SignatoryAttachment
+    { signatoryattachmentfile        = mfid
+    , signatoryattachmentfilename    = mfname
+    , signatoryattachmentname        = name
+    , signatoryattachmentdescription = description
+    , signatoryattachmentrequired    = required
+    }
 
 defaultSignatoryAttachment :: SignatoryAttachment
 defaultSignatoryAttachment =

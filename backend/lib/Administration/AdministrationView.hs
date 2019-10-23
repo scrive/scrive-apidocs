@@ -27,7 +27,7 @@ adminMainPage ctx = renderTemplate "adminsmain" $ do
   F.value "admin" $ isAdmin ctx
   entryPointFields ctx
 
-adminCompanyPage :: TemplatesMonad m => Context -> UserGroupID ->  m String
+adminCompanyPage :: TemplatesMonad m => Context -> UserGroupID -> m String
 adminCompanyPage ctx ugid = renderTemplate "admincompany" $ do
   F.value "companyid" $ show ugid
   F.value "admin" $ isAdmin ctx

@@ -98,29 +98,27 @@ data UserGroupWithChildren = UserGroupWithChildren
   } deriving (Eq, Show)
 
 defaultUserGroup :: UserGroup
-defaultUserGroup = ugFromUGRoot $ UserGroupRoot {
-    _ugrID = emptyUserGroupID
-  , _ugrName = ""
-  , _ugrHomeFolderID = Nothing
-  , _ugrSettings = defaultUserGroupSettings
-  , _ugrPaymentPlan = FreePlan
-  , _ugrAddress = defaultUserGroupAddress
-  , _ugrUI = defaultUserGroupUI
-  , _ugrFeatures = defaultFeatures FreePlan
-  }
+defaultUserGroup = ugFromUGRoot $ UserGroupRoot { _ugrID = emptyUserGroupID
+                                                , _ugrName = ""
+                                                , _ugrHomeFolderID = Nothing
+                                                , _ugrSettings = defaultUserGroupSettings
+                                                , _ugrPaymentPlan = FreePlan
+                                                , _ugrAddress = defaultUserGroupAddress
+                                                , _ugrUI = defaultUserGroupUI
+                                                , _ugrFeatures = defaultFeatures FreePlan
+                                                }
 
 defaultChildUserGroup :: UserGroup
-defaultChildUserGroup = UserGroup {
-    _ugID = emptyUserGroupID
-  , _ugParentGroupID = Nothing
-  , _ugName = ""
-  , _ugHomeFolderID = Nothing
-  , _ugSettings = Nothing
-  , _ugInvoicing = None
-  , _ugAddress = Nothing
-  , _ugUI = defaultUserGroupUI
-  , _ugFeatures = Nothing
-  }
+defaultChildUserGroup = UserGroup { _ugID            = emptyUserGroupID
+                                  , _ugParentGroupID = Nothing
+                                  , _ugName          = ""
+                                  , _ugHomeFolderID  = Nothing
+                                  , _ugSettings      = Nothing
+                                  , _ugInvoicing     = None
+                                  , _ugAddress       = Nothing
+                                  , _ugUI            = defaultUserGroupUI
+                                  , _ugFeatures      = Nothing
+                                  }
 
 data UserGroupInvoicing =
     None
@@ -151,21 +149,20 @@ data UserGroupSettings = UserGroupSettings {
   } deriving (Show, Eq)
 
 defaultUserGroupSettings :: UserGroupSettings
-defaultUserGroupSettings = UserGroupSettings {
-    _ugsIPAddressMaskList    = []
-  , _ugsDataRetentionPolicy  = defaultDataRetentionPolicy
-  , _ugsCGIDisplayName       = Nothing
-  , _ugsCGIServiceID         = Nothing
-  , _ugsSMSProvider          = SMSDefault
-  , _ugsPadAppMode           = ListView
-  , _ugsPadEarchiveEnabled   = True
-  , _ugsLegalText            = False
-  , _ugsRequireBPIDForNewDoc = False
+defaultUserGroupSettings = UserGroupSettings
+  { _ugsIPAddressMaskList       = []
+  , _ugsDataRetentionPolicy     = defaultDataRetentionPolicy
+  , _ugsCGIDisplayName          = Nothing
+  , _ugsCGIServiceID            = Nothing
+  , _ugsSMSProvider             = SMSDefault
+  , _ugsPadAppMode              = ListView
+  , _ugsPadEarchiveEnabled      = True
+  , _ugsLegalText               = False
+  , _ugsRequireBPIDForNewDoc    = False
   , _ugsSendTimeoutNotification = False
-  , _ugsTotpIsMandatory      = False
-  , _ugsSessionTimeoutSecs   = Nothing
-  , _ugsPortalUrl            = Nothing
-
+  , _ugsTotpIsMandatory         = False
+  , _ugsSessionTimeoutSecs      = Nothing
+  , _ugsPortalUrl               = Nothing
   }
 
 data UserGroupUI = UserGroupUI {
@@ -178,14 +175,13 @@ data UserGroupUI = UserGroupUI {
 } deriving (Eq, Ord, Show)
 
 defaultUserGroupUI :: UserGroupUI
-defaultUserGroupUI = UserGroupUI {
-    _uguiMailTheme     = Nothing
-  , _uguiSignviewTheme = Nothing
-  , _uguiServiceTheme  = Nothing
-  , _uguiBrowserTitle  = Nothing
-  , _uguiSmsOriginator = Nothing
-  , _uguiFavicon       = Nothing
-  }
+defaultUserGroupUI = UserGroupUI { _uguiMailTheme     = Nothing
+                                 , _uguiSignviewTheme = Nothing
+                                 , _uguiServiceTheme  = Nothing
+                                 , _uguiBrowserTitle  = Nothing
+                                 , _uguiSmsOriginator = Nothing
+                                 , _uguiFavicon       = Nothing
+                                 }
 
 data UserGroupAddress = UserGroupAddress {
     _ugaCompanyNumber :: Text
@@ -197,14 +193,13 @@ data UserGroupAddress = UserGroupAddress {
   } deriving (Eq, Ord, Show)
 
 defaultUserGroupAddress :: UserGroupAddress
-defaultUserGroupAddress = UserGroupAddress {
-    _ugaCompanyNumber = ""
-  , _ugaEntityName    = ""
-  , _ugaAddress       = ""
-  , _ugaZip           = ""
-  , _ugaCity          = ""
-  , _ugaCountry       = ""
-  }
+defaultUserGroupAddress = UserGroupAddress { _ugaCompanyNumber = ""
+                                           , _ugaEntityName    = ""
+                                           , _ugaAddress       = ""
+                                           , _ugaZip           = ""
+                                           , _ugaCity          = ""
+                                           , _ugaCountry       = ""
+                                           }
 
 -- INVOICING
 
@@ -217,7 +212,7 @@ instance Read InvoicingType where
   readsPrec _ "none"     = [(InvoicingTypeNone, "")]
   readsPrec _ "billitem" = [(InvoicingTypeBillItem, "")]
   readsPrec _ "invoice"  = [(InvoicingTypeInvoice, "")]
-  readsPrec _ _  = []
+  readsPrec _ _          = []
 
 instance PQFormat InvoicingType where
   pqFormat = pqFormat @Int16
@@ -227,36 +222,34 @@ instance FromSQL InvoicingType where
   fromSQL mbase = do
     n <- fromSQL mbase
     case n :: Int16 of
-      1  -> return InvoicingTypeNone
-      2  -> return InvoicingTypeBillItem
-      3  -> return InvoicingTypeInvoice
-      _  -> E.throwIO $ RangeError {
-        reRange = [(1, 3)]
-      , reValue = n
-      }
+      1 -> return InvoicingTypeNone
+      2 -> return InvoicingTypeBillItem
+      3 -> return InvoicingTypeInvoice
+      _ -> E.throwIO $ RangeError { reRange = [(1, 3)], reValue = n }
 
 instance ToSQL InvoicingType where
   type PQDest InvoicingType = PQDest Int16
-  toSQL InvoicingTypeNone     = toSQL (1::Int16)
-  toSQL InvoicingTypeBillItem = toSQL (2::Int16)
-  toSQL InvoicingTypeInvoice  = toSQL (3::Int16)
+  toSQL InvoicingTypeNone     = toSQL (1 :: Int16)
+  toSQL InvoicingTypeBillItem = toSQL (2 :: Int16)
+  toSQL InvoicingTypeInvoice  = toSQL (3 :: Int16)
 
 instance Unjson InvoicingType where
   unjsonDef = unjsonInvmapR
-                ((maybe (fail "Can't parse InvoicingType") return) . maybeRead . T.pack)
-                show unjsonDef
+    ((maybe (fail "Can't parse InvoicingType") return) . maybeRead . T.pack)
+    show
+    unjsonDef
 
 ugInvoicingType :: UserGroup -> InvoicingType
 ugInvoicingType ug = case _ugInvoicing ug of
   None         -> InvoicingTypeNone
   (BillItem _) -> InvoicingTypeBillItem
-  (Invoice _)  -> InvoicingTypeInvoice
+  (Invoice  _) -> InvoicingTypeInvoice
 
 ugPaymentPlan :: UserGroup -> Maybe PaymentPlan
 ugPaymentPlan ug = case _ugInvoicing ug of
   None           -> Nothing
   (BillItem mpp) -> mpp
-  (Invoice pp)   -> Just pp
+  (Invoice  pp ) -> Just pp
 
 type instance CompositeRow UserGroupInvoicing = (InvoicingType, Maybe PaymentPlan)
 
@@ -265,47 +258,37 @@ instance PQFormat UserGroupInvoicing where
 
 instance CompositeFromSQL UserGroupInvoicing where
   toComposite (invoicing_type, mpayplan) = case (invoicing_type, mpayplan) of
-    (InvoicingTypeNone    , Nothing     ) -> None
-    (InvoicingTypeBillItem, _           ) -> BillItem mpayplan
-    (InvoicingTypeInvoice , Just payplan) -> Invoice payplan
+    (InvoicingTypeNone, Nothing) -> None
+    (InvoicingTypeBillItem, _) -> BillItem mpayplan
+    (InvoicingTypeInvoice, Just payplan) -> Invoice payplan
     _ -> unexpectedError "invalid invoicing row in database"
 
 -- USER GROUP
 
 fetchUserGroup
- :: ( UserGroupID
-    , Maybe UserGroupID
-    , Text
-    , Maybe FolderID
-    , Composite UserGroupInvoicing
-    , Maybe (Composite UserGroupSettings)
-    , Maybe (Composite UserGroupAddress)
-    , Composite UserGroupUI
-    , Maybe (Composite FeatureFlags)  -- for admins
-    , Maybe (Composite FeatureFlags)  -- for regular users
-    ) -> UserGroup
-fetchUserGroup
-  ( _ugID
-  , _ugParentGroupID
-  , _ugName
-  , _ugHomeFolderID
-  , cinvoicing
-  , cinfos
-  , caddresses
-  , cuis
-  , cAdminFeatureFlags
-  , cRegularFeatureFlags
-  ) =
-  UserGroup
-  { _ugSettings  = unComposite <$> cinfos
-  , _ugInvoicing = unComposite cinvoicing
-  , _ugAddress   = unComposite <$> caddresses
-  , _ugUI        = unComposite cuis
-  , _ugFeatures  = Features
-    <$> (unComposite <$> cAdminFeatureFlags)
-    <*> (unComposite <$> cRegularFeatureFlags)
-  , ..
-  }
+  :: ( UserGroupID
+     , Maybe UserGroupID
+     , Text
+     , Maybe FolderID
+     , Composite UserGroupInvoicing
+     , Maybe (Composite UserGroupSettings)
+     , Maybe (Composite UserGroupAddress)
+     , Composite UserGroupUI
+     , Maybe (Composite FeatureFlags)  -- for admins
+     , Maybe (Composite FeatureFlags)
+     )  -- for regular users
+  -> UserGroup
+fetchUserGroup (_ugID, _ugParentGroupID, _ugName, _ugHomeFolderID, cinvoicing, cinfos, caddresses, cuis, cAdminFeatureFlags, cRegularFeatureFlags)
+  = UserGroup
+    { _ugSettings  = unComposite <$> cinfos
+    , _ugInvoicing = unComposite cinvoicing
+    , _ugAddress   = unComposite <$> caddresses
+    , _ugUI        = unComposite cuis
+    , _ugFeatures  = Features
+      <$> (unComposite <$> cAdminFeatureFlags)
+      <*> (unComposite <$> cRegularFeatureFlags)
+    , ..
+    }
 
 -- USER GROUP ROOT
 
@@ -314,46 +297,52 @@ ugrFromUG ug = do
   -- the root of usergroup tree must have Invoice, Settings, Address, UI
   -- and Feature Flags
   _ugrPaymentPlan <- case _ugInvoicing ug of
-    None -> Nothing
-    BillItem _ -> Nothing         -- the root of usergroup tree must have:
-    Invoice pp -> Just pp         --   Invoice
+    None        -> Nothing
+    BillItem _  -> Nothing         -- the root of usergroup tree must have:
+    Invoice  pp -> Just pp         --   Invoice
   _ugrSettings <- _ugSettings ug  --   Settings
-  _ugrAddress <- _ugAddress ug    --   Address
+  _ugrAddress  <- _ugAddress ug    --   Address
   _ugrFeatures <- _ugFeatures ug  --   Features
   return $ UserGroupRoot
-    { _ugrID = _ugID ug
-    , _ugrName = _ugName ug
+    { _ugrID           = _ugID ug
+    , _ugrName         = _ugName ug
     , _ugrHomeFolderID = _ugHomeFolderID ug
-    , _ugrUI = _ugUI ug
+    , _ugrUI           = _ugUI ug
     , ..
     }
 
 ugFromUGRoot :: UserGroupRoot -> UserGroup
-ugFromUGRoot ugr = UserGroup
-  { _ugID = _ugrID ugr
-  , _ugName = _ugrName ugr
-  , _ugHomeFolderID = _ugrHomeFolderID ugr
-  , _ugParentGroupID = Nothing
-  , _ugInvoicing = Invoice . _ugrPaymentPlan $ ugr
-  , _ugSettings = Just $ _ugrSettings ugr
-  , _ugAddress = Just $ _ugrAddress ugr
-  , _ugUI = _ugrUI ugr
-  , _ugFeatures = Just $ _ugrFeatures ugr
-  }
+ugFromUGRoot ugr = UserGroup { _ugID            = _ugrID ugr
+                             , _ugName          = _ugrName ugr
+                             , _ugHomeFolderID  = _ugrHomeFolderID ugr
+                             , _ugParentGroupID = Nothing
+                             , _ugInvoicing     = Invoice . _ugrPaymentPlan $ ugr
+                             , _ugSettings      = Just $ _ugrSettings ugr
+                             , _ugAddress       = Just $ _ugrAddress ugr
+                             , _ugUI            = _ugrUI ugr
+                             , _ugFeatures      = Just $ _ugrFeatures ugr
+                             }
 
 -- USER GROUP WITH PARENTS
 ugwpOnlyParents :: UserGroupWithParents -> Maybe UserGroupWithParents
-ugwpOnlyParents (_,[]) = Nothing -- root is leaf, nothing would be left
-ugwpOnlyParents (root, (_:parents_tail)) = Just (root, parents_tail)
+ugwpOnlyParents (_   , []                ) = Nothing -- root is leaf, nothing would be left
+ugwpOnlyParents (root, (_ : parents_tail)) = Just (root, parents_tail)
 
-ugwpInherit :: (UserGroupRoot -> a) -> (UserGroup -> Maybe a) -> UserGroupWithParents -> (UserGroupID, a)
+ugwpInherit
+  :: (UserGroupRoot -> a)
+  -> (UserGroup -> Maybe a)
+  -> UserGroupWithParents
+  -> (UserGroupID, a)
 ugwpInherit ugrProperty ugProperty (ug_root, ug_children_path) =
-  fromMaybe (_ugrID ug_root, ugrProperty ug_root) . listToMaybe . catMaybes
-    . map (makeIDPropertyTuple) $ ug_children_path
-      where
-        makeIDPropertyTuple ug = case ugProperty ug of
-          Nothing -> Nothing
-          Just prop -> Just (_ugID ug, prop)
+  fromMaybe (_ugrID ug_root, ugrProperty ug_root)
+    . listToMaybe
+    . catMaybes
+    . map (makeIDPropertyTuple)
+    $ ug_children_path
+  where
+    makeIDPropertyTuple ug = case ugProperty ug of
+      Nothing   -> Nothing
+      Just prop -> Just (_ugID ug, prop)
 
 ugwpPaymentPlan :: UserGroupWithParents -> PaymentPlan
 ugwpPaymentPlan = snd . ugwpInherit _ugrPaymentPlan ugPaymentPlan
@@ -380,22 +369,21 @@ ugwpFeaturesWithID :: UserGroupWithParents -> (UserGroupID, Features)
 ugwpFeaturesWithID = ugwpInherit _ugrFeatures _ugFeatures
 
 ugwpToList :: UserGroupWithParents -> [UserGroup]
-ugwpToList (ug_root, ug_children_path) =
-  ug_children_path ++ [ugFromUGRoot ug_root]
+ugwpToList (ug_root, ug_children_path) = ug_children_path ++ [ugFromUGRoot ug_root]
 
 ugwpUG :: UserGroupWithParents -> UserGroup
-ugwpUG (root, [])  = ugFromUGRoot root
-ugwpUG (_, (ug:_)) = ug
+ugwpUG (root, []      ) = ugFromUGRoot root
+ugwpUG (_   , (ug : _)) = ug
 
 ugwpRoot :: UserGroupWithParents -> UserGroup
 ugwpRoot (root, _) = ugFromUGRoot root
 
 ugwpAddChild :: UserGroup -> UserGroupWithParents -> UserGroupWithParents
-ugwpAddChild ug (root, children_path) = (root, ug:children_path)
+ugwpAddChild ug (root, children_path) = (root, ug : children_path)
 
 ugwcToList :: [UserGroupWithChildren] -> [UserGroup]
-ugwcToList ugwcs = concat . for ugwcs $ \ugwc ->
-  _ugwcGroup ugwc : ugwcToList (_ugwcChildren ugwc)
+ugwcToList ugwcs =
+  concat . for ugwcs $ \ugwc -> _ugwcGroup ugwc : ugwcToList (_ugwcChildren ugwc)
 
 newtype UserGroupID = UserGroupID Int64
   deriving (Eq, Ord)
@@ -410,7 +398,7 @@ instance FromJSON UserGroupID where
   parseJSON v = do
     uidStr <- parseJSON v
     case maybeRead uidStr of
-      Nothing -> fail "Could not parse User Group ID"
+      Nothing  -> fail "Could not parse User Group ID"
       Just uid -> return uid
 
 instance PQFormat UserGroupID where
@@ -437,7 +425,7 @@ fromUserGroupID :: UserGroupID -> Int64
 fromUserGroupID (UserGroupID ugid) = ugid
 
 instance Identifier UserGroupID where
-  idDefaultLabel          = "user_group_id"
+  idDefaultLabel = "user_group_id"
   idValue (UserGroupID k) = int64AsStringIdentifier k
 
 instance B.Binary UserGroupID where
@@ -445,126 +433,89 @@ instance B.Binary UserGroupID where
   get = fmap UserGroupID B.get
 
 instance Unjson UserGroupID where
-  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse UserGroupID")  return) . maybeRead) showt unjsonDef
+  unjsonDef = unjsonInvmapR
+    ((maybe (fail "Can't parse UserGroupID") return) . maybeRead)
+    showt
+    unjsonDef
 
 -- USER GROUP INFO
 
-type instance CompositeRow UserGroupSettings = (
-    Maybe Text
-  , Maybe Int16
-  , Maybe Int16
-  , Maybe Int16
-  , Maybe Int16
-  , Maybe Int16
-  , Maybe Int16
-  , Bool
-  , Maybe Text
-  , SMSProvider
-  , Maybe Text
-  , PadAppMode
-  , Bool
-  , Bool
-  , Bool
-  , Bool
-  , Bool
-  , Bool
-  , Maybe Int32
-  , Maybe Text
-  )
+type instance CompositeRow UserGroupSettings
+  = ( Maybe Text
+    , Maybe Int16
+    , Maybe Int16
+    , Maybe Int16
+    , Maybe Int16
+    , Maybe Int16
+    , Maybe Int16
+    , Bool
+    , Maybe Text
+    , SMSProvider
+    , Maybe Text
+    , PadAppMode
+    , Bool
+    , Bool
+    , Bool
+    , Bool
+    , Bool
+    , Bool
+    , Maybe Int32
+    , Maybe Text
+    )
 
 instance PQFormat UserGroupSettings where
   pqFormat = compositeTypePqFormat ctUserGroupSettings
 
 instance CompositeFromSQL UserGroupSettings where
-  toComposite (
-      ip_address_mask_list
-    , _drpIdleDocTimeoutPreparation
-    , _drpIdleDocTimeoutClosed
-    , _drpIdleDocTimeoutCanceled
-    , _drpIdleDocTimeoutTimedout
-    , _drpIdleDocTimeoutRejected
-    , _drpIdleDocTimeoutError
-    , _drpImmediateTrash
-    , _ugsCGIDisplayName
-    , _ugsSMSProvider
-    , _ugsCGIServiceID
-    , _ugsPadAppMode
-    , _ugsPadEarchiveEnabled
-    , _ugsLegalText
-    , _ugsRequireBPIDForNewDoc
-    , _ugsSendTimeoutNotification
-    , _useFolderListCalls -- not yet used
-    , _ugsTotpIsMandatory
-    , _ugsSessionTimeoutSecs
-    , _ugsPortalUrl
-    ) = UserGroupSettings {
-      _ugsIPAddressMaskList         = maybe [] read ip_address_mask_list
-    , _ugsDataRetentionPolicy = DataRetentionPolicy {..}
-    , ..
-    }
+  toComposite (ip_address_mask_list, _drpIdleDocTimeoutPreparation, _drpIdleDocTimeoutClosed, _drpIdleDocTimeoutCanceled, _drpIdleDocTimeoutTimedout, _drpIdleDocTimeoutRejected, _drpIdleDocTimeoutError, _drpImmediateTrash, _ugsCGIDisplayName, _ugsSMSProvider, _ugsCGIServiceID, _ugsPadAppMode, _ugsPadEarchiveEnabled, _ugsLegalText, _ugsRequireBPIDForNewDoc, _ugsSendTimeoutNotification, _useFolderListCalls -- not yet used
+                                                                                                                                                                                                                                                                                                                                                                                                                       , _ugsTotpIsMandatory, _ugsSessionTimeoutSecs, _ugsPortalUrl)
+    = UserGroupSettings
+      { _ugsIPAddressMaskList   = maybe [] read ip_address_mask_list
+      , _ugsDataRetentionPolicy = DataRetentionPolicy { .. }
+      , ..
+      }
 
 -- UI
 
-type instance CompositeRow UserGroupUI = (
-    Maybe ThemeID
-  , Maybe ThemeID
-  , Maybe ThemeID
-  , Maybe Text
-  , Maybe Text
-  , Maybe BS.ByteString
-  )
+type instance CompositeRow UserGroupUI
+  = ( Maybe ThemeID
+    , Maybe ThemeID
+    , Maybe ThemeID
+    , Maybe Text
+    , Maybe Text
+    , Maybe BS.ByteString
+    )
 
 instance PQFormat UserGroupUI where
   pqFormat = compositeTypePqFormat ctUserGroupUI
 
 instance CompositeFromSQL UserGroupUI where
-  toComposite (
-      mail_theme
-    , signview_theme
-    , service_theme
-    , browser_title
-    , sms_originator
-    , favicon
-    ) = UserGroupUI {
-      _uguiMailTheme     = mail_theme
-    , _uguiSignviewTheme = signview_theme
-    , _uguiServiceTheme  = service_theme
-    , _uguiBrowserTitle  = browser_title
-    , _uguiSmsOriginator = sms_originator
-    , _uguiFavicon       = faviconFromBinary favicon
-    }
+  toComposite (mail_theme, signview_theme, service_theme, browser_title, sms_originator, favicon)
+    = UserGroupUI { _uguiMailTheme     = mail_theme
+                  , _uguiSignviewTheme = signview_theme
+                  , _uguiServiceTheme  = service_theme
+                  , _uguiBrowserTitle  = browser_title
+                  , _uguiSmsOriginator = sms_originator
+                  , _uguiFavicon       = faviconFromBinary favicon
+                  }
     where
-    faviconFromBinary (Just f) = if (BS.null f) then Nothing else Just f
-    -- We should interpret empty logos as no logos.
-    faviconFromBinary Nothing = Nothing
+      faviconFromBinary (Just f) = if (BS.null f) then Nothing else Just f
+      -- We should interpret empty logos as no logos.
+      faviconFromBinary Nothing  = Nothing
 
 -- ADDRESS
 
-type instance CompositeRow UserGroupAddress = (
-    Text
-  , Text
-  , Text
-  , Text
-  , Text
-  , Text
-  )
+type instance CompositeRow UserGroupAddress = (Text, Text, Text, Text, Text, Text)
 
 instance PQFormat UserGroupAddress where
   pqFormat = compositeTypePqFormat ctUserGroupAddress
 
 instance CompositeFromSQL UserGroupAddress where
-  toComposite (
-      company_number
-    , entity_name
-    , address
-    , zip_code
-    , city
-    , country
-    ) = UserGroupAddress {
-      _ugaCompanyNumber = company_number
-    , _ugaEntityName    = entity_name
-    , _ugaAddress       = address
-    , _ugaZip           = zip_code
-    , _ugaCity          = city
-    , _ugaCountry       = country
-    }
+  toComposite (company_number, entity_name, address, zip_code, city, country) =
+    UserGroupAddress { _ugaCompanyNumber = company_number
+                     , _ugaEntityName    = entity_name
+                     , _ugaAddress       = address
+                     , _ugaZip           = zip_code
+                     , _ugaCity          = city
+                     , _ugaCountry       = country
+                     }

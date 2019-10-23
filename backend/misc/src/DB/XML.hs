@@ -15,8 +15,7 @@ instance PQFormat C.XMLContent where
 
 instance FromSQL C.XMLContent where
   type PQBase C.XMLContent = PQBase XML
-  fromSQL mbase = either throwIO return
-                  =<< (C.parseXMLContent . unXML <$> fromSQL mbase)
+  fromSQL mbase = either throwIO return =<< (C.parseXMLContent . unXML <$> fromSQL mbase)
 
 instance ToSQL C.XMLContent where
   type PQDest C.XMLContent = PQDest XML

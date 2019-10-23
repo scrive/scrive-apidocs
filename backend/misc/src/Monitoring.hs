@@ -16,28 +16,24 @@ data MonitoringConf = MonitoringConf
   } deriving (Eq, Show)
 
 instance Unjson MonitoringConf where
-  unjsonDef = objectOf $ MonitoringConf
-    <$> fieldDef "host" "127.0.0.1"
-        monitoringHost
-        "Monitoring server host"
-    <*> fieldDef "port" 8125
-        monitoringPort
-        "Monitoring server port"
-    <*> fieldDef "flush_interval" 1000
-        monitoringFlushInterval
-        "Data push interval, in ms"
-    <*> fieldDef "debug" False
-        monitoringDebug
-        "Print debugging information to stderr"
-    <*> fieldDef "prefix" "ekg_monitoring."
-        monitoringPrefix
-        "Prefix to add to all metric names"
-    <*> fieldDef "suffix" ""
-        monitoringSuffix
-        "Suffix to add to all metric names"
+  unjsonDef =
+    objectOf
+      $   MonitoringConf
+      <$> fieldDef "host" "127.0.0.1" monitoringHost "Monitoring server host"
+      <*> fieldDef "port" 8125        monitoringPort "Monitoring server port"
+      <*> fieldDef "flush_interval"
+                   1000
+                   monitoringFlushInterval
+                   "Data push interval, in ms"
+      <*> fieldDef "debug" False monitoringDebug "Print debugging information to stderr"
+      <*> fieldDef "prefix"
+                   "ekg_monitoring."
+                   monitoringPrefix
+                   "Prefix to add to all metric names"
+      <*> fieldDef "suffix" "" monitoringSuffix "Suffix to add to all metric names"
 
 startMonitoringServer :: MonitoringConf -> IO EKG.Statsd
-startMonitoringServer MonitoringConf{..} = do
+startMonitoringServer MonitoringConf {..} = do
   store <- EKG.newStore
   EKG.registerGcMetrics store
   let opts = EKG.StatsdOptions { EKG.host          = monitoringHost

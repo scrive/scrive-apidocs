@@ -27,9 +27,7 @@ data JobType
   deriving (Eq, Ord, Show)
 
 jobTypeMapper :: [(JobType, Text)]
-jobTypeMapper = [
-    (CleanOldSMSes, "clean_old_smses")
-  ]
+jobTypeMapper = [(CleanOldSMSes, "clean_old_smses")]
 
 instance PQFormat JobType where
   pqFormat = pqFormat @Text
@@ -40,10 +38,8 @@ instance FromSQL JobType where
     v <- fromSQL mbase
     case v `rlookup` jobTypeMapper of
       Just tt -> return tt
-      Nothing -> throwM InvalidValue {
-        ivValue = v
-      , ivValidValues = Just $ map snd jobTypeMapper
-      }
+      Nothing ->
+        throwM InvalidValue { ivValue = v, ivValidValues = Just $ map snd jobTypeMapper }
 
 instance ToSQL JobType where
   type PQDest JobType = PQBase Text
@@ -70,18 +66,15 @@ instance FromSQL SMSProvider where
     case n :: Int16 of
       1 -> return SMSDefault
       2 -> return SMSTeliaCallGuide
-      _ -> throwM RangeError {
-        reRange = [(1,2)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(1, 2)], reValue = n }
 
 instance ToSQL SMSProvider where
   type PQDest SMSProvider = PQDest Int16
-  toSQL SMSDefault        = toSQL (1::Int16)
-  toSQL SMSTeliaCallGuide = toSQL (2::Int16)
+  toSQL SMSDefault        = toSQL (1 :: Int16)
+  toSQL SMSTeliaCallGuide = toSQL (2 :: Int16)
 
 codeFromSMSProvider :: SMSProvider -> Text
-codeFromSMSProvider SMSDefault = "default"
+codeFromSMSProvider SMSDefault        = "default"
 codeFromSMSProvider SMSTeliaCallGuide = "telia_call_guide"
 
 smsProviderFromCode :: Text -> Maybe SMSProvider
@@ -98,7 +91,7 @@ instance PQFormat ShortMessageID where
   pqFormat = pqFormat @Int64
 
 instance Identifier ShortMessageID where
-  idDefaultLabel             = "sms_id"
+  idDefaultLabel = "sms_id"
   idValue (ShortMessageID k) = int64AsStringIdentifier k
 
 instance FromSQL ShortMessageID where
@@ -119,13 +112,13 @@ data ShortMessage = ShortMessage {
 } deriving (Eq, Ord, Show)
 
 instance Loggable ShortMessage where
-  logValue ShortMessage{..} = object [
-      identifier smID
-    , "provider"   .= show smProvider
+  logValue ShortMessage {..} = object
+    [ identifier smID
+    , "provider" .= show smProvider
     , "originator" .= smOriginator
-    , "msisdn"     .= smMSISDN -- original/non-clean format
-    , "body"       .= smBody
-    , "attempts"   .= smAttempts
+    , "msisdn" .= smMSISDN -- original/non-clean format
+    , "body" .= smBody
+    , "attempts" .= smAttempts
     ]
   logDefaultLabel _ = "short_message"
 
@@ -140,7 +133,7 @@ instance PQFormat SMSEventID where
   pqFormat = pqFormat @Int64
 
 instance Identifier SMSEventID where
-  idDefaultLabel         = "sms_event_id"
+  idDefaultLabel = "sms_event_id"
   idValue (SMSEventID k) = int64AsStringIdentifier k
 
 instance FromSQL SMSEventID where

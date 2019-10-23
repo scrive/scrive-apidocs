@@ -49,7 +49,7 @@ unPartnerID (PartnerID i) = i
 
 unjsonPartnerID :: UnjsonDef PartnerID
 unjsonPartnerID = unjsonInvmapR
-  ((maybe (fail "Can't parse PartnerID")  return) . maybeRead . T.pack)
+  ((maybe (fail "Can't parse PartnerID") return) . maybeRead . T.pack)
   (show . unPartnerID :: PartnerID -> String)
   unjsonDef
 

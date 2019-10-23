@@ -34,29 +34,78 @@ import Util.HasSomeUserInfo
 
 ----------------------------------------------------------------------------
 
-mailNewUserGroupUserInvite :: (TemplatesMonad m, MonadDB m,MonadThrow m, HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>
-                               Context -> a -> b -> UserGroup -> KontraLink -> UTCTime -> m Mail
+mailNewUserGroupUserInvite
+  :: ( TemplatesMonad m
+     , MonadDB m
+     , MonadThrow m
+     , HasSomeUserInfo a
+     , HasLang a
+     , HasSomeUserInfo b
+     )
+  => Context
+  -> a
+  -> b
+  -> UserGroup
+  -> KontraLink
+  -> UTCTime
+  -> m Mail
 mailNewUserGroupUserInvite ctx invited inviter ug link expires = do
-  theme <- dbQuery . GetTheme . fromMaybe (get (bdMailTheme . ctxbrandeddomain) ctx) . get (uguiMailTheme . ugUI) $ ug
-  kontramail (get ctxmailnoreplyaddress ctx) (get ctxbrandeddomain ctx) theme "mailNewCompanyUserInvite" $ do
-    basicUserGroupInviteFields invited inviter ug
-    basicLinkFields (get ctxDomainUrl ctx) link
-    brandingMailFields theme
-    F.value "creatorname" $ getSmartName inviter
-    F.value "expiredate" $ formatTimeYMD expires
+  theme <-
+    dbQuery
+    . GetTheme
+    . fromMaybe (get (bdMailTheme . ctxbrandeddomain) ctx)
+    . get (uguiMailTheme . ugUI)
+    $ ug
+  kontramail (get ctxmailnoreplyaddress ctx)
+             (get ctxbrandeddomain ctx)
+             theme
+             "mailNewCompanyUserInvite"
+    $ do
+        basicUserGroupInviteFields invited inviter ug
+        basicLinkFields (get ctxDomainUrl ctx) link
+        brandingMailFields theme
+        F.value "creatorname" $ getSmartName inviter
+        F.value "expiredate" $ formatTimeYMD expires
 
 
-mailTakeoverSingleUserInvite :: (TemplatesMonad m, MonadDB m,MonadThrow m, HasSomeUserInfo a, HasLang a, HasSomeUserInfo b) =>
-                               Context -> a -> b -> UserGroup -> KontraLink -> m Mail
+mailTakeoverSingleUserInvite
+  :: ( TemplatesMonad m
+     , MonadDB m
+     , MonadThrow m
+     , HasSomeUserInfo a
+     , HasLang a
+     , HasSomeUserInfo b
+     )
+  => Context
+  -> a
+  -> b
+  -> UserGroup
+  -> KontraLink
+  -> m Mail
 mailTakeoverSingleUserInvite ctx invited inviter ug link = do
-  theme <- dbQuery . GetTheme . fromMaybe (get (bdMailTheme . ctxbrandeddomain) ctx) . get (uguiMailTheme . ugUI) $ ug
+  theme <-
+    dbQuery
+    . GetTheme
+    . fromMaybe (get (bdMailTheme . ctxbrandeddomain) ctx)
+    . get (uguiMailTheme . ugUI)
+    $ ug
   --invite in the language of the existing user rather than in the inviter's language
-  kontramaillocal (get ctxmailnoreplyaddress ctx) (get ctxbrandeddomain ctx) theme invited  "mailTakeoverSingleUserInvite" $ do
-    basicUserGroupInviteFields invited inviter ug
-    basicLinkFields (get ctxDomainUrl ctx) link
-    brandingMailFields theme
+  kontramaillocal (get ctxmailnoreplyaddress ctx)
+                  (get ctxbrandeddomain ctx)
+                  theme
+                  invited
+                  "mailTakeoverSingleUserInvite"
+    $ do
+        basicUserGroupInviteFields invited inviter ug
+        basicLinkFields (get ctxDomainUrl ctx) link
+        brandingMailFields theme
 
-basicUserGroupInviteFields :: (TemplatesMonad m, HasSomeUserInfo a, HasSomeUserInfo b) => a -> b -> UserGroup -> Fields m ()
+basicUserGroupInviteFields
+  :: (TemplatesMonad m, HasSomeUserInfo a, HasSomeUserInfo b)
+  => a
+  -> b
+  -> UserGroup
+  -> Fields m ()
 basicUserGroupInviteFields invited inviter ug = do
   F.value "invitedname" $ getFullName invited
   F.value "invitedemail" $ getEmail invited
@@ -78,13 +127,14 @@ pageDoYouWantToBeCompanyAccount ctx ug =
     entryPointFields ctx
 -------------------------------------------------------------------------------
 
-flashMessageUserHasBecomeCompanyAccount :: (TemplatesMonad m) => UserGroup -> m FlashMessage
-flashMessageUserHasBecomeCompanyAccount ug =
-  toFlashMsg OperationDone <$> renderTemplate "flashMessageUserHasBecomeCompanyAccount"
-                                  (F.value "companyname" . T.unpack . get ugName $ ug)
+flashMessageUserHasBecomeCompanyAccount
+  :: (TemplatesMonad m) => UserGroup -> m FlashMessage
+flashMessageUserHasBecomeCompanyAccount ug = toFlashMsg OperationDone <$> renderTemplate
+  "flashMessageUserHasBecomeCompanyAccount"
+  (F.value "companyname" . T.unpack . get ugName $ ug)
 
 -------------------------------------------------------------------------------
 
 flashMessageBecomeCompanyLogInDifferentUser :: (TemplatesMonad m) => m FlashMessage
-flashMessageBecomeCompanyLogInDifferentUser  =
-  toFlashMsg OperationFailed <$> renderTemplate_ "flashMessageBecomeCompanyLogInDifferentUser"
+flashMessageBecomeCompanyLogInDifferentUser = toFlashMsg OperationFailed
+  <$> renderTemplate_ "flashMessageBecomeCompanyLogInDifferentUser"

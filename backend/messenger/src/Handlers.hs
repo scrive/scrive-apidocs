@@ -27,14 +27,13 @@ router rng (ConnectionSource pool) routes = withPostgreSQL pool $ do
   runMessenger rng routes
 
 handlers :: Route (Messenger Response)
-handlers = choice [
-    hGet showHelloMessage
-  , dir "sms" $ dir "telia"       $ hPost $
-                                    withDecodedBody_ handleTeliaCallGuideEvents
-  , dir "sms" $ dir "mblox"       $ hPost handleMbloxEvents
+handlers = choice
+  [ hGet showHelloMessage
+  , dir "sms" $ dir "telia" $ hPost $ withDecodedBody_ handleTeliaCallGuideEvents
+  , dir "sms" $ dir "mblox" $ hPost handleMbloxEvents
   ]
   where
-    hGet = path GET id
+    hGet  = path GET id
     hPost = path POST id
 
 showHelloMessage :: Messenger Response

@@ -28,22 +28,24 @@ data EvidenceOfTime = EvidenceOfTime {
 -- | Given the document title, list of clock error estimates, and clock error
 -- statistics graph (in SVG, to be directly injected in HTML page) returns the
 -- Evidence of Time HTML
-evidenceOfTimeHTML :: TemplatesMonad m => String -> [HC.ClockErrorEstimate] -> EvidenceOfTime -> m String
-evidenceOfTimeHTML title clockErrors EvidenceOfTime{..} = do
+evidenceOfTimeHTML
+  :: TemplatesMonad m => String -> [HC.ClockErrorEstimate] -> EvidenceOfTime -> m String
+evidenceOfTimeHTML title clockErrors EvidenceOfTime {..} = do
   let startTime = minimum (map HC.time clockErrors)
       endTime   = maximum (map HC.time clockErrors)
       absoluteCDF dist v = cumulative dist v - cumulative dist (-v)
-      showCDFInPercent dist v = (++ "%") (show $ realFracToDecimal 3 $ 100 * absoluteCDF dist v)
+      showCDFInPercent dist v =
+        (++ "%") (show $ realFracToDecimal 3 $ 100 * absoluteCDF dist v)
   renderTemplate "evidenceOfTime" $ do
     F.value "documenttitle" title
     F.value "graph_image" eotGraph
-    F.value "EvidenceOfTimeMean"   $ HC.showClockError 2 (mean eotDistribution)
+    F.value "EvidenceOfTimeMean" $ HC.showClockError 2 (mean eotDistribution)
     F.value "EvidenceOfTimeStddev" $ HC.showClockError 2 (stdDev eotDistribution)
     F.value "EvidenceOfTimeLT25" $ showCDFInPercent eotDistribution 0.0025
-    F.value "EvidenceOfTimeLT5"  $ showCDFInPercent eotDistribution 0.005
+    F.value "EvidenceOfTimeLT5" $ showCDFInPercent eotDistribution 0.005
     F.value "EvidenceOfTimeLT10" $ showCDFInPercent eotDistribution 0.01
     F.value "EvidenceOfTimeStartDate" $ formatTimeUTC startTime ++ " UTC"
-    F.value "EvidenceOfTimeEndDate"   $ formatTimeUTC endTime   ++ " UTC"
+    F.value "EvidenceOfTimeEndDate" $ formatTimeUTC endTime ++ " UTC"
     F.objects "entries" $ for clockErrors $ \entry -> do
       F.value "offset" $ HC.showClockError 1 $ HC.offset entry
       F.value "offset_time" $ formatTimeUTC $ HC.time entry
@@ -54,12 +56,14 @@ evidenceOfTimeHTML title clockErrors EvidenceOfTime{..} = do
 generateEvidenceOfTimeData :: Int -> FilePath -> FilePath -> [Double] -> IO EvidenceOfTime
 generateEvidenceOfTimeData intervals inputFilePath outputFilePath offsets' = do
   let (dist, distData) = computeDist intervals (-0.01, 0.01) offsets
-      offsets = V.fromList offsets'
+      offsets          = V.fromList offsets'
   writeFile inputFilePath ""
   V.forM_ distData $ \(x, emp_x, est_x, err) ->
-    appendFile inputFilePath $ (intercalate " " . map show $ [x, emp_x, est_x, err]) ++ "\n"
-  void $ system $ smconcat [
-      "gnuplot -e"
+    appendFile inputFilePath
+      $  (intercalate " " . map show $ [x, emp_x, est_x, err])
+      ++ "\n"
+  void $ system $ smconcat
+    [ "gnuplot -e"
     , "\""
     , "inputfile='" ++ inputFilePath ++ "';"
     , "outputfile='" ++ outputFilePath ++ "'"
@@ -67,10 +71,7 @@ generateEvidenceOfTimeData intervals inputFilePath outputFilePath offsets' = do
     , "evidence-package/samples.p"
     ]
   graph <- BS.readFile outputFilePath
-  return EvidenceOfTime {
-      eotDistribution = dist
-    , eotGraph = graph
-    }
+  return EvidenceOfTime { eotDistribution = dist, eotGraph = graph }
 
 computeDist
   :: Int
@@ -110,22 +111,24 @@ computeDist intervals (mins, maxs) samples =
         -- deterministic results between runs.
         go :: StdGen -> Int -> NormalDistribution -> NormalDistribution
         go _ 50 dist = dist
-        go g  n dist =
-          let phi   = 1.5 * (fromIntegral n + 1)
-              mu    = mean dist
-              sigma = stdDev dist
-              (deltaMu,    g' ) = randomR (-mu/phi, mu/phi) g
-              (deltaSigma, g'') = randomR (-sigma/phi, sigma/phi) g'
-              newDist = normalDistr (mu + deltaMu) (sigma + deltaSigma)
-          in if estimationError newDist < estimationError dist
-             then go g'' 0 newDist
-             else go g'' (n+1) dist
+        go g n dist =
+          let phi               = 1.5 * (fromIntegral n + 1)
+              mu                = mean dist
+              sigma             = stdDev dist
+              (deltaMu   , g' ) = randomR (-mu / phi, mu / phi) g
+              (deltaSigma, g'') = randomR (-sigma / phi, sigma / phi) g'
+              newDist           = normalDistr (mu + deltaMu) (sigma + deltaSigma)
+          in  if estimationError newDist < estimationError dist
+                then go g'' 0 newDist
+                else go g'' (n + 1) dist
 
         -- Compute euclidean norm of the vector of errors, i.e. its distance
         -- from the zero vector which represents perfect estimation. The greater
         -- the distance, the greater the error.
         estimationError :: NormalDistribution -> Double
-        estimationError dist = sqrt $ V.sum $ V.map (\(v, emp) -> (emp - cumulative dist v)**2) empiricalCdf
+        estimationError dist = sqrt $ V.sum $ V.map
+          (\(v, emp) -> (emp - cumulative dist v) ** 2)
+          empiricalCdf
 
     empiricalCdf :: V.Vector (Double, Double)
     empiricalCdf = computeEmpirical `V.map` V.enumFromStepN mins step intervals
@@ -140,4 +143,4 @@ computeDist intervals (mins, maxs) samples =
             n = fromIntegral $ V.length samples
 
         step :: Double
-        step = (maxs - mins) / fromIntegral (intervals-1)
+        step = (maxs - mins) / fromIntegral (intervals - 1)

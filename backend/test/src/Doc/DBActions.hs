@@ -19,9 +19,8 @@ import User.Model
 data GetDocumentSearchDataByFunction = GetDocumentSearchDataByFunction DocumentID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetDocumentSearchDataByFunction (Maybe String) where
   query (GetDocumentSearchDataByFunction docID) = do
-    runQuery_ $ rawSQL
-                   "SELECT coalesce(archive_search_terms_func($1), '')"
-                   (Identity docID)
+    runQuery_
+      $ rawSQL "SELECT coalesce(archive_search_terms_func($1), '')" (Identity docID)
     fetchMaybe runIdentity
 
 -- | Get the contents of the field `documents.archive_search_terms`. For testing

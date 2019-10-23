@@ -63,27 +63,24 @@ instance FromSQL DocumentStatus where
       5 -> return Timedout
       6 -> return Rejected
       7 -> return DocumentError
-      _ -> throwM RangeError {
-        reRange = [(1, 7)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(1, 7)], reValue = n }
 
 instance ToSQL DocumentStatus where
   type PQDest DocumentStatus = PQDest Int16
-  toSQL Preparation     = toSQL (1::Int16)
-  toSQL Pending         = toSQL (2::Int16)
-  toSQL Closed          = toSQL (3::Int16)
-  toSQL Canceled        = toSQL (4::Int16)
-  toSQL Timedout        = toSQL (5::Int16)
-  toSQL Rejected        = toSQL (6::Int16)
-  toSQL DocumentError   = toSQL (7::Int16)
+  toSQL Preparation   = toSQL (1 :: Int16)
+  toSQL Pending       = toSQL (2 :: Int16)
+  toSQL Closed        = toSQL (3 :: Int16)
+  toSQL Canceled      = toSQL (4 :: Int16)
+  toSQL Timedout      = toSQL (5 :: Int16)
+  toSQL Rejected      = toSQL (6 :: Int16)
+  toSQL DocumentError = toSQL (7 :: Int16)
 
 -- | Used by API (FIXME: it shouldn't be).
 instance Show DocumentStatus where
-  show Preparation = "Preparation"
-  show Pending = "Pending"
-  show Closed  = "Closed"
-  show Canceled  = "Canceled"
-  show Timedout  = "Timedout"
-  show Rejected = "Rejected"
+  show Preparation   = "Preparation"
+  show Pending       = "Pending"
+  show Closed        = "Closed"
+  show Canceled      = "Canceled"
+  show Timedout      = "Timedout"
+  show Rejected      = "Rejected"
   show DocumentError = "DocumentError"

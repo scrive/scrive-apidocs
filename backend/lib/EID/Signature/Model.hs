@@ -74,20 +74,17 @@ instance FromSQL SignatureProvider where
       5 -> return CgiGrpBankID
       6 -> return NetsNOBankID
       7 -> return NetsDKNemID
-      _ -> throwM RangeError {
-        reRange = [(1, 7)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(1, 7)], reValue = n }
 
 instance ToSQL SignatureProvider where
   type PQDest SignatureProvider = PQDest Int16
-  toSQL LegacyBankID       = toSQL (1::Int16)
-  toSQL LegacyTelia        = toSQL (2::Int16)
-  toSQL LegacyNordea       = toSQL (3::Int16)
-  toSQL LegacyMobileBankID = toSQL (4::Int16)
-  toSQL CgiGrpBankID       = toSQL (5::Int16)
-  toSQL NetsNOBankID       = toSQL (6::Int16)
-  toSQL NetsDKNemID        = toSQL (7::Int16)
+  toSQL LegacyBankID       = toSQL (1 :: Int16)
+  toSQL LegacyTelia        = toSQL (2 :: Int16)
+  toSQL LegacyNordea       = toSQL (3 :: Int16)
+  toSQL LegacyMobileBankID = toSQL (4 :: Int16)
+  toSQL CgiGrpBankID       = toSQL (5 :: Int16)
+  toSQL NetsNOBankID       = toSQL (6 :: Int16)
+  toSQL NetsDKNemID        = toSQL (7 :: Int16)
 
 
 ----------------------------------------
@@ -95,7 +92,7 @@ instance ToSQL SignatureProvider where
 -- | Insert bank id signature for a given signatory or replace the existing one.
 data MergeCGISEBankIDSignature = MergeCGISEBankIDSignature SignatoryLinkID CGISEBankIDSignature
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeCGISEBankIDSignature () where
-  update (MergeCGISEBankIDSignature slid CGISEBankIDSignature{..}) = do
+  update (MergeCGISEBankIDSignature slid CGISEBankIDSignature {..}) = do
     loopOnUniqueViolation . withSavepoint "merge_bank_id_signature" $ do
       runQuery01_ selectSignatorySignTime
       msign_time :: Maybe UTCTime <- fetchOne runIdentity
@@ -105,11 +102,9 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeCGISEBankIDSignature () whe
         setFields
         sqlWhereEq "signatory_link_id" slid
         -- replace the signature only if signatory hasn't signed yet
-        sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime)
-          <+> "IS NULL"
-      unless success $
-        runQuery_ . sqlInsertSelect "eid_signatures" "" $ do
-          setFields
+        sqlWhere $ parenthesize (toSQLCommand selectSignatorySignTime) <+> "IS NULL"
+      unless success $ runQuery_ . sqlInsertSelect "eid_signatures" "" $ do
+        setFields
     where
       selectSignatorySignTime = do
         sqlSelect "signatory_links" $ do
@@ -119,20 +114,20 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeCGISEBankIDSignature () whe
       setFields :: (MonadState v n, SqlSet v) => n ()
       setFields = do
         sqlSet "signatory_link_id" slid
-        sqlSet "provider" CgiGrpBankID
-        sqlSet "data" cgisebidsSignedText
-        sqlSet "signature" cgisebidsSignature
-        sqlSet "signatory_name" cgisebidsSignatoryName
+        sqlSet "provider"          CgiGrpBankID
+        sqlSet "data"              cgisebidsSignedText
+        sqlSet "signature"         cgisebidsSignature
+        sqlSet "signatory_name"    cgisebidsSignatoryName
         sqlSet "signatory_personal_number" cgisebidsSignatoryPersonalNumber
-        sqlSet "ocsp_response" cgisebidsOcspResponse
-        sqlSet "signatory_ip" cgisebidsSignatoryIP
+        sqlSet "ocsp_response"     cgisebidsOcspResponse
+        sqlSet "signatory_ip"      cgisebidsSignatoryIP
 
 ----------------------------------------
 
 -- | Insert bank id signature for a given signatory or replace the existing one.
 data MergeNetsNOBankIDSignature = MergeNetsNOBankIDSignature SignatoryLinkID NetsNOBankIDSignature
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsNOBankIDSignature () where
-  update (MergeNetsNOBankIDSignature slid NetsNOBankIDSignature{..}) = do
+  update (MergeNetsNOBankIDSignature slid NetsNOBankIDSignature {..}) = do
     loopOnUniqueViolation . withSavepoint "merge_bank_id_signature" $ do
       runQuery01_ selectSignatorySignTime
       msign_time :: Maybe UTCTime <- fetchOne runIdentity
@@ -155,16 +150,16 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsNOBankIDSignature () wh
       setFields :: (MonadState v n, SqlSet v) => n ()
       setFields = do
         sqlSet "signatory_link_id" slid
-        sqlSet "provider" NetsNOBankID
-        sqlSet "data" netsnoSignedText
+        sqlSet "provider"          NetsNOBankID
+        sqlSet "data"              netsnoSignedText
         sqlSet "signature" . encodeUtf8 $ netsnoB64SDO
-        sqlSet "signatory_name" netsnoSignatoryName
+        sqlSet "signatory_name"            netsnoSignatoryName
         sqlSet "signatory_personal_number" netsnoSignatoryPID
 
 -- | Insert bank id signature for a given signatory or replace the existing one.
 data MergeNetsDKNemIDSignature = MergeNetsDKNemIDSignature SignatoryLinkID NetsDKNemIDSignature
 instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsDKNemIDSignature () where
-  update (MergeNetsDKNemIDSignature slid NetsDKNemIDSignature{..}) = do
+  update (MergeNetsDKNemIDSignature slid NetsDKNemIDSignature {..}) = do
     loopOnUniqueViolation . withSavepoint "merge_bank_id_signature" $ do
       runQuery01_ selectSignatorySignTime
       msign_time :: Maybe UTCTime <- fetchOne runIdentity
@@ -187,12 +182,12 @@ instance (MonadDB m, MonadMask m) => DBUpdate m MergeNetsDKNemIDSignature () whe
       setFields :: (MonadState v n, SqlSet v) => n ()
       setFields = do
         sqlSet "signatory_link_id" slid
-        sqlSet "provider" NetsDKNemID
-        sqlSet "data" netsdkSignedText
+        sqlSet "provider"          NetsDKNemID
+        sqlSet "data"              netsdkSignedText
         sqlSet "signature" . encodeUtf8 $ netsdkB64SDO
-        sqlSet "signatory_name" netsdkSignatoryName
+        sqlSet "signatory_name"            netsdkSignatoryName
         sqlSet "signatory_personal_number" netsdkSignatorySSN
-        sqlSet "signatory_ip" netsdkSignatoryIP
+        sqlSet "signatory_ip"              netsdkSignatoryIP
 
 -- | Get signature for a given signatory.
 data GetESignature = GetESignature SignatoryLinkID
@@ -211,46 +206,57 @@ instance (MonadThrow m, MonadDB m) => DBQuery m GetESignature (Maybe ESignature)
     fetchMaybe fetchESignature
 
 -- | Fetch e-signature.
-fetchESignature :: (SignatureProvider, Text, ByteString, Maybe ByteString, Maybe Text, Maybe Text, Maybe ByteString, Maybe Text) -> ESignature
-fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msignatory_personal_number, mocsp_response, msignatory_ip) = case provider of
-  LegacyBankID -> LegacyBankIDSignature_ LegacyBankIDSignature {
-    lbidsSignedText = sdata
-  , lbidsSignature = signature
-  , lbidsCertificate = fromJust mcertificate
-  }
-  LegacyTelia -> LegacyTeliaSignature_ LegacyTeliaSignature {
-    ltsSignedText = sdata
-  , ltsSignature = signature
-  , ltsCertificate = fromJust mcertificate
-  }
-  LegacyNordea -> LegacyNordeaSignature_ LegacyNordeaSignature {
-    lnsSignedText = sdata
-  , lnsSignature = signature
-  , lnsCertificate = fromJust mcertificate
-  }
-  LegacyMobileBankID -> LegacyMobileBankIDSignature_ LegacyMobileBankIDSignature {
-    lmbidsSignedText = sdata
-  , lmbidsSignature = signature
-  , lmbidsOcspResponse = fromJust mocsp_response
-  }
-  CgiGrpBankID -> CGISEBankIDSignature_ CGISEBankIDSignature {
-    cgisebidsSignatoryName = fromJust msignatory_name
-  , cgisebidsSignatoryPersonalNumber = fromJust msignatory_personal_number
-  , cgisebidsSignatoryIP = fromMaybe "" msignatory_ip
-  , cgisebidsSignedText = sdata
-  , cgisebidsSignature = signature
-  , cgisebidsOcspResponse = fromJust mocsp_response
-  }
-  NetsNOBankID -> NetsNOBankIDSignature_ NetsNOBankIDSignature {
-    netsnoSignedText = sdata
-  , netsnoB64SDO = decodeUtf8 signature
-  , netsnoSignatoryName = fromJust msignatory_name
-  , netsnoSignatoryPID = fromJust msignatory_personal_number
-  }
-  NetsDKNemID -> NetsDKNemIDSignature_ NetsDKNemIDSignature {
-    netsdkSignedText = sdata
-  , netsdkB64SDO = decodeUtf8 signature
-  , netsdkSignatoryName = fromJust msignatory_name
-  , netsdkSignatorySSN = fromJust msignatory_personal_number
-  , netsdkSignatoryIP = fromMaybe "" msignatory_ip
-  }
+fetchESignature
+  :: ( SignatureProvider
+     , Text
+     , ByteString
+     , Maybe ByteString
+     , Maybe Text
+     , Maybe Text
+     , Maybe ByteString
+     , Maybe Text
+     )
+  -> ESignature
+fetchESignature (provider, sdata, signature, mcertificate, msignatory_name, msignatory_personal_number, mocsp_response, msignatory_ip)
+  = case provider of
+    LegacyBankID -> LegacyBankIDSignature_ LegacyBankIDSignature
+      { lbidsSignedText  = sdata
+      , lbidsSignature   = signature
+      , lbidsCertificate = fromJust mcertificate
+      }
+    LegacyTelia -> LegacyTeliaSignature_ LegacyTeliaSignature
+      { ltsSignedText  = sdata
+      , ltsSignature   = signature
+      , ltsCertificate = fromJust mcertificate
+      }
+    LegacyNordea -> LegacyNordeaSignature_ LegacyNordeaSignature
+      { lnsSignedText  = sdata
+      , lnsSignature   = signature
+      , lnsCertificate = fromJust mcertificate
+      }
+    LegacyMobileBankID -> LegacyMobileBankIDSignature_ LegacyMobileBankIDSignature
+      { lmbidsSignedText   = sdata
+      , lmbidsSignature    = signature
+      , lmbidsOcspResponse = fromJust mocsp_response
+      }
+    CgiGrpBankID -> CGISEBankIDSignature_ CGISEBankIDSignature
+      { cgisebidsSignatoryName           = fromJust msignatory_name
+      , cgisebidsSignatoryPersonalNumber = fromJust msignatory_personal_number
+      , cgisebidsSignatoryIP             = fromMaybe "" msignatory_ip
+      , cgisebidsSignedText              = sdata
+      , cgisebidsSignature               = signature
+      , cgisebidsOcspResponse            = fromJust mocsp_response
+      }
+    NetsNOBankID -> NetsNOBankIDSignature_ NetsNOBankIDSignature
+      { netsnoSignedText    = sdata
+      , netsnoB64SDO        = decodeUtf8 signature
+      , netsnoSignatoryName = fromJust msignatory_name
+      , netsnoSignatoryPID  = fromJust msignatory_personal_number
+      }
+    NetsDKNemID -> NetsDKNemIDSignature_ NetsDKNemIDSignature
+      { netsdkSignedText    = sdata
+      , netsdkB64SDO        = decodeUtf8 signature
+      , netsdkSignatoryName = fromJust msignatory_name
+      , netsdkSignatorySSN  = fromJust msignatory_personal_number
+      , netsdkSignatoryIP   = fromMaybe "" msignatory_ip
+      }

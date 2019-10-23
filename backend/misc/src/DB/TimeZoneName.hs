@@ -37,19 +37,20 @@ mkTimeZoneName s
     -- Check if we can use the string to form a valid SQL 'timestamp with time zone' value.
     runSQL_ ("SELECT cast(" <?> ("2000-01-01 " <> s) <+> "as timestamp with time zone)")
       `catch` \(E.SomeException e) -> do
-        fail $ "mkTimeZoneName: time zone not recognized by database: " <> show (s, e)
+                fail $ "mkTimeZoneName: time zone not recognized by database: " <> show
+                  (s, e)
     return $ TimeZoneName s
 
 sanityCheck :: Text -> Bool
-sanityCheck s = case break (=='/') (T.unpack s) of
-  (as@(_:_),'/':bs) -> all isAlpha as && all (\b -> isAlphaNum b || isAllowedChar b) bs
-  _                 -> all (\b -> isAlphaNum b || isAllowedChar b) (T.unpack s)
+sanityCheck s = case break (== '/') (T.unpack s) of
+  (as@(_ : _), '/' : bs) ->
+    all isAlpha as && all (\b -> isAlphaNum b || isAllowedChar b) bs
+  _ -> all (\b -> isAlphaNum b || isAllowedChar b) (T.unpack s)
   where
     isAllowedChar :: Char -> Bool
-    isAllowedChar = (`elem` ("/+-_"::String))
+    isAllowedChar = (`elem` ("/+-_" :: String))
 
-withTimeZone :: forall m a. (MonadDB m, MonadMask m)
-             => TimeZoneName -> m a -> m a
+withTimeZone :: forall  m a . (MonadDB m, MonadMask m) => TimeZoneName -> m a -> m a
 withTimeZone (TimeZoneName tz) = bracket setNewTz setTz . const
   where
     setNewTz = do
@@ -76,7 +77,12 @@ instance FromSQL TimeZoneName where
     s <- fromSQL mbase
     if sanityCheck s
       then return $ TimeZoneName s
-      else hpqTypesError $ T.unpack $ "fromSQL (TimeZoneName): sanity check on value '" <> s <> "' failed"
+      else
+        hpqTypesError
+        $  T.unpack
+        $  "fromSQL (TimeZoneName): sanity check on value '"
+        <> s
+        <> "' failed"
 
 instance ToSQL TimeZoneName where
   type PQDest TimeZoneName = PQDest String

@@ -18,17 +18,20 @@ data Screenshot = Screenshot
 
 instance FromJSValue Screenshot where
   fromJSValue = do
-    time' <- fromJSValueField "time"
+    time'  <- fromJSValueField "time"
     image' <- fromJSValueField "image"
-    s <- fromJSValue
+    s      <- fromJSValue
     return $ if isJust time' && isJust image'
       then f time' image'
       else f (fst <$> s) (snd <$> s) -- old array format
-   where f :: Maybe String -> Maybe String -> Maybe Screenshot
-         f t i = Screenshot <$> (parseTimeISO =<< t)
-                            <*> (fmap snd . RFC2397.decode . BS.fromString =<< i)
+    where
+      f :: Maybe String -> Maybe String -> Maybe Screenshot
+      f t i =
+        Screenshot
+          <$> (parseTimeISO =<< t)
+          <*> (fmap snd . RFC2397.decode . BS.fromString =<< i)
 
 instance ToJSValue Screenshot where
   toJSValue (Screenshot time' image') = runJSONGen $ do
-    value "time"  $ toJSValue $ formatTimeISO time'
+    value "time" $ toJSValue $ formatTimeISO time'
     value "image" $ toJSValue $ BS.toString $ RFC2397.encode "image/jpeg" image'

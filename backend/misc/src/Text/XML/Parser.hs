@@ -19,7 +19,7 @@ newtype XMLParser a = XMLParser { runParser :: Cursor -> Maybe a }
   deriving Functor
 
 instance Applicative XMLParser where
-  pure = return
+  pure  = return
   (<*>) = ap
 
 instance Alternative XMLParser where

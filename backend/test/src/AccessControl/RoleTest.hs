@@ -14,9 +14,11 @@ import UserGroup.Model
 import UserGroup.Types
 
 accessControlRoleTests :: TestEnvSt -> Test
-accessControlRoleTests env = testGroup "AccessControlRoles"
+accessControlRoleTests env = testGroup
+  "AccessControlRoles"
   [ testThat "User's roles do not trickle down the user group tree"
-      env testRolesNotInheritedInUserGroupTree
+             env
+             testRolesNotInheritedInUserGroupTree
   ]
 
 testRolesNotInheritedInUserGroupTree :: TestEnv ()
@@ -39,7 +41,7 @@ testRolesNotInheritedInUserGroupTree = do
   void $ dbUpdate $ SetUserGroup (userid user) (Just $ root_ugid)
   -- user's group changed, need to re-retrieve the user
   (Just user'') <- dbQuery $ GetUserByID uid
-  userRoles2 <- dbQuery $ GetRoles user''
+  userRoles2    <- dbQuery $ GetRoles user''
   assertBool "The role set on the user's group is indeed included in user's roles"
              (grp_role `elem` userRoles2)
   where
@@ -48,5 +50,6 @@ testRolesNotInheritedInUserGroupTree = do
       ugrand0 <- rand 10 arbitrary
       ugrand1 <- rand 10 arbitrary
       ug0 <- dbUpdate . UserGroupCreate . set ugParentGroupID (Just root_ugid') $ ugrand0
-      ug1 <- dbUpdate . UserGroupCreate . set ugParentGroupID (Just (get ugID ug0)) $ ugrand1
+      ug1     <-
+        dbUpdate . UserGroupCreate . set ugParentGroupID (Just (get ugID ug0)) $ ugrand1
       return $ [ug0, ug1]

@@ -42,7 +42,10 @@ unBrandedDomainID :: BrandedDomainID -> Int64
 unBrandedDomainID (BrandedDomainID i) = i
 
 unjsonBrandedDomainID :: UnjsonDef BrandedDomainID
-unjsonBrandedDomainID = unjsonInvmapR ((maybe (fail "Can't parse DomainID")  return) . maybeRead . T.pack) (show . unBrandedDomainID :: BrandedDomainID -> String) unjsonDef
+unjsonBrandedDomainID = unjsonInvmapR
+  ((maybe (fail "Can't parse DomainID") return) . maybeRead . T.pack)
+  (show . unBrandedDomainID :: BrandedDomainID -> String)
+  unjsonDef
 
 instance Unjson BrandedDomainID where
   unjsonDef = unjsonBrandedDomainID

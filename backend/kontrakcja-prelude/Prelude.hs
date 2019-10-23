@@ -62,9 +62,9 @@ import qualified "base" Prelude as P
 
 -- | Boolean algebra of functions.
 instance Boolean (a -> Bool) where
-  true   = const True
-  false  = const False
-  not f  = not . f
+  true  = const True
+  false = const False
+  not f = not . f
   (&&)   = liftA2 (&&)
   (||)   = liftA2 (||)
   xor    = liftA2 xor
@@ -79,7 +79,7 @@ instance {-# OVERLAPPABLE #-}
   (Show a)
   => TextShow a
    where
-    showb = fromString . show
+  showb = fromString . show
 
 instance FromJSValue Text where
   fromJSValue = fmap T.pack . fromJSValue
@@ -111,10 +111,15 @@ maybeRead s = case reads (T.unpack s) of
 -- | Replacement for 'P.!!' that provides useful information on failure.
 (!!) :: HasCallStack => [a] -> Int -> a
 xs !! n
-  | n < 0     = negativeIndexError "!!"
-  | otherwise = foldr (\x r k -> case k of
-                                   0 -> x
-                                   _ -> r (k-1)) (indexOutOfBoundsError "!!") xs n
+  | n < 0 = negativeIndexError "!!"
+  | otherwise = foldr
+    (\x r k -> case k of
+      0 -> x
+      _ -> r (k - 1)
+    )
+    (indexOutOfBoundsError "!!")
+    xs
+    n
 
 -- | Replacement for 'P.head' that provides useful information on failure.
 head :: HasCallStack => [a] -> a
@@ -140,10 +145,17 @@ minimum = emptyList P.minimum $ emptyListError "minimum"
 read :: (HasCallStack, Read a, TextShow a) => Text -> a
 read s =
   let parsedS = reads $ T.unpack s
-  in  fromMaybe (unexpectedError $ "reading failed (input was '"
-                  <> s <> "', reads returned '" <> (showt parsedS) <> "')") $ do
-        [(v, "")] <- return parsedS
-        return v
+  in  fromMaybe
+          (  unexpectedError
+          $  "reading failed (input was '"
+          <> s
+          <> "', reads returned '"
+          <> (showt parsedS)
+          <> "')"
+          )
+        $ do
+            [(v, "")] <- return parsedS
+            return v
 
 -- | Replacement for 'Data.Maybe.fromJust' that provides useful
 -- information on failure.
@@ -168,9 +180,8 @@ emptyListError :: HasCallStack => Text -> a
 emptyListError fname = unexpectedError $ fname <> " received an empty list"
 
 indexOutOfBoundsError :: HasCallStack => Text -> a
-indexOutOfBoundsError fname = unexpectedError $
-                              fname <> " received an out-of-bounds index"
+indexOutOfBoundsError fname =
+  unexpectedError $ fname <> " received an out-of-bounds index"
 
 negativeIndexError :: HasCallStack => Text -> a
-negativeIndexError fname = unexpectedError $
-                           fname <> " received a negative index"
+negativeIndexError fname = unexpectedError $ fname <> " received a negative index"

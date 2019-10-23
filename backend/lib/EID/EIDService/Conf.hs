@@ -10,13 +10,11 @@ data EIDServiceConf = EIDServiceConf {
 } deriving (Show, Eq, Ord)
 
 unjsonEIDServiceConf :: UnjsonDef EIDServiceConf
-unjsonEIDServiceConf = objectOf $ pure EIDServiceConf
-  <*> field "url"
-      eidServiceUrl
-      "EIDService url"
-  <*> field "token"
-      eidServiceToken
-      "EIDService token"
+unjsonEIDServiceConf =
+  objectOf $ pure EIDServiceConf <*> field "url" eidServiceUrl "EIDService url" <*> field
+    "token"
+    eidServiceToken
+    "EIDService token"
 
 instance Unjson EIDServiceConf where
   unjsonDef = unjsonEIDServiceConf

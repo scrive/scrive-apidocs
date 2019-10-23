@@ -36,10 +36,7 @@ mailerJobSelectors :: [SQL]
 mailerJobSelectors = ["id", "attempts"]
 
 mailerJobFetcher :: (JobType, Int32) -> MailerJob
-mailerJobFetcher (jtype, attempts) = MailerJob {
-  mjType = jtype
-, mjAttempts = attempts
-}
+mailerJobFetcher (jtype, attempts) = MailerJob { mjType = jtype, mjAttempts = attempts }
 
 data GetCurrentSenderType = GetCurrentSenderType
 instance (MonadDB m, MonadThrow m) => DBQuery m GetCurrentSenderType SenderType where
@@ -61,22 +58,18 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m SwitchToSlaveSenderImmediately 
     success <- runQuery01 . sqlUpdate "mailer_jobs" $ do
       sqlSet "finished_at" (Nothing :: Maybe UTCTime)
       sqlWhereEq "id" job
-    unless success $
-      unexpectedError $ (showt job) <+> "doesn't exist"
-    where
-      job = CollectServiceTestResult
+    unless success $ unexpectedError $ (showt job) <+> "doesn't exist"
+    where job = CollectServiceTestResult
 
 data CollectServiceTestResultIn = CollectServiceTestResultIn Interval
 instance (MonadDB m, MonadTime m, MonadThrow m) => DBUpdate m CollectServiceTestResultIn () where
   update (CollectServiceTestResultIn int) = do
-    now <- currentTime
+    now     <- currentTime
     success <- runQuery01 . sqlUpdate "mailer_jobs" $ do
       sqlSetCmd "run_at" $ sqlParam now <+> "+" <?> int
       sqlWhereEq "id" job
-    unless success $
-      unexpectedError $ (showt job) <+> "doesn't exist"
-    where
-      job = CollectServiceTestResult
+    unless success $ unexpectedError $ (showt job) <+> "doesn't exist"
+    where job = CollectServiceTestResult
 
 data ScheduleServiceTest = ScheduleServiceTest
 instance (MonadDB m, MonadThrow m) => DBUpdate m ScheduleServiceTest () where
@@ -84,10 +77,8 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m ScheduleServiceTest () where
     success <- runQuery01 . sqlUpdate "mailer_jobs" $ do
       sqlSet "run_at" unixEpoch
       sqlWhereEq "id" job
-    unless success $
-      unexpectedError $ (showt job) <+> "doesn't exist"
-    where
-      job = PerformServiceTest
+    unless success $ unexpectedError $ (showt job) <+> "doesn't exist"
+    where job = PerformServiceTest
 
 ----------------------------------------
 
@@ -95,32 +86,46 @@ mailNotificationChannel :: Channel
 mailNotificationChannel = "mailer_mail"
 
 mailSelectors :: [SQL]
-mailSelectors = [
-    "mails.id"
+mailSelectors =
+  [ "mails.id"
   , "mails.token"
   , "mails.sender"
   , "mails.receivers"
   , "mails.reply_to"
   , "mails.title"
   , "mails.content"
-  , "ARRAY(SELECT (name, content, file_id)::" <> raw (ctName ctMailAttachment) <+> "FROM mail_attachments a WHERE a.mail_id = mails.id ORDER BY a.id)"
+  , "ARRAY(SELECT (name, content, file_id)::"
+    <>  raw (ctName ctMailAttachment)
+    <+> "FROM mail_attachments a WHERE a.mail_id = mails.id ORDER BY a.id)"
   , "mails.service_test"
   , "mails.attempts"
   ]
 
-mailFetcher :: (MailID, MagicHash, Address, [Address], Maybe Address, Text, Text, CompositeArray1 Attachment, Bool, Int32) -> Mail
-mailFetcher (mid, token, from, to, reply_to, title, content, CompositeArray1 attachments, service_test, attempts) = Mail {
-  mailID = mid
-, mailToken = token
-, mailFrom = from
-, mailTo = to
-, mailReplyTo = reply_to
-, mailTitle = title
-, mailContent = content
-, mailAttachments = attachments
-, mailServiceTest = service_test
-, mailAttempts = attempts
-}
+mailFetcher
+  :: ( MailID
+     , MagicHash
+     , Address
+     , [Address]
+     , Maybe Address
+     , Text
+     , Text
+     , CompositeArray1 Attachment
+     , Bool
+     , Int32
+     )
+  -> Mail
+mailFetcher (mid, token, from, to, reply_to, title, content, CompositeArray1 attachments, service_test, attempts)
+  = Mail { mailID          = mid
+         , mailToken       = token
+         , mailFrom        = from
+         , mailTo          = to
+         , mailReplyTo     = reply_to
+         , mailTitle       = title
+         , mailContent     = content
+         , mailAttachments = attachments
+         , mailServiceTest = service_test
+         , mailAttempts    = attempts
+         }
 
 ----------------------------------------
 
@@ -142,7 +147,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetEmail (Maybe Mail) where
   query (GetEmail mid token) = do
     runQuery01_ . sqlSelect "mails" $ do
       mapM_ sqlResult mailSelectors
-      sqlWhereEq "id" mid
+      sqlWhereEq "id"    mid
       sqlWhereEq "token" token
     fetchMaybe mailFetcher
 
@@ -155,7 +160,7 @@ instance (MonadDB m, MonadThrow m) => DBQuery m GetEmailSendoutTime (Maybe UTCTi
     mres <- fetchMaybe runIdentity
     case mres of
       Just (Just res) -> return res
-      _ -> return Nothing
+      _               -> return Nothing
 
 data GetEmailForRecipient = GetEmailForRecipient Text Text UTCTime
 instance (MonadDB m, MonadThrow m, MonadTime m) => DBQuery m GetEmailForRecipient (Maybe Mail) where
@@ -182,7 +187,10 @@ instance MonadDB m => DBUpdate m ResendEmailsSentAfterServiceTest Int where
     n <- runQuery . sqlUpdate "mails" $ do
       sqlSet "run_at" unixEpoch
       sqlWhereEq "service_test" False
-      sqlWhere $ "finished_at >= (SELECT j.finished_at FROM mailer_jobs j WHERE j.id =" <?> PerformServiceTest <> ")"
+      sqlWhere
+        $   "finished_at >= (SELECT j.finished_at FROM mailer_jobs j WHERE j.id ="
+        <?> PerformServiceTest
+        <>  ")"
     when (n > 0) $ do
       notify mailNotificationChannel ""
     return n
@@ -201,38 +209,36 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m UpdateWithEvent Bool where
   update (UpdateWithEvent mid ev) = do
     runQuery01 . sqlInsert "mail_events" $ do
       sqlSet "mail_id" mid
-      sqlSet "event" ev
+      sqlSet "event"   ev
 
 data MarkEventAsRead = MarkEventAsRead EventID UTCTime
 instance (MonadDB m, MonadThrow m) => DBUpdate m MarkEventAsRead Bool where
-  update (MarkEventAsRead eid time) =
-    runQuery01 $ sqlUpdate "mail_events" $ do
-      sqlSet "event_read" time
-      sqlWhereEq "id" eid
+  update (MarkEventAsRead eid time) = runQuery01 $ sqlUpdate "mail_events" $ do
+    sqlSet "event_read" time
+    sqlWhereEq "id" eid
 
 ----------------------------------------
 
 insertEmail :: (MonadDB m, MonadThrow m) => Bool -> EmailData -> m MailID
 insertEmail service_test (token, sender, to, reply_to, title, content, attachments) = do
   runQuery_ . sqlInsert "mails" $ do
-    sqlSet "token" token
-    sqlSet "sender" sender
+    sqlSet "token"     token
+    sqlSet "sender"    sender
     sqlSet "receivers" to
-    sqlSet "reply_to" reply_to
+    sqlSet "reply_to"  reply_to
     sqlSet "title" $ T.strip title
-    sqlSet "content" content
-    sqlSet "run_at" unixEpoch
+    sqlSet "content"      content
+    sqlSet "run_at"       unixEpoch
     sqlSet "service_test" service_test
     sqlResult "id"
   mid <- fetchOne runIdentity
-  unless (null attachments) $
-    runQuery_ $ sqlInsert "mail_attachments" $ do
-      sqlSet "mail_id" mid
-      sqlSetList "name" names
-      sqlSetList "content" $ either Just (const Nothing) `map` contents
-      sqlSetList "file_id" $ either (const Nothing) Just `map` contents
+  unless (null attachments) $ runQuery_ $ sqlInsert "mail_attachments" $ do
+    sqlSet "mail_id" mid
+    sqlSetList "name" names
+    sqlSetList "content" $ either Just (const Nothing) `map` contents
+    sqlSetList "file_id" $ either (const Nothing) Just `map` contents
   notify mailNotificationChannel ""
   return mid
   where
-    names = map attName attachments
+    names    = map attName attachments
     contents = map attContent attachments

@@ -50,15 +50,12 @@ instance FromSQL DocumentType where
     case n :: Int16 of
       1 -> return Signable
       2 -> return Template
-      _ -> throwM RangeError {
-        reRange = [(1, 2)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(1, 2)], reValue = n }
 
 instance ToSQL DocumentType where
   type PQDest DocumentType = PQDest Int16
-  toSQL Signable = toSQL (1::Int16)
-  toSQL Template = toSQL (2::Int16)
+  toSQL Signable = toSQL (1 :: Int16)
+  toSQL Template = toSQL (2 :: Int16)
 
 ---------------------------------
 
@@ -78,15 +75,12 @@ instance FromSQL DocumentSharing where
     case n :: Int16 of
       1 -> return Private
       2 -> return Shared
-      _ -> throwM RangeError {
-        reRange = [(1, 2)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(1, 2)], reValue = n }
 
 instance ToSQL DocumentSharing where
   type PQDest DocumentSharing = PQDest Int16
-  toSQL Private = toSQL (1::Int16)
-  toSQL Shared  = toSQL (2::Int16)
+  toSQL Private = toSQL (1 :: Int16)
+  toSQL Shared  = toSQL (2 :: Int16)
 
 ---------------------------------
 
@@ -137,55 +131,55 @@ instance FromSQL StatusClass where
       16 -> return SCOpenedAuthToView
       17 -> return SCAuthenticatedToView
       18 -> return SCApproved
-      _ -> throwM RangeError {
-        reRange = [(1, 18)]
-      , reValue = n
-      }
+      _  -> throwM RangeError { reRange = [(1, 18)], reValue = n }
 
 instance ToSQL StatusClass where
   type PQDest StatusClass = PQDest Int16
-  toSQL SCDraft           = toSQL (1::Int16)
-  toSQL SCCancelled       = toSQL (2::Int16)
-  toSQL SCRejected        = toSQL (3::Int16)
-  toSQL SCTimedout        = toSQL (4::Int16)
-  toSQL SCError           = toSQL (5::Int16)
-  toSQL SCDeliveryProblem = toSQL (6::Int16)
-  toSQL SCSent            = toSQL (7::Int16)
-  toSQL SCDelivered       = toSQL (8::Int16)
-  toSQL SCRead            = toSQL (9::Int16)
-  toSQL SCOpened          = toSQL (10::Int16)
-  toSQL SCSigned          = toSQL (11::Int16)
-  toSQL SCProlonged       = toSQL (12::Int16)
-  toSQL SCSealed          = toSQL (13::Int16)
-  toSQL SCExtended        = toSQL (14::Int16)
-  toSQL SCInitiated       = toSQL (15::Int16)
-  toSQL SCOpenedAuthToView    = toSQL (16::Int16)
-  toSQL SCAuthenticatedToView = toSQL (17::Int16)
-  toSQL SCApproved        = toSQL (18::Int16)
+  toSQL SCDraft               = toSQL (1 :: Int16)
+  toSQL SCCancelled           = toSQL (2 :: Int16)
+  toSQL SCRejected            = toSQL (3 :: Int16)
+  toSQL SCTimedout            = toSQL (4 :: Int16)
+  toSQL SCError               = toSQL (5 :: Int16)
+  toSQL SCDeliveryProblem     = toSQL (6 :: Int16)
+  toSQL SCSent                = toSQL (7 :: Int16)
+  toSQL SCDelivered           = toSQL (8 :: Int16)
+  toSQL SCRead                = toSQL (9 :: Int16)
+  toSQL SCOpened              = toSQL (10 :: Int16)
+  toSQL SCSigned              = toSQL (11 :: Int16)
+  toSQL SCProlonged           = toSQL (12 :: Int16)
+  toSQL SCSealed              = toSQL (13 :: Int16)
+  toSQL SCExtended            = toSQL (14 :: Int16)
+  toSQL SCInitiated           = toSQL (15 :: Int16)
+  toSQL SCOpenedAuthToView    = toSQL (16 :: Int16)
+  toSQL SCAuthenticatedToView = toSQL (17 :: Int16)
+  toSQL SCApproved            = toSQL (18 :: Int16)
 
 instance Show StatusClass where
-  show SCInitiated = "initiated"
-  show SCDraft = "draft"
-  show SCCancelled = "cancelled"
-  show SCRejected  = "rejected"
-  show SCTimedout  = "timeouted"
-  show SCError = "problem"
-  show SCDeliveryProblem = "deliveryproblem"
-  show SCSent = "sent"
-  show SCDelivered = "delivered"
-  show SCRead = "read"
-  show SCOpened = "opened"
-  show SCSigned = "signed"
-  show SCProlonged = "prolonged"
-  show SCSealed = "sealed"
-  show SCExtended = "extended"
-  show SCOpenedAuthToView = "authenticationview"
+  show SCInitiated           = "initiated"
+  show SCDraft               = "draft"
+  show SCCancelled           = "cancelled"
+  show SCRejected            = "rejected"
+  show SCTimedout            = "timeouted"
+  show SCError               = "problem"
+  show SCDeliveryProblem     = "deliveryproblem"
+  show SCSent                = "sent"
+  show SCDelivered           = "delivered"
+  show SCRead                = "read"
+  show SCOpened              = "opened"
+  show SCSigned              = "signed"
+  show SCProlonged           = "prolonged"
+  show SCSealed              = "sealed"
+  show SCExtended            = "extended"
+  show SCOpenedAuthToView    = "authenticationview"
   show SCAuthenticatedToView = "authenticated"
-  show SCApproved = "approved"
+  show SCApproved            = "approved"
 
 instance Read StatusClass where
   readsPrec _ str =
-    [(v,drop (length (show v)) str) | v <- [minBound .. maxBound], show v `isPrefixOf` str]
+    [ (v, drop (length (show v)) str)
+    | v <- [minBound .. maxBound]
+    , show v `isPrefixOf` str
+    ]
 
 ---------------------------------
 
@@ -238,55 +232,50 @@ data Document = Document {
 type instance ID Document = DocumentID
 
 instance Loggable Document where
-  logValue Document{..} = object [
-      identifier documentid
-    , "title" .= documenttitle
-    , "status" .= show documentstatus
-    ]
+  logValue Document {..} = object
+    [identifier documentid, "title" .= documenttitle, "status" .= show documentstatus]
   logDefaultLabel _ = "document"
 
 defaultDocument :: Document
-defaultDocument =
-  Document {
-    documentid = unsafeDocumentID 0
-  , documenttitle = ""
-  , documentsignatorylinks = []
-  , documentmainfiles = []
-  , documentstatus = Preparation
-  , documenttype = Signable
-  , documentctime = unixEpoch
-  , documentmtime = unixEpoch
-  , documentdaystosign = 90
-  , documentdaystoremind = Nothing
-  , documenttimeouttime = Nothing
-  , documentautoremindtime = Nothing
-  , documentshowheader = True
-  , documentshowpdfdownload = True
-  , documentshowrejectoption = True
-  , documentallowrejectreason = True
-  , documentshowfooter = True
-  , documentisreceipt = False
-  , documentinvitetext = ""
-  , documentconfirmtext = ""
-  , documentinvitetime = Nothing
-  , documentsharing = Private
-  , documenttags = S.empty
-  , documentauthorattachments = []
-  , documentlang = defaultLang
-  , documentstatusclass = SCDraft
-  , documentapiv1callbackurl = Nothing
-  , documentapiv2callbackurl = Nothing
-  , documentunsaveddraft = False
-  , documentobjectversion = 0
-  , documentmagichash = unsafeMagicHash 0
-  , documentauthorugid = Nothing
-  , documenttimezonename = defaultTimeZoneName
-  , documentshareablelinkhash = Nothing
-  , documenttemplateid = Nothing
-  , documentfromshareablelink = False
-  , documentshowarrow = True
-  , documentfolderid = Nothing
-  }
+defaultDocument = Document { documentid                = unsafeDocumentID 0
+                           , documenttitle             = ""
+                           , documentsignatorylinks    = []
+                           , documentmainfiles         = []
+                           , documentstatus            = Preparation
+                           , documenttype              = Signable
+                           , documentctime             = unixEpoch
+                           , documentmtime             = unixEpoch
+                           , documentdaystosign        = 90
+                           , documentdaystoremind      = Nothing
+                           , documenttimeouttime       = Nothing
+                           , documentautoremindtime    = Nothing
+                           , documentshowheader        = True
+                           , documentshowpdfdownload   = True
+                           , documentshowrejectoption  = True
+                           , documentallowrejectreason = True
+                           , documentshowfooter        = True
+                           , documentisreceipt         = False
+                           , documentinvitetext        = ""
+                           , documentconfirmtext       = ""
+                           , documentinvitetime        = Nothing
+                           , documentsharing           = Private
+                           , documenttags              = S.empty
+                           , documentauthorattachments = []
+                           , documentlang              = defaultLang
+                           , documentstatusclass       = SCDraft
+                           , documentapiv1callbackurl  = Nothing
+                           , documentapiv2callbackurl  = Nothing
+                           , documentunsaveddraft      = False
+                           , documentobjectversion     = 0
+                           , documentmagichash         = unsafeMagicHash 0
+                           , documentauthorugid        = Nothing
+                           , documenttimezonename      = defaultTimeZoneName
+                           , documentshareablelinkhash = Nothing
+                           , documenttemplateid        = Nothing
+                           , documentfromshareablelink = False
+                           , documentshowarrow         = True
+                           , documentfolderid          = Nothing
+                           }
 
 instance HasGuardtimeSignature Document where
   hasGuardtimeSignature doc =
@@ -301,11 +290,19 @@ instance HasLang Document where
 ---------------------------------
 
 documentsSelectors :: [SQL]
-documentsSelectors = [
-    "documents.id"
+documentsSelectors =
+  [ "documents.id"
   , "documents.title"
-  , "ARRAY(SELECT (" <> mintercalate ", " signatoryLinksSelectors <> ")::" <> raw (ctName ctSignatoryLink) <+> "FROM signatory_links WHERE documents.id = signatory_links.document_id ORDER BY signatory_links.id)"
-  , "ARRAY(SELECT (" <> mintercalate ", " mainFilesSelectors <> ")::" <> raw (ctName ctMainFile) <+> "FROM main_files, files WHERE documents.id = main_files.document_id AND main_files.file_id = files.id ORDER BY main_files.id DESC)"
+  , "ARRAY(SELECT ("
+    <>  mintercalate ", " signatoryLinksSelectors
+    <>  ")::"
+    <>  raw (ctName ctSignatoryLink)
+    <+> "FROM signatory_links WHERE documents.id = signatory_links.document_id ORDER BY signatory_links.id)"
+  , "ARRAY(SELECT ("
+    <>  mintercalate ", " mainFilesSelectors
+    <>  ")::"
+    <>  raw (ctName ctMainFile)
+    <+> "FROM main_files, files WHERE documents.id = main_files.document_id AND main_files.file_id = files.id ORDER BY main_files.id DESC)"
   , "documents.status"
   , "documents.type"
   , "documents.ctime"
@@ -326,9 +323,17 @@ documentsSelectors = [
   , "documents.is_receipt"
   , "documents.lang"
   , "documents.sharing"
-  , "ARRAY(SELECT (" <> mintercalate ", " documentTagsSelectors <> ")::" <> raw (ctName ctDocumentTag) <+> "FROM document_tags WHERE documents.id = document_tags.document_id ORDER BY document_tags.name)"
+  , "ARRAY(SELECT ("
+    <>  mintercalate ", " documentTagsSelectors
+    <>  ")::"
+    <>  raw (ctName ctDocumentTag)
+    <+> "FROM document_tags WHERE documents.id = document_tags.document_id ORDER BY document_tags.name)"
   -- needs ROW since composite type has only one field for now
-  , "ARRAY(SELECT ROW(" <> mintercalate ", " authorAttachmentsSelectors <> ")::" <> raw (ctName ctAuthorAttachment) <+> "FROM author_attachments WHERE documents.id = author_attachments.document_id ORDER BY author_attachments.file_id)"
+  , "ARRAY(SELECT ROW("
+    <>  mintercalate ", " authorAttachmentsSelectors
+    <>  ")::"
+    <>  raw (ctName ctAuthorAttachment)
+    <+> "FROM author_attachments WHERE documents.id = author_attachments.document_id ORDER BY author_attachments.file_id)"
   , "documents.api_v1_callback_url"
   , "documents.api_v2_callback_url"
   , "documents.unsaved_draft"
@@ -345,25 +350,25 @@ documentsSelectors = [
   ]
 
 documentStatusClassExpression :: SQL
-documentStatusClassExpression = mconcat [
-    "(SELECT COALESCE((SELECT min(" <> statusClassCaseExpression <> ")"
+documentStatusClassExpression = mconcat
+  [ "(SELECT COALESCE((SELECT min(" <> statusClassCaseExpression <> ")"
   , "FROM signatory_links "
   , "WHERE signatory_links.document_id = documents.id "
-  , "AND" <+>
-    parenthesize
-    ( "signatory_links.signatory_role =" <?> SignatoryRoleSigningParty <+>
-      "OR" <+>
-      "signatory_links.signatory_role =" <?> SignatoryRoleApprover )
+  , "AND" <+> parenthesize
+    (   "signatory_links.signatory_role ="
+    <?> SignatoryRoleSigningParty
+    <+> "OR"
+    <+> "signatory_links.signatory_role ="
+    <?> SignatoryRoleApprover
+    )
   , "),"
-  , "(SELECT " <>
-    statusClassCaseExpressionForDocument <> "),"
-    <?> SCDraft
+  , "(SELECT " <> statusClassCaseExpressionForDocument <> ")," <?> SCDraft
   , "))::SMALLINT"
   ]
   where
     -- FIXME: Add to DB.SQL functionality that encodes CASE expression.
-    statusClassCaseExpression = smconcat [
-        "(CASE"
+    statusClassCaseExpression = smconcat
+      [ "(CASE"
       , "WHEN documents.status =" <?> DocumentError
       , "THEN" <?> SCError
       , "WHEN documents.status =" <?> Preparation
@@ -382,80 +387,121 @@ documentStatusClassExpression = mconcat [
       , "THEN" <?> SCRead
       , "WHEN signatory_links.mail_invitation_delivery_status =" <?> Undelivered
       , "THEN" <?> SCDeliveryProblem
-      , "WHEN signatory_links.sms_invitation_delivery_status ="  <?> Undelivered
+      , "WHEN signatory_links.sms_invitation_delivery_status =" <?> Undelivered
       , "THEN" <?> SCDeliveryProblem
       , "WHEN signatory_links.mail_invitation_delivery_status =" <?> Delivered
       , "THEN" <?> SCDelivered
-      , "WHEN signatory_links.sms_invitation_delivery_status ="  <?> Delivered
+      , "WHEN signatory_links.sms_invitation_delivery_status =" <?> Delivered
       , "THEN" <?> SCDelivered
       , "ELSE" <?> SCSent
       , "END :: SMALLINT)"
       ]
-    statusClassCaseExpressionForDocument = smconcat [
-        "(CASE"
+    statusClassCaseExpressionForDocument = smconcat
+      [ "(CASE"
       , "WHEN documents.status =" <?> DocumentError <+> "THEN" <?> SCError
-      , "WHEN documents.status =" <?> Preparation   <+> "THEN" <?> SCDraft
-      , "WHEN documents.status =" <?> Canceled      <+> "THEN" <?> SCCancelled
-      , "WHEN documents.status =" <?> Timedout      <+> "THEN" <?> SCTimedout
-      , "WHEN documents.status =" <?> Rejected      <+> "THEN" <?> SCRejected
+      , "WHEN documents.status =" <?> Preparation <+> "THEN" <?> SCDraft
+      , "WHEN documents.status =" <?> Canceled <+> "THEN" <?> SCCancelled
+      , "WHEN documents.status =" <?> Timedout <+> "THEN" <?> SCTimedout
+      , "WHEN documents.status =" <?> Rejected <+> "THEN" <?> SCRejected
       , "END :: INTEGER)"
       ]
 
-type instance CompositeRow Document = (DocumentID, Text, CompositeArray1 SignatoryLink, CompositeArray1 MainFile, DocumentStatus, DocumentType, UTCTime, UTCTime, Int32, Maybe Int32, Maybe UTCTime, Maybe UTCTime, Maybe UTCTime, Maybe IPAddress, Text, Text, Bool, Bool, Bool, Bool, Bool, Bool, Lang, DocumentSharing, CompositeArray1 DocumentTag, CompositeArray1 AuthorAttachment, Maybe Text, Maybe Text, Bool, Int64, MagicHash, TimeZoneName, Maybe UserGroupID, StatusClass, Maybe MagicHash, Maybe DocumentID, Bool, Bool, Maybe FolderID)
+type instance CompositeRow Document
+  = ( DocumentID
+    , Text
+    , CompositeArray1 SignatoryLink
+    , CompositeArray1 MainFile
+    , DocumentStatus
+    , DocumentType
+    , UTCTime
+    , UTCTime
+    , Int32
+    , Maybe Int32
+    , Maybe UTCTime
+    , Maybe UTCTime
+    , Maybe UTCTime
+    , Maybe IPAddress
+    , Text
+    , Text
+    , Bool
+    , Bool
+    , Bool
+    , Bool
+    , Bool
+    , Bool
+    , Lang
+    , DocumentSharing
+    , CompositeArray1 DocumentTag
+    , CompositeArray1 AuthorAttachment
+    , Maybe Text
+    , Maybe Text
+    , Bool
+    , Int64
+    , MagicHash
+    , TimeZoneName
+    , Maybe UserGroupID
+    , StatusClass
+    , Maybe MagicHash
+    , Maybe DocumentID
+    , Bool
+    , Bool
+    , Maybe FolderID
+    )
 
 instance PQFormat Document where
   pqFormat = compositeTypePqFormat ctDocument
 
 instance CompositeFromSQL Document where
-  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text,  show_header, show_pdf_download, show_reject_option, allow_reject_reason, show_footer, is_receipt, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apiv1callback, apiv2callback, unsaved_draft, objectversion, token, time_zone_name, author_ugid, status_class, shareable_link_hash, template_id, from_shareable_link, show_arrow, fid) = Document {
-    documentid = did
-  , documenttitle = title
-  , documentsignatorylinks = signatory_links
-  , documentmainfiles = main_files
-  , documentstatus = status
-  , documenttype = doc_type
-  , documentctime = ctime
-  , documentmtime = mtime
-  , documentdaystosign = days_to_sign
-  , documentdaystoremind = days_to_remind
-  , documenttimeouttime = timeout_time
-  , documentautoremindtime = case status of
-    Pending -> auto_remind_time
-    _ -> Nothing
-  , documentinvitetime = case invite_time of
-    Nothing -> Nothing
-    Just t -> Just (SignInfo t $ fromMaybe noIP invite_ip)
-  , documentinvitetext = invite_text
-  , documentconfirmtext = confirm_text
-  , documentshowheader = show_header
-  , documentshowpdfdownload = show_pdf_download
-  , documentshowrejectoption = show_reject_option
-  , documentallowrejectreason = allow_reject_reason
-  , documentshowfooter = show_footer
-  , documentisreceipt = is_receipt
-  , documentsharing = sharing
-  , documenttags = S.fromList tags
-  , documentauthorattachments = author_attachments
-  , documentlang = lang
-  , documentstatusclass = status_class
-  , documentapiv1callbackurl = apiv1callback
-  , documentapiv2callbackurl = apiv2callback
-  , documentunsaveddraft = unsaved_draft
-  , documentobjectversion = objectversion
-  , documentmagichash = token
-  , documentauthorugid = author_ugid
-  , documenttimezonename = time_zone_name
-  , documentshareablelinkhash = shareable_link_hash
-  , documenttemplateid = template_id
-  , documentfromshareablelink = from_shareable_link
-  , documentshowarrow = show_arrow
-  , documentfolderid = fid
-  }
+  toComposite (did, title, CompositeArray1 signatory_links, CompositeArray1 main_files, status, doc_type, ctime, mtime, days_to_sign, days_to_remind, timeout_time, auto_remind_time, invite_time, invite_ip, invite_text, confirm_text, show_header, show_pdf_download, show_reject_option, allow_reject_reason, show_footer, is_receipt, lang, sharing, CompositeArray1 tags, CompositeArray1 author_attachments, apiv1callback, apiv2callback, unsaved_draft, objectversion, token, time_zone_name, author_ugid, status_class, shareable_link_hash, template_id, from_shareable_link, show_arrow, fid)
+    = Document
+      { documentid                = did
+      , documenttitle             = title
+      , documentsignatorylinks    = signatory_links
+      , documentmainfiles         = main_files
+      , documentstatus            = status
+      , documenttype              = doc_type
+      , documentctime             = ctime
+      , documentmtime             = mtime
+      , documentdaystosign        = days_to_sign
+      , documentdaystoremind      = days_to_remind
+      , documenttimeouttime       = timeout_time
+      , documentautoremindtime    = case status of
+                                      Pending -> auto_remind_time
+                                      _       -> Nothing
+      , documentinvitetime        = case invite_time of
+                                      Nothing -> Nothing
+                                      Just t -> Just (SignInfo t $ fromMaybe noIP invite_ip)
+      , documentinvitetext        = invite_text
+      , documentconfirmtext       = confirm_text
+      , documentshowheader        = show_header
+      , documentshowpdfdownload   = show_pdf_download
+      , documentshowrejectoption  = show_reject_option
+      , documentallowrejectreason = allow_reject_reason
+      , documentshowfooter        = show_footer
+      , documentisreceipt         = is_receipt
+      , documentsharing           = sharing
+      , documenttags              = S.fromList tags
+      , documentauthorattachments = author_attachments
+      , documentlang              = lang
+      , documentstatusclass       = status_class
+      , documentapiv1callbackurl  = apiv1callback
+      , documentapiv2callbackurl  = apiv2callback
+      , documentunsaveddraft      = unsaved_draft
+      , documentobjectversion     = objectversion
+      , documentmagichash         = token
+      , documentauthorugid        = author_ugid
+      , documenttimezonename      = time_zone_name
+      , documentshareablelinkhash = shareable_link_hash
+      , documenttemplateid        = template_id
+      , documentfromshareablelink = from_shareable_link
+      , documentshowarrow         = show_arrow
+      , documentfolderid          = fid
+      }
 
 ---------------------------------
 
 documentfile :: Document -> Maybe MainFile
-documentfile =  find ((Preparation ==) . mainfiledocumentstatus) . documentmainfiles
+documentfile = find ((Preparation ==) . mainfiledocumentstatus) . documentmainfiles
 
 -- | Here we assume that the most recently sealed file is closest to the head of the list.
 documentsealedfile :: Document -> Maybe MainFile

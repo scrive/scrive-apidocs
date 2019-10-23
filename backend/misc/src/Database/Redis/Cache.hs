@@ -22,7 +22,8 @@ data KeyInvalidated = NotExists | TTLNotSet
 -- | Given a 'RedisKey', try to fetch it from the cache and run the
 -- corresponding handler afterwards.
 mfetch
-  :: forall m r. (MonadBaseControl IO m, MonadLog m, MonadMask m)
+  :: forall m r
+   . (MonadBaseControl IO m, MonadLog m, MonadMask m)
   => Maybe R.Connection                       -- ^ Redis connection
   -> RedisKey                                 -- ^ Redis key
   -> (R.Connection -> RedisKey -> m r)        -- ^ What to do if key is in cache
@@ -36,16 +37,12 @@ mfetch mredis rkey actGet construct = case mredis of
     -- without it. If a key is left in partial or invalid state, it
     -- will be eventually cleaned up by one of the instances.
     Left ex -> do
-      logAttention "Error when using Redis, trying cacheless version" $
-        object [
-          "error" .= show ex
-        ]
+      logAttention "Error when using Redis, trying cacheless version"
+        $ object ["error" .= show ex]
       construct Nothing
     Right (Left err) -> do
-      logAttention "Key invalidated while its value was being fetched" $
-        object [
-          "reason" .= show err
-        ]
+      logAttention "Key invalidated while its value was being fetched"
+        $ object ["reason" .= show err]
       mfetch mredis rkey actGet construct
     Right (Right res) -> return res
   where
@@ -54,9 +51,7 @@ mfetch mredis rkey actGet construct = case mredis of
       keySet <- runRedis cache $ R.hsetnx key "__set" ""
       if keySet
         then (`onException` deleteKey cache rkey) . release $ do
-          logInfo "Key not found in global cache" $ object [
-              "key" `equalsExternalBS` key
-            ]
+          logInfo "Key not found in global cache" $ object ["key" `equalsExternalBS` key]
           -- Create a thread that continually prolongs key's TTL by a few
           -- seconds as long as the value is being generated so that if an
           -- instance unexpectedly terminates, other instances can quickly
@@ -67,9 +62,7 @@ mfetch mredis rkey actGet construct = case mredis of
           void . runRedis cache $ R.expire key oneDay
           return $ Right res
         else release $ do
-          logInfo "Key found in global cache" $ object [
-              "key" `equalsExternalBS` key
-            ]
+          logInfo "Key found in global cache" $ object ["key" `equalsExternalBS` key]
           -- While fetching value(s) associated with the key, monitor key's
           -- TTL. If key gets deleted or TTL is not set (it may happen if the
           -- appropriate instance dies between setting the key with setnx and
@@ -113,6 +106,6 @@ mfetch mredis rkey actGet construct = case mredis of
         oneDay :: Integer
         oneDay = 86400
 
-deleteKey :: (MonadBaseControl IO m, MonadLog m, MonadMask m) => R.Connection
-          -> RedisKey -> m ()
+deleteKey
+  :: (MonadBaseControl IO m, MonadLog m, MonadMask m) => R.Connection -> RedisKey -> m ()
 deleteKey conn = void . runRedis conn . R.del . pure . fromRedisKey

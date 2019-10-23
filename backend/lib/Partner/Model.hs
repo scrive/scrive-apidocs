@@ -17,20 +17,10 @@ import UserGroup.Types
 
 fetchPartner :: (PartnerID, String, Bool, Maybe UserGroupID) -> Partner
 fetchPartner (pid, pname, pdef, mugid) =
-  Partner
-    { ptID = pid
-    , ptName = pname
-    , ptDefaultPartner = pdef
-    , ptUserGroupID = mugid
-    }
+  Partner { ptID = pid, ptName = pname, ptDefaultPartner = pdef, ptUserGroupID = mugid }
 
 partnerSelector :: [SQL]
-partnerSelector =
-  [ "id"
-  , "name"
-  , "default_partner"
-  , "user_group_id"
-  ]
+partnerSelector = ["id", "name", "default_partner", "user_group_id"]
 
 data GetPartners = GetPartners
 instance (MonadDB m, MonadLog m) => DBQuery m GetPartners [Partner] where

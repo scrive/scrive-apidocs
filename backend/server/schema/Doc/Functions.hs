@@ -12,54 +12,46 @@ import DB.SQLFunction
 -- | This function collects all text that should be searchable for one
 -- document.
 archiveSearchTerms :: SQLFunction
-archiveSearchTerms =
-    SQLFunction
-    {
-      sqlFunDef = archiveSearchTermsFunc
-    }
+archiveSearchTerms = SQLFunction { sqlFunDef = archiveSearchTermsFunc }
   where
     archiveSearchTermsFunc :: RawSQL ()
     archiveSearchTermsFunc =
-          "create or replace function archive_search_terms_func(doc_id bigint)"
-      <+> "returns text as"
-      <+> "$$"
-      <+> "begin"
-      <+> "return (coalesce(d.title, '') ||"
-      <+> "        ' ' ||"
-      <+> "        string_agg(coalesce(slf.value_text, ''), ' '))"
-      <+> "  from signatory_link_fields slf"
-      <+> "  join signatory_links sl on sl.id = slf.signatory_link_id"
-      <+> "  join documents d on d.id = sl.document_id and  d.id = doc_id"
-      <+> "  group by d.id;"
-      <+> "end;"
-      <+> "$$"
-      <+> "language plpgsql"
-      <+> "volatile"
-      <+> "returns null on null input;"
+      "create or replace function archive_search_terms_func(doc_id bigint)"
+        <+> "returns text as"
+        <+> "$$"
+        <+> "begin"
+        <+> "return (coalesce(d.title, '') ||"
+        <+> "        ' ' ||"
+        <+> "        string_agg(coalesce(slf.value_text, ''), ' '))"
+        <+> "  from signatory_link_fields slf"
+        <+> "  join signatory_links sl on sl.id = slf.signatory_link_id"
+        <+> "  join documents d on d.id = sl.document_id and  d.id = doc_id"
+        <+> "  group by d.id;"
+        <+> "end;"
+        <+> "$$"
+        <+> "language plpgsql"
+        <+> "volatile"
+        <+> "returns null on null input;"
 
 postProcessSearchString :: SQLFunction
-postProcessSearchString =
-    SQLFunction
-    {
-      sqlFunDef = postProcessSearchStringFunc
-    }
+postProcessSearchString = SQLFunction { sqlFunDef = postProcessSearchStringFunc }
   where
     postProcessSearchStringFunc :: RawSQL ()
     postProcessSearchStringFunc =
-          "create or replace function post_process_search_string(txt text)"
-      <+> "returns tsvector as"
-      <+> "$$"
-      <+> "declare"
-      <+> "  emails       text := extract_emails(txt);"
-      <+> "  split_emails text := '';"
-      <+> "begin"
-      <+> "  split_emails = (select string_agg(split_email(eml.splits), ' ')"
-      <+> "                  from   (select unnest(string_to_array(emails, ' ')) as splits ) as eml);"
-      <+> "  return to_tsvector('simple', coalesce(regexp_replace(txt, ':+', ' ', 'g'), '')) ||  ' ' || (coalesce(regexp_replace(split_emails, ':+', ' ', 'g'), '')::tsvector);"
-      <+> "end;"
-      <+> "$$"
-      <+> "language plpgsql"
-      <+> "immutable;"
+      "create or replace function post_process_search_string(txt text)"
+        <+> "returns tsvector as"
+        <+> "$$"
+        <+> "declare"
+        <+> "  emails       text := extract_emails(txt);"
+        <+> "  split_emails text := '';"
+        <+> "begin"
+        <+> "  split_emails = (select string_agg(split_email(eml.splits), ' ')"
+        <+> "                  from   (select unnest(string_to_array(emails, ' ')) as splits ) as eml);"
+        <+> "  return to_tsvector('simple', coalesce(regexp_replace(txt, ':+', ' ', 'g'), '')) ||  ' ' || (coalesce(regexp_replace(split_emails, ':+', ' ', 'g'), '')::tsvector);"
+        <+> "end;"
+        <+> "$$"
+        <+> "language plpgsql"
+        <+> "immutable;"
 
 -- | Filter out everything but email addresses.
 --
@@ -89,52 +81,44 @@ postProcessSearchString =
 -- The regexp match returns an array that will contain at most one element in
 -- the array (and hence the array subcript in the string aggregation).
 extractEmails :: SQLFunction
-extractEmails =
-    SQLFunction
-    {
-      sqlFunDef = extractEmailsFunc
-    }
+extractEmails = SQLFunction { sqlFunDef = extractEmailsFunc }
   where
     extractEmailsFunc :: RawSQL ()
     extractEmailsFunc =
-          "create or replace function extract_emails(txt text)"
-      <+> "returns text as"
-      <+> "$$"
-      <+> "begin"
-      <+> "  return string_agg(emails.address[1], ' ')"
-      <+> "  from   (select regexp_matches(unnest(string_to_array(txt, ' ')), '(.+@.+\\..+?)', 'g') as address)"
-      <+> "  as     emails;"
-      <+> "end;"
-      <+> "$$"
-      <+> "language plpgsql"
-      <+> "immutable"
-      <+> "returns null on null input;"
+      "create or replace function extract_emails(txt text)"
+        <+> "returns text as"
+        <+> "$$"
+        <+> "begin"
+        <+> "  return string_agg(emails.address[1], ' ')"
+        <+> "  from   (select regexp_matches(unnest(string_to_array(txt, ' ')), '(.+@.+\\..+?)', 'g') as address)"
+        <+> "  as     emails;"
+        <+> "end;"
+        <+> "$$"
+        <+> "language plpgsql"
+        <+> "immutable"
+        <+> "returns null on null input;"
 
 -- | Split an email address into its constituent parts.
 
 splitEmail :: SQLFunction
-splitEmail =
-     SQLFunction
-     {
-       sqlFunDef = splitEmailFunc
-     }
+splitEmail = SQLFunction { sqlFunDef = splitEmailFunc }
   where
     splitEmailFunc :: RawSQL ()
     splitEmailFunc =
-          "create or replace function split_email(email text)"
-      <+> "returns text as"
-      <+> "$$"
-      <+> "declare"
-      <+> "  split   text[] := '{}';"
-      <+> "begin"
-      <+> "  split   := string_to_array(email, '@');"
-      <+> "  return (split[1] ||"
-      <+> "          ' ' ||"
-      <+> "          split[2] ||"
-      <+> "          ' ' ||"
-      <+> "          email);"
-      <+> "end;"
-      <+> "$$"
-      <+> "language plpgsql"
-      <+> "immutable"
-      <+> "returns null on null input;"
+      "create or replace function split_email(email text)"
+        <+> "returns text as"
+        <+> "$$"
+        <+> "declare"
+        <+> "  split   text[] := '{}';"
+        <+> "begin"
+        <+> "  split   := string_to_array(email, '@');"
+        <+> "  return (split[1] ||"
+        <+> "          ' ' ||"
+        <+> "          split[2] ||"
+        <+> "          ' ' ||"
+        <+> "          email);"
+        <+> "end;"
+        <+> "$$"
+        <+> "language plpgsql"
+        <+> "immutable"
+        <+> "returns null on null input;"

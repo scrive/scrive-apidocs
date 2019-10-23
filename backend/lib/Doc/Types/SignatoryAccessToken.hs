@@ -56,10 +56,7 @@ instance FromSQL SignatoryAccessTokenReason where
       5 -> return SignatoryAccessTokenForSMSAfterClosing
       6 -> return SignatoryAccessTokenForQRCode
       7 -> return SignatoryAccessTokenForAPI
-      _ -> throwM RangeError
-        { reRange = [(1,7)]
-        , reValue = n
-        }
+      _ -> throwM RangeError { reRange = [(1, 7)], reValue = n }
 
 ---------------------------------
 
@@ -79,29 +76,24 @@ data SignatoryAccessToken = SignatoryAccessToken
 instance PQFormat SignatoryAccessToken where
   pqFormat = compositeTypePqFormat ctSignatoryAccessToken
 
-type instance CompositeRow SignatoryAccessToken =
-  ( MagicHash
-  , SignatoryAccessTokenReason
-  , Maybe UTCTime
-  )
+type instance CompositeRow SignatoryAccessToken
+  = (MagicHash, SignatoryAccessTokenReason, Maybe UTCTime)
 
 instance CompositeFromSQL SignatoryAccessToken where
-  toComposite (hash, reason, time) =
-    SignatoryAccessToken hash reason time
+  toComposite (hash, reason, time) = SignatoryAccessToken hash reason time
 
-isValidSignatoryAccessToken
-  :: UTCTime -> DocumentStatus -> SignatoryAccessToken -> Bool
-isValidSignatoryAccessToken now status SignatoryAccessToken{..} =
+isValidSignatoryAccessToken :: UTCTime -> DocumentStatus -> SignatoryAccessToken -> Bool
+isValidSignatoryAccessToken now status SignatoryAccessToken {..} =
   let expired = case signatoryAccessTokenExpirationTime of
         Just v -> v <= now
-        _ -> False
-      closedOrPending = status == Pending ||status == Closed
+        _      -> False
+      closedOrPending       = status == Pending || status == Closed
       reasonIsStillRelevant = case signatoryAccessTokenReason of
         SignatoryAccessTokenForMailBeforeClosing -> closedOrPending
-        SignatoryAccessTokenForSMSBeforeClosing -> closedOrPending
-        SignatoryAccessTokenForMailAfterClosing -> status == Closed
-        SignatoryAccessTokenForSMSAfterClosing -> status == Closed
-        SignatoryAccessTokenLegacy -> True
-        SignatoryAccessTokenForQRCode -> True
-        SignatoryAccessTokenForAPI -> True
-  in reasonIsStillRelevant && not expired
+        SignatoryAccessTokenForSMSBeforeClosing  -> closedOrPending
+        SignatoryAccessTokenForMailAfterClosing  -> status == Closed
+        SignatoryAccessTokenForSMSAfterClosing   -> status == Closed
+        SignatoryAccessTokenLegacy               -> True
+        SignatoryAccessTokenForQRCode            -> True
+        SignatoryAccessTokenForAPI               -> True
+  in  reasonIsStillRelevant && not expired

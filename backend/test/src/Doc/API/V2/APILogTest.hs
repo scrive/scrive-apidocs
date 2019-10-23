@@ -18,18 +18,19 @@ import User.Lang (defaultLang)
 import User.Model
 
 apiV2CallLogTests :: TestEnvSt -> Test
-apiV2CallLogTests env = testGroup "APILog" $
-  [ testThat "API Call gets logged" env testApiLogIsStored
-  , testThat "API log is rotated" env testApiLogIsRotated
-  , testThat "Getting a single log item works" env testApiLogGetItemWorks
-  , testThat "Getting list of logs works" env testApiLogGetListWorks
-  , testThat "Multiple users can work independently" env testApiLog2Users
-  ]
+apiV2CallLogTests env =
+  testGroup "APILog"
+    $ [ testThat "API Call gets logged"                  env testApiLogIsStored
+      , testThat "API log is rotated"                    env testApiLogIsRotated
+      , testThat "Getting a single log item works"       env testApiLogGetItemWorks
+      , testThat "Getting list of logs works"            env testApiLogGetListWorks
+      , testThat "Multiple users can work independently" env testApiLog2Users
+      ]
 
 testApiLogIsStored :: TestEnv ()
 testApiLogIsStored = do
-  user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  user       <- addNewRandomUser
+  ctx        <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
@@ -41,65 +42,62 @@ testApiLogIsStored = do
 
 testApiLogIsRotated :: TestEnv ()
 testApiLogIsRotated = do
-  user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  user       <- addNewRandomUser
+  ctx        <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
   setRequestURI "/api/v2/documents"
-  forM_ [1..101] $ \_ ->
-    testRequestHelper ctx GET [] (docApiV2Get did) 200
+  forM_ [1 .. 101] $ \_ -> testRequestHelper ctx GET [] (docApiV2Get did) 200
   logs <- dbQuery $ GetCallLogList (userid user)
   assertEqual "There should be only 100 logged API Calls" 100 (length logs)
 
 testApiLogGetItemWorks :: TestEnv ()
 testApiLogGetItemWorks = do
-  user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  user       <- addNewRandomUser
+  ctx        <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
   setRequestURI "/api/v2/documents"
-  forM_ [1..5] $ \_ ->
-    testRequestHelper ctx GET [] (docApiV2Get did) 200
+  forM_ [1 .. 5] $ \_ -> testRequestHelper ctx GET [] (docApiV2Get did) 200
   logs <- dbQuery $ GetCallLogList (userid user)
   assertEqual "There should be 5 logged API Calls" 5 (length logs)
   void $ testRequestHelper ctx GET [] (apiLogGetItem . cliID . head $ logs) 200
 
 testApiLogGetListWorks :: TestEnv ()
 testApiLogGetListWorks = do
-  user <- addNewRandomUser
-  ctx <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
+  user       <- addNewRandomUser
+  ctx        <- (set ctxmaybeuser (Just user)) <$> mkContext defaultLang
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
   setRequestURI "/api/v2/documents"
-  forM_ [1..5] $ \_ ->
-    testRequestHelper ctx GET [] (docApiV2Get did) 200
+  forM_ [1 .. 5] $ \_ -> testRequestHelper ctx GET [] (docApiV2Get did) 200
   void $ testRequestHelper ctx GET [] apiLogGetList 200
 
 testApiLog2Users :: TestEnv ()
 testApiLog2Users = do
-  userA <- addNewRandomUser
-  ctxA <- (set ctxmaybeuser (Just userA)) <$> mkContext defaultLang
+  userA       <- addNewRandomUser
+  ctxA        <- (set ctxmaybeuser (Just userA)) <$> mkContext defaultLang
   newMockDocA <- testDocApiV2New' ctxA
   let didA = getMockDocId newMockDocA
 
   setRequestURI "/api/v2/documents"
-  forM_ [1..5] $ \_ ->
-    testRequestHelper ctxA GET [] (docApiV2Get didA) 200
+  forM_ [1 .. 5] $ \_ -> testRequestHelper ctxA GET [] (docApiV2Get didA) 200
   logsUserA <- dbQuery $ GetCallLogList (userid userA)
   assertEqual "There should be 5 logged API Calls for user A" 5 (length logsUserA)
 
-  userB <- addNewRandomUser
-  ctxB <- (set ctxmaybeuser (Just userB)) <$> mkContext defaultLang
+  userB       <- addNewRandomUser
+  ctxB        <- (set ctxmaybeuser (Just userB)) <$> mkContext defaultLang
   newMockDocB <- testDocApiV2New' ctxB
   let didB = getMockDocId newMockDocB
 
-  forM_ [1..101] $ \_ ->
-    testRequestHelper ctxB GET [] (docApiV2Get didB) 200
+  forM_ [1 .. 101] $ \_ -> testRequestHelper ctxB GET [] (docApiV2Get didB) 200
   logsUserB <- dbQuery $ GetCallLogList (userid userB)
-  assertEqual "There should be only 100 logged API Calls for user B" 100 (length logsUserB)
+  assertEqual "There should be only 100 logged API Calls for user B"
+              100
+              (length logsUserB)
 
   logsUserA' <- dbQuery $ GetCallLogList (userid userA)
   assertEqual "Logs of user A are not affected by user B activity"

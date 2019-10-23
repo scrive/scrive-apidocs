@@ -133,11 +133,8 @@ checkPrerequisites = do
     (takeWhile dotOrNum . drop 13)
   requireVersion "happy" ["--version"] (makeVersion [1,18,0])
     (takeWhile dotOrNum . drop 14)
-
-  -- Temporarily make brittany requirement optional to make CI pass,
-  -- since brittany is not installed on CI.
-  -- requireVersion "brittany" ["--version"] (makeVersion [0,12,0,0])
-  --   (takeWhile dotOrNum . drop 17)
+  requireVersion "brittany" ["--version"] (makeVersion [0,12,0,0])
+    (takeWhile dotOrNum . drop 17)
 
     where
       dotOrNum c = c == '.' || isNumber c

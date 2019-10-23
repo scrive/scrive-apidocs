@@ -38,39 +38,47 @@ newtype XMLContent = XMLContent { unXMLContent :: [Node] }
 
 -- | Parses text as XML; removing processing instructions and comments; cleaning up HTML entities
 parseXMLContent :: Text -> Either SomeException XMLContent
-parseXMLContent s = XMLContent . concatMap cleanup . elementNodes . documentRoot
-              <$> parseText def{ psDecodeEntities = decodeHtmlEntities } (fromStrict ("<a>" `T.append` s `T.append` "</a>"))
+parseXMLContent s =
+  XMLContent . concatMap cleanup . elementNodes . documentRoot <$> parseText
+    def { psDecodeEntities = decodeHtmlEntities }
+    (fromStrict ("<a>" `T.append` s `T.append` "</a>"))
   where
     cleanup NodeInstruction{} = []
-    cleanup NodeComment{} = []
-    cleanup (NodeElement (Element n as ns)) = [NodeElement (Element n as (concatMap cleanup ns))]
+    cleanup NodeComment{}     = []
+    cleanup (NodeElement (Element n as ns)) =
+      [NodeElement (Element n as (concatMap cleanup ns))]
     cleanup n = [n]
 
 renderXMLContent :: XMLContent -> Text
-renderXMLContent ns = T.concat . map decodeUtf8 $ runST $ runConduit $ (sourceList (nodesToEvents ns) .| renderBytes def .| consume)
+renderXMLContent ns =
+  T.concat
+    . map decodeUtf8
+    $ runST
+    $ runConduit
+    $ (sourceList (nodesToEvents ns) .| renderBytes def .| consume)
 
 nodesToEvents :: XMLContent -> [Event]
 nodesToEvents ct = goN (unXMLContent ct) []
   where
     goE (Element name as ns) =
-          (EventBeginElement name (Map.toList (fmap ((:[]) . ContentText) as)) :)
+      (EventBeginElement name (Map.toList (fmap ((: []) . ContentText) as)) :)
         . goN ns
         . (EventEndElement name :)
-    goN [] = id
-    goN [x] = goN' x
-    goN (x:xs) = goN' x . goN xs
-    goN' (NodeElement e) = goE e
+    goN []       = id
+    goN [x     ] = goN' x
+    goN (x : xs) = goN' x . goN xs
+    goN' (NodeElement     e) = goE e
     goN' (NodeInstruction i) = (EventInstruction i :)
-    goN' (NodeContent c) = (EventContent (ContentText c) :)
-    goN' (NodeComment t) = (EventComment t :)
+    goN' (NodeContent     c) = (EventContent (ContentText c) :)
+    goN' (NodeComment     t) = (EventComment t :)
 
 substitute :: Map (Name, Text) XMLContent -> XMLContent -> XMLContent
 substitute m = XMLContent . concatMap subN . unXMLContent
   where
     subN (NodeElement (Element e as _))
-        | Just i  <- Map.lookup "class" as
-        , Just (XMLContent ns) <- Map.lookup (e,i) m = ns
-    subN (NodeElement (Element e as ns)) = [NodeElement (Element e as (concatMap subN ns))]
+      | Just i <- Map.lookup "class" as, Just (XMLContent ns) <- Map.lookup (e, i) m = ns
+    subN (NodeElement (Element e as ns)) =
+      [NodeElement (Element e as (concatMap subN ns))]
     subN n = [n]
 
 -- | Remove tags, keeping content
@@ -78,15 +86,13 @@ removeTags :: XMLContent -> XMLContent
 removeTags = XMLContent . concatMap remove . unXMLContent
   where
     remove (NodeElement (Element _ _ ns)) = concatMap remove ns
-    remove n@(NodeContent {}) = [n]
+    remove n@(NodeContent{}) = [n]
     remove _ = []
 
 -- | Form XMLContent from string literals
 instance IsString XMLContent where
-  fromString s = either
-    (unexpectedError $ "Cannot parse XML content " <> (showt s))
-    id $
-    parseXMLContent (T.pack s)
+  fromString s = either (unexpectedError $ "Cannot parse XML content " <> (showt s)) id
+    $ parseXMLContent (T.pack s)
 
 -- | Form XMLContent from plain text
 cdata :: Text -> XMLContent

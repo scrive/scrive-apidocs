@@ -26,14 +26,15 @@ data CronEnv = CronEnv {
   , ceMailNoreplyAddress :: Text
   }
 
-runCronEnv :: MonadBase IO m
-           => CronConf
-           -> KontrakcjaGlobalTemplates
-           -> CronEnvT m CronEnv a
-           -> m a
+runCronEnv
+  :: MonadBase IO m
+  => CronConf
+  -> KontrakcjaGlobalTemplates
+  -> CronEnvT m CronEnv a
+  -> m a
 runCronEnv cronConf templates x = do
-  let cronEnvData = CronEnv (cronSalesforceConf cronConf) templates
-                            (cronMailNoreplyAddress cronConf)
+  let cronEnvData =
+        CronEnv (cronSalesforceConf cronConf) templates (cronMailNoreplyAddress cronConf)
   runReaderT (unCronEnvT x) cronEnvData
 
 type CronEnvM = CronEnvT (DBT (FileStorageT (CryptoRNGT (LogT IO)))) CronEnv
@@ -53,6 +54,6 @@ deriving newtype instance
 instance (MonadBaseControl IO m, MonadBase IO (CronEnvT m sd)) => MonadBaseControl IO (CronEnvT m sd) where
   type StM (CronEnvT m sd) a = StM (ReaderT sd m) a
   liftBaseWith f = CronEnvT $ liftBaseWith $ \run -> f $ run . unCronEnvT
-  restoreM       = CronEnvT . restoreM
+  restoreM = CronEnvT . restoreM
   {-# INLINE liftBaseWith #-}
   {-# INLINE restoreM #-}

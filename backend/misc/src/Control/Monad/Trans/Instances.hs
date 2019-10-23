@@ -13,16 +13,16 @@ instance {-# OVERLAPS #-} (
   , MonadTransControl t
   , MonadReader r m
   ) => MonadReader r (t m) where
-    ask       = lift ask
-    local f m = controlT $ \run -> local f (run m)
+  ask = lift ask
+  local f m = controlT $ \run -> local f (run m)
 
 instance {-# OVERLAPS #-} (
     Monad (t m)
   , MonadTrans t
   , MonadState s m
   ) => MonadState s (t m) where
-    get = lift S.get
-    put = lift . put
+  get = lift S.get
+  put = lift . put
 
 {-
 

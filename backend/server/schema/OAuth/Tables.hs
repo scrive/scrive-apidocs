@@ -29,20 +29,19 @@ import DB
    Users may add and delete the API Tokens in their account screen, though most users will not use them.
 -}
 tableAPIToken :: Table
-tableAPIToken = tblTable {
-  tblName = "oauth_api_token"
-  , tblVersion = 2
-  , tblColumns = [
-      tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+tableAPIToken = tblTable
+  { tblName        = "oauth_api_token"
+  , tblVersion     = 2
+  , tblColumns     =
+    [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "api_token", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "api_secret", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
     ]
-  , tblPrimaryKey = pkOnColumn "id"
-  , tblForeignKeys = [
-      (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
-    ]
-  , tblIndexes = [indexOnColumn "user_id"]
+  , tblPrimaryKey  = pkOnColumn "id"
+  , tblForeignKeys =
+    [(fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }]
+  , tblIndexes     = [indexOnColumn "user_id"]
   }
 
 {-
@@ -54,26 +53,24 @@ tableAPIToken = tblTable {
     user_id.
 -}
 tableAccessToken :: Table
-tableAccessToken = tblTable {
-  tblName = "oauth_access_token"
-  , tblVersion = 2
-  , tblColumns = [
-      tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+tableAccessToken = tblTable
+  { tblName        = "oauth_access_token"
+  , tblVersion     = 2
+  , tblColumns     =
+    [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "access_token", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "access_secret", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "api_token_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "user_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "created", colType = TimestampWithZoneT, colNullable = False }
     ]
-  , tblPrimaryKey = pkOnColumn "id"
-  , tblForeignKeys = [
-      (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
-    , (fkOnColumn "api_token_id" "oauth_api_token" "id") { fkOnDelete = ForeignKeyCascade }
+  , tblPrimaryKey  = pkOnColumn "id"
+  , tblForeignKeys =
+    [ (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
+    , (fkOnColumn "api_token_id" "oauth_api_token" "id") { fkOnDelete = ForeignKeyCascade
+                                                         }
     ]
-  , tblIndexes = [
-      indexOnColumn "user_id"
-    , indexOnColumn "api_token_id"
-    ]
+  , tblIndexes     = [indexOnColumn "user_id", indexOnColumn "api_token_id"]
   }
 
 {-
@@ -82,18 +79,18 @@ tableAccessToken = tblTable {
     These privileges belong to an Access Token.
 -}
 tablePrivilege :: Table
-tablePrivilege = tblTable {
-  tblName = "oauth_privilege"
-  , tblVersion = 2
-  , tblColumns = [
-      tblColumn { colName = "access_token_id", colType = BigIntT, colNullable = False }
+tablePrivilege = tblTable
+  { tblName        = "oauth_privilege"
+  , tblVersion     = 2
+  , tblColumns     =
+    [ tblColumn { colName = "access_token_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "privilege", colType = SmallIntT, colNullable = False }
     ]
-  , tblPrimaryKey = pkOnColumns ["access_token_id", "privilege"]
-  , tblForeignKeys = [
-      (fkOnColumn "access_token_id" "oauth_access_token" "id") { fkOnDelete = ForeignKeyCascade }
-    ]
-  , tblIndexes = [indexOnColumn "access_token_id"]
+  , tblPrimaryKey  = pkOnColumns ["access_token_id", "privilege"]
+  , tblForeignKeys = [ (fkOnColumn "access_token_id" "oauth_access_token" "id") { fkOnDelete = ForeignKeyCascade
+                                                                                }
+                     ]
+  , tblIndexes     = [indexOnColumn "access_token_id"]
   }
 
 {- |
@@ -105,11 +102,11 @@ tablePrivilege = tblTable {
    They should expire after 10 minutes and only be used once.
 -}
 tableTempCredential :: Table
-tableTempCredential = tblTable {
-  tblName = "oauth_temp_credential"
-  , tblVersion = 4
-  , tblColumns = [
-      tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
+tableTempCredential = tblTable
+  { tblName        = "oauth_temp_credential"
+  , tblVersion     = 4
+  , tblColumns     =
+    [ tblColumn { colName = "id", colType = BigSerialT, colNullable = False }
     , tblColumn { colName = "temp_token", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "temp_secret", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "api_token_id", colType = BigIntT, colNullable = False }
@@ -118,15 +115,13 @@ tableTempCredential = tblTable {
     , tblColumn { colName = "callback", colType = TextT, colNullable = False }
     , tblColumn { colName = "user_id", colType = BigIntT }
     ]
-  , tblPrimaryKey = pkOnColumn "id"
-  , tblForeignKeys = [
-      (fkOnColumn "api_token_id" "oauth_api_token" "id") { fkOnDelete = ForeignKeyCascade }
+  , tblPrimaryKey  = pkOnColumn "id"
+  , tblForeignKeys =
+    [ (fkOnColumn "api_token_id" "oauth_api_token" "id") { fkOnDelete = ForeignKeyCascade
+                                                         }
     , (fkOnColumn "user_id" "users" "id") { fkOnDelete = ForeignKeyCascade }
     ]
-  , tblIndexes = [
-      indexOnColumn "api_token_id"
-    , indexOnColumn "user_id"
-    ]
+  , tblIndexes     = [indexOnColumn "api_token_id", indexOnColumn "user_id"]
   }
 
 {- |
@@ -136,16 +131,17 @@ tableTempCredential = tblTable {
    They belong to a Temp Credential.
 -}
 tableTempPrivileges :: Table
-tableTempPrivileges = tblTable {
-  tblName = "oauth_temp_privileges"
-  , tblVersion = 2
-  , tblColumns = [
-      tblColumn { colName = "temp_token_id", colType = BigIntT, colNullable = False }
+tableTempPrivileges = tblTable
+  { tblName        = "oauth_temp_privileges"
+  , tblVersion     = 2
+  , tblColumns     =
+    [ tblColumn { colName = "temp_token_id", colType = BigIntT, colNullable = False }
     , tblColumn { colName = "privilege", colType = SmallIntT, colNullable = False }
     ]
-  , tblPrimaryKey = pkOnColumns ["temp_token_id", "privilege"]
-  , tblForeignKeys = [
-    (fkOnColumn "temp_token_id" "oauth_temp_credential" "id") { fkOnDelete = ForeignKeyCascade }
+  , tblPrimaryKey  = pkOnColumns ["temp_token_id", "privilege"]
+  , tblForeignKeys =
+    [ (fkOnColumn "temp_token_id" "oauth_temp_credential" "id") { fkOnDelete = ForeignKeyCascade
+                                                                }
     ]
-  , tblIndexes = [indexOnColumn "temp_token_id"]
+  , tblIndexes     = [indexOnColumn "temp_token_id"]
   }

@@ -31,19 +31,19 @@ newtype MemCache k v = MemCache (MVar (MemCache_ k v))
 -- | Create new memory cache. Supply a memory limit (in bytes) and a sizing
 -- function. Key type should have 'Ord' and 'Hashable' instances.
 new :: MonadBase IO m => (v -> Int) -> Int -> m (MemCache k v)
-new sizeFun sizeLimit = MemCache <$> newMVar MemCache_ {
-    mcSizeFun     = sizeFun
-  , mcSizeLimit   = sizeLimit
-  , mcCurrentSize = 0
-  , mcTick        = 0
-  , mcInProgress  = HM.empty
-  , mcCache       = Q.empty
-  }
+new sizeFun sizeLimit = MemCache <$> newMVar MemCache_ { mcSizeFun     = sizeFun
+                                                       , mcSizeLimit   = sizeLimit
+                                                       , mcCurrentSize = 0
+                                                       , mcTick        = 0
+                                                       , mcInProgress  = HM.empty
+                                                       , mcCache       = Q.empty
+                                                       }
 
 -- | Fetch an object from cache or construct it if it's not there. Returned Bool
 -- signifies whether constructing action was run.
 fetch
-  :: forall k v m. (Ord k, Hashable k, NFData v, MonadBaseControl IO m)
+  :: forall k v m
+   . (Ord k, Hashable k, NFData v, MonadBaseControl IO m)
   => MemCache k v
   -> k
   -> m v
@@ -64,23 +64,18 @@ fetch (MemCache mv) key construct = mask $ \release -> do
   eel <- modifyMVar mv $ \mc -> release $ do
     case Q.alter (lookupAndIncreasePriorityTo $ mcTick mc) key $ mcCache mc of
       (Just el, updatedCache) -> do
-        let !mc' = mc {
-                mcTick  = mcTick mc + 1
-              , mcCache = updatedCache
-              }
+        let !mc' = mc { mcTick = mcTick mc + 1, mcCache = updatedCache }
         return (mc', Right el)
       (Nothing, _) -> case key `HM.lookup` mcInProgress mc of
         Just mvEl -> return (mc, Left (mvEl, True))
-        Nothing -> do
+        Nothing   -> do
           mvEl <- newEmptyMVar
-          let !mc' = mc {
-                  mcInProgress = HM.insert key mvEl $ mcInProgress mc
-                }
+          let !mc' = mc { mcInProgress = HM.insert key mvEl $ mcInProgress mc }
           return (mc', Left (mvEl, False))
 
   case eel of
-    Right el -> return (el, False)
-    Left (mvEl, mvAlreadyThere) -> do
+    Right el                     -> return (el, False)
+    Left  (mvEl, mvAlreadyThere) -> do
       -- If we got existing MVar, wait for its result. Otherwise run
       -- constructing action and update cache accordingly.
       if mvAlreadyThere
@@ -98,12 +93,10 @@ fetch (MemCache mv) key construct = mask $ \release -> do
             evalue <- readMVar mvEl
             modifyMVar_ mv $ \mc -> release $ case evalue of
               Left _ -> do
-                return $! mc {
-                    mcInProgress = HM.delete key $ mcInProgress mc
-                  }
+                return $! mc { mcInProgress = HM.delete key $ mcInProgress mc }
               Right value -> do
-                return $! tidyCache $! mc {
-                    mcCurrentSize = mcCurrentSize mc + mcSizeFun mc value
+                return $! tidyCache $! mc
+                  { mcCurrentSize = mcCurrentSize mc + mcSizeFun mc value
                   , mcTick        = mcTick mc + 1
                   , mcInProgress  = HM.delete key $ mcInProgress mc
                   , mcCache       = Q.insert key (mcTick mc) value $ mcCache mc
@@ -118,25 +111,23 @@ fetch (MemCache mv) key construct = mask $ \release -> do
     throwOrReturn = either throwIO return
 
     removeInProgress :: m ()
-    removeInProgress = modifyMVar_ mv $ \mc -> return $! mc {
-        mcInProgress = HM.delete key $ mcInProgress mc
-      }
+    removeInProgress = modifyMVar_ mv
+      $ \mc -> return $! mc { mcInProgress = HM.delete key $ mcInProgress mc }
 
     tidyCache :: MemCache_ k v -> MemCache_ k v
     tidyCache mc = go (mcCache mc) (mcCurrentSize mc)
       where
         go cache size
-          | size <= mcSizeLimit mc = mc {
-                mcCurrentSize = size
-              , mcCache       = cache
-              }
+          | size <= mcSizeLimit mc = mc { mcCurrentSize = size, mcCache = cache }
           | otherwise = case Q.minView cache of
-              Nothing -> unexpectedError "tidyCache: size limit exceeded even though cache is empty"
-              Just (_, _, minEl, tidiedCache) -> go tidiedCache $ size - mcSizeFun mc minEl
+            Nothing ->
+              unexpectedError "tidyCache: size limit exceeded even though cache is empty"
+            Just (_, _, minEl, tidiedCache) -> go tidiedCache $ size - mcSizeFun mc minEl
 
 -- | Fetch an object from cache or construct it if it's not there.
 fetch_
-  :: forall k v m. (Ord k, Hashable k, NFData v, MonadBaseControl IO m)
+  :: forall k v m
+   . (Ord k, Hashable k, NFData v, MonadBaseControl IO m)
   => MemCache k v
   -> k
   -> m v
@@ -144,15 +135,9 @@ fetch_
 fetch_ mc key = fmap fst . fetch mc key
 
 -- | Invalidate a key in cache.
-invalidate
-  :: (Ord k, Hashable k, MonadBaseControl IO m)
-  => MemCache k v
-  -> k
-  -> m ()
+invalidate :: (Ord k, Hashable k, MonadBaseControl IO m) => MemCache k v -> k -> m ()
 invalidate (MemCache mv) key = modifyMVar_ mv $ \mc ->
   return $! case Q.deleteView key $ mcCache mc of
     Nothing -> mc
-    Just (_, value, newCache) -> mc {
-        mcCurrentSize = mcCurrentSize mc - mcSizeFun mc value
-      , mcCache = newCache
-      }
+    Just (_, value, newCache) ->
+      mc { mcCurrentSize = mcCurrentSize mc - mcSizeFun mc value, mcCache = newCache }

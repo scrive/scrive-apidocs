@@ -22,23 +22,20 @@ import MailingServerConf
 import MessengerServerConf
 
 printHelpMessage :: Text -> IO ()
-printHelpMessage prog = TIO.putStrLn . T.unlines $
-  [ "Usage: "
-  , ""
-  , prog <> " check - Check that config files are in sync."
-  ]
+printHelpMessage prog =
+  TIO.putStrLn
+    . T.unlines
+    $ ["Usage: ", "", prog <> " check - Check that config files are in sync."]
 
 -- | Map between parsed configuration types (like 'AppConf') and file names.
 class ConfigFile config where
   -- | Given a parsed configuration type, return the config file name.
   configFile :: FilePath
 
-readConfigFile :: forall config .
-                  (ConfigFile config, Unjson config)
-               => FilePath
-               -> IO config
-readConfigFile workspaceRoot = readConfig putStrLn $
-  workspaceRoot </> (configFile @config)
+readConfigFile
+  :: forall  config . (ConfigFile config, Unjson config) => FilePath -> IO config
+readConfigFile workspaceRoot =
+  readConfig putStrLn $ workspaceRoot </> (configFile @config)
 
 instance ConfigFile AppConf where
   configFile = "kontrakcja.conf"
@@ -56,30 +53,39 @@ lintConfigFiles :: IO ()
 lintConfigFiles = do
   (AppPaths _ workspaceRoot) <- setupAppPaths
 
-  appConf       <- readConfigFile @AppConf workspaceRoot
-  cronConf      <- readConfigFile @CronConf workspaceRoot
-  mailerConf    <- readConfigFile @MailingServerConf workspaceRoot
-  messengerConf <- readConfigFile @MessengerServerConf workspaceRoot
+  appConf                    <- readConfigFile @AppConf workspaceRoot
+  cronConf                   <- readConfigFile @CronConf workspaceRoot
+  mailerConf                 <- readConfigFile @MailingServerConf workspaceRoot
+  messengerConf              <- readConfigFile @MessengerServerConf workspaceRoot
 
   putStrLn "Checking that config files are in sync..."
 
-  case checkFieldsEqualAppConfCronConf      appConf cronConf      *>
-       checkFieldsEqualAppConfMailerConf    appConf mailerConf    *>
-       checkFieldsEqualAppConfMessengerConf appConf messengerConf of
-    Success ()   -> putStrLn "Checks finished."
-    Failure errs -> do
-      forM_ errs $ hPutStrLn stderr
-      exitFailure
+  case
+      checkFieldsEqualAppConfCronConf appConf cronConf
+      *> checkFieldsEqualAppConfMailerConf appConf mailerConf
+      *> checkFieldsEqualAppConfMessengerConf appConf messengerConf
+    of
+      Success ()   -> putStrLn "Checks finished."
+      Failure errs -> do
+        forM_ errs $ hPutStrLn stderr
+        exitFailure
 
 type ConfigValidation = Validation [String] ()
 
-checkFieldEq :: Eq a
-             => (FilePath, FilePath) -> String -> a -> a -> ConfigValidation
-checkFieldEq (conf0, conf1) fieldName a b =
-  if a == b then Success ()
-  else Failure [ "Field '" <> fieldName <> "' in '" <> conf0 <> "' and '" <>
-                 conf1 <> "' is not in sync." ]
+checkFieldEq :: Eq a => (FilePath, FilePath) -> String -> a -> a -> ConfigValidation
+checkFieldEq (conf0, conf1) fieldName a b = if a == b
+  then Success ()
+  else Failure
+    [ "Field '"
+      <> fieldName
+      <> "' in '"
+      <> conf0
+      <> "' and '"
+      <> conf1
+      <> "' is not in sync."
+    ]
 
+-- brittany-disable-next-binding
 checkFieldsEqualAppConfCronConf :: AppConf -> CronConf
                                 -> ConfigValidation
 checkFieldsEqualAppConfCronConf
@@ -121,6 +127,7 @@ checkFieldsEqualAppConfCronConf
     checkEq :: forall a . Eq a => String -> a -> a -> ConfigValidation
     checkEq = checkFieldEq (configFile @AppConf, configFile @CronConf)
 
+-- brittany-disable-next-binding
 checkFieldsEqualAppConfMailerConf :: AppConf -> MailingServerConf
                                   -> ConfigValidation
 checkFieldsEqualAppConfMailerConf
@@ -149,6 +156,7 @@ checkFieldsEqualAppConfMailerConf
     checkEq :: forall a . Eq a => String -> a -> a -> ConfigValidation
     checkEq = checkFieldEq (configFile @AppConf, configFile @MailingServerConf)
 
+-- brittany-disable-next-binding
 checkFieldsEqualAppConfMessengerConf :: AppConf -> MessengerServerConf
                                      -> ConfigValidation
 checkFieldsEqualAppConfMessengerConf
@@ -177,6 +185,7 @@ main :: IO ()
 main = do
   prog <- T.pack <$> getProgName
   args <- fmap T.pack <$> getArgs
-  if | args == [] || head args `elem` ["help"] -> printHelpMessage prog
-     | head args `elem` ["lint", "check"]      -> lintConfigFiles
-     | otherwise                               -> printHelpMessage prog
+  if
+    | args == [] || head args `elem` ["help"] -> printHelpMessage prog
+    | head args `elem` ["lint", "check"] -> lintConfigFiles
+    | otherwise -> printHelpMessage prog

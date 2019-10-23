@@ -14,16 +14,10 @@ data CgiGrpConfig = CgiGrpConfig {
 } deriving (Eq, Ord, Show)
 
 instance Unjson CgiGrpConfig where
-  unjsonDef = objectOf $ CgiGrpConfig
-    <$> field "gateway"
-        cgGateway
-        "URL"
-    <*> field "cert_file"
-        cgCertFile
-        "Path to the certificate file"
-    <*> field "service_id"
-        cgServiceID
-        "Service ID"
-    <*> field "display_name"
-        cgDisplayName
-        "Display name"
+  unjsonDef =
+    objectOf
+      $   CgiGrpConfig
+      <$> field "gateway"      cgGateway     "URL"
+      <*> field "cert_file" cgCertFile "Path to the certificate file"
+      <*> field "service_id"   cgServiceID   "Service ID"
+      <*> field "display_name" cgDisplayName "Display name"

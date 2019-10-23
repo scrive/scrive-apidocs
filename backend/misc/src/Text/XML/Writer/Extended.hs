@@ -18,6 +18,6 @@ documentA
   -> Document
 documentA name attrs children = Document
   { documentPrologue = Prologue def def def
-  , documentRoot = Element name (M.fromList attrs) (render children)
+  , documentRoot     = Element name (M.fromList attrs) (render children)
   , documentEpilogue = def
   }

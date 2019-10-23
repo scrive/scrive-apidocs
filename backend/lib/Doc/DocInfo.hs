@@ -33,53 +33,54 @@ import Util.SignatoryLinkUtils
 
 -- | Is the document pending?
 isPending :: Document -> Bool
-isPending        =   (==) Pending       . documentstatus
+isPending = (==) Pending . documentstatus
 
 -- | Is the document in preparation?
 isPreparation :: Document -> Bool
-isPreparation    =   (==) Preparation   . documentstatus
+isPreparation = (==) Preparation . documentstatus
 
 -- | Is the document Closed?
 isClosed :: Document -> Bool
-isClosed         =   (==) Closed        . documentstatus
+isClosed = (==) Closed . documentstatus
 
 -- | Is the document canceled?
 isCanceled :: Document -> Bool
-isCanceled       =   (==) Canceled      . documentstatus
+isCanceled = (==) Canceled . documentstatus
 
 -- | Is the document timedout?
 isTimedout :: Document -> Bool
-isTimedout       =   (==) Timedout      . documentstatus
+isTimedout = (==) Timedout . documentstatus
 
 -- | Is the document rejected?
 isRejected :: Document -> Bool
-isRejected       =   (==) Rejected      . documentstatus
+isRejected = (==) Rejected . documentstatus
 
 -- | Is document error?
 isDocumentError :: Document -> Bool
-isDocumentError  =   (==) DocumentError . documentstatus
+isDocumentError = (==) DocumentError . documentstatus
 
 -- | Is the document signable?
 isSignable :: Document -> Bool
-isSignable       =   (==) Signable      . documenttype
+isSignable = (==) Signable . documenttype
 
 -- | Is the document a template?
 isTemplate :: Document -> Bool
-isTemplate       =   (==) Template      . documenttype
+isTemplate = (==) Template . documenttype
 
 -- | Is document shared?
 isDocumentShared :: Document -> Bool
-isDocumentShared =  ((==) Shared . documentsharing)
-                 && isTemplate
+isDocumentShared = ((==) Shared . documentsharing) && isTemplate
 
 -- | Get the time of the last signature/approval as Int. Returns unixEpoch when
 -- there are no signatures/approvals.
 getLastSignedOrApprovedTime :: Document -> UTCTime
 getLastSignedOrApprovedTime doc =
-  maximum $ unixEpoch :
-  [ signtime si
-  | SignatoryLink { maybesigninfo = Just si } <-
-      filter (isSignatory || isApprover) . documentsignatorylinks $ doc ]
+  maximum
+    $ unixEpoch
+    : [ signtime si
+      | SignatoryLink { maybesigninfo = Just si } <-
+        filter (isSignatory || isApprover) . documentsignatorylinks $ doc
+      ]
 
 -- | Can signatories see the document?
 isAccessibleBySignatories :: Document -> Bool

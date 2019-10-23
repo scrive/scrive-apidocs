@@ -36,74 +36,96 @@ data DocumentAccessMode =
     -- ^ Person looking at the document is an admin of author.
 
 canSeeSignlinks :: DocumentAccess -> Bool
-canSeeSignlinks (DocumentAccess { daAccessMode = AuthorDocumentAccess}) = True
-canSeeSignlinks (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess _})  = True
+canSeeSignlinks (DocumentAccess { daAccessMode = AuthorDocumentAccess }) = True
+canSeeSignlinks (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess _ }) = True
 canSeeSignlinks _ = False
 
 propertyForCurrentSignatory :: DocumentAccess -> (SignatoryLink -> a) -> Document -> a
-propertyForCurrentSignatory da f doc =
-  case slForAccess da doc of
-    Just s -> f s
-    Nothing -> unexpectedError "Signatory that is looking at document is not in document"
+propertyForCurrentSignatory da f doc = case slForAccess da doc of
+  Just s  -> f s
+  Nothing -> unexpectedError "Signatory that is looking at document is not in document"
   where
     slForAccess :: DocumentAccess -> Document -> Maybe SignatoryLink
-    slForAccess (DocumentAccess { daAccessMode = SignatoryDocumentAccess sid}) = getSigLinkFor sid
-    slForAccess (DocumentAccess { daAccessMode = AuthorDocumentAccess})        = getAuthorSigLink
-    slForAccess (DocumentAccess { daAccessMode = CompanySharedDocumentAccess}) = getAuthorSigLink
-    slForAccess (DocumentAccess { daAccessMode = SystemAdminDocumentAccess})   = getAuthorSigLink
-    slForAccess (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess (Just sid)})  = getSigLinkFor sid
-    slForAccess (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess Nothing})  = getAuthorSigLink
+    slForAccess (DocumentAccess { daAccessMode = SignatoryDocumentAccess sid }) =
+      getSigLinkFor sid
+    slForAccess (DocumentAccess { daAccessMode = AuthorDocumentAccess }) =
+      getAuthorSigLink
+    slForAccess (DocumentAccess { daAccessMode = CompanySharedDocumentAccess }) =
+      getAuthorSigLink
+    slForAccess (DocumentAccess { daAccessMode = SystemAdminDocumentAccess }) =
+      getAuthorSigLink
+    slForAccess (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess (Just sid) })
+      = getSigLinkFor sid
+    slForAccess (DocumentAccess { daAccessMode = CompanyAdminDocumentAccess Nothing }) =
+      getAuthorSigLink
 
 documentAccessForUser :: User -> Document -> DocumentAccess
-documentAccessForUser user document = DocumentAccess {
-      daDocumentID = documentid document
-    , daAccessMode = documentAccessModeForUser user document
-    , daStatus = documentstatus document
+documentAccessForUser user document = DocumentAccess
+  { daDocumentID = documentid document
+  , daAccessMode = documentAccessModeForUser user document
+  , daStatus     = documentstatus document
   }
 
 documentAccessForAuthor :: Document -> DocumentAccess
-documentAccessForAuthor document = DocumentAccess {
-      daDocumentID = documentid document
-    , daAccessMode = AuthorDocumentAccess
-    , daStatus = documentstatus document
-  }
+documentAccessForAuthor document = DocumentAccess { daDocumentID = documentid document
+                                                  , daAccessMode = AuthorDocumentAccess
+                                                  , daStatus     = documentstatus document
+                                                  }
 
 documentAccessForAdminonly :: Document -> DocumentAccess
-documentAccessForAdminonly document =  DocumentAccess {
-      daDocumentID = documentid document
-    , daAccessMode = SystemAdminDocumentAccess
-    , daStatus = documentstatus document
+documentAccessForAdminonly document = DocumentAccess
+  { daDocumentID = documentid document
+  , daAccessMode = SystemAdminDocumentAccess
+  , daStatus     = documentstatus document
   }
 
 documentAccessModeForUser :: User -> Document -> DocumentAccessMode
-documentAccessModeForUser user document =
-  case (getSigLinkFor user document) of
-    Just sl -> if (isAuthor sl)
-                 then AuthorDocumentAccess
-                 else if (documentauthorugid document == Just (usergroupid user) && useriscompanyadmin user)
-                  then CompanyAdminDocumentAccess $ Just $ signatorylinkid sl
-                  else SignatoryDocumentAccess $ signatorylinkid sl
-    Nothing -> if (documentauthorugid document == Just (usergroupid user) && useriscompanyadmin user)
-                 then CompanyAdminDocumentAccess $ Nothing
-                 else if (documentauthorugid document == Just (usergroupid user) && isDocumentShared document)
-                  then CompanySharedDocumentAccess
-                  else unexpectedError $
-                    "User " <> showt (userid user) <> " accessing document " <> showt (documentid document)
-                    <> " without any permission. This should be cought earlier."
+documentAccessModeForUser user document = case (getSigLinkFor user document) of
+  Just sl -> if (isAuthor sl)
+    then AuthorDocumentAccess
+    else
+      if (  documentauthorugid document
+         == Just (usergroupid user)
+         && useriscompanyadmin user
+         )
+      then
+        CompanyAdminDocumentAccess $ Just $ signatorylinkid sl
+      else
+        SignatoryDocumentAccess $ signatorylinkid sl
+  Nothing ->
+    if (documentauthorugid document == Just (usergroupid user) && useriscompanyadmin user)
+      then CompanyAdminDocumentAccess $ Nothing
+      else
+        if (  documentauthorugid document
+           == Just (usergroupid user)
+           && isDocumentShared document
+           )
+        then
+          CompanySharedDocumentAccess
+        else
+          unexpectedError
+          $  "User "
+          <> showt (userid user)
+          <> " accessing document "
+          <> showt (documentid document)
+          <> " without any permission. This should be cought earlier."
 
 documentAccessForSlid :: SignatoryLinkID -> Document -> DocumentAccess
-documentAccessForSlid slid document = DocumentAccess {
-      daDocumentID = documentid document
-    , daAccessMode = documentAccessModeForSlid slid document
-    , daStatus = documentstatus document
+documentAccessForSlid slid document = DocumentAccess
+  { daDocumentID = documentid document
+  , daAccessMode = documentAccessModeForSlid slid document
+  , daStatus     = documentstatus document
   }
 
 documentAccessModeForSlid :: SignatoryLinkID -> Document -> DocumentAccessMode
-documentAccessModeForSlid slid document =
-  case (getSigLinkFor slid document) of
-    Just sl -> if (isAuthor sl)
-                  then AuthorDocumentAccess
-                  else SignatoryDocumentAccess $ signatorylinkid sl
-    Nothing -> unexpectedError $ "SignatoryLinkID " <> showt slid
-                  <> " accessing document " <> showt (documentid document)
-                  <> " without any permission. This should be caught earlier."
+documentAccessModeForSlid slid document = case (getSigLinkFor slid document) of
+  Just sl -> if (isAuthor sl)
+    then AuthorDocumentAccess
+    else SignatoryDocumentAccess $ signatorylinkid sl
+  Nothing ->
+    unexpectedError
+      $  "SignatoryLinkID "
+      <> showt slid
+      <> " accessing document "
+      <> showt (documentid document)
+      <> " without any permission. This should be caught earlier."

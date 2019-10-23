@@ -6,5 +6,5 @@ import Database.PostgreSQL.PQTypes
 
 newtype SQLFunction = SQLFunction { sqlFunDef :: RawSQL () }
 
-defineFunctions :: MonadDB m => [SQLFunction]-> m ()
+defineFunctions :: MonadDB m => [SQLFunction] -> m ()
 defineFunctions = mapM_ $ runQuery_ . sqlFunDef

@@ -41,38 +41,24 @@ instance FromSQL KontraInfoForSMSType where
       2 -> return DocumentPinSendoutSMST
       3 -> return OtherDocumentSMST
       4 -> return DocumentPartyNotificationSMST
-      _ -> throwM RangeError {
-        reRange = [(1, 3)]
-      , reValue = n
-      }
+      _ -> throwM RangeError { reRange = [(1, 3)], reValue = n }
 
 instance ToSQL KontraInfoForSMSType where
   type PQDest KontraInfoForSMSType = PQDest Int16
-  toSQL DocumentInvitationSMST        = toSQL (1::Int16)
-  toSQL DocumentPinSendoutSMST        = toSQL (2::Int16)
-  toSQL OtherDocumentSMST             = toSQL (3::Int16)
-  toSQL DocumentPartyNotificationSMST = toSQL (4::Int16)
+  toSQL DocumentInvitationSMST        = toSQL (1 :: Int16)
+  toSQL DocumentPinSendoutSMST        = toSQL (2 :: Int16)
+  toSQL OtherDocumentSMST             = toSQL (3 :: Int16)
+  toSQL DocumentPartyNotificationSMST = toSQL (4 :: Int16)
 
 instance Loggable KontraInfoForSMS where
-  logValue (DocumentInvitationSMS did slid) = object [
-       "type" .= ("invitation" :: String)
-      , identifier did
-      , identifier slid
-    ]
-  logValue (DocumentPinSendoutSMS did slid) = object [
-       "type" .= ("pin_sendout" :: String)
-      , identifier did
-      , identifier slid
-    ]
-  logValue (DocumentPartyNotificationSMS did slid) = object [
-       "type" .= ("notification" :: String)
-      , identifier did
-      , identifier slid
-    ]
-  logValue (OtherDocumentSMS did) = object [
-       "type" .= ("other" :: String)
-      , identifier did
-    ]
+  logValue (DocumentInvitationSMS did slid) =
+    object ["type" .= ("invitation" :: String), identifier did, identifier slid]
+  logValue (DocumentPinSendoutSMS did slid) =
+    object ["type" .= ("pin_sendout" :: String), identifier did, identifier slid]
+  logValue (DocumentPartyNotificationSMS did slid) =
+    object ["type" .= ("notification" :: String), identifier did, identifier slid]
+  logValue (OtherDocumentSMS did) =
+    object ["type" .= ("other" :: String), identifier did]
 
   logDefaultLabel _ = "sms_document_info"
 
@@ -83,40 +69,58 @@ instance (MonadDB m, MonadThrow m) => DBUpdate m AddKontraInfoForSMS Bool where
       sqlSet "sms_id" smsid
       case kifs of
         (DocumentInvitationSMS did slid) -> do
-           sqlSet "sms_type" DocumentInvitationSMST
-           sqlSet "document_id" did
-           sqlSet "signatory_link_id" slid
+          sqlSet "sms_type"          DocumentInvitationSMST
+          sqlSet "document_id"       did
+          sqlSet "signatory_link_id" slid
         (DocumentPinSendoutSMS did slid) -> do
-           sqlSet "sms_type" DocumentPinSendoutSMST
-           sqlSet "document_id" did
-           sqlSet "signatory_link_id" slid
+          sqlSet "sms_type"          DocumentPinSendoutSMST
+          sqlSet "document_id"       did
+          sqlSet "signatory_link_id" slid
         (DocumentPartyNotificationSMS did slid) -> do
-           sqlSet "sms_type" DocumentPartyNotificationSMST
-           sqlSet "document_id" did
-           sqlSet "signatory_link_id" slid
+          sqlSet "sms_type"          DocumentPartyNotificationSMST
+          sqlSet "document_id"       did
+          sqlSet "signatory_link_id" slid
         (OtherDocumentSMS did) -> do
-           sqlSet "sms_type" OtherDocumentSMST
-           sqlSet "document_id" did
+          sqlSet "sms_type"    OtherDocumentSMST
+          sqlSet "document_id" did
 
-fetchKontraInfoForSMS :: (Maybe KontraInfoForSMSType, Maybe DocumentID, Maybe SignatoryLinkID) -> Maybe KontraInfoForSMS
+fetchKontraInfoForSMS
+  :: (Maybe KontraInfoForSMSType, Maybe DocumentID, Maybe SignatoryLinkID)
+  -> Maybe KontraInfoForSMS
 fetchKontraInfoForSMS (Nothing, _, _) = Nothing
-fetchKontraInfoForSMS (Just DocumentInvitationSMST, Just did, Just sig) = Just $ DocumentInvitationSMS did sig
-fetchKontraInfoForSMS (Just DocumentInvitationSMST, _, _) = unexpectedError "Failed to fetch KontraInfoForSMS (DocumentInvitationSMST)"
-fetchKontraInfoForSMS (Just DocumentPinSendoutSMST, Just did, Just sig) = Just $ DocumentPinSendoutSMS did sig
-fetchKontraInfoForSMS (Just DocumentPinSendoutSMST, _, _) = unexpectedError "Failed to fetch KontraInfoForSMS (DocumentPinSendoutSMST)"
-fetchKontraInfoForSMS (Just DocumentPartyNotificationSMST, Just did, Just sig) = Just $ DocumentPartyNotificationSMS did sig
-fetchKontraInfoForSMS (Just DocumentPartyNotificationSMST, _, _) = unexpectedError "Failed to fetch KontraInfoForSMS (DocumentPartyNotificationSMST)"
-fetchKontraInfoForSMS (Just OtherDocumentSMST, Just did, Nothing) = Just $ OtherDocumentSMS did
-fetchKontraInfoForSMS (Just OtherDocumentSMST, _, _) = unexpectedError "Failed to fetch KontraInfoForSMS (OtherDocumentSMST)"
+fetchKontraInfoForSMS (Just DocumentInvitationSMST, Just did, Just sig) =
+  Just $ DocumentInvitationSMS did sig
+fetchKontraInfoForSMS (Just DocumentInvitationSMST, _, _) =
+  unexpectedError "Failed to fetch KontraInfoForSMS (DocumentInvitationSMST)"
+fetchKontraInfoForSMS (Just DocumentPinSendoutSMST, Just did, Just sig) =
+  Just $ DocumentPinSendoutSMS did sig
+fetchKontraInfoForSMS (Just DocumentPinSendoutSMST, _, _) =
+  unexpectedError "Failed to fetch KontraInfoForSMS (DocumentPinSendoutSMST)"
+fetchKontraInfoForSMS (Just DocumentPartyNotificationSMST, Just did, Just sig) =
+  Just $ DocumentPartyNotificationSMS did sig
+fetchKontraInfoForSMS (Just DocumentPartyNotificationSMST, _, _) =
+  unexpectedError "Failed to fetch KontraInfoForSMS (DocumentPartyNotificationSMST)"
+fetchKontraInfoForSMS (Just OtherDocumentSMST, Just did, Nothing) =
+  Just $ OtherDocumentSMS did
+fetchKontraInfoForSMS (Just OtherDocumentSMST, _, _) =
+  unexpectedError "Failed to fetch KontraInfoForSMS (OtherDocumentSMST)"
 
-fetchEvent :: ( SMSEventID, ShortMessageID, SMSEvent, Text, Maybe KontraInfoForSMSType
-             , Maybe DocumentID, Maybe SignatoryLinkID)
-           -> (SMSEventID, ShortMessageID, SMSEvent, Text, Maybe KontraInfoForSMS)
+fetchEvent
+  :: ( SMSEventID
+     , ShortMessageID
+     , SMSEvent
+     , Text
+     , Maybe KontraInfoForSMSType
+     , Maybe DocumentID
+     , Maybe SignatoryLinkID
+     )
+  -> (SMSEventID, ShortMessageID, SMSEvent, Text, Maybe KontraInfoForSMS)
 fetchEvent (eid, smsid, e, msisdn, mkifsmst, mkifsmsdid, mkifsmsslid) =
-    (eid, smsid, e, msisdn, mkifsms)
+  (eid, smsid, e, msisdn, mkifsms)
   where mkifsms = fetchKontraInfoForSMS (mkifsmst, mkifsmsdid, mkifsmsslid)
 
-getUnreadSMSEvents :: MonadDB m => m [(SMSEventID, ShortMessageID, SMSEvent, Text, Maybe KontraInfoForSMS)]
+getUnreadSMSEvents
+  :: MonadDB m => m [(SMSEventID, ShortMessageID, SMSEvent, Text, Maybe KontraInfoForSMS)]
 getUnreadSMSEvents = do
   runQuery_ . sqlSelect "sms_events" $ do
     sqlJoinOn "smses" "smses.id = sms_events.sms_id"

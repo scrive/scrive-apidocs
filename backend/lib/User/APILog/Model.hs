@@ -55,50 +55,40 @@ data CallLogParam = CallLogParam
 
 
 unjsonCallLogData :: UnjsonDef CallLogData
-unjsonCallLogData = objectOf $ pure CallLogData
-  <*> fieldBy "request"
-      cldRequest
-      "Call Log Request Data"
-      unjsonCallLogRequest
-  <*> fieldBy "response"
-      cldResponse
-      "Call Log Response Data"
-      unjsonCallLogResponse
+unjsonCallLogData =
+  objectOf
+    $   pure CallLogData
+    <*> fieldBy "request"  cldRequest  "Call Log Request Data"  unjsonCallLogRequest
+    <*> fieldBy "response" cldResponse "Call Log Response Data" unjsonCallLogResponse
 
 unjsonCallLogRequest :: UnjsonDef CallLogRequest
-unjsonCallLogRequest = objectOf $ pure CallLogRequest
-  <*> field "uri"
-      clrqURI
-      "Call Log Request URI"
-  <*> field "method"
-      clrqMethod
-      "Call Log Request Method"
-  <*> fieldBy "params_get"
-      clrqParamsGet
-      "Call Log Request GET Params"
-      (arrayOf unjsonCallLogParam)
-  <*> fieldBy "params_post"
-      clrqParamsPost
-      "Call Log Request POST Params"
-      (arrayOf unjsonCallLogParam)
+unjsonCallLogRequest =
+  objectOf
+    $   pure CallLogRequest
+    <*> field "uri"    clrqURI    "Call Log Request URI"
+    <*> field "method" clrqMethod "Call Log Request Method"
+    <*> fieldBy "params_get"
+                clrqParamsGet
+                "Call Log Request GET Params"
+                (arrayOf unjsonCallLogParam)
+    <*> fieldBy "params_post"
+                clrqParamsPost
+                "Call Log Request POST Params"
+                (arrayOf unjsonCallLogParam)
 
 unjsonCallLogResponse :: UnjsonDef CallLogResponse
-unjsonCallLogResponse = objectOf $ pure CallLogResponse
-  <*> field "code"
-      clrsCode
-      "Call Log Response Code"
-  <*> field "body"
-      clrsBody
-      "Call Log Response Body"
+unjsonCallLogResponse =
+  objectOf
+    $   pure CallLogResponse
+    <*> field "code" clrsCode "Call Log Response Code"
+    <*> field "body" clrsBody "Call Log Response Body"
 
 unjsonCallLogParam :: UnjsonDef CallLogParam
-unjsonCallLogParam = objectOf $ pure CallLogParam
-  <*> field "name"
-      clpName
-      "Call Log Param Name"
-  <*> field "value"
-      clpValue
-      "Call Log Param Value"
+unjsonCallLogParam =
+  objectOf $ pure CallLogParam <*> field "name" clpName "Call Log Param Name" <*> field
+    "value"
+    clpValue
+    "Call Log Param Value"
 
 newtype CallLogID = CallLogID Int64
   deriving (Eq, Ord)
@@ -116,7 +106,10 @@ instance FromReqURI CallLogID where
   fromReqURI = maybeRead . T.pack
 
 instance Unjson CallLogID where
-  unjsonDef = unjsonInvmapR ((maybe (fail "Can't parse CallLogID")  return) . maybeRead . T.pack) show unjsonDef
+  unjsonDef = unjsonInvmapR
+    ((maybe (fail "Can't parse CallLogID") return) . maybeRead . T.pack)
+    show
+    unjsonDef
 
 instance Binary CallLogID where
   put (CallLogID did) = put did
@@ -142,14 +135,19 @@ instance FromSQL [CallLogParam] where
   fromSQL mbase = do
     JSON s <- fromSQL mbase
     case Aeson.eitherDecode s of
-      Left _ -> hpqTypesError $ "fromSQL ([CallLogParam]): can't parse json"
+      Left  _  -> hpqTypesError $ "fromSQL ([CallLogParam]): can't parse json"
       Right ae -> case (parse (arrayOf unjsonCallLogParam) ae) of
         (Result res []) -> return $ res
-        (Result _ _) -> hpqTypesError $ "fromSQL ([CallLogParam]): can't parse CallLogParam"
+        (Result _ _) ->
+          hpqTypesError $ "fromSQL ([CallLogParam]): can't parse CallLogParam"
 
 instance ToSQL [CallLogParam] where
   type PQDest [CallLogParam] = PQDest (JSON BS.ByteString)
-  toSQL s = toSQL (unjsonToByteStringLazy' (Options { pretty = False, indent = 0, nulls = True }) (arrayOf unjsonCallLogParam) s)
+  toSQL s = toSQL
+    (unjsonToByteStringLazy' (Options { pretty = False, indent = 0, nulls = True })
+                             (arrayOf unjsonCallLogParam)
+                             s
+    )
 
 
 data CallLogItem = CallLogItem
@@ -160,30 +158,30 @@ data CallLogItem = CallLogItem
   } deriving (Eq, Show)
 
 unjsonCallLogItem :: UnjsonDef CallLogItem
-unjsonCallLogItem = objectOf $ pure CallLogItem
-  <*> field "id"
-      cliID
-      "ID of this log item"
-  <*> field "user_id"
-      cliUserID
-      "Time of this log item"
-  <*> field "time"
-      cliTime
-      "Time of this log item"
-  <*> fieldBy "data"
-      cliData
-      "All data, which were logged"
-      unjsonCallLogData
+unjsonCallLogItem =
+  objectOf
+    $   pure CallLogItem
+    <*> field "id"      cliID     "ID of this log item"
+    <*> field "user_id" cliUserID "Time of this log item"
+    <*> field "time"    cliTime   "Time of this log item"
+    <*> fieldBy "data" cliData "All data, which were logged" unjsonCallLogData
 
 unjsonCallLogListForAPI :: UnjsonDef [CallLogItem]
-unjsonCallLogListForAPI = objectOf $
-  fieldBy "call_logs"
-  id
-  "List of log items"
-  (arrayOf unjsonCallLogItem)
+unjsonCallLogListForAPI =
+  objectOf $ fieldBy "call_logs" id "List of log items" (arrayOf unjsonCallLogItem)
 
 selectCallLogItemSelectorsList :: [SQL]
-selectCallLogItemSelectorsList = ["id", "user_id", "time", "request_uri", "request_method", "request_params_get", "request_params_post", "response_code", "response_body"]
+selectCallLogItemSelectorsList =
+  [ "id"
+  , "user_id"
+  , "time"
+  , "request_uri"
+  , "request_method"
+  , "request_params_get"
+  , "request_params_post"
+  , "response_code"
+  , "response_body"
+  ]
 
 data GetCallLogItem = GetCallLogItem CallLogID
 instance (MonadDB m, MonadThrow m) => DBQuery m GetCallLogItem CallLogItem where
@@ -210,13 +208,19 @@ instance (MonadDB m, MonadTime m, MonadThrow m) => DBUpdate m CreateCallLogItem 
     now <- currentTime
     runQuery_ $ sqlInsert "api_call_logs" $ do
       sqlSet "user_id" userid
-      sqlSet "time" now
-      sqlSet "request_uri"                    . clrqURI        . cldRequest  $ cld
-      sqlSet "request_method"                 . clrqMethod     . cldRequest  $ cld
-      sqlSet "request_params_get"             . clrqParamsGet  . cldRequest  $ cld
-      sqlSet "request_params_post"            . clrqParamsPost . cldRequest  $ cld
-      sqlSet "response_code"                  . clrsCode       . cldResponse $ cld
-      sqlSet "response_body"                  . BS.unpack . B64.encode . BS.pack . clrsBody . cldResponse $ cld
+      sqlSet "time"    now
+      sqlSet "request_uri" . clrqURI . cldRequest $ cld
+      sqlSet "request_method" . clrqMethod . cldRequest $ cld
+      sqlSet "request_params_get" . clrqParamsGet . cldRequest $ cld
+      sqlSet "request_params_post" . clrqParamsPost . cldRequest $ cld
+      sqlSet "response_code" . clrsCode . cldResponse $ cld
+      sqlSet "response_body"
+        . BS.unpack
+        . B64.encode
+        . BS.pack
+        . clrsBody
+        . cldResponse
+        $ cld
       mapM_ sqlResult selectCallLogItemSelectorsList
     cli <- fetchOne fetchCallLogItem
     runQuery_ . sqlDelete "api_call_logs" $ do
@@ -229,22 +233,35 @@ instance (MonadDB m, MonadTime m, MonadThrow m) => DBUpdate m CreateCallLogItem 
       sqlWhereEq "user_id" userid
     return cli
 
-fetchCallLogItem :: (CallLogID, UserID, UTCTime, String, String, [CallLogParam], [CallLogParam], Int32, String) -> CallLogItem
-fetchCallLogItem (clid, userid, time, rq_uri, rq_method, rq_params_get, rq_params_post, rs_code, rs_body) =
-  CallLogItem
+fetchCallLogItem
+  :: ( CallLogID
+     , UserID
+     , UTCTime
+     , String
+     , String
+     , [CallLogParam]
+     , [CallLogParam]
+     , Int32
+     , String
+     )
+  -> CallLogItem
+fetchCallLogItem (clid, userid, time, rq_uri, rq_method, rq_params_get, rq_params_post, rs_code, rs_body)
+  = CallLogItem
     { cliID     = clid
     , cliUserID = userid
     , cliTime   = time
-    , cliData   = CallLogData
-      { cldRequest = CallLogRequest
-        { clrqURI        = rq_uri
-        , clrqMethod     = rq_method
-        , clrqParamsGet  = rq_params_get
-        , clrqParamsPost = rq_params_post
+    , cliData   =
+      CallLogData
+        { cldRequest  = CallLogRequest { clrqURI        = rq_uri
+                                       , clrqMethod     = rq_method
+                                       , clrqParamsGet  = rq_params_get
+                                       , clrqParamsPost = rq_params_post
+                                       }
+        , cldResponse =
+          CallLogResponse
+            { clrsCode = rs_code
+            , clrsBody =
+              either (const "<DECODING ERROR>") BS.unpack $ B64.decode $ BS.pack rs_body
+            }
         }
-      , cldResponse = CallLogResponse
-        { clrsCode = rs_code
-        , clrsBody = either (const "<DECODING ERROR>") BS.unpack $ B64.decode $ BS.pack rs_body
-        }
-      }
     }

@@ -27,27 +27,29 @@ data DocumentTypeShouldBe = DocumentTypeShouldBe
 instance Show DocumentTypeShouldBe where
   show (DocumentTypeShouldBe a b) =
     "DocumentTypeShouldBe { documentTypeShouldBe = "
-    ++ x a ++ ", documentTypeIs = " ++ x b ++ " }"
-    where x (Signable {}) = "Signable"
-          x (Template {}) = "Template"
+      ++ x a
+      ++ ", documentTypeIs = "
+      ++ x b
+      ++ " }"
+    where
+      x (Signable{}) = "Signable"
+      x (Template{}) = "Template"
 
 instance ToJSValue DocumentTypeShouldBe where
-  toJSValue (DocumentTypeShouldBe a b) =
-    runJSONGen $ do
-      value "message"  ("Document has incorrect type" :: String)
-      value "expected" (x a)
-      value "actual"   (x b)
-        where x (Signable {}) = ("Signable" :: String)
-              x (Template {}) = "Template"
+  toJSValue (DocumentTypeShouldBe a b) = runJSONGen $ do
+    value "message"  ("Document has incorrect type" :: String)
+    value "expected" (x a)
+    value "actual"   (x b)
+    where
+      x (Signable{}) = ("Signable" :: String)
+      x (Template{}) = "Template"
 
 
 instance DBExtraException DocumentTypeShouldBe
 
-sqlWhereDocumentTypeIs :: (MonadState v m, SqlWhere v)
-                       => DocumentType -> m ()
+sqlWhereDocumentTypeIs :: (MonadState v m, SqlWhere v) => DocumentType -> m ()
 sqlWhereDocumentTypeIs xtype =
-  sqlWhereEV (DocumentTypeShouldBe xtype, "documents.type") $
-  "documents.type =" <?> xtype
+  sqlWhereEV (DocumentTypeShouldBe xtype, "documents.type") $ "documents.type =" <?> xtype
 
 data DocumentStatusShouldBe = DocumentStatusShouldBe
   { documentStatusShouldBeDocumentID :: DocumentID
@@ -58,42 +60,41 @@ data DocumentStatusShouldBe = DocumentStatusShouldBe
 instance Show DocumentStatusShouldBe where
   show (DocumentStatusShouldBe d a b) =
     "DocumentStatusShouldBe { documentStatusShouldBeDocumentID = "
-    ++ show d ++ ", documentStatusShouldBe = ["
-    ++ intercalate "," (map x a) ++ "], documentStatusIs = "
-    ++ x b ++ " }"
-    where x (DocumentError {}) = "DocumentError {}"
-          x v = show v
+      ++ show d
+      ++ ", documentStatusShouldBe = ["
+      ++ intercalate "," (map x a)
+      ++ "], documentStatusIs = "
+      ++ x b
+      ++ " }"
+    where
+      x (DocumentError{}) = "DocumentError {}"
+      x v                 = show v
 
 instance ToJSValue DocumentStatusShouldBe where
-  toJSValue (DocumentStatusShouldBe d a b) =
-    runJSONGen $ do
-      value "message"     ("Document status is incorrect" :: String)
-      value "document_id" (show d)
-      value "expected"    (map x a)
-      value "actual"      (x b)
-        where x (DocumentError {}) = "DocumentError {}"
-              x v = show v
+  toJSValue (DocumentStatusShouldBe d a b) = runJSONGen $ do
+    value "message"     ("Document status is incorrect" :: String)
+    value "document_id" (show d)
+    value "expected"    (map x a)
+    value "actual"      (x b)
+    where
+      x (DocumentError{}) = "DocumentError {}"
+      x v                 = show v
 
 instance DBExtraException DocumentStatusShouldBe
 
-sqlWhereDocumentStatusIsOneOf :: (MonadState v m, SqlWhere v)
-                              => [DocumentStatus] -> m ()
-sqlWhereDocumentStatusIsOneOf [] =
-  sqlWhereEVV ( \d -> DocumentStatusShouldBe d []
-              , "documents.id", "documents.status" ) "FALSE"
-sqlWhereDocumentStatusIsOneOf [s] =
-  sqlWhereEVV ( \d -> DocumentStatusShouldBe d [s]
-              , "documents.id", "documents.status")
+sqlWhereDocumentStatusIsOneOf :: (MonadState v m, SqlWhere v) => [DocumentStatus] -> m ()
+sqlWhereDocumentStatusIsOneOf [] = sqlWhereEVV
+  (\d -> DocumentStatusShouldBe d [], "documents.id", "documents.status")
+  "FALSE"
+sqlWhereDocumentStatusIsOneOf [s] = sqlWhereEVV
+  (\d -> DocumentStatusShouldBe d [s], "documents.id", "documents.status")
   ("documents.status =" <?> s)
-sqlWhereDocumentStatusIsOneOf sx =
-  sqlWhereEVV ( \d -> DocumentStatusShouldBe d sx
-              , "documents.id", "documents.status")
+sqlWhereDocumentStatusIsOneOf sx = sqlWhereEVV
+  (\d -> DocumentStatusShouldBe d sx, "documents.id", "documents.status")
   ("documents.status IN" <+> parenthesize (sqlConcatComma (map sqlParam sx)))
 
-sqlWhereDocumentStatusIs :: (MonadState v m, SqlWhere v)
-                         => DocumentStatus -> m ()
-sqlWhereDocumentStatusIs status =
-  sqlWhereDocumentStatusIsOneOf [status]
+sqlWhereDocumentStatusIs :: (MonadState v m, SqlWhere v) => DocumentStatus -> m ()
+sqlWhereDocumentStatusIs status = sqlWhereDocumentStatusIsOneOf [status]
 
 
 data UserShouldBeSelfOrCompanyAdmin = UserShouldBeSelfOrCompanyAdmin
@@ -103,24 +104,22 @@ data UserShouldBeSelfOrCompanyAdmin = UserShouldBeSelfOrCompanyAdmin
   } deriving (Eq, Ord, Typeable, Show)
 
 instance ToJSValue UserShouldBeSelfOrCompanyAdmin where
-  toJSValue (UserShouldBeSelfOrCompanyAdmin d a b) =
-    runJSONGen $ do
-      value "message" ("User is not company admin" :: String)
-      value "user_id" (show d)
-      value "user_email" (a)
-      value "company_id" (show b)
+  toJSValue (UserShouldBeSelfOrCompanyAdmin d a b) = runJSONGen $ do
+    value "message"    ("User is not company admin" :: String)
+    value "user_id"    (show d)
+    value "user_email" (a)
+    value "company_id" (show b)
 
 instance DBExtraException UserShouldBeSelfOrCompanyAdmin
 
-sqlWhereUserIsSelfOrCompanyAdmin :: (MonadState v m, SqlWhere v)
-                                 => m ()
-sqlWhereUserIsSelfOrCompanyAdmin =
-  sqlWhereEVVV
+sqlWhereUserIsSelfOrCompanyAdmin :: (MonadState v m, SqlWhere v) => m ()
+sqlWhereUserIsSelfOrCompanyAdmin = sqlWhereEVVV
   ( UserShouldBeSelfOrCompanyAdmin
-  , "same_usergroup_users.id", "same_usergroup_users.email"
-  , "same_usergroup_users.user_group_id" )
-  ( "(users.id = same_usergroup_users.id"
-    <+> "OR same_usergroup_users.is_company_admin)" )
+  , "same_usergroup_users.id"
+  , "same_usergroup_users.email"
+  , "same_usergroup_users.user_group_id"
+  )
+  ("(users.id = same_usergroup_users.id" <+> "OR same_usergroup_users.is_company_admin)")
 
 data UserShouldBeDirectlyOrIndirectlyRelatedToDocument =
   UserShouldBeDirectlyOrIndirectlyRelatedToDocument
@@ -131,41 +130,37 @@ data UserShouldBeDirectlyOrIndirectlyRelatedToDocument =
   } deriving (Eq, Ord, Typeable, Show)
 
 instance ToJSValue UserShouldBeDirectlyOrIndirectlyRelatedToDocument where
-  toJSValue (UserShouldBeDirectlyOrIndirectlyRelatedToDocument d a g b) =
-    runJSONGen $ do
-      value "message"        ("User is not related to document" :: String)
-      value "user_id"        (show d)
-      value "document_id"    (show a)
-      value "document_title" (g)
-      value "user_email"     (b)
+  toJSValue (UserShouldBeDirectlyOrIndirectlyRelatedToDocument d a g b) = runJSONGen $ do
+    value "message"        ("User is not related to document" :: String)
+    value "user_id"        (show d)
+    value "document_id"    (show a)
+    value "document_title" (g)
+    value "user_email"     (b)
 
 instance DBExtraException UserShouldBeDirectlyOrIndirectlyRelatedToDocument
 
 sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument
-  :: (MonadState v m, SqlWhere v)
-  => UserID -> m ()
-sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument uid =
-  sqlWhereEVVV
+  :: (MonadState v m, SqlWhere v) => UserID -> m ()
+sqlWhereUserIsDirectlyOrIndirectlyRelatedToDocument uid = sqlWhereEVVV
   ( UserShouldBeDirectlyOrIndirectlyRelatedToDocument uid
   , "(SELECT signatory_links.document_id)"
   , "(SELECT documents.title FROM documents"
     <+> "WHERE documents.id = signatory_links.document_id)"
-  , "(SELECT email FROM users WHERE id =" <?> uid <> ")" )
+  , "(SELECT email FROM users WHERE id =" <?> uid <> ")"
+  )
   ("same_usergroup_users.id =" <?> uid)
 
 data DocumentDoesNotExist = DocumentDoesNotExist DocumentID
   deriving (Eq, Ord, Show, Typeable)
 
 instance ToJSValue DocumentDoesNotExist where
-  toJSValue (DocumentDoesNotExist d) =
-    runJSONGen $ do
-      value "message"     ("Document does not exists" :: String)
-      value "document_id" (show d)
+  toJSValue (DocumentDoesNotExist d) = runJSONGen $ do
+    value "message"     ("Document does not exists" :: String)
+    value "document_id" (show d)
 
 instance DBExtraException DocumentDoesNotExist
 
-sqlWhereDocumentIDIs :: (MonadState v m, SqlWhere v)
-                     => DocumentID -> m ()
+sqlWhereDocumentIDIs :: (MonadState v m, SqlWhere v) => DocumentID -> m ()
 sqlWhereDocumentIDIs did = do
   sqlWhereE (DocumentDoesNotExist did) ("documents.id =" <?> did)
 
@@ -173,32 +168,34 @@ data ShortDocumentIDHasNoMatch = ShortDocumentIDHasNoMatch DocumentID
   deriving (Eq, Ord, Show, Typeable)
 
 instance ToJSValue ShortDocumentIDHasNoMatch where
-  toJSValue (ShortDocumentIDHasNoMatch d) =
-    runJSONGen $ do
-      value "message"           ("No match for short document ID" :: String)
-      value "short_document_id" (show d)
+  toJSValue (ShortDocumentIDHasNoMatch d) = runJSONGen $ do
+    value "message"           ("No match for short document ID" :: String)
+    value "short_document_id" (show d)
 
 instance DBExtraException ShortDocumentIDHasNoMatch
 
 sqlWhereShortDocumentIDIs
   :: (MonadState v m, SqlWhere v, SqlOrderBy v, SqlOffsetLimit v)
-  => UTCTime -> DocumentID -> m ()
+  => UTCTime
+  -> DocumentID
+  -> m ()
 sqlWhereShortDocumentIDIs now shortDid = do
+  sqlWhereE (ShortDocumentIDHasNoMatch shortDid) ("documents.id % 1000000 =" <?> shortDid)
   sqlWhereE (ShortDocumentIDHasNoMatch shortDid)
-    ("documents.id % 1000000 =" <?> shortDid)
-  sqlWhereE (ShortDocumentIDHasNoMatch shortDid) $
-    ("documents.id >="
-     <+> "(SELECT COALESCE(max(id),0) FROM documents WHERE mtime <"
-     <?> now <+> "- interval '72 hour')"
-     <+> "and documents.mtime >" <?> now <+> "- interval '72 hour'")
+    $ (   "documents.id >="
+      <+> "(SELECT COALESCE(max(id),0) FROM documents WHERE mtime <"
+      <?> now
+      <+> "- interval '72 hour')"
+      <+> "and documents.mtime >"
+      <?> now
+      <+> "- interval '72 hour'"
+      )
   sqlOrderBy "documents.id DESC"
   sqlLimit 1
 
-sqlWhereDocumentIDForSignatoryIs :: (MonadState v m, SqlWhere v)
-                     => DocumentID -> m ()
-sqlWhereDocumentIDForSignatoryIs did = sqlWhereE
-  (DocumentDoesNotExist did)
-  ("signatory_links.document_id =" <?> did)
+sqlWhereDocumentIDForSignatoryIs :: (MonadState v m, SqlWhere v) => DocumentID -> m ()
+sqlWhereDocumentIDForSignatoryIs did =
+  sqlWhereE (DocumentDoesNotExist did) ("signatory_links.document_id =" <?> did)
 
 data SignatoryLinkDoesNotExist = SignatoryLinkDoesNotExist SignatoryLinkID
   deriving (Eq, Ord, Show, Typeable)
@@ -211,8 +208,7 @@ instance ToJSValue SignatoryLinkDoesNotExist where
 
 instance DBExtraException SignatoryLinkDoesNotExist
 
-sqlWhereSignatoryLinkIDIs :: (MonadState v m, SqlWhere v)
-                          => SignatoryLinkID -> m ()
+sqlWhereSignatoryLinkIDIs :: (MonadState v m, SqlWhere v) => SignatoryLinkID -> m ()
 sqlWhereSignatoryLinkIDIs slid =
   sqlWhereE (SignatoryLinkDoesNotExist slid) ("signatory_links.id =" <?> slid)
 
@@ -221,21 +217,19 @@ data SignatoryLinkIsForwarded = SignatoryLinkIsForwarded
 
 instance ToJSValue SignatoryLinkIsForwarded where
   toJSValue (SignatoryLinkIsForwarded) = runJSONGen $ do
-    value "message"           ("Signatory link is forwarded" :: String)
+    value "message" ("Signatory link is forwarded" :: String)
 
 instance DBExtraException SignatoryLinkIsForwarded
 
-sqlWhereSignatoryLinkIsNotForwaded :: (MonadState v m, SqlWhere v)
-                                   => m ()
-sqlWhereSignatoryLinkIsNotForwaded =
-  sqlWhereE (SignatoryLinkIsForwarded) ("signatory_links.signatory_role NOT IN " <+>
-    parenthesize (sqlConcatComma (map sqlParam forwardedRoles)))
+sqlWhereSignatoryLinkIsNotForwaded :: (MonadState v m, SqlWhere v) => m ()
+sqlWhereSignatoryLinkIsNotForwaded = sqlWhereE
+  (SignatoryLinkIsForwarded)
+  (   "signatory_links.signatory_role NOT IN "
+  <+> parenthesize (sqlConcatComma (map sqlParam forwardedRoles))
+  )
 
 forwardedRoles :: [SignatoryRole]
-forwardedRoles =
-  [ SignatoryRoleForwardedSigningParty
-  , SignatoryRoleForwardedApprover
-  ]
+forwardedRoles = [SignatoryRoleForwardedSigningParty, SignatoryRoleForwardedApprover]
 
 data SigningPartyHasNotYetSignedOrApproved = SigningPartyHasNotYetSignedOrApproved
   deriving (Eq, Ord, Show, Typeable)
@@ -246,20 +240,21 @@ instance ToJSValue SigningPartyHasNotYetSignedOrApproved where
 
 instance DBExtraException SigningPartyHasNotYetSignedOrApproved
 
-sqlWhereAllSigningPartiesHaveSignedOrApproved :: (MonadState v m, SqlWhere v)
-                                              => m ()
+sqlWhereAllSigningPartiesHaveSignedOrApproved :: (MonadState v m, SqlWhere v) => m ()
 sqlWhereAllSigningPartiesHaveSignedOrApproved =
-  sqlWhereE SigningPartyHasNotYetSignedOrApproved $
-  "NOT EXISTS"
-  <+> "(SELECT TRUE FROM signatory_links"
-   <+> "WHERE signatory_links.document_id = documents.id"
-   <+> "AND"
-   <+> parenthesize
-         (   "signatory_links.signatory_role =" <?> SignatoryRoleSigningParty
-         <+> "OR"
-         <+> "signatory_links.signatory_role =" <?> SignatoryRoleApprover
-         )
-   <+> "AND signatory_links.sign_time IS NULL)"
+  sqlWhereE SigningPartyHasNotYetSignedOrApproved
+    $   "NOT EXISTS"
+    <+> "(SELECT TRUE FROM signatory_links"
+    <+> "WHERE signatory_links.document_id = documents.id"
+    <+> "AND"
+    <+> parenthesize
+          (   "signatory_links.signatory_role ="
+          <?> SignatoryRoleSigningParty
+          <+> "OR"
+          <+> "signatory_links.signatory_role ="
+          <?> SignatoryRoleApprover
+          )
+    <+> "AND signatory_links.sign_time IS NULL)"
 
 
 
@@ -273,8 +268,10 @@ instance ToJSValue SignatoryRoleIsNotSigningParty where
 instance DBExtraException SignatoryRoleIsNotSigningParty
 
 sqlWhereSignatoryRoleIsSigningParty :: (MonadState v m, SqlWhere v) => m ()
-sqlWhereSignatoryRoleIsSigningParty = sqlWhereE SignatoryRoleIsNotSigningParty $
-  "signatory_links.signatory_role =" <?> SignatoryRoleSigningParty
+sqlWhereSignatoryRoleIsSigningParty =
+  sqlWhereE SignatoryRoleIsNotSigningParty
+    $   "signatory_links.signatory_role ="
+    <?> SignatoryRoleSigningParty
 
 data SignatoryRoleIsNotSigningPartyOrApprover =
   SignatoryRoleIsNotSigningPartyOrApprover
@@ -286,12 +283,14 @@ instance ToJSValue SignatoryRoleIsNotSigningPartyOrApprover where
 
 instance DBExtraException SignatoryRoleIsNotSigningPartyOrApprover
 
-sqlWhereSignatoryRoleIsSigningPartyOrApprover :: (MonadState v m, SqlWhere v)
-                                              => m ()
+sqlWhereSignatoryRoleIsSigningPartyOrApprover :: (MonadState v m, SqlWhere v) => m ()
 sqlWhereSignatoryRoleIsSigningPartyOrApprover =
-  sqlWhereE SignatoryRoleIsNotSigningPartyOrApprover . parenthesize $
-  "signatory_links.signatory_role ="        <?> SignatoryRoleSigningParty
-  <+> "OR signatory_links.signatory_role =" <?> SignatoryRoleApprover
+  sqlWhereE SignatoryRoleIsNotSigningPartyOrApprover
+    .   parenthesize
+    $   "signatory_links.signatory_role ="
+    <?> SignatoryRoleSigningParty
+    <+> "OR signatory_links.signatory_role ="
+    <?> SignatoryRoleApprover
 
 data SignatoryRoleMustNotBeSigningParty = SignatoryRoleMustNotBeSigningParty
   deriving (Eq, Ord, Show, Typeable)
@@ -304,8 +303,9 @@ instance DBExtraException SignatoryRoleMustNotBeSigningParty
 
 sqlWhereSignatoryRoleIsNotSigningParty :: (MonadState v m, SqlWhere v) => m ()
 sqlWhereSignatoryRoleIsNotSigningParty =
-  sqlWhereE SignatoryRoleMustNotBeSigningParty $
-  "signatory_links.signatory_role !=" <?> SignatoryRoleSigningParty
+  sqlWhereE SignatoryRoleMustNotBeSigningParty
+    $   "signatory_links.signatory_role !="
+    <?> SignatoryRoleSigningParty
 
 data SignatoryRoleIsNotApprover = SignatoryRoleIsNotApprover
   deriving (Eq, Ord, Show, Typeable)
@@ -317,8 +317,10 @@ instance ToJSValue SignatoryRoleIsNotApprover where
 instance DBExtraException SignatoryRoleIsNotApprover
 
 sqlWhereSignatoryRoleIsApprover :: (MonadState v m, SqlWhere v) => m ()
-sqlWhereSignatoryRoleIsApprover = sqlWhereE SignatoryRoleIsNotApprover $
-  "signatory_links.signatory_role =" <?> SignatoryRoleApprover
+sqlWhereSignatoryRoleIsApprover =
+  sqlWhereE SignatoryRoleIsNotApprover
+    $   "signatory_links.signatory_role ="
+    <?> SignatoryRoleApprover
 
 
 data SignatoryRoleIsNotViewer = SignatoryRoleIsNotViewer
@@ -331,8 +333,10 @@ instance ToJSValue SignatoryRoleIsNotViewer where
 instance DBExtraException SignatoryRoleIsNotViewer
 
 sqlWhereSignatoryRoleIsViewer :: (MonadState v m, SqlWhere v) => m ()
-sqlWhereSignatoryRoleIsViewer = sqlWhereE SignatoryRoleIsNotViewer $
-  "signatory_links.signatory_role =" <?> SignatoryRoleViewer
+sqlWhereSignatoryRoleIsViewer =
+  sqlWhereE SignatoryRoleIsNotViewer
+    $   "signatory_links.signatory_role ="
+    <?> SignatoryRoleViewer
 
 
 
@@ -346,12 +350,10 @@ instance ToJSValue SignatoryHasAlreadyAuthenticatedToView where
 
 instance DBExtraException SignatoryHasAlreadyAuthenticatedToView
 
-sqlWhereSigningPartyHasNotAuthenticatedToView :: (MonadState v m, SqlWhere v)
-                                              => m ()
+sqlWhereSigningPartyHasNotAuthenticatedToView :: (MonadState v m, SqlWhere v) => m ()
 sqlWhereSigningPartyHasNotAuthenticatedToView = sqlWhereE
   SignatoryHasAlreadyAuthenticatedToView
-  ("signatory_links.id NOT IN"
-   <+> "(SELECT signatory_link_id FROM eid_authentications)")
+  ("signatory_links.id NOT IN" <+> "(SELECT signatory_link_id FROM eid_authentications)")
 
 data SignatoryHasAlreadySigned = SignatoryHasAlreadySigned
   { signatoryHasAlreadySignedTime :: UTCTime }
@@ -359,15 +361,14 @@ data SignatoryHasAlreadySigned = SignatoryHasAlreadySigned
 
 instance ToJSValue SignatoryHasAlreadySigned where
   toJSValue (SignatoryHasAlreadySigned {..}) = runJSONGen $ do
-    value "message" ("Signatory has already signed" :: String)
+    value "message"   ("Signatory has already signed" :: String)
     value "sign_time" (show signatoryHasAlreadySignedTime)
 
 instance DBExtraException SignatoryHasAlreadySigned
 
-sqlWhereSigningPartyHasNotSignedOrApproved :: (MonadState v m, SqlWhere v)
-                                           => m ()
+sqlWhereSigningPartyHasNotSignedOrApproved :: (MonadState v m, SqlWhere v) => m ()
 sqlWhereSigningPartyHasNotSignedOrApproved = sqlWhereEV
-  (SignatoryHasAlreadySigned,"signatory_links.sign_time")
+  (SignatoryHasAlreadySigned, "signatory_links.sign_time")
   "signatory_links.sign_time IS NULL"
 
 
@@ -403,20 +404,20 @@ data DocumentObjectVersionDoesNotMatch = DocumentObjectVersionDoesNotMatch
 
 instance ToJSValue DocumentObjectVersionDoesNotMatch where
   toJSValue (DocumentObjectVersionDoesNotMatch {..}) = runJSONGen $ do
-    value "message" ("Document object version does not match" :: String)
+    value "message"  ("Document object version does not match" :: String)
     value "expected" (show documentObjectVersionShouldBe)
-    value "actual" (show documentObjectVersionIs)
+    value "actual"   (show documentObjectVersionIs)
 
 instance DBExtraException DocumentObjectVersionDoesNotMatch
 
-sqlWhereDocumentObjectVersionIs :: (MonadState v m, SqlWhere v)
-                                 => Int64 -> m ()
+sqlWhereDocumentObjectVersionIs :: (MonadState v m, SqlWhere v) => Int64 -> m ()
 sqlWhereDocumentObjectVersionIs object_version =
   sqlWhereEVV
-  ( \did actual -> DocumentObjectVersionDoesNotMatch did object_version actual
-  , "documents.id"
-  , "documents.object_version" ) $
-  ("documents.object_version =" <?> object_version)
+      ( \did actual -> DocumentObjectVersionDoesNotMatch did object_version actual
+      , "documents.id"
+      , "documents.object_version"
+      )
+    $ ("documents.object_version =" <?> object_version)
 
 data DocumentWasPurged = DocumentWasPurged DocumentID String UTCTime
   deriving (Eq, Ord, Show, Typeable)
@@ -424,21 +425,16 @@ data DocumentWasPurged = DocumentWasPurged DocumentID String UTCTime
 instance ToJSValue DocumentWasPurged where
   toJSValue (DocumentWasPurged did title time) = runJSONGen $ do
     value "message"
-      ("Document was purged from the system and is no longer available"
-       :: String)
+          ("Document was purged from the system and is no longer available" :: String)
     value "document_id" (show did)
     value "purged_time" (show time)
     value "title"       (title)
 
 instance DBExtraException DocumentWasPurged
 
-sqlWhereDocumentWasNotPurged :: (MonadState v m, SqlWhere v)
-                             => m ()
+sqlWhereDocumentWasNotPurged :: (MonadState v m, SqlWhere v) => m ()
 sqlWhereDocumentWasNotPurged = sqlWhereEVVV
-  ( DocumentWasPurged
-  , "documents.id"
-  , "documents.title"
-  , "documents.purged_time" )
+  (DocumentWasPurged, "documents.id", "documents.title", "documents.purged_time")
   "documents.purged_time IS NULL"
 
 ------------------------------------------------------------
@@ -456,14 +452,14 @@ instance ToJSValue DocumentIsDeleted where
 
 instance DBExtraException DocumentIsDeleted
 
-sqlWhereDocumentIsNotDeleted :: (MonadState v m, SqlWhere v)
-                             => m ()
+sqlWhereDocumentIsNotDeleted :: (MonadState v m, SqlWhere v) => m ()
 sqlWhereDocumentIsNotDeleted = sqlWhereEVVVV
   ( DocumentIsDeleted
   , "signatory_links.document_id"
   , "(SELECT title FROM documents WHERE documents.id = document_id)"
   , "signatory_links.id"
-  , "signatory_links.deleted" )
+  , "signatory_links.deleted"
+  )
   "signatory_links.deleted IS NULL"
 
 ------------------------------------------------------------
@@ -481,13 +477,13 @@ instance ToJSValue DocumentIsNotDeleted where
 
 instance DBExtraException DocumentIsNotDeleted
 
-sqlWhereDocumentIsDeleted :: (MonadState v m, SqlWhere v)
-                             => m ()
+sqlWhereDocumentIsDeleted :: (MonadState v m, SqlWhere v) => m ()
 sqlWhereDocumentIsDeleted = sqlWhereEVVV
   ( DocumentIsNotDeleted
   , "signatory_links.document_id"
   , "(SELECT title FROM documents WHERE documents.id = document_id)"
-  , "signatory_links.id" )
+  , "signatory_links.id"
+  )
   "signatory_links.deleted IS NOT NULL"
 
 ------------------------------------------------------------
@@ -505,15 +501,14 @@ instance ToJSValue DocumentIsReallyDeleted where
 
 instance DBExtraException DocumentIsReallyDeleted
 
-sqlWhereDocumentIsNotReallyDeleted :: (MonadState v m, SqlWhere v)
-                                   => m ()
-sqlWhereDocumentIsNotReallyDeleted =
-  sqlWhereEVVVV
+sqlWhereDocumentIsNotReallyDeleted :: (MonadState v m, SqlWhere v) => m ()
+sqlWhereDocumentIsNotReallyDeleted = sqlWhereEVVVV
   ( DocumentIsReallyDeleted
   , "signatory_links.id"
   , "(SELECT title FROM documents WHERE documents.id = document_id)"
   , "signatory_links.id"
-  , "signatory_links.really_deleted")
+  , "signatory_links.really_deleted"
+  )
   "signatory_links.really_deleted IS NULL"
 
 ------------------------------------------------------------
@@ -525,11 +520,9 @@ data SignatoryAuthenticationToSignDoesNotMatch =
   deriving (Eq, Ord, Show, Typeable)
 
 instance ToJSValue SignatoryAuthenticationToSignDoesNotMatch where
-  toJSValue (SignatoryAuthenticationToSignDoesNotMatch
-             did slid expected actual) =
+  toJSValue (SignatoryAuthenticationToSignDoesNotMatch did slid expected actual) =
     runJSONGen $ do
-      value "message"
-        ("Signatory authentication to sign method does not match" :: String)
+      value "message" ("Signatory authentication to sign method does not match" :: String)
       value "document_id"       (show did)
       value "signatory_link_id" (show slid)
       value "expected"          (show expected)
@@ -537,15 +530,14 @@ instance ToJSValue SignatoryAuthenticationToSignDoesNotMatch where
 
 instance DBExtraException SignatoryAuthenticationToSignDoesNotMatch
 
-sqlWhereSignatoryAuthenticationToSignMethodIs :: (MonadState v m, SqlWhere v)
-                                        => AuthenticationToSignMethod -> m ()
-sqlWhereSignatoryAuthenticationToSignMethodIs am =
-  sqlWhereEVVV
-  ( \did slid amact ->
-      SignatoryAuthenticationToSignDoesNotMatch did slid am amact
+sqlWhereSignatoryAuthenticationToSignMethodIs
+  :: (MonadState v m, SqlWhere v) => AuthenticationToSignMethod -> m ()
+sqlWhereSignatoryAuthenticationToSignMethodIs am = sqlWhereEVVV
+  ( \did slid amact -> SignatoryAuthenticationToSignDoesNotMatch did slid am amact
   , "signatory_links.document_id"
   , "signatory_links.id"
-  , "signatory_links.authentication_to_sign_method" )
+  , "signatory_links.authentication_to_sign_method"
+  )
   ("signatory_links.authentication_to_sign_method =" <?> am)
 
 ------------------------------------------------------------
@@ -561,9 +553,8 @@ instance ToJSValue SignatoryConsentQuestionDoesNotExist where
 
 instance DBExtraException SignatoryConsentQuestionDoesNotExist
 
-sqlWhereSignatoryConsentQuestionIDIs :: (MonadState v m, SqlWhere v)
-                                     => SignatoryConsentQuestionID -> m ()
-sqlWhereSignatoryConsentQuestionIDIs scqid =
-  sqlWhereE
+sqlWhereSignatoryConsentQuestionIDIs
+  :: (MonadState v m, SqlWhere v) => SignatoryConsentQuestionID -> m ()
+sqlWhereSignatoryConsentQuestionIDIs scqid = sqlWhereE
   (SignatoryConsentQuestionDoesNotExist scqid)
   ("signatory_link_consent_questions.id =" <?> scqid)

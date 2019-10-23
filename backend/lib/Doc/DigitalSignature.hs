@@ -32,64 +32,80 @@ import Utils.Directory (withSystemTempDirectory')
 import qualified GuardTime as GT
 
 addDigitalSignature
-  :: ( CryptoRNG m, MonadIO m, MonadMask m, MonadLog m, MonadBaseControl IO m
-     , DocumentMonad m, MonadFileStorage m, GuardTimeConfMonad m, TemplatesMonad m)
+  :: ( CryptoRNG m
+     , MonadIO m
+     , MonadMask m
+     , MonadLog m
+     , MonadBaseControl IO m
+     , DocumentMonad m
+     , MonadFileStorage m
+     , GuardTimeConfMonad m
+     , TemplatesMonad m
+     )
   => m Bool
 addDigitalSignature = theDocumentID >>= \did ->
-  withSystemTempDirectory'
-  ("DigitalSignature-" ++ show did ++ "-") $ \tmppath -> do
-  mfile <- fileFromMainFile =<< (documentsealedfile <$> theDocument)
-  file <- case mfile of
-    Nothing   -> unexpectedError "addDigitalSignature: File is not sealed"
-    Just file -> return file
-  content <- getFileContents file
-  let mainpath = tmppath </> "main.pdf"
-  logInfo "Temp file write" $ object [
-      "bytes_written" .= (BS.length content)
-    , "originator" .= ("addDigitalSignature" :: Text)
-    ]
-  liftIO $ BS.writeFile mainpath content
-  now <- currentTime
-  gtconf <- getGuardTimeConf
-  -- GuardTime signs in place
-  (code, stdout, stderr) <- GT.digitallySign gtconf mainpath
-  case code of
-    ExitSuccess -> do
-      vr <- GT.verify gtconf mainpath
-      case vr of
-           GT.Valid gsig -> do
-                res <- liftIO $ BS.readFile mainpath
-                logInfo "GuardTime verification result" $ logObject_ vr
-                logInfo_ "GuardTime signed successfully"
-                logInfo_ "Adding new sealed file to DB"
-                sealedfileid <- saveNewFile (filename file) res
-                logInfo "Finished adding sealed file to DB, adding to document" $ object [
-                    identifier sealedfileid
-                  ]
-                dbUpdate $ AppendSealedFile sealedfileid (Guardtime (GT.extended gsig) (GT.privateGateway gsig)) $ systemActor now
-                return True
-           _ -> do
-                logAttention "GuardTime verification after signing failed for document" $ object [
-                    logPair_ vr
+  withSystemTempDirectory' ("DigitalSignature-" ++ show did ++ "-") $ \tmppath -> do
+    mfile <- fileFromMainFile =<< (documentsealedfile <$> theDocument)
+    file  <- case mfile of
+      Nothing   -> unexpectedError "addDigitalSignature: File is not sealed"
+      Just file -> return file
+    content <- getFileContents file
+    let mainpath = tmppath </> "main.pdf"
+    logInfo "Temp file write" $ object
+      [ "bytes_written" .= (BS.length content)
+      , "originator" .= ("addDigitalSignature" :: Text)
+      ]
+    liftIO $ BS.writeFile mainpath content
+    now                    <- currentTime
+    gtconf                 <- getGuardTimeConf
+    -- GuardTime signs in place
+    (code, stdout, stderr) <- GT.digitallySign gtconf mainpath
+    case code of
+      ExitSuccess -> do
+        vr <- GT.verify gtconf mainpath
+        case vr of
+          GT.Valid gsig -> do
+            res <- liftIO $ BS.readFile mainpath
+            logInfo "GuardTime verification result" $ logObject_ vr
+            logInfo_ "GuardTime signed successfully"
+            logInfo_ "Adding new sealed file to DB"
+            sealedfileid <- saveNewFile (filename file) res
+            logInfo "Finished adding sealed file to DB, adding to document"
+              $ object [identifier sealedfileid]
+            dbUpdate
+              $ AppendSealedFile sealedfileid
+                                 (Guardtime (GT.extended gsig) (GT.privateGateway gsig))
+              $ systemActor now
+            return True
+          _ -> do
+            logAttention "GuardTime verification after signing failed for document"
+              $ object
+                  [ logPair_ vr
                   , "signing_stdout" `equalsExternalBSL` stdout
                   , "signing_stderr" `equalsExternalBSL` stderr
                   ]
-                return False
-    ExitFailure c -> do
-      logAttention "GuardTime failed" $ object [
-          "code" .= c
-        ]
-      return False
+            return False
+      ExitFailure c -> do
+        logAttention "GuardTime failed" $ object ["code" .= c]
+        return False
 
 -- | Extend a document: replace the digital signature with a keyless
 -- one.  Trigger callbacks.
 extendDigitalSignature
-  :: ( MonadBaseControl IO m, MonadIO m, MonadMask m, MonadLog m, CryptoRNG m
-     , DocumentMonad m, MonadFileStorage m, GuardTimeConfMonad m, TemplatesMonad m)
+  :: ( MonadBaseControl IO m
+     , MonadIO m
+     , MonadMask m
+     , MonadLog m
+     , CryptoRNG m
+     , DocumentMonad m
+     , MonadFileStorage m
+     , GuardTimeConfMonad m
+     , TemplatesMonad m
+     )
   => m Bool
 extendDigitalSignature = do
   mfile <- fileFromMainFile =<< (documentsealedfile <$> theDocument)
-  file <- case mfile of
+  file  <- case mfile of
     Nothing   -> unexpectedError "extendDigitalSignature: File is not sealed"
     Just file -> return file
 
@@ -97,8 +113,10 @@ extendDigitalSignature = do
   withSystemTempDirectory' ("ExtendSignature-" ++ show did ++ "-") $ \tmppath -> do
     content <- getFileContents file
     let sealedpath = tmppath </> "sealed.pdf"
-    logInfo "Temp file write" $ object [ "bytes_written" .= (BS.length content)
-                                       , "originator" .= ("extendDigitalSignature" :: Text) ]
+    logInfo "Temp file write" $ object
+      [ "bytes_written" .= (BS.length content)
+      , "originator" .= ("extendDigitalSignature" :: Text)
+      ]
     liftIO $ BS.writeFile sealedpath content
     now <- currentTime
     res <- digitallyExtendFile now sealedpath (filename file)
@@ -119,41 +137,50 @@ extendDigitalSignature = do
     -- /verify service can detect and provide an extended version if
     -- the verified document was extensible.
 
-digitallyExtendFile :: (MonadFileStorage m, TemplatesMonad m, MonadBase IO m,
-                        MonadThrow m, CryptoRNG m, MonadLog m, MonadIO m,
-                        MonadMask m, DocumentMonad m, GuardTimeConfMonad m)
-                    => UTCTime -> FilePath -> Text -> m Bool
+digitallyExtendFile
+  :: ( MonadFileStorage m
+     , TemplatesMonad m
+     , MonadBase IO m
+     , MonadThrow m
+     , CryptoRNG m
+     , MonadLog m
+     , MonadIO m
+     , MonadMask m
+     , DocumentMonad m
+     , GuardTimeConfMonad m
+     )
+  => UTCTime
+  -> FilePath
+  -> Text
+  -> m Bool
 digitallyExtendFile ctxtime pdfpath pdfname = do
-  gtconf <- getGuardTimeConf
+  gtconf                 <- getGuardTimeConf
   (code, stdout, stderr) <- GT.digitallyExtend gtconf pdfpath
-  mr <- case code of
+  mr                     <- case code of
     ExitSuccess -> do
       vr <- GT.verify gtconf pdfpath
       case vr of
-           GT.Valid gsig | GT.extended gsig -> do
-                res <- liftIO $ BS.readFile pdfpath
-                logInfo "GuardTime verification result" $ logObject_ vr
-                logInfo_ "GuardTime extended successfully"
-                return $ Just (res, Guardtime (GT.extended gsig) (GT.privateGateway gsig))
-           _ -> do
-                logAttention "GuardTime verification after extension failed" $ object [
-                    logPair_ vr
-                  , "extending_stdout" `equalsExternalBSL` stdout
-                  , "extending_stderr" `equalsExternalBSL` stderr
-                  ]
-                return Nothing
+        GT.Valid gsig | GT.extended gsig -> do
+          res <- liftIO $ BS.readFile pdfpath
+          logInfo "GuardTime verification result" $ logObject_ vr
+          logInfo_ "GuardTime extended successfully"
+          return $ Just (res, Guardtime (GT.extended gsig) (GT.privateGateway gsig))
+        _ -> do
+          logAttention "GuardTime verification after extension failed" $ object
+            [ logPair_ vr
+            , "extending_stdout" `equalsExternalBSL` stdout
+            , "extending_stderr" `equalsExternalBSL` stderr
+            ]
+          return Nothing
     ExitFailure c -> do
-      logAttention "GuardTime failed for document" $ object [
-          "code" .= c
-        ]
+      logAttention "GuardTime failed for document" $ object ["code" .= c]
       return Nothing
   case mr of
     Nothing -> return False
     Just (extendedfilepdf, status) -> do
       logInfo_ "Adding new extended file to DB"
       sealedfileid <- saveNewFile pdfname extendedfilepdf
-      logInfo "Finished adding extended file to DB, adding to document" $ object [
-          identifier sealedfileid
-        ]
+      logInfo "Finished adding extended file to DB, adding to document"
+        $ object [identifier sealedfileid]
       dbUpdate $ AppendExtendedSealedFile sealedfileid status $ systemActor ctxtime
       return True

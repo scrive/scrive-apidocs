@@ -49,25 +49,29 @@ instance MonadTransControl DocumentT where
   {-# INLINE restoreT #-}
 
 instance {-# OVERLAPPING #-} (GetRow Document m, MonadDB m) => DocumentMonad (DocumentT m) where
-  theDocument = DocumentT rowCache
+  theDocument   = DocumentT rowCache
   theDocumentID = DocumentT rowCacheID
   updateDocument m = DocumentT $ updateRow $ unDocumentT . m
   updateDocumentWithID m = DocumentT $ updateRowWithID $ unDocumentT . m
 
 -- | Lock a document and perform an operation that modifies the
 -- document in the database, given the document
-withDocument :: (MonadDB m, MonadLog m, GetRow Document m) => Document -> DocumentT m a -> m a
-withDocument d = runRowCacheT d . logDocument (documentid d) . unDocumentT . (lockDocument >>)
+withDocument
+  :: (MonadDB m, MonadLog m, GetRow Document m) => Document -> DocumentT m a -> m a
+withDocument d =
+  runRowCacheT d . logDocument (documentid d) . unDocumentT . (lockDocument >>)
 
 -- | Lock a document and perform an operation that modifies the
 -- document in the database, given the document ID
-withDocumentID :: (MonadDB m, MonadLog m, GetRow Document m) => DocumentID -> DocumentT m a -> m a
+withDocumentID
+  :: (MonadDB m, MonadLog m, GetRow Document m) => DocumentID -> DocumentT m a -> m a
 withDocumentID d = runRowCacheTID d . logDocument d . unDocumentT . (lockDocument >>)
 
 -- | Lock a document and perform an operation that modifies the
 -- document in the database, given an operation that obtains the
 -- document
-withDocumentM :: (MonadDB m, MonadLog m, GetRow Document m) => m Document -> DocumentT m a -> m a
+withDocumentM
+  :: (MonadDB m, MonadLog m, GetRow Document m) => m Document -> DocumentT m a -> m a
 withDocumentM dm action = do
   d <- dm
   runRowCacheT d . logDocument (documentid d) . unDocumentT $ do
@@ -81,7 +85,7 @@ lockDocument = do
   runQuery_ ("SELECT pg_backend_pid()" :: SQL)
   pids :: [Int32] <- fetchMany runIdentity
   let pidstr = case pids of
-                 [] -> "UKNOWN"
-                 (pid:_) -> show pid
+        []        -> "UKNOWN"
+        (pid : _) -> show pid
   logInfo "Lock document" $ object ["pid" .= pidstr]
   runQuery_ $ "SELECT TRUE FROM documents WHERE id =" <?> did <+> "FOR UPDATE"

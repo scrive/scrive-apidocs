@@ -27,20 +27,17 @@ instance FromSQL SignupMethod where
       5 -> return CompanyInvitation
       6 -> return PartnerInvitation
       7 -> return PortalInvite
-      _ -> E.throwIO $ RangeError {
-        reRange = [(1, 7)]
-      , reValue = n
-      }
+      _ -> E.throwIO $ RangeError { reRange = [(1, 7)], reValue = n }
 
 instance ToSQL SignupMethod where
   type PQDest SignupMethod = PQDest Int16
-  toSQL AccountRequest    = toSQL (1::Int16)
-  toSQL ViralInvitation   = toSQL (2::Int16)
-  toSQL BySigning         = toSQL (3::Int16)
-  toSQL ByAdmin           = toSQL (4::Int16)
-  toSQL CompanyInvitation = toSQL (5::Int16)
-  toSQL PartnerInvitation = toSQL (6::Int16)
-  toSQL PortalInvite = toSQL (7::Int16)
+  toSQL AccountRequest    = toSQL (1 :: Int16)
+  toSQL ViralInvitation   = toSQL (2 :: Int16)
+  toSQL BySigning         = toSQL (3 :: Int16)
+  toSQL ByAdmin           = toSQL (4 :: Int16)
+  toSQL CompanyInvitation = toSQL (5 :: Int16)
+  toSQL PartnerInvitation = toSQL (6 :: Int16)
+  toSQL PortalInvite      = toSQL (7 :: Int16)
 
 instance FromReqURI SignupMethod where
   fromReqURI = maybeRead . T.pack

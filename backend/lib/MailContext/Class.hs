@@ -24,4 +24,4 @@ instance (
   , Monad (t m)
   , MonadTrans t
   ) => MailContextMonad (t m) where
-    getMailContext = lift getMailContext
+  getMailContext = lift getMailContext

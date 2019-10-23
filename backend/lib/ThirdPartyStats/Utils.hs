@@ -16,11 +16,7 @@ extractUID = extract uidProp
 -- | Extract a certain property from the rest. There has to be exactly one
 --   instance of this property, or the result will be Nothing.
 extract :: (EventProperty -> Maybe a) -> [EventProperty] -> Maybe (a, [EventProperty])
-extract fromprop props =
-    case partition predicate props of
-      ([prop], props') | Just prop' <- fromprop prop ->
-        Just (prop', props')
-      _ ->
-        Nothing
-  where
-    predicate = isJust . fromprop
+extract fromprop props = case partition predicate props of
+  ([prop], props') | Just prop' <- fromprop prop -> Just (prop', props')
+  _ -> Nothing
+  where predicate = isJust . fromprop

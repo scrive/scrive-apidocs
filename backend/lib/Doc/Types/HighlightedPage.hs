@@ -17,10 +17,7 @@ data HighlightedPage = HighlightedPage {
 ---------------------------------
 
 highlightedPagesSelectors :: [SQL]
-highlightedPagesSelectors = [
-    "highlighted_pages.page"
-  , "highlighted_pages.file_id"
-  ]
+highlightedPagesSelectors = ["highlighted_pages.page", "highlighted_pages.file_id"]
 
 type instance CompositeRow HighlightedPage = (Int32, FileID)
 
@@ -28,7 +25,5 @@ instance PQFormat HighlightedPage where
   pqFormat = compositeTypePqFormat ctHighlightedPage
 
 instance CompositeFromSQL HighlightedPage where
-  toComposite (hppage, hpfid) = HighlightedPage {
-     highlightedPagePage = hppage
-  ,  highlightedPageFileID = hpfid
-  }
+  toComposite (hppage, hpfid) =
+    HighlightedPage { highlightedPagePage = hppage, highlightedPageFileID = hpfid }

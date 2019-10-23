@@ -24,4 +24,4 @@ punyEncode s = name <> "@" <> encodedDomain
 
     encodeElem :: Text -> Text
     encodeElem str | needsEncoding str = "xn--" <> encodeStr str
-                   | otherwise = str
+                   | otherwise         = str

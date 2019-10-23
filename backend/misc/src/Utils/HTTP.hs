@@ -42,7 +42,7 @@ isHTTPS = do
 getHostpart :: ServerMonad m => m Text
 getHostpart = do
   hostpart <- currentDomain
-  scheme <- currentScheme
+  scheme   <- currentScheme
   return $ scheme <> "://" <> hostpart
 
 getHttpHostpart :: ServerMonad m => m Text
@@ -57,18 +57,21 @@ getHttpsHostpart = do
 
 currentLink :: ServerMonad m => m Text -- We use this since we can switch to HTTPS whenever we want
 currentLink = do
-  scheme <- currentScheme
+  scheme  <- currentScheme
   urlbody <- currentLinkBody
   return $ scheme <> "://" <> urlbody
 
 
 currentLinkBody :: ServerMonad m => m Text
 currentLinkBody = do
-  rq <- askRq
+  rq       <- askRq
   hostpart <- currentDomain
   return $ hostpart <> (T.pack $ rqUri rq) <> (T.pack $ rqQuery rq)
 
-urlEncodeVars :: [(BSLU.ByteString,BSLU.ByteString)] -> BSLU.ByteString
-urlEncodeVars ((n,v):[]) = (BSL.fromChunks [(URI.urlEncode True $ BSL.toStrict n)]) `BSL.append` "=" `BSL.append` (BSL.fromChunks [(URI.urlEncode True $ BSL.toStrict v)])
-urlEncodeVars [] = BSL.empty
-urlEncodeVars (p:pp) = urlEncodeVars [p] `BSL.append` "&" `BSL.append` urlEncodeVars pp
+urlEncodeVars :: [(BSLU.ByteString, BSLU.ByteString)] -> BSLU.ByteString
+urlEncodeVars ((n, v) : []) =
+  (BSL.fromChunks [(URI.urlEncode True $ BSL.toStrict n)])
+    `BSL.append` "="
+    `BSL.append` (BSL.fromChunks [(URI.urlEncode True $ BSL.toStrict v)])
+urlEncodeVars []       = BSL.empty
+urlEncodeVars (p : pp) = urlEncodeVars [p] `BSL.append` "&" `BSL.append` urlEncodeVars pp

@@ -18,14 +18,11 @@ import User.Model
 
 import UserGroup.Types
 
-doDailyPlanhatStats :: ( MonadDB m
-                       , MonadLog m
-                       , MonadThrow m
-                       , MonadIO m
-                       , MonadBaseControl IO m)
-                    => PlanhatConf
-                    -> Manager
-                    -> m ()
+doDailyPlanhatStats
+  :: (MonadDB m, MonadLog m, MonadThrow m, MonadIO m, MonadBaseControl IO m)
+  => PlanhatConf
+  -> Manager
+  -> m ()
 doDailyPlanhatStats phConf reqManager = do
   now <- currentTime
   logInfo_ "Generating Planhat user stats"
@@ -34,22 +31,29 @@ doDailyPlanhatStats phConf reqManager = do
 
   -- metrics; the Planhat metrics API endpoint accepts a list so we concatenate
   -- the updates to be efficient
-  logPlanhatErrors =<< (liftIO $ do
-    httpLbs (mkPlanhatRequest
-               phConf
-               phMetricsURL
-               (JSON.toJSON $
-                 (planhatMetricJSONs "users_total" usersTotal now) <>
-                 (planhatMetricJSONs "users_active" usersActive now)))
-            reqManager)
-    where
+  logPlanhatErrors
+    =<< (liftIO $ do
+          httpLbs
+            (mkPlanhatRequest
+              phConf
+              phMetricsURL
+              (  JSON.toJSON
+              $  (planhatMetricJSONs "users_total" usersTotal now)
+              <> (planhatMetricJSONs "users_active" usersActive now)
+              )
+            )
+            reqManager
+        )
+  where
 
-      planhatMetricJSONs :: String -> [(UserGroupID, UserGroupID, Int64)] -> UTCTime -> [JSON.Value]
-      planhatMetricJSONs dimensionId uts now = map (\(invoiceUgid, ugid, k) ->
-        planhatMetricJSON dimensionId k invoiceUgid ugid now) uts
+    planhatMetricJSONs
+      :: String -> [(UserGroupID, UserGroupID, Int64)] -> UTCTime -> [JSON.Value]
+    planhatMetricJSONs dimensionId uts now = map
+      (\(invoiceUgid, ugid, k) -> planhatMetricJSON dimensionId k invoiceUgid ugid now)
+      uts
 
-      logPlanhatErrors :: (MonadLog m) => Response BSL.ByteString-> m ()
-      logPlanhatErrors res = do
-        case maybeErrors . getResponseBody $ res of
-          Nothing -> return ()
-          Just errObject -> logInfo "Planhat call error" $ errObject
+    logPlanhatErrors :: (MonadLog m) => Response BSL.ByteString -> m ()
+    logPlanhatErrors res = do
+      case maybeErrors . getResponseBody $ res of
+        Nothing        -> return ()
+        Just errObject -> logInfo "Planhat call error" $ errObject

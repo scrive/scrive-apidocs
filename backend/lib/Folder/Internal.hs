@@ -37,16 +37,11 @@ fwcToList :: FolderWithChildren -> [Folder]
 fwcToList fwc = _fwcFolder fwc : concatMap fwcToList (_fwcChildren fwc)
 
 fetchFolder :: (FolderID, Maybe FolderID, Text) -> Folder
-fetchFolder (_folderID, _folderParentID, _folderName) = Folder{..}
+fetchFolder (_folderID, _folderParentID, _folderName) = Folder { .. }
 
 defaultFolder :: Folder
 defaultFolder =
-    Folder
-    {
-      _folderID       = emptyFolderID
-    , _folderParentID = Nothing
-    , _folderName     = ""
-    }
+  Folder { _folderID = emptyFolderID, _folderParentID = Nothing, _folderName = "" }
 
 newtype FolderID = FolderID Int64
   deriving (Eq, Ord)
@@ -77,7 +72,7 @@ fromFolderID :: FolderID -> Int64
 fromFolderID (FolderID k) = k
 
 instance Identifier FolderID where
-  idDefaultLabel       = "folder_id"
+  idDefaultLabel = "folder_id"
   idValue (FolderID k) = int64AsStringIdentifier k
 
 instance Unjson FolderID where
@@ -96,5 +91,5 @@ instance FromJSON FolderID where
   parseJSON v = do
     fidStr <- parseJSON v
     case maybeRead fidStr of
-      Nothing -> fail "Could not parse Folder ID"
+      Nothing  -> fail "Could not parse Folder ID"
       Just fid -> return fid

@@ -22,18 +22,18 @@ import qualified Data.Text.Encoding as Text
 -}
 parseCSV :: BSL8.ByteString -> Either String [[String]]
 parseCSV csvcontents =
-  let parseresult = splitCSVContents $ decodeByteString csvcontents in
-  case (exception parseresult, result parseresult) of
-    (Just msg, _res) -> Left $ "Parse error : " ++ (show msg)
-    (Nothing, res) ->
-      Right $ fixSize $ map dropTrailingEmptyCells $ filter (not . isEmptyRow) res
+  let parseresult = splitCSVContents $ decodeByteString csvcontents
+  in  case (exception parseresult, result parseresult) of
+        (Just msg, _res) -> Left $ "Parse error : " ++ (show msg)
+        (Nothing, res) ->
+          Right $ fixSize $ map dropTrailingEmptyCells $ filter (not . isEmptyRow) res
   where
     dropTrailingEmptyCells = reverse . dropWhile isEmptyCell . reverse
-    isEmptyRow = all isEmptyCell
-    isEmptyCell = null . dropWhile isSpace . reverse . dropWhile isSpace
+    isEmptyRow             = all isEmptyCell
+    isEmptyCell            = null . dropWhile isSpace . reverse . dropWhile isSpace
     fixSize s = fixSize' (maximum $ map length s) s
-    fixSize' l (s:ss) = (s ++ (replicate (l - length s) "")) : fixSize' l ss
-    fixSize' _ _ = []
+    fixSize' l (s : ss) = (s ++ (replicate (l - length s) "")) : fixSize' l ss
+    fixSize' _ _        = []
 {- |
     This splits up the csv contents, it makes an effort to guess separators
 -}
@@ -54,7 +54,11 @@ splitCSVContents x = SS.fromString guessedQuoteMark guessedSeparator (x ++ "\n")
 -}
 decodeByteString :: BSL8.ByteString -> String
 decodeByteString bs =
-  guessBest . map  (BS.toString . toStrict) . lefts $ map (\enc -> convertStrictly enc "UTF-8" bs) alternativeEncodings ++ [Left bs]
+  guessBest
+    .  map (BS.toString . toStrict)
+    .  lefts
+    $  map (\enc -> convertStrictly enc "UTF-8" bs) alternativeEncodings
+    ++ [Left bs]
   where
     {- |
         I picked these because these seem to be what Excel 2007 is outputting on my Windows machine if you choose to Save As ...
@@ -63,7 +67,7 @@ decodeByteString bs =
         CSV (Macintosh) -> MAC
         The MAC encoding seemed to cover the files Viktor sent me from his Mac too.
     -}
-    alternativeEncodings = ["ISO8859-1","CP437","MAC"]
+    alternativeEncodings = ["ISO8859-1", "CP437", "MAC"]
     {- |
         Guesses the best string by looking at it, there's not much else you can do really.
         This goes for the one with the most nordic chars in.  This also goes for things
@@ -73,13 +77,18 @@ decodeByteString bs =
     guessBest = maximumBy nordicCharCountOrdering
     nordicCharCountOrdering :: String -> String -> Ordering
     nordicCharCountOrdering a b = compare (nordicCharCount a) (nordicCharCount b)
-    nordicCharCount = length . filter (\c -> c `elem` ("äÄöÖåÅ"::String))
+    nordicCharCount = length . filter (\c -> c `elem` ("äÄöÖåÅ" :: String))
 
 
 -- | Render a BSL8.ByteString representation of CSV. Uses \',\' as
 -- spearator and \'\"\' as quote.
 renderCSV :: [[String]] -> BSL.ByteString
-renderCSV content = bom `BSL.append` (BSL.fromStrict $ Text.encodeUtf16LE $ Text.pack $ SS.toString '"' ',' content)
+renderCSV content =
+  bom
+    `BSL.append` (BSL.fromStrict $ Text.encodeUtf16LE $ Text.pack $ SS.toString '"'
+                                                                                ','
+                                                                                content
+                 )
   where bom = BSL.pack [255, 254]
 
 
@@ -92,8 +101,10 @@ data CSV = CSV
 instance ToMessage CSV where
   toMessage csv = renderCSV (csvHeader csv : csvContent csv)
   toContentType _ = BS.fromString "text/csv; charset=UTF-16"
-  toResponse csv = (if not (null (csvFilename csv))
-                    then setHeader "Content-Disposition" ("attachment;filename=" ++ csvFilename csv)
-                    else id)
-                       $ setHeaderBS (BS.fromString "Content-Type") (toContentType csv)
-                       $ toResponse (toMessage csv)
+  toResponse csv =
+    (if not (null (csvFilename csv))
+        then setHeader "Content-Disposition" ("attachment;filename=" ++ csvFilename csv)
+        else id
+      )
+      $ setHeaderBS (BS.fromString "Content-Type") (toContentType csv)
+      $ toResponse (toMessage csv)

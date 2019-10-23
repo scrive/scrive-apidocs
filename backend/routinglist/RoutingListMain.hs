@@ -48,17 +48,17 @@ data MyRoute a =
   | MyChoice [MyRoute a]
 
 instance Show (MyRoute a) where
-    show (MyDir seg x) = "Dir " ++ show seg ++ " (" ++ show x ++ ")"
-    show (MyParam x) = "Param (" ++ show x ++ ")"
-    show (MyHandler segment _ _) = "Handler(" ++ show segment ++ ")"
-    show (MyChoice xs) = "Choice (" ++ show xs  ++ ")"
+  show (MyDir seg x          ) = "Dir " ++ show seg ++ " (" ++ show x ++ ")"
+  show (MyParam x            ) = "Param (" ++ show x ++ ")"
+  show (MyHandler segment _ _) = "Handler(" ++ show segment ++ ")"
+  show (MyChoice xs          ) = "Choice (" ++ show xs ++ ")"
 
 data MySegment = MyStringS String
                | MyParams
 
 instance Show (MySegment) where
-    show (MyStringS s) = s
-    show MyParams = "Params"
+  show (MyStringS s) = s
+  show MyParams      = "Params"
 
 type MyEndSegment = (Maybe Int, Method)
 
@@ -70,16 +70,17 @@ coerce = unsafeCoerce
 -- go over Route object (recursively) and return list of urls inside
 -- this a stateful computation (for counting how many parameters are in the url)
 worker :: MyRoute (Kontra Response) -> S.State Int [String]
-worker (MyDir _segment (MyHandler (Nothing, _) _ _)) = return [] -- [segment ++ " <SERVING FILES FROM SOME DIRECTORY>"]
-worker (MyDir segment (MyHandler (Just n, _method') _ _)) = do
+worker (MyDir _segment (MyHandler (Nothing, _       ) _ _)) = return [] -- [segment ++ " <SERVING FILES FROM SOME DIRECTORY>"]
+worker (MyDir segment  (MyHandler (Just n , _method') _ _)) = do
   nParams <- S.get
   let n' = n - nParams
   case n' of
     0 -> return [show segment]
     _ -> return [show segment ++ "/"]
-worker (MyDir segment route) = mapM (\s -> return $ show segment ++ "/" ++ s) =<< worker route
-worker (MyHandler (Nothing, _) _ _) = return [] -- ["<SERVING FILES FROM SOME DIRECTORY>"]
-worker (MyHandler (Just n, _method') _ _) = do
+worker (MyDir segment route) =
+  mapM (\s -> return $ show segment ++ "/" ++ s) =<< worker route
+worker (MyHandler (Nothing, _       ) _ _) = return [] -- ["<SERVING FILES FROM SOME DIRECTORY>"]
+worker (MyHandler (Just n , _method') _ _) = do
   nParams <- S.get
   let n' = n - nParams
   case n' of
@@ -97,15 +98,19 @@ worker (MyChoice routes) = do
         return x
   concat <$> mapM (localState . worker) routes
 worker (MyParam route) = do
-  S.modify (+1)
-  mapM (\s -> return $ if s == "" then "[a-zA-Z0-9_-]+" else "[a-zA-Z0-9_-]+/" ++ s) =<< worker route
+  S.modify (+ 1)
+  mapM (\s -> return $ if s == "" then "[a-zA-Z0-9_-]+" else "[a-zA-Z0-9_-]+/" ++ s)
+    =<< worker route
 
 getUrls :: Route (Kontra Response) -> [String]
-getUrls route = nub $ concatMap exceptions $ filter (not . isRoot) $ map makeAbsoluteUrl result
-  where route' = coerce route
-        makeAbsoluteUrl url = "/" ++ url
-        isRoot url = url == "/"
-        result = fst $ S.runState (worker route') 0
+getUrls route = nub $ concatMap exceptions $ filter (not . isRoot) $ map
+  makeAbsoluteUrl
+  result
+  where
+    route' = coerce route
+    makeAbsoluteUrl url = "/" ++ url
+    isRoot url = url == "/"
+    result = fst $ S.runState (worker route') 0
 
 -- handle exceptions
 -- 1)
@@ -122,23 +127,25 @@ getUrls route = nub $ concatMap exceptions $ filter (not . isRoot) $ map makeAbs
 -- /verify gets its own special rule at the end
 exceptions :: String -> [String]
 exceptions "/no" = []
-exceptions ('/':c1:c2:[]) | [c1, c2] `elem` (map (T.unpack . codeFromLang) allLangs) = [['/', c1, c2, '$']]
-exceptions ('/':c:[]) | c `elem` ("asd"::String) = [['/', c, '/'], ['/', c, '$']]
+exceptions ('/' : c1 : c2 : [])
+  | [c1, c2] `elem` (map (T.unpack . codeFromLang) allLangs) = [['/', c1, c2, '$']]
+exceptions ('/' : c : []) | c `elem` ("asd" :: String) = [['/', c, '/'], ['/', c, '$']]
 exceptions "/pricing" = []
-exceptions "/verify" = []
-exceptions ('/':c1:c2:"/pricing") | [c1, c2] `elem` map (T.unpack . codeFromLang) allLangs = []
+exceptions "/verify"  = []
+exceptions ('/' : c1 : c2 : "/pricing")
+  | [c1, c2] `elem` map (T.unpack . codeFromLang) allLangs = []
 exceptions s = [s]
 
 main :: IO ()
 main = do
-  _ <- setupAppPaths
+  _                   <- setupAppPaths
   [fileName, include] <- getArgs
-  input <- BSL.getContents
+  input               <- BSL.getContents
   let stringifyPair (x, y) = (T.unpack x, T.unpack y)
       Just rules = map stringifyPair <$> HM.toList <$> decode input
-      overrides = map fst rules
+      overrides  = map fst rules
   withFile fileName WriteMode $ \h -> do
-    let urls = getUrls $ staticRoutes True
+    let urls       = getUrls $ staticRoutes True
         -- sort DESC to have "/a/b" coming before "/a"
         sortedUrls = sortBy (\u1 u2 -> compare u2 u1) urls
         printInstructions is = forM_ is $ \i -> hPutStrLn h $ "    " ++ i

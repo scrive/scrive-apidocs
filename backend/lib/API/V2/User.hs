@@ -42,28 +42,30 @@ getAPIUserWithPad priv = getAPIUserWith getContextUser [priv]
 
 
 -- * Internal functions
-getAPIUserWith :: Kontrakcja m => (Context -> Maybe User) -> [APIPrivilege] -> m (User, Actor)
+getAPIUserWith
+  :: Kontrakcja m => (Context -> Maybe User) -> [APIPrivilege] -> m (User, Actor)
 getAPIUserWith ctxUser privs = do
   moauthuser <- getOAuthUser privs
   case moauthuser of
-    Just (Left msg) -> apiError $ invalidAuthorizationWithMsg msg
+    Just (Left  msg          ) -> apiError $ invalidAuthorizationWithMsg msg
     Just (Right (user, actor)) -> return (user, actor)
-    Nothing -> do
+    Nothing                    -> do
       msessionuser <- do
         ctx <- getContext
         case ctxUser ctx of
-          Nothing -> return Nothing
+          Nothing   -> return Nothing
           Just user -> return $ Just (user, authorActor ctx user)
       case msessionuser of
         Just (user, actor) -> return (user, actor)
-        Nothing -> do
-          sesids <- (lookCookieValues cookieNameSessionID . rqHeaders) <$> askRq
-          auth <- (lookCookieValues "authorization" . rqHeaders) <$> askRq
-          xtoken <- (lookCookieValues cookieNameXToken . rqHeaders) <$> askRq
+        Nothing            -> do
+          sesids  <- (lookCookieValues cookieNameSessionID . rqHeaders) <$> askRq
+          auth    <- (lookCookieValues "authorization" . rqHeaders) <$> askRq
+          xtoken  <- (lookCookieValues cookieNameXToken . rqHeaders) <$> askRq
           cookies <- (lookCookieNames . rqHeaders) <$> askRq
-          logInfo "Could not find user session" $ object [ "session_id_cookies" .= sesids
-                                                         , "authorization" .= auth
-                                                         , "cookie names" .= show cookies
-                                                         , "xtoken" .= xtoken
-                                                         ]
+          logInfo "Could not find user session" $ object
+            [ "session_id_cookies" .= sesids
+            , "authorization" .= auth
+            , "cookie names" .= show cookies
+            , "xtoken" .= xtoken
+            ]
           apiError $ invalidAuthorization
