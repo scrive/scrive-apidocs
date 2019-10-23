@@ -19,7 +19,6 @@ stdenv.mkDerivation {
   name = "kontrakcja-frontend";
   buildInputs = [
     nodejs
-    pkgs.phantomjs
     pkgs.glibcLocales
     pkgs.nodePackages.less
     pkgs.nodePackages.grunt-cli
