@@ -12,6 +12,9 @@ var merge = require("webpack-merge");
 langFromTexts = _.without(langFromTexts, "no");
 langFromTexts.push("nn");
 
+const sourceDir = process.env.KONTRAKCJA_ROOT || "../";
+const workspaceDir = process.env.KONTRAKCJA_WORKSPACE || "../";
+
 module.exports = function (grunt) {
   require("load-grunt-tasks")(grunt);
   require("time-grunt")(grunt);
@@ -22,17 +25,9 @@ module.exports = function (grunt) {
   var yeomanConfig = {
     app: require("./bower.json").appPath || "app",
     dist: "dist",
-    kontrakcja: "../"
+    kontrakcjaRoot: sourceDir,
+    kontrakcjaWorkspace: workspaceDir
   };
-
-  // Pick correct defaults when we're using Haskell's 'cabal new-build'.
-  var newBuild;
-  if (grunt.option("no-new-build")) {
-      newBuild = false;
-  } else {
-      newBuild = grunt.option("new-build")
-          || fs.existsSync(yeomanConfig.kontrakcja + "dist-newstyle");
-  }
 
   grunt.initConfig({
     yeoman: yeomanConfig,
@@ -44,8 +39,8 @@ module.exports = function (grunt) {
       },
       localization: {
         files: [
-          "<%= yeoman.kontrakcja %>/texts/**/*.json",
-          "<%= yeoman.kontrakcja %>/templates/javascript-langs.st"
+          "<%= yeoman.kontrakcjaRoot %>/texts/**/*.json",
+          "<%= yeoman.kontrakcjaRoot %>/templates/javascript-langs.st"
         ],
         tasks: ["updateLocalization"]
       },
@@ -173,19 +168,19 @@ module.exports = function (grunt) {
         // We can't just invoke `../shake.sh localization` because
         // Shake doesn't allow us to run two Shake processes in the
         // same working dir simultaneously.
-        command: (newBuild ? "cabal new-build" : "cabal build") + " localization",
+        command: "cabal new-build localization",
         options: {
           execOptions: {
-            cwd: "<%= yeoman.kontrakcja %>"
+            cwd: "<%= yeoman.kontrakcjaWorkspace %>"
           }
         }
       },
       generateLocalization: {
         command: (process.env.LOCALIZATION_BIN ||
-                  (newBuild ? "cabal new-run localization" : "./dist/build/localization/localization")),
+                  "cabal new-run localization"),
         options: {
           execOptions: {
-            cwd: "<%= yeoman.kontrakcja %>"
+            cwd: "<%= yeoman.kontrakcjaWorkspace %>"
           }
         }
       }

@@ -13,6 +13,7 @@ import Text.StringTemplates.Files
 import qualified Data.Map as Map
 import qualified Data.Set as S
 
+import AppDir (setupAppPaths)
 import ScriptsPrelude
 import Transifex.Synch
 import Transifex.Utils
@@ -309,6 +310,8 @@ setCatMaybes = S.fromList . catMaybes . S.toList
 
 main :: IO ()
 main = do
+  _ <- setupAppPaths
+
   files <- filter (".hs" `isSuffixOf`) <$> directoryFilesRecursive "backend"
   mexps <- mapM fileExps files
   when (Nothing `elem` mexps) $

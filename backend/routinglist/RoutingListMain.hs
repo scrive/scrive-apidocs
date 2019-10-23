@@ -33,6 +33,7 @@ import qualified Data.ByteString.Lazy as BSL
 import qualified Data.HashMap.Strict as HM
 import qualified Data.Text as T
 
+import AppDir (setupAppPaths)
 import Kontra
 import RoutingTable (staticRoutes)
 import User.Lang
@@ -130,6 +131,7 @@ exceptions s = [s]
 
 main :: IO ()
 main = do
+  _ <- setupAppPaths
   [fileName, include] <- getArgs
   input <- BSL.getContents
   let stringifyPair (x, y) = (T.unpack x, T.unpack y)

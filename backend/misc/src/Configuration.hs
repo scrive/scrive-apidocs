@@ -133,3 +133,5 @@ showNiceYamlParseException filepath parseException =
          ++ ", " ++ show value
     Yaml.CyclicIncludes
       -> filepath ++ ": cyclic includes"
+    Yaml.LoadSettingsException _ ex
+      -> showNiceYamlParseException filepath ex

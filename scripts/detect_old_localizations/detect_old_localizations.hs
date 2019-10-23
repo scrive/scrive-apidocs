@@ -17,6 +17,7 @@ import System.IO
 import Text.Regex.TDFA
 import qualified Data.Map as Map
 
+import AppDir (setupAppPaths)
 import ScriptsPrelude
 
 ------------------------------
@@ -352,6 +353,8 @@ readLocalizations paths = concat <$> mapM aux paths
 
 main :: IO ()
 main = do
+  _ <- setupAppPaths
+
   mainLocalization   <- localizationsFromFile "templates/javascript-langs.st"
   normal_js_files    <- filter (".js" `isSuffixOf`)
                         <$> directoryFilesRecursive "frontend/app/js"

@@ -44,9 +44,9 @@ shakeFlags =
   , Option ""  ["src-subdir"] (reqArg SrcSubdir         "DIR")
     "Source subdirectory (for 'hindent'/'stylish-haskell'/'hlint')"
   , Option ""  ["new-build"]  (noArg  NewBuild)
-    "Use 'new-build' (default)."
+    "Use 'v2-build' (default)."
   , Option ""  ["old-build"]  (noArg  OldBuild)
-    "Don't use 'new-build'."
+    "Don't use 'v2-build'."
   , Option "O"
     [ "enable-optimisation", "enable-optimization"
     , "optimisation", "optimization" ]

@@ -10,6 +10,7 @@ import Data.Time.Clock
 import Data.Time.Format
 import Development.Shake
 import Development.Shake.Classes
+import System.FilePath (FilePath)
 
 -- * These newtypes are used by `askOracle` to get environment variables
 -- Treat them as black-boxes that you don't need to know about!
@@ -17,6 +18,8 @@ import Development.Shake.Classes
 -- The other option was to write the value of env vars to a file in the Shake
 -- build directory, this option was preffered
 newtype GhcVersion = GhcVersion ()
+  deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
+newtype SourceRoot = SourceRoot ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 newtype TeamCity = TeamCity ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
@@ -52,6 +55,7 @@ newtype CreateTestDBWithConfData = CreateTestDBWithConfData ()
   deriving (Show,Typeable,Eq,Hashable,Binary,NFData)
 
 type instance RuleResult GhcVersion                      = String
+type instance RuleResult SourceRoot                      = FilePath
 type instance RuleResult TeamCity                        = Bool
 type instance RuleResult NginxConfRulesPath              = String
 type instance RuleResult NginxConfDefaultRule            = String
@@ -77,6 +81,8 @@ addOracles = do
                      withVerbosity Silent $
                      (fromStdout <$>
                       cmd "ghc --numeric-version" :: Action String)
+  void $ addOracle $ \(SourceRoot _) ->
+                     fromMaybe "." <$> getEnv "KONTRAKCJA_ROOT"
   void $ addOracle $ \(TeamCity _) ->
                      not . null . fromMaybe ""
                      <$> getEnv "TEAMCITY_VERSION"
@@ -212,6 +218,9 @@ oracleHelpRule = do
 
     ghc <- askOracleWith (GhcVersion ()) ""
     explainVar "GHC version" ghc
+
+    sourceRoot <- askOracleWith (SourceRoot ()) ""
+    explainVar "SourceRoot" sourceRoot
 
     putNormal ""
 

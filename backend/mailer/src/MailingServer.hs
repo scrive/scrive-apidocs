@@ -10,12 +10,14 @@ import Happstack.Server hiding (result, waitForTermination)
 import Log
 import System.Console.CmdArgs hiding (def)
 import System.Environment
+import System.FilePath ((</>), FilePath)
 import qualified Control.Exception.Lifted as E
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Data.Traversable as F
 import qualified Happstack.StaticRouting as R
 
+import AppDir (AppPaths(..), setupAppPaths)
 import Configuration
 import Database.Redis.Configuration
 import DB
@@ -41,14 +43,14 @@ data CmdConf = CmdConf {
   config :: String
 } deriving (Data, Typeable)
 
-cmdConf :: String -> CmdConf
-cmdConf progName = CmdConf {
+cmdConf :: FilePath -> String -> CmdConf
+cmdConf workspaceRoot progName = CmdConf {
   config = configFile
         &= help ("Configuration file (default: " ++ configFile ++ ")")
         &= typ "FILE"
 } &= program progName
   where
-    configFile = "mailing_server.conf"
+    configFile = workspaceRoot </> "mailing_server.conf"
 
 ----------------------------------------
 
@@ -56,8 +58,9 @@ type MainM = LogT IO
 
 main :: IO ()
 main = do
+  (AppPaths _ workspaceRoot) <- setupAppPaths
   -- All running instances need to have the same configuration.
-  CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
+  CmdConf{..} <- cmdArgs . cmdConf workspaceRoot =<< getProgName
   conf <- readConfig putStrLn config
   case mailerMonitoringConfig conf of
     Just mconf -> void $ startMonitoringServer mconf

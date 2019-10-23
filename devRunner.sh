@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 
+set -eax
+
+script_dir="$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )"
+source "$script_dir/env.sh"
+
 echo "DEV RUNNER:"
 echo ""
 
 echo "MIGRATING DATABASE"
-cabal new-run kontrakcja-migrate
+cabal v2-run kontrakcja-migrate
 
 echo ""
 echo "STARTING S3 SERVER"
@@ -23,21 +28,21 @@ if grep --quiet ".*gateway_url.*:.*localhost.*" kontrakcja.conf; then
 fi
 
 echo "STARTING MAILER SERVER"
-    cabal new-run mailing-server &
+    cabal v2-run mailing-server &
     echo $! > _mailer_pid
     echo "started mailer with pid $(cat _mailer_pid)"
     sleep 1
 
 echo ""
 echo "STARTING SMS SERVER"
-    cabal new-run messenger-server &
+    cabal v2-run messenger-server &
     echo $! > _mailer_pid
     echo "started sms sender with pid $(cat _mailer_pid)"
     sleep 1
 
 echo ""
 echo "STARTING CRON SERVER"
-    cabal new-run cron &
+    cabal v2-run cron &
     echo $! > _cron_pid
     echo "started mailer with pid $(cat _cron_pid)"
     sleep 1
@@ -62,7 +67,7 @@ fi
 
 echo ""
 echo "STARTING MAIN SERVER"
-    cabal new-run kontrakcja-server "$@" &
+    cabal v2-run kontrakcja-server "$@" &
     echo $! > _server_pid
     echo "started server with pid $(cat _server_pid)"
 

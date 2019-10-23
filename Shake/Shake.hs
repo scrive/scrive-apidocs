@@ -11,6 +11,7 @@ import Development.Shake
 import Development.Shake.FilePath
 import Distribution.Text (display)
 import System.Directory (createDirectoryIfMissing)
+import System.Environment (lookupEnv)
 import System.Exit (ExitCode(..), exitFailure)
 import System.IO (hPutStrLn, stderr)
 import System.Process (callProcess, readProcess)
@@ -168,11 +169,13 @@ main = do
   -- correct.
   checkPrerequisites
 
+  sourceRoot <- fromMaybe "." <$> (lookupEnv "KONTRAKCJA_ROOT")
+
   -- Used to check if Shake.hs rules changed, triggering a full rebuild.
-  hsDeps       <- getHsDeps "Shake"
+  hsDeps       <- getHsDeps $ sourceRoot </> "Shake"
   ver          <- getHashedShakeVersion $ ["shake.sh"] ++ hsDeps
   -- Dependency information needed by our rules.
-  cabalFile    <- parseCabalFile "kontrakcja.cabal"
+  cabalFile    <- parseCabalFile $ sourceRoot </> "kontrakcja.cabal"
   shakeArgsWith (opts ver) shakeFlags $ \flags targets -> return . Just $ do
     newBuild <- liftIO $ mkUseNewBuild flags cabalFile
     let opt        = getOptimisationLevel flags
@@ -227,12 +230,12 @@ main = do
       removeFilesAfter "_shake/" ["//*"]
 
     -- * Rules
-    componentBuildRules   newBuild opt cabalFile
+    componentBuildRules   sourceRoot newBuild opt cabalFile
     serverBuildRules      newBuild opt exeDynamic cabalFile
     serverTestRules       newBuild opt cabalFile
                           (mkCreateDBWithTestConf flags)
                           [pat | TestPattern pat <- flags]
-    serverFormatLintRules newBuild opt cabalFile flags
+    serverFormatLintRules sourceRoot newBuild opt cabalFile flags
     frontendBuildRules    newBuild
     frontendTestRules     newBuild
     distributionRules     newBuild opt
@@ -271,18 +274,26 @@ serverNewBuildRules :: OptimisationLevel -> EnableExecutableDynamic
                     -> CabalFile -> FilePath
                     -> Rules ()
 serverNewBuildRules opt exeDynamic cabalFile buildDir = do
-  let cabalFiles = ["cabal.project.freeze", "kontrakcja.cabal"]
-
   "_build/cabal-update" %>>> do
-    need cabalFiles
-    cmd (EchoStdout True) "cabal new-update"
+    sourceRoot <- askOracle (SourceRoot ())
+    need
+      [ sourceRoot </> "kontrakcja.cabal"
+      ]
+
+    cmd (EchoStdout True) "cabal v2-update"
 
   "cabal.project.local" %> \_ -> do
-    need ("_build/cabal-update":cabalFiles)
+    sourceRoot <- askOracle (SourceRoot ())
+    need
+      [ "_build/cabal-update"
+      , sourceRoot </> "kontrakcja.cabal"
+      ]
+
     flags <- getCabalConfigureFlags opt exeDynamic
-    command [Shell] "cabal" ("new-configure":flags)
+    command [Shell] "cabal" ("v2-configure":flags)
 
   "_build/cabal-build" %>>> do
+    sourceRoot <- askOracle (SourceRoot ())
     need ["cabal.project.local"]
     tc <- askOracle (TeamCity ())
     when tc $ do
@@ -291,43 +302,50 @@ serverNewBuildRules opt exeDynamic cabalFile buildDir = do
       -- that is rebuilt with new version code by `grunt build`.
       alwaysRerun
       -- Force GHC to rebuild the TH-containing module.
-      cmd "touch" ("backend" </> "lib" </> "Version.hs")
+      cmd "touch" (sourceRoot </> "backend" </> "lib" </> "Version.hs")
     needServerHaskellFiles cabalFile
-    cmd (EchoStdout True) "cabal new-build"
+    cmd (EchoStdout True) "cabal v2-build all"
 
   "_build/cabal-haddock.tar.gz" %> \_ -> do
     need ["_build/cabal-build"]
     needServerHaskellFiles cabalFile
     -- Limit to library from package, due to Cabal bug:
     -- https://github.com/haskell/cabal/issues/1919
-    command_ [] "cabal" ["act-as-setup", "--", "haddock", "--internal"
-                        ,"--builddir", buildDir]
+    command_ [] "cabal" [ "v2-haddock"
+                        , "all"
+                        ]
     command_ [Shell] "tar" ["-czf","_build/cabal-haddock.tar.gz"
-                           ,buildDir </> "doc"]
+                           , buildDir </> "noopt/doc"]
 
-  "cabal-clean" ~> cmd "cabal new-clean"
+  "cabal-clean" ~> cmd "cabal v2-clean"
 
 serverOldBuildRules :: OptimisationLevel -> EnableExecutableDynamic -> CabalFile
                     -> Rules ()
 serverOldBuildRules opt exeDynamic cabalFile = do
-  let cabalFiles = ["cabal.config", "kontrakcja.cabal"]
-
   "cabal.sandbox.config" %> \_ -> do
     sandbox <- askOracle (BuildSandbox ())
     if null sandbox
        then cmd "cabal sandbox init"
-       else cmd $ "cabal sandbox init --sandbox=" ++ sandbox
+       else cmd $ "cabal sandbox init --sandbox=" <> sandbox
 
   "_build/cabal-update" %>>> do
-    need cabalFiles
+    sourceRoot <- askOracle (SourceRoot ())
+    need
+      [ "cabal.config"
+      , sourceRoot </> "kontrakcja.cabal"
+      ]
     cmd (EchoStdout True) "cabal update"
 
   "_build/cabal-install-deps" %>>> do
+    sourceRoot <- askOracle (SourceRoot ())
     void $ askOracleWith (GhcVersion ()) ""
-    need cabalFiles
-    need [ "cabal.sandbox.config"
-         , "_build/cabal-update"
-         ]
+    need
+      [ "cabal.config"
+      , sourceRoot </> "kontrakcja.cabal"
+      , "cabal.sandbox.config"
+      , "_build/cabal-update"
+      ]
+
     cmd (EchoStdout True) "cabal" [ "install", "--enable-tests"
                                   , "--only-dependencies"
                                   , "--reorder-goals"
@@ -337,8 +355,12 @@ serverOldBuildRules opt exeDynamic cabalFile = do
   -- Using a separate production rule lets us avoid having to run cabal clean
   -- every time, because then we know that it was run with up to date flags
   "_build/cabal-configure-with-flags" %>>> do
-    need cabalFiles
-    need ["_build/cabal-install-deps"]
+    sourceRoot <- askOracle (SourceRoot ())
+    need
+      [ "cabal.config"
+      , sourceRoot </> "kontrakcja.cabal"
+      , "_build/cabal-install-deps"
+      ]
     tc <- askOracle (TeamCity ())
     -- Need to rebuild on TeamCity because version code for resources
     -- that is generated in src/Version.hs is used for stuff that is
@@ -351,8 +373,12 @@ serverOldBuildRules opt exeDynamic cabalFile = do
     command [Shell] "cabal" ("configure":"--enable-tests":flags)
 
   "dist/setup-config" %> \_ -> do
-    need cabalFiles
-    need ["_build/cabal-install-deps"]
+    sourceRoot <- askOracle (SourceRoot ())
+    need
+      [ "cabal.config"
+      , sourceRoot </> "kontrakcja.cabal"
+      , "_build/cabal-install-deps"
+      ]
     tc <- askOracle (TeamCity ())
     testCoverage <- askOracle (BuildTestCoverage ())
     cabalFlags <- askOracleWith (BuildCabalConfigureOptions ()) ""
@@ -415,6 +441,7 @@ serverTestRules newBuild opt cabalFile createDBWithConf testPatterns = do
     -- removeFilesAfter is only performed on a successfull build, this file
     -- needs to be cleaned regardless otherwise successive builds will fail
     liftIO $ removeFiles "." ["kontrakcja-test.tix"]
+    sourceRoot <- askOracle (SourceRoot ())
     withDB createDBWithConf $ forM_ testSuiteExePaths $ \testSuiteExe -> do
       tc <- askOracle (TeamCity ())
       let testPatterns'
@@ -423,11 +450,11 @@ serverTestRules newBuild opt cabalFile createDBWithConf testPatterns = do
       if tc
         then do
           target <- askOracle (BuildTarget ())
-          let cmdopt = [Shell] ++ langEnv
+          let cmdopt = [Shell] <> langEnv
               flags = ["--plain"
                       ,"--output-dir _build/kontrakcja-test-artefacts"]
-                      ++ testPatterns'
-                      ++ case target of
+                      <> testPatterns'
+                      <> case target of
                            "staging" -> ["--staging-tests"]
                            _         -> []
           (Exit c, Stdouterr out) <- command cmdopt testSuiteExe flags
@@ -439,15 +466,17 @@ serverTestRules newBuild opt cabalFile createDBWithConf testPatterns = do
       putNormal "Checking if kontrakcja-test.tix was generated by tests..."
       need ["kontrakcja-test.tix"]
       command_ [Shell]
-        ("ls backend/test/src | awk -F \".\" '{print \"--exclude=\"$1}' "
-         ++ "| hpc markup `xargs echo` "
-         ++ "--destdir=coverage-reports kontrakcja-test.tix "
-         ++ concat [ "--hpcdir=" ++ hpcPath ++ " "
+        ("ls "
+         <> (sourceRoot </> "backend/test/src")
+         <> " | awk -F \".\" '{print \"--exclude=\"$1}' "
+         <> "| hpc markup `xargs echo` "
+         <> "--destdir=coverage-reports kontrakcja-test.tix "
+         <> concat [ "--hpcdir=" <> hpcPath <> " "
                    | hpcPath <- hpcPaths cabalFile newBuild opt ]
         ) []
       command_ [Shell]
         ("zip -r _build/coverage-reports.zip "
-         ++ "coverage-reports kontrakcja-test.tix") []
+         <> "coverage-reports kontrakcja-test.tix") []
       removeFilesAfter "coverage-reports" ["//*"]
 
         where
@@ -468,7 +497,9 @@ serverTestRules newBuild opt cabalFile createDBWithConf testPatterns = do
                                    ,"DROP DATABASE IF EXISTS " <> dbName <> ";"]
 
 needHaskellFilesInDirectories :: [FilePath] -> Action ()
-needHaskellFilesInDirectories = needPatternsInDirectories ["//*.hs"]
+needHaskellFilesInDirectories paths = do
+  sourceRoot <- askOracle (SourceRoot ())
+  needPatternsInDirectories sourceRoot ["//*.hs"] paths
 
 needAllHaskellFiles :: CabalFile -> Action ()
 needAllHaskellFiles = needHaskellFilesInDirectories . allHsSourceDirs
@@ -476,12 +507,12 @@ needAllHaskellFiles = needHaskellFilesInDirectories . allHsSourceDirs
 needServerHaskellFiles :: CabalFile -> Action ()
 needServerHaskellFiles = needHaskellFilesInDirectories . allLibExeHsSourceDirs
 
-serverFormatLintRules :: UseNewBuild -> OptimisationLevel -> CabalFile
+serverFormatLintRules :: FilePath ->UseNewBuild -> OptimisationLevel -> CabalFile
                       -> [ShakeFlag] -> Rules ()
-serverFormatLintRules newBuild opt cabalFile flags = do
+serverFormatLintRules sourceRoot newBuild opt cabalFile flags = do
   let srcSubdirs = case [subdir | SrcSubdir subdir <- flags]
-                   of [] -> allHsSourceDirs cabalFile
-                      ds -> ds
+                    of [] -> fmap (sourceRoot </>) $ allHsSourceDirs cabalFile
+                       ds -> ds
 
   "_build/hs-import-order" %>>> do
     needAllHaskellFiles cabalFile
@@ -501,7 +532,7 @@ serverFormatLintRules newBuild opt cabalFile flags = do
   "test-hs-outdated-deps" ~> do
     cmd "cabal" ["outdated", "--exit-code",
                  if useNewBuild newBuild
-                 then "--new-freeze-file"
+                 then "--v2-freeze-file"
                  else "--freeze-file"]
 
   "hindent" ~> do
@@ -517,16 +548,16 @@ serverFormatLintRules newBuild opt cabalFile flags = do
       onEachHsFile subdir ["stylish-haskell", "-i"]
 
   "hlint" ~> do
-    cmd "hlint" (commonHLintOpts ++ srcSubdirs)
+    cmd "hlint" (commonHLintOpts <> srcSubdirs)
 
   "hlint-report" ~> do
-    unit $ cmd "hlint" (commonHLintOpts ++ ("-q":"--report":srcSubdirs))
+    unit $ cmd "hlint" (commonHLintOpts <> ("-q":"--report":srcSubdirs))
     putNormal "Output written to report.html"
 
   "hlint-refactor" ~> do
     forM_ srcSubdirs $ \subdir ->
-      onEachHsFile subdir (["hlint"] ++ commonHLintOpts
-                            ++ [ "--refactor", "--refactor-options=-i"])
+      onEachHsFile subdir (["hlint"] <> commonHLintOpts
+                            <> [ "--refactor", "--refactor-options=-i"])
 
   "brittany" ~> do
     forM_ srcSubdirs $ \subdir -> do
@@ -534,7 +565,7 @@ serverFormatLintRules newBuild opt cabalFile flags = do
       forM_ files $ \file -> do
         unit $ command [] "brittany"
           $ [ "--config-file"
-            , "brittany.yaml"
+            , sourceRoot </> "brittany.yaml"
             , "--write-mode"
             , "inplace"
             , subdir </> file
@@ -562,12 +593,12 @@ serverFormatLintRules newBuild opt cabalFile flags = do
       commonHLintOpts = ["-XNoPatternSynonyms" , "--no-exit-code", "--cross"]
       onEachHsFile subdir act = unit $
         cmd "find" $ [subdir, "-type", "f", "-name", "*.hs", "-exec"]
-                     ++ act ++ ["{}", ";"]
+                     <> act <> ["{}", ";"]
 
       checkFormatted srcPath = do
         Exit code <- command [] "brittany"
           $ [ "--config-file"
-            , "brittany.yaml"
+            , sourceRoot </> "brittany.yaml"
             , "--check-mode"
             , srcPath
             ]
@@ -577,7 +608,7 @@ serverFormatLintRules newBuild opt cabalFile flags = do
 
       hsImportOrderAction checkOnly dirs = do
         let sortImportsFlags = if checkOnly then ("--check":dirs) else dirs
-        command ([Shell] ++ langEnv)
+        command ([Shell] <> langEnv)
           (componentTargetPath newBuild opt . mkExeName $ "sort_imports")
           sortImportsFlags
 
@@ -591,38 +622,64 @@ gruntNewBuildArg unb | useNewBuild unb = "--new-build"
 frontendBuildRules :: UseNewBuild -> Rules ()
 frontendBuildRules newBuild = do
   "_build/npm-install" %>>> do
-    need ["frontend/package.json"]
-    command [EchoStdout True, Cwd "frontend"] "npm" ["install"]
+    sourceRoot <- askOracle (SourceRoot ())
+    need [ sourceRoot </> "frontend/package.json" ]
+    command
+      [ EchoStdout True
+      , Cwd $ sourceRoot </> "frontend"
+      ]
+      "npm"
+      ["install"]
 
   "_build/grunt-build" %>>> do
+    sourceRoot <- askOracle (SourceRoot ())
     need [ "_build/npm-install"
          , "localization"
          ]
     alwaysRerun
-    command ([EchoStdout True, Cwd "frontend"] ++ langEnv) "grunt"
+    command
+      ([ EchoStdout True
+       , Cwd $ sourceRoot </> "frontend"
+       ] <> langEnv)
+      "grunt"
       ["build", gruntNewBuildArg newBuild]
 
   "grunt-clean" ~> do
+    sourceRoot <- askOracle (SourceRoot ())
     need ["_build/npm-install"]
-    cmd [Cwd "frontend"] "grunt" ["clean", gruntNewBuildArg newBuild]
+    cmd
+      [Cwd $ sourceRoot </> "frontend"]
+      "grunt"
+      ["clean", gruntNewBuildArg newBuild]
 
 -- | Frontend test rules
 frontendTestRules :: UseNewBuild -> Rules ()
 frontendTestRules newBuild = do
   "grunt-eslint" ~> do
+    sourceRoot <- askOracle (SourceRoot ())
     need ["_build/npm-install"]
-    cmd [Cwd "frontend"] "grunt" ["eslint", gruntNewBuildArg newBuild]
+    cmd
+      [Cwd $ sourceRoot </> "frontend"]
+      "grunt"
+      ["eslint", gruntNewBuildArg newBuild]
 
   "grunt-coverage" ~> do
+    sourceRoot <- askOracle (SourceRoot ())
     need ["_build/grunt-build"]
-    command_ [Cwd "frontend"] "grunt" ["test", gruntNewBuildArg newBuild]
+    command_
+      [Cwd $ sourceRoot </> "frontend"]
+      "grunt"
+      ["test", gruntNewBuildArg newBuild]
 
   "grunt-test" ~> do
+    sourceRoot <- askOracle (SourceRoot ())
     need ["_build/grunt-build"]
     testCoverage <- askOracle (BuildTestCoverage ())
     case testCoverage of
-      False -> cmd [Cwd "frontend"] "grunt" ["test:fast"
-                                            ,gruntNewBuildArg newBuild]
+      False -> cmd
+        [Cwd $ sourceRoot </> "frontend"]
+        "grunt"
+        ["test:fast", gruntNewBuildArg newBuild]
       True -> do
         need ["grunt-coverage"]
         command_ [Shell] "zip -r _build/JS_coverage.zip frontend/coverage/" []
@@ -638,7 +695,7 @@ distributionRules newBuild opt = do
     nginxconfrulespathalternative <- askOracle (NginxConfRulesPathAlternative ())
     unless tc $ do
       fail $ "ERROR: routinglist executable is only built "
-        ++ "with Shake when running from TeamCity"
+        <> "with Shake when running from TeamCity"
     when (null nginxconfrulespath) $ do
       fail "ERROR: NGINX_CONF_RULES_PATH is empty"
     let routingListPath = componentTargetPath newBuild opt . mkExeName
@@ -663,8 +720,8 @@ distributionRules newBuild opt = do
 
   "_build/kontrakcja.tar.gz" %> \_ -> do
     let binaries = map binaryPath binaryNames
-    need $ ["all", "urls.txt"] ++ binaries
-    let distFiles = binaries ++
+    need $ ["all", "urls.txt"] <> binaries
+    let distFiles = binaries <>
                     [ "evidence-package/samples.p"
                     , "frontend/app/img"
                     , "frontend/app/less"
@@ -681,7 +738,7 @@ distributionRules newBuild opt = do
                     , "build-scripts/deployFeaturesTestbedNginxRules.sh"
                     , "certs"
                     ]
-    command_ [Shell] "tar" $ ["-czf","_build/kontrakcja.tar.gz"] ++ distFiles
+    command_ [Shell] "tar" $ ["-czf","_build/kontrakcja.tar.gz"] <> distFiles
 
     where
       binaryPath = componentTargetPath DontUseNewBuild DefaultOptimisation
@@ -755,7 +812,7 @@ scriptsUsageMsg = unlines $
   , "              \"image\":\"data:image/jpeg;base64,\" + x}"
   , "writeFile files/reference_screenshots/author.json (dumps(authorJson))"
   , "same thing for /tmp/desktop2.png into "
-    ++ "files/reference_screenshots/standard.json"
+    <> "files/reference_screenshots/standard.json"
   , "same thing for /tmp/mobile2.png into"
   , "files/reference_screenshots/mobile.json"
   , ""
@@ -810,7 +867,7 @@ runTX :: UseNewBuild -> OptimisationLevel -> String -> [String] -> Action ()
 runTX newBuild opt a args = do
   let scriptPath = componentTargetPath newBuild opt . mkExeName $ "transifex"
   need [scriptPath]
-  command_ [] scriptPath ([a] ++ args)
+  command_ [] scriptPath ([a] <> args)
 
 runTransifexUsageScript :: UseNewBuild -> OptimisationLevel -> Action ()
 runTransifexUsageScript newBuild opt = do

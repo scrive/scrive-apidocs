@@ -1,0 +1,8 @@
+{
+  "host": "localhost",
+  "port": 4568,
+  "bucket": "dev",
+  "access_key": "key",
+  "secret_key": "secret",
+  "secure": false
+}

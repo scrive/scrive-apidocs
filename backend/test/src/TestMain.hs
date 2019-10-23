@@ -10,6 +10,7 @@ import Database.PostgreSQL.PQTypes.Internal.Connection
 import Log
 import System.Directory (createDirectoryIfMissing)
 import System.Environment
+import System.FilePath ((</>), FilePath)
 import System.IO
 import Test.Framework
 import qualified Control.Exception.Lifted as E
@@ -23,6 +24,7 @@ import AccountInfoTest
 import AdministrationTest
 import AppDBMigrations
 import AppDBTables
+import AppDir (AppPaths(..), setupAppPaths)
 import ArchiveTest
 import Attachment.APITest
 import BrandedDomainTest
@@ -173,21 +175,22 @@ modifyTestEnv ("--output-dir":d:r) =
 modifyTestEnv (d:r) = first (d:) $ modifyTestEnv r
 
 
-testMany :: ([String], [(TestEnvSt -> Test)]) -> IO ()
-testMany (allargs, ts) = do
+testMany :: FilePath -> ([String], [(TestEnvSt -> Test)]) -> IO ()
+testMany workspaceRoot (allargs, ts) = do
   rng <- unsafeCryptoRNGState (BS.pack (replicate 128 0))
   (errs, lr)  <- mkLogRunner "test" testLogConfig rng
   mapM_ T.putStrLn errs
 
-  withLogger lr $ \runLogger -> testMany' (allargs, ts) runLogger rng
+  withLogger lr $ \runLogger -> testMany' workspaceRoot (allargs, ts) runLogger rng
 
-testMany' :: ([String], [(TestEnvSt -> Test)])
+testMany' :: FilePath
+          -> ([String], [(TestEnvSt -> Test)])
           -> (forall m r . LogT m r -> m r) -> CryptoRNGState -> IO ()
-testMany' (allargs, ts) runLogger rng = do
+testMany' workspaceRoot (allargs, ts) runLogger rng = do
   let (args, envf) = modifyTestEnv allargs
   hSetEncoding stdout utf8
   hSetEncoding stderr utf8
-  tconf     <- readConfig  putStrLn "kontrakcja_test.conf"
+  tconf     <- readConfig putStrLn (workspaceRoot </> "kontrakcja_test.conf")
   templates <- readGlobalTemplates
 
   let connSettings  = pgConnSettings (testDBConfig tconf)
@@ -269,9 +272,11 @@ testMany' (allargs, ts) runLogger rng = do
 testone :: (TestEnvSt -> Test) -> IO ()
 testone t = do
   args <- getArgs
-  testMany (args, [t])
+  (AppPaths _ workspaceRoot) <- setupAppPaths
+  testMany workspaceRoot (args, [t])
 
 main :: IO ()
 main = do
   args <- getArgs
-  testMany (args, allTests)
+  (AppPaths _ workspaceRoot) <- setupAppPaths
+  testMany workspaceRoot (args, allTests)

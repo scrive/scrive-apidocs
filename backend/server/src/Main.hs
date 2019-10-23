@@ -12,6 +12,7 @@ import Network.Curl
 import Network.HostName
 import System.Console.CmdArgs hiding (def)
 import System.Environment
+import System.FilePath ((</>), FilePath)
 import qualified Control.Exception.Lifted as E
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
@@ -20,6 +21,7 @@ import qualified Data.Traversable as F
 import AppConf
 import AppControl
 import AppDBTables
+import AppDir (AppPaths(..), setupAppPaths)
 import BrandedDomain.BrandedDomain
 import BrandedDomain.Model
 import Configuration
@@ -50,14 +52,14 @@ data CmdConf = CmdConf {
   config :: String
 } deriving (Data, Typeable)
 
-cmdConf :: String -> CmdConf
-cmdConf progName = CmdConf {
+cmdConf :: FilePath -> String -> CmdConf
+cmdConf workspaceRoot progName = CmdConf {
   config = configFile
         &= help ("Configuration file (default: " ++ configFile ++ ")")
         &= typ "FILE"
 } &= program progName
   where
-    configFile = "kontrakcja.conf"
+    configFile = workspaceRoot </> "kontrakcja.conf"
 
 ----------------------------------------
 
@@ -65,7 +67,9 @@ type MainM = LogT IO
 
 main :: IO ()
 main = withCurlDo $ do
-  CmdConf{..} <- cmdArgs . cmdConf =<< getProgName
+  (AppPaths _ workspaceRoot) <- setupAppPaths
+
+  CmdConf{..} <- cmdArgs . cmdConf workspaceRoot =<< getProgName
   appConf <- readConfig putStrLn config
   case monitoringConfig appConf of
     Just conf -> void $ startMonitoringServer conf

@@ -4,6 +4,7 @@ _local/
 /.ghc.environment.*
 coverage-reports/
 log/
+.locale
 cron.conf
 kontrakcja.conf
 mailing_server.conf

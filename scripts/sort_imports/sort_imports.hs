@@ -24,6 +24,8 @@ import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
+import AppDir (setupAppPaths)
+
 max_line_length :: Int
 max_line_length = 80
 
@@ -320,6 +322,8 @@ checkConsistency style dirs = do
 
 main :: IO ()
 main = do
+  _ <- setupAppPaths
+
   (args, dirs) <- partition is_config_option <$> getArgs
   if null dirs
     then do

@@ -25,11 +25,11 @@ getHsDeps rootPath = do
 -- `getDirectoryFiles` that match the pattern and apply a `need` on
 -- it, this also tracks the result of `getDirectoryFiles` (for
 -- matching files)
-needPatternsInDirectories :: [FilePattern] -> [FilePath] -> Action ()
-needPatternsInDirectories pats dirs = do
+needPatternsInDirectories :: FilePath -> [FilePattern] -> [FilePath] -> Action ()
+needPatternsInDirectories sourceRoot pats dirs = do
   forM_ dirs ( \d -> do
-    hs <- getDirectoryFiles d pats
-    need $ map (\f -> d ++ "/" ++ f) hs
+    hs <- getDirectoryFiles (sourceRoot </> d) pats
+    need $ map (\f -> sourceRoot </> d </> f) hs
     )
 
 infix 1 %>>>

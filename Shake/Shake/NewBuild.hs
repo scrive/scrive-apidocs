@@ -1,4 +1,4 @@
--- | Various new-build related utilities.
+-- | Various v2-build related utilities.
 --
 
 module Shake.NewBuild (UseNewBuild(DontUseNewBuild)
@@ -36,11 +36,11 @@ useSeparateComponentDirs (CabalInstallVersion v) = v > makeVersion [2,1]
 
 type BuildDirPath = FilePath
 
--- | Whether new-build mode should be used, plus some settings data.
+-- | Whether v2-build mode should be used, plus some settings data.
 data UseNewBuild = UseNewBuild CabalInstallVersion BuildDirPath
                  | DontUseNewBuild
 
--- | Is 'new-build' mode enabled?
+-- | Is 'v2-build' mode enabled?
 useNewBuild :: UseNewBuild -> Bool
 useNewBuild (UseNewBuild _ _) = True
 useNewBuild DontUseNewBuild   = False
@@ -53,7 +53,7 @@ mkUseNewBuild flags cabalFile =
   else do
     cabalVer <- readVersion <$> numericVersion "cabal"
     if cabalVer < makeVersion [1,25] then do
-      putStrLn $ "Warning: --new-build only works with cabal-install >= 1.25."
+      putStrLn $ "Warning: --v2-build only works with cabal-install >= 1.25."
       putStrLn "Falling back to old code path."
       return DontUseNewBuild
     else UseNewBuild <$> (pure . CabalInstallVersion $ cabalVer)
@@ -69,10 +69,10 @@ mkUseNewBuild flags cabalFile =
                                M.lookup "Target platform" ghcInfo
     newBuildBuildDir ghcInfo = "dist-newstyle" </> "build"
                               </> (lookupGhcTarget ghcInfo)
-                              </> ("ghc-" ++ lookupGhcVersion ghcInfo)
+                              </> ("ghc-" <> lookupGhcVersion ghcInfo)
                               </> (packageId cabalFile)
 
--- | Branch based on whether new-build is enabled.
+-- | Branch based on whether v2-build is enabled.
 ifNewBuild :: UseNewBuild -> (FilePath -> a) -> a -> a
 ifNewBuild (UseNewBuild _cabalVer buildDir) act0 _act1 = act0 buildDir
 ifNewBuild DontUseNewBuild                  _act0 act1 = act1
@@ -135,7 +135,7 @@ hpcPaths :: CabalFile -> UseNewBuild -> OptimisationLevel -> [FilePath]
 hpcPaths cabalFile newBuild opt =
   [ mainPath
   , componentPath . mkTestName $ "kontrakcja-test" ]
-  ++ if useNewBuild newBuild
+  <> if useNewBuild newBuild
      then [componentPath . mkSubLibName $ "kontrakcja-prelude"]
      else []
   where
@@ -153,8 +153,8 @@ hpcPaths cabalFile newBuild opt =
 
 -- | For each exe/test-suite/benchmark component in the .cabal file,
 -- add a rule for building the corresponding executable.
-componentBuildRules :: UseNewBuild -> OptimisationLevel -> CabalFile -> Rules ()
-componentBuildRules newBuild optlevel cabalFile =
+componentBuildRules :: FilePath -> UseNewBuild -> OptimisationLevel -> CabalFile -> Rules ()
+componentBuildRules sourceRoot newBuild optlevel cabalFile =
   forM_ (allComponentNames cabalFile) $ \cname -> do
       let targetPath = componentTargetPath newBuild optlevel cname
       unComponentName cname ~> do need [targetPath]
@@ -166,8 +166,8 @@ componentBuildRules newBuild optlevel cabalFile =
            if useNewBuild newBuild
              then need ["cabal.project.local"]
              else need ["dist/setup-config"]
-           needPatternsInDirectories ["//*.hs"]
-             (ordNub $ sourceDirs ++ depsSourceDirs)
+           needPatternsInDirectories sourceRoot ["//*.hs"]
+             (ordNub $ sourceDirs <> depsSourceDirs)
            if useNewBuild newBuild
-             then cmd $ "cabal new-build " ++ (unComponentName cname)
-             else cmd $ "cabal build "     ++ (unComponentName cname)
+             then cmd $ "cabal v2-build " <> (unComponentName cname)
+             else cmd $ "cabal build "     <> (unComponentName cname)

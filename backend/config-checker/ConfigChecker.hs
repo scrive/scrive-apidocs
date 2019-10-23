@@ -9,11 +9,13 @@ import Data.Either.Validation
 import Data.Unjson
 import System.Environment
 import System.Exit
+import System.FilePath ((</>), FilePath)
 import System.IO
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 
 import AppConf
+import AppDir
 import Configuration
 import CronConf
 import MailingServerConf
@@ -33,8 +35,10 @@ class ConfigFile config where
 
 readConfigFile :: forall config .
                   (ConfigFile config, Unjson config)
-               => IO config
-readConfigFile = readConfig putStrLn (configFile @ config)
+               => FilePath
+               -> IO config
+readConfigFile workspaceRoot = readConfig putStrLn $
+  workspaceRoot </> (configFile @config)
 
 instance ConfigFile AppConf where
   configFile = "kontrakcja.conf"
@@ -50,10 +54,12 @@ instance ConfigFile MessengerServerConf where
 
 lintConfigFiles :: IO ()
 lintConfigFiles = do
-  appConf       <- readConfigFile @AppConf
-  cronConf      <- readConfigFile @CronConf
-  mailerConf    <- readConfigFile @MailingServerConf
-  messengerConf <- readConfigFile @MessengerServerConf
+  (AppPaths _ workspaceRoot) <- setupAppPaths
+
+  appConf       <- readConfigFile @AppConf workspaceRoot
+  cronConf      <- readConfigFile @CronConf workspaceRoot
+  mailerConf    <- readConfigFile @MailingServerConf workspaceRoot
+  messengerConf <- readConfigFile @MessengerServerConf workspaceRoot
 
   putStrLn "Checking that config files are in sync..."
 
