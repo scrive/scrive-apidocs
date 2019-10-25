@@ -29,6 +29,7 @@ module.exports = React.createClass({
       <div className="col">
         <div className="account-header company">{model.company().companyname()}</div>
         <div className="account-body standard-input-table">
+<form autoComplete="off"> // this form is only needed to disable autofill in buggy Chrome
           <table>
             <tbody>
               <tr>
@@ -111,6 +112,7 @@ module.exports = React.createClass({
               </tr>
             </tbody>
           </table>
+</form>
         </div>
       </div>
     );
