@@ -17,6 +17,7 @@ import Doc.Model.Expressions
 import MinutesTime
 import TextSearchQuery
 import User.UserID
+import Folder.Types
 
 -- | Document filtering options
 --
@@ -48,6 +49,7 @@ data DocumentFilter
   | DocumentFilterLinkIsAuthor Bool           -- ^ Only documents visible by signatory_links.is_author equal to param
   | DocumentFilterUnsavedDraft Bool           -- ^ Only documents with unsaved draft flag equal to this one
   | DocumentFilterByModificationTimeAfter UTCTime -- ^ That were modified after given time
+  | DocumentFilterByFolderID FolderID         -- ^ Documents in given folder
   deriving Show
 
 documentFilterToSQL :: (State.MonadState v m, SqlWhere v) => DocumentFilter -> m ()
@@ -176,6 +178,9 @@ documentFilterToSQL (DocumentFilterDeleted flag1) = do
   if flag1
     then sqlWhere "signatory_links.deleted IS NOT NULL"
     else sqlWhere "signatory_links.deleted IS NULL"
+
+documentFilterToSQL (DocumentFilterByFolderID fid) = do
+  sqlWhereEq "documents.folder_id" fid
 
 data FilterString = Quoted Text | Unquoted Text
   deriving (Show, Eq)

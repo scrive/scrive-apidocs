@@ -23,6 +23,11 @@ import Doc.API.V2.AesonTestUtils
 import Doc.API.V2.Calls.CallsTestUtils
 import Doc.API.V2.JSONTest
 import Doc.SignatoryLinkID ()
+import Doc.Types.Document
+import Doc.Types.SignatoryLink
+import Doc.Model.Update
+import Doc.DocumentMonad
+import Doc.Types.DocumentStatus
 import Folder.API
 import Folder.JSON
 import Folder.Model
@@ -35,6 +40,7 @@ import User.Model
 import UserGroup
 import UserGroupAccounts.UserGroupAccountsControl
 import Util.MonadUtils
+import Util.Actor
 
 folderTests :: TestEnvSt -> Test
 folderTests env = testGroup
@@ -449,7 +455,8 @@ testFolderAPIGet = do
   grpAdmin <- addNewRandomUser
   ctxAdmin <- (set ctxmaybeuser (Just grpAdmin)) <$> mkContext defaultLang
   fdrRoot  <- dbUpdate $ FolderCreate (set folderName "Folder root" defaultFolder)
-  let folderAdminR = FolderAdminAR (get folderID fdrRoot)
+  let fdrRootID = get folderID fdrRoot
+      folderAdminR = FolderAdminAR fdrRootID
       admid        = userid grpAdmin
   void . dbUpdate $ AccessControlInsertRoleForUser admid folderAdminR
   subs@[_fdr1          , _fdr2          ] <- createChildrenForParentByAPI ctxAdmin fdrRoot
@@ -463,11 +470,33 @@ testFolderAPIGet = do
         fromJust . Aeson.decode . AE.encodingToLazyByteString $ encodeFolderWithChildren
           fdrwc
   assertEqual "Folder data output corresponds to what was sent in" fdrwcfuFromAPI fdrwcbs
+  (signingParty, approver) <- addDocumentWithSigningPartyAndApprover ctxAdmin grpAdmin fdrRootID
+  ctxSigningParty <- (set ctxmaybeuser (Just signingParty)) <$> mkContext defaultLang
+  void $ fdrAPIGet ctxSigningParty fdrRoot 200
+  ctxApproverParty <- (set ctxmaybeuser (Just approver)) <$> mkContext defaultLang
+  void $ fdrAPIGet ctxApproverParty fdrRoot 200
+  return ()
   where
     fdrAPIGet :: Context -> Folder -> Int -> TestEnv Aeson.Value
     fdrAPIGet ctx fdr code = do
       let apiCall = folderAPIGet . get folderID $ fdr
       jsonTestRequestHelper ctx GET [] apiCall code
+    addDocumentWithSigningPartyAndApprover :: Context -> User -> FolderID -> TestEnv (User, User)
+    addDocumentWithSigningPartyAndApprover ctx author fid = do
+      document <- addRandomDocumentWithAuthor' author
+      signingParty <- addNewRandomUser
+      let signatoryLink = defaultSignatoryLink {
+          maybesignatory = Just $ userid signingParty,
+          signatoryrole = SignatoryRoleSigningParty }
+      approver <- addNewRandomUser
+      let approverLink = defaultSignatoryLink {
+          maybesignatory = Just $ userid approver,
+          signatoryrole = SignatoryRoleApprover }
+          sl = signatoryLink : approverLink : documentsignatorylinks document
+          documentWithSL = document { documentsignatorylinks = sl, documentfolderid = Just fid, documentstatus = Pending, documenttype = Signable }
+          did = documentid document
+      void $ withDocumentID did $ dbUpdate $ UpdateDraft documentWithSL $ authorActor ctx author
+      return (signingParty, approver)
 
 testFolderAPIDelete :: TestEnv ()
 testFolderAPIDelete = do

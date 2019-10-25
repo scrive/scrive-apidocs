@@ -3,6 +3,7 @@ module API.V2.Utils
     , accessControlLoggedIn
     , apiAccessControlOrIsAdmin
     , apiAccessControlWithAnyPrivileges
+    , apiAccessControlCheck
     , checkAdminOrSales
     , folderOrAPIError
     , isApiAdmin
@@ -44,6 +45,11 @@ apiAccessControl :: Kontrakcja m => AccessPolicy -> m a -> m a
 apiAccessControl acc successAction = do
   apiuser <- fst <$> getAPIUserWithPrivileges [APIPersonal]
   userAccessControlImpl apiuser acc (apiError insufficientPrivileges) successAction
+
+apiAccessControlCheck :: Kontrakcja m => AccessPolicy -> m Bool
+apiAccessControlCheck acc = do
+  apiuser <- fst <$> getAPIUserWithPrivileges [APIPersonal]
+  userAccessControlImpl apiuser acc (return False) (return True)
 
 apiAccessControlOrIsAdmin :: Kontrakcja m => AccessPolicy -> m a -> m a
 apiAccessControlOrIsAdmin acc successAction = do
