@@ -105,7 +105,7 @@ module.exports = React.createClass({
         <div className="account-header">{model.user().smartname()}</div>
 
         <div className="account-body standard-input-table">
-<form autoComplete="off"> // this form is only needed to disable autofill in buggy Chrome
+<form autoComplete="off">
           <table>
             <tbody>
               <tr>
