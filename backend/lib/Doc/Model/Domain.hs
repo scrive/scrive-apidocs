@@ -34,6 +34,7 @@ data DocumentDomain
   | DocumentsOfUserGroup UserGroupID             -- ^ Documents created by a particular user group.
   | DocumentsVisibleToUser UserID                -- ^ Documents that a user has possible access to
   | DocumentsByFolderOnly FolderID               -- ^ List documents in folder for which user has read access
+  | DocumentsUserHasAnyLinkTo UserID             -- ^ Documents that the given user is linked to
  deriving (Eq, Ord, Typeable, Show)
 --
 -- Document visibility rules:
@@ -138,5 +139,11 @@ documentDomainToSQL (DocumentsVisibleToUser uid) = do
 documentDomainToSQL (DocumentsByFolderOnly fdrid) = do
   sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
   sqlWhereEq "folder_id" fdrid
+  sqlWhereDocumentWasNotPurged
+  sqlWhereDocumentIsNotReallyDeleted
+
+documentDomainToSQL (DocumentsUserHasAnyLinkTo uid) = do
+  sqlJoinOn "signatory_links" "documents.id = signatory_links.document_id"
+  sqlWhereEq "user_id" uid
   sqlWhereDocumentWasNotPurged
   sqlWhereDocumentIsNotReallyDeleted

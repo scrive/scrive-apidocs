@@ -82,7 +82,7 @@ folderAPIGet fid = api $ do
     isSignatoryOfOneOfDocuments = do
       user <- fst <$> getAPIUserWithAnyPrivileges
       documents <- dbQuery $ GetDocumentsIDs
-                (DocumentsVisibleToUser (userid user))
+                (DocumentsUserHasAnyLinkTo (userid user))
                 [DocumentFilterDeleted False, DocumentFilterByFolderID fid]
                 []
       return . (> 0) $ length documents
