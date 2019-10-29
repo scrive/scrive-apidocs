@@ -14,10 +14,10 @@ import Doc.Conditions
 import Doc.DocStateData
 import Doc.DocumentID
 import Doc.Model.Expressions
+import Folder.Types
 import MinutesTime
 import TextSearchQuery
 import User.UserID
-import Folder.Types
 
 -- | Document filtering options
 --

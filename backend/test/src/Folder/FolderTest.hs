@@ -22,10 +22,10 @@ import DB
 import Doc.API.V2.AesonTestUtils
 import Doc.API.V2.Calls.CallsTestUtils
 import Doc.API.V2.JSONTest
+import Doc.DocumentMonad
+import Doc.Model.Update
 import Doc.SignatoryLinkID ()
 import Doc.Types.Document
-import Doc.Model.Update
-import Doc.DocumentMonad
 import Folder.API
 import Folder.JSON
 import Folder.Model
@@ -37,8 +37,8 @@ import User.Email
 import User.Model
 import UserGroup
 import UserGroupAccounts.UserGroupAccountsControl
-import Util.MonadUtils
 import Util.Actor
+import Util.MonadUtils
 
 folderTests :: TestEnvSt -> Test
 folderTests env = testGroup
@@ -453,7 +453,7 @@ testFolderAPIGet = do
   grpAdmin <- addNewRandomUser
   ctxAdmin <- (set ctxmaybeuser (Just grpAdmin)) <$> mkContext defaultLang
   fdrRoot  <- dbUpdate $ FolderCreate (set folderName "Folder root" defaultFolder)
-  let fdrRootID = get folderID fdrRoot
+  let fdrRootID    = get folderID fdrRoot
       folderAdminR = FolderAdminAR fdrRootID
       admid        = userid grpAdmin
   void . dbUpdate $ AccessControlInsertRoleForUser admid folderAdminR
@@ -470,12 +470,18 @@ testFolderAPIGet = do
   assertEqual "Folder data output corresponds to what was sent in" fdrwcfuFromAPI fdrwcbs
   document <- addRandomDocumentWithAuthor' grpAdmin
   let did = documentid document
-  anotherUser <- addNewRandomUser
+  anotherUser    <- addNewRandomUser
   ctxAnotherUser <- (set ctxmaybeuser (Just anotherUser)) <$> mkContext defaultLang
   let anotherUserHomeFolder = userhomefolderid anotherUser
-  let updatedDocument = document { documentfolderid = anotherUserHomeFolder } 
-  void $ withDocumentID did $ dbUpdate $ UpdateDraft updatedDocument $ authorActor ctxAnotherUser anotherUser
-  void $ jsonTestRequestHelper ctxAnotherUser GET [] (folderAPIGet $ fromJust anotherUserHomeFolder) 200
+  let updatedDocument = document { documentfolderid = anotherUserHomeFolder }
+  void $ withDocumentID did $ dbUpdate $ UpdateDraft updatedDocument $ authorActor
+    ctxAnotherUser
+    anotherUser
+  void $ jsonTestRequestHelper ctxAnotherUser
+                               GET
+                               []
+                               (folderAPIGet $ fromJust anotherUserHomeFolder)
+                               200
   where
     fdrAPIGet :: Context -> Folder -> Int -> TestEnv Aeson.Value
     fdrAPIGet ctx fdr code = do
