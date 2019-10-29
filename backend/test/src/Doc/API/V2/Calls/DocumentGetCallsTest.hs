@@ -32,6 +32,8 @@ import Doc.Types.SignatoryLink
   ( AuthenticationToSignMethod(..), SignatoryLink(..) )
 
 import File.Storage (saveNewFile)
+import Folder.Model.Update
+import Folder.Types
 import Session.Model
 import TestingUtil
 import TestKontra
@@ -63,15 +65,46 @@ testDocApiV2List = do
   user <- addNewRandomUser
   ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
-  void $ testDocApiV2New' ctx
+  doc1 <- testDocApiV2New' ctx
   void $ testDocApiV2New' ctx
   void $ testDocApiV2New' ctx
 
-  listJSON  <- jsonTestRequestHelper ctx GET [] docApiV2List 200
-  listArray <- lookupObjectArray "documents" listJSON
-  assertEqual "`docApiV2List` should return same number of docs" 3 (length listArray)
-  let docs = map mockDocFromValue $ listArray
-  forM_ docs $ \d -> assertEqual "Status should be" Preparation (getMockDocStatus d)
+  listJSON <- jsonTestRequestHelper ctx GET [] docApiV2List 200
+  assertListResponseLengthAndStatus listJSON 3 Preparation
+
+  let homeFolderID = user ^. #homeFolderID
+  userSubFolder <- dbUpdate . FolderCreate $ set #parentID homeFolderID defaultFolder
+  let subFolderID = userSubFolder ^. #id
+      movedDoc1   = moveMockDoc doc1 subFolderID
+  void $ testDocApiV2Update' ctx movedDoc1
+  listJSON2 <- jsonTestRequestHelper ctx
+                                     GET
+                                     [filterByFolderID $ fromJust homeFolderID]
+                                     docApiV2List
+                                     200
+  assertListResponseLengthAndStatus listJSON2 3 Preparation
+  listJSON3 <- jsonTestRequestHelper ctx
+                                     GET
+                                     [filterByFolderID subFolderID]
+                                     docApiV2List
+                                     200
+  assertListResponseLengthAndStatus listJSON3 1 Preparation
+  where
+    filterByFolderID :: FolderID -> (Text, Input)
+    filterByFolderID fid =
+      ( "filter"
+      , inText
+        $  "[{\"filter_by\": \"folder_id\", \"folder_id\": \""
+        <> showt fid
+        <> "\"}]"
+      )
+    assertListResponseLengthAndStatus response len status = do
+      listArray <- lookupObjectArray "documents" response
+      assertEqual "`docApiV2List` should return same number of docs"
+                  len
+                  (length listArray)
+      let docs = map mockDocFromValue $ listArray
+      forM_ docs $ \d -> assertEqual "Status should be" status (getMockDocStatus d)
 
 testDocApiV2Get :: TestEnv ()
 testDocApiV2Get = do
