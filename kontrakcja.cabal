@@ -1,3 +1,4 @@
+Cabal-Version: 2.4
 Name:          kontrakcja
 Version:       1.0
 Author:        Scrive AB
@@ -7,8 +8,7 @@ Stability:     Experimental
 Category:      Web
 Synopsis:      Ultimate signing solution
 Description:   Sign documents online with the ultimate signing solution
-Cabal-Version: >= 2.0
-License:       OtherLicense
+License:       NONE
 Build-type:    Simple
 
 -- Note:
@@ -46,6 +46,35 @@ Build-type:    Simple
 -- - use TH only where it is truly needed
 --
 
+common common-stanza
+  Default-Language: Haskell2010
+  Default-Extensions: BangPatterns
+                    , ConstraintKinds
+                    , DeriveDataTypeable
+                    , DeriveFunctor
+                    , DeriveGeneric
+                    , DerivingStrategies
+                    , FlexibleContexts
+                    , FlexibleInstances
+                    , FunctionalDependencies
+                    , GeneralizedNewtypeDeriving
+                    , LambdaCase
+                    , MultiParamTypeClasses
+                    , MultiWayIf
+                    , NamedFieldPuns
+                    , OverloadedStrings
+                    , PatternGuards
+                    , RankNTypes
+                    , RecordWildCards
+                    , ScopedTypeVariables
+                    , StandaloneDeriving
+                    , TupleSections
+                    , TypeApplications
+                    , TypeFamilies
+                    , TypeOperators
+                    , TypeSynonymInstances
+                    , UndecidableInstances
+
 Library kontrakcja-prelude
 
   Hs-Source-Dirs: backend/kontrakcja-prelude
@@ -76,6 +105,7 @@ Library kontrakcja-appdir
   Default-Language:   Haskell2010
 
 Library
+  import: common-stanza
 
   Hs-source-dirs: backend/cron/inc backend/cron/schema
                   backend/lib
@@ -633,36 +663,10 @@ Library
                , yaml >= 0.11.1.0
                , zip-archive
 
-  Default-Language: Haskell2010
-  Default-Extensions: BangPatterns
-                    , ConstraintKinds
-                    , DeriveDataTypeable
-                    , DeriveFunctor
-                    , DeriveGeneric
-                    , DerivingStrategies
-                    , FlexibleContexts
-                    , FlexibleInstances
-                    , FunctionalDependencies
-                    , GeneralizedNewtypeDeriving
-                    , LambdaCase
-                    , MultiParamTypeClasses
-                    , MultiWayIf
-                    , NamedFieldPuns
-                    , OverloadedStrings
-                    , PatternGuards
-                    , RankNTypes
-                    , RecordWildCards
-                    , ScopedTypeVariables
-                    , StandaloneDeriving
-                    , TupleSections
-                    , TypeApplications
-                    , TypeFamilies
-                    , TypeOperators
-                    , TypeSynonymInstances
-                    , UndecidableInstances
-  Other-Extensions:   TemplateHaskell
+  Other-Extensions: TemplateHaskell
 
 Executable kontrakcja-server
+  import: common-stanza
 
   Hs-source-dirs: backend/server/src
 
@@ -695,34 +699,8 @@ Executable kontrakcja-server
                , transformers-base
                , utf8-string
 
-  Default-Language: Haskell2010
-  Default-Extensions: BangPatterns
-                    , ConstraintKinds
-                    , DeriveDataTypeable
-                    , DeriveFunctor
-                    , DeriveGeneric
-                    , DerivingStrategies
-                    , FlexibleContexts
-                    , FlexibleInstances
-                    , FunctionalDependencies
-                    , GeneralizedNewtypeDeriving
-                    , LambdaCase
-                    , MultiParamTypeClasses
-                    , MultiWayIf
-                    , NamedFieldPuns
-                    , OverloadedStrings
-                    , PatternGuards
-                    , RankNTypes
-                    , RecordWildCards
-                    , ScopedTypeVariables
-                    , StandaloneDeriving
-                    , TupleSections
-                    , TypeFamilies
-                    , TypeOperators
-                    , TypeSynonymInstances
-                    , UndecidableInstances
-
 Executable cron
+  import: common-stanza
 
   Hs-source-dirs: backend/cron/src
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
@@ -757,34 +735,8 @@ Executable cron
   Main-is:       Cron.hs
   GHC-options:   -main-is Cron
 
-  Default-Language: Haskell2010
-  Default-Extensions: BangPatterns
-                    , ConstraintKinds
-                    , DeriveDataTypeable
-                    , DeriveFunctor
-                    , DeriveGeneric
-                    , DerivingStrategies
-                    , FlexibleContexts
-                    , FlexibleInstances
-                    , FunctionalDependencies
-                    , GeneralizedNewtypeDeriving
-                    , LambdaCase
-                    , MultiParamTypeClasses
-                    , MultiWayIf
-                    , NamedFieldPuns
-                    , OverloadedStrings
-                    , PatternGuards
-                    , RankNTypes
-                    , RecordWildCards
-                    , ScopedTypeVariables
-                    , StandaloneDeriving
-                    , TupleSections
-                    , TypeFamilies
-                    , TypeOperators
-                    , TypeSynonymInstances
-                    , UndecidableInstances
-
 Executable kontrakcja-migrate
+  import: common-stanza
 
   Hs-source-dirs: backend/cron/schema
                   backend/mailer/schema
@@ -935,36 +887,10 @@ Executable kontrakcja-migrate
                , utf8-string
                , yaml
 
-  Default-Language: Haskell2010
-  Default-Extensions: BangPatterns
-                    , ConstraintKinds
-                    , DeriveDataTypeable
-                    , DeriveFunctor
-                    , DeriveGeneric
-                    , DerivingStrategies
-                    , FlexibleContexts
-                    , FlexibleInstances
-                    , FunctionalDependencies
-                    , GeneralizedNewtypeDeriving
-                    , LambdaCase
-                    , MultiParamTypeClasses
-                    , MultiWayIf
-                    , NamedFieldPuns
-                    , OverloadedStrings
-                    , PatternGuards
-                    , RankNTypes
-                    , RecordWildCards
-                    , ScopedTypeVariables
-                    , StandaloneDeriving
-                    , TupleSections
-                    , TypeApplications
-                    , TypeFamilies
-                    , TypeOperators
-                    , TypeSynonymInstances
-                    , UndecidableInstances
-  Other-Extensions:   TemplateHaskell
+  Other-Extensions: TemplateHaskell
 
 Executable mailing-server
+  import: common-stanza
 
   Hs-source-dirs: backend/mailer/inc backend/mailer/schema backend/mailer/src
                   backend/misc/schema backend/misc/src backend/lib
@@ -1109,36 +1035,10 @@ Executable mailing-server
                , vector
                , yaml
 
-  Default-Language: Haskell2010
-  Default-Extensions: BangPatterns
-                    , ConstraintKinds
-                    , DeriveDataTypeable
-                    , DeriveFunctor
-                    , DeriveGeneric
-                    , DerivingStrategies
-                    , FlexibleContexts
-                    , FlexibleInstances
-                    , FunctionalDependencies
-                    , GeneralizedNewtypeDeriving
-                    , LambdaCase
-                    , MultiParamTypeClasses
-                    , MultiWayIf
-                    , NamedFieldPuns
-                    , OverloadedStrings
-                    , PatternGuards
-                    , RankNTypes
-                    , RecordWildCards
-                    , ScopedTypeVariables
-                    , StandaloneDeriving
-                    , TupleSections
-                    , TypeApplications
-                    , TypeFamilies
-                    , TypeOperators
-                    , TypeSynonymInstances
-                    , UndecidableInstances
-  Other-Extensions:   TemplateHaskell
+  Other-Extensions: TemplateHaskell
 
 Executable messenger-server
+  import: common-stanza
 
   Hs-source-dirs: backend/messenger/inc backend/messenger/schema
                   backend/messenger/src
@@ -1242,36 +1142,11 @@ Executable messenger-server
                , utf8-string
                , yaml
 
-  Default-Language: Haskell2010
-  Default-Extensions: BangPatterns
-                    , ConstraintKinds
-                    , DeriveDataTypeable
-                    , DeriveFunctor
-                    , DeriveGeneric
-                    , DerivingStrategies
-                    , FlexibleContexts
-                    , FlexibleInstances
-                    , FunctionalDependencies
-                    , GeneralizedNewtypeDeriving
-                    , LambdaCase
-                    , MultiParamTypeClasses
-                    , MultiWayIf
-                    , NamedFieldPuns
-                    , OverloadedStrings
-                    , PatternGuards
-                    , RankNTypes
-                    , RecordWildCards
-                    , ScopedTypeVariables
-                    , StandaloneDeriving
-                    , TupleSections
-                    , TypeApplications
-                    , TypeFamilies
-                    , TypeOperators
-                    , TypeSynonymInstances
-                    , UndecidableInstances
-  Other-Extensions:   TemplateHaskell
+  Other-Extensions: TemplateHaskell
 
 Test-suite kontrakcja-test
+  import: common-stanza
+
   Type:           exitcode-stdio-1.0
   Hs-source-dirs: backend/cron/schema
                   backend/cron/src
@@ -1515,34 +1390,6 @@ Test-suite kontrakcja-test
                , vector
                , xml-conduit
 
-  Default-Language: Haskell2010
-  Default-Extensions: BangPatterns
-                    , ConstraintKinds
-                    , DeriveDataTypeable
-                    , DeriveFunctor
-                    , DeriveGeneric
-                    , DerivingStrategies
-                    , FlexibleContexts
-                    , FlexibleInstances
-                    , FunctionalDependencies
-                    , GeneralizedNewtypeDeriving
-                    , LambdaCase
-                    , MultiParamTypeClasses
-                    , MultiWayIf
-                    , NamedFieldPuns
-                    , OverloadedStrings
-                    , PatternGuards
-                    , RankNTypes
-                    , RecordWildCards
-                    , ScopedTypeVariables
-                    , StandaloneDeriving
-                    , TypeApplications
-                    , TupleSections
-                    , TypeFamilies
-                    , TypeOperators
-                    , TypeSynonymInstances
-                    , UndecidableInstances
-
 Executable config-checker
   Hs-source-dirs: backend/config-checker,
                   backend/cron/inc,
@@ -1569,6 +1416,7 @@ Executable config-checker
   Other-Extensions:   TemplateHaskell
 
 Executable localization
+  import: common-stanza
 
   Hs-source-dirs: backend/lib
                   backend/misc/src
@@ -1607,36 +1455,9 @@ Executable localization
                , text
                , time
 
-
-  Default-Language: Haskell2010
-  Default-Extensions: BangPatterns
-                    , ConstraintKinds
-                    , DeriveDataTypeable
-                    , DeriveFunctor
-                    , DeriveGeneric
-                    , DerivingStrategies
-                    , FlexibleContexts
-                    , FlexibleInstances
-                    , FunctionalDependencies
-                    , GeneralizedNewtypeDeriving
-                    , LambdaCase
-                    , MultiParamTypeClasses
-                    , MultiWayIf
-                    , NamedFieldPuns
-                    , OverloadedStrings
-                    , PatternGuards
-                    , RankNTypes
-                    , RecordWildCards
-                    , ScopedTypeVariables
-                    , StandaloneDeriving
-                    , TupleSections
-                    , TypeApplications
-                    , TypeFamilies
-                    , TypeOperators
-                    , TypeSynonymInstances
-                    , UndecidableInstances
-
 Executable routinglist
+  import: common-stanza
+
   Hs-source-dirs: backend/routinglist
 
   GHC-Options: -Werror -Wall -fno-warn-type-defaults
@@ -1657,33 +1478,6 @@ Executable routinglist
                , mtl
                , text
                , unordered-containers
-
-  Default-Language: Haskell2010
-  Default-Extensions: BangPatterns
-                    , ConstraintKinds
-                    , DeriveDataTypeable
-                    , DeriveFunctor
-                    , DeriveGeneric
-                    , DerivingStrategies
-                    , FlexibleContexts
-                    , FlexibleInstances
-                    , FunctionalDependencies
-                    , GeneralizedNewtypeDeriving
-                    , LambdaCase
-                    , MultiParamTypeClasses
-                    , MultiWayIf
-                    , NamedFieldPuns
-                    , OverloadedStrings
-                    , PatternGuards
-                    , RankNTypes
-                    , RecordWildCards
-                    , ScopedTypeVariables
-                    , StandaloneDeriving
-                    , TupleSections
-                    , TypeFamilies
-                    , TypeOperators
-                    , TypeSynonymInstances
-                    , UndecidableInstances
 
 Executable transifex
   Hs-source-dirs:   transifex
