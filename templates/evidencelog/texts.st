@@ -100,7 +100,7 @@ ChangeAuthenticationToViewFromFITupasLog=$ChangeAuthenticationToViewFrom(auth='�
 ###
 ChangeAuthenticationToViewFromVerimiLog=$ChangeAuthenticationToViewFrom(auth='“Verimi”')$
 ###
-ChangeAuthenticationToViewFromIDINLog=$ChangeAuthenticationToViewFrom(auth='iDIN')$
+ChangeAuthenticationToViewFromIDINLog=$ChangeAuthenticationToViewFrom(auth='“iDIN“')$
 ###
 ChangeAuthenticationToViewToStandardLog=$ChangeAuthenticationToViewTo(auth='“no extra authentication”')$
 ###
@@ -116,7 +116,7 @@ ChangeAuthenticationToViewToFITupasLog=$ChangeAuthenticationToViewTo(auth='“Fi
 ###
 ChangeAuthenticationToViewToVerimiLog=$ChangeAuthenticationToViewTo(auth='“Verimi”')$
 ###
-ChangeAuthenticationToViewToIDINLog=$ChangeAuthenticationToViewTo(auth='iDIN')$
+ChangeAuthenticationToViewToIDINLog=$ChangeAuthenticationToViewTo(auth='“iDIN“')$
 ###
 ChangeAuthenticationToViewArchivedFromStandardLog=$ChangeAuthenticationToViewArchivedFrom(auth='“no extra authentication”')$
 ###
@@ -132,7 +132,7 @@ ChangeAuthenticationToViewArchivedFromFITupasLog=$ChangeAuthenticationToViewArch
 ###
 ChangeAuthenticationToViewArchivedFromVerimiLog=$ChangeAuthenticationToViewArchivedFrom(auth='“Verimi”')$
 ###
-ChangeAuthenticationToViewArchivedFromIDINLog=$ChangeAuthenticationToViewArchivedFrom(auth='iDIN')$
+ChangeAuthenticationToViewArchivedFromIDINLog=$ChangeAuthenticationToViewArchivedFrom(auth='“iDIN“')$
 ###
 ChangeAuthenticationToViewArchivedToStandardLog=$ChangeAuthenticationToViewArchivedTo(auth='“no extra authentication”')$
 ###
@@ -148,7 +148,7 @@ ChangeAuthenticationToViewArchivedToFITupasLog=$ChangeAuthenticationToViewArchiv
 ###
 ChangeAuthenticationToViewArchivedToVerimiLog=$ChangeAuthenticationToViewArchivedTo(auth='“Verimi”')$
 ###
-ChangeAuthenticationToViewArchivedToIDINLog=$ChangeAuthenticationToViewArchivedTo(auth='iDIN')$
+ChangeAuthenticationToViewArchivedToIDINLog=$ChangeAuthenticationToViewArchivedTo(auth='“iDIN“')$
 ###
 ###
 ###
