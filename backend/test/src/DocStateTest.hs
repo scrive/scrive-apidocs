@@ -505,7 +505,7 @@ getScreenshots = do
 
 testSignDocumentEvidenceLog :: TestEnv ()
 testSignDocumentEvidenceLog = do
-  pdfSealLambdaEnv <- gview #tePdfToolsLambdaEnv
+  pdfSealLambdaEnv <- gview #pdfToolsLambdaEnv
   author           <- addNewRandomUser
   screenshots      <- getScreenshots
   addRandomDocument (rdaDefault author)

@@ -761,7 +761,7 @@ signatoryLinkExample1 = defaultSignatoryLink
 testThat :: String -> TestEnvSt -> TestEnv () -> Test
 testThat s env test = testCase s $ do
   ((), diff) <- timed $ runTestEnv env test
-  modifyMVar_ (env ^. #teTestDurations) $ \td -> return $ (diff, s) : td
+  modifyMVar_ (env ^. #testDurations) $ \td -> return $ (diff, s) : td
 
 compareTime :: UTCTime -> UTCTime -> Bool
 compareTime (UTCTime da ta) (UTCTime db tb) =
@@ -1332,7 +1332,7 @@ addRandomDocumentWithFile fileid rda = do
       case invariantProblems now adoc of
         Nothing        -> return adoc
         Just _problems -> do
-          rej <- gview #teRejectedDocuments
+          rej <- gview #rejectedDocuments
           modifyMVar_ rej $ \i -> return $! i + 1
           -- Invariant problems might happen e.g. when all signatories are
           -- picked to have signed, but the document was earlier picked to be in

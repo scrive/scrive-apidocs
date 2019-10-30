@@ -19,33 +19,33 @@ import Templates
 
 newtype RunLogger = RunLogger { unRunLogger :: (forall m r . LogT m r -> m r) }
 
-data TestEnvSt = TestEnvSt {
-    teConnSource         :: !BasicConnectionSource
-  , teStaticConnSource   :: !BasicConnectionSource
-  , teTransSettings      :: !TransactionSettings
-  , teRNGState           :: !CryptoRNGState
-  , teRunLogger          :: !RunLogger
-  , teActiveTests        :: !(TVar (Bool, Int))
-  , teGlobalTemplates    :: !KontrakcjaGlobalTemplates
-  , teRejectedDocuments  :: !(MVar Int)
-  , teOutputDirectory    :: !(Maybe String)
+data TestEnvSt = TestEnvSt
+  { connSource         :: !BasicConnectionSource
+  , staticConnSource   :: !BasicConnectionSource
+  , transSettings      :: !TransactionSettings
+  , rngState           :: !CryptoRNGState
+  , runLogger          :: !RunLogger
+  , activeTests        :: !(TVar (Bool, Int))
+  , globalTemplates    :: !KontrakcjaGlobalTemplates
+  , rejectedDocuments  :: !(MVar Int)
+  , outputDirectory    :: !(Maybe String)
     -- ^ Put the test artifact output in this directory, if given.
-  , teStagingTests       :: !Bool
-  , tePdfToolsLambdaEnv  :: PdfToolsLambdaEnv
-  , teAmazonS3Env        :: Maybe AmazonS3Env
-  , teFileMemCache       :: FileMemCache
-  , teRedisConn          :: Maybe R.Connection
-  , teCronDBConfig       :: !Text
-  , teCronMonthlyInvoice :: Maybe MonthlyInvoiceConf
-  , teTestDurations      :: MVar [(NominalDiffTime, String)]
+  , stagingTests       :: !Bool
+  , pdfToolsLambdaEnv  :: PdfToolsLambdaEnv
+  , amazonS3Env        :: Maybe AmazonS3Env
+  , fileMemCache       :: FileMemCache
+  , redisConn          :: Maybe R.Connection
+  , cronDBConfig       :: !Text
+  , cronMonthlyInvoice :: Maybe MonthlyInvoiceConf
+  , testDurations      :: MVar [(NominalDiffTime, String)]
   }
 
-data TestEnvStRW = TestEnvStRW {
-    terwTimeDelay   :: !NominalDiffTime
+data TestEnvStRW = TestEnvStRW
+  { timeDelay   :: !NominalDiffTime
     -- ^ Modifies currentTime, when taken from IO.
-  , terwCurrentTime :: !(Maybe UTCTime)
+  , currentTime :: !(Maybe UTCTime)
     -- ^ When 'Nothing', currentTime is taken from IO.
-  , terwRequestURI  :: !String
+  , requestUri  :: !String
   }
 
 makeFieldLabelsWith noPrefixFieldLabels ''TestEnvSt

@@ -42,10 +42,10 @@ dumpAllEvidenceTexts env = testThat "Generating all evidence texts" env $ do
   author <- addNewRandomUser
   did    <- addRandomDocumentWithAuthor author
   withDocumentID did $ forM_ allLangs $ \lang -> do
-    gts <- gview #teGlobalTemplates
+    gts <- gview #globalTemplates
     now <- currentTime
     t   <- runTemplatesT (lang, gts) $ theDocument >>= dumpEvidenceTexts now lang
-    case env ^. #teOutputDirectory of
+    case env ^. #outputDirectory of
       Just d -> liftIO $ writeFile
         (d </> "evidence-texts-" <> (T.unpack $ codeFromLang lang) <> ".html")
         t

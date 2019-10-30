@@ -104,32 +104,32 @@ deriving instance MonadFail m => MonadFail (DBT m)
 
 runTestEnv :: TestEnvSt -> TestEnv () -> IO ()
 runTestEnv st m = do
-  can_be_run <- fst <$> atomically (readTVar $ st ^. #teActiveTests)
+  can_be_run <- fst <$> atomically (readTVar $ st ^. #activeTests)
   when can_be_run $ do
-    atomically . modifyTVar' (st ^. #teActiveTests) $ second (succ $!)
+    atomically . modifyTVar' (st ^. #activeTests) $ second (succ $!)
     E.finally
-      (runDBT (unConnectionSource $ st ^. #teStaticConnSource)
-              (st ^. #teTransSettings)
+      (runDBT (unConnectionSource $ st ^. #staticConnSource)
+              (st ^. #transSettings)
               (ununTestEnv st $ withTestDB m)
       )
-      (atomically . modifyTVar' (st ^. #teActiveTests) $ second (pred $!))
+      (atomically . modifyTVar' (st ^. #activeTests) $ second (pred $!))
 
 ununTestEnv :: TestEnvSt -> TestEnv a -> DBT IO a
 ununTestEnv st =
-  (unRunLogger $ st ^. #teRunLogger)
+  (unRunLogger $ st ^. #runLogger)
     . flip runReaderT st
   -- for each test start with no time delay
     . flip
         evalStateT
-        I.TestEnvStRW { terwTimeDelay   = 0
-                    , terwCurrentTime = Nothing
-                    , terwRequestURI  = "http://testkontra.fake"
+        I.TestEnvStRW { timeDelay   = 0
+                    , currentTime = Nothing
+                    , requestUri  = "http://testkontra.fake"
                     }
-    . evalTestFileStorageT ((, st ^. #teRedisConn, st ^. #teFileMemCache) <$> st ^. #teAmazonS3Env)
+    . evalTestFileStorageT ((, st ^. #redisConn, st ^. #fileMemCache) <$> st ^. #amazonS3Env)
     . unTestEnv
 
 instance CryptoRNG TestEnv where
-  randomBytes n = gview #teRNGState >>= liftIO . randomBytesIO n
+  randomBytes n = gview #rngState >>= liftIO . randomBytesIO n
 
 instance MonadDB TestEnv where
   runQuery               = TestEnv . runQuery
@@ -146,8 +146,8 @@ instance MonadDB TestEnv where
   -- different one, thus we can't use current (static) connection
   -- source, so we need one that actually creates new connections.
   withNewConnection (TestEnv m) = do
-    ConnectionSource pool <- gview #teConnSource
-    runLogger             <- gview (#teRunLogger % to unRunLogger)
+    ConnectionSource pool <- gview #connSource
+    runLogger             <- gview (#runLogger % to unRunLogger)
     TestEnv . liftTestFileStorageT $ \fsVar ->
       StateT $ \terw -> ReaderT $ \te -> LogT . ReaderT $ \_ -> DBT . StateT $ \st -> do
         res <- runDBT pool (dbTransactionSettings st) . runLogger $ runReaderT
@@ -158,20 +158,20 @@ instance MonadDB TestEnv where
 
 instance MonadTime TestEnv where
   currentTime = do
-    mtesttime <- use #terwCurrentTime
+    mtesttime <- use #currentTime
     case mtesttime of
       -- we use static time
       Just testtime -> return testtime
       -- we use IO time, but with a configurable delay
       Nothing       -> do
-        delay <- use #terwTimeDelay
+        delay <- use #timeDelay
         now   <- liftIO getCurrentTime
         return $ addUTCTime delay now
 
 instance TemplatesMonad TestEnv where
   getTemplates = getTextTemplatesByLanguage $ T.unpack $ codeFromLang defaultLang
   getTextTemplatesByLanguage langStr = do
-    globaltemplates <- gview #teGlobalTemplates
+    globaltemplates <- gview #globalTemplates
     return $ TL.localizedVersion langStr globaltemplates
 
 instance MonadBaseControl IO TestEnv where
@@ -194,8 +194,8 @@ runTestKontraHelper
   -> TestEnv (a, Context, Response -> Response)
 runTestKontraHelper (ConnectionSource pool) rq ctx tk = do
   now       <- currentTime
-  rng       <- gview #teRNGState
-  runLogger <- gview (#teRunLogger % to unRunLogger)
+  rng       <- gview #rngState
+  runLogger <- gview (#runLogger % to unRunLogger)
   ts        <- getTransactionSettings
   -- commit previous changes and do not begin new transaction as runDBT
   -- does it and we don't want these pesky warnings about transaction
@@ -224,31 +224,31 @@ class RunnableTestKontra a where
 
 instance RunnableTestKontra a where
   runTestKontra rq ctx tk = do
-    cs             <- gview #teConnSource
+    cs             <- gview #connSource
     (res, ctx', _) <- runTestKontraHelper cs rq ctx tk
     return (res, ctx')
 
 instance {-# OVERLAPPING #-} RunnableTestKontra Response where
   runTestKontra rq ctx tk = do
-    cs             <- gview #teConnSource
+    cs             <- gview #connSource
     (res, ctx', f) <- runTestKontraHelper cs rq ctx tk
     return (f res, ctx')
 
 -- | Modifies time, but does not change, whether the time is static or from IO.
 modifyTestTime :: (MonadState TestEnvStRW m) => (UTCTime -> UTCTime) -> m ()
 modifyTestTime modtime = do
-  mtesttime <- use #terwCurrentTime
+  mtesttime <- use #currentTime
   case mtesttime of
-    Just testtime -> assign #terwCurrentTime (Just $ modtime testtime)
-    Nothing -> assign #terwTimeDelay (diffUTCTime (modtime unixEpoch) unixEpoch)
+    Just testtime -> assign #currentTime (Just $ modtime testtime)
+    Nothing -> assign #timeDelay (diffUTCTime (modtime unixEpoch) unixEpoch)
 
 -- | Sets time and also stops time flow
 setTestTime :: (MonadState TestEnvStRW m) => UTCTime -> m ()
-setTestTime currtime = assign #terwCurrentTime (Just currtime)
+setTestTime currtime = assign #currentTime (Just currtime)
 
 -- | Sets current uri of all test requests
 setRequestURI :: (MonadState TestEnvStRW m) => Text -> m ()
-setRequestURI uri = assign #terwRequestURI $ T.unpack uri
+setRequestURI uri = assign #requestUri $ T.unpack uri
 
 -- Various helpers for constructing appropriate Context/Request.
 
@@ -321,7 +321,7 @@ mkRequestWithHeaders
   -> m Request
 mkRequestWithHeaders method vars headers = do
   let vars' :: [(String, Input)] = fmap (\(t1, t2) -> (T.unpack t1, t2)) vars
-  uri <- use #terwRequestURI
+  uri <- use #requestUri
   liftIO $ do
     rqbody <- newEmptyMVar
     ib :: MVar [(String, Input)] <- newMVar vars'
@@ -344,8 +344,8 @@ mkRequestWithHeaders method vars headers = do
 -- | Constructs initial context with given templates
 mkContext :: Lang -> TestEnv Context
 mkContext lang = do
-  pdfSealLambdaEnv <- gview #tePdfToolsLambdaEnv
-  globaltemplates  <- gview #teGlobalTemplates
+  pdfSealLambdaEnv <- gview #pdfToolsLambdaEnv
+  globaltemplates  <- gview #globalTemplates
   time             <- currentTime
   bd               <- dbQuery $ GetMainBrandedDomain
   liftIO $ do

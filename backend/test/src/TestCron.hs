@@ -27,10 +27,10 @@ runTestCronUntilIdle ctx = do
   -- processes with their own DB transactions, which do not see
   -- changes of the test transaction ... unless there is a commit.
   commit
-  ConnectionSource pool  <- gview #teConnSource
-  pdfSealLambdaEnv       <- gview #tePdfToolsLambdaEnv
-  cronDBConfig           <- gview #teCronDBConfig
-  cronMonthlyInvoiceConf <- gview #teCronMonthlyInvoice
+  ConnectionSource pool  <- gview #connSource
+  pdfSealLambdaEnv       <- gview #pdfToolsLambdaEnv
+  cronDBConfig           <- gview #cronDBConfig
+  cronMonthlyInvoiceConf <- gview #cronMonthlyInvoice
 
   -- Will not be used, because Planhat is not configured when testing,
   -- but it is a parameter for cronConsumer.
