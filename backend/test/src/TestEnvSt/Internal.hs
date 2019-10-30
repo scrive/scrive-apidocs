@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module TestEnvSt.Internal where
 
 import Control.Concurrent.MVar
@@ -6,6 +7,7 @@ import Crypto.RNG
 import Data.Time
 import Database.PostgreSQL.PQTypes.Transaction.Settings
 import Log.Monad
+import Optics.TH
 import qualified Database.Redis as R
 
 import DB.PostgreSQL
@@ -45,3 +47,6 @@ data TestEnvStRW = TestEnvStRW {
     -- ^ When 'Nothing', currentTime is taken from IO.
   , terwRequestURI  :: !String
   }
+
+makeFieldLabelsWith noPrefixFieldLabels ''TestEnvSt
+makeFieldLabelsWith noPrefixFieldLabels ''TestEnvStRW

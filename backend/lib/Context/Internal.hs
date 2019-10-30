@@ -1,6 +1,8 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Context.Internal where
 
 import Log.Class
+import Optics.TH
 import qualified Database.Redis as R
 
 import BrandedDomain.BrandedDomain
@@ -77,6 +79,8 @@ data Context = Context
     -- includes api/frontend) This might be the user from session, if
     -- the OAuth authorization was missing.
     }
+
+makeFieldLabelsWith noPrefixFieldLabels ''Context
 
 -- | 'anonymiseContext' changes given context into a one that does not
 -- hold any user credentials.  Use this if your action requires

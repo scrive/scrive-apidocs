@@ -5,4 +5,3 @@ module TestEnvSt
   ) where
 
 import TestEnvSt.Internal
-import TestEnvSt.Labels ()

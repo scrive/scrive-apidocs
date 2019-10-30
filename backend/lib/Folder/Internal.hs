@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module Folder.Internal (
     Folder(..)
   , FolderID
@@ -15,6 +16,7 @@ import Data.Int
 import Data.Text (Text, pack)
 import Data.Unjson
 import Happstack.Server
+import Optics.TH
 import Text.JSON.ToJSValue
 import qualified Data.Text as T
 
@@ -33,6 +35,14 @@ data FolderWithChildren = FolderWithChildren
   , fwcChildren :: [FolderWithChildren]
   }
 
+newtype FolderID = FolderID Int64
+  deriving (Eq, Ord)
+deriving newtype instance Read FolderID
+deriving newtype instance Show FolderID
+
+makeFieldLabelsWith noPrefixFieldLabels ''Folder
+makeFieldLabelsWith noPrefixFieldLabels ''FolderWithChildren
+
 fwcToList :: FolderWithChildren -> [Folder]
 fwcToList fwc = fwcFolder fwc : concatMap fwcToList (fwcChildren fwc)
 
@@ -42,11 +52,6 @@ fetchFolder (folderID, folderParentID, folderName) = Folder { .. }
 defaultFolder :: Folder
 defaultFolder =
   Folder { folderID = emptyFolderID, folderParentID = Nothing, folderName = "" }
-
-newtype FolderID = FolderID Int64
-  deriving (Eq, Ord)
-deriving newtype instance Read FolderID
-deriving newtype instance Show FolderID
 
 instance PQFormat FolderID where
   pqFormat = pqFormat @Int64

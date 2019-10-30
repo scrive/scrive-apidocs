@@ -14,9 +14,7 @@ import Control.Monad.Trans.Control
   ( ComposeSt, MonadBaseControl(..), MonadTransControl(..), defaultLiftBaseWith
   , defaultLiftWith, defaultRestoreM, defaultRestoreT )
 
-
 import PdfToolsLambda.Conf.Internal
-import PdfToolsLambda.Conf.Labels ()
 
 class Monad m => PdfToolsLambdaMonad m where
   getPdfToolsLambdaEnv :: m PdfToolsLambdaEnv

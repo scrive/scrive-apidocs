@@ -1,3 +1,4 @@
+{-# LANGUAGE TemplateHaskell #-}
 module MailContext.Class (
     MailContext
   , mctxDomainUrl
@@ -8,7 +9,6 @@ import Control.Monad.Trans
 import Optics
 
 import MailContext.Internal
-import MailContext.Labels ()
 
 mctxDomainUrl :: Lens' MailContext Text
 mctxDomainUrl = #mctxCurrentBrandedDomain % #bdUrl

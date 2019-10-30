@@ -1,5 +1,6 @@
-module Context (
-    Context
+{-# LANGUAGE TemplateHaskell #-}
+module Context
+  ( Context
   , ctxDomainUrl
   , getContextUser
   , anonymiseContext
@@ -9,7 +10,6 @@ module Context (
 import Optics
 
 import Context.Internal
-import Context.Labels ()
 import MailContext.Internal (MailContext(..))
 import User.Types.User (User)
 

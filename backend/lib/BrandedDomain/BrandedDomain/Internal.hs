@@ -1,5 +1,7 @@
+{-# LANGUAGE TemplateHaskell #-}
 module BrandedDomain.BrandedDomain.Internal where
 
+import Optics.TH
 import qualified Data.ByteString.Char8 as BS
 
 import BrandedDomain.BrandedDomainID
@@ -32,3 +34,5 @@ data BrandedDomain = BrandedDomain
   , bdReviewedColor     :: !Text
   , bdSignedColor       :: !Text
   } deriving (Eq, Ord, Show)
+
+makeFieldLabelsWith noPrefixFieldLabels ''BrandedDomain

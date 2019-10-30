@@ -1,6 +1,5 @@
-module Folder.Types (
-    module Folder.Internal
+module Folder.Types
+  ( module Folder.Internal
   ) where
 
 import Folder.Internal
-import Folder.Labels ()

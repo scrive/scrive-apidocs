@@ -1,6 +1,8 @@
+{-# LANGUAGE TemplateHaskell #-}
 module MailContext.Internal where
 
 import Data.Time
+import Optics.TH
 
 import BrandedDomain.BrandedDomain
 import User.Model
@@ -11,3 +13,5 @@ data MailContext = MailContext
   , mctxTime                 :: !UTCTime
   , mctxMailNoreplyAddress   :: !Text
   } deriving Show
+
+makeFieldLabelsWith noPrefixFieldLabels ''MailContext

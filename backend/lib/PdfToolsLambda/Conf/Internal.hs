@@ -1,7 +1,9 @@
+{-# LANGUAGE TemplateHaskell #-}
 module PdfToolsLambda.Conf.Internal where
 
 import Control.Monad.Base
 import Data.Unjson
+import Optics.TH
 
 import FileStorage.Amazon.Config
 import FileStorage.Amazon.S3Env
@@ -34,3 +36,6 @@ pdfToolsLambdaEnvFromConf PdfToolsLambdaConf {..} =
     <$> pure pdfToolsLambdaConfGatewayUrl
     <*> pure pdfToolsLambdaConfApiKey
     <*> s3envFromConfig pdfToolsLambdaConfConfig
+
+makeFieldLabelsWith noPrefixFieldLabels ''PdfToolsLambdaConf
+makeFieldLabelsWith noPrefixFieldLabels ''PdfToolsLambdaEnv

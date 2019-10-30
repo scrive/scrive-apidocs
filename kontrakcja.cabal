@@ -295,7 +295,6 @@ Library
                  , Folder.JSON
                  , Folder.Types
                  , Folder.Internal
-                 , Folder.Labels
                  , Folder.Model
                  , Folder.Model.Query
                  , Folder.Model.Update
@@ -417,7 +416,6 @@ Library
                  , PasswordService.Control
                  , PdfToolsLambda.Conf
                  , PdfToolsLambda.Conf.Internal
-                 , PdfToolsLambda.Conf.Labels
                  , PdfToolsLambda.Control
                  , PdfToolsLambda.Response
                  , PdfToolsLambda.Spec
@@ -551,10 +549,7 @@ Library
                  , VersionTH
 
   Other-Modules: BrandedDomain.BrandedDomain.Internal,
-                 BrandedDomain.BrandedDomain.Labels,
-                 Context.Labels,
-                 MailContext.Internal,
-                 MailContext.Labels
+                 MailContext.Internal
   Build-depends: base-noprelude
                , kontrakcja-prelude
                , kontrakcja-appdir
@@ -1294,7 +1289,6 @@ Test-suite kontrakcja-test
                  TestCron
                  TestEnvSt
                  TestEnvSt.Internal
-                 TestEnvSt.Labels
                  TestFileStorage
                  TestKontra
                  TestingUtil
