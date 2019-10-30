@@ -391,8 +391,9 @@ setMockDocSigLinkSignatoryRole :: SignatoryRole -> MockSigLink -> MockSigLink
 setMockDocSigLinkSignatoryRole role sigLink = sigLink { mockSigLinkSignatoryRole = role }
 
 setMockSigLinkStandardField :: String -> String -> MockSigLink -> MockSigLink
-setMockSigLinkStandardField fieldType value msl =
-  msl { mockSigLinkFields = newField : oldFieldsWithoutFieldType msl }
+setMockSigLinkStandardField fieldType value msl = msl
+  { mockSigLinkFields = newField : oldFieldsWithoutFieldType msl
+  }
   where
     newField =
       defaultMockSigField { mockSigFieldType = fieldType, mockSigFieldValue = Just value }
@@ -489,5 +490,4 @@ setForSigNumberFromMockDoc i f md = md
     updatedSigLinks = insert updatedSL . delete originalSL . sort . mockDocParties $ md
 
 moveMockDoc :: FolderID -> MockDoc -> MockDoc
-moveMockDoc fid doc =
-  doc { mockDocFolderId = Just fid }
+moveMockDoc fid doc = doc { mockDocFolderId = Just fid }
