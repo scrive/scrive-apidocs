@@ -85,9 +85,8 @@ executePdfToolsLambdaActionCall
   -> BSL.ByteString
   -> m (Maybe BS.ByteString)
 executePdfToolsLambdaActionCall lc action inputData = do
-  let amazonEnv = lc ^. #pdfToolsLambdaS3Env
   logInfo_ "Uploading data to s3 for lamda"
-  uploadedDataFileName <- sendDataFileToAmazon amazonEnv inputData
+  uploadedDataFileName <- sendDataFileToAmazon (lc ^. #s3Env) inputData
   case uploadedDataFileName of
     Nothing -> do
       logAttention_ "Failed to upload data to s3 for lambda"
@@ -98,12 +97,12 @@ executePdfToolsLambdaActionCall lc action inputData = do
         [ "-X"
         , "POST"
         , "-H"
-        , "x-api-key: " ++ lc ^. #pdfToolsLambdaApiKey
+        , "x-api-key: " ++ lc ^. #apiKey
         , "-H"
         , "Content-Type: text/plain"
         , "--data"
         , "@-"
-        , lc ^. #pdfToolsLambdaGatewayUrl
+        , lc ^. #gatewayUrl
         ]
         (BSL.fromString $ JSON.encode $ JSON.runJSONGen $ do
           JSON.value "action" $ T.unpack $ pdfToolsActionName action
@@ -130,10 +129,9 @@ parseSealingResponse
   -> BSL.ByteString
   -> m (Maybe BS.ByteString)
 parseSealingResponse lc stdout = do
-  let amazonEnv = lc ^. #pdfToolsLambdaS3Env
   case (parsePdfToolsLambdaSealingResponse stdout) of
     SealSuccess resultS3Name -> do
-      mresdata <- getDataFromAmazon amazonEnv resultS3Name
+      mresdata <- getDataFromAmazon (lc ^. #s3Env) resultS3Name
       case mresdata of
         Just resdata -> return $ Just $ BSL.toStrict resdata
         Nothing      -> do
@@ -152,10 +150,9 @@ parseCleaningResponse
   -> BSL.ByteString
   -> m (Maybe BS.ByteString)
 parseCleaningResponse lc stdout = do
-  let amazonEnv = lc ^. #pdfToolsLambdaS3Env
   case (parsePdfToolsLambdaCleaningResponse stdout) of
     CleanSuccess resultS3Name -> do
-      mresdata <- getDataFromAmazon amazonEnv resultS3Name
+      mresdata <- getDataFromAmazon (lc ^. #s3Env) resultS3Name
       case mresdata of
         Just resdata -> return $ Just $ BSL.toStrict resdata
         Nothing      -> do
@@ -174,10 +171,9 @@ parseAddImageResponse
   -> BSL.ByteString
   -> m (Maybe BS.ByteString)
 parseAddImageResponse lc stdout = do
-  let amazonEnv = lc ^. #pdfToolsLambdaS3Env
   case (parsePdfToolsLambdaAddImageResponse stdout) of
     AddImageSuccess resultS3Name -> do
-      mresdata <- getDataFromAmazon amazonEnv resultS3Name
+      mresdata <- getDataFromAmazon (lc ^. #s3Env) resultS3Name
       case mresdata of
         Just resdata -> return $ Just $ BSL.toStrict resdata
         Nothing      -> do
