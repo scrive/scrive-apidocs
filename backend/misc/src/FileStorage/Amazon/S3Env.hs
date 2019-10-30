@@ -1,7 +1,7 @@
 module FileStorage.Amazon.S3Env where
 
 import Control.Monad.Base
-import qualified Control.Lens as L
+import Optics (lensVL)
 import qualified Network.AWS as AWS
 import qualified Network.AWS.S3 as AWS
 
@@ -14,8 +14,8 @@ data AmazonS3Env = AmazonS3Env
 
 s3envFromConfig :: MonadBase IO m => AmazonConfig -> m AmazonS3Env
 s3envFromConfig conf = liftBase $ do
-  env <- L.set AWS.envRegion (amazonConfigRegion conf) . AWS.configure s3 <$> AWS.newEnv
-    (AWS.FromKeys accessKey secretKey)
+  env <- set (lensVL AWS.envRegion) (amazonConfigRegion conf) . AWS.configure s3
+    <$> AWS.newEnv (AWS.FromKeys accessKey secretKey)
   return AmazonS3Env { as3eEnv    = env
                      , as3eBucket = AWS.BucketName $ amazonConfigBucket conf
                      }
@@ -26,7 +26,7 @@ s3envFromConfig conf = liftBase $ do
       AWS.setEndpoint (amazonConfigSecure conf)
                       (amazonConfigHost conf)
                       (amazonConfigPort conf)
-        $ L.set AWS.serviceTimeout timeout AWS.s3
+        $ set (lensVL AWS.serviceTimeout) timeout AWS.s3
 
     accessKey = AWS.AccessKey $ amazonConfigAccessKey conf
     secretKey = AWS.SecretKey $ amazonConfigSecretKey conf

@@ -8,8 +8,8 @@ import Control.Monad.Base
 import Control.Monad.Catch
 import Data.Aeson.Types
 import Log
+import Optics (lensVL)
 import qualified Conduit as C
-import qualified Control.Lens as L
 import qualified Data.Binary.Builder as B
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T
@@ -34,10 +34,8 @@ saveContentsToAmazon env url contents = go True =<< awsLogger
     go retry logger = do
       logInfo "Attempting to save file to AWS" $ object ["url" .= url]
       (result, diff) <- timed . liftBase $ do
-        withResourceT . runAWS env logger . AWS.send $ AWS.putObject
-          (as3eBucket env)
-          (urlObjectKey url)
-          (AWS.toBody contents)
+        withResourceT . runAWS env logger . AWS.send
+          $ AWS.putObject (as3eBucket env) (urlObjectKey url) (AWS.toBody contents)
       case result of
         Right res -> do
           logInfo "Filed saved to AWS"
@@ -61,9 +59,9 @@ getContentsFromAmazon env url = go True =<< awsLogger
       logInfo "Attempting to fetch file from AWS" $ object ["url" .= url]
       (result, diff) <- timed . liftBase $ do
         withResourceT $ do
-          rs <- runAWS env logger . AWS.send $ AWS.getObject (as3eBucket env)
-                                                             (urlObjectKey url)
-          C.runConduit $ AWS._streamBody (L.view AWS.gorsBody rs) C..| C.sinkLazy
+          rs <- runAWS env logger . AWS.send
+            $ AWS.getObject (as3eBucket env) (urlObjectKey url)
+          C.runConduit $ AWS._streamBody (rs ^. lensVL AWS.gorsBody) C..| C.sinkLazy
       case result of
         Right rsp -> do
           logInfo "Fetching file from AWS succeeded"
@@ -86,8 +84,8 @@ deleteContentsFromAmazon env url = do
   logger <- awsLogger
   logInfo "Attempting to delete file from AWS" $ object ["url" .= url]
   (result, diff) <- timed . liftBase $ do
-    withResourceT . runAWS env logger . AWS.send $ AWS.deleteObject (as3eBucket env)
-                                                                    (urlObjectKey url)
+    withResourceT . runAWS env logger . AWS.send
+      $ AWS.deleteObject (as3eBucket env) (urlObjectKey url)
   case result of
     Right res -> do
       logInfo "AWS file deleted"
@@ -106,7 +104,7 @@ withResourceT :: C.ResourceT IO r -> IO (Either AWS.Error r)
 withResourceT = try . C.runResourceT
 
 runAWS :: AmazonS3Env -> AWS.Logger -> AWS.AWS a -> C.ResourceT IO a
-runAWS env lgr = AWS.runAWS (L.set AWS.envLogger lgr $ as3eEnv env)
+runAWS env lgr = AWS.runAWS (as3eEnv env & lensVL AWS.envLogger .~ lgr)
 
 awsLogger :: MonadLog m => m AWS.Logger
 awsLogger = do

@@ -611,7 +611,6 @@ Library
                , json
                , JuicyPixels
                , kontrakcja-templates
-               , lens
                , lifted-async
                , lifted-base
                , lifted-threads
@@ -1007,7 +1006,6 @@ Executable mailing-server
                , json
                , lifted-async
                , lifted-base
-               , lens
                , log-base
                , log-elasticsearch
                , log-postgres
