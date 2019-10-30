@@ -1,5 +1,5 @@
 module MailContext.Class (
-    MailContext(..)
+    MailContext
   , mctxDomainUrl
   , MailContextMonad(..)
   ) where

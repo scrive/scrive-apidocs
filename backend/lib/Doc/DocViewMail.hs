@@ -732,7 +732,7 @@ otherMailFields muser mctx = do
   theme <- dbQuery $ GetTheme themeid
   return $ do
     F.value "ctxhostpart" $ mctx ^. mctxDomainUrl
-    F.value "ctxlang" (codeFromLang $ mctxLang mctx)
+    F.value "ctxlang" (codeFromLang $ mctx ^. #mctxLang)
     -- brandingdomainid and brandinguserid are needed only for
     -- preview/email logo
     F.value "brandingdomainid" (show $ mctx ^. #mctxCurrentBrandedDomain % #bdid)
@@ -755,8 +755,8 @@ documentMail haslang doc mailname otherfields = do
         $ preview (_Just % #ugUI % #uguiMailTheme % _Just) mug
   theme     <- dbQuery $ GetTheme themeid
   allfields <- documentMailFields doc mctx
-  kontramaillocal (mctxMailNoreplyAddress mctx)
-                  (mctxCurrentBrandedDomain mctx)
+  kontramaillocal (mctx ^. #mctxMailNoreplyAddress)
+                  (mctx ^. #mctxCurrentBrandedDomain)
                   theme
                   haslang
                   mailname
@@ -779,8 +779,8 @@ otherMail muser mailname otherfields = do
         $ preview (_Just % #ugUI % #uguiMailTheme % _Just) mug
   theme     <- dbQuery $ GetTheme themeid
   allfields <- otherMailFields muser mctx
-  kontramaillocal (mctxMailNoreplyAddress mctx)
-                  (mctxCurrentBrandedDomain mctx)
+  kontramaillocal (mctx ^. #mctxMailNoreplyAddress)
+                  (mctx ^. #mctxCurrentBrandedDomain)
                   theme
                   lang
                   mailname

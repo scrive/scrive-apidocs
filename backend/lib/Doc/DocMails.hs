@@ -52,6 +52,7 @@ import InputValidation
 import Kontra
 import Log.Identifier
 import MailContext
+import MailContext.Internal
 import Mails.MailsData
 import Mails.SendMail
 import SMS.SMS (scheduleSMS)
