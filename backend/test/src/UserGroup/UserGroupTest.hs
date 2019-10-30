@@ -231,7 +231,7 @@ testChangeUserGroupParent = do
       parentUsrGrpID = ugID parentUsrGrp
       usrEmail       = "testuseremail@scrive.com"
   Just user <- addNewUserToUserGroup "Froggie" "Freddie" usrEmail usrGrpID
-  ctx       <- (set #ctxMaybeUser $ Just user) <$> mkContext defaultLang
+  ctx       <- (set #maybeUser $ Just user) <$> mkContext defaultLang
 
   let params1 = [("companyparentid", inText $ showt parentUsrGrpID)]
   req1 <- mkRequest POST params1
@@ -242,7 +242,7 @@ testChangeUserGroupParent = do
   assertLeft eErrRes
 
   -- -- user gets admin rights
-  let ctx' = (set #ctxAdminAccounts [Email usrEmail]) ctx
+  let ctx' = (set #adminAccounts [Email usrEmail]) ctx
   mUsrGrpParentBefore <-
     join <$> (ugParentGroupID <$>) <$> (dbQuery . UserGroupGet $ usrGrpID)
   assertEqual "User group has no parent" mUsrGrpParentBefore Nothing

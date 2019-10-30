@@ -40,7 +40,7 @@ test_handleGetCompanyJSON = do
 
   let ugui = ugUI ug
 
-  ctx              <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx              <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   req              <- mkRequest GET []
   (avalue, _ctx')  <- runTestKontra req ctx $ handleGetCompanyBranding Nothing
@@ -90,16 +90,16 @@ test_settingUIWithHandleChangeCompanyBranding = do
 
   (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
-  ctx <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   -- Try setting new themes
-  mailThemeFromDomain <- dbQuery $ GetTheme (ctx ^. #ctxBrandedDomain % #mailTheme)
+  mailThemeFromDomain <- dbQuery $ GetTheme (ctx ^. #brandedDomain % #mailTheme)
   mailTheme <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailThemeFromDomain
   signviewThemeFromDomain <- dbQuery
-    $ GetTheme (ctx ^. #ctxBrandedDomain % #signviewTheme)
+    $ GetTheme (ctx ^. #brandedDomain % #signviewTheme)
   signviewTheme <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) signviewThemeFromDomain
   serviceThemeFromDomain <- dbQuery
-    $ GetTheme (ctx ^. #ctxBrandedDomain % #serviceTheme)
+    $ GetTheme (ctx ^. #brandedDomain % #serviceTheme)
   serviceTheme <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) serviceThemeFromDomain
   let browserTitle  = "Super"
   let smsOriginator = "Super SMS"
@@ -195,7 +195,7 @@ test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership :: TestEnv (
 test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
 
   (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
-  ctx        <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   --Test we can't set mailTheme to domain theme
   req1       <- mkRequest
@@ -205,7 +205,7 @@ test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
       $  "{\"companyid\":\""
       <> showt (ugID ug)
       <> "\",\"mailTheme\":\""
-      <> showt (ctx ^. #ctxBrandedDomain % #mailTheme)
+      <> showt (ctx ^. #brandedDomain % #mailTheme)
       <> "\",\"signviewTheme\":null,\"serviceTheme\":null,\"browserTitle\": null ,\"smsOriginator\": null,\"favicon\":null}"
       )
     ]
@@ -218,7 +218,7 @@ test_settingUIWithHandleChangeCompanyBrandingRespectsThemeOwnership = do
 
   -- Create theme for other company
   (_, otherUg) <- addNewAdminUserAndUserGroup "Other" "Guy" "other_guy@skrivapa.se"
-  someTheme    <- dbQuery $ GetTheme (ctx ^. #ctxBrandedDomain % #mailTheme)
+  someTheme    <- dbQuery $ GetTheme (ctx ^. #brandedDomain % #mailTheme)
   otherUgTheme <- dbUpdate $ InsertNewThemeForUserGroup (ugID otherUg) someTheme
 
   --Test we can't set mailTheme to other company theme

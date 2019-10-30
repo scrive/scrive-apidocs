@@ -151,7 +151,7 @@ testUser2FAWorkflow :: TestEnv ()
 testUser2FAWorkflow = do
   password          <- rand 10 $ arbText 3 30
   randomUser        <- addNewRandomUserWithPassword $ password
-  ctx'              <- set #ctxMaybeUser (Just randomUser) <$> mkContext defaultLang
+  ctx'              <- set #maybeUser (Just randomUser) <$> mkContext defaultLang
 
   -- Start setting up 2FA
   req_setup2fa      <- mkRequest POST []
@@ -172,7 +172,7 @@ testUser2FAWorkflow = do
   -- For some reason we need to get updated User and add to Context
   -- otherwise tests fail because TOTP changes are not "seen"
   Just user <- dbQuery $ GetUserByID $ userid randomUser
-  ctx       <- set #ctxMaybeUser (Just user) <$> mkContext defaultLang
+  ctx       <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   -- apiCallGetUserPersonalToken should still work: 2FA not yet confirmed
   do
@@ -224,7 +224,7 @@ testUserNoDeletionIfWrongEmail :: TestEnv ()
 testUserNoDeletionIfWrongEmail = do
   (anna, _) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
 
-  ctx       <- set #ctxMaybeUser (Just anna) <$> mkContext defaultLang
+  ctx       <- set #maybeUser (Just anna) <$> mkContext defaultLang
 
   do
     req      <- mkRequest POST [("email", inText "wrong@email.com")]
@@ -244,7 +244,7 @@ testUserNoDeletionIfPendingDocuments = do
 
   Just bob <- addNewCompanyUser "Bob" "Blue" "bob@blue.com" (ugID ug)
 
-  ctx      <- set #ctxMaybeUser (Just bob) <$> mkContext defaultLang
+  ctx      <- set #maybeUser (Just bob) <$> mkContext defaultLang
 
   doc      <- addRandomDocument (rdaDefault bob) { rdaTypes    = OneOf [Signable]
                                                  , rdaStatuses = OneOf [Pending]
@@ -265,7 +265,7 @@ testUserNoDeletionIfPendingDocuments = do
 testUserDeletion :: TestEnv ()
 testUserDeletion = do
   (anna, _) <- addNewAdminUserAndUserGroup "Anna" "Android" "anna@android.com"
-  ctx       <- set #ctxMaybeUser (Just anna) <$> mkContext defaultLang
+  ctx       <- set #maybeUser (Just anna) <$> mkContext defaultLang
 
   req       <- mkRequest POST [("email", inText "anna@android.com")]
   (res, _)  <- runTestKontra req ctx apiCallDeleteUser
@@ -288,7 +288,7 @@ testUserDeletionOwnershipTransfer = do
                                                           , rdaSharings = OneOf [Private]
                                                           }
 
-  ctx <- set #ctxMaybeUser (Just anna) <$> mkContext defaultLang
+  ctx <- set #maybeUser (Just anna) <$> mkContext defaultLang
   let actor = userActor ctx anna
 
   fid                <- addNewRandomFile
@@ -331,7 +331,7 @@ testUserDeletionOwnershipTransfer = do
 testUserSetDataRetentionPolicy :: TestEnv ()
 testUserSetDataRetentionPolicy = do
   (user, _) <- addNewAdminUserAndUserGroup "Bob" "Blue" "bob@email.tld"
-  ctx       <- set #ctxMaybeUser (Just user) <$> mkContext defaultLang
+  ctx       <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   replicateM_ 10 $ do
     drp <- rand 10 arbitrary
@@ -348,7 +348,7 @@ testUserSetDataRetentionPolicy = do
 testUserSetDataRetentionPolicyOnlyIfAsStrict :: TestEnv ()
 testUserSetDataRetentionPolicyOnlyIfAsStrict = do
   (user, ug) <- addNewAdminUserAndUserGroup "Bob" "Blue" "bob@email.tld"
-  ctx        <- set #ctxMaybeUser (Just user) <$> mkContext defaultLang
+  ctx        <- set #maybeUser (Just user) <$> mkContext defaultLang
 
   replicateM_ 10 $ do
     userDRP    <- rand 10 arbitrary

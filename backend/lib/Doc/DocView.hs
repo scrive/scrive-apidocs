@@ -125,9 +125,9 @@ pageDocumentIdentifyView ctx document siglink ad = do
     F.value "documentid" $ show $ documentid document
     F.value "siglinkid" $ show $ signatorylinkid siglink
     F.value "documenttitle" $ documenttitle document
-    F.value "netsIdentifyUrl" $ netsIdentifyUrl <$> ctx ^. #ctxNetsConfig
-    F.value "netsMerchantIdentifier" $ netsMerchantIdentifier <$> ctx ^. #ctxNetsConfig
-    F.value "netsTrustedDomain" $ netsTrustedDomain <$> ctx ^. #ctxNetsConfig
+    F.value "netsIdentifyUrl" $ netsIdentifyUrl <$> ctx ^. #netsConfig
+    F.value "netsMerchantIdentifier" $ netsMerchantIdentifier <$> ctx ^. #netsConfig
+    F.value "netsTrustedDomain" $ netsTrustedDomain <$> ctx ^. #netsConfig
     F.value "previewLink" $ show LinkPreviewLockedImage
     standardPageFields ctx (Just (ugID authorug, ugUI authorug)) ad -- Branding for signview depends only on authors company
 
@@ -196,7 +196,7 @@ gtVerificationPage :: Kontrakcja m => m Response
 gtVerificationPage = do
   ctx <- getContext
   ad  <- getAnalyticsData
-  if ctx ^. #ctxBrandedDomain % #mainDomain
+  if ctx ^. #brandedDomain % #mainDomain
     then do
       content <- renderTextTemplate "gtVerificationPage" $ do
         standardPageFields ctx Nothing ad

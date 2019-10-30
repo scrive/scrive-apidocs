@@ -69,7 +69,7 @@ apiV1JSONTests env = testGroup
 testFromFileAndReadySimple :: TestEnv ()
 testFromFileAndReadySimple = do
   (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx         <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   reqDoc      <- mkRequestWithHeaders
     POST
@@ -89,7 +89,7 @@ testFromFileAndReadySimple = do
 testFromFileAndUpdate :: TestEnv ()
 testFromFileAndUpdate = do
   (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx         <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   reqDoc      <- mkRequestWithHeaders
     POST
@@ -110,7 +110,7 @@ testFromFileAndUpdate = do
 testFromTemplateAndReadySimple :: TestEnv ()
 testFromTemplateAndReadySimple = do
   (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx         <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   reqDoc      <- mkRequestWithHeaders
     POST
@@ -147,7 +147,7 @@ testFromTemplateAndReadySimple = do
 testUpdateFields :: TestEnv ()
 testUpdateFields = do
   (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx         <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   reqDoc      <- mkRequestWithHeaders
     POST
@@ -186,7 +186,7 @@ testUpdateFields = do
 testUpdateWithReplacementFields :: TestEnv ()
 testUpdateWithReplacementFields = do
   (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx         <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   reqDoc      <- mkRequestWithHeaders
     POST
@@ -224,7 +224,7 @@ testUpdateWithReplacementFields = do
 testUpdateWithSubset :: TestEnv ()
 testUpdateWithSubset = do
   (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx         <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   reqDoc      <- mkRequestWithHeaders POST [] []
   (resDoc, _) <- runTestKontra reqDoc ctx $ apiCallV1CreateFromFile
@@ -243,7 +243,7 @@ testUpdateWithSubset = do
 testUpdateWithAllFeatures :: TestEnv ()
 testUpdateWithAllFeatures = do
   (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx         <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   reqDoc      <- mkRequestWithHeaders
     POST
@@ -282,7 +282,7 @@ testUpdateWithAllFeatures = do
 testList :: TestEnv ()
 testList = do
   (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx         <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   reqDoc      <- mkRequestWithHeaders
     POST
@@ -366,7 +366,7 @@ testList = do
 testSignWithSignature :: TestEnv ()
 testSignWithSignature = do
   (Just user) <- addNewUser "Jonathan" "Jounty" "jonathan@scrive.com"
-  ctx         <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   reqDoc      <- mkRequestWithHeaders
     POST

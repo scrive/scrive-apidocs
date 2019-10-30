@@ -158,7 +158,7 @@ postDocumentRejectedChange siglinkid customMessage doc@Document {..} =
     -- Log the fact that the current user rejected a document.
     maybe (return ())
           (\user -> logDocEvent "Doc Rejected" user [] doc)
-          (ctx ^. #ctxMaybeUser)
+          (ctx ^. #maybeUser)
     sendRejectEmails customMessage (fromJust $ getSigLinkFor siglinkid doc) doc
     return ()
 
@@ -214,7 +214,7 @@ postDocumentPendingChange olddoc signatoryLink = do
   {-then-}(do
             document <- theDocument
             logInfo "All have signed, document will be closed" $ logObject_ document
-            time <- view #mctxTime <$> getMailContext
+            time <- view #time <$> getMailContext
             dbUpdate $ CloseDocument (systemActor time)
             dbUpdate $ ChargeUserGroupForClosingDocument $ documentid olddoc
             when (documentfromshareablelink olddoc) $ do
@@ -232,7 +232,7 @@ postDocumentPendingChange olddoc signatoryLink = do
                 asyncLogEvent SetUserProps (userMixpanelData author now) EventMixpanel
             dbUpdate
               .   ScheduleDocumentSealing
-              .   view (#mctxCurrentBrandedDomain % #id)
+              .   view (#brandedDomain % #id)
               =<< getMailContext
             if signatorylinkconfirmationdeliverymethod signatoryLink == NoConfirmationDelivery
               then sendPartyProcessFinalizedNotification document signatoryLink
@@ -422,10 +422,10 @@ findAndTimeoutDocuments = do
       Just author -> do
         ugwp <- guardJustM $ dbQuery $ UserGroupGetWithParents (usergroupid author)
         bd   <- dbQuery $ GetBrandedDomainByUserID (userid author)
-        let mc = I.MailContext { mctxLang                 = lang
-                               , mctxCurrentBrandedDomain = bd
-                               , mctxTime                 = now
-                               , mctxMailNoreplyAddress   = noreplyAddress
+        let mc = I.MailContext { lang               = lang
+                               , brandedDomain      = bd
+                               , time               = now
+                               , mailNoreplyAddress = noreplyAddress
                                }
         runTemplatesT (lang, gt) . runMailContextT mc $ do
           when (ugsSendTimeoutNotification (ugwpSettings ugwp)) $ do

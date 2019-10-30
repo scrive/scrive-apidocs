@@ -29,7 +29,7 @@ apiV2CallLogTests env =
 testApiLogIsStored :: TestEnv ()
 testApiLogIsStored = do
   user       <- addNewRandomUser
-  ctx        <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
@@ -42,7 +42,7 @@ testApiLogIsStored = do
 testApiLogIsRotated :: TestEnv ()
 testApiLogIsRotated = do
   user       <- addNewRandomUser
-  ctx        <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
@@ -54,7 +54,7 @@ testApiLogIsRotated = do
 testApiLogGetItemWorks :: TestEnv ()
 testApiLogGetItemWorks = do
   user       <- addNewRandomUser
-  ctx        <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
@@ -67,7 +67,7 @@ testApiLogGetItemWorks = do
 testApiLogGetListWorks :: TestEnv ()
 testApiLogGetListWorks = do
   user       <- addNewRandomUser
-  ctx        <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   newMockDoc <- testDocApiV2New' ctx
   let did = getMockDocId newMockDoc
 
@@ -78,7 +78,7 @@ testApiLogGetListWorks = do
 testApiLog2Users :: TestEnv ()
 testApiLog2Users = do
   userA       <- addNewRandomUser
-  ctxA        <- (set #ctxMaybeUser (Just userA)) <$> mkContext defaultLang
+  ctxA        <- (set #maybeUser (Just userA)) <$> mkContext defaultLang
   newMockDocA <- testDocApiV2New' ctxA
   let didA = getMockDocId newMockDocA
 
@@ -88,7 +88,7 @@ testApiLog2Users = do
   assertEqual "There should be 5 logged API Calls for user A" 5 (length logsUserA)
 
   userB       <- addNewRandomUser
-  ctxB        <- (set #ctxMaybeUser (Just userB)) <$> mkContext defaultLang
+  ctxB        <- (set #maybeUser (Just userB)) <$> mkContext defaultLang
   newMockDocB <- testDocApiV2New' ctxB
   let didB = getMockDocId newMockDocB
 

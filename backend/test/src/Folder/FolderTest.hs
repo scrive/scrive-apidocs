@@ -123,7 +123,7 @@ testPartnerUsersWithoutFolders = do
 
 partnerCompanyCreate :: User -> UserGroup -> TestEnv (Context, UserGroupID)
 partnerCompanyCreate partnerAdminUser partnerAdminUserGroup = do
-  ctx <- (set #ctxMaybeUser (Just partnerAdminUser)) <$> mkContext defaultLang
+  ctx <- (set #maybeUser (Just partnerAdminUser)) <$> mkContext defaultLang
   let partnerUgID = ugID partnerAdminUserGroup
   newCompanyJSON <- readTestFile "json/partner_api_v1/param-partnerCompanyCreate.json"
   let rq_newCompany_params = [("json", inTextBS newCompanyJSON)]
@@ -160,7 +160,7 @@ testNewCompanyAccount = do
   (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   assertBool "UserGroup has home Folder" . isJust $ ugHomeFolderID ug
 
-  ctx    <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx    <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   bobReq <- mkRequest
     POST
@@ -293,8 +293,8 @@ testMigrationTriggersWork = do
 
   ctx0 <- mkContext defaultLang
   let ctx =
-        set #ctxAdminAccounts [useremail $ userinfo user]
-          . set #ctxMaybeUser (Just user)
+        set #adminAccounts [useremail $ userinfo user]
+          . set #maybeUser (Just user)
           $ ctx0
   req <- mkRequest GET []
   void $ runTestKontra req ctx $ handleTriggerMigrateFolders 1
@@ -323,7 +323,7 @@ testMigrationTriggersWork = do
 testFolderAPICreate :: TestEnv ()
 testFolderAPICreate = do
   user      <- addNewRandomUser
-  ctx       <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx       <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   -- make root of folder struct
   fdrRootID <- folderID <$> do
     dbUpdate . FolderCreate $ defaultFolder
@@ -361,8 +361,8 @@ testFolderAPIUpdate :: TestEnv ()
 testFolderAPIUpdate = do
   grpAdmin <- addNewRandomUser
   user     <- addNewRandomUser
-  ctxAdmin <- (set #ctxMaybeUser (Just grpAdmin)) <$> mkContext defaultLang
-  ctxUser  <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctxAdmin <- (set #maybeUser (Just grpAdmin)) <$> mkContext defaultLang
+  ctxUser  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   fdrRoot  <- dbUpdate $ FolderCreate (set #folderName "Folder root" defaultFolder)
   let folderAdminRoot = FolderAdminAR (folderID fdrRoot)
       admid           = userid grpAdmin
@@ -446,7 +446,7 @@ testFolderAPIUpdate = do
 testFolderAPIGet :: TestEnv ()
 testFolderAPIGet = do
   grpAdmin <- addNewRandomUser
-  ctxAdmin <- (set #ctxMaybeUser (Just grpAdmin)) <$> mkContext defaultLang
+  ctxAdmin <- (set #maybeUser (Just grpAdmin)) <$> mkContext defaultLang
   fdrRoot  <- dbUpdate $ FolderCreate (set #folderName "Folder root" defaultFolder)
   let folderAdminR = FolderAdminAR (folderID fdrRoot)
       admid        = userid grpAdmin
@@ -471,7 +471,7 @@ testFolderAPIGet = do
 testFolderAPIDelete :: TestEnv ()
 testFolderAPIDelete = do
   user       <- addNewRandomUser
-  ctx        <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   userFolder <- fromJust <$> (dbQuery . FolderGet . fromJust . userhomefolderid $ user)
   -- I don't want to test deletion of the user home folder, so let's create a subfolder.
   let fdrTestDeleteChild =
@@ -489,7 +489,7 @@ testFolderAPIDelete = do
 testFolderAPIListDocs :: TestEnv ()
 testFolderAPIListDocs = do
   user       <- addNewRandomUser
-  ctx        <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   userFolder <- fromJust <$> (dbQuery . FolderGet . fromJust . userhomefolderid $ user)
   let numDocsToStart = 5
       fdrid          = folderID userFolder
@@ -504,7 +504,7 @@ testFolderAPIListDocs = do
   -- HACK to enable user to start documents in another folder
   dbUpdate $ FolderSetUserHomeFolder (userid user) (folderID newFdr)
   user' <- fromJust <$> (dbQuery $ GetUserByID (userid user))
-  let ctx'            = set #ctxMaybeUser (Just user') ctx
+  let ctx'            = set #maybeUser (Just user') ctx
       numDocsToStart' = 3
   mapM_ testDocApiV2New' $ take numDocsToStart' . repeat $ ctx'
   -- switch back to original home folder for user

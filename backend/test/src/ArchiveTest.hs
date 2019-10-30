@@ -27,7 +27,7 @@ testListDocs = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
 
   -- send a doc as author
-  ctx         <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req         <- mkRequest
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]
@@ -40,7 +40,7 @@ testListDocs = do
 
   -- send a doc to author from someoneelse
   (Just user2) <- addNewUser "Jackie" "Chan" "jackie@chan.com"
-  ctx2         <- (set #ctxMaybeUser (Just user2)) <$> mkContext defaultLang
+  ctx2         <- (set #maybeUser (Just user2)) <$> mkContext defaultLang
   req2         <- mkRequest
     POST
     [("expectedType", inText "text"), ("file", inFile $ inTestDir "pdfs/simple.pdf")]

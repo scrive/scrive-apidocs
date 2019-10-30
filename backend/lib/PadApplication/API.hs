@@ -61,7 +61,7 @@ apiCallGetPadClientTheme = api $ do
   ctx          <- getContext
   (user, _, _) <- getAPIUserWithAnyPrivileges
   ug           <- dbQuery . UserGroupGetByUserID . userid $ user
-  theme <- dbQuery $ GetTheme $ fromMaybe (ctx ^. #ctxBrandedDomain % #signviewTheme)
+  theme <- dbQuery $ GetTheme $ fromMaybe (ctx ^. #brandedDomain % #signviewTheme)
                                           (uguiSignviewTheme $ ugUI ug)
   simpleAesonResponse $ Unjson.unjsonToJSON'
     (Options { pretty = True, indent = 2, nulls = True })

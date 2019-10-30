@@ -66,7 +66,7 @@ handleAccountGet = withUser . withTosCheck $ \user -> do
   ctx <- getContext
   pb  <- renderTextTemplate "showAccount" $ do
     F.value "companyAdmin" $ useriscompanyadmin user
-    F.value "apiLogEnabled" $ ctx ^. #ctxIsApiLogEnabled
+    F.value "apiLogEnabled" $ ctx ^. #isApiLogEnabled
     entryPointFields ctx
   internalResponse <$> renderFromBodyWithFields pb (F.value "account" True)
 
@@ -109,7 +109,7 @@ handlePostChangeEmail :: Kontrakcja m => UserID -> MagicHash -> m InternalKontra
 handlePostChangeEmail uid hash = withUser $ \user -> do
   mnewemail <- getEmailChangeRequestNewEmail uid hash
   ctx       <- getContext
-  let (ipnumber, time) = (ctx ^. #ctxIpNumber, ctx ^. #ctxTime)
+  let (ipnumber, time) = (ctx ^. #ipAddr, ctx ^. #time)
   mpassword <- getOptionalField asDirtyPassword "password"
   case mpassword of
     Nothing -> return $ internalResponse $ LinkAccount
@@ -152,7 +152,7 @@ handleUsageStatsJSONForUserMonths = V2.api $ do
 
 handleUsageStatsJSONForShareableLinks :: Kontrakcja m => StatsPartition -> m JSValue
 handleUsageStatsJSONForShareableLinks statsPartition = do
-  user <- guardJustM $ view #ctxMaybeUser <$> getContext
+  user <- guardJustM $ view #maybeUser <$> getContext
   getShareableLinksStats statsPartition $ if useriscompanyadmin user
     then UsageStatsForUserGroup $ usergroupid user
     else UsageStatsForUser $ userid user
@@ -236,7 +236,7 @@ handleAcceptTOSPost :: Kontrakcja m => m ()
 handleAcceptTOSPost = do
   ctx <- getContext
   let (maybeuser, time, ipnumber) =
-        (ctx ^. #ctxMaybeUser, ctx ^. #ctxTime, ctx ^. #ctxIpNumber)
+        (ctx ^. #maybeUser, ctx ^. #time, ctx ^. #ipAddr)
   userid <- guardJustM $ return $ userid <$> maybeuser
   tos    <- getDefaultedField False asValidCheckBox "tos"
   case tos of
@@ -273,7 +273,7 @@ handleAccountSetupGet uid token sm = do
       flashmessage <- case sm of
         CompanyInvitation -> flashMessageUserAccountRequestExpiredCompany
         _                 -> flashMessageUserAccountRequestExpired
-      return . internalResponseWithFlash flashmessage . LinkLogin $ ctx ^. #ctxLang
+      return . internalResponseWithFlash flashmessage . LinkLogin $ ctx ^. #lang
 
 handleAccountSetupPost :: Kontrakcja m => UserID -> MagicHash -> SignupMethod -> m JSValue
 handleAccountSetupPost uid token sm = do
@@ -291,7 +291,7 @@ handleAccountSetupPost uid token sm = do
       void $ dbUpdate $ DeleteUserAccountRequest uid
       ctx <- getContext
       void $ dbUpdate $ SetUserSettings (userid user) $ (usersettings user)
-        { lang = ctx ^. #ctxLang
+        { lang = ctx ^. #lang
         }
       link <- getHomeOrDesignViewLink
       J.runJSONGenT $ do
@@ -320,7 +320,7 @@ handlePasswordReminderGet uid token = do
     Nothing -> do
       ctx          <- getContext
       flashmessage <- flashMessagePasswordChangeLinkNotValid
-      return $ internalResponseWithFlash flashmessage $ LinkLoginDirect (ctx ^. #ctxLang)
+      return $ internalResponseWithFlash flashmessage $ LinkLoginDirect (ctx ^. #lang)
 
 
 handlePasswordReminderPost :: Kontrakcja m => UserID -> MagicHash -> m JSValue
@@ -333,17 +333,17 @@ handlePasswordReminderPost uid token = do
       ctx <- getContext
       return
         $  null masklist
-        || (any (ipAddressIsInNetwork $ ctx ^. #ctxIpNumber) masklist)
+        || (any (ipAddressIsInNetwork $ ctx ^. #ipAddr) masklist)
     Nothing -> return True
   case muser of
     Just user | not (useraccountsuspended user) && ipIsOK -> do
       switchLang (getLang user)
       ctx <- getContext
-      let time      = ctx ^. #ctxTime
-          ipnumber  = ctx ^. #ctxIpNumber
-          maybeuser = ctx ^. #ctxMaybeUser
+      let time      = ctx ^. #time
+          ipnumber  = ctx ^. #ipAddr
+          maybeuser = ctx ^. #maybeUser
       password     <- guardJustM $ getField "password"
-      goodPassword <- checkPassword (ctx ^. #ctxPasswordServiceConf) password
+      goodPassword <- checkPassword (ctx ^. #passwordServiceConf) password
       if (goodPassword)
         then do
           void $ dbUpdate $ DeletePasswordReminder uid
@@ -378,8 +378,8 @@ handleContactSales = do
 
   let uid = maybe "user not logged in"
                   ((<>) "user with id " . showt . userid)
-                  (ctx ^. #ctxMaybeUser)
-      domainInfo = " (from domain " <> (ctx ^. #ctxBrandedDomain % #url) <> " )"
+                  (ctx ^. #maybeUser)
+      domainInfo = " (from domain " <> (ctx ^. #brandedDomain % #url) <> " )"
       content =
         "<p>Hi there!</p>"
           <> "<p>Someone requested information from the payments form"

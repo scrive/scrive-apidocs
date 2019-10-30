@@ -151,7 +151,7 @@ flashMessageUserHasIdentifiedWithDifferentSSN = toFlashMsg OperationFailed
 handleResolve :: Kontrakcja m => m InternalKontraResponse
 handleResolve = do
   ctx <- getContext
-  let mnetsconfig = ctx ^. #ctxNetsConfig
+  let mnetsconfig = ctx ^. #netsConfig
       domainUrl   = ctx ^. ctxDomainUrl
   case mnetsconfig of
     Nothing -> do
@@ -253,7 +253,7 @@ handleResolveNetsNOBankID
   -> Context
   -> m Bool
 handleResolveNetsNOBankID res doc nt sl ctx = do
-  sessionID <- view #ctxSessionID <$> getContext
+  sessionID <- view #sessionID <$> getContext
   let decodeInternalProvider s = case s of
         "no_bankid" -> NetsNOBankIDStandard
         "no_bidmob" -> NetsNOBankIDMobile
@@ -348,7 +348,7 @@ handleResolveNetsDKNemID
   -> Context
   -> m Bool
 handleResolveNetsDKNemID res doc nt sl ctx = do
-  sessionID <- view #ctxSessionID <$> getContext
+  sessionID <- view #sessionID <$> getContext
   let decodeInternalProvider s = case s of
         "dk_nemid_js"       -> NetsDKNemIDKeyCard
         "dk_nemid-opensign" -> NetsDKNemIDKeyFile
@@ -414,7 +414,7 @@ handleResolveNetsFITupas
   -> Context
   -> m Bool
 handleResolveNetsFITupas res doc nt sl ctx = do
-  sessionID <- view #ctxSessionID <$> getContext
+  sessionID <- view #sessionID <$> getContext
   let signatoryName = cnFromDN $ attributeFromAssertion "DN" $ assertionAttributes res
       dob_nets      = attributeFromAssertion "DOB" $ assertionAttributes res
       dob_sl        = dobFromFIPersonalNumber $ getPersonalNumber sl
@@ -485,7 +485,7 @@ handleSignRequest did slid = do
   logInfo_ "NETS SIGN start"
   conf@NetsSignConfig {..} <- do
     ctx <- getContext
-    case ctx ^. #ctxNetsSignConfig of
+    case ctx ^. #netsSignConfig of
       Nothing       -> noConfigurationError "Nets ESigning"
       Just netsconf -> return netsconf
   withDocumentID did $ do

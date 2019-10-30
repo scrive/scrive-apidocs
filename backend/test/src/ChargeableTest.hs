@@ -101,7 +101,7 @@ test_startDocumentCharging = do
   ugid        <- ugID <$> addNewUserGroup
   Just user   <- addNewUser "Bob" "Blue" "bob@blue.com"
   True        <- dbUpdate $ SetUserUserGroup (userid user) ugid
-  ctxWithUser <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctxWithUser <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   did1        <- newDocumentReadyToStart user
   req1        <- mkRequest POST []
@@ -163,7 +163,7 @@ test_startDocumentCharging = do
 test_closeDocAndSigCharging :: TestEnv ()
 test_closeDocAndSigCharging = do
   user <- addNewRandomUser
-  ctx  <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   let queryChargeableSigClose =
         "SELECT count(*) FROM chargeable_items WHERE type = 9 "
           <>  "AND quantity = 1 AND user_group_id ="

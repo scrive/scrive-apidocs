@@ -89,14 +89,14 @@ pageFromBody ctx ad bodytext fields = do
 userGroupWithParentsForPage :: Kontrakcja m => m (Maybe UserGroupWithParents)
 userGroupWithParentsForPage = do
   ctx <- getContext
-  case ctx ^. #ctxMaybeUser of
+  case ctx ^. #maybeUser of
     Nothing   -> return Nothing
     Just user -> fmap Just $ dbQuery $ UserGroupGetWithParentsByUserID (userid user)
 
 userGroupUIForPage :: Kontrakcja m => m (Maybe (UserGroupID, UserGroupUI))
 userGroupUIForPage = do
   ctx <- getContext
-  case ctx ^. #ctxMaybeUser of
+  case ctx ^. #maybeUser of
     Just user -> do
       ug <- dbQuery . UserGroupGetByUserID . userid $ user
       return . Just $ (ugID ug, ugUI ug)
@@ -197,31 +197,31 @@ standardPageFields
   -> AnalyticsData
   -> Fields m ()
 standardPageFields ctx mugidandui ad = do
-  F.value "langcode" $ codeFromLang $ ctx ^. #ctxLang
-  F.value "logged" $ isJust (ctx ^. #ctxMaybeUser)
-  F.value "padlogged" $ isJust (ctx ^. #ctxMaybePadUser)
+  F.value "langcode" $ codeFromLang $ ctx ^. #lang
+  F.value "logged" $ isJust (ctx ^. #maybeUser)
+  F.value "padlogged" $ isJust (ctx ^. #maybePadUser)
   F.value "hostpart" $ ctx ^. ctxDomainUrl
-  F.value "production" (ctx ^. #ctxProduction)
-  F.value "brandingdomainid" (show $ ctx ^. #ctxBrandedDomain % #id)
+  F.value "production" (ctx ^. #production)
+  F.value "brandingdomainid" (show $ ctx ^. #brandedDomain % #id)
   F.value "brandinguserid" (fmap (show . userid) (ctx ^? contextUser))
-  F.value "ctxlang" $ codeFromLang $ ctx ^. #ctxLang
+  F.value "ctxlang" $ codeFromLang $ ctx ^. #lang
   F.object "analytics" $ analyticsTemplates ad
-  F.value "trackjstoken" (ctx ^. #ctxTrackJsToken)
-  F.value "zendeskkey" (ctx ^. #ctxZendeskKey)
+  F.value "trackjstoken" (ctx ^. #trackJsToken)
+  F.value "zendeskkey" (ctx ^. #zendeskKey)
   F.valueM "brandinghash" $ brandingAdler32 ctx mugidandui
   F.valueM "b64subscriptiondata"
     $   fmap (B64.encode . A.encode)
     <$> currentSubscriptionJSON
   F.value "subscriptionuseriscompanyadmin"
-    $ case fmap useriscompanyadmin (ctx ^. #ctxMaybeUser) of
+    $ case fmap useriscompanyadmin (ctx ^. #maybeUser) of
         Nothing    -> "undefined"
         Just True  -> "true"
         Just False -> "false"
   F.value "title"
     $ case emptyToNothing . strip . T.unpack =<< uguiBrowserTitle . snd =<< mugidandui of
         Just ctitle ->
-          ctitle <> " - " <> (T.unpack $ ctx ^. #ctxBrandedDomain % #browserTitle)
-        Nothing -> T.unpack (ctx ^. #ctxBrandedDomain % #browserTitle)
+          ctitle <> " - " <> (T.unpack $ ctx ^. #brandedDomain % #browserTitle)
+        Nothing -> T.unpack (ctx ^. #brandedDomain % #browserTitle)
   entryPointFields ctx
 
 jsonContentType :: BS.ByteString
@@ -268,5 +268,5 @@ respondWithDownloadContents mimeType forceDownload contents =
 -}
 entryPointFields :: TemplatesMonad m => Context -> Fields m ()
 entryPointFields ctx = do
-  F.value "cdnbaseurl" (ctx ^. #ctxCdnBaseUrl)
+  F.value "cdnbaseurl" (ctx ^. #cdnBaseUrl)
   F.value "versioncode" $ BS.toString $ B16.encode $ BS.fromString versionID

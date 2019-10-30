@@ -82,11 +82,11 @@ getNonTempSessionID
   :: (CryptoRNG m, KontraMonad m, MonadDB m, MonadThrow m, MonadTime m, ServerMonad m)
   => m SessionID
 getNonTempSessionID = do
-  sid <- view #ctxSessionID <$> getContext
+  sid <- view #sessionID <$> getContext
   if sid == SessionID.tempSessionID
     then do
       new_sid <- sesID <$> insertEmptySession
-      modifyContext $ set #ctxSessionID new_sid
+      modifyContext $ set #sessionID new_sid
       return new_sid
     else return sid
   where

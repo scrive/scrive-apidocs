@@ -52,7 +52,7 @@ testFetchCompanyBranding :: TestEnv ()
 testFetchCompanyBranding = do
   ugid         <- ugID <$> addNewUserGroup
   Just user    <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" ugid
-  ctx          <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx          <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req1         <- mkRequest GET []
   (avalue1, _) <- runTestKontra req1 ctx $ handleGetCompanyBranding Nothing
   case decode (BSL.toString $ A.encode avalue1) of
@@ -78,7 +78,7 @@ testUpdateCompanyTheme :: TestEnv ()
 testUpdateCompanyTheme = do
   ug        <- addNewUserGroup
   Just user <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ugID ug)
-  ctx       <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx       <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   mainbd    <- dbQuery $ GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (mainbd ^. #mailTheme)
@@ -156,7 +156,7 @@ testDeleteCompanyTheme :: TestEnv ()
 testDeleteCompanyTheme = do
   ug        <- addNewUserGroup
   Just user <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ugID ug)
-  ctx       <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx       <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   mainbd    <- dbQuery $ GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (mainbd ^. #mailTheme)
   newTheme  <- dbUpdate $ InsertNewThemeForUserGroup (ugID ug) mailTheme
@@ -175,7 +175,7 @@ testNormalUserCantChangeOrDeleteTheme = do
   True       <- dbUpdate $ SetUserCompanyAdmin (userid user1) False
   Just user2 <- dbQuery $ GetUserByID (userid user1)
 
-  ctx        <- (set #ctxMaybeUser (Just user2)) <$> mkContext defaultLang
+  ctx        <- (set #maybeUser (Just user2)) <$> mkContext defaultLang
 
   mainbd     <- dbQuery $ GetMainBrandedDomain
   mailTheme  <- dbQuery $ GetTheme (mainbd ^. #mailTheme)
@@ -209,7 +209,7 @@ testChangeCompanyUI :: TestEnv ()
 testChangeCompanyUI = do
   ug        <- addNewUserGroup
   Just user <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ugID ug)
-  ctx       <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx       <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   mainbd    <- dbQuery $ GetMainBrandedDomain
   mailTheme <- dbQuery $ GetTheme (mainbd ^. #mailTheme)
@@ -237,7 +237,7 @@ testNormalUseCantChangeCompanyUI = do
   Just user1 <- addNewUserToUserGroup "Mariusz" "Rak" "mariusz+ut@scrive.com" (ugID ug)
   True       <- dbUpdate $ SetUserCompanyAdmin (userid user1) False
   Just user2 <- dbQuery $ GetUserByID (userid user1)
-  ctx        <- (set #ctxMaybeUser (Just user2)) <$> mkContext defaultLang
+  ctx        <- (set #maybeUser (Just user2)) <$> mkContext defaultLang
 
   mainbd     <- dbQuery $ GetMainBrandedDomain
   mailTheme  <- dbQuery $ GetTheme (mainbd ^. #mailTheme)

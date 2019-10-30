@@ -105,17 +105,17 @@ handleGetThemes mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
 
 handleGetDomainThemes :: Kontrakcja m => m Aeson.Value
 handleGetDomainThemes = do
-  bd <- view #ctxBrandedDomain <$> getContext
+  bd <- view #brandedDomain <$> getContext
   handleGetThemesUsedByDomain bd
 
 handleGetSignviewTheme :: Kontrakcja m => m Aeson.Value
 handleGetSignviewTheme = withUserAndGroup $ \(_, ug) -> do
-  bd <- view #ctxBrandedDomain <$> getContext
+  bd <- view #brandedDomain <$> getContext
   handleGetTheme . fromMaybe (bd ^. #signviewTheme) . uguiSignviewTheme . ugUI $ ug
 
 handleNewTheme :: Kontrakcja m => String -> Maybe UserGroupID -> m Aeson.Value
 handleNewTheme s mugid = withCompanyAdminOrAdminOnly mugid $ \ug -> do
-  bd  <- view #ctxBrandedDomain <$> getContext
+  bd  <- view #brandedDomain <$> getContext
   tid <- case s of
     "signview" -> return $ bd ^. #signviewTheme
     "service"  -> return $ bd ^. #serviceTheme

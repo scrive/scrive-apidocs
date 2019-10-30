@@ -299,7 +299,7 @@ sendInvitationEmail1 signatorylink | not (isAuthor signatorylink) = do
         eventFields
         (Just signatorylink)
         (Just text <| text /= "" |> Nothing)
-        (systemActor $ mctx ^. #mctxTime)
+        (systemActor $ mctx ^. #time)
 
 sendInvitationEmail1 authorsiglink = do
   when (isSignatory authorsiglink) $ do
@@ -928,10 +928,10 @@ runMailT templates mailNoreplyAddress doc m = do
   bd <- maybe (dbQuery GetMainBrandedDomain)
               (dbQuery . GetBrandedDomainByUserID)
               (userid <$> mauthor)
-  let mctx = I.MailContext { mctxLang                 = documentlang doc
-                           , mctxCurrentBrandedDomain = bd
-                           , mctxTime                 = now
-                           , mctxMailNoreplyAddress   = mailNoreplyAddress
+  let mctx = I.MailContext { lang               = documentlang doc
+                           , brandedDomain      = bd
+                           , time               = now
+                           , mailNoreplyAddress = mailNoreplyAddress
                            }
   runTemplatesT (getLang doc, templates) . runMailContextT mctx $ m
 

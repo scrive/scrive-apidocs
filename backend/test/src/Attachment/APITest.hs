@@ -40,7 +40,7 @@ testAttachmentList = do
   _          <- dbUpdate $ NewAttachment (userid bob) "c" fid $ systemActor now
   _          <- dbUpdate $ SetAttachmentsSharing (userid bob) [attachmentid attB] True
 
-  ctx        <- set #ctxMaybeUser (Just anna) <$> mkContext defaultLang
+  ctx        <- set #maybeUser (Just anna) <$> mkContext defaultLang
 
   do
     req              <- mkRequest GET []
@@ -61,7 +61,7 @@ testAttachmentList = do
 testAttachmentCreate :: TestEnv ()
 testAttachmentCreate = do
   Just bob <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx      <- set #ctxMaybeUser (Just bob) <$> mkContext defaultLang
+  ctx      <- set #maybeUser (Just bob) <$> mkContext defaultLang
 
   req      <- mkRequest
     POST
@@ -80,7 +80,7 @@ testAttachmentCreate = do
 testAttachmentSetSharing :: TestEnv ()
 testAttachmentSetSharing = do
   Just bob <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx      <- set #ctxMaybeUser (Just bob) <$> mkContext defaultLang
+  ctx      <- set #maybeUser (Just bob) <$> mkContext defaultLang
   now      <- currentTime
 
   fid      <- addNewRandomFile
@@ -117,7 +117,7 @@ testAttachmentSetSharing = do
 testAttachmentDelete :: TestEnv ()
 testAttachmentDelete = do
   Just bob <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx      <- set #ctxMaybeUser (Just bob) <$> mkContext defaultLang
+  ctx      <- set #maybeUser (Just bob) <$> mkContext defaultLang
   now      <- currentTime
 
   fid      <- addNewRandomFile
@@ -139,7 +139,7 @@ testAttachmentDelete = do
 testAttachmentDownload :: TestEnv ()
 testAttachmentDownload = do
   Just bob <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx      <- set #ctxMaybeUser (Just bob) <$> mkContext defaultLang
+  ctx      <- set #maybeUser (Just bob) <$> mkContext defaultLang
   now      <- currentTime
 
   fid      <- addNewRandomFile

@@ -149,7 +149,7 @@ testNewDocumentUnsavedDraft = do
 uploadDocAsNewUser :: TestEnv (User, Response)
 uploadDocAsNewUser = do
   (Just user)  <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx          <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx          <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   req          <- mkRequest POST [("file", inFile $ inTestDir "pdfs/simple.pdf")]
   (rsp, _ctx') <- runTestKontra req ctx $ apiCallV1CreateFromFile
@@ -172,7 +172,7 @@ signScreenshots =
 testLastPersonSigningADocumentClosesIt :: TestEnv ()
 testLastPersonSigningADocumentClosesIt = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx         <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   let filename = inTestDir "pdfs/simple.pdf"
   filecontent <- liftIO $ BS.readFile filename
@@ -235,7 +235,7 @@ testLastPersonSigningADocumentClosesIt = do
                         t <- documentctime <$> theDocument
                         randomUpdate
                           .   MarkDocumentSeen (signatorylinkid siglink)
-                          =<< signatoryActor (set #ctxTime t ctx) siglink
+                          =<< signatoryActor (set #time t ctx) siglink
 
                       assertEqual "One left to sign" 1
                         .   length
@@ -275,7 +275,7 @@ testSigningWithPin = do
   Just user2 <- addNewUser "Gary" "Green" "gary@green.com"
   True       <- dbUpdate $ SetUserUserGroup (userid user1) ugid1
   True       <- dbUpdate $ SetUserUserGroup (userid user2) ugid2
-  ctx        <- (set #ctxMaybeUser (Just user1)) <$> mkContext defaultLang
+  ctx        <- (set #maybeUser (Just user1)) <$> mkContext defaultLang
 
   let filename = inTestDir "pdfs/simple.pdf"
   filecontent <- liftIO $ BS.readFile filename
@@ -417,7 +417,7 @@ testSigningWithPin = do
 testSendReminderEmailUpdatesLastModifiedDate :: TestEnv ()
 testSendReminderEmailUpdatesLastModifiedDate = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx         <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   doc         <- addRandomDocument (rdaDefault user)
     { rdaStatuses    = OneOf [Pending]
@@ -426,7 +426,7 @@ testSendReminderEmailUpdatesLastModifiedDate = do
                        in  OneOf $ map (`replicate` signatory) [2 .. 10]
     }
 
-  assertBool "Precondition" $ ctx ^. #ctxTime /= documentmtime doc
+  assertBool "Precondition" $ ctx ^. #time /= documentmtime doc
 
   -- who cares which one, just pick the last one
   let sl = head . reverse $ documentsignatorylinks doc
@@ -436,7 +436,7 @@ testSendReminderEmailUpdatesLastModifiedDate = do
 
   updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertBool "Modified date is updated"
-    $ compareTime (ctx ^. #ctxTime) (documentmtime updateddoc)
+    $ compareTime (ctx ^. #time) (documentmtime updateddoc)
   emails <- dbQuery GetEmailsForTest
   assertEqual "Email was sent" 1 (length emails)
 
@@ -447,9 +447,9 @@ testSendReminderEmailByCompanyAdmin = do
   otheruser <- addNewRandomCompanyUser ugid False
   adminuser <- addNewRandomCompanyUser ugid True
 
-  ctx       <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
-  ctxadmin  <- (set #ctxMaybeUser (Just adminuser)) <$> mkContext defaultLang
-  ctxother  <- (set #ctxMaybeUser (Just otheruser)) <$> mkContext defaultLang
+  ctx       <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctxadmin  <- (set #maybeUser (Just adminuser)) <$> mkContext defaultLang
+  ctxother  <- (set #maybeUser (Just otheruser)) <$> mkContext defaultLang
 
   doc       <- addRandomDocument (rdaDefault user)
     { rdaStatuses    = OneOf [Pending]
@@ -458,7 +458,7 @@ testSendReminderEmailByCompanyAdmin = do
                        in  OneOf $ map (`replicate` signatory) [2 .. 10]
     }
 
-  assertBool "Precondition" $ ctx ^. #ctxTime /= documentmtime doc
+  assertBool "Precondition" $ ctx ^. #time /= documentmtime doc
 
   -- who cares which one, just pick the last one
   let sl = head . reverse $ documentsignatorylinks doc
@@ -487,7 +487,7 @@ testSendReminderEmailByCompanyAdmin = do
 
   updateddoc <- dbQuery $ GetDocumentByDocumentID (documentid doc)
   assertBool "Modified date is updated"
-    $ compareTime (ctxadmin ^. #ctxTime) (documentmtime updateddoc)
+    $ compareTime (ctxadmin ^. #time) (documentmtime updateddoc)
   emails <- dbQuery GetEmailsForTest
   assertEqual "Email was sent" 1 (length emails)
 
@@ -500,10 +500,10 @@ testDownloadFile = do
 
   ctxnotloggedin <- mkContext defaultLang
 
-  ctxuser        <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
-  ctxuseronpad   <- (set #ctxMaybePadUser (Just user)) <$> mkContext defaultLang
-  ctxadmin       <- (set #ctxMaybeUser (Just adminuser)) <$> mkContext defaultLang
-  ctxother       <- (set #ctxMaybeUser (Just otheruser)) <$> mkContext defaultLang
+  ctxuser        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
+  ctxuseronpad   <- (set #maybePadUser (Just user)) <$> mkContext defaultLang
+  ctxadmin       <- (set #maybeUser (Just adminuser)) <$> mkContext defaultLang
+  ctxother       <- (set #maybeUser (Just otheruser)) <$> mkContext defaultLang
 
   reqfile        <- mkRequest POST [("file", inFile $ inTestDir "pdfs/simple.pdf")]
   (_rsp, _ctx')  <- runTestKontra reqfile ctxuser $ apiCallV1CreateFromFile
@@ -601,13 +601,13 @@ testDownloadFileWithAuthToView = do
 testSendingReminderClearsDeliveryInformation :: TestEnv ()
 testSendingReminderClearsDeliveryInformation = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx         <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   addRandomDocument (rdaDefault user) { rdaTypes    = OneOf [Signable]
                                       , rdaStatuses = OneOf [Pending]
                                       }
     `withDocumentM` do
                       sl <- head . reverse . documentsignatorylinks <$> theDocument
-                      let actor = systemActor $ ctx ^. #ctxTime
+                      let actor = systemActor $ ctx ^. #time
                       void $ dbUpdate $ MarkInvitationRead (signatorylinkid sl) actor
                       -- who cares which one, just pick the last one
                       req            <- mkRequest POST []
@@ -632,7 +632,7 @@ testDocumentFromTemplate = do
   (Just user) <- addNewUser "aaa" "bbb" "xxx@xxx.pl"
   doc         <- addRandomDocument (rdaDefault user) { rdaTypes = OneOf [Template] }
   docs1       <- randomQuery $ GetDocumentsByAuthor (userid user)
-  ctx         <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req         <- mkRequest POST []
   void $ runTestKontra req ctx $ apiCallV1CreateFromTemplate (documentid doc)
   docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
@@ -646,7 +646,7 @@ testDocumentFromTemplateShared = do
   void $ randomUpdate $ SetDocumentSharing [documentid doc] True
   (Just user) <- addNewUserToUserGroup "ccc" "ddd" "zzz@zzz.pl" ugid
   docs1       <- randomQuery $ GetDocumentsByAuthor (userid user)
-  ctx         <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req         <- mkRequest POST []
   void $ runTestKontra req ctx $ apiCallV1CreateFromTemplate (documentid doc)
   docs2 <- randomQuery $ GetDocumentsByAuthor (userid user)
@@ -662,7 +662,7 @@ testDocumentDeleteInBulk = do
     100
     (addRandomDocument (rdaDefault author) { rdaTypes = OneOf [Signable] })
 
-  ctx <- (set #ctxMaybeUser (Just author)) <$> mkContext defaultLang
+  ctx <- (set #maybeUser (Just author)) <$> mkContext defaultLang
   req <- mkRequest POST [("documentids", inText $ (showt $ documentid <$> docs))]
 
   void $ runTestKontra req ctx $ handleDelete
@@ -673,7 +673,7 @@ testGetLoggedIn :: TestEnv ()
 testGetLoggedIn = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   doc         <- addRandomDocumentWithAuthor user
-  ctx         <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req         <- mkRequest GET []
   (res, _)    <- runTestKontra req ctx $ apiCallV1Get doc
   assertEqual "Response code is 200" 200 (rsCode res)
@@ -693,7 +693,7 @@ testGetBadHeader :: TestEnv ()
 testGetBadHeader = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   doc         <- addRandomDocumentWithAuthor user
-  ctx         <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req         <- mkRequestWithHeaders GET [] [("authorization", ["ABC"])]
   (res, _)    <- runTestKontra req ctx $ apiCallV1Get doc
   assertEqual "Response code is 403" 403 (rsCode res)
@@ -704,7 +704,7 @@ testGetEvidenceAttachmentsLoggedIn :: TestEnv ()
 testGetEvidenceAttachmentsLoggedIn = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
   doc         <- addRandomDocumentWithAuthor user
-  ctx         <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req         <- mkRequest GET []
   (res, _)    <- runTestKontra req ctx $ apiCallV1GetEvidenceAttachments doc
   assertEqual "Response code is 200" 200 (rsCode res)
@@ -722,7 +722,7 @@ testGetEvidenceAttachmentsNotLoggedIn = do
 
 testSignviewBrandingBlocksNastyInput :: TestEnv ()
 testSignviewBrandingBlocksNastyInput = do
-  bd               <- view #ctxBrandedDomain <$> mkContext defaultLang -- We need to get default branded domain. AllOf it can be fetched from default ctx
+  bd               <- view #brandedDomain <$> mkContext defaultLang -- We need to get default branded domain. AllOf it can be fetched from default ctx
   theme            <- dbQuery $ GetTheme $ bd ^. #signviewTheme
   emptyBrandingCSS <- signviewBrandingCSS theme
   assertBool "CSS generated for empty branding is not empty"
@@ -791,7 +791,7 @@ testDownloadSignviewBrandingAccess = do
 
   -- 1) Check access to main signview branding
   emptyContext <- mkContext defaultLang
-  let bid = emptyContext ^. #ctxBrandedDomain % #id
+  let bid = emptyContext ^. #brandedDomain % #id
   svbr1 <- mkRequest GET []
   resp1 <- E.try $ runTestKontra svbr1 emptyContext $ handleSignviewBranding
     bid

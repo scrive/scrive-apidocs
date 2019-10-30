@@ -77,7 +77,7 @@ testExtendingIsNotRescheduledForPurgedDocs :: TestEnv ()
 testExtendingIsNotRescheduledForPurgedDocs = do
   setTestTime unixEpoch
   user    <- addNewRandomUser
-  ctx     <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx     <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   -- Create a document
   mockDoc <- testDocApiV2StartNew ctx
   let did  = getMockDocId mockDoc

@@ -35,11 +35,11 @@ getAnalyticsData :: Kontrakcja m => m AnalyticsData
 getAnalyticsData = do
   ctx <- getContext
 
-  let muser       = ctx ^. #ctxMaybeUser
-      token       = ctx ^. #ctxMixpanelToken
-      hubspotConf = ctx ^. #ctxHubspotConf
-      gaToken     = ctx ^. #ctxGaToken
-      lang        = ctx ^. #ctxLang
+  let muser       = ctx ^. #maybeUser
+      token       = ctx ^. #mixpanelToken
+      hubspotConf = ctx ^. #hubspotConf
+      gaToken     = ctx ^. #gaToken
+      lang        = ctx ^. #lang
 
   musergroup <- case muser of
     Just user -> dbQuery . UserGroupGet . usergroupid $ user

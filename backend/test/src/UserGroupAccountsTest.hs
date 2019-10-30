@@ -103,7 +103,7 @@ test_addingANewCompanyAccount :: TestEnv ()
 test_addingANewCompanyAccount = do
   (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
-  ctx        <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   req        <- mkRequest
     POST
@@ -134,7 +134,7 @@ test_addingExistingCompanyUserAsCompanyAccount :: TestEnv ()
 test_addingExistingCompanyUserAsCompanyAccount = do
   (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   (existinguser, existingug) <- addNewAdminUserAndUserGroup "Bob" "Blue" "bob@blue.com"
-  ctx <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req <- mkRequest
     POST
     [ ("add"    , inText "True")
@@ -163,7 +163,7 @@ test_addingANewCompanyAccountWithDifferentTarget = do
   trgug       <- addNewCompany False
   let trgugid = ugID trgug
 
-  ctx <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   req <- mkRequest
     POST
@@ -200,7 +200,7 @@ test_addingExistingCompanyUserAsCompanyAccountWithDifferentTarget = do
   trgug <- addNewCompany False
   let trgugid = ugID trgug
 
-  ctx <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req <- mkRequest
     POST
     [ ("add"          , inText "True")
@@ -234,7 +234,7 @@ test_resendingInviteToNewCompanyAccount = do
   Just newuser <- addNewUserToUserGroup "Bob" "Blue" "bob@blue.com" (ugID ug)
   void $ dbUpdate $ AddUserGroupInvite $ mkInvite ug newuser
 
-  ctx <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   req <- mkRequest
     POST
@@ -258,7 +258,7 @@ test_switchingStandardToAdminUser = do
   (user, ug) <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
   Just standarduser <- addNewUserToUserGroup "Bob" "Blue" "bob@blue.com" (ugID ug)
 
-  ctx               <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx               <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   req               <- mkRequest
     POST
@@ -281,7 +281,7 @@ test_switchingAdminToStandardUser = do
   void $ dbUpdate $ SetUserCompanyAdmin (userid standarduser) True
   Just adminuser <- dbQuery $ GetUserByID (userid user)
 
-  ctx            <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx            <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   req            <- mkRequest
     POST
@@ -304,7 +304,7 @@ test_removingCompanyAccountInvite = do
 
   void $ dbUpdate $ AddUserGroupInvite $ mkInvite ug standarduser
 
-  ctx          <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx          <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   req          <- mkRequest POST [("removeid", inText $ showt $ userid standarduser)]
   (res, _ctx') <- runTestKontra req ctx $ handleRemoveUserGroupAccount
@@ -324,7 +324,7 @@ test_removingCompanyAccountWorks = do
 
   void $ dbUpdate $ AddUserGroupInvite $ mkInvite ug standarduser
 
-  ctx          <- (set #ctxMaybeUser (Just adminuser)) <$> mkContext defaultLang
+  ctx          <- (set #maybeUser (Just adminuser)) <$> mkContext defaultLang
 
   companydocs1 <- dbQuery $ GetDocuments (DocumentsVisibleToUser $ userid adminuser)
                                          [DocumentFilterUnsavedDraft False]
@@ -382,7 +382,7 @@ test_privateUserTakoverWorks = do
     }
   void $ dbUpdate $ AddUserGroupInvite $ mkInvite ug user
 
-  ctx      <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx      <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   req      <- mkRequest POST []
   (res, _) <- runTestKontra req ctx $ handlePostBecomeUserGroupAccount (ugID ug)
@@ -413,7 +413,7 @@ test_mustBeInvitedForTakeoverToWork = do
   ug         <- addNewUserGroup
   Just user  <- addNewUser "Bob" "Blue" "bob@blue.com"
 
-  ctx        <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx        <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   req        <- mkRequest POST []
   (l, _ctx') <-

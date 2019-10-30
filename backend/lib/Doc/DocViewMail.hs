@@ -707,17 +707,17 @@ documentMailFields doc mctx = do
   mug <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
     Just suid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ suid
     Nothing   -> return Nothing
-  let themeid = fromMaybe (mctx ^. #mctxCurrentBrandedDomain % #mailTheme)
+  let themeid = fromMaybe (mctx ^. #brandedDomain % #mailTheme)
         $ preview (_Just % #ugUI % #uguiMailTheme % _Just) mug
   theme <- dbQuery $ GetTheme themeid
   return $ do
     F.value "ctxhostpart" $ mctx ^. mctxDomainUrl
-    F.value "ctxlang" (codeFromLang $ mctx ^. #mctxLang)
+    F.value "ctxlang" (codeFromLang $ mctx ^. #lang)
     F.value "documenttitle" $ documenttitle doc
     F.value "creatorname" $ getSmartName $ fromJust $ getAuthorSigLink doc
     -- brandingdomainid and brandinguserid are needed only for
     -- preview/email logo
-    F.value "brandingdomainid" (show $ mctx ^. #mctxCurrentBrandedDomain % #id)
+    F.value "brandingdomainid" (show $ mctx ^. #brandedDomain % #id)
     F.value "brandinguserid" (show <$> (maybesignatory =<< getAuthorSigLink doc))
     brandingMailFields theme
 
@@ -727,15 +727,15 @@ otherMailFields muser mctx = do
   mug <- case (userid <$> muser) of
     Just uid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ uid
     Nothing  -> return Nothing
-  let themeid = fromMaybe (mctx ^. #mctxCurrentBrandedDomain % #mailTheme)
+  let themeid = fromMaybe (mctx ^. #brandedDomain % #mailTheme)
         $ preview (_Just % #ugUI % #uguiMailTheme % _Just) mug
   theme <- dbQuery $ GetTheme themeid
   return $ do
     F.value "ctxhostpart" $ mctx ^. mctxDomainUrl
-    F.value "ctxlang" (codeFromLang $ mctx ^. #mctxLang)
+    F.value "ctxlang" (codeFromLang $ mctx ^. #lang)
     -- brandingdomainid and brandinguserid are needed only for
     -- preview/email logo
-    F.value "brandingdomainid" (show $ mctx ^. #mctxCurrentBrandedDomain % #id)
+    F.value "brandingdomainid" (show $ mctx ^. #brandedDomain % #id)
     F.value "brandinguserid" (show <$> userid <$> muser)
     brandingMailFields theme
 
@@ -751,12 +751,12 @@ documentMail haslang doc mailname otherfields = do
   mug  <- case (join $ maybesignatory <$> getAuthorSigLink doc) of
     Just suid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ suid
     Nothing   -> return Nothing
-  let themeid = fromMaybe (mctx ^. #mctxCurrentBrandedDomain % #mailTheme)
+  let themeid = fromMaybe (mctx ^. #brandedDomain % #mailTheme)
         $ preview (_Just % #ugUI % #uguiMailTheme % _Just) mug
   theme     <- dbQuery $ GetTheme themeid
   allfields <- documentMailFields doc mctx
-  kontramaillocal (mctx ^. #mctxMailNoreplyAddress)
-                  (mctx ^. #mctxCurrentBrandedDomain)
+  kontramaillocal (mctx ^. #mailNoreplyAddress)
+                  (mctx ^. #brandedDomain)
                   theme
                   haslang
                   mailname
@@ -775,12 +775,12 @@ otherMail muser mailname otherfields = do
   mug  <- case (userid <$> muser) of
     Just uid -> fmap Just $ dbQuery $ UserGroupGetByUserID $ uid
     Nothing  -> return Nothing
-  let themeid = fromMaybe (mctx ^. #mctxCurrentBrandedDomain % #mailTheme)
+  let themeid = fromMaybe (mctx ^. #brandedDomain % #mailTheme)
         $ preview (_Just % #ugUI % #uguiMailTheme % _Just) mug
   theme     <- dbQuery $ GetTheme themeid
   allfields <- otherMailFields muser mctx
-  kontramaillocal (mctx ^. #mctxMailNoreplyAddress)
-                  (mctx ^. #mctxCurrentBrandedDomain)
+  kontramaillocal (mctx ^. #mailNoreplyAddress)
+                  (mctx ^. #brandedDomain)
                   theme
                   lang
                   mailname

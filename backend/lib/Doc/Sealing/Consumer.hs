@@ -77,10 +77,10 @@ documentSealing guardTimeConf pdfToolsLambdaEnv templates pool mailNoreplyAddres
                                       doc <- theDocument
                                       let lang = getLang doc
                                           mc   = I.MailContext
-                                            { mctxLang                 = lang
-                                            , mctxCurrentBrandedDomain = bd
-                                            , mctxTime                 = now0
-                                            , mctxMailNoreplyAddress = mailNoreplyAddress
+                                            { lang               = lang
+                                            , brandedDomain      = bd
+                                            , time               = now0
+                                            , mailNoreplyAddress = mailNoreplyAddress
                                             }
                                       logInfo_ "Running postDocumentClosedActions"
                                       resultisok <-

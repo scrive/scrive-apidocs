@@ -67,7 +67,7 @@ handleUserGroupAccountsForAdminOnly ugid = onlySalesOrAdmin $ do
 -- company admin.
 handleUserGroupAccountsInternal :: Kontrakcja m => [UserGroupID] -> m JSValue
 handleUserGroupAccountsInternal ugids = do
-  muser <- view #ctxMaybeUser <$> getContext
+  muser <- view #maybeUser <$> getContext
   user  <- case muser of
     Nothing   -> unexpectedError "handleUserGroupAccountsInternal: No user in Context!"
     Just user -> return user
@@ -226,15 +226,15 @@ handleAddUserGroupAccount = withUserAndGroup $ \(user, ug) -> do
       newuser' <- guardJustM $ createUser (Email email)
                                           (fstname, sndname)
                                           (trgugid, False)
-                                          (ctx ^. #ctxLang)
+                                          (ctx ^. #lang)
                                           CompanyInvitation
       void $ dbUpdate $ LogHistoryUserInfoChanged
         (userid newuser')
-        (ctx ^. #ctxIpNumber)
-        (ctx ^. #ctxTime)
+        (ctx ^. #ipAddr)
+        (ctx ^. #time)
         (userinfo newuser')
         ((userinfo newuser') { userfstname = fstname, usersndname = sndname })
-        (userid <$> ctx ^. #ctxMaybeUser)
+        (userid <$> ctx ^. #maybeUser)
       newuser <- guardJustM $ dbQuery $ GetUserByID (userid newuser')
       void $ sendNewUserGroupUserMail user ug newuser
       runJSONGenT $ value "added" True
@@ -332,8 +332,8 @@ handleRemoveUserGroupAccount = withUserAndRoles $ \(user, roles) -> do
         void $ dbUpdate $ DeleteUser (userid removeuser)
         void $ dbUpdate $ LogHistoryAccountDeleted (userid removeuser)
                                                    (userid user)
-                                                   (ctx ^. #ctxIpNumber)
-                                                   (ctx ^. #ctxTime)
+                                                   (ctx ^. #ipAddr)
+                                                   (ctx ^. #time)
         runJSONGenT $ value "removed" True
       _ -> do
         runJSONGenT $ value "removed" False

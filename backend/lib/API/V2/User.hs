@@ -35,7 +35,7 @@ getAPIUserWithAnyPrivileges = getAPIUserWithPrivileges allPrivileges
 --
 -- Only returns if *any* of the privileges in privs are issued.
 getAPIUserWithPrivileges :: Kontrakcja m => [APIPrivilege] -> m (User, Actor)
-getAPIUserWithPrivileges privs = getAPIUserWith (view #ctxMaybeUser) privs
+getAPIUserWithPrivileges privs = getAPIUserWith (view #maybeUser) privs
 
 getAPIUserWithPad :: Kontrakcja m => APIPrivilege -> m (User, Actor)
 getAPIUserWithPad priv = getAPIUserWith (preview contextUser) [priv]

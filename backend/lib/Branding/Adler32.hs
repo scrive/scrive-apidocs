@@ -24,7 +24,7 @@ import VersionTH
 brandingAdler32
   :: (MonadDB m, MonadThrow m) => Context -> Maybe (UserGroupID, UserGroupUI) -> m Text
 brandingAdler32 ctx mugidandui = do
-  ad1 <- domainAdler32 $ ctx ^. #ctxBrandedDomain
+  ad1 <- domainAdler32 $ ctx ^. #brandedDomain
   ad2 <- maybe (return "") userGroupUIAdler32 mugidandui
   ad3 <- do
     case ctx ^? contextUser of

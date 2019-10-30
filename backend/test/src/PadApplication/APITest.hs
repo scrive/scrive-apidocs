@@ -23,7 +23,7 @@ testPadApplicationPadInfoGet :: TestEnv ()
 testPadApplicationPadInfoGet = do
   (user, ug)    <- addNewAdminUserAndUserGroup "Andrzej" "Rybczak" "andrzej@skrivapa.se"
 
-  ctx1          <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx1          <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req1          <- mkRequest GET []
   (res1, _ctx2) <- runTestKontra req1 ctx1 apiCallGetPadInfo
   let Just (Object resObject1            ) = decode (rsBody res1) :: Maybe Value

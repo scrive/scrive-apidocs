@@ -35,7 +35,7 @@ testLoggedInLangSwitching :: TestEnv ()
 testLoggedInLangSwitching = do
     --create a new swedish user - after login from english page - he should still use swedish
   user <- createTestUser LANG_SV
-  ctx0 <- (set #ctxLang LANG_EN) <$> mkContext defaultLang
+  ctx0 <- (set #lang LANG_EN) <$> mkContext defaultLang
   req0 <- mkRequest
     POST
     [ ("email"    , inText "andrzej@skrivapa.se")
@@ -44,7 +44,7 @@ testLoggedInLangSwitching = do
     ]
   (_, ctx1) <- runTestKontra req0 ctx0 $ handleLoginPost
 
-  assertBool "User was logged into context" $ (userid <$> ctx1 ^. #ctxMaybeUser) == Just
+  assertBool "User was logged into context" $ (userid <$> ctx1 ^. #maybeUser) == Just
     (userid user)
   assertUserLang (userid user) LANG_SV
   assertContextLang (userid user) ctx1 LANG_SV

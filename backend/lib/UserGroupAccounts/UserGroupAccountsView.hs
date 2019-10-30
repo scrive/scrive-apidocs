@@ -52,12 +52,12 @@ mailNewUserGroupUserInvite ctx invited inviter ug link expires = do
   theme <-
     dbQuery
     . GetTheme
-    . fromMaybe (ctx ^. #ctxBrandedDomain % #mailTheme)
+    . fromMaybe (ctx ^. #brandedDomain % #mailTheme)
     . uguiMailTheme
     . ugUI
     $ ug
-  kontramail (ctx ^. #ctxMailNoreplyAddress)
-             (ctx ^. #ctxBrandedDomain)
+  kontramail (ctx ^. #mailNoreplyAddress)
+             (ctx ^. #brandedDomain)
              theme
              "mailNewCompanyUserInvite"
     $ do
@@ -86,13 +86,13 @@ mailTakeoverSingleUserInvite ctx invited inviter ug link = do
   theme <-
     dbQuery
     . GetTheme
-    . fromMaybe (ctx ^. #ctxBrandedDomain % #mailTheme)
+    . fromMaybe (ctx ^. #brandedDomain % #mailTheme)
     . uguiMailTheme
     . ugUI
     $ ug
   --invite in the language of the existing user rather than in the inviter's language
-  kontramaillocal (ctx ^. #ctxMailNoreplyAddress)
-                  (ctx ^. #ctxBrandedDomain)
+  kontramaillocal (ctx ^. #mailNoreplyAddress)
+                  (ctx ^. #brandedDomain)
                   theme
                   invited
                   "mailTakeoverSingleUserInvite"

@@ -76,7 +76,7 @@ testUpdateDoc updateJsonPath = do
   cont        <- liftIO $ readFile updateJsonPath
 
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx         <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   do
     req <- mkRequest
@@ -122,7 +122,7 @@ testUpdateDoc updateJsonPath = do
 testOAuthCreateDoc :: TestEnv ()
 testOAuthCreateDoc = do
   user <- addNewRandomUser
-  ctx  <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   -- Create OAuth API tokens
   let uid = userid user
   void $ dbUpdate $ CreateAPIToken uid
@@ -182,7 +182,7 @@ testOAuthCreateDoc = do
 testPersonalAccessCredentialsCreateDoc :: TestEnv ()
 testPersonalAccessCredentialsCreateDoc = do
   user <- addNewRandomUser
-  ctx  <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   -- Get the personal access token
   let uid = userid user
@@ -223,7 +223,7 @@ testPersonalAccessCredentialsCreateDoc = do
 testSetAutoReminder :: TestEnv ()
 testSetAutoReminder = do
   ctx <- testUpdateDoc $ head jsonDocs
-  let Just user = ctx ^. #ctxMaybeUser
+  let Just user = ctx ^. #maybeUser
   [doc]    <- randomQuery $ GetDocumentsByAuthor (userid user)
 
   req      <- mkRequest POST [("days", inText "3")]
@@ -234,7 +234,7 @@ testSetAutoReminder = do
 testUpdateDocToSaved :: Bool -> TestEnv ()
 testUpdateDocToSaved useOAuth = do
   user    <- addNewRandomUser
-  ctx     <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx     <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   authStr <- if useOAuth
     then do
@@ -319,7 +319,7 @@ testUpdateDocToSaved useOAuth = do
 testChangeAuthenticationToViewMethod :: TestEnv ()
 testChangeAuthenticationToViewMethod = do
   ctx <- testUpdateDoc $ head jsonDocs
-  let Just user = ctx ^. #ctxMaybeUser
+  let Just user = ctx ^. #maybeUser
   [doc] <- randomQuery $ GetDocumentsByAuthor (userid user)
   let siglinks       = documentsignatorylinks doc
       validsiglinkid = signatorylinkid $ head $ filter isSignatory siglinks
@@ -466,7 +466,7 @@ testChangeAuthenticationToViewMethod = do
 
   -- Check that we can't change authentication to view if we are logged as user not connected to document
   user2           <- addNewRandomUser
-  ctx2            <- (set #ctxMaybeUser (Just user2)) <$> mkContext defaultLang
+  ctx2            <- (set #maybeUser (Just user2)) <$> mkContext defaultLang
   (resBadUser, _) <-
     runTestKontra reqSEBankIDValid10digits ctx2
       $ apiCallV1ChangeAuthenticationToView (documentid doc) validsiglinkid
@@ -475,7 +475,7 @@ testChangeAuthenticationToViewMethod = do
 testChangeAuthenticationToSignMethod :: TestEnv ()
 testChangeAuthenticationToSignMethod = do
   ctx <- testUpdateDoc $ head jsonDocs
-  let Just user = ctx ^. #ctxMaybeUser
+  let Just user = ctx ^. #maybeUser
   [doc] <- randomQuery $ GetDocumentsByAuthor (userid user)
   let siglinks       = documentsignatorylinks doc
       validsiglinkid = signatorylinkid $ head $ filter isSignatory siglinks
@@ -502,7 +502,7 @@ testChangeAuthenticationToSignMethod = do
   assertEqual "Response code should be 202" 202 (rsCode res)
 
   user2           <- addNewRandomUser
-  ctx2            <- (set #ctxMaybeUser (Just user2)) <$> mkContext defaultLang
+  ctx2            <- (set #maybeUser (Just user2)) <$> mkContext defaultLang
   (resBadUser, _) <- runTestKontra req ctx2
     $ apiCallV1ChangeAuthenticationToSign (documentid doc) validsiglinkid
   assertEqual "Response code should be 403" 403 (rsCode resBadUser)
@@ -510,7 +510,7 @@ testChangeAuthenticationToSignMethod = do
 testChangeAuthenticationToSignMethodWithEmptyAuthenticationValue :: TestEnv ()
 testChangeAuthenticationToSignMethodWithEmptyAuthenticationValue = do
   ctx <- testUpdateDoc $ head jsonDocs
-  let Just user = ctx ^. #ctxMaybeUser
+  let Just user = ctx ^. #maybeUser
   [doc] <- randomQuery $ GetDocumentsByAuthor (userid user)
   let siglinks       = documentsignatorylinks doc
       validsiglinkid = signatorylinkid $ head $ filter isSignatory siglinks
@@ -551,7 +551,7 @@ testChangeAuthenticationToSignMethodWithEmptyAuthenticationValue = do
 testChangeMainFile :: TestEnv ()
 testChangeMainFile = do
   (Just user) <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx         <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx         <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   req         <- mkRequest
     POST
@@ -599,7 +599,7 @@ testChangeMainFileMovePlacementsWithNegativeIndex = do
   let anchorpdf2 = inTestDir "pdfs/anchor-avis-contract-2.pdf"
 
   (Just user)   <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx           <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx           <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   req <- mkRequest POST [("expectedType", inText "text"), ("file", inFile anchorpdf1)]
   (rsp1, _ctx') <- runTestKontra req ctx $ apiCallV1CreateFromFile
@@ -692,7 +692,7 @@ testChangeMainFileMovePlacements = do
   let noanchorpdf = inTestDir "pdfs/simple.pdf"
 
   (Just user)   <- addNewUser "Bob" "Blue" "bob@blue.com"
-  ctx           <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx           <- (set #maybeUser (Just user)) <$> mkContext defaultLang
 
   req <- mkRequest POST [("expectedType", inText "text"), ("file", inFile anchorpdf1)]
   (rsp1, _ctx') <- runTestKontra req ctx $ apiCallV1CreateFromFile
@@ -836,7 +836,7 @@ assertEqualDouble msg x y = do
 testCloseEvidenceAttachments :: TestEnv ()
 testCloseEvidenceAttachments = do
   author <- addNewRandomUser
-  ctx    <- (set #ctxMaybeUser (Just author)) <$> mkContext defaultLang
+  ctx    <- (set #maybeUser (Just author)) <$> mkContext defaultLang
   doc    <- addRandomDocument (rdaDefault author)
     { rdaTypes       = OneOf [Signable]
     , rdaStatuses    = OneOf [Pending]

@@ -350,45 +350,45 @@ mkContext lang = do
   bd               <- dbQuery $ GetMainBrandedDomain
   liftIO $ do
     filecache <- newFileMemCache 52428800
-    return I.Context { ctxMaybeUser           = Nothing
-                     , ctxTime                = time
-                     , ctxClientName          = Nothing
-                     , ctxClientTime          = Nothing
-                     , ctxIpNumber            = noIP
-                     , ctxProduction          = False
-                     , ctxCdnBaseUrl          = Nothing
-                     , ctxTemplates           = localizedVersion lang globaltemplates
-                     , ctxGlobalTemplates     = globaltemplates
-                     , ctxLang                = lang
-                     , ctxIsMailBackdoorOpen  = False
-                     , ctxMailNoreplyAddress  = "noreply@scrive.com"
-                     , ctxCgiGrpConfig        = Nothing
-                     , ctxRedisCache          = Nothing
-                     , ctxFileCache           = filecache
-                     , ctxXToken              = unexpectedError "xtoken is not defined"
-                     , ctxAdminAccounts       = []
-                     , ctxSalesAccounts       = []
-                     , ctxMaybePadUser        = Nothing
-                     , ctxUseHttps            = False
-                     , ctxGtConf              = testGTConf
-                     , ctxSessionID           = SessionID.tempSessionID
-                     , ctxTrackJsToken        = Nothing
-                     , ctxZendeskKey          = Nothing
-                     , ctxMixpanelToken       = Nothing
-                     , ctxGaToken             = Nothing
-                     , ctxHubspotConf         = Nothing
-                     , ctxBrandedDomain       = bd
-                     , ctxSalesforceConf      = Nothing
-                     , ctxNetsConfig          = Nothing
-                     , ctxIsApiLogEnabled     = True
-                     , ctxNetsSignConfig      = Nothing
+    return I.Context { maybeUser           = Nothing
+                     , time                = time
+                     , clientName          = Nothing
+                     , clientTime          = Nothing
+                     , ipAddr            = noIP
+                     , production          = False
+                     , cdnBaseUrl          = Nothing
+                     , templates           = localizedVersion lang globaltemplates
+                     , globalTemplates     = globaltemplates
+                     , lang                = lang
+                     , isMailBackdoorOpen  = False
+                     , mailNoreplyAddress  = "noreply@scrive.com"
+                     , cgiGrpConfig        = Nothing
+                     , redisCache          = Nothing
+                     , fileCache           = filecache
+                     , xToken              = unexpectedError "xtoken is not defined"
+                     , adminAccounts       = []
+                     , salesAccounts       = []
+                     , maybePadUser        = Nothing
+                     , useHttps            = False
+                     , gtConf              = testGTConf
+                     , sessionID           = SessionID.tempSessionID
+                     , trackJsToken        = Nothing
+                     , zendeskKey          = Nothing
+                     , mixpanelToken       = Nothing
+                     , gaToken             = Nothing
+                     , hubspotConf         = Nothing
+                     , brandedDomain       = bd
+                     , salesforceConf      = Nothing
+                     , netsConfig          = Nothing
+                     , isApiLogEnabled     = True
+                     , netsSignConfig      = Nothing
                      -- We use real Lambda config here because we want our tests
                      -- to check it.  This Lambda and S3 bucket are dedicated
                      -- for tests and development.
-                     , ctxPdfToolsLambdaEnv   = pdfSealLambdaEnv
-                     , ctxPasswordServiceConf = defaultPasswordService
-                     , ctxMaybeApiUser        = Nothing
-                     , ctxEidServiceConf      = Nothing
+                     , pdfToolsLambdaEnv   = pdfSealLambdaEnv
+                     , passwordServiceConf = defaultPasswordService
+                     , maybeApiUser        = Nothing
+                     , eidServiceConf      = Nothing
                      }
 
 testGTConf :: GuardTimeConf

@@ -137,10 +137,10 @@ documentSigning guardTimeConf cgiGrpConf netsSignConf templates pool mailNoreply
           $ do
               now <- currentTime
               bd  <- dbQuery $ GetBrandedDomainByID signingBrandedDomainID
-              let mc = I.MailContext { mctxLang                 = signingLang
-                                     , mctxCurrentBrandedDomain = bd
-                                     , mctxTime                 = now
-                                     , mctxMailNoreplyAddress   = mailNoreplyAddress
+              let mc = I.MailContext { lang               = signingLang
+                                     , brandedDomain      = bd
+                                     , time               = now
+                                     , mailNoreplyAddress = mailNoreplyAddress
                                      }
               runTemplatesT (signingLang, templates)
                 . runMailContextT mc

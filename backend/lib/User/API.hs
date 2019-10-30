@@ -181,8 +181,8 @@ apiCallGetUserPersonalToken = api $ do
             else do
               void . dbUpdate $ LogHistoryAPIGetPersonalTokenFailure
                 (userid user)
-                (ctx ^. #ctxIpNumber)
-                (ctx ^. #ctxTime)
+                (ctx ^. #ipAddr)
+                (ctx ^. #time)
               logInfo "getpersonaltoken failed (invalid password)" $ logObject_ user
               -- we do not want rollback here, so we don't raise exception
               return . Left $ forbidden wrongPassMsg
@@ -216,8 +216,8 @@ apiCallGetUserPersonalToken = api $ do
             then do
               void $ dbUpdate $ LogHistoryAPIGetPersonalTokenSuccess
                 uid
-                (ctx ^. #ctxIpNumber)
-                (ctx ^. #ctxTime)
+                (ctx ^. #ipAddr)
+                (ctx ^. #time)
               return $ Right $ Ok (unjsonOAuthAuthorization, t)
             else
               -- use an ambiguous message, so that this cannot be used to determine
@@ -256,8 +256,8 @@ confirm2FA = V2.api $ do
         if r
           then do
             void $ dbUpdate $ LogHistoryTOTPEnable (userid user)
-                                                   (ctx ^. #ctxIpNumber)
-                                                   (ctx ^. #ctxTime)
+                                                   (ctx ^. #ipAddr)
+                                                   (ctx ^. #time)
             return . V2.Ok <$> runJSONGen $ do
               value "twofactor_active" r
               value "totp_valid"       True
@@ -275,8 +275,8 @@ disable2FA = V2.api $ do
       if r
         then do
           void $ dbUpdate $ LogHistoryTOTPDisable (userid user)
-                                                  (ctx ^. #ctxIpNumber)
-                                                  (ctx ^. #ctxTime)
+                                                  (ctx ^. #ipAddr)
+                                                  (ctx ^. #time)
           V2.Ok <$> runJSONGenT (value "twofactor_active" False)
         else V2.apiError $ V2.serverError "Could not disable TOTP"
     else V2.Ok <$> runJSONGenT (value "twofactor_active" False)
@@ -300,22 +300,22 @@ apiCallChangeUserPassword = api $ do
   (user, _, _) <- getAPIUserWithAnyPrivileges
   oldpassword  <- getField' "oldpassword"
   password     <- getField' "password"
-  goodPassword <- checkPassword (ctx ^. #ctxPasswordServiceConf) password
+  goodPassword <- checkPassword (ctx ^. #passwordServiceConf) password
   if goodPassword
     then if (maybeVerifyPassword (userpassword user) oldpassword)
       then do
         passwordhash <- createPassword password
         void $ dbUpdate $ SetUserPassword (userid user) passwordhash
         void $ dbUpdate $ LogHistoryPasswordSetup (userid user)
-                                                  (ctx ^. #ctxIpNumber)
-                                                  (ctx ^. #ctxTime)
+                                                  (ctx ^. #ipAddr)
+                                                  (ctx ^. #time)
                                                   (Just $ userid $ user)
         terminateAllUserSessionsExceptCurrent (userid user)
         Ok <$> (runJSONGenT $ value "changed" True)
       else do
         void $ dbUpdate $ LogHistoryPasswordSetupReq (userid user)
-                                                     (ctx ^. #ctxIpNumber)
-                                                     (ctx ^. #ctxTime)
+                                                     (ctx ^. #ipAddr)
+                                                     (ctx ^. #time)
                                                      (Just $ userid $ user)
         Ok <$> (runJSONGenT $ value "changed" False)
     else throwM . SomeDBExtraException $ serverError
@@ -330,8 +330,8 @@ apiCallLoginUser = api $ do
     $ getField "redirect"
 
   void $ dbUpdate $ LogHistoryLoginSuccess (userid user)
-                                           (ctx ^. #ctxIpNumber)
-                                           (ctx ^. #ctxTime)
+                                           (ctx ^. #ipAddr)
+                                           (ctx ^. #time)
   logUserToContext $ Just user
   sendRedirect $ LinkExternal redirectUrl
 
@@ -375,11 +375,11 @@ apiCallUpdateUserProfile = api $ do
 
   void $ dbUpdate $ SetUserInfo (userid user) ui
   void $ dbUpdate $ LogHistoryUserInfoChanged (userid user)
-                                              (ctx ^. #ctxIpNumber)
-                                              (ctx ^. #ctxTime)
+                                              (ctx ^. #ipAddr)
+                                              (ctx ^. #time)
                                               (userinfo user)
                                               ui
-                                              (userid <$> ctx ^. #ctxMaybeUser)
+                                              (userid <$> ctx ^. #maybeUser)
   if (useriscompanyadmin user)
     then do
       ugwp <- dbQuery . UserGroupGetWithParentsByUserID . userid $ user
@@ -476,7 +476,7 @@ apiCallSignup = api $ do
   phone           <- fromMaybe "" <$> getOptionalField asValidPhone "phone"
   companyName     <- fromMaybe "" <$> getOptionalField asValidCompanyName "companyName"
   companyPosition <- fromMaybe "" <$> getOptionalField asValidPosition "companyPosition"
-  lang            <- fromMaybe (ctx ^. #ctxLang) <$> langFromCode <$> getField' "lang"
+  lang            <- fromMaybe (ctx ^. #lang) <$> langFromCode <$> getField' "lang"
   switchLang lang
   muser  <- dbQuery $ GetUserByEmail $ Email email
   muser' <- case muser of
@@ -506,15 +506,15 @@ apiCallSignup = api $ do
       asyncLogEvent
         "Send account confirmation email"
         [ UserIDProp $ userid user
-        , IPProp $ ctx ^. #ctxIpNumber
-        , TimeProp $ ctx ^. #ctxTime
+        , IPProp $ ctx ^. #ipAddr
+        , TimeProp $ ctx ^. #time
         , someProp "Context" ("Acount request" :: String)
         ]
         EventMixpanel
       asyncLogEvent
         SetUserProps
         [ UserIDProp $ userid user
-        , someProp "Account confirmation email" $ ctx ^. #ctxTime
+        , someProp "Account confirmation email" $ ctx ^. #time
         , NameProp (firstname <> " " <> lastname)
         , FirstNameProp firstname
         , LastNameProp lastname
@@ -594,7 +594,7 @@ apiCallTestSalesforceIntegration = do
     fmap Ok $ case scheme of
       Just (SalesforceScheme token) -> do
         ctx <- getContext
-        case ctx ^. #ctxSalesforceConf of
+        case ctx ^. #salesforceConf of
           Nothing -> noConfigurationError "Salesforce"
           Just sc -> do
             res <- flip runReaderT sc $ testSalesforce token url
@@ -620,7 +620,7 @@ apiCallSetSalesforceCallbacks = do
     -- should use APIPersonal.
     (user, _) <- V2.getAPIUserWithAnyPrivileges
     ctx       <- getContext
-    case (ctx ^. #ctxSalesforceConf) of
+    case (ctx ^. #salesforceConf) of
       Nothing ->
         V2.apiError $ V2.serverError $ "No configuration for Salesforce integration"
       Just sc -> do
@@ -644,10 +644,10 @@ apiCallLoginUserAndGetSession = V2.api $ do
       ctx <- getContext
       asyncLogEvent
         "Login"
-        [UserIDProp userid, IPProp $ ctx ^. #ctxIpNumber, TimeProp $ ctx ^. #ctxTime]
+        [UserIDProp userid, IPProp $ ctx ^. #ipAddr, TimeProp $ ctx ^. #time]
         EventMixpanel
       asyncLogEvent SetUserProps
-                    [UserIDProp userid, someProp "Last login" $ ctx ^. #ctxTime]
+                    [UserIDProp userid, someProp "Last login" $ ctx ^. #time]
                     EventMixpanel
       session <- startNewSessionWithUser userid
       return $ V2.Ok $ runJSONGen $ do
@@ -686,8 +686,8 @@ apiCallDeleteUser = V2.api $ do
   void $ dbUpdate $ DeleteUser (userid user)
   void $ dbUpdate $ LogHistoryAccountDeleted (userid user)
                                              (userid user)
-                                             (ctx ^. #ctxIpNumber)
-                                             (ctx ^. #ctxTime)
+                                             (ctx ^. #ipAddr)
+                                             (ctx ^. #time)
 
   return $ V2.Ok ()
 
@@ -755,7 +755,7 @@ apiCallCheckPassword :: Kontrakcja m => m Response
 apiCallCheckPassword = api $ do
   ctx          <- getContext
   password     <- getField' "password"
-  goodPassword <- checkPassword (ctx ^. #ctxPasswordServiceConf) password
+  goodPassword <- checkPassword (ctx ^. #passwordServiceConf) password
   Ok <$> (runJSONGenT $ value "valid" goodPassword)
 
 guardCanChangeUser :: Kontrakcja m => User -> User -> m ()
@@ -800,8 +800,8 @@ apiCallUpdateOtherUserProfile affectedUserID = V2.api $ do
                                                         }
       void $ dbUpdate $ SetUserInfo affectedUserID affectedUserNewInfo
       void $ dbUpdate $ LogHistoryUserInfoChanged affectedUserID
-                                                  (ctx ^. #ctxIpNumber)
-                                                  (ctx ^. #ctxTime)
+                                                  (ctx ^. #ipAddr)
+                                                  (ctx ^. #time)
                                                   (userinfo affectedUser)
                                                   affectedUserNewInfo
                                                   (Just $ userid authorizingUser)
@@ -875,20 +875,20 @@ apiCallActivateAccount = V2.api $ do
       unless (validRequest) $ do
         V2.apiError $ V2.requestFailed errMsgToPreventAddressHarvesting
       void $ dbUpdate $ DeleteUserAccountRequest (userid user)
-      void $ dbUpdate $ AcceptTermsOfService (userid user) (ctx ^. #ctxTime)
+      void $ dbUpdate $ AcceptTermsOfService (userid user) (ctx ^. #time)
       void $ dbUpdate $ LogHistoryTOSAccept (userid user)
-                                            (ctx ^. #ctxIpNumber)
-                                            (ctx ^. #ctxTime)
+                                            (ctx ^. #ipAddr)
+                                            (ctx ^. #time)
                                             Nothing
       password      <- apiV2ParameterObligatory (ApiV2ParameterText "password")
-      validPassword <- checkPassword (ctx ^. #ctxPasswordServiceConf) password
+      validPassword <- checkPassword (ctx ^. #passwordServiceConf) password
       unless (validPassword) $ do
         V2.apiError $ V2.requestParameterInvalid "password" "Password is weak"
       passwordhash <- createPassword password
       void . dbUpdate $ SetUserPassword (userid user) passwordhash
       void $ dbUpdate $ LogHistoryPasswordSetup (userid user)
-                                                (ctx ^. #ctxIpNumber)
-                                                (ctx ^. #ctxTime)
+                                                (ctx ^. #ipAddr)
+                                                (ctx ^. #time)
                                                 Nothing
       return $ V2.Ok $ runJSONGen $ do
         value "activated" True

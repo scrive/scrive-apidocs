@@ -1017,7 +1017,7 @@ performNewDocumentWithRandomUser mug doctype title = do
   let aa = authorActor ctx user
   doc <- randomUpdate
     $ NewDocument user (T.pack title) doctype defaultTimeZoneName 0 aa Nothing
-  return (user, ctx ^. #ctxTime, doc)
+  return (user, ctx ^. #time, doc)
 
 assertGoodNewDocument
   :: Maybe UserGroupWithParents
@@ -1082,7 +1082,7 @@ testCancelDocumentCancelsDocument = replicateM_ 10 $ do
                                   Canceled
                                   (documentstatus canceleddoc)
                       assertBool "Updated modification time"
-                        $ compareTime (ctx ^. #ctxTime) (documentmtime canceleddoc)
+                        $ compareTime (ctx ^. #time) (documentmtime canceleddoc)
                       assertBool
                         "Siglinks are unchanged"
                         (signatoryLinksListsAreAlmostEqualForTests
@@ -1752,7 +1752,7 @@ testSealDocument = replicateM_ 1 $ do
                               }
                         return att
                       (time, sl) <- rand 10 arbitrary
-                      sa         <- signatoryActor (set #ctxTime time ctx) sl
+                      sa         <- signatoryActor (set #time time ctx) sl
                       sls        <- documentsignatorylinks <$> theDocument
                       dbUpdate $ SetSigAttachments (signatorylinkid $ sls !! 0) atts sa
 
@@ -1797,7 +1797,7 @@ testSealDocument = replicateM_ 1 $ do
 
                       randomUpdate $ \t -> CloseDocument (systemActor t)
 
-                      runPdfToolsLambdaT (ctx ^. #ctxPdfToolsLambdaEnv)
+                      runPdfToolsLambdaT (ctx ^. #pdfToolsLambdaEnv)
                         $ sealDocument "https://scrive.com"
 
 testDocumentAppendSealedPendingRight :: TestEnv ()
@@ -2390,7 +2390,7 @@ testUpdateSigAttachmentsAttachmentsOk = replicateM_ 10 $ do
                             , signatoryattachmentdescription = "att2 description"
                             }
                       (time, sl) <- rand 10 arbitrary
-                      let sa = signatoryActor (set #ctxTime time ctx) sl
+                      let sa = signatoryActor (set #time time ctx) sl
                       sls <- documentsignatorylinks <$> theDocument
                       randomUpdate
                         .   SetSigAttachments (signatorylinkid $ sls !! 0) [att1, att2]
@@ -2796,7 +2796,7 @@ testRejectDocumentNotSignableLeft = replicateM_ 10 $ do
                           (signatorylinkid sl)
                           (isApprover sl)
                           Nothing
-                          (authorActor (set #ctxTime time ctx) author)
+                          (authorActor (set #time time ctx) author)
 
 testRejectDocumentSignableNotPendingLeft :: TestEnv ()
 testRejectDocumentSignableNotPendingLeft = replicateM_ 10 $ do
@@ -2815,14 +2815,14 @@ testRejectDocumentSignableNotPendingLeft = replicateM_ 10 $ do
                           (signatorylinkid sl)
                           (isApprover sl)
                           Nothing
-                          (authorActor (set #ctxTime time ctx) author)
+                          (authorActor (set #time time ctx) author)
 
 testRejectDocumentNotLeft :: TestEnv ()
 testRejectDocumentNotLeft = replicateM_ 10 $ do
   void $ addRandomDocument . rdaDefault =<< addNewRandomUser
   ctx             <- mkContext defaultLang
   (did, time, sl) <- rand 10 arbitrary
-  let sa = signatoryActor (set #ctxTime time ctx) sl
+  let sa = signatoryActor (set #time time ctx) sl
   assertRaisesKontra (\DocumentDoesNotExist{} -> True) $ do
     withDocumentID did
       $   randomUpdate
@@ -2846,7 +2846,7 @@ testRejectDocumentSignablePendingRight = replicateM_ 10 $ do
                         =<< theDocument
                       sl   <- guardJustM $ getSigLinkFor slid <$> theDocument
                       time <- rand 10 arbitrary
-                      let sa = signatoryActor (set #ctxTime time ctx) sl
+                      let sa = signatoryActor (set #time time ctx) sl
                       randomUpdate . RejectDocument slid (isApprover sl) Nothing =<< sa
 
                       assertInvariants =<< theDocument
@@ -2868,7 +2868,7 @@ testRejectDocumentSignablePendingRight = replicateM_ 10 $ do
                         =<< theDocument
                       sl   <- guardJustM $ getSigLinkFor slid <$> theDocument
                       time <- rand 10 arbitrary
-                      let sa = signatoryActor (set #ctxTime time ctx) sl
+                      let sa = signatoryActor (set #time time ctx) sl
                       randomUpdate . RejectDocument slid (isApprover sl) Nothing =<< sa
 
                       assertInvariants =<< theDocument
@@ -2893,7 +2893,7 @@ testApproveDocumentSignablePendingRight = replicateM_ 10 $ do
                         =<< theDocument
                       sl   <- guardJustM $ getSigLinkFor slid <$> theDocument
                       time <- rand 10 arbitrary
-                      let sa = signatoryActor (set #ctxTime time ctx) sl
+                      let sa = signatoryActor (set #time time ctx) sl
                       randomUpdate . ApproveDocument slid =<< sa
 
                       assertInvariants =<< theDocument
@@ -2915,7 +2915,7 @@ testMarkInvitationRead = replicateM_ 10 $ do
                       success <-
                         dbUpdate
                         .   MarkInvitationRead slid
-                        =<< signatoryActor (set #ctxTime time ctx) sl'
+                        =<< signatoryActor (set #time time ctx) sl'
 
                       assert success
                       sl <- guardJustM $ getSigLinkFor slid <$> theDocument
@@ -2932,7 +2932,7 @@ testMarkInvitationReadDocDoesntExist = replicateM_ 10 $ do
       $   withDocumentID did
       $   randomUpdate
       .   MarkInvitationRead (signatorylinkid sl)
-      =<< signatoryActor (set #ctxTime time ctx) sl
+      =<< signatoryActor (set #time time ctx) sl
     return ()
   return ()
 
@@ -2948,7 +2948,7 @@ testMarkDocumentSeenNotSignableLeft = replicateM_ 10 $ do
                       (theDocument >>=) $ forEachSignatoryLink $ \sl ->
                         when (isNothing $ maybeseeninfo sl) $ do
                           time <- rand 10 arbitrary
-                          let sa = signatoryActor (set #ctxTime time ctx) sl
+                          let sa = signatoryActor (set #time time ctx) sl
                           assertRaisesKontra (\DocumentTypeShouldBe{} -> True) $ do
                             randomUpdate . MarkDocumentSeen (signatorylinkid sl) =<< sa
 
@@ -2963,7 +2963,7 @@ testMarkDocumentSeenClosedOrPreparationLeft = replicateM_ 10 $ do
                       (theDocument >>=) $ forEachSignatoryLink $ \sl ->
                         when (isNothing $ maybeseeninfo sl) $ do
                           time <- rand 10 arbitrary
-                          let sa = signatoryActor (set #ctxTime time ctx) sl
+                          let sa = signatoryActor (set #time time ctx) sl
                           assertRaisesKontra (\DocumentStatusShouldBe{} -> True) $ do
                             randomUpdate . MarkDocumentSeen (signatorylinkid sl) =<< sa
 
@@ -2997,7 +2997,7 @@ testMarkDocumentSeenSignableSignatoryLinkIDAndMagicHashAndNoSeenInfoRight =
                         (theDocument >>=) $ forEachSignatoryLink $ \sl ->
                           unless (hasSeen sl) $ do
                             time <- rand 10 arbitrary
-                            let sa = signatoryActor (set #ctxTime time ctx) sl
+                            let sa = signatoryActor (set #time time ctx) sl
                             randomUpdate . MarkDocumentSeen (signatorylinkid sl) =<< sa
                             tsl <-
                               guardJustM
@@ -3050,7 +3050,7 @@ testSetDocumentTagsRight = replicateM_ 10 $ do
   ctx    <- mkContext defaultLang
   addRandomDocumentWithAuthor' author `withDocumentM` do
     (tags, time) <- first S.fromList <$> rand 10 arbitrary
-    let actor = authorActor (set #ctxTime time ctx) author
+    let actor = authorActor (set #time time ctx) author
     success <- randomUpdate $ SetDocumentTags tags actor
 
     assert success
@@ -3118,7 +3118,7 @@ testCancelDocumentNotSignableNothing = replicateM_ 10 $ do
 
                       assertRaisesKontra (\DocumentTypeShouldBe{} -> True)
                         $ randomUpdate
-                        $ CancelDocument (authorActor (set #ctxTime time ctx) author)
+                        $ CancelDocument (authorActor (set #time time ctx) author)
 
 testCancelDocumentNotNothing :: TestEnv ()
 testCancelDocumentNotNothing = replicateM_ 10 $ do

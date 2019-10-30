@@ -309,11 +309,11 @@ docApiV2SigSign did slid = logDocumentAndSignatory did slid . api $ do
         doclang <- getLang <$> theDocument
         dbUpdate $ CleanAllScheduledDocumentSigning slid
         dbUpdate $ ScheduleDocumentSigning slid
-                                           (ctx ^. #ctxBrandedDomain % #id)
-                                           (ctx ^. #ctxTime)
-                                           (ctx ^. #ctxIpNumber)
-                                           (ctx ^. #ctxClientTime)
-                                           (ctx ^. #ctxClientName)
+                                           (ctx ^. #brandedDomain % #id)
+                                           (ctx ^. #time)
+                                           (ctx ^. #ipAddr)
+                                           (ctx ^. #clientTime)
+                                           (ctx ^. #clientName)
                                            doclang
                                            fields
                                            acceptedAttachments

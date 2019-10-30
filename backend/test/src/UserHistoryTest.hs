@@ -146,7 +146,7 @@ testHandlerForLoginSuccess = do
 testHandlerForPasswordSetup :: TestEnv ()
 testHandlerForPasswordSetup = do
   user <- createTestUser
-  ctx  <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req  <- mkRequest
     POST
     [("oldpassword", inText "test_password"), ("password", inText "test1111test")]
@@ -160,7 +160,7 @@ testHandlerForPasswordSetup = do
 testHandlerForPasswordSetupReq :: TestEnv ()
 testHandlerForPasswordSetupReq = do
   user <- createTestUser
-  ctx  <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req  <- mkRequest POST
                     [("oldpassword", inText "test"), ("password", inText "test1111test")]
   void $ runTestKontra req ctx $ apiCallChangeUserPassword
@@ -211,7 +211,7 @@ testHandlerForTOSAccept = do
 testHandlerForDetailsChanged :: TestEnv ()
 testHandlerForDetailsChanged = do
   user <- createTestUser
-  ctx  <- (set #ctxMaybeUser (Just user)) <$> mkContext defaultLang
+  ctx  <- (set #maybeUser (Just user)) <$> mkContext defaultLang
   req  <- mkRequest
     POST
     [ ("fstname"        , inText "Karol")
